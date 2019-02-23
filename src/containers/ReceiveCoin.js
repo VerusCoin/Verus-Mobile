@@ -18,7 +18,7 @@ import { Dropdown } from 'react-native-material-dropdown'
 import QRCode from 'react-native-qrcode-svg';
 import { coinsToSats, isNumber } from '../utils/math'
 
-const VERUS_QR_VERSION = "0.0.1"
+const VERUS_QR_VERSION = "0.1.0"
 const LOGO_DIR = require('../images/customIcons/verusQRLogo.png');
 
 class ReceiveCoin extends Component {
