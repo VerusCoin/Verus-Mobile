@@ -113,7 +113,7 @@ class VerusPay extends Component {
               this.preConfirm(
                 activeCoin, 
                 this.props.activeAccount, 
-                this.findAddress(coinTicker),
+                address,
                 amount,
                 memo
               )
@@ -126,7 +126,7 @@ class VerusPay extends Component {
                   this.preConfirm(
                     activeCoin, 
                     this.props.activeAccount, 
-                    this.findAddress(coinTicker),
+                    address,
                     amount,
                     memo
                   )
@@ -152,7 +152,7 @@ class VerusPay extends Component {
                       this.preConfirm(
                         activeCoin, 
                         this.props.activeAccount, 
-                        this.findAddress(coinTicker),
+                        address,
                         amount,
                         memo
                       )
@@ -268,21 +268,6 @@ class VerusPay extends Component {
       return false
     } else {
       return true
-    }
-  }
-
-  findAddress = (coinTicker) => {
-    let activeUser = this.props.activeAccount
-    let index = 0
-
-    while (index < activeUser.keys.length && coinTicker !== activeUser.keys[index].id) {
-      index++
-    }
-    if (index < activeUser.keys.length) {
-      return activeUser.keys[index].pubKey 
-    }
-    else {
-      throw "VerusPay.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinTicker + " not found!";
     }
   }
 
