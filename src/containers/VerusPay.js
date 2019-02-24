@@ -21,6 +21,7 @@ import {
  } from '../actions/actionCreators'
 import Spinner from 'react-native-loading-spinner-overlay';
 import AlertAsync from "react-native-alert-async";
+import { coinsToSats } from '../utils/math'
 
 const FORMAT_UNKNOWN = "QR Data format unrecognized"
 const ADDRESS_ONLY = "Only address detected, please fill out amount field"
@@ -72,6 +73,17 @@ class VerusPay extends Component {
         this.handleVerusQR(resultParsed)
       } else {
         //TODO: Handle other style QR codes here
+        if (resultParsed.address && resultParsed.amount && resultParsed.coin) {
+          let resultConverted = {
+            coinTicker: resultParsed.coin,
+            amount: coinsToSats(resultParsed.amount),
+            address: resultParsed.address
+          }
+
+          this.handleVerusQR(resultConverted)
+        } else {
+          this.errorHandler(FORMAT_UNKNOWN)
+        }
       }
     } else {
       if (result.length < 34 || result.length > 35 ) {
@@ -102,7 +114,13 @@ class VerusPay extends Component {
     console.log("Amount: " + amount)
     console.log("Memo: " + memo)
 
-    if (coinTicker && address && amount && address.length >= 34 && address.length <= 35) {
+    if (
+      coinTicker && 
+      address && 
+      amount && 
+      address.length >= 34 && 
+      address.length <= 35 && 
+      amount > 0) {
       if (this.coinExistsInWallet(coinTicker)) {
         let activeCoin = this.getCoinFromActiveCoins(coinTicker)
 
