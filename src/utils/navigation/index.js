@@ -85,7 +85,7 @@ export const MainScreens =
       TxDetails: {
         screen: TransactionDetails,
         navigationOptions: {
-          title: "Details",
+          title: "Info",
         }
       },
       ConfirmSend: {

@@ -247,7 +247,7 @@ class SendCoin extends Component {
               To:
               </FormLabel>
               <FormInput 
-                onChangeText={(text) => this.setState({toAddress: text})}
+                onChangeText={(text) => this.setState({toAddress: text.replace(/\s+/g, '')})}
                 onSubmitEditing={Keyboard.dismiss}
                 value={this.state.toAddress}
                 autoCapitalize={"none"}
