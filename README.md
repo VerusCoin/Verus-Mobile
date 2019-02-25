@@ -1,4 +1,4 @@
-# Verus Mobile v0.1.0-beta
+# Verus Mobile 
 The iOS/Android Verus Mobile multi-coin Wallet
 
 Welcome to the Verus Mobile multi-currency crypto wallet test release! This mobile wallet will be the core code base going forward for the Verus mobile experience, including PBaaS and crypto application support in the future. The features currently included are: 
