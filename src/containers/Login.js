@@ -1,9 +1,22 @@
 import React, { Component } from "react";
 import { Icon, FormLabel, FormInput, FormValidationMessage, Divider} from "react-native-elements";
 import Button1 from "../symbols/button1";
-import { View, StyleSheet, Text, Keyboard, TouchableWithoutFeedback, ActivityIndicator } from "react-native";
+import { 
+  View, 
+  StyleSheet, 
+  Text, 
+  Keyboard, 
+  TouchableWithoutFeedback, 
+  ActivityIndicator, 
+} from "react-native";
 import { connect } from 'react-redux';
-import { validateLogin, setUserCoins, updateCoinBalances, setCoinRates, transactionsNeedUpdate, everythingNeedsUpdate } from '../actions/actionCreators';
+import { 
+  validateLogin, 
+  setUserCoins, 
+  everythingNeedsUpdate, 
+  fetchActiveCoins,
+  setUpdateIntervalID
+ } from '../actions/actionCreators';
 import { Dropdown } from 'react-native-material-dropdown';
 
 const UPDATE_INTERVAL = 60000
@@ -20,26 +33,39 @@ class Login extends Component {
     };
   }
 
+  componentWillMount() {
+    if (this.props.updateIntervalID) {
+      console.log("Update interval ID detected as " + this.props.updateIntervalID + ", clearing...")
+      clearInterval(this.props.updateIntervalID)
+      this.props.dispatch(setUpdateIntervalID(null))
+    }
+  }
+
   _handleSubmit = () => {
     Keyboard.dismiss();
     const account = this.state.selectedAccount;
-    const coinList = this.props.activeCoinList;
-    const coinsForUser = setUserCoins(coinList, account.id);
     this.setState({validating: true})
-
-
 
     validateLogin(account, this.state.password)
       .then(response => {
         if(response !== false) {
           this.setState({loading: true})
-          this.props.dispatch(coinsForUser)
-          this.signInWithHeartbeat(response)
+          let promiseArr = [fetchActiveCoins(), response]
+          return Promise.all(promiseArr);
         }
         else {
           this.setState({validating: false})
           throw "Account not validated"
         }
+      })
+      .then((resArr) => {
+        const validation = resArr[1]
+        const coinList = resArr[0]
+        const coinsForUser = setUserCoins(coinList.activeCoinList, account.id);
+
+        this.props.dispatch(coinList)
+        this.props.dispatch(coinsForUser)
+        this.signInWithHeartbeat(validation)
       })
       .catch(err => {return err});
   }
@@ -80,10 +106,12 @@ class Login extends Component {
 
   signInWithHeartbeat = (signInAction) => {
     this.props.dispatch(everythingNeedsUpdate())
-    this.interval = setInterval(() => {
+    let intervalID = setInterval(() => {
+      console.log("Everything needs to update interval")
       this.props.dispatch(everythingNeedsUpdate())
     }, UPDATE_INTERVAL);
 
+    this.props.dispatch(setUpdateIntervalID(intervalID))
     this.props.dispatch(signInAction)
   }
 
@@ -119,7 +147,10 @@ class Login extends Component {
                 return item
               }}
               data={this.props.accounts}
-              onChangeText={(value, index, data) => this.setState({selectedAccount: value})}
+              onChangeText={(value, index, data) => {
+                this.setState({selectedAccount: value})
+                this.passwordInput.focus();
+              }}
               textColor="#E9F1F7"
               selectedItemColor="#232323"
               baseColor="#E9F1F7"
@@ -147,6 +178,7 @@ class Login extends Component {
               secureTextEntry={true}
               shake={this.state.errors.password}
               inputStyle={styles.formInput}
+              ref={(input) => { this.passwordInput = input; }}
             />
             <FormValidationMessage>
               {
@@ -193,6 +225,7 @@ const mapStateToProps = (state) => {
   return {
     accounts: state.authentication.accounts,
     activeCoinList: state.coins.activeCoinList,
+    updateIntervalID: state.ledger.updateIntervalID
   }
 };
 
@@ -227,7 +260,7 @@ const styles = StyleSheet.create({
   formInput: {
     width: "100%",
   },
-  passwordLabel: {
+  /*passwordLabel: {
     backgroundColor: "transparent",
     fontSize: 22,
     color: "#E9F1F7",
@@ -252,7 +285,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     marginTop: 0,
     color: "#E9F1F7"
-  },
+  },*/
   dropDown: {
     width: "90%",
     marginBottom: 0,

@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import Button1 from "../symbols/button1";
 import { View, StyleSheet, Text, ScrollView, Image, ActivityIndicator } from "react-native";
-import { storeCoins, getActiveCoinsList } from "../utils/asyncStore";
 import { Icon } from "react-native-elements";
 import { findCoinObj } from "../utils/CoinData"
 import { connect } from 'react-redux';
@@ -149,7 +148,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: "center"
   },
-
+/*
   fiatBalanceLabel: {
     backgroundColor: "transparent",
     opacity: 0.89,
@@ -162,7 +161,7 @@ const styles = StyleSheet.create({
     color: "#E9F1F7",
     width: 359,
   },
-
+*/
   titleLabel: {
     backgroundColor: "transparent",
     opacity: 0.86,
@@ -206,7 +205,7 @@ const styles = StyleSheet.create({
     marginRight: 5,
     color: "#50C3A5",
   },
-
+/*
   balanceSheetLabel: {
     width: "100%",
     backgroundColor: "#E9F1F7",
@@ -219,12 +218,15 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#232323"
   },
+  */
+
   rect: {
     height: 1,
     width: "100%",
-
     backgroundColor: "rgb(230,230,230)"
   },
+
+  
   addCoinBtn: {
     height: 54,
     width: "100%",
@@ -237,6 +239,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     left: "0%"
   },
+  
 
   receiveBtn: {
     width: 222.32,
@@ -245,7 +248,7 @@ const styles = StyleSheet.create({
     opacity: 1,
     marginTop: 0,
     marginBottom: 0
-  },
+  },/*
   icon: {
     backgroundColor: "transparent",
     color: "grey",
@@ -274,6 +277,7 @@ const styles = StyleSheet.create({
     height: 568,
     backgroundColor: "#E9F1F7"
   },
+  */
   homeLabel: {
     width: 244,
     backgroundColor: "transparent",

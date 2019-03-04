@@ -61,7 +61,6 @@ const styles = StyleSheet.create({
     width: "69.33%",
     textAlign: "center"
   },
-
   signInButton: {
     width: "26.595744680851062%",
     height: 46,

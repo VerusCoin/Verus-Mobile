@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
 
-  foreground: {
+  /*foreground: {
     backgroundColor: 'rgba(0,0,0,0.5)'
   },
 
@@ -165,9 +165,11 @@ const styles = StyleSheet.create({
   addCoinIcon: {
     marginTop: 35
   },
+  */
   coinList: {
     width: "100%",
   },
+  /*
   z5erm7: {
     height: 568,
     flexDirection: "column",
@@ -193,4 +195,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#E9F1F7"
   }
+  */
 });

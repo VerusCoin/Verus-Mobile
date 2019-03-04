@@ -5,14 +5,18 @@ import {
   StyleSheet, 
   Text, 
   TouchableOpacity, 
-  Switch, ScrollView, 
-  Keyboard 
+  Switch, 
+  ScrollView, 
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
 import { FormLabel, FormInput, FormValidationMessage, Icon } from 'react-native-elements'
-import { addUser } from '../actions/actionCreators';
+import { addUser, setUpdateIntervalID } from '../actions/actionCreators';
 import { connect } from 'react-redux';
 import { getKey } from '../utils/keyGenerator/keyGenerator'
+import { spacesLeadOrTrail } from '../utils/stringUtils'
+import AlertAsync from "react-native-alert-async";
 
 class SignUp extends Component {
   constructor() {
@@ -22,9 +26,25 @@ class SignUp extends Component {
       pin: null,
       confirmPin: null,
       wifSaved: false,
+      disclaimerRealized: false,
       userName: null,
-      errors: {userName: null, wifKey: null, pin: null, confirmPin: null, wifSaved: null}
+      errors: {
+        userName: null, 
+        wifKey: null, 
+        pin: null, 
+        confirmPin: null,
+        wifSaved: null,
+        disclaimerRealized: null},
+      warnings: [],
     };
+  }
+
+  componentWillMount() {
+    if (this.props.updateIntervalID) {
+      console.log("Update interval ID detected as " + this.props.updateIntervalID + ", clearing...")
+      clearInterval(this.props.updateIntervalID)
+      this.props.dispatch(setUpdateIntervalID(null))
+    }
   }
   
   setKey = () => {
@@ -41,6 +61,13 @@ class SignUp extends Component {
     _errors[field] = error
 
     this.setState({errors: _errors})
+  }
+
+  handleWarning = (warning) => {
+    let _warnings = this.state.warnings
+    _warnings.push(warning)
+
+    this.setState({warnings: _warnings})
   }
 
   duplicateAccount = (accountID) => {
@@ -61,16 +88,29 @@ class SignUp extends Component {
     this.props.navigation.dispatch(NavigationActions.back())
   }
 
+  isValid = (str) => {
+    return !/[~`!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/g.test(str);
+  }
+
   validateFormData = () => {
     this.setState({
-      errors: {userName: null, wifKey: null, pin: null, confirmPin: null, wifSaved: null}
+      errors: {
+        userName: null, 
+        wifKey: null, 
+        pin: null, 
+        confirmPin: null, 
+        wifSaved: null,
+        disclaimerRealized: null},
+      warnings: []
     }, () => {
       const _userName = this.state.userName
       const _wifKey = this.state.wifKey
       const _pin = this.state.pin
       const _confirmPin = this.state.confirmPin
       const _wifSaved = this.state.wifSaved
+      const _disclaimerRealized = this.state.disclaimerRealized
       let _errors = false;
+      let _warnings = false;
 
       if (!_userName || _userName.length < 1) {
         this.handleError("Required field", "userName")
@@ -89,6 +129,23 @@ class SignUp extends Component {
       } else if (_wifKey.length < 15) {
         this.handleError("Min. 15 characters", "wifKey")
         _errors = true
+      } else if (!this.isValid(_wifKey)) {
+        this.handleError("Seed cannot include any special characters", "wifKey")
+        _errors = true
+      } else {
+        if (spacesLeadOrTrail(_wifKey)) {
+          this.handleWarning(
+            "• Seed contains leading or trailing spaces")
+          _warnings = true
+        }
+
+        if (_wifKey.length < 30) {
+          this.handleWarning(
+            "• Seed is less than 30 characters, it is recommended that" +
+            " you create a long, complex seed, as anyone with access to it " + 
+            "will have access to your funds")
+          _warnings = true
+        }
       }
 
       if (!_pin || _pin.length < 1) {
@@ -109,19 +166,66 @@ class SignUp extends Component {
         _errors = true
       }
 
-      if (!_errors) {
+      if (!_disclaimerRealized) {
+        this.handleError("Ensure you are aware of the risks of sharing your passphrase/seed", "disclaimerRealized")
+        _errors = true
+      }
+
+      if (!_errors && !_warnings) {
         addUser(this.state.userName, this.state.wifKey, this.state.pin, this.props.accounts)
         .then((action) => {
           this.props.dispatch(action);
         })
-      } else {
-        return false;
-      }
+      } else if (!_errors) {
+        this.canMakeAccount()
+        .then((res) => {
+          if (res) {
+            addUser(this.state.userName, this.state.wifKey, this.state.pin, this.props.accounts)
+            .then((action) => {
+              this.props.dispatch(action);
+            })
+            .catch((e) => {
+              console.warn(e)
+            })
+          } 
+        })
+        .catch((e) => {
+          console.warn(e)
+        })
+      } 
     });
+  }
+
+  canMakeAccount = () => {
+    let alertText = 
+                ('Please take the time to double check the following things regarding your new profile ' + 
+                'information. If you are sure everything is correct, press continue.' + 
+                "\n")
+
+    for (let i = 0; i < this.state.warnings.length; i++) {
+      alertText += "\n" + this.state.warnings[i] + "\n"
+    }
+
+    return AlertAsync(
+      'Warning',
+      alertText,
+      [
+        {
+          text: 'No, take me back',
+          onPress: () => Promise.resolve(false),
+          style: 'cancel',
+        },
+        {text: 'Continue', onPress: () => Promise.resolve(true)},
+      ],
+      {
+        cancelable: false,
+      },
+    )
   }
 
   render() {
     return (
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center", justifyContent: "center"}}>
           <Text style={styles.wifLabel}>
             Create New Account
@@ -216,7 +320,7 @@ class SignUp extends Component {
           </View>
           <View style={styles.valueContainer}>
           <FormLabel labelStyle={styles.formLabel}>
-          I have written down my wallet passphrase (you will not be able to access it past this point):
+          I have written down my wallet seed/passphrase in a private place:
           </FormLabel>
           <View style={styles.switchContainer}>
             <Switch 
@@ -224,11 +328,29 @@ class SignUp extends Component {
               onValueChange={(value) => this.setState({wifSaved: value})}
             />
           </View>
-          
           <FormValidationMessage>
           {
             this.state.errors.wifSaved ? 
               this.state.errors.wifSaved
+              :
+              null
+          }
+          </FormValidationMessage>
+          </View>
+          <View style={styles.valueContainer}>
+          <FormLabel labelStyle={styles.formLabel}>
+          I realize anybody with access to my seed/passphrase will have access to my funds:
+          </FormLabel>
+          <View style={styles.switchContainer}>
+            <Switch 
+              value={this.state.disclaimerRealized}
+              onValueChange={(value) => this.setState({disclaimerRealized: value})}
+            />
+          </View>
+          <FormValidationMessage>
+          {
+            this.state.errors.disclaimerRealized ? 
+              this.state.errors.disclaimerRealized
               :
               null
           }
@@ -249,6 +371,7 @@ class SignUp extends Component {
             />
           </View>
         </ScrollView>
+      </TouchableWithoutFeedback>
     );
   }
 }
@@ -256,6 +379,7 @@ class SignUp extends Component {
 const mapStateToProps = (state) => {
   return {
     accounts: state.authentication.accounts,
+    updateIntervalID: state.ledger.updateIntervalID
   }
 };
 
@@ -278,10 +402,10 @@ const styles = StyleSheet.create({
   formInput: {
     width: "100%",
   },
-  labelContainer: {
+  /*labelContainer: {
     //borderWidth:1,
     //borderColor:"blue",
-  },
+  },*/
   valueContainer: {
     width: "85%",
     //borderWidth:1,

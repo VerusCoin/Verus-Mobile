@@ -151,7 +151,24 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
           }
         }
         else {
-          throw "getUnspent.js: Fatal mismatch error, raw transaction not found for: " + _utxoItem
+          console.log("Error being thrown with transaction")
+          console.log("Number of UTXOs: " + _utxoList.length)
+          console.log("Raw Transactions fetched: " + gottenTransactions.length)
+
+          console.log("Printing full UTXO list below line")
+          console.log("---------------------------------------")
+          for (let i = 0; i < _utxoList.length; i++) {
+            console.log(_utxoList[i])
+          }
+          console.log("---------------------------------------")
+
+          console.log("Printing full raw transaction list below line")
+          console.log("---------------------------------------")
+          for (let i = 0; i < gottenTransactions.length; i++) {
+            console.log(gottenTransactions[i])
+          }
+          console.log("---------------------------------------")
+          throw "getUnspent.js: Fatal mismatch error, couldn't fetch raw transactions for all UTXOs, see details above"
         }
       }
 
@@ -177,7 +194,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
       resolve(_formattedUtxoList)
     })
     .catch(err => {
-      Alert.alert("Send Error", e)
+      reject(err)
     })
   });
 }

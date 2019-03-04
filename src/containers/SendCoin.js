@@ -17,8 +17,10 @@ import { satsToCoins, truncateDecimal, isNumber, coinsToSats } from '../utils/ma
 import { updateCoinBalances, setCoinRates } from '../actions/actionCreators';
 import { connect } from "react-redux";
 import { getRecommendedBTCFees } from '../utils/httpCalls/callCreators'
+import { removeSpaces } from '../utils/stringUtils'
 
 const VERUSPAY_LOGO_DIR = require('../images/customIcons/verusPay.png')
+const DEFAULT_FEE_GUI = 10000;
 
 class SendCoin extends Component {
   constructor(props) {
@@ -35,7 +37,8 @@ class SendCoin extends Component {
         loading: false,
         btcFeesErr: false,
         activeCoinsForUser: {},
-        formErrors: {toAddress: null, amount: null}
+        formErrors: {toAddress: null, amount: null},
+        spendableBalance: 0
     };
   }
 
@@ -44,7 +47,8 @@ class SendCoin extends Component {
     this.setState({ 
       coin: this.props.activeCoin,
       account: this.props.activeAccount, 
-      activeCoinsForUser: this.props.activeCoinsForUser
+      activeCoinsForUser: this.props.activeCoinsForUser,
+      spendableBalance: this.props.balances[this.props.activeCoin.id].result.confirmed - (this.props.activeCoin.fee ? this.props.activeCoin.fee : 10000)
     }, () => {
       const activeUser = this.state.account
       const coinObj = this.state.coin
@@ -165,7 +169,11 @@ class SendCoin extends Component {
   }
 
   fillAmount = (amount) => {
-    this.setState({ amount: amount });  
+    let amountToFill = amount
+    if (amount < 0) {
+      amountToFill = 0
+    }
+    this.setState({ amount: amountToFill });  
   }
 
   _verusPay = () => {
@@ -174,13 +182,15 @@ class SendCoin extends Component {
     navigation.navigate("VerusPay", { fillAddress: this.fillAddress, fillAmount: this.fillAmount });
   }
 
+  //TODO: Add fee to Bitcoin object in CoinData
+
   validateFormData = () => {
     this.setState({
       formErrors: {toAddress: null, amount: null}
     }, () => {
       const coin = this.state.coin
-      const spendableBalance = this.props.balances[coin.id].result.confirmed - this.state.coin.fee
-      const toAddress = this.state.toAddress
+      const spendableBalance = coin.id === 'BTC' ? truncateDecimal(this.props.balances[this.props.activeCoin.id].result.confirmed, 4) : this.state.spendableBalance
+      const toAddress = removeSpaces(this.state.toAddress)
       const fromAddress = this.state.fromAddress
       const amount = this.state.amount
       const account = this.state.account
@@ -227,27 +237,31 @@ class SendCoin extends Component {
     });
   }
 
+  
+
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center"}}>
-          <Text style={styles.coinBalanceLabel}>
-            {(this.props.balances && this.state.coin.id && this.props.balances[this.state.coin.id]) ?
-              (typeof(this.props.balances[this.state.coin.id].result.confirmed) !== 'undefined' ? 
-              truncateDecimal(satsToCoins(this.props.balances[this.state.coin.id].result.confirmed), 4) + ' ' + this.state.coin.id 
+          <TouchableOpacity onPress={() => this.fillAmount(satsToCoins(this.state.spendableBalance))}>
+            <Text style={styles.coinBalanceLabel}>
+              {(this.props.balances && this.state.coin.id && this.props.balances[this.state.coin.id]) ?
+                (typeof(this.props.balances[this.state.coin.id].result.confirmed) !== 'undefined' ? 
+                truncateDecimal(satsToCoins(this.props.balances[this.state.coin.id].result.confirmed), 4) + ' ' + this.state.coin.id 
+                :
+                null)
               :
-              null)
-            :
-            null
-            }
-          </Text>
+              null
+              }
+            </Text>
+          </TouchableOpacity>
           <Text style={styles.sendLabel}>{"Send " + this.state.coin.name}</Text>
           <View style={styles.valueContainer}>
               <FormLabel labelStyle={styles.formLabel}>
               To:
               </FormLabel>
               <FormInput 
-                onChangeText={(text) => this.setState({toAddress: text.replace(/\s+/g, '')})}
+                onChangeText={(text) => this.setState({toAddress: removeSpaces(text)})}
                 onSubmitEditing={Keyboard.dismiss}
                 value={this.state.toAddress}
                 autoCapitalize={"none"}
@@ -342,16 +356,16 @@ const styles = StyleSheet.create({
   formInput: {
     width: "100%",
   },
-  labelContainer: {
+  /*labelContainer: {
     //borderWidth:1,
     //borderColor:"blue",
-  },
+  },*/
   valueContainer: {
     width: "85%",
     //borderWidth:1,
     //borderColor:"blue",
   },
-  addressInput: {
+  /*addressInput: {
     width: "100%",
     color: "#009B72"
   },
@@ -359,7 +373,7 @@ const styles = StyleSheet.create({
     height: 48,
     width: 48,
     marginTop: 65
-  },
+  },*/
   coinBalanceLabel: {
     backgroundColor: "transparent",
     opacity: 0.89,
@@ -369,10 +383,10 @@ const styles = StyleSheet.create({
     paddingTop: 0,
     fontSize: 25,
     textAlign: "center",
-    color: "#E9F1F7",
+    color: "#009B72",
     width: 359,
   },
-  walletLabel: {
+  /*walletLabel: {
     width: 244,
     height: 23,
     backgroundColor: "transparent",
@@ -383,7 +397,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     textAlign: "center",
     color: "#E9F1F7"
-  },
+  },*/
   sendLabel: {
     width: "100%",
     backgroundColor: "#E9F1F7",
@@ -396,12 +410,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#232323"
   },
-  rect: {
+  /*rect: {
     height: 1,
     width: 359,
 
     backgroundColor: "rgb(230,230,230)"
-  },
+  },*/
   buttonContainer: {
     height: 45,
     width: 400,
@@ -422,7 +436,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 28
   },
-  iconContainer: {
+  /*iconContainer: {
     height: 20,
     width: 400,
     backgroundColor: "transparent",
@@ -432,7 +446,7 @@ const styles = StyleSheet.create({
     paddingTop: 0,
     marginBottom: 0,
     marginTop: 0
-  },
+  },*/
   sendBtn: {
     width: 104,
     height: 45,
@@ -441,7 +455,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 0
   },
-  receiveBtn: {
+  /*receiveBtn: {
     width: 104,
     height: 45,
     backgroundColor: "rgba(68,206,147,1)",
@@ -517,14 +531,14 @@ const styles = StyleSheet.create({
     fontSize: 22,
     textAlign: "center",
     color: "#E9F1F7"
-  },
+  },*/
   loadingText: {
     backgroundColor: "transparent",
     opacity: 0.86,
     fontSize: 22,
     textAlign: "center",
     color: "#E9F1F7"
-  },
+  },/*
   icon: {
     backgroundColor: "transparent",
     fontSize: 40,
@@ -539,4 +553,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#E9F1F7"
   }
+  */
 });

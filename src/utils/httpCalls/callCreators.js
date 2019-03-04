@@ -208,6 +208,7 @@ export const postElectrum = (serverList, callType, data, skipServer) => {
         bodyObj[key] = data[key]
       }
 
+      console.log("Posting request to electrum server")
       promiseArray.push(
         fetch(httpAddr, {
         method: 'POST',
@@ -224,6 +225,7 @@ export const postElectrum = (serverList, callType, data, skipServer) => {
     })
     .then((responseArray) => {
       responseArray[0] = responseArray[0].json()
+      console.log("Received response from push to electrum")
 
       return Promise.all(responseArray)
     })

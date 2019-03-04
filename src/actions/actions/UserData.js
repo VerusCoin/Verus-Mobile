@@ -9,7 +9,9 @@ import {
   storeUser,
   getUsers,
   getActiveCoinsList,
-  checkPinForUser
+  checkPinForUser,
+  resetUserPwd,
+  deleteUser
 } from '../../utils/asyncStore';
 import {
   makeKeyPair
@@ -26,6 +28,34 @@ export const addUser = (userName, wifKey, pin, users) => {
     storeUser(authData, users)
       .then(res => {
         resolve(setAccounts(res))
+      })
+      .catch(err => reject(err));
+  });
+}
+
+export const resetPwd = (userID, newPwd, oldPwd) => {
+  return new Promise((resolve, reject) => {
+    resetUserPwd(userID, newPwd, oldPwd)
+      .then(res => {
+        if (res) {
+          resolve(setAccounts(res))
+        } else {
+          resolve(false)
+        }
+      })
+      .catch(err => reject(err));
+  });
+}
+
+export const deleteUserByID = (userID) => {
+  return new Promise((resolve, reject) => {
+    deleteUser(userID)
+      .then(res => {
+        if (res) {
+          resolve(setAccounts(res))
+        } else {
+          resolve(false)
+        }
       })
       .catch(err => reject(err));
   });

@@ -1,7 +1,7 @@
 import React from "react";
 import { YellowBox, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { RootNavigator } from './utils/navigation/index';
-import { fetchUsers, fetchActiveCoins } from './actions/actionCreators';
+import { fetchUsers } from './actions/actionCreators';
 import { connect } from 'react-redux';
 
 
@@ -23,17 +23,13 @@ class VerusMobile extends React.Component {
     fetchUsers()
     .then((action) => {
       this.props.dispatch(action);
-      return fetchActiveCoins();
-    })
-    .then((action) => {
-      this.props.dispatch(action);
       this.setState({ loading: false });
     })
   }
 
   render() {
     const Layout = RootNavigator(
-      this.props.accounts.length > 0, 
+      this.props.accountsLength > 0, 
       this.state.loading, 
       this.props.signedIn);
     
@@ -52,7 +48,7 @@ const DismissKeyboard = ({children}) => (
 
 const mapStateToProps = (state) => {
   return {
-    accounts: state.authentication.accounts,
+    accountsLength: state.authentication.accounts.length,
     signedIn: state.authentication.signedIn,
   }
 };

@@ -60,6 +60,8 @@ class VerusPay extends Component {
     }
   }
 
+  //TODO: Allow veruspay from home to open send screen of a coin with address 
+  //filled in but value still empty
   onSuccess(e) {
     console.log(e)
     let result = e.data
@@ -86,10 +88,14 @@ class VerusPay extends Component {
         }
       }
     } else {
-      if (result.length < 34 || result.length > 35 ) {
-        this.errorHandler(FORMAT_UNKNOWN)
-      } else {
+      let coinbaseAddr = this.isCoinbaseQR(result)
+
+      if (coinbaseAddr) {
+        this.addressOnly(coinbaseAddr)
+      } else if (result.length >= 34 && result.length <= 35) {
         this.addressOnly(result)
+      } else {
+        this.errorHandler(FORMAT_UNKNOWN)
       }
     }
   }
@@ -97,6 +103,19 @@ class VerusPay extends Component {
   errorHandler = (error) => {
     Alert.alert("Error", error);
     this.props.navigation.dispatch(NavigationActions.back())
+  }
+
+  //Coinbase qr returns a string in the following format:
+  //<coinName>:<address>
+  isCoinbaseQR = (qrString) => {
+    let splitString = qrString.split(":")
+    console.log(splitString)
+
+    if (Array.isArray(splitString) && splitString.length === 2 && splitString[1].length >= 34 && splitString[1].length <= 35) {
+      return splitString[1]
+    } else {
+      return false
+    }
   }
 
   cancelHandler = () => {
@@ -416,16 +435,6 @@ class VerusPay extends Component {
       <View style={styles.root}>
           <QRCodeScanner
             onRead={this.onSuccess.bind(this)}
-            /*topContent={
-              <Text style={styles.centerText}>
-                Scan any Verus or Agama invoice
-              </Text>
-            }
-            bottomContent={
-              <Text style={styles.centerText}>
-                Searching...
-              </Text>
-            }*/
             showMarker={true}
             captureAudio={false}
           />
@@ -470,7 +479,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center"
   },
-  centerText: {
+  /*centerText: {
     flex: 1,
     fontSize: 18,
     padding: 32,
@@ -489,5 +498,5 @@ const styles = StyleSheet.create({
   },
   spinnerTextStyle: {
     color: '#FFF'
-  },
+  },*/
 });
