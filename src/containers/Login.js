@@ -149,7 +149,7 @@ class Login extends Component {
               data={this.props.accounts}
               onChangeText={(value, index, data) => {
                 this.setState({selectedAccount: value})
-                this.passwordInput.focus();
+                //this.passwordInput.focus();
               }}
               textColor="#E9F1F7"
               selectedItemColor="#232323"
