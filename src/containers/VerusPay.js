@@ -88,12 +88,16 @@ class VerusPay extends Component {
         }
       }
     } else {
-      let coinbaseAddr = this.isCoinbaseQR(result)
+      if (typeof result === "string") {
+        let coinbaseAddr = this.isCoinbaseQR(result)
 
-      if (coinbaseAddr) {
-        this.addressOnly(coinbaseAddr)
-      } else if (result.length >= 34 && result.length <= 35) {
-        this.addressOnly(result)
+        if (coinbaseAddr) {
+          this.addressOnly(coinbaseAddr)
+        } else if (result.length >= 34 && result.length <= 35) {
+          this.addressOnly(result)
+        } else {
+          this.errorHandler(FORMAT_UNKNOWN)
+        }
       } else {
         this.errorHandler(FORMAT_UNKNOWN)
       }

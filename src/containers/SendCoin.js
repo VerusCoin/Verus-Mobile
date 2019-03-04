@@ -48,7 +48,6 @@ class SendCoin extends Component {
       coin: this.props.activeCoin,
       account: this.props.activeAccount, 
       activeCoinsForUser: this.props.activeCoinsForUser,
-      spendableBalance: this.props.balances[this.props.activeCoin.id].result.confirmed - (this.props.activeCoin.fee ? this.props.activeCoin.fee : 10000)
     }, () => {
       const activeUser = this.state.account
       const coinObj = this.state.coin
@@ -189,7 +188,12 @@ class SendCoin extends Component {
       formErrors: {toAddress: null, amount: null}
     }, () => {
       const coin = this.state.coin
-      const spendableBalance = coin.id === 'BTC' ? truncateDecimal(this.props.balances[this.props.activeCoin.id].result.confirmed, 4) : this.state.spendableBalance
+
+      const spendableBalance = coin.id === 'BTC' ? 
+      truncateDecimal(this.props.balances[this.props.activeCoin.id].result.confirmed, 4) 
+      : 
+      this.props.balances[this.props.activeCoin.id].result.confirmed - (this.props.activeCoin.fee ? this.props.activeCoin.fee : 10000)
+      
       const toAddress = removeSpaces(this.state.toAddress)
       const fromAddress = this.state.fromAddress
       const amount = this.state.amount
@@ -243,7 +247,12 @@ class SendCoin extends Component {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center"}}>
-          <TouchableOpacity onPress={() => this.fillAmount(satsToCoins(this.state.spendableBalance))}>
+          <TouchableOpacity onPress={
+            this.props.balances.hasOwnProperty(this.props.activeCoin.id) ? 
+            (() => this.fillAmount(satsToCoins(this.props.balances[this.props.activeCoin.id].result.confirmed - (this.props.activeCoin.fee ? this.props.activeCoin.fee : 10000))))
+            :
+            (() => {return 0})
+            }>
             <Text style={styles.coinBalanceLabel}>
               {(this.props.balances && this.state.coin.id && this.props.balances[this.state.coin.id]) ?
                 (typeof(this.props.balances[this.state.coin.id].result.confirmed) !== 'undefined' ? 

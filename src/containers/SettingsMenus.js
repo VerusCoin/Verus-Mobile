@@ -32,12 +32,12 @@ class SettingsMenus extends Component {
   generateTabs = () => {
     let tabArray = [
       {
-        key: "settings-info",
-        icon: "info",
-        label: "App Info",
-        barColor: '#2E86AB',
+        key: "settings-profile",
+        icon: "account-circle",
+        label: "Profile",
+        barColor: '#009B72',
         pressColor: 'rgba(255, 255, 255, 0.16)',
-        screen: "AppInfo"
+        screen: "ProfileSettings"
       },
       /*{
         key: "settings-general",
@@ -47,13 +47,13 @@ class SettingsMenus extends Component {
         pressColor: 'rgba(255, 255, 255, 0.16)',
       },*/
       {
-        key: "settings-profile",
-        icon: "account-circle",
-        label: "Profile",
-        barColor: '#009B72',
+        key: "settings-info",
+        icon: "info",
+        label: "App Info",
+        barColor: '#2E86AB',
         pressColor: 'rgba(255, 255, 255, 0.16)',
-        screen: "ProfileSettings"
-      }
+        screen: "AppInfo"
+      },
     ]
     let activeTab
     let index = 0
