@@ -57,6 +57,13 @@ export const setActiveCoin = (activeCoin) => {
   }
 }
 
+export const setConfigSection = (section) => {
+  return {
+    type: 'SET_CONFIG_SECTION',
+    activeConfigSection: section
+  }
+}
+
 export const setActiveApp = (activeApp) => {
   return {
     type: 'SET_ACTIVE_APP',
@@ -136,6 +143,13 @@ export const updateCoinRates = (rates) => {
   return {
     type: 'SET_RATES',
     rates: rates
+  }
+}
+
+export const setUpdateIntervalID = (ID) => {
+  return {
+    type: 'SET_INTERVAL_ID',
+    updateIntervalID: ID
   }
 }
 

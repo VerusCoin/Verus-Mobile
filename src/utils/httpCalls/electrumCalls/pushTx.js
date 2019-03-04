@@ -30,6 +30,7 @@ export const pushTx = (coinObj, _rawtx) => {
 }
 
 export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFee, network, verify) => {
+  console.log("Value passed to tx preflight: " + value)
   return new Promise((resolve, reject) => {
     getUnspentFormatted(null, coinObj, activeUser, verify)
     .then((utxoList) => {
@@ -44,7 +45,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
       let wif
       let changeAddress
       let feePerByte = 0;
-      let btcFees = false
+      let btcFees = false;
 
       if (typeof defaultFee === 'object' && typeof defaultFee !== 'null') {
         //BTC Fee style detected, changing fee unit to fee per byte and 
@@ -67,6 +68,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
 
       console.log('Utxo list ==>') 
       console.log(utxoList)
+
       for (let i = 0; i < utxoList.length; i++) {
         if (network.coin === 'komodo' ||
             network.coin === 'kmd') {
@@ -87,7 +89,9 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
         }
       }
 
+      //TODO: Filter out coinbase UTXOs
       const _maxSpendBalance = Number(maxSpendBalance(utxoListFormatted));
+      console.log(_maxSpendBalance)
       let targets = [{
         address: outputAddress,
         value: value > _maxSpendBalance ? _maxSpendBalance : value,
@@ -270,12 +274,13 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
     }
     })
     .catch((e) => {
-      Alert.alert("Send Error", e)
+      reject(e)
     })
   });
 }
 
 export const sendRawTx = (coinObj, activeUser, outputAddress, value, defaultFee, network) => {
+  console.log("Value to send raw tx: " + value)
   return new Promise((resolve, reject) => {
     txPreflight(coinObj, activeUser, outputAddress, value, defaultFee, network, true)
     .then((resObj) => {

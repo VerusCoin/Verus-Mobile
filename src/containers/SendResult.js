@@ -55,7 +55,7 @@ class SendResult extends Component {
     const toAddress = this.props.navigation.state.params.data.toAddress
     const fromAddress = this.props.navigation.state.params.data.fromAddress
     const amount = Number(this.props.navigation.state.params.data.amount)
-    const fee = Number(this.props.navigation.state.params.data.coinObj.fee)
+    const fee = coinObj.id === 'BTC' ? { feePerByte: Number(this.props.navigation.state.params.data.btcFee) } : Number(this.props.navigation.state.params.data.coinObj.fee)
     const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
     
     this.timeoutTimer = setTimeout(() => {
@@ -74,7 +74,7 @@ class SendResult extends Component {
 
     sendRawTx(coinObj, activeUser, toAddress, amount, fee, network)
     .then((res) => {
-      if(res.err) {
+      if(res.err || !res) {
         this.setState({
           loading: false,
           err: res.result,
@@ -91,7 +91,7 @@ class SendResult extends Component {
           fromAddress: fromAddress,
           coinObj: coinObj,
           network: network,
-          fee: fee,
+          fee: coinObj.id === 'BTC' ? fee.feePerByte : fee,
           amount: amount,
         });
         this.props.dispatch(needsUpdate("balances"))
@@ -201,7 +201,7 @@ class SendResult extends Component {
               <Text style={styles.addressText}>{this.state.toAddress}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Fee:</Text>
+              <Text style={styles.infoText}>{this.state.coinObj.id === 'BTC' ? 'Fee/byte: ' : 'Fee: '}</Text>
               <Text style={styles.infoText}>{satsToCoins(this.state.fee) + ' ' + this.state.coinObj.id}</Text>
             </View>
             <View style={styles.infoRow}>
@@ -213,18 +213,13 @@ class SendResult extends Component {
             </TouchableOpacity>
           </View>
           <View style={styles.buttonContainer}>
+            { explorers[this.state.coinObj.id] &&
+              <Button1 style={styles.explBtn} buttonContent="Explorer" onPress={() => this.openExplorer()} />
+            }
             <Button1 style={styles.homeBtn} 
             buttonContent="Home" 
             onPress={() => {this.navigateToScreen(this.state.coinObj, "Home")}}/>
-            <Button1 style={styles.sendBtn} 
-            buttonContent="Back to coin" 
-            onPress={this.backToCoin}/>
           </View>
-          { explorers[this.state.coinObj.id] &&
-            <View style={styles.buttonContainer}>
-              <Button1 style={styles.explBtn} buttonContent="Explorer" onPress={() => this.openExplorer()} />
-            </View>
-          }
         </ScrollView>
       </View>
     )
@@ -251,9 +246,6 @@ class SendResult extends Component {
             <Button1 style={styles.homeBtn} 
             buttonContent="Home" 
             onPress={() => {this.navigateToScreen(this.state.coinObj, "Home")}}/>
-            <Button1 style={styles.sendBtn} 
-            buttonContent="Back to coin" 
-            onPress={this.backToCoin}/>
           </View>
         </ScrollView>
       </View>
@@ -354,14 +346,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "rgba(68,206,147,1)"
   },
-  explorerBtn: {
+  /*explorerBtn: {
     backgroundColor: "#2E86AB",
     width: 140,
     height: 45,
     opacity: 1,
     marginTop: 0,
     marginBottom: 0
-  },
+  },*/
   sendBtn: {
     width: 140,
     height: 45,
@@ -398,7 +390,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     left: "0%"
   },
-  explorerButtonContainer: {
+  /*explorerButtonContainer: {
     height: 54,
     width: "100%",
     backgroundColor: "transparent",
@@ -414,4 +406,5 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   }
+  */
 });

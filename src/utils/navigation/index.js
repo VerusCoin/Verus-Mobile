@@ -10,8 +10,6 @@ import Login from '../../containers/Login';
 import Home from '../../containers/Home';
 import AddCoin from '../../containers/AddCoin';
 import Settings from '../../containers/Settings';
-//import Polling from '../../containers/Polling';
-import Overview from '../../containers/Overview';
 import SignUp from  '../../containers/SignUp';
 import CoinDetails from '../../containers/CoinDetails';
 import TransactionDetails from '../../containers/TransactionDetails';
@@ -20,6 +18,13 @@ import ConfirmSend from '../../containers/ConfirmSend';
 import SendResult from '../../containers/SendResult';
 import CoinMenus from '../../containers/CoinMenus';
 import VerusPay from '../../containers/VerusPay';
+import SettingsMenus from '../../containers/SettingsMenus';
+import ProfileInfo from '../../containers/ProfileInfo';
+import ResetPwd from '../../containers/ResetPwd';
+import DisplaySeed from '../../containers/DisplaySeed';
+import RecoverSeed from '../../containers/RecoverSeed';
+import DeleteProfile from '../../containers/DeleteProfile';
+import SecureLoading from '../../containers/SecureLoading';
 
 const WALLET = "wallet";
 
@@ -103,15 +108,59 @@ export const MainScreens =
           drawerLockMode: 'locked-closed'
         }
       },
+      DisplaySeed: {
+        screen: DisplaySeed,
+        navigationOptions: {
+          title: "Seed",
+          headerRight: null,
+          drawerLockMode: 'locked-closed'
+        }
+      },
       CoinMenus: {
         screen: CoinMenus,
+      },
+      SettingsMenus: {
+        screen: SettingsMenus,
       },
       VerusPay: {
         screen: VerusPay,
         navigationOptions: {
           title: "VerusPay",
         }
-      }
+      },
+      ProfileInfo: {
+        screen: ProfileInfo,
+        navigationOptions: {
+          title: "Info",
+        }
+      },
+      ResetPwd: {
+        screen: ResetPwd,
+        navigationOptions: {
+          title: "Reset",
+        }
+      },
+      RecoverSeed: {
+        screen: RecoverSeed,
+        navigationOptions: {
+          title: "Recover",
+        }
+      },
+      DeleteProfile: {
+        screen: DeleteProfile,
+        navigationOptions: {
+          title: "Delete",
+        }
+      },
+      SecureLoading: {
+        screen: SecureLoading,
+        navigationOptions: {
+          title: "Loading",
+          headerRight: null,
+          headerLeft: null,
+          drawerLockMode: 'locked-closed'
+        }
+      },
     }, {
       headerMode: 'screen',
       navigationOptions: ({navigation}) => ({
@@ -133,6 +182,33 @@ export const SignedOut = StackNavigator({
     screen: Login,
     navigationOptions: {
         header: null
+    }
+  },
+  RecoverSeed: {
+    screen: RecoverSeed,
+    navigationOptions: {
+      title: "Recover",
+    }
+  },
+  DisplaySeed: {
+    screen: DisplaySeed,
+    navigationOptions: {
+      title: "Seed",
+    }
+  },
+  DeleteProfile: {
+    screen: DeleteProfile,
+    navigationOptions: {
+      title: "Delete",
+    }
+  },
+  SecureLoading: {
+    screen: SecureLoading,
+    navigationOptions: {
+      title: "Loading",
+      headerRight: null,
+      headerLeft: null,
+      drawerLockMode: 'locked-closed'
     }
   },
 });
@@ -169,7 +245,8 @@ export const RootNavigator = (hasAccount, loading, signedIn) => {
         screen: SignedOut,
         navigationOptions: {
           gesturesEnabled: false,
-          drawerLockMode: 'locked-closed'
+          drawerLockMode: 'locked-closed',
+          headerRight: null
         }
       },
       SignedOutNoKey: {

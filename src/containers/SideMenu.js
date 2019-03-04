@@ -5,8 +5,17 @@ import { NavigationActions } from 'react-navigation';
 import PropTypes from 'prop-types';
 import DrawerHeader from '../components/DrawerHeader';
 import { connect } from 'react-redux';
-import { setActiveCoin, setActiveApp, setActiveSection, signOut } from '../actions/actionCreators'
+import { 
+  setActiveCoin, 
+  setActiveApp, 
+  setActiveSection, 
+  signOut,
+  setConfigSection
+ } from '../actions/actionCreators'
 import { getKeyByValue } from '../utils/objectManip'
+
+const APP_INFO = 'App Info'
+const PROFILE = 'Profile'
 
 class SideMenu extends Component {
   constructor(props) {
@@ -112,6 +121,19 @@ class SideMenu extends Component {
     this.props.dispatch(signOut())
   }
 
+  _openSettings = (drawerItem) => {
+    let navigation = this.props.navigation
+    if (drawerItem.title === APP_INFO) {
+      this.props.dispatch(setConfigSection('settings-info'))
+    } else if (drawerItem.title === PROFILE){
+      this.props.dispatch(setConfigSection('settings-profile'))
+    } else {
+      throw "Option " + drawerItem.title + " not found in possible settings values"
+    }
+
+    navigation.navigate("SettingsMenus", { title: drawerItem.title })
+  }
+
   renderAddCoinComponents = () => {
     return (
       <SectionList
@@ -128,11 +150,41 @@ class SideMenu extends Component {
         title={<Text style={{fontWeight: "bold"}}>{title}</Text>}                             
         containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
         hideChevron={true}
-        //onPress={() => {return 0}}
         /> 
       )}
       sections={[
         {title: 'Add Coin', data: ['Add coin from list'/*, 'Add custom coin'*/]},
+      ]}
+      keyExtractor={(item, index) => item + index}
+      />
+    )
+  }
+
+  renderSettingsComponents = () => {
+    return (
+      <SectionList
+      style={styles.coinList}
+      renderItem={({item, index, section}) => (
+        <ListItem    
+        leftIcon={{name: item.icon}}                    
+        title={item.title}                             
+        containerStyle={{ borderBottomWidth: 0 }} 
+        onPress={() => this._openSettings(item)}
+        /> 
+      )}
+      renderSectionHeader={({section: {title}}) => (
+        <ListItem                        
+        title={<Text style={{fontWeight: "bold"}}>{title}</Text>}                             
+        containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
+        hideChevron={true}
+        /> 
+      )}
+      sections={[
+        {title: 'Settings', 
+        data: [
+          {title: PROFILE, icon: "account-circle"},
+          {title: APP_INFO, icon: "info"}
+        ]},
       ]}
       keyExtractor={(item, index) => item + index}
       />
@@ -155,13 +207,13 @@ class SideMenu extends Component {
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: -1 })}
           /> 
-          {/*<ListItem    
+          <ListItem    
           roundAvatar                    
           title={"Settings"}                           
           leftIcon={{name: 'settings'}}
           containerStyle={{ borderBottomWidth: 0 }} 
-          onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: -1 })}
-          /> */}
+          onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: -2 })}
+          />
           <ListItem    
           roundAvatar                    
           title={"Log Out"}                           
@@ -175,7 +227,7 @@ class SideMenu extends Component {
 
     return (
       <ScrollView>
-        <View style={styles.root}>
+        <View>
           <DrawerHeader navigateToScreen={this.navigateToScreen} />
             <ListItem                        
             title={<Text style={{fontWeight: "bold"}}>{"Back"}</Text>}                             
@@ -190,7 +242,13 @@ class SideMenu extends Component {
             }
             onPress={this.toggleMainDrawer}
             /> 
-          {this.state.currentCoinIndex === -1 ? this.renderAddCoinComponents() : this.renderChildDrawerComponents()}
+          {this.state.currentCoinIndex === -1 ? 
+            this.renderAddCoinComponents() 
+            : 
+            this.state.currentCoinIndex === -2 ? 
+              this.renderSettingsComponents()
+              :
+              this.renderChildDrawerComponents()}
         </View>
       </ScrollView>
     );
@@ -212,11 +270,7 @@ const mapStateToProps = (state) => {
 export default connect(mapStateToProps)(SideMenu);
 
 const styles = StyleSheet.create({
-  root: {
-    //backgroundColor: "rgba(206,68,70,1)",
-    //flex: 1
-  },
-  homeBox: {
+  /*homeBox: {
     height: 67,
     width: 361,
   },
@@ -368,10 +422,11 @@ const styles = StyleSheet.create({
     height: 1,
     width: 360,
     backgroundColor: "rgb(230,230,230)"
-  },
+  },*/
   coinList: {
     width: "100%",
   },
+  /*
   backButtonRow: {
 		flexDirection: 'row',
 		alignItems: 'center',
@@ -379,5 +434,6 @@ const styles = StyleSheet.create({
 		paddingLeft: 3,
 		borderBottomColor: '#F0F0F0',
 		borderBottomWidth: 1,
-	},
+  },
+  */
 });

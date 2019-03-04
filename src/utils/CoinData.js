@@ -1,7 +1,7 @@
 import electrumServers from 'agama-wallet-lib/build/electrum-servers';
 
 export const explorers = {
-  KMD: 'http://kmd.komodochainz.info',
+  KMD: 'https://kmdexplorer.io',
   OOT: 'https://explorer.utrum.io',
   VRSC: 'https://explorer.veruscoin.io',
 }
@@ -50,7 +50,7 @@ coinsListSorted.sort((a, b) => {
   return 0;
 })
 
-coinsListSorted.unshift({ id: "BTC", name: "Bitcoin", description: "The coin that started it all. Bitcoin (BTC) is a peer to peer digital currency created in 2009 by Satoshi Nakamoto."});
+coinsListSorted.unshift({ id: "BTC", name: "Bitcoin", description: "The coin that started it all. Bitcoin (BTC) is a peer to peer digital currency created in 2009 by Satoshi Nakamoto.", fee: 10000});
 coinsListSorted.unshift({ id: "KMD", name: "Komodo", description: "", fee: 10000});
 coinsListSorted.unshift({ 
   id: "VRSC", 

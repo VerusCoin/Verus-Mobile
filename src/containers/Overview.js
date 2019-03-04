@@ -237,11 +237,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center"
   },
-  image: {
+  /*image: {
     height: 48,
     width: 48,
     marginTop: 65
-  },
+  },*/
   coinBalanceLabel: {
     backgroundColor: "transparent",
     opacity: 0.89,
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     marginTop: 13,
     marginBottom: 14,
   },
-  walletLabel: {
+  /*walletLabel: {
     width: 245,
     height: 38,
     backgroundColor: "transparent",
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     textAlign: "center",
     color: "#E9F1F7"
-  },
+  },*/
   transactionLabel: {
     width: "100%",
     backgroundColor: "#E9F1F7",
@@ -281,13 +281,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#232323"
   },
-  rect: {
+  /*rect: {
     height: 1,
     width: "95.74468085106383%",
 
     backgroundColor: "rgb(230,230,230)"
-  },
-  buttonContainer: {
+  },*/
+  /*buttonContainer: {
     height: 54,
     width: "100%",
     backgroundColor: "transparent",
@@ -298,12 +298,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 8,
     left: "0%"
-  },
+  },*/
   headerContainer: {
     flexDirection: "row",
     justifyContent: "center",
   },
-  sendBtn: {
+  /*sendBtn: {
     width: 130,
     height: 45,
     backgroundColor: "rgba(206,68,70,1)",
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     borderColor: "green",
     borderStyle: "dashed",
     backgroundColor: "#E6E6E6"
-  },
+  },*/
   transactionList: {
     width: "100%",
   },

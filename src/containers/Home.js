@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#232323"
   },
-  rect: {
+  /*rect: {
     height: 1,
     width: 360,
 
@@ -293,10 +293,11 @@ const styles = StyleSheet.create({
     fontSize: 22,
     textAlign: "center",
     color: "#E9F1F7"
-  },
+  },*/
   coinList: {
     width: "100%",
   },
+  /*
   buttonContainer: {
     height: 54,
     width: "100%",
@@ -325,4 +326,5 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 0
   },
+  */
 });

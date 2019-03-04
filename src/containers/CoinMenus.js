@@ -11,9 +11,8 @@ import Overview from './Overview'
 import SendCoin from './SendCoin'
 import ReceiveCoin from './ReceiveCoin'
 import { Icon } from "react-native-elements"
-//import ReceiveCoin from './wherever_receive_coin_is_located'
 
-class CoinMenu extends Component {
+class CoinMenus extends Component {
   constructor(props) {
     super(props)
     let stateObj = this.generateTabs();
@@ -118,12 +117,5 @@ const mapStateToProps = (state) => {
   }
 };
 
-export default connect(mapStateToProps)(CoinMenu);
+export default connect(mapStateToProps)(CoinMenus);
 
-const styles = StyleSheet.create({
-  root: {
-    backgroundColor: "#232323",
-    flex: 1,
-    alignItems: "center"
-  },
-});

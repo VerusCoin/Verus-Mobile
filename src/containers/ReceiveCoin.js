@@ -18,7 +18,7 @@ import { Dropdown } from 'react-native-material-dropdown'
 import QRCode from 'react-native-qrcode-svg';
 import { coinsToSats, isNumber } from '../utils/math'
 
-const VERUS_QR_VERSION = "0.1.0"
+//const VERUS_QR_VERSION = "0.1.0"
 const LOGO_DIR = require('../images/customIcons/verusQRLogo.png');
 
 class ReceiveCoin extends Component {
@@ -68,7 +68,7 @@ class ReceiveCoin extends Component {
 
   createQRString = (coinTicker, amount, address, memo) => {
     let verusQRJSON = {
-      verusQR: VERUS_QR_VERSION,
+      verusQR: global.VERUS_QR_VERSION,
       coinTicker: coinTicker,
       address: address,
       amount: coinsToSats(amount),
@@ -261,21 +261,21 @@ const styles = StyleSheet.create({
   formInput: {
     width: "100%",
   },
-  labelContainer: {
+  /*labelContainer: {
     //borderWidth:1,
     //borderColor:"blue",
-  },
+  },*/
   valueContainer: {
     width: "85%",
     //borderWidth:1,
     //borderColor:"blue",
   },
-  switchContainer: {
+  /*switchContainer: {
     //borderWidth:1,
     //borderColor:"blue",
     alignItems: "flex-start",
     marginLeft: 18
-  },
+  },*/
   wifLabel: {
     backgroundColor: "transparent",
     marginTop: 50,
@@ -290,12 +290,12 @@ const styles = StyleSheet.create({
     width: "100%",
     color: "#009B72"
   },
-  buttonContainer: {
+  /*buttonContainer: {
     width: "75%",
     backgroundColor: "transparent",
     flexDirection: "row",
     justifyContent: "space-between",
-  },
+  },*/
   singleButtonContainer: {
     width: "75%",
     backgroundColor: "transparent",
@@ -308,11 +308,11 @@ const styles = StyleSheet.create({
     marginTop: 15,
     marginBottom: 40
   },
-  cancelButton: {
+  /*cancelButton: {
     height: 46,
     backgroundColor: "rgba(206,68,70,1)",
     marginTop: 28,
-  },
+  },*/
   dropDownContainer: {
     width: "85%",
     alignItems: "center"

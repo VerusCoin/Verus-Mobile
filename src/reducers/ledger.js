@@ -7,7 +7,8 @@ export const ledger = (state = {
   balances: {},
   transactions: {},
   rates: {},
-  needsUpdate: {balances: true, transactions: {}, rates: true}
+  needsUpdate: {balances: true, transactions: {}, rates: true},
+  updateIntervalID: null
 }, action) => {
   switch (action.type) {
     case 'SET_BALANCES':
@@ -72,6 +73,11 @@ export const ledger = (state = {
         balances: {},
         transactions: {},
         rates: {},
+      };
+    case 'SET_INTERVAL_ID':
+      return {
+        ...state,
+        updateIntervalID: action.updateIntervalID
       };
     default:
       return state;

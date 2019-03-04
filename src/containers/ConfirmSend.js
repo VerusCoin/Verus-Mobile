@@ -3,7 +3,7 @@ import Button1 from "../symbols/button1";
 import { connect } from 'react-redux';
 import { txPreflight, sendRawTx } from '../utils/httpCalls/callCreators';
 import { networks } from 'bitgo-utxo-lib';
-import { View, StyleSheet, Alert, Text, ScrollView, Keyboard} from "react-native";
+import { View, StyleSheet, Alert, Text, ScrollView, Keyboard } from "react-native";
 import { satsToCoins, truncateDecimal } from '../utils/math';
 import ProgressBar from 'react-native-progress/Bar';
 import { NavigationActions } from 'react-navigation';
@@ -30,7 +30,8 @@ class ConfirmSend extends Component {
         guiAmount: 0,
         memo: null,
         loadingProgress: 0.175,
-        loadingMessage: "Creating transaction..."
+        loadingMessage: "Creating transaction...",
+        btcFeePerByte: null
     };
   }
 
@@ -46,7 +47,9 @@ class ConfirmSend extends Component {
     
     this.timeoutTimer = setTimeout(() => {
       if (this.state.loading) {
-        this.setState({err: 'timed out while trying to build transaction', loading: false})
+        this.setState(
+          {err: 'timed out while trying to build transaction, this may be a networking error, try sending again', 
+          loading: false})
       }
     }, TIMEOUT_LIMIT)
 
@@ -56,7 +59,7 @@ class ConfirmSend extends Component {
 
     txPreflight(coinObj, activeUser, address, amount, fee, network, true)
     .then((res) => {
-      if(res.err) {
+      if(res.err || !res) {
         this.setState({
           loading: false,
           err: res.result
@@ -64,7 +67,7 @@ class ConfirmSend extends Component {
         clearInterval(this.loadingInterval);
       } else {
         let balanceCoins = satsToCoins(balance)
-        let guiAmount = satsToCoins(amount) + satsToCoins(fee)
+        let guiAmount = satsToCoins(amount) + (coinObj.id === 'BTC' ? Number(res.result.fee) : satsToCoins(fee))
         let remainingBalance = balanceCoins - guiAmount
         clearInterval(this.loadingInterval);
         
@@ -83,12 +86,17 @@ class ConfirmSend extends Component {
           remainingBalance: remainingBalance,
           guiAmount: guiAmount,
           loadingProgress: 1,
-          loadingMessage: "Done"
+          loadingMessage: "Done",
+          btcFeePerByte: fee.feePerByte ? fee.feePerByte : null
         });
       }
     })
     .catch((e) => {
-      Alert.alert("Send Error", e)
+      this.setState({
+        loading: false,
+        err: "Unknown error while building transaction, double check form data"
+      });
+      console.log(e)
     })
   }
 
@@ -111,7 +119,8 @@ class ConfirmSend extends Component {
       activeUser: this.state.activeUser,
       toAddress: this.state.toAddress,
       fromAddress: this.state.fromAddress,
-      amount: truncateDecimal(this.state.amount, 8),
+      amount: truncateDecimal(this.state.amount, 0),
+      btcFee: this.state.btcFeePerByte,
     }
 
     const resetAction = NavigationActions.reset({
@@ -120,10 +129,6 @@ class ConfirmSend extends Component {
         NavigationActions.navigate({ routeName: route, params: {data: data} }),
       ],
     })
-
-    /*navigation.replace(route, {
-      data: data
-    });*/
 
     navigation.dispatch(resetAction)
   }
@@ -301,12 +306,12 @@ const styles = StyleSheet.create({
     width: "65%",
     textAlign: "right"
   },
-  warningText: {
+  /*warningText: {
     fontSize: 16,
     color: "#E9F1F7",
     width: "70%",
     textAlign: "center"
-  },
+  },*/
   rect: {
     height: 1,
     width: 360,
@@ -339,14 +344,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "rgba(68,206,147,1)"
   },
-  explorerBtn: {
+  /*explorerBtn: {
     backgroundColor: "rgba(68,152,206,1)",
     flex: 1,
     paddingTop: 6,
     paddingBottom: 6,
     marginTop: 10,
     alignSelf: "center",
-  },
+  },*/
   cancelBtn: {
     width: 104,
     height: 45,
@@ -375,8 +380,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
     left: "0%"
   },
-  overBox: {
+  /*overBox: {
     width: "100%",
     height: "100%",
-  }
+  }*/
 });
