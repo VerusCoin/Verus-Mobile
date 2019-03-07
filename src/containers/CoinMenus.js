@@ -1,7 +1,11 @@
+/*
+  This component's purpose is to display a tab bar of 
+  all the different apps a specific coin has in the coinData file. 
+*/
+
 import React, { Component } from "react";
 import {
   View,
-  StyleSheet,
 } from "react-native";
 import { connect } from 'react-redux';
 import BottomNavigation, {

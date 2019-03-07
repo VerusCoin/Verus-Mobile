@@ -1,3 +1,10 @@
+/*
+  The ledger reducer generally conatains coin information fetched from electrum
+  calls and wallet information. The needsupdate booleans are to be set to true when the 
+  program assumes some element of the ledger has changed and needs to be re-fetched, 
+  and set to false again when that componenet updates.
+*/
+
 import { namesList } from '../utils/CoinData'
 //TODO: Change this to get coin names from activeCoinForUser
 //so that when people add custom coins they also get told to 

@@ -1,9 +1,17 @@
+/*
+  This screen is to show the user the result of their transaction
+  pre-flight check, and the details of their transaction. It is passed
+  transaction data from the sendCoin component, and builds a model transaction
+  using that data + the user's authentication data that they decrypted while entering
+  their password. NO TRANSACTION IS SENT YET.
+*/
+
 import React, { Component } from "react";
 import Button1 from "../symbols/button1";
 import { connect } from 'react-redux';
-import { txPreflight, sendRawTx } from '../utils/httpCalls/callCreators';
+import { txPreflight } from '../utils/httpCalls/callCreators';
 import { networks } from 'bitgo-utxo-lib';
-import { View, StyleSheet, Alert, Text, ScrollView, Keyboard } from "react-native";
+import { View, StyleSheet, Text, ScrollView, Keyboard } from "react-native";
 import { satsToCoins, truncateDecimal } from '../utils/math';
 import ProgressBar from 'react-native-progress/Bar';
 import { NavigationActions } from 'react-navigation';
@@ -306,12 +314,6 @@ const styles = StyleSheet.create({
     width: "65%",
     textAlign: "right"
   },
-  /*warningText: {
-    fontSize: 16,
-    color: "#E9F1F7",
-    width: "70%",
-    textAlign: "center"
-  },*/
   rect: {
     height: 1,
     width: 360,
@@ -344,14 +346,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "rgba(68,206,147,1)"
   },
-  /*explorerBtn: {
-    backgroundColor: "rgba(68,152,206,1)",
-    flex: 1,
-    paddingTop: 6,
-    paddingBottom: 6,
-    marginTop: 10,
-    alignSelf: "center",
-  },*/
   cancelBtn: {
     width: 104,
     height: 45,
@@ -380,8 +374,4 @@ const styles = StyleSheet.create({
     marginTop: 8,
     left: "0%"
   },
-  /*overBox: {
-    width: "100%",
-    height: "100%",
-  }*/
 });

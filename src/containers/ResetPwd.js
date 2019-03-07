@@ -1,3 +1,11 @@
+/*
+  This component gives the user the opportunity to reset their 
+  wallet password, given they know their old password. Once they
+  enter their password, if it is correct, they are asked to confirm, 
+  and if they continue, their password is reset in memory by decrypting
+  their wallet seed and re-encrypting it with their new password.
+*/
+
 import React, { Component } from "react";
 import Button1 from "../symbols/button1";
 import { 
@@ -10,7 +18,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
-import { FormLabel, FormInput, FormValidationMessage, Icon } from 'react-native-elements'
+import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements'
 import { resetPwd } from '../actions/actionCreators';
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
@@ -237,8 +245,6 @@ const styles = StyleSheet.create({
   },
   valueContainer: {
     width: "85%",
-    //borderWidth:1,
-    //borderColor:"blue",
   },
   wifLabel: {
     backgroundColor: "transparent",

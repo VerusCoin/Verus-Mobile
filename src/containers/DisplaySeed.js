@@ -1,3 +1,9 @@
+/*
+  This component's purpose is to display the user seed in 
+  plaintext upon authorization. It uses the users password 
+  to decrypt it from their userData stored in AsyncStorage.
+*/
+
 import React, { Component } from "react";
 import Button1 from "../symbols/button1";
 import { 
@@ -10,10 +16,8 @@ import {
   TouchableOpacity
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
-import { FormLabel, FormInput, FormValidationMessage, Icon } from 'react-native-elements'
-import { resetPwd } from '../actions/actionCreators';
+import { FormInput, Icon } from 'react-native-elements'
 import { connect } from 'react-redux';
-import AlertAsync from "react-native-alert-async";
 
 class ResetPwd extends Component {
   constructor() {
@@ -59,7 +63,7 @@ class ResetPwd extends Component {
   }
 
   copySeedToClipboard = () => {
-    Clipboard.setString(this.state.address);
+    Clipboard.setString(this.state.seed);
     Alert.alert("Seed Copied", "Seed copied to clipboard")
   }
 
@@ -119,8 +123,6 @@ const styles = StyleSheet.create({
   },
   valueContainer: {
     width: "85%",
-    //borderWidth:1,
-    //borderColor:"blue",
   },
   wifLabel: {
     backgroundColor: "transparent",

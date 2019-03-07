@@ -1,5 +1,14 @@
+/*
+  This component's purpose is to present the user with the option 
+  to log into their accounts, and will only be shown if at least on account 
+  exists on the mobile device. It uses the user-entered username and password
+  to find and decrypt the wallet seed in asyncStorage. When mounted, it clears
+  any detecting app update heartbeats located from before, and upon successfull 
+  login, creates a new update heartbeat interval.
+*/
+
 import React, { Component } from "react";
-import { Icon, FormLabel, FormInput, FormValidationMessage, Divider} from "react-native-elements";
+import { Icon, FormLabel, FormInput, FormValidationMessage } from "react-native-elements";
 import Button1 from "../symbols/button1";
 import { 
   View, 
@@ -260,32 +269,6 @@ const styles = StyleSheet.create({
   formInput: {
     width: "100%",
   },
-  /*passwordLabel: {
-    backgroundColor: "transparent",
-    fontSize: 22,
-    color: "#E9F1F7",
-    opacity: 0.86,
-    paddingBottom: 0,
-    marginBottom: 5,
-    marginTop: 30
-  },
-  userLabel: {
-    backgroundColor: "transparent",
-    fontSize: 22,
-    color: "#E9F1F7",
-    opacity: 0.86,
-    paddingBottom: 0,
-    marginBottom: 5,
-    marginTop: 20
-  },
-  passwordInput: {
-    width: 262,
-    fontSize: 20,
-    textAlign: "center",
-    marginBottom: 0,
-    marginTop: 0,
-    color: "#E9F1F7"
-  },*/
   dropDown: {
     width: "90%",
     marginBottom: 0,

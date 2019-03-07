@@ -1,15 +1,13 @@
-import React, { Component } from "react";
-import { StackNavigator, TabNavigator, DrawerNavigator } from "react-navigation";
+import React from "react";
+import { StackNavigator, DrawerNavigator } from "react-navigation";
 import { StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 import { Icon } from "react-native-elements";
-import { NavigationActions } from 'react-navigation';
 
 import SideMenu from '../../containers/SideMenu';
 
 import Login from '../../containers/Login';
 import Home from '../../containers/Home';
 import AddCoin from '../../containers/AddCoin';
-import Settings from '../../containers/Settings';
 import SignUp from  '../../containers/SignUp';
 import CoinDetails from '../../containers/CoinDetails';
 import TransactionDetails from '../../containers/TransactionDetails';
@@ -69,18 +67,6 @@ export const MainScreens =
           title: "Add Coin",
         }
       },
-      Settings: {
-        screen: Settings,
-        navigationOptions: {
-          title: "Settings",
-        }
-      },
-      /*Polling: {
-        screen: Polling,
-        navigationOptions: {
-          title: "Polling",
-        }
-      },*/
       CoinDetails: {
         screen: CoinDetails,
         navigationOptions: {

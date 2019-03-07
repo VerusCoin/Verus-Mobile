@@ -1,3 +1,10 @@
+/*
+  This component represents the screen that the user is met with
+  if there is no account present in AsyncStorage. It allows them
+  to create an account by using a seed, username and password.
+  It is crucial that they understand the importance of their seed.
+*/  
+
 import React, { Component } from "react";
 import Button1 from "../symbols/button1";
 import { 
@@ -11,7 +18,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
-import { FormLabel, FormInput, FormValidationMessage, Icon } from 'react-native-elements'
+import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements'
 import { addUser, setUpdateIntervalID } from '../actions/actionCreators';
 import { connect } from 'react-redux';
 import { getKey } from '../utils/keyGenerator/keyGenerator'
@@ -402,18 +409,10 @@ const styles = StyleSheet.create({
   formInput: {
     width: "100%",
   },
-  /*labelContainer: {
-    //borderWidth:1,
-    //borderColor:"blue",
-  },*/
   valueContainer: {
     width: "85%",
-    //borderWidth:1,
-    //borderColor:"blue",
   },
   switchContainer: {
-    //borderWidth:1,
-    //borderColor:"blue",
     alignItems: "flex-start",
     marginLeft: 18
   },

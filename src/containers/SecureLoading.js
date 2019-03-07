@@ -1,14 +1,16 @@
-//The secure loading screen is a simple screen with a spinner and a message
-//that exists as display to show while something that cannot be interrupted
-//is loading. This usually means interactions with sensitive data in memory
-//like removing accounts. It is passed a promise that it completes and then
-//exits the screen, dispatching the result of the promise to the store.
+/*
+  The secure loading screen is a simple screen with a spinner and a message
+  that exists as display to show while something that cannot be interrupted
+  is loading. This usually means interactions with sensitive data in memory
+  like removing accounts. It is passed a promise that it completes and then
+  exits the screen, dispatching the result of the promise to the store.
 
-//It will only navigate to a screen if the screen is provided, if it is not
-//provided, it will simply do nothing on completion. 
+  It will only navigate to a screen if the screen is provided, if it is not
+  provided, it will simply do nothing on completion. 
 
-//This screen should always be reset to, not just navigated to, so that the 
-//user cannot go back.
+  This screen should always be reset to, not just navigated to, so that the 
+  user cannot go back.
+*/
 
 import React, { Component } from "react";
 import { 

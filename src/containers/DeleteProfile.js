@@ -1,3 +1,12 @@
+/*
+  This component takes in the user's password, and upon authorization,
+  creates an action to sign the user out, delete their profile data
+  from AsyncStorage, and delete them as a user for all coins in 
+  activeCoinsList in memory. It then passes that action to the 
+  SecureLoading screen, as this process shouldn't be interrupted in 
+  any way.
+*/
+
 import React, { Component } from "react";
 import Button1 from "../symbols/button1";
 import { 
@@ -235,18 +244,10 @@ const styles = StyleSheet.create({
   formInput: {
     width: "100%",
   },
-  /*labelContainer: {
-    //borderWidth:1,
-    //borderColor:"blue",
-  },*/
   valueContainer: {
     width: "85%",
-    //borderWidth:1,
-    //borderColor:"blue",
   },
   switchContainer: {
-    //borderWidth:1,
-    //borderColor:"blue",
     alignItems: "flex-start",
     marginLeft: 18
   },

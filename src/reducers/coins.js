@@ -1,3 +1,8 @@
+/*
+  The coin reducer conatains general coin information NOT
+  fetched from electrum. This includes data stored in AsyncStorage.
+*/
+
 export const coins = (state = {
   activeCoinList: [],
   activeCoin: {id: null},

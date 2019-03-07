@@ -1,3 +1,9 @@
+/*
+  The authentication reducer is to contain sensitive account data
+  while the app is loaded. When the user logs out, or the app is 
+  completely closed, only the non-sensitive data should persist.
+*/
+
 export const authentication = (state = {
   accounts: [],
   activeAccount: {id: null, wifKey: "", keys: []},
@@ -6,11 +12,6 @@ export const authentication = (state = {
   signedIn: false
 }, action) => {
   switch (action.type) {
-    case 'ADD_ACCOUNT':
-      return {
-        ...state,
-        accounts: action.newAccounts,
-      };
     case 'SET_ACCOUNTS':
       return {
         ...state,
@@ -32,11 +33,6 @@ export const authentication = (state = {
         ...state,
         activeAccount: null,
         signedIn: false
-      };
-    case 'SET_LOCK':
-      return {
-        ...state,
-        locked: action.locked,
       };
     case 'FINGER_AUTH':
       return {

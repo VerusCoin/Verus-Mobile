@@ -1,3 +1,11 @@
+/*
+  This component is meant to be the overview screen for 
+  the user profile settings menu. It provides the user
+  with all configurable settings they have access to for 
+  their user account. This includes changing passwords, 
+  deleting accounts etc.
+*/
+
 import React, { Component } from "react";
 import { ListItem } from "react-native-elements";
 import { 
@@ -94,7 +102,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center"
   },
-
   fiatBalanceLabel: {
     backgroundColor: "transparent",
     opacity: 0.89,
@@ -123,81 +130,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#232323"
   },
-  /*rect: {
-    height: 1,
-    width: 360,
-
-    backgroundColor: "rgb(230,230,230)"
-  },
-  icon: {
-    backgroundColor: "transparent",
-    color: "grey",
-    fontSize: 40,
-    height: 46,
-    width: 397
-  },
-  homeIcon: {
-    marginTop: 35
-  },
-  homeList: {
-    width: "100%",
-    height: 1701
-  },
-  z5erm7: {
-    height: 568,
-    flexDirection: "column",
-    alignSelf: "stretch",
-    backgroundColor: "#E6E6E6",
-    borderWidth: 0,
-    borderColor: "green",
-    borderStyle: "dashed"
-  },
-  jiPwUz: {
-    width: 401,
-    height: 568,
-    backgroundColor: "#E9F1F7"
-  },
-  homeLabel: {
-    width: 244,
-    backgroundColor: "transparent",
-    opacity: 0.86,
-    marginTop: 10,
-    marginBottom: 15,
-    paddingBottom: 0,
-    fontSize: 22,
-    textAlign: "center",
-    color: "#E9F1F7"
-  },*/
   coinList: {
     width: "100%",
-  },/*
-  buttonContainer: {
-    height: 54,
-    width: "100%",
-    backgroundColor: "transparent",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingBottom: 0,
-    paddingTop: 5,
-    marginBottom: 8,
-    marginTop: 8,
-    left: "0%"
   },
-  addCoinBtn: {
-    width: 130,
-    height: 45,
-    backgroundColor: "#2E86AB",
-    opacity: 1,
-    marginTop: 0,
-    marginBottom: 0
-  },
-  receiveBtn: {
-    width: 130,
-    height: 45,
-    backgroundColor: "rgba(29,145,95,1)",
-    opacity: 1,
-    marginTop: 0,
-    marginBottom: 0
-  },
-  */
 });

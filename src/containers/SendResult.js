@@ -1,7 +1,17 @@
+/*
+  This component works very similarly to ConfirmSend, 
+  in that it takes in the parameters to send and signs
+  a transaction. Unlike ConfirmSend, this component
+  pushes the transaction to the blockchain and displays
+  the result. This component should always be resetTo,
+  so that the navigation stack get reset when a transaction
+  is sent.
+*/
+
 import React, { Component } from "react";
 import Button1 from "../symbols/button1";
 import { connect } from 'react-redux';
-import { txPreflight, sendRawTx } from '../utils/httpCalls/callCreators';
+import { sendRawTx } from '../utils/httpCalls/callCreators';
 import { networks } from 'bitgo-utxo-lib';
 import { 
   View, 
@@ -22,9 +32,8 @@ import {
   setActiveApp,
   setActiveSection
  } from '../actions/actionCreators';
- import ProgressBar from 'react-native-progress/Bar';
- import { Icon } from 'react-native-elements'
-
+import ProgressBar from 'react-native-progress/Bar';
+import { Icon } from 'react-native-elements'
 
 const TIMEOUT_LIMIT = 60000
 const LOADING_TICKER = 5000
@@ -346,14 +355,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "rgba(68,206,147,1)"
   },
-  /*explorerBtn: {
-    backgroundColor: "#2E86AB",
-    width: 140,
-    height: 45,
-    opacity: 1,
-    marginTop: 0,
-    marginBottom: 0
-  },*/
   sendBtn: {
     width: 140,
     height: 45,
@@ -390,21 +391,4 @@ const styles = StyleSheet.create({
     marginTop: 8,
     left: "0%"
   },
-  /*explorerButtonContainer: {
-    height: 54,
-    width: "100%",
-    backgroundColor: "transparent",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingBottom: 0,
-    paddingTop: 5,
-    marginBottom: 8,
-    marginTop: 8,
-    left: "0%"
-  },
-  overBox: {
-    width: "100%",
-    height: "100%",
-  }
-  */
 });

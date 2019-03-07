@@ -1,6 +1,5 @@
 import { 
   setAccounts,
-  setLock,
   setFingerAuth,
   signIntoAccount,
   updateAccountKeys

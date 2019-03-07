@@ -1,3 +1,10 @@
+/*
+  This component is simply to display the app version data and 
+  mobile platform to the user. It is more for debugging or support purposes,
+  and any general, non-sensitive, useful information that would help a dev
+  help a user should go here.
+*/
+
 import React, { Component } from "react";
 import { 
   View, 
@@ -120,84 +127,11 @@ const styles = StyleSheet.create({
     color: "#2E86AB",
     textAlign: "right"
   },
-  /*warningText: {
-    fontSize: 16,
-    color: "#E9F1F7",
-    width: "70%",
-    textAlign: "center"
-  },
-  rect: {
-    height: 1,
-    width: 360,
-    backgroundColor: "rgb(230,230,230)"
-  },
-  loadingLabel: {
-    backgroundColor: "transparent",
-    opacity: 0.86,
-    marginTop: 15,
-    marginBottom: 15,
-    fontSize: 22,
-    textAlign: "center",
-    color: "#E9F1F7"
-  },*/
   verifiedLabel: {
     marginTop: 10,
     marginBottom: 15,
     fontSize: 22,
     textAlign: "center",
     color: "#E9F1F7"
-  },/*
-  explorerBtn: {
-    backgroundColor: "rgba(68,152,206,1)",
-    flex: 1,
-    paddingTop: 6,
-    paddingBottom: 6,
-    marginTop: 10,
-    alignSelf: "center",
   },
-  cancelBtn: {
-    width: 104,
-    height: 45,
-    backgroundColor: "rgba(206,68,70,1)",
-    opacity: 1,
-    marginTop: 0,
-    marginBottom: 0
-  },
-  confirmBtn: {
-    width: 104,
-    height: 45,
-    backgroundColor: "#009B72",
-    opacity: 1,
-    marginTop: 0,
-    marginBottom: 0
-  },
-  buttonContainer: {
-    height: 54,
-    width: "100%",
-    backgroundColor: "transparent",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingBottom: 0,
-    paddingTop: 5,
-    marginBottom: 8,
-    marginTop: 8,
-    left: "0%"
-  },
-  overBox: {
-    width: "100%",
-    height: "100%",
-  },
-  titleLabel: {
-    backgroundColor: "transparent",
-    fontSize: 22,
-    textAlign: "center",
-    color: "#E9F1F7",
-  },
-  description: {
-    backgroundColor: "transparent",
-    fontSize: 22,
-    textAlign: "center",
-    color: "#E9F1F7",
-  },
-  */
 });

@@ -1,3 +1,10 @@
+/*
+  This screen is passed a coinID, which it finds more data for in the 
+  activeCoinsForUser section of the store upon being mounted. It's purpose
+  is to educate the user about the coin they chose and give them the option
+  to open a wallet for that coin.
+*/
+
 import React, { Component } from "react";
 import Button1 from "../symbols/button1";
 import { View, StyleSheet, Text, ScrollView, Image, ActivityIndicator } from "react-native";
@@ -141,27 +148,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center"
   },
-
   coinAddedBox: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: "center"
   },
-/*
-  fiatBalanceLabel: {
-    backgroundColor: "transparent",
-    opacity: 0.89,
-    marginTop: 15,
-    marginBottom: 15,
-    paddingBottom: 0,
-    paddingTop: 0,
-    fontSize: 25,
-    textAlign: "center",
-    color: "#E9F1F7",
-    width: 359,
-  },
-*/
   titleLabel: {
     backgroundColor: "transparent",
     opacity: 0.86,
@@ -205,28 +197,11 @@ const styles = StyleSheet.create({
     marginRight: 5,
     color: "#50C3A5",
   },
-/*
-  balanceSheetLabel: {
-    width: "100%",
-    backgroundColor: "#E9F1F7",
-    opacity: 0.86,
-    marginTop: 0,
-    marginBottom: 0,
-    paddingBottom: 15,
-    paddingTop: 15,
-    fontSize: 22,
-    textAlign: "center",
-    color: "#232323"
-  },
-  */
-
   rect: {
     height: 1,
     width: "100%",
     backgroundColor: "rgb(230,230,230)"
   },
-
-  
   addCoinBtn: {
     height: 54,
     width: "100%",
@@ -239,8 +214,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     left: "0%"
   },
-  
-
   receiveBtn: {
     width: 222.32,
     height: 45,
@@ -248,36 +221,7 @@ const styles = StyleSheet.create({
     opacity: 1,
     marginTop: 0,
     marginBottom: 0
-  },/*
-  icon: {
-    backgroundColor: "transparent",
-    color: "grey",
-    fontSize: 40,
-    height: 46,
-    width: 397
   },
-  homeIcon: {
-    marginTop: 35
-  },
-  homeList: {
-    width: "107.4866310160428%",
-    height: 1701
-  },
-  z5erm7: {
-    height: 568,
-    flexDirection: "column",
-    alignSelf: "stretch",
-    backgroundColor: "#E6E6E6",
-    borderWidth: 0,
-    borderColor: "green",
-    borderStyle: "dashed"
-  },
-  jiPwUz: {
-    width: 401,
-    height: 568,
-    backgroundColor: "#E9F1F7"
-  },
-  */
   homeLabel: {
     width: 244,
     backgroundColor: "transparent",
