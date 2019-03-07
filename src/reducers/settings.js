@@ -1,3 +1,8 @@
+/*
+  The settings reducer contains information to do with
+  user-decided app settings.
+*/
+
 export const settings = (state = {
   btcFeesAdvanced: false,
   extendedCoinInfo: false,

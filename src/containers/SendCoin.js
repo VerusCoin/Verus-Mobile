@@ -1,6 +1,16 @@
+/*
+  This screen is where the user goes if they 
+  want to send a transaction of a particular coin. The goal is
+  to give them easy access to all sending relating functions. 
+  While this means the ability to enter an amount, an adress, and 
+  send, it also means easy access to things like VerusPay. If given 
+  the option, a user shouldn't have to always enter in a complicated 
+  address to send to manually.
+*/
+
 import React, { Component } from "react";
 import Button1 from "../symbols/button1";
-import { Icon, FormLabel, FormInput, FormValidationMessage, } from "react-native-elements";
+import { FormLabel, FormInput, FormValidationMessage, } from "react-native-elements";
 import {
   View,
   StyleSheet,
@@ -365,24 +375,9 @@ const styles = StyleSheet.create({
   formInput: {
     width: "100%",
   },
-  /*labelContainer: {
-    //borderWidth:1,
-    //borderColor:"blue",
-  },*/
   valueContainer: {
     width: "85%",
-    //borderWidth:1,
-    //borderColor:"blue",
   },
-  /*addressInput: {
-    width: "100%",
-    color: "#009B72"
-  },
-  image: {
-    height: 48,
-    width: 48,
-    marginTop: 65
-  },*/
   coinBalanceLabel: {
     backgroundColor: "transparent",
     opacity: 0.89,
@@ -395,18 +390,6 @@ const styles = StyleSheet.create({
     color: "#009B72",
     width: 359,
   },
-  /*walletLabel: {
-    width: 244,
-    height: 23,
-    backgroundColor: "transparent",
-    opacity: 0.86,
-    marginTop: 10,
-    marginBottom: 13,
-    paddingBottom: 0,
-    fontSize: 22,
-    textAlign: "center",
-    color: "#E9F1F7"
-  },*/
   sendLabel: {
     width: "100%",
     backgroundColor: "#E9F1F7",
@@ -419,12 +402,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#232323"
   },
-  /*rect: {
-    height: 1,
-    width: 359,
-
-    backgroundColor: "rgb(230,230,230)"
-  },*/
   buttonContainer: {
     height: 45,
     width: 400,
@@ -445,17 +422,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 28
   },
-  /*iconContainer: {
-    height: 20,
-    width: 400,
-    backgroundColor: "transparent",
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-    paddingBottom: 0,
-    paddingTop: 0,
-    marginBottom: 0,
-    marginTop: 0
-  },*/
   sendBtn: {
     width: 104,
     height: 45,
@@ -464,103 +430,11 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 0
   },
-  /*receiveBtn: {
-    width: 104,
-    height: 45,
-    backgroundColor: "rgba(68,206,147,1)",
-    opacity: 1,
-    marginTop: 0,
-    marginBottom: 0
-  },
-  fromLabel: {
-    width: 244,
-    height: 27,
-
-    backgroundColor: "transparent",
-    opacity: 0.86,
-    marginTop: 10,
-    marginBottom: 3,
-    paddingBottom: 0,
-    fontSize: 22,
-    textAlign: "center",
-    color: "#E9F1F7"
-  },
-  fromAddress: {
-    width: 339,
-    height: 18,
-
-    backgroundColor: "transparent",
-    opacity: 0.86,
-    marginTop: 0,
-    marginBottom: 15,
-    paddingBottom: 0,
-    fontSize: 16,
-    textAlign: "center",
-    color: "#E9F1F7"
-  },
-  text3: {
-    width: 244,
-    height: 26,
-
-    backgroundColor: "transparent",
-    opacity: 0.86,
-    marginTop: 10,
-    marginBottom: 0,
-    paddingBottom: 0,
-    fontSize: 22,
-    textAlign: "center",
-    color: "#E9F1F7"
-  },
-  textInput: {
-    width: 263,
-    height: 41,
-    marginTop: 0,
-    marginBottom: 0,
-    fontSize: 20,
-    textAlign: "center",
-    color: "#E9F1F7"
-  },
-  addressInput: {
-    width: 339,
-    height: 41,
-    marginTop: 0,
-    marginBottom: 0,
-    fontSize: 16,
-    textAlign: "center",
-    color: "#E9F1F7"
-  },
-  text4: {
-    width: 244,
-    height: 26,
-    backgroundColor: "transparent",
-    opacity: 0.86,
-    marginTop: 10,
-    marginBottom: 0,
-    paddingBottom: 0,
-    fontSize: 22,
-    textAlign: "center",
-    color: "#E9F1F7"
-  },*/
   loadingText: {
     backgroundColor: "transparent",
     opacity: 0.86,
     fontSize: 22,
     textAlign: "center",
     color: "#E9F1F7"
-  },/*
-  icon: {
-    backgroundColor: "transparent",
-    fontSize: 40,
   },
-  textInput2: {
-    width: 339,
-    height: 30,
-
-    marginTop: 0,
-    marginBottom: 0,
-    fontSize: 16,
-    textAlign: "center",
-    color: "#E9F1F7"
-  }
-  */
 });

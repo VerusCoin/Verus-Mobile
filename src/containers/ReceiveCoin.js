@@ -1,3 +1,10 @@
+/*
+  This component is responsible for creating verusQR invoices and 
+  showing the user their receiving address. If the user ever wants
+  to receive coins from anyone, they should be able to go to this
+  screen and configure their invoice within a few button presses.
+*/
+
 import React, { Component } from "react"
 import Button1 from "../symbols/button1"
 import { 
@@ -11,14 +18,11 @@ import {
   Alert
  } from "react-native"
 import { FormLabel, FormInput, FormValidationMessage, Icon } from 'react-native-elements'
-import { addUser } from '../actions/actionCreators'
 import { connect } from 'react-redux'
-import { getKey } from '../utils/keyGenerator/keyGenerator'
 import { Dropdown } from 'react-native-material-dropdown'
 import QRCode from 'react-native-qrcode-svg';
 import { coinsToSats, isNumber } from '../utils/math'
 
-//const VERUS_QR_VERSION = "0.1.0"
 const LOGO_DIR = require('../images/customIcons/verusQRLogo.png');
 
 class ReceiveCoin extends Component {
@@ -261,21 +265,9 @@ const styles = StyleSheet.create({
   formInput: {
     width: "100%",
   },
-  /*labelContainer: {
-    //borderWidth:1,
-    //borderColor:"blue",
-  },*/
   valueContainer: {
     width: "85%",
-    //borderWidth:1,
-    //borderColor:"blue",
   },
-  /*switchContainer: {
-    //borderWidth:1,
-    //borderColor:"blue",
-    alignItems: "flex-start",
-    marginLeft: 18
-  },*/
   wifLabel: {
     backgroundColor: "transparent",
     marginTop: 50,
@@ -290,12 +282,6 @@ const styles = StyleSheet.create({
     width: "100%",
     color: "#009B72"
   },
-  /*buttonContainer: {
-    width: "75%",
-    backgroundColor: "transparent",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },*/
   singleButtonContainer: {
     width: "75%",
     backgroundColor: "transparent",
@@ -308,11 +294,6 @@ const styles = StyleSheet.create({
     marginTop: 15,
     marginBottom: 40
   },
-  /*cancelButton: {
-    height: 46,
-    backgroundColor: "rgba(206,68,70,1)",
-    marginTop: 28,
-  },*/
   dropDownContainer: {
     width: "85%",
     alignItems: "center"

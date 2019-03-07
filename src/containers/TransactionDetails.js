@@ -1,8 +1,11 @@
+/*
+  This component displays the details of ta transaction selected
+  from the Overview component.
+*/
+
 import React, { Component } from "react";
 import Button1 from "../symbols/button1";
 import { View, StyleSheet, Text, ScrollView, Image, Linking } from "react-native";
-import { storeCoins, getActiveCoinsList } from "../utils/asyncStore";
-import { Icon } from "react-native-elements";
 import { connect } from 'react-redux';
 import { unixToDate } from '../utils/math';
 import { explorers } from '../utils/CoinData';

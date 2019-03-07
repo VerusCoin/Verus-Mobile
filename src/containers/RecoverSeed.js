@@ -1,3 +1,14 @@
+/* 
+  This component's purpose is to give the user a screen to enter their
+  wallet password, and request their seed to be shown in plaintext. If
+  they are properly authorized to do so, they will be notified of the 
+  importance of their seed, and that they should realize that it is the 
+  sole phrase that controls their funds. If they still choose to proceed,
+  their password will be used to decrypt their seed and it will be passed to 
+  the displaySeed screen. It is VERY IMPORTANT that the user knows how 
+  important their seed is.
+*/
+
 import React, { Component } from "react";
 import Button1 from "../symbols/button1";
 import { 
@@ -10,7 +21,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
-import { FormLabel, FormInput, FormValidationMessage, Icon } from 'react-native-elements'
+import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements'
 import { checkPinForUser } from '../utils/asyncStore'
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
@@ -177,8 +188,6 @@ const styles = StyleSheet.create({
   },
   valueContainer: {
     width: "85%",
-    //borderWidth:1,
-    //borderColor:"blue",
   },
   wifLabel: {
     backgroundColor: "transparent",

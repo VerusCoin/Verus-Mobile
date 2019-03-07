@@ -1,7 +1,11 @@
+/*
+  This component represents the drawer menu that pulls out from the
+  side of the screen to display components.
+*/
+
 import React, { Component } from "react";
-import { View, StyleSheet, Text, ScrollView, FlatList, SectionList, TouchableOpacity } from "react-native";
+import { View, StyleSheet, Text, ScrollView, FlatList, SectionList } from "react-native";
 import { Icon, ListItem } from "react-native-elements";
-import { NavigationActions } from 'react-navigation';
 import PropTypes from 'prop-types';
 import DrawerHeader from '../components/DrawerHeader';
 import { connect } from 'react-redux';
@@ -270,170 +274,7 @@ const mapStateToProps = (state) => {
 export default connect(mapStateToProps)(SideMenu);
 
 const styles = StyleSheet.create({
-  /*homeBox: {
-    height: 67,
-    width: 361,
-  },
-  homeButton: {
-    top: 0,
-    left: 0,
-    width: "100%",
-    position: "absolute",
-    elevation: 0,
-    borderRadius: 0,
-    shadowColor: "#E9F1F7",
-    shadowOffset: {
-      width: 0,
-      height: 1
-    },
-    shadowOpacity: 1,
-    shadowRadius: 0
-  },
-  homeLabel: {
-    top: 21,
-    left: 22,
-    width: 104,
-    position: "absolute",
-    backgroundColor: "transparent",
-    fontSize: 25,
-    color: "#E9F1F7"
-  },
-  menuBox: {
-    height: 68,
-    width: 361,
-    marginTop: 70,
-    backgroundColor: "#E9F1F7",
-  },
-  menuButton: {
-    top: 0,
-    left: 0,
-    width: "100%",
-    position: "absolute",
-    elevation: 0,
-    borderRadius: 0,
-    shadowColor: "#E9F1F7",
-    shadowOffset: {
-      width: 0,
-      height: 1
-    },
-    shadowOpacity: 1,
-    shadowRadius: 0
-  },
-  menuLabel: {
-    top: 21,
-    left: 22,
-    width: 104,
-    position: "absolute",
-    backgroundColor: "transparent",
-    fontSize: 25,
-    color: "#E9F1F7"
-  },
-  addCoinBox: {
-    width: 361,
-    height: 67
-  },
-  addCoinButton: {
-    top: 0,
-    left: 0,
-    width: "100%",
-    position: "absolute",
-    elevation: 0,
-    borderRadius: 0,
-    shadowColor: "#E9F1F7",
-    shadowOffset: {
-      width: 0,
-      height: 1
-    },
-    shadowOpacity: 1,
-    shadowRadius: 0
-  },
-  addCoinLabel: {
-    top: 21,
-    left: 22,
-    width: 104,
-    position: "absolute",
-    backgroundColor: "transparent",
-    fontSize: 25,
-    color: "#E9F1F7"
-  },
-  pollingBox: {
-    width: 361,
-    height: 67
-  },
-  pollingButton: {
-    top: 0,
-    left: 0,
-    width: "100%",
-    position: "absolute",
-    elevation: 0,
-    borderRadius: 0,
-    shadowColor: "#E9F1F7",
-    shadowOffset: {
-      width: 0,
-      height: 1
-    },
-    shadowOpacity: 1,
-    shadowRadius: 0
-  },
-  pollingLabel: {
-    top: 21,
-    left: 22,
-    width: 104,
-    position: "absolute",
-    backgroundColor: "transparent",
-    fontSize: 25,
-    color: "#E9F1F7"
-  },
-  settingsBox: {
-    width: 361,
-    height: 67
-  },
-  settingsButton: {
-    top: 0,
-    left: 0,
-    width: "100%",
-    position: "absolute",
-    elevation: 0,
-    borderRadius: 0,
-    shadowColor: "#E9F1F7",
-    shadowOffset: {
-      width: 0,
-      height: 1
-    },
-    shadowOpacity: 1,
-    shadowRadius: 0
-  },
-  settingsLabel: {
-    top: 21,
-    left: 22,
-    width: 104,
-    position: "absolute",
-    backgroundColor: "transparent",
-    fontSize: 25,
-    color: "#E9F1F7"
-  },
-  listPlaceholder: {
-    height: 404.67,
-    width: 361,
-    backgroundColor: "#E9F1F7",
-    opacity: 1
-  },
-  rect: {
-    height: 1,
-    width: 360,
-    backgroundColor: "rgb(230,230,230)"
-  },*/
   coinList: {
     width: "100%",
   },
-  /*
-  backButtonRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		paddingBottom: 17,
-		paddingLeft: 3,
-		borderBottomColor: '#F0F0F0',
-		borderBottomWidth: 1,
-  },
-  */
 });

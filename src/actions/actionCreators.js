@@ -2,13 +2,7 @@ export * from './actions/Coins';
 export * from './actions/UserData';
 export * from './actions/Ledger';
 
-export const addAccount = (accounts) => {
-  return {
-    type: 'ADD_ACCOUNT',
-    newAccounts: accounts
-  }
-}
-
+//Reducer Name: authentication
 export const setAccounts = (accounts) => {
   return {
     type: 'SET_ACCOUNTS',
@@ -16,6 +10,7 @@ export const setAccounts = (accounts) => {
   }
 }
 
+//Reducer Name: authentication
 export const signIntoAccount = (account) => {
   return {
     type: 'SIGN_IN',
@@ -23,19 +18,15 @@ export const signIntoAccount = (account) => {
   }
 }
 
+//Reducer Name: authentication
 export const signOut = () => {
   return {
     type: 'SIGN_OUT',
   }
 }
 
-export const setLock = (locked) => {
-  return {
-    type: 'UNLOCK',
-    locked: locked
-  }
-}
-
+//TODO: Setup finger authentication with this method in redux store
+//Reducer Name: authentication
 export const setFingerAuth = (isEnabled) => {
   return {
     type: 'FINGER_AUTH',
@@ -43,6 +34,7 @@ export const setFingerAuth = (isEnabled) => {
   }
 }
 
+//Reducer Name: coins
 export const addActiveCoin = (newCoinObj) => {
   return {
     type: 'ADD_ACTIVE_COIN',
@@ -50,6 +42,7 @@ export const addActiveCoin = (newCoinObj) => {
   }
 }
 
+//Reducer Name: coins
 export const setActiveCoin = (activeCoin) => {
   return {
     type: 'SET_ACTIVE_COIN',
@@ -57,6 +50,7 @@ export const setActiveCoin = (activeCoin) => {
   }
 }
 
+//Reducer Name: settings
 export const setConfigSection = (section) => {
   return {
     type: 'SET_CONFIG_SECTION',
@@ -64,6 +58,7 @@ export const setConfigSection = (section) => {
   }
 }
 
+//Reducer name: coins
 export const setActiveApp = (activeApp) => {
   return {
     type: 'SET_ACTIVE_APP',
@@ -71,6 +66,7 @@ export const setActiveApp = (activeApp) => {
   }
 }
 
+//Reducer name: coins
 export const setActiveSection = (activeSection) => {
   return {
     type: 'SET_ACTIVE_SECTION',
@@ -78,6 +74,7 @@ export const setActiveSection = (activeSection) => {
   }
 }
 
+//Reducer name: coins
 export const setCoinList = (activeCoinList) => {
   return {
     type: 'SET_COIN_LIST',
@@ -85,6 +82,7 @@ export const setCoinList = (activeCoinList) => {
   }
 }
 
+//Reducer name: coins
 export const setCurrentUserCoins = (activeCoinsForUser, coinsToUpdate) => {
   return {
     type: 'SET_USER_COINS',
@@ -93,6 +91,7 @@ export const setCurrentUserCoins = (activeCoinsForUser, coinsToUpdate) => {
   }
 }
 
+//Reducer name: ledger
 export const setBalances = (balances) => {
   return {
     type: 'SET_BALANCES',
@@ -100,6 +99,7 @@ export const setBalances = (balances) => {
   }
 }
 
+//Reducer name: ledger
 export const setTransactions = (transactions, needsUpdateObj) => {
   return {
     type: 'SET_TRANSACTIONS',
@@ -108,14 +108,33 @@ export const setTransactions = (transactions, needsUpdateObj) => {
   }
 }
 
-export const needsUpdate = (component) => {
-  let actionType = (component.toUpperCase()) + "_NEED_UPDATE"
-
+//This sets the ID for the app heartbeat data update interval
+//so that it can be cleared from any active component
+//Reducer name: ledger
+export const setUpdateIntervalID = (ID) => {
   return {
-    type: actionType,
+    type: 'SET_INTERVAL_ID',
+    updateIntervalID: ID
   }
 }
 
+//Reducer name: authentication
+export const updateAccountKeys = (keys) => {
+  return {
+    type: 'UPDATE_ACCOUNT_KEYS',
+    keys: keys
+  }
+}
+
+//Reducer name: ledger
+export const updateCoinRates = (rates) => {
+  return {
+    type: 'SET_RATES',
+    rates: rates
+  }
+}
+
+//Reducer name: ledger
 export const transactionsNeedUpdate = (coinID, needsUpdateObj) => {
   let _needsUpdateObj = needsUpdateObj ? needsUpdateObj : {}
   _needsUpdateObj[coinID] = true
@@ -126,30 +145,19 @@ export const transactionsNeedUpdate = (coinID, needsUpdateObj) => {
   }
 }
 
+//Reducer name: ledger
+export const needsUpdate = (component) => {
+  let actionType = (component.toUpperCase()) + "_NEED_UPDATE"
+
+  return {
+    type: actionType,
+  }
+}
+
+//Reducer name: ledger
 export const everythingNeedsUpdate = () => {
   return {
     type: 'EVERYTHING_NEEDS_UPDATE',
-  }
-}
-
-export const updateAccountKeys = (keys) => {
-  return {
-    type: 'UPDATE_ACCOUNT_KEYS',
-    keys: keys
-  }
-}
-
-export const updateCoinRates = (rates) => {
-  return {
-    type: 'SET_RATES',
-    rates: rates
-  }
-}
-
-export const setUpdateIntervalID = (ID) => {
-  return {
-    type: 'SET_INTERVAL_ID',
-    updateIntervalID: ID
   }
 }
 
