@@ -108,6 +108,13 @@ class SendResult extends Component {
         this.props.dispatch(transactionsNeedUpdate(coinObj.id, this.props.needsUpdate.transanctions))
       }
     })
+    .catch((e) => {
+      this.setState({
+        loading: false,
+        err: e.message ? e.message : "Unknown error while building transaction, double check form data"
+      });
+      console.log(e)
+    })
   }
 
   componentWillUnmount() {

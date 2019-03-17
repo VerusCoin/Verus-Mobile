@@ -130,7 +130,7 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
         address = activeUser.keys[index].pubKey
       }
       else {
-        throw "Ledger.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!";
+        throw new Error("Ledger.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!");
       }
 
       for (let i = 0; i < consolidatedTxs.transactions.length; i++) {
@@ -139,6 +139,7 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
 
       resolve(updateCoinTransactions(coinObj.id, _parsedTxList, oldTransactions, needsUpdateObj))
     })
+    .catch(err => reject(err))
   });
 }
 
@@ -157,17 +158,17 @@ export const updateCoinBalances = (oldBalances, activeCoinsForUser, activeUser) 
   });
 }
 
-export const updateOneBalance = (oldBalances, coinObj, activeUser, coinID) => {
+export const updateOneBalance = (oldBalances, coinObj, activeUser) => {
   let _balances = oldBalances
 
   return new Promise((resolve, reject) => {
-    getOneBalance(oldBalances[coinID], coinObj, activeUser, coinID)
+    getOneBalance(oldBalances[coinObj.id], coinObj, activeUser)
     .then(balance => {
       if (!balances) {
         resolve(false)
       }
       else {
-        _balances[coinID] = balance
+        _balances[coinObj.id] = balance
         resolve(setBalances(_balances))
       }
     })
@@ -178,10 +179,10 @@ export const updateOneBalance = (oldBalances, coinObj, activeUser, coinID) => {
 export const updateOneRate = (coinObj, coinRates) => {
   return new Promise((resolve, reject) => {
     getCoinRate(coinObj)
-    .then(balance => {
+    .then(resizeTo => {
       let _coinRates = coinRates
-      _coinRates[coinObj.id] = balance.rate
-      if (balance) {
+      _coinRates[coinObj.id] = res.rate
+      if (res) {
         resolve(updateCoinRates(_coinRates))
       }
       else {

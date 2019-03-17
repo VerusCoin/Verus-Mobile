@@ -13,7 +13,7 @@ export const getOneTransactionList = (oldList, coinObj, activeUser) => {
     params.address = activeUser.keys[index].pubKey
   }
   else {
-    throw "getTransactions.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + activeCoinsForUser[i].id + " not found!";
+    throw new Error("getTransactions.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + activeCoinsForUser[i].id + " not found!");
   }
 
   return new Promise((resolve, reject) => {
@@ -25,6 +25,19 @@ export const getOneTransactionList = (oldList, coinObj, activeUser) => {
       else {
         resolve(response.result)
       }
+    })
+    .catch((err) => {
+      let errorObj = {
+        coin: coinObj.id,
+        result: {
+          result: {},
+          blockHeight: 0,
+          error: true,
+          errorMsg: err.message
+        }
+      }
+      console.log(errorObj)
+      resolve(errorObj)
     })
   });
 }

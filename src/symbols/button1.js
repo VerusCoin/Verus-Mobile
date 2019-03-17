@@ -3,7 +3,6 @@ import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 
 export default class button1 extends Component {
   
-  // Only for displaying symbol in BuilderX.
   static containerStyle = {
     height: 44,
     width: 100,
@@ -12,7 +11,10 @@ export default class button1 extends Component {
   };
   render() {
     return (
-      <TouchableOpacity style={[styles.root, this.props.style]} onPress={this.props.onPress}>
+      <TouchableOpacity 
+      style={[styles.root, this.props.style]} 
+      onPress={this.props.onPress}
+      >
         <View pointerEvents='none'>
           <Text style={styles.buttonContent}>
             {this.props.buttonContent ? this.props.buttonContent : "Button"}

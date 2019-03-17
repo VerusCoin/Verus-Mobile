@@ -1,4 +1,4 @@
-import { updateValues, getMerkle } from '../callCreators'
+import { updateValues, getMerkleRoot, getBlockInfo } from '../callCreators'
 import { getOneTransaction } from './getTransaction'
 import { TxDecoder } from '../../crypto/txDecoder'
 import { networks } from 'bitgo-utxo-lib';
@@ -17,7 +17,7 @@ export const getUnspent = (oldList, coinObj, activeUser) => {
     params.address = activeUser.keys[index].pubKey
   }
   else {
-    throw "getUnspent.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinID + " not found!";
+    throw new Error("getUnspent.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinID + " not found!")
   }
 
   
@@ -29,10 +29,13 @@ export const getUnspent = (oldList, coinObj, activeUser) => {
         resolve(false)
       }
       else {
-        console.log(response)
         response.result.address = params.address
         resolve(response.result)
       }
+    })
+    .catch((err) => {
+      console.log("Caught error in getUnspent.js")
+      reject(err)
     })
   });
 }
@@ -51,7 +54,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
       let currentHeight = res.blockHeight
 
       if (!_utxoList.length) {
-        throw "no valid utxo"
+        throw new Error("no valid utxo")
       }
       else {
 
@@ -85,7 +88,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
           const currentHeight = gottenTransactions[i].blockHeight
           
           if (!decodedTx) {
-            throw 'cant decode tx'
+            throw new Error('cant decode tx')
           } else {
             if (network.coin === 'kmd') {
               let interest = 0;
@@ -106,13 +109,14 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
                 confirmations: Number(_utxoItem.height) === 0 ? 0 : currentHeight - _utxoItem.height,
                 spendable: true,
                 verified: false,
+                merkleRoot: null,
                 locktime: decodedTx.format.locktime,
               };
 
               // merkle root verification against another electrum server
               if (verify) {
                 verifyMerklePromises.push(
-                  getMerkle(
+                  getMerkleRoot(
                     null,
                     coinObj,
                     _utxoItem['tx_hash'],
@@ -132,12 +136,13 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
                 confirmations: Number(_utxoItem.height) === 0 ? 0 : currentHeight - _utxoItem.height,
                 spendable: true,
                 verified: false,
+                merkleRoot: null,
               };
 
-              // merkle root verification agains another electrum server
+              // merkle root verification against another electrum server
               if (verify) {
                 verifyMerklePromises.push(
-                  getMerkle(
+                  getMerkleRoot(
                     null,
                     coinObj,
                     _utxoItem['tx_hash'],
@@ -168,7 +173,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
             console.log(gottenTransactions[i])
           }
           console.log("---------------------------------------")
-          throw "getUnspent.js: Fatal mismatch error, couldn't fetch raw transactions for all UTXOs, see details above"
+          throw new Error("getUnspent.js: Fatal mismatch error, couldn't fetch raw transactions for all UTXOs")
         }
       }
 
@@ -178,22 +183,90 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
     })
     .then((verifiedMerkleArr) => {
       let _formattedUtxoList = verifiedMerkleArr.pop()
-      console.log(verifiedMerkleArr)
+      let blockInfoPromises = [];
+      let i = 0
+      let unshieldedFunds = 0
 
-      for (let i = 0; i < verifiedMerkleArr.length; i++) {
-        if(_formattedUtxoList[i]) {
-          if (verifiedMerkleArr[i] && verifiedMerkleArr[i].result && verifiedMerkleArr[i].result.merkle) {
-            _formattedUtxoList[i].verified = true
-          }
+      //We loop through each item in the unspent transaction array, finding the merkle
+      //root for each transaction, and eliminating all unspent coinbase transactions as
+      //they can't be sent before being shielded
+      while (i < verifiedMerkleArr.length) {
+        if(_formattedUtxoList[i] && verifiedMerkleArr[i] && _formattedUtxoList.length === verifiedMerkleArr.length) {
+          if (
+            verifiedMerkleArr[i].result && 
+            verifiedMerkleArr[i].result.root && 
+            Number(verifiedMerkleArr[i].result.index) > 0) {
+            _formattedUtxoList[i].merkleRoot = verifiedMerkleArr[i].result.root
+
+            if (__DEV__) {
+              console.log("UTXO #" + i)
+              console.log(_formattedUtxoList[i])
+            }
+
+            blockInfoPromises.push(getBlockInfo(null, coinObj, activeUser, verifiedMerkleArr[i].result.height))
+            i++
+          } else {
+            unshieldedFunds += _formattedUtxoList[i].amountSats
+            verifiedMerkleArr.splice(i, 1);
+            _formattedUtxoList.splice(i, 1);
+          } 
         }
         else {
-          throw "getUnspent.js: Fatal mismatch error, no utxo list found for verified merkle " + verifiedMerkleArr[i]
+          throw new Error("getUnspent.js: Fatal mismatch error, no utxo list found for verified merkle " + verifiedMerkleArr[i] +
+          "or length of verified merkle root array does not match length of uspent transaction array")
         }
       }
 
-      resolve(_formattedUtxoList)
+      if (__DEV__) {
+        console.log("Filtered out " + unshieldedFunds + " coins due to coinbase non-shielded fund filtering")
+      }
+
+      blockInfoPromises.push(_formattedUtxoList)
+      blockInfoPromises.push(unshieldedFunds)
+
+      return Promise.all(blockInfoPromises)
+    })
+    .then((blockInfoArr) => {
+      unshieldedFunds = blockInfoArr.pop()
+      _formattedUtxoList = blockInfoArr.pop()
+      let i = 0
+
+      //We go through the formatted utxo list array one more time, removing any
+      //transactions that don't can't be verified by merkle root
+      while (i < blockInfoArr.length) {
+        if(_formattedUtxoList[i] && blockInfoArr[i] && _formattedUtxoList.length === blockInfoArr.length) {
+          if (
+            blockInfoArr[i].result && 
+            blockInfoArr[i].result.merkle_root && 
+            blockInfoArr[i].result.merkle_root === _formattedUtxoList[i].merkleRoot) {
+            if (__DEV__) {
+              console.log('txid ' + _formattedUtxoList[i].txid + ' verified!')
+            }
+            _formattedUtxoList[i].verified = true
+            i++
+          } else {
+            if (__DEV__) {
+              console.log("Couldnt verify UTXO merkle root, splicing from array:")
+              console.log(_formattedUtxoList[i])
+              console.log("Tried to prove with merkle root:")
+              console.log(blockInfoArr[i])
+            }
+            
+            blockInfoArr.splice(i, 1);
+            _formattedUtxoList.splice(i, 1);
+          } 
+        }
+        else {
+          throw new Error("getUnspent.js: Fatal mismatch error, no utxo list item found for blockInfo or blockinfo array does not match length of uspent transaction array")
+        }
+      }
+      resolve({
+        utxoList: _formattedUtxoList,
+        unshieldedFunds: unshieldedFunds
+      })
     })
     .catch(err => {
+      console.log(err)
       reject(err)
     })
   });

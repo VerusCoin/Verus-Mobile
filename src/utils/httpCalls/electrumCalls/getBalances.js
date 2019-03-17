@@ -14,19 +14,18 @@ export const getBalances = (oldBalances, activeCoinsForUser, activeUser) => {
         getOneBalance(
           oldBalances ? oldBalances[activeCoinsForUser[i].id] : null, 
           activeCoinsForUser[i], 
-          activeUser,
-          activeCoinsForUser[i].id
+          activeUser
           ))
     }
     else {
-      throw "getBalances.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + activeCoinsForUser[i].id + " not found!";
+      throw new Error("getBalances.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + activeCoinsForUser[i].id + " not found!");
     }
   }
 
   return new Promise((resolve, reject) => {
     Promise.all(balancePromises)
     .then((results) => {
-      if (results.every(item => {return !item.new})) {
+      if (results.every(item => {return !item})) {
         resolve(false)
       }
       else {
@@ -39,26 +38,30 @@ export const getBalances = (oldBalances, activeCoinsForUser, activeUser) => {
         resolve(balances)
       }
     })
+    .catch((err) => {
+      console.log("Caught " + err + " in getBalances.js")
+      reject(err)
+    })
   });
 }
 
-export const getOneBalance = (oldBalance, coinObj, activeUser, coinID) => {
+export const getOneBalance = (oldBalance, coinObj, activeUser) => {
   const callType = 'getbalance'
   let index = 0
   let params = {}
 
-  while (index < activeUser.keys.length && coinID !== activeUser.keys[index].id) {
+  while (index < activeUser.keys.length && coinObj.id !== activeUser.keys[index].id) {
     index++
   }
   if (index < activeUser.keys.length) {
     params.address = activeUser.keys[index].pubKey
   }
   else {
-    throw "getBalances.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + activeCoinsForUser[i].id + " not found!";
+    throw new Error("getBalances.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + activeCoinsForUser[i].id + " not found!");
   }
 
   return new Promise((resolve, reject) => {
-    updateValues(oldBalance, coinObj.serverList.serverList, callType, params, coinID)
+    updateValues(oldBalance, coinObj.serverList.serverList, callType, params, coinObj.id)
     .then((response) => {
       if(!response.new || !response) {
         resolve(false)
@@ -66,6 +69,25 @@ export const getOneBalance = (oldBalance, coinObj, activeUser, coinID) => {
       else {
         resolve(response)
       }
+    })
+    .catch((err) => {
+      //If error in server processing is caught, the getBalance call
+      //resolves, to let Promise.all resolve, but returns an error 
+      //object
+      let errorObj = {
+        coin: coinObj.id,
+        result: {
+          result: {
+            confirmed: 0,
+            unconfirmed: 0
+          },
+          blockHeight: 0,
+          error: true,
+          errorMsg: err.message
+        }
+      }
+      console.log(errorObj)
+      resolve(errorObj)
     })
   });
 }

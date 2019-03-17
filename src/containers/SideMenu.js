@@ -56,7 +56,7 @@ class SideMenu extends Component {
     }
 
     if (index >= coinObj.apps[sectionName].data.length) {
-      throw "Array out of bounds error at _openCoin in SideMenu.js"
+      throw new Error("Array out of bounds error at _openCoin in SideMenu.js")
     }
 
     this.props.dispatch(setActiveCoin(coinObj))
@@ -132,7 +132,7 @@ class SideMenu extends Component {
     } else if (drawerItem.title === PROFILE){
       this.props.dispatch(setConfigSection('settings-profile'))
     } else {
-      throw "Option " + drawerItem.title + " not found in possible settings values"
+      throw new Error("Option " + drawerItem.title + " not found in possible settings values")
     }
 
     navigation.navigate("SettingsMenus", { title: drawerItem.title })

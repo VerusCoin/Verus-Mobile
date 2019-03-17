@@ -20,7 +20,7 @@ import {
   ActivityIndicator,
   Alert
 } from "react-native";
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions, StackActions } from 'react-navigation';
 import { connect } from 'react-redux';
 import { signOut } from '../actions/actionCreators'
 
@@ -70,16 +70,16 @@ class SecureLoading extends Component {
               }
             })
           } else {
-            throw "Error, task given to loading screen is " + (typeof this.state.task) + ", expected function"
+            throw new Error("Error, task given to loading screen is " + (typeof this.state.task) + ", expected function")
           }
         })
     } else {
-      throw "Error, no task given to loading screen, expected Promise"
+      throw new Error("Error, no task given to loading screen, expected Promise")
     }
   }
 
   resetToScreen = (route) => {
-    const resetAction = NavigationActions.reset({
+    const resetAction = StackActions.reset({
       index: 0, // <-- currect active route from actions array
       actions: [
         NavigationActions.navigate({ routeName: route }),

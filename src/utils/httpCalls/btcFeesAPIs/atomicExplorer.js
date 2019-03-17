@@ -1,10 +1,10 @@
+import { timeout } from '../../promises'
+
 export const getAtomicExplorerBTCFees = () => {
   const address = `https://www.atomicexplorer.com/api/btc/fees`
 
   return new Promise((resolve, reject) => {
-    fetch(address, {
-      method: 'GET'
-      })
+    timeout(global.REQUEST_TIMEOUT_MS, fetch(address, {method: 'GET'}))
     .then((response) => response.json())
     .then((response) => {
       if (response.msg !== "success") {
@@ -17,6 +17,10 @@ export const getAtomicExplorerBTCFees = () => {
           slowest: Number(response.result.recommended.hourFee)
         })
       }
+    })
+    .catch((err) => {
+      console.warn(err.message + " in atomicExplorer.js")
+      resolve(false)
     })
   });
 }

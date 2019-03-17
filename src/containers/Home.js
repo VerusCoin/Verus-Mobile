@@ -29,6 +29,8 @@ import {
 import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../utils/math';
 
+const CONNECTION_ERROR = "Connection Error"
+
 class Home extends Component {
   constructor(props) {
     super(props)
@@ -169,14 +171,22 @@ class Home extends Component {
               title={<Text style={styles.coinItemLabel}>{item.name}</Text>}   
               subtitle={
                 this.props.balances.hasOwnProperty(item.id) ? 
-                truncateDecimal(satsToCoins(this.props.balances[item.id].result.confirmed), 4) + ' ' + item.id :
-                null}                       
-              avatar={item.logo}   
+                  this.props.balances[item.id].error ? 
+                    CONNECTION_ERROR
+                    :
+                    truncateDecimal(satsToCoins(this.props.balances[item.id].result.confirmed), 4) + ' ' + item.id 
+                :
+                null
+              }                       
+              avatar={item.logo}  
+              subtitleStyle={this.props.balances.hasOwnProperty(item.id) && this.props.balances[item.id].error ? {color: "rgba(206,68,70,1)"} : null} 
               containerStyle={{ borderBottomWidth: 0 }} 
-              rightTitle={'$' + 
+              rightTitle={
+              ('$' + 
               truncateDecimal(((typeof(this.props.rates[item.id]) === 'number' ? this.props.rates[item.id] : 0)*(this.props.balances.hasOwnProperty(item.id) ? 
               satsToCoins(this.props.balances[item.id].result.confirmed) :
-              0)), 2)}
+              0)), 2))
+            }
             />
           </TouchableOpacity>   
         )}   

@@ -22,6 +22,7 @@ const OUT = require('../images/customIcons/outgoingArrow.png')
 const IN = require('../images/customIcons/incomingArrow.png')
 const UNKNOWN = require('../images/customIcons/unknownLogo.png')
 const INTEREST = require('../images/customIcons/interestPlus.png')
+const CONNECTION_ERROR = "Connection Error"
 
 class Overview extends Component {
   constructor(props) {
@@ -201,18 +202,33 @@ class Overview extends Component {
     return item.txid
   }
 
+  renderBalanceLabel = () => {
+    if (this.state.loading) {
+      return (
+      <ActivityIndicator style={styles.spinner} animating={this.state.loading} size="large"/>
+      )
+    } else if (this.props.balances.hasOwnProperty(this.props.activeCoin.id) && this.props.balances[this.props.activeCoin.id].error) {
+      return (
+        <Text style={styles.connectionErrorLabel}>
+          {CONNECTION_ERROR}  
+        </Text>
+      )
+    } else if (this.props.balances.hasOwnProperty(this.props.activeCoin.id)) {
+      return (
+      <Text style={styles.coinBalanceLabel}>
+          {truncateDecimal(satsToCoins(this.props.balances[this.props.activeCoin.id].result.confirmed), 4) + ' ' + this.props.activeCoin.id }
+      </Text>
+      )
+    } else {
+      return null;
+    }
+  }
+
   render() {
     return (
       <View style={styles.root}>
       <View style={styles.headerContainer}>
-        {this.state.loading ? 
-        <ActivityIndicator style={styles.spinner} animating={this.state.loading} size="large"/>
-        :
-        <Text style={styles.coinBalanceLabel}>
-          {this.props.balances.hasOwnProperty(this.props.activeCoin.id) ? 
-          truncateDecimal(satsToCoins(this.props.balances[this.props.activeCoin.id].result.confirmed), 4) + ' ' + this.props.activeCoin.id :
-          null}  
-        </Text>}
+        {this.renderBalanceLabel()}
       </View>
         <Text style={styles.transactionLabel}>Transactions</Text>
         {this.renderTransactionList()}
@@ -250,6 +266,17 @@ const styles = StyleSheet.create({
     fontSize: 25,
     textAlign: "center",
     color: "#E9F1F7",
+  },
+  connectionErrorLabel: {
+    backgroundColor: "transparent",
+    opacity: 0.89,
+    marginTop: 15,
+    marginBottom: 15,
+    paddingBottom: 0,
+    paddingTop: 0,
+    fontSize: 25,
+    textAlign: "center",
+    color: "rgba(206,68,70,1)",
   },
   spinner: {
     marginTop: 13,

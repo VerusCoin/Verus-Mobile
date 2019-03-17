@@ -10,13 +10,10 @@ import {
   View, 
   StyleSheet, 
   Text, 
-  Alert,
   ScrollView, 
-  Clipboard,
-  TouchableOpacity
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
-import { FormInput, Icon } from 'react-native-elements'
+import { FormInput } from 'react-native-elements'
 import { connect } from 'react-redux';
 
 class ResetPwd extends Component {
@@ -62,11 +59,6 @@ class ResetPwd extends Component {
     this.props.navigation.dispatch(NavigationActions.back())
   }
 
-  copySeedToClipboard = () => {
-    Clipboard.setString(this.state.seed);
-    Alert.alert("Seed Copied", "Seed copied to clipboard")
-  }
-
   render() {
     return (
       <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center", justifyContent: "center"}}>
@@ -81,9 +73,6 @@ class ResetPwd extends Component {
             editable={false}
           />
         </View>
-        <TouchableOpacity onPress={this.copySeedToClipboard}>
-          <Icon name="content-copy" size={25} color="#E9F1F7"/>
-        </TouchableOpacity>
         <View style={styles.buttonContainer}>
           <Button1 
             style={styles.cancelButton} 

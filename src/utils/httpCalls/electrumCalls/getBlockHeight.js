@@ -7,8 +7,8 @@ export const getBlockHeight = (proxyServer, electrumServer) => {
     .then((response) => {
       resolve(response)
     })
-    .catch((e) => {
-      resolve(false)
+    .catch((err) => {
+      reject(err)
     })
   });
 }

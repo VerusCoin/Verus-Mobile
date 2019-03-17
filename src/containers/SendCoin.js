@@ -53,11 +53,15 @@ class SendCoin extends Component {
   }
 
   componentDidMount() {
-    let index = 0
-    this.setState({ 
+    this.initializeState()
+  }
+
+  initializeState = () => {
+    this.setState({
       coin: this.props.activeCoin,
       account: this.props.activeAccount, 
       activeCoinsForUser: this.props.activeCoinsForUser,
+      toAddress: this.props.data ? this.props.data.address : null
     }, () => {
       const activeUser = this.state.account
       const coinObj = this.state.coin
@@ -78,7 +82,7 @@ class SendCoin extends Component {
       this.setState({ fromAddress: activeUser.keys[index].pubKey });  
     }
     else {
-      throw "SendCoin.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!";
+      throw new Error("SendCoin.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!");
     }
 
     if(this.props.needsUpdate.rates) {
@@ -338,12 +342,17 @@ class SendCoin extends Component {
             :
               this.state.btcFeesErr ?
                 <View style={styles.loadingContainer}>
-                  <Text style={styles.loadingText}>BTC Fees Error!</Text>
+                  <Text style={styles.errorText}>BTC Fees Error!</Text>
                 </View>
               :
-                <View style={styles.buttonContainer}>
-                  <Button1 style={styles.sendBtn} onPress={this.validateFormData} buttonContent="Send"/>
-                </View>
+                this.props.balances[this.props.activeCoin.id] && this.props.balances[this.props.activeCoin.id].error ? 
+                  <View style={styles.loadingContainer}>
+                    <Text style={styles.errorText}>Connection Error</Text>
+                  </View>
+                :
+                  <View style={styles.buttonContainer}>
+                    <Button1 style={styles.sendBtn} onPress={this.validateFormData} buttonContent="Send"/>
+                  </View>
             }
         </ScrollView>
       </TouchableWithoutFeedback>
@@ -436,5 +445,12 @@ const styles = StyleSheet.create({
     fontSize: 22,
     textAlign: "center",
     color: "#E9F1F7"
+  },
+  errorText: {
+    backgroundColor: "transparent",
+    opacity: 0.86,
+    fontSize: 22,
+    textAlign: "center",
+    color: "rgba(206,68,70,1)"
   },
 });
