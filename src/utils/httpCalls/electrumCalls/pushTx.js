@@ -33,7 +33,9 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
   console.log("Value passed to tx preflight: " + value)
   return new Promise((resolve, reject) => {
     getUnspentFormatted(null, coinObj, activeUser, verify)
-    .then((utxoList) => {
+    .then((res) => {
+      utxoList = res.utxoList
+      
       if (utxoList &&
         utxoList.length) {
       let utxoListFormatted = [];
@@ -46,6 +48,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
       let changeAddress
       let feePerByte = 0;
       let btcFees = false;
+      let unshieldedFunds = res.unshieldedFunds
 
       if (typeof defaultFee === 'object' && typeof defaultFee !== 'null') {
         //BTC Fee style detected, changing fee unit to fee per byte and 
@@ -63,7 +66,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
         changeAddress = activeUser.keys[index].pubKey
       }
       else {
-        throw "pushTx.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!";
+        throw new Error("pushTx.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!")
       }
 
       console.log('Utxo list ==>') 
@@ -89,7 +92,6 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
         }
       }
 
-      //TODO: Filter out coinbase UTXOs
       const _maxSpendBalance = Number(maxSpendBalance(utxoListFormatted));
       console.log(_maxSpendBalance)
       let targets = [{
@@ -176,17 +178,22 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
       const _maxSpend = maxSpendBalance(utxoListFormatted);
 
       if (value > _maxSpend) {
+        console.log("Value is larger than max spend, returning with error")
         const successObj = {
           err: true,
-          result: `Spend value is too large. Max available amount is ${Number((_maxSpend * 0.00000001.toFixed(8)))}`,
+          result: `Spend value is too large. Max available amount is ${Number((_maxSpend * 0.00000001.toFixed(8)))}.` + 
+          (unshieldedFunds > 0 ? `\n\nThis is most likely due to the fact that you have ${satsToCoins(unshieldedFunds)} ${coinObj.id}
+          in unshielded funds received from mining in your wallet. Please unshield through a native client prior to sending through Verus Mobile` : null),
         };
 
         resolve(successObj);
       } else {
-        console.log(`maxspend ${_maxSpend} (${_maxSpend * 0.00000001})`);
-        console.log(`value ${value}`);
-        console.log(`sendto ${outputAddress} amount ${value} (${value * 0.00000001})`);
-        console.log(`changeto ${changeAddress} amount ${_change} (${_change * 0.00000001})`);
+        if (__DEV__) {
+          console.log(`maxspend ${_maxSpend} (${_maxSpend * 0.00000001})`);
+          console.log(`value ${value}`);
+          console.log(`sendto ${outputAddress} amount ${value} (${value * 0.00000001})`);
+          console.log(`changeto ${changeAddress} amount ${_change} (${_change * 0.00000001})`);
+        }
 
         // account for KMD interest
         if ((network.coin === 'komodo' || network.coin === 'kmd') &&
@@ -195,18 +202,22 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
           // const _feeOverhead = outputs.length === 1 ? estimateTxSize(0, 1) * feeRate : 0;
           const _feeOverhead = 0;
 
-          console.log(`max interest to claim ${totalInterest} (${totalInterest * 0.00000001})`);
-          console.log(`estimated fee overhead ${_feeOverhead}`);
-          console.log(`current change amount ${_change} (${_change * 0.00000001}), boosted change amount ${_change + (totalInterest - _feeOverhead)} (${(_change + (totalInterest - _feeOverhead)) * 0.00000001})`);
-
+          if (__DEV__) {
+            console.log(`max interest to claim ${totalInterest} (${totalInterest * 0.00000001})`);
+            console.log(`estimated fee overhead ${_feeOverhead}`);
+            console.log(`current change amount ${_change} (${_change * 0.00000001}), boosted change amount ${_change + (totalInterest - _feeOverhead)} (${(_change + (totalInterest - _feeOverhead)) * 0.00000001})`);
+          }
+          
           if (_maxSpend === value) {
             _change = Math.abs(totalInterest) - _change - _feeOverhead;
 
             if (outputAddress === changeAddress) {
               value += _change;
               _change = 0;
-              console.log(`send to self ${outputAddress} = ${changeAddress}`);
-              console.log(`send to self old val ${value}, new val ${value + _change}`);
+              if (__DEV__) {
+                console.log(`send to self ${outputAddress} = ${changeAddress}`);
+                console.log(`send to self old val ${value}, new val ${value + _change}`);
+              }
             }
           } else {
             _change = _change + (Math.abs(totalInterest) - _feeOverhead);
