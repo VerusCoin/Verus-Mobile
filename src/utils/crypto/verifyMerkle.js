@@ -1,12 +1,9 @@
-const crypto = require('react-native-crypto');
 const Buffer = require('safe-buffer').Buffer;
 import reverse from 'buffer-reverse';
+import { sha256 } from './hash';
 
 export const calculateMerkleRoot = (txid, proof, pos, txBlockHeight) => {
   let index = pos
-  const _sha256 = (data) => {
-    return crypto.createHash('sha256').update(data).digest();
-  }
   let hash = txid;
   let serialized;
 
@@ -27,7 +24,7 @@ export const calculateMerkleRoot = (txid, proof, pos, txBlockHeight) => {
       serialized = Buffer.concat([reverse(_proofBuff), reverse(_hashBuff)]);
     }
 
-    hash = reverse(_sha256(_sha256(serialized))).toString('hex');
+    hash = reverse(sha256(sha256(serialized))).toString('hex');
     pos /= 2;
   }
 

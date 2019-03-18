@@ -28,6 +28,7 @@ import {
 } from '../actions/actionCreators';
 import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../utils/math';
+import { NavigationActions } from 'react-navigation';
 
 const CONNECTION_ERROR = "Connection Error"
 
@@ -73,6 +74,18 @@ class Home extends Component {
       this.calculateTotalBalance()
       this.updateProps(promiseArray)
     }
+  }
+
+  resetToScreen = (route, title, data) => {
+    const resetAction = NavigationActions.reset({
+      index: 1, // <-- currect active route from actions array
+      actions: [
+        NavigationActions.navigate({ routeName: "Home" }),
+        NavigationActions.navigate({ routeName: route, params: {title: title, data: data} }),
+      ],
+    })
+
+    this.props.navigation.dispatch(resetAction)
   }
 
   updateProps = (promiseArray) => {
@@ -140,7 +153,7 @@ class Home extends Component {
     this.props.dispatch(setActiveApp(coinObj.defaultApp))
     this.props.dispatch(setActiveSection(coinObj.apps[coinObj.defaultApp].data[0]))
 
-    navigation.navigate("CoinMenus", { title: 'Overview' });
+    this.resetToScreen('CoinMenus', 'Overview');
   }
 
   _addCoin = () => {

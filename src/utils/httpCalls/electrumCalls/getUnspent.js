@@ -1,7 +1,8 @@
 import { updateValues, getMerkleRoot, getBlockInfo } from '../callCreators'
 import { getOneTransaction } from './getTransaction'
 import { TxDecoder } from '../../crypto/txDecoder'
-import { networks } from 'bitgo-utxo-lib';
+import { hashRawTx } from '../../crypto/hash'
+import { networks } from 'bitgo-utxo-lib'
 import { coinsToSats, satsToCoins, kmdCalcInterest, truncateDecimal } from '../../math'
 
 export const getUnspent = (oldList, coinObj, activeUser) => {
@@ -86,9 +87,17 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
         if (gottenTransactions[i]) {
           const decodedTx = TxDecoder(gottenTransactions[i].result, network)
           const currentHeight = gottenTransactions[i].blockHeight
+
+          if (hashRawTx(gottenTransactions[i].result) !== _utxoItem['tx_hash']) {
+            throw new Error(
+              'Mismatch error! At least one transaction ID provided by server ' + JSON.stringify(serverUsed) + 
+              ' does not match the values of the transaction that it represents! This could indicate that the server is malicious, and this transaction has been canceled.')
+          } else {
+            console.log(_utxoItem['tx_hash'] + ' succesfully verified against its hashed raw tx')
+          }
           
           if (!decodedTx) {
-            throw new Error('cant decode tx')
+            throw new Error('Can\'t decode tx')
           } else {
             if (network.coin === 'kmd') {
               let interest = 0;

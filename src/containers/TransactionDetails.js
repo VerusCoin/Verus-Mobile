@@ -5,11 +5,21 @@
 
 import React, { Component } from "react";
 import Button1 from "../symbols/button1";
-import { View, StyleSheet, Text, ScrollView, Image, Linking } from "react-native";
+import { 
+  View, 
+  StyleSheet, Text, 
+  ScrollView, 
+  Image, 
+  Linking, 
+  TouchableOpacity,
+  Clipboard,
+  Alert
+} from "react-native";
 import { connect } from 'react-redux';
 import { unixToDate } from '../utils/math';
 import { explorers } from '../utils/CoinData';
 import { truncateDecimal } from '../utils/math';
+import { Icon } from 'react-native-elements'
 
 const SELF = require('../images/customIcons/selfArrow.png')
 const OUT = require('../images/customIcons/outgoingArrow.png')
@@ -71,6 +81,11 @@ class TransactionDetails extends Component {
 
     this.setState({ txLogo: image });
   }
+
+  copyTxIDToClipboard = () => {
+    Clipboard.setString(this.state.txData.txid);
+    Alert.alert("ID Copied", "Transaction ID copied to clipboard")
+  }
   
   render() {
     const {state} = this.props.navigation;
@@ -104,6 +119,13 @@ class TransactionDetails extends Component {
               <Text style={styles.infoText}>Time:</Text>
               <Text style={styles.infoText}>{unixToDate(this.state.txData.timestamp)}</Text>
             </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoText}>ID:</Text>
+              <Text style={styles.addressText}>{this.state.txData.txid}</Text>
+            </View>
+            <TouchableOpacity onPress={this.copyTxIDToClipboard}>
+              <Icon name="content-copy" size={25} color="#E9F1F7"/>
+            </TouchableOpacity>
             { explorers[this.state.activeCoinID] &&
             <Button1 style={styles.explorerBtn} buttonContent="view in explorer" onPress={() => this.openExplorer()} />
             }

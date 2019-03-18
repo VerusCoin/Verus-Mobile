@@ -17,6 +17,7 @@ import {
   setConfigSection
  } from '../actions/actionCreators'
 import { getKeyByValue } from '../utils/objectManip'
+import { NavigationActions } from 'react-navigation';
 
 const APP_INFO = 'App Info'
 const PROFILE = 'Profile'
@@ -45,7 +46,6 @@ class SideMenu extends Component {
   };
 
   _openCoin = (coinObj, screen, section) => {
-    let navigation = this.props.navigation 
     let sectionName = getKeyByValue(section, coinObj.apps)
     let index = 0;
     
@@ -62,7 +62,19 @@ class SideMenu extends Component {
     this.props.dispatch(setActiveCoin(coinObj))
     this.props.dispatch(setActiveApp(sectionName))
     this.props.dispatch(setActiveSection(coinObj.apps[sectionName].data[index]))
-    navigation.navigate("CoinMenus", { title: screen })
+    this.resetToScreen("CoinMenus", screen)
+  }
+
+  resetToScreen = (route, title, data) => {
+    const resetAction = NavigationActions.reset({
+      index: 1, // <-- currect active route from actions array
+      actions: [
+        NavigationActions.navigate({ routeName: "Home" }),
+        NavigationActions.navigate({ routeName: route, params: {title: title, data: data} }),
+      ],
+    })
+
+    this.props.navigation.dispatch(resetAction)
   }
 
   renderMainDrawerComponents = () => {

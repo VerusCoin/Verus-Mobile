@@ -497,9 +497,13 @@ class VerusPay extends Component {
       memo: this.state.memo
     }
 
-    navigation.navigate(route, {
+    /*navigation.navigate(route, {
       data: data
-    });
+    });*/
+
+    this.resetToScreen(route, "Confirm", data)
+
+
   }
 
   handleUpdates = () => {

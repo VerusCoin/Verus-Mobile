@@ -246,9 +246,19 @@ class SignUp extends Component {
               value={this.state.wifKey}
               autoCapitalize={"none"}
               autoCorrect={false}
+              secureTextEntry={true}
               shake={this.state.errors.wifKey}
               inputStyle={styles.wifInput}
               multiline={true}
+            />
+            <FormLabel labelStyle={styles.formLabel}>
+            Plaintext Passphrase Display:
+            </FormLabel>
+            <FormInput 
+              value={this.state.wifKey}
+              inputStyle={styles.wifInput}
+              multiline={true}
+              editable={false}
             />
             {this.state.errors.wifKey &&
             <FormValidationMessage>
