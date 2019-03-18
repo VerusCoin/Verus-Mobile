@@ -18,6 +18,7 @@ import { NavigationActions } from 'react-navigation';
 import { connect } from 'react-redux';
 import { namesList, coinsList } from '../utils/CoinData'
 import { getRecommendedBTCFees } from '../utils/httpCalls/callCreators'
+import { removeSpaces } from '../utils/stringUtils'
 import {
   updateCoinBalances,
   setUserCoins,
@@ -40,6 +41,7 @@ const INSUFFICIENT_FUNDS = "Insufficient funds."
 const INCOMPATIBLE_COIN = "The coin this invoice is requesting is currently incompatible with Verus Mobile."
 const INCOMPATIBLE_APP = "The coin this invoice is requesting does not have send functionality."
 const ONLY_ADDRESS = "This QR Code only contains only an address. Please select a coin and then scan."
+const BALANCE_NULL = "Couldn't fetch balance for coin."
 
 class VerusPay extends Component {
   constructor(props) {
@@ -162,7 +164,7 @@ class VerusPay extends Component {
 
       if (coinName && address && amount) {
         //Find coin ticker from coin data here, URL has full name
-        const index = coinsList.findIndex(coinObj => coinObj.name.toLowerCase() === coinName.toLowerCase());
+        const index = coinsList.findIndex(coinObj => removeSpaces(coinObj.name).toLowerCase() === coinName.toLowerCase());
 
         if (index >= 0) {
           //Create verusQR compatible data from coin URL
@@ -417,14 +419,19 @@ class VerusPay extends Component {
   }
 
   checkBalance = (amount, activeCoin) => {
-    const spendableBalance = this.props.balances[activeCoin.id].result.confirmed - activeCoin.fee
+    if (this.props.balances[activeCoin.id] && this.props.balances[activeCoin.id].result) {
+      const spendableBalance = this.props.balances[activeCoin.id].result.confirmed - activeCoin.fee
 
-    if (amount > Number(spendableBalance)) {
-      this.errorHandler(INSUFFICIENT_FUNDS)
-      return false
+      if (amount > Number(spendableBalance)) {
+        this.errorHandler(INSUFFICIENT_FUNDS)
+        return false
+      } else {
+        return true
+      }
     } else {
-      return true
+      this.errorHandler(BALANCE_NULL)
     }
+    
   }
 
   canExitWallet = (fromTicker, toTicker) => {
