@@ -33,12 +33,13 @@ import Spinner from 'react-native-loading-spinner-overlay';
 import AlertAsync from "react-native-alert-async";
 import { coinsToSats } from '../utils/math'
 
-const FORMAT_UNKNOWN = "QR Data format unrecognized"
-const ADDRESS_ONLY = "Only address detected, please fill out amount field"
-const INCOMPLETE_VERUS_QR = "VerusQR code impartial or incomplete, cannot parse QR data"
-const INSUFFICIENT_FUNDS = "Insufficient funds"
-const INCOMPATIBLE_COIN = "The coin this invoice is requesting is currently incompatible with Verus Mobile"
-const INCOMPATIBLE_APP = "The coin this invoice is requesting does not have send functionality"
+const FORMAT_UNKNOWN = "QR Data format unrecognized."
+const ADDRESS_ONLY = "Only address detected, please fill out amount field."
+const INCOMPLETE_VERUS_QR = "VerusQR code impartial or incomplete, cannot parse QR data."
+const INSUFFICIENT_FUNDS = "Insufficient funds."
+const INCOMPATIBLE_COIN = "The coin this invoice is requesting is currently incompatible with Verus Mobile."
+const INCOMPATIBLE_APP = "The coin this invoice is requesting does not have send functionality."
+const ONLY_ADDRESS = "This QR Code only contains only an address. Please select a coin and then scan."
 
 class VerusPay extends Component {
   constructor(props) {
@@ -486,7 +487,7 @@ class VerusPay extends Component {
 
   goToConfirmScreen = () => {
     const route = "ConfirmSend"
-    let navigation = this.props.navigation
+
     let data = {
       coinObj: this.state.coinObj,
       activeUser: this.state.activeUser,
@@ -497,13 +498,7 @@ class VerusPay extends Component {
       memo: this.state.memo
     }
 
-    /*navigation.navigate(route, {
-      data: data
-    });*/
-
     this.resetToScreen(route, "Confirm", data)
-
-
   }
 
   handleUpdates = () => {
@@ -562,7 +557,7 @@ class VerusPay extends Component {
       this.props.navigation.state.params.fillAddress(address)
       this.props.navigation.dispatch(NavigationActions.back())
     } else {
-      this.errorHandler(FORMAT_UNKNOWN)
+      this.errorHandler(ONLY_ADDRESS)
     }
   }
 
