@@ -17,14 +17,16 @@ import {
   FlatList, 
   ActivityIndicator, 
   TouchableOpacity,
-  ScrollView
+  ScrollView,
+  RefreshControl
 } from "react-native";
 import { 
   updateCoinBalances, 
   setCoinRates, 
   setActiveCoin, 
   setActiveApp,
-  setActiveSection
+  setActiveSection,
+  everythingNeedsUpdate
 } from '../actions/actionCreators';
 import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../utils/math';
@@ -88,6 +90,11 @@ class Home extends Component {
     this.props.navigation.dispatch(resetAction)
   }
 
+  forceUpdate = () => {
+    this.props.dispatch(everythingNeedsUpdate())
+    this.refresh();
+  }
+
   updateProps = (promiseArray) => {
     return new Promise((resolve, reject) => {
       Promise.all(promiseArray)
@@ -148,7 +155,6 @@ class Home extends Component {
   }
 
   _openCoin = (coinObj) => {
-    let navigation = this.props.navigation  
     this.props.dispatch(setActiveCoin(coinObj))
     this.props.dispatch(setActiveApp(coinObj.defaultApp))
     this.props.dispatch(setActiveSection(coinObj.apps[coinObj.defaultApp].data[0]))
@@ -164,7 +170,14 @@ class Home extends Component {
 
   renderCoinList = () => {
     return (
-      <ScrollView style={styles.coinList}>
+      <ScrollView 
+      style={styles.coinList} 
+      refreshControl={
+        <RefreshControl
+          refreshing={this.state.loading}
+          onRefresh={this.forceUpdate}
+        />
+      }>
         <TouchableOpacity onPress={this._verusPay}>
           <ListItem       
             roundAvatar                
@@ -214,7 +227,7 @@ class Home extends Component {
             containerStyle={{ borderBottomWidth: 0 }} 
           /> 
         </TouchableOpacity>
-        <ActivityIndicator animating={this.state.loading} size="large"/>
+        {/*<ActivityIndicator animating={this.state.loading} size="large"/>*/}
       </ScrollView>
     )
   }

@@ -10,12 +10,18 @@ import {
   StyleSheet,
   Text,
   FlatList,
-  ActivityIndicator
+  TouchableOpacity
 } from "react-native";
 import { ListItem } from "react-native-elements";
 import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../utils/math';
-import { fetchTransactionsForCoin, updateCoinBalances } from '../actions/actionCreators';
+import { 
+  fetchTransactionsForCoin, 
+  updateCoinBalances,
+  //transactionsNeedUpdate,
+  //needsUpdate,
+  everythingNeedsUpdate
+} from '../actions/actionCreators';
 
 const SELF = require('../images/customIcons/selfArrow.png')
 const OUT = require('../images/customIcons/outgoingArrow.png')
@@ -37,6 +43,10 @@ class Overview extends Component {
 
 
   componentDidMount() {
+    this.refresh()
+  }
+
+  refresh = () => {
     const _coinObj = this.props.activeCoin
     const _oldTransactions = this.props.transactions
     const _activeAccount = this.props.activeAccount
@@ -63,6 +73,17 @@ class Overview extends Component {
     }
   
     this.updateProps(promiseArray)
+  }
+
+  forceUpdate = () => {
+    //TODO: Figure out why screen doesnt always update if everything is called seperately
+
+    /*this.props.dispatch(transactionsNeedUpdate(this.props.activeCoin.id, this.props.needsUpdate.transanctions))
+    this.props.dispatch(needsUpdate("balances"))
+    this.props.dispatch(needsUpdate("rates"))*/
+    this.props.dispatch(everythingNeedsUpdate())
+
+    this.refresh()
   }
 
   _openDetails = (item) => {  
@@ -168,17 +189,18 @@ class Overview extends Component {
     subtitle = 'to: ' + subtitle
 
     return (
-      <ListItem              
-        roundAvatar          
-        title={<Text style={styles.transactionItemLabel}>
-              {amount < 0.0001 ? '< ' + truncateDecimal(amount, 4) : truncateDecimal(amount, 4)}
-              </Text>}   
-        subtitle={subtitle}                  
-        avatar={avatarImg}   
-        containerStyle={{ borderBottomWidth: 0 }} 
-        rightTitle={'info'}
-        onPress={() => this._openDetails({amount: amount, tx: item, coinID: this.props.activeCoin.id})}
-      />      
+      <TouchableOpacity onPress={() => this._openDetails({amount: amount, tx: item, coinID: this.props.activeCoin.id})}>
+        <ListItem              
+          roundAvatar          
+          title={<Text style={styles.transactionItemLabel}>
+                {amount < 0.0001 ? '< ' + truncateDecimal(amount, 4) : truncateDecimal(amount, 4)}
+                </Text>}   
+          subtitle={subtitle}                  
+          avatar={avatarImg}   
+          containerStyle={{ borderBottomWidth: 0 }} 
+          rightTitle={'info'}
+        /> 
+      </TouchableOpacity>    
     )
   }
 
@@ -188,6 +210,8 @@ class Overview extends Component {
       style={styles.transactionList}         
       data={this.props.transactions[this.props.activeCoin.id]}
       scrollEnabled={true}
+      refreshing={this.state.loading}
+      onRefresh={this.forceUpdate}
       renderItem={this.renderTransactionItem}   
       //extraData={this.props.balances}       
       keyExtractor={this.keyExtractor}                            
@@ -203,11 +227,13 @@ class Overview extends Component {
   }
 
   renderBalanceLabel = () => {
-    if (this.state.loading) {
+    /*if (this.state.loading) {
       return (
       <ActivityIndicator style={styles.spinner} animating={this.state.loading} size="large"/>
       )
-    } else if (this.props.balances.hasOwnProperty(this.props.activeCoin.id) && this.props.balances[this.props.activeCoin.id].error) {
+    } else */
+    
+    if (this.props.balances.hasOwnProperty(this.props.activeCoin.id) && this.props.balances[this.props.activeCoin.id].error) {
       return (
         <Text style={styles.connectionErrorLabel}>
           {CONNECTION_ERROR}  

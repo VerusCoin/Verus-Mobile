@@ -15,6 +15,7 @@ import {
 import { NavigationActions } from 'react-navigation';
 import { FormInput } from 'react-native-elements'
 import { connect } from 'react-redux';
+import QRCode from 'react-native-qrcode-svg';
 
 class ResetPwd extends Component {
   constructor() {
@@ -73,6 +74,14 @@ class ResetPwd extends Component {
             editable={false}
           />
         </View>
+        { this.state.seed &&
+          <View style={{padding: 10, backgroundColor: '#FFF'}}>
+            <QRCode
+              value={this.state.seed}
+              size={250}
+            />
+          </View>
+        }
         <View style={styles.buttonContainer}>
           <Button1 
             style={styles.cancelButton} 

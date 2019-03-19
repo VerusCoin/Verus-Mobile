@@ -24,6 +24,7 @@ import { connect } from 'react-redux';
 import { getKey } from '../utils/keyGenerator/keyGenerator'
 import { spacesLeadOrTrail } from '../utils/stringUtils'
 import AlertAsync from "react-native-alert-async";
+import ScanSeed from '../components/ScanSeed'
 
 class SignUp extends Component {
   constructor() {
@@ -43,6 +44,7 @@ class SignUp extends Component {
         wifSaved: null,
         disclaimerRealized: null},
       warnings: [],
+      scanning: false
     };
   }
 
@@ -51,6 +53,10 @@ class SignUp extends Component {
       console.log("Update interval ID detected as " + this.props.updateIntervalID + ", clearing...")
       clearInterval(this.props.updateIntervalID)
       this.props.dispatch(setUpdateIntervalID(null))
+    }
+
+    if (this.props.navigation.state.params && this.props.navigation.state.params.data) {
+      this.fillSeed(this.props.navigation.state.params.data.seed)
     }
   }
   
@@ -203,6 +209,19 @@ class SignUp extends Component {
     });
   }
 
+  scanSeed = () => {
+    this.setState({scanning: true})
+  }
+
+  turnOffScan = () => {
+    this.setState({scanning: false})
+  }
+
+  handleScan = (seed) => {
+    this.turnOffScan()
+    this.setState({wifKey: seed})
+  }
+
   canMakeAccount = () => {
     let alertText = 
                 ('Please take the time to double check the following things regarding your new profile ' + 
@@ -233,6 +252,7 @@ class SignUp extends Component {
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        {!this.state.scanning ? 
         <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center", justifyContent: "center"}}>
           <Text style={styles.wifLabel}>
             Create New Account
@@ -251,6 +271,11 @@ class SignUp extends Component {
               inputStyle={styles.wifInput}
               multiline={true}
             />
+            <TouchableOpacity onPress={this.scanSeed}>
+              <FormLabel labelStyle={styles.scanLabel}>
+                Scan seed from QR
+              </FormLabel>
+            </TouchableOpacity>
             <FormLabel labelStyle={styles.formLabel}>
             Plaintext Passphrase Display:
             </FormLabel>
@@ -388,6 +413,9 @@ class SignUp extends Component {
             />
           </View>
         </ScrollView>
+        :
+        <ScanSeed cancel={this.turnOffScan} onScan={this.handleScan}/>
+        }
       </TouchableWithoutFeedback>
     );
   }
@@ -415,6 +443,11 @@ const styles = StyleSheet.create({
     textAlign:"left",
     marginRight: "auto",
     color: "#2E86AB"
+  },
+  scanLabel: {
+    textAlign:"left",
+    marginRight: "auto",
+    color: "#009B72"
   },
   formInput: {
     width: "100%",
