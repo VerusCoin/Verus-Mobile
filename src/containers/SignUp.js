@@ -16,6 +16,7 @@ import {
   ScrollView, 
   Keyboard,
   TouchableWithoutFeedback,
+  Platform
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
 import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements'
@@ -269,7 +270,7 @@ class SignUp extends Component {
               secureTextEntry={true}
               shake={this.state.errors.wifKey}
               inputStyle={styles.wifInput}
-              multiline={true}
+              multiline={Platform.OS === 'ios' ? false : true}
             />
             <TouchableOpacity onPress={this.scanSeed}>
               <FormLabel labelStyle={styles.scanLabel}>
