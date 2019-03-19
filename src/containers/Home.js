@@ -17,17 +17,22 @@ import {
   FlatList, 
   ActivityIndicator, 
   TouchableOpacity,
-  ScrollView
+  ScrollView,
+  RefreshControl
 } from "react-native";
 import { 
   updateCoinBalances, 
   setCoinRates, 
   setActiveCoin, 
   setActiveApp,
-  setActiveSection
+  setActiveSection,
+  everythingNeedsUpdate
 } from '../actions/actionCreators';
 import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../utils/math';
+import { NavigationActions } from 'react-navigation';
+
+const CONNECTION_ERROR = "Connection Error"
 
 class Home extends Component {
   constructor(props) {
@@ -71,6 +76,23 @@ class Home extends Component {
       this.calculateTotalBalance()
       this.updateProps(promiseArray)
     }
+  }
+
+  resetToScreen = (route, title, data) => {
+    const resetAction = NavigationActions.reset({
+      index: 1, // <-- currect active route from actions array
+      actions: [
+        NavigationActions.navigate({ routeName: "Home" }),
+        NavigationActions.navigate({ routeName: route, params: {title: title, data: data} }),
+      ],
+    })
+
+    this.props.navigation.dispatch(resetAction)
+  }
+
+  forceUpdate = () => {
+    this.props.dispatch(everythingNeedsUpdate())
+    this.refresh();
   }
 
   updateProps = (promiseArray) => {
@@ -133,12 +155,11 @@ class Home extends Component {
   }
 
   _openCoin = (coinObj) => {
-    let navigation = this.props.navigation  
     this.props.dispatch(setActiveCoin(coinObj))
     this.props.dispatch(setActiveApp(coinObj.defaultApp))
     this.props.dispatch(setActiveSection(coinObj.apps[coinObj.defaultApp].data[0]))
 
-    navigation.navigate("CoinMenus", { title: 'Overview' });
+    this.resetToScreen('CoinMenus', 'Overview');
   }
 
   _addCoin = () => {
@@ -149,7 +170,14 @@ class Home extends Component {
 
   renderCoinList = () => {
     return (
-      <ScrollView style={styles.coinList}>
+      <ScrollView 
+      style={styles.coinList} 
+      refreshControl={
+        <RefreshControl
+          refreshing={this.state.loading}
+          onRefresh={this.forceUpdate}
+        />
+      }>
         <TouchableOpacity onPress={this._verusPay}>
           <ListItem       
             roundAvatar                
@@ -169,14 +197,22 @@ class Home extends Component {
               title={<Text style={styles.coinItemLabel}>{item.name}</Text>}   
               subtitle={
                 this.props.balances.hasOwnProperty(item.id) ? 
-                truncateDecimal(satsToCoins(this.props.balances[item.id].result.confirmed), 4) + ' ' + item.id :
-                null}                       
-              avatar={item.logo}   
+                  this.props.balances[item.id].error ? 
+                    CONNECTION_ERROR
+                    :
+                    truncateDecimal(satsToCoins(this.props.balances[item.id].result.confirmed), 4) + ' ' + item.id 
+                :
+                null
+              }                       
+              avatar={item.logo}  
+              subtitleStyle={this.props.balances.hasOwnProperty(item.id) && this.props.balances[item.id].error ? {color: "rgba(206,68,70,1)"} : null} 
               containerStyle={{ borderBottomWidth: 0 }} 
-              rightTitle={'$' + 
+              rightTitle={
+              ('$' + 
               truncateDecimal(((typeof(this.props.rates[item.id]) === 'number' ? this.props.rates[item.id] : 0)*(this.props.balances.hasOwnProperty(item.id) ? 
               satsToCoins(this.props.balances[item.id].result.confirmed) :
-              0)), 2)}
+              0)), 2))
+            }
             />
           </TouchableOpacity>   
         )}   
@@ -191,7 +227,7 @@ class Home extends Component {
             containerStyle={{ borderBottomWidth: 0 }} 
           /> 
         </TouchableOpacity>
-        <ActivityIndicator animating={this.state.loading} size="large"/>
+        {/*<ActivityIndicator animating={this.state.loading} size="large"/>*/}
       </ScrollView>
     )
   }

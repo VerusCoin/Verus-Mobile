@@ -10,14 +10,12 @@ import {
   View, 
   StyleSheet, 
   Text, 
-  Alert,
   ScrollView, 
-  Clipboard,
-  TouchableOpacity
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
-import { FormInput, Icon } from 'react-native-elements'
+import { FormInput } from 'react-native-elements'
 import { connect } from 'react-redux';
+import QRCode from 'react-native-qrcode-svg';
 
 class ResetPwd extends Component {
   constructor() {
@@ -62,11 +60,6 @@ class ResetPwd extends Component {
     this.props.navigation.dispatch(NavigationActions.back())
   }
 
-  copySeedToClipboard = () => {
-    Clipboard.setString(this.state.seed);
-    Alert.alert("Seed Copied", "Seed copied to clipboard")
-  }
-
   render() {
     return (
       <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center", justifyContent: "center"}}>
@@ -81,9 +74,14 @@ class ResetPwd extends Component {
             editable={false}
           />
         </View>
-        <TouchableOpacity onPress={this.copySeedToClipboard}>
-          <Icon name="content-copy" size={25} color="#E9F1F7"/>
-        </TouchableOpacity>
+        { this.state.seed &&
+          <View style={{padding: 10, backgroundColor: '#FFF'}}>
+            <QRCode
+              value={this.state.seed}
+              size={250}
+            />
+          </View>
+        }
         <View style={styles.buttonContainer}>
           <Button1 
             style={styles.cancelButton} 

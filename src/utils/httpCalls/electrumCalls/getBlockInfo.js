@@ -13,7 +13,7 @@ export const getBlockInfo = (oldBlock, coinObj, activeUser, blockheight) => {
     params.address = activeUser.keys[index].pubKey
   }
   else {
-    throw "getBlockInfo.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + activeCoinsForUser[i].id + " not found!";
+    throw new Error("getBlockInfo.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + activeCoinsForUser[i].id + " not found!");
   }
 
   return new Promise((resolve, reject) => {
@@ -25,6 +25,10 @@ export const getBlockInfo = (oldBlock, coinObj, activeUser, blockheight) => {
       else {
         resolve(response.result)
       }
+    })
+    .catch((err) => {
+      console.log("Caught error in getBlockInfo.js")
+      reject(err)
     })
   });
 }

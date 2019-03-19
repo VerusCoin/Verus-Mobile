@@ -1,3 +1,5 @@
+import { timeout } from '../../promises'
+
 export const getCoinPaprikaRate = (coinObj) => {
   let coinID = coinObj.id
   let coinName = coinObj.name
@@ -6,9 +8,7 @@ export const getCoinPaprikaRate = (coinObj) => {
   const address = `https://api.coinpaprika.com/v1/coins/${param}/ohlcv/latest`
 
   return new Promise((resolve, reject) => {
-    fetch(address, {
-      method: 'GET'
-      })
+    timeout(global.REQUEST_TIMEOUT_MS, fetch(address, {method: 'GET'}))
     .then((response) => response.json())
     .then((response) => {
       if (response.error) {
@@ -19,6 +19,10 @@ export const getCoinPaprikaRate = (coinObj) => {
       else {
         resolve(response[0].close)
       }
+    })
+    .catch((err) => {
+      console.warn(err.message + " in coinPaprika.js")
+      resolve(false)
     })
   });
 }

@@ -76,7 +76,7 @@ class CoinDetails extends Component {
         this.setState({ isActive: true, loading: false });
       }
       else {
-        throw "Error adding coin"
+        throw new Error("Error adding coin")
       }
     })
     .then(() => {

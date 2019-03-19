@@ -64,7 +64,7 @@ class Login extends Component {
         }
         else {
           this.setState({validating: false})
-          throw "Account not validated"
+          throw new Error("Account not validated")
         }
       })
       .then((resArr) => {

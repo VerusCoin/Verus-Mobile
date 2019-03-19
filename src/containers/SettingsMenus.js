@@ -69,7 +69,7 @@ class SettingsMenus extends Component {
     if (index < tabArray.length) {
       activeTab = tabArray[index]
     } else {
-      throw "Tab not found for active section " + this.props.activeConfigSection
+      throw new Error("Tab not found for active section " + this.props.activeConfigSection)
     }
 
     return {

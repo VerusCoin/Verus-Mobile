@@ -102,7 +102,7 @@ class ConfirmSend extends Component {
     .catch((e) => {
       this.setState({
         loading: false,
-        err: "Unknown error while building transaction, double check form data"
+        err: e.message ? e.message : "Unknown error while building transaction, double check form data"
       });
       console.log(e)
     })

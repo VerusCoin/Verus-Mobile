@@ -20,11 +20,18 @@ class CoinMenus extends Component {
   constructor(props) {
     super(props)
     let stateObj = this.generateTabs();
+
+    //CoinMenus can be passed data, which will be passed to 
+    //the app section components as props
+    this.passthrough = this.props.navigation.state.params ? this.props.navigation.state.params.data : null
+    
     this.state = {
       tabs: stateObj.tabs,
       activeTab: stateObj.activeTab,
-    };
+    }; 
   }
+
+  
 
   static navigationOptions = ({ navigation }) => {
     return {
@@ -65,7 +72,7 @@ class CoinMenus extends Component {
     }
 
     if (!activeTab) {
-      throw "Tab not found for active section " + this.props.activeSection.key
+      throw new Error("Tab not found for active section " + this.props.activeSection.key)
     }
 
     return {
@@ -99,9 +106,9 @@ class CoinMenus extends Component {
   render() {
     return (
       <View style={{ flex: 1 }}>
-          {this.state.activeTab.screen === "Overview" ? <Overview navigation={this.props.navigation}/> :
-          (this.state.activeTab.screen === "SendCoin" ? <SendCoin navigation={this.props.navigation}/> : 
-          (this.state.activeTab.screen === "ReceiveCoin" ? <ReceiveCoin navigation={this.props.navigation}/> : null))}
+          {this.state.activeTab.screen === "Overview" ? <Overview navigation={this.props.navigation} data={this.passthrough}/> :
+          (this.state.activeTab.screen === "SendCoin" ? <SendCoin navigation={this.props.navigation} data={this.passthrough}/> : 
+          (this.state.activeTab.screen === "ReceiveCoin" ? <ReceiveCoin navigation={this.props.navigation} data={this.passthrough}/> : null))}
         <BottomNavigation
           onTabPress={newTab => this.switchTab(newTab)}
           renderTab={this.renderTab}

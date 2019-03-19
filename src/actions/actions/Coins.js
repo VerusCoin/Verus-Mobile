@@ -18,7 +18,7 @@ export const addExistingCoin = (coinID, activeCoins, userName) => {
   
   if (coinIndex > -1) {
     if (activeCoins[coinIndex].users.includes(userName)) {
-      throw "Coin already added for user " + userName;
+      throw new Error("Coin already added for user " + userName);
     }
     else {
       activeCoins[coinIndex].users.push(userName);
@@ -58,7 +58,7 @@ export const addCustomCoin = (coinID, activeCoins, userName, coinName, coinDesc,
   
   if (coinIndex > -1) {
     if (activeCoins[coinIndex].users.includes(userName)) {
-      throw "Coin already added for user " + userName;
+      throw new Error("Coin already added for user " + userName);
     }
     else {
       let _activeCoins = activeCoins.slice();

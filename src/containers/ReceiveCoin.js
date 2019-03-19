@@ -54,7 +54,7 @@ class ReceiveCoin extends Component {
       this.setState({ address: activeUser.keys[index].pubKey });  
     }
     else {
-      throw "ReceiveCoin.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!";
+      throw new Error("ReceiveCoin.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!");
     }
   }
 

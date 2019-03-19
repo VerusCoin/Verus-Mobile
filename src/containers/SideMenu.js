@@ -17,6 +17,7 @@ import {
   setConfigSection
  } from '../actions/actionCreators'
 import { getKeyByValue } from '../utils/objectManip'
+import { NavigationActions } from 'react-navigation';
 
 const APP_INFO = 'App Info'
 const PROFILE = 'Profile'
@@ -45,7 +46,6 @@ class SideMenu extends Component {
   };
 
   _openCoin = (coinObj, screen, section) => {
-    let navigation = this.props.navigation 
     let sectionName = getKeyByValue(section, coinObj.apps)
     let index = 0;
     
@@ -56,13 +56,25 @@ class SideMenu extends Component {
     }
 
     if (index >= coinObj.apps[sectionName].data.length) {
-      throw "Array out of bounds error at _openCoin in SideMenu.js"
+      throw new Error("Array out of bounds error at _openCoin in SideMenu.js")
     }
 
     this.props.dispatch(setActiveCoin(coinObj))
     this.props.dispatch(setActiveApp(sectionName))
     this.props.dispatch(setActiveSection(coinObj.apps[sectionName].data[index]))
-    navigation.navigate("CoinMenus", { title: screen })
+    this.resetToScreen("CoinMenus", screen)
+  }
+
+  resetToScreen = (route, title, data) => {
+    const resetAction = NavigationActions.reset({
+      index: 1, // <-- currect active route from actions array
+      actions: [
+        NavigationActions.navigate({ routeName: "Home" }),
+        NavigationActions.navigate({ routeName: route, params: {title: title, data: data} }),
+      ],
+    })
+
+    this.props.navigation.dispatch(resetAction)
   }
 
   renderMainDrawerComponents = () => {
@@ -132,7 +144,7 @@ class SideMenu extends Component {
     } else if (drawerItem.title === PROFILE){
       this.props.dispatch(setConfigSection('settings-profile'))
     } else {
-      throw "Option " + drawerItem.title + " not found in possible settings values"
+      throw new Error("Option " + drawerItem.title + " not found in possible settings values")
     }
 
     navigation.navigate("SettingsMenus", { title: drawerItem.title })

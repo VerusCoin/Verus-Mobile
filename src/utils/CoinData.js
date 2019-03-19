@@ -52,11 +52,12 @@ coinsListSorted.sort((a, b) => {
 
 coinsListSorted.unshift({ id: "BTC", name: "Bitcoin", description: "The coin that started it all. Bitcoin (BTC) is a peer to peer digital currency created in 2009 by Satoshi Nakamoto.", fee: 10000});
 coinsListSorted.unshift({ id: "KMD", name: "Komodo", description: "", fee: 10000});
-coinsListSorted.unshift({ 
+coinsListSorted.unshift({
   id: "VRSC", 
   name: "Verus Coin", 
   description: "Verus Coin includes the first proven 51% hash attack resistant proof of power algorithm. The Verus vision is PBaaS, public blockchains as a service, provisioned for conditional rewards by Verus miners and stakers.", 
-  fee: 10000});
+  fee: 10000
+});
 
 export const coinsList = coinsListSorted;
 
@@ -108,7 +109,7 @@ export const findCoinObj = (id, userName) => {
     }
   }
   else {
-    throw id + " not found in coin list!";
+    throw new Error(id + " not found in coin list!")
   }
 
   return coinObj;

@@ -11,7 +11,9 @@ import { proxyServers } from './proxyServers';
 import { getBlockHeight } from './electrumCalls/getBlockHeight';
 import { getCoinPaprikaRate } from './ratesAPIs/coinPaprika';
 import { getAtomicExplorerBTCFees } from './btcFeesAPIs/atomicExplorer';
-import { truncateDecimal } from '../math'
+import { truncateDecimal } from '../math';
+import { randomBytes } from 'react-native-randombytes';
+import { timeout } from '../promises';
 
 // This purpose of this method is to take in a list of electrum servers,
 // and use a valid one to call a specified command given a set of parameters
@@ -20,7 +22,10 @@ import { truncateDecimal } from '../math'
 // It then calls the specified command with the specified params (passed in as an object)
 // on that electrum server with an HTTP get
 export const getElectrum = (serverList, callType, params, skipServer) => {
-  const proxyServer = proxyServers[Math.round(Math.random() * (proxyServers.length - 1))]
+  const randBytes = randomBytes(2)
+  const rand = (((randBytes['0'] & 0xFF) << 8) | (randBytes['1'] & 0xFF))
+  const proxyServer = proxyServers[rand % proxyServers.length]
+  
   let servers = []
   let serverPromises = []
   let serverInfo = []
@@ -45,35 +50,33 @@ export const getElectrum = (serverList, callType, params, skipServer) => {
     }
   }
 
+  if (serverPromises.length === 0) {
+    throw new Error("Only server in server array was requested as one to skip")
+  }
   
-
   return new Promise((resolve, reject) => {
     Promise.all(serverPromises)
     .then((results) => {
       //Here we pick a random server that has a connection
-      let index = 0
-      let resultObj = {}
-      let randNum = (Math.round(Math.random() * 3)) + 1
-      let skipped = 0
-      
-      while(skipped <= randNum || results[index].msg != "success" || !results[index]) {
-        if (results[index].msg == "success") {
-          skipped++
-        }
-
-        if (index == (results.length - 1)) {
-          index = 0
-        }
-        else {
-          index++
+      let goodServers = []
+      for (let i = 0; i < servers.length; i++) {
+        if (results[i].msg === 'success') {
+          goodServers.push(servers[i])
         }
       }
 
-      if (index < results.length) {
-        resultObj = {goodServer: servers[index], blockHeight: results[index].result}
+      if (goodServers.length > 0) {
+        const randBytes = randomBytes(2)
+        const rand = (((randBytes['0'] & 0xFF) << 8) | (randBytes['1'] & 0xFF))
+        let randIndex = rand % goodServers.length
+
+        resultObj = {goodServer: goodServers[randIndex], blockHeight: results[randIndex].result}
         return resultObj
       } else {
-        throw "No good server found"
+        console.log("Failed to find good server")
+        throw new Error(
+          "No valid server found out of options provided. Verus Mobile needs two active servers to securely verify transactions for any given coin."
+          )
       }
     })
     .then((resultObj) => {
@@ -105,14 +108,17 @@ export const getElectrum = (serverList, callType, params, skipServer) => {
 
       resolve(resultObj)
     })
-    .catch(err => console.log(err))
+    .catch(err => {
+      console.warn(err.message)
+      reject(err)
+    })
   });
 }
 
 //Function to update only if values have changed
 export const updateValues = (oldResponse, serverList, callType, params, coinID, skipServer) => {
   return new Promise((resolve, reject) => {
-    getElectrum(serverList, callType, params, skipServer)
+    timeout(global.REQUEST_TIMEOUT_MS, getElectrum(serverList, callType, params, skipServer))
     .then((response) => {
       if(response === oldResponse) {
         resolve({
@@ -120,7 +126,8 @@ export const updateValues = (oldResponse, serverList, callType, params, coinID, 
           result: oldResponse,
           new: false,
           blockHeight: response.blockHeight,
-          serverUsed: response.serverUsed
+          serverUsed: response.serverUsed,
+          error: false
         })
       } else if (response === false) {
         resolve(false)
@@ -130,9 +137,13 @@ export const updateValues = (oldResponse, serverList, callType, params, coinID, 
           result: response,
           new: true,
           blockHeight: response.blockHeight,
-          serverUsed: response.serverUsed
+          serverUsed: response.serverUsed,
+          error: false
         })
       }
+    })
+    .catch((err) => {
+      reject(err)
     })
   });
 }
@@ -238,6 +249,7 @@ export const postElectrum = (serverList, callType, data, skipServer) => {
 }
 
 export const getCoinRate = (coinObj) => {
+  //This is to be added to later
   let rateFunctions = [getCoinPaprikaRate(coinObj)]
 
   return new Promise((resolve, reject) => {
@@ -269,7 +281,6 @@ export const getRecommendedBTCFees = () => {
     Promise.all(feeFunctions)
     .then((fees) => {
       let feesFound = []
-      console.log(fees)
 
       for (let i = 0; i < fees.length; i++) {
         if (fees[i]) {

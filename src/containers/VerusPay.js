@@ -16,24 +16,32 @@ import QRCodeScanner from 'react-native-qrcode-scanner';
 import { isJson } from '../utils/objectManip'
 import { NavigationActions } from 'react-navigation';
 import { connect } from 'react-redux';
-import { namesList } from '../utils/CoinData'
+import { namesList, coinsList } from '../utils/CoinData'
 import { getRecommendedBTCFees } from '../utils/httpCalls/callCreators'
-import { 
+import { removeSpaces } from '../utils/stringUtils'
+import {
   updateCoinBalances,
   setUserCoins,
   addKeypair,
   transactionsNeedUpdate,
   needsUpdate,
-  addExistingCoin
+  addExistingCoin,
+  setActiveApp,
+  setActiveCoin,
+  setActiveSection
  } from '../actions/actionCreators'
 import Spinner from 'react-native-loading-spinner-overlay';
 import AlertAsync from "react-native-alert-async";
 import { coinsToSats } from '../utils/math'
 
-const FORMAT_UNKNOWN = "QR Data format unrecognized"
-const ADDRESS_ONLY = "Only address detected, please fill out amount field"
-const INCOMPLETE_VERUS_QR = "VerusQR code impartial or incomplete, cannot parse QR data"
-const INSUFFICIENT_FUNDS = "Insufficient funds"
+const FORMAT_UNKNOWN = "QR Data format unrecognized."
+const ADDRESS_ONLY = "Only address detected, please fill out amount field."
+const INCOMPLETE_VERUS_QR = "VerusQR code impartial or incomplete, cannot parse QR data."
+const INSUFFICIENT_FUNDS = "Insufficient funds."
+const INCOMPATIBLE_COIN = "The coin this invoice is requesting is currently incompatible with Verus Mobile."
+const INCOMPATIBLE_APP = "The coin this invoice is requesting does not have send functionality."
+const ONLY_ADDRESS = "This QR Code only contains only an address. Please select a coin and then scan."
+const BALANCE_NULL = "Couldn't fetch balance for coin."
 
 class VerusPay extends Component {
   constructor(props) {
@@ -61,9 +69,22 @@ class VerusPay extends Component {
   }
 
   componentWillUnmount() {
+    //TODO: Pop veruspay from navigation stack on unmount
     if (this.props.navigation.state.params && this.props.navigation.state.params.refresh) {
       this.props.navigation.state.params.refresh()
     }
+  }
+
+  resetToScreen = (route, title, data) => {
+    const resetAction = NavigationActions.reset({
+      index: 1, // <-- currect active route from actions array
+      actions: [
+        NavigationActions.navigate({ routeName: "Home" }),
+        NavigationActions.navigate({ routeName: route, params: {title: title, data: data} }),
+      ],
+    })
+
+    this.props.navigation.dispatch(resetAction)
   }
 
   //TODO: Allow veruspay from home to open send screen of a coin with address 
@@ -95,10 +116,10 @@ class VerusPay extends Component {
       }
     } else {
       if (typeof result === "string") {
-        let coinbaseAddr = this.isCoinbaseQR(result)
+        let coinURLParsed = this.parseCoinURL(result)
 
-        if (coinbaseAddr) {
-          this.addressOnly(coinbaseAddr)
+        if (coinURLParsed) {
+          this.handleVerusQR(coinURLParsed)
         } else if (result.length >= 34 && result.length <= 35) {
           this.addressOnly(result)
         } else {
@@ -117,15 +138,67 @@ class VerusPay extends Component {
 
   //Coinbase qr returns a string in the following format:
   //<coinName>:<address>
-  isCoinbaseQR = (qrString) => {
+  isCoinURL = (qrString) => {
     let splitString = qrString.split(":")
-    console.log(splitString)
 
     if (Array.isArray(splitString) && splitString.length === 2 && splitString[1].length >= 34 && splitString[1].length <= 35) {
       return splitString[1]
     } else {
       return false
     }
+  }
+
+  parseCoinURL = (qrString) => {
+    let fullURL = /^\w{1,30}:\w{33,36}\?amount\=\d*\.{1}\d*$/
+    //<coinName>:<address>?amount=<amount>
+    let partialURL = /^\w{1,30}:\w{33,36}$/
+    //<coinName>:<address>
+
+    let firstTry = qrString.match(fullURL) 
+
+    if(firstTry) {
+      //parse full URL here
+      let coinName = firstTry[0].substring(0, firstTry[0].indexOf(':'))
+      let address = firstTry[0].substring((firstTry[0].indexOf(':') + 1), firstTry[0].indexOf('?'))
+      let amount = firstTry[0].substring((firstTry[0].indexOf('=') + 1))
+
+      if (coinName && address && amount) {
+        //Find coin ticker from coin data here, URL has full name
+        const index = coinsList.findIndex(coinObj => removeSpaces(coinObj.name).toLowerCase() === coinName.toLowerCase());
+
+        if (index >= 0) {
+          //Create verusQR compatible data from coin URL
+          return {
+            coinTicker: coinsList[index].id,
+            address: address,
+            amount: coinsToSats(Number(amount))
+          }
+        } else {
+          throw new Error(INCOMPATIBLE_COIN)
+        }
+      }
+    } else {
+      let secondTry = qrString.match(partialURL) 
+
+      if (secondTry) {
+        //Parse partial URL here
+        let coinName = secondTry[0].substring(0, secondTry[0].indexOf(':'))
+        let address = secondTry[0].substring((secondTry[0].indexOf(':') + 1))
+
+        const index = coinsList.findIndex(coinObj => coinObj.name.toLowerCase() === coinName.toLowerCase());
+        if (index >= 0) {
+          //Create verusQR compatible data from coin URL
+          return {
+            coinTicker: coinsList[index].id,
+            address: address,
+          }
+        } else {
+          throw new Error(INCOMPATIBLE_COIN)
+        }
+      } else {
+        return false 
+      }
+    } 
   }
 
   cancelHandler = () => {
@@ -135,48 +208,57 @@ class VerusPay extends Component {
   handleVerusQR = (verusQR) => {
     const coinTicker = verusQR.coinTicker
     const address = verusQR.address
-    const amount = Number(verusQR.amount)
+    const amount = verusQR.hasOwnProperty('amount') ? Number(verusQR.amount) : null
     const memo = verusQR.memo
 
     console.log("CoinID: " + coinTicker)
     console.log("Address: " + address)
-    console.log("Amount: " + amount)
+    if (amount === null || amount <= 0) {
+      console.log("Invalid amount, need additional information for transaction")
+    } else {
+      console.log("Amount: " + amount)
+    }
     console.log("Memo: " + memo)
 
     if (
       coinTicker && 
       address && 
-      amount && 
       address.length >= 34 && 
-      address.length <= 35 && 
-      amount > 0) {
+      address.length <= 35) {
       if (this.coinExistsInWallet(coinTicker)) {
         let activeCoin = this.getCoinFromActiveCoins(coinTicker)
 
         if (activeCoin) {
-          const spendableBalance = this.props.balances[coinTicker].result.confirmed - activeCoin.fee
           if (this.state.fromHome || this.props.activeCoin.id === coinTicker) {
-            if (this.checkBalance(amount, spendableBalance)) {
-              this.preConfirm(
-                activeCoin, 
-                this.props.activeAccount, 
-                address,
-                amount,
-                memo
-              )
+            if (amount === null || amount <= 0) {
+              this.handleMissingAmount(activeCoin, address, memo)
+            } else {
+              if (this.checkBalance(amount, activeCoin)) {
+                this.preConfirm(
+                  activeCoin, 
+                  this.props.activeAccount, 
+                  address,
+                  amount,
+                  memo
+                )
+              }
             }
           } else {
             this.canExitWallet(this.props.activeCoin.id, coinTicker)
             .then((res) => {
               if (res) {
-                if (this.checkBalance(amount, spendableBalance)) {
-                  this.preConfirm(
-                    activeCoin, 
-                    this.props.activeAccount, 
-                    address,
-                    amount,
-                    memo
-                  )
+                if (amount === null || amount <= 0) {
+                  this.handleMissingAmount(activeCoin, address, memo)
+                } else {
+                  if (this.checkBalance(amount, activeCoin)) {
+                    this.preConfirm(
+                      activeCoin, 
+                      this.props.activeAccount, 
+                      address,
+                      amount,
+                      memo
+                    )
+                  }
                 }
               } else {
                 this.cancelHandler()
@@ -191,18 +273,20 @@ class VerusPay extends Component {
               .then((res) => {
                 if (res) {
                   activeCoin = this.getCoinFromActiveCoins(coinTicker)
-  
                   this.handleUpdates()
                   .then(() => {
-                    const spendableBalance = this.props.balances[coinTicker].result.confirmed - activeCoin.fee
-                    if (this.checkBalance(amount, spendableBalance)) {
-                      this.preConfirm(
-                        activeCoin, 
-                        this.props.activeAccount, 
-                        address,
-                        amount,
-                        memo
-                      )
+                    if (amount === null || amount <= 0) {
+                      this.handleMissingAmount(activeCoin, address, memo)
+                    } else {
+                      if (this.checkBalance(amount, activeCoin)) {
+                        this.preConfirm(
+                          activeCoin, 
+                          this.props.activeAccount, 
+                          address,
+                          amount,
+                          memo
+                        )
+                      }
                     }
                   })
                 }
@@ -239,9 +323,34 @@ class VerusPay extends Component {
           resolve(true)
         }
         else {
-          throw "Error adding coin"
+          throw new Error("Error adding coin")
         }
       })
+    })
+  }
+
+  handleMissingAmount = (coinObj, address, memo) => {
+    this.canFillAmount(memo, address)
+    .then((res) => {
+      if (res) {
+        if (coinObj.apps.hasOwnProperty('wallet')) {
+          let wallet = coinObj.apps.wallet
+          let sendIndex = wallet.data.findIndex(section => section.key === 'wallet-send')
+            
+          if (sendIndex >= 0) { 
+            this.props.dispatch(setActiveCoin(coinObj))
+            this.props.dispatch(setActiveApp('wallet'))
+            this.props.dispatch(setActiveSection(wallet.data[sendIndex]))
+            this.resetToScreen("CoinMenus", 'Send', {address: address}) 
+          } else {
+            this.errorHandler(INCOMPATIBLE_APP)
+          }
+        } else {
+          this.errorHandler(INCOMPATIBLE_APP)
+        }
+      } else {
+        this.cancelHandler()
+      }
     })
   }
 
@@ -309,13 +418,20 @@ class VerusPay extends Component {
     }) 
   }
 
-  checkBalance = (amount, spendableBalance) => {
-    if (amount > Number(spendableBalance)) {
-      this.errorHandler(INSUFFICIENT_FUNDS)
-      return false
+  checkBalance = (amount, activeCoin) => {
+    if (this.props.balances[activeCoin.id] && this.props.balances[activeCoin.id].result) {
+      const spendableBalance = this.props.balances[activeCoin.id].result.confirmed - activeCoin.fee
+
+      if (amount > Number(spendableBalance)) {
+        this.errorHandler(INSUFFICIENT_FUNDS)
+        return false
+      } else {
+        return true
+      }
     } else {
-      return true
+      this.errorHandler(BALANCE_NULL)
     }
+    
   }
 
   canExitWallet = (fromTicker, toTicker) => {
@@ -323,6 +439,26 @@ class VerusPay extends Component {
       'Exiting Wallet',
       'This invoice is requesting funds in ' + toTicker + ', but you are currently ' + 
       'in the ' + fromTicker + ' wallet. Would you like to proceed?',
+      [
+        {
+          text: 'No, take me back',
+          onPress: () => Promise.resolve(false),
+          style: 'cancel',
+        },
+        {text: 'Yes', onPress: () => Promise.resolve(true)},
+      ],
+      {
+        cancelable: false,
+      },
+    )
+  }
+
+  canFillAmount = (memo, address) => {
+    return AlertAsync(
+      'Missing Amount',
+      'This invoice does not specify an amount, in order to proceed you ' + 
+      'will need to fill in the amount yourself, would you like to continue?' +
+      '\n\n To: ' + address + (memo ? ('\n\n Memo: ' + memo) : null),
       [
         {
           text: 'No, take me back',
@@ -358,7 +494,7 @@ class VerusPay extends Component {
 
   goToConfirmScreen = () => {
     const route = "ConfirmSend"
-    let navigation = this.props.navigation
+
     let data = {
       coinObj: this.state.coinObj,
       activeUser: this.state.activeUser,
@@ -369,9 +505,7 @@ class VerusPay extends Component {
       memo: this.state.memo
     }
 
-    navigation.navigate(route, {
-      data: data
-    });
+    this.resetToScreen(route, "Confirm", data)
   }
 
   handleUpdates = () => {
@@ -430,13 +564,7 @@ class VerusPay extends Component {
       this.props.navigation.state.params.fillAddress(address)
       this.props.navigation.dispatch(NavigationActions.back())
     } else {
-      this.errorHandler(FORMAT_UNKNOWN)
-    }
-  }
-
-  QRCodeScanner = () => {
-    return {
-      
+      this.errorHandler(ONLY_ADDRESS)
     }
   }
 
@@ -449,7 +577,7 @@ class VerusPay extends Component {
             captureAudio={false}
           />
         <Spinner
-          visible={this.state.loading || this.state.loadingBTCFees || this.state.addingCoin}
+          visible={this.state.loading || this.state.loadingBTCFees || this.state.addingCoin || this.state.spinnerOverlay}
           textContent={
             this.state.addingCoin ? 
               "Adding coin..."
