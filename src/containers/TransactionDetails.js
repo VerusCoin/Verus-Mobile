@@ -83,7 +83,7 @@ class TransactionDetails extends Component {
   }
 
   copyTxIDToClipboard = () => {
-    Clipboard.setString(this.state.txData.txid);
+    Clipboard.setString(this.state.activeCoinID === 'BTC' ? this.decodeBtcTxid(this.state.txData.txid) : this.state.txData.txid);
     Alert.alert("ID Copied", "Transaction ID copied to clipboard")
   }
 
