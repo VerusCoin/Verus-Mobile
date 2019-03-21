@@ -227,12 +227,6 @@ class Overview extends Component {
   }
 
   renderBalanceLabel = () => {
-    /*if (this.state.loading) {
-      return (
-      <ActivityIndicator style={styles.spinner} animating={this.state.loading} size="large"/>
-      )
-    } else */
-    
     if (this.props.balances.hasOwnProperty(this.props.activeCoin.id) && this.props.balances[this.props.activeCoin.id].error) {
       return (
         <Text style={styles.connectionErrorLabel}>

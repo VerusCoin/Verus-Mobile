@@ -86,6 +86,22 @@ class TransactionDetails extends Component {
     Clipboard.setString(this.state.txData.txid);
     Alert.alert("ID Copied", "Transaction ID copied to clipboard")
   }
+
+  //TODO: Move this higher up to txid source
+  decodeBtcTxid = () => {
+    //Decode decimal txid to hex string
+    let txid = this.state.txData.txid
+    let txidArr = txid.split(",")
+
+    for (let i = 0; i < txidArr.length; i++) {
+      txidArr[i] = Number(txidArr[i]).toString(16)
+      if (!(isNaN(Number(txidArr[i]))) && txidArr[i].length === 1) {
+        txidArr[i] = "0" + txidArr[i]
+      }
+    }
+    
+    return txidArr.join('')
+  }
   
   render() {
     const {state} = this.props.navigation;
@@ -121,7 +137,7 @@ class TransactionDetails extends Component {
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoText}>ID:</Text>
-              <Text style={styles.addressText}>{this.state.txData.txid}</Text>
+              <Text style={styles.addressText}>{this.state.activeCoinID === 'BTC' ? this.decodeBtcTxid(this.state.txData.txid) : this.state.txData.txid}</Text>
             </View>
             <TouchableOpacity onPress={this.copyTxIDToClipboard}>
               <Icon name="content-copy" size={25} color="#E9F1F7"/>
