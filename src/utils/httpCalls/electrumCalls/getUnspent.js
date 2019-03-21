@@ -88,7 +88,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
           const decodedTx = TxDecoder(gottenTransactions[i].result, network)
           const currentHeight = gottenTransactions[i].blockHeight
 
-          if (hashRawTx(gottenTransactions[i].result) !== _utxoItem['tx_hash']) {
+          if (hashRawTx(gottenTransactions[i].result, network) !== _utxoItem['tx_hash']) {
             throw new Error(
               'Mismatch error! At least one transaction ID provided by server ' + JSON.stringify(serverUsed) + 
               ' does not match the values of the transaction that it represents! This could indicate that the server is malicious, and this transaction has been canceled.')

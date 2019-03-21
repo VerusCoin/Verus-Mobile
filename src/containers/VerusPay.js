@@ -149,7 +149,7 @@ class VerusPay extends Component {
   }
 
   parseCoinURL = (qrString) => {
-    let fullURL = /^\w{1,30}:\w{33,36}\?amount\=\d*\.{1}\d*$/
+    let fullURL = /^\w{1,30}:\w{33,36}\?amount\=\d*\.{1}\d*/
     //<coinName>:<address>?amount=<amount>
     let partialURL = /^\w{1,30}:\w{33,36}$/
     //<coinName>:<address>
@@ -174,7 +174,8 @@ class VerusPay extends Component {
             amount: coinsToSats(Number(amount))
           }
         } else {
-          throw new Error(INCOMPATIBLE_COIN)
+          this.errorHandler(INCOMPATIBLE_COIN)
+          return false
         }
       }
     } else {
@@ -193,7 +194,8 @@ class VerusPay extends Component {
             address: address,
           }
         } else {
-          throw new Error(INCOMPATIBLE_COIN)
+          this.errorHandler(INCOMPATIBLE_COIN)
+          return false
         }
       } else {
         return false 
@@ -323,7 +325,7 @@ class VerusPay extends Component {
           resolve(true)
         }
         else {
-          throw new Error("Error adding coin")
+          this.errorHandler("Error adding coin")
         }
       })
     })
