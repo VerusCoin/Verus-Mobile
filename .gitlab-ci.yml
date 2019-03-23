@@ -9,7 +9,7 @@ variables:
   ${CI_COMMIT_MESSAGE}"
 
 build:
-  tags: Mobile
+  tags: ["Mobile"]
   stage: build
   script:
     - yarn install
