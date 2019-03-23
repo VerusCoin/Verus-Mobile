@@ -1,0 +1,25 @@
+stages:
+  - build
+
+variables:
+  POST_MESSAGE: "Pipeline Trigger: ${CI_PIPELINE_SOURCE}\n
+  Branch: ${CI_COMMIT_REF_NAME}\n
+  Commit: ${CI_COMMIT_SHA}\n
+  Author:  ${GITLAB_USER_NAME} <${GITLAB_USER_EMAIL}>\n
+  ${CI_COMMIT_MESSAGE}"
+
+build:
+  tags: Mobile
+  stage: build
+  script:
+    - yarn install
+    - yarn run bundle-android
+    - cd android && ./gradlew assembleDebug
+    - ls
+
+
+  artifacts:
+    paths:
+      - android/app/build
+      - yarn-lock.json
+
