@@ -3,7 +3,12 @@
   "version": "0.1.4-beta",
   "private": true,
   "scripts": {
-    "start": "meteor run",
+    "postinstall": "./node_modules/.bin/rn-nodeify --hack --install",
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "android": "react-native run-android",
+    "bundle-android": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/",
+    "bundle-ios": "react-native bundle --dev false --entry-file index.js --bundle-output ios/main.jsbundle --platform ios",
+    "dist-android": "cd android && ./gradlew assembleRelease && cd ..",
     "test": "jest"
   },
   "dependencies": {
@@ -37,9 +42,9 @@
     "path-browserify": "0.0.0",
     "qrcode.react": "^0.7.1",
     "querystring-es3": "^0.2.1",
-    "react": "^16.8.2",
+    "react": "16.8.3",
     "react-dom": "^16.4.2",
-    "react-native": "0.54.0",
+    "react-native": "0.59.1",
     "react-native-alert-async": "^1.0.3",
     "react-native-camera": "^1.10.1",
     "react-native-crypto": "^2.1.2",
@@ -76,9 +81,12 @@
   },
   "devDependencies": {
     "babel-jest": "23.6.0",
-    "metro-react-native-babel-preset": "0.48.0",
+    "metro-react-native-babel-preset": "0.53.1",
     "react-test-renderer": "16.5.0",
     "rn-nodeify": "github:tradle/rn-nodeify"
+  },
+  "resolutions": {
+    "typeforce": "git+https://github.com/michaeltout/typeforce"
   },
   "jest": {
     "preset": "react-native"
