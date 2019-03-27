@@ -6,8 +6,9 @@
     "postinstall": "./node_modules/.bin/rn-nodeify --hack --install",
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "android": "react-native run-android",
+    "ios": "react-native run-ios",
     "bundle-android": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/",
-    "bundle-ios": "react-native bundle --dev false --entry-file index.js --bundle-output ios/main.jsbundle --platform ios",
+    "bundle-ios": "react-native bundle --dev false --entry-file index.js --bundle-output ios/main.jsbundle --platform ios --assets-dest='./ios'",
     "dist-android": "cd android && ./gradlew assembleRelease && cd ..",
     "test": "jest"
   },
@@ -55,6 +56,7 @@
     "react-native-material-dropdown": "^0.11.1",
     "react-native-os": "^1.2.1",
     "react-native-paper": "^2.6.3",
+    "react-native-permissions": "^1.1.1",
     "react-native-progress": "^3.5.0",
     "react-native-qrcode-scanner": "^1.1.2",
     "react-native-qrcode-svg": "^5.1.2",
