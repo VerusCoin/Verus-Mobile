@@ -142,6 +142,7 @@ class DeleteProfile extends Component {
         Enter your password:
         </FormLabel>
         <FormInput 
+          underlineColorAndroid="#86939d"
           onChangeText={(text) => this.setState({pwd: text})}
           autoCapitalize={"none"}
           autoCorrect={false}

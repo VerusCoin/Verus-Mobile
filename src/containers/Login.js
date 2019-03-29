@@ -181,6 +181,7 @@ class Login extends Component {
               Enter password:
             </FormLabel>
             <FormInput 
+              underlineColorAndroid="#86939d"
               onChangeText={(text) => this.setState({password: text})}
               autoCapitalize={"none"}
               autoCorrect={false}

@@ -164,6 +164,7 @@ class ReceiveCoin extends Component {
             Your address:
             </FormLabel>
             <FormInput 
+              underlineColorAndroid="#86939d"
               editable={false}
               value={this.state.address}
               autoCapitalize={"none"}
@@ -188,6 +189,7 @@ class ReceiveCoin extends Component {
             Enter an amount:
             </FormLabel>
             <FormInput 
+              underlineColorAndroid="#86939d"
               onChangeText={(text) => this.setState({amount: text})}
               shake={this.state.errors.amount}
               inputStyle={styles.formInput}
@@ -207,6 +209,7 @@ class ReceiveCoin extends Component {
             Enter a note for the receiver (optional):
             </FormLabel>
             <FormInput 
+              underlineColorAndroid="#86939d"
               onChangeText={(text) => this.setState({memo: text})}
               autoCapitalize={"none"}
               autoCorrect={false}

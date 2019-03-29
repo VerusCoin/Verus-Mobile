@@ -284,6 +284,7 @@ class SendCoin extends Component {
               To:
               </FormLabel>
               <FormInput 
+                underlineColorAndroid="#86939d"
                 onChangeText={(text) => this.setState({toAddress: removeSpaces(text)})}
                 onSubmitEditing={Keyboard.dismiss}
                 value={this.state.toAddress}
@@ -306,6 +307,7 @@ class SendCoin extends Component {
               Amount:
               </FormLabel>
               <FormInput 
+                underlineColorAndroid="#86939d"
                 onChangeText={(text) => this.setState({amount: text})}
                 onSubmitEditing={Keyboard.dismiss}
                 value={this.state.amount.toString()}

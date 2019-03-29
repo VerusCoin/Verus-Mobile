@@ -131,6 +131,7 @@ class RecoverSeed extends Component {
             Enter your account password:
             </FormLabel>
             <FormInput 
+              underlineColorAndroid="#86939d"
               onChangeText={(text) => this.setState({password: text})}
               value={this.state.password}
               autoCapitalize={"none"}
