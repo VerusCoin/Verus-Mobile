@@ -33,13 +33,14 @@ export const _coinsList = {
       { id: "ZEC", name: "ZCash", description: "", fee: 10000},
       { id: "DASH", name: "Dash", description: "", fee: 10000},
       { id: "LTC", name: "Litecoin", description: "", fee: 30000},
+      { id: "ZILLA", name: "ChainZilla", description: "", fee: 10000},
     ]
 };
 
 //To make flatlist render faster
-export const namesList = ['VRSC','KMD','BTC','BCH','CCL',
-                          'DASH','DGB','DOGE',
-                          'LTC','OOT', 'ZEC']
+export const namesList = _coinsList.coins.map(function(coin) {
+  return coin.id;
+});
 
   // sorting needs to be done
 let coinsListSorted = _coinsList.coins;

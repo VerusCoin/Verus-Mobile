@@ -75,7 +75,7 @@ class ResetPwd extends Component {
           />
         </View>
         { this.state.seed &&
-          <View style={{padding: 10, backgroundColor: '#FFF'}}>
+          <View style={{padding: 10, backgroundColor: '#FFF', marginTop: 5}}>
             <QRCode
               value={this.state.seed}
               size={250}
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   },
   wifLabel: {
     backgroundColor: "transparent",
-    marginTop: 50,
+    marginTop: 20,
     marginBottom: 8,
     paddingBottom: 0,
     fontSize: 22,
@@ -134,7 +134,8 @@ const styles = StyleSheet.create({
   },
   wifInput: {
     width: "100%",
-    color: "#009B72"
+    color: "#009B72",
+    textAlign: "center"
   },
   buttonContainer: {
     width: "75%",
