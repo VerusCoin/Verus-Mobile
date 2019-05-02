@@ -1,7 +1,8 @@
 import { updateValues, getMerkleRoot, getBlockInfo } from '../callCreators'
 import { getOneTransaction } from './getTransaction'
 import { TxDecoder } from '../../crypto/txDecoder'
-import { hashRawTx } from '../../crypto/hash'
+import { hashRawTx, hexHashToDecimal } from '../../crypto/hash'
+import { arraysEqual } from '../../objectManip'
 import { networks } from 'bitgo-utxo-lib'
 import { coinsToSats, satsToCoins, kmdCalcInterest, truncateDecimal } from '../../math'
 
@@ -88,7 +89,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
           const decodedTx = TxDecoder(gottenTransactions[i].result, network)
           const currentHeight = gottenTransactions[i].blockHeight
 
-          if (hashRawTx(gottenTransactions[i].result, network) !== _utxoItem['tx_hash']) {
+          if (!arraysEqual(hashRawTx(gottenTransactions[i].result, network), hexHashToDecimal(_utxoItem['tx_hash']))) {
             throw new Error(
               'Mismatch error! At least one transaction ID provided by server ' + JSON.stringify(serverUsed) + 
               ' does not match the values of the transaction that it represents! This could indicate that the server is malicious, and this transaction has been canceled.')

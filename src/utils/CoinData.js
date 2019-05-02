@@ -37,12 +37,7 @@ export const _coinsList = {
     ]
 };
 
-//To make flatlist render faster
-export const namesList = _coinsList.coins.map(function(coin) {
-  return coin.id;
-});
-
-  // sorting needs to be done
+// sorting needs to be done
 let coinsListSorted = _coinsList.coins;
 
 coinsListSorted.sort((a, b) => {
@@ -58,6 +53,11 @@ coinsListSorted.unshift({
   name: "Verus Coin", 
   description: "Verus Coin includes the first proven 51% hash attack resistant proof of power algorithm. The Verus vision is PBaaS, public blockchains as a service, provisioned for conditional rewards by Verus miners and stakers.", 
   fee: 10000
+});
+
+//To make flatlist render faster
+export const namesList = coinsListSorted.map(function(coin) {
+  return coin.id;
 });
 
 export const coinsList = coinsListSorted;

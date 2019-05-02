@@ -16,7 +16,7 @@ export const hashRawTx = (rawTxString, network) => {
   } else {
     let rawTxBuffer = new Buffer(rawTxString, 'hex')
 
-    return reverse(sha256(sha256(rawTxBuffer))).toString('hex')
+    return reverse(sha256(sha256(rawTxBuffer)))
   }
 }
 
@@ -27,11 +27,17 @@ export const decodeBitcoinTxID = (rawTxString, network) => {
   let txidArr = txid.split(",")
 
   for (let i = 0; i < txidArr.length; i++) {
-    txidArr[i] = Number(txidArr[i]).toString(16)
-    if (!(isNaN(Number(txidArr[i]))) && txidArr[i].length === 1) {
-      txidArr[i] = "0" + txidArr[i]
-    }
+    txidArr[i] = Number(txidArr[i])
   }
 
-  return txidArr.join('')
+  return txidArr
+}
+
+//Converts hex txid to decimal array
+export const hexHashToDecimal = (hexHash) => {
+  let hexHashArray = hexHash.match(/.{1,2}/g)
+
+  return hexHashArray.map((byte, index) => {
+    return parseInt(byte, 16)
+  })
 }
