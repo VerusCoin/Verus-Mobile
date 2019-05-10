@@ -11,13 +11,13 @@ import Button1 from "../symbols/button1";
 import { connect } from 'react-redux';
 import { txPreflight } from '../utils/httpCalls/callCreators';
 import { networks } from 'bitgo-utxo-lib';
-import { View, StyleSheet, Text, ScrollView, Keyboard } from "react-native";
-import { satsToCoins, truncateDecimal } from '../utils/math';
+import { View, StyleSheet, Text, ScrollView, Keyboard, Alert } from "react-native";
+import { satsToCoins, truncateDecimal, coinsToSats } from '../utils/math';
 import ProgressBar from 'react-native-progress/Bar';
 import { NavigationActions } from 'react-navigation';
 
 
-const TIMEOUT_LIMIT = 60000
+const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
 
 class ConfirmSend extends Component {
@@ -32,14 +32,15 @@ class ConfirmSend extends Component {
         loading: true,
         network: null,
         fee: 0,
-        amount: 0,
+        amountSubmitted: 0,
         balance: 0,
         remainingBalance: 0,
-        guiAmount: 0,
+        finalTxAmount: 0,
         memo: null,
         loadingProgress: 0.175,
         loadingMessage: "Creating transaction...",
-        btcFeePerByte: null
+        btcFeePerByte: null,
+        feeTakenFromAmount: false
     };
   }
 
@@ -74,10 +75,28 @@ class ConfirmSend extends Component {
         });
         clearInterval(this.loadingInterval);
       } else {
+        let feeTakenFromAmount = res.result.feeTakenFromAmount
         let balanceCoins = satsToCoins(balance)
-        let guiAmount = satsToCoins(amount) + (coinObj.id === 'BTC' ? Number(res.result.fee) : satsToCoins(fee))
-        let remainingBalance = balanceCoins - guiAmount
+        let finalTxAmount = feeTakenFromAmount ? res.result.value : (res.result.value + coinsToSats(Number(res.result.fee)))
+        let remainingBalance = balanceCoins - satsToCoins(finalTxAmount)
         clearInterval(this.loadingInterval);
+
+        if (res.result.feeTakenFromAmount) {
+          if (!res.result.unshieldedFunds) {
+            Alert.alert(
+              "Warning", 
+              "Your transaction amount has been changed to " + satsToCoins(finalTxAmount) + " " + coinObj.id + 
+              " as you do not have sufficient funds to cover your submitted amount of " + satsToCoins(res.result.amountSubmitted) + " " + coinObj.id + 
+              " + a fee of " + res.result.fee + " " + coinObj.id + ".");
+          } else {
+            Alert.alert(
+              "Warning", 
+              "Your transaction amount has been changed to " + satsToCoins(finalTxAmount) + " " + coinObj.id + 
+              " as you do not have sufficient funds to cover your submitted amount of " + satsToCoins(res.result.amountSubmitted) + " " + coinObj.id + 
+              " + a fee of " + res.result.fee + " " + coinObj.id + ". This could be due to the " + satsToCoins(res.result.unshieldedFunds) + " in unshielded " + coinObj.id + " your " + 
+              "wallet contains. Log into a native client and shield your mined funds to be able to use them." );
+          }
+        }
         
         this.setState({
           loading: false,
@@ -85,17 +104,18 @@ class ConfirmSend extends Component {
           fromAddress: res.result.changeAddress,
           network: res.result.network,
           fee: res.result.fee,
-          amount: res.result.value,
+          amountSubmitted: res.result.amountSubmitted,
           utxoCrossChecked: res.result.utxoVerified,
           coinObj: coinObj,
           activeUser: activeUser,
           balance: balanceCoins,
           memo: memo,
           remainingBalance: remainingBalance,
-          guiAmount: guiAmount,
+          finalTxAmount: finalTxAmount,
           loadingProgress: 1,
           loadingMessage: "Done",
-          btcFeePerByte: fee.feePerByte ? fee.feePerByte : null
+          btcFeePerByte: fee.feePerByte ? fee.feePerByte : null,
+          feeTakenFromAmount: res.result.feeTakenFromAmount
         });
       }
     })
@@ -127,7 +147,10 @@ class ConfirmSend extends Component {
       activeUser: this.state.activeUser,
       toAddress: this.state.toAddress,
       fromAddress: this.state.fromAddress,
-      amount: truncateDecimal(this.state.amount, 0),
+      amount: this.state.feeTakenFromAmount ? 
+        truncateDecimal(this.state.finalTxAmount, 0) 
+        : 
+        (truncateDecimal(this.state.finalTxAmount, 0) - coinsToSats(Number(this.state.fee))),
       btcFee: this.state.btcFeePerByte,
     }
 
@@ -191,7 +214,7 @@ class ConfirmSend extends Component {
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoText}>Amount Submitted:</Text>
-              <Text style={styles.infoText}>{truncateDecimal(satsToCoins(this.state.amount), 8) + ' ' + this.state.coinObj.id}</Text>
+              <Text style={styles.infoText}>{truncateDecimal(satsToCoins(this.state.amountSubmitted), 8) + ' ' + this.state.coinObj.id}</Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoText}>Fee:</Text>
@@ -199,7 +222,7 @@ class ConfirmSend extends Component {
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoText}>Tx Amount:</Text>
-              <Text style={styles.infoText}>{truncateDecimal(this.state.guiAmount, 8) + ' ' + this.state.coinObj.id}</Text>
+              <Text style={this.state.feeTakenFromAmount ? styles.warningText : styles.infoText}>{truncateDecimal(satsToCoins(this.state.finalTxAmount), 8) + ' ' + this.state.coinObj.id}</Text>
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.infoText}>Balance After Tx:</Text>
@@ -307,6 +330,14 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 16,
     color: "#E9F1F7"
+  },
+  infoText: {
+    fontSize: 16,
+    color: "#E9F1F7"
+  },
+  warningText: {
+    fontSize: 16,
+    color: "#ffa303"
   },
   addressText: {
     fontSize: 16,

@@ -35,7 +35,7 @@ import {
 import ProgressBar from 'react-native-progress/Bar';
 import { Icon } from 'react-native-elements'
 
-const TIMEOUT_LIMIT = 60000
+const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
 
 class SendResult extends Component {
@@ -205,7 +205,7 @@ class SendResult extends Component {
               <Text style={styles.infoText}>Success!</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Amount:</Text>
+              <Text style={styles.infoText}>Amount Sent:</Text>
               <Text style={styles.infoText}>{truncateDecimal(satsToCoins(this.state.amount), 8) + ' ' + this.state.coinObj.id}</Text>
             </View>
             <View style={styles.infoRow}>

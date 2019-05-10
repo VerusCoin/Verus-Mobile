@@ -133,7 +133,7 @@ class Home extends Component {
     
     for (let key in this.props.rates) {
       if (typeof this.props.rates[key] === "number") {
-        coinBalance = balances.hasOwnProperty(key) ? 
+        coinBalance = balances.hasOwnProperty(key) && !balances[key].error && !isNaN(balances[key].result.confirmed) ? 
         truncateDecimal(satsToCoins(balances[key].result.confirmed), 4) : 0
 
         _totalFiatBalance += coinBalance*this.props.rates[key]
@@ -197,7 +197,7 @@ class Home extends Component {
               title={<Text style={styles.coinItemLabel}>{item.name}</Text>}   
               subtitle={
                 this.props.balances.hasOwnProperty(item.id) ? 
-                  this.props.balances[item.id].error ? 
+                  this.props.balances[item.id].error || isNaN(this.props.balances[item.id].result.confirmed) ? 
                     CONNECTION_ERROR
                     :
                     truncateDecimal(satsToCoins(this.props.balances[item.id].result.confirmed), 4) + ' ' + item.id 
@@ -205,13 +205,16 @@ class Home extends Component {
                 null
               }                       
               avatar={item.logo}  
-              subtitleStyle={this.props.balances.hasOwnProperty(item.id) && this.props.balances[item.id].error ? {color: "rgba(206,68,70,1)"} : null} 
+              subtitleStyle={this.props.balances.hasOwnProperty(item.id) && (this.props.balances[item.id].error || isNaN(this.props.balances[item.id].result.confirmed)) ? {color: "rgba(206,68,70,1)"} : null} 
               containerStyle={{ borderBottomWidth: 0 }} 
               rightTitle={
               ('$' + 
-              truncateDecimal(((typeof(this.props.rates[item.id]) === 'number' ? this.props.rates[item.id] : 0)*(this.props.balances.hasOwnProperty(item.id) ? 
-              satsToCoins(this.props.balances[item.id].result.confirmed) :
-              0)), 2))
+              (!this.props.balances.hasOwnProperty(item.id) || this.props.balances[item.id].error || isNaN(this.props.balances[item.id].result.confirmed) ? 
+                '0.00'
+                :
+                truncateDecimal(((typeof(this.props.rates[item.id]) === 'number' ? this.props.rates[item.id] : 0)*(this.props.balances.hasOwnProperty(item.id) ? 
+                satsToCoins(this.props.balances[item.id].result.confirmed) :
+                0)), 2)))
             }
             />
           </TouchableOpacity>   
