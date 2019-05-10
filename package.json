@@ -30,7 +30,6 @@
     "console-browserify": "^1.1.0",
     "constants-browserify": "^1.0.0",
     "cordova-common": "^3.1.0",
-    "crypto": "^1.0.1",
     "dns.js": "^1.0.1",
     "domain-browser": "^1.2.0",
     "https-browserify": "0.0.1",
@@ -45,7 +44,7 @@
     "querystring-es3": "^0.2.1",
     "react": "16.8.3",
     "react-dom": "^16.4.2",
-    "react-native": "0.59.2",
+    "react-native": "0.59.8",
     "react-native-alert-async": "^1.0.3",
     "react-native-camera": "^1.10.1",
     "react-native-crypto": "^2.1.2",
@@ -88,7 +87,11 @@
     "rn-nodeify": "github:tradle/rn-nodeify"
   },
   "resolutions": {
-    "typeforce": "git+https://github.com/michaeltout/typeforce"
+    "typeforce": "git+https://github.com/michaeltout/typeforce",
+    "braces": "^3.0.2",
+    "tar": "^4.4.8",
+    "semver": "^6.0.0",
+    "bl": "^3.0.0"
   },
   "jest": {
     "preset": "react-native"
