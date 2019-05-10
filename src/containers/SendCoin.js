@@ -313,7 +313,7 @@ class SendCoin extends Component {
                 value={this.state.amount.toString()}
                 shake={this.state.formErrors.amount}
                 inputStyle={styles.formInput}
-                keyboardType={"numeric"}
+                keyboardType={"decimal-pad"}
               />
               <FormValidationMessage>
               {
