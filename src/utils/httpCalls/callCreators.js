@@ -7,7 +7,7 @@ export * from './electrumCalls/getUnspent';
 export * from './electrumCalls/getMerkle';
 export * from './electrumCalls/pushTx'
 
-import { proxyServers } from './proxyServers';
+import { proxyServers, httpsEnabled } from './proxyServers';
 import { getBlockHeight } from './electrumCalls/getBlockHeight';
 import { getCoinPaprikaRate } from './ratesAPIs/coinPaprika';
 import { getAtomicExplorerBTCFees } from './btcFeesAPIs/atomicExplorer';
@@ -81,7 +81,7 @@ export const getElectrum = (serverList, callType, params, skipServer) => {
     })
     .then((resultObj) => {
       let electrumServer = resultObj.goodServer
-      let httpAddr = `https://${proxyServer}/api/${callType}?port=${electrumServer.port}&ip=${electrumServer.ip}&proto=${electrumServer.proto}`
+      let httpAddr = `${httpsEnabled ? 'https' : 'http'}://${proxyServer}/api/${callType}?port=${electrumServer.port}&ip=${electrumServer.ip}&proto=${electrumServer.proto}`
       let promiseArray = []
 
       for (let key in params) {
@@ -207,7 +207,7 @@ export const postElectrum = (serverList, callType, data, skipServer) => {
     })
     .then((resultObj) => {
       let electrumServer = resultObj.goodServer
-      let httpAddr = `https://${proxyServer}/api/${callType}`
+      let httpAddr = `${httpsEnabled ? 'https' : 'http'}://${proxyServer}/api/${callType}`
       let promiseArray = []
       let bodyObj = {
         port: electrumServer.port,
