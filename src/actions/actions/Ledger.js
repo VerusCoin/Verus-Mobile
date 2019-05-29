@@ -4,8 +4,6 @@ import {
   updateCoinRates
 } from '../actionCreators';
 
-import { Platform } from 'react-native'
-
 import { 
   getBalances,
   getOneBalance,
@@ -22,8 +20,7 @@ import { formatTx } from '../../utils/crypto/txDecoder';
 
 const Buffer = require('safe-buffer').Buffer;
 
-
- export const updateCoinTransactions = (coinID, transactions, oldTransactions, needsUpdateObj) => {
+export const updateCoinTransactions = (coinID, transactions, oldTransactions, needsUpdateObj) => {
   let _transactions = oldTransactions
   _transactions[coinID] = transactions
 

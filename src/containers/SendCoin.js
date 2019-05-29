@@ -210,7 +210,12 @@ class SendCoin extends Component {
       
       const toAddress = removeSpaces(this.state.toAddress)
       const fromAddress = this.state.fromAddress
-      const amount = this.state.amount.includes(".") && this.state.amount.includes(",") ? this.state.amount : this.state.amount.replace(/,/g, '.')
+      const amount = (((this.state.amount.toString()).includes(".") && 
+                    (this.state.amount.toString()).includes(",")) || 
+                    !this.state.amount) ? 
+                      this.state.amount 
+                    : 
+                      (this.state.amount.toString()).replace(/,/g, '.')
       const account = this.state.account
       let _errors = false
 
