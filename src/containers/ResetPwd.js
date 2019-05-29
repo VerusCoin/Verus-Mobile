@@ -146,6 +146,7 @@ class ResetPwd extends Component {
             Enter your current password:
             </FormLabel>
             <FormInput 
+              underlineColorAndroid="#86939d"
               onChangeText={(text) => this.setState({oldPwd: text})}
               autoCapitalize={"none"}
               autoCorrect={false}
@@ -167,6 +168,7 @@ class ResetPwd extends Component {
             Enter a new password (min. 5 characters):
             </FormLabel>
             <FormInput 
+              underlineColorAndroid="#86939d"
               onChangeText={(text) => this.setState({newPwd: text})}
               autoCapitalize={"none"}
               autoCorrect={false}
@@ -188,6 +190,7 @@ class ResetPwd extends Component {
             Confirm new password:
             </FormLabel>
             <FormInput 
+              underlineColorAndroid="#86939d"
               onChangeText={(text) => this.setState({confirmNewPwd: text})}
               autoCapitalize={"none"}
               autoCorrect={false}

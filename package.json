@@ -1,6 +1,6 @@
 {
   "name": "verusmobile",
-  "version": "0.1.4-beta",
+  "version": "0.1.6-beta",
   "private": true,
   "scripts": {
     "postinstall": "./node_modules/.bin/rn-nodeify --hack --install",
@@ -28,9 +28,7 @@
     "browserify-zlib": "^0.1.4",
     "buffer": "^4.9.1",
     "console-browserify": "^1.1.0",
-    "constants-browserify": "^1.0.0",
     "cordova-common": "^3.1.0",
-    "crypto": "^1.0.1",
     "dns.js": "^1.0.1",
     "domain-browser": "^1.2.0",
     "https-browserify": "0.0.1",
@@ -45,7 +43,7 @@
     "querystring-es3": "^0.2.1",
     "react": "16.8.3",
     "react-dom": "^16.4.2",
-    "react-native": "0.59.2",
+    "react-native": "0.59.8",
     "react-native-alert-async": "^1.0.3",
     "react-native-camera": "^1.10.1",
     "react-native-crypto": "^2.1.2",
@@ -79,7 +77,8 @@
     "tx-builder": "^0.18.0",
     "url": "^0.10.3",
     "vm": "^0.1.0",
-    "vm-browserify": "0.0.4"
+    "vm-browserify": "0.0.4",
+    "events": "^1.0.0"
   },
   "devDependencies": {
     "babel-jest": "23.6.0",
@@ -88,7 +87,11 @@
     "rn-nodeify": "github:tradle/rn-nodeify"
   },
   "resolutions": {
-    "typeforce": "git+https://github.com/michaeltout/typeforce"
+    "typeforce": "git+https://github.com/michaeltout/typeforce",
+    "braces": "^3.0.2",
+    "tar": "^4.4.8",
+    "semver": "^6.0.0",
+    "bl": "^3.0.0"
   },
   "jest": {
     "preset": "react-native"

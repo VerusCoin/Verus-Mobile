@@ -33,15 +33,11 @@ export const _coinsList = {
       { id: "ZEC", name: "ZCash", description: "", fee: 10000},
       { id: "DASH", name: "Dash", description: "", fee: 10000},
       { id: "LTC", name: "Litecoin", description: "", fee: 30000},
+      { id: "ZILLA", name: "ChainZilla", description: "", fee: 10000},
     ]
 };
 
-//To make flatlist render faster
-export const namesList = ['VRSC','KMD','BTC','BCH','CCL',
-                          'DASH','DGB','DOGE',
-                          'LTC','OOT', 'ZEC']
-
-  // sorting needs to be done
+// sorting needs to be done
 let coinsListSorted = _coinsList.coins;
 
 coinsListSorted.sort((a, b) => {
@@ -57,6 +53,11 @@ coinsListSorted.unshift({
   name: "Verus Coin", 
   description: "Verus Coin includes the first proven 51% hash attack resistant proof of power algorithm. The Verus vision is PBaaS, public blockchains as a service, provisioned for conditional rewards by Verus miners and stakers.", 
   fee: 10000
+});
+
+//To make flatlist render faster
+export const namesList = coinsListSorted.map(function(coin) {
+  return coin.id;
 });
 
 export const coinsList = coinsListSorted;

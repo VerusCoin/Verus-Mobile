@@ -11,9 +11,7 @@ export const getCoinPaprikaRate = (coinObj) => {
     timeout(global.REQUEST_TIMEOUT_MS, fetch(address, {method: 'GET'}))
     .then((response) => response.json())
     .then((response) => {
-      if (response.error) {
-        //TODO: Solve why coins that arent on coinPaprika cause 
-        //an error
+      if (response.error || !response || !response[0] || !response[0].close) {
         resolve(false)
       }
       else {

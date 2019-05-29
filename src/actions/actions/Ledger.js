@@ -4,8 +4,6 @@ import {
   updateCoinRates
 } from '../actionCreators';
 
-import { Platform } from 'react-native'
-
 import { 
   getBalances,
   getOneBalance,
@@ -22,8 +20,7 @@ import { formatTx } from '../../utils/crypto/txDecoder';
 
 const Buffer = require('safe-buffer').Buffer;
 
-
- export const updateCoinTransactions = (coinID, transactions, oldTransactions, needsUpdateObj) => {
+export const updateCoinTransactions = (coinID, transactions, oldTransactions, needsUpdateObj) => {
   let _transactions = oldTransactions
   _transactions[coinID] = transactions
 
@@ -56,12 +53,7 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
               return hash[key];
             });
 
-            //This is extremely confusing and I do not know why the hash array in iOS
-            //comes pre-reversed
-            const _txid = Platform.OS === 'ios' ? 
-              Buffer.from(array, 'hex').toString('hex')
-              :
-              Buffer.from(array.reverse(), 'hex').toString('hex')
+            const _txid = Buffer.from(array, 'hex').toString('hex')
 
             insPromises.push(getOneTransaction(null, coinObj, activeUser, _txid))
           }

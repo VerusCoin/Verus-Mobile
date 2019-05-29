@@ -1,4 +1,9 @@
 import { updateValues } from '../callCreators'
+import {
+  parseBlock,
+  electrumMerkleRoot,
+} from 'agama-wallet-lib/build/block'
+import { networks } from 'bitgo-utxo-lib';
 
 export const getBlockInfo = (oldBlock, coinObj, activeUser, blockheight) => {
   const callType = 'getblockinfo'
@@ -22,7 +27,21 @@ export const getBlockInfo = (oldBlock, coinObj, activeUser, blockheight) => {
       if(!response.new || !response) {
         resolve(false)
       }
-      else {
+      else if (response.serverVersion >= 1.4) {
+        let blockInfo = response.result
+
+        let parsedBlock = parseBlock(
+          response.result.result,
+          networks[coinID.toLowerCase()] || networks['default']
+        );
+        if (parsedBlock.merkleRoot) {
+          parsedBlock.merkle_root = electrumMerkleRoot(parsedBlock);
+        }
+
+        blockInfo.result = parsedBlock
+
+        resolve(blockInfo)
+      } else {
         resolve(response.result)
       }
     })

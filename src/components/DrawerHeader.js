@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, Image, StatusBar, TouchableOpacity } from 'react-native';
+import { 
+  View, 
+  Text, 
+  Image, 
+  StatusBar, 
+  TouchableOpacity, 
+  Platform 
+} from 'react-native';
 
 const LOGO_DIR = require('../images/customIcons/verusHeaderLogo.png');
 
@@ -11,7 +18,7 @@ const DrawerHeader = ({ navigateToScreen }) => (
 				backgroundColor: "#2E86AB",
 				paddingVertical: 28,
 				paddingLeft: 17,
-				paddingTop: StatusBar.currentHeight + 10,
+				paddingTop: Platform.OS === 'ios' ? 35 : StatusBar.currentHeight,
 				alignItems: 'center',
 			}}
 		>

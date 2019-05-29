@@ -49,6 +49,8 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
       let feePerByte = 0;
       let btcFees = false;
       let unshieldedFunds = res.unshieldedFunds
+      let feeTakenFromAmount = false
+      let amountSubmitted = value
 
       if (typeof defaultFee === 'object' && typeof defaultFee !== 'null') {
         //BTC Fee style detected, changing fee unit to fee per byte and 
@@ -64,9 +66,8 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
       if (index < activeUser.keys.length) {
         wif = activeUser.keys[index].privKey
         changeAddress = activeUser.keys[index].pubKey
-      }
-      else {
-        throw new Error("pushTx.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!")
+      } else {
+        throw new Error("pushTx.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj.id + " not found!")
       }
 
       console.log('Utxo list ==>') 
@@ -93,56 +94,70 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
       }
 
       const _maxSpendBalance = Number(maxSpendBalance(utxoListFormatted));
-      console.log(_maxSpendBalance)
+
       let targets = [{
         address: outputAddress,
-        value: value > _maxSpendBalance ? _maxSpendBalance : value,
-      }];
-      console.log('targets =>');
+        value: value
+      }]
+
+      //If a no fee per byte is passed, the default transaction fee is used
+      if (feePerByte === 0) {
+        //if transaction value is more than what is spendable with fee included, subtract fee from amount
+        //else, add fee to amount to take fee from wallet  
+        if (value > (_maxSpendBalance - defaultFee)) {
+          console.log('subtracting default fee from amount...')
+          amountSubmitted = value
+          value = _maxSpendBalance - defaultFee
+          targets[0].value = _maxSpendBalance
+
+          feeTakenFromAmount = true
+        } else {
+          targets[0].value += defaultFee
+        }
+      }
+
+      console.log('transaction targets =>');
       console.log(targets);
-      console.log(`create tx network ${network.coin}`)
+      console.log('searching for utxos...')
 
-      targets[0].value = targets[0].value + defaultFee;
-
-      // console.log(`fee rate ${feeRate}`);
-      console.log(`default fee ${defaultFee}`);
-      console.log(`targets ==>`);
-      console.log(targets);
-
-      // default coin selection algo blackjack with fallback to accumulative
-      // make a first run, calc approx tx fee
-      // if ins and outs are empty reduce max spend by txfee
       let {
         inputs,
         outputs,
         fee
       } = coinSelect(utxoListFormatted, targets, feePerByte);
 
-      console.log('coinselect res =>');
-      console.log('coinselect inputs =>');
-      console.log(inputs);
-      console.log('coinselect outputs =>');
-      console.log(outputs);
-      console.log('coinselect calculated fee =>');
-      console.log(fee);
+      console.log('calculated transaction fee: ' + (fee ? fee : defaultFee))
 
       if (!outputs) {
-        targets[0].value = targets[0].value - defaultFee;
-        console.log('second run');
-        console.log('coinselect adjusted targets =>');
-        console.log(targets);
+        console.log('tx fee is too great to deduct from wallet, subtracting from tx amount instead')
+        console.log('readjusting transaction amount...')
+        amountSubmitted = value
+        value -= fee
+        targets[0].value = value
+        console.log('readjusted transaction amount: ' + targets[0].value)
+        feeTakenFromAmount = true
+        
+        let secondRun = coinSelect(utxoListFormatted, targets, feePerByte);
+        inputs = secondRun.inputs
+        outputs = secondRun.outputs
+        fee = secondRun.fee
 
-        const secondRun = coinSelect(utxoListFormatted, targets, feePerByte);
-        inputs = secondRun.inputs;
-        outputs = secondRun.outputs;
-        fee = secondRun.fee;
+        console.log('readjusted transaction fee: ' + fee)
+      }
 
-        console.log('coinselect inputs =>');
-        console.log(inputs);
-        console.log('coinselect outputs =>');
-        console.log(outputs);
-        console.log('coinselect fee =>');
-        console.log(fee);
+      if (!outputs) {
+        throw new Error('Insufficient funds. Failed to calculate acceptable transaction amount with fee of ' + satsToCoins(fee ? fee : defaultFee) + '.')
+      }
+
+      console.log('transaction calculated inputs =>')
+      console.log(inputs)
+      console.log('transaction calculated outputs =>')
+      console.log(outputs)
+
+      if (!fee) {
+        console.log('no coinselect calculated fee entered, adjusting outputs for default fee =>')
+        console.log(outputs)
+        outputs[0].value = outputs[0].value - defaultFee;
       }
 
       let _change = 0;
@@ -152,10 +167,10 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
         _change = outputs[1].value;
       }
 
-      outputs[0].value = outputs[0].value - defaultFee;
+      //outputs[0].value = outputs[0].value - defaultFee;
 
-      console.log('adjusted outputs, value - default fee =>');
-      console.log(outputs);
+      //console.log('adjusted outputs, value - default fee =>');
+      //console.log(outputs);
 
       // check if any outputs are unverified
       if (inputs &&
@@ -175,26 +190,17 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
         }
       }
 
-      const _maxSpend = maxSpendBalance(utxoListFormatted);
-
-      if (value > _maxSpend) {
+      if (value > _maxSpendBalance) {
         console.log("Value is larger than max spend, returning with error")
         const successObj = {
           err: true,
-          result: `Spend value is too large. Max available amount is ${Number((_maxSpend * 0.00000001.toFixed(8)))}.` + 
+          result: `Spend value is too large. Max available amount is ${Number((_maxSpendBalance * 0.00000001.toFixed(8)))}.` + 
           (unshieldedFunds > 0 ? `\n\nThis is most likely due to the fact that you have ${satsToCoins(unshieldedFunds)} ${coinObj.id}
           in unshielded funds received from mining in your wallet. Please unshield through a native client prior to sending through Verus Mobile` : null),
         };
 
         resolve(successObj);
       } else {
-        if (__DEV__) {
-          console.log(`maxspend ${_maxSpend} (${_maxSpend * 0.00000001})`);
-          console.log(`value ${value}`);
-          console.log(`sendto ${outputAddress} amount ${value} (${value * 0.00000001})`);
-          console.log(`changeto ${changeAddress} amount ${_change} (${_change * 0.00000001})`);
-        }
-
         // account for KMD interest
         if ((network.coin === 'komodo' || network.coin === 'kmd') &&
             totalInterest > 0) {
@@ -208,7 +214,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
             console.log(`current change amount ${_change} (${_change * 0.00000001}), boosted change amount ${_change + (totalInterest - _feeOverhead)} (${(_change + (totalInterest - _feeOverhead)) * 0.00000001})`);
           }
           
-          if (_maxSpend === value) {
+          if (_maxSpendBalance === value) {
             _change = Math.abs(totalInterest) - _change - _feeOverhead;
 
             if (outputAddress === changeAddress) {
@@ -271,6 +277,9 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
               network,
               rawtx: _rawtx,
               utxoVerified,
+              feeTakenFromAmount,
+              amountSubmitted,
+              unshieldedFunds
             },
           };
 

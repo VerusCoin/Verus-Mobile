@@ -227,7 +227,7 @@ class Overview extends Component {
   }
 
   renderBalanceLabel = () => {
-    if (this.props.balances.hasOwnProperty(this.props.activeCoin.id) && this.props.balances[this.props.activeCoin.id].error) {
+    if (this.props.balances.hasOwnProperty(this.props.activeCoin.id) && (this.props.balances[this.props.activeCoin.id].error || isNaN(this.props.balances[this.props.activeCoin.id].result.confirmed))) {
       return (
         <Text style={styles.connectionErrorLabel}>
           {CONNECTION_ERROR}  

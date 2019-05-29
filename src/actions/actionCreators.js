@@ -1,6 +1,7 @@
 export * from './actions/Coins';
 export * from './actions/UserData';
 export * from './actions/Ledger';
+export * from './actions/Electrum'
 
 //Reducer Name: authentication
 export const setAccounts = (accounts) => {
@@ -158,6 +159,23 @@ export const needsUpdate = (component) => {
 export const everythingNeedsUpdate = () => {
   return {
     type: 'EVERYTHING_NEEDS_UPDATE',
+  }
+}
+
+//Reducer Name: electrum
+export const addServerVersion = (server, version) => {
+  return {
+    type: 'ADD_SERVER_VERSION',
+    server: server,
+    version: version
+  }
+}
+
+//Reducer Name: electrum
+export const setServerVersions = (serverVersions) => {
+  return {
+    type: 'SET_SERVER_VERSIONS',
+    serverVersions: serverVersions
   }
 }
 

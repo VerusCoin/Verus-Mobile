@@ -54,6 +54,10 @@ class AppInfo extends Component {
               <Text style={styles.infoText}>{Platform.OS}</Text>
             </View>
             <View style={styles.infoRow}>
+              <Text style={styles.infoText}>Platform Version:</Text>
+              <Text style={styles.infoText}>{Platform.Version}</Text>
+            </View>
+            <View style={styles.infoRow}>
               <Text style={styles.infoText}>VerusQR Version:</Text>
               <Text style={styles.infoText}>{global.VERUS_QR_VERSION}</Text>
             </View>

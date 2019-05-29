@@ -52,6 +52,30 @@ export const addExistingCoin = (coinID, activeCoins, userName) => {
   }
 }
 
+// Remove a user's name from an active coin
+export const removeExistingCoin = (coinID, activeCoins, userName) => {
+  let coinIndex = activeCoins.findIndex(x => x.id === coinID);
+  
+  if (coinIndex > -1 && activeCoins[coinIndex].users.includes(userName)) {
+    let userIndex = activeCoins[coinIndex].users.findIndex(n => n === userName);
+    activeCoins[coinIndex].users.splice(userIndex, 1);
+    return new Promise((resolve, reject) => {
+      storeCoins(activeCoins)
+      .then((res) => {
+        if (res === true) {
+          resolve(setCoinList(activeCoins))
+        }
+        else {
+          resolve(false);
+        }
+      })
+    });
+  }
+  else {
+    throw new Error("User " + userName + " has not activated coin " + coinID);
+  }
+}
+
 // Add custom coin by QR or by form data
 export const addCustomCoin = (coinID, activeCoins, userName, coinName, coinDesc, coinServers) => {
   let coinIndex = activeCoins.findIndex(x => x.id === coinID);

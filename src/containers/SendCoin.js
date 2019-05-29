@@ -210,7 +210,12 @@ class SendCoin extends Component {
       
       const toAddress = removeSpaces(this.state.toAddress)
       const fromAddress = this.state.fromAddress
-      const amount = this.state.amount
+      const amount = (((this.state.amount.toString()).includes(".") && 
+                    (this.state.amount.toString()).includes(",")) || 
+                    !this.state.amount) ? 
+                      this.state.amount 
+                    : 
+                      (this.state.amount.toString()).replace(/,/g, '.')
       const account = this.state.account
       let _errors = false
 
@@ -284,6 +289,7 @@ class SendCoin extends Component {
               To:
               </FormLabel>
               <FormInput 
+                underlineColorAndroid="#86939d"
                 onChangeText={(text) => this.setState({toAddress: removeSpaces(text)})}
                 onSubmitEditing={Keyboard.dismiss}
                 value={this.state.toAddress}
@@ -306,12 +312,14 @@ class SendCoin extends Component {
               Amount:
               </FormLabel>
               <FormInput 
+                underlineColorAndroid="#86939d"
                 onChangeText={(text) => this.setState({amount: text})}
                 onSubmitEditing={Keyboard.dismiss}
                 value={this.state.amount.toString()}
                 shake={this.state.formErrors.amount}
                 inputStyle={styles.formInput}
-                keyboardType={"numeric"}
+                keyboardType={"decimal-pad"}
+                autoCapitalize='words'
               />
               <FormValidationMessage>
               {

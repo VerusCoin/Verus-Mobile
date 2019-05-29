@@ -14,10 +14,15 @@ import {
   setActiveApp, 
   setActiveSection, 
   signOut,
-  setConfigSection
+  setConfigSection,
+  removeExistingCoin,
+  setUserCoins
  } from '../actions/actionCreators'
 import { getKeyByValue } from '../utils/objectManip'
 import { NavigationActions } from 'react-navigation';
+import AlertAsync from "react-native-alert-async";
+import { resolve } from "path";
+import { rejects } from "assert";
 
 const APP_INFO = 'App Info'
 const PROFILE = 'Profile'
@@ -65,15 +70,58 @@ class SideMenu extends Component {
     this.resetToScreen("CoinMenus", screen)
   }
 
-  resetToScreen = (route, title, data) => {
-    const resetAction = NavigationActions.reset({
-      index: 1, // <-- currect active route from actions array
-      actions: [
-        NavigationActions.navigate({ routeName: "Home" }),
-        NavigationActions.navigate({ routeName: route, params: {title: title, data: data} }),
-      ],
+  _removeCoin = (coinID) => {
+    let data = {
+      task: this._removeUserFromCoin,
+      message: "Removing " + coinID + " from user " + this.props.activeAccount.id + ", please do not close Verus Mobile.",
+      input: [coinID],
+      route: "Home"
+    }
+    
+    this.canRemoveCoin(coinID)
+    .then(answer => {
+      if (answer) {
+        this.setState({ mainDrawer: true }, () => {
+          this.resetToScreen("SecureLoading", null, data, true)
+        })
+      }
     })
+  }
 
+  _removeUserFromCoin = (coinID) => {
+    return new Promise((resolve, reject) => {
+      removeExistingCoin(coinID, this.props.activeCoinList, this.props.activeAccount.id)
+      .then((res) => {
+        this.props.dispatch(res)
+        resolve(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
+      })
+      .catch(err => {
+        console.warn(err)
+        reject(err)
+      })
+    })
+  }
+
+  resetToScreen = (route, title, data, fullReset) => {
+    let resetAction
+
+    if (fullReset) {
+      resetAction = NavigationActions.reset({
+        index: 0, // <-- currect active route from actions array
+        actions: [
+          NavigationActions.navigate({ routeName: route, params: {data: data} }),
+        ],
+      })
+    } else {
+      resetAction = NavigationActions.reset({
+        index: 1, // <-- currect active route from actions array
+        actions: [
+          NavigationActions.navigate({ routeName: "Home" }),
+          NavigationActions.navigate({ routeName: route, params: {title: title, data: data} }),
+        ],
+      })
+    }
+    
     this.props.navigation.dispatch(resetAction)
   }
 
@@ -99,27 +147,36 @@ class SideMenu extends Component {
 
   renderChildDrawerComponents = () => {
     return (
-      <SectionList
-      style={styles.coinList}
-      renderItem={({item, index, section}) => (
-        <ListItem                        
-        title={item.name}     
-        leftIcon={{name: item.icon}}                        
-        containerStyle={{ borderBottomWidth: 0 }} 
-        onPress={() => {this._openCoin(this.props.activeCoinsForUser[this.state.currentCoinIndex], item.name, section)}}
-      /> 
-      )}
-      renderSectionHeader={({section: {title}}) => (
-        <ListItem                        
-        title={<Text style={{fontWeight: "bold"}}>{title}</Text>}                             
-        containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
-        hideChevron={true}
-        onPress={() => {return 0}}
+      <ScrollView>
+        <SectionList
+        style={styles.coinList}
+        renderItem={({item, index, section}) => (
+          <ListItem                        
+          title={item.name}     
+          leftIcon={{name: item.icon}}                        
+          containerStyle={{ borderBottomWidth: 0 }} 
+          onPress={() => {this._openCoin(this.props.activeCoinsForUser[this.state.currentCoinIndex], item.name, section)}}
         /> 
-      )}
-      sections={this.sectionExtractor(this.state.currentCoinIndex)}
-      keyExtractor={(item, index) => item + index}
-      />
+        )}
+        renderSectionHeader={({section: {title}}) => (
+          <ListItem                        
+          title={<Text style={{fontWeight: "bold"}}>{title}</Text>}                             
+          containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
+          hideChevron={true}
+          onPress={() => {return 0}}
+          /> 
+        )}
+        sections={this.sectionExtractor(this.state.currentCoinIndex)}
+        keyExtractor={(item, index) => item + index}
+        />
+        <ListItem                        
+          title={"Remove Coin"}     
+          leftIcon={{name: "close"}}   
+          hideChevron={true}                     
+          containerStyle={{ borderBottomWidth: 0 }} 
+          onPress={() => {this._removeCoin(this.props.activeCoinsForUser[this.state.currentCoinIndex].id)}}
+        />
+      </ScrollView>
     )
   }
 
@@ -131,6 +188,24 @@ class SideMenu extends Component {
     }
 
     return sections
+  }
+
+  canRemoveCoin = (coinID) => {
+    return AlertAsync(
+      'Confirm',
+      "Are you sure you would like to remove " + coinID + "?",
+      [
+        {
+          text: 'No',
+          onPress: () => Promise.resolve(false),
+          style: 'cancel',
+        },
+        {text: 'Yes', onPress: () => Promise.resolve(true)},
+      ],
+      {
+        cancelable: false,
+      },
+    )
   }
 
   handleLogout = () => {
@@ -278,6 +353,7 @@ SideMenu.propTypes = {
 const mapStateToProps = (state) => {
   return {
     activeCoinsForUser: state.coins.activeCoinsForUser,
+    activeCoinList: state.coins.activeCoinList,
     activeAccount: state.authentication.activeAccount,
     balances: state.ledger.balances,
   }

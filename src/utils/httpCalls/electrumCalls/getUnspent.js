@@ -1,7 +1,8 @@
 import { updateValues, getMerkleRoot, getBlockInfo } from '../callCreators'
 import { getOneTransaction } from './getTransaction'
 import { TxDecoder } from '../../crypto/txDecoder'
-import { hashRawTx } from '../../crypto/hash'
+import { hashRawTx, hexHashToDecimal } from '../../crypto/hash'
+import { arraysEqual } from '../../objectManip'
 import { networks } from 'bitgo-utxo-lib'
 import { coinsToSats, satsToCoins, kmdCalcInterest, truncateDecimal } from '../../math'
 
@@ -88,7 +89,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
           const decodedTx = TxDecoder(gottenTransactions[i].result, network)
           const currentHeight = gottenTransactions[i].blockHeight
 
-          if (hashRawTx(gottenTransactions[i].result, network) !== _utxoItem['tx_hash']) {
+          if (!arraysEqual(hashRawTx(gottenTransactions[i].result, network), hexHashToDecimal(_utxoItem['tx_hash']))) {
             throw new Error(
               'Mismatch error! At least one transaction ID provided by server ' + JSON.stringify(serverUsed) + 
               ' does not match the values of the transaction that it represents! This could indicate that the server is malicious, and this transaction has been canceled.')
@@ -182,7 +183,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
             console.log(gottenTransactions[i])
           }
           console.log("---------------------------------------")
-          throw new Error("getUnspent.js: Fatal mismatch error, couldn't fetch raw transactions for all UTXOs")
+          throw new Error("Fatal mismatch error, couldn't fetch raw transactions for all UTXOs. You may have unconfirmed transactions, please wait until they are confirmed to send.")
         }
       }
 
@@ -220,9 +221,11 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
             _formattedUtxoList.splice(i, 1);
           } 
         }
-        else {
+        else if (!verifiedMerkleArr[i]) {
           throw new Error("getUnspent.js: Fatal mismatch error, no utxo list found for verified merkle " + verifiedMerkleArr[i] +
-          "or length of verified merkle root array does not match length of uspent transaction array")
+          " or length of verified merkle root array does not match length of uspent transaction array")
+        } else {
+          throw new Error("Server error, unable to crosscheck merkle root across multiple electrum servers.")
         }
       }
 
