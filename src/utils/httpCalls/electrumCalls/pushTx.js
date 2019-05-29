@@ -146,7 +146,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
       }
 
       if (!outputs) {
-        throw new Error('Insufficient funds. Failed to calculate acceptable transaction amount with fee ' + satsToCoins(fee ? fee : defaultFee) + '.')
+        throw new Error('Insufficient funds. Failed to calculate acceptable transaction amount with fee of ' + satsToCoins(fee ? fee : defaultFee) + '.')
       }
 
       console.log('transaction calculated inputs =>')

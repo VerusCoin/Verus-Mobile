@@ -6,7 +6,6 @@ import {
 } from './seedCrypt';
 
 import { AsyncStorage, Alert } from "react-native";
-import { arrayify } from 'ethers/utils/bytes';
 // react-native's version of local storage
 
 export const INIT = "initialized";
@@ -32,16 +31,19 @@ export const storeUser = (authData, users) => {
   }) 
 };
 
-export const deleteUserFromCoins = (userID) => {
+//Clear user from coin, or delete user from all if no coin specified
+export const deleteUserFromCoin = (userID, coinID) => {
   return new Promise((resolve, reject) => {
     getActiveCoinsList()
     .then((coinList) => {
       let newList = coinList.slice()
       for (let i = 0; i < newList.length; i++) {
-        let userIndex = newList[i].users.findIndex(n => n === userID);
+        if (coinID === null || newList[i].id === coinID) {
+          let userIndex = newList[i].users.findIndex(n => n === userID);
 
-        if (userIndex > -1) {
-          newList[i].users.splice(userIndex, 1);
+          if (userIndex > -1) {
+            newList[i].users.splice(userIndex, 1);
+          }
         }
       }
 
@@ -70,7 +72,7 @@ export const deleteUser = (userID) => {
             let _toStore = {users: _users}
             let promiseArr = [
               AsyncStorage.setItem('userData', JSON.stringify(_toStore)), 
-              deleteUserFromCoins(userID),
+              deleteUserFromCoin(userID, null),
               _users]
             return Promise.all(promiseArr)
           } else {
@@ -240,3 +242,35 @@ export const isSignedIn = () => {
       .catch(err => reject(err));
   });
 };
+
+//Store version numbers for each loaded electrum server
+//so we don't have to keep checking
+export const setElectrumVersion = (server, version, versionList) => {
+  let _versionList = versionList ? versionList : {};
+  _versionList[server] = version
+  let _toStore = _versionList
+
+  return new Promise((resolve, reject) => {
+    AsyncStorage.setItem('eProtocolVersions', JSON.stringify(_toStore))
+      .then(() => {
+        resolve(_versionList);
+      })
+      .catch(err => reject(err));
+  }) 
+}
+
+//Get electrum server versions, to be called
+//on startup and dispatched to redux store
+export const getElectrumVersions = () => {
+  let versions = {}
+  return new Promise((resolve, reject) => {
+    AsyncStorage.getItem('eProtocolVersions')
+      .then(res => {
+        versions = res ? JSON.parse(res) : {};
+        resolve(versions)
+      })
+      .catch(err => reject(err));
+  }) 
+}
+
+

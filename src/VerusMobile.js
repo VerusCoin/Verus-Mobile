@@ -1,7 +1,7 @@
 import React from "react";
-import { YellowBox, TouchableWithoutFeedback, Keyboard } from "react-native";
+import { YellowBox, TouchableWithoutFeedback, Keyboard, Alert } from "react-native";
 import { RootNavigator } from './utils/navigation/index';
-import { fetchUsers } from './actions/actionCreators';
+import { fetchUsers, loadServerVersions } from './actions/actionCreators';
 import { connect } from 'react-redux';
 
 
@@ -21,9 +21,16 @@ class VerusMobile extends React.Component {
   
   componentDidMount() {
     fetchUsers()
-    .then((action) => {
-      this.props.dispatch(action);
+    .then((usersAction) => {
+      this.props.dispatch(usersAction);
+      return loadServerVersions()
+    })
+    .then((serversAction) => {
+      this.props.dispatch(serversAction);
       this.setState({ loading: false });
+    })
+    .catch((err) => {
+      Alert.alert("Error", err.message)
     })
   }
 

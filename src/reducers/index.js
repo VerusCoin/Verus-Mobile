@@ -3,10 +3,12 @@ import { authentication } from './authentication'
 import { coins } from './coins'
 import { ledger } from './ledger'
 import { settings } from './settings'
+import { electrum } from './electrum'
 
 export default combineReducers({
     authentication,
     coins,
     ledger,
-    settings
+    settings,
+    electrum
 })

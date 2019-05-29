@@ -5,7 +5,8 @@ export * from './electrumCalls/getTransaction';
 export * from './electrumCalls/getBlockInfo';
 export * from './electrumCalls/getUnspent';
 export * from './electrumCalls/getMerkle';
-export * from './electrumCalls/pushTx'
+export * from './electrumCalls/pushTx';
+export * from './electrumCalls/getServerVersion';
 
 import { proxyServers, httpsEnabled } from './proxyServers';
 import { getBlockHeight } from './electrumCalls/getBlockHeight';
@@ -14,6 +15,9 @@ import { getAtomicExplorerBTCFees } from './btcFeesAPIs/atomicExplorer';
 import { truncateDecimal } from '../math';
 import { randomBytes } from 'react-native-randombytes';
 import { timeout } from '../promises';
+import { getServerVersion } from './electrumCalls/getServerVersion';
+import { updateParamObj } from '../electrumUpdates';
+import { networks } from 'bitgo-utxo-lib';
 
 // This purpose of this method is to take in a list of electrum servers,
 // and use a valid one to call a specified command given a set of parameters
@@ -21,7 +25,7 @@ import { timeout } from '../promises';
 // servers are working by attempting to call getBlockHeight on each of them.
 // It then calls the specified command with the specified params (passed in as an object)
 // on that electrum server with an HTTP get
-export const getElectrum = (serverList, callType, params, skipServer) => {
+export const getElectrum = (serverList, callType, params, skipServer, coinID) => {
   const randBytes = randomBytes(2)
   const rand = (((randBytes['0'] & 0xFF) << 8) | (randBytes['1'] & 0xFF))
   const proxyServer = proxyServers[rand % proxyServers.length]
@@ -76,13 +80,25 @@ export const getElectrum = (serverList, callType, params, skipServer) => {
         console.log("Failed to find good server")
         throw new Error(
           "No valid server found out of options provided. Verus Mobile needs two active servers to securely verify transactions for any given coin."
-          )
+        )
       }
     })
-    .then((resultObj) => {
+    .then((serverObj) => {
+      let eServer = serverObj.goodServer
+      return Promise.all([serverObj, getServerVersion(proxyServer, eServer.ip, eServer.port, eServer.proto, httpsEnabled)])
+    })
+    .then((resultArr) => {
+      let resultObj = resultArr[0]
+      resultObj.serverVersion = resultArr[1]
+
       let electrumServer = resultObj.goodServer
       let httpAddr = `${httpsEnabled ? 'https' : 'http'}://${proxyServer}/api/${callType}?port=${electrumServer.port}&ip=${electrumServer.ip}&proto=${electrumServer.proto}`
       let promiseArray = []
+
+      updateParamObj(
+        params, 
+        networks[coinID.toLowerCase()] ? networks[coinID.toLowerCase()] : networks['default'], 
+        resultObj.serverVersion)
 
       for (let key in params) {
         httpAddr += `&${key}=${params[key]}`
@@ -95,6 +111,7 @@ export const getElectrum = (serverList, callType, params, skipServer) => {
 
       promiseArray.push(resultObj.blockHeight)
       promiseArray.push(resultObj.goodServer)
+      promiseArray.push(resultObj.serverVersion)
 
       return Promise.all(promiseArray)
     })
@@ -104,8 +121,11 @@ export const getElectrum = (serverList, callType, params, skipServer) => {
       return Promise.all(responseArray)
     })
     .then((responseArray) => {
-      let resultObj = {result: responseArray[0].result, blockHeight: responseArray[1], serverUsed: responseArray[2]}
-
+      let resultObj = {
+        result: responseArray[0].result, 
+        blockHeight: responseArray[1], 
+        serverUsed: responseArray[2], 
+        serverVersion: responseArray[3]}
       resolve(resultObj)
     })
     .catch(err => {
@@ -118,7 +138,7 @@ export const getElectrum = (serverList, callType, params, skipServer) => {
 //Function to update only if values have changed
 export const updateValues = (oldResponse, serverList, callType, params, coinID, skipServer) => {
   return new Promise((resolve, reject) => {
-    timeout(global.REQUEST_TIMEOUT_MS, getElectrum(serverList, callType, params, skipServer))
+    timeout(global.REQUEST_TIMEOUT_MS, getElectrum(serverList, callType, params, skipServer, coinID))
     .then((response) => {
       if(response === oldResponse) {
         resolve({
@@ -127,6 +147,7 @@ export const updateValues = (oldResponse, serverList, callType, params, coinID, 
           new: false,
           blockHeight: response.blockHeight,
           serverUsed: response.serverUsed,
+          serverVersion: response.serverVersion,
           error: false
         })
       } else if (response === false) {
@@ -138,6 +159,7 @@ export const updateValues = (oldResponse, serverList, callType, params, coinID, 
           new: true,
           blockHeight: response.blockHeight,
           serverUsed: response.serverUsed,
+          serverVersion: response.serverVersion,
           error: false
         })
       }
