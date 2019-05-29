@@ -274,7 +274,7 @@ class ConfirmSend extends Component {
           <View style={styles.buttonContainer}>
             <Button1 
             style={styles.cancelBtn} 
-            buttonContent="back" 
+            buttonContent="Back" 
             onPress={this.cancel}
             />
           </View>

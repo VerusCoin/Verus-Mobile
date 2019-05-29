@@ -119,7 +119,7 @@ class DeleteProfile extends Component {
               let data = {
                 task: deleteUserByID,
                 message: "Deleting profile, please do not close Verus Mobile",
-                input: userID
+                input: [userID]
               }
               this.resetToScreen("SecureLoading", data)
             } 
@@ -132,7 +132,6 @@ class DeleteProfile extends Component {
     } else {
       Alert.alert("Error", "No account ID");
     }
-    
   }
 
   authenticatePwd = () => {
