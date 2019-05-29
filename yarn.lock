@@ -811,9 +811,9 @@ aes-js@3.0.0:
   resolved "https://registry.yarnpkg.com/aes-js/-/aes-js-3.0.0.tgz#e21df10ad6c2053295bcbb8dab40b09dbea87e4d"
   integrity sha1-4h3xCtbCBTKVvLuNq0Cwnb6ofk0=
 
-"agama-wallet-lib@git://github.com/VerusCoin/agama-wallet-lib.git#mobile-dev":
+"agama-wallet-lib@git://github.com/VerusCoin/agama-wallet-lib.git#mobile":
   version "0.3.3"
-  resolved "git://github.com/VerusCoin/agama-wallet-lib.git#e9950cfb064a6dcf303dd92cdb3d41dfd1c172ec"
+  resolved "git://github.com/VerusCoin/agama-wallet-lib.git#34a587299b49d3af848a764a62e80332e6664388"
   dependencies:
     bigi "^1.4.2"
     bip32 "^1.0.2"
