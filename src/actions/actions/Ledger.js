@@ -115,13 +115,9 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
         }
       }
 
-      while (index < activeUser.keys.length && coinObj.id !== activeUser.keys[index].id) {
-        index++
-      }
-      if (index < activeUser.keys.length) {
-        address = activeUser.keys[index].pubKey
-      }
-      else {
+      if (activeUser.keys.hasOwnProperty(coinObj.id)) {
+        address = activeUser.keys[coinObj.id].pubKey
+      } else {
         throw new Error("Ledger.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!");
       }
 

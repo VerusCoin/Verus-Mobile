@@ -60,12 +60,9 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
         btcFees = true
       }
 
-      while (index < activeUser.keys.length && coinObj.id !== activeUser.keys[index].id) {
-        index++
-      }
-      if (index < activeUser.keys.length) {
-        wif = activeUser.keys[index].privKey
-        changeAddress = activeUser.keys[index].pubKey
+      if (activeUser.keys.hasOwnProperty(coinObj.id)) {
+        wif = activeUser.keys[coinObj.id].privKey
+        changeAddress = activeUser.keys[coinObj.id].pubKey
       } else {
         throw new Error("pushTx.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj.id + " not found!")
       }

@@ -71,14 +71,14 @@ export const fetchUsers = () => {
 }
 
 export const loginUser = (account, password) => {
-  let _keys = [];
+  let _keys = {};
   let seed = decryptkey(password, account.encryptedKey);
   return new Promise((resolve, reject) => {
     getActiveCoinsList()
       .then(activeCoins => {
         for (let i = 0; i < activeCoins.length; i++) {
           if (activeCoins[i].users.includes(account.id)) {
-            _keys.push(makeKeyPair(seed, activeCoins[i].id))
+            _keys[activeCoins[i].id] = makeKeyPair(seed, activeCoins[i].id)
           }
         }
         let _activeAccount = {id: account.id, wifKey: seed, keys: _keys}
@@ -107,8 +107,9 @@ export const validateLogin = (account, password) => {
 
 export const addKeypair = (seed, coinID, keys) => {
   let keypair = makeKeyPair(seed, coinID)
-  let _keys = keys.slice()
-  _keys.push(keypair)
+  let _keys = {}
+  Object.assign(_keys, keys)
+  _keys[coinID] = keypair
 
   return updateAccountKeys(_keys)
 }

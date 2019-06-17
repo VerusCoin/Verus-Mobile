@@ -47,13 +47,9 @@ class ReceiveCoin extends Component {
     const activeUser = this.props.activeAccount
     const coinObj = this.state.selectedCoin
 
-    while (index < activeUser.keys.length && coinObj.id !== activeUser.keys[index].id) {
-      index++
-    }
-    if (index < activeUser.keys.length) {
-      this.setState({ address: activeUser.keys[index].pubKey });  
-    }
-    else {
+    if (activeUser.keys.hasOwnProperty(coinObj.id)) {
+      this.setState({ address: activeUser.keys[coinObj.id].pubKey });  
+    } else {
       throw new Error("ReceiveCoin.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!");
     }
   }

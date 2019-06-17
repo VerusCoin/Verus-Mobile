@@ -6,13 +6,9 @@ export const getOneTransactionList = (oldList, coinObj, activeUser) => {
   let params = { raw: "true" }
   const coinID = coinObj.id
 
-  while (index < activeUser.keys.length && coinID !== activeUser.keys[index].id) {
-    index++
-  }
-  if (index < activeUser.keys.length) {
-    params.address = activeUser.keys[index].pubKey
-  }
-  else {
+  if (activeUser.keys.hasOwnProperty(coinObj.id)) {
+    params.address = activeUser.keys[coinObj.id].pubKey
+  } else {
     throw new Error("getTransactions.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + activeCoinsForUser[i].id + " not found!");
   }
 
