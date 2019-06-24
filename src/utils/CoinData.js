@@ -4,6 +4,7 @@ export const explorers = {
   KMD: 'https://kmdexplorer.io',
   OOT: 'https://explorer.utrum.io',
   VRSC: 'https://explorer.veruscoin.io',
+  K64: 'https://k64.explorer.dexstats.info'
 }
 
 export const assetsPath = {
@@ -20,6 +21,7 @@ export const assetsPath = {
         zilla: require('../images/cryptologo/zilla.png'),	
         ltc: require('../images/cryptologo/ltc.png'),		
         ccl: require('../images/cryptologo/ccl.png'),
+        k64: require('../images/cryptologo/k64.png')
     },
 };
 
@@ -34,6 +36,7 @@ export const _coinsList = {
       { id: "DASH", name: "Dash", description: "", fee: 10000},
       { id: "LTC", name: "Litecoin", description: "", fee: 30000},
       { id: "ZILLA", name: "ChainZilla", description: "", fee: 10000},
+      { id: "K64", name: "Komodore64", description: "", fee: 10000}
     ]
 };
 
