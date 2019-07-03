@@ -55,7 +55,7 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
 
             const _txid = Buffer.from(array, 'hex').toString('hex')
 
-            insPromises.push(getOneTransaction(null, coinObj, activeUser, _txid))
+            insPromises.push(getOneTransaction(null, coinObj, _txid))
           }
           
           getTransactionPromise = Promise.all(insPromises)

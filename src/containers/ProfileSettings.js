@@ -13,9 +13,11 @@ import {
   StyleSheet, 
   Text, 
   TouchableOpacity,
-  ScrollView
+  ScrollView,
+  Alert
 } from "react-native";
 import { connect } from 'react-redux';
+import { clearCacheData } from '../actions/actionCreators'
 
 const RESET_PWD = "ResetPwd"
 const RECOVER_SEED = "RecoverSeed"
@@ -36,6 +38,20 @@ class ProfileSettings extends Component {
     let navigation = this.props.navigation  
 
     navigation.navigate(screen);
+  }
+
+  clearCache = () => {
+    clearCacheData(this.props.dispatch)
+    .then(() => {
+      Alert.alert(
+        "Success", 
+        "Cache cleared successfully");
+    })
+    .catch(e => {
+      Alert.alert(
+        "Error", 
+        "Cache failed to clear");
+    })
   }
 
   renderSettingsList = () => {
@@ -61,6 +77,15 @@ class ProfileSettings extends Component {
             title={<Text style={styles.coinItemLabel}>Reset Password</Text>}
             leftIcon={{name: 'autorenew'}}
             containerStyle={{ borderBottomWidth: 0 }} 
+          />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => this.clearCache()}>
+          <ListItem                       
+            title={<Text style={styles.coinItemLabel}>Clear Data Cache</Text>}
+            leftIcon={{name: 'clear-all'}}
+            rightIcon={{name: 'close'}}
+            containerStyle={{ borderBottomWidth: 0 }} 
+            chevron={false}
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => this._openSettings(REMOVE_PROFILE)}>

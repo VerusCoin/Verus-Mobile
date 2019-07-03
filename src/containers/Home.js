@@ -14,8 +14,7 @@ import {
   View, 
   StyleSheet, 
   Text, 
-  FlatList, 
-  ActivityIndicator, 
+  FlatList,
   TouchableOpacity,
   ScrollView,
   RefreshControl
@@ -25,8 +24,7 @@ import {
   setCoinRates, 
   setActiveCoin, 
   setActiveApp,
-  setActiveSection,
-  everythingNeedsUpdate
+  setActiveSection
 } from '../actions/actionCreators';
 import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../utils/math';
@@ -230,7 +228,6 @@ class Home extends Component {
             containerStyle={{ borderBottomWidth: 0 }} 
           /> 
         </TouchableOpacity>
-        {/*<ActivityIndicator animating={this.state.loading} size="large"/>*/}
       </ScrollView>
     )
   }
@@ -255,7 +252,7 @@ const mapStateToProps = (state) => {
     activeAccount: state.authentication.activeAccount,
     balances: state.ledger.balances,
     needsUpdate: state.ledger.needsUpdate,
-    rates: state.ledger.rates
+    rates: state.ledger.rates,
   }
 };
 

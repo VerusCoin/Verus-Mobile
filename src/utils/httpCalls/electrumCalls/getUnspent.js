@@ -53,11 +53,10 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
         throw new Error("no valid utxo")
       }
       else {
-
         //Filter out unconfirmed UTXOs
         for (let i = 0; i < _utxoList.length; i++) {
           if(Number(currentHeight) - Number(_utxoList[i].height) !== 0) {
-            getTxPromiseArray.push(getOneTransaction(null, coinObj, activeUser, _utxoList[i].tx_hash))
+            getTxPromiseArray.push(getOneTransaction(null, coinObj, _utxoList[i].tx_hash))
           }
         }
 
@@ -92,7 +91,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
           }
           
           if (!decodedTx) {
-            throw new Error('Can\'t decode tx')
+            throw new Error('Can\'t decode transaction.')
           } else {
             if (network.coin === 'kmd') {
               let interest = 0;

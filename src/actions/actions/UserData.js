@@ -11,7 +11,7 @@ import {
   checkPinForUser,
   resetUserPwd,
   deleteUser
-} from '../../utils/asyncStore';
+} from '../../utils/asyncStore/asyncStore';
 import {
   makeKeyPair
 } from '../../utils/keys'

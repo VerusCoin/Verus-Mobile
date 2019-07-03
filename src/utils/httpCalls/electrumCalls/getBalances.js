@@ -11,7 +11,7 @@ export const getBalances = (oldBalances, activeCoinsForUser, activeUser) => {
         oldBalances ? oldBalances[activeCoinsForUser[i].id] : null, 
         activeCoinsForUser[i], 
         activeUser
-        ))
+      ))
   }
 
   return new Promise((resolve, reject) => {

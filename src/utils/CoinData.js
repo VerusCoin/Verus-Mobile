@@ -27,7 +27,7 @@ export const assetsPath = {
 
 export const _coinsList = {
     coins: [
-      { id: "OOT", name: "Utrum", description: "", fee: 10000},
+      { id: "OOT", name: "Utrum", description: "Reward platform for crypto analysis, reviews and predictions", fee: 10000},
       { id: "CCL", name: "CoinCollect", description: "", fee: 10000},
       { id: "DOGE", name: "Dogecoin", description: "", fee: 100000000},
       { id: "DGB", name: "Digibyte", description: "", fee: 100000},

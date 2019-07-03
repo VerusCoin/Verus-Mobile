@@ -1,7 +1,14 @@
 import React from "react";
 import { YellowBox, TouchableWithoutFeedback, Keyboard, Alert } from "react-native";
 import { RootNavigator } from './utils/navigation/index';
-import { fetchUsers, loadServerVersions } from './actions/actionCreators';
+import { 
+  fetchUsers, 
+  loadServerVersions,
+  loadCachedHeaders
+} from './actions/actionCreators';
+import {
+  initCache
+} from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 
 
@@ -20,14 +27,16 @@ class VerusMobile extends React.Component {
   }
   
   componentDidMount() {
-    fetchUsers()
-    .then((usersAction) => {
-      this.props.dispatch(usersAction);
-      return loadServerVersions()
+    initCache()
+    .then(() => {
+      return fetchUsers()
     })
-    .then((serversAction) => {
-      this.props.dispatch(serversAction);
-      this.setState({ loading: false });
+    .then((usersAction) => {
+      this.props.dispatch(usersAction)
+      return Promise.all([loadServerVersions(this.props.dispatch), loadCachedHeaders(this.props.dispatch)])
+    })
+    .then(() => {
+      this.setState({ loading: false })
     })
     .catch((err) => {
       Alert.alert("Error", err.message)

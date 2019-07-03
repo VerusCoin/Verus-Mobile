@@ -35,6 +35,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
     getUnspentFormatted(null, coinObj, activeUser, verify)
     .then((res) => {
       utxoList = res.utxoList
+      let unshieldedFunds = res.unshieldedFunds
       
       if (utxoList &&
         utxoList.length) {
@@ -48,7 +49,6 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
       let changeAddress
       let feePerByte = 0;
       let btcFees = false;
-      let unshieldedFunds = res.unshieldedFunds
       let feeTakenFromAmount = false
       let amountSubmitted = value
 
@@ -286,7 +286,9 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
     } else {
       resolve ({
         err: true,
-        result: utxoList,
+        result: `No spendable funds found.` + 
+        (unshieldedFunds > 0 ? `\n\nThis is most likely due to the fact that you have ${satsToCoins(unshieldedFunds)} ${coinObj.id}
+        in unshielded funds received from mining in your wallet. Please unshield through a native client prior to sending through Verus Mobile` : null),
       });
     }
     })
@@ -305,7 +307,6 @@ export const sendRawTx = (coinObj, activeUser, outputAddress, value, defaultFee,
         console.log(resObj)
         throw (resObj)
       } else {
-        console.log("Final Tx preflight check completed, pushing tx")
         return pushTx(coinObj, resObj.result.rawtx)
       }
     })
