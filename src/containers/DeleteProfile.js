@@ -119,7 +119,8 @@ class DeleteProfile extends Component {
               let data = {
                 task: deleteUserByID,
                 message: "Deleting profile, please do not close Verus Mobile",
-                input: [userID]
+                input: [userID],
+                dispatchResult: true
               }
               this.resetToScreen("SecureLoading", data)
             } 
