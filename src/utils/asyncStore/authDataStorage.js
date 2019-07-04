@@ -6,6 +6,10 @@ import {
   decryptkey,
 } from '../seedCrypt'
 
+import {
+  deleteUserFromCoin
+} from './asyncStore'
+
 //Set storage to hold encrypted user data
 export const storeUser = (authData, users) => {
   let encryptedKey = encryptkey(authData.pin, authData.wifKey)
