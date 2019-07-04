@@ -18,8 +18,6 @@ import { satsToCoins, truncateDecimal } from '../utils/math';
 import { 
   fetchTransactionsForCoin, 
   updateCoinBalances,
-  //transactionsNeedUpdate,
-  //needsUpdate,
   everythingNeedsUpdate
 } from '../actions/actionCreators';
 

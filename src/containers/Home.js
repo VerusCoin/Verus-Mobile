@@ -24,7 +24,8 @@ import {
   setCoinRates, 
   setActiveCoin, 
   setActiveApp,
-  setActiveSection
+  setActiveSection,
+  everythingNeedsUpdate
 } from '../actions/actionCreators';
 import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../utils/math';
