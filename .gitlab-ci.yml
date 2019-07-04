@@ -2,24 +2,49 @@ stages:
   - build
 
 variables:
+  VERSION: 0.1.7-beta
   POST_MESSAGE: "Pipeline Trigger: ${CI_PIPELINE_SOURCE}\n
   Branch: ${CI_COMMIT_REF_NAME}\n
   Commit: ${CI_COMMIT_SHA}\n
-  Author:  ${GITLAB_USER_NAME} <${GITLAB_USER_EMAIL}>\n
   ${CI_COMMIT_MESSAGE}"
 
-build:
+Android:debug:
+  except:
+    refs:
+      - master
   tags: ["Mobile"]
   stage: build
   script:
     - yarn install
     - yarn run bundle-android
     - cd android && ./gradlew assembleDebug
-    - ls
-
-
   artifacts:
     paths:
       - android/app/build
       - yarn-lock.json
 
+
+Android:release:
+  only:
+    refs:
+      - master
+  tags: ["Mobile"]
+  variables:
+    RELEASE: 1
+  stage: build
+  script:
+    - yarn install
+    - cd android
+    - echo ${KEYSTORE}  | xxd -r -p - > app/${MYAPP_RELEASE_STORE_FILE}
+    - ./gradlew assembleRelease;
+    - rm app/${MYAPP_RELEASE_STORE_FILE}
+  after_script:
+    - curl -F file=@"android/app/build/outputs/apk/release/VerusMobile-${VERSION}.apk"
+      -F channels="${CHANNEL}"
+      -F initial_comment="${POST_MESSAGE}"
+      -H "${SLACK_BOT_AUTH}"
+      "https://slack.com/api/files.upload"
+
+  artifacts:
+    paths:
+      - android/app/build/outputs/apk/release
