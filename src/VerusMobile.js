@@ -7,7 +7,8 @@ import {
   loadCachedHeaders
 } from './actions/actionCreators';
 import {
-  initCache
+  initCache,
+  clearCachedVersions
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 
@@ -27,7 +28,13 @@ class VerusMobile extends React.Component {
   }
   
   componentDidMount() {
-    initCache()
+    //TODO: Figure out what should trigger a cache clear on startup of server 
+    //versions. (The action that triggers it should indicate a server upgraded it's 
+    //version)
+    clearCachedVersions()
+    .then(() => {
+      return initCache()
+    })
     .then(() => {
       return fetchUsers()
     })
