@@ -20,6 +20,11 @@ export const electrum = (state = {
         ...state, 
         serverVersions: action.serverVersions,
       };
+    case 'CLEAR_CACHE':
+      return {
+        ...state, 
+        serverVersions: {},
+      };
     default:
       return state;
   }

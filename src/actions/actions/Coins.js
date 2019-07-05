@@ -10,7 +10,7 @@ import {
 import {
   storeCoins,
   getActiveCoinsList
-} from '../../utils/asyncStore';
+} from '../../utils/asyncStore/asyncStore';
 
 // Add coin that exists in default list of coins
 export const addExistingCoin = (coinID, activeCoins, userName) => {

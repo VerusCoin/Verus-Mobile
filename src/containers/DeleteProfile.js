@@ -24,7 +24,7 @@ import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elemen
 import { deleteUserByID } from '../actions/actionCreators';
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
-import { checkPinForUser } from '../utils/asyncStore'
+import { checkPinForUser } from '../utils/asyncStore/asyncStore'
 
 class DeleteProfile extends Component {
   constructor() {
@@ -119,7 +119,8 @@ class DeleteProfile extends Component {
               let data = {
                 task: deleteUserByID,
                 message: "Deleting profile, please do not close Verus Mobile",
-                input: [userID]
+                input: [userID],
+                dispatchResult: true
               }
               this.resetToScreen("SecureLoading", data)
             } 

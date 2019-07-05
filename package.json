@@ -1,6 +1,6 @@
 {
   "name": "verusmobile",
-  "version": "0.1.6-beta",
+  "version": "0.1.7-beta",
   "private": true,
   "scripts": {
     "postinstall": "patch-package && ./node_modules/.bin/rn-nodeify --hack --install",
@@ -48,6 +48,7 @@
     "react-dom": "^16.4.2",
     "react-native": "0.59.8",
     "react-native-alert-async": "^1.0.3",
+    "react-native-cache": "https://github.com/michaeltout/react-native-cache.git",
     "react-native-camera": "^1.10.1",
     "react-native-crypto": "^2.1.2",
     "react-native-elements": "^0.19.1",

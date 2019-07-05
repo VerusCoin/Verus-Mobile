@@ -12,6 +12,9 @@ export const getCoinPaprikaRate = (coinObj) => {
     .then((response) => response.json())
     .then((response) => {
       if (response.error || !response || !response[0] || !response[0].close) {
+        console.log(`Failed to get price for ${coinID} through CoinPaprika API:`)
+        console.log(`url: ${address}`)
+        console.log(response)
         resolve(false)
       }
       else {

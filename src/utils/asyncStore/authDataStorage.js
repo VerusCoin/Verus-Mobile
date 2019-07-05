@@ -1,18 +1,14 @@
-// Handle all calls to Async Storage (persistent) in this file
+import { AsyncStorage, Alert } from "react-native";
+// react-native's version of local storage
 
 import {
   encryptkey,
   decryptkey,
-} from './seedCrypt';
+} from '../seedCrypt'
 
-import { AsyncStorage, Alert } from "react-native";
-// react-native's version of local storage
-
-export const INIT = "initialized";
-export const PIN = "pin";
-
-export const initialize = () => AsyncStorage.setItem(INIT, "true");
-// set storage to hold key as TRUE
+import {
+  deleteUserFromCoin
+} from './asyncStore'
 
 //Set storage to hold encrypted user data
 export const storeUser = (authData, users) => {
@@ -30,33 +26,6 @@ export const storeUser = (authData, users) => {
       .catch(err => reject(err));
   }) 
 };
-
-//Clear user from coin, or delete user from all if no coin specified
-export const deleteUserFromCoin = (userID, coinID) => {
-  return new Promise((resolve, reject) => {
-    getActiveCoinsList()
-    .then((coinList) => {
-      let newList = coinList.slice()
-      for (let i = 0; i < newList.length; i++) {
-        if (coinID === null || newList[i].id === coinID) {
-          let userIndex = newList[i].users.findIndex(n => n === userID);
-
-          if (userIndex > -1) {
-            newList[i].users.splice(userIndex, 1);
-          }
-        }
-      }
-
-      return storeCoins(newList)
-    })
-    .then((res) => {
-      resolve(res)
-    })
-    .catch((err) => {
-      reject(err)
-    })
-  });
-}
 
 //Delete user by user ID and return new user array
 export const deleteUser = (userID) => {
@@ -156,37 +125,6 @@ export const getUsers = () => {
   }) 
 };
 
-//Set storage to hold list of activated coins
-export const storeCoins = (coins) => {
-  let _coins = coins ? coins.slice() : []
-  let _toStore = {coins: _coins}
-
-  return new Promise((resolve, reject) => {
-    AsyncStorage.setItem('activeCoins', JSON.stringify(_toStore))
-      .then(() => {
-        resolve(true);
-      })
-      .catch(err => reject(err));
-  }) 
-};
-
-export const getActiveCoinsList = () => {
-  return new Promise((resolve, reject) => {
-    AsyncStorage.getItem('activeCoins')
-      .then(res => {
-        if (!res) {
-          let coinsList = {coins: []};
-          resolve(coinsList.coins);
-        }
-        else {
-          _res = JSON.parse(res);
-          resolve(_res.coins);
-        }
-      })
-      .catch(err => reject(err));
-  });
-};
-
 //Set storage to hold encrypted user data
 export const checkPinForUser = (pin, userName) => {
   return new Promise((resolve, reject) => {
@@ -225,52 +163,3 @@ export const checkPinForUser = (pin, userName) => {
 
 export const onSignOut = () => AsyncStorage.removeItem(KEY);
 //if user signs out, remove TRUE key
-
-export const clearStorage = () => AsyncStorage.clear();
-//For testing purposes
-
-export const isSignedIn = () => {
-  return new Promise((resolve, reject) => {
-    AsyncStorage.getItem(KEY)
-      .then(res => {
-        if (res !== null) {
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-      })
-      .catch(err => reject(err));
-  });
-};
-
-//Store version numbers for each loaded electrum server
-//so we don't have to keep checking
-export const setElectrumVersion = (server, version, versionList) => {
-  let _versionList = versionList ? versionList : {};
-  _versionList[server] = version
-  let _toStore = _versionList
-
-  return new Promise((resolve, reject) => {
-    AsyncStorage.setItem('eProtocolVersions', JSON.stringify(_toStore))
-      .then(() => {
-        resolve(_versionList);
-      })
-      .catch(err => reject(err));
-  }) 
-}
-
-//Get electrum server versions, to be called
-//on startup and dispatched to redux store
-export const getElectrumVersions = () => {
-  let versions = {}
-  return new Promise((resolve, reject) => {
-    AsyncStorage.getItem('eProtocolVersions')
-      .then(res => {
-        versions = res ? JSON.parse(res) : {};
-        resolve(versions)
-      })
-      .catch(err => reject(err));
-  }) 
-}
-
-

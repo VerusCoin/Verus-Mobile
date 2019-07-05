@@ -69,7 +69,6 @@ class VerusPay extends Component {
   }
 
   componentWillUnmount() {
-    //TODO: Pop veruspay from navigation stack on unmount
     if (this.props.navigation.state.params && this.props.navigation.state.params.refresh) {
       this.props.navigation.state.params.refresh()
     }
@@ -87,8 +86,6 @@ class VerusPay extends Component {
     this.props.navigation.dispatch(resetAction)
   }
 
-  //TODO: Allow veruspay from home to open send screen of a coin with address 
-  //filled in but value still empty
   onSuccess(e) {
     console.log(e)
     let result = e.data

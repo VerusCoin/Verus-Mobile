@@ -6,20 +6,12 @@ export const getBalances = (oldBalances, activeCoinsForUser, activeUser) => {
 
   for (let i = 0; i < activeCoinsForUser.length; i++) {
     index = 0
-    while (index < activeUser.keys.length && activeUser.keys[index].id !== activeCoinsForUser[i].id) {
-      index++;
-    }
-    if (index < activeUser.keys.length) {
-      balancePromises.push(
-        getOneBalance(
-          oldBalances ? oldBalances[activeCoinsForUser[i].id] : null, 
-          activeCoinsForUser[i], 
-          activeUser
-          ))
-    }
-    else {
-      throw new Error("getBalances.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + activeCoinsForUser[i].id + " not found!");
-    }
+    balancePromises.push(
+      getOneBalance(
+        oldBalances ? oldBalances[activeCoinsForUser[i].id] : null, 
+        activeCoinsForUser[i], 
+        activeUser
+      ))
   }
 
   return new Promise((resolve, reject) => {
@@ -50,13 +42,9 @@ export const getOneBalance = (oldBalance, coinObj, activeUser) => {
   let index = 0
   let params = {}
 
-  while (index < activeUser.keys.length && coinObj.id !== activeUser.keys[index].id) {
-    index++
-  }
-  if (index < activeUser.keys.length) {
-    params.address = activeUser.keys[index].pubKey
-  }
-  else {
+  if (activeUser.keys.hasOwnProperty(coinObj.id)) {
+    params.address = activeUser.keys[coinObj.id].pubKey
+  } else {
     throw new Error("getBalances.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + activeCoinsForUser[i].id + " not found!");
   }
 

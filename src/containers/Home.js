@@ -14,8 +14,7 @@ import {
   View, 
   StyleSheet, 
   Text, 
-  FlatList, 
-  ActivityIndicator, 
+  FlatList,
   TouchableOpacity,
   ScrollView,
   RefreshControl
@@ -230,7 +229,6 @@ class Home extends Component {
             containerStyle={{ borderBottomWidth: 0 }} 
           /> 
         </TouchableOpacity>
-        {/*<ActivityIndicator animating={this.state.loading} size="large"/>*/}
       </ScrollView>
     )
   }
@@ -255,7 +253,7 @@ const mapStateToProps = (state) => {
     activeAccount: state.authentication.activeAccount,
     balances: state.ledger.balances,
     needsUpdate: state.ledger.needsUpdate,
-    rates: state.ledger.rates
+    rates: state.ledger.rates,
   }
 };
 

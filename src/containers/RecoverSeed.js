@@ -22,7 +22,7 @@ import {
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
 import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements'
-import { checkPinForUser } from '../utils/asyncStore'
+import { checkPinForUser } from '../utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
 

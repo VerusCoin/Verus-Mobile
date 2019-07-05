@@ -75,13 +75,9 @@ class SendCoin extends Component {
     let promiseArray = []
     let index = 0;
 
-    while (index < activeUser.keys.length && coinObj.id !== activeUser.keys[index].id) {
-      index++
-    }
-    if (index < activeUser.keys.length) {
-      this.setState({ fromAddress: activeUser.keys[index].pubKey });  
-    }
-    else {
+    if (activeUser.keys.hasOwnProperty(coinObj.id)) {
+      this.setState({ fromAddress: activeUser.keys[coinObj.id].pubKey });  
+    } else {
       throw new Error("SendCoin.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!");
     }
 

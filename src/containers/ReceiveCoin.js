@@ -15,13 +15,15 @@ import {
   ScrollView, 
   Keyboard, 
   Clipboard,
-  Alert
+  Alert,
+  RefreshControl
  } from "react-native"
 import { FormLabel, FormInput, FormValidationMessage, Icon } from 'react-native-elements'
 import { connect } from 'react-redux'
 import { Dropdown } from 'react-native-material-dropdown'
 import QRCode from 'react-native-qrcode-svg';
-import { coinsToSats, isNumber } from '../utils/math'
+import { coinsToSats, isNumber, truncateDecimal } from '../utils/math'
+import { setCoinRates, everythingNeedsUpdate } from '../actions/actionCreators'
 
 const LOGO_DIR = require('../images/customIcons/verusQRLogo.png');
 
@@ -34,7 +36,9 @@ class ReceiveCoin extends Component {
       address: null,
       memo: null,
       errors: {selectedCoin: null, amount: null, address: null, memo: null },
-      verusQRString: null
+      verusQRString: null,
+      amountFiat: false,
+      loading: false
     };
   }
 
@@ -47,13 +51,9 @@ class ReceiveCoin extends Component {
     const activeUser = this.props.activeAccount
     const coinObj = this.state.selectedCoin
 
-    while (index < activeUser.keys.length && coinObj.id !== activeUser.keys[index].id) {
-      index++
-    }
-    if (index < activeUser.keys.length) {
-      this.setState({ address: activeUser.keys[index].pubKey });  
-    }
-    else {
+    if (activeUser.keys.hasOwnProperty(coinObj.id)) {
+      this.setState({ address: activeUser.keys[coinObj.id].pubKey });  
+    } else {
       throw new Error("ReceiveCoin.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!");
     }
   }
@@ -70,12 +70,62 @@ class ReceiveCoin extends Component {
     this.setState({errors: _errors})
   }
 
+  forceUpdate = () => {
+    //TODO: Figure out why screen doesnt always update if everything is called seperately
+
+    /*this.props.dispatch(transactionsNeedUpdate(this.props.activeCoin.id, this.props.needsUpdate.transanctions))
+    this.props.dispatch(needsUpdate("balances"))
+    this.props.dispatch(needsUpdate("rates"))*/
+    this.props.dispatch(everythingNeedsUpdate())
+
+    this.refresh()
+  }
+
+  refresh = () => {
+    const _activeCoinsForUser = this.props.activeCoinsForUser
+
+    let promiseArray = []
+
+    if(this.props.needsUpdate.rates) {
+      console.log("Rates need update, pushing update to transaction array")
+      if (!this.state.loading) {
+        this.setState({ loading: true });  
+      }  
+      promiseArray.push(setCoinRates(_activeCoinsForUser))
+    }
+  
+    this.updateProps(promiseArray)
+  }
+
+  updateProps = (promiseArray) => {
+    return new Promise((resolve, reject) => {
+      Promise.all(promiseArray)
+        .then((updatesArray) => {
+          if (updatesArray.length > 0) {
+            for (let i = 0; i < updatesArray.length; i++) {
+              if(updatesArray[i]) {
+                this.props.dispatch(updatesArray[i])
+              }
+            }
+            if (this.state.loading) {
+              this.setState({ loading: false });  
+            }
+            resolve(true)
+          }
+          else {
+            resolve(false)
+          }
+        })
+    }) 
+  }
+
   createQRString = (coinTicker, amount, address, memo) => {
+    let _price = this.props.rates[this.state.selectedCoin.id]
     let verusQRJSON = {
       verusQR: global.VERUS_QR_VERSION,
       coinTicker: coinTicker,
       address: address,
-      amount: coinsToSats(amount),
+      amount: this.state.amountFiat ? truncateDecimal(coinsToSats(amount/_price), 0) : coinsToSats(amount),
       memo: memo
     }
 
@@ -94,9 +144,27 @@ class ReceiveCoin extends Component {
     Alert.alert("Address Copied", "Address copied to clipboard")
   }
 
+  getPrice = () => {
+    const _amount = this.state.amount
+    const _price = this.props.rates[this.state.selectedCoin.id]
+    
+    if (!(_amount.toString()) ||
+      !(isNumber(_amount)) ||
+      !_price) {
+      return 0
+    } 
+
+    if (this.state.amountFiat) {
+      return truncateDecimal(_amount/_price, 8)
+    } else {
+      return truncateDecimal(_amount*_price, 2)
+    }
+  }
+
   validateFormData = () => {
     this.setState({
-      errors: {selectedCoin: null, amount: null, address: null, memo: null }
+      errors: {selectedCoin: null, amount: null, address: null, memo: null },
+      verusQRString: null
     }, () => {
       const _selectedCoin = this.state.selectedCoin
       const _amount = this.state.amount
@@ -109,7 +177,7 @@ class ReceiveCoin extends Component {
         _errors = true
       }
 
-      if (!(_amount.toString())) {
+      if (!(_amount.toString()) || _amount.toString().length < 1) {
         this.handleError("Required field", "amount")
         _errors = true
       } else if (!(isNumber(_amount))) {
@@ -126,8 +194,17 @@ class ReceiveCoin extends Component {
   }
 
   render() {
+    const _price = this.getPrice()
     return (
-        <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center", justifyContent: "center"}}>
+        <ScrollView 
+        style={styles.root} 
+        contentContainerStyle={{alignItems: "center", justifyContent: "center"}}
+        refreshControl={
+          <RefreshControl
+            refreshing={this.state.loading}
+            onRefresh={this.forceUpdate}
+          />
+        }>
           <Text style={styles.wifLabel}>
             Generate VerusQR Invoice
           </Text>
@@ -172,6 +249,7 @@ class ReceiveCoin extends Component {
               inputStyle={styles.wifInput}
               multiline={true}
             />
+            {this.state.errors.address &&
             <FormValidationMessage>
             {
               this.state.errors.address ? 
@@ -179,22 +257,33 @@ class ReceiveCoin extends Component {
                 :
                 null
             }
-            </FormValidationMessage>
+            </FormValidationMessage>}
           </View>
-          <TouchableOpacity onPress={this.copyAddressToClipboard}>
+          <TouchableOpacity onPress={this.copyAddressToClipboard} style={{marginTop: 5}}>
             <Icon name="content-copy" size={25} color="#E9F1F7"/>
           </TouchableOpacity>
           <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-            Enter an amount:
-            </FormLabel>
+            <View style={styles.LabelContainer}>
+              <FormLabel labelStyle={styles.formLabel}>
+              {`Enter an amount in ${this.state.amountFiat ? 'USD' : this.state.selectedCoin.id}:`}
+              </FormLabel>
+              {this.props.rates[this.state.selectedCoin.id] && (isNumber(_price)) &&
+                <TouchableOpacity onPress={() => {this.setState({ amountFiat: !this.state.amountFiat })}}>
+                  <FormLabel labelStyle={styles.swapInputTypeBtnBordered}>
+                    {this.state.amountFiat ? this.state.selectedCoin.id : 'USD'}
+                  </FormLabel>
+                </TouchableOpacity>
+              }
+            </View>
             <FormInput 
               underlineColorAndroid="#86939d"
               onChangeText={(text) => this.setState({amount: text})}
               shake={this.state.errors.amount}
               inputStyle={styles.formInput}
-              keyboardType={"numeric"}
+              keyboardType={"decimal-pad"}
+              autoCapitalize='words'
             />
+            {this.state.errors.amount &&
             <FormValidationMessage>
             {
               this.state.errors.amount ? 
@@ -202,7 +291,13 @@ class ReceiveCoin extends Component {
                 :
                 null
             }
-            </FormValidationMessage>
+            </FormValidationMessage>}
+            {this.props.rates[this.state.selectedCoin.id] && (isNumber(_price)) &&
+            <TouchableOpacity onPress={() => {this.setState({ amountFiat: !this.state.amountFiat })}}>
+              <FormLabel labelStyle={styles.swapInputTypeBtn}>
+                {`~${_price} ${this.state.amountFiat ? this.state.selectedCoin.id : 'USD'}`}
+              </FormLabel>
+            </TouchableOpacity>}
           </View>
           <View style={styles.valueContainer}>
             <FormLabel labelStyle={styles.formLabel}>
@@ -251,6 +346,8 @@ const mapStateToProps = (state) => {
     activeCoin: state.coins.activeCoin,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeAccount: state.authentication.activeAccount,
+    rates: state.ledger.rates,
+    needsUpdate: state.ledger.needsUpdate,
   }
 };
 
@@ -291,6 +388,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
   },
+  LabelContainer: {
+    width: "94%",
+    flexDirection: "row",
+    justifyContent: "space-between"
+  },
   addAccountButton: {
     height: 46,
     backgroundColor: "#2E86AB",
@@ -305,5 +407,19 @@ const styles = StyleSheet.create({
     width: "90%",
     marginBottom: 0,
     marginTop: 0,
+  },
+  swapInputTypeBtn: {
+    textAlign:"left",
+    marginRight: "auto",
+    color: "#2E86AB"
+  },
+  swapInputTypeBtnBordered: {
+    marginRight: "auto",
+    color: "#2E86AB",
+    borderRadius: 10,
+    backgroundColor: "#E9F1F7",
+    paddingLeft: 5,
+    paddingRight: 5,
+    overflow: "hidden"
   },
 });

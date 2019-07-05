@@ -1,7 +1,9 @@
-export * from './actions/Coins';
-export * from './actions/UserData';
-export * from './actions/Ledger';
-export * from './actions/Electrum'
+export * from './actions/Coins'
+export * from './actions/UserData'
+export * from './actions/Ledger'
+export * from './actions/cache/Electrum'
+export * from './actions/cache/Headers'
+export * from './actions/cache/Cache'
 
 //Reducer Name: authentication
 export const setAccounts = (accounts) => {
@@ -176,6 +178,30 @@ export const setServerVersions = (serverVersions) => {
   return {
     type: 'SET_SERVER_VERSIONS',
     serverVersions: serverVersions
+  }
+}
+
+//Reducer Name: headers
+export const addBlockHeader = (header, height, coinID) => {
+  let key = `${coinID}.${height}`
+  return {
+    type: 'ADD_HEADER',
+    key: key,
+    header: header
+  }
+}
+
+//Reducer Name: headers
+export const setBlockHeaders = (headers) => {
+  return {
+    type: 'SET_HEADERS',
+    headers: headers
+  }
+}
+
+export const clearDataCache = () => {
+  return {
+    type: 'CLEAR_CACHE',
   }
 }
 

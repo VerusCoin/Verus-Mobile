@@ -2,6 +2,13 @@ apply plugin: "com.android.application"
 
 import com.android.build.OutputFile
 
+def versionMajor = 0
+def versionMinor = 1
+def versionRevision = 7
+def versionBuild = 1
+
+def keystorePropertiesFile = rootProject.file("keystore.properties");
+
 /**
  * The react.gradle file registers a task for each build variant (e.g. bundleDebugJsAndAssets
  * and bundleReleaseJsAndAssets).
@@ -101,19 +108,27 @@ android {
         applicationId "com.verusmobile"
         minSdkVersion 16
         targetSdkVersion 26
-        versionCode 2
-        versionName "0.1.6-beta"
+        versionCode versionMajor * 10000 + versionMinor * 1000 + versionRevision * 100 + versionBuild
+        versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta"
         ndk {
             abiFilters "armeabi-v7a", "x86"
         }
     }
     signingConfigs {
         release {
-            if (project.hasProperty('MYAPP_RELEASE_STORE_FILE')) {
-                storeFile file(MYAPP_RELEASE_STORE_FILE)
-                storePassword MYAPP_RELEASE_STORE_PASSWORD
-                keyAlias MYAPP_RELEASE_KEY_ALIAS
-                keyPassword MYAPP_RELEASE_KEY_PASSWORD
+            if ( keystorePropertiesFile.exists()) {
+                def keystoreProperties = new Properties()
+                keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+                    storeFile file(keystoreProperties['storeFile'])
+                    storePassword keystoreProperties['storePassword']
+                    keyAlias keystoreProperties['keyAlias']
+                    keyPassword keystoreProperties['keyPassword']
+                }
+            if (System.getenv("CI_SERVER") && System.getenv("RELEASE")) {
+                storeFile file(System.getenv('MYAPP_RELEASE_STORE_FILE'))
+                storePassword System.getenv('MYAPP_RELEASE_STORE_PASSWORD')
+                keyAlias System.getenv('MYAPP_RELEASE_KEY_ALIAS')
+                keyPassword System.getenv('MYAPP_RELEASE_KEY_PASSWORD')
             }
         }
     }

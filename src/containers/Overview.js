@@ -18,8 +18,6 @@ import { satsToCoins, truncateDecimal } from '../utils/math';
 import { 
   fetchTransactionsForCoin, 
   updateCoinBalances,
-  //transactionsNeedUpdate,
-  //needsUpdate,
   everythingNeedsUpdate
 } from '../actions/actionCreators';
 
@@ -57,7 +55,7 @@ class Overview extends Component {
     let promiseArray = []
 
     if (_needsUpdateObj[_coinObj.id]){
-      console.log("Transactions need update, pushing update to transaction array")
+      console.log("Transactions need update, pushing update to promise array")
       if (!this.state.loading) {
         this.setState({ loading: true });  
       }
@@ -65,7 +63,7 @@ class Overview extends Component {
     }
 
     if(this.props.needsUpdate.balances) {
-      console.log("Balances need update, pushing update to balance array")
+      console.log("Balances need update, pushing update to promise array")
       if (!this.state.loading) {
         this.setState({ loading: true });  
       }

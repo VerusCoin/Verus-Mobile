@@ -3,7 +3,8 @@
   that exists as display to show while something that cannot be interrupted
   is loading. This usually means interactions with sensitive data in memory
   like removing accounts. It is passed a promise that it completes and then
-  exits the screen, dispatching the result of the promise to the store.
+  exits the screen, dispatching the result of the promise to the store (if 
+  dispatch is specified).
 
   It will only navigate to a screen if the screen is provided, if it is not
   provided, it will simply do nothing on completion. 
@@ -20,9 +21,10 @@ import {
   ActivityIndicator,
   Alert
 } from "react-native";
-import { NavigationActions, StackActions } from 'react-navigation';
+import { NavigationActions } from 'react-navigation';
 import { connect } from 'react-redux';
-import { signOut } from '../actions/actionCreators'
+import { signOut } from '../actions/actionCreators';
+import { Icon } from "react-native-elements";
 
 const DEFAULT_TIMEOUT = 30000
 const DEFAULT_MESSAGE = "Loading..."
@@ -35,8 +37,13 @@ class SecureLoading extends Component {
       task: null,
       timeout: DEFAULT_TIMEOUT,
       route: null,
-      timedOut: false,
-      action: null
+      action: null,
+      input: null,
+      dispatchResult: false,
+      onError: null,
+      successMsg: null,
+      errorMsg: null,
+      status: 'loading'
     };
   }
 
@@ -45,7 +52,7 @@ class SecureLoading extends Component {
     const data = navigation.state.params ? navigation.state.params.data : null
 
     this.timeoutTimer = setTimeout(() => {
-      this.setState({timedOut: true})
+      this.setState({status: 'timeout'})
     }, DEFAULT_TIMEOUT)
 
     if (data) {
@@ -54,14 +61,20 @@ class SecureLoading extends Component {
         message: data.message ? data.message: DEFAULT_MESSAGE, 
         timeout: data.timeout ? data.timeout : DEFAULT_TIMEOUT,
         route: data.route ? data.route : null,
-        input: data.input ? data.input : null},
+        input: data.input ? data.input : [],
+        dispatchResult: data.dispatchResult ? true : false,
+        onError: data.onError ? data.onError : null,
+        successMsg: data.successMsg ? data.successMsg : null,
+        errorMsg: data.errorMsg ? data.errorMsg : null
+      },
         () => {
           if (typeof this.state.task === "function") {
             this.state.task(...this.state.input)
             .then((res) => {
               clearTimeout(this.timeoutTimer);
-              if (!this.state.timedOut) {
-                this.props.dispatch(res)
+              if (this.state.status !== 'timeout') {
+                if (this.state.dispatchResult) this.props.dispatch(res)
+                this.setState({ status: 'success' })
                 if (this.state.route) {
                   this.resetToScreen(this.state.route)
                 } else {
@@ -70,6 +83,10 @@ class SecureLoading extends Component {
               }
             })
           } else {
+            if (this.state.onError) this.state.onError()
+            clearTimeout(this.timeoutTimer);
+            this.setState({ status: 'error' })
+
             throw new Error("Error, task given to loading screen is " + (typeof this.state.task) + ", expected function")
           }
         })
@@ -100,8 +117,30 @@ class SecureLoading extends Component {
   render() {
     return(
       <View style={styles.loadingRoot}>
-        <ActivityIndicator animating={!this.state.timedOut} size="large"/>
-        <Text style={styles.loadingLabel}>{this.state.message}</Text>
+        <ActivityIndicator 
+          animating={
+            this.state.status === 'loading' || 
+            (this.state.status === 'success' && (!this.state.successMsg)) || 
+            (this.state.status !== 'error' && (!this.state.errorMsg))} 
+          size="large"
+        />
+        { this.state.status === 'success' && this.state.successMsg &&
+          <Icon name="check" color="#50C3A5" size={45}/>
+        }
+        { this.state.status === 'error' && this.state.errorMsg &&
+          <Icon name="close" color="rgba(206,68,70,1)" size={45}/>
+        }
+        <Text style={styles.loadingLabel}>
+          {
+            this.state.status === 'success' && this.state.successMsg ? 
+              this.state.successMsg
+              :
+              this.state.status === 'error' && this.state.errorMsg ? 
+                this.state.errorMsg
+                :
+                this.state.message
+          }
+        </Text>
       </View>
     )
   }

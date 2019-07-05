@@ -8,24 +8,40 @@
 */
 
 import React, { Component } from "react";
-import { View, StyleSheet } from "react-native";
+import { 
+  View, 
+  StyleSheet, 
+  Text
+} from "react-native";
+import ProgressBar from 'react-native-progress/Bar';
 
 export default class LoadingScreen extends Component {
   constructor(props) {
     super(props)
-    this.state = {
-      loading: false,        
-    };
-    this.arrayholder = [];
   }
-
 
   render() {
     return (
-      <View></View>
+      <View style={styles.loadingRoot}>
+        <ProgressBar width={200} indeterminate={true} color='#2E86AB'/>
+        <Text style={styles.loadingLabel}>{"Initializing Verus Mobile..."}</Text>
+      </View>
     );
   }
 }
 const styles = StyleSheet.create({
-  
+  loadingRoot: {
+    backgroundColor: "#232323",
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  loadingLabel: {
+    backgroundColor: "transparent",
+    marginTop: 15,
+    fontSize: 15,
+    textAlign: "center",
+    color: "#E9F1F7",
+    width: "70%"
+  },
 });

@@ -12,17 +12,11 @@ export const getUnspent = (oldList, coinObj, activeUser) => {
   let params = {}
   const coinID = coinObj.id
 
-  while (index < activeUser.keys.length && coinID !== activeUser.keys[index].id) {
-    index++
-  }
-  if (index < activeUser.keys.length) {
-    params.address = activeUser.keys[index].pubKey
-  }
-  else {
+  if (activeUser.keys.hasOwnProperty(coinObj.id)) {
+    params.address = activeUser.keys[coinObj.id].pubKey
+  } else {
     throw new Error("getUnspent.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinID + " not found!")
   }
-
-  
 
   return new Promise((resolve, reject) => {
     updateValues(oldList, coinObj.serverList.serverList, callType, params, coinID)
@@ -59,11 +53,10 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
         throw new Error("no valid utxo")
       }
       else {
-
         //Filter out unconfirmed UTXOs
         for (let i = 0; i < _utxoList.length; i++) {
           if(Number(currentHeight) - Number(_utxoList[i].height) !== 0) {
-            getTxPromiseArray.push(getOneTransaction(null, coinObj, activeUser, _utxoList[i].tx_hash))
+            getTxPromiseArray.push(getOneTransaction(null, coinObj, _utxoList[i].tx_hash))
           }
         }
 
@@ -98,7 +91,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
           }
           
           if (!decodedTx) {
-            throw new Error('Can\'t decode tx')
+            throw new Error('Can\'t decode transaction.')
           } else {
             if (network.coin === 'kmd') {
               let interest = 0;

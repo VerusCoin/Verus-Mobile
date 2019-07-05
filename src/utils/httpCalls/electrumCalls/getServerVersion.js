@@ -1,5 +1,3 @@
-//  TODO: add code to fetch protocolVersions to store on startup and in this function...
-
 //  1. Get protocolVersions from redux store
 //  2. If they exist, resolve accordingly
 //  3. If they do not, fetch them from http(s) call
@@ -8,14 +6,13 @@
 import store from '../../../store/index';
 import { timeout } from '../../../utils/promises';
 import { saveServerVersion } from '../../../actions/actionCreators';
-//store.getState() to get state
 
 const OLD_DEFAULT_VERSION = 1.0
 
 export const getServerVersion = (proxyServer, ip, port, proto, httpsEnabled) => {
   let protocolVersion = store.getState().electrum.serverVersions;
 
-  if (protocolVersion[`${ip}:${port}:${proto}`]) {
+  if (protocolVersion[`${ip}:${port}:${proto}`]) {    
     return new Promise((resolve, reject) => {resolve(protocolVersion[`${ip}:${port}:${proto}`])})
   } 
 
@@ -48,17 +45,13 @@ export const getServerVersion = (proxyServer, ip, port, proto, httpsEnabled) => 
     })
     .then((version) => {
       if (!isNaN(version)) {
-        return saveServerVersion(`${ip}:${port}:${proto}`, version, protocolVersion)
+        return Promise.all([version, saveServerVersion(`${ip}:${port}:${proto}`, version, store.dispatch)])
       } else {
         throw new Error("Expected version number getServerVersion.js, got " + typeof version + " instead")
       }
-    }).then((versionAction) => {
-      if (typeof versionAction === 'object') {
-        store.dispatch(versionAction)
-        resolve(versionAction.serverVersions[`${ip}:${port}:${proto}`])
-      } else {
-        throw new Error("Expected version object getServerVersion.js, got " + typeof versionAction + " instead")
-      }
+    })
+    .then(arr => {
+      resolve(arr[0])
     })
     .catch((err) => {
       console.warn(err.message + " in serverVersion.js")

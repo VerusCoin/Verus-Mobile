@@ -1,7 +1,15 @@
 import React from "react";
 import { YellowBox, TouchableWithoutFeedback, Keyboard, Alert } from "react-native";
 import { RootNavigator } from './utils/navigation/index';
-import { fetchUsers, loadServerVersions } from './actions/actionCreators';
+import { 
+  fetchUsers, 
+  loadServerVersions,
+  loadCachedHeaders
+} from './actions/actionCreators';
+import {
+  initCache,
+  clearCachedVersions
+} from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 
 
@@ -20,14 +28,22 @@ class VerusMobile extends React.Component {
   }
   
   componentDidMount() {
-    fetchUsers()
-    .then((usersAction) => {
-      this.props.dispatch(usersAction);
-      return loadServerVersions()
+    //TODO: Figure out what should trigger a cache clear on startup of server 
+    //versions. (The action that triggers it should indicate a server upgraded it's 
+    //version)
+    clearCachedVersions()
+    .then(() => {
+      return initCache()
     })
-    .then((serversAction) => {
-      this.props.dispatch(serversAction);
-      this.setState({ loading: false });
+    .then(() => {
+      return fetchUsers()
+    })
+    .then((usersAction) => {
+      this.props.dispatch(usersAction)
+      return Promise.all([loadServerVersions(this.props.dispatch), loadCachedHeaders(this.props.dispatch)])
+    })
+    .then(() => {
+      this.setState({ loading: false })
     })
     .catch((err) => {
       Alert.alert("Error", err.message)
