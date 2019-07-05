@@ -280,7 +280,7 @@ class ReceiveCoin extends Component {
               onChangeText={(text) => this.setState({amount: text})}
               shake={this.state.errors.amount}
               inputStyle={styles.formInput}
-              keyboardType={"numeric"}
+              keyboardType={"decimal-pad"}
             />
             {this.state.errors.amount &&
             <FormValidationMessage>
