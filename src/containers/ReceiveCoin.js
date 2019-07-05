@@ -281,6 +281,7 @@ class ReceiveCoin extends Component {
               shake={this.state.errors.amount}
               inputStyle={styles.formInput}
               keyboardType={"decimal-pad"}
+              autoCapitalize='words'
             />
             {this.state.errors.amount &&
             <FormValidationMessage>
