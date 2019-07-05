@@ -27,7 +27,7 @@ export const assetsPath = {
 
 export const _coinsList = {
     coins: [
-      { id: "OOT", name: "Utrum", description: "Reward platform for crypto analysis, reviews and predictions", fee: 10000},
+      { id: "OOT", name: "Utrum", description: "A reward platform for crypto analysis, reviews and predictions", fee: 10000},
       { id: "CCL", name: "CoinCollect", description: "", fee: 10000},
       { id: "DOGE", name: "Dogecoin", description: "", fee: 100000000},
       { id: "DGB", name: "Digibyte", description: "", fee: 100000},
@@ -35,7 +35,7 @@ export const _coinsList = {
       { id: "ZEC", name: "ZCash", description: "", fee: 10000},
       { id: "DASH", name: "Dash", description: "", fee: 10000},
       { id: "LTC", name: "Litecoin", description: "", fee: 30000},
-      { id: "ZILLA", name: "ChainZilla", description: "", fee: 10000},
+      { id: "ZILLA", name: "ChainZilla", description: "The native token of Chainzilla Blockchain Solutions. They are a blockchain consulting company that develops easy to use whitelabel blockchain wallets and applications.", fee: 10000},
       { id: "K64", name: "Komodore64", description: "", fee: 10000}
     ]
 };
@@ -50,7 +50,12 @@ coinsListSorted.sort((a, b) => {
 })
 
 coinsListSorted.unshift({ id: "BTC", name: "Bitcoin", description: "The coin that started it all. Bitcoin (BTC) is a peer to peer digital currency created in 2009 by Satoshi Nakamoto.", fee: 10000});
-coinsListSorted.unshift({ id: "KMD", name: "Komodo", description: "", fee: 10000});
+coinsListSorted.unshift({ 
+  id: "KMD", 
+  name: "Komodo", 
+  description: "Komodo is an open, modular, multi-chain platform that provides an autonomous, customizable blockchain to every project that builds within the ecosystem.", 
+  fee: 10000
+});
 coinsListSorted.unshift({
   id: "VRSC", 
   name: "Verus Coin", 
