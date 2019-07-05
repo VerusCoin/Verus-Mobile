@@ -163,7 +163,8 @@ class ReceiveCoin extends Component {
 
   validateFormData = () => {
     this.setState({
-      errors: {selectedCoin: null, amount: null, address: null, memo: null }
+      errors: {selectedCoin: null, amount: null, address: null, memo: null },
+      verusQRString: null
     }, () => {
       const _selectedCoin = this.state.selectedCoin
       const _amount = this.state.amount
@@ -413,7 +414,6 @@ const styles = StyleSheet.create({
   swapInputTypeBtnBordered: {
     marginRight: "auto",
     color: "#2E86AB",
-    borderColor: "#E9F1F7",
     borderRadius: 10,
     backgroundColor: "#E9F1F7",
     paddingLeft: 5,
