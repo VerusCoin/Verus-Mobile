@@ -44,6 +44,7 @@ export const getElectrumVersions = () => {
 
 //Clear electrum version cache
 export const clearCachedVersions = () => {
+  console.log("Clearing electrum version cache")
   return versionCache.clearAll().catch(e => {
     console.log("Error while clearing electrum cache")
     throw e

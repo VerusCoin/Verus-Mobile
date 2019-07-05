@@ -39,6 +39,7 @@ export const setCachedHeader = (headerObj, height, coinID) => {
 }
 
 export const clearCachedHeaders = () => {
+  console.log("Clearing block header cache")
   return headerCache.clearAll().catch(e => {
     console.log("Error while clearing header cache")
     throw e
