@@ -249,6 +249,7 @@ class ReceiveCoin extends Component {
               inputStyle={styles.wifInput}
               multiline={true}
             />
+            {this.state.errors.address &&
             <FormValidationMessage>
             {
               this.state.errors.address ? 
@@ -256,9 +257,9 @@ class ReceiveCoin extends Component {
                 :
                 null
             }
-            </FormValidationMessage>
+            </FormValidationMessage>}
           </View>
-          <TouchableOpacity onPress={this.copyAddressToClipboard}>
+          <TouchableOpacity onPress={this.copyAddressToClipboard} style={{marginTop: 5}}>
             <Icon name="content-copy" size={25} color="#E9F1F7"/>
           </TouchableOpacity>
           <View style={styles.valueContainer}>
@@ -269,7 +270,7 @@ class ReceiveCoin extends Component {
               {this.props.rates[this.state.selectedCoin.id] && (isNumber(_price)) &&
                 <TouchableOpacity onPress={() => {this.setState({ amountFiat: !this.state.amountFiat })}}>
                   <FormLabel labelStyle={styles.swapInputTypeBtnBordered}>
-                    {`switch to ${this.state.amountFiat ? this.state.selectedCoin.id : 'USD'}`}
+                    {this.state.amountFiat ? this.state.selectedCoin.id : 'USD'}
                   </FormLabel>
                 </TouchableOpacity>
               }
@@ -387,7 +388,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   LabelContainer: {
-    width: "95%",
+    width: "94%",
     flexDirection: "row",
     justifyContent: "space-between"
   },
@@ -417,6 +418,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#E9F1F7",
     paddingLeft: 5,
-    paddingRight: 5
+    paddingRight: 5,
+    overflow: "hidden"
   },
 });
