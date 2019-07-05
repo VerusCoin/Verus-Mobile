@@ -143,7 +143,7 @@ class TransactionDetails extends Component {
               <Icon name="content-copy" size={25} color="#E9F1F7"/>
             </TouchableOpacity>
             { explorers[this.state.activeCoinID] &&
-            <Button1 style={styles.explorerBtn} buttonContent="view in explorer" onPress={() => this.openExplorer()} />
+            <Button1 style={styles.explorerBtn} buttonContent="Explorer" onPress={() => this.openExplorer()} />
             }
           </View>
         </ScrollView>
@@ -212,11 +212,12 @@ const styles = StyleSheet.create({
     color: "#E9F1F7"
   },
   explorerBtn: {
-    backgroundColor: "rgba(68,152,206,1)",
-    flex: 1,
-    paddingTop: 6,
-    paddingBottom: 6,
-    marginTop: 10,
     alignSelf: "center",
+    width: 140,
+    height: 45,
+    backgroundColor: "rgba(68,152,206,1)",
+    opacity: 1,
+    marginTop: 10,
+    marginBottom: 0
   },
 });
