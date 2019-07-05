@@ -1,5 +1,3 @@
-//  TODO: add code to fetch protocolVersions to store on startup and in this function...
-
 //  1. Get protocolVersions from redux store
 //  2. If they exist, resolve accordingly
 //  3. If they do not, fetch them from http(s) call
