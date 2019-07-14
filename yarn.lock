@@ -812,14 +812,14 @@ aes-js@3.0.0:
   integrity sha1-4h3xCtbCBTKVvLuNq0Cwnb6ofk0=
 
 "agama-wallet-lib@git://github.com/VerusCoin/agama-wallet-lib.git#mobile":
-  version "0.3.3"
-  resolved "git://github.com/VerusCoin/agama-wallet-lib.git#34a587299b49d3af848a764a62e80332e6664388"
+  version "0.3.4"
+  resolved "git://github.com/VerusCoin/agama-wallet-lib.git#73e541b5d4c830ebdfa2047bb3c8f8e8f5fa80dc"
   dependencies:
     bigi "^1.4.2"
     bip32 "^1.0.2"
     bip39 "^2.4.0"
     bitcoinforksjs-lib "git+https://github.com/SuperNETorg/bitcoinjs-lib#opt-in-bitcoincash-sighash"
-    bitcoinjs-lib "git+https://github.com/SuperNETorg/bitcoinjs-lib"
+    bitcoinjs-lib "https://github.com/SuperNETorg/bitcoinjs-lib"
     bitcoinjs-lib-pos "git+https://github.com/KomodoPlatform/bitcoinjs-lib-pos"
     bitcoinjs-lib-zcash "git+https://github.com/pbca26/bitcoinjs-lib#zcash"
     bitcoinjs-message "^2.0.0"
@@ -1120,7 +1120,7 @@ async-limiter@~1.0.0:
   resolved "https://registry.yarnpkg.com/async-limiter/-/async-limiter-1.0.0.tgz#78faed8c3d074ab81f22b4e985d79e8738f720f8"
   integrity sha512-jp/uFnooOiO+L211eZOoSyzpOITMXx1rBITauYykG3BRYPu8h0UcxsPNB04RR5vo4Tyz3+ay17tR6JVf9qzYWg==
 
-async@^2.4.0:
+async@^2.4.0, async@^2.6.1:
   version "2.6.2"
   resolved "https://registry.yarnpkg.com/async/-/async-2.6.2.tgz#18330ea7e6e313887f5d2f2a904bac6fe4dd5381"
   integrity sha512-H1qVYh1MYhEEFLsP97cVKqCGo7KfCyTt6uEWqsTBr9SO84oK9Uwbyd/yCW+6rKJLHksBNUVWZDAjfS+Ccx0Bbg==
@@ -1997,9 +1997,9 @@ bitcoinjs-lib@^4.0.1:
     varuint-bitcoin "^1.0.4"
     wif "^2.0.1"
 
-"bitcoinjs-lib@git+https://github.com/SuperNETorg/bitcoinjs-lib":
+"bitcoinjs-lib@https://github.com/SuperNETorg/bitcoinjs-lib":
   version "3.3.2"
-  resolved "git+https://github.com/SuperNETorg/bitcoinjs-lib#b5cc78cde0265ba6606b2c9c33e0158489c0fa4a"
+  resolved "https://github.com/SuperNETorg/bitcoinjs-lib#2325ac228f03efcd5b39aad8a672e79c407dcf00"
   dependencies:
     bech32 "^1.1.2"
     bigi "^1.4.0"
@@ -7693,6 +7693,12 @@ react-native-alert-async@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/react-native-alert-async/-/react-native-alert-async-1.0.3.tgz#f89d90c636af2096c9995f6be4c7f570c6cd462e"
   integrity sha512-PqcaIsfbUKUkhmlSNfhlgaY/w+2SbJEOhefM6GXS7bxwVtne6bDNy+rBpd9xP6uyOYDxxraDQao+CiRP2EdM0A==
+
+"react-native-cache@https://github.com/michaeltout/react-native-cache.git":
+  version "1.1.7"
+  resolved "https://github.com/michaeltout/react-native-cache.git#f8c1a72b50177aa93de5e8c329b1523409505dd6"
+  dependencies:
+    async "^2.6.1"
 
 react-native-camera@^1.10.1:
   version "1.13.1"
