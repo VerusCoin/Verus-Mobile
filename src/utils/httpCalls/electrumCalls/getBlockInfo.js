@@ -2,7 +2,7 @@ import { updateValues } from '../callCreators'
 import {
   parseBlock,
   electrumMerkleRoot,
-} from 'agama-wallet-lib/build/block'
+} from 'agama-wallet-lib/src/block'
 import { networks } from 'bitgo-utxo-lib';
 import store from '../../../store/index';
 import { saveBlockHeader } from '../../../actions/actionCreators';

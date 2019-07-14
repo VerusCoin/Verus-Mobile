@@ -9,11 +9,11 @@ export * from './electrumCalls/pushTx';
 export * from './electrumCalls/getServerVersion';
 
 import { proxyServers, httpsEnabled } from './proxyServers';
+import { getGoodServer, testProxy, testElectrum } from './serverTester';
 import { getBlockHeight } from './electrumCalls/getBlockHeight';
 import { getCoinPaprikaRate } from './ratesAPIs/coinPaprika';
 import { getAtomicExplorerBTCFees } from './btcFeesAPIs/atomicExplorer';
 import { truncateDecimal } from '../math';
-import { randomBytes } from 'react-native-randombytes';
 import { timeout } from '../promises';
 import { getServerVersion } from './electrumCalls/getServerVersion';
 import { updateParamObj } from '../electrumUpdates';
@@ -25,63 +25,27 @@ import { networks } from 'bitgo-utxo-lib';
 // servers are working by attempting to call getBlockHeight on each of them.
 // It then calls the specified command with the specified params (passed in as an object)
 // on that electrum server with an HTTP get
-export const getElectrum = (serverList, callType, params, skipServer, coinID) => {
-  const randBytes = randomBytes(2)
-  const rand = (((randBytes['0'] & 0xFF) << 8) | (randBytes['1'] & 0xFF))
-  const proxyServer = proxyServers[rand % proxyServers.length]
-  
-  let servers = []
-  let serverPromises = []
-  let serverInfo = []
-  let _i = 0
-  let _x = 0
+export const getElectrum = (serverList, callType, params, toSkip, coinID) => {
+  let proxyServer
 
-  //Only push non skipped servers to the server array
-  while ((_i + _x) < serverList.length) {
-    serverInfo = serverList[(_i + _x)].split(":")
-    let _serverToPush = {
-      ip: serverInfo[0],
-      port: serverInfo[1],
-      proto: serverInfo[2],
-    }
-    if (JSON.stringify(_serverToPush) !== JSON.stringify(skipServer)) {
-      servers.push(_serverToPush)
-      serverPromises.push(getBlockHeight(proxyServer, servers[_i]))
-      _i++
-    }
-    else {
-      _x++
-    }
-  }
-
-  if (serverPromises.length === 0) {
-    throw new Error("Only server in server array was requested as one to skip")
-  }
-  
   return new Promise((resolve, reject) => {
-    Promise.all(serverPromises)
-    .then((results) => {
-      //Here we pick a random server that has a connection
-      let goodServers = []
-      for (let i = 0; i < servers.length; i++) {
-        if (results[i].msg === 'success') {
-          goodServers.push(servers[i])
-        }
+    //Get working proxy server
+    getGoodServer(testProxy, proxyServers)
+    .then((_proxyServer) => {
+      proxyServer = _proxyServer.goodServer
+
+      return getGoodServer(testElectrum, serverList, [proxyServer], toSkip)
+    })
+    .then((result) => {
+      let electrumSplit = result.goodServer.split(":")
+      let goodServer = {
+        ip: electrumSplit[0],
+        port: electrumSplit[1],
+        proto: electrumSplit[2],
       }
 
-      if (goodServers.length > 0) {
-        const randBytes = randomBytes(2)
-        const rand = (((randBytes['0'] & 0xFF) << 8) | (randBytes['1'] & 0xFF))
-        let randIndex = rand % goodServers.length
-
-        resultObj = {goodServer: goodServers[randIndex], blockHeight: results[randIndex].result}
-        return resultObj
-      } else {
-        console.log("Failed to find good server")
-        throw new Error(
-          "No valid server found out of options provided. Verus Mobile needs two active servers to securely verify transactions for any given coin."
-        )
-      }
+      resultObj = { goodServer: goodServer, blockHeight: result.testResult.result }
+      return resultObj
     })
     .then((serverObj) => {
       let eServer = serverObj.goodServer
@@ -136,9 +100,9 @@ export const getElectrum = (serverList, callType, params, skipServer, coinID) =>
 }
 
 //Function to update only if values have changed
-export const updateValues = (oldResponse, serverList, callType, params, coinID, skipServer) => {
+export const updateValues = (oldResponse, serverList, callType, params, coinID, toSkip) => {
   return new Promise((resolve, reject) => {
-    timeout(global.REQUEST_TIMEOUT_MS, getElectrum(serverList, callType, params, skipServer, coinID))
+    timeout(global.REQUEST_TIMEOUT_MS, getElectrum(serverList, callType, params, toSkip, coinID))
     .then((response) => {
       if(response === oldResponse) {
         resolve({
@@ -170,62 +134,27 @@ export const updateValues = (oldResponse, serverList, callType, params, coinID, 
   });
 }
 
-export const postElectrum = (serverList, callType, data, skipServer) => {
-  const proxyServer = proxyServers[Math.round(Math.random() * (proxyServers.length - 1))]
-  let servers = []
-  let serverPromises = []
-  let serverInfo = []
-
-  for (let i = 0; i < serverList.length; i++) {
-    serverInfo = serverList[i].split(":")
-    servers.push({
-      ip: serverInfo[0],
-      port: serverInfo[1],
-      proto: serverInfo[2],
-    })
-    serverPromises.push(getBlockHeight(proxyServer, servers[i]))
-  }
+export const postElectrum = (serverList, callType, data, toSkip) => {
+  let proxyServer
 
   return new Promise((resolve, reject) => {
-    Promise.all(serverPromises)
-    .then((results) => {
-      //Here we pick a random server that has a connection
-      let index = 0
-      let resultObj = {}
-      let randNum = (Math.round(Math.random() * 3)) + 1
-      let skipped = 0
+    //Get working proxy server
+    getGoodServer(testProxy, proxyServers)
+    .then((_proxyServer) => {
+      proxyServer = _proxyServer.goodServer
 
-      if(skipServer) {
-        let spliceIndex = -1
-        for (let i = 0; i < servers.length; i++) {
-          if (JSON.stringify(servers[i]) === JSON.stringify(skipServer)) {
-            spliceIndex = i
-          }
-        }
-        if (spliceIndex > -1) {
-          servers.splice(spliceIndex, 1)
-        }
-      }
-      
-      while(skipped <= randNum || results[index].msg != "success") {
-        if (results[index].msg == "success") {
-          skipped++
-        }
-
-        if (index == (results.length - 1)) {
-          index = 0
-        }
-        else {
-          index++
-        }
+      return getGoodServer(testElectrum, serverList, [proxyServer], toSkip)
+    })
+    .then((result) => {
+      let electrumSplit = result.goodServer.split(":")
+      let goodServer = {
+        ip: electrumSplit[0],
+        port: electrumSplit[1],
+        proto: electrumSplit[2],
       }
 
-      if (index < results.length) {
-        resultObj = {goodServer: servers[index], blockHeight: results[index].result}
-        return resultObj
-      } else {
-        resolve(false)
-      }
+      resultObj = { goodServer: goodServer, blockHeight: result.testResult.result }
+      return resultObj
     })
     .then((resultObj) => {
       let electrumServer = resultObj.goodServer

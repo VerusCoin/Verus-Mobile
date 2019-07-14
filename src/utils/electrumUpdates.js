@@ -1,4 +1,4 @@
-import { pubToElectrumScriptHashHex } from 'agama-wallet-lib/build/keys';
+import { pubToElectrumScriptHashHex } from 'agama-wallet-lib/src/keys';
 
 //If params contain an address, and electrum server version is 1.4, convert the address to
 //scripthash

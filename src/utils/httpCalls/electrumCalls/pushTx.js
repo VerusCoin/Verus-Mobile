@@ -11,7 +11,7 @@ export const pushTx = (coinObj, _rawtx) => {
   let data = { rawtx: _rawtx }
 
   return new Promise((resolve, reject) => {
-    postElectrum(serverList, callType, data, null)
+    postElectrum(serverList, callType, data)
     .then((response) => {
       if(!response || !response.result) {
         resolve({

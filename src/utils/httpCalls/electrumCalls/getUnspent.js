@@ -124,7 +124,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
                     coinObj,
                     _utxoItem['tx_hash'],
                     _utxoItem.height,
-                    serverUsed
+                    [serverUsed]
                   ))
               } 
                 
@@ -150,7 +150,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
                     coinObj,
                     _utxoItem['tx_hash'],
                     _utxoItem.height,
-                    serverUsed
+                    [serverUsed]
                   ))
               } 
                 

@@ -1,4 +1,4 @@
-import electrumServers from 'agama-wallet-lib/build/electrum-servers';
+import { electrumServers } from 'agama-wallet-lib/src/electrum-servers';
 
 export const explorers = {
   KMD: 'https://kmdexplorer.io',

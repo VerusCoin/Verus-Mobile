@@ -1,7 +1,7 @@
 const bs58check = require('bs58check');
 
-import { isKomodoCoin } from 'agama-wallet-lib/build/coin-helpers';
-import electrumJSNetworks from 'agama-wallet-lib/build/bitcoinjs-networks';
+import { isKomodoCoin } from 'agama-wallet-lib/src/coin-helpers';
+import electrumJSNetworks from 'agama-wallet-lib/src/bitcoinjs-networks';
 import {
   decryptkey,
 } from './seedCrypt';
@@ -9,7 +9,7 @@ import {
 import {
   wifToWif,
   seedToWif,
-} from 'agama-wallet-lib/build/keys';
+} from 'agama-wallet-lib/src/keys';
 
 export const makeKeyPair = (seed, coinID) => {
   let isWif = false;
