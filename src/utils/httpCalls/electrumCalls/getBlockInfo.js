@@ -34,7 +34,7 @@ export const getBlockInfo = (oldBlock, coinObj, activeUser, blockheight) => {
 
       if(!response.new || !response) {
         res = false
-      } else if (response.serverVersion >= 1.4) {
+      } else if (response.serverVersion >= global.ELECTRUM_PROTOCOL_CHANGE) {
         let blockInfo = response.result
 
         let parsedBlock = parseBlock(
