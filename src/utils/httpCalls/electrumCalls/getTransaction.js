@@ -2,7 +2,6 @@ import { updateValues } from '../callCreators'
 
 export const getOneTransaction = (oldTx, coinObj, txid) => {
   const callType = 'gettransaction'
-  let index = 0
   let params = { txid: txid }
   const coinID = coinObj.id
 

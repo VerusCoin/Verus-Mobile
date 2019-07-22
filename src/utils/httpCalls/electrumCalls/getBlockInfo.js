@@ -6,6 +6,7 @@ import {
 import { networks } from 'bitgo-utxo-lib';
 import store from '../../../store/index';
 import { saveBlockHeader } from '../../../actions/actionCreators';
+import { ELECTRUM_PROTOCOL_CHANGE } from '../../constants' 
 
 export const getBlockInfo = (oldBlock, coinObj, activeUser, blockheight) => {
   const callType = 'getblockinfo'
@@ -34,7 +35,7 @@ export const getBlockInfo = (oldBlock, coinObj, activeUser, blockheight) => {
 
       if(!response.new || !response) {
         res = false
-      } else if (response.serverVersion >= global.ELECTRUM_PROTOCOL_CHANGE) {
+      } else if (response.serverVersion >= ELECTRUM_PROTOCOL_CHANGE) {
         let blockInfo = response.result
 
         let parsedBlock = parseBlock(

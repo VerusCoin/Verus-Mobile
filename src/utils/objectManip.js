@@ -5,6 +5,8 @@ export const getKeyByValue = (value, object) => {
                return prop;
       }
   }
+
+  return null
 }
 
 export const isJson = (item) => {

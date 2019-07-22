@@ -124,7 +124,23 @@ export const findCoinObj = (id, userName) => {
   return coinObj;
 }
 
+/**
+ * @param {String} id The coin's identifier to be used in code
+ * @param {String} name The coin's full name for display
+ * @param {String} description A brief display description of the coin
+ * @param {String[]} serverList A list of electrum servers for the coin
+ * @param {String} userName The current user's username (coins must be activated with a user)
+ * @param {Object} apps A list of applications the coin supports, 
+ * fetched to display in the coin's menu (these still need to be written in order to be used)
+ * @param {String} defaultApp The key of the app this coin will start on when selected
+ */
 export const createCoinObj = (id, name, description, serverList, userName, apps, defaultApp) => {
+  let coinObj = coinsList.find(x => x.id === id);
+
+  if (coinObj) {
+    throw new Error(`Coin with ID ${id} already exists in coin list`)
+  }
+
   coinObj = {
     id: id,
     name: name,

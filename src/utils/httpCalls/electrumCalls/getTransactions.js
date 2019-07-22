@@ -33,7 +33,7 @@ export const getOneTransactionList = (oldList, coinObj, activeUser) => {
         }
       }
       console.log(errorObj)
-      resolve(errorObj)
+      reject(errorObj)
     })
   });
 }

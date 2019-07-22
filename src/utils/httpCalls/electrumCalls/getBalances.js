@@ -2,10 +2,8 @@ import { updateValues } from '../callCreators';
 
 export const getBalances = (oldBalances, activeCoinsForUser, activeUser) => {
   let balancePromises = []
-  let index
 
   for (let i = 0; i < activeCoinsForUser.length; i++) {
-    index = 0
     balancePromises.push(
       getOneBalance(
         oldBalances ? oldBalances[activeCoinsForUser[i].id] : null, 

@@ -1,0 +1,1 @@
+export const ELECTRUM_PROTOCOL_CHANGE = 1.4

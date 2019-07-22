@@ -41,7 +41,8 @@ export const getMerkleRoot = (oldMerkle, coinObj, txid, height, toSkip) => {
           result: calculateMerkleRoot(txid, response.result.merkle, response.result.pos, response.result.block_height),
           blockHeight: response.blockHeight,
           serverUsed: response.serverUsed,
-          error: false
+          error: false,
+          serverVersion: response.serverVersion
         })
       }
     })
