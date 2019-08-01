@@ -30,7 +30,9 @@ export const unixToDate = (unixTime) => {
   return (new Date(unixTime*1000)).toUTCString();
 }
 
-export const kmdCalcInterest = (locktime, value) => { // value in sats
+export const kmdCalcInterest = (locktime, value) => {
+  if (satsToCoins(Number(value)) < 10 || locktime <= 0) return 0
+
   const timestampDiff = Math.floor(Date.now() / 1000) - locktime - 777;
   let timestampDiffMinutes = timestampDiff / 60;
   let interest = 0;
