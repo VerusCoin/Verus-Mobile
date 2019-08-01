@@ -10,7 +10,6 @@ export * from './electrumCalls/getServerVersion';
 
 import { proxyServers, httpsEnabled } from './proxyServers';
 import { getGoodServer, testProxy, testElectrum } from './serverTester';
-import { getBlockHeight } from './electrumCalls/getBlockHeight';
 import { getCoinPaprikaRate } from './ratesAPIs/coinPaprika';
 import { getAtomicExplorerBTCFees } from './btcFeesAPIs/atomicExplorer';
 import { truncateDecimal } from '../math';
@@ -18,6 +17,7 @@ import { timeout } from '../promises';
 import { getServerVersion } from './electrumCalls/getServerVersion';
 import { updateParamObj } from '../electrumUpdates';
 import { networks } from 'bitgo-utxo-lib';
+import { isJson } from '../objectManip'
 
 // This purpose of this method is to take in a list of electrum servers,
 // and use a valid one to call a specified command given a set of parameters
@@ -33,8 +33,16 @@ export const getElectrum = (serverList, callType, params, toSkip, coinID) => {
     getGoodServer(testProxy, proxyServers)
     .then((_proxyServer) => {
       proxyServer = _proxyServer.goodServer
+      
+      if (toSkip) {
+        let _serverList = serverList.filter((server) => {
+          return !toSkip.includes(server)
+        })
 
-      return getGoodServer(testElectrum, serverList, [proxyServer], toSkip)
+        return getGoodServer(testElectrum, _serverList, [proxyServer])
+      }
+
+      return getGoodServer(testElectrum, serverList, [proxyServer])
     })
     .then((result) => {
       let electrumSplit = result.goodServer.split(":")
@@ -80,8 +88,12 @@ export const getElectrum = (serverList, callType, params, toSkip, coinID) => {
       return Promise.all(promiseArray)
     })
     .then((responseArray) => {
+      if (!isJson(responseArray[0])) {
+        throw new Error("Invalid JSON in callCreators.js, received: " + responseArray[0])
+      }
+      
       responseArray[0] = responseArray[0].json()
-
+      
       return Promise.all(responseArray)
     })
     .then((responseArray) => {
@@ -93,6 +105,7 @@ export const getElectrum = (serverList, callType, params, toSkip, coinID) => {
       resolve(resultObj)
     })
     .catch(err => {
+      console.log(`Error while trying to make call: ${callType}`)
       console.warn(err.message)
       reject(err)
     })
@@ -143,6 +156,14 @@ export const postElectrum = (serverList, callType, data, toSkip) => {
     .then((_proxyServer) => {
       proxyServer = _proxyServer.goodServer
 
+      if (toSkip) {
+        let _serverList = serverList.filter((server) => {
+          return !toSkip.includes(server)
+        })
+
+        return getGoodServer(testElectrum, _serverList, [proxyServer])
+      }
+
       return getGoodServer(testElectrum, serverList, [proxyServer], toSkip)
     })
     .then((result) => {
@@ -186,6 +207,10 @@ export const postElectrum = (serverList, callType, data, toSkip) => {
       return Promise.all(promiseArray)
     })
     .then((responseArray) => {
+      if (!isJson(responseArray[0])) {
+        throw new Error("Invalid JSON in callCreators.js, received: " + responseArray[0])
+      }
+
       responseArray[0] = responseArray[0].json()
       console.log("Received response from push to electrum")
 
