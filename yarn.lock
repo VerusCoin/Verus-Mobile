@@ -666,6 +666,11 @@
     hoist-non-react-statics "^2.5.0"
     prop-types "^15.6.0"
 
+"@react-native-community/async-storage@^1.5.1":
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/@react-native-community/async-storage/-/async-storage-1.5.1.tgz#c496b4969eea5b91da1a5919a611046360b0c51f"
+  integrity sha512-Ssfx2uLYPnsuqIvDCuUOEZT6jh5AVy0U0mr2eHxNO2Syor1nfOrR/n4hTOFcBWc1wamDTGCqo+UHJpxURVXd2Q==
+
 "@react-native-community/cli@^1.2.1":
   version "1.9.7"
   resolved "https://registry.yarnpkg.com/@react-native-community/cli/-/cli-1.9.7.tgz#1d0aad150a83f8ee06410c216b1b37e8861aa59f"

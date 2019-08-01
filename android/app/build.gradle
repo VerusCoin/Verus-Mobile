@@ -106,7 +106,7 @@ android {
 
     defaultConfig {
         applicationId "com.verusmobile"
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 26
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionRevision * 100 + versionBuild
         versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta"
@@ -156,6 +156,7 @@ android {
 }
 
 dependencies {
+    implementation project(':@react-native-community_async-storage')
     implementation project(':react-native-vector-icons')
     implementation project(':react-native-udp')
     implementation project(':react-native-tcp')
