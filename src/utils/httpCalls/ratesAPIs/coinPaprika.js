@@ -1,4 +1,5 @@
 import { timeout } from '../../promises'
+import { isJson } from '../../objectManip'
 
 export const getCoinPaprikaRate = (coinObj) => {
   let coinID = coinObj.id
@@ -9,7 +10,13 @@ export const getCoinPaprikaRate = (coinObj) => {
 
   return new Promise((resolve, reject) => {
     timeout(global.REQUEST_TIMEOUT_MS, fetch(address, {method: 'GET'}))
-    .then((response) => response.json())
+    .then((response) => {
+      if (!isJson(response)) {
+        throw new Error("Invalid JSON in coinPaprika.js, received: " + response)
+      }
+
+      return response.json()
+    })
     .then((response) => {
       if (response.error || !response || !response[0] || !response[0].close) {
         console.log(`Failed to get price for ${coinID} through CoinPaprika API:`)
