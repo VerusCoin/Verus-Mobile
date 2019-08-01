@@ -1,6 +1,6 @@
 // Handle all calls to Async Storage (persistent) in this file
 
-import { AsyncStorage } from "react-native"
+import AsyncStorage from '@react-native-community/async-storage';
 // react-native's version of local storage
 
 export * from './authDataStorage'

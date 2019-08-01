@@ -1,4 +1,5 @@
-import { AsyncStorage, Alert } from "react-native";
+import { Alert } from "react-native";
+import AsyncStorage from '@react-native-community/async-storage';
 // react-native's version of local storage
 
 import {
