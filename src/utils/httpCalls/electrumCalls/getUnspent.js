@@ -3,12 +3,12 @@ import { getOneTransaction } from './getTransaction'
 import { TxDecoder } from '../../crypto/txDecoder'
 import { hashRawTx, hexHashToDecimal } from '../../crypto/hash'
 import { arraysEqual } from '../../objectManip'
+import { resolveSequentially } from '../../promises'
 import { networks } from 'bitgo-utxo-lib'
 import { coinsToSats, satsToCoins, kmdCalcInterest, truncateDecimal } from '../../math'
 
 export const getUnspent = (oldList, coinObj, activeUser) => {
   const callType = 'listunspent'
-  let index = 0
   let params = {}
   const coinID = coinObj.id
 
@@ -36,238 +36,168 @@ export const getUnspent = (oldList, coinObj, activeUser) => {
   });
 }
 
-//Fix by getting rid of txid requirement, instead getting txid from each item 
-//in response of getUnspent. Also, use currentHeight to filter out unconfirmed
-//utxos
-export const getUnspentFormatted = (oldList, coinObj, activeUser, verify) => {
+/**
+ * @param {Array} oldList (Optional) The last used unspent utxo list 
+ * @param {Object} coinObj The coin object for the coin being used for getUnspent. Includes coin servers and coin id.
+ * @param {Object} activeUser The current active user object. Includes public address.
+ * @param {Boolean} verifyMerkle (Default: false) Choose whether or not to call getMerkle on each utxo in the utxo list. 
+ * This allows verification of the merkle root for the block of each transaction, and enhances security, but can 
+ * be a performance issue for addresses with large amounts of utxos. Without this, coinbases will be unrecognizable.
+ * @param {Boolean} verifyTxid (Default: false) Choose whether or not to verify the txid of a transaction by hashing it's 
+ * transaction data (calls getTransaction on each utxo). This improves security, 
+ * and prevents a server from feeding false txids to the client, but can be a performance issue for addresses with more utxos. 
+ * (This is always true if the coin being used is KMD and overrideKmdInterest is false, 
+ * as getTransaction is needed to determine interest)
+ * @param {Boolean} overrideKmdInterest (Default: false) Optionally override KMD interest calculations and don't call gettransaction
+ * on utxos to calculate locktime. (WILL RESULT IN LOSS OF INTEREST IF KMD TRANSACTION IS SENT WITH THIS ENABLED)
+ */
+export const getUnspentFormatted = (oldList, coinObj, activeUser, verifyMerkle = false, verifyTxid = false, overrideKmdInterest = false) => {
+  const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
+  
+  let formattedUtxos = []
+  let firstServer
+  let currentHeight
+  let unshieldedFunds = null
+
   return new Promise((resolve, reject) => {
     getUnspent(oldList, coinObj, activeUser)
-    .then((res) => {
-      let serverUsed = res.serverUsed
-      let _utxoList = res.result
-      let address = res.address
-      let getTxPromiseArray = []
-      let currentHeight = res.blockHeight
+    .then(getUnspentRes => {
+      firstServer = getUnspentRes.serverUsed
+      currentHeight = getUnspentRes.blockHeight
+      let _utxoList = getUnspentRes.result
+      let getTxArr = []
 
-      if (!_utxoList.length) {
-        throw new Error("no valid utxo")
-      }
-      else {
-        //Filter out unconfirmed UTXOs
-        for (let i = 0; i < _utxoList.length; i++) {
-          if(Number(currentHeight) - Number(_utxoList[i].height) !== 0) {
-            getTxPromiseArray.push(getOneTransaction(null, coinObj, _utxoList[i].tx_hash))
+      if (!_utxoList.length) throw new Error("No valid utxo")
+
+      _utxoList.forEach((_utxoItem) => {
+        if(Number(currentHeight) - Number(_utxoItem.height) !== 0) {
+          formattedUtxos.push({
+            txid: _utxoItem['tx_hash'],
+            vout: _utxoItem['tx_pos'],
+            address: activeUser.keys[coinObj.id].pubKey,
+            amountSats: _utxoItem.value,
+            blockHeight: _utxoItem.height,
+            interestSats: 0,
+            confirmations: Number(_utxoItem.height) === 0 ? 0 : currentHeight - _utxoItem.height,
+            verifiedMerkle: false,
+            verifiedTxid: false,
+            merkleRoot: null
+          })
+
+          if (verifyTxid || (!verifyTxid && coinObj.id === 'KMD' && !overrideKmdInterest)) {
+            getTxArr.push(getOneTransaction(null, coinObj, _utxoItem.tx_hash))
           }
         }
+      })
 
-        getTxPromiseArray.push(_utxoList)
-        getTxPromiseArray.push(serverUsed)
-        getTxPromiseArray.push(address)
+      if (formattedUtxos.length === 0) throw new Error("No confirmed utxos")
 
-        return Promise.all(getTxPromiseArray)
-      }
+      return resolveSequentially(getTxArr)
     })
-    .then((gottenTransactions) => {
-      let address = gottenTransactions.pop()
-      let serverUsed = gottenTransactions.pop()
-      let _utxoList = gottenTransactions.pop()
-      let _formattedUtxoList = []
-      let network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
-      let verifyMerklePromises = []
+    .then(getTxsRes => {
+      let getMerkleArr = []
 
-      for (let i = 0; i < _utxoList.length; i++) {
-        const _utxoItem = _utxoList[i]
+      if (getTxsRes.length !== 0 && getTxsRes.length !== formattedUtxos.length) {
+        throw new Error("Fatal mismatch error, couldn't fetch raw transactions for all UTXOs. If you just sent a transaction, try waiting a few minutes and sending again.")
+      }
 
-        if (gottenTransactions[i]) {
-          const decodedTx = TxDecoder(gottenTransactions[i].result, network)
-          const currentHeight = gottenTransactions[i].blockHeight
-
-          if (!arraysEqual(hashRawTx(gottenTransactions[i].result, network), hexHashToDecimal(_utxoItem['tx_hash']))) {
+      formattedUtxos.forEach((formattedUtxo, index) => {
+        if (getTxsRes[index]) {
+          if (!arraysEqual(hashRawTx(getTxsRes[index].result, network), hexHashToDecimal(formattedUtxo.txid))) {
             throw new Error(
-              'Mismatch error! At least one transaction ID provided by server ' + JSON.stringify(serverUsed) + 
+              'Mismatch error! At least one transaction ID provided by server ' + JSON.stringify(firstServer) + 
               ' does not match the values of the transaction that it represents! This could indicate that the server is malicious, and this transaction has been canceled.')
-          } else {
-            console.log(_utxoItem['tx_hash'] + ' succesfully verified against its hashed raw tx')
-          }
-          
-          if (!decodedTx) {
-            throw new Error('Can\'t decode transaction.')
-          } else {
-            if (network.coin === 'kmd') {
-              let interest = 0;
+          } 
+          formattedUtxos[index].verifiedTxid = true
 
-              if (satsToCoins(Number(_utxoItem.value)) >= 10 &&
-                  decodedTx.format.locktime > 0) {
-                interest = kmdCalcInterest(decodedTx.format.locktime, _utxoItem.value);
-              }
+          //Calculate interest to claim when transaction is sent
+          if (coinObj.id === 'KMD') {
+            const decodedTx = TxDecoder(getTxsRes[index].result, network)
 
-              let _resolveObj = {
-                txid: _utxoItem['tx_hash'],
-                vout: _utxoItem['tx_pos'],
-                address,
-                amount: satsToCoins(Number(_utxoItem.value)),
-                amountSats: _utxoItem.value,
-                interest: interest,
-                interestSats: coinsToSats(truncateDecimal(interest, 8)),
-                confirmations: Number(_utxoItem.height) === 0 ? 0 : currentHeight - _utxoItem.height,
-                spendable: true,
-                verified: false,
-                merkleRoot: null,
-                locktime: decodedTx.format.locktime,
-              };
+            if (!decodedTx) throw new Error('Can\'t decode transaction')
 
-              // merkle root verification against another electrum server
-              if (verify) {
-                verifyMerklePromises.push(
-                  getMerkleRoot(
-                    null,
-                    coinObj,
-                    _utxoItem['tx_hash'],
-                    _utxoItem.height,
-                    [serverUsed]
-                  ))
-              } 
-                
-              _formattedUtxoList.push(_resolveObj);
-            } else {
-              let _resolveObj = {
-                txid: _utxoItem['tx_hash'],
-                vout: _utxoItem['tx_pos'],
-                address,
-                amount: satsToCoins(Number(_utxoItem.value)),
-                amountSats: _utxoItem.value,
-                confirmations: Number(_utxoItem.height) === 0 ? 0 : currentHeight - _utxoItem.height,
-                spendable: true,
-                verified: false,
-                merkleRoot: null,
-              };
-
-              // merkle root verification against another electrum server
-              if (verify) {
-                verifyMerklePromises.push(
-                  getMerkleRoot(
-                    null,
-                    coinObj,
-                    _utxoItem['tx_hash'],
-                    _utxoItem.height,
-                    [serverUsed]
-                  ))
-              } 
-                
-              _formattedUtxoList.push(_resolveObj);
+            if (satsToCoins(Number(formattedUtxo.amountSats)) >= 10 &&
+                decodedTx.format.locktime > 0) {
+              interest = kmdCalcInterest(decodedTx.format.locktime, formattedUtxo.amountSats)
+              formattedUtxos[index].interestSats = coinsToSats(truncateDecimal(interest, 8))
             }
           }
         }
-        else {
-          console.log("Error being thrown with transaction")
-          console.log("Number of UTXOs: " + _utxoList.length)
-          console.log("Raw Transactions fetched: " + gottenTransactions.length)
 
-          console.log("Printing full UTXO list below line")
-          console.log("---------------------------------------")
-          for (let i = 0; i < _utxoList.length; i++) {
-            console.log(_utxoList[i])
-          }
-          console.log("---------------------------------------")
-
-          console.log("Printing full raw transaction list below line")
-          console.log("---------------------------------------")
-          for (let i = 0; i < gottenTransactions.length; i++) {
-            console.log(gottenTransactions[i])
-          }
-          console.log("---------------------------------------")
-          throw new Error("Fatal mismatch error, couldn't fetch raw transactions for all UTXOs. You may have unconfirmed transactions, please wait until they are confirmed to send.")
+        if (verifyMerkle) {
+          getMerkleArr.push(
+            getMerkleRoot(
+              null,
+              coinObj,
+              formattedUtxo.txid,
+              formattedUtxo.blockHeight,
+              [firstServer]
+            )
+          )
         }
-      }
+      })
 
-        
-      verifyMerklePromises.push(_formattedUtxoList)
-      return Promise.all(verifyMerklePromises)
+      return resolveSequentially(getMerkleArr)
     })
-    .then((verifiedMerkleArr) => {
-      let _formattedUtxoList = verifiedMerkleArr.pop()
-      let blockInfoPromises = [];
+    .then(getMerkleRes => {
+      let blockInfoArr = []
+
       let i = 0
-      let unshieldedFunds = 0
-
-      //We loop through each item in the unspent transaction array, finding the merkle
-      //root for each transaction, and eliminating all unspent coinbase transactions as
-      //they can't be sent before being shielded
-      while (i < verifiedMerkleArr.length) {
-        if(_formattedUtxoList[i] && verifiedMerkleArr[i] && _formattedUtxoList.length === verifiedMerkleArr.length) {
+      while (i < getMerkleRes.length) {
+        if(formattedUtxos[i] && getMerkleRes[i] && formattedUtxos.length === getMerkleRes.length) {
           if (
-            verifiedMerkleArr[i].result && 
-            verifiedMerkleArr[i].result.root && 
-            Number(verifiedMerkleArr[i].result.index) > 0) {
-            _formattedUtxoList[i].merkleRoot = verifiedMerkleArr[i].result.root
+            getMerkleRes[i].result && 
+            getMerkleRes[i].result.root && 
+            Number(getMerkleRes[i].result.index) > 0) {
+            formattedUtxos[i].merkleRoot = getMerkleRes[i].result.root
 
-            if (__DEV__) {
-              console.log("UTXO #" + i)
-              console.log(_formattedUtxoList[i])
-            }
-
-            blockInfoPromises.push(getBlockInfo(null, coinObj, activeUser, verifiedMerkleArr[i].result.height))
+            blockInfoArr.push(getBlockInfo(null, coinObj, getMerkleRes[i].result.height))
             i++
           } else {
-            unshieldedFunds += _formattedUtxoList[i].amountSats
-            verifiedMerkleArr.splice(i, 1);
-            _formattedUtxoList.splice(i, 1);
+            if (coinObj.id === 'VRSC') unshieldedFunds += formattedUtxos[i].amountSats
+            getMerkleRes.splice(i, 1);
+            formattedUtxos.splice(i, 1);
           } 
         }
-        else if (!verifiedMerkleArr[i]) {
-          throw new Error("getUnspent.js: Fatal mismatch error, no utxo list found for verified merkle " + verifiedMerkleArr[i] +
-          " or length of verified merkle root array does not match length of uspent transaction array")
+        else if (!getMerkleRes[i]) {
+          throw new Error("getUnspent.js: Fatal mismatch error, no utxo list found for verified merkle root or length of verified merkle root array does not match length of uspent transaction array. If you just sent a transaction, try waiting a few minutes and sending again.")
         } else {
           throw new Error("Server error, unable to crosscheck merkle root across multiple electrum servers.")
         }
       }
 
-      if (__DEV__) {
-        console.log("Filtered out " + unshieldedFunds + " coins due to coinbase non-shielded fund filtering")
-      }
-
-      blockInfoPromises.push(_formattedUtxoList)
-      blockInfoPromises.push(unshieldedFunds)
-
-      return Promise.all(blockInfoPromises)
+      return resolveSequentially(blockInfoArr)
     })
-    .then((blockInfoArr) => {
-      unshieldedFunds = blockInfoArr.pop()
-      _formattedUtxoList = blockInfoArr.pop()
+    .then(blockInfoRes => {
       let i = 0
-
-      //We go through the formatted utxo list array one more time, removing any
-      //transactions that don't can't be verified by merkle root
-      while (i < blockInfoArr.length) {
-        if(_formattedUtxoList[i] && blockInfoArr[i] && _formattedUtxoList.length === blockInfoArr.length) {
+      while (i < blockInfoRes.length) {
+        if(formattedUtxos[i] && blockInfoRes[i] && formattedUtxos.length === blockInfoRes.length) {
           if (
-            blockInfoArr[i].result && 
-            blockInfoArr[i].result.merkle_root && 
-            blockInfoArr[i].result.merkle_root === _formattedUtxoList[i].merkleRoot) {
-            if (__DEV__) {
-              console.log('txid ' + _formattedUtxoList[i].txid + ' verified!')
-            }
-            _formattedUtxoList[i].verified = true
+            blockInfoRes[i].result && 
+            blockInfoRes[i].result.merkle_root && 
+            blockInfoRes[i].result.merkle_root === formattedUtxos[i].merkleRoot) {
+            formattedUtxos[i].verifiedMerkle = true
             i++
           } else {
             if (__DEV__) {
               console.log("Couldnt verify UTXO merkle root, splicing from array:")
-              console.log(_formattedUtxoList[i])
+              console.log(formattedUtxos[i])
               console.log("Tried to prove with merkle root:")
-              console.log(blockInfoArr[i])
+              console.log(blockInfoRes[i])
             }
             
-            blockInfoArr.splice(i, 1);
-            _formattedUtxoList.splice(i, 1);
-          } 
+            blockInfoRes.splice(i, 1);
+            formattedUtxos.splice(i, 1);
+          }
         }
         else {
           throw new Error("getUnspent.js: Fatal mismatch error, no utxo list item found for blockInfo or blockinfo array does not match length of uspent transaction array")
         }
       }
+
       resolve({
-        utxoList: _formattedUtxoList,
-        unshieldedFunds: unshieldedFunds
+        utxoList: formattedUtxos,
+        unshieldedFunds: unshieldedFunds //This will always be zero if verifyMerkle is false
       })
     })
     .catch(err => {
