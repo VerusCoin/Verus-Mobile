@@ -10,34 +10,42 @@ import { getBlockHeight } from './electrumCalls/getBlockHeight';
 import { timeout } from '../promises'
 import { httpsEnabled } from './proxyServers'
 
-export const getGoodServer = (tester, serverList, xtraTesterParams = [], toSkip = []) => {
-  let usableServers = serverList.filter((server) => {
-    return !toSkip.includes(server)
-  })
-  if (usableServers.length === 0) {
+/**
+ * @param {Function} tester A tester function that takes in a server and will fail if it does not perform it's purpose
+ * @param {String[]} serverList A list of server strings in the format the tester requires
+ * @param {Array} xtraTesterParams (Optional) A list of extra parameters for the tester function
+ */
+export const getGoodServer = (tester, serverList, xtraTesterParams = []) => {
+  if (serverList.length === 0) {
     console.log("No valid server out of options:")
     console.log(serverList)
     return Promise.reject(new Error("No valid server found out of the options provided"))
   }
 
-  let index = Math.floor(Math.random() * usableServers.length)
+  let index = Math.floor(Math.random() * serverList.length)
   
   return new Promise((resolve) => {
-    tester(usableServers[index], ...xtraTesterParams)
+    tester(serverList[index], ...xtraTesterParams)
     .then((res) => {
       resolve({
-        goodServer: usableServers[index],
+        goodServer: serverList[index],
         testResult: res
       })
     }, (rej) => {
       console.log("Server failed: ")
-      console.log(usableServers[index])
+      console.log(serverList[index])
       console.log("For reason: ")
       console.log(rej)
       console.log("Attempting next server...")
-      let _toSkip = toSkip.slice()
-      _toSkip.push(usableServers[index])
-      resolve(getGoodServer(tester, serverList, xtraTesterParams, _toSkip))
+      let _serverList = serverList.slice()
+      _serverList.splice(index, 1);
+
+      console.log("New list is:")
+      console.log(_serverList)
+      return (getGoodServer(tester, _serverList, xtraTesterParams))
+    })
+    .then(res => {
+      resolve(res)
     })
   })
 }
