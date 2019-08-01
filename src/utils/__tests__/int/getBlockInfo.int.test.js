@@ -1,3 +1,5 @@
+jest.setTimeout(60000)
+
 import { 
   getBlockInfo
 } from '../../httpCalls/callCreators'
@@ -11,7 +13,7 @@ import {
 
 describe('Block info fetcher for BTC based chains', () => {
   it('can fetch block info with mock user', () => {
-    return getBlockInfo({}, MOCK_ACTIVE_COINS_FOR_USER[0], MOCK_USER_OBJ, 0)
+    return getBlockInfo({}, MOCK_ACTIVE_COINS_FOR_USER[0], 0)
     .then((res) => {
       expect(res).toHaveProperty('result')
       expect(res).toHaveProperty('blockHeight')

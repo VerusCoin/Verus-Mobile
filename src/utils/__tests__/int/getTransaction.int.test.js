@@ -1,3 +1,5 @@
+jest.setTimeout(60000)
+
 import { 
   getOneTransaction
 } from '../../httpCalls/callCreators'

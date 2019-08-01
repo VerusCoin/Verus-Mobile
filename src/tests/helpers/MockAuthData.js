@@ -13,13 +13,66 @@ export const MOCK_USER_OBJ = {
   }
 }
 
+//This account represents one of the richest VRSC addresses on the date specified,
+//to provide a testing address with a large amount of UTXOs and possibly
+//transactions. All of the information obtained from this address is public
+//knowledge.
+export const MOCK_USER_OBJ_BALANCE_LARGE_VRSC = {
+  id: 'VRSC Richlist #2 Address at https://dexstats.info/richlist.php?asset=VRSC as of July 31st, 2019',
+  seed: '',
+  keys: {
+    VRSC: {
+      pubKey: 'RFeHXibrwdnrxdKPozadvH8XAsNGXY7bxP',
+      privKey: ''
+    },
+    KMD: {
+      pubKey: 'RFeHXibrwdnrxdKPozadvH8XAsNGXY7bxP',
+      privKey: ''
+    },
+  }
+}
+
+//TODO: Change to an address with more than one utxo
+export const MOCK_USER_OBJ_BALANCE_SMALL_VRSC = {
+  id: 'Random address with balance of ~3000 VRSC taken from https://dexstats.info/richlist.php?asset=VRSC on July 31st, 2019',
+  seed: '',
+  keys: {
+    VRSC: {
+      pubKey: 'RY7eX5Pm2vJV9SXh2CMC1higVYzLrUeukD',
+      privKey: ''
+    },
+    KMD: {
+      pubKey: 'RY7eX5Pm2vJV9SXh2CMC1higVYzLrUeukD',
+      privKey: ''
+    },
+  }
+}
+
+export const MOCK_USER_OBJ_BALANCE_SMALL_KMD = {
+  id: 'KMD Richlist #1000 Address at https://dexstats.info/richlist.php?asset=KMD as of July 31st, 2019',
+  seed: '',
+  keys: {
+    VRSC: {
+      pubKey: 'RYZ62rj6VEgojsWhkxT5ucV6kZnwMGBKr7',
+      privKey: ''
+    },
+    KMD: {
+      pubKey: 'RYZ62rj6VEgojsWhkxT5ucV6kZnwMGBKr7',
+      privKey: ''
+    },
+  }
+}
+
 export const MOCK_ACTIVE_COINS_FOR_USER = [
   {
     id: "VRSC", 
     name: "Verus Coin", 
     description: "Verus Coin includes the first proven 51% hash attack resistant proof of power algorithm. The Verus vision is PBaaS, public blockchains as a service, provisioned for conditional rewards by Verus miners and stakers.", 
     fee: 10000,
-    users: ['AzureDiamond'],
+    users: [
+    'AzureDiamond',
+    'Random address with balance of ~3000 VRSC taken from https://dexstats.info/richlist.php?asset=VRSC on July 31st, 2019',
+    'VRSC Richlist #2 Address at https://dexstats.info/richlist.php?asset=VRSC as of July 31st, 2019'],
     serverList: {
       serverList: [
         'el0.vrsc.0x03.services:10000:tcp',

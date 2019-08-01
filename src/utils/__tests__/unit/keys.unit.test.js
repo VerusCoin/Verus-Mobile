@@ -4,7 +4,9 @@ import {
 
 import {
   MOCK_PIN,
-  MOCK_ENCRYPTEDKEY
+  MOCK_ENCRYPTEDKEY,
+  MOCK_PRIVKEY,
+  MOCK_ADDRESS
 } from '../../../tests/helpers/MockAuthData'
 
 describe("Main wallet keypair generator", () => {
@@ -13,7 +15,7 @@ describe("Main wallet keypair generator", () => {
     
     expect(keyPair).toHaveProperty('pubKey')
     expect(keyPair).toHaveProperty('privKey')
-    expect(keyPair.pubKey).toBe('RTbZS48ASp9qtCg4ucyHC8GwF6KG49UNjF')
-    expect(keyPair.privKey).toBe('Ux4SB7LdzdMVg2s2BuapntC2aiVjEiNdabfhZsb6NCPNJTLEYHTX')
+    expect(keyPair.pubKey).toBe(MOCK_ADDRESS)
+    expect(keyPair.privKey).toBe(MOCK_PRIVKEY)
   })
 })
