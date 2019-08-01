@@ -6,6 +6,7 @@
 import store from '../../../store/index';
 import { timeout } from '../../../utils/promises';
 import { saveServerVersion } from '../../../actions/actionCreators';
+import { isJson } from '../../objectManip'
 
 const OLD_DEFAULT_VERSION = 1.0
 
@@ -20,7 +21,13 @@ export const getServerVersion = (proxyServer, ip, port, proto, httpsEnabled) => 
     let httpAddr = `${httpsEnabled ? 'https' : 'http'}://${proxyServer}/api/server/version?port=${port}&ip=${ip}&proto=${proto}`
 
     timeout(global.REQUEST_TIMEOUT_MS, fetch(httpAddr, {method: 'GET'}))
-    .then((response) => response.json())
+    .then((response) => {
+      if (!isJson(response)) {
+        throw new Error("Invalid JSON in getServerVersion.js, received: " + response)
+      }
+
+      return response.json()
+    })
     .then((response) => {
       if (response.msg === "success" &&
         response.result &&

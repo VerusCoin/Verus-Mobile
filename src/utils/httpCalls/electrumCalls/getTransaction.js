@@ -17,6 +17,7 @@ export const getOneTransaction = (oldTx, coinObj, txid) => {
     })
     .catch((err) => {
       console.log("Caught error in getTransaction.js")
+      console.log(err)
       reject(err)
     })
   });

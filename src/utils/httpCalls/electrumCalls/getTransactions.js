@@ -3,7 +3,8 @@ import { updateValues } from '../callCreators'
 export const getOneTransactionList = (oldList, coinObj, activeUser) => {
   const callType = 'listtransactions'
   let index = 0
-  let params = { raw: "true" }
+  //TODO: Add option to change max length in general settings
+  let params = { raw: true }
   const coinID = coinObj.id
 
   if (activeUser.keys.hasOwnProperty(coinObj.id)) {
