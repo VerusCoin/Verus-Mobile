@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 // react-native's version of local storage
 
 export * from './authDataStorage'
+export * from './settingsStorage'
 export * from './coinStorage'
 export * from './cache/cache'
 

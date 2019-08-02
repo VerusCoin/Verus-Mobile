@@ -59,7 +59,9 @@ class Overview extends Component {
       if (!this.state.loading) {
         this.setState({ loading: true });  
       }
-      promiseArray.push(fetchTransactionsForCoin(_oldTransactions, _coinObj, _activeAccount, _needsUpdateObj))
+      
+      console.log(Number(this.props.walletSettingsState.maxTxCount))
+      promiseArray.push(fetchTransactionsForCoin(_oldTransactions, _coinObj, _activeAccount, _needsUpdateObj, Number(this.props.walletSettingsState.maxTxCount)))
     }
 
     if(this.props.needsUpdate.balances) {
@@ -263,6 +265,7 @@ const mapStateToProps = (state) => {
     transactions: state.ledger.transactions,
     activeAccount: state.authentication.activeAccount,
     activeCoinsForUser: state.coins.activeCoinsForUser,
+    walletSettingsState: state.settings.walletSettingsState,
   }
 };
 

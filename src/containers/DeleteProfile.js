@@ -215,7 +215,6 @@ class DeleteProfile extends Component {
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
-      
     );
   }
 }
@@ -255,8 +254,6 @@ const styles = StyleSheet.create({
   wifLabel: {
     backgroundColor: "transparent",
     marginTop: 50,
-    marginBottom: 8,
-    paddingBottom: 0,
     fontSize: 22,
     color: "#E9F1F7",
     width: "85%",

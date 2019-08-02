@@ -26,6 +26,7 @@ import { rejects } from "assert";
 
 const APP_INFO = 'App Info'
 const PROFILE = 'Profile'
+const WALLET = 'Wallet'
 
 class SideMenu extends Component {
   constructor(props) {
@@ -219,6 +220,8 @@ class SideMenu extends Component {
       this.props.dispatch(setConfigSection('settings-info'))
     } else if (drawerItem.title === PROFILE){
       this.props.dispatch(setConfigSection('settings-profile'))
+    } else if (drawerItem.title === WALLET){
+      this.props.dispatch(setConfigSection('settings-wallet'))
     } else {
       throw new Error("Option " + drawerItem.title + " not found in possible settings values")
     }
@@ -275,6 +278,7 @@ class SideMenu extends Component {
         {title: 'Settings', 
         data: [
           {title: PROFILE, icon: "account-circle"},
+          {title: WALLET, icon: "account-balance-wallet"},
           {title: APP_INFO, icon: "info"}
         ]},
       ]}

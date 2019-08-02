@@ -66,7 +66,10 @@ class ConfirmSend extends Component {
       this.tickLoading()
     }, LOADING_TICKER);
 
-    txPreflight(coinObj, activeUser, address, amount, fee, network, true)
+    const verifyMerkle = this.props.walletSettingsState.utxoVerificationLvl > 1 ? true : false
+    const verifyTxid = this.props.walletSettingsState.utxoVerificationLvl > 0 ? true : false 
+
+    txPreflight(coinObj, activeUser, address, amount, fee, network, verifyMerkle, verifyTxid)
     .then((res) => {
       if(res.err || !res) {
         this.setState({
@@ -299,7 +302,13 @@ class ConfirmSend extends Component {
   }
 }
 
-export default connect()(ConfirmSend);
+const mapStateToProps = (state) => {
+  return {
+    walletSettingsState: state.settings.walletSettingsState,
+  }
+};
+
+export default connect(mapStateToProps)(ConfirmSend);
 
 const styles = StyleSheet.create({
   root: {

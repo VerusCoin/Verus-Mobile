@@ -81,7 +81,10 @@ class SendResult extends Component {
       this.tickLoading()
     }, LOADING_TICKER);
 
-    sendRawTx(coinObj, activeUser, toAddress, amount, fee, network)
+    const verifyMerkle = this.props.walletSettingsState.utxoVerificationLvl > 1 ? true : false
+    const verifyTxid = this.props.walletSettingsState.utxoVerificationLvl > 0 ? true : false 
+
+    sendRawTx(coinObj, activeUser, toAddress, amount, fee, network, verifyMerkle, verifyTxid)
     .then((res) => {
       if(res.err || !res) {
         this.setState({
@@ -289,6 +292,7 @@ const mapStateToProps = (state) => {
     balances: state.ledger.balances,
     needsUpdate: state.ledger.needsUpdate,
     activeAccount: state.authentication.activeAccount,
+    walletSettingsState: state.settings.walletSettingsState,
   }
 };
 

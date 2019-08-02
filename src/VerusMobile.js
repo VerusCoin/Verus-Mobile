@@ -4,7 +4,8 @@ import { RootNavigator } from './utils/navigation/index';
 import { 
   fetchUsers, 
   loadServerVersions,
-  loadCachedHeaders
+  loadCachedHeaders,
+  initWalletSettings
 } from './actions/actionCreators';
 import {
   initCache,
@@ -36,10 +37,13 @@ class VerusMobile extends React.Component {
       return initCache()
     })
     .then(() => {
-      return fetchUsers()
+      return Promise.all([fetchUsers(), initWalletSettings()])
     })
-    .then((usersAction) => {
-      this.props.dispatch(usersAction)
+    .then((actionArr) => {
+      actionArr.forEach((action) => {
+        this.props.dispatch(action)
+      })
+      
       return Promise.all([loadServerVersions(this.props.dispatch), loadCachedHeaders(this.props.dispatch)])
     })
     .then(() => {

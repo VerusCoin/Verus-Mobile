@@ -1,6 +1,7 @@
 export * from './actions/Coins'
 export * from './actions/UserData'
 export * from './actions/Ledger'
+export * from './actions/WalletSettings'
 export * from './actions/cache/Electrum'
 export * from './actions/cache/Headers'
 export * from './actions/cache/Cache'
@@ -58,6 +59,14 @@ export const setConfigSection = (section) => {
   return {
     type: 'SET_CONFIG_SECTION',
     activeConfigSection: section
+  }
+}
+
+//Reducer Name: settings
+export const setWalletSettingsState = (state) => {
+  return {
+    type: 'SET_WALLET_SETTINGS_STATE',
+    walletSettingsState: state
   }
 }
 

@@ -1,10 +1,9 @@
 import { updateValues } from '../callCreators'
 
-export const getOneTransactionList = (oldList, coinObj, activeUser) => {
+export const getOneTransactionList = (oldList, coinObj, activeUser, maxlength = 10) => {
   const callType = 'listtransactions'
   let index = 0
-  //TODO: Add option to change max length in general settings
-  let params = { raw: true }
+  let params = { raw: true, maxlength: maxlength }
   const coinID = coinObj.id
 
   if (activeUser.keys.hasOwnProperty(coinObj.id)) {
