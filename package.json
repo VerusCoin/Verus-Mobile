@@ -64,7 +64,7 @@
     "react-native-qrcode-scanner": "^1.1.2",
     "react-native-qrcode-svg": "^5.1.2",
     "react-native-randombytes": "^3.5.2",
-    "react-native-screens": "^1.0.0-alpha.22",
+    "react-native-screens": "1.0.0-alpha.22",
     "react-native-svg": "^9.2.4",
     "react-native-tcp": "^3.3.0",
     "react-native-udp": "^2.3.1",
@@ -86,17 +86,20 @@
   },
   "devDependencies": {
     "babel-jest": "23.6.0",
+    "jest": "^24.9.0",
     "metro-react-native-babel-preset": "0.53.1",
     "node-fetch": "^2.6.0",
     "react-test-renderer": "16.5.0",
     "rn-nodeify": "github:tradle/rn-nodeify"
   },
   "resolutions": {
+    "lodash": "^4.17.15",
     "typeforce": "git+https://github.com/michaeltout/typeforce",
     "braces": "^3.0.2",
     "tar": "^4.4.8",
     "semver": "^6.0.0",
-    "bl": "^3.0.0"
+    "level-filesystem": "1.2.0",
+    "levelup": "4.1.0"
   },
   "jest": {
     "preset": "react-native",
