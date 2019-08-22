@@ -5,7 +5,7 @@ export const buildSignedTx = (sendTo, changeAddress, wif, network, utxo, changeV
 
   let key = bitcoin.ECPair.fromWIF(wif, network);
   let tx = new bitcoin.TransactionBuilder(network);
-  
+
   console.log('Keypair intialized and transaction defined')
   console.log('Unsigned transaction structure constructed successfully');
 
@@ -15,10 +15,10 @@ export const buildSignedTx = (sendTo, changeAddress, wif, network, utxo, changeV
 
   console.log(utxo);
   console.log('UTXOs added to transaction')
-  
+
 
   tx.addOutput(sendTo, Number(spendValue));
-  
+
   if (changeValue > 0) {
     console.log('Change value larger than 0, adding change value output')
     console.log(changeValue)
@@ -56,19 +56,24 @@ export const buildSignedTx = (sendTo, changeAddress, wif, network, utxo, changeV
 
 
   tx.setVersion(versionNum);
-  
+
   console.log('Set version to ' + versionNum)
 
   for (let i = 0; i < utxo.length; i++) {
+    if (bitcoin.coins.isBitcoinCash(network) || bitcoin.coins.isBitcoinGold(network)) {
+      const hashType = bitcoin.Transaction.SIGHASH_ALL | bitcoin.Transaction.SIGHASH_BITCOINCASHBIP143;
+      tx.sign(i, key, null, hashType, utxo[i].value);
+    } else {
       tx.sign(i, key, '', null, utxo[i].value);
-      console.log('Standard transaction signed')
+    }
+    console.log('Standard transaction signed')
   }
 
   const rawtx = tx.build().toHex();
 
   //shepherd.log('buildSignedTx signed tx hex', true);
   //shepherd.log(rawtx, true);
-  
+
 
   return rawtx;
 }
