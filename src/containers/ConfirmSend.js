@@ -15,7 +15,7 @@ import { View, StyleSheet, Text, ScrollView, Keyboard, Alert } from "react-nativ
 import { satsToCoins, truncateDecimal, coinsToSats } from '../utils/math';
 import ProgressBar from 'react-native-progress/Bar';
 import { NavigationActions } from 'react-navigation';
-
+import { NO_VERIFICATION, MID_VERIFICATION } from '../utils/constants'
 
 const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
@@ -24,23 +24,23 @@ class ConfirmSend extends Component {
   constructor(props) {
     super(props)
     this.state = {
-        toAddress: "",
-        fromAddress: "",
-        err: false,
-        coinObj: {},
-        utxoCrossChecked: false,
-        loading: true,
-        network: null,
-        fee: 0,
-        amountSubmitted: 0,
-        balance: 0,
-        remainingBalance: 0,
-        finalTxAmount: 0,
-        memo: null,
-        loadingProgress: 0.175,
-        loadingMessage: "Creating transaction...",
-        btcFeePerByte: null,
-        feeTakenFromAmount: false
+      toAddress: "",
+      fromAddress: "",
+      err: false,
+      coinObj: {},
+      utxoCrossChecked: false,
+      loading: true,
+      network: null,
+      fee: 0,
+      amountSubmitted: 0,
+      balance: 0,
+      remainingBalance: 0,
+      finalTxAmount: 0,
+      memo: null,
+      loadingProgress: 0.175,
+      loadingMessage: "Creating transaction...",
+      btcFeePerByte: null,
+      feeTakenFromAmount: false
     };
   }
 
@@ -66,8 +66,16 @@ class ConfirmSend extends Component {
       this.tickLoading()
     }, LOADING_TICKER);
 
-    const verifyMerkle = this.props.walletSettingsState.utxoVerificationLvl > 1 ? true : false
-    const verifyTxid = this.props.walletSettingsState.utxoVerificationLvl > 0 ? true : false 
+    let verifyMerkle, verifyTxid
+
+    if (this.props.coinSettings[coinObj.id]) {
+      verifyMerkle = this.props.coinSettings[this.state.coinObj.id].verificationLvl > MID_VERIFICATION ? true : false
+      verifyTxid = this.props.coinSettings[this.state.coinObj.id].verificationLvl > NO_VERIFICATION ? true : false 
+    } else {
+      console.warn(`No coin settings data found for ${coinObj.id} in ConfirmSend, assuming highest verification level`)
+      verifyMerkle = true
+      verifyTxid = true
+    }
 
     txPreflight(coinObj, activeUser, address, amount, fee, network, verifyMerkle, verifyTxid)
     .then((res) => {
@@ -304,7 +312,7 @@ class ConfirmSend extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    walletSettingsState: state.settings.walletSettingsState,
+    coinSettings: state.settings.coinSettings,
   }
 };
 

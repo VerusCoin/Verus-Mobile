@@ -22,46 +22,34 @@ export const ledger = (state = {
       return {
         ...state,
         balances: action.balances,
-        needsUpdate: {balances: false, 
-                      transactions: state.needsUpdate.transactions,
-                      rates: state.needsUpdate.rates}
+        needsUpdate: {...state.needsUpdate, balances: false}
       };
     case 'SET_TRANSACTIONS':
       return {
         ...state,
         transactions: action.transactions,
-        needsUpdate: {balances: state.needsUpdate.balances, 
-                      transactions: action.needsUpdateObj,
-                      rates: state.needsUpdate.rates}
+        needsUpdate: {...state.needsUpdate, transactions: action.needsUpdateObj}
       };
     case 'SET_RATES':
       return {
         ...state,
         rates: action.rates,
-        needsUpdate: {balances: state.needsUpdate.balances, 
-                      transactions: state.needsUpdate.transactions,
-                      rates: false}
+        needsUpdate: {...state.needsUpdate, rates: false}
       };
     case 'BALANCES_NEED_UPDATE':
       return {
         ...state,
-        needsUpdate: {balances: true, 
-                      transactions: state.needsUpdate.transactions,
-                      rates: state.needsUpdate.rates}
+        needsUpdate: {...state.needsUpdate, balances: true}
       };
     case 'TRANSACTIONS_NEED_UPDATE':
       return {
         ...state,
-        needsUpdate: {balances: state.needsUpdate.balances, 
-                      transactions: action.needsUpdateObj,
-                      rates: state.needsUpdate.rates}
+        needsUpdate: {...state.needsUpdate, transactions: action.needsUpdateObj}
       };
     case 'RATES_NEED_UPDATE':
       return {
         ...state,
-        needsUpdate: {balances: state.needsUpdate.balances, 
-                      transactions: state.needsUpdate.transactions,
-                      rates: true}
+        needsUpdate: {...state.needsUpdate, rates: true}
       };
     case 'EVERYTHING_NEEDS_UPDATE':
       let _transactions = state.needsUpdate.transactions

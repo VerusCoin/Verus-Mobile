@@ -6,7 +6,7 @@ export const getOneTransaction = (oldTx, coinObj, txid) => {
   const coinID = coinObj.id
 
   return new Promise((resolve, reject) => {
-    updateValues(oldTx, coinObj.serverList.serverList, callType, params, coinID)
+    updateValues(oldTx, coinObj.serverList, callType, params, coinID)
     .then((response) => {
       if(!response.new || !response) {
         resolve(false)

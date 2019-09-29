@@ -1,194 +1,146 @@
 /*
-  This component allows the user to modify the general
-  wallet settings. This includes things like maximum transaction
-  display size, what level of UTXO verification they want, and the 
-  option to clear the cache.
+  This component displays the different coin setting menu options a user
+  has. This includes general coin settings and specific settings for each 
+  active coin.
 */
 
 import React, { Component } from "react";
-import Button1 from "../symbols/button1";
+import { ListItem } from "react-native-elements";
 import { 
   View, 
   StyleSheet, 
   Text, 
-  ScrollView, 
-  Keyboard,
-  TouchableWithoutFeedback,
-  ActivityIndicator,
-  Alert
+  TouchableOpacity,
+  ScrollView
 } from "react-native";
-import { NavigationActions } from 'react-navigation';
-import { FormLabel, FormInput, FormValidationMessage, ButtonGroup } from 'react-native-elements'
-import { saveWalletSettings } from '../actions/actionCreators';
-import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
+import { connect } from 'react-redux';
+import { NavigationActions } from 'react-navigation';
 import { clearCacheData } from '../actions/actionCreators'
 
-const NO_VERIFICATION = 0
-const MID_VERIFICATION = 1
-const MAX_VERIFICATION = 2
+const GENERAL_WALLET_SETTINGS = "GeneralWalletSettings"
+const COIN_SETTINGS = "CoinSettings"
 
 class WalletSettings extends Component {
   constructor(props) {
-    super(props);
-
-    if (this.props.walletSettingsState.hasOwnProperty("maxTxCount")) {
-      this.state = this.props.walletSettingsState
-    } else {
-      this.state = {
-        maxTxCount: "10",
-        utxoVerificationLvl: 2,
-        errors: { maxTxCount: false, utxoVerificationLvl: false },
-        loading: false
-      };
-    }
-    
-    this.updateIndex = this.updateIndex.bind(this)
+    super(props)
+    this.state = {
+      loading: false
+    };
   }
 
-  _handleSubmit = () => {
-    Keyboard.dismiss();
-    this.validateFormData()
-  }
+  _openSettings = (screen, data, header) => {
+    let navigation = this.props.navigation  
 
-  updateIndex(utxoVerificationLvl) {
-    this.setState({utxoVerificationLvl: utxoVerificationLvl})
-  }
-
-  saveSettings = () => {
-    this.setState({ loading: true }, () => {
-      const stateToSave = {
-        maxTxCount: this.state.maxTxCount,
-        utxoVerificationLvl: this.state.utxoVerificationLvl,
-        errors: { maxTxCount: false, utxoVerificationLvl: false },
-        loading: false
-      }
-      saveWalletSettings(stateToSave)
-      .then(res => {
-        this.props.dispatch(res)
-        this.setState(this.props.walletSettingsState)
-        Alert.alert("Success", "Settings saved")
-      })
-      .catch(err => {
-        Alert.alert("Error", err.message)
-        console.warn(err.message)
-        this.setState({ loading: false })
-      })
-    })
-  }
-
-  handleError = (error, field) => {
-    let _errors = this.state.errors
-    _errors[field] = error
-
-    this.setState({errors: _errors})
-  }
-
-  back = () => {
-    this.props.navigation.dispatch(NavigationActions.back())
-  }
-
-  validateFormData = () => {
-    this.setState({
-      errors: {maxTxCount: null, utxoVerificationLvl: null}
-    }, () => {
-      let _errors = false
-      const _maxTxCount = this.state.maxTxCount
-
-      if (!_maxTxCount || _maxTxCount.length === 0 || isNaN(_maxTxCount) || Number(_maxTxCount) < 10 || Number(_maxTxCount) > 100) {
-        this.handleError("Please enter a valid number from 10 to 100", "maxTxCount")
-        _errors = true
-      }
-
-      if (!_errors) {
-        this.saveSettings()
-      } 
+    navigation.navigate(screen, {
+      data: data,
+      title: header ? header : undefined
     });
   }
 
-  render() {
-    const utxoVerificationBtns = ['Low', 'Mid', 'High']
+  clearCache = () => {
+    this.canClearCache()
+    .then(res => {
+      if (res) {
+        let data = {
+          task: () => {
+            return clearCacheData(this.props.dispatch)
+          },
+          message: "Clearing cache, please do not close Verus Mobile",
+          route: "Home",
+          successMsg: "Cache cleared successfully",
+          errorMsg: "Cache failed to clear"
+        }
+        this.resetToScreen("SecureLoading", data)
+      }
+    })
+  }
 
+  canClearCache = () => {
+    return AlertAsync(
+      'Confirm',
+      "Are you sure you would like to clear the stored data cache? " + 
+      "(This could impact performance temporarily but will not delete any account information)",
+      [
+        {
+          text: 'No, take me back',
+          onPress: () => Promise.resolve(false),
+          style: 'cancel',
+        },
+        {text: 'Yes', onPress: () => Promise.resolve(true)},
+      ],
+      {
+        cancelable: false,
+      },
+    )
+  }
+
+  resetToScreen = (route, data) => {
+    const resetAction = NavigationActions.reset({
+      index: 0, // <-- currect active route from actions array
+      actions: [
+        NavigationActions.navigate({ routeName: route, params: {data: data} }),
+      ],
+    })
+
+    this.props.navigation.dispatch(resetAction)
+  }
+
+  renderSettingsList = () => {
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center", justifyContent: "center"}}>
-          <Text style={styles.mainHeader}>
-            {"Wallet Settings:"}
-          </Text>
-          <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-            Maximum Displayed Transaction Count:
-            </FormLabel>
-            <FormInput 
-              underlineColorAndroid="#86939d"
-              onChangeText={(text) => this.setState({maxTxCount: text})}
-              value={this.state.maxTxCount}
-              shake={this.state.errors.maxTxCount}
-              inputStyle={styles.formInput}
-              keyboardType={'number-pad'}
-            />
-            <FormValidationMessage>
-            {
-              this.state.errors.maxTxCount ? 
-                this.state.errors.maxTxCount
-                :
-                null
-            }
-            </FormValidationMessage>
-          </View>
-          <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-              {"Level of UTXO verification:"}
-            </FormLabel>
-            <ButtonGroup
-              onPress={this.updateIndex}
-              selectedIndex={this.state.utxoVerificationLvl}
-              buttons={utxoVerificationBtns}
-              selectedButtonStyle={{backgroundColor: "#7c858f", containerBorderRadius: "0"}}
-              selectedTextStyle={{color: "#f5f5f5"}}
-            />
-            <FormLabel labelStyle={styles.utxoVerificationDesc}>
-              { this.state.utxoVerificationLvl === NO_VERIFICATION ? 
-                'No Verification (Not recommended):\nOn this setting, before sending a transaction, none of your funds will be ' +
-                'cross-verified across different electrum servers, and your existing transactions will not be ' +
-                'hashed to check against their transaction id. This is only suggested for huge wallets that ' +
-                'otherwise wouldn\'t be able to send.'
-                :
-                this.state.utxoVerificationLvl === MID_VERIFICATION ? 
-                  'Incomplete Verification (Not recommended):\nOn this setting, your funds will not be cross verified across multiple ' + 
-                  'servers, but you may experience a little quicker transaction sending times. This is not recommended unless ' +
-                  'necessary for usability.'
-                  :
-                  'Complete Verification (Highly recommended):\nOn this setting, before sending a transaction, your funds will be ' +
-                  'cross verified across at least two different electrum servers, and the transaction IDs of your existing ' +
-                  'transactions will be double-checked through local transaction hashing.'}
-            </FormLabel>
-          </View>
-          {this.state.loading ? 
-            <ActivityIndicator animating={this.state.loading} size="large"/>
-          :
-            <View style={styles.buttonContainer}>
-              <Button1 
-                style={styles.backButton} 
-                buttonContent="Back" 
-                onPress={this.back}
+      <ScrollView style={styles.coinList}>
+        <TouchableOpacity onPress={() => this.clearCache()}>
+          <ListItem                       
+            title={<Text style={styles.coinItemLabel}>Clear Data Cache</Text>}
+            leftIcon={{name: 'clear-all'}}
+            rightIcon={{name: 'close'}}
+            containerStyle={{ borderBottomWidth: 0 }} 
+            chevron={false}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => this._openSettings(GENERAL_WALLET_SETTINGS)}>
+          <ListItem                       
+            title={<Text style={styles.coinItemLabel}>{"General Settings"}</Text>}
+            leftIcon={{name: 'settings-applications'}}
+            containerStyle={{ borderBottomWidth: 0 }} 
+          />
+        </TouchableOpacity>
+        {this.props.activeCoinsForUser.map((coin, index) => {
+          return (
+            <TouchableOpacity 
+              onPress={() => this._openSettings(COIN_SETTINGS, coin.id, coin.name)}
+              key={index}>
+              <ListItem
+                title={<Text style={styles.coinItemLabel}>{`${coin.name} Settings`}</Text>}
+                avatar={coin.logo}
+                roundAvatar
+                containerStyle={{ borderBottomWidth: 0 }} 
               />
-              <Button1 
-                style={styles.saveChangesButton} 
-                buttonContent="Confirm" 
-                onPress={this._handleSubmit}
-              />
-            </View>
-          }
-        </ScrollView>
-      </TouchableWithoutFeedback>
+            </TouchableOpacity>
+          )
+        })}
+      </ScrollView>
+    )
+  }
+
+  render() {
+    return (
+      <View style={styles.root}>
+        <Text style={styles.fiatBalanceLabel}>
+        {this.props.activeAccount.id.length < 15 ? 
+          this.props.activeAccount.id : "My Account"}
+        </Text>
+        <Text style={styles.balanceSheetLabel}>{"Wallet Settings"}</Text>
+        {this.renderSettingsList()}
+      </View>
     );
   }
 }
 
 const mapStateToProps = (state) => {
   return {
-    walletSettingsState: state.settings.walletSettingsState,
+    activeAccount: state.authentication.activeAccount,
+    activeCoinsForUser: state.coins.activeCoinsForUser,
   }
 };
 
@@ -198,66 +150,37 @@ const styles = StyleSheet.create({
   root: {
     backgroundColor: "#232323",
     flex: 1,
+    alignItems: "center"
   },
-  formLabel: {
-    textAlign:"left",
-    marginRight: "auto",
-  },
-  keyGenLabel: {
-    textAlign:"left",
-    marginRight: "auto",
-    color: "#2E86AB"
-  },
-  formInput: {
-    width: "100%",
-  },
-  valueContainer: {
-    width: "85%",
-  },
-  mainHeader: {
+  fiatBalanceLabel: {
     backgroundColor: "transparent",
-    marginTop: 30,
-    fontSize: 22,
+    opacity: 0.89,
+    marginTop: 15,
+    marginBottom: 15,
+    paddingBottom: 0,
+    paddingTop: 0,
+    fontSize: 25,
+    textAlign: "center",
     color: "#E9F1F7",
-    width: "85%",
-    textAlign: "center"
+    width: 359,
   },
-  wifInput: {
+  coinItemLabel: {
+    color: "#E9F1F7",
+    marginLeft: 10,
+  },
+  balanceSheetLabel: {
     width: "100%",
-    color: "#009B72"
+    backgroundColor: "#E9F1F7",
+    opacity: 0.86,
+    marginTop: 0,
+    marginBottom: 0,
+    paddingBottom: 15,
+    paddingTop: 15,
+    fontSize: 22,
+    textAlign: "center",
+    color: "#232323"
   },
-  buttonContainer: {
-    width: "75%",
-    backgroundColor: "transparent",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  singleButtonContainer: {
-    width: "75%",
-    backgroundColor: "transparent",
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  saveChangesButton: {
-    height: 46,
-    backgroundColor: "#009B72",
-    marginTop: 15,
-    marginBottom: 40
-  },
-  clearCacheButton: {
-    height: 46,
-    backgroundColor: "#2E86AB",
-    marginTop: 25,
-    marginBottom: 25
-  },
-  backButton: {
-    height: 46,
-    backgroundColor: "rgba(206,68,70,1)",
-    marginTop: 15,
-  },
-  utxoVerificationDesc: {
-    textAlign:"left",
-    marginRight: "auto",
-    color: "#2E86AB"
+  coinList: {
+    width: "100%",
   },
 });

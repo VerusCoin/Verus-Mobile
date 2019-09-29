@@ -39,14 +39,6 @@ export const setFingerAuth = (isEnabled) => {
 }
 
 //Reducer Name: coins
-export const addActiveCoin = (newCoinObj) => {
-  return {
-    type: 'ADD_ACTIVE_COIN',
-    newCoin: newCoinObj
-  }
-}
-
-//Reducer Name: coins
 export const setActiveCoin = (activeCoin) => {
   return {
     type: 'SET_ACTIVE_COIN',
@@ -63,10 +55,34 @@ export const setConfigSection = (section) => {
 }
 
 //Reducer Name: settings
-export const setWalletSettingsState = (state) => {
+/*export const setWalletSettingsState = (state) => {
   return {
     type: 'SET_WALLET_SETTINGS_STATE',
     walletSettingsState: state
+  }
+}*/
+
+//Reducer Name: settings
+export const setAllSettings = (settings) => {
+  return {
+    type: 'SET_ALL_SETTINGS',
+    settings
+  }
+}
+
+//Reducer Name: settings
+export const setCoinSettingsState = (state) => {
+  return {
+    type: 'SET_COIN_SETTINGS_STATE',
+    coinSettings: state
+  }
+}
+
+//Reducer Name: settings
+export const setGeneralWalletSettingsState = (state) => {
+  return {
+    type: 'SET_GENERAL_WALLET_SETTINGS_STATE',
+    state
   }
 }
 
@@ -211,6 +227,14 @@ export const setBlockHeaders = (headers) => {
 export const clearDataCache = () => {
   return {
     type: 'CLEAR_CACHE',
+  }
+}
+
+//Reducer name: customCoins
+export const setActiveSectionCustomCoins = (activeSection) => {
+  return {
+    type: 'SET_ACTIVE_SECTION_CUSTOM_COIN',
+    activeSection: activeSection
   }
 }
 

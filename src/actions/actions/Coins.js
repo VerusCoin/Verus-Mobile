@@ -1,10 +1,8 @@
 import { 
-  addActiveCoin,
   setCoinList,
   setCurrentUserCoins,
  } from '../actionCreators';
 import { 
-  findCoinObj,
   createCoinObj
 } from '../../utils/CoinData';
 import {
@@ -13,8 +11,8 @@ import {
 } from '../../utils/asyncStore/asyncStore';
 
 // Add coin that exists in default list of coins
-export const addExistingCoin = (coinID, activeCoins, userName) => {
-  let coinIndex = activeCoins.findIndex(x => x.id === coinID);
+export const addExistingCoin = (fullCoinObj, activeCoins, userName) => {
+  let coinIndex = activeCoins.findIndex(x => x.id === fullCoinObj.id);
   
   if (coinIndex > -1) {
     if (activeCoins[coinIndex].users.includes(userName)) {
@@ -36,8 +34,7 @@ export const addExistingCoin = (coinID, activeCoins, userName) => {
     }
   }
   else {
-    let coinObj = findCoinObj(coinID, userName);
-    activeCoins.push(coinObj);
+    activeCoins.push(fullCoinObj);
     return new Promise((resolve, reject) => {
       storeCoins(activeCoins)
       .then((res) => {
@@ -73,44 +70,6 @@ export const removeExistingCoin = (coinID, activeCoins, userName) => {
   }
   else {
     throw new Error("User " + userName + " has not activated coin " + coinID);
-  }
-}
-
-// Add custom coin by QR or by form data
-export const addCustomCoin = (coinID, activeCoins, userName, coinName, coinDesc, coinServers) => {
-  let coinIndex = activeCoins.findIndex(x => x.id === coinID);
-  
-  if (coinIndex > -1) {
-    if (activeCoins[coinIndex].users.includes(userName)) {
-      throw new Error("Coin already added for user " + userName);
-    }
-    else {
-      let _activeCoins = activeCoins.slice();
-      _activeCoins[coinIndex].users.push(userName);
-
-      storeCoins(_activeCoins)
-      .then((res) => {
-        if (res === true) {
-          return setCoinList(_activeCoins);
-        }
-        else {
-          return false;
-        }
-      })
-    }
-  }
-  else {
-    coinObj = createCoinObj(coinID, coinName, coinDesc, coinServers, userName);
-    activeCoins.push(coinObj);
-    storeCoins(activeCoins)
-    .then((res) => {
-      if (res === true) {
-        return addActiveCoin(coinObj);
-      }
-      else {
-        return false;
-      }
-    })
   }
 }
 

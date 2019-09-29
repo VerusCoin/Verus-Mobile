@@ -31,8 +31,6 @@ class CoinMenus extends Component {
     }; 
   }
 
-  
-
   static navigationOptions = ({ navigation }) => {
     return {
       title: typeof(navigation.state.params)==='undefined' || 

@@ -23,6 +23,9 @@ import DisplaySeed from '../../containers/DisplaySeed';
 import RecoverSeed from '../../containers/RecoverSeed';
 import DeleteProfile from '../../containers/DeleteProfile';
 import SecureLoading from '../../containers/SecureLoading';
+import CustomChainMenus from '../../containers/CustomChainMenus'
+import GeneralWalletSettings from '../../containers/GeneralWalletSettings'
+import CoinSettings from '../../containers/CoinSettings'
 
 const WALLET = "wallet";
 
@@ -132,6 +135,15 @@ export const MainScreens =
           title: "Recover",
         }
       },
+      GeneralWalletSettings: {
+        screen: GeneralWalletSettings,
+        navigationOptions: {
+          title: "General Wallet Settings"
+        }
+      },
+      CoinSettings: {
+        screen: CoinSettings,
+      },
       DeleteProfile: {
         screen: DeleteProfile,
         navigationOptions: {
@@ -146,6 +158,9 @@ export const MainScreens =
           headerLeft: null,
           drawerLockMode: 'locked-closed'
         }
+      },
+      CustomChainMenus: {
+        screen: CustomChainMenus,
       },
     }, {
       headerMode: 'screen',

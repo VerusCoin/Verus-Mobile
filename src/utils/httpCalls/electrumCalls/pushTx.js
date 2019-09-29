@@ -7,7 +7,7 @@ import { TxDecoder } from '../../crypto/txDecoder'
 
 export const pushTx = (coinObj, _rawtx) => {
   const callType = 'pushtx'
-  let serverList = coinObj.serverList.serverList
+  let serverList = coinObj.serverList
   let data = { rawtx: _rawtx }
 
   return new Promise((resolve, reject) => {

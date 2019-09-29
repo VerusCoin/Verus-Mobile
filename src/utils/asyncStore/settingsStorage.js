@@ -1,30 +1,30 @@
 import AsyncStorage from '@react-native-community/async-storage';
 
 /**
- * Saves the current state of the walletSettings state object into AsyncStorage and returns 
+ * Saves the current settings state object into AsyncStorage and returns 
  * a promise that resolves to the input parameter if the save succeeded
- * @param {Object} walletSettingsState The current state of the walletSettings object in the redux store
+ * @param {Object} settings The current state of the settings object in the redux store
  */
-export const storeWalletSettings = (walletSettingsState) => {
-  if (typeof walletSettingsState !== 'object') throw new Error(`Wallet settings store function expected object, recieved ${typeof walletSettingsState}`)
+export const storeSettings = (settings) => {
+  if (typeof settings !== 'object') throw new Error(`Wallet settings store function expected object, recieved ${typeof settings}`)
 
   return new Promise((resolve, reject) => {
-    AsyncStorage.setItem('walletSettings', JSON.stringify(walletSettingsState))
+    AsyncStorage.setItem('settings', JSON.stringify(settings))
       .then(() => {
-        resolve(walletSettingsState);
+        resolve(settings);
       })
       .catch(err => reject(err));
   }) 
 };
 
 /**
- * Loads the walletSettings object from AsyncStorage, to be dispatched to the redux store. 
- * Returns a promise that resolves to the walletSettings state object or rejects on error. If
- * the object is undefined in AsyncStorage, it resolves to an empty object.
+ * Loads the settings object from AsyncStorage, to be dispatched to the redux store. 
+ * Returns a promise that resolves to the settings state object or rejects on error. If
+ * the object is undefined in AsyncStorage, resolves to an empty object.
  */
-export const loadWalletSettings = () => {
+export const loadSettings = () => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem('walletSettings')
+    AsyncStorage.getItem('settings')
       .then(res => {
         if (!res) {
           resolve({});

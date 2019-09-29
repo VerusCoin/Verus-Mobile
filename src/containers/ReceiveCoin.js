@@ -16,16 +16,16 @@ import {
   Keyboard, 
   Clipboard,
   Alert,
-  RefreshControl
+  RefreshControl,
+  Modal
  } from "react-native"
 import { FormLabel, FormInput, FormValidationMessage, Icon } from 'react-native-elements'
 import { connect } from 'react-redux'
 import { Dropdown } from 'react-native-material-dropdown'
 import QRCode from 'react-native-qrcode-svg';
+import QRModal from '../components/QRModal'
 import { coinsToSats, isNumber, truncateDecimal } from '../utils/math'
 import { setCoinRates, everythingNeedsUpdate } from '../actions/actionCreators'
-
-const LOGO_DIR = require('../images/customIcons/verusQRLogo.png');
 
 class ReceiveCoin extends Component {
   constructor(props) {
@@ -38,7 +38,8 @@ class ReceiveCoin extends Component {
       errors: {selectedCoin: null, amount: null, address: null, memo: null },
       verusQRString: null,
       amountFiat: false,
-      loading: false
+      loading: false,
+      showModal: false
     };
   }
 
@@ -129,7 +130,7 @@ class ReceiveCoin extends Component {
       memo: memo
     }
 
-    this.setState({verusQRString: JSON.stringify(verusQRJSON)})
+    this.setState({verusQRString: JSON.stringify(verusQRJSON), showModal: true})
   }
 
   switchInvoiceCoin = (coinObj) => {
@@ -183,7 +184,10 @@ class ReceiveCoin extends Component {
       } else if (!(isNumber(_amount))) {
         this.handleError("Invalid amount", "amount")
         _errors = true
-      } 
+      } else if (Number(_amount) <= 0) {
+        this.handleError("Enter an amount greater than 0", "amount")
+        _errors = true
+      }
 
       if (!_errors) {
         this.createQRString(_selectedCoin.id, _amount, _address, _memo)
@@ -196,7 +200,7 @@ class ReceiveCoin extends Component {
   render() {
     const _price = this.getPrice()
     return (
-        <ScrollView 
+      <ScrollView 
         style={styles.root} 
         contentContainerStyle={{alignItems: "center", justifyContent: "center"}}
         refreshControl={
@@ -205,137 +209,135 @@ class ReceiveCoin extends Component {
             onRefresh={this.forceUpdate}
           />
         }>
-          <Text style={styles.wifLabel}>
-            Generate VerusQR Invoice
-          </Text>
-          <View style={styles.dropDownContainer}>
-            <Dropdown
-              containerStyle={styles.dropDown}
-              labelExtractor={(item, index) => {
-                return item.id
-              }}
-              valueExtractor={(item, index) => {
-                return item
-              }}
-              data={this.props.activeCoinsForUser}
-              onChangeText={(value, index, data) => this.switchInvoiceCoin(value)}
-              textColor="#E9F1F7"
-              selectedItemColor="#232323"
-              baseColor="#E9F1F7"
-              label="Selected Coin:"
-              value={this.state.selectedCoin}
-            />
-          </View>
-          <View style={styles.valueContainer}>
-            <FormValidationMessage>
-            {
-              this.state.errors.selectedCoin ? 
-                this.state.errors.selectedCoin
-                :
-                null
-            }
-            </FormValidationMessage>
-          </View>
-          <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-            Your address:
-            </FormLabel>
-            <FormInput 
-              underlineColorAndroid="#86939d"
-              editable={false}
-              value={this.state.address}
-              autoCapitalize={"none"}
-              autoCorrect={false}
-              inputStyle={styles.wifInput}
-              multiline={true}
-            />
-            {this.state.errors.address &&
-            <FormValidationMessage>
-            {
-              this.state.errors.address ? 
-                this.state.errors.address
-                :
-                null
-            }
-            </FormValidationMessage>}
-          </View>
-          <TouchableOpacity onPress={this.copyAddressToClipboard} style={{marginTop: 5}}>
-            <Icon name="content-copy" size={25} color="#E9F1F7"/>
-          </TouchableOpacity>
-          <View style={styles.valueContainer}>
-            <View style={styles.LabelContainer}>
-              <FormLabel labelStyle={styles.formLabel}>
-              {`Enter an amount in ${this.state.amountFiat ? 'USD' : this.state.selectedCoin.id}:`}
-              </FormLabel>
-              {this.props.rates[this.state.selectedCoin.id] && (isNumber(_price)) &&
-                <TouchableOpacity onPress={() => {this.setState({ amountFiat: !this.state.amountFiat })}}>
-                  <FormLabel labelStyle={styles.swapInputTypeBtnBordered}>
-                    {this.state.amountFiat ? this.state.selectedCoin.id : 'USD'}
-                  </FormLabel>
-                </TouchableOpacity>
-              }
-            </View>
-            <FormInput 
-              underlineColorAndroid="#86939d"
-              onChangeText={(text) => this.setState({amount: text})}
-              shake={this.state.errors.amount}
-              inputStyle={styles.formInput}
-              keyboardType={"decimal-pad"}
-              autoCapitalize='words'
-            />
-            {this.state.errors.amount &&
-            <FormValidationMessage>
-            {
-              this.state.errors.amount ? 
-                this.state.errors.amount
-                :
-                null
-            }
-            </FormValidationMessage>}
-            {this.props.rates[this.state.selectedCoin.id] && (isNumber(_price)) &&
-            <TouchableOpacity onPress={() => {this.setState({ amountFiat: !this.state.amountFiat })}}>
-              <FormLabel labelStyle={styles.swapInputTypeBtn}>
-                {`~${_price} ${this.state.amountFiat ? this.state.selectedCoin.id : 'USD'}`}
-              </FormLabel>
-            </TouchableOpacity>}
-          </View>
-          <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-            Enter a note for the receiver (optional):
-            </FormLabel>
-            <FormInput 
-              underlineColorAndroid="#86939d"
-              onChangeText={(text) => this.setState({memo: text})}
-              autoCapitalize={"none"}
-              autoCorrect={false}
-              shake={this.state.errors.memo}
-              inputStyle={styles.formInput}
-            />
-            <FormValidationMessage>
-            {
-              this.state.errors.memo ? 
-                this.state.errors.memo
-                :
-                null
-            }
-            </FormValidationMessage>
-          </View>
-          { this.state.verusQRString &&
-          <View style={{padding: 10, backgroundColor: '#FFF'}}>
-            <QRCode
-              value={this.state.verusQRString}
-              size={250}
-            />
-          </View>
+        <QRModal
+          animationType="slide"
+          transparent={false}
+          visible={this.state.showModal && this.state.verusQRString && this.state.verusQRString.length > 0}
+          qrString={this.state.verusQRString}
+          cancel={() => {this.setState({showModal: false})}}/>
+        <Text style={styles.wifLabel}>
+          {"Generate VerusQR Invoice"}
+        </Text>
+        <View style={styles.dropDownContainer}>
+          <Dropdown
+            containerStyle={styles.dropDown}
+            labelExtractor={(item, index) => {
+              return item.id
+            }}
+            valueExtractor={(item, index) => {
+              return item
+            }}
+            data={this.props.activeCoinsForUser}
+            onChangeText={(value, index, data) => this.switchInvoiceCoin(value)}
+            textColor="#E9F1F7"
+            selectedItemColor="#232323"
+            baseColor="#E9F1F7"
+            label="Selected Coin:"
+            value={this.state.selectedCoin}
+          />
+        </View>
+        <View style={styles.valueContainer}>
+          <FormValidationMessage>
+          {
+            this.state.errors.selectedCoin ? 
+              this.state.errors.selectedCoin
+              :
+              null
           }
-          <View style={styles.singleButtonContainer}>
-            <Button1 
-              style={styles.addAccountButton} 
-              buttonContent="Generate QR" 
-              onPress={this.validateFormData}
-            />
+          </FormValidationMessage>
+        </View>
+        <View style={styles.valueContainer}>
+          <FormLabel labelStyle={styles.formLabel}>
+          Your address:
+          </FormLabel>
+          <FormInput 
+            underlineColorAndroid="#86939d"
+            editable={false}
+            value={this.state.address}
+            autoCapitalize={"none"}
+            autoCorrect={false}
+            inputStyle={styles.wifInput}
+            multiline={true}
+          />
+          {this.state.errors.address &&
+          <FormValidationMessage>
+          {
+            this.state.errors.address ? 
+              this.state.errors.address
+              :
+              null
+          }
+          </FormValidationMessage>}
+        </View>
+        <TouchableOpacity onPress={this.copyAddressToClipboard} style={{marginTop: 5}}>
+          <Icon name="content-copy" size={25} color="#E9F1F7"/>
+        </TouchableOpacity>
+        <View style={styles.valueContainer}>
+          <View style={styles.labelContainer}>
+            <FormLabel labelStyle={styles.formLabel}>
+            {`Enter an amount in ${this.state.amountFiat ? 'USD' : this.state.selectedCoin.id}:`}
+            </FormLabel>
+            {this.props.rates[this.state.selectedCoin.id] && (isNumber(_price)) &&
+              <TouchableOpacity onPress={() => {this.setState({ amountFiat: !this.state.amountFiat })}}>
+                <FormLabel labelStyle={styles.swapInputTypeBtnBordered}>
+                  {this.state.amountFiat ? this.state.selectedCoin.id : 'USD'}
+                </FormLabel>
+              </TouchableOpacity>
+            }
           </View>
-        </ScrollView>
+          <FormInput 
+            underlineColorAndroid="#86939d"
+            onChangeText={(text) => this.setState({amount: text})}
+            shake={this.state.errors.amount}
+            inputStyle={styles.formInput}
+            keyboardType={"decimal-pad"}
+            autoCapitalize='words'
+          />
+          {this.state.errors.amount &&
+          <FormValidationMessage>
+          {
+            this.state.errors.amount ? 
+              this.state.errors.amount
+              :
+              null
+          }
+          </FormValidationMessage>}
+          {this.props.rates[this.state.selectedCoin.id] && (isNumber(_price)) &&
+          <TouchableOpacity onPress={() => {this.setState({ amountFiat: !this.state.amountFiat })}}>
+            <FormLabel labelStyle={styles.swapInputTypeBtn}>
+              {`~${_price} ${this.state.amountFiat ? this.state.selectedCoin.id : 'USD'}`}
+            </FormLabel>
+          </TouchableOpacity>}
+        </View>
+        <View style={styles.valueContainer}>
+          <FormLabel labelStyle={styles.formLabel}>
+            {"Enter a note for the receiver (optional):"}
+          </FormLabel>
+          <FormInput 
+            underlineColorAndroid="#86939d"
+            onChangeText={(text) => this.setState({memo: text})}
+            autoCapitalize={"none"}
+            autoCorrect={false}
+            shake={this.state.errors.memo}
+            inputStyle={styles.formInput}
+          />
+          <FormValidationMessage>
+          {
+            this.state.errors.memo ? 
+              this.state.errors.memo
+              :
+              null
+          }
+          </FormValidationMessage>
+        </View>
+        <View style={styles.singleButtonContainer}>
+          <Button1 
+            style={styles.addAccountButton} 
+            buttonContent="Generate QR" 
+            onPress={this.validateFormData}
+          />
+        </View>
+      </ScrollView>
     );
   }
 }
@@ -388,7 +390,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
   },
-  LabelContainer: {
+  labelContainer: {
     width: "94%",
     flexDirection: "row",
     justifyContent: "space-between"

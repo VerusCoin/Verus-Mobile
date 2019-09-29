@@ -7,7 +7,7 @@ export const getMerkleHashes = (oldMerkle, coinObj, txid, height, toSkip) => {
   const coinID = coinObj.id
 
   return new Promise((resolve, reject) => {
-    updateValues(oldMerkle, coinObj.serverList.serverList, callType, params, coinID, toSkip)
+    updateValues(oldMerkle, coinObj.serverList, callType, params, coinID, toSkip)
     .then((response) => {
       if(!response) {
         resolve(false)

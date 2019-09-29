@@ -47,7 +47,7 @@ export const getOneBalance = (oldBalance, coinObj, activeUser) => {
   }
 
   return new Promise((resolve, reject) => {
-    updateValues(oldBalance, coinObj.serverList.serverList, callType, params, coinObj.id)
+    updateValues(oldBalance, coinObj.serverList, callType, params, coinObj.id)
     .then((response) => {
       if(!response.new || !response) {
         resolve(false)

@@ -49,6 +49,11 @@ class Home extends Component {
     this.refresh();
   }
 
+  componentWillReceiveProps() {
+    //TODO: Evaluate whether this is a performance issue
+    this.refresh();
+  }
+
   refresh = () => {
     const _activeCoinsForUser = this.props.activeCoinsForUser
     const _balances = this.props.balances
@@ -140,11 +145,6 @@ class Home extends Component {
     }
 
     this.setState({ totalFiatBalance: _totalFiatBalance.toFixed(2) });  
-  }
-
-  _onPress = () => {
-    let coinObj = this.props.activeCoinsForUser[0]
-    this.props.dispatch(setActiveCoin(coinObj))
   }
 
   _verusPay = () => {

@@ -7,27 +7,28 @@
 
 import React, { Component } from "react";
 import { SearchBar, ListItem } from "react-native-elements";
-import { View, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import { View, StyleSheet, FlatList, TouchableOpacity, Alert } from "react-native";
+import { connect } from 'react-redux';
 
 import {
-  coinsList,
-  assetsPath,
-  namesList
+  defaultAssetsPath,
+  namesList,
+  findCoinObj
 } from '../utils/CoinData';
 
-export default class AddCoin extends Component {
+class AddCoin extends Component {
   constructor(props) {
     super(props)
     this.state = {
       loading: true,      
       error: null,    
     };
-    this.arrayholder = [];
+    //this.arrayholder = [];
   }
 
-  componentDidMount() {
+  /*componentDidMount() {
     this.arrayholder = coinsList;
-  }
+  }*/
 
   componentWillUnmount() {
     if (this.props.navigation.state.params && this.props.navigation.state.params.refresh) {
@@ -46,13 +47,21 @@ export default class AddCoin extends Component {
   };
 
   _openDetails = (item) => {  
-    let navigation = this.props.navigation  
-    navigation.navigate("CoinDetails", {
-      data: item
-    });
+    let navigation = this.props.navigation 
+    let coinData = {}
+    
+    try {
+      coinData = findCoinObj(item, this.props.activeAccount.id)
+
+      navigation.navigate("CoinDetails", {
+        data: coinData
+      });
+    } catch (e) {
+      Alert.alert("Error", e.message || "Unknown error");
+    }
   };
 
-  searchFilterFunction = text => {    
+  /*searchFilterFunction = text => {    
     const newData = this.arrayholder.filter(item => {      
       const itemData = `${item.id.toUpperCase()}   
       ${item.name.toUpperCase()}`;
@@ -61,7 +70,7 @@ export default class AddCoin extends Component {
        return itemData.indexOf(textData) > -1;    
     });    
     this.setState({ dataFull: newData });  
-  };
+  };*/
 
   onEndReached = () => {
     this.setState({ loading: false });
@@ -69,30 +78,37 @@ export default class AddCoin extends Component {
 
   render() {
     return (
-        <View style={styles.root}>
-          <FlatList 
-            style={styles.coinList}         
-            data={namesList}
-            onEndReached={this.onEndReached}
-            onEndReachedThreshold={50}
-            renderItem={({item}) => (
-              <TouchableOpacity onPress={() => this._openDetails(item)}>
-                <ListItem     
-                  roundAvatar                
-                  title={item}
-                  avatar={assetsPath.coinLogo[item.toLowerCase()]}
-                  containerStyle={{ borderBottomWidth: 0 }}
-                  titleStyle={{color: "#E9F1F7"}}
-                />
-              </TouchableOpacity>
-            )}
-            keyExtractor={item => item}                                   
-          />       
-        </View>
+      <View style={styles.root}>
+        <FlatList 
+          style={styles.coinList}         
+          data={namesList}
+          onEndReached={this.onEndReached}
+          onEndReachedThreshold={50}
+          renderItem={({item}) => (
+            <TouchableOpacity onPress={() => this._openDetails(item)}>
+              <ListItem     
+                roundAvatar                
+                title={item}
+                avatar={defaultAssetsPath.coinLogo[item.toLowerCase()]}
+                containerStyle={{ borderBottomWidth: 0 }}
+                titleStyle={{color: "#E9F1F7"}}
+              />
+            </TouchableOpacity>
+          )}
+          keyExtractor={item => item}                                   
+        />       
+      </View>
     );
   }
 }
 
+const mapStateToProps = (state) => {
+  return {
+    activeAccount: state.authentication.activeAccount,
+  }
+}
+
+export default connect(mapStateToProps)(AddCoin);
 
 const styles = StyleSheet.create({
   root: {

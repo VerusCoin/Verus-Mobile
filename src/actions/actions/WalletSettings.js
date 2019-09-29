@@ -1,19 +1,24 @@
-import { setWalletSettingsState } from '../actionCreators'
-
+import { 
+  setAllSettings,
+  setCoinSettingsState,
+  setGeneralWalletSettingsState
+ } from '../actionCreators'
 import {
-  loadWalletSettings,
-  storeWalletSettings
+  loadSettings,
+  storeSettings
 } from '../../utils/asyncStore/asyncStore';
+import store from '../../store/index'
+//TODO: Maybe dispatch from here instead of VerusMobile main file
 
 /**
  * Fetches the wallet settings state from Async Storage and returns a promise that 
  * resolves to an action to be dispatched to the redux store. Rejects on error.
  */
-export const initWalletSettings = () => {
+export const initSettings = () => {
   return new Promise((resolve, reject) => {
-    loadWalletSettings()
+    loadSettings()
     .then(res => {
-      resolve(setWalletSettingsState(res))
+      resolve(setAllSettings(res))
     })
     .catch(err => reject(err))
   })
@@ -22,13 +27,52 @@ export const initWalletSettings = () => {
 /**
  * Saves the wallet settings state to Async storage and returns a promise that resolves
  * to an action to be dispatched to the redux store. Rejects on error.
- * @param {Object} walletSettingsState The current state of the wallet settings component or reducer
+ * @param {Object} stateChanges State changes to be made to settings
  */
-export const saveWalletSettings = (walletSettingsState) => {
+export const saveAllSettings = (stateChanges) => {
+  const settings = {...store.getState().settings, ...stateChanges}
   return new Promise((resolve, reject) => {
-    storeWalletSettings(walletSettingsState)
+    storeSettings(settings)
     .then(res => {
-      resolve(setWalletSettingsState(res))
+      resolve(setAllSettings(res))
+    })
+    .catch(err => reject(err))
+  })
+}
+
+/**
+ * Saves a single coin settings state change to Async storage and returns a promise that resolves
+ * to an action to be dispatched to the redux store. Rejects on error.
+ * @param {Object} stateChanges Changes to be made to the coin setting state,
+ * @param {String} coinID Coin ID for the coin being modified
+ */
+export const saveCoinSettings = (stateChanges, coinID) => {
+  const settingsState = store.getState().settings
+  const coinSettingsForCoin = {...settingsState.coinSettings[coinID], ...stateChanges}
+  const coinSettings = {...settingsState.coinSettings, [coinID]: coinSettingsForCoin}
+
+  return new Promise((resolve, reject) => {
+    storeSettings({...settingsState, coinSettings})
+    .then(() => {
+      resolve(setCoinSettingsState(coinSettings))
+    })
+    .catch(err => reject(err))
+  })
+}
+
+/**
+ * Saves a general settings state change to Async storage and returns a promise that resolves
+ * to an action to be dispatched to the redux store. Rejects on error.
+ * @param {Object} stateChanges Changes to be made to the general setting state,
+ */
+export const saveGeneralSettings = (stateChanges) => {
+  const settingsState = store.getState().settings
+  const generalWalletSettings = {...settingsState.generalWalletSettings, ...stateChanges}
+
+  return new Promise((resolve, reject) => {
+    storeSettings({...settingsState, generalWalletSettings})
+    .then(() => {
+      resolve(setGeneralWalletSettingsState(generalWalletSettings))
     })
     .catch(err => reject(err))
   })

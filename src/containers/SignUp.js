@@ -23,8 +23,8 @@ import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elemen
 import { addUser, setUpdateIntervalID } from '../actions/actionCreators';
 import { connect } from 'react-redux';
 import { getKey } from '../utils/keyGenerator/keyGenerator'
-import { spacesLeadOrTrail } from '../utils/stringUtils'
-import AlertAsync from "react-native-alert-async";
+import { spacesLeadOrTrail, hasSpecialCharacters } from '../utils/stringUtils'
+import AlertAsync from 'react-native-alert-async'
 import ScanSeed from '../components/ScanSeed'
 
 class SignUp extends Component {
@@ -102,10 +102,6 @@ class SignUp extends Component {
     this.props.navigation.dispatch(NavigationActions.back())
   }
 
-  isValid = (str) => {
-    return !/[~`!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/g.test(str);
-  }
-
   validateFormData = () => {
     this.setState({
       errors: {
@@ -143,7 +139,7 @@ class SignUp extends Component {
       } else if (_wifKey.length < 15) {
         this.handleError("Min. 15 characters", "wifKey")
         _errors = true
-      } else if (!this.isValid(_wifKey)) {
+      } else if (!hasSpecialCharacters(_wifKey)) {
         this.handleError("Seed cannot include any special characters", "wifKey")
         _errors = true
       } else {

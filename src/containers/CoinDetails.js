@@ -9,7 +9,6 @@ import React, { Component } from "react";
 import Button1 from "../symbols/button1";
 import { View, StyleSheet, Text, ScrollView, Image, ActivityIndicator } from "react-native";
 import { Icon } from "react-native-elements";
-import { findCoinObj } from "../utils/CoinData"
 import { connect } from 'react-redux';
 import { 
   addExistingCoin, 
@@ -24,10 +23,10 @@ class CoinDetails extends Component {
   constructor(props) {
     super(props)
     this.state = {
-        isActive: false,
-        coinData: {logo: null, id: ""},
-        loading: false,
-        unmounted: false
+      isActive: false,
+      fullCoinData: {logo: null, id: ""},
+      loading: false,
+      unmounted: false
     };
     this.isActiveCoin = this.isActiveCoin.bind(this);
   }
@@ -41,35 +40,27 @@ class CoinDetails extends Component {
   }
 
   isActiveCoin = () => {
-    let selectedCoin = this.props.activeCoinsForUser.find((o) => {
-        if (o.id === this.props.navigation.state.params.data) {
-          return o
-        }
+    let selectedCoin = this.props.navigation.state.params.data
+    let activeCoinIndex = this.props.activeCoinsForUser.findIndex(coin => {
+      return coin.id === selectedCoin.id
     })
-
-    if (selectedCoin) {
-      this.setState({ isActive: true, coinData: selectedCoin });
-    }
-    else {
-      selectedCoin = findCoinObj(this.props.navigation.state.params.data, null)
-
-      this.setState({ isActive: false, coinData: selectedCoin });
-    }
+  
+    this.setState({ isActive: activeCoinIndex > -1 ? true : false, fullCoinData: selectedCoin });
   }
 
   goBack = () => {
     this.props.navigation.dispatch(NavigationActions.back())
   }
 
-  _handleAddCoin = (coinID) => {
+  _handleAddCoin = () => {
     this.setState({ loading: true });
-    addExistingCoin(coinID, this.props.activeCoinList, this.props.activeAccount.id)
+    addExistingCoin(this.state.fullCoinData, this.props.activeCoinList, this.props.activeAccount.id)
     .then(response => {
       if (response) {
         this.props.dispatch(response)
         this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
-        this.props.dispatch(addKeypair(this.props.activeAccount.wifKey, coinID, this.props.activeAccount.keys))
-        this.props.dispatch(transactionsNeedUpdate(coinID, this.props.needsUpdate.transanctions))
+        this.props.dispatch(addKeypair(this.props.activeAccount.wifKey, this.state.fullCoinData.id, this.props.activeAccount.keys))
+        this.props.dispatch(transactionsNeedUpdate(this.state.fullCoinData.id, this.props.needsUpdate.transanctions))
 
         this.props.dispatch(needsUpdate("balances"))
         this.props.dispatch(needsUpdate("rates"))
@@ -87,27 +78,26 @@ class CoinDetails extends Component {
   }
   
   render() {
-    const {state} = this.props.navigation;
     return (
       <View style={styles.root}>
         <Image
           style={{width: 50, height: 50, marginTop: 5}}
-          source={this.state.coinData.logo}
+          source={this.state.fullCoinData.logo}
         />
-        <Text style={styles.homeLabel}>{this.state.coinData.id} Details</Text>
+        <Text style={styles.homeLabel}>{this.state.fullCoinData.id} Details</Text>
         <View style={styles.rect} />
         <Text style={styles.titleLabel}>
             Full Name:
         </Text>
         <Text style={styles.fullName}>
-            {this.state.coinData.name}
+            {this.state.fullCoinData.name}
         </Text>
         <Text style={styles.titleLabel}>
             Description:
         </Text>
         <ScrollView>
             <Text style={styles.description}>
-                {this.state.coinData.description}
+                {this.state.fullCoinData.description}
             </Text>
         </ScrollView>
         <View style={styles.addCoinBtn}>
@@ -121,7 +111,7 @@ class CoinDetails extends Component {
               <Icon name="check" color="#50C3A5" size={30}/>
               </View>
             :
-              <Button1 style={styles.receiveBtn} buttonContent="Add Coin" onPress={() => this._handleAddCoin(this.state.coinData.id)}/>
+              <Button1 style={styles.receiveBtn} buttonContent="Add Coin" onPress={() => this._handleAddCoin()}/>
         }
         </View>
         

@@ -34,6 +34,7 @@ import {
  } from '../actions/actionCreators';
 import ProgressBar from 'react-native-progress/Bar';
 import { Icon } from 'react-native-elements'
+import { NO_VERIFICATION, MID_VERIFICATION } from '../utils/constants'
 
 const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
@@ -81,8 +82,16 @@ class SendResult extends Component {
       this.tickLoading()
     }, LOADING_TICKER);
 
-    const verifyMerkle = this.props.walletSettingsState.utxoVerificationLvl > 1 ? true : false
-    const verifyTxid = this.props.walletSettingsState.utxoVerificationLvl > 0 ? true : false 
+    let verifyMerkle, verifyTxid
+
+    if (this.props.coinSettings[coinObj.id]) {
+      verifyMerkle = this.props.coinSettings[this.state.coinObj.id].verificationLvl > MID_VERIFICATION ? true : false
+      verifyTxid = this.props.coinSettings[this.state.coinObj.id].verificationLvl > NO_VERIFICATION ? true : false 
+    } else {
+      console.warn(`No coin settings data found for ${coinObj.id} in SendResult, assuming highest verification level`)
+      verifyMerkle = true
+      verifyTxid = true
+    }
 
     sendRawTx(coinObj, activeUser, toAddress, amount, fee, network, verifyMerkle, verifyTxid)
     .then((res) => {
@@ -292,7 +301,7 @@ const mapStateToProps = (state) => {
     balances: state.ledger.balances,
     needsUpdate: state.ledger.needsUpdate,
     activeAccount: state.authentication.activeAccount,
-    walletSettingsState: state.settings.walletSettingsState,
+    coinSettings: state.settings.coinSettings,
   }
 };
 

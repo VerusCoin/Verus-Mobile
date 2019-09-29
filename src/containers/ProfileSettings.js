@@ -15,10 +15,7 @@ import {
   TouchableOpacity,
   ScrollView
 } from "react-native";
-import AlertAsync from "react-native-alert-async";
 import { connect } from 'react-redux';
-import { NavigationActions } from 'react-navigation';
-import { clearCacheData } from '../actions/actionCreators'
 
 const RESET_PWD = "ResetPwd"
 const RECOVER_SEED = "RecoverSeed"
@@ -39,54 +36,6 @@ class ProfileSettings extends Component {
     let navigation = this.props.navigation  
 
     navigation.navigate(screen);
-  }
-
-  clearCache = () => {
-    this.canClearCache()
-    .then(res => {
-      if (res) {
-        let data = {
-          task: () => {
-            return clearCacheData(this.props.dispatch)
-          },
-          message: "Clearing cache, please do not close Verus Mobile",
-          route: "Home",
-          successMsg: "Cache cleared successfully",
-          errorMsg: "Cache failed to clear"
-        }
-        this.resetToScreen("SecureLoading", data)
-      }
-    })
-  }
-
-  canClearCache = () => {
-    return AlertAsync(
-      'Confirm',
-      "Are you sure you would like to clear the stored data cache? " + 
-      "(This could impact performance temporarily but will not delete any account information)",
-      [
-        {
-          text: 'No, take me back',
-          onPress: () => Promise.resolve(false),
-          style: 'cancel',
-        },
-        {text: 'Yes', onPress: () => Promise.resolve(true)},
-      ],
-      {
-        cancelable: false,
-      },
-    )
-  }
-
-  resetToScreen = (route, data) => {
-    const resetAction = NavigationActions.reset({
-      index: 0, // <-- currect active route from actions array
-      actions: [
-        NavigationActions.navigate({ routeName: route, params: {data: data} }),
-      ],
-    })
-
-    this.props.navigation.dispatch(resetAction)
   }
 
   renderSettingsList = () => {
@@ -112,15 +61,6 @@ class ProfileSettings extends Component {
             title={<Text style={styles.coinItemLabel}>Reset Password</Text>}
             leftIcon={{name: 'autorenew'}}
             containerStyle={{ borderBottomWidth: 0 }} 
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => this.clearCache()}>
-          <ListItem                       
-            title={<Text style={styles.coinItemLabel}>Clear Data Cache</Text>}
-            leftIcon={{name: 'clear-all'}}
-            rightIcon={{name: 'close'}}
-            containerStyle={{ borderBottomWidth: 0 }} 
-            chevron={false}
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => this._openSettings(REMOVE_PROFILE)}>

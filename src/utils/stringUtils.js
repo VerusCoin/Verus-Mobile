@@ -19,3 +19,11 @@ export const spacesLeadOrTrail = (string) => {
     return string
   }
 }
+
+export const hasSpecialCharacters = (str) => {
+  return !/[~`!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/g.test(str);
+}
+
+export const isElectrumUrl = (str) => {
+  return /^[\w\.]{1,100}:\d{1,100}:\w{1,100}$/.test(str)
+}

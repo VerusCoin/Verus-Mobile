@@ -1,6 +1,6 @@
 /*
   This component's purpose is to display a tab bar of 
-  all the different options a specific setting type has 
+  all the different options for adding a custom coin
 */
 
 import React, { Component } from "react";
@@ -11,12 +11,11 @@ import { connect } from 'react-redux';
 import BottomNavigation, {
   FullTab
 } from 'react-native-material-bottom-navigation'
-import AppInfo from './AppInfo'
-import ProfileSettings from './ProfileSettings'
-import WalletSettings from './WalletSettings'
+import CustomChainForm from './CustomChainForm'
+import CustomChainScan from './CustomChainScan'
 import { Icon } from "react-native-elements"
 
-class SettingsMenus extends Component {
+class CustomChainMenus extends Component {
   constructor(props) {
     super(props)
     let stateObj = this.generateTabs();
@@ -37,41 +36,33 @@ class SettingsMenus extends Component {
   generateTabs = () => {
     let tabArray = [
       {
-        key: "settings-profile",
-        icon: "account-circle",
-        label: "Profile",
+        key: "custom-coin-qr",
+        icon: "photo-camera",
+        label: "Scan QR",
         barColor: '#009B72',
         pressColor: 'rgba(255, 255, 255, 0.16)',
-        screen: "ProfileSettings"
+        screen: "CustomChainScan"
       },
       {
-        key: "settings-wallet",
-        icon: "account-balance-wallet",
-        label: "Wallet",
+        key: "custom-coin-form",
+        icon: "format-list-numbered",
+        label: "Coin Form",
         barColor: '#EDAE49',
         pressColor: 'rgba(255, 255, 255, 0.16)',
-        screen: "WalletSettings"
-      },
-      {
-        key: "settings-info",
-        icon: "info",
-        label: "App Info",
-        barColor: '#2E86AB',
-        pressColor: 'rgba(255, 255, 255, 0.16)',
-        screen: "AppInfo"
+        screen: "CustomChainForm"
       },
     ]
     let activeTab
     let index = 0
 
-    while (index < tabArray.length && tabArray[index].key !== this.props.activeConfigSection) {
+    while (index < tabArray.length && tabArray[index].key !== this.props.activeSection) {
       index++
     }
 
     if (index < tabArray.length) {
       activeTab = tabArray[index]
     } else {
-      throw new Error("Tab not found for active section " + this.props.activeConfigSection)
+      throw new Error("Tab not found for active section " + this.props.activeSection)
     }
 
     return {
@@ -80,7 +71,7 @@ class SettingsMenus extends Component {
     };
   }
 
-  renderIcon = icon => ({ isActive }) => (
+  renderIcon = icon => () => (
     <Icon size={24} color="white" name={icon} />
   )
 
@@ -101,9 +92,8 @@ class SettingsMenus extends Component {
   render() {
     return (
       <View style={{ flex: 1 }}>
-          {this.state.activeTab.screen === "AppInfo" ? <AppInfo navigation={this.props.navigation}/> :
-          this.state.activeTab.screen === "ProfileSettings" ? <ProfileSettings navigation={this.props.navigation}/> :
-          (this.state.activeTab.screen === "WalletSettings" ? <WalletSettings navigation={this.props.navigation}/> :
+          {this.state.activeTab.screen === "CustomChainForm" ? <CustomChainForm navigation={this.props.navigation}/> :
+          (this.state.activeTab.screen === "CustomChainScan" ? <CustomChainScan navigation={this.props.navigation}/> :
           null)}
         <BottomNavigation
           onTabPress={newTab => this.switchTab(newTab)}
@@ -118,9 +108,9 @@ class SettingsMenus extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    activeConfigSection: state.settings.activeConfigSection
+    activeSection: state.customCoins.activeSection
   }
 };
 
-export default connect(mapStateToProps)(SettingsMenus);
+export default connect(mapStateToProps)(CustomChainMenus);
 

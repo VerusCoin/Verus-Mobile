@@ -16,7 +16,8 @@ import {
   signOut,
   setConfigSection,
   removeExistingCoin,
-  setUserCoins
+  setUserCoins,
+  setActiveSectionCustomCoins
  } from '../actions/actionCreators'
 import { getKeyByValue } from '../utils/objectManip'
 import { NavigationActions } from 'react-navigation';
@@ -229,6 +230,14 @@ class SideMenu extends Component {
     navigation.navigate("SettingsMenus", { title: drawerItem.title })
   }
 
+  _openCustomCoinMenus = () => {
+    let navigation = this.props.navigation
+    this.props.dispatch(setActiveSectionCustomCoins('custom-coin-qr'))
+
+    //TODO: Change this when coin adding is refactored
+    navigation.navigate("CustomChainMenus", { title: "Scan QR" })
+  }
+
   renderAddCoinComponents = () => {
     return (
       <SectionList
@@ -237,7 +246,11 @@ class SideMenu extends Component {
         <ListItem                        
         title={item}                             
         containerStyle={{ borderBottomWidth: 0 }} 
-        onPress={item === 'Add coin from list' ? () => this.navigateToScreen('AddCoin') : () => {return 0}}
+        onPress={
+          item === 'Add coin from list' ? 
+            () => this.navigateToScreen('AddCoin') 
+          : 
+            () => this._openCustomCoinMenus()}
         /> 
       )}
       renderSectionHeader={({section: {title}}) => (
@@ -248,7 +261,7 @@ class SideMenu extends Component {
         /> 
       )}
       sections={[
-        {title: 'Add Coin', data: ['Add coin from list'/*, 'Add custom coin'*/]},
+        {title: 'Add Coin', data: ['Add coin from list', 'Add custom coin']},
       ]}
       keyExtractor={(item, index) => item + index}
       />

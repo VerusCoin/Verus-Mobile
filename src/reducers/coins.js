@@ -10,14 +10,8 @@ export const coins = (state = {
   activeApp: null,
   activeSection: null
 }, action) => {
+  //TODO: Change coin lists to objects not arrays
   switch (action.type) {
-    case 'ADD_ACTIVE_COIN':
-      let newActiveCoinList = state.activeCoinList.slice()
-      newActiveCoinList.push(action.newCoin)
-      return {
-        ...state, 
-        activeCoinList: newActiveCoinList,
-      };
     case 'SET_ACTIVE_COIN':
       return {
         ...state,

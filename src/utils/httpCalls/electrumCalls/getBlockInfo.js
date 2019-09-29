@@ -22,7 +22,7 @@ export const getBlockInfo = (oldBlock, coinObj, blockheight) => {
   } 
 
   return new Promise((resolve, reject) => {
-    updateValues(oldBlock, coinObj.serverList.serverList, callType, params, coinID)
+    updateValues(oldBlock, coinObj.serverList, callType, params, coinID)
     .then((response) => {
       let res
 

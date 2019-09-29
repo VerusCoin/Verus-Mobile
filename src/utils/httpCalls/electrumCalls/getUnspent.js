@@ -19,7 +19,7 @@ export const getUnspent = (oldList, coinObj, activeUser) => {
   }
 
   return new Promise((resolve, reject) => {
-    updateValues(oldList, coinObj.serverList.serverList, callType, params, coinID)
+    updateValues(oldList, coinObj.serverList, callType, params, coinID)
     .then((response) => {
       if(!response.new || !response) {
         resolve(false)

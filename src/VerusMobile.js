@@ -5,7 +5,7 @@ import {
   fetchUsers, 
   loadServerVersions,
   loadCachedHeaders,
-  initWalletSettings
+  initSettings
 } from './actions/actionCreators';
 import {
   initCache,
@@ -37,7 +37,7 @@ class VerusMobile extends React.Component {
       return initCache()
     })
     .then(() => {
-      return Promise.all([fetchUsers(), initWalletSettings()])
+      return Promise.all([fetchUsers(), initSettings()])
     })
     .then((actionArr) => {
       actionArr.forEach((action) => {
