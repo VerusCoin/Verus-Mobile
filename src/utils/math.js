@@ -39,8 +39,11 @@ export const kmdCalcInterest = (locktime, value) => {
 
   // calc interest
   if (timestampDiffMinutes >= 60) {
-    if (timestampDiffMinutes > 365 * 24 * 60) {
+    /*if (timestampDiffMinutes > 365 * 24 * 60) {
       timestampDiffMinutes = 365 * 24 * 60;
+    }*/
+    if (timestampDiffMinutes > 31 * 24 * 60) {
+      timestampDiffMinutes = 31 * 24 * 60;
     }
     timestampDiffMinutes -= 59;
 
