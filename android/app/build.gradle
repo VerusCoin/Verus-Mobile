@@ -156,6 +156,8 @@ android {
 }
 
 dependencies {
+    implementation project(':react-native-share')
+    implementation project(':react-native-fs')
     implementation project(':@react-native-community_async-storage')
     implementation project(':react-native-vector-icons')
     implementation project(':react-native-udp')
