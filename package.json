@@ -83,6 +83,7 @@
     "tty-browserify": "0.0.0",
     "tx-builder": "^0.18.0",
     "url": "^0.10.3",
+    "version_compare": "^0.0.3",
     "vm": "^0.1.0",
     "vm-browserify": "0.0.4"
   },

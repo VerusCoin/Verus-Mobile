@@ -58,3 +58,26 @@ export const getActiveCoinsList = () => {
       .catch(err => reject(err));
   });
 };
+
+//TODO: For version 0.1.8 update, delete in next version
+export const updateActiveCoinList_v0_1_8_beta = () => {
+  return new Promise((resolve, reject) => {
+    AsyncStorage.getItem('activeCoins')
+      .then((res) => {
+        let coinList = []
+        if (res) {
+          coinList = JSON.parse(res).coins;
+        }
+
+        coinList = coinList.map((coin) => {
+          return {...coin, serverList: coin.serverList.hasOwnProperty('serverList') ? coin.serverList.serverList : coin.serverList}
+        })
+
+        return storeCoins(coinList)
+      })
+      .then(() => {
+        resolve(true)
+      })
+      .catch(err => reject(err));
+  });
+};
