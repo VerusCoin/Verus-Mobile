@@ -85,8 +85,8 @@ class SendResult extends Component {
     let verifyMerkle, verifyTxid
 
     if (this.props.coinSettings[coinObj.id]) {
-      verifyMerkle = this.props.coinSettings[this.state.coinObj.id].verificationLvl > MID_VERIFICATION ? true : false
-      verifyTxid = this.props.coinSettings[this.state.coinObj.id].verificationLvl > NO_VERIFICATION ? true : false 
+      verifyMerkle = this.props.coinSettings[coinObj.id].verificationLvl > MID_VERIFICATION ? true : false
+      verifyTxid = this.props.coinSettings[coinObj.id].verificationLvl > NO_VERIFICATION ? true : false 
     } else {
       console.warn(`No coin settings data found for ${coinObj.id} in SendResult, assuming highest verification level`)
       verifyMerkle = true

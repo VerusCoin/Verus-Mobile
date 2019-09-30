@@ -43,7 +43,7 @@ export const getOneBalance = (oldBalance, coinObj, activeUser) => {
   if (activeUser.keys.hasOwnProperty(coinObj.id)) {
     params.address = activeUser.keys[coinObj.id].pubKey
   } else {
-    throw new Error("getBalances.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + activeCoinsForUser[i].id + " not found!");
+    throw new Error("getBalances.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj.id + " not found!");
   }
 
   return new Promise((resolve, reject) => {

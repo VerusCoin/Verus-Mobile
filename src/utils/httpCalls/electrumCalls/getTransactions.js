@@ -9,7 +9,7 @@ export const getOneTransactionList = (oldList, coinObj, activeUser, maxlength = 
   if (activeUser.keys.hasOwnProperty(coinObj.id)) {
     params.address = activeUser.keys[coinObj.id].pubKey
   } else {
-    throw new Error("getTransactions.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + activeCoinsForUser[i].id + " not found!");
+    throw new Error("getTransactions.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj.id + " not found!");
   }
 
   return new Promise((resolve, reject) => {

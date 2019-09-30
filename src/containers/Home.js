@@ -49,10 +49,11 @@ class Home extends Component {
     this.refresh();
   }
 
-  componentWillReceiveProps() {
-    //TODO: Evaluate whether this is a performance issue
-    this.refresh();
-  }
+  //TODO: Fix the fact that at this point, activeUser doesnt have their keys yet
+  //componentWillReceiveProps() {
+  //  //TODO: Evaluate whether this is a performance issue
+  //  this.refresh();
+  //}
 
   refresh = () => {
     const _activeCoinsForUser = this.props.activeCoinsForUser
