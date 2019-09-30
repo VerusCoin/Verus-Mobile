@@ -73,13 +73,10 @@ export const MOCK_ACTIVE_COINS_FOR_USER = [
     'AzureDiamond',
     'Random address with balance of ~3000 VRSC taken from https://dexstats.info/richlist.php?asset=VRSC on July 31st, 2019',
     'VRSC Richlist #2 Address at https://dexstats.info/richlist.php?asset=VRSC as of July 31st, 2019'],
-    serverList: {
-      serverList: [
-        'el0.vrsc.0x03.services:10000:tcp',
-        'el1.vrsc.0x03.services:10000:tcp',
-      ],
-      txfee: 10000
-    },
+    serverList: [
+      'el0.vrsc.0x03.services:10000:tcp',
+      'el1.vrsc.0x03.services:10000:tcp',
+    ],
     apps: {
       wallet: {
         title: 'VRSC Wallet', 
@@ -119,13 +116,10 @@ export const MOCK_ACTIVE_COINS_FOR_USER = [
     description: "",
     fee: 10000,
     users: ['AzureDiamond'],
-    serverList: {
-      serverList: [
+    serverList: [
       'electrum1.cipig.net:10001:tcp',
       'electrum2.cipig.net:10001:tcp',
-      ],
-      txfee: 10000
-    },
+    ],
     apps: {
       wallet: {
         title: 'Komodo Wallet', 
