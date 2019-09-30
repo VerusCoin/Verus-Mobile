@@ -143,9 +143,10 @@ class QRModal extends Component {
             <QRCode
               value={this.props.qrString ? this.props.qrString : "-"}
               size={250}
-              logo={LOGO_DIR}
-              logoSize={100}
-              logoBackgroundColor='transparent'
+              //TODO: Add in differently so it doesn't impact readability
+              //logo={LOGO_DIR}
+              //logoSize={50}
+              //logoBackgroundColor='transparent'
               getRef={(qr) => (this.QRCodeRef = qr)}
             />
           </View>
