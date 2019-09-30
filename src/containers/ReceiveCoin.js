@@ -280,7 +280,7 @@ class ReceiveCoin extends Component {
             {this.props.rates[this.state.selectedCoin.id] && (isNumber(_price)) &&
               <TouchableOpacity onPress={() => {this.setState({ amountFiat: !this.state.amountFiat })}}>
                 <FormLabel labelStyle={styles.swapInputTypeBtnBordered}>
-                  {this.state.amountFiat ? this.state.selectedCoin.id : 'USD'}
+                  {`switch to ${this.state.amountFiat ? this.state.selectedCoin.id : 'USD'}`}
                 </FormLabel>
               </TouchableOpacity>
             }
