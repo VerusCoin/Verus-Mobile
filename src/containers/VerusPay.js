@@ -577,11 +577,12 @@ class VerusPay extends Component {
   render() {
     return (
       <View style={styles.root}>
-          <QRCodeScanner
-            onRead={this.onSuccess.bind(this)}
-            showMarker={true}
-            captureAudio={false}
-          />
+        <QRCodeScanner
+          onRead={this.onSuccess.bind(this)}
+          showMarker={true}
+          captureAudio={false}
+          cameraStyle={styles.QRCamera}
+        />
         <Spinner
           visible={this.state.loading || this.state.loadingBTCFees || this.state.addingCoin || this.state.spinnerOverlay}
           textContent={
@@ -623,4 +624,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center"
   },
+  QRCamera: {
+    height: "100%"
+  }
 });

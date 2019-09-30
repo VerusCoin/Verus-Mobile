@@ -102,7 +102,9 @@
     "tar": "^4.4.8",
     "semver": "^6.0.0",
     "level-filesystem": "1.2.0",
-    "levelup": "4.1.0"
+    "levelup": "4.1.0",
+    "mem": "5.1.1",
+    "handlebars": "^4.4.0"
   },
   "jest": {
     "preset": "react-native",
