@@ -15,7 +15,8 @@ import {
   Alert,
   TouchableOpacity,
   CameraRoll,
-  ScrollView
+  ScrollView,
+  Platform
 } from "react-native"
 import QRCode from 'react-native-qrcode-svg'
 import Button1 from "../symbols/button1"
@@ -52,12 +53,12 @@ class QRModal extends Component {
 
   saveQRToDisk = () => {
     this.QRCodeRef.toDataURL((data) => {
-      RNFS.writeFile(RNFS.CachesDirectoryPath+"/tempVerusPayQR.png", data, 'base64')
+      RNFS.writeFile(RNFS.CachesDirectoryPath+"/VerusPayQR.png", data, 'base64')
         .then((success) => {
-          return CameraRoll.saveToCameraRoll(RNFS.CachesDirectoryPath+"/tempVerusPayQR.png", 'photo')
+          return CameraRoll.saveToCameraRoll(RNFS.CachesDirectoryPath+"/VerusPayQR.png", 'photo')
         })
         .then(() => {
-          return RNFS.unlink(RNFS.CachesDirectoryPath+"/tempVerusPayQR.png")
+          return RNFS.unlink(RNFS.CachesDirectoryPath+"/VerusPayQR.png")
         })
         .then(() => {
           Alert.alert("Success", "VerusPay QR Code saved to camera roll")
@@ -156,11 +157,13 @@ class QRModal extends Component {
               activeOpacity={this.state.libraryPressed ? 1 : DEFAULT_OPACITY}>
               <Icon name="camera-roll" size={35} color="#E9F1F7"/>
             </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={this.state.sharePressed ? () => {return 0} : this.requestShareQR} 
-              activeOpacity={this.state.sharePressed ? 1 : DEFAULT_OPACITY}>
-              <Icon name="share" size={35} color="#E9F1F7"/>
-            </TouchableOpacity>
+            {Platform.OS === 'ios' && 
+              <TouchableOpacity 
+                onPress={this.state.sharePressed ? () => {return 0} : this.requestShareQR} 
+                activeOpacity={this.state.sharePressed ? 1 : DEFAULT_OPACITY}>
+                <Icon name="share" size={35} color="#E9F1F7"/>
+              </TouchableOpacity>
+            }
           </View>
           <View style={styles.singleButtonContainer}>
             <Button1 
