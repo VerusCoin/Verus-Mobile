@@ -91,13 +91,13 @@ class QRModal extends Component {
     this.setState({ sharePressed: true },
     () => {
       this.QRCodeRef.toDataURL((data) => {
-        RNFS.writeFile(RNFS.CachesDirectoryPath+"/tempVerusPayQR.png", data, 'base64')
+        RNFS.writeFile(RNFS.CachesDirectoryPath+"/VerusPayQR.png", data, 'base64')
           .then((success) => {
-            return Share.open({ url: RNFS.CachesDirectoryPath+"/tempVerusPayQR.png" })
+            return Share.open({ url: RNFS.CachesDirectoryPath+"/VerusPayQR.png" })
           })
           .then(() => {
             this.setState({ sharePressed: false })
-            return RNFS.unlink(RNFS.CachesDirectoryPath+"/tempVerusPayQR.png")
+            return RNFS.unlink(RNFS.CachesDirectoryPath+"/VerusPayQR.png")
           })
           .catch(e => {
             this.setState({ sharePressed: false })
