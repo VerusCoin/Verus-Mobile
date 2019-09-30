@@ -1,9 +1,9 @@
 {
   "name": "verusmobile",
-  "version": "0.1.7-beta",
+  "version": "0.1.8-beta",
   "private": true,
   "scripts": {
-    "postinstall": "patch-package && ./node_modules/.bin/rn-nodeify --hack --install",
+    "postinstall": "./node_modules/.bin/rn-nodeify --hack --install",
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@babel/runtime": "7.0.0-beta.55",
+    "@react-native-community/async-storage": "^1.5.1",
     "@react-navigation/core": "^3.0.2",
     "@react-navigation/native": "^3.1.1",
     "@tradle/react-native-http": "^2.0.1",
@@ -35,7 +36,7 @@
     "https-browserify": "0.0.1",
     "istanbul-reports": "^2.1.1",
     "jsqr": "^0.2.2",
-    "lodash": "^4.17.4",
+    "lodash": "^4.17.15",
     "meteor-node-stubs": "~0.2.4",
     "node-gyp": "^3.8.0",
     "nodejs-aes256": "^1.0.1",
@@ -46,12 +47,13 @@
     "querystring-es3": "^0.2.1",
     "react": "16.8.3",
     "react-dom": "^16.4.2",
-    "react-native": "0.59.8",
+    "react-native": "0.59.9",
     "react-native-alert-async": "^1.0.3",
     "react-native-cache": "https://github.com/michaeltout/react-native-cache.git",
     "react-native-camera": "^1.10.1",
     "react-native-crypto": "^2.1.2",
     "react-native-elements": "^0.19.1",
+    "react-native-fs": "^2.14.1",
     "react-native-level-fs": "^3.0.1",
     "react-native-loading-spinner-overlay": "^1.0.1",
     "react-native-material-bottom-navigation": "^1.0.2",
@@ -63,7 +65,8 @@
     "react-native-qrcode-scanner": "^1.1.2",
     "react-native-qrcode-svg": "^5.1.2",
     "react-native-randombytes": "^3.5.2",
-    "react-native-screens": "^1.0.0-alpha.22",
+    "react-native-screens": "1.0.0-alpha.22",
+    "react-native-share": "1.2.1",
     "react-native-svg": "^9.2.4",
     "react-native-tcp": "^3.3.0",
     "react-native-udp": "^2.3.1",
@@ -80,24 +83,33 @@
     "tty-browserify": "0.0.0",
     "tx-builder": "^0.18.0",
     "url": "^0.10.3",
+    "version_compare": "^0.0.3",
     "vm": "^0.1.0",
     "vm-browserify": "0.0.4"
   },
   "devDependencies": {
     "babel-jest": "23.6.0",
+    "jest": "^24.9.0",
     "metro-react-native-babel-preset": "0.53.1",
+    "node-fetch": "^2.6.0",
     "react-test-renderer": "16.5.0",
     "rn-nodeify": "github:tradle/rn-nodeify"
   },
   "resolutions": {
+    "lodash": "^4.17.15",
     "typeforce": "git+https://github.com/michaeltout/typeforce",
     "braces": "^3.0.2",
     "tar": "^4.4.8",
     "semver": "^6.0.0",
-    "bl": "^3.0.0"
+    "level-filesystem": "1.2.0",
+    "levelup": "4.1.0"
   },
   "jest": {
-    "preset": "react-native"
+    "preset": "react-native",
+    "setupFiles": [
+      "./debug/setupJest.js",
+      "./global.js"
+    ]
   },
   "react-native": {
     "zlib": "browserify-zlib",

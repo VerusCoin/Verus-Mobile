@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import Button1 from "../symbols/button1";
+import QRCode from 'react-native-qrcode-svg';
 
 const FORMAT_UNKNOWN = "QR Data format unrecognized."
 

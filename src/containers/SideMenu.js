@@ -16,7 +16,8 @@ import {
   signOut,
   setConfigSection,
   removeExistingCoin,
-  setUserCoins
+  setUserCoins,
+  setActiveSectionCustomCoins
  } from '../actions/actionCreators'
 import { getKeyByValue } from '../utils/objectManip'
 import { NavigationActions } from 'react-navigation';
@@ -26,6 +27,7 @@ import { rejects } from "assert";
 
 const APP_INFO = 'App Info'
 const PROFILE = 'Profile'
+const WALLET = 'Wallet'
 
 class SideMenu extends Component {
   constructor(props) {
@@ -219,11 +221,21 @@ class SideMenu extends Component {
       this.props.dispatch(setConfigSection('settings-info'))
     } else if (drawerItem.title === PROFILE){
       this.props.dispatch(setConfigSection('settings-profile'))
+    } else if (drawerItem.title === WALLET){
+      this.props.dispatch(setConfigSection('settings-wallet'))
     } else {
       throw new Error("Option " + drawerItem.title + " not found in possible settings values")
     }
 
     navigation.navigate("SettingsMenus", { title: drawerItem.title })
+  }
+
+  _openCustomCoinMenus = () => {
+    let navigation = this.props.navigation
+    this.props.dispatch(setActiveSectionCustomCoins('custom-coin-qr'))
+
+    //TODO: Change this when coin adding is refactored
+    navigation.navigate("CustomChainMenus", { title: "Scan QR" })
   }
 
   renderAddCoinComponents = () => {
@@ -234,7 +246,11 @@ class SideMenu extends Component {
         <ListItem                        
         title={item}                             
         containerStyle={{ borderBottomWidth: 0 }} 
-        onPress={item === 'Add coin from list' ? () => this.navigateToScreen('AddCoin') : () => {return 0}}
+        onPress={
+          item === 'Add coin from list' ? 
+            () => this.navigateToScreen('AddCoin') 
+          : 
+            () => this._openCustomCoinMenus()}
         /> 
       )}
       renderSectionHeader={({section: {title}}) => (
@@ -245,7 +261,7 @@ class SideMenu extends Component {
         /> 
       )}
       sections={[
-        {title: 'Add Coin', data: ['Add coin from list'/*, 'Add custom coin'*/]},
+        {title: 'Add Coin', data: ['Add coin from list', 'Add custom coin']},
       ]}
       keyExtractor={(item, index) => item + index}
       />
@@ -275,6 +291,7 @@ class SideMenu extends Component {
         {title: 'Settings', 
         data: [
           {title: PROFILE, icon: "account-circle"},
+          {title: WALLET, icon: "account-balance-wallet"},
           {title: APP_INFO, icon: "info"}
         ]},
       ]}

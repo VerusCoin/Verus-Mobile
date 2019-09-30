@@ -2,12 +2,11 @@ import { updateValues } from '../callCreators'
 
 export const getOneTransaction = (oldTx, coinObj, txid) => {
   const callType = 'gettransaction'
-  let index = 0
   let params = { txid: txid }
   const coinID = coinObj.id
 
   return new Promise((resolve, reject) => {
-    updateValues(oldTx, coinObj.serverList.serverList, callType, params, coinID)
+    updateValues(oldTx, coinObj.serverList, callType, params, coinID)
     .then((response) => {
       if(!response.new || !response) {
         resolve(false)
@@ -18,6 +17,7 @@ export const getOneTransaction = (oldTx, coinObj, txid) => {
     })
     .catch((err) => {
       console.log("Caught error in getTransaction.js")
+      console.log(err)
       reject(err)
     })
   });

@@ -16,7 +16,7 @@ import QRCodeScanner from 'react-native-qrcode-scanner';
 import { isJson } from '../utils/objectManip'
 import { NavigationActions } from 'react-navigation';
 import { connect } from 'react-redux';
-import { namesList, coinsList } from '../utils/CoinData'
+import { namesList, coinsList, findCoinObj } from '../utils/CoinData'
 import { getRecommendedBTCFees } from '../utils/httpCalls/callCreators'
 import { removeSpaces } from '../utils/stringUtils'
 import {
@@ -33,15 +33,16 @@ import {
 import Spinner from 'react-native-loading-spinner-overlay';
 import AlertAsync from "react-native-alert-async";
 import { coinsToSats } from '../utils/math'
-
-const FORMAT_UNKNOWN = "QR Data format unrecognized."
-const ADDRESS_ONLY = "Only address detected, please fill out amount field."
-const INCOMPLETE_VERUS_QR = "VerusQR code impartial or incomplete, cannot parse QR data."
-const INSUFFICIENT_FUNDS = "Insufficient funds."
-const INCOMPATIBLE_COIN = "The coin this invoice is requesting is currently incompatible with Verus Mobile."
-const INCOMPATIBLE_APP = "The coin this invoice is requesting does not have send functionality."
-const ONLY_ADDRESS = "This QR Code only contains only an address. Please select a coin and then scan."
-const BALANCE_NULL = "Couldn't fetch balance for coin."
+import {
+  FORMAT_UNKNOWN,
+  ADDRESS_ONLY,
+  INCOMPATIBLE_APP,
+  INCOMPATIBLE_COIN,
+  INSUFFICIENT_FUNDS,
+  INCOMPLETE_VERUS_QR,
+  ONLY_ADDRESS,
+  BALANCE_NULL
+} from '../utils/constants'
 
 class VerusPay extends Component {
   constructor(props) {
@@ -160,20 +161,21 @@ class VerusPay extends Component {
       let amount = firstTry[0].substring((firstTry[0].indexOf('=') + 1))
 
       if (coinName && address && amount) {
-        //Find coin ticker from coin data here, URL has full name
-        const index = coinsList.findIndex(coinObj => removeSpaces(coinObj.name).toLowerCase() === coinName.toLowerCase());
+        //Find coin ticker from coin data here, URL uses full name
 
-        if (index >= 0) {
-          //Create verusQR compatible data from coin URL
-          return {
-            coinTicker: coinsList[index].id,
-            address: address,
-            amount: coinsToSats(Number(amount))
-          }
-        } else {
-          this.errorHandler(INCOMPATIBLE_COIN)
-          return false
+        for (coinObj in coinsList) {
+          if (removeSpaces(coinObj.name).toLowerCase() === coinName.toLowerCase()) {
+            //Create verusQR compatible data from coin URL
+            return {
+              coinTicker: coinObj.id,
+              address: address,
+              amount: coinsToSats(Number(amount))
+            }
+          } 
         }
+
+        this.errorHandler(INCOMPATIBLE_COIN)
+        return false
       }
     } else {
       let secondTry = qrString.match(partialURL) 
@@ -183,17 +185,18 @@ class VerusPay extends Component {
         let coinName = secondTry[0].substring(0, secondTry[0].indexOf(':'))
         let address = secondTry[0].substring((secondTry[0].indexOf(':') + 1))
 
-        const index = coinsList.findIndex(coinObj => coinObj.name.toLowerCase() === coinName.toLowerCase());
-        if (index >= 0) {
-          //Create verusQR compatible data from coin URL
-          return {
-            coinTicker: coinsList[index].id,
-            address: address,
-          }
-        } else {
-          this.errorHandler(INCOMPATIBLE_COIN)
-          return false
+        for (coinObj in coinsList) {
+          if (removeSpaces(coinObj.name).toLowerCase() === coinName.toLowerCase()) {
+            //Create verusQR compatible data from coin URL
+            return {
+              coinTicker: coinObj.id,
+              address: address,
+            }
+          } 
         }
+
+        this.errorHandler(INCOMPATIBLE_COIN)
+        return false
       } else {
         return false 
       }
@@ -210,14 +213,18 @@ class VerusPay extends Component {
     const amount = verusQR.hasOwnProperty('amount') ? Number(verusQR.amount) : null
     const memo = verusQR.memo
 
-    console.log("CoinID: " + coinTicker)
-    console.log("Address: " + address)
-    if (amount === null || amount <= 0) {
-      console.log("Invalid amount, need additional information for transaction")
-    } else {
-      console.log("Amount: " + amount)
+
+    if (__DEV__) {
+      console.log("CoinID: " + coinTicker)
+      console.log("Address: " + address)
+      if (amount === null || amount <= 0) {
+        console.log("Invalid amount, need additional information for transaction")
+      } else {
+        console.log("Amount: " + amount)
+      }
+      console.log("Memo: " + memo)
     }
-    console.log("Memo: " + memo)
+    
 
     if (
       coinTicker && 
@@ -234,7 +241,7 @@ class VerusPay extends Component {
             } else {
               if (this.checkBalance(amount, activeCoin)) {
                 this.preConfirm(
-                  activeCoin, 
+                  activeCoin,
                   this.props.activeAccount, 
                   address,
                   amount,
@@ -297,7 +304,7 @@ class VerusPay extends Component {
         }
         
       } else {
-        //Handle adding coin that doesn't exist yet in wallet here
+        //TODO: Handle adding coin that doesn't exist yet in wallet here
         this.errorHandler(INCOMPLETE_VERUS_QR)
       }
     } else {
@@ -308,7 +315,7 @@ class VerusPay extends Component {
   handleAddCoin = (coinTicker) => {
     this.setState({ addingCoin: true });
     return new Promise((resolve, reject) => {
-      addExistingCoin(coinTicker, this.props.activeCoinList, this.props.activeAccount.id)
+      addExistingCoin(findCoinObj(coinTicker), this.props.activeCoinList, this.props.activeAccount.id)
       .then(response => {
         if (response) {
           this.props.dispatch(response)

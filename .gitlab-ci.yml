@@ -2,7 +2,7 @@ stages:
   - build
 
 variables:
-  VERSION: 0.1.7-beta
+  VERSION: 0.1.8-beta
   POST_MESSAGE: "Pipeline Trigger: ${CI_PIPELINE_SOURCE}\n
   Branch: ${CI_COMMIT_REF_NAME}\n
   Commit: ${CI_COMMIT_SHA}\n

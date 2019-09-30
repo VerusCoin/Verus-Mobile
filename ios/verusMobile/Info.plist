@@ -17,7 +17,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.1.7</string>
+	<string>0.1.8</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
@@ -54,7 +54,7 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
+	<string>Verus Mobile needs access to the photo library to save QR codes.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
 	<key>UIAppFonts</key>

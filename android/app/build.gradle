@@ -4,7 +4,7 @@ import com.android.build.OutputFile
 
 def versionMajor = 0
 def versionMinor = 1
-def versionRevision = 7
+def versionRevision = 8
 def versionBuild = 1
 
 def keystorePropertiesFile = rootProject.file("keystore.properties");
@@ -106,7 +106,7 @@ android {
 
     defaultConfig {
         applicationId "com.verusmobile"
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 26
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionRevision * 100 + versionBuild
         versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta"
@@ -156,10 +156,13 @@ android {
 }
 
 dependencies {
+    implementation project(':react-native-svg')
+    implementation project(':react-native-share')
+    implementation project(':react-native-fs')
+    implementation project(':@react-native-community_async-storage')
     implementation project(':react-native-vector-icons')
     implementation project(':react-native-udp')
     implementation project(':react-native-tcp')
-    implementation project(':react-native-svg')
     implementation project(':react-native-screens')
     implementation project(':react-native-randombytes')
     implementation project(':react-native-os')

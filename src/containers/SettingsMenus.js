@@ -13,6 +13,7 @@ import BottomNavigation, {
 } from 'react-native-material-bottom-navigation'
 import AppInfo from './AppInfo'
 import ProfileSettings from './ProfileSettings'
+import WalletSettings from './WalletSettings'
 import { Icon } from "react-native-elements"
 
 class SettingsMenus extends Component {
@@ -43,13 +44,14 @@ class SettingsMenus extends Component {
         pressColor: 'rgba(255, 255, 255, 0.16)',
         screen: "ProfileSettings"
       },
-      /*{
-        key: "settings-general",
-        icon: "book",
-        label: "General",
-        barColor: "#EDAE49",
+      {
+        key: "settings-wallet",
+        icon: "account-balance-wallet",
+        label: "Wallet",
+        barColor: '#EDAE49',
         pressColor: 'rgba(255, 255, 255, 0.16)',
-      },*/
+        screen: "WalletSettings"
+      },
       {
         key: "settings-info",
         icon: "info",
@@ -100,7 +102,8 @@ class SettingsMenus extends Component {
     return (
       <View style={{ flex: 1 }}>
           {this.state.activeTab.screen === "AppInfo" ? <AppInfo navigation={this.props.navigation}/> :
-          (this.state.activeTab.screen === "ProfileSettings" ? <ProfileSettings navigation={this.props.navigation}/> :
+          this.state.activeTab.screen === "ProfileSettings" ? <ProfileSettings navigation={this.props.navigation}/> :
+          (this.state.activeTab.screen === "WalletSettings" ? <WalletSettings navigation={this.props.navigation}/> :
           null)}
         <BottomNavigation
           onTabPress={newTab => this.switchTab(newTab)}

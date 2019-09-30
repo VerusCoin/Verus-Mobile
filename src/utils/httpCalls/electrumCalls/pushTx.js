@@ -7,11 +7,11 @@ import { TxDecoder } from '../../crypto/txDecoder'
 
 export const pushTx = (coinObj, _rawtx) => {
   const callType = 'pushtx'
-  let serverList = coinObj.serverList.serverList
+  let serverList = coinObj.serverList
   let data = { rawtx: _rawtx }
 
   return new Promise((resolve, reject) => {
-    postElectrum(serverList, callType, data, null)
+    postElectrum(serverList, callType, data)
     .then((response) => {
       if(!response || !response.result) {
         resolve({
@@ -29,10 +29,10 @@ export const pushTx = (coinObj, _rawtx) => {
   });
 }
 
-export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFee, network, verify) => {
+export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFee, network, verifyMerkle, verifyTxid) => {
   console.log("Value passed to tx preflight: " + value)
   return new Promise((resolve, reject) => {
-    getUnspentFormatted(null, coinObj, activeUser, verify)
+    getUnspentFormatted(null, coinObj, activeUser, verifyMerkle, verifyTxid)
     .then((res) => {
       utxoList = res.utxoList
       let unshieldedFunds = res.unshieldedFunds
@@ -298,10 +298,10 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
   });
 }
 
-export const sendRawTx = (coinObj, activeUser, outputAddress, value, defaultFee, network) => {
+export const sendRawTx = (coinObj, activeUser, outputAddress, value, defaultFee, network, verifyMerkle, verifyTxid) => {
   console.log("Value to send raw tx: " + value)
   return new Promise((resolve, reject) => {
-    txPreflight(coinObj, activeUser, outputAddress, value, defaultFee, network, true)
+    txPreflight(coinObj, activeUser, outputAddress, value, defaultFee, network, verifyMerkle, verifyTxid)
     .then((resObj) => {
       if (resObj.err) {
         console.log(resObj)

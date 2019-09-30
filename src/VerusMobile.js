@@ -4,11 +4,14 @@ import { RootNavigator } from './utils/navigation/index';
 import { 
   fetchUsers, 
   loadServerVersions,
-  loadCachedHeaders
+  loadCachedHeaders,
+  initSettings
 } from './actions/actionCreators';
 import {
   initCache,
-  clearCachedVersions
+  clearCachedVersions,
+  updateActiveCoinList_v0_1_8_beta,
+  checkAndSetVersion
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 
@@ -36,10 +39,25 @@ class VerusMobile extends React.Component {
       return initCache()
     })
     .then(() => {
-      return fetchUsers()
+      return checkAndSetVersion()
     })
-    .then((usersAction) => {
-      this.props.dispatch(usersAction)
+    .then((versionCompare) => {
+      let promiseArr = [fetchUsers(), initSettings()]
+
+      //Handle version change stuff here
+      if (global.APP_VERSION === '0.1.8-beta' && versionCompare === -1) {
+        if (__DEV__) console.log("Old version detected, updating active coins for 0.1.8-beta")
+        promiseArr.push(updateActiveCoinList_v0_1_8_beta())
+      }
+
+      return Promise.all(promiseArr)
+    })
+    .then((res) => {
+      let actionArr = res.slice(0, res.length - 1)
+      actionArr.forEach((action) => {
+        this.props.dispatch(action)
+      })
+      
       return Promise.all([loadServerVersions(this.props.dispatch), loadCachedHeaders(this.props.dispatch)])
     })
     .then(() => {

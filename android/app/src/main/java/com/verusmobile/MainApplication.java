@@ -3,10 +3,13 @@ package com.verusmobile;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.horcrux.svg.SvgPackage;
+import cl.json.RNSharePackage;
+import com.rnfs.RNFSPackage;
+import com.reactnativecommunity.asyncstorage.AsyncStoragePackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.tradle.react.UdpSocketsModule;
 import com.peel.react.TcpSocketsModule;
-import com.horcrux.svg.SvgPackage;
 import com.swmansion.rnscreens.RNScreensPackage;
 import com.bitgo.randombytes.RandomBytesPackage;
 import com.peel.react.rnos.RNOSModule;
@@ -31,10 +34,13 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new SvgPackage(),
+            new RNSharePackage(),
+            new RNFSPackage(),
+            new AsyncStoragePackage(),
             new VectorIconsPackage(),
             new UdpSocketsModule(),
             new TcpSocketsModule(),
-            new SvgPackage(),
             new RNScreensPackage(),
             new RandomBytesPackage(),
             new RNOSModule(),

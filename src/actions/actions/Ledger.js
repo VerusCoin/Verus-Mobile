@@ -30,12 +30,11 @@ export const updateCoinTransactions = (coinID, transactions, oldTransactions, ne
   return setTransactions(_transactions, _needsUpdateObj)
 }
 
-export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, needsUpdateObj) => {
-
+export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, needsUpdateObj, maxlength) => {
   let network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
 
   return new Promise((resolve, reject) => {
-    getOneTransactionList(oldTransactions, coinObj, activeUser)
+    getOneTransactionList(oldTransactions, coinObj, activeUser, maxlength)
     .then((transactionList) => {
       if (transactionList) {
         let getTransactionPromises = []
@@ -95,7 +94,7 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
         }
 
         consolidatedTxs.transactions.push(txObj)
-        blockInfoPromises.push(getBlockInfo(null, coinObj, activeUser, txObj.height))
+        blockInfoPromises.push(getBlockInfo(null, coinObj, txObj.height))
       }
 
       
