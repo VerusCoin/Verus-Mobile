@@ -33,8 +33,8 @@ export const ENTER_AMOUNT_GREATER_THAN_0 = "Enter an amount greater than 0"
 export const BAD_SERVER_INPUT_FORMAT = "Not in ip:port:protocol format"
 export const BAD_SERVER_PROTOCOL = "Please choose either ssl or tcp as protocol"
 export const ELECTRUM_DISCLAIMER_UNREALIZED = "Please confirm"
-export const ELECTRUM_DISCLAIMER = "I understand that no developer of this mobile application is responsible for these electrum servers."
-export const POSSIBLY_UNSUPPORTED_CHAIN = "• This chain\'s key structure may not be recognized by Verus Mobile, and you could run into sending or receiving issues with it if you continue. Make sure you know what you are doing."
+export const ELECTRUM_DISCLAIMER = "I understand that no developer of this mobile application is responsible for these electrum servers, and I proceed at my own risk."
+export const POSSIBLY_UNSUPPORTED_CHAIN = "• This chain\'s key structure may not be recognized by Verus Mobile, and you could run into sending or receiving issues with it if you continue. Make sure you know what you are doing, and proceed at your own risk."
 
 //Coin settings
 export const NO_VERIFICATION = 0
