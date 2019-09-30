@@ -160,7 +160,7 @@ class CustomChainScan extends Component {
             onRead={this.onSuccess.bind(this)}
             showMarker={true}
             captureAudio={false}
-            cameraStyle={styles.QRContainer}
+            cameraStyle={styles.QRCamera}
           />
         }
       </View>
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center"
   },
-  QRContainer: {
+  QRCamera: {
     height: "100%"
   }
 });
