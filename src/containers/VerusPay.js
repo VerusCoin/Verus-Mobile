@@ -163,11 +163,11 @@ class VerusPay extends Component {
       if (coinName && address && amount) {
         //Find coin ticker from coin data here, URL uses full name
 
-        for (coinObj in coinsList) {
-          if (removeSpaces(coinObj.name).toLowerCase() === coinName.toLowerCase()) {
+        for (key in coinsList) {
+          if (coinsList[key] && removeSpaces(coinsList[key].name).toLowerCase() === coinName.toLowerCase()) {
             //Create verusQR compatible data from coin URL
             return {
-              coinTicker: coinObj.id,
+              coinTicker: coinsList[key].id,
               address: address,
               amount: coinsToSats(Number(amount))
             }
@@ -251,14 +251,14 @@ class VerusPay extends Component {
             }
           } else {
             this.canExitWallet(this.props.activeCoin.id, coinTicker)
-            .then((res) => {
+            .then((res) => { 
               if (res) {
                 if (amount === null || amount <= 0) {
                   this.handleMissingAmount(activeCoin, address, memo)
                 } else {
                   if (this.checkBalance(amount, activeCoin)) {
                     this.preConfirm(
-                      activeCoin, 
+                      activeCoin,
                       this.props.activeAccount, 
                       address,
                       amount,
@@ -425,7 +425,7 @@ class VerusPay extends Component {
   }
 
   checkBalance = (amount, activeCoin) => {
-    if (this.props.balances[activeCoin.id] && this.props.balances[activeCoin.id].result) {
+    if (activeCoin && this.props.balances[activeCoin.id] && this.props.balances[activeCoin.id].result) {
       const spendableBalance = this.props.balances[activeCoin.id].result.confirmed - activeCoin.fee
 
       if (amount > Number(spendableBalance)) {
