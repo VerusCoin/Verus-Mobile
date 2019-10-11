@@ -4,7 +4,7 @@
 */ 
 
 import React, { Component } from "react";
-import Button1 from "../symbols/button1";
+import Button1 from "../../symbols/button1";
 import { 
   View, 
   StyleSheet, 
@@ -20,9 +20,9 @@ import { NavigationActions } from 'react-navigation';
 import { FormLabel, FormInput, FormValidationMessage, Icon } from 'react-native-elements'
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
-import { namesList } from '../utils/CoinData'
-import { hasSpecialCharacters, isElectrumUrl } from '../utils/stringUtils'
-import { isNumber, coinsToSats } from '../utils/math'
+import { namesList } from '../../utils/CoinData'
+import { hasSpecialCharacters, isElectrumUrl } from '../../utils/stringUtils'
+import { isNumber, coinsToSats } from '../../utils/math'
 import { 
   DEFAULT_FEE_DESC, 
   ELECTRUM_SERVERS_DESC,
@@ -38,9 +38,9 @@ import {
   ELECTRUM_DISCLAIMER_UNREALIZED,
   ELECTRUM_DISCLAIMER,
   POSSIBLY_UNSUPPORTED_CHAIN
-} from '../utils/constants'
-import extraCoins from '../utils/extraCoins/extraCoins'
-import { createCoinObj } from '../utils/CoinData'
+} from '../../utils/constants'
+import extraCoins from '../../utils/extraCoins/extraCoins'
+import { createCoinObj } from '../../utils/CoinData'
 import { networks } from 'bitgo-utxo-lib';
 import { isKomodoCoin } from 'agama-wallet-lib/src/coin-helpers';
 

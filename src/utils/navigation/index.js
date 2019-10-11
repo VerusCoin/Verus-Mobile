@@ -23,7 +23,7 @@ import DisplaySeed from '../../containers/DisplaySeed';
 import RecoverSeed from '../../containers/RecoverSeed';
 import DeleteProfile from '../../containers/DeleteProfile';
 import SecureLoading from '../../containers/SecureLoading';
-import CustomChainMenus from '../../containers/CustomChainMenus'
+import CustomChainMenus from '../../containers/CustomChains/CustomChainMenus'
 import GeneralWalletSettings from '../../containers/GeneralWalletSettings'
 import CoinSettings from '../../containers/CoinSettings'
 

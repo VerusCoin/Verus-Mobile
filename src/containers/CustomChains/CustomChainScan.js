@@ -15,14 +15,14 @@ import {
   Modal
 } from "react-native";
 import QRCodeScanner from 'react-native-qrcode-scanner';
-import { isJson } from '../utils/objectManip'
+import { isJson } from '../../utils/objectManip'
 import { NavigationActions } from 'react-navigation';
 import { connect } from 'react-redux';
-import { namesList } from '../utils/CoinData'
+import { namesList } from '../../utils/CoinData'
 import {
   FORMAT_UNKNOWN,
   INCOMPLETE_CHAIN_QR
-} from '../utils/constants'
+} from '../../utils/constants'
 import CustomChainForm from './CustomChainForm'
 
 class CustomChainScan extends Component {
