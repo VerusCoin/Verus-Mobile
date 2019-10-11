@@ -5,17 +5,21 @@ import {
 } from '../../httpCalls/electrumCalls/getServerVersion'
 
 import {
-  MOCK_ELECTRUM_SERVER_OBJ,
-  MOCK_PROXY_SERVER_HTTPS
+  setFetchParams
+} from '../../../tests/helpers/SetFetchParams'
+
+import {
+  MOCK_PROXY_SERVER
 } from '../../../tests/helpers/MockServerData'
 
 describe('Server version fetch functions for electrum servers', () => {
   it ('can fetch and parse a server\'s version', () => {
+    const mockServer = setFetchParams(true, 200, {server_version: ["ElectrumX 1.13.0", 1.4]}, true)
     return getServerVersion(
-      MOCK_PROXY_SERVER_HTTPS, 
-      MOCK_ELECTRUM_SERVER_OBJ.ip, 
-      MOCK_ELECTRUM_SERVER_OBJ.port,
-      MOCK_ELECTRUM_SERVER_OBJ.proto)
+      MOCK_PROXY_SERVER, 
+      mockServer.ip, 
+      mockServer.port,
+      mockServer.proto)
       .then(res => {
         expect(res).not.toBeNaN()
       })

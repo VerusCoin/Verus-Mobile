@@ -1,3 +1,5 @@
+import { setFetchParams } from './SetFetchParams'
+
 export const MOCK_USER_OBJ = {
   id: 'AzureDiamond',
   seed: 'hunter2',
@@ -63,97 +65,59 @@ export const MOCK_USER_OBJ_BALANCE_SMALL_KMD = {
   }
 }
 
-export const MOCK_ACTIVE_COINS_FOR_USER = [
-  {
-    id: "VRSC", 
-    name: "Verus Coin", 
-    description: "Verus Coin includes the first proven 51% hash attack resistant proof of power algorithm. The Verus vision is PBaaS, public blockchains as a service, provisioned for conditional rewards by Verus miners and stakers.", 
-    fee: 10000,
-    users: [
-    'AzureDiamond',
-    'Random address with balance of ~3000 VRSC taken from https://dexstats.info/richlist.php?asset=VRSC on July 31st, 2019',
-    'VRSC Richlist #2 Address at https://dexstats.info/richlist.php?asset=VRSC as of July 31st, 2019'],
-    serverList: [
-      'el0.vrsc.0x03.services:10000:tcp',
-      'el1.vrsc.0x03.services:10000:tcp',
-    ],
-    apps: {
-      wallet: {
-        title: 'VRSC Wallet', 
-        data: [
-          {
-            screen: 'Overview',
-            icon: 'account-balance-wallet',
-            name: 'Overview',
-            key: 'wallet-overview',
-            color: '#2E86AB'
-            //Blue
-          },
-          {
-            screen: 'SendCoin',
-            icon: 'arrow-upward',
-            name: 'Send',
-            key: 'wallet-send',
-            color: '#EDAE49'
-            //Orange
-          },
-          {
-            screen: 'ReceiveCoin',
-            icon: 'arrow-downward',
-            name: 'Receive',
-            key: 'wallet-receive',
-            color: '#009B72'
-            //Green
-          }
-        ]
-      }
-    },
-    logo: ""
+/**
+ * Returns an active coin object for test users for one function call. The function call
+ * result will depend on the inputs to this temporary active coin object.
+ * @param {String} coinID Coin ticker for coin being used.
+ * @param {Boolean} callsSucceed Determines whether or not server calls made by this active coin will succeed
+ * @param {Integer} code Determines the code result of each http call made for this active coin.
+ * @param {*} params The parameter array to be fed to the mock function being used, which depends on the electrum call being made. 
+ * Refer to __mocks__/react-native-fetch/mocked_results to see all the options.
+ * @param {*} errorMsg (Optional) Error message returned if the call fails with an error.
+ */
+export const getTempActiveCoin = (coinID, callsSucceed, code, params, errorMsg = '') => {return ({
+  id: coinID, 
+  name: "Test Coin", 
+  description: "Coin for testing", 
+  fee: 10000,
+  users: [
+  'AzureDiamond',
+  'Random address with balance of ~3000 VRSC taken from https://dexstats.info/richlist.php?asset=VRSC on July 31st, 2019',
+  'VRSC Richlist #2 Address at https://dexstats.info/richlist.php?asset=VRSC as of July 31st, 2019'],
+  serverList: setFetchParams(callsSucceed, code, params, false, errorMsg),
+  apps: {
+    wallet: {
+      title: 'VRSC Wallet', 
+      data: [
+        {
+          screen: 'Overview',
+          icon: 'account-balance-wallet',
+          name: 'Overview',
+          key: 'wallet-overview',
+          color: '#2E86AB'
+          //Blue
+        },
+        {
+          screen: 'SendCoin',
+          icon: 'arrow-upward',
+          name: 'Send',
+          key: 'wallet-send',
+          color: '#EDAE49'
+          //Orange
+        },
+        {
+          screen: 'ReceiveCoin',
+          icon: 'arrow-downward',
+          name: 'Receive',
+          key: 'wallet-receive',
+          color: '#009B72'
+          //Green
+        }
+      ]
+    }
   },
-  {
-    id: "KMD", 
-    name: "Komodo", 
-    description: "",
-    fee: 10000,
-    users: ['AzureDiamond'],
-    serverList: [
-      'electrum1.cipig.net:10001:tcp',
-      'electrum2.cipig.net:10001:tcp',
-    ],
-    apps: {
-      wallet: {
-        title: 'Komodo Wallet', 
-        data: [
-          {
-            screen: 'Overview',
-            icon: 'account-balance-wallet',
-            name: 'Overview',
-            key: 'wallet-overview',
-            color: '#2E86AB'
-            //Blue
-          },
-          {
-            screen: 'SendCoin',
-            icon: 'arrow-upward',
-            name: 'Send',
-            key: 'wallet-send',
-            color: '#EDAE49'
-            //Orange
-          },
-          {
-            screen: 'ReceiveCoin',
-            icon: 'arrow-downward',
-            name: 'Receive',
-            key: 'wallet-receive',
-            color: '#009B72'
-            //Green
-          }
-        ]
-      }
-    },
-    logo: ""
-  }
-]
+  logo: ""
+})}
 
 export const MOCK_PIN = '12345'
 export const MOCK_SEED = 'hunter2'

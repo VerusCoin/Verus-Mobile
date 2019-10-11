@@ -1,1 +1,1 @@
-global.fetch = require('node-fetch')
+global.fetch = require('../__mocks__/react-native-fetch/fetch')

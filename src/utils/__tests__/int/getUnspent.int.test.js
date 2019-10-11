@@ -6,15 +6,21 @@ import {
 } from '../../httpCalls/callCreators'
 
 import {
-  MOCK_ACTIVE_COINS_FOR_USER,
   MOCK_USER_OBJ_BALANCE_LARGE_VRSC,
   MOCK_USER_OBJ_BALANCE_SMALL_VRSC,
   MOCK_USER_OBJ_BALANCE_SMALL_KMD
 } from '../../../tests/helpers/MockAuthData'
 
+import {
+  getTempActiveCoin,
+} from '../../../tests/helpers/MockAuthData'
+
+import { proxyServersHttps, proxyServersHttp } from 'agama-wallet-lib/src/electrum-servers'
+jest.mock('agama-wallet-lib/src/electrum-servers')
+
 describe('Unspent utxo fetcher for BTC based coins', () => {
   it('can fetch unspent VRSC utxos for user', () => {
-    return getUnspent({}, MOCK_ACTIVE_COINS_FOR_USER[0], MOCK_USER_OBJ_BALANCE_LARGE_VRSC)
+    return getUnspent({}, getTempActiveCoin('VRSC', true, 200, {listunspent: [10], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_USER_OBJ_BALANCE_LARGE_VRSC)
     .then(res => {
       expect(res).toHaveProperty('result')
       expect(res).toHaveProperty('blockHeight')
@@ -26,8 +32,9 @@ describe('Unspent utxo fetcher for BTC based coins', () => {
     })
   })
 
-  it('can fetch unspent VRSC utxos for user in formatted form from large address (>1000 UTXOS) without verification', () => {
-    return getUnspentFormatted({}, MOCK_ACTIVE_COINS_FOR_USER[0], MOCK_USER_OBJ_BALANCE_LARGE_VRSC, false, false, false)
+  
+  it('can fetch unspent VRSC utxos for user in formatted form from large address (1500 UTXOS) without verification', () => {
+    return getUnspentFormatted({}, getTempActiveCoin('VRSC', true, 200, {getblockinfo: [], getmerkle: [], listunspent: [1500], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_USER_OBJ_BALANCE_LARGE_VRSC, false, false, false)
     .then(res => {
       let _utxoList = res.utxoList
       expect(_utxoList.length).toBeGreaterThan(0)
@@ -56,7 +63,7 @@ describe('Unspent utxo fetcher for BTC based coins', () => {
   })
 
   it('can fetch unspent VRSC utxos for user in formatted form from small address with merkle verification only', () => {
-    return getUnspentFormatted({}, MOCK_ACTIVE_COINS_FOR_USER[0], MOCK_USER_OBJ_BALANCE_SMALL_VRSC, true, false, false)
+    return getUnspentFormatted({}, getTempActiveCoin('VRSC', true, 200, {getblockinfo: [], getmerkle: [], listunspent: [10], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_USER_OBJ_BALANCE_SMALL_VRSC, true, false, false)
     .then(res => {
       let _utxoList = res.utxoList
 
@@ -85,7 +92,7 @@ describe('Unspent utxo fetcher for BTC based coins', () => {
   })
 
   it('can fetch unspent VRSC utxos for user in formatted form from small address with txid verification only', () => {
-    return getUnspentFormatted({}, MOCK_ACTIVE_COINS_FOR_USER[0], MOCK_USER_OBJ_BALANCE_SMALL_VRSC, false, true, false)
+    return getUnspentFormatted({}, getTempActiveCoin('VRSC', true, 200, {getblockinfo: [], gettransaction: [], listunspent: [10], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_USER_OBJ_BALANCE_SMALL_VRSC, false, true, false)
     .then(res => {
       let _utxoList = res.utxoList
 
@@ -114,7 +121,7 @@ describe('Unspent utxo fetcher for BTC based coins', () => {
   })
 
   it('can fetch unspent VRSC utxos for user in formatted form from small address with txid and merkle verification', () => {
-    return getUnspentFormatted({}, MOCK_ACTIVE_COINS_FOR_USER[0], MOCK_USER_OBJ_BALANCE_SMALL_VRSC, true, true, false)
+    return getUnspentFormatted({}, getTempActiveCoin('VRSC', true, 200, {getblockinfo: [], getmerkle: [], gettransaction: [], listunspent: [10], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_USER_OBJ_BALANCE_SMALL_VRSC, true, true, false)
     .then(res => {
       let _utxoList = res.utxoList
 
@@ -142,8 +149,9 @@ describe('Unspent utxo fetcher for BTC based coins', () => {
     })
   })
 
-  it('can fetch unspent KMD utxos for user in formatted form from small address with interest', () => {
-    return getUnspentFormatted({}, MOCK_ACTIVE_COINS_FOR_USER[1], MOCK_USER_OBJ_BALANCE_SMALL_KMD, false, false, false)
+  //TODO: Add mock data in for Electrum server versions > 1.4
+  /*it('can fetch unspent KMD utxos for user in formatted form from small address with interest', () => {
+    return getUnspentFormatted({}, getTempActiveCoin('KMD', true, 200, {listunspent: [10], gettransaction: [], getcurrentblock: [118329], server_version: ["ElectrumX 13.0.8", 1.4]}), MOCK_USER_OBJ_BALANCE_SMALL_KMD, false, false, false)
     .then(res => {
       let _utxoList = res.utxoList
 
@@ -172,7 +180,7 @@ describe('Unspent utxo fetcher for BTC based coins', () => {
   })
 
   it('can fetch unspent KMD utxos for user in formatted form from small address without interest', () => {
-    return getUnspentFormatted({}, MOCK_ACTIVE_COINS_FOR_USER[1], MOCK_USER_OBJ_BALANCE_SMALL_KMD, false, false, true)
+    return getUnspentFormatted({}, getTempActiveCoin('KMD', 'listunspent', true, 200, [10]), MOCK_USER_OBJ_BALANCE_SMALL_KMD, false, false, true)
     .then(res => {
       let _utxoList = res.utxoList
 
@@ -198,5 +206,5 @@ describe('Unspent utxo fetcher for BTC based coins', () => {
       expect(res).not.toHaveProperty('error')
       expect(typeof res).toBe('object')
     })
-  })
+  })*/
 })
