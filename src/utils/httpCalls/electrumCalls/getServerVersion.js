@@ -61,7 +61,7 @@ export const getServerVersion = (proxyServer, ip, port, proto, httpsEnabled) => 
       resolve(arr[0])
     })
     .catch((err) => {
-      console.warn(err.message + " in serverVersion.js")
+      console.warn(err.message + " in getServerVersion.js")
       reject(err)
     })
   })

@@ -57,6 +57,7 @@ export const getBlockInfo = (oldBlock, coinObj, blockheight) => {
     })
     .catch((err) => {
       console.log("Caught error in getBlockInfo.js")
+      console.log(err.stack)
       reject(err)
     })
   });
