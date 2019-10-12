@@ -79,6 +79,14 @@ export const setCoinSettingsState = (state) => {
 }
 
 //Reducer Name: settings
+export const setWyreSettingsState = (state) => {
+  return {
+    type: 'SET_WYRE_SETTINGS_STATE',
+    wyreSettings: state
+  }
+}
+
+//Reducer Name: settings
 export const setGeneralWalletSettingsState = (state) => {
   return {
     type: 'SET_GENERAL_WALLET_SETTINGS_STATE',

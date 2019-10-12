@@ -1,6 +1,7 @@
 import { 
   setAllSettings,
   setCoinSettingsState,
+  setWyreSettingsState,
   setGeneralWalletSettingsState
  } from '../actionCreators'
 import {
@@ -55,6 +56,26 @@ export const saveCoinSettings = (stateChanges, coinID) => {
     storeSettings({...settingsState, coinSettings})
     .then(() => {
       resolve(setCoinSettingsState(coinSettings))
+    })
+    .catch(err => reject(err))
+  })
+}
+
+/**
+ * Saves a single wyre settings state change to Async storage and returns a promise that resolves
+ * to an action to be dispatched to the redux store. Rejects on error.
+ * @param {Object} stateChanges Changes to be made to the user's wyre setting state
+ * @param {String} userID UserID of the user who's wyre settings are being modified
+ */
+export const saveWyreSettings = (stateChanges, userID) => {
+  const settingsState = store.getState().settings
+  const wyreSettingsForUser = {...settingsState.wyreSettings[userID], ...stateChanges}
+  const wyreSettings = {...settingsState.wyreSettings, [userID]: wyreSettingsForUser}
+
+  return new Promise((resolve, reject) => {
+    storeSettings({...settingsState, wyreSettings})
+    .then(() => {
+      resolve(setWyreSettingsState(wyreSettings))
     })
     .catch(err => reject(err))
   })

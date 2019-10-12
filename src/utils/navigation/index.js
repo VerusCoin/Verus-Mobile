@@ -3,29 +3,29 @@ import { StackNavigator, DrawerNavigator } from "react-navigation";
 import { StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 import { Icon } from "react-native-elements";
 
-import SideMenu from '../../containers/SideMenu';
+import SideMenu from '../../containers/SideMenu/SideMenu';
 
-import Login from '../../containers/Login';
-import Home from '../../containers/Home';
-import AddCoin from '../../containers/AddCoin';
-import SignUp from  '../../containers/SignUp';
-import CoinDetails from '../../containers/CoinDetails';
-import TransactionDetails from '../../containers/TransactionDetails';
-import LoadingScreen from '../../containers/LoadingScreen';
-import ConfirmSend from '../../containers/ConfirmSend';
-import SendResult from '../../containers/SendResult';
-import CoinMenus from '../../containers/CoinMenus';
-import VerusPay from '../../containers/VerusPay';
-import SettingsMenus from '../../containers/SettingsMenus';
-import ProfileInfo from '../../containers/ProfileInfo';
-import ResetPwd from '../../containers/ResetPwd';
-import DisplaySeed from '../../containers/DisplaySeed';
-import RecoverSeed from '../../containers/RecoverSeed';
-import DeleteProfile from '../../containers/DeleteProfile';
-import SecureLoading from '../../containers/SecureLoading';
+import Login from '../../containers/Login/Login';
+import Home from '../../containers/Home/Home';
+import AddCoin from '../../containers/AddCoin/AddCoin';
+import SignUp from  '../../containers/SignUp/SignUp';
+import CoinDetails from '../../containers/CoinDetails/CoinDetails';
+import TransactionDetails from '../../containers/TransactionDetails/TransactionDetails';
+import LoadingScreen from '../../containers/LoadingScreen/LoadingScreen';
+import ConfirmSend from '../../containers/ConfirmSend/ConfirmSend';
+import SendResult from '../../containers/SendResult/SendResult';
+import CoinMenus from '../../containers/Coin/CoinMenus';
+import VerusPay from '../../containers/VerusPay/VerusPay';
+import SettingsMenus from '../../containers/Settings/SettingsMenus';
+import ProfileInfo from '../../containers/ProfileInfo/ProfileInfo';
+import ResetPwd from '../../containers/ResetPwd/ResetPwd';
+import DisplaySeed from '../../containers/DisplaySeed/DisplaySeed';
+import RecoverSeed from '../../containers/RecoverSeed/RecoverSeed';
+import DeleteProfile from '../../containers/DeleteProfile/DeleteProfile';
+import SecureLoading from '../../containers/SecureLoading/SecureLoading';
 import CustomChainMenus from '../../containers/CustomChains/CustomChainMenus'
-import GeneralWalletSettings from '../../containers/GeneralWalletSettings'
-import CoinSettings from '../../containers/CoinSettings'
+import GeneralWalletSettings from '../../containers/GeneralWalletSettings/GeneralWalletSettings'
+import CoinSettings from '../../containers/CoinSettings/CoinSettings'
 
 const WALLET = "wallet";
 
