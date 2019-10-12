@@ -4,7 +4,7 @@
 */ 
 
 import React, { Component } from "react";
-import Button1 from "../../symbols/button1";
+import Button1 from "../../../symbols/button1";
 import { 
   View, 
   StyleSheet, 
@@ -20,9 +20,9 @@ import { NavigationActions } from 'react-navigation';
 import { FormLabel, FormInput, FormValidationMessage, Icon } from 'react-native-elements'
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
-import { namesList } from '../../utils/CoinData'
-import { hasSpecialCharacters, isElectrumUrl } from '../../utils/stringUtils'
-import { isNumber, coinsToSats } from '../../utils/math'
+import { namesList } from '../../../utils/CoinData'
+import { hasSpecialCharacters, isElectrumUrl } from '../../../utils/stringUtils'
+import { isNumber, coinsToSats } from '../../../utils/math'
 import { 
   DEFAULT_FEE_DESC, 
   ELECTRUM_SERVERS_DESC,
@@ -38,11 +38,12 @@ import {
   ELECTRUM_DISCLAIMER_UNREALIZED,
   ELECTRUM_DISCLAIMER,
   POSSIBLY_UNSUPPORTED_CHAIN
-} from '../../utils/constants'
-import extraCoins from '../../utils/extraCoins/extraCoins'
-import { createCoinObj } from '../../utils/CoinData'
+} from '../../../utils/constants'
+import extraCoins from '../../../utils/extraCoins/extraCoins'
+import { createCoinObj } from '../../../utils/CoinData'
 import { networks } from 'bitgo-utxo-lib';
 import { isKomodoCoin } from 'agama-wallet-lib/src/coin-helpers';
+import styles from './CustomChainForm.styles'
 
 class CustomChainForm extends Component {
   constructor(props) {
@@ -579,128 +580,3 @@ const mapStateToProps = (state) => {
 };
 
 export default connect(mapStateToProps)(CustomChainForm);
-
-const styles = StyleSheet.create({
-  root: {
-    backgroundColor: "#232323",
-    flex: 1,
-  },
-  mainLabel: {
-    backgroundColor: "transparent",
-    fontSize: 22,
-    color: "#E9F1F7",
-    textAlign: "center",
-    marginTop: 25
-  },
-  formLabel: {
-    textAlign:"left",
-    marginRight: "auto",
-  },
-  keyGenLabel: {
-    textAlign:"left",
-    marginRight: "auto",
-    color: "#2E86AB"
-  },
-  scanLabel: {
-    textAlign:"left",
-    marginRight: "auto",
-    color: "#009B72"
-  },
-  formInput: {
-    width: "100%",
-  },
-  valueContainer: {
-    width: "85%",
-  },
-  switchContainer: {
-    alignItems: "flex-start",
-    marginLeft: 18
-  },
-  wifLabel: {
-    backgroundColor: "transparent",
-    marginTop: 50,
-    marginBottom: 8,
-    paddingBottom: 0,
-    fontSize: 22,
-    color: "#E9F1F7",
-    width: "85%",
-    textAlign: "center"
-  },
-  wifInput: {
-    width: "100%",
-    color: "#009B72"
-  },
-  buttonContainer: {
-    width: "75%",
-    backgroundColor: "transparent",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  singleButtonContainer: {
-    width: "75%",
-    backgroundColor: "transparent",
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  addCoinButton: {
-    height: 46,
-    backgroundColor: "#2E86AB",
-    marginTop: 15,
-    marginBottom: 40
-  },
-  cancelButton: {
-    height: 46,
-    backgroundColor: "rgba(206,68,70,1)",
-    marginTop: 15,
-  },
-  infoLink: {
-    color: "#2E86AB"
-  },
-  addServerBtn: {
-    textAlign:"left",
-    marginRight: "auto",
-    color: "#2E86AB"
-  },
-  serverItemContainer: {
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    alignItems: "center",
-    alignSelf: "center",
-    //borderWidth: 1,
-    //borderColor: "green",
-    width: "100%"
-  },
-  serversContainer: {
-    justifyContent: "center", 
-    //borderWidth: 1,
-    width: "100%",
-    //borderColor: "red"
-  },
-  serverInput: { 
-    width: "100%",
-  },
-  serverInputContainer: {
-    marginHorizontal: 0,
-    flex: 1,
-    //borderWidth: 1,
-    //borderColor: "blue",
-    //width: "100%",
-  },
-  labelContainer: {
-    width: "94%",
-    flexDirection: "row",
-    justifyContent: "space-between"
-  },
-  infoBtn: {
-    marginRight: "auto",
-    color: "#2E86AB",
-    borderRadius: 10,
-    backgroundColor: "#E9F1F7",
-    paddingLeft: 5,
-    paddingRight: 5,
-    overflow: "hidden"
-  },
-  removeServerBtn: {
-    marginRight: 15
-  }
-});

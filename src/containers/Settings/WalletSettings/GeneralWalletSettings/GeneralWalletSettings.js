@@ -5,7 +5,7 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../symbols/button1";
+import Button1 from "../../../../symbols/button1";
 import { 
   View, 
   ScrollView, 
@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
 import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements'
-import { saveGeneralSettings } from '../../actions/actionCreators';
+import { saveGeneralSettings } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import styles from './GeneralWalletSettings.styles';
 

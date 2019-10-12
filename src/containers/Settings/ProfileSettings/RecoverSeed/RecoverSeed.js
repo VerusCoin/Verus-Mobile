@@ -10,7 +10,7 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../symbols/button1";
+import Button1 from "../../../../symbols/button1";
 import { 
   View, 
   Text, 
@@ -21,7 +21,7 @@ import {
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
 import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements'
-import { checkPinForUser } from '../../utils/asyncStore/asyncStore'
+import { checkPinForUser } from '../../../../utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
 import styles from './RecoverSeed.styles'

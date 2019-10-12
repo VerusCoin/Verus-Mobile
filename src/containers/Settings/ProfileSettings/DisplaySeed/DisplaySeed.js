@@ -5,7 +5,7 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../symbols/button1";
+import Button1 from "../../../../symbols/button1";
 import { 
   View, 
   Text, 

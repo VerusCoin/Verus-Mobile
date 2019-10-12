@@ -13,19 +13,19 @@ import CoinDetails from '../../containers/CoinDetails/CoinDetails';
 import TransactionDetails from '../../containers/TransactionDetails/TransactionDetails';
 import LoadingScreen from '../../containers/LoadingScreen/LoadingScreen';
 import ConfirmSend from '../../containers/ConfirmSend/ConfirmSend';
-import SendResult from '../../containers/SendResult/SendResult';
+import SendResult from '../../containers/Coin/SendCoin/SendResult/SendResult';
 import CoinMenus from '../../containers/Coin/CoinMenus';
 import VerusPay from '../../containers/VerusPay/VerusPay';
 import SettingsMenus from '../../containers/Settings/SettingsMenus';
-import ProfileInfo from '../../containers/ProfileInfo/ProfileInfo';
-import ResetPwd from '../../containers/ResetPwd/ResetPwd';
-import DisplaySeed from '../../containers/DisplaySeed/DisplaySeed';
-import RecoverSeed from '../../containers/RecoverSeed/RecoverSeed';
-import DeleteProfile from '../../containers/DeleteProfile/DeleteProfile';
+import ProfileInfo from '../../containers/Settings/ProfileSettings/ProfileInfo/ProfileInfo';
+import ResetPwd from '../../containers/Settings/ProfileSettings/ResetPwd/ResetPwd';
+import DisplaySeed from '../../containers/Settings/ProfileSettings/DisplaySeed/DisplaySeed';
+import RecoverSeed from '../../containers/Settings/ProfileSettings/RecoverSeed/RecoverSeed';
+import DeleteProfile from '../../containers/Settings/ProfileSettings/DeleteProfile/DeleteProfile';
 import SecureLoading from '../../containers/SecureLoading/SecureLoading';
 import CustomChainMenus from '../../containers/CustomChains/CustomChainMenus'
-import GeneralWalletSettings from '../../containers/GeneralWalletSettings/GeneralWalletSettings'
-import CoinSettings from '../../containers/CoinSettings/CoinSettings'
+import GeneralWalletSettings from '../../containers/Settings/WalletSettings/GeneralWalletSettings/GeneralWalletSettings'
+import CoinSettings from '../../containers/Settings/CoinSettings/CoinSettings'
 
 const WALLET = "wallet";
 

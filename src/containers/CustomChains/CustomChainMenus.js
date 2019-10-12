@@ -11,8 +11,8 @@ import { connect } from 'react-redux';
 import BottomNavigation, {
   FullTab
 } from 'react-native-material-bottom-navigation'
-import CustomChainForm from './CustomChainForm'
-import CustomChainScan from './CustomChainScan'
+import CustomChainForm from './CustomChainForm/CustomChainForm'
+import CustomChainScan from './CustomChainScan/CustomChainScan'
 import { Icon } from "react-native-elements"
 
 class CustomChainMenus extends Component {
@@ -39,7 +39,7 @@ class CustomChainMenus extends Component {
         key: "custom-coin-qr",
         icon: "photo-camera",
         label: "Scan QR",
-        barColor: '#009B72',
+        barColor: '#2E86AB',
         pressColor: 'rgba(255, 255, 255, 0.16)',
         screen: "CustomChainScan"
       },

@@ -5,10 +5,9 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../symbols/button1";
+import Button1 from "../../../symbols/button1";
 import { 
   View, 
-  Text, 
   ScrollView, 
   Keyboard,
   TouchableWithoutFeedback,
@@ -17,7 +16,7 @@ import {
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
 import { FormLabel, ButtonGroup } from 'react-native-elements'
-import { saveCoinSettings } from '../../actions/actionCreators';
+import { saveCoinSettings } from '../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import { 
   NO_VERIFICATION,
@@ -27,7 +26,7 @@ import {
   MID_VERIFICATION_DESC,
   MAX_VERIFICATION_DESC,
   VERIFICATION_LOCKED
-} from '../../utils/constants'
+} from '../../../utils/constants'
 import styles from './CoinSettings.styles'
 
 class CoinSettings extends Component {

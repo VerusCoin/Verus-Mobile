@@ -9,9 +9,9 @@
 */
 
 import React, { Component } from "react"
-import Button1 from "../../symbols/button1"
+import Button1 from "../../../../symbols/button1"
 import { connect } from 'react-redux'
-import { sendRawTx } from '../../utils/httpCalls/callCreators'
+import { sendRawTx } from '../../../../utils/httpCalls/callCreators'
 import { networks } from 'bitgo-utxo-lib'
 import { 
   View, 
@@ -22,18 +22,18 @@ import {
   Alert,
   Clipboard
  } from "react-native"
-import { satsToCoins, truncateDecimal } from '../../utils/math'
-import { explorers } from '../../utils/CoinData'
+import { satsToCoins, truncateDecimal } from '../../../../utils/math'
+import { explorers } from '../../../../utils/CoinData'
 import { 
   needsUpdate, 
   transactionsNeedUpdate,
   setActiveCoin, 
   setActiveApp,
   setActiveSection
- } from '../../actions/actionCreators'
+ } from '../../../../actions/actionCreators'
 import ProgressBar from 'react-native-progress/Bar'
 import { Icon } from 'react-native-elements'
-import { NO_VERIFICATION, MID_VERIFICATION } from '../../utils/constants'
+import { NO_VERIFICATION, MID_VERIFICATION } from '../../../../utils/constants'
 import styles from './SendResult.styles'
 
 const TIMEOUT_LIMIT = 120000

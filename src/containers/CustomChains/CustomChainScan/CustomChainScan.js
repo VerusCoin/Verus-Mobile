@@ -15,15 +15,16 @@ import {
   Modal
 } from "react-native";
 import QRCodeScanner from 'react-native-qrcode-scanner';
-import { isJson } from '../../utils/objectManip'
+import { isJson } from '../../../utils/objectManip'
 import { NavigationActions } from 'react-navigation';
 import { connect } from 'react-redux';
-import { namesList } from '../../utils/CoinData'
+import { namesList } from '../../../utils/CoinData'
 import {
   FORMAT_UNKNOWN,
   INCOMPLETE_CHAIN_QR
-} from '../../utils/constants'
-import CustomChainForm from './CustomChainForm'
+} from '../../../utils/constants'
+import CustomChainForm from '../CustomChainForm/CustomChainForm'
+import styles from './CustomChainScan.styles'
 
 class CustomChainScan extends Component {
   constructor(props) {
@@ -175,15 +176,3 @@ const mapStateToProps = (state) => {
 };
 
 export default connect(mapStateToProps)(CustomChainScan);
-
-
-const styles = StyleSheet.create({
-  root: {
-    backgroundColor: "#232323",
-    flex: 1,
-    alignItems: "center"
-  },
-  QRCamera: {
-    height: "100%"
-  }
-});
