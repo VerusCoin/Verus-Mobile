@@ -79,9 +79,9 @@ export const setCoinSettingsState = (state) => {
 }
 
 //Reducer Name: settings
-export const setWyreSettingsState = (state) => {
+export const setBuySellSettingsState = (state) => {
   return {
-    type: 'SET_WYRE_SETTINGS_STATE',
+    type: 'SET_BUY_SELL_SETTINGS_STATE',
     wyreSettings: state
   }
 }
@@ -245,4 +245,13 @@ export const setActiveSectionCustomCoins = (activeSection) => {
     activeSection: activeSection
   }
 }
+
+//Reducer name: buySellCrypto
+export const setActiveSectionBuySellCrypto = (activeSection) => {
+  return {
+    type: 'SET_ACTIVE_SECTION_BUY_SELL_CRYPTO',
+    activeSection: activeSection
+  }
+}
+
 

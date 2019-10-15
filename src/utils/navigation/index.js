@@ -26,6 +26,7 @@ import SecureLoading from '../../containers/SecureLoading/SecureLoading';
 import CustomChainMenus from '../../containers/CustomChains/CustomChainMenus'
 import GeneralWalletSettings from '../../containers/Settings/WalletSettings/GeneralWalletSettings/GeneralWalletSettings'
 import CoinSettings from '../../containers/Settings/CoinSettings/CoinSettings'
+import BuySellCryptoMenus from '../../containers/BuySellCrypto/BuySellCryptoMenus'
 
 const WALLET = "wallet";
 
@@ -162,6 +163,9 @@ export const MainScreens =
       CustomChainMenus: {
         screen: CustomChainMenus,
       },
+      BuySellCryptoMenus: {
+        screen: BuySellCryptoMenus
+      }
     }, {
       headerMode: 'screen',
       navigationOptions: ({navigation}) => ({

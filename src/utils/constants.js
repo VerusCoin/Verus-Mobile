@@ -1,6 +1,12 @@
 //Electrum
 export const ELECTRUM_PROTOCOL_CHANGE = 1.4
 
+//Wyre integration testing
+export const SUPPORTED_FIAT_CURRENCIES = ['USD'] //Before API is connected, use only USD as so far we only have USD rate data
+export const SUPPORTED_CRYPTOCURRENCIES = ['BTC'] //No support for ETH and ERC20 (DAI) yet
+export const SUPPORTED_PAYMENT_METHODS = [{id: 'US_BANK_ACCT', name: 'US Bank Account', est_time: '5 business days'}]
+export const SUPPORTED_COUNTRIES = ['US']
+
 //VerusPay
 export const FORMAT_UNKNOWN = "QR Data format unrecognized."
 export const ADDRESS_ONLY = "Only address detected, please fill out amount field."

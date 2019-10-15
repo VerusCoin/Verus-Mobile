@@ -51,6 +51,7 @@
     "react-native-alert-async": "^1.0.3",
     "react-native-cache": "https://github.com/michaeltout/react-native-cache.git",
     "react-native-camera": "^1.10.1",
+    "react-native-country-picker-modal": "^1.5.2",
     "react-native-crypto": "^2.1.2",
     "react-native-elements": "^0.19.1",
     "react-native-fs": "^2.14.1",

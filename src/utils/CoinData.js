@@ -1,7 +1,7 @@
 import { electrumServers } from 'agama-wallet-lib/src/electrum-servers';
 import { MAX_VERIFICATION } from '../utils/constants'
 
-const getDefaultApps = (coinName) => {
+const getDefaultApps = (coinName, canBuySell = false) => {
   return ({
     defaultApp: 'wallet',
     apps: {

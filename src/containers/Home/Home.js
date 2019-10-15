@@ -24,7 +24,8 @@ import {
   setActiveCoin, 
   setActiveApp,
   setActiveSection,
-  everythingNeedsUpdate
+  everythingNeedsUpdate,
+  setActiveSectionBuySellCrypto
 } from '../../actions/actionCreators';
 import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../../utils/math';
@@ -168,6 +169,13 @@ class Home extends Component {
     navigation.navigate("AddCoin", { refresh: this.refresh });
   }
 
+  _buySellCrypto = () => {
+    let navigation = this.props.navigation  
+    this.props.dispatch(setActiveSectionBuySellCrypto('buy-crypto'))
+
+    navigation.navigate("BuySellCryptoMenus", {title: "Buy"});
+  }
+
   renderCoinList = () => {
     return (
       <ScrollView 
@@ -222,6 +230,14 @@ class Home extends Component {
         extraData={this.props.balances}       
         keyExtractor={item => item.id}                            
         /> 
+        <TouchableOpacity onPress={this._buySellCrypto}>
+          <ListItem    
+            roundAvatar
+            title={<Text style={styles.coinItemLabel}>Buy/Sell Crypto</Text>}                            
+            avatar={require('../../images/customIcons/interestPlus.png')}
+            containerStyle={{ borderBottomWidth: 0 }} 
+          /> 
+        </TouchableOpacity>
         <TouchableOpacity onPress={this._addCoin}>
           <ListItem    
             roundAvatar                    
