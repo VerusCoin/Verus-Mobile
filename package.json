@@ -3,7 +3,7 @@
   "version": "0.1.8-beta",
   "private": true,
   "scripts": {
-    "postinstall": "./node_modules/.bin/rn-nodeify --hack --install",
+    "postinstall": "patch-package && ./node_modules/.bin/rn-nodeify --hack --install",
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
@@ -69,7 +69,7 @@
     "react-native-share": "1.2.1",
     "react-native-svg": "^9.2.4",
     "react-native-tcp": "^3.3.2",
-    "react-native-udp": "^2.3.1",
+    "react-native-udp": "^2.6.1",
     "react-native-vector-icons": "^6.2.0",
     "react-navigation": "1.2.1",
     "react-navigation-material-bottom-tabs": "^1.0.0",
@@ -90,7 +90,7 @@
   "devDependencies": {
     "babel-jest": "23.6.0",
     "jest": "^24.9.0",
-    "metro-react-native-babel-preset": "0.53.1",
+    "metro-react-native-babel-preset": "0.56.0",
     "node-fetch": "^2.6.0",
     "react-test-renderer": "16.5.0",
     "rn-nodeify": "github:tradle/rn-nodeify"

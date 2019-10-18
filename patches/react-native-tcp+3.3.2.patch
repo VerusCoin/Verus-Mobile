@@ -1,0 +1,32 @@
+diff --git a/node_modules/react-native-tcp/android/src/main/java/com/peel/react/TcpSocketManager.java b/node_modules/react-native-tcp/android/src/main/java/com/peel/react/TcpSocketManager.java
+index df2007f..a2a017b 100644
+--- a/node_modules/react-native-tcp/android/src/main/java/com/peel/react/TcpSocketManager.java
++++ b/node_modules/react-native-tcp/android/src/main/java/com/peel/react/TcpSocketManager.java
+@@ -1,6 +1,6 @@
+ package com.peel.react;
+ 
+-import android.support.annotation.Nullable;
++import androidx.annotation.Nullable;;
+ import android.util.SparseArray;
+ 
+ import com.koushikdutta.async.AsyncNetworkSocket;
+diff --git a/node_modules/react-native-tcp/ios/TcpSockets.xcodeproj/xcuserdata/administrator.xcuserdatad/xcschemes/xcschememanagement.plist b/node_modules/react-native-tcp/ios/TcpSockets.xcodeproj/xcuserdata/administrator.xcuserdatad/xcschemes/xcschememanagement.plist
+new file mode 100644
+index 0000000..fe506fa
+--- /dev/null
++++ b/node_modules/react-native-tcp/ios/TcpSockets.xcodeproj/xcuserdata/administrator.xcuserdatad/xcschemes/xcschememanagement.plist
+@@ -0,0 +1,14 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
++<plist version="1.0">
++<dict>
++	<key>SchemeUserState</key>
++	<dict>
++		<key>TcpSockets.xcscheme_^#shared#^_</key>
++		<dict>
++			<key>orderHint</key>
++			<integer>16</integer>
++		</dict>
++	</dict>
++</dict>
++</plist>
