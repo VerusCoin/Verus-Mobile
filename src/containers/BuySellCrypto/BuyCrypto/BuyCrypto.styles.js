@@ -65,14 +65,30 @@ export default styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     justifyContent: "center",
-    maxHeight: 100
+    maxHeight: 80,
   },
   saveChangesButton: {
     height: 46,
     backgroundColor: "#009B72",
+    width: '40%',
   },
   backButton: {
     height: 46,
     backgroundColor: "rgba(206,68,70,1)",
+    width: '40%',
+  },
+  touchableInputBank: {
+    width: "85%",
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: '#86939e',
+    margin: 20,
+  },
+  inputBankFieldText:{
+    color: '#86939e',
+  },
+  coinItemLabel: {
+    color: "#E9F1F7",
+    marginLeft: 10,
   },
 });

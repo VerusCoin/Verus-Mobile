@@ -8,7 +8,7 @@ import SideMenu from '../../containers/SideMenu/SideMenu';
 import Login from '../../containers/Login/Login';
 import Home from '../../containers/Home/Home';
 import AddCoin from '../../containers/AddCoin/AddCoin';
-import SignUp from  '../../containers/SignUp/SignUp';
+import SignUp from '../../containers/SignUp/SignUp';
 import CoinDetails from '../../containers/CoinDetails/CoinDetails';
 import TransactionDetails from '../../containers/TransactionDetails/TransactionDetails';
 import LoadingScreen from '../../containers/LoadingScreen/LoadingScreen';
@@ -23,12 +23,21 @@ import DisplaySeed from '../../containers/Settings/ProfileSettings/DisplaySeed/D
 import RecoverSeed from '../../containers/Settings/ProfileSettings/RecoverSeed/RecoverSeed';
 import DeleteProfile from '../../containers/Settings/ProfileSettings/DeleteProfile/DeleteProfile';
 import SecureLoading from '../../containers/SecureLoading/SecureLoading';
-import CustomChainMenus from '../../containers/CustomChains/CustomChainMenus'
-import GeneralWalletSettings from '../../containers/Settings/WalletSettings/GeneralWalletSettings/GeneralWalletSettings'
-import CoinSettings from '../../containers/Settings/CoinSettings/CoinSettings'
-import BuySellCryptoMenus from '../../containers/BuySellCrypto/BuySellCryptoMenus'
+import CustomChainMenus from '../../containers/CustomChains/CustomChainMenus';
+import GeneralWalletSettings from '../../containers/Settings/WalletSettings/GeneralWalletSettings/GeneralWalletSettings';
+import CoinSettings from '../../containers/Settings/CoinSettings/CoinSettings';
+import BuySellCryptoMenus from '../../containers/BuySellCrypto/BuySellCryptoMenus';
+import SelectPaymentMethod from '../../containers/BuySellCrypto/PaymentMethod/SelectPaymentMethod/SelectPaymentMethod';
+import ManageWyreAccount from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreAccount';
+import ManageWyreEmail from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreEmail';
+import ManageWyreCellphone from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreCellphone';
+import ManageWyreDocuments from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreDocuments';
+import ManageWyrePaymentMethod from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyrePaymentMethod';
+import ManageWyrePersonalDetails from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyrePersonalDetails';
+import ManageWyreProofOfAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreProofOfAddress';
+import ManageWyreAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreAddress';
 
-const WALLET = "wallet";
+const WALLET = 'wallet';
 
 const styles = StyleSheet.create({
   header_title_noBack: {
@@ -56,130 +65,200 @@ const styles = StyleSheet.create({
   }
 });
 
-export const MainScreens = 
+export const MainScreens =
   StackNavigator({
-      Home: {
-        screen: Home,
-        navigationOptions: {
-          title: "Home",
-          headerLeft: null
-        }
-      },
-      AddCoin: {
-        screen: AddCoin,
-        navigationOptions: {
-          title: "Add Coin",
-        }
-      },
-      CoinDetails: {
-        screen: CoinDetails,
-        navigationOptions: {
-          title: "Details",
-        }
-      },
-      TxDetails: {
-        screen: TransactionDetails,
-        navigationOptions: {
-          title: "Info",
-        }
-      },
-      ConfirmSend: {
-        screen: ConfirmSend,
-        navigationOptions: {
-          title: "Confirm Send",
-        }
-      },
-      SendResult: {
-        screen: SendResult,
-        navigationOptions: {
-          title: "Send Result",
-          headerLeft: null,
-          headerRight: null,
-          drawerLockMode: 'locked-closed'
-        }
-      },
-      DisplaySeed: {
-        screen: DisplaySeed,
-        navigationOptions: {
-          title: "Seed",
-          headerRight: null,
-          drawerLockMode: 'locked-closed'
-        }
-      },
-      CoinMenus: {
-        screen: CoinMenus,
-      },
-      SettingsMenus: {
-        screen: SettingsMenus,
-      },
-      VerusPay: {
-        screen: VerusPay,
-        navigationOptions: {
-          title: "VerusPay",
-        }
-      },
-      ProfileInfo: {
-        screen: ProfileInfo,
-        navigationOptions: {
-          title: "Info",
-        }
-      },
-      ResetPwd: {
-        screen: ResetPwd,
-        navigationOptions: {
-          title: "Reset",
-        }
-      },
-      RecoverSeed: {
-        screen: RecoverSeed,
-        navigationOptions: {
-          title: "Recover",
-        }
-      },
-      GeneralWalletSettings: {
-        screen: GeneralWalletSettings,
-        navigationOptions: {
-          title: "General Wallet Settings"
-        }
-      },
-      CoinSettings: {
-        screen: CoinSettings,
-      },
-      DeleteProfile: {
-        screen: DeleteProfile,
-        navigationOptions: {
-          title: "Delete",
-        }
-      },
-      SecureLoading: {
-        screen: SecureLoading,
-        navigationOptions: {
-          title: "Loading",
-          headerRight: null,
-          headerLeft: null,
-          drawerLockMode: 'locked-closed'
-        }
-      },
-      CustomChainMenus: {
-        screen: CustomChainMenus,
-      },
-      BuySellCryptoMenus: {
-        screen: BuySellCryptoMenus
+    Home: {
+      screen: Home,
+      navigationOptions: {
+        title: "Home",
+        headerLeft: null
       }
-    }, {
-      headerMode: 'screen',
-      navigationOptions: ({navigation}) => ({
-        headerStyle: {
-          backgroundColor: '#2E86AB',
-        },
-        headerRight: (
-        <TouchableOpacity onPress={() => 
-          navigation.navigate('DrawerOpen')} style={styles.menuButton}>
-          <Icon name="menu" size={35} color="#E9F1F7"/>
-        </TouchableOpacity>),
-        gesturesEnabled: false,
-        headerTintColor: '#E9F1F7',
-      }),
+    },
+    AddCoin: {
+      screen: AddCoin,
+      navigationOptions: {
+        title: "Add Coin",
+      }
+    },
+    CoinDetails: {
+      screen: CoinDetails,
+      navigationOptions: {
+        title: "Details",
+      }
+    },
+    TxDetails: {
+      screen: TransactionDetails,
+      navigationOptions: {
+        title: "Info",
+      }
+    },
+    ConfirmSend: {
+      screen: ConfirmSend,
+      navigationOptions: {
+        title: "Confirm Send",
+      }
+    },
+    SendResult: {
+      screen: SendResult,
+      navigationOptions: {
+        title: "Send Result",
+        headerLeft: null,
+        headerRight: null,
+        drawerLockMode: 'locked-closed'
+      }
+    },
+    DisplaySeed: {
+      screen: DisplaySeed,
+      navigationOptions: {
+        title: "Seed",
+        headerRight: null,
+        drawerLockMode: 'locked-closed'
+      }
+    },
+    CoinMenus: {
+      screen: CoinMenus,
+    },
+    SettingsMenus: {
+      screen: SettingsMenus,
+    },
+    VerusPay: {
+      screen: VerusPay,
+      navigationOptions: {
+        title: "VerusPay",
+      }
+    },
+    ProfileInfo: {
+      screen: ProfileInfo,
+      navigationOptions: {
+        title: "Info",
+      }
+    },
+    ResetPwd: {
+      screen: ResetPwd,
+      navigationOptions: {
+        title: "Reset",
+      }
+    },
+    RecoverSeed: {
+      screen: RecoverSeed,
+      navigationOptions: {
+        title: "Recover",
+      }
+    },
+    GeneralWalletSettings: {
+      screen: GeneralWalletSettings,
+      navigationOptions: {
+        title: "General Wallet Settings"
+      }
+    },
+    CoinSettings: {
+      screen: CoinSettings,
+    },
+    DeleteProfile: {
+      screen: DeleteProfile,
+      navigationOptions: {
+        title: "Delete",
+      }
+    },
+    SecureLoading: {
+      screen: SecureLoading,
+      navigationOptions: {
+        title: "Loading",
+        headerRight: null,
+        headerLeft: null,
+        drawerLockMode: 'locked-closed'
+      }
+    },
+    CustomChainMenus: {
+      screen: CustomChainMenus,
+    },
+    BuySellCryptoMenus: {
+      screen: BuySellCryptoMenus
+    },
+    SelectPaymentMethod: {
+      screen: SelectPaymentMethod,
+      navigationOptions: {
+        title: 'Select Payment Method',
+        drawerLockMode: 'locked-closed'
+      }
+    },
+    ManageWyreAccount: {
+      screen: ManageWyreAccount,
+      navigationOptions: {
+        title: 'Manage Wyre Account',
+        drawerLockMode: 'locked-closed'
+      }
+    },
+    ManageWyreEmail: {
+      screen: ManageWyreEmail,
+      navigationOptions: {
+        title: 'Manage Wyre Email',
+        headerRight: null,
+        drawerLockMode: 'locked-closed'
+      }
+    },
+    ManageWyreCellphone: {
+      screen: ManageWyreCellphone,
+      navigationOptions: {
+        title: 'Manage Wyre Cellphone',
+        headerRight: null,
+        drawerLockMode: 'locked-closed'
+      }
+    },
+    ManageWyreDocuments: {
+      screen: ManageWyreDocuments,
+      navigationOptions: {
+        title: 'Upload Documents',
+        headerRight: null,
+        drawerLockMode: 'locked-closed'
+      }
+    },
+    ManageWyrePaymentMethod: {
+      screen: ManageWyrePaymentMethod,
+      navigationOptions: {
+        title: 'Manage Payment Method',
+        headerRight: null,
+        drawerLockMode: 'locked-closed'
+      }
+    },
+    ManageWyrePersonalDetails: {
+      screen: ManageWyrePersonalDetails,
+      navigationOptions: {
+        title: 'Upload Personal Details',
+        headerRight: null,
+        drawerLockMode: 'locked-closed'
+      }
+    },
+    ManageWyreProofOfAddress: {
+      screen: ManageWyreProofOfAddress,
+      navigationOptions: {
+        title: 'Upload Proof of Address',
+        headerRight: null,
+        drawerLockMode: 'locked-closed'
+      }
+    },
+    ManageWyreAddress: {
+      screen: ManageWyreAddress,
+      navigationOptions: {
+        title: 'Manage Wyre Address',
+        headerRight: null,
+        drawerLockMode: 'locked-closed'
+      }
+    },
+  }, {
+    headerMode: 'screen',
+    navigationOptions: ({navigation}) => ({
+      headerStyle: {
+        backgroundColor: '#2E86AB',
+      },
+      headerRight: (
+      <TouchableOpacity onPress={() =>
+        navigation.navigate('DrawerOpen')} style={styles.menuButton}>
+        <Icon name="menu" size={35} color="#E9F1F7"/>
+      </TouchableOpacity>),
+      gesturesEnabled: false,
+      headerTintColor: '#E9F1F7',
+    }),
   })
 
 export const SignedOut = StackNavigator({
@@ -280,6 +359,3 @@ export const RootNavigator = (hasAccount, loading, signedIn) => {
     }
   );
 };
-
-
-

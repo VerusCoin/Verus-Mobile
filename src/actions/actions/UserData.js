@@ -1,4 +1,4 @@
-import { 
+import {
   setAccounts,
   setFingerAuth,
   signIntoAccount,
@@ -16,7 +16,8 @@ import {
   makeKeyPair
 } from '../../utils/keys'
 import {
-  decryptkey
+  decryptkey,
+  decryptGeneral,
 } from '../../utils/seedCrypt'
 
 //TODO: Fingerprint authentication
@@ -81,7 +82,11 @@ export const loginUser = (account, password) => {
             _keys[activeCoins[i].id] = makeKeyPair(seed, activeCoins[i].id)
           }
         }
-        let _activeAccount = {id: account.id, wifKey: seed, keys: _keys}
+        let paymentMethods = {}
+        if (account.paymentMethods) {
+          paymentMethods = JSON.parse(decryptGeneral(seed, account.paymentMethods))
+        }
+        let _activeAccount = {id: account.id, wifKey: seed, keys: _keys, paymentMethods}
         resolve(signIntoAccount(_activeAccount))
       })
       .catch(err => reject(err));
@@ -113,6 +118,3 @@ export const addKeypair = (seed, coinID, keys) => {
 
   return updateAccountKeys(_keys)
 }
-
-
-

@@ -254,4 +254,61 @@ export const setActiveSectionBuySellCrypto = (activeSection) => {
   }
 }
 
+// Payment Method
+export const createWyreAccount = () => ({
+  type: 'CREATE_WYRE_ACCOUNT',
+  payload: {},
+});
 
+export const createWyreAccountResponse = () => ({
+  type: 'CREATE_WYRE_ACCOUNT_RESPONSE',
+  payload: {},
+});
+
+export const getWyreAccount = () => ({
+  type: 'GET_WYRE_ACCOUNT',
+  payload: {},
+});
+
+export const getWyreAccountResponse = (account = {}) => ({
+  type: 'GET_WYRE_ACCOUNT_RESPONSE',
+  payload: {
+    account,
+  },
+});
+
+export const putWyreAccount = () => ({
+  type: 'PUT_WYRE_ACCOUNT',
+  payload: {},
+});
+
+export const putWyreAccountResponse = (account = {}) => ({
+  type: 'PUT_WYRE_ACCOUNT_RESPONSE',
+  payload: {
+    account,
+  },
+});
+
+export const getWyreConfig = () => ({
+  type: 'GET_WYRE_CONFIG',
+  payload: {},
+});
+
+export const getWyreConfigResponse = (config = {}) => ({
+  type: 'GET_WYRE_CONFIG_RESPONSE',
+  payload: {
+    config,
+  },
+});
+
+export const createWyrePayment = () => ({
+  type: 'CREATE_WYRE_PAYMENT',
+  payload: {},
+});
+
+export const createWyrePaymentResponse = (payment = {}) => ({
+  type: 'CREATE_WYRE_PAYMENT_RESPONSE',
+  payload: {
+    payment,
+  },
+});

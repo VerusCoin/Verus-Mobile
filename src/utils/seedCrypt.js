@@ -24,3 +24,7 @@ export const decryptkey = (cipherKey, string) => {
 
   return !_regexTest ? false : decryptedKey;
 }
+
+export const decryptGeneral = (cipherKey, string) => (
+  aes256.decrypt(cipherKey, string)
+)

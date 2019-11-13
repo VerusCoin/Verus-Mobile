@@ -1,11 +1,12 @@
 /*
-  This component's purpose is to display a tab bar of 
+  This component's purpose is to display a tab bar of
   all the different options for buying/selling crypto
 */
 
 import React, { Component } from "react";
 import {
   View,
+  Image,
 } from "react-native";
 import { connect } from 'react-redux';
 import BottomNavigation, {
@@ -14,6 +15,8 @@ import BottomNavigation, {
 //import SellCrypto from './SellCrypto/SellCrypto'
 import BuyCrypto from './BuyCrypto/BuyCrypto'
 import { Icon } from "react-native-elements"
+
+import { Buy, Sell } from '../../images/customIcons';
 
 class BuySellCryptoMenus extends Component {
   constructor(props) {
@@ -27,8 +30,8 @@ class BuySellCryptoMenus extends Component {
 
   static navigationOptions = ({ navigation }) => {
     return {
-      title: typeof(navigation.state.params)==='undefined' || 
-      typeof(navigation.state.params.title) === 'undefined' ? 
+      title: typeof(navigation.state.params)==='undefined' ||
+      typeof(navigation.state.params.title) === 'undefined' ?
       'undefined': navigation.state.params.title,
     };
   };
@@ -41,7 +44,8 @@ class BuySellCryptoMenus extends Component {
         label: "Buy",
         barColor: '#2E86AB',
         pressColor: 'rgba(255, 255, 255, 0.16)',
-        screen: "BuyCrypto"
+        screen: "BuyCrypto",
+        source: Buy
       },
       {
         key: "sell-crypto",
@@ -49,7 +53,8 @@ class BuySellCryptoMenus extends Component {
         label: "Sell",
         barColor: '#EDAE49',
         pressColor: 'rgba(255, 255, 255, 0.16)',
-        screen: "SellCrypto"
+        screen: "SellCrypto",
+        source: Sell
       },
     ]
     let activeTab
@@ -72,15 +77,22 @@ class BuySellCryptoMenus extends Component {
   }
 
   renderIcon = icon => () => (
-    <Icon size={24} color="white" name={icon} />
+    <Image source={icon} style={{
+      flex: 1,
+      width: 40,
+      height: 40,
+      resizeMode: 'contain',
+      marginRight: 10,
+    }}/>
   )
 
   renderTab = ({ tab, isActive }) => (
     <FullTab
+      style={{flex:1, flexDirection: 'row', justifyContent:'center' }}
       isActive={isActive}
       key={tab.key ? tab.key : ''}
       label={tab.label ? tab.label : ''}
-      renderIcon={this.renderIcon(tab.icon)}
+      renderIcon={this.renderIcon(tab.source)}
     />
   )
 
@@ -113,4 +125,3 @@ const mapStateToProps = (state) => {
 };
 
 export default connect(mapStateToProps)(BuySellCryptoMenus);
-
