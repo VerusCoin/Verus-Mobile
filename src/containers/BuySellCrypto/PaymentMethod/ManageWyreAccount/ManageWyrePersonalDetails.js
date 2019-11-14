@@ -16,6 +16,8 @@ import {
 import {
   putWyreAccountField
 } from '../../../../actions/actions/PaymentMethod/WyreAccount';
+import TextInputMask from 'react-native-text-input-mask';
+
 
 
 class ManageWyrePersonalDetails extends Component {
@@ -129,14 +131,15 @@ class ManageWyrePersonalDetails extends Component {
             </View>
             <View>
               <FormLabel labelStyle={styles.formLabel}>
-                    Date of Birth YYYY-MM-DD:
+                Date of Birth YYYY-MM-DD:
               </FormLabel>
-              <FormInput
-                underlineColorAndroid="#86939d"
-                onChangeText={(text) => this.setState({ dateOfBirth: text })}
-                value={this.state.dateOfBirth}
-                autoCorrect={false}
-                inputStyle={{ width: 300 }}
+              <TextInputMask
+                refInput={ref => { this.input = ref }}
+                onChangeText={(formatted, extracted) => {
+                  this.setState({dateOfBirth: extracted})
+                }}
+                mask={"[0000]-[00]-[00]"}
+                style={styles.inputMask}
               />
               <FormValidationMessage>
                 {this.state.errors.dateOfBirth}
@@ -144,17 +147,18 @@ class ManageWyrePersonalDetails extends Component {
             </View>
             <View>
               <FormLabel labelStyle={styles.formLabel}>
-                    US Social Security Number XXX-XX-XXXX:
+                US Social Security Number XXX-XX-XXXX:
               </FormLabel>
-              <FormInput
-                underlineColorAndroid="#86939d"
-                onChangeText={(text) => this.setState({ socialSecurityNumber: text })}
-                value={this.state.socialSecurityNumber}
-                autoCorrect={false}
-                inputStyle={{ width: 300 }}
+              <TextInputMask
+                refInput={ref => { this.input = ref }}
+                onChangeText={(formatted, extracted) => {
+                  this.setState({socialSecurityNumber: extracted})
+                }}
+                mask={"[000]-[00]-[0000]"}
+                style={styles.inputMask}
               />
               <FormValidationMessage>
-                {this.state.errors.socialSecurityNumber}
+                {this.state.errors.dateOfBirth}
               </FormValidationMessage>
             </View>
             <View style={styles.buttonContainerBottom}>

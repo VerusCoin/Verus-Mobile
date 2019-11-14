@@ -2,18 +2,37 @@ import React, { Component } from "react";
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 
 export default class button1 extends Component {
-
+  constructor(props) {
+    super(props);
+    this.state = {
+      onPressingInProgress: false,
+    };
+  }
   static containerStyle = {
     height: 44,
     width: 100,
     defaultHeight: "fixed",
     defaultWidth: "auto"
   };
+
+  _onPress = (e) => {
+    this.setState({
+        onPressingInProgress: true
+      }, () => {
+           this.props.onPress(e)
+           this.setState({
+             onPressingInProgress: false
+          })
+      })
+  }
+
+
   render() {
     return (
       <TouchableOpacity
-      style={[styles.root, this.props.style]}
-      onPress={this.props.onPress}
+      style={this.state.onPressingInProgress ? [styles.root, this.props.style, styles.newOne ] : [styles.root, this.props.style]}
+      onPress={this._onPress}
+      disabled={this.state.onPressingInProgress}
       >
         <View pointerEvents='none'>
           <Text style={styles.buttonContent}>
@@ -39,5 +58,8 @@ const styles = StyleSheet.create({
     //fontWeight: "500",
     //fontFamily: "Roboto",
     color: "#fff"
-  }
+  },
+  newOne: {
+    opacity: 0.7,
+  },
 });

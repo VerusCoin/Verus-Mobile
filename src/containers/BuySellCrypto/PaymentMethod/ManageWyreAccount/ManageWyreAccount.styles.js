@@ -108,4 +108,11 @@ export default StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
   },
+  inputMask: {
+    color: '#86939e',
+    borderBottomColor: '#86939d',
+    borderBottomWidth: 1,
+    width: 290,
+    marginLeft: 20,
+  },
 });
