@@ -1,4 +1,4 @@
-import { Alert } from 'react-native';
+import DelayedAlert from '../../../utils/delayedAlert';
 import { NavigationActions } from 'react-navigation';
 
 import { WYRE_URL } from '../../../utils/constants';
@@ -49,7 +49,7 @@ export const manageAccount = (navigation) => async (dispatch, getState) => {
 
       dispatch(createWyreAccountResponse());
 
-      if (error) return Alert.alert('Failed creating Wyre account');
+      if (error) return DelayedAlert('Failed creating Wyre account');
 
       const activeAccount = selectActiveAccount(state);
 
@@ -65,13 +65,13 @@ export const manageAccount = (navigation) => async (dispatch, getState) => {
       };
 
       const accounts = await putUserPaymentMethods(activeAccount, newActiveAccount.paymentMethods);
-      if (!accounts) return Alert.alert('Failed storing Wyre account credentials');
+      if (!accounts) return DelayedAlert('Failed storing Wyre account credentials');
 
       dispatch(setAccounts(accounts));
       dispatch(signIntoAccount(newActiveAccount));
     } catch (error) {
       dispatch(createWyreAccountResponse());
-      return Alert.alert('Failed creating Wyre account');
+      return DelayedAlert('Failed creating Wyre account');
     }
   }
   // Navigate to manage screen
@@ -82,7 +82,7 @@ export const getAccount = () => async (dispatch, getState) => {
   const state = getState();
   const paymentMethod = selectWyrePaymentMethod(state);
   if (!paymentMethod) {
-    Alert.alert('No Payment Account');
+    DelayedAlert('No Payment Account');
     return;
   }
   dispatch(getWyreAccount());
@@ -92,10 +92,10 @@ export const getAccount = () => async (dispatch, getState) => {
 
     dispatch(getWyreAccountResponse(data));
 
-    if (error) Alert.alert('Failed fetching Wyre account');
+    if (error) DelayedAlert('Failed fetching Wyre account');
   } catch (error) {
     dispatch(getWyreAccountResponse());
-    Alert.alert('Failed fetching Wyre account');
+    DelayedAlert('Failed fetching Wyre account');
   }
 };
 
@@ -103,7 +103,7 @@ export const putWyreAccountField = (params, navigation) => async (dispatch, getS
   const state = getState();
   const paymentMethod = selectWyrePaymentMethod(state);
   if (!paymentMethod) {
-    return Alert.alert('No Payment Account');
+    return DelayedAlert('No Payment Account');
   }
   dispatch(putWyreAccount());
   try {
@@ -113,10 +113,10 @@ export const putWyreAccountField = (params, navigation) => async (dispatch, getS
       });
 
     dispatch(putWyreAccountResponse(data));
-    if (error) return Alert.alert('Failed updating Wyre account', error);
+    if (error) return DelayedAlert('Failed updating Wyre account', error);
   } catch (error) {
     dispatch(putWyreAccountResponse(null));
-    return Alert.alert('Failed updating Wyre account', error);
+    return DelayedAlert('Failed updating Wyre account', error);
   }
 
   return navigation.dispatch(NavigationActions.back());
@@ -126,7 +126,7 @@ export const uploadWyreAccountDocument = (field, uri, type, onSuccess) => async 
   const state = getState();
   const paymentMethod = selectWyrePaymentMethod(state);
   if (!paymentMethod) {
-    return Alert.alert('No Payment Account');
+    return DelayedAlert('No Payment Account');
   }
   dispatch(putWyreAccount());
   try {
@@ -135,10 +135,10 @@ export const uploadWyreAccountDocument = (field, uri, type, onSuccess) => async 
 
     dispatch(putWyreAccountResponse(data));
 
-    if (error) return Alert.alert('Failed uploading Wyre document', error);
+    if (error) return DelayedAlert('Failed uploading Wyre document', error);
   } catch (error) {
     dispatch(putWyreAccountResponse());
-    return Alert.alert('Failed uploading Wyre document');
+    return DelayedAlert('Failed uploading Wyre document');
   }
   return onSuccess();
 };
@@ -152,11 +152,11 @@ export const getConfig = () => async (dispatch) => {
       const config = await response.json();
       dispatch(getWyreConfigResponse(config));
     } else {
-      Alert.alert('Failed fetching Wyre payment method configuration');
+      DelayedAlert('Failed fetching Wyre payment method configuration');
     }
   } catch (error) {
     dispatch(getWyreConfigResponse());
-    Alert.alert('Failed fetching Wyre payment method configuration');
+    DelayedAlert('Failed fetching Wyre payment method configuration');
   }
 };
 
@@ -164,7 +164,7 @@ export const createWyreAccountPaymentMethod = (token, navigation) => async (disp
   const state = getState();
   const paymentMethod = selectWyrePaymentMethod(state);
   if (!paymentMethod) {
-    Alert.alert('No Payment Account');
+    DelayedAlert('No Payment Account');
     return;
   }
 
@@ -173,9 +173,9 @@ export const createWyreAccountPaymentMethod = (token, navigation) => async (disp
     const { error } = await WyreService.build()
       .createPaymentMethod(paymentMethod.key, token);
 
-    if (error) Alert.alert('Failed creating Wyre payment method', error);
+    if (error) DelayedAlert('Failed creating Wyre payment method', error);
   } catch (error) {
-    Alert.alert('Failed creating Wyre payment method');
+    DelayedAlert('Failed creating Wyre payment method');
   }
   dispatch(putWyreAccountResponse({}));
   navigation.dispatch(NavigationActions.back());
@@ -185,7 +185,7 @@ export const sendTransaction = (_, fromCurr, fromVal, toCurr, navigation) => asy
   const state = getState();
   const paymentMethod = selectWyrePaymentMethod(state);
   if (!paymentMethod) {
-    Alert.alert('No Payment Account');
+    DelayedAlert('No Payment Account');
     return;
   }
 
@@ -195,7 +195,7 @@ export const sendTransaction = (_, fromCurr, fromVal, toCurr, navigation) => asy
       .getPaymentMethods(paymentMethod.key);
 
     if (paymentMethods.error || !paymentMethods.data.length) {
-      Alert.alert('Cannot fetch Payment Method');
+      DelayedAlert('Cannot fetch Payment Method');
       dispatch(createWyrePaymentResponse());
       return;
     }
@@ -204,7 +204,7 @@ export const sendTransaction = (_, fromCurr, fromVal, toCurr, navigation) => asy
       .getAccount(paymentMethod.id, paymentMethod.key);
 
     if (account.error) {
-      Alert.alert('Cannot fetch Payment Account');
+      DelayedAlert('Cannot fetch Payment Account');
       dispatch(createWyrePaymentResponse());
       return;
     }
@@ -222,15 +222,15 @@ export const sendTransaction = (_, fromCurr, fromVal, toCurr, navigation) => asy
     dispatch(createWyrePaymentResponse());
 
     if (error) {
-      Alert.alert('Failed to create Wyre Transfer', error);
+      DelayedAlert('Failed to create Wyre Transfer', error);
       return;
     }
 
-    Alert.alert('Payment Success');
+    DelayedAlert('Payment Success');
     navigation.dispatch(NavigationActions.back());
   } catch (error) {
     dispatch(createWyrePaymentResponse());
-    Alert.alert('Failed to create Wyre Transfer');
+    DelayedAlert('Failed to create Wyre Transfer');
   }
 };
 
