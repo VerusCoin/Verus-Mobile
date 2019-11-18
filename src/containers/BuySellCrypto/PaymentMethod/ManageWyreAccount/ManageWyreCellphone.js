@@ -93,7 +93,7 @@ class ManageWyreCellphone extends Component {
                 onChangeText={(text) => this.setState({ phone: text })}
                 value={this.state.phone}
                 autoCorrect={false}
-                inputStyle={{ width: 300 }}
+                inputStyle={styles.formInputContainer}
               />
               <FormValidationMessage>
                 {this.state.error}

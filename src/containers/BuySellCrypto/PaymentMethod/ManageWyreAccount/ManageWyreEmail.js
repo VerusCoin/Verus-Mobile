@@ -92,7 +92,7 @@ class ManageWyreEmail extends Component {
                 onChangeText={(text) => this.setState({ email: text })}
                 value={this.state.email}
                 autoCorrect={false}
-                inputStyle={{ width: 300 }}
+                inputStyle={styles.formInputContainer}
               />
               <FormValidationMessage>
                 {this.state.error}

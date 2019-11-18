@@ -17,23 +17,23 @@ export const ONLY_ADDRESS = 'This QR Code only contains only an address. Please 
 export const BALANCE_NULL = "Couldn't fetch balance for coin.";
 
 // Custom chain form
-export const DEFAULT_FEE_DESC = ("A chain's default fee is the fee paid by default to miners every time you send a transaction."
-                                 + '\n\n' + 'If this number is too low, your transactions will take very long to complete, and may fail. '
-                                 + "If it is too high, your transactions could be quicker, but you'll spend a lot in fees." + '\n\n' + 'It is recommended that you research the average network '
-                                 + 'fee for the chain you are trying to add. This number will be used by Verus Mobile if online fee data is unavailable.');
-export const ELECTRUM_SERVERS_DESC = ("A chain's electrum servers are full nodes you can connect to securely interact with it's blockchain network." + '\n\n' + 'Although you will never share your private key '
-                                      + 'with the servers entered here, it is important that you either trust them, or use your own if you want a pleasant wallet user experience.' + '\n\n' + "If you're using third party servers, "
-                                      + "ensure you've done your research. Enter a minimum of two servers in the format:" + '\n\n' + "<ip>:<port>:<protocol (e.g. 'tcp' or 'ssl')>.");
-export const ADD_COIN_CHECK = ('Please take the time to double check the following things regarding your custom coin '
-                              + 'information. If you are sure everything is correct, press continue.'
-                              + '\n');
+export const DEFAULT_FEE_DESC = ("A chain's default fee is the fee paid by default to miners every time you send a transaction." +
+    '\n\n' + 'If this number is too low, your transactions will take very long to complete, and may fail. ' +
+    "If it is too high, your transactions could be quicker, but you'll spend a lot in fees." + '\n\n' + 'It is recommended that you research the average network ' +
+    'fee for the chain you are trying to add. This number will be used by Verus Mobile if online fee data is unavailable.');
+export const ELECTRUM_SERVERS_DESC = ("A chain's electrum servers are full nodes you can connect to securely interact with it's blockchain network." + '\n\n' + 'Although you will never share your private key ' +
+    'with the servers entered here, it is important that you either trust them, or use your own if you want a pleasant wallet user experience.' + '\n\n' + "If you're using third party servers, " +
+    "ensure you've done your research. Enter a minimum of two servers in the format:" + '\n\n' + "<ip>:<port>:<protocol (e.g. 'tcp' or 'ssl')>.");
+export const ADD_COIN_CHECK = ('Please take the time to double check the following things regarding your custom coin ' +
+    'information. If you are sure everything is correct, press continue.' +
+    '\n');
 export const REQUIRED_FIELD = 'Required field';
 export const COIN_ALREADY_ACTIVE = 'A coin with this ticker is currently active';
 export const TICKER_RESERVED = 'This ticker is reserved, try adding this coin through the coin list';
 export const NO_SPECIAL_CHARACTERS_NAME = 'Name cannot include any special characters';
 export const INVALID_AMOUNT = 'Invalid amount';
-export const DEFAULT_FEE_HIGH_WARNING = '• Your default fee is unusually high. By default, you will pay this fee'
-+ ' every time you send a transaction with this coin. Ensure it is correct.';
+export const DEFAULT_FEE_HIGH_WARNING = '• Your default fee is unusually high. By default, you will pay this fee' +
+    ' every time you send a transaction with this coin. Ensure it is correct.';
 export const ENTER_AMOUNT_GREATER_THAN_0 = 'Enter an amount greater than 0';
 export const BAD_SERVER_INPUT_FORMAT = 'Not in ip:port:protocol format';
 export const BAD_SERVER_PROTOCOL = 'Please choose either ssl or tcp as protocol';
@@ -45,16 +45,16 @@ export const POSSIBLY_UNSUPPORTED_CHAIN = "• This chain\'s key structure may 
 export const NO_VERIFICATION = 0;
 export const MID_VERIFICATION = 1;
 export const MAX_VERIFICATION = 2;
-export const NO_VERIFICATION_DESC = 'No Verification (Not recommended):\n\nOn this setting, before sending a transaction, none of your funds will be '
-+ 'cross-verified across different electrum servers, and your existing transactions will not be '
-+ 'hashed to check against their transaction ID. This is only suggested for huge wallets that '
-+ 'otherwise wouldn\'t be able to send.';
-export const MID_VERIFICATION_DESC = 'Incomplete Verification (Not recommended):\n\nOn this setting, your funds will not be cross verified across multiple '
-+ 'servers, but you may experience a little quicker transaction sending times. This is not recommended unless '
-+ 'necessary for usability.';
-export const MAX_VERIFICATION_DESC = 'Complete Verification (Highly recommended):\n\nOn this setting, before sending a transaction, your funds will be '
-+ 'cross verified across at least two different electrum servers, and the transaction IDs of your existing '
-+ 'transactions will be double-checked through local transaction hashing.';
+export const NO_VERIFICATION_DESC = 'No Verification (Not recommended):\n\nOn this setting, before sending a transaction, none of your funds will be ' +
+    'cross-verified across different electrum servers, and your existing transactions will not be ' +
+    'hashed to check against their transaction ID. This is only suggested for huge wallets that ' +
+    'otherwise wouldn\'t be able to send.';
+export const MID_VERIFICATION_DESC = 'Incomplete Verification (Not recommended):\n\nOn this setting, your funds will not be cross verified across multiple ' +
+    'servers, but you may experience a little quicker transaction sending times. This is not recommended unless ' +
+    'necessary for usability.';
+export const MAX_VERIFICATION_DESC = 'Complete Verification (Highly recommended):\n\nOn this setting, before sending a transaction, your funds will be ' +
+    'cross verified across at least two different electrum servers, and the transaction IDs of your existing ' +
+    'transactions will be double-checked through local transaction hashing.';
 export const VERIFICATION_LOCKED = 'The verification level settings for this coin have been locked and cannot be changed.';
 
 // Chain QR
@@ -67,60 +67,61 @@ export const WYRE_URL = 'https://api.testwyre.com';
 export const WYRE_REFERRER_ACCOUNT_ID = 'verus-valu';
 
 export const SUPPORTED_COUNTRIES = ['US'];
+export const WYRE_COUNTRIES = [{ value: 'US' }, ];
 export const STATES = [
-  { value: 'AL' },
-  { value: 'AK' },
-  { value: 'AS' },
-  { value: 'AZ' },
-  { value: 'AR' },
-  { value: 'CA' },
-  { value: 'CO' },
-  { value: 'CT' },
-  { value: 'DE' },
-  { value: 'DC' },
-  { value: 'FM' },
-  { value: 'FL' },
-  { value: 'GA' },
-  { value: 'HI' },
-  { value: 'ID' },
-  { value: 'IL' },
-  { value: 'IN' },
-  { value: 'IA' },
-  { value: 'KS' },
-  { value: 'KY' },
-  { value: 'LA' },
-  { value: 'ME' },
-  { value: 'MD' },
-  { value: 'MA' },
-  { value: 'MI' },
-  { value: 'MN' },
-  { value: 'MS' },
-  { value: 'MO' },
-  { value: 'MT' },
-  { value: 'NE' },
-  { value: 'NV' },
-  { value: 'NH' },
-  { value: 'NJ' },
-  { value: 'NM' },
-  { value: 'NY' },
-  { value: 'NC' },
-  { value: 'ND' },
-  { value: 'OH' },
-  { value: 'OK' },
-  { value: 'OR' },
-  { value: 'PW' },
-  { value: 'PA' },
-  { value: 'PR' },
-  { value: 'RI' },
-  { value: 'SC' },
-  { value: 'SD' },
-  { value: 'TN' },
-  { value: 'TX' },
-  { value: 'UT' },
-  { value: 'VT' },
-  { value: 'VA' },
-  { value: 'WA' },
-  { value: 'WV' },
-  { value: 'WI' },
-  { value: 'WY' }
+    { value: 'AL' },
+    { value: 'AK' },
+    { value: 'AS' },
+    { value: 'AZ' },
+    { value: 'AR' },
+    { value: 'CA' },
+    { value: 'CO' },
+    { value: 'CT' },
+    { value: 'DE' },
+    { value: 'DC' },
+    { value: 'FM' },
+    { value: 'FL' },
+    { value: 'GA' },
+    { value: 'HI' },
+    { value: 'ID' },
+    { value: 'IL' },
+    { value: 'IN' },
+    { value: 'IA' },
+    { value: 'KS' },
+    { value: 'KY' },
+    { value: 'LA' },
+    { value: 'ME' },
+    { value: 'MD' },
+    { value: 'MA' },
+    { value: 'MI' },
+    { value: 'MN' },
+    { value: 'MS' },
+    { value: 'MO' },
+    { value: 'MT' },
+    { value: 'NE' },
+    { value: 'NV' },
+    { value: 'NH' },
+    { value: 'NJ' },
+    { value: 'NM' },
+    { value: 'NY' },
+    { value: 'NC' },
+    { value: 'ND' },
+    { value: 'OH' },
+    { value: 'OK' },
+    { value: 'OR' },
+    { value: 'PW' },
+    { value: 'PA' },
+    { value: 'PR' },
+    { value: 'RI' },
+    { value: 'SC' },
+    { value: 'SD' },
+    { value: 'TN' },
+    { value: 'TX' },
+    { value: 'UT' },
+    { value: 'VT' },
+    { value: 'VA' },
+    { value: 'WA' },
+    { value: 'WV' },
+    { value: 'WI' },
+    { value: 'WY' }
 ];

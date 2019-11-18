@@ -47,7 +47,7 @@ class ManageWyrePersonalDetails extends Component {
         dateOfBirth: null,
         socialSecurityNumber: null,
       },
-    }, () => {
+    }, () => {   
       const userName = this.state.name;
       const userDateOfBirth = this.state.dateOfBirth;
       const userSocialSecurityNumber = this.state.socialSecurityNumber;
@@ -123,7 +123,7 @@ class ManageWyrePersonalDetails extends Component {
                 onChangeText={(text) => this.setState({ name: text })}
                 value={this.state.name}
                 autoCorrect={false}
-                inputStyle={{ width: 300 }}
+                inputStyle={styles.formInputContainer}
               />
               <FormValidationMessage>
                 {this.state.errors.name}
@@ -136,7 +136,7 @@ class ManageWyrePersonalDetails extends Component {
               <TextInputMask
                 refInput={ref => { this.input = ref }}
                 onChangeText={(formatted, extracted) => {
-                  this.setState({dateOfBirth: extracted})
+                  this.setState({dateOfBirth: formatted})
                 }}
                 mask={"[0000]-[00]-[00]"}
                 style={styles.inputMask}
@@ -152,13 +152,13 @@ class ManageWyrePersonalDetails extends Component {
               <TextInputMask
                 refInput={ref => { this.input = ref }}
                 onChangeText={(formatted, extracted) => {
-                  this.setState({socialSecurityNumber: extracted})
+                  this.setState({socialSecurityNumber: formatted})
                 }}
                 mask={"[000]-[00]-[0000]"}
                 style={styles.inputMask}
               />
               <FormValidationMessage>
-                {this.state.errors.dateOfBirth}
+                {this.state.errors.socialSecurityNumber}
               </FormValidationMessage>
             </View>
             <View style={styles.buttonContainerBottom}>

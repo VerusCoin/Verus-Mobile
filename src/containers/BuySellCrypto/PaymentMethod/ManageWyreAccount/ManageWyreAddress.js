@@ -18,9 +18,8 @@ import {
 import {
   putWyreAccountField
 } from '../../../../actions/actions/PaymentMethod/WyreAccount';
-import { STATES, SUPPORTED_COUNTRIES } from '../../../../utils/constants';
+import { STATES, WYRE_COUNTRIES } from '../../../../utils/constants';
 
-const COUNTRIES = [{ value: SUPPORTED_COUNTRIES }];
 
 class ManageWyreAddress extends Component {
   constructor(props) {
@@ -116,7 +115,7 @@ class ManageWyreAddress extends Component {
       value: {
         street1: this.state.streetAddress,
         city: this.state.city,
-        state: this.state.state,
+        state: this.state.countryState,
         postalCode: this.state.postalCode,
         country: this.state.country,
       }
@@ -142,7 +141,7 @@ class ManageWyreAddress extends Component {
                 onChangeText={(text) => this.setState({ streetAddress: text })}
                 value={this.state.streetAddress}
                 autoCorrect={false}
-                inputStyle={{ width: 300 }}
+                inputStyle={styles.formInputContainer}
               />
               <FormValidationMessage>
                 {this.state.errors.streetAddress}
@@ -157,7 +156,7 @@ class ManageWyreAddress extends Component {
                 onChangeText={(text) => this.setState({ city: text })}
                 value={this.state.city}
                 autoCorrect={false}
-                inputStyle={{ width: 300 }}
+                inputStyle={styles.formInputContainer}
               />
               <FormValidationMessage>
                 {this.state.errors.city}
@@ -192,7 +191,7 @@ class ManageWyreAddress extends Component {
                 onChangeText={(text) => this.setState({ postalCode: text })}
                 value={this.state.postalCode}
                 autoCorrect={false}
-                inputStyle={{ width: 300 }}
+                inputStyle={styles.formInputContainer}
               />
               <FormValidationMessage>
                 {this.state.errors.postalCode}
@@ -202,11 +201,11 @@ class ManageWyreAddress extends Component {
               <View style={styles.dropdownInput}>
                 <Dropdown
                   labelExtractor={(item) => item.value}
-                  valueExtractor={(item) => item}
+                  valueExtractor={(item) => item.value}
                   label="Country: "
                   labelTextStyle={{ fontWeight: '700', paddingBottom: 20 }}
                   labelFontSize={13}
-                  data={COUNTRIES}
+                  data={WYRE_COUNTRIES}
                   onChangeText={(value) => this.setState({ country: value })}
                   textColor="#86939e"
                   selectedItemColor="#232323"
