@@ -1,4 +1,6 @@
 rootProject.name = 'verusmobile'
+include ':@react-native-community_datetimepicker'
+project(':@react-native-community_datetimepicker').projectDir = new File(rootProject.projectDir, '../node_modules/@react-native-community/datetimepicker/android')
 include ':react-native-text-input-mask'
 project(':react-native-text-input-mask').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-text-input-mask/android')
 include ':react-native-webview'

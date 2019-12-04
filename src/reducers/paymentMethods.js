@@ -15,6 +15,12 @@ const actionToUi = (action) => {
     case 'CREATE_WYRE_PAYMENT':
     case 'CREATE_WYRE_PAYMENT_RESPONSE':
       return 'createPayment';
+    case 'GET_EXCHANGE_RATES':
+    case 'GET_EXCHANGE_RATES_RESPONSE':
+      return 'getExchangeRates';
+    case 'GET_TRANSACTION_HISTORY':
+    case 'GET_TRANSACTION_HISTORY_RESPONSE':
+      return 'getTransactionHistory'
     default:
       return '';
   }
@@ -82,10 +88,38 @@ const wyre = (state, action) => {
           ...action.payload.config
         },
       };
+    case 'GET_EXCHANGE_RATES':
+        return {
+          ...state,
+          ui: isFetching(state.ui, actionToUi(action), true),
+          rates: {}
+        }
+    case 'GET_EXCHANGE_RATES_RESPONSE':
+      return {
+        ...state,
+        ui: isFetching(state.ui, actionToUi(action), false),
+        rates: {
+          ...action.payload.rates
+        }
+      }
+    case 'GET_TRANSACTION_HISTORY':
+      return {
+        ...state,
+        ui: isFetching(state.ui, actionToUi(action), true),
+        history: [],
+      }
+    case 'GET_TRANSACTION_HISTORY_RESPONSE':
+      return {
+        ...state,
+        ui: isFetching(state.ui, actionToUi(action), false),
+        history: action.payload.history,
+      }
     default:
       return state;
   }
 };
+
+
 
 export const paymentMethods = (state = {
   wyre: {
@@ -109,7 +143,14 @@ export const paymentMethods = (state = {
       createPayment: {
         isFetching: false,
       },
-    }
+      getExchangeRates: {
+        isFetching: false,
+      },
+      getTransactionHistory: {
+        isFetching: false,
+      }
+    },
+    rates: {},
   }
 }, action) => {
   switch (action.type) {
@@ -123,6 +164,10 @@ export const paymentMethods = (state = {
     case 'GET_WYRE_CONFIG_RESPONSE':
     case 'CREATE_WYRE_PAYMENT':
     case 'CREATE_WYRE_PAYMENT_RESPONSE':
+    case 'GET_EXCHANGE_RATES':
+    case 'GET_EXCHANGE_RATES_RESPONSE':
+    case 'GET_TRANSACTION_HISTORY':
+    case 'GET_TRANSACTION_HISTORY_RESPONSE':
       return {
         ...state,
         wyre: wyre(state.wyre, action),

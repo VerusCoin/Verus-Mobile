@@ -121,4 +121,20 @@ export default StyleSheet.create({
       fontSize: 14,
       width: 300,
     },
+    inputMaskDateOfBirth: {
+      color: '#86939e',
+      borderBottomColor: '#86939d',
+      borderBottomWidth: 2,
+      width: '76%',
+      marginLeft: 20,
+      paddingVertical: 10,
+    },
+    containerCalendarButton: {
+        width: '15%',
+        marginTop: '5%',
+        marginLeft: '3%',
+    },
+    containerDateOfBirth: {
+        flexDirection: 'row',
+    },
 });

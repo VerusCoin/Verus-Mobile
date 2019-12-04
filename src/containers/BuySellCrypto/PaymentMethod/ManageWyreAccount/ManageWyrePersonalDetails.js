@@ -3,7 +3,9 @@ import { connect } from 'react-redux';
 import {
   View,
   TouchableWithoutFeedback,
-  Keyboard
+  Keyboard,
+  Image,
+  TouchableOpacity,
 } from 'react-native';
 import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements';
 import Spinner from 'react-native-loading-spinner-overlay';
@@ -17,7 +19,9 @@ import {
   putWyreAccountField
 } from '../../../../actions/actions/PaymentMethod/WyreAccount';
 import TextInputMask from 'react-native-text-input-mask';
-
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Calendar} from '../../../../images/customIcons/index';
+import { parseDate } from '../../../../utils/date';
 
 
 class ManageWyrePersonalDetails extends Component {
@@ -32,7 +36,23 @@ class ManageWyrePersonalDetails extends Component {
         dateOfBirth: null,
         socialSecurityNumber: null,
       },
+      date: new Date(),
+      mode: 'date',
+      toggleCalendar: false,
     };
+  }
+
+  toggleCalendar = () => {
+    this.setState(prevState => ({
+      toggleCalendar: !prevState.toggleCalendar
+    }));
+  }
+
+  setDate = (date) => {
+    this.setState({
+      dateOfBirth: parseDate(date),
+      date,
+    });
   }
 
   handleSubmit = () => {
@@ -106,7 +126,12 @@ class ManageWyrePersonalDetails extends Component {
 
   render() {
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <TouchableWithoutFeedback onPress={() =>{
+        if (this.state.toggleCalendar){
+          this.toggleCalendar();
+        }
+        Keyboard.dismiss
+      }} accessible={false}>
         <View>
           <View style={styles.mainInputView}>
             <Spinner
@@ -133,14 +158,36 @@ class ManageWyrePersonalDetails extends Component {
               <FormLabel labelStyle={styles.formLabel}>
                 Date of Birth YYYY-MM-DD:
               </FormLabel>
-              <TextInputMask
-                refInput={ref => { this.input = ref }}
-                onChangeText={(formatted, extracted) => {
-                  this.setState({dateOfBirth: formatted})
-                }}
-                mask={"[0000]-[00]-[00]"}
-                style={styles.inputMask}
-              />
+              <View style={styles.containerDateOfBirth}>
+                <TextInputMask
+                  onChangeText={(formatted) => {
+                    this.setState({dateOfBirth: formatted})
+                  }}
+                  value={this.state.dateOfBirth}
+                  mask={"[0000]-[00]-[00]"}
+                  style={styles.inputMaskDateOfBirth}
+                />
+                <View style={styles.containerCalendarButton} >
+                  <TouchableOpacity onPress={this.toggleCalendar}>
+                    <Image
+                      source={Calendar}
+                      style={styles.icon}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <View>
+                { this.state.toggleCalendar && <DateTimePicker 
+                    value={this.state.date}
+                    mode={this.state.mode}
+                    display="calendar"
+                    onChange={this.setDate}
+                    maximumDate={new Date()}
+                    minimumDate={new Date(1950, 0, 1)}
+                    style={{backgroundColor: 'white'}} />
+                } 
+              </View>
               <FormValidationMessage>
                 {this.state.errors.dateOfBirth}
               </FormValidationMessage>
@@ -150,8 +197,7 @@ class ManageWyrePersonalDetails extends Component {
                 US Social Security Number XXX-XX-XXXX:
               </FormLabel>
               <TextInputMask
-                refInput={ref => { this.input = ref }}
-                onChangeText={(formatted, extracted) => {
+                onChangeText={(formatted) => {
                   this.setState({socialSecurityNumber: formatted})
                 }}
                 mask={"[000]-[00]-[0000]"}
@@ -165,7 +211,13 @@ class ManageWyrePersonalDetails extends Component {
               <Button1
                 style={styles.buttonSubmit}
                 buttonContent="Submit"
-                onPress={this.handleSubmit}
+                onPress={()=>{
+                  if (this.state.toggleCalendar) {
+                    this.toggleCalendar();
+                  } 
+                  this.handleSubmit();
+                }
+                }
               />
             </View>
           </View>

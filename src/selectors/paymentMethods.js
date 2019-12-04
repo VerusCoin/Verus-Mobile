@@ -37,3 +37,19 @@ export const selectWyreGetConfigIsFetching = (state) => (
 export const selectWyreConfig = (state) => (
   state.paymentMethods.wyre.config
 );
+
+export const selectExchangeRates = (state) => (
+  state.paymentMethods.wyre.rates.data
+);
+
+export const selectExchangeRatesIsFetching = (state) => (
+  selectAccountIsFetching(state, 'getExchangeRates', 'wyre')
+);
+
+export const selectTransactionHistoryIsFetching = (state) => (
+  selectAccountIsFetching(state, 'getTransactionHistory', 'wyre')
+);
+
+export const selectTransactionHistory = (state) => (
+  state.paymentMethods.wyre.history
+);

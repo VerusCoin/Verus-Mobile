@@ -24,6 +24,10 @@ import {
     getWyreConfigResponse,
     createWyrePayment,
     createWyrePaymentResponse,
+    getActiveTransaction,
+    getActiveTransactionResponse,
+    getTransactionHistory,
+    getTransactionHistoryResponse
 } from '../../actionCreators';
 
 const getPaymentAddress = (account, currency) => {
@@ -233,5 +237,37 @@ export const sendTransaction = (_, fromCurr, fromVal, toCurr, navigation) => asy
         DelayedAlert('Failed to create Wyre Transfer');
     }
 };
+
+export const getExchangeRates = () => async(dispatch) => {
+    dispatch(getActiveTransaction());
+    try {
+        const { data, error} = await WyreService.build().getRates();
+        if (!error) {
+            dispatch(getActiveTransactionResponse(data));
+        } else {
+            DelayedAlert('Failed fetching Exchange rates');
+        }
+    } catch (error) {
+        dispatch(getActiveTransactionResponse());
+        DelayedAlert('Failed fetching  Exchange rates');
+    }
+};
+
+export const getTransactions = () => async(dispatch, getState) => {
+    dispatch(getTransactionHistory());
+    const state = getState();
+    const paymentMethod = selectWyrePaymentMethod(state);
+    try {
+        const { data, error} = await WyreService.build().getTransactions(paymentMethod.key)
+        if (!error){
+            dispatch(getTransactionHistoryResponse(data));
+        } else {
+            DelayedAlert('Failed fetching transactions history')
+        }
+    } catch (error) {
+        dispatch(getTransactionHistoryResponse());
+        DelayedAlert('Failed fetching transactions history');
+    }
+}
 
 export default manageAccount;

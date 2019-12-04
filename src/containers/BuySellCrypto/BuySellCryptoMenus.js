@@ -104,8 +104,8 @@ class BuySellCryptoMenus extends Component {
   render() {
     return (
       <View style={{ flex: 1 }}>
-          {this.state.activeTab.screen === "SellCrypto" ? <BuyCrypto navigation={this.props.navigation}/> :
-          (this.state.activeTab.screen === "BuyCrypto" ? <BuyCrypto navigation={this.props.navigation}/> :
+          {this.state.activeTab.screen === "SellCrypto" ? <BuyCrypto navigation={this.props.navigation}  /> :
+          (this.state.activeTab.screen === "BuyCrypto" ? <BuyCrypto navigation={this.props.navigation}  buy/> :
           null)}
         <BottomNavigation
           onTabPress={newTab => this.switchTab(newTab)}

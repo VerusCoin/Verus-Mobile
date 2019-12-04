@@ -70,6 +70,7 @@
 		D08649F3B20D46DBA121581B /* FontAwesome5_Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3F4FFC227A7146BAB05B947F /* FontAwesome5_Regular.ttf */; };
 		D3920DB51C024A56998A2ED6 /* FontAwesome.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1A63C3132FCC48BAAEBD7F3A /* FontAwesome.ttf */; };
 		D89D7FEA42F144D7B24A3AC0 /* libRNOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AF58C5E85782430AA15D7D13 /* libRNOS.a */; };
+		E3F18E5EE5FD4C98AD647F19 /* libRNDateTimePicker.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7313AD3571D04D2081FDE9B1 /* libRNDateTimePicker.a */; };
 		E78EDC1DD21C4172B41D16E4 /* libUdpSockets.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 38D04647AAFB4943A8DD845F /* libUdpSockets.a */; };
 		F73844B799BF438996EB6FFD /* EvilIcons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7486B3ADFE6E4933A10EB3E2 /* EvilIcons.ttf */; };
 		FC8D0E93A71448BAB53C041F /* MaterialIcons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 015B95AEAE8846598210DFBB /* MaterialIcons.ttf */; };
@@ -420,6 +421,13 @@
 			remoteGlobalIDString = 58B5119B1A9E6C1200147676;
 			remoteInfo = RCTText;
 		};
+		90E28DFA2383EFB0008766F7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8214F60179334E07BB8E0DB8 /* RNDateTimePicker.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 134814201AA4EA6300B7C361;
+			remoteInfo = RNDateTimePicker;
+		};
 		ADBDB9261DFEBF0700ED6528 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = ADBDB91F1DFEBF0600ED6528 /* RCTBlob.xcodeproj */;
@@ -559,9 +567,11 @@
 		6742422040AC419C80926888 /* libRNFetchBlob.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRNFetchBlob.a; sourceTree = "<group>"; };
 		6AB9A21C9DD440DE899785E2 /* RNVectorIcons.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = RNVectorIcons.xcodeproj; path = "../node_modules/react-native-vector-icons/RNVectorIcons.xcodeproj"; sourceTree = "<group>"; };
 		72EEF6E4383446DA91C07DF0 /* libRNCWebView.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRNCWebView.a; sourceTree = "<group>"; };
+		7313AD3571D04D2081FDE9B1 /* libRNDateTimePicker.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libRNDateTimePicker.a; sourceTree = "<group>"; };
 		7486B3ADFE6E4933A10EB3E2 /* EvilIcons.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = EvilIcons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/EvilIcons.ttf"; sourceTree = "<group>"; };
 		770EB60891D549ED898A45CA /* RNRandomBytes.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = RNRandomBytes.xcodeproj; path = "../node_modules/react-native-randombytes/RNRandomBytes.xcodeproj"; sourceTree = "<group>"; };
 		78C398B01ACF4ADC00677621 /* RCTLinking.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTLinking.xcodeproj; path = "../node_modules/react-native/Libraries/LinkingIOS/RCTLinking.xcodeproj"; sourceTree = "<group>"; };
+		8214F60179334E07BB8E0DB8 /* RNDateTimePicker.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = RNDateTimePicker.xcodeproj; path = "../node_modules/@react-native-community/datetimepicker/ios/RNDateTimePicker.xcodeproj"; sourceTree = "<group>"; };
 		832341B01AAA6A8300B99B32 /* RCTText.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTText.xcodeproj; path = "../node_modules/react-native/Libraries/Text/RCTText.xcodeproj"; sourceTree = "<group>"; };
 		842860A0D38C4F53A3EF76D3 /* FontAwesome5_Brands.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = FontAwesome5_Brands.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome5_Brands.ttf"; sourceTree = "<group>"; };
 		893399C234F94788BA8526F8 /* RNImagePicker.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = RNImagePicker.xcodeproj; path = "../node_modules/react-native-image-picker/ios/RNImagePicker.xcodeproj"; sourceTree = "<group>"; };
@@ -639,6 +649,7 @@
 				C78EECB16082448B90D851A7 /* libRNFetchBlob.a in Frameworks */,
 				C384E8F71D9F4A3B8FF19E44 /* libRNCWebView.a in Frameworks */,
 				497FA154902F40AFBBFF1A76 /* libRNTextInputMask.a in Frameworks */,
+				E3F18E5EE5FD4C98AD647F19 /* libRNDateTimePicker.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -877,6 +888,7 @@
 				6742422040AC419C80926888 /* libRNFetchBlob.a */,
 				72EEF6E4383446DA91C07DF0 /* libRNCWebView.a */,
 				2EF2DA6EF62D4E0FB4C905E1 /* libRNTextInputMask.a */,
+				7313AD3571D04D2081FDE9B1 /* libRNDateTimePicker.a */,
 			);
 			name = "Recovered References";
 			sourceTree = "<group>";
@@ -970,6 +982,7 @@
 				45FD39CF955B4485B310D4D6 /* RNFetchBlob.xcodeproj */,
 				D8D27F42AD16452DB4EAC0FF /* RNCWebView.xcodeproj */,
 				EA34A4C3F8E3474D994E8A0D /* RNTextInputMask.xcodeproj */,
+				8214F60179334E07BB8E0DB8 /* RNDateTimePicker.xcodeproj */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -1006,6 +1019,14 @@
 				00E356EE1AD99517003FC87E /* verusmobileTests.xctest */,
 				2D02E47B1E0B4A5D006451C7 /* verusmobile-tvOS.app */,
 				2D02E4901E0B4A5D006451C7 /* verusmobile-tvOSTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		90E28DF72383EFB0008766F7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				90E28DFB2383EFB0008766F7 /* libRNDateTimePicker.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1267,6 +1288,10 @@
 				{
 					ProductGroup = 37CE7CE72376225500A031DC /* Products */;
 					ProjectRef = D8D27F42AD16452DB4EAC0FF /* RNCWebView.xcodeproj */;
+				},
+				{
+					ProductGroup = 90E28DF72383EFB0008766F7 /* Products */;
+					ProjectRef = 8214F60179334E07BB8E0DB8 /* RNDateTimePicker.xcodeproj */;
 				},
 				{
 					ProductGroup = 376F304C2374E8940015733F /* Products */;
@@ -1657,6 +1682,13 @@
 			remoteRef = 832341B41AAA6A8300B99B32 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		90E28DFB2383EFB0008766F7 /* libRNDateTimePicker.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libRNDateTimePicker.a;
+			remoteRef = 90E28DFA2383EFB0008766F7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		ADBDB9271DFEBF0700ED6528 /* libRCTBlob.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -1906,12 +1938,14 @@
 					"$(SRCROOT)/../node_modules/rn-fetch-blob/ios/**",
 					"$(SRCROOT)/../node_modules/react-native-webview/ios",
 					"$(SRCROOT)/../node_modules/react-native-text-input-mask/ios/**",
+					"$(SRCROOT)/../node_modules/@react-native-community/datetimepicker/ios/**",
 				);
 				INFOPLIST_FILE = verusmobileTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
@@ -1952,12 +1986,14 @@
 					"$(SRCROOT)/../node_modules/rn-fetch-blob/ios/**",
 					"$(SRCROOT)/../node_modules/react-native-webview/ios",
 					"$(SRCROOT)/../node_modules/react-native-text-input-mask/ios/**",
+					"$(SRCROOT)/../node_modules/@react-native-community/datetimepicker/ios/**",
 				);
 				INFOPLIST_FILE = verusmobileTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
@@ -2001,6 +2037,7 @@
 					"$(SRCROOT)/../node_modules/rn-fetch-blob/ios/**",
 					"$(SRCROOT)/../node_modules/react-native-webview/ios",
 					"$(SRCROOT)/../node_modules/react-native-text-input-mask/ios/**",
+					"$(SRCROOT)/../node_modules/@react-native-community/datetimepicker/ios/**",
 				);
 				INFOPLIST_FILE = verusmobile/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -2043,6 +2080,7 @@
 					"$(SRCROOT)/../node_modules/rn-fetch-blob/ios/**",
 					"$(SRCROOT)/../node_modules/react-native-webview/ios",
 					"$(SRCROOT)/../node_modules/react-native-text-input-mask/ios/**",
+					"$(SRCROOT)/../node_modules/@react-native-community/datetimepicker/ios/**",
 				);
 				INFOPLIST_FILE = verusmobile/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -2089,11 +2127,13 @@
 					"$(SRCROOT)/../node_modules/rn-fetch-blob/ios/**",
 					"$(SRCROOT)/../node_modules/react-native-webview/ios",
 					"$(SRCROOT)/../node_modules/react-native-text-input-mask/ios/**",
+					"$(SRCROOT)/../node_modules/@react-native-community/datetimepicker/ios/**",
 				);
 				INFOPLIST_FILE = "verusmobile-tvOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
@@ -2143,11 +2183,13 @@
 					"$(SRCROOT)/../node_modules/rn-fetch-blob/ios/**",
 					"$(SRCROOT)/../node_modules/react-native-webview/ios",
 					"$(SRCROOT)/../node_modules/react-native-text-input-mask/ios/**",
+					"$(SRCROOT)/../node_modules/@react-native-community/datetimepicker/ios/**",
 				);
 				INFOPLIST_FILE = "verusmobile-tvOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
@@ -2188,6 +2230,7 @@
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.facebook.REACT.verusmobile-tvOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2212,6 +2255,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",
 					"\"$(SRCROOT)/$(TARGET_NAME)\"",

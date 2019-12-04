@@ -19,7 +19,8 @@ import Spinner from 'react-native-loading-spinner-overlay';
 import { FormLabel, FormInput, FormValidationMessage, Icon, TouchableOpacity } from 'react-native-elements'
 import { connect } from 'react-redux'
 import { Dropdown } from 'react-native-material-dropdown'
-import { isNumber, truncateDecimal } from '../../../utils/math'
+import { isNumber } from '../../../utils/math';
+import { calculatePrice } from '../../../utils/price';
 import { SUPPORTED_CRYPTOCURRENCIES, SUPPORTED_FIAT_CURRENCIES, SUPPORTED_PAYMENT_METHODS } from '../../../utils/constants'
 import {
   setCoinRates,
@@ -42,11 +43,13 @@ import {
 } from '../../../images/customIcons';
 
 import {
-  sendTransaction,
+  getExchangeRates,
 } from '../../../actions/actions/PaymentMethod/WyreAccount';
 
 import {
   selectWyreCreatePaymentIsFetching,
+  selectExchangeRates,
+  selectExchangeRatesIsFetching,
 } from '../../../selectors/paymentMethods';
 
 class BuyCrypto extends Component {
@@ -64,8 +67,20 @@ class BuyCrypto extends Component {
       errors: { fromVal: null, toVal: null },
       loading: false,
       loadingOverlay: false,
-      addingCoin: false
+      addingCoin: false,
     };
+  }
+  componentDidMount() {
+    this.props.getExchangeRates();
+  }
+
+  componentWillReceiveProps(newProps) {
+    if(this.props.buy != newProps.buy) {
+      this.setState({
+        fromCurr: this.state.toCurr,
+        toCurr: this.state.fromCurr,
+      });
+    }
   }
 
   back = () => {
@@ -160,13 +175,13 @@ class BuyCrypto extends Component {
   }
 
   setFromVal = (value) => {
-    const converted = this.getPrice(value, true)
+    const converted = calculatePrice(value, this.state.fromCurr, this.state.toCurr, this.props.rates)
 
     this.setState({fromVal: value, toVal: (isNumber(converted)) ? converted : this.state.toVal})
   }
 
   setToVal = (value) => {
-    const converted = this.getPrice(value)
+    const converted = calculatePrice(value, this.state.fromCurr, this.state.toCurr, this.props.rates)
 
     this.setState({toVal: value, fromVal: (isNumber(converted)) ? converted : this.state.fromVal})
   }
@@ -221,28 +236,30 @@ class BuyCrypto extends Component {
   }
 
   switchToCurr = (coin) => {
-    if (!(this.props.activeCoinsForUser.find(coinObj => {
+    const coinIsAlreadyAddedToWallet = (this.props.activeCoinsForUser.find(coinObj => {
       return SUPPORTED_CRYPTOCURRENCIES.map(x => x.value).includes(coinObj.id)
-    }))) {
-      this.canAddCoin(coin)
-      .then((res) => {
-        this.setState({loadingOverlay: true, addingCoin: true}, () => {
-          if (res) {
-            this.handleAddCoin(coin)
-            .then((res) => {
+      }))
+      if (this.props.buy && !coinIsAlreadyAddedToWallet) {
+          this.canAddCoin(coin)
+          .then((res) => {
+            this.setState({loadingOverlay: true, addingCoin: true}, () => {
               if (res) {
-                this.handleUpdates()
-                .then(() => {
-                  this.setState({toCurr: coin, loadingOverlay: false, addingCoin: false})
+                this.handleAddCoin(coin)
+                .then((res) => {
+                  if (res) {
+                    this.handleUpdates()
+                    .then(() => {
+                      this.setState({toCurr: coin, loadingOverlay: false, addingCoin: false})
+                    })
+                  }
                 })
               }
             })
-          }
-        })
-      })
-    } else {
-      this.setState({toCurr: coin})
-    }
+          })
+      } else {
+        this.setState({toCurr: coin})
+      }
+  
   }
 
   switchPaymentMethod = (method) => {
@@ -254,21 +271,6 @@ class BuyCrypto extends Component {
    * @param {Number} amount Amount to get price for
    * @param {Boolean} fromFiat (Optional, Default = false) Whether to convert from fiat to crypto instead of crypto to fiat
    */
-  getPrice = (amount, fromFiat = false) => {
-    const price = this.props.rates[this.state.toCurr]
-
-    if (!(amount.toString()) ||
-      !(isNumber(amount)) ||
-      !price) {
-      return '-'
-    }
-
-    if (fromFiat) {
-      return truncateDecimal(amount/price, 8)
-    } else {
-      return truncateDecimal(amount*price, 2)
-    }
-  }
 
   validateFormData = () => {
     this.setState({
@@ -313,7 +315,12 @@ class BuyCrypto extends Component {
       if (!_errors) {
         switch (this.state.paymentMethod.id) {
           case 'US_BANK_ACCT':
-            this.usBankAcctPayment();
+              this.usBankAcctPayment(
+                this.state.fromVal,
+                this.state.fromCurr,
+                this.state.toCurr,
+                this.state.toVal
+              );
             break;
           default:
         }
@@ -323,21 +330,15 @@ class BuyCrypto extends Component {
     });
   }
 
-  usBankAcctPayment = () => {
-    const {
-      fromVal,
-      fromCurr,
-      toCurr,
-    } = this.state;
-
+  usBankAcctPayment = (fromVal, fromCurr, toCurr, toVal) => {
     if (ENABLE_WYRE) {
-      this.props.sendTransaction(
-        this.state.paymentMethod,
+      this.props.navigation.navigate('SendTransaction', {
+        paymentMethod: this.state.paymentMethod,
         fromCurr,
         fromVal,
         toCurr,
-        this.props.navigation,
-      );
+        toVal,
+      });
     }
   }
 
@@ -346,13 +347,14 @@ class BuyCrypto extends Component {
       onSelect: this.switchPaymentMethod,
     });
   }
+  
 
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.root}>
           <Spinner
-            visible={this.state.loadingOverlay || this.state.addingCoin || this.props.inProgress}
+            visible={this.state.loadingOverlay || this.state.addingCoin || this.props.inProgress || this.props.exchangeRatesFetching}
             textContent={
               this.state.addingCoin ?
                 "Adding coin..."
@@ -369,10 +371,10 @@ class BuyCrypto extends Component {
                 onRefresh={this.forceUpdate}
               />
           }>
-            <View style={styles.inputAndDropDownContainer}>
+          <View style={styles.inputAndDropDownContainer}>
               <View style={styles.formInputLabelContainer}>
                 <FormLabel labelStyle={styles.formLabel}>
-                  {"Buy with:"}
+                  {`${this.props.buy ? 'Buy:' : 'Receive: ' } `}
                 </FormLabel>
                 <FormInput
                   underlineColorAndroid="#86939d"
@@ -395,7 +397,7 @@ class BuyCrypto extends Component {
                   valueExtractor={(item) => {
                     return item.value
                   }}
-                  data={SUPPORTED_FIAT_CURRENCIES}
+                  data={this.props.buy ?  SUPPORTED_FIAT_CURRENCIES : SUPPORTED_CRYPTOCURRENCIES}
                   onChangeText={(value) => this.switchFromCurr(value)}
                   textColor="#E9F1F7"
                   selectedItemColor="#232323"
@@ -423,7 +425,7 @@ class BuyCrypto extends Component {
             <View style={styles.inputAndDropDownContainer}>
               <View style={styles.formInputLabelContainer}>
                 <FormLabel labelStyle={styles.formLabel}>
-                  {"Receive:"}
+                  {`${this.props.buy ? 'Receive:' : 'Sell:' } `}
                 </FormLabel>
                 <FormInput
                   underlineColorAndroid="#86939d"
@@ -434,6 +436,7 @@ class BuyCrypto extends Component {
                   autoCapitalize='words'
                   shake={this.state.errors.toVal}
                   onChangeText={(text) => this.setToVal(text)}
+                  editable={false}
                 />
               </View>
               <View>
@@ -446,7 +449,7 @@ class BuyCrypto extends Component {
                   valueExtractor={(item) => {
                     return item.value;
                   }}
-                  data={SUPPORTED_CRYPTOCURRENCIES}
+                  data={this.props.buy ? SUPPORTED_CRYPTOCURRENCIES : SUPPORTED_FIAT_CURRENCIES }
                   onChangeText={(value) => this.switchToCurr(value)}
                   textColor="#E9F1F7"
                   selectedItemColor="#232323"
@@ -517,7 +520,7 @@ class BuyCrypto extends Component {
               />
               <Button1
                 style={styles.saveChangesButton}
-                buttonContent="Confirm"
+                buttonContent="Proceed"
                 onPress={this._handleSubmit}
               />
             </View>
@@ -532,14 +535,15 @@ const mapStateToProps = (state) => ({
   activeCoin: state.coins.activeCoin,
   activeCoinsForUser: state.coins.activeCoinsForUser,
   activeAccount: state.authentication.activeAccount,
-  rates: state.ledger.rates,
   needsUpdate: state.ledger.needsUpdate,
   activeCoinList: state.coins.activeCoinList,
   inProgress: selectWyreCreatePaymentIsFetching(state),
+  rates: selectExchangeRates(state),
+  exchangeRatesFetching: selectExchangeRatesIsFetching(state)
 });
 
 const mapDispatchToProps = ({
-  sendTransaction,
+  getExchangeRates,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(BuyCrypto);

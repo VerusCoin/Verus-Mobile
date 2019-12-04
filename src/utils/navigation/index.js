@@ -36,6 +36,7 @@ import ManageWyrePaymentMethod from '../../containers/BuySellCrypto/PaymentMetho
 import ManageWyrePersonalDetails from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyrePersonalDetails';
 import ManageWyreProofOfAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreProofOfAddress';
 import ManageWyreAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreAddress';
+import SendTransaction from '../../containers/BuySellCrypto/PaymentMethod/SendTransaction/SendTransaction';
 
 const WALLET = 'wallet';
 
@@ -243,6 +244,14 @@ export const MainScreens =
         title: 'Manage Wyre Address',
         headerRight: null,
         drawerLockMode: 'locked-closed'
+      }
+    },
+    SendTransaction: {
+      screen: SendTransaction,
+      navigationOptions: {
+        title: 'Confirm transaction',
+        headerRight: null,
+        drawerLockMode: 'locked-closed',
       }
     },
   }, {

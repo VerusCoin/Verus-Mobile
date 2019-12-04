@@ -188,6 +188,36 @@ class WyreService {
       };
     }
   }
+  getRates = async () => {
+    try {
+      const data = await this.service.get(`${this.url}/v3/rates`)
+      return {
+        data: data,
+        error: false,
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: parseError(error)
+      };
+    }
+  }
+  getTransactions = async (key) => {
+    try {
+      this.setAuthorizationHeader(key);
+      const { data } = await this.service.get(`${this.url}/v3/transfers`)
+      return {
+        data: data,
+        error: false, 
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: parseError(error)
+      };
+    }
+  }
 }
+
 
 export default WyreService;

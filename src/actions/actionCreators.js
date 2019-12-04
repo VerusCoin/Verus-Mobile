@@ -312,3 +312,27 @@ export const createWyrePaymentResponse = (payment = {}) => ({
     payment,
   },
 });
+
+export const getActiveTransaction = () => ({
+  type: 'GET_EXCHANGE_RATES',
+  payload: {},
+});
+
+export const getActiveTransactionResponse = (rates = {}) => ({
+  type: 'GET_EXCHANGE_RATES_RESPONSE',
+  payload: {
+    rates,
+  },
+});
+
+export const getTransactionHistory = () => ({
+  type: 'GET_TRANSACTION_HISTORY',
+  payload: {},
+});
+
+export const getTransactionHistoryResponse = (history = {}) => ({
+  type: 'GET_TRANSACTION_HISTORY_RESPONSE',
+  payload: {
+    history,
+  }
+});
