@@ -254,9 +254,13 @@ export const getExchangeRates = () => async(dispatch) => {
 };
 
 export const getTransactions = () => async(dispatch, getState) => {
-    dispatch(getTransactionHistory());
     const state = getState();
     const paymentMethod = selectWyrePaymentMethod(state);
+    if (!paymentMethod) {
+        DelayedAlert('No Payment Account');
+        return;
+    }
+    dispatch(getTransactionHistory());
     try {
         const { data, error} = await WyreService.build().getTransactions(paymentMethod.key)
         if (!error){

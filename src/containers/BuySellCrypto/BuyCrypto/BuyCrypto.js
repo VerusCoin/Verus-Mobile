@@ -35,6 +35,7 @@ import {
 import { findCoinObj } from '../../../utils/CoinData'
 import styles from './BuyCrypto.styles'
 import AlertAsync from "react-native-alert-async";
+import DelayedAlert from '../../../utils/delayedAlert';
 
 import { ENABLE_WYRE } from '../../../utils/constants'
 
@@ -51,6 +52,7 @@ import {
   selectExchangeRates,
   selectExchangeRatesIsFetching,
 } from '../../../selectors/paymentMethods';
+import { selectWyrePaymentMethod } from '../../../selectors/authentication';
 
 class BuyCrypto extends Component {
   constructor(props) {
@@ -97,6 +99,12 @@ class BuyCrypto extends Component {
 
   _handleSubmit = () => {
     Keyboard.dismiss();
+    if (!this.props.paymentMethod){
+      DelayedAlert('Please Manage Account first')
+      this.props.navigation.navigate('SelectPaymentMethod', {
+        onSelect: this.switchPaymentMethod,
+      });
+    }
     this.validateFormData()
   }
 
@@ -539,7 +547,8 @@ const mapStateToProps = (state) => ({
   activeCoinList: state.coins.activeCoinList,
   inProgress: selectWyreCreatePaymentIsFetching(state),
   rates: selectExchangeRates(state),
-  exchangeRatesFetching: selectExchangeRatesIsFetching(state)
+  exchangeRatesFetching: selectExchangeRatesIsFetching(state),
+  paymentMethod: selectWyrePaymentMethod(state)
 });
 
 const mapDispatchToProps = ({
