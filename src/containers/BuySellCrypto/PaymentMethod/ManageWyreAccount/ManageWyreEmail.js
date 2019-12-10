@@ -13,6 +13,7 @@ import {
 } from 'react-native-elements';
 
 import Spinner from 'react-native-loading-spinner-overlay';
+import DelayedAlert from '../../../../utils/delayedAlert';
 
 import Button1 from '../../../../symbols/button1';
 
@@ -20,6 +21,7 @@ import {
   selectWyreAccountField,
   selectWyrePutAccountIsFetching,
 } from '../../../../selectors/paymentMethods';
+import { NavigationActions } from 'react-navigation';
 
 import {
   putWyreAccountField
@@ -70,7 +72,13 @@ class ManageWyreEmail extends Component {
     this.props.putWyreAccountField([{
       fieldId: 'individualEmail',
       value: this.state.email,
-    }], this.props.navigation);
+    }], 
+    this.props.navigation,
+    () => {
+      DelayedAlert('Success, Check your email and verify account');
+      this.props.navigation.dispatch(NavigationActions.back())
+    }
+    );
   };
 
   render() {
@@ -94,7 +102,7 @@ class ManageWyreEmail extends Component {
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage>
+              <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.error}
               </FormValidationMessage>
             </View>

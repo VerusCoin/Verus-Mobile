@@ -95,7 +95,7 @@ class ManageWyreCellphone extends Component {
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage>
+              <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.error}
               </FormValidationMessage>
             </View>

@@ -104,8 +104,9 @@ class BuyCrypto extends Component {
       this.props.navigation.navigate('SelectPaymentMethod', {
         onSelect: this.switchPaymentMethod,
       });
+    }else {
+      this.validateFormData()
     }
-    this.validateFormData()
   }
 
   handleError = (error, field) => {
@@ -307,6 +308,9 @@ class BuyCrypto extends Component {
       } else if (Number(_fromVal) <= 0) {
         this.handleError("Enter an amount greater than 0", "fromVal")
         _errors = true
+      } else if(!this.props.buy && _fromVal > this.props.balances[_fromCurr].result.confirmed){
+        this.handleError("You exceeded your balance amount", "fromVal")
+        _errors = true
       }
 
       if (!(_toVal.toString()) || _toVal.toString().length < 1) {
@@ -320,7 +324,7 @@ class BuyCrypto extends Component {
         _errors = true
       }
 
-      if (!_errors) {
+      if (!_errors && this.props.paymentMethod) {
         switch (this.state.paymentMethod.id) {
           case 'US_BANK_ACCT':
               this.usBankAcctPayment(
@@ -548,7 +552,8 @@ const mapStateToProps = (state) => ({
   inProgress: selectWyreCreatePaymentIsFetching(state),
   rates: selectExchangeRates(state),
   exchangeRatesFetching: selectExchangeRatesIsFetching(state),
-  paymentMethod: selectWyrePaymentMethod(state)
+  paymentMethod: selectWyrePaymentMethod(state),
+  balances: state.ledger.balances,
 });
 
 const mapDispatchToProps = ({
