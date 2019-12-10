@@ -25,7 +25,8 @@ import { getKey } from '../../utils/keyGenerator/keyGenerator'
 import { spacesLeadOrTrail, hasSpecialCharacters } from '../../utils/stringUtils'
 import AlertAsync from 'react-native-alert-async'
 import ScanSeed from '../../components/ScanSeed'
-import styles from './SignUp.styles'
+import styles from './SignUp.styles';
+import Colors from '../../globals/colors';
 
 class SignUp extends Component {
   constructor() {
@@ -259,7 +260,7 @@ class SignUp extends Component {
             Wallet passphrase/WIF key (min. 15 characters):
             </FormLabel>
             <FormInput 
-              underlineColorAndroid="#86939d"
+              underlineColorAndroid={Colors.quinaryColor}
               onChangeText={(text) => this.setState({wifKey: text})}
               value={this.state.wifKey}
               autoCapitalize={"none"}
@@ -301,7 +302,7 @@ class SignUp extends Component {
           <View style={styles.valueContainer}>
             <FormLabel labelStyle={styles.formLabel}>Enter a username:</FormLabel>
             <FormInput 
-              underlineColorAndroid="#86939d"
+              underlineColorAndroid={Colors.quinaryColor}
               onChangeText={(text) => this.setState({userName: text})}
               autoCapitalize={"none"}
               autoCorrect={false}
@@ -322,7 +323,7 @@ class SignUp extends Component {
             Enter an account password (min. 5 characters):
             </FormLabel>
             <FormInput 
-              underlineColorAndroid="#86939d"
+              underlineColorAndroid={Colors.quinaryColor}
               onChangeText={(text) => this.setState({pin: text})}
               autoCapitalize={"none"}
               autoCorrect={false}
@@ -344,7 +345,7 @@ class SignUp extends Component {
             Confirm account password:
             </FormLabel>
             <FormInput 
-              underlineColorAndroid="#86939d"
+              underlineColorAndroid={Colors.quinaryColor}
               onChangeText={(text) => this.setState({confirmPin: text})}
               autoCapitalize={"none"}
               autoCorrect={false}

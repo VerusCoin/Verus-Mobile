@@ -26,7 +26,8 @@ import {
   setUpdateIntervalID
  } from '../../actions/actionCreators';
 import { Dropdown } from 'react-native-material-dropdown';
-import styles from './Login.styles'
+import styles from './Login.styles';
+import Colors from '../../globals/colors';
 
 const UPDATE_INTERVAL = 60000
 
@@ -140,7 +141,8 @@ class Login extends Component {
         <View style={styles.root}>
           <Icon
             name="lock"
-            color="#009B72"
+            // color="#009B72"
+            color={Colors.successButtonColor}
             size={36}
           />
           <Text style={styles.loginLabel}>
@@ -160,9 +162,9 @@ class Login extends Component {
                 this.setState({selectedAccount: value})
                 //this.passwordInput.focus();
               }}
-              textColor="#E9F1F7"
-              selectedItemColor="#232323"
-              baseColor="#E9F1F7"
+              textColor={Colors.quinaryColor}
+              selectedItemColor={Colors.quinaryColor}
+              baseColor={Colors.quinaryColor}
               label="Select Account..."
             />
           </View>
@@ -181,7 +183,7 @@ class Login extends Component {
               Enter password:
             </FormLabel>
             <FormInput 
-              underlineColorAndroid="#86939d"
+              underlineColorAndroid={Colors.quinaryColor}
               onChangeText={(text) => this.setState({password: text})}
               autoCapitalize={"none"}
               autoCorrect={false}

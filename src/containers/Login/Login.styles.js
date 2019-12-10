@@ -1,8 +1,9 @@
 import { StyleSheet } from "react-native";
+import Colors from '../../globals/colors';
 
 export default styles = StyleSheet.create({
   root: {
-    backgroundColor: "#232323",
+    backgroundColor: Colors.tertiaryColor,
     flex: 1,
     flexDirection: "column",
     justifyContent: "center",
@@ -11,23 +12,27 @@ export default styles = StyleSheet.create({
   loginLabel: {
     backgroundColor: "transparent",
     fontSize: 22,
-    color: "#E9F1F7",
+    color: Colors.quaternaryColor,
     width: "85%",
     textAlign: "center"
   },
   formLabel: {
     textAlign:"left",
     marginRight: "auto",
+    color: Colors.quinaryColor,
+    fontWeight: "200",
   },
   valueContainer: {
     width: "85%",
   },
   dropDownContainer: {
+    marginTop: "10%",
     width: "85%",
     alignItems: "center"
   },
   formInput: {
     width: "100%",
+    color: Colors.quaternaryColor,
   },
   dropDown: {
     width: "90%",
@@ -39,14 +44,14 @@ export default styles = StyleSheet.create({
     width: 130,
     marginBottom: 0,
     marginTop: 35,
-    backgroundColor: "#009B72",
+    backgroundColor: Colors.successButtonColor,
   },
   addUserButton: {
     height: 45,
     width: 130,
     marginBottom: 100,
     marginTop: 10,
-    backgroundColor: "#2E86AB",
+    backgroundColor: Colors.linkButtonColor,
   },
   loadingContainer: {
     width: 400,
@@ -59,9 +64,9 @@ export default styles = StyleSheet.create({
   },
   loadingText: {
     backgroundColor: "transparent",
-    opacity: 0.86,
+    // opacity: 0.86,
     fontSize: 22,
     textAlign: "center",
-    color: "#E9F1F7"
+    color: Colors.quaternaryColor,
   },
 });

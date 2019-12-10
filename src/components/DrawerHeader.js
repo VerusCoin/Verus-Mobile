@@ -7,6 +7,7 @@ import {
   TouchableOpacity, 
   Platform 
 } from 'react-native';
+import Colors from '../globals/colors';
 
 const LOGO_DIR = require('../images/customIcons/verusHeaderLogo.png');
 
@@ -15,7 +16,7 @@ const DrawerHeader = ({ navigateToScreen }) => (
 		<View
 			style={{
 				flexDirection: 'row',
-				backgroundColor: "#2E86AB",
+				backgroundColor: Colors.primaryColor,
 				paddingVertical: 28,
 				paddingLeft: 17,
 				paddingTop: Platform.OS === 'ios' ? 35 : StatusBar.currentHeight,

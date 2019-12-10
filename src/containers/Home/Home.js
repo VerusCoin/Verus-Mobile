@@ -31,6 +31,7 @@ import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../../utils/math';
 import { NavigationActions } from 'react-navigation';
 import styles from './Home.styles'
+import Colors from "../../globals/colors";
 
 const CONNECTION_ERROR = "Connection Error"
 
@@ -224,6 +225,7 @@ class Home extends Component {
                 satsToCoins(this.props.balances[item.id].result.confirmed) :
                 0)), 2)))
             }
+              rightTitleStyle={{color: 'black'}}
             />
           </TouchableOpacity>   
         )}   
@@ -243,7 +245,8 @@ class Home extends Component {
             roundAvatar                    
             title={<Text style={styles.coinItemLabel}>Add Coin</Text>}                            
             avatar={require('../../images/customIcons/addCoin.png')}
-            containerStyle={{ borderBottomWidth: 0 }} 
+            containerStyle={{ borderBottomWidth: 0 }}
+            chevron={{ color: 'black'}}
           /> 
         </TouchableOpacity>
       </ScrollView>

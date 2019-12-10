@@ -64,6 +64,9 @@ class ManageWyreAccount extends Component {
         flex: 1,
         width: 100,
         marginRight: 10,
+        height: '30%',
+        paddingVertical: 0,
+        alignSelf: 'center',
       }}
       resizeMode="contain"
     />

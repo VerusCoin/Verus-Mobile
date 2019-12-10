@@ -1,14 +1,16 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet } from "react-native"; 
+import Colors from '../../../globals/colors';
 
 export default styles = StyleSheet.create({
   root: {
-    backgroundColor: "#232323",
+    backgroundColor: Colors.secondaryColor,
     flex: 1,
     flexDirection: "column"
   },
   formLabel: {
     textAlign:"left",
-    marginLeft: 3
+    marginLeft: 3,
+    color: 'black'
   },
   formInputLabelContainer: {
     flex: 1,
@@ -21,7 +23,7 @@ export default styles = StyleSheet.create({
     marginLeft: 0,
   },
   currencyLabel: {
-    color: '#86939e',
+    color: 'black',
     fontWeight: 'bold',
     fontSize: 20
   },
@@ -49,10 +51,11 @@ export default styles = StyleSheet.create({
     paddingRight: 0
   },
   buttonContainer: {
-    width: "75%",
+    width: "100%",
     backgroundColor: "transparent",
     flexDirection: "row",
     justifyContent: "space-between",
+    paddingHorizontal: '7%',
   },
   currencyDropDownContainer: {
     flex: 1,
@@ -69,26 +72,26 @@ export default styles = StyleSheet.create({
   },
   saveChangesButton: {
     height: 46,
-    backgroundColor: "#009B72",
+    backgroundColor: Colors.successButtonColor,
     width: '40%',
   },
   backButton: {
     height: 46,
-    backgroundColor: "rgba(206,68,70,1)",
+    backgroundColor: Colors.warningButtonColor,
     width: '40%',
   },
   touchableInputBank: {
     width: "85%",
     borderRadius: 7,
     borderWidth: 1,
-    borderColor: '#86939e',
+    borderColor: 'black',
     margin: 20,
   },
   inputBankFieldText:{
-    color: '#86939e',
+    color: 'black',
   },
   coinItemLabel: {
-    color: "#E9F1F7",
+    color: "black",
     marginLeft: 10,
   },
 });

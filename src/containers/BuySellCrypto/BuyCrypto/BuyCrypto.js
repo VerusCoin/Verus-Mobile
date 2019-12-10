@@ -104,8 +104,9 @@ class BuyCrypto extends Component {
       this.props.navigation.navigate('SelectPaymentMethod', {
         onSelect: this.switchPaymentMethod,
       });
+    }else {
+      this.validateFormData()
     }
-    this.validateFormData()
   }
 
   handleError = (error, field) => {
@@ -320,7 +321,7 @@ class BuyCrypto extends Component {
         _errors = true
       }
 
-      if (!_errors) {
+      if (!_errors && this.props.paymentMethod) {
         switch (this.state.paymentMethod.id) {
           case 'US_BANK_ACCT':
               this.usBankAcctPayment(
@@ -385,7 +386,7 @@ class BuyCrypto extends Component {
                   {`${this.props.buy ? 'Buy:' : 'Receive: ' } `}
                 </FormLabel>
                 <FormInput
-                  underlineColorAndroid="#86939d"
+                  underlineColorAndroid="black"
                   value={this.state.fromVal}
                   inputStyle={styles.formInput}
                   containerStyle={styles.formInputContainer}
@@ -407,7 +408,7 @@ class BuyCrypto extends Component {
                   }}
                   data={this.props.buy ?  SUPPORTED_FIAT_CURRENCIES : SUPPORTED_CRYPTOCURRENCIES}
                   onChangeText={(value) => this.switchFromCurr(value)}
-                  textColor="#E9F1F7"
+                  textColor=""
                   selectedItemColor="#232323"
                   value={this.state.fromCurr}
                   containerStyle={styles.currencyDropDownContainer}
@@ -436,7 +437,7 @@ class BuyCrypto extends Component {
                   {`${this.props.buy ? 'Receive:' : 'Sell:' } `}
                 </FormLabel>
                 <FormInput
-                  underlineColorAndroid="#86939d"
+                  underlineColorAndroid="black"
                   value={this.state.toVal}
                   inputStyle={styles.formInput}
                   containerStyle={styles.formInputContainer}
@@ -511,7 +512,7 @@ class BuyCrypto extends Component {
                     labelFontSize={12}
                     data={SUPPORTED_PAYMENT_METHODS}
                     onChangeText={(method) => this.switchPaymentMethod(method)}
-                    textColor="#86939e"
+                    textColor="black"
                     selectedItemColor="#232323"
                     baseColor="#86939e"
                     value={this.state.paymentMethod.name}

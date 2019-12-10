@@ -1,13 +1,15 @@
 import { StyleSheet } from "react-native";
+import Colors from '../../globals/colors';
 
 export default styles = StyleSheet.create({
   root: {
-    backgroundColor: "#232323",
+    backgroundColor: Colors.tertiaryColor,
     flex: 1,
   },
   formLabel: {
     textAlign:"left",
     marginRight: "auto",
+    color: Colors.quinaryColor,
   },
   keyGenLabel: {
     textAlign:"left",
@@ -35,13 +37,15 @@ export default styles = StyleSheet.create({
     marginBottom: 8,
     paddingBottom: 0,
     fontSize: 22,
-    color: "#E9F1F7",
+    // color: "#E9F1F7",
+    color: Colors.quaternaryColor,
     width: "85%",
     textAlign: "center"
   },
   wifInput: {
     width: "100%",
-    color: "#009B72"
+    // color: "#009B72"
+    color: Colors.quaternaryColor,
   },
   buttonContainer: {
     width: "75%",
@@ -57,13 +61,13 @@ export default styles = StyleSheet.create({
   },
   addAccountButton: {
     height: 46,
-    backgroundColor: "#2E86AB",
+    backgroundColor: Colors.linkButtonColor,
     marginTop: 15,
     marginBottom: 40
   },
   cancelButton: {
     height: 46,
-    backgroundColor: "rgba(206,68,70,1)",
+    backgroundColor: Colors.warningButtonColor,
     marginTop: 15,
   },
 });

@@ -94,7 +94,7 @@ class ManageWyreEmail extends Component {
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage>
+              <FormValidationMessage labelStyle={{fontSize: 12}}>
                 {this.state.error}
               </FormValidationMessage>
             </View>

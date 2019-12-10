@@ -15,7 +15,7 @@ import BottomNavigation, {
 //import SellCrypto from './SellCrypto/SellCrypto'
 import BuyCrypto from './BuyCrypto/BuyCrypto'
 import { Icon } from "react-native-elements"
-
+import Colors from '../../globals/colors';
 import { Buy, Sell } from '../../images/customIcons';
 
 class BuySellCryptoMenus extends Component {
@@ -42,7 +42,7 @@ class BuySellCryptoMenus extends Component {
         key: "buy-crypto",
         icon: "photo-camera",
         label: "Buy",
-        barColor: '#2E86AB',
+        barColor: Colors.primaryColor,
         pressColor: 'rgba(255, 255, 255, 0.16)',
         screen: "BuyCrypto",
         source: Buy

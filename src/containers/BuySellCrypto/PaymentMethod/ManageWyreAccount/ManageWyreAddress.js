@@ -143,7 +143,7 @@ class ManageWyreAddress extends Component {
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage>
+              <FormValidationMessage labelStyle={{fontSize: 12}}>
                 {this.state.errors.streetAddress}
               </FormValidationMessage>
             </View>
@@ -157,8 +157,9 @@ class ManageWyreAddress extends Component {
                 value={this.state.city}
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
+                // containerStyle={{height: 5}}
               />
-              <FormValidationMessage>
+              <FormValidationMessage labelStyle={{fontSize: 12}}>
                 {this.state.errors.city}
               </FormValidationMessage>
             </View>
@@ -168,7 +169,7 @@ class ManageWyreAddress extends Component {
                   labelExtractor={(item) => item.value}
                   valueExtractor={(item) => item.value}
                   label="State: "
-                  labelTextStyle={{ fontWeight: '700', paddingBottom: 20 }}
+                  labelTextStyle={{ fontWeight: '700' }}
                   labelFontSize={13}
                   data={STATES}
                   onChangeText={(value) => this.setState({ countryState: value })}
@@ -176,9 +177,10 @@ class ManageWyreAddress extends Component {
                   selectedItemColor="#232323"
                   baseColor="#86939e"
                   value={this.state.countryState}
+                  inputContainerStyle={{ borderBottomWidth: 1 , marginTop: 15}}
                 />
               </View>
-              <FormValidationMessage>
+              <FormValidationMessage labelStyle={{fontSize: 12}}>
                 {this.state.errors.countryState}
               </FormValidationMessage>
             </View>
@@ -193,7 +195,7 @@ class ManageWyreAddress extends Component {
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage>
+              <FormValidationMessage labelStyle={{fontSize: 12}}>
                 {this.state.errors.postalCode}
               </FormValidationMessage>
             </View>
@@ -203,7 +205,7 @@ class ManageWyreAddress extends Component {
                   labelExtractor={(item) => item.value}
                   valueExtractor={(item) => item.value}
                   label="Country: "
-                  labelTextStyle={{ fontWeight: '700', paddingBottom: 20 }}
+                  labelTextStyle={{ fontWeight: '700' }}
                   labelFontSize={13}
                   data={WYRE_COUNTRIES}
                   onChangeText={(value) => this.setState({ country: value })}
@@ -211,9 +213,10 @@ class ManageWyreAddress extends Component {
                   selectedItemColor="#232323"
                   baseColor="#86939e"
                   value={this.state.country ? `${this.state.country}` : ''}
+                  inputContainerStyle={{ borderBottomWidth: 1 }}
                 />
               </View>
-              <FormValidationMessage>
+              <FormValidationMessage labelStyle={{fontSize: 12}}>
                 {this.state.errors.country}
               </FormValidationMessage>
             </View>

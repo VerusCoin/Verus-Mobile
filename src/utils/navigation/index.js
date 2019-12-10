@@ -2,6 +2,7 @@ import React from "react";
 import { StackNavigator, DrawerNavigator } from "react-navigation";
 import { StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 import { Icon } from "react-native-elements";
+import Colors from '../../globals/colors';
 
 import SideMenu from '../../containers/SideMenu/SideMenu';
 
@@ -258,7 +259,7 @@ export const MainScreens =
     headerMode: 'screen',
     navigationOptions: ({navigation}) => ({
       headerStyle: {
-        backgroundColor: '#2E86AB',
+        backgroundColor: Colors.primaryColor,
       },
       headerRight: (
       <TouchableOpacity onPress={() =>

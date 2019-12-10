@@ -9,10 +9,13 @@ export default StyleSheet.create({
     viewContainer: {
         width: '90%',
         borderRadius: 7,
-        borderWidth: 0.5,
+        borderWidth: 0.8,
         borderColor: '#86939e',
-        height: 45,
-        margin: 10,
+        height: '8%',
+        margin: '2%',
+        marginVertical: 0,
+        paddingVertical: 0,
+        marginBottom: '2%',
     },
     wyreCard: {
         paddingLeft: 10,
@@ -21,6 +24,8 @@ export default StyleSheet.create({
         alignItems: 'center',
         flex: 1,
         width: '100%',
+        marginVertical: 0,
+        paddingVertical: 0,
     },
     userProfileHeader: {
         fontWeight: 'bold',
@@ -35,10 +40,12 @@ export default StyleSheet.create({
     wyreCardText: {
         color: 'white',
         paddingLeft: 10,
-        paddingTop: 3
     },
     wyreCardIconContainer: {
         flexDirection: 'row',
+        flex: 1,
+        alignItems: 'center',
+        
     },
     icon: {
         width: 20,
@@ -79,7 +86,8 @@ export default StyleSheet.create({
         textAlign: 'left',
         paddingTop: '0%',
         color: '#86939e',
-        marginBottom: -5,
+        marginVertical: 0,
+        paddingVertical: 0,
     },
     buttonContainer: {
         width: '80%',
@@ -97,9 +105,12 @@ export default StyleSheet.create({
         marginVertical: 20,
     },
     dropdownInput: {
-        width: '90%',
-        marginLeft: 20,
-        marginTop: -10,
+        width: '100%',
+        paddingHorizontal: '6%',
+        marginVertical: -13,
+        // borderBottomWidth: 1,
+        // borderBottomColor: 'white'
+        // marginTop: -10,
     },
     statusInfo: {
         color: 'white',
@@ -119,7 +130,8 @@ export default StyleSheet.create({
     },
     formInputContainer: {
       fontSize: 14,
-      width: 300,
+      width: '100%',
+      marginVertical: -13,
     },
     inputMaskDateOfBirth: {
       color: '#86939e',

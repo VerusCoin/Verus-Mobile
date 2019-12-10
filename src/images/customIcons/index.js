@@ -4,7 +4,7 @@ import Pending from './pending.png';
 import Email from './email.png';
 import Phone from './call-answer.png';
 import File from './file.png';
-import BankMain from './bank.png';
+import BankMain from './piggybank.png';
 import Bank from './bank2.png';
 import BankBuilding from './bank-building.png';
 import User from './user.png';
