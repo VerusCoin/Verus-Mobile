@@ -556,8 +556,9 @@ const mapStateToProps = (state) => ({
   balances: state.ledger.balances,
 });
 
-const mapDispatchToProps = ({
-  getExchangeRates,
+const mapDispatchToProps = (dispatch) => ({
+  dispatch,
+  getExchangeRates: () => dispatch(getExchangeRates()),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(BuyCrypto);
