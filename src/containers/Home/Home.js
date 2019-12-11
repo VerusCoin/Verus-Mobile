@@ -191,7 +191,7 @@ class Home extends Component {
           <ListItem       
             roundAvatar                
             title={<Text style={styles.coinItemLabel}>VerusPay</Text>}
-            rightIcon={{name: 'photo-camera'}}
+            hideChevron={true}
             avatar={require('../../images/customIcons/verusPay.png')}
             containerStyle={{ borderBottomWidth: 0 }} 
           />
@@ -216,15 +216,6 @@ class Home extends Component {
               avatar={item.logo}  
               subtitleStyle={this.props.balances.hasOwnProperty(item.id) && (this.props.balances[item.id].error || isNaN(this.props.balances[item.id].result.confirmed)) ? {color: "rgba(206,68,70,1)"} : null} 
               containerStyle={{ borderBottomWidth: 0 }} 
-              rightTitle={
-              ('$' + 
-              (!this.props.balances.hasOwnProperty(item.id) || this.props.balances[item.id].error || isNaN(this.props.balances[item.id].result.confirmed) ? 
-                '0.00'
-                :
-                truncateDecimal(((typeof(this.props.rates[item.id]) === 'number' ? this.props.rates[item.id] : 0)*(this.props.balances.hasOwnProperty(item.id) ? 
-                satsToCoins(this.props.balances[item.id].result.confirmed) :
-                0)), 2)))
-            }
               rightTitleStyle={{color: 'black'}}
             />
           </TouchableOpacity>   
@@ -232,21 +223,30 @@ class Home extends Component {
         extraData={this.props.balances}       
         keyExtractor={item => item.id}                            
         /> 
+        <View style={{
+            borderBottomColor: 'black',
+            borderBottomWidth: 1,
+            width: '100%',
+            alignSelf: 'center',
+            marginVertical: '3%'
+          }}> 
+        </View>
         <TouchableOpacity onPress={this._buySellCrypto}>
           <ListItem    
             roundAvatar
             title={<Text style={styles.coinItemLabel}>Buy/Sell Crypto</Text>}                            
-            avatar={require('../../images/customIcons/interestPlus.png')}
+            avatar={require('../../images/customIcons/buySell.png')}
             containerStyle={{ borderBottomWidth: 0 }} 
+            hideChevron={true}
           /> 
         </TouchableOpacity>
         <TouchableOpacity onPress={this._addCoin}>
           <ListItem    
             roundAvatar                    
             title={<Text style={styles.coinItemLabel}>Add Coin</Text>}                            
-            avatar={require('../../images/customIcons/addCoin.png')}
+            avatar={require('../../images/customIcons/coinAdd.png')}
             containerStyle={{ borderBottomWidth: 0 }}
-            chevron={{ color: 'black'}}
+            hideChevron={true}
           /> 
         </TouchableOpacity>
       </ScrollView>
@@ -256,7 +256,7 @@ class Home extends Component {
   render() {
     return (
       <View style={styles.root}>
-        <Text style={styles.fiatBalanceLabel}>
+        <Text style={styles.fiatBalanceLabel} >
         {'$' + truncateDecimal(this.state.totalFiatBalance, 2)}
         </Text>
         <Text style={styles.balanceSheetLabel}>Portfolio</Text>

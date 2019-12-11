@@ -16,6 +16,7 @@ import {
   Keyboard, 
   TouchableWithoutFeedback, 
   ActivityIndicator, 
+  Image,
 } from "react-native";
 import { connect } from 'react-redux';
 import { 
@@ -26,6 +27,7 @@ import {
   setUpdateIntervalID
  } from '../../actions/actionCreators';
 import { Dropdown } from 'react-native-material-dropdown';
+import { Verus } from '../../images/customIcons/index';
 import styles from './Login.styles';
 import Colors from '../../globals/colors';
 
@@ -139,14 +141,16 @@ class Login extends Component {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.root}>
-          <Icon
-            name="lock"
-            // color="#009B72"
-            color={Colors.successButtonColor}
-            size={36}
+          <Image
+            source={Verus}
+            style={{
+              height: '20%',
+              marginBottom: '5%'
+            }}
+            resizeMode="contain"
           />
           <Text style={styles.loginLabel}>
-            Wallet Login
+            Log in to Wallet
           </Text>
           <View style={styles.dropDownContainer}>
             <Dropdown
@@ -160,12 +164,13 @@ class Login extends Component {
               data={this.props.accounts}
               onChangeText={(value, index, data) => {
                 this.setState({selectedAccount: value})
-                //this.passwordInput.focus();
+                // this.passwordInput.focus();
               }}
               textColor={Colors.quinaryColor}
               selectedItemColor={Colors.quinaryColor}
               baseColor={Colors.quinaryColor}
               label="Select Account..."
+              pickerStyle={{backgroundColor: Colors.tertiaryColor}}
             />
           </View>
           <View style = {styles.valueContainer}>
@@ -179,19 +184,25 @@ class Login extends Component {
             </FormValidationMessage>
           </View>
           <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-              Enter password:
-            </FormLabel>
-            <FormInput 
-              underlineColorAndroid={Colors.quinaryColor}
-              onChangeText={(text) => this.setState({password: text})}
-              autoCapitalize={"none"}
-              autoCorrect={false}
-              secureTextEntry={true}
-              shake={this.state.errors.password}
-              inputStyle={styles.formInput}
-              ref={(input) => { this.passwordInput = input; }}
-            />
+            <View style={styles.passwordContainer}>
+              <Icon
+                name="lock"
+                color={Colors.linkButtonColor}
+                size={36}
+              />
+              <FormInput 
+                underlineColorAndroid={Colors.quinaryColor}
+                onChangeText={(text) => this.setState({password: text})}
+                autoCapitalize={"none"}
+                autoCorrect={false}
+                secureTextEntry={true}
+                shake={this.state.errors.password}
+                inputStyle={styles.formInput}
+                ref={(input) => { this.passwordInput = input; }}
+                containerStyle={styles.passwordInputContainer}
+                clearTextOnFocus
+              />
+            </View>
             <FormValidationMessage>
               {
                 this.state.errors.password ? 
@@ -214,17 +225,16 @@ class Login extends Component {
                 <ActivityIndicator animating={this.state.validating} size="large"/>
               </View>
             :
-              <View>
+              <View style={styles.buttonContainer}>
                 <Button1 
                 style={styles.unlockButton} 
-                buttonContent="Unlock"
+                buttonContent="UNLOCK"
                 onPress={this.validateFormData} 
                 />
-                <Button1 
-                style={styles.addUserButton} 
-                buttonContent="Add User"
-                onPress={this._handleAddUser} 
-                />
+                <View style={styles.signUpTextContainer}>
+                  <Text >Don’t have an account?</Text>  
+                  <Text style={styles.signUpText} onPress={this._handleAddUser}>    Add user</Text>
+                </View>
               </View>
             }
         </View>

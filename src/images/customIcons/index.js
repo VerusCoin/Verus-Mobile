@@ -12,7 +12,9 @@ import Address from './maps-and-flags.png';
 import Home from './home-icon-silhouette.png';
 import Buy from './buy.png';
 import Sell from './sell.png';
-import Calendar from './calendar.png'
+import Calendar from './calendar.png';
+import Verus from './Verus.png';
+import BankBuildingBlack from './bankBuildingBlack.png';
 
 export {
   Open,
@@ -30,6 +32,8 @@ export {
   Buy,
   Sell,
   Calendar,
+  Verus,
+  BankBuildingBlack
 };
 
 export default Open;

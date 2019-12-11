@@ -270,12 +270,17 @@ class SignUp extends Component {
               inputStyle={styles.wifInput}
               multiline={Platform.OS === 'ios' ? false : true}
             />
-            <TouchableOpacity onPress={this.scanSeed}>
-              <FormLabel labelStyle={styles.scanLabel}>
-                Scan seed from QR
-              </FormLabel>
-            </TouchableOpacity>
-            <FormLabel labelStyle={styles.formLabel}>
+            <Button1 
+              style={styles.scanSeedButton} 
+              buttonContent="Scan seed from QR" 
+              onPress={this.scanSeed}
+              />
+            <Button1 
+              style={styles.generatePassphraseButton} 
+              buttonContent="Generate random passphrase " 
+              onPress={this.setKey}
+              />
+            <FormLabel labelStyle={styles.passphraseDisplayLabel} containerStyle={{alignSelf: 'center'}}>
             Plaintext Passphrase Display:
             </FormLabel>
             <FormInput 
@@ -293,11 +298,6 @@ class SignUp extends Component {
                 null
             }
             </FormValidationMessage>}
-            <TouchableOpacity onPress={this.setKey}>
-              <FormLabel labelStyle={styles.keyGenLabel}>
-                Generate random passphrase 
-              </FormLabel>
-            </TouchableOpacity>
           </View>
           <View style={styles.valueContainer}>
             <FormLabel labelStyle={styles.formLabel}>Enter a username:</FormLabel>

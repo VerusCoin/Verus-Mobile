@@ -259,15 +259,15 @@ export const MainScreens =
     headerMode: 'screen',
     navigationOptions: ({navigation}) => ({
       headerStyle: {
-        backgroundColor: Colors.primaryColor,
+        backgroundColor: Colors.tertiaryColor,
       },
       headerRight: (
       <TouchableOpacity onPress={() =>
         navigation.navigate('DrawerOpen')} style={styles.menuButton}>
-        <Icon name="menu" size={35} color="#E9F1F7"/>
+        <Icon name="menu" size={35} color={Colors.quaternaryColor}/>
       </TouchableOpacity>),
       gesturesEnabled: false,
-      headerTintColor: '#E9F1F7',
+      headerTintColor: Colors.quaternaryColor,
     }),
   })
 
@@ -360,7 +360,7 @@ export const RootNavigator = (hasAccount, loading, signedIn) => {
     }, {
       contentComponent: SideMenu,
       drawerWidth: 250,
-      drawerPosition: 'left',
+      drawerPosition: 'right',
       drawerOpenRoute: 'DrawerOpen',
       drawerCloseRoute: 'DrawerClose',
       drawerToggleRoute: 'DrawerToggle',

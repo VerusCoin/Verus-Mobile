@@ -1,9 +1,10 @@
 import { StyleSheet } from "react-native";
 import Colors from '../../globals/colors';
+import { bold } from "ansi-colors";
 
 export default styles = StyleSheet.create({
   root: {
-    backgroundColor: Colors.tertiaryColor,
+    backgroundColor: Colors.secondaryColor,
     flex: 1,
     flexDirection: "column",
     justifyContent: "center",
@@ -14,7 +15,8 @@ export default styles = StyleSheet.create({
     fontSize: 22,
     color: Colors.quaternaryColor,
     width: "85%",
-    textAlign: "center"
+    textAlign: "center",
+    fontFamily: 'Roboto',
   },
   formLabel: {
     textAlign:"left",
@@ -26,13 +28,14 @@ export default styles = StyleSheet.create({
     width: "85%",
   },
   dropDownContainer: {
-    marginTop: "10%",
+    marginTop: "5%",
     width: "85%",
-    alignItems: "center"
+    alignItems: "center",
   },
   formInput: {
     width: "100%",
     color: Colors.quaternaryColor,
+    fontFamily: 'Avenir',
   },
   dropDown: {
     width: "90%",
@@ -41,16 +44,10 @@ export default styles = StyleSheet.create({
   },
   unlockButton: {
     height: 45,
-    width: 130,
+    width: '78%',
+    alignSelf: 'center',
+    marginTop: '2%',
     marginBottom: 0,
-    marginTop: 35,
-    backgroundColor: Colors.successButtonColor,
-  },
-  addUserButton: {
-    height: 45,
-    width: 130,
-    marginBottom: 100,
-    marginTop: 10,
     backgroundColor: Colors.linkButtonColor,
   },
   loadingContainer: {
@@ -69,4 +66,26 @@ export default styles = StyleSheet.create({
     textAlign: "center",
     color: Colors.quaternaryColor,
   },
+  buttonContainer: {
+    width: '100%',
+    alignSelf: 'center'
+  },
+  signUpTextContainer: {
+    flexDirection: 'row',
+    marginVertical: '8%',
+    alignSelf: 'center'
+  },
+  signUpText: {
+    color: Colors.linkButtonColor,
+    fontWeight: 'bold',
+    fontFamily: 'Avenir',
+  },
+  passwordContainer: {
+    width: '90%',
+    flexDirection: 'row',
+    alignSelf: 'center'
+  },
+  passwordInputContainer: {
+    width: '85%',
+  }
 });

@@ -40,7 +40,7 @@ import DelayedAlert from '../../../utils/delayedAlert';
 import { ENABLE_WYRE } from '../../../utils/constants'
 
 import {
-  BankMain,
+  BankBuildingBlack, Bank,
 } from '../../../images/customIcons';
 
 import {
@@ -85,9 +85,9 @@ class BuyCrypto extends Component {
     }
   }
 
-  back = () => {
-    this.props.navigation.dispatch(NavigationActions.back())
-  }
+  // back = () => {
+  //   this.props.navigation.dispatch(NavigationActions.back())
+  // }
 
   static navigationOptions = ({ navigation }) => {
     return {
@@ -321,7 +321,7 @@ class BuyCrypto extends Component {
         _errors = true
       }
 
-      if (!_errors && this.props.paymentMethod) {
+      if (!_errors) {
         switch (this.state.paymentMethod.id) {
           case 'US_BANK_ACCT':
               this.usBankAcctPayment(
@@ -383,7 +383,7 @@ class BuyCrypto extends Component {
           <View style={styles.inputAndDropDownContainer}>
               <View style={styles.formInputLabelContainer}>
                 <FormLabel labelStyle={styles.formLabel}>
-                  {`${this.props.buy ? 'Buy:' : 'Receive: ' } `}
+                  {`${this.props.buy ? 'Spend:' : 'Sell: ' } `}
                 </FormLabel>
                 <FormInput
                   underlineColorAndroid="black"
@@ -434,7 +434,7 @@ class BuyCrypto extends Component {
             <View style={styles.inputAndDropDownContainer}>
               <View style={styles.formInputLabelContainer}>
                 <FormLabel labelStyle={styles.formLabel}>
-                  {`${this.props.buy ? 'Receive:' : 'Sell:' } `}
+                  Receive
                 </FormLabel>
                 <FormInput
                   underlineColorAndroid="black"
@@ -489,14 +489,16 @@ class BuyCrypto extends Component {
                 <TouchableWithoutFeedback onPress={this.openPaymentMethodOptions}>
                   <View style={styles.formInput}>
                     <ListItem
-                      roundAvatar
                       title={(
                         <Text style={styles.coinItemLabel}>
                           {this.state.paymentMethod.name}
                         </Text>
                       )}
-                      avatar={BankMain}
+                      avatar={BankBuildingBlack}
+                      avatarOverlayContainerStyle={{backgroundColor: 'transparent'}}
+                      avatarStyle={{ height: '80%'}}
                       containerStyle={{ borderBottomWidth: 0 }}
+                      chevronColor={'black'}
                     />
                   </View>
                 </TouchableWithoutFeedback>
@@ -523,13 +525,8 @@ class BuyCrypto extends Component {
             )}
             <View style={styles.buttonContainer}>
               <Button1
-                style={styles.backButton}
-                buttonContent="Back"
-                onPress={this.back}
-              />
-              <Button1
                 style={styles.saveChangesButton}
-                buttonContent="Proceed"
+                buttonContent="PROCEED"
                 onPress={this._handleSubmit}
               />
             </View>
@@ -552,8 +549,9 @@ const mapStateToProps = (state) => ({
   paymentMethod: selectWyrePaymentMethod(state)
 });
 
-const mapDispatchToProps = ({
-  getExchangeRates,
+const mapDispatchToProps = (dispatch) => ({
+  dispatch,
+  getExchangeRates: () => dispatch(getExchangeRates()),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(BuyCrypto);

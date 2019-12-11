@@ -311,7 +311,7 @@ class SideMenu extends Component {
           <ListItem    
           roundAvatar                    
           title={"Add Coin"}                           
-          avatar={require('../../images/customIcons/addCoin.png')}
+          avatar={require('../../images/customIcons/coinAdd.png')}
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: -1 })}
           /> 

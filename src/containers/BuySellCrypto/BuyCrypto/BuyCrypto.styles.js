@@ -71,9 +71,9 @@ export default styles = StyleSheet.create({
     maxHeight: 80,
   },
   saveChangesButton: {
-    height: 46,
+    height: 44,
     backgroundColor: Colors.successButtonColor,
-    width: '40%',
+    width: '100%',
   },
   backButton: {
     height: 46,
@@ -82,9 +82,6 @@ export default styles = StyleSheet.create({
   },
   touchableInputBank: {
     width: "85%",
-    borderRadius: 7,
-    borderWidth: 1,
-    borderColor: 'black',
     margin: 20,
   },
   inputBankFieldText:{

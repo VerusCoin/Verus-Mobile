@@ -3,22 +3,19 @@ import Colors from '../../globals/colors';
 
 export default styles = StyleSheet.create({
   root: {
-    backgroundColor: Colors.tertiaryColor,
+    backgroundColor: Colors.secondaryColor,
     flex: 1,
     alignItems: "center"
   },
 
   fiatBalanceLabel: {
-    backgroundColor: "transparent",
-    opacity: 0.89,
-    marginTop: 15,
-    marginBottom: 15,
-    paddingBottom: 0,
-    paddingTop: 0,
-    fontSize: 25,
+    backgroundColor: Colors.tertiaryColor,
+    paddingTop: 40,
+    fontSize: 60,
     textAlign: "center",
     color: Colors.quaternaryColor,
-    width: 359,
+    width: '100%',
+    height: '25%',
   },
   coinItemLabel: {
     color: Colors.quinaryColor,
@@ -26,17 +23,19 @@ export default styles = StyleSheet.create({
   },
   balanceSheetLabel: {
     width: "100%",
-    backgroundColor: "#E9F1F7",
+    backgroundColor: Colors.secondaryColor,
     opacity: 0.86,
     marginTop: 0,
     marginBottom: 0,
     paddingBottom: 15,
     paddingTop: 15,
     fontSize: 22,
-    textAlign: "center",
+    textAlign: "left",
     color: Colors.quinaryColor,
+    paddingLeft: 15,
+    fontWeight: '600'
   },
   coinList: {
-    width: "100%",
+    width: "85%",
   },
 });
