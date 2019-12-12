@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   header_title_back: {
     backgroundColor: 'transparent',
     height: 55,
-    textAlign: 'center',
+    textAlign: 'right',
     fontSize: 22,
     color: "#E9F1F7",
     paddingTop: 12,

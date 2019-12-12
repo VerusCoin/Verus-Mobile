@@ -103,7 +103,7 @@ export const getAccount = () => async(dispatch, getState) => {
     }
 };
 
-export const putWyreAccountField = (params, navigation) => async(dispatch, getState) => {
+export const putWyreAccountField = (params, navigation, onSuccess) => async(dispatch, getState) => {
     const state = getState();
     const paymentMethod = selectWyrePaymentMethod(state);
     if (!paymentMethod) {
@@ -122,7 +122,9 @@ export const putWyreAccountField = (params, navigation) => async(dispatch, getSt
         dispatch(putWyreAccountResponse(null));
         return DelayedAlert('Failed updating Wyre account', error);
     }
-
+    if(onSuccess){
+       return onSuccess()
+    }
     return navigation.dispatch(NavigationActions.back());
 };
 

@@ -206,8 +206,94 @@ class WyreService {
     try {
       this.setAuthorizationHeader(key);
       const { data } = await this.service.get(`${this.url}/v3/transfers`)
+      const example = {
+        "data": [
+            {
+                "closedAt": 1536857934000,
+                "createdAt": 1536857933000,
+                "id": "TF-PLPZGNU4EHV",
+                "customId": null,
+                "source": "account:AC-RCNPH8MWL3E",
+                "dest": "account:AC-RCNPH8MWL3E",
+                "sourceCurrency": "USD",
+                "destCurrency": "CNY",
+                "sourceAmount": 1.01,
+                "destAmount": 6.83,
+                "fees": {
+                    "USD": 0.01
+                },
+                "sourceName": "Primary Account",
+                "destName": "Primary Account",
+                "status": "COMPLETED",
+                "message": null,
+                "exchangeRate": 6.8349,
+                "blockchainTxId": null,
+                "destNickname": null
+            },
+            {
+                "closedAt": 1524090636000,
+                "createdAt": 1524090632000,
+                "id": "TF-JD773YWJ3VB",
+                "customId": null,
+                "source": "paymentmethod:TestPaymentMethodApi",
+                "dest": "account:AC-RCNPH8MWL3E",
+                "sourceCurrency": "USD",
+                "destCurrency": "USD",
+                "sourceAmount": 10000,
+                "destAmount": 10000,
+                "fees": {},
+                "sourceName": "Payment Method TestPaymentMethodApi",
+                "destName": "Primary Account",
+                "status": "COMPLETED",
+                "message": null,
+                "exchangeRate": null,
+                "blockchainTxId": null
+            },
+            {
+              "closedAt": 1524090636000,
+              "createdAt": 1524090632000,
+              "id": "TF-JD773asdYWJ3VB",
+              "customId": null,
+              "source": "paymentmethod:TestPaymentMethodApi",
+              "dest": "account:AC-RCNPH8MWL3E",
+              "sourceCurrency": "USD",
+              "destCurrency": "USD",
+              "sourceAmount": 10000,
+              "destAmount": 10000,
+              "fees": {},
+              "sourceName": "Payment Method TestPaymentMethodApi",
+              "destName": "Primary Account",
+              "status": "COMPLETED",
+              "message": null,
+              "exchangeRate": null,
+              "blockchainTxId": null
+          },
+          {
+            "closedAt": 1524090636000,
+            "createdAt": 1524090632000,
+            "id": "TF-JD773YWasdJ3VB",
+            "customId": null,
+            "source": "paymentmethod:TestPaymentMethodApi",
+            "dest": "account:AC-RCNPH8MWL3E",
+            "sourceCurrency": "USD",
+            "destCurrency": "USD",
+            "sourceAmount": 10000,
+            "destAmount": 10000,
+            "fees": {},
+            "sourceName": "Payment Method TestPaymentMethodApi",
+            "destName": "Primary Account",
+            "status": "COMPLETED",
+            "message": null,
+            "exchangeRate": null,
+            "blockchainTxId": null
+        }
+        ],
+        "position": 0,
+        "recordsTotal": 2,
+        "recordsFiltered": 2
+    }
       return {
-        data: data,
+        data: example,
         error: false, 
       };
     } catch (error) {

@@ -1,18 +1,13 @@
 import { StyleSheet } from 'react-native';
+import Colors from '../../../../globals/colors';
 
 export default StyleSheet.create({
   manageAccountView: {
-    height: 35,
     marginTop: 15,
-    borderRadius: 5,
-    backgroundColor: '#009B72',
   },
   manageAccountLabel: {
-    textAlign: 'center',
-    paddingTop: 7,
-    fontWeight: '500',
-    color: 'white',
-    fontSize: 15,
+    height: 45,
+    backgroundColor: Colors.successButtonColor
   },
   bankAccountLabel: {
     color: 'black',
@@ -26,8 +21,10 @@ export default StyleSheet.create({
     padding: 10,
   },
   coinItemLabel: {
-    color: '#E9F1F7',
+    color: Colors.quaternaryColor,
     marginLeft: 10,
+    fontSize: 18,
+    fontWeight: '600'
   },
   coinItemContainer: {
     borderBottomWidth: 0,
@@ -39,5 +36,8 @@ export default StyleSheet.create({
     borderRadius: 7,
     borderColor: '#86939e',
     padding: 5,
+  },
+  rightTitleStyle: {
+    color: Colors.quaternaryColor,
   },
 });

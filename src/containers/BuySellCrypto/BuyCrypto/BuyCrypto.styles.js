@@ -5,7 +5,9 @@ export default styles = StyleSheet.create({
   root: {
     backgroundColor: Colors.secondaryColor,
     flex: 1,
-    flexDirection: "column"
+    flexDirection: "column",
+    paddingTop: '20%',
+    paddingBottom: 0,
   },
   formLabel: {
     textAlign:"left",
@@ -51,11 +53,11 @@ export default styles = StyleSheet.create({
     paddingRight: 0
   },
   buttonContainer: {
-    width: "100%",
+    width: "85%",
     backgroundColor: "transparent",
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: '7%',
+    marginTop: '35%',
   },
   currencyDropDownContainer: {
     flex: 1,

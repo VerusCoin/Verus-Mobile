@@ -191,7 +191,7 @@ class Home extends Component {
           <ListItem       
             roundAvatar                
             title={<Text style={styles.coinItemLabel}>VerusPay</Text>}
-            hideChevron={true}
+            hideChevron
             avatar={require('../../images/customIcons/verusPay.png')}
             containerStyle={{ borderBottomWidth: 0 }} 
           />
@@ -224,7 +224,7 @@ class Home extends Component {
         keyExtractor={item => item.id}                            
         /> 
         <View style={{
-            borderBottomColor: 'black',
+            borderBottomColor: Colors.quaternaryColor,
             borderBottomWidth: 1,
             width: '100%',
             alignSelf: 'center',
@@ -237,7 +237,7 @@ class Home extends Component {
             title={<Text style={styles.coinItemLabel}>Buy/Sell Crypto</Text>}                            
             avatar={require('../../images/customIcons/buySell.png')}
             containerStyle={{ borderBottomWidth: 0 }} 
-            hideChevron={true}
+            hideChevron
           /> 
         </TouchableOpacity>
         <TouchableOpacity onPress={this._addCoin}>
@@ -246,7 +246,7 @@ class Home extends Component {
             title={<Text style={styles.coinItemLabel}>Add Coin</Text>}                            
             avatar={require('../../images/customIcons/coinAdd.png')}
             containerStyle={{ borderBottomWidth: 0 }}
-            hideChevron={true}
+            hideChevron
           /> 
         </TouchableOpacity>
       </ScrollView>

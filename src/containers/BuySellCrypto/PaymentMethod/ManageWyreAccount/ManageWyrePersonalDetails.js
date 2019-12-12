@@ -23,6 +23,7 @@ import TextInputMask from 'react-native-text-input-mask';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Calendar} from '../../../../images/customIcons/index';
 import { parseDate } from '../../../../utils/date';
+import Colors from '../../../../globals/colors';
 
 
 class ManageWyrePersonalDetails extends Component {
@@ -157,13 +158,13 @@ class ManageWyrePersonalDetails extends Component {
                     Legal Name:
               </FormLabel>
               <FormInput
-                underlineColorAndroid="#86939d"
+                underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ name: text })}
                 value={this.state.name}
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage labelStyle={{fontSize: 12}}>
+              <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.errors.name}
               </FormValidationMessage>
             </View>
@@ -201,7 +202,7 @@ class ManageWyrePersonalDetails extends Component {
                     style={{backgroundColor: 'white'}} />
                 } 
               </View>
-              <FormValidationMessage labelStyle={{fontSize: 12}}>
+              <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.errors.dateOfBirth}
               </FormValidationMessage>
             </View>
@@ -216,14 +217,14 @@ class ManageWyrePersonalDetails extends Component {
                 mask={"[000]-[00]-[0000]"}
                 style={styles.inputMask}
               />
-              <FormValidationMessage labelStyle={{fontSize: 12}}>
+              <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.errors.socialSecurityNumber}
               </FormValidationMessage>
             </View>
             <View style={styles.buttonContainerBottom}>
               <Button1
                 style={styles.buttonSubmit}
-                buttonContent="Submit"
+                buttonContent="SUBMIT"
                 onPress={()=>{
                   if (this.state.showCalendar) {
                     this.hideCalendar();

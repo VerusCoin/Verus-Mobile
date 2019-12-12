@@ -82,7 +82,7 @@ class CoinDetails extends Component {
     return (
       <View style={styles.root}>
         <Image
-          style={{width: 50, height: 50, marginTop: 5}}
+          style={{width: 100,height: 100, resizeMode: 'contain', marginTop: '10%'}}
           source={this.state.fullCoinData.logo}
         />
         <Text style={styles.homeLabel}>{this.state.fullCoinData.id} Details</Text>
@@ -112,7 +112,7 @@ class CoinDetails extends Component {
               <Icon name="check" color="#50C3A5" size={30}/>
               </View>
             :
-              <Button1 style={styles.receiveBtn} buttonContent="Add Coin" onPress={() => this._handleAddCoin()}/>
+              <Button1 style={styles.receiveBtn} buttonContent="ADD COIN" onPress={() => this._handleAddCoin()}/>
         }
         </View>
         

@@ -10,6 +10,7 @@ import { SearchBar, ListItem } from "react-native-elements";
 import { View, FlatList, TouchableOpacity, Alert } from "react-native";
 import { connect } from 'react-redux';
 import styles from './AddCoin.styles'
+import Colors from '../../globals/colors';
 
 import {
   defaultAssetsPath,
@@ -91,8 +92,9 @@ class AddCoin extends Component {
                 roundAvatar                
                 title={item}
                 avatar={defaultAssetsPath.coinLogo[item.toLowerCase()]}
-                containerStyle={{ borderBottomWidth: 0 }}
-                titleStyle={{color: "#E9F1F7"}}
+                containerStyle={styles.listItemContainer}
+                titleStyle={{color: "black"}}
+                chevronColor={Colors.quinaryColor}
               />
             </TouchableOpacity>
           )}

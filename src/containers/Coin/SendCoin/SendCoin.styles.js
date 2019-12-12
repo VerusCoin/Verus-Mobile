@@ -1,16 +1,19 @@
 import { StyleSheet } from "react-native";
+import Colors from '../../../globals/colors';
 
 export default styles = StyleSheet.create({
   root: {
-    backgroundColor: "#232323",
+    backgroundColor: Colors.secondaryColor,
     flex: 1,
   },
   formLabel: {
     textAlign:"left",
     marginRight: "auto",
+    color: Colors.quinaryColor
   },
   formInput: {
     width: "100%",
+    color: Colors.quinaryColor
   },
   valueContainer: {
     width: "85%",
@@ -22,14 +25,14 @@ export default styles = StyleSheet.create({
     marginBottom: 15,
     paddingBottom: 0,
     paddingTop: 0,
-    fontSize: 25,
+    fontSize: 35,
     textAlign: "center",
-    color: "#009B72",
+    color: Colors.quinaryColor,
     width: 359,
   },
   sendLabel: {
     width: "100%",
-    backgroundColor: "#E9F1F7",
+    backgroundColor: Colors.tertiaryColor,
     opacity: 0.86,
     marginTop: 0,
     marginBottom: 0,
@@ -37,7 +40,7 @@ export default styles = StyleSheet.create({
     paddingTop: 15,
     fontSize: 22,
     textAlign: "center",
-    color: "#232323"
+    color: Colors.quinaryColor,
   },
   buttonContainer: {
     height: 45,
@@ -60,9 +63,9 @@ export default styles = StyleSheet.create({
     marginTop: 28
   },
   sendBtn: {
-    width: 104,
+    width: '80%',
     height: 45,
-    backgroundColor: "#009B72",
+    backgroundColor: Colors.successButtonColor,
     opacity: 1,
     marginTop: 0,
     marginBottom: 0

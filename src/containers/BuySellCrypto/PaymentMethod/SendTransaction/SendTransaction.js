@@ -18,6 +18,7 @@ import {
 } from '../../../../selectors/paymentMethods';
 import { ListItem } from "react-native-elements";
 import Spinner from 'react-native-loading-spinner-overlay';
+import Colors from '../../../../globals/colors';
 
 class SendTransaction extends Component {
     componentDidMount() {
@@ -44,44 +45,56 @@ class SendTransaction extends Component {
             <View style={styles.root}>
                 <View style={styles.containerConfirmTransaction}>
                     <View style={styles.containerTransactionInfo}>
-                        <Text style={styles.textStyle}>
-                            {`Payment method: ${this.props.navigation.state.params.paymentMethod.name}`}
+                        <Text style={styles.transactionInfoTitleTextStyle}>
+                            Payment method
                         </Text>
-                        <Text style={styles.textStyle}>
+                        <Text style={styles.transactionInfoSubtitleTextStyle}> 
+                            {this.props.navigation.state.params.paymentMethod.name}
+                        </Text>
+
+                        <Text style={styles.transactionInfoTitleTextStyle}>
+                            From
+                        </Text>
+                        <Text style={styles.transactionInfoSubtitleTextStyle}>
                             {
-                                `From ${this.props.navigation.state.params.fromVal} "${this.props.navigation.state.params.fromCurr}"`
+                                ` ${this.props.navigation.state.params.fromVal} "${this.props.navigation.state.params.fromCurr}"`
                             }
                         </Text>
-                        <Text style={styles.textStyle}>
+
+                        <Text style={styles.transactionInfoTitleTextStyle}>
+                            To
+                        </Text>
+                        <Text style={styles.transactionInfoSubtitleTextStyle}>
                             {
-                                `To ${this.props.navigation.state.params.toVal} "${this.props.navigation.state.params.toCurr}"`
+                                `${this.props.navigation.state.params.toVal} "${this.props.navigation.state.params.toCurr}"`
                             }
                         </Text>
                     </View>    
                     <View style={styles.buttonContainer}>
                         <Button1
-                            style={styles.saveChangesButton}
-                            buttonContent="Confirm"
-                            onPress={this.handleConfirm}
+                            style={styles.backButton}
+                            buttonContent="CANCEL"
+                            onPress={this.back}
                         />
                         <Button1
-                            style={styles.backButton}
-                            buttonContent="Cancel"
-                            onPress={this.back}
+                            style={styles.saveChangesButton}
+                            buttonContent="CONFIRM"
+                            onPress={this.handleConfirm}
                         />
                     </View>
                 </View>
-                <Text style={styles.textTransactionHistory}>Transaction history:</Text>
+                <Text style={styles.textTransactionHistory}>Transaction history</Text>
                 <ScrollView>
                 <Spinner
                     visible={this.props.isTransactionHistoryFetching}
                     textContent="Loading..."
-                    textStyle={{ color: '#FFF' }}
+                    textStyle={{ color: Colors.quaternaryColor }}
+                    color={Colors.quinaryColor}
                 />
-                    <View style={styles.containerTransactionHistory} >
+                    <View>
                         {
                             this.props.history && this.props.history.data && this.props.history.data.map((item) => (
-                                <View key={item.id}>
+                                <View key={item.id} style={styles.containerTransactionView}>
                                     <ListItem
                                         title={`From ${item.sourceAmount} ${item.sourceCurrency}`}
                                         titleStyle={styles.itemTextTransactionHistory}
@@ -98,6 +111,7 @@ class SendTransaction extends Component {
                                         hideChevron
                                         rightTitle={item.status}
                                         rightTitleStyle={styles.rightTitleStyle}
+                                        containerStyle={{borderBottomWidth: 0}}
                                     />
                                 </View>
                             ))

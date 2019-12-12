@@ -13,6 +13,7 @@ import {
 } from 'react-native-elements';
 
 import Spinner from 'react-native-loading-spinner-overlay';
+import DelayedAlert from '../../../../utils/delayedAlert';
 
 import Button1 from '../../../../symbols/button1';
 
@@ -20,12 +21,14 @@ import {
   selectWyreAccountField,
   selectWyrePutAccountIsFetching,
 } from '../../../../selectors/paymentMethods';
+import { NavigationActions } from 'react-navigation';
 
 import {
   putWyreAccountField
 } from '../../../../actions/actions/PaymentMethod/WyreAccount';
 
 import styles from './ManageWyreAccount.styles';
+import Colors from '../../../../globals/colors';
 
 class ManageWyreEmail extends Component {
   constructor(props) {
@@ -70,7 +73,13 @@ class ManageWyreEmail extends Component {
     this.props.putWyreAccountField([{
       fieldId: 'individualEmail',
       value: this.state.email,
-    }], this.props.navigation);
+    }], 
+    this.props.navigation,
+    () => {
+      DelayedAlert('Success, Check your email and verify account');
+      this.props.navigation.dispatch(NavigationActions.back())
+    }
+    );
   };
 
   render() {
@@ -88,20 +97,20 @@ class ManageWyreEmail extends Component {
                 Enter Email:
               </FormLabel>
               <FormInput
-                underlineColorAndroid="#86939d"
+                underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ email: text })}
                 value={this.state.email}
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage labelStyle={{fontSize: 12}}>
+              <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.error}
               </FormValidationMessage>
             </View>
             <View style={styles.buttonContainerBottom}>
               <Button1
                 style={styles.buttonSubmit}
-                buttonContent="Submit"
+                buttonContent="SUBMIT"
                 onPress={this.handleSubmit}
               />
             </View>

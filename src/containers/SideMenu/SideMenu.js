@@ -164,7 +164,7 @@ class SideMenu extends Component {
           <ListItem                        
           title={<Text style={{fontWeight: "bold"}}>{title}</Text>}                             
           containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
-          hideChevron={true}
+          hideChevron
           onPress={() => {return 0}}
           /> 
         )}
@@ -174,7 +174,7 @@ class SideMenu extends Component {
         <ListItem                        
           title={"Remove Coin"}     
           leftIcon={{name: "close"}}   
-          hideChevron={true}                     
+          hideChevron                     
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => {this._removeCoin(this.props.activeCoinsForUser[this.state.currentCoinIndex].id)}}
         />
@@ -256,7 +256,7 @@ class SideMenu extends Component {
         <ListItem                        
         title={<Text style={{fontWeight: "bold"}}>{title}</Text>}                             
         containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
-        hideChevron={true}
+        hideChevron
         /> 
       )}
       sections={[
@@ -283,7 +283,7 @@ class SideMenu extends Component {
         <ListItem                        
         title={<Text style={{fontWeight: "bold"}}>{title}</Text>}                             
         containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
-        hideChevron={true}
+        hideChevron
         /> 
       )}
       sections={[
@@ -340,7 +340,7 @@ class SideMenu extends Component {
             <ListItem                        
             title={<Text style={{fontWeight: "bold"}}>{"Back"}</Text>}                             
             containerStyle={{ borderBottomWidth: 0 }} 
-            hideChevron={true}
+            hideChevron
             leftIcon={
               <Icon
 							name="arrow-back"

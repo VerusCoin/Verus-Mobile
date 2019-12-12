@@ -1,16 +1,16 @@
 import { StyleSheet } from 'react-native';
+import Colors from '../../../../globals/colors';
 
 export default StyleSheet.create({
     userProfileContainer: {
-        paddingTop: 15,
-        backgroundColor: '#232323',
+        backgroundColor: Colors.secondaryColor,
         height: '100%'
     },
     viewContainer: {
         width: '90%',
         borderRadius: 7,
         borderWidth: 0.8,
-        borderColor: '#86939e',
+        borderColor: Colors.quaternaryColor,
         height: '8%',
         margin: '2%',
         marginVertical: 0,
@@ -38,35 +38,37 @@ export default StyleSheet.create({
         color: '#86939e',
     },
     wyreCardText: {
-        color: 'white',
+        color: Colors.quaternaryColor,
         paddingLeft: 10,
     },
     wyreCardIconContainer: {
         flexDirection: 'row',
         flex: 1,
         alignItems: 'center',
-        
     },
     icon: {
         width: 20,
         height: 20,
+        tintColor: 'black'
     },
     buttonSubmit: {
         alignSelf: 'center',
         marginTop: 10,
-        height: 35,
+        height: 46,
         width: '90%',
         backgroundColor: "#009B72",
     },
     buttonConfirm: {
-        width: 110,
+        width: '100%',
         height: 40,
         backgroundColor: '#009B72',
+        marginTop: 15,
     },
     buttonCancel: {
-        width: 110,
+        width: '100%',
         height: 40,
-        backgroundColor: 'rgba(206,68,70,1)',
+        backgroundColor: Colors.basicButtonColor,
+        marginTop: 15,
     },
     buttonSelect: {
         alignSelf: 'center',
@@ -75,17 +77,18 @@ export default StyleSheet.create({
         backgroundColor: "#009B72"
     },
     mainInputView: {
-        padding: '10%',
-        backgroundColor: '#232323',
+        backgroundColor: Colors.secondaryColor,
         height: '100%',
         paddingBottom: 10,
+        paddingHorizontal: '5%',
+        paddingVertical: '5%'
     },
     formLabel: {
         fontSize: 15,
         fontWeight: '700',
         textAlign: 'left',
         paddingTop: '0%',
-        color: '#86939e',
+        color: Colors.quaternaryColor,
         marginVertical: 0,
         paddingVertical: 0,
     },
@@ -93,10 +96,10 @@ export default StyleSheet.create({
         width: '80%',
         paddingTop: 10,
         backgroundColor: 'transparent',
-        flexDirection: 'row',
+        flexDirection: 'column',
         alignSelf: 'center',
-        justifyContent: 'space-between',
-        height: 46,
+        alignContent: 'flex-end',
+        marginTop: '40%',
     },
     imageContainer: {
         width: 280,
@@ -108,20 +111,24 @@ export default StyleSheet.create({
         width: '100%',
         paddingHorizontal: '6%',
         marginVertical: -13,
-        // borderBottomWidth: 1,
-        // borderBottomColor: 'white'
-        // marginTop: -10,
     },
     statusInfo: {
-        color: 'white',
+        color: Colors.quaternaryColor,
         alignSelf: 'center',
+        fontSize: 15
+    },
+    statusInfoContent: {
+        color: Colors.quaternaryColor,
+        alignSelf: 'center',
+        fontSize: 15,
+        fontWeight: 'bold'
     },
     buttonContainerBottom: {
         flex: 1,
         justifyContent: 'flex-end',
     },
     inputMask: {
-      color: '#86939e',
+      color: Colors.quaternaryColor,
       borderBottomColor: '#86939d',
       borderBottomWidth: 2,
       width: '87%',
@@ -131,10 +138,11 @@ export default StyleSheet.create({
     formInputContainer: {
       fontSize: 14,
       width: '100%',
-      marginVertical: -13,
+      marginVertical: 0,
+      color: Colors.quaternaryColor,
     },
     inputMaskDateOfBirth: {
-      color: '#86939e',
+      color: Colors.quaternaryColor,
       borderBottomColor: '#86939d',
       borderBottomWidth: 2,
       width: '76%',
@@ -148,5 +156,44 @@ export default StyleSheet.create({
     },
     containerDateOfBirth: {
         flexDirection: 'row',
+    },
+    formValidationLabel: {
+        fontSize: 12,
+    }, 
+    dropdownInputContainer:{ 
+        borderBottomWidth: 1 , 
+        marginTop: 15
+    }, 
+    statusButtonAdd: {
+        backgroundColor: Colors.successButtonColor,
+        width: 110,
+        height: 35,
+        marginRight: 15,
+    },
+    statusButtonPending: {
+        backgroundColor: Colors.infoButtonColor,
+        width: 110,
+        height: 35,
+        marginRight: 15,
+    },
+    statusButtonApproved: {
+        backgroundColor: 'transparent',
+        width: 110,
+        height: 35,
+        marginRight: 15,
+    },
+    statusButtonApprovedSyle:{
+        fontSize: 15,
+        color: Colors.linkButtonColor,
+        width: 130,
+        textAlign: 'center',
+        fontWeight: '600'
+    },
+    statusButtonStyle: {
+        fontSize: 15,
+        width: 130,
+        textAlign: 'center',
+        fontWeight: '600',
+        color: Colors.tertiaryColor,
     },
 });

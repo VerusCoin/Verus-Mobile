@@ -34,9 +34,9 @@ import {
 } from '../../../actions/actionCreators'
 import { findCoinObj } from '../../../utils/CoinData'
 import styles from './BuyCrypto.styles'
-import AlertAsync from "react-native-alert-async";
+import DelayedAsyncAlert from '../../../utils/delayedAsyncAlert'
 import DelayedAlert from '../../../utils/delayedAlert';
-
+import Colors from '../../../globals/colors';
 import { ENABLE_WYRE } from '../../../utils/constants'
 
 import {
@@ -166,7 +166,7 @@ class BuyCrypto extends Component {
   }
 
   canAddCoin = (coinTicker) => {
-    return AlertAsync(
+    return DelayedAsyncAlert(
       'Coin Inactive',
       'In order to buy ' + coinTicker + ', you will need to add it to your wallet. Would you like to do so now?',
       [
@@ -249,26 +249,25 @@ class BuyCrypto extends Component {
       return SUPPORTED_CRYPTOCURRENCIES.map(x => x.value).includes(coinObj.id)
       }))
       if (this.props.buy && !coinIsAlreadyAddedToWallet) {
-          this.canAddCoin(coin)
-          .then((res) => {
-            this.setState({loadingOverlay: true, addingCoin: true}, () => {
-              if (res) {
-                this.handleAddCoin(coin)
-                .then((res) => {
-                  if (res) {
-                    this.handleUpdates()
-                    .then(() => {
-                      this.setState({toCurr: coin, loadingOverlay: false, addingCoin: false})
-                    })
-                  }
-                })
-              }
+      this.canAddCoin(coin)
+        .then((res) => {
+          if (res) {
+          this.setState({loadingOverlay: true, addingCoin: true}, () => {
+              this.handleAddCoin(coin)
+              .then((res) => {
+                if (res) {
+                  this.handleUpdates()
+                  .then(() => {
+                    this.setState({toCurr: coin, loadingOverlay: false, addingCoin: false})
+                  })
+                }
+              })
             })
-          })
+          }
+        })
       } else {
         this.setState({toCurr: coin})
       }
-  
   }
 
   switchPaymentMethod = (method) => {
@@ -308,6 +307,9 @@ class BuyCrypto extends Component {
       } else if (Number(_fromVal) <= 0) {
         this.handleError("Enter an amount greater than 0", "fromVal")
         _errors = true
+      } else if(!this.props.buy && _fromVal > this.props.balances[_fromCurr].result.confirmed){
+        this.handleError("You exceeded your balance amount", "fromVal")
+        _errors = true
       }
 
       if (!(_toVal.toString()) || _toVal.toString().length < 1) {
@@ -321,7 +323,7 @@ class BuyCrypto extends Component {
         _errors = true
       }
 
-      if (!_errors) {
+      if (!_errors && this.props.paymentMethod) {
         switch (this.state.paymentMethod.id) {
           case 'US_BANK_ACCT':
               this.usBankAcctPayment(
@@ -370,10 +372,11 @@ class BuyCrypto extends Component {
                 :
                 "Loading..."
             }
-            textStyle={{color: "#FFF"}}
+            textStyle={{color: Colors.quaternaryColor}}
+            color={Colors.quinaryColor}
           />
           <ScrollView
-            contentContainerStyle={{height: "100%", alignItems: "center", justifyContent: "center"}}
+            contentContainerStyle={{height: "100%", alignItems: "center"}}
             refreshControl={
               <RefreshControl
                 refreshing={this.state.loading}
@@ -418,6 +421,7 @@ class BuyCrypto extends Component {
                       <Icon size={24} style={styles.dropDownIcon} color="#86939e" name={"arrow-drop-down"} />
                     </View>
                   ) }}
+                  pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                 />
               </View>
             </View>
@@ -470,6 +474,7 @@ class BuyCrypto extends Component {
                       <Icon size={24} style={styles.dropDownIcon} color="#86939e" name={"arrow-drop-down"} />
                     </View>
                   ) }}
+                  pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                 />
               </View>
             </View>
@@ -496,7 +501,7 @@ class BuyCrypto extends Component {
                       )}
                       avatar={BankBuildingBlack}
                       avatarOverlayContainerStyle={{backgroundColor: 'transparent'}}
-                      avatarStyle={{ height: '80%'}}
+                      avatarStyle={{ resizeMode: 'contain'}}
                       containerStyle={{ borderBottomWidth: 0 }}
                       chevronColor={'black'}
                     />
@@ -546,7 +551,8 @@ const mapStateToProps = (state) => ({
   inProgress: selectWyreCreatePaymentIsFetching(state),
   rates: selectExchangeRates(state),
   exchangeRatesFetching: selectExchangeRatesIsFetching(state),
-  paymentMethod: selectWyrePaymentMethod(state)
+  paymentMethod: selectWyrePaymentMethod(state),
+  balances: state.ledger.balances,
 });
 
 const mapDispatchToProps = (dispatch) => ({

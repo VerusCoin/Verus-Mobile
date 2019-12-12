@@ -26,6 +26,7 @@ import QRModal from '../../../components/QRModal'
 import { coinsToSats, isNumber, truncateDecimal } from '../../../utils/math'
 import { setCoinRates, everythingNeedsUpdate } from '../../../actions/actionCreators'
 import styles from './ReceiveCoin.styles'
+import Colors from '../../../globals/colors';
 
 class ReceiveCoin extends Component {
   constructor(props) {
@@ -229,11 +230,13 @@ class ReceiveCoin extends Component {
             }}
             data={this.props.activeCoinsForUser}
             onChangeText={(value, index, data) => this.switchInvoiceCoin(value)}
-            textColor="#E9F1F7"
-            selectedItemColor="#232323"
-            baseColor="#E9F1F7"
+            textColor={Colors.quinaryColor}
+            selectedItemColor={Colors.quinaryColor}
+            baseColor={Colors.quinaryColor}
             label="Selected Coin:"
+            labelFontSize={17}
             value={this.state.selectedCoin}
+            containerStyle={{width: '85%'}}
           />
         </View>
         <View style={styles.valueContainer}>
@@ -251,7 +254,7 @@ class ReceiveCoin extends Component {
           Your address:
           </FormLabel>
           <FormInput 
-            underlineColorAndroid="#86939d"
+            underlineColorAndroid={Colors.quinaryColor}
             editable={false}
             value={this.state.address}
             autoCapitalize={"none"}
@@ -270,7 +273,7 @@ class ReceiveCoin extends Component {
           </FormValidationMessage>}
         </View>
         <TouchableOpacity onPress={this.copyAddressToClipboard} style={{marginTop: 5}}>
-          <Icon name="content-copy" size={25} color="#E9F1F7"/>
+          <Icon name="content-copy" size={25} color={Colors.quinaryColor}/>
         </TouchableOpacity>
         <View style={styles.valueContainer}>
           <View style={styles.labelContainer}>
@@ -286,7 +289,7 @@ class ReceiveCoin extends Component {
             }
           </View>
           <FormInput 
-            underlineColorAndroid="#86939d"
+            underlineColorAndroid={Colors.quinaryColor}
             onChangeText={(text) => this.setState({amount: text})}
             shake={this.state.errors.amount}
             inputStyle={styles.formInput}
@@ -314,7 +317,7 @@ class ReceiveCoin extends Component {
             {"Enter a note for the receiver (optional):"}
           </FormLabel>
           <FormInput 
-            underlineColorAndroid="#86939d"
+            underlineColorAndroid={Colors.quinaryColor}
             onChangeText={(text) => this.setState({memo: text})}
             autoCapitalize={"none"}
             autoCorrect={false}
@@ -333,7 +336,7 @@ class ReceiveCoin extends Component {
         <View style={styles.singleButtonContainer}>
           <Button1 
             style={styles.addAccountButton} 
-            buttonContent="Generate QR" 
+            buttonContent="GENERATE QR" 
             onPress={this.validateFormData}
           />
         </View>

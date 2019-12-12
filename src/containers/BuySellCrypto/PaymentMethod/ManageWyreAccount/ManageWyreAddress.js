@@ -19,6 +19,7 @@ import {
   putWyreAccountField
 } from '../../../../actions/actions/PaymentMethod/WyreAccount';
 import { STATES, WYRE_COUNTRIES } from '../../../../utils/constants';
+import Colors from '../../../../globals/colors';
 
 
 class ManageWyreAddress extends Component {
@@ -137,13 +138,13 @@ class ManageWyreAddress extends Component {
                     Street Address:
               </FormLabel>
               <FormInput
-                underlineColorAndroid="#86939d"
+                underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ streetAddress: text })}
                 value={this.state.streetAddress}
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage labelStyle={{fontSize: 12}}>
+              <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.errors.streetAddress}
               </FormValidationMessage>
             </View>
@@ -152,14 +153,13 @@ class ManageWyreAddress extends Component {
                     City:
               </FormLabel>
               <FormInput
-                underlineColorAndroid="#86939d"
+                underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ city: text })}
                 value={this.state.city}
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
-                // containerStyle={{height: 5}}
               />
-              <FormValidationMessage labelStyle={{fontSize: 12}}>
+              <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.errors.city}
               </FormValidationMessage>
             </View>
@@ -173,14 +173,15 @@ class ManageWyreAddress extends Component {
                   labelFontSize={13}
                   data={STATES}
                   onChangeText={(value) => this.setState({ countryState: value })}
-                  textColor="#86939e"
-                  selectedItemColor="#232323"
-                  baseColor="#86939e"
+                  textColor={Colors.quaternaryColor}
+                  selectedItemColor={Colors.quaternaryColor}
+                  baseColor={Colors.quaternaryColor}
                   value={this.state.countryState}
-                  inputContainerStyle={{ borderBottomWidth: 1 , marginTop: 15}}
+                  inputContainerStyle={styles.dropdownInputContainer}
+                  pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                 />
               </View>
-              <FormValidationMessage labelStyle={{fontSize: 12}}>
+              <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.errors.countryState}
               </FormValidationMessage>
             </View>
@@ -189,13 +190,13 @@ class ManageWyreAddress extends Component {
                     Postal Code:
               </FormLabel>
               <FormInput
-                underlineColorAndroid="#86939d"
+                underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ postalCode: text })}
                 value={this.state.postalCode}
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage labelStyle={{fontSize: 12}}>
+              <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.errors.postalCode}
               </FormValidationMessage>
             </View>
@@ -209,21 +210,22 @@ class ManageWyreAddress extends Component {
                   labelFontSize={13}
                   data={WYRE_COUNTRIES}
                   onChangeText={(value) => this.setState({ country: value })}
-                  textColor="#86939e"
-                  selectedItemColor="#232323"
-                  baseColor="#86939e"
+                  textColor={Colors.quaternaryColor}
+                  selectedItemColor={Colors.quaternaryColor}
+                  baseColor={Colors.quaternaryColor}
                   value={this.state.country ? `${this.state.country}` : ''}
-                  inputContainerStyle={{ borderBottomWidth: 1 }}
+                  inputContainerStyle={styles.dropdownInputContainer}
+                  pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                 />
               </View>
-              <FormValidationMessage labelStyle={{fontSize: 12}}>
+              <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.errors.country}
               </FormValidationMessage>
             </View>
             <View style={styles.buttonContainerBottom}>
               <Button1
                 style={styles.buttonSubmit}
-                buttonContent="Submit"
+                buttonContent="SUBMIT"
                 onPress={this.handleSubmit}
               />
             </View>

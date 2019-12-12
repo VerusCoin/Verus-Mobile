@@ -11,7 +11,7 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
-
+import Button1 from '../../../../symbols/button1';
 import Spinner from 'react-native-loading-spinner-overlay';
 import {
   selectWyreAccount,
@@ -46,31 +46,37 @@ class ManageWyreAccount extends Component {
     this.props.getAccount();
   }
 
-  renderSectionStatus = (status) => {
+  renderSectionStatus = (status, screen) => {
     switch (status) {
       case 'PENDING':
-        return Pending;
+        return(
+          <Button1
+            style={styles.statusButtonPending}
+            buttonContent="PENDING"
+            onPress={() => this.navigate(screen)}
+            buttonStyle={styles.statusButtonStyle}
+          />
+        )
       case 'APPROVED':
-        return Approved;
+        return (
+          <Button1
+            style={styles.statusButtonApproved}
+            buttonContent="APPROVED"
+            onPress={() => this.navigate(screen)}
+            buttonStyle={styles.statusButtonApprovedSyle}
+        />
+        )
       default:
-        return Open;
+        return (
+          <Button1
+            style={styles.statusButtonAdd}
+            buttonContent="ADD"
+            onPress={() => this.navigate(screen)}
+            buttonStyle={styles.statusButtonStyle}
+        />
+        )
     }
   }
-
-  renderImage = (status) => (
-    <Image
-      source={this.renderSectionStatus(status)}
-      style={{
-        flex: 1,
-        width: 100,
-        marginRight: 10,
-        height: '30%',
-        paddingVertical: 0,
-        alignSelf: 'center',
-      }}
-      resizeMode="contain"
-    />
-  )
 
   renderEmailSection = () => {
     const emailObj = this.props.account.denormalizedProfileFields.individualEmail || {};
@@ -123,7 +129,7 @@ class ManageWyreAccount extends Component {
           <Text style={styles.wyreCardText}>{label}</Text>
         </View>
         <View>
-          {this.renderImage(status)}
+          {this.renderSectionStatus(status, screen)}
         </View>
       </View>
     </TouchableHighlight>
@@ -140,7 +146,7 @@ class ManageWyreAccount extends Component {
           <Spinner
             visible={this.props.isFetching}
             textContent="Loading..."
-            textStyle={{ color: '#FFF' }}
+            textStyle={{ color: 'black' }}
           />
           <ScrollView
             contentContainerStyle={{ height: '100%', alignItems: 'center', justifyContent: 'center' }}
@@ -152,6 +158,24 @@ class ManageWyreAccount extends Component {
             )}
           >
             <Text style={styles.userProfileHeader}>Verification Set Up</Text>
+            <View style={{padding: 20}}>
+              <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
+                <Text style={styles.statusInfo}>
+                  Account Id: &nbsp; &nbsp;
+                </Text>
+                <Text style={styles.statusInfoContent}>
+                {this.props.account.id}
+                </Text>
+              </View>
+              <View style={{flexDirection: 'row', alignSelf: 'center'}}>
+                <Text style={styles.statusInfo}>
+                  Account Status: &nbsp; &nbsp;
+                </Text>
+                <Text style={styles.statusInfoContent}>
+                  {this.props.account.status}
+                </Text>
+              </View>
+            </View>
             {this.renderEmailSection()}
             {this.renderCellphoneSection()}
             {this.renderPersonalDetailsSection()}
@@ -159,16 +183,7 @@ class ManageWyreAccount extends Component {
             {this.renderDocumentsSection()}
             {this.renderPaymentMethodSection()}
             {this.renderProofOfAddressSection()}
-            <View style={{ padding: 20 }}>
-              <Text style={styles.statusInfo}>
-                Account Id: &nbsp; &nbsp;
-                {this.props.account.id}
-              </Text>
-              <Text style={styles.statusInfo}>
-                Account Status: &nbsp; &nbsp;
-                {this.props.account.status}
-              </Text>
-            </View>
+            
           </ScrollView>
         </View>
       </TouchableWithoutFeedback>
