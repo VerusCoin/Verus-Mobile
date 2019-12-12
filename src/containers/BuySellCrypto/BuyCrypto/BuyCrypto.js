@@ -34,7 +34,7 @@ import {
 } from '../../../actions/actionCreators'
 import { findCoinObj } from '../../../utils/CoinData'
 import styles from './BuyCrypto.styles'
-import AlertAsync from "react-native-alert-async";
+import DelayedAsyncAlert from '../../../utils/delayedAsyncAlert'
 import DelayedAlert from '../../../utils/delayedAlert';
 
 import { ENABLE_WYRE } from '../../../utils/constants'
@@ -166,7 +166,7 @@ class BuyCrypto extends Component {
   }
 
   canAddCoin = (coinTicker) => {
-    return AlertAsync(
+    return DelayedAsyncAlert(
       'Coin Inactive',
       'In order to buy ' + coinTicker + ', you will need to add it to your wallet. Would you like to do so now?',
       [
@@ -249,26 +249,25 @@ class BuyCrypto extends Component {
       return SUPPORTED_CRYPTOCURRENCIES.map(x => x.value).includes(coinObj.id)
       }))
       if (this.props.buy && !coinIsAlreadyAddedToWallet) {
-          this.canAddCoin(coin)
-          .then((res) => {
-            this.setState({loadingOverlay: true, addingCoin: true}, () => {
-              if (res) {
-                this.handleAddCoin(coin)
-                .then((res) => {
-                  if (res) {
-                    this.handleUpdates()
-                    .then(() => {
-                      this.setState({toCurr: coin, loadingOverlay: false, addingCoin: false})
-                    })
-                  }
-                })
-              }
+      this.canAddCoin(coin)
+        .then((res) => {
+          if (res) {
+          this.setState({loadingOverlay: true, addingCoin: true}, () => {
+              this.handleAddCoin(coin)
+              .then((res) => {
+                if (res) {
+                  this.handleUpdates()
+                  .then(() => {
+                    this.setState({toCurr: coin, loadingOverlay: false, addingCoin: false})
+                  })
+                }
+              })
             })
-          })
+          }
+        })
       } else {
         this.setState({toCurr: coin})
       }
-  
   }
 
   switchPaymentMethod = (method) => {

@@ -45,7 +45,6 @@ export default StyleSheet.create({
         flexDirection: 'row',
         flex: 1,
         alignItems: 'center',
-        
     },
     icon: {
         width: 20,
@@ -75,10 +74,11 @@ export default StyleSheet.create({
         backgroundColor: "#009B72"
     },
     mainInputView: {
-        padding: '10%',
         backgroundColor: '#232323',
         height: '100%',
         paddingBottom: 10,
+        paddingHorizontal: '5%',
+        paddingVertical: '5%'
     },
     formLabel: {
         fontSize: 15,
@@ -128,7 +128,7 @@ export default StyleSheet.create({
     formInputContainer: {
       fontSize: 14,
       width: '100%',
-      marginVertical: -13,
+      marginVertical: 0,
     },
     inputMaskDateOfBirth: {
       color: '#86939e',
