@@ -170,8 +170,9 @@ class Login extends Component {
               selectedItemColor={Colors.quinaryColor}
               baseColor={Colors.quinaryColor}
               label="Select Account..."
-              labelTextStyle={{fontFamily: 'Avenir'}}
+              labelTextStyle={{fontFamily: 'Avenir-Black'}}
               pickerStyle={{backgroundColor: Colors.tertiaryColor}}
+              itemTextStyle={{fontFamily: 'Avenir-Book'}}
             />
           </View>
           <View style = {styles.valueContainer}>

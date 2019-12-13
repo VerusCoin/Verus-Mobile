@@ -45,8 +45,7 @@ export default styles = StyleSheet.create({
     fontSize: 22,
     textAlign: "center",
     color: Colors.quinaryColor,
-    fontFamily: 'Avenir',
-    fontWeight: 'bold'
+    fontFamily: 'Avenir-Black',
   },
   headerContainer: {
     flexDirection: "row",

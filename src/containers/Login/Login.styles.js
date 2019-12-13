@@ -16,7 +16,7 @@ export default styles = StyleSheet.create({
         color: Colors.quaternaryColor,
         width: "85%",
         textAlign: "center",
-        fontFamily: 'Avenir',
+        fontFamily: 'Avenir-Black',
     },
     formLabel: {
         textAlign: "left",
@@ -35,7 +35,7 @@ export default styles = StyleSheet.create({
     formInput: {
         width: "100%",
         color: Colors.quaternaryColor,
-        fontFamily: 'Avenir',
+        fontFamily: 'Avenir-Book',
     },
     dropDown: {
         width: "90%",
@@ -79,11 +79,10 @@ export default styles = StyleSheet.create({
     },
     signUpText: {
         color: Colors.linkButtonColor,
-        fontWeight: 'bold',
-        fontFamily: 'Avenir',
+        fontFamily: 'Avenir-Black',
     },
     signUpTextQuestion: {
-        fontFamily: 'Avenir', 
+        fontFamily: 'Avenir-Black', 
         color: Colors.quaternaryColor
     },
     passwordContainer: {

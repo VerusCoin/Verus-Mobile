@@ -137,10 +137,10 @@ class SideMenu extends Component {
         <ListItem              
           roundAvatar          
           title={item.id}                           
-          avatar={item.logo}   
+          avatar={item.logo}  
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: index })}
-          titleStyle={{fontFamily: 'Avenir'}}
+          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '15%'}}
         />          
       )}          
       keyExtractor={item => item.id}                            
@@ -163,14 +163,21 @@ class SideMenu extends Component {
         )}
         renderSectionHeader={({section: {title}}) => (
           <ListItem                        
-          title={<Text style={{fontWeight: "bold"}}>{title}</Text>}                             
-          containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
-          hideChevron
-          onPress={() => {return 0}}
+            title={<Text style={{fontWeight: "bold"}}>{title}</Text>}                             
+            containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
+            hideChevron
+            onPress={() => {return 0}}
           /> 
-        )}
-        sections={this.sectionExtractor(this.state.currentCoinIndex)}
-        keyExtractor={(item, index) => item + index}
+          )}
+          sections={this.sectionExtractor(this.state.currentCoinIndex)}
+          keyExtractor={(item, index) => item + index}
+        />
+        <ListItem                        
+          title={"Buy/Sell coin"}     
+          leftIcon={{name: "close"}}   
+          hideChevron                     
+          containerStyle={{ borderBottomWidth: 0 }} 
+          onPress={() => {}}
         />
         <ListItem                        
           title={"Remove Coin"}     
@@ -274,7 +281,7 @@ class SideMenu extends Component {
       style={styles.coinList}
       renderItem={({item, index, section}) => (
         <ListItem    
-        leftIcon={{name: item.icon}}                    
+        leftIcon={{name: item.icon}}  
         title={item.title}                             
         containerStyle={{ borderBottomWidth: 0 }} 
         onPress={() => this._openSettings(item)}
@@ -315,7 +322,7 @@ class SideMenu extends Component {
           avatar={require('../../images/customIcons/coinAdd.png')}
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: -1 })}
-          titleStyle={{fontFamily: 'Avenir'}}
+          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '15%'}}
           /> 
           <ListItem    
           roundAvatar                    
@@ -323,15 +330,15 @@ class SideMenu extends Component {
           leftIcon={{name: 'settings'}}
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: -2 })}
-          titleStyle={{fontFamily: 'Avenir'}}
+          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '15%'}}
           />
           <ListItem    
           roundAvatar                    
-          title={"Log Out"}                           
+          title={"Log Out"}
           leftIcon={{name: 'exit-to-app'}}
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={this.handleLogout}
-          titleStyle={{fontFamily: 'Avenir'}}
+          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '15%'}} 
           /> 
 				</ScrollView>
       );

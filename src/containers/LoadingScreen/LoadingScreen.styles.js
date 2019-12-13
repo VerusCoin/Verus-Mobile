@@ -13,7 +13,9 @@ export default styles = StyleSheet.create({
     marginTop: 15,
     fontSize: 18,
     textAlign: "center",
-    color: Colors.quaternaryColor,
-    width: "70%"
+    color: Colors.quinaryColor,
+    width: "70%",
+    fontFamily: 'Avenir-Book',
+    fontWeight: 'normal'
   },
 });

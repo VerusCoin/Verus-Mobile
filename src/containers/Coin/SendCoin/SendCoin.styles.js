@@ -30,7 +30,7 @@ export default styles = StyleSheet.create({
     fontSize: 35,
     textAlign: "center",
     color: Colors.quinaryColor,
-    fontFamily: 'Avenir',
+    fontFamily: 'Avenir-Book',
   },
   sendLabel: {
     width: "100%",
@@ -43,8 +43,7 @@ export default styles = StyleSheet.create({
     fontSize: 22,
     textAlign: "center",
     color: Colors.quinaryColor,
-    fontFamily: 'Avenir',
-    fontWeight: 'bold'
+    fontFamily: 'Avenir-Black',
   },
   buttonContainer: {
     height: 45,

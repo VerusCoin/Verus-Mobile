@@ -32,8 +32,7 @@ export default styles = StyleSheet.create({
     color: Colors.quaternaryColor,
     width: "85%",
     textAlign: "center",
-    fontFamily: 'Avenir',
-    fontWeight: 'bold',
+    fontFamily: 'Avenir-Black',
   },
   wifInput: {
     width: "100%",

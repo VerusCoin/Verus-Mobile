@@ -32,7 +32,7 @@ export default styles = StyleSheet.create({
   },
   formInput: {
     width: "100%",
-    fontFamily: 'Avenir-Book',
+    fontFamily: 'Avenir',
     color: Colors.quaternaryColor
   },
   valueContainer: {
@@ -93,15 +93,11 @@ export default styles = StyleSheet.create({
     justifyContent: "space-between", 
     alignItems: "center",
     alignSelf: "center",
-    //borderWidth: 1,
-    //borderColor: "green",
     width: "100%"
   },
   serversContainer: {
     justifyContent: "center", 
-    //borderWidth: 1,
     width: "100%",
-    //borderColor: "red"
   },
   serverInput: { 
     width: "100%",
@@ -109,12 +105,9 @@ export default styles = StyleSheet.create({
   serverInputContainer: {
     marginHorizontal: 0,
     flex: 1,
-    //borderWidth: 1,
-    //borderColor: "blue",
-    //width: "100%",
   },
   labelContainer: {
-    width: "94%",
+    width: "80%",
     flexDirection: "row",
     justifyContent: "space-between"
   },

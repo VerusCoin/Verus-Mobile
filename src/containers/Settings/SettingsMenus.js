@@ -15,6 +15,7 @@ import AppInfo from './AppInfo/AppInfo'
 import ProfileSettings from './ProfileSettings/ProfileSettings'
 import WalletSettings from './WalletSettings/WalletSettings'
 import { Icon } from "react-native-elements"
+import Colors from '../../globals/colors';
 
 class SettingsMenus extends Component {
   constructor(props) {
@@ -40,7 +41,7 @@ class SettingsMenus extends Component {
         key: "settings-profile",
         icon: "account-circle",
         label: "Profile",
-        barColor: '#2E86AB',
+        barColor: Colors.primaryColor,
         pressColor: 'rgba(255, 255, 255, 0.16)',
         screen: "ProfileSettings"
       },
@@ -48,7 +49,7 @@ class SettingsMenus extends Component {
         key: "settings-wallet",
         icon: "account-balance-wallet",
         label: "Wallet",
-        barColor: '#EDAE49',
+        barColor: Colors.infoButtonColor,
         pressColor: 'rgba(255, 255, 255, 0.16)',
         screen: "WalletSettings"
       },
@@ -56,7 +57,7 @@ class SettingsMenus extends Component {
         key: "settings-info",
         icon: "info",
         label: "App Info",
-        barColor: '#009B72',
+        barColor: Colors.successButtonColor,
         pressColor: 'rgba(255, 255, 255, 0.16)',
         screen: "AppInfo"
       },
@@ -89,7 +90,9 @@ class SettingsMenus extends Component {
       isActive={isActive}
       key={tab.key ? tab.key : ''}
       label={tab.label ? tab.label : ''}
+      labelStyle={{fontFamily: 'Avenir-Black',paddingLeft: 5}}
       renderIcon={this.renderIcon(tab.icon)}
+      style={{flexDirection: 'row', alignSelf: 'center', justifyContent: 'center'}}
     />
   )
 

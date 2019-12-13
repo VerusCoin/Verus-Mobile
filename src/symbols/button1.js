@@ -54,10 +54,9 @@ const styles = StyleSheet.create({
     borderRadius: 5
   },
   buttonContent: {
-    fontSize: 18,
+    fontSize: 16,
     color: "#fff",
-    fontFamily: 'Avenir',
-    fontWeight: '400'
+    fontFamily: 'Avenir-Black',
   },
   newOne: {
     opacity: 0.7,

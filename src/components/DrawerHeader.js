@@ -28,7 +28,7 @@ const DrawerHeader = ({ navigateToScreen }) => (
 				source={LOGO_DIR}
 				style={{width: 50, height: 40, overflow: 'hidden' }}
 			/>
-			<Text style={{ color: '#FFF', paddingLeft: 9, fontSize: 16 }}>
+			<Text style={{ color: '#FFF', paddingLeft: 9, fontSize: 16, fontFamily: 'Avenir-Black' }}>
 				Verus Wallet
 			</Text>
 		</View>

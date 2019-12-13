@@ -10,7 +10,7 @@ export default styles = StyleSheet.create({
     textAlign:"left",
     marginRight: "auto",
     color: Colors.quinaryColor,
-    fontFamily: 'Avenir',
+    fontFamily: 'Avenir-Book',
     fontWeight: 'normal'
   },
   formInput: {

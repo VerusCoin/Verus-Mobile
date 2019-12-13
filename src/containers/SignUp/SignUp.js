@@ -277,8 +277,9 @@ class SignUp extends Component {
               />
             <Button1 
               style={styles.generatePassphraseButton} 
-              buttonContent="GENERATE RANDROM PASSPHRASE" 
+              buttonContent="GENERATE RANDOM PASSPHRASE" 
               onPress={this.setKey}
+              buttonStyle={{fontSize: 14, color: "#fff",fontFamily: 'Avenir-Black'}}
               />
             <FormLabel labelStyle={styles.passphraseDisplayLabel} containerStyle={{alignSelf: 'center'}}>
             Plaintext Passphrase Display:
