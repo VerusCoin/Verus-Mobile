@@ -50,6 +50,7 @@ export default styles = StyleSheet.create({
         marginBottom: 0,
         fontSize: 16,
         fontFamily: 'Avenir-Black',
+        fontWeight: '600',
         backgroundColor: Colors.linkButtonColor,
     },
     loadingContainer: {

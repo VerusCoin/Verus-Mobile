@@ -15,6 +15,7 @@ export default styles = StyleSheet.create({
     textAlign: "center",
     color: Colors.quaternaryColor,
     width: '100%',
+    fontFamily:'Avenir',
     height: '25%',
   },
   coinItemLabel: {

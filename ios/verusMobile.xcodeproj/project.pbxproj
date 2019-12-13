@@ -5,7 +5,6 @@
 	};
 	objectVersion = 46;
 	objects = {
-
 /* Begin PBXBuildFile section */
 		00C302E51ABCBA2D00DB3ED1 /* libRCTActionSheet.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 00C302AC1ABCB8CE00DB3ED1 /* libRCTActionSheet.a */; };
 		00C302E71ABCBA2D00DB3ED1 /* libRCTGeolocation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 00C302BA1ABCB90400DB3ED1 /* libRCTGeolocation.a */; };
@@ -78,6 +77,8 @@
 		ED2971652150620600B7C4FE /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ED2971642150620600B7C4FE /* JavaScriptCore.framework */; };
 		EF57A5451CC4430D9FF90702 /* libRNFetchBlob.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D33AC04A1278440F9EE275A2 /* libRNFetchBlob.a */; };
 		FD7EE387AC4E45E5B4D1F514 /* libRNSVG.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A9406C1E7CA41028945285A /* libRNSVG.a */; };
+		E0BA13AF3FFB4768AA7C470C /* Avenir-Book.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3933028624554855BA6D94D7 /* Avenir-Book.ttf */; };
+		02B3F564CFB04FEBABF99F4C /* Avenir-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5D4784C262FF4091869413F2 /* Avenir-Medium.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -587,6 +588,8 @@
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		ED2971642150620600B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS12.0.sdk/System/Library/Frameworks/JavaScriptCore.framework; sourceTree = DEVELOPER_DIR; };
 		FBA66685809B402F99E44A0F /* FontAwesome.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = FontAwesome.ttf; path = "../node_modules/react-native-vector-icons/Fonts/FontAwesome.ttf"; sourceTree = "<group>"; };
+		3933028624554855BA6D94D7 /* Avenir-Book.ttf */ = {isa = PBXFileReference; name = "Avenir-Book.ttf"; path = "../assets/fonts/Avenir/Avenir-Book.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		5D4784C262FF4091869413F2 /* Avenir-Medium.ttf */ = {isa = PBXFileReference; name = "Avenir-Medium.ttf"; path = "../assets/fonts/Avenir/Avenir-Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -911,6 +914,8 @@
 				71684689C4CF44C48337A195 /* Octicons.ttf */,
 				2B645A5770F54A05B5C0CC07 /* SimpleLineIcons.ttf */,
 				B657E79715FE4DD7BF1E0A5E /* Zocial.ttf */,
+				3933028624554855BA6D94D7 /* Avenir-Book.ttf */,
+				5D4784C262FF4091869413F2 /* Avenir-Medium.ttf */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -1762,6 +1767,8 @@
 				31D581FA69124DA69444F17C /* Octicons.ttf in Resources */,
 				6221547E8FDC4261903064C1 /* SimpleLineIcons.ttf in Resources */,
 				89D8B780F9B940B29D57A616 /* Zocial.ttf in Resources */,
+				E0BA13AF3FFB4768AA7C470C /* Avenir-Book.ttf in Resources */,
+				02B3F564CFB04FEBABF99F4C /* Avenir-Medium.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
