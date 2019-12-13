@@ -23,6 +23,7 @@ export default styles = StyleSheet.create({
   infoText: {
     fontSize: 16,
     color: Colors.quinaryColor,
+    fontFamily: 'Avenir-Book'
   },
   linkBox: {
     width: "65%",
@@ -30,7 +31,8 @@ export default styles = StyleSheet.create({
   linkText: {
     fontSize: 16,
     color: "#2E86AB",
-    textAlign: "right"
+    textAlign: "right",
+    fontFamily: 'Avenir-Book'
   },
   verifiedLabel: {
     marginTop: 10,

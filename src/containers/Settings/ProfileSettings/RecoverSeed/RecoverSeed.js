@@ -128,7 +128,7 @@ class RecoverSeed extends Component {
             Recover Wallet Seed
           </Text>
           <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
+            <FormLabel style={styles.formLabel}>
             Enter your account password:
             </FormLabel>
             <FormInput 

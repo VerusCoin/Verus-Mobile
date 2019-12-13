@@ -43,7 +43,7 @@ const WALLET = 'wallet';
 
 const styles = StyleSheet.create({
   header_title_noBack: {
-    fontFamily: 'Avenir',
+    fontFamily: 'Avenir-Black',
     backgroundColor: 'transparent',
     height: 55,
     textAlign: 'center',
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   },
 
   header_title_back: {
-    fontFamily: 'Avenir',
+    fontFamily: 'Avenir-Black',
     backgroundColor: 'transparent',
     height: 55,
     textAlign: 'right',
@@ -75,7 +75,7 @@ export const MainScreens =
       screen: Home,
       navigationOptions: {
         title: "Home",
-        headerLeft: null
+        headerLeft: null,
       }
     },
     AddCoin: {
@@ -262,6 +262,11 @@ export const MainScreens =
     navigationOptions: ({navigation}) => ({
       headerStyle: {
         backgroundColor: Colors.tertiaryColor,
+      },
+      headerTitleStyle:{
+        fontFamily: 'Avenir-Black',
+        fontWeight: 'normal',
+        fontSize: 22
       },
       headerRight: (
       <TouchableOpacity onPress={() =>

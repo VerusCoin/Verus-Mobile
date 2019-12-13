@@ -9,9 +9,11 @@ export default styles = StyleSheet.create({
   formLabel: {
     textAlign:"left",
     marginRight: "auto",
+    fontFamily: 'Avenir-Book'
   },
   formInput: {
     width: "100%",
+    fontFamily: 'Avenir-Book'
   },
   valueContainer: {
     width: "85%",
@@ -25,14 +27,14 @@ export default styles = StyleSheet.create({
     color: Colors.quaternaryColor,
     width: "85%",
     textAlign: "center",
-    fontWeight: 'bold'
+    fontFamily: 'Avenir-Black'
   },
   wifInput: {
-    width: "80%",
+    width: "90%",
     color: Colors.successButtonColor,
     textAlign: "center",
-    backgroundColor: Colors.tertiaryColor,
-    alignSelf: 'center'
+    alignSelf: 'center',
+    fontFamily: 'Avenir-Book'
   },
   buttonContainer: {
     width: "65%",

@@ -22,6 +22,8 @@ import { getAccount } from '../../../../actions/actions/PaymentMethod/WyreAccoun
 
 import styles from './ManageWyreAccount.styles';
 
+import Colors from '../../../../globals/colors';
+
 import {
   Approved, Pending, Open,
   Email, Phone, File,
@@ -146,7 +148,8 @@ class ManageWyreAccount extends Component {
           <Spinner
             visible={this.props.isFetching}
             textContent="Loading..."
-            textStyle={{ color: 'black' }}
+            textStyle={{ color: Colors.quinaryColor }}
+            color={Colors.quinaryColor}
           />
           <ScrollView
             contentContainerStyle={{ height: '100%', alignItems: 'center', justifyContent: 'center' }}

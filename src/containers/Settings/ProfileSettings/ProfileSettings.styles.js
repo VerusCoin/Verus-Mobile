@@ -17,15 +17,18 @@ export default styles = StyleSheet.create({
     fontSize: 25,
     textAlign: "center",
     color: Colors.quinaryColor,
-    width: 359,
+    fontFamily: 'Avenir-Book'
   },
   coinItemLabel: {
     color: Colors.quinaryColor,
     marginLeft: 10,
+    fontSize: 19,
+    fontFamily: 'Avenir-Book',
+    marginVertical: 10
   },
   balanceSheetLabel: {
     width: "100%",
-    backgroundColor: "#E9F1F7",
+    backgroundColor: Colors.tertiaryColor,
     opacity: 0.86,
     marginTop: 0,
     marginBottom: 0,
@@ -34,6 +37,7 @@ export default styles = StyleSheet.create({
     fontSize: 22,
     textAlign: "center",
     color: Colors.quaternaryColor,
+    fontFamily: 'Avenir-Black'
   },
   coinList: {
     width: "90%",

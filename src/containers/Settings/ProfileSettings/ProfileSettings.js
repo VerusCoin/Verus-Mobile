@@ -62,7 +62,7 @@ class ProfileSettings extends Component {
           <ListItem                       
             title={<Text style={styles.coinItemLabel}>Reset Password</Text>}
             leftIcon={{name: 'autorenew'}}
-            containerStyle={{ borderBottomWidth: 0 , marginVertical: 10}} 
+            containerStyle={{ borderBottomWidth: 0}} 
             chevronColor={Colors.quaternaryColor}
           />
         </TouchableOpacity>

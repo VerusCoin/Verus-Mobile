@@ -17,12 +17,14 @@ import {
   setConfigSection,
   removeExistingCoin,
   setUserCoins,
-  setActiveSectionCustomCoins
+  setActiveSectionCustomCoins,
+  setActiveSectionBuySellCrypto,
  } from '../../actions/actionCreators'
 import { getKeyByValue } from '../../utils/objectManip'
 import { NavigationActions } from 'react-navigation';
 import AlertAsync from "react-native-alert-async";
 import styles from './SideMenu.styles';
+import { ENABLE_WYRE } from '../../utils/constants';
 
 const APP_INFO = 'App Info'
 const PROFILE = 'Profile'
@@ -155,7 +157,8 @@ class SideMenu extends Component {
         style={styles.coinList}
         renderItem={({item, index, section}) => (
           <ListItem                        
-          title={item.name}     
+          title={item.name}    
+          titleStyle={{fontFamily: 'Avenir-Black'}}     
           leftIcon={{name: item.icon}}                        
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => {this._openCoin(this.props.activeCoinsForUser[this.state.currentCoinIndex], item.name, section)}}
@@ -163,7 +166,7 @@ class SideMenu extends Component {
         )}
         renderSectionHeader={({section: {title}}) => (
           <ListItem                        
-            title={<Text style={{fontWeight: "bold"}}>{title}</Text>}                             
+            title={<Text style={{fontFamily: 'Avenir-Black'}}>{title}</Text>}                             
             containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
             hideChevron
             onPress={() => {return 0}}
@@ -172,15 +175,28 @@ class SideMenu extends Component {
           sections={this.sectionExtractor(this.state.currentCoinIndex)}
           keyExtractor={(item, index) => item + index}
         />
+        { ENABLE_WYRE ? (
+          <ListItem                        
+            title={"Buy/Sell coin"} 
+            titleStyle={{fontFamily: 'Avenir-Black'}}     
+            leftIcon={{name: "account-balance"}}   
+            hideChevron                     
+            containerStyle={{ borderBottomWidth: 0 }} 
+            onPress={() => {
+              let navigation = this.props.navigation  
+              this.props.dispatch(setActiveSectionBuySellCrypto('buy-crypto'))
+              navigation.navigate("BuySellCryptoMenus", {title: "Buy"});
+            }}
+          />
+          )
+          : 
+          (
+            ''
+          )
+        }
         <ListItem                        
-          title={"Buy/Sell coin"}     
-          leftIcon={{name: "close"}}   
-          hideChevron                     
-          containerStyle={{ borderBottomWidth: 0 }} 
-          onPress={() => {}}
-        />
-        <ListItem                        
-          title={"Remove Coin"}     
+          title={"Remove Coin"}  
+          titleStyle={{fontFamily: 'Avenir-Black'}}   
           leftIcon={{name: "close"}}   
           hideChevron                     
           containerStyle={{ borderBottomWidth: 0 }} 
@@ -251,18 +267,20 @@ class SideMenu extends Component {
       style={styles.coinList}
       renderItem={({item, index, section}) => (
         <ListItem                        
-        title={item}                             
+        title={item}  
+        titleStyle={{fontFamily: 'Avenir-Black'}}                           
         containerStyle={{ borderBottomWidth: 0 }} 
         onPress={
           item === 'Add coin from list' ? 
             () => this.navigateToScreen('AddCoin') 
           : 
             () => this._openCustomCoinMenus()}
+        textInputStyle={{fontFamily: 'Avenir-Black'}}
         /> 
       )}
       renderSectionHeader={({section: {title}}) => (
         <ListItem                        
-        title={<Text style={{fontWeight: "bold"}}>{title}</Text>}                             
+        title={<Text style={{fontFamily: 'Avenir-Black'}}>{title}</Text>}                             
         containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
         hideChevron
         /> 
@@ -282,14 +300,15 @@ class SideMenu extends Component {
       renderItem={({item, index, section}) => (
         <ListItem    
         leftIcon={{name: item.icon}}  
-        title={item.title}                             
+        title={item.title}  
+        titleStyle={{fontFamily: 'Avenir-Black'}}                           
         containerStyle={{ borderBottomWidth: 0 }} 
         onPress={() => this._openSettings(item)}
         /> 
       )}
       renderSectionHeader={({section: {title}}) => (
         <ListItem                        
-        title={<Text style={{fontWeight: "bold"}}>{title}</Text>}                             
+        title={<Text style={{fontFamily: 'Avenir-Black'}}>{title}</Text>}                             
         containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
         hideChevron
         /> 
@@ -318,7 +337,8 @@ class SideMenu extends Component {
           {this.renderMainDrawerComponents()}
           <ListItem    
           roundAvatar                    
-          title={"Add Coin"}                           
+          title={"Add Coin"}   
+          titleStyle={{fontFamily: 'Avenir-Black'}}                        
           avatar={require('../../images/customIcons/coinAdd.png')}
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: -1 })}
@@ -349,7 +369,7 @@ class SideMenu extends Component {
         <View>
           <DrawerHeader navigateToScreen={this.navigateToScreen} />
             <ListItem                        
-            title={<Text style={{fontWeight: "bold"}}>{"Back"}</Text>}                             
+            title={<Text style={{fontFamily: 'Avenir-Black', paddingLeft: '5%', fontSize: 18}}>{"Back"}</Text>}                             
             containerStyle={{ borderBottomWidth: 0 }} 
             hideChevron
             leftIcon={
