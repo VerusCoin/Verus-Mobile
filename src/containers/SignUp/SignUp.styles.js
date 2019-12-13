@@ -10,18 +10,9 @@ export default styles = StyleSheet.create({
     textAlign:"left",
     marginRight: "auto",
     color: Colors.quinaryColor,
-    fontWeight: '100',
+    fontFamily: 'Avenir',
+    fontWeight: 'normal'
   },
-  // keyGenLabel: {
-  //   textAlign:"left",
-  //   marginRight: "auto",
-  //   color: "#2E86AB"
-  // },
-  // scanLabel: {
-  //   textAlign:"left",
-  //   marginRight: "auto",
-  //   color: "#009B72"
-  // },
   formInput: {
     width: "100%",
   },
@@ -40,7 +31,9 @@ export default styles = StyleSheet.create({
     fontSize: 22,
     color: Colors.quaternaryColor,
     width: "85%",
-    textAlign: "center"
+    textAlign: "center",
+    fontFamily: 'Avenir',
+    fontWeight: 'bold'
   },
   wifInput: {
     width: "100%",

@@ -93,7 +93,7 @@ class AddCoin extends Component {
                 title={item}
                 avatar={defaultAssetsPath.coinLogo[item.toLowerCase()]}
                 containerStyle={styles.listItemContainer}
-                titleStyle={{color: "black"}}
+                titleStyle={{color: "black", fontFamily: 'Avenir'}}
                 chevronColor={Colors.quinaryColor}
               />
             </TouchableOpacity>

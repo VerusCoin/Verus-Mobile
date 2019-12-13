@@ -1,20 +1,24 @@
 import { StyleSheet } from "react-native"
+import Colors from '../../../globals/colors';
 
 export default styles = StyleSheet.create({
   root: {
-    backgroundColor: "#232323",
+    backgroundColor: Colors.secondaryColor,
     flex: 1,
   },
   mainLabel: {
     backgroundColor: "transparent",
     fontSize: 22,
-    color: "#E9F1F7",
+    color: 'black',
     textAlign: "center",
     marginTop: 25
   },
   formLabel: {
     textAlign:"left",
     marginRight: "auto",
+    color: Colors.quinaryColor,
+    fontFamily: 'Avenir-Book',
+    fontWeight: 'normal'
   },
   keyGenLabel: {
     textAlign:"left",
@@ -28,6 +32,8 @@ export default styles = StyleSheet.create({
   },
   formInput: {
     width: "100%",
+    fontFamily: 'Avenir-Book',
+    color: Colors.quaternaryColor
   },
   valueContainer: {
     width: "85%",
@@ -64,9 +70,10 @@ export default styles = StyleSheet.create({
   },
   addCoinButton: {
     height: 46,
-    backgroundColor: "#2E86AB",
+    backgroundColor: Colors.successButtonColor,
     marginTop: 15,
-    marginBottom: 40
+    marginBottom: 40,
+    width: '100%'
   },
   cancelButton: {
     height: 46,

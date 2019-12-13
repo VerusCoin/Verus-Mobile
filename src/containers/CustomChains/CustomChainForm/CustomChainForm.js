@@ -556,13 +556,13 @@ class CustomChainForm extends Component {
             {this.props.isModal &&
               <Button1 
                 style={styles.cancelButton} 
-                buttonContent="Cancel" 
+                buttonContent="CANCEL" 
                 onPress={this.cancel}
               />
             }
             <Button1 
               style={styles.addCoinButton} 
-              buttonContent="Add Coin" 
+              buttonContent="ADD COIN" 
               onPress={this._handleSubmit}
             />
           </View>

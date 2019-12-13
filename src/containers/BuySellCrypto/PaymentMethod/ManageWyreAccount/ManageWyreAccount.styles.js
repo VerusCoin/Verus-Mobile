@@ -34,6 +34,7 @@ export default StyleSheet.create({
     wyreCardText: {
         color: Colors.quaternaryColor,
         paddingLeft: 10,
+        fontFamily: 'Avenir',
     },
     wyreCardIconContainer: {
         flexDirection: 'row',
@@ -85,6 +86,7 @@ export default StyleSheet.create({
         color: Colors.quaternaryColor,
         marginVertical: 0,
         paddingVertical: 0,
+        fontFamily: 'Avenir',
     },
     buttonContainer: {
         width: '80%',
@@ -109,7 +111,14 @@ export default StyleSheet.create({
     statusInfo: {
         color: Colors.quaternaryColor,
         alignSelf: 'center',
-        fontSize: 15
+        fontSize: 15,
+        fontFamily: 'Avenir',
+    },
+    statusInfoHeader: {
+        color: Colors.quaternaryColor,
+        alignSelf: 'center',
+        fontSize: 22,
+        fontFamily: 'Avenir',
     },
     statusInfoContent: {
         color: Colors.quaternaryColor,
@@ -134,6 +143,7 @@ export default StyleSheet.create({
         width: '100%',
         marginVertical: 0,
         color: Colors.quaternaryColor,
+        fontFamily: 'Avenir',
     },
     inputMaskDateOfBirth: {
         color: Colors.quaternaryColor,
@@ -176,12 +186,13 @@ export default StyleSheet.create({
         height: 35,
         marginRight: 15,
     },
-    statusButtonApprovedSyle: {
+    statusButtonApprovedStyle: {
         fontSize: 15,
         color: Colors.linkButtonColor,
         width: 130,
         textAlign: 'center',
-        fontWeight: '600'
+        fontWeight: '600',
+        fontFamily: 'Avenir',
     },
     statusButtonStyle: {
         fontSize: 15,

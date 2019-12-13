@@ -63,7 +63,7 @@ class ManageWyreAccount extends Component {
             style={styles.statusButtonApproved}
             buttonContent="APPROVED"
             onPress={() => this.navigate(screen)}
-            buttonStyle={styles.statusButtonApprovedSyle}
+            buttonStyle={styles.statusButtonApprovedStyle}
         />
         )
       default:
@@ -157,7 +157,7 @@ class ManageWyreAccount extends Component {
               />
             )}
           >
-            <Text style={styles.statusInfo}>Verification Set Up</Text>
+            <Text style={styles.statusInfoHeader}>Verification Set Up</Text>
             <View style={{padding: 20}}>
               <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
                 <Text style={styles.statusInfo}>

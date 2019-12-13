@@ -93,6 +93,7 @@ class BuySellCryptoMenus extends Component {
       key={tab.key ? tab.key : ''}
       label={tab.label ? tab.label : ''}
       renderIcon={this.renderIcon(tab.source)}
+      labelStyle={{fontFamily: 'Avenir'}}
     />
   )
 

@@ -1,13 +1,15 @@
 import { StyleSheet } from "react-native";
+import Colors from '../../../../globals/colors';
 
 export default styles = StyleSheet.create({
   root: {
-    backgroundColor: "#232323",
+    backgroundColor: Colors.secondaryColor,
     flex: 1,
   },
   formLabel: {
     textAlign:"left",
     marginRight: "auto",
+    color: Colors.quaternaryColor
   },
   keyGenLabel: {
     textAlign:"left",
@@ -16,6 +18,7 @@ export default styles = StyleSheet.create({
   },
   formInput: {
     width: "100%",
+    color: Colors.quaternaryColor
   },
   valueContainer: {
     width: "85%",
@@ -46,13 +49,15 @@ export default styles = StyleSheet.create({
   },
   saveChangesButton: {
     height: 46,
-    backgroundColor: "#009B72",
+    backgroundColor: Colors.successButtonColor,
     marginTop: 15,
+    width: '60%'
   },
   backButton: {
     height: 46,
-    backgroundColor: "rgba(206,68,70,1)",
+    backgroundColor: Colors.basicButtonColor,
     marginTop: 15,
+    width: '35%'
   },
   utxoVerificationDesc: {
     textAlign:"left",

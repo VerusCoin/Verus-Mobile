@@ -75,12 +75,16 @@ export default styles = StyleSheet.create({
     signUpTextContainer: {
         flexDirection: 'row',
         marginVertical: '8%',
-        alignSelf: 'center'
+        alignSelf: 'center',
     },
     signUpText: {
         color: Colors.linkButtonColor,
         fontWeight: 'bold',
         fontFamily: 'Avenir',
+    },
+    signUpTextQuestion: {
+        fontFamily: 'Avenir', 
+        color: Colors.quaternaryColor
     },
     passwordContainer: {
         width: '90%',
@@ -89,5 +93,5 @@ export default styles = StyleSheet.create({
     },
     passwordInputContainer: {
         width: '85%',
-    }
+    },
 });

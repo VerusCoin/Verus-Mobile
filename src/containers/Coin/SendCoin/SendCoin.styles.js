@@ -9,11 +9,13 @@ export default styles = StyleSheet.create({
   formLabel: {
     textAlign:"left",
     marginRight: "auto",
-    color: Colors.quinaryColor
+    color: Colors.quinaryColor,
+    fontFamily: 'Avenir',
   },
   formInput: {
     width: "100%",
-    color: Colors.quinaryColor
+    color: Colors.quinaryColor,
+    fontFamily: 'Avenir',
   },
   valueContainer: {
     width: "85%",
@@ -28,7 +30,7 @@ export default styles = StyleSheet.create({
     fontSize: 35,
     textAlign: "center",
     color: Colors.quinaryColor,
-    width: 359,
+    fontFamily: 'Avenir',
   },
   sendLabel: {
     width: "100%",
@@ -41,6 +43,8 @@ export default styles = StyleSheet.create({
     fontSize: 22,
     textAlign: "center",
     color: Colors.quinaryColor,
+    fontFamily: 'Avenir',
+    fontWeight: 'bold'
   },
   buttonContainer: {
     height: 45,

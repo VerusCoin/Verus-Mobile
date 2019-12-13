@@ -21,7 +21,8 @@ export default styles = StyleSheet.create({
     fontSize: 22,
     textAlign: "center",
     color: Colors.quaternaryColor,
-    fontWeight: '600'
+    fontWeight: 'bold',
+    fontFamily:'Avenir',
   },
 
   fullName: {
@@ -33,6 +34,7 @@ export default styles = StyleSheet.create({
     fontSize: 20,
     textAlign: "center",
     color: Colors.quaternaryColor,
+    fontFamily:'Avenir',
   },
 
   description: {
@@ -41,24 +43,19 @@ export default styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 0,
     paddingBottom: 0,
-    fontSize: 22,
+    fontSize: 20,
     textAlign: "center",
     color: Colors.quaternaryColor,
     width: 300,
+    fontFamily:'Avenir',
   },
 
   coinAddedLabel: {
     backgroundColor: "transparent",
-    opacity: 0.86,
     fontSize: 22,
     marginRight: 5,
     color: Colors.successButtonColor,
-  },
-  rect: {
-    height: 1,
-    width: "85%",
-    backgroundColor: Colors.quaternaryColor,
-    marginVertical: '3%'
+    fontFamily:'Avenir',
   },
   addCoinBtn: {
     height: 54,
@@ -82,11 +79,12 @@ export default styles = StyleSheet.create({
   homeLabel: {
     backgroundColor: "transparent",
     opacity: 0.86,
-    marginTop: 5,
-    marginBottom: 15,
+    marginTop: 15,
+    marginBottom: '15%',
     paddingBottom: 0,
     fontSize: 25,
     textAlign: "center",
     color: Colors.quaternaryColor,
+    fontFamily:'Avenir',
   }
 });

@@ -1,8 +1,9 @@
 import { StyleSheet } from "react-native";
+import Colors from '../../../globals/colors';
 
 export default styles = StyleSheet.create({
   root: {
-    backgroundColor: "#232323",
+    backgroundColor: "white",
     flex: 1,
   },
   infoBox: {
@@ -21,7 +22,7 @@ export default styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 16,
-    color: "#E9F1F7"
+    color: Colors.quinaryColor,
   },
   linkBox: {
     width: "65%",
@@ -36,6 +37,17 @@ export default styles = StyleSheet.create({
     marginBottom: 15,
     fontSize: 22,
     textAlign: "center",
-    color: "#E9F1F7"
+    color: Colors.quinaryColor
   },
+  imageStyle: {
+    width: '30%',
+    marginTop: '10%',
+    resizeMode: 'contain',
+    alignSelf: 'center'
+  },
+  imageStyleContainer:{
+    width: '100%',
+    backgroundColor: Colors.tertiaryColor,
+    marginBottom: '10%'
+  }
 });

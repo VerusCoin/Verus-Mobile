@@ -55,7 +55,9 @@ const styles = StyleSheet.create({
   },
   buttonContent: {
     fontSize: 18,
-    color: "#fff"
+    color: "#fff",
+    fontFamily: 'Avenir',
+    fontWeight: '400'
   },
   newOne: {
     opacity: 0.7,

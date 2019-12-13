@@ -86,7 +86,6 @@ class CoinDetails extends Component {
           source={this.state.fullCoinData.logo}
         />
         <Text style={styles.homeLabel}>{this.state.fullCoinData.id} Details</Text>
-        <View style={styles.rect} />
         <Text style={styles.titleLabel}>
             Full Name:
         </Text>

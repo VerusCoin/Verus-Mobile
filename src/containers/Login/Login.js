@@ -170,6 +170,7 @@ class Login extends Component {
               selectedItemColor={Colors.quinaryColor}
               baseColor={Colors.quinaryColor}
               label="Select Account..."
+              labelTextStyle={{fontFamily: 'Avenir'}}
               pickerStyle={{backgroundColor: Colors.tertiaryColor}}
             />
           </View>
@@ -232,7 +233,7 @@ class Login extends Component {
                 onPress={this.validateFormData} 
                 />
                 <View style={styles.signUpTextContainer}>
-                  <Text >Don’t have an account?</Text>  
+                  <Text style={styles.signUpTextQuestion}>Don’t have an account?</Text>  
                   <Text style={styles.signUpText} onPress={this._handleAddUser}>    Add user</Text>
                 </View>
               </View>

@@ -12,11 +12,13 @@ export default styles = StyleSheet.create({
     color: Colors.quinaryColor,
     fontWeight: 'normal',
     fontSize: 17,
+    fontFamily: 'Avenir',
   },
   formInput: {
     width: "100%",
     color: Colors.quinaryColor,
     fontSize: 16,
+    fontFamily: 'Avenir',
   },
   valueContainer: {
     width: "85%",
@@ -27,9 +29,11 @@ export default styles = StyleSheet.create({
     marginBottom: 8,
     paddingBottom: 0,
     fontSize: 22,
-    color: "#E9F1F7",
+    color: Colors.quaternaryColor,
     width: "85%",
-    textAlign: "center"
+    textAlign: "center",
+    fontFamily: 'Avenir',
+    fontWeight: 'bold',
   },
   wifInput: {
     width: "100%",
@@ -59,7 +63,7 @@ export default styles = StyleSheet.create({
     alignItems: "center"
   },
   dropDown: {
-    width: "90%",
+    width: '85%',
     marginBottom: 0,
     marginTop: 0,
   },

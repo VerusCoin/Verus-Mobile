@@ -422,6 +422,7 @@ class BuyCrypto extends Component {
                     </View>
                   ) }}
                   pickerStyle={{backgroundColor: Colors.tertiaryColor}}
+                  itemTextStyle={{fontFamily: 'Avenir'}}
                 />
               </View>
             </View>
@@ -475,6 +476,7 @@ class BuyCrypto extends Component {
                     </View>
                   ) }}
                   pickerStyle={{backgroundColor: Colors.tertiaryColor}}
+                  itemTextStyle={{fontFamily: 'Avenir'}}
                 />
               </View>
             </View>
@@ -515,7 +517,7 @@ class BuyCrypto extends Component {
                     labelExtractor={(item) => item.name}
                     valueExtractor={(item) => item}
                     label="Pay With"
-                    labelTextStyle={{ fontWeight: 'bold' }}
+                    labelTextStyle={{ fontWeight: 'bold', fontFamily: 'Avenir' }}
                     labelFontSize={12}
                     data={SUPPORTED_PAYMENT_METHODS}
                     onChangeText={(method) => this.switchPaymentMethod(method)}

@@ -1,8 +1,9 @@
 import { StyleSheet } from "react-native";
+import Colors from '../../../globals/colors';
 
 export default styles = StyleSheet.create({
   root: {
-    backgroundColor: "#232323",
+    backgroundColor: Colors.secondaryColor,
     flex: 1,
     alignItems: "center"
   },
@@ -15,11 +16,11 @@ export default styles = StyleSheet.create({
     paddingTop: 0,
     fontSize: 25,
     textAlign: "center",
-    color: "#E9F1F7",
+    color: Colors.quinaryColor,
     width: 359,
   },
   coinItemLabel: {
-    color: "#E9F1F7",
+    color: Colors.quinaryColor,
     marginLeft: 10,
   },
   balanceSheetLabel: {
@@ -32,9 +33,9 @@ export default styles = StyleSheet.create({
     paddingTop: 15,
     fontSize: 22,
     textAlign: "center",
-    color: "#232323"
+    color: Colors.quaternaryColor,
   },
   coinList: {
-    width: "100%",
+    width: "90%",
   },
 });

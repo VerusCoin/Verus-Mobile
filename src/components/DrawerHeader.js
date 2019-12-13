@@ -18,15 +18,15 @@ const DrawerHeader = ({ navigateToScreen }) => (
 				flexDirection: 'row',
 				backgroundColor: Colors.linkButtonColor,
 				paddingTop: '30%',
-				paddingLeft: '15%',
+				paddingLeft: '5%',
 				paddingBottom : '15%',
 				paddingTop: Platform.OS === 'ios' ? 35 : 90,
 				alignItems: 'flex-end',
 			}}
 		>
 			<Image
-        source={LOGO_DIR}
-        style={{width: 50, height: 40, overflow: 'hidden' }}
+				source={LOGO_DIR}
+				style={{width: 50, height: 40, overflow: 'hidden' }}
 			/>
 			<Text style={{ color: '#FFF', paddingLeft: 9, fontSize: 16 }}>
 				Verus Wallet

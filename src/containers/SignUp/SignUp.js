@@ -272,12 +272,12 @@ class SignUp extends Component {
             />
             <Button1 
               style={styles.scanSeedButton} 
-              buttonContent="Scan seed from QR" 
+              buttonContent="SCAN SEED FROM QR" 
               onPress={this.scanSeed}
               />
             <Button1 
               style={styles.generatePassphraseButton} 
-              buttonContent="Generate random passphrase " 
+              buttonContent="GENERATE RANDROM PASSPHRASE" 
               onPress={this.setKey}
               />
             <FormLabel labelStyle={styles.passphraseDisplayLabel} containerStyle={{alignSelf: 'center'}}>
@@ -404,13 +404,13 @@ class SignUp extends Component {
           { this.props.accounts.length > 0 && 
             <Button1 
               style={styles.cancelButton} 
-              buttonContent="Cancel" 
+              buttonContent="CANCEL" 
               onPress={this.cancel}
             />
           }
             <Button1 
               style={styles.addAccountButton} 
-              buttonContent="Add Account" 
+              buttonContent="ADD ACCOUNT" 
               onPress={this._handleSubmit}
             />
           </View>

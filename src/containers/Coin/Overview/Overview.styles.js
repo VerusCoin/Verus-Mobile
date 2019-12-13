@@ -17,6 +17,7 @@ export default styles = StyleSheet.create({
     fontSize: 35,
     textAlign: "center",
     color: Colors.quaternaryColor,
+    fontFamily: 'Avenir',
   },
   connectionErrorLabel: {
     backgroundColor: "transparent",
@@ -43,7 +44,9 @@ export default styles = StyleSheet.create({
     paddingTop: 15,
     fontSize: 22,
     textAlign: "center",
-    color: Colors.quinaryColor
+    color: Colors.quinaryColor,
+    fontFamily: 'Avenir',
+    fontWeight: 'bold'
   },
   headerContainer: {
     flexDirection: "row",

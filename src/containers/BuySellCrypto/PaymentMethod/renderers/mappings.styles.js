@@ -24,7 +24,8 @@ export default StyleSheet.create({
     color: Colors.quaternaryColor,
     marginLeft: 10,
     fontSize: 18,
-    fontWeight: '600'
+    fontWeight: '600',
+    fontFamily: 'Avenir',
   },
   coinItemContainer: {
     borderBottomWidth: 0,
@@ -39,5 +40,7 @@ export default StyleSheet.create({
   },
   rightTitleStyle: {
     color: Colors.quaternaryColor,
+    fontFamily: 'Avenir',
+    fontSize: 15
   },
 });

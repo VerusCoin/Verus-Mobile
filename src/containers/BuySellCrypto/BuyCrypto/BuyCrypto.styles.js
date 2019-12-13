@@ -12,7 +12,9 @@ export default styles = StyleSheet.create({
   formLabel: {
     textAlign:"left",
     marginLeft: 3,
-    color: 'black'
+    color: 'black',
+    fontFamily:'Avenir',
+    fontWeight: 'normal'
   },
   formInputLabelContainer: {
     flex: 1,
@@ -26,8 +28,8 @@ export default styles = StyleSheet.create({
   },
   currencyLabel: {
     color: 'black',
-    fontWeight: 'bold',
-    fontSize: 20
+    fontSize: 20,
+    fontFamily:'Avenir',
   },
   dropDownContainer: {
     paddingHorizontal: 3, 

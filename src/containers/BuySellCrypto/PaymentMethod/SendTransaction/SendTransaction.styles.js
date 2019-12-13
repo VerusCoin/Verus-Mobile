@@ -43,11 +43,13 @@ export default styles = StyleSheet.create({
     textAlign: 'left',
     fontWeight: 'bold',
     fontSize: 18,
-    marginTop: '2%'
+    marginTop: '2%',
+    fontFamily: 'Avenir',
   },
   transactionInfoSubtitleTextStyle: {
     color: Colors.quaternaryColor,
     fontSize: 15,
+    fontFamily: 'Avenir',
   },
   textTransactionHistory: {
     color: Colors.quinaryColor, 
@@ -55,21 +57,27 @@ export default styles = StyleSheet.create({
     marginVertical: '5%', 
     paddingTop: '5%', 
     paddingLeft: '5%', 
-    fontWeight: '700'
+    fontWeight: '700',
+    fontFamily: 'Avenir',
   },
   itemTextTransactionHistory: { 
-    color: Colors.quinaryColor
+    color: Colors.quinaryColor,
+    fontFamily: 'Avenir',
+    fontWeight: 'normal'
   },
   itemContainerTransactionHistory: {
     borderBottomWidth: 0,
   },
   itemIdTransactionHistory: {
     color: Colors.quinaryColor,
-    fontSize: 13
+    fontSize: 13,
+    fontFamily: 'Avenir',
   },
   rightTitleStyle: {
     fontSize: 17, 
-    color: Colors.quinaryColor
+    color: Colors.quinaryColor,
+    fontFamily: 'Avenir',
+    fontWeight: '500'
   },
   containerTransactionView: {
     width: '90%',

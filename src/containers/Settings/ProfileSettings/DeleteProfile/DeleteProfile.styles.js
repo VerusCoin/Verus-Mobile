@@ -1,13 +1,15 @@
 import { StyleSheet } from "react-native";
+import Colors from '../../../../globals/colors';
 
 export default styles = StyleSheet.create({
   root: {
-    backgroundColor: "#232323",
+    backgroundColor: Colors.secondaryColor,
     flex: 1,
   },
   formLabel: {
     textAlign:"left",
     marginRight: "auto",
+    color: Colors.quaternaryColor
   },
   keyGenLabel: {
     textAlign:"left",
@@ -16,6 +18,7 @@ export default styles = StyleSheet.create({
   },
   formInput: {
     width: "100%",
+    color: Colors.quaternaryColor
   },
   valueContainer: {
     width: "85%",
@@ -26,11 +29,12 @@ export default styles = StyleSheet.create({
   },
   wifLabel: {
     backgroundColor: "transparent",
-    marginTop: 50,
+    marginBottom: '25%',
     fontSize: 22,
-    color: "#E9F1F7",
+    color: Colors.quaternaryColor,
     width: "85%",
-    textAlign: "center"
+    textAlign: "center",
+    fontWeight: 'bold'
   },
   wifInput: {
     width: "100%",
@@ -43,20 +47,22 @@ export default styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   singleButtonContainer: {
-    width: "75%",
+    width: "90%",
     backgroundColor: "transparent",
     flexDirection: "row",
     justifyContent: "center",
   },
   addAccountButton: {
     height: 46,
-    backgroundColor: "#2E86AB",
+    backgroundColor: Colors.warningButtonColor,
     marginTop: 15,
-    marginBottom: 40
+    marginBottom: 40,
+    width: '60%'
   },
   cancelButton: {
     height: 46,
-    backgroundColor: "rgba(206,68,70,1)",
+    backgroundColor: Colors.basicButtonColor,
     marginTop: 15,
+    width: '35%'
   },
 });

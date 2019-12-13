@@ -234,9 +234,9 @@ class ReceiveCoin extends Component {
             selectedItemColor={Colors.quinaryColor}
             baseColor={Colors.quinaryColor}
             label="Selected Coin:"
+            labelTextStyle={{fontFamily: 'Avenir'}}
             labelFontSize={17}
             value={this.state.selectedCoin}
-            containerStyle={{width: '85%'}}
           />
         </View>
         <View style={styles.valueContainer}>

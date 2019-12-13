@@ -140,6 +140,7 @@ class SideMenu extends Component {
           avatar={item.logo}   
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: index })}
+          titleStyle={{fontFamily: 'Avenir'}}
         />          
       )}          
       keyExtractor={item => item.id}                            
@@ -314,6 +315,7 @@ class SideMenu extends Component {
           avatar={require('../../images/customIcons/coinAdd.png')}
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: -1 })}
+          titleStyle={{fontFamily: 'Avenir'}}
           /> 
           <ListItem    
           roundAvatar                    
@@ -321,6 +323,7 @@ class SideMenu extends Component {
           leftIcon={{name: 'settings'}}
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: -2 })}
+          titleStyle={{fontFamily: 'Avenir'}}
           />
           <ListItem    
           roundAvatar                    
@@ -328,6 +331,7 @@ class SideMenu extends Component {
           leftIcon={{name: 'exit-to-app'}}
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={this.handleLogout}
+          titleStyle={{fontFamily: 'Avenir'}}
           /> 
 				</ScrollView>
       );

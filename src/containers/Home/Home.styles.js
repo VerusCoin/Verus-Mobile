@@ -5,7 +5,7 @@ export default styles = StyleSheet.create({
   root: {
     backgroundColor: Colors.secondaryColor,
     flex: 1,
-    alignItems: "center"
+    alignItems: "center",
   },
 
   fiatBalanceLabel: {
@@ -15,12 +15,15 @@ export default styles = StyleSheet.create({
     textAlign: "center",
     color: Colors.quaternaryColor,
     width: '100%',
-    fontFamily:'Avenir',
+    fontFamily:'Avenir-Book',
     height: '25%',
+    fontWeight: 'bold'
   },
   coinItemLabel: {
     color: Colors.quinaryColor,
     marginLeft: 10,
+    fontFamily:'Avenir-Book',
+    fontSize: 17,
   },
   balanceSheetLabel: {
     width: "100%",
@@ -30,12 +33,11 @@ export default styles = StyleSheet.create({
     marginBottom: 0,
     paddingBottom: 15,
     paddingTop: 15,
-    fontSize: 22,
+    fontSize: 25,
     textAlign: "left",
     color: Colors.quinaryColor,
     paddingLeft: 30,
-    fontFamily:'Avenir',
-    fontWeight: '600'
+    fontFamily:'Avenir-Book',
   },
   coinList: {
     width: "90%",
