@@ -224,10 +224,11 @@ class Home extends Component {
         keyExtractor={item => item.id}                            
         /> 
         <View style={{
-            borderBottomColor: Colors.quaternaryColor,
+            borderBottomColor: Colors.tertiaryColor,
             borderBottomWidth: 1,
             width: '100%',
             alignSelf: 'center',
+            width: "90%",
             marginVertical: '3%'
           }}> 
         </View>

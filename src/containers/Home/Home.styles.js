@@ -32,10 +32,11 @@ export default styles = StyleSheet.create({
     fontSize: 22,
     textAlign: "left",
     color: Colors.quinaryColor,
-    paddingLeft: 15,
+    paddingLeft: 30,
+    fontFamily:'Avenir',
     fontWeight: '600'
   },
   coinList: {
-    width: "85%",
+    width: "90%",
   },
 });

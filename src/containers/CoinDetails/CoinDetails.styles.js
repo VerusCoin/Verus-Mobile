@@ -88,6 +88,5 @@ export default styles = StyleSheet.create({
     fontSize: 25,
     textAlign: "center",
     color: Colors.quaternaryColor,
-    fontWeight: 'bold'
   }
 });

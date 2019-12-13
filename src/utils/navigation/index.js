@@ -43,22 +43,24 @@ const WALLET = 'wallet';
 
 const styles = StyleSheet.create({
   header_title_noBack: {
+    fontFamily: 'Avenir',
     backgroundColor: 'transparent',
     height: 55,
     textAlign: 'center',
-    fontSize: 22,
+    fontSize: 18,
     color: "#E9F1F7",
-    paddingTop: 12,
+    paddingTop: 15,
     width: Dimensions.get('window').width // width of both buttons + no left-right padding
   },
 
   header_title_back: {
+    fontFamily: 'Avenir',
     backgroundColor: 'transparent',
     height: 55,
     textAlign: 'right',
-    fontSize: 22,
+    fontSize: 18,
     color: "#E9F1F7",
-    paddingTop: 12,
+    paddingTop: 15,
     width: Dimensions.get('window').width - 110// width of both buttons + no left-right padding
   },
 

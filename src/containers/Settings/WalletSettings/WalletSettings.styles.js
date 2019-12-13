@@ -26,11 +26,13 @@ export default styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "#E9F1F7",
     opacity: 0.86,
+    marginLeft:10,
     marginTop: 0,
     marginBottom: 0,
     paddingBottom: 15,
     paddingTop: 15,
     fontSize: 22,
+    fontFamily: 'Avenir',
     textAlign: "center",
     color: "#232323"
   },

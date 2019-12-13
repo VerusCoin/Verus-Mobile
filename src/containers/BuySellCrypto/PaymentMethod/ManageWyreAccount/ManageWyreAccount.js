@@ -157,7 +157,7 @@ class ManageWyreAccount extends Component {
               />
             )}
           >
-            <Text style={styles.userProfileHeader}>Verification Set Up</Text>
+            <Text style={styles.statusInfo}>Verification Set Up</Text>
             <View style={{padding: 20}}>
               <View style={{ flexDirection: 'row', alignSelf: 'center' }}>
                 <Text style={styles.statusInfo}>

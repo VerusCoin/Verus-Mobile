@@ -27,12 +27,6 @@ export default StyleSheet.create({
         marginVertical: 0,
         paddingVertical: 0,
     },
-    userProfileHeader: {
-        fontWeight: 'bold',
-        paddingBottom: 20,
-        fontSize: 22,
-        color: '#86939e',
-    },
     wyreInfo: {
         fontSize: 13,
         color: '#86939e',
@@ -128,26 +122,26 @@ export default StyleSheet.create({
         justifyContent: 'flex-end',
     },
     inputMask: {
-      color: Colors.quaternaryColor,
-      borderBottomColor: '#86939d',
-      borderBottomWidth: 2,
-      width: '87%',
-      marginLeft: 20,
-      paddingVertical: 10,
+        color: Colors.quaternaryColor,
+        borderBottomColor: '#86939d',
+        borderBottomWidth: 2,
+        width: '87%',
+        marginLeft: 20,
+        paddingVertical: 10,
     },
     formInputContainer: {
-      fontSize: 14,
-      width: '100%',
-      marginVertical: 0,
-      color: Colors.quaternaryColor,
+        fontSize: 14,
+        width: '100%',
+        marginVertical: 0,
+        color: Colors.quaternaryColor,
     },
     inputMaskDateOfBirth: {
-      color: Colors.quaternaryColor,
-      borderBottomColor: '#86939d',
-      borderBottomWidth: 2,
-      width: '76%',
-      marginLeft: 20,
-      paddingVertical: 10,
+        color: Colors.quaternaryColor,
+        borderBottomColor: '#86939d',
+        borderBottomWidth: 2,
+        width: '76%',
+        marginLeft: 20,
+        paddingVertical: 10,
     },
     containerCalendarButton: {
         width: '15%',
@@ -159,11 +153,11 @@ export default StyleSheet.create({
     },
     formValidationLabel: {
         fontSize: 12,
-    }, 
-    dropdownInputContainer:{ 
-        borderBottomWidth: 1 , 
+    },
+    dropdownInputContainer: {
+        borderBottomWidth: 1,
         marginTop: 15
-    }, 
+    },
     statusButtonAdd: {
         backgroundColor: Colors.successButtonColor,
         width: 110,
@@ -182,7 +176,7 @@ export default StyleSheet.create({
         height: 35,
         marginRight: 15,
     },
-    statusButtonApprovedSyle:{
+    statusButtonApprovedSyle: {
         fontSize: 15,
         color: Colors.linkButtonColor,
         width: 130,
@@ -194,6 +188,6 @@ export default StyleSheet.create({
         width: 130,
         textAlign: 'center',
         fontWeight: '600',
-        color: Colors.tertiaryColor,
+        color: Colors.secondaryColor,
     },
 });

@@ -3,6 +3,7 @@ package com.verusmobile;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.reactnativecommunity.rnpermissions.RNPermissionsPackage;
 import com.reactcommunity.rndatetimepicker.RNDateTimePickerPackage;
 import com.RNTextInputMask.RNTextInputMaskPackage;
 import com.reactnativecommunity.webview.RNCWebViewPackage;
@@ -39,6 +40,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
             new MainReactPackage(),
+            new RNPermissionsPackage(),
             new RNDateTimePickerPackage(),
             new RNTextInputMaskPackage(),
             new RNCWebViewPackage(),

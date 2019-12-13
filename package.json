@@ -12,6 +12,11 @@
     "dist-android": "cd android && ./gradlew assembleRelease && cd ..",
     "test": "jest"
   },
+  "rnpm": {
+    "assets": [
+      "assets/fonts/Avenir"
+    ]
+  },
   "dependencies": {
     "@babel/runtime": "7.0.0-beta.55",
     "@react-native-community/async-storage": "^1.5.1",
@@ -66,7 +71,7 @@
     "react-native-material-dropdown": "^0.11.1",
     "react-native-os": "^1.2.1",
     "react-native-paper": "^2.6.3",
-    "react-native-permissions": "^1.1.1",
+    "react-native-permissions": "^2.0.8",
     "react-native-plaid-link": "^1.4.4",
     "react-native-progress": "^3.5.0",
     "react-native-qrcode-scanner": "^1.1.2",
