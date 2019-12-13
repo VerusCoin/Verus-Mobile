@@ -6,6 +6,7 @@ import {
   Keyboard,
   Image,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements';
 import Spinner from 'react-native-loading-spinner-overlay';
@@ -38,20 +39,32 @@ class ManageWyrePersonalDetails extends Component {
       },
       date: new Date(),
       mode: 'date',
-      toggleCalendar: false,
+      showCalendar: false,
     };
   }
 
-  toggleCalendar = () => {
-    this.setState(prevState => ({
-      toggleCalendar: !prevState.toggleCalendar
-    }));
+  showCalendar = () => {
+    this.setState({
+      showCalendar: true,
+    });
   }
 
-  setDate = (date) => {
+  hideCalendar = () => {
     this.setState({
-      dateOfBirth: parseDate(date),
-      date,
+      showCalendar: false,
+    });
+  }
+
+  setDate = (_, date) => {
+    this.setState({
+      showCalendar: Platform.OS === 'ios' ? true : false,
+    }, () => {
+      if (date) {
+        this.setState({
+          dateOfBirth: parseDate(date),
+          date
+        })
+      }
     });
   }
 
@@ -127,10 +140,10 @@ class ManageWyrePersonalDetails extends Component {
   render() {
     return (
       <TouchableWithoutFeedback onPress={() =>{
-        if (this.state.toggleCalendar){
-          this.toggleCalendar();
+        Keyboard.dismiss()
+        if (this.state.showCalendar){
+          this.hideCalendar();
         }
-        Keyboard.dismiss
       }} accessible={false}>
         <View>
           <View style={styles.mainInputView}>
@@ -150,7 +163,7 @@ class ManageWyrePersonalDetails extends Component {
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage>
+              <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.errors.name}
               </FormValidationMessage>
             </View>
@@ -168,7 +181,7 @@ class ManageWyrePersonalDetails extends Component {
                   style={styles.inputMaskDateOfBirth}
                 />
                 <View style={styles.containerCalendarButton} >
-                  <TouchableOpacity onPress={this.toggleCalendar}>
+                  <TouchableOpacity onPress={this.showCalendar}>
                     <Image
                       source={Calendar}
                       style={styles.icon}
@@ -178,7 +191,7 @@ class ManageWyrePersonalDetails extends Component {
                 </View>
               </View>
               <View>
-                { this.state.toggleCalendar && <DateTimePicker 
+                { this.state.showCalendar && <DateTimePicker 
                     value={this.state.date}
                     mode={this.state.mode}
                     display="calendar"
@@ -188,7 +201,7 @@ class ManageWyrePersonalDetails extends Component {
                     style={{backgroundColor: 'white'}} />
                 } 
               </View>
-              <FormValidationMessage>
+              <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.errors.dateOfBirth}
               </FormValidationMessage>
             </View>
@@ -203,7 +216,7 @@ class ManageWyrePersonalDetails extends Component {
                 mask={"[000]-[00]-[0000]"}
                 style={styles.inputMask}
               />
-              <FormValidationMessage>
+              <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.errors.socialSecurityNumber}
               </FormValidationMessage>
             </View>
@@ -212,8 +225,8 @@ class ManageWyrePersonalDetails extends Component {
                 style={styles.buttonSubmit}
                 buttonContent="Submit"
                 onPress={()=>{
-                  if (this.state.toggleCalendar) {
-                    this.toggleCalendar();
+                  if (this.state.showCalendar) {
+                    this.hideCalendar();
                   } 
                   this.handleSubmit();
                 }
