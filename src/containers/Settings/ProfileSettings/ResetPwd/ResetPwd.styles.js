@@ -10,10 +10,12 @@ export default styles = StyleSheet.create({
     textAlign:"left",
     marginRight: "auto",
     color: Colors.quaternaryColor,
+    fontFamily: 'Avenir-Book'
   },
   formInput: {
     width: "100%",
     color: Colors.quaternaryColor,
+    fontFamily: 'Avenir-Book'
   },
   valueContainer: {
     width: "85%",
@@ -26,7 +28,7 @@ export default styles = StyleSheet.create({
     color: Colors.quinaryColor,
     width: "85%",
     textAlign: "center",
-    fontWeight: 'bold'
+    fontFamily: 'Avenir-Black'
   },
   buttonContainer: {
     width: "80%",

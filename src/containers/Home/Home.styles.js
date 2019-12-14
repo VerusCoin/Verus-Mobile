@@ -23,7 +23,7 @@ export default styles = StyleSheet.create({
     color: Colors.quinaryColor,
     marginLeft: 10,
     fontFamily:'Avenir-Book',
-    fontSize: 17,
+    fontSize: 18,
   },
   balanceSheetLabel: {
     width: "100%",

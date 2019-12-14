@@ -19,6 +19,8 @@ import Spinner from 'react-native-loading-spinner-overlay';
 
 import styles from './SelectPaymentMethod.styles';
 
+import Colors from '../../../../globals/colors';
+
 class SelectPaymentMethod extends Component {
   back = () => {
     this.props.navigation.dispatch(NavigationActions.back());
@@ -38,7 +40,8 @@ class SelectPaymentMethod extends Component {
           <Spinner
             visible={this.props.isCreating}
             textContent="Loading..."
-            textStyle={{ color: '#FFF' }}
+            textStyle={{ color: 'black' }}
+            color={Colors.quinaryColor}
           />
           <View style={styles.inputAndDropDownContainer}>
             { SUPPORTED_PAYMENT_METHODS.map((method) => {

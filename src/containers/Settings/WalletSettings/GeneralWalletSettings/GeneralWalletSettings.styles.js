@@ -9,7 +9,8 @@ export default styles = StyleSheet.create({
   formLabel: {
     textAlign:"left",
     marginRight: "auto",
-    color: Colors.quaternaryColor
+    color: Colors.quaternaryColor,
+    fontFamily: 'Avenir-Book'
   },
   keyGenLabel: {
     textAlign:"left",
@@ -18,7 +19,8 @@ export default styles = StyleSheet.create({
   },
   formInput: {
     width: "100%",
-    color: Colors.quaternaryColor
+    color: Colors.quaternaryColor,
+    fontFamily: 'Avenir-Book'
   },
   valueContainer: {
     width: "85%",

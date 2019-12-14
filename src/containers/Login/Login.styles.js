@@ -67,6 +67,7 @@ export default styles = StyleSheet.create({
         fontSize: 22,
         textAlign: "center",
         color: Colors.quaternaryColor,
+        fontFamily: 'Avenir-Book'
     },
     buttonContainer: {
         width: '100%',
