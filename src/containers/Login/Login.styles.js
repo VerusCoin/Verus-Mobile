@@ -66,7 +66,7 @@ export default styles = StyleSheet.create({
         backgroundColor: "transparent",
         fontSize: 22,
         textAlign: "center",
-        color: Colors.quaternaryColor,
+        color: Colors.quinaryColor,
         fontFamily: 'Avenir-Book'
     },
     buttonContainer: {
@@ -83,7 +83,7 @@ export default styles = StyleSheet.create({
         fontFamily: 'Avenir-Black',
     },
     signUpTextQuestion: {
-        fontFamily: 'Avenir-Black', 
+        fontFamily: 'Avenir-Black',
         color: Colors.quaternaryColor
     },
     passwordContainer: {
