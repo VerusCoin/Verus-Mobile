@@ -156,7 +156,6 @@ android {
 }
 
 dependencies {
-    implementation project(':react-native-permissions')
     implementation project(':@react-native-community_datetimepicker')
     implementation project(':react-native-text-input-mask')
     implementation project(':react-native-webview')
