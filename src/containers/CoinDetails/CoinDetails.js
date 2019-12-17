@@ -107,7 +107,7 @@ class CoinDetails extends Component {
           :
             this.state.isActive ?
               <View style={styles.coinAddedBox}>
-              <Text style={styles.coinAddedLabel}>Coin Added</Text>
+              <Text style={styles.coinAddedLabel}>COIN ADDED</Text>
               <Icon name="check" color="#50C3A5" size={30}/>
               </View>
             :

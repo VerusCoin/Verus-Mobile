@@ -25,7 +25,6 @@ import styles from './ManageWyreAccount.styles';
 import Colors from '../../../../globals/colors';
 
 import {
-  Approved, Pending, Open,
   Email, Phone, File,
   BankBuilding, User,
   Address, Home,

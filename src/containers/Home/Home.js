@@ -214,7 +214,7 @@ class Home extends Component {
                 null
               }                       
               avatar={item.logo}  
-              subtitleStyle={this.props.balances.hasOwnProperty(item.id) && (this.props.balances[item.id].error || isNaN(this.props.balances[item.id].result.confirmed)) ? {color: "rgba(206,68,70,1)"} : null} 
+              subtitleStyle={this.props.balances.hasOwnProperty(item.id) && (this.props.balances[item.id].error || isNaN(this.props.balances[item.id].result.confirmed)) ? {color: "rgba(206,68,70,1)", fontFamily: 'Avenir-Book'} : null} 
               containerStyle={{ borderBottomWidth: 0 }} 
               rightTitleStyle={{color: 'black'}}
             />

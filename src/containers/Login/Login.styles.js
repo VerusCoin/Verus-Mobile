@@ -16,7 +16,7 @@ export default styles = StyleSheet.create({
         color: Colors.quaternaryColor,
         width: "85%",
         textAlign: "center",
-        fontFamily: 'Avenir-Black',
+        fontFamily: 'Avenir-Medium',
     },
     formLabel: {
         textAlign: "left",

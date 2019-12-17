@@ -55,7 +55,7 @@ export default styles = StyleSheet.create({
     fontSize: 22,
     marginRight: 5,
     color: Colors.successButtonColor,
-    fontFamily:'Avenir',
+    fontFamily:'Avenir-Book',
   },
   addCoinBtn: {
     height: 54,

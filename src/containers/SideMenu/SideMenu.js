@@ -158,8 +158,8 @@ class SideMenu extends Component {
         renderItem={({item, index, section}) => (
           <ListItem                        
           title={item.name}    
-          titleStyle={{fontFamily: 'Avenir-Black'}}     
-          leftIcon={{name: item.icon}}                        
+          titleStyle={{fontFamily: 'Avenir-Black', textTransform: 'uppercase'}}     
+          leftIcon={{name: item.icon, size: 30}}                        
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => {this._openCoin(this.props.activeCoinsForUser[this.state.currentCoinIndex], item.name, section)}}
         /> 
@@ -177,7 +177,7 @@ class SideMenu extends Component {
         />
         { ENABLE_WYRE ? (
           <ListItem                        
-            title={"Buy/Sell coin"} 
+            title={"BUY/SELL COIN"} 
             titleStyle={{fontFamily: 'Avenir-Black'}}     
             leftIcon={{name: "account-balance"}}   
             hideChevron                     
@@ -185,7 +185,7 @@ class SideMenu extends Component {
             onPress={() => {
               let navigation = this.props.navigation  
               this.props.dispatch(setActiveSectionBuySellCrypto('buy-crypto'))
-              navigation.navigate("BuySellCryptoMenus", {title: "Buy"});
+              navigation.navigate("BuySellCryptoMenus", {title: "Buy Crypto"});
             }}
           />
           )
@@ -195,7 +195,7 @@ class SideMenu extends Component {
           )
         }
         <ListItem                        
-          title={"Remove Coin"}  
+          title={"REMOVE COIN"}  
           titleStyle={{fontFamily: 'Avenir-Black'}}   
           leftIcon={{name: "close"}}   
           hideChevron                     
@@ -267,8 +267,8 @@ class SideMenu extends Component {
       style={styles.coinList}
       renderItem={({item, index, section}) => (
         <ListItem                        
-        title={item}  
-        titleStyle={{fontFamily: 'Avenir-Black'}}                           
+        title={item}
+        titleStyle={{fontFamily: 'Avenir-Black', fontSize: 15, textTransform: 'uppercase'}}  
         containerStyle={{ borderBottomWidth: 0 }} 
         onPress={
           item === 'Add coin from list' ? 
@@ -299,9 +299,9 @@ class SideMenu extends Component {
       style={styles.coinList}
       renderItem={({item, index, section}) => (
         <ListItem    
-        leftIcon={{name: item.icon}}  
+        leftIcon={{name: item.icon, size: 30}}  
         title={item.title}  
-        titleStyle={{fontFamily: 'Avenir-Black'}}                           
+        titleStyle={{fontFamily: 'Avenir-Black', textTransform: 'uppercase'}}                  
         containerStyle={{ borderBottomWidth: 0 }} 
         onPress={() => this._openSettings(item)}
         /> 
@@ -337,7 +337,7 @@ class SideMenu extends Component {
           {this.renderMainDrawerComponents()}
           <ListItem    
           roundAvatar                    
-          title={"Add Coin"}   
+          title={"ADD COIN"}   
           titleStyle={{fontFamily: 'Avenir-Black'}}                        
           avatar={require('../../images/customIcons/coinAdd.png')}
           containerStyle={{ borderBottomWidth: 0 }} 
@@ -346,19 +346,19 @@ class SideMenu extends Component {
           /> 
           <ListItem    
           roundAvatar                    
-          title={"Settings"}                           
-          leftIcon={{name: 'settings'}}
+          title={"SETTINGS"}                           
+          leftIcon={{name: 'settings', size: 34}}
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: -2 })}
-          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '15%'}}
+          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '10%'}}
           />
           <ListItem    
           roundAvatar                    
-          title={"Log Out"}
-          leftIcon={{name: 'exit-to-app'}}
+          title={"LOG OUT"}
+          leftIcon={{name: 'exit-to-app', size: 34}}
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={this.handleLogout}
-          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '15%'}} 
+          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '10%'}} 
           /> 
 				</ScrollView>
       );
@@ -369,13 +369,13 @@ class SideMenu extends Component {
         <View>
           <DrawerHeader navigateToScreen={this.navigateToScreen} />
             <ListItem                        
-            title={<Text style={{fontFamily: 'Avenir-Black', paddingLeft: '5%', fontSize: 18}}>{"Back"}</Text>}                             
+            title={<Text style={{fontFamily: 'Avenir-Black', paddingLeft: '5%', fontSize: 18}}>{"BACK"}</Text>}                             
             containerStyle={{ borderBottomWidth: 0 }} 
             hideChevron
             leftIcon={
               <Icon
 							name="arrow-back"
-							size={25}
+							size={30}
 							color="#666666"
 						  />
             }

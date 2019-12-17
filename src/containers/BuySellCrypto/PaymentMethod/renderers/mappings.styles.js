@@ -23,9 +23,8 @@ export default StyleSheet.create({
   coinItemLabel: {
     color: Colors.quaternaryColor,
     marginLeft: 10,
-    fontSize: 18,
-    fontWeight: '600',
-    fontFamily: 'Avenir',
+    fontSize: 17,
+    fontFamily: 'Avenir-Black',
   },
   coinItemContainer: {
     borderBottomWidth: 0,
@@ -40,7 +39,7 @@ export default StyleSheet.create({
   },
   rightTitleStyle: {
     color: Colors.quaternaryColor,
-    fontFamily: 'Avenir',
+    fontFamily: 'Avenir-Book',
     fontSize: 15
   },
 });

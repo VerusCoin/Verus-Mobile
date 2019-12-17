@@ -59,12 +59,12 @@ export default styles = StyleSheet.create({
     backgroundColor: Colors.warningButtonColor,
     marginTop: 15,
     marginBottom: 40,
-    width: '60%'
+    width: '55%'
   },
   cancelButton: {
     height: 46,
     backgroundColor: Colors.basicButtonColor,
     marginTop: 15,
-    width: '35%'
+    width: '40%'
   },
 });

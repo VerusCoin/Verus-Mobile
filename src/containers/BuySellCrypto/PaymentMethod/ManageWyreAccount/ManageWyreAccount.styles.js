@@ -34,7 +34,8 @@ export default StyleSheet.create({
     wyreCardText: {
         color: Colors.quaternaryColor,
         paddingLeft: 10,
-        fontFamily: 'Avenir',
+        fontFamily: 'Avenir-Book',
+        fontSize: 16,
     },
     wyreCardIconContainer: {
         flexDirection: 'row',
@@ -79,14 +80,14 @@ export default StyleSheet.create({
         paddingVertical: '5%'
     },
     formLabel: {
-        fontSize: 15,
-        fontWeight: '700',
+        fontSize: 16,
         textAlign: 'left',
         paddingTop: '0%',
         color: Colors.quaternaryColor,
         marginVertical: 0,
         paddingVertical: 0,
-        fontFamily: 'Avenir',
+        fontFamily: 'Avenir-Book',
+        fontWeight: 'normal'
     },
     buttonContainer: {
         width: '80%',
@@ -139,11 +140,11 @@ export default StyleSheet.create({
         paddingVertical: 10,
     },
     formInputContainer: {
-        fontSize: 14,
+        fontSize: 15,
         width: '100%',
         marginVertical: 0,
         color: Colors.quaternaryColor,
-        fontFamily: 'Avenir',
+        fontFamily: 'Avenir-Medium',
     },
     inputMaskDateOfBirth: {
         color: Colors.quaternaryColor,

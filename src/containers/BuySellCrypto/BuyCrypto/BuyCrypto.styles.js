@@ -6,8 +6,8 @@ export default styles = StyleSheet.create({
     backgroundColor: Colors.secondaryColor,
     flex: 1,
     flexDirection: "column",
-    paddingTop: '20%',
     paddingBottom: 0,
+    marginVertical: '2%',
   },
   formLabel: {
     textAlign:"left",
@@ -78,11 +78,6 @@ export default styles = StyleSheet.create({
     height: 44,
     backgroundColor: Colors.successButtonColor,
     width: '100%',
-  },
-  backButton: {
-    height: 46,
-    backgroundColor: Colors.warningButtonColor,
-    width: '40%',
   },
   touchableInputBank: {
     width: "85%",

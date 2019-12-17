@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
-  Text,
+  ScrollView,
   View,
   TouchableWithoutFeedback,
   Keyboard
@@ -126,13 +126,13 @@ class ManageWyreAddress extends Component {
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View>
           <View style={styles.mainInputView}>
             <Spinner
               visible={this.props.isFetching}
               textContent="Loading..."
               textStyle={{ color: '#FFF' }}
             />
+            <ScrollView>
             <View>
               <FormLabel labelStyle={styles.formLabel}>
                     Street Address:
@@ -169,7 +169,7 @@ class ManageWyreAddress extends Component {
                   labelExtractor={(item) => item.value}
                   valueExtractor={(item) => item.value}
                   label="State: "
-                  labelTextStyle={{ fontWeight: '700' }}
+                  labelTextStyle={{ fontFamily: 'Avenir-Book'}}
                   labelFontSize={13}
                   data={STATES}
                   onChangeText={(value) => this.setState({ countryState: value })}
@@ -229,8 +229,8 @@ class ManageWyreAddress extends Component {
                 onPress={this.handleSubmit}
               />
             </View>
+            </ScrollView>
           </View>
-        </View>
       </TouchableWithoutFeedback>
     );
   }

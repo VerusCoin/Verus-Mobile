@@ -22,7 +22,7 @@ export default styles = StyleSheet.create({
   coinItemLabel: {
     color: Colors.quinaryColor,
     marginLeft: 10,
-    fontFamily:'Avenir-Book',
+    fontFamily:'Avenir-Black',
     fontSize: 18,
   },
   balanceSheetLabel: {
@@ -37,7 +37,7 @@ export default styles = StyleSheet.create({
     textAlign: "left",
     color: Colors.quinaryColor,
     paddingLeft: 30,
-    fontFamily:'Avenir-Book',
+    fontFamily:'Avenir-Black',
   },
   coinList: {
     width: "90%",

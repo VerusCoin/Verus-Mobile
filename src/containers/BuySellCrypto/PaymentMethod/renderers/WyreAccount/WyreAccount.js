@@ -32,7 +32,7 @@ class WyreAccount extends Component {
               avatarStyle={{resizeMode: 'contain'}}
               containerStyle={styles.coinItemContainer}
               subtitle="ACH with Wyre"
-              subtitleStyle={{fontFamily: 'Avenir'}}
+              subtitleStyle={{fontFamily: 'Avenir-Book'}}
               rightTitle="max $2,500/wk"
               rightTitleStyle={styles.rightTitleStyle}
             />

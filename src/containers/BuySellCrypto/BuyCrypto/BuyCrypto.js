@@ -376,7 +376,7 @@ class BuyCrypto extends Component {
             color={Colors.quinaryColor}
           />
           <ScrollView
-            contentContainerStyle={{height: "100%", alignItems: "center"}}
+            contentContainerStyle={{height: "100%", alignItems: "center", justifyContent: 'center'}}
             refreshControl={
               <RefreshControl
                 refreshing={this.state.loading}
