@@ -104,7 +104,7 @@
     "level-filesystem": "1.2.0",
     "levelup": "4.1.0",
     "mem": "5.1.1",
-    "handlebars": "^4.4.0"
+    "handlebars": "^4.5.3"
   },
   "jest": {
     "preset": "react-native",
