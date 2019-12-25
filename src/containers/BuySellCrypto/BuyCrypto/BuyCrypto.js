@@ -53,7 +53,7 @@ import {
   selectExchangeRatesIsFetching,
 } from '../../../selectors/paymentMethods';
 import { selectWyrePaymentMethod } from '../../../selectors/authentication';
-
+import hasPaymentMethod from '../../../utils/paymentMethod';
 class BuyCrypto extends Component {
   constructor(props) {
     super(props);
@@ -99,7 +99,7 @@ class BuyCrypto extends Component {
 
   _handleSubmit = () => {
     Keyboard.dismiss();
-    if (!this.props.paymentMethod){
+    if (!hasPaymentMethod(this.props.paymentMethod)){
       DelayedAlert('Please Manage Account first')
       this.props.navigation.navigate('SelectPaymentMethod', {
         onSelect: this.switchPaymentMethod,
@@ -323,7 +323,7 @@ class BuyCrypto extends Component {
         _errors = true
       }
 
-      if (!_errors && this.props.paymentMethod) {
+      if (!_errors && hasPaymentMethod(this.props.paymentMethod)) {
         switch (this.state.paymentMethod.id) {
           case 'US_BANK_ACCT':
               this.usBankAcctPayment(

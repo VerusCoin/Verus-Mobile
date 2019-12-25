@@ -4,8 +4,6 @@ import RNFetchBlob from 'rn-fetch-blob';
 
 import { WYRE_URL, WYRE_REFERRER_ACCOUNT_ID } from '../utils/constants';
 
-const generateSecretKey = () => crypto.randomBytes(30).toString('hex');
-
 const parseError = (error) => (
   error.response ? error.response.data.message : error.toString()
 )
@@ -40,26 +38,20 @@ class WyreService {
       { secretKey },
     )
   )
-
-  createAccount = async () => {
+  
+  createAccount = async (key) => {
     try {
-      // Generate random secret key fo user
-      const secretKey = generateSecretKey();
-      // Register Wyre secret key
-      await this.submitAuthToken(secretKey);
-
       const wyreAccount = {
         type: 'INDIVIDUAL',
         country: 'US',
         subaccount: false,
         referrerAccountId: WYRE_REFERRER_ACCOUNT_ID,
       };
-
-      this.setAuthorizationHeader(secretKey);
+      this.setAuthorizationHeader(key);
       const { data } = await this.service.post(`${this.url}/v3/accounts`, wyreAccount);
       return {
         data,
-        key: secretKey,
+        key: key,
       };
     } catch (error) {
       return {

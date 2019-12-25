@@ -10,6 +10,7 @@ import {
     selectWyrePaymentMethod,
     selectActiveAccount,
 } from '../../../selectors/authentication';
+import hasPaymentMethod from '../../../utils/paymentMethod';
 
 import {
     createWyreAccount,
@@ -30,6 +31,7 @@ import {
     getTransactionHistoryResponse
 } from '../../actionCreators';
 
+
 const getPaymentAddress = (account, currency) => {
     switch (currency) {
         case 'BTC':
@@ -41,15 +43,16 @@ const getPaymentAddress = (account, currency) => {
     }
 };
 
-export const manageAccount = (navigation) => async(dispatch, getState) => {
+export const manageAccount = (navigation) => async (dispatch, getState) => {
     const state = getState();
     const paymentMethod = selectWyrePaymentMethod(state);
-    if (!paymentMethod) {
+
+    if (!hasPaymentMethod(paymentMethod)) {
         // Create account
         try {
-            dispatch(createWyreAccount());
+            dispatch(createWyreAccount());   
 
-            const { data, key, error } = await WyreService.build().createAccount();
+            const { data, key, error } = await WyreService.build().createAccount(paymentMethod.key);
 
             dispatch(createWyreAccountResponse());
 
@@ -68,11 +71,8 @@ export const manageAccount = (navigation) => async(dispatch, getState) => {
                 }
             };
 
-            const accounts = await putUserPaymentMethods(activeAccount, newActiveAccount.paymentMethods);
-            if (!accounts) return DelayedAlert('Failed storing Wyre account credentials');
-
-            dispatch(setAccounts(accounts));
             dispatch(signIntoAccount(newActiveAccount));
+
         } catch (error) {
             dispatch(createWyreAccountResponse());
             return DelayedAlert('Failed creating Wyre account');
@@ -82,10 +82,10 @@ export const manageAccount = (navigation) => async(dispatch, getState) => {
     return navigation.navigate('ManageWyreAccount');
 };
 
-export const getAccount = () => async(dispatch, getState) => {
+export const getAccount = () => async (dispatch, getState) => {
     const state = getState();
     const paymentMethod = selectWyrePaymentMethod(state);
-    if (!paymentMethod) {
+    if (!hasPaymentMethod(paymentMethod)) {
         DelayedAlert('No Payment Account');
         return;
     }
@@ -97,16 +97,17 @@ export const getAccount = () => async(dispatch, getState) => {
         dispatch(getWyreAccountResponse(data));
 
         if (error) DelayedAlert('Failed fetching Wyre account');
+
     } catch (error) {
         dispatch(getWyreAccountResponse());
         DelayedAlert('Failed fetching Wyre account');
     }
 };
 
-export const putWyreAccountField = (params, navigation, onSuccess) => async(dispatch, getState) => {
+export const putWyreAccountField = (params, navigation, onSuccess) => async (dispatch, getState) => {
     const state = getState();
     const paymentMethod = selectWyrePaymentMethod(state);
-    if (!paymentMethod) {
+    if (!hasPaymentMethod(paymentMethod)) {
         return DelayedAlert('No Payment Account');
     }
     dispatch(putWyreAccount());
@@ -122,16 +123,16 @@ export const putWyreAccountField = (params, navigation, onSuccess) => async(disp
         dispatch(putWyreAccountResponse(null));
         return DelayedAlert('Failed updating Wyre account', error);
     }
-    if(onSuccess){
-       return onSuccess()
+    if (onSuccess) {
+        return onSuccess()
     }
     return navigation.dispatch(NavigationActions.back());
 };
 
-export const uploadWyreAccountDocument = (field, uri, type, onSuccess) => async(dispatch, getState) => {
+export const uploadWyreAccountDocument = (field, uri, type, onSuccess) => async (dispatch, getState) => {
     const state = getState();
     const paymentMethod = selectWyrePaymentMethod(state);
-    if (!paymentMethod) {
+    if (!hasPaymentMethod(paymentMethod)) {
         return DelayedAlert('No Payment Account');
     }
     dispatch(putWyreAccount());
@@ -149,7 +150,7 @@ export const uploadWyreAccountDocument = (field, uri, type, onSuccess) => async(
     return onSuccess();
 };
 
-export const getConfig = () => async(dispatch) => {
+export const getConfig = () => async (dispatch) => {
     dispatch(getWyreConfig());
     try {
         const response = await fetch(`${WYRE_URL}/v2/client/config/plaid`);
@@ -166,10 +167,10 @@ export const getConfig = () => async(dispatch) => {
     }
 };
 
-export const createWyreAccountPaymentMethod = (token, navigation) => async(dispatch, getState) => {
+export const createWyreAccountPaymentMethod = (token, navigation) => async (dispatch, getState) => {
     const state = getState();
     const paymentMethod = selectWyrePaymentMethod(state);
-    if (!paymentMethod) {
+    if (!hasPaymentMethod(paymentMethod)) {
         DelayedAlert('No Payment Account');
         return;
     }
@@ -187,10 +188,10 @@ export const createWyreAccountPaymentMethod = (token, navigation) => async(dispa
     navigation.dispatch(NavigationActions.back());
 };
 
-export const sendTransaction = (_, fromCurr, fromVal, toCurr, navigation) => async(dispatch, getState) => {
+export const sendTransaction = (_, fromCurr, fromVal, toCurr, navigation) => async (dispatch, getState) => {
     const state = getState();
     const paymentMethod = selectWyrePaymentMethod(state);
-    if (!paymentMethod) {
+    if (!hasPaymentMethod(paymentMethod)) {
         DelayedAlert('No Payment Account');
         return;
     }
@@ -240,10 +241,10 @@ export const sendTransaction = (_, fromCurr, fromVal, toCurr, navigation) => asy
     }
 };
 
-export const getExchangeRates = () => async(dispatch) => {
+export const getExchangeRates = () => async (dispatch) => {
     dispatch(getActiveTransaction());
     try {
-        const { data, error} = await WyreService.build().getRates();
+        const { data, error } = await WyreService.build().getRates();
         if (!error) {
             dispatch(getActiveTransactionResponse(data));
         } else {
@@ -255,17 +256,17 @@ export const getExchangeRates = () => async(dispatch) => {
     }
 };
 
-export const getTransactions = () => async(dispatch, getState) => {
+export const getTransactions = () => async (dispatch, getState) => {
     const state = getState();
     const paymentMethod = selectWyrePaymentMethod(state);
-    if (!paymentMethod) {
+    if (!hasPaymentMethod(paymentMethod)) {
         DelayedAlert('No Payment Account');
         return;
     }
     dispatch(getTransactionHistory());
     try {
-        const { data, error} = await WyreService.build().getTransactions(paymentMethod.key)
-        if (!error){
+        const { data, error } = await WyreService.build().getTransactions(paymentMethod.key)
+        if (!error) {
             dispatch(getTransactionHistoryResponse(data));
         } else {
             DelayedAlert('Failed fetching transactions history')
