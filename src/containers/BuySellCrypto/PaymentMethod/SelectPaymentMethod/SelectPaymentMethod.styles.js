@@ -1,8 +1,9 @@
 import { StyleSheet } from "react-native";
+import Colors from '../../../../globals/colors';
 
 export default styles = StyleSheet.create({
   root: {
-    backgroundColor: "#232323",
+    backgroundColor: Colors.secondaryColor,
     flex: 1,
     flexDirection: "column",
     paddingVertical: 50,

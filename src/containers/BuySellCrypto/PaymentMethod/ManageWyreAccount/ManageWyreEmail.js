@@ -28,6 +28,7 @@ import {
 } from '../../../../actions/actions/PaymentMethod/WyreAccount';
 
 import styles from './ManageWyreAccount.styles';
+import Colors from '../../../../globals/colors';
 
 class ManageWyreEmail extends Component {
   constructor(props) {
@@ -96,7 +97,7 @@ class ManageWyreEmail extends Component {
                 Enter Email:
               </FormLabel>
               <FormInput
-                underlineColorAndroid="#86939d"
+                underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ email: text })}
                 value={this.state.email}
                 autoCorrect={false}
@@ -109,7 +110,7 @@ class ManageWyreEmail extends Component {
             <View style={styles.buttonContainerBottom}>
               <Button1
                 style={styles.buttonSubmit}
-                buttonContent="Submit"
+                buttonContent="SUBMIT"
                 onPress={this.handleSubmit}
               />
             </View>

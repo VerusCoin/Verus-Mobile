@@ -29,6 +29,7 @@ import {
   VERIFICATION_LOCKED
 } from '../../../../utils/constants'
 import styles from './CoinSettings.styles'
+import Colors from '../../../../globals/colors';
 
 class CoinSettings extends Component {
   constructor(props) {
@@ -154,12 +155,12 @@ class CoinSettings extends Component {
               <View style={styles.buttonContainer}>
                 <Button1 
                   style={styles.backButton} 
-                  buttonContent="Back" 
+                  buttonContent="BACK" 
                   onPress={this.back}
                 />
                 <Button1 
                   style={styles.saveChangesButton} 
-                  buttonContent="Confirm" 
+                  buttonContent="CONFIRM" 
                   onPress={this._handleSubmit}
                 />
               </View>

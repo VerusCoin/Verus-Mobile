@@ -24,6 +24,7 @@ import { deleteUserByID } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
 import { checkPinForUser } from '../../../../utils/asyncStore/asyncStore'
+import Colors from '../../../../globals/colors';
 import styles from './DeleteProfile.styles'
 
 class DeleteProfile extends Component {
@@ -142,7 +143,7 @@ class DeleteProfile extends Component {
         Enter your password:
         </FormLabel>
         <FormInput 
-          underlineColorAndroid="#86939d"
+          underlineColorAndroid={Colors.quaternaryColor}
           onChangeText={(text) => this.setState({pwd: text})}
           autoCapitalize={"none"}
           autoCorrect={false}
@@ -176,7 +177,7 @@ class DeleteProfile extends Component {
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center", justifyContent: "center"}}>
+        <ScrollView style={styles.root} contentContainerStyle={{height: '100%' ,alignItems: "center", justifyContent: "center"}}>
           <Text style={styles.wifLabel}>
             {"Delete Profile"}
           </Text>
@@ -204,12 +205,12 @@ class DeleteProfile extends Component {
           <View style={styles.buttonContainer}>
             <Button1 
               style={styles.cancelButton} 
-              buttonContent="Cancel" 
+              buttonContent="CANCEL" 
               onPress={this.cancel}
             />
             <Button1 
               style={styles.addAccountButton} 
-              buttonContent="Delete" 
+              buttonContent="DELETE" 
               onPress={this._handleSubmit}
             />
           </View>

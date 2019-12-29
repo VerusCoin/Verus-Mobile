@@ -25,6 +25,7 @@ import { checkPinForUser } from '../../../../utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
 import styles from './RecoverSeed.styles'
+import Colors from "../../../../globals/colors";
 
 class RecoverSeed extends Component {
   constructor() {
@@ -127,11 +128,11 @@ class RecoverSeed extends Component {
             Recover Wallet Seed
           </Text>
           <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
+            <FormLabel style={styles.formLabel}>
             Enter your account password:
             </FormLabel>
             <FormInput 
-              underlineColorAndroid="#86939d"
+              underlineColorAndroid={Colors.quaternaryColor}
               onChangeText={(text) => this.setState({password: text})}
               value={this.state.password}
               autoCapitalize={"none"}
@@ -152,12 +153,12 @@ class RecoverSeed extends Component {
           <View style={styles.buttonContainer}>
             <Button1 
               style={styles.cancelButton} 
-              buttonContent="Cancel" 
+              buttonContent="CANCEL" 
               onPress={this.cancel}
             />
             <Button1 
               style={styles.addAccountButton} 
-              buttonContent="Recover" 
+              buttonContent="RECOVER" 
               onPress={this._handleSubmit}
             />
           </View>

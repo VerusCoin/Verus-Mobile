@@ -28,6 +28,7 @@ import { connect } from "react-redux";
 import { getRecommendedBTCFees } from '../../../utils/httpCalls/callCreators'
 import { removeSpaces } from '../../../utils/stringUtils'
 import styles from './SendCoin.styles'
+import Colors from '../../../globals/colors';
 
 const VERUSPAY_LOGO_DIR = require('../../../images/customIcons/verusPay.png')
 const DEFAULT_FEE_GUI = 10000;
@@ -285,7 +286,7 @@ class SendCoin extends Component {
               To:
               </FormLabel>
               <FormInput 
-                underlineColorAndroid="#86939d"
+                underlineColorAndroid={Colors.quinaryColor}
                 onChangeText={(text) => this.setState({toAddress: removeSpaces(text)})}
                 onSubmitEditing={Keyboard.dismiss}
                 value={this.state.toAddress}
@@ -308,7 +309,7 @@ class SendCoin extends Component {
               Amount:
               </FormLabel>
               <FormInput 
-                underlineColorAndroid="#86939d"
+                underlineColorAndroid={Colors.quinaryColor}
                 onChangeText={(text) => this.setState({amount: text})}
                 onSubmitEditing={Keyboard.dismiss}
                 value={this.state.amount.toString()}
@@ -328,7 +329,7 @@ class SendCoin extends Component {
               <TouchableOpacity onPress={this._verusPay}>
                 <Image
                   source={VERUSPAY_LOGO_DIR}
-                  style={{width: 40, height: 40, alignSelf: "center"}}
+                  style={{width: 40, height: 40, alignSelf: "center", marginVertical: '10%'}}
                 />
               </TouchableOpacity>
           </View>
@@ -355,7 +356,7 @@ class SendCoin extends Component {
                   </View>
                 :
                   <View style={styles.buttonContainer}>
-                    <Button1 style={styles.sendBtn} onPress={this.validateFormData} buttonContent="Send"/>
+                    <Button1 style={styles.sendBtn} onPress={this.validateFormData} buttonContent="SEND"/>
                   </View>
             }
         </ScrollView>

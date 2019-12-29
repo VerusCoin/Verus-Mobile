@@ -126,12 +126,12 @@ class WalletSettings extends Component {
               <View style={styles.buttonContainer}>
                 <Button1 
                   style={styles.backButton} 
-                  buttonContent="Back" 
+                  buttonContent="BACK" 
                   onPress={this.back}
                 />
                 <Button1 
                   style={styles.saveChangesButton} 
-                  buttonContent="Confirm" 
+                  buttonContent="CONFIRM" 
                   onPress={this._handleSubmit}
                 />
               </View>

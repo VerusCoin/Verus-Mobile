@@ -4,7 +4,7 @@ import Pending from './pending.png';
 import Email from './email.png';
 import Phone from './call-answer.png';
 import File from './file.png';
-import BankMain from './bank.png';
+import BankMain from './piggybank.png';
 import Bank from './bank2.png';
 import BankBuilding from './bank-building.png';
 import User from './user.png';
@@ -12,7 +12,9 @@ import Address from './maps-and-flags.png';
 import Home from './home-icon-silhouette.png';
 import Buy from './buy.png';
 import Sell from './sell.png';
-import Calendar from './calendar.png'
+import Calendar from './calendar.png';
+import Verus from './Verus.png';
+import BankBuildingBlack from './bankBuildingBlack.png';
 
 export {
   Open,
@@ -30,6 +32,8 @@ export {
   Buy,
   Sell,
   Calendar,
+  Verus,
+  BankBuildingBlack
 };
 
 export default Open;

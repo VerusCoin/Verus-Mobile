@@ -23,6 +23,7 @@ import TextInputMask from 'react-native-text-input-mask';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Calendar} from '../../../../images/customIcons/index';
 import { parseDate } from '../../../../utils/date';
+import Colors from '../../../../globals/colors';
 
 
 class ManageWyrePersonalDetails extends Component {
@@ -157,7 +158,7 @@ class ManageWyrePersonalDetails extends Component {
                     Legal Name:
               </FormLabel>
               <FormInput
-                underlineColorAndroid="#86939d"
+                underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ name: text })}
                 value={this.state.name}
                 autoCorrect={false}
@@ -223,7 +224,7 @@ class ManageWyrePersonalDetails extends Component {
             <View style={styles.buttonContainerBottom}>
               <Button1
                 style={styles.buttonSubmit}
-                buttonContent="Submit"
+                buttonContent="SUBMIT"
                 onPress={()=>{
                   if (this.state.showCalendar) {
                     this.hideCalendar();

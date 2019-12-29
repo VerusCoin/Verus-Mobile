@@ -2,6 +2,7 @@ import React from "react";
 import { StackNavigator, DrawerNavigator } from "react-navigation";
 import { StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 import { Icon } from "react-native-elements";
+import Colors from '../../globals/colors';
 
 import SideMenu from '../../containers/SideMenu/SideMenu';
 
@@ -42,22 +43,24 @@ const WALLET = 'wallet';
 
 const styles = StyleSheet.create({
   header_title_noBack: {
+    fontFamily: 'Avenir-Black',
     backgroundColor: 'transparent',
     height: 55,
     textAlign: 'center',
-    fontSize: 22,
+    fontSize: 18,
     color: "#E9F1F7",
-    paddingTop: 12,
+    paddingTop: 15,
     width: Dimensions.get('window').width // width of both buttons + no left-right padding
   },
 
   header_title_back: {
+    fontFamily: 'Avenir-Black',
     backgroundColor: 'transparent',
     height: 55,
-    textAlign: 'center',
-    fontSize: 22,
+    textAlign: 'right',
+    fontSize: 18,
     color: "#E9F1F7",
-    paddingTop: 12,
+    paddingTop: 15,
     width: Dimensions.get('window').width - 110// width of both buttons + no left-right padding
   },
 
@@ -72,7 +75,7 @@ export const MainScreens =
       screen: Home,
       navigationOptions: {
         title: "Home",
-        headerLeft: null
+        headerLeft: null,
       }
     },
     AddCoin: {
@@ -258,15 +261,20 @@ export const MainScreens =
     headerMode: 'screen',
     navigationOptions: ({navigation}) => ({
       headerStyle: {
-        backgroundColor: '#2E86AB',
+        backgroundColor: Colors.tertiaryColor,
+      },
+      headerTitleStyle:{
+        fontFamily: 'Avenir-Black',
+        fontWeight: 'normal',
+        fontSize: 22
       },
       headerRight: (
       <TouchableOpacity onPress={() =>
         navigation.navigate('DrawerOpen')} style={styles.menuButton}>
-        <Icon name="menu" size={35} color="#E9F1F7"/>
+        <Icon name="menu" size={35} color={Colors.quaternaryColor}/>
       </TouchableOpacity>),
       gesturesEnabled: false,
-      headerTintColor: '#E9F1F7',
+      headerTintColor: Colors.quaternaryColor,
     }),
   })
 
@@ -359,7 +367,7 @@ export const RootNavigator = (hasAccount, loading, signedIn) => {
     }, {
       contentComponent: SideMenu,
       drawerWidth: 250,
-      drawerPosition: 'left',
+      drawerPosition: 'right',
       drawerOpenRoute: 'DrawerOpen',
       drawerCloseRoute: 'DrawerClose',
       drawerToggleRoute: 'DrawerToggle',

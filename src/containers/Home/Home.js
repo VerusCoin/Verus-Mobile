@@ -31,6 +31,7 @@ import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../../utils/math';
 import { NavigationActions } from 'react-navigation';
 import styles from './Home.styles'
+import Colors from "../../globals/colors";
 
 const CONNECTION_ERROR = "Connection Error"
 
@@ -190,7 +191,7 @@ class Home extends Component {
           <ListItem       
             roundAvatar                
             title={<Text style={styles.coinItemLabel}>VerusPay</Text>}
-            rightIcon={{name: 'photo-camera'}}
+            hideChevron
             avatar={require('../../images/customIcons/verusPay.png')}
             containerStyle={{ borderBottomWidth: 0 }} 
           />
@@ -213,37 +214,40 @@ class Home extends Component {
                 null
               }                       
               avatar={item.logo}  
-              subtitleStyle={this.props.balances.hasOwnProperty(item.id) && (this.props.balances[item.id].error || isNaN(this.props.balances[item.id].result.confirmed)) ? {color: "rgba(206,68,70,1)"} : null} 
+              subtitleStyle={this.props.balances.hasOwnProperty(item.id) && (this.props.balances[item.id].error || isNaN(this.props.balances[item.id].result.confirmed)) ? {color: "rgba(206,68,70,1)", fontFamily: 'Avenir-Book'} : null} 
               containerStyle={{ borderBottomWidth: 0 }} 
-              rightTitle={
-              ('$' + 
-              (!this.props.balances.hasOwnProperty(item.id) || this.props.balances[item.id].error || isNaN(this.props.balances[item.id].result.confirmed) ? 
-                '0.00'
-                :
-                truncateDecimal(((typeof(this.props.rates[item.id]) === 'number' ? this.props.rates[item.id] : 0)*(this.props.balances.hasOwnProperty(item.id) ? 
-                satsToCoins(this.props.balances[item.id].result.confirmed) :
-                0)), 2)))
-            }
+              rightTitleStyle={{color: 'black'}}
             />
           </TouchableOpacity>   
         )}   
         extraData={this.props.balances}       
         keyExtractor={item => item.id}                            
         /> 
+        <View style={{
+            borderBottomColor: Colors.tertiaryColor,
+            borderBottomWidth: 1,
+            width: '100%',
+            alignSelf: 'center',
+            width: "90%",
+            marginVertical: '3%'
+          }}> 
+        </View>
         <TouchableOpacity onPress={this._buySellCrypto}>
           <ListItem    
             roundAvatar
             title={<Text style={styles.coinItemLabel}>Buy/Sell Crypto</Text>}                            
-            avatar={require('../../images/customIcons/interestPlus.png')}
+            avatar={require('../../images/customIcons/buySell.png')}
             containerStyle={{ borderBottomWidth: 0 }} 
+            hideChevron
           /> 
         </TouchableOpacity>
         <TouchableOpacity onPress={this._addCoin}>
           <ListItem    
             roundAvatar                    
             title={<Text style={styles.coinItemLabel}>Add Coin</Text>}                            
-            avatar={require('../../images/customIcons/addCoin.png')}
-            containerStyle={{ borderBottomWidth: 0 }} 
+            avatar={require('../../images/customIcons/coinAdd.png')}
+            containerStyle={{ borderBottomWidth: 0 }}
+            hideChevron
           /> 
         </TouchableOpacity>
       </ScrollView>
@@ -253,7 +257,7 @@ class Home extends Component {
   render() {
     return (
       <View style={styles.root}>
-        <Text style={styles.fiatBalanceLabel}>
+        <Text style={styles.fiatBalanceLabel} >
         {'$' + truncateDecimal(this.state.totalFiatBalance, 2)}
         </Text>
         <Text style={styles.balanceSheetLabel}>Portfolio</Text>

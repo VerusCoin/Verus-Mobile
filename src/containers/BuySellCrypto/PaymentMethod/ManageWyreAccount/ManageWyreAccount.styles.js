@@ -1,16 +1,16 @@
 import { StyleSheet } from 'react-native';
+import Colors from '../../../../globals/colors';
 
 export default StyleSheet.create({
     userProfileContainer: {
-        paddingTop: 15,
-        backgroundColor: '#232323',
+        backgroundColor: Colors.secondaryColor,
         height: '100%'
     },
     viewContainer: {
         width: '90%',
         borderRadius: 7,
         borderWidth: 0.8,
-        borderColor: '#86939e',
+        borderColor: Colors.quaternaryColor,
         height: '8%',
         margin: '2%',
         marginVertical: 0,
@@ -27,19 +27,15 @@ export default StyleSheet.create({
         marginVertical: 0,
         paddingVertical: 0,
     },
-    userProfileHeader: {
-        fontWeight: 'bold',
-        paddingBottom: 20,
-        fontSize: 22,
-        color: '#86939e',
-    },
     wyreInfo: {
         fontSize: 13,
         color: '#86939e',
     },
     wyreCardText: {
-        color: 'white',
+        color: Colors.quaternaryColor,
         paddingLeft: 10,
+        fontFamily: 'Avenir-Book',
+        fontSize: 16,
     },
     wyreCardIconContainer: {
         flexDirection: 'row',
@@ -49,23 +45,26 @@ export default StyleSheet.create({
     icon: {
         width: 20,
         height: 20,
+        tintColor: 'black'
     },
     buttonSubmit: {
         alignSelf: 'center',
         marginTop: 10,
-        height: 35,
+        height: 46,
         width: '90%',
         backgroundColor: "#009B72",
     },
     buttonConfirm: {
-        width: 110,
+        width: '100%',
         height: 40,
         backgroundColor: '#009B72',
+        marginTop: 15,
     },
     buttonCancel: {
-        width: 110,
+        width: '100%',
         height: 40,
-        backgroundColor: 'rgba(206,68,70,1)',
+        backgroundColor: Colors.basicButtonColor,
+        marginTop: 15,
     },
     buttonSelect: {
         alignSelf: 'center',
@@ -74,29 +73,30 @@ export default StyleSheet.create({
         backgroundColor: "#009B72"
     },
     mainInputView: {
-        backgroundColor: '#232323',
+        backgroundColor: Colors.secondaryColor,
         height: '100%',
         paddingBottom: 10,
         paddingHorizontal: '5%',
         paddingVertical: '5%'
     },
     formLabel: {
-        fontSize: 15,
-        fontWeight: '700',
+        fontSize: 16,
         textAlign: 'left',
         paddingTop: '0%',
-        color: '#86939e',
+        color: Colors.quaternaryColor,
         marginVertical: 0,
         paddingVertical: 0,
+        fontFamily: 'Avenir-Book',
+        fontWeight: 'normal'
     },
     buttonContainer: {
         width: '80%',
         paddingTop: 10,
         backgroundColor: 'transparent',
-        flexDirection: 'row',
+        flexDirection: 'column',
         alignSelf: 'center',
-        justifyContent: 'space-between',
-        height: 46,
+        alignContent: 'flex-end',
+        marginTop: '40%',
     },
     imageContainer: {
         width: 280,
@@ -110,33 +110,49 @@ export default StyleSheet.create({
         marginVertical: -13,
     },
     statusInfo: {
-        color: 'white',
+        color: Colors.quaternaryColor,
         alignSelf: 'center',
+        fontSize: 15,
+        fontFamily: 'Avenir',
+    },
+    statusInfoHeader: {
+        color: Colors.quaternaryColor,
+        alignSelf: 'center',
+        fontSize: 22,
+        fontFamily: 'Avenir',
+    },
+    statusInfoContent: {
+        color: Colors.quaternaryColor,
+        alignSelf: 'center',
+        fontSize: 15,
+        fontWeight: 'bold'
     },
     buttonContainerBottom: {
         flex: 1,
         justifyContent: 'flex-end',
     },
     inputMask: {
-      color: '#86939e',
-      borderBottomColor: '#86939d',
-      borderBottomWidth: 2,
-      width: '87%',
-      marginLeft: 20,
-      paddingVertical: 10,
+        color: Colors.quaternaryColor,
+        borderBottomColor: '#86939d',
+        borderBottomWidth: 2,
+        width: '87%',
+        marginLeft: 20,
+        paddingVertical: 10,
     },
     formInputContainer: {
-      fontSize: 14,
-      width: '100%',
-      marginVertical: 0,
+        fontSize: 15,
+        width: '100%',
+        marginVertical: 0,
+        color: Colors.quaternaryColor,
+        fontFamily: 'Avenir-Medium',
     },
     inputMaskDateOfBirth: {
-      color: '#86939e',
-      borderBottomColor: '#86939d',
-      borderBottomWidth: 2,
-      width: '76%',
-      marginLeft: 20,
-      paddingVertical: 10,
+        color: Colors.quaternaryColor,
+        borderBottomColor: '#86939d',
+        borderBottomWidth: 2,
+        width: '76%',
+        marginLeft: 20,
+        paddingVertical: 10,
     },
     containerCalendarButton: {
         width: '15%',
@@ -148,9 +164,42 @@ export default StyleSheet.create({
     },
     formValidationLabel: {
         fontSize: 12,
-    }, 
-    dropdownInputContainer:{ 
-        borderBottomWidth: 1 , 
+    },
+    dropdownInputContainer: {
+        borderBottomWidth: 1,
         marginTop: 15
-    }, 
+    },
+    statusButtonAdd: {
+        backgroundColor: Colors.successButtonColor,
+        width: 110,
+        height: 35,
+        marginRight: 15,
+    },
+    statusButtonPending: {
+        backgroundColor: Colors.infoButtonColor,
+        width: 110,
+        height: 35,
+        marginRight: 15,
+    },
+    statusButtonApproved: {
+        backgroundColor: 'transparent',
+        width: 110,
+        height: 35,
+        marginRight: 15,
+    },
+    statusButtonApprovedStyle: {
+        fontSize: 15,
+        color: Colors.linkButtonColor,
+        width: 130,
+        textAlign: 'center',
+        fontWeight: '600',
+        fontFamily: 'Avenir',
+    },
+    statusButtonStyle: {
+        fontSize: 15,
+        width: 130,
+        textAlign: 'center',
+        fontWeight: '600',
+        color: Colors.secondaryColor,
+    },
 });

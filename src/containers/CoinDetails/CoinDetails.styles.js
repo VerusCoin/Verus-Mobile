@@ -1,8 +1,9 @@
 import { StyleSheet } from "react-native";
+import Colors from '../../globals/colors';
 
 export default styles = StyleSheet.create({
   root: {
-    backgroundColor: "#232323",
+    backgroundColor: Colors.secondaryColor,
     flex: 1,
     alignItems: "center"
   },
@@ -14,14 +15,14 @@ export default styles = StyleSheet.create({
   },
   titleLabel: {
     backgroundColor: "transparent",
-    opacity: 0.86,
     marginTop: 5,
     marginBottom: 3,
     paddingBottom: 0,
     fontSize: 22,
     textAlign: "center",
-    color: "#E9F1F7",
-    width: 245,
+    color: Colors.quaternaryColor,
+    fontWeight: 'bold',
+    fontFamily:'Avenir',
   },
 
   fullName: {
@@ -32,8 +33,8 @@ export default styles = StyleSheet.create({
     paddingBottom: 0,
     fontSize: 20,
     textAlign: "center",
-    color: "#E9F1F7",
-    width: 245,
+    color: Colors.quaternaryColor,
+    fontFamily:'Avenir',
   },
 
   description: {
@@ -42,23 +43,19 @@ export default styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 0,
     paddingBottom: 0,
-    fontSize: 22,
+    fontSize: 20,
     textAlign: "center",
-    color: "#E9F1F7",
+    color: Colors.quaternaryColor,
     width: 300,
+    fontFamily:'Avenir',
   },
 
   coinAddedLabel: {
     backgroundColor: "transparent",
-    opacity: 0.86,
     fontSize: 22,
     marginRight: 5,
-    color: "#50C3A5",
-  },
-  rect: {
-    height: 1,
-    width: "100%",
-    backgroundColor: "rgb(230,230,230)"
+    color: Colors.successButtonColor,
+    fontFamily:'Avenir-Book',
   },
   addCoinBtn: {
     height: 54,
@@ -73,22 +70,21 @@ export default styles = StyleSheet.create({
     left: "0%"
   },
   receiveBtn: {
-    width: 222.32,
+    width: '85%',
     height: 45,
-    backgroundColor: "rgba(29,145,95,1)",
-    opacity: 1,
+    backgroundColor: Colors.infoButtonColor,
     marginTop: 0,
     marginBottom: 0
   },
   homeLabel: {
-    width: 244,
     backgroundColor: "transparent",
     opacity: 0.86,
-    marginTop: 5,
-    marginBottom: 15,
+    marginTop: 15,
+    marginBottom: '15%',
     paddingBottom: 0,
-    fontSize: 22,
+    fontSize: 25,
     textAlign: "center",
-    color: "#E9F1F7"
+    color: Colors.quaternaryColor,
+    fontFamily:'Avenir',
   }
 });

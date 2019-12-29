@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
-  Text,
+  ScrollView,
   View,
   TouchableWithoutFeedback,
   Keyboard
@@ -19,6 +19,7 @@ import {
   putWyreAccountField
 } from '../../../../actions/actions/PaymentMethod/WyreAccount';
 import { STATES, WYRE_COUNTRIES } from '../../../../utils/constants';
+import Colors from '../../../../globals/colors';
 
 
 class ManageWyreAddress extends Component {
@@ -125,19 +126,19 @@ class ManageWyreAddress extends Component {
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View>
           <View style={styles.mainInputView}>
             <Spinner
               visible={this.props.isFetching}
               textContent="Loading..."
               textStyle={{ color: '#FFF' }}
             />
+            <ScrollView>
             <View>
               <FormLabel labelStyle={styles.formLabel}>
                     Street Address:
               </FormLabel>
               <FormInput
-                underlineColorAndroid="#86939d"
+                underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ streetAddress: text })}
                 value={this.state.streetAddress}
                 autoCorrect={false}
@@ -152,7 +153,7 @@ class ManageWyreAddress extends Component {
                     City:
               </FormLabel>
               <FormInput
-                underlineColorAndroid="#86939d"
+                underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ city: text })}
                 value={this.state.city}
                 autoCorrect={false}
@@ -168,15 +169,16 @@ class ManageWyreAddress extends Component {
                   labelExtractor={(item) => item.value}
                   valueExtractor={(item) => item.value}
                   label="State: "
-                  labelTextStyle={{ fontWeight: '700' }}
+                  labelTextStyle={{ fontFamily: 'Avenir-Book'}}
                   labelFontSize={13}
                   data={STATES}
                   onChangeText={(value) => this.setState({ countryState: value })}
-                  textColor="#86939e"
-                  selectedItemColor="#232323"
-                  baseColor="#86939e"
+                  textColor={Colors.quaternaryColor}
+                  selectedItemColor={Colors.quaternaryColor}
+                  baseColor={Colors.quaternaryColor}
                   value={this.state.countryState}
                   inputContainerStyle={styles.dropdownInputContainer}
+                  pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                 />
               </View>
               <FormValidationMessage labelStyle={styles.formValidationLabel}>
@@ -188,7 +190,7 @@ class ManageWyreAddress extends Component {
                     Postal Code:
               </FormLabel>
               <FormInput
-                underlineColorAndroid="#86939d"
+                underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ postalCode: text })}
                 value={this.state.postalCode}
                 autoCorrect={false}
@@ -208,11 +210,12 @@ class ManageWyreAddress extends Component {
                   labelFontSize={13}
                   data={WYRE_COUNTRIES}
                   onChangeText={(value) => this.setState({ country: value })}
-                  textColor="#86939e"
-                  selectedItemColor="#232323"
-                  baseColor="#86939e"
+                  textColor={Colors.quaternaryColor}
+                  selectedItemColor={Colors.quaternaryColor}
+                  baseColor={Colors.quaternaryColor}
                   value={this.state.country ? `${this.state.country}` : ''}
                   inputContainerStyle={styles.dropdownInputContainer}
+                  pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                 />
               </View>
               <FormValidationMessage labelStyle={styles.formValidationLabel}>
@@ -222,12 +225,12 @@ class ManageWyreAddress extends Component {
             <View style={styles.buttonContainerBottom}>
               <Button1
                 style={styles.buttonSubmit}
-                buttonContent="Submit"
+                buttonContent="SUBMIT"
                 onPress={this.handleSubmit}
               />
             </View>
+            </ScrollView>
           </View>
-        </View>
       </TouchableWithoutFeedback>
     );
   }

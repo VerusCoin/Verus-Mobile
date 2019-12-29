@@ -7,10 +7,11 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import { ListItem } from 'react-native-elements';
+import Button1 from '../../../../../symbols/button1';
 
 import { manageAccount } from '../../../../../actions/actions/PaymentMethod/WyreAccount';
 
-import { Bank } from '../../../../../images/customIcons';
+import { BankBuildingBlack } from '../../../../../images/customIcons';
 
 import styles from '../mappings.styles';
 
@@ -25,21 +26,23 @@ class WyreAccount extends Component {
         <View style={styles.bankAccountContainer}>
           <View style={styles.formInput}>
             <ListItem
-              roundAvatar
               title={<Text style={styles.coinItemLabel}>Bank Transfer</Text>}
-              avatar={Bank}
+              avatar={BankBuildingBlack}
+              avatarOverlayContainerStyle={{backgroundColor: 'transparent'}}
+              avatarStyle={{resizeMode: 'contain'}}
               containerStyle={styles.coinItemContainer}
               subtitle="ACH with Wyre"
+              subtitleStyle={{fontFamily: 'Avenir-Book'}}
               rightTitle="max $2,500/wk"
+              rightTitleStyle={styles.rightTitleStyle}
             />
           </View>
           <View style={styles.manageAccountView}>
-            <Text
-              onPress={this.manageAccount}
-              style={styles.manageAccountLabel}
-            >
-                Manage Account
-            </Text>
+            <Button1
+                style={styles.manageAccountLabel}
+                buttonContent="MANAGE ACCOUNT"
+                onPress={this.manageAccount}
+              />
           </View>
         </View>
       </TouchableWithoutFeedback>

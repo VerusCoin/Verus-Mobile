@@ -26,6 +26,7 @@ import {
 } from '../../../../actions/actions/PaymentMethod/WyreAccount';
 
 import styles from './ManageWyreAccount.styles';
+import Colors from '../../../../globals/colors';
 
 class ManageWyreCellphone extends Component {
   constructor(props) {
@@ -89,7 +90,7 @@ class ManageWyreCellphone extends Component {
                 Enter Cellphone Number:
               </FormLabel>
               <FormInput
-                underlineColorAndroid="#86939d"
+                underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ phone: text })}
                 value={this.state.phone}
                 autoCorrect={false}
@@ -102,7 +103,7 @@ class ManageWyreCellphone extends Component {
             <View style={styles.buttonContainerBottom}>
               <Button1
                 style={styles.buttonSubmit}
-                buttonContent="Submit"
+                buttonContent="SUBMIT"
                 onPress={this.handleSubmit}
               />
             </View>

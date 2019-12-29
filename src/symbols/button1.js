@@ -35,7 +35,7 @@ export default class button1 extends Component {
       disabled={this.state.onPressingInProgress}
       >
         <View pointerEvents='none'>
-          <Text style={styles.buttonContent}>
+          <Text style={this.props.buttonStyle ? this.props.buttonStyle : styles.buttonContent}>
             {this.props.buttonContent ? this.props.buttonContent : "Button"}
           </Text>
         </View>
@@ -54,10 +54,9 @@ const styles = StyleSheet.create({
     borderRadius: 5
   },
   buttonContent: {
-    fontSize: 18,
-    //fontWeight: "500",
-    //fontFamily: "Roboto",
-    color: "#fff"
+    fontSize: 16,
+    color: "#fff",
+    fontFamily: 'Avenir-Black',
   },
   newOne: {
     opacity: 0.7,

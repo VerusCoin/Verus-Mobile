@@ -52,7 +52,7 @@ class ScanSeed extends Component {
         <View style={styles.singleButtonContainer}>
           <Button1 
             style={styles.cancelBtn} 
-            buttonContent="Cancel" 
+            buttonContent="CANCEL" 
             onPress={this.cancelHandler}
           />
         </View>

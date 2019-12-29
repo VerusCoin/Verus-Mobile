@@ -92,7 +92,7 @@ class ManageWyreDocuments extends Component {
               <View style={styles.buttonContainerBottom}>
                 <Button1
                   style={styles.buttonSelect}
-                  buttonContent="Select Document"
+                  buttonContent=" DOCUMENT"
                   onPress={this.handleSelect}
                 />
               </View>
@@ -106,12 +106,12 @@ class ManageWyreDocuments extends Component {
                 <View style={styles.buttonContainer}>
                   <Button1
                     style={styles.buttonConfirm}
-                    buttonContent="Confirm"
+                    buttonContent="CONFIRM"
                     onPress={this.handleUpload}
                   />
                   <Button1
                     style={styles.buttonCancel}
-                    buttonContent="Cancel"
+                    buttonContent="CANCEL"
                     onPress={this.clearSelectedImage}
                   />
                 </View>

@@ -17,6 +17,7 @@ import { connect } from 'react-redux';
 import { NavigationActions } from 'react-navigation';
 import { clearCacheData } from '../../../actions/actionCreators';
 import styles from './WalletSettings.styles';
+import Colors from '../../../globals/colors';
 
 const GENERAL_WALLET_SETTINGS = "GeneralWalletSettings"
 const COIN_SETTINGS = "CoinSettings"
@@ -96,6 +97,7 @@ class WalletSettings extends Component {
             rightIcon={{name: 'close'}}
             containerStyle={{ borderBottomWidth: 0 }} 
             chevron={false}
+            chevronColor={Colors.quaternaryColor}
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => this._openSettings(GENERAL_WALLET_SETTINGS)}>
@@ -103,6 +105,7 @@ class WalletSettings extends Component {
             title={<Text style={styles.coinItemLabel}>{"General Settings"}</Text>}
             leftIcon={{name: 'settings-applications'}}
             containerStyle={{ borderBottomWidth: 0 }} 
+            chevronColor={Colors.quaternaryColor}
           />
         </TouchableOpacity>
         {this.props.activeCoinsForUser.map((coin, index) => {
@@ -115,6 +118,7 @@ class WalletSettings extends Component {
                 avatar={coin.logo}
                 roundAvatar
                 containerStyle={{ borderBottomWidth: 0 }} 
+                chevronColor={Colors.quaternaryColor}
               />
             </TouchableOpacity>
           )

@@ -36,11 +36,11 @@ import { findCoinObj } from '../../../utils/CoinData'
 import styles from './BuyCrypto.styles'
 import DelayedAsyncAlert from '../../../utils/delayedAsyncAlert'
 import DelayedAlert from '../../../utils/delayedAlert';
-
+import Colors from '../../../globals/colors';
 import { ENABLE_WYRE } from '../../../utils/constants'
 
 import {
-  BankMain,
+  BankBuildingBlack, Bank,
 } from '../../../images/customIcons';
 
 import {
@@ -85,9 +85,9 @@ class BuyCrypto extends Component {
     }
   }
 
-  back = () => {
-    this.props.navigation.dispatch(NavigationActions.back())
-  }
+  // back = () => {
+  //   this.props.navigation.dispatch(NavigationActions.back())
+  // }
 
   static navigationOptions = ({ navigation }) => {
     return {
@@ -372,10 +372,11 @@ class BuyCrypto extends Component {
                 :
                 "Loading..."
             }
-            textStyle={{color: "#FFF"}}
+            textStyle={{color: Colors.quaternaryColor}}
+            color={Colors.quinaryColor}
           />
           <ScrollView
-            contentContainerStyle={{height: "100%", alignItems: "center", justifyContent: "center"}}
+            contentContainerStyle={{height: "100%", alignItems: "center", justifyContent: 'center'}}
             refreshControl={
               <RefreshControl
                 refreshing={this.state.loading}
@@ -385,10 +386,10 @@ class BuyCrypto extends Component {
           <View style={styles.inputAndDropDownContainer}>
               <View style={styles.formInputLabelContainer}>
                 <FormLabel labelStyle={styles.formLabel}>
-                  {`${this.props.buy ? 'Buy:' : 'Receive: ' } `}
+                  {`${this.props.buy ? 'Spend:' : 'Sell: ' } `}
                 </FormLabel>
                 <FormInput
-                  underlineColorAndroid="#86939d"
+                  underlineColorAndroid="black"
                   value={this.state.fromVal}
                   inputStyle={styles.formInput}
                   containerStyle={styles.formInputContainer}
@@ -410,7 +411,7 @@ class BuyCrypto extends Component {
                   }}
                   data={this.props.buy ?  SUPPORTED_FIAT_CURRENCIES : SUPPORTED_CRYPTOCURRENCIES}
                   onChangeText={(value) => this.switchFromCurr(value)}
-                  textColor="#E9F1F7"
+                  textColor=""
                   selectedItemColor="#232323"
                   value={this.state.fromCurr}
                   containerStyle={styles.currencyDropDownContainer}
@@ -420,6 +421,8 @@ class BuyCrypto extends Component {
                       <Icon size={24} style={styles.dropDownIcon} color="#86939e" name={"arrow-drop-down"} />
                     </View>
                   ) }}
+                  pickerStyle={{backgroundColor: Colors.tertiaryColor}}
+                  itemTextStyle={{fontFamily: 'Avenir'}}
                 />
               </View>
             </View>
@@ -436,10 +439,10 @@ class BuyCrypto extends Component {
             <View style={styles.inputAndDropDownContainer}>
               <View style={styles.formInputLabelContainer}>
                 <FormLabel labelStyle={styles.formLabel}>
-                  {`${this.props.buy ? 'Receive:' : 'Sell:' } `}
+                  Receive
                 </FormLabel>
                 <FormInput
-                  underlineColorAndroid="#86939d"
+                  underlineColorAndroid="black"
                   value={this.state.toVal}
                   inputStyle={styles.formInput}
                   containerStyle={styles.formInputContainer}
@@ -472,6 +475,8 @@ class BuyCrypto extends Component {
                       <Icon size={24} style={styles.dropDownIcon} color="#86939e" name={"arrow-drop-down"} />
                     </View>
                   ) }}
+                  pickerStyle={{backgroundColor: Colors.tertiaryColor}}
+                  itemTextStyle={{fontFamily: 'Avenir'}}
                 />
               </View>
             </View>
@@ -491,14 +496,16 @@ class BuyCrypto extends Component {
                 <TouchableWithoutFeedback onPress={this.openPaymentMethodOptions}>
                   <View style={styles.formInput}>
                     <ListItem
-                      roundAvatar
                       title={(
                         <Text style={styles.coinItemLabel}>
                           {this.state.paymentMethod.name}
                         </Text>
                       )}
-                      avatar={BankMain}
+                      avatar={BankBuildingBlack}
+                      avatarOverlayContainerStyle={{backgroundColor: 'transparent'}}
+                      avatarStyle={{ resizeMode: 'contain'}}
                       containerStyle={{ borderBottomWidth: 0 }}
+                      chevronColor={'black'}
                     />
                   </View>
                 </TouchableWithoutFeedback>
@@ -510,11 +517,11 @@ class BuyCrypto extends Component {
                     labelExtractor={(item) => item.name}
                     valueExtractor={(item) => item}
                     label="Pay With"
-                    labelTextStyle={{ fontWeight: 'bold' }}
+                    labelTextStyle={{ fontWeight: 'bold', fontFamily: 'Avenir' }}
                     labelFontSize={12}
                     data={SUPPORTED_PAYMENT_METHODS}
                     onChangeText={(method) => this.switchPaymentMethod(method)}
-                    textColor="#86939e"
+                    textColor="black"
                     selectedItemColor="#232323"
                     baseColor="#86939e"
                     value={this.state.paymentMethod.name}
@@ -525,13 +532,8 @@ class BuyCrypto extends Component {
             )}
             <View style={styles.buttonContainer}>
               <Button1
-                style={styles.backButton}
-                buttonContent="Back"
-                onPress={this.back}
-              />
-              <Button1
                 style={styles.saveChangesButton}
-                buttonContent="Proceed"
+                buttonContent="PROCEED"
                 onPress={this._handleSubmit}
               />
             </View>

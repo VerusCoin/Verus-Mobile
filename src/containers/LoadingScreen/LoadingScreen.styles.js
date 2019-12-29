@@ -1,8 +1,9 @@
 import { StyleSheet } from "react-native";
+import Colors from '../../globals/colors';
 
 export default styles = StyleSheet.create({
   loadingRoot: {
-    backgroundColor: "#232323",
+    backgroundColor: Colors.tertiaryColor,
     flex: 1,
     alignItems: "center",
     justifyContent: "center"
@@ -10,9 +11,11 @@ export default styles = StyleSheet.create({
   loadingLabel: {
     backgroundColor: "transparent",
     marginTop: 15,
-    fontSize: 15,
+    fontSize: 18,
     textAlign: "center",
-    color: "#E9F1F7",
-    width: "70%"
+    color: Colors.quinaryColor,
+    width: "70%",
+    fontFamily: 'Avenir-Book',
+    fontWeight: 'normal'
   },
 });

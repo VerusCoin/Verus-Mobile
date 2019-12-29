@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { connect } from 'react-redux';
 import styles from './ProfileSettings.styles';
+import Colors from '../../../globals/colors';
 
 const RESET_PWD = "ResetPwd"
 const RECOVER_SEED = "RecoverSeed"
@@ -54,13 +55,15 @@ class ProfileSettings extends Component {
             title={<Text style={styles.coinItemLabel}>Recover Seed</Text>}
             leftIcon={{name: 'lock-open'}}
             containerStyle={{ borderBottomWidth: 0 }} 
+            chevronColor={Colors.quaternaryColor}
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => this._openSettings(RESET_PWD)}>
           <ListItem                       
             title={<Text style={styles.coinItemLabel}>Reset Password</Text>}
             leftIcon={{name: 'autorenew'}}
-            containerStyle={{ borderBottomWidth: 0 }} 
+            containerStyle={{ borderBottomWidth: 0}} 
+            chevronColor={Colors.quaternaryColor}
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => this._openSettings(REMOVE_PROFILE)}>
@@ -68,6 +71,7 @@ class ProfileSettings extends Component {
             title={<Text style={styles.coinItemLabel}>Delete Profile</Text>}
             leftIcon={{name: 'delete-forever'}}
             containerStyle={{ borderBottomWidth: 0 }} 
+            chevronColor={Colors.quaternaryColor}
           />
         </TouchableOpacity>
       </ScrollView>
