@@ -17,12 +17,14 @@ import {
   setConfigSection,
   removeExistingCoin,
   setUserCoins,
-  setActiveSectionCustomCoins
+  setActiveSectionCustomCoins,
+  setActiveSectionBuySellCrypto,
  } from '../../actions/actionCreators'
 import { getKeyByValue } from '../../utils/objectManip'
 import { NavigationActions } from 'react-navigation';
 import AlertAsync from "react-native-alert-async";
 import styles from './SideMenu.styles';
+import { ENABLE_WYRE } from '../../utils/constants';
 
 const APP_INFO = 'App Info'
 const PROFILE = 'Profile'
@@ -137,9 +139,10 @@ class SideMenu extends Component {
         <ListItem              
           roundAvatar          
           title={item.id}                           
-          avatar={item.logo}   
+          avatar={item.logo}  
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: index })}
+          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '15%'}}
         />          
       )}          
       keyExtractor={item => item.id}                            
@@ -154,27 +157,48 @@ class SideMenu extends Component {
         style={styles.coinList}
         renderItem={({item, index, section}) => (
           <ListItem                        
-          title={item.name}     
-          leftIcon={{name: item.icon}}                        
+          title={item.name}    
+          titleStyle={{fontFamily: 'Avenir-Black', textTransform: 'uppercase'}}     
+          leftIcon={{name: item.icon, size: 30}}                        
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => {this._openCoin(this.props.activeCoinsForUser[this.state.currentCoinIndex], item.name, section)}}
         /> 
         )}
         renderSectionHeader={({section: {title}}) => (
           <ListItem                        
-          title={<Text style={{fontWeight: "bold"}}>{title}</Text>}                             
-          containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
-          hideChevron={true}
-          onPress={() => {return 0}}
+            title={<Text style={{fontFamily: 'Avenir-Black'}}>{title}</Text>}                             
+            containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
+            hideChevron
+            onPress={() => {return 0}}
           /> 
-        )}
-        sections={this.sectionExtractor(this.state.currentCoinIndex)}
-        keyExtractor={(item, index) => item + index}
+          )}
+          sections={this.sectionExtractor(this.state.currentCoinIndex)}
+          keyExtractor={(item, index) => item + index}
         />
+        { ENABLE_WYRE ? (
+          <ListItem                        
+            title={"BUY/SELL COIN"} 
+            titleStyle={{fontFamily: 'Avenir-Black'}}     
+            leftIcon={{name: "account-balance"}}   
+            hideChevron                     
+            containerStyle={{ borderBottomWidth: 0 }} 
+            onPress={() => {
+              let navigation = this.props.navigation  
+              this.props.dispatch(setActiveSectionBuySellCrypto('buy-crypto'))
+              navigation.navigate("BuySellCryptoMenus", {title: "Buy Crypto"});
+            }}
+          />
+          )
+          : 
+          (
+            ''
+          )
+        }
         <ListItem                        
-          title={"Remove Coin"}     
+          title={"REMOVE COIN"}  
+          titleStyle={{fontFamily: 'Avenir-Black'}}   
           leftIcon={{name: "close"}}   
-          hideChevron={true}                     
+          hideChevron                     
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => {this._removeCoin(this.props.activeCoinsForUser[this.state.currentCoinIndex].id)}}
         />
@@ -243,20 +267,22 @@ class SideMenu extends Component {
       style={styles.coinList}
       renderItem={({item, index, section}) => (
         <ListItem                        
-        title={item}                             
+        title={item}
+        titleStyle={{fontFamily: 'Avenir-Black', fontSize: 15, textTransform: 'uppercase'}}  
         containerStyle={{ borderBottomWidth: 0 }} 
         onPress={
           item === 'Add coin from list' ? 
             () => this.navigateToScreen('AddCoin') 
           : 
             () => this._openCustomCoinMenus()}
+        textInputStyle={{fontFamily: 'Avenir-Black'}}
         /> 
       )}
       renderSectionHeader={({section: {title}}) => (
         <ListItem                        
-        title={<Text style={{fontWeight: "bold"}}>{title}</Text>}                             
+        title={<Text style={{fontFamily: 'Avenir-Black'}}>{title}</Text>}                             
         containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
-        hideChevron={true}
+        hideChevron
         /> 
       )}
       sections={[
@@ -273,17 +299,18 @@ class SideMenu extends Component {
       style={styles.coinList}
       renderItem={({item, index, section}) => (
         <ListItem    
-        leftIcon={{name: item.icon}}                    
-        title={item.title}                             
+        leftIcon={{name: item.icon, size: 30}}  
+        title={item.title}  
+        titleStyle={{fontFamily: 'Avenir-Black', textTransform: 'uppercase'}}                  
         containerStyle={{ borderBottomWidth: 0 }} 
         onPress={() => this._openSettings(item)}
         /> 
       )}
       renderSectionHeader={({section: {title}}) => (
         <ListItem                        
-        title={<Text style={{fontWeight: "bold"}}>{title}</Text>}                             
+        title={<Text style={{fontFamily: 'Avenir-Black'}}>{title}</Text>}                             
         containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
-        hideChevron={true}
+        hideChevron
         /> 
       )}
       sections={[
@@ -310,24 +337,28 @@ class SideMenu extends Component {
           {this.renderMainDrawerComponents()}
           <ListItem    
           roundAvatar                    
-          title={"Add Coin"}                           
-          avatar={require('../../images/customIcons/addCoin.png')}
+          title={"ADD COIN"}   
+          titleStyle={{fontFamily: 'Avenir-Black'}}                        
+          avatar={require('../../images/customIcons/coinAdd.png')}
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: -1 })}
+          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '15%'}}
           /> 
           <ListItem    
           roundAvatar                    
-          title={"Settings"}                           
-          leftIcon={{name: 'settings'}}
+          title={"SETTINGS"}                           
+          leftIcon={{name: 'settings', size: 34}}
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: -2 })}
+          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '10%'}}
           />
           <ListItem    
           roundAvatar                    
-          title={"Log Out"}                           
-          leftIcon={{name: 'exit-to-app'}}
+          title={"LOG OUT"}
+          leftIcon={{name: 'exit-to-app', size: 34}}
           containerStyle={{ borderBottomWidth: 0 }} 
           onPress={this.handleLogout}
+          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '10%'}} 
           /> 
 				</ScrollView>
       );
@@ -338,13 +369,13 @@ class SideMenu extends Component {
         <View>
           <DrawerHeader navigateToScreen={this.navigateToScreen} />
             <ListItem                        
-            title={<Text style={{fontWeight: "bold"}}>{"Back"}</Text>}                             
+            title={<Text style={{fontFamily: 'Avenir-Black', paddingLeft: '5%', fontSize: 18}}>{"BACK"}</Text>}                             
             containerStyle={{ borderBottomWidth: 0 }} 
-            hideChevron={true}
+            hideChevron
             leftIcon={
               <Icon
 							name="arrow-back"
-							size={25}
+							size={30}
 							color="#666666"
 						  />
             }

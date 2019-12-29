@@ -3,6 +3,11 @@ package com.verusmobile;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.reactcommunity.rndatetimepicker.RNDateTimePickerPackage;
+import com.RNTextInputMask.RNTextInputMaskPackage;
+import com.reactnativecommunity.webview.RNCWebViewPackage;
+import com.RNFetchBlob.RNFetchBlobPackage;
+import com.imagepicker.ImagePickerPackage;
 import com.horcrux.svg.SvgPackage;
 import cl.json.RNSharePackage;
 import com.rnfs.RNFSPackage;
@@ -33,7 +38,12 @@ public class MainApplication extends Application implements ReactApplication {
     @Override
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
-          new MainReactPackage(),
+            new MainReactPackage(),
+            new RNDateTimePickerPackage(),
+            new RNTextInputMaskPackage(),
+            new RNCWebViewPackage(),
+            new RNFetchBlobPackage(),
+            new ImagePickerPackage(),
             new SvgPackage(),
             new RNSharePackage(),
             new RNFSPackage(),

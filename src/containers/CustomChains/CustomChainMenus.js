@@ -14,6 +14,7 @@ import BottomNavigation, {
 import CustomChainForm from './CustomChainForm/CustomChainForm'
 import CustomChainScan from './CustomChainScan/CustomChainScan'
 import { Icon } from "react-native-elements"
+import Colors from '../../globals/colors';
 
 class CustomChainMenus extends Component {
   constructor(props) {
@@ -39,7 +40,7 @@ class CustomChainMenus extends Component {
         key: "custom-coin-qr",
         icon: "photo-camera",
         label: "Scan QR",
-        barColor: '#2E86AB',
+        barColor: Colors.primaryColor,
         pressColor: 'rgba(255, 255, 255, 0.16)',
         screen: "CustomChainScan"
       },
@@ -47,7 +48,7 @@ class CustomChainMenus extends Component {
         key: "custom-coin-form",
         icon: "format-list-numbered",
         label: "Coin Form",
-        barColor: '#EDAE49',
+        barColor: Colors.infoButtonColor,
         pressColor: 'rgba(255, 255, 255, 0.16)',
         screen: "CustomChainForm"
       },
@@ -80,7 +81,9 @@ class CustomChainMenus extends Component {
       isActive={isActive}
       key={tab.key ? tab.key : ''}
       label={tab.label ? tab.label : ''}
+      labelStyle={{fontFamily: 'Avenir-Black',paddingLeft: 5}}
       renderIcon={this.renderIcon(tab.icon)}
+      style={{flexDirection: 'row', alignSelf: 'center', justifyContent: 'center'}}
     />
   )
 

@@ -22,7 +22,7 @@ const REDDIT_URL = "https://www.reddit.com/r/VerusCoin/"
 const TWITTER_URL = "https://twitter.com/VerusCoin"
 const PRIVACY_URL = "https://github.com/VerusCoin/Verus-Mobile/blob/master/PRIVACY.txt"
 const LICENCE_URL = "https://github.com/VerusCoin/Verus-Mobile/blob/master/LICENCE"
-const LOGO_DIR = require('../../../images/customIcons/verusHeaderLogo.png');
+const LOGO_DIR = require('../../../images/customIcons/VerusLogo.png');
 
 class AppInfo extends Component {
 
@@ -39,11 +39,13 @@ class AppInfo extends Component {
   render() {
     return(
       <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center", justifyContent: "center"}}>
-        <Image
-          style={{width: 50, height: 50, marginTop: 10}}
-          source={LOGO_DIR}
-        />
-        <Text style={styles.verifiedLabel}>Verus Mobile</Text>
+        <View style={styles.imageStyleContainer}>
+          <Image
+            style={styles.imageStyle}
+            source={LOGO_DIR}
+          />
+          <Text style={styles.verifiedLabel}>Verus Mobile</Text>
+        </View>
           <View style={styles.infoBox}>
             <View style={styles.infoRow}>
               <Text style={styles.infoText}>App Version:</Text>

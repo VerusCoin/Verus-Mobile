@@ -168,7 +168,7 @@ class QRModal extends Component {
           <View style={styles.singleButtonContainer}>
             <Button1 
               style={styles.cancelBtn} 
-              buttonContent="Close" 
+              buttonContent="CLOSE" 
               onPress={this.cancelHandler}
             />
           </View>

@@ -87,8 +87,10 @@ class CoinMenus extends Component {
     <FullTab
       isActive={isActive}
       key={tab.key ? tab.key : ''}
+      labelStyle={{fontFamily: 'Avenir-Black',paddingLeft: 5}}
       label={tab.label ? tab.label : ''}
       renderIcon={this.renderIcon(tab.icon)}
+      style={{flexDirection: 'row', alignSelf: 'center', justifyContent: 'center'}}
     />
   )
 

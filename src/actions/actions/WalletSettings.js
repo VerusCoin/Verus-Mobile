@@ -1,7 +1,7 @@
 import { 
   setAllSettings,
   setCoinSettingsState,
-  setWyreSettingsState,
+  setBuySellSettingsState,
   setGeneralWalletSettingsState
  } from '../actionCreators'
 import {
@@ -62,20 +62,20 @@ export const saveCoinSettings = (stateChanges, coinID) => {
 }
 
 /**
- * Saves a single wyre settings state change to Async storage and returns a promise that resolves
+ * Saves a single buy/sell settings state change to Async storage and returns a promise that resolves
  * to an action to be dispatched to the redux store. Rejects on error.
- * @param {Object} stateChanges Changes to be made to the user's wyre setting state
- * @param {String} userID UserID of the user who's wyre settings are being modified
+ * @param {Object} stateChanges Changes to be made to the user's buy/sell setting state
+ * @param {String} userID UserID of the user who's buy/sell settings are being modified
  */
-export const saveWyreSettings = (stateChanges, userID) => {
+export const saveBuySellSettings = (stateChanges, userID) => {
   const settingsState = store.getState().settings
-  const wyreSettingsForUser = {...settingsState.wyreSettings[userID], ...stateChanges}
-  const wyreSettings = {...settingsState.wyreSettings, [userID]: wyreSettingsForUser}
+  const buySellSettingsForUser = {...settingsState.buySellSettings[userID], ...stateChanges}
+  const buySellSettings = {...settingsState.buySellSettings, [userID]: buySellSettingsForUser}
 
   return new Promise((resolve, reject) => {
-    storeSettings({...settingsState, wyreSettings})
+    storeSettings({...settingsState, buySellSettings})
     .then(() => {
-      resolve(setWyreSettingsState(wyreSettings))
+      resolve(setBuySellSettingsState(buySellSettings))
     })
     .catch(err => reject(err))
   })

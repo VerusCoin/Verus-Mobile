@@ -62,7 +62,7 @@ class ResetPwd extends Component {
 
   render() {
     return (
-      <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center", justifyContent: "center"}}>
+      <ScrollView style={styles.root} contentContainerStyle={{height: '100%' ,alignItems: "center", justifyContent: "center"}}>
         <Text style={styles.wifLabel}>
           Unencrypted Wallet Seed:
         </Text>
@@ -85,12 +85,12 @@ class ResetPwd extends Component {
         <View style={styles.buttonContainer}>
           <Button1 
             style={styles.cancelButton} 
-            buttonContent="Back" 
+            buttonContent="BACK" 
             onPress={this.back}
           />
           <Button1 
             style={styles.addAccountButton} 
-            buttonContent={this.state.fromDeleteAccount ? "Continue" : "Home" }
+            buttonContent={this.state.fromDeleteAccount ? "CONTINUE" : "HOME" }
             onPress={this.resetToScreen}
           />
         </View>

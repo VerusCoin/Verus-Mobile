@@ -25,7 +25,8 @@ import { getKey } from '../../utils/keyGenerator/keyGenerator'
 import { spacesLeadOrTrail, hasSpecialCharacters } from '../../utils/stringUtils'
 import AlertAsync from 'react-native-alert-async'
 import ScanSeed from '../../components/ScanSeed'
-import styles from './SignUp.styles'
+import styles from './SignUp.styles';
+import Colors from '../../globals/colors';
 
 class SignUp extends Component {
   constructor() {
@@ -259,7 +260,7 @@ class SignUp extends Component {
             Wallet passphrase/WIF key (min. 15 characters):
             </FormLabel>
             <FormInput 
-              underlineColorAndroid="#86939d"
+              underlineColorAndroid={Colors.quinaryColor}
               onChangeText={(text) => this.setState({wifKey: text})}
               value={this.state.wifKey}
               autoCapitalize={"none"}
@@ -269,12 +270,18 @@ class SignUp extends Component {
               inputStyle={styles.wifInput}
               multiline={Platform.OS === 'ios' ? false : true}
             />
-            <TouchableOpacity onPress={this.scanSeed}>
-              <FormLabel labelStyle={styles.scanLabel}>
-                Scan seed from QR
-              </FormLabel>
-            </TouchableOpacity>
-            <FormLabel labelStyle={styles.formLabel}>
+            <Button1 
+              style={styles.scanSeedButton} 
+              buttonContent="SCAN SEED FROM QR" 
+              onPress={this.scanSeed}
+              />
+            <Button1 
+              style={styles.generatePassphraseButton} 
+              buttonContent="GENERATE RANDOM PASSPHRASE" 
+              onPress={this.setKey}
+              buttonStyle={{fontSize: 14, color: "#fff",fontFamily: 'Avenir-Black'}}
+              />
+            <FormLabel labelStyle={styles.passphraseDisplayLabel} containerStyle={{alignSelf: 'center'}}>
             Plaintext Passphrase Display:
             </FormLabel>
             <FormInput 
@@ -292,16 +299,11 @@ class SignUp extends Component {
                 null
             }
             </FormValidationMessage>}
-            <TouchableOpacity onPress={this.setKey}>
-              <FormLabel labelStyle={styles.keyGenLabel}>
-                Generate random passphrase 
-              </FormLabel>
-            </TouchableOpacity>
           </View>
           <View style={styles.valueContainer}>
             <FormLabel labelStyle={styles.formLabel}>Enter a username:</FormLabel>
             <FormInput 
-              underlineColorAndroid="#86939d"
+              underlineColorAndroid={Colors.quinaryColor}
               onChangeText={(text) => this.setState({userName: text})}
               autoCapitalize={"none"}
               autoCorrect={false}
@@ -322,7 +324,7 @@ class SignUp extends Component {
             Enter an account password (min. 5 characters):
             </FormLabel>
             <FormInput 
-              underlineColorAndroid="#86939d"
+              underlineColorAndroid={Colors.quinaryColor}
               onChangeText={(text) => this.setState({pin: text})}
               autoCapitalize={"none"}
               autoCorrect={false}
@@ -344,7 +346,7 @@ class SignUp extends Component {
             Confirm account password:
             </FormLabel>
             <FormInput 
-              underlineColorAndroid="#86939d"
+              underlineColorAndroid={Colors.quinaryColor}
               onChangeText={(text) => this.setState({confirmPin: text})}
               autoCapitalize={"none"}
               autoCorrect={false}
@@ -403,13 +405,13 @@ class SignUp extends Component {
           { this.props.accounts.length > 0 && 
             <Button1 
               style={styles.cancelButton} 
-              buttonContent="Cancel" 
+              buttonContent="CANCEL" 
               onPress={this.cancel}
             />
           }
             <Button1 
               style={styles.addAccountButton} 
-              buttonContent="Add Account" 
+              buttonContent="ADD ACCOUNT" 
               onPress={this._handleSubmit}
             />
           </View>

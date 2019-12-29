@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import ProgressBar from 'react-native-progress/Bar';
 import styles from './LoadingScreen.styles';
+import Colors from '../../globals/colors';
 
 export default class LoadingScreen extends Component {
   constructor(props) {
@@ -23,7 +24,7 @@ export default class LoadingScreen extends Component {
   render() {
     return (
       <View style={styles.loadingRoot}>
-        <ProgressBar width={200} indeterminate={true} color='#2E86AB'/>
+        <ProgressBar width={250} height={20} indeterminate={true} color={Colors.primaryColor}/>
         <Text style={styles.loadingLabel}>{"Initializing Verus Mobile..."}</Text>
       </View>
     );

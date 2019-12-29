@@ -14,7 +14,7 @@ export const settings = (state = {
   generalWalletSettings: {
     maxTxCount: 10
   },
-  wyreSettings: {}, //e.g. {'user1': {wyreEnabled: true, wyreData: {}}, 'user2': {wyreEnabled: false, wyreData: {}}, }
+  buySellSettings: {}, //e.g. {'user1': {buySellEnabled: true, wyreData: {}}, 'user2': {buySellEnabled: false, wyreData: {}}}
   coinSettings: {}, //e.g. {VRSC: {verificationLvl: 2, verificationLock: false}}
 }, action) => {
   switch (action.type) {
@@ -64,7 +64,7 @@ export const settings = (state = {
         ...state,
         coinSettings: action.coinSettings
       }
-    case 'SET_WYRE_SETTINGS_STATE':
+    case 'SET_BUY_SELL_SETTINGS_STATE':
       return {
         ...state,
         wyreSettings: action.wyreSettings
