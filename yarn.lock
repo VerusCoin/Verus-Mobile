@@ -1130,7 +1130,7 @@ aes-js@3.0.0:
 
 "agama-wallet-lib@git://github.com/VerusCoin/agama-wallet-lib.git#mobile":
   version "0.3.4"
-  resolved "git://github.com/VerusCoin/agama-wallet-lib.git#f4b99634df15436ab670399ba30bc0c368b3e4bd"
+  resolved "git://github.com/VerusCoin/agama-wallet-lib.git#c6cd187e68ecb511922a4562fa0e76b2612d714f"
   dependencies:
     bigi "^1.4.2"
     bip32 "^1.0.2"
@@ -1153,7 +1153,7 @@ aes-js@3.0.0:
     iocane "^1.0.0"
     js-sha256 "^0.7.1"
     nodejs-aes256 "^1.0.1"
-    npm "^6.8.0"
+    npm "^6.13.4"
     passwd-strength "git+https://github.com/pbca26/passwd-strength"
     sha256 "^0.2.0"
     tx-decoder "git+https://github.com/pbca26/tx-decoder"
@@ -7969,7 +7969,7 @@ npm-user-validate@~1.0.0:
   resolved "https://registry.yarnpkg.com/npm-user-validate/-/npm-user-validate-1.0.0.tgz#8ceca0f5cea04d4e93519ef72d0557a75122e951"
   integrity sha1-jOyg9c6gTU6TUZ73LQVXp1Ei6VE=
 
-npm@^6.8.0:
+npm@^6.13.4:
   version "6.13.4"
   resolved "https://registry.yarnpkg.com/npm/-/npm-6.13.4.tgz#1e95b0f311999cf682384c38865dfeb3127203bb"
   integrity sha512-vTcUL4SCg3AzwInWTbqg1OIaOXlzKSS8Mb8kc5avwrJpcvevDA5J9BhYSuei+fNs3pwOp4lzA5x2FVDXACvoXA==
