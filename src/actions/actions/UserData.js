@@ -22,6 +22,7 @@ import {
 import { sha256 } from '../../utils/crypto/hash';
 
 import WyreService from '../../services/wyreService';
+import { ENABLE_WYRE } from '../../utils/constants';
 
 
 //TODO: Fingerprint authentication
@@ -91,21 +92,24 @@ export const loginUser = (account, password) => {
           ...account.paymentMethods
         }
 
-        const hashedSeed = sha256(seed).toString('hex');
+        if (ENABLE_WYRE) {
+          const hashedSeed = sha256(seed).toString('hex');
 
-        WyreService.build().submitAuthToken(hashedSeed).then((response) => {
+          WyreService.build().submitAuthToken(hashedSeed).then((response) => {
 
-          const submitAuthTokenResponse = response.data;
-
-          paymentMethods.wyre = {
-            id: submitAuthTokenResponse.authenticatedAs ?
-              submitAuthTokenResponse.authenticatedAs.slice(8) : null,
-            key: hashedSeed
-          }
-
-          resolve(signIntoAccount({ id: account.id, wifKey: seed, keys: _keys, paymentMethods }));
-        });
-
+            const submitAuthTokenResponse = response.data;
+  
+            paymentMethods.wyre = {
+              id: submitAuthTokenResponse.authenticatedAs ?
+                submitAuthTokenResponse.authenticatedAs.slice(8) : null,
+              key: hashedSeed
+            }
+  
+            resolve(signIntoAccount({ id: account.id, wifKey: seed, keys: _keys, paymentMethods }));
+          });
+        } else {
+          resolve(signIntoAccount({ id: account.id, wifKey: seed, keys: _keys, paymentMethods: {} }));
+        }
       })
       .catch(err => reject(err));
   });

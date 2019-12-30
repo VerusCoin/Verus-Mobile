@@ -62,7 +62,7 @@ export const INCOMPLETE_CHAIN_QR = 'VerusQR code impartial or incomplete, cannot
 export const COIN_TICKER_ALREADY_EXISTS = 'already exists in Verus Mobile, and therefore cannot be added as a custom coin.';
 
 //Payment Methods
-export const ENABLE_WYRE = true;
+export const ENABLE_WYRE = false;
 export const WYRE_URL = 'https://api.testwyre.com';
 export const WYRE_REFERRER_ACCOUNT_ID = 'verus-valu';
 

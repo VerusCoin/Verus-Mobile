@@ -32,6 +32,7 @@ import { satsToCoins, truncateDecimal } from '../../utils/math';
 import { NavigationActions } from 'react-navigation';
 import styles from './Home.styles'
 import Colors from "../../globals/colors";
+import { ENABLE_WYRE } from "../../utils/constants";
 
 const CONNECTION_ERROR = "Connection Error"
 
@@ -232,15 +233,18 @@ class Home extends Component {
             marginVertical: '3%'
           }}> 
         </View>
-        <TouchableOpacity onPress={this._buySellCrypto}>
-          <ListItem    
-            roundAvatar
-            title={<Text style={styles.coinItemLabel}>Buy/Sell Crypto</Text>}                            
-            avatar={require('../../images/customIcons/buySell.png')}
-            containerStyle={{ borderBottomWidth: 0 }} 
-            hideChevron
-          /> 
-        </TouchableOpacity>
+        {
+          ENABLE_WYRE &&
+          <TouchableOpacity onPress={this._buySellCrypto}>
+            <ListItem    
+              roundAvatar
+              title={<Text style={styles.coinItemLabel}>Buy/Sell Crypto</Text>}                            
+              avatar={require('../../images/customIcons/buySell.png')}
+              containerStyle={{ borderBottomWidth: 0 }} 
+              hideChevron
+            /> 
+          </TouchableOpacity>
+        }
         <TouchableOpacity onPress={this._addCoin}>
           <ListItem    
             roundAvatar                    
