@@ -21,6 +21,7 @@ import { explorers } from '../../utils/CoinData';
 import { truncateDecimal } from '../../utils/math';
 import { Icon } from 'react-native-elements';
 import styles from './TransactionDetails.styles';
+import Colors from '../../globals/colors';
 
 const SELF = require('../../images/customIcons/selfArrow.png')
 const OUT = require('../../images/customIcons/outgoingArrow.png')
@@ -141,7 +142,7 @@ class TransactionDetails extends Component {
               <Text style={styles.addressText}>{this.state.activeCoinID === 'BTC' ? this.decodeBtcTxid(this.state.txData.txid) : this.state.txData.txid}</Text>
             </View>
             <TouchableOpacity onPress={this.copyTxIDToClipboard}>
-              <Icon name="content-copy" size={25} color="#E9F1F7"/>
+              <Icon name="content-copy" size={25} color={Colors.quaternaryColor}/>
             </TouchableOpacity>
             { explorers[this.state.activeCoinID] &&
             <Button1 style={styles.explorerBtn} buttonContent="Explorer" onPress={() => this.openExplorer()} />

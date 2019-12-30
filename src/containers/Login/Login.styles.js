@@ -92,6 +92,6 @@ export default styles = StyleSheet.create({
         alignSelf: 'center'
     },
     passwordInputContainer: {
-        width: '85%',
+        width: '82%',
     },
 });

@@ -9,14 +9,14 @@ import {
 } from 'react-native';
 import Colors from '../globals/colors';
 
-const LOGO_DIR = require('../images/customIcons/VerusLogo.png');
+const LOGO_DIR = require('../images/customIcons/Verus.png');
 
 const DrawerHeader = ({ navigateToScreen }) => (
 	<TouchableOpacity onPress={() => navigateToScreen('Home')}>
 		<View
 			style={{
 				flexDirection: 'row',
-				backgroundColor: Colors.linkButtonColor,
+				backgroundColor: Colors.primaryColor,
 				paddingTop: '30%',
 				paddingLeft: '5%',
 				paddingBottom : '15%',

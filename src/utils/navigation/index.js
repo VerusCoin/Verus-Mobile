@@ -261,20 +261,21 @@ export const MainScreens =
     headerMode: 'screen',
     navigationOptions: ({navigation}) => ({
       headerStyle: {
-        backgroundColor: Colors.tertiaryColor,
+        backgroundColor: Colors.primaryColor,
       },
       headerTitleStyle:{
         fontFamily: 'Avenir-Black',
         fontWeight: 'normal',
-        fontSize: 22
+        fontSize: 22,
+        color: Colors.secondaryColor
       },
       headerRight: (
       <TouchableOpacity onPress={() =>
         navigation.navigate('DrawerOpen')} style={styles.menuButton}>
-        <Icon name="menu" size={35} color={Colors.quaternaryColor}/>
+        <Icon name="menu" size={35} color={Colors.secondaryColor}/>
       </TouchableOpacity>),
       gesturesEnabled: false,
-      headerTintColor: Colors.quaternaryColor,
+      headerTintColor: Colors.secondaryColor,
     }),
   })
 

@@ -1,13 +1,14 @@
 import { StyleSheet } from "react-native";
+import Colors from '../../globals/colors'
 
 export default styles = StyleSheet.create({
   root: {
-    backgroundColor: "#232323",
+    backgroundColor: Colors.secondaryColor,
     flex: 1,
     alignItems: "center"
   },
   loadingRoot: {
-    backgroundColor: "#232323",
+    backgroundColor: Colors.secondaryColor,
     flex: 1,
     alignItems: "center",
     justifyContent: "center"
@@ -28,11 +29,11 @@ export default styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 16,
-    color: "#E9F1F7"
+    color: Colors.quaternaryColor
   },
   infoText: {
     fontSize: 16,
-    color: "#E9F1F7"
+    color: Colors.quaternaryColor
   },
   warningText: {
     fontSize: 16,
@@ -40,7 +41,7 @@ export default styles = StyleSheet.create({
   },
   addressText: {
     fontSize: 16,
-    color: "#E9F1F7",
+    color: Colors.quaternaryColor,
     width: "65%",
     textAlign: "right"
   },
@@ -56,7 +57,7 @@ export default styles = StyleSheet.create({
     marginBottom: 15,
     fontSize: 22,
     textAlign: "center",
-    color: "#E9F1F7"
+    color: Colors.quaternaryColor
   },
   errorLabel: {
     backgroundColor: "transparent",
@@ -74,7 +75,7 @@ export default styles = StyleSheet.create({
     marginBottom: 15,
     fontSize: 22,
     textAlign: "center",
-    color: "rgba(68,206,147,1)"
+    color: "#00B231"
   },
   cancelBtn: {
     width: 104,

@@ -255,10 +255,10 @@ class ConfirmSend extends Component {
           </View>
           <View style={styles.buttonContainer}>
           <Button1 style={styles.cancelBtn} 
-            buttonContent="Cancel" 
+            buttonContent="CANCEL" 
             onPress={this.cancel}/>
           <Button1 style={styles.confirmBtn} 
-            buttonContent="Send" 
+            buttonContent="SEND" 
             onPress={this.sendTx}/>
           </View>
         </ScrollView>

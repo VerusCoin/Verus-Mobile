@@ -55,7 +55,8 @@ export default styles = StyleSheet.create({
     width: "100%",
   },
   transactionItemLabel: {
-    color: "#E9F1F7",
+    color: Colors.quaternaryColor,
     marginLeft: 10,
+    fontWeight: "bold"
   },
 });

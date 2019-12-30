@@ -29,7 +29,7 @@ export default styles = StyleSheet.create({
     paddingTop: 0,
     fontSize: 35,
     textAlign: "center",
-    color: Colors.quinaryColor,
+    color: Colors.primaryColor,
     fontFamily: 'Avenir-Book',
   },
   sendLabel: {
@@ -78,7 +78,7 @@ export default styles = StyleSheet.create({
     opacity: 0.86,
     fontSize: 22,
     textAlign: "center",
-    color: "#E9F1F7"
+    color: Colors.quaternaryColor
   },
   errorText: {
     backgroundColor: "transparent",
