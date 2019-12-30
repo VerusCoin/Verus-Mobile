@@ -1,5 +1,6 @@
 import { electrumServers } from 'agama-wallet-lib/src/electrum-servers';
 import { MAX_VERIFICATION } from '../utils/constants'
+import Colors from '../globals/colors'
 
 const getDefaultApps = (coinName, canBuySell = false) => {
   return ({
@@ -13,8 +14,8 @@ const getDefaultApps = (coinName, canBuySell = false) => {
           icon: 'account-balance-wallet',
           name: 'Overview',
           key: 'wallet-overview',
-          color: '#2E86AB'
-          //Blue
+          color: Colors.primaryColor
+          //Verus Blue
         },
         {
           screen: 'SendCoin',
