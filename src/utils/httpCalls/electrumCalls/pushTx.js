@@ -78,7 +78,8 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
             vout: utxoList[i].vout,
             value: Number(utxoList[i].amountSats),
             interestSats: Number(utxoList[i].interestSats),
-            verified: utxoList[i].verified ? utxoList[i].verified : false,
+            verifiedMerkle: utxoList[i].verifiedMerkle,
+            verifiedTxid: utxoList[i].verifiedTxid
           });
         } else {
           utxoListFormatted.push({
@@ -86,6 +87,8 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
             vout: utxoList[i].vout,
             value: Number(utxoList[i].amountSats),
             verified: utxoList[i].verified ? utxoList[i].verified : false,
+            verifiedMerkle: utxoList[i].verifiedMerkle,
+            verifiedTxid: utxoList[i].verifiedTxid
           });
         }
       }
@@ -173,7 +176,8 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
       if (inputs &&
           inputs.length) {
         for (let i = 0; i < inputs.length; i++) {
-          if (!inputs[i].verified) {
+          //TODO: Warnings for both txid verification and merkle verification
+          if (!inputs[i].verifiedMerkle) {
             utxoVerified = false;
             break;
           }

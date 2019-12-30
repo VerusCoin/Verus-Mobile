@@ -4,6 +4,8 @@ import {
   updateCoinRates
 } from '../actionCreators';
 
+import { Alert } from 'react-native'
+
 import { 
   getBalances,
   getOneBalance,
@@ -106,6 +108,7 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
       let consolidatedTxs = gottenBlocksInfo.pop()
       let _parsedTxList = []
       let index = 0
+      let error = false
       let network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
 
       for (let i = 0; i < gottenBlocksInfo.length; i++) {
@@ -124,7 +127,10 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
         const formattedTx = formatTx(consolidatedTxs.transactions[i], address, network, consolidatedTxs.currentHeight)
         
         if (formattedTx != false) _parsedTxList.push(formattedTx)
+        else error = true
       }
+
+      if (error) Alert.alert(`Error reading transaction list for ${coinObj.id}. This may indicate electrum server maintenence.`)
 
       resolve(updateCoinTransactions(coinObj.id, _parsedTxList, oldTransactions, needsUpdateObj))
     })
