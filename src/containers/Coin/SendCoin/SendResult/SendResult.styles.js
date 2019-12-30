@@ -67,7 +67,7 @@ export default styles = StyleSheet.create({
     marginBottom: 15,
     fontSize: 22,
     textAlign: "center",
-    color: "#00B231"
+    color: Colors.successButtonColor
   },
   sendBtn: {
     width: 140,

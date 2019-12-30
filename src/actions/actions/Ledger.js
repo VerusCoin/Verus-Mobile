@@ -121,7 +121,9 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
       }
 
       for (let i = 0; i < consolidatedTxs.transactions.length; i++) {
-        _parsedTxList.push(formatTx(consolidatedTxs.transactions[i], address, network, consolidatedTxs.currentHeight))
+        const formattedTx = formatTx(consolidatedTxs.transactions[i], address, network, consolidatedTxs.currentHeight)
+        
+        if (formattedTx != false) _parsedTxList.push(formattedTx)
       }
 
       resolve(updateCoinTransactions(coinObj.id, _parsedTxList, oldTransactions, needsUpdateObj))

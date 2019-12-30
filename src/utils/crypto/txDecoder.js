@@ -370,54 +370,65 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
 }
 
 export const formatTx = (transactionObj, targetAddress, network, currentHeight) => {
-  const txOutDecoded = transactionObj.rawOut ? TxDecoder(transactionObj.rawOut, network) : false
-
-  let txInsDecoded = []
-
-  if (transactionObj.rawIns && transactionObj.rawIns.every(item => {return !(item.status && item.status === 'not found')})) {
-    for (let i = 0; i < transactionObj.rawIns.length; i++) {
-      txInsDecoded.push(TxDecoder(transactionObj.rawIns[i], network))
+  // Check if any txins contain errors, if so, return false (skips transaction when called)
+  if (transactionObj.rawIns && Array.isArray(transactionObj.rawIns)) {
+    if (!transactionObj.rawIns.every((txIn) => {
+      return !txIn.code
+    })) {
+      console.log("Error formatting tx:")
+      console.log(transactionObj)
+      return false
     }
-  }
 
-  let txInputs = []
+    const txOutDecoded = transactionObj.rawOut ? TxDecoder(transactionObj.rawOut, network) : false
 
-  if (txOutDecoded) {
-    for (let i = 0; i < txOutDecoded.inputs.length; i++) {
-      if(txInsDecoded[i] && txInsDecoded[i].outputs) {
-        txInputs.push(txInsDecoded[i].outputs[txOutDecoded.inputs[i].n])
-      }
-      else {
-        txInputs.push(false)
+    let txInsDecoded = []
+
+    if (transactionObj.rawIns && transactionObj.rawIns.every(item => {return !(item.status && item.status === 'not found')})) {
+      for (let i = 0; i < transactionObj.rawIns.length; i++) {
+        txInsDecoded.push(TxDecoder(transactionObj.rawIns[i], network))
       }
     }
 
-    const _parsedTx = {
-      network: txOutDecoded.network,
-      format: txOutDecoded.format,
-      inputs: txInputs,
-      outputs: txOutDecoded.outputs,
-      height: transactionObj.height,
-      timestamp: Number(transactionObj.height) === 0 ? Math.floor(Date.now() / 1000) : transactionObj.timestamp,
-      confirmations: Number(transactionObj.height) === 0 ? 0 : currentHeight - transactionObj.height,
+    let txInputs = []
+
+    if (txOutDecoded) {
+      for (let i = 0; i < txOutDecoded.inputs.length; i++) {
+        if(txInsDecoded[i] && txInsDecoded[i].outputs) {
+          txInputs.push(txInsDecoded[i].outputs[txOutDecoded.inputs[i].n])
+        }
+        else {
+          txInputs.push(false)
+        }
+      }
+
+      const _parsedTx = {
+        network: txOutDecoded.network,
+        format: txOutDecoded.format,
+        inputs: txInputs,
+        outputs: txOutDecoded.outputs,
+        height: transactionObj.height,
+        timestamp: Number(transactionObj.height) === 0 ? Math.floor(Date.now() / 1000) : transactionObj.timestamp,
+        confirmations: Number(transactionObj.height) === 0 ? 0 : currentHeight - transactionObj.height,
+      }
+
+      let formattedTx = parseTransactionAddresses(_parsedTx, targetAddress, network.coin, false)
+
+      if (formattedTx.type) {
+        formattedTx.height = transactionObj.height;
+        formattedTx.blocktime = transactionObj.timestamp;
+        formattedTx.hex = transactionObj.rawOut;
+        formattedTx.inputs = txOutDecoded.inputs;
+        formattedTx.outputs = txOutDecoded.outputs;
+        formattedTx.locktime = txOutDecoded.format.locktime;
+      }
+
+      return formattedTx
     }
-
-    let formattedTx = parseTransactionAddresses(_parsedTx, targetAddress, network.coin, false)
-
-    if (formattedTx.type) {
-      formattedTx.height = transactionObj.height;
-      formattedTx.blocktime = transactionObj.timestamp;
-      formattedTx.hex = transactionObj.rawOut;
-      formattedTx.inputs = txOutDecoded.inputs;
-      formattedTx.outputs = txOutDecoded.outputs;
-      formattedTx.locktime = txOutDecoded.format.locktime;
+    else {
+      return false
     }
-
-    return formattedTx
-  }
-  else {
+  } else {
     return false
   }
-   
-
 }
