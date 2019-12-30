@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-community/async-storage';
+import { findCoinObj } from '../CoinData';
 // react-native's version of local storage
 
 //Clear user from coin, or delete user from all if no coin specified
@@ -59,7 +60,7 @@ export const getActiveCoinsList = () => {
   });
 };
 
-//TODO: For version 0.1.8 update, delete in next version
+//TODO: Deprecated, delete
 export const updateActiveCoinList_v0_1_8_beta = () => {
   return new Promise((resolve, reject) => {
     AsyncStorage.getItem('activeCoins')
@@ -74,6 +75,35 @@ export const updateActiveCoinList_v0_1_8_beta = () => {
         })
 
         return storeCoins(coinList)
+      })
+      .then(() => {
+        resolve(true)
+      })
+      .catch(err => reject(err));
+  });
+};
+
+//TODO: For version 0.1.9 update
+export const updateActiveCoinList_v0_1_9_beta = () => {
+  return new Promise((resolve, reject) => {
+    AsyncStorage.getItem('activeCoins')
+      .then((res) => {
+        let coinList = []
+        let newCoinList = []
+
+        if (res) {
+          coinList = JSON.parse(res).coins;
+        }
+        
+        coinList = coinList.map((coin) => {
+          const newCoinObj = findCoinObj(coin.id, "")
+          
+          if (coin.id !== 'K64') {
+            newCoinList.push({...newCoinObj, users: coin.users})
+          }
+        })
+
+        return storeCoins(newCoinList)
       })
       .then(() => {
         resolve(true)
