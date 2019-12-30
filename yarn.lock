@@ -9171,18 +9171,18 @@ react-native-elements@^0.19.1:
     opencollective "^1.0.3"
     prop-types "^15.5.8"
 
-react-native-fs@~2.16.2:
-  version "2.16.2"
-  resolved "https://registry.yarnpkg.com/react-native-fs/-/react-native-fs-2.16.2.tgz#a312ce5f418e6d91d13b51e50ba0c49b1da1ec79"
-  integrity sha512-N9V8cMAOE49+er0/Qnf/xSFzsVWVWPW7Uggr11KVh18uv7FEPLEfLwEsL1Gv9vdkTgAK+6SYT46nqrhKtJClSw==
+react-native-fs@~2.15.0:
+  version "2.15.3"
+  resolved "https://registry.yarnpkg.com/react-native-fs/-/react-native-fs-2.15.3.tgz#1a7757759bfba5b08d4087433bf068fb5fe9a699"
+  integrity sha512-fKCfFOiRPLj/Pj8G70Qm0kRU51g40uYOee9aqjkY6yZeMG8uD+4rz1/WRi8r9QdJawxZomyhEc/60hVgLVgE3g==
   dependencies:
     base-64 "^0.1.0"
     utf8 "^3.0.0"
 
-react-native-gesture-handler@^1.5.2:
-  version "1.5.2"
-  resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-1.5.2.tgz#281111550bf1eee10b7feba5278d142169892731"
-  integrity sha512-Xp03dq4XYVTD0xmWx4DW4eX+ox1NQLjHmbykspTdS5FCNIVIOekVXRLFCw1698/v8dYUHApNo6K3s3BCD8fqPA==
+react-native-gesture-handler@~1.4.0:
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-1.4.1.tgz#c38d9e57637b95e221722a79f2bafac62e3aeb21"
+  integrity sha512-Ffcs+SbEbkGaal0CClYL+v7A9y4OA5G5lW01qrzjxaqASp5C8BfnWSKuqYKE00s6bLwE5L4xnlHkG0yIxAtbrQ==
   dependencies:
     hammerjs "^2.0.8"
     hoist-non-react-statics "^2.3.1"
