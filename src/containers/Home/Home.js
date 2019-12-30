@@ -218,6 +218,15 @@ class Home extends Component {
               subtitleStyle={this.props.balances.hasOwnProperty(item.id) && (this.props.balances[item.id].error || isNaN(this.props.balances[item.id].result.confirmed)) ? {color: "rgba(206,68,70,1)", fontFamily: 'Avenir-Book'} : null} 
               containerStyle={{ borderBottomWidth: 0 }} 
               rightTitleStyle={{color: 'black'}}
+              rightTitle={
+                ('$' + 
+                (!this.props.balances.hasOwnProperty(item.id) || this.props.balances[item.id].error || isNaN(this.props.balances[item.id].result.confirmed) ? 
+                  '0.00'
+                  :
+                  truncateDecimal(((typeof(this.props.rates[item.id]) === 'number' ? this.props.rates[item.id] : 0)*(this.props.balances.hasOwnProperty(item.id) ? 
+                  satsToCoins(this.props.balances[item.id].result.confirmed) :
+                  0)), 2)))
+              }
             />
           </TouchableOpacity>   
         )}   
