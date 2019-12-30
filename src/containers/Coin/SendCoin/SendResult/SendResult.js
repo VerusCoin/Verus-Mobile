@@ -35,6 +35,7 @@ import ProgressBar from 'react-native-progress/Bar'
 import { Icon } from 'react-native-elements'
 import { NO_VERIFICATION, MID_VERIFICATION } from '../../../../utils/constants'
 import styles from './SendResult.styles'
+import Colors from '../../../../globals/colors'
 
 const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
@@ -237,7 +238,7 @@ class SendResult extends Component {
               <Text style={styles.addressText}>{this.state.txid}</Text>
             </View>
             <TouchableOpacity onPress={this.copyTxIDToClipboard}>
-              <Icon name="content-copy" size={25} color="#E9F1F7"/>
+              <Icon name="content-copy" size={25} color={Colors.quaternaryColor}/>
             </TouchableOpacity>
           </View>
           <View style={styles.buttonContainer}>
