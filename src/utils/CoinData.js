@@ -40,8 +40,7 @@ const getDefaultApps = (coinName, canBuySell = false) => {
 export const explorers = {
   KMD: 'https://kmdexplorer.io',
   OOT: 'https://explorer.utrum.io',
-  VRSC: 'https://explorer.veruscoin.io',
-  K64: 'https://k64.explorer.dexstats.info'
+  VRSC: 'https://explorer.veruscoin.io'
 }
 
 export const defaultAssetsPath = {
@@ -58,7 +57,6 @@ export const defaultAssetsPath = {
     zilla: require('../images/cryptologo/default/zilla.png'),	
     ltc: require('../images/cryptologo/default/ltc.png'),		
     ccl: require('../images/cryptologo/default/ccl.png'),
-    k64: require('../images/cryptologo/default/k64.png'),
     default: require('../images/cryptologo/default_chain.png')
   },
 };
@@ -85,8 +83,7 @@ export const coinsList = {
   zec: { id: "ZEC", name: "ZCash", description: "", fee: 10000},
   dash: { id: "DASH", name: "Dash", description: "", fee: 10000},
   ltc: { id: "LTC", name: "Litecoin", description: "", fee: 30000},
-  zilla: { id: "ZILLA", name: "ChainZilla", description: "The native token of Chainzilla Blockchain Solutions. They are a blockchain consulting company that develops easy to use whitelabel blockchain wallets and applications.", fee: 10000},
-  k64: { id: "K64", name: "Komodore64", description: "", fee: 10000}
+  zilla: { id: "ZILLA", name: "ChainZilla", description: "The native token of Chainzilla Blockchain Solutions. They are a blockchain consulting company that develops easy to use whitelabel blockchain wallets and applications.", fee: 10000}
 };
 
 //To make flatlist render faster
