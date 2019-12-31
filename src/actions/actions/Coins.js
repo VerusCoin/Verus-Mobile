@@ -34,7 +34,7 @@ export const addExistingCoin = (fullCoinObj, activeCoins, userName) => {
     }
   }
   else {
-    activeCoins.push(fullCoinObj);
+    activeCoins.push({...fullCoinObj, users: [userName]});
     return new Promise((resolve, reject) => {
       storeCoins(activeCoins)
       .then((res) => {

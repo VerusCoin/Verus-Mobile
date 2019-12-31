@@ -98,7 +98,7 @@ export const findCoinObj = (id, userName) => {
   if (coinObj) {
     coinObj.serverList = electrumServers[id.toLowerCase()].serverList;
     coinObj.logo = defaultAssetsPath.coinLogo[id.toLowerCase()];
-    coinObj.users = [userName];
+    coinObj.users = userName != null ? [userName] : [];
 
     if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
       const DEFAULT_APPS = getDefaultApps(coinObj.name)

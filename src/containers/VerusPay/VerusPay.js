@@ -343,6 +343,9 @@ class VerusPay extends Component {
           this.errorHandler("Error adding coin")
         }
       })
+      .catch(err => {
+        this.errorHandler(err.message)
+      })
     })
   }
 
