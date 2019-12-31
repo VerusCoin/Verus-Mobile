@@ -30,7 +30,8 @@ import {
   setActiveSection
  } from '../../actions/actionCreators'
 import Spinner from 'react-native-loading-spinner-overlay';
-import AlertAsync from "react-native-alert-async";
+import DelayedAlert from '../../utils/delayedAlert'
+import DelayedAsyncAlert from '../../utils/delayedAsyncAlert'
 import { coinsToSats } from '../../utils/math'
 import {
   FORMAT_UNKNOWN,
@@ -131,7 +132,7 @@ class VerusPay extends Component {
   }
 
   errorHandler = (error) => {
-    Alert.alert("Error", error);
+    DelayedAlert("Error", error);
     this.props.navigation.dispatch(NavigationActions.back())
   }
 
@@ -447,11 +448,10 @@ class VerusPay extends Component {
     } else {
       this.errorHandler(BALANCE_NULL)
     }
-    
   }
 
   canExitWallet = (fromTicker, toTicker) => {
-    return AlertAsync(
+    return DelayedAsyncAlert(
       'Exiting Wallet',
       'This invoice is requesting funds in ' + toTicker + ', but you are currently ' + 
       'in the ' + fromTicker + ' wallet. Would you like to proceed?',
@@ -470,7 +470,7 @@ class VerusPay extends Component {
   }
 
   canFillAmount = (memo, address) => {
-    return AlertAsync(
+    return DelayedAsyncAlert(
       'Missing Amount',
       'This invoice does not specify an amount, in order to proceed you ' + 
       'will need to fill in the amount yourself, would you like to continue?' +
@@ -490,7 +490,7 @@ class VerusPay extends Component {
   }
 
   canAddCoin = (coinTicker) => {
-    return AlertAsync(
+    return DelayedAsyncAlert(
       'Coin Inactive',
       'This invoice is requesting funds in ' + coinTicker + ', but you have not ' +
       'activated that coin yet, would you like to activate ' + coinTicker + ' and proceed?',
@@ -576,7 +576,7 @@ class VerusPay extends Component {
 
   addressOnly = (address) => {
     if (this.props.navigation.state.params && this.props.navigation.state.params.fillAddress) {
-      Alert.alert("Address Only", ADDRESS_ONLY);
+      DelayedAlert("Address Only", ADDRESS_ONLY);
       this.props.navigation.state.params.fillAddress(address)
       this.props.navigation.dispatch(NavigationActions.back())
     } else {
