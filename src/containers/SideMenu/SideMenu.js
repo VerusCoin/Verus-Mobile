@@ -175,7 +175,7 @@ class SideMenu extends Component {
           sections={this.sectionExtractor(this.state.currentCoinIndex)}
           keyExtractor={(item, index) => item + index}
         />
-        { ENABLE_WYRE ? (
+        { ENABLE_WYRE &&
           <ListItem                        
             title={"BUY/SELL COIN"} 
             titleStyle={{fontFamily: 'Avenir-Black'}}     
@@ -188,11 +188,6 @@ class SideMenu extends Component {
               navigation.navigate("BuySellCryptoMenus", {title: "Buy Crypto"});
             }}
           />
-          )
-          : 
-          (
-            ''
-          )
         }
         <ListItem                        
           title={"REMOVE COIN"}  
