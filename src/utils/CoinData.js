@@ -22,7 +22,7 @@ const getDefaultApps = (coinName, canBuySell = false) => {
           icon: 'arrow-upward',
           name: 'Send',
           key: 'wallet-send',
-          color: '#EDAE49'
+          color: Colors.infoButtonColor
           //Orange
         },
         {
@@ -30,7 +30,7 @@ const getDefaultApps = (coinName, canBuySell = false) => {
           icon: 'arrow-downward',
           name: 'Receive',
           key: 'wallet-receive',
-          color: '#009B72'
+          color: Colors.successButtonColor
           //Green
         }
       ]
