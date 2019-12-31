@@ -65,6 +65,7 @@
 		4E9EA98523BA7F6D00B9FA10 /* RNPermissionHandlerMotion.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E9EA98423BA7F6C00B9FA10 /* RNPermissionHandlerMotion.m */; };
 		4E9EA98823BA7F7700B9FA10 /* RNPermissionHandlerNotifications.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E9EA98623BA7F7700B9FA10 /* RNPermissionHandlerNotifications.m */; };
 		4E9EA98B23BA7F7E00B9FA10 /* RNPermissionHandlerReminders.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E9EA98A23BA7F7E00B9FA10 /* RNPermissionHandlerReminders.m */; };
+		4E9EA99B23BB63A800B9FA10 /* main.jsbundle in Resources */ = {isa = PBXBuildFile; fileRef = 008F07F21AC5B25A0029DE68 /* main.jsbundle */; };
 		593FA5C43DB94CDCACE6BB12 /* libRNFS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 626A9F13C73249B8818E79A9 /* libRNFS.a */; };
 		5E9157361DD0AC6A00FF2AA8 /* libRCTAnimation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E9157331DD0AC6500FF2AA8 /* libRCTAnimation.a */; };
 		6204CB3970E24A7F9C07FCFA /* Ionicons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1DFC2CCFDE654798A64E1922 /* Ionicons.ttf */; };
@@ -1955,6 +1956,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4E9EA99B23BB63A800B9FA10 /* main.jsbundle in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */,
 				0D3855D5B0B24F33BD5C00A3 /* AntDesign.ttf in Resources */,
