@@ -40,7 +40,8 @@ import {
   INSUFFICIENT_FUNDS,
   INCOMPLETE_VERUS_QR,
   ONLY_ADDRESS,
-  BALANCE_NULL
+  BALANCE_NULL,
+  PARSE_ERROR
 } from '../../utils/constants'
 import styles from './VerusPay.styles'
 
@@ -147,60 +148,69 @@ class VerusPay extends Component {
   }
 
   parseCoinURL = (qrString) => {
+    //TODO: Add support for messages in btc urls as well (&message=Hello)
+
     let fullURL = /^\w{1,30}:\w{33,36}\?amount\=\d*\.{1}\d*/
     //<coinName>:<address>?amount=<amount>
     let partialURL = /^\w{1,30}:\w{33,36}$/
     //<coinName>:<address>
+  
+    try {
+      let firstTry = qrString.match(fullURL) 
 
-    let firstTry = qrString.match(fullURL) 
-
-    if(firstTry) {
-      //parse full URL here
-      let coinName = firstTry[0].substring(0, firstTry[0].indexOf(':'))
-      let address = firstTry[0].substring((firstTry[0].indexOf(':') + 1), firstTry[0].indexOf('?'))
-      let amount = firstTry[0].substring((firstTry[0].indexOf('=') + 1))
-
-      if (coinName && address && amount) {
-        //Find coin ticker from coin data here, URL uses full name
-
-        for (key in coinsList) {
-          if (coinsList[key] && removeSpaces(coinsList[key].name).toLowerCase() === coinName.toLowerCase()) {
-            //Create verusQR compatible data from coin URL
-            return {
-              coinTicker: coinsList[key].id,
-              address: address,
-              amount: coinsToSats(Number(amount))
-            }
-          } 
+      if(firstTry) {
+        //parse full URL here
+        let coinName = firstTry[0].substring(0, firstTry[0].indexOf(':'))
+        let address = firstTry[0].substring((firstTry[0].indexOf(':') + 1), firstTry[0].indexOf('?'))
+        let amount = firstTry[0].substring((firstTry[0].indexOf('=') + 1))
+  
+        if (coinName && address && amount) {
+          //Find coin ticker from coin data here, URL uses full name
+  
+          for (key in coinsList) {
+            if (coinsList[key] && removeSpaces(coinsList[key].name).toLowerCase() === coinName.toLowerCase()) {
+              //Create verusQR compatible data from coin URL
+              return {
+                coinTicker: coinsList[key].id,
+                address: address,
+                amount: coinsToSats(Number(amount))
+              }
+            } 
+          }
+  
+          this.errorHandler(INCOMPATIBLE_COIN)
+          return false
         }
-
-        this.errorHandler(INCOMPATIBLE_COIN)
-        return false
-      }
-    } else {
-      let secondTry = qrString.match(partialURL) 
-
-      if (secondTry) {
-        //Parse partial URL here
-        let coinName = secondTry[0].substring(0, secondTry[0].indexOf(':'))
-        let address = secondTry[0].substring((secondTry[0].indexOf(':') + 1))
-
-        for (coinObj in coinsList) {
-          if (removeSpaces(coinObj.name).toLowerCase() === coinName.toLowerCase()) {
-            //Create verusQR compatible data from coin URL
-            return {
-              coinTicker: coinObj.id,
-              address: address,
-            }
-          } 
-        }
-
-        this.errorHandler(INCOMPATIBLE_COIN)
-        return false
       } else {
-        return false 
-      }
-    } 
+        let secondTry = qrString.match(partialURL) 
+  
+        if (secondTry) {
+          //Parse partial URL here
+          let coinName = secondTry[0].substring(0, secondTry[0].indexOf(':'))
+          let address = secondTry[0].substring((secondTry[0].indexOf(':') + 1))
+  
+          for (key in coinsList) {
+            const coinObj = coinsList[key]
+
+            if (removeSpaces(coinObj.name).toLowerCase() === coinName.toLowerCase()) {
+              //Create verusQR compatible data from coin URL
+              return {
+                coinTicker: coinObj.id,
+                address: address,
+              }
+            } 
+          }
+  
+          this.errorHandler(INCOMPATIBLE_COIN)
+          return false
+        } else {
+          return false 
+        }
+      } 
+    } catch (e) {
+      console.error(e)
+      this.errorHandler(PARSE_ERROR)
+    }
   }
 
   cancelHandler = () => {

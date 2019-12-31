@@ -15,6 +15,7 @@ export const INCOMPATIBLE_COIN = 'The coin this invoice is requesting is current
 export const INCOMPATIBLE_APP = 'The coin this invoice is requesting does not have send functionality.';
 export const ONLY_ADDRESS = 'This QR Code only contains only an address. Please select a coin and then scan.';
 export const BALANCE_NULL = "Couldn't fetch balance for coin.";
+export const PARSE_ERROR = 'Error parsing QR code data.'
 
 // Custom chain form
 export const DEFAULT_FEE_DESC = ("A chain's default fee is the fee paid by default to miners every time you send a transaction." +
