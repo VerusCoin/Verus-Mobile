@@ -6,8 +6,11 @@ import {
 } from '../../httpCalls/callCreators'
 
 import {
-  MOCK_ACTIVE_COINS_FOR_USER,
+  getTempActiveCoin,
 } from '../../../tests/helpers/MockAuthData'
+
+import { proxyServersHttps, proxyServersHttp } from 'agama-wallet-lib/src/electrum-servers'
+jest.mock('agama-wallet-lib/src/electrum-servers')
 
 import {
   MOCK_TX
@@ -15,7 +18,7 @@ import {
 
 describe('Merkle info fetcher for BTC based chains (root and hashes)', () => {
   it('can fetch merkle root from specific txid and height', () => {
-    return getMerkleRoot({}, MOCK_ACTIVE_COINS_FOR_USER[0], MOCK_TX.id, MOCK_TX.height, [])
+    return getMerkleRoot({}, getTempActiveCoin('VRSC', true, 200, {getmerkle: [204832, '9f01c1d5f7fd67ec40d45e3c81006e18e6239a3b54d6a78e99c2c28cc3915558'], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_TX.id, MOCK_TX.height, [])
     .then((res) => {
       expect(res).toHaveProperty('result')
       expect(res).toHaveProperty('blockHeight')
@@ -29,7 +32,7 @@ describe('Merkle info fetcher for BTC based chains (root and hashes)', () => {
   })
 
   it('can fetch merkle hashes', () => {
-    return getMerkleHashes({}, MOCK_ACTIVE_COINS_FOR_USER[0], MOCK_TX.id, MOCK_TX.height, [])
+    return getMerkleHashes({}, getTempActiveCoin('VRSC', true, 200, {getmerkle: [204832, '9f01c1d5f7fd67ec40d45e3c81006e18e6239a3b54d6a78e99c2c28cc3915558'], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_TX.id, MOCK_TX.height, [])
     .then(res => {
       expect(res).toHaveProperty('result')
       expect(res).toHaveProperty('blockHeight')

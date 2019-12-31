@@ -1,9 +1,9 @@
-import { 
+import {
   setAccounts,
   setFingerAuth,
   signIntoAccount,
   updateAccountKeys
- } from '../actionCreators';
+} from '../actionCreators';
 import {
   storeUser,
   getUsers,
@@ -16,13 +16,19 @@ import {
   makeKeyPair
 } from '../../utils/keys'
 import {
-  decryptkey
+  decryptkey,
+  decryptGeneral,
 } from '../../utils/seedCrypt'
+import { sha256 } from '../../utils/crypto/hash';
+
+import WyreService from '../../services/wyreService';
+import { ENABLE_WYRE } from '../../utils/constants';
+
 
 //TODO: Fingerprint authentication
 
 export const addUser = (userName, wifKey, pin, users) => {
-  let authData = {wifKey: wifKey, pin: pin, userName: userName}
+  let authData = { wifKey: wifKey, pin: pin, userName: userName }
   return new Promise((resolve, reject) => {
     storeUser(authData, users)
       .then(res => {
@@ -81,8 +87,29 @@ export const loginUser = (account, password) => {
             _keys[activeCoins[i].id] = makeKeyPair(seed, activeCoins[i].id)
           }
         }
-        let _activeAccount = {id: account.id, wifKey: seed, keys: _keys}
-        resolve(signIntoAccount(_activeAccount))
+
+        let paymentMethods = {
+          ...account.paymentMethods
+        }
+
+        if (ENABLE_WYRE) {
+          const hashedSeed = sha256(seed).toString('hex');
+
+          WyreService.build().submitAuthToken(hashedSeed).then((response) => {
+
+            const submitAuthTokenResponse = response.data;
+  
+            paymentMethods.wyre = {
+              id: submitAuthTokenResponse.authenticatedAs ?
+                submitAuthTokenResponse.authenticatedAs.slice(8) : null,
+              key: hashedSeed
+            }
+  
+            resolve(signIntoAccount({ id: account.id, wifKey: seed, keys: _keys, paymentMethods }));
+          });
+        } else {
+          resolve(signIntoAccount({ id: account.id, wifKey: seed, keys: _keys, paymentMethods: {} }));
+        }
       })
       .catch(err => reject(err));
   });
@@ -113,6 +140,3 @@ export const addKeypair = (seed, coinID, keys) => {
 
   return updateAccountKeys(_keys)
 }
-
-
-

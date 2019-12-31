@@ -59,7 +59,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verifyMerkle =
   let currentHeight
   let unshieldedFunds = null
 
-  if (__DEV__) {
+  /*if (__DEV__) {
     if (verifyMerkle) {
       console.log("verifyMerkle is true, going to verify merkle roots")
     }
@@ -73,7 +73,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verifyMerkle =
     if (overrideKmdInterest) {
       console.log("overridekmdinterest is true, going to override kmd interest calculations")
     }
-  }
+  }*/
   
 
   return new Promise((resolve, reject) => {
@@ -86,7 +86,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verifyMerkle =
 
       if (!_utxoList.length) throw new Error("No valid utxo")
 
-      _utxoList.forEach((_utxoItem) => {
+      _utxoList.forEach((_utxoItem, index) => {
         if(Number(currentHeight) - Number(_utxoItem.height) !== 0) {
           formattedUtxos.push({
             txid: _utxoItem['tx_hash'],

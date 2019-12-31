@@ -1,6 +1,7 @@
 import { 
   setAllSettings,
   setCoinSettingsState,
+  setBuySellSettingsState,
   setGeneralWalletSettingsState
  } from '../actionCreators'
 import {
@@ -55,6 +56,26 @@ export const saveCoinSettings = (stateChanges, coinID) => {
     storeSettings({...settingsState, coinSettings})
     .then(() => {
       resolve(setCoinSettingsState(coinSettings))
+    })
+    .catch(err => reject(err))
+  })
+}
+
+/**
+ * Saves a single buy/sell settings state change to Async storage and returns a promise that resolves
+ * to an action to be dispatched to the redux store. Rejects on error.
+ * @param {Object} stateChanges Changes to be made to the user's buy/sell setting state
+ * @param {String} userID UserID of the user who's buy/sell settings are being modified
+ */
+export const saveBuySellSettings = (stateChanges, userID) => {
+  const settingsState = store.getState().settings
+  const buySellSettingsForUser = {...settingsState.buySellSettings[userID], ...stateChanges}
+  const buySellSettings = {...settingsState.buySellSettings, [userID]: buySellSettingsForUser}
+
+  return new Promise((resolve, reject) => {
+    storeSettings({...settingsState, buySellSettings})
+    .then(() => {
+      resolve(setBuySellSettingsState(buySellSettings))
     })
     .catch(err => reject(err))
   })

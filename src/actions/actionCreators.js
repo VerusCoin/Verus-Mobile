@@ -79,6 +79,14 @@ export const setCoinSettingsState = (state) => {
 }
 
 //Reducer Name: settings
+export const setBuySellSettingsState = (state) => {
+  return {
+    type: 'SET_BUY_SELL_SETTINGS_STATE',
+    wyreSettings: state
+  }
+}
+
+//Reducer Name: settings
 export const setGeneralWalletSettingsState = (state) => {
   return {
     type: 'SET_GENERAL_WALLET_SETTINGS_STATE',
@@ -238,3 +246,93 @@ export const setActiveSectionCustomCoins = (activeSection) => {
   }
 }
 
+//Reducer name: buySellCrypto
+export const setActiveSectionBuySellCrypto = (activeSection) => {
+  return {
+    type: 'SET_ACTIVE_SECTION_BUY_SELL_CRYPTO',
+    activeSection: activeSection
+  }
+}
+
+// Payment Method
+export const createWyreAccount = () => ({
+  type: 'CREATE_WYRE_ACCOUNT',
+  payload: {},
+});
+
+export const createWyreAccountResponse = () => ({
+  type: 'CREATE_WYRE_ACCOUNT_RESPONSE',
+  payload: {},
+});
+
+export const getWyreAccount = () => ({
+  type: 'GET_WYRE_ACCOUNT',
+  payload: {},
+});
+
+export const getWyreAccountResponse = (account = {}) => ({
+  type: 'GET_WYRE_ACCOUNT_RESPONSE',
+  payload: {
+    account,
+  },
+});
+
+export const putWyreAccount = () => ({
+  type: 'PUT_WYRE_ACCOUNT',
+  payload: {},
+});
+
+export const putWyreAccountResponse = (account = {}) => ({
+  type: 'PUT_WYRE_ACCOUNT_RESPONSE',
+  payload: {
+    account,
+  },
+});
+
+export const getWyreConfig = () => ({
+  type: 'GET_WYRE_CONFIG',
+  payload: {},
+});
+
+export const getWyreConfigResponse = (config = {}) => ({
+  type: 'GET_WYRE_CONFIG_RESPONSE',
+  payload: {
+    config,
+  },
+});
+
+export const createWyrePayment = () => ({
+  type: 'CREATE_WYRE_PAYMENT',
+  payload: {},
+});
+
+export const createWyrePaymentResponse = (payment = {}) => ({
+  type: 'CREATE_WYRE_PAYMENT_RESPONSE',
+  payload: {
+    payment,
+  },
+});
+
+export const getActiveTransaction = () => ({
+  type: 'GET_EXCHANGE_RATES',
+  payload: {},
+});
+
+export const getActiveTransactionResponse = (rates = {}) => ({
+  type: 'GET_EXCHANGE_RATES_RESPONSE',
+  payload: {
+    rates,
+  },
+});
+
+export const getTransactionHistory = () => ({
+  type: 'GET_TRANSACTION_HISTORY',
+  payload: {},
+});
+
+export const getTransactionHistoryResponse = (history = {}) => ({
+  type: 'GET_TRANSACTION_HISTORY_RESPONSE',
+  payload: {
+    history,
+  }
+});

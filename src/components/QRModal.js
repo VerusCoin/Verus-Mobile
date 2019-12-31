@@ -24,6 +24,7 @@ import AlertAsync from "react-native-alert-async"
 import { Icon } from "react-native-elements"
 import RNFS from "react-native-fs"
 import Share from 'react-native-share';
+import Colors from '../globals/colors';
 
 const LOGO_DIR = require('../images/customIcons/verusQRLogo.png');
 const NOT_REAL_ERROR_MSG = "User did not share"
@@ -155,20 +156,20 @@ class QRModal extends Component {
             <TouchableOpacity 
               onPress={this.state.libraryPressed ? () => {return 0} : this.requestSaveQR} 
               activeOpacity={this.state.libraryPressed ? 1 : DEFAULT_OPACITY}>
-              <Icon name="camera-roll" size={35} color="#E9F1F7"/>
+              <Icon name="camera-roll" size={35} color={Colors.quinaryColor}/>
             </TouchableOpacity>
             {Platform.OS === 'ios' && 
               <TouchableOpacity 
                 onPress={this.state.sharePressed ? () => {return 0} : this.requestShareQR} 
                 activeOpacity={this.state.sharePressed ? 1 : DEFAULT_OPACITY}>
-                <Icon name="share" size={35} color="#E9F1F7"/>
+                <Icon name="share" size={35} color={Colors.quinaryColor}/>
               </TouchableOpacity>
             }
           </View>
           <View style={styles.singleButtonContainer}>
             <Button1 
               style={styles.cancelBtn} 
-              buttonContent="Close" 
+              buttonContent="CLOSE" 
               onPress={this.cancelHandler}
             />
           </View>
@@ -182,7 +183,7 @@ export default QRModal;
 
 const styles = StyleSheet.create({
   root: {
-    backgroundColor: "#232323",
+    backgroundColor: Colors.secondaryColor,
   },
   singleButtonContainer: {
     width: "75%",
@@ -206,14 +207,14 @@ const styles = StyleSheet.create({
   mainLabel: {
     backgroundColor: "transparent",
     fontSize: 22,
-    color: "#E9F1F7",
+    color: Colors.quinaryColor,
     textAlign: "center",
     paddingBottom: 10
   },
   mainDesc: {
     backgroundColor: "transparent",
     fontSize: 16,
-    color: "#E9F1F7",
+    color: Colors.quinaryColor,
     textAlign: "center"
   },
   textContainer: {

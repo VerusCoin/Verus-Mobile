@@ -1,12 +1,12 @@
 /*
   The authentication reducer is to contain sensitive account data
-  while the app is loaded. When the user logs out, or the app is 
+  while the app is loaded. When the user logs out, or the app is
   completely closed, only the non-sensitive data should persist.
 */
 
 export const authentication = (state = {
   accounts: [],
-  activeAccount: {id: null, wifKey: "", keys: []},
+  activeAccount: {id: null, wifKey: "", keys: [], paymentMethods: {}},
   unlocked: false,
   fingerPrint: false,
   signedIn: false
@@ -26,7 +26,10 @@ export const authentication = (state = {
     case 'UPDATE_ACCOUNT_KEYS':
       return {
         ...state,
-        activeAccount: {id: state.activeAccount.id, wifKey: state.activeAccount.wifKey, keys: action.keys},
+        activeAccount: {
+          ...state.activeAccount,
+          keys: action.keys
+        },
       };
     case 'SIGN_OUT':
       return {

@@ -1,7 +1,8 @@
 import { electrumServers } from 'agama-wallet-lib/src/electrum-servers';
 import { MAX_VERIFICATION } from '../utils/constants'
+import Colors from '../globals/colors'
 
-const getDefaultApps = (coinName) => {
+const getDefaultApps = (coinName, canBuySell = false) => {
   return ({
     defaultApp: 'wallet',
     apps: {
@@ -13,15 +14,15 @@ const getDefaultApps = (coinName) => {
           icon: 'account-balance-wallet',
           name: 'Overview',
           key: 'wallet-overview',
-          color: '#2E86AB'
-          //Blue
+          color: Colors.primaryColor
+          //Verus Blue
         },
         {
           screen: 'SendCoin',
           icon: 'arrow-upward',
           name: 'Send',
           key: 'wallet-send',
-          color: '#EDAE49'
+          color: Colors.infoButtonColor
           //Orange
         },
         {
@@ -29,7 +30,7 @@ const getDefaultApps = (coinName) => {
           icon: 'arrow-downward',
           name: 'Receive',
           key: 'wallet-receive',
-          color: '#009B72'
+          color: Colors.successButtonColor
           //Green
         }
       ]
@@ -40,8 +41,7 @@ const getDefaultApps = (coinName) => {
 export const explorers = {
   KMD: 'https://kmdexplorer.io',
   OOT: 'https://explorer.utrum.io',
-  VRSC: 'https://explorer.veruscoin.io',
-  K64: 'https://k64.explorer.dexstats.info'
+  VRSC: 'https://explorer.veruscoin.io'
 }
 
 export const defaultAssetsPath = {
@@ -58,7 +58,6 @@ export const defaultAssetsPath = {
     zilla: require('../images/cryptologo/default/zilla.png'),	
     ltc: require('../images/cryptologo/default/ltc.png'),		
     ccl: require('../images/cryptologo/default/ccl.png'),
-    k64: require('../images/cryptologo/default/k64.png'),
     default: require('../images/cryptologo/default_chain.png')
   },
 };
@@ -85,8 +84,7 @@ export const coinsList = {
   zec: { id: "ZEC", name: "ZCash", description: "", fee: 10000},
   dash: { id: "DASH", name: "Dash", description: "", fee: 10000},
   ltc: { id: "LTC", name: "Litecoin", description: "", fee: 30000},
-  zilla: { id: "ZILLA", name: "ChainZilla", description: "The native token of Chainzilla Blockchain Solutions. They are a blockchain consulting company that develops easy to use whitelabel blockchain wallets and applications.", fee: 10000},
-  k64: { id: "K64", name: "Komodore64", description: "", fee: 10000}
+  zilla: { id: "ZILLA", name: "ChainZilla", description: "The native token of Chainzilla Blockchain Solutions. They are a blockchain consulting company that develops easy to use whitelabel blockchain wallets and applications.", fee: 10000}
 };
 
 //To make flatlist render faster
@@ -100,7 +98,7 @@ export const findCoinObj = (id, userName) => {
   if (coinObj) {
     coinObj.serverList = electrumServers[id.toLowerCase()].serverList;
     coinObj.logo = defaultAssetsPath.coinLogo[id.toLowerCase()];
-    coinObj.users = [userName];
+    coinObj.users = userName != null ? [userName] : [];
 
     if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
       const DEFAULT_APPS = getDefaultApps(coinObj.name)

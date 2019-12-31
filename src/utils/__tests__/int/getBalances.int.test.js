@@ -6,11 +6,24 @@ import {
 } from '../../httpCalls/callCreators'
 
 import {
-  MOCK_ACTIVE_COINS_FOR_USER,
+  getTempActiveCoin,
   MOCK_USER_OBJ
 } from '../../../tests/helpers/MockAuthData'
 
+import { proxyServersHttps, proxyServersHttp } from 'agama-wallet-lib/src/electrum-servers'
+jest.mock('agama-wallet-lib/src/electrum-servers')
+
 describe('Balance fetcher for BTC based chains', () => {
+  const CONFIRMED_BALANCE_VRSC = 2500
+  const UNCONFIRMED_BALANCE_VRSC = 3000
+  const CONFIRMED_BALANCE_KMD = 10000
+  const UNCONFIRMED_BALANCE_KMD = 12345
+
+  const MOCK_ACTIVE_COINS_FOR_USER = [
+    getTempActiveCoin('VRSC', true, 200, {getbalance: [CONFIRMED_BALANCE_VRSC, UNCONFIRMED_BALANCE_VRSC], getcurrentblock: [118329], server_version: ["ElectrumX"]}),
+    getTempActiveCoin('KMD', true, 200, {getbalance: [CONFIRMED_BALANCE_KMD, UNCONFIRMED_BALANCE_KMD], getcurrentblock: [118329], server_version: ["ElectrumX 13.0.6, 1.4"]}),
+  ]
+
   it('can get a single balance for a mock user', () => {
     return getOneBalance({}, MOCK_ACTIVE_COINS_FOR_USER[0], MOCK_USER_OBJ)
     .then((res) => {

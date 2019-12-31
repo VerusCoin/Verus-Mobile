@@ -10,7 +10,7 @@ import {
 import {
   initCache,
   clearCachedVersions,
-  updateActiveCoinList_v0_1_8_beta,
+  updateActiveCoinList_v0_1_9_beta,
   checkAndSetVersion
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
@@ -45,9 +45,9 @@ class VerusMobile extends React.Component {
       let promiseArr = [fetchUsers(), initSettings()]
 
       //Handle version change stuff here
-      if (global.APP_VERSION === '0.1.8-beta' && versionCompare === -1) {
-        if (__DEV__) console.log("Old version detected, updating active coins for 0.1.8-beta")
-        promiseArr.push(updateActiveCoinList_v0_1_8_beta())
+      if (global.APP_VERSION === '0.1.9-beta' && versionCompare === -1) {
+        if (__DEV__) console.log("Old version detected, updating active coins for 0.1.9-beta")
+        promiseArr.push(updateActiveCoinList_v0_1_9_beta())
       }
 
       return Promise.all(promiseArr)

@@ -25,11 +25,6 @@ export const getGoodServer = (tester, serverList, xtraTesterParams = []) => {
   let index = Math.floor(Math.random() * serverList.length)
   
   return new Promise((resolve) => {
-    //DELET
-    if (!serverList[index]) {
-      console.log("WARNING")
-      console.log(serverList)
-    }
     tester(serverList[index], ...xtraTesterParams)
     .then((res) => {
       resolve({

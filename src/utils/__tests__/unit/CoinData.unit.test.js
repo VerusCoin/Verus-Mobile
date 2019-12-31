@@ -7,6 +7,8 @@ import {
   MOCK_USER_OBJ
 } from '../../../tests/helpers/MockAuthData'
 
+jest.unmock('agama-wallet-lib/src/electrum-servers')
+
 describe('Main coin data functions', () => {
   it('can find coin from pre-existing coins list and create coin obj', () => {
     let coinObj = findCoinObj('VRSC', MOCK_USER_OBJ.id)
