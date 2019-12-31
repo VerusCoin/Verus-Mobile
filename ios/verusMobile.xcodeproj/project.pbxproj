@@ -66,6 +66,7 @@
 		4E9EA98823BA7F7700B9FA10 /* RNPermissionHandlerNotifications.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E9EA98623BA7F7700B9FA10 /* RNPermissionHandlerNotifications.m */; };
 		4E9EA98B23BA7F7E00B9FA10 /* RNPermissionHandlerReminders.m in Sources */ = {isa = PBXBuildFile; fileRef = 4E9EA98A23BA7F7E00B9FA10 /* RNPermissionHandlerReminders.m */; };
 		4E9EA99B23BB63A800B9FA10 /* main.jsbundle in Resources */ = {isa = PBXBuildFile; fileRef = 008F07F21AC5B25A0029DE68 /* main.jsbundle */; };
+		4E9EA99D23BB985300B9FA10 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 4E9EA99C23BB985200B9FA10 /* assets */; };
 		593FA5C43DB94CDCACE6BB12 /* libRNFS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 626A9F13C73249B8818E79A9 /* libRNFS.a */; };
 		5E9157361DD0AC6A00FF2AA8 /* libRCTAnimation.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E9157331DD0AC6500FF2AA8 /* libRCTAnimation.a */; };
 		6204CB3970E24A7F9C07FCFA /* Ionicons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1DFC2CCFDE654798A64E1922 /* Ionicons.ttf */; };
@@ -636,6 +637,7 @@
 		4E9EA98723BA7F7700B9FA10 /* RNPermissionHandlerNotifications.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RNPermissionHandlerNotifications.h; path = "../node_modules/react-native-permissions/ios/Notifications/RNPermissionHandlerNotifications.h"; sourceTree = "<group>"; };
 		4E9EA98923BA7F7E00B9FA10 /* RNPermissionHandlerReminders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RNPermissionHandlerReminders.h; path = "../node_modules/react-native-permissions/ios/Reminders/RNPermissionHandlerReminders.h"; sourceTree = "<group>"; };
 		4E9EA98A23BA7F7E00B9FA10 /* RNPermissionHandlerReminders.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RNPermissionHandlerReminders.m; path = "../node_modules/react-native-permissions/ios/Reminders/RNPermissionHandlerReminders.m"; sourceTree = "<group>"; };
+		4E9EA99C23BB985200B9FA10 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = "<group>"; };
 		56A25BA6B5754BE79DCFEAFB /* Entypo.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Entypo.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Entypo.ttf"; sourceTree = "<group>"; };
 		5DE70CFD98894B3AA5C72B1F /* libRNSVG-tvOS.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = "libRNSVG-tvOS.a"; sourceTree = "<group>"; };
 		5E91572D1DD0AC6500FF2AA8 /* RCTAnimation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTAnimation.xcodeproj; path = "../node_modules/react-native/Libraries/NativeAnimation/RCTAnimation.xcodeproj"; sourceTree = "<group>"; };
@@ -1144,6 +1146,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				4E9EA99C23BB985200B9FA10 /* assets */,
 				4E9EA94F23BA790200B9FA10 /* Permissions */,
 				13B07FAE1A68108700A75B9A /* verusmobile */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
@@ -1956,6 +1959,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4E9EA99D23BB985300B9FA10 /* assets in Resources */,
 				4E9EA99B23BB63A800B9FA10 /* main.jsbundle in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */,
