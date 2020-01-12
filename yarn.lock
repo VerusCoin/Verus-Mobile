@@ -1130,7 +1130,7 @@ aes-js@3.0.0:
 
 "agama-wallet-lib@git://github.com/VerusCoin/agama-wallet-lib.git#mobile":
   version "0.3.4"
-  resolved "git://github.com/VerusCoin/agama-wallet-lib.git#eba70373bdf32d29e277b7b40ac71c5f7a2f4a8e"
+  resolved "git://github.com/VerusCoin/agama-wallet-lib.git#b3a48ec0ba34ade552422c2cc3cc69ae7e26e9db"
   dependencies:
     bigi "^1.4.2"
     bip32 "^1.0.2"
@@ -2545,7 +2545,7 @@ bitcoinjs-message@^2.0.0:
 
 "bitgo-utxo-lib@git+https://github.com/VerusCoin/bitgo-utxo-lib.git#react-native":
   version "1.2.1"
-  resolved "git+https://github.com/VerusCoin/bitgo-utxo-lib.git#750be0f4dc85408f3e4aa6312557fc7efc875840"
+  resolved "git+https://github.com/VerusCoin/bitgo-utxo-lib.git#73e694ee2586175f14ca59206694e29e52784a09"
   dependencies:
     bech32 "0.0.3"
     bigi "^1.4.0"
