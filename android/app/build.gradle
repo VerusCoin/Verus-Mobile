@@ -5,7 +5,7 @@ import com.android.build.OutputFile
 def versionMajor = 0
 def versionMinor = 1
 def versionRevision = 9
-def versionBuild = 0
+def versionBuild = 1
 
 def keystorePropertiesFile = rootProject.file("keystore.properties");
 
@@ -109,7 +109,11 @@ android {
         minSdkVersion 19
         targetSdkVersion 26
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionRevision * 100 + versionBuild
-        versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta"
+        if ( ${versionBuild} > 0) {
+            versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta-.${versionBuild}"
+        } else {
+            versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta"
+        }
         ndk {
             abiFilters "armeabi-v7a", "x86"
         }
