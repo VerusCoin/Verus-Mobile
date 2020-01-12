@@ -110,7 +110,7 @@ android {
         targetSdkVersion 26
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionRevision * 100 + versionBuild
         if ( versionBuild > 0) {
-            versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta-.${versionBuild}"
+            versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta-${versionBuild}"
         } else {
             versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta"
         }
