@@ -1,31 +1,16 @@
 package com.verusmobile;
 
 import android.app.Application;
+import android.content.Context;
+import com.facebook.react.PackageList;
 
 import com.facebook.react.ReactApplication;
-import com.reactnativecommunity.rnpermissions.RNPermissionsPackage;
-import com.swmansion.gesturehandler.react.RNGestureHandlerPackage;
-import com.reactcommunity.rndatetimepicker.RNDateTimePickerPackage;
-import com.RNTextInputMask.RNTextInputMaskPackage;
-import com.reactnativecommunity.webview.RNCWebViewPackage;
-import com.RNFetchBlob.RNFetchBlobPackage;
-import com.imagepicker.ImagePickerPackage;
-import com.horcrux.svg.SvgPackage;
-import cl.json.RNSharePackage;
-import com.rnfs.RNFSPackage;
-import com.reactnativecommunity.asyncstorage.AsyncStoragePackage;
 import com.oblador.vectoricons.VectorIconsPackage;
-import com.tradle.react.UdpSocketsModule;
-import com.peel.react.TcpSocketsModule;
-import com.swmansion.rnscreens.RNScreensPackage;
-import com.bitgo.randombytes.RandomBytesPackage;
-import com.peel.react.rnos.RNOSModule;
-import org.reactnative.camera.RNCameraPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
-import com.facebook.react.shell.MainReactPackage;
 import com.facebook.soloader.SoLoader;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -39,27 +24,16 @@ public class MainApplication extends Application implements ReactApplication {
 
     @Override
     protected List<ReactPackage> getPackages() {
-      return Arrays.<ReactPackage>asList(
+      @SuppressWarnings("UnnecessaryLocalVariable")
+      List<ReactPackage> packages = new PackageList(this).getPackages();
+      // Packages that cannot be autolinked yet can be added manually here, for example:
+      // packages.add(new MyReactNativePackage());
+      return packages;
+
+      /*return Arrays.<ReactPackage>asList(
             new MainReactPackage(),
-            new RNPermissionsPackage(),
-            new RNGestureHandlerPackage(),
-            new RNDateTimePickerPackage(),
-            new RNTextInputMaskPackage(),
-            new RNCWebViewPackage(),
-            new RNFetchBlobPackage(),
-            new ImagePickerPackage(),
-            new SvgPackage(),
-            new RNSharePackage(),
-            new RNFSPackage(),
-            new AsyncStoragePackage(),
-            new VectorIconsPackage(),
-            new UdpSocketsModule(),
-            new TcpSocketsModule(),
-            new RNScreensPackage(),
-            new RandomBytesPackage(),
-            new RNOSModule(),
-            new RNCameraPackage()
-      );
+            new VectorIconsPackage()
+      );*/
     }
 
     @Override

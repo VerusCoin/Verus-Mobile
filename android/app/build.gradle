@@ -80,7 +80,8 @@ def keystorePropertiesFile = rootProject.file("keystore.properties");
  */
 
 project.ext.react = [
-    entryFile: "index.js"
+    entryFile: "index.js",
+    enableHermes: false,  // clean and rebuild if changing
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
@@ -99,6 +100,27 @@ def enableSeparateBuildPerCPUArchitecture = false
  * Run Proguard to shrink the Java bytecode in release builds.
  */
 def enableProguardInReleaseBuilds = false
+
+/**
+ * The preferred build flavor of JavaScriptCore.
+ *
+ * For example, to use the international variant, you can use:
+ * `def jscFlavor = 'org.webkit:android-jsc-intl:+'`
+ *
+ * The international variant includes ICU i18n library and necessary data
+ * allowing to use e.g. `Date.toLocaleString` and `String.localeCompare` that
+ * give correct results when using with locales other than en-US.  Note that
+ * this variant is about 6MiB larger per architecture than default.
+ */
+def jscFlavor = 'org.webkit:android-jsc:+'
+/**
+ * Whether to enable the Hermes VM.
+ *
+ * This should be set on project.ext.react and mirrored here.  If it is not set
+ * on project.ext.react, JavaScript will not be compiled to Hermes Bytecode
+ * and the benefits of using Hermes will therefore be sharply reduced.
+ */
+def enableHermes = project.ext.react.get("enableHermes", false);
 
 android {
     compileSdkVersion 27
@@ -119,6 +141,12 @@ android {
         }
     }
     signingConfigs {
+        debug {
+            storeFile file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
         release {
             if ( keystorePropertiesFile.exists()) {
                 def keystoreProperties = new Properties()
@@ -145,6 +173,9 @@ android {
         }
     }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
@@ -160,24 +191,7 @@ android {
 }
 
 dependencies {
-    implementation project(':react-native-permissions')
-    implementation project(':react-native-gesture-handler')
-    implementation project(':@react-native-community_datetimepicker')
-    implementation project(':react-native-text-input-mask')
-    implementation project(':react-native-webview')
-    implementation project(':rn-fetch-blob')
-    implementation project(':react-native-image-picker')
-    implementation project(':react-native-svg')
-    implementation project(':react-native-share')
-    implementation project(':react-native-fs')
-    implementation project(':@react-native-community_async-storage')
     implementation project(':react-native-vector-icons')
-    implementation project(':react-native-udp')
-    implementation project(':react-native-tcp')
-    implementation project(':react-native-screens')
-    implementation project(':react-native-randombytes')
-    implementation project(':react-native-os')
-    implementation project(':react-native-camera')
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation 'androidx.appcompat:appcompat:1.0.0'
     implementation "com.facebook.react:react-native:+"  // From node_modules
@@ -189,3 +203,5 @@ task copyDownloadableDepsToLibs(type: Copy) {
     from configurations.compile
     into 'libs'
 }
+
+apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
