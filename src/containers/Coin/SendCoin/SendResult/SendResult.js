@@ -29,7 +29,8 @@ import {
   transactionsNeedUpdate,
   setActiveCoin, 
   setActiveApp,
-  setActiveSection
+  setActiveSection,
+  balancesNeedUpdate
  } from '../../../../actions/actionCreators'
 import ProgressBar from 'react-native-progress/Bar'
 import { Icon } from 'react-native-elements'
@@ -116,7 +117,7 @@ class SendResult extends Component {
           fee: coinObj.id === 'BTC' ? fee.feePerByte : fee,
           amount: amount,
         });
-        this.props.dispatch(needsUpdate("balances"))
+        this.props.dispatch(balancesNeedUpdate(coinObj.id, this.props.needsUpdate.balances))
         this.props.dispatch(needsUpdate("rates"))
         this.props.dispatch(transactionsNeedUpdate(coinObj.id, this.props.needsUpdate.transanctions))
       }

@@ -16,10 +16,11 @@ import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../../../utils/math';
 import { 
   fetchTransactionsForCoin, 
-  updateCoinBalances,
-  everythingNeedsUpdate
+  everythingNeedsUpdate,
+  updateOneBalance
 } from '../../../actions/actionCreators';
 import styles from './Overview.styles';
+import withNavigationFocus from "react-navigation/src/views/withNavigationFocus";
 
 const SELF = require('../../../images/customIcons/selfArrow.png')
 const OUT = require('../../../images/customIcons/outgoingArrow.png')
@@ -31,44 +32,57 @@ const CONNECTION_ERROR = "Connection Error"
 class Overview extends Component {
   constructor(props) {
     super(props)
+
     this.state = {
       parsedTxList: [],
       coinRates: {},
       loading: false
     };
     this.updateProps = this.updateProps.bind(this);
+    this.refresh = this.refresh.bind(this)
+
+    this.refresh()
   }
 
-
-  componentDidMount() {
-    this.refresh()
+  componentDidUpdate(lastProps) {    
+    if (lastProps.isFocused !== this.props.isFocused && this.props.isFocused) {
+      this.refresh();
+    }
   }
 
   refresh = () => {
     const _coinObj = this.props.activeCoin
     const _oldTransactions = this.props.transactions
     const _activeAccount = this.props.activeAccount
-    const _needsUpdateObj = this.props.needsUpdate.transactions
+    const _txsNeedsUpdateObj = this.props.needsUpdate.transactions
+    const _balancesNeedUpdateObj = this.props.needsUpdate.balances
     const _balances = this.props.balances
-    const _activeCoinsForUser = this.props.activeCoinsForUser
 
     let promiseArray = []
 
-    if (_needsUpdateObj[_coinObj.id]){
+    if (_txsNeedsUpdateObj[_coinObj.id]){
       console.log("Transactions need update, pushing update to promise array")
       if (!this.state.loading) {
         this.setState({ loading: true });  
       }
 
-      promiseArray.push(fetchTransactionsForCoin(_oldTransactions, _coinObj, _activeAccount, _needsUpdateObj, Number(this.props.generalWalletSettings.maxTxCount)))
+      promiseArray.push(fetchTransactionsForCoin(_oldTransactions, _coinObj, _activeAccount, _txsNeedsUpdateObj, Number(this.props.generalWalletSettings.maxTxCount)))
     }
 
-    if(this.props.needsUpdate.balances) {
-      console.log("Balances need update, pushing update to promise array")
+    if(_balancesNeedUpdateObj[_coinObj.id]) {
+      console.log(_coinObj.id + "balance needs update, pushing update to promise array")
       if (!this.state.loading) {
         this.setState({ loading: true });  
       }
-      promiseArray.push(updateCoinBalances(_balances, _activeCoinsForUser, _activeAccount))
+
+      promiseArray.push(
+        updateOneBalance(
+          _balances,
+          _coinObj,
+          _activeAccount,
+          _balancesNeedUpdateObj
+        )
+      );
     }
   
     this.updateProps(promiseArray)
@@ -78,7 +92,6 @@ class Overview extends Component {
     //TODO: Figure out why screen doesnt always update if everything is called seperately
 
     /*this.props.dispatch(transactionsNeedUpdate(this.props.activeCoin.id, this.props.needsUpdate.transanctions))
-    this.props.dispatch(needsUpdate("balances"))
     this.props.dispatch(needsUpdate("rates"))*/
     this.props.dispatch(everythingNeedsUpdate())
 
@@ -188,34 +201,46 @@ class Overview extends Component {
     subtitle = 'to: ' + subtitle
 
     return (
-      <TouchableOpacity onPress={() => this._openDetails({amount: amount, tx: item, coinID: this.props.activeCoin.id})}>
-        <ListItem              
-          roundAvatar          
-          title={<Text style={styles.transactionItemLabel}>
-                {amount < 0.0001 ? '< ' + truncateDecimal(amount, 4) : truncateDecimal(amount, 4)}
-                </Text>}   
-          subtitle={subtitle}                  
-          avatar={avatarImg}   
-          containerStyle={{ borderBottomWidth: 0 }} 
-          rightTitle={'info'}
-        /> 
-      </TouchableOpacity>    
-    )
+      <TouchableOpacity
+        onPress={() =>
+          this._openDetails({
+            amount: amount,
+            tx: item,
+            coinID: this.props.activeCoin.id
+          })
+        }
+      >
+        <ListItem
+          roundAvatar
+          title={
+            <Text style={styles.transactionItemLabel}>
+              {amount < 0.0001
+                ? "< " + truncateDecimal(amount, 4)
+                : truncateDecimal(amount, 4)}
+            </Text>
+          }
+          subtitle={subtitle}
+          avatar={avatarImg}
+          containerStyle={{ borderBottomWidth: 0 }}
+          rightTitle={<Text style={styles.txInfoLabel}>{"info"}</Text>}
+        />
+      </TouchableOpacity>
+    );
   }
 
   renderTransactionList = () => {
     return (
-      <FlatList 
-      style={styles.transactionList}         
-      data={this.props.transactions[this.props.activeCoin.id]}
-      scrollEnabled={true}
-      refreshing={this.state.loading}
-      onRefresh={this.forceUpdate}
-      renderItem={this.renderTransactionItem}   
-      //extraData={this.props.balances}       
-      keyExtractor={this.keyExtractor}                            
-      /> 
-    )
+      <FlatList
+        style={styles.transactionList}
+        data={this.props.transactions[this.props.activeCoin.id]}
+        scrollEnabled={true}
+        refreshing={this.state.loading}
+        onRefresh={this.forceUpdate}
+        renderItem={this.renderTransactionItem}
+        //extraData={this.props.balances}
+        keyExtractor={this.keyExtractor}
+      />
+    );
   }
 
   keyExtractor = (item, index) => {
@@ -226,18 +251,27 @@ class Overview extends Component {
   }
 
   renderBalanceLabel = () => {
-    if (this.props.balances.hasOwnProperty(this.props.activeCoin.id) && (this.props.balances[this.props.activeCoin.id].error || isNaN(this.props.balances[this.props.activeCoin.id].result.confirmed))) {
+    if (
+      this.props.balances.hasOwnProperty(this.props.activeCoin.id) &&
+      (this.props.balances[this.props.activeCoin.id].error ||
+        isNaN(this.props.balances[this.props.activeCoin.id].result.confirmed))
+    ) {
       return (
-        <Text style={styles.connectionErrorLabel}>
-          {CONNECTION_ERROR}  
-        </Text>
-      )
+        <Text style={styles.connectionErrorLabel}>{CONNECTION_ERROR}</Text>
+      );
     } else if (this.props.balances.hasOwnProperty(this.props.activeCoin.id)) {
       return (
-      <Text style={styles.coinBalanceLabel}>
-          {truncateDecimal(satsToCoins(this.props.balances[this.props.activeCoin.id].result.confirmed), 4) + ' ' + this.props.activeCoin.id }
-      </Text>
-      )
+        <Text style={styles.coinBalanceLabel}>
+          {truncateDecimal(
+            satsToCoins(
+              this.props.balances[this.props.activeCoin.id].result.confirmed
+            ),
+            4
+          ) +
+            " " +
+            this.props.activeCoin.id}
+        </Text>
+      );
     } else {
       return null;
     }
@@ -268,4 +302,4 @@ const mapStateToProps = (state) => {
   }
 };
 
-export default connect(mapStateToProps)(Overview);
+export default connect(mapStateToProps)(withNavigationFocus(Overview));

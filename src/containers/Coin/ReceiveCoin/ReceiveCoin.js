@@ -76,7 +76,6 @@ class ReceiveCoin extends Component {
     //TODO: Figure out why screen doesnt always update if everything is called seperately
 
     /*this.props.dispatch(transactionsNeedUpdate(this.props.activeCoin.id, this.props.needsUpdate.transanctions))
-    this.props.dispatch(needsUpdate("balances"))
     this.props.dispatch(needsUpdate("rates"))*/
     this.props.dispatch(everythingNeedsUpdate())
 

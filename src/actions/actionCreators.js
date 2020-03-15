@@ -128,10 +128,20 @@ export const setCurrentUserCoins = (activeCoinsForUser, coinsToUpdate) => {
 }
 
 //Reducer name: ledger
-export const setBalances = (balances) => {
+export const setBalances = (balances, needsUpdateObj) => {
   return {
     type: 'SET_BALANCES',
-    balances: balances
+    balances: balances,
+    needsUpdateObj
+  }
+}
+
+//Reducer name: ledger
+export const setOneBalance = (coinId, balance) => {
+  return {
+    type: 'SET_ONE_BALANCE',
+    balance,
+    coinId
   }
 }
 
@@ -182,6 +192,18 @@ export const transactionsNeedUpdate = (coinID, needsUpdateObj) => {
 }
 
 //Reducer name: ledger
+export const balancesNeedUpdate = (coinID, needsUpdateObj) => {
+  let _needsUpdateObj = needsUpdateObj ? needsUpdateObj : {}
+  _needsUpdateObj[coinID] = true
+
+  return {
+    type: 'BALANCES_NEED_UPDATE',
+    needsUpdateObj: _needsUpdateObj
+  }
+}
+
+//Reducer name: ledger
+//TODO: ERROR HERE FIX THIS
 export const needsUpdate = (component) => {
   let actionType = (component.toUpperCase()) + "_NEED_UPDATE"
 

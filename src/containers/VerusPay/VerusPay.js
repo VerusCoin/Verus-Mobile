@@ -19,15 +19,15 @@ import { namesList, coinsList, findCoinObj } from '../../utils/CoinData'
 import { getRecommendedBTCFees } from '../../utils/httpCalls/callCreators'
 import { removeSpaces } from '../../utils/stringUtils'
 import {
-  updateCoinBalances,
   setUserCoins,
   addKeypair,
   transactionsNeedUpdate,
-  needsUpdate,
   addExistingCoin,
   setActiveApp,
   setActiveCoin,
-  setActiveSection
+  setActiveSection,
+  updateOneBalance,
+  balancesNeedUpdate
  } from '../../actions/actionCreators'
 import Spinner from 'react-native-loading-spinner-overlay';
 import DelayedAlert from '../../utils/delayedAlert'
@@ -333,8 +333,8 @@ class VerusPay extends Component {
           this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
           this.props.dispatch(addKeypair(this.props.activeAccount.wifKey, coinTicker, this.props.activeAccount.keys))
           this.props.dispatch(transactionsNeedUpdate(coinTicker, this.props.needsUpdate.transanctions))
+          this.props.dispatch(balancesNeedUpdate(coinTicker, this.props.needsUpdate.balances))
 
-          this.props.dispatch(needsUpdate("balances"))
           this.setState({ addingCoin: false });
 
           resolve(true)
@@ -530,16 +530,19 @@ class VerusPay extends Component {
   handleUpdates = () => {
     let promiseArray = []
     
-    if(this.props.needsUpdate.balances) {
-      console.log("Balances need update, pushing update to transaction array")
+    if(this.state.coinObj && this.props.needsUpdate.balances[this.state.coinObj.id]) {
+      console.log(this.state.coinObj.id + "balance needs update, pushing update to transaction array")
       if (!this.state.loading) {
         this.setState({ loading: true });  
       }  
-      promiseArray.push(updateCoinBalances(
-        this.props.balances, 
-        this.props.activeCoinsForUser, 
-        this.props.activeAccount)
-      )
+      promiseArray.push(
+        updateOneBalance(
+          this.props.balances,
+          this.state.coinObj,
+          this.props.activeAccount,
+          this.props.needsUpdate.balances
+        )
+      );
     } 
 
     if(this.state.coinObj && this.state.coinObj.id === 'BTC' && !this.state.loadingBTCFees) {

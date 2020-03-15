@@ -19,13 +19,13 @@ import {
   RefreshControl
 } from "react-native";
 import { 
-  updateCoinBalances, 
   setCoinRates, 
   setActiveCoin, 
   setActiveApp,
   setActiveSection,
   everythingNeedsUpdate,
-  setActiveSectionBuySellCrypto
+  setActiveSectionBuySellCrypto,
+  updateOneBalance
 } from '../../actions/actionCreators';
 import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../../utils/math';
@@ -33,6 +33,7 @@ import { NavigationActions } from 'react-navigation';
 import styles from './Home.styles'
 import Colors from "../../globals/colors";
 import { ENABLE_WYRE } from "../../utils/constants";
+import { withNavigationFocus } from 'react-navigation';
 
 const CONNECTION_ERROR = "Connection Error"
 
@@ -40,48 +41,55 @@ class Home extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      totalFiatBalance: 0,
-      coinRates: {},
+      totalFiatBalance: this.getTotalFiatBalance(props),
       loading: false
     };
-    this.calculateTotalBalance = this.calculateTotalBalance.bind(this);
+    
     this.updateProps = this.updateProps.bind(this);
   }
 
-  componentDidMount() {
-    this.refresh();
+  componentDidUpdate(lastProps) {    
+    if (lastProps.isFocused !== this.props.isFocused && this.props.isFocused) {
+      this.refresh();
+    }
   }
-
-  //TODO: Fix the fact that at this point, activeUser doesnt have their keys yet
-  //componentWillReceiveProps() {
-  //  //TODO: Evaluate whether this is a performance issue
-  //  this.refresh();
-  //}
 
   refresh = () => {
     const _activeCoinsForUser = this.props.activeCoinsForUser
     const _balances = this.props.balances
+    const _balancesNeedUpdate = this.props.needsUpdate.balances
     const _activeAccount = this.props.activeAccount
     let promiseArray = []
 
-    if (this.props.activeCoinsForUser.length > 0) {
+    if (_activeCoinsForUser.length > 0) {
       if(this.props.needsUpdate.rates) {
-        console.log("Rates need update, pushing update to transaction array")
+        console.log("Rates need update, pushing update to update array")
         if (!this.state.loading) {
           this.setState({ loading: true });  
         }  
         promiseArray.push(setCoinRates(_activeCoinsForUser))
       }
       
-      if(this.props.needsUpdate.balances) {
-        console.log("Balances need update, pushing update to transaction array")
-        if (!this.state.loading) {
-          this.setState({ loading: true });  
-        }  
-        promiseArray.push(updateCoinBalances(_balances, _activeCoinsForUser, _activeAccount))
-      } 
+      _activeCoinsForUser.map(coinObj => {
+        if (_balancesNeedUpdate[coinObj.id]) {
+          console.log(coinObj.id + " balance needs update, pushing update to update array")
+
+          if (!this.state.loading) {
+            this.setState({ loading: true });  
+          }  
+          
+          promiseArray.push(
+            updateOneBalance(
+              _balances,
+              coinObj,
+              _activeAccount,
+              _balancesNeedUpdate
+            )
+          );
+        }
+      })
       
-      this.calculateTotalBalance()
+      this.setState({ totalFiatBalance: this.getTotalFiatBalance(this.props) }) 
       this.updateProps(promiseArray)
     }
   }
@@ -124,7 +132,7 @@ class Home extends Component {
         })
         .then((res) => {
           if (res) {
-            this.calculateTotalBalance()
+            this.setState({ totalFiatBalance: this.getTotalFiatBalance(this.props) })
             resolve(true)
           }
           else {
@@ -134,21 +142,21 @@ class Home extends Component {
     }) 
   }
 
-  calculateTotalBalance = () => {
+  getTotalFiatBalance = (props) => {    
     let _totalFiatBalance = 0
     let coinBalance = 0
-    const balances = this.props.balances
+    const balances = props.balances
     
-    for (let key in this.props.rates) {
-      if (typeof this.props.rates[key] === "number") {
+    for (let key in props.rates) {
+      if (typeof props.rates[key] === "number") {
         coinBalance = balances.hasOwnProperty(key) && !balances[key].error && !isNaN(balances[key].result.confirmed) ? 
         truncateDecimal(satsToCoins(balances[key].result.confirmed), 4) : 0
 
-        _totalFiatBalance += coinBalance*this.props.rates[key]
+        _totalFiatBalance += coinBalance*props.rates[key]
       }
     }
 
-    this.setState({ totalFiatBalance: _totalFiatBalance.toFixed(2) });  
+    return _totalFiatBalance.toFixed(2)
   }
 
   _verusPay = () => {
@@ -268,6 +276,9 @@ class Home extends Component {
   }
 
   render() {
+    //console.log("FOCUSED?:")
+    //console.log(this.props.isFocused)
+
     return (
       <View style={styles.root}>
         <Text style={styles.fiatBalanceLabel} >
@@ -291,4 +302,4 @@ const mapStateToProps = (state) => {
   }
 };
 
-export default connect(mapStateToProps)(Home);
+export default connect(mapStateToProps)(withNavigationFocus(Home));

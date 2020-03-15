@@ -23,12 +23,13 @@ import {
   Image
 } from "react-native"
 import { satsToCoins, truncateDecimal, isNumber, coinsToSats } from '../../../utils/math'
-import { updateCoinBalances, setCoinRates } from '../../../actions/actionCreators'
+import { setCoinRates, updateOneBalance } from '../../../actions/actionCreators'
 import { connect } from "react-redux";
 import { getRecommendedBTCFees } from '../../../utils/httpCalls/callCreators'
 import { removeSpaces } from '../../../utils/stringUtils'
 import styles from './SendCoin.styles'
 import Colors from '../../../globals/colors';
+import withNavigationFocus from "react-navigation/src/views/withNavigationFocus"
 
 const VERUSPAY_LOGO_DIR = require('../../../images/customIcons/verusPay.png')
 const DEFAULT_FEE_GUI = 10000;
@@ -53,8 +54,10 @@ class SendCoin extends Component {
     };
   }
 
-  componentDidMount() {
-    this.initializeState()
+  componentDidUpdate(lastProps) {    
+    if (lastProps.isFocused !== this.props.isFocused && this.props.isFocused) {
+      this.initializeState()
+    }
   }
 
   initializeState = () => {
@@ -74,7 +77,6 @@ class SendCoin extends Component {
 
   handleState = (activeUser, coinObj, activeCoinsForUser, balances) => {
     let promiseArray = []
-    let index = 0;
 
     if (activeUser.keys.hasOwnProperty(coinObj.id)) {
       this.setState({ fromAddress: activeUser.keys[coinObj.id].pubKey });  
@@ -90,13 +92,21 @@ class SendCoin extends Component {
       promiseArray.push(setCoinRates(activeCoinsForUser))
     }
     
-    if(this.props.needsUpdate.balances) {
-      console.log("Balances need update, pushing update to transaction array")
+    if(this.props.needsUpdate.balances[coinObj.id]) {
+      console.log(coinObj.id + "balance needs update, pushing update to transaction array")
       if (!this.state.loading) {
         this.setState({ loading: true });  
       }  
-      promiseArray.push(updateCoinBalances(balances, activeCoinsForUser, activeUser))
-    } 
+
+      promiseArray.push(
+        updateOneBalance(
+          balances,
+          coinObj,
+          activeUser,
+          this.props.needsUpdate.balances
+        )
+      );
+    }
 
     if(coinObj.id === 'BTC' && !this.state.loadingBTCFees) {
       this.setState({ loadingBTCFees: true });  
@@ -375,4 +385,4 @@ const mapStateToProps = (state) => {
   }
 };
 
-export default connect(mapStateToProps)(SendCoin);
+export default connect(mapStateToProps)(withNavigationFocus(SendCoin));

@@ -41,6 +41,7 @@ buck-out/
 \.buckd/
 *.keystore
 keystore.properties
+!debug.keystore
 
 # fastlane
 #
@@ -55,3 +56,6 @@ keystore.properties
 
 # Bundle artifact
 *.jsbundle
+
+# CocoaPods
+/ios/Pods/

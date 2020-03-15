@@ -15,7 +15,8 @@ import {
   setUserCoins, 
   needsUpdate, 
   addKeypair,
-  transactionsNeedUpdate
+  transactionsNeedUpdate,
+  balancesNeedUpdate
  } from '../../actions/actionCreators';
 import { NavigationActions } from 'react-navigation'
 import styles from './CoinDetails.styles'
@@ -62,8 +63,8 @@ class CoinDetails extends Component {
         this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
         this.props.dispatch(addKeypair(this.props.activeAccount.wifKey, this.state.fullCoinData.id, this.props.activeAccount.keys))
         this.props.dispatch(transactionsNeedUpdate(this.state.fullCoinData.id, this.props.needsUpdate.transanctions))
+        this.props.dispatch(balancesNeedUpdate(this.state.fullCoinData.id, this.props.needsUpdate.balances))
 
-        this.props.dispatch(needsUpdate("balances"))
         this.props.dispatch(needsUpdate("rates"))
         this.setState({ isActive: true, loading: false });
       }

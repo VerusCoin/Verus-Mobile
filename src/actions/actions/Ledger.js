@@ -1,8 +1,11 @@
 import { 
   setBalances,
+  setOneBalance,
   setTransactions,
   updateCoinRates
 } from '../actionCreators';
+
+import NULL_TX from '../../utils/crypto/nullTx'
 
 import { Alert } from 'react-native'
 
@@ -54,9 +57,11 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
               return hash[key];
             });
 
-            const _txid = Buffer.from(array, 'hex').toString('hex')
+            const _txid = Buffer.from(array, "hex").toString("hex");
 
-            insPromises.push(getOneTransaction(null, coinObj, _txid))
+            if (_txid == NULL_TX.toString("hex")) {
+              insPromises.push(null)
+            } else insPromises.push(getOneTransaction(null, coinObj, _txid.toString('hex')))
           }
           
           getTransactionPromise = Promise.all(insPromises)
@@ -86,6 +91,8 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
           let _rawIns = []
           let insArr = gottenTransactions[i]
           for (let i = 0; i < insArr.length; i++) {
+            if (insArr[i] == null) continue;
+            
             _rawIns.push(insArr[i].result)
           }
 
@@ -107,7 +114,6 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
     .then((gottenBlocksInfo) => {
       let consolidatedTxs = gottenBlocksInfo.pop()
       let _parsedTxList = []
-      let index = 0
       let error = false
       let network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
 
@@ -138,7 +144,7 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
   });
 }
 
-export const updateCoinBalances = (oldBalances, activeCoinsForUser, activeUser) => {
+export const updateCoinBalances = (oldBalances, activeCoinsForUser, activeUser, needsUpdateObj) => {
   return new Promise((resolve, reject) => {
     getBalances(oldBalances, activeCoinsForUser, activeUser)
     .then(balances => {
@@ -146,7 +152,12 @@ export const updateCoinBalances = (oldBalances, activeCoinsForUser, activeUser) 
         resolve(false)
       }
       else {
-        resolve(setBalances(balances))
+        let newUpdateObj = {}
+        Object.keys(needsUpdateObj).map(coinId => {
+          newUpdateObj[coinId] = false
+        })
+
+        resolve(setBalances(balances, newUpdateObj))
       }
     })
     .catch(err => reject(err));
@@ -154,20 +165,19 @@ export const updateCoinBalances = (oldBalances, activeCoinsForUser, activeUser) 
 }
 
 export const updateOneBalance = (oldBalances, coinObj, activeUser) => {
-  let _balances = oldBalances
-
   return new Promise((resolve, reject) => {
     getOneBalance(oldBalances[coinObj.id], coinObj, activeUser)
     .then(balance => {
-      if (!balances) {
+      if (!balance) {
         resolve(false)
       }
       else {
-        _balances[coinObj.id] = balance
-        resolve(setBalances(_balances))
+        resolve(setOneBalance(coinObj.id, balance.result))
       }
     })
-    .catch(err => reject(err));
+    .catch(err => {
+      reject(err)
+    });
   });
 }
 

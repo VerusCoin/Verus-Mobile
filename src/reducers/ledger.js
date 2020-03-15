@@ -14,7 +14,7 @@ export const ledger = (state = {
   balances: {},
   transactions: {},
   rates: {},
-  needsUpdate: {balances: true, transactions: {}, rates: true},
+  needsUpdate: {balances: {}, transactions: {}, rates: true},
   updateIntervalID: null
 }, action) => {
   switch (action.type) {
@@ -22,13 +22,19 @@ export const ledger = (state = {
       return {
         ...state,
         balances: action.balances,
-        needsUpdate: {...state.needsUpdate, balances: false}
+        needsUpdate: {...state.needsUpdate, balances: action.needsUpdateObj}
       };
     case 'SET_TRANSACTIONS':
       return {
         ...state,
         transactions: action.transactions,
         needsUpdate: {...state.needsUpdate, transactions: action.needsUpdateObj}
+      };
+    case 'SET_ONE_BALANCE':
+      return {
+        ...state,
+        balances: {...state.balances, [action.coinId]: action.balance},
+        needsUpdate: {...state.needsUpdate, balances: {...state.needsUpdate.balances, [action.coinId]: false}}
       };
     case 'SET_RATES':
       return {
@@ -39,7 +45,7 @@ export const ledger = (state = {
     case 'BALANCES_NEED_UPDATE':
       return {
         ...state,
-        needsUpdate: {...state.needsUpdate, balances: true}
+        needsUpdate: {...state.needsUpdate, balances: action.needsUpdateObj}
       };
     case 'TRANSACTIONS_NEED_UPDATE':
       return {
@@ -53,12 +59,16 @@ export const ledger = (state = {
       };
     case 'EVERYTHING_NEEDS_UPDATE':
       let _transactions = state.needsUpdate.transactions
+      let _balances = state.needsUpdate.balances
+
       for (let i = 0; i < namesList.length; i++) {
         _transactions[namesList[i]] = true
+        _balances[namesList[i]] = true
       }
+
       return {
         ...state,
-        needsUpdate: {balances: true, 
+        needsUpdate: {balances: _balances, 
                       transactions: _transactions,
                       rates: true}
       };

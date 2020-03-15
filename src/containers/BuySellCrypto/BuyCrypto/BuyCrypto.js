@@ -29,8 +29,8 @@ import {
   setUserCoins,
   addKeypair,
   transactionsNeedUpdate,
-  needsUpdate,
-  updateCoinBalances
+  updateOneBalance,
+  balancesNeedUpdate
 } from '../../../actions/actionCreators'
 import { findCoinObj } from '../../../utils/CoinData'
 import styles from './BuyCrypto.styles'
@@ -54,6 +54,7 @@ import {
 } from '../../../selectors/paymentMethods';
 import { selectWyrePaymentMethod } from '../../../selectors/authentication';
 import hasPaymentMethod from '../../../utils/paymentMethod';
+import withNavigationFocus from "react-navigation/src/views/withNavigationFocus";
 class BuyCrypto extends Component {
   constructor(props) {
     super(props);
@@ -72,8 +73,11 @@ class BuyCrypto extends Component {
       addingCoin: false,
     };
   }
-  componentDidMount() {
-    this.props.getExchangeRates();
+
+  componentDidUpdate(lastProps) {    
+    if (lastProps.isFocused !== this.props.isFocused && this.props.isFocused) {
+      this.props.getExchangeRates();
+    }
   }
 
   componentWillReceiveProps(newProps) {
@@ -84,10 +88,6 @@ class BuyCrypto extends Component {
       });
     }
   }
-
-  // back = () => {
-  //   this.props.navigation.dispatch(NavigationActions.back())
-  // }
 
   static navigationOptions = ({ navigation }) => {
     return {
@@ -120,7 +120,6 @@ class BuyCrypto extends Component {
     //TODO: Figure out why screen doesnt always update if everything is called seperately
 
     /*this.props.dispatch(transactionsNeedUpdate(this.props.activeCoin.id, this.props.needsUpdate.transanctions))
-    this.props.dispatch(needsUpdate("balances"))
     this.props.dispatch(needsUpdate("rates"))*/
     this.props.dispatch(everythingNeedsUpdate())
 
@@ -205,8 +204,8 @@ class BuyCrypto extends Component {
           this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
           this.props.dispatch(addKeypair(this.props.activeAccount.wifKey, coinTicker, this.props.activeAccount.keys))
           this.props.dispatch(transactionsNeedUpdate(coinTicker, this.props.needsUpdate.transanctions))
+          this.props.dispatch(balancesNeedUpdate(coinTicker, this.props.needsUpdate.balances))
 
-          this.props.dispatch(needsUpdate("balances"))
           this.setState({ addingCoin: false });
 
           resolve(true)
@@ -225,15 +224,16 @@ class BuyCrypto extends Component {
   handleUpdates = () => {
     let promiseArray = []
 
-    if(this.props.needsUpdate.balances) {
-      console.log("Balances need update, pushing update to transaction array")
+    if(this.state.coinObj && this.props.needsUpdate.balances[this.state.coinObj.id]) {
+      console.log(this.state.coinObj.id + "balance needs update, pushing update to transaction array")
       if (!this.state.loading) {
         this.setState({ loading: true });
       }
-      promiseArray.push(updateCoinBalances(
+      promiseArray.push(updateOneBalance(
         this.props.balances,
-        this.props.activeCoinsForUser,
-        this.props.activeAccount)
+        this.state.coinObj,
+        this.props.activeAccount,
+        this.props.needsUpdate.balances)
       )
     }
 
@@ -562,4 +562,4 @@ const mapDispatchToProps = (dispatch) => ({
   getExchangeRates: () => dispatch(getExchangeRates()),
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(BuyCrypto);
+export default connect(mapStateToProps, mapDispatchToProps)(withNavigationFocus(BuyCrypto));

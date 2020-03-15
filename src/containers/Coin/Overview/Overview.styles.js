@@ -59,4 +59,7 @@ export default styles = StyleSheet.create({
     marginLeft: 10,
     fontWeight: "bold"
   },
+  txInfoLabel: {
+    color: Colors.quaternaryColor,
+  },
 });
