@@ -2,7 +2,7 @@ jest.setTimeout(60000)
 
 import { 
   getOneTransaction
-} from '../../httpCalls/callCreators'
+} from '../../api/channels/electrum/callCreators'
 
 import {
   MOCK_TX

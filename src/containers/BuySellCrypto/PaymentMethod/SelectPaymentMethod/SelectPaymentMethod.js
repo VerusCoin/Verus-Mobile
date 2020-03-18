@@ -13,7 +13,7 @@ import { selectWyreCreateAccountIsFetching } from '../../../../selectors/payment
 
 import AccountRenderers from '../renderers/mappings';
 
-import { SUPPORTED_PAYMENT_METHODS } from '../../../../utils/constants';
+import { SUPPORTED_PAYMENT_METHODS } from '../../../../utils/constants/constants';
 
 import Spinner from 'react-native-loading-spinner-overlay';
 

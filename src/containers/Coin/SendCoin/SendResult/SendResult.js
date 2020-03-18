@@ -11,7 +11,7 @@
 import React, { Component } from "react"
 import Button1 from "../../../../symbols/button1"
 import { connect } from 'react-redux'
-import { sendRawTx } from '../../../../utils/httpCalls/callCreators'
+import { sendRawTx } from '../../../../utils/api/channels/electrum/callCreators'
 import { networks } from 'bitgo-utxo-lib'
 import { 
   View, 
@@ -34,7 +34,7 @@ import {
  } from '../../../../actions/actionCreators'
 import ProgressBar from 'react-native-progress/Bar'
 import { Icon } from 'react-native-elements'
-import { NO_VERIFICATION, MID_VERIFICATION } from '../../../../utils/constants'
+import { NO_VERIFICATION, MID_VERIFICATION } from '../../../../utils/constants/constants'
 import styles from './SendResult.styles'
 import Colors from '../../../../globals/colors'
 

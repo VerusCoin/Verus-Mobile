@@ -18,7 +18,7 @@ import {
 import {
   putWyreAccountField
 } from '../../../../actions/actions/PaymentMethod/WyreAccount';
-import { STATES, WYRE_COUNTRIES } from '../../../../utils/constants';
+import { STATES, WYRE_COUNTRIES } from '../../../../utils/constants/constants';
 import Colors from '../../../../globals/colors';
 
 

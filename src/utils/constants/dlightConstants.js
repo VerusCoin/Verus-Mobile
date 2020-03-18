@@ -1,0 +1,5 @@
+export const DLIGHT_ADDRESSES = 'listaddresses'
+export const DLIGHT_BALANCES = 'getbalance'
+export const DLIGHT_TRANSACTIONS = 'listtransactions'
+export const DLIGHT_INFO = 'getinfo'
+export const DLIGHT_BLOCKCOUNT = 'getblockcount'

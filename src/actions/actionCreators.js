@@ -5,6 +5,7 @@ export * from './actions/WalletSettings'
 export * from './actions/cache/Electrum'
 export * from './actions/cache/Headers'
 export * from './actions/cache/Cache'
+export * from './actions/updateManager'
 
 //Reducer Name: authentication
 export const setAccounts = (accounts) => {

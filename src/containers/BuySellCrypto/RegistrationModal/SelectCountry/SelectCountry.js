@@ -13,7 +13,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback
 } from "react-native";
-import { SUPPORTED_COUNTRIES } from '../../../../utils/constants'
+import { SUPPORTED_COUNTRIES } from '../../../../utils/constants/constants'
 import { saveBuySellSettings } from '../../../../actions/actionCreators'
 import { NavigationActions } from 'react-navigation';
 import { connect } from 'react-redux';

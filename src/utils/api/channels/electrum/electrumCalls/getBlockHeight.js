@@ -1,5 +1,5 @@
 import { httpsEnabled } from '../proxyServers'
-import { isJson } from '../../objectManip'
+import { isJson } from '../../../../objectManip'
 
 export const getBlockHeight = (proxyServer, electrumServer) => {
   return new Promise((resolve, reject) => {

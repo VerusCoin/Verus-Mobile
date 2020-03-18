@@ -3,7 +3,7 @@ jest.setTimeout(60000)
 import { 
   getBalances, 
   getOneBalance
-} from '../../httpCalls/callCreators'
+} from '../../api/channels/electrum/callCreators'
 
 import {
   getTempActiveCoin,

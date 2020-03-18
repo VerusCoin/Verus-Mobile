@@ -4,9 +4,9 @@ import {
   electrumMerkleRoot,
 } from 'agama-wallet-lib/src/block'
 import { networks } from 'bitgo-utxo-lib';
-import store from '../../../store/index';
-import { saveBlockHeader } from '../../../actions/actionCreators';
-import { ELECTRUM_PROTOCOL_CHANGE } from '../../constants' 
+import store from '../../../../../store/index';
+import { saveBlockHeader } from '../../../../../actions/actionCreators';
+import { ELECTRUM_PROTOCOL_CHANGE } from '../../../../constants/constants' 
 
 export const getBlockInfo = (oldBlock, coinObj, blockheight) => {
   const callType = 'getblockinfo'

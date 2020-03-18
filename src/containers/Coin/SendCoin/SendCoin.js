@@ -25,7 +25,7 @@ import {
 import { satsToCoins, truncateDecimal, isNumber, coinsToSats } from '../../../utils/math'
 import { setCoinRates, updateOneBalance } from '../../../actions/actionCreators'
 import { connect } from "react-redux";
-import { getRecommendedBTCFees } from '../../../utils/httpCalls/callCreators'
+import { getRecommendedBTCFees } from '../../../utils/api/channels/electrum/callCreators'
 import { removeSpaces } from '../../../utils/stringUtils'
 import styles from './SendCoin.styles'
 import Colors from '../../../globals/colors';

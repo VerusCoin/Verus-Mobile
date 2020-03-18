@@ -27,7 +27,7 @@ import {
   MID_VERIFICATION_DESC,
   MAX_VERIFICATION_DESC,
   VERIFICATION_LOCKED
-} from '../../../../utils/constants'
+} from '../../../../utils/constants/constants'
 import styles from './CoinSettings.styles'
 import Colors from '../../../../globals/colors';
 

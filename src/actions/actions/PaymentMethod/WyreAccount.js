@@ -1,7 +1,7 @@
 import DelayedAlert from '../../../utils/delayedAlert';
 import { NavigationActions } from 'react-navigation';
 
-import { WYRE_URL } from '../../../utils/constants';
+import { WYRE_URL } from '../../../utils/constants/constants';
 
 import WyreService from '../../../services/wyreService';
 import { putUserPaymentMethods } from '../../../utils/asyncStore/asyncStore';

@@ -7,7 +7,7 @@
 //server that passed the test.
 
 import { getBlockHeight } from './electrumCalls/getBlockHeight';
-import { timeout } from '../promises'
+import { timeout } from '../../../promises'
 import { httpsEnabled } from './proxyServers'
 
 /**

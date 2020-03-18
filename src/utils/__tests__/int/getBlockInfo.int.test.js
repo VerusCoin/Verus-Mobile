@@ -2,7 +2,7 @@ jest.setTimeout(60000)
 
 import { 
   getBlockInfo
-} from '../../httpCalls/callCreators'
+} from '../../api/channels/electrum/callCreators'
 
 import {
   getTempActiveCoin,

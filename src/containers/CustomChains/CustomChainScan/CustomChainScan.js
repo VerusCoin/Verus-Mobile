@@ -22,7 +22,7 @@ import { namesList } from '../../../utils/CoinData'
 import {
   FORMAT_UNKNOWN,
   INCOMPLETE_CHAIN_QR
-} from '../../../utils/constants'
+} from '../../../utils/constants/constants'
 import CustomChainForm from '../CustomChainForm/CustomChainForm'
 import styles from './CustomChainScan.styles'
 

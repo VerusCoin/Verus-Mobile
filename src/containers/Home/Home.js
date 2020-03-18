@@ -32,7 +32,7 @@ import { satsToCoins, truncateDecimal } from '../../utils/math';
 import { NavigationActions } from 'react-navigation';
 import styles from './Home.styles'
 import Colors from "../../globals/colors";
-import { ENABLE_WYRE } from "../../utils/constants";
+import { ENABLE_WYRE } from "../../utils/constants/constants";
 import { withNavigationFocus } from 'react-navigation';
 
 const CONNECTION_ERROR = "Connection Error"

@@ -3,7 +3,7 @@ jest.setTimeout(60000)
 import { 
   getUnspent,
   getUnspentFormatted
-} from '../../httpCalls/callCreators'
+} from '../../api/channels/electrum/callCreators'
 
 import {
   MOCK_USER_OBJ_BALANCE_LARGE_VRSC,

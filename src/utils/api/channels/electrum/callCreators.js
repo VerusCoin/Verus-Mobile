@@ -12,12 +12,12 @@ import { proxyServers, httpsEnabled } from './proxyServers';
 import { getGoodServer, testProxy, testElectrum } from './serverTester';
 import { getCoinPaprikaRate } from './ratesAPIs/coinPaprika';
 import { getAtomicExplorerBTCFees } from './btcFeesAPIs/atomicExplorer';
-import { truncateDecimal } from '../math';
-import { timeout } from '../promises';
+import { truncateDecimal } from '../../../math';
+import { timeout } from '../../../promises';
 import { getServerVersion } from './electrumCalls/getServerVersion';
-import { updateParamObj } from '../electrumUpdates';
+import { updateParamObj } from '../../../electrumUpdates';
 import { networks } from 'bitgo-utxo-lib';
-import { isJson } from '../objectManip'
+import { isJson } from '../../../objectManip'
 
 // This purpose of this method is to take in a list of electrum servers,
 // and use a valid one to call a specified command given a set of parameters

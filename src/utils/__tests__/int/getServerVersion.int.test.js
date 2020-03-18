@@ -2,7 +2,7 @@ jest.setTimeout(60000)
 
 import {
   getServerVersion
-} from '../../httpCalls/electrumCalls/getServerVersion'
+} from '../../api/channels/electrum/callCreators'
 
 import {
   setFetchParams

@@ -3,7 +3,7 @@
   user-decided app settings.
 */
 
-import { MAX_VERIFICATION } from '../utils/constants'
+import { MAX_VERIFICATION } from '../utils/constants/constants'
 
 export const settings = (state = {
   btcFeesAdvanced: false,

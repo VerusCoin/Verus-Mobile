@@ -17,7 +17,7 @@ import {
   getOneTransactionList,
   getOneTransaction,
   getBlockInfo
-} from '../../utils/httpCalls/callCreators';
+} from '../../utils/api/channels/electrum/callCreators';
 
 import { TxDecoder } from '../../utils/crypto/txDecoder';
 import { networks } from 'bitgo-utxo-lib';

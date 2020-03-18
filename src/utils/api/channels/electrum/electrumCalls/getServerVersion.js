@@ -3,10 +3,10 @@
 //  3. If they do not, fetch them from http(s) call
 //     and update AsyncStorage with function in asyncStore
 //  4. Resolve result
-import store from '../../../store/index';
-import { timeout } from '../../../utils/promises';
-import { saveServerVersion } from '../../../actions/actionCreators';
-import { isJson } from '../../objectManip'
+import store from '../../../../../store/index';
+import { timeout } from '../../../../promises';
+import { saveServerVersion } from '../../../../../actions/actionCreators';
+import { isJson } from '../../../../objectManip'
 
 const OLD_DEFAULT_VERSION = 1.0
 

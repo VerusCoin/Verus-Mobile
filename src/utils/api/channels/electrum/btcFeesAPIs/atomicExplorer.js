@@ -1,5 +1,5 @@
-import { timeout } from '../../promises'
-import { isJson } from '../../objectManip'
+import { timeout } from '../../../../promises'
+import { isJson } from '../../../../objectManip'
 
 export const getAtomicExplorerBTCFees = () => {
   const address = `https://www.atomicexplorer.com/api/btc/fees`

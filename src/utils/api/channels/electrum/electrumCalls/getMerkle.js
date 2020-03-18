@@ -1,5 +1,5 @@
 import { updateValues } from '../callCreators'
-import { calculateMerkleRoot } from '../../crypto/verifyMerkle'
+import { calculateMerkleRoot } from '../../../../crypto/verifyMerkle'
 
 export const getMerkleHashes = (oldMerkle, coinObj, txid, height, toSkip) => {
   const callType = 'getmerkle'

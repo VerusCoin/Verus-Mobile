@@ -1,5 +1,5 @@
-import { timeout } from '../../promises'
-import { isJson } from '../../objectManip'
+import { timeout } from '../../../../promises'
+import { isJson } from '../../../../objectManip'
 
 export const getCoinPaprikaRate = (coinObj) => {
   let coinID = coinObj.id

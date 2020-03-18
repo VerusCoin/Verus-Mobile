@@ -38,7 +38,7 @@ import {
   ELECTRUM_DISCLAIMER_UNREALIZED,
   ELECTRUM_DISCLAIMER,
   POSSIBLY_UNSUPPORTED_CHAIN
-} from '../../../utils/constants'
+} from '../../../utils/constants/constants'
 import extraCoins from '../../../utils/extraCoins/extraCoins'
 import { createCoinObj } from '../../../utils/CoinData'
 import { networks } from 'bitgo-utxo-lib';

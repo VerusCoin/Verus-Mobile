@@ -24,7 +24,7 @@ import { getKeyByValue } from '../../utils/objectManip'
 import { NavigationActions } from 'react-navigation';
 import AlertAsync from "react-native-alert-async";
 import styles from './SideMenu.styles';
-import { ENABLE_WYRE } from '../../utils/constants';
+import { ENABLE_WYRE } from '../../utils/constants/constants';
 
 const APP_INFO = 'App Info'
 const PROFILE = 'Profile'

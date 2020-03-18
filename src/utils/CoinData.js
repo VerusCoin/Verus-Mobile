@@ -1,5 +1,5 @@
 import { electrumServers } from 'agama-wallet-lib/src/electrum-servers';
-import { MAX_VERIFICATION } from '../utils/constants'
+import { MAX_VERIFICATION } from './constants/constants'
 import Colors from '../globals/colors'
 
 const getDefaultApps = (coinName, canBuySell = false) => {

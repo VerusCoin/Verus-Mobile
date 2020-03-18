@@ -122,6 +122,7 @@ export const getTempActiveCoin = (coinID, callsSucceed, code, params, errorMsg =
 export const MOCK_PIN = '12345'
 export const MOCK_SEED = 'hunter2'
 export const MOCK_ADDRESS = 'RTbZS48ASp9qtCg4ucyHC8GwF6KG49UNjF'
+export const MOCK_PUBKEY = '033b467f6c3e5042a14cef1711498c08a08787999443c200f6dd9fd72b619454f1'
 export const MOCK_SCRIPTHASH = '371acb1c695c759b5049653f4893697187c07e88fe07ee22b30ad4cf39d3ca87'
 export const MOCK_ENCRYPTEDKEY = 'a76WqKD6uDccOd5fUEY6CBZEMEhfHBA='
 export const MOCK_PRIVKEY = 'Ux4SB7LdzdMVg2s2BuapntC2aiVjEiNdabfhZsb6NCPNJTLEYHTX'

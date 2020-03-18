@@ -9,13 +9,13 @@
 import React, { Component } from "react";
 import Button1 from "../../symbols/button1";
 import { connect } from 'react-redux';
-import { txPreflight } from '../../utils/httpCalls/callCreators';
+import { txPreflight } from '../../utils/api/channels/electrum/callCreators';
 import { networks } from 'bitgo-utxo-lib';
 import { View, Text, ScrollView, Keyboard, Alert } from "react-native";
 import { satsToCoins, truncateDecimal, coinsToSats } from '../../utils/math';
 import ProgressBar from 'react-native-progress/Bar';
 import { NavigationActions } from 'react-navigation';
-import { NO_VERIFICATION, MID_VERIFICATION } from '../../utils/constants'
+import { NO_VERIFICATION, MID_VERIFICATION } from '../../utils/constants/constants'
 import styles from './ConfirmSend.styles'
 
 const TIMEOUT_LIMIT = 120000

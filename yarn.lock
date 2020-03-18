@@ -10220,7 +10220,7 @@ react-native-vector-icons@^6.2.0:
 
 "react-native-verus-light-client@git+https://github.com/michaeltout/react-native-verus-light-client.git#rn0.61.5":
   version "1.0.0"
-  resolved "git+https://github.com/michaeltout/react-native-verus-light-client.git#6703fb70464369d1e5ff1f087bdc545d7ebed346"
+  resolved "git+https://github.com/michaeltout/react-native-verus-light-client.git#f96b9e8ee55be6ec1b6918fe7000c2a3e2debb30"
   dependencies:
     react "16.9.0"
     react-native "0.61.5"
