@@ -183,7 +183,7 @@ class SignUp extends Component {
       }
 
       if (!_errors && !_warnings) {
-        addUser(this.state.userName, this.state.wifKey, this.state.pin, this.props.accounts)
+        addUser(this.state.userName, {electrum: this.state.wifKey}, this.state.pin, this.props.accounts)
         .then((action) => {
           this.props.dispatch(action);
         })
@@ -191,7 +191,7 @@ class SignUp extends Component {
         this.canMakeAccount()
         .then((res) => {
           if (res) {
-            addUser(this.state.userName, this.state.wifKey, this.state.pin, this.props.accounts)
+            addUser(this.state.userName, {electrum: this.state.wifKey}, this.state.pin, this.props.accounts)
             .then((action) => {
               this.props.dispatch(action);
             })

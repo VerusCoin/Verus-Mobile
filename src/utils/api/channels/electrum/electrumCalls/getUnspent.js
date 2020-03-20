@@ -12,10 +12,20 @@ export const getUnspent = (oldList, coinObj, activeUser) => {
   let params = {}
   const coinID = coinObj.id
 
-  if (activeUser.keys.hasOwnProperty(coinObj.id)) {
-    params.address = activeUser.keys[coinObj.id].pubKey
+  if (
+    activeUser.keys[coinObj.id] != null &&
+    activeUser.keys[coinObj.id].electrum != null &&
+    activeUser.keys[coinObj.id].electrum.addresses.length > 0
+  ) {
+    params.address = activeUser.keys[coinObj.id].electrum.addresses[0];
   } else {
-    throw new Error("getUnspent.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinID + " not found!")
+    throw new Error(
+      "getUnspent.js: Fatal mismatch error, " +
+        activeUser.id +
+        " user keys for active coin " +
+        coinID +
+        " not found!"
+    );
   }
 
   return new Promise((resolve, reject) => {

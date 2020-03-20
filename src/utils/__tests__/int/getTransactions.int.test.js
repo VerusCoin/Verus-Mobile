@@ -13,7 +13,6 @@ import {
   getTempActiveCoin,
 } from '../../../tests/helpers/MockAuthData'
 
-import { proxyServersHttps, proxyServersHttp } from 'agama-wallet-lib/src/electrum-servers'
 jest.mock('agama-wallet-lib/src/electrum-servers')
 
 describe('TxList fetcher for BTC based coins', () => {

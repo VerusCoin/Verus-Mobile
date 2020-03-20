@@ -14,7 +14,7 @@ import {
   addExistingCoin, 
   setUserCoins, 
   needsUpdate, 
-  addKeypair,
+  addKeypairs,
   transactionsNeedUpdate,
   balancesNeedUpdate
  } from '../../actions/actionCreators';
@@ -61,7 +61,7 @@ class CoinDetails extends Component {
       if (response) {
         this.props.dispatch(response)
         this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
-        this.props.dispatch(addKeypair(this.props.activeAccount.wifKey, this.state.fullCoinData.id, this.props.activeAccount.keys))
+        this.props.dispatch(addKeypairs(this.props.activeAccount.seeds, this.state.fullCoinData.id, this.props.activeAccount.keys))
         this.props.dispatch(transactionsNeedUpdate(this.state.fullCoinData.id, this.props.needsUpdate.transanctions))
         this.props.dispatch(balancesNeedUpdate(this.state.fullCoinData.id, this.props.needsUpdate.balances))
 

@@ -123,10 +123,20 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
         }
       }
 
-      if (activeUser.keys.hasOwnProperty(coinObj.id)) {
-        address = activeUser.keys[coinObj.id].pubKey
+      if (
+        activeUser.keys[coinObj.id] != null &&
+        activeUser.keys[coinObj.id].electrum != null &&
+        activeUser.keys[coinObj.id].electrum.addresses.length > 0
+      ) {
+        address = activeUser.keys[coinObj.id].electrum.addresses[0];
       } else {
-        throw new Error("Ledger.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!");
+        throw new Error(
+          "Ledger.js: Fatal mismatch error, " +
+            activeUser.id +
+            " user keys for active coin " +
+            coinObj[i].id +
+            " not found!"
+        );
       }
 
       for (let i = 0; i < consolidatedTxs.transactions.length; i++) {

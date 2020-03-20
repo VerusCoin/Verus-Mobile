@@ -21,9 +21,5 @@ export * from './dlightRequests/getTransactions'
  * @param {String[]} params Paramters to pass in with the request
  */
 export const makeDlightRequest = (coinId, accountHash, coinProto, reqId, method, params) => {
-  console.log(reqId)
-  console.log(method)
-  console.log([coinId, accountHash, coinProto, ...params])
-
   return VerusLightClient.request(reqId, method, [coinId, accountHash, coinProto, ...params])
 }

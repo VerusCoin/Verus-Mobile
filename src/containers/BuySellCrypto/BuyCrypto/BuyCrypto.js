@@ -21,13 +21,13 @@ import { connect } from 'react-redux'
 import { Dropdown } from 'react-native-material-dropdown'
 import { isNumber } from '../../../utils/math';
 import { calculatePrice } from '../../../utils/price';
-import { SUPPORTED_CRYPTOCURRENCIES, SUPPORTED_FIAT_CURRENCIES, SUPPORTED_PAYMENT_METHODS } from '../../../utils/constants'
+import { SUPPORTED_CRYPTOCURRENCIES, SUPPORTED_FIAT_CURRENCIES, SUPPORTED_PAYMENT_METHODS } from '../../../utils/constants/constants'
 import {
   setCoinRates,
   everythingNeedsUpdate,
   addExistingCoin,
   setUserCoins,
-  addKeypair,
+  addKeypairs,
   transactionsNeedUpdate,
   updateOneBalance,
   balancesNeedUpdate
@@ -37,7 +37,7 @@ import styles from './BuyCrypto.styles'
 import DelayedAsyncAlert from '../../../utils/delayedAsyncAlert'
 import DelayedAlert from '../../../utils/delayedAlert';
 import Colors from '../../../globals/colors';
-import { ENABLE_WYRE } from '../../../utils/constants'
+import { ENABLE_WYRE } from '../../../utils/constants/constants'
 
 import {
   BankBuildingBlack, Bank,
@@ -202,7 +202,7 @@ class BuyCrypto extends Component {
         if (response) {
           this.props.dispatch(response)
           this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
-          this.props.dispatch(addKeypair(this.props.activeAccount.wifKey, coinTicker, this.props.activeAccount.keys))
+          this.props.dispatch(addKeypairs(this.props.activeAccount.seeds, coinTicker, this.props.activeAccount.keys))
           this.props.dispatch(transactionsNeedUpdate(coinTicker, this.props.needsUpdate.transanctions))
           this.props.dispatch(balancesNeedUpdate(coinTicker, this.props.needsUpdate.balances))
 

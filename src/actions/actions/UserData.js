@@ -22,15 +22,14 @@ import {
 import { sha256 } from '../../utils/crypto/hash';
 
 import WyreService from '../../services/wyreService';
-import { ENABLE_WYRE } from '../../utils/constants';
+import { ENABLE_WYRE } from '../../utils/constants/constants';
 
 
 //TODO: Fingerprint authentication
 
-export const addUser = (userName, wifKey, pin, users) => {
-  let authData = { wifKey: wifKey, pin: pin, userName: userName }
+export const addUser = (userName, seeds, password, users) => {
   return new Promise((resolve, reject) => {
-    storeUser(authData, users)
+    storeUser({ seeds, password, userName }, users)
       .then(res => {
         resolve(setAccounts(res))
       })
@@ -78,13 +77,22 @@ export const fetchUsers = () => {
 
 export const loginUser = (account, password) => {
   let _keys = {};
-  let seed = decryptkey(password, account.encryptedKey);
+  const { electrum, dlight } = account.encryptedKeys
+
+  let seeds = {
+    electrum: electrum != null ? decryptkey(password, electrum) : null,
+    dlight: dlight != null ? decryptkey(password, dlight) : null,
+  }
+
   return new Promise((resolve, reject) => {
     getActiveCoinsList()
       .then(activeCoins => {
         for (let i = 0; i < activeCoins.length; i++) {
           if (activeCoins[i].users.includes(account.id)) {
-            _keys[activeCoins[i].id] = makeKeyPair(seed, activeCoins[i].id)
+            _keys[activeCoins[i].id] = {
+              electrum: electrum != null ? makeKeyPair(seed, activeCoins[i].id) : null,
+              dlight: electrum != null ? makeKeyPair(seed, activeCoins[i].id) : null,
+            }
           }
         }
 
@@ -105,10 +113,10 @@ export const loginUser = (account, password) => {
               key: hashedSeed
             }
   
-            resolve(signIntoAccount({ id: account.id, wifKey: seed, keys: _keys, paymentMethods }));
+            resolve(signIntoAccount({ id: account.id, seeds, keys: _keys, paymentMethods }));
           });
         } else {
-          resolve(signIntoAccount({ id: account.id, wifKey: seed, keys: _keys, paymentMethods: {} }));
+          resolve(signIntoAccount({ id: account.id, seeds, keys: _keys, paymentMethods: {} }));
         }
       })
       .catch(err => reject(err));
@@ -132,11 +140,14 @@ export const validateLogin = (account, password) => {
   });
 }
 
-export const addKeypair = (seed, coinID, keys) => {
-  let keypair = makeKeyPair(seed, coinID)
-  let _keys = {}
-  Object.assign(_keys, keys)
-  _keys[coinID] = keypair
+export const addKeypairs = (accountSeeds, coinID, keys) => {
+  let keypairs = {}
+  Object.keys(accountSeeds).map(seedType => {
+    const seed = accountSeeds[seedType]
+    if (seed != null) {
+      keypairs[seedType] = makeKeyPair(seed, coinID)
+    }
+  })
 
-  return updateAccountKeys(_keys)
+  return updateAccountKeys({...keys, [coinID]: keypairs})
 }

@@ -16,11 +16,11 @@ import { isJson } from '../../utils/objectManip'
 import { NavigationActions } from 'react-navigation';
 import { connect } from 'react-redux';
 import { namesList, coinsList, findCoinObj } from '../../utils/CoinData'
-import { getRecommendedBTCFees } from '../../utils/httpCalls/callCreators'
+import { getRecommendedBTCFees } from '../../utils/api/channels/electrum/callCreators'
 import { removeSpaces } from '../../utils/stringUtils'
 import {
   setUserCoins,
-  addKeypair,
+  addKeypairs,
   transactionsNeedUpdate,
   addExistingCoin,
   setActiveApp,
@@ -43,7 +43,7 @@ import {
   ONLY_ADDRESS,
   BALANCE_NULL,
   PARSE_ERROR
-} from '../../utils/constants'
+} from '../../utils/constants/constants'
 import styles from './VerusPay.styles'
 
 class VerusPay extends Component {
@@ -331,7 +331,7 @@ class VerusPay extends Component {
         if (response) {
           this.props.dispatch(response)
           this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
-          this.props.dispatch(addKeypair(this.props.activeAccount.wifKey, coinTicker, this.props.activeAccount.keys))
+          this.props.dispatch(addKeypairs(this.props.activeAccount.seeds, coinTicker, this.props.activeAccount.keys))
           this.props.dispatch(transactionsNeedUpdate(coinTicker, this.props.needsUpdate.transanctions))
           this.props.dispatch(balancesNeedUpdate(coinTicker, this.props.needsUpdate.balances))
 

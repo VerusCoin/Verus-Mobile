@@ -13,8 +13,17 @@ import {
 
 //Set storage to hold encrypted user data
 export const storeUser = (authData, users) => {
-  let encryptedKey = encryptkey(authData.pin, authData.wifKey)
-  let userObj = {id: authData.userName, encryptedKey: encryptedKey}
+  let encryptedKeys = {
+    electrum: null,
+    dlight: null
+  }
+
+  Object.keys(authData.seeds).map(seedType => {
+    const { seeds } = authData
+    if (seeds[seedType]) encryptedKeys[seedType] = encryptkey(authData.password, seeds[seedType])
+  })
+
+  let userObj = {id: authData.userName, encryptedKeys}
   let _users = users ? users.slice() : [];
   _users.push(userObj)
   let _toStore = {users: _users}
@@ -75,12 +84,21 @@ export const resetUserPwd = (userID, newPwd, oldPwd) => {
           let userIndex = _users.findIndex(n => n.id === userID);
 
           if (userIndex > -1) {
-            const _oldEncryptedKey = _users[userIndex].encryptedKey
-            const _decryptedKey = decryptkey(oldPwd, _oldEncryptedKey)
+            const _oldEncryptedKeys = _users[userIndex].encryptedKeys
+            const { dlight, electrum } = _oldEncryptedKeys
 
-            if (_decryptedKey) {
-              const _newEncryptedKey = encryptkey(newPwd, _decryptedKey)
-              _users[userIndex].encryptedKey = _newEncryptedKey
+            const _decryptedElectrum = electrum != null ? decryptkey(oldPwd, _oldEncryptedKeys.electrum) : null
+            const _decryptedDlight = dlight != null ? decryptkey(oldPwd, _oldEncryptedKeys.dlight) : null
+
+            if ((electrum == null || _decryptedElectrum) && (dlight == null || _decryptedDlight)) {
+              const _newElectrumKey = electrum ? encryptkey(newPwd, _decryptedElectrum) : null
+              const _newDlightKey = dlight ? encryptkey(newPwd, _decryptedDlight) : null
+
+              _users[userIndex].encryptedKeys = {
+                electrum: _newElectrumKey,
+                dlight: _newDlightKey
+              }
+              
               let _toStore = {users: _users}
               let promiseArr = [AsyncStorage.setItem('userData', JSON.stringify(_toStore)), _users]
               return Promise.all(promiseArr)
@@ -113,8 +131,10 @@ export const resetUserPwd = (userID, newPwd, oldPwd) => {
   });
 };
 
+//TODO: Stop using wifKey to encrypt payment methods before using them in production
 export const putUserPaymentMethods = async (user, paymentMethods) => {
-  const encryptedPaymentMethods = encryptkey(user.wifKey, JSON.stringify(paymentMethods))
+  //const encryptedPaymentMethods = encryptkey(user.wifKey, JSON.stringify(paymentMethods))
+  const encryptedPaymentMethods = "none"
   return await putUser(user.id, {
     paymentMethods: encryptedPaymentMethods,
   })
@@ -168,7 +188,7 @@ export const getUsers = () => {
   })
 };
 
-//Set storage to hold encrypted user data
+// Check user password
 export const checkPinForUser = (pin, userName) => {
   return new Promise((resolve, reject) => {
     AsyncStorage.getItem('userData')
@@ -177,11 +197,15 @@ export const checkPinForUser = (pin, userName) => {
         if(pin !== null && users.users) {
           let user = users.users.find(n => n.id === userName);
           if (user) {
-            const _decryptedKey = decryptkey(pin, user.encryptedKey);
-            if (_decryptedKey) {
-              resolve(_decryptedKey);
+            const { electrum, dlight } = user.encryptedKeys
+            const _decryptedKeys = {
+              electrum: electrum != null ? decryptkey(pin, electrum) : null,
+              dlight: dlight != null ? decryptkey(pin, dlight) : null,
             }
-            else {
+
+            if ((electrum == null || _decryptedKeys.electrum) && (dlight == null || _decryptedKeys.dlight)) {
+              resolve(_decryptedKeys);
+            } else {
               Alert.alert("Authentication Error", "Incorrect password");
               resolve(false);
             }

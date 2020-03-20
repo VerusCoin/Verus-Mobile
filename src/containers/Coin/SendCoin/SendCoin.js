@@ -78,10 +78,22 @@ class SendCoin extends Component {
   handleState = (activeUser, coinObj, activeCoinsForUser, balances) => {
     let promiseArray = []
 
-    if (activeUser.keys.hasOwnProperty(coinObj.id)) {
-      this.setState({ fromAddress: activeUser.keys[coinObj.id].pubKey });  
+    if (
+      activeUser.keys[coinObj.id] != null &&
+      activeUser.keys[coinObj.id].electrum != null &&
+      activeUser.keys[coinObj.id].electrum.addresses.length > 0
+    ) {
+      this.setState({
+        fromAddress: activeUser.keys[coinObj.id].electrum.addresses[0]
+      });
     } else {
-      throw new Error("SendCoin.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!");
+      throw new Error(
+        "SendCoin.js: Fatal mismatch error, " +
+          activeUser.id +
+          " user keys for active coin " +
+          coinObj[i].id +
+          " not found!"
+      );
     }
 
     if(this.props.needsUpdate.rates) {

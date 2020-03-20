@@ -6,7 +6,8 @@
 
 export const authentication = (state = {
   accounts: [],
-  activeAccount: {id: null, wifKey: "", keys: [], paymentMethods: {}},
+  //activeAccount: {id: null, wifKey: "", keys: {}, paymentMethods: {}},
+  activeAccount: {id: null, seeds: {}, keys: { electrum: null, dlight: null }, paymentMethods: {}},
   unlocked: false,
   fingerPrint: false,
   signedIn: false

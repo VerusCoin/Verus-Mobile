@@ -60,11 +60,21 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
         btcFees = true
       }
 
-      if (activeUser.keys.hasOwnProperty(coinObj.id)) {
-        wif = activeUser.keys[coinObj.id].privKey
-        changeAddress = activeUser.keys[coinObj.id].pubKey
+      if (
+        activeUser.keys[coinObj.id] != null &&
+        activeUser.keys[coinObj.id].electrum != null &&
+        activeUser.keys[coinObj.id].electrum.addresses.length > 0
+      ) {
+        wif = activeUser.keys[coinObj.id].privKey;
+        changeaddress = activeUser.keys[coinObj.id].electrum.addresses[0];
       } else {
-        throw new Error("pushTx.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj.id + " not found!")
+        throw new Error(
+          "pushTx.js: Fatal mismatch error, " +
+            activeUser.id +
+            " user keys for active coin " +
+            coinObj.id +
+            " not found!"
+        );
       }
 
       console.log('Utxo list ==>') 

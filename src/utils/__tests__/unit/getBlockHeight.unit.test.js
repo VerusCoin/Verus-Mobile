@@ -6,7 +6,7 @@ import {
   setFetchParams
 } from '../../../tests/helpers/SetFetchParams'
 
-import { getBlockHeight } from '../../httpCalls/callCreators'
+import { getBlockHeight } from '../../api/channels/electrum/callCreators'
 
 describe('Function to fetch blockheight', () => {
   it('can fetch blockheight from specified electrum and proxy server', () => {

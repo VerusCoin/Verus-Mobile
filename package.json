@@ -48,7 +48,6 @@
     "lodash": "^4.17.15",
     "meteor-node-stubs": "~0.2.4",
     "node-gyp": "^3.8.0",
-    "nodejs-aes256": "^1.0.1",
     "patch-package": "^6.1.2",
     "path-browserify": "0.0.0",
     "postinstall-postinstall": "^2.0.0",

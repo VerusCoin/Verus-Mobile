@@ -37,13 +37,22 @@ export const getBalances = (oldBalances, activeCoinsForUser, activeUser) => {
 
 export const getOneBalance = (oldBalance, coinObj, activeUser) => {
   const callType = 'getbalance'
-  let index = 0
   let params = {}
 
-  if (activeUser.keys.hasOwnProperty(coinObj.id)) {
-    params.address = activeUser.keys[coinObj.id].pubKey
+  if (
+    activeUser.keys[coinObj.id] != null &&
+    activeUser.keys[coinObj.id].electrum != null &&
+    activeUser.keys[coinObj.id].electrum.addresses.length > 0
+  ) {
+    params.address = activeUser.keys[coinObj.id].electrum.addresses[0];
   } else {
-    throw new Error("getBalances.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj.id + " not found!");
+    throw new Error(
+      "getBalances.js: Fatal mismatch error, " +
+        activeUser.id +
+        " user keys for active coin " +
+        coinObj.id +
+        " not found!"
+    );
   }
 
   return new Promise((resolve, reject) => {
