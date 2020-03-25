@@ -1,4 +1,4 @@
-DELETE/REFACTOR: Move to getParsedTransactionList test inside of electrum folder
+//DELETE/REFACTOR: Move to getParsedTransactionList test inside of electrum folder
 
 /*jest.setTimeout(60000)
 
