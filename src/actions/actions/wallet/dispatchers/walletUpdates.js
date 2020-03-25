@@ -85,10 +85,6 @@ export const conditionallyUpdateWallet = async (state, dispatch, chainTicker, up
     if (coin_bound && (activeCoin == null || activeCoin.id !== chainTicker)) return API_ABORTED
     else if (update_locations != null && (activeSection == null || !update_locations.includes(activeSection.key))) return API_ABORTED
 
-    DELETE/REFACTOR
-    console.log("Updating open channels")
-    console.log(openChannels)
-
     if(await udpateWalletData(state, dispatch, openChannels, chainTicker, updateId)) {
       return API_SUCCESS
     }

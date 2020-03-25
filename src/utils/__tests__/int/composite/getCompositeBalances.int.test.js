@@ -106,10 +106,6 @@ describe('Composite balance updater for BTC based chains', () => {
       const successDlight = resultActions.find(action => action.payload.channel === DLIGHT)
       const successElectrum = resultActions.find(action => action.payload.channel === ELECTRUM)
 
-      DELETE/REFACTOR
-      console.log(successDlight)
-      console.log(successElectrum)
-
       expect(successElectrum.type).toBe('SET_BALANCES')
       expect(successDlight.type).toBe('SET_BALANCES')
       expect(typeof successElectrum.payload.body.confirmed).toBe('number')
