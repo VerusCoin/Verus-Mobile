@@ -46,7 +46,7 @@ export const fetchTransactionsForCoin = (coinObj, activeUser, needsUpdateObj, ma
   });
 }*/
 
-DELETE/REFACTOR
+// DELETE/REFACTOR
 /*export const fetchTransactionsForCoin = (coinObj, activeUser, needsUpdateObj, maxlength) => {
   let network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
 
