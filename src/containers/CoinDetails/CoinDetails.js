@@ -63,7 +63,7 @@ class CoinDetails extends Component {
         this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
         this.props.dispatch(addKeypairs(this.props.activeAccount.seeds, this.state.fullCoinData.id, this.props.activeAccount.keys))
 
-        DELETE/REFACTOR: Deprecated
+        // DELETE/REFACTOR: Deprecated
         /*
         this.props.dispatch(transactionsNeedUpdate(this.state.fullCoinData.id, this.props.needsUpdate.transanctions))
         this.props.dispatch(balancesNeedUpdate(this.state.fullCoinData.id, this.props.needsUpdate.balances))

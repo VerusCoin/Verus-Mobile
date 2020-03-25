@@ -90,7 +90,7 @@ class ReceiveCoin extends Component {
     /*this.props.dispatch(transactionsNeedUpdate(this.props.activeCoin.id, this.props.needsUpdate.transanctions))
     this.props.dispatch(needsUpdate("rates"))*/
 
-    DELETE/REFACTOR: Deprecated
+    // DELETE/REFACTOR: Deprecated
     //this.props.dispatch(everythingNeedsUpdate())
 
     this.refresh()

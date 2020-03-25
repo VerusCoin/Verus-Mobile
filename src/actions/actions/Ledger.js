@@ -203,7 +203,7 @@ DELETE/REFACTOR
   });
 }*/
 
-DELETE/REFACTOR: Deprecated
+// DELETE/REFACTOR: Deprecated
 /*export const updateOneRate = (coinObj, coinRates) => {
   return new Promise((resolve, reject) => {
     getCoinRates(coinObj)

@@ -86,14 +86,14 @@ export const ledger = (state = {
           [channel]: { ...state.rates[channel], [chainTicker]: body }
         }
       };
-    DELETE/REFACTOR: Deprecated
+    // DELETE/REFACTOR: Deprecated
     /*case SET_ONE_BALANCE:
       return {
         ...state,
         balances: {...state.balances, [action.coinId]: action.balance},
         needsUpdate: {...state.needsUpdate, balances: {...state.needsUpdate.balances, [action.coinId]: false}}
       };*/
-    DELETE/REFACTOR: Deprecated
+    // DELETE/REFACTOR: Deprecated
     /*case BALANCES_NEED_UPDATE:
       return {
         ...state,

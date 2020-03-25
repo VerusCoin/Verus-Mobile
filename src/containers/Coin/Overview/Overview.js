@@ -66,7 +66,7 @@ class Overview extends Component {
         this.setState({ loading: true });  
       }
 
-      DELETE/REFACTOR: Deprecated
+      // DELETE/REFACTOR: Deprecated
       //promiseArray.push(fetchTransactionsForCoin(_oldTransactions, _coinObj, _activeAccount, _txsNeedsUpdateObj, Number(this.props.generalWalletSettings.maxTxCount)))
     }
 

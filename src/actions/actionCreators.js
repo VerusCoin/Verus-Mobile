@@ -212,7 +212,7 @@ export const setTransactions = (transactions) => {
 //This sets the ID for the app heartbeat data update interval
 //so that it can be cleared from any active component
 //Reducer name: ledger
-DELETE/REFACTOR: Deprecated
+// DELETE/REFACTOR: Deprecated
 /*export const setUpdateIntervalID = (ID) => {
   return {
     type: SET_INTERVAL_ID,

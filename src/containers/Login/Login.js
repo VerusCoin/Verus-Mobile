@@ -46,7 +46,7 @@ class Login extends Component {
   }
 
   componentWillMount() {
-    DELETE/REFACTOR: Deprecated
+    // DELETE/REFACTOR: Deprecated
     /*
     if (this.props.updateIntervalID) {
       console.log("Update interval ID detected as " + this.props.updateIntervalID + ", clearing...")
@@ -119,7 +119,7 @@ class Login extends Component {
   }
 
   signInWithHeartbeat = (signInAction) => {
-    DELETE/REFACTOR: Deprecated
+    // DELETE/REFACTOR: Deprecated
     //TODO: Initiate coin interval here
     /*this.props.dispatch(everythingNeedsUpdate())
     let intervalID = setInterval(() => {

@@ -334,7 +334,7 @@ class VerusPay extends Component {
           this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
           this.props.dispatch(addKeypairs(this.props.activeAccount.seeds, coinTicker, this.props.activeAccount.keys))
 
-          DELETE/REFACTOR: Deprecated
+          // DELETE/REFACTOR: Deprecated
           //this.props.dispatch(transactionsNeedUpdate(coinTicker, this.props.needsUpdate.transanctions))
           //this.props.dispatch(balancesNeedUpdate(coinTicker, this.props.needsUpdate.balances))
 
@@ -539,7 +539,7 @@ class VerusPay extends Component {
         this.setState({ loading: true });  
       }  
 
-      DELETE/REFACTOR: Deprecated
+      // DELETE/REFACTOR: Deprecated
       /*promiseArray.push(
         updateOneBalance(
           this.props.balances,

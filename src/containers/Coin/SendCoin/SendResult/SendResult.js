@@ -118,7 +118,7 @@ class SendResult extends Component {
           amount: amount,
         });
 
-        DELETE/REFACTOR: Deprecated
+        // DELETE/REFACTOR: Deprecated
         /*this.props.dispatch(balancesNeedUpdate(coinObj.id, this.props.needsUpdate.balances))
         this.props.dispatch(needsUpdate("rates"))
         this.props.dispatch(transactionsNeedUpdate(coinObj.id, this.props.needsUpdate.transanctions))*/

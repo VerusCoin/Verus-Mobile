@@ -77,7 +77,7 @@ class Home extends Component {
             this.setState({ loading: true });  
           }  
           
-          DELETE/REFACTOR: Deprecated
+          // DELETE/REFACTOR: Deprecated
           /*promiseArray.push(
             updateOneBalance(
               _balances,
@@ -107,7 +107,7 @@ class Home extends Component {
   }
 
   forceUpdate = () => {
-    DELETE/REFACTOR: Deprecated
+    // DELETE/REFACTOR: Deprecated
     //this.props.dispatch(everythingNeedsUpdate())
 
     this.refresh();
