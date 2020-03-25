@@ -19,7 +19,7 @@ import {
   decryptkey,
   decryptGeneral,
 } from '../../utils/seedCrypt'
-import { sha256 } from '../../utils/crypto/hash';
+import { sha256, hashAccountId } from '../../utils/crypto/hash';
 
 import WyreService from '../../services/wyreService';
 import { ENABLE_WYRE } from '../../utils/constants/constants';
@@ -113,10 +113,30 @@ export const loginUser = (account, password) => {
               key: hashedSeed
             }
   
-            resolve(signIntoAccount({ id: account.id, seeds, keys: _keys, paymentMethods }));
+            resolve(
+              signIntoAccount({
+                id: account.id,
+                accountHash: account.accountHash
+                  ? account.accountHash
+                  : hashAccountId(account.id),
+                seeds,
+                keys: _keys,
+                paymentMethods
+              })
+            );
           });
         } else {
-          resolve(signIntoAccount({ id: account.id, seeds, keys: _keys, paymentMethods: {} }));
+          resolve(
+            signIntoAccount({
+              id: account.id,
+              accountHash: account.accountHash
+                ? account.accountHash
+                : hashAccountId(account.id),
+              seeds,
+              keys: _keys,
+              paymentMethods: {}
+            })
+          );
         }
       })
       .catch(err => reject(err));

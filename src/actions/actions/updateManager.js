@@ -1,5 +1,5 @@
 import { IS_PBAAS, IS_ZCASH, IS_PBAAS_ROOT } from '../../utils/constants/constants'
-import { DEFAULT_COIN_UPDATE_PARAMS, DEFAULT_SYSTEM_UPDATE_PARAMS } from '../../utils/constants/defaultUpdateParams'
+import { DEFAULT_COIN_UPDATE_PARAMS } from '../../utils/constants/defaultUpdateParams'
 import {
   SET_COIN_UPDATE_DATA,
   EXPIRE_COIN_DATA,
@@ -8,20 +8,21 @@ import {
   SET_COIN_UPDATE_EXPIRED_ID,
   CLEAR_COIN_EXPIRE_ID,
   CLEAR_COIN_UPDATE_EXPIRED_ID,
-  FREE_COIN_API_CALL,
   OCCUPY_COIN_API_CALL,
+  ENABLE_COIN_API_CALL,
+  DISABLE_COIN_API_CALL,
 } from "../../utils/constants/storeType";
 
 /**
  * Returns an action to initialize all coin related API call update data
- * @param {String} mode Coin mode ("dlight" || "electrum")
+ * @param {String[]} channels The enabled channels for the information request e.g. ['electrum', 'dlight']
  * @param {String} chainStatus Current chain status in it's lifecycle ("pre_data" || "syncing" || "post_sync")
  * @param {String} chainTicker The ticker for the chain these updates are for
  * @param {String[]} chainTags Tags associated with the chain to be added, e.g. IS_PBAAS
  * @param {Object} onCompletes Object with optional onCompletes to each updateInterval to be called with state and dispatch function.
  * e.g. {get_info: {update_expired_oncomplete: increaseGetInfoInterval}}
  */
-export const generateUpdateCoinDataAction = (mode, chainStatus, chainTicker, chainTags, onCompletes = {}) => {
+export const generateUpdateCoinDataAction = (chainStatus, chainTicker, chainTags, onCompletes = {}) => {
   if (!chainTicker) throw new Error("No chain ticker specified for generateUpdateCoinDataAction")
   
   let updateIntervalData = {}
@@ -29,16 +30,18 @@ export const generateUpdateCoinDataAction = (mode, chainStatus, chainTicker, cha
   const isPbaasRoot = chainTags.includes(IS_PBAAS_ROOT)
   const isPbaas = chainTags.includes(IS_PBAAS) || isPbaasRoot
   const isZcash = chainTags.includes(IS_ZCASH)
-  const updateParams = DEFAULT_COIN_UPDATE_PARAMS(chainTicker)
 
-  for (let key in updateParams[mode]) {
-    if (!isPbaas && updateParams[mode][key].restrictions.includes(IS_PBAAS)) continue 
-    if (!isZcash && updateParams[mode][key].restrictions.includes(IS_ZCASH)) continue 
-    if (!isPbaasRoot && updateParams[mode][key].restrictions.includes(IS_PBAAS_ROOT)) continue 
-    if (chainTicker && updateParams[mode][key].restrictions.includes(chainTicker.toUpperCase())) continue 
+  for (let key in DEFAULT_COIN_UPDATE_PARAMS) {
+    if (!isPbaas && DEFAULT_COIN_UPDATE_PARAMS[key].restrictions.includes(IS_PBAAS)) continue 
+    if (!isZcash && DEFAULT_COIN_UPDATE_PARAMS[key].restrictions.includes(IS_ZCASH)) continue 
+    if (!isPbaasRoot && DEFAULT_COIN_UPDATE_PARAMS[key].restrictions.includes(IS_PBAAS_ROOT)) continue 
+    if (chainTicker && DEFAULT_COIN_UPDATE_PARAMS[key].restrictions.includes(chainTicker.toUpperCase())) continue
 
-    updateIntervalData[key] = updateParams[mode][key][chainStatus].interval_info
-    updateTrackingData[key] = updateParams[mode][key][chainStatus].tracking_info
+    updateIntervalData[key] = DEFAULT_COIN_UPDATE_PARAMS[key][chainStatus].interval_info
+    updateTrackingData[key] = {
+      ...DEFAULT_COIN_UPDATE_PARAMS[key][chainStatus].tracking_info,
+      channels: DEFAULT_COIN_UPDATE_PARAMS[key].channels
+    };
     if (onCompletes[key]) updateIntervalData[key] = {...updateIntervalData[key], ...onCompletes[key]}
   }
 
@@ -66,17 +69,33 @@ export const renewData = (chainTicker, dataType) => {
   }
 }
 
-export const occupyCoinApiCall = (chainTicker, dataType) => {
+export const occupyCoinApiCall = (chainTicker, channels, dataType) => {
+  let busyChannels = {}
+  channels.map(channel => {
+    busyChannels[channel] = true
+  })
+
   return {
     type: OCCUPY_COIN_API_CALL,
+    payload: {
+      chainTicker,
+      dataType,
+      channels: busyChannels
+    }
+  }
+}
+
+export const enableCoinApiCall = (chainTicker, dataType) => {
+  return {
+    type: ENABLE_COIN_API_CALL,
     chainTicker,
     dataType
   }
 }
 
-export const freeCoinApiCall = (chainTicker, dataType) => {
+export const disableCoinApiCall = (chainTicker, dataType) => {
   return {
-    type: FREE_COIN_API_CALL,
+    type: DISABLE_COIN_API_CALL,
     chainTicker,
     dataType
   }

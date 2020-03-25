@@ -15,19 +15,20 @@ import QRCodeScanner from 'react-native-qrcode-scanner';
 import { isJson } from '../../utils/objectManip'
 import { NavigationActions } from 'react-navigation';
 import { connect } from 'react-redux';
-import { namesList, coinsList, findCoinObj } from '../../utils/CoinData'
-import { getRecommendedBTCFees } from '../../utils/api/channels/electrum/callCreators'
+import { namesList, findCoinObj } from '../../utils/CoinData/CoinData'
+import { coinsList } from '../../utils/CoinData/CoinsList'
+import { getRecommendedBTCFees } from '../../utils/api/channels/general/callCreators'
 import { removeSpaces } from '../../utils/stringUtils'
 import {
   setUserCoins,
   addKeypairs,
-  transactionsNeedUpdate,
+  //transactionsNeedUpdate,
   addExistingCoin,
   setActiveApp,
   setActiveCoin,
   setActiveSection,
-  updateOneBalance,
-  balancesNeedUpdate
+  //updateOneBalance,
+  //balancesNeedUpdate
  } from '../../actions/actionCreators'
 import Spinner from 'react-native-loading-spinner-overlay';
 import DelayedAlert from '../../utils/delayedAlert'
@@ -332,8 +333,10 @@ class VerusPay extends Component {
           this.props.dispatch(response)
           this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
           this.props.dispatch(addKeypairs(this.props.activeAccount.seeds, coinTicker, this.props.activeAccount.keys))
-          this.props.dispatch(transactionsNeedUpdate(coinTicker, this.props.needsUpdate.transanctions))
-          this.props.dispatch(balancesNeedUpdate(coinTicker, this.props.needsUpdate.balances))
+
+          DELETE/REFACTOR: Deprecated
+          //this.props.dispatch(transactionsNeedUpdate(coinTicker, this.props.needsUpdate.transanctions))
+          //this.props.dispatch(balancesNeedUpdate(coinTicker, this.props.needsUpdate.balances))
 
           this.setState({ addingCoin: false });
 
@@ -535,14 +538,16 @@ class VerusPay extends Component {
       if (!this.state.loading) {
         this.setState({ loading: true });  
       }  
-      promiseArray.push(
+
+      DELETE/REFACTOR: Deprecated
+      /*promiseArray.push(
         updateOneBalance(
           this.props.balances,
           this.state.coinObj,
           this.props.activeAccount,
           this.props.needsUpdate.balances
         )
-      );
+      );*/
     } 
 
     if(this.state.coinObj && this.state.coinObj.id === 'BTC' && !this.state.loadingBTCFees) {

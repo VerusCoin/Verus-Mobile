@@ -1,20 +1,15 @@
-import { updateValues } from '../callCreators'
+import { electrumRequest } from '../callCreators'
 import { calculateMerkleRoot } from '../../../../crypto/verifyMerkle'
 
-export const getMerkleHashes = (oldMerkle, coinObj, txid, height, toSkip) => {
+export const getMerkleHashes = (coinObj, txid, height, toSkip) => {
   const callType = 'getmerkle'
   let params = { txid: txid, height: height }
   const coinID = coinObj.id
 
   return new Promise((resolve, reject) => {
-    updateValues(oldMerkle, coinObj.serverList, callType, params, coinID, toSkip)
+    electrumRequest(coinObj.serverList, callType, params, coinID, toSkip)
     .then((response) => {
-      if(!response) {
-        resolve(false)
-      }
-      else {
-        resolve(response.result)
-      }
+      resolve(response)
     })
     .catch((err) => {
       console.log("Caught error in getMerkle.js")
@@ -23,9 +18,9 @@ export const getMerkleHashes = (oldMerkle, coinObj, txid, height, toSkip) => {
   });
 }
 
-export const getMerkleRoot = (oldMerkle, coinObj, txid, height, toSkip) => {
+export const getMerkleRoot = (coinObj, txid, height, toSkip) => {
   return new Promise((resolve, reject) => {
-    getMerkleHashes(oldMerkle, coinObj, txid, height, toSkip)
+    getMerkleHashes(coinObj, txid, height, toSkip)
     .then((response) => {
       if(!response || !response.result || !response.result.merkle) {
         if (__DEV__) {
@@ -38,11 +33,8 @@ export const getMerkleRoot = (oldMerkle, coinObj, txid, height, toSkip) => {
       }
       else {
         resolve({
+          ...response,
           result: calculateMerkleRoot(txid, response.result.merkle, response.result.pos, response.result.block_height),
-          blockHeight: response.blockHeight,
-          serverUsed: response.serverUsed,
-          error: false,
-          serverVersion: response.serverVersion
         })
       }
     })

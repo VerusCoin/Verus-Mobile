@@ -5,7 +5,7 @@ global.CHAIN_QR_VERSION = "0.1.0"
 global.ELECTRUM_PROTOCOL_CHANGE = 1.4;
 
 //HTTPS
-global.REQUEST_TIMEOUT_MS = 60000;
+global.REQUEST_TIMEOUT_MS = 10000;
 
 //Cache globals (more in cache files because globals cant be used for
 //constants that are needed immediately on app load)

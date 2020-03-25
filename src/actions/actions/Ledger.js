@@ -12,21 +12,22 @@ import { Alert } from 'react-native'
 import { 
   getBalances,
   getOneBalance,
-  getCoinRate,
-  getAllCoinRates,
-  getOneTransactionList,
-  getOneTransaction,
-  getBlockInfo
+  getParsedTransactionList
 } from '../../utils/api/channels/electrum/callCreators';
 
-import { TxDecoder } from '../../utils/crypto/txDecoder';
+import {
+  getCoinRates,
+  getAllCoinRates
+} from "../../utils/api/channels/general/callCreators";
+
+import { TxDecoder, formatTx } from '../../utils/crypto/txDecoder';
 import { networks } from 'bitgo-utxo-lib';
-import { formatTx } from '../../utils/crypto/txDecoder';
 
 const Buffer = require('safe-buffer').Buffer;
 
-export const updateCoinTransactions = (coinID, transactions, oldTransactions, needsUpdateObj) => {
-  let _transactions = oldTransactions
+// DELET: Deprecated
+/*export const updateCoinTransactions = (coinID, transactions, needsUpdateObj) => {
+  let _transactions = []
   _transactions[coinID] = transactions
 
   let _needsUpdateObj = needsUpdateObj
@@ -35,11 +36,22 @@ export const updateCoinTransactions = (coinID, transactions, oldTransactions, ne
   return setTransactions(_transactions, _needsUpdateObj)
 }
 
-export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, needsUpdateObj, maxlength) => {
+export const fetchTransactionsForCoin = (coinObj, activeUser, needsUpdateObj, maxlength) => {
+  return new Promise((resolve, reject) => {
+    getParsedTransactionList(coinObj, activeUser, maxlength)
+    .then((parsedTxList) => {
+      resolve(updateCoinTransactions(coinObj.id, parsedTxList.result, needsUpdateObj))
+    })
+    .catch(err => reject(err))
+  });
+}*/
+
+DELETE/REFACTOR
+/*export const fetchTransactionsForCoin = (coinObj, activeUser, needsUpdateObj, maxlength) => {
   let network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
 
   return new Promise((resolve, reject) => {
-    getOneTransactionList(oldTransactions, coinObj, activeUser, maxlength)
+    getOneTransactionList(coinObj, activeUser, maxlength)
     .then((transactionList) => {
       if (transactionList) {
         let getTransactionPromises = []
@@ -48,8 +60,6 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
         for (let i = 0; i < transactionList.result.length; i++) {
           let insPromises = []
           let txInputs = TxDecoder(transactionList.result[i].raw, network).tx.ins
-
-          _oldTx = oldTransactions.hasOwnProperty('result') ? (i < oldTransactions.result.length ? oldTransactions.result[i] : null) : null
 
           for (let j = 0; j < txInputs.length; j++) {
             const hash = txInputs[j].hash
@@ -61,7 +71,7 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
 
             if (_txid == NULL_TX.toString("hex")) {
               insPromises.push(null)
-            } else insPromises.push(getOneTransaction(null, coinObj, _txid.toString('hex')))
+            } else insPromises.push(getOneTransaction(coinObj, _txid.toString('hex')))
           }
           
           getTransactionPromise = Promise.all(insPromises)
@@ -103,7 +113,7 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
         }
 
         consolidatedTxs.transactions.push(txObj)
-        blockInfoPromises.push(getBlockInfo(null, coinObj, txObj.height))
+        blockInfoPromises.push(getBlockInfo(coinObj, txObj.height))
       }
 
       
@@ -148,15 +158,16 @@ export const fetchTransactionsForCoin = (oldTransactions, coinObj, activeUser, n
 
       if (error) Alert.alert(`Error reading transaction list for ${coinObj.id}. This may indicate electrum server maintenence.`)
 
-      resolve(updateCoinTransactions(coinObj.id, _parsedTxList, oldTransactions, needsUpdateObj))
+      resolve(updateCoinTransactions(coinObj.id, _parsedTxList, needsUpdateObj))
     })
     .catch(err => reject(err))
   });
-}
+}*/
 
-export const updateCoinBalances = (oldBalances, activeCoinsForUser, activeUser, needsUpdateObj) => {
+// DELET: Deprecated
+/*export const updateCoinBalances = (activeCoinsForUser, activeUser, needsUpdateObj) => {
   return new Promise((resolve, reject) => {
-    getBalances(oldBalances, activeCoinsForUser, activeUser)
+    getBalances(activeCoinsForUser, activeUser)
     .then(balances => {
       if (!balances) {
         resolve(false)
@@ -172,11 +183,12 @@ export const updateCoinBalances = (oldBalances, activeCoinsForUser, activeUser, 
     })
     .catch(err => reject(err));
   });
-}
+}*/
 
-export const updateOneBalance = (oldBalances, coinObj, activeUser) => {
+// DELET: Deprecated
+/*export const updateOneBalance = (coinObj, activeUser) => {
   return new Promise((resolve, reject) => {
-    getOneBalance(oldBalances[coinObj.id], coinObj, activeUser)
+    getOneBalance(coinObj, activeUser)
     .then(balance => {
       if (!balance) {
         resolve(false)
@@ -189,14 +201,15 @@ export const updateOneBalance = (oldBalances, coinObj, activeUser) => {
       reject(err)
     });
   });
-}
+}*/
 
-export const updateOneRate = (coinObj, coinRates) => {
+DELETE/REFACTOR: Deprecated
+/*export const updateOneRate = (coinObj, coinRates) => {
   return new Promise((resolve, reject) => {
-    getCoinRate(coinObj)
-    .then(resizeTo => {
+    getCoinRates(coinObj)
+    .then(() => {
       let _coinRates = coinRates
-      _coinRates[coinObj.id] = res.rate
+      _coinRates[coinObj.id] = res.rateUsd
       if (res) {
         resolve(updateCoinRates(_coinRates))
       }
@@ -206,9 +219,10 @@ export const updateOneRate = (coinObj, coinRates) => {
     })
     .catch(err => reject(err));
   });
-}
+}*/
 
-export const setCoinRates = (activeCoinsForUser) => {
+// DELET: Deprecated
+/*export const setCoinRates = (activeCoinsForUser) => {
   return new Promise((resolve, reject) => {
     getAllCoinRates(activeCoinsForUser)
     .then(rates => {
@@ -221,5 +235,5 @@ export const setCoinRates = (activeCoinsForUser) => {
     })
     .catch(err => reject(err));
   });
-}
+}*/
 

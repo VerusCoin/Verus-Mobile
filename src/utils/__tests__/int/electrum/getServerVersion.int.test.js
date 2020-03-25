@@ -2,15 +2,15 @@ jest.setTimeout(60000)
 
 import {
   getServerVersion
-} from '../../api/channels/electrum/callCreators'
+} from '../../../api/channels/electrum/callCreators'
 
 import {
   setFetchParams
-} from '../../../tests/helpers/SetFetchParams'
+} from '../../../../tests/helpers/SetFetchParams'
 
 import {
   MOCK_PROXY_SERVER
-} from '../../../tests/helpers/MockServerData'
+} from '../../../../tests/helpers/MockServerData'
 
 describe('Server version fetch functions for electrum servers', () => {
   it ('can fetch and parse a server\'s version', () => {

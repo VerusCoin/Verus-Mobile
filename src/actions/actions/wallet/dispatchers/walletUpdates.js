@@ -1,7 +1,7 @@
-import { updateAllBalances } from './updateBalances'
-import { updateInfo } from './updateInfo'
-import { updateTransactions } from './updateTransactions'
-import { updateFiatPrice } from './updateFiatPrice'
+import { updateBalances } from './UpdateBalances'
+import { updateInfo } from './UpdateInfo'
+import { updateTransactions } from './UpdateTransactions'
+import { updateFiatPrices } from './UpdateFiatPrices'
 import {
   API_GET_BALANCES,
   API_GET_INFO,
@@ -14,19 +14,17 @@ import {
 } from '../../../../utils/constants/intervalConstants'
 import {
   renewData,
-  occupyCoinApiCall,
-  freeCoinApiCall,
+  occupyCoinApiCall
 } from "../../../actionCreators";
 import { createExpireTimeout } from '../../../actionDispatchers'
-import { logDebugWarning } from '../../debug/creators/debugWarnings'
 
 // Map of update functions to be able to call them through standardized 
 // API call constants. Each function requires the same three parameters: (store, mode, chainTicker)
 export const walletUpdates = {
-  [API_GET_BALANCES]: updateAllBalances,
+  [API_GET_BALANCES]: updateBalances,
   [API_GET_INFO]: updateInfo,
   [API_GET_TRANSACTIONS]: updateTransactions,
-  [API_GET_FIATPRICE]: updateFiatPrice,
+  [API_GET_FIATPRICE]: updateFiatPrices,
 }
 
 /**
@@ -34,17 +32,17 @@ export const walletUpdates = {
  * redux store if the API call succeeded.
  * @param {Object} state Reference to redux state
  * @param {Function} dispatch Redux action dispatch function
- * @param {String} mode native || electrum || eth
+ * @param {String[]} channels The enabled channels for the information request e.g. ['electrum', 'dlight']
  * @param {String} chainTicker Chain ticker symbol of chain being called
  * @param {String} updateId Name of API call to update
  * @param {Function} onExpire (Optional) Function to execute on data expiry
  */
-export const udpateWalletData = async (state, dispatch, mode, chainTicker, updateId, onExpire) => {
-  dispatch(occupyCoinApiCall(chainTicker, updateId))
-  let callCompleted = false
+export const udpateWalletData = async (state, dispatch, channels, chainTicker, updateId, onExpire) => {
+  dispatch(occupyCoinApiCall(chainTicker, channels, updateId))
+  let noError = false
 
   try {
-    if(await walletUpdates[updateId](state, dispatch, mode, chainTicker)) {
+    if(await walletUpdates[updateId](state, dispatch, channels, chainTicker)) {
       if (state.updates.coinUpdateIntervals[chainTicker][updateId].expire_timeout !== ALWAYS_ACTIVATED) {
         dispatch(renewData(chainTicker, updateId))
       }
@@ -54,15 +52,13 @@ export const udpateWalletData = async (state, dispatch, mode, chainTicker, updat
         clearTimeout(state.updates.coinUpdateIntervals[chainTicker][updateId].expire_id)
       }
       createExpireTimeout(state.updates.coinUpdateIntervals[chainTicker][updateId].expire_timeout, chainTicker, updateId, onExpire)
-      callCompleted = true
+      noError = true
     }
   } catch (e) {
     console.error(e)
   }
   
-  dispatch(freeCoinApiCall(chainTicker, updateId))
-  
-  return callCompleted
+  return noError
 }
 
 /**
@@ -71,23 +67,33 @@ export const udpateWalletData = async (state, dispatch, mode, chainTicker, updat
  * 'success' if the call succeeded and 'error' if the call failed.
  * @param {Object} state Reference to redux state
  * @param {Function} dispatch Redux action dispatch function
- * @param {String} mode native || electrum || eth
  * @param {String} chainTicker Chain ticker symbol of chain being called
  * @param {String} updateId Name of API call to update
  */
-export const conditionallyUpdateWallet = async (state, dispatch, mode, chainTicker, updateId) => {
+export const conditionallyUpdateWallet = async (state, dispatch, chainTicker, updateId) => {
   const updateInfo = state.updates.coinUpdateTracker[chainTicker][updateId]
+  const { coin_bound, update_locations, channels } = updateInfo
+  const openChannels = channels.filter(channel => {
+    return !(updateInfo.busy[channel] === true)
+  })
+  const { activeSection, activeCoin } = state.coins
   
-  if (updateInfo && updateInfo.needs_update && !updateInfo.busy) {    
-    if (!updateInfo.update_enabled) return API_ABORTED
+  if (openChannels.length === 0) {
+    //dispatch(logDebugWarning(`The ${updateId} call for ${chainTicker} is taking a very long time to complete. This may impact performace.`)
+    console.warn(`The ${updateId} call for ${chainTicker} is taking a very long time to complete. This may impact performace.`)
+  } else if (updateInfo && updateInfo.needs_update) {    
+    if (coin_bound && (activeCoin == null || activeCoin.id !== chainTicker)) return API_ABORTED
+    else if (update_locations != null && (activeSection == null || !update_locations.includes(activeSection.key))) return API_ABORTED
 
-    if(await udpateWalletData(state, dispatch, mode, chainTicker, updateId)) {
+    DELETE/REFACTOR
+    console.log("Updating open channels")
+    console.log(openChannels)
+
+    if(await udpateWalletData(state, dispatch, openChannels, chainTicker, updateId)) {
       return API_SUCCESS
     }
     else return API_ERROR
-  } else if (updateInfo && updateInfo.needs_update && updateInfo.busy) {
-    dispatch(logDebugWarning(`The ${updateId} call for ${chainTicker} is taking a very long time to complete. This may impact performace.`))
-  }
+  } 
 
   return API_ABORTED
 }

@@ -19,7 +19,6 @@ export const getApiData = (mode, call, params, reqType) => {
   return new Promise((resolve, reject) => {
     requestFunc(`${mode}/${call}`, params)
     .catch((error) => {
-      console.error(error);
       reject(error)
     })
     .then(json => {

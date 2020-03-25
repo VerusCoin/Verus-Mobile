@@ -22,9 +22,9 @@ import { connect } from 'react-redux';
 import { 
   validateLogin, 
   setUserCoins, 
-  everythingNeedsUpdate, 
+  //everythingNeedsUpdate, 
   fetchActiveCoins,
-  setUpdateIntervalID
+  //setUpdateIntervalID
  } from '../../actions/actionCreators';
 import { Dropdown } from 'react-native-material-dropdown';
 import { Verus } from '../../images/customIcons/index';
@@ -46,11 +46,13 @@ class Login extends Component {
   }
 
   componentWillMount() {
+    DELETE/REFACTOR: Deprecated
+    /*
     if (this.props.updateIntervalID) {
       console.log("Update interval ID detected as " + this.props.updateIntervalID + ", clearing...")
       clearInterval(this.props.updateIntervalID)
       this.props.dispatch(setUpdateIntervalID(null))
-    }
+    }*/
   }
 
   _handleSubmit = () => {
@@ -117,13 +119,15 @@ class Login extends Component {
   }
 
   signInWithHeartbeat = (signInAction) => {
-    this.props.dispatch(everythingNeedsUpdate())
+    DELETE/REFACTOR: Deprecated
+    //TODO: Initiate coin interval here
+    /*this.props.dispatch(everythingNeedsUpdate())
     let intervalID = setInterval(() => {
       console.log("Everything needs to update interval")
       this.props.dispatch(everythingNeedsUpdate())
-    }, UPDATE_INTERVAL);
+    }, UPDATE_INTERVAL);*/
 
-    this.props.dispatch(setUpdateIntervalID(intervalID))
+    //this.props.dispatch(setUpdateIntervalID(intervalID))
     this.props.dispatch(signInAction)
   }
 

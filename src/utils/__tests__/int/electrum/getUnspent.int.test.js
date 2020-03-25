@@ -3,28 +3,28 @@ jest.setTimeout(60000)
 import { 
   getUnspent,
   getUnspentFormatted
-} from '../../api/channels/electrum/callCreators'
+} from '../../../api/channels/electrum/callCreators'
 
 import {
   MOCK_USER_OBJ_BALANCE_LARGE_VRSC,
   MOCK_USER_OBJ_BALANCE_SMALL_VRSC,
   MOCK_USER_OBJ_BALANCE_SMALL_KMD
-} from '../../../tests/helpers/MockAuthData'
+} from '../../../../tests/helpers/MockAuthData'
 
 import {
   getTempActiveCoin,
-} from '../../../tests/helpers/MockAuthData'
+} from '../../../../tests/helpers/MockAuthData'
 
 jest.mock('agama-wallet-lib/src/electrum-servers')
 
 describe('Unspent utxo fetcher for BTC based coins', () => {
   it('can fetch unspent VRSC utxos for user', () => {
-    return getUnspent({}, getTempActiveCoin('VRSC', true, 200, {listunspent: [10], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_USER_OBJ_BALANCE_LARGE_VRSC)
+    return getUnspent(getTempActiveCoin('VRSC', true, 200, {listunspent: [10], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_USER_OBJ_BALANCE_LARGE_VRSC)
     .then(res => {
       expect(res).toHaveProperty('result')
       expect(res).toHaveProperty('blockHeight')
-      expect(res).toHaveProperty('serverUsed')
-      expect(res).toHaveProperty('serverVersion')
+      expect(res).toHaveProperty('electrumUsed')
+      expect(res).toHaveProperty('electrumVersion')
 
       expect(res.result).not.toHaveProperty('error')
       expect(typeof res.result).toBe('object')
@@ -33,7 +33,7 @@ describe('Unspent utxo fetcher for BTC based coins', () => {
 
   
   it('can fetch unspent VRSC utxos for user in formatted form from large address (1500 UTXOS) without verification', () => {
-    return getUnspentFormatted({}, getTempActiveCoin('VRSC', true, 200, {getblockinfo: [], getmerkle: [], listunspent: [1500], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_USER_OBJ_BALANCE_LARGE_VRSC, false, false, false)
+    return getUnspentFormatted(getTempActiveCoin('VRSC', true, 200, {getblockinfo: [], getmerkle: [], listunspent: [1500], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_USER_OBJ_BALANCE_LARGE_VRSC, false, false, false)
     .then(res => {
       let _utxoList = res.utxoList
       expect(_utxoList.length).toBeGreaterThan(0)
@@ -62,7 +62,7 @@ describe('Unspent utxo fetcher for BTC based coins', () => {
   })
 
   it('can fetch unspent VRSC utxos for user in formatted form from small address with merkle verification only', () => {
-    return getUnspentFormatted({}, getTempActiveCoin('VRSC', true, 200, {getblockinfo: [], getmerkle: [], listunspent: [10], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_USER_OBJ_BALANCE_SMALL_VRSC, true, false, false)
+    return getUnspentFormatted(getTempActiveCoin('VRSC', true, 200, {getblockinfo: [], getmerkle: [], listunspent: [10], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_USER_OBJ_BALANCE_SMALL_VRSC, true, false, false)
     .then(res => {
       let _utxoList = res.utxoList
 
@@ -91,7 +91,7 @@ describe('Unspent utxo fetcher for BTC based coins', () => {
   })
 
   it('can fetch unspent VRSC utxos for user in formatted form from small address with txid verification only', () => {
-    return getUnspentFormatted({}, getTempActiveCoin('VRSC', true, 200, {getblockinfo: [], gettransaction: [], listunspent: [10], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_USER_OBJ_BALANCE_SMALL_VRSC, false, true, false)
+    return getUnspentFormatted(getTempActiveCoin('VRSC', true, 200, {getblockinfo: [], gettransaction: [], listunspent: [10], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_USER_OBJ_BALANCE_SMALL_VRSC, false, true, false)
     .then(res => {
       let _utxoList = res.utxoList
 
@@ -120,7 +120,7 @@ describe('Unspent utxo fetcher for BTC based coins', () => {
   })
 
   it('can fetch unspent VRSC utxos for user in formatted form from small address with txid and merkle verification', () => {
-    return getUnspentFormatted({}, getTempActiveCoin('VRSC', true, 200, {getblockinfo: [], getmerkle: [], gettransaction: [], listunspent: [10], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_USER_OBJ_BALANCE_SMALL_VRSC, true, true, false)
+    return getUnspentFormatted(getTempActiveCoin('VRSC', true, 200, {getblockinfo: [], getmerkle: [], gettransaction: [], listunspent: [10], getcurrentblock: [118329], server_version: ["ElectrumX"]}), MOCK_USER_OBJ_BALANCE_SMALL_VRSC, true, true, false)
     .then(res => {
       let _utxoList = res.utxoList
 

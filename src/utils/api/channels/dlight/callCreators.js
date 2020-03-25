@@ -1,4 +1,6 @@
 import VerusLightClient from 'react-native-verus-light-client'
+import ApiException from '../../errors/apiError'
+import { DLIGHT } from '../../../constants/intervalConstants'
 
 // State requests
 export * from './state/synchronizer'
@@ -6,7 +8,7 @@ export * from './state/walletFolder'
 
 // JSON-RPC requests
 export * from './dlightRequests/getAddresses'
-export * from './dlightRequests/getBalance'
+export * from './dlightRequests/getPrivateBalance'
 export * from './dlightRequests/getBlockCount'
 export * from './dlightRequests/getInfo'
 export * from './dlightRequests/getTransactions'
@@ -21,5 +23,20 @@ export * from './dlightRequests/getTransactions'
  * @param {String[]} params Paramters to pass in with the request
  */
 export const makeDlightRequest = (coinId, accountHash, coinProto, reqId, method, params) => {
-  return VerusLightClient.request(reqId, method, [coinId, accountHash, coinProto, ...params])
+  return new Promise((resolve, reject) => {
+    VerusLightClient.request(reqId, method, [coinId, coinProto, accountHash, ...params])
+    .then(res => {
+      if (res.error != null) {
+        reject(
+          new ApiException(
+            res.error.message,
+            res.error.data,
+            coinId,
+            DLIGHT,
+            res.error.code
+          )
+        );
+      } else resolve(res);
+    })
+  })
 }

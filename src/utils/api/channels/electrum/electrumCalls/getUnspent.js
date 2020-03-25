@@ -1,4 +1,4 @@
-import { updateValues, getMerkleRoot, getBlockInfo } from '../callCreators'
+import { electrumRequest, getMerkleRoot, getBlockInfo } from '../callCreators'
 import { getOneTransaction } from './getTransaction'
 import { TxDecoder } from '../../../../crypto/txDecoder'
 import { hashRawTx, hexHashToDecimal } from '../../../../crypto/hash'
@@ -7,7 +7,7 @@ import { resolveSequentially } from '../../../../promises'
 import { networks } from 'bitgo-utxo-lib'
 import { coinsToSats, satsToCoins, kmdCalcInterest, truncateDecimal } from '../../../../math'
 
-export const getUnspent = (oldList, coinObj, activeUser) => {
+export const getUnspent = (coinObj, activeUser) => {
   const callType = 'listunspent'
   let params = {}
   const coinID = coinObj.id
@@ -29,15 +29,12 @@ export const getUnspent = (oldList, coinObj, activeUser) => {
   }
 
   return new Promise((resolve, reject) => {
-    updateValues(oldList, coinObj.serverList, callType, params, coinID)
+    electrumRequest(coinObj.serverList, callType, params, coinID)
     .then((response) => {
-      if(!response.new || !response) {
-        resolve(false)
-      }
-      else {
+      if(response != false) {
         response.result.address = params.address
-        resolve(response.result)
       }
+      resolve(response)
     })
     .catch((err) => {
       console.log("Caught error in getUnspent.js")
@@ -61,7 +58,7 @@ export const getUnspent = (oldList, coinObj, activeUser) => {
  * @param {Boolean} overrideKmdInterest (Default: false) Optionally override KMD interest calculations and don't call gettransaction
  * on utxos to calculate locktime. (WILL RESULT IN LOSS OF INTEREST IF KMD TRANSACTION IS SENT WITH THIS ENABLED)
  */
-export const getUnspentFormatted = (oldList, coinObj, activeUser, verifyMerkle = false, verifyTxid = false, overrideKmdInterest = false) => {
+export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, verifyTxid = false, overrideKmdInterest = false) => {
   const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
   
   let formattedUtxos = []
@@ -87,16 +84,16 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verifyMerkle =
   
 
   return new Promise((resolve, reject) => {
-    getUnspent(oldList, coinObj, activeUser)
+    getUnspent(coinObj, activeUser)
     .then(getUnspentRes => {
-      firstServer = getUnspentRes.serverUsed
+      firstServer = getUnspentRes.electrumUsed
       currentHeight = getUnspentRes.blockHeight
       let _utxoList = getUnspentRes.result
       let getTxArr = []
 
       if (!_utxoList.length) throw new Error("No valid utxo")
 
-      _utxoList.forEach((_utxoItem, index) => {
+      _utxoList.forEach((_utxoItem) => {
         if(Number(currentHeight) - Number(_utxoItem.height) !== 0) {
           formattedUtxos.push({
             txid: _utxoItem['tx_hash'],
@@ -112,7 +109,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verifyMerkle =
           })
 
           if (verifyTxid || (!verifyTxid && coinObj.id === 'KMD' && !overrideKmdInterest)) {
-            getTxArr.push(getOneTransaction(null, coinObj, _utxoItem.tx_hash))
+            getTxArr.push(getOneTransaction(coinObj, _utxoItem.tx_hash))
           }
         }
       })
@@ -154,7 +151,6 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verifyMerkle =
         if (verifyMerkle) {
           getMerkleArr.push(
             getMerkleRoot(
-              null,
               coinObj,
               formattedUtxo.txid,
               formattedUtxo.blockHeight,
@@ -178,7 +174,7 @@ export const getUnspentFormatted = (oldList, coinObj, activeUser, verifyMerkle =
             Number(getMerkleRes[i].result.index) > 0) {
             formattedUtxos[i].merkleRoot = getMerkleRes[i].result.root
 
-            blockInfoArr.push(getBlockInfo(null, coinObj, getMerkleRes[i].result.height))
+            blockInfoArr.push(getBlockInfo(coinObj, getMerkleRes[i].result.height))
             i++
           } else {
             if (coinObj.id === 'VRSC') unshieldedFunds += formattedUtxos[i].amountSats

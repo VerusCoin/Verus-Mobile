@@ -4,46 +4,63 @@
   completely closed, only the non-sensitive data should persist.
 */
 
-export const authentication = (state = {
-  accounts: [],
-  //activeAccount: {id: null, wifKey: "", keys: {}, paymentMethods: {}},
-  activeAccount: {id: null, seeds: {}, keys: { electrum: null, dlight: null }, paymentMethods: {}},
-  unlocked: false,
-  fingerPrint: false,
-  signedIn: false
-}, action) => {
+import {
+  SET_ACCOUNTS,
+  SIGN_IN,
+  UPDATE_ACCOUNT_KEYS,
+  SIGN_OUT,
+  FINGER_AUTH
+} from "../utils/constants/storeType";
+
+export const authentication = (
+  state = {
+    accounts: [],
+    //activeAccount: {id: null, wifKey: "", keys: {}, paymentMethods: {}},
+    activeAccount: {
+      id: null,
+      accountHash: null,
+      seeds: { electrum: null, dlight: null },
+      keys: { electrum: null, dlight: null },
+      paymentMethods: {}
+    },
+    unlocked: false,
+    fingerPrint: false,
+    signedIn: false
+  },
+  action
+) => {
   switch (action.type) {
-    case 'SET_ACCOUNTS':
+    case SET_ACCOUNTS:
       return {
         ...state,
-        accounts: action.accounts,
+        accounts: action.accounts
       };
-    case 'SIGN_IN':
+    case SIGN_IN:
       return {
         ...state,
         activeAccount: action.activeAccount,
         signedIn: true
       };
-    case 'UPDATE_ACCOUNT_KEYS':
+    case UPDATE_ACCOUNT_KEYS:
       return {
         ...state,
         activeAccount: {
           ...state.activeAccount,
           keys: action.keys
-        },
+        }
       };
-    case 'SIGN_OUT':
+    case SIGN_OUT:
       return {
         ...state,
         activeAccount: null,
         signedIn: false
       };
-    case 'FINGER_AUTH':
+    case FINGER_AUTH:
       return {
         ...state,
-        fingerPrint: action.fingerPrint,
+        fingerPrint: action.fingerPrint
       };
     default:
       return state;
   }
-}
+};

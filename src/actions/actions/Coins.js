@@ -4,7 +4,7 @@ import {
  } from '../actionCreators';
 import { 
   createCoinObj
-} from '../../utils/CoinData';
+} from '../../utils/CoinData/CoinData';
 import {
   storeCoins,
   getActiveCoinsList
@@ -85,15 +85,13 @@ export const fetchActiveCoins = () => {
 
 export const setUserCoins = (activeCoinList, userName) => {
   let result = [];
-  let toUpdate = []
 
   for (let i = 0; i < activeCoinList.length; i++) {
     if (activeCoinList[i].users.includes(userName)) {
       result.push(activeCoinList[i]);
-      toUpdate.push(activeCoinList[i].id)
     }
   }
 
-  return setCurrentUserCoins(result, toUpdate);
+  return setCurrentUserCoins(result);
 }
 

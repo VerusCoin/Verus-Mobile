@@ -10,14 +10,16 @@ export * from './electrumCalls/getServerVersion';
 
 import { proxyServers, httpsEnabled } from './proxyServers';
 import { getGoodServer, testProxy, testElectrum } from './serverTester';
-import { getCoinPaprikaRate } from './ratesAPIs/coinPaprika';
-import { getAtomicExplorerBTCFees } from './btcFeesAPIs/atomicExplorer';
+import { getCoinPaprikaRate } from '../general/ratesAPIs/coinPaprika';
+import { getAtomicExplorerBTCFees } from '../general/btcFeesAPIs/atomicExplorer';
 import { truncateDecimal } from '../../../math';
 import { timeout } from '../../../promises';
 import { getServerVersion } from './electrumCalls/getServerVersion';
 import { updateParamObj } from '../../../electrumUpdates';
 import { networks } from 'bitgo-utxo-lib';
 import { isJson } from '../../../objectManip'
+import ApiException from '../../errors/apiError';
+import { ELECTRUM } from '../../../constants/intervalConstants'
 
 // This purpose of this method is to take in a list of electrum servers,
 // and use a valid one to call a specified command given a set of parameters
@@ -61,7 +63,7 @@ export const getElectrum = (serverList, callType, params, toSkip, coinID) => {
     })
     .then((resultArr) => {
       let resultObj = resultArr[0]
-      resultObj.serverVersion = resultArr[1]
+      resultObj.electrumVersion = resultArr[1]
 
       let electrumServer = resultObj.goodServer
       let httpAddr = `${httpsEnabled ? 'https' : 'http'}://${proxyServer}/api/${callType}?port=${electrumServer.port}&ip=${electrumServer.ip}&proto=${electrumServer.proto}`
@@ -70,7 +72,7 @@ export const getElectrum = (serverList, callType, params, toSkip, coinID) => {
       updateParamObj(
         params, 
         networks[coinID.toLowerCase()] ? networks[coinID.toLowerCase()] : networks['default'], 
-        resultObj.serverVersion)
+        resultObj.electrumVersion)
 
       for (let key in params) {
         httpAddr += `&${key}=${params[key]}`
@@ -83,7 +85,7 @@ export const getElectrum = (serverList, callType, params, toSkip, coinID) => {
 
       promiseArray.push(resultObj.blockHeight)
       promiseArray.push(resultObj.goodServer)
-      promiseArray.push(resultObj.serverVersion)
+      promiseArray.push(resultObj.electrumVersion)
 
       return Promise.all(promiseArray)
     })
@@ -100,13 +102,11 @@ export const getElectrum = (serverList, callType, params, toSkip, coinID) => {
       let resultObj = {
         result: responseArray[0].result, 
         blockHeight: responseArray[1], 
-        serverUsed: responseArray[2], 
-        serverVersion: responseArray[3]}
+        electrumUsed: responseArray[2], 
+        electrumVersion: responseArray[3]}
       resolve(resultObj)
     })
     .catch(err => {
-      console.log(`Error while trying to make call: ${callType}`)
-      console.warn(err.message)
       reject(err)
     })
   });
@@ -123,8 +123,8 @@ export const updateValues = (oldResponse, serverList, callType, params, coinID, 
           result: oldResponse,
           new: false,
           blockHeight: response.blockHeight,
-          serverUsed: response.serverUsed,
-          serverVersion: response.serverVersion,
+          electrumUsed: response.electrumUsed,
+          electrumVersion: response.electrumVersion,
           error: false
         })
       } else if (response === false) {
@@ -135,14 +135,33 @@ export const updateValues = (oldResponse, serverList, callType, params, coinID, 
           result: response,
           new: true,
           blockHeight: response.blockHeight,
-          serverUsed: response.serverUsed,
-          serverVersion: response.serverVersion,
+          electrumUsed: response.electrumUsed,
+          electrumVersion: response.electrumVersion,
           error: false
         })
       }
     })
     .catch((err) => {
       reject(err)
+    })
+  });
+}
+
+//Function to update only if values have changed
+export const electrumRequest = (serverList, callType, params, coinID, toSkip) => {
+  return new Promise((resolve, reject) => {
+    timeout(global.REQUEST_TIMEOUT_MS, getElectrum(serverList, callType, params, toSkip, coinID))
+    .then((response) => {
+      resolve(!response ? false : {coin: coinID, ...response})
+    })
+    .catch((err) => {
+      reject(new ApiException(
+        err.name,
+        err.message,
+        coinID,
+        ELECTRUM,
+        err.code
+      ))
     })
   });
 }
@@ -217,100 +236,11 @@ export const postElectrum = (serverList, callType, data, toSkip) => {
       return Promise.all(responseArray)
     })
     .then((responseArray) => {
-      let resultObj = {result: responseArray[0].result, blockHeight: responseArray[1], serverUsed: responseArray[2]}
+      let resultObj = {result: responseArray[0].result, blockHeight: responseArray[1], electrumUsed: responseArray[2]}
 
       resolve(resultObj)
     })
   });
 }
 
-export const getCoinRate = (coinObj) => {
-  //This is to be added to later
-  let rateFunctions = [getCoinPaprikaRate(coinObj)]
 
-  return new Promise((resolve, reject) => {
-    Promise.all(rateFunctions)
-    .then((rates) => {
-      let index = 0
-
-      while (index < rates.length && rates[index] === false) {
-        index++
-      }
-      if (index < rates.length) {
-        let resolveObj = {id: coinObj.id, rate: rates[index]}
-        resolve(resolveObj)
-      }
-      else {
-        resolve(false)
-      }
-    })
-  });
-}
-
-export const getRecommendedBTCFees = () => {
-  //Fees are measured in satoshis per byte, slowest should 
-  //take around an hour, average should take around 30 minutes, 
-  //and fastest should take around 20 to 30 minutes
-  let feeFunctions = [getAtomicExplorerBTCFees()]
-
-  return new Promise((resolve, reject) => {
-    Promise.all(feeFunctions)
-    .then((fees) => {
-      let feesFound = []
-
-      for (let i = 0; i < fees.length; i++) {
-        if (fees[i]) {
-          feesFound.push(fees[i])
-        }
-      }
-
-      if (feesFound.length > 0) {
-        let avgFees = {slowest: 0, average: 0, fastest: 0}
-
-        for (let i = 0; i < feesFound.length; i++) {
-          avgFees.slowest += feesFound[i].slowest
-          avgFees.average += feesFound[i].average
-          avgFees.fastest += feesFound[i].fastest
-        }
-
-        for (let key in avgFees) {
-          avgFees[key] = truncateDecimal((avgFees[key]/feesFound.length), 0)
-        }
-
-        resolve(avgFees)
-      }
-      else {
-        resolve(false)
-      }
-    })
-  });
-}
-
-export const getAllCoinRates = (activeCoinsForUser) => {
-  let promiseArray = []
-
-  for (let i = 0; i < activeCoinsForUser.length; i++) {
-    promiseArray.push(getCoinRate(activeCoinsForUser[i]))
-  }
-
-  return new Promise((resolve, reject) => {
-    Promise.all(promiseArray)
-    .then((rates) => {
-      if (rates.every(item => {return !item})) {
-        resolve(false)
-      }
-      else {
-        let resolveObj = {}
-        for (let i = 0; i < rates.length; i++) {
-          if (rates[i]) {
-            resolveObj[rates[i].id] = rates[i].rate
-          }
-          else {
-            resolveObj[rates[i].id] = "err"
-          }
-        }
-        resolve(resolveObj)
-      }
-    })
-  });
-}

@@ -1,4 +1,9 @@
 const mockAgamaWalletLibElectrums = require('../__mocks__/agama-wallet-lib/agama-wallet-lib-electrums')
+const mockVerusLightClient = require('../__mocks__/react-native-verus-light-client/mock')
+const mockRedux = require('../__mocks__/redux/mock')
+
 jest.mock('agama-wallet-lib/src/electrum-servers', () => mockAgamaWalletLibElectrums());
+jest.mock('react-native-verus-light-client', () => mockVerusLightClient());
+jest.mock('redux', () => mockRedux());
 
 global.fetch = require('../__mocks__/react-native-fetch/fetch')

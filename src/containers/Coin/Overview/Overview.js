@@ -15,9 +15,9 @@ import { ListItem } from "react-native-elements";
 import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../../../utils/math';
 import { 
-  fetchTransactionsForCoin, 
-  everythingNeedsUpdate,
-  updateOneBalance
+  //fetchTransactionsForCoin, 
+  //everythingNeedsUpdate,
+  //updateOneBalance
 } from '../../../actions/actionCreators';
 import styles from './Overview.styles';
 import withNavigationFocus from "react-navigation/src/views/withNavigationFocus";
@@ -66,7 +66,8 @@ class Overview extends Component {
         this.setState({ loading: true });  
       }
 
-      promiseArray.push(fetchTransactionsForCoin(_oldTransactions, _coinObj, _activeAccount, _txsNeedsUpdateObj, Number(this.props.generalWalletSettings.maxTxCount)))
+      DELETE/REFACTOR: Deprecated
+      //promiseArray.push(fetchTransactionsForCoin(_oldTransactions, _coinObj, _activeAccount, _txsNeedsUpdateObj, Number(this.props.generalWalletSettings.maxTxCount)))
     }
 
     if(_balancesNeedUpdateObj[_coinObj.id]) {
@@ -75,14 +76,15 @@ class Overview extends Component {
         this.setState({ loading: true });  
       }
 
-      promiseArray.push(
+      // DELET: Deprecated
+      /*promiseArray.push(
         updateOneBalance(
           _balances,
           _coinObj,
           _activeAccount,
           _balancesNeedUpdateObj
         )
-      );
+      );*/
     }
   
     this.updateProps(promiseArray)
@@ -93,7 +95,9 @@ class Overview extends Component {
 
     /*this.props.dispatch(transactionsNeedUpdate(this.props.activeCoin.id, this.props.needsUpdate.transanctions))
     this.props.dispatch(needsUpdate("rates"))*/
-    this.props.dispatch(everythingNeedsUpdate())
+    
+    // DELET: Deprecated
+    //this.props.dispatch(everythingNeedsUpdate())
 
     this.refresh()
   }

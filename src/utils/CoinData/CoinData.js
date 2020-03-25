@@ -1,6 +1,7 @@
 import { electrumServers } from 'agama-wallet-lib/src/electrum-servers';
-import { MAX_VERIFICATION } from './constants/constants'
-import Colors from '../globals/colors'
+import { MAX_VERIFICATION } from '../constants/constants'
+import Colors from '../../globals/colors'
+import { coinsList } from './CoinsList'
 
 const getDefaultApps = (coinName, canBuySell = false) => {
   return ({
@@ -46,45 +47,20 @@ export const explorers = {
 
 export const defaultAssetsPath = {
   coinLogo: {
-    bch: require('../images/cryptologo/default/bch.png'),		
-    vrsc: require('../images/cryptologo/default/vrsc.png'),
-    dash: require('../images/cryptologo/default/dash.png'),	
-    oot: require('../images/cryptologo/default/oot.png'),		
-    btc: require('../images/cryptologo/default/btc.png'),		
-    dgb: require('../images/cryptologo/default/dgb.png'),		
-    doge: require('../images/cryptologo/default/doge.png'),	
-    kmd: require('../images/cryptologo/default/kmd.png'),		
-    zec: require('../images/cryptologo/default/zec.png'),
-    zilla: require('../images/cryptologo/default/zilla.png'),	
-    ltc: require('../images/cryptologo/default/ltc.png'),		
-    ccl: require('../images/cryptologo/default/ccl.png'),
-    default: require('../images/cryptologo/default_chain.png')
+    bch: require('../../images/cryptologo/default/bch.png'),		
+    vrsc: require('../../images/cryptologo/default/vrsc.png'),
+    dash: require('../../images/cryptologo/default/dash.png'),	
+    oot: require('../../images/cryptologo/default/oot.png'),		
+    btc: require('../../images/cryptologo/default/btc.png'),		
+    dgb: require('../../images/cryptologo/default/dgb.png'),		
+    doge: require('../../images/cryptologo/default/doge.png'),	
+    kmd: require('../../images/cryptologo/default/kmd.png'),		
+    zec: require('../../images/cryptologo/default/zec.png'),
+    zilla: require('../../images/cryptologo/default/zilla.png'),	
+    ltc: require('../../images/cryptologo/default/ltc.png'),		
+    ccl: require('../../images/cryptologo/default/ccl.png'),
+    default: require('../../images/cryptologo/default_chain.png')
   },
-};
-
-export const coinsList = {
-  vrsc: {
-    id: "VRSC", 
-    name: "Verus Coin", 
-    description: "Verus Coin includes the first proven 51% hash attack resistant proof of power algorithm. The Verus vision is PBaaS, public blockchains as a service, provisioned for conditional rewards by Verus miners and stakers.", 
-    fee: 10000
-  },
-  kmd: { 
-    id: "KMD", 
-    name: "Komodo", 
-    description: "Komodo is an open, modular, multi-chain platform that provides an autonomous, customizable blockchain to every project that builds within the ecosystem.", 
-    fee: 10000
-  },
-  btc: { id: "BTC", name: "Bitcoin", description: "The coin that started it all. Bitcoin (BTC) is a peer to peer digital currency created in 2009 by Satoshi Nakamoto.", fee: 10000},
-  oot: { id: "OOT", name: "Utrum", description: "A reward platform for crypto analysis, reviews and predictions", fee: 10000},
-  ccl: { id: "CCL", name: "CoinCollect", description: "", fee: 10000},
-  doge: { id: "DOGE", name: "Dogecoin", description: "", fee: 100000000},
-  dgb: { id: "DGB", name: "Digibyte", description: "", fee: 100000},
-  bch: { id: "BCH", name: "Bitcoin Cash", description: "", fee: 10000},
-  zec: { id: "ZEC", name: "ZCash", description: "", fee: 10000},
-  dash: { id: "DASH", name: "Dash", description: "", fee: 10000},
-  ltc: { id: "LTC", name: "Litecoin", description: "", fee: 30000},
-  zilla: { id: "ZILLA", name: "ChainZilla", description: "The native token of Chainzilla Blockchain Solutions. They are a blockchain consulting company that develops easy to use whitelabel blockchain wallets and applications.", fee: 10000}
 };
 
 //To make flatlist render faster
@@ -155,5 +131,11 @@ export const createCoinObj = (id, name, description, defaultFee, serverList, use
   }
 
   return coinObj;
+}
+
+export const getCoinObj = (coinList, coinId) => {
+  return coinList.find(coinObj => {
+    return coinObj.id === coinId
+  })
 }
 

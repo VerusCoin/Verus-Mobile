@@ -9,6 +9,10 @@
 import { getBlockHeight } from './electrumCalls/getBlockHeight';
 import { timeout } from '../../../promises'
 import { httpsEnabled } from './proxyServers'
+import ApiException from '../../errors/apiError';
+import { ELECTRUM } from '../../../constants/intervalConstants';
+import { NO_VALID_SERVER } from '../../errors/errorCodes';
+import { CONNECTION_ERROR } from '../../errors/errorMessages'
 
 /**
  * @param {Function} tester A tester function that takes in a server and will fail if it does not perform it's purpose
@@ -17,14 +21,20 @@ import { httpsEnabled } from './proxyServers'
  */
 export const getGoodServer = (tester, serverList, xtraTesterParams = []) => {
   if (serverList.length === 0) {
-    console.log("No valid server out of options:")
-    console.log(serverList)
-    return Promise.reject(new Error("No valid server found out of the options provided"))
+    return Promise.reject(
+      new ApiException(
+        CONNECTION_ERROR,
+        "No valid server found out of options provided",
+        null,
+        ELECTRUM,
+        NO_VALID_SERVER
+      )
+    );
   }
 
   let index = Math.floor(Math.random() * serverList.length)
   
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     tester(serverList[index], ...xtraTesterParams)
     .then((res) => {
       resolve({
@@ -32,21 +42,16 @@ export const getGoodServer = (tester, serverList, xtraTesterParams = []) => {
         testResult: res
       })
     }, (rej) => {
-      console.log("Server failed: ")
-      console.log(serverList[index])
-      console.log("For reason: ")
-      console.log(rej)
-      console.log("Attempting next server...")
+      //console.warn(rej)
+
       let _serverList = serverList.slice()
       _serverList.splice(index, 1);
-
-      console.log("New list is:")
-      console.log(_serverList)
       return (getGoodServer(tester, _serverList, xtraTesterParams))
     })
     .then(res => {
       resolve(res)
     })
+    .catch(reject)
   })
 }
 

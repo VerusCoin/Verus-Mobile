@@ -24,7 +24,7 @@ import { Dropdown } from 'react-native-material-dropdown'
 import QRCode from 'react-native-qrcode-svg';
 import QRModal from '../../../components/QRModal'
 import { coinsToSats, isNumber, truncateDecimal } from '../../../utils/math'
-import { setCoinRates, everythingNeedsUpdate } from '../../../actions/actionCreators'
+//import { everythingNeedsUpdate } from '../../../actions/actionCreators'
 import styles from './ReceiveCoin.styles'
 import Colors from '../../../globals/colors';
 
@@ -89,7 +89,9 @@ class ReceiveCoin extends Component {
 
     /*this.props.dispatch(transactionsNeedUpdate(this.props.activeCoin.id, this.props.needsUpdate.transanctions))
     this.props.dispatch(needsUpdate("rates"))*/
-    this.props.dispatch(everythingNeedsUpdate())
+
+    DELETE/REFACTOR: Deprecated
+    //this.props.dispatch(everythingNeedsUpdate())
 
     this.refresh()
   }
@@ -104,7 +106,7 @@ class ReceiveCoin extends Component {
       if (!this.state.loading) {
         this.setState({ loading: true });  
       }  
-      promiseArray.push(setCoinRates(_activeCoinsForUser))
+      //promiseArray.push(setCoinRates(_activeCoinsForUser))
     }
   
     this.updateProps(promiseArray)

@@ -18,14 +18,13 @@ import {
   ScrollView,
   RefreshControl
 } from "react-native";
-import { 
-  setCoinRates, 
+import {  
   setActiveCoin, 
   setActiveApp,
   setActiveSection,
-  everythingNeedsUpdate,
+  //everythingNeedsUpdate,
   setActiveSectionBuySellCrypto,
-  updateOneBalance
+  //updateOneBalance
 } from '../../actions/actionCreators';
 import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../../utils/math';
@@ -67,7 +66,7 @@ class Home extends Component {
         if (!this.state.loading) {
           this.setState({ loading: true });  
         }  
-        promiseArray.push(setCoinRates(_activeCoinsForUser))
+        //promiseArray.push(setCoinRates(_activeCoinsForUser))
       }
       
       _activeCoinsForUser.map(coinObj => {
@@ -78,14 +77,15 @@ class Home extends Component {
             this.setState({ loading: true });  
           }  
           
-          promiseArray.push(
+          DELETE/REFACTOR: Deprecated
+          /*promiseArray.push(
             updateOneBalance(
               _balances,
               coinObj,
               _activeAccount,
               _balancesNeedUpdate
             )
-          );
+          );*/
         }
       })
       
@@ -107,7 +107,9 @@ class Home extends Component {
   }
 
   forceUpdate = () => {
-    this.props.dispatch(everythingNeedsUpdate())
+    DELETE/REFACTOR: Deprecated
+    //this.props.dispatch(everythingNeedsUpdate())
+
     this.refresh();
   }
 

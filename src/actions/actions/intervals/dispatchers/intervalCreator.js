@@ -12,6 +12,7 @@ import {
   NEVER_ACTIVATED
 } from "../../../../utils/constants/intervalConstants";
 import Store from '../../../../store/index'
+import { getCoinObj } from '../../../../utils/CoinData/CoinData';
 //TODO: If app is ever used in any server side rendering scenario, switch store
 //to a function parameter on all of these functions rather than an import
 
@@ -40,18 +41,18 @@ export const createExpireTimeout = (timeout, chainTicker, updateId, onComplete) 
 /**
  * Creates the interval that will update expired data through an API call
  * @param {Integer} interval Length of interval in ms
- * @param {String} mode native || electrum || eth
+ * @param {String[]} channels The enabled channels for the information request e.g. ['electrum', 'dlight']
  * @param {String} chainTicker Ticker symbol of chain that data is for
  * @param {String} updateId Name of API call
  * @param {Function} onComplete (Optional) Function to execute on interval completion (every interval)
  */
-export const createCoinUpdateExpiredInterval = (interval, mode, chainTicker, updateId, onComplete) => {
+export const createCoinUpdateExpiredInterval = (interval, chainTicker, updateId, onComplete) => {
   if (interval !== ALWAYS_ACTIVATED && interval !== NEVER_ACTIVATED) {
     //console.log(`${updateId} update expired interval set to ${interval}`)
     const intervalAction = async () => {
       const state = Store.getState()
     
-      const updateStatus = await conditionallyUpdateWallet(state, Store.dispatch, mode, chainTicker, updateId)
+      await conditionallyUpdateWallet(state, Store.dispatch, chainTicker, updateId)
       //console.log(`Call to ${updateId} for ${chainTicker} in ${mode} mode completed with status: ${updateStatus}`)
 
       if (onComplete != null) onComplete(state, Store.dispatch, chainTicker) 
@@ -84,18 +85,18 @@ export const clearAllCoinIntervals = (chainTicker) => {
 /**
  * Clears old intervals and creates new ones for a certain point in an added
  * coins lifecycle (e.g. post_sync)
- * @param {String} mode native || electrum || eth
  * @param {String} chainTicker Ticker symbol of chain that data is for
  * @param {Function{}} onCompletes Object with optional onCompletes to each updateInterval to be called with state and dispatch function.
  * e.g. {get_info: {update_expired_oncomplete: increaseGetInfoInterval}}
  */
-export const refreshCoinIntervals = (mode, chainTicker, onCompletes) => {
+export const refreshCoinIntervals = (chainTicker, onCompletes) => {
   const state = Store.getState()
-  const coinObj = state.coins.activatedCoins[chainTicker]
+  const coinObj = getCoinObj(state.coins.activeCoinsForUser, chainTicker)
+  const chainStatus = state.coins.status[chainTicker]
+
   if (!coinObj) throw new Error(`${chainTicker} is not added for current user. Coins must be added to be used.`)
-  const chainStatus = coinObj.status
   
-  const updateDataAction = generateUpdateCoinDataAction(mode, chainStatus, chainTicker, coinObj.tags, onCompletes)
+  const updateDataAction = generateUpdateCoinDataAction(chainStatus, chainTicker, coinObj.tags, onCompletes)
   const oldUpdateData = state.updates.coinUpdateIntervals[chainTicker]
   const newUpdateData = updateDataAction.updateIntervalData
 
@@ -112,7 +113,7 @@ export const refreshCoinIntervals = (mode, chainTicker, onCompletes) => {
   Store.dispatch(updateDataAction)
 
   for (let updateId in newUpdateData) {
-    createCoinUpdateExpiredInterval(newUpdateData[updateId].update_expired_interval, mode, chainTicker, updateId, newUpdateData[updateId].update_expired_oncomplete)
+    createCoinUpdateExpiredInterval(newUpdateData[updateId].update_expired_interval, chainTicker, updateId, newUpdateData[updateId].update_expired_oncomplete)
     createExpireTimeout(newUpdateData[updateId].expire_timeout, chainTicker, updateId, newUpdateData[updateId].expire_oncomplete)
   }
 }

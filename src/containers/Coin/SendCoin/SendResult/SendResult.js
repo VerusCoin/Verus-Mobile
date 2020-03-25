@@ -23,14 +23,14 @@ import {
   Clipboard
  } from "react-native"
 import { satsToCoins, truncateDecimal } from '../../../../utils/math'
-import { explorers } from '../../../../utils/CoinData'
+import { explorers } from '../../../../utils/CoinData/CoinData'
 import { 
-  needsUpdate, 
-  transactionsNeedUpdate,
+  //needsUpdate, 
+  //transactionsNeedUpdate,
   setActiveCoin, 
   setActiveApp,
   setActiveSection,
-  balancesNeedUpdate
+  //balancesNeedUpdate
  } from '../../../../actions/actionCreators'
 import ProgressBar from 'react-native-progress/Bar'
 import { Icon } from 'react-native-elements'
@@ -117,9 +117,11 @@ class SendResult extends Component {
           fee: coinObj.id === 'BTC' ? fee.feePerByte : fee,
           amount: amount,
         });
-        this.props.dispatch(balancesNeedUpdate(coinObj.id, this.props.needsUpdate.balances))
+
+        DELETE/REFACTOR: Deprecated
+        /*this.props.dispatch(balancesNeedUpdate(coinObj.id, this.props.needsUpdate.balances))
         this.props.dispatch(needsUpdate("rates"))
-        this.props.dispatch(transactionsNeedUpdate(coinObj.id, this.props.needsUpdate.transanctions))
+        this.props.dispatch(transactionsNeedUpdate(coinObj.id, this.props.needsUpdate.transanctions))*/
       }
     })
     .catch((e) => {

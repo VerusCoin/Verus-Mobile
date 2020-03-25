@@ -4,6 +4,14 @@
 */
 
 import { MAX_VERIFICATION } from '../utils/constants/constants'
+import {
+  SET_COIN_LIST,
+  SET_ALL_SETTINGS,
+  SET_CONFIG_SECTION,
+  SET_GENERAL_WALLET_SETTINGS_STATE,
+  SET_COIN_SETTINGS_STATE,
+  SET_BUY_SELL_SETTINGS_STATE
+} from '../utils/constants/storeType'
 
 export const settings = (state = {
   btcFeesAdvanced: false,
@@ -14,11 +22,11 @@ export const settings = (state = {
   generalWalletSettings: {
     maxTxCount: 10
   },
-  buySellSettings: {}, //e.g. {'user1': {buySellEnabled: true, wyreData: {}}, 'user2': {buySellEnabled: false, wyreData: {}}}
+  buySellSettings: {}, //e.g. {user1': {buySellEnabled: true, wyreData: {}}, 'user2: {buySellEnabled: false, wyreData: {}}}
   coinSettings: {}, //e.g. {VRSC: {verificationLvl: 2, verificationLock: false}}
 }, action) => {
   switch (action.type) {
-    case 'SET_COIN_LIST':
+    case SET_COIN_LIST:
       //TODO: Change this when activeCoinList is an object
       let newCoinSettings = {}
       action.activeCoinList.forEach((coinObj) => {
@@ -44,27 +52,27 @@ export const settings = (state = {
           ...newCoinSettings
         },
       };
-    case 'SET_ALL_SETTINGS': 
+    case SET_ALL_SETTINGS: 
       return {
         ...state,
         ...action.settings
       }
-    case 'SET_CONFIG_SECTION':
+    case SET_CONFIG_SECTION:
       return {
         ...state,
         activeConfigSection: action.activeConfigSection,
       };
-    case 'SET_GENERAL_WALLET_SETTINGS_STATE':
+    case SET_GENERAL_WALLET_SETTINGS_STATE:
       return {
         ...state,
         generalWalletSettings: action.state
       }
-    case 'SET_COIN_SETTINGS_STATE':
+    case SET_COIN_SETTINGS_STATE:
       return {
         ...state,
         coinSettings: action.coinSettings
       }
-    case 'SET_BUY_SELL_SETTINGS_STATE':
+    case SET_BUY_SELL_SETTINGS_STATE:
       return {
         ...state,
         wyreSettings: action.wyreSettings

@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-community/async-storage';
-import { findCoinObj } from '../CoinData';
+import { findCoinObj } from '../CoinData/CoinData';
 // react-native's version of local storage
 
 //Clear user from coin, or delete user from all if no coin specified

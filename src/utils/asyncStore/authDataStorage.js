@@ -10,6 +10,7 @@ import {
 import {
   deleteUserFromCoin
 } from './asyncStore'
+import { hashAccountId } from "../crypto/hash";
 
 //Set storage to hold encrypted user data
 export const storeUser = (authData, users) => {
@@ -23,7 +24,7 @@ export const storeUser = (authData, users) => {
     if (seeds[seedType]) encryptedKeys[seedType] = encryptkey(authData.password, seeds[seedType])
   })
 
-  let userObj = {id: authData.userName, encryptedKeys}
+  let userObj = {id: authData.userName, accountHash: hashAccountId(authData.userName), encryptedKeys}
   let _users = users ? users.slice() : [];
   _users.push(userObj)
   let _toStore = {users: _users}

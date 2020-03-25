@@ -20,6 +20,13 @@ export const hashRawTx = (rawTxString, network) => {
   }
 }
 
+export const hashAccountId = (accountId) => {
+  return crypto
+    .createHash("sha256")
+    .update(new Buffer.from(accountId))
+    .digest("hex");
+}
+
 //Decodes specific bitcoin transaction ID return which is in
 //string format seperated by ','
 export const decodeBitcoinTxID = (rawTxString, network) => {

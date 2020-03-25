@@ -15,6 +15,18 @@ import {
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 
+import {
+  getAddresses,
+  getZTransactions,
+  getPrivateBalance,
+  getBlockCount,
+  getInfo,
+  startSync,
+  stopSync,
+  initializeWallet,
+  openWallet
+} from "./utils/api/channels/dlight/callCreators";
+
 
 class VerusMobile extends React.Component {
   constructor(props) {
@@ -31,6 +43,73 @@ class VerusMobile extends React.Component {
   }
   
   componentDidMount() {
+
+    //DELETE/REFACTOR
+    /*VerusLightClient.addWallet('ZEC', 'btc', "lightwalletd.testnet.z.cash", 9067, "abcde12345", "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol.")
+    .then(res => {
+      console.log("ADD WALLET RES")
+      console.log(res)
+
+      return VerusLightClient.request(20, "getblockcount", ["ZEC", "abcde12345", "btc"])
+    }) 
+    .then(res => {
+      console.log("BLOCK COUNT")
+      console.log(res)
+    })
+    .catch(err => {
+      console.log("ADD WALLET OR REQ REJ")
+      console.log(err)
+    })*/
+    /*
+    initializeWallet('ZEC', 'btc', "lightwalletd.testnet.z.cash", 9067, "abcde12345", 100, "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol.", 0)
+    .then(res => {
+      console.log("INIT WALLET RES")
+      console.log(res)
+
+      return openWallet('ZEC', 'btc', 'abcde12345')
+    })
+    .then(res => {
+      console.log("ADD WALLET RES")
+      console.log(res)
+
+      return startSync('ZEC', 'btc', 'abcde12345')
+    }) 
+    .then(res => {
+      console.log("START SYNC RES")
+      console.log(res)
+
+      setInterval(() => {
+        getInfo('ZEC', 'abcde12345', 'btc')
+        .then(res => {
+          console.log("INFO")
+          console.log(res)
+        })
+
+        getPrivateBalance('ZEC', 'abcde12345', 'btc')
+        .then(res => {
+          console.log("BALANCES")
+          console.log(res)
+        })
+
+        getZTransactions('ZEC', 'abcde12345', 'btc')
+        .then(res => {
+          console.log("TRANSACTIONS")
+          console.log(res)
+        })
+
+        getBlockCount('ZEC', 'abcde12345', 'btc')
+        .then(res => {
+          console.log("BLOCKS")
+          console.log(res)
+        })
+      }, 10000);
+    })
+    .catch(e => {
+      console.log("ERROR")
+      console.log(e)
+    })*/
+
+
     //TODO: Figure out what should trigger a cache clear on startup of server 
     //versions. (The action that triggers it should indicate a server upgraded it's 
     //version)

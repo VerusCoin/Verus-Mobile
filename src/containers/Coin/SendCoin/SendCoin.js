@@ -23,9 +23,9 @@ import {
   Image
 } from "react-native"
 import { satsToCoins, truncateDecimal, isNumber, coinsToSats } from '../../../utils/math'
-import { setCoinRates, updateOneBalance } from '../../../actions/actionCreators'
+//import { updateOneBalance } from '../../../actions/actionCreators'
 import { connect } from "react-redux";
-import { getRecommendedBTCFees } from '../../../utils/api/channels/electrum/callCreators'
+import { getRecommendedBTCFees } from '../../../utils/api/channels/general/callCreators'
 import { removeSpaces } from '../../../utils/stringUtils'
 import styles from './SendCoin.styles'
 import Colors from '../../../globals/colors';
@@ -101,7 +101,7 @@ class SendCoin extends Component {
       if (!this.state.loading) {
         this.setState({ loading: true });  
       }  
-      promiseArray.push(setCoinRates(activeCoinsForUser))
+      //promiseArray.push(setCoinRates(activeCoinsForUser))
     }
     
     if(this.props.needsUpdate.balances[coinObj.id]) {
@@ -110,14 +110,15 @@ class SendCoin extends Component {
         this.setState({ loading: true });  
       }  
 
-      promiseArray.push(
+      // DELET: Deprecated
+      /*promiseArray.push(
         updateOneBalance(
           balances,
           coinObj,
           activeUser,
           this.props.needsUpdate.balances
         )
-      );
+      );*/
     }
 
     if(coinObj.id === 'BTC' && !this.state.loadingBTCFees) {

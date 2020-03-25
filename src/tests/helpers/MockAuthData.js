@@ -1,8 +1,8 @@
 import { setFetchParams } from './SetFetchParams'
 
-// OLD FORMAT
 export const MOCK_USER_OBJ = {
   id: 'AzureDiamond',
+  accountHash: '0d09a83e8659dd37b875e43498823459b3e27b42299d80960557d443f6bf98e0',
   seeds: {
     electrum: 'hunter2',
     dlight: "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol."
@@ -16,6 +16,13 @@ export const MOCK_USER_OBJ = {
       }
     },
     KMD: {
+      electrum: {
+        pubKey: '033b467f6c3e5042a14cef1711498c08a08787999443c200f6dd9fd72b619454f1',
+        privKey: 'Ux4SB7LdzdMVg2s2BuapntC2aiVjEiNdabfhZsb6NCPNJTLEYHTX',
+        addresses: ['RTbZS48ASp9qtCg4ucyHC8GwF6KG49UNjF']
+      }
+    },
+    ZEC: {
       electrum: {
         pubKey: '033b467f6c3e5042a14cef1711498c08a08787999443c200f6dd9fd72b619454f1',
         privKey: 'Ux4SB7LdzdMVg2s2BuapntC2aiVjEiNdabfhZsb6NCPNJTLEYHTX',
@@ -114,9 +121,12 @@ export const MOCK_USER_OBJ_BALANCE_SMALL_KMD = {
  */
 export const getTempActiveCoin = (coinID, callsSucceed, code, params, errorMsg = '') => {return ({
   id: coinID, 
+  proto: coinID === 'VRSC' ? 'vrsc' : 'btc',
   name: "Test Coin", 
   description: "Coin for testing", 
   fee: 10000,
+  compatible_channnels: [ 'dlight', 'electrum', 'general' ],
+  tags: [ 'is_verus', 'is_zcash', 'is_pbaas', 'is_pbaas_root' ],
   users: [
   'AzureDiamond',
   'Random address with balance of ~3000 VRSC taken from https://dexstats.info/richlist.php?asset=VRSC on July 31st, 2019',

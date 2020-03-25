@@ -13,10 +13,10 @@ import { connect } from 'react-redux';
 import { 
   addExistingCoin, 
   setUserCoins, 
-  needsUpdate, 
+  //needsUpdate, 
   addKeypairs,
-  transactionsNeedUpdate,
-  balancesNeedUpdate
+  //transactionsNeedUpdate,
+  //balancesNeedUpdate
  } from '../../actions/actionCreators';
 import { NavigationActions } from 'react-navigation'
 import styles from './CoinDetails.styles'
@@ -62,10 +62,13 @@ class CoinDetails extends Component {
         this.props.dispatch(response)
         this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
         this.props.dispatch(addKeypairs(this.props.activeAccount.seeds, this.state.fullCoinData.id, this.props.activeAccount.keys))
+
+        DELETE/REFACTOR: Deprecated
+        /*
         this.props.dispatch(transactionsNeedUpdate(this.state.fullCoinData.id, this.props.needsUpdate.transanctions))
         this.props.dispatch(balancesNeedUpdate(this.state.fullCoinData.id, this.props.needsUpdate.balances))
+        this.props.dispatch(needsUpdate("rates"))*/
 
-        this.props.dispatch(needsUpdate("rates"))
         this.setState({ isActive: true, loading: false });
       }
       else {
