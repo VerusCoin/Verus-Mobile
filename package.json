@@ -3,7 +3,7 @@
   "version": "0.1.9-beta",
   "private": true,
   "scripts": {
-    "postinstall": "patch-package && ./node_modules/.bin/rn-nodeify --hack --install && npx jetify",
+    "postinstall": "patch-package && ./node_modules/.bin/rn-nodeify --hack --install && yarn jetify",
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
