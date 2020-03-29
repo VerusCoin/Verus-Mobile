@@ -122,7 +122,10 @@
     "level-filesystem": "1.2.0",
     "levelup": "4.1.0",
     "mem": "5.1.1",
-    "handlebars": "^4.5.3"
+    "handlebars": "^4.5.3",
+    "acorn": "^6.4.0",
+    "kind-of": "6.0.3",
+    "minimist": "0.2.1"
   },
   "jest": {
     "preset": "react-native",
