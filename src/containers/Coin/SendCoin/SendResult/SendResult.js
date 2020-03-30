@@ -30,6 +30,7 @@ import {
   setActiveCoin, 
   setActiveApp,
   setActiveSection,
+  expireData,
   //balancesNeedUpdate
  } from '../../../../actions/actionCreators'
 import ProgressBar from 'react-native-progress/Bar'
@@ -37,6 +38,7 @@ import { Icon } from 'react-native-elements'
 import { NO_VERIFICATION, MID_VERIFICATION } from '../../../../utils/constants/constants'
 import styles from './SendResult.styles'
 import Colors from '../../../../globals/colors'
+import { API_GET_FIATPRICE, API_GET_TRANSACTIONS, ELECTRUM, DLIGHT, API_GET_BALANCES } from "../../../../utils/constants/intervalConstants"
 
 const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
@@ -109,7 +111,7 @@ class SendResult extends Component {
         this.setState({
           loading: false,
           txid: res.result,
-          remainingBalance: this.props.balances[coinObj.id].result.confirmed - (amount + fee),
+          remainingBalance: this.props.balances.public.confirmed - (amount + fee),
           toAddress: toAddress,
           fromAddress: fromAddress,
           coinObj: coinObj,
@@ -117,11 +119,9 @@ class SendResult extends Component {
           fee: coinObj.id === 'BTC' ? fee.feePerByte : fee,
           amount: amount,
         });
-
-        // DELETE/REFACTOR: Deprecated
-        /*this.props.dispatch(balancesNeedUpdate(coinObj.id, this.props.needsUpdate.balances))
-        this.props.dispatch(needsUpdate("rates"))
-        this.props.dispatch(transactionsNeedUpdate(coinObj.id, this.props.needsUpdate.transanctions))*/
+        
+        this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE))
+        this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS))
       }
     })
     .catch((e) => {
@@ -158,7 +158,7 @@ class SendResult extends Component {
     if (route === "Send") {
       data = {
         coinObj: coinObj,
-        balance: this.props.balances[coinObj.id].result.confirmed,
+        balance: this.props.balances.public.result.confirmed,
         activeAccount: this.props.activeAccount
       }
     } else {
@@ -301,9 +301,18 @@ class SendResult extends Component {
 }
 
 const mapStateToProps = (state) => {
+  const chainTicker = state.coins.activeCoin.id
+
   return {
-    balances: state.ledger.balances,
-    needsUpdate: state.ledger.needsUpdate,
+    balances: {
+      public: state.ledger.balances[ELECTRUM][chainTicker],
+      private: state.ledger.balances[DLIGHT][chainTicker],
+      errors: {
+        public: state.errors[API_GET_BALANCES][ELECTRUM][chainTicker],
+        private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
+      }
+    },
+    //needsUpdate: state.ledger.needsUpdate,
     activeAccount: state.authentication.activeAccount,
     coinSettings: state.settings.coinSettings,
   }

@@ -18,7 +18,7 @@ import QRCodeScanner from 'react-native-qrcode-scanner';
 import { isJson } from '../../../utils/objectManip'
 import { NavigationActions } from 'react-navigation';
 import { connect } from 'react-redux';
-import { namesList } from '../../../utils/CoinData'
+import { namesList } from '../../../utils/CoinData/CoinData'
 import {
   FORMAT_UNKNOWN,
   INCOMPLETE_CHAIN_QR

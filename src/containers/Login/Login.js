@@ -24,12 +24,15 @@ import {
   setUserCoins, 
   //everythingNeedsUpdate, 
   fetchActiveCoins,
+  signIntoAuthenticatedAccount,
   //setUpdateIntervalID
  } from '../../actions/actionCreators';
 import { Dropdown } from 'react-native-material-dropdown';
 import { Verus } from '../../images/customIcons/index';
 import styles from './Login.styles';
 import Colors from '../../globals/colors';
+import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
+import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 
 const UPDATE_INTERVAL = 60000
 
@@ -45,14 +48,10 @@ class Login extends Component {
     };
   }
 
-  componentWillMount() {
-    // DELETE/REFACTOR: Deprecated
-    /*
-    if (this.props.updateIntervalID) {
-      console.log("Update interval ID detected as " + this.props.updateIntervalID + ", clearing...")
-      clearInterval(this.props.updateIntervalID)
-      this.props.dispatch(setUpdateIntervalID(null))
-    }*/
+  componentDidMount() {
+    this.props.activeCoinList.map(coinObj => {
+      clearAllCoinIntervals(coinObj.id)
+    })
   }
 
   _handleSubmit = () => {
@@ -79,9 +78,18 @@ class Login extends Component {
 
         this.props.dispatch(coinList)
         this.props.dispatch(coinsForUser)
-        this.signInWithHeartbeat(validation)
+        this.props.dispatch(validation)
+
+        coinsForUser.activeCoinsForUser.map(coinObj => {
+          activateChainLifecycle(coinObj.id);
+        });
+
+        this.props.dispatch(signIntoAuthenticatedAccount())
       })
-      .catch(err => {return err});
+      .catch(err => {
+        console.error(err)
+        return err
+      });
   }
 
   handleError = (error, field) => {
@@ -116,19 +124,6 @@ class Login extends Component {
         return false;
       }
     });
-  }
-
-  signInWithHeartbeat = (signInAction) => {
-    // DELETE/REFACTOR: Deprecated
-    //TODO: Initiate coin interval here
-    /*this.props.dispatch(everythingNeedsUpdate())
-    let intervalID = setInterval(() => {
-      console.log("Everything needs to update interval")
-      this.props.dispatch(everythingNeedsUpdate())
-    }, UPDATE_INTERVAL);*/
-
-    //this.props.dispatch(setUpdateIntervalID(intervalID))
-    this.props.dispatch(signInAction)
   }
 
   _handleAddUser = () => {
@@ -253,7 +248,7 @@ const mapStateToProps = (state) => {
   return {
     accounts: state.authentication.accounts,
     activeCoinList: state.coins.activeCoinList,
-    updateIntervalID: state.ledger.updateIntervalID
+    //updateIntervalID: state.ledger.updateIntervalID
   }
 };
 

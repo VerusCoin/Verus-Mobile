@@ -41,7 +41,7 @@ export const getOneBalance = (coinObj, activeUser) => {
     activeUser.keys[coinObj.id] != null &&
     activeUser.keys[coinObj.id].electrum != null &&
     activeUser.keys[coinObj.id].electrum.addresses.length > 0
-  ) {
+  ) {    
     params.address = activeUser.keys[coinObj.id].electrum.addresses[0];
   } else {
     throw new Error(

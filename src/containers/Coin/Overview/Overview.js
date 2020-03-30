@@ -14,13 +14,12 @@ import {
 import { ListItem } from "react-native-elements";
 import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../../../utils/math';
-import { 
-  //fetchTransactionsForCoin, 
-  //everythingNeedsUpdate,
-  //updateOneBalance
-} from '../../../actions/actionCreators';
+import { expireData } from '../../../actions/actionCreators';
 import styles from './Overview.styles';
 import withNavigationFocus from "react-navigation/src/views/withNavigationFocus";
+import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
+import store from "../../../store";
+import { API_GET_FIATPRICE, API_GET_BALANCES, API_GET_INFO, API_GET_TRANSACTIONS, ELECTRUM, DLIGHT } from "../../../utils/constants/intervalConstants";
 
 const SELF = require('../../../images/customIcons/selfArrow.png')
 const OUT = require('../../../images/customIcons/outgoingArrow.png')
@@ -38,7 +37,7 @@ class Overview extends Component {
       coinRates: {},
       loading: false
     };
-    this.updateProps = this.updateProps.bind(this);
+    //this.updateProps = this.updateProps.bind(this);
     this.refresh = this.refresh.bind(this)
 
     this.refresh()
@@ -51,53 +50,26 @@ class Overview extends Component {
   }
 
   refresh = () => {
-    const _coinObj = this.props.activeCoin
-    const _oldTransactions = this.props.transactions
-    const _activeAccount = this.props.activeAccount
-    const _txsNeedsUpdateObj = this.props.needsUpdate.transactions
-    const _balancesNeedUpdateObj = this.props.needsUpdate.balances
-    const _balances = this.props.balances
-
-    let promiseArray = []
-
-    if (_txsNeedsUpdateObj[_coinObj.id]){
-      console.log("Transactions need update, pushing update to promise array")
-      if (!this.state.loading) {
-        this.setState({ loading: true });  
-      }
-
-      // DELETE/REFACTOR: Deprecated
-      //promiseArray.push(fetchTransactionsForCoin(_oldTransactions, _coinObj, _activeAccount, _txsNeedsUpdateObj, Number(this.props.generalWalletSettings.maxTxCount)))
-    }
-
-    if(_balancesNeedUpdateObj[_coinObj.id]) {
-      console.log(_coinObj.id + "balance needs update, pushing update to promise array")
-      if (!this.state.loading) {
-        this.setState({ loading: true });  
-      }
-
-      // DELET: Deprecated
-      /*promiseArray.push(
-        updateOneBalance(
-          _balances,
-          _coinObj,
-          _activeAccount,
-          _balancesNeedUpdateObj
-        )
-      );*/
-    }
-  
-    this.updateProps(promiseArray)
+    this.setState({ loading: true }, () => {
+      const updates = [API_GET_FIATPRICE, API_GET_BALANCES, API_GET_INFO, API_GET_TRANSACTIONS]
+      Promise.all(updates.map(async (update) => {
+        await conditionallyUpdateWallet(store.getState(), this.props.dispatch, this.props.activeCoin.id, update)
+      })).then(res => {
+        this.setState({ loading: false })
+      })
+      .catch(error => {
+        this.setState({ loading: false })
+        console.error(error)
+      })
+    })
   }
 
   forceUpdate = () => {
-    //TODO: Figure out why screen doesnt always update if everything is called seperately
-
-    /*this.props.dispatch(transactionsNeedUpdate(this.props.activeCoin.id, this.props.needsUpdate.transanctions))
-    this.props.dispatch(needsUpdate("rates"))*/
-    
-    // DELET: Deprecated
-    //this.props.dispatch(everythingNeedsUpdate())
+    const coinObj = this.props.activeCoin
+    this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE))
+    this.props.dispatch(expireData(coinObj.id, API_GET_BALANCES))
+    this.props.dispatch(expireData(coinObj.id, API_GET_INFO))
+    this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS))
 
     this.refresh()
   }
@@ -108,43 +80,6 @@ class Overview extends Component {
       data: item
     });
   };
-
-  _sendButton = () => {
-    let navigation = this.props.navigation  
-
-    data = {
-      coinObj: this.props.activeCoin, 
-      balances: this.props.balances,
-      activeAccount: this.props.activeAccount,
-      activeCoinsForUser: this.props.activeCoinsForUser
-    }
-
-    navigation.navigate("Send", {
-      data: data
-    });
-  }
-
-  updateProps = (promiseArray) => {
-    return new Promise((resolve, reject) => {
-      Promise.all(promiseArray)
-        .then((updatesArray) => {
-          if (updatesArray.length > 0) {
-            for (let i = 0; i < updatesArray.length; i++) {
-              if(updatesArray[i]) {
-                this.props.dispatch(updatesArray[i])
-              }
-            }
-            if (this.state.loading) {
-              this.setState({ loading: false });  
-            }
-            resolve(true)
-          }
-          else {
-            resolve(false)
-          }
-        })
-    }) 
-  }
 
   renderTransactionItem = ({item, index}) => {
     let amount = 0
@@ -236,7 +171,7 @@ class Overview extends Component {
     return (
       <FlatList
         style={styles.transactionList}
-        data={this.props.transactions[this.props.activeCoin.id]}
+        data={this.props.transactions.public}
         scrollEnabled={true}
         refreshing={this.state.loading}
         onRefresh={this.forceUpdate}
@@ -255,25 +190,16 @@ class Overview extends Component {
   }
 
   renderBalanceLabel = () => {
-    if (
-      this.props.balances.hasOwnProperty(this.props.activeCoin.id) &&
-      (this.props.balances[this.props.activeCoin.id].error ||
-        isNaN(this.props.balances[this.props.activeCoin.id].result.confirmed))
-    ) {
+    const { activeCoin, balances } = this.props
+
+    if (balances.errors.public) {
       return (
         <Text style={styles.connectionErrorLabel}>{CONNECTION_ERROR}</Text>
       );
-    } else if (this.props.balances.hasOwnProperty(this.props.activeCoin.id)) {
+    } else if (balances.public) {
       return (
         <Text style={styles.coinBalanceLabel}>
-          {truncateDecimal(
-            satsToCoins(
-              this.props.balances[this.props.activeCoin.id].result.confirmed
-            ),
-            4
-          ) +
-            " " +
-            this.props.activeCoin.id}
+          {truncateDecimal(satsToCoins(balances.public.confirmed), 4) + " " + activeCoin.id}
         </Text>
       );
     } else {
@@ -295,11 +221,26 @@ class Overview extends Component {
 }
 
 const mapStateToProps = (state) => {
+  const chainTicker = state.coins.activeCoin.id
+
   return {
     activeCoin: state.coins.activeCoin,
-    balances: state.ledger.balances,
-    needsUpdate: state.ledger.needsUpdate,
-    transactions: state.ledger.transactions,
+    balances: {
+      public: state.ledger.balances[ELECTRUM][chainTicker],
+      private: state.ledger.balances[DLIGHT][chainTicker],
+      errors: {
+        public: state.errors[API_GET_BALANCES][ELECTRUM][chainTicker],
+        private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
+      }
+    },
+    transactions: {
+      public: state.ledger.transactions[ELECTRUM][chainTicker],
+      private: state.ledger.transactions[DLIGHT][chainTicker],
+      errors: {
+        public: state.errors[API_GET_TRANSACTIONS][ELECTRUM][chainTicker],
+        private: state.errors[API_GET_TRANSACTIONS][DLIGHT][chainTicker],
+      }
+    },
     activeAccount: state.authentication.activeAccount,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     generalWalletSettings: state.settings.generalWalletSettings,

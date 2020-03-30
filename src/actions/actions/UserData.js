@@ -2,12 +2,13 @@ import {
   setAccounts,
   setFingerAuth,
   signIntoAccount,
-  updateAccountKeys
+  updateAccountKeys,
+  authenticateUser
 } from '../actionCreators';
 import {
   storeUser,
   getUsers,
-  getActiveCoinsList,
+  getActiveCoinList,
   checkPinForUser,
   resetUserPwd,
   deleteUser
@@ -75,7 +76,7 @@ export const fetchUsers = () => {
   });
 }
 
-export const loginUser = (account, password) => {
+export const authenticateAccount = (account, password) => {
   let _keys = {};
   const { electrum, dlight } = account.encryptedKeys
 
@@ -85,13 +86,13 @@ export const loginUser = (account, password) => {
   }
 
   return new Promise((resolve, reject) => {
-    getActiveCoinsList()
+    getActiveCoinList()
       .then(activeCoins => {
         for (let i = 0; i < activeCoins.length; i++) {
           if (activeCoins[i].users.includes(account.id)) {
             _keys[activeCoins[i].id] = {
-              electrum: electrum != null ? makeKeyPair(seed, activeCoins[i].id) : null,
-              dlight: electrum != null ? makeKeyPair(seed, activeCoins[i].id) : null,
+              electrum: electrum != null ? makeKeyPair(seeds.electrum, activeCoins[i].id) : null,
+              dlight: dlight != null ? makeKeyPair(seeds.dlight, activeCoins[i].id) : null,
             }
           }
         }
@@ -101,7 +102,7 @@ export const loginUser = (account, password) => {
         }
 
         if (ENABLE_WYRE) {
-          const hashedSeed = sha256(seed).toString('hex');
+          const hashedSeed = sha256(seeds.electrum).toString('hex');
 
           WyreService.build().submitAuthToken(hashedSeed).then((response) => {
 
@@ -114,7 +115,7 @@ export const loginUser = (account, password) => {
             }
   
             resolve(
-              signIntoAccount({
+              authenticateUser({
                 id: account.id,
                 accountHash: account.accountHash
                   ? account.accountHash
@@ -127,7 +128,7 @@ export const loginUser = (account, password) => {
           });
         } else {
           resolve(
-            signIntoAccount({
+            authenticateUser({
               id: account.id,
               accountHash: account.accountHash
                 ? account.accountHash
@@ -148,15 +149,17 @@ export const validateLogin = (account, password) => {
     checkPinForUser(password, account.id)
       .then(res => {
         if (res !== false) {
-          return loginUser(account, password)
-        }
-        else {
-          return res
+          return authenticateAccount(account, password);
+        } else {
+          return res;
         }
       })
       .then(loginData => {
-        resolve(loginData)
+        resolve(loginData);
       })
+      .catch(err => {
+        console.error(err);
+      });
   });
 }
 

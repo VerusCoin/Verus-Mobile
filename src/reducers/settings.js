@@ -23,7 +23,7 @@ export const settings = (state = {
     maxTxCount: 10
   },
   buySellSettings: {}, //e.g. {user1': {buySellEnabled: true, wyreData: {}}, 'user2: {buySellEnabled: false, wyreData: {}}}
-  coinSettings: {}, //e.g. {VRSC: {verificationLvl: 2, verificationLock: false}}
+  coinSettings: {}, //e.g. {VRSC: {verificationLvl: 2, verificationLock: false, channels: ['dlight', 'electrum', 'general']}}
 }, action) => {
   switch (action.type) {
     case SET_COIN_LIST:
@@ -34,6 +34,7 @@ export const settings = (state = {
           newCoinSettings[coinObj.id] = {
             verificationLvl: MAX_VERIFICATION, 
             verificationLock: false,
+            channels: coinObj.compatible_channnels,
             ...coinObj.coinSettings,
           }
         }

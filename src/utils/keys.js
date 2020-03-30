@@ -25,7 +25,7 @@ export const makeKeyPair = (seed, coinID) => {
     _seedToWif = seedToWif(seed, isKomodoCoin(coinID) ? electrumJSNetworks.kmd : electrumJSNetworks[coinID.toLowerCase()], true);
   }
 
-  keyObj = {pubKey: _seedToWif.pubHex, privKey: _seedToWif.priv, addresses: [_seedToWif.pubKey]}
+  keyObj = {pubKey: _seedToWif.pubHex, privKey: _seedToWif.priv, addresses: [_seedToWif.pub]}
 
   return keyObj;
 }

@@ -60,49 +60,22 @@ class VerusMobile extends React.Component {
       console.log("ADD WALLET OR REQ REJ")
       console.log(err)
     })*/
-    /*
-    initializeWallet('ZEC', 'btc', "lightwalletd.testnet.z.cash", 9067, "abcde12345", 100, "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol.", 0)
+    /*initializeWallet('ZEC', 'btc', "lightwalletd.testnet.z.cash", 9067, "8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99", 100, "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol.", 0)
     .then(res => {
       console.log("INIT WALLET RES")
       console.log(res)
 
-      return openWallet('ZEC', 'btc', 'abcde12345')
+      return openWallet('ZEC', 'btc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99')
     })
     .then(res => {
       console.log("ADD WALLET RES")
       console.log(res)
 
-      return startSync('ZEC', 'btc', 'abcde12345')
+      return startSync('ZEC', 'btc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99')
     }) 
     .then(res => {
       console.log("START SYNC RES")
       console.log(res)
-
-      setInterval(() => {
-        getInfo('ZEC', 'abcde12345', 'btc')
-        .then(res => {
-          console.log("INFO")
-          console.log(res)
-        })
-
-        getPrivateBalance('ZEC', 'abcde12345', 'btc')
-        .then(res => {
-          console.log("BALANCES")
-          console.log(res)
-        })
-
-        getZTransactions('ZEC', 'abcde12345', 'btc')
-        .then(res => {
-          console.log("TRANSACTIONS")
-          console.log(res)
-        })
-
-        getBlockCount('ZEC', 'abcde12345', 'btc')
-        .then(res => {
-          console.log("BLOCKS")
-          console.log(res)
-        })
-      }, 10000);
     })
     .catch(e => {
       console.log("ERROR")
@@ -124,10 +97,10 @@ class VerusMobile extends React.Component {
       let promiseArr = [fetchUsers(), initSettings()]
 
       //Handle version change stuff here
-      if (global.APP_VERSION === '0.1.9-beta' && versionCompare === -1) {
+      /*if (global.APP_VERSION === '0.1.9-beta' && versionCompare === -1) {
         if (__DEV__) console.log("Old version detected, updating active coins for 0.1.9-beta")
         promiseArr.push(updateActiveCoinList_v0_1_9_beta())
-      }
+      }*/
 
       return Promise.all(promiseArr)
     })

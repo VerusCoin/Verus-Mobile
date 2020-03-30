@@ -20,6 +20,8 @@ import {
  } from '../../actions/actionCreators';
 import { NavigationActions } from 'react-navigation'
 import styles from './CoinDetails.styles'
+import { API_GET_FIATPRICE, API_GET_BALANCES, API_GET_TRANSACTIONS } from "../../utils/constants/intervalConstants";
+import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 
 class CoinDetails extends Component {
   constructor(props) {
@@ -59,15 +61,11 @@ class CoinDetails extends Component {
     addExistingCoin(this.state.fullCoinData, this.props.activeCoinList, this.props.activeAccount.id)
     .then(response => {
       if (response) {
+        const chainId = this.state.fullCoinData.id
         this.props.dispatch(response)
         this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
-        this.props.dispatch(addKeypairs(this.props.activeAccount.seeds, this.state.fullCoinData.id, this.props.activeAccount.keys))
-
-        // DELETE/REFACTOR: Deprecated
-        /*
-        this.props.dispatch(transactionsNeedUpdate(this.state.fullCoinData.id, this.props.needsUpdate.transanctions))
-        this.props.dispatch(balancesNeedUpdate(this.state.fullCoinData.id, this.props.needsUpdate.balances))
-        this.props.dispatch(needsUpdate("rates"))*/
+        this.props.dispatch(addKeypairs(this.props.activeAccount.seeds, chainId, this.props.activeAccount.keys))
+        activateChainLifecycle(chainId)
 
         this.setState({ isActive: true, loading: false });
       }
@@ -128,9 +126,8 @@ const mapStateToProps = (state) => {
   return {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
-    activeAccount: state.authentication.activeAccount,
-    balances: state.ledger.balances,
-    needsUpdate: state.ledger.needsUpdate
+    activeAccount: state.authentication.activeAccount
+    //needsUpdate: state.ledger.needsUpdate
   }
 };
 

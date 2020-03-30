@@ -15,8 +15,7 @@ import {
   Keyboard, 
   Clipboard,
   Alert,
-  RefreshControl,
-  Modal
+  RefreshControl
  } from "react-native"
 import { FormLabel, FormInput, FormValidationMessage, Icon } from 'react-native-elements'
 import { connect } from 'react-redux'
@@ -27,6 +26,9 @@ import { coinsToSats, isNumber, truncateDecimal } from '../../../utils/math'
 //import { everythingNeedsUpdate } from '../../../actions/actionCreators'
 import styles from './ReceiveCoin.styles'
 import Colors from '../../../globals/colors';
+import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
+import { API_GET_FIATPRICE, API_GET_BALANCES, DLIGHT } from "../../../utils/constants/intervalConstants"
+import { expireData } from "../../../actions/actionCreators"
 
 class ReceiveCoin extends Component {
   constructor(props) {
@@ -85,31 +87,26 @@ class ReceiveCoin extends Component {
   }
 
   forceUpdate = () => {
-    //TODO: Figure out why screen doesnt always update if everything is called seperately
-
-    /*this.props.dispatch(transactionsNeedUpdate(this.props.activeCoin.id, this.props.needsUpdate.transanctions))
-    this.props.dispatch(needsUpdate("rates"))*/
-
-    // DELETE/REFACTOR: Deprecated
-    //this.props.dispatch(everythingNeedsUpdate())
+    const coinObj = this.props.activeCoin
+    this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE))
+    this.props.dispatch(expireData(coinObj.id, API_GET_BALANCES))
 
     this.refresh()
   }
 
   refresh = () => {
-    const _activeCoinsForUser = this.props.activeCoinsForUser
-
-    let promiseArray = []
-
-    if(this.props.needsUpdate.rates) {
-      console.log("Rates need update, pushing update to transaction array")
-      if (!this.state.loading) {
-        this.setState({ loading: true });  
-      }  
-      //promiseArray.push(setCoinRates(_activeCoinsForUser))
-    }
-  
-    this.updateProps(promiseArray)
+    this.setState({ loading: true }, () => {
+      const updates = [API_GET_FIATPRICE, API_GET_BALANCES]
+      Promise.all(updates.map(async (update) => {
+        await conditionallyUpdateWallet(store.getState(), this.props.dispatch, this.props.activeCoin.id, update)
+      })).then(res => {
+        this.setState({ loading: false })
+      })
+      .catch(error => {
+        this.setState({ loading: false })
+        console.error(error)
+      })
+    })
   }
 
   updateProps = (promiseArray) => {
@@ -135,7 +132,7 @@ class ReceiveCoin extends Component {
   }
 
   createQRString = (coinTicker, amount, address, memo) => {
-    let _price = this.props.rates[this.state.selectedCoin.id]
+    let _price = this.props.rate
     let verusQRJSON = {
       verusQR: global.VERUS_QR_VERSION,
       coinTicker: coinTicker,
@@ -161,7 +158,7 @@ class ReceiveCoin extends Component {
 
   getPrice = () => {
     const _amount = this.state.amount
-    const _price = this.props.rates[this.state.selectedCoin.id]
+    const _price = this.props.rate
     
     if (!(_amount.toString()) ||
       !(isNumber(_amount)) ||
@@ -295,7 +292,7 @@ class ReceiveCoin extends Component {
             <FormLabel labelStyle={styles.formLabel}>
             {`Enter an amount in ${this.state.amountFiat ? 'USD' : this.state.selectedCoin.id}:`}
             </FormLabel>
-            {this.props.rates[this.state.selectedCoin.id] && (isNumber(_price)) &&
+            {this.props.rate && (isNumber(_price)) &&
               <TouchableOpacity onPress={() => {this.setState({ amountFiat: !this.state.amountFiat })}}>
                 <FormLabel labelStyle={styles.swapInputTypeBtnBordered}>
                   {this.state.amountFiat ? 'USD' : this.state.selectedCoin.id}
@@ -320,7 +317,7 @@ class ReceiveCoin extends Component {
               null
           }
           </FormValidationMessage>}
-          {this.props.rates[this.state.selectedCoin.id] && (isNumber(_price)) &&
+          {this.props.rate && (isNumber(_price)) &&
           <TouchableOpacity onPress={() => {this.setState({ amountFiat: !this.state.amountFiat })}}>
             <FormLabel labelStyle={styles.swapInputTypeBtn}>
               {`~${_price} ${this.state.amountFiat ? this.state.selectedCoin.id : 'USD'}`}
@@ -361,13 +358,15 @@ class ReceiveCoin extends Component {
 }
 
 const mapStateToProps = (state) => {
+  const chainTicker = state.coins.activeCoin.id
+
   return {
     accounts: state.authentication.accounts,
     activeCoin: state.coins.activeCoin,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeAccount: state.authentication.activeAccount,
-    rates: state.ledger.rates,
-    needsUpdate: state.ledger.needsUpdate,
+    rate: state.ledger.rates[DLIGHT][chainTicker],
+    //needsUpdate: state.ledger.needsUpdate,
   }
 };
 

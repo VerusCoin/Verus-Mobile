@@ -9,7 +9,7 @@ import {
 import { setCoinStatus } from '../../../actionCreators'
 import { getCoinObj } from '../../../../utils/CoinData/CoinData';
 
-export const activateChainLifecycle = (chainTicker) => {
+export const activateChainLifecycle = (chainTicker) => {  
   refreshCoinIntervals(chainTicker, {[API_GET_INFO]: {update_expired_oncomplete: getInfoOnComplete}})
 }
 
@@ -18,15 +18,15 @@ export const getInfoOnComplete = (state, dispatch, chainTicker) => {
   
   if (activeCoin == null) throw new Error(`${chainTicker} is not an active coin.`)
 
-  const currentStatus = activeCoin.status
+  const currentStatus = state.coins.status[chainTicker]
   const getInfoResult = state.ledger.info[chainTicker];
-  const getInfoError = state.errors[API_GET_INFO][chainTicker][DLIGHT];
+  const getInfoError = state.errors[API_GET_INFO][DLIGHT][chainTicker];
   const refresh = () =>
     refreshCoinIntervals(chainTicker, {
       [API_GET_INFO]: { update_expired_oncomplete: getInfoOnComplete }
     });
 
-  if (getInfoError && getInfoError.error) return;
+  if (getInfoError && getInfoError.error) return
 
   if (
     typeof getInfoResult !== "object" ||

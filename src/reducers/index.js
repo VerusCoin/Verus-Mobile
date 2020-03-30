@@ -10,6 +10,7 @@ import { buySellCrypto } from './buySellCrypto';
 import { paymentMethods } from './paymentMethods';
 import { updates } from './updates'
 import { responseHeaders } from './responseHeaders'
+import { errors } from './errors'
 
 export default combineReducers({
   authentication,
@@ -22,5 +23,6 @@ export default combineReducers({
   buySellCrypto,
   paymentMethods,
   updates,
+  errors,
   responseHeaders
 });

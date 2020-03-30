@@ -30,6 +30,9 @@ import { removeSpaces } from '../../../utils/stringUtils'
 import styles from './SendCoin.styles'
 import Colors from '../../../globals/colors';
 import withNavigationFocus from "react-navigation/src/views/withNavigationFocus"
+import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
+import store from "../../../store"
+import { API_GET_FIATPRICE, API_GET_BALANCES, ELECTRUM, DLIGHT } from "../../../utils/constants/intervalConstants"
 
 const VERUSPAY_LOGO_DIR = require('../../../images/customIcons/verusPay.png')
 const DEFAULT_FEE_GUI = 10000;
@@ -69,15 +72,12 @@ class SendCoin extends Component {
     }, () => {
       const activeUser = this.state.account
       const coinObj = this.state.coin
-      const activeCoinsForUser = this.state.activeCoinsForUser
-      const balances = this.props.balances
-      this.handleState(activeUser, coinObj, activeCoinsForUser, balances)
+
+      this.handleState(activeUser, coinObj)
     }); 
   }
 
-  handleState = (activeUser, coinObj, activeCoinsForUser, balances) => {
-    let promiseArray = []
-
+  handleState = async (activeUser, coinObj) => {
     if (
       activeUser.keys[coinObj.id] != null &&
       activeUser.keys[coinObj.id].electrum != null &&
@@ -96,36 +96,15 @@ class SendCoin extends Component {
       );
     }
 
-    if(this.props.needsUpdate.rates) {
-      console.log("Rates need update, pushing update to transaction array")
-      if (!this.state.loading) {
-        this.setState({ loading: true });  
-      }  
-      //promiseArray.push(setCoinRates(activeCoinsForUser))
-    }
-    
-    if(this.props.needsUpdate.balances[coinObj.id]) {
-      console.log(coinObj.id + "balance needs update, pushing update to transaction array")
-      if (!this.state.loading) {
-        this.setState({ loading: true });  
-      }  
+    this.setState({ loading: true, loadingBTCFees: coinObj.id === 'BTC' }, async () => {
+      await conditionallyUpdateWallet(store.getState(), this.props.dispatch, coinObj.id, API_GET_FIATPRICE)
+      await conditionallyUpdateWallet(store.getState(), this.props.dispatch, coinObj.id, API_GET_BALANCES)
+      if (coinObj.id === 'BTC') {
+        await this.updateBtcFees()
+      }
 
-      // DELET: Deprecated
-      /*promiseArray.push(
-        updateOneBalance(
-          balances,
-          coinObj,
-          activeUser,
-          this.props.needsUpdate.balances
-        )
-      );*/
-    }
-
-    if(coinObj.id === 'BTC' && !this.state.loadingBTCFees) {
-      this.setState({ loadingBTCFees: true });  
-    }
-
-    this.updateProps(promiseArray)
+      this.setState({ loading: false });  
+    });
   }
 
   handleFormError = (error, field) => {
@@ -135,50 +114,31 @@ class SendCoin extends Component {
     this.setState({formErrors: _errors})
   }
 
-  updateProps = (promiseArray) => {
+  updateBtcFees = () => {
     return new Promise((resolve, reject) => {
-      Promise.all(promiseArray)
-        .then((updatesArray) => {
-          if (updatesArray.length > 0) {
-            for (let i = 0; i < updatesArray.length; i++) {
-              if(updatesArray[i]) {
-                this.props.dispatch(updatesArray[i])
-              }
-            }
-            if (this.state.loading) {
-              this.setState({ loading: false });  
-            }
-            return true
-          }
-          else {
-            return false
-          }
-        })
-        .then((res) => {
-          if (this.state.coin.id === 'BTC') {
-            return getRecommendedBTCFees()
-          } 
-          else {
-            return false
-          }
-        })
-        .then((res) => {
-          if (res) {
-            console.log("BTC FEES:")
-            console.log(res)
-            this.setState({ 
+      getRecommendedBTCFees().then(res => {
+        if (res) {
+          console.log("BTC FEES:");
+          console.log(res);
+          this.setState(
+            {
               btcFees: res,
               loadingBTCFees: false
-             });  
-          } else if (this.state.coin.id === 'BTC'){
-            this.setState({ 
+            },
+            resolve
+          );
+        } else {
+          this.setState(
+            {
               btcFeesErr: true,
               loadingBTCFees: false
-             });
-          }
-        })
-    }) 
-  }
+            },
+            resolve
+          );
+        }
+      });
+    });
+  };
 
   goToConfirmScreen = (coinObj, activeUser, address, amount) => {
     const route = "ConfirmSend"
@@ -189,7 +149,7 @@ class SendCoin extends Component {
       address: address,
       amount: coinsToSats(Number(amount)),
       btcFee: this.state.btcFees.average,
-      balance: this.props.balances[coinObj.id].result.confirmed
+      balance: this.props.balances.public.confirmed
     }
 
     navigation.navigate(route, {
@@ -224,9 +184,9 @@ class SendCoin extends Component {
       const coin = this.state.coin
 
       const spendableBalance = coin.id === 'BTC' ? 
-      truncateDecimal(this.props.balances[this.props.activeCoin.id].result.confirmed, 4) 
+      truncateDecimal(this.props.balances.public.confirmed, 4) 
       : 
-      this.props.balances[this.props.activeCoin.id].result.confirmed - (this.props.activeCoin.fee ? this.props.activeCoin.fee : 10000)
+      this.props.balances.public.confirmed - (this.props.activeCoin.fee ? this.props.activeCoin.fee : 10000)
       
       const toAddress = removeSpaces(this.state.toAddress)
       const fromAddress = this.state.fromAddress
@@ -283,19 +243,20 @@ class SendCoin extends Component {
   
 
   render() {
+    const { balances, activeCoin } = this.props
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center"}}>
           <TouchableOpacity onPress={
-            this.props.balances.hasOwnProperty(this.props.activeCoin.id) ? 
-            (() => this.fillAmount(satsToCoins(this.props.balances[this.props.activeCoin.id].result.confirmed - (this.props.activeCoin.fee ? this.props.activeCoin.fee : 10000))))
+            balances.public ? 
+            (() => this.fillAmount(satsToCoins(balances.public.confirmed - (activeCoin.fee ? activeCoin.fee : 10000))))
             :
             (() => {return 0})
             }>
             <Text style={styles.coinBalanceLabel}>
-              {(this.props.balances && this.state.coin.id && this.props.balances[this.state.coin.id]) ?
-                (typeof(this.props.balances[this.state.coin.id].result.confirmed) !== 'undefined' ? 
-                truncateDecimal(satsToCoins(this.props.balances[this.state.coin.id].result.confirmed), 4) + ' ' + this.state.coin.id 
+              {(this.state.coin.id && balances.public) ?
+                (typeof(balances.public.confirmed) !== 'undefined' ? 
+                truncateDecimal(satsToCoins(balances.public.confirmed), 4) + ' ' + this.state.coin.id 
                 :
                 null)
               :
@@ -373,7 +334,7 @@ class SendCoin extends Component {
                   <Text style={styles.errorText}>BTC Fees Error!</Text>
                 </View>
               :
-                this.props.balances[this.props.activeCoin.id] && this.props.balances[this.props.activeCoin.id].error ? 
+                balances.errors.public ? 
                   <View style={styles.loadingContainer}>
                     <Text style={styles.errorText}>Connection Error</Text>
                   </View>
@@ -389,11 +350,20 @@ class SendCoin extends Component {
 }
 
 const mapStateToProps = (state) => {
+  const chainTicker = state.coins.activeCoin.id
+
   return {
-    needsUpdate: state.ledger.needsUpdate,
+    //needsUpdate: state.ledger.needsUpdate,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoin: state.coins.activeCoin,
-    balances: state.ledger.balances,
+    balances: {
+      public: state.ledger.balances[ELECTRUM][chainTicker],
+      private: state.ledger.balances[DLIGHT][chainTicker],
+      errors: {
+        public: state.errors[API_GET_BALANCES][ELECTRUM][chainTicker],
+        private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
+      }
+    },
     activeAccount: state.authentication.activeAccount,
   }
 };

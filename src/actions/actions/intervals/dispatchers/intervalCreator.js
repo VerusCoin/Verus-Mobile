@@ -74,7 +74,7 @@ export const createCoinUpdateExpiredInterval = (interval, chainTicker, updateId,
 export const clearAllCoinIntervals = (chainTicker) => {
   const intervalData = Store.getState().updates.coinUpdateIntervals[chainTicker]
 
-  for (let updateType in intervalData) {    
+  for (let updateType in intervalData) { 
     clearTimeout(intervalData[updateType].expire_id)
     Store.dispatch(clearExpireTimeoutId(chainTicker, updateType))
     clearInterval(intervalData[updateType].update_expired_id)
@@ -91,29 +91,34 @@ export const clearAllCoinIntervals = (chainTicker) => {
  */
 export const refreshCoinIntervals = (chainTicker, onCompletes) => {
   const state = Store.getState()
+
   const coinObj = getCoinObj(state.coins.activeCoinsForUser, chainTicker)
+  const channels = state.settings.coinSettings[chainTicker].channels
   const chainStatus = state.coins.status[chainTicker]
 
   if (!coinObj) throw new Error(`${chainTicker} is not added for current user. Coins must be added to be used.`)
   
-  const updateDataAction = generateUpdateCoinDataAction(chainStatus, chainTicker, coinObj.tags, onCompletes)
-  const oldUpdateData = state.updates.coinUpdateIntervals[chainTicker]
-  const newUpdateData = updateDataAction.updateIntervalData
+  const updateDataAction = generateUpdateCoinDataAction(chainStatus, chainTicker, coinObj.tags, channels, onCompletes)
+  const oldIntervalData = state.updates.coinUpdateIntervals[chainTicker]
+  const newIntervalData = updateDataAction.updateIntervalData
+  const newTrackingData = updateDataAction.updateTrackingData
 
-  if (oldUpdateData) {
+  if (oldIntervalData) {
     // Clear all previously existing intervals
 
-    for (let updateId in oldUpdateData) {
-      clearTimeout(oldUpdateData[updateId].expire_id)
-      clearInterval(oldUpdateData[updateId].update_expired_id)
+    for (let updateId in oldIntervalData) {
+      clearTimeout(oldIntervalData[updateId].expire_id)
+      clearInterval(oldIntervalData[updateId].update_expired_id)
     }
   }
 
   //Update state
   Store.dispatch(updateDataAction)
 
-  for (let updateId in newUpdateData) {
-    createCoinUpdateExpiredInterval(newUpdateData[updateId].update_expired_interval, chainTicker, updateId, newUpdateData[updateId].update_expired_oncomplete)
-    createExpireTimeout(newUpdateData[updateId].expire_timeout, chainTicker, updateId, newUpdateData[updateId].expire_oncomplete)
+  for (let updateId in newIntervalData) {
+    if (newTrackingData[updateId].channels.length > 0) {
+      createCoinUpdateExpiredInterval(newIntervalData[updateId].update_expired_interval, chainTicker, updateId, newIntervalData[updateId].update_expired_oncomplete)
+      createExpireTimeout(newIntervalData[updateId].expire_timeout, chainTicker, updateId, newIntervalData[updateId].expire_oncomplete)
+    } 
   }
 }

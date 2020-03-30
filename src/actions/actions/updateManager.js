@@ -1,4 +1,4 @@
-import { IS_PBAAS, IS_ZCASH, IS_PBAAS_ROOT } from '../../utils/constants/constants'
+import { IS_PBAAS, IS_ZCASH, IS_PBAAS_ROOT } from '../../utils/constants/intervalConstants'
 import { DEFAULT_COIN_UPDATE_PARAMS } from '../../utils/constants/defaultUpdateParams'
 import {
   SET_COIN_UPDATE_DATA,
@@ -22,7 +22,7 @@ import {
  * @param {Object} onCompletes Object with optional onCompletes to each updateInterval to be called with state and dispatch function.
  * e.g. {get_info: {update_expired_oncomplete: increaseGetInfoInterval}}
  */
-export const generateUpdateCoinDataAction = (chainStatus, chainTicker, chainTags, onCompletes = {}) => {
+export const generateUpdateCoinDataAction = (chainStatus, chainTicker, chainTags, enabledChannels, onCompletes = {}) => {
   if (!chainTicker) throw new Error("No chain ticker specified for generateUpdateCoinDataAction")
   
   let updateIntervalData = {}
@@ -37,10 +37,12 @@ export const generateUpdateCoinDataAction = (chainStatus, chainTicker, chainTags
     if (!isPbaasRoot && DEFAULT_COIN_UPDATE_PARAMS[key].restrictions.includes(IS_PBAAS_ROOT)) continue 
     if (chainTicker && DEFAULT_COIN_UPDATE_PARAMS[key].restrictions.includes(chainTicker.toUpperCase())) continue
 
+    const channelsToUse = DEFAULT_COIN_UPDATE_PARAMS[key].channels.filter(value => -1 !== enabledChannels.indexOf(value))
+
     updateIntervalData[key] = DEFAULT_COIN_UPDATE_PARAMS[key][chainStatus].interval_info
     updateTrackingData[key] = {
       ...DEFAULT_COIN_UPDATE_PARAMS[key][chainStatus].tracking_info,
-      channels: DEFAULT_COIN_UPDATE_PARAMS[key].channels
+      channels: channelsToUse
     };
     if (onCompletes[key]) updateIntervalData[key] = {...updateIntervalData[key], ...onCompletes[key]}
   }

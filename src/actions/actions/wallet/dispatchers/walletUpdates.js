@@ -37,13 +37,13 @@ export const walletUpdates = {
  * @param {String} updateId Name of API call to update
  * @param {Function} onExpire (Optional) Function to execute on data expiry
  */
-export const udpateWalletData = async (state, dispatch, channels, chainTicker, updateId, onExpire) => {
+export const udpateWalletData = async (state, dispatch, channels, chainTicker, updateId, onExpire) => {  
   dispatch(occupyCoinApiCall(chainTicker, channels, updateId))
   let noError = false
 
   try {
     if(await walletUpdates[updateId](state, dispatch, channels, chainTicker)) {
-      if (state.updates.coinUpdateIntervals[chainTicker][updateId].expire_timeout !== ALWAYS_ACTIVATED) {
+      if (state.updates.coinUpdateIntervals[chainTicker][updateId].expire_timeout !== ALWAYS_ACTIVATED) {        
         dispatch(renewData(chainTicker, updateId))
       }
 
@@ -72,24 +72,30 @@ export const udpateWalletData = async (state, dispatch, channels, chainTicker, u
  */
 export const conditionallyUpdateWallet = async (state, dispatch, chainTicker, updateId) => {
   const updateInfo = state.updates.coinUpdateTracker[chainTicker][updateId]
-  const { coin_bound, update_locations, channels } = updateInfo
-  const openChannels = channels.filter(channel => {
-    return !(updateInfo.busy[channel] === true)
-  })
-  const { activeSection, activeCoin } = state.coins
-  
-  if (openChannels.length === 0) {
-    //dispatch(logDebugWarning(`The ${updateId} call for ${chainTicker} is taking a very long time to complete. This may impact performace.`)
-    console.warn(`The ${updateId} call for ${chainTicker} is taking a very long time to complete. This may impact performace.`)
-  } else if (updateInfo && updateInfo.needs_update) {    
-    if (coin_bound && (activeCoin == null || activeCoin.id !== chainTicker)) return API_ABORTED
-    else if (update_locations != null && (activeSection == null || !update_locations.includes(activeSection.key))) return API_ABORTED
 
-    if(await udpateWalletData(state, dispatch, openChannels, chainTicker, updateId)) {
-      return API_SUCCESS
-    }
-    else return API_ERROR
-  } 
+  if (updateInfo != null && updateInfo.channels.length > 0) {
+    const { coin_bound, update_locations, channels } = updateInfo
+    const openChannels = channels.filter(channel => {
+      return !(updateInfo.busy[channel] === true)
+    })
+    const { activeSection, activeCoin, coinMenuFocused } = state.coins
 
+    if (openChannels.length === 0) {
+      //dispatch(logDebugWarning(`The ${updateId} call for ${chainTicker} is taking a very long time to complete. This may impact performace.`)
+      console.warn(`The ${updateId} call for ${chainTicker} is taking a very long time to complete. This may impact performace.`)
+    } else if (updateInfo && updateInfo.needs_update) {    
+      if (coin_bound && (!coinMenuFocused || activeCoin == null || activeCoin.id !== chainTicker)) {
+        return API_ABORTED
+      } else if (update_locations != null && (!coinMenuFocused || activeSection == null || !update_locations.includes(activeSection.key))) {
+        return API_ABORTED
+      }
+
+      if(await udpateWalletData(state, dispatch, openChannels, chainTicker, updateId)) {
+        return API_SUCCESS
+      } else {
+        return API_ERROR
+      }
+    } 
+  }
   return API_ABORTED
 }

@@ -7,7 +7,7 @@ import {
 } from '../../utils/CoinData/CoinData';
 import {
   storeCoins,
-  getActiveCoinsList
+  getActiveCoinList
 } from '../../utils/asyncStore/asyncStore';
 
 // Add coin that exists in default list of coins
@@ -75,7 +75,7 @@ export const removeExistingCoin = (coinID, activeCoins, userName) => {
 
 export const fetchActiveCoins = () => {
   return new Promise((resolve, reject) => {
-    getActiveCoinsList()
+    getActiveCoinList()
       .then(res => {
         resolve(setCoinList(res))
       })

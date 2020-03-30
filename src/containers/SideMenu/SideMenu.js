@@ -25,6 +25,7 @@ import { NavigationActions } from 'react-navigation';
 import AlertAsync from "react-native-alert-async";
 import styles from './SideMenu.styles';
 import { ENABLE_WYRE } from '../../utils/constants/constants';
+import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 
 const APP_INFO = 'App Info'
 const PROFILE = 'Profile'
@@ -96,6 +97,7 @@ class SideMenu extends Component {
     return new Promise((resolve, reject) => {
       removeExistingCoin(coinID, this.props.activeCoinList, this.props.activeAccount.id)
       .then((res) => {
+        clearAllCoinIntervals(coinID)
         this.props.dispatch(res)
         resolve(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
       })
@@ -397,8 +399,7 @@ const mapStateToProps = (state) => {
   return {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
-    activeAccount: state.authentication.activeAccount,
-    balances: state.ledger.balances,
+    activeAccount: state.authentication.activeAccount
   }
 };
 

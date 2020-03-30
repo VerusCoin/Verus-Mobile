@@ -5,7 +5,7 @@ import { findCoinObj } from '../CoinData/CoinData';
 //Clear user from coin, or delete user from all if no coin specified
 export const deleteUserFromCoin = (userID, coinID) => {
   return new Promise((resolve, reject) => {
-    getActiveCoinsList()
+    getActiveCoinList()
     .then((coinList) => {
       let newList = coinList.slice()
       for (let i = 0; i < newList.length; i++) {
@@ -43,7 +43,7 @@ export const storeCoins = (coins) => {
   }) 
 };
 
-export const getActiveCoinsList = () => {
+export const getActiveCoinList = () => {
   return new Promise((resolve, reject) => {
     AsyncStorage.getItem('activeCoins')
       .then(res => {

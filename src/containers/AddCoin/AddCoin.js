@@ -16,7 +16,7 @@ import {
   defaultAssetsPath,
   namesList,
   findCoinObj
-} from '../../utils/CoinData';
+} from '../../utils/CoinData/CoinData';
 
 class AddCoin extends Component {
   constructor(props) {

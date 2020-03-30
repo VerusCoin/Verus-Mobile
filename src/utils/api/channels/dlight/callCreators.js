@@ -27,6 +27,19 @@ export const makeDlightRequest = (coinId, accountHash, coinProto, reqId, method,
     VerusLightClient.request(reqId, method, [coinId, coinProto, accountHash, ...params])
     .then(res => {
       if (res.error != null) {
+
+        // DELETE/REFACTOR when proper error displays are made
+        console.log(" ------- DLIGHT EXCEPTION ------- ")
+        console.log(res.error.message)
+        console.log(res.error.data)
+        console.log(reqId)
+        console.log(params)
+        console.log(coinId)
+        console.log(coinProto)
+        console.log(accountHash)
+        console.log(method)
+        console.log(" ------- END DLIGHT EXCEPTION ------- ")
+
         reject(
           new ApiException(
             res.error.message,

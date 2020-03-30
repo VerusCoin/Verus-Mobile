@@ -9,7 +9,6 @@ export * from './actions/updateManager'
 
 import {
   SET_ACCOUNTS,
-  SIGN_IN,
   SIGN_OUT,
   FINGER_AUTH,
   SET_ACTIVE_COIN,
@@ -53,7 +52,10 @@ import {
   GET_EXCHANGE_RATES_RESPONSE,
   GET_TRANSACTION_HISTORY,
   GET_TRANSACTION_HISTORY_RESPONSE,
-  SET_COIN_STATUS
+  SET_COIN_STATUS,
+  SIGN_IN_USER,
+  AUTHENTICATE_USER,
+  SET_COINMENU_FOCUS
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -65,9 +67,14 @@ export const setAccounts = (accounts) => {
 }
 
 //Reducer Name: authentication
-export const signIntoAccount = (account) => {
+export const signIntoAuthenticatedAccount = () => {
+  return { type: SIGN_IN_USER }
+}
+
+//Reducer Name: authentication
+export const authenticateUser = (account) => {
   return {
-    type: SIGN_IN,
+    type: AUTHENTICATE_USER,
     activeAccount: account
   }
 }
@@ -161,6 +168,16 @@ export const setActiveSection = (activeSection) => {
 }
 
 //Reducer name: coins
+export const setIsCoinMenuFocused = (isFocused) => {  
+  return {
+    type: SET_COINMENU_FOCUS,
+    payload: {
+      isFocused
+    }
+  }
+}
+
+//Reducer name: coins
 export const setCoinList = (activeCoinList) => {
   return {
     type: SET_COIN_LIST,
@@ -209,17 +226,6 @@ export const setTransactions = (transactions) => {
   }
 }
 
-//This sets the ID for the app heartbeat data update interval
-//so that it can be cleared from any active component
-//Reducer name: ledger
-// DELETE/REFACTOR: Deprecated
-/*export const setUpdateIntervalID = (ID) => {
-  return {
-    type: SET_INTERVAL_ID,
-    updateIntervalID: ID
-  }
-}*/
-
 //Reducer name: authentication
 export const updateAccountKeys = (keys) => {
   return {
@@ -235,48 +241,6 @@ export const updateCoinRates = (rates) => {
     rates: rates
   }
 }
-
-/* DELET: Deprecated
-//Reducer name: ledger
-export const transactionsNeedUpdate = (coinID, needsUpdateObj) => {
-  let _needsUpdateObj = needsUpdateObj ? needsUpdateObj : {}
-  _needsUpdateObj[coinID] = true
-
-  return {
-    type: TRANSACTIONS_NEED_UPDATE,
-    needsUpdateObj: _needsUpdateObj
-  }
-}
-
-//Reducer name: ledger
-export const balancesNeedUpdate = (coinID, needsUpdateObj) => {
-  let _needsUpdateObj = needsUpdateObj ? needsUpdateObj : {}
-  _needsUpdateObj[coinID] = true
-
-  return {
-    type: BALANCES_NEED_UPDATE,
-    needsUpdateObj: _needsUpdateObj
-  }
-}
-
-//Reducer name: ledger
-//TODO: ERROR HERE FIX THIS
-export const needsUpdate = (component) => {
-  let actionType = (component.toUpperCase()) + NEEDS_UPDATE_POSTFIX
-
-  return {
-    type: actionType,
-  }
-}
-
-//Reducer name: ledger
-export const everythingNeedsUpdate = () => {
-  return {
-    type: EVERYTHING_NEEDS_UPDATE,
-  }
-}
-
-*/
 
 //Reducer Name: electrum
 export const addServerVersion = (server, version) => {

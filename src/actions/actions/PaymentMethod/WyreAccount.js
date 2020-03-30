@@ -71,6 +71,7 @@ export const manageAccount = (navigation) => async (dispatch, getState) => {
                 }
             };
 
+            //TODO: REFACTOR signIntoAccount is deprecated
             dispatch(signIntoAccount(newActiveAccount));
 
         } catch (error) {

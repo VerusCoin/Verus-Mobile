@@ -26,10 +26,7 @@ import { API_GET_BALANCES, API_GET_TRANSACTIONS, API_GET_INFO, API_GET_FIATPRICE
 
 export const updates = (state = {
   coinUpdateTracker: {},
-  coinUpdateIntervals: {},
-  systemUpdateTracker: {},
-  systemUpdateIntervals: {},
-  updateWarningSnackDisabled: false,
+  coinUpdateIntervals: {}
 }, action) => {
   let { chainTicker, channel, dataType, channels, error } = action.payload || {}
   if (chainTicker == null && error) {

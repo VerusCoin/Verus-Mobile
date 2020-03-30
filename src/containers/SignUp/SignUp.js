@@ -19,7 +19,7 @@ import {
 } from "react-native"
 import { NavigationActions } from 'react-navigation'
 import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements'
-import { addUser, setUpdateIntervalID } from '../../actions/actionCreators'
+import { addUser } from '../../actions/actionCreators'
 import { connect } from 'react-redux'
 import { getKey } from '../../utils/keyGenerator/keyGenerator'
 import { spacesLeadOrTrail, hasSpecialCharacters } from '../../utils/stringUtils'
@@ -27,6 +27,7 @@ import AlertAsync from 'react-native-alert-async'
 import ScanSeed from '../../components/ScanSeed'
 import styles from './SignUp.styles';
 import Colors from '../../globals/colors';
+import { clearAllCoinIntervals } from "../../actions/actionDispatchers"
 
 class SignUp extends Component {
   constructor() {
@@ -51,11 +52,14 @@ class SignUp extends Component {
   }
 
   componentWillMount() {
-    if (this.props.updateIntervalID) {
+    /*if (this.props.updateIntervalID) {
       console.log("Update interval ID detected as " + this.props.updateIntervalID + ", clearing...")
       clearInterval(this.props.updateIntervalID)
       this.props.dispatch(setUpdateIntervalID(null))
-    }
+    }*/
+    this.props.activeCoinList.map(coinObj => {
+      clearAllCoinIntervals(coinObj.id)
+    })
 
     if (this.props.navigation.state.params && this.props.navigation.state.params.data) {
       this.fillSeed(this.props.navigation.state.params.data.seed)
@@ -427,7 +431,8 @@ class SignUp extends Component {
 const mapStateToProps = (state) => {
   return {
     accounts: state.authentication.accounts,
-    updateIntervalID: state.ledger.updateIntervalID
+    //updateIntervalID: state.ledger.updateIntervalID,
+    activeCoinList: state.coins.activeCoinList
   }
 };
 

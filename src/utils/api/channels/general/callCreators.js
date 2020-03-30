@@ -99,33 +99,3 @@ export const getCoinRates = (coinObj) => {
       });
   });
 }
-
-// DELET: Deprecated
-/*export const getAllCoinRates = (activeCoinsForUser) => {
-  let promiseArray = []
-
-  for (let i = 0; i < activeCoinsForUser.length; i++) {
-    promiseArray.push(getCoinRates(activeCoinsForUser[i]))
-  }
-
-  return new Promise((resolve, reject) => {
-    Promise.all(promiseArray)
-    .then((rates) => {
-      if (rates.every(item => {return !item})) {
-        resolve(false)
-      }
-      else {
-        let resolveObj = {}
-        for (let i = 0; i < rates.length; i++) {
-          if (rates[i]) {
-            resolveObj[rates[i].id] = rates[i].rate
-          }
-          else {
-            resolveObj[rates[i].id] = "err"
-          }
-        }
-        resolve(resolveObj)
-      }
-    })
-  });
-}*/

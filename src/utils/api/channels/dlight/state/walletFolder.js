@@ -20,7 +20,7 @@ export const initializeWallet = async (coinId, coinProto, host, port, accountHas
 }
 
 /**
- * Opens a wallet that has been opened before
+ * Opens a wallet that has been created before
  * @param {String} coinId The chainticker to create a light wallet client for
  * @param {String} coinProto The protocol the coin is based on (e.g. 'btc' || 'vrsc')
  * @param {String} accountHash The account hash of the user account to create the wallet for

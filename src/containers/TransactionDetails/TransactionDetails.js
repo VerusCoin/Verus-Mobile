@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { connect } from 'react-redux';
 import { unixToDate } from '../../utils/math';
-import { explorers } from '../../utils/CoinData';
+import { explorers } from '../../utils/CoinData/CoinData';
 import { truncateDecimal } from '../../utils/math';
 import { Icon } from 'react-native-elements';
 import styles from './TransactionDetails.styles';
@@ -160,8 +160,7 @@ const mapStateToProps = (state) => {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
     activeAccount: state.authentication.activeAccount,
-    balances: state.ledger.balances,
-    needsUpdate: state.ledger.needsUpdate
+    //needsUpdate: state.ledger.needsUpdate
   }
 };
 

@@ -15,6 +15,8 @@ import Overview from './Overview/Overview'
 import SendCoin from './SendCoin/SendCoin'
 import ReceiveCoin from './ReceiveCoin/ReceiveCoin'
 import { Icon } from "react-native-elements"
+import { setIsCoinMenuFocused } from "../../actions/actionCreators";
+import { withNavigationFocus } from 'react-navigation';
 
 class CoinMenus extends Component {
   constructor(props) {
@@ -29,6 +31,12 @@ class CoinMenus extends Component {
       tabs: stateObj.tabs,
       activeTab: stateObj.activeTab,
     }; 
+  }
+
+  componentDidUpdate(lastProps) {  
+    if (lastProps.isFocused !== this.props.isFocused) {
+      this.props.dispatch(setIsCoinMenuFocused(this.props.isFocused))
+    }
   }
 
   static navigationOptions = ({ navigation }) => {
@@ -124,9 +132,10 @@ const mapStateToProps = (state) => {
   return {
     activeCoin: state.coins.activeCoin,
     activeApp: state.coins.activeApp,
-    activeSection: state.coins.activeSection
+    activeSection: state.coins.activeSection,
+    coinMenuFocused: state.coins.coinMenuFocused
   }
 };
 
-export default connect(mapStateToProps)(CoinMenus);
+export default connect(mapStateToProps)(withNavigationFocus(CoinMenus));
 

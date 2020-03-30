@@ -6,10 +6,11 @@
 
 import {
   SET_ACCOUNTS,
-  SIGN_IN,
   UPDATE_ACCOUNT_KEYS,
   SIGN_OUT,
-  FINGER_AUTH
+  FINGER_AUTH,
+  AUTHENTICATE_USER,
+  SIGN_IN_USER
 } from "../utils/constants/storeType";
 
 export const authentication = (
@@ -35,10 +36,14 @@ export const authentication = (
         ...state,
         accounts: action.accounts
       };
-    case SIGN_IN:
+    case AUTHENTICATE_USER:
       return {
         ...state,
         activeAccount: action.activeAccount,
+      };
+    case SIGN_IN_USER:
+      return {
+        ...state,
         signedIn: true
       };
     case UPDATE_ACCOUNT_KEYS:

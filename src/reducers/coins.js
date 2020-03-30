@@ -9,7 +9,8 @@ import {
   SET_ACTIVE_SECTION,
   SET_COIN_LIST,
   SET_USER_COINS,
-  SET_COIN_STATUS
+  SET_COIN_STATUS,
+  SET_COINMENU_FOCUS
 } from '../utils/constants/storeType'
 import {
   DLIGHT,
@@ -23,7 +24,8 @@ export const coins = (state = {
   activeCoinsForUser: [],
   activeApp: null,
   activeSection: null,
-  status: {}
+  status: {},
+  coinMenuFocused: false
 }, action) => {
   //TODO: Change coin lists to objects not arrays
   switch (action.type) {
@@ -42,6 +44,11 @@ export const coins = (state = {
         ...state,
         activeSection: action.activeSection,
       };
+    case SET_COINMENU_FOCUS:
+      return {
+        ...state,
+        coinMenuFocused: action.payload.isFocused
+      }
     case SET_COIN_LIST:
       return {
         ...state,
@@ -50,7 +57,7 @@ export const coins = (state = {
     case SET_USER_COINS:
       let status = {}
       action.activeCoinsForUser.map(coinObj => {
-        status[coinObj.id] = coinObj.compatible_channnels.includes(DLIGHT) ? PRE_DATA : POST_SYNC
+        status[coinObj.id] = PRE_DATA
       })
 
       return {

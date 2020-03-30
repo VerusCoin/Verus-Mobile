@@ -86,44 +86,6 @@ export const ledger = (state = {
           [channel]: { ...state.rates[channel], [chainTicker]: body }
         }
       };
-    // DELETE/REFACTOR: Deprecated
-    /*case SET_ONE_BALANCE:
-      return {
-        ...state,
-        balances: {...state.balances, [action.coinId]: action.balance},
-        needsUpdate: {...state.needsUpdate, balances: {...state.needsUpdate.balances, [action.coinId]: false}}
-      };*/
-    // DELETE/REFACTOR: Deprecated
-    /*case BALANCES_NEED_UPDATE:
-      return {
-        ...state,
-        needsUpdate: {...state.needsUpdate, balances: action.needsUpdateObj}
-      };
-    case TRANSACTIONS_NEED_UPDATE:
-      return {
-        ...state,
-        needsUpdate: {...state.needsUpdate, transactions: action.needsUpdateObj}
-      };
-    case RATES_NEED_UPDATE:
-      return {
-        ...state,
-        needsUpdate: {...state.needsUpdate, rates: true}
-      };
-    case EVERYTHING_NEEDS_UPDATE:
-      let _transactions = state.needsUpdate.transactions
-      let _balances = state.needsUpdate.balances
-
-      for (let i = 0; i < namesList.length; i++) {
-        _transactions[namesList[i]] = true
-        _balances[namesList[i]] = true
-      }
-
-      return {
-        ...state,
-        needsUpdate: {balances: _balances, 
-                      transactions: _transactions,
-                      rates: true}
-      };*/
     case SIGN_OUT:
       return {
         ...state,

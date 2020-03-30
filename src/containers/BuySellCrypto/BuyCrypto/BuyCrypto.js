@@ -27,6 +27,7 @@ import {
   addExistingCoin,
   setUserCoins,
   addKeypairs,
+  expireData,
   //transactionsNeedUpdate,
   //updateOneBalance,
   //balancesNeedUpdate
@@ -54,6 +55,11 @@ import {
 import { selectWyrePaymentMethod } from '../../../selectors/authentication';
 import hasPaymentMethod from '../../../utils/paymentMethod';
 import withNavigationFocus from "react-navigation/src/views/withNavigationFocus";
+import { API_GET_FIATPRICE, API_GET_BALANCES, API_GET_INFO, API_GET_TRANSACTIONS, ELECTRUM } from "../../../utils/constants/intervalConstants";
+import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
+import store from "../../../store";
+import { activateChainLifecycle } from "../../../actions/actions/intervals/dispatchers/lifecycleManager";
+
 class BuyCrypto extends Component {
   constructor(props) {
     super(props);
@@ -118,51 +124,28 @@ class BuyCrypto extends Component {
   };
 
   forceUpdate = () => {
-    //TODO: Figure out why screen doesnt always update if everything is called seperately
+    const coinObj = this.props.activeCoin
+    this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE))
+    this.props.dispatch(expireData(coinObj.id, API_GET_BALANCES))
+    this.props.dispatch(expireData(coinObj.id, API_GET_INFO))
+    this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS))
 
-    /*this.props.dispatch(transactionsNeedUpdate(this.props.activeCoin.id, this.props.needsUpdate.transanctions))
-    this.props.dispatch(needsUpdate("rates"))*/
-
-    // DELET: Deprecated
-    //this.props.dispatch(everythingNeedsUpdate());
-
-    this.refresh();
-  };
+    this.refresh()
+  }
 
   refresh = () => {
-    const _activeCoinsForUser = this.props.activeCoinsForUser;
-
-    let promiseArray = [];
-
-    if (this.props.needsUpdate.rates) {
-      console.log("Rates need update, pushing update to transaction array");
-      if (!this.state.loading) {
-        this.setState({ loading: true });
-      }
-      //promiseArray.push(setCoinRates(_activeCoinsForUser));
-    }
-
-    this.updateProps(promiseArray);
-  };
-
-  updateProps = promiseArray => {
-    return new Promise((resolve, reject) => {
-      Promise.all(promiseArray).then(updatesArray => {
-        if (updatesArray.length > 0) {
-          for (let i = 0; i < updatesArray.length; i++) {
-            if (updatesArray[i]) {
-              this.props.dispatch(updatesArray[i]);
-            }
-          }
-          if (this.state.loading) {
-            this.setState({ loading: false });
-          }
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-      });
-    });
+    this.setState({ loading: true }, () => {
+      const updates = [API_GET_FIATPRICE]
+      Promise.all(updates.map(async (update) => {
+        await conditionallyUpdateWallet(store.getState(), this.props.dispatch, this.props.activeCoin.id, update)
+      })).then(() => {
+        this.setState({ loading: false })
+      })
+      .catch(error => {
+        this.setState({ loading: false })
+        console.error(error)
+      })
+    })
   };
 
   canAddCoin = coinTicker => {
@@ -233,18 +216,8 @@ class BuyCrypto extends Component {
               this.props.activeAccount.keys
             )
           );
-          // DELET: Deprecated
-          /*
-          this.props.dispatch(
-            transactionsNeedUpdate(
-              coinTicker,
-              this.props.needsUpdate.transanctions
-            )
-          );
-          this.props.dispatch(
-            balancesNeedUpdate(coinTicker, this.props.needsUpdate.balances)
-          );*/
 
+          activateChainLifecycle(coinTicker)
           this.setState({ addingCoin: false });
 
           resolve(true);
@@ -259,40 +232,55 @@ class BuyCrypto extends Component {
     this.setState({ fromCurr: curr });
   };
 
-  handleUpdates = () => {
-    let promiseArray = [];
+  handleUpdates = async () => {
+    //DELETE/REFACTOR
+    return new Promise((resolve, reject) => {
+      let promises = [];
+      const finishPromise = () => {
+        Promise.all(promises)
+          .then(res => {
+            resolve(res);
+          })
+          .catch(err => {
+            reject(err);
+          });
+      };
 
-    if (
-      this.state.coinObj &&
-      this.props.needsUpdate.balances[this.state.coinObj.id]
-    ) {
-      console.log(
-        this.state.coinObj.id +
-          "balance needs update, pushing update to transaction array"
+      this.setState(
+        {
+          loading: true,
+          loadingBTCFees:
+            this.state.coinObj &&
+            this.state.coinObj.id === "BTC" &&
+            !this.state.loadingBTCFees
+              ? true
+              : false
+        },
+        () => {
+          const updates = [API_GET_BALANCES, API_GET_INFO];
+          promises.push(() =>
+            Promise.all(
+              updates.map(async update => {
+                await conditionallyUpdateWallet(
+                  store.getState(),
+                  this.props.dispatch,
+                  this.props.activeCoin.id,
+                  update
+                );
+              })
+            )
+              .then(() => {
+                this.setState({ loading: false });
+              })
+              .catch(error => {
+                this.setState({ loading: false });
+                console.error(error);
+              })
+          );
+          finishPromise();
+        }
       );
-      if (!this.state.loading) {
-        this.setState({ loading: true });
-      }
-      // DELET: Deprecated
-      /*promiseArray.push(
-        updateOneBalance(
-          this.props.balances,
-          this.state.coinObj,
-          this.props.activeAccount,
-          this.props.needsUpdate.balances
-        )
-      );*/
-    }
-
-    if (
-      this.state.coinObj &&
-      this.state.coinObj.id === "BTC" &&
-      !this.state.loadingBTCFees
-    ) {
-      this.setState({ loadingBTCFees: true });
-    }
-
-    return this.updateProps(promiseArray);
+    });
   };
 
   switchToCurr = coin => {
@@ -368,7 +356,7 @@ class BuyCrypto extends Component {
           _errors = true;
         } else if (
           !this.props.buy &&
-          _fromVal > this.props.balances[_fromCurr].result.confirmed
+          _fromVal > this.props.balances[_fromCurr].confirmed
         ) {
           this.handleError("You exceeded your balance amount", "fromVal");
           _errors = true;
@@ -638,13 +626,13 @@ const mapStateToProps = (state) => ({
   activeCoin: state.coins.activeCoin,
   activeCoinsForUser: state.coins.activeCoinsForUser,
   activeAccount: state.authentication.activeAccount,
-  needsUpdate: state.ledger.needsUpdate,
+  //needsUpdate: state.ledger.needsUpdate,
   activeCoinList: state.coins.activeCoinList,
   inProgress: selectWyreCreatePaymentIsFetching(state),
   rates: selectExchangeRates(state),
   exchangeRatesFetching: selectExchangeRatesIsFetching(state),
   paymentMethod: selectWyrePaymentMethod(state),
-  balances: state.ledger.balances,
+  balances: state.ledger.balances[ELECTRUM],
 });
 
 const mapDispatchToProps = (dispatch) => ({
