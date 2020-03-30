@@ -142,13 +142,13 @@ class Home extends Component {
     for (let key in this.props.rates) {
       if (typeof this.props.rates[key] === "number") {
         coinBalance = balances.hasOwnProperty(key) && !balances[key].error && !isNaN(balances[key].result.confirmed) ? 
-        truncateDecimal(satsToCoins(balances[key].result.confirmed), 4) : 0
+        satsToCoins(balances[key].result.confirmed) : 0
 
         _totalFiatBalance += coinBalance*this.props.rates[key]
       }
     }
 
-    this.setState({ totalFiatBalance: _totalFiatBalance.toFixed(2) });  
+    this.setState({ totalFiatBalance: _totalFiatBalance });
   }
 
   _verusPay = () => {
