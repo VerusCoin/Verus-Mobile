@@ -6,7 +6,7 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../../../symbols/button1";
+import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
   ScrollView, 
@@ -87,14 +87,14 @@ class SelectCountry extends Component {
           </ScrollView>
           <View style={styles.bottom}>
             <View style={styles.buttonContainer}>
-              <Button1 
+              <StandardButton 
                 style={styles.backButton} 
-                buttonContent="Back" 
+                title="Back" 
                 onPress={this.back}
               />
-              <Button1 
+              <StandardButton 
                 style={styles.saveChangesButton} 
-                buttonContent="Confirm" 
+                title="Confirm" 
                 onPress={this.handleSubmit}
               />
             </View>

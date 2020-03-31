@@ -10,7 +10,7 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../../../symbols/button1";
+import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
   Text, 
@@ -153,14 +153,14 @@ class RecoverSeed extends Component {
             </FormValidationMessage>
           </View>
           <View style={styles.buttonContainer}>
-            <Button1 
+            <StandardButton 
               style={styles.cancelButton} 
-              buttonContent="CANCEL" 
+              title="CANCEL" 
               onPress={this.cancel}
             />
-            <Button1 
+            <StandardButton 
               style={styles.addAccountButton} 
-              buttonContent="RECOVER" 
+              title="RECOVER" 
               onPress={this._handleSubmit}
             />
           </View>

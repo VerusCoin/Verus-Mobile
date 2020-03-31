@@ -11,7 +11,7 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
-import Button1 from '../../../../symbols/button1';
+import StandardButton from '../../../../components/StandardButton';
 import Spinner from 'react-native-loading-spinner-overlay';
 import {
   selectWyreAccount,
@@ -51,27 +51,27 @@ class ManageWyreAccount extends Component {
     switch (status) {
       case 'PENDING':
         return(
-          <Button1
+          <StandardButton
             style={styles.statusButtonPending}
-            buttonContent="PENDING"
+            title="PENDING"
             onPress={() => this.navigate(screen)}
             buttonStyle={styles.statusButtonStyle}
           />
         )
       case 'APPROVED':
         return (
-          <Button1
+          <StandardButton
             style={styles.statusButtonApproved}
-            buttonContent="APPROVED"
+            title="APPROVED"
             onPress={() => this.navigate(screen)}
             buttonStyle={styles.statusButtonApprovedStyle}
         />
         )
       default:
         return (
-          <Button1
+          <StandardButton
             style={styles.statusButtonAdd}
-            buttonContent="ADD"
+            title="ADD"
             onPress={() => this.navigate(screen)}
             buttonStyle={styles.statusButtonStyle}
         />

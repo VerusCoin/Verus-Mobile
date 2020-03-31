@@ -5,7 +5,7 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../../../symbols/button1";
+import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
   Text, 
@@ -153,14 +153,14 @@ class CoinSettings extends Component {
               <ActivityIndicator animating={this.state.loading} size="large"/>
             :
               <View style={styles.buttonContainer}>
-                <Button1 
+                <StandardButton 
                   style={styles.backButton} 
-                  buttonContent="BACK" 
+                  title="BACK" 
                   onPress={this.back}
                 />
-                <Button1 
+                <StandardButton 
                   style={styles.saveChangesButton} 
-                  buttonContent="CONFIRM" 
+                  title="CONFIRM" 
                   onPress={this._handleSubmit}
                 />
               </View>

@@ -19,7 +19,7 @@ import {
   Platform
 } from "react-native"
 import QRCode from 'react-native-qrcode-svg'
-import Button1 from "../symbols/button1"
+import StandardButton from "../components/StandardButton"
 import AlertAsync from "react-native-alert-async"
 import { Icon } from "react-native-elements"
 import RNFS from "react-native-fs"
@@ -167,9 +167,9 @@ class QRModal extends Component {
             }
           </View>
           <View style={styles.singleButtonContainer}>
-            <Button1 
+            <StandardButton 
               style={styles.cancelBtn} 
-              buttonContent="CLOSE" 
+              title="CLOSE" 
               onPress={this.cancelHandler}
             />
           </View>

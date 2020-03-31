@@ -9,7 +9,7 @@
 */
 
 import React, { Component } from "react"
-import Button1 from "../../../symbols/button1"
+import StandardButton from "../../../components/StandardButton"
 import { FormLabel, FormInput, FormValidationMessage, } from "react-native-elements"
 import {
   View,
@@ -340,7 +340,7 @@ class SendCoin extends Component {
                   </View>
                 :
                   <View style={styles.buttonContainer}>
-                    <Button1 style={styles.sendBtn} onPress={this.validateFormData} buttonContent="SEND"/>
+                    <StandardButton style={styles.sendBtn} onPress={this.validateFormData} title="SEND"/>
                   </View>
             }
         </ScrollView>

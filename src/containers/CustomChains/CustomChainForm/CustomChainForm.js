@@ -4,7 +4,7 @@
 */ 
 
 import React, { Component } from "react";
-import Button1 from "../../../symbols/button1";
+import StandardButton from "../../../components/StandardButton";
 import { 
   View, 
   StyleSheet, 
@@ -553,15 +553,15 @@ class CustomChainForm extends Component {
           </View>
           <View style={this.props.isModal ? styles.buttonContainer : styles.singleButtonContainer}>
             {this.props.isModal &&
-              <Button1 
+              <StandardButton 
                 style={styles.cancelButton} 
-                buttonContent="CANCEL" 
+                title="CANCEL" 
                 onPress={this.cancel}
               />
             }
-            <Button1 
+            <StandardButton 
               style={styles.addCoinButton} 
-              buttonContent="ADD COIN" 
+              title="ADD COIN" 
               onPress={this._handleSubmit}
             />
           </View>

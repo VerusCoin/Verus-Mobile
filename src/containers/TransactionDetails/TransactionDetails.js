@@ -4,7 +4,7 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../symbols/button1";
+import StandardButton from "../../components/StandardButton";
 import { 
   View, 
   Text, 
@@ -145,7 +145,7 @@ class TransactionDetails extends Component {
               <Icon name="content-copy" size={25} color={Colors.quaternaryColor}/>
             </TouchableOpacity>
             { explorers[this.state.activeCoinID] &&
-            <Button1 style={styles.explorerBtn} buttonContent="Explorer" onPress={() => this.openExplorer()} />
+            <StandardButton style={styles.explorerBtn} title="Explorer" onPress={() => this.openExplorer()} />
             }
           </View>
         </ScrollView>

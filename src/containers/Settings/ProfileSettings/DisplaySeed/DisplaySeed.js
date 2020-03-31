@@ -5,7 +5,7 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../../../symbols/button1";
+import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
   Text, 
@@ -83,14 +83,14 @@ class ResetPwd extends Component {
           </View>
         }
         <View style={styles.buttonContainer}>
-          <Button1 
+          <StandardButton 
             style={styles.cancelButton} 
-            buttonContent="BACK" 
+            title="BACK" 
             onPress={this.back}
           />
-          <Button1 
+          <StandardButton 
             style={styles.addAccountButton} 
-            buttonContent={this.state.fromDeleteAccount ? "CONTINUE" : "HOME" }
+            title={this.state.fromDeleteAccount ? "CONTINUE" : "HOME" }
             onPress={this.resetToScreen}
           />
         </View>

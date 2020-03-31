@@ -8,8 +8,6 @@
 */
 
 import React, { Component } from "react";
-import { Icon, FormLabel, FormInput, FormValidationMessage } from "react-native-elements";
-import Button1 from "../../symbols/button1";
 import { 
   View,
   Text, 
@@ -17,6 +15,7 @@ import {
   TouchableWithoutFeedback, 
   ActivityIndicator, 
   Image,
+  Alert,
 } from "react-native";
 import { connect } from 'react-redux';
 import { 
@@ -29,12 +28,12 @@ import {
  } from '../../actions/actionCreators';
 import { Dropdown } from 'react-native-material-dropdown';
 import { Verus } from '../../images/customIcons/index';
-import styles from './Login.styles';
+import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
-
-const UPDATE_INTERVAL = 60000
+import StandardButton from "../../components/StandardButton";
+import PasswordInput from '../../components/PasswordInput'
 
 class Login extends Component {
   constructor(props) {
@@ -46,6 +45,8 @@ class Login extends Component {
       validating: false,
       errors: {selectedAccount: null, password: null}
     };
+
+    this.passwordInput = React.createRef();
   }
 
   componentDidMount() {
@@ -87,7 +88,7 @@ class Login extends Component {
         this.props.dispatch(signIntoAuthenticatedAccount())
       })
       .catch(err => {
-        console.error(err)
+        //console.error(err)
         return err
       });
   }
@@ -109,7 +110,7 @@ class Login extends Component {
       let _errors = false;
 
       if (!_selectedAccount.id) {
-        this.handleError("Select an account", "selectedAccount")
+        Alert.alert("No Account Selected", "Please select an account.")
         _errors = true
       } 
 
@@ -139,105 +140,75 @@ class Login extends Component {
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={styles.root}>
+        <View style={Styles.focalCenter}>
           <Image
             source={Verus}
             style={{
-              height: '20%',
-              marginBottom: '5%'
+              height: "20%",
+              marginBottom: "5%"
             }}
             resizeMode="contain"
           />
-          <Text style={styles.loginLabel}>
-            Log in to Wallet
-          </Text>
-          <View style={styles.dropDownContainer}>
-            <Dropdown
-              containerStyle={styles.dropDown}
-              labelExtractor={(item, index) => {
-                return item.id
-              }}
-              valueExtractor={(item, index) => {
-                return item
-              }}
-              data={this.props.accounts}
-              onChangeText={(value, index, data) => {
-                this.setState({selectedAccount: value})
-                // this.passwordInput.focus();
-              }}
-              textColor={Colors.quinaryColor}
-              selectedItemColor={Colors.quinaryColor}
-              baseColor={Colors.quinaryColor}
-              label="Select Account..."
-              labelTextStyle={{fontFamily: 'Avenir-Book'}}
-              pickerStyle={{backgroundColor: Colors.tertiaryColor}}
-              itemTextStyle={{fontFamily: 'Avenir-Book'}}
-            />
-          </View>
-          <View style = {styles.valueContainer}>
-            <FormValidationMessage>
-              {
-                this.state.errors.selectedAccount ? 
-                  this.state.errors.selectedAccount
-                  :
-                  null
-              }
-            </FormValidationMessage>
-          </View>
-          <View style={styles.valueContainer}>
-            <View style={styles.passwordContainer}>
-              <Icon
-                name="lock"
-                color={Colors.linkButtonColor}
-                size={36}
-              />
-              <FormInput 
-                underlineColorAndroid={Colors.quinaryColor}
-                onChangeText={(text) => this.setState({password: text})}
-                autoCapitalize={"none"}
-                autoCorrect={false}
-                secureTextEntry={true}
-                shake={this.state.errors.password}
-                inputStyle={styles.formInput}
-                ref={(input) => { this.passwordInput = input; }}
-                containerStyle={styles.passwordInputContainer}
-                clearTextOnFocus
-              />
-            </View>
-            <FormValidationMessage>
-              {
-                this.state.errors.password ? 
-                  this.state.errors.password
-                  :
-                  null
-              }
-            </FormValidationMessage>
-          </View>
-
-          {this.state.loading ? 
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Unlocking Wallet</Text>
-              <ActivityIndicator animating={this.state.loading} size="large"/>
-            </View>
-          :
-            this.state.validating ? 
-              <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Validating User</Text>
-                <ActivityIndicator animating={this.state.validating} size="large"/>
-              </View>
-            :
-              <View style={styles.buttonContainer}>
-                <Button1 
-                style={styles.unlockButton} 
-                buttonContent="UNLOCK"
-                onPress={this.validateFormData} 
-                />
-                <View style={styles.signUpTextContainer}>
-                  <Text style={styles.signUpTextQuestion}>Don’t have an account?</Text>  
-                  <Text style={styles.signUpText} onPress={this._handleAddUser}>    Add user</Text>
-                </View>
-              </View>
+          <Text style={Styles.centralHeader}>Select an Account</Text>
+          <Dropdown
+            //containerStyle={styles.dropDown}
+            containerStyle={Styles.standardWidthBlock}
+            labelExtractor={(item, index) => {
+              return item.id;
+            }}
+            valueExtractor={(item, index) => {
+              return item;
+            }}
+            data={this.props.accounts}
+            onChangeText={(value, index, data) => {
+              this.setState({ selectedAccount: value });
+            }}
+            textColor={Colors.quinaryColor}
+            selectedItemColor={Colors.quinaryColor}
+            baseColor={Colors.quinaryColor}
+            label="Select Account..."
+            labelTextStyle={Styles.defaultText}
+            pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
+            itemTextStyle={Styles.defaultText}
+          />
+          <PasswordInput 
+            onChangeText={text => this.setState({ password: text })}
+            errorMessage={
+              this.state.errors.password ? this.state.errors.password : null
             }
+          />
+          {this.state.loading ? (
+            <View style={Styles.fullWidthFlexCenterBlock}>
+              <Text style={Styles.centralHeader}>Unlocking Wallet</Text>
+              <ActivityIndicator animating={this.state.loading} size="large" />
+            </View>
+          ) : this.state.validating ? (
+            <View style={Styles.fullWidthFlexCenterBlock}>
+              <Text style={Styles.centralHeader}>Validating User</Text>
+              <ActivityIndicator
+                animating={this.state.validating}
+                size="large"
+              />
+            </View>
+          ) : (
+            <View style={Styles.fullWidthFlexCenterBlock}>
+              <StandardButton
+                title="UNLOCK"
+                onPress={this.validateFormData}
+                buttonStyle={Styles.fullWidthButton}
+                containerStyle={Styles.standardWidthCenterBlock}
+              />
+              <View style={Styles.flexCenterRowBlock}>
+                <Text style={Styles.infoText}>
+                  Don’t have an account?
+                </Text>
+                <Text style={Styles.linkText} onPress={this._handleAddUser}>
+                  {" "}
+                  Add user
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
       </TouchableWithoutFeedback>
     );

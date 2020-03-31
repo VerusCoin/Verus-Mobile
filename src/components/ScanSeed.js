@@ -10,7 +10,7 @@ import {
   Alert
 } from "react-native";
 import QRCodeScanner from 'react-native-qrcode-scanner';
-import Button1 from "../symbols/button1";
+import StandardButton from "../components/StandardButton";
 import QRCode from 'react-native-qrcode-svg';
 
 const FORMAT_UNKNOWN = "QR Data format unrecognized."
@@ -50,9 +50,9 @@ class ScanSeed extends Component {
           captureAudio={false}
         />
         <View style={styles.singleButtonContainer}>
-          <Button1 
+          <StandardButton 
             style={styles.cancelBtn} 
-            buttonContent="CANCEL" 
+            title="CANCEL" 
             onPress={this.cancelHandler}
           />
         </View>

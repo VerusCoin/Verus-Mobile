@@ -9,7 +9,7 @@
 */
 
 import React, { Component } from "react"
-import Button1 from "../../../../symbols/button1"
+import StandardButton from "../../../../components/StandardButton"
 import { connect } from 'react-redux'
 import { sendRawTx } from '../../../../utils/api/channels/electrum/callCreators'
 import { networks } from 'bitgo-utxo-lib'
@@ -246,10 +246,10 @@ class SendResult extends Component {
           </View>
           <View style={styles.buttonContainer}>
             { explorers[this.state.coinObj.id] &&
-              <Button1 style={styles.explBtn} buttonContent="Explorer" onPress={() => this.openExplorer()} />
+              <StandardButton style={styles.explBtn} title="Explorer" onPress={() => this.openExplorer()} />
             }
-            <Button1 style={styles.homeBtn} 
-            buttonContent="Home" 
+            <StandardButton style={styles.homeBtn} 
+            title="Home" 
             onPress={() => {this.navigateToScreen(this.state.coinObj, "Home")}}/>
           </View>
         </ScrollView>
@@ -275,8 +275,8 @@ class SendResult extends Component {
             </View>
           </View>
           <View style={styles.buttonContainer}>
-            <Button1 style={styles.homeBtn} 
-            buttonContent="Home" 
+            <StandardButton style={styles.homeBtn} 
+            title="Home" 
             onPress={() => {this.navigateToScreen(this.state.coinObj, "Home")}}/>
           </View>
         </ScrollView>

@@ -7,7 +7,7 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../symbols/button1";
+import StandardButton from "../../components/StandardButton";
 import { connect } from 'react-redux';
 import { txPreflight } from '../../utils/api/channels/electrum/callCreators';
 import { networks } from 'bitgo-utxo-lib';
@@ -254,11 +254,11 @@ class ConfirmSend extends Component {
             }
           </View>
           <View style={styles.buttonContainer}>
-          <Button1 style={styles.cancelBtn} 
-            buttonContent="CANCEL" 
+          <StandardButton style={styles.cancelBtn} 
+            title="CANCEL" 
             onPress={this.cancel}/>
-          <Button1 style={styles.confirmBtn} 
-            buttonContent="SEND" 
+          <StandardButton style={styles.confirmBtn} 
+            title="SEND" 
             onPress={this.sendTx}/>
           </View>
         </ScrollView>
@@ -284,9 +284,9 @@ class ConfirmSend extends Component {
             </View>
           </View>
           <View style={styles.buttonContainer}>
-            <Button1 
+            <StandardButton 
             style={styles.cancelBtn} 
-            buttonContent="Back" 
+            title="Back" 
             onPress={this.cancel}
             />
           </View>

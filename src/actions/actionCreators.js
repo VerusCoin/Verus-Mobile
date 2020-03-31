@@ -1,6 +1,5 @@
 export * from './actions/Coins'
 export * from './actions/UserData'
-export * from './actions/Ledger'
 export * from './actions/WalletSettings'
 export * from './actions/cache/Electrum'
 export * from './actions/cache/Headers'

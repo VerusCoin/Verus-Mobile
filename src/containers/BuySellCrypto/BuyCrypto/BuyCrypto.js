@@ -4,7 +4,7 @@
 */
 
 import React, { Component } from "react"
-import Button1 from "../../../symbols/button1"
+import StandardButton from "../../../components/StandardButton"
 import {
   View,
   ScrollView,
@@ -609,9 +609,9 @@ class BuyCrypto extends Component {
               </View>
             )}
             <View style={styles.buttonContainer}>
-              <Button1
+              <StandardButton
                 style={styles.saveChangesButton}
-                buttonContent="PROCEED"
+                title="PROCEED"
                 onPress={this._handleSubmit}
               />
             </View>

@@ -7,7 +7,7 @@ import {
   } from 'react-native';
 import { NavigationActions } from 'react-navigation';
 import { sendTransaction } from '../../../../actions/actions/PaymentMethod/WyreAccount';
-import Button1 from '../../../../symbols/button1';
+import StandardButton from '../../../../components/StandardButton';
 import styles from './SendTransaction.styles';
 import {
   getTransactions
@@ -70,14 +70,14 @@ class SendTransaction extends Component {
             </Text>
           </View>    
           <View style={styles.buttonContainer}>
-            <Button1
+            <StandardButton
               style={styles.backButton}
-              buttonContent="CANCEL"
+              title="CANCEL"
               onPress={this.back}
             />
-            <Button1
+            <StandardButton
               style={styles.saveChangesButton}
-              buttonContent="CONFIRM"
+              title="CONFIRM"
               onPress={this.handleConfirm}
             />
           </View>

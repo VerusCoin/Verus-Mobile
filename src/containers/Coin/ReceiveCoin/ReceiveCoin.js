@@ -6,7 +6,7 @@
 */
 
 import React, { Component } from "react"
-import Button1 from "../../../symbols/button1"
+import StandardButton from "../../../components/StandardButton"
 import { 
   View, 
   Text, 
@@ -346,9 +346,9 @@ class ReceiveCoin extends Component {
           </FormValidationMessage>
         </View>
         <View style={styles.singleButtonContainer}>
-          <Button1 
+          <StandardButton 
             style={styles.addAccountButton} 
-            buttonContent="GENERATE QR" 
+            title="GENERATE QR" 
             onPress={this.validateFormData}
           />
         </View>

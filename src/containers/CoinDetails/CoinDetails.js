@@ -6,7 +6,7 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../symbols/button1";
+import StandardButton from "../../components/StandardButton";
 import { View, Text, ScrollView, Image, ActivityIndicator } from "react-native";
 import { Icon } from "react-native-elements";
 import { connect } from 'react-redux';
@@ -113,7 +113,7 @@ class CoinDetails extends Component {
               <Icon name="check" color="#50C3A5" size={30}/>
               </View>
             :
-              <Button1 style={styles.receiveBtn} buttonContent="ADD COIN" onPress={() => this._handleAddCoin()}/>
+              <StandardButton style={styles.receiveBtn} title="ADD COIN" onPress={() => this._handleAddCoin()}/>
         }
         </View>
         
