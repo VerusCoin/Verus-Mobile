@@ -65,5 +65,38 @@ export default text = {
     color: Colors.primaryColor,
     fontFamily: 'Avenir-Book',
     fontWeight: 'normal'
+  },
+  listItemLeftTitleDefault: {
+    color: Colors.quinaryColor,
+    fontFamily:'Avenir-Black',
+    fontSize: 18,
+  },
+  listItemRightTitleDefault: {
+    color: Colors.quinaryColor,
+  },
+  listItemSubtitleDefault: {
+    color: "rgba(206,68,70,1)" 
+  },
+  fiatLabel: {
+    backgroundColor: Colors.tertiaryColor,
+    paddingTop: 40,
+    fontSize: 60,
+    textAlign: "center",
+    color: Colors.quaternaryColor,
+    width: '100%',
+    fontFamily:'Avenir-Book',
+    height: '25%',
+    fontWeight: 'bold'
+  },
+  boldListHeader: {
+    width: "100%",
+    backgroundColor: Colors.secondaryColor,
+    opacity: 0.86,
+    paddingVertical: 15,
+    fontSize: 25,
+    textAlign: "left",
+    color: Colors.quinaryColor,
+    paddingLeft: 30,
+    fontFamily:'Avenir-Black',
   }
 };

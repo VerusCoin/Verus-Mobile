@@ -9,7 +9,7 @@
 */
 
 import React, { Component } from "react";
-import { ListItem } from "react-native-elements";
+import { ListItem, Divider } from "react-native-elements";
 import { 
   View, 
   Text, 
@@ -22,15 +22,13 @@ import {
   setActiveCoin, 
   setActiveApp,
   setActiveSection,
-  //everythingNeedsUpdate,
   setActiveSectionBuySellCrypto,
   expireData,
-  //updateOneBalance
 } from '../../actions/actionCreators';
 import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../../utils/math';
 import { NavigationActions } from 'react-navigation';
-import styles from './Home.styles'
+import Styles from '../../styles/index'
 import Colors from "../../globals/colors";
 import Store from '../../store/index'
 import { ENABLE_WYRE } from "../../utils/constants/constants";
@@ -177,7 +175,7 @@ class Home extends Component {
     
     return (
       <ScrollView
-        style={styles.coinList}
+        style={Styles.wide}
         refreshControl={
           <RefreshControl
             refreshing={this.state.loading}
@@ -187,11 +185,12 @@ class Home extends Component {
       >
         <TouchableOpacity onPress={this._verusPay}>
           <ListItem
-            roundAvatar
-            title={<Text style={styles.coinItemLabel}>VerusPay</Text>}
+            title={<Text style={Styles.listItemLeftTitleDefault}>VerusPay</Text>}
             hideChevron
-            avatar={require("../../images/customIcons/verusPay.png")}
-            containerStyle={{ borderBottomWidth: 0 }}
+            leftAvatar={{
+              source: require("../../images/customIcons/verusPay.png")
+            }}
+            containerStyle={Styles.bottomlessListItemContainer}
           />
         </TouchableOpacity>
         <FlatList
@@ -205,7 +204,7 @@ class Home extends Component {
             >
               <ListItem
                 roundAvatar
-                title={<Text style={styles.coinItemLabel}>{item.name}</Text>}
+                title={<Text style={Styles.listItemLeftTitleDefault}>{item.name}</Text>}
                 subtitle={
                   balances.public.hasOwnProperty(item.id) ||
                   balances.errors.public[item.id]
@@ -220,17 +219,19 @@ class Home extends Component {
                         item.id
                     : null
                 }
-                avatar={item.logo}
+                leftAvatar={{
+                  source: item.logo
+                }}
                 subtitleStyle={
                   (balances.public.hasOwnProperty(item.id) ||
                     balances.errors.public[item.id]) &&
                   (balances.errors.public[item.id] ||
                     isNaN(balances.public[item.id].confirmed))
-                    ? { color: "rgba(206,68,70,1)" }
+                    ? Styles.listItemSubtitleDefault
                     : null
                 }
-                containerStyle={{ borderBottomWidth: 0 }}
-                rightTitleStyle={{ color: "black" }}
+                containerStyle={Styles.bottomlessListItemContainer}
+                rightTitleStyle={Styles.listItemRightTitleDefault}
                 rightTitle={
                   "$" +
                   (!balances.public.hasOwnProperty(item.id) ||
@@ -253,32 +254,25 @@ class Home extends Component {
           extraData={balances.public}
           keyExtractor={item => item.id}
         />
-        <View
-          style={{
-            borderBottomColor: Colors.tertiaryColor,
-            borderBottomWidth: 1,
-            width: "100%",
-            alignSelf: "center",
-            width: "90%",
-            marginVertical: "3%"
-          }}
-        ></View>
+        <Divider style={Styles.defaultDivider} />
         {ENABLE_WYRE && (
           <TouchableOpacity onPress={this._buySellCrypto}>
             <ListItem
-              roundAvatar
-              title={<Text style={styles.coinItemLabel}>Buy/Sell Crypto</Text>}
-              avatar={require("../../images/customIcons/buySell.png")}
-              containerStyle={{ borderBottomWidth: 0 }}
+              title={<Text style={Styles.listItemLeftTitleDefault}>Buy/Sell Crypto</Text>}
+              leftAvatar={{
+                source: require("../../images/customIcons/buySell.png")
+              }}
+              containerStyle={Styles.bottomlessListItemContainer}
               hideChevron
             />
           </TouchableOpacity>
         )}
         <TouchableOpacity onPress={this._addCoin}>
           <ListItem
-            roundAvatar
-            title={<Text style={styles.coinItemLabel}>Add Coin</Text>}
-            avatar={require("../../images/customIcons/coinAdd.png")}
+            title={<Text style={Styles.listItemLeftTitleDefault}>Add Coin</Text>}
+            leftAvatar={{
+              source: require("../../images/customIcons/coinAdd.png")
+            }}
             containerStyle={{ borderBottomWidth: 0 }}
             hideChevron
           />
@@ -288,15 +282,12 @@ class Home extends Component {
   }
 
   render() {
-    //console.log("FOCUSED?:")
-    //console.log(isFocused)
-
     return (
-      <View style={styles.root}>
-        <Text style={styles.fiatBalanceLabel} >
+      <View style={Styles.defaultRoot}>
+        <Text style={Styles.fiatLabel} >
         {'$' + truncateDecimal(this.state.totalFiatBalance, 2)}
         </Text>
-        <Text style={styles.balanceSheetLabel}>Portfolio</Text>
+        <Text style={Styles.boldListHeader}>{"Portfolio"}</Text>
         {this.renderCoinList()}
       </View>
     );

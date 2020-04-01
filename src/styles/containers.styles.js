@@ -27,6 +27,9 @@ export default containers = {
     width: '90%',
     paddingVertical: 16,
   },
+  wide: {
+    width: '90%'
+  },
   wideFlexRowBlock: {
     width: '90%',
     paddingVertical: 16,
@@ -74,5 +77,8 @@ export default containers = {
     alignItems: "center",
     position: 'absolute',
     top: 56
+  },
+  bottomlessListItemContainer: {
+    borderBottomWidth: 0
   }
 }

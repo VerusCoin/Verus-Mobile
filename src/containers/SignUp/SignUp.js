@@ -10,22 +10,16 @@ import StandardButton from "../../components/StandardButton"
 import { 
   View, 
   Text, 
-  TouchableOpacity, 
-  Switch, 
   ScrollView, 
   Keyboard,
   TouchableWithoutFeedback,
-  Platform,
   Alert
 } from "react-native"
 import { NavigationActions } from 'react-navigation'
-import { FormLabel, Input, FormValidationMessage, CheckBox } from 'react-native-elements'
+import { Input, CheckBox } from 'react-native-elements'
 import { addUser } from '../../actions/actionCreators'
 import { connect } from 'react-redux'
-import { getKey } from '../../utils/keyGenerator/keyGenerator'
-import { spacesLeadOrTrail, hasSpecialCharacters } from '../../utils/stringUtils'
 import AlertAsync from 'react-native-alert-async'
-import ScanSeed from '../../components/ScanSeed'
 import SetupSeedModal from '../../components/SetupSeedModal/SetupSeedModal'
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
@@ -36,10 +30,8 @@ class SignUp extends Component {
   constructor() {
     super();
     this.state = {
-      wifKey: null,
       pin: null,
       confirmPin: null,
-      wifSaved: false,
       seeds: {
         [DLIGHT]: null,
         [ELECTRUM]: null
@@ -50,10 +42,8 @@ class SignUp extends Component {
       userName: null,
       errors: {
         userName: null,
-        wifKey: null,
         pin: null,
         confirmPin: null,
-        wifSaved: null,
         disclaimerRealized: null
       },
       warnings: [],
@@ -78,10 +68,6 @@ class SignUp extends Component {
       this.fillSeed(this.props.navigation.state.params.data.seed);
     }
   }
-
-  setKey = () => {
-    this.setState({ wifKey: getKey(24) });
-  };
 
   _handleSubmit = () => {
     Keyboard.dismiss();
@@ -128,20 +114,17 @@ class SignUp extends Component {
       {
         errors: {
           userName: null,
-          wifKey: null,
           pin: null,
           confirmPin: null,
-          wifSaved: null,
           disclaimerRealized: null
         },
         warnings: []
       },
       () => {
         const _userName = this.state.userName;
-        const _wifKey = this.state.wifKey;
         const _pin = this.state.pin;
+        const _seeds = this.state.seeds
         const _confirmPin = this.state.confirmPin;
-        const _wifSaved = this.state.wifSaved;
         const _disclaimerRealized = this.state.disclaimerRealized;
         let _errors = false;
         let _warnings = false;
@@ -157,32 +140,9 @@ class SignUp extends Component {
           _errors = true;
         }
 
-        if (!_wifKey || _wifKey.length < 1) {
-          this.handleError("Required field", "wifKey");
+        if (_seeds[ELECTRUM] == null || _seeds[DLIGHT] == null) {
+          Alert.alert("Error", "Please configure both a primary seed, and a secondary seed.")
           _errors = true;
-        } else if (_wifKey.length < 15) {
-          this.handleError("Min. 15 characters", "wifKey");
-          _errors = true;
-        } else if (!hasSpecialCharacters(_wifKey)) {
-          this.handleError(
-            "Seed cannot include any special characters",
-            "wifKey"
-          );
-          _errors = true;
-        } else {
-          if (spacesLeadOrTrail(_wifKey)) {
-            this.handleWarning("• Seed contains leading or trailing spaces");
-            _warnings = true;
-          }
-
-          if (_wifKey.length < 30) {
-            this.handleWarning(
-              "• Seed is less than 30 characters, it is recommended that" +
-                " you create a long, complex seed, as anyone with access to it " +
-                "will have access to your funds"
-            );
-            _warnings = true;
-          }
         }
 
         if (!_pin || _pin.length < 1) {
@@ -198,12 +158,6 @@ class SignUp extends Component {
           _errors = true;
         }
 
-        if (!_wifSaved && !_errors) {
-          //this.handleError("Make sure to save your WIF key", "wifSaved")
-          Alert.alert("Wait!", "Make sure to save your WIF key");
-          _errors = true;
-        }
-
         if (!_disclaimerRealized && !_errors) {
           //this.handleError("Ensure you are aware of the risks of sharing your passphrase/seed", "disclaimerRealized")
           Alert.alert(
@@ -216,7 +170,7 @@ class SignUp extends Component {
         if (!_errors && !_warnings) {
           addUser(
             this.state.userName,
-            { electrum: this.state.wifKey },
+            { [ELECTRUM]: _seeds[ELECTRUM], [DLIGHT]: _seeds[DLIGHT] },
             this.state.pin,
             this.props.accounts
           ).then(action => {
@@ -228,7 +182,7 @@ class SignUp extends Component {
               if (res) {
                 addUser(
                   this.state.userName,
-                  { electrum: this.state.wifKey },
+                  { [ELECTRUM]: _seeds[ELECTRUM], [DLIGHT]: _seeds[DLIGHT] },
                   this.state.pin,
                   this.props.accounts
                 )
@@ -296,11 +250,6 @@ class SignUp extends Component {
     else if (channel === DLIGHT) this.setState({ privateSeedModalOpen: true })
   }
 
-  handleScan = seed => {
-    this.turnOffScan();
-    this.setState({ wifKey: seed });
-  };
-
   canMakeAccount = () => {
     let alertText =
       "Please take the time to double check the following things regarding your new profile " +
@@ -331,186 +280,141 @@ class SignUp extends Component {
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        {!this.state.scanning ? (
-          <ScrollView
-            style={Styles.flexBackground}
-            contentContainerStyle={Styles.centerContainer}
-          >
-            <SetupSeedModal
-              animationType="slide"
-              transparent={false}
-              visible={this.state.publicSeedModalOpen}
-              qrString={this.state.verusQRString}
-              cancel={() => {
-                this.setState({ publicSeedModalOpen: false });
-              }}
-              setSeed={(seed, channel) => {
-                this.setState({
-                  seeds: { ...this.state.seeds, [channel]: seed }
-                });
-              }}
-              channel={ELECTRUM}
+        <ScrollView
+          style={Styles.flexBackground}
+          contentContainerStyle={Styles.centerContainer}
+        >
+          <SetupSeedModal
+            animationType="slide"
+            transparent={false}
+            visible={this.state.publicSeedModalOpen}
+            qrString={this.state.verusQRString}
+            cancel={() => {
+              this.setState({ publicSeedModalOpen: false });
+            }}
+            setSeed={(seed, channel) => {
+              this.setState({
+                seeds: { ...this.state.seeds, [channel]: seed }
+              });
+            }}
+            channel={ELECTRUM}
+          />
+          <SetupSeedModal
+            animationType="slide"
+            transparent={false}
+            visible={this.state.privateSeedModalOpen}
+            qrString={this.state.verusQRString}
+            cancel={() => {
+              this.setState({ privateSeedModalOpen: false });
+            }}
+            setSeed={(seed, channel) => {
+              this.setState({
+                seeds: { ...this.state.seeds, [channel]: seed }
+              });
+            }}
+            channel={DLIGHT}
+          />
+          <View style={Styles.headerContainer}>
+            <Text style={Styles.centralHeader}>Create New Account</Text>
+          </View>
+          <View style={Styles.wideBlock}>
+            <Input
+              labelStyle={Styles.formInputLabel}
+              containerStyle={Styles.fullWidthBlock}
+              label={"Enter a username:"}
+              underlineColorAndroid={Colors.quinaryColor}
+              onChangeText={text => this.setState({ userName: text })}
+              autoCapitalize={"none"}
+              autoCorrect={false}
+              shake={this.state.errors.userName}
+              errorMessage={
+                this.state.errors.userName ? this.state.errors.userName : null
+              }
             />
-            <SetupSeedModal
-              animationType="slide"
-              transparent={false}
-              visible={this.state.privateSeedModalOpen}
-              qrString={this.state.verusQRString}
-              cancel={() => {
-                this.setState({ privateSeedModalOpen: false });
-              }}
-              setSeed={(seed, channel) => {
-                this.setState({
-                  seeds: { ...this.state.seeds, [channel]: seed }
-                });
-              }}
-              channel={DLIGHT}
+          </View>
+          <View style={Styles.wideBlock}>
+            <CheckBox
+              title="Setup Primary (T Address) Seed"
+              checked={this.state.seeds[ELECTRUM] != null}
+              textStyle={Styles.defaultText}
+              onPress={() => this.setupSeed(ELECTRUM)}
             />
-            <View style={Styles.headerContainer}>
-              <Text style={Styles.centralHeader}>Create New Account</Text>
-            </View>
-            {/* <View style={Styles.wideBlock}>
-              <Input
-                label={"Wallet passphrase/WIF key (min. 15 characters):"}
-                labelStyle={styles.formLabel}
-                underlineColorAndroid={Colors.quinaryColor}
-                onChangeText={text => this.setState({ wifKey: text })}
-                value={this.state.wifKey}
-                autoCapitalize={"none"}
-                autoCorrect={false}
-                secureTextEntry={true}
-                shake={this.state.errors.wifKey}
-                inputStyle={styles.wifInput}
-                multiline={Platform.OS === "ios" ? false : true}
-              />
-              <StandardButton
-                style={styles.scanSeedButton}
-                title="SCAN SEED FROM QR"
-                onPress={this.scanSeed}
-              />
-              <StandardButton
-                style={styles.generatePassphraseButton}
-                title="GENERATE RANDOM PASSPHRASE"
-                onPress={this.setKey}
-                buttonStyle={{
-                  fontSize: 14,
-                  color: "#fff",
-                  fontFamily: "Avenir-Black"
-                }}
-              />
-              <Input
-                label={"Plaintext Passphrase Display:"}
-                labelStyle={styles.passphraseDisplayLabel}
-                value={this.state.wifKey}
-                inputStyle={styles.wifInput}
-                multiline={true}
-                editable={false}
-                errorMessage={
-                  this.state.errors.wifKey ? this.state.errors.wifKey : null
-                }
-              />
-            </View> */}
+            <CheckBox
+              title="Setup Secondary (Z Address) Seed"
+              checked={this.state.seeds[DLIGHT] != null}
+              textStyle={Styles.defaultText}
+              onPress={() => this.setupSeed(DLIGHT)}
+            />
+          </View>
+          <View style={Styles.fullWidthFlexCenterBlock}>
             <View style={Styles.wideBlock}>
               <Input
                 labelStyle={Styles.formInputLabel}
-                containerStyle={Styles.fullWidthBlock}
-                label={"Enter a username:"}
+                label={"Enter an account password (min. 5 characters):"}
                 underlineColorAndroid={Colors.quinaryColor}
-                onChangeText={text => this.setState({ userName: text })}
+                onChangeText={text => this.setState({ pin: text })}
                 autoCapitalize={"none"}
                 autoCorrect={false}
-                shake={this.state.errors.userName}
+                secureTextEntry={true}
+                shake={this.state.errors.pin}
                 errorMessage={
-                  this.state.errors.userName ? this.state.errors.userName : null
+                  this.state.errors.pin ? this.state.errors.pin : null
                 }
               />
             </View>
             <View style={Styles.wideBlock}>
-              <CheckBox
-                title="Setup Primary (T Address) Seed"
-                checked={this.state.seeds[ELECTRUM] != null}
-                textStyle={Styles.defaultText}
-                onPress={() => this.setupSeed(ELECTRUM)}
-              />
-              <CheckBox
-                title="Setup Secondary (Z Address) Seed"
-                checked={this.state.seeds[DLIGHT] != null}
-                textStyle={Styles.defaultText}
-                onPress={() => this.setupSeed(DLIGHT)}
-              />
-            </View>
-            <View style={Styles.fullWidthFlexCenterBlock}>
-              <View style={Styles.wideBlock}>
-                <Input
-                  labelStyle={Styles.formInputLabel}
-                  label={"Enter an account password (min. 5 characters):"}
-                  underlineColorAndroid={Colors.quinaryColor}
-                  onChangeText={text => this.setState({ pin: text })}
-                  autoCapitalize={"none"}
-                  autoCorrect={false}
-                  secureTextEntry={true}
-                  shake={this.state.errors.pin}
-                  errorMessage={
-                    this.state.errors.pin ? this.state.errors.pin : null
-                  }
-                />
-              </View>
-              <View style={Styles.wideBlock}>
-                <Input
-                  labelStyle={Styles.formInputLabel}
-                  label={"Confirm account password:"}
-                  underlineColorAndroid={Colors.quinaryColor}
-                  onChangeText={text => this.setState({ confirmPin: text })}
-                  autoCapitalize={"none"}
-                  autoCorrect={false}
-                  secureTextEntry={true}
-                  shake={this.state.errors.confirmPin}
-                  errorMessage={
-                    this.state.errors.confirmPin
-                      ? this.state.errors.confirmPin
-                      : null
-                  }
-                />
-              </View>
-            </View>
-            <View style={Styles.wideBlock}>
-              <CheckBox
-                title="I realize anybody with access to my seeds/passphrases will have access to my funds:"
-                checked={this.state.disclaimerRealized}
-                textStyle={Styles.defaultText}
-                onPress={() =>
-                  this.setState({
-                    disclaimerRealized: !this.state.disclaimerRealized
-                  })
+              <Input
+                labelStyle={Styles.formInputLabel}
+                label={"Confirm account password:"}
+                underlineColorAndroid={Colors.quinaryColor}
+                onChangeText={text => this.setState({ confirmPin: text })}
+                autoCapitalize={"none"}
+                autoCorrect={false}
+                secureTextEntry={true}
+                shake={this.state.errors.confirmPin}
+                errorMessage={
+                  this.state.errors.confirmPin
+                    ? this.state.errors.confirmPin
+                    : null
                 }
               />
             </View>
-            <View style={Styles.footerContainer}>
-              <View
-                style={
-                  this.props.accounts.length > 0
-                    ? Styles.standardWidthSpaceBetweenBlock
-                    : Styles.fullWidthFlexCenterBlock
-                }
-              >
-                {this.props.accounts.length > 0 && (
-                  <StandardButton
-                    title="CANCEL"
-                    onPress={this.cancel}
-                    color={Colors.warningButtonColor}
-                  />
-                )}
+          </View>
+          <View style={Styles.wideBlock}>
+            <CheckBox
+              title="I realize anybody with access to my seeds/passphrases will have access to my funds:"
+              checked={this.state.disclaimerRealized}
+              textStyle={Styles.defaultText}
+              onPress={() =>
+                this.setState({
+                  disclaimerRealized: !this.state.disclaimerRealized
+                })
+              }
+            />
+          </View>
+          <View style={Styles.footerContainer}>
+            <View
+              style={
+                this.props.accounts.length > 0
+                  ? Styles.standardWidthSpaceBetweenBlock
+                  : Styles.fullWidthFlexCenterBlock
+              }
+            >
+              {this.props.accounts.length > 0 && (
                 <StandardButton
-                  title="ADD ACCOUNT"
-                  onPress={this._handleSubmit}
-                  color={Colors.successButtonColor}
+                  title="CANCEL"
+                  onPress={this.cancel}
+                  color={Colors.warningButtonColor}
                 />
-              </View>
+              )}
+              <StandardButton
+                title="ADD ACCOUNT"
+                onPress={this._handleSubmit}
+                color={Colors.successButtonColor}
+              />
             </View>
-          </ScrollView>
-        ) : (
-          <ScanSeed cancel={this.turnOffScan} onScan={this.handleScan} />
-        )}
+          </View>
+        </ScrollView>
       </TouchableWithoutFeedback>
     );
   }

@@ -8,4 +8,9 @@ export default roots = {
     justifyContent: "center",
     alignItems: "center"
   },
+  defaultRoot: {
+    backgroundColor: Colors.secondaryColor,
+    flex: 1,
+    alignItems: "center",
+  }
 };
