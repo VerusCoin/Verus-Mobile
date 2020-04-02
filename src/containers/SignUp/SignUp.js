@@ -321,12 +321,12 @@ class SignUp extends Component {
             <Input
               labelStyle={Styles.formInputLabel}
               containerStyle={Styles.fullWidthBlock}
+              inputStyle={Styles.inputTextDefaultStyle}
               label={"Enter a username:"}
               underlineColorAndroid={Colors.quinaryColor}
               onChangeText={text => this.setState({ userName: text })}
               autoCapitalize={"none"}
               autoCorrect={false}
-              shake={this.state.errors.userName}
               errorMessage={
                 this.state.errors.userName ? this.state.errors.userName : null
               }
@@ -351,12 +351,12 @@ class SignUp extends Component {
               <Input
                 labelStyle={Styles.formInputLabel}
                 label={"Enter an account password (min. 5 characters):"}
+                inputStyle={Styles.inputTextDefaultStyle}
                 underlineColorAndroid={Colors.quinaryColor}
                 onChangeText={text => this.setState({ pin: text })}
                 autoCapitalize={"none"}
                 autoCorrect={false}
                 secureTextEntry={true}
-                shake={this.state.errors.pin}
                 errorMessage={
                   this.state.errors.pin ? this.state.errors.pin : null
                 }
@@ -366,12 +366,12 @@ class SignUp extends Component {
               <Input
                 labelStyle={Styles.formInputLabel}
                 label={"Confirm account password:"}
+                inputStyle={Styles.inputTextDefaultStyle}
                 underlineColorAndroid={Colors.quinaryColor}
                 onChangeText={text => this.setState({ confirmPin: text })}
                 autoCapitalize={"none"}
                 autoCorrect={false}
                 secureTextEntry={true}
-                shake={this.state.errors.confirmPin}
                 errorMessage={
                   this.state.errors.confirmPin
                     ? this.state.errors.confirmPin

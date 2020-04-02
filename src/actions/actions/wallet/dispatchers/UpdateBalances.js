@@ -9,6 +9,7 @@ import {
   ELECTRUM
 } from "../../../../utils/constants/intervalConstants";
 import { getCoinObj } from "../../../../utils/CoinData/CoinData";
+import { satsToCoins } from "../../../../utils/math";
 
 /**
  * Fetches the appropriate data from the store for the specified channel's balance
@@ -73,9 +74,9 @@ export const updateBalances = async (
               channel,
               header,
               body: {
-                confirmed: confirmed,
-                pending: unconfirmed + confirmed,
-                total: confirmed
+                confirmed: satsToCoins(confirmed),
+                pending: satsToCoins(unconfirmed),
+                total: satsToCoins(unconfirmed + confirmed)
               }
             }
           });

@@ -10,6 +10,14 @@ export default containers = {
     width: '75%',
     paddingVertical: 16,
   },
+  centralRow: {
+    flexDirection: 'row',
+    alignSelf: 'center'
+  },
+  startRow: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start'
+  },
   standardWidthSpaceBetweenBlock: {
     width: "75%",
     flexDirection: "row",
@@ -30,6 +38,13 @@ export default containers = {
   wide: {
     width: '90%'
   },
+  wideCenter: {
+    width: '90%',
+    alignSelf: 'center'
+  },
+  fullWidth: {
+    width: '100%'
+  },
   wideFlexRowBlock: {
     width: '90%',
     paddingVertical: 16,
@@ -41,7 +56,8 @@ export default containers = {
     paddingVertical: 16,
     display: 'flex',
     flexDirection: 'row',
-    alignSelf: 'center'
+    alignSelf: 'center',
+    alignItems: 'baseline'
   },
   fullWidthFlexCenterBlock: {
     paddingVertical: 16,
@@ -58,6 +74,10 @@ export default containers = {
     flex: 1,
     alignItems: "center",
     justifyContent: "center"
+  },
+  horizontalCenterContainer: {
+    flex: 1,
+    alignItems: "center",
   },
   flexBackground: {
     flex: 1,
@@ -77,6 +97,12 @@ export default containers = {
     alignItems: "center",
     position: 'absolute',
     top: 56
+  },
+  inlineHeaderContainer: {
+    width: '100%',
+    alignItems: "center",
+    position: 'absolute',
+    top: 32
   },
   bottomlessListItemContainer: {
     borderBottomWidth: 0

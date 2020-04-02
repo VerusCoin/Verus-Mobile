@@ -26,14 +26,14 @@ import {
   expireData,
 } from '../../actions/actionCreators';
 import { connect } from 'react-redux';
-import { satsToCoins, truncateDecimal } from '../../utils/math';
+import { truncateDecimal } from '../../utils/math';
 import { NavigationActions } from 'react-navigation';
 import Styles from '../../styles/index'
 import Colors from "../../globals/colors";
 import Store from '../../store/index'
 import { ENABLE_WYRE } from "../../utils/constants/constants";
 import { withNavigationFocus } from 'react-navigation';
-import { API_GET_FIATPRICE, API_GET_ADDRESSES, API_GET_BALANCES, API_GET_INFO, ELECTRUM, DLIGHT, GENERAL } from "../../utils/constants/intervalConstants";
+import { API_GET_FIATPRICE, API_GET_ADDRESSES, API_GET_BALANCES, API_GET_INFO, ELECTRUM, DLIGHT, GENERAL, USD } from "../../utils/constants/intervalConstants";
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 
 const CONNECTION_ERROR = "Connection Error"
@@ -129,14 +129,17 @@ class Home extends Component {
     let _totalFiatBalance = 0
     let coinBalance = 0
     const balances = props.balances.public
+    const { rates, displayCurrency } = props
     const balanceErrors = props.balances.errors.public
     
-    for (let key in props.rates) {
-      if (typeof props.rates[key] === "number") {
-        coinBalance = balances.hasOwnProperty(key) && !balanceErrors[key] && !isNaN(balances[key].confirmed) ? 
-        truncateDecimal(satsToCoins(balances[key].confirmed), 4) : 0
+    for (let key in rates) {
+      if (rates[key][displayCurrency]) {
+        const price = rates[key][displayCurrency]
 
-        _totalFiatBalance += coinBalance*props.rates[key]
+        coinBalance = balances.hasOwnProperty(key) && !balanceErrors[key] && !isNaN(balances[key].confirmed) ? 
+        truncateDecimal(balances[key].confirmed, 4) : 0
+
+        _totalFiatBalance += coinBalance*price
       }
     }
 
@@ -171,7 +174,7 @@ class Home extends Component {
   }
 
   renderCoinList = () => {
-    const { rates, balances, activeCoinsForUser } = this.props
+    const { rates, balances, activeCoinsForUser, displayCurrency } = this.props;
     
     return (
       <ScrollView
@@ -212,7 +215,7 @@ class Home extends Component {
                       isNaN(balances.public[item.id].confirmed)
                       ? CONNECTION_ERROR
                       : truncateDecimal(
-                          satsToCoins(balances.public[item.id].confirmed),
+                          balances.public[item.id].confirmed,
                           4
                         ) +
                         " " +
@@ -233,20 +236,17 @@ class Home extends Component {
                 containerStyle={Styles.bottomlessListItemContainer}
                 rightTitleStyle={Styles.listItemRightTitleDefault}
                 rightTitle={
-                  "$" +
                   (!balances.public.hasOwnProperty(item.id) ||
                   balances.errors.public[item.id] ||
                   isNaN(balances.public[item.id].confirmed)
-                    ? "0.00"
+                    ? "-"
                     : truncateDecimal(
-                        (typeof rates[item.id] === "number"
-                          ? rates[item.id]
+                        (rates[item.id] && rates[item.id][displayCurrency] != null
+                          ? rates[item.id][displayCurrency]
                           : 0) *
-                          (balances.hasOwnProperty(item.id)
-                            ? satsToCoins(balances.public[item.id].confirmed)
-                            : 0),
+                          balances.public[item.id].confirmed,
                         2
-                      ))
+                      )) + ' ' + displayCurrency
                 }
               />
             </TouchableOpacity>
@@ -309,6 +309,7 @@ const mapStateToProps = (state) => {
     },
     //needsUpdate: state.ledger.needsUpdate,
     rates: state.ledger.rates[GENERAL],
+    displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD
   }
 };
 

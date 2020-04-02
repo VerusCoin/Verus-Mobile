@@ -7,6 +7,25 @@ export default text = {
     textAlign: "center",
     fontFamily: "Avenir-Medium"
   },
+  largeCentralPaddedHeader: {
+    fontSize: 32,
+    color: Colors.quaternaryColor,
+    textAlign: "center",
+    fontFamily: "Avenir-Medium",
+    paddingVertical: 16
+  },
+  greyStripeHeader: {
+    width: "100%",
+    backgroundColor: Colors.tertiaryColor,
+    paddingVertical: 16,
+    fontSize: 24,
+    textAlign: "center",
+    color: Colors.quinaryColor,
+    fontFamily: 'Avenir-Black',
+  },
+  errorText: {
+    color: Colors.warningButtonColor,
+  },
   seedWord: {
     fontSize: 32,
     color: Colors.primaryColor,
@@ -26,13 +45,13 @@ export default text = {
     fontFamily: "Avenir-Book",
     color: Colors.quaternaryColor,
     textAlign: "center",
-    paddingVertical: 5
+    paddingVertical: 6
   },
   centralInfoTextPadded: {
     fontFamily: "Avenir-Black",
     color: Colors.quaternaryColor,
     textAlign: "center",
-    paddingVertical: 5
+    paddingVertical: 6
   },
   linkText: {
     color: Colors.linkButtonColor,
@@ -44,6 +63,28 @@ export default text = {
   },
   formInputLabel: {
     textAlign:"left",
+    color: Colors.quinaryColor,
+    fontFamily: 'Avenir-Book',
+    fontWeight: 'normal'
+  },
+  mediumFormInputLabel: {
+    textAlign:"left",
+    color: Colors.quinaryColor,
+    fontFamily: 'Avenir-Book',
+    fontWeight: 'normal',
+    fontSize: 16
+  },
+  mediumInlineLink: {
+    color: Colors.linkButtonColor,
+    fontFamily: "Avenir-Black",
+    fontSize: 16
+  },
+  ghostText: {
+    color: Colors.primaryColor,
+    fontFamily: "Avenir-Black",
+    fontSize: 16
+  },
+  inputTextDefaultStyle: {
     color: Colors.quinaryColor,
     fontFamily: 'Avenir-Book',
     fontWeight: 'normal'
@@ -69,7 +110,7 @@ export default text = {
   listItemLeftTitleDefault: {
     color: Colors.quinaryColor,
     fontFamily:'Avenir-Black',
-    fontSize: 18,
+    fontSize: 16,
   },
   listItemRightTitleDefault: {
     color: Colors.quinaryColor,
@@ -80,7 +121,7 @@ export default text = {
   fiatLabel: {
     backgroundColor: Colors.tertiaryColor,
     paddingTop: 40,
-    fontSize: 60,
+    fontSize: 56,
     textAlign: "center",
     color: Colors.quaternaryColor,
     width: '100%',
@@ -91,12 +132,17 @@ export default text = {
   boldListHeader: {
     width: "100%",
     backgroundColor: Colors.secondaryColor,
-    opacity: 0.86,
-    paddingVertical: 15,
-    fontSize: 25,
+    paddingVertical: 16,
+    fontSize: 24,
     textAlign: "left",
     color: Colors.quinaryColor,
-    paddingLeft: 30,
+    paddingLeft: 32,
     fontFamily:'Avenir-Black',
+  },
+  blockTextAlignRight: {
+    fontSize: 16,
+    color: Colors.quaternaryColor,
+    width: "65%",
+    textAlign: "right"
   }
 };

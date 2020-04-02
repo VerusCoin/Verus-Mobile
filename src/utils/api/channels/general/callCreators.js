@@ -76,24 +76,24 @@ export const getCoinRates = (coinObj) => {
           );
       })
       .then(exchangeRates => {
-        let resObj = { result: { coinId: coinObj.id, rates: { [USD]: rateUsd } }, source: source }
+        let resObj = { result: { [USD]: rateUsd }, source }
 
         Object.keys(
           exchangeRates.result == null ? {} : exchangeRates.result
         ).map(fiatCurr => {
-          resObj.result.rates[fiatCurr] = exchangeRates.result[fiatCurr] * rateUsd;
+          resObj.result[fiatCurr] = exchangeRates.result[fiatCurr] * rateUsd;
         });
 
         resolve(resObj)
       })
-      .catch(err => {
+      .catch(error => {
         reject(
           new ApiException(
             CONNECTION_ERROR,
             error.message || "Error connecting to rates APIs",
             coinObj.id,
             GENERAL,
-            err.code || GENERAL_CONNECTION_ERROR
+            error.code || GENERAL_CONNECTION_ERROR
           )
         );
       });

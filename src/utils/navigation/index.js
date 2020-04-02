@@ -11,7 +11,6 @@ import Home from '../../containers/Home/Home';
 import AddCoin from '../../containers/AddCoin/AddCoin';
 import SignUp from '../../containers/SignUp/SignUp';
 import CoinDetails from '../../containers/CoinDetails/CoinDetails';
-import TransactionDetails from '../../containers/TransactionDetails/TransactionDetails';
 import LoadingScreen from '../../containers/LoadingScreen/LoadingScreen';
 import ConfirmSend from '../../containers/ConfirmSend/ConfirmSend';
 import SendResult from '../../containers/Coin/SendCoin/SendResult/SendResult';
@@ -26,7 +25,7 @@ import DeleteProfile from '../../containers/Settings/ProfileSettings/DeleteProfi
 import SecureLoading from '../../containers/SecureLoading/SecureLoading';
 import CustomChainMenus from '../../containers/CustomChains/CustomChainMenus';
 import GeneralWalletSettings from '../../containers/Settings/WalletSettings/GeneralWalletSettings/GeneralWalletSettings';
-import CoinSettings from '../../containers/Settings/CoinSettings/CoinSettings';
+import CoinSettings from '../../containers/Settings/WalletSettings/CoinSettings/CoinSettings';
 import BuySellCryptoMenus from '../../containers/BuySellCrypto/BuySellCryptoMenus';
 import SelectPaymentMethod from '../../containers/BuySellCrypto/PaymentMethod/SelectPaymentMethod/SelectPaymentMethod';
 import ManageWyreAccount from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreAccount';
@@ -88,12 +87,6 @@ export const MainScreens =
       screen: CoinDetails,
       navigationOptions: {
         title: "Details",
-      }
-    },
-    TxDetails: {
-      screen: TransactionDetails,
-      navigationOptions: {
-        title: "Info",
       }
     },
     ConfirmSend: {

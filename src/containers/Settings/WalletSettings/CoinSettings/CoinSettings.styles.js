@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet } from "react-native"
 import Colors from '../../../../globals/colors';
 
 export default styles = StyleSheet.create({
@@ -9,6 +9,10 @@ export default styles = StyleSheet.create({
   formLabel: {
     textAlign:"left",
     marginRight: "auto",
+    fontFamily: 'Avenir-Black',
+    color: Colors.quaternaryColor,
+    fontSize: 20,
+    marginBottom: 20
   },
   keyGenLabel: {
     textAlign:"left",
@@ -47,15 +51,15 @@ export default styles = StyleSheet.create({
   },
   saveChangesButton: {
     height: 46,
-    backgroundColor: "#009B72",
+    backgroundColor: Colors.successButtonColor,
     marginTop: 15,
+    width: '60%',
   },
   clearCacheButton: {
     height: 46,
-    backgroundColor: Colors.successButtonColor,
+    backgroundColor: "#2E86AB",
     marginTop: 25,
-    marginBottom: 25,
-    width: '60%'
+    marginBottom: 25
   },
   backButton: {
     height: 46,
@@ -65,7 +69,9 @@ export default styles = StyleSheet.create({
   },
   utxoVerificationDesc: {
     textAlign:"left",
-    marginRight: "auto"
+    marginRight: "auto",
+    fontFamily: 'Avenir-Book',
+    fontWeight: 'normal',
   },
   bottom: {
     flex: 1,

@@ -17,18 +17,17 @@ import {
   Alert,
   RefreshControl
  } from "react-native"
-import { FormLabel, FormInput, FormValidationMessage, Icon } from 'react-native-elements'
+import { Input } from 'react-native-elements'
 import { connect } from 'react-redux'
 import { Dropdown } from 'react-native-material-dropdown'
-import QRCode from 'react-native-qrcode-svg';
+import Styles from '../../../styles/index'
 import QRModal from '../../../components/QRModal'
 import { coinsToSats, isNumber, truncateDecimal } from '../../../utils/math'
-//import { everythingNeedsUpdate } from '../../../actions/actionCreators'
-import styles from './ReceiveCoin.styles'
 import Colors from '../../../globals/colors';
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
-import { API_GET_FIATPRICE, API_GET_BALANCES, DLIGHT } from "../../../utils/constants/intervalConstants"
+import { API_GET_FIATPRICE, API_GET_BALANCES, GENERAL, USD } from "../../../utils/constants/intervalConstants"
 import { expireData } from "../../../actions/actionCreators"
+import Store from "../../../store"
 
 class ReceiveCoin extends Component {
   constructor(props) {
@@ -98,7 +97,7 @@ class ReceiveCoin extends Component {
     this.setState({ loading: true }, () => {
       const updates = [API_GET_FIATPRICE, API_GET_BALANCES]
       Promise.all(updates.map(async (update) => {
-        await conditionallyUpdateWallet(store.getState(), this.props.dispatch, this.props.activeCoin.id, update)
+        await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, this.props.activeCoin.id, update)
       })).then(res => {
         this.setState({ loading: false })
       })
@@ -132,7 +131,10 @@ class ReceiveCoin extends Component {
   }
 
   createQRString = (coinTicker, amount, address, memo) => {
-    let _price = this.props.rate
+    const { rates, displayCurrency } = this.props
+
+    let _price = rates[coinTicker] != null ? rates[coinTicker][displayCurrency] : null
+    
     let verusQRJSON = {
       verusQR: global.VERUS_QR_VERSION,
       coinTicker: coinTicker,
@@ -157,19 +159,22 @@ class ReceiveCoin extends Component {
   }
 
   getPrice = () => {
-    const _amount = this.state.amount
-    const _price = this.props.rate
+    const { state, props } = this
+    const { amount, selectedCoin, amountFiat } = state
+    const { rates, displayCurrency } = props
+
+    let _price = rates[selectedCoin.id] != null ? rates[selectedCoin.id][displayCurrency] : null
     
-    if (!(_amount.toString()) ||
-      !(isNumber(_amount)) ||
+    if (!(amount.toString()) ||
+      !(isNumber(amount)) ||
       !_price) {
       return 0
     } 
 
-    if (this.state.amountFiat) {
-      return truncateDecimal(_amount/_price, 8)
+    if (amountFiat) {
+      return truncateDecimal(amount/_price, 8)
     } else {
-      return truncateDecimal(_amount*_price, 2)
+      return truncateDecimal(amount*_price, 2)
     }
   }
 
@@ -185,7 +190,7 @@ class ReceiveCoin extends Component {
       let _errors = false;
 
       if (!_selectedCoin) {
-        this.handleError("Required field", "selectedCoin")
+        Alert.alert("Error", "Please select a coin to receive.")
         _errors = true
       }
 
@@ -210,146 +215,141 @@ class ReceiveCoin extends Component {
 
   render() {
     const _price = this.getPrice()
+    const {
+      state,
+      props,
+      validateFormData,
+      forceUpdate,
+      switchInvoiceCoin,
+      copyAddressToClipboard
+    } = this;
+    const { activeCoinsForUser, rates, displayCurrency } = props;
+    const {
+      loading,
+      showModal,
+      verusQRString,
+      selectedCoin,
+      address,
+      errors,
+      amountFiat
+    } = state;
+    const fiatEnabled = rates[selectedCoin.id] && rates[selectedCoin.id][displayCurrency] != null
+
     return (
-      <ScrollView 
-        style={styles.root} 
-        contentContainerStyle={{alignItems: "center", justifyContent: "center"}}
+      <ScrollView
+        style={Styles.flexBackground}
+        contentContainerStyle={Styles.centerContainer}
         refreshControl={
-          <RefreshControl
-            refreshing={this.state.loading}
-            onRefresh={this.forceUpdate}
-          />
-        }>
+          <RefreshControl refreshing={loading} onRefresh={forceUpdate} />
+        }
+      >
+        <View style={Styles.wideBlock}>
+          <Text style={Styles.centralHeader}>{"Generate VerusQR Invoice"}</Text>
+        </View>
         <QRModal
           animationType="slide"
           transparent={false}
-          visible={this.state.showModal && this.state.verusQRString && this.state.verusQRString.length > 0}
-          qrString={this.state.verusQRString}
-          cancel={() => {this.setState({showModal: false})}}/>
-        <Text style={styles.wifLabel}>
-          {"Generate VerusQR Invoice"}
-        </Text>
-        <View style={styles.dropDownContainer}>
-          <Dropdown
-            containerStyle={styles.dropDown}
-            labelExtractor={(item, index) => {
-              return item.id
-            }}
-            valueExtractor={(item, index) => {
-              return item
-            }}
-            data={this.props.activeCoinsForUser}
-            onChangeText={(value, index, data) => this.switchInvoiceCoin(value)}
-            textColor={Colors.quinaryColor}
-            selectedItemColor={Colors.quinaryColor}
-            baseColor={Colors.quinaryColor}
-            label="Selected Coin:"
-            labelTextStyle={{fontFamily: 'Avenir-Book'}}
-            labelFontSize={17}
-            value={this.state.selectedCoin}
-            pickerStyle={{backgroundColor: Colors.tertiaryColor}}
-            itemTextStyle={{fontFamily: 'Avenir-Book'}}
-          />
+          visible={showModal && verusQRString && verusQRString.length > 0}
+          qrString={verusQRString}
+          cancel={() => {
+            this.setState({ showModal: false });
+          }}
+        />
+        <Dropdown
+          // TODO: Determine why width must be 85 here, cant be wide block
+          containerStyle={{...Styles.wideBlock, width: '85%'}}
+          labelExtractor={(item, index) => {
+            return item.id;
+          }}
+          valueExtractor={(item, index) => {
+            return item;
+          }}
+          data={activeCoinsForUser}
+          onChangeText={(value, index, data) => switchInvoiceCoin(value)}
+          textColor={Colors.quinaryColor}
+          selectedItemColor={Colors.quinaryColor}
+          baseColor={Colors.quinaryColor}
+          label="Selected Coin:"
+          labelTextStyle={{ fontFamily: "Avenir-Book" }}
+          labelFontSize={17}
+          value={selectedCoin}
+          pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
+          itemTextStyle={{ fontFamily: "Avenir-Book" }}
+        />
+        <View style={Styles.wideBlock}>
+          <TouchableOpacity onPress={copyAddressToClipboard}>
+            <Input
+              labelStyle={Styles.formInputLabel}
+              underlineColorAndroid={Colors.quinaryColor}
+              editable={false}
+              value={address}
+              autoCapitalize={"none"}
+              autoCorrect={false}
+              inputStyle={Styles.mediumInlineLink}
+              pointerEvents="none"
+              multiline={true}
+              label={"Your address:"}
+              errorMessage={errors.address ? errors.address : null}
+            />
+          </TouchableOpacity>
         </View>
-        <View style={styles.valueContainer}>
-          <FormValidationMessage>
-          {
-            this.state.errors.selectedCoin ? 
-              this.state.errors.selectedCoin
-              :
-              null
-          }
-          </FormValidationMessage>
-        </View>
-        <View style={styles.valueContainer}>
-          <FormLabel labelStyle={styles.formLabel}>
-          Your address:
-          </FormLabel>
-          <FormInput 
+        <View style={Styles.wideBlock}>
+          <Input
             underlineColorAndroid={Colors.quinaryColor}
-            editable={false}
-            value={this.state.address}
-            autoCapitalize={"none"}
-            autoCorrect={false}
-            inputStyle={styles.wifInput}
-            multiline={true}
-          />
-          {this.state.errors.address &&
-          <FormValidationMessage>
-          {
-            this.state.errors.address ? 
-              this.state.errors.address
-              :
-              null
-          }
-          </FormValidationMessage>}
-        </View>
-        <TouchableOpacity onPress={this.copyAddressToClipboard} style={{marginTop: 5}}>
-          <Icon name="content-copy" size={25} color={Colors.quinaryColor}/>
-        </TouchableOpacity>
-        <View style={styles.valueContainer}>
-          <View style={styles.labelContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-            {`Enter an amount in ${this.state.amountFiat ? 'USD' : this.state.selectedCoin.id}:`}
-            </FormLabel>
-            {this.props.rate && (isNumber(_price)) &&
-              <TouchableOpacity onPress={() => {this.setState({ amountFiat: !this.state.amountFiat })}}>
-                <FormLabel labelStyle={styles.swapInputTypeBtnBordered}>
-                  {this.state.amountFiat ? 'USD' : this.state.selectedCoin.id}
-                </FormLabel>
-              </TouchableOpacity>
+            label={
+              <View style={Styles.startRow}>
+                <Text style={Styles.mediumFormInputLabel}>
+                  {"Enter an amount in "}
+                </Text>
+                <Text
+                  style={
+                    fiatEnabled
+                      ? Styles.mediumInlineLink
+                      : Styles.mediumFormInputLabel
+                  }
+                  onPress={
+                    fiatEnabled
+                      ? () => this.setState({ amountFiat: !amountFiat })
+                      : () => {}
+                  }
+                >
+                  {amountFiat ? displayCurrency : selectedCoin.id}
+                </Text>
+              </View>
             }
-          </View>
-          <FormInput 
-            underlineColorAndroid={Colors.quinaryColor}
-            onChangeText={(text) => this.setState({amount: text})}
-            shake={this.state.errors.amount}
-            inputStyle={styles.formInput}
+            rightIcon={
+              fiatEnabled ? (
+                <Text
+                  style={Styles.ghostText}
+                  onPress={() => this.setState({ amountFiat: !amountFiat })}
+                >{`~${_price} ${
+                  amountFiat ? selectedCoin.id : displayCurrency
+                }`}</Text>
+              ) : null
+            }
+            onChangeText={text => this.setState({ amount: text })}
             keyboardType={"decimal-pad"}
-            autoCapitalize='words'
+            autoCapitalize="words"
+            errorMessage={errors.amount ? errors.amount : null}
           />
-          {this.state.errors.amount &&
-          <FormValidationMessage>
-          {
-            this.state.errors.amount ? 
-              this.state.errors.amount
-              :
-              null
-          }
-          </FormValidationMessage>}
-          {this.props.rate && (isNumber(_price)) &&
-          <TouchableOpacity onPress={() => {this.setState({ amountFiat: !this.state.amountFiat })}}>
-            <FormLabel labelStyle={styles.swapInputTypeBtn}>
-              {`~${_price} ${this.state.amountFiat ? this.state.selectedCoin.id : 'USD'}`}
-            </FormLabel>
-          </TouchableOpacity>}
         </View>
-        <View style={styles.valueContainer}>
-          <FormLabel labelStyle={styles.formLabel}>
-            {"Enter a note for the receiver (optional):"}
-          </FormLabel>
-          <FormInput 
+        <View style={Styles.wideBlock}>
+          <Input
+            labelStyle={Styles.formInputLabel}
             underlineColorAndroid={Colors.quinaryColor}
-            onChangeText={(text) => this.setState({memo: text})}
+            onChangeText={text => this.setState({ memo: text })}
             autoCapitalize={"none"}
+            label={"Enter a note for the receiver (optional):"}
             autoCorrect={false}
-            shake={this.state.errors.memo}
-            inputStyle={styles.formInput}
+            shake={errors.memo}
+            errorMessage={errors.memo ? errors.memo : null}
           />
-          <FormValidationMessage>
-          {
-            this.state.errors.memo ? 
-              this.state.errors.memo
-              :
-              null
-          }
-          </FormValidationMessage>
         </View>
-        <View style={styles.singleButtonContainer}>
-          <StandardButton 
-            style={styles.addAccountButton} 
-            title="GENERATE QR" 
-            onPress={this.validateFormData}
+        <View style={Styles.wideBlock}>
+          <StandardButton
+            color={Colors.linkButtonColor}
+            title="GENERATE QR"
+            onPress={validateFormData}
           />
         </View>
       </ScrollView>
@@ -365,7 +365,8 @@ const mapStateToProps = (state) => {
     activeCoin: state.coins.activeCoin,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeAccount: state.authentication.activeAccount,
-    rate: state.ledger.rates[DLIGHT][chainTicker],
+    rates: state.ledger.rates[GENERAL],
+    displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD
     //needsUpdate: state.ledger.needsUpdate,
   }
 };

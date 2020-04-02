@@ -12,6 +12,7 @@ import {
   SET_COIN_SETTINGS_STATE,
   SET_BUY_SELL_SETTINGS_STATE
 } from '../utils/constants/storeType'
+import { USD } from '../utils/constants/intervalConstants'
 
 export const settings = (state = {
   btcFeesAdvanced: false,
@@ -20,7 +21,8 @@ export const settings = (state = {
   pinForTxs: false,
   activeConfigSection: null,
   generalWalletSettings: {
-    maxTxCount: 10
+    maxTxCount: 10,
+    displayCurrency: USD
   },
   buySellSettings: {}, //e.g. {user1': {buySellEnabled: true, wyreData: {}}, 'user2: {buySellEnabled: false, wyreData: {}}}
   coinSettings: {}, //e.g. {VRSC: {verificationLvl: 2, verificationLock: false, channels: ['dlight', 'electrum', 'general']}}

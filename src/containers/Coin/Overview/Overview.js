@@ -15,10 +15,11 @@ import { ListItem } from "react-native-elements";
 import { connect } from 'react-redux';
 import { satsToCoins, truncateDecimal } from '../../../utils/math';
 import { expireData } from '../../../actions/actionCreators';
-import styles from './Overview.styles';
+import Styles from '../../../styles/index'
 import withNavigationFocus from "react-navigation/src/views/withNavigationFocus";
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
 import store from "../../../store";
+import TxDetailsModal from '../../../components/TxDetailsModal/TxDetailsModal'
 import { API_GET_FIATPRICE, API_GET_BALANCES, API_GET_INFO, API_GET_TRANSACTIONS, ELECTRUM, DLIGHT } from "../../../utils/constants/intervalConstants";
 
 const SELF = require('../../../images/customIcons/selfArrow.png')
@@ -30,20 +31,27 @@ const CONNECTION_ERROR = "Connection Error"
 
 class Overview extends Component {
   constructor(props) {
-    super(props)
+    super(props);
 
     this.state = {
       parsedTxList: [],
       coinRates: {},
-      loading: false
+      loading: false,
+      txDetailsModalOpen: false,
+      txDetailProps: {
+        parsedAmount: 0,
+        txData: {},
+        activeCoinID: null,
+        txLogo: UNKNOWN
+      }
     };
     //this.updateProps = this.updateProps.bind(this);
-    this.refresh = this.refresh.bind(this)
+    this.refresh = this.refresh.bind(this);
 
-    this.refresh()
+    this.refresh();
   }
 
-  componentDidUpdate(lastProps) {    
+  componentDidUpdate(lastProps) {
     if (lastProps.isFocused !== this.props.isFocused && this.props.isFocused) {
       this.refresh();
     }
@@ -51,126 +59,142 @@ class Overview extends Component {
 
   refresh = () => {
     this.setState({ loading: true }, () => {
-      const updates = [API_GET_FIATPRICE, API_GET_BALANCES, API_GET_INFO, API_GET_TRANSACTIONS]
-      Promise.all(updates.map(async (update) => {
-        await conditionallyUpdateWallet(store.getState(), this.props.dispatch, this.props.activeCoin.id, update)
-      })).then(res => {
-        this.setState({ loading: false })
-      })
-      .catch(error => {
-        this.setState({ loading: false })
-        console.error(error)
-      })
-    })
-  }
+      const updates = [
+        API_GET_FIATPRICE,
+        API_GET_BALANCES,
+        API_GET_INFO,
+        API_GET_TRANSACTIONS
+      ];
+      Promise.all(
+        updates.map(async update => {
+          await conditionallyUpdateWallet(
+            store.getState(),
+            this.props.dispatch,
+            this.props.activeCoin.id,
+            update
+          );
+        })
+      )
+        .then(res => {
+          this.setState({ loading: false });
+        })
+        .catch(error => {
+          this.setState({ loading: false });
+          console.error(error);
+        });
+    });
+  };
 
   forceUpdate = () => {
-    const coinObj = this.props.activeCoin
-    this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE))
-    this.props.dispatch(expireData(coinObj.id, API_GET_BALANCES))
-    this.props.dispatch(expireData(coinObj.id, API_GET_INFO))
-    this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS))
+    const coinObj = this.props.activeCoin;
+    this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE));
+    this.props.dispatch(expireData(coinObj.id, API_GET_BALANCES));
+    this.props.dispatch(expireData(coinObj.id, API_GET_INFO));
+    this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS));
 
-    this.refresh()
-  }
+    this.refresh();
+  };
 
-  _openDetails = (item) => {  
-    let navigation = this.props.navigation  
+  _openDetails = item => {
+    let navigation = this.props.navigation;
     navigation.navigate("TxDetails", {
       data: item
     });
   };
 
-  renderTransactionItem = ({item, index}) => {
-    let amount = 0
-    let avatarImg
-    let subtitle = ''
-    
-    if(Array.isArray(item)) {
-      let toAddresses = []
-      amount = Number(item[0].amount) - Number(item[1].amount)
+  renderTransactionItem = ({ item, index }) => {
+    let amount = 0;
+    let avatarImg;
+    let subtitle = "";
+
+    if (Array.isArray(item)) {
+      let toAddresses = [];
+      amount = Number(item[0].amount) - Number(item[1].amount);
 
       if (item[1].interest) {
-        let interest = item[1].interest*-1
-        amount = Number(amount) + Number(interest)
+        let interest = item[1].interest * -1;
+        amount = Number(amount) + Number(interest);
       }
-          
-      avatarImg = OUT
+
+      avatarImg = OUT;
       for (let i = 0; i < item[0].to.length; i++) {
         if (item[0].to[i] !== item[0].from[0]) {
-          toAddresses.push(item[0].to[i])
+          toAddresses.push(item[0].to[i]);
         }
       }
 
       if (toAddresses.length > 1) {
-        subtitle = toAddresses[0] + ' + ' + (toAddresses.length - 1) + ' more'
+        subtitle = toAddresses[0] + " + " + (toAddresses.length - 1) + " more";
+      } else {
+        subtitle = toAddresses[0];
       }
-      else {
-        subtitle = toAddresses[0]
-      }
-    }
-    else {
-      amount = item.amount ? Number(item.amount) : '???'
+    } else {
+      amount = item.amount ? Number(item.amount) : "???";
 
-      if(item.type === 'received') {
-        avatarImg = IN
-        subtitle = 'me'
-      }
-      else if (item.type === 'sent') {
-        avatarImg = OUT
-        subtitle = item.address
-      }
-      else if (item.type === 'self') {
-        if (item.amount !== '???' && amount < 0) {
-          subtitle = 'me'
-          avatarImg = INTEREST
-          amount = amount*-1
+      if (item.type === "received") {
+        avatarImg = IN;
+        subtitle = "me";
+      } else if (item.type === "sent") {
+        avatarImg = OUT;
+        subtitle = item.address;
+      } else if (item.type === "self") {
+        if (item.amount !== "???" && amount < 0) {
+          subtitle = "me";
+          avatarImg = INTEREST;
+          amount = amount * -1;
+        } else {
+          avatarImg = SELF;
+          subtitle = "fees";
         }
-        else {
-          avatarImg = SELF
-          subtitle = 'fees'
-        }
-      }
-      else {
-        avatarImg = UNKNOWN
-        subtitle = '???'
+      } else {
+        avatarImg = UNKNOWN;
+        subtitle = "???";
       }
     }
 
-    subtitle = 'to: ' + subtitle
+    subtitle = "to: " + subtitle;
 
     return (
       <TouchableOpacity
         onPress={() =>
-          this._openDetails({
-            amount: amount,
-            tx: item,
-            coinID: this.props.activeCoin.id
+          this.setState({
+            txDetailProps: {
+              parsedAmount: amount,
+              txData: item,
+              activeCoinID: this.props.activeCoin.id,
+              txLogo: avatarImg
+            },
+            txDetailsModalOpen: true
           })
         }
       >
         <ListItem
           roundAvatar
           title={
-            <Text style={styles.transactionItemLabel}>
+            <Text style={Styles.listItemLeftTitleDefault}>
               {amount < 0.0001
                 ? "< " + truncateDecimal(amount, 4)
                 : truncateDecimal(amount, 4)}
             </Text>
           }
           subtitle={subtitle}
-          avatar={avatarImg}
-          containerStyle={{ borderBottomWidth: 0 }}
-          rightTitle={<Text style={styles.txInfoLabel}>{"info"}</Text>}
+          leftAvatar={{
+            source: avatarImg
+          }}
+          chevron
+          containerStyle={Styles.bottomlessListItemContainer}
+          rightTitle={
+            <Text style={Styles.listItemRightTitleDefault}>{"info"}</Text>
+          }
         />
       </TouchableOpacity>
     );
-  }
+  };
 
   renderTransactionList = () => {
     return (
       <FlatList
-        style={styles.transactionList}
+        style={Styles.fullWidth}
         data={this.props.transactions.public}
         scrollEnabled={true}
         refreshing={this.state.loading}
@@ -180,40 +204,60 @@ class Overview extends Component {
         keyExtractor={this.keyExtractor}
       />
     );
-  }
+  };
 
   keyExtractor = (item, index) => {
     if (Array.isArray(item)) {
-      return item[0].txid
+      return item[0].txid;
     }
-    return item.txid
-  }
+    return item.txid;
+  };
 
   renderBalanceLabel = () => {
-    const { activeCoin, balances } = this.props
+    const { activeCoin, balances } = this.props;
 
     if (balances.errors.public) {
       return (
-        <Text style={styles.connectionErrorLabel}>{CONNECTION_ERROR}</Text>
+        <Text
+          style={{ ...Styles.largeCentralPaddedHeader, ...Styles.errorText }}
+        >
+          {CONNECTION_ERROR}
+        </Text>
       );
     } else if (balances.public) {
       return (
-        <Text style={styles.coinBalanceLabel}>
-          {truncateDecimal(satsToCoins(balances.public.confirmed), 4) + " " + activeCoin.id}
+        <Text style={Styles.largeCentralPaddedHeader}>
+          {truncateDecimal(satsToCoins(balances.public.confirmed), 4) +
+            " " +
+            activeCoin.id}
         </Text>
       );
     } else {
       return null;
     }
-  }
+  };
 
   render() {
     return (
-      <View style={styles.root}>
-      <View style={styles.headerContainer}>
-        {this.renderBalanceLabel()}
-      </View>
-        <Text style={styles.transactionLabel}>Transactions</Text>
+      <View style={Styles.defaultRoot}>
+        <TxDetailsModal
+          {...this.state.txDetailProps}
+          cancel={() =>
+            this.setState({
+              txDetailsModalOpen: false,
+              txDetailProps: {
+                parsedAmount: 0,
+                txData: {},
+                activeCoinID: null,
+                txLogo: UNKNOWN
+              }
+            })
+          }
+          visible={this.state.txDetailsModalOpen}
+          animationType="slide"
+        />
+        <View style={Styles.centralRow}>{this.renderBalanceLabel()}</View>
+        <Text style={Styles.greyStripeHeader}>Transactions</Text>
         {this.renderTransactionList()}
       </View>
     );

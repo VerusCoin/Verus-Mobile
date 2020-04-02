@@ -35,7 +35,7 @@ class SetupSeedModal extends Component {
         animationType={this.props.animationType}
         transparent={false}
         visible={this.props.visible}
-        onRequestClose={this.cancelHandler}
+        onRequestClose={cancel}
       >
         {this.state.firstTimeSeed ? (
           <CreateSeed {...parentProps} importSeed={() => this.setState({ firstTimeSeed: false })}/>

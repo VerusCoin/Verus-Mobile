@@ -12,5 +12,5 @@ export default roots = {
     backgroundColor: Colors.secondaryColor,
     flex: 1,
     alignItems: "center",
-  }
+  },
 };
