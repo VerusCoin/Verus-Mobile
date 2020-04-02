@@ -238,7 +238,7 @@ class ReceiveCoin extends Component {
     return (
       <ScrollView
         style={Styles.flexBackground}
-        contentContainerStyle={Styles.centerContainer}
+        contentContainerStyle={{...Styles.horizontalCenterContainer, ...Styles.fullWidthBlock}}
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={forceUpdate} />
         }

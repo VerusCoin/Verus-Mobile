@@ -32,6 +32,11 @@ export default text = {
     textAlign: "center",
     fontFamily: "Avenir-Medium"
   },
+  defaultDescriptiveText: {
+    textAlign: "center",
+    fontSize: 18,
+    fontFamily: "Avenir-Book",
+  },
   seedText: {
     color: Colors.primaryColor,
     textAlign: "center",

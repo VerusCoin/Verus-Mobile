@@ -25,6 +25,7 @@ import { Icon } from "react-native-elements"
 import RNFS from "react-native-fs"
 import Share from 'react-native-share';
 import Colors from '../globals/colors';
+import Styles from '../styles/index'
 
 const LOGO_DIR = require('../images/customIcons/verusQRLogo.png');
 const NOT_REAL_ERROR_MSG = "User did not share"
@@ -130,21 +131,21 @@ class QRModal extends Component {
       visible={this.props.visible}
       onRequestClose={this.cancelHandler}>
         <ScrollView 
-          style={styles.root} 
-          contentContainerStyle={{flex: 1, alignItems: "center", justifyContent: "center"}}>
-          <View style={{...styles.textContainer, marginTop: 25}}>
-            <Text style={styles.mainLabel}>
+          style={Styles.flexBackground}
+          contentContainerStyle={Styles.centerContainer}>
+          <View style={Styles.headerContainer}>
+            <Text style={Styles.centralHeader}>
               {"VerusPay Invoice"}
             </Text>
-            <Text style={styles.mainDesc}>
-              {"Scan this QR code with VerusPay on another device to automatically create" + 
-                " a transaction."}
-            </Text>
           </View>
+          <Text style={{...Styles.defaultDescriptiveText, ...Styles.standardWidthFlexRowBlock}}>
+            {"Scan this QR code with VerusPay on another device to automatically create" + 
+              " a transaction."}
+          </Text>
           <View style={{padding: 10, backgroundColor: '#FFF'}}>
             <QRCode
               value={this.props.qrString ? this.props.qrString : "-"}
-              size={250}
+              size={302}
               //TODO: Add in differently so it doesn't impact readability
               //logo={LOGO_DIR}
               //logoSize={50}
@@ -152,7 +153,7 @@ class QRModal extends Component {
               getRef={(qr) => (this.QRCodeRef = qr)}
             />
           </View>
-          <View style={styles.multiButtonContainer}>
+          <View style={Styles.standardWidthSpaceBetweenBlock}>
             <TouchableOpacity 
               onPress={this.state.libraryPressed ? () => {return 0} : this.requestSaveQR} 
               activeOpacity={this.state.libraryPressed ? 1 : DEFAULT_OPACITY}>
@@ -166,9 +167,9 @@ class QRModal extends Component {
               </TouchableOpacity>
             }
           </View>
-          <View style={styles.singleButtonContainer}>
+          <View style={Styles.wideBlock}>
             <StandardButton 
-              style={styles.cancelBtn} 
+              color={Colors.linkButtonColor}
               title="CLOSE" 
               onPress={this.cancelHandler}
             />
@@ -180,45 +181,3 @@ class QRModal extends Component {
 }
 
 export default QRModal;
-
-const styles = StyleSheet.create({
-  root: {
-    backgroundColor: Colors.secondaryColor,
-  },
-  singleButtonContainer: {
-    width: "75%",
-    backgroundColor: "transparent",
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  multiButtonContainer: {
-    width: "75%",
-    backgroundColor: "transparent",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 20
-  },
-  cancelBtn: {
-    height: 46,
-    backgroundColor: "rgba(206,68,70,1)",
-    marginTop: 20,
-    marginBottom: 40
-  },
-  mainLabel: {
-    backgroundColor: "transparent",
-    fontSize: 22,
-    color: Colors.quinaryColor,
-    textAlign: "center",
-    paddingBottom: 10
-  },
-  mainDesc: {
-    backgroundColor: "transparent",
-    fontSize: 16,
-    color: Colors.quinaryColor,
-    textAlign: "center"
-  },
-  textContainer: {
-    width: "85%",
-    paddingBottom: 30
-  }
-});
