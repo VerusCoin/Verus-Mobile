@@ -169,7 +169,7 @@ class QRModal extends Component {
           </View>
           <View style={Styles.wideBlock}>
             <StandardButton 
-              color={Colors.linkButtonColor}
+              color={Colors.warningButtonColor}
               title="CLOSE" 
               onPress={this.cancelHandler}
             />
