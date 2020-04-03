@@ -80,7 +80,7 @@ class Overview extends Component {
         })
         .catch(error => {
           this.setState({ loading: false });
-          console.error(error);
+          console.warn(error);
         });
     });
   };
@@ -227,7 +227,7 @@ class Overview extends Component {
     } else if (balances.public) {
       return (
         <Text style={Styles.largeCentralPaddedHeader}>
-          {truncateDecimal(satsToCoins(balances.public.confirmed), 4) +
+          {truncateDecimal(balances.public.confirmed, 4) +
             " " +
             activeCoin.id}
         </Text>

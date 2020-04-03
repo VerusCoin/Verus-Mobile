@@ -10,7 +10,7 @@
 
 import React, { Component } from "react"
 import StandardButton from "../../../components/StandardButton"
-import { FormLabel, FormInput, FormValidationMessage, } from "react-native-elements"
+import { FormLabel, Input, FormValidationMessage, } from "react-native-elements"
 import {
   View,
   Text,
@@ -23,11 +23,10 @@ import {
   Image
 } from "react-native"
 import { satsToCoins, truncateDecimal, isNumber, coinsToSats } from '../../../utils/math'
-//import { updateOneBalance } from '../../../actions/actionCreators'
 import { connect } from "react-redux";
 import { getRecommendedBTCFees } from '../../../utils/api/channels/general/callCreators'
 import { removeSpaces } from '../../../utils/stringUtils'
-import styles from './SendCoin.styles'
+import Styles from '../../../styles/index'
 import Colors from '../../../globals/colors';
 import withNavigationFocus from "react-navigation/src/views/withNavigationFocus"
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
@@ -215,7 +214,7 @@ class SendCoin extends Component {
         this.handleFormError("Invalid amount", "amount")
         _errors = true
       } else if (coinsToSats(Number(amount)) > Number(spendableBalance)) {
-        this.handleFormError(("Insufficient funds, " + (spendableBalance < 0 ? "available amount is less than fee" : truncateDecimal(satsToCoins(spendableBalance), 4) + " available")), "amount")
+        this.handleFormError(("Insufficient funds, " + (spendableBalance < 0 ? "available amount is less than fee" : truncateDecimal(spendableBalance, 4) + " available")), "amount")
         _errors = true
       }
 
@@ -246,104 +245,122 @@ class SendCoin extends Component {
     const { balances, activeCoin } = this.props
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center"}}>
-          <TouchableOpacity onPress={
-            balances.public ? 
-            (() => this.fillAmount(satsToCoins(balances.public.confirmed - (activeCoin.fee ? activeCoin.fee : 10000))))
-            :
-            (() => {return 0})
-            }>
-            <Text style={styles.coinBalanceLabel}>
-              {(this.state.coin.id && balances.public) ?
-                (typeof(balances.public.confirmed) !== 'undefined' ? 
-                truncateDecimal(satsToCoins(balances.public.confirmed), 4) + ' ' + this.state.coin.id 
-                :
-                null)
-              :
-              null
+        <View style={Styles.defaultRoot}>
+          <View style={Styles.centralRow}>
+            <TouchableOpacity
+              onPress={
+                balances.public
+                  ? () =>
+                      this.fillAmount(
+                        balances.public.confirmed -
+                          satsToCoins(activeCoin.fee ? activeCoin.fee : 10000)
+                      )
+                  : () => {
+                      return 0;
+                    }
               }
-            </Text>
-          </TouchableOpacity>
-          <Text style={styles.sendLabel}>{"Send " + this.state.coin.name}</Text>
-          <View style={styles.valueContainer}>
-              <FormLabel labelStyle={styles.formLabel}>
-              To:
-              </FormLabel>
-              <FormInput 
-                underlineColorAndroid={Colors.quinaryColor}
-                onChangeText={(text) => this.setState({toAddress: removeSpaces(text)})}
-                onSubmitEditing={Keyboard.dismiss}
-                value={this.state.toAddress}
-                autoCapitalize={"none"}
-                autoCorrect={false}
-                shake={this.state.formErrors.toAddress}
-                inputStyle={styles.formInput}
-              />
-              <FormValidationMessage>
-              {
-                this.state.formErrors.toAddress ? 
-                  this.state.formErrors.toAddress
-                  :
-                  null
-              }
-              </FormValidationMessage>
+              style={Styles.centralRow}
+            >
+              <Text
+                style={{
+                  ...Styles.largeCentralPaddedHeader,
+                  ...Styles.linkText
+                }}
+              >
+                {this.state.coin.id && balances.public
+                  ? typeof balances.public.confirmed !== "undefined"
+                    ? truncateDecimal(balances.public.confirmed, 4) +
+                      " " +
+                      this.state.coin.id
+                    : null
+                  : null}
+              </Text>
+            </TouchableOpacity>
           </View>
-          <View style={styles.valueContainer}>
-              <FormLabel labelStyle={styles.formLabel}>
-              Amount:
-              </FormLabel>
-              <FormInput 
-                underlineColorAndroid={Colors.quinaryColor}
-                onChangeText={(text) => this.setState({amount: text})}
-                onSubmitEditing={Keyboard.dismiss}
-                value={this.state.amount.toString()}
-                shake={this.state.formErrors.amount}
-                inputStyle={styles.formInput}
-                keyboardType={"decimal-pad"}
-                autoCapitalize='words'
-              />
-              <FormValidationMessage>
-              {
-                this.state.formErrors.amount ? 
-                  this.state.formErrors.amount
-                  :
-                  null
+          <Text style={Styles.greyStripeHeader}>
+            {"Send " + this.state.coin.name}
+          </Text>
+          <View style={Styles.wideBlock}>
+            <Input
+              labelStyle={Styles.formInputLabel}
+              label={"To:"}
+              underlineColorAndroid={Colors.quinaryColor}
+              onChangeText={text =>
+                this.setState({ toAddress: removeSpaces(text) })
               }
-              </FormValidationMessage>
-              <TouchableOpacity onPress={this._verusPay}>
-                <Image
-                  source={VERUSPAY_LOGO_DIR}
-                  style={{width: 40, height: 40, alignSelf: "center", marginVertical: '10%'}}
-                />
-              </TouchableOpacity>
+              onSubmitEditing={Keyboard.dismiss}
+              value={this.state.toAddress}
+              autoCapitalize={"none"}
+              autoCorrect={false}
+              errorMessage={
+                this.state.formErrors.toAddress
+                  ? this.state.formErrors.toAddress
+                  : null
+              }
+            />
           </View>
-          {this.state.loading ? 
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Updating balance...</Text>
-              <ActivityIndicator animating={this.state.loading} size="large"/>
-            </View>
-          :
-            this.state.loadingBTCFees ?
-              <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Loading BTC Fees...</Text>
-                <ActivityIndicator animating={this.state.loadingBTCFees} size="large"/>
+          <View style={Styles.wideBlock}>
+            <Input
+              labelStyle={Styles.formInputLabel}
+              label={"Amount:"}
+              underlineColorAndroid={Colors.quinaryColor}
+              onChangeText={text => this.setState({ amount: text })}
+              onSubmitEditing={Keyboard.dismiss}
+              value={this.state.amount.toString()}
+              shake={this.state.formErrors.amount}
+              keyboardType={"decimal-pad"}
+              autoCapitalize="words"
+              errorMessage={
+                this.state.formErrors.amount
+                  ? this.state.formErrors.amount
+                  : null
+              }
+            />
+            <View style={Styles.standardWidthCenterBlock}>
+              <View style={Styles.fullWidthFlexCenterBlock}>
+                <TouchableOpacity onPress={this._verusPay}>
+                  <Image
+                    source={VERUSPAY_LOGO_DIR}
+                    style={{
+                      width: 40,
+                      height: 40
+                    }}
+                  />
+                </TouchableOpacity>
               </View>
-            :
-              this.state.btcFeesErr ?
-                <View style={styles.loadingContainer}>
-                  <Text style={styles.errorText}>BTC Fees Error!</Text>
-                </View>
-              :
-                balances.errors.public ? 
-                  <View style={styles.loadingContainer}>
-                    <Text style={styles.errorText}>Connection Error</Text>
-                  </View>
-                :
-                  <View style={styles.buttonContainer}>
-                    <StandardButton style={styles.sendBtn} onPress={this.validateFormData} title="SEND"/>
-                  </View>
-            }
-        </ScrollView>
+            </View>
+          </View>
+          {this.state.loading ? (
+            <View style={Styles.fullWidthFlexCenterBlock}>
+              <Text style={Styles.centralHeader}>Updating balance...</Text>
+              <ActivityIndicator animating={this.state.loading} size="large" />
+            </View>
+          ) : this.state.loadingBTCFees ? (
+            <View style={Styles.fullWidthFlexCenterBlock}>
+              <Text style={Styles.centralHeader}>Loading BTC Fees...</Text>
+              <ActivityIndicator
+                animating={this.state.loadingBTCFees}
+                size="large"
+              />
+            </View>
+          ) : this.state.btcFeesErr ? (
+            <View style={Styles.fullWidthFlexCenterBlock}>
+              <Text style={{ ...Styles.centralHeader, ...Styles.errorText }}>
+                BTC Fees Error!
+              </Text>
+            </View>
+          ) : balances.errors.public ? (
+            <View style={Styles.fullWidthFlexCenterBlock}>
+              <Text style={{ ...Styles.centralHeader, ...Styles.errorText }}>
+                Connection Error
+              </Text>
+            </View>
+          ) : (
+            <View style={Styles.fullWidthFlexCenterBlock}>
+              <StandardButton onPress={this.validateFormData} title="SEND" />
+            </View>
+          )}
+        </View>
       </TouchableWithoutFeedback>
     );
   }

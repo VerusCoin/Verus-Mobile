@@ -50,7 +50,7 @@ export default text = {
     fontFamily: "Avenir-Book",
     color: Colors.quaternaryColor,
     textAlign: "center",
-    paddingVertical: 6
+    paddingVertical: 6,
   },
   centralInfoTextPadded: {
     fontFamily: "Avenir-Black",

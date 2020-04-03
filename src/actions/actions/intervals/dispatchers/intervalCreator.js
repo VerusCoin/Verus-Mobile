@@ -93,6 +93,7 @@ export const refreshCoinIntervals = (chainTicker, onCompletes) => {
   const state = Store.getState()
 
   const coinObj = getCoinObj(state.coins.activeCoinsForUser, chainTicker)
+
   const channels = state.settings.coinSettings[chainTicker].channels
   const chainStatus = state.coins.status[chainTicker]
 

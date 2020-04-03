@@ -55,7 +55,7 @@ export const udpateWalletData = async (state, dispatch, channels, chainTicker, u
       noError = true
     }
   } catch (e) {
-    console.error(e)
+    console.warn(e)
   }
   
   return noError

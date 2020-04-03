@@ -238,7 +238,7 @@ class VerusPay extends Component {
         }
       }
     } catch (e) {
-      console.error(e);
+      console.warn(e);
       this.errorHandler(PARSE_ERROR);
     }
   };
@@ -598,7 +598,7 @@ class VerusPay extends Component {
               })
               .catch(error => {
                 this.setState({ loading: false });
-                console.error(error);
+                console.warn(error);
               })
           );
           if (this.state.loadingBTCFees) promises.push(this.updateBtcFees);

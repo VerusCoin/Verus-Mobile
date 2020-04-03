@@ -5,14 +5,31 @@ export default containers = {
     width: '75%',
     paddingVertical: 16,
   },
-  standardWidthCenterBlock: {
+  standardWidthFlexGrowCenterBlock: {
     alignSelf: 'center',
     width: '75%',
     paddingVertical: 16,
   },
+  standardWidthFlexGrowCenterBlock: {
+    alignSelf: 'center',
+    width: '75%',
+    paddingVertical: 16,
+    flex: 1,
+    justifyContent: 'center'
+  },
+  fullWidthFlexGrowCenterBlock: {
+    alignSelf: 'center',
+    width: '100%',
+    paddingVertical: 16,
+    flex: 1,
+    justifyContent: 'center'
+  },
   centralRow: {
     flexDirection: 'row',
     alignSelf: 'center'
+  },
+  fullHeight: {
+    height: '100%',
   },
   startRow: {
     flexDirection: 'row',
@@ -20,6 +37,14 @@ export default containers = {
   },
   standardWidthSpaceBetweenBlock: {
     width: "75%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 16,
+    alignSelf: 'center',
+  },
+  fullWidthSpaceBetweenCenterBlock: {
+    width: "100%",
+    alignSelf: 'center',
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 16,
@@ -35,6 +60,11 @@ export default containers = {
     width: '90%',
     paddingVertical: 16,
   },
+  wideCenterBlock: {
+    width: '90%',
+    paddingVertical: 16,
+    alignSelf: 'center'
+  },
   wide: {
     width: '90%'
   },
@@ -44,6 +74,10 @@ export default containers = {
   },
   fullWidth: {
     width: '100%'
+  },
+  fullWidthAlignCenter: {
+    width: '100%',
+    alignItems: 'center'
   },
   wideFlexRowBlock: {
     width: '90%',
@@ -73,10 +107,9 @@ export default containers = {
   centerContainer: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
   },
   horizontalCenterContainer: {
-    flex: 1,
     alignItems: "center",
   },
   flexBackground: {
@@ -89,14 +122,35 @@ export default containers = {
   footerContainer: {
     width: '100%',
     alignItems: "center",
-    position: 'absolute',
-    bottom: 32
+    flex: 1,
+    maxHeight: '14%',
+    backgroundColor: Colors.secondaryColor,
+    borderTopWidth: 1,
+    borderColor: Colors.tertiaryColor
   },
   headerContainer: {
     width: '100%',
     alignItems: "center",
+    maxHeight: '10%',
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: Colors.secondaryColor,
+    borderBottomWidth: 1,
+    borderColor: Colors.tertiaryColor
+  },
+  tallHeaderContainer: {
+    width: '100%',
+    alignItems: "center",
+    maxHeight: '18%',
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: Colors.secondaryColor,
+    borderBottomWidth: 1,
+    borderColor: Colors.tertiaryColor
+  },
+  innerHeaderFooterContainer: {
     position: 'absolute',
-    top: 56
+    width: '100%'
   },
   inlineHeaderContainer: {
     width: '100%',

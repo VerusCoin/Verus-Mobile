@@ -155,7 +155,7 @@ export const electrumRequest = (serverList, callType, params, coinID, toSkip) =>
       resolve(!response ? false : {coin: coinID, ...response})
     })
     .catch((err) => {
-      console.error(err)
+      console.warn(err)
       
       reject(new ApiException(
         err.name,

@@ -106,7 +106,7 @@ class CreateSeed extends Component {
           <Text style={Styles.centralHeader}>Create New Seed</Text>
         </View>
         {formStep === 0 && (
-          <View style={Styles.standardWidthCenterBlock}>
+          <View style={Styles.standardWidthFlexGrowCenterBlock}>
             <Text style={Styles.centralLightTextPadded}>
               {`You will now be shown a sequence of ${DEFAULT_SEED_PHRASE_LENGTH} words.`}
             </Text>
@@ -139,7 +139,7 @@ class CreateSeed extends Component {
           </View>
         )}
         {formStep > 0 && formStep < DEFAULT_SEED_PHRASE_LENGTH + 1 && (
-          <View style={Styles.standardWidthCenterBlock}>
+          <View style={Styles.standardWidthFlexGrowCenterBlock}>
             <Text style={Styles.centralInfoTextPadded}>
               {`Word #${formStep}:`}
             </Text>
@@ -150,7 +150,7 @@ class CreateSeed extends Component {
           </View>
         )}
         {formStep > DEFAULT_SEED_PHRASE_LENGTH && (
-          <View style={Styles.wideBlock}>
+          <View style={Styles.standardWidthFlexGrowCenterBlock}>
             {randomIndices.map((randomI, index) => {
               return (
                 <Input

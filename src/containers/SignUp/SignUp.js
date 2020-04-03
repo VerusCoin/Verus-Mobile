@@ -13,7 +13,8 @@ import {
   ScrollView, 
   Keyboard,
   TouchableWithoutFeedback,
-  Alert
+  Alert,
+  ListView
 } from "react-native"
 import { NavigationActions } from 'react-navigation'
 import { Input, CheckBox } from 'react-native-elements'
@@ -246,8 +247,9 @@ class SignUp extends Component {
           );
         }
       });
-    } else if (channel === ELECTRUM) this.setState({ publicSeedModalOpen: true })
-    else if (channel === DLIGHT) this.setState({ privateSeedModalOpen: true })
+    } else if (channel === ELECTRUM) {
+      this.setState({ publicSeedModalOpen: true })
+    } else if (channel === DLIGHT) this.setState({ privateSeedModalOpen: true })
   }
 
   canMakeAccount = () => {
@@ -279,143 +281,146 @@ class SignUp extends Component {
 
   render() {
     return (
+      <React.Fragment>
+      <View style={Styles.headerContainer}>
+        <Text style={Styles.centralHeader}>Create New Account</Text>
+      </View>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <ScrollView
-          style={Styles.flexBackground}
-          contentContainerStyle={Styles.centerContainer}
-        >
-          <SetupSeedModal
-            animationType="slide"
-            transparent={false}
-            visible={this.state.publicSeedModalOpen}
-            qrString={this.state.verusQRString}
-            cancel={() => {
-              this.setState({ publicSeedModalOpen: false });
-            }}
-            setSeed={(seed, channel) => {
-              this.setState({
-                seeds: { ...this.state.seeds, [channel]: seed }
-              });
-            }}
-            channel={ELECTRUM}
-          />
-          <SetupSeedModal
-            animationType="slide"
-            transparent={false}
-            visible={this.state.privateSeedModalOpen}
-            qrString={this.state.verusQRString}
-            cancel={() => {
-              this.setState({ privateSeedModalOpen: false });
-            }}
-            setSeed={(seed, channel) => {
-              this.setState({
-                seeds: { ...this.state.seeds, [channel]: seed }
-              });
-            }}
-            channel={DLIGHT}
-          />
-          <View style={Styles.headerContainer}>
-            <Text style={Styles.centralHeader}>Create New Account</Text>
-          </View>
-          <View style={Styles.wideBlock}>
-            <Input
-              labelStyle={Styles.formInputLabel}
-              containerStyle={Styles.fullWidthBlock}
-              inputStyle={Styles.inputTextDefaultStyle}
-              label={"Enter a username:"}
-              underlineColorAndroid={Colors.quinaryColor}
-              onChangeText={text => this.setState({ userName: text })}
-              autoCapitalize={"none"}
-              autoCorrect={false}
-              errorMessage={
-                this.state.errors.userName ? this.state.errors.userName : null
-              }
-            />
-          </View>
-          <View style={Styles.wideBlock}>
-            <CheckBox
-              title="Setup Primary (T Address) Seed"
-              checked={this.state.seeds[ELECTRUM] != null}
-              textStyle={Styles.defaultText}
-              onPress={() => this.setupSeed(ELECTRUM)}
-            />
-            <CheckBox
-              title="Setup Secondary (Z Address) Seed"
-              checked={this.state.seeds[DLIGHT] != null}
-              textStyle={Styles.defaultText}
-              onPress={() => this.setupSeed(DLIGHT)}
-            />
-          </View>
-          <View style={Styles.fullWidthFlexCenterBlock}>
-            <View style={Styles.wideBlock}>
-              <Input
-                labelStyle={Styles.formInputLabel}
-                label={"Enter an account password (min. 5 characters):"}
-                inputStyle={Styles.inputTextDefaultStyle}
-                underlineColorAndroid={Colors.quinaryColor}
-                onChangeText={text => this.setState({ pin: text })}
-                autoCapitalize={"none"}
-                autoCorrect={false}
-                secureTextEntry={true}
-                errorMessage={
-                  this.state.errors.pin ? this.state.errors.pin : null
-                }
-              />
-            </View>
-            <View style={Styles.wideBlock}>
-              <Input
-                labelStyle={Styles.formInputLabel}
-                label={"Confirm account password:"}
-                inputStyle={Styles.inputTextDefaultStyle}
-                underlineColorAndroid={Colors.quinaryColor}
-                onChangeText={text => this.setState({ confirmPin: text })}
-                autoCapitalize={"none"}
-                autoCorrect={false}
-                secureTextEntry={true}
-                errorMessage={
-                  this.state.errors.confirmPin
-                    ? this.state.errors.confirmPin
-                    : null
-                }
-              />
-            </View>
-          </View>
-          <View style={Styles.wideBlock}>
-            <CheckBox
-              title="I realize anybody with access to my seeds/passphrases will have access to my funds:"
-              checked={this.state.disclaimerRealized}
-              textStyle={Styles.defaultText}
-              onPress={() =>
-                this.setState({
-                  disclaimerRealized: !this.state.disclaimerRealized
-                })
-              }
-            />
-          </View>
-          <View style={Styles.footerContainer}>
-            <View
-              style={
-                this.props.accounts.length > 0
-                  ? Styles.standardWidthSpaceBetweenBlock
-                  : Styles.fullWidthFlexCenterBlock
-              }
+        <View style={Styles.flexBackground}>
+          <ScrollView 
+            contentContainerStyle={{...Styles.centerContainer, ...Styles.innerHeaderFooterContainer}}
             >
-              {this.props.accounts.length > 0 && (
-                <StandardButton
-                  title="CANCEL"
-                  onPress={this.cancel}
-                  color={Colors.warningButtonColor}
-                />
-              )}
-              <StandardButton
-                title="ADD ACCOUNT"
-                onPress={this._handleSubmit}
-                color={Colors.successButtonColor}
+              <SetupSeedModal
+                animationType="slide"
+                transparent={false}
+                visible={this.state.publicSeedModalOpen}
+                qrString={this.state.verusQRString}
+                cancel={() => {
+                  this.setState({ publicSeedModalOpen: false });
+                }}
+                setSeed={(seed, channel) => {
+                  this.setState({
+                    seeds: { ...this.state.seeds, [channel]: seed }
+                  });
+                }}
+                channel={ELECTRUM}
               />
-            </View>
-          </View>
-        </ScrollView>
+              <SetupSeedModal
+                animationType="slide"
+                transparent={false}
+                visible={this.state.privateSeedModalOpen}
+                qrString={this.state.verusQRString}
+                cancel={() => {
+                  this.setState({ privateSeedModalOpen: false });
+                }}
+                setSeed={(seed, channel) => {
+                  this.setState({
+                    seeds: { ...this.state.seeds, [channel]: seed }
+                  });
+                }}
+                channel={DLIGHT}
+              />
+              <View style={Styles.wideBlock}>
+                <Input
+                  labelStyle={Styles.formInputLabel}
+                  containerStyle={Styles.fullWidthBlock}
+                  inputStyle={Styles.inputTextDefaultStyle}
+                  label={"Enter a username:"}
+                  underlineColorAndroid={Colors.quinaryColor}
+                  onChangeText={text => this.setState({ userName: text })}
+                  autoCapitalize={"none"}
+                  autoCorrect={false}
+                  errorMessage={
+                    this.state.errors.userName ? this.state.errors.userName : null
+                  }
+                />
+              </View>
+              <View style={Styles.wideBlock}>
+                <CheckBox
+                  title="Setup Primary (T Address) Seed"
+                  checked={this.state.seeds[ELECTRUM] != null}
+                  textStyle={Styles.defaultText}
+                  onPress={() => this.setupSeed(ELECTRUM)}
+                />
+                <CheckBox
+                  title="Setup Secondary (Z Address) Seed"
+                  checked={this.state.seeds[DLIGHT] != null}
+                  textStyle={Styles.defaultText}
+                  onPress={() => this.setupSeed(DLIGHT)}
+                />
+              </View>
+              <View style={Styles.fullWidthFlexCenterBlock}>
+                <View style={Styles.wideBlock}>
+                  <Input
+                    labelStyle={Styles.formInputLabel}
+                    label={"Enter an account password (min. 5 characters):"}
+                    inputStyle={Styles.inputTextDefaultStyle}
+                    underlineColorAndroid={Colors.quinaryColor}
+                    onChangeText={text => this.setState({ pin: text })}
+                    autoCapitalize={"none"}
+                    autoCorrect={false}
+                    secureTextEntry={true}
+                    errorMessage={
+                      this.state.errors.pin ? this.state.errors.pin : null
+                    }
+                  />
+                </View>
+                <View style={Styles.wideBlock}>
+                  <Input
+                    labelStyle={Styles.formInputLabel}
+                    label={"Confirm account password:"}
+                    inputStyle={Styles.inputTextDefaultStyle}
+                    underlineColorAndroid={Colors.quinaryColor}
+                    onChangeText={text => this.setState({ confirmPin: text })}
+                    autoCapitalize={"none"}
+                    autoCorrect={false}
+                    secureTextEntry={true}
+                    errorMessage={
+                      this.state.errors.confirmPin
+                        ? this.state.errors.confirmPin
+                        : null
+                    }
+                  />
+                </View>
+              </View>
+              <View style={Styles.wideBlock}>
+                <CheckBox
+                  title="I realize anybody with access to my seeds/passphrases will have access to my funds:"
+                  checked={this.state.disclaimerRealized}
+                  textStyle={Styles.defaultText}
+                  onPress={() =>
+                    this.setState({
+                      disclaimerRealized: !this.state.disclaimerRealized
+                    })
+                  }
+                />
+              </View>
+          </ScrollView>
+        </View>
       </TouchableWithoutFeedback>
+      <View style={Styles.footerContainer}>
+        <View
+          style={
+            this.props.accounts.length > 0
+              ? Styles.standardWidthSpaceBetweenBlock
+              : Styles.fullWidthFlexCenterBlock
+          }
+        >
+          {this.props.accounts.length > 0 && (
+            <StandardButton
+              title="CANCEL"
+              onPress={this.cancel}
+              color={Colors.warningButtonColor}
+            />
+          )}
+          <StandardButton
+            title="ADD ACCOUNT"
+            onPress={this._handleSubmit}
+            color={Colors.successButtonColor}
+          />
+        </View>
+      </View>
+      </React.Fragment>
     );
   }
 }

@@ -158,7 +158,7 @@ export const validateLogin = (account, password) => {
         resolve(loginData);
       })
       .catch(err => {
-        console.error(err);
+        console.warn(err);
       });
   });
 }

@@ -13,4 +13,10 @@ export default roots = {
     flex: 1,
     alignItems: "center",
   },
+  blackRoot: {
+    backgroundColor: Colors.quinaryColor,
+    flex: 1,
+    alignItems: "center",
+    borderTopWidth: 0
+  },
 };

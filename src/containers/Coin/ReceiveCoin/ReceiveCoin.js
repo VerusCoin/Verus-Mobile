@@ -25,7 +25,7 @@ import QRModal from '../../../components/QRModal'
 import { coinsToSats, isNumber, truncateDecimal } from '../../../utils/math'
 import Colors from '../../../globals/colors';
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
-import { API_GET_FIATPRICE, API_GET_BALANCES, GENERAL, USD } from "../../../utils/constants/intervalConstants"
+import { API_GET_FIATPRICE, API_GET_BALANCES, GENERAL, USD, ELECTRUM, DLIGHT } from "../../../utils/constants/intervalConstants"
 import { expireData } from "../../../actions/actionCreators"
 import Store from "../../../store"
 
@@ -103,7 +103,7 @@ class ReceiveCoin extends Component {
       })
       .catch(error => {
         this.setState({ loading: false })
-        console.error(error)
+        console.warn(error)
       })
     })
   }
@@ -213,6 +213,30 @@ class ReceiveCoin extends Component {
     });
   }
 
+  renderBalanceLabel = () => {
+    const { activeCoin, balances } = this.props;
+
+    if (balances.errors.public) {
+      return (
+        <Text
+          style={{ ...Styles.largeCentralPaddedHeader, ...Styles.errorText }}
+        >
+          {CONNECTION_ERROR}
+        </Text>
+      );
+    } else if (balances.public) {
+      return (
+        <Text style={Styles.largeCentralPaddedHeader}>
+          {truncateDecimal(balances.public.confirmed, 4) +
+            " " +
+            activeCoin.id}
+        </Text>
+      );
+    } else {
+      return null;
+    }
+  };
+
   render() {
     const _price = this.getPrice()
     const {
@@ -236,123 +260,126 @@ class ReceiveCoin extends Component {
     const fiatEnabled = rates[selectedCoin.id] && rates[selectedCoin.id][displayCurrency] != null
 
     return (
-      <ScrollView
-        style={Styles.flexBackground}
-        contentContainerStyle={{...Styles.horizontalCenterContainer, ...Styles.fullWidthBlock}}
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={forceUpdate} />
-        }
-      >
-        <View style={Styles.wideBlock}>
-          <Text style={Styles.centralHeader}>{"Generate VerusQR Invoice"}</Text>
-        </View>
-        <QRModal
-          animationType="slide"
-          transparent={false}
-          visible={showModal && verusQRString && verusQRString.length > 0}
-          qrString={verusQRString}
-          cancel={() => {
-            this.setState({ showModal: false });
-          }}
-        />
-        <Dropdown
-          // TODO: Determine why width must be 85 here, cant be wide block
-          containerStyle={{...Styles.wideBlock, width: '85%'}}
-          labelExtractor={(item, index) => {
-            return item.id;
-          }}
-          valueExtractor={(item, index) => {
-            return item;
-          }}
-          data={activeCoinsForUser}
-          onChangeText={(value, index, data) => switchInvoiceCoin(value)}
-          textColor={Colors.quinaryColor}
-          selectedItemColor={Colors.quinaryColor}
-          baseColor={Colors.quinaryColor}
-          label="Selected Coin:"
-          labelTextStyle={{ fontFamily: "Avenir-Book" }}
-          labelFontSize={17}
-          value={selectedCoin}
-          pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
-          itemTextStyle={{ fontFamily: "Avenir-Book" }}
-        />
-        <View style={Styles.wideBlock}>
-          <TouchableOpacity onPress={copyAddressToClipboard}>
+      <View style={Styles.defaultRoot}>
+        <View style={Styles.centralRow}>{this.renderBalanceLabel()}</View>
+        <Text style={Styles.greyStripeHeader}>
+          {"Generate VerusQR Invoice"}
+        </Text>
+        <ScrollView
+          style={Styles.fullWidth}
+          contentContainerStyle={Styles.horizontalCenterContainer}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={forceUpdate} />
+          }
+        >
+          <QRModal
+            animationType="slide"
+            transparent={false}
+            visible={showModal && verusQRString && verusQRString.length > 0}
+            qrString={verusQRString}
+            cancel={() => {
+              this.setState({ showModal: false });
+            }}
+          />
+          <Dropdown
+            // TODO: Determine why width must be 85 here, cant be wide block
+            containerStyle={{ ...Styles.wideBlock, width: "85%" }}
+            labelExtractor={(item, index) => {
+              return item.id;
+            }}
+            valueExtractor={(item, index) => {
+              return item;
+            }}
+            data={activeCoinsForUser}
+            onChangeText={(value, index, data) => switchInvoiceCoin(value)}
+            textColor={Colors.quinaryColor}
+            selectedItemColor={Colors.quinaryColor}
+            baseColor={Colors.quinaryColor}
+            label="Selected Coin:"
+            labelTextStyle={{ fontFamily: "Avenir-Book" }}
+            labelFontSize={17}
+            value={selectedCoin}
+            pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
+            itemTextStyle={{ fontFamily: "Avenir-Book" }}
+          />
+          <View style={Styles.wideBlock}>
+            <TouchableOpacity onPress={copyAddressToClipboard}>
+              <Input
+                labelStyle={Styles.formInputLabel}
+                underlineColorAndroid={Colors.quinaryColor}
+                editable={false}
+                value={address}
+                autoCapitalize={"none"}
+                autoCorrect={false}
+                inputStyle={Styles.mediumInlineLink}
+                pointerEvents="none"
+                multiline={true}
+                label={"Your address:"}
+                errorMessage={errors.address ? errors.address : null}
+              />
+            </TouchableOpacity>
+          </View>
+          <View style={Styles.wideBlock}>
+            <Input
+              underlineColorAndroid={Colors.quinaryColor}
+              label={
+                <View style={Styles.startRow}>
+                  <Text style={Styles.mediumFormInputLabel}>
+                    {"Enter an amount in "}
+                  </Text>
+                  <Text
+                    style={
+                      fiatEnabled
+                        ? Styles.mediumInlineLink
+                        : Styles.mediumFormInputLabel
+                    }
+                    onPress={
+                      fiatEnabled
+                        ? () => this.setState({ amountFiat: !amountFiat })
+                        : () => {}
+                    }
+                  >
+                    {amountFiat ? displayCurrency : selectedCoin.id}
+                  </Text>
+                </View>
+              }
+              rightIcon={
+                fiatEnabled ? (
+                  <Text
+                    style={Styles.ghostText}
+                    onPress={() => this.setState({ amountFiat: !amountFiat })}
+                  >{`~${_price} ${
+                    amountFiat ? selectedCoin.id : displayCurrency
+                  }`}</Text>
+                ) : null
+              }
+              onChangeText={text => this.setState({ amount: text })}
+              keyboardType={"decimal-pad"}
+              autoCapitalize="words"
+              errorMessage={errors.amount ? errors.amount : null}
+            />
+          </View>
+          <View style={Styles.wideBlock}>
             <Input
               labelStyle={Styles.formInputLabel}
               underlineColorAndroid={Colors.quinaryColor}
-              editable={false}
-              value={address}
+              onChangeText={text => this.setState({ memo: text })}
               autoCapitalize={"none"}
+              label={"Enter a note for the receiver (optional):"}
               autoCorrect={false}
-              inputStyle={Styles.mediumInlineLink}
-              pointerEvents="none"
-              multiline={true}
-              label={"Your address:"}
-              errorMessage={errors.address ? errors.address : null}
+              shake={errors.memo}
+              errorMessage={errors.memo ? errors.memo : null}
             />
-          </TouchableOpacity>
-        </View>
-        <View style={Styles.wideBlock}>
-          <Input
-            underlineColorAndroid={Colors.quinaryColor}
-            label={
-              <View style={Styles.startRow}>
-                <Text style={Styles.mediumFormInputLabel}>
-                  {"Enter an amount in "}
-                </Text>
-                <Text
-                  style={
-                    fiatEnabled
-                      ? Styles.mediumInlineLink
-                      : Styles.mediumFormInputLabel
-                  }
-                  onPress={
-                    fiatEnabled
-                      ? () => this.setState({ amountFiat: !amountFiat })
-                      : () => {}
-                  }
-                >
-                  {amountFiat ? displayCurrency : selectedCoin.id}
-                </Text>
-              </View>
-            }
-            rightIcon={
-              fiatEnabled ? (
-                <Text
-                  style={Styles.ghostText}
-                  onPress={() => this.setState({ amountFiat: !amountFiat })}
-                >{`~${_price} ${
-                  amountFiat ? selectedCoin.id : displayCurrency
-                }`}</Text>
-              ) : null
-            }
-            onChangeText={text => this.setState({ amount: text })}
-            keyboardType={"decimal-pad"}
-            autoCapitalize="words"
-            errorMessage={errors.amount ? errors.amount : null}
-          />
-        </View>
-        <View style={Styles.wideBlock}>
-          <Input
-            labelStyle={Styles.formInputLabel}
-            underlineColorAndroid={Colors.quinaryColor}
-            onChangeText={text => this.setState({ memo: text })}
-            autoCapitalize={"none"}
-            label={"Enter a note for the receiver (optional):"}
-            autoCorrect={false}
-            shake={errors.memo}
-            errorMessage={errors.memo ? errors.memo : null}
-          />
-        </View>
-        <View style={Styles.wideBlock}>
-          <StandardButton
-            color={Colors.linkButtonColor}
-            title="GENERATE QR"
-            onPress={validateFormData}
-          />
-        </View>
-      </ScrollView>
+          </View>
+          <View style={Styles.wideBlock}>
+            <StandardButton
+              color={Colors.linkButtonColor}
+              title="GENERATE QR"
+              onPress={validateFormData}
+            />
+          </View>
+        </ScrollView>
+      </View>
     );
   }
 }
@@ -366,7 +393,15 @@ const mapStateToProps = (state) => {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeAccount: state.authentication.activeAccount,
     rates: state.ledger.rates[GENERAL],
-    displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD
+    displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
+    balances: {
+      public: state.ledger.balances[ELECTRUM][chainTicker],
+      private: state.ledger.balances[DLIGHT][chainTicker],
+      errors: {
+        public: state.errors[API_GET_BALANCES][ELECTRUM][chainTicker],
+        private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
+      }
+    },
     //needsUpdate: state.ledger.needsUpdate,
   }
 };

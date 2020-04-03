@@ -66,7 +66,7 @@ class Home extends Component {
       })
       .catch(error => {
         this.setState({ loading: false })
-        console.error(error)
+        console.warn(error)
       })
     })
     

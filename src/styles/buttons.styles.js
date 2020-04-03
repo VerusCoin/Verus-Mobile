@@ -11,6 +11,10 @@ export default buttons = {
     backgroundColor: Colors.linkButtonColor,
     minWidth: 104
   },
+  redButton: {
+    alignSelf: 'center',
+    minWidth: 104
+  },
   fullWidthButtonTitle: {
     fontSize: 16,
     fontFamily: 'Avenir-Black',

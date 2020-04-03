@@ -61,32 +61,34 @@ class ImportSeed extends Component {
                 {"Import Existing WIF/Seed"}
               </Text>
             </View>
-            <View style={Styles.wideBlock}>
-            <Input
-              label={"Wallet passphrase/WIF key:"}
-              labelStyle={Styles.formCenterLabel}
-              underlineColorAndroid={Colors.quinaryColor}
-              onChangeText={text => this.setState({ seed: text })}
-              value={this.state.seed}
-              autoCapitalize={"none"}
-              autoCorrect={false}
-              secureTextEntry={!this.state.showSeed}
-              inputStyle={Styles.seedText}
-              multiline={Platform.OS === "ios" && !this.state.showSeed ? false : true}
-            />
+            <View style={Styles.fullWidthFlexGrowCenterBlock}>
+              <View style={Styles.wideCenterBlock}>
+                <Input
+                  label={"Wallet passphrase/WIF key:"}
+                  labelStyle={Styles.formCenterLabel}
+                  underlineColorAndroid={Colors.quinaryColor}
+                  onChangeText={text => this.setState({ seed: text })}
+                  value={this.state.seed}
+                  autoCapitalize={"none"}
+                  autoCorrect={false}
+                  secureTextEntry={!this.state.showSeed}
+                  inputStyle={Styles.seedText}
+                  multiline={Platform.OS === "ios" && !this.state.showSeed ? false : true}
+                />
+              </View>
+              <StandardButton
+                buttonStyle={Styles.fullWidthButton}
+                containerStyle={Styles.wideCenterBlock}
+                title="SCAN SEED FROM QR"
+                onPress={() => this.setState({ scanning: true })}
+              />
+              <StandardButton
+                buttonStyle={Styles.fullWidthButton}
+                containerStyle={Styles.wideCenterBlock}
+                title={`${this.state.showSeed ? "HIDE" : "SHOW"} SEED`}
+                onPress={() => this.setState({ showSeed: !this.state.showSeed })}
+              />
             </View>
-            <StandardButton
-              buttonStyle={Styles.fullWidthButton}
-              containerStyle={Styles.standardWidthCenterBlock}
-              title="SCAN SEED FROM QR"
-              onPress={() => this.setState({ scanning: true })}
-            />
-            <StandardButton
-              buttonStyle={Styles.fullWidthButton}
-              containerStyle={Styles.standardWidthCenterBlock}
-              title={`${this.state.showSeed ? "HIDE" : "SHOW"} SEED`}
-              onPress={() => this.setState({ showSeed: !this.state.showSeed })}
-            />
             <View style={Styles.footerContainer}>
               <View style={Styles.standardWidthSpaceBetweenBlock}>
                 <StandardButton

@@ -138,41 +138,43 @@ class QRModal extends Component {
               {"VerusPay Invoice"}
             </Text>
           </View>
-          <Text style={{...Styles.defaultDescriptiveText, ...Styles.standardWidthFlexRowBlock}}>
-            {"Scan this QR code with VerusPay on another device to automatically create" + 
-              " a transaction."}
-          </Text>
-          <View style={{padding: 10, backgroundColor: '#FFF'}}>
-            <QRCode
-              value={this.props.qrString ? this.props.qrString : "-"}
-              size={302}
-              //TODO: Add in differently so it doesn't impact readability
-              //logo={LOGO_DIR}
-              //logoSize={50}
-              //logoBackgroundColor='transparent'
-              getRef={(qr) => (this.QRCodeRef = qr)}
-            />
+          <View style={Styles.standardWidthFlexGrowCenterBlock}>
+            <Text style={{...Styles.defaultDescriptiveText, ...Styles.fullWidthSpaceBetweenCenterBlock}}>
+              {"Scan this QR code with VerusPay on another device to automatically create" + 
+                " a transaction."}
+            </Text>
+            <View style={Styles.fullWidthAlignCenter}>
+              <QRCode
+                value={this.props.qrString ? this.props.qrString : "-"}
+                size={264}
+                //TODO: Add in differently so it doesn't impact readability
+                //logo={LOGO_DIR}
+                //logoSize={50}
+                //logoBackgroundColor='transparent'
+                getRef={(qr) => (this.QRCodeRef = qr)}
+              />
+            </View>
           </View>
-          <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <TouchableOpacity 
-              onPress={this.state.libraryPressed ? () => {return 0} : this.requestSaveQR} 
-              activeOpacity={this.state.libraryPressed ? 1 : DEFAULT_OPACITY}>
-              <Icon name="camera-roll" size={35} color={Colors.quinaryColor}/>
-            </TouchableOpacity>
-            {Platform.OS === 'ios' && 
+          <View style={Styles.footerContainer}>
+            <View style={Styles.standardWidthSpaceBetweenBlock}>
               <TouchableOpacity 
-                onPress={this.state.sharePressed ? () => {return 0} : this.requestShareQR} 
-                activeOpacity={this.state.sharePressed ? 1 : DEFAULT_OPACITY}>
-                <Icon name="share" size={35} color={Colors.quinaryColor}/>
+                onPress={this.state.libraryPressed ? () => {return 0} : this.requestSaveQR} 
+                activeOpacity={this.state.libraryPressed ? 1 : DEFAULT_OPACITY}>
+                <Icon name="camera-roll" size={35} color={Colors.quinaryColor}/>
               </TouchableOpacity>
-            }
-          </View>
-          <View style={Styles.wideBlock}>
-            <StandardButton 
-              color={Colors.warningButtonColor}
-              title="CLOSE" 
-              onPress={this.cancelHandler}
-            />
+              <StandardButton 
+                color={Colors.warningButtonColor}
+                title="CLOSE" 
+                onPress={this.cancelHandler}
+              />
+              {Platform.OS === 'ios' && 
+                <TouchableOpacity 
+                  onPress={this.state.sharePressed ? () => {return 0} : this.requestShareQR} 
+                  activeOpacity={this.state.sharePressed ? 1 : DEFAULT_OPACITY}>
+                  <Icon name="share" size={35} color={Colors.quinaryColor}/>
+                </TouchableOpacity>
+              }
+            </View>
           </View>
         </ScrollView>
       </Modal>
