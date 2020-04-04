@@ -38,43 +38,46 @@ const DEFAULT_FEE_GUI = 10000;
 
 class SendCoin extends Component {
   constructor(props) {
-    super(props)
+    super(props);
     this.state = {
-        coin: {name: ""},
-        balances: {},
-        account: "none",
-        fromAddress: '',
-        toAddress: '',
-        amount: 0,
-        btcFees: {},
-        loadingBTCFees: false,
-        loading: false,
-        btcFeesErr: false,
-        activeCoinsForUser: {},
-        formErrors: {toAddress: null, amount: null},
-        spendableBalance: 0
+      coin: { name: "" },
+      balances: {},
+      account: "none",
+      fromAddress: "",
+      toAddress: "",
+      amount: 0,
+      btcFees: {},
+      loadingBTCFees: false,
+      loading: false,
+      btcFeesErr: false,
+      activeCoinsForUser: {},
+      formErrors: { toAddress: null, amount: null },
+      spendableBalance: 0
     };
   }
 
-  componentDidUpdate(lastProps) {    
+  componentDidUpdate(lastProps) {
     if (lastProps.isFocused !== this.props.isFocused && this.props.isFocused) {
-      this.initializeState()
+      this.initializeState();
     }
   }
 
   initializeState = () => {
-    this.setState({
-      coin: this.props.activeCoin,
-      account: this.props.activeAccount, 
-      activeCoinsForUser: this.props.activeCoinsForUser,
-      toAddress: this.props.data ? this.props.data.address : null
-    }, () => {
-      const activeUser = this.state.account
-      const coinObj = this.state.coin
+    this.setState(
+      {
+        coin: this.props.activeCoin,
+        account: this.props.activeAccount,
+        activeCoinsForUser: this.props.activeCoinsForUser,
+        toAddress: this.props.data ? this.props.data.address : null
+      },
+      () => {
+        const activeUser = this.state.account;
+        const coinObj = this.state.coin;
 
-      this.handleState(activeUser, coinObj)
-    }); 
-  }
+        this.handleState(activeUser, coinObj);
+      }
+    );
+  };
 
   handleState = async (activeUser, coinObj) => {
     if (
@@ -95,23 +98,36 @@ class SendCoin extends Component {
       );
     }
 
-    this.setState({ loading: true, loadingBTCFees: coinObj.id === 'BTC' }, async () => {
-      await conditionallyUpdateWallet(store.getState(), this.props.dispatch, coinObj.id, API_GET_FIATPRICE)
-      await conditionallyUpdateWallet(store.getState(), this.props.dispatch, coinObj.id, API_GET_BALANCES)
-      if (coinObj.id === 'BTC') {
-        await this.updateBtcFees()
-      }
+    this.setState(
+      { loading: true, loadingBTCFees: coinObj.id === "BTC" },
+      async () => {
+        await conditionallyUpdateWallet(
+          store.getState(),
+          this.props.dispatch,
+          coinObj.id,
+          API_GET_FIATPRICE
+        );
+        await conditionallyUpdateWallet(
+          store.getState(),
+          this.props.dispatch,
+          coinObj.id,
+          API_GET_BALANCES
+        );
+        if (coinObj.id === "BTC") {
+          await this.updateBtcFees();
+        }
 
-      this.setState({ loading: false });  
-    });
-  }
+        this.setState({ loading: false });
+      }
+    );
+  };
 
   handleFormError = (error, field) => {
-    let _errors = this.state.formErrors
-    _errors[field] = error
+    let _errors = this.state.formErrors;
+    _errors[field] = error;
 
-    this.setState({formErrors: _errors})
-  }
+    this.setState({ formErrors: _errors });
+  };
 
   updateBtcFees = () => {
     return new Promise((resolve, reject) => {
@@ -140,8 +156,8 @@ class SendCoin extends Component {
   };
 
   goToConfirmScreen = (coinObj, activeUser, address, amount) => {
-    const route = "ConfirmSend"
-    let navigation = this.props.navigation
+    const route = "ConfirmSend";
+    let navigation = this.props.navigation;
     let data = {
       coinObj: coinObj,
       activeUser: activeUser,
@@ -149,100 +165,110 @@ class SendCoin extends Component {
       amount: coinsToSats(Number(amount)),
       btcFee: this.state.btcFees.average,
       balance: this.props.balances.public.confirmed
-    }
+    };
 
     navigation.navigate(route, {
       data: data
     });
-  }
+  };
 
-  fillAddress = (address) => {
-    this.setState({ toAddress: address });  
-  }
+  fillAddress = address => {
+    this.setState({ toAddress: address });
+  };
 
-  fillAmount = (amount) => {
-    let amountToFill = amount
+  fillAmount = amount => {
+    let amountToFill = amount;
     if (amount < 0) {
-      amountToFill = 0
+      amountToFill = 0;
     }
-    this.setState({ amount: amountToFill });  
-  }
+    this.setState({ amount: amountToFill });
+  };
 
   _verusPay = () => {
-    let navigation = this.props.navigation  
+    let navigation = this.props.navigation;
 
-    navigation.navigate("VerusPay", { fillAddress: this.fillAddress, fillAmount: this.fillAmount });
-  }
+    navigation.navigate("VerusPay", {
+      fillAddress: this.fillAddress,
+      fillAmount: this.fillAmount
+    });
+  };
 
   //TODO: Add fee to Bitcoin object in CoinData
 
   validateFormData = () => {
-    this.setState({
-      formErrors: {toAddress: null, amount: null}
-    }, () => {
-      const coin = this.state.coin
+    this.setState(
+      {
+        formErrors: { toAddress: null, amount: null }
+      },
+      () => {
+        const coin = this.state.coin;
 
-      const spendableBalance = coin.id === 'BTC' ? 
-      truncateDecimal(this.props.balances.public.confirmed, 4) 
-      : 
-      this.props.balances.public.confirmed - (this.props.activeCoin.fee ? this.props.activeCoin.fee : 10000)
-      
-      const toAddress = removeSpaces(this.state.toAddress)
-      const fromAddress = this.state.fromAddress
-      const amount = (((this.state.amount.toString()).includes(".") && 
-                    (this.state.amount.toString()).includes(",")) || 
-                    !this.state.amount) ? 
-                      this.state.amount 
-                    : 
-                      (this.state.amount.toString()).replace(/,/g, '.')
-      const account = this.state.account
-      let _errors = false
+        const spendableBalance =
+          coin.id === "BTC"
+            ? truncateDecimal(this.props.balances.public.confirmed, 4)
+            : this.props.balances.public.confirmed -
+              (this.props.activeCoin.fee ? this.props.activeCoin.fee : 10000);
 
+        const toAddress = removeSpaces(this.state.toAddress);
+        const fromAddress = this.state.fromAddress;
+        const amount =
+          (this.state.amount.toString().includes(".") &&
+            this.state.amount.toString().includes(",")) ||
+          !this.state.amount
+            ? this.state.amount
+            : this.state.amount.toString().replace(/,/g, ".");
+        const account = this.state.account;
+        let _errors = false;
 
-      if (!toAddress || toAddress.length < 1) {
-        this.handleFormError("Required field", "toAddress")
-        _errors = true
-      } else if (toAddress.length < 34 || toAddress.length > 35 ) {
-        this.handleFormError("Invalid address", "toAddress")
-        _errors = true
+        if (!toAddress || toAddress.length < 1) {
+          this.handleFormError("Required field", "toAddress");
+          _errors = true;
+        } else if (toAddress.length < 34 || toAddress.length > 35) {
+          this.handleFormError("Invalid address", "toAddress");
+          _errors = true;
+        }
+
+        if (!amount.toString()) {
+          this.handleFormError("Required field", "amount");
+          _errors = true;
+        } else if (!isNumber(amount)) {
+          this.handleFormError("Invalid amount", "amount");
+          _errors = true;
+        } else if (coinsToSats(Number(amount)) > Number(spendableBalance)) {
+          this.handleFormError(
+            "Insufficient funds, " +
+              (spendableBalance < 0
+                ? "available amount is less than fee"
+                : truncateDecimal(spendableBalance, 4) + " available"),
+            "amount"
+          );
+          _errors = true;
+        }
+
+        if (!coin) {
+          Alert.alert("No active coin", "no current active coin");
+          _errors = true;
+        }
+
+        if (!account) {
+          Alert.alert("No active account", "no current active account");
+          _errors = true;
+        }
+
+        if (!fromAddress) {
+          Alert.alert("No from address", "no current active from address");
+          _errors = true;
+        }
+
+        if (!_errors) {
+          this.goToConfirmScreen(coin, account, toAddress, amount);
+        }
       }
-
-      if (!(amount.toString())) {
-        this.handleFormError("Required field", "amount")
-        _errors = true
-      } else if (!(isNumber(amount))) {
-        this.handleFormError("Invalid amount", "amount")
-        _errors = true
-      } else if (coinsToSats(Number(amount)) > Number(spendableBalance)) {
-        this.handleFormError(("Insufficient funds, " + (spendableBalance < 0 ? "available amount is less than fee" : truncateDecimal(spendableBalance, 4) + " available")), "amount")
-        _errors = true
-      }
-
-      if (!coin) {
-        Alert.alert("No active coin", "no current active coin")
-        _errors = true
-      }
-
-      if (!account) {
-        Alert.alert("No active account", "no current active account")
-        _errors = true
-      }
-
-      if (!fromAddress) {
-        Alert.alert("No from address", "no current active from address")
-        _errors = true
-      }
-
-      if (!_errors) {
-        this.goToConfirmScreen(coin, account, toAddress, amount)
-      }
-    });
-  }
-
-  
+    );
+  };
 
   render() {
-    const { balances, activeCoin } = this.props
+    const { balances, activeCoin } = this.props;
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={Styles.defaultRoot}>
@@ -280,44 +306,49 @@ class SendCoin extends Component {
           <Text style={Styles.greyStripeHeader}>
             {"Send " + this.state.coin.name}
           </Text>
-          <View style={Styles.wideBlock}>
-            <Input
-              labelStyle={Styles.formInputLabel}
-              label={"To:"}
-              underlineColorAndroid={Colors.quinaryColor}
-              onChangeText={text =>
-                this.setState({ toAddress: removeSpaces(text) })
-              }
-              onSubmitEditing={Keyboard.dismiss}
-              value={this.state.toAddress}
-              autoCapitalize={"none"}
-              autoCorrect={false}
-              errorMessage={
-                this.state.formErrors.toAddress
-                  ? this.state.formErrors.toAddress
-                  : null
-              }
-            />
-          </View>
-          <View style={Styles.wideBlock}>
-            <Input
-              labelStyle={Styles.formInputLabel}
-              label={"Amount:"}
-              underlineColorAndroid={Colors.quinaryColor}
-              onChangeText={text => this.setState({ amount: text })}
-              onSubmitEditing={Keyboard.dismiss}
-              value={this.state.amount.toString()}
-              shake={this.state.formErrors.amount}
-              keyboardType={"decimal-pad"}
-              autoCapitalize="words"
-              errorMessage={
-                this.state.formErrors.amount
-                  ? this.state.formErrors.amount
-                  : null
-              }
-            />
-            <View style={Styles.standardWidthCenterBlock}>
-              <View style={Styles.fullWidthFlexCenterBlock}>
+          <ScrollView
+            style={Styles.fullWidth}
+            contentContainerStyle={Styles.horizontalCenterContainer}
+          >
+            <View style={Styles.wideBlock}>
+              <Input
+                labelStyle={Styles.formInputLabel}
+                label={"To:"}
+                underlineColorAndroid={Colors.quinaryColor}
+                onChangeText={text =>
+                  this.setState({ toAddress: removeSpaces(text) })
+                }
+                onSubmitEditing={Keyboard.dismiss}
+                value={this.state.toAddress}
+                autoCapitalize={"none"}
+                autoCorrect={false}
+                errorMessage={
+                  this.state.formErrors.toAddress
+                    ? this.state.formErrors.toAddress
+                    : null
+                }
+              />
+            </View>
+            <View style={Styles.wideBlock}>
+              <Input
+                labelStyle={Styles.formInputLabel}
+                label={"Amount:"}
+                underlineColorAndroid={Colors.quinaryColor}
+                onChangeText={text => this.setState({ amount: text })}
+                onSubmitEditing={Keyboard.dismiss}
+                value={this.state.amount.toString()}
+                shake={this.state.formErrors.amount}
+                keyboardType={"decimal-pad"}
+                autoCapitalize="words"
+                errorMessage={
+                  this.state.formErrors.amount
+                    ? this.state.formErrors.amount
+                    : null
+                }
+              />
+              <View
+                style={{ ...Styles.fullWidthFlexCenterBlock, paddingBottom: 0 }}
+              >
                 <TouchableOpacity onPress={this._verusPay}>
                   <Image
                     source={VERUSPAY_LOGO_DIR}
@@ -329,37 +360,40 @@ class SendCoin extends Component {
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
-          {this.state.loading ? (
-            <View style={Styles.fullWidthFlexCenterBlock}>
-              <Text style={Styles.centralHeader}>Updating balance...</Text>
-              <ActivityIndicator animating={this.state.loading} size="large" />
-            </View>
-          ) : this.state.loadingBTCFees ? (
-            <View style={Styles.fullWidthFlexCenterBlock}>
-              <Text style={Styles.centralHeader}>Loading BTC Fees...</Text>
-              <ActivityIndicator
-                animating={this.state.loadingBTCFees}
-                size="large"
-              />
-            </View>
-          ) : this.state.btcFeesErr ? (
-            <View style={Styles.fullWidthFlexCenterBlock}>
-              <Text style={{ ...Styles.centralHeader, ...Styles.errorText }}>
-                BTC Fees Error!
-              </Text>
-            </View>
-          ) : balances.errors.public ? (
-            <View style={Styles.fullWidthFlexCenterBlock}>
-              <Text style={{ ...Styles.centralHeader, ...Styles.errorText }}>
-                Connection Error
-              </Text>
-            </View>
-          ) : (
-            <View style={Styles.fullWidthFlexCenterBlock}>
-              <StandardButton onPress={this.validateFormData} title="SEND" />
-            </View>
-          )}
+            {this.state.loading ? (
+              <View style={Styles.fullWidthFlexCenterBlock}>
+                <Text style={Styles.centralHeader}>Updating balance...</Text>
+                <ActivityIndicator
+                  animating={this.state.loading}
+                  size="large"
+                />
+              </View>
+            ) : this.state.loadingBTCFees ? (
+              <View style={Styles.fullWidthFlexCenterBlock}>
+                <Text style={Styles.centralHeader}>Loading BTC Fees...</Text>
+                <ActivityIndicator
+                  animating={this.state.loadingBTCFees}
+                  size="large"
+                />
+              </View>
+            ) : this.state.btcFeesErr ? (
+              <View style={Styles.fullWidthFlexCenterBlock}>
+                <Text style={{ ...Styles.centralHeader, ...Styles.errorText }}>
+                  BTC Fees Error!
+                </Text>
+              </View>
+            ) : balances.errors.public ? (
+              <View style={Styles.fullWidthFlexCenterBlock}>
+                <Text style={{ ...Styles.centralHeader, ...Styles.errorText }}>
+                  Connection Error
+                </Text>
+              </View>
+            ) : (
+              <View style={Styles.fullWidthFlexCenterBlock}>
+                <StandardButton onPress={this.validateFormData} title="SEND" />
+              </View>
+            )}
+          </ScrollView>
         </View>
       </TouchableWithoutFeedback>
     );
