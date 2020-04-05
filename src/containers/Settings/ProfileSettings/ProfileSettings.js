@@ -15,8 +15,7 @@ import {
   ScrollView
 } from "react-native";
 import { connect } from 'react-redux';
-import styles from './ProfileSettings.styles';
-import Colors from '../../../globals/colors';
+import Styles from '../../../styles/index'
 
 const RESET_PWD = "ResetPwd"
 const RECOVER_SEED = "RecoverSeed"
@@ -41,7 +40,7 @@ class ProfileSettings extends Component {
 
   renderSettingsList = () => {
     return (
-      <ScrollView style={styles.coinList}>
+      <ScrollView style={Styles.wide}>
         {/* TODO: Add back in when more interesting profile data and/or settings are implemented
         <TouchableOpacity onPress={() => this._openSettings(PROFILE_INFO)}>
           <ListItem                       
@@ -52,26 +51,29 @@ class ProfileSettings extends Component {
         </TouchableOpacity>*/}
         <TouchableOpacity onPress={() => this._openSettings(RECOVER_SEED)}>
           <ListItem                       
-            title={<Text style={styles.coinItemLabel}>Recover Seed</Text>}
+            title="Recover Seed"
+            titleStyle={Styles.listItemLeftTitleDefault}
             leftIcon={{name: 'lock-open'}}
-            containerStyle={{ borderBottomWidth: 0 }} 
-            chevronColor={Colors.quaternaryColor}
+            containerStyle={Styles.bottomlessListItemContainer} 
+            chevron
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => this._openSettings(RESET_PWD)}>
           <ListItem                       
-            title={<Text style={styles.coinItemLabel}>Reset Password</Text>}
+            title="Reset Password"
+            titleStyle={Styles.listItemLeftTitleDefault}
             leftIcon={{name: 'autorenew'}}
-            containerStyle={{ borderBottomWidth: 0}} 
-            chevronColor={Colors.quaternaryColor}
+            containerStyle={Styles.bottomlessListItemContainer} 
+            chevron
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => this._openSettings(REMOVE_PROFILE)}>
           <ListItem                       
-            title={<Text style={styles.coinItemLabel}>Delete Profile</Text>}
+            title="Delete Profile"
+            titleStyle={Styles.listItemLeftTitleDefault}
             leftIcon={{name: 'delete-forever'}}
-            containerStyle={{ borderBottomWidth: 0 }} 
-            chevronColor={Colors.quaternaryColor}
+            containerStyle={Styles.bottomlessListItemContainer} 
+            chevron
           />
         </TouchableOpacity>
       </ScrollView>
@@ -80,12 +82,12 @@ class ProfileSettings extends Component {
 
   render() {
     return (
-      <View style={styles.root}>
-        <Text style={styles.fiatBalanceLabel}>
+      <View style={Styles.defaultRoot}>
+        <Text style={Styles.largeCentralPaddedHeader}>
         {this.props.activeAccount.id.length < 15 ? 
           this.props.activeAccount.id : "My Account"}
         </Text>
-        <Text style={styles.balanceSheetLabel}>Profile Settings</Text>
+        <Text style={Styles.greyStripeHeader}>Profile Settings</Text>
         {this.renderSettingsList()}
       </View>
     );
