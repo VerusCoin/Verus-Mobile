@@ -8,20 +8,16 @@
 import React, { Component } from "react";
 import StandardButton from "../../components/StandardButton";
 import { View, Text, ScrollView, Image, ActivityIndicator } from "react-native";
-import { Icon } from "react-native-elements";
 import { connect } from 'react-redux';
 import { 
   addExistingCoin, 
   setUserCoins, 
-  //needsUpdate, 
   addKeypairs,
-  //transactionsNeedUpdate,
-  //balancesNeedUpdate
  } from '../../actions/actionCreators';
 import { NavigationActions } from 'react-navigation'
-import styles from './CoinDetails.styles'
-import { API_GET_FIATPRICE, API_GET_BALANCES, API_GET_TRANSACTIONS } from "../../utils/constants/intervalConstants";
+import Styles from '../../styles/index'
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
+import Colors from "../../globals/colors";
 
 class CoinDetails extends Component {
   constructor(props) {
@@ -82,41 +78,43 @@ class CoinDetails extends Component {
   
   render() {
     return (
-      <View style={styles.root}>
-        <Image
-          style={{width: 100,height: 100, resizeMode: 'contain', marginTop: '10%'}}
-          source={this.state.fullCoinData.logo}
-        />
-        <Text style={styles.homeLabel}>{this.state.fullCoinData.id} Details</Text>
-        <Text style={styles.titleLabel}>
-            Full Name:
-        </Text>
-        <Text style={styles.fullName}>
-            {this.state.fullCoinData.name}
-        </Text>
-        <Text style={styles.titleLabel}>
-            Description:
-        </Text>
-        <ScrollView>
-            <Text style={styles.description}>
-                {this.state.fullCoinData.description}
-            </Text>
-        </ScrollView>
-        <View style={styles.addCoinBtn}>
-        {
-          this.state.loading ? 
-            <ActivityIndicator animating={this.state.loading} size="large"/>
-          :
-            this.state.isActive ?
-              <View style={styles.coinAddedBox}>
-              <Text style={styles.coinAddedLabel}>COIN ADDED</Text>
-              <Icon name="check" color="#50C3A5" size={30}/>
-              </View>
-            :
-              <StandardButton style={styles.receiveBtn} title="ADD COIN" onPress={() => this._handleAddCoin()}/>
-        }
+      <View style={Styles.defaultRoot}>
+        <View style={Styles.centralRow}>
+          <View style={Styles.fullWidthFlexCenterBlock}>
+            <Image
+              style={{
+                width: 75,
+                height: 75,
+                resizeMode: "contain",
+              }}
+              source={this.state.fullCoinData.logo}
+            />
+          </View>
         </View>
-        
+        <Text style={Styles.greyStripeHeader}>{this.state.fullCoinData.name}</Text>
+        <ScrollView
+          style={Styles.fullWidth}
+          contentContainerStyle={Styles.horizontalCenterContainer}
+        >
+          <View style={Styles.wideCenterBlock}>
+            <Text style={Styles.defaultDescriptiveText}>
+              {this.state.fullCoinData.description}
+            </Text>
+          </View>
+          <View>
+            {this.state.loading ? (
+              <ActivityIndicator animating={this.state.loading} size="large" />
+            ) : this.state.isActive ? (
+              <Text style={Styles.centralSuccessHeader}>COIN ADDED</Text>
+            ) : (
+              <StandardButton
+                color={Colors.linkButtonColor}
+                title="ADD COIN"
+                onPress={() => this._handleAddCoin()}
+              />
+            )}
+          </View>
+        </ScrollView>
       </View>
     );
   }

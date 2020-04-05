@@ -78,18 +78,21 @@ class AddCoin extends Component {
   }
 
   render() {
+    const activeCoinIds = this.props.activeCoinsForUser.map(coinObj => coinObj.id)
     return (
-      <FlatList 
-        style={Styles.fullWidth}         
-        data={namesList}
+      <FlatList
+        style={Styles.fullWidth}
+        data={namesList.filter((coinId) => {
+          return !activeCoinIds.includes(coinId);
+        })}
         onEndReached={this.onEndReached}
         onEndReachedThreshold={50}
-        renderItem={({item}) => (
+        renderItem={({ item }) => (
           <TouchableOpacity onPress={() => this._openDetails(item)}>
-            <ListItem                   
+            <ListItem
               title={item}
               leftAvatar={{
-                source: defaultAssetsPath.coinLogo[item.toLowerCase()]
+                source: defaultAssetsPath.coinLogo[item.toLowerCase()],
               }}
               containerStyle={Styles.bottomlessListItemContainer}
               titleStyle={Styles.listItemLeftTitleDefault}
@@ -97,8 +100,8 @@ class AddCoin extends Component {
             />
           </TouchableOpacity>
         )}
-        keyExtractor={item => item}                                   
-      />       
+        keyExtractor={(item) => item}
+      />
     );
   }
 }
@@ -106,6 +109,7 @@ class AddCoin extends Component {
 const mapStateToProps = (state) => {
   return {
     activeAccount: state.authentication.activeAccount,
+    activeCoinsForUser: state.coins.activeCoinsForUser
   }
 }
 

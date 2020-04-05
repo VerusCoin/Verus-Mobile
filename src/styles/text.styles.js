@@ -7,6 +7,12 @@ export default text = {
     textAlign: "center",
     fontFamily: "Avenir-Medium"
   },
+  centralSuccessHeader: {
+    fontSize: 24,
+    color: Colors.successButtonColor,
+    textAlign: "center",
+    fontFamily: "Avenir-Medium"
+  },
   largeCentralPaddedHeader: {
     fontSize: 32,
     color: Colors.quaternaryColor,

@@ -79,6 +79,13 @@ export default containers = {
     width: '100%',
     alignItems: 'center'
   },
+  fullWidthAlignCenterRowBlock: {
+    width: '100%',
+    alignItems: 'center',
+    paddingVertical: 16,
+    justifyContent: 'center',
+    flexDirection: 'row'
+  },
   wideFlexRowBlock: {
     width: '90%',
     paddingVertical: 16,
