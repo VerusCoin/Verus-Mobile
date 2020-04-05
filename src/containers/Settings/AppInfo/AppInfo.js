@@ -15,7 +15,7 @@ import {
   Image,
   Linking
 } from "react-native";
-import styles from './AppInfo.styles'
+import Styles from '../../../styles/index'
 
 const DISCORD_URL = "https://discord.gg/VRKMP2S"
 const REDDIT_URL = "https://www.reddit.com/r/VerusCoin/"
@@ -38,57 +38,67 @@ class AppInfo extends Component {
 
   render() {
     return(
-      <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center", justifyContent: "center"}}>
-        <View style={styles.imageStyleContainer}>
-          <Image
-            style={styles.imageStyle}
-            source={LOGO_DIR}
-          />
-          <Text style={styles.verifiedLabel}>Verus Mobile</Text>
+      <View style={Styles.defaultRoot}>
+        <View style={Styles.centralRow}>
+          <View style={Styles.fullWidthFlexCenterBlock}>
+            <Image
+              style={{
+                width: 75,
+                height: 75,
+                resizeMode: "contain",
+              }}
+              source={LOGO_DIR}
+            />
+          </View>
         </View>
-          <View style={styles.infoBox}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>App Version:</Text>
-              <Text style={styles.infoText}>{global.APP_VERSION}</Text>
+        <Text style={Styles.centralHeader}>Verus Mobile</Text>
+        <ScrollView
+          style={Styles.wide}
+          contentContainerStyle={Styles.horizontalCenterContainer}
+        >
+          <View style={Styles.infoTable}>
+            <View style={Styles.infoTableRow}>
+              <Text style={Styles.infoTableHeaderCell}>App Version:</Text>
+              <Text style={Styles.infoTableCell}>{global.APP_VERSION}</Text>
             </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Platform:</Text>
-              <Text style={styles.infoText}>{Platform.OS}</Text>
+            <View style={Styles.infoTableRow}>
+              <Text style={Styles.infoTableHeaderCell}>Platform:</Text>
+              <Text style={Styles.infoTableCell}>{Platform.OS}</Text>
             </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Platform Version:</Text>
-              <Text style={styles.infoText}>{Platform.Version}</Text>
+            <View style={Styles.infoTableRow}>
+              <Text style={Styles.infoTableHeaderCell}>Platform Version:</Text>
+              <Text style={Styles.infoTableCell}>{Platform.Version}</Text>
             </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>VerusQR Version:</Text>
-              <Text style={styles.infoText}>{global.VERUS_QR_VERSION}</Text>
+            <View style={Styles.infoTableRow}>
+              <Text style={Styles.infoTableHeaderCell}>VerusQR Version:</Text>
+              <Text style={Styles.infoTableCell}>{global.VERUS_QR_VERSION}</Text>
             </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Docs:</Text>
-              <View style={styles.linkBox}>
+            <View style={Styles.infoTableRow}>
+              <Text style={Styles.infoTableHeaderCell}>Docs:</Text>
+              <View style={Styles.infoTableCell}>
               <TouchableOpacity onPress={() => this.openUrl(PRIVACY_URL)}>
-                <Text style={styles.linkText}>Privacy</Text>
+                <Text style={Styles.linkText}>Privacy</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => this.openUrl(LICENCE_URL)}>
-                <Text style={styles.linkText}>Licence</Text>
+                <Text style={Styles.linkText}>Licence</Text>
               </TouchableOpacity>
               </View>
             </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Contact:</Text>
-              <View style={styles.linkBox}>
+            <View style={Styles.infoTableRow}>
+              <Text style={Styles.infoTableHeaderCell}>Contact:</Text>
+              <View style={Styles.infoTableCell}>
                 <TouchableOpacity onPress={() => this.openUrl(DISCORD_URL)}>
-                  <Text style={styles.linkText}>
+                  <Text style={Styles.linkText}>
                     Discord
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => this.openUrl(REDDIT_URL)}>
-                    <Text style={styles.linkText}>
+                    <Text style={Styles.linkText}>
                       Reddit
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => this.openUrl(TWITTER_URL)}>
-                    <Text style={styles.linkText}>
+                    <Text style={Styles.linkText}>
                       Twitter
                     </Text>
                 </TouchableOpacity>
@@ -96,6 +106,7 @@ class AppInfo extends Component {
             </View>
           </View>     
       </ScrollView>
+      </View>
     )
   }
 }
