@@ -167,5 +167,13 @@ export default containers = {
   },
   bottomlessListItemContainer: {
     borderBottomWidth: 0
-  }
+  },
+  underflow: {
+    overflow: 'visible',
+    zIndex: -1
+  },
+  greyStripeContainer: {
+    backgroundColor: Colors.tertiaryColor,
+    borderBottomWidth: 0
+  },
 }

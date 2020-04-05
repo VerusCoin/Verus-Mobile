@@ -7,4 +7,7 @@ export default misc = {
     marginVertical: "3%",
     backgroundColor: Colors.quaternaryColor
   },
+  flex: {
+    flex: 1
+  }
 };

@@ -121,7 +121,20 @@ export default text = {
   listItemLeftTitleDefault: {
     color: Colors.quinaryColor,
     fontFamily:'Avenir-Black',
+    fontSize: 16
+  },
+  listItemLeftTitleUppercase: {
+    color: Colors.quinaryColor,
+    fontFamily:'Avenir-Black',
     fontSize: 16,
+    textTransform: 'uppercase'
+  },
+  listItemLeftTitlePadded: {
+    color: Colors.quinaryColor,
+    fontFamily:'Avenir-Black',
+    fontSize: 16,
+    paddingHorizontal: 6, // To match sidemenu avatars
+    textTransform: 'uppercase'
   },
   listItemRightTitleDefault: {
     color: Colors.quinaryColor,

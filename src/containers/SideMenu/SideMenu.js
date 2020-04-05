@@ -23,7 +23,7 @@ import {
 import { getKeyByValue } from '../../utils/objectManip'
 import { NavigationActions } from 'react-navigation';
 import AlertAsync from "react-native-alert-async";
-import styles from './SideMenu.styles';
+import Styles from '../../styles/index'
 import { ENABLE_WYRE } from '../../utils/constants/constants';
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 
@@ -133,74 +133,128 @@ class SideMenu extends Component {
 
   renderMainDrawerComponents = () => {
     return (
-      <FlatList 
-      style={styles.coinList}         
-      data={this.props.activeCoinsForUser}    
-      scrollEnabled={false}
-      renderItem={({ item, index }) => ( 
-        <ListItem              
-          roundAvatar          
-          title={item.id}                           
-          avatar={item.logo}  
-          containerStyle={{ borderBottomWidth: 0 }} 
-          onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: index })}
-          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '15%'}}
-        />          
-      )}          
-      keyExtractor={item => item.id}                            
-      /> 
-    )
+      <FlatList
+        data={this.props.activeCoinsForUser}
+        style={Styles.underflow}
+        renderItem={({ item, index }) => (
+          <ListItem
+            title={item.id}
+            leftAvatar={{
+              source: item.logo,
+            }}
+            containerStyle={Styles.bottomlessListItemContainer}
+            onPress={() =>
+              this.setState({ mainDrawer: false, currentCoinIndex: index })
+            }
+            titleStyle={Styles.listItemLeftTitleUppercase}
+          />
+        )}
+        ListFooterComponent={
+          <React.Fragment>
+            <ListItem
+              title="ADD COIN"
+              leftAvatar={{
+                source: require("../../images/customIcons/coinAdd.png"),
+              }}
+              containerStyle={Styles.bottomlessListItemContainer}
+              onPress={() =>
+                this.setState({ mainDrawer: false, currentCoinIndex: -1 })
+              }
+              titleStyle={Styles.listItemLeftTitleUppercase}
+            />
+            <ListItem
+              title={"SETTINGS"}
+              leftIcon={{ name: "settings", size: 34 }}
+              containerStyle={Styles.bottomlessListItemContainer}
+              onPress={() =>
+                this.setState({ mainDrawer: false, currentCoinIndex: -2 })
+              }
+              titleStyle={Styles.listItemLeftTitlePadded}
+            />
+            <ListItem
+              title={"LOG OUT"}
+              leftIcon={{ name: "exit-to-app", size: 34 }}
+              containerStyle={Styles.bottomlessListItemContainer}
+              onPress={this.handleLogout}
+              titleStyle={Styles.listItemLeftTitlePadded}
+            />
+          </React.Fragment>
+        }
+        keyExtractor={(item) => item.id}
+      />
+    );
   }
 
   renderChildDrawerComponents = () => {
     return (
-      <ScrollView>
-        <SectionList
-        style={styles.coinList}
-        renderItem={({item, index, section}) => (
-          <ListItem                        
-          title={item.name}    
-          titleStyle={{fontFamily: 'Avenir-Black', textTransform: 'uppercase'}}     
-          leftIcon={{name: item.icon, size: 30}}                        
-          containerStyle={{ borderBottomWidth: 0 }} 
-          onPress={() => {this._openCoin(this.props.activeCoinsForUser[this.state.currentCoinIndex], item.name, section)}}
-        /> 
-        )}
-        renderSectionHeader={({section: {title}}) => (
-          <ListItem                        
-            title={<Text style={{fontFamily: 'Avenir-Black'}}>{title}</Text>}                             
-            containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
-            hideChevron
-            onPress={() => {return 0}}
-          /> 
-          )}
-          sections={this.sectionExtractor(this.state.currentCoinIndex)}
-          keyExtractor={(item, index) => item + index}
-        />
-        { ENABLE_WYRE &&
-          <ListItem                        
-            title={"BUY/SELL COIN"} 
-            titleStyle={{fontFamily: 'Avenir-Black'}}     
-            leftIcon={{name: "account-balance"}}   
-            hideChevron                     
-            containerStyle={{ borderBottomWidth: 0 }} 
+      <SectionList
+        style={Styles.fullWidth}
+        renderItem={({ item, index, section }) => (
+          <ListItem
+            title={item.name}
+            titleStyle={Styles.listItemLeftTitleUppercase}
+            leftIcon={{ name: item.icon, size: 30 }}
+            containerStyle={Styles.bottomlessListItemContainer}
             onPress={() => {
-              let navigation = this.props.navigation  
-              this.props.dispatch(setActiveSectionBuySellCrypto('buy-crypto'))
-              navigation.navigate("BuySellCryptoMenus", {title: "Buy Crypto"});
+              this._openCoin(
+                this.props.activeCoinsForUser[this.state.currentCoinIndex],
+                item.name,
+                section
+              );
             }}
           />
+        )}
+        renderSectionHeader={({ section: { title } }) => (
+          <ListItem
+            title={
+              <Text style={Styles.infoText}>{title}</Text>
+            }
+            containerStyle={Styles.greyStripeContainer}
+            hideChevron
+            onPress={() => {
+              return 0;
+            }}
+          />
+        )}
+        ListFooterComponent={
+          <React.Fragment>
+            {ENABLE_WYRE && (
+              <ListItem
+                title={"BUY/SELL COIN"}
+                titleStyle={Styles.infoText}
+                leftIcon={{ name: "account-balance" }}
+                hideChevron
+                containerStyle={Styles.bottomlessListItemContainer}
+                onPress={() => {
+                  let navigation = this.props.navigation;
+                  this.props.dispatch(
+                    setActiveSectionBuySellCrypto("buy-crypto")
+                  );
+                  navigation.navigate("BuySellCryptoMenus", {
+                    title: "Buy Crypto",
+                  });
+                }}
+              />
+            )}
+            <ListItem
+              title={"REMOVE COIN"}
+              titleStyle={Styles.listItemLeftTitlePadded}
+              leftIcon={{ name: "close" }}
+              hideChevron
+              containerStyle={Styles.bottomlessListItemContainer}
+              onPress={() => {
+                this._removeCoin(
+                  this.props.activeCoinsForUser[this.state.currentCoinIndex]
+                    .id
+                );
+              }}
+            />
+          </React.Fragment>
         }
-        <ListItem                        
-          title={"REMOVE COIN"}  
-          titleStyle={{fontFamily: 'Avenir-Black'}}   
-          leftIcon={{name: "close"}}   
-          hideChevron                     
-          containerStyle={{ borderBottomWidth: 0 }} 
-          onPress={() => {this._removeCoin(this.props.activeCoinsForUser[this.state.currentCoinIndex].id)}}
-        />
-      </ScrollView>
-    )
+        sections={this.sectionExtractor(this.state.currentCoinIndex)}
+        keyExtractor={(item, index) => item + index}
+      />
+    );
   }
 
   sectionExtractor = (currentCoinIndex) => {
@@ -261,24 +315,23 @@ class SideMenu extends Component {
   renderAddCoinComponents = () => {
     return (
       <SectionList
-      style={styles.coinList}
-      renderItem={({item, index, section}) => (
+      style={Styles.fullWidth}
+      renderItem={({item}) => (
         <ListItem                        
         title={item}
-        titleStyle={{fontFamily: 'Avenir-Black', fontSize: 15, textTransform: 'uppercase'}}  
-        containerStyle={{ borderBottomWidth: 0 }} 
+        titleStyle={Styles.listItemLeftTitleUppercase}  
+        containerStyle={Styles.bottomlessListItemContainer} 
         onPress={
           item === 'Add coin from list' ? 
             () => this.navigateToScreen('AddCoin') 
           : 
             () => this._openCustomCoinMenus()}
-        textInputStyle={{fontFamily: 'Avenir-Black'}}
         /> 
       )}
       renderSectionHeader={({section: {title}}) => (
         <ListItem                        
-        title={<Text style={{fontFamily: 'Avenir-Black'}}>{title}</Text>}                             
-        containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
+        title={<Text style={Styles.infoText}>{title}</Text>}                             
+        containerStyle={Styles.greyStripeContainer} 
         hideChevron
         /> 
       )}
@@ -293,20 +346,20 @@ class SideMenu extends Component {
   renderSettingsComponents = () => {
     return (
       <SectionList
-      style={styles.coinList}
-      renderItem={({item, index, section}) => (
+      style={Styles.fullWidth}
+      renderItem={({item}) => (
         <ListItem    
         leftIcon={{name: item.icon, size: 30}}  
         title={item.title}  
-        titleStyle={{fontFamily: 'Avenir-Black', textTransform: 'uppercase'}}                  
-        containerStyle={{ borderBottomWidth: 0 }} 
+        titleStyle={Styles.listItemLeftTitleUppercase}                  
+        containerStyle={Styles.bottomlessListItemContainer} 
         onPress={() => this._openSettings(item)}
         /> 
       )}
       renderSectionHeader={({section: {title}}) => (
         <ListItem                        
-        title={<Text style={{fontFamily: 'Avenir-Black'}}>{title}</Text>}                             
-        containerStyle={{ backgroundColor: "#E9F1F7", borderBottomWidth: 0 }} 
+        title={<Text style={Styles.infoText}>{title}</Text>}                             
+        containerStyle={Styles.greyStripeContainer} 
         hideChevron
         /> 
       )}
@@ -329,64 +382,36 @@ class SideMenu extends Component {
   render() {
     if (this.state.mainDrawer) {
       return (
-        <ScrollView>
+        <View style={Styles.flex}>
 					<DrawerHeader navigateToScreen={this.navigateToScreen} />
           {this.renderMainDrawerComponents()}
-          <ListItem    
-          roundAvatar                    
-          title={"ADD COIN"}   
-          titleStyle={{fontFamily: 'Avenir-Black'}}                        
-          avatar={require('../../images/customIcons/coinAdd.png')}
-          containerStyle={{ borderBottomWidth: 0 }} 
-          onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: -1 })}
-          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '15%'}}
-          /> 
-          <ListItem    
-          roundAvatar                    
-          title={"SETTINGS"}                           
-          leftIcon={{name: 'settings', size: 34}}
-          containerStyle={{ borderBottomWidth: 0 }} 
-          onPress={() => this.setState({ mainDrawer: false, currentCoinIndex: -2 })}
-          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '10%'}}
-          />
-          <ListItem    
-          roundAvatar                    
-          title={"LOG OUT"}
-          leftIcon={{name: 'exit-to-app', size: 34}}
-          containerStyle={{ borderBottomWidth: 0 }} 
-          onPress={this.handleLogout}
-          titleStyle={{fontFamily: 'Avenir-Black', marginLeft: '10%'}} 
-          /> 
-				</ScrollView>
+				</View>
       );
     } 
 
     return (
-      <ScrollView>
-        <View>
-          <DrawerHeader navigateToScreen={this.navigateToScreen} />
-            <ListItem                        
-            title={<Text style={{fontFamily: 'Avenir-Black', paddingLeft: '5%', fontSize: 18}}>{"BACK"}</Text>}                             
-            containerStyle={{ borderBottomWidth: 0 }} 
-            hideChevron
-            leftIcon={
-              <Icon
-							name="arrow-back"
-							size={30}
-							color="#666666"
-						  />
-            }
-            onPress={this.toggleMainDrawer}
-            /> 
-          {this.state.currentCoinIndex === -1 ? 
-            this.renderAddCoinComponents() 
-            : 
-            this.state.currentCoinIndex === -2 ? 
-              this.renderSettingsComponents()
-              :
-              this.renderChildDrawerComponents()}
-        </View>
-      </ScrollView>
+      <View style={Styles.flex}>
+        <DrawerHeader navigateToScreen={this.navigateToScreen} />
+        <ListItem                        
+        title={<Text style={Styles.listItemLeftTitleUppercase}>{"BACK"}</Text>}                             
+        containerStyle={Styles.bottomlessListItemContainer} 
+        hideChevron
+        leftIcon={
+          <Icon
+          name="arrow-back"
+          size={30}
+          />
+        }
+        onPress={this.toggleMainDrawer}
+        /> 
+        {this.state.currentCoinIndex === -1 ? 
+          this.renderAddCoinComponents() 
+          : 
+          this.state.currentCoinIndex === -2 ? 
+            this.renderSettingsComponents()
+            :
+            this.renderChildDrawerComponents()}
+      </View>
     );
   }
 }
