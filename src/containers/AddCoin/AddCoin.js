@@ -7,10 +7,9 @@
 
 import React, { Component } from "react";
 import { SearchBar, ListItem } from "react-native-elements";
-import { View, FlatList, TouchableOpacity, Alert } from "react-native";
+import { FlatList, TouchableOpacity, Alert } from "react-native";
 import { connect } from 'react-redux';
-import styles from './AddCoin.styles'
-import Colors from '../../globals/colors';
+import Styles from '../../styles/index'
 
 import {
   defaultAssetsPath,
@@ -80,27 +79,26 @@ class AddCoin extends Component {
 
   render() {
     return (
-      <View style={styles.root}>
-        <FlatList 
-          style={styles.coinList}         
-          data={namesList}
-          onEndReached={this.onEndReached}
-          onEndReachedThreshold={50}
-          renderItem={({item}) => (
-            <TouchableOpacity onPress={() => this._openDetails(item)}>
-              <ListItem     
-                roundAvatar                
-                title={item}
-                avatar={defaultAssetsPath.coinLogo[item.toLowerCase()]}
-                containerStyle={styles.listItemContainer}
-                titleStyle={{color: "black", fontFamily: 'Avenir'}}
-                chevronColor={Colors.quinaryColor}
-              />
-            </TouchableOpacity>
-          )}
-          keyExtractor={item => item}                                   
-        />       
-      </View>
+      <FlatList 
+        style={Styles.fullWidth}         
+        data={namesList}
+        onEndReached={this.onEndReached}
+        onEndReachedThreshold={50}
+        renderItem={({item}) => (
+          <TouchableOpacity onPress={() => this._openDetails(item)}>
+            <ListItem                   
+              title={item}
+              leftAvatar={{
+                source: defaultAssetsPath.coinLogo[item.toLowerCase()]
+              }}
+              containerStyle={Styles.bottomlessListItemContainer}
+              titleStyle={Styles.listItemLeftTitleDefault}
+              chevron
+            />
+          </TouchableOpacity>
+        )}
+        keyExtractor={item => item}                                   
+      />       
     );
   }
 }
