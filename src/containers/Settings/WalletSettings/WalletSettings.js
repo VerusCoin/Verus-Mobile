@@ -16,8 +16,7 @@ import AlertAsync from "react-native-alert-async";
 import { connect } from 'react-redux';
 import { NavigationActions } from 'react-navigation';
 import { clearCacheData } from '../../../actions/actionCreators';
-import styles from './WalletSettings.styles';
-import Colors from '../../../globals/colors';
+import Styles from '../../../styles/index'
 
 const GENERAL_WALLET_SETTINGS = "GeneralWalletSettings"
 const COIN_SETTINGS = "CoinSettings"
@@ -89,23 +88,23 @@ class WalletSettings extends Component {
 
   renderSettingsList = () => {
     return (
-      <ScrollView style={styles.coinList}>
+      <ScrollView style={Styles.wide}>
         <TouchableOpacity onPress={() => this.clearCache()}>
           <ListItem                       
-            title={<Text style={styles.coinItemLabel}>Clear Data Cache</Text>}
-            leftIcon={{name: 'clear-all'}}
-            rightIcon={{name: 'close'}}
-            containerStyle={{ borderBottomWidth: 0 }} 
-            chevron={false}
-            chevronColor={Colors.quaternaryColor}
+            title="Clear Data Cache"
+            titleStyle={Styles.listItemLeftTitleDefault}
+            leftIcon={{name: 'clear-all', size: 40}}
+            containerStyle={Styles.bottomlessListItemContainer} 
+            chevron
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => this._openSettings(GENERAL_WALLET_SETTINGS)}>
           <ListItem                       
-            title={<Text style={styles.coinItemLabel}>{"General Settings"}</Text>}
-            leftIcon={{name: 'settings-applications'}}
-            containerStyle={{ borderBottomWidth: 0 }} 
-            chevronColor={Colors.quaternaryColor}
+            title="General Settings"
+            titleStyle={Styles.listItemLeftTitleDefault}
+            leftIcon={{name: 'settings-applications', size: 40}}
+            containerStyle={Styles.bottomlessListItemContainer} 
+            chevron
           />
         </TouchableOpacity>
         {this.props.activeCoinsForUser.map((coin, index) => {
@@ -114,11 +113,13 @@ class WalletSettings extends Component {
               onPress={() => this._openSettings(COIN_SETTINGS, coin.id, coin.name)}
               key={index}>
               <ListItem
-                title={<Text style={styles.coinItemLabel}>{`${coin.name} Settings`}</Text>}
-                avatar={coin.logo}
-                roundAvatar
-                containerStyle={{ borderBottomWidth: 0 }} 
-                chevronColor={Colors.quaternaryColor}
+                title={`${coin.name} Settings`}
+                titleStyle={Styles.listItemLeftTitleDefault}
+                leftAvatar={{
+                  source: coin.logo
+                }}
+                containerStyle={Styles.bottomlessListItemContainer} 
+                chevron
               />
             </TouchableOpacity>
           )
@@ -129,12 +130,12 @@ class WalletSettings extends Component {
 
   render() {
     return (
-      <View style={styles.root}>
-        <Text style={styles.fiatBalanceLabel}>
+      <View style={Styles.defaultRoot}>
+        <Text style={Styles.largeCentralPaddedHeader}>
         {this.props.activeAccount.id.length < 15 ? 
           this.props.activeAccount.id : "My Account"}
         </Text>
-        <Text style={styles.balanceSheetLabel}>{"Wallet Settings"}</Text>
+        <Text style={Styles.greyStripeHeader}>{"Wallet Settings"}</Text>
         {this.renderSettingsList()}
       </View>
     );

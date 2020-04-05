@@ -169,14 +169,14 @@ class SideMenu extends Component {
               onPress={() =>
                 this.setState({ mainDrawer: false, currentCoinIndex: -2 })
               }
-              titleStyle={Styles.listItemLeftTitlePadded}
+              titleStyle={Styles.listItemLeftTitlePaddedUppercase}
             />
             <ListItem
               title={"LOG OUT"}
               leftIcon={{ name: "exit-to-app", size: 34 }}
               containerStyle={Styles.bottomlessListItemContainer}
               onPress={this.handleLogout}
-              titleStyle={Styles.listItemLeftTitlePadded}
+              titleStyle={Styles.listItemLeftTitlePaddedUppercase}
             />
           </React.Fragment>
         }
@@ -238,7 +238,7 @@ class SideMenu extends Component {
             )}
             <ListItem
               title={"REMOVE COIN"}
-              titleStyle={Styles.listItemLeftTitlePadded}
+              titleStyle={Styles.listItemLeftTitlePaddedUppercase}
               leftIcon={{ name: "close" }}
               hideChevron
               containerStyle={Styles.bottomlessListItemContainer}

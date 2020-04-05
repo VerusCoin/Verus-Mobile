@@ -134,6 +134,12 @@ export default text = {
     fontFamily:'Avenir-Black',
     fontSize: 16,
     paddingHorizontal: 6, // To match sidemenu avatars
+  },
+  listItemLeftTitlePaddedUppercase: {
+    color: Colors.quinaryColor,
+    fontFamily:'Avenir-Black',
+    fontSize: 16,
+    paddingHorizontal: 6, // To match sidemenu avatars
     textTransform: 'uppercase'
   },
   listItemRightTitleDefault: {
