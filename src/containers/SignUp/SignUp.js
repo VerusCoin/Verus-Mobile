@@ -245,7 +245,9 @@ class SignUp extends Component {
               console.log(this.state.seeds);
             }
           );
-        }
+        } else if (channel === ELECTRUM) {
+          this.setState({ publicSeedModalOpen: true })
+        } else if (channel === DLIGHT) this.setState({ privateSeedModalOpen: true })
       });
     } else if (channel === ELECTRUM) {
       this.setState({ publicSeedModalOpen: true })

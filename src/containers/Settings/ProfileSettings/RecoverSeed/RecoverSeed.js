@@ -102,7 +102,7 @@ class RecoverSeed extends Component {
               let seeds = res.pop()
 
               //DELETE/REFACTOR, change to show both seeds
-              this.showSeed(seeds.electrum)
+              this.showSeed(seeds)
             })
           } 
         })
@@ -113,9 +113,9 @@ class RecoverSeed extends Component {
     });
   }
 
-  showSeed = (seed) => {
+  showSeed = (seeds) => {
     this.props.navigation.navigate("DisplaySeed", {
-      data: {seed: seed}
+      data: {seeds}
     });
   }
 
