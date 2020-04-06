@@ -284,8 +284,10 @@ class Home extends Component {
   render() {
     return (
       <View style={Styles.defaultRoot}>
-        <Text style={Styles.fiatLabel} >
-        {'$' + truncateDecimal(this.state.totalFiatBalance, 2)}
+        <Text style={Styles.fiatLabel}>
+          {truncateDecimal(this.state.totalFiatBalance, 2) +
+            " " +
+            this.props.displayCurrency}
         </Text>
         <Text style={Styles.boldListHeader}>{"Portfolio"}</Text>
         {this.renderCoinList()}

@@ -17,11 +17,11 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
-import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements'
+import { FormLabel, Input, FormValidationMessage } from 'react-native-elements'
 import { resetPwd } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
-import styles from './ResetPwd.styles'
+import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors';
 
 class ResetPwd extends Component {
@@ -137,91 +137,85 @@ class ResetPwd extends Component {
 
   render() {
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <ScrollView style={styles.root} contentContainerStyle={{height: '100%' ,alignItems: "center", justifyContent: "center"}}>
-          <Text style={styles.wifLabel}>
-            Reset Password
-          </Text>
-          <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-            Enter your current password:
-            </FormLabel>
-            <FormInput 
+      <View style={Styles.defaultRoot}>
+        <ScrollView style={Styles.fullWidth}
+          contentContainerStyle={{...Styles.innerHeaderFooterContainerCentered, ...Styles.fullHeight}}>
+          <View style={Styles.wideBlock}>
+            <Input 
+              label="Enter your current password:"
+              labelStyle={Styles.formCenterLabel}
+              containerStyle={Styles.wideCenterBlock}
+              inputStyle={Styles.inputTextDefaultStyle}
               underlineColorAndroid={Colors.quaternaryColor}
               onChangeText={(text) => this.setState({oldPwd: text})}
               autoCapitalize={"none"}
               autoCorrect={false}
               secureTextEntry={true}
-              shake={this.state.errors.oldPwd}
-              inputStyle={styles.formInput}
-            />
-            <FormValidationMessage>
-            {
-              this.state.errors.oldPwd ? 
-                this.state.errors.oldPwd
-                :
-                null
-            }
-            </FormValidationMessage>
+              shake={this.state.errors.pwd}
+              errorMessage={
+                this.state.errors.oldPwd ? 
+                  this.state.errors.oldPwd
+                  :
+                  null
+              }
+              />
           </View>
-          <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-            Enter a new password (min. 5 characters):
-            </FormLabel>
-            <FormInput 
+          <View style={Styles.wideBlock}>
+            <Input 
+              label="Enter a new password (min. 5 characters):"
+              labelStyle={Styles.formCenterLabel}
+              containerStyle={Styles.wideCenterBlock}
+              inputStyle={Styles.inputTextDefaultStyle}
               underlineColorAndroid={Colors.quaternaryColor}
               onChangeText={(text) => this.setState({newPwd: text})}
               autoCapitalize={"none"}
               autoCorrect={false}
               secureTextEntry={true}
-              shake={this.state.errors.newPwd}
-              inputStyle={styles.formInput}
+              shake={this.state.errors.pwd}
+              errorMessage={
+                this.state.errors.newPwd ? 
+                  this.state.errors.newPwd
+                  :
+                  null
+              }
             />
-            <FormValidationMessage>
-            {
-              this.state.errors.newPwd ? 
-                this.state.errors.newPwd
-                :
-                null
-            }
-            </FormValidationMessage>
           </View>
-          <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-            Confirm new password:
-            </FormLabel>
-            <FormInput 
+          <View style={Styles.wideBlock}>
+            <Input 
+              label="Confirm new password:"
+              labelStyle={Styles.formCenterLabel}
+              containerStyle={Styles.wideCenterBlock}
+              inputStyle={Styles.inputTextDefaultStyle}
               underlineColorAndroid={Colors.quaternaryColor}
               onChangeText={(text) => this.setState({confirmNewPwd: text})}
               autoCapitalize={"none"}
               autoCorrect={false}
               secureTextEntry={true}
-              shake={this.state.errors.confirmNewPwd}
-              inputStyle={styles.formInput}
+              shake={this.state.errors.pwd}
+              errorMessage={
+                this.state.errors.confirmNewPwd ? 
+                  this.state.errors.confirmNewPwd
+                  :
+                  null
+              }
             />
-            <FormValidationMessage>
-            {
-              this.state.errors.confirmNewPwd ? 
-                this.state.errors.confirmNewPwd
-                :
-                null
-            }
-            </FormValidationMessage>
           </View>
-          <View style={styles.buttonContainer}>
+        </ScrollView>
+        <View style={Styles.highFooterContainer}>
+          <View style={Styles.standardWidthSpaceBetweenBlock}>
             <StandardButton 
-              style={styles.cancelButton} 
+              color={Colors.warningButtonColor}
               title="CANCEL" 
               onPress={this.cancel}
             />
             <StandardButton 
-              style={styles.addAccountButton} 
+              style={Colors.infoButtonColor} 
               title="RESET" 
               onPress={this._handleSubmit}
             />
           </View>
-        </ScrollView>
-      </TouchableWithoutFeedback>
+        </View>
+      </View>
       
     );
   }
