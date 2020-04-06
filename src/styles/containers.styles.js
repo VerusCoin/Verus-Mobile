@@ -135,6 +135,15 @@ export default containers = {
     borderTopWidth: 1,
     borderColor: Colors.tertiaryColor
   },
+  highFooterContainer: {
+    width: '100%',
+    alignItems: "center",
+    flex: 1,
+    maxHeight: '16%',
+    backgroundColor: Colors.secondaryColor,
+    borderTopWidth: 1,
+    borderColor: Colors.tertiaryColor
+  },
   headerContainer: {
     width: '100%',
     alignItems: "center",
@@ -158,6 +167,12 @@ export default containers = {
   innerHeaderFooterContainer: {
     position: 'absolute',
     width: '100%'
+  },
+  innerHeaderFooterContainerCentered: {
+    position: 'absolute',
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   inlineHeaderContainer: {
     width: '100%',

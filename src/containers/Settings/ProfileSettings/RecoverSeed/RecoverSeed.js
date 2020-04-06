@@ -13,18 +13,15 @@ import React, { Component } from "react";
 import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
-  Text, 
   Alert,
   ScrollView, 
-  Keyboard,
-  TouchableWithoutFeedback,
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
-import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements'
+import { Input } from 'react-native-elements'
 import { checkPinForUser } from '../../../../utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
-import styles from './RecoverSeed.styles'
+import Styles from '../../../../styles/index'
 import Colors from "../../../../globals/colors";
 
 class RecoverSeed extends Component {
@@ -124,16 +121,13 @@ class RecoverSeed extends Component {
 
   render() {
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center", justifyContent: "center"}}>
-          <Text style={styles.wifLabel}>
-            Recover Wallet Seed
-          </Text>
-          <View style={styles.valueContainer}>
-            <FormLabel style={styles.formLabel}>
-            Enter your account password:
-            </FormLabel>
-            <FormInput 
+      <View style={Styles.defaultRoot}>
+        <ScrollView style={Styles.fullWidth}
+          contentContainerStyle={{...Styles.innerHeaderFooterContainerCentered, ...Styles.fullHeight}}>
+          <View style={Styles.wideCenterBlock}>
+            <Input 
+              label="Enter your account password:"
+              labelStyle={Styles.formCenterLabel}
               underlineColorAndroid={Colors.quaternaryColor}
               onChangeText={(text) => this.setState({password: text})}
               value={this.state.password}
@@ -141,31 +135,30 @@ class RecoverSeed extends Component {
               autoCorrect={false}
               secureTextEntry={true}
               shake={this.state.errors.password}
-              inputStyle={styles.formInput}
+              errorMessage={
+                this.state.errors.password ? 
+                  this.state.errors.password
+                  :
+                  null
+              }
             />
-            <FormValidationMessage>
-            {
-              this.state.errors.password ? 
-                this.state.errors.password
-                :
-                null
-            }
-            </FormValidationMessage>
           </View>
-          <View style={styles.buttonContainer}>
+        </ScrollView>
+        <View style={Styles.highFooterContainer}>
+          <View style={Styles.standardWidthSpaceBetweenBlock}>
             <StandardButton 
-              style={styles.cancelButton} 
+              color={Colors.warningButtonColor}
               title="CANCEL" 
               onPress={this.cancel}
             />
             <StandardButton 
-              style={styles.addAccountButton} 
+              color={Colors.linkButtonColor} 
               title="RECOVER" 
               onPress={this._handleSubmit}
             />
           </View>
-        </ScrollView>
-      </TouchableWithoutFeedback>
+        </View>
+      </View>
     );
   }
 }
