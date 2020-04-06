@@ -11,21 +11,18 @@ import React, { Component } from "react";
 import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
-  Text, 
   Alert,
   ScrollView, 
   Keyboard,
-  TouchableWithoutFeedback,
-  Switch
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
-import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements'
+import { Input, CheckBox } from 'react-native-elements'
 import { deleteUserByID } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
 import { checkPinForUser } from '../../../../utils/asyncStore/asyncStore'
 import Colors from '../../../../globals/colors';
-import styles from './DeleteProfile.styles'
+import Styles from '../../../../styles/index'
 
 class DeleteProfile extends Component {
   constructor() {
@@ -36,16 +33,11 @@ class DeleteProfile extends Component {
       errors: {pwd: null, confirmSwitch: null},
       loading: false,
     };
-    this.updateIndex = this.updateIndex.bind(this)
   }
 
   _handleSubmit = () => {
     Keyboard.dismiss();
     this.validateFormData()
-  }
-
-  updateIndex (selectedButtonIndex) {
-    this.setState({selectedButtonIndex: selectedButtonIndex})
   }
 
   handleError = (error, field) => {
@@ -96,13 +88,13 @@ class DeleteProfile extends Component {
         const _confirmSwitch = this.state.confirmSwitch
         let _errors = false;
   
-        if ((!_pwd || _pwd.length < 1) && (this.state.selectedButtonIndex === 0)) {
+        if (!_pwd || _pwd.length < 1) {
           this.handleError("Required field", "pwd")
           _errors = true
         } 
   
-        if (!this.state.confirmSwitch) {
-          this.handleError("Please confirm", "confirmSwitch")
+        if (!this.state.confirmSwitch && !_errors) {
+          Alert.alert("Please confirm", "Please confirm you are aware of what deleting your profile entails.")
           _errors = true
         }
   
@@ -138,28 +130,24 @@ class DeleteProfile extends Component {
 
   authenticatePwd = () => {
     return (
-      <View style={styles.valueContainer}>
-        <FormLabel labelStyle={styles.formLabel}>
-        Enter your password:
-        </FormLabel>
-        <FormInput 
-          underlineColorAndroid={Colors.quaternaryColor}
-          onChangeText={(text) => this.setState({pwd: text})}
-          autoCapitalize={"none"}
-          autoCorrect={false}
-          secureTextEntry={true}
-          shake={this.state.errors.pwd}
-          inputStyle={styles.formInput}
-        />
-        <FormValidationMessage>
-        {
+      <Input 
+        label="Enter your password:"
+        labelStyle={Styles.formCenterLabel}
+        containerStyle={Styles.wideCenterBlock}
+        inputStyle={Styles.inputTextDefaultStyle}
+        underlineColorAndroid={Colors.quaternaryColor}
+        onChangeText={(text) => this.setState({pwd: text})}
+        autoCapitalize={"none"}
+        autoCorrect={false}
+        secureTextEntry={true}
+        shake={this.state.errors.pwd}
+        errorMessage={
           this.state.errors.pwd ? 
             this.state.errors.pwd
             :
             null
         }
-        </FormValidationMessage>
-      </View>
+      />
     )
   }
 
@@ -176,46 +164,35 @@ class DeleteProfile extends Component {
 
   render() {
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <ScrollView style={styles.root} contentContainerStyle={{height: '100%' ,alignItems: "center", justifyContent: "center"}}>
-          <Text style={styles.wifLabel}>
-            {"Delete Profile"}
-          </Text>
+      <View style={Styles.defaultRoot}>
+        <ScrollView style={Styles.fullWidth}
+          contentContainerStyle={{...Styles.innerHeaderFooterContainerCentered, ...Styles.fullHeight}}>
           {this.authenticatePwd()}
-          <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-              I confirm that I would like to delete my profile, and acknowledge that 
-              this action cannot be reversed.
-            </FormLabel>
-            <View style={styles.switchContainer}>
-              <Switch 
-                value={this.state.confirmSwitch}
-                onValueChange={(value) => this.setState({confirmSwitch: value})}
-              />
-            </View>
-            <FormValidationMessage>
-            {
-              this.state.errors.confirmSwitch ? 
-                this.state.errors.confirmSwitch
-                :
-                null
-            }
-            </FormValidationMessage>
+          <View style={Styles.wideBlock}>
+            <CheckBox
+              title="I confirm that I would like to delete my profile, and acknowledge that 
+              this action cannot be reversed."
+              checked={this.state.confirmSwitch}
+              textStyle={Styles.defaultText}
+              onPress={() => this.setState({confirmSwitch: !this.state.confirmSwitch})}
+            />
           </View>
-          <View style={styles.buttonContainer}>
+        </ScrollView>
+        <View style={Styles.highFooterContainer}>
+          <View style={Styles.standardWidthSpaceBetweenBlock}>
             <StandardButton 
-              style={styles.cancelButton} 
+              color={Colors.warningButtonColor}
               title="CANCEL" 
               onPress={this.cancel}
             />
             <StandardButton 
-              style={styles.addAccountButton} 
+              color={Colors.linkButtonColor}
               title="DELETE" 
               onPress={this._handleSubmit}
             />
           </View>
-        </ScrollView>
-      </TouchableWithoutFeedback>
+        </View>
+      </View>
     );
   }
 }
