@@ -131,6 +131,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 26
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionRevision * 100 + versionBuild
+        missingDimensionStrategy 'react-native-camera', 'general'
         if ( versionBuild > 0) {
             versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta-${versionBuild}"
         } else {
