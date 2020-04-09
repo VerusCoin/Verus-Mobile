@@ -15,10 +15,11 @@ import {
   Alert
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
-import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements'
+import { FormLabel, Input, FormValidationMessage } from 'react-native-elements'
 import { saveGeneralSettings } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
-import styles from './GeneralWalletSettings.styles';
+import Styles from '../../../../styles/index'
+import Colors from '../../../../globals/colors'
 
 class WalletSettings extends Component {
   constructor(props) {
@@ -94,51 +95,46 @@ class WalletSettings extends Component {
 
   render() {
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={styles.root}>
-          <ScrollView contentContainerStyle={{paddingTop: "30%", alignItems: "center", justifyContent: "flex-start"}}>
-            <View style={{...styles.valueContainer, marginTop: 15}}>
-              <FormLabel labelStyle={styles.formLabel}>
-              Maximum Displayed Transaction Count:
-              </FormLabel>
-              <FormInput 
-                underlineColorAndroid="#86939d"
-                onChangeText={(text) => this.setState({maxTxCount: text})}
-                value={this.state.maxTxCount.toString()}
-                shake={this.state.errors.maxTxCount}
-                inputStyle={styles.formInput}
-                keyboardType={'number-pad'}
-              />
-              <FormValidationMessage>
-              {
+      <View style={Styles.defaultRoot}>
+        <ScrollView style={Styles.fullWidth}
+          contentContainerStyle={{...Styles.innerHeaderFooterContainerCentered, ...Styles.fullHeight}}>
+            <Input 
+              label="Maximum Displayed Transaction Count:"
+              labelStyle={Styles.formCenterLabel}
+              containerStyle={Styles.wideCenterBlock}
+              inputStyle={Styles.inputTextDefaultStyle}
+              underlineColorAndroid="#86939d"
+              onChangeText={(text) => this.setState({maxTxCount: text})}
+              value={this.state.maxTxCount.toString()}
+              shake={this.state.errors.maxTxCount}
+              keyboardType={'number-pad'}
+              errorMessage={
                 this.state.errors.maxTxCount ? 
                   this.state.errors.maxTxCount
                   :
                   null
               }
-              </FormValidationMessage>
+            />
+        </ScrollView>
+        <View style={Styles.highFooterContainer}>
+          {this.state.loading ? 
+            <ActivityIndicator animating={this.state.loading} size="large"/>
+          :
+          <View style={Styles.standardWidthSpaceBetweenBlock}>
+              <StandardButton 
+                color={Colors.warningButtonColor}
+                title="BACK" 
+                onPress={this.back}
+              />
+              <StandardButton 
+                color={Colors.linkButtonColor}
+                title="CONFIRM" 
+                onPress={this._handleSubmit}
+              />
             </View>
-          </ScrollView>
-          <View style={styles.bottom}>
-            {this.state.loading ? 
-              <ActivityIndicator animating={this.state.loading} size="large"/>
-            :
-              <View style={styles.buttonContainer}>
-                <StandardButton 
-                  style={styles.backButton} 
-                  title="BACK" 
-                  onPress={this.back}
-                />
-                <StandardButton 
-                  style={styles.saveChangesButton} 
-                  title="CONFIRM" 
-                  onPress={this._handleSubmit}
-                />
-              </View>
-            }
-          </View>
+          }
         </View>
-      </TouchableWithoutFeedback>
+      </View>
     );
   }
 }
