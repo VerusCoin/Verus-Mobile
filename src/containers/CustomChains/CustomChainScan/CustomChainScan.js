@@ -24,7 +24,7 @@ import {
   INCOMPLETE_CHAIN_QR
 } from '../../../utils/constants/constants'
 import CustomChainForm from '../CustomChainForm/CustomChainForm'
-import styles from './CustomChainScan.styles'
+import Styles from '../../../styles/index'
 
 class CustomChainScan extends Component {
   constructor(props) {
@@ -143,7 +143,7 @@ class CustomChainScan extends Component {
 
   render() {
     return (
-      <View style={styles.root}>
+      <View style={Styles.defaultRoot}>
         <Modal 
           visible={this.state.modalVisible}
           animationType={"slide"}>
@@ -161,7 +161,7 @@ class CustomChainScan extends Component {
             onRead={this.onSuccess.bind(this)}
             showMarker={true}
             captureAudio={false}
-            cameraStyle={styles.QRCamera}
+            cameraStyle={{...Styles.fullWidth, ...Styles.fullHeight}}
           />
         }
       </View>

@@ -5,7 +5,8 @@ export default text = {
     fontSize: 24,
     color: Colors.quaternaryColor,
     textAlign: "center",
-    fontFamily: "Avenir-Medium"
+    fontFamily: "Avenir-Medium",
+    fontSize: 16
   },
   centralSuccessHeader: {
     fontSize: 24,
@@ -41,6 +42,11 @@ export default text = {
   defaultDescriptiveText: {
     textAlign: "center",
     fontSize: 18,
+    fontFamily: "Avenir-Book",
+  },
+  smallerDescriptiveText: {
+    textAlign: "center",
+    fontSize: 14,
     fontFamily: "Avenir-Book",
   },
   seedText: {
@@ -84,6 +90,14 @@ export default text = {
     fontFamily: 'Avenir-Book',
     fontWeight: 'normal',
     fontSize: 16
+  },
+  mediumFormInputLabelLeftPadded: {
+    textAlign:"left",
+    color: Colors.quinaryColor,
+    fontFamily: 'Avenir-Book',
+    fontWeight: 'normal',
+    fontSize: 16,
+    paddingLeft: 9
   },
   mediumInlineLink: {
     color: Colors.linkButtonColor,

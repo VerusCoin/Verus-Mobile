@@ -20,4 +20,8 @@ export default buttons = {
     fontFamily: 'Avenir-Black',
     fontWeight: '600',
   },
+  inlineXButton: {
+    marginRight: 16,
+    color: Colors.warningButtonColor
+  }
 }

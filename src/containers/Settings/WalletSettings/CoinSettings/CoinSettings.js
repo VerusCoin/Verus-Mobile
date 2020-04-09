@@ -12,10 +12,11 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   ActivityIndicator,
-  Alert
+  Alert,
+  Text
 } from "react-native";
 import { NavigationActions } from 'react-navigation';
-import { FormLabel, ButtonGroup } from 'react-native-elements'
+import { ButtonGroup } from 'react-native-elements'
 import { saveCoinSettings } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import { 
@@ -27,7 +28,7 @@ import {
   MAX_VERIFICATION_DESC,
   VERIFICATION_LOCKED
 } from '../../../../utils/constants/constants'
-import styles from './CoinSettings.styles'
+import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors';
 
 class CoinSettings extends Component {
@@ -117,13 +118,13 @@ class CoinSettings extends Component {
     const utxoVerificationBtns = ['Low', 'Mid', 'High']
 
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={styles.root}>
-          <ScrollView contentContainerStyle={{paddingTop: "30%", alignItems: "center", justifyContent: "flex-start"}}>
-            <View style={{...styles.valueContainer, marginTop: 15}}>
-              <FormLabel labelStyle={styles.formLabel}>
-                {"Level of UTXO verification:"}
-              </FormLabel>
+        <View style={Styles.defaultRoot}>
+        <ScrollView style={Styles.fullWidth}
+          contentContainerStyle={{...Styles.innerHeaderFooterContainerCentered, ...Styles.fullHeight}}>
+            <View style={Styles.wideCenterBlock}>
+              <Text style={Styles.centralHeader}>
+                {"Transaction Verification:"}
+              </Text>
               <ButtonGroup
                 onPress={this.verificationLock ? null : this.updateIndex}
                 selectedIndex={this.state.verificationLvl}
@@ -132,35 +133,35 @@ class CoinSettings extends Component {
                 selectedTextStyle={{color: "#f5f5f5"}}
                 containerStyle={{backgroundColor: Colors.tertiaryColor}}
                 textStyle={{fontFamily: 'Avenir-Book'}}
-                //disabled={true}
-                //^ This doesnt work and it's supposed to (bugged)
               />
-              <FormLabel labelStyle={{...styles.utxoVerificationDesc, color: this.verificationLock ? "#EDAE49" : "#2E86AB"}}>
-                { this.verificationLock ? 
-                    VERIFICATION_LOCKED
-                    :
-                    this.state.verificationLvl === NO_VERIFICATION ? 
-                      NO_VERIFICATION_DESC
+              <View style={Styles.fullWidthBlock}> 
+                <Text style={Styles.smallerDescriptiveText}>
+                  { this.verificationLock ? 
+                      VERIFICATION_LOCKED
                       :
-                      this.state.verificationLvl === MID_VERIFICATION ? 
-                        MID_VERIFICATION_DESC
+                      this.state.verificationLvl === NO_VERIFICATION ? 
+                        NO_VERIFICATION_DESC
                         :
-                        MAX_VERIFICATION_DESC}
-              </FormLabel>
+                        this.state.verificationLvl === MID_VERIFICATION ? 
+                          MID_VERIFICATION_DESC
+                          :
+                          MAX_VERIFICATION_DESC}
+                </Text>
+              </View>
             </View>
           </ScrollView>
-          <View style={styles.bottom}>
+          <View style={Styles.highFooterContainer}>
             {this.state.loading ? 
               <ActivityIndicator animating={this.state.loading} size="large"/>
             :
-              <View style={styles.buttonContainer}>
+            <View style={Styles.standardWidthSpaceBetweenBlock}>
                 <StandardButton 
-                  style={styles.backButton} 
+                  color={Colors.warningButtonColor}
                   title="BACK" 
                   onPress={this.back}
                 />
                 <StandardButton 
-                  style={styles.saveChangesButton} 
+                  color={Colors.linkButtonColor}
                   title="CONFIRM" 
                   onPress={this._handleSubmit}
                 />
@@ -168,7 +169,6 @@ class CoinSettings extends Component {
             }
           </View>
         </View>
-      </TouchableWithoutFeedback>
     );
   }
 }
