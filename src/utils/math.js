@@ -15,7 +15,7 @@ export const truncateDecimal = (value, numDecimals) => {
   let truncatedValue = Math.trunc(expandedValue)
   let newValue = (Math.round(truncatedValue))/y
 
-  return newValue.toFixed(numDecimals)
+  return Number(newValue.toFixed(numDecimals))
 }
 
 export const findNumDecimals = (value) => {

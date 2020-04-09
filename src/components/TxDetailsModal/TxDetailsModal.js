@@ -118,7 +118,7 @@ class TxDetailsModal extends Component {
               <View style={Styles.infoTableRow}>
                 <Text style={Styles.infoTableHeaderCell}>Confirmations:</Text>
                 <Text style={Styles.infoTableCell}>
-                  {txData.confirmations || "??"}
+                  {txData.confirmations != null ? txData.confirmations : "??"}
                 </Text>
               </View>
               <View style={Styles.infoTableRow}>

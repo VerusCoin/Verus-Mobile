@@ -19,4 +19,7 @@ export default roots = {
     alignItems: "center",
     borderTopWidth: 0
   },
+  secondaryBackground: {
+    backgroundColor: Colors.secondaryColor
+  }
 };

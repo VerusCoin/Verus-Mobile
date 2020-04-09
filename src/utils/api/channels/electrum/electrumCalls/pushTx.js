@@ -4,6 +4,7 @@ import { maxSpendBalance, satsToCoins } from '../../../../math'
 import coinSelect from 'coinselect';
 import { buildSignedTx } from '../../../../crypto/buildTx'
 import { TxDecoder } from '../../../../crypto/txDecoder'
+import { ELECTRUM } from '../../../../constants/intervalConstants';
 
 export const pushTx = (coinObj, _rawtx) => {
   const callType = 'pushtx'
@@ -32,7 +33,7 @@ export const pushTx = (coinObj, _rawtx) => {
 export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFee, network, verifyMerkle, verifyTxid) => {
   console.log("Value passed to tx preflight: " + value)
   return new Promise((resolve, reject) => {
-    getUnspentFormatted(null, coinObj, activeUser, verifyMerkle, verifyTxid)
+    getUnspentFormatted(coinObj, activeUser, verifyMerkle, verifyTxid)
     .then((res) => {
       utxoList = res.utxoList
       let unshieldedFunds = res.unshieldedFunds
@@ -45,7 +46,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
       let interestClaimThreshold = 200;
       let utxoVerified = true;
       let index = 0
-      let wif
+      let electrumKey
       let changeAddress
       let feePerByte = 0;
       let btcFees = false;
@@ -65,8 +66,8 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
         activeUser.keys[coinObj.id].electrum != null &&
         activeUser.keys[coinObj.id].electrum.addresses.length > 0
       ) {
-        wif = activeUser.keys[coinObj.id].privKey;
-        changeaddress = activeUser.keys[coinObj.id].electrum.addresses[0];
+        electrumKey = activeUser.keys[coinObj.id][ELECTRUM].privKey;
+        changeAddress = activeUser.keys[coinObj.id].electrum.addresses[0];
       } else {
         throw new Error(
           "pushTx.js: Fatal mismatch error, " +
@@ -266,7 +267,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
           _rawtx = buildSignedTx(
             outputAddress,
             changeAddress,
-            wif,
+            electrumKey,
             network,
             inputs,
             _change,
@@ -280,7 +281,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
               change: _change,
               inputs,
               outputs,
-              // wif,
+              // electrumKey,
               fee: btcFees ? satsToCoins(fee) : satsToCoins(_estimatedFee),
               value,
               outputAddress,

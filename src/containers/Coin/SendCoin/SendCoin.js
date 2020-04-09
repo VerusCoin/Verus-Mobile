@@ -158,13 +158,14 @@ class SendCoin extends Component {
   goToConfirmScreen = (coinObj, activeUser, address, amount) => {
     const route = "ConfirmSend";
     let navigation = this.props.navigation;
+
     let data = {
       coinObj: coinObj,
       activeUser: activeUser,
       address: address,
       amount: coinsToSats(Number(amount)),
       btcFee: this.state.btcFees.average,
-      balance: this.props.balances.public.confirmed
+      balance: (this.props.balances.public.confirmed + (this.props.balances.private ? this.props.balances.private.confirmed : 0))
     };
 
     navigation.navigate(route, {
@@ -207,7 +208,7 @@ class SendCoin extends Component {
           coin.id === "BTC"
             ? truncateDecimal(this.props.balances.public.confirmed, 4)
             : this.props.balances.public.confirmed -
-              (this.props.activeCoin.fee ? this.props.activeCoin.fee : 10000);
+              satsToCoins(this.props.activeCoin.fee ? this.props.activeCoin.fee : 10000);
 
         const toAddress = removeSpaces(this.state.toAddress);
         const fromAddress = this.state.fromAddress;
@@ -234,7 +235,7 @@ class SendCoin extends Component {
         } else if (!isNumber(amount)) {
           this.handleFormError("Invalid amount", "amount");
           _errors = true;
-        } else if (coinsToSats(Number(amount)) > Number(spendableBalance)) {
+        } else if (Number(amount) > Number(spendableBalance)) {
           this.handleFormError(
             "Insufficient funds, " +
               (spendableBalance < 0

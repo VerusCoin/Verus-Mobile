@@ -36,7 +36,7 @@ import {
 import ProgressBar from 'react-native-progress/Bar'
 import { Icon } from 'react-native-elements'
 import { NO_VERIFICATION, MID_VERIFICATION } from '../../../../utils/constants/constants'
-import styles from './SendResult.styles'
+import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors'
 import { API_GET_FIATPRICE, API_GET_TRANSACTIONS, ELECTRUM, DLIGHT, API_GET_BALANCES } from "../../../../utils/constants/intervalConstants"
 
@@ -210,85 +210,146 @@ class SendResult extends Component {
 
   renderTransactionResult = () => {
     clearTimeout(this.timeoutTimer);
-    return(
-      <View style={styles.root}>
-        <Text style={styles.verifiedLabel}>Sent</Text>
-        <View style={styles.rect} />
-        <ScrollView style={{width:"100%", height:"100%"}}>
-          <View style={styles.infoBox}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Status:</Text>
-              <Text style={styles.infoText}>Success!</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Amount Sent:</Text>
-              <Text style={styles.infoText}>{truncateDecimal(satsToCoins(this.state.amount), 8) + ' ' + this.state.coinObj.id}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>From:</Text>
-              <Text style={styles.addressText}>{this.state.fromAddress}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>To:</Text>
-              <Text style={styles.addressText}>{this.state.toAddress}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>{this.state.coinObj.id === 'BTC' ? 'Fee/byte: ' : 'Fee: '}</Text>
-              <Text style={styles.infoText}>{satsToCoins(this.state.fee) + ' ' + this.state.coinObj.id}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>ID:</Text>
-              <Text style={styles.addressText}>{this.state.txid}</Text>
-            </View>
-            <TouchableOpacity onPress={this.copyTxIDToClipboard}>
-              <Icon name="content-copy" size={25} color={Colors.quaternaryColor}/>
-            </TouchableOpacity>
+    return (
+      <React.Fragment>
+        <View style={Styles.headerContainer}>
+          <View style={Styles.centerContainer}>
+            <Text
+              style={{
+                ...Styles.mediumCentralPaddedHeader,
+                ...Styles.successText,
+              }}
+            >
+              {'Sent'}
+            </Text>
           </View>
-          <View style={styles.buttonContainer}>
-            { explorers[this.state.coinObj.id] &&
-              <StandardButton style={styles.explBtn} title="Explorer" onPress={() => this.openExplorer()} />
-            }
-            <StandardButton style={styles.homeBtn} 
-            title="Home" 
-            onPress={() => {this.navigateToScreen(this.state.coinObj, "Home")}}/>
+        </View>
+        <ScrollView
+          contentContainerStyle={{
+            ...Styles.centerContainer,
+            ...Styles.innerHeaderFooterContainer
+          }}
+          style={Styles.secondaryBackground}
+        >
+          <View style={Styles.wideBlock}>
+            <View style={Styles.infoTable}>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>From:</Text>
+                <View style={Styles.infoTableCell}>
+                  <Text style={Styles.blockTextAlignRight}>
+                    {this.state.fromAddress}
+                  </Text>
+                </View>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>To:</Text>
+                <View style={Styles.infoTableCell}>
+                  <Text style={Styles.blockTextAlignRight}>
+                    {this.state.toAddress}
+                  </Text>
+                </View>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>Balance:</Text>
+                <Text style={Styles.infoTableCell}>
+                  {truncateDecimal(this.state.balance, 8) +
+                    " " +
+                    this.state.coinObj.id}
+                </Text>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>
+                  Amount Sent:
+                </Text>
+                <Text style={Styles.infoTableCell}>
+                  {truncateDecimal(
+                    satsToCoins(this.state.amount),
+                    8
+                  ) +
+                    " " +
+                    this.state.coinObj.id}
+                </Text>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>{this.state.coinObj.id === 'BTC' ? 'Fee/byte: ' : 'Fee: '}</Text>
+                <Text style={Styles.infoTableCell}>{satsToCoins(this.state.fee) + ' ' + this.state.coinObj.id}</Text>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>ID:</Text>
+                <View style={Styles.infoTableCell}>
+                  <Text style={{...Styles.blockTextAlignRight, ...Styles.linkText}} onPress={this.copyTxIDToClipboard}>
+                    {this.state.txid}
+                  </Text>
+                </View>
+              </View>
+            </View>
           </View>
         </ScrollView>
-      </View>
-    )
+        <View style={Styles.footerContainer}>
+          <View style={Styles.standardWidthSpaceBetweenBlock}>
+            <StandardButton
+              color={Colors.linkButtonColor}
+              title="DETAILS"
+              onPress={() => this.openExplorer()}
+            />
+            <StandardButton
+              color={Colors.linkButtonColor}
+              title="HOME"
+              onPress={() => {this.navigateToScreen(this.state.coinObj, "Home")}}
+            />
+          </View>
+        </View>
+      </React.Fragment>
+    );
   }
 
   renderError = () => {
     clearTimeout(this.timeoutTimer);
-    return(
-      <View style={styles.root}>
-        <Text style={styles.errorLabel}>Error</Text>
-        <View style={styles.rect} />
-        <ScrollView style={{width:"100%", height:"100%"}}>
-          <View style={styles.infoBox}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Status:</Text>
-              <Text style={styles.infoText}>Error</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Error Type:</Text>
-              <Text style={styles.addressText}>{this.state.err}</Text>
+    return (
+      <React.Fragment>
+        <View style={Styles.headerContainer}>
+          <View style={Styles.centerContainer}>
+            <Text style={{...Styles.mediumCentralPaddedHeader, ...Styles.errorText}}>Error</Text>
+          </View>
+        </View>
+        <ScrollView
+          contentContainerStyle={{
+            ...Styles.centerContainer,
+            ...Styles.innerHeaderFooterContainer,
+          }}
+          style={Styles.secondaryBackground}
+        >
+        <View style={Styles.wideBlock}>
+          <View style={Styles.infoTable}>
+            <View style={Styles.infoTableRow}>
+              <Text style={Styles.infoTableHeaderCell}>Error Type:</Text>
+              <View style={Styles.infoTableCell}>
+                <Text style={Styles.blockTextAlignRight}>
+                  {this.state.err}
+                </Text>
+              </View>
             </View>
           </View>
-          <View style={styles.buttonContainer}>
-            <StandardButton style={styles.homeBtn} 
-            title="Home" 
-            onPress={() => {this.navigateToScreen(this.state.coinObj, "Home")}}/>
           </View>
         </ScrollView>
-      </View>
-    )
+        <View style={Styles.footerContainer}>
+          <View style={Styles.fullWidthFlexCenterBlock}>
+            <StandardButton
+              color={Colors.linkButtonColor}
+              title="HOME"
+              onPress={() => {this.navigateToScreen(this.state.coinObj, "Home")}}
+            />
+          </View>
+        </View>
+      </React.Fragment>
+    );
   }
 
   renderLoading = () => {
     return(
-      <View style={styles.loadingRoot}>
-        <ProgressBar progress={this.state.loadingProgress} width={200} color='#2E86AB'/>
-        <Text style={styles.loadingLabel}>{this.state.loadingMessage}</Text>
+      <View style={Styles.focalCenter}>
+        <ProgressBar progress={this.state.loadingProgress} width={200} color={Colors.linkButtonColor}/>
+        <Text style={Styles.mediumCentralPaddedHeader}>{this.state.loadingMessage}</Text>
       </View>
     )
   }

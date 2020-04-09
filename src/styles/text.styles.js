@@ -21,6 +21,13 @@ export default text = {
     fontFamily: "Avenir-Medium",
     paddingVertical: 16
   },
+  mediumCentralPaddedHeader: {
+    fontSize: 24,
+    color: Colors.quaternaryColor,
+    textAlign: "center",
+    fontFamily: "Avenir-Medium",
+    paddingVertical: 16
+  },
   greyStripeHeader: {
     width: "100%",
     backgroundColor: Colors.tertiaryColor,
@@ -32,6 +39,12 @@ export default text = {
   },
   errorText: {
     color: Colors.warningButtonColor,
+  },
+  successText: {
+    color: Colors.successButtonColor,
+  },
+  warningText: {
+    color: Colors.infoButtonColor,
   },
   seedWord: {
     fontSize: 32,

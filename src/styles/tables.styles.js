@@ -12,7 +12,11 @@ export default tables = {
   },
   infoTableCell: {
     fontSize: 16,
-    color: Colors.quaternaryColor
+    color: Colors.quaternaryColor,
+    flex: 1,
+    alignItems: 'flex-end',
+    textAlign: 'right',
+    paddingTop: 1
   },
   infoTableHeaderCell: {
     fontSize: 16,

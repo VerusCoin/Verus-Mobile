@@ -16,7 +16,8 @@ import { satsToCoins, truncateDecimal, coinsToSats } from '../../utils/math';
 import ProgressBar from 'react-native-progress/Bar';
 import { NavigationActions } from 'react-navigation';
 import { NO_VERIFICATION, MID_VERIFICATION } from '../../utils/constants/constants'
-import styles from './ConfirmSend.styles'
+import Styles from '../../styles/index'
+import Colors from "../../globals/colors";
 
 const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
@@ -88,9 +89,8 @@ class ConfirmSend extends Component {
         clearInterval(this.loadingInterval);
       } else {
         let feeTakenFromAmount = res.result.feeTakenFromAmount
-        let balanceCoins = satsToCoins(balance)
         let finalTxAmount = feeTakenFromAmount ? res.result.value : (res.result.value + coinsToSats(Number(res.result.fee)))
-        let remainingBalance = balanceCoins - satsToCoins(finalTxAmount)
+        let remainingBalance = balance - satsToCoins(finalTxAmount)
         clearInterval(this.loadingInterval);
 
         if (res.result.feeTakenFromAmount) {
@@ -120,7 +120,7 @@ class ConfirmSend extends Component {
           utxoCrossChecked: res.result.utxoVerified,
           coinObj: coinObj,
           activeUser: activeUser,
-          balance: balanceCoins,
+          balance,
           memo: memo,
           remainingBalance: remainingBalance,
           finalTxAmount: finalTxAmount,
@@ -202,104 +202,189 @@ class ConfirmSend extends Component {
 
   renderTransactionInfo = () => {
     clearTimeout(this.timeoutTimer);
-    return(
-      <View style={styles.root}>
-        <Text style={styles.verifiedLabel}>Verified</Text>
-        <View style={styles.rect} />
-        <ScrollView style={{width:"100%", height:"100%"}}>
-          <View style={styles.infoBox}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Status:</Text>
-              <Text style={styles.infoText}>Verified!</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>From:</Text>
-              <Text style={styles.addressText}>{this.state.fromAddress}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>To:</Text>
-              <Text style={styles.addressText}>{this.state.toAddress}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Balance:</Text>
-              <Text style={styles.infoText}>{truncateDecimal(this.state.balance, 8) + ' ' + this.state.coinObj.id}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Amount Submitted:</Text>
-              <Text style={styles.infoText}>{truncateDecimal(satsToCoins(this.state.amountSubmitted), 8) + ' ' + this.state.coinObj.id}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Fee:</Text>
-              <Text style={styles.infoText}>{this.state.fee + ' ' + this.state.coinObj.id}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Tx Amount:</Text>
-              <Text style={this.state.feeTakenFromAmount ? styles.warningText : styles.infoText}>{truncateDecimal(satsToCoins(this.state.finalTxAmount), 8) + ' ' + this.state.coinObj.id}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Balance After Tx:</Text>
-              <Text style={styles.infoText}>{truncateDecimal(this.state.remainingBalance, 8) + ' ' + this.state.coinObj.id}</Text>
-            </View>
-            { this.state.memo && 
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Note:</Text>
-              <Text style={styles.addressText}>{this.state.memo}</Text>
-            </View>
-            }
-            { !this.state.utxoCrossChecked &&
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Warning:</Text>
-              <Text style={styles.addressText}>Funds only verified on one server, proceed at own risk!</Text>
-            </View>
-            }
+    return (
+      <React.Fragment>
+        <View style={Styles.headerContainer}>
+          <View style={Styles.centerContainer}>
+            <Text
+              style={{
+                ...Styles.mediumCentralPaddedHeader,
+                ...Styles.successText,
+              }}
+            >
+              {'Confirm'}
+            </Text>
           </View>
-          <View style={styles.buttonContainer}>
-          <StandardButton style={styles.cancelBtn} 
-            title="CANCEL" 
-            onPress={this.cancel}/>
-          <StandardButton style={styles.confirmBtn} 
-            title="SEND" 
-            onPress={this.sendTx}/>
+        </View>
+        <ScrollView
+          contentContainerStyle={{
+            ...Styles.centerContainer,
+            ...Styles.innerHeaderFooterContainer
+          }}
+          style={Styles.secondaryBackground}
+        >
+          <View style={Styles.wideBlock}>
+            <View style={Styles.infoTable}>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>From:</Text>
+                <View style={Styles.infoTableCell}>
+                  <Text style={Styles.blockTextAlignRight}>
+                    {this.state.fromAddress}
+                  </Text>
+                </View>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>To:</Text>
+                <View style={Styles.infoTableCell}>
+                  <Text style={Styles.blockTextAlignRight}>
+                    {this.state.toAddress}
+                  </Text>
+                </View>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>Balance:</Text>
+                <Text style={Styles.infoTableCell}>
+                  {truncateDecimal(this.state.balance, 8) +
+                    " " +
+                    this.state.coinObj.id}
+                </Text>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>
+                  Amount Submitted:
+                </Text>
+                <Text style={Styles.infoTableCell}>
+                  {truncateDecimal(
+                    satsToCoins(this.state.amountSubmitted),
+                    8
+                  ) +
+                    " " +
+                    this.state.coinObj.id}
+                </Text>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>Fee:</Text>
+                <Text style={Styles.infoTableCell}>
+                  {this.state.fee + " " + this.state.coinObj.id}
+                </Text>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>Tx Amount:</Text>
+                <Text
+                  style={
+                    this.state.feeTakenFromAmount
+                      ? { ...Styles.infoTableCell, ...Styles.warningText }
+                      : Styles.infoTableCell
+                  }
+                >
+                  {truncateDecimal(
+                    satsToCoins(this.state.finalTxAmount),
+                    8
+                  ) +
+                    " " +
+                    this.state.coinObj.id}
+                </Text>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>
+                  Balance After Tx:
+                </Text>
+                <Text style={Styles.infoTableCell}>
+                  {truncateDecimal(this.state.remainingBalance, 8) +
+                    " " +
+                    this.state.coinObj.id}
+                </Text>
+              </View>
+              {this.state.memo && (
+                <View style={Styles.infoTableRow}>
+                  <Text style={Styles.infoTableHeaderCell}>Note:</Text>
+                  <View style={Styles.infoTableCell}>
+                    <Text style={Styles.blockTextAlignRight}>
+                      {this.state.memo}
+                    </Text>
+                  </View>
+                </View>
+              )}
+              {!this.state.utxoCrossChecked && (
+                <View style={Styles.infoTableRow}>
+                  <Text style={Styles.infoTableHeaderCell}>Warning:</Text>
+                  <View style={Styles.infoTableCell}>
+                    <Text style={{...Styles.blockTextAlignRight, ...Styles.warningText}}>
+                      {
+                        "Funds only verified on one server, proceed at own risk!"
+                      }
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
           </View>
         </ScrollView>
-      </View>
-    )
+        <View style={Styles.footerContainer}>
+          <View style={Styles.standardWidthSpaceBetweenBlock}>
+            <StandardButton
+              color={Colors.warningButtonColor}
+              title="BACK"
+              onPress={this.cancel}
+            />
+            <StandardButton
+              color={Colors.successButtonColor}
+              title="SEND"
+              onPress={this.sendTx}
+            />
+          </View>
+        </View>
+      </React.Fragment>
+    );
   }
 
   renderError = () => {
     clearTimeout(this.timeoutTimer);
-    return(
-      <View style={styles.root}>
-        <Text style={styles.errorLabel}>Error</Text>
-        <View style={styles.rect} />
-        <ScrollView style={{width:"100%", height:"100%"}}>
-          <View style={styles.infoBox}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Status:</Text>
-              <Text style={styles.infoText}>Error</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Error Type:</Text>
-              <Text style={styles.addressText}>{this.state.err}</Text>
+    return (
+      <React.Fragment>
+        <View style={Styles.headerContainer}>
+          <View style={Styles.centerContainer}>
+            <Text style={{...Styles.mediumCentralPaddedHeader, ...Styles.errorText}}>Error</Text>
+          </View>
+        </View>
+        <ScrollView
+          contentContainerStyle={{
+            ...Styles.centerContainer,
+            ...Styles.innerHeaderFooterContainer,
+          }}
+          style={Styles.secondaryBackground}
+        >
+        <View style={Styles.wideBlock}>
+          <View style={Styles.infoTable}>
+            <View style={Styles.infoTableRow}>
+              <Text style={Styles.infoTableHeaderCell}>Error Type:</Text>
+              <View style={Styles.infoTableCell}>
+                <Text style={Styles.blockTextAlignRight}>
+                  {this.state.err}
+                </Text>
+              </View>
             </View>
           </View>
-          <View style={styles.buttonContainer}>
-            <StandardButton 
-            style={styles.cancelBtn} 
-            title="Back" 
-            onPress={this.cancel}
-            />
           </View>
         </ScrollView>
-      </View>
-    )
+        <View style={Styles.footerContainer}>
+          <View style={Styles.fullWidthFlexCenterBlock}>
+            <StandardButton
+              color={Colors.warningButtonColor}
+              title="BACK"
+              onPress={this.cancel}
+            />
+          </View>
+        </View>
+      </React.Fragment>
+    );
   }
 
   renderLoading = () => {
     return(
-      <View style={styles.loadingRoot}>
-        <ProgressBar progress={this.state.loadingProgress} width={200} color='#2E86AB'/>
-        <Text style={styles.loadingLabel}>{this.state.loadingMessage}</Text>
+      <View style={Styles.focalCenter}>
+        <ProgressBar progress={this.state.loadingProgress} width={200} color={Colors.linkButtonColor}/>
+        <Text style={Styles.mediumCentralPaddedHeader}>{this.state.loadingMessage}</Text>
       </View>
     )
   }
