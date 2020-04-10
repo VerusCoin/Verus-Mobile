@@ -160,9 +160,12 @@ class Home extends Component {
     this.resetToScreen('CoinMenus', 'Overview');
   }
 
+  _handleIdentity = () => {
+    let navigation = this.props.navigation ; 
+    navigation.navigate("Identity");
+  }
   _addCoin = () => {
     let navigation = this.props.navigation  
-
     navigation.navigate("AddCoin", { refresh: this.refresh });
   }
 
@@ -186,6 +189,9 @@ class Home extends Component {
           />
         }
       >
+        <TouchableOpacity onPress={this._handleIdentity}>
+          <Text>Identity</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={this._verusPay}>
           <ListItem
             title={<Text style={Styles.listItemLeftTitleDefault}>VerusPay</Text>}
