@@ -1,4 +1,5 @@
 import Home from './Home/View';
+import PersonalInformation from './PersonalInformation/View';
 
 export default [
   {
@@ -12,7 +13,7 @@ export default [
     key: 'Personal information',
     label: 'Personal information',
     pressColor: 'rgba(255, 255, 255, 0.16)',
-    screen: Home,
+    screen: PersonalInformation,
     icon: 'user-circle',
   },
 ];

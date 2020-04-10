@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 import Colors from '../../globals/colors';
 import GlobalStyles from '../../globals/globalStyles';
 
-export default styles = StyleSheet.create({
+export default StyleSheet.create({
   root: {
     flex: 1,
     elevation: 5,

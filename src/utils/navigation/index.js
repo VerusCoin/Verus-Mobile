@@ -38,6 +38,9 @@ import ManageWyreProofOfAddress from '../../containers/BuySellCrypto/PaymentMeth
 import ManageWyreAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreAddress';
 import SendTransaction from '../../containers/BuySellCrypto/PaymentMethod/SendTransaction/SendTransaction';
 import Identity from '../../containers/Identity/View';
+import ScanBadge from '../../containers/Identity/Home/ScanBadge/View';
+import PersonalInformation from '../../containers/Identity/PersonalInformation/View';
+
 const WALLET = 'wallet';
 
 const styles = StyleSheet.create({
@@ -91,6 +94,13 @@ export const MainScreens =
     },
     Identity: {
       screen: Identity,
+    },
+    PersonalInformation: {
+      screen: PersonalInformation,
+    },
+  
+    ScanBadge: {
+      screen: ScanBadge,
       navigationOptions: {
         header: null,
         gesturesEnabled: false,
@@ -100,7 +110,6 @@ export const MainScreens =
         },
       },
     },
-    
     ConfirmSend: {
       screen: ConfirmSend,
       navigationOptions: {
