@@ -15,6 +15,10 @@ export default StyleSheet.create({
         color: 'white',
         fontWeight: 'bold',
     },
+    textBadge: {
+        marginTop: "10%",
+        fontSize: 18,
+    },
     scanToVerifyBtn: {
         flexDirection: 'row',
         backgroundColor: Colors.linkButtonColor,
@@ -22,6 +26,11 @@ export default StyleSheet.create({
         padding: 10,
         marginRight: '55%',
         alignItems:'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.8,
+        shadowRadius: 2,  
+        elevation: 5
     },
     icon: {
         color: '#d6cccb',

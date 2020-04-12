@@ -21,8 +21,7 @@ export default StyleSheet.create({
     elevation: 0,
     flexDirection: 'column',
     justifyContent: 'center',
-    backgroundColor: 'white',
-    borderTopWidth: 0.2,
+    backgroundColor: '#f0f0f0',
     borderTopColor: Colors.quinaryColor,
   },
   bottomMenuLabelStyle: {
@@ -37,4 +36,7 @@ export default StyleSheet.create({
   activeTabIconStyle: {
     color: Colors.linkButtonColor,
   },
+  bottomNavigation:{
+    backgroundColor:'#f0f0f0',
+  }
 });

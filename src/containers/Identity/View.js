@@ -9,7 +9,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 const Identity = ({ navigation }) => {
     const [activeTab, setActiveTab] = useState(tabs[0]);
     const renderIcon = (icon, isActive) => () => (
-     <Icon size={22}  name={icon} style={isActive ? [styles.iconStyle, styles.activeTabIconStyle] : styles.iconStyle} />
+     <Icon size={25}  name={icon} style={isActive ? [styles.iconStyle, styles.activeTabIconStyle] : styles.iconStyle} />
     );
     const renderTabItem = ({ tab, isActive }) => (
         <FullTab
@@ -34,6 +34,7 @@ const Identity = ({ navigation }) => {
                 renderTab={renderTabItem}
                 tabs={tabs}
                 activeTab={activeTab.key}
+                style={styles.bottomNavigation}
             />
         </View>
     );
