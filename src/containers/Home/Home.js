@@ -162,7 +162,7 @@ class Home extends Component {
 
   _handleIdentity = () => {
     let navigation = this.props.navigation ; 
-    navigation.navigate("Identity");
+    navigation.navigate("Identity", { selectedScreen: "Identity" } );
   }
   _addCoin = () => {
     let navigation = this.props.navigation  
@@ -189,9 +189,6 @@ class Home extends Component {
           />
         }
       >
-        <TouchableOpacity onPress={this._handleIdentity}>
-          <Text>Identity</Text>
-        </TouchableOpacity>
         <TouchableOpacity onPress={this._verusPay}>
           <ListItem
             title={<Text style={Styles.listItemLeftTitleDefault}>VerusPay</Text>}
@@ -202,6 +199,19 @@ class Home extends Component {
             containerStyle={Styles.bottomlessListItemContainer}
           />
         </TouchableOpacity>
+        {activeCoinsForUser.some(coin => coin.id === "VRSC") && (
+          <TouchableOpacity onPress={this._handleIdentity}>
+          <ListItem
+            title={<Text style={Styles.listItemLeftTitleDefault}>Identity</Text>}
+            hideChevron
+            leftAvatar={{
+              source: require("../../images/customIcons/verusPay.png")
+            }}
+
+            containerStyle={Styles.bottomlessListItemContainer}
+          />
+        </TouchableOpacity>
+        )}
         <FlatList
           data={activeCoinsForUser}
           scrollEnabled={false}

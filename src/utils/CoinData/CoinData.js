@@ -39,6 +39,29 @@ const getDefaultApps = (coinName, canBuySell = false) => {
   })
 }
 
+const identityApp = {
+  identity: {
+    title: 'Identity App',
+    data: [
+      {
+        screen: 'Home',
+        icon: 'account-balance-wallet',
+        name: 'Identity',
+        key: 'Home',
+        color: Colors.primaryColor
+        //Verus Blue
+      },
+      {
+        screen: 'Home',
+        icon: 'account-balance-wallet',
+        name: 'Personal Information',
+        key: 'Personal information',
+        color: Colors.primaryColor
+      },
+    ]
+  }
+}
+
 export const explorers = {
   KMD: 'https://kmdexplorer.io',
   OOT: 'https://explorer.utrum.io',
@@ -78,7 +101,11 @@ export const findCoinObj = (id, userName) => {
 
     if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
       const DEFAULT_APPS = getDefaultApps(coinObj.name)
-      coinObj.apps = DEFAULT_APPS.apps
+      if (coinObj.id === "VRSC") {
+        coinObj.apps = {...identityApp, ...DEFAULT_APPS.apps};
+      } else {
+        coinObj.apps = DEFAULT_APPS.apps;
+      }
       if (!coinObj.defaultApp) coinObj.defaultApp = DEFAULT_APPS.defaultApp
     } else if (!coinObj.defaultApp) {
       coinObj.defaultApp = Object.keys(coinObj.apps)[0]

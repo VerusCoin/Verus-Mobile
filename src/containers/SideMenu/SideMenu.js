@@ -54,6 +54,15 @@ class SideMenu extends Component {
     });
   };
 
+  _openApp = (coinObj, screen, section) => {
+    if (section.title === "Identity App") {
+      let navigation = this.props.navigation;
+      navigation.navigate("Identity", { selectedScreen: screen} );
+    } else {
+      this._openCoin(coinObj, screen, section)
+    }
+  }
+
   _openCoin = (coinObj, screen, section) => {
     let sectionName = getKeyByValue(section, coinObj.apps)
     let index = 0;
@@ -196,10 +205,10 @@ class SideMenu extends Component {
             leftIcon={{ name: item.icon, size: 30 }}
             containerStyle={Styles.bottomlessListItemContainer}
             onPress={() => {
-              this._openCoin(
+              this._openApp(
                 this.props.activeCoinsForUser[this.state.currentCoinIndex],
                 item.name,
-                section
+                section,
               );
             }}
           />
