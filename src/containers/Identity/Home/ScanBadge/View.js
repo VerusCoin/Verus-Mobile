@@ -11,7 +11,7 @@ import Styles from '../../../../styles/index';
 
 const ScanBadge = ({ navigation }) => {
   const onSuccess = (e) => {
-   //TODO
+    navigation.navigate('ScannedInformation');
   }
   const errorHandler = (error) => {
     Alert.alert("Error", error);

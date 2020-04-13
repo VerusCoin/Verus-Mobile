@@ -4,7 +4,7 @@ export default StyleSheet.create({
     root: {
         flex: 1,
         marginTop: "20%",
-        marginLeft: '5%'
+        marginLeft: '5%',
     },
     textHeader: {
         paddingBottom: 20,

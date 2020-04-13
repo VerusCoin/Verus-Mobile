@@ -1,9 +1,9 @@
 import React from "react";
 import { StackNavigator, DrawerNavigator } from "react-navigation";
-import { StyleSheet, TouchableOpacity, Dimensions } from "react-native";
+import { StyleSheet, TouchableOpacity, Dimensions, Text } from "react-native";
 import { Icon } from "react-native-elements";
 import Colors from '../../globals/colors';
-
+import { Platform } from 'react-native'
 import SideMenu from '../../containers/SideMenu/SideMenu';
 
 import Login from '../../containers/Login/Login';
@@ -40,9 +40,21 @@ import SendTransaction from '../../containers/BuySellCrypto/PaymentMethod/SendTr
 import Identity from '../../containers/Identity/View';
 import ScanBadge from '../../containers/Identity/Home/ScanBadge/View';
 import PersonalInformation from '../../containers/Identity/PersonalInformation/View';
-
+import ScannedInformation from '../../containers/Identity/Home/ScannedInformation/View'
+import IconVector from 'react-native-vector-icons/Ionicons';
 const WALLET = 'wallet';
 
+
+const getBackButton = (navigation, title, navigateTo) => {
+  return (
+    <TouchableOpacity onPress={() =>
+      navigation.navigate(navigateTo)} style={styles.goBackBtn}>
+      <IconVector name={Platform.OS === 'ios' ? 'ios-arrow-back' : 'md-arrow-back'}
+        size={35} color={'white'} style={{ paddingLeft: 8 }} />
+      <Text style={styles.goBackBtnText}>{title}</Text>
+    </TouchableOpacity>
+  )
+}
 const styles = StyleSheet.create({
   header_title_noBack: {
     fontFamily: 'Avenir-Black',
@@ -67,8 +79,20 @@ const styles = StyleSheet.create({
   },
 
   menuButton: {
-    marginRight:15
+    marginRight: 15
+  },
+
+  goBackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+
+  goBackBtnText:{
+    color: 'white', 
+    paddingLeft: 10, 
+    fontSize: 18
   }
+
 });
 
 export const MainScreens =
@@ -94,20 +118,26 @@ export const MainScreens =
     },
     Identity: {
       screen: Identity,
+      navigationOptions: ({ navigation }) => ({
+        headerLeft: getBackButton(navigation, 'Home', 'Home')
+      })
     },
     PersonalInformation: {
       screen: PersonalInformation,
     },
-  
+
+    ScannedInformation: {
+      screen: ScannedInformation,
+      navigationOptions: ({ navigation }) => ({
+        headerLeft: getBackButton(navigation, 'Identity', 'Identity')
+      })
+
+    },
+
     ScanBadge: {
       screen: ScanBadge,
       navigationOptions: {
         header: null,
-        gesturesEnabled: false,
-        headerRight: null,
-        headerStyle: {
-          backgroundColor: 'white',
-        },
       },
     },
     ConfirmSend: {
@@ -273,21 +303,21 @@ export const MainScreens =
     },
   }, {
     headerMode: 'screen',
-    navigationOptions: ({navigation}) => ({
+    navigationOptions: ({ navigation }) => ({
       headerStyle: {
         backgroundColor: Colors.primaryColor,
       },
-      headerTitleStyle:{
+      headerTitleStyle: {
         fontFamily: 'Avenir-Black',
         fontWeight: 'normal',
         fontSize: 22,
         color: Colors.secondaryColor
       },
       headerRight: (
-      <TouchableOpacity onPress={() =>
-        navigation.navigate('DrawerOpen')} style={styles.menuButton}>
-        <Icon name="menu" size={35} color={Colors.secondaryColor}/>
-      </TouchableOpacity>),
+        <TouchableOpacity onPress={() =>
+          navigation.navigate('DrawerOpen')} style={styles.menuButton}>
+          <Icon name="menu" size={35} color={Colors.secondaryColor} />
+        </TouchableOpacity>),
       gesturesEnabled: false,
       headerTintColor: Colors.secondaryColor,
     }),
@@ -297,7 +327,7 @@ export const SignedOut = StackNavigator({
   SignIn: {
     screen: Login,
     navigationOptions: {
-        header: null
+      header: null
     }
   },
   RecoverSeed: {
@@ -330,12 +360,12 @@ export const SignedOut = StackNavigator({
 });
 
 export const SignedOutNoKey = StackNavigator({
-    SignIn: {
-      screen: SignUp,
-      navigationOptions: {
-        header: null
-      }
-    },
+  SignIn: {
+    screen: SignUp,
+    navigationOptions: {
+      header: null
+    }
+  },
 });
 
 export const Loading = StackNavigator({
@@ -380,14 +410,14 @@ export const RootNavigator = (hasAccount, loading, signedIn) => {
         }
       }
     }, {
-      contentComponent: SideMenu,
-      drawerWidth: 250,
-      drawerPosition: 'right',
-      drawerOpenRoute: 'DrawerOpen',
-      drawerCloseRoute: 'DrawerClose',
-      drawerToggleRoute: 'DrawerToggle',
-      mode: "modal",
-      initialRouteName: loading ? "Loading" : (hasAccount ? (signedIn ? "SignedIn" : "SignedOut") : "SignedOutNoKey")
-    }
+    contentComponent: SideMenu,
+    drawerWidth: 250,
+    drawerPosition: 'right',
+    drawerOpenRoute: 'DrawerOpen',
+    drawerCloseRoute: 'DrawerClose',
+    drawerToggleRoute: 'DrawerToggle',
+    mode: "modal",
+    initialRouteName: loading ? "Loading" : (hasAccount ? (signedIn ? "SignedIn" : "SignedOut") : "SignedOutNoKey")
+  }
   );
 };
