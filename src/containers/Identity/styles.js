@@ -12,8 +12,6 @@ export default StyleSheet.create({
     flex: 1,
     height: 20,
     margin: 3,
-    resizeMode: 'contain',
-    tintColor: Colors.darkGreyColor,
     color:'grey'
   },
   bottomMenuStyle: {

@@ -3,12 +3,11 @@ import Colors from '../../../globals/colors';
 export default StyleSheet.create({
     root: {
         flex: 1,
-        marginTop: "20%",
-        marginLeft: '5%',
+        padding: 16,
     },
     textHeader: {
         paddingBottom: 20,
-        fontSize: 30,
+        fontSize: 24,
     },
     text: {
         fontSize: 16,
@@ -25,11 +24,11 @@ export default StyleSheet.create({
         borderRadius: 8,
         padding: 10,
         marginRight: '55%',
-        alignItems:'center',
+        alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.8,
-        shadowRadius: 2,  
+        shadowRadius: 2,
         elevation: 5
     },
     icon: {

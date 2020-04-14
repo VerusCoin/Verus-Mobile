@@ -38,7 +38,8 @@ class VerusMobile extends React.Component {
     YellowBox.ignoreWarnings([
       "Warning: componentWillMount is deprecated",
       "Warning: componentWillReceiveProps is deprecated",
-      "Warning: componentWillUpdate is deprecated"
+      "Warning: componentWillUpdate is deprecated",
+      'RCTRootView cancelTouches', 
     ]);
   }
   
