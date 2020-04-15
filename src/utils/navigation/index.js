@@ -42,6 +42,7 @@ import ScanBadge from '../../containers/Identity/Home/ScanBadge/View';
 import PersonalInfo from '../../containers/Identity/PersonalInfo/View';
 import ScannedInformation from '../../containers/Identity/Home/ScannedInformation/View'
 import Claim from '../../containers/Identity/PersonalInfo/Claim/View';
+import ClaimDetails from '../../containers/Identity/PersonalInfo/Claim/ClaimDetails/View';
 import IconVector from 'react-native-vector-icons/Ionicons';
 const WALLET = 'wallet';
 
@@ -129,6 +130,10 @@ export const MainScreens =
 
     Claim: {
       screen: Claim,
+    },
+
+    ClaimDetails: {
+      screen: ClaimDetails,
     },
 
     ScannedInformation: {

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { SearchBar } from 'react-native-elements';
 import styles from './styles';
-import data from './mockData';
+import data from './claimCategoryData';
 import { ScrollView } from 'react-native-gesture-handler';
 
 const PersonalInfo = ({ navigation, actions }) => {
