@@ -39,8 +39,9 @@ import ManageWyreAddress from '../../containers/BuySellCrypto/PaymentMethod/Mana
 import SendTransaction from '../../containers/BuySellCrypto/PaymentMethod/SendTransaction/SendTransaction';
 import Identity from '../../containers/Identity/View';
 import ScanBadge from '../../containers/Identity/Home/ScanBadge/View';
-import PersonalInformation from '../../containers/Identity/PersonalInformation/View';
+import PersonalInfo from '../../containers/Identity/PersonalInfo/View';
 import ScannedInformation from '../../containers/Identity/Home/ScannedInformation/View'
+import Claim from '../../containers/Identity/PersonalInfo/Claim/View';
 import IconVector from 'react-native-vector-icons/Ionicons';
 const WALLET = 'wallet';
 
@@ -87,9 +88,9 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
 
-  goBackBtnText:{
-    color: 'white', 
-    paddingLeft: 10, 
+  goBackBtnText: {
+    color: 'white',
+    paddingLeft: 10,
     fontSize: 18
   }
 
@@ -122,8 +123,12 @@ export const MainScreens =
         headerLeft: getBackButton(navigation, 'Home', 'Home')
       })
     },
-    PersonalInformation: {
-      screen: PersonalInformation,
+    PersonalInfo: {
+      screen: PersonalInfo,
+    },
+
+    Claim: {
+      screen: Claim,
     },
 
     ScannedInformation: {
