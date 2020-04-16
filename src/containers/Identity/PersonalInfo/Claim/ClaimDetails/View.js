@@ -39,6 +39,10 @@ const ClaimDetails = ({ navigation, actions }) => {
         setValue(value);
     }
 
+    const goToAttestationDetails = (id) => {
+        navigation.navigate('AttestationDetails', { id: id });
+    };
+
     return (
         <View style={styles.root}>
             <SearchBar
@@ -55,7 +59,7 @@ const ClaimDetails = ({ navigation, actions }) => {
                         <ListItem
                             key={item.id}
                             title={item.contentRootKey}
-                            //  onPress={goToClaimDetails}
+                            onPress={() => goToAttestationDetails(item.id)}
                             bottomDivider
                             chevron
                         />
@@ -63,7 +67,7 @@ const ClaimDetails = ({ navigation, actions }) => {
                     }
                 </View>
                 <View style={{ paddingVertical: 50 }}>
-                    {isParent ? <Text style={{ paddingHorizontal: 16 }}>Child Claims</Text> : <Text>Parent Claims</Text>}
+                    {isParent ? <Text style={{ paddingHorizontal: 16 }}>Child Claims</Text> : <Text style={{ paddingHorizontal: 16 }}>Parent Claims</Text>}
                     {claims.map(item =>
                         <ListItem
                             key={item.id}
