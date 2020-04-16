@@ -44,6 +44,8 @@ import ScannedInformation from '../../containers/Identity/Home/ScannedInformatio
 import Claim from '../../containers/Identity/PersonalInfo/Claim/View';
 import ClaimDetails from '../../containers/Identity/PersonalInfo/Claim/ClaimDetails/View';
 import AttestationDetails from '../../containers/Identity/Home/AttestationDetails/View';
+import AddIdentity from '../../containers/Identity/AddIdentity/View';
+
 import IconVector from 'react-native-vector-icons/Ionicons';
 const WALLET = 'wallet';
 
@@ -127,6 +129,9 @@ export const MainScreens =
     },
     PersonalInfo: {
       screen: PersonalInfo,
+    },
+    AddIdentity: {
+      screen: AddIdentity,
     },
 
     AttestationDetails: {

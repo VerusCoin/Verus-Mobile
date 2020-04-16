@@ -8,6 +8,7 @@ export default StyleSheet.create({
     textHeader: {
         paddingBottom: 20,
         fontSize: 24,
+        paddingRight:10 ,
     },
     text: {
         fontSize: 16,
