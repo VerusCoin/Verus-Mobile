@@ -28,7 +28,7 @@ const AddIdentity = ({ navigation, actions }) => {
                     onChangeText={text => handleOnChange(text)}
                     value={name}
                     style={styles.input}
-                    placeholder="Identity..."
+                    placeholder="Identity@"
                 />
                 <TouchableOpacity style={styles.add}>
                     <Text style={{color:'white'}}>Add identity</Text>

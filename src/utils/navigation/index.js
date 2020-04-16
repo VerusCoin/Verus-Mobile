@@ -50,10 +50,10 @@ import IconVector from 'react-native-vector-icons/Ionicons';
 const WALLET = 'wallet';
 
 
-const getBackButton = (navigation, title, navigateTo) => {
+const getBackButton = (navigation, title, navigateTo, parms) => {
   return (
     <TouchableOpacity onPress={() =>
-      navigation.navigate(navigateTo)} style={styles.goBackBtn}>
+      navigation.navigate(navigateTo, parms)} style={styles.goBackBtn}>
       <IconVector name={Platform.OS === 'ios' ? 'ios-arrow-back' : 'md-arrow-back'}
         size={35} color={'white'} style={{ paddingLeft: 8 }} />
       <Text style={styles.goBackBtnText}>{title}</Text>
@@ -124,7 +124,7 @@ export const MainScreens =
     Identity: {
       screen: Identity,
       navigationOptions: ({ navigation }) => ({
-        headerLeft: getBackButton(navigation, 'Home', 'Home')
+        headerLeft: getBackButton(navigation, 'Home', 'Home',)
       })
     },
     PersonalInfo: {
@@ -137,7 +137,7 @@ export const MainScreens =
     AttestationDetails: {
       screen: AttestationDetails,
     },
-    
+
     Claim: {
       screen: Claim,
     },
@@ -149,9 +149,8 @@ export const MainScreens =
     ScannedInformation: {
       screen: ScannedInformation,
       navigationOptions: ({ navigation }) => ({
-        headerLeft: getBackButton(navigation, 'Identity', 'Identity')
+        headerLeft: getBackButton(navigation, 'Identity', 'Identity', { selectedScreen: "Identity" })
       })
-
     },
 
     ScanBadge: {

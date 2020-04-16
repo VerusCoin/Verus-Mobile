@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/AntDesign';
 import data from './mockData';
 
 const ScannedInformation = ({ navigation }) => {
+    
     return (
         <View style={styles.root}>
             <View style={styles.check}>

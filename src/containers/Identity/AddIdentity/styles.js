@@ -35,7 +35,7 @@ export default StyleSheet.create({
     },
     identities: {
         backgroundColor:
-            '#d6cccb',
+            '#b5b5b5',
         marginVertical: '2%',
         paddingVertical: 10,
         borderRadius: 5,

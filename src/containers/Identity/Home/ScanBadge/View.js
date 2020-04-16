@@ -18,8 +18,9 @@ const ScanBadge = ({ navigation }) => {
     cancelHandler()
   }
 
-  const cancelHandler = () => {
-    navigation.goBack();
+  const nextHandler = () => {
+    //navigation.goBack();
+    navigation.navigate('ScannedInformation');
   }
   return (
     <View style={Styles.blackRoot}>
@@ -30,8 +31,8 @@ const ScanBadge = ({ navigation }) => {
         cameraStyle={Styles.fullHeight}
       />
       <TouchableOpacity style={{ ...Styles.footerContainer, ...Styles.blackRoot }}
-        onPress={cancelHandler}>
-        <Text style={styles.cancelBtn}>Cancel</Text>
+        onPress={nextHandler}>
+        <Text style={styles.cancelBtn}>Next</Text>
       </TouchableOpacity>
     </View>
   );
