@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import styles from './styles';
 import data from './identitiesData';
-import Colors from '../../../globals/colors';
+import uuid from 'react-uuid';
 
 const AddIdentity = ({ navigation, actions }) => {
     const [identities, setIdentity] = useState(data);
@@ -12,13 +12,26 @@ const AddIdentity = ({ navigation, actions }) => {
         setName(name);
     };
 
-    const selectIdentity = (id) => {
-    //set flag selected Identity
-   // navigation.navigate('Identity');
+    const handleAdd = () => {
+        if (name) {
+            if (!name.includes('@')) {
+                setIdentity([...identities, ...[{
+                    id: uuid(),
+                    name: `${name}@`,
+                }]]);
+
+            } else {
+                setIdentity([...identities, ...[{
+                    id: uuid(),
+                    name: name,
+                }]]);
+            }
+            setName(null);
+        }
     };
 
-    const addIdentity = (id) => {
-      //AddIdentity to local db
+    const selectIdentity = () => {
+        navigation.navigate('Identity', { selectedScreen: "Identity"});
     };
 
     return (
@@ -30,26 +43,26 @@ const AddIdentity = ({ navigation, actions }) => {
                     style={styles.input}
                     placeholder="Identity@"
                 />
-                <TouchableOpacity style={styles.add}>
-                    <Text style={{color:'white'}}>Add identity</Text>
+                <TouchableOpacity style={styles.add} onPress={handleAdd}>
+                    <Text style={{ color: 'white' }}>Add identity</Text>
                 </TouchableOpacity>
-            </View>
-            <Text style={{color:'#d6cccb'}}>AVAILABLE IDENTITIES</Text>
+            </View >
+            <Text style={{ color: '#d6cccb' }}>AVAILABLE IDENTITIES</Text>
             <View >
                 {identities.map(item =>
                     <TouchableOpacity
                         key={item.id}
-                    
+
                         style={styles.identities}
-                        onPress={() => selectIdentity(item.id)}>
+                        onPress={() => selectIdentity(item.name)}>
                         <View>
-                            <Text style={{paddingLeft:5}}>{item.name}</Text>
+                            <Text style={{ paddingLeft: 5 }}>{item.name}</Text>
                         </View>
                     </TouchableOpacity>
                 )
                 }
             </View>
-        </View>
+        </View >
     );
 };
 
