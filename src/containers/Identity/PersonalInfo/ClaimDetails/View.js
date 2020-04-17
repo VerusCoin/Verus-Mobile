@@ -27,14 +27,18 @@ const claimsData = [
 const ClaimDetails = (props) => {
   const {
     navigation,
-    actions: { setActiveAttestationId },
+    actions: { setActiveAttestationId, setActiveClaim },
     attestationsData,
+    childClaims,
+    parentClaims,
   } = props;
 
   const [attestations, setAttestation] = useState(attestationsData);
-  const [claims, setClaims] = useState([]);
-  const [isParent, setIsParent] = useState(false);
   const [value, setValue] = useState("");
+
+  useEffect(() => {
+    setAttestation(attestationsData);
+  }, [attestationsData])
 
   const updateSearch = (value) => {
     const newData = attestationsData.filter((item) => {
@@ -44,6 +48,9 @@ const ClaimDetails = (props) => {
     });
     setAttestation(newData);
     setValue(value);
+  };
+  const getClaimsDetails = (claim) => {
+    setActiveClaim(claim);
   };
 
   const goToAttestationDetails = (activeAttestationId) => {
@@ -78,22 +85,31 @@ const ClaimDetails = (props) => {
           ))}
         </View>
         <View style={{ paddingVertical: 50 }}>
-          {isParent ? (
-            <Text style={{ paddingHorizontal: 16 }}>Child Claims</Text>
-          ) : (
-            <Text style={{ paddingHorizontal: 16 }}>Parent Claims</Text>
-          )}
-          {claimsData.map((item) => (
+          {childClaims.size > 0 ?
+            <Text style={{ paddingHorizontal: 16 }}>Child Claims</Text> : null}
+          {childClaims.keySeq().map((item) => (
             <ListItem
-              key={item.id}
+              key={childClaims.getIn([item, 'id'])}
               contentContainerStyle={styles.claims}
-              title={item.name}
+              title={childClaims.getIn([item, 'name'])}
+              titleStyle={{ fontSize: 15 }}
+              onPress={() => getClaimsDetails(childClaims.get(item))}
+            />
+          ))
+          }
+          {parentClaims.size > 0 ?
+            <Text style={{ paddingHorizontal: 16 }}>Parent Claims</Text> : null}
+          {parentClaims.keySeq().map((item) => (
+            <ListItem
+              key={parentClaims.getIn([item, 'id'])}
+              contentContainerStyle={styles.claims}
+              title={parentClaims.getIn([item, 'name'])}
               titleStyle={{ fontSize: 15 }}
             />
           ))}
         </View>
       </ScrollView>
-    </View>
+    </View >
   );
 };
 

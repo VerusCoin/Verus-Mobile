@@ -25,6 +25,8 @@ const selectActiveCategory = createSelector(
   (claimCategoryId, claimCategories) => claimCategories.filter((claimCategory) => claimCategory.get('id', '') === claimCategoryId)
 );
 
+
+
 export const selectClaimsByCategoryId = createSelector(
   [selectActiveClaimCategoryId, selectActiveCategory, selectClaims],
   (activeCategoryId, activeCategory, claims) => claims.filter((claim) =>
@@ -36,6 +38,17 @@ const selectAttestations = (state) =>
 
 const selectActiveClaim = (state) => state.identity.getIn(["personalInformation", "activeClaim"], IMap());
 
+export const selectParentClaimsById = createSelector(
+  [selectClaims, selectActiveClaim],
+  (claims, activeClaim) => claims.filter((claim) =>
+  activeClaim.get('parent_claims').includes(claim.get('id')))
+);
+
+export const selectChildClaimsById = createSelector(
+  [selectClaims, selectActiveClaim],
+  (claims, activeClaim) => claims.filter((claim) =>
+  activeClaim.get('child_claims').includes(claim.get('id')))
+);
 export const selectAttestationsObject = (state) => state.identity.getIn(["personalInformation", "attestations"], IMap());
 
 export const selectAttestationsByClaimId = createSelector(

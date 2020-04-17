@@ -1,18 +1,24 @@
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import { selectAttestationsByClaimId, selectClaimsByCategoryId } from '../../../../selectors/identity';
-import { setActiveAttestationId } from '../../../../actions/actionCreators';
+import {
+  selectAttestationsByClaimId, selectClaimsByCategoryId,
+  selectParentClaimsById, selectChildClaimsById
+} from '../../../../selectors/identity';
+import { setActiveAttestationId, setActiveClaim } from '../../../../actions/actionCreators';
 
 const mapStateToProps = (state) => ({
   attestationsData: selectAttestationsByClaimId(state),
   claims: selectClaimsByCategoryId(state),
+  childClaims: selectChildClaimsById(state),
+  parentClaims: selectParentClaimsById(state),
 });
 
 const mapDispatchToProps = dispatch => ({
   actions: bindActionCreators(
     {
-      setActiveAttestationId
+      setActiveAttestationId,
+      setActiveClaim,
     },
     dispatch
   ),

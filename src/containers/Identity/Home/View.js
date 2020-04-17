@@ -48,9 +48,10 @@ const Home = (props) => {
                         <TouchableOpacity
                             key={pinnedAttestations.getIn([attestationKey, 'id'], '')}
                             onPress={() => goToAttestationDetails(pinnedAttestations.getIn([attestationKey, 'id'], ''))}
+                            style={styles.attestation}
                             >
                             <View>
-                                <Text>{pinnedAttestations.getIn([attestationKey, 'identity_attested'], '')}</Text>
+                                <Text style={{paddingLeft:16}}>{pinnedAttestations.getIn([attestationKey, 'identity_attested'], '')}</Text>
                             </View>
                         </TouchableOpacity>
                     ))}

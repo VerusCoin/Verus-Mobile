@@ -124,7 +124,7 @@ export const MainScreens =
     Identity: {
       screen: Identity,
       navigationOptions: ({ navigation }) => ({
-        headerLeft: getBackButton(navigation, 'Home', 'Home',)
+        headerLeft: getBackButton(navigation, 'Home', 'Home')
       })
     },
     PersonalInfo: {
@@ -136,6 +136,12 @@ export const MainScreens =
 
     AttestationDetails: {
       screen: AttestationDetails,
+      navigationOptions: ({ navigation }) => {
+        return {
+          title: navigation.state.params.claimName,
+          headerLeft: getBackButton(navigation, 'Identity', 'Identity',{ selectedScreen: "Identity" })
+        }
+      }
     },
 
     ClaimDetails: {
@@ -149,11 +155,11 @@ export const MainScreens =
 
     ClaimCategory: {
       screen: ClaimCategory,
-      navigationOptions: ({ navigation }) => {
-        return {
-          title: navigation.state.params.claimCategoryName,
-          headerLeft: getBackButton(navigation, 'Identity', 'Identity')
-        }}
+      // navigationOptions: ({ navigation }) => {
+      //   return {
+      //     title: navigation.state.params.claimCategoryName,
+      //     headerLeft: getBackButton(navigation, 'Identity', 'Identity')
+      //   }}
     },
     ScannedInformation: {
       screen: ScannedInformation,
