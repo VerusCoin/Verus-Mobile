@@ -1,9 +1,9 @@
 import { normalize, schema } from 'normalizr';
 
-const identities = new schema.Entity('identities', { idAttribute: 'name' });
-const claimCategory = new schema.Entity('claimCategories', { idAttribute: 'id' });
-const claims = new schema.Entity('claims', { idAttribute: 'id' });
-const attestations = new schema.Entity('attestations', { idAttribute: 'id' });
+const identities = new schema.Entity('identities');
+const claimCategory = new schema.Entity('claimCategories');
+const claims = new schema.Entity('claims');
+const attestations = new schema.Entity('attestations');
 
 export const normalizedIdentities = (identityData) => normalize(identityData, [identities]);
 export const normalizedCategories = (categoryData) => normalize(categoryData, [claimCategory]);

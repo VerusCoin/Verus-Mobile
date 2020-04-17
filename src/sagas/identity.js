@@ -1,7 +1,6 @@
 import { all, takeLatest, call, put, select } from "redux-saga/effects";
-import { fromJS } from 'immutable';
 import {
-  storeActiveIdentity,
+  // storeActiveIdentity,
   getIdentities,
   storeSeedIdentities,
   storeSeedClaimCategories,
@@ -88,6 +87,7 @@ function* handleChangeActiveIdentity(action){
   yield put(deselectActiveIdentity(selectedIdentityId));
   yield put(setNewActiveIdentity(action.payload.newActiveIdentityId, action.payload.newActiveIdentity));
   yield call(updateIdentityStorage)
+  yield call(handleSetActiveIdentity)
 }
 
 function* handleReceiveSeedData() {
@@ -107,6 +107,7 @@ function* handleReceiveSeedData() {
 }
 
 function* handleToggleAttestation() {
+  // COMBAK
   const selectedAttestations = yield select(selectAttestationsObject);
   const updatedAttestations = yield call(denormalizedAttestations, selectedAttestations.toJS())
   yield call(updateAttestations, updatedAttestations)

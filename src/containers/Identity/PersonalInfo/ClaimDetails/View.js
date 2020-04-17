@@ -7,23 +7,6 @@ import { ListItem } from "react-native-elements";
 
 import styles from "./styles";
 
-const claimsData = [
-  {
-    id: "firstName",
-    name: "COVID-19",
-    claimCategoryId: "healthCare",
-    parentClaims: [1, 2],
-    childClaims: [],
-  },
-  {
-    id: "lastName",
-    name: "Blood Type",
-    claimCategoryId: "healthCare",
-    parentClaims: [],
-    childClaims: [3, 4, 5],
-  },
-];
-
 const ClaimDetails = (props) => {
   const {
     navigation,

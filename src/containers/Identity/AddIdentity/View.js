@@ -2,12 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import styles from './styles';
 import { Map as IMap } from 'immutable';
-// import data from './identitiesData';
-// import uuid from 'react-uuid';
 
 const AddIdentity = (props) => {
     const { navigation, actions, identities, activeIdentity } = props;
-    // const [identities, setIdentity] = useState(data);
     const [name, setName] = useState('');
 
     const handleOnChange = (name) => {
@@ -15,14 +12,9 @@ const AddIdentity = (props) => {
     };
 
     const handleAdd = () => {
-        if (name !== '') {
-            if (!name.includes('@')) {
-                actions.addNewIdentityName(`${name}@`)
-            } else {
-                actions.addNewIdentityName(name)
-            }
-            setName(null);
-        }
+        if (!name) return
+        actions.addNewIdentityName(name.includes('@') ? name : `${name}@`);
+        setName('')
     };
 
     const selectIdentity = (identity) => {

@@ -58,7 +58,7 @@ export const identity = (state = defaultState, action) => {
         claimCategoriesIds: action.payload.claimCategories.result,
       }));
     case SET_ATTESTATIONS:
-      return state.mergeIn(["personalInformation", "attestations"], fromJS({
+      return state.setIn(["personalInformation", "attestations"], fromJS({
         byId: action.payload.attestations.entities.attestations,
         attestationIds: action.payload.attestations.result,
       }));

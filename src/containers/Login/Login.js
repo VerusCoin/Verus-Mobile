@@ -35,8 +35,6 @@ import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import StandardButton from "../../components/StandardButton";
 import PasswordInput from '../../components/PasswordInput'
-import { removeIdentityData } from '../../utils/asyncStore/identityStorage';
-import { TouchableHighlight } from "react-native-gesture-handler";
 
 class Login extends Component {
   constructor(props) {
@@ -140,10 +138,6 @@ class Login extends Component {
     this.setState({selectedAccount: account})
   }
 
-  clearIdentityStorage = () => {
-    removeIdentityData();
-  }
-
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -158,7 +152,6 @@ class Login extends Component {
           />
           <Text style={Styles.centralHeader}>Select an Account</Text>
           <Dropdown
-            //containerStyle={styles.dropDown}
             containerStyle={Styles.standardWidthBlock}
             labelExtractor={(item, index) => {
               return item.id;
