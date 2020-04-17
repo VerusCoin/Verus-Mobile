@@ -1,37 +1,46 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import styles from './styles';
-import data from './identitiesData';
-import uuid from 'react-uuid';
+import { Map as IMap } from 'immutable';
+// import data from './identitiesData';
+// import uuid from 'react-uuid';
 
-const AddIdentity = ({ navigation, actions }) => {
-    const [identities, setIdentity] = useState(data);
+const AddIdentity = (props) => {
+    const { navigation, actions, identities, activeIdentity } = props;
+    // const [identities, setIdentity] = useState(data);
     const [name, setName] = useState('');
 
     const handleOnChange = (name) => {
         setName(name);
     };
 
+    // const handleAdd = () => {
+    //     if (name) {
+    //         if (!name.includes('@')) {
+    //             setIdentity([...identities, ...[{
+    //                 id: uuid(),
+    //                 name: `${name}@`,
+    //             }]]);
+
+    //         } else {
+    //             setIdentity([...identities, ...[{
+    //                 id: uuid(),
+    //                 name: name,
+    //             }]]);
+    //         }
+    //         setName(null);
+    //     }
+    // };
+
     const handleAdd = () => {
-        if (name) {
-            if (!name.includes('@')) {
-                setIdentity([...identities, ...[{
-                    id: uuid(),
-                    name: `${name}@`,
-                }]]);
+        console.log('aa')
+    }
 
-            } else {
-                setIdentity([...identities, ...[{
-                    id: uuid(),
-                    name: name,
-                }]]);
-            }
-            setName(null);
+    const selectIdentity = (identity) => {
+        if (activeIdentity) {
+            navigation.navigate('Identity', { selectedScreen: "Identity"});
         }
-    };
-
-    const selectIdentity = () => {
-        navigation.navigate('Identity', { selectedScreen: "Identity"});
+        actions.setActiveIdentity(identity);
     };
 
     return (
@@ -49,14 +58,13 @@ const AddIdentity = ({ navigation, actions }) => {
             </View >
             <Text style={{ color: '#d6cccb' }}>AVAILABLE IDENTITIES</Text>
             <View >
-                {identities.map(item =>
+                {identities.keySeq().map(identity =>
                     <TouchableOpacity
-                        key={item.id}
-
+                        key={identities.getIn([identity, 'id'], '')}
                         style={styles.identities}
-                        onPress={() => selectIdentity(item.name)}>
+                        onPress={() => selectIdentity(identities.get(identity, IMap()))}>
                         <View>
-                            <Text style={{ paddingLeft: 5 }}>{item.name}</Text>
+                            <Text style={{ paddingLeft: 5 }}>{identities.getIn([identity, 'id'], '')}</Text>
                         </View>
                     </TouchableOpacity>
                 )

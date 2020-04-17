@@ -12,6 +12,7 @@ import { updates } from './updates'
 import { responseHeaders } from './responseHeaders'
 import { errors } from './errors'
 import { coinOverview } from './gui/coinOverview'
+import { identity } from './identity';
 
 export default combineReducers({
   authentication,
@@ -26,5 +27,6 @@ export default combineReducers({
   updates,
   errors,
   responseHeaders,
-  coinOverview
+  coinOverview,
+  identity,
 });

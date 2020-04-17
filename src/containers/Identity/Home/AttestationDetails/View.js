@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, Switch } from 'react-native';
 import styles from './styles';
 import QRCode from 'react-native-qrcode-svg';
@@ -6,19 +6,18 @@ import Colors from '../../../../globals/colors'
 
 const awesomeLink = 'http://awesome.link.qr';
 
-const AttestationDetails = ({ navigation, actions }) => {
-    const [isEnabled, setIsEnabled] = useState(false);
-    const setEnable = () => {
-        if (isEnabled)
-            setIsEnabled(false);
-        else
-            setIsEnabled(true);
+const AttestationDetails = (props) => {
+    const { attestation, activeAttestationId, actions: { toggleAttestationPin }} = props;
+
+    const toggleSwitch = (value) => {
+        toggleAttestationPin(attestation.getIn([activeAttestationId, 'id'], ''), value)
     }
+
     return (
         <View style={styles.root}>
             <View style={{ alignItems: 'center'}}>
                 <View style={{ backgroundColor: Colors.successButtonColor, paddingHorizontal: '14%', borderRadius: 5, paddingVertical: 16 }}>
-                    <Text style={{ color: 'white', fontSize: 15 }}>COVID-19 Recovered</Text>
+                    <Text style={{ color: 'white', fontSize: 15 }}>{attestation.getIn([activeAttestationId, 'id'], '')}</Text>
                 </View>
                 <View style={{ marginVertical: '10%' }}>
                     <QRCode
@@ -30,12 +29,11 @@ const AttestationDetails = ({ navigation, actions }) => {
                     <Text style={{ paddingHorizontal: 10 }}>Pin attestation</Text>
                     <Switch
                         trackColor={{ false: "#767577", true: Colors.linkButtonColor }}
-                        onValueChange={setEnable}
-                        value={isEnabled}
+                        onValueChange={toggleSwitch}
+                        value={attestation.getIn([activeAttestationId, 'showOnHomeScreen'])}
                     />
                 </View>
             </View>
-
         </View>
     ); Í
 };

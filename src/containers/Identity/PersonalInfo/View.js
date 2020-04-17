@@ -1,21 +1,25 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { SearchBar } from 'react-native-elements';
-import styles from './styles';
-import data from './claimCategoryData';
 import { ScrollView } from 'react-native-gesture-handler';
+import { setActiveClaimCategory } from '../../../actions/actionCreators';
+import styles from './styles';
 
-const PersonalInfo = ({ navigation, actions }) => {
-    const [categories, setCategories] = useState(data);
-    const [value, setValue] = useState('');
+const PersonalInfo = (props) => {
+    const { claimCategories, navigation } = props;
+    const [categories, setCategories ] = useState(claimCategories);
+    const [value,setValue] = useState('');
 
-    const goToClaims = (id) => {
-        navigation.navigate('Claim', { id: id });
+    const goToClaims = (claimCategoryId, claimCategoryName) => {
+        navigation.navigate('ClaimCategory', {
+            claimCategoryName,
+        })
+        props.dispatch(setActiveClaimCategory(claimCategoryId))
     };
 
     const updateSearch = (value) => {
-        const newData = data.filter(function (item) {
-            const itemData = item.name ? item.name.toUpperCase() : ''.toUpperCase();
+        const newData = claimCategories.filter((claimCategory) => {
+            const itemData = claimCategory.get('name', '').toUpperCase();
             const textData = value.toUpperCase();
             return itemData.indexOf(textData) > -1;
         });
@@ -35,13 +39,13 @@ const PersonalInfo = ({ navigation, actions }) => {
             />
             <ScrollView>
                 <View style={styles.categoriesContainer}>
-                    {categories.map(item =>
+                    {categories.keySeq().map(item =>
                         <TouchableOpacity
-                            key={item.id}
+                            key={categories.getIn([item, 'id'], '')}
                             style={styles.category}
-                            onPress={() => goToClaims(item.id)}>
+                            onPress={() => goToClaims(categories.getIn([item, 'id'], ''), categories.getIn([item, 'name'], ''))}>
                             <View>
-                                <Text style={styles.name}>{item.name}</Text>
+                                <Text style={styles.name}>{categories.getIn([item, 'name'], '')}</Text>
                             </View>
                         </TouchableOpacity>
                     )

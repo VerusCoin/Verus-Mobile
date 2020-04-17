@@ -39,12 +39,12 @@ import ManageWyreAddress from '../../containers/BuySellCrypto/PaymentMethod/Mana
 import SendTransaction from '../../containers/BuySellCrypto/PaymentMethod/SendTransaction/SendTransaction';
 import Identity from '../../containers/Identity/View';
 import ScanBadge from '../../containers/Identity/Home/ScanBadge/View';
-import PersonalInfo from '../../containers/Identity/PersonalInfo/View';
 import ScannedInformation from '../../containers/Identity/Home/ScannedInformation/View'
-import Claim from '../../containers/Identity/PersonalInfo/Claim/View';
-import ClaimDetails from '../../containers/Identity/PersonalInfo/Claim/ClaimDetails/View';
-import AttestationDetails from '../../containers/Identity/Home/AttestationDetails/View';
-import AddIdentity from '../../containers/Identity/AddIdentity/View';
+import PersonalInfo from '../../containers/Identity/PersonalInfo/';
+import ClaimDetails from '../../containers/Identity/PersonalInfo/ClaimDetails';
+import ClaimCategory from '../../containers/Identity/PersonalInfo/ClaimCategoryDetails'
+import AttestationDetails from '../../containers/Identity/Home/AttestationDetails';
+import AddIdentity from '../../containers/Identity/AddIdentity';
 
 import IconVector from 'react-native-vector-icons/Ionicons';
 const WALLET = 'wallet';
@@ -138,14 +138,23 @@ export const MainScreens =
       screen: AttestationDetails,
     },
 
-    Claim: {
-      screen: Claim,
-    },
-
     ClaimDetails: {
       screen: ClaimDetails,
+      // navigationOptions: ({ navigation }) => {
+      //   return {
+      //     title: navigation.state.params.claimName,
+      //     headerLeft: getBackButton(navigation, 'Identity', 'Identity')
+      //   }}
     },
 
+    ClaimCategory: {
+      screen: ClaimCategory,
+      navigationOptions: ({ navigation }) => {
+        return {
+          title: navigation.state.params.claimCategoryName,
+          headerLeft: getBackButton(navigation, 'Identity', 'Identity')
+        }}
+    },
     ScannedInformation: {
       screen: ScannedInformation,
       navigationOptions: ({ navigation }) => ({

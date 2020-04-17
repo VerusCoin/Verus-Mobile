@@ -51,7 +51,19 @@ import {
   SET_COIN_STATUS,
   SIGN_IN_USER,
   AUTHENTICATE_USER,
-  SET_COINMENU_FOCUS
+  SET_COINMENU_FOCUS,
+  REQUEST_SEED_DATA,
+  SET_ACTIVE_IDENTITY,
+  STORE_IDENTITIES,
+  SET_CLAIMS,
+  SET_CLAIM_CATEGORIES,
+  SET_ATTESTATIONS,
+  SET_ACTIVE_CLAIM_CATEGORY_ID,
+  TOGGLE_ATTESTATION_PIN,
+  GET_ACTIVE_IDENTITY,
+  SET_ACTIVE_ATTESTATION_ID,
+  SET_ACTIVE_CLAIM,
+  SET_IDENTITIES,
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -390,4 +402,57 @@ export const getTransactionHistoryResponse = (history = {}) => ({
   payload: {
     history,
   }
+});
+
+export const requestSeedData = () => ({
+  type: REQUEST_SEED_DATA,
+});
+
+export const setActiveIdentity = (identity) => ({
+  type: SET_ACTIVE_IDENTITY,
+  payload: { identity },
+});
+
+export const storeIdentities = () => ({
+  type: STORE_IDENTITIES
+});
+
+export const setClaims = (claims) => ({
+  type: SET_CLAIMS,
+  payload: { claims },
+});
+
+export const setClaimCategories = (claimCategories) => ({
+  type: SET_CLAIM_CATEGORIES,
+  payload: { claimCategories },
+});
+
+export const setAttestations = (attestations) => ({
+  type: SET_ATTESTATIONS,
+  payload: { attestations },
+});
+
+export const setActiveClaimCategory = (activeClaimCategoryId) => ({
+  type: SET_ACTIVE_CLAIM_CATEGORY_ID,
+  payload: { activeClaimCategoryId },
+});
+
+export const toggleAttestationPin = (attestationId, value) => ({
+  type: TOGGLE_ATTESTATION_PIN,
+  payload: { attestationId, value },
+});
+
+export const setActiveClaim = (activeClaim) => ({
+  type: SET_ACTIVE_CLAIM,
+  payload: { activeClaim },
+});
+
+export const setActiveAttestationId = (activeAttestationId) => ({
+  type: SET_ACTIVE_ATTESTATION_ID,
+  payload: { activeAttestationId },
+})
+
+export const setIdentities = (identities) => ({
+  type: SET_IDENTITIES,
+  payload: { identities },
 });

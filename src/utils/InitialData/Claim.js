@@ -1,0 +1,60 @@
+const claims = [
+  {
+    id: "firstName",
+    name: "First Name",
+    desc: "",
+    parent_claims: ["birthDate"],
+    child_claims: [],
+    local_key: "",
+  },
+  {
+    id: "lastName",
+    name: "Last Name",
+    desc: "",
+    parent_claims: ["birthDate"],
+    child_claims: [],
+    local_key: "",
+  },
+  {
+    id: "birthDate",
+    name: "Birth Date",
+    desc: "",
+    parent_claims: [],
+    child_claims: ["firstName", "lastName"],
+    local_key: "",
+  },
+  {
+    id: "bloodType",
+    name: "Blood Type",
+    desc: "",
+    parent_claims: ["healthConditions"],
+    child_claims: [],
+    local_key: "",
+  },
+  {
+    id: "healthConditions",
+    name: "Health Conditions",
+    desc: "",
+    parent_claims: [],
+    child_claims: ["bloodType"],
+    local_key: "",
+  },
+  {
+    id: "university",
+    name: "University",
+    desc: "",
+    parent_claims: [],
+    child_claims: [],
+    local_key: "",
+  },
+  {
+    id: "address",
+    name: "Address",
+    desc: "",
+    parent_claims: [],
+    child_claims: [],
+    local_key: "",
+  },
+];
+
+export default claims;
