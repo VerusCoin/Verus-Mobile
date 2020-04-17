@@ -65,6 +65,11 @@ export default containers = {
     paddingVertical: 16,
     alignSelf: 'center'
   },
+  standardWidthCenterBlock: {
+    width: '75%',
+    paddingVertical: 16,
+    alignSelf: 'center'
+  },
   wide: {
     width: '90%'
   },

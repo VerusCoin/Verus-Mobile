@@ -3,6 +3,7 @@ import { getParsedTransactionList } from '../../../../utils/api/channels/electru
 import { ERROR_TRANSACTIONS, SET_TRANSACTIONS } from '../../../../utils/constants/storeType'
 import { DLIGHT, ELECTRUM } from '../../../../utils/constants/intervalConstants'
 import { getCoinObj } from '../../../../utils/CoinData/CoinData'
+import { standardizeDlightTxObj } from '../../../../utils/standardization/standardizeTxObj'
 
 /**
  * Fetches the appropriate data from the store for the specified channel's transaction
@@ -23,6 +24,10 @@ export const updateTransactions = async (state, dispatch, channels, chainTicker)
       try {
         const zTransactions = await getZTransactions(chainTicker, accountHash, coinObj.proto)
         const { result, ...header } = zTransactions
+
+        //DELETE/DEBUG
+        console.log("Z TRANSACTIONS")
+        console.log(result.map(standardizeDlightTxObj))
         
         dispatch({
           type: SET_TRANSACTIONS,
@@ -30,7 +35,7 @@ export const updateTransactions = async (state, dispatch, channels, chainTicker)
             chainTicker,
             channel,
             header,
-            body: result
+            body: result.map(standardizeDlightTxObj)
           }
         });
         channelsPassed.push(channel)
@@ -42,6 +47,10 @@ export const updateTransactions = async (state, dispatch, channels, chainTicker)
       try {
         const transactions = await getParsedTransactionList(coinObj, activeUser, 10)
         const { result, ...header } = transactions
+
+        //DELETE/REFACTOR
+        console.log("ELECTRUM TRANSACTIONS")
+        console.log(transactions)
 
         dispatch({
           type: SET_TRANSACTIONS,
