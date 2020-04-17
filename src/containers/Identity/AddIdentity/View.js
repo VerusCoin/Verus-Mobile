@@ -14,33 +14,22 @@ const AddIdentity = (props) => {
         setName(name);
     };
 
-    // const handleAdd = () => {
-    //     if (name) {
-    //         if (!name.includes('@')) {
-    //             setIdentity([...identities, ...[{
-    //                 id: uuid(),
-    //                 name: `${name}@`,
-    //             }]]);
-
-    //         } else {
-    //             setIdentity([...identities, ...[{
-    //                 id: uuid(),
-    //                 name: name,
-    //             }]]);
-    //         }
-    //         setName(null);
-    //     }
-    // };
-
     const handleAdd = () => {
-        console.log('aa')
-    }
+        if (name !== '') {
+            if (!name.includes('@')) {
+                actions.addNewIdentityName(`${name}@`)
+            } else {
+                actions.addNewIdentityName(name)
+            }
+            setName(null);
+        }
+    };
 
     const selectIdentity = (identity) => {
         if (activeIdentity) {
             navigation.navigate('Identity', { selectedScreen: "Identity"});
         }
-        actions.setActiveIdentity(identity);
+            actions.changeActiveIdentity(identity.get('id', ''), identity)
     };
 
     return (

@@ -64,6 +64,11 @@ import {
   SET_ACTIVE_ATTESTATION_ID,
   SET_ACTIVE_CLAIM,
   SET_IDENTITIES,
+  ADD_NEW_IDENTITY_NAME,
+  ADD_NEW_IDENTITY,
+  CHANGE_ACTIVE_IDENTITY,
+  DESELECT_ACTIVE_IDENTITY,
+  SET_NEW_ACTIVE_IDENTITY,
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -456,3 +461,28 @@ export const setIdentities = (identities) => ({
   type: SET_IDENTITIES,
   payload: { identities },
 });
+
+export const addNewIdentityName = (identityName) => ({
+  type: ADD_NEW_IDENTITY_NAME,
+  payload: { identityName },
+});
+
+export const addNewIdentity = (identity) => ({
+  type: ADD_NEW_IDENTITY,
+  payload: { identity },
+})
+
+export const changeActiveIdentity = (newActiveIdentityId, newActiveIdentity) => ({
+  type: CHANGE_ACTIVE_IDENTITY,
+  payload: { newActiveIdentityId, newActiveIdentity},
+})
+
+export const deselectActiveIdentity = (activeIdentityId) => ({
+  type: DESELECT_ACTIVE_IDENTITY,
+  payload: { activeIdentityId },
+})
+
+export const setNewActiveIdentity = (newActiveIdentityId, newActiveIdentity) => ({
+  type: SET_NEW_ACTIVE_IDENTITY,
+  payload: { newActiveIdentityId, newActiveIdentity },
+})

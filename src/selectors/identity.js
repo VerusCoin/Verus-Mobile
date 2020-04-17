@@ -3,6 +3,8 @@ import { createSelector } from "reselect";
 
 export const selectIdentities = (state) => state.identity.getIn(["personalInformation", "identities", "byId"], IMap());
 
+export const selectIdentityObj = (state) => state.identity.getIn(["personalInformation", "identities"], IMap())
+
 export const selectActiveIdentity = (state) =>
   state.identity.getIn(["personalInformation", "activeIdentity"], IMap());
 

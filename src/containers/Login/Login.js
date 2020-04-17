@@ -156,7 +156,6 @@ class Login extends Component {
             }}
             resizeMode="contain"
           />
-          <TouchableHighlight onPress={this.clearIdentityStorage}><Text>KLIIIR</Text></TouchableHighlight>
           <Text style={Styles.centralHeader}>Select an Account</Text>
           <Dropdown
             //containerStyle={styles.dropDown}

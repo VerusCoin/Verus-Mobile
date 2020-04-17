@@ -11,6 +11,7 @@ import {
   getClaims,
   getAttestations,
   updateAttestations,
+  updateIdentities,
 } from "../utils/asyncStore/identityStorage";
 import {
   setActiveIdentity,
@@ -19,13 +20,19 @@ import {
   setClaims,
   setClaimCategories,
   storeIdentities,
+  addNewIdentity,
+  deselectActiveIdentity,
+  setNewActiveIdentity,
 } from "../actions/actionCreators";
-import { selectActiveIdentityId, selectAttestationsObject, selectIdentities } from "../selectors/identity";
+import { selectActiveIdentityId, selectAttestationsObject, selectIdentities, selectIdentityObj } from "../selectors/identity";
 import {
   REQUEST_SEED_DATA,
   SET_ACTIVE_IDENTITY,
   STORE_IDENTITIES,
   TOGGLE_ATTESTATION_PIN,
+  ADD_NEW_IDENTITY_NAME,
+  ADD_NEW_IDENTITY,
+  CHANGE_ACTIVE_IDENTITY,
 } from "../utils/constants/storeType";
 import {
   normalizedCategories,
@@ -33,14 +40,17 @@ import {
   normalizedAttestations,
   normalizedIdentities,
 } from "../utils/identityTransform/identityNormalizers";
-import { denormalizedAttestations } from '../utils/identityTransform/identityDenormalizers';
+import { denormalizedAttestations, denormalizedIdentities } from '../utils/identityTransform/identityDenormalizers';
 
 export default function* identitySaga() {
   yield all([
     takeLatest(REQUEST_SEED_DATA, handleSeedData),
     takeLatest(STORE_IDENTITIES, handleStoreIdentities),
     takeLatest(SET_ACTIVE_IDENTITY, handleSetActiveIdentity),
-    takeLatest(TOGGLE_ATTESTATION_PIN, handleToggleAttestation)
+    takeLatest(TOGGLE_ATTESTATION_PIN, handleToggleAttestation),
+    takeLatest(ADD_NEW_IDENTITY_NAME, handleAddNewIdentity),
+    takeLatest(ADD_NEW_IDENTITY, updateIdentityStorage),
+    takeLatest(CHANGE_ACTIVE_IDENTITY, handleChangeActiveIdentity),
   ]);
 }
 
@@ -73,6 +83,13 @@ function* handleSetActiveIdentity() {
   yield call(handleReceiveSeedData);
 }
 
+function* handleChangeActiveIdentity(action){
+  const selectedIdentityId = yield select(selectActiveIdentityId);
+  yield put(deselectActiveIdentity(selectedIdentityId));
+  yield put(setNewActiveIdentity(action.payload.newActiveIdentityId, action.payload.newActiveIdentity));
+  yield call(updateIdentityStorage)
+}
+
 function* handleReceiveSeedData() {
   const [categoriesFromStore, claimsFromStore, attestationsFromStore] = yield all([
     call(getClaimCategories),
@@ -93,4 +110,26 @@ function* handleToggleAttestation() {
   const selectedAttestations = yield select(selectAttestationsObject);
   const updatedAttestations = yield call(denormalizedAttestations, selectedAttestations.toJS())
   yield call(updateAttestations, updatedAttestations)
+}
+
+function* handleAddNewIdentity(action) {
+  const name = action.payload.identityName;
+
+  const newIdentity = {
+    [name]: {
+      id: name,
+      name: name,
+      primaryAddresses: ["3456789876543", "4567898765432"],
+      identityAddress: "3456789876543",
+      active: false,
+    }
+  }
+
+  yield put(addNewIdentity(newIdentity[name]))
+}
+
+function* updateIdentityStorage() {
+  const selectedIdentities = yield select(selectIdentityObj);
+  const identities = yield call(denormalizedIdentities, selectedIdentities.toJS());
+  yield call(updateIdentities, identities);
 }

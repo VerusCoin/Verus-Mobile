@@ -1,7 +1,7 @@
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import { setActiveIdentity } from '../../../actions/actionCreators';
+import { setActiveIdentity, addNewIdentityName, changeActiveIdentity} from '../../../actions/actionCreators';
 import { selectIdentities, selectActiveIdentityId } from '../../../selectors/identity';
 
 const mapStateToProps = (state) => ({
@@ -12,7 +12,9 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = dispatch => ({
   actions: bindActionCreators(
     {
-      setActiveIdentity
+      setActiveIdentity,
+      addNewIdentityName,
+      changeActiveIdentity,
     },
     dispatch
   ),

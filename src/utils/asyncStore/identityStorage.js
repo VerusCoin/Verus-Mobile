@@ -108,19 +108,27 @@ export const getAttestations = () => {
 };
 
 export const updateAttestations = (updatedAttestations) => {
-  console.log(updatedAttestations);
-  return;
-  // return new Promise((resolve, reject) => {
-  //   AsyncStorage.setItem("attestations", JSON.stringify(updatedAttestations))
-  //     .then(res => {
-  //       resolve(res);
-  //     })
-  //     .catch(err => reject(err));
-  // });
+  return new Promise((resolve, reject) => {
+    AsyncStorage.setItem("attestations", JSON.stringify(updatedAttestations.attestations))
+      .then(res => {
+        resolve(res);
+      })
+      .catch(err => reject(err));
+  });
 };
 
 export const removeIdentityData = () => {
   AsyncStorage.multiRemove(['identities', 'claimCategories', 'claims', 'attestations'], err => {
     console.log(err)
+  });
+}
+
+export const updateIdentities = (updatedIdentities) => {
+  return new Promise((resolve, reject) => {
+    AsyncStorage.setItem("identities", JSON.stringify(updatedIdentities.identities))
+      .then(res => {
+        resolve(res);
+      })
+      .catch(err => reject(err));
   });
 }

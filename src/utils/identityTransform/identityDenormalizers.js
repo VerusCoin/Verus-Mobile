@@ -9,10 +9,19 @@ const claimSchema = { claims: [claim] };
 const claimCategory = new schema.Entity("claimCategories");
 const claimCategorySchema = { claimCategories: [claimCategory] };
 
+const identity = new schema.Entity("identities");
+const identitySchema = { identities: [identity] };
+
+export const denormalizedIdentities = (entities) => denormalize(
+  { identities: entities.identityIds },
+  identitySchema,
+  { identities: entities.byId },
+);
+
 export const denormalizedAttestations = (entities) => denormalize(
   { attestations: entities.attestationIds },
   attestationSchema,
-  entities
+  { atestations: entities.byId }
 );
 
 export const denormalizedClaims = (entities) => denormalize({ claims: entities.claimIds }, claimSchema, entities);
