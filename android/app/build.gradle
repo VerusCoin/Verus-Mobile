@@ -199,7 +199,7 @@ dependencies {
     implementation "com.facebook.react:react-native:+"  // From node_modules
     implementation 'com.android.support:multidex:1.0.3'
 
- if (enable) {
+ if (enableHermes) {
       def hermesPath = "../../node_modules/hermes-engine/android/";
 
 
