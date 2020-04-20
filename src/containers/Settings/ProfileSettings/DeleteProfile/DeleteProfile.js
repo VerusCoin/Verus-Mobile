@@ -135,7 +135,6 @@ class DeleteProfile extends Component {
         labelStyle={Styles.formCenterLabel}
         containerStyle={Styles.wideCenterBlock}
         inputStyle={Styles.inputTextDefaultStyle}
-        underlineColorAndroid={Colors.quaternaryColor}
         onChangeText={(text) => this.setState({pwd: text})}
         autoCapitalize={"none"}
         autoCorrect={false}

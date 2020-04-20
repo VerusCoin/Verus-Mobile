@@ -146,7 +146,6 @@ class ResetPwd extends Component {
               labelStyle={Styles.formCenterLabel}
               containerStyle={Styles.wideCenterBlock}
               inputStyle={Styles.inputTextDefaultStyle}
-              underlineColorAndroid={Colors.quaternaryColor}
               onChangeText={(text) => this.setState({oldPwd: text})}
               autoCapitalize={"none"}
               autoCorrect={false}
@@ -166,7 +165,6 @@ class ResetPwd extends Component {
               labelStyle={Styles.formCenterLabel}
               containerStyle={Styles.wideCenterBlock}
               inputStyle={Styles.inputTextDefaultStyle}
-              underlineColorAndroid={Colors.quaternaryColor}
               onChangeText={(text) => this.setState({newPwd: text})}
               autoCapitalize={"none"}
               autoCorrect={false}
@@ -186,7 +184,6 @@ class ResetPwd extends Component {
               labelStyle={Styles.formCenterLabel}
               containerStyle={Styles.wideCenterBlock}
               inputStyle={Styles.inputTextDefaultStyle}
-              underlineColorAndroid={Colors.quaternaryColor}
               onChangeText={(text) => this.setState({confirmNewPwd: text})}
               autoCapitalize={"none"}
               autoCorrect={false}

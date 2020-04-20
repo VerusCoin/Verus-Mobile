@@ -158,7 +158,6 @@ class CreateSeed extends Component {
                   labelStyle={Styles.formCenterLabel}
                   containerStyle={Styles.fullWidthBlock}
                   label={`Enter word #${randomI + 1}:`}
-                  underlineColorAndroid={Colors.quinaryColor}
                   onChangeText={text => {
                     let newGuesses = [...wordGuesses];
 

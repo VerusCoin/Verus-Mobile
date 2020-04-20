@@ -328,7 +328,6 @@ class SignUp extends Component {
                   containerStyle={Styles.fullWidthBlock}
                   inputStyle={Styles.inputTextDefaultStyle}
                   label={"Enter a username:"}
-                  underlineColorAndroid={Colors.quinaryColor}
                   onChangeText={text => this.setState({ userName: text })}
                   autoCapitalize={"none"}
                   autoCorrect={false}
@@ -357,7 +356,6 @@ class SignUp extends Component {
                     labelStyle={Styles.formInputLabel}
                     label={"Enter an account password (min. 5 characters):"}
                     inputStyle={Styles.inputTextDefaultStyle}
-                    underlineColorAndroid={Colors.quinaryColor}
                     onChangeText={text => this.setState({ pin: text })}
                     autoCapitalize={"none"}
                     autoCorrect={false}
@@ -372,7 +370,6 @@ class SignUp extends Component {
                     labelStyle={Styles.formInputLabel}
                     label={"Confirm account password:"}
                     inputStyle={Styles.inputTextDefaultStyle}
-                    underlineColorAndroid={Colors.quinaryColor}
                     onChangeText={text => this.setState({ confirmPin: text })}
                     autoCapitalize={"none"}
                     autoCorrect={false}

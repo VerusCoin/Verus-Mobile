@@ -315,7 +315,6 @@ class SendCoin extends Component {
               <Input
                 labelStyle={Styles.formInputLabel}
                 label={"To:"}
-                underlineColorAndroid={Colors.quinaryColor}
                 onChangeText={text =>
                   this.setState({ toAddress: removeSpaces(text) })
                 }
@@ -334,7 +333,6 @@ class SendCoin extends Component {
               <Input
                 labelStyle={Styles.formInputLabel}
                 label={"Amount:"}
-                underlineColorAndroid={Colors.quinaryColor}
                 onChangeText={text => this.setState({ amount: text })}
                 onSubmitEditing={Keyboard.dismiss}
                 value={this.state.amount.toString()}

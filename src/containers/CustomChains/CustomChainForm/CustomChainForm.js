@@ -368,7 +368,6 @@ class CustomChainForm extends Component {
               labelStyle={Styles.formInputLabel}
               containerStyle={Styles.fullWidthBlock}
               inputStyle={Styles.inputTextDefaultStyle}
-              underlineColorAndroid={Colors.quinaryColor}
               onChangeText={(text) => this.updateTicker(text)}
               value={this.state.ticker}
               autoCapitalize={"none"}
@@ -388,7 +387,6 @@ class CustomChainForm extends Component {
               labelStyle={Styles.formInputLabel}
               containerStyle={Styles.fullWidthBlock}
               inputStyle={Styles.inputTextDefaultStyle}
-              underlineColorAndroid={Colors.quinaryColor}
               onChangeText={(text) => this.setState({name: text})}
               value={this.state.name}
               autoCapitalize={"none"}
@@ -407,7 +405,6 @@ class CustomChainForm extends Component {
               labelStyle={Styles.formInputLabel}
               containerStyle={Styles.fullWidthBlock}
               inputStyle={Styles.inputTextDefaultStyle}
-              underlineColorAndroid={Colors.quinaryColor}
               onChangeText={(text) => this.setState({description: text})}
               value={this.state.description}
               autoCapitalize={"none"}
@@ -436,7 +433,6 @@ class CustomChainForm extends Component {
                   </Text>
                 </View>
               }
-              underlineColorAndroid={Colors.quinaryColor}
               onChangeText={(text) => this.setState({defaultFee: text})}
               onSubmitEditing={Keyboard.dismiss}
               value={this.state.defaultFee.toString()}
@@ -466,7 +462,6 @@ class CustomChainForm extends Component {
               return (
                 <View key={index} style={Styles.fullWidthAlignCenterRowBlock}>
                     <Input 
-                      underlineColorAndroid={Colors.quinaryColor}
                       onChangeText={(text) => this.updateServer(text, index)}
                       onSubmitEditing={() => { Keyboard.dismiss() }}
                       value={this.state.servers[index]}

@@ -306,7 +306,6 @@ class ReceiveCoin extends Component {
             <TouchableOpacity onPress={copyAddressToClipboard}>
               <Input
                 labelStyle={Styles.formInputLabel}
-                underlineColorAndroid={Colors.quinaryColor}
                 editable={false}
                 value={address}
                 autoCapitalize={"none"}
@@ -321,7 +320,6 @@ class ReceiveCoin extends Component {
           </View>
           <View style={Styles.wideBlock}>
             <Input
-              underlineColorAndroid={Colors.quinaryColor}
               label={
                 <View style={Styles.startRow}>
                   <Text style={Styles.mediumFormInputLabel}>
@@ -362,7 +360,6 @@ class ReceiveCoin extends Component {
           <View style={Styles.wideBlock}>
             <Input
               labelStyle={Styles.formInputLabel}
-              underlineColorAndroid={Colors.quinaryColor}
               onChangeText={text => this.setState({ memo: text })}
               autoCapitalize={"none"}
               label={"Enter a note for the receiver (optional):"}
