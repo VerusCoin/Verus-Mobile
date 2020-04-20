@@ -1,5 +1,5 @@
 import Home from './Home/View';
-import PersonalInfo from './PersonalInfo/View';
+import PersonalInfo from './PersonalInfo';
 import Colors from '../../globals/colors';
 
 export default [

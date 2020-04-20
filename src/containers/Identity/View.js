@@ -9,16 +9,16 @@ import tabs from './tabs';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { selectActiveIdentityId } from '../../selectors/identity';
 
-const sizeIcon= 25;
+const sizeIcon = 25;
 
-const Identity = ({ navigation }) => {
+const Identity = ({ navigation, activeIdentity }) => {
     const [activeTab, setActiveTab] = useState(tabs[0]);
 
     const selectedTab = navigation.state.params.selectedScreen;
     const tabIndex = Object.keys(tabs).findIndex((tabKey) => tabs[tabKey].label.toLowerCase() === selectedTab.toLowerCase());
 
     const renderIcon = icon => () => (
-     <Icon size={sizeIcon}  name={icon} style={styles.iconStyle} />
+        <Icon size={sizeIcon} name={icon} style={styles.iconStyle} />
     );
 
     useEffect(() => {

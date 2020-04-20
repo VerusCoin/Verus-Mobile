@@ -27,8 +27,6 @@ const selectActiveCategory = createSelector(
   (claimCategoryId, claimCategories) => claimCategories.filter((claimCategory) => claimCategory.get('id', '') === claimCategoryId)
 );
 
-
-
 export const selectClaimsByCategoryId = createSelector(
   [selectActiveClaimCategoryId, selectActiveCategory, selectClaims],
   (activeCategoryId, activeCategory, claims) => claims.filter((claim) =>
