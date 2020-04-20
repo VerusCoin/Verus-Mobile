@@ -6,14 +6,16 @@ import styles from './styles';
 import tabs from './tabs';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
+const sizeIcon= 25;
+
 const Identity = ({ navigation }) => {
     const [activeTab, setActiveTab] = useState(tabs[0]);
 
     const selectedTab = navigation.state.params.selectedScreen;
     const tabIndex = Object.keys(tabs).findIndex((tabKey) => tabs[tabKey].label.toLowerCase() === selectedTab.toLowerCase());
 
-    const renderIcon = (icon, isActive) => () => (
-     <Icon size={25}  name={icon} style={isActive ? [styles.iconStyle, styles.activeTabIconStyle] : styles.iconStyle} />
+    const renderIcon = icon => () => (
+     <Icon size={sizeIcon}  name={icon} style={styles.iconStyle} />
     );
 
     useEffect(() => {
@@ -22,16 +24,12 @@ const Identity = ({ navigation }) => {
 
     const renderTabItem = ({ tab, isActive }) => (
         <FullTab
-            style={styles.bottomMenuStyle}
             isActive={isActive}
             key={tab.key}
             label={tab.label}
-            renderIcon={renderIcon(tab.icon, isActive)}
-            labelStyle={
-                isActive
-                    ? [styles.bottomMenuLabelStyle, styles.activeTabLabelStyle]
-                    : styles.bottomMenuLabelStyle
-            }
+            style={styles.bottomMenuStyle}
+            renderIcon={renderIcon(tab.icon)}
+            labelStyle={styles.bottomMenuLabelStyle}
         />
     );
     return (

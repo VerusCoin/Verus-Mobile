@@ -5,36 +5,24 @@ import GlobalStyles from '../../globals/globalStyles';
 export default StyleSheet.create({
   root: {
     flex: 1,
-    elevation: 5,
-    backgroundColor:'white'
+    backgroundColor: Colors.secondaryColor,
   },
   iconStyle: {
-    flex: 1,
-    height: 20,
-    margin: 3,
-    color:'grey'
+    color: Colors.secondaryColor,
   },
   bottomMenuStyle: {
-    flex: 1,
-    elevation: 0,
-    flexDirection: 'column',
+    flexDirection: 'row', 
+    alignSelf: 'center', 
     justifyContent: 'center',
-    backgroundColor: '#f0f0f0',
-    borderTopColor: Colors.quinaryColor,
   },
   bottomMenuLabelStyle: {
     fontSize: 12,
     fontFamily: GlobalStyles.AvenirBook,
-    color:  Colors.darkGreyColor,
-    fontWeight: '200',
+    color: Colors.secondaryColor,
+    fontWeight: 'bold',
+    padding: 8,
   },
-  activeTabLabelStyle: {
-    color: Colors.linkButtonColor,
-  },
-  activeTabIconStyle: {
-    color: Colors.linkButtonColor,
-  },
-  bottomNavigation:{
-    backgroundColor:'#f0f0f0',
+  bottomNavigation: {
+    backgroundColor: Colors.linkButtonColor,
   }
 });

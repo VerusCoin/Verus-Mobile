@@ -1,5 +1,6 @@
 import Home from './Home/View';
 import PersonalInfo from './PersonalInfo/View';
+import Colors from '../../globals/colors';
 
 export default [
   {
@@ -8,6 +9,7 @@ export default [
     pressColor: 'rgba(255, 255, 255, 0.16)',
     screen: Home,
     icon: 'home',
+    barColor: Colors.primaryColor,
   },
   {
     key: 'Personal information',
@@ -15,5 +17,6 @@ export default [
     pressColor: 'rgba(255, 255, 255, 0.16)',
     screen: PersonalInfo,
     icon: 'user-circle',
+    barColor: Colors.successButtonColor,
   },
 ];
