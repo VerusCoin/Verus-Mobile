@@ -31,7 +31,7 @@ export default StyleSheet.create({
         height: 40,
         borderColor: 'grey',
         borderWidth: 0.7,
-        paddingLeft: 5,
+        paddingLeft: 16,
     },
     identities: {
         backgroundColor:
@@ -48,5 +48,16 @@ export default StyleSheet.create({
         shadowRadius: 2,
         elevation: 2,
     },
+    textButton: {
+        color: 'white',
+        fontSize: 16,
+    },
+    label: {
+        color: '#d6cccb',
+    },
+    textIdentities: {
+        paddingLeft: 16,
+        fontSize: 16,
+    }
 
 });

@@ -27,10 +27,10 @@ export default StyleSheet.create({
         shadowRadius: 2,
     },
     claimsTitle: {
-        fontSize: 15,
+        fontSize: 16,
     },
     claimsText: {
-        paddingHorizontal: 16
+        paddingHorizontal: 16,
     },
     attestationContainer: {
         paddingHorizontal: 16,

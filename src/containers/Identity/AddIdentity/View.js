@@ -19,9 +19,9 @@ const AddIdentity = (props) => {
 
     const selectIdentity = (identity) => {
         if (activeIdentity) {
-            navigation.navigate('Identity', { selectedScreen: "Identity"});
+            navigation.navigate('Identity', { selectedScreen: "Identity" });
         }
-            actions.changeActiveIdentity(identity.get('id', ''), identity)
+        actions.changeActiveIdentity(identity.get('id', ''), identity)
     };
 
     return (
@@ -34,10 +34,10 @@ const AddIdentity = (props) => {
                     placeholder="Identity@"
                 />
                 <TouchableOpacity style={styles.add} onPress={handleAdd}>
-                    <Text style={{ color: 'white' }}>Add identity</Text>
+                    <Text style={styles.textButton}>Add identity</Text>
                 </TouchableOpacity>
             </View >
-            <Text style={{ color: '#d6cccb' }}>AVAILABLE IDENTITIES</Text>
+            <Text style={styles.label}>AVAILABLE IDENTITIES</Text>
             <View >
                 {identities.keySeq().map(identity =>
                     <TouchableOpacity
@@ -45,7 +45,7 @@ const AddIdentity = (props) => {
                         style={styles.identities}
                         onPress={() => selectIdentity(identities.get(identity, IMap()))}>
                         <View>
-                            <Text style={{ paddingLeft: 5 }}>{identities.getIn([identity, 'id'], '')}</Text>
+                            <Text style={styles.textIdentities}>{identities.getIn([identity, 'id'], '')}</Text>
                         </View>
                     </TouchableOpacity>
                 )

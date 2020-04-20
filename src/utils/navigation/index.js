@@ -132,6 +132,9 @@ export const MainScreens =
     },
     AddIdentity: {
       screen: AddIdentity,
+      navigationOptions: {
+        title: "Identity",
+      }
     },
 
     AttestationDetails: {

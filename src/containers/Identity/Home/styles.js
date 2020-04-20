@@ -51,7 +51,9 @@ export default StyleSheet.create({
         elevation: 2,
     },
     attestationText: {
-        paddingLeft: 16
+        paddingLeft: 16,
+        fontSize: 16,
+
     },
     identityContainer: {
         flexDirection: 'row',
