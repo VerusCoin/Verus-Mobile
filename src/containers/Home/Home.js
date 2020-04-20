@@ -290,7 +290,6 @@ createWallet = (coinId, coinTicker, accountHash) => {
   const string = coinId + coinTicker + accountHash;
   this.setState({ samsarray: [...this.state.samsarray, string]});
 
-
   VerusLightClient.createWallet(coinId, coinTicker, accountHash, "lightwalletd.testnet.z.cash", 9067, 2, "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol.", 0)
 .then(res => {
   console.log("ADD WALLET RES")
