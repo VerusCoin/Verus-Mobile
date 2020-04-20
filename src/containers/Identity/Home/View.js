@@ -11,6 +11,9 @@ import { selectActiveIdentity, selectPinnedAttestations } from '../../../selecto
 import { setActiveAttestationId } from '../../../actions/actionCreators';
 import { ScrollView } from 'react-native-gesture-handler';
 
+const iconAccountSwitchSize = 28;
+const iconCheckSize = 23;
+
 const Home = (props) => {
     const { navigation, activeIdentity, pinnedAttestations, actions: { setActiveAttestationId } } = props;
 
@@ -31,14 +34,14 @@ const Home = (props) => {
 
     return (
         <View style={styles.root}>
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start', }}>
+            <View style={styles.identityContainer}>
                 <Text style={styles.textHeader}>{activeIdentity.get('name', '')}</Text>
                 <TouchableOpacity onPress={goToAddIdentity}>
-                    <MaterialCommunityIcons name='account-switch' size={28} style={{color:'grey', paddingTop:3}} />
+                    <MaterialCommunityIcons name='account-switch' size={iconAccountSwitchSize} style={styles.identityIcon} />
                 </TouchableOpacity>
             </View>
             <TouchableOpacity onPress={handleScanToVerify} style={styles.scanToVerifyBtn}>
-                <Icon name="check" color={styles.icon.color} size={23} />
+                <Icon name="check" color={styles.icon.color} size={iconCheckSize} />
                 <Text style={styles.text}>Scan to Verify</Text>
             </TouchableOpacity>
             <Text style={styles.textBadge}>Pinned attestations</Text>
@@ -49,9 +52,9 @@ const Home = (props) => {
                             key={pinnedAttestations.getIn([attestationKey, 'id'], '')}
                             onPress={() => goToAttestationDetails(pinnedAttestations.getIn([attestationKey, 'id'], ''))}
                             style={styles.attestation}
-                            >
+                        >
                             <View>
-                                <Text style={{paddingLeft:16}}>{pinnedAttestations.getIn([attestationKey, 'identity_attested'], '')}</Text>
+                                <Text style={styles.attestationText}>{pinnedAttestations.getIn([attestationKey, 'identity_attested'], '')}</Text>
                             </View>
                         </TouchableOpacity>
                     ))}
@@ -68,11 +71,11 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = dispatch => ({
     actions: bindActionCreators(
-      {
-        setActiveAttestationId
-      },
-      dispatch
+        {
+            setActiveAttestationId
+        },
+        dispatch
     ),
-  });
+});
 
 export default connect(mapStateToProps, mapDispatchToProps)(Home);

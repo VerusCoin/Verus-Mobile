@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Platform } from "react-native";
 import { SearchBar } from "react-native-elements";
-import { Map as IMap } from "immutable";
 import { ScrollView } from "react-native-gesture-handler";
 import { ListItem } from "react-native-elements";
 
@@ -32,16 +31,31 @@ const ClaimDetails = (props) => {
     setAttestation(newData);
     setValue(value);
   };
-  const getClaimsDetails = (claim) => {
-    setActiveClaim(claim);
+  const getClaimsDetails = (claim, type) => {
+    if (type === 'child') {
+      setActiveClaim(claim);
+    }
   };
 
   const goToAttestationDetails = (activeAttestationId) => {
     setActiveAttestationId(activeAttestationId);
     navigation.navigate("AttestationDetails", {
       id: activeAttestationId,
+
     });
   };
+
+  const claimList = (claims, item, type) => {
+    return (
+      <ListItem
+        key={claims.getIn([item, 'id'])}
+        contentContainerStyle={styles.claims}
+        title={claims.getIn([item, 'name'])}
+        titleStyle={styles.claimsTitle}
+        onPress={() => getClaimsDetails(claims.get(item), type)}
+      />
+    )
+  }
 
   return (
     <View style={styles.root}>
@@ -53,42 +67,31 @@ const ClaimDetails = (props) => {
         value={value}
       />
       <ScrollView>
-        <View style={{ paddingHorizontal: 16, backgroundColor: "white" }}>
-          <Text style={{ color: "#b5b5b5", fontSize: 12 }}>ATTESTED TO BY</Text>
+        <View style={styles.attestationContainer}>
+          <Text style={styles.attestationText}>ATTESTED TO BY</Text>
           {attestations.keySeq().map((attestation) => (
             <ListItem
               key={attestations.getIn([attestation, "id"], "")}
               title={attestations.getIn([attestation, "id"], "")}
               onPress={() =>
-                goToAttestationDetails(attestations.getIn([attestation, "id"], ""))
+                goToAttestationDetails(attestations.getIn([attestation, "id"], "") )
               }
               bottomDivider
               chevron
             />
           ))}
         </View>
-        <View style={{ paddingVertical: 50 }}>
+        <View style={styles.claimsContainer}>
           {childClaims.size > 0 ?
-            <Text style={{ paddingHorizontal: 16 }}>Child Claims</Text> : null}
+            <Text style={styles.claimsText}>Child Claims</Text> : null}
           {childClaims.keySeq().map((item) => (
-            <ListItem
-              key={childClaims.getIn([item, 'id'])}
-              contentContainerStyle={styles.claims}
-              title={childClaims.getIn([item, 'name'])}
-              titleStyle={{ fontSize: 15 }}
-              onPress={() => getClaimsDetails(childClaims.get(item))}
-            />
+            claimList(childClaims, item, 'child')
           ))
           }
           {parentClaims.size > 0 ?
-            <Text style={{ paddingHorizontal: 16 }}>Parent Claims</Text> : null}
+            <Text style={styles.claimsText}>Parent Claims</Text> : null}
           {parentClaims.keySeq().map((item) => (
-            <ListItem
-              key={parentClaims.getIn([item, 'id'])}
-              contentContainerStyle={styles.claims}
-              title={parentClaims.getIn([item, 'name'])}
-              titleStyle={{ fontSize: 15 }}
-            />
+            claimList(parentClaims, item, 'parent')
           ))}
         </View>
       </ScrollView>

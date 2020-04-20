@@ -13,9 +13,9 @@ const ClaimCategoryDetails = (props) => {
     actions: { setActiveClaim },
   } = props;
 
-  const goToClaimDetails = (claim) => {
+  const goToClaimDetails = (claim, claimName) => {
     setActiveClaim(claim);
-    navigation.navigate("ClaimDetails", { id: claim.get('id', '') });
+    navigation.navigate("ClaimDetails", { id: claim.get('id', ''), claimName });
   };
 
   return (
@@ -25,7 +25,7 @@ const ClaimCategoryDetails = (props) => {
           <ListItem
             key={claims.getIn([claim, "id"], "")}
             title={claims.getIn([claim, "name"], "")}
-            onPress={() => goToClaimDetails(claims.get(claim, IMap()))}
+            onPress={() => goToClaimDetails(claims.get(claim, IMap()), claims.getIn([claim, "name"], ""))}
             bottomDivider
             chevron
           />

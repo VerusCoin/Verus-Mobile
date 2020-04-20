@@ -8,7 +8,7 @@ export default StyleSheet.create({
     textHeader: {
         paddingBottom: 20,
         fontSize: 24,
-        paddingRight:10 ,
+        paddingRight: 10,
     },
     text: {
         fontSize: 16,
@@ -49,5 +49,16 @@ export default StyleSheet.create({
         shadowOpacity: 0.43,
         shadowRadius: 2,
         elevation: 2,
+    },
+    attestationText: {
+        paddingLeft: 16
+    },
+    identityContainer: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+    },
+    identityIcon: {
+        color: 'grey',
+        paddingTop: 3
     },
 });
