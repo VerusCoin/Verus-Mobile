@@ -169,6 +169,9 @@ export default text = {
     paddingHorizontal: 6, // To match sidemenu avatars
     textTransform: 'uppercase'
   },
+  capitalizeFirstLetter: {
+    textTransform: 'capitalize'
+  },
   listItemRightTitleDefault: {
     color: Colors.quinaryColor,
   },

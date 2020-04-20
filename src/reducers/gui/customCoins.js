@@ -5,7 +5,7 @@
 
 import {
   SET_ACTIVE_SECTION_CUSTOM_COIN
-} from '../utils/constants/storeType'
+} from '../../utils/constants/storeType'
 
 export const customCoins = (state = {
   activeSection: null

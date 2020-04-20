@@ -13,9 +13,7 @@ import {
   SET_COINMENU_FOCUS
 } from '../utils/constants/storeType'
 import {
-  DLIGHT,
   PRE_DATA,
-  POST_SYNC
 } from "../utils/constants/intervalConstants";
 
 export const coins = (state = {

@@ -5,7 +5,7 @@
 
 import {
   SET_ACTIVE_SECTION_BUY_SELL_CRYPTO
-} from '../utils/constants/storeType'
+} from '../../utils/constants/storeType'
 
 export const buySellCrypto = (state = {
   activeSection: null

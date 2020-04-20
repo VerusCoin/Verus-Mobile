@@ -26,10 +26,7 @@ import {
   //SET_INTERVAL_ID,
   UPDATE_ACCOUNT_KEYS,
   SET_RATES,
-  TRANSACTIONS_NEED_UPDATE,
-  BALANCES_NEED_UPDATE,
-  NEEDS_UPDATE_POSTFIX,
-  EVERYTHING_NEEDS_UPDATE,
+  SET_OVERVIEW_FILTER,
   ADD_SERVER_VERSION,
   SET_SERVER_VERSIONS,
   ADD_HEADER,
@@ -287,6 +284,20 @@ export const setActiveSectionCustomCoins = (activeSection) => {
   return {
     type: SET_ACTIVE_SECTION_CUSTOM_COIN,
     activeSection: activeSection
+  }
+}
+
+// Reducer name: coinOverview
+export const setActiveOverviewFilter = (chainTicker, filterType) => {
+  //DELET
+  console.log("SETTING FILTER FOR")
+  console.log(chainTicker + ', ' + filterType)
+  return {
+    type: SET_OVERVIEW_FILTER,
+    payload: {
+      chainTicker,
+      filterType
+    }
   }
 }
 

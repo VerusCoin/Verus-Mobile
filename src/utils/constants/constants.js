@@ -62,6 +62,11 @@ export const VERIFICATION_LOCKED = 'The verification level settings for this coi
 export const INCOMPLETE_CHAIN_QR = 'VerusQR code impartial or incomplete, cannot parse QR data.';
 export const COIN_TICKER_ALREADY_EXISTS = 'already exists in Verus Mobile, and therefore cannot be added as a custom coin.';
 
+// Transaction Type Constants
+export const PRIVATE = 'private'
+export const PUBLIC = 'public'
+export const TOTAL = 'total'
+
 //Payment Methods
 export const ENABLE_WYRE = false;
 export const WYRE_URL = 'https://api.testwyre.com';

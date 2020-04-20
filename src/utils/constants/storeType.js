@@ -89,3 +89,6 @@ export const ERROR_BALANCES = 'ERROR_BALANCES'
 export const ERROR_TRANSACTIONS = 'ERROR_TRANSACTIONS'
 export const ERROR_INFO = 'ERROR_INFO'
 export const ERROR_RATES = 'ERROR_RATES'
+
+// Overview Screen GUI state
+export const SET_OVERVIEW_FILTER = 'SET_OVERVIEW_FILTER'
