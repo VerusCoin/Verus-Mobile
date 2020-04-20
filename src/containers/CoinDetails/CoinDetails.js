@@ -1,5 +1,5 @@
 /*
-  This screen is passed a coinID, which it finds more data for in the 
+  This screen is passed a coinID, which it finds more data for in the
   activeCoinsForUser section of the store upon being mounted. It's purpose
   is to educate the user about the coin they chose and give them the option
   to open a wallet for that coin.
@@ -9,15 +9,16 @@ import React, { Component } from "react";
 import StandardButton from "../../components/StandardButton";
 import { View, Text, ScrollView, Image, ActivityIndicator } from "react-native";
 import { connect } from 'react-redux';
-import { 
-  addExistingCoin, 
-  setUserCoins, 
+import {
+  addExistingCoin,
+  setUserCoins,
   addKeypairs,
  } from '../../actions/actionCreators';
 import { NavigationActions } from 'react-navigation'
 import Styles from '../../styles/index'
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import Colors from "../../globals/colors";
+import VerusLightClient from 'react-native-verus-light-client';
 
 class CoinDetails extends Component {
   constructor(props) {
@@ -44,14 +45,13 @@ class CoinDetails extends Component {
     let activeCoinIndex = this.props.activeCoinsForUser.findIndex(coin => {
       return coin.id === selectedCoin.id
     })
-  
+
     this.setState({ isActive: activeCoinIndex > -1 ? true : false, fullCoinData: selectedCoin });
   }
 
   goBack = () => {
     this.props.navigation.dispatch(NavigationActions.back())
   }
-
   _handleAddCoin = () => {
     this.setState({ loading: true });
     addExistingCoin(this.state.fullCoinData, this.props.activeCoinList, this.props.activeAccount.id)
@@ -74,8 +74,33 @@ class CoinDetails extends Component {
         this.goBack();
       }
     })
+    if (this.state.fullCoinData.name === "Verus Coin") {
+      //VerusLightClient.addWallet("VRSC", "vrsc", "light.virtualsoundnw.com", "9077","ZIPPIE","1")//
+      VerusLightClient.createWallet('VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99', "lightwalletd.testnet.z.cash", 9067, 2, "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol.", 0)
+    .then(res => {
+      console.log("ADD WALLET RES")
+      console.log(res)
+
+
+
+      return VerusLightClient.openWallet('VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99')
+    })
+    .then(res => {
+      console.log("ADD WALLET RES")
+      console.log(res)
+
+      return startSync('VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99')
+    })
+    .catch(err => {
+      console.log("ADD WALLET OR REQ REJ")
+      console.log(err)
+    })
+    }
+    //if ( ) {
+
+    //}
   }
-  
+
   render() {
     return (
       <View style={Styles.defaultRoot}>
@@ -130,5 +155,3 @@ const mapStateToProps = (state) => {
 };
 
 export default connect(mapStateToProps)(CoinDetails);
-
-

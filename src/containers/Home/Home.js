@@ -1,25 +1,25 @@
 /*
-  The purpose of this component is to be the first screen a user is 
-  met with after login. This screen should have all necesarry or 
+  The purpose of this component is to be the first screen a user is
+  met with after login. This screen should have all necesarry or
   essential wallet components available at the press of one button.
-  This includes VerusPay, adding coins, and coin menus. Keeping this 
-  screen clean is also essential, as users will spend alot of time with 
-  it in their faces. It updates the balances and the rates upon loading 
+  This includes VerusPay, adding coins, and coin menus. Keeping this
+  screen clean is also essential, as users will spend alot of time with
+  it in their faces. It updates the balances and the rates upon loading
   if they are flagged to be updated in the redux store.
 */
 
 import React, { Component } from "react";
 import { ListItem, Divider } from "react-native-elements";
-import { 
-  View, 
-  Text, 
+import {
+  View,
+  Text,
   FlatList,
   TouchableOpacity,
   ScrollView,
   RefreshControl
 } from "react-native";
-import {  
-  setActiveCoin, 
+import {
+  setActiveCoin,
   setActiveApp,
   setActiveSection,
   setActiveSectionBuySellCrypto,
@@ -35,6 +35,7 @@ import { ENABLE_WYRE } from "../../utils/constants/constants";
 import { withNavigationFocus } from 'react-navigation';
 import { API_GET_FIATPRICE, API_GET_ADDRESSES, API_GET_BALANCES, API_GET_INFO, ELECTRUM, DLIGHT, GENERAL, USD } from "../../utils/constants/intervalConstants";
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
+import VerusLightClient from "react-native-verus-light-client";
 
 const CONNECTION_ERROR = "Connection Error"
 
@@ -42,14 +43,15 @@ class Home extends Component {
   constructor(props) {
     super(props)
     this.state = {
+      samsarray: [],
       totalFiatBalance: this.getTotalFiatBalance(props),
       loading: false
     };
-    
+
     this.updateProps = this.updateProps.bind(this);
   }
 
-  componentDidUpdate(lastProps) {    
+  componentDidUpdate(lastProps) {
     if (lastProps.isFocused !== this.props.isFocused && this.props.isFocused) {
       this.refresh();
     }
@@ -69,7 +71,7 @@ class Home extends Component {
         console.warn(error)
       })
     })
-    
+
   }
 
   resetToScreen = (route, title, data) => {
@@ -105,7 +107,7 @@ class Home extends Component {
               }
             }
             if (this.state.loading) {
-              this.setState({ loading: false });  
+              this.setState({ loading: false });
             }
             return true
           }
@@ -122,21 +124,21 @@ class Home extends Component {
             resolve(false)
           }
         })
-    }) 
+    })
   }
 
-  getTotalFiatBalance = (props) => {    
+  getTotalFiatBalance = (props) => {
     let _totalFiatBalance = 0
     let coinBalance = 0
     const balances = props.balances.public
     const { rates, displayCurrency } = props
     const balanceErrors = props.balances.errors.public
-    
+
     for (let key in rates) {
       if (rates[key][displayCurrency]) {
         const price = rates[key][displayCurrency]
 
-        coinBalance = balances.hasOwnProperty(key) && !balanceErrors[key] && !isNaN(balances[key].confirmed) ? 
+        coinBalance = balances.hasOwnProperty(key) && !balanceErrors[key] && !isNaN(balances[key].confirmed) ?
         truncateDecimal(balances[key].confirmed, 4) : 0
 
         _totalFiatBalance += coinBalance*price
@@ -147,7 +149,7 @@ class Home extends Component {
   }
 
   _verusPay = () => {
-    let navigation = this.props.navigation  
+    let navigation = this.props.navigation
 
     navigation.navigate("VerusPay", { refresh: this.refresh });
   }
@@ -161,13 +163,13 @@ class Home extends Component {
   }
 
   _addCoin = () => {
-    let navigation = this.props.navigation  
+    let navigation = this.props.navigation
 
     navigation.navigate("AddCoin", { refresh: this.refresh });
   }
 
   _buySellCrypto = () => {
-    let navigation = this.props.navigation  
+    let navigation = this.props.navigation
     this.props.dispatch(setActiveSectionBuySellCrypto('buy-crypto'))
 
     navigation.navigate("BuySellCryptoMenus", {title: "Buy"});
@@ -175,7 +177,7 @@ class Home extends Component {
 
   renderCoinList = () => {
     const { rates, balances, activeCoinsForUser, displayCurrency } = this.props;
-    
+
     return (
       <ScrollView
         style={Styles.wide}
@@ -281,7 +283,57 @@ class Home extends Component {
     );
   }
 
+//'VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99'
+
+createWallet = (coinId, coinTicker, accountHash) => {
+
+  const string = coinId + coinTicker + accountHash;
+  this.setState({ samsarray: [...this.state.samsarray, string]});
+
+
+  VerusLightClient.createWallet(coinId, coinTicker, accountHash, "lightwalletd.testnet.z.cash", 9067, 2, "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol.", 0)
+.then(res => {
+  console.log("ADD WALLET RES")
+  console.log(res)
+  console.log(samsarray)
+
+});
+}
+
+
+/*
+voorbeeld = (id) => {
+  this.props.activeCoinList.map( (item) => {
+      if(console.log(item.id) === id){
+        return true;
+    }
+  });
+  return false;
+}
+*/
+
+/*
+1) schrijf een fucntie die de wallet create.
+2) voeg to dat de wallet opslaat welk ticker protocl en accaunthash paar al is geweest.
+3) bouw een functie zoals hierboven die kan checken if een ticker-accounthash-procol paar erin staat.
+4) bouw het if statement
+5) check of de coin die toegevoegd moet worden een dlight channel heeft aka.
+6) get z API_GET_ADDRESSES
+7) dispatch z addres
+*/
+
+
   render() {
+    //'VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99'
+    this.createWallet('VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99');
+
+
+    //this.props.activeCoinList.map( (item) => {
+      //  console.log(item.id);
+//  });
+
+console.log(JSON.stringify(this.props.activeCoinList));
+
     return (
       <View style={Styles.defaultRoot}>
         <Text style={Styles.fiatLabel}>
