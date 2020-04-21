@@ -5,19 +5,19 @@ import GlobalStyles from '../../../globals/globalStyles';
 export default StyleSheet.create({
     root: {
         flex: 1,
+        padding: 16,
     },
     searchBarContainer: {
-        paddingHorizontal: 8,
-        backgroundColor: 'white'
+        backgroundColor: 'white',
+        paddingRight:'6%'
+
     },
     categoriesContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        padding: 15,
         justifyContent: 'space-between',
     },
     textHeader: {
-        padding: 16,
         paddingBottom: 20,
         fontSize: 24,
     },

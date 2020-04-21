@@ -66,6 +66,7 @@
     "react-native-camera": "^3.22.1",
     "react-native-country-picker-modal": "^1.5.2",
     "react-native-crypto": "^2.1.2",
+    "react-native-dialog": "^5.6.0",
     "react-native-elements": "1.0.0",
     "react-native-fs": "~2.15.0",
     "react-native-gesture-handler": "~1.4.0",

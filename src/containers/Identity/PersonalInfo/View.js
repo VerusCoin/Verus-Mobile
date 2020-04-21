@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, Platform,
 } from 'react-native';
 import { SearchBar, CheckBox } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
+import Icon from 'react-native-vector-icons/Ionicons';
+import Dialog from 'react-native-dialog';
 import styles from './styles';
+import useClaimCategories from './utils/useClaimCategories';
 
 const PersonalInfo = (props) => {
   const {
@@ -14,10 +17,24 @@ const PersonalInfo = (props) => {
     actions: {
       setActiveClaimCategory,
       setShowEmptyClaimCategories,
-    }
+    },
   } = props;
-  const [categories, setCategories] = useState(claimCategories);
-  const [searchValue, setSearchValue] = useState('');
+  const [state, actions] = useClaimCategories(claimCategories);
+
+  const {
+    categories,
+    searchTerm,
+    dialogVisible,
+    categoryName,
+  } = state;
+
+  const {
+    setSearchTerm,
+    setCategories,
+    setDialogVisible,
+    setCategoryName,
+  } = actions;
+
 
   const goToClaims = (claimCategoryId, claimCategoryName) => {
     navigation.navigate('ClaimCategory', {
@@ -30,15 +47,46 @@ const PersonalInfo = (props) => {
     setCategories(claimCategories);
   }, [claimCategories]);
 
-  const updateSearch = (value) => {
+  const updateSearch = (searchValue) => {
     const newData = claimCategories.filter((claimCategory) => {
       const itemData = claimCategory.get('name', '').toUpperCase();
-      const textData = value.toUpperCase().replace(/\s+/g, '');
+      const textData = searchTerm.toUpperCase().replace(/\s+/g, '');
       return itemData.includes(textData) || claimCategory.get('claims').some((claim) => claim.toUpperCase().includes(textData));
     });
+
     setCategories(newData);
-    setSearchValue(value);
+
+    setSearchTerm(searchValue);
   };
+
+  const handleAddCategory = () => {
+    setDialogVisible(true);
+  };
+
+  const handleOnChangeText = (text) => {
+    setCategoryName(text);
+  };
+
+  const handleSave = () => {
+    // TODO: Need method that add category to redux than to Async storage
+    setDialogVisible(false);
+  };
+
+  const handleCancel = () => {
+    setDialogVisible(false);
+  };
+
+  const renderDialog = () => (
+    <Dialog.Container visible={dialogVisible}>
+      <Dialog.Title>Add category</Dialog.Title>
+      <Dialog.Description>
+        Please enter the name of Claim Category that you want add.
+      </Dialog.Description>
+      <Dialog.Input onChangeText={(text) => handleOnChangeText(text)} />
+      <Dialog.Button label="Cancel" onPress={handleCancel} />
+      <Dialog.Button label="Save" onPress={handleSave} />
+    </Dialog.Container>
+  );
 
   return (
     <View style={styles.root}>
@@ -48,13 +96,23 @@ const PersonalInfo = (props) => {
         title="Show empty claim categories"
         onPress={() => setShowEmptyClaimCategories(!showEmptyClaimCategories)}
       />
-      <SearchBar
-        containerStyle={styles.searchBarContainer}
-        platform={Platform.OS === 'ios' ? 'ios' : 'android'}
-        placeholder="Quick Search"
-        onChangeText={updateSearch}
-        value={searchValue}
-      />
+      <View style={{
+        flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 5,
+      }}
+      >
+        <SearchBar
+          containerStyle={styles.searchBarContainer}
+          platform={Platform.OS === 'ios' ? 'ios' : 'android'}
+          placeholder="Quick Search"
+          onChangeText={updateSearch}
+          cancelButtonProps={{ buttonStyle: { paddingRight: 15 } }}
+          value={searchTerm}
+        />
+        <TouchableOpacity onPress={handleAddCategory}>
+          <Icon name={Platform.OS === 'ios' ? 'ios-add' : 'md-add'} size={35} style={{ paddingRight: '4%' }} />
+        </TouchableOpacity>
+      </View>
+      {renderDialog()}
       <ScrollView>
         <View style={styles.categoriesContainer}>
           {categories.keySeq().map((item) => (
