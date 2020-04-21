@@ -5,7 +5,8 @@ import {
   fetchUsers, 
   loadServerVersions,
   loadCachedHeaders,
-  initSettings
+  initSettings,
+  requestSeedData,
 } from './actions/actionCreators';
 import {
   initCache,
@@ -104,7 +105,6 @@ class VerusMobile extends React.Component {
       actionArr.forEach((action) => {
         this.props.dispatch(action)
       })
-      
       return Promise.all([loadServerVersions(this.props.dispatch), loadCachedHeaders(this.props.dispatch)])
     })
     .then(() => {
@@ -113,6 +113,7 @@ class VerusMobile extends React.Component {
     .catch((err) => {
       Alert.alert("Error", err.message)
     })
+    this.props.dispatch(requestSeedData());
   }
 
   render() {

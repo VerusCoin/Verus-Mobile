@@ -1,134 +1,135 @@
-import AsyncStorage from "@react-native-community/async-storage";
+import AsyncStorage from '@react-native-community/async-storage';
 
 import identities from '../InitialData/Identity';
 import claims from '../InitialData/Claim';
 import claimCategories from '../InitialData/ClaimCategory';
 import attestations from '../InitialData/Attestation';
 
-export const storeSeedIdentities = () => {
-  return new Promise((resolve, reject) => {
-    AsyncStorage.setItem("identities", JSON.stringify(identities))
-      .then(res => {
-        resolve(res);
-      })
-      .catch(err => reject(err));
+export const storeSeedIdentities = async () => {
+  try {
+    await AsyncStorage.setItem('identities', JSON.stringify({ identities }));
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const getClaimCategories = async () => {
+  try {
+    const result = await AsyncStorage.getItem('claimCategories');
+    return result ? JSON.parse(result).claimCategories : [];
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const storeSeedClaimCategories = async (identityId) => {
+  const seededCategories = claimCategories(identityId);
+  try {
+    let categoriesToStore = [];
+    const storedCategories = await getClaimCategories();
+    if (!storedCategories) {
+      categoriesToStore = seededCategories;
+    } else if (storedCategories.every((category) => category.identity !== identityId)) {
+      categoriesToStore = [...storedCategories, ...seededCategories];
+    } else {
+      categoriesToStore = storedCategories;
+    }
+    await AsyncStorage.setItem('claimCategories', JSON.stringify({ claimCategories: categoriesToStore }));
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const getAttestations = async () => {
+  try {
+    const result = await AsyncStorage.getItem('attestations');
+    return result ? JSON.parse(result).attestations : [];
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const storeSeedAttestations = async () => {
+  try {
+    let attestationsToStore = [];
+    const storedAttestations = await getAttestations();
+    if (!storedAttestations.length) {
+      attestationsToStore = attestations;
+    } else {
+      attestationsToStore = storedAttestations;
+    }
+    await AsyncStorage.setItem('attestations', JSON.stringify({ attestations: attestationsToStore }));
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getClaimCategoriesByIdentity = async (identityId) => {
+  try {
+    const storedCategories = await getClaimCategories();
+    const categoriesForIdentity = storedCategories.filter((category) => category.identity === identityId);
+    return categoriesForIdentity;
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const updateClaimCategories = async (updatedCategories) => {
+  try {
+    const storedCategories = await getClaimCategories();
+    const oldCategories = storedCategories.filter((storedCategory) => !updatedCategories.some((updatedCategory) => updatedCategory.id === storedCategory.id));
+    const categoriesToStore = oldCategories.concat(updatedCategories);
+    await AsyncStorage.setItem('claimCategories', JSON.stringify({ claimCategories: categoriesToStore }));
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const storeSeedClaims = async () => {
+  try {
+    await AsyncStorage.setItem('claims', JSON.stringify({ claims }));
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getIdentities = async () => {
+  try {
+    const result = await AsyncStorage.getItem('identities');
+    console.log(JSON.parse(result))
+    return result ? JSON.parse(result).identities : [];
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getClaims = async () => {
+  try {
+    const result = await AsyncStorage.getItem('claims');
+    return result ? JSON.parse(result).claims : [];
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const updateAttestations = async (updatedAttestations) => {
+  try {
+    await AsyncStorage.setItem('attestations', JSON.stringify(updatedAttestations));
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const removeIdentityData = async () => {
+  await AsyncStorage.multiRemove(['identities', 'claimCategories', 'claims', 'attestations'], (err) => {
+    console.log(err);
   });
 };
 
-export const storeSeedClaimCategories = (identityId) => {
-  const seededCategories = claimCategories(identityId)
-
-  return new Promise((resolve, reject) => {
-    AsyncStorage.setItem("claimCategories", JSON.stringify(seededCategories))
-      .then(res => {
-        resolve(res);
-      })
-      .catch(err => reject(err));
-  });
+export const updateIdentities = async (updatedIdentities) => {
+  try {
+    await AsyncStorage.setItem('identities', JSON.stringify({ identities: updatedIdentities.identities }));
+  } catch (error) {
+    console.log(error);
+  }
 };
-
-export const storeSeedClaims = () => {
-  return new Promise((resolve, reject) => {
-    AsyncStorage.setItem("claims", JSON.stringify(claims))
-      .then(res => {
-        resolve(res);
-      })
-      .catch(err => reject(err));
-  });
-};
-
-export const storeSeedAttestations = () => {
-  return new Promise((resolve, reject) => {
-    AsyncStorage.setItem("attestations", JSON.stringify(attestations))
-      .then(res => {
-        resolve(res);
-      })
-      .catch(err => reject(err));
-  });
-};
-
-export const getIdentities = () => {
-  return new Promise((resolve, reject) => {
-    AsyncStorage.getItem("identities")
-      .then(res => {
-        if (!res) {
-          resolve(false);
-        } else {
-          const result = JSON.parse(res);
-          resolve(result);
-        }
-      })
-      .catch(err => reject(err));
-  });
-};
-
-export const getClaimCategories = () => {
-  return new Promise((resolve, reject) => {
-    AsyncStorage.getItem("claimCategories")
-      .then(res => {
-        if (!res) {
-          resolve(false);
-        } else {
-          const result = JSON.parse(res);
-          resolve(result);
-        }
-      })
-      .catch(err => reject(err));
-  });
-};
-
-export const getClaims = () => {
-  return new Promise((resolve, reject) => {
-    AsyncStorage.getItem("claims")
-      .then(res => {
-        if (!res) {
-          resolve(false);
-        } else {
-          const result = JSON.parse(res);
-          resolve(result);
-        }
-      })
-      .catch(err => reject(err));
-  });
-};
-
-export const getAttestations = () => {
-  return new Promise((resolve, reject) => {
-    AsyncStorage.getItem("attestations")
-      .then(res => {
-        if (!res) {
-          resolve(false);
-        } else {
-          const result = JSON.parse(res);
-          resolve(result);
-        }
-      })
-      .catch(err => reject(err));
-  });
-};
-
-export const updateAttestations = (updatedAttestations) => {
-  return new Promise((resolve, reject) => {
-    AsyncStorage.setItem("attestations", JSON.stringify(updatedAttestations.attestations))
-      .then(res => {
-        resolve(res);
-      })
-      .catch(err => reject(err));
-  });
-};
-
-export const removeIdentityData = () => {
-  AsyncStorage.multiRemove(['identities', 'claimCategories', 'claims', 'attestations'], err => {
-    console.log(err)
-  });
-}
-
-export const updateIdentities = (updatedIdentities) => {
-  return new Promise((resolve, reject) => {
-    AsyncStorage.setItem("identities", JSON.stringify(updatedIdentities.identities))
-      .then(res => {
-        resolve(res);
-      })
-      .catch(err => reject(err));
-  });
-}

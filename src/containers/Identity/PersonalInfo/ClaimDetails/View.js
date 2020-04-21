@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, Platform } from "react-native";
-import { SearchBar } from "react-native-elements";
-import { ScrollView } from "react-native-gesture-handler";
-import { ListItem } from "react-native-elements";
+import React, { useState, useEffect } from 'react';
+import { View, Text, Platform } from 'react-native';
+import { SearchBar, ListItem } from 'react-native-elements';
+import { ScrollView } from 'react-native-gesture-handler';
 
-import styles from "./styles";
+
+import styles from './styles';
 
 const ClaimDetails = (props) => {
   const {
@@ -16,17 +16,17 @@ const ClaimDetails = (props) => {
   } = props;
 
   const [attestations, setAttestation] = useState(attestationsData);
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState('');
 
   useEffect(() => {
     setAttestation(attestationsData);
-  }, [attestationsData])
+  }, [attestationsData]);
 
   const updateSearch = (value) => {
     const newData = attestationsData.filter((item) => {
-      const itemData = item.get("id", "").toUpperCase();
+      const itemData = item.get('id', '').toUpperCase();
       const textData = value.toUpperCase();
-      return itemData.indexOf(textData) > -1;
+      return itemData.includes(textData);
     });
     setAttestation(newData);
     setValue(value);
@@ -39,29 +39,27 @@ const ClaimDetails = (props) => {
 
   const goToAttestationDetails = (activeAttestationId) => {
     setActiveAttestationId(activeAttestationId);
-    navigation.navigate("AttestationDetails", {
+    navigation.navigate('AttestationDetails', {
       id: activeAttestationId,
 
     });
   };
 
-  const claimList = (claims, item, type) => {
-    return (
-      <ListItem
-        key={claims.getIn([item, 'id'])}
-        contentContainerStyle={styles.claims}
-        title={claims.getIn([item, 'name'])}
-        titleStyle={styles.claimsTitle}
-        onPress={() => getClaimsDetails(claims.get(item), type)}
-      />
-    )
-  }
+  const claimList = (claims, item, type) => (
+    <ListItem
+      key={claims.getIn([item, 'id'])}
+      contentContainerStyle={styles.claims}
+      title={claims.getIn([item, 'name'])}
+      titleStyle={styles.claimsTitle}
+      onPress={() => getClaimsDetails(claims.get(item), type)}
+    />
+  );
 
   return (
     <View style={styles.root}>
       <SearchBar
         containerStyle={styles.searchBarContainer}
-        platform={Platform.OS === "ios" ? "ios" : "android"}
+        platform={Platform.OS === 'ios' ? 'ios' : 'android'}
         placeholder="Quick Search"
         onChangeText={updateSearch}
         value={value}
@@ -71,31 +69,28 @@ const ClaimDetails = (props) => {
           <Text style={styles.attestationText}>ATTESTED TO BY</Text>
           {attestations.keySeq().map((attestation) => (
             <ListItem
-              key={attestations.getIn([attestation, "id"], "")}
-              title={attestations.getIn([attestation, "id"], "")}
-              onPress={() =>
-                goToAttestationDetails(attestations.getIn([attestation, "id"], "") )
-              }
+              key={attestations.getIn([attestation, 'id'], '')}
+              title={attestations.getIn([attestation, 'id'], '')}
+              onPress={() => goToAttestationDetails(attestations.getIn([attestation, 'id'], ''))}
               bottomDivider
               chevron
             />
           ))}
         </View>
         <View style={styles.claimsContainer}>
-          {childClaims.size > 0 ?
-            <Text style={styles.claimsText}>Child Claims</Text> : null}
+          {childClaims.size > 0
+            ? <Text style={styles.claimsText}>Child Claims</Text> : null}
           {childClaims.keySeq().map((item) => (
             claimList(childClaims, item, 'child')
-          ))
-          }
-          {parentClaims.size > 0 ?
-            <Text style={styles.claimsText}>Parent Claims</Text> : null}
+          ))}
+          {parentClaims.size > 0
+            ? <Text style={styles.claimsText}>Parent Claims</Text> : null}
           {parentClaims.keySeq().map((item) => (
             claimList(parentClaims, item, 'parent')
           ))}
         </View>
       </ScrollView>
-    </View >
+    </View>
   );
 };
 

@@ -24,7 +24,6 @@ import {
   //everythingNeedsUpdate, 
   fetchActiveCoins,
   signIntoAuthenticatedAccount,
-  requestSeedData,
   //setUpdateIntervalID
  } from '../../actions/actionCreators';
 import { Dropdown } from 'react-native-material-dropdown';
@@ -35,6 +34,9 @@ import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import StandardButton from "../../components/StandardButton";
 import PasswordInput from '../../components/PasswordInput'
+
+import { removeIdentityData } from '../../utils/asyncStore/identityStorage';
+import { TouchableHighlight } from "react-native-gesture-handler";
 
 class Login extends Component {
   constructor(props) {
@@ -54,6 +56,10 @@ class Login extends Component {
     this.props.activeCoinList.map(coinObj => {
       clearAllCoinIntervals(coinObj.id)
     })
+  }
+
+  clearIdentityStorage = () => {
+    removeIdentityData();
   }
 
   _handleSubmit = () => {
@@ -85,7 +91,6 @@ class Login extends Component {
         coinsForUser.activeCoinsForUser.map(coinObj => {
           activateChainLifecycle(coinObj.id);
         });
-        this.props.dispatch(requestSeedData());
         this.props.dispatch(signIntoAuthenticatedAccount())
       })
       .catch(err => {
@@ -150,6 +155,7 @@ class Login extends Component {
             }}
             resizeMode="contain"
           />
+          <TouchableHighlight onPress={this.clearIdentityStorage}><Text>Clear identity storage</Text></TouchableHighlight>
           <Text style={Styles.centralHeader}>Select an Account</Text>
           <Dropdown
             containerStyle={Styles.standardWidthBlock}

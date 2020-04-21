@@ -37,7 +37,7 @@ import ManageWyrePersonalDetails from '../../containers/BuySellCrypto/PaymentMet
 import ManageWyreProofOfAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreProofOfAddress';
 import ManageWyreAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreAddress';
 import SendTransaction from '../../containers/BuySellCrypto/PaymentMethod/SendTransaction/SendTransaction';
-import Identity from '../../containers/Identity/View';
+import Identity from '../../containers/Identity';
 import ScanBadge from '../../containers/Identity/Home/ScanBadge/View';
 import ScannedInformation from '../../containers/Identity/Home/ScannedInformation/View'
 import PersonalInfo from '../../containers/Identity/PersonalInfo/';
