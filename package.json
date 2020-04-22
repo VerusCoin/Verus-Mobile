@@ -33,7 +33,7 @@
     "babel-runtime": "^6.20.0",
     "base-x": "3.0.4",
     "bitgo-utxo-lib": "git+https://github.com/VerusCoin/bitgo-utxo-lib.git#react-native",
-    "browserify": "^16.2.3",
+    "browserify": "^16.5.1",
     "browserify-zlib": "^0.1.4",
     "buffer": "^4.9.1",
     "coinselect": "^3.1.11",

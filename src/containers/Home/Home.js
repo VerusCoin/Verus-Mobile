@@ -51,6 +51,11 @@ class Home extends Component {
     this.updateProps = this.updateProps.bind(this);
   }
 
+componentDidMount(){
+  this.createWallet('VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99');
+}
+
+
   componentDidUpdate(lastProps) {
     if (lastProps.isFocused !== this.props.isFocused && this.props.isFocused) {
       this.refresh();
@@ -294,7 +299,7 @@ createWallet = (coinId, coinTicker, accountHash) => {
 .then(res => {
   console.log("ADD WALLET RES")
   console.log(res)
-  console.log(samsarray)
+  //console.log(samsarray)
 
 });
 }
@@ -324,14 +329,13 @@ voorbeeld = (id) => {
 
   render() {
     //'VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99'
-    this.createWallet('VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99');
 
 
     //this.props.activeCoinList.map( (item) => {
       //  console.log(item.id);
 //  });
 
-console.log(JSON.stringify(this.props.activeCoinList));
+//console.log(JSON.stringify(this.props.activeCoinList));
 
     return (
       <View style={Styles.defaultRoot}>

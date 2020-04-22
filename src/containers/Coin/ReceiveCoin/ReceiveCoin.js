@@ -1,18 +1,20 @@
 /*
-  This component is responsible for creating verusQR invoices and 
+  This component is responsible for creating verusQR invoices and
   showing the user their receiving address. If the user ever wants
   to receive coins from anyone, they should be able to go to this
   screen and configure their invoice within a few button presses.
 */
 
-import React, { Component } from "react"
+import React, { Component, useState } from "react"
 import StandardButton from "../../../components/StandardButton"
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  ScrollView, 
-  Keyboard, 
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  Switch,
+  StyleSheet,
+  Keyboard,
   Clipboard,
   Alert,
   RefreshControl
@@ -34,6 +36,7 @@ class ReceiveCoin extends Component {
     super(props);
     this.state = {
       selectedCoin: this.props.activeCoin,
+      private: false,
       amount: 0,
       address: null,
       memo: null,
@@ -61,6 +64,57 @@ class ReceiveCoin extends Component {
     ) {
       this.setState({
         address: activeUser.keys[coinObj.id].electrum.addresses[0]
+      });
+    } else {
+      throw new Error(
+        "ReceiveCoin.js: Fatal mismatch error, " +
+          activeUser.id +
+          " user keys for active coin " +
+          coinObj[i].id +
+          " not found!"
+      );
+    }
+  }
+
+/*
+1) maak een button met 2 keuzes zoals in de graphic
+2) maak een private boolean (true false varibale) in states
+3)pas dat component aan om als je true valse varibale true is
+je private address uit redux haalt ipv je public
+
+*/
+//this if statement is here because it can turn the switch on or off
+walletPrivate = () => {
+  if (
+     this.state.private === true
+   ) {
+     this.setState({
+       private: false
+     });
+  } else {
+
+  this.setState({
+    private: true
+  });
+  this.activeUserDlight();
+}
+}
+
+
+
+//this is a function just like the "setAddress" but then for the private addresses
+  activeUserDlight = () => {
+    let index = 0;
+    const activeUser = this.props.activeAccount
+    const coinObj = this.state.selectedCoin
+
+    if (
+      activeUser.keys[coinObj.id] != null &&
+      activeUser.keys[coinObj.id].dlight != null &&
+      activeUser.keys[coinObj.id].dlight.addresses.length > 0
+    ) {
+      this.setState({
+        address: activeUser.keys[coinObj.id].dlight.addresses[0]
       });
     } else {
       throw new Error(
@@ -119,7 +173,7 @@ class ReceiveCoin extends Component {
               }
             }
             if (this.state.loading) {
-              this.setState({ loading: false });  
+              this.setState({ loading: false });
             }
             resolve(true)
           }
@@ -127,14 +181,14 @@ class ReceiveCoin extends Component {
             resolve(false)
           }
         })
-    }) 
+    })
   }
 
   createQRString = (coinTicker, amount, address, memo) => {
     const { rates, displayCurrency } = this.props
 
     let _price = rates[coinTicker] != null ? rates[coinTicker][displayCurrency] : null
-    
+
     let verusQRJSON = {
       verusQR: global.VERUS_QR_VERSION,
       coinTicker: coinTicker,
@@ -153,6 +207,14 @@ class ReceiveCoin extends Component {
       })
   }
 
+//this is a function that saperates the private and non-private addresses
+  switchInvoiceAddress = (coinObj) => {
+    this.setState({selectedAddress: coinObj},
+      () => {
+        this.activeUserDlight()
+      })
+  }
+
   copyAddressToClipboard = () => {
     Clipboard.setString(this.state.address);
     Alert.alert("Address Copied", "Address copied to clipboard")
@@ -164,12 +226,12 @@ class ReceiveCoin extends Component {
     const { rates, displayCurrency } = props
 
     let _price = rates[selectedCoin.id] != null ? rates[selectedCoin.id][displayCurrency] : null
-    
+
     if (!(amount.toString()) ||
       !(isNumber(amount)) ||
       !_price) {
       return 0
-    } 
+    }
 
     if (amountFiat) {
       return truncateDecimal(amount/_price, 8)
@@ -237,6 +299,107 @@ class ReceiveCoin extends Component {
     }
   };
 
+//this is a function that only shows the switch for private addres screen
+  switchButton = () => {
+    if (this.props.channels[this.props.activeCoin.id].channels.includes("dlight")) {
+      //console.log(this.props.channels[this.props.activeCoin.id].channels);
+    return <View style={Styles.centralRow}>
+    <Text style={Styles.mediumFormInputLabel} >use private address</Text>
+    <Switch
+  trackColor={{ false: "#767577", true: "#81b0ff" }}
+
+  ios_backgroundColor="#3e3e3e"
+  onValueChange={this.walletPrivate}
+  value={this.state.private}
+/>
+    </View>
+  } else {
+    return null;
+ }
+  }
+//this is a function that shows the private address only in private address mode
+dynamicViewingTest = () => {
+  const {
+    state,
+    props,
+    validateFormData,
+    forceUpdate,
+    switchInvoiceCoin,
+    copyAddressToClipboard
+  } = this;
+  const { activeCoinsForUser, rates, displayCurrency } = props;
+  const {
+    loading,
+    showModal,
+    verusQRString,
+    selectedCoin,
+    address,
+    errors,
+    amountFiat
+  } = state;
+
+
+if(this.state.private == false){
+    return <TouchableOpacity onPress={this.copyAddressToClipboard}>
+      <Input
+        labelStyle={Styles.formInputLabel}
+        underlineColorAndroid={Colors.quinaryColor}
+        editable={false}
+        value={address}
+        autoCapitalize={"none"}
+        autoCorrect={false}
+        inputStyle={Styles.mediumInlineLink}
+        pointerEvents="none"
+        multiline={true}
+        label={"Your address:"}
+        errorMessage={errors.address ? errors.address : null} //dit zijn de gewone errors
+      />
+    </TouchableOpacity>
+  }else{
+    return <View>
+      <Dropdown
+        // TODO: Determine why width must be 85 here, cant be wide block
+        containerStyle={{ ...Styles.wideBlock, width: "85%" }}
+        labelExtractor={(item, index) => {
+          return item.id;
+        }}
+        valueExtractor={(item, index) => {
+          return item;
+        }}
+        data={this.props.activeUser}
+        onChangeText={(value, index, data) => switchInvoiceAddress(value)}
+        textColor={Colors.quinaryColor}
+        selectedItemColor={Colors.quinaryColor}
+        baseColor={Colors.quinaryColor}
+        label="Selected address:"
+        labelTextStyle={{ fontFamily: "Avenir-Book" }}
+        labelFontSize={17}
+        value={this.props.activeUser}
+        pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
+        itemTextStyle={{ fontFamily: "Avenir-Book" }}
+      />
+    <TouchableOpacity onPress={this.copyAddressToClipboard} >
+      <Input
+        labelStyle={Styles.formInputLabel}
+        underlineColorAndroid={Colors.quinaryColor}
+        editable={false}
+        value={this.state.address}
+        autoCapitalize={"none"}
+        autoCorrect={false}
+        inputStyle={Styles.mediumInlineLink}
+        pointerEvents="none"
+        multiline={true}
+        label={"Your address:"}
+        errorMessage={errors.address ? errors.address : null} //check of dit d edlight errors zijn
+      />
+      </TouchableOpacity>
+      </View>
+  }
+}
+
+
+
+
   render() {
     const _price = this.getPrice()
     const {
@@ -272,6 +435,9 @@ class ReceiveCoin extends Component {
             <RefreshControl refreshing={loading} onRefresh={forceUpdate} />
           }
         >
+          {this.switchButton()}
+
+
           <QRModal
             animationType="slide"
             transparent={false}
@@ -302,23 +468,9 @@ class ReceiveCoin extends Component {
             pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
             itemTextStyle={{ fontFamily: "Avenir-Book" }}
           />
+
           <View style={Styles.wideBlock}>
-            <TouchableOpacity onPress={copyAddressToClipboard}>
-              <Input
-                labelStyle={Styles.formInputLabel}
-                underlineColorAndroid={Colors.quinaryColor}
-                editable={false}
-                value={address}
-                autoCapitalize={"none"}
-                autoCorrect={false}
-                inputStyle={Styles.mediumInlineLink}
-                pointerEvents="none"
-                multiline={true}
-                label={"Your address:"}
-                errorMessage={errors.address ? errors.address : null}
-              />
-            </TouchableOpacity>
-          </View>
+          {this.dynamicViewingTest()}
           <View style={Styles.wideBlock}>
             <Input
               underlineColorAndroid={Colors.quinaryColor}
@@ -378,6 +530,7 @@ class ReceiveCoin extends Component {
               onPress={validateFormData}
             />
           </View>
+          </View>
         </ScrollView>
       </View>
     );
@@ -393,6 +546,7 @@ const mapStateToProps = (state) => {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeAccount: state.authentication.activeAccount,
     rates: state.ledger.rates[GENERAL],
+    channels: state.settings.coinSettings,
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
     balances: {
       public: state.ledger.balances[ELECTRUM][chainTicker],
