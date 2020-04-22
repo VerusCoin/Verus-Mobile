@@ -84,7 +84,7 @@ function * handleSetActiveIdentity() {
   const selectedIdentityId = yield select(selectActiveIdentityId);
   yield all([
     call(storeSeedClaimCategories, selectedIdentityId),
-    call(storeSeedClaims),
+    call(storeSeedClaims, selectedIdentityId),
     call(storeSeedAttestations),
   ]);
   yield call(handleReceiveSeedData);

@@ -17,6 +17,18 @@ export const selectClaimCategories = (state) => state.identity.getIn(
   IMap(),
 );
 
+export const selectShowEmptyClaimCategories = (state) => state.identity.getIn(['personalInformation', 'showEmptyClaimCategories'], false);
+
+export const selectClaimCategoriesToDisplay = createSelector(
+  [selectClaimCategories, selectShowEmptyClaimCategories],
+  (claimCategories, showEmptyClaimCategories) => {
+    if (!showEmptyClaimCategories) {
+      return claimCategories.filter((claimCategory) => claimCategory.get('claims', IList()).size > 0);
+    }
+    return claimCategories;
+  },
+);
+
 const selectClaims = (state) => state.identity.getIn(['personalInformation', 'claims', 'byId'], IMap());
 
 const selectActiveClaimCategoryId = (state) => state.identity.getIn(['personalInformation', 'activeClaimCategoryId'], '');

@@ -12,6 +12,7 @@ import {
   ADD_NEW_IDENTITY,
   DESELECT_ACTIVE_IDENTITY,
   SET_NEW_ACTIVE_IDENTITY,
+  SET_SHOW_EMPTY_CLAIM_CATEGORIES,
 } from '../utils/constants/storeType';
 
 const defaultState = fromJS({
@@ -25,6 +26,7 @@ const defaultState = fromJS({
       byId: {},
       claimCategoriesIds: [],
     },
+    showEmptyClaimCategories: false,
     activeClaimCategoryId: '',
     claims: {
       byId: {},
@@ -97,6 +99,8 @@ const identity = (state = defaultState, action) => {
         nextState.setIn(['personalInformation', 'identities', 'byId', action.payload.newActiveIdentityId, 'active'], true);
         nextState.setIn(['personalInformation', 'activeIdentityId'], action.payload.newActiveIdentityId);
       });
+    case SET_SHOW_EMPTY_CLAIM_CATEGORIES:
+      return state.setIn(['personalInformation', 'showEmptyClaimCategories'], action.payload.value);
     default:
       return state;
   }

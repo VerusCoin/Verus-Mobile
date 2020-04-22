@@ -85,9 +85,11 @@ export const updateClaimCategories = async (updatedCategories) => {
   }
 };
 
-export const storeSeedClaims = async () => {
+export const storeSeedClaims = async (identityId) => {
+  const seededClaims = claims(identityId);
+
   try {
-    await AsyncStorage.setItem('claims', JSON.stringify({ claims }));
+    await AsyncStorage.setItem('claims', JSON.stringify({ claims: seededClaims }));
   } catch (error) {
     console.log(error);
   }
@@ -133,3 +135,18 @@ export const updateIdentities = async (updatedIdentities) => {
     console.log(error);
   }
 };
+
+export const updateClaims = async (updatedClaims) => {
+  try {
+    const storedClaims = await getClaims();
+    const oldCategories = storedClaims.filter((storedClaim) => !updatedClaims.some((updatedClaim) => updatedClaim.id === storedClaim.id));
+    const claimsToStore = oldCategories.concat(updatedClaims);
+    await AsyncStorage.setItem('claims', JSON.stringify({ claims: claimsToStore }));
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// toggleCheckedClaim = (claim, value) => {
+
+// }

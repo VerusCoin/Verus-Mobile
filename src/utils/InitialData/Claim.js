@@ -1,4 +1,4 @@
-const claims = [
+const claims = (identityId) => ([
   {
     id: 'firstName',
     name: 'First Name',
@@ -6,6 +6,8 @@ const claims = [
     parent_claims: ['birthDate'],
     child_claims: [],
     local_key: '',
+    hidden: false,
+    categoryId: `${identityId}-personalInformation`,
   },
   {
     id: 'lastName',
@@ -14,6 +16,8 @@ const claims = [
     parent_claims: ['birthDate'],
     child_claims: [],
     local_key: '',
+    hidden: false,
+    categoryId: `${identityId}-personalInformation`,
   },
   {
     id: 'birthDate',
@@ -22,6 +26,8 @@ const claims = [
     parent_claims: [],
     child_claims: ['firstName', 'lastName'],
     local_key: '',
+    hidden: false,
+    categoryId: `${identityId}-personalInformation`,
   },
   {
     id: 'bloodType',
@@ -30,6 +36,8 @@ const claims = [
     parent_claims: ['healthConditions'],
     child_claims: [],
     local_key: '',
+    hidden: false,
+    categoryId: `${identityId}-healthCare`,
   },
   {
     id: 'healthConditions',
@@ -38,6 +46,8 @@ const claims = [
     parent_claims: [],
     child_claims: ['bloodType'],
     local_key: '',
+    hidden: false,
+    categoryId: `${identityId}-healthCare`,
   },
   {
     id: 'university',
@@ -46,6 +56,8 @@ const claims = [
     parent_claims: [],
     child_claims: [],
     local_key: '',
+    hidden: true,
+    categoryId: `${identityId}-education`,
   },
   {
     id: 'address',
@@ -54,7 +66,9 @@ const claims = [
     parent_claims: [],
     child_claims: [],
     local_key: '',
+    hidden: false,
+    categoryId: `${identityId}-housing`,
   },
-];
+]);
 
 export default claims;

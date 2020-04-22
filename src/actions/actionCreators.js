@@ -70,6 +70,7 @@ import {
   DESELECT_ACTIVE_IDENTITY,
   SET_NEW_ACTIVE_IDENTITY,
   APP_SETUP,
+  SET_SHOW_EMPTY_CLAIM_CATEGORIES,
 } from '../utils/constants/storeType';
 
 // Reducer Name: authentication
@@ -439,4 +440,9 @@ export const setNewActiveIdentity = (newActiveIdentityId) => ({
 
 export const appSetup = () => ({
   type: APP_SETUP,
+});
+
+export const setShowEmptyClaimCategories = (value) => ({
+  type: SET_SHOW_EMPTY_CLAIM_CATEGORIES,
+  payload: { value },
 });

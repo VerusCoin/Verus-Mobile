@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, Platform,
 } from 'react-native';
-import { SearchBar } from 'react-native-elements';
+import { SearchBar, CheckBox } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import styles from './styles';
 
 const PersonalInfo = (props) => {
-  const { claimCategories, navigation, actions: { setActiveClaimCategory } } = props;
+  const {
+    claimCategories,
+    showEmptyClaimCategories,
+    navigation,
+    actions: {
+      setActiveClaimCategory,
+      setShowEmptyClaimCategories,
+    }
+  } = props;
   const [categories, setCategories] = useState(claimCategories);
   const [searchValue, setSearchValue] = useState('');
 
@@ -17,6 +25,10 @@ const PersonalInfo = (props) => {
     });
     setActiveClaimCategory(claimCategoryId);
   };
+
+  useEffect(() => {
+    setCategories(claimCategories);
+  }, [claimCategories]);
 
   const updateSearch = (value) => {
     const newData = claimCategories.filter((claimCategory) => {
@@ -31,6 +43,11 @@ const PersonalInfo = (props) => {
   return (
     <View style={styles.root}>
       <Text style={styles.textHeader}>Personal Information</Text>
+      <CheckBox
+        checked={showEmptyClaimCategories}
+        title="Show empty claim categories"
+        onPress={() => setShowEmptyClaimCategories(!showEmptyClaimCategories)}
+      />
       <SearchBar
         containerStyle={styles.searchBarContainer}
         platform={Platform.OS === 'ios' ? 'ios' : 'android'}
