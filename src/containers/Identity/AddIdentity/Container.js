@@ -6,7 +6,7 @@ import { selectIdentities, selectActiveIdentityId } from '../../../selectors/ide
 
 const mapStateToProps = (state) => ({
   identities: selectIdentities(state),
-  activeIdentity: selectActiveIdentityId(state),
+  activeIdentityId: selectActiveIdentityId(state),
 });
 
 const mapDispatchToProps = (dispatch) => ({

@@ -7,7 +7,6 @@ export default StyleSheet.create({
   },
   searchBarContainer: {
     backgroundColor: 'white',
-    paddingRight: '3%',
 
   },
   textHeader: {

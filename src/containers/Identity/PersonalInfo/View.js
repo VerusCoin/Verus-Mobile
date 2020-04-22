@@ -1,16 +1,14 @@
 import React, { useEffect } from 'react';
 import {
-  View, Text, TouchableOpacity, Platform,
+  View, Text, Platform,
 } from 'react-native';
 import { SearchBar, CheckBox, ListItem } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import { FloatingAction } from 'react-native-floating-action';
-
 import Icon from 'react-native-vector-icons/Ionicons';
 import Dialog from 'react-native-dialog';
 
 import DelayedAlert from '../../../utils/delayedAlert';
-
 import styles from './styles';
 import Colors from '../../../globals/colors';
 
@@ -82,7 +80,6 @@ const PersonalInfo = (props) => {
     setSearchTerm(searchValue);
   };
 
-
   const handleOnChangeText = (text) => {
     setCategoryName(text);
   };
@@ -134,7 +131,6 @@ const PersonalInfo = (props) => {
           platform={Platform.OS === 'ios' ? 'ios' : 'android'}
           placeholder="Quick Search"
           onChangeText={updateSearch}
-          cancelButtonProps={{ buttonStyle: { paddingRight: 15 } }}
           value={searchTerm}
         />
       </View>
@@ -157,6 +153,7 @@ const PersonalInfo = (props) => {
         onPressItem={(name) => handleSelectAction(name)}
         color={Colors.primaryColor}
       />
+
     </View>
   );
 };
