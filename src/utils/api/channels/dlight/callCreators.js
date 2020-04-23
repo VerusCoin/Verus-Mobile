@@ -26,6 +26,10 @@ export const makeDlightRequest = (coinId, accountHash, coinProto, reqId, method,
   return new Promise((resolve, reject) => {
     VerusLightClient.request(reqId, method, [coinId, coinProto, accountHash, ...params])
     .then(res => {
+      console.log("GOT DLIGHT REQUEST RESULT")
+      console.log(JSON.stringify(res))
+      console.log(typeof res)
+      console.log(res.error)
       if (res.error != null) {
 
         // DELETE/REFACTOR when proper error displays are made

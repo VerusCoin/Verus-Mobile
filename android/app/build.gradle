@@ -139,8 +139,8 @@ android {
             versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta"
         }
         ndk {
-            abiFilters "x86"
-            //abiFilters "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
+            //abiFilters "x86"
+            abiFilters  "arm64-v8a", "x86_64" //,"x86" "armeabi-v7a",
         }
     }
 
@@ -172,7 +172,7 @@ android {
             reset()
             enable enableSeparateBuildPerCPUArchitecture
             universalApk false  // If true, also generate a universal APK
-            include "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
+            include "armeabi-v7a", "arm64-v8a", "x86_64"
         }
     }
     buildTypes {

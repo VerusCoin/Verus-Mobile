@@ -1,6 +1,6 @@
 /*
-  This component's purpose is to display a tab bar of 
-  all the different apps a specific coin has in the coinData file. 
+  This component's purpose is to display a tab bar of
+  all the different apps a specific coin has in the coinData file.
 */
 
 import React, { Component } from "react";
@@ -17,32 +17,42 @@ import ReceiveCoin from './ReceiveCoin/ReceiveCoin'
 import { Icon } from "react-native-elements"
 import { setIsCoinMenuFocused } from "../../actions/actionCreators";
 import { withNavigationFocus } from 'react-navigation';
+import VerusLightClient from 'react-native-verus-light-client';
 
 class CoinMenus extends Component {
   constructor(props) {
     super(props)
     let stateObj = this.generateTabs();
 
-    //CoinMenus can be passed data, which will be passed to 
+    //CoinMenus can be passed data, which will be passed to
     //the app section components as props
     this.passthrough = this.props.navigation.state.params ? this.props.navigation.state.params.data : null
-    
+
     this.state = {
       tabs: stateObj.tabs,
       activeTab: stateObj.activeTab,
-    }; 
+    };
   }
 
-  componentDidUpdate(lastProps) {  
+  componentDidUpdate(lastProps) {
     if (lastProps.isFocused !== this.props.isFocused) {
       this.props.dispatch(setIsCoinMenuFocused(this.props.isFocused))
     }
+
+    var testArray = ['VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99'];
+
+    VerusLightClient.request( 0, "listprivatetransactions", testArray)
+    .then(res => {
+      console.log("Check Dit")
+      console.log(res)
+    })
+
   }
 
   static navigationOptions = ({ navigation }) => {
     return {
-      title: typeof(navigation.state.params)==='undefined' || 
-      typeof(navigation.state.params.title) === 'undefined' ? 
+      title: typeof(navigation.state.params)==='undefined' ||
+      typeof(navigation.state.params.title) === 'undefined' ?
       'undefined': navigation.state.params.title,
     };
   };
@@ -108,14 +118,14 @@ class CoinMenus extends Component {
   }
 
   //The rendering of overview, send and recieve is temporary, we want to use
-  //this.state.activeTab.screen, but the 
+  //this.state.activeTab.screen, but the
   //"Cannot Add a child that doesn't have a YogaNode to a parent with out a measure function"
   //bug comes up and it seems like a bug in rn
   render() {
     return (
       <View style={{ flex: 1 }}>
           {this.state.activeTab.screen === "Overview" ? <Overview navigation={this.props.navigation} data={this.passthrough}/> :
-          (this.state.activeTab.screen === "SendCoin" ? <SendCoin navigation={this.props.navigation} data={this.passthrough}/> : 
+          (this.state.activeTab.screen === "SendCoin" ? <SendCoin navigation={this.props.navigation} data={this.passthrough}/> :
           (this.state.activeTab.screen === "ReceiveCoin" ? <ReceiveCoin navigation={this.props.navigation} data={this.passthrough}/> : null))}
         <BottomNavigation
           onTabPress={newTab => this.switchTab(newTab)}
@@ -138,4 +148,3 @@ const mapStateToProps = (state) => {
 };
 
 export default connect(mapStateToProps)(withNavigationFocus(CoinMenus));
-

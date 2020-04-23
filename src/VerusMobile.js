@@ -1,8 +1,8 @@
 import React from "react";
 import { YellowBox, TouchableWithoutFeedback, Keyboard, Alert } from "react-native";
 import { RootNavigator } from './utils/navigation/index';
-import { 
-  fetchUsers, 
+import {
+  fetchUsers,
   loadServerVersions,
   loadCachedHeaders,
   initSettings
@@ -26,40 +26,48 @@ import {
   initializeWallet,
   openWallet
 } from "./utils/api/channels/dlight/callCreators";
+import  VerusLightClient  from 'react-native-verus-light-client';
 
 
 class VerusMobile extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      loading: true   
+      loading: true
     };
-    
+
     YellowBox.ignoreWarnings([
       "Warning: componentWillMount is deprecated",
       "Warning: componentWillReceiveProps is deprecated",
       "Warning: componentWillUpdate is deprecated"
     ]);
   }
-  
+
   componentDidMount() {
 
     //DELETE/REFACTOR
-    /*VerusLightClient.addWallet('ZEC', 'btc', "lightwalletd.testnet.z.cash", 9067, "abcde12345", "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol.")
+    VerusLightClient.createWallet('VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99', "lightwalletd.testnet.z.cash", 9067, 2, "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol.", 0)
     .then(res => {
       console.log("ADD WALLET RES")
       console.log(res)
 
-      return VerusLightClient.request(20, "getblockcount", ["ZEC", "abcde12345", "btc"])
-    }) 
+      return VerusLightClient.openWallet('VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99')
+    })
     .then(res => {
-      console.log("BLOCK COUNT")
+      console.log("ADD WALLET RES")
+      console.log(res)
+
+      return startSync('VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99')
+    })
+    .then(res => {
+      console.log("START SYNC RES")
       console.log(res)
     })
     .catch(err => {
       console.log("ADD WALLET OR REQ REJ")
       console.log(err)
-    })*/
+    })
+
     /*initializeWallet('ZEC', 'btc', "lightwalletd.testnet.z.cash", 9067, "8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99", 100, "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol.", 0)
     .then(res => {
       console.log("INIT WALLET RES")
@@ -72,7 +80,7 @@ class VerusMobile extends React.Component {
       console.log(res)
 
       return startSync('ZEC', 'btc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99')
-    }) 
+    })
     .then(res => {
       console.log("START SYNC RES")
       console.log(res)
@@ -83,8 +91,8 @@ class VerusMobile extends React.Component {
     })*/
 
 
-    //TODO: Figure out what should trigger a cache clear on startup of server 
-    //versions. (The action that triggers it should indicate a server upgraded it's 
+    //TODO: Figure out what should trigger a cache clear on startup of server
+    //versions. (The action that triggers it should indicate a server upgraded it's
     //version)
     clearCachedVersions()
     .then(() => {
@@ -109,7 +117,7 @@ class VerusMobile extends React.Component {
       actionArr.forEach((action) => {
         this.props.dispatch(action)
       })
-      
+
       return Promise.all([loadServerVersions(this.props.dispatch), loadCachedHeaders(this.props.dispatch)])
     })
     .then(() => {
@@ -122,10 +130,10 @@ class VerusMobile extends React.Component {
 
   render() {
     const Layout = RootNavigator(
-      this.props.accountsLength > 0, 
-      this.state.loading, 
+      this.props.accountsLength > 0,
+      this.state.loading,
       this.props.signedIn);
-    
+
     return(
        <Layout />
     );
