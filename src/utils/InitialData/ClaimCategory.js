@@ -4,14 +4,12 @@ const claimCategories = (identityId) => ([
     name: 'Healthcare',
     desc: '',
     identity: identityId,
-    claims: ['bloodType', 'healthConditions'],
   },
   {
     id: `${identityId}-personalInformation`,
     name: 'Personal Information',
     desc: '',
     identity: identityId,
-    claims: ['firstName', 'lastName', 'birthDate'],
   },
   {
     id: `${identityId}-finance`,
@@ -25,21 +23,18 @@ const claimCategories = (identityId) => ([
     name: 'Education',
     desc: '',
     identity: identityId,
-    claims: ['university'],
   },
   {
     id: `${identityId}-housing`,
     name: 'Housing',
     desc: '',
     identity: identityId,
-    claims: ['address'],
   },
   {
     id: `${identityId}-family`,
     name: 'Family',
     desc: '',
     identity: identityId,
-    claims: [],
   },
 ]);
 

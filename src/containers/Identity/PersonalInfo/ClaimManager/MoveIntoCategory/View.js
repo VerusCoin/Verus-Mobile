@@ -1,27 +1,30 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Map as IMap } from 'immutable';
 import { View,Text } from 'react-native';
 import { ListItem } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
-import data from './mockData';
 import styles from './styles';
 
 const MoveIntoCategory = (props) => {
   const {
     navigation,
+    categories,
+    actions: { moveClaimsToCategory },
   } = props;
-  const [categories, setCategories] = useState(data);
-  const moveIntoCategory = (id) => {
+
+  const moveIntoCategory = (category) => {
+    moveClaimsToCategory(category);
     navigation.goBack();
   };
+
   return (
     <View style={styles.root}>
       <ScrollView>
-        {categories.map((item) => (
+        {categories.keySeq().map((category) => (
           <ListItem
-            key={item.id}
-            title={item.name}
-            onPress={() => moveIntoCategory(item.id)}
+            key={categories.getIn([category, 'id'], '')}
+            title={categories.getIn([category, 'name'], '')}
+            onPress={() => moveIntoCategory(categories.get(category, IMap()))}
             bottomDivider
           />
         ))}

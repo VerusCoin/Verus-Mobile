@@ -56,7 +56,7 @@ const Home = (props) => {
               style={styles.attestation}
             >
               <View>
-                <Text style={styles.attestationText}>{pinnedAttestations.getIn([attestationKey, 'identity_attested'], '')}</Text>
+                <Text style={styles.attestationText}>{pinnedAttestations.getIn([attestationKey, 'identityAttested'], '')}</Text>
               </View>
             </TouchableOpacity>
           ))}

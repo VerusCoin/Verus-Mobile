@@ -1,19 +1,19 @@
 const attestations = [
   {
     id: 'birthCertificate',
-    identity_attested: 'kkuna@',
-    content_root_key: '',
+    identityAttested: 'kkuna@',
+    contentRootKey: '',
     sigKey: '',
     showOnHomeScreen: false,
-    claim_id: 'birthDate',
+    claimId: 'birthDate',
   },
   {
     id: 'driversLicence',
-    identity_attested: 'kkuna@',
-    content_root_key: '',
+    identityAttested: 'kkuna@',
+    contentRootKey: '',
     sigKey: '',
     showOnHomeScreen: false,
-    claim_id: 'lastName',
+    claimId: 'lastName',
   },
 ];
 

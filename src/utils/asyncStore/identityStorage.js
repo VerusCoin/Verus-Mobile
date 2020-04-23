@@ -105,6 +105,8 @@ export const storeSeedClaims = async (identityId) => {
     const storedClaims = await getClaims();
     if (!storedClaims.length) {
       claimsToStore = seededClaims;
+    } else if (storedClaims.every((claim) => !claim.categoryId.includes(identityId))) {
+      claimsToStore = [...storedClaims, ...seededClaims];
     } else {
       claimsToStore = storedClaims;
     }

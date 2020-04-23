@@ -34,6 +34,7 @@ const PersonalInfo = (props) => {
     claimCategories,
     showEmptyClaimCategories,
     navigation,
+    claims,
     actions: {
       setActiveClaimCategory,
       setShowEmptyClaimCategories,
@@ -71,12 +72,11 @@ const PersonalInfo = (props) => {
   const updateSearch = (searchValue) => {
     const newData = claimCategories.filter((claimCategory) => {
       const itemData = claimCategory.get('name', '').toUpperCase();
-      const textData = searchTerm.toUpperCase().replace(/\s+/g, '');
-      return itemData.includes(textData) || claimCategory.get('claims').some((claim) => claim.toUpperCase().includes(textData));
+      const textData = searchValue.toUpperCase();
+      return itemData.includes(textData);
     });
 
     setCategories(newData);
-
     setSearchTerm(searchValue);
   };
 

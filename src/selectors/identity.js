@@ -21,11 +21,13 @@ export const selectClaimCategoriesObj = (state) => state.identity.getIn(['person
 
 export const selectShowEmptyClaimCategories = (state) => state.identity.getIn(['personalInformation', 'showEmptyClaimCategories'], false);
 
+export const selectClaims = (state) => state.identity.getIn(['personalInformation', 'claims', 'byId'], IMap());
+
 export const selectClaimCategoriesToDisplay = createSelector(
-  [selectClaimCategories, selectShowEmptyClaimCategories],
-  (claimCategories, showEmptyClaimCategories) => {
+  [selectClaimCategories, selectShowEmptyClaimCategories, selectClaims],
+  (claimCategories, showEmptyClaimCategories, claims) => {
     if (!showEmptyClaimCategories) {
-      return claimCategories.filter((claimCategory) => claimCategory.get('claims', IList()).size > 0);
+      return claimCategories.filter((claimCategory) => claims.some((claim) => claim.get('categoryId', '') === claimCategory.get('id', '')));
     }
     return claimCategories;
   },
@@ -33,11 +35,11 @@ export const selectClaimCategoriesToDisplay = createSelector(
 
 export const selectClaimsObj = (state) => state.identity.getIn(['personalInformation', 'claims'], IMap());
 
-export const selectClaims = (state) => state.identity.getIn(['personalInformation', 'claims', 'byId'], IMap());
-
 const selectActiveClaimCategoryId = (state) => state.identity.getIn(['personalInformation', 'activeClaimCategoryId'], '');
 
 export const selectShowHiddenClaims = (state) => state.identity.getIn(['personalInformation', 'showHiddenClaims'], false);
+
+export const selectSelectedClaims = (state) => state.identity.getIn(['personalInformation', 'selectedClaims'], IList());
 
 const selectActiveCategory = createSelector(
   [selectActiveClaimCategoryId, selectClaimCategories],
@@ -45,8 +47,8 @@ const selectActiveCategory = createSelector(
 );
 
 export const selectClaimsByCategoryId = createSelector(
-  [selectActiveClaimCategoryId, selectActiveCategory, selectClaims],
-  (activeCategoryId, activeCategory, claims) => claims.filter((claim) => activeCategory.getIn([activeCategoryId, 'claims'], IList()).indexOf(claim.get('id', '')) > -1),
+  [selectActiveClaimCategoryId, selectClaims],
+  (activeCategoryId, claims) => claims.filter((claim) => claim.get('categoryId', '') === activeCategoryId)
 );
 
 export const selectClaimsToDisplay = createSelector(
@@ -65,18 +67,18 @@ const selectActiveClaim = (state) => state.identity.getIn(['personalInformation'
 
 export const selectParentClaimsById = createSelector(
   [selectClaims, selectActiveClaim],
-  (claims, activeClaim) => claims.filter((claim) => activeClaim.get('parent_claims').includes(claim.get('id'))),
+  (claims, activeClaim) => claims.filter((claim) => activeClaim.get('parentClaims').includes(claim.get('id'))),
 );
 
 export const selectChildClaimsById = createSelector(
   [selectClaims, selectActiveClaim],
-  (claims, activeClaim) => claims.filter((claim) => activeClaim.get('child_claims').includes(claim.get('id'))),
+  (claims, activeClaim) => claims.filter((claim) => activeClaim.get('childClaims').includes(claim.get('id'))),
 );
 export const selectAttestationsObject = (state) => state.identity.getIn(['personalInformation', 'attestations'], IMap());
 
 export const selectAttestationsByClaimId = createSelector(
   [selectAttestations, selectActiveClaim],
-  (attestations, activeClaim) => attestations.filter((attestation) => attestation.get('claim_id', '') === activeClaim.get('id', '')),
+  (attestations, activeClaim) => attestations.filter((attestation) => attestation.get('claimId', '') === activeClaim.get('id', '')),
 );
 
 export const selectPinnedAttestations = createSelector(

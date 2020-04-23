@@ -75,6 +75,10 @@ import {
   SET_NEW_CATEGORY,
   SET_CLAIM_VISIBILITY,
   SET_SHOW_HIDDEN_CLAIMS,
+  UPDATE_SELECTED_CLAIMS,
+  CLEAR_SELECTED_CLAIMS,
+  UPDATE_CATEGORY_FOR_CLAIM,
+  MOVE_CLAIMS_TO_CATEGORY,
 } from '../utils/constants/storeType';
 
 // Reducer Name: authentication
@@ -469,4 +473,23 @@ export const setNewCategory = (category) => ({
 export const setClaimVisibility = (claim, value) => ({
   type: SET_CLAIM_VISIBILITY,
   payload: { claim, value },
+});
+
+export const updateSelectedClaims = (claim) => ({
+  type: UPDATE_SELECTED_CLAIMS,
+  payload: { claim },
+});
+
+export const clearSelectedClaims = () => ({
+  type: CLEAR_SELECTED_CLAIMS,
+});
+
+export const updateCategoryForClaim = (claimId, categoryId) => ({
+  type: UPDATE_CATEGORY_FOR_CLAIM,
+  payload: { claimId, categoryId },
+});
+
+export const moveClaimsToCategory = (targetCategory) => ({
+  type: MOVE_CLAIMS_TO_CATEGORY,
+  payload: { targetCategory },
 });
