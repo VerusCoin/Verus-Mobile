@@ -1,10 +1,12 @@
 import React from 'react';
 import { Map as IMap } from 'immutable';
-import { View, Text } from 'react-native';
+import { View, Text, Platform } from 'react-native';
 import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
-
+import Icon from 'react-native-vector-icons/Ionicons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { CheckBox } from 'react-native-elements';
 import styles from './styles';
+import { truncateString } from './utils/truncateString';
 
 const ClaimManager = (props) => {
   const {
@@ -43,11 +45,21 @@ const ClaimManager = (props) => {
 
   const checkIfClaimIsSelected = (claim) => selectedClaims.indexOf(claim) > -1;
 
+
+  const getCategotyName = (name) => {
+    if (name.length > 10) return `${truncateString(name, 10)}...`;
+    return name;
+  };
   return (
     <View style={styles.root}>
       <TouchableOpacity style={[styles.button, styles.moveInto]} onPress={moveSelectedCategories}>
         <Text style={styles.moveIntoText}>Move into category</Text>
       </TouchableOpacity>
+      <View style={styles.labelContainer}>
+        <Text style={styles.claimText}>CLAIM</Text>
+        <Text style={styles.label}>CATEGORY</Text>
+        <Text style={styles.label}>SHOW/HIDE</Text>
+      </View>
       <ScrollView>
         <View style={styles.claimsContainer}>
           {claims.keySeq().map((claim) => (
@@ -60,11 +72,16 @@ const ClaimManager = (props) => {
               <View>
                 <Text style={styles.text}>{claims.getIn([claim, 'name'])}</Text>
               </View>
-              <TouchableOpacity style={styles.button} onPress={() => moveSingleClaim(claims.get(claim))}>
-                <Text style={styles.text}>{claimCategories.getIn([claims.getIn([claim, 'categoryId'], ''), 'name'], '')}</Text>
+              <TouchableOpacity onPress={() => moveSingleClaim(claims.get(claim))}>
+                <View style={{ flexDirection:'row', alignItems:'center' }}>
+                  <Text style={styles.text}>{getCategotyName(claimCategories.getIn([claims.getIn([claim, 'categoryId'], ''), 'name'], ''))}</Text>
+                  <MaterialIcons name="arrow-drop-down" size={24} />
+                </View>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.button} onPress={() => toggleClaimVisibility(claims.get(claim))}>
-                <Text style={styles.text}>{claims.getIn([claim, 'hidden']) ? 'Show' : 'Hide'}</Text>
+              <TouchableOpacity onPress={() => toggleClaimVisibility(claims.get(claim))}>
+                {claims.getIn([claim, 'hidden']) ? <Icon name={Platform.OS === 'ios' ? 'ios-eye' : 'md-eye'} size={24} />
+                  : <Icon name={Platform.OS === 'ios' ? 'ios-eye-off' : 'md-eye-off'} size={24} />
+                }
               </TouchableOpacity>
             </View>
           ))}

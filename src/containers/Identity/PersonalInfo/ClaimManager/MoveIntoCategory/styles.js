@@ -6,4 +6,8 @@ export default StyleSheet.create({
     flex: 1,
     padding:16,
   },
+  text:{
+    color:'#b5b5b5',
+    padding:10,
+  },
 });

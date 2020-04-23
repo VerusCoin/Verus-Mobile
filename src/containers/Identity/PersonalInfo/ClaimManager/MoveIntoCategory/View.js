@@ -1,6 +1,6 @@
 import React from 'react';
 import { Map as IMap } from 'immutable';
-import { View,Text } from 'react-native';
+import { View, Text } from 'react-native';
 import { ListItem } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import styles from './styles';
@@ -19,6 +19,7 @@ const MoveIntoCategory = (props) => {
 
   return (
     <View style={styles.root}>
+      <Text style={styles.text}>SELECT CATEGORY</Text>
       <ScrollView>
         {categories.keySeq().map((category) => (
           <ListItem

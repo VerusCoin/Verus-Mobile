@@ -31,7 +31,7 @@ export default StyleSheet.create({
     color:Colors.secondaryColor,
   },
   claimsContainer:{
-    paddingVertical:30,
+    paddingVertical:8,
   },
   claims:{
     flexDirection: 'row',
@@ -39,9 +39,24 @@ export default StyleSheet.create({
     justifyContent:'space-between',
     borderBottomColor:'#b5b5b5',
     borderBottomWidth: 0.8,
+    alignContent:'flex-start',
   },
   text:{
     fontSize: 16,
-    paddingHorizontal:4,
+  },
+  labelContainer:{
+    flexDirection:'row',
+    alignItems:'center',
+    justifyContent:'space-between',
+    borderBottomColor:'#b5b5b5',
+    borderBottomWidth: 0.8,
+    paddingVertical:8,
+  },
+  label:{
+    color:'#b5b5b5',
+  },
+  claimText:{
+    marginLeft:'30%',
+    color:'#b5b5b5',
   },
 });
