@@ -122,18 +122,13 @@ const PersonalInfo = (props) => {
         title="Show empty claim categories"
         onPress={() => setShowEmptyClaimCategories(!showEmptyClaimCategories)}
       />
-      <View style={{
-        flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 5,
-      }}
-      >
-        <SearchBar
-          containerStyle={styles.searchBarContainer}
-          platform={Platform.OS === 'ios' ? 'ios' : 'android'}
-          placeholder="Quick Search"
-          onChangeText={updateSearch}
-          value={searchTerm}
-        />
-      </View>
+      <SearchBar
+        containerStyle={styles.searchBarContainer}
+        platform={Platform.OS === 'ios' ? 'ios' : 'android'}
+        placeholder="Quick Search"
+        onChangeText={updateSearch}
+        value={searchTerm}
+      />
       {renderDialog()}
       <ScrollView>
         <View>
