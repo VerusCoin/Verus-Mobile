@@ -77,8 +77,12 @@ export const getClaimCategoriesByIdentity = async (identityId) => {
 export const updateClaimCategories = async (updatedCategories) => {
   try {
     const storedCategories = await getClaimCategories();
-    const oldCategories = storedCategories.filter((storedCategory) => !updatedCategories.some((updatedCategory) => updatedCategory.id === storedCategory.id));
-    const categoriesToStore = oldCategories.concat(updatedCategories);
+    const oldCategories = storedCategories.filter(
+      (storedCategory) => !updatedCategories.claimCategories.some(
+        (updatedCategory) => updatedCategory.id === storedCategory.id,
+      ),
+    );
+    const categoriesToStore = oldCategories.concat(updatedCategories.claimCategories);
     await AsyncStorage.setItem('claimCategories', JSON.stringify({ claimCategories: categoriesToStore }));
   } catch (error) {
     console.log(error);

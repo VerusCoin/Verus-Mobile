@@ -12,7 +12,9 @@ import {
   updateAttestations,
   updateIdentities,
   getClaimCategoriesByIdentity,
+  updateClaimCategories,
 } from '../utils/asyncStore/identityStorage';
+import { camelizeString } from '../utils/stringUtils';
 import {
   setActiveIdentity,
   setIdentities,
@@ -24,9 +26,15 @@ import {
   deselectActiveIdentity,
   setNewActiveIdentity,
   setAttestationPinned,
+  setNewCategory,
 } from '../actions/actionCreators';
 import {
-  selectActiveIdentityId, selectAttestationsObject, selectIdentities, selectIdentityObj, selectActiveAttestationId,
+  selectActiveIdentityId,
+  selectAttestationsObject,
+  selectIdentities,
+  selectIdentityObj,
+  selectActiveAttestationId,
+  selectClaimCategoriesObj,
 } from '../selectors/identity';
 import {
   REQUEST_SEED_DATA,
@@ -37,6 +45,7 @@ import {
   ADD_NEW_IDENTITY,
   CHANGE_ACTIVE_IDENTITY,
   SET_ATTESTATION_PINNED,
+  ADD_NEW_CATEGORY,
 } from '../utils/constants/storeType';
 import {
   normalizeCategories,
@@ -44,7 +53,7 @@ import {
   normalizeAttestations,
   normalizeIdentities,
 } from '../utils/identityTransform/identityNormalizers';
-import { denormalizeAttestations, denormalizeIdentities } from '../utils/identityTransform/identityDenormalizers';
+import { denormalizeAttestations, denormalizeIdentities, denormalizeClaimCategories } from '../utils/identityTransform/identityDenormalizers';
 
 export default function * identitySaga() {
   yield all([
@@ -56,6 +65,7 @@ export default function * identitySaga() {
     takeLatest(ADD_NEW_IDENTITY_NAME, handleAddNewIdentity),
     takeLatest(ADD_NEW_IDENTITY, updateIdentityStorage),
     takeLatest(CHANGE_ACTIVE_IDENTITY, handleChangeActiveIdentity),
+    takeLatest(ADD_NEW_CATEGORY, handleAddNewCategory),
   ]);
 }
 
@@ -148,8 +158,34 @@ function * handleAddNewIdentity(action) {
   yield put(addNewIdentity(newIdentity[name]));
 }
 
+function * handleAddNewCategory(action) {
+  const selectedIdentityId = yield select(selectActiveIdentityId);
+  const camelizedCategoryName = camelizeString(action.payload.value);
+
+  const newCategoryId = `${selectedIdentityId}-${camelizedCategoryName}`;
+
+  const newCategory = {
+    [newCategoryId]: {
+      id: newCategoryId,
+      name: action.payload.value,
+      desc: '',
+      identity: selectedIdentityId,
+      claims: [],
+    },
+  };
+
+  yield put(setNewCategory(newCategory[newCategoryId]));
+  yield call(updateClaimCategoryStorage);
+}
+
 function * updateIdentityStorage() {
   const selectedIdentities = yield select(selectIdentityObj);
   const identities = yield call(denormalizeIdentities, selectedIdentities.toJS());
   yield call(updateIdentities, identities);
+}
+
+function * updateClaimCategoryStorage() {
+  const selectedCategories = yield select(selectClaimCategoriesObj);
+  const categories = yield call(denormalizeClaimCategories, selectedCategories.toJS());
+  yield call(updateClaimCategories, categories);
 }

@@ -2,7 +2,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import { selectClaimCategoriesToDisplay, selectShowEmptyClaimCategories } from '../../../selectors/identity';
-import { setActiveClaimCategory, setShowEmptyClaimCategories } from '../../../actions/actionCreators';
+import { setActiveClaimCategory, setShowEmptyClaimCategories, addNewCategory } from '../../../actions/actionCreators';
 
 const mapStateToProps = (state) => ({
   claimCategories: selectClaimCategoriesToDisplay(state),
@@ -14,6 +14,7 @@ const mapDispatchToProps = (dispatch) => ({
     {
       setActiveClaimCategory,
       setShowEmptyClaimCategories,
+      addNewCategory,
     },
     dispatch,
   ),

@@ -18,7 +18,7 @@ const claimCategories = (identityId) => ([
     name: 'Finance',
     desc: '',
     identity: identityId,
-    claims: ['bankAccount'],
+    claims: [],
   },
   {
     id: `${identityId}-education`,

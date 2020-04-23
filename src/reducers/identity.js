@@ -13,6 +13,7 @@ import {
   DESELECT_ACTIVE_IDENTITY,
   SET_NEW_ACTIVE_IDENTITY,
   SET_SHOW_EMPTY_CLAIM_CATEGORIES,
+  SET_NEW_CATEGORY,
 } from '../utils/constants/storeType';
 
 const defaultState = fromJS({
@@ -98,6 +99,11 @@ const identity = (state = defaultState, action) => {
       return state.withMutations((nextState) => {
         nextState.setIn(['personalInformation', 'identities', 'byId', action.payload.newActiveIdentityId, 'active'], true);
         nextState.setIn(['personalInformation', 'activeIdentityId'], action.payload.newActiveIdentityId);
+      });
+    case SET_NEW_CATEGORY:
+      return state.withMutations((nextState) => {
+        nextState.setIn(['personalInformation', 'claimCategories', 'byId', action.payload.category.id], fromJS(action.payload.category));
+        nextState.updateIn(['personalInformation', 'claimCategories', 'claimCategoriesIds'], IList(), (claimCategoriesIds) => claimCategoriesIds.concat(action.payload.category.id));
       });
     case SET_SHOW_EMPTY_CLAIM_CATEGORIES:
       return state.setIn(['personalInformation', 'showEmptyClaimCategories'], action.payload.value);

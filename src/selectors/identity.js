@@ -17,6 +17,8 @@ export const selectClaimCategories = (state) => state.identity.getIn(
   IMap(),
 );
 
+export const selectClaimCategoriesObj = (state) => state.identity.getIn(['personalInformation', 'claimCategories'], IMap());
+
 export const selectShowEmptyClaimCategories = (state) => state.identity.getIn(['personalInformation', 'showEmptyClaimCategories'], false);
 
 export const selectClaimCategoriesToDisplay = createSelector(

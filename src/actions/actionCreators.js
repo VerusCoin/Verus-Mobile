@@ -71,6 +71,8 @@ import {
   SET_NEW_ACTIVE_IDENTITY,
   APP_SETUP,
   SET_SHOW_EMPTY_CLAIM_CATEGORIES,
+  ADD_NEW_CATEGORY,
+  SET_NEW_CATEGORY,
 } from '../utils/constants/storeType';
 
 // Reducer Name: authentication
@@ -445,4 +447,14 @@ export const appSetup = () => ({
 export const setShowEmptyClaimCategories = (value) => ({
   type: SET_SHOW_EMPTY_CLAIM_CATEGORIES,
   payload: { value },
+});
+
+export const addNewCategory = (value) => ({
+  type: ADD_NEW_CATEGORY,
+  payload: { value },
+});
+
+export const setNewCategory = (category) => ({
+  type: SET_NEW_CATEGORY,
+  payload: { category },
 });

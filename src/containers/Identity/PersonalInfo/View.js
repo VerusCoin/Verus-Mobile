@@ -6,6 +6,9 @@ import { SearchBar, CheckBox } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Dialog from 'react-native-dialog';
+
+import DelayedAlert from '../../../utils/delayedAlert';
+
 import styles from './styles';
 import useClaimCategories from './utils/useClaimCategories';
 
@@ -17,6 +20,7 @@ const PersonalInfo = (props) => {
     actions: {
       setActiveClaimCategory,
       setShowEmptyClaimCategories,
+      addNewCategory,
     },
   } = props;
   const [state, actions] = useClaimCategories(claimCategories);
@@ -68,8 +72,12 @@ const PersonalInfo = (props) => {
   };
 
   const handleSave = () => {
-    // TODO: Need method that add category to redux than to Async storage
-    setDialogVisible(false);
+    if (categoryName) {
+      addNewCategory(categoryName);
+      setDialogVisible(false);
+    } else {
+      DelayedAlert('Please enter a name for the category');
+    }
   };
 
   const handleCancel = () => {
