@@ -68,6 +68,7 @@
     "react-native-crypto": "^2.1.2",
     "react-native-dialog": "^5.6.0",
     "react-native-elements": "1.0.0",
+    "react-native-floating-action": "^1.20.0",
     "react-native-fs": "~2.15.0",
     "react-native-gesture-handler": "~1.4.0",
     "react-native-image-picker": "^1.1.0",

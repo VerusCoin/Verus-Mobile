@@ -40,7 +40,7 @@ import SendTransaction from '../../containers/BuySellCrypto/PaymentMethod/SendTr
 import Identity from '../../containers/Identity';
 import ScanBadge from '../../containers/Identity/Home/ScanBadge/View';
 import ScannedInformation from '../../containers/Identity/Home/ScannedInformation/View'
-import PersonalInfo from '../../containers/Identity/PersonalInfo/';
+import PersonalInfo from '../../containers/Identity/PersonalInfo';
 import ClaimDetails from '../../containers/Identity/PersonalInfo/ClaimDetails';
 import ClaimCategory from '../../containers/Identity/PersonalInfo/ClaimCategoryDetails'
 import AttestationDetails from '../../containers/Identity/Home/AttestationDetails';
@@ -139,12 +139,9 @@ export const MainScreens =
 
     AttestationDetails: {
       screen: AttestationDetails,
-      navigationOptions: ({ navigation }) => {
-        return {
-          title: navigation.state.params.id,
-          headerLeft: getBackButton(navigation, 'Identity', 'Identity',{ selectedScreen: "Identity" })
-        }
-      }
+      navigationOptions: ({ navigation }) => ({
+        title: navigation.state.params.id,
+      }),
     },
 
     ClaimDetails: {
@@ -164,9 +161,9 @@ export const MainScreens =
     },
     ScannedInformation: {
       screen: ScannedInformation,
-      navigationOptions: ({ navigation }) => ({
-        headerLeft: getBackButton(navigation, 'Identity', 'Identity', { selectedScreen: "Identity" })
-      })
+      navigationOptions: {
+        title:'Scan to verify',
+      },
     },
 
     ScanBadge: {

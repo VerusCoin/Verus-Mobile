@@ -2,15 +2,34 @@ import React, { useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, Platform,
 } from 'react-native';
-import { SearchBar, CheckBox } from 'react-native-elements';
+import { SearchBar, CheckBox, ListItem } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
+import { FloatingAction } from 'react-native-floating-action';
+
 import Icon from 'react-native-vector-icons/Ionicons';
 import Dialog from 'react-native-dialog';
 
 import DelayedAlert from '../../../utils/delayedAlert';
 
 import styles from './styles';
+import Colors from '../../../globals/colors';
+
 import useClaimCategories from './utils/useClaimCategories';
+
+const floatingActions = [
+  {
+    text: 'Add claims',
+    name: 'claims',
+    icon:  <Icon name={Platform.OS === 'ios' ? 'ios-add' : 'md-add'} size={24} color={Colors.secondaryColor} />,
+    color: Colors.primaryColor,
+  },
+  {
+    text: 'Add category',
+    name: 'category',
+    icon:  <Icon name={Platform.OS === 'ios' ? 'ios-add' : 'md-add'} size={24} color={Colors.secondaryColor} />,
+    color: Colors.primaryColor,
+  },
+];
 
 const PersonalInfo = (props) => {
   const {
@@ -63,15 +82,12 @@ const PersonalInfo = (props) => {
     setSearchTerm(searchValue);
   };
 
-  const handleAddCategory = () => {
-    setDialogVisible(true);
-  };
 
   const handleOnChangeText = (text) => {
     setCategoryName(text);
   };
 
-  const handleSave = () => {
+  const handleSaveCategory = () => {
     if (categoryName) {
       addNewCategory(categoryName);
       setDialogVisible(false);
@@ -80,7 +96,12 @@ const PersonalInfo = (props) => {
     }
   };
 
-  const handleCancel = () => {
+  const handleSelectAction = (name) => {
+    if (name === 'claims') navigation.navigate('ClaimManager');
+    else setDialogVisible(true);
+  };
+
+  const closeDialog = () => {
     setDialogVisible(false);
   };
 
@@ -91,8 +112,8 @@ const PersonalInfo = (props) => {
         Please enter the name of Claim Category that you want add.
       </Dialog.Description>
       <Dialog.Input onChangeText={(text) => handleOnChangeText(text)} />
-      <Dialog.Button label="Cancel" onPress={handleCancel} />
-      <Dialog.Button label="Save" onPress={handleSave} />
+      <Dialog.Button label="Cancel" onPress={closeDialog} />
+      <Dialog.Button label="Save" onPress={handleSaveCategory} />
     </Dialog.Container>
   );
 
@@ -116,26 +137,26 @@ const PersonalInfo = (props) => {
           cancelButtonProps={{ buttonStyle: { paddingRight: 15 } }}
           value={searchTerm}
         />
-        <TouchableOpacity onPress={handleAddCategory}>
-          <Icon name={Platform.OS === 'ios' ? 'ios-add' : 'md-add'} size={35} style={{ paddingRight: '4%' }} />
-        </TouchableOpacity>
       </View>
       {renderDialog()}
       <ScrollView>
-        <View style={styles.categoriesContainer}>
+        <View>
           {categories.keySeq().map((item) => (
-            <TouchableOpacity
+            <ListItem
               key={categories.getIn([item, 'id'], '')}
-              style={styles.category}
+              title={categories.getIn([item, 'name'], '')}
+              bottomDivider
               onPress={() => goToClaims(categories.getIn([item, 'id'], ''), categories.getIn([item, 'name'], ''))}
-            >
-              <View>
-                <Text style={styles.name}>{categories.getIn([item, 'name'], '')}</Text>
-              </View>
-            </TouchableOpacity>
+              chevron
+            />
           ))}
         </View>
       </ScrollView>
+      <FloatingAction
+        actions={floatingActions}
+        onPressItem={(name) => handleSelectAction(name)}
+        color={Colors.primaryColor}
+      />
     </View>
   );
 };
