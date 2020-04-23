@@ -47,7 +47,7 @@ import PersonalInfo from '../../containers/Identity/PersonalInfo';
 import ClaimDetails from '../../containers/Identity/PersonalInfo/ClaimDetails';
 import ClaimCategory from '../../containers/Identity/PersonalInfo/ClaimCategoryDetails';
 import AttestationDetails from '../../containers/Identity/Home/AttestationDetails';
-import ClaimManager from '../../containers/Identity/PersonalInfo/ClaimManager/View';
+import ClaimManager from '../../containers/Identity/PersonalInfo/ClaimManager';
 import MoveIntoCategory from '../../containers/Identity/PersonalInfo/ClaimManager/MoveIntoCategory/View';
 import AddIdentity from '../../containers/Identity/AddIdentity';
 

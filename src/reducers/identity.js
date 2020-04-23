@@ -14,6 +14,8 @@ import {
   SET_NEW_ACTIVE_IDENTITY,
   SET_SHOW_EMPTY_CLAIM_CATEGORIES,
   SET_NEW_CATEGORY,
+  SET_CLAIM_VISIBILITY,
+  SET_SHOW_HIDDEN_CLAIMS,
 } from '../utils/constants/storeType';
 
 const defaultState = fromJS({
@@ -107,6 +109,10 @@ const identity = (state = defaultState, action) => {
       });
     case SET_SHOW_EMPTY_CLAIM_CATEGORIES:
       return state.setIn(['personalInformation', 'showEmptyClaimCategories'], action.payload.value);
+    case SET_SHOW_HIDDEN_CLAIMS:
+      return state.setIn(['personalInformation', 'showHiddenClaims'], action.payload.value);
+    case SET_CLAIM_VISIBILITY:
+      return state.setIn(['personalInformation', 'claims', 'byId', action.payload.claim, 'hidden'], action.payload.value);
     default:
       return state;
   }

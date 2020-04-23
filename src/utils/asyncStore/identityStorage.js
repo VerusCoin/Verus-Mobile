@@ -89,14 +89,30 @@ export const updateClaimCategories = async (updatedCategories) => {
   }
 };
 
-export const storeSeedClaims = async (identityId) => {
-  const seededClaims = claims(identityId);
-
+export const getClaims = async () => {
   try {
-    await AsyncStorage.setItem('claims', JSON.stringify({ claims: seededClaims }));
+    const result = await AsyncStorage.getItem('claims');
+    return result ? JSON.parse(result).claims : [];
   } catch (error) {
     console.log(error);
   }
+};
+
+export const storeSeedClaims = async (identityId) => {
+  const seededClaims = claims(identityId);
+  try {
+    let claimsToStore = [];
+    const storedClaims = await getClaims();
+    if (!storedClaims.length) {
+      claimsToStore = seededClaims;
+    } else {
+      claimsToStore = storedClaims;
+    }
+    await AsyncStorage.setItem('claims', JSON.stringify({ claims: claimsToStore }));
+  } catch (error) {
+    console.log(error);
+  }
+
 };
 
 export const getIdentities = async () => {
@@ -104,15 +120,6 @@ export const getIdentities = async () => {
     const result = await AsyncStorage.getItem('identities');
     console.log(JSON.parse(result))
     return result ? JSON.parse(result).identities : [];
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-export const getClaims = async () => {
-  try {
-    const result = await AsyncStorage.getItem('claims');
-    return result ? JSON.parse(result).claims : [];
   } catch (error) {
     console.log(error);
   }
@@ -143,8 +150,9 @@ export const updateIdentities = async (updatedIdentities) => {
 export const updateClaims = async (updatedClaims) => {
   try {
     const storedClaims = await getClaims();
-    const oldCategories = storedClaims.filter((storedClaim) => !updatedClaims.some((updatedClaim) => updatedClaim.id === storedClaim.id));
-    const claimsToStore = oldCategories.concat(updatedClaims);
+    const oldClaims = storedClaims.filter((storedClaim) => !updatedClaims.claims.some((updatedClaim) => updatedClaim.id === storedClaim.id));
+    const claimsToStore = oldClaims.concat(updatedClaims.claims);
+    console.log(claimsToStore)
     await AsyncStorage.setItem('claims', JSON.stringify({ claims: claimsToStore }));
   } catch (error) {
     console.log(error);

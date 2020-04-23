@@ -24,7 +24,10 @@ export const denormalizeAttestations = (entities) => denormalize(
   { attestations: entities.byId },
 );
 
-export const denormalizeClaims = (entities) => denormalize({ claims: entities.claimIds }, claimSchema, entities);
+export const denormalizeClaims = (entities) => denormalize(
+  { claims: entities.claimIds },
+  claimSchema,
+  { claims: entities.byId });
 
 export const denormalizeClaimCategories = (entities) => denormalize(
   { claimCategories: entities.claimCategoriesIds },

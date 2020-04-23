@@ -1,7 +1,7 @@
 import React from 'react';
 import { Map as IMap } from 'immutable';
 import { View } from 'react-native';
-import { ListItem } from 'react-native-elements';
+import { ListItem, CheckBox } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 
 import styles from './styles';
@@ -10,7 +10,8 @@ const ClaimCategoryDetails = (props) => {
   const {
     claims,
     navigation,
-    actions: { setActiveClaim },
+    showHiddenClaims,
+    actions: { setActiveClaim, setShowHiddenClaims },
   } = props;
 
   const goToClaimDetails = (claim) => {
@@ -18,8 +19,14 @@ const ClaimCategoryDetails = (props) => {
     navigation.navigate('ClaimDetails', { id: claim.get('id', ''), claimName: claim.get('name', '') });
   };
 
+
   return (
     <View style={styles.root}>
+      <CheckBox
+        checked={showHiddenClaims}
+        title="Show hidden claims"
+        onPress={() => setShowHiddenClaims(!showHiddenClaims)}
+      />
       <ScrollView>
         {claims.keySeq().map((claim) => (
           <ListItem

@@ -1,19 +1,21 @@
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import { selectClaimsByCategoryId } from '../../../../selectors/identity';
-import { setActiveClaim } from '../../../../actions/actionCreators';
+import { selectClaimsToDisplay, selectShowHiddenClaims } from '../../../../selectors/identity';
+import { setActiveClaim, setShowHiddenClaims } from '../../../../actions/actionCreators';
 
 const mapStateToProps = (state) => ({
-  claims: selectClaimsByCategoryId(state),
+  claims: selectClaimsToDisplay(state),
+  showHiddenClaims: selectShowHiddenClaims(state),
 });
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(
     {
-      setActiveClaim
+      setActiveClaim,
+      setShowHiddenClaims,
     },
-    dispatch
+    dispatch,
   ),
 });
 

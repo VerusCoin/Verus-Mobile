@@ -1,21 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, Text, Platform } from 'react-native';
 import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
 
 import { CheckBox } from 'react-native-elements';
-import data from './mockData';
 import styles from './styles';
 
-const ClaimManager = ({ navigation }) => {
-  const [claims, setClaims] = useState(data);
+const ClaimManager = (props) => {
+  const { claims, claimCategories, actions: { setClaimVisibility } } = props;
 
-  const toggleCheckbox = (id) => {
-    // const checkedClaim = claims.find((claim) => claim.id === id);
-    // checkedClaim.checked = !checkedClaim.checked;
-
-    // setClaims([...claims, checkedClaim]);
+  const toggleClaimVisibility = (selectedClaim) => {
+    if (selectedClaim.get('hidden')) {
+      setClaimVisibility(selectedClaim.get('id', ''), false);
+    } else {
+      setClaimVisibility(selectedClaim.get('id', ''), true);
+    }
   };
-
 
   const moveIn = () => {
     navigation.navigate('MoveIntoCategory');
@@ -28,24 +27,18 @@ const ClaimManager = ({ navigation }) => {
       </TouchableOpacity>
       <ScrollView>
         <View style={styles.claimsContainer}>
-          {claims.map((item) => (
-            <View
-              style={styles.claims}
-              key={item.id}
-            >
-              <CheckBox key={item.id} checked={item.checked} onPress={() => toggleCheckbox(item.id)} />
+          {claims.keySeq().map((claim) => (
+            <View style={styles.claims} key={claims.getIn([claim, 'id'])}>
+              <CheckBox key={claims.getIn([claim, 'id'])} checked={false} />
               <View>
-                <Text style={styles.text}>{item.name}</Text>
+                <Text style={{ fontSize: 16, paddingHorizontal:4 }}>{claims.getIn([claim, 'name'])}</Text>
               </View>
               <TouchableOpacity style={styles.button} onPress={moveIn}>
-                <Text style={styles.text}>{item.category}</Text>
+                <Text style={styles.text}>{claimCategories.getIn([claims.getIn([claim, 'categoryId'], ''), 'name'], '')}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.button}>
-                <Text style={styles.text}>Show</Text>
+              <TouchableOpacity style={styles.button} onPress={() => toggleClaimVisibility(claims.get(claim))}>
+                <Text style={styles.text}>{claims.getIn([claim, 'hidden']) ? 'Show' : 'Hide'}</Text>
               </TouchableOpacity>
-              {/* <TouchableOpacity style={{ padding: 10 }}>
-                <Text style={{ fontSize: 16, backgroundColor:'#b5b5b5', padding:10 }}>Hide</Text>
-              </TouchableOpacity> */}
             </View>
           ))}
         </View>

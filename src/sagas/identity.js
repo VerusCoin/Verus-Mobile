@@ -13,6 +13,7 @@ import {
   updateIdentities,
   getClaimCategoriesByIdentity,
   updateClaimCategories,
+  updateClaims,
 } from '../utils/asyncStore/identityStorage';
 import { camelizeString } from '../utils/stringUtils';
 import {
@@ -35,6 +36,7 @@ import {
   selectIdentityObj,
   selectActiveAttestationId,
   selectClaimCategoriesObj,
+  selectClaimsObj,
 } from '../selectors/identity';
 import {
   REQUEST_SEED_DATA,
@@ -46,6 +48,7 @@ import {
   CHANGE_ACTIVE_IDENTITY,
   SET_ATTESTATION_PINNED,
   ADD_NEW_CATEGORY,
+  SET_CLAIM_VISIBILITY,
 } from '../utils/constants/storeType';
 import {
   normalizeCategories,
@@ -53,7 +56,12 @@ import {
   normalizeAttestations,
   normalizeIdentities,
 } from '../utils/identityTransform/identityNormalizers';
-import { denormalizeAttestations, denormalizeIdentities, denormalizeClaimCategories } from '../utils/identityTransform/identityDenormalizers';
+import {
+  denormalizeAttestations,
+  denormalizeIdentities,
+  denormalizeClaimCategories,
+  denormalizeClaims,
+} from '../utils/identityTransform/identityDenormalizers';
 
 export default function * identitySaga() {
   yield all([
@@ -66,6 +74,7 @@ export default function * identitySaga() {
     takeLatest(ADD_NEW_IDENTITY, updateIdentityStorage),
     takeLatest(CHANGE_ACTIVE_IDENTITY, handleChangeActiveIdentity),
     takeLatest(ADD_NEW_CATEGORY, handleAddNewCategory),
+    takeLatest(SET_CLAIM_VISIBILITY, updateClaimsStorage),
   ]);
 }
 
@@ -176,6 +185,12 @@ function * handleAddNewCategory(action) {
 
   yield put(setNewCategory(newCategory[newCategoryId]));
   yield call(updateClaimCategoryStorage);
+}
+
+function * updateClaimsStorage() {
+  const selectedClaims = yield select(selectClaimsObj);
+  const claims = yield call(denormalizeClaims, selectedClaims.toJS());
+  yield call(updateClaims, claims);
 }
 
 function * updateIdentityStorage() {

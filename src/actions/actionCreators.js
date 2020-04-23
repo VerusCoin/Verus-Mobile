@@ -73,6 +73,8 @@ import {
   SET_SHOW_EMPTY_CLAIM_CATEGORIES,
   ADD_NEW_CATEGORY,
   SET_NEW_CATEGORY,
+  SET_CLAIM_VISIBILITY,
+  SET_SHOW_HIDDEN_CLAIMS,
 } from '../utils/constants/storeType';
 
 // Reducer Name: authentication
@@ -449,6 +451,11 @@ export const setShowEmptyClaimCategories = (value) => ({
   payload: { value },
 });
 
+export const setShowHiddenClaims = (value) => ({
+  type: SET_SHOW_HIDDEN_CLAIMS,
+  payload: { value },
+});
+
 export const addNewCategory = (value) => ({
   type: ADD_NEW_CATEGORY,
   payload: { value },
@@ -457,4 +464,9 @@ export const addNewCategory = (value) => ({
 export const setNewCategory = (category) => ({
   type: SET_NEW_CATEGORY,
   payload: { category },
+});
+
+export const setClaimVisibility = (claim, value) => ({
+  type: SET_CLAIM_VISIBILITY,
+  payload: { claim, value },
 });
