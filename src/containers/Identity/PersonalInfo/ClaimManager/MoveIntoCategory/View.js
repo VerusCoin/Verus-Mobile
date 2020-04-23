@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Map as IMap } from 'immutable';
-import { View } from 'react-native';
+import { View,Text } from 'react-native';
 import { ListItem } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import data from './mockData';

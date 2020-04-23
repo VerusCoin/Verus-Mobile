@@ -138,7 +138,7 @@ export const MainScreens = StackNavigator({
   MoveIntoCategory: {
     screen: MoveIntoCategory,
     navigationOptions: {
-      title: 'Move Into Category',
+      title: 'Categories',
     },
   },
 
@@ -186,7 +186,7 @@ export const MainScreens = StackNavigator({
   ScanBadge: {
     screen: ScanBadge,
     navigationOptions: {
-      header: null,
+      title: 'Scan badge',
     },
   },
   ConfirmSend: {

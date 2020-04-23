@@ -23,22 +23,25 @@ const ClaimManager = ({ navigation }) => {
 
   return (
     <View style={styles.root}>
-      <TouchableOpacity style={[styles.button, { marginLeft:'44%', alignItems:'center' }]} onPress={moveIn}>
-        <Text style={{ fontSize: 16 }}>Move into category</Text>
+      <TouchableOpacity style={[styles.button, styles.moveInto]} onPress={moveIn}>
+        <Text style={styles.moveIntoText}>Move into category</Text>
       </TouchableOpacity>
       <ScrollView>
-        <View style={{paddingVertical:30}}>
+        <View style={styles.claimsContainer}>
           {claims.map((item) => (
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent:'space-between' }} key={item.id}>
+            <View
+              style={styles.claims}
+              key={item.id}
+            >
               <CheckBox key={item.id} checked={item.checked} onPress={() => toggleCheckbox(item.id)} />
               <View>
-                <Text style={{ fontSize: 16, paddingHorizontal:4 }}>{item.name}</Text>
+                <Text style={styles.text}>{item.name}</Text>
               </View>
               <TouchableOpacity style={styles.button} onPress={moveIn}>
-                <Text style={{ fontSize: 16, paddingHorizontal:4 }}>{item.category}</Text>
+                <Text style={styles.text}>{item.category}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.button}>
-                <Text style={{ fontSize: 16, paddingHorizontal:4 }}>Show</Text>
+                <Text style={styles.text}>Show</Text>
               </TouchableOpacity>
               {/* <TouchableOpacity style={{ padding: 10 }}>
                 <Text style={{ fontSize: 16, backgroundColor:'#b5b5b5', padding:10 }}>Hide</Text>
