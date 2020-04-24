@@ -6,6 +6,7 @@ import { SearchBar, CheckBox, ListItem } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import { FloatingAction } from 'react-native-floating-action';
 import Icon from 'react-native-vector-icons/Ionicons';
+import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome5';
 import Dialog from 'react-native-dialog';
 
 import DelayedAlert from '../../../utils/delayedAlert';
@@ -16,15 +17,15 @@ import useClaimCategories from './utils/useClaimCategories';
 
 const floatingActions = [
   {
-    text: 'Add claims',
-    name: 'claims',
+    text: 'Add category',
+    name: 'category',
     icon:  <Icon name={Platform.OS === 'ios' ? 'ios-add' : 'md-add'} size={24} color={Colors.secondaryColor} />,
     color: Colors.primaryColor,
   },
   {
-    text: 'Add category',
-    name: 'category',
-    icon:  <Icon name={Platform.OS === 'ios' ? 'ios-add' : 'md-add'} size={24} color={Colors.secondaryColor} />,
+    text: 'Manage claims',
+    name: 'claims',
+    icon:  <FontAwesomeIcon name="cogs" size={15} color={Colors.secondaryColor} />,
     color: Colors.primaryColor,
   },
 ];

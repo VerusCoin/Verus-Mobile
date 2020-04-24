@@ -5,6 +5,7 @@ export default StyleSheet.create({
   root: {
     flex: 1,
     padding:16,
+    backgroundColor:'white',
   },
   button: {
     backgroundColor:
@@ -39,7 +40,6 @@ export default StyleSheet.create({
     justifyContent:'space-between',
     borderBottomColor:'#b5b5b5',
     borderBottomWidth: 0.8,
-    alignContent:'flex-start',
   },
   text:{
     fontSize: 16,
@@ -56,7 +56,11 @@ export default StyleSheet.create({
     color:'#b5b5b5',
   },
   claimText:{
-    marginLeft:'30%',
+    marginLeft:'24%',
     color:'#b5b5b5',
+  },
+  icon:{
+    flexDirection:'row',
+    alignItems:'center',
   },
 });

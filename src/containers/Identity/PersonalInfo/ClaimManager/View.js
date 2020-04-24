@@ -50,6 +50,7 @@ const ClaimManager = (props) => {
     if (name.length > 10) return `${truncateString(name, 10)}...`;
     return name;
   };
+
   return (
     <View style={styles.root}>
       <TouchableOpacity style={[styles.button, styles.moveInto]} onPress={moveSelectedCategories}>
@@ -68,12 +69,11 @@ const ClaimManager = (props) => {
                 key={claims.getIn([claim, 'id'])}
                 checked={checkIfClaimIsSelected(claims.get(claim))}
                 onPress={() => selectClaim(claims.get(claim, IMap()))}
+                title={claims.getIn([claim, 'name'])}
+                containerStyle={{ backgroundColor:'white' }}
               />
-              <View>
-                <Text style={styles.text}>{claims.getIn([claim, 'name'])}</Text>
-              </View>
               <TouchableOpacity onPress={() => moveSingleClaim(claims.get(claim))}>
-                <View style={{ flexDirection:'row', alignItems:'center' }}>
+                <View style={styles.icon}>
                   <Text style={styles.text}>{getCategotyName(claimCategories.getIn([claims.getIn([claim, 'categoryId'], ''), 'name'], ''))}</Text>
                   <MaterialIcons name="arrow-drop-down" size={24} />
                 </View>
