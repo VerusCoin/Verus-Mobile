@@ -5,8 +5,7 @@ export default text = {
     fontSize: 24,
     color: Colors.quaternaryColor,
     textAlign: "center",
-    fontFamily: "Avenir-Medium",
-    fontSize: 16
+    fontFamily: "Avenir-Medium"
   },
   centralSuccessHeader: {
     fontSize: 24,
