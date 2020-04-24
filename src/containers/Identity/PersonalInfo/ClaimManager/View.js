@@ -79,8 +79,8 @@ const ClaimManager = (props) => {
                 </View>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => toggleClaimVisibility(claims.get(claim))}>
-                {claims.getIn([claim, 'hidden']) ? <Icon name={Platform.OS === 'ios' ? 'ios-eye' : 'md-eye'} size={24} />
-                  : <Icon name={Platform.OS === 'ios' ? 'ios-eye-off' : 'md-eye-off'} size={24} />
+                {claims.getIn([claim, 'hidden']) ? <Icon name={Platform.OS === 'ios' ? 'ios-eye-off' : 'md-eye-off'} size={24} />
+                  : <Icon name={Platform.OS === 'ios' ? 'ios-eye' : 'md-eye'} size={24} />
                 }
               </TouchableOpacity>
             </View>
