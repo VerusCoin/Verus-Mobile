@@ -36,7 +36,6 @@ const PersonalInfo = (props) => {
     showEmptyClaimCategories,
     navigation,
     claims,
-    claimsToDisplay,
     actions: {
       setActiveClaimCategory,
       setShowEmptyClaimCategories,
@@ -71,20 +70,26 @@ const PersonalInfo = (props) => {
     setCategories(claimCategories);
   }, [claimCategories]);
 
-  // Search categories by claims
   const updateSearch = (searchValue) => {
     const newData = claimCategories.filter((claimCategory) => {
-      const categoryIds = claimsToDisplay
-        .filter((item) => item.get('name').includes(searchValue))
+      const search = searchValue.toUpperCase();
+      const categoryIds = claims
+        .filter((item) => item.get('name').toUpperCase().includes(search))
         .keySeq()
-        .map((item) => claimsToDisplay.getIn([item]));
+        .map((item) => claims.get(item));
 
-      const itemData = claimCategory.get('id', '');
+      const itemDataId = claimCategory.get('id', '');
+      const itemDataName = claimCategory.get('name', '').toUpperCase();
 
-      if (categoryIds.size !== claimsToDisplay.size && categoryIds.size > 0) {
-        return itemData.includes(categoryIds.first().get('categoryId', ''));
+      if (itemDataName.includes(search)) {
+        return itemDataName.includes(search);
       }
-      return itemData;
+
+      if (categoryIds.size === 0) {
+        return false;
+      }
+
+      return itemDataId.includes(categoryIds.first().get('categoryId', ''));
     });
 
     setCategories(newData);

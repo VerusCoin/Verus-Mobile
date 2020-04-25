@@ -9,8 +9,7 @@ import { setActiveClaimCategory, setShowEmptyClaimCategories, addNewCategory } f
 const mapStateToProps = (state) => ({
   claimCategories: selectClaimCategoriesToDisplay(state),
   showEmptyClaimCategories: selectShowEmptyClaimCategories(state),
-  claims: selectClaimsByCategoryId(state),
-  claimsToDisplay: selectClaims(state),
+  claims: selectClaims(state),
 });
 
 const mapDispatchToProps = (dispatch) => ({
