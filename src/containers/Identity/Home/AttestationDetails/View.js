@@ -22,7 +22,7 @@ const AttestationDetails = (props) => {
   return (
     <View style={styles.root}>
       <View style={styles.activeAttestation}>
-        <Text style={styles.attestaionText}>{attestation.get('id', '')}</Text>
+        <Text style={styles.attestaionText}>{attestation.get('claimName', '')}</Text>
       </View>
       <View style={styles.qrCode}>
         <QRCode

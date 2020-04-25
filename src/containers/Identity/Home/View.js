@@ -23,10 +23,10 @@ const Home = (props) => {
     navigation.navigate('ScanBadge');
   };
 
-  const goToAttestationDetails = (activeAttestationId) => {
+  const goToAttestationDetails = (activeAttestationId, attestedClaimName) => {
     setActiveAttestationId(activeAttestationId);
     navigation.navigate('AttestationDetails', {
-      id: activeAttestationId,
+      id: attestedClaimName,
     });
   };
 
@@ -52,7 +52,7 @@ const Home = (props) => {
           {pinnedAttestations.keySeq().map((attestationKey) => (
             <TouchableOpacity
               key={pinnedAttestations.getIn([attestationKey, 'id'], '')}
-              onPress={() => goToAttestationDetails(pinnedAttestations.getIn([attestationKey, 'id'], ''))}
+              onPress={() => goToAttestationDetails(pinnedAttestations.getIn([attestationKey, 'id'], ''), pinnedAttestations.getIn([attestationKey, 'claimName'], ''))}
               style={styles.attestation}
             >
               <View>
