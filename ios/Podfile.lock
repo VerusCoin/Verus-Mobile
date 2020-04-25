@@ -203,13 +203,13 @@ PODS:
     - React-cxxreact (= 0.61.5)
     - React-jsi (= 0.61.5)
   - React-jsinspector (0.61.5)
-  - react-native-camera (1.13.1):
+  - react-native-camera (3.22.1):
     - React
-    - react-native-camera/RCT (= 1.13.1)
-    - react-native-camera/RN (= 1.13.1)
-  - react-native-camera/RCT (1.13.1):
+    - react-native-camera/RCT (= 3.22.1)
+    - react-native-camera/RN (= 3.22.1)
+  - react-native-camera/RCT (3.22.1):
     - React
-  - react-native-camera/RN (1.13.1):
+  - react-native-camera/RN (3.22.1):
     - React
   - react-native-image-picker (1.1.0):
     - React
@@ -485,7 +485,7 @@ SPEC CHECKSUMS:
   React-jsi: cb2cd74d7ccf4cffb071a46833613edc79cdf8f7
   React-jsiexecutor: d5525f9ed5f782fdbacb64b9b01a43a9323d2386
   React-jsinspector: fa0ecc501688c3c4c34f28834a76302233e29dc0
-  react-native-camera: b322bc25f47536219473c6d00c666d221f7f2695
+  react-native-camera: a49f960eb362b9fbff87667c0ce639eef1161530
   react-native-image-picker: 7a85cf7b0a53845f03ae52fb4592a2748ded069b
   react-native-randombytes: 3638d24759d67c68f6ccba60c52a7a8a8faa6a23
   react-native-text-input-mask: 07227297075f9653315f43b0424d596423a01736
