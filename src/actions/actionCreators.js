@@ -77,7 +77,7 @@ import {
   SET_SHOW_HIDDEN_CLAIMS,
   UPDATE_SELECTED_CLAIMS,
   CLEAR_SELECTED_CLAIMS,
-  UPDATE_CATEGORY_FOR_CLAIM,
+  UPDATE_CATEGORY_FOR_CLAIMS,
   MOVE_CLAIMS_TO_CATEGORY,
 } from '../utils/constants/storeType';
 
@@ -484,9 +484,9 @@ export const clearSelectedClaims = () => ({
   type: CLEAR_SELECTED_CLAIMS,
 });
 
-export const updateCategoryForClaim = (claimId, categoryId) => ({
-  type: UPDATE_CATEGORY_FOR_CLAIM,
-  payload: { claimId, categoryId },
+export const updateCategoryForClaims = (claims, categoryId) => ({
+  type: UPDATE_CATEGORY_FOR_CLAIMS,
+  payload: { claims, categoryId },
 });
 
 export const moveClaimsToCategory = (targetCategory) => ({

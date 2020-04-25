@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Map as IMap } from 'immutable';
 import { View, Text, Platform } from 'react-native';
 import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
@@ -22,11 +22,7 @@ const ClaimManager = (props) => {
   } = props;
 
   const toggleClaimVisibility = (selectedClaim) => {
-    if (selectedClaim.get('hidden')) {
-      setClaimVisibility(selectedClaim.get('id', ''), false);
-    } else {
-      setClaimVisibility(selectedClaim.get('id', ''), true);
-    }
+    setClaimVisibility(selectedClaim.get('id', ''), !selectedClaim.get('hidden'));
   };
 
   const moveSingleClaim = (selectedClaim) => {
@@ -43,8 +39,7 @@ const ClaimManager = (props) => {
     updateSelectedClaims(selectedClaim);
   };
 
-  const checkIfClaimIsSelected = (claim) => selectedClaims.indexOf(claim) > -1;
-
+  const checkIfClaimIsSelected = useCallback((claim) => selectedClaims.includes(claim), [selectedClaims]);
 
   const getCategotyName = (name) => {
     if (name.length > 10) return `${truncateString(name, 10)}...`;

@@ -28,9 +28,7 @@ import {
   setNewActiveIdentity,
   setAttestationPinned,
   setNewCategory,
-  updateCategoryForClaim,
-  updateTargetCategory,
-  updateSourceClaimCategory,
+  updateCategoryForClaims,
   clearSelectedClaims,
 } from '../actions/actionCreators';
 import {
@@ -197,19 +195,9 @@ function * handleAddNewCategory(action) {
 function * handleMoveClaims(action) {
   const { targetCategory } = action.payload;
   const selectedClaims = yield select(selectSelectedClaims);
-  yield all(selectedClaims.toJS().map((claim) => put(updateCategoryForClaim(claim.id, targetCategory.get('id')))));
+  yield put(updateCategoryForClaims(selectedClaims, targetCategory.get('id')));
   yield put(clearSelectedClaims());
   yield call(updateClaimsStorage);
-  // const selectedCategores = yield select(selectClaimCategories);
-  // const selectedClaimsIds = selectedClaims.map((selectedClaim) => selectedClaim.get('id', ''));
-  // yield put(updateTargetCategory(targetCategory.get('id'), selectedClaimsIds));
-  // yield call(updateClaimCategoryStorage);
-  // const sourceClaimCategories = selectedCategores.filter((category) => selectedClaims.some((claim) => claim.get('categoryId') === category.get('id')));
-  // yield all(sourceClaimCategories.keySeq().map(
-  //   (sourceClaimCategory) => put(
-  //     updateSourceClaimCategory(sourceClaimCategories.getIn([sourceClaimCategory, 'id']), selectedClaimsIds),
-  //   ),
-  // ));
 }
 
 function * updateClaimsStorage() {

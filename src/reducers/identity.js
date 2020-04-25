@@ -17,7 +17,7 @@ import {
   SET_CLAIM_VISIBILITY,
   SET_SHOW_HIDDEN_CLAIMS,
   UPDATE_SELECTED_CLAIMS,
-  UPDATE_CATEGORY_FOR_CLAIM,
+  UPDATE_CATEGORY_FOR_CLAIMS,
   CLEAR_SELECTED_CLAIMS,
 } from '../utils/constants/storeType';
 
@@ -120,15 +120,21 @@ const identity = (state = defaultState, action) => {
       return state.setIn(['personalInformation', 'claims', 'byId', action.payload.claim, 'hidden'], action.payload.value);
     case UPDATE_SELECTED_CLAIMS:
       return state.updateIn(['personalInformation', 'selectedClaims'], IList(), (selectedClaims) => {
-        if (selectedClaims.indexOf(action.payload.claim) > -1) {
+        if (selectedClaims.includes(action.payload.claim)) {
           return selectedClaims.filter((selectedClaim) => selectedClaim.get('id', '') !== action.payload.claim.get('id', ''));
         }
         return selectedClaims.push(action.payload.claim);
       });
     case CLEAR_SELECTED_CLAIMS:
       return state.setIn(['personalInformation', 'selectedClaims'], IList());
-    case UPDATE_CATEGORY_FOR_CLAIM:
-      return state.setIn(['personalInformation', 'claims', 'byId', action.payload.claimId, 'categoryId'], action.payload.categoryId);
+    case UPDATE_CATEGORY_FOR_CLAIMS:
+      return state.withMutations((nextState) => {
+        action.payload.claims.map(
+          (claim) => nextState.setIn(
+            ['personalInformation', 'claims', 'byId', claim.get('id'), 'categoryId'], action.payload.categoryId,
+          ),
+        );
+      });
     default:
       return state;
   }
