@@ -1,7 +1,7 @@
 // Makes transaction objects from lightwalletd client resemble those from electrum,
 // for predictable, standard behaviour
 export const standardizeDlightTxObj = (txObj) => {
-  const { address, amount, category, height, status, time, txid } = txObj
+  const { address, amount, category, height, status, time, txid, memo } = txObj
   return {
     address,
     amount,
@@ -9,6 +9,7 @@ export const standardizeDlightTxObj = (txObj) => {
     height,
     status,
     timestamp: time,
-    txid
+    txid,
+    memo
   }
 }
