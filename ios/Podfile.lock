@@ -1,11 +1,14 @@
 PODS:
   - boost-for-react-native (1.63.0)
-  - BoringSSL-GRPC (0.0.3):
-    - BoringSSL-GRPC/Implementation (= 0.0.3)
-    - BoringSSL-GRPC/Interface (= 0.0.3)
-  - BoringSSL-GRPC/Implementation (0.0.3):
-    - BoringSSL-GRPC/Interface (= 0.0.3)
-  - BoringSSL-GRPC/Interface (0.0.3)
+  - CGRPCZlib (1.0.0-alpha.11)
+  - CNIOAtomics (2.15.0)
+  - CNIOBoringSSL (2.7.1)
+  - CNIOBoringSSLShims (2.7.1):
+    - CNIOBoringSSL (= 2.7.1)
+  - CNIODarwin (2.15.0)
+  - CNIOHTTPParser (2.15.0)
+  - CNIOLinux (2.15.0)
+  - CNIOSHA1 (2.15.0)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.61.5)
   - FBReactNativeSpec (0.61.5):
@@ -25,19 +28,15 @@ PODS:
     - DoubleConversion
     - glog
   - glog (0.3.5)
-  - gRPC-Core (1.23.1):
-    - gRPC-Core/Implementation (= 1.23.1)
-    - gRPC-Core/Interface (= 1.23.1)
-  - gRPC-Core/Implementation (1.23.1):
-    - BoringSSL-GRPC (= 0.0.3)
-    - gRPC-Core/Interface (= 1.23.1)
-    - nanopb (~> 0.3)
-  - gRPC-Core/Interface (1.23.1)
-  - nanopb (0.3.9011):
-    - nanopb/decode (= 0.3.9011)
-    - nanopb/encode (= 0.3.9011)
-  - nanopb/decode (0.3.9011)
-  - nanopb/encode (0.3.9011)
+  - gRPC-Swift (1.0.0-alpha.11):
+    - CGRPCZlib (= 1.0.0-alpha.11)
+    - Logging (= 1.2.0)
+    - SwiftNIO (= 2.15.0)
+    - SwiftNIOHTTP2 (= 1.11.0)
+    - SwiftNIOSSL (= 2.7.1)
+    - SwiftNIOTransportServices (= 1.3.0)
+    - SwiftProtobuf (= 1.8.0)
+  - Logging (1.2.0)
   - Permission-Camera (2.0.8):
     - RNPermissions
   - RCTRequired (0.61.5)
@@ -287,19 +286,53 @@ PODS:
   - SQLite.swift (0.12.2):
     - SQLite.swift/standard (= 0.12.2)
   - SQLite.swift/standard (0.12.2)
-  - SwiftGRPC (0.10.0):
-    - gRPC-Core (~> 1.23.0)
-    - SwiftProtobuf (~> 1.7.0)
-  - SwiftProtobuf (1.7.0)
+  - SwiftNIO (2.15.0):
+    - CNIOAtomics (= 2.15.0)
+    - CNIODarwin (= 2.15.0)
+    - CNIOLinux (= 2.15.0)
+    - CNIOSHA1 (= 2.15.0)
+    - SwiftNIOConcurrencyHelpers (= 2.15.0)
+  - SwiftNIOConcurrencyHelpers (2.15.0):
+    - CNIOAtomics (= 2.15.0)
+  - SwiftNIOFoundationCompat (2.15.0):
+    - SwiftNIO (= 2.15.0)
+  - SwiftNIOHPACK (1.11.0):
+    - SwiftNIO (= 2.15.0)
+    - SwiftNIOConcurrencyHelpers (= 2.15.0)
+    - SwiftNIOHTTP1 (= 2.15.0)
+  - SwiftNIOHTTP1 (2.15.0):
+    - CNIOHTTPParser (= 2.15.0)
+    - SwiftNIO (= 2.15.0)
+    - SwiftNIOConcurrencyHelpers (= 2.15.0)
+  - SwiftNIOHTTP2 (1.11.0):
+    - SwiftNIO (= 2.15.0)
+    - SwiftNIOConcurrencyHelpers (= 2.15.0)
+    - SwiftNIOHPACK (= 1.11.0)
+    - SwiftNIOHTTP1 (= 2.15.0)
+    - SwiftNIOTLS (= 2.15.0)
+  - SwiftNIOSSL (2.7.1):
+    - CNIOBoringSSL (= 2.7.1)
+    - CNIOBoringSSLShims (= 2.7.1)
+    - SwiftNIO (= 2.15.0)
+    - SwiftNIOConcurrencyHelpers (= 2.15.0)
+    - SwiftNIOTLS (= 2.15.0)
+  - SwiftNIOTLS (2.15.0):
+    - SwiftNIO (= 2.15.0)
+  - SwiftNIOTransportServices (1.3.0):
+    - SwiftNIO (~> 2.0)
+    - SwiftNIOConcurrencyHelpers (~> 2.0)
+    - SwiftNIOFoundationCompat (~> 2.0)
+    - SwiftNIOTLS (~> 2.0)
+  - SwiftProtobuf (1.8.0)
   - TcpSockets (3.3.2):
     - React
   - Yoga (1.14.0)
-  - ZcashLightClientKit (0.2.0):
+  - ZcashLightClientKit (0.4.0):
+    - gRPC-Swift (~> 1.0.0-alpha.11)
     - SQLite.swift (~> 0.12.2)
-    - SwiftGRPC (~> 0.10.0)
-  - ZcashLightClientKit/Tests (0.2.0):
+  - ZcashLightClientKit/Tests (0.4.0):
+    - gRPC-Swift (~> 1.0.0-alpha.11)
     - SQLite.swift (~> 0.12.2)
-    - SwiftGRPC (~> 0.10.0)
 
 DEPENDENCIES:
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
@@ -357,11 +390,26 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - boost-for-react-native
-    - BoringSSL-GRPC
-    - gRPC-Core
-    - nanopb
+    - CGRPCZlib
+    - CNIOAtomics
+    - CNIOBoringSSL
+    - CNIOBoringSSLShims
+    - CNIODarwin
+    - CNIOHTTPParser
+    - CNIOLinux
+    - CNIOSHA1
+    - gRPC-Swift
+    - Logging
     - SQLite.swift
-    - SwiftGRPC
+    - SwiftNIO
+    - SwiftNIOConcurrencyHelpers
+    - SwiftNIOFoundationCompat
+    - SwiftNIOHPACK
+    - SwiftNIOHTTP1
+    - SwiftNIOHTTP2
+    - SwiftNIOSSL
+    - SwiftNIOTLS
+    - SwiftNIOTransportServices
     - SwiftProtobuf
 
 EXTERNAL SOURCES:
@@ -462,19 +510,26 @@ EXTERNAL SOURCES:
 
 CHECKOUT OPTIONS:
   ZcashLightClientKit:
-    :commit: bc0e2bf00c52b20753c33d3bcf0737de492c1a8f
+    :commit: f79d0b82d23aea387ede28fa107c2f7833101748
     :git: https://github.com/michaeltout/ZcashLightClientKit.git
 
 SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
-  BoringSSL-GRPC: db8764df3204ccea016e1c8dd15d9a9ad63ff318
+  CGRPCZlib: e595387378d0601be796e858dd30c505458c4b1f
+  CNIOAtomics: ba49b1c86f281e1ecfd84c9205fbc27a81826847
+  CNIOBoringSSL: e4766830ab6d7c7fcd3618331f05fcb11638314d
+  CNIOBoringSSLShims: c3f3c6f05b7ce9b576521328a5b1b566d8f4665b
+  CNIODarwin: 2e341dd283fa3972706568b12925366145a8e2cd
+  CNIOHTTPParser: 25e1d1bc84c0612cbbbd6baedc4be05d77a17e01
+  CNIOLinux: 61598a8e49510207acb74c87f8fc11f762f76b5a
+  CNIOSHA1: 7b1dcceef9682aef4c6578b9fc67f87a03f0c48e
   DoubleConversion: 5805e889d232975c086db112ece9ed034df7a0b2
   FBLazyVector: aaeaf388755e4f29cd74acbc9e3b8da6d807c37f
   FBReactNativeSpec: 118d0d177724c2d67f08a59136eb29ef5943ec75
   Folly: 30e7936e1c45c08d884aa59369ed951a8e68cf51
   glog: 1f3da668190260b06b429bb211bfbee5cd790c28
-  gRPC-Core: 4b1148eb8596225178e5a154e40e35141a3cdf0f
-  nanopb: 18003b5e52dab79db540fe93fe9579f399bd1ccd
+  gRPC-Swift: 79f04da038f9a62005271d5b638611ce1bb31304
+  Logging: 7838d379d234d7e5ae1265fa02804a9084caf04c
   Permission-Camera: f9a7b0b01c71febe320436aa74630f23c9483547
   RCTRequired: b153add4da6e7dbc44aebf93f3cf4fcae392ddf1
   RCTTypeSafety: 9aa1b91d7f9310fc6eadc3cf95126ffe818af320
@@ -515,12 +570,20 @@ SPEC CHECKSUMS:
   RNSVG: 8ba35cbeb385a52fd960fd28db9d7d18b4c2974f
   RNVectorIcons: 0bb4def82230be1333ddaeee9fcba45f0b288ed4
   SQLite.swift: d2b4642190917051ce6bd1d49aab565fe794eea3
-  SwiftGRPC: f8fcfecb547c96cc6913de619f95fa3cd09838ee
-  SwiftProtobuf: 4fd9645e69b72cbae6ec8da5be0cdd20ca6565dd
+  SwiftNIO: c9889dcd8aed2655af9163b42fc11ebd4ce94252
+  SwiftNIOConcurrencyHelpers: 2357037a16e9c51880c01b896a5ac3cd41066044
+  SwiftNIOFoundationCompat: f09ee499a8a9c636ec9007f73c5a1cedc23dcad3
+  SwiftNIOHPACK: 906596511ff9d1e095b7a72a0011351591bcae03
+  SwiftNIOHTTP1: b05f4061ba18482006a264a5aa087bbcd35d153c
+  SwiftNIOHTTP2: 3a52499594c6ec073af2a2801cf3c5d3d1c8700f
+  SwiftNIOSSL: 7c82b8393a6b69a3ef9b12fe74240e92c2bd7add
+  SwiftNIOTLS: 51580e51240d1a4d51efb2d317e92cf243181042
+  SwiftNIOTransportServices: 26d40c589fc8fe667af51b06ef0aa49fbc9ae7f2
+  SwiftProtobuf: 2cbd9409689b7df170d82a92a33443c8e3e14a70
   TcpSockets: 14306fb79f9750ea7d2ddd02d8bed182abb01797
   Yoga: f2a7cd4280bfe2cca5a7aed98ba0eb3d1310f18b
-  ZcashLightClientKit: 3c41d8d99d601efdd22cbae7c0561d3b28b97d8c
+  ZcashLightClientKit: 47e707be6657391d5d4fd7db1544b0d98ce45e42
 
-PODFILE CHECKSUM: f268a364902850f64c332e362a9cbef7bf69e432
+PODFILE CHECKSUM: 1b8236064a4376f90220274f1c9cc8d34ab1075c
 
 COCOAPODS: 1.8.4
