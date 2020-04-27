@@ -27,7 +27,7 @@ const ClaimManager = (props) => {
   } = props;
 
   const toggleClaimVisibility = (selectedClaim) => {
-    setClaimVisibility(selectedClaim.get('id', ''), !selectedClaim.get('hidden'));
+    setClaimVisibility(selectedClaim.get('id', ''));
   };
 
   const moveSingleClaim = (selectedClaim) => {

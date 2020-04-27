@@ -14,7 +14,14 @@ import {
   getClaimCategoriesByIdentity,
   updateClaimCategories,
   updateClaims,
+  getClaimCategories,
+  getClaimsByIdentity,
+  getAttestationsByIdentity,
 } from '../utils/asyncStore/identityStorage';
+import updateStoredItems from '../utils/InitialData/updateStoredItems';
+import generateClaimCategories from '../utils/InitialData/ClaimCategory';
+import generateClaims from '../utils/InitialData/Claim';
+import generateAttestations from '../utils/InitialData/Attestation';
 import { camelizeString } from '../utils/stringUtils';
 import {
   setActiveIdentity,
@@ -33,13 +40,12 @@ import {
 } from '../actions/actionCreators';
 import {
   selectActiveIdentityId,
-  selectAttestationsObject,
+  selectAttestationsReducerState,
   selectIdentities,
-  selectIdentityObj,
+  selectIdentityReducerState,
   selectActiveAttestationId,
-  selectClaimCategoriesObj,
-  selectClaimsObj,
-  selectClaimCategories,
+  selectClaimCategoriesReducerState,
+  selectClaimsReducerState,
   selectSelectedClaims,
 } from '../selectors/identity';
 import {
@@ -74,7 +80,7 @@ export default function * identitySaga() {
     takeLatest(STORE_IDENTITIES, handleStoreIdentities),
     takeLatest(SET_ACTIVE_IDENTITY, handleSetActiveIdentity),
     takeLatest(TOGGLE_ATTESTATION_PIN, handleToggleAttestation),
-    takeLatest(SET_ATTESTATION_PINNED, handleSetAttestationPinned),
+    takeLatest(SET_ATTESTATION_PINNED, updateAttestationStorage),
     takeLatest(ADD_NEW_IDENTITY_NAME, handleAddNewIdentity),
     takeLatest(ADD_NEW_IDENTITY, updateIdentityStorage),
     takeLatest(CHANGE_ACTIVE_IDENTITY, handleChangeActiveIdentity),
@@ -104,15 +110,86 @@ function * handleStoreIdentities() {
   }
 }
 
-
 function * handleSetActiveIdentity() {
   const selectedIdentityId = yield select(selectActiveIdentityId);
   yield all([
-    call(storeSeedClaimCategories, selectedIdentityId),
-    call(storeSeedClaims, selectedIdentityId),
-    call(storeSeedAttestations),
+    call(handleStoreSeedClaimCategories, selectedIdentityId),
+    call(handleStoreSeedClaims, selectedIdentityId),
+    call(handleStoreSeedAttestations, selectedIdentityId),
   ]);
   yield call(handleReceiveSeedData);
+}
+
+/**
+ * @function `handleStoreSeedClaimCategories`:
+ * this saga is being called when user selects an identity,
+ * or changes the current active identity. It's responsible for storing claim categories
+ * into the Async Storage. If there is nothing stored, the initial data
+ * is generated. If there are some items stored but for a different identity,
+ * concat the two arrays. Finally if there are categories for the selected identity
+ * use those categories
+ * @param {String} identityId Currently active identity.
+ */
+function * handleStoreSeedClaimCategories(identityId) {
+  const seededCategories = generateClaimCategories(identityId);
+  let categoriesToStore = [];
+  const storedCategories = yield call(getClaimCategories);
+  if (!storedCategories.length) {
+    categoriesToStore = seededCategories;
+  } else if (storedCategories.every((category) => category.identity !== identityId)) {
+    categoriesToStore = [...storedCategories, ...seededCategories];
+  } else {
+    categoriesToStore = storedCategories;
+  }
+  yield call(storeSeedClaimCategories, categoriesToStore);
+}
+
+/**
+ * @function `handleStoreSeedClaims`:
+ * this saga is being called when user selects an identity,
+ * or changes the current active identity. It's responsible for storing claims
+ * into the Async Storage. If there is nothing stored, the initial data
+ * is generated. If there are some items stored but for a different identity,
+ * concat the two arrays. Finally if there are claims for the selected identity
+ * use those claims
+ * @param {String} identityId Currently active identity.
+ */
+function * handleStoreSeedClaims(identityId) {
+  const seededClaims = generateClaims(identityId);
+  let claimsToStore = [];
+  const storedClaims = yield call(getClaims);
+  if (!storedClaims.length) {
+    claimsToStore = seededClaims;
+  } else if (storedClaims.every((claim) => !claim.categoryId.includes(identityId))) {
+    claimsToStore = [...storedClaims, ...seededClaims];
+  } else {
+    claimsToStore = storedClaims;
+  }
+  yield call(storeSeedClaims, claimsToStore);
+}
+
+/**
+ * @function `handleStoreSeedAttestations`:
+ * this saga is being called when user selects an identity,
+ * or changes the current active identity. It's responsible for storing attestations
+ * into the Async Storage. If there is nothing stored, the initial data
+ * is generated. If there are some items stored but for a different identity,
+ * concat the two arrays. Finally if there are attestations for the selected identity
+ * use those attestations
+ * @param {String} identityId Currently active identity.
+ */
+function * handleStoreSeedAttestations(identityId) {
+  const seededAttestations = generateAttestations(identityId);
+  let attestationsToStore = [];
+  const storedAttestations = yield call(getAttestations);
+  if (!storedAttestations.length) {
+    attestationsToStore = seededAttestations;
+  } else if (storedAttestations.every((attestation) => !attestation.id.includes(identityId))) {
+    attestationsToStore = [...storedAttestations, ...seededAttestations];
+  } else {
+    attestationsToStore = storedAttestations;
+  }
+  yield call(storeSeedAttestations, attestationsToStore);
 }
 
 function * handleChangeActiveIdentity(action) {
@@ -126,13 +203,12 @@ function * handleChangeActiveIdentity(action) {
 function * handleReceiveSeedData() {
   const selectedIdentityId = yield select(selectActiveIdentityId);
   try {
-    const [identityClaimCategoriesFromStore, claimsFromStore, attestationsFromStore] = yield all([
+    const [claimCategoriesFromStore, claimsFromStore, attestationsFromStore] = yield all([
       call(getClaimCategoriesByIdentity, selectedIdentityId),
-      call(getClaims),
-      call(getAttestations),
+      call(getClaimsByIdentity, selectedIdentityId),
+      call(getAttestationsByIdentity, selectedIdentityId),
     ]);
-
-    const claimCategories = normalizeCategories(identityClaimCategoriesFromStore);
+    const claimCategories = normalizeCategories(claimCategoriesFromStore);
     const claims = normalizeClaims(claimsFromStore);
     const attestations = normalizeAttestations(attestationsFromStore);
 
@@ -146,15 +222,9 @@ function * handleReceiveSeedData() {
   }
 }
 
-function * handleToggleAttestation(action) {
+function * handleToggleAttestation() {
   const selectedAttestationId = yield select(selectActiveAttestationId);
-  yield put(setAttestationPinned(selectedAttestationId, action.payload.value));
-}
-
-function * handleSetAttestationPinned() {
-  const attestations = yield select(selectAttestationsObject);
-  const updatedAttestations = yield call(denormalizeAttestations, attestations.toJS());
-  yield call(updateAttestations, updatedAttestations);
+  yield put(setAttestationPinned(selectedAttestationId));
 }
 
 function * handleAddNewIdentity(action) {
@@ -200,20 +270,32 @@ function * handleMoveClaims(action) {
   yield call(updateClaimsStorage);
 }
 
-function * updateClaimsStorage() {
-  const selectedClaims = yield select(selectClaimsObj);
-  const claims = yield call(denormalizeClaims, selectedClaims.toJS());
-  yield call(updateClaims, claims);
-}
-
 function * updateIdentityStorage() {
-  const selectedIdentities = yield select(selectIdentityObj);
+  const selectedIdentities = yield select(selectIdentityReducerState);
   const identities = yield call(denormalizeIdentities, selectedIdentities.toJS());
   yield call(updateIdentities, identities);
 }
 
 function * updateClaimCategoryStorage() {
-  const selectedCategories = yield select(selectClaimCategoriesObj);
-  const categories = yield call(denormalizeClaimCategories, selectedCategories.toJS());
-  yield call(updateClaimCategories, categories);
+  const selectedCategories = yield select(selectClaimCategoriesReducerState);
+  const storedCategories = yield call(getClaimCategories);
+  const denormalizedCategories = yield call(denormalizeClaimCategories, selectedCategories.toJS());
+  const categoriesToStore = yield call(updateStoredItems, storedCategories, denormalizedCategories, 'claimCategories');
+  yield call(updateClaimCategories, categoriesToStore);
+}
+
+function * updateClaimsStorage() {
+  const selectedClaims = yield select(selectClaimsReducerState);
+  const storedClaims = yield call(getClaims);
+  const claims = yield call(denormalizeClaims, selectedClaims.toJS());
+  const claimsToStore = yield call(updateStoredItems, storedClaims, claims, 'claims');
+  yield call(updateClaims, claimsToStore);
+}
+
+function * updateAttestationStorage() {
+  const attestations = yield select(selectAttestationsReducerState);
+  const storedAttestations = yield call(getAttestations);
+  const updatedAttestations = yield call(denormalizeAttestations, attestations.toJS());
+  const attestationsToStore = yield call(updateStoredItems, storedAttestations, updatedAttestations, 'attestations');
+  yield call(updateAttestations, attestationsToStore);
 }

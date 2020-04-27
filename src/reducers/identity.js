@@ -15,7 +15,7 @@ import {
   SET_SHOW_EMPTY_CLAIM_CATEGORIES,
   SET_NEW_CATEGORY,
   SET_CLAIM_VISIBILITY,
-  SET_SHOW_HIDDEN_CLAIMS,
+  TOGGLE_SHOW_HIDDEN_CLAIMS,
   UPDATE_SELECTED_CLAIMS,
   UPDATE_CATEGORY_FOR_CLAIMS,
   CLEAR_SELECTED_CLAIMS,
@@ -82,7 +82,7 @@ const identity = (state = defaultState, action) => {
     case SET_ACTIVE_ATTESTATION_ID:
       return state.setIn(['personalInformation', 'activeAttestationId'], fromJS(action.payload.activeAttestationId));
     case SET_ATTESTATION_PINNED:
-      return state.setIn(
+      return state.updateIn(
         [
           'personalInformation',
           'attestations',
@@ -90,7 +90,7 @@ const identity = (state = defaultState, action) => {
           action.payload.attestationId,
           'showOnHomeScreen',
         ],
-        fromJS(action.payload.value),
+        (showOnHomeScreen) => !showOnHomeScreen,
       );
     case ADD_NEW_IDENTITY:
       return state.withMutations((nextState) => {
@@ -113,17 +113,17 @@ const identity = (state = defaultState, action) => {
         nextState.updateIn(['personalInformation', 'claimCategories', 'claimCategoriesIds'], IList(), (claimCategoriesIds) => claimCategoriesIds.concat(action.payload.category.id));
       });
     case SET_SHOW_EMPTY_CLAIM_CATEGORIES:
-      return state.setIn(['personalInformation', 'showEmptyClaimCategories'], action.payload.value);
-    case SET_SHOW_HIDDEN_CLAIMS:
-      return state.setIn(['personalInformation', 'showHiddenClaims'], action.payload.value);
+      return state.updateIn(['personalInformation', 'showEmptyClaimCategories'], (showEmptyClaimCategories) => !showEmptyClaimCategories);
+    case TOGGLE_SHOW_HIDDEN_CLAIMS:
+      return state.updateIn(['personalInformation', 'showHiddenClaims'], (showHiddenClaims) => !showHiddenClaims);
     case SET_CLAIM_VISIBILITY:
-      return state.setIn(['personalInformation', 'claims', 'byId', action.payload.claim, 'hidden'], action.payload.value);
+      return state.updateIn(['personalInformation', 'claims', 'byId', action.payload.claim, 'hidden'], (claimVisibility) => !claimVisibility);
     case UPDATE_SELECTED_CLAIMS:
       return state.updateIn(['personalInformation', 'selectedClaims'], IList(), (selectedClaims) => {
-        if (selectedClaims.includes(action.payload.claim)) {
-          return selectedClaims.filter((selectedClaim) => selectedClaim.get('id', '') !== action.payload.claim.get('id', ''));
+        if (selectedClaims.includes(action.payload.claims)) {
+          return selectedClaims.filter((selectedClaim) => selectedClaim.get('id', '') !== action.payload.claims.get('id', ''));
         }
-        return selectedClaims.push(action.payload.claim);
+        return selectedClaims.push(action.payload.claims);
       });
     case CLEAR_SELECTED_CLAIMS:
       return state.setIn(['personalInformation', 'selectedClaims'], IList());

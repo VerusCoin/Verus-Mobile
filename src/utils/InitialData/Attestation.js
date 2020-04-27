@@ -1,40 +1,40 @@
-const attestations = [
+const generateAttestations = (identityId) => [
   {
-    id: 'birthCertificate-birthDate',
+    id: `${identityId}-birthCertificate-birthDate`,
     identityAttested: 'The Department of Health@',
     contentRootKey: '',
     sigKey: '',
     showOnHomeScreen: false,
-    claimId: 'birthDate',
+    claimId: `${identityId}-birthDate`,
     claimName: 'Birth date',
   },
   {
-    id: 'birthCertificate-firstName',
+    id: `${identityId}-birthCertificate-firstName`,
     identityAttested: 'The Department of Health@',
     contentRootKey: '',
     sigKey: '',
     showOnHomeScreen: false,
-    claimId: 'firstName',
+    claimId: `${identityId}-firstName`,
     claimName: 'First name',
   },
   {
-    id: 'birthCertificate-lastName',
+    id: `${identityId}-birthCertificate-lastName`,
     identityAttested: 'The Department of Health@',
     contentRootKey: '',
     sigKey: '',
     showOnHomeScreen: false,
-    claimId: 'lastName',
+    claimId: `${identityId}-lastName`,
     claimName: 'Last name',
   },
   {
-    id: 'driversLicence-lastName',
+    id: `${identityId}-driversLicence-lastName`,
     identityAttested: 'Washington State Gov@',
     contentRootKey: '',
     sigKey: '',
     showOnHomeScreen: false,
-    claimId: 'lastName',
+    claimId: `${identityId}-lastName`,
     claimName: 'Last name',
   },
 ];
 
-export default attestations;
+export default generateAttestations;

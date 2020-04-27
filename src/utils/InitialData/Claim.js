@@ -1,56 +1,56 @@
-const claims = (identityId) => ([
+const generateClaims = (identityId) => ([
   {
-    id: 'firstName',
+    id: `${identityId}-firstName`,
     name: 'First Name',
     desc: '',
-    parentClaims: ['birthDate'],
+    parentClaims: [`${identityId}-birthDate`],
     childClaims: [],
     localKey: '',
     hidden: false,
     categoryId: `${identityId}-personalInformation`,
   },
   {
-    id: 'lastName',
+    id: `${identityId}-lastName`,
     name: 'Last Name',
     desc: '',
-    parentClaims: ['birthDate'],
+    parentClaims: [`${identityId}-birthDate`],
     childClaims: [],
     localKey: '',
     hidden: false,
     categoryId: `${identityId}-personalInformation`,
   },
   {
-    id: 'birthDate',
+    id: `${identityId}-birthDate`,
     name: 'Birth Date',
     desc: '',
     parentClaims: [],
-    childClaims: ['firstName', 'lastName'],
+    childClaims: [`${identityId}-firstName`, `${identityId}-lastName`],
     localKey: '',
     hidden: false,
     categoryId: `${identityId}-personalInformation`,
   },
   {
-    id: 'bloodType',
+    id: `${identityId}-bloodType`,
     name: 'Blood Type',
     desc: '',
-    parentClaims: ['healthConditions'],
+    parentClaims: [`${identityId}-healthConditions`],
     childClaims: [],
     localKey: '',
     hidden: false,
     categoryId: `${identityId}-healthCare`,
   },
   {
-    id: 'healthConditions',
+    id: `${identityId}-healthConditions`,
     name: 'Health Conditions',
     desc: '',
     parentClaims: [],
-    childClaims: ['bloodType'],
+    childClaims: [`${identityId}-bloodType`],
     localKey: '',
     hidden: false,
     categoryId: `${identityId}-healthCare`,
   },
   {
-    id: 'university',
+    id: `${identityId}-university`,
     name: 'University',
     desc: '',
     parentClaims: [],
@@ -60,7 +60,7 @@ const claims = (identityId) => ([
     categoryId: `${identityId}-education`,
   },
   {
-    id: 'address',
+    id: `${identityId}-address`,
     name: 'Address',
     desc: '',
     parentClaims: [],
@@ -71,4 +71,4 @@ const claims = (identityId) => ([
   },
 ]);
 
-export default claims;
+export default generateClaims;

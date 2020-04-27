@@ -1,4 +1,4 @@
-const claimCategories = (identityId) => ([
+const generateClaimCategories = (identityId) => ([
   {
     id: `${identityId}-healthCare`,
     name: 'Healthcare',
@@ -38,4 +38,4 @@ const claimCategories = (identityId) => ([
   },
 ]);
 
-export default claimCategories;
+export default generateClaimCategories;

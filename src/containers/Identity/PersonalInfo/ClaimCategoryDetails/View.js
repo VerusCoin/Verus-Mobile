@@ -11,7 +11,7 @@ const ClaimCategoryDetails = (props) => {
     claims,
     navigation,
     showHiddenClaims,
-    actions: { setActiveClaim, setShowHiddenClaims },
+    actions: { setActiveClaim, toggleShowHiddenClaims },
   } = props;
 
   const goToClaimDetails = (claim) => {
@@ -25,7 +25,7 @@ const ClaimCategoryDetails = (props) => {
       <CheckBox
         checked={showHiddenClaims}
         title="Show hidden claims"
-        onPress={() => setShowHiddenClaims(!showHiddenClaims)}
+        onPress={() => toggleShowHiddenClaims()}
       />
       <ScrollView>
         {claims.keySeq().map((claim) => (

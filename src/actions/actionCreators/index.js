@@ -1,10 +1,15 @@
-export * from './actions/Coins';
-export * from './actions/UserData';
-export * from './actions/WalletSettings';
-export * from './actions/cache/Electrum';
-export * from './actions/cache/Headers';
-export * from './actions/cache/Cache';
-export * from './actions/updateManager';
+export * from '../actions/Coins';
+export * from '../actions/UserData';
+export * from '../actions/WalletSettings';
+export * from '../actions/cache/Electrum';
+export * from '../actions/cache/Headers';
+export * from '../actions/cache/Cache';
+export * from '../actions/updateManager';
+
+export * from './claims';
+export * from './claimCategories';
+export * from './attestations';
+export * from './identities';
 
 import {
   SET_ACCOUNTS,
@@ -53,33 +58,8 @@ import {
   AUTHENTICATE_USER,
   SET_COINMENU_FOCUS,
   REQUEST_SEED_DATA,
-  SET_ACTIVE_IDENTITY,
-  STORE_IDENTITIES,
-  SET_CLAIMS,
-  SET_CLAIM_CATEGORIES,
-  SET_ATTESTATIONS,
-  SET_ACTIVE_CLAIM_CATEGORY_ID,
-  TOGGLE_ATTESTATION_PIN,
-  SET_ATTESTATION_PINNED,
-  SET_ACTIVE_ATTESTATION_ID,
-  SET_ACTIVE_CLAIM,
-  SET_IDENTITIES,
-  ADD_NEW_IDENTITY_NAME,
-  ADD_NEW_IDENTITY,
-  CHANGE_ACTIVE_IDENTITY,
-  DESELECT_ACTIVE_IDENTITY,
-  SET_NEW_ACTIVE_IDENTITY,
   APP_SETUP,
-  SET_SHOW_EMPTY_CLAIM_CATEGORIES,
-  ADD_NEW_CATEGORY,
-  SET_NEW_CATEGORY,
-  SET_CLAIM_VISIBILITY,
-  SET_SHOW_HIDDEN_CLAIMS,
-  UPDATE_SELECTED_CLAIMS,
-  CLEAR_SELECTED_CLAIMS,
-  UPDATE_CATEGORY_FOR_CLAIMS,
-  MOVE_CLAIMS_TO_CATEGORY,
-} from '../utils/constants/storeType';
+} from '../../utils/constants/storeType';
 
 // Reducer Name: authentication
 export const setAccounts = (accounts) => ({
@@ -365,131 +345,10 @@ export const getTransactionHistoryResponse = (history = {}) => ({
 
 export const requestSeedData = () => ({
   type: REQUEST_SEED_DATA,
-});
-
-export const setActiveIdentity = (identityId) => ({
-  type: SET_ACTIVE_IDENTITY,
-  payload: { identityId },
-});
-
-export const storeIdentities = () => ({
-  type: STORE_IDENTITIES,
-});
-
-export const setClaims = (claims) => ({
-  type: SET_CLAIMS,
-  payload: { claims },
-});
-
-export const setClaimCategories = (claimCategories) => ({
-  type: SET_CLAIM_CATEGORIES,
-  payload: { claimCategories },
-});
-
-export const setAttestations = (attestations) => ({
-  type: SET_ATTESTATIONS,
-  payload: { attestations },
-});
-
-export const setActiveClaimCategory = (activeClaimCategoryId) => ({
-  type: SET_ACTIVE_CLAIM_CATEGORY_ID,
-  payload: { activeClaimCategoryId },
-});
-
-export const toggleAttestationPin = (value) => ({
-  type: TOGGLE_ATTESTATION_PIN,
-  payload: { value },
-});
-
-export const setAttestationPinned = (attestationId, value) => ({
-  type: SET_ATTESTATION_PINNED,
-  payload: { attestationId, value },
-});
-
-export const setActiveClaim = (activeClaim) => ({
-  type: SET_ACTIVE_CLAIM,
-  payload: { activeClaim },
-});
-
-export const setActiveAttestationId = (activeAttestationId) => ({
-  type: SET_ACTIVE_ATTESTATION_ID,
-  payload: { activeAttestationId },
-});
-
-export const setIdentities = (identities) => ({
-  type: SET_IDENTITIES,
-  payload: { identities },
-});
-
-export const addNewIdentityName = (identityName) => ({
-  type: ADD_NEW_IDENTITY_NAME,
-  payload: { identityName },
-});
-
-export const addNewIdentity = (identity) => ({
-  type: ADD_NEW_IDENTITY,
-  payload: { identity },
-});
-
-export const changeActiveIdentity = (newActiveIdentityId) => ({
-  type: CHANGE_ACTIVE_IDENTITY,
-  payload: { newActiveIdentityId },
-});
-
-export const deselectActiveIdentity = (activeIdentityId) => ({
-  type: DESELECT_ACTIVE_IDENTITY,
-  payload: { activeIdentityId },
-});
-
-export const setNewActiveIdentity = (newActiveIdentityId) => ({
-  type: SET_NEW_ACTIVE_IDENTITY,
-  payload: { newActiveIdentityId },
+  payload: {},
 });
 
 export const appSetup = () => ({
   type: APP_SETUP,
-});
-
-export const setShowEmptyClaimCategories = (value) => ({
-  type: SET_SHOW_EMPTY_CLAIM_CATEGORIES,
-  payload: { value },
-});
-
-export const setShowHiddenClaims = (value) => ({
-  type: SET_SHOW_HIDDEN_CLAIMS,
-  payload: { value },
-});
-
-export const addNewCategory = (value) => ({
-  type: ADD_NEW_CATEGORY,
-  payload: { value },
-});
-
-export const setNewCategory = (category) => ({
-  type: SET_NEW_CATEGORY,
-  payload: { category },
-});
-
-export const setClaimVisibility = (claim, value) => ({
-  type: SET_CLAIM_VISIBILITY,
-  payload: { claim, value },
-});
-
-export const updateSelectedClaims = (claim) => ({
-  type: UPDATE_SELECTED_CLAIMS,
-  payload: { claim },
-});
-
-export const clearSelectedClaims = () => ({
-  type: CLEAR_SELECTED_CLAIMS,
-});
-
-export const updateCategoryForClaims = (claims, categoryId) => ({
-  type: UPDATE_CATEGORY_FOR_CLAIMS,
-  payload: { claims, categoryId },
-});
-
-export const moveClaimsToCategory = (targetCategory) => ({
-  type: MOVE_CLAIMS_TO_CATEGORY,
-  payload: { targetCategory },
+  payload: {},
 });
