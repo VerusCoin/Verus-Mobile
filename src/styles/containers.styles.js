@@ -77,6 +77,11 @@ export default containers = {
     width: '90%',
     alignSelf: 'center'
   },
+ contentCenter:{
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignSelf:'center'
+ },  
   fullWidth: {
     width: '100%'
   },

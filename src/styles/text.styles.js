@@ -82,6 +82,10 @@ export default text = {
     textAlign: "center",
     paddingVertical: 6
   },
+  whiteText: {
+    fontFamily: "Avenir-Book",
+    color: Colors.secondaryColor,
+  },
   linkText: {
     color: Colors.linkButtonColor,
     fontFamily: "Avenir-Black"
@@ -203,5 +207,13 @@ export default text = {
     color: Colors.quaternaryColor,
     width: "65%",
     textAlign: "right"
-  }
+  },
+
+  labelBold:{
+    fontSize: 12,
+    fontFamily:'Avenir-Book',
+    color: Colors.secondaryColor,
+    fontWeight: 'bold',
+    padding: 8,
+  },
 };

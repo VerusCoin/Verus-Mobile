@@ -9,5 +9,6 @@ export default misc = {
   },
   flex: {
     flex: 1
-  }
+  },
+  
 };

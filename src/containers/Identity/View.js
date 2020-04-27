@@ -4,8 +4,8 @@ import { View } from 'react-native';
 import BottomNavigation, { FullTab } from 'react-native-material-bottom-navigation';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AddIdentity from './AddIdentity';
-import styles from './styles';
 import tabs from './tabs';
+import Styles from '../../styles/index';
 
 const sizeIcon = 25;
 
@@ -17,7 +17,7 @@ const Identity = (props) => {
   const tabIndex = Object.keys(tabs).findIndex((tabKey) => tabs[tabKey].label.toLowerCase() === selectedTab.toLowerCase());
 
   const renderIcon = (icon) => () => (
-    <Icon size={sizeIcon} name={icon} style={styles.iconStyle} />
+    <Icon size={sizeIcon} name={icon} style={Styles.whiteText} />
   );
 
   useEffect(() => {
@@ -29,9 +29,9 @@ const Identity = (props) => {
       isActive={isActive}
       key={tab.key}
       label={tab.label}
-      style={styles.bottomMenuStyle}
+      style={Styles.contentCenter}
       renderIcon={renderIcon(tab.icon)}
-      labelStyle={styles.bottomMenuLabelStyle}
+      labelStyle={Styles.labelBold}
     />
   );
 
@@ -40,7 +40,7 @@ const Identity = (props) => {
   }
 
   return (
-    <View style={styles.root}>
+    <View style={Styles.flexBackground}>
       <activeTab.screen navigation={navigation} setActiveTab={setActiveTab} />
       <BottomNavigation
         useLayoutAnimation={false}
@@ -48,7 +48,7 @@ const Identity = (props) => {
         renderTab={renderTabItem}
         tabs={tabs}
         activeTab={activeTab.key}
-        style={styles.bottomNavigation}
+        style={Styles.linkButtonColor}
       />
     </View>
   );
