@@ -206,5 +206,9 @@ export default containers = {
   },
   horizontalPaddingBox: {
     paddingHorizontal: "25%"
-  }
+  },
+  flexColumn:{
+    flexDirection:'column',
+  },
+
 }

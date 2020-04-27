@@ -3,6 +3,7 @@ import {
   View, Text, TouchableOpacity, TextInput,
 } from 'react-native';
 import styles from './styles';
+import Styles from '../../../styles/index';
 
 const AddIdentity = (props) => {
   const {
@@ -28,16 +29,16 @@ const AddIdentity = (props) => {
   };
 
   return (
-    <View style={styles.root}>
-      <View style={styles.container}>
+    <View style={Styles.root}>
+      <View style={Styles.flexColumn}>
         <TextInput
           onChangeText={(text) => handleOnChange(text)}
           value={name}
-          style={styles.input}
+          style={Styles.inputField}
           placeholder="Identity@"
         />
-        <TouchableOpacity style={styles.add} onPress={handleAdd}>
-          <Text style={styles.textButton}>Add identity</Text>
+        <TouchableOpacity style={Styles.linkButton} onPress={handleAdd}>
+          <Text style={Styles.whiteTextWithCustomFontSize}>Add identity</Text>
         </TouchableOpacity>
       </View>
       <Text style={styles.label}>AVAILABLE IDENTITIES</Text>
