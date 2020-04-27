@@ -5,7 +5,7 @@ export default StyleSheet.create({
   root: {
     flex: 1,
     padding:16,
-    backgroundColor:'white',
+    backgroundColor:Colors.secondaryColor,
   },
   button: {
     backgroundColor:
@@ -62,5 +62,9 @@ export default StyleSheet.create({
   icon:{
     flexDirection:'row',
     alignItems:'center',
+  },
+
+  checkBox:{
+    backgroundColor: Colors.secondaryColor,
   },
 });

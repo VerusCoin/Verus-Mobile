@@ -14,6 +14,7 @@ import styles from './styles';
 import Colors from '../../../globals/colors';
 
 import useClaimCategories from './utils/useClaimCategories';
+import getfilteredData from './utils/searchByCategoriesAndClaims';
 
 const floatingActions = [
   {
@@ -70,29 +71,10 @@ const PersonalInfo = (props) => {
     setCategories(claimCategories);
   }, [claimCategories]);
 
+  // Search by categories and claims
   const updateSearch = (searchValue) => {
-    const newData = claimCategories.filter((claimCategory) => {
-      const search = searchValue.toUpperCase();
-      const categoryIds = claims
-        .filter((item) => item.get('name').toUpperCase().includes(search))
-        .keySeq()
-        .map((item) => claims.get(item));
-
-      const itemDataId = claimCategory.get('id', '');
-      const itemDataName = claimCategory.get('name', '').toUpperCase();
-
-      if (itemDataName.includes(search)) {
-        return itemDataName.includes(search);
-      }
-
-      if (categoryIds.size === 0) {
-        return false;
-      }
-
-      return itemDataId.includes(categoryIds.first().get('categoryId', ''));
-    });
-
-    setCategories(newData);
+    const filteredData = getfilteredData(claimCategories, claims, searchValue);
+    setCategories(filteredData);
     setSearchTerm(searchValue);
   };
 
