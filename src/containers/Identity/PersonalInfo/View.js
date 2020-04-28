@@ -8,11 +8,9 @@ import { FloatingAction } from 'react-native-floating-action';
 import Icon from 'react-native-vector-icons/Ionicons';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome5';
 import Dialog from 'react-native-dialog';
-
 import DelayedAlert from '../../../utils/delayedAlert';
-import styles from './styles';
 import Colors from '../../../globals/colors';
-
+import Styles from '../../../styles';
 import useClaimCategories from './utils/useClaimCategories';
 import getfilteredData from './utils/searchByCategoriesAndClaims';
 
@@ -113,15 +111,15 @@ const PersonalInfo = (props) => {
   );
 
   return (
-    <View style={styles.root}>
-      <Text style={styles.textHeader}>Personal Information</Text>
+    <View style={Styles.root}>
+      <Text style={Styles.textHeader}>Personal Information</Text>
       <CheckBox
         checked={showEmptyClaimCategories}
         title="Show empty claim categories"
         onPress={() => setShowEmptyClaimCategories(!showEmptyClaimCategories)}
       />
       <SearchBar
-        containerStyle={styles.searchBarContainer}
+        containerStyle={Styles.backgroundColorWhite}
         platform={Platform.OS === 'ios' ? 'ios' : 'android'}
         placeholder="Quick Search"
         onChangeText={updateSearch}

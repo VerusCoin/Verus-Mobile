@@ -29,4 +29,7 @@ export default misc = {
     borderColor:Colors.successButtonColor,
     fontWeight: 'bold',
   },
+  backgroundColorWhite:{
+    backgroundColor:Colors.secondaryColor,
+  },
 };
