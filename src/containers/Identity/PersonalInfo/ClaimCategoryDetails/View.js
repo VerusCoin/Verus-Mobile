@@ -3,8 +3,7 @@ import { Map as IMap } from 'immutable';
 import { View } from 'react-native';
 import { ListItem, CheckBox } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
-
-import styles from './styles';
+import Styles from '../../../../styles';
 
 const ClaimCategoryDetails = (props) => {
   const {
@@ -21,7 +20,7 @@ const ClaimCategoryDetails = (props) => {
 
 
   return (
-    <View style={styles.root}>
+    <View style={Styles.root}>
       <CheckBox
         checked={showHiddenClaims}
         title="Show hidden claims"

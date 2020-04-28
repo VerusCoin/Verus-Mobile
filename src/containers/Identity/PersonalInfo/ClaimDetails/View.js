@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Platform } from 'react-native';
 import { SearchBar, ListItem } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
-
-
-import styles from './styles';
+import Styles from '../../../../styles';
 
 const ClaimDetails = (props) => {
   const {
@@ -48,25 +46,25 @@ const ClaimDetails = (props) => {
   const claimList = (claims, item, type) => (
     <ListItem
       key={claims.getIn([item, 'id'])}
-      contentContainerStyle={styles.claims}
+      contentContainerStyle={Styles.greyButtonWithShadow}
       title={claims.getIn([item, 'name'])}
-      titleStyle={styles.claimsTitle}
+      titleStyle={Styles.textWithLeftPadding}
       onPress={() => getClaimsDetails(claims.get(item), type)}
     />
   );
 
   return (
-    <View style={styles.root}>
+    <View style={Styles.root}>
       <SearchBar
-        containerStyle={styles.searchBarContainer}
+        containerStyle={Styles.backgroundColorWhite}
         platform={Platform.OS === 'ios' ? 'ios' : 'android'}
         placeholder="Quick Search"
         onChangeText={updateSearch}
         value={value}
       />
       <ScrollView>
-        <View style={styles.attestationContainer}>
-          <Text style={styles.attestationText}>ATTESTED TO BY</Text>
+        <View>
+          <Text style={Styles.labelUltraLightGrey}>ATTESTED TO BY</Text>
           {attestations.keySeq().map((attestation) => (
             <ListItem
               key={attestations.getIn([attestation, 'id'], '')}
@@ -77,14 +75,14 @@ const ClaimDetails = (props) => {
             />
           ))}
         </View>
-        <View style={styles.claimsContainer}>
+        <View>
           {childClaims.size > 0
-            ? <Text style={styles.claimsText}>Child Claims</Text> : null}
+            ? <Text style={Styles.textWithTopMargin}>Child Claims</Text> : null}
           {childClaims.keySeq().map((item) => (
             claimList(childClaims, item, 'child')
           ))}
           {parentClaims.size > 0
-            ? <Text style={styles.claimsText}>Parent Claims</Text> : null}
+            ? <Text style={Styles.textWithTopMargin}>Parent Claims</Text> : null}
           {parentClaims.keySeq().map((item) => (
             claimList(parentClaims, item, 'parent')
           ))}
