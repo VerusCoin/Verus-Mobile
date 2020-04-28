@@ -250,4 +250,20 @@ export default text = {
   textWithHorizontalPadding:{
     paddingHorizontal: 10,
   },
+  whiteTextWithPadding:{
+    padding: '3%',
+    color: Colors.secondaryColor,
+    fontSize: 20,
+  },
+
+  textWithBlackColor: {
+    color: Colors.quinaryColor,
+    fontSize: 17,
+  },
+  
+  textWithRightPadding: {
+    fontSize: 16,
+    color: Colors.quaternaryColor,
+    paddingRight: 24,
+  },
 };

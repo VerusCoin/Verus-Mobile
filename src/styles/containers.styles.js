@@ -218,5 +218,23 @@ export default containers = {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  blockWithBorderBottom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    paddingVertical: 24,
+    borderBottomColor: Colors.ultraLightGrey,
+  },
+
+  blockWithFlexStart: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 16,
+  },
+  containerWithTopMargin:{
+    marginTop:'20%',
+  },
 
 };

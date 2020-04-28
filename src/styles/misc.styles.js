@@ -22,5 +22,11 @@ export default misc = {
   marginVertical:{
     marginVertical:'10%',
   },
-
+  borderWithGreenColor: {
+    color: Colors.successButtonColor,
+    borderWidth: 1,
+    padding: 4,
+    borderColor:Colors.successButtonColor,
+    fontWeight: 'bold',
+  },
 };

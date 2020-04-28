@@ -57,8 +57,8 @@ export default buttons = {
   linkButtonWithMarginRight: {
     flexDirection: 'row',
     backgroundColor: Colors.linkButtonColor,
-    borderRadius: 8,
-    padding: 10,
+    borderRadius: 4,
+    padding: 6,
     marginRight: '55%',
     alignItems: 'center',
     shadowColor: '#000',
