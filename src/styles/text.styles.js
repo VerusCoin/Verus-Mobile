@@ -259,11 +259,17 @@ export default text = {
   textWithBlackColor: {
     color: Colors.quinaryColor,
     fontSize: 17,
-  },
-  
+  }, 
   textWithRightPadding: {
     fontSize: 16,
     color: Colors.quaternaryColor,
     paddingRight: 24,
+  },
+  defaultFontSize:{
+    fontSize:16,
+  },
+  textWithLeftMargin:{
+    marginLeft:'24%',
+    color:Colors.ultraLightGrey,
   },
 };

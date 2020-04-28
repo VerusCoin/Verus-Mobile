@@ -58,7 +58,7 @@ export default buttons = {
     flexDirection: 'row',
     backgroundColor: Colors.linkButtonColor,
     borderRadius: 4,
-    padding: 6,
+    padding: 10,
     marginRight: '55%',
     alignItems: 'center',
     shadowColor: '#000',
@@ -75,4 +75,20 @@ export default buttons = {
     paddingVertical: 16,
   },
 
+  linkleftButton: {
+    backgroundColor:Colors.linkButtonColor,
+    marginVertical: '2%',
+    paddingVertical: 10,
+    borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.43,
+    shadowRadius: 2,
+    elevation: 2,
+    marginLeft:'55%',
+    alignItems:'center',
+  },
 };

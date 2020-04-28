@@ -223,7 +223,7 @@ export default containers = {
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    paddingVertical: 24,
+    paddingVertical: 10,
     borderBottomColor: Colors.ultraLightGrey,
   },
 
@@ -236,5 +236,7 @@ export default containers = {
   containerWithTopMargin:{
     marginTop:'20%',
   },
-
+  containerVerticalPadding:{
+    paddingVertical:8,
+  },
 };

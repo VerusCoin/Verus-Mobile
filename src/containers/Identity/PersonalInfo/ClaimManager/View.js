@@ -4,9 +4,9 @@ import { View, Text } from 'react-native';
 import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { CheckBox } from 'react-native-elements';
-import styles from './styles';
 import { truncateString } from './utils/truncateString';
 import getShowHideIcon from './utils/getShowHideIcon';
+import Styles from '../../../../styles';
 
 const getCategotyName = (name) => {
   if (name.length > 10) return `${truncateString(name, 10)}...`;
@@ -47,29 +47,29 @@ const ClaimManager = (props) => {
   const checkIfClaimIsSelected = useCallback((claim) => selectedClaims.includes(claim), [selectedClaims]);
 
   return (
-    <View style={styles.root}>
-      <TouchableOpacity style={[styles.button, styles.moveInto]} onPress={moveSelectedCategories}>
-        <Text style={styles.moveIntoText}>Move into category</Text>
+    <View style={Styles.root}>
+      <TouchableOpacity style={Styles.linkleftButton} onPress={moveSelectedCategories}>
+        <Text style={Styles.whiteTextWithCustomFontSize}>Move into category</Text>
       </TouchableOpacity>
-      <View style={styles.labelContainer}>
-        <Text style={styles.claimText}>CLAIM</Text>
-        <Text style={styles.label}>CATEGORY</Text>
-        <Text style={styles.label}>SHOW/HIDE</Text>
+      <View style={Styles.blockWithBorderBottom}>
+        <Text style={Styles.textWithLeftMargin}>CLAIM</Text>
+        <Text style={Styles.labelUltraLightGrey}>CATEGORY</Text>
+        <Text style={Styles.labelUltraLightGrey}>SHOW/HIDE</Text>
       </View>
       <ScrollView>
-        <View style={styles.claimsContainer}>
+        <View style={Styles.containerVerticalPadding}>
           {claims.keySeq().map((claim) => (
-            <View style={styles.claims} key={claims.getIn([claim, 'id'])}>
+            <View style={Styles.blockWithBorderBottom} key={claims.getIn([claim, 'id'])}>
               <CheckBox
                 key={claims.getIn([claim, 'id'])}
                 checked={checkIfClaimIsSelected(claims.get(claim))}
                 onPress={() => selectClaim(claims.get(claim, IMap()))}
                 title={claims.getIn([claim, 'name'])}
-                containerStyle={styles.checkBox}
+                containerStyle={Styles.backgroundColorWhite}
               />
               <TouchableOpacity onPress={() => moveSingleClaim(claims.get(claim))}>
-                <View style={styles.icon}>
-                  <Text style={styles.text}>{getCategotyName(claimCategories.getIn([claims.getIn([claim, 'categoryId'], ''), 'name'], ''))}</Text>
+                <View style={Styles.alignItemsCenter}>
+                  <Text style={Styles.defaultFontSize}>{getCategotyName(claimCategories.getIn([claims.getIn([claim, 'categoryId'], ''), 'name'], ''))}</Text>
                   <MaterialIcons name="arrow-drop-down" size={24} />
                 </View>
               </TouchableOpacity>
