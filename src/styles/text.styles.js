@@ -221,4 +221,30 @@ export default text = {
     color: Colors.secondaryColor,
     fontSize: 16,
   },
+
+  textWithLeftPadding: {
+    paddingLeft: 16,
+    fontSize: 16,
+  },
+  labelUltraLightGrey:{
+    color:Colors.ultraLightGrey,
+  },
+  textHeader:{
+    paddingBottom: 20,
+    fontSize: 24,
+    paddingRight: 10,
+  },
+  textButton:{
+    fontSize: 16,
+    color: Colors.secondaryColor,
+    fontWeight: 'bold',
+  },
+  textWithTopMargin: {
+    marginTop: '10%',
+    fontSize: 16,
+  },
+  textWithGreyColor:{
+    color: Colors.quaternaryColor,
+    paddingTop: 3,
+  },
 };

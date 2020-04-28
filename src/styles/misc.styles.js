@@ -15,8 +15,9 @@ export default misc = {
     borderRadius: 5,
     fontWeight: 'bold',
     height: 40,
-    borderColor: 'grey',
+    color: Colors.quaternaryColor,
     borderWidth: 0.7,
     paddingLeft: 16,
   },
+
 };

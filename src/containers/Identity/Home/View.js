@@ -6,10 +6,11 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { ScrollView } from 'react-native-gesture-handler';
-import styles from './styles';
 
 import { selectActiveIdentity, selectPinnedAttestations } from '../../../selectors/identity';
 import { setActiveAttestationId } from '../../../actions/actionCreators';
+import Styles from '../../../styles';
+import Colors from '../../../globals/colors';
 
 const iconAccountSwitchSize = 28;
 const iconCheckSize = 23;
@@ -35,28 +36,28 @@ const Home = (props) => {
   };
 
   return (
-    <View style={styles.root}>
-      <View style={styles.identityContainer}>
-        <Text style={styles.textHeader}>{activeIdentity.get('name', '')}</Text>
+    <View style={Styles.root}>
+      <View style={Styles.alignItemsStart}>
+        <Text style={Styles.textHeader}>{activeIdentity.get('name', '')}</Text>
         <TouchableOpacity onPress={goToAddIdentity}>
-          <MaterialCommunityIcons name="account-switch" size={iconAccountSwitchSize} style={styles.identityIcon} />
+          <MaterialCommunityIcons name="account-switch" size={iconAccountSwitchSize} style={Styles.textWithGreyColor} />
         </TouchableOpacity>
       </View>
-      <TouchableOpacity onPress={handleScanToVerify} style={styles.scanToVerifyBtn}>
-        <Icon name="check" color={styles.icon.color} size={iconCheckSize} />
-        <Text style={styles.text}>Scan to Verify</Text>
+      <TouchableOpacity onPress={handleScanToVerify} style={Styles.linkButtonWithMarginRight}>
+        <Icon name="check" color={Colors.ultraLightGrey} size={iconCheckSize} />
+        <Text style={Styles.textButton}>Scan to Verify</Text>
       </TouchableOpacity>
-      <Text style={styles.textBadge}>Pinned attestations</Text>
+      <Text style={Styles.textWithTopMargin}>Pinned attestations</Text>
       <ScrollView>
         <View>
           {pinnedAttestations.keySeq().map((attestationKey) => (
             <TouchableOpacity
               key={pinnedAttestations.getIn([attestationKey, 'id'], '')}
               onPress={() => goToAttestationDetails(pinnedAttestations.getIn([attestationKey, 'id'], ''), pinnedAttestations.getIn([attestationKey, 'claimName'], ''))}
-              style={styles.attestation}
+              style={Styles.greyButtonWithShadow}
             >
               <View>
-                <Text style={styles.attestationText}>{pinnedAttestations.getIn([attestationKey, 'identityAttested'], '')}</Text>
+                <Text style={Styles.textWithLeftPadding}>{pinnedAttestations.getIn([attestationKey, 'identityAttested'], '')}</Text>
               </View>
             </TouchableOpacity>
           ))}

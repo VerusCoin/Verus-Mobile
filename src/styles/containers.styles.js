@@ -1,4 +1,4 @@
-import Colors from "../globals/colors";
+import Colors from '../globals/colors';
 
 export default containers = {
   standardWidthBlock: {
@@ -15,38 +15,38 @@ export default containers = {
     width: '75%',
     paddingVertical: 16,
     flex: 1,
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   fullWidthFlexGrowCenterBlock: {
     alignSelf: 'center',
     width: '100%',
     paddingVertical: 16,
     flex: 1,
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   centralRow: {
     flexDirection: 'row',
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
   fullHeight: {
     height: '100%',
   },
   startRow: {
     flexDirection: 'row',
-    alignSelf: 'flex-start'
+    alignSelf: 'flex-start',
   },
   standardWidthSpaceBetweenBlock: {
-    width: "75%",
-    flexDirection: "row",
-    justifyContent: "space-between",
+    width: '75%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingVertical: 16,
     alignSelf: 'center',
   },
   fullWidthSpaceBetweenCenterBlock: {
-    width: "100%",
+    width: '100%',
     alignSelf: 'center',
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingVertical: 16,
   },
   standardWidthFlexRowBlock: {
@@ -54,7 +54,7 @@ export default containers = {
     paddingVertical: 16,
     display: 'flex',
     flexDirection: 'row',
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
   wideBlock: {
     width: '90%',
@@ -63,7 +63,7 @@ export default containers = {
   wideCenterBlock: {
     width: '90%',
     paddingVertical: 16,
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
   standardWidthCenterBlock: {
     width: '75%',
@@ -71,135 +71,135 @@ export default containers = {
     alignSelf: 'center'
   },
   wide: {
-    width: '90%'
+    width: '90%',
   },
   wideCenter: {
     width: '90%',
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
- contentCenter:{
+  contentCenter:{
     flexDirection: 'row',
     justifyContent: 'center',
-    alignSelf:'center'
- },  
+    alignSelf:'center',
+  },
   fullWidth: {
-    width: '100%'
+    width: '100%',
   },
   fullWidthAlignCenter: {
     width: '100%',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   fullWidthAlignCenterRowBlock: {
     width: '100%',
     alignItems: 'center',
     paddingVertical: 16,
     justifyContent: 'center',
-    flexDirection: 'row'
+    flexDirection: 'row',
   },
   wideFlexRowBlock: {
     width: '90%',
     paddingVertical: 16,
     display: 'flex',
     flexDirection: 'row',
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
   flexCenterRowBlock: {
     paddingVertical: 16,
     display: 'flex',
     flexDirection: 'row',
     alignSelf: 'center',
-    alignItems: 'baseline'
+    alignItems: 'baseline',
   },
   fullWidthFlexCenterBlock: {
     paddingVertical: 16,
     width: '100%',
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     display: 'flex',
   },
   fullWidthBlock: {
     paddingVertical: 16,
-    width: '100%'
+    width: '100%',
   },
   centerContainer: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   horizontalCenterContainer: {
-    alignItems: "center",
+    alignItems: 'center',
   },
   flexBackground: {
     flex: 1,
     backgroundColor: Colors.secondaryColor,
   },
   passwordInputContainer: {
-    width: '91%'
+    width: '91%',
   },
   footerContainer: {
     width: '100%',
-    alignItems: "center",
+    alignItems: 'center',
     flex: 1,
     maxHeight: '14%',
     backgroundColor: Colors.secondaryColor,
     borderTopWidth: 1,
-    borderColor: Colors.tertiaryColor
+    borderColor: Colors.tertiaryColor,
   },
   highFooterContainer: {
     width: '100%',
-    alignItems: "center",
+    alignItems: 'center',
     flex: 1,
     maxHeight: '16%',
     backgroundColor: Colors.secondaryColor,
     borderTopWidth: 1,
-    borderColor: Colors.tertiaryColor
+    borderColor: Colors.tertiaryColor,
   },
   headerContainer: {
     width: '100%',
-    alignItems: "center",
+    alignItems: 'center',
     maxHeight: '10%',
     flex: 1,
     justifyContent: 'flex-end',
     backgroundColor: Colors.secondaryColor,
     borderBottomWidth: 1,
-    borderColor: Colors.tertiaryColor
+    borderColor: Colors.tertiaryColor,
   },
   tallHeaderContainer: {
     width: '100%',
-    alignItems: "center",
+    alignItems: 'center',
     maxHeight: '18%',
     flex: 1,
     justifyContent: 'flex-end',
     backgroundColor: Colors.secondaryColor,
     borderBottomWidth: 1,
-    borderColor: Colors.tertiaryColor
+    borderColor: Colors.tertiaryColor,
   },
   innerHeaderFooterContainer: {
     position: 'absolute',
-    width: '100%'
+    width: '100%',
   },
   innerHeaderFooterContainerCentered: {
     position: 'absolute',
     width: '100%',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   inlineHeaderContainer: {
     width: '100%',
-    alignItems: "center",
+    alignItems: 'center',
     position: 'absolute',
-    top: 32
+    top: 32,
   },
   bottomlessListItemContainer: {
-    borderBottomWidth: 0
+    borderBottomWidth: 0,
   },
   underflow: {
     overflow: 'visible',
-    zIndex: -1
+    zIndex: -1,
   },
   greyStripeContainer: {
     backgroundColor: Colors.tertiaryColor,
-    borderBottomWidth: 0
+    borderBottomWidth: 0,
   },
   halfWidthBox: {
     maxWidth: '50%'
@@ -210,5 +210,9 @@ export default containers = {
   flexColumn:{
     flexDirection:'column',
   },
+  alignItemsStart:{
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
 
-}
+};

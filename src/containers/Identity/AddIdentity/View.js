@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, TextInput,
 } from 'react-native';
-import styles from './styles';
 import Styles from '../../../styles/index';
 
 const AddIdentity = (props) => {
@@ -41,16 +40,16 @@ const AddIdentity = (props) => {
           <Text style={Styles.whiteTextWithCustomFontSize}>Add identity</Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.label}>AVAILABLE IDENTITIES</Text>
+      <Text style={Styles.labelUltraLightGrey}>AVAILABLE IDENTITIES</Text>
       <View>
         {identities.keySeq().map((identity) => (
           <TouchableOpacity
             key={identities.getIn([identity, 'id'], '')}
-            style={styles.identities}
+            style={Styles.greyButtonWithShadow}
             onPress={() => selectIdentity(identities.getIn([identity, 'id'], ''))}
           >
             <View>
-              <Text style={styles.textIdentities}>{identities.getIn([identity, 'id'], '')}</Text>
+              <Text style={Styles.textWithLeftPadding}>{identities.getIn([identity, 'id'], '')}</Text>
             </View>
           </TouchableOpacity>
         ))}

@@ -41,7 +41,7 @@ export default buttons = {
   },
 
   greyButtonWithShadow:{
-    backgroundColor:Colors.lightGray,
+    backgroundColor:Colors.lightGrey,
     marginVertical: '2%',
     paddingVertical: 10,
     borderRadius: 5,
@@ -53,6 +53,19 @@ export default buttons = {
     shadowOpacity: 0.43,
     shadowRadius: 2,
     elevation: 2,
+  },
+  linkButtonWithMarginRight: {
+    flexDirection: 'row',
+    backgroundColor: Colors.linkButtonColor,
+    borderRadius: 8,
+    padding: 10,
+    marginRight: '55%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 5,
   },
 
 };
