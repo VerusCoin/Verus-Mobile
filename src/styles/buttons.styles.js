@@ -68,4 +68,11 @@ export default buttons = {
     elevation: 5,
   },
 
+  buttonWithSuccessColor: {
+    backgroundColor: Colors.successButtonColor,
+    paddingHorizontal: '16%',
+    borderRadius: 5,
+    paddingVertical: 16,
+  },
+
 };

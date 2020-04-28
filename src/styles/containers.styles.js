@@ -214,5 +214,9 @@ export default containers = {
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
+  alignItemsCenter:{
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 
 };

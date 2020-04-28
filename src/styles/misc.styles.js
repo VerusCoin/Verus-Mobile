@@ -19,5 +19,8 @@ export default misc = {
     borderWidth: 0.7,
     paddingLeft: 16,
   },
+  marginVertical:{
+    marginVertical:'10%',
+  },
 
 };
