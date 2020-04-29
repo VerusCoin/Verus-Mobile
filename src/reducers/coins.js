@@ -10,7 +10,11 @@ import {
   SET_COIN_LIST,
   SET_USER_COINS,
   SET_COIN_STATUS,
-  SET_COINMENU_FOCUS
+  SET_COINMENU_FOCUS,
+  OPEN_DLIGHT_SOCKET,
+  CLOSE_DLIGHT_SOCKET,
+  START_DLIGHT_SYNC,
+  STOP_DLIGHT_SYNC
 } from '../utils/constants/storeType'
 import {
   PRE_DATA,
@@ -23,7 +27,9 @@ export const coins = (state = {
   activeApp: null,
   activeSection: null,
   status: {},
-  coinMenuFocused: false
+  coinMenuFocused: false,
+  dlightSockets: {},
+  dlightSyncing: {},
 }, action) => {
   //TODO: Change coin lists to objects not arrays
   switch (action.type) {
@@ -51,6 +57,38 @@ export const coins = (state = {
       return {
         ...state,
         activeCoinList: action.activeCoinList,
+      };
+    case OPEN_DLIGHT_SOCKET:
+      return {
+        ...state,
+        dlightSockets: {
+          ...state.dlightSockets,
+          [action.payload.chainTicker]: true
+        },
+      };
+    case CLOSE_DLIGHT_SOCKET:
+      return {
+        ...state,
+        dlightSockets: {
+          ...state.dlightSockets,
+          [action.payload.chainTicker]: false
+        },
+      };
+    case START_DLIGHT_SYNC:
+      return {
+        ...state,
+        dlightSyncing: {
+          ...state.dlightSyncing,
+          [action.payload.chainTicker]: true
+        },
+      };
+    case STOP_DLIGHT_SYNC:
+      return {
+        ...state,
+        dlightSyncing: {
+          ...state.dlightSyncing,
+          [action.payload.chainTicker]: false
+        },
       };
     case SET_USER_COINS:
       let status = {}

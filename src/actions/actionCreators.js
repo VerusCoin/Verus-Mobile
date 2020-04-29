@@ -1,4 +1,4 @@
-export * from './actions/Coins'
+export * from './actions/coins/Coins'
 export * from './actions/UserData'
 export * from './actions/WalletSettings'
 export * from './actions/cache/Electrum'
@@ -51,7 +51,9 @@ import {
   SET_COIN_STATUS,
   SIGN_IN_USER,
   AUTHENTICATE_USER,
-  SET_COINMENU_FOCUS
+  SET_COINMENU_FOCUS,
+  OPEN_DLIGHT_SOCKET,
+  CLOSE_DLIGHT_SOCKET
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -197,6 +199,22 @@ export const setCurrentUserCoins = (activeCoinsForUser) => {
   }
 }
 
+//Reducer name: coins
+export const openDlightWallet = (chainTicker) => {
+  return {
+    type: OPEN_DLIGHT_SOCKET,
+    payload: { chainTicker }
+  }
+}
+
+//Reducer name: coins
+export const closeDlightWallet = (chainTicker) => {
+  return {
+    type: CLOSE_DLIGHT_SOCKET,
+    payload: { chainTicker }
+  }
+}
+
 //Reducer name: ledger
 export const setBalances = (balances) => {
   return {
@@ -287,11 +305,8 @@ export const setActiveSectionCustomCoins = (activeSection) => {
   }
 }
 
-// Reducer name: coinOverview
+//Reducer name: coinOverview
 export const setActiveOverviewFilter = (chainTicker, filterType) => {
-  //DELET
-  console.log("SETTING FILTER FOR")
-  console.log(chainTicker + ', ' + filterType)
   return {
     type: SET_OVERVIEW_FILTER,
     payload: {

@@ -33,9 +33,9 @@ describe('Composite info updater for BTC based chains', () => {
     return VerusLightClient.createWallet(
       "VRSC",
       "vrsc",
+      "0d09a83e8659dd37b875e43498823459b3e27b42299d80960557d443f6bf98e0",
       "test.address",
       12345,
-      "0d09a83e8659dd37b875e43498823459b3e27b42299d80960557d443f6bf98e0",
       100,
       "hunter2",
       0

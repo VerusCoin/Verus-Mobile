@@ -26,7 +26,7 @@ export const MOCK_STATE = {
   coins: {
     activeCoinsForUser: [
       getTempActiveCoin("VRSC", true, 200, {
-        getbalance: [30, 40],
+        getbalance: [3000000000, 4000000000],
         getcurrentblock: [118329],
         listtransactions: [10],
         server_version: ["ElectrumX"],
@@ -34,7 +34,7 @@ export const MOCK_STATE = {
         getblockinfo: []
       }),
       getTempActiveCoin("ZEC", false, 200, {
-        getbalance: [30, 40],
+        getbalance: [3000000000, 4000000000],
         getcurrentblock: [118329],
         listtransactions: [10],
         server_version: ["ElectrumX 13.0.6, 1.4"],

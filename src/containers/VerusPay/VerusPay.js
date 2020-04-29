@@ -23,7 +23,7 @@ import {
   setUserCoins,
   addKeypairs,
   //transactionsNeedUpdate,
-  addExistingCoin,
+  addCoin,
   setActiveApp,
   setActiveCoin,
   setActiveSection,
@@ -349,11 +349,16 @@ class VerusPay extends Component {
 
   handleAddCoin = coinTicker => {
     this.setState({ addingCoin: true });
+    const coinObj = findCoinObj(coinTicker)
+    
     return new Promise((resolve, reject) => {
-      addExistingCoin(
+      addCoin(
         findCoinObj(coinTicker),
         this.props.activeCoinList,
-        this.props.activeAccount.id
+        this.props.activeAccount.id,
+        this.props.coinSettings[coinTicker]
+        ? this.props.coinSettings[coinTicker].channels
+        : coinObj.compatible_channels
       )
         .then(response => {
           if (response) {
@@ -701,6 +706,7 @@ const mapStateToProps = (state) => {
     },
     activeAccount: state.authentication.activeAccount,
     activeCoinList: state.coins.activeCoinList,
+    coinSettings: state.settings.coinSettings
   }
 };
 

@@ -83,6 +83,11 @@ export const updates = (state = {
       }
     case SET_TRANSACTIONS:
     case ERROR_TRANSACTIONS:
+      //DELET
+      console.log("COIN UPDATE TRACKER:")
+      console.log(state.coinUpdateTracker)
+      console.log(chainTicker)
+
       return {
         ...state,
         coinUpdateTracker: {

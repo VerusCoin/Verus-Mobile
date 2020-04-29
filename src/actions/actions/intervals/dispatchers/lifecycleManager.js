@@ -8,9 +8,14 @@ import {
 } from "../../../../utils/constants/intervalConstants";
 import { setCoinStatus } from '../../../actionCreators'
 import { getCoinObj } from '../../../../utils/CoinData/CoinData';
+import { clearAllCoinIntervals } from './IntervalCreator';
 
 export const activateChainLifecycle = (chainTicker) => {  
   refreshCoinIntervals(chainTicker, {[API_GET_INFO]: {update_expired_oncomplete: getInfoOnComplete}})
+}
+
+export const clearChainLifecycle = (chainTicker) => {
+  clearAllCoinIntervals(chainTicker)
 }
 
 export const getInfoOnComplete = (state, dispatch, chainTicker) => {
