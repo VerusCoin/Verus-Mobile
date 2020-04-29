@@ -354,6 +354,27 @@ if(this.state.private == false){
         label={"Your address:"}
         errorMessage={errors.address ? errors.address : null} //dit zijn de gewone errors
       />
+      <Dropdown
+        // TODO: Determine why width must be 85 here, cant be wide block
+        containerStyle={{ ...Styles.wideBlock, width: "85%" }}
+        labelExtractor={(item, index) => {
+          return item.id;
+        }}
+        valueExtractor={(item, index) => {
+          return item;
+        }}
+        data={this.state.address}
+        onChangeText={(value, index, data) => switchInvoiceAddress(value)}
+        textColor={Colors.quinaryColor}
+        selectedItemColor={Colors.quinaryColor}
+        baseColor={Colors.quinaryColor}
+        label="Selected address:"
+        labelTextStyle={{ fontFamily: "Avenir-Book" }}
+        labelFontSize={17}
+        value={this.state.address}
+        pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
+        itemTextStyle={{ fontFamily: "Avenir-Book" }}
+      />
     </TouchableOpacity>
   }else{
     return <View>
