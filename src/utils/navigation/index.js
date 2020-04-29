@@ -150,9 +150,6 @@ export const MainScreens = StackNavigator({
   },
   Identity: {
     screen: Identity,
-    navigationOptions: ({ navigation }) => ({
-      headerLeft: getBackButton(navigation, 'Home', 'Home'),
-    }),
   },
   PersonalInfo: {
     screen: PersonalInfo,
