@@ -99,3 +99,5 @@ export const selectActiveAttestation = createSelector(
   [selectActiveAttestationId, selectAttestationsByIdentityId],
   (attestationId, attestations) => attestations.get(attestationId),
 );
+
+export const selectAttestationModalVisibility = (state) => state.identity.getIn(['personalInformation', 'setAttestationModalVisibility'], '');

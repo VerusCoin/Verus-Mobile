@@ -19,10 +19,12 @@ import {
   UPDATE_SELECTED_CLAIMS,
   UPDATE_CATEGORY_FOR_CLAIMS,
   CLEAR_SELECTED_CLAIMS,
+  SET_ATTESTATION_MODAL_VISIBILITY,
 } from '../utils/constants/storeType';
 
 const defaultState = fromJS({
   personalInformation: {
+    setAttestationModalVisibility:false,
     identities: {
       byId: {},
       identityIds: [],
@@ -135,6 +137,9 @@ const identity = (state = defaultState, action) => {
           ),
         );
       });
+
+    case SET_ATTESTATION_MODAL_VISIBILITY:
+      return state.setIn(['personalInformation', 'setAttestationModalVisibility'], action.payload.value);
     default:
       return state;
   }

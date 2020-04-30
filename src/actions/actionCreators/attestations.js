@@ -3,6 +3,7 @@ import {
   TOGGLE_ATTESTATION_PIN,
   SET_ATTESTATION_PINNED,
   SET_ACTIVE_ATTESTATION_ID,
+  SET_ATTESTATION_MODAL_VISIBILITY,
 } from '../../utils/constants/storeType';
 
 export const setAttestations = (attestations) => ({
@@ -23,4 +24,10 @@ export const setAttestationPinned = (attestationId) => ({
 export const setActiveAttestationId = (activeAttestationId) => ({
   type: SET_ACTIVE_ATTESTATION_ID,
   payload: { activeAttestationId },
+});
+
+
+export const setAttestationModalVisibility = (value) => ({
+  type: SET_ATTESTATION_MODAL_VISIBILITY,
+  payload: { value },
 });

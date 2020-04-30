@@ -3,18 +3,21 @@ import { View, Text, Platform } from 'react-native';
 import { SearchBar, ListItem } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import Styles from '../../../../styles';
+import AttestationDetails from '../../Home/AttestationDetails';
 
 const ClaimDetails = (props) => {
   const {
     navigation,
-    actions: { setActiveAttestationId, setActiveClaim },
+    actions: { setActiveAttestationId, setActiveClaim, setAttestationModalVisibility },
     attestationsData,
     childClaims,
     parentClaims,
+    attestationModalVisibility,
   } = props;
 
   const [attestations, setAttestation] = useState(attestationsData);
   const [value, setValue] = useState('');
+  const [attestedClaimName, setAttestedClaimName] = useState('');
 
   useEffect(() => {
     setAttestation(attestationsData);
@@ -37,10 +40,8 @@ const ClaimDetails = (props) => {
 
   const goToAttestationDetails = (activeAttestationId, attestedClaimName) => {
     setActiveAttestationId(activeAttestationId);
-    navigation.navigate('AttestationDetails', {
-      id: attestedClaimName,
-
-    });
+    setAttestedClaimName(attestedClaimName);
+    setAttestationModalVisibility(true);
   };
 
   const claimList = (claims, item, type) => (
@@ -88,6 +89,8 @@ const ClaimDetails = (props) => {
           ))}
         </View>
       </ScrollView>
+      <AttestationDetails visible={attestationModalVisibility} attestedClaimName={attestedClaimName} />
+
     </View>
   );
 };
