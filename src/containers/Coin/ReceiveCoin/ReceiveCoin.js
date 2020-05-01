@@ -30,6 +30,7 @@ import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import { API_GET_FIATPRICE, API_GET_BALANCES, GENERAL, USD, ELECTRUM, DLIGHT } from "../../../utils/constants/intervalConstants"
 import { expireData } from "../../../actions/actionCreators"
 import Store from "../../../store"
+import SwitchButton from "switch-button-react-native"
 
 class ReceiveCoin extends Component {
   constructor(props) {
@@ -161,6 +162,7 @@ walletPrivate = () => {
       })
     })
   }
+
 
   updateProps = (promiseArray) => {
     return new Promise((resolve, reject) => {
@@ -304,14 +306,24 @@ walletPrivate = () => {
     if (this.props.channels[this.props.activeCoin.id].channels.includes("dlight")) {
       //console.log(this.props.channels[this.props.activeCoin.id].channels);
     return <View style={Styles.centralRow}>
-    <Text style={Styles.mediumFormInputLabel} >use private address</Text>
-    <Switch
-  trackColor={{ false: "#767577", true: "#81b0ff" }}
-
-  ios_backgroundColor="#3e3e3e"
-  onValueChange={this.walletPrivate}
-  value={this.state.private}
-/>
+    <SwitchButton
+                onValueChange={(val) => this.setState({ activeSwitch: val })}      // this is necessary for this component
+                text1 = 'Generate VerusQR Invoice'                        // optional: first text in switch button --- default ON
+                text2 = 'Private'                       // optional: second text in switch button --- default OFF
+                switchWidth = {410}                 // optional: switch width --- default 44
+                switchHeight = {65}                 // optional: switch height --- default 100
+                switchdirection = 'rtl'             // optional: switch button direction ( ltr and rtl ) --- default ltr
+                switchBorderRadius = {100}          // optional: switch border radius --- default oval
+                switchSpeedChange = {500}           // optional: button change speed --- default 100
+                switchBorderColor = '#fff'       // optional: switch border color --- default #d4d4d4
+                switchBackgroundColor = '#d3d3d3'      // optional: switch background color --- default #fff
+                btnBorderColor = '#fff'          // optional: button border color --- default #00a4b9
+                btnBackgroundColor = '#fff'      // optional: button background color --- default #00bcd4
+                fontColor = {Colors.quaternaryColor}               // optional: text font color --- default #b1b1b1
+                activeFontColor = {Colors.quaternaryColor}             // optional: active font color --- default #fff
+                onValueChange={this.walletPrivate}
+                value={this.state.private}
+            />
     </View>
   } else {
     return null;
@@ -339,8 +351,14 @@ dynamicViewingTest = () => {
   } = state;
 
 
-if(this.state.private == false){
-    return <TouchableOpacity onPress={this.copyAddressToClipboard}>
+if(this.state.private == true){
+    return
+
+            { this.state.activeSwitch === 1 ? console.log('view1') : console.log('view2') }
+     <TouchableOpacity onPress={this.copyAddressToClipboard}>
+    <SwitchButton
+    onValueChange={(val) => this.setState({ activeSwitch: val })}
+  />
       <Input
         labelStyle={Styles.formInputLabel}
         underlineColorAndroid={Colors.quinaryColor}
@@ -363,7 +381,7 @@ if(this.state.private == false){
         valueExtractor={(item, index) => {
           return item;
         }}
-        data={this.state.address}
+        data={this.props.activeUser}
         onChangeText={(value, index, data) => switchInvoiceAddress(value)}
         textColor={Colors.quinaryColor}
         selectedItemColor={Colors.quinaryColor}
@@ -371,7 +389,7 @@ if(this.state.private == false){
         label="Selected address:"
         labelTextStyle={{ fontFamily: "Avenir-Book" }}
         labelFontSize={17}
-        value={this.state.address}
+        value={this.props.activeUser}
         pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
         itemTextStyle={{ fontFamily: "Avenir-Book" }}
       />
@@ -446,6 +464,7 @@ if(this.state.private == false){
     return (
       <View style={Styles.defaultRoot}>
         <View style={Styles.centralRow}>{this.renderBalanceLabel()}</View>
+          {this.switchButton()}
         <Text style={Styles.greyStripeHeader}>
           {"Generate VerusQR Invoice"}
         </Text>
@@ -456,7 +475,28 @@ if(this.state.private == false){
             <RefreshControl refreshing={loading} onRefresh={forceUpdate} />
           }
         >
-          {this.switchButton()}
+        <Dropdown
+          // TODO: Determine why width must be 85 here, cant be wide block
+          containerStyle={{ ...Styles.wideBlock, width: "85%" }}
+          labelExtractor={(item, index) => {
+            return item.id;
+          }}
+          valueExtractor={(item, index) => {
+            return item;
+          }}
+          data={this.props.activeUser}
+          onChangeText={(value, index, data) => switchInvoiceAddress(value)}
+          textColor={Colors.quinaryColor}
+          selectedItemColor={Colors.quinaryColor}
+          baseColor={Colors.quinaryColor}
+          label="Selected address:"
+          labelTextStyle={{ fontFamily: "Avenir-Book" }}
+          labelFontSize={17}
+          value={this.props.activeUser}
+          pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
+          itemTextStyle={{ fontFamily: "Avenir-Book" }}
+        />
+
 
 
           <QRModal

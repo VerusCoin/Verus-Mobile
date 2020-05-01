@@ -99,6 +99,7 @@
     "rn-fetch-blob": "^0.11.2",
     "stream-browserify": "^1.0.0",
     "string_decoder": "^0.10.31",
+    "switch-button-react-native": "^1.0.3",
     "timers-browserify": "^1.4.2",
     "tty-browserify": "0.0.0",
     "tx-builder": "^0.18.0",
