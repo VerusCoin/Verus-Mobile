@@ -1,8 +1,9 @@
 import React from 'react';
 import {
-  View, Text, Switch, Modal, TouchableOpacity, SafeAreaView,
+  View, Text, Modal,
 } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
+import { PricingCard } from 'react-native-elements';
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import StandardButton from '../../../../components/StandardButton';
@@ -10,23 +11,21 @@ import StandardButton from '../../../../components/StandardButton';
 const awesomeLink = 'http://awesome.link.qr';
 const qrCodeSize = 245;
 
-const switchTrackColor = () => ({
-  false: '#767577',
-  true: Colors.linkButtonColor,
-});
-
 
 const AttestationDetails = (props) => {
   const {
-    attestation, visible, attestedClaimName, actions: { toggleAttestationPin, setAttestationModalVisibility },
+    attestation, visible, attestedClaimName, identityAttested,
+    actions: { toggleAttestationPin, setAttestationModalVisibility },
   } = props;
 
   const cancelHandler = () => {
     setAttestationModalVisibility(false);
   };
 
-  const toggleSwitch = (value) => {
-    toggleAttestationPin(value);
+
+  const pinToHome = () => {
+    toggleAttestationPin();
+    setAttestationModalVisibility(false);
   };
 
   return (
@@ -39,7 +38,7 @@ const AttestationDetails = (props) => {
         transparent={false}
       >
         <View
-          style={Styles.root}
+          style={Styles.defaultRoot}
         >
           <View style={Styles.headerContainer}>
             <Text style={Styles.centralHeader}>
@@ -47,14 +46,13 @@ const AttestationDetails = (props) => {
             </Text>
           </View>
           <View style={Styles.alignItemsCenterColumn}>
-            {/* <View style={Styles.buttonWithSuccessColor}>
-              <Text style={Styles.textButton}>{attestation.get('claimName', '')}</Text>
-            </View> */}
             <View>
-              <StandardButton
+              <PricingCard
                 color={Colors.successButtonColor}
-                title="Pin to home"
-                onPress={cancelHandler}
+                title={attestation.get('claimName', '')}
+                info={[identityAttested]}
+                button={attestation.get('showOnHomeScreen', false) ? { title: 'Unpin from home' } : { title: 'Pin to home' }}
+                onButtonPress={pinToHome}
               />
             </View>
             <View style={Styles.marginVertical}>
@@ -64,17 +62,9 @@ const AttestationDetails = (props) => {
               />
             </View>
           </View>
-          <View style={Styles.alignItemsCenter}>
-            <Text style={Styles.textWithHorizontalPadding}>Pin attestation</Text>
-            <Switch
-              trackColor={switchTrackColor}
-              onValueChange={toggleSwitch}
-              value={attestation.get('showOnHomeScreen', false)}
-            />
-          </View>
         </View>
         <View style={Styles.footerContainer}>
-          <View style={Styles.alignItemsCenter}>
+          <View style={[Styles.alignItemsCenter, Styles.paddingTop]}>
             <StandardButton
               color={Colors.warningButtonColor}
               title="CLOSE"

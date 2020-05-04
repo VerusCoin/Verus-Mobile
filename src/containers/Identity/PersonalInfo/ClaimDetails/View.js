@@ -18,6 +18,7 @@ const ClaimDetails = (props) => {
   const [attestations, setAttestation] = useState(attestationsData);
   const [value, setValue] = useState('');
   const [attestedClaimName, setAttestedClaimName] = useState('');
+  const [identityAttested, setIdentityAttested] = useState('');
 
   useEffect(() => {
     setAttestation(attestationsData);
@@ -38,9 +39,10 @@ const ClaimDetails = (props) => {
     }
   };
 
-  const goToAttestationDetails = (activeAttestationId, attestedClaimName) => {
+  const goToAttestationDetails = (activeAttestationId, attestedClaimName, identityAttested) => {
     setActiveAttestationId(activeAttestationId);
     setAttestedClaimName(attestedClaimName);
+    setIdentityAttested(identityAttested);
     setAttestationModalVisibility(true);
   };
 
@@ -70,7 +72,9 @@ const ClaimDetails = (props) => {
             <ListItem
               key={attestations.getIn([attestation, 'id'], '')}
               title={attestations.getIn([attestation, 'identityAttested'], '')}
-              onPress={() => goToAttestationDetails(attestations.getIn([attestation, 'id'], ''), attestations.getIn([attestation, 'claimName'], ''))}
+              onPress={() => goToAttestationDetails(attestations.getIn([attestation, 'id'], ''),
+                attestations.getIn([attestation, 'claimName'], ''),
+                attestations.getIn([attestation, 'identityAttested'], ''))}
               bottomDivider
               chevron
             />
@@ -89,7 +93,11 @@ const ClaimDetails = (props) => {
           ))}
         </View>
       </ScrollView>
-      <AttestationDetails visible={attestationModalVisibility} attestedClaimName={attestedClaimName} />
+      <AttestationDetails
+        visible={attestationModalVisibility}
+        attestedClaimName={attestedClaimName}
+        identityAttested={identityAttested}
+      />
 
     </View>
   );

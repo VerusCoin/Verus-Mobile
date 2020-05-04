@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
@@ -7,28 +7,35 @@ import Icon from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { ScrollView } from 'react-native-gesture-handler';
 
-import { selectActiveIdentity, selectPinnedAttestations } from '../../../selectors/identity';
-import { setActiveAttestationId } from '../../../actions/actionCreators';
+import { selectActiveIdentity, selectPinnedAttestations, selectAttestationModalVisibility } from '../../../selectors/identity';
+
+import { setActiveAttestationId, setAttestationModalVisibility } from '../../../actions/actionCreators';
 import Styles from '../../../styles';
 import Colors from '../../../globals/colors';
+import AttestationDetails from './AttestationDetails';
 
 const iconAccountSwitchSize = 28;
 const iconCheckSize = 23;
 
 const Home = (props) => {
   const {
-    navigation, activeIdentity, pinnedAttestations, actions: { setActiveAttestationId },
+    navigation, activeIdentity, pinnedAttestations, attestationModalVisibility, actions: { setActiveAttestationId, setAttestationModalVisibility },
   } = props;
 
   const handleScanToVerify = () => {
     navigation.navigate('ScanBadge');
   };
 
-  const goToAttestationDetails = (activeAttestationId, attestedClaimName) => {
+  const [attestedClaimName, setAttestedClaimName] = useState('');
+  const [identityAttested, setIdentityAttested] = useState('');
+  const goToAttestationDetails = (activeAttestationId, attestedClaimName, identityAttested) => {
     setActiveAttestationId(activeAttestationId);
-    navigation.navigate('AttestationDetails', {
-      id: attestedClaimName,
-    });
+    // navigation.navigate('AttestationDetails', {
+    //   id: attestedClaimName,
+    // });
+    setAttestedClaimName(attestedClaimName);
+    setIdentityAttested(identityAttested);
+    setAttestationModalVisibility(true);
   };
 
   const goToAddIdentity = () => {
@@ -53,7 +60,9 @@ const Home = (props) => {
           {pinnedAttestations.keySeq().map((attestationKey) => (
             <TouchableOpacity
               key={pinnedAttestations.getIn([attestationKey, 'id'], '')}
-              onPress={() => goToAttestationDetails(pinnedAttestations.getIn([attestationKey, 'id'], ''), pinnedAttestations.getIn([attestationKey, 'claimName'], ''))}
+              onPress={() => goToAttestationDetails(pinnedAttestations.getIn([attestationKey, 'id'], ''),
+                pinnedAttestations.getIn([attestationKey, 'claimName'], ''),
+                pinnedAttestations.getIn([attestationKey, 'identityAttested'], ''))}
               style={Styles.greyButtonWithShadow}
             >
               <View>
@@ -63,6 +72,11 @@ const Home = (props) => {
           ))}
         </View>
       </ScrollView>
+      <AttestationDetails
+        visible={attestationModalVisibility}
+        attestedClaimName={attestedClaimName}
+        identityAttested={identityAttested}
+      />
     </View>
   );
 };
@@ -70,12 +84,14 @@ const Home = (props) => {
 const mapStateToProps = (state) => ({
   activeIdentity: selectActiveIdentity(state),
   pinnedAttestations: selectPinnedAttestations(state),
+  attestationModalVisibility: selectAttestationModalVisibility(state),
 });
 
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(
     {
       setActiveAttestationId,
+      setAttestationModalVisibility,
     },
     dispatch,
   ),

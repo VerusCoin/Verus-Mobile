@@ -32,4 +32,7 @@ export default misc = {
   backgroundColorWhite:{
     backgroundColor:Colors.secondaryColor,
   },
+  paddingTop:{
+    paddingTop:20,
+  },
 };
