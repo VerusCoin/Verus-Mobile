@@ -41,8 +41,7 @@ import ManageWyreProofOfAddress from '../../containers/BuySellCrypto/PaymentMeth
 import ManageWyreAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreAddress';
 import SendTransaction from '../../containers/BuySellCrypto/PaymentMethod/SendTransaction/SendTransaction';
 import Identity from '../../containers/Identity';
-import ScanBadge from '../../containers/Identity/Home/ScanBadge/View';
-import ScannedInformation from '../../containers/Identity/Home/ScannedInformation/View';
+import ScanBadge from '../../containers/Identity/Home/ScanBadge';
 import PersonalInfo from '../../containers/Identity/PersonalInfo';
 import ClaimDetails from '../../containers/Identity/PersonalInfo/ClaimDetails';
 import ClaimCategory from '../../containers/Identity/PersonalInfo/ClaimCategoryDetails';
@@ -160,12 +159,7 @@ export const MainScreens = StackNavigator({
       title: 'Identity',
     },
   },
-  ScannedInformation: {
-    screen: ScannedInformation,
-    navigationOptions: {
-      title:'Scan to verify',
-    },
-  },
+
   ClaimDetails: {
     screen: ClaimDetails,
     navigationOptions: ({ navigation }) => ({

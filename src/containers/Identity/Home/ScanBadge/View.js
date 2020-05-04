@@ -1,25 +1,27 @@
 import React from 'react';
 import {
   View,
-  Alert,
   TouchableOpacity,
   Text,
 } from 'react-native';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import Styles from '../../../../styles/index';
+import ScannedInformation from '../ScannedInformation';
 
-const ScanBadge = ({ navigation }) => {
+const ScanBadge = (props) => {
+  const {
+    navigation,
+    scanInfoModalVisibility,
+    actions: { setScanInfoModalVisibility },
+
+  } = props;
+
   const onSuccess = (e) => {
     navigation.navigate('ScannedInformation');
   };
-  const errorHandler = (error) => {
-    Alert.alert('Error', error);
-    cancelHandler();
-  };
 
   const nextHandler = () => {
-    // navigation.goBack();
-    navigation.navigate('ScannedInformation');
+    setScanInfoModalVisibility(true);
   };
   return (
     <View style={Styles.blackRoot}>
@@ -35,6 +37,9 @@ const ScanBadge = ({ navigation }) => {
       >
         <Text style={Styles.whiteTextWithPadding}>Next</Text>
       </TouchableOpacity>
+      <ScannedInformation
+        visible={scanInfoModalVisibility}
+      />
     </View>
   );
 };

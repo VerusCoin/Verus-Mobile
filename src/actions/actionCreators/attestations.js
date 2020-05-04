@@ -4,6 +4,7 @@ import {
   SET_ATTESTATION_PINNED,
   SET_ACTIVE_ATTESTATION_ID,
   SET_ATTESTATION_MODAL_VISIBILITY,
+  SET_SCANINFO_MODAL_VISIBILITY,
 } from '../../utils/constants/storeType';
 
 export const setAttestations = (attestations) => ({
@@ -29,5 +30,9 @@ export const setActiveAttestationId = (activeAttestationId) => ({
 
 export const setAttestationModalVisibility = (value) => ({
   type: SET_ATTESTATION_MODAL_VISIBILITY,
+  payload: { value },
+});
+export const setScanInfoModalVisibility = (value) => ({
+  type: SET_SCANINFO_MODAL_VISIBILITY,
   payload: { value },
 });

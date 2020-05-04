@@ -24,10 +24,17 @@ export default roots = {
     alignItems: 'center',
     borderTopWidth: 0,
   },
+  rootWithoutPadding:{
+    flex: 1,
+    backgroundColor: Colors.secondaryColor,
+  },
   secondaryBackground: {
     backgroundColor: Colors.secondaryColor,
   },
   linkButtonColor:{
     backgroundColor: Colors.linkButtonColor,
+  },
+  padding:{
+    padding: '5%',
   },
 };

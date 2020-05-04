@@ -29,7 +29,6 @@ const AttestationDetails = (props) => {
   };
 
   return (
-
     <View>
       { visible && (
       <Modal
