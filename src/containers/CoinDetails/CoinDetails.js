@@ -10,7 +10,7 @@ import StandardButton from "../../components/StandardButton";
 import { View, Text, ScrollView, Image, ActivityIndicator } from "react-native";
 import { connect } from 'react-redux';
 import { 
-  addExistingCoin, 
+  addCoin, 
   setUserCoins, 
   addKeypairs,
  } from '../../actions/actionCreators';
@@ -54,26 +54,49 @@ class CoinDetails extends Component {
 
   _handleAddCoin = () => {
     this.setState({ loading: true });
-    addExistingCoin(this.state.fullCoinData, this.props.activeCoinList, this.props.activeAccount.id)
-    .then(response => {
-      if (response) {
-        const chainId = this.state.fullCoinData.id
-        this.props.dispatch(response)
-        this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
-        this.props.dispatch(addKeypairs(this.props.activeAccount.seeds, chainId, this.props.activeAccount.keys))
-        activateChainLifecycle(chainId)
 
-        this.setState({ isActive: true, loading: false });
-      }
-      else {
-        throw new Error("Error adding coin")
-      }
-    })
-    .then(() => {
-      if (!this.state.unmounted) {
-        this.goBack();
-      }
-    })
+    addCoin(
+      this.state.fullCoinData,
+      this.props.activeCoinList,
+      this.props.activeAccount.id,
+      this.props.coinSettings[this.state.fullCoinData.id]
+        ? this.props.coinSettings[this.state.fullCoinData.id].channels
+        : this.state.fullCoinData.compatible_channels
+    )
+      .then((response) => {
+        if (response) {
+          const chainId = this.state.fullCoinData.id;
+          this.props.dispatch(response);
+          this.props.dispatch(
+            setUserCoins(
+              this.props.activeCoinList,
+              this.props.activeAccount.id
+            )
+          );
+          this.props.dispatch(
+            addKeypairs(
+              this.props.activeAccount.seeds,
+              chainId,
+              this.props.activeAccount.keys
+            )
+          );
+
+          activateChainLifecycle(chainId);
+
+          this.setState({ isActive: true, loading: false });
+        } else {
+          throw new Error("Error adding coin");
+        }
+      })
+      .then(() => {
+        if (!this.state.unmounted) {
+          this.goBack();
+        }
+      })
+      .catch((err) => {
+        Alert.alert("Error Adding Coin", err.message);
+        this.setState({ loading: false });
+      });
   }
   
   render() {
@@ -124,7 +147,8 @@ const mapStateToProps = (state) => {
   return {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
-    activeAccount: state.authentication.activeAccount
+    activeAccount: state.authentication.activeAccount,
+    coinSettings: state.settings.coinSettings
     //needsUpdate: state.ledger.needsUpdate
   }
 };

@@ -23,13 +23,14 @@ export * from './dlightRequests/getTransactions'
  * @param {String[]} params Paramters to pass in with the request
  */
 export const makeDlightRequest = (coinId, accountHash, coinProto, reqId, method, params) => {
+  
   return new Promise((resolve, reject) => {
     VerusLightClient.request(reqId, method, [coinId, coinProto, accountHash, ...params])
     .then(res => {
       if (res.error != null) {
-
         // DELETE/REFACTOR when proper error displays are made
         console.log(" ------- DLIGHT EXCEPTION ------- ")
+        console.log(res.error)
         console.log(res.error.message)
         console.log(res.error.data)
         console.log(reqId)

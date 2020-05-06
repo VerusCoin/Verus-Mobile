@@ -9,17 +9,21 @@ import {
   API_GET_INFO,
   ELECTRUM,
   DLIGHT,
-  GENERAL
+  GENERAL,
+  INIT_DLIGHT_ERRORS
 } from "../utils/constants/intervalConstants";
 import {
   ERROR_BALANCES,
   ERROR_INFO,
   ERROR_TRANSACTIONS,
   ERROR_RATES,
+  ERROR_DLIGHT_INIT,
   SET_BALANCES,
   SET_INFO,
   SET_TRANSACTIONS,
-  SET_RATES
+  SET_RATES,
+  CLOSE_DLIGHT_SOCKET,
+  OPEN_DLIGHT_SOCKET
 } from "../utils/constants/storeType";
 
 export const errors = (state = {
@@ -44,6 +48,7 @@ export const errors = (state = {
     [DLIGHT]: {},
     [GENERAL]: {},
   },
+  [INIT_DLIGHT_ERRORS]: {}
 }, action) => {
   const { channel, error, chainTicker } = action.payload || {}
 
@@ -92,6 +97,30 @@ export const errors = (state = {
           }
         }
       };
+    case ERROR_DLIGHT_INIT:
+      return {
+        ...state,
+        [INIT_DLIGHT_ERRORS]: {
+          ...state[INIT_DLIGHT_ERRORS],
+          [chainTicker]: error
+        }
+      }
+    case OPEN_DLIGHT_SOCKET:
+      return {
+        ...state,
+        [INIT_DLIGHT_ERRORS]: {
+          ...state[INIT_DLIGHT_ERRORS],
+          [chainTicker]: null
+        }
+      }
+    case CLOSE_DLIGHT_SOCKET:
+      return {
+        ...state,
+        [INIT_DLIGHT_ERRORS]: {
+          ...state[INIT_DLIGHT_ERRORS],
+          [chainTicker]: null
+        }
+      }
     case SET_BALANCES:
       return {
         ...state,
