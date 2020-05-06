@@ -218,6 +218,10 @@ export default containers = {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  alignItemsCenterColumn:{
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
   blockWithBorderBottom: {
     flexDirection: 'row',
     alignItems: 'center',

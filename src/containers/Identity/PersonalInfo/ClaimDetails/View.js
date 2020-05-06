@@ -3,18 +3,22 @@ import { View, Text, Platform } from 'react-native';
 import { SearchBar, ListItem } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import Styles from '../../../../styles';
+import AttestationDetails from '../../Home/AttestationDetails';
 
 const ClaimDetails = (props) => {
   const {
     navigation,
-    actions: { setActiveAttestationId, setActiveClaim },
+    actions: { setActiveAttestationId, setActiveClaim, setAttestationModalVisibility },
     attestationsData,
     childClaims,
     parentClaims,
+    attestationModalVisibility,
   } = props;
 
   const [attestations, setAttestation] = useState(attestationsData);
   const [value, setValue] = useState('');
+  const [attestedClaimName, setAttestedClaimName] = useState('');
+  const [identityAttested, setIdentityAttested] = useState('');
 
   useEffect(() => {
     setAttestation(attestationsData);
@@ -35,12 +39,11 @@ const ClaimDetails = (props) => {
     }
   };
 
-  const goToAttestationDetails = (activeAttestationId, attestedClaimName) => {
+  const goToAttestationDetails = (activeAttestationId, attestedClaimName, identityAttested) => {
     setActiveAttestationId(activeAttestationId);
-    navigation.navigate('AttestationDetails', {
-      id: attestedClaimName,
-
-    });
+    setAttestedClaimName(attestedClaimName);
+    setIdentityAttested(identityAttested);
+    setAttestationModalVisibility(true);
   };
 
   const claimList = (claims, item, type) => (
@@ -69,7 +72,9 @@ const ClaimDetails = (props) => {
             <ListItem
               key={attestations.getIn([attestation, 'id'], '')}
               title={attestations.getIn([attestation, 'identityAttested'], '')}
-              onPress={() => goToAttestationDetails(attestations.getIn([attestation, 'id'], ''), attestations.getIn([attestation, 'claimName'], ''))}
+              onPress={() => goToAttestationDetails(attestations.getIn([attestation, 'id'], ''),
+                attestations.getIn([attestation, 'claimName'], ''),
+                attestations.getIn([attestation, 'identityAttested'], ''))}
               bottomDivider
               chevron
             />
@@ -88,6 +93,12 @@ const ClaimDetails = (props) => {
           ))}
         </View>
       </ScrollView>
+      <AttestationDetails
+        visible={attestationModalVisibility}
+        attestedClaimName={attestedClaimName}
+        identityAttested={identityAttested}
+      />
+
     </View>
   );
 };

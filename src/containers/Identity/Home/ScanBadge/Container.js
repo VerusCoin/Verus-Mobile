@@ -1,18 +1,19 @@
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import { selectActiveAttestation } from '../../../../selectors/identity';
-import { toggleAttestationPin, setAttestationModalVisibility } from '../../../../actions/actionCreators';
+import {
+  selectScanInfoModalVisibility,
+} from '../../../../selectors/identity';
+import { setScanInfoModalVisibility } from '../../../../actions/actionCreators';
 
 const mapStateToProps = (state) => ({
-  attestation: selectActiveAttestation(state),
+  scanInfoModalVisibility: selectScanInfoModalVisibility(state),
 });
 
 const mapDispatchToProps = (dispatch) => ({
   actions: bindActionCreators(
     {
-      toggleAttestationPin,
-      setAttestationModalVisibility,
+      setScanInfoModalVisibility,
     },
     dispatch,
   ),
