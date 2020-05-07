@@ -156,7 +156,7 @@ export const MainScreens = StackNavigator({
   AddIdentity: {
     screen: AddIdentity,
     navigationOptions: {
-      title: 'Identity',
+      title: 'Add Identity',
     },
   },
 

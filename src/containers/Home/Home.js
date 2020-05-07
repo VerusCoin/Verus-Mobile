@@ -205,7 +205,7 @@ class Home extends Component {
             title={<Text style={Styles.listItemLeftTitleDefault}>Identity</Text>}
             hideChevron
             leftAvatar={{
-              source: require("../../images/customIcons/verusPay.png")
+              source: require("../../images/customIcons/id-card.png")
             }}
 
             containerStyle={Styles.bottomlessListItemContainer}

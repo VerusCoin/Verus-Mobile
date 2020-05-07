@@ -44,17 +44,19 @@ const Home = (props) => {
 
   return (
     <View style={Styles.root}>
+
       <View style={Styles.alignItemsStart}>
         <Text style={Styles.textHeader}>{activeIdentity.get('name', '')}</Text>
         <TouchableOpacity onPress={goToAddIdentity}>
           <MaterialCommunityIcons name="account-switch" size={iconAccountSwitchSize} style={Styles.textWithGreyColor} />
         </TouchableOpacity>
       </View>
-      <TouchableOpacity onPress={handleScanToVerify} style={Styles.linkButtonWithMarginRight}>
-        <Icon name="check" color={Colors.ultraLightGrey} size={iconCheckSize} />
-        <Text style={Styles.textButton}>Scan to Verify</Text>
-      </TouchableOpacity>
-      <Text style={Styles.textWithTopMargin}>Pinned attestations</Text>
+      <View>
+        <TouchableOpacity onPress={handleScanToVerify} style={Styles.linkButton}>
+          <Text style={Styles.textButton}>SCAN TO VERIFY</Text>
+        </TouchableOpacity>
+      </View>
+      <Text style={Styles.boldText}>Pinned attestations</Text>
       <ScrollView>
         <View>
           {pinnedAttestations.keySeq().map((attestationKey) => (

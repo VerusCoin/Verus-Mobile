@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Platform } from 'react-native';
+import {
+  View, Text, Platform, TouchableOpacity,
+} from 'react-native';
 import { SearchBar, ListItem } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import Styles from '../../../../styles';
@@ -33,10 +35,8 @@ const ClaimDetails = (props) => {
     setAttestation(newData);
     setValue(value);
   };
-  const getClaimsDetails = (claim, type) => {
-    if (type === 'child') {
-      setActiveClaim(claim);
-    }
+  const getClaimsDetails = (claim) => {
+    setActiveClaim(claim);
   };
 
   const goToAttestationDetails = (activeAttestationId, attestedClaimName, identityAttested) => {
@@ -47,13 +47,15 @@ const ClaimDetails = (props) => {
   };
 
   const claimList = (claims, item, type) => (
-    <ListItem
+    <TouchableOpacity
       key={claims.getIn([item, 'id'])}
-      contentContainerStyle={Styles.greyButtonWithShadow}
-      title={claims.getIn([item, 'name'])}
-      titleStyle={Styles.textWithLeftPadding}
+      style={Styles.greyButtonWithShadow}
       onPress={() => getClaimsDetails(claims.get(item), type)}
-    />
+    >
+      <View>
+        <Text style={Styles.textWithLeftPadding}>{claims.getIn([item, 'name'])}</Text>
+      </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -64,10 +66,12 @@ const ClaimDetails = (props) => {
         placeholder="Quick Search"
         onChangeText={updateSearch}
         value={value}
+        inputContainerStyle={Styles.defaultMargin}
+        cancelButtonTitle=""
       />
       <ScrollView>
         <View>
-          <Text style={Styles.labelUltraLightGrey}>ATTESTED TO BY</Text>
+          <Text style={[Styles.labelUltraLightGrey, Styles.paddingTop]}>ATTESTED TO BY</Text>
           {attestations.keySeq().map((attestation) => (
             <ListItem
               key={attestations.getIn([attestation, 'id'], '')}
@@ -82,14 +86,14 @@ const ClaimDetails = (props) => {
         </View>
         <View>
           {childClaims.size > 0
-            ? <Text style={Styles.textWithTopMargin}>Child Claims</Text> : null}
+            ? <Text style={[Styles.textWithTopMargin, Styles.boldText]}>Child Claims</Text> : null}
           {childClaims.keySeq().map((item) => (
-            claimList(childClaims, item, 'child')
+            claimList(childClaims, item)
           ))}
           {parentClaims.size > 0
-            ? <Text style={Styles.textWithTopMargin}>Parent Claims</Text> : null}
+            ? <Text style={[Styles.textWithTopMargin, Styles.boldText]}>Parent Claims</Text> : null}
           {parentClaims.keySeq().map((item) => (
-            claimList(parentClaims, item, 'parent')
+            claimList(parentClaims, item)
           ))}
         </View>
       </ScrollView>

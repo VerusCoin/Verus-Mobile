@@ -68,7 +68,7 @@ export default containers = {
   standardWidthCenterBlock: {
     width: '75%',
     paddingVertical: 16,
-    alignSelf: 'center'
+    alignSelf: 'center',
   },
   wide: {
     width: '90%',
@@ -202,13 +202,16 @@ export default containers = {
     borderBottomWidth: 0,
   },
   halfWidthBox: {
-    maxWidth: '50%'
+    maxWidth: '50%',
   },
   horizontalPaddingBox: {
-    paddingHorizontal: "25%"
+    paddingHorizontal: '25%',
   },
   flexColumn:{
     flexDirection:'column',
+  },
+  flexRow:{
+    flexDirection:'row',
   },
   alignItemsStart:{
     flexDirection: 'row',
@@ -228,9 +231,17 @@ export default containers = {
     justifyContent: 'space-between',
     borderBottomWidth: 1,
     paddingVertical: 10,
-    borderBottomColor: Colors.ultraLightGrey,
+    borderColor: Colors.ultraLightGrey,
   },
-
+  blockWithBorder: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height:'14%',
+    borderColor: Colors.ultraLightGrey,
+    marginTop:'2%',
+    justifyContent: 'space-between',
+    borderBottomWidth:1,
+  },
   blockWithFlexStart: {
     flexDirection: 'row',
     alignItems: 'center',

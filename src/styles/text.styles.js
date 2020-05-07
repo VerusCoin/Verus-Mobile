@@ -4,8 +4,11 @@ export default text = {
   centralHeader: {
     fontSize: 24,
     color: Colors.quaternaryColor,
-    textAlign: "center",
-    fontFamily: "Avenir-Medium"
+    textAlign: 'center',
+    fontFamily: 'Avenir-Medium',
+  },
+  mediumFont: {
+    fontSize: 24,
   },
   centralSuccessHeader: {
     fontSize: 24,
@@ -173,7 +176,7 @@ export default text = {
     textTransform: 'uppercase',
   },
   capitalizeFirstLetter: {
-    textTransform: 'capitalize'
+    textTransform: 'capitalize',
   },
   listItemRightTitleDefault: {
     color: Colors.quinaryColor,
@@ -259,7 +262,7 @@ export default text = {
   textWithBlackColor: {
     color: Colors.quinaryColor,
     fontSize: 17,
-  }, 
+  },
   textWithRightPadding: {
     fontSize: 16,
     color: Colors.quaternaryColor,
@@ -271,5 +274,11 @@ export default text = {
   textWithLeftMargin:{
     marginLeft:'24%',
     color:Colors.ultraLightGrey,
+  },
+  boldText:{
+    fontSize: 16,
+    color: Colors.quaternaryColor,
+    fontWeight: 'bold',
+    paddingVertical: '3%',
   },
 };

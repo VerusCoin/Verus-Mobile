@@ -37,7 +37,7 @@ const AddIdentity = (props) => {
           placeholder="Identity@"
         />
         <TouchableOpacity style={Styles.linkButton} onPress={handleAdd}>
-          <Text style={Styles.whiteTextWithCustomFontSize}>Add identity</Text>
+          <Text style={Styles.textButton}>ADD IDENTITY</Text>
         </TouchableOpacity>
       </View>
       <Text style={Styles.labelUltraLightGrey}>AVAILABLE IDENTITIES</Text>

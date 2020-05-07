@@ -35,4 +35,20 @@ export default misc = {
   paddingTop:{
     paddingTop:20,
   },
+
+  paddingBottom:{
+    paddingBottom:4,
+  },
+
+  paddingRight:{
+    paddingRight:'3%',
+  },
+  defaultMargin:{
+    marginLeft:0,
+    marginRight:0,
+  },
+
+  paddingHorizontal:{
+    paddingHorizontal:10,
+  },
 };

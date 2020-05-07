@@ -29,6 +29,7 @@ const floatingActions = [
   },
 ];
 
+
 const PersonalInfo = (props) => {
   const {
     claimCategories,
@@ -84,6 +85,7 @@ const PersonalInfo = (props) => {
     if (categoryName) {
       addNewCategory(categoryName);
       setDialogVisible(false);
+      DelayedAlert('Successfully added');
     } else {
       DelayedAlert('Please enter a name for the category');
     }
@@ -115,8 +117,9 @@ const PersonalInfo = (props) => {
       <Text style={Styles.textHeader}>Personal Information</Text>
       <CheckBox
         checked={showEmptyClaimCategories}
-        title="Show empty claim categories"
+        title="Hide empty claim categories"
         onPress={() => setShowEmptyClaimCategories(!showEmptyClaimCategories)}
+        containerStyle={Styles.defaultMargin}
       />
       <SearchBar
         containerStyle={Styles.backgroundColorWhite}
@@ -124,6 +127,8 @@ const PersonalInfo = (props) => {
         placeholder="Quick Search"
         onChangeText={updateSearch}
         value={searchTerm}
+        inputContainerStyle={Styles.defaultMargin}
+        cancelButtonTitle=""
       />
       {renderDialog()}
       <ScrollView>

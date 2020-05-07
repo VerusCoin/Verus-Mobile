@@ -26,7 +26,7 @@ export const selectClaims = (state) => state.identity.getIn(['personalInformatio
 export const selectClaimCategoriesToDisplay = createSelector(
   [selectClaimCategories, selectShowEmptyClaimCategories, selectClaims],
   (claimCategories, showEmptyClaimCategories, claims) => {
-    if (!showEmptyClaimCategories) {
+    if (showEmptyClaimCategories) {
       return claimCategories.filter((claimCategory) => claims.some((claim) => claim.get('categoryId', '') === claimCategory.get('id', '')));
     }
     return claimCategories;

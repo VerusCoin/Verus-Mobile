@@ -25,6 +25,7 @@ const ClaimCategoryDetails = (props) => {
         checked={showHiddenClaims}
         title="Show hidden claims"
         onPress={() => toggleShowHiddenClaims()}
+        containerStyle={Styles.defaultMargin}
       />
       <ScrollView>
         {claims.keySeq().map((claim) => (

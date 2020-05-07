@@ -59,7 +59,6 @@ export default buttons = {
     backgroundColor: Colors.linkButtonColor,
     borderRadius: 4,
     padding: 10,
-    marginRight: '55%',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },

@@ -2,14 +2,14 @@ import React, { useCallback } from 'react';
 import { Map as IMap } from 'immutable';
 import { View, Text } from 'react-native';
 import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { CheckBox } from 'react-native-elements';
 import { truncateString } from './utils/truncateString';
 import getShowHideIcon from './utils/getShowHideIcon';
 import Styles from '../../../../styles';
 
 const getCategotyName = (name) => {
-  if (name.length > 10) return `${truncateString(name, 10)}...`;
+  if (name.length > 30) return `${truncateString(name, 30)}...`;
   return name;
 };
 
@@ -48,34 +48,42 @@ const ClaimManager = (props) => {
 
   return (
     <View style={Styles.root}>
-      <TouchableOpacity style={Styles.linkleftButton} onPress={moveSelectedCategories}>
-        <Text style={Styles.whiteTextWithCustomFontSize}>Move into category</Text>
+      <TouchableOpacity style={Styles.linkButton} onPress={moveSelectedCategories}>
+        <Text style={Styles.textButton}>MOVE INTO CATEGORY</Text>
       </TouchableOpacity>
-      <View style={Styles.blockWithBorderBottom}>
-        <Text style={Styles.textWithLeftMargin}>CLAIM</Text>
-        <Text style={Styles.labelUltraLightGrey}>CATEGORY</Text>
-        <Text style={Styles.labelUltraLightGrey}>SHOW/HIDE</Text>
-      </View>
       <ScrollView>
         <View style={Styles.containerVerticalPadding}>
           {claims.keySeq().map((claim) => (
-            <View style={Styles.blockWithBorderBottom} key={claims.getIn([claim, 'id'])}>
-              <CheckBox
-                key={claims.getIn([claim, 'id'])}
-                checked={checkIfClaimIsSelected(claims.get(claim))}
-                onPress={() => selectClaim(claims.get(claim, IMap()))}
-                title={claims.getIn([claim, 'name'])}
-                containerStyle={Styles.backgroundColorWhite}
-              />
-              <TouchableOpacity onPress={() => moveSingleClaim(claims.get(claim))}>
-                <View style={Styles.alignItemsCenter}>
-                  <Text style={Styles.defaultFontSize}>{getCategotyName(claimCategories.getIn([claims.getIn([claim, 'categoryId'], ''), 'name'], ''))}</Text>
-                  <MaterialIcons name="arrow-drop-down" size={24} />
+            <View style={Styles.blockWithBorder} key={claims.getIn([claim, 'id'])}>
+              <View style={Styles.flexRow}>
+                <CheckBox
+                  key={claims.getIn([claim, 'id'])}
+                  checked={checkIfClaimIsSelected(claims.get(claim))}
+                  onPress={() => selectClaim(claims.get(claim, IMap()))}
+                  containerStyle={Styles.backgroundColorWhite}
+                />
+                <View style={Styles.flexColumn}>
+                  <Text style={[Styles.boldText, Styles.paddingBottom]}>{claims.getIn([claim, 'name'])}</Text>
+
+                  <View style={Styles.alignItemsCenter}>
+                    <Text style={Styles.defaultFontSize}>
+                      {getCategotyName(claimCategories.getIn([claims.getIn( [claim, 'categoryId'], ''), 'name'], ''))}   
+                    </Text>
+                  </View>
+
                 </View>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => toggleClaimVisibility(claims.get(claim))}>
-                {getShowHideIcon(claims.getIn([claim, 'hidden']), 24)}
-              </TouchableOpacity>
+              </View>
+              <View style={[Styles.paddingRight, Styles.flexRow]}>
+                <View>
+                  <TouchableOpacity onPress={() => moveSingleClaim(claims.get(claim))} style={Styles.paddingHorizontal}>
+                    <MaterialIcons name="content-save-move" size={28} st />
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity onPress={() => toggleClaimVisibility(claims.get(claim))}>
+                  {getShowHideIcon(claims.getIn([claim, 'hidden']), 28)}
+                </TouchableOpacity>
+
+              </View>
             </View>
           ))}
         </View>

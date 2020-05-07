@@ -52,6 +52,7 @@ const AttestationDetails = (props) => {
                 info={[identityAttested]}
                 button={attestation.get('showOnHomeScreen', false) ? { title: 'Unpin from home' } : { title: 'Pin to home' }}
                 onButtonPress={pinToHome}
+                titleStyle={Styles.mediumFont}
               />
             </View>
             <View style={Styles.marginVertical}>
