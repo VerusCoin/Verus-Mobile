@@ -116,7 +116,7 @@ const PersonalInfo = (props) => {
     <View style={Styles.root}>
       <Text style={Styles.textHeader}>Personal Information</Text>
       <CheckBox
-        checked={showEmptyClaimCategories}
+        checked={!showEmptyClaimCategories}
         title="Hide empty claim categories"
         onPress={() => setShowEmptyClaimCategories(!showEmptyClaimCategories)}
         containerStyle={Styles.defaultMargin}

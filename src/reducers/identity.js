@@ -36,7 +36,7 @@ const defaultState = fromJS({
       byId: {},
       claimCategoriesIds: [],
     },
-    showEmptyClaimCategories: false,
+    showEmptyClaimCategories: true,
     showHiddenClaims: false,
     activeClaimCategoryId: '',
     selectedClaims: [],

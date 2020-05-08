@@ -27,9 +27,9 @@ export const selectClaimCategoriesToDisplay = createSelector(
   [selectClaimCategories, selectShowEmptyClaimCategories, selectClaims],
   (claimCategories, showEmptyClaimCategories, claims) => {
     if (showEmptyClaimCategories) {
-      return claimCategories.filter((claimCategory) => claims.some((claim) => claim.get('categoryId', '') === claimCategory.get('id', '')));
+      return claimCategories;
     }
-    return claimCategories;
+    return claimCategories.filter((claimCategory) => claims.some((claim) => claim.get('categoryId', '') === claimCategory.get('id', '')));
   },
 );
 
