@@ -51,6 +51,27 @@ class ReceiveCoin extends Component {
 
   componentDidMount() {
     this.setAddress()
+    const {
+      state,
+      props,
+      validateFormData,
+      forceUpdate,
+      switchInvoiceCoin,
+      copyAddressToClipboard
+    } = this;
+    const { activeCoinsForUser, rates, displayCurrency } = props;
+    const {
+      loading,
+      showModal,
+      verusQRString,
+      selectedCoin,
+      address,
+      errors,
+      amountFiat
+    } = state;
+
+    console.log("dikke pik")
+    console.log(JSON.stringify(address))
   }
 
   setAddress = () => {
@@ -305,12 +326,13 @@ walletPrivate = () => {
   switchButton = () => {
     if (this.props.channels[this.props.activeCoin.id].channels.includes("dlight")) {
       //console.log(this.props.channels[this.props.activeCoin.id].channels);
+      console.log(this.state.private)
     return <View style={Styles.centralRow}>
     <SwitchButton
-                onValueChange={(val) => this.setState({ activeSwitch: val })}      // this is necessary for this component
+                onValueChange={(val) => this.setState({ private: val-1 })}      // this is necessary for this component
                 text1 = 'Generate VerusQR Invoice'                        // optional: first text in switch button --- default ON
                 text2 = 'Private'                       // optional: second text in switch button --- default OFF
-                switchWidth = {410}                 // optional: switch width --- default 44
+                switchWidth = {350}           // optional: switch width --- default 44
                 switchHeight = {65}                 // optional: switch height --- default 100
                 switchdirection = 'rtl'             // optional: switch button direction ( ltr and rtl ) --- default ltr
                 switchBorderRadius = {100}          // optional: switch border radius --- default oval
@@ -321,7 +343,7 @@ walletPrivate = () => {
                 btnBackgroundColor = '#fff'      // optional: button background color --- default #00bcd4
                 fontColor = {Colors.quaternaryColor}               // optional: text font color --- default #b1b1b1
                 activeFontColor = {Colors.quaternaryColor}             // optional: active font color --- default #fff
-                onValueChange={this.walletPrivate}
+
                 value={this.state.private}
             />
     </View>
@@ -332,11 +354,13 @@ walletPrivate = () => {
 //this is a function that shows the private address only in private address mode
 dynamicViewingTest = () => {
   const {
+
     state,
     props,
     validateFormData,
     forceUpdate,
     switchInvoiceCoin,
+    switchInvoiceAddress,
     copyAddressToClipboard
   } = this;
   const { activeCoinsForUser, rates, displayCurrency } = props;
@@ -351,88 +375,102 @@ dynamicViewingTest = () => {
   } = state;
 
 
-if(this.state.private == true){
-    return
+if(this.state.private == 0){
+  const coinObj = this.state.selectedCoin
+  const activeUser = this.props.activeAccount
 
-            { this.state.activeSwitch === 1 ? console.log('view1') : console.log('view2') }
-     <TouchableOpacity onPress={this.copyAddressToClipboard}>
-    <SwitchButton
-    onValueChange={(val) => this.setState({ activeSwitch: val })}
-  />
-      <Input
-        labelStyle={Styles.formInputLabel}
-        underlineColorAndroid={Colors.quinaryColor}
-        editable={false}
-        value={address}
-        autoCapitalize={"none"}
-        autoCorrect={false}
-        inputStyle={Styles.mediumInlineLink}
-        pointerEvents="none"
-        multiline={true}
-        label={"Your address:"}
-        errorMessage={errors.address ? errors.address : null} //dit zijn de gewone errors
-      />
-      <Dropdown
-        // TODO: Determine why width must be 85 here, cant be wide block
-        containerStyle={{ ...Styles.wideBlock, width: "85%" }}
-        labelExtractor={(item, index) => {
-          return item.id;
-        }}
-        valueExtractor={(item, index) => {
-          return item;
-        }}
-        data={this.props.activeUser}
-        onChangeText={(value, index, data) => switchInvoiceAddress(value)}
-        textColor={Colors.quinaryColor}
-        selectedItemColor={Colors.quinaryColor}
-        baseColor={Colors.quinaryColor}
-        label="Selected address:"
-        labelTextStyle={{ fontFamily: "Avenir-Book" }}
-        labelFontSize={17}
-        value={this.props.activeUser}
-        pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
-        itemTextStyle={{ fontFamily: "Avenir-Book" }}
-      />
-    </TouchableOpacity>
-  }else{
-    return <View>
-      <Dropdown
-        // TODO: Determine why width must be 85 here, cant be wide block
-        containerStyle={{ ...Styles.wideBlock, width: "85%" }}
-        labelExtractor={(item, index) => {
-          return item.id;
-        }}
-        valueExtractor={(item, index) => {
-          return item;
-        }}
-        data={this.props.activeUser}
-        onChangeText={(value, index, data) => switchInvoiceAddress(value)}
-        textColor={Colors.quinaryColor}
-        selectedItemColor={Colors.quinaryColor}
-        baseColor={Colors.quinaryColor}
-        label="Selected address:"
-        labelTextStyle={{ fontFamily: "Avenir-Book" }}
-        labelFontSize={17}
-        value={this.props.activeUser}
-        pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
-        itemTextStyle={{ fontFamily: "Avenir-Book" }}
-      />
-    <TouchableOpacity onPress={this.copyAddressToClipboard} >
-      <Input
-        labelStyle={Styles.formInputLabel}
-        underlineColorAndroid={Colors.quinaryColor}
-        editable={false}
-        value={this.state.address}
-        autoCapitalize={"none"}
-        autoCorrect={false}
-        inputStyle={Styles.mediumInlineLink}
-        pointerEvents="none"
-        multiline={true}
-        label={"Your address:"}
-        errorMessage={errors.address ? errors.address : null} //check of dit d edlight errors zijn
-      />
-      </TouchableOpacity>
+console.log(activeUser.keys[coinObj.id].electrum.addresses)
+       return(
+        <View >
+        <View style={Styles.centralRow}>
+        <Dropdown
+          // TODO: Determine why width must be 85 here, cant be wide block
+          containerStyle={{ ...Styles.wideBlock, width: "85%" }}
+          labelExtractor={(item, index) => {
+            return item.id;
+          }}
+          valueExtractor={(item, index) => {
+            return item;
+          }}
+            data={activeUser.keys[coinObj.id].electrum.addresses}
+          onChangeText={(value, index, data) => switchInvoiceAddress(value)}
+          textColor={Colors.quinaryColor}
+          selectedItemColor={Colors.quinaryColor}
+          baseColor={Colors.quinaryColor}
+          inputStyle={Styles.mediumInlineLink}
+          label="Selected address:"
+          labelTextStyle={{ fontFamily: "Avenir-Book" }}
+          labelFontSize={17}
+          value={activeUser.keys[coinObj.id].electrum.addresses}
+          pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
+          itemTextStyle={{ fontFamily: "Avenir-Book" }}
+        />
+        </View>
+            <View style={Styles.centralRow}>
+        <Input
+          labelStyle={Styles.formInputLabel}
+          underlineColorAndroid={Colors.quinaryColor}
+          editable={false}
+          value={address}
+          autoCapitalize={"none"}
+          autoCorrect={false}
+          inputStyle={Styles.mediumInlineLink}
+          pointerEvents="none"
+          multiline={true}
+          label={"Your address:"}
+          errorMessage={errors.address ? errors.address : null} //dit zijn de gewone errors
+        />
+          </View>
+          </View>
+        );
+
+}else{
+    const coinObj = this.state.selectedCoin
+    const activeUser = this.props.activeAccount
+console.log(activeUser.keys[coinObj.id].dlight.addresses)
+    return(
+    <View >
+    <View style={Styles.centralRow}>
+    <Dropdown
+      // TODO: Determine why width must be 85 here, cant be wide block
+      containerStyle={{ ...Styles.wideBlock, width: "85%" }}
+      labelExtractor={(item, index) => {
+        return item.id;
+      }}
+      valueExtractor={(item, index) => {
+        return item;
+      }}
+      data={activeUser.keys[coinObj.id].dlight.addresses}
+      onChangeText={(value, index, data) => switchInvoiceAddress(value)}
+      textColor={Colors.quinaryColor}
+      selectedItemColor={Colors.quinaryColor}
+      baseColor={Colors.quinaryColor}
+      inputStyle={Styles.mediumInlineLink}
+      label="Selected address:"
+      labelTextStyle={{ fontFamily: "Avenir-Book" }}
+      labelFontSize={17}
+      value={activeUser.keys[coinObj.id].dlight.addresses}
+      pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
+      itemTextStyle={{ fontFamily: "Avenir-Book" }}
+    />
+    </View>
+        <View style={Styles.centralRow}>
+    <Input
+      labelStyle={Styles.formInputLabel}
+      underlineColorAndroid={Colors.quinaryColor}
+      editable={false}
+      value={this.props.channels}
+      autoCapitalize={"none"}
+      autoCorrect={false}
+      inputStyle={Styles.mediumInlineLink}
+      pointerEvents="none"
+      multiline={true}
+      label={"Your address:"}
+      errorMessage={errors.address ? errors.address : null} //dit zijn de gewone errors
+    />
       </View>
+      </View>
+    )
   }
 }
 
@@ -460,6 +498,9 @@ if(this.state.private == true){
       amountFiat
     } = state;
     const fiatEnabled = rates[selectedCoin.id] && rates[selectedCoin.id][displayCurrency] != null
+    const coinObj = this.state.selectedCoin
+    const activeUser = this.props.activeAccount
+
 
     return (
       <View style={Styles.defaultRoot}>
@@ -475,28 +516,6 @@ if(this.state.private == true){
             <RefreshControl refreshing={loading} onRefresh={forceUpdate} />
           }
         >
-        <Dropdown
-          // TODO: Determine why width must be 85 here, cant be wide block
-          containerStyle={{ ...Styles.wideBlock, width: "85%" }}
-          labelExtractor={(item, index) => {
-            return item.id;
-          }}
-          valueExtractor={(item, index) => {
-            return item;
-          }}
-          data={this.props.activeUser}
-          onChangeText={(value, index, data) => switchInvoiceAddress(value)}
-          textColor={Colors.quinaryColor}
-          selectedItemColor={Colors.quinaryColor}
-          baseColor={Colors.quinaryColor}
-          label="Selected address:"
-          labelTextStyle={{ fontFamily: "Avenir-Book" }}
-          labelFontSize={17}
-          value={this.props.activeUser}
-          pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
-          itemTextStyle={{ fontFamily: "Avenir-Book" }}
-        />
-
 
 
           <QRModal
@@ -530,7 +549,7 @@ if(this.state.private == true){
             itemTextStyle={{ fontFamily: "Avenir-Book" }}
           />
 
-          <View style={Styles.wideBlock}>
+
           {this.dynamicViewingTest()}
           <View style={Styles.wideBlock}>
             <Input
@@ -590,7 +609,7 @@ if(this.state.private == true){
               title="GENERATE QR"
               onPress={validateFormData}
             />
-          </View>
+
           </View>
         </ScrollView>
       </View>
