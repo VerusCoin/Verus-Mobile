@@ -1,16 +1,18 @@
 /*
-  This screen is where the user goes if they 
+  This screen is where the user goes if they
   want to send a transaction of a particular coin. The goal is
-  to give them easy access to all sending relating functions. 
-  While this means the ability to enter an amount, an adress, and 
-  send, it also means easy access to things like VerusPay. If given 
-  the option, a user shouldn't have to always enter in a complicated 
+  to give them easy access to all sending relating functions.
+  While this means the ability to enter an amount, an adress, and
+  send, it also means easy access to things like VerusPay. If given
+  the option, a user shouldn't have to always enter in a complicated
   address to send to manually.
 */
 
+
+
 import React, { Component } from "react"
 import StandardButton from "../../../components/StandardButton"
-import { FormLabel, Input, FormValidationMessage, } from "react-native-elements"
+import { FormLabel, Input, FormValidationMessage, ButtonGroup } from "react-native-elements"
 import {
   View,
   Text,
@@ -31,6 +33,7 @@ import Colors from '../../../globals/colors';
 import withNavigationFocus from "react-navigation/src/views/withNavigationFocus"
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import store from "../../../store"
+
 import { API_GET_FIATPRICE, API_GET_BALANCES, ELECTRUM, DLIGHT } from "../../../utils/constants/intervalConstants"
 
 const VERUSPAY_LOGO_DIR = require('../../../images/customIcons/verusPay.png')
@@ -52,7 +55,8 @@ class SendCoin extends Component {
       btcFeesErr: false,
       activeCoinsForUser: {},
       formErrors: { toAddress: null, amount: null },
-      spendableBalance: 0
+      spendableBalance: 0,
+      privateIndex: 0
     };
   }
 
@@ -122,6 +126,36 @@ class SendCoin extends Component {
     );
   };
 
+  changeIndex = (privateIndex) => {
+    this.setState({ privateIndex })
+  }
+
+  pubText = () => <Text style={{...Styles.fullWidthButtonTitle, color: Colors.secondaryColor}}>PUBLIC</Text>
+
+  privText = () =>  <Text style={{...Styles.fullWidthButtonTitle, color: Colors.secondaryColor}}>PRIVATE</Text>
+
+  switchButton = () => {
+    if (this.props.channels[this.props.activeCoin.id].channels.includes("dlight")) {
+
+      buttons = [{ element: this.pubText }, { element: this.privText },];
+
+      console.log(this.state.privateIndex)
+
+      //console.log(this.props.channels[this.props.activeCoin.id].channels);
+    return( <View style={Styles.centralRow}>
+        <ButtonGroup
+              onPress={this.changeIndex}
+              selectedIndex={this.state.privateIndex}
+              buttons={buttons}
+              containerStyle={ Styles.fullWidthButton }
+              />
+          </View>
+        )
+  } else {
+    return null;
+ }
+}
+
   handleFormError = (error, field) => {
     let _errors = this.state.formErrors;
     _errors[field] = error;
@@ -155,7 +189,7 @@ class SendCoin extends Component {
     });
   };
 
-  goToConfirmScreen = (coinObj, activeUser, address, amount) => {
+  goToConfirmScreen = (coinObj, activeUser, address, amount, privateIndex) => {
     const route = "ConfirmSend";
     let navigation = this.props.navigation;
 
@@ -163,6 +197,7 @@ class SendCoin extends Component {
       coinObj: coinObj,
       activeUser: activeUser,
       address: address,
+      privateIndex: privateIndex,
       amount: coinsToSats(Number(amount)),
       btcFee: this.state.btcFees.average,
       balance: (this.props.balances.public.confirmed + (this.props.balances.private ? this.props.balances.private.confirmed : 0))
@@ -202,13 +237,26 @@ class SendCoin extends Component {
         formErrors: { toAddress: null, amount: null }
       },
       () => {
-        const coin = this.state.coin;
+        let _errors = false;
 
-        const spendableBalance =
+        const coin = this.state.coin;
+        const privateIndex = this.state.privateIndex;
+        var spendableBalance;
+        if( privateIndex == 0){
+          spendableBalance =
           coin.id === "BTC"
             ? truncateDecimal(this.props.balances.public.confirmed, 4)
             : this.props.balances.public.confirmed -
               satsToCoins(this.props.activeCoin.fee ? this.props.activeCoin.fee : 10000);
+        }else{
+            if(this.props.balances.errors.private != null){
+              spendableBalance = 0;
+              _errors = true;
+              Alert.alert("Connection Error", "there has occured an error obtaining your balance details from the private transaction ledger");
+            }else{
+              spendableBalance = this.props.balances.private.confirmed - satsToCoins(this.props.activeCoin.fee ? this.props.activeCoin.fee : 10000);
+            }
+        }
 
         const toAddress = removeSpaces(this.state.toAddress);
         const fromAddress = this.state.fromAddress;
@@ -219,7 +267,6 @@ class SendCoin extends Component {
             ? this.state.amount
             : this.state.amount.toString().replace(/,/g, ".");
         const account = this.state.account;
-        let _errors = false;
 
         if (!toAddress || toAddress.length < 1) {
           this.handleFormError("Required field", "toAddress");
@@ -262,11 +309,12 @@ class SendCoin extends Component {
         }
 
         if (!_errors) {
-          this.goToConfirmScreen(coin, account, toAddress, amount);
+          this.goToConfirmScreen(coin, account, toAddress, amount, privateIndex);
         }
       }
     );
   };
+
 
   render() {
     const { balances, activeCoin } = this.props;
@@ -304,9 +352,7 @@ class SendCoin extends Component {
               </Text>
             </TouchableOpacity>
           </View>
-          <Text style={Styles.greyStripeHeader}>
-            {"Send " + this.state.coin.name}
-          </Text>
+          {this.switchButton()}
           <ScrollView
             style={Styles.fullWidth}
             contentContainerStyle={Styles.horizontalCenterContainer}
@@ -391,7 +437,7 @@ class SendCoin extends Component {
               </View>
             ) : (
               <View style={Styles.fullWidthFlexCenterBlock}>
-                <StandardButton onPress={this.validateFormData} title="SEND" />
+                <StandardButton onPress={ this.validateFormData } title="SEND" />
               </View>
             )}
           </ScrollView>
@@ -408,6 +454,7 @@ const mapStateToProps = (state) => {
     //needsUpdate: state.ledger.needsUpdate,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoin: state.coins.activeCoin,
+    channels: state.settings.coinSettings,
     balances: {
       public: state.ledger.balances[ELECTRUM][chainTicker],
       private: state.ledger.balances[DLIGHT][chainTicker],
