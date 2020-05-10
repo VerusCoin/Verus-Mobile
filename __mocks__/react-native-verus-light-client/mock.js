@@ -3,7 +3,9 @@ const {
   openWallet,
   closeWallet,
   deleteWallet,
-  request
+  request,
+  startSync,
+  stopSync
 } = require('./WalletFolder')
 
 function mockVerusLightClient() {
@@ -12,6 +14,8 @@ function mockVerusLightClient() {
     openWallet,
     closeWallet,
     deleteWallet,
+    startSync,
+    stopSync,
     request
   } 
 }

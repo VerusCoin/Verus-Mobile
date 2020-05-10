@@ -3,13 +3,35 @@ const formatResponse = require('./requests/JsonRpc')
 
 const WalletFolder = {}
 
-function createWallet(coinId, coinProto, address, port, accountHash, numAddresses, seed, birthday) {
+function createWallet(coinId, coinProto, accountHash, address, port, numAddresses, seed, birthday) {
   WalletFolder[coinId + '_' + coinProto + '_' + accountHash] = { open: false }
 
   return new Promise((resolve, reject) => resolve(true))
 }
 
 function openWallet(coinId, coinProto, accountHash) {
+  return new Promise((resolve, reject) => {
+    if (WalletFolder[coinId + '_' + coinProto + '_' + accountHash] == null) reject("Failed to open " + coinId + " wallet.")
+    else {
+      WalletFolder[coinId + '_' + coinProto + '_' + accountHash].open = true
+
+      resolve(true)
+    }
+  })
+}
+
+function startSync(coinId, coinProto, accountHash) {
+  return new Promise((resolve, reject) => {
+    if (WalletFolder[coinId + '_' + coinProto + '_' + accountHash] == null) reject("Failed to open " + coinId + " wallet.")
+    else {
+      WalletFolder[coinId + '_' + coinProto + '_' + accountHash].open = true
+
+      resolve(true)
+    }
+  })
+}
+
+function stopSync(coinId, coinProto, accountHash) {
   return new Promise((resolve, reject) => {
     if (WalletFolder[coinId + '_' + coinProto + '_' + accountHash] == null) reject("Failed to open " + coinId + " wallet.")
     else {
@@ -88,5 +110,7 @@ module.exports = {
   openWallet,
   closeWallet,
   deleteWallet,
+  startSync,
+  stopSync,
   request
 }

@@ -30,6 +30,9 @@ import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 const APP_INFO = 'App Info'
 const PROFILE = 'Profile'
 const WALLET = 'Wallet'
+const CANCEL = 0
+const REMOVE = 1
+const REMOVE_DELETE = 2
 
 class SideMenu extends Component {
   constructor(props) {
@@ -75,17 +78,17 @@ class SideMenu extends Component {
   }
 
   _removeCoin = (coinID) => {
-    let data = {
-      task: this._removeUserFromCoin,
-      message: "Removing " + coinID + " from user " + this.props.activeAccount.id + ", please do not close Verus Mobile.",
-      input: [coinID],
-      route: "Home",
-      dispatchResult: true
-    }
-    
     this.canRemoveCoin(coinID)
     .then(answer => {
-      if (answer) {
+      let data = {
+        task: this._removeUserFromCoin,
+        message: "Removing " + coinID + " from user " + this.props.activeAccount.id + ", please do not close Verus Mobile.",
+        input: [coinID, answer === REMOVE_DELETE],
+        route: "Home",
+        dispatchResult: true
+      }
+
+      if (answer === REMOVE_DELETE || answer === REMOVE) {
         this.setState({ mainDrawer: true }, () => {
           this.resetToScreen("SecureLoading", null, data, true)
         })
@@ -93,9 +96,9 @@ class SideMenu extends Component {
     })
   }
 
-  _removeUserFromCoin = (coinID) => {
+  _removeUserFromCoin = (coinID, deleteWallet) => {
     return new Promise((resolve, reject) => {
-      removeExistingCoin(coinID, this.props.activeCoinList, this.props.activeAccount.id)
+      removeExistingCoin(coinID, this.props.activeCoinList, this.props.activeAccount.id, this.props.dlightSockets[coinID], deleteWallet)
       .then((res) => {
         clearAllCoinIntervals(coinID)
         this.props.dispatch(res)
@@ -268,21 +271,41 @@ class SideMenu extends Component {
   }
 
   canRemoveCoin = (coinID) => {
-    return AlertAsync(
-      'Confirm',
-      "Are you sure you would like to remove " + coinID + "?",
-      [
+    if (this.props.dlightSockets[coinID]) {
+      return AlertAsync(
+        'Confirm',
+        "Would you like to remove " + coinID + " and delete all its blockchain data?",
+        [
+          {
+            text: 'Cancel',
+            onPress: () => Promise.resolve(CANCEL),
+            style: 'cancel',
+          },
+          {text: 'Remove', onPress: () => Promise.resolve(REMOVE)},
+          {text: 'Remove & Delete', onPress: () => Promise.resolve(REMOVE_DELETE)},
+        ],
         {
-          text: 'No',
-          onPress: () => Promise.resolve(false),
-          style: 'cancel',
+          cancelable: false,
         },
-        {text: 'Yes', onPress: () => Promise.resolve(true)},
-      ],
-      {
-        cancelable: false,
-      },
-    )
+      )
+    } else {
+      return AlertAsync(
+        'Confirm',
+        "Are you sure you would like to remove " + coinID + "?",
+        [
+          {
+            text: 'No',
+            onPress: () => Promise.resolve(CANCEL),
+            style: 'cancel',
+          },
+          {text: 'Yes', onPress: () => Promise.resolve(REMOVE)},
+        ],
+        {
+          cancelable: false,
+        },
+      )
+    }
+    
   }
 
   handleLogout = () => {
@@ -424,7 +447,8 @@ const mapStateToProps = (state) => {
   return {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
-    activeAccount: state.authentication.activeAccount
+    activeAccount: state.authentication.activeAccount,
+    dlightSockets: state.coins.dlightSockets
   }
 };
 

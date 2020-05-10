@@ -196,4 +196,10 @@ export default containers = {
     backgroundColor: Colors.tertiaryColor,
     borderBottomWidth: 0
   },
+  halfWidthBox: {
+    maxWidth: '50%'
+  },
+  horizontalPaddingBox: {
+    paddingHorizontal: "25%"
+  }
 }

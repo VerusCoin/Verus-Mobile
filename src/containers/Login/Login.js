@@ -24,6 +24,7 @@ import {
   //everythingNeedsUpdate, 
   fetchActiveCoins,
   signIntoAuthenticatedAccount,
+  addCoin,
   //setUpdateIntervalID
  } from '../../actions/actionCreators';
 import { Dropdown } from 'react-native-material-dropdown';
@@ -34,6 +35,8 @@ import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import StandardButton from "../../components/StandardButton";
 import PasswordInput from '../../components/PasswordInput'
+import { DLIGHT } from "../../utils/constants/intervalConstants";
+import { initDlightWallet } from "../../actions/actions/dlight/dispatchers/LightWalletReduxManager";
 
 class Login extends Component {
   constructor(props) {
@@ -72,24 +75,29 @@ class Login extends Component {
           throw new Error("Account not validated")
         }
       })
-      .then((resArr) => {
-        const validation = resArr[1]
+      .then(async (resArr) => {
+        const accountAuthenticator = resArr[1]
         const coinList = resArr[0]
-        const coinsForUser = setUserCoins(coinList.activeCoinList, account.id);
+        const setUserCoinsAction = setUserCoins(coinList.activeCoinList, account.id)
+        const { activeCoinsForUser } = setUserCoinsAction
 
+        this.props.dispatch(accountAuthenticator)
         this.props.dispatch(coinList)
-        this.props.dispatch(coinsForUser)
-        this.props.dispatch(validation)
+        this.props.dispatch(setUserCoinsAction)
 
-        coinsForUser.activeCoinsForUser.map(coinObj => {
-          activateChainLifecycle(coinObj.id);
-        });
+        for (let i = 0; i < activeCoinsForUser.length; i++) {
+          if (this.props.coinSettings[activeCoinsForUser[i].id].channels.includes(DLIGHT)) {
+            await initDlightWallet(activeCoinsForUser[i])
+          }
+  
+          activateChainLifecycle(activeCoinsForUser[i].id);
+        }
 
         this.props.dispatch(signIntoAuthenticatedAccount())
       })
       .catch(err => {
-        //console.error(err)
-        return err
+        console.warn(err)
+        Alert.alert("Error", err.message)
       });
   }
 
@@ -219,6 +227,7 @@ const mapStateToProps = (state) => {
   return {
     accounts: state.authentication.accounts,
     activeCoinList: state.coins.activeCoinList,
+    coinSettings: state.settings.coinSettings
     //updateIntervalID: state.ledger.updateIntervalID
   }
 };

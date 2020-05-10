@@ -2,6 +2,7 @@ import { electrumServers } from 'agama-wallet-lib/src/electrum-servers';
 import { MAX_VERIFICATION } from '../constants/constants'
 import Colors from '../../globals/colors'
 import { coinsList } from './CoinsList'
+import { DLIGHT, ELECTRUM } from '../constants/intervalConstants';
 
 const getDefaultApps = (coinName, canBuySell = false) => {
   return ({
@@ -56,6 +57,7 @@ export const defaultAssetsPath = {
     doge: require('../../images/cryptologo/default/doge.png'),	
     kmd: require('../../images/cryptologo/default/kmd.png'),		
     zec: require('../../images/cryptologo/default/zec.png'),
+    zectest: require('../../images/cryptologo/default/zectest.png'),
     zilla: require('../../images/cryptologo/default/zilla.png'),	
     ltc: require('../../images/cryptologo/default/ltc.png'),		
     ccl: require('../../images/cryptologo/default/ccl.png'),
@@ -72,10 +74,16 @@ export const findCoinObj = (id, userName) => {
   let coinObj = coinsList[id.toLowerCase()]
 
   if (coinObj) {
-    coinObj.serverList = electrumServers[id.toLowerCase()].serverList;
+    coinObj.serverList = coinObj.compatible_channels.includes(ELECTRUM) ? electrumServers[id.toLowerCase()].serverList : []
     coinObj.logo = defaultAssetsPath.coinLogo[id.toLowerCase()];
     coinObj.users = userName != null ? [userName] : [];
-
+    
+    if (!coinObj.compatible_channels.includes(DLIGHT)) {
+      coinObj.overrideCoinSettings = {
+        privateAddrs: 0
+      }
+    }
+    
     if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
       const DEFAULT_APPS = getDefaultApps(coinObj.name)
       coinObj.apps = DEFAULT_APPS.apps
@@ -114,6 +122,7 @@ export const createCoinObj = (id, name, description, defaultFee, serverList, use
     fee: defaultFee,
     serverList: serverList ? serverList : [],
     users: [userName],
+    compatible_channels: [ELECTRUM, GENERAL],
     apps: apps,
     defaultApp: defaultApp,
     overrideCoinSettings: {

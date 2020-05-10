@@ -7,6 +7,9 @@ export const API_ERROR = "error"
 export const API_ABORTED = "aborted"
 export const API_SUCCESS = "success"
 
+// Intitalization errors
+export const INIT_DLIGHT_ERRORS = 'init_dlight_errors'
+
 // API call names
 export const API_GET_ADDRESSES = "get_addresses"
 export const API_GET_BALANCES = "get_balances"

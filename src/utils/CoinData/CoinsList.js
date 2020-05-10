@@ -1,4 +1,5 @@
 import { DLIGHT, ELECTRUM, GENERAL, IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT } from "../constants/intervalConstants";
+import { dlightServers } from 'agama-wallet-lib/src/dlight-servers';
 
 export const coinsList = {
   vrsc: {
@@ -7,9 +8,10 @@ export const coinsList = {
     description:
       "Verus Coin includes the first proven 51% hash attack resistant proof of power algorithm. The Verus vision is PBaaS, public blockchains as a service, provisioned for conditional rewards by Verus miners and stakers.",
     fee: 10000,
-    compatible_channnels: [DLIGHT, ELECTRUM, GENERAL],
+    compatible_channels: [DLIGHT, ELECTRUM, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT],
-    proto: 'vrsc'
+    proto: 'vrsc',
+    dlightEndpoints: dlightServers.vrsc
   },
   kmd: {
     id: "KMD",
@@ -17,7 +19,7 @@ export const coinsList = {
     description:
       "Komodo is an open, modular, multi-chain platform that provides an autonomous, customizable blockchain to every project that builds within the ecosystem.",
     fee: 10000,
-    compatible_channnels: [ELECTRUM, GENERAL],
+    compatible_channels: [ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
     proto: 'btc'
   },
@@ -27,7 +29,7 @@ export const coinsList = {
     description:
       "The coin that started it all. Bitcoin (BTC) is a peer to peer digital currency created in 2009 by Satoshi Nakamoto.",
     fee: 10000,
-    compatible_channnels: [ELECTRUM, GENERAL],
+    compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
     proto: 'btc'
   },
@@ -37,7 +39,7 @@ export const coinsList = {
     description:
       "A reward platform for crypto analysis, reviews and predictions",
     fee: 10000,
-    compatible_channnels: [ELECTRUM, GENERAL],
+    compatible_channels: [ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
     proto: 'btc'
   },
@@ -46,7 +48,7 @@ export const coinsList = {
     name: "CoinCollect",
     description: "",
     fee: 10000,
-    compatible_channnels: [ELECTRUM, GENERAL],
+    compatible_channels: [ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
     proto: 'btc'
   },
@@ -55,7 +57,7 @@ export const coinsList = {
     name: "Dogecoin",
     description: "",
     fee: 100000000,
-    compatible_channnels: [ELECTRUM, GENERAL],
+    compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
     proto: 'btc'
   },
@@ -64,7 +66,7 @@ export const coinsList = {
     name: "Digibyte",
     description: "",
     fee: 100000,
-    compatible_channnels: [ELECTRUM, GENERAL],
+    compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
     proto: 'btc'
   },
@@ -73,7 +75,7 @@ export const coinsList = {
     name: "Bitcoin Cash",
     description: "",
     fee: 10000,
-    compatible_channnels: [ELECTRUM, GENERAL],
+    compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
     proto: 'btc'
   },
@@ -82,16 +84,27 @@ export const coinsList = {
     name: "ZCash",
     description: "",
     fee: 10000,
-    compatible_channnels: [DLIGHT, ELECTRUM, GENERAL],
+    compatible_channels: [DLIGHT, ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
-    proto: 'btc'
+    proto: 'btc',
+    dlightEndpoints: dlightServers.zec
+  },
+  zectest: {
+    id: "ZECTEST",
+    name: "ZCash Testnet",
+    description: "",
+    fee: 10000,
+    compatible_channels: [DLIGHT, GENERAL],
+    tags: [IS_ZCASH],
+    proto: 'btc',
+    dlightEndpoints: dlightServers.zectest
   },
   dash: {
     id: "DASH",
     name: "Dash",
     description: "",
     fee: 10000,
-    compatible_channnels: [ELECTRUM, GENERAL],
+    compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
     proto: 'btc'
   },
@@ -100,7 +113,7 @@ export const coinsList = {
     name: "Litecoin",
     description: "",
     fee: 30000,
-    compatible_channnels: [ELECTRUM, GENERAL],
+    compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
     proto: 'btc'
   },
@@ -110,7 +123,7 @@ export const coinsList = {
     description:
       "The native token of Chainzilla Blockchain Solutions. They are a blockchain consulting company that develops easy to use whitelabel blockchain wallets and applications.",
     fee: 10000,
-    compatible_channnels: [ELECTRUM, GENERAL],
+    compatible_channels: [ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
     proto: 'btc'
   }

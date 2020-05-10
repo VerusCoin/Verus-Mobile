@@ -24,7 +24,7 @@ import { calculatePrice } from '../../../utils/price';
 import { SUPPORTED_CRYPTOCURRENCIES, SUPPORTED_FIAT_CURRENCIES, SUPPORTED_PAYMENT_METHODS } from '../../../utils/constants/constants'
 import {
   //everythingNeedsUpdate,
-  addExistingCoin,
+  addCoin,
   setUserCoins,
   addKeypairs,
   expireData,
@@ -198,11 +198,16 @@ class BuyCrypto extends Component {
 
   handleAddCoin = coinTicker => {
     this.setState({ addingCoin: true });
+    const coinObj = findCoinObj(coinTicker)
+
     return new Promise((resolve, reject) => {
-      addExistingCoin(
-        findCoinObj(coinTicker),
+      addCoin(
+        coinObj,
         this.props.activeCoinList,
-        this.props.activeAccount.id
+        this.props.activeAccount.id,
+        this.props.coinSettings[coinTicker]
+        ? this.props.coinSettings[coinTicker].channels
+        : coinObj.compatible_channels
       ).then(response => {
         if (response) {
           this.props.dispatch(response);
@@ -224,7 +229,11 @@ class BuyCrypto extends Component {
         } else {
           this.errorHandler("Error adding coin");
         }
-      });
+      })
+      .catch(err => {
+        this.setState({ addingCoin: false })
+        Alert.alert("Error Adding Coin", err.message)
+      })
     });
   };
 
@@ -633,6 +642,7 @@ const mapStateToProps = (state) => ({
   exchangeRatesFetching: selectExchangeRatesIsFetching(state),
   paymentMethod: selectWyrePaymentMethod(state),
   balances: state.ledger.balances[ELECTRUM],
+  coinSettings: state.settings.coinSettings
 });
 
 const mapDispatchToProps = (dispatch) => ({

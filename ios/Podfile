@@ -25,6 +25,25 @@ $dynamic_frameworks = [
   'ZcashLightClientKit',
   'SwiftGRPC',
   'gRPC-Core',
+  'gRPC-Swift',
+  'Logging', 
+  'SwiftNIO', 
+  'CNIOLinux', 
+  'CNIODarwin', 
+  'SwiftNIOConcurrencyHelpers', 
+  'CNIOAtomics', 
+  'CNIOSHA1', 
+  'SwiftNIOHTTP2', 
+  'SwiftNIOHTTP1', 
+  'CNIOHTTPParser', 
+  'SwiftNIOTLS', 
+  'SwiftNIOHPACK', 
+  'SwiftNIOSSL', 
+  'CNIOBoringSSL', 
+  'CNIOBoringSSLShims', 
+  'SwiftNIOTransportServices', 
+  'SwiftNIOFoundationCompat', 
+  'CGRPCZlib',
   'BoringSSL-GRPC',
   'nanopb',
   'SwiftProtobuf',
@@ -81,8 +100,6 @@ target 'verusmobile' do
   pod 'Permission-Camera', :path => "#{permissions_path}/Camera.podspec"
   pod 'ZcashLightClientKit', :git => 'https://github.com/michaeltout/ZcashLightClientKit.git', :testspecs => ['Tests']
 
-
-  
   target 'verusmobileTests' do
     inherit! :search_paths
     # Pods for testing

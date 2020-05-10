@@ -5,8 +5,7 @@ export default text = {
     fontSize: 24,
     color: Colors.quaternaryColor,
     textAlign: "center",
-    fontFamily: "Avenir-Medium",
-    fontSize: 16
+    fontFamily: "Avenir-Medium"
   },
   centralSuccessHeader: {
     fontSize: 24,
@@ -168,6 +167,9 @@ export default text = {
     fontSize: 16,
     paddingHorizontal: 6, // To match sidemenu avatars
     textTransform: 'uppercase'
+  },
+  capitalizeFirstLetter: {
+    textTransform: 'capitalize'
   },
   listItemRightTitleDefault: {
     color: Colors.quinaryColor,

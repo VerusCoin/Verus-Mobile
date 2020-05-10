@@ -42,11 +42,12 @@ function getTransactions(id, params) {
             {
               address: null,
               amount: 12.160704,
-              category: "sent",
+              category: "received",
               status: "confirmed",
               time: "341431",
               txid: "3242edc2c2",
-              height: "312312"
+              height: "312312",
+              memo: "746573746d656d6f"
             },
             {
               address: "2ei2joffd2",

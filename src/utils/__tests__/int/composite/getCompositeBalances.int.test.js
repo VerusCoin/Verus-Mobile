@@ -32,7 +32,7 @@ describe('Composite balance updater for BTC based chains', () => {
       expect(typeof success.payload.body.pending).toBe('number')
       expect(typeof success.payload.body.total).toBe('number')
     
-      expect(success.payload.body.z_total).toBe(undefined)
+      expect(success.payload.body.total).toBe(undefined)
     })
   })
 
@@ -42,9 +42,9 @@ describe('Composite balance updater for BTC based chains', () => {
     return VerusLightClient.createWallet(
       "ZEC",
       "btc",
+      "0d09a83e8659dd37b875e43498823459b3e27b42299d80960557d443f6bf98e0",
       "test.address",
       12345,
-      "0d09a83e8659dd37b875e43498823459b3e27b42299d80960557d443f6bf98e0",
       100,
       "hunter2",
       0
@@ -70,9 +70,9 @@ describe('Composite balance updater for BTC based chains', () => {
       expect(error.payload.error.channel).toBe('electrum')
 
       expect(success.type).toBe('SET_BALANCES')
-      expect(typeof success.payload.body.z_confirmed).toBe('number')
-      expect(typeof success.payload.body.z_pending).toBe('number')
-      expect(typeof success.payload.body.z_total).toBe('number')
+      expect(typeof success.payload.body.confirmed).toBe('number')
+      expect(typeof success.payload.body.pending).toBe('number')
+      expect(typeof success.payload.body.total).toBe('number')
       
       expect(success.payload.body.total).toBe(undefined)
     })
@@ -85,9 +85,9 @@ describe('Composite balance updater for BTC based chains', () => {
     return VerusLightClient.createWallet(
       "VRSC",
       "vrsc",
+      "0d09a83e8659dd37b875e43498823459b3e27b42299d80960557d443f6bf98e0",
       "test.address",
       12345,
-      "0d09a83e8659dd37b875e43498823459b3e27b42299d80960557d443f6bf98e0",
       100,
       "hunter2",
       0
