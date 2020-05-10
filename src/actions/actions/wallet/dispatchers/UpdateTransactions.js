@@ -3,6 +3,7 @@ import { getParsedTransactionList } from '../../../../utils/api/channels/electru
 import { ERROR_TRANSACTIONS, SET_TRANSACTIONS } from '../../../../utils/constants/storeType'
 import { DLIGHT, ELECTRUM } from '../../../../utils/constants/intervalConstants'
 import { getCoinObj } from '../../../../utils/CoinData/CoinData'
+import { standardizeDlightTxObj } from '../../../../utils/standardization/standardizeTxObj'
 
 /**
  * Fetches the appropriate data from the store for the specified channel's transaction
@@ -30,7 +31,7 @@ export const updateTransactions = async (state, dispatch, channels, chainTicker)
             chainTicker,
             channel,
             header,
-            body: result
+            body: result.map(standardizeDlightTxObj)
           }
         });
         channelsPassed.push(channel)

@@ -103,7 +103,6 @@ class WalletSettings extends Component {
               labelStyle={Styles.formCenterLabel}
               containerStyle={Styles.wideCenterBlock}
               inputStyle={Styles.inputTextDefaultStyle}
-              underlineColorAndroid="#86939d"
               onChangeText={(text) => this.setState({maxTxCount: text})}
               value={this.state.maxTxCount.toString()}
               shake={this.state.errors.maxTxCount}

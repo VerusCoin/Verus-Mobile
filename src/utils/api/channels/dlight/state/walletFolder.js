@@ -11,9 +11,9 @@ import VerusLightClient from 'react-native-verus-light-client'
  * @param {String} seed The wallet seed
  * @param {Integer} birthday (optional) The last known blockheight the wallet was created on 
  */
-export const initializeWallet = async (coinId, coinProto, host, port, accountHash, numAddresses, seed, birthday = 0) => {
+export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, seed, birthday = 0) => {
   try {
-    return await VerusLightClient.createWallet(coinId, coinProto, host, port, accountHash, numAddresses, seed, birthday)
+    return await VerusLightClient.createWallet(coinId, coinProto, accountHash, host, port, numAddresses, seed, birthday)
   } catch (error) {
     throw error
   }

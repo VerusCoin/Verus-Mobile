@@ -42,7 +42,8 @@ class ConfirmSend extends Component {
       loadingProgress: 0.175,
       loadingMessage: "Creating transaction...",
       btcFeePerByte: null,
-      feeTakenFromAmount: false
+      feeTakenFromAmount: false,
+      privateIndex: 0
     };
   }
 
@@ -55,11 +56,12 @@ class ConfirmSend extends Component {
     const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
     const balance = Number(this.props.navigation.state.params.data.balance)
     const memo = this.props.navigation.state.params.data.memo
-    
+    const privateIndex = this.props.navigation.state.params.data.privateIndex
+
     this.timeoutTimer = setTimeout(() => {
       if (this.state.loading) {
         this.setState(
-          {err: 'timed out while trying to build transaction, this may be a networking error, try sending again', 
+          {err: 'timed out while trying to build transaction, this may be a networking error, try sending again',
           loading: false})
       }
     }, TIMEOUT_LIMIT)
@@ -72,7 +74,7 @@ class ConfirmSend extends Component {
 
     if (this.props.coinSettings[coinObj.id]) {
       verifyMerkle = this.props.coinSettings[coinObj.id].verificationLvl > MID_VERIFICATION ? true : false
-      verifyTxid = this.props.coinSettings[coinObj.id].verificationLvl > NO_VERIFICATION ? true : false 
+      verifyTxid = this.props.coinSettings[coinObj.id].verificationLvl > NO_VERIFICATION ? true : false
     } else {
       console.warn(`No coin settings data found for ${coinObj.id} in ConfirmSend, assuming highest verification level`)
       verifyMerkle = true
@@ -96,20 +98,20 @@ class ConfirmSend extends Component {
         if (res.result.feeTakenFromAmount) {
           if (!res.result.unshieldedFunds) {
             Alert.alert(
-              "Warning", 
-              "Your transaction amount has been changed to " + satsToCoins(finalTxAmount) + " " + coinObj.id + 
-              " as you do not have sufficient funds to cover your submitted amount of " + satsToCoins(res.result.amountSubmitted) + " " + coinObj.id + 
+              "Warning",
+              "Your transaction amount has been changed to " + satsToCoins(finalTxAmount) + " " + coinObj.id +
+              " as you do not have sufficient funds to cover your submitted amount of " + satsToCoins(res.result.amountSubmitted) + " " + coinObj.id +
               " + a fee of " + res.result.fee + " " + coinObj.id + ".");
           } else {
             Alert.alert(
-              "Warning", 
-              "Your transaction amount has been changed to " + satsToCoins(finalTxAmount) + " " + coinObj.id + 
-              " as you do not have sufficient funds to cover your submitted amount of " + satsToCoins(res.result.amountSubmitted) + " " + coinObj.id + 
-              " + a fee of " + res.result.fee + " " + coinObj.id + ". This could be due to the " + satsToCoins(res.result.unshieldedFunds) + " in unshielded " + coinObj.id + " your " + 
+              "Warning",
+              "Your transaction amount has been changed to " + satsToCoins(finalTxAmount) + " " + coinObj.id +
+              " as you do not have sufficient funds to cover your submitted amount of " + satsToCoins(res.result.amountSubmitted) + " " + coinObj.id +
+              " + a fee of " + res.result.fee + " " + coinObj.id + ". This could be due to the " + satsToCoins(res.result.unshieldedFunds) + " in unshielded " + coinObj.id + " your " +
               "wallet contains. Log into a native client and shield your mined funds to be able to use them." );
           }
         }
-        
+
         this.setState({
           loading: false,
           toAddress: res.result.outputAddress,
@@ -127,7 +129,8 @@ class ConfirmSend extends Component {
           loadingProgress: 1,
           loadingMessage: "Done",
           btcFeePerByte: fee.feePerByte ? fee.feePerByte : null,
-          feeTakenFromAmount: res.result.feeTakenFromAmount
+          feeTakenFromAmount: res.result.feeTakenFromAmount,
+          privateIndex: privateIndex
         });
       }
     })
@@ -145,7 +148,7 @@ class ConfirmSend extends Component {
       clearInterval(this.loadingInterval);
     }
   }
-  
+
   cancel = () => {
     this.props.navigation.dispatch(NavigationActions.back())
   }
@@ -159,11 +162,12 @@ class ConfirmSend extends Component {
       activeUser: this.state.activeUser,
       toAddress: this.state.toAddress,
       fromAddress: this.state.fromAddress,
-      amount: this.state.feeTakenFromAmount ? 
-        truncateDecimal(this.state.finalTxAmount, 0) 
-        : 
+      amount: this.state.feeTakenFromAmount ?
+        truncateDecimal(this.state.finalTxAmount, 0)
+        :
         (truncateDecimal(this.state.finalTxAmount, 0) - coinsToSats(Number(this.state.fee))),
       btcFee: this.state.btcFeePerByte,
+      privateIndex: privateIndex,
     }
 
     const resetAction = NavigationActions.reset({
@@ -176,7 +180,7 @@ class ConfirmSend extends Component {
     navigation.dispatch(resetAction)
   }
 
-  
+
 
   tickLoading = () => {
     //This is cheeky but it actually does all these things
@@ -186,7 +190,7 @@ class ConfirmSend extends Component {
       'Verifying merkle root...',
       'Signing Transaction...'
     ]
-    
+
     let index = 0
 
     while (index < loadingMessages.length && loadingMessages[index] !== this.state.loadingMessage) {
@@ -403,4 +407,3 @@ const mapStateToProps = (state) => {
 };
 
 export default connect(mapStateToProps)(ConfirmSend);
-

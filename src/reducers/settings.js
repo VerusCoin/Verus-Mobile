@@ -3,7 +3,7 @@
   user-decided app settings.
 */
 
-import { MAX_VERIFICATION } from '../utils/constants/constants'
+import { MAX_VERIFICATION, DEFAULT_PRIVATE_ADDRS } from '../utils/constants/constants'
 import {
   SET_COIN_LIST,
   SET_ALL_SETTINGS,
@@ -12,7 +12,7 @@ import {
   SET_COIN_SETTINGS_STATE,
   SET_BUY_SELL_SETTINGS_STATE
 } from '../utils/constants/storeType'
-import { USD } from '../utils/constants/intervalConstants'
+import { USD, DLIGHT } from '../utils/constants/intervalConstants'
 
 export const settings = (state = {
   btcFeesAdvanced: false,
@@ -25,7 +25,7 @@ export const settings = (state = {
     displayCurrency: USD
   },
   buySellSettings: {}, //e.g. {user1': {buySellEnabled: true, wyreData: {}}, 'user2: {buySellEnabled: false, wyreData: {}}}
-  coinSettings: {}, //e.g. {VRSC: {verificationLvl: 2, verificationLock: false, channels: ['dlight', 'electrum', 'general']}}
+  coinSettings: {}, //e.g. {VRSC: {verificationLvl: 2, verificationLock: false, channels: ['dlight', 'electrum', 'general'], privateAddrs: 100}}
 }, action) => {
   switch (action.type) {
     case SET_COIN_LIST:
@@ -36,7 +36,8 @@ export const settings = (state = {
           newCoinSettings[coinObj.id] = {
             verificationLvl: MAX_VERIFICATION, 
             verificationLock: false,
-            channels: coinObj.compatible_channnels,
+            channels: coinObj.compatible_channels,
+            privateAddrs: coinObj.compatible_channels.includes(DLIGHT) ? DEFAULT_PRIVATE_ADDRS: 0,
             ...coinObj.coinSettings,
           }
         }

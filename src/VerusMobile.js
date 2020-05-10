@@ -26,6 +26,8 @@ import {
   initializeWallet,
   openWallet
 } from "./utils/api/channels/dlight/callCreators";
+import VerusLightClient from "react-native-verus-light-client";
+import { hashAccountId } from "./utils/crypto/hash";
 
 
 class VerusMobile extends React.Component {
@@ -43,46 +45,6 @@ class VerusMobile extends React.Component {
   }
 
   componentDidMount() {
-
-    //DELETE/REFACTOR
-    VerusLightClient.createWallet('ZEC', 'btc', "abcde12345", "lightwalletd.testnet.z.cash", 9067, 1, "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol.", 0)
-    .then(res => {
-      console.log("ADD WALLET RES")
-      console.log(res)
-
-      return VerusLightClient.request(20, "getblockcount", ["ZEC", "btc", "abcde12345"])
-    })
-    .then(res => {
-      console.log("BLOCK COUNT")
-      console.log(res)
-    })
-    .catch(err => {
-      console.log("ADD WALLET OR REQ REJ")
-      console.log(err)
-    })
-    /*initializeWallet('ZEC', 'btc', "lightwalletd.testnet.z.cash", 9067, "8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99", 100, "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol.", 0)
-    .then(res => {
-      console.log("INIT WALLET RES")
-      console.log(res)
-
-      return openWallet('ZEC', 'btc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99')
-    })
-    .then(res => {
-      console.log("ADD WALLET RES")
-      console.log(res)
-
-      return startSync('ZEC', 'btc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99')
-    })
-    .then(res => {
-      console.log("START SYNC RES")
-      console.log(res)
-    })
-    .catch(e => {
-      console.log("ERROR")
-      console.log(e)
-    })*/
-
-
     //TODO: Figure out what should trigger a cache clear on startup of server
     //versions. (The action that triggers it should indicate a server upgraded it's
     //version)

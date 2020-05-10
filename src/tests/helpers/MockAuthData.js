@@ -125,13 +125,14 @@ export const getTempActiveCoin = (coinID, callsSucceed, code, params, errorMsg =
   name: "Test Coin", 
   description: "Coin for testing", 
   fee: 10000,
-  compatible_channnels: [ 'dlight', 'electrum', 'general' ],
+  compatible_channels: [ 'dlight', 'electrum', 'general' ],
   tags: [ 'is_verus', 'is_zcash', 'is_pbaas', 'is_pbaas_root' ],
   users: [
   'AzureDiamond',
   'Random address with balance of ~3000 VRSC taken from https://dexstats.info/richlist.php?asset=VRSC on July 31st, 2019',
   'VRSC Richlist #2 Address at https://dexstats.info/richlist.php?asset=VRSC as of July 31st, 2019'],
   serverList: setFetchParams(callsSucceed, code, params, false, errorMsg),
+  dlightEndpoints: ['light.virtualsoundnw.com:9077'],
   apps: {
     wallet: {
       title: 'VRSC Wallet', 

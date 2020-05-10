@@ -19,7 +19,6 @@ import {
 import { unixToDate } from '../../utils/math';
 import { explorers } from '../../utils/CoinData/CoinData';
 import { truncateDecimal } from '../../utils/math';
-import { Icon, Divider } from 'react-native-elements';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
 
@@ -108,6 +107,10 @@ class TxDetailsModal extends Component {
                 <Text style={Styles.infoTableCell}>{txData.type || "??"}</Text>
               </View>
               <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>Category:</Text>
+                <Text style={Styles.infoTableCell}>{txData.visibility || "??"}</Text>
+              </View>
+              <View style={Styles.infoTableRow}>
                 <Text style={Styles.infoTableHeaderCell}>Amount:</Text>
                 <Text style={Styles.infoTableCell}>
                   {parsedAmount != null
@@ -130,7 +133,7 @@ class TxDetailsModal extends Component {
                   }}
                   onPress={txData.address ? this.copyAddressToClipboard : () => {}}
                 >
-                  {txData.address || "??"}
+                  {txData.address == null ? (txData.visibility === "private" ? "hidden" : "??") : txData.address}
                 </Text>
               </View>
               <View style={Styles.infoTableRow}>

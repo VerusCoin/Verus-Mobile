@@ -50,9 +50,9 @@ export const updateBalances = async (
               channel,
               header,
               body: {
-                z_confirmed: confirmed,
-                z_pending: total - confirmed,
-                z_total: total
+                confirmed: confirmed,
+                pending: total - confirmed,
+                total: total
               }
             }
           });

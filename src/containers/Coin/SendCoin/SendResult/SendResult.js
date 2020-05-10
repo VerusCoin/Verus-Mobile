@@ -1,5 +1,5 @@
 /*
-  This component works very similarly to ConfirmSend, 
+  This component works very similarly to ConfirmSend,
   in that it takes in the parameters to send and signs
   a transaction. Unlike ConfirmSend, this component
   pushes the transaction to the blockchain and displays
@@ -13,21 +13,21 @@ import StandardButton from "../../../../components/StandardButton"
 import { connect } from 'react-redux'
 import { sendRawTx } from '../../../../utils/api/channels/electrum/callCreators'
 import { networks } from 'bitgo-utxo-lib'
-import { 
-  View, 
-  TouchableOpacity, 
-  Text, 
-  ScrollView, 
-  Linking, 
+import {
+  View,
+  TouchableOpacity,
+  Text,
+  ScrollView,
+  Linking,
   Alert,
   Clipboard
  } from "react-native"
 import { satsToCoins, truncateDecimal } from '../../../../utils/math'
 import { explorers } from '../../../../utils/CoinData/CoinData'
-import { 
-  //needsUpdate, 
+import {
+  //needsUpdate,
   //transactionsNeedUpdate,
-  setActiveCoin, 
+  setActiveCoin,
   setActiveApp,
   setActiveSection,
   expireData,
@@ -39,6 +39,8 @@ import { NO_VERIFICATION, MID_VERIFICATION } from '../../../../utils/constants/c
 import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors'
 import { API_GET_FIATPRICE, API_GET_TRANSACTIONS, ELECTRUM, DLIGHT, API_GET_BALANCES } from "../../../../utils/constants/intervalConstants"
+
+
 
 const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
@@ -71,11 +73,12 @@ class SendResult extends Component {
     const amount = Number(this.props.navigation.state.params.data.amount)
     const fee = coinObj.id === 'BTC' ? { feePerByte: Number(this.props.navigation.state.params.data.btcFee) } : Number(this.props.navigation.state.params.data.coinObj.fee)
     const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
-    
+    const privateIndex = this.props.navigation.state.params.data.privateIndex
+
     this.timeoutTimer = setTimeout(() => {
       if (this.state.loading) {
         this.setState({
-          err: 'timed out while trying to send transaction', 
+          err: 'timed out while trying to send transaction',
           loading: false,
           coinObj: coinObj,
         })
@@ -90,47 +93,51 @@ class SendResult extends Component {
 
     if (this.props.coinSettings[coinObj.id]) {
       verifyMerkle = this.props.coinSettings[coinObj.id].verificationLvl > MID_VERIFICATION ? true : false
-      verifyTxid = this.props.coinSettings[coinObj.id].verificationLvl > NO_VERIFICATION ? true : false 
+      verifyTxid = this.props.coinSettings[coinObj.id].verificationLvl > NO_VERIFICATION ? true : false
     } else {
       console.warn(`No coin settings data found for ${coinObj.id} in SendResult, assuming highest verification level`)
       verifyMerkle = true
       verifyTxid = true
     }
 
-    sendRawTx(coinObj, activeUser, toAddress, amount, fee, network, verifyMerkle, verifyTxid)
-    .then((res) => {
-      if(res.err || !res) {
+    if(privateIndex == 0){
+      sendRawTx(coinObj, activeUser, toAddress, amount, fee, network, verifyMerkle, verifyTxid)
+      .then((res) => {
+        if(res.err || !res) {
+          this.setState({
+            loading: false,
+            err: res.result,
+            coinObj: coinObj,
+          });
+          clearInterval(this.loadingInterval);
+        } else {
+          clearInterval(this.loadingInterval);
+          this.setState({
+            loading: false,
+            txid: res.result,
+            remainingBalance: this.props.balances.public.confirmed - (amount + fee),
+            toAddress: toAddress,
+            fromAddress: fromAddress,
+            coinObj: coinObj,
+            network: network,
+            fee: coinObj.id === 'BTC' ? fee.feePerByte : fee,
+            amount: amount,
+          });
+
+          this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE))
+          this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS))
+        }
+      })
+      .catch((e) => {
         this.setState({
           loading: false,
-          err: res.result,
-          coinObj: coinObj,
+          err: e.message ? e.message : "Unknown error while building transaction, double check form data"
         });
-        clearInterval(this.loadingInterval);
-      } else {
-        clearInterval(this.loadingInterval);
-        this.setState({
-          loading: false,
-          txid: res.result,
-          remainingBalance: this.props.balances.public.confirmed - (amount + fee),
-          toAddress: toAddress,
-          fromAddress: fromAddress,
-          coinObj: coinObj,
-          network: network,
-          fee: coinObj.id === 'BTC' ? fee.feePerByte : fee,
-          amount: amount,
-        });
-        
-        this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE))
-        this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS))
-      }
-    })
-    .catch((e) => {
-      this.setState({
-        loading: false,
-        err: e.message ? e.message : "Unknown error while building transaction, double check form data"
-      });
-      console.log(e)
-    })
+        console.log(e)
+      })
+    }else{
+        //TODO: private tx
+    }
   }
 
   componentWillUnmount() {
@@ -141,7 +148,7 @@ class SendResult extends Component {
 
   openExplorer = () => {
     let url = `${explorers[this.state.coinObj.id]}/tx/${this.state.txid}`
-    
+
     Linking.canOpenURL(url).then(supported => {
       if (supported) {
         Linking.openURL(url);
@@ -173,7 +180,7 @@ class SendResult extends Component {
   backToCoin = () => {
     let coinObj = this.state.coinObj
 
-    let navigation = this.props.navigation  
+    let navigation = this.props.navigation
     this.props.dispatch(setActiveCoin(coinObj))
     this.props.dispatch(setActiveApp(coinObj.defaultApp))
     this.props.dispatch(setActiveSection(coinObj.apps[coinObj.defaultApp].data[0]))
@@ -194,7 +201,7 @@ class SendResult extends Component {
       'Verifying merkle root again...',
       'Signing Transaction...'
     ]
-    
+
     let index = 0
 
     while (index < loadingMessages.length && loadingMessages[index] !== this.state.loadingMessage) {

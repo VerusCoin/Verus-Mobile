@@ -66,7 +66,6 @@ class ImportSeed extends Component {
                 <Input
                   label={"Wallet passphrase/WIF key:"}
                   labelStyle={Styles.formCenterLabel}
-                  underlineColorAndroid={Colors.quinaryColor}
                   onChangeText={text => this.setState({ seed: text })}
                   value={this.state.seed}
                   autoCapitalize={"none"}

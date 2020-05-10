@@ -1,4 +1,4 @@
-export * from './actions/Coins'
+export * from './actions/coins/Coins'
 export * from './actions/UserData'
 export * from './actions/WalletSettings'
 export * from './actions/cache/Electrum'
@@ -26,10 +26,7 @@ import {
   //SET_INTERVAL_ID,
   UPDATE_ACCOUNT_KEYS,
   SET_RATES,
-  TRANSACTIONS_NEED_UPDATE,
-  BALANCES_NEED_UPDATE,
-  NEEDS_UPDATE_POSTFIX,
-  EVERYTHING_NEEDS_UPDATE,
+  SET_OVERVIEW_FILTER,
   ADD_SERVER_VERSION,
   SET_SERVER_VERSIONS,
   ADD_HEADER,
@@ -54,7 +51,9 @@ import {
   SET_COIN_STATUS,
   SIGN_IN_USER,
   AUTHENTICATE_USER,
-  SET_COINMENU_FOCUS
+  SET_COINMENU_FOCUS,
+  OPEN_DLIGHT_SOCKET,
+  CLOSE_DLIGHT_SOCKET
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -200,6 +199,22 @@ export const setCurrentUserCoins = (activeCoinsForUser) => {
   }
 }
 
+//Reducer name: coins
+export const openDlightWallet = (chainTicker) => {
+  return {
+    type: OPEN_DLIGHT_SOCKET,
+    payload: { chainTicker }
+  }
+}
+
+//Reducer name: coins
+export const closeDlightWallet = (chainTicker) => {
+  return {
+    type: CLOSE_DLIGHT_SOCKET,
+    payload: { chainTicker }
+  }
+}
+
 //Reducer name: ledger
 export const setBalances = (balances) => {
   return {
@@ -287,6 +302,17 @@ export const setActiveSectionCustomCoins = (activeSection) => {
   return {
     type: SET_ACTIVE_SECTION_CUSTOM_COIN,
     activeSection: activeSection
+  }
+}
+
+//Reducer name: coinOverview
+export const setActiveOverviewFilter = (chainTicker, filterType) => {
+  return {
+    type: SET_OVERVIEW_FILTER,
+    payload: {
+      chainTicker,
+      filterType
+    }
   }
 }
 

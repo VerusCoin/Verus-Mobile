@@ -553,7 +553,6 @@ console.log(activeUser.keys[coinObj.id].dlight.addresses)
           {this.dynamicViewingTest()}
           <View style={Styles.wideBlock}>
             <Input
-              underlineColorAndroid={Colors.quinaryColor}
               label={
                 <View style={Styles.startRow}>
                   <Text style={Styles.mediumFormInputLabel}>
@@ -594,7 +593,6 @@ console.log(activeUser.keys[coinObj.id].dlight.addresses)
           <View style={Styles.wideBlock}>
             <Input
               labelStyle={Styles.formInputLabel}
-              underlineColorAndroid={Colors.quinaryColor}
               onChangeText={text => this.setState({ memo: text })}
               autoCapitalize={"none"}
               label={"Enter a note for the receiver (optional):"}

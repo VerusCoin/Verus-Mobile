@@ -10,7 +10,8 @@ import {
   SIGN_OUT,
   FINGER_AUTH,
   AUTHENTICATE_USER,
-  SIGN_IN_USER
+  SIGN_IN_USER,
+  SET_DLIGHT_ADDRESSES
 } from "../utils/constants/storeType";
 
 export const authentication = (
@@ -20,8 +21,8 @@ export const authentication = (
     activeAccount: {
       id: null,
       accountHash: null,
-      seeds: { electrum: null, dlight: null },
-      keys: { electrum: null, dlight: null },
+      seeds: {},
+      keys: {},
       paymentMethods: {}
     },
     unlocked: false,
@@ -52,6 +53,28 @@ export const authentication = (
         activeAccount: {
           ...state.activeAccount,
           keys: action.keys
+        }
+      };
+    case SET_DLIGHT_ADDRESSES:
+      const currentDlightAddrs = state.activeAccount.keys[
+        action.payload.chainTicker
+      ]
+        ? state.activeAccount.keys[action.payload.chainTicker].dlight
+        : {};
+      return {
+        ...state,
+        activeAccount: {
+          ...state.activeAccount,
+          keys: {
+            ...state.activeAccount.keys,
+            [action.payload.chainTicker]: {
+              ...state.activeAccount.keys[action.payload.chainTicker],
+              dlight: {
+                ...currentDlightAddrs,
+                addresses: action.payload.addresses
+              }
+            }
+          }
         }
       };
     case SIGN_OUT:

@@ -10,7 +10,6 @@ export default class PasswordInput extends Component {
       <View style={Styles.standardWidthFlexRowBlock}>
         <Icon name="lock" color={Colors.linkButtonColor} size={36} />
         <Input
-          underlineColorAndroid={Colors.quinaryColor}
           onChangeText={this.props.onChangeText}
           autoCapitalize={"none"}
           autoCorrect={false}
