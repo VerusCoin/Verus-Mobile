@@ -9926,10 +9926,10 @@ react-native-alert-async@^1.0.3:
   dependencies:
     async "^2.6.1"
 
-react-native-camera@3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/react-native-camera/-/react-native-camera-3.0.0.tgz#67427cda54bb67afa08aeae1320dd540b14d5cfd"
-  integrity sha512-U8o5Kiv0/Vpwkp+SGpovhVdFMpFJpiXwl7NJLQ6a5EFoAy0CYyMFyfw8aXinplNfLetb3iXv1FmXLNkoawEYDw==
+react-native-camera@^3.22.1:
+  version "3.24.1"
+  resolved "https://registry.yarnpkg.com/react-native-camera/-/react-native-camera-3.24.1.tgz#e5ddbb81a88c634cf220b039da739427e16a1d48"
+  integrity sha512-D6X4WDe6mptKwH2/0dv42NgcTpT5Wq6jHyQpmFlh4pEy8OtBmgeYg5HXPmvc0SEtXj10MG+5WQz2oCoEkITs4A==
   dependencies:
     prop-types "^15.6.2"
 
@@ -10252,11 +10252,7 @@ react-native-vector-icons@^6.2.0:
 
 "react-native-verus-light-client@git+https://github.com/michaeltout/react-native-verus-light-client#a81f72764cdbad73ed1377a251a62168d0593b87":
   version "1.0.0"
-<<<<<<< HEAD
-  resolved "git+https://github.com/michaeltout/react-native-verus-light-client#a81f72764cdbad73ed1377a251a62168d0593b87"
-=======
   resolved "git+https://github.com/VerusCoin/react-native-verus-light-client.git#227e36637b69ff60b0d1546a6f7eaca59777b071"
->>>>>>> 2a966b524d031907a2c214ff09e78bba2aaa27a5
   dependencies:
     react "16.9.0"
     react-native "0.61.5"
