@@ -26,12 +26,9 @@ import {
   initializeWallet,
   openWallet
 } from "./utils/api/channels/dlight/callCreators";
-<<<<<<< HEAD
-import  VerusLightClient  from 'react-native-verus-light-client';
-=======
+
 import VerusLightClient from "react-native-verus-light-client";
 import { hashAccountId } from "./utils/crypto/hash";
->>>>>>> 2a966b524d031907a2c214ff09e78bba2aaa27a5
 
 
 class VerusMobile extends React.Component {
@@ -49,7 +46,7 @@ class VerusMobile extends React.Component {
   }
 
   componentDidMount() {
-<<<<<<< HEAD
+
 
     //DELETE/REFACTOR
     VerusLightClient.createWallet('VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99', "lightwalletd.testnet.z.cash", 9067, 2, "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol.", 0)
@@ -99,10 +96,7 @@ class VerusMobile extends React.Component {
 
     //TODO: Figure out what should trigger a cache clear on startup of server
     //versions. (The action that triggers it should indicate a server upgraded it's
-=======
-    //TODO: Figure out what should trigger a cache clear on startup of server 
-    //versions. (The action that triggers it should indicate a server upgraded it's 
->>>>>>> 2a966b524d031907a2c214ff09e78bba2aaa27a5
+
     //version)
     clearCachedVersions()
     .then(() => {

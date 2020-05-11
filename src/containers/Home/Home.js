@@ -253,10 +253,10 @@ class Home extends Component {
               : balances.errors.public[item.id]?
                 "PublicError" //then it checks if there is a public error
               : info.private[item.id]? //if the syncronizer is present
-                `${info.private[item.id].status} ${info.private[item.id].progress}` //it showes the status and the progress
+                `${info.private[item.id].status.toLowerCase()} ${info.private[item.id].progress}` //it showes the status and the progress
               : null //if there is nothing there it shows nothing
               }
-              rightSubtitleStyle={Styles.errorText}
+              rightSubtitleStyle={balances.errors.private[item.id] || balances.errors.public[item.id]? Styles.errorText : Styles.successText}
               rightTitleStyle={Styles.listItemRightTitleDefaultError}
               rightTitle={
                 (!balances.public.hasOwnProperty(item.id) ||
