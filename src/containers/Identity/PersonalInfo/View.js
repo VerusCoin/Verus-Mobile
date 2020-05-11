@@ -36,6 +36,7 @@ const PersonalInfo = (props) => {
     showEmptyClaimCategories,
     navigation,
     claims,
+    claimsCountByCategory,
     actions: {
       setActiveClaimCategory,
       setShowEmptyClaimCategories,
@@ -112,6 +113,15 @@ const PersonalInfo = (props) => {
     </Dialog.Container>
   );
 
+  const handleBadge = (categoryId) => (
+    {
+      value: claimsCountByCategory.filter((claim) => categoryId === claim.categoryId).first().count,
+      textStyle: { color: Colors.secondaryColor },
+      badgeStyle: { backgroundColor:Colors.quinaryColor },
+      containerStyle: Styles.alignItemsCenter,
+    }
+  );
+
   return (
     <View style={Styles.root}>
       <Text style={Styles.textHeader}>Personal Information</Text>
@@ -140,6 +150,7 @@ const PersonalInfo = (props) => {
               bottomDivider
               onPress={() => goToClaims(categories.getIn([item, 'id'], ''), categories.getIn([item, 'name'], ''))}
               chevron
+              badge={handleBadge(categories.getIn([item, 'id']))}
             />
           ))}
         </View>

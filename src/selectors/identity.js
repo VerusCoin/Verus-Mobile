@@ -103,3 +103,10 @@ export const selectActiveAttestation = createSelector(
 export const selectAttestationModalVisibility = (state) => state.identity.getIn(['personalInformation', 'attestationModalVisibility'], '');
 export const selectScanInfoModalVisibility = (state) => state.identity.getIn(['personalInformation', 'scanInfoModalVisibility'], '');
 
+export const selectCountClaimsByCategory = createSelector(
+  [selectClaimCategories, selectClaims],
+  (categories, claims) => categories.keySeq().map((item) => {
+    const count = claims.filter((claim) => categories.getIn([item, 'id'], '') === claim.get('categoryId', '')).size;
+    return { count, categoryId:categories.getIn([item, 'id'], '') };
+  }),
+);
