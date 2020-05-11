@@ -5,7 +5,7 @@ import { selectClaimsToDisplay, selectShowHiddenClaims, selectAttestationsCountB
 import { setActiveClaim, toggleShowHiddenClaims } from '../../../../actions/actionCreators';
 
 const mapStateToProps = (state) => ({
-  claims: selectClaimsToDisplay(state),
+  claimsData: selectClaimsToDisplay(state),
   showHiddenClaims: selectShowHiddenClaims(state),
   attestationsCountByClaim: selectAttestationsCountByClaim(state),
 });

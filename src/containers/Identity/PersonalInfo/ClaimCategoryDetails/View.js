@@ -1,23 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Map as IMap } from 'immutable';
-import { View } from 'react-native';
-import { ListItem, CheckBox } from 'react-native-elements';
+import { View, Platform } from 'react-native';
+import { ListItem, CheckBox, SearchBar } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import Styles from '../../../../styles';
 import Colors from '../../../../globals/colors';
 
 const ClaimCategoryDetails = (props) => {
   const {
-    claims,
+    claimsData,
     navigation,
     showHiddenClaims,
     attestationsCountByClaim,
     actions: { setActiveClaim, toggleShowHiddenClaims },
   } = props;
+  const [claims, setClaims] = useState(claimsData);
+  const [value, setValue] = useState('');
+
+  useEffect(() => {
+    setClaims(claimsData);
+  }, [claimsData]);
 
   const goToClaimDetails = (claim) => {
     setActiveClaim(claim);
     navigation.navigate('ClaimDetails', { id: claim.get('id', ''), claimName: claim.get('name', '') });
+  };
+
+  const updateSearch = (value) => {
+    const newData = claimsData.filter((item) => {
+      const itemData = item.get('name', '').toUpperCase();
+      const textData = value.toUpperCase();
+      return itemData.includes(textData);
+    });
+    setClaims(newData);
+    setValue(value);
   };
 
   const handleBadge = (claimId) => (
@@ -35,6 +51,15 @@ const ClaimCategoryDetails = (props) => {
         title="Show hidden claims"
         onPress={() => toggleShowHiddenClaims()}
         containerStyle={Styles.defaultMargin}
+      />
+      <SearchBar
+        containerStyle={Styles.backgroundColorWhite}
+        platform={Platform.OS === 'ios' ? 'ios' : 'android'}
+        placeholder="Quick Search"
+        onChangeText={updateSearch}
+        value={value}
+        inputContainerStyle={Styles.defaultMargin}
+        cancelButtonTitle=""
       />
       <ScrollView>
         {claims.keySeq().map((claim) => (
