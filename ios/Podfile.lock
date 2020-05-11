@@ -202,13 +202,13 @@ PODS:
     - React-cxxreact (= 0.61.5)
     - React-jsi (= 0.61.5)
   - React-jsinspector (0.61.5)
-  - react-native-camera (3.22.1):
+  - react-native-camera (3.24.1):
     - React
-    - react-native-camera/RCT (= 3.22.1)
-    - react-native-camera/RN (= 3.22.1)
-  - react-native-camera/RCT (3.22.1):
+    - react-native-camera/RCT (= 3.24.1)
+    - react-native-camera/RN (= 3.24.1)
+  - react-native-camera/RCT (3.24.1):
     - React
-  - react-native-camera/RN (3.22.1):
+  - react-native-camera/RN (3.24.1):
     - React
   - react-native-image-picker (1.1.0):
     - React
@@ -217,13 +217,13 @@ PODS:
   - react-native-text-input-mask (2.0.0):
     - React
     - RNInputMask
-  - react-native-udp (2.6.1):
+  - react-native-udp (2.7.0):
     - React
   - react-native-verus-light-client (1.0.0):
     - React
     - React-Core
     - ZcashLightClientKit
-  - react-native-webview (8.0.2):
+  - react-native-webview (8.2.1):
     - React
   - React-RCTActionSheet (0.61.5):
     - React-Core/RCTActionSheetHeaders (= 0.61.5)
@@ -262,9 +262,9 @@ PODS:
     - ReactCommon/jscallinvoker (= 0.61.5)
   - rn-fetch-blob (0.11.2):
     - React-Core
-  - RNCAsyncStorage (1.7.1):
+  - RNCAsyncStorage (1.10.0):
     - React
-  - RNDateTimePicker (2.1.0):
+  - RNDateTimePicker (2.3.2):
     - React
   - RNFS (2.15.3):
     - React
@@ -540,13 +540,13 @@ SPEC CHECKSUMS:
   React-jsi: cb2cd74d7ccf4cffb071a46833613edc79cdf8f7
   React-jsiexecutor: d5525f9ed5f782fdbacb64b9b01a43a9323d2386
   React-jsinspector: fa0ecc501688c3c4c34f28834a76302233e29dc0
-  react-native-camera: a49f960eb362b9fbff87667c0ce639eef1161530
+  react-native-camera: 6d47390c89812306baa37b88508a1f110b4a9794
   react-native-image-picker: 7a85cf7b0a53845f03ae52fb4592a2748ded069b
   react-native-randombytes: 3638d24759d67c68f6ccba60c52a7a8a8faa6a23
   react-native-text-input-mask: 07227297075f9653315f43b0424d596423a01736
-  react-native-udp: 54a1aa9bf5c0824f930b1ba6dbfb3fd3e733bba9
+  react-native-udp: ff9d13e523f2b58e6bc5d4d32321ac60671b5dc9
   react-native-verus-light-client: b71b8551595c3c75787bc51ff1d2b2989639851a
-  react-native-webview: 99bdfd6c189772b0f15494f728430c23b18b93e4
+  react-native-webview: 160ac8d6bb974e2933f2de6bb7464a8e934ff31d
   React-RCTActionSheet: 600b4d10e3aea0913b5a92256d2719c0cdd26d76
   React-RCTAnimation: 791a87558389c80908ed06cc5dfc5e7920dfa360
   React-RCTBlob: d89293cc0236d9cb0933d85e430b0bbe81ad1d72
@@ -558,8 +558,8 @@ SPEC CHECKSUMS:
   React-RCTVibration: a49a1f42bf8f5acf1c3e297097517c6b3af377ad
   ReactCommon: 198c7c8d3591f975e5431bec1b0b3b581aa1c5dd
   rn-fetch-blob: f525a73a78df9ed5d35e67ea65e79d53c15255bc
-  RNCAsyncStorage: 44395cb9c7c1523104c2b499eb426ef7aff82bca
-  RNDateTimePicker: 9db00606d689f5653f08aa601c81b9d3266a0a19
+  RNCAsyncStorage: 6d99641f8e6f15d169d695d8ef184bf187903f11
+  RNDateTimePicker: 4bd49e09f91ca73d69119a9e1173b0d43b82f5e5
   RNFS: cf1bd19f8bf3c1400f8d3ececbe84e42aa29d2e7
   RNGestureHandler: 4cb47a93019c1a201df2644413a0a1569a51c8aa
   RNInputMask: 815461ebdf396beb62cf58916c35cf6930adb991

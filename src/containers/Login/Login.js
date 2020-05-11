@@ -38,6 +38,9 @@ import PasswordInput from '../../components/PasswordInput'
 import { DLIGHT } from "../../utils/constants/intervalConstants";
 import { initDlightWallet } from "../../actions/actions/dlight/dispatchers/LightWalletReduxManager";
 
+import { removeIdentityData } from '../../utils/asyncStore/identityStorage';
+import { TouchableHighlight } from "react-native-gesture-handler";
+
 class Login extends Component {
   constructor(props) {
     super(props);
@@ -145,6 +148,10 @@ class Login extends Component {
     this.setState({selectedAccount: account})
   }
 
+  clearIdentityStorage = () => {
+    removeIdentityData();
+  }
+
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -157,6 +164,7 @@ class Login extends Component {
             }}
             resizeMode="contain"
           />
+          <TouchableHighlight onPress={this.clearIdentityStorage}><Text>Clear identity storage</Text></TouchableHighlight>
           <Text style={Styles.centralHeader}>Select an Account</Text>
           <Dropdown
             containerStyle={Styles.standardWidthBlock}

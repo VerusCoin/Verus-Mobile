@@ -61,6 +61,7 @@ import {
   CLOSE_DLIGHT_SOCKET,
   REQUEST_SEED_DATA,
   APP_SETUP,
+  GET_MEMOS_FROM_TRANSACTIONS,
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -420,5 +421,10 @@ export const getTransactionHistoryResponse = (history = {}) => ({
 });
 export const appSetup = () => ({
   type: APP_SETUP,
+  payload: {},
+});
+
+export const getMemosFromTransactions = () => ({
+  type: GET_MEMOS_FROM_TRANSACTIONS,
   payload: {},
 });

@@ -49,6 +49,7 @@
     "lodash": "^4.17.15",
     "meteor-node-stubs": "~0.2.4",
     "node-gyp": "^3.8.0",
+    "node-jest-testing-boilerplate": "https://github.com/michaeltout/verus-zkedid-utils",
     "normalizr": "^3.6.0",
     "patch-package": "^6.1.2",
     "path-browserify": "0.0.0",
@@ -111,6 +112,7 @@
     "tty-browserify": "0.0.0",
     "tx-builder": "^0.18.0",
     "url": "^0.10.3",
+    "uuid": "^8.0.0",
     "version_compare": "^0.0.3",
     "vm": "^0.1.0",
     "vm-browserify": "0.0.4"

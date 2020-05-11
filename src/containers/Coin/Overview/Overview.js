@@ -14,7 +14,7 @@ import {
 import { ListItem } from "react-native-elements";
 import { connect } from 'react-redux';
 import { truncateDecimal } from '../../../utils/math';
-import { expireData, setActiveOverviewFilter } from '../../../actions/actionCreators';
+import { expireData, setActiveOverviewFilter, getMemosFromTransactions } from '../../../actions/actionCreators';
 import Styles from '../../../styles/index'
 import withNavigationFocus from "react-navigation/src/views/withNavigationFocus";
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
@@ -89,6 +89,10 @@ class Overview extends Component {
     if (lastProps.isFocused !== this.props.isFocused && this.props.isFocused) {
       this.refresh();
     }
+  }
+
+  componentDidMount() {
+    this.props.dispatch(getMemosFromTransactions());
   }
 
   refresh = () => {
@@ -247,6 +251,7 @@ class Overview extends Component {
 
   parseTransactionLists = () => {
     const { transactions } = this.props
+    console.log(transactions, '---020021030121123=====')
     let privateTxs = transactions.private || []
     let publicTxs = transactions.public || []
     let txList = [
@@ -257,6 +262,7 @@ class Overview extends Component {
         return Array.isArray(object) ? { txArray: object, visibility: PUBLIC } : { ...object, visibility: PUBLIC };
       })
     ];
+    // VerusZkedidUtils.StructuredMemo.readMemo(
 
     return txList.sort((a, b) => {
       if (a.timestamp == null) return 1
@@ -332,6 +338,9 @@ class Overview extends Component {
 
   render() {
     const { activeOverviewFilter, enabledChannels, activeCoin, dispatch } = this.props
+    // const memo1 = 'N2I5NGI2YzVjNmNjNTkwMzAxYzExNzFiZTExYjBjYzY4ZGQ0ZTg1M0FBPT0ycmc9aWQ6Y292aWQxOXJlcG9ydHxmcm9tOuKbhEB8dG86RGFtaXJAfGNvbnRlbnRfcm9vdDoyNmY5ZDQwNTA0MGVmYzM3YThjMGNhZmUwMzM5YWZlMzY1Y2ExYjFkOTEzMTk4NzAxN2U2OWE0NDcxOGJlYjhmfHNpZzpBWmNPRHdBQlFSK3dtSjYzaVdTMDhhSVhPRGtWV0pNc2Y4MG90ZkFRTTVqZkNlKzdBVVM0c1FiaEVBRmJ0V3ZFbXlreUFGNWpVMWw2OUtsZjNBdFlmNHBhOW0yeHkyeWkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+    
+    // console.log(VerusZkedidUtils.StructuredMemo.readMemo(memo1), 'aaaaa-------aaaaa======-0-----')
 
     return (
       <View style={Styles.defaultRoot}>

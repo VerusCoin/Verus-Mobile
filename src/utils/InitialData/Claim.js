@@ -1,6 +1,8 @@
+import { v4 as uuidv4 } from 'uuid';
+
 const generateClaims = (identityId) => ([
   {
-    id: `${identityId}-firstName`,
+    id: uuidv4(),
     name: 'First Name',
     desc: '',
     parentClaims: [`${identityId}-birthDate`],
@@ -8,7 +10,8 @@ const generateClaims = (identityId) => ([
     childClaims: [],
     localKey: '',
     hidden: false,
-    categoryId: `${identityId}-personalInformation`,
+    categoryId: 1,
+    identityId,
   },
   {
     id: `${identityId}-lastName`,

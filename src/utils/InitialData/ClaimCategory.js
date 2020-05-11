@@ -1,41 +1,19 @@
-const generateClaimCategories = (identityId) => ([
+const generateClaimCategories = [
   {
-    id: `${identityId}-healthCare`,
-    name: 'Healthcare',
+    id: '0',
+    name: 'Other',
     desc: '',
-    identity: identityId,
   },
   {
-    id: `${identityId}-personalInformation`,
+    id: '1',
     name: 'Personal Information',
     desc: '',
-    identity: identityId,
   },
   {
-    id: `${identityId}-finance`,
-    name: 'Finance',
+    id: '2',
+    name: 'Healthcare',
     desc: '',
-    identity: identityId,
-    claims: [],
   },
-  {
-    id: `${identityId}-education`,
-    name: 'Education',
-    desc: '',
-    identity: identityId,
-  },
-  {
-    id: `${identityId}-housing`,
-    name: 'Housing',
-    desc: '',
-    identity: identityId,
-  },
-  {
-    id: `${identityId}-family`,
-    name: 'Family',
-    desc: '',
-    identity: identityId,
-  },
-]);
+];
 
 export default generateClaimCategories;

@@ -116,7 +116,7 @@ function * handleStoreIdentities() {
 function * handleSetActiveIdentity() {
   const selectedIdentityId = yield select(selectActiveIdentityId);
   yield all([
-    call(handleStoreSeedClaimCategories, selectedIdentityId),
+    call(handleStoreSeedClaimCategories),
     call(handleStoreSeedClaims, selectedIdentityId),
     call(handleStoreSeedAttestations, selectedIdentityId),
   ]);
@@ -128,23 +128,14 @@ function * handleSetActiveIdentity() {
  * this saga is being called when user selects an identity,
  * or changes the current active identity. It's responsible for storing claim categories
  * into the Async Storage. If there is nothing stored, the initial data
- * is generated. If there are some items stored but for a different identity,
- * concat the two arrays. Finally if there are categories for the selected identity
- * use those categories
- * @param {String} identityId Currently active identity.
+ * is generated.
  */
-function * handleStoreSeedClaimCategories(identityId) {
-  const seededCategories = generateClaimCategories(identityId);
-  let categoriesToStore = [];
+function * handleStoreSeedClaimCategories() {
+  const seededCategories = generateClaimCategories;
   const storedCategories = yield call(getClaimCategories);
   if (!storedCategories.length) {
-    categoriesToStore = seededCategories;
-  } else if (storedCategories.every((category) => category.identity !== identityId)) {
-    categoriesToStore = [...storedCategories, ...seededCategories];
-  } else {
-    categoriesToStore = storedCategories;
+    yield call(storeSeedClaimCategories, seededCategories);
   }
-  yield call(storeSeedClaimCategories, categoriesToStore);
 }
 
 /**
@@ -163,9 +154,11 @@ function * handleStoreSeedClaims(identityId) {
   const storedClaims = yield call(getClaims);
   if (!storedClaims.length) {
     claimsToStore = seededClaims;
-  } else if (storedClaims.every((claim) => !claim.categoryId.includes(identityId))) {
-    claimsToStore = [...storedClaims, ...seededClaims];
-  } else {
+  } 
+  // else if (storedClaims.every((claim) => !claim.categoryId.includes(identityId))) {
+  //   claimsToStore = [...storedClaims, ...seededClaims];
+  // }
+   else {
     claimsToStore = storedClaims;
   }
   yield call(storeSeedClaims, claimsToStore);
@@ -207,7 +200,7 @@ function * handleReceiveSeedData() {
   const selectedIdentityId = yield select(selectActiveIdentityId);
   try {
     const [claimCategoriesFromStore, claimsFromStore, attestationsFromStore] = yield all([
-      call(getClaimCategoriesByIdentity, selectedIdentityId),
+      call(getClaimCategories),
       call(getClaimsByIdentity, selectedIdentityId),
       call(getAttestationsByIdentity, selectedIdentityId),
     ]);
