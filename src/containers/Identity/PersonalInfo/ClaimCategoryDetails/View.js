@@ -4,12 +4,14 @@ import { View } from 'react-native';
 import { ListItem, CheckBox } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import Styles from '../../../../styles';
+import Colors from '../../../../globals/colors';
 
 const ClaimCategoryDetails = (props) => {
   const {
     claims,
     navigation,
     showHiddenClaims,
+    attestationsCountByClaim,
     actions: { setActiveClaim, toggleShowHiddenClaims },
   } = props;
 
@@ -18,7 +20,14 @@ const ClaimCategoryDetails = (props) => {
     navigation.navigate('ClaimDetails', { id: claim.get('id', ''), claimName: claim.get('name', '') });
   };
 
-
+  const handleBadge = (claimId) => (
+    {
+      value: attestationsCountByClaim.filter((item) => claimId === item.claimId).first().count,
+      textStyle: { color: Colors.secondaryColor },
+      badgeStyle: { backgroundColor:Colors.quinaryColor },
+      containerStyle: Styles.alignItemsCenter,
+    }
+  );
   return (
     <View style={Styles.root}>
       <CheckBox
@@ -33,6 +42,7 @@ const ClaimCategoryDetails = (props) => {
             key={claims.getIn([claim, 'id'], '')}
             title={claims.getIn([claim, 'name'], '')}
             onPress={() => goToClaimDetails(claims.get(claim, IMap()))}
+            badge={handleBadge(claims.getIn([claim, 'id']))}
             bottomDivider
             chevron
           />

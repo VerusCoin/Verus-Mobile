@@ -25,7 +25,6 @@ const AttestationDetails = (props) => {
 
   const pinToHome = () => {
     toggleAttestationPin();
-    setAttestationModalVisibility(false);
   };
 
   return (

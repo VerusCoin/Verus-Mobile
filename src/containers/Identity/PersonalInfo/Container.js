@@ -2,7 +2,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import {
-  selectClaimCategoriesToDisplay, selectShowEmptyClaimCategories, selectCountClaimsByCategory, selectClaims,
+  selectClaimCategoriesToDisplay, selectShowEmptyClaimCategories, selectClaimsCountByCategory, selectClaims,
 } from '../../../selectors/identity';
 import { setActiveClaimCategory, setShowEmptyClaimCategories, addNewCategory } from '../../../actions/actionCreators';
 
@@ -10,7 +10,7 @@ const mapStateToProps = (state) => ({
   claimCategories: selectClaimCategoriesToDisplay(state),
   showEmptyClaimCategories: selectShowEmptyClaimCategories(state),
   claims: selectClaims(state),
-  claimsCountByCategory: selectCountClaimsByCategory(state),
+  claimsCountByCategory: selectClaimsCountByCategory(state),
 });
 
 const mapDispatchToProps = (dispatch) => ({
