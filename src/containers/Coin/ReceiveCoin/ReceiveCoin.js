@@ -322,31 +322,26 @@ walletPrivate = () => {
     }
   };
 
+  changeIndex = (privateIndex) => {
+    this.setState({ privateIndex })
+  }
+  pubText = () => <Text style={{...Styles.fullWidthButtonTitle, color: Colors.secondaryColor}}>PUBLIC</Text>
+
+  privText = () =>  <Text style={{...Styles.fullWidthButtonTitle, color: Colors.secondaryColor}}>PRIVATE</Text>
 //this is a function that only shows the switch for private addres screen
   switchButton = () => {
     if (this.props.channels[this.props.activeCoin.id].channels.includes("dlight")) {
-      //console.log(this.props.channels[this.props.activeCoin.id].channels);
-      console.log(this.state.private)
-    return <View style={Styles.centralRow}>
-    <SwitchButton
-                onValueChange={(val) => this.setState({ private: val-1 })}      // this is necessary for this component
-                text1 = 'Generate VerusQR Invoice'                        // optional: first text in switch button --- default ON
-                text2 = 'Private'                       // optional: second text in switch button --- default OFF
-                switchWidth = {350}           // optional: switch width --- default 44
-                switchHeight = {65}                 // optional: switch height --- default 100
-                switchdirection = 'rtl'             // optional: switch button direction ( ltr and rtl ) --- default ltr
-                switchBorderRadius = {100}          // optional: switch border radius --- default oval
-                switchSpeedChange = {500}           // optional: button change speed --- default 100
-                switchBorderColor = '#fff'       // optional: switch border color --- default #d4d4d4
-                switchBackgroundColor = '#d3d3d3'      // optional: switch background color --- default #fff
-                btnBorderColor = '#fff'          // optional: button border color --- default #00a4b9
-                btnBackgroundColor = '#fff'      // optional: button background color --- default #00bcd4
-                fontColor = {Colors.quaternaryColor}               // optional: text font color --- default #b1b1b1
-                activeFontColor = {Colors.quaternaryColor}             // optional: active font color --- default #fff
+          buttons = [{ element: this.pubText }, { element: this.privText },];
 
-                value={this.state.private}
-            />
-    </View>
+    return
+    <View style={Styles.centralRow} >
+        <ButtonGroup
+              onPress={this.changeIndex}
+              selectedIndex={this.state.privateIndex}
+              buttons={buttons}
+              containerStyle={ Styles.fullWidthButton }
+              />
+      </View>
   } else {
     return null;
  }

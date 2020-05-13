@@ -12,9 +12,8 @@ import {
   clearCachedVersions,
   updateActiveCoinList_v0_1_9_beta,
   checkAndSetVersion
-} from './utils/asyncStore/asyncStore'
+} from './utils/asyncStore/asyncStore';
 import { connect } from 'react-redux';
-import  VerusLightClient  from 'react-native-verus-light-client';
 import {
   getAddresses,
   getZTransactions,
