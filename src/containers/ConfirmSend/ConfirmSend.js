@@ -18,6 +18,7 @@ import { NavigationActions } from 'react-navigation';
 import { NO_VERIFICATION, MID_VERIFICATION } from '../../utils/constants/constants'
 import Styles from '../../styles/index'
 import Colors from "../../globals/colors";
+import { API_GET_FIATPRICE, API_GET_BALANCES, ELECTRUM, DLIGHT } from "../../utils/constants/intervalConstants"
 
 const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
@@ -43,7 +44,7 @@ class ConfirmSend extends Component {
       loadingMessage: "Creating transaction...",
       btcFeePerByte: null,
       feeTakenFromAmount: false,
-      privateIndex: 0
+      params: []
     };
   }
 
@@ -56,7 +57,7 @@ class ConfirmSend extends Component {
     const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
     const balance = Number(this.props.navigation.state.params.data.balance)
     const memo = this.props.navigation.state.params.data.memo
-    const privateIndex = this.props.navigation.state.params.data.privateIndex
+    const params = this.props.navigation.state.params.data.params
 
     this.timeoutTimer = setTimeout(() => {
       if (this.state.loading) {
@@ -81,67 +82,67 @@ class ConfirmSend extends Component {
       verifyTxid = true
     }
 
-    txPreflight(coinObj, activeUser, address, amount, fee, network, verifyMerkle, verifyTxid)
-    .then((res) => {
-      if(res.err || !res) {
-        this.setState({
-          loading: false,
-          err: res.result
-        });
-        clearInterval(this.loadingInterval);
-      } else {
-        let feeTakenFromAmount = res.result.feeTakenFromAmount
-        let finalTxAmount = feeTakenFromAmount ? res.result.value : (res.result.value + coinsToSats(Number(res.result.fee)))
-        let remainingBalance = balance - satsToCoins(finalTxAmount)
-        clearInterval(this.loadingInterval);
+      txPreflight(coinObj, activeUser, address, amount, fee, network, verifyMerkle, verifyTxid)
+      .then((res) => {
+        if(res.err || !res) {
+          this.setState({
+            loading: false,
+            err: res.result
+          });
+          clearInterval(this.loadingInterval);
+        } else {
+          let feeTakenFromAmount = res.result.feeTakenFromAmount
+          let finalTxAmount = feeTakenFromAmount ? res.result.value : (res.result.value + coinsToSats(Number(res.result.fee)))
+          let remainingBalance = balance - satsToCoins(finalTxAmount)
+          clearInterval(this.loadingInterval);
 
-        if (res.result.feeTakenFromAmount) {
-          if (!res.result.unshieldedFunds) {
-            Alert.alert(
-              "Warning",
-              "Your transaction amount has been changed to " + satsToCoins(finalTxAmount) + " " + coinObj.id +
-              " as you do not have sufficient funds to cover your submitted amount of " + satsToCoins(res.result.amountSubmitted) + " " + coinObj.id +
-              " + a fee of " + res.result.fee + " " + coinObj.id + ".");
-          } else {
-            Alert.alert(
-              "Warning",
-              "Your transaction amount has been changed to " + satsToCoins(finalTxAmount) + " " + coinObj.id +
-              " as you do not have sufficient funds to cover your submitted amount of " + satsToCoins(res.result.amountSubmitted) + " " + coinObj.id +
-              " + a fee of " + res.result.fee + " " + coinObj.id + ". This could be due to the " + satsToCoins(res.result.unshieldedFunds) + " in unshielded " + coinObj.id + " your " +
-              "wallet contains. Log into a native client and shield your mined funds to be able to use them." );
+          if (res.result.feeTakenFromAmount) {
+            if (!res.result.unshieldedFunds) {
+              Alert.alert(
+                "Warning",
+                "Your transaction amount has been changed to " + satsToCoins(finalTxAmount) + " " + coinObj.id +
+                " as you do not have sufficient funds to cover your submitted amount of " + satsToCoins(res.result.amountSubmitted) + " " + coinObj.id +
+                " + a fee of " + res.result.fee + " " + coinObj.id + ".");
+            } else {
+              Alert.alert(
+                "Warning",
+                "Your transaction amount has been changed to " + satsToCoins(finalTxAmount) + " " + coinObj.id +
+                " as you do not have sufficient funds to cover your submitted amount of " + satsToCoins(res.result.amountSubmitted) + " " + coinObj.id +
+                " + a fee of " + res.result.fee + " " + coinObj.id + ". This could be due to the " + satsToCoins(res.result.unshieldedFunds) + " in unshielded " + coinObj.id + " your " +
+                "wallet contains. Log into a native client and shield your mined funds to be able to use them." );
+            }
           }
-        }
 
+          this.setState({
+            loading: false,
+            toAddress: res.result.outputAddress,
+            fromAddress: res.result.changeAddress,
+            network: res.result.network,
+            fee: res.result.fee,
+            amountSubmitted: res.result.amountSubmitted,
+            utxoCrossChecked: res.result.utxoVerified,
+            coinObj: coinObj,
+            activeUser: activeUser,
+            balance,
+            memo: memo,
+            remainingBalance: remainingBalance,
+            finalTxAmount: finalTxAmount,
+            loadingProgress: 1,
+            loadingMessage: "Done",
+            btcFeePerByte: fee.feePerByte ? fee.feePerByte : null,
+            feeTakenFromAmount: res.result.feeTakenFromAmount,
+          });
+        }
+      })
+      .catch((e) => {
         this.setState({
           loading: false,
-          toAddress: res.result.outputAddress,
-          fromAddress: res.result.changeAddress,
-          network: res.result.network,
-          fee: res.result.fee,
-          amountSubmitted: res.result.amountSubmitted,
-          utxoCrossChecked: res.result.utxoVerified,
-          coinObj: coinObj,
-          activeUser: activeUser,
-          balance,
-          memo: memo,
-          remainingBalance: remainingBalance,
-          finalTxAmount: finalTxAmount,
-          loadingProgress: 1,
-          loadingMessage: "Done",
-          btcFeePerByte: fee.feePerByte ? fee.feePerByte : null,
-          feeTakenFromAmount: res.result.feeTakenFromAmount,
-          privateIndex: privateIndex
+          err: e.message ? e.message : "Unknown error while building transaction, double check form data"
         });
-      }
-    })
-    .catch((e) => {
-      this.setState({
-        loading: false,
-        err: e.message ? e.message : "Unknown error while building transaction, double check form data"
-      });
-      console.log(e)
-    })
-  }
+        console.log(e)
+      })
+    }
+
 
   componentWillUnmount() {
     if (this.loadingInterval) {
@@ -167,7 +168,7 @@ class ConfirmSend extends Component {
         :
         (truncateDecimal(this.state.finalTxAmount, 0) - coinsToSats(Number(this.state.fee))),
       btcFee: this.state.btcFeePerByte,
-      privateIndex: privateIndex,
+      params: this.state.params,
     }
 
     const resetAction = NavigationActions.reset({
@@ -401,9 +402,19 @@ class ConfirmSend extends Component {
 }
 
 const mapStateToProps = (state) => {
+  const chainTicker = state.coins.activeCoin.id
+
   return {
     coinSettings: state.settings.coinSettings,
+    balances: {
+      public: state.ledger.balances[ELECTRUM][chainTicker],
+      private: state.ledger.balances[DLIGHT][chainTicker],
+      errors: {
+        public: state.errors[API_GET_BALANCES][ELECTRUM][chainTicker],
+        private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
+      }
   }
 };
+}
 
 export default connect(mapStateToProps)(ConfirmSend);

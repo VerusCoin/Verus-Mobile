@@ -26,6 +26,7 @@ import {
 } from "react-native"
 import { satsToCoins, truncateDecimal, isNumber, coinsToSats } from '../../../utils/math'
 import { connect } from "react-redux";
+import { Dropdown } from 'react-native-material-dropdown'
 import { getRecommendedBTCFees } from '../../../utils/api/channels/general/callCreators'
 import { removeSpaces } from '../../../utils/stringUtils'
 import Styles from '../../../styles/index'
@@ -33,6 +34,7 @@ import Colors from '../../../globals/colors';
 import withNavigationFocus from "react-navigation/src/views/withNavigationFocus"
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import store from "../../../store"
+import VerusLightClient from 'react-native-verus-light-client'
 
 import { API_GET_FIATPRICE, API_GET_BALANCES, ELECTRUM, DLIGHT } from "../../../utils/constants/intervalConstants"
 
@@ -48,7 +50,7 @@ class SendCoin extends Component {
       account: "none",
       fromAddress: "",
       toAddress: "",
-      amount: 0,
+      amount: "0",
       btcFees: {},
       loadingBTCFees: false,
       loading: false,
@@ -139,7 +141,9 @@ class SendCoin extends Component {
 
       buttons = [{ element: this.pubText }, { element: this.privText },];
 
-      console.log(this.state.privateIndex)
+      console.log(this.state.account)
+      console.log(this.state.coin)
+
 
       //console.log(this.props.channels[this.props.activeCoin.id].channels);
     return( <View style={Styles.centralRow}>
@@ -189,7 +193,7 @@ class SendCoin extends Component {
     });
   };
 
-  goToConfirmScreen = (coinObj, activeUser, address, amount, privateIndex) => {
+  goToConfirmScreen = (coinObj, activeUser, address, amount, params) => {
     const route = "ConfirmSend";
     let navigation = this.props.navigation;
 
@@ -197,11 +201,13 @@ class SendCoin extends Component {
       coinObj: coinObj,
       activeUser: activeUser,
       address: address,
-      privateIndex: privateIndex,
+      params: params,
       amount: coinsToSats(Number(amount)),
       btcFee: this.state.btcFees.average,
       balance: (this.props.balances.public.confirmed + (this.props.balances.private ? this.props.balances.private.confirmed : 0))
     };
+
+
 
     navigation.navigate(route, {
       data: data
@@ -308,12 +314,74 @@ class SendCoin extends Component {
           _errors = true;
         }
 
+
+
         if (!_errors) {
-          this.goToConfirmScreen(coin, account, toAddress, amount, privateIndex);
+          var params = [];
+          if(privateIndex == 0){
+            params = "";
+          }else{
+            params = [this.state.coin.id, this.state.coin.proto, this.state.account.accountHash, this.state.toAddress, this.state.fromAddress, this.state.amount, "" ];
+          }
+          this.goToConfirmScreen(coin, account, toAddress, amount, params);
         }
       }
     );
   };
+
+switchSendAddress = (value) => {
+  this.setState({ fromAddress: value });
+}
+
+
+dynamicDropDown = () => {
+  if(this.state.privateIndex == 1){
+
+    if(this.state.toAddress != null){
+    /*const params = [this.state.coin.id, this.state.coin.proto, this.state.account.accountHash, this.state.toAddress, this.state.fromAddress, this.state.amount, "" ];
+
+
+    VerusLightClient.request(8, "send", params).then(
+      (res) => {
+          console.log(res)
+        }
+      );*/
+    }
+
+
+    return (
+      <View style={Styles.centralRow}>
+        <View style={Styles.wideBlock}>
+        <Dropdown
+          // TODO: Determine why width must be 85 here, cant be wide block
+          containerStyle={{ ...Styles.wideBlock, width: "85%" }}
+          labelExtractor={(item, index) => {
+            return item.id;
+          }}
+          valueExtractor={(item, index) => {
+            return item;
+          }}
+          data={this.props.activeAccount.keys[this.state.coin.id].electrum.addresses}
+          onChangeText={(value, index, data) => this.switchSendAddress(value)}
+          textColor={Colors.quinaryColor}
+          selectedItemColor={Colors.quinaryColor}
+          baseColor={Colors.quinaryColor}
+          inputStyle={Styles.mediumInlineLink}
+          label="Selected address:"
+          labelTextStyle={{ fontFamily: "Avenir-Book" }}
+          labelFontSize={17}
+          value={this.state.fromAddress}
+          pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
+          itemTextStyle={{ fontFamily: "Avenir-Book" }}
+        />
+        </View>
+      </View>
+    );
+  }else{
+    return null;
+  }
+}
+
 
 
   render() {
@@ -358,6 +426,7 @@ class SendCoin extends Component {
             contentContainerStyle={Styles.horizontalCenterContainer}
           >
             <View style={Styles.wideBlock}>
+              {this.dynamicDropDown()}
               <Input
                 labelStyle={Styles.formInputLabel}
                 label={"To:"}

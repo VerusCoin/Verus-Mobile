@@ -374,7 +374,8 @@ if(this.state.private == 0){
   const coinObj = this.state.selectedCoin
   const activeUser = this.props.activeAccount
 
-console.log(activeUser.keys[coinObj.id].electrum.addresses)
+//console.log(activeUser.keys[coinObj.id].electrum.addresses)
+
        return(
         <View >
         <View style={Styles.centralRow}>

@@ -14,6 +14,10 @@ import {
   checkAndSetVersion
 } from './utils/asyncStore/asyncStore';
 import { connect } from 'react-redux';
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7d3baaf81da8b8a57486f541962cf46174dadb13
 import {
   getAddresses,
   getZTransactions,

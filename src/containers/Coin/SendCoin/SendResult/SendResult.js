@@ -39,7 +39,7 @@ import { NO_VERIFICATION, MID_VERIFICATION } from '../../../../utils/constants/c
 import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors'
 import { API_GET_FIATPRICE, API_GET_TRANSACTIONS, ELECTRUM, DLIGHT, API_GET_BALANCES } from "../../../../utils/constants/intervalConstants"
-
+import VerusLightClient from 'react-native-verus-light-client'
 
 
 const TIMEOUT_LIMIT = 120000
@@ -73,7 +73,7 @@ class SendResult extends Component {
     const amount = Number(this.props.navigation.state.params.data.amount)
     const fee = coinObj.id === 'BTC' ? { feePerByte: Number(this.props.navigation.state.params.data.btcFee) } : Number(this.props.navigation.state.params.data.coinObj.fee)
     const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
-    const privateIndex = this.props.navigation.state.params.data.privateIndex
+    const params = this.props.navigation.state.params.data.params
 
     this.timeoutTimer = setTimeout(() => {
       if (this.state.loading) {
@@ -100,7 +100,7 @@ class SendResult extends Component {
       verifyTxid = true
     }
 
-    if(privateIndex == 0){
+    if( params != ""){
       sendRawTx(coinObj, activeUser, toAddress, amount, fee, network, verifyMerkle, verifyTxid)
       .then((res) => {
         if(res.err || !res) {
@@ -136,7 +136,20 @@ class SendResult extends Component {
         console.log(e)
       })
     }else{
-        //TODO: private tx
+      VerusLightClient.request(999, "send", params ).then( (res) => {
+        if(res.error == null){
+          Alert.alert("Transaction ", res.result);
+        }else{
+          Alert.alert("Error: ", res.error);
+        }
+      })
+      .catch((e) => {
+        this.setState({
+          loading: false,
+          err: e.message ? e.message : "Unknown error while building transaction, double check form data"
+        });
+        console.log(e)
+      })
     }
   }
 

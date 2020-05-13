@@ -10,9 +10,9 @@ import StandardButton from "../../components/StandardButton";
 import { View, Text, ScrollView, Image, ActivityIndicator } from "react-native";
 import { connect } from 'react-redux';
 import {
-  addExistingCoin,
-  setUserCoins,
-  addKeypairs,
+  addCoin,
+   setUserCoins,
+   addKeypairs,
  } from '../../actions/actionCreators';
 import { NavigationActions } from 'react-navigation'
 import Styles from '../../styles/index'
@@ -52,91 +52,60 @@ class CoinDetails extends Component {
   goBack = () => {
     this.props.navigation.dispatch(NavigationActions.back())
   }
+
+
   _handleAddCoin = () => {
-    this.setState({ loading: true });
+      this.setState({ loading: true });
 
-<<<<<<< HEAD
-        this.setState({ isActive: true, loading: false });
-      }
-      else {
-        throw new Error("Error adding coin")
-      }
-    })
-    .then(() => {
-      if (!this.state.unmounted) {
-        this.goBack();
-      }
-    })
-    if (this.state.fullCoinData.name === "Verus Coin") {
-      //VerusLightClient.addWallet("VRSC", "vrsc", "light.virtualsoundnw.com", "9077","ZIPPIE","1")//
-      VerusLightClient.createWallet('VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99', "lightwalletd.testnet.z.cash", 9067, 2, "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol.", 0)
-    .then(res => {
-      console.log("ADD WALLET RES")
-      console.log(res)
+      addCoin(
+        this.state.fullCoinData,
+        this.props.activeCoinList,
+        this.props.activeAccount.id,
+        this.props.coinSettings[this.state.fullCoinData.id]
+          ? this.props.coinSettings[this.state.fullCoinData.id].channels
+          : this.state.fullCoinData.compatible_channels
+      )
+        .then((response) => {
+          if (response) {
+            const chainId = this.state.fullCoinData.id;
+            this.props.dispatch(response);
+            this.props.dispatch(
+              setUserCoins(
+                this.props.activeCoinList,
+                this.props.activeAccount.id
+              )
+            );
+            this.props.dispatch(
+              addKeypairs(
+                this.props.activeAccount.seeds,
+                chainId,
+                this.props.activeAccount.keys
+              )
+            );
 
+            activateChainLifecycle(chainId);
 
-
-      return VerusLightClient.openWallet('VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99')
-    })
-    .then(res => {
-      console.log("ADD WALLET RES")
-      console.log(res)
-
-      return startSync('VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99')
-    })
-    .catch(err => {
-      console.log("ADD WALLET OR REQ REJ")
-      console.log(err)
-    })
+            this.setState({ isActive: true, loading: false });
+          } else {
+            throw new Error("Error adding coin");
+          }
+        })
+        .then(() => {
+          if (!this.state.unmounted) {
+            this.goBack();
+          }
+        })
+        .catch((err) => {
+          Alert.alert("Error Adding Coin", err.message);
+          this.setState({ loading: false });
+        });
     }
+
+
     //if ( ) {
 
     //}
-=======
-    addCoin(
-      this.state.fullCoinData,
-      this.props.activeCoinList,
-      this.props.activeAccount.id,
-      this.props.coinSettings[this.state.fullCoinData.id]
-        ? this.props.coinSettings[this.state.fullCoinData.id].channels
-        : this.state.fullCoinData.compatible_channels
-    )
-      .then((response) => {
-        if (response) {
-          const chainId = this.state.fullCoinData.id;
-          this.props.dispatch(response);
-          this.props.dispatch(
-            setUserCoins(
-              this.props.activeCoinList,
-              this.props.activeAccount.id
-            )
-          );
-          this.props.dispatch(
-            addKeypairs(
-              this.props.activeAccount.seeds,
-              chainId,
-              this.props.activeAccount.keys
-            )
-          );
 
-          activateChainLifecycle(chainId);
-
-          this.setState({ isActive: true, loading: false });
-        } else {
-          throw new Error("Error adding coin");
-        }
-      })
-      .then(() => {
-        if (!this.state.unmounted) {
-          this.goBack();
-        }
-      })
-      .catch((err) => {
-        Alert.alert("Error Adding Coin", err.message);
-        this.setState({ loading: false });
-      });
->>>>>>> 2a966b524d031907a2c214ff09e78bba2aaa27a5
-  }
 
   render() {
     return (
