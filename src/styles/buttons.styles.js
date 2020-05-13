@@ -38,6 +38,7 @@ export default buttons = {
     shadowOpacity: 0.43,
     shadowRadius: 2,
     elevation: 2,
+  
   },
 
   greyButtonWithShadow:{
@@ -89,5 +90,12 @@ export default buttons = {
     elevation: 2,
     marginLeft:'55%',
     alignItems:'center',
+  },
+
+  opacity: {
+    opacity: 1,
+  },
+  opacityBlur: {
+    opacity: 0.4,
   },
 };

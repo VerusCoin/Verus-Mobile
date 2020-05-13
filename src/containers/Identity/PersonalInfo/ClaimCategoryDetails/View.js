@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Map as IMap } from 'immutable';
-import { View, Platform,Text } from 'react-native';
+import { View, Platform, Text } from 'react-native';
 import { ListItem, CheckBox, SearchBar } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import Styles from '../../../../styles';
@@ -47,13 +47,20 @@ const ClaimCategoryDetails = (props) => {
   );
   return (
     <View style={Styles.root}>
-      <CheckBox
-        checked={showHiddenClaims}
-        title="Show hidden claims"
-        onPress={() => toggleShowHiddenClaims()}
-        containerStyle={Styles.defaultMargin}
-      />
-      <Text>{hiddenClaimsCount}</Text>
+      <View style={Styles.alignItemsCenter}>
+        <CheckBox
+          checked={showHiddenClaims}
+          onPress={() => toggleShowHiddenClaims()}
+          containerStyle={Styles.defaultMargin}
+        />
+
+        <Text style={Styles.paddingRight}>Show hidden claims</Text>
+        <View style={Styles.circleBadge}>
+          <Text style={Styles.smallTextWithWhiteColor}>
+            {hiddenClaimsCount}
+          </Text>
+        </View>
+      </View>
       <SearchBar
         containerStyle={Styles.backgroundColorWhite}
         platform={Platform.OS === 'ios' ? 'ios' : 'android'}

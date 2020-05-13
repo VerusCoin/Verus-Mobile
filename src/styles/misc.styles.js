@@ -51,4 +51,12 @@ export default misc = {
   paddingHorizontal:{
     paddingHorizontal:10,
   },
+  circleBadge:{
+    width: 17,
+    height: 17,
+    borderRadius: 17 / 2,
+    backgroundColor:Colors.quaternaryColor,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 };

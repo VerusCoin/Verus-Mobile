@@ -152,6 +152,9 @@ export const MainScreens = StackNavigator({
   },
   PersonalInfo: {
     screen: PersonalInfo,
+    navigationOptions: {
+      title: 'Personal information',
+    },
   },
   AddIdentity: {
     screen: AddIdentity,

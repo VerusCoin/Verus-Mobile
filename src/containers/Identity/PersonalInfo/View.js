@@ -125,14 +125,21 @@ const PersonalInfo = (props) => {
 
   return (
     <View style={Styles.root}>
-      <Text style={Styles.textHeader}>Personal Information</Text>
-      <CheckBox
-        checked={!showEmptyClaimCategories}
-        title="Hide empty claim categories"
-        onPress={() => setShowEmptyClaimCategories(!showEmptyClaimCategories)}
-        containerStyle={Styles.defaultMargin}
-      />
-      <Text>{emptyCategoryCount}</Text>
+      <Text style={Styles.textHeader}>Claim categories</Text>
+      <View style={Styles.alignItemsCenter}>
+        <CheckBox
+          checked={!showEmptyClaimCategories}
+          onPress={() => setShowEmptyClaimCategories(!showEmptyClaimCategories)}
+          containerStyle={Styles.defaultMargin}
+        />
+
+        <Text style={Styles.paddingRight}>Hide empty claim categories</Text>
+        <View style={Styles.circleBadge}>
+          <Text style={Styles.smallTextWithWhiteColor}>
+            {emptyCategoryCount}
+          </Text>
+        </View>
+      </View>
       <SearchBar
         containerStyle={Styles.backgroundColorWhite}
         platform={Platform.OS === 'ios' ? 'ios' : 'android'}

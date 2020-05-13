@@ -11,11 +11,9 @@ import { selectActiveIdentity, selectPinnedAttestations, selectAttestationModalV
 
 import { setActiveAttestationId, setAttestationModalVisibility } from '../../../actions/actionCreators';
 import Styles from '../../../styles';
-import Colors from '../../../globals/colors';
 import AttestationDetails from './AttestationDetails';
 
 const iconAccountSwitchSize = 28;
-const iconCheckSize = 23;
 
 const Home = (props) => {
   const {
@@ -30,9 +28,6 @@ const Home = (props) => {
   const [identityAttested, setIdentityAttested] = useState('');
   const goToAttestationDetails = (activeAttestationId, attestedClaimName, identityAttested) => {
     setActiveAttestationId(activeAttestationId);
-    // navigation.navigate('AttestationDetails', {
-    //   id: attestedClaimName,
-    // });
     setAttestedClaimName(attestedClaimName);
     setIdentityAttested(identityAttested);
     setAttestationModalVisibility(true);

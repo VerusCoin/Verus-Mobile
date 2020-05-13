@@ -1,7 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, {
+  useCallback, useEffect, useState,
+} from 'react';
 import { Map as IMap } from 'immutable';
 import { View, Text } from 'react-native';
-import { ScrollView, TouchableOpacity, TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import { ScrollView, TouchableWithoutFeedback, TouchableOpacity } from 'react-native-gesture-handler';
 import MaterialIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { CheckBox } from 'react-native-elements';
 import { truncateString } from './utils/truncateString';
@@ -12,6 +14,7 @@ const getCategotyName = (name) => {
   if (name.length > 30) return `${truncateString(name, 30)}...`;
   return name;
 };
+
 
 const ClaimManager = (props) => {
   const {
@@ -26,7 +29,6 @@ const ClaimManager = (props) => {
       hideSelectedClaims,
     },
   } = props;
-
   const [disabled, setDisable] = useState(true);
   useEffect(() => {
     if (selectedClaims.size > 0) setDisable(false);
@@ -57,14 +59,19 @@ const ClaimManager = (props) => {
 
   const checkIfClaimIsSelected = useCallback((claim) => selectedClaims.includes(claim), [selectedClaims]);
 
+
   return (
     <View style={Styles.root}>
-      <TouchableOpacity style={Styles.linkButton} onPress={moveSelectedCategories} activeOpacity={disabled ? 1 : 0.1}>
-        <Text style={Styles.textButton}>MOVE INTO CATEGORY</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={Styles.linkButton} onPress={hideClaims} activeOpacity={disabled ? 1 : 0.1}>
-        <Text style={Styles.textButton}>HIDE SELECTED</Text>
-      </TouchableOpacity>
+      <View style={[disabled ? Styles.opacityBlur : Styles.opacity]}>
+        <TouchableWithoutFeedback style={Styles.linkButton} onPress={moveSelectedCategories}>
+          <Text style={Styles.textButton}>MOVE INTO CATEGORY</Text>
+        </TouchableWithoutFeedback>
+      </View>
+      <View style={[disabled ? Styles.opacityBlur : Styles.opacity]}>
+        <TouchableWithoutFeedback style={Styles.linkButton} onPress={hideClaims}>
+          <Text style={Styles.textButton}>HIDE SELECTED</Text>
+        </TouchableWithoutFeedback>
+      </View>
       <ScrollView>
         <View style={Styles.containerVerticalPadding}>
           {claims.keySeq().map((claim) => (
@@ -74,7 +81,6 @@ const ClaimManager = (props) => {
                   key={claims.getIn([claim, 'id'])}
                   checked={checkIfClaimIsSelected(claims.get(claim))}
                   onPress={() => selectClaim(claims.get(claim, IMap()))}
-                  containerStyle={Styles.backgroundColorWhite}
                 />
                 <View style={Styles.flexColumn}>
                   <Text style={[Styles.boldText, Styles.paddingBottom]}>{claims.getIn([claim, 'name'])}</Text>
