@@ -34,6 +34,7 @@ const PersonalInfo = (props) => {
   const {
     claimCategories,
     showEmptyClaimCategories,
+    emptyCategoryCount,
     navigation,
     claims,
     claimsCountByCategory,
@@ -131,6 +132,7 @@ const PersonalInfo = (props) => {
         onPress={() => setShowEmptyClaimCategories(!showEmptyClaimCategories)}
         containerStyle={Styles.defaultMargin}
       />
+      <Text>{emptyCategoryCount}</Text>
       <SearchBar
         containerStyle={Styles.backgroundColorWhite}
         platform={Platform.OS === 'ios' ? 'ios' : 'android'}

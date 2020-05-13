@@ -118,3 +118,13 @@ export const selectAttestationsCountByClaim = createSelector(
     return { count, claimId: claims.getIn([item, 'id'], '') };
   }),
 );
+
+export const selectHiddenClaimsCount = createSelector(
+  [selectActiveClaimCategoryId, selectClaims],
+  (categoryId, claims) => claims.filter((item) => item.get('hidden') && item.get('categoryId') === categoryId).size,
+);
+
+export const selectEmptyCategoryCount = createSelector(
+  [selectClaimCategories, selectClaims],
+  (claimCategories, claims) => claimCategories.size - claimCategories.filter((claimCategory) => claims.some((claim) => claim.get('categoryId', '') === claimCategory.get('id', ''))).size,
+);

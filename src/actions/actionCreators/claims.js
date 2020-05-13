@@ -7,6 +7,8 @@ import {
   CLEAR_SELECTED_CLAIMS,
   UPDATE_CATEGORY_FOR_CLAIMS,
   MOVE_CLAIMS_TO_CATEGORY,
+  HIDE_SELECTED_CLAIMS,
+  SET_HIDE_SELECTED_CLAIMS,
 } from '../../utils/constants/storeType';
 
 export const setClaims = (claims) => ({
@@ -47,4 +49,14 @@ export const updateCategoryForClaims = (claims, categoryId) => ({
 export const moveClaimsToCategory = (targetCategory) => ({
   type: MOVE_CLAIMS_TO_CATEGORY,
   payload: { targetCategory },
+});
+export const hideSelectedClaims = () => ({
+  type: HIDE_SELECTED_CLAIMS,
+  payload: { },
+});
+
+
+export const setHideSelectedClaims = (claims) => ({
+  type: SET_HIDE_SELECTED_CLAIMS,
+  payload: { claims },
 });

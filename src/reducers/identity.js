@@ -21,6 +21,7 @@ import {
   CLEAR_SELECTED_CLAIMS,
   SET_ATTESTATION_MODAL_VISIBILITY,
   SET_SCANINFO_MODAL_VISIBILITY,
+  SET_HIDE_SELECTED_CLAIMS,
 } from '../utils/constants/storeType';
 
 const defaultState = fromJS({
@@ -144,6 +145,15 @@ const identity = (state = defaultState, action) => {
       return state.setIn(['personalInformation', 'attestationModalVisibility'], action.payload.value);
     case SET_SCANINFO_MODAL_VISIBILITY:
       return state.setIn(['personalInformation', 'scanInfoModalVisibility'], action.payload.value);
+
+    case SET_HIDE_SELECTED_CLAIMS:
+      return state.withMutations((nextState) => {
+        action.payload.claims.map(
+          (claim) => nextState.setIn(
+            ['personalInformation', 'claims', 'byId', claim.get('id'), 'hidden'], true,
+          ),
+        );
+      });
     default:
       return state;
   }

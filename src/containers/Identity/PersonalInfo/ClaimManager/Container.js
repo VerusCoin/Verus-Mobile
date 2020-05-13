@@ -2,7 +2,9 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import { selectClaimsByIdentityId, selectClaimCategories, selectSelectedClaims } from '../../../../selectors/identity';
-import { setClaimVisibility, updateSelectedClaims, clearSelectedClaims } from '../../../../actions/actionCreators';
+import {
+  setClaimVisibility, updateSelectedClaims, clearSelectedClaims, hideSelectedClaims,
+} from '../../../../actions/actionCreators';
 
 const mapStateToProps = (state) => ({
   claims: selectClaimsByIdentityId(state),
@@ -16,6 +18,7 @@ const mapDispatchToProps = (dispatch) => ({
       setClaimVisibility,
       updateSelectedClaims,
       clearSelectedClaims,
+      hideSelectedClaims,
     },
     dispatch,
   ),

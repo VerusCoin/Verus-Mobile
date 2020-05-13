@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Map as IMap } from 'immutable';
-import { View, Platform } from 'react-native';
+import { View, Platform,Text } from 'react-native';
 import { ListItem, CheckBox, SearchBar } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import Styles from '../../../../styles';
@@ -12,6 +12,7 @@ const ClaimCategoryDetails = (props) => {
     navigation,
     showHiddenClaims,
     attestationsCountByClaim,
+    hiddenClaimsCount,
     actions: { setActiveClaim, toggleShowHiddenClaims },
   } = props;
   const [claims, setClaims] = useState(claimsData);
@@ -52,6 +53,7 @@ const ClaimCategoryDetails = (props) => {
         onPress={() => toggleShowHiddenClaims()}
         containerStyle={Styles.defaultMargin}
       />
+      <Text>{hiddenClaimsCount}</Text>
       <SearchBar
         containerStyle={Styles.backgroundColorWhite}
         platform={Platform.OS === 'ios' ? 'ios' : 'android'}

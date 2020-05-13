@@ -1,7 +1,7 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Map as IMap } from 'immutable';
 import { View, Text } from 'react-native';
-import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
+import { ScrollView, TouchableOpacity, TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import MaterialIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { CheckBox } from 'react-native-elements';
 import { truncateString } from './utils/truncateString';
@@ -23,8 +23,15 @@ const ClaimManager = (props) => {
       setClaimVisibility,
       updateSelectedClaims,
       clearSelectedClaims,
+      hideSelectedClaims,
     },
   } = props;
+
+  const [disabled, setDisable] = useState(true);
+  useEffect(() => {
+    if (selectedClaims.size > 0) setDisable(false);
+    else setDisable(true);
+  }, [selectedClaims]);
 
   const toggleClaimVisibility = (selectedClaim) => {
     setClaimVisibility(selectedClaim.get('id', ''));
@@ -37,19 +44,26 @@ const ClaimManager = (props) => {
   };
 
   const moveSelectedCategories = () => {
-    navigation.navigate('MoveIntoCategory');
+    if (!disabled) navigation.navigate('MoveIntoCategory');
   };
 
   const selectClaim = (selectedClaim) => {
     updateSelectedClaims(selectedClaim);
   };
 
+  const hideClaims = () => {
+    hideSelectedClaims();
+  };
+
   const checkIfClaimIsSelected = useCallback((claim) => selectedClaims.includes(claim), [selectedClaims]);
 
   return (
     <View style={Styles.root}>
-      <TouchableOpacity style={Styles.linkButton} onPress={moveSelectedCategories}>
+      <TouchableOpacity style={Styles.linkButton} onPress={moveSelectedCategories} activeOpacity={disabled ? 1 : 0.1}>
         <Text style={Styles.textButton}>MOVE INTO CATEGORY</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={Styles.linkButton} onPress={hideClaims} activeOpacity={disabled ? 1 : 0.1}>
+        <Text style={Styles.textButton}>HIDE SELECTED</Text>
       </TouchableOpacity>
       <ScrollView>
         <View style={Styles.containerVerticalPadding}>
@@ -67,7 +81,7 @@ const ClaimManager = (props) => {
 
                   <View style={Styles.alignItemsCenter}>
                     <Text style={Styles.defaultFontSize}>
-                      {getCategotyName(claimCategories.getIn([claims.getIn( [claim, 'categoryId'], ''), 'name'], ''))}   
+                      {getCategotyName(claimCategories.getIn([claims.getIn([claim, 'categoryId'], ''), 'name'], ''))}
                     </Text>
                   </View>
 
