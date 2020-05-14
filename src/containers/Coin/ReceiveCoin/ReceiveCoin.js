@@ -19,7 +19,7 @@ import {
   Alert,
   RefreshControl
  } from "react-native"
-import { Input } from 'react-native-elements'
+import { Input,ButtonGroup } from 'react-native-elements'
 import { connect } from 'react-redux'
 import { Dropdown } from 'react-native-material-dropdown'
 import Styles from '../../../styles/index'
@@ -45,7 +45,8 @@ class ReceiveCoin extends Component {
       verusQRString: null,
       amountFiat: false,
       loading: false,
-      showModal: false
+      showModal: false,
+        privateIndex: 0
     };
   }
 
@@ -272,6 +273,7 @@ walletPrivate = () => {
       const _amount = this.state.amount
       const _address = this.state.address
       const _memo = this.state.memo
+      const privateIndex = this.state.privateIndex;
       let _errors = false;
 
       if (!_selectedCoin) {
@@ -333,7 +335,7 @@ walletPrivate = () => {
     if (this.props.channels[this.props.activeCoin.id].channels.includes("dlight")) {
           buttons = [{ element: this.pubText }, { element: this.privText },];
 
-    return
+    return(
     <View style={Styles.centralRow} >
         <ButtonGroup
               onPress={this.changeIndex}
@@ -342,6 +344,7 @@ walletPrivate = () => {
               containerStyle={ Styles.fullWidthButton }
               />
       </View>
+    )
   } else {
     return null;
  }
@@ -370,7 +373,7 @@ dynamicViewingTest = () => {
   } = state;
 
 
-if(this.state.private == 0){
+if(this.state.privateIndex == 0){
   const coinObj = this.state.selectedCoin
   const activeUser = this.props.activeAccount
 
