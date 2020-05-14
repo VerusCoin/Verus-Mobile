@@ -7,7 +7,7 @@ import {
 } from '../../../../actions/actionCreators';
 
 const mapStateToProps = (state) => ({
-  claims: selectClaimsByIdentityId(state),
+  claimsData: selectClaimsByIdentityId(state),
   claimCategories: selectClaimCategories(state),
   selectedClaims: selectSelectedClaims(state),
 });

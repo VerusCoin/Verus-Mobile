@@ -149,6 +149,9 @@ export const MainScreens = StackNavigator({
   },
   Identity: {
     screen: Identity,
+    navigationOptions: {
+      title: 'Identity',
+    },
   },
   PersonalInfo: {
     screen: PersonalInfo,
