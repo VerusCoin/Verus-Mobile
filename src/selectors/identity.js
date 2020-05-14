@@ -128,3 +128,36 @@ export const selectEmptyCategoryCount = createSelector(
   [selectClaimCategories, selectClaims],
   (claimCategories, claims) => claimCategories.size - claimCategories.filter((claimCategory) => claims.some((claim) => claim.get('categoryId', '') === claimCategory.get('id', ''))).size,
 );
+
+
+export const selectClaimForActiveAttestion = createSelector(
+  [selectClaims, selectActiveAttestation],
+  (claims, attestation) => {
+    if (attestation) {
+      const claimId = attestation.get('claimId');
+
+      return claims.filter((item) => item.get('id') === claimId)
+        .keySeq().map((item) => claims.getIn([item, 'claimData'], '')).first();
+    }
+    return IList();
+  },
+);
+
+export const selectChildDataClaimForActiveAttestion = createSelector(
+  [selectClaims, selectActiveAttestation],
+  (claims, attestation) => {
+    if (attestation) {
+      const claimId = attestation.get('claimId');
+      const childClaims = claims.filter((item) => item.get('id') === claimId)
+        .keySeq().map((item) => claims.getIn([item, 'childClaims'], '')).first();
+      return childClaims.map((id) => {
+        const claimData = claims.filter((item) => item.get('id') === id)
+          .keySeq().map((item) => claims.getIn([item, 'claimData'], '')).first();
+        const claimName = claims.filter((item) => item.get('id') === id)
+          .keySeq().map((item) => claims.getIn([item, 'name'], '')).first();
+        return { claimData, claimName };
+      });
+    }
+    return IList();
+  },
+);

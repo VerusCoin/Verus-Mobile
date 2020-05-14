@@ -14,18 +14,20 @@ const qrCodeSize = 245;
 
 const AttestationDetails = (props) => {
   const {
-    attestation, visible, attestedClaimName, identityAttested,
+    attestation, visible, childClaimData, identityAttested,claimData,
     actions: { toggleAttestationPin, setAttestationModalVisibility },
   } = props;
 
   const cancelHandler = () => {
     setAttestationModalVisibility(false);
   };
-
-
   const pinToHome = () => {
     toggleAttestationPin();
   };
+  const getChildClaimData = () => {
+    return ['First name: nazif'];
+  };
+
 
   return (
     <View>
@@ -40,7 +42,7 @@ const AttestationDetails = (props) => {
         >
           <View style={Styles.headerContainer}>
             <Text style={Styles.centralHeader}>
-              {attestedClaimName}
+              {identityAttested}
             </Text>
           </View>
           <View style={Styles.alignItemsCenterColumn}>
@@ -48,7 +50,7 @@ const AttestationDetails = (props) => {
               <PricingCard
                 color={Colors.successButtonColor}
                 title={attestation.get('claimName', '')}
-                info={[identityAttested]}
+                info={[claimData, ...getChildClaimData()]}
                 button={attestation.get('showOnHomeScreen', false) ? { title: 'Unpin from home' } : { title: 'Pin to home' }}
                 onButtonPress={pinToHome}
                 titleStyle={Styles.mediumFont}

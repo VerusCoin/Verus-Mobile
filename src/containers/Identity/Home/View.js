@@ -24,11 +24,9 @@ const Home = (props) => {
     navigation.navigate('ScanBadge');
   };
 
-  const [attestedClaimName, setAttestedClaimName] = useState('');
   const [identityAttested, setIdentityAttested] = useState('');
-  const goToAttestationDetails = (activeAttestationId, attestedClaimName, identityAttested) => {
+  const goToAttestationDetails = (activeAttestationId, identityAttested) => {
     setActiveAttestationId(activeAttestationId);
-    setAttestedClaimName(attestedClaimName);
     setIdentityAttested(identityAttested);
     setAttestationModalVisibility(true);
   };
@@ -71,7 +69,6 @@ const Home = (props) => {
       </ScrollView>
       <AttestationDetails
         visible={attestationModalVisibility}
-        attestedClaimName={attestedClaimName}
         identityAttested={identityAttested}
       />
     </View>
