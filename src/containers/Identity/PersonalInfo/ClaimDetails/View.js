@@ -43,6 +43,11 @@ const ClaimDetails = (props) => {
   };
   const getClaimsDetails = (claim) => {
     setActiveClaim(claim);
+    navigation.navigate('ClaimDetails', {
+      id: claim.get('id', ''),
+      claimName: claim.get('name', ''),
+      claimData: claim.get('claimData', ''),
+    });
   };
 
   const goToAttestationDetails = (activeAttestationId, identityAttested) => {
