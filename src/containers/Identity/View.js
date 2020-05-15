@@ -39,12 +39,16 @@ const Identity = (props) => {
     return <AddIdentity />;
   }
 
+  const switchTab = (newTab) => {
+    navigation.setParams({ title: newTab.label });
+    setActiveTab(newTab);
+  };
   return (
     <View style={Styles.flexBackground}>
-      <activeTab.screen navigation={navigation} setActiveTab={setActiveTab} />
+      <activeTab.screen navigation={navigation} />
       <BottomNavigation
         useLayoutAnimation={false}
-        onTabPress={(newTab) => setActiveTab(newTab)}
+        onTabPress={(newTab) => switchTab(newTab)}
         renderTab={renderTabItem}
         tabs={tabs}
         activeTab={activeTab.key}

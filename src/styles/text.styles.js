@@ -281,4 +281,8 @@ export default text = {
     fontWeight: 'bold',
     paddingVertical: '3%',
   },
+  smallTextWithWhiteColor:{
+    color:Colors.secondaryColor,
+    fontSize:12,
+  },
 };

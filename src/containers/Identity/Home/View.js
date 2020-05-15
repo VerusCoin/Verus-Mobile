@@ -11,11 +11,9 @@ import { selectActiveIdentity, selectPinnedAttestations, selectAttestationModalV
 
 import { setActiveAttestationId, setAttestationModalVisibility } from '../../../actions/actionCreators';
 import Styles from '../../../styles';
-import Colors from '../../../globals/colors';
 import AttestationDetails from './AttestationDetails';
 
 const iconAccountSwitchSize = 28;
-const iconCheckSize = 23;
 
 const Home = (props) => {
   const {
@@ -26,14 +24,9 @@ const Home = (props) => {
     navigation.navigate('ScanBadge');
   };
 
-  const [attestedClaimName, setAttestedClaimName] = useState('');
   const [identityAttested, setIdentityAttested] = useState('');
-  const goToAttestationDetails = (activeAttestationId, attestedClaimName, identityAttested) => {
+  const goToAttestationDetails = (activeAttestationId, identityAttested) => {
     setActiveAttestationId(activeAttestationId);
-    // navigation.navigate('AttestationDetails', {
-    //   id: attestedClaimName,
-    // });
-    setAttestedClaimName(attestedClaimName);
     setIdentityAttested(identityAttested);
     setAttestationModalVisibility(true);
   };
@@ -76,7 +69,6 @@ const Home = (props) => {
       </ScrollView>
       <AttestationDetails
         visible={attestationModalVisibility}
-        attestedClaimName={attestedClaimName}
         identityAttested={identityAttested}
       />
     </View>

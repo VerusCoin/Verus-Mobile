@@ -39,9 +39,11 @@ export default misc = {
   paddingBottom:{
     paddingBottom:4,
   },
-
   paddingRight:{
     paddingRight:'3%',
+  },
+  defaultLeftPadding:{
+    paddingLeft:0,
   },
   defaultMargin:{
     marginLeft:0,
@@ -50,5 +52,13 @@ export default misc = {
 
   paddingHorizontal:{
     paddingHorizontal:10,
+  },
+  circleBadge:{
+    width: 17,
+    height: 17,
+    borderRadius: 17 / 2,
+    backgroundColor:Colors.quaternaryColor,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 };

@@ -10,23 +10,30 @@ import StandardButton from '../../../../components/StandardButton';
 // This is temp solution until we get real data from QR code
 const awesomeLink = 'http://awesome.link.qr';
 const qrCodeSize = 245;
+import { truncateString } from '../../PersonalInfo/ClaimManager/utils/truncateString';
 
+const getClaimData = (name) => {
+  if (name.length > 20) return `${truncateString(name, 20)}...`;
+  return name;
+};
 
 const AttestationDetails = (props) => {
   const {
-    attestation, visible, attestedClaimName, identityAttested,
+    attestation, visible, childClaimData, identityAttested, claimData,
     actions: { toggleAttestationPin, setAttestationModalVisibility },
   } = props;
 
   const cancelHandler = () => {
     setAttestationModalVisibility(false);
   };
-
-
   const pinToHome = () => {
     toggleAttestationPin();
-    setAttestationModalVisibility(false);
   };
+
+
+  const getChildClaimData = () => (childClaimData ? childClaimData.map((item) => `${item.claimName}: ${item.claimData}`).toJS() : []);
+
+  
 
   return (
     <View>
@@ -41,7 +48,7 @@ const AttestationDetails = (props) => {
         >
           <View style={Styles.headerContainer}>
             <Text style={Styles.centralHeader}>
-              {attestedClaimName}
+              {identityAttested}
             </Text>
           </View>
           <View style={Styles.alignItemsCenterColumn}>
@@ -49,7 +56,7 @@ const AttestationDetails = (props) => {
               <PricingCard
                 color={Colors.successButtonColor}
                 title={attestation.get('claimName', '')}
-                info={[identityAttested]}
+                info={[getClaimData(claimData), ...getChildClaimData()]}
                 button={attestation.get('showOnHomeScreen', false) ? { title: 'Unpin from home' } : { title: 'Pin to home' }}
                 onButtonPress={pinToHome}
                 titleStyle={Styles.mediumFont}

@@ -34,8 +34,10 @@ const PersonalInfo = (props) => {
   const {
     claimCategories,
     showEmptyClaimCategories,
+    emptyCategoryCount,
     navigation,
     claims,
+    claimsCountByCategory,
     actions: {
       setActiveClaimCategory,
       setShowEmptyClaimCategories,
@@ -112,15 +114,32 @@ const PersonalInfo = (props) => {
     </Dialog.Container>
   );
 
+  const handleBadge = (categoryId) => (
+    {
+      value: claimsCountByCategory.filter((claim) => categoryId === claim.categoryId).first().count,
+      textStyle: { color: Colors.secondaryColor },
+      badgeStyle: { backgroundColor:Colors.quinaryColor },
+      containerStyle: Styles.alignItemsCenter,
+    }
+  );
+
   return (
     <View style={Styles.root}>
-      <Text style={Styles.textHeader}>Personal Information</Text>
-      <CheckBox
-        checked={!showEmptyClaimCategories}
-        title="Hide empty claim categories"
-        onPress={() => setShowEmptyClaimCategories(!showEmptyClaimCategories)}
-        containerStyle={Styles.defaultMargin}
-      />
+      <Text style={Styles.textHeader}>Claim categories</Text>
+      <View style={Styles.alignItemsCenter}>
+        <CheckBox
+          checked={!showEmptyClaimCategories}
+          onPress={() => setShowEmptyClaimCategories(!showEmptyClaimCategories)}
+          containerStyle={[Styles.defaultMargin, Styles.defaultLeftPadding]}
+        />
+
+        <Text style={Styles.paddingRight}>Hide empty claim categories</Text>
+        <View style={Styles.circleBadge}>
+          <Text style={Styles.smallTextWithWhiteColor}>
+            {emptyCategoryCount}
+          </Text>
+        </View>
+      </View>
       <SearchBar
         containerStyle={Styles.backgroundColorWhite}
         platform={Platform.OS === 'ios' ? 'ios' : 'android'}
@@ -140,6 +159,7 @@ const PersonalInfo = (props) => {
               bottomDivider
               onPress={() => goToClaims(categories.getIn([item, 'id'], ''), categories.getIn([item, 'name'], ''))}
               chevron
+              badge={handleBadge(categories.getIn([item, 'id']))}
             />
           ))}
         </View>
@@ -153,5 +173,6 @@ const PersonalInfo = (props) => {
     </View>
   );
 };
+
 
 export default PersonalInfo;

@@ -37,6 +37,7 @@ import {
   setNewCategory,
   updateCategoryForClaims,
   clearSelectedClaims,
+  setHideSelectedClaims,
 } from '../actions/actionCreators';
 import {
   selectActiveIdentityId,
@@ -60,6 +61,7 @@ import {
   ADD_NEW_CATEGORY,
   SET_CLAIM_VISIBILITY,
   MOVE_CLAIMS_TO_CATEGORY,
+  HIDE_SELECTED_CLAIMS,
 } from '../utils/constants/storeType';
 import {
   normalizeCategories,
@@ -87,6 +89,7 @@ export default function * identitySaga() {
     takeLatest(ADD_NEW_CATEGORY, handleAddNewCategory),
     takeLatest(SET_CLAIM_VISIBILITY, updateClaimsStorage),
     takeLatest(MOVE_CLAIMS_TO_CATEGORY, handleMoveClaims),
+    takeLatest(HIDE_SELECTED_CLAIMS, handleHideClaims),
   ]);
 }
 
@@ -298,4 +301,10 @@ function * updateAttestationStorage() {
   const updatedAttestations = yield call(denormalizeAttestations, attestations.toJS());
   const attestationsToStore = yield call(updateStoredItems, storedAttestations, updatedAttestations, 'attestations');
   yield call(updateAttestations, attestationsToStore);
+}
+function * handleHideClaims() {
+  const selectedClaims = yield select(selectSelectedClaims);
+  yield put(setHideSelectedClaims(selectedClaims));
+  yield put(clearSelectedClaims());
+  yield call(updateClaimsStorage);
 }

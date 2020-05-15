@@ -236,7 +236,6 @@ export default containers = {
   blockWithBorder: {
     flexDirection: 'row',
     alignItems: 'center',
-    height:'14%',
     borderColor: Colors.ultraLightGrey,
     marginTop:'2%',
     justifyContent: 'space-between',

@@ -103,3 +103,61 @@ export const selectActiveAttestation = createSelector(
 export const selectAttestationModalVisibility = (state) => state.identity.getIn(['personalInformation', 'attestationModalVisibility'], '');
 export const selectScanInfoModalVisibility = (state) => state.identity.getIn(['personalInformation', 'scanInfoModalVisibility'], '');
 
+export const selectClaimsCountByCategory = createSelector(
+  [selectClaimCategories, selectClaims],
+  (categories, claims) => categories.keySeq().map((item) => {
+    const count = claims.filter((claim) => categories.getIn([item, 'id'], '') === claim.get('categoryId', '')).size;
+    return { count, categoryId:categories.getIn([item, 'id'], '') };
+  }),
+);
+
+export const selectAttestationsCountByClaim = createSelector(
+  [selectClaims, selectAttestations],
+  (claims, attestations) => claims.keySeq().map((item) => {
+    const count = attestations.filter((attestation) => claims.getIn([item, 'id'], '') === attestation.get('claimId', '')).size;
+    return { count, claimId: claims.getIn([item, 'id'], '') };
+  }),
+);
+
+export const selectHiddenClaimsCount = createSelector(
+  [selectActiveClaimCategoryId, selectClaims],
+  (categoryId, claims) => claims.filter((item) => item.get('hidden') && item.get('categoryId') === categoryId).size,
+);
+
+export const selectEmptyCategoryCount = createSelector(
+  [selectClaimCategories, selectClaims],
+  (claimCategories, claims) => claimCategories.size - claimCategories.filter((claimCategory) => claims.some((claim) => claim.get('categoryId', '') === claimCategory.get('id', ''))).size,
+);
+
+
+export const selectClaimForActiveAttestion = createSelector(
+  [selectClaims, selectActiveAttestation],
+  (claims, attestation) => {
+    if (attestation) {
+      const claimId = attestation.get('claimId');
+
+      return claims.filter((item) => item.get('id') === claimId)
+        .keySeq().map((item) => claims.getIn([item, 'claimData'], '')).first();
+    }
+    return IList();
+  },
+);
+
+export const selectChildDataClaimForActiveAttestion = createSelector(
+  [selectClaims, selectActiveAttestation],
+  (claims, attestation) => {
+    if (attestation) {
+      const claimId = attestation.get('claimId');
+      const childClaims = claims.filter((item) => item.get('id') === claimId)
+        .keySeq().map((item) => claims.getIn([item, 'childClaims'], '')).first();
+      return childClaims.map((id) => {
+        const claimData = claims.filter((item) => item.get('id') === id)
+          .keySeq().map((item) => claims.getIn([item, 'claimData'], '')).first();
+        const claimName = claims.filter((item) => item.get('id') === id)
+          .keySeq().map((item) => claims.getIn([item, 'name'], '')).first();
+        return { claimData, claimName };
+      });
+    }
+    return IList();
+  },
+);
