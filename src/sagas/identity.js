@@ -6,7 +6,7 @@ import {
   storeSeedIdentities,
   storeSeedClaimCategories,
   storeSeedClaims,
-  storeSeedAttestations,
+  // storeSeedAttestations,
   getClaims,
   getAttestations,
   updateAttestations,
@@ -20,7 +20,6 @@ import {
 } from '../utils/asyncStore/identityStorage';
 import updateStoredItems from '../utils/InitialData/updateStoredItems';
 import generateClaimCategories from '../utils/InitialData/ClaimCategory';
-import generateClaims from '../utils/InitialData/Claim';
 import generateAttestations from '../utils/InitialData/Attestation';
 import { camelizeString } from '../utils/stringUtils';
 import {
@@ -114,12 +113,8 @@ function * handleStoreIdentities() {
 }
 
 function * handleSetActiveIdentity() {
-  const selectedIdentityId = yield select(selectActiveIdentityId);
-  yield all([
-    call(handleStoreSeedClaimCategories),
-    call(handleStoreSeedClaims, selectedIdentityId),
-    call(handleStoreSeedAttestations, selectedIdentityId),
-  ]);
+  yield call(handleStoreSeedClaimCategories);
+  yield call(handleStoreSeedClaims);
   yield call(handleReceiveSeedData);
 }
 
@@ -138,30 +133,21 @@ function * handleStoreSeedClaimCategories() {
   }
 }
 
-/**
- * @function `handleStoreSeedClaims`:
- * this saga is being called when user selects an identity,
- * or changes the current active identity. It's responsible for storing claims
- * into the Async Storage. If there is nothing stored, the initial data
- * is generated. If there are some items stored but for a different identity,
- * concat the two arrays. Finally if there are claims for the selected identity
- * use those claims
- * @param {String} identityId Currently active identity.
- */
-function * handleStoreSeedClaims(identityId) {
-  const seededClaims = generateClaims(identityId);
-  let claimsToStore = [];
+// /**
+//  * @function `handleStoreSeedClaims`:
+//  * this saga is being called when user selects an identity,
+//  * or changes the current active identity. It's responsible for storing claims
+//  * into the Async Storage. If there is nothing stored, the initial data
+//  * is generated. If there are some items stored but for a different identity,
+//  * concat the two arrays. Finally if there are claims for the selected identity
+//  * use those claims
+//  * @param {String} identityId Currently active identity.
+//  */
+
+function * handleStoreSeedClaims() {
   const storedClaims = yield call(getClaims);
-  if (!storedClaims.length) {
-    claimsToStore = seededClaims;
-  } 
-  // else if (storedClaims.every((claim) => !claim.categoryId.includes(identityId))) {
-  //   claimsToStore = [...storedClaims, ...seededClaims];
-  // }
-   else {
-    claimsToStore = storedClaims;
-  }
-  yield call(storeSeedClaims, claimsToStore);
+  console.log(storedClaims, 'stored claimssss[s[s[[s[[[[123[[31p[321[213p[[321')
+  yield call(storeSeedClaims, storedClaims.length > 0 ? storedClaims : []);
 }
 
 /**
@@ -199,20 +185,18 @@ function * handleChangeActiveIdentity(action) {
 function * handleReceiveSeedData() {
   const selectedIdentityId = yield select(selectActiveIdentityId);
   try {
-    const [claimCategoriesFromStore, claimsFromStore, attestationsFromStore] = yield all([
-      call(getClaimCategories),
-      call(getClaimsByIdentity, selectedIdentityId),
-      call(getAttestationsByIdentity, selectedIdentityId),
-    ]);
+    const claimCategoriesFromStore = yield call(getClaimCategories);
+    const claimsFromStore = yield call(getClaims);
+    console.log(claimCategoriesFromStore, '-==--=-=-=-=-=-=-==-')
     const claimCategories = normalizeCategories(claimCategoriesFromStore);
     const claims = normalizeClaims(claimsFromStore);
-    const attestations = normalizeAttestations(attestationsFromStore);
+    // const attestations = normalizeAttestations(attestationsFromStore);
 
-    yield all([
-      put(setClaims(claims)),
-      put(setClaimCategories(claimCategories)),
-      put(setAttestations(attestations)),
-    ]);
+    console.log('=+++++==', claimCategories, '=++++====')
+
+    yield put(setClaimCategories(claimCategories));
+    yield put(setClaims(claims));
+      // put(setAttestations(attestations)),
   } catch (error) {
     console.log(error);
   }
@@ -250,7 +234,6 @@ function * handleAddNewCategory(action) {
       id: newCategoryId,
       name: action.payload.value,
       desc: '',
-      identity: selectedIdentityId,
     },
   };
 
@@ -261,7 +244,7 @@ function * handleAddNewCategory(action) {
 function * handleMoveClaims(action) {
   const { targetCategory } = action.payload;
   const selectedClaims = yield select(selectSelectedClaims);
-  yield put(updateCategoryForClaims(selectedClaims, targetCategory.get('id')));
+  yield put(updateCategoryForClaims(selectedClaims, targetCategory.get('name')));
   yield put(clearSelectedClaims());
   yield call(updateClaimsStorage);
 }
@@ -280,7 +263,7 @@ function * updateClaimCategoryStorage() {
   yield call(updateClaimCategories, categoriesToStore);
 }
 
-function * updateClaimsStorage() {
+export function * updateClaimsStorage() {
   const selectedClaims = yield select(selectClaimsReducerState);
   const storedClaims = yield call(getClaims);
   const claims = yield call(denormalizeClaims, selectedClaims.toJS());
@@ -288,7 +271,7 @@ function * updateClaimsStorage() {
   yield call(updateClaims, claimsToStore);
 }
 
-function * updateAttestationStorage() {
+export function * updateAttestationStorage() {
   const attestations = yield select(selectAttestationsReducerState);
   const storedAttestations = yield call(getAttestations);
   const updatedAttestations = yield call(denormalizeAttestations, attestations.toJS());

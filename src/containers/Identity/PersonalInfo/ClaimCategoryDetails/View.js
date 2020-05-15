@@ -77,8 +77,8 @@ const ClaimCategoryDetails = (props) => {
       <ScrollView>
         {claims.keySeq().map((claim) => (
           <ListItem
-            key={claims.getIn([claim, 'id'], '')}
-            title={claims.getIn([claim, 'name'], '')}
+            key={claims.getIn([claim, 'uid'], '')}
+            title={claims.getIn([claim, 'id'], '')}
             onPress={() => goToClaimDetails(claims.get(claim, IMap()))}
             badge={handleBadge(claims.getIn([claim, 'id']))}
             bottomDivider

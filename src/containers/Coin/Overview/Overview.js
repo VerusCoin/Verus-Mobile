@@ -33,6 +33,7 @@ import {
   PRIVATE,
   TOTAL
 } from '../../../utils/constants/constants'
+import { selectTransactions } from '../../../selectors/transactions';
 import { Dropdown } from 'react-native-material-dropdown'
 import Colors from "../../../globals/colors";
 
@@ -251,7 +252,6 @@ class Overview extends Component {
 
   parseTransactionLists = () => {
     const { transactions } = this.props
-    console.log(transactions, '---020021030121123=====')
     let privateTxs = transactions.private || []
     let publicTxs = transactions.public || []
     let txList = [
@@ -262,7 +262,6 @@ class Overview extends Component {
         return Array.isArray(object) ? { txArray: object, visibility: PUBLIC } : { ...object, visibility: PUBLIC };
       })
     ];
-    // VerusZkedidUtils.StructuredMemo.readMemo(
 
     return txList.sort((a, b) => {
       if (a.timestamp == null) return 1
@@ -397,14 +396,7 @@ const mapStateToProps = (state) => {
         private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
       }
     },
-    transactions: {
-      public: state.ledger.transactions[ELECTRUM][chainTicker],
-      private: state.ledger.transactions[DLIGHT][chainTicker],
-      errors: {
-        public: state.errors[API_GET_TRANSACTIONS][ELECTRUM][chainTicker],
-        private: state.errors[API_GET_TRANSACTIONS][DLIGHT][chainTicker],
-      }
-    },
+    transactions: selectTransactions(state),
     activeAccount: state.authentication.activeAccount,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     generalWalletSettings: state.settings.generalWalletSettings,

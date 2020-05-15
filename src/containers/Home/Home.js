@@ -199,7 +199,7 @@ class Home extends Component {
             containerStyle={Styles.bottomlessListItemContainer}
           />
         </TouchableOpacity>
-        {activeCoinsForUser.some(coin => coin.id === "VRSC") && (
+        {activeCoinsForUser.some(coin => coin.id === "VRSC" || coin.id === "ZECTEST") && (
           <TouchableOpacity onPress={this._handleIdentity}>
           <ListItem
             title={<Text style={Styles.listItemLeftTitleDefault}>Identity</Text>}

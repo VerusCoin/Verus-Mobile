@@ -1,15 +1,29 @@
 import {
   all, takeLatest, call, put, select,
 } from 'redux-saga/effects';
-
+import { fromJS } from 'immutable';
+import { v4 as uuidv4 } from 'uuid';
 
 import VerusZkedidUtils from 'node-jest-testing-boilerplate';
 
-import selectTransactions from '../selectors/transactions';
+import { unixToDate } from '../utils/math';
 
+
+import { setMemoDataFromTx } from '../actions/actionCreators/claims';
+import { updateClaimsStorage, updateAttestationStorage } from './identity';
+import { selectTransactions } from '../selectors/transactions';
+import { getStoredBlockHeight, storeBlockHeight } from '../utils/asyncStore/transactionsStorage';
 import { SET_TRANSACTIONS } from '../utils/constants/storeType';
 
 const crypto = require('react-native-crypto');
+
+const sha256Hash = (memoData) => crypto.createHash('sha256')
+  .update(memoData)
+  .digest();
+
+const rmd160Hash = (memoData) => crypto.createHash('rmd160')
+  .update(sha256Hash(memoData))
+  .digest('hex');
 
 export default function * transactionsSaga() {
   yield all([
@@ -17,52 +31,76 @@ export default function * transactionsSaga() {
   ]);
 }
 
-// const trans = {
-//   address: 'ztestsapling1lu6p9xr0u8cdv6w2dn9p5gjzsvpuupx65p94drwl07gfv83jqq6c3kqgl9ac4ealf6nkwxlwzt0',
-//   amount: 0.001,
-//   height: 908793,
-//   memo: 'OTU0NGZiYTViZmU1Mzg2MjgyOTRkYzNmMzZhNGEyY2I2NzA2MWEwNjAwMDAwMDAwMDAwMDAwMDJlZjE3OWY5OGNiNjQ0ZDk1MDE3Y2RlYmNkZjFkYmIzYzhiYTA1OTdhMDAyYmQ0NGNhZTNkMzU2ZjYwZGNmNDg5YjFkZjg0MzY1ODA4M2VlMTc5YTQwMDAwMDAwMDAwMDk3NDY1NzM3NDVmNjQ2MTc0NjEwMDA2NmU2MTdhNjk2NjQwZmJkZmI0ZTdhZDg1ODYyNTRmMmIwNDdkZGY5YTk2YTBjODZkMTZmYTAwMzNkNDRjYWUzZDM1NmY2MGRjZjQ4OWIxZGY4NDM2NTgwODNlZTE3OWE0MDAwMDAwMDAwMDA5NzQ2NTczNzQ1ZjY0NjE3NDYxMDAwNjZlNjE3YTY5NjY0MDAwMDY3NjY1NzI3NTczNDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-//   status: 'confirmed',
-//   timestamp: 1588950349,
-//   txid: '44068a078a452b2058ef04c4d79599540b3d8e97416ecd47b86ff951d2cd0f64',
-//   type: 'sent',
-// };
-
+const hashMap = {
+  strings: {
+    [VerusZkedidUtils.utf8ToHash160('firstName.personal-information.claim:vrsc').toString('hex')]: 'firstName.personal-information.claim:vrsc',
+    [VerusZkedidUtils.utf8ToHash160('lastName.personal-information.claim:vrsc').toString('hex')]: 'lastName.personal-information.claim:vrsc',
+    [VerusZkedidUtils.utf8ToHash160('birthDate.personal-information.claim:vrsc').toString('hex')]: 'birthDate.personal-information.claim:vrsc',
+    [VerusZkedidUtils.utf8ToHash160('driversLicense.composite.claim:vrsc').toString('hex')]: 'driversLicense.composite.claim:vrsc',
+  },
+};
 
 function * handleGetMemosFromTransactions() {
   const transactions = yield select(selectTransactions);
-  const mockMemo = VerusZkedidUtils.StructuredMemo.writeMemo([VerusZkedidUtils.PresetObjects.Claim.create('covid19.health.claim:vrsc', 'test_data')]);
-  // const mockMemo = '9544fba5bfe538628294dc3f36a4a2cb67061a060000000000000002ef179f98cb644d95017cdebcdf1dbb3c8ba0597a002bd44cae3d356f60dcf489b1df843658083ee179a4000000000009746573745f6461746100066e617a696640fbdfb4e7ad8586254f2b047ddf9a96a0c86d16fa0033d44cae3d356f60dcf489b1df843658083ee179a4000000000009746573745f6461746100066e617a6966400006766572757340';
-  const memoObj = VerusZkedidUtils.StructuredMemo.readMemo(mockMemo);
-  console.log(memoObj);
-  // const memosFromTransactions = transactions.transactions.private?.map((transaction) => transaction.address && VerusZkedidUtils.StructuredMemo.readMemo(transaction.memo));
-  // console.log(memosFromTransactions, 'memo from trans')
-  const sha256 = crypto.createHash('sha256');
-  if (memoObj.protocol === 'VRSC:MEMO') {
-    const memoBodiesWithIds = memoObj.objects.map((object) => object);
-    const memoObjects = memoBodiesWithIds.map((memoBody) => {
-      const typeStrings = memoBody.type.split('.');
+  const storedBlockHeight = yield call(getStoredBlockHeight);
+
+  const transactionsBlockHeights = transactions.private.map((transaction) => transaction.height);
+  const currentHighestBlockHeight = Math.max(...transactionsBlockHeights);
+
+  if (storedBlockHeight >= currentHighestBlockHeight) {
+    return null;
+  }
+
+  yield call(storeBlockHeight, currentHighestBlockHeight);
+
+  const memosArray = transactions.private.map((transaction) => {
+    try {
+      const decodeBase64 = atob(transaction.memo);
+      const memoTimeStamp = transaction.timestamp;
+      const memo = VerusZkedidUtils.StructuredMemo.readMemo(decodeBase64, hashMap);
+      return ({ ...memo, timestamp: memoTimeStamp });
+    } catch (error) {
+      return null;
+    }
+  });
+
+  const txMemos = memosArray.flatMap((memoItem) => memoItem || []);
+
+  const createdMemos = txMemos.flatMap((memoBody) => {
+    const date = unixToDate(memoBody.timestamp);
+    const memoObjects = memoBody.objects.map((memoObject) => {
+      const typeStrings = memoObject.type.split('.');
       const memoId = typeStrings[0];
       const memoClaimCategory = typeStrings[1];
-
-      const sha256Hash = crypto.createHash('sha256')
-        .update(memoBody.data)
-        .digest('hex');
-
-      const rmd160Hash = crypto.createHash('rmd160')
-        .update(sha256Hash)
-        .digest('hex');
+      if (memoObject.id.includes('claim')) {
+        return ({
+          uid: uuidv4(),
+          id: memoId,
+          categoryId: memoClaimCategory,
+          data: memoObject.data,
+          identity: memoObject.to,
+          hash: rmd160Hash(memoObject.data),
+          hidden: true,
+          date,
+        });
+      }
 
       return ({
-        [memoId]: {
-          id: memoId,
-          claimCategoryId: memoClaimCategory,
-          data: memoBody.data,
-          hash: rmd160Hash,
-        },
+        uid: uuidv4(),
+        id: memoId,
+        identityAttested: memoObject.from,
+        identity: memoObject.to,
+        contentRootKey: rmd160Hash(memoObject.data),
+        sigKey: '',
+        data: memoObject.data,
+        showOnHomeScreen: false,
+        claimId: memoId,
+        date,
       });
     });
-
-    console.log('......>>>>>>>>', memoObjects, '<<<<<<.......');
-  }
+    return memoObjects;
+  });
+  yield put(setMemoDataFromTx(createdMemos));
+  yield call(updateClaimsStorage);
+  yield call(updateAttestationStorage);
 }

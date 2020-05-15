@@ -109,7 +109,7 @@ export const updateAttestations = async (updatedAttestations) => {
 
 export const removeIdentityData = async () => {
   try {
-    await AsyncStorage.multiRemove(['identities', 'claimCategories', 'claims', 'attestations']);
+    await AsyncStorage.multiRemove(['identities', 'claimCategories', 'claims', 'attestations', 'blockHeight']);
   } catch (err) {
     console.log(err);
   }
@@ -134,7 +134,7 @@ export const updateClaims = async (updatedClaims) => {
 export const getClaimsByIdentity = async (identityId) => {
   try {
     const storedClaims = await getClaims();
-    const claimsForIdentity = storedClaims.filter((claim) => claim.id.includes(identityId));
+    const claimsForIdentity = storedClaims.filter((claim) => claim.to.includes(identityId));
     return claimsForIdentity;
   } catch (error) {
     console.log(error);

@@ -1,4 +1,4 @@
-import { fromJS, List as IList } from 'immutable';
+import { fromJS, List as IList, Map as IMap } from 'immutable';
 import {
   SET_ACTIVE_IDENTITY,
   SET_CLAIMS,
@@ -22,6 +22,7 @@ import {
   SET_ATTESTATION_MODAL_VISIBILITY,
   SET_SCANINFO_MODAL_VISIBILITY,
   SET_HIDE_SELECTED_CLAIMS,
+  SET_MEMO_DATA_FROM_TX,
 } from '../utils/constants/storeType';
 
 const defaultState = fromJS({
@@ -136,7 +137,7 @@ const identity = (state = defaultState, action) => {
       return state.withMutations((nextState) => {
         action.payload.claims.map(
           (claim) => nextState.setIn(
-            ['personalInformation', 'claims', 'byId', claim.get('id'), 'categoryId'], action.payload.categoryId,
+            ['personalInformation', 'claims', 'byId', claim.get('uid'), 'categoryId'], action.payload.categoryId,
           ),
         );
       });
@@ -152,6 +153,25 @@ const identity = (state = defaultState, action) => {
           (claim) => nextState.setIn(
             ['personalInformation', 'claims', 'byId', claim.get('id'), 'hidden'], true,
           ),
+        );
+      });
+    case SET_MEMO_DATA_FROM_TX:
+      return state.withMutations((nextState) => {
+        action.payload.memoData.map(
+          (memo) => {
+            if (memo.identityAttested) {
+              return nextState.setIn(['personalInformation', 'attestations', 'byId', memo.id], fromJS(memo));
+            }
+            return nextState.setIn(['personalInformation', 'claims', 'byId', memo.uid], fromJS(memo));
+          },
+        );
+        action.payload.memoData.map(
+          (memo) => {
+            if (memo.identityAttested) {
+              return nextState.updateIn(['personalInformation', 'attestations', 'attestationIds'], IList(), (attestationIds) => attestationIds.push(fromJS(memo.id)));
+            }
+            return nextState.updateIn(['personalInformation', 'claims', 'claimIds'], IList(), (claimIds) => claimIds.push(fromJS(memo.uid)));
+          },
         );
       });
     default:

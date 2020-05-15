@@ -10,12 +10,6 @@ import { truncateString } from './utils/truncateString';
 import getShowHideIcon from './utils/getShowHideIcon';
 import Styles from '../../../../styles';
 
-const getCategotyName = (name) => {
-  if (name.length > 30) return `${truncateString(name, 30)}...`;
-  return name;
-};
-
-
 const ClaimManager = (props) => {
   const {
     claimsData,
@@ -75,6 +69,12 @@ const ClaimManager = (props) => {
 
   const checkIfClaimIsSelected = useCallback((claim) => selectedClaims.includes(claim), [selectedClaims]);
 
+  const getCategoryName = useCallback((categories, claim) => {
+    const categoryForClaim = categories.filter((category) => category.get('name', '') === claim.get('categoryId', ''));
+    const name = categoryForClaim.keySeq().map((claimCategory) => categoryForClaim.getIn([claimCategory, 'name'], '')).first();
+    if (name.length > 30) return `${truncateString(name, 30)}...`;
+    return name;
+  }, [claimCategories, claims]);
 
   return (
     <View style={Styles.root}>
@@ -88,7 +88,6 @@ const ClaimManager = (props) => {
           <Text style={Styles.textButton}>HIDE SELECTED</Text>
         </TouchableWithoutFeedback>
       </View>
-
       <SearchBar
         containerStyle={Styles.backgroundColorWhite}
         platform={Platform.OS === 'ios' ? 'ios' : 'android'}
@@ -98,25 +97,24 @@ const ClaimManager = (props) => {
         inputContainerStyle={Styles.defaultMargin}
         cancelButtonTitle=""
       />
-      <ScrollView>
+      <ScrollView style={Styles.fullHeight}>
         {claims.keySeq().map((claim) => (
-          <View style={Styles.blockWithBorder} key={claims.getIn([claim, 'id'])}>
+          <View style={Styles.blockWithBorder} key={claims.getIn([claim, 'uid'])}>
             <View style={Styles.flexRow}>
               <CheckBox
-                key={claims.getIn([claim, 'id'])}
+                key={claims.getIn([claim, 'uid'])}
                 checked={checkIfClaimIsSelected(claims.get(claim))}
                 onPress={() => selectClaim(claims.get(claim, IMap()))}
                 containerStyle={Styles.defaultMargin}
               />
               <View style={Styles.flexColumn}>
-                <Text style={[Styles.boldText]}>{claims.getIn([claim, 'name'])}</Text>
+                <Text style={[Styles.boldText, Styles.paddingBottom]}>{claims.getIn([claim, 'id'])}</Text>
 
                 <View style={Styles.alignItemsCenter}>
                   <Text style={Styles.defaultFontSize}>
-                    {getCategotyName(claimCategories.getIn([claims.getIn([claim, 'categoryId'], ''), 'name'], ''))}
+                    {getCategoryName(claimCategories, claims.get(claim))}
                   </Text>
                 </View>
-
               </View>
             </View>
             <View style={[Styles.paddingRight, Styles.flexRow]}>

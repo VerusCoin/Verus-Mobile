@@ -9,6 +9,7 @@ import {
   MOVE_CLAIMS_TO_CATEGORY,
   HIDE_SELECTED_CLAIMS,
   SET_HIDE_SELECTED_CLAIMS,
+  SET_MEMO_DATA_FROM_TX,
 } from '../../utils/constants/storeType';
 
 export const setClaims = (claims) => ({
@@ -50,13 +51,18 @@ export const moveClaimsToCategory = (targetCategory) => ({
   type: MOVE_CLAIMS_TO_CATEGORY,
   payload: { targetCategory },
 });
+
 export const hideSelectedClaims = () => ({
   type: HIDE_SELECTED_CLAIMS,
-  payload: { },
+  payload: {},
 });
-
 
 export const setHideSelectedClaims = (claims) => ({
   type: SET_HIDE_SELECTED_CLAIMS,
   payload: { claims },
+});
+
+export const setMemoDataFromTx = (memoData) => ({
+  type: SET_MEMO_DATA_FROM_TX,
+  payload: { memoData },
 });

@@ -1,7 +1,7 @@
 const updateStoredItems = (storedItems, updatedItems, type) => {
   const oldEntries = storedItems.filter(
     (storedItem) => !updatedItems[type].some(
-      (updatedItem) => updatedItem.id === storedItem.id,
+      (updatedItem) => updatedItem.uid === storedItem.uid,
     ),
   );
   const updatedEntries = oldEntries.concat(updatedItems[type]);

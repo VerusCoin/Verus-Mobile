@@ -11,7 +11,7 @@ const generateClaimCategories = [
   },
   {
     id: '2',
-    name: 'Healthcare',
+    name: 'health',
     desc: '',
   },
 ];

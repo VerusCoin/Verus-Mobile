@@ -4,14 +4,13 @@ const filteredData = (claimCategories, claims, searchValue) => {
     const searchValueUpperCase = searchValue.toUpperCase();
 
     const claimCategoriesFilteredByName = claims
-      .filter((item) => item.get('name').toUpperCase().includes(searchValueUpperCase))
+      .filter((item) =>  item.get('id').toUpperCase().includes(searchValueUpperCase))
       .keySeq()
       .map((item) => claims.get(item));
 
-    const claimCategoryId = claimCategory.get('id', '');
-    const claimCategoryName = claimCategory.get('name', '').toUpperCase();
+    const claimCategoryName = claimCategory.get('name', '');
 
-    if (claimCategoryName.includes(searchValueUpperCase)) {
+    if (claimCategoryName.toUpperCase().includes(searchValueUpperCase)) {
       return true;
     }
 
@@ -19,7 +18,7 @@ const filteredData = (claimCategories, claims, searchValue) => {
       return false;
     }
 
-    return claimCategoryId.includes(claimCategoriesFilteredByName.first().get('categoryId', ''));
+    return claimCategoryName.includes(claimCategoriesFilteredByName.first().get('categoryId', ''));
   });
   return newData;
 };

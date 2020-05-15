@@ -109,7 +109,7 @@ export const findCoinObj = (id, userName) => {
     
     if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
       const DEFAULT_APPS = getDefaultApps(coinObj.name)
-      if (coinObj.id === "VRSC") {
+      if (coinObj.id === 'VRSC' || coinObj.id === 'ZECTEST') {
         coinObj.apps = {...identityApp, ...DEFAULT_APPS.apps};
       } else {
         coinObj.apps = DEFAULT_APPS.apps;

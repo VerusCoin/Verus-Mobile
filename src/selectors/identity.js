@@ -23,19 +23,19 @@ export const selectShowEmptyClaimCategories = (state) => state.identity.getIn(['
 
 export const selectClaims = (state) => state.identity.getIn(['personalInformation', 'claims', 'byId'], IMap());
 
-export const selectClaimCategoriesToDisplay = createSelector(
-  [selectClaimCategories, selectShowEmptyClaimCategories, selectClaims],
-  (claimCategories, showEmptyClaimCategories, claims) => {
-    if (showEmptyClaimCategories) {
-      return claimCategories;
-    }
-    return claimCategories.filter((claimCategory) => claims.some((claim) => claim.get('categoryId', '') === claimCategory.get('id', '')));
-  },
-);
-
 export const selectClaimsByIdentityId = createSelector(
   [selectActiveIdentityId, selectClaims],
-  (activeIdentityId, claims) => claims.filter((claim) => claim.get('id', '').includes(activeIdentityId)),
+  (activeIdentityId, claims) => claims.filter((claim) => claim.get('identity', '').includes(activeIdentityId)),
+);
+
+export const selectClaimCategoriesToDisplay = createSelector(
+  [selectClaimCategories, selectShowEmptyClaimCategories, selectClaimsByIdentityId],
+  (claimCategories, showEmptyClaimCategories, claims) => {
+    if (!showEmptyClaimCategories) {
+      return claimCategories.filter((claimCategory) => claims.some((claim) => claim.get('categoryId', '') === claimCategory.get('name', '')));
+    }
+    return claimCategories;
+  },
 );
 
 export const selectClaimsReducerState = (state) => state.identity.getIn(['personalInformation', 'claims'], IMap());

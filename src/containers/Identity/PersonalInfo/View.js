@@ -61,11 +61,11 @@ const PersonalInfo = (props) => {
   } = actions;
 
 
-  const goToClaims = (claimCategoryId, claimCategoryName) => {
+  const goToClaims = (claimCategoryName) => {
     navigation.navigate('ClaimCategory', {
       claimCategoryName,
     });
-    setActiveClaimCategory(claimCategoryId);
+    setActiveClaimCategory(claimCategoryName);
   };
 
   useEffect(() => {
@@ -157,7 +157,7 @@ const PersonalInfo = (props) => {
               key={categories.getIn([item, 'id'], '')}
               title={categories.getIn([item, 'name'], '')}
               bottomDivider
-              onPress={() => goToClaims(categories.getIn([item, 'id'], ''), categories.getIn([item, 'name'], ''))}
+              onPress={() => goToClaims(categories.getIn([item, 'name'], ''))}
               chevron
               badge={handleBadge(categories.getIn([item, 'id']))}
             />
