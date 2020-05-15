@@ -6,6 +6,12 @@ import { SearchBar, ListItem } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import Styles from '../../../../styles';
 import AttestationDetails from '../../Home/AttestationDetails';
+import { truncateString } from '../ClaimManager/utils/truncateString';
+
+const getClaimData = (name) => {
+  if (name.length > 20) return `${truncateString(name, 20)}...`;
+  return name;
+};
 
 const ClaimDetails = (props) => {
   const {
@@ -60,8 +66,14 @@ const ClaimDetails = (props) => {
   return (
     <View style={Styles.root}>
       <View style={Styles.alignItemsCenter}>
-        <Text style={Styles.boldText}>{claimParams.claimName}:</Text>
-        <Text style={Styles.boldText}> {claimParams.claimData}</Text>
+        <Text style={Styles.boldText}>
+          {claimParams.claimName}
+          :
+        </Text>
+        <Text style={Styles.boldText}>
+          {' '}
+          {getClaimData(claimParams.claimData)}
+        </Text>
       </View>
       <SearchBar
         containerStyle={Styles.backgroundColorWhite}
