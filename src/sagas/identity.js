@@ -234,6 +234,7 @@ export function * updateAttestationStorage() {
   const attestations = yield select(selectAttestationsReducerState);
   const storedAttestations = yield call(getAttestations);
   const updatedAttestations = yield call(denormalizeAttestations, attestations.toJS());
+  console.log(storedAttestations, updatedAttestations, 'u sagi');
   const attestationsToStore = yield call(updateStoredItems, storedAttestations, updatedAttestations, 'attestations');
   yield call(updateAttestations, attestationsToStore);
 }
