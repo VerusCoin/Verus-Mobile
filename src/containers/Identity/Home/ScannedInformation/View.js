@@ -5,6 +5,12 @@ import data from './mockData';
 import Styles from '../../../../styles';
 import Colors from '../../../../globals/colors';
 import StandardButton from '../../../../components/StandardButton';
+import { truncateString } from '../../PersonalInfo/ClaimManager/utils/truncateString';
+
+const getClaimData = (name) => {
+  if (name.length > 20) return `${truncateString(name, 20)}...`;
+  return name;
+};
 
 const ScannedInformation = (props) => {
   const {
@@ -28,37 +34,37 @@ const ScannedInformation = (props) => {
         <View style={Styles.rootWithoutPadding}>
           <View style={Styles.headerContainer}>
             <Text style={Styles.centralHeader}>
-              Scan to verify
+              Scan results
             </Text>
           </View>
           <View style={Styles.padding}>
             <View style={Styles.blockWithBorderBottom}>
-              <Text style={Styles.textWithBlackColor}>COVID-19</Text>
+              <Text style={Styles.textWithBlackColor}>The Department of Health@</Text>
               <Icon name="checkcircle" color={Colors.successButtonColor} size={23} />
             </View>
-            <View style={Styles.blockWithFlexStart}>
-              <Text style={Styles.textWithRightPadding}>Status:</Text>
-              <Text style={Styles.borderWithGreenColor}>{data.status}</Text>
-            </View>
-
-            <View style={Styles.blockWithFlexStart}>
-              <Text style={Styles.textWithRightPadding}>Attested to by:</Text>
-              <Text style={Styles.textWithBlackColor}>{data.attestedBy}</Text>
-            </View>
-
-            <View style={Styles.containerWithTopMargin}>
+            <View style={Styles.marginVertical}>
               <View style={Styles.blockWithBorderBottom}>
-                <Text style={Styles.textWithBlackColor}>Goverment ID</Text>
+                <View style={Styles.flexRow}>
+                  <Text style={Styles.textWithRightPadding}>Birth Date:</Text>
+                  <Text style={Styles.textWithBlackColor}>{getClaimData(data.claimData)}</Text>
+                </View>
                 <Icon name="checkcircle" color={Colors.successButtonColor} size={23} />
               </View>
 
-              <View style={Styles.blockWithFlexStart}>
-                <Text style={Styles.textWithRightPadding}>ID:</Text>
-                <Text style={Styles.textWithBlackColor}>{data.person.id}</Text>
+              <View style={Styles.blockWithBorderBottom}>
+                <View style={Styles.flexRow}>
+                  <Text style={Styles.textWithRightPadding}>First name:</Text>
+                  <Text style={Styles.textWithBlackColor}>{data.firstName}</Text>
+                </View>
+                <Icon name="checkcircle" color={Colors.successButtonColor} size={23} />
               </View>
-              <View style={Styles.blockWithFlexStart}>
-                <Text style={Styles.textWithRightPadding}>Attested to by:</Text>
-                <Text style={Styles.textWithBlackColor}>{data.person.attestedBy}</Text>
+
+              <View style={Styles.blockWithBorderBottom}>
+                <View style={Styles.flexRow}>
+                  <Text style={Styles.textWithRightPadding}>Last name:</Text>
+                  <Text style={Styles.textWithBlackColor}>{data.lastName}</Text>
+                </View>
+                <Icon name="checkcircle" color={Colors.successButtonColor} size={23} />
               </View>
             </View>
           </View>

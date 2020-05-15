@@ -106,6 +106,7 @@ const ClaimManager = (props) => {
                 key={claims.getIn([claim, 'id'])}
                 checked={checkIfClaimIsSelected(claims.get(claim))}
                 onPress={() => selectClaim(claims.get(claim, IMap()))}
+                containerStyle={Styles.defaultMargin}
               />
               <View style={Styles.flexColumn}>
                 <Text style={[Styles.boldText]}>{claims.getIn([claim, 'name'])}</Text>

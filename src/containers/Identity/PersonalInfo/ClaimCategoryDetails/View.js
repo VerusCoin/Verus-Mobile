@@ -55,7 +55,7 @@ const ClaimCategoryDetails = (props) => {
         <CheckBox
           checked={showHiddenClaims}
           onPress={() => toggleShowHiddenClaims()}
-          containerStyle={Styles.defaultMargin}
+          containerStyle={[Styles.defaultMargin, Styles.defaultLeftPadding]}
         />
 
         <Text style={Styles.paddingRight}>Show hidden claims</Text>

@@ -130,7 +130,7 @@ const PersonalInfo = (props) => {
         <CheckBox
           checked={!showEmptyClaimCategories}
           onPress={() => setShowEmptyClaimCategories(!showEmptyClaimCategories)}
-          containerStyle={Styles.defaultMargin}
+          containerStyle={[Styles.defaultMargin, Styles.defaultLeftPadding]}
         />
 
         <Text style={Styles.paddingRight}>Hide empty claim categories</Text>
@@ -173,5 +173,6 @@ const PersonalInfo = (props) => {
     </View>
   );
 };
+
 
 export default PersonalInfo;
