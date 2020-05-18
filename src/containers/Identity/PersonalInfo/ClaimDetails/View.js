@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, Platform, TouchableOpacity,
 } from 'react-native';
-import { SearchBar, ListItem } from 'react-native-elements';
+import { SearchBar, ListItem, Button } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import Styles from '../../../../styles';
+import Colors from '../../../../globals/colors';
 import AttestationDetails from '../../Home/AttestationDetails';
+import RequestAttestation from '../RequestAttestation';
 import { truncateString } from '../ClaimManager/utils/truncateString';
 
 const getClaimData = (name) => {
@@ -26,6 +28,7 @@ const ClaimDetails = (props) => {
   const [attestations, setAttestation] = useState(attestationsData);
   const [value, setValue] = useState('');
   const [identityAttested, setIdentityAttested] = useState('');
+  const [requestAttestationModalShown, setRequestAttestationModalShown] = useState(false);
   const claimParams = navigation.state.params;
 
   useEffect(() => {
@@ -34,7 +37,7 @@ const ClaimDetails = (props) => {
 
   const updateSearch = (value) => {
     const newData = attestationsData.filter((item) => {
-      const itemData = item.get('id', '').toUpperCase();
+      const itemData = item.get('identityAttested', '').toUpperCase();
       const textData = value.toUpperCase();
       return itemData.includes(textData);
     });
@@ -84,7 +87,7 @@ const ClaimDetails = (props) => {
       <SearchBar
         containerStyle={Styles.backgroundColorWhite}
         platform={Platform.OS === 'ios' ? 'ios' : 'android'}
-        placeholder="Quick Search"
+        placeholder="Search Attestaions"
         onChangeText={updateSearch}
         value={value}
         inputContainerStyle={Styles.defaultMargin}
@@ -104,6 +107,12 @@ const ClaimDetails = (props) => {
             />
           ))}
         </View>
+        <Button
+          title="Request attestation"
+          color={Colors.primaryColor}
+          style={Styles.paddingTop}
+          onPress={() => setRequestAttestationModalShown(true)}
+        />
         <View>
           {childClaims.size > 0
             ? <Text style={[Styles.textWithTopMargin, Styles.boldText]}>Child Claims</Text> : null}
@@ -122,7 +131,10 @@ const ClaimDetails = (props) => {
         claimData={claimParams.claimData}
         identityAttested={identityAttested}
       />
-
+      <RequestAttestation
+        visible={requestAttestationModalShown}
+        setRequestAttestationModalShown={setRequestAttestationModalShown}
+      />
     </View>
   );
 };

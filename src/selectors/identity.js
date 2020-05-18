@@ -68,7 +68,7 @@ const selectAttestationsByIdentityId = createSelector(
   (activeIdentityId, attestations) => attestations.filter((attestation) => attestation.get('identity', '').includes(activeIdentityId)),
 );
 
-const selectActiveClaim = (state) => state.identity.getIn(['personalInformation', 'activeClaim'], IMap());
+export const selectActiveClaim = (state) => state.identity.getIn(['personalInformation', 'activeClaim'], IMap());
 
 export const selectParentClaimsById = createSelector(
   [selectClaims, selectActiveClaim],

@@ -30,8 +30,6 @@ const AttestationDetails = (props) => {
     },
   } = props;
 
-  console.log(identityAttested)
-
   const cancelHandler = () => {
     setAttestationModalVisibility(false);
   };
