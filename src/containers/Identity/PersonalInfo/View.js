@@ -1,16 +1,18 @@
 import React, { useEffect, useCallback } from 'react';
-import {
-  View, Text, Platform, TouchableHighlight
-} from 'react-native';
+
 import { Map as IMap } from 'immutable';
-import { SearchBar, CheckBox, ListItem, Button, Badge } from 'react-native-elements';
+import {
+  View, Text, Platform, TouchableOpacity,
+} from 'react-native';
+import {
+  SearchBar, CheckBox, ListItem, Button, Badge,
+} from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
-import { FloatingAction } from 'react-native-floating-action';
-import Icon from 'react-native-vector-icons/Ionicons';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome5';
 
 import AddCategoryDialog from './CategoryDialogs/AddCategory';
 import DeleteCategoryDialog from './CategoryDialogs/DeleteCategory';
+import AlphabeticalSort from './AlphaSort/AlphabeticalSort';
 
 import DelayedAlert from '../../../utils/delayedAlert';
 import Colors from '../../../globals/colors';
@@ -28,11 +30,13 @@ const PersonalInfo = (props) => {
     claims,
     claimsCountByCategory,
     activeCategory,
+    sortCategoriesBy,
     actions: {
       setActiveClaimCategory,
       setShowEmptyClaimCategories,
       addNewCategory,
       deleteCategory,
+      setCategorySortDirection,
     },
   } = props;
   const [state, actions] = useClaimCategories(claimCategories);
@@ -148,22 +152,28 @@ const PersonalInfo = (props) => {
             {emptyCategoryCount}
           </Text>
         </View>
-        <TouchableHighlight
+        <TouchableOpacity
           onPress={() => navigation.navigate('ClaimManager')}
           style={Styles.marginLeftAuto}
         >
-          <FontAwesomeIcon name="cogs" size={15} />
-        </TouchableHighlight>
+          <FontAwesomeIcon name="cogs" size={20} />
+        </TouchableOpacity>
       </View>
-      <SearchBar
-        containerStyle={Styles.backgroundColorWhite}
-        platform={Platform.OS === 'ios' ? 'ios' : 'android'}
-        placeholder="Quick Search"
-        onChangeText={updateSearch}
-        value={searchTerm}
-        inputContainerStyle={Styles.defaultMargin}
-        cancelButtonTitle=""
-      />
+      <View style={Styles.fullWidthSpaceBetween}>
+        <SearchBar
+          containerStyle={[Styles.backgroundColorWhite, Styles.passwordInputContainer]}
+          platform={Platform.OS === 'ios' ? 'ios' : 'android'}
+          placeholder="Quick Search"
+          onChangeText={updateSearch}
+          value={searchTerm}
+          inputContainerStyle={Styles.defaultMargin}
+          cancelButtonTitle=""
+        />
+        <AlphabeticalSort
+          sortBy={sortCategoriesBy}
+          setSortDirection={setCategorySortDirection}
+        />
+      </View>
       <AddCategoryDialog
         addCategoryDialogShown={addCategoryDialogVisible}
         handleOnChangeText={handleOnChangeText}

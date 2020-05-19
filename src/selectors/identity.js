@@ -38,6 +38,18 @@ export const selectClaimCategoriesToDisplay = createSelector(
   },
 );
 
+export const selectClaimCategorySortBy = (state) => state.identity.getIn(['personalInformation', 'categorySort'], 'asc');
+
+export const sortedClaimCategories = createSelector(
+  [selectClaimCategoriesToDisplay, selectClaimCategorySortBy],
+  (categories, sortBy) => categories.sort((a, b) => {
+    if (sortBy === 'asc') {
+      return a.get('name').localeCompare(b.get('name'));
+    }
+    return b.get('name').localeCompare(a.get('name'));
+  }),
+);
+
 export const selectClaimsReducerState = (state) => state.identity.getIn(['personalInformation', 'claims'], IMap());
 
 const selectActiveClaimCategoryId = (state) => state.identity.getIn(['personalInformation', 'activeClaimCategoryId'], '');
@@ -59,6 +71,18 @@ export const selectClaimsToDisplay = createSelector(
     }
     return selectedClaims.filter((claim) => !claim.get('hidden', ''));
   },
+);
+
+export const selectClaimsSortBy = (state) => state.identity.getIn(['personalInformation', 'claimsSort'], 'asc');
+
+export const selectSortedClaims = createSelector(
+  [selectClaimsToDisplay, selectClaimsSortBy],
+  (claims, sortBy) => claims.sort((a, b) => {
+    if (sortBy === 'asc') {
+      return a.get('id').localeCompare(b.get('id'));
+    }
+    return b.get('id').localeCompare(a.get('id'));
+  }),
 );
 
 export const selectClaimCategory = createSelector(
@@ -133,7 +157,6 @@ export const selectEmptyCategoryCount = createSelector(
   [selectClaimCategories, selectClaimsByIdentityId],
   (claimCategories, claims) => claimCategories.size - claimCategories.filter((claimCategory) => claims.some((claim) => claim.get('categoryId', '') === claimCategory.get('name', ''))).size,
 );
-
 
 export const selectClaimForActiveAttestion = createSelector(
   [selectClaims, selectActiveAttestation],

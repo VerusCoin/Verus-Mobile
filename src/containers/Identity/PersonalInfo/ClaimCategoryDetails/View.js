@@ -3,6 +3,7 @@ import { Map as IMap } from 'immutable';
 import { View, Platform, Text } from 'react-native';
 import { ListItem, CheckBox, SearchBar } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
+import AlphabeticalSort from '../AlphaSort/AlphabeticalSort';
 import Styles from '../../../../styles';
 import Colors from '../../../../globals/colors';
 
@@ -13,7 +14,12 @@ const ClaimCategoryDetails = (props) => {
     showHiddenClaims,
     attestationsCountByClaim,
     hiddenClaimsCount,
-    actions: { setActiveClaim, toggleShowHiddenClaims },
+    sortClaimsBy,
+    actions: {
+      setActiveClaim,
+      toggleShowHiddenClaims,
+      setClaimsSortDirection,
+    },
   } = props;
   const [claims, setClaims] = useState(claimsData);
   const [value, setValue] = useState('');
@@ -65,15 +71,21 @@ const ClaimCategoryDetails = (props) => {
           </Text>
         </View>
       </View>
-      <SearchBar
-        containerStyle={Styles.backgroundColorWhite}
-        platform={Platform.OS === 'ios' ? 'ios' : 'android'}
-        placeholder="Quick Search"
-        onChangeText={updateSearch}
-        value={value}
-        inputContainerStyle={Styles.defaultMargin}
-        cancelButtonTitle=""
-      />
+      <View style={Styles.fullWidthSpaceBetween}>
+        <SearchBar
+          containerStyle={[Styles.backgroundColorWhite, Styles.passwordInputContainer]}
+          platform={Platform.OS === 'ios' ? 'ios' : 'android'}
+          placeholder="Quick Search"
+          onChangeText={updateSearch}
+          value={value}
+          inputContainerStyle={Styles.defaultMargin}
+          cancelButtonTitle=""
+        />
+        <AlphabeticalSort
+          sortBy={sortClaimsBy}
+          setSortDirection={setClaimsSortDirection}
+        />
+      </View>
       <ScrollView>
         {claims.keySeq().map((claim) => (
           <ListItem

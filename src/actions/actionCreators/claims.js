@@ -10,6 +10,7 @@ import {
   HIDE_SELECTED_CLAIMS,
   SET_HIDE_SELECTED_CLAIMS,
   SET_MEMO_DATA_FROM_TX,
+  SET_CLAIMS_SORT_DIRECTION,
 } from '../../utils/constants/storeType';
 
 export const setClaims = (claims) => ({
@@ -65,4 +66,9 @@ export const setHideSelectedClaims = (claims) => ({
 export const setMemoDataFromTx = (memoData) => ({
   type: SET_MEMO_DATA_FROM_TX,
   payload: { memoData },
+});
+
+export const setClaimsSortDirection = (direction) => ({
+  type: SET_CLAIMS_SORT_DIRECTION,
+  payload: { direction },
 });

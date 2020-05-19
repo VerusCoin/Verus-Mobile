@@ -24,6 +24,8 @@ import {
   SET_HIDE_SELECTED_CLAIMS,
   SET_MEMO_DATA_FROM_TX,
   DELETE_CATEGORY,
+  SET_CATEGORY_SORT_DIRECTION,
+  SET_CLAIMS_SORT_DIRECTION,
 } from '../utils/constants/storeType';
 
 const defaultState = fromJS({
@@ -52,6 +54,8 @@ const defaultState = fromJS({
       byId: {},
       attestationIds: [],
     },
+    categorySort: 'asc',
+    claimsSort: 'asc',
   },
 });
 
@@ -180,6 +184,10 @@ const identity = (state = defaultState, action) => {
           },
         );
       });
+    case SET_CATEGORY_SORT_DIRECTION:
+      return state.setIn(['personalInformation', 'categorySort'], action.payload.direction);
+    case SET_CLAIMS_SORT_DIRECTION:
+      return state.setIn(['personalInformation', 'claimsSort'], action.payload.direction);
     default:
       return state;
   }

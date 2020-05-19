@@ -253,4 +253,10 @@ export default containers = {
   containerVerticalPadding:{
     paddingVertical:8,
   },
+  fullWidthSpaceBetween: {
+    width: '100%',
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
 };

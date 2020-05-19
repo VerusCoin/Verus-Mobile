@@ -2,27 +2,30 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import {
-  selectClaimCategoriesToDisplay,
+  sortedClaimCategories,
   selectShowEmptyClaimCategories,
   selectClaimsCountByCategory,
   selectClaimsByIdentityId,
   selectEmptyCategoryCount,
   selectClaimCategory,
+  selectClaimCategorySortBy,
 } from '../../../selectors/identity';
 import {
   setActiveClaimCategory,
   setShowEmptyClaimCategories,
   addNewCategory,
   deleteCategory,
+  setCategorySortDirection,
 } from '../../../actions/actionCreators';
 
 const mapStateToProps = (state) => ({
-  claimCategories: selectClaimCategoriesToDisplay(state),
+  claimCategories: sortedClaimCategories(state),
   showEmptyClaimCategories: selectShowEmptyClaimCategories(state),
   claims: selectClaimsByIdentityId(state),
   claimsCountByCategory: selectClaimsCountByCategory(state),
   emptyCategoryCount:selectEmptyCategoryCount(state),
   activeCategory: selectClaimCategory(state),
+  sortCategoriesBy: selectClaimCategorySortBy(state),
 });
 
 const mapDispatchToProps = (dispatch) => ({
@@ -32,6 +35,7 @@ const mapDispatchToProps = (dispatch) => ({
       setShowEmptyClaimCategories,
       addNewCategory,
       deleteCategory,
+      setCategorySortDirection,
     },
     dispatch,
   ),

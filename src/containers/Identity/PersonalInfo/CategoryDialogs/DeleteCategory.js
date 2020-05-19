@@ -1,4 +1,5 @@
 import React from 'react';
+import { Text } from 'react-native';
 import Dialog from 'react-native-dialog';
 
 const DeleteCategoryDialog = (props) => {
@@ -16,7 +17,7 @@ const DeleteCategoryDialog = (props) => {
       <Dialog.Title>Delete category</Dialog.Title>
       <Dialog.Description>
         Do you really want to delete
-        &nbsp;
+        {' '}
         {selectedCategory.get('displayName', '')}
       </Dialog.Description>
       <Dialog.Button label="No" onPress={closeDeleteCategoryDialog} />

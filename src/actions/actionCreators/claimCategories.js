@@ -5,6 +5,7 @@ import {
   ADD_NEW_CATEGORY,
   SET_NEW_CATEGORY,
   DELETE_CATEGORY,
+  SET_CATEGORY_SORT_DIRECTION,
 } from '../../utils/constants/storeType';
 
 export const setClaimCategories = (claimCategories) => ({
@@ -35,4 +36,9 @@ export const setNewCategory = (category) => ({
 export const deleteCategory = (category) => ({
   type: DELETE_CATEGORY,
   payload: { category },
+});
+
+export const setCategorySortDirection = (direction) => ({
+  type: SET_CATEGORY_SORT_DIRECTION,
+  payload: { direction },
 });

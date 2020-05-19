@@ -2,15 +2,20 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import {
-  selectClaimsToDisplay, selectShowHiddenClaims, selectAttestationsCountByClaim, selectHiddenClaimsCount,
+  selectSortedClaims,
+  selectShowHiddenClaims,
+  selectAttestationsCountByClaim,
+  selectHiddenClaimsCount,
+  selectClaimsSortBy,
 } from '../../../../selectors/identity';
-import { setActiveClaim, toggleShowHiddenClaims } from '../../../../actions/actionCreators';
+import { setActiveClaim, toggleShowHiddenClaims, setClaimsSortDirection } from '../../../../actions/actionCreators';
 
 const mapStateToProps = (state) => ({
-  claimsData: selectClaimsToDisplay(state),
+  claimsData: selectSortedClaims(state),
   showHiddenClaims: selectShowHiddenClaims(state),
   attestationsCountByClaim: selectAttestationsCountByClaim(state),
   hiddenClaimsCount: selectHiddenClaimsCount(state),
+  sortClaimsBy: selectClaimsSortBy(state),
 });
 
 const mapDispatchToProps = (dispatch) => ({
@@ -18,6 +23,7 @@ const mapDispatchToProps = (dispatch) => ({
     {
       setActiveClaim,
       toggleShowHiddenClaims,
+      setClaimsSortDirection,
     },
     dispatch,
   ),
