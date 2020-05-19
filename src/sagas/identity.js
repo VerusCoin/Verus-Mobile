@@ -57,6 +57,7 @@ import {
   SET_CLAIM_VISIBILITY,
   MOVE_CLAIMS_TO_CATEGORY,
   HIDE_SELECTED_CLAIMS,
+  DELETE_CATEGORY,
 } from '../utils/constants/storeType';
 import {
   normalizeCategories,
@@ -85,6 +86,7 @@ export default function * identitySaga() {
     takeLatest(SET_CLAIM_VISIBILITY, updateClaimsStorage),
     takeLatest(MOVE_CLAIMS_TO_CATEGORY, handleMoveClaims),
     takeLatest(HIDE_SELECTED_CLAIMS, handleHideClaims),
+    takeLatest(DELETE_CATEGORY, updateClaimCategoryStorage),
   ]);
 }
 
@@ -183,20 +185,18 @@ function * handleAddNewIdentity(action) {
 }
 
 function * handleAddNewCategory(action) {
-  const selectedIdentityId = yield select(selectActiveIdentityId);
-  const camelizedCategoryName = camelizeString(action.payload.value);
-
-  const newCategoryId = `${selectedIdentityId}-${camelizedCategoryName}`;
+  const newCategoryName = action.payload.value.replace(/\s+/g, '-').toLowerCase();
 
   const newCategory = {
-    [newCategoryId]: {
-      id: newCategoryId,
-      name: action.payload.value,
+    [newCategoryName]: {
+      id: newCategoryName,
+      name: newCategoryName,
+      displayName: action.payload.value,
       desc: '',
     },
   };
 
-  yield put(setNewCategory(newCategory[newCategoryId]));
+  yield put(setNewCategory(newCategory[newCategoryName]));
   yield call(updateClaimCategoryStorage);
 }
 

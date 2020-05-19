@@ -1,18 +1,18 @@
 const generateClaimCategories = [
   {
-    id: '0',
+    id: 'other',
     name: 'other',
     displayName: 'Other',
     desc: '',
   },
   {
-    id: '1',
+    id: 'personal-information',
     displayName: 'Personal Information',
     name: 'personal-information',
     desc: '',
   },
   {
-    id: '2',
+    id: 'health',
     displayName: 'Health',
     name: 'health',
     desc: '',

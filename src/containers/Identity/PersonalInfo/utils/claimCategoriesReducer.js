@@ -1,14 +1,17 @@
 export const defaultState = (categoryData) => ({
   categories: categoryData,
   searchTerm: '',
-  dialogVisible: false,
+  addCategoryDialogVisible: false,
+  deleteCategoryDialogVisible: false,
+  categoryToDelete: null,
   categoryName: '',
 });
 
 const types = {
   SET_SEARCH_TERM: 'SET_SEARCH_TERM',
   SET_CATEGORIES: 'SET_CATEGORIES',
-  SET_DIALOG_VISIBLE: 'SET_DIALOG_VISIBLE',
+  SET_ADD_CATEGORY_DIALOG_VISIBLE: 'SET_ADD_CATEGORY_DIALOG_VISIBLE',
+  SET_DELETE_CATEGORY_DIALOG_VISIBLE: 'SET_DELETE_CATEGORY_DIALOG_VISIBLE',
   SET_CATEGORY_NAME: 'SET_CATEGORY_NAME',
 };
 
@@ -16,12 +19,19 @@ export const setSearchTerm = (searchTerm) => ({
   type: types.SET_SEARCH_TERM,
   payload: { searchTerm },
 });
+
 export const setCategories = (categories) => ({
   type: types.SET_CATEGORIES,
   payload: { categories },
 });
-export const setDialogVisible = (dialogVisible) => ({
-  type: types.SET_DIALOG_VISIBLE,
+
+export const setAddDialogVisible = (dialogVisible) => ({
+  type: types.SET_ADD_CATEGORY_DIALOG_VISIBLE,
+  payload: { dialogVisible },
+});
+
+export const setDeleteDialogVisible = (dialogVisible) => ({
+  type: types.SET_DELETE_CATEGORY_DIALOG_VISIBLE,
   payload: { dialogVisible },
 });
 
@@ -37,8 +47,10 @@ export const claimCategoriesReducer = (state = defaultState, action) => {
       return { ...state, searchTerm: action.payload.searchTerm };
     case types.SET_CATEGORIES:
       return { ...state, categories: action.payload.categories };
-    case types.SET_DIALOG_VISIBLE:
-      return { ...state, dialogVisible: action.payload.dialogVisible };
+    case types.SET_ADD_CATEGORY_DIALOG_VISIBLE:
+      return { ...state, addCategoryDialogVisible: action.payload.dialogVisible };
+    case types.SET_DELETE_CATEGORY_DIALOG_VISIBLE:
+      return { ...state, deleteCategoryDialogVisible: action.payload.dialogVisible };
     case types.SET_CATEGORY_NAME:
       return { ...state, categoryName: action.payload.categoryName };
     default:

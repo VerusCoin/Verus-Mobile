@@ -61,6 +61,11 @@ export const selectClaimsToDisplay = createSelector(
   },
 );
 
+export const selectClaimCategory = createSelector(
+  [selectActiveClaimCategoryId, selectClaimCategories],
+  (activeCategoryId, claimCategories) => claimCategories.get(activeCategoryId, IMap()),
+);
+
 const selectAttestations = (state) => state.identity.getIn(['personalInformation', 'attestations', 'byId'], IMap());
 
 const selectAttestationsByIdentityId = createSelector(

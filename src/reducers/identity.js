@@ -23,6 +23,7 @@ import {
   SET_SCANINFO_MODAL_VISIBILITY,
   SET_HIDE_SELECTED_CLAIMS,
   SET_MEMO_DATA_FROM_TX,
+  DELETE_CATEGORY,
 } from '../utils/constants/storeType';
 
 const defaultState = fromJS({
@@ -117,6 +118,11 @@ const identity = (state = defaultState, action) => {
       return state.withMutations((nextState) => {
         nextState.setIn(['personalInformation', 'claimCategories', 'byId', action.payload.category.id], fromJS(action.payload.category));
         nextState.updateIn(['personalInformation', 'claimCategories', 'claimCategoriesIds'], IList(), (claimCategoriesIds) => claimCategoriesIds.concat(action.payload.category.id));
+      });
+    case DELETE_CATEGORY:
+      return state.withMutations((nextState) => {
+        nextState.deleteIn(['personalInformation', 'claimCategories', 'byId', action.payload.category.get('name')]);
+        nextState.updateIn(['personalInformation', 'claimCategories', 'claimCategoriesIds'], IList(), (claimCategoriesIds) => claimCategoriesIds.filter((claimCategoryId) => claimCategoryId !== action.payload.category.get('id', '')));
       });
     case SET_SHOW_EMPTY_CLAIM_CATEGORIES:
       return state.updateIn(['personalInformation', 'showEmptyClaimCategories'], (showEmptyClaimCategories) => !showEmptyClaimCategories);

@@ -4,6 +4,7 @@ import {
   SET_SHOW_EMPTY_CLAIM_CATEGORIES,
   ADD_NEW_CATEGORY,
   SET_NEW_CATEGORY,
+  DELETE_CATEGORY,
 } from '../../utils/constants/storeType';
 
 export const setClaimCategories = (claimCategories) => ({
@@ -28,5 +29,10 @@ export const addNewCategory = (value) => ({
 
 export const setNewCategory = (category) => ({
   type: SET_NEW_CATEGORY,
+  payload: { category },
+});
+
+export const deleteCategory = (category) => ({
+  type: DELETE_CATEGORY,
   payload: { category },
 });
