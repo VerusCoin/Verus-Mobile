@@ -46,7 +46,8 @@ class ReceiveCoin extends Component {
       amountFiat: false,
       loading: false,
       showModal: false,
-        privateIndex: 0
+      privateIndex: 0,
+      privateAddress: null
     };
   }
 
@@ -97,6 +98,10 @@ class ReceiveCoin extends Component {
           " not found!"
       );
     }
+    this.activeUserDlight();
+
+    //if checkt of het een private coin, of er een address bestaat, kijk naar hoe we dat doen bij de b
+
   }
 
 /*
@@ -137,7 +142,7 @@ walletPrivate = () => {
       activeUser.keys[coinObj.id].dlight.addresses.length > 0
     ) {
       this.setState({
-        address: activeUser.keys[coinObj.id].dlight.addresses[0]
+        privateAddress: activeUser.keys[coinObj.id].dlight.addresses[0]
       });
     } else {
       throw new Error(
@@ -233,12 +238,12 @@ walletPrivate = () => {
 
 //this is a function that saperates the private and non-private addresses
   switchInvoiceAddress = (coinObj) => {
-    this.setState({selectedAddress: coinObj},
-      () => {
-        this.activeUserDlight()
-      })
+    this.setState({selectedAddress: coinObj})
   }
 
+  switchInvoiceAddressPrivate = (coinObj) => {
+    this.setState({ privateAddress: coinObj})
+  }
   copyAddressToClipboard = () => {
     Clipboard.setString(this.state.address);
     Alert.alert("Address Copied", "Address copied to clipboard")
@@ -348,7 +353,14 @@ walletPrivate = () => {
   } else {
     return null;
  }
+}
+
+copyAddressToClipboard = () => {
+    Clipboard.setString(this.state.address);
+    Alert.alert("Address Copied", "Address copied to clipboard")
   }
+
+
 //this is a function that shows the private address only in private address mode
 dynamicViewingTest = () => {
   const {
@@ -359,6 +371,7 @@ dynamicViewingTest = () => {
     forceUpdate,
     switchInvoiceCoin,
     switchInvoiceAddress,
+    switchInvoiceAddressPrivate,
     copyAddressToClipboard
   } = this;
   const { activeCoinsForUser, rates, displayCurrency } = props;
@@ -405,7 +418,9 @@ if(this.state.privateIndex == 0){
           itemTextStyle={{ fontFamily: "Avenir-Book" }}
         />
         </View>
-            <View style={Styles.centralRow}>
+        <TouchableOpacity onPress={copyAddressToClipboard}>
+          <View style={Styles.centralRow}>
+            <View style={Styles.standardWidthFlexGrowCenterBlock} >
         <Input
           labelStyle={Styles.formInputLabel}
           underlineColorAndroid={Colors.quinaryColor}
@@ -419,7 +434,9 @@ if(this.state.privateIndex == 0){
           label={"Your address:"}
           errorMessage={errors.address ? errors.address : null} //dit zijn de gewone errors
         />
+        </View>
           </View>
+          </TouchableOpacity>
           </View>
         );
 
@@ -440,7 +457,7 @@ console.log(activeUser.keys[coinObj.id].dlight.addresses)
         return item;
       }}
       data={activeUser.keys[coinObj.id].dlight.addresses}
-      onChangeText={(value, index, data) => switchInvoiceAddress(value)}
+      onChangeText={(value, index, data) => switchInvoiceAddressPrivate(value)}
       textColor={Colors.quinaryColor}
       selectedItemColor={Colors.quinaryColor}
       baseColor={Colors.quinaryColor}
@@ -453,12 +470,14 @@ console.log(activeUser.keys[coinObj.id].dlight.addresses)
       itemTextStyle={{ fontFamily: "Avenir-Book" }}
     />
     </View>
+    <TouchableOpacity onPress={copyAddressToClipboard}>
         <View style={Styles.centralRow}>
+        <View style={Styles.standardWidthFlexGrowCenterBlock} >
     <Input
       labelStyle={Styles.formInputLabel}
       underlineColorAndroid={Colors.quinaryColor}
       editable={false}
-      value={this.props.channels}
+      value={this.state.privateAddress}
       autoCapitalize={"none"}
       autoCorrect={false}
       inputStyle={Styles.mediumInlineLink}
@@ -467,7 +486,9 @@ console.log(activeUser.keys[coinObj.id].dlight.addresses)
       label={"Your address:"}
       errorMessage={errors.address ? errors.address : null} //dit zijn de gewone errors
     />
+    </View>
       </View>
+      </TouchableOpacity>
       </View>
     )
   }
@@ -504,10 +525,10 @@ console.log(activeUser.keys[coinObj.id].dlight.addresses)
     return (
       <View style={Styles.defaultRoot}>
         <View style={Styles.centralRow}>{this.renderBalanceLabel()}</View>
-          {this.switchButton()}
         <Text style={Styles.greyStripeHeader}>
           {"Generate VerusQR Invoice"}
         </Text>
+        {this.switchButton()}
         <ScrollView
           style={Styles.fullWidth}
           contentContainerStyle={Styles.horizontalCenterContainer}
