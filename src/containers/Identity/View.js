@@ -40,7 +40,7 @@ const Identity = (props) => {
   }
 
   const switchTab = (newTab) => {
-    navigation.setParams({ title: newTab.label });
+    navigation.setParams({ selectedScreen: newTab.label });
     setActiveTab(newTab);
   };
   return (

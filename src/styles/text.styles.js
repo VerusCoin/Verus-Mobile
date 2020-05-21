@@ -285,4 +285,7 @@ export default text = {
     color:Colors.secondaryColor,
     fontSize:12,
   },
+  centeredText: {
+    textAlign: 'center',
+  },
 };

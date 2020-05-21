@@ -259,4 +259,9 @@ export default containers = {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  paddedBorderedBox: {
+    borderWidth: 1,
+    borderColor: Colors.lightGrey,
+    padding: 10,
+  },
 };

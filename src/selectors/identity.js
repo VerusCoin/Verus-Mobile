@@ -170,16 +170,3 @@ export const selectClaimForActiveAttestion = createSelector(
     return IList();
   },
 );
-
-export const selectChildDataClaimForActiveAttestion = createSelector(
-  [selectActiveAttestation],
-  (attestation) => {
-    if (attestation) {
-      return {
-        claimData: attestation.get('data', ''),
-        claimName: attestation.get('claimId', '')
-      };
-    }
-    return IList();
-  },
-);

@@ -1,13 +1,11 @@
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import { selectActiveAttestation, selectChildDataClaimForActiveAttestion, selectClaimForActiveAttestion } from '../../../../selectors/identity';
+import { selectActiveAttestation, } from '../../../../selectors/identity';
 import { toggleAttestationPin, setAttestationModalVisibility } from '../../../../actions/actionCreators';
 
 const mapStateToProps = (state) => ({
   attestation: selectActiveAttestation(state),
-  childClaimData: selectChildDataClaimForActiveAttestion(state),
-  claimData: selectClaimForActiveAttestion(state),
 });
 
 const mapDispatchToProps = (dispatch) => ({

@@ -147,11 +147,12 @@ export const MainScreens = StackNavigator({
       title: navigation.state.params.id,
     }),
   },
+
   Identity: {
     screen: Identity,
-    // navigationOptions: {
-    //   title: 'Identity',
-    // },
+    navigationOptions: ({ navigation }) => ({
+      title: navigation.state.params.selectedScreen,
+    }),
   },
 
   AddIdentity: {

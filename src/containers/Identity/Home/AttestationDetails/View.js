@@ -3,27 +3,19 @@ import {
   View, Text, Modal,
 } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
-import { PricingCard } from 'react-native-elements';
+import { Button } from 'react-native-elements';
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import StandardButton from '../../../../components/StandardButton';
 // This is temp solution until we get real data from QR code
 const awesomeLink = 'http://awesome.link.qr';
 const qrCodeSize = 245;
-import { truncateString } from '../../PersonalInfo/ClaimManager/utils/truncateString';
-
-const getClaimData = (name) => {
-  if (name.length > 20) return `${truncateString(name, 20)}...`;
-  return name;
-};
 
 const AttestationDetails = (props) => {
   const {
     attestation,
     visible,
-    childClaimData,
     identityAttested,
-    claimData,
     actions: {
       toggleAttestationPin,
       setAttestationModalVisibility,
@@ -36,8 +28,6 @@ const AttestationDetails = (props) => {
   const pinToHome = () => {
     toggleAttestationPin();
   };
-
-  const getChildClaimData = () => `${childClaimData.claimName}: ${childClaimData.claimData}`;
 
   return (
     <View>
@@ -56,22 +46,22 @@ const AttestationDetails = (props) => {
             </Text>
           </View>
           <View style={Styles.alignItemsCenterColumn}>
-            <View>
-              <PricingCard
-                color={Colors.successButtonColor}
-                title={attestation.get('id', '')}
-                info={[getClaimData(claimData), getChildClaimData()]}
-                button={attestation.get('showOnHomeScreen', false) ? { title: 'Unpin from home' } : { title: 'Pin to home' }}
-                onButtonPress={pinToHome}
-                titleStyle={Styles.mediumFont}
-              />
+            <View style={[Styles.marginVertical, Styles.paddedBorderedBox]}>
+              <Text style={Styles.centralSuccessHeader}>{attestation.get('claimId', '')}</Text>
+              <View>
+                <Text style={[Styles.boldText, Styles.centeredText]}>{attestation.get('data', '')}</Text>
+                <Text style={Styles.centeredText}>{attestation.get('date', '')}</Text>
+              </View>
+              <QRCode value={awesomeLink} size={qrCodeSize} />
+              <Text style={[Styles.boldText, Styles.centeredText]}>From: {attestation.get('identityAttested', '')}</Text>
+              <Text style={[Styles.boldText, Styles.noVerticalPadding, Styles.centeredText]}>To: {attestation.get('identity', '')}</Text>
             </View>
-            <View style={Styles.marginVertical}>
-              <QRCode
-                value={awesomeLink}
-                size={qrCodeSize}
-              />
-            </View>
+            <Button
+              onPress={pinToHome}
+              color={Colors.secondaryColor}
+              buttonStyle={Styles.greenButton}
+              title={attestation.get('showOnHomeScreen', false) ? 'Unpin from home' : 'Pin to home'}
+            />
           </View>
         </View>
         <View style={Styles.footerContainer}>

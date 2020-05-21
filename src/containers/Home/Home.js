@@ -176,9 +176,13 @@ class Home extends Component {
     navigation.navigate("BuySellCryptoMenus", {title: "Buy"});
   }
 
+  handleScanToVerify = () => {
+    this.props.navigation.navigate('ScanBadge');
+  }
+
   renderCoinList = () => {
     const { rates, balances, activeCoinsForUser, displayCurrency } = this.props;
-    
+
     return (
       <ScrollView
         style={Styles.wide}
@@ -200,17 +204,28 @@ class Home extends Component {
           />
         </TouchableOpacity>
         {activeCoinsForUser.some(coin => coin.id === "VRSC" || coin.id === "ZECTEST") && (
-          <TouchableOpacity onPress={this._handleIdentity}>
-          <ListItem
-            title={<Text style={Styles.listItemLeftTitleDefault}>Identity</Text>}
-            hideChevron
-            leftAvatar={{
-              source: require("../../images/customIcons/id-card.png")
-            }}
-
-            containerStyle={Styles.bottomlessListItemContainer}
-          />
-        </TouchableOpacity>
+          <View>
+            <TouchableOpacity onPress={this._handleIdentity}>
+              <ListItem
+                title={<Text style={Styles.listItemLeftTitleDefault}>Identity</Text>}
+                hideChevron
+                leftAvatar={{
+                  source: require("../../images/customIcons/id-card.png")
+                }}
+                containerStyle={Styles.bottomlessListItemContainer}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={this.handleScanToVerify}>
+              <ListItem
+                title={<Text style={Styles.listItemLeftTitleDefault}>Scan to verify</Text>}
+                hideChevron
+                leftAvatar={{
+                  source: require("../../images/customIcons/verusPay.png")
+                }}
+                containerStyle={Styles.bottomlessListItemContainer}
+              />
+            </TouchableOpacity>
+          </View>
         )}
         <FlatList
           data={activeCoinsForUser}

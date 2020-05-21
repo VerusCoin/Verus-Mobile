@@ -15,6 +15,11 @@ export default buttons = {
     alignSelf: 'center',
     minWidth: 104,
   },
+  greenButton: {
+    alignSelf: 'center',
+    minWidth: 104,
+    backgroundColor: Colors.successButtonColor,
+  },
   fullWidthButtonTitle: {
     fontSize: 16,
     fontFamily: 'Avenir-Black',

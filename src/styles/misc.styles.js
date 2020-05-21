@@ -64,4 +64,7 @@ export default misc = {
   marginLeftAuto: {
     marginLeft: 'auto',
   },
+  noVerticalPadding: {
+    paddingVertical: 0,
+  },
 };
