@@ -151,7 +151,7 @@ const identity = (state = defaultState, action) => {
       return state.withMutations((nextState) => {
         action.payload.claims.map(
           (claim) => nextState.setIn(
-            ['personalInformation', 'claims', 'byId', claim.get('id'), 'hidden'], true,
+            ['personalInformation', 'claims', 'byId', claim.get('uid'), 'hidden'], true,
           ),
         );
       });
@@ -160,7 +160,7 @@ const identity = (state = defaultState, action) => {
         action.payload.memoData.map(
           (memo) => {
             if (memo.identityAttested) {
-              return nextState.setIn(['personalInformation', 'attestations', 'byId', memo.id], fromJS(memo));
+              return nextState.setIn(['personalInformation', 'attestations', 'byId', memo.uid], fromJS(memo));
             }
             return nextState.setIn(['personalInformation', 'claims', 'byId', memo.uid], fromJS(memo));
           },
@@ -168,7 +168,7 @@ const identity = (state = defaultState, action) => {
         action.payload.memoData.map(
           (memo) => {
             if (memo.identityAttested) {
-              return nextState.updateIn(['personalInformation', 'attestations', 'attestationIds'], IList(), (attestationIds) => attestationIds.push(fromJS(memo.id)));
+              return nextState.updateIn(['personalInformation', 'attestations', 'attestationIds'], IList(), (attestationIds) => attestationIds.push(fromJS(memo.uid)));
             }
             return nextState.updateIn(['personalInformation', 'claims', 'claimIds'], IList(), (claimIds) => claimIds.push(fromJS(memo.uid)));
           },

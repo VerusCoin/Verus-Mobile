@@ -41,6 +41,7 @@ const ClaimDetails = (props) => {
     setAttestation(newData);
     setValue(value);
   };
+
   const getClaimsDetails = (claim) => {
     setActiveClaim(claim);
     navigation.navigate('ClaimDetails', {
@@ -72,7 +73,7 @@ const ClaimDetails = (props) => {
     <View style={Styles.root}>
       <View style={Styles.alignItemsCenter}>
         <Text style={Styles.boldText}>
-          {claimParams.claimName}
+          {claimParams.id}
           :
         </Text>
         <Text style={Styles.boldText}>
@@ -94,9 +95,9 @@ const ClaimDetails = (props) => {
           <Text style={[Styles.labelUltraLightGrey, Styles.paddingTop]}>ATTESTED TO BY</Text>
           {attestations.keySeq().map((attestation) => (
             <ListItem
-              key={attestations.getIn([attestation, 'id'], '')}
+              key={attestations.getIn([attestation, 'uid'], '')}
               title={attestations.getIn([attestation, 'identityAttested'], '')}
-              onPress={() => goToAttestationDetails(attestations.getIn([attestation, 'id'], ''),
+              onPress={() => goToAttestationDetails(attestations.getIn([attestation, 'uid'], ''),
                 attestations.getIn([attestation, 'identityAttested'], ''))}
               bottomDivider
               chevron

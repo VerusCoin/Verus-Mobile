@@ -27,7 +27,7 @@ const ClaimCategoryDetails = (props) => {
     navigation.navigate('ClaimDetails', {
       id: claim.get('id', ''),
       claimName: claim.get('name', ''),
-      claimData: claim.get('claimData', ''),
+      claimData: claim.get('data', IMap()),
     });
   };
 

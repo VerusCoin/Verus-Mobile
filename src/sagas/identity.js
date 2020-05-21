@@ -183,20 +183,18 @@ function * handleChangeActiveIdentity(action) {
 }
 
 function * handleReceiveSeedData() {
-  const selectedIdentityId = yield select(selectActiveIdentityId);
   try {
     const claimCategoriesFromStore = yield call(getClaimCategories);
     const claimsFromStore = yield call(getClaims);
-    console.log(claimCategoriesFromStore, '-==--=-=-=-=-=-=-==-')
+    const attestationsFromStore = yield call(getAttestations);
+
     const claimCategories = normalizeCategories(claimCategoriesFromStore);
     const claims = normalizeClaims(claimsFromStore);
-    // const attestations = normalizeAttestations(attestationsFromStore);
-
-    console.log('=+++++==', claimCategories, '=++++====')
+    const attestations = normalizeAttestations(attestationsFromStore);
 
     yield put(setClaimCategories(claimCategories));
     yield put(setClaims(claims));
-      // put(setAttestations(attestations)),
+    yield put(setAttestations(attestations));
   } catch (error) {
     console.log(error);
   }

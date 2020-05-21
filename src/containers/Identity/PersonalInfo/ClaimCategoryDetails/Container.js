@@ -10,7 +10,7 @@ const mapStateToProps = (state) => ({
   claimsData: selectClaimsToDisplay(state),
   showHiddenClaims: selectShowHiddenClaims(state),
   attestationsCountByClaim: selectAttestationsCountByClaim(state),
-  hiddenClaimsCount:selectHiddenClaimsCount(state),
+  hiddenClaimsCount: selectHiddenClaimsCount(state),
 });
 
 const mapDispatchToProps = (dispatch) => ({

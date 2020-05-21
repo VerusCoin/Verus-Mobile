@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import {
   View, Text, Platform,
 } from 'react-native';
+import { Map as IMap } from 'immutable';
 import { SearchBar, CheckBox, ListItem } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 import { FloatingAction } from 'react-native-floating-action';
@@ -61,11 +62,11 @@ const PersonalInfo = (props) => {
   } = actions;
 
 
-  const goToClaims = (claimCategoryName) => {
+  const goToClaims = (selectedCategory) => {
     navigation.navigate('ClaimCategory', {
-      claimCategoryName,
+      claimCategoryName: selectedCategory.get('displayName', ''),
     });
-    setActiveClaimCategory(claimCategoryName);
+    setActiveClaimCategory(selectedCategory.get('name', ''));
   };
 
   useEffect(() => {
@@ -114,9 +115,9 @@ const PersonalInfo = (props) => {
     </Dialog.Container>
   );
 
-  const handleBadge = (categoryId) => (
+  const handleBadge = (categoryName) => (
     {
-      value: claimsCountByCategory.filter((claim) => categoryId === claim.categoryId).first().count,
+      value: claimsCountByCategory.filter((claim) => categoryName === claim.categoryId).first().count,
       textStyle: { color: Colors.secondaryColor },
       badgeStyle: { backgroundColor:Colors.quinaryColor },
       containerStyle: Styles.alignItemsCenter,
@@ -155,11 +156,11 @@ const PersonalInfo = (props) => {
           {categories.keySeq().map((item) => (
             <ListItem
               key={categories.getIn([item, 'id'], '')}
-              title={categories.getIn([item, 'name'], '')}
+              title={categories.getIn([item, 'displayName'], '')}
               bottomDivider
-              onPress={() => goToClaims(categories.getIn([item, 'name'], ''))}
+              onPress={() => goToClaims(categories.get(item, IMap()))}
               chevron
-              badge={handleBadge(categories.getIn([item, 'id']))}
+              badge={handleBadge(categories.getIn([item, 'name']))}
             />
           ))}
         </View>

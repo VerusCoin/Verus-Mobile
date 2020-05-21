@@ -24,7 +24,7 @@ const MoveIntoCategory = (props) => {
         {categories.keySeq().map((category) => (
           <ListItem
             key={categories.getIn([category, 'id'], '')}
-            title={categories.getIn([category, 'name'], '')}
+            title={categories.getIn([category, 'displayName'], '')}
             onPress={() => moveIntoCategory(categories.get(category, IMap()))}
             bottomDivider
           />
