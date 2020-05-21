@@ -1,4 +1,4 @@
-import { fromJS, List as IList, Map as IMap } from 'immutable';
+import { fromJS, List as IList } from 'immutable';
 import {
   SET_ACTIVE_IDENTITY,
   SET_CLAIMS,
@@ -65,7 +65,7 @@ const identity = (state = defaultState, action) => {
       return state.setIn(['personalInformation', 'activeIdentityId'], fromJS(action.payload.identityId));
     case SET_CLAIMS:
       return state.setIn(['personalInformation', 'claims'], fromJS({
-        byId: action.payload.claims.entities.claims,
+        byId: action.payload.claims.entities.claims || {},
         claimIds: action.payload.claims.result,
       }));
     case SET_CLAIM_CATEGORIES:
@@ -75,7 +75,7 @@ const identity = (state = defaultState, action) => {
       }));
     case SET_ATTESTATIONS:
       return state.setIn(['personalInformation', 'attestations'], fromJS({
-        byId: action.payload.attestations.entities.attestations,
+        byId: action.payload.attestations.entities.attestations || {},
         attestationIds: action.payload.attestations.result,
       }));
     case SET_ACTIVE_CLAIM_CATEGORY_ID:

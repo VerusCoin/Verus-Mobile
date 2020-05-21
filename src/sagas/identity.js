@@ -6,21 +6,17 @@ import {
   storeSeedIdentities,
   storeSeedClaimCategories,
   storeSeedClaims,
-  // storeSeedAttestations,
+  storeSeedAttestations,
   getClaims,
   getAttestations,
   updateAttestations,
   updateIdentities,
-  getClaimCategoriesByIdentity,
   updateClaimCategories,
   updateClaims,
   getClaimCategories,
-  getClaimsByIdentity,
-  getAttestationsByIdentity,
 } from '../utils/asyncStore/identityStorage';
 import updateStoredItems from '../utils/InitialData/updateStoredItems';
 import generateClaimCategories from '../utils/InitialData/ClaimCategory';
-import generateAttestations from '../utils/InitialData/Attestation';
 import { camelizeString } from '../utils/stringUtils';
 import {
   setActiveIdentity,
@@ -116,15 +112,9 @@ function * handleSetActiveIdentity() {
   yield call(handleStoreSeedClaimCategories);
   yield call(handleStoreSeedClaims);
   yield call(handleReceiveSeedData);
+  yield call(handleStoreSeedAttestations);
 }
 
-/**
- * @function `handleStoreSeedClaimCategories`:
- * this saga is being called when user selects an identity,
- * or changes the current active identity. It's responsible for storing claim categories
- * into the Async Storage. If there is nothing stored, the initial data
- * is generated.
- */
 function * handleStoreSeedClaimCategories() {
   const seededCategories = generateClaimCategories;
   const storedCategories = yield call(getClaimCategories);
@@ -133,45 +123,14 @@ function * handleStoreSeedClaimCategories() {
   }
 }
 
-// /**
-//  * @function `handleStoreSeedClaims`:
-//  * this saga is being called when user selects an identity,
-//  * or changes the current active identity. It's responsible for storing claims
-//  * into the Async Storage. If there is nothing stored, the initial data
-//  * is generated. If there are some items stored but for a different identity,
-//  * concat the two arrays. Finally if there are claims for the selected identity
-//  * use those claims
-//  * @param {String} identityId Currently active identity.
-//  */
-
 function * handleStoreSeedClaims() {
   const storedClaims = yield call(getClaims);
-  console.log(storedClaims, 'stored claimssss[s[s[[s[[[[123[[31p[321[213p[[321')
   yield call(storeSeedClaims, storedClaims.length > 0 ? storedClaims : []);
 }
 
-/**
- * @function `handleStoreSeedAttestations`:
- * this saga is being called when user selects an identity,
- * or changes the current active identity. It's responsible for storing attestations
- * into the Async Storage. If there is nothing stored, the initial data
- * is generated. If there are some items stored but for a different identity,
- * concat the two arrays. Finally if there are attestations for the selected identity
- * use those attestations
- * @param {String} identityId Currently active identity.
- */
-function * handleStoreSeedAttestations(identityId) {
-  const seededAttestations = generateAttestations(identityId);
-  let attestationsToStore = [];
+function * handleStoreSeedAttestations() {
   const storedAttestations = yield call(getAttestations);
-  if (!storedAttestations.length) {
-    attestationsToStore = seededAttestations;
-  } else if (storedAttestations.every((attestation) => !attestation.id.includes(identityId))) {
-    attestationsToStore = [...storedAttestations, ...seededAttestations];
-  } else {
-    attestationsToStore = storedAttestations;
-  }
-  yield call(storeSeedAttestations, attestationsToStore);
+  yield call(storeSeedAttestations, storedAttestations.length > 0 ? storedAttestations : []);
 }
 
 function * handleChangeActiveIdentity(action) {
@@ -192,9 +151,11 @@ function * handleReceiveSeedData() {
     const claims = normalizeClaims(claimsFromStore);
     const attestations = normalizeAttestations(attestationsFromStore);
 
-    yield put(setClaimCategories(claimCategories));
-    yield put(setClaims(claims));
-    yield put(setAttestations(attestations));
+    yield all([
+      put(setClaimCategories(claimCategories)),
+      put(setClaims(claims)),
+      put(setAttestations(attestations)),
+    ]);
   } catch (error) {
     console.log(error);
   }

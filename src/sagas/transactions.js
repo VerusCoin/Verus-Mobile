@@ -1,7 +1,6 @@
 import {
   all, takeLatest, call, put, select,
 } from 'redux-saga/effects';
-import { fromJS } from 'immutable';
 import { v4 as uuidv4 } from 'uuid';
 
 import VerusZkedidUtils from 'node-jest-testing-boilerplate';
@@ -82,6 +81,7 @@ function * handleGetMemosFromTransactions() {
           hash: rmd160Hash(memoObject.data),
           hidden: true,
           date,
+          type: 'claim',
         });
       }
 
@@ -96,11 +96,24 @@ function * handleGetMemosFromTransactions() {
         showOnHomeScreen: false,
         claimId: memoId,
         date,
+        type: 'attestation',
       });
     });
     return memoObjects;
   });
-  yield put(setMemoDataFromTx(createdMemos));
+
+  const uniqueMemos = createdMemos.reduce((acc, current) => {
+    const itemExists = acc.find((item) => item.type === current.type
+    && item.id === current.id
+    && (item.hash === current.hash || item.contentRootKey === current.contentRootKey));
+
+    if (itemExists) {
+      return acc;
+    }
+    return acc.concat([current]);
+  }, []);
+
+  yield put(setMemoDataFromTx(uniqueMemos));
   yield call(updateClaimsStorage);
   yield call(updateAttestationStorage);
 }
