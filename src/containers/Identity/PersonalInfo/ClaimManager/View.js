@@ -52,11 +52,11 @@ const ClaimManager = (props) => {
   const moveSingleClaim = (selectedClaim) => {
     clearSelectedClaims();
     updateSelectedClaims(selectedClaim);
-    navigation.navigate('MoveIntoCategory');
+    navigation.navigate('MoveIntoCategory', { clearClaims: clearSelectedClaims });
   };
 
   const moveSelectedCategories = () => {
-    if (!disabled) navigation.navigate('MoveIntoCategory');
+    if (!disabled) navigation.navigate('MoveIntoCategory', { clearClaims: clearSelectedClaims });
   };
 
   const selectClaim = (selectedClaim) => {

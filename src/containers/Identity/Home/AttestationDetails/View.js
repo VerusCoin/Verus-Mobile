@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View, Text, Modal,
 } from 'react-native';
@@ -7,8 +7,7 @@ import { Button } from 'react-native-elements';
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import StandardButton from '../../../../components/StandardButton';
-// This is temp solution until we get real data from QR code
-const awesomeLink = 'http://awesome.link.qr';
+
 const qrCodeSize = 245;
 
 const AttestationDetails = (props) => {
@@ -28,6 +27,8 @@ const AttestationDetails = (props) => {
   const pinToHome = () => {
     toggleAttestationPin();
   };
+
+  const attestationQRCode = useMemo(() => JSON.stringify(attestation), [attestation]);
 
   return (
     <View>
@@ -52,7 +53,10 @@ const AttestationDetails = (props) => {
                 <Text style={[Styles.boldText, Styles.centeredText]}>{attestation.get('data', '')}</Text>
                 <Text style={Styles.centeredText}>{attestation.get('date', '')}</Text>
               </View>
-              <QRCode value={awesomeLink} size={qrCodeSize} />
+              <QRCode
+                value={attestationQRCode}
+                size={qrCodeSize}
+              />
               <Text style={[Styles.boldText, Styles.centeredText]}>From: {attestation.get('identityAttested', '')}</Text>
               <Text style={[Styles.boldText, Styles.noVerticalPadding, Styles.centeredText]}>To: {attestation.get('identity', '')}</Text>
             </View>

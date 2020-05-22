@@ -23,9 +23,9 @@ export const setActiveClaim = (activeClaim) => ({
   payload: { activeClaim },
 });
 
-export const toggleShowHiddenClaims = () => ({
+export const toggleShowHiddenClaims = (value) => ({
   type: TOGGLE_SHOW_HIDDEN_CLAIMS,
-  payload: {},
+  payload: { value },
 });
 
 export const setClaimVisibility = (claim) => ({

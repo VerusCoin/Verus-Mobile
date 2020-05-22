@@ -131,7 +131,12 @@ const identity = (state = defaultState, action) => {
     case SET_SHOW_EMPTY_CLAIM_CATEGORIES:
       return state.updateIn(['personalInformation', 'showEmptyClaimCategories'], (showEmptyClaimCategories) => !showEmptyClaimCategories);
     case TOGGLE_SHOW_HIDDEN_CLAIMS:
-      return state.updateIn(['personalInformation', 'showHiddenClaims'], (showHiddenClaims) => !showHiddenClaims);
+      return state.updateIn(['personalInformation', 'showHiddenClaims'], (showHiddenClaims) => {
+        if (typeof action.payload.value !== 'undefined') {
+          return action.payload.value;
+        }
+        return !showHiddenClaims;
+      });
     case SET_CLAIM_VISIBILITY:
       return state.updateIn(['personalInformation', 'claims', 'byId', action.payload.claim, 'hidden'], (claimVisibility) => !claimVisibility);
     case UPDATE_SELECTED_CLAIMS:

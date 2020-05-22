@@ -3,6 +3,7 @@ import { Map as IMap } from 'immutable';
 import { View, Text } from 'react-native';
 import { ListItem } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
+import DelayedAlert from '../../../../../utils/delayedAlert';
 import Styles from '../../../../../styles';
 
 const MoveIntoCategory = (props) => {
@@ -15,6 +16,7 @@ const MoveIntoCategory = (props) => {
   const moveIntoCategory = (category) => {
     moveClaimsToCategory(category);
     navigation.goBack();
+    DelayedAlert('Moved succesfully');
   };
 
   return (

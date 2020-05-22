@@ -136,9 +136,26 @@ export const MainScreens = StackNavigator({
   },
   MoveIntoCategory: {
     screen: MoveIntoCategory,
-    navigationOptions: {
+    navigationOptions: ({ navigation }) => ({
       title: 'Categories',
-    },
+      headerLeft: (
+        <TouchableOpacity
+          onPress={() => {
+            navigation.state.params.clearClaims();
+            navigation.goBack();
+          }}
+          style={styles.goBackBtn}
+        >
+          <IconVector
+            name={Platform.OS === 'ios' ? 'ios-arrow-back' : 'md-arrow-back'}
+            size={35}
+            color="white"
+            style={{ paddingLeft: 8 }}
+          />
+          <Text style={styles.goBackBtnText}>Back</Text>
+        </TouchableOpacity>
+      ),
+    }),
   },
 
   AttestationDetails: {

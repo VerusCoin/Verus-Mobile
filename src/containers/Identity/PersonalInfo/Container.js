@@ -16,6 +16,7 @@ import {
   addNewCategory,
   deleteCategory,
   setCategorySortDirection,
+  toggleShowHiddenClaims,
 } from '../../../actions/actionCreators';
 
 const mapStateToProps = (state) => ({
@@ -36,6 +37,7 @@ const mapDispatchToProps = (dispatch) => ({
       addNewCategory,
       deleteCategory,
       setCategorySortDirection,
+      toggleShowHiddenClaims,
     },
     dispatch,
   ),
