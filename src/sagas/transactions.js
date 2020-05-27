@@ -2,7 +2,7 @@ import {
   all, takeLatest, call, put, select,
 } from 'redux-saga/effects';
 import { v4 as uuidv4 } from 'uuid';
-
+import isEqual from 'lodash/isEqual';
 import VerusZkedidUtils from 'node-jest-testing-boilerplate';
 
 import { unixToDate } from '../utils/math';
@@ -23,6 +23,8 @@ const sha256Hash = (memoData) => crypto.createHash('sha256')
 const rmd160Hash = (memoData) => crypto.createHash('rmd160')
   .update(sha256Hash(memoData))
   .digest('hex');
+
+const generateUid = (type, id, data, date) => rmd160Hash(`${type}-${id}-${data}-${date}`);
 
 export default function * transactionsSaga() {
   yield all([
@@ -73,20 +75,20 @@ function * handleGetMemosFromTransactions() {
       const memoClaimCategory = typeStrings[1];
       if (memoObject.id.includes('claim')) {
         return ({
-          uid: uuidv4(),
+          uid: generateUid('claim', memoId, memoObject.data, date),
           id: memoId,
           categoryId: memoClaimCategory,
           data: memoObject.data,
           identity: memoObject.to,
           hash: rmd160Hash(memoObject.data),
-          hidden: true,
+          hidden: false,
           date,
           type: 'claim',
         });
       }
 
       return ({
-        uid: uuidv4(),
+        uid: generateUid('attestation', memoId, memoObject.data, date),
         id: memoId,
         identityAttested: memoObject.from,
         identity: memoObject.to,
@@ -103,9 +105,7 @@ function * handleGetMemosFromTransactions() {
   });
 
   const uniqueMemos = createdMemos.reduce((acc, current) => {
-    const itemExists = acc.find((item) => item.type === current.type
-    && item.id === current.id
-    && (item.hash === current.hash || item.contentRootKey === current.contentRootKey));
+    const itemExists = acc.find((item) => isEqual(item, current));
 
     if (itemExists) {
       return acc;

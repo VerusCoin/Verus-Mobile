@@ -183,9 +183,9 @@ const identity = (state = defaultState, action) => {
         action.payload.memoData.map(
           (memo) => {
             if (memo.identityAttested) {
-              return nextState.updateIn(['personalInformation', 'attestations', 'attestationIds'], IList(), (attestationIds) => attestationIds.push(fromJS(memo.uid)));
+              return nextState.updateIn(['personalInformation', 'attestations', 'attestationIds'], IList(), (attestationIds) => (attestationIds.includes(memo.uid) ? attestationIds : attestationIds.push(memo.uid)));
             }
-            return nextState.updateIn(['personalInformation', 'claims', 'claimIds'], IList(), (claimIds) => claimIds.push(fromJS(memo.uid)));
+            return nextState.updateIn(['personalInformation', 'claims', 'claimIds'], IList(), (claimIds) => (claimIds.includes(memo.uid) ? claimIds : claimIds.push(memo.uid)));
           },
         );
       });

@@ -100,7 +100,6 @@ export const getIdentities = async () => {
 };
 
 export const updateAttestations = async (updatedAttestations) => {
-  console.log('u setteru', updatedAttestations)
   try {
     await AsyncStorage.setItem('attestations', JSON.stringify({ attestations: updatedAttestations }));
   } catch (error) {

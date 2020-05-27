@@ -82,10 +82,6 @@ const Home = (props) => {
               ))}
             </View>
           </ScrollView>
-          <AttestationDetails
-            visible={attestationModalVisibility}
-            identityAttested={identityAttested}
-          />
         </View>
       ) : (
         <View style={Styles.fullWidthFlexGrowCenterBlock}>
@@ -101,6 +97,10 @@ const Home = (props) => {
           />
         </View>
       )}
+      <AttestationDetails
+        visible={attestationModalVisibility}
+        identityAttested={identityAttested}
+      />
     </View>
   );
 };
