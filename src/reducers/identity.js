@@ -75,7 +75,7 @@ const identity = (state = defaultState, action) => {
       }));
     case SET_CLAIM_CATEGORIES:
       return state.setIn(['personalInformation', 'claimCategories'], fromJS({
-        byId: action.payload.claimCategories.entities.claimCategories,
+        byId: action.payload.claimCategories.entities.claimCategories || {},
         claimCategoriesIds: action.payload.claimCategories.result,
       }));
     case SET_ATTESTATIONS:
@@ -125,7 +125,7 @@ const identity = (state = defaultState, action) => {
       });
     case DELETE_CATEGORY:
       return state.withMutations((nextState) => {
-        nextState.deleteIn(['personalInformation', 'claimCategories', 'byId', action.payload.category.get('name')]);
+        nextState.deleteIn(['personalInformation', 'claimCategories', 'byId', action.payload.category.get('id')]);
         nextState.updateIn(['personalInformation', 'claimCategories', 'claimCategoriesIds'], IList(), (claimCategoriesIds) => claimCategoriesIds.filter((claimCategoryId) => claimCategoryId !== action.payload.category.get('id', '')));
       });
     case SET_SHOW_EMPTY_CLAIM_CATEGORIES:

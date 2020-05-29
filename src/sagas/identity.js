@@ -14,6 +14,7 @@ import {
   updateClaimCategories,
   updateClaims,
   getClaimCategories,
+  getClaimCategoriesByIdentity,
 } from '../utils/asyncStore/identityStorage';
 import updateStoredItems from '../utils/InitialData/updateStoredItems';
 import generateClaimCategories from '../utils/InitialData/ClaimCategory';
@@ -111,19 +112,28 @@ function * handleStoreIdentities() {
 
 function * handleSetActiveIdentity() {
   yield all([
-    call(handleReceiveSeedData),
     call(handleStoreSeedClaimCategories),
     call(handleStoreSeedClaims),
     call(handleStoreSeedAttestations),
   ]);
+  yield call(handleReceiveSeedData);
 }
 
+
 function * handleStoreSeedClaimCategories() {
-  const seededCategories = generateClaimCategories;
+  const selectedIdentityId = yield select(selectActiveIdentityId);
+
+  const seededCategories = generateClaimCategories(selectedIdentityId);
+  let categoriesToStore = [];
   const storedCategories = yield call(getClaimCategories);
   if (!storedCategories.length) {
-    yield call(storeSeedClaimCategories, seededCategories);
+    categoriesToStore = seededCategories;
+  } else if (storedCategories.every((category) => category.identity !== selectedIdentityId)) {
+    categoriesToStore = [...storedCategories, ...seededCategories];
+  } else {
+    categoriesToStore = storedCategories;
   }
+  yield call(storeSeedClaimCategories, categoriesToStore);
 }
 
 function * handleStoreSeedClaims() {
@@ -145,15 +155,15 @@ function * handleChangeActiveIdentity(action) {
 }
 
 function * handleReceiveSeedData() {
+  const selectedIdentityId = yield select(selectActiveIdentityId);
   try {
-    const claimCategoriesFromStore = yield call(getClaimCategories);
+    const claimCategoriesFromStore = yield call(getClaimCategoriesByIdentity, selectedIdentityId);
     const claimsFromStore = yield call(getClaims);
     const attestationsFromStore = yield call(getAttestations);
 
     const claimCategories = normalizeCategories(claimCategoriesFromStore);
     const claims = normalizeClaims(claimsFromStore);
     const attestations = normalizeAttestations(attestationsFromStore);
-
     yield all([
       put(setClaimCategories(claimCategories)),
       put(setClaims(claims)),
@@ -186,25 +196,30 @@ function * handleAddNewIdentity(action) {
 }
 
 function * handleAddNewCategory(action) {
+  const selectedIdentityId = yield select(selectActiveIdentityId);
+
   const newCategoryName = action.payload.value.replace(/\s+/g, '-').toLowerCase();
+  const newCategoryId = `${selectedIdentityId}-${newCategoryName}`;
 
   const newCategory = {
-    [newCategoryName]: {
-      id: newCategoryName,
+    [newCategoryId]: {
+      uid: newCategoryId,
+      id: newCategoryId,
       name: newCategoryName,
       displayName: action.payload.value,
+      identity: selectedIdentityId,
       desc: '',
     },
   };
 
-  yield put(setNewCategory(newCategory[newCategoryName]));
+  yield put(setNewCategory(newCategory[newCategoryId]));
   yield call(updateClaimCategoryStorage);
 }
 
 function * handleMoveClaims(action) {
   const { targetCategory } = action.payload;
   const selectedClaims = yield select(selectSelectedClaims);
-  yield put(updateCategoryForClaims(selectedClaims, targetCategory.get('name')));
+  yield put(updateCategoryForClaims(selectedClaims, targetCategory.get('id')));
   yield put(clearSelectedClaims());
   yield call(updateClaimsStorage);
 }

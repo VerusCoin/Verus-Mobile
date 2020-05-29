@@ -32,7 +32,7 @@ export const selectClaimCategoriesToDisplay = createSelector(
   [selectClaimCategories, selectShowEmptyClaimCategories, selectClaimsByIdentityId],
   (claimCategories, showEmptyClaimCategories, claims) => {
     if (!showEmptyClaimCategories) {
-      return claimCategories.filter((claimCategory) => claims.some((claim) => claim.get('categoryId', '') === claimCategory.get('name', '')));
+      return claimCategories.filter((claimCategory) => claims.some((claim) => claim.get('categoryId', '') === claimCategory.get('id', '')));
     }
     return claimCategories;
   },
@@ -135,8 +135,8 @@ export const selectScanInfoModalVisibility = (state) => state.identity.getIn(['p
 export const selectClaimsCountByCategory = createSelector(
   [selectClaimCategories, selectClaimsByIdentityId],
   (categories, claims) => categories.keySeq().map((item) => {
-    const count = claims.filter((claim) => categories.getIn([item, 'name'], '') === claim.get('categoryId', '')).size;
-    return { count, categoryId:categories.getIn([item, 'name'], '') };
+    const count = claims.filter((claim) => categories.getIn([item, 'id'], '') === claim.get('categoryId', '')).size;
+    return { count, categoryId:categories.getIn([item, 'id'], '') };
   }),
 );
 
@@ -155,7 +155,7 @@ export const selectHiddenClaimsCount = createSelector(
 
 export const selectEmptyCategoryCount = createSelector(
   [selectClaimCategories, selectClaimsByIdentityId],
-  (claimCategories, claims) => claimCategories.size - claimCategories.filter((claimCategory) => claims.some((claim) => claim.get('categoryId', '') === claimCategory.get('name', ''))).size,
+  (claimCategories, claims) => claimCategories.size - claimCategories.filter((claimCategory) => claims.some((claim) => claim.get('categoryId', '') === claimCategory.get('id', ''))).size,
 );
 
 export const selectClaimForActiveAttestion = createSelector(

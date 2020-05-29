@@ -70,7 +70,7 @@ const ClaimManager = (props) => {
   const checkIfClaimIsSelected = useCallback((claim) => selectedClaims.includes(claim), [selectedClaims]);
 
   const getCategoryName = useCallback((categories, claim) => {
-    const categoryForClaim = categories.filter((category) => category.get('name', '') === claim.get('categoryId', ''));
+    const categoryForClaim = categories.filter((category) => category.get('id', '') === claim.get('categoryId', ''));
     const name = categoryForClaim.keySeq().map((claimCategory) => categoryForClaim.getIn([claimCategory, 'name'], '')).first();
     if (name.length > 30) return `${truncateString(name, 30)}...`;
     return name;

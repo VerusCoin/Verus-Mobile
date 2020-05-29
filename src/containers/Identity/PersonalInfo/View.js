@@ -62,7 +62,7 @@ const PersonalInfo = (props) => {
     navigation.navigate('ClaimCategory', {
       claimCategoryName: selectedCategory.get('displayName', ''),
     });
-    setActiveClaimCategory(selectedCategory.get('name', ''));
+    setActiveClaimCategory(selectedCategory.get('id', ''));
     toggleShowHiddenClaims(false);
   };
 
@@ -200,8 +200,8 @@ const PersonalInfo = (props) => {
               key={categories.getIn([item, 'id'], '')}
               title={categories.getIn([item, 'displayName'], '')}
               onPress={() => goToClaims(categories.get(item, IMap()))}
-              rightElement={handleClaimCountBadge(categories.getIn([item, 'name'], ''))}
-              rightIcon={handleDeleteCategoryIcon(categories.getIn([item, 'name'], ''))}
+              rightElement={handleClaimCountBadge(categories.getIn([item, 'id'], ''))}
+              rightIcon={handleDeleteCategoryIcon(categories.getIn([item, 'id'], ''))}
               bottomDivider
               chevron
             />

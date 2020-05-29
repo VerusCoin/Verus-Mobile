@@ -77,7 +77,7 @@ function * handleGetMemosFromTransactions() {
         return ({
           uid: generateUid('claim', memoId, memoObject.data, date),
           id: memoId,
-          categoryId: memoClaimCategory,
+          categoryId: `${memoObject.to}-${memoClaimCategory}`,
           data: memoObject.data,
           identity: memoObject.to,
           hash: rmd160Hash(memoObject.data),
