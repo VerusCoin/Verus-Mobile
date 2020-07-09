@@ -5,6 +5,7 @@ export default buttons = {
     width: '100%',
     alignSelf: 'center',
     backgroundColor: Colors.linkButtonColor,
+    paddingVertical: 16
   },
   defaultButton: {
     alignSelf: 'center',
@@ -23,5 +24,13 @@ export default buttons = {
   inlineXButton: {
     marginRight: 16,
     color: Colors.warningButtonColor
+  },
+  fullWidthButtonWithPadding: {
+    width: '96%',
+    alignSelf: 'center',
+    backgroundColor: Colors.tertiaryColor,
+    paddingVertical: 12,
+    fontSize: 9,
+    width: "85%"
   }
 }

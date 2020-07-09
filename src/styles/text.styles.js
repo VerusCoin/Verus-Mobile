@@ -175,7 +175,7 @@ export default text = {
     color: Colors.quinaryColor,
   },
   listItemSubtitleDefault: {
-    color: "rgba(206,68,70,1)" 
+    color: "rgba(206,68,70,1)"
   },
   fiatLabel: {
     backgroundColor: Colors.tertiaryColor,
@@ -203,5 +203,17 @@ export default text = {
     color: Colors.quaternaryColor,
     width: "65%",
     textAlign: "right"
+  },
+  greyStripeHeaderWithoutPadding: {
+    width: "100%",
+    backgroundColor: Colors.tertiaryColor,
+    paddingVertical: 1,
+    fontSize: 24,
+    textAlign: "center",
+    color: Colors.quinaryColor,
+    fontFamily: 'Avenir-Black',
+  },
+  textDots: {
+    overflow: "hidden"
   }
-};
+}

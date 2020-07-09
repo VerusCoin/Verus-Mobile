@@ -19,7 +19,7 @@ import {
   Alert,
   RefreshControl
  } from "react-native"
-import { Input,ButtonGroup } from 'react-native-elements'
+import { Input,ButtonGroup, Button } from 'react-native-elements'
 import { connect } from 'react-redux'
 import { Dropdown } from 'react-native-material-dropdown'
 import Styles from '../../../styles/index'
@@ -72,7 +72,6 @@ class ReceiveCoin extends Component {
       amountFiat
     } = state;
 
-    console.log("dikke pik")
     console.log(JSON.stringify(address))
   }
 
@@ -241,6 +240,8 @@ walletPrivate = () => {
     this.setState({selectedAddress: coinObj})
   }
 
+
+
   switchInvoiceAddressPrivate = (coinObj) => {
     this.setState({ privateAddress: coinObj})
   }
@@ -306,14 +307,14 @@ walletPrivate = () => {
   }
 
   renderBalanceLabel = () => {
-    const { activeCoin, balances } = this.props;
+    const { activeCoin, balances } = this.props
 
     if (balances.errors.public) {
       return (
         <Text
           style={{ ...Styles.largeCentralPaddedHeader, ...Styles.errorText }}
         >
-          {CONNECTION_ERROR}
+      //    {CONNECTION_ERROR}
         </Text>
       );
     } else if (balances.public) {
@@ -338,17 +339,26 @@ walletPrivate = () => {
 //this is a function that only shows the switch for private addres screen
   switchButton = () => {
     if (this.props.channels[this.props.activeCoin.id].channels.includes("dlight")) {
-          buttons = [{ element: this.pubText }, { element: this.privText },];
+
+
+    const buttons = ['Public', 'Private']
+    const { selectedIndex } = this.state
 
     return(
-    <View style={Styles.centralRow} >
-        <ButtonGroup
-              onPress={this.changeIndex}
-              selectedIndex={this.state.privateIndex}
-              buttons={buttons}
-              containerStyle={ Styles.fullWidthButton }
-              />
-      </View>
+
+    <ButtonGroup
+      onPress={this.changeIndex}
+      buttonStyle={Styles.fullWidthButtonWithPadding}
+      selectedIndex={selectedIndex}
+      selectedItemColor={Colors.primaryColor}
+      buttons={buttons}
+      containerStyle={{height: 35}}
+      containerStyle = {{
+        borderStyle: 'dotted',
+        borderWidth: 0
+      }}
+      />
+
     )
   } else {
     return null;
@@ -389,38 +399,65 @@ dynamicViewingTest = () => {
 if(this.state.privateIndex == 0){
   const coinObj = this.state.selectedCoin
   const activeUser = this.props.activeAccount
+  //console.log(activeUser.keys.electrum.addresses)
+
+//  var smallpeen = "f"
+
+//   if(this.state.privateAddress.length > 27 ){
+  //   smallpeen = this.state.privateAddress.substring(0,27)+"..."
+//console.log("dit execute")
+//   }else{
+//     smallpeen =this.state.privateAddress;
+//   }
+
+  var bigpeen = "f"
+
+
+  if(this.state.address != null){
+   if(this.state.address.length > 26 ){
+     bigpeen = this.state.address.substring(0,26)+"..."
+   }else{
+     bigpeen = this.state.address;
+   }
+ }
 
 //console.log(activeUser.keys[coinObj.id].electrum.addresses)
-
+//strlen($sentence) >= 30 ? exho substr($sentence,0,29)."..." : echo $sentence;
        return(
-        <View >
+         <View>
         <View style={Styles.centralRow}>
         <Dropdown
           // TODO: Determine why width must be 85 here, cant be wide block
           containerStyle={{ ...Styles.wideBlock, width: "85%" }}
+
+        /*  if(strlen($sentence) >= 30) {
+            echo substr($sentence,0,29)."...";
+          } else {
+            echo $sentence;
+          } */
           labelExtractor={(item, index) => {
             return item.id;
           }}
           valueExtractor={(item, index) => {
-            return item;
+            return item.id;
           }}
             data={activeUser.keys[coinObj.id].electrum.addresses}
           onChangeText={(value, index, data) => switchInvoiceAddress(value)}
           textColor={Colors.quinaryColor}
-          selectedItemColor={Colors.quinaryColor}
+          selectedItemColor={Colors.primaryColor}
           baseColor={Colors.quinaryColor}
           inputStyle={Styles.mediumInlineLink}
           label="Selected address:"
           labelTextStyle={{ fontFamily: "Avenir-Book" }}
           labelFontSize={17}
-          value={activeUser.keys[coinObj.id].electrum.addresses}
+          value={bigpeen}
+          //value={activeUser.keys[coinObj.id].electrum.addresses >= 29? (obj.str).substring(activeUser.keys[coinObj.id].electrum.addresses,0,29) + "..." : activeUser.keys[coinObj.id].electrum.addresses}
           pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
-          itemTextStyle={{ fontFamily: "Avenir-Book" }}
-        />
-        </View>
+         />
+         </View>
         <TouchableOpacity onPress={copyAddressToClipboard}>
           <View style={Styles.centralRow}>
-            <View style={Styles.standardWidthFlexGrowCenterBlock} >
+            <View style={{ ...Styles.wideBlock, width: "95%" }} >
         <Input
           labelStyle={Styles.formInputLabel}
           underlineColorAndroid={Colors.quinaryColor}
@@ -432,6 +469,7 @@ if(this.state.privateIndex == 0){
           pointerEvents="none"
           multiline={true}
           label={"Your address:"}
+          labelTextStyle={{ fontFamily: "Avenir-Book" }}
           errorMessage={errors.address ? errors.address : null} //dit zijn de gewone errors
         />
         </View>
@@ -441,9 +479,23 @@ if(this.state.privateIndex == 0){
         );
 
 }else{
+
+
+
     const coinObj = this.state.selectedCoin
     const activeUser = this.props.activeAccount
-console.log(activeUser.keys[coinObj.id].dlight.addresses)
+
+   var smallpeen = "f"
+
+    if(this.state.privateAddress.length > 27 ){
+      smallpeen = this.state.privateAddress.substring(0,27)+"..."
+      console.log("dit execute")
+    }else{
+      smallpeen =this.state.privateAddress;
+    }
+
+
+    console.log(activeUser.keys[coinObj.id].dlight.addresses)
     return(
     <View >
     <View style={Styles.centralRow}>
@@ -465,14 +517,15 @@ console.log(activeUser.keys[coinObj.id].dlight.addresses)
       label="Selected address:"
       labelTextStyle={{ fontFamily: "Avenir-Book" }}
       labelFontSize={17}
-      value={activeUser.keys[coinObj.id].dlight.addresses}
-      pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
-      itemTextStyle={{ fontFamily: "Avenir-Book" }}
+      value={smallpeen}
+      labelTextStyle={{ ...Styles.textDots}}
+      pickerStyle={{ backgroundColor: Colors.tertiaryColor}}
+      itemTextStyle={{ fontFamily: "Avenir-Book"}}
     />
     </View>
     <TouchableOpacity onPress={copyAddressToClipboard}>
         <View style={Styles.centralRow}>
-        <View style={Styles.standardWidthFlexGrowCenterBlock} >
+        <View style={{ ...Styles.wideBlock, width: "95%" }}  >
     <Input
       labelStyle={Styles.formInputLabel}
       underlineColorAndroid={Colors.quinaryColor}
@@ -492,6 +545,7 @@ console.log(activeUser.keys[coinObj.id].dlight.addresses)
       </View>
     )
   }
+
 }
 
 
@@ -525,7 +579,7 @@ console.log(activeUser.keys[coinObj.id].dlight.addresses)
     return (
       <View style={Styles.defaultRoot}>
         <View style={Styles.centralRow}>{this.renderBalanceLabel()}</View>
-        <Text style={Styles.greyStripeHeader}>
+        <Text style={Styles.greyStripeHeaderWithoutPadding}>
           {"Generate VerusQR Invoice"}
         </Text>
         {this.switchButton()}

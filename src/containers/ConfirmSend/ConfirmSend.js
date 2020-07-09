@@ -19,6 +19,7 @@ import { NO_VERIFICATION, MID_VERIFICATION } from '../../utils/constants/constan
 import Styles from '../../styles/index'
 import Colors from "../../globals/colors";
 import { API_GET_FIATPRICE, API_GET_BALANCES, ELECTRUM, DLIGHT } from "../../utils/constants/intervalConstants"
+import VerusLightClient from "react-native-verus-light-client";
 
 const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
@@ -181,6 +182,12 @@ class ConfirmSend extends Component {
     navigation.dispatch(resetAction)
   }
 
+
+sendPrivate = () => {
+  //coin id, coin protocol, account hash allemaal uit redux vraag aan micheal waar ze staan
+  const params = ["VRSC", "VRSC", "stonks", this.state.toAddress, this.state.fromAddress, this.state.amount, this.state.memo];
+  VerusLightClient.request("666", "send", params);
+}
 
 
   tickLoading = () => {

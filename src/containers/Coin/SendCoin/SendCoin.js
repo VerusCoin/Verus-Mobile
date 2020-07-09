@@ -333,6 +333,15 @@ switchSendAddress = (value) => {
   this.setState({ fromAddress: value });
 }
 
+privateCoinSending = () => {
+  const params = [this.state.coin.id, this.state.coin.proto, this.state.account.accountHash, this.state.toAddress, this.state.fromAddress, this.state.amount, "" ]
+  VerusLightClient.request(8, "send", params).then(
+    (res) => {
+        console.log(res)
+      }
+    );
+  }
+
 
 dynamicDropDown = () => {
   if(this.state.privateIndex == 1){
@@ -437,11 +446,11 @@ dynamicDropDown = () => {
                 value={this.state.toAddress}
                 autoCapitalize={"none"}
                 autoCorrect={false}
-                errorMessage={
+              /*  errorMessage={
                   this.state.formErrors.toAddress
                     ? this.state.formErrors.toAddress
                     : null
-                }
+                }*/
               />
             </View>
             <View style={Styles.wideBlock}>
@@ -454,11 +463,11 @@ dynamicDropDown = () => {
                 shake={this.state.formErrors.amount}
                 keyboardType={"decimal-pad"}
                 autoCapitalize="words"
-                errorMessage={
+              /*  errorMessage={
                   this.state.formErrors.amount
                     ? this.state.formErrors.amount
                     : null
-                }
+                } */
               />
               <View
                 style={{ ...Styles.fullWidthFlexCenterBlock, paddingBottom: 0 }}
@@ -504,7 +513,7 @@ dynamicDropDown = () => {
               </View>
             ) : (
               <View style={Styles.fullWidthFlexCenterBlock}>
-                <StandardButton onPress={ this.validateFormData } title="SEND" />
+                <StandardButton onPress={ this.goToConfirmScreen } title="SEND" />
               </View>
             )}
           </ScrollView>
