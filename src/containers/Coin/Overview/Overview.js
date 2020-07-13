@@ -1,5 +1,5 @@
 /*
-  This component's purpose is to display a list of transactions for the 
+  This component's purpose is to display a list of transactions for the
   activeCoin, as set by the store. If transactions or balances are flagged
   as needing an update, it updates them upon mounting.
 */
@@ -35,6 +35,9 @@ import {
 } from '../../../utils/constants/constants'
 import { Dropdown } from 'react-native-material-dropdown'
 import Colors from "../../../globals/colors";
+import VerusLightClient from "react-native-verus-light-client";
+
+
 
 const TX_LOGOS = {
   self: {
@@ -89,6 +92,18 @@ class Overview extends Component {
     if (lastProps.isFocused !== this.props.isFocused && this.props.isFocused) {
       this.refresh();
     }
+  }
+
+  componentDidMount(){
+    console.log(this.props.activeAccount.accountHash);
+    console.log(this.props.activeCoin.id);
+    console.log(this.props.activeCoin.proto);
+
+    const params = [this.props.activeCoin.id, this.props.activeCoin.proto, this.props.activeAccount.accountHash];
+
+    VerusLightClient.request(666, "listaddresses", params).then( (res) => {
+      console.log(JSON.stringify(res));
+    });
   }
 
   refresh = () => {
@@ -327,7 +342,7 @@ class Overview extends Component {
           } ${activeCoin.id}`}
         </Text>
       );
-    } 
+    }
   };
 
   render() {

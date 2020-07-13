@@ -9927,15 +9927,9 @@ react-native-alert-async@^1.0.3:
     async "^2.6.1"
 
 react-native-camera@^3.22.1:
-<<<<<<< HEAD
-  version "3.25.0"
-  resolved "https://registry.yarnpkg.com/react-native-camera/-/react-native-camera-3.25.0.tgz#fb080341d65c0200b05ff31d2ff07f141b9fbae0"
-  integrity sha512-qnaeAadfn/CWeRrzNj24tJkoFF8oO/A+22YuMyfUIGZb/VwFvE70wl5GDVKp9f9NtRyUKuH+VDCyGrvw3jGoRA==
-=======
   version "3.24.1"
   resolved "https://registry.yarnpkg.com/react-native-camera/-/react-native-camera-3.24.1.tgz#e5ddbb81a88c634cf220b039da739427e16a1d48"
   integrity sha512-D6X4WDe6mptKwH2/0dv42NgcTpT5Wq6jHyQpmFlh4pEy8OtBmgeYg5HXPmvc0SEtXj10MG+5WQz2oCoEkITs4A==
->>>>>>> 7d3baaf81da8b8a57486f541962cf46174dadb13
   dependencies:
     prop-types "^15.6.2"
 

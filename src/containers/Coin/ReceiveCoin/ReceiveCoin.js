@@ -365,9 +365,9 @@ walletPrivate = () => {
  }
 }
 
-copyAddressToClipboard = () => {
-    Clipboard.setString(this.state.address);
-    Alert.alert("Address Copied", "Address copied to clipboard")
+copyAddressToClipboardPrivate = () => {
+    Clipboard.setString(this.state.privateAddress);
+    Alert.alert("Address Copied", this.state.privateAddress);
   }
 
 
@@ -399,25 +399,15 @@ dynamicViewingTest = () => {
 if(this.state.privateIndex == 0){
   const coinObj = this.state.selectedCoin
   const activeUser = this.props.activeAccount
-  //console.log(activeUser.keys.electrum.addresses)
 
-//  var smallpeen = "f"
-
-//   if(this.state.privateAddress.length > 27 ){
-  //   smallpeen = this.state.privateAddress.substring(0,27)+"..."
-//console.log("dit execute")
-//   }else{
-//     smallpeen =this.state.privateAddress;
-//   }
-
-  var bigpeen = "f"
+  var showPub = "f"
 
 
   if(this.state.address != null){
    if(this.state.address.length > 26 ){
-     bigpeen = this.state.address.substring(0,26)+"..."
+     showPub = this.state.address.substring(0,26)+"..."
    }else{
-     bigpeen = this.state.address;
+     showPub = this.state.address;
    }
  }
 
@@ -427,14 +417,7 @@ if(this.state.privateIndex == 0){
          <View>
         <View style={Styles.centralRow}>
         <Dropdown
-          // TODO: Determine why width must be 85 here, cant be wide block
           containerStyle={{ ...Styles.wideBlock, width: "85%" }}
-
-        /*  if(strlen($sentence) >= 30) {
-            echo substr($sentence,0,29)."...";
-          } else {
-            echo $sentence;
-          } */
           labelExtractor={(item, index) => {
             return item.id;
           }}
@@ -450,12 +433,12 @@ if(this.state.privateIndex == 0){
           label="Selected address:"
           labelTextStyle={{ fontFamily: "Avenir-Book" }}
           labelFontSize={17}
-          value={bigpeen}
+          value={showPub}
           //value={activeUser.keys[coinObj.id].electrum.addresses >= 29? (obj.str).substring(activeUser.keys[coinObj.id].electrum.addresses,0,29) + "..." : activeUser.keys[coinObj.id].electrum.addresses}
           pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
          />
          </View>
-        <TouchableOpacity onPress={copyAddressToClipboard}>
+        <TouchableOpacity onPress={this.copyAddressToClipboard}>
           <View style={Styles.centralRow}>
             <View style={{ ...Styles.wideBlock, width: "95%" }} >
         <Input
@@ -485,13 +468,13 @@ if(this.state.privateIndex == 0){
     const coinObj = this.state.selectedCoin
     const activeUser = this.props.activeAccount
 
-   var smallpeen = "f"
+   var showPriv = "f"
 
     if(this.state.privateAddress.length > 27 ){
-      smallpeen = this.state.privateAddress.substring(0,27)+"..."
+      showPriv = this.state.privateAddress.substring(0,27)+"..."
       console.log("dit execute")
     }else{
-      smallpeen =this.state.privateAddress;
+      showPriv =this.state.privateAddress;
     }
 
 
@@ -517,13 +500,13 @@ if(this.state.privateIndex == 0){
       label="Selected address:"
       labelTextStyle={{ fontFamily: "Avenir-Book" }}
       labelFontSize={17}
-      value={smallpeen}
+      value={showPriv}
       labelTextStyle={{ ...Styles.textDots}}
       pickerStyle={{ backgroundColor: Colors.tertiaryColor}}
       itemTextStyle={{ fontFamily: "Avenir-Book"}}
     />
     </View>
-    <TouchableOpacity onPress={copyAddressToClipboard}>
+    <TouchableOpacity onPress={this.copyAddressToClipboardPrivate}>
         <View style={Styles.centralRow}>
         <View style={{ ...Styles.wideBlock, width: "95%" }}  >
     <Input
