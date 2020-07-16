@@ -75,6 +75,7 @@ class Overview extends Component {
       coinRates: {},
       loading: false,
       txDetailsModalOpen: false,
+      status: "",
       txDetailProps: {
         parsedAmount: 0,
         txData: {},
@@ -104,6 +105,34 @@ class Overview extends Component {
     VerusLightClient.request(666, "listaddresses", params).then( (res) => {
       console.log(JSON.stringify(res));
     });
+    VerusLightClient.request(666, "getprivatebalance", params).then( (res) => {
+      console.log(JSON.stringify(res));
+    });
+
+    this.lightStatus();
+  }
+
+
+  lightStatus = async () => {
+    const params = [this.props.activeCoin.id, this.props.activeCoin.proto, this.props.activeAccount.accountHash];
+
+
+    await VerusLightClient.request(666, "getinfo", params).then( (res) => {
+      if(!res.error){
+        this.setState({ status: res.result.status });
+      }else{
+        this,setState({ status: res.error});
+      }
+    });
+  }
+
+  showStatus = () => {
+    const text = `synchronizer: ${this.state.status}`;
+    return(
+      <View>
+        <Text style={{...Styles.centralInfoTextPadded, ...Styles.capitalizeFirstLetter}}>{text}</Text>
+      </View>
+    )
   }
 
   refresh = () => {
@@ -383,6 +412,7 @@ class Overview extends Component {
                 } Overview${enabledChannels.length < 3 ? '' : ' ▾'}`}</Text>
               )}
             />
+          {this.showStatus()}
           </View>
           {this.renderTransactionList()}
       </View>
