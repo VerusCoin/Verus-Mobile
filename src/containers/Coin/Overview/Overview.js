@@ -76,6 +76,7 @@ class Overview extends Component {
       loading: false,
       txDetailsModalOpen: false,
       status: "",
+      percent:"",
       txDetailProps: {
         parsedAmount: 0,
         txData: {},
@@ -116,10 +117,11 @@ class Overview extends Component {
   lightStatus = async () => {
     const params = [this.props.activeCoin.id, this.props.activeCoin.proto, this.props.activeAccount.accountHash];
 
-
     await VerusLightClient.request(666, "getinfo", params).then( (res) => {
       if(!res.error){
+        console.log(res);
         this.setState({ status: res.result.status });
+        this.setState({ percent: res.result.percent});
       }else{
         this,setState({ status: res.error});
       }
@@ -127,12 +129,27 @@ class Overview extends Component {
   }
 
   showStatus = () => {
-    const text = `synchronizer: ${this.state.status}`;
-    return(
-      <View>
-        <Text style={{...Styles.centralInfoTextPadded, ...Styles.capitalizeFirstLetter}}>{text}</Text>
-      </View>
-    )
+    console.log(this.state.status);
+
+    if (this.props.channels[this.props.activeCoin.id].channels.includes("dlight")) {
+      var text;
+      const percentage = this.state.percent;
+      console.log(percentage);
+      if(this.state.status === "DOWNLOADING"){
+        text = `syncing blockchain (${percentage}%)`;
+      }else if(this.state.status === "VERIFYING"){
+        text = `verifying blockchain (${percentage}%)`;
+      }else if(this.state.status === "SCANNING"){
+        text = `scanning blockchain (${percentage}%)`;
+      }
+      return(
+        <View>
+          <Text style={{...Styles.centralInfoTextPadded, ...Styles.capitalizeFirstLetter, paddingTop: 0, paddingBottom: 4}}>{text}</Text>
+        </View>
+      );
+    }else{
+        return;
+    }
   }
 
   refresh = () => {
@@ -407,12 +424,14 @@ class Overview extends Component {
                 }
               }
               renderBase={() => (
-                <Text style={{...Styles.greyStripeHeader, ...Styles.capitalizeFirstLetter}}>{`${
+                <View>
+                <Text style={{...Styles.greyStripeHeaderWithoutPadding, ...Styles.capitalizeFirstLetter, paddingTop: 4}}>{`${
                   activeOverviewFilter == null ? "Total" : activeOverviewFilter
                 } Overview${enabledChannels.length < 3 ? '' : ' ▾'}`}</Text>
+                  {this.showStatus()}
+                </View>
               )}
             />
-          {this.showStatus()}
           </View>
           {this.renderTransactionList()}
       </View>
@@ -433,6 +452,7 @@ const mapStateToProps = (state) => {
         private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
       }
     },
+    channels: state.settings.coinSettings,
     transactions: {
       public: state.ledger.transactions[ELECTRUM][chainTicker],
       private: state.ledger.transactions[DLIGHT][chainTicker],
