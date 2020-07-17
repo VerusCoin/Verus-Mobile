@@ -144,7 +144,7 @@ class Overview extends Component {
       }
       return(
         <View>
-          <Text style={{...Styles.centralInfoTextPadded, ...Styles.capitalizeFirstLetter, paddingTop: 0, paddingBottom: 4}}>{text}</Text>
+          <Text style={{...Styles.centralInfoTextPadded, ...Styles.capitalizeFirstLetter, paddingTop: 0, paddingBottom: 8}}>{text}</Text>
         </View>
       );
     }else{
@@ -425,7 +425,7 @@ class Overview extends Component {
               }
               renderBase={() => (
                 <View>
-                <Text style={{...Styles.greyStripeHeaderWithoutPadding, ...Styles.capitalizeFirstLetter, paddingTop: 4}}>{`${
+                <Text style={this.props.channels[this.props.activeCoin.id].channels.includes("dlight") ?{...Styles.greyStripeHeaderWithoutPadding, ...Styles.capitalizeFirstLetter, paddingTop: 4} : {...Styles.greyStripeHeader, ...Styles.capitalizeFirstLetter}}>{`${
                   activeOverviewFilter == null ? "Total" : activeOverviewFilter
                 } Overview${enabledChannels.length < 3 ? '' : ' ▾'}`}</Text>
                   {this.showStatus()}
