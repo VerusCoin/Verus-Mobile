@@ -42,7 +42,7 @@
     "https-browserify": "0.0.1",
     "istanbul-reports": "^2.1.1",
     "jsqr": "^0.2.2",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "meteor-node-stubs": "~0.2.4",
     "node-gyp": "^3.8.0",
     "nodejs-aes256": "^1.0.1",
