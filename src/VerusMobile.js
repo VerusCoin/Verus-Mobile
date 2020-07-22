@@ -5,12 +5,13 @@ import {
   fetchUsers, 
   loadServerVersions,
   loadCachedHeaders,
-  initSettings
+  initSettings,
+  requestSeedData,
 } from './actions/actionCreators';
 import {
   initCache,
   clearCachedVersions,
-  updateActiveCoinList_v0_1_9_beta,
+  updateActiveCoinList,
   checkAndSetVersion
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
@@ -40,7 +41,8 @@ class VerusMobile extends React.Component {
     YellowBox.ignoreWarnings([
       "Warning: componentWillMount is deprecated",
       "Warning: componentWillReceiveProps is deprecated",
-      "Warning: componentWillUpdate is deprecated"
+      "Warning: componentWillUpdate is deprecated",
+      'RCTRootView cancelTouches', 
     ]);
   }
   
@@ -55,14 +57,8 @@ class VerusMobile extends React.Component {
     .then(() => {
       return checkAndSetVersion()
     })
-    .then((versionCompare) => {
-      let promiseArr = [fetchUsers(), initSettings()]
-
-      //Handle version change stuff here
-      /*if (global.APP_VERSION === '0.1.9-beta' && versionCompare === -1) {
-        if (__DEV__) console.log("Old version detected, updating active coins for 0.1.9-beta")
-        promiseArr.push(updateActiveCoinList_v0_1_9_beta())
-      }*/
+    .then(() => {
+      let promiseArr = [fetchUsers(), initSettings(), updateActiveCoinList()]
 
       return Promise.all(promiseArr)
     })
@@ -71,7 +67,6 @@ class VerusMobile extends React.Component {
       actionArr.forEach((action) => {
         this.props.dispatch(action)
       })
-      
       return Promise.all([loadServerVersions(this.props.dispatch), loadCachedHeaders(this.props.dispatch)])
     })
     .then(() => {
@@ -80,6 +75,7 @@ class VerusMobile extends React.Component {
     .catch((err) => {
       Alert.alert("Error", err.message)
     })
+    this.props.dispatch(requestSeedData());
   }
 
   render() {

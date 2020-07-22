@@ -160,9 +160,12 @@ class Home extends Component {
     this.resetToScreen('CoinMenus', 'Overview');
   }
 
+  _handleIdentity = () => {
+    let navigation = this.props.navigation ; 
+    navigation.navigate("Identity", { selectedScreen: "Identity" } );
+  }
   _addCoin = () => {
     let navigation = this.props.navigation  
-
     navigation.navigate("AddCoin", { refresh: this.refresh });
   }
 
@@ -173,9 +176,13 @@ class Home extends Component {
     navigation.navigate("BuySellCryptoMenus", {title: "Buy"});
   }
 
+  handleScanToVerify = () => {
+    this.props.navigation.navigate('ScanBadge');
+  }
+
   renderCoinList = () => {
     const { rates, balances, activeCoinsForUser, displayCurrency } = this.props;
-    
+
     return (
       <ScrollView
         style={Styles.wide}
@@ -196,6 +203,30 @@ class Home extends Component {
             containerStyle={Styles.bottomlessListItemContainer}
           />
         </TouchableOpacity>
+        {activeCoinsForUser.some(coin => coin.id === "VRSC" || coin.id === "ZECTEST") && (
+          <View>
+            <TouchableOpacity onPress={this._handleIdentity}>
+              <ListItem
+                title={<Text style={Styles.listItemLeftTitleDefault}>Identity</Text>}
+                hideChevron
+                leftAvatar={{
+                  source: require("../../images/customIcons/id-card.png")
+                }}
+                containerStyle={Styles.bottomlessListItemContainer}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={this.handleScanToVerify}>
+              <ListItem
+                title={<Text style={Styles.listItemLeftTitleDefault}>Scan to verify</Text>}
+                hideChevron
+                leftAvatar={{
+                  source: require("../../images/customIcons/verusPay.png")
+                }}
+                containerStyle={Styles.bottomlessListItemContainer}
+              />
+            </TouchableOpacity>
+          </View>
+        )}
         <FlatList
           data={activeCoinsForUser}
           scrollEnabled={false}
