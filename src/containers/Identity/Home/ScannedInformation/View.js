@@ -46,7 +46,7 @@ const ScannedInformation = (props) => {
               <View style={Styles.blockWithBorderBottom}>
                 <View style={Styles.flexRow}>
                   <Text style={Styles.textWithRightPadding}>Birth Date:</Text>
-                  <Text style={Styles.textWithBlackColor}>{getClaimData(data.claimData)}</Text>
+                  <Text style={Styles.textWithBlackColor}>{getClaimData(data.data)}</Text>
                 </View>
                 <Icon name="checkcircle" color={Colors.successButtonColor} size={23} />
               </View>

@@ -10,6 +10,8 @@ import Colors from '../../../../globals/colors';
 import AttestationDetails from '../../Home/AttestationDetails';
 import RequestAttestation from '../RequestAttestation';
 import { truncateString } from '../ClaimManager/utils/truncateString';
+import withNavigationFocus from "react-navigation/src/views/withNavigationFocus";
+//import { useFocusEffect } from '@react-navigation/native';
 
 const getClaimData = (name) => {
   if (name.length > 20) return `${truncateString(name, 20)}...`;
@@ -24,13 +26,31 @@ const ClaimDetails = (props) => {
     childClaims,
     parentClaims,
     attestationModalVisibility,
+    claims,
+    isFocused
   } = props;
 
   const [attestations, setAttestation] = useState(attestationsData);
   const [value, setValue] = useState('');
   const [identityAttested, setIdentityAttested] = useState('');
   const [requestAttestationModalShown, setRequestAttestationModalShown] = useState(false);
-  const claimParams = navigation.state.params;
+  const claimUid = navigation.state.params.claimUid;
+
+  /*useFocusEffect(
+    React.useCallback(() => {
+      console.log("Screen focused")
+
+      return () => {
+        console.log("Screen unfocused")
+      }
+    }, [])
+  );*/
+
+  useEffect(() => {
+    if (isFocused === true) {
+      setActiveClaim(claims.get(claimUid))
+    }
+  }, [isFocused])
 
   useEffect(() => {
     setAttestation(attestationsData);
@@ -47,11 +67,8 @@ const ClaimDetails = (props) => {
   };
 
   const getClaimsDetails = (claim) => {
-    setActiveClaim(claim);
     navigation.navigate('ClaimDetails', {
-      id: claim.get('id', ''),
-      claimName: claim.get('name', ''),
-      claimData: claim.get('claimData', ''),
+      claimUid: claim.get('uid', '')
     });
   };
 
@@ -61,14 +78,16 @@ const ClaimDetails = (props) => {
     setAttestationModalVisibility(true);
   };
 
-  const claimList = (claims, item, type) => (
+  const claimList = (_claims, item, type) => (
     <TouchableOpacity
-      key={claims.getIn([item, 'id'])}
+      key={_claims.getIn([item, "uid"])}
       style={Styles.greyButtonWithShadow}
-      onPress={() => getClaimsDetails(claims.get(item), type)}
+      onPress={() => getClaimsDetails(_claims.get(item), type)}
     >
       <View>
-        <Text style={Styles.textWithLeftPadding}>{claims.getIn([item, 'name'])}</Text>
+        <Text style={Styles.textWithLeftPadding}>
+          {_claims.getIn([item, "displayName"])}
+        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -77,12 +96,12 @@ const ClaimDetails = (props) => {
     <View style={Styles.root}>
       <View style={Styles.alignItemsCenter}>
         <Text style={Styles.boldText}>
-          {claimParams.id}
+          {claims.getIn([claimUid, 'displayName'])}
           :
         </Text>
         <Text style={Styles.boldText}>
           {' '}
-          {getClaimData(claimParams.claimData)}
+          {getClaimData(claims.getIn([claimUid, 'data']))}
         </Text>
       </View>
       <SearchBar
@@ -128,7 +147,7 @@ const ClaimDetails = (props) => {
       </ScrollView>
       <AttestationDetails
         visible={attestationModalVisibility}
-        claimData={claimParams.claimData}
+        claimData={claims.get(claimUid)}
         identityAttested={identityAttested}
       />
       <RequestAttestation
@@ -139,4 +158,4 @@ const ClaimDetails = (props) => {
   );
 };
 
-export default ClaimDetails;
+export default withNavigationFocus(ClaimDetails);

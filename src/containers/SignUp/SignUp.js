@@ -240,9 +240,6 @@ class SignUp extends Component {
                 ...seeds,
                 [channel]: seeds[oppositeChannel]
               }
-            },
-            () => {
-              console.log(this.state.seeds);
             }
           );
         } else if (channel === ELECTRUM) {

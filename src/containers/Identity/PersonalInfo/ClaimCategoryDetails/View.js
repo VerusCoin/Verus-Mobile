@@ -29,17 +29,14 @@ const ClaimCategoryDetails = (props) => {
   }, [claimsData]);
 
   const goToClaimDetails = (claim) => {
-    setActiveClaim(claim);
     navigation.navigate('ClaimDetails', {
-      id: claim.get('id', ''),
-      claimName: claim.get('id', ''),
-      claimData: claim.get('data', IMap()),
+      claimUid: claim.get('uid', '')
     });
   };
 
   const updateSearch = (value) => {
     const newData = claimsData.filter((item) => {
-      const itemData = item.get('name', '').toUpperCase();
+      const itemData = item.get('displayName', '').toUpperCase();
       const textData = value.toUpperCase();
       return itemData.includes(textData);
     });
@@ -90,7 +87,7 @@ const ClaimCategoryDetails = (props) => {
         {claims.keySeq().map((claim) => (
           <ListItem
             key={claims.getIn([claim, 'uid'], '')}
-            title={claims.getIn([claim, 'id'], '')}
+            title={claims.getIn([claim, 'displayName'], '')}
             onPress={() => goToClaimDetails(claims.get(claim, IMap()))}
             badge={handleBadge(claims.getIn([claim, 'id']))}
             bottomDivider

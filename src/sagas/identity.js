@@ -18,6 +18,7 @@ import {
 } from '../utils/asyncStore/identityStorage';
 import updateStoredItems from '../utils/InitialData/updateStoredItems';
 import generateClaimCategories from '../utils/InitialData/ClaimCategory';
+import generateClaims from '../utils/InitialData/Claim';
 import {
   setActiveIdentity,
   setIdentities,
@@ -133,11 +134,16 @@ function * handleStoreSeedClaimCategories() {
   } else {
     categoriesToStore = storedCategories;
   }
+
   yield call(storeSeedClaimCategories, categoriesToStore);
 }
 
 function * handleStoreSeedClaims() {
-  const storedClaims = yield call(getClaims);
+  //const storedClaims = yield call(getClaims);
+
+  const selectedIdentityId = yield select(selectActiveIdentityId);
+  const storedClaims = generateClaims(selectedIdentityId);
+
   yield call(storeSeedClaims, storedClaims.length > 0 ? storedClaims : []);
 }
 
