@@ -1,5 +1,5 @@
 /*
-  This component's purpose is to display a list of transactions for the 
+  This component's purpose is to display a list of transactions for the
   activeCoin, as set by the store. If transactions or balances are flagged
   as needing an update, it updates them upon mounting.
 */
@@ -35,6 +35,9 @@ import {
 } from '../../../utils/constants/constants'
 import { Dropdown } from 'react-native-material-dropdown'
 import Colors from "../../../globals/colors";
+import VerusLightClient from "react-native-verus-light-client";
+
+
 
 const TX_LOGOS = {
   self: {
@@ -72,6 +75,8 @@ class Overview extends Component {
       coinRates: {},
       loading: false,
       txDetailsModalOpen: false,
+      status: "",
+      percent:"",
       txDetailProps: {
         parsedAmount: 0,
         txData: {},
@@ -88,6 +93,62 @@ class Overview extends Component {
   componentDidUpdate(lastProps) {
     if (lastProps.isFocused !== this.props.isFocused && this.props.isFocused) {
       this.refresh();
+    }
+  }
+
+  componentDidMount(){
+    console.log(this.props.activeAccount.accountHash);
+    console.log(this.props.activeCoin.id);
+    console.log(this.props.activeCoin.proto);
+
+    const params = [this.props.activeCoin.id, this.props.activeCoin.proto, this.props.activeAccount.accountHash];
+
+    VerusLightClient.request(666, "listaddresses", params).then( (res) => {
+      console.log(JSON.stringify(res));
+    });
+    VerusLightClient.request(666, "getprivatebalance", params).then( (res) => {
+      console.log(JSON.stringify(res));
+    });
+
+    this.lightStatus();
+  }
+
+
+  lightStatus = async () => {
+    const params = [this.props.activeCoin.id, this.props.activeCoin.proto, this.props.activeAccount.accountHash];
+
+    await VerusLightClient.request(666, "getinfo", params).then( (res) => {
+      if(!res.error){
+        console.log(res);
+        this.setState({ status: res.result.status });
+        this.setState({ percent: res.result.percent});
+      }else{
+        this,setState({ status: res.error});
+      }
+    });
+  }
+
+  showStatus = () => {
+    console.log(this.state.status);
+
+    if (this.props.channels[this.props.activeCoin.id].channels.includes("dlight")) {
+      var text;
+      const percentage = this.state.percent;
+      console.log(percentage);
+      if(this.state.status === "DOWNLOADING"){
+        text = `syncing blockchain (${percentage}%)`;
+      }else if(this.state.status === "VERIFYING"){
+        text = `verifying blockchain (${percentage}%)`;
+      }else if(this.state.status === "SCANNING"){
+        text = `scanning blockchain (${percentage}%)`;
+      }
+      return(
+        <View>
+          <Text style={{...Styles.centralInfoTextPadded, ...Styles.capitalizeFirstLetter, paddingTop: 0, paddingBottom: 8}}>{text}</Text>
+        </View>
+      );
+    }else{
+        return;
     }
   }
 
@@ -327,7 +388,7 @@ class Overview extends Component {
           } ${activeCoin.id}`}
         </Text>
       );
-    } 
+    }
   };
 
   render() {
@@ -363,9 +424,12 @@ class Overview extends Component {
                 }
               }
               renderBase={() => (
-                <Text style={{...Styles.greyStripeHeader, ...Styles.capitalizeFirstLetter}}>{`${
+                <View>
+                <Text style={this.props.channels[this.props.activeCoin.id].channels.includes("dlight") ?{...Styles.greyStripeHeaderWithoutPadding, ...Styles.capitalizeFirstLetter, paddingTop: 4} : {...Styles.greyStripeHeader, ...Styles.capitalizeFirstLetter}}>{`${
                   activeOverviewFilter == null ? "Total" : activeOverviewFilter
                 } Overview${enabledChannels.length < 3 ? '' : ' ▾'}`}</Text>
+                  {this.showStatus()}
+                </View>
               )}
             />
           </View>
@@ -388,6 +452,7 @@ const mapStateToProps = (state) => {
         private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
       }
     },
+    channels: state.settings.coinSettings,
     transactions: {
       public: state.ledger.transactions[ELECTRUM][chainTicker],
       private: state.ledger.transactions[DLIGHT][chainTicker],

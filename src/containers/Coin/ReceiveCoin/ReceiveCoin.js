@@ -365,9 +365,9 @@ walletPrivate = () => {
  }
 }
 
-copyAddressToClipboard = () => {
-    Clipboard.setString(this.state.address);
-    Alert.alert("Address Copied", "Address copied to clipboard")
+copyAddressToClipboardPrivate = () => {
+    Clipboard.setString(this.state.privateAddress);
+    Alert.alert("Address Copied", this.state.privateAddress);
   }
 
 
@@ -416,7 +416,6 @@ if(this.state.privateIndex == 0){
          <View>
         <View style={Styles.centralRow}>
         <Dropdown
-          // TODO: Determine why width must be 85 here, cant be wide block
           containerStyle={{ ...Styles.wideBlock, width: "85%" }}
           labelExtractor={(item, index) => {
             return item.id;
@@ -438,7 +437,7 @@ if(this.state.privateIndex == 0){
           pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
          />
          </View>
-        <TouchableOpacity onPress={copyAddressToClipboard}>
+        <TouchableOpacity onPress={this.copyAddressToClipboard}>
           <View style={Styles.centralRow}>
             <View style={{ ...Styles.wideBlock, width: "95%" }} >
         <Input
@@ -468,6 +467,7 @@ if(this.state.privateIndex == 0){
     const coinObj = this.state.selectedCoin
     const activeUser = this.props.activeAccount
 
+<<<<<<< HEAD
    var testString = "f"
 
     if(this.state.privateAddress.length > 27 ){
@@ -475,6 +475,15 @@ if(this.state.privateIndex == 0){
 
     }else{
       testString =this.state.privateAddress;
+=======
+   var showPriv = "f"
+
+    if(this.state.privateAddress.length > 27 ){
+      showPriv = this.state.privateAddress.substring(0,27)+"..."
+      console.log("dit execute")
+    }else{
+      showPriv =this.state.privateAddress;
+>>>>>>> d06e1b4d44f1847c752164ce79e08c3ed00544ab
     }
 
 
@@ -500,13 +509,17 @@ if(this.state.privateIndex == 0){
       label="Selected address:"
       labelTextStyle={{ fontFamily: "Avenir-Book" }}
       labelFontSize={17}
+<<<<<<< HEAD
       value={testString}
+=======
+      value={showPriv}
+>>>>>>> d06e1b4d44f1847c752164ce79e08c3ed00544ab
       labelTextStyle={{ ...Styles.textDots}}
       pickerStyle={{ backgroundColor: Colors.tertiaryColor}}
       itemTextStyle={{ fontFamily: "Avenir-Book"}}
     />
     </View>
-    <TouchableOpacity onPress={copyAddressToClipboard}>
+    <TouchableOpacity onPress={this.copyAddressToClipboardPrivate}>
         <View style={Styles.centralRow}>
         <View style={{ ...Styles.wideBlock, width: "95%" }}  >
     <Input
