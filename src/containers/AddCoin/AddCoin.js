@@ -32,8 +32,8 @@ class AddCoin extends Component {
   }*/
 
   componentWillUnmount() {
-    if (this.props.navigation.state.params && this.props.navigation.state.params.refresh) {
-      this.props.navigation.state.params.refresh()
+    if (this.props.route.params && this.props.route.params.refresh) {
+      this.props.route.params.refresh()
     }
   }
 

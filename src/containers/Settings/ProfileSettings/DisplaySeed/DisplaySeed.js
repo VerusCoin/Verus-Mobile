@@ -10,7 +10,7 @@ import {
   View, 
   ScrollView, 
 } from "react-native";
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 import { Input } from 'react-native-elements'
 import { connect } from 'react-redux';
 import QRCode from 'react-native-qrcode-svg';
@@ -31,7 +31,7 @@ class ResetPwd extends Component {
   }
 
   componentDidMount() {
-    const { data } = this.props.navigation.state.params
+    const { data } = this.props.route.params
     if (
       data &&
       data.seeds
@@ -58,9 +58,9 @@ class ResetPwd extends Component {
   resetToScreen = () => {
     route = this.state.fromDeleteAccount ? "DeleteProfile" : "Home";
 
-    const resetAction = NavigationActions.reset({
+    const resetAction = CommonActions.reset({
       index: 0, // <-- currect active route from actions array
-      actions: [NavigationActions.navigate({ routeName: route })],
+      routes: [{ name: route }],
     });
 
     this.props.navigation.dispatch(resetAction);

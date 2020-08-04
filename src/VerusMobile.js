@@ -1,6 +1,7 @@
 import React from "react";
 import { YellowBox, TouchableWithoutFeedback, Keyboard, Alert } from "react-native";
-import { RootNavigator } from './utils/navigation/index';
+import RootStackScreens from './utils/navigation/index';
+import { NavigationContainer } from '@react-navigation/native';
 import { 
   fetchUsers, 
   loadServerVersions,
@@ -79,13 +80,15 @@ class VerusMobile extends React.Component {
   }
 
   render() {
-    const Layout = RootNavigator(
+    const Layout = () => RootStackScreens(
       this.props.accountsLength > 0, 
       this.state.loading, 
       this.props.signedIn);
     
-    return(
-       <Layout />
+    return (
+      <NavigationContainer>
+        <Layout />
+      </NavigationContainer>
     );
   }
 }

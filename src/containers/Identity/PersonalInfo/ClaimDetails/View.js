@@ -10,8 +10,6 @@ import Colors from '../../../../globals/colors';
 import AttestationDetails from '../../Home/AttestationDetails';
 import RequestAttestation from '../RequestAttestation';
 import { truncateString } from '../ClaimManager/utils/truncateString';
-import withNavigationFocus from "react-navigation/src/views/withNavigationFocus";
-//import { useFocusEffect } from '@react-navigation/native';
 
 const getClaimData = (name) => {
   if (name.length > 20) return `${truncateString(name, 20)}...`;
@@ -21,36 +19,22 @@ const getClaimData = (name) => {
 const ClaimDetails = (props) => {
   const {
     navigation,
+    route,
     actions: { setActiveAttestationId, setActiveClaim, setAttestationModalVisibility },
     attestationsData,
     childClaims,
     parentClaims,
     attestationModalVisibility,
-    claims,
-    isFocused
+    claims
   } = props;
 
   const [attestations, setAttestation] = useState(attestationsData);
   const [value, setValue] = useState('');
   const [identityAttested, setIdentityAttested] = useState('');
   const [requestAttestationModalShown, setRequestAttestationModalShown] = useState(false);
-  const claimUid = navigation.state.params.claimUid;
-
-  /*useFocusEffect(
-    React.useCallback(() => {
-      console.log("Screen focused")
-
-      return () => {
-        console.log("Screen unfocused")
-      }
-    }, [])
-  );*/
-
-  useEffect(() => {
-    if (isFocused === true) {
-      setActiveClaim(claims.get(claimUid))
-    }
-  }, [isFocused])
+  const [displayChildClaims] = useState(childClaims)
+  const [displayParentClaims] = useState(parentClaims)
+  const claimUid = route.params.claimUid;
 
   useEffect(() => {
     setAttestation(attestationsData);
@@ -67,7 +51,8 @@ const ClaimDetails = (props) => {
   };
 
   const getClaimsDetails = (claim) => {
-    navigation.navigate('ClaimDetails', {
+    setActiveClaim(claim)
+    navigation.push('ClaimDetails', {
       claimUid: claim.get('uid', '')
     });
   };
@@ -133,15 +118,15 @@ const ClaimDetails = (props) => {
           onPress={() => setRequestAttestationModalShown(true)}
         />
         <View>
-          {childClaims.size > 0
+          {displayChildClaims.size > 0
             ? <Text style={[Styles.textWithTopMargin, Styles.boldText]}>Child Claims</Text> : null}
-          {childClaims.keySeq().map((item) => (
-            claimList(childClaims, item)
+          {displayChildClaims.keySeq().map((item) => (
+            claimList(displayChildClaims, item)
           ))}
-          {parentClaims.size > 0
+          {displayParentClaims.size > 0
             ? <Text style={[Styles.textWithTopMargin, Styles.boldText]}>Parent Claims</Text> : null}
-          {parentClaims.keySeq().map((item) => (
-            claimList(parentClaims, item)
+          {displayParentClaims.keySeq().map((item) => (
+            claimList(displayParentClaims, item)
           ))}
         </View>
       </ScrollView>
@@ -158,4 +143,4 @@ const ClaimDetails = (props) => {
   );
 };
 
-export default withNavigationFocus(ClaimDetails);
+export default /*withNavigationFocus(ClaimDetails)*/ClaimDetails;

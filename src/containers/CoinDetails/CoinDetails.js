@@ -14,7 +14,7 @@ import {
   setUserCoins, 
   addKeypairs,
  } from '../../actions/actionCreators';
-import { NavigationActions } from 'react-navigation'
+import { NavigationActions } from '@react-navigation/compat'
 import Styles from '../../styles/index'
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import Colors from "../../globals/colors";
@@ -40,7 +40,7 @@ class CoinDetails extends Component {
   }
 
   isActiveCoin = () => {
-    let selectedCoin = this.props.navigation.state.params.data
+    let selectedCoin = this.props.route.params.data
     let activeCoinIndex = this.props.activeCoinsForUser.findIndex(coin => {
       return coin.id === selectedCoin.id
     })

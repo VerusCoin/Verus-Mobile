@@ -29,6 +29,7 @@ const ClaimCategoryDetails = (props) => {
   }, [claimsData]);
 
   const goToClaimDetails = (claim) => {
+    setActiveClaim(claim)
     navigation.navigate('ClaimDetails', {
       claimUid: claim.get('uid', '')
     });

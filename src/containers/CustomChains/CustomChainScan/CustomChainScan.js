@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import { isJson } from '../../../utils/objectManip'
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 import { connect } from 'react-redux';
 import { namesList } from '../../../utils/CoinData/CoinData'
 import {
@@ -40,9 +40,9 @@ class CustomChainScan extends Component {
 
   static navigationOptions = ({ navigation }) => {
     return {
-      title: typeof(navigation.state.params)==='undefined' || 
-      typeof(navigation.state.params.title) === 'undefined' ? 
-      'undefined': navigation.state.params.title,
+      title: typeof(route.params)==='undefined' || 
+      typeof(route.params.title) === 'undefined' ? 
+      'undefined': route.params.title,
     };
   };
 

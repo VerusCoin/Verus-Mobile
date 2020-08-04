@@ -64,12 +64,12 @@ class SendResult extends Component {
   }
 
   componentDidMount() {
-    const coinObj = this.props.navigation.state.params.data.coinObj
-    const activeUser = this.props.navigation.state.params.data.activeUser
-    const toAddress = this.props.navigation.state.params.data.toAddress
-    const fromAddress = this.props.navigation.state.params.data.fromAddress
-    const amount = Number(this.props.navigation.state.params.data.amount)
-    const fee = coinObj.id === 'BTC' ? { feePerByte: Number(this.props.navigation.state.params.data.btcFee) } : Number(this.props.navigation.state.params.data.coinObj.fee)
+    const coinObj = this.props.route.params.data.coinObj
+    const activeUser = this.props.route.params.data.activeUser
+    const toAddress = this.props.route.params.data.toAddress
+    const fromAddress = this.props.route.params.data.fromAddress
+    const amount = Number(this.props.route.params.data.amount)
+    const fee = coinObj.id === 'BTC' ? { feePerByte: Number(this.props.route.params.data.btcFee) } : Number(this.props.route.params.data.coinObj.fee)
     const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
     
     this.timeoutTimer = setTimeout(() => {

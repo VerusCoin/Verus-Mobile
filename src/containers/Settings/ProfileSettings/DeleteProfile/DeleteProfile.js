@@ -15,7 +15,8 @@ import {
   ScrollView, 
   Keyboard,
 } from "react-native";
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
+import { CommonActions } from '@react-navigation/native';
 import { Input, CheckBox } from 'react-native-elements'
 import { deleteUserByID } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
@@ -75,8 +76,8 @@ class DeleteProfile extends Component {
   }
 
   validateFormData = () => {
-    const userID = (this.props.navigation.state.params && this.props.navigation.state.params.data) ? 
-      this.props.navigation.state.params.data.coinObj
+    const userID = (this.props.route.params && this.props.route.params.data) ? 
+      this.props.route.params.data.coinObj
       :
       this.props.activeAccount.id
     
@@ -151,10 +152,10 @@ class DeleteProfile extends Component {
   }
 
   resetToScreen = (route, data) => {
-    const resetAction = NavigationActions.reset({
+    const resetAction = CommonActions.reset({
       index: 0, // <-- currect active route from actions array
-      actions: [
-        NavigationActions.navigate({ routeName: route, params: {data: data} }),
+      routes: [
+        { name: route, params: { data: data } },
       ],
     })
 

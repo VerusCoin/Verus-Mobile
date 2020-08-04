@@ -16,7 +16,6 @@ import { connect } from 'react-redux';
 import { truncateDecimal } from '../../../utils/math';
 import { expireData, setActiveOverviewFilter } from '../../../actions/actionCreators';
 import Styles from '../../../styles/index'
-import withNavigationFocus from "react-navigation/src/views/withNavigationFocus";
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
 import store from "../../../store";
 import TxDetailsModal from '../../../components/TxDetailsModal/TxDetailsModal'
@@ -86,10 +85,16 @@ class Overview extends Component {
     this.refresh();
   }
 
-  componentDidUpdate(lastProps) {
-    if (lastProps.isFocused !== this.props.isFocused && this.props.isFocused) {
+  componentDidMount() {
+    this.refresh();
+
+    this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
       this.refresh();
-    }
+    });
+  }
+
+  componentWillUnmount() {
+    this._unsubscribeFocus()
   }
 
   refresh = () => {
@@ -398,4 +403,4 @@ const mapStateToProps = (state) => {
   }
 };
 
-export default connect(mapStateToProps)(withNavigationFocus(Overview));
+export default connect(mapStateToProps)(Overview);

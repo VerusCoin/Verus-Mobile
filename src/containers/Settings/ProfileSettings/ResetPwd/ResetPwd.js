@@ -16,7 +16,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 import { FormLabel, Input, FormValidationMessage } from 'react-native-elements'
 import { resetPwd } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';

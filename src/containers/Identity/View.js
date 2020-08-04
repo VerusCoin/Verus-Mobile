@@ -10,10 +10,10 @@ import Styles from '../../styles/index';
 const sizeIcon = 25;
 
 const Identity = (props) => {
-  const { navigation, activeIdentityId } = props;
+  const { route, navigation, activeIdentityId } = props;
   const [activeTab, setActiveTab] = useState(tabs[0]);
 
-  const selectedTab = navigation.state.params.selectedScreen;
+  const selectedTab = route.params.selectedScreen;
   const tabIndex = Object.keys(tabs).findIndex((tabKey) => tabs[tabKey].label.toLowerCase() === selectedTab.toLowerCase());
 
   const renderIcon = (icon) => () => (
@@ -43,6 +43,7 @@ const Identity = (props) => {
     navigation.setParams({ selectedScreen: newTab.label });
     setActiveTab(newTab);
   };
+  
   return (
     <View style={Styles.flexBackground}>
       <activeTab.screen navigation={navigation} />

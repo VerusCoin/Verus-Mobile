@@ -14,7 +14,7 @@ import {
   TouchableWithoutFeedback,
  } from "react-native"
 import { ListItem } from "react-native-elements";
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { FormLabel, FormInput, FormValidationMessage, Icon, TouchableOpacity } from 'react-native-elements'
 import { connect } from 'react-redux'
@@ -54,7 +54,6 @@ import {
 } from '../../../selectors/paymentMethods';
 import { selectWyrePaymentMethod } from '../../../selectors/authentication';
 import hasPaymentMethod from '../../../utils/paymentMethod';
-import withNavigationFocus from "react-navigation/src/views/withNavigationFocus";
 import { API_GET_FIATPRICE, API_GET_BALANCES, API_GET_INFO, API_GET_TRANSACTIONS, ELECTRUM } from "../../../utils/constants/intervalConstants";
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
 import store from "../../../store";
@@ -77,12 +76,20 @@ class BuyCrypto extends Component {
       loadingOverlay: false,
       addingCoin: false
     };
+
+    this._unsubscribeFocus = null
   }
 
-  componentDidUpdate(lastProps) {
-    if (lastProps.isFocused !== this.props.isFocused && this.props.isFocused) {
+  componentDidMount() {
+    this.props.getExchangeRates();
+
+    this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
       this.props.getExchangeRates();
-    }
+    });
+  }
+
+  componentWillUnmount() {
+    this._unsubscribeFocus()
   }
 
   componentWillReceiveProps(newProps) {
@@ -97,10 +104,10 @@ class BuyCrypto extends Component {
   static navigationOptions = ({ navigation }) => {
     return {
       title:
-        typeof navigation.state.params === "undefined" ||
-        typeof navigation.state.params.title === "undefined"
+        typeof route.params === "undefined" ||
+        typeof route.params.title === "undefined"
           ? "undefined"
-          : navigation.state.params.title
+          : route.params.title
     };
   };
 
@@ -650,4 +657,4 @@ const mapDispatchToProps = (dispatch) => ({
   getExchangeRates: () => dispatch(getExchangeRates()),
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(withNavigationFocus(BuyCrypto));
+export default connect(mapStateToProps, mapDispatchToProps)(BuyCrypto);

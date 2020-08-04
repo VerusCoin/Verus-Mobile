@@ -30,9 +30,9 @@ class BuySellCryptoMenus extends Component {
 
   static navigationOptions = ({ navigation }) => {
     return {
-      title: typeof(navigation.state.params)==='undefined' ||
-      typeof(navigation.state.params.title) === 'undefined' ?
-      'undefined': navigation.state.params.title,
+      title: typeof(route.params)==='undefined' ||
+      typeof(route.params.title) === 'undefined' ?
+      'undefined': route.params.title,
     };
   };
 
@@ -70,6 +70,8 @@ class BuySellCryptoMenus extends Component {
       throw new Error("Tab not found for active section " + this.props.activeSection)
     }
 
+    this.props.navigation.setOptions({ title: activeTab.label })
+
     return {
       tabs: tabArray,
       activeTab: activeTab
@@ -98,15 +100,15 @@ class BuySellCryptoMenus extends Component {
   )
 
   switchTab = (newTab) => {
-    this.props.navigation.setParams({ title: newTab.label })
+    this.props.navigation.setOptions({ title: newTab.label })
     this.setState({ activeTab: newTab })
   }
 
   render() {
     return (
       <View style={{ flex: 1 }}>
-          {this.state.activeTab.screen === "SellCrypto" ? <BuyCrypto navigation={this.props.navigation}  /> :
-          (this.state.activeTab.screen === "BuyCrypto" ? <BuyCrypto navigation={this.props.navigation}  buy/> :
+          {this.state.activeTab.screen === "SellCrypto" ? <BuyCrypto navigation={this.props.navigation}/> :
+          (this.state.activeTab.screen === "BuyCrypto" ? <BuyCrypto navigation={this.props.navigation} buy/> :
           null)}
         <BottomNavigation
           onTabPress={newTab => this.switchTab(newTab)}

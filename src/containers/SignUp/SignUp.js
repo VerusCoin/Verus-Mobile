@@ -16,7 +16,7 @@ import {
   Alert,
   ListView
 } from "react-native"
-import { NavigationActions } from 'react-navigation'
+import { NavigationActions } from '@react-navigation/compat'
 import { Input, CheckBox } from 'react-native-elements'
 import { addUser } from '../../actions/actionCreators'
 import { connect } from 'react-redux'
@@ -63,10 +63,10 @@ class SignUp extends Component {
     });
 
     if (
-      this.props.navigation.state.params &&
-      this.props.navigation.state.params.data
+      this.props.route.params &&
+      this.props.route.params.data
     ) {
-      this.fillSeed(this.props.navigation.state.params.data.seed);
+      this.fillSeed(this.props.route.params.data.seed);
     }
   }
 

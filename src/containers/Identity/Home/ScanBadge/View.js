@@ -12,8 +12,7 @@ const ScanBadge = (props) => {
   const {
     navigation,
     scanInfoModalVisibility,
-    actions: { setScanInfoModalVisibility },
-
+    actions: { setScanInfoModalVisibility }
   } = props;
 
   const onSuccess = (e) => {
