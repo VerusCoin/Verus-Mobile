@@ -75,6 +75,8 @@ class SendResult extends Component {
     const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
     const params = this.props.navigation.state.params.data.params
 
+    if( params === ""){
+
     this.timeoutTimer = setTimeout(() => {
       if (this.state.loading) {
         this.setState({
@@ -100,7 +102,7 @@ class SendResult extends Component {
       verifyTxid = true
     }
 
-    if( params != ""){
+
       sendRawTx(coinObj, activeUser, toAddress, amount, fee, network, verifyMerkle, verifyTxid)
       .then((res) => {
         if(res.err || !res) {
@@ -136,20 +138,24 @@ class SendResult extends Component {
         console.log(e)
       })
     }else{
-      VerusLightClient.request(999, "send", params ).then( (res) => {
-        if(res.error == null){
-          Alert.alert("Transaction ", res.result);
-        }else{
-          Alert.alert("Error: ", res.error);
-        }
-      })
-      .catch((e) => {
-        this.setState({
-          loading: false,
-          err: e.message ? e.message : "Unknown error while building transaction, double check form data"
-        });
-        console.log(e)
-      })
+
+      this.setState({ loading: false });
+      console.log(params);
+      const privateParams = [params[0], params[1], params[2], params[3], params[4], params[5], params[6] ];
+      if(params[3] === null){
+          Alert.alert("the to address is left empty. It will not work like this");
+      }else{
+        VerusLightClient.request(999, "send", privateParams ).then( (res) => {
+          console.log( "oof", res );
+        })
+        .catch((e) => {
+          this.setState({
+            loading: false,
+            err: e.message ? e.message : "Unknown error while building transaction, double check form data"
+          });
+          console.log(e)
+        })
+      }
     }
   }
 

@@ -45,7 +45,7 @@ class ConfirmSend extends Component {
       loadingMessage: "Creating transaction...",
       btcFeePerByte: null,
       feeTakenFromAmount: false,
-      params: []
+      params: null
     };
   }
 
@@ -60,6 +60,9 @@ class ConfirmSend extends Component {
     const memo = this.props.navigation.state.params.data.memo
     const params = this.props.navigation.state.params.data.params
 
+if (params === ""){
+  console.log("runs");
+
     this.timeoutTimer = setTimeout(() => {
       if (this.state.loading) {
         this.setState(
@@ -68,9 +71,12 @@ class ConfirmSend extends Component {
       }
     }, TIMEOUT_LIMIT)
 
+
     this.loadingInterval = setInterval(() => {
+      console.log("big oof")
       this.tickLoading()
     }, LOADING_TICKER);
+
 
     let verifyMerkle, verifyTxid
 
@@ -83,7 +89,11 @@ class ConfirmSend extends Component {
       verifyTxid = true
     }
 
-      txPreflight(coinObj, activeUser, address, amount, fee, network, verifyMerkle, verifyTxid)
+
+
+
+      txPreflight(coinObj, activeUser, address, amount, fee, //network
+        verifyMerkle, verifyTxid)
       .then((res) => {
         if(res.err || !res) {
           this.setState({
@@ -142,15 +152,39 @@ class ConfirmSend extends Component {
         });
         console.log(e)
       })
+    }else{
+      let finalTxAmount = amount - fee;
+      let remainingBalance = balance - amount;
+
+      console.log(params[3], params[4])
+      this.setState({
+        loading: false,
+        toAddress: params[3],
+        fromAddress: params[4],
+        network: "private",
+        fee: fee,
+        amountSubmitted: amount,
+        coinObj: coinObj,
+        activeUser: activeUser,
+        balance,
+        memo: memo,
+        remainingBalance: remainingBalance,
+        finalTxAmount: finalTxAmount,
+        loadingProgress: 1,
+        loadingMessage: "Done",
+        feeTakenFromAmount: fee,
+        params: this.props.navigation.state.params.data.params
+       })
     }
+
+  }
 
 
   componentWillUnmount() {
     if (this.loadingInterval) {
       clearInterval(this.loadingInterval);
     }
-  }
-
+  }-1
   cancel = () => {
     this.props.navigation.dispatch(NavigationActions.back())
   }
@@ -183,12 +217,6 @@ class ConfirmSend extends Component {
   }
 
 
-sendPrivate = () => {
-  //coin id, coin protocol, account hash allemaal uit redux vraag aan micheal waar ze staan
-  const params = ["VRSC", "VRSC", "stonks", this.state.toAddress, this.state.fromAddress, this.state.amount, this.state.memo];
-  VerusLightClient.request("666", "send", params);
-}
-
 
   tickLoading = () => {
     //This is cheeky but it actually does all these things
@@ -199,7 +227,7 @@ sendPrivate = () => {
       'Signing Transaction...'
     ]
 
-    let index = 0
+   let index = 0
 
     while (index < loadingMessages.length && loadingMessages[index] !== this.state.loadingMessage) {
       index++

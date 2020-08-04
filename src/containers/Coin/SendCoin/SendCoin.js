@@ -136,29 +136,34 @@ class SendCoin extends Component {
 
   privText = () =>  <Text style={{...Styles.fullWidthButtonTitle, color: Colors.secondaryColor}}>PRIVATE</Text>
 
-  switchButton = () => {
-    if (this.props.channels[this.props.activeCoin.id].channels.includes("dlight")) {
-
-      buttons = [{ element: this.pubText }, { element: this.privText },];
-
-      console.log(this.state.account)
-      console.log(this.state.coin)
+  //this is a function that only shows the switch for private addres screen
+    switchButton = () => {
+      if (this.props.channels[this.props.activeCoin.id].channels.includes("dlight")) {
 
 
-      //console.log(this.props.channels[this.props.activeCoin.id].channels);
-    return( <View style={Styles.centralRow}>
-        <ButtonGroup
-              onPress={this.changeIndex}
-              selectedIndex={this.state.privateIndex}
-              buttons={buttons}
-              containerStyle={ Styles.fullWidthButton }
-              />
-          </View>
-        )
-  } else {
-    return null;
- }
-}
+      const buttons = ['Public', 'Private']
+      const { selectedIndex } = this.state
+
+      return(
+
+      <ButtonGroup
+        onPress={this.changeIndex}
+        buttonStyle={Styles.fullWidthButtonWithPadding}
+        selectedIndex={selectedIndex}
+        selectedItemColor={Colors.primaryColor}
+        buttons={buttons}
+        containerStyle={{height: 35}}
+        containerStyle = {{
+          borderStyle: 'dotted',
+          borderWidth: 0
+        }}
+        />
+
+      )
+    } else {
+      return null;
+   }
+  }
 
   handleFormError = (error, field) => {
     let _errors = this.state.formErrors;
@@ -205,14 +210,45 @@ class SendCoin extends Component {
       amount: coinsToSats(Number(amount)),
       btcFee: this.state.btcFees.average,
       balance: (this.props.balances.public.confirmed + (this.props.balances.private ? this.props.balances.private.confirmed : 0))
-    };
-
-
+      };
 
     navigation.navigate(route, {
       data: data
     });
   };
+b
+  goToConfirmScreentest = (coinObj, activeUser, address, amount, params) => {
+    const route = "ConfirmSend";
+    let navigation = this.props.navigation;
+
+    coinObj = this.state.coin;
+    activeUser = this.state.account;
+    amount = this.state.amount;
+    address = this.state.toAddress;
+
+
+
+    if(this.state.privateIndex == 0){
+      params = "";
+    }else{
+      params = [this.state.coin.id, this.state.coin.proto, this.state.account.accountHash, this.state.toAddress, this.state.fromAddress, this.state.amount, "" ];
+    }
+
+    let data = {
+      coinObj: coinObj,
+      activeUser: activeUser,
+      address: address,
+      params: params,
+      amount: coinsToSats(Number(amount)),
+      btcFee: this.state.btcFees.average,
+      balance: (this.props.balances.public.confirmed + (this.props.balances.private ? this.props.balances.private.confirmed : 0))
+    };
+
+    navigation.navigate(route, {
+      data: data
+    });
+  }
+
 
   fillAddress = address => {
     this.setState({ toAddress: address });
@@ -235,7 +271,6 @@ class SendCoin extends Component {
     });
   };
 
-  //TODO: Add fee to Bitcoin object in CoinData
 
   validateFormData = () => {
     this.setState(
@@ -329,35 +364,14 @@ class SendCoin extends Component {
     );
   };
 
-switchSendAddress = (value) => {
+switchAddress = (value) => {
   this.setState({ fromAddress: value });
 }
 
-privateCoinSending = () => {
-  const params = [this.state.coin.id, this.state.coin.proto, this.state.account.accountHash, this.state.toAddress, this.state.fromAddress, this.state.amount, "" ]
-  VerusLightClient.request(8, "send", params).then(
-    (res) => {
-        console.log(res)
-      }
-    );
-  }
 
 
 dynamicDropDown = () => {
   if(this.state.privateIndex == 1){
-
-    if(this.state.toAddress != null){
-    /*const params = [this.state.coin.id, this.state.coin.proto, this.state.account.accountHash, this.state.toAddress, this.state.fromAddress, this.state.amount, "" ];
-
-
-    VerusLightClient.request(8, "send", params).then(
-      (res) => {
-          console.log(res)
-        }
-      );*/
-    }
-
-
     return (
       <View style={Styles.centralRow}>
         <View style={Styles.wideBlock}>
@@ -446,11 +460,11 @@ dynamicDropDown = () => {
                 value={this.state.toAddress}
                 autoCapitalize={"none"}
                 autoCorrect={false}
-              /*  errorMessage={
+                errorMessage={
                   this.state.formErrors.toAddress
                     ? this.state.formErrors.toAddress
                     : null
-                }*/
+                }
               />
             </View>
             <View style={Styles.wideBlock}>
@@ -463,11 +477,11 @@ dynamicDropDown = () => {
                 shake={this.state.formErrors.amount}
                 keyboardType={"decimal-pad"}
                 autoCapitalize="words"
-              /*  errorMessage={
+                errorMessage={
                   this.state.formErrors.amount
                     ? this.state.formErrors.amount
                     : null
-                } */
+                }
               />
               <View
                 style={{ ...Styles.fullWidthFlexCenterBlock, paddingBottom: 0 }}
@@ -513,7 +527,8 @@ dynamicDropDown = () => {
               </View>
             ) : (
               <View style={Styles.fullWidthFlexCenterBlock}>
-                <StandardButton onPress={ this.goToConfirmScreen } title="SEND" />
+                <StandardButton onPress={ this.validateFormData } title="SEND" />
+                <StandardButton onPress={ this.goToConfirmScreentest } title="SEND_snbeaky" />
               </View>
             )}
           </ScrollView>
