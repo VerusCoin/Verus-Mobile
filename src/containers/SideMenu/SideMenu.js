@@ -4,7 +4,7 @@
 */
 
 import React, { Component } from "react";
-import { View, Text, ScrollView, FlatList, SectionList } from "react-native";
+import { View, Text, FlatList, SectionList } from "react-native";
 import { Icon, ListItem } from "react-native-elements";
 import PropTypes from 'prop-types';
 import DrawerHeader from '../../components/DrawerHeader';
@@ -21,7 +21,7 @@ import {
   setActiveSectionBuySellCrypto,
  } from '../../actions/actionCreators'
 import { getKeyByValue } from '../../utils/objectManip'
-import { NavigationActions } from 'react-navigation';
+import { CommonActions } from '@react-navigation/native';
 import AlertAsync from "react-native-alert-async";
 import Styles from '../../styles/index'
 import { ENABLE_WYRE } from '../../utils/constants/constants';
@@ -57,6 +57,15 @@ class SideMenu extends Component {
     });
   };
 
+  _openApp = (coinObj, screen, section) => {
+    if (section.title === "Identity App") {
+      let navigation = this.props.navigation;
+      navigation.navigate("Identity", { selectedScreen: screen } );
+    } else {
+      this._openCoin(coinObj, screen, section)
+    }
+  }
+
   _openCoin = (coinObj, screen, section) => {
     let sectionName = getKeyByValue(section, coinObj.apps)
     let index = 0;
@@ -71,6 +80,7 @@ class SideMenu extends Component {
       throw new Error("Array out of bounds error at _openCoin in SideMenu.js")
     }
 
+    this.props.navigation.closeDrawer();
     this.props.dispatch(setActiveCoin(coinObj))
     this.props.dispatch(setActiveApp(sectionName))
     this.props.dispatch(setActiveSection(coinObj.apps[sectionName].data[index]))
@@ -115,18 +125,18 @@ class SideMenu extends Component {
     let resetAction
 
     if (fullReset) {
-      resetAction = NavigationActions.reset({
+      resetAction = CommonActions.reset({
         index: 0, // <-- currect active route from actions array
-        actions: [
-          NavigationActions.navigate({ routeName: route, params: {data: data} }),
+        routes: [
+          { name: route, params: { data: data } },
         ],
       })
     } else {
-      resetAction = NavigationActions.reset({
+      resetAction = CommonActions.reset({
         index: 1, // <-- currect active route from actions array
-        actions: [
-          NavigationActions.navigate({ routeName: "Home" }),
-          NavigationActions.navigate({ routeName: route, params: {title: title, data: data} }),
+        routes: [
+          { name: "Home" },
+          { name: route, params: { title: title, data: data } },
         ],
       })
     }
@@ -199,10 +209,10 @@ class SideMenu extends Component {
             leftIcon={{ name: item.icon, size: 30 }}
             containerStyle={Styles.bottomlessListItemContainer}
             onPress={() => {
-              this._openCoin(
+              this._openApp(
                 this.props.activeCoinsForUser[this.state.currentCoinIndex],
                 item.name,
-                section
+                section,
               );
             }}
           />

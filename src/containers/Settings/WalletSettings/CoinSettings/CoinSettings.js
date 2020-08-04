@@ -15,7 +15,7 @@ import {
   Alert,
   Text
 } from "react-native";
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 import { ButtonGroup } from 'react-native-elements'
 import { saveCoinSettings } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
@@ -34,7 +34,7 @@ import Colors from '../../../../globals/colors';
 class CoinSettings extends Component {
   constructor(props) {
     super(props);
-    this.coinID = this.props.navigation.state.params.data
+    this.coinID = this.props.route.params.data
     this.verificationLock = this.props.coinSettings[this.coinID].verificationLock
 
     if (this.props.coinSettings.hasOwnProperty(this.coinID)) {
@@ -61,9 +61,9 @@ class CoinSettings extends Component {
 
   static navigationOptions = ({ navigation }) => {
     return {
-      title: typeof(navigation.state.params)==='undefined' || 
-      typeof(navigation.state.params.title) === 'undefined' ? 
-      'undefined': `${navigation.state.params.title} Settings`,
+      title: typeof(route.params)==='undefined' || 
+      typeof(route.params.title) === 'undefined' ? 
+      'undefined': `${route.params.title} Settings`,
     };
   };
 

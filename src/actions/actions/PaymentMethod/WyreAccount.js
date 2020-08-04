@@ -1,5 +1,5 @@
 import DelayedAlert from '../../../utils/delayedAlert';
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 
 import { WYRE_URL } from '../../../utils/constants/constants';
 

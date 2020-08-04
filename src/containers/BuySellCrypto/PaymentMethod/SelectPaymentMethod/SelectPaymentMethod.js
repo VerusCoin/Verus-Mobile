@@ -7,7 +7,7 @@ import {
   Keyboard,
 } from 'react-native';
 
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 
 import { selectWyreCreateAccountIsFetching } from '../../../../selectors/paymentMethods'
 
@@ -27,7 +27,7 @@ class SelectPaymentMethod extends Component {
   }
 
   onSelect = (method) => {
-    const { onSelect } = this.props.navigation.state.params;
+    const { onSelect } = this.props.route.params;
     if (!onSelect) return;
     onSelect(method);
     this.back();

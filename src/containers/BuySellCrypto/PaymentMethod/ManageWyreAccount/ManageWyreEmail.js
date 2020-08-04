@@ -21,7 +21,7 @@ import {
   selectWyreAccountField,
   selectWyrePutAccountIsFetching,
 } from '../../../../selectors/paymentMethods';
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 
 import {
   putWyreAccountField

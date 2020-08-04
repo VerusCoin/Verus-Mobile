@@ -6,6 +6,11 @@ export * from './actions/cache/Headers'
 export * from './actions/cache/Cache'
 export * from './actions/updateManager'
 
+export * from './actionCreators/claims';
+export * from './actionCreators/claimCategories';
+export * from './actionCreators/attestations';
+export * from './actionCreators/identities';
+
 import {
   SET_ACCOUNTS,
   SIGN_OUT,
@@ -53,7 +58,9 @@ import {
   AUTHENTICATE_USER,
   SET_COINMENU_FOCUS,
   OPEN_DLIGHT_SOCKET,
-  CLOSE_DLIGHT_SOCKET
+  CLOSE_DLIGHT_SOCKET,
+  REQUEST_SEED_DATA,
+  APP_SETUP,
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -405,4 +412,13 @@ export const getTransactionHistoryResponse = (history = {}) => ({
   payload: {
     history,
   }
+});
+
+	export const requestSeedData = () => ({
+  type: REQUEST_SEED_DATA,
+  payload: {},
+});
+export const appSetup = () => ({
+  type: APP_SETUP,
+  payload: {},
 });

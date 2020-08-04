@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import AlertAsync from "react-native-alert-async";
 import { connect } from 'react-redux';
-import { NavigationActions } from 'react-navigation';
+import { CommonActions } from '@react-navigation/native';
 import { clearCacheData } from '../../../actions/actionCreators';
 import Styles from '../../../styles/index'
 
@@ -76,10 +76,10 @@ class WalletSettings extends Component {
   }
 
   resetToScreen = (route, data) => {
-    const resetAction = NavigationActions.reset({
+    const resetAction = CommonActions.reset({
       index: 0, // <-- currect active route from actions array
-      actions: [
-        NavigationActions.navigate({ routeName: route, params: {data: data} }),
+      routes: [
+        { name: route, params: { data: data } },
       ],
     })
 

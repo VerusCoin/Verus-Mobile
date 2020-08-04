@@ -16,7 +16,7 @@ import {
   Alert,
   ScrollView, 
 } from "react-native";
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 import { Input } from 'react-native-elements'
 import { checkPinForUser } from '../../../../utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';

@@ -16,7 +16,6 @@ import { connect } from 'react-redux';
 import { truncateDecimal } from '../../../utils/math';
 import { expireData, setActiveOverviewFilter } from '../../../actions/actionCreators';
 import Styles from '../../../styles/index'
-import withNavigationFocus from "react-navigation/src/views/withNavigationFocus";
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
 import store from "../../../store";
 import TxDetailsModal from '../../../components/TxDetailsModal/TxDetailsModal'
@@ -33,6 +32,7 @@ import {
   PRIVATE,
   TOTAL
 } from '../../../utils/constants/constants'
+import { selectTransactions } from '../../../selectors/transactions';
 import { Dropdown } from 'react-native-material-dropdown'
 import Colors from "../../../globals/colors";
 
@@ -85,10 +85,16 @@ class Overview extends Component {
     this.refresh();
   }
 
-  componentDidUpdate(lastProps) {
-    if (lastProps.isFocused !== this.props.isFocused && this.props.isFocused) {
+  componentDidMount() {
+    this.refresh();
+
+    this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
       this.refresh();
-    }
+    });
+  }
+
+  componentWillUnmount() {
+    this._unsubscribeFocus()
   }
 
   refresh = () => {
@@ -331,7 +337,7 @@ class Overview extends Component {
   };
 
   render() {
-    const { activeOverviewFilter, enabledChannels, activeCoin, dispatch } = this.props
+    const { activeOverviewFilter, enabledChannels, activeCoin, dispatch } = this.props;
 
     return (
       <View style={Styles.defaultRoot}>
@@ -388,14 +394,7 @@ const mapStateToProps = (state) => {
         private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
       }
     },
-    transactions: {
-      public: state.ledger.transactions[ELECTRUM][chainTicker],
-      private: state.ledger.transactions[DLIGHT][chainTicker],
-      errors: {
-        public: state.errors[API_GET_TRANSACTIONS][ELECTRUM][chainTicker],
-        private: state.errors[API_GET_TRANSACTIONS][DLIGHT][chainTicker],
-      }
-    },
+    transactions: selectTransactions(state),
     activeAccount: state.authentication.activeAccount,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     generalWalletSettings: state.settings.generalWalletSettings,
@@ -404,4 +403,4 @@ const mapStateToProps = (state) => {
   }
 };
 
-export default connect(mapStateToProps)(withNavigationFocus(Overview));
+export default connect(mapStateToProps)(Overview);

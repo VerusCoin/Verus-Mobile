@@ -10,6 +10,8 @@ const Colors = {
     infoButtonColor: '#F89336', // Orange
     linkButtonColor: '#4E73DF', // Blue
     basicButtonColor: 'black',
+    lightGrey:'#b5b5b5',
+    ultraLightGrey:'#d6cccb',
 }
 
 export default Colors
