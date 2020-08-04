@@ -103,13 +103,7 @@ class ReceiveCoin extends Component {
 
   }
 
-/*
-1) maak een button met 2 keuzes zoals in de graphic
-2) maak een private boolean (true false varibale) in states
-3)pas dat component aan om als je true valse varibale true is
-je private address uit redux haalt ipv je public
 
-*/
 //this if statement is here because it can turn the switch on or off
 walletPrivate = () => {
   if (
@@ -333,9 +327,7 @@ walletPrivate = () => {
   changeIndex = (privateIndex) => {
     this.setState({ privateIndex })
   }
-  pubText = () => <Text style={{...Styles.fullWidthButtonTitle, color: Colors.secondaryColor}}>PUBLIC</Text>
 
-  privText = () =>  <Text style={{...Styles.fullWidthButtonTitle, color: Colors.secondaryColor}}>PRIVATE</Text>
 //this is a function that only shows the switch for private addres screen
   switchButton = () => {
     if (this.props.channels[this.props.activeCoin.id].channels.includes("dlight")) {
@@ -467,7 +459,7 @@ if(this.state.privateIndex == 0){
     const coinObj = this.state.selectedCoin
     const activeUser = this.props.activeAccount
 
-<<<<<<< HEAD
+
    var testString = "f"
 
     if(this.state.privateAddress.length > 27 ){
@@ -475,15 +467,7 @@ if(this.state.privateIndex == 0){
 
     }else{
       testString =this.state.privateAddress;
-=======
-   var showPriv = "f"
 
-    if(this.state.privateAddress.length > 27 ){
-      showPriv = this.state.privateAddress.substring(0,27)+"..."
-      console.log("dit execute")
-    }else{
-      showPriv =this.state.privateAddress;
->>>>>>> d06e1b4d44f1847c752164ce79e08c3ed00544ab
     }
 
 
@@ -509,11 +493,7 @@ if(this.state.privateIndex == 0){
       label="Selected address:"
       labelTextStyle={{ fontFamily: "Avenir-Book" }}
       labelFontSize={17}
-<<<<<<< HEAD
       value={testString}
-=======
-      value={showPriv}
->>>>>>> d06e1b4d44f1847c752164ce79e08c3ed00544ab
       labelTextStyle={{ ...Styles.textDots}}
       pickerStyle={{ backgroundColor: Colors.tertiaryColor}}
       itemTextStyle={{ fontFamily: "Avenir-Book"}}

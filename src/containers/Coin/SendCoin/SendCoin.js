@@ -132,9 +132,7 @@ class SendCoin extends Component {
     this.setState({ privateIndex })
   }
 
-  pubText = () => <Text style={{...Styles.fullWidthButtonTitle, color: Colors.secondaryColor}}>PUBLIC</Text>
 
-  privText = () =>  <Text style={{...Styles.fullWidthButtonTitle, color: Colors.secondaryColor}}>PRIVATE</Text>
 
   //this is a function that only shows the switch for private addres screen
     switchButton = () => {
@@ -216,8 +214,9 @@ class SendCoin extends Component {
       data: data
     });
   };
-b
-  goToConfirmScreentest = (coinObj, activeUser, address, amount, params) => {
+
+  //this is used to test the next screen without needing the have the requirements
+  /*goToConfirmScreentest = (coinObj, activeUser, address, amount, params) => {
     const route = "ConfirmSend";
     let navigation = this.props.navigation;
 
@@ -247,7 +246,7 @@ b
     navigation.navigate(route, {
       data: data
     });
-  }
+  }*/
 
 
   fillAddress = address => {
@@ -369,7 +368,7 @@ switchAddress = (value) => {
 }
 
 
-
+//this is the private dropdown
 dynamicDropDown = () => {
   if(this.state.privateIndex == 1){
     return (
@@ -528,7 +527,7 @@ dynamicDropDown = () => {
             ) : (
               <View style={Styles.fullWidthFlexCenterBlock}>
                 <StandardButton onPress={ this.validateFormData } title="SEND" />
-                <StandardButton onPress={ this.goToConfirmScreentest } title="SEND_snbeaky" />
+                //<StandardButton onPress={ this.goToConfirmScreentest } title="SEND_snbeaky" />
               </View>
             )}
           </ScrollView>
