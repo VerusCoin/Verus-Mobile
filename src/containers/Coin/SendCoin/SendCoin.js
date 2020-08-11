@@ -10,7 +10,7 @@
 
 import React, { Component } from "react"
 import StandardButton from "../../../components/StandardButton"
-import { FormLabel, Input, FormValidationMessage, } from "react-native-elements"
+import { FormLabel, Input, FormValidationMessage } from "react-native-elements"
 import {
   View,
   Text,
@@ -28,7 +28,6 @@ import { getRecommendedBTCFees } from '../../../utils/api/channels/general/callC
 import { removeSpaces } from '../../../utils/stringUtils'
 import Styles from '../../../styles/index'
 import Colors from '../../../globals/colors';
-import withNavigationFocus from "react-navigation/src/views/withNavigationFocus"
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import store from "../../../store"
 import { API_GET_FIATPRICE, API_GET_BALANCES, ELECTRUM, DLIGHT } from "../../../utils/constants/intervalConstants"
@@ -54,12 +53,20 @@ class SendCoin extends Component {
       formErrors: { toAddress: null, amount: null },
       spendableBalance: 0
     };
+
+    this._unsubscribeFocus = null
   }
 
-  componentDidUpdate(lastProps) {
-    if (lastProps.isFocused !== this.props.isFocused && this.props.isFocused) {
+  componentDidMount() {
+    this.initializeState();
+
+    this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
       this.initializeState();
-    }
+    });
+  }
+
+  componentWillUnmount() {
+    this._unsubscribeFocus()
   }
 
   initializeState = () => {
@@ -270,8 +277,12 @@ class SendCoin extends Component {
 
   render() {
     const { balances, activeCoin } = this.props;
+
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <TouchableWithoutFeedback
+        onPress={Keyboard.dismiss}
+        accessible={false}
+      >
         <View style={Styles.defaultRoot}>
           <View style={Styles.centralRow}>
             <TouchableOpacity
@@ -280,7 +291,9 @@ class SendCoin extends Component {
                   ? () =>
                       this.fillAmount(
                         balances.public.confirmed -
-                          satsToCoins(activeCoin.fee ? activeCoin.fee : 10000)
+                          satsToCoins(
+                            activeCoin.fee ? activeCoin.fee : 10000
+                          )
                       )
                   : () => {
                       return 0;
@@ -291,16 +304,15 @@ class SendCoin extends Component {
               <Text
                 style={{
                   ...Styles.largeCentralPaddedHeader,
-                  ...Styles.linkText
+                  ...Styles.linkText,
                 }}
               >
-                {this.state.coin.id && balances.public
-                  ? typeof balances.public.confirmed !== "undefined"
-                    ? truncateDecimal(balances.public.confirmed, 4) +
-                      " " +
-                      this.state.coin.id
-                    : null
-                  : null}
+                {balances.public &&
+                typeof balances.public.confirmed !== "undefined"
+                  ? truncateDecimal(balances.public.confirmed, 4) +
+                    " " +
+                    activeCoin.id
+                  : `0 ${activeCoin.id}`}
               </Text>
             </TouchableOpacity>
           </View>
@@ -315,7 +327,7 @@ class SendCoin extends Component {
               <Input
                 labelStyle={Styles.formInputLabel}
                 label={"To:"}
-                onChangeText={text =>
+                onChangeText={(text) =>
                   this.setState({ toAddress: removeSpaces(text) })
                 }
                 onSubmitEditing={Keyboard.dismiss}
@@ -333,7 +345,7 @@ class SendCoin extends Component {
               <Input
                 labelStyle={Styles.formInputLabel}
                 label={"Amount:"}
-                onChangeText={text => this.setState({ amount: text })}
+                onChangeText={(text) => this.setState({ amount: text })}
                 onSubmitEditing={Keyboard.dismiss}
                 value={this.state.amount.toString()}
                 shake={this.state.formErrors.amount}
@@ -346,14 +358,17 @@ class SendCoin extends Component {
                 }
               />
               <View
-                style={{ ...Styles.fullWidthFlexCenterBlock, paddingBottom: 0 }}
+                style={{
+                  ...Styles.fullWidthFlexCenterBlock,
+                  paddingBottom: 0,
+                }}
               >
                 <TouchableOpacity onPress={this._verusPay}>
                   <Image
                     source={VERUSPAY_LOGO_DIR}
                     style={{
                       width: 40,
-                      height: 40
+                      height: 40,
                     }}
                   />
                 </TouchableOpacity>
@@ -361,7 +376,9 @@ class SendCoin extends Component {
             </View>
             {this.state.loading ? (
               <View style={Styles.fullWidthFlexCenterBlock}>
-                <Text style={Styles.centralHeader}>Updating balance...</Text>
+                <Text style={Styles.centralHeader}>
+                  Updating balance...
+                </Text>
                 <ActivityIndicator
                   animating={this.state.loading}
                   size="large"
@@ -369,7 +386,9 @@ class SendCoin extends Component {
               </View>
             ) : this.state.loadingBTCFees ? (
               <View style={Styles.fullWidthFlexCenterBlock}>
-                <Text style={Styles.centralHeader}>Loading BTC Fees...</Text>
+                <Text style={Styles.centralHeader}>
+                  Loading BTC Fees...
+                </Text>
                 <ActivityIndicator
                   animating={this.state.loadingBTCFees}
                   size="large"
@@ -377,19 +396,26 @@ class SendCoin extends Component {
               </View>
             ) : this.state.btcFeesErr ? (
               <View style={Styles.fullWidthFlexCenterBlock}>
-                <Text style={{ ...Styles.centralHeader, ...Styles.errorText }}>
+                <Text
+                  style={{ ...Styles.centralHeader, ...Styles.errorText }}
+                >
                   BTC Fees Error!
                 </Text>
               </View>
             ) : balances.errors.public ? (
               <View style={Styles.fullWidthFlexCenterBlock}>
-                <Text style={{ ...Styles.centralHeader, ...Styles.errorText }}>
+                <Text
+                  style={{ ...Styles.centralHeader, ...Styles.errorText }}
+                >
                   Connection Error
                 </Text>
               </View>
             ) : (
               <View style={Styles.fullWidthFlexCenterBlock}>
-                <StandardButton onPress={this.validateFormData} title="SEND" />
+                <StandardButton
+                  onPress={this.validateFormData}
+                  title="SEND"
+                />
               </View>
             )}
           </ScrollView>
@@ -418,4 +444,4 @@ const mapStateToProps = (state) => {
   }
 };
 
-export default connect(mapStateToProps)(withNavigationFocus(SendCoin));
+export default connect(mapStateToProps)(SendCoin);

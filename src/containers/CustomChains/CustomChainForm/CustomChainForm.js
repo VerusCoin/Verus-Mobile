@@ -16,7 +16,7 @@ import {
   TouchableWithoutFeedback,
   Alert
 } from "react-native";
-import { NavigationActions } from 'react-navigation';
+import { CommonActions } from '@react-navigation/native';
 import { Input, Icon, CheckBox } from 'react-native-elements'
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
@@ -140,11 +140,11 @@ class CustomChainForm extends Component {
   }
 
   resetToScreen = (route, data) => {
-    const resetAction = NavigationActions.reset({
+    const resetAction = CommonActions.reset({
       index: 1, // <-- currect active route from actions array
-      actions: [
-        NavigationActions.navigate({ routeName: "Home" }),
-        NavigationActions.navigate({ routeName: route, params: {data: data} }),
+      routes: [
+        { name: "Home" },
+        { name: route, params: {data: data} },
       ],
     })
 

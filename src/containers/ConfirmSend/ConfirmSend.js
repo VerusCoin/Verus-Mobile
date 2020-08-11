@@ -14,7 +14,8 @@ import { networks } from 'bitgo-utxo-lib';
 import { View, Text, ScrollView, Keyboard, Alert } from "react-native";
 import { satsToCoins, truncateDecimal, coinsToSats } from '../../utils/math';
 import ProgressBar from 'react-native-progress/Bar';
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
+import { CommonActions } from '@react-navigation/native';
 import { NO_VERIFICATION, MID_VERIFICATION } from '../../utils/constants/constants'
 import Styles from '../../styles/index'
 import Colors from "../../globals/colors";
@@ -47,14 +48,14 @@ class ConfirmSend extends Component {
   }
 
   componentDidMount() {
-    const coinObj = this.props.navigation.state.params.data.coinObj
-    const activeUser = this.props.navigation.state.params.data.activeUser
-    const address = this.props.navigation.state.params.data.address
-    const amount = Number(this.props.navigation.state.params.data.amount)
-    const fee = coinObj.id === 'BTC' ? { feePerByte: Number(this.props.navigation.state.params.data.btcFee) } : Number(this.props.navigation.state.params.data.coinObj.fee)
+    const coinObj = this.props.route.params.data.coinObj
+    const activeUser = this.props.route.params.data.activeUser
+    const address = this.props.route.params.data.address
+    const amount = Number(this.props.route.params.data.amount)
+    const fee = coinObj.id === 'BTC' ? { feePerByte: Number(this.props.route.params.data.btcFee) } : Number(this.props.route.params.data.coinObj.fee)
     const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
-    const balance = Number(this.props.navigation.state.params.data.balance)
-    const memo = this.props.navigation.state.params.data.memo
+    const balance = Number(this.props.route.params.data.balance)
+    const memo = this.props.route.params.data.memo
     
     this.timeoutTimer = setTimeout(() => {
       if (this.state.loading) {
@@ -166,10 +167,10 @@ class ConfirmSend extends Component {
       btcFee: this.state.btcFeePerByte,
     }
 
-    const resetAction = NavigationActions.reset({
+    const resetAction = CommonActions.reset({
       index: 0, // <-- currect active route from actions array
-      actions: [
-        NavigationActions.navigate({ routeName: route, params: {data: data} }),
+      routes: [
+        { name: route, params: { data: data } },
       ],
     })
 

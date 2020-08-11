@@ -12,5 +12,5 @@ export default Styles = StyleSheet.create({
   ...text,
   ...containers,
   ...misc,
-  ...tables
+  ...tables,
 });

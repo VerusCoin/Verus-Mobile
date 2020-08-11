@@ -20,7 +20,7 @@ import {
   ActivityIndicator,
   Alert
 } from "react-native";
-import { NavigationActions } from 'react-navigation';
+import { CommonActions } from '@react-navigation/native';
 import { connect } from 'react-redux';
 import { signOut } from '../../actions/actionCreators';
 import { Icon } from "react-native-elements";
@@ -49,7 +49,7 @@ class SecureLoading extends Component {
 
   componentWillMount() {
     const navigation = this.props.navigation
-    const data = navigation.state.params ? navigation.state.params.data : null
+    const data = route.params ? route.params.data : null
 
     this.timeoutTimer = setTimeout(() => {
       this.setState({status: 'timeout'})
@@ -96,10 +96,10 @@ class SecureLoading extends Component {
   }
 
   resetToScreen = (route) => {
-    const resetAction = NavigationActions.reset({
+    const resetAction = CommonActions.reset({
       index: 0, // <-- currect active route from actions array
-      actions: [
-        NavigationActions.navigate({ routeName: route }),
+      routes: [
+        { name: route },
       ],
     })
 

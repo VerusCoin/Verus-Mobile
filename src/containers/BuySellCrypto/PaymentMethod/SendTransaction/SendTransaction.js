@@ -5,7 +5,7 @@ import {
   Text,
   ScrollView,
   } from 'react-native';
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 import { sendTransaction } from '../../../../actions/actions/PaymentMethod/WyreAccount';
 import StandardButton from '../../../../components/StandardButton';
 import styles from './SendTransaction.styles';
@@ -27,10 +27,10 @@ class SendTransaction extends Component {
 
   handleConfirm = () => {
     this.props.sendTransaction(
-      this.props.navigation.state.params.paymentMethod.name,
-      this.props.navigation.state.params.fromCurr,
-      this.props.navigation.state.params.fromVal,
-      this.props.navigation.state.params.toCurr,
+      this.props.route.params.paymentMethod.name,
+      this.props.route.params.fromCurr,
+      this.props.route.params.fromVal,
+      this.props.route.params.toCurr,
       this.props.navigation,
     );
   }
@@ -48,7 +48,7 @@ class SendTransaction extends Component {
               Payment method
             </Text>
             <Text style={styles.transactionInfoSubtitleTextStyle}> 
-              {this.props.navigation.state.params.paymentMethod.name}
+              {this.props.route.params.paymentMethod.name}
             </Text>
 
             <Text style={styles.transactionInfoTitleTextStyle}>
@@ -56,7 +56,7 @@ class SendTransaction extends Component {
             </Text>
             <Text style={styles.transactionInfoSubtitleTextStyle}>
               {
-                ` ${this.props.navigation.state.params.fromVal} "${this.props.navigation.state.params.fromCurr}"`
+                ` ${this.props.route.params.fromVal} "${this.props.route.params.fromCurr}"`
               }
             </Text>
 
@@ -65,7 +65,7 @@ class SendTransaction extends Component {
             </Text>
             <Text style={styles.transactionInfoSubtitleTextStyle}>
               {
-                `${this.props.navigation.state.params.toVal} "${this.props.navigation.state.params.toCurr}"`
+                `${this.props.route.params.toVal} "${this.props.route.params.toCurr}"`
               }
             </Text>
           </View>    

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 
 import { View } from 'react-native';
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 import PlaidAuthenticator from 'react-native-plaid-link';
 import Spinner from 'react-native-loading-spinner-overlay';
 

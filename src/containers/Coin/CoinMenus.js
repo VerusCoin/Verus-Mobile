@@ -26,7 +26,7 @@ class CoinMenus extends Component {
 
     //CoinMenus can be passed data, which will be passed to
     //the app section components as props
-    this.passthrough = this.props.navigation.state.params ? this.props.navigation.state.params.data : null
+    this.passthrough = this.props.route.params ? this.props.route.params.data : null
 
     this.state = {
       tabs: stateObj.tabs,
@@ -48,14 +48,6 @@ class CoinMenus extends Component {
     })
 
   }
-
-  static navigationOptions = ({ navigation }) => {
-    return {
-      title: typeof(navigation.state.params)==='undefined' ||
-      typeof(navigation.state.params.title) === 'undefined' ?
-      'undefined': navigation.state.params.title,
-    };
-  };
 
   generateTabs = () => {
     //this.props.activeSection
@@ -91,6 +83,8 @@ class CoinMenus extends Component {
       throw new Error("Tab not found for active section " + this.props.activeSection.key)
     }
 
+    this.props.navigation.setOptions({ title: activeTab.label })
+
     return {
       tabs: tabArray,
       activeTab: activeTab
@@ -113,7 +107,7 @@ class CoinMenus extends Component {
   )
 
   switchTab = (newTab) => {
-    this.props.navigation.setParams({ title: newTab.label })
+    this.props.navigation.setOptions({ title: newTab.label })
     this.setState({ activeTab: newTab })
   }
 
@@ -124,11 +118,24 @@ class CoinMenus extends Component {
   render() {
     return (
       <View style={{ flex: 1 }}>
-          {this.state.activeTab.screen === "Overview" ? <Overview navigation={this.props.navigation} data={this.passthrough}/> :
-          (this.state.activeTab.screen === "SendCoin" ? <SendCoin navigation={this.props.navigation} data={this.passthrough}/> :
-          (this.state.activeTab.screen === "ReceiveCoin" ? <ReceiveCoin navigation={this.props.navigation} data={this.passthrough}/> : null))}
+        {this.state.activeTab.screen === "Overview" ? (
+          <Overview
+            navigation={this.props.navigation}
+            data={this.passthrough}
+          />
+        ) : this.state.activeTab.screen === "SendCoin" ? (
+          <SendCoin
+            navigation={this.props.navigation}
+            data={this.passthrough}
+          />
+        ) : this.state.activeTab.screen === "ReceiveCoin" ? (
+          <ReceiveCoin
+            navigation={this.props.navigation}
+            data={this.passthrough}
+          />
+        ) : null}
         <BottomNavigation
-          onTabPress={newTab => this.switchTab(newTab)}
+          onTabPress={(newTab) => this.switchTab(newTab)}
           renderTab={this.renderTab}
           tabs={this.state.tabs}
           activeTab={this.state.activeTab.key}

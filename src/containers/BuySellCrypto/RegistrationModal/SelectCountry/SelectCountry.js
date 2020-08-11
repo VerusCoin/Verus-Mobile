@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { SUPPORTED_COUNTRIES } from '../../../../utils/constants/constants'
 import { saveBuySellSettings } from '../../../../actions/actionCreators'
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 import { connect } from 'react-redux';
 import styles from './SelectCountry.styles'
 import CountryPicker from 'react-native-country-picker-modal';
