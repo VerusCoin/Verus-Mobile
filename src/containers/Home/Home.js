@@ -175,12 +175,7 @@ class Home extends Component {
     navigation.navigate("Identity", { selectedScreen: "Identity" } );
   }
   _addCoin = () => {
-<<<<<<< HEAD
     let navigation = this.props.navigation
-
-=======
-    let navigation = this.props.navigation
->>>>>>> upstream/identities
     navigation.navigate("AddCoin", { refresh: this.refresh });
   }
 
@@ -196,28 +191,6 @@ class Home extends Component {
   }
 
   renderCoinList = () => {
-<<<<<<< HEAD
-  const { rates, info, balances, activeCoinsForUser, displayCurrency } = this.props;
-
-  return (
-    <ScrollView
-      style={Styles.wide}
-      refreshControl={
-        <RefreshControl
-          refreshing={this.state.loading}
-          onRefresh={this.forceUpdate}
-        />
-      }
-    >
-      <TouchableOpacity onPress={this._verusPay}>
-        <ListItem
-          title={<Text style={Styles.listItemLeftTitleDefault}>VerusPay</Text>}
-          hideChevron
-          leftAvatar={{
-            source: require("../../images/customIcons/verusPay.png")
-          }}
-          containerStyle={Styles.bottomlessListItemContainer}
-=======
     const { rates, balances, activeCoinsForUser, displayCurrency } = this.props;
 
     return (
@@ -321,7 +294,6 @@ class Home extends Component {
           )}
           extraData={balances.public}
           keyExtractor={item => item.id}
->>>>>>> upstream/identities
         />
       </TouchableOpacity>
       <FlatList
@@ -458,8 +430,5 @@ const mapStateToProps = (state) => {
   }
 };
 
-<<<<<<< HEAD
-export default connect(mapStateToProps)(withNavigationFocus(Home));
-=======
+
 export default connect(mapStateToProps)(Home);
->>>>>>> upstream/identities
