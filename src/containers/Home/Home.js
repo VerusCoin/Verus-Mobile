@@ -295,101 +295,31 @@ class Home extends Component {
           extraData={balances.public}
           keyExtractor={item => item.id}
         />
-      </TouchableOpacity>
-      <FlatList
-        data={activeCoinsForUser}
-        scrollEnabled={false}
-        renderItem={({ item, index }) => (
-          <TouchableOpacity
-            onPress={() => {
-              this._openCoin(activeCoinsForUser[index], item);
-            }}
-          >
+        <Divider style={Styles.defaultDivider} />
+        {ENABLE_WYRE && (
+          <TouchableOpacity onPress={this._buySellCrypto}>
             <ListItem
-              roundAvatar
-              title={<Text style={Styles.listItemLeftTitleDefault}>{item.name}</Text>}
-              subtitle={
-                balances.public.hasOwnProperty(item.id) ||
-                balances.errors.public[item.id]
-                  ? balances.errors.public[item.id] ||
-                    isNaN(balances.public[item.id].confirmed)
-                    ? CONNECTION_ERROR
-                    : truncateDecimal(
-                        balances.public[item.id].confirmed,
-                        4
-                      ) +
-                      " " +
-                      item.id
-                  : null
-              }
+              title={<Text style={Styles.listItemLeftTitleDefault}>Buy/Sell Crypto</Text>}
               leftAvatar={{
-                source: item.logo
+                source: require("../../images/customIcons/buySell.png")
               }}
-              subtitleStyle={
-                (balances.public.hasOwnProperty(item.id) ||
-                  balances.errors.public[item.id]) &&
-                (balances.errors.public[item.id] ||
-                  isNaN(balances.public[item.id].confirmed))
-                  ? Styles.listItemSubtitleDefault
-                  : null
-              }
               containerStyle={Styles.bottomlessListItemContainer}
-              rightSubtitle={balances.errors.public[item.id] && balances.errors.private[item.id]?
-                "ConnectionError" //first it checks if both errors are present
-              : balances.errors.private[item.id]?
-                "PrivateError" //then it checks if there is only a private error
-              : balances.errors.public[item.id]?
-                "PublicError" //then it checks if there is a public error
-              : info.private[item.id]? //if the syncronizer is present
-                `${info.private[item.id].status.toLowerCase()} ${info.private[item.id].progress}` //it showes the status and the progress
-              : null //if there is nothing there it shows nothing
-              }
-              rightSubtitleStyle={balances.errors.private[item.id] || balances.errors.public[item.id]? Styles.errorText : Styles.successText}
-              rightTitleStyle={Styles.listItemRightTitleDefaultError}
-              rightTitle={
-                (!balances.public.hasOwnProperty(item.id) ||
-                balances.errors.public[item.id] ||
-                isNaN(balances.public[item.id].confirmed)
-                  ? "-"
-                  : truncateDecimal(
-                      (rates[item.id] && rates[item.id][displayCurrency] != null
-                        ? rates[item.id][displayCurrency]
-                        : 0) *
-                        balances.public[item.id].confirmed,
-                      2
-                    )) + ' ' + displayCurrency
-              }
+              hideChevron
             />
           </TouchableOpacity>
         )}
-        extraData={balances.public}
-        keyExtractor={item => item.id}
-      />
-      <Divider style={Styles.defaultDivider} />
-      {ENABLE_WYRE && (
-        <TouchableOpacity onPress={this._buySellCrypto}>
+        <TouchableOpacity onPress={this._addCoin}>
           <ListItem
-            title={<Text style={Styles.listItemLeftTitleDefault}>Buy/Sell Crypto</Text>}
+            title={<Text style={Styles.listItemLeftTitleDefault}>Add Coin</Text>}
             leftAvatar={{
-              source: require("../../images/customIcons/buySell.png")
+              source: require("../../images/customIcons/coinAdd.png")
             }}
-            containerStyle={Styles.bottomlessListItemContainer}
+            containerStyle={{ borderBottomWidth: 0 }}
             hideChevron
           />
         </TouchableOpacity>
-      )}
-      <TouchableOpacity onPress={this._addCoin}>
-        <ListItem
-          title={<Text style={Styles.listItemLeftTitleDefault}>Add Coin</Text>}
-          leftAvatar={{
-            source: require("../../images/customIcons/coinAdd.png")
-          }}
-          containerStyle={{ borderBottomWidth: 0 }}
-          hideChevron
-        />
-      </TouchableOpacity>
-    </ScrollView>
-  );
+      </ScrollView>
+    );
 }
 
 render() {
