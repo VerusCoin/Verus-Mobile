@@ -35,7 +35,7 @@ class SignUp extends Component {
       confirmPin: null,
       seeds: {
         [DLIGHT]: null,
-        [ELECTRUM]: null
+        [ELECTRUM]: null,
       },
       publicSeedModalOpen: false,
       privateSeedModalOpen: false,
@@ -45,10 +45,10 @@ class SignUp extends Component {
         userName: null,
         pin: null,
         confirmPin: null,
-        disclaimerRealized: null
+        disclaimerRealized: null,
       },
       warnings: [],
-      scanning: false
+      scanning: false,
     };
   }
 
@@ -58,14 +58,11 @@ class SignUp extends Component {
       clearInterval(this.props.updateIntervalID)
       this.props.dispatch(setUpdateIntervalID(null))
     }*/
-    this.props.activeCoinList.map(coinObj => {
+    this.props.activeCoinList.map((coinObj) => {
       clearAllCoinIntervals(coinObj.id);
     });
 
-    if (
-      this.props.route.params &&
-      this.props.route.params.data
-    ) {
+    if (this.props.route.params && this.props.route.params.data) {
       this.fillSeed(this.props.route.params.data.seed);
     }
   }
@@ -82,14 +79,18 @@ class SignUp extends Component {
     this.setState({ errors: _errors });
   };
 
-  handleWarning = warning => {
+  handleWarning = (warning) => {
     let _warnings = this.state.warnings;
     _warnings.push(warning);
 
     this.setState({ warnings: _warnings });
   };
 
-  duplicateAccount = accountID => {
+  hasAccount = () => {
+    return this.props.accounts.length > 0
+  }
+
+  duplicateAccount = (accountID) => {
     let index = 0;
 
     while (
@@ -117,14 +118,14 @@ class SignUp extends Component {
           userName: null,
           pin: null,
           confirmPin: null,
-          disclaimerRealized: null
+          disclaimerRealized: null,
         },
-        warnings: []
+        warnings: [],
       },
       () => {
         const _userName = this.state.userName;
         const _pin = this.state.pin;
-        const _seeds = this.state.seeds
+        const _seeds = this.state.seeds;
         const _confirmPin = this.state.confirmPin;
         const _disclaimerRealized = this.state.disclaimerRealized;
         let _errors = false;
@@ -142,7 +143,10 @@ class SignUp extends Component {
         }
 
         if (_seeds[ELECTRUM] == null || _seeds[DLIGHT] == null) {
-          Alert.alert("Error", "Please configure both a primary seed, and a secondary seed.")
+          Alert.alert(
+            "Error",
+            "Please configure both a primary seed, and a secondary seed."
+          );
           _errors = true;
         }
 
@@ -174,12 +178,12 @@ class SignUp extends Component {
             { [ELECTRUM]: _seeds[ELECTRUM], [DLIGHT]: _seeds[DLIGHT] },
             this.state.pin,
             this.props.accounts
-          ).then(action => {
-            this.props.dispatch(action);
+          ).then((action) => {
+            this.createAccount(action)
           });
         } else if (!_errors) {
           this.canMakeAccount()
-            .then(res => {
+            .then((res) => {
               if (res) {
                 addUser(
                   this.state.userName,
@@ -187,21 +191,30 @@ class SignUp extends Component {
                   this.state.pin,
                   this.props.accounts
                 )
-                  .then(action => {
-                    this.props.dispatch(action);
+                  .then((action) => {
+                    this.createAccount(action)
                   })
-                  .catch(e => {
+                  .catch((e) => {
                     console.warn(e);
                   });
               }
             })
-            .catch(e => {
+            .catch((e) => {
               console.warn(e);
             });
         }
       }
     );
   };
+
+  createAccount(accountAction) {
+    Alert.alert(
+      "Account Created!",
+      `${this.state.userName} account has been created. Login to continue.`
+    );
+
+    this.props.dispatch(accountAction);
+  }
 
   scanSeed = () => {
     this.setState({ scanning: true });
@@ -212,8 +225,8 @@ class SignUp extends Component {
   };
 
   setupSeed = (channel) => {
-    const { seeds } = this.state
-    const oppositeChannel = channel === ELECTRUM ? DLIGHT : ELECTRUM
+    const { seeds } = this.state;
+    const oppositeChannel = channel === ELECTRUM ? DLIGHT : ELECTRUM;
 
     if (!seeds[channel] && seeds[oppositeChannel]) {
       AlertAsync(
@@ -225,31 +238,31 @@ class SignUp extends Component {
           {
             text: "No",
             onPress: () => Promise.resolve(false),
-            style: "cancel"
+            style: "cancel",
           },
-          { text: "Yes", onPress: () => Promise.resolve(true) }
+          { text: "Yes", onPress: () => Promise.resolve(true) },
         ],
         {
-          cancelable: false
+          cancelable: false,
         }
-      ).then(canCopySeed => {
+      ).then((canCopySeed) => {
         if (canCopySeed) {
-          this.setState(
-            {
-              seeds: {
-                ...seeds,
-                [channel]: seeds[oppositeChannel]
-              }
-            }
-          );
+          this.setState({
+            seeds: {
+              ...seeds,
+              [channel]: seeds[oppositeChannel],
+            },
+          });
         } else if (channel === ELECTRUM) {
-          this.setState({ publicSeedModalOpen: true })
-        } else if (channel === DLIGHT) this.setState({ privateSeedModalOpen: true })
+          this.setState({ publicSeedModalOpen: true });
+        } else if (channel === DLIGHT)
+          this.setState({ privateSeedModalOpen: true });
       });
     } else if (channel === ELECTRUM) {
-      this.setState({ publicSeedModalOpen: true })
-    } else if (channel === DLIGHT) this.setState({ privateSeedModalOpen: true })
-  }
+      this.setState({ publicSeedModalOpen: true });
+    } else if (channel === DLIGHT)
+      this.setState({ privateSeedModalOpen: true });
+  };
 
   canMakeAccount = () => {
     let alertText =
@@ -268,12 +281,12 @@ class SignUp extends Component {
         {
           text: "No, take me back",
           onPress: () => Promise.resolve(false),
-          style: "cancel"
+          style: "cancel",
         },
-        { text: "Continue", onPress: () => Promise.resolve(true) }
+        { text: "Continue", onPress: () => Promise.resolve(true) },
       ],
       {
-        cancelable: false
+        cancelable: false,
       }
     );
   };
@@ -281,13 +294,16 @@ class SignUp extends Component {
   render() {
     return (
       <React.Fragment>
-      <View style={Styles.headerContainer}>
-        <Text style={Styles.centralHeader}>Create New Account</Text>
-      </View>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={Styles.flexBackground}>
-          <ScrollView 
-            contentContainerStyle={{...Styles.centerContainer, ...Styles.innerHeaderFooterContainer}}
+        <View style={Styles.headerContainer}>
+          <Text style={Styles.centralHeader}>Create New Account</Text>
+        </View>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <View style={Styles.flexBackground}>
+            <ScrollView
+              contentContainerStyle={{
+                ...Styles.centerContainer,
+                ...Styles.innerHeaderFooterContainer,
+              }}
             >
               <SetupSeedModal
                 animationType="slide"
@@ -299,7 +315,7 @@ class SignUp extends Component {
                 }}
                 setSeed={(seed, channel) => {
                   this.setState({
-                    seeds: { ...this.state.seeds, [channel]: seed }
+                    seeds: { ...this.state.seeds, [channel]: seed },
                   });
                 }}
                 channel={ELECTRUM}
@@ -314,7 +330,7 @@ class SignUp extends Component {
                 }}
                 setSeed={(seed, channel) => {
                   this.setState({
-                    seeds: { ...this.state.seeds, [channel]: seed }
+                    seeds: { ...this.state.seeds, [channel]: seed },
                   });
                 }}
                 channel={DLIGHT}
@@ -325,11 +341,13 @@ class SignUp extends Component {
                   containerStyle={Styles.fullWidthBlock}
                   inputStyle={Styles.inputTextDefaultStyle}
                   label={"Enter a username:"}
-                  onChangeText={text => this.setState({ userName: text })}
+                  onChangeText={(text) => this.setState({ userName: text })}
                   autoCapitalize={"none"}
                   autoCorrect={false}
                   errorMessage={
-                    this.state.errors.userName ? this.state.errors.userName : null
+                    this.state.errors.userName
+                      ? this.state.errors.userName
+                      : null
                   }
                 />
               </View>
@@ -353,7 +371,7 @@ class SignUp extends Component {
                     labelStyle={Styles.formInputLabel}
                     label={"Enter an account password (min. 5 characters):"}
                     inputStyle={Styles.inputTextDefaultStyle}
-                    onChangeText={text => this.setState({ pin: text })}
+                    onChangeText={(text) => this.setState({ pin: text })}
                     autoCapitalize={"none"}
                     autoCorrect={false}
                     secureTextEntry={true}
@@ -367,7 +385,7 @@ class SignUp extends Component {
                     labelStyle={Styles.formInputLabel}
                     label={"Confirm account password:"}
                     inputStyle={Styles.inputTextDefaultStyle}
-                    onChangeText={text => this.setState({ confirmPin: text })}
+                    onChangeText={(text) => this.setState({ confirmPin: text })}
                     autoCapitalize={"none"}
                     autoCorrect={false}
                     secureTextEntry={true}
@@ -386,36 +404,36 @@ class SignUp extends Component {
                   textStyle={Styles.defaultText}
                   onPress={() =>
                     this.setState({
-                      disclaimerRealized: !this.state.disclaimerRealized
+                      disclaimerRealized: !this.state.disclaimerRealized,
                     })
                   }
                 />
               </View>
-          </ScrollView>
-        </View>
-      </TouchableWithoutFeedback>
-      <View style={Styles.footerContainer}>
-        <View
-          style={
-            this.props.accounts.length > 0
-              ? Styles.standardWidthSpaceBetweenBlock
-              : Styles.fullWidthFlexCenterBlock
-          }
-        >
-          {this.props.accounts.length > 0 && (
+            </ScrollView>
+          </View>
+        </TouchableWithoutFeedback>
+        <View style={Styles.footerContainer}>
+          <View
+            style={
+              this.hasAccount()
+                ? Styles.standardWidthSpaceBetweenBlock
+                : Styles.fullWidthFlexCenterBlock
+            }
+          >
+            {this.hasAccount() && (
+              <StandardButton
+                title="CANCEL"
+                onPress={this.cancel}
+                color={Colors.warningButtonColor}
+              />
+            )}
             <StandardButton
-              title="CANCEL"
-              onPress={this.cancel}
-              color={Colors.warningButtonColor}
+              title="ADD ACCOUNT"
+              onPress={this._handleSubmit}
+              color={Colors.successButtonColor}
             />
-          )}
-          <StandardButton
-            title="ADD ACCOUNT"
-            onPress={this._handleSubmit}
-            color={Colors.successButtonColor}
-          />
+          </View>
         </View>
-      </View>
       </React.Fragment>
     );
   }

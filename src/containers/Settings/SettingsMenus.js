@@ -27,7 +27,7 @@ class SettingsMenus extends Component {
     };
   }
 
-  static navigationOptions = ({ navigation }) => {
+  static navigationOptions = ({ route }) => {
     return {
       title: typeof(route.params)==='undefined' || 
       typeof(route.params.title) === 'undefined' ? 

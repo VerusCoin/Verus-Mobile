@@ -140,7 +140,7 @@ class Login extends Component {
 
   _handleAddUser = () => {
     let navigation = this.props.navigation;
-    navigation.navigate("SignedOutNoKey")
+    navigation.navigate("SignIn")
   }
 
   _selectAccount = (index) => {

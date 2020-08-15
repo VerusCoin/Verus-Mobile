@@ -111,7 +111,7 @@ class DeleteProfile extends Component {
           .then((res) => {
             if (res) {
               let data = {
-                task: deleteUserByID,
+                task: this.deleteUser,
                 message: "Deleting profile, please do not close Verus Mobile",
                 input: [userID],
                 dispatchResult: true
@@ -126,6 +126,18 @@ class DeleteProfile extends Component {
       });
     } else {
       Alert.alert("Error", "No account ID");
+    }
+  }
+
+  deleteUser = async (userId) => {
+    try {
+      const res = await deleteUserByID(userId)
+      Alert.alert("Account Deleted!", `"${userId}" account successfully deleted.`)
+
+      return res
+    } catch (error) {
+      console.error(error)
+      Alert.alert("Error.", `Failed to delete "${userId}" account.`)
     }
   }
 

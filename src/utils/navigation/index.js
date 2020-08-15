@@ -443,8 +443,16 @@ function SignedOutStackScreens() {
   return (
     <SignedOutStack.Navigator>
       <SignedOutStack.Screen
-        name="SignIn"
+        name="Login"
         component={Login}
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      <SignedOutStack.Screen
+        name="SignIn"
+        component={SignUp}
         options={{
           headerShown: false,
         }}

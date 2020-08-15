@@ -37,7 +37,7 @@ PODS:
     - SwiftNIOTransportServices (= 1.3.0)
     - SwiftProtobuf (= 1.8.0)
   - Logging (1.2.0)
-  - Permission-Camera (2.0.8):
+  - Permission-Camera (2.1.5):
     - RNPermissions
   - RCTRequired (0.61.5)
   - RCTTypeSafety (0.61.5):
@@ -202,13 +202,13 @@ PODS:
     - React-cxxreact (= 0.61.5)
     - React-jsi (= 0.61.5)
   - React-jsinspector (0.61.5)
-  - react-native-camera (3.25.0):
+  - react-native-camera (3.36.0):
     - React
-    - react-native-camera/RCT (= 3.25.0)
-    - react-native-camera/RN (= 3.25.0)
-  - react-native-camera/RCT (3.25.0):
+    - react-native-camera/RCT (= 3.36.0)
+    - react-native-camera/RN (= 3.36.0)
+  - react-native-camera/RCT (3.36.0):
     - React
-  - react-native-camera/RN (3.25.0):
+  - react-native-camera/RN (3.36.0):
     - React
   - react-native-image-picker (1.1.0):
     - React
@@ -277,7 +277,7 @@ PODS:
   - RNInputMask (4.1.0)
   - RNOS (1.2.6):
     - React
-  - RNPermissions (2.0.8):
+  - RNPermissions (2.1.5):
     - React
   - RNReanimated (1.10.1):
     - React
@@ -545,7 +545,7 @@ SPEC CHECKSUMS:
   glog: 1f3da668190260b06b429bb211bfbee5cd790c28
   gRPC-Swift: 79f04da038f9a62005271d5b638611ce1bb31304
   Logging: 7838d379d234d7e5ae1265fa02804a9084caf04c
-  Permission-Camera: f9a7b0b01c71febe320436aa74630f23c9483547
+  Permission-Camera: afad27bf90337684d4a86f3825112d648c8c4d3b
   RCTRequired: b153add4da6e7dbc44aebf93f3cf4fcae392ddf1
   RCTTypeSafety: 9aa1b91d7f9310fc6eadc3cf95126ffe818af320
   React: b6a59ef847b2b40bb6e0180a97d0ca716969ac78
@@ -555,7 +555,7 @@ SPEC CHECKSUMS:
   React-jsi: cb2cd74d7ccf4cffb071a46833613edc79cdf8f7
   React-jsiexecutor: d5525f9ed5f782fdbacb64b9b01a43a9323d2386
   React-jsinspector: fa0ecc501688c3c4c34f28834a76302233e29dc0
-  react-native-camera: c4b1136c213f12b6437f12d78eb1805ca664918c
+  react-native-camera: 8016138a8348b889e22c95b23f668a234f124335
   react-native-image-picker: 7a85cf7b0a53845f03ae52fb4592a2748ded069b
   react-native-randombytes: 3638d24759d67c68f6ccba60c52a7a8a8faa6a23
   react-native-safe-area-context: 344b969c45af3d8464d36e8dea264942992ef033
@@ -581,7 +581,7 @@ SPEC CHECKSUMS:
   RNGestureHandler: b6b359bb800ae399a9c8b27032bdbf7c18f08a08
   RNInputMask: 815461ebdf396beb62cf58916c35cf6930adb991
   RNOS: 6f2f9a70895bbbfbdad7196abd952e7b01d45027
-  RNPermissions: 923c1506d0bde387fbcfc18a8f87945806d03c19
+  RNPermissions: ad71dd4f767ec254f2cd57592fbee02afee75467
   RNReanimated: c2bb7438b57a3d987bb2e4e6e4bca94787e30b02
   RNScreens: c526239bbe0e957b988dacc8d75ac94ec9cb19da
   RNShare: 48cf88cadf9ca2143cdaa557c1ec7f8808040ffc
