@@ -16,7 +16,7 @@ import SendCoin from './SendCoin/SendCoin'
 import ReceiveCoin from './ReceiveCoin/ReceiveCoin'
 import { Icon } from "react-native-elements"
 import { setIsCoinMenuFocused } from "../../actions/actionCreators";
-import { withNavigationFocus } from 'react-navigation';
+import { withNavigationFocus } from '@react-navigation/compat';
 import VerusLightClient from 'react-native-verus-light-client';
 
 class CoinMenus extends Component {
