@@ -31,7 +31,6 @@ import { CommonActions } from '@react-navigation/native';
 import Styles from '../../styles/index'
 import Colors from "../../globals/colors";
 import Store from '../../store/index'
-import { ENABLE_WYRE } from "../../utils/constants/constants";
 import { API_GET_FIATPRICE, API_GET_ADDRESSES, API_GET_BALANCES, API_GET_INFO, ELECTRUM, DLIGHT, GENERAL, USD } from "../../utils/constants/intervalConstants";
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 
@@ -292,7 +291,7 @@ class Home extends Component {
           keyExtractor={item => item.id}
         />
         <Divider style={Styles.defaultDivider} />
-        {ENABLE_WYRE && (
+        {global.ENABLE_FIAT_GATEWAY && (
           <TouchableOpacity onPress={this._buySellCrypto}>
             <ListItem
               title={<Text style={Styles.listItemLeftTitleDefault}>Buy/Sell Crypto</Text>}

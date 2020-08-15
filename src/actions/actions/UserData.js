@@ -23,7 +23,6 @@ import {
 import { sha256, hashAccountId } from '../../utils/crypto/hash';
 
 import WyreService from '../../services/wyreService';
-import { ENABLE_WYRE } from '../../utils/constants/constants';
 
 
 //TODO: Fingerprint authentication
@@ -101,7 +100,7 @@ export const authenticateAccount = (account, password) => {
           ...account.paymentMethods
         }
 
-        if (ENABLE_WYRE) {
+        if (global.ENABLE_FIAT_GATEWAY) {
           const hashedSeed = sha256(seeds.electrum).toString('hex');
 
           WyreService.build().submitAuthToken(hashedSeed).then((response) => {

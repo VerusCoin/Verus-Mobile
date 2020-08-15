@@ -37,7 +37,6 @@ import styles from './BuyCrypto.styles'
 import DelayedAsyncAlert from '../../../utils/delayedAsyncAlert'
 import DelayedAlert from '../../../utils/delayedAlert';
 import Colors from '../../../globals/colors';
-import { ENABLE_WYRE } from '../../../utils/constants/constants'
 
 import {
   BankBuildingBlack, Bank,
@@ -409,7 +408,7 @@ class BuyCrypto extends Component {
   };
 
   usBankAcctPayment = (fromVal, fromCurr, toCurr, toVal) => {
-    if (ENABLE_WYRE) {
+    if (global.ENABLE_FIAT_GATEWAY) {
       this.props.navigation.navigate("SendTransaction", {
         paymentMethod: this.state.paymentMethod,
         fromCurr,
@@ -578,7 +577,7 @@ class BuyCrypto extends Component {
               </FormValidationMessage>
             </View>
 
-            {ENABLE_WYRE ? (
+            {global.ENABLE_FIAT_GATEWAY ? (
               <View style={styles.touchableInputBank}>
                 <TouchableWithoutFeedback
                   onPress={this.openPaymentMethodOptions}
