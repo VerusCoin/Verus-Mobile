@@ -38,7 +38,7 @@ class CustomChainScan extends Component {
     this.handleChainQR = this.handleChainQR.bind(this)
   }
 
-  static navigationOptions = ({ navigation }) => {
+  static navigationOptions = ({ route }) => {
     return {
       title: typeof(route.params)==='undefined' || 
       typeof(route.params.title) === 'undefined' ? 

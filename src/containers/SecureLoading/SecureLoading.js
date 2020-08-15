@@ -47,8 +47,8 @@ class SecureLoading extends Component {
     };
   }
 
-  componentWillMount() {
-    const navigation = this.props.navigation
+  componentDidMount() {
+    const { route } = this.props
     const data = route.params ? route.params.data : null
 
     this.timeoutTimer = setTimeout(() => {
@@ -73,13 +73,15 @@ class SecureLoading extends Component {
             .then((res) => {
               clearTimeout(this.timeoutTimer);
               if (this.state.status !== 'timeout') {
-                if (this.state.dispatchResult) this.props.dispatch(res)
-                this.setState({ status: 'success' })
-                if (this.state.route) {
-                  this.resetToScreen(this.state.route)
-                } else {
-                  this.props.dispatch(signOut())
-                }
+                this.setState({ status: 'success' }, () => {
+                  if (this.state.dispatchResult) this.props.dispatch(res)
+
+                  if (this.state.route) {
+                    this.resetToScreen(this.state.route)
+                  } else {
+                    this.props.dispatch(signOut())
+                  }
+                })
               }
             })
           } else {
