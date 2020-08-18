@@ -14,4 +14,6 @@ global.MIN_HEADER_CACHE_CONFS = 100;
 
 // App functionality
 global.ENABLE_FIAT_GATEWAY = false;
+global.ENABLE_VERUS_IDENTITIES = false;
+global.ENABLE_DLIGHT = false;
 

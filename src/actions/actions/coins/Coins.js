@@ -12,7 +12,7 @@ import { initDlightWallet, closeDlightWallet } from '../dlight/dispatchers/Light
 // Add coin by saving it to localstorage, and optionally intialize dlight backend
 export const addCoin = (fullCoinObj, activeCoins, userName, channels) => {
   let coinIndex = activeCoins.findIndex(x => x.id === fullCoinObj.id);
-  let dlightInit = channels.includes(DLIGHT) ? [initDlightWallet(fullCoinObj)] : []
+  let dlightInit = global.ENABLE_DLIGHT && channels.includes(DLIGHT) ? [initDlightWallet(fullCoinObj)] : []
   
   if (coinIndex > -1) {
     if (activeCoins[coinIndex].users.includes(userName)) {

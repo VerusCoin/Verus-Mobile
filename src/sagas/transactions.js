@@ -42,78 +42,80 @@ const hashMap = {
 };
 
 function * handleGetMemosFromTransactions() {
-  const transactions = yield select(selectTransactions);
-  const storedBlockHeight = yield call(getStoredBlockHeight);
-
-  const transactionsBlockHeights = transactions.private.map((transaction) => transaction.height);
-  const currentHighestBlockHeight = Math.max(...transactionsBlockHeights);
-
-  if (storedBlockHeight >= currentHighestBlockHeight) {
-    return null;
-  }
-
-  yield call(storeBlockHeight, currentHighestBlockHeight);
-
-  const memosArray = transactions.private.map((transaction) => {
-    try {
-      const decodeBase64 = atob(transaction.memo);
-      const memoTimeStamp = transaction.timestamp;
-      const memo = VerusZkedidUtils.StructuredMemo.readMemo(decodeBase64, hashMap);
-      return ({ ...memo, timestamp: memoTimeStamp });
-    } catch (error) {
+  if (global.ENABLE_DLIGHT) {
+    const transactions = yield select(selectTransactions);
+    const storedBlockHeight = yield call(getStoredBlockHeight);
+  
+    const transactionsBlockHeights = transactions.private.map((transaction) => transaction.height);
+    const currentHighestBlockHeight = Math.max(...transactionsBlockHeights);
+  
+    if (storedBlockHeight >= currentHighestBlockHeight) {
       return null;
     }
-  });
-
-  const txMemos = memosArray.flatMap((memoItem) => memoItem || []);
-
-  const createdMemos = txMemos.flatMap((memoBody) => {
-    const date = unixToDate(memoBody.timestamp);
-    const memoObjects = memoBody.objects.map((memoObject) => {
-      const typeStrings = memoObject.type.split('.');
-      const memoId = typeStrings[0];
-      const memoClaimCategory = typeStrings[1];
-      if (memoObject.id.includes('claim')) {
-        return ({
-          uid: generateUid('claim', memoId, memoObject.data, date),
-          id: memoId,
-          categoryId: `${memoObject.to}-${memoClaimCategory}`,
-          data: memoObject.data,
-          identity: memoObject.to,
-          hash: rmd160Hash(memoObject.data),
-          hidden: false,
-          date,
-          type: 'claim',
-        });
+  
+    yield call(storeBlockHeight, currentHighestBlockHeight);
+  
+    const memosArray = transactions.private.map((transaction) => {
+      try {
+        const decodeBase64 = atob(transaction.memo);
+        const memoTimeStamp = transaction.timestamp;
+        const memo = VerusZkedidUtils.StructuredMemo.readMemo(decodeBase64, hashMap);
+        return ({ ...memo, timestamp: memoTimeStamp });
+      } catch (error) {
+        return null;
       }
-
-      return ({
-        uid: generateUid('attestation', memoId, memoObject.data, date),
-        id: memoId,
-        identityAttested: memoObject.from,
-        identity: memoObject.to,
-        contentRootKey: rmd160Hash(memoObject.data),
-        sigKey: '',
-        data: memoObject.data,
-        showOnHomeScreen: false,
-        claimId: memoId,
-        date,
-        type: 'attestation',
-      });
     });
-    return memoObjects;
-  });
-
-  const uniqueMemos = createdMemos.reduce((acc, current) => {
-    const itemExists = acc.find((item) => isEqual(item, current));
-
-    if (itemExists) {
-      return acc;
-    }
-    return acc.concat([current]);
-  }, []);
-
-  yield put(setMemoDataFromTx(uniqueMemos));
-  yield call(updateClaimsStorage);
-  yield call(updateAttestationStorage);
+  
+    const txMemos = memosArray.flatMap((memoItem) => memoItem || []);
+  
+    const createdMemos = txMemos.flatMap((memoBody) => {
+      const date = unixToDate(memoBody.timestamp);
+      const memoObjects = memoBody.objects.map((memoObject) => {
+        const typeStrings = memoObject.type.split('.');
+        const memoId = typeStrings[0];
+        const memoClaimCategory = typeStrings[1];
+        if (memoObject.id.includes('claim')) {
+          return ({
+            uid: generateUid('claim', memoId, memoObject.data, date),
+            id: memoId,
+            categoryId: `${memoObject.to}-${memoClaimCategory}`,
+            data: memoObject.data,
+            identity: memoObject.to,
+            hash: rmd160Hash(memoObject.data),
+            hidden: false,
+            date,
+            type: 'claim',
+          });
+        }
+  
+        return ({
+          uid: generateUid('attestation', memoId, memoObject.data, date),
+          id: memoId,
+          identityAttested: memoObject.from,
+          identity: memoObject.to,
+          contentRootKey: rmd160Hash(memoObject.data),
+          sigKey: '',
+          data: memoObject.data,
+          showOnHomeScreen: false,
+          claimId: memoId,
+          date,
+          type: 'attestation',
+        });
+      });
+      return memoObjects;
+    });
+  
+    const uniqueMemos = createdMemos.reduce((acc, current) => {
+      const itemExists = acc.find((item) => isEqual(item, current));
+  
+      if (itemExists) {
+        return acc;
+      }
+      return acc.concat([current]);
+    }, []);
+  
+    yield put(setMemoDataFromTx(uniqueMemos));
+    yield call(updateClaimsStorage);
+    yield call(updateAttestationStorage);
+  }
 }

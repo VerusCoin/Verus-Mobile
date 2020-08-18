@@ -58,8 +58,6 @@ class SendCoin extends Component {
   }
 
   componentDidMount() {
-    this.initializeState();
-
     this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
       this.initializeState();
     });

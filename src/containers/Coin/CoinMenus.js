@@ -33,6 +33,10 @@ class CoinMenus extends Component {
     }; 
   }
 
+  componentDidMount() {
+    this.props.dispatch(setIsCoinMenuFocused(true))
+  }
+
   componentDidUpdate(lastProps) {  
     if (lastProps.isFocused !== this.props.isFocused) {
       this.props.dispatch(setIsCoinMenuFocused(this.props.isFocused))

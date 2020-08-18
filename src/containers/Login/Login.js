@@ -89,7 +89,7 @@ class Login extends Component {
         this.props.dispatch(setUserCoinsAction)
 
         for (let i = 0; i < activeCoinsForUser.length; i++) {
-          if (this.props.coinSettings[activeCoinsForUser[i].id].channels.includes(DLIGHT)) {
+          if (global.ENABLE_DLIGHT && this.props.coinSettings[activeCoinsForUser[i].id].channels.includes(DLIGHT)) {
             await initDlightWallet(activeCoinsForUser[i])
           }
   
@@ -164,7 +164,7 @@ class Login extends Component {
             }}
             resizeMode="contain"
           />
-          <TouchableHighlight onPress={this.clearIdentityStorage}><Text>Clear identity storage</Text></TouchableHighlight>
+          {/* {<TouchableHighlight onPress={this.clearIdentityStorage}><Text>Clear identity storage</Text></TouchableHighlight>} */}
           <Text style={Styles.centralHeader}>Select an Account</Text>
           <Dropdown
             containerStyle={Styles.standardWidthBlock}
@@ -214,12 +214,9 @@ class Login extends Component {
                 containerStyle={Styles.standardWidthCenterBlock}
               />
               <View style={Styles.flexCenterRowBlock}>
-                <Text style={Styles.infoText}>
-                  Don’t have an account?
-                </Text>
                 <Text style={Styles.linkText} onPress={this._handleAddUser}>
                   {" "}
-                  Add user
+                  Add an account
                 </Text>
               </View>
             </View>

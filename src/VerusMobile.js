@@ -17,20 +17,6 @@ import {
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 
-import {
-  getAddresses,
-  getZTransactions,
-  getPrivateBalance,
-  getBlockCount,
-  getInfo,
-  startSync,
-  stopSync,
-  initializeWallet,
-  openWallet
-} from "./utils/api/channels/dlight/callCreators";
-import VerusLightClient from "react-native-verus-light-client";
-import { hashAccountId } from "./utils/crypto/hash";
-
 
 class VerusMobile extends React.Component {
   constructor(props) {

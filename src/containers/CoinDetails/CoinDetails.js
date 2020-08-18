@@ -7,7 +7,14 @@
 
 import React, { Component } from "react";
 import StandardButton from "../../components/StandardButton";
-import { View, Text, ScrollView, Image, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { connect } from 'react-redux';
 import { 
   addCoin, 
@@ -59,7 +66,7 @@ class CoinDetails extends Component {
       this.state.fullCoinData,
       this.props.activeCoinList,
       this.props.activeAccount.id,
-      this.props.coinSettings[this.state.fullCoinData.id]
+      this.props.coinSettings[this.state.fullCoinData.id] != null
         ? this.props.coinSettings[this.state.fullCoinData.id].channels
         : this.state.fullCoinData.compatible_channels
     )
@@ -94,7 +101,8 @@ class CoinDetails extends Component {
         }
       })
       .catch((err) => {
-        Alert.alert("Error Adding Coin", err.message);
+        Alert.alert("Error Adding Coin", `There was a problem adding ${this.state.fullCoinData.id}.`);
+        console.error(err)
         this.setState({ loading: false });
       });
   }

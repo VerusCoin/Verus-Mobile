@@ -86,8 +86,6 @@ class Overview extends Component {
   }
 
   componentDidMount() {
-    this.refresh();
-
     this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
       this.refresh();
     });
@@ -298,11 +296,14 @@ class Overview extends Component {
     let balanceName = null
 
     if (activeOverviewFilter == null) {
-      displayBalance = balances.public != null && balances.private != null
-      ? balances.public.total + balances.private.total
-      : balances.public != null
-      ? balances.public.total
-      : balances.private.total
+      displayBalance =
+        balances.public != null && balances.private != null
+          ? balances.public.total + balances.private.total
+          : balances.public != null
+          ? balances.public.total
+          : balances.private != null
+          ? balances.private.total
+          : null;
     } else {
       balanceName = activeOverviewFilter
 
@@ -361,7 +362,7 @@ class Overview extends Component {
           <View style={{...Styles.fullWidth, ...Styles.greyStripeContainer, ...Styles.horizontalPaddingBox}}>
             <Dropdown
               data={[TOTAL, PUBLIC, PRIVATE]}
-              disabled={enabledChannels.length < 3}
+              disabled={!global.ENABLE_DLIGHT || enabledChannels.length < 3}
               labelExtractor={(value) => value}
               valueExtractor={(value) => value}
               onChangeText={(value) => {
@@ -371,7 +372,7 @@ class Overview extends Component {
               renderBase={() => (
                 <Text style={{...Styles.greyStripeHeader, ...Styles.capitalizeFirstLetter}}>{`${
                   activeOverviewFilter == null ? "Total" : activeOverviewFilter
-                } Overview${enabledChannels.length < 3 ? '' : ' ▾'}`}</Text>
+                } Overview${!global.ENABLE_DLIGHT || enabledChannels.length < 3 ? '' : ' ▾'}`}</Text>
               )}
             />
           </View>
