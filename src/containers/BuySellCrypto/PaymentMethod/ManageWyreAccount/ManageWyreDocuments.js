@@ -8,6 +8,7 @@ import {
   Keyboard,
   Alert,
   Image,
+  Text,
 } from 'react-native';
 
 import {
@@ -80,13 +81,10 @@ class ManageWyreDocuments extends Component {
               textStyle={{ color: '#FFF' }}
             />
             <View>
-              <FormLabel labelStyle={styles.formLabel}>
+              <Text Style={styles.formLabel}>
                 Uploaded documents: &nbsp; &nbsp;
-                {this.props.field.value ? this.props.field.value.length : 0}
-              </FormLabel>
-              <FormValidationMessage>
-                {this.state.error}
-              </FormValidationMessage>
+                {typeof this.props.field === 'undefined' ? 0 : this.props.field.value.length}
+              </Text>
             </View>
             {!this.state.image && (
               <View style={styles.buttonContainerBottom}>

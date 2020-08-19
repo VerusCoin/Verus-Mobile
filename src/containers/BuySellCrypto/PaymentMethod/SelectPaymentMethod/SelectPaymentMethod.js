@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
   Keyboard,
+  Button
 } from 'react-native';
 
 import { NavigationActions } from '@react-navigation/compat';
@@ -28,9 +29,17 @@ class SelectPaymentMethod extends Component {
 
   onSelect = (method) => {
     const { onSelect } = this.props.route.params;
-    if (!onSelect) return;
+    if (!onSelect){
+      console.log("not found");
+      return;
+    }
+    console.log("found");
     onSelect(method);
     this.back();
+  }
+
+  cheatNav = () => {
+    this.props.navigation.navigate("ManageWyreAccount");
   }
 
   render() {
@@ -55,6 +64,10 @@ class SelectPaymentMethod extends Component {
               );
             })}
           </View>
+          <Button
+            title={"goto wyreAccount"}
+            onPress={this.cheatNav}
+            />
         </View>
       </TouchableWithoutFeedback>
     );

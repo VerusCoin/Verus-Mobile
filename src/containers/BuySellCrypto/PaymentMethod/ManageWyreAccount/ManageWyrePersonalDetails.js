@@ -7,8 +7,9 @@ import {
   Image,
   TouchableOpacity,
   Platform,
+  Text,
 } from 'react-native';
-import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements';
+import { Input } from 'react-native-elements';
 import Spinner from 'react-native-loading-spinner-overlay';
 import StandardButton from '../../../../components/StandardButton';
 import styles from './ManageWyreAccount.styles';
@@ -30,9 +31,9 @@ class ManageWyrePersonalDetails extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      name: this.props.individualLegalName.value,
-      dateOfBirth: this.props.individualDateOfBirth.value,
-      socialSecurityNumber: this.props.individualSsn.value,
+      name: typeof this.props.individualLegalName === 'undefined'? "" : this.props.individualLegalName.value,
+      dateOfBirth: typeof this.props.individualDateOfBirth === 'undefined'? "" : this.props.individualDateOfBirth.value,
+      socialSecurityNumber: typeof this.props.individualSsn === 'undefined'? "" : this.props.individualSsn.value,
       errors: {
         name: null,
         dateOfBirth: null,
@@ -81,7 +82,7 @@ class ManageWyrePersonalDetails extends Component {
         dateOfBirth: null,
         socialSecurityNumber: null,
       },
-    }, () => {   
+    }, () => {
       const userName = this.state.name;
       const userDateOfBirth = this.state.dateOfBirth;
       const userSocialSecurityNumber = this.state.socialSecurityNumber;
@@ -154,24 +155,20 @@ class ManageWyrePersonalDetails extends Component {
               textStyle={{ color: '#FFF' }}
             />
             <View>
-              <FormLabel labelStyle={styles.formLabel}>
-                    Legal Name:
-              </FormLabel>
-              <FormInput
+              <Input
+                label="Legal Name:"
+                labelStyle={styles.formLabel}
                 underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ name: text })}
                 value={this.state.name}
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage labelStyle={styles.formValidationLabel}>
-                {this.state.errors.name}
-              </FormValidationMessage>
             </View>
             <View>
-              <FormLabel labelStyle={styles.formLabel}>
+              <Text labelStyle={styles.formLabel}>
                 Date of Birth YYYY-MM-DD:
-              </FormLabel>
+              </Text>
               <View style={styles.containerDateOfBirth}>
                 <TextInputMask
                   onChangeText={(formatted) => {
@@ -192,7 +189,7 @@ class ManageWyrePersonalDetails extends Component {
                 </View>
               </View>
               <View>
-                { this.state.showCalendar && <DateTimePicker 
+                { this.state.showCalendar && <DateTimePicker
                     value={this.state.date}
                     mode={this.state.mode}
                     display="calendar"
@@ -200,16 +197,13 @@ class ManageWyrePersonalDetails extends Component {
                     maximumDate={new Date()}
                     minimumDate={new Date(1950, 0, 1)}
                     style={{backgroundColor: 'white'}} />
-                } 
+                }
               </View>
-              <FormValidationMessage labelStyle={styles.formValidationLabel}>
-                {this.state.errors.dateOfBirth}
-              </FormValidationMessage>
             </View>
             <View>
-              <FormLabel labelStyle={styles.formLabel}>
+              <Text labelStyle={styles.formLabel}>
                 US Social Security Number XXX-XX-XXXX:
-              </FormLabel>
+              </Text>
               <TextInputMask
                 onChangeText={(formatted) => {
                   this.setState({socialSecurityNumber: formatted})
@@ -217,9 +211,6 @@ class ManageWyrePersonalDetails extends Component {
                 mask={"[000]-[00]-[0000]"}
                 style={styles.inputMask}
               />
-              <FormValidationMessage labelStyle={styles.formValidationLabel}>
-                {this.state.errors.socialSecurityNumber}
-              </FormValidationMessage>
             </View>
             <View style={styles.buttonContainerBottom}>
               <StandardButton
@@ -228,7 +219,7 @@ class ManageWyrePersonalDetails extends Component {
                 onPress={()=>{
                   if (this.state.showCalendar) {
                     this.hideCalendar();
-                  } 
+                  }
                   this.handleSubmit();
                 }
                 }

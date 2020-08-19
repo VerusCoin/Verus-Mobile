@@ -6,7 +6,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard
 } from 'react-native';
-import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements';
+import { Input } from 'react-native-elements';
 import { Dropdown } from 'react-native-material-dropdown';
 import Spinner from 'react-native-loading-spinner-overlay';
 import StandardButton from '../../../../components/StandardButton';
@@ -25,7 +25,10 @@ import Colors from '../../../../globals/colors';
 class ManageWyreAddress extends Component {
   constructor(props) {
     super(props);
-    const individualAddress = this.props.individualResidenceAddress.value || {};
+    console.log(JSON.stringify(this.props.individualResidenceAddress))
+
+    const individualAddress = typeof this.props.individualResidenceAddress === 'undefined' ? {} : this.props.individualResidenceAddress.value;
+
     this.state = {
       streetAddress: individualAddress.street1,
       city: individualAddress.city,
@@ -134,34 +137,26 @@ class ManageWyreAddress extends Component {
             />
             <ScrollView>
             <View>
-              <FormLabel labelStyle={styles.formLabel}>
-                    Street Address:
-              </FormLabel>
-              <FormInput
+              <Input
+                label="Street Address"
+                labelStyle={styles.formLabel}
                 underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ streetAddress: text })}
                 value={this.state.streetAddress}
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage labelStyle={styles.formValidationLabel}>
-                {this.state.errors.streetAddress}
-              </FormValidationMessage>
             </View>
             <View>
-              <FormLabel labelStyle={styles.formLabel}>
-                    City:
-              </FormLabel>
-              <FormInput
+              <Input
+                label="City"
+                labelStyle={styles.fromLabel}
                 underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ city: text })}
                 value={this.state.city}
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage labelStyle={styles.formValidationLabel}>
-                {this.state.errors.city}
-              </FormValidationMessage>
             </View>
             <View>
               <View style={styles.dropdownInput}>
@@ -181,24 +176,17 @@ class ManageWyreAddress extends Component {
                   pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                 />
               </View>
-              <FormValidationMessage labelStyle={styles.formValidationLabel}>
-                {this.state.errors.countryState}
-              </FormValidationMessage>
             </View>
             <View>
-              <FormLabel labelStyle={styles.formLabel}>
-                    Postal Code:
-              </FormLabel>
-              <FormInput
+              <Input
+                label="postal Code"
+                labelStyle={styles.formLabel}
                 underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ postalCode: text })}
                 value={this.state.postalCode}
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage labelStyle={styles.formValidationLabel}>
-                {this.state.errors.postalCode}
-              </FormValidationMessage>
             </View>
             <View>
               <View style={styles.dropdownInput}>
@@ -218,9 +206,6 @@ class ManageWyreAddress extends Component {
                   pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                 />
               </View>
-              <FormValidationMessage labelStyle={styles.formValidationLabel}>
-                {this.state.errors.country}
-              </FormValidationMessage>
             </View>
             <View style={styles.buttonContainerBottom}>
               <StandardButton

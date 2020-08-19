@@ -7,9 +7,7 @@ import {
 } from 'react-native';
 
 import {
-  FormLabel,
-  FormInput,
-  FormValidationMessage
+  Input
 } from 'react-native-elements';
 
 import Spinner from 'react-native-loading-spinner-overlay';
@@ -32,7 +30,7 @@ class ManageWyreCellphone extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      phone: this.props.field.value,
+      phone: typeof this.props.field === 'undefined'? {} : this.props.field.value,
       error: null,
     };
   }
@@ -86,19 +84,15 @@ class ManageWyreCellphone extends Component {
               textStyle={{ color: '#FFF' }}
             />
             <View>
-              <FormLabel labelStyle={styles.formLabel}>
-                Enter Cellphone Number:
-              </FormLabel>
-              <FormInput
+              <Input
+                label="Enter Cellphone Number:"
+                labelStyle={styles.formLabel}
                 underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ phone: text })}
                 value={this.state.phone}
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage labelStyle={styles.formValidationLabel}>
-                {this.state.error}
-              </FormValidationMessage>
             </View>
             <View style={styles.buttonContainerBottom}>
               <StandardButton

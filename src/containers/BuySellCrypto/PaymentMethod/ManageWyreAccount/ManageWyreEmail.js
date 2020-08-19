@@ -7,9 +7,7 @@ import {
 } from 'react-native';
 
 import {
-  FormLabel,
-  FormInput,
-  FormValidationMessage
+  Input
 } from 'react-native-elements';
 
 import Spinner from 'react-native-loading-spinner-overlay';
@@ -34,7 +32,7 @@ class ManageWyreEmail extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      email: this.props.field.value,
+      email: typeof this.props.field ===  'undefined'? "" : this.props.field.value,
       error: null,
     };
   }
@@ -73,7 +71,7 @@ class ManageWyreEmail extends Component {
     this.props.putWyreAccountField([{
       fieldId: 'individualEmail',
       value: this.state.email,
-    }], 
+    }],
     this.props.navigation,
     () => {
       DelayedAlert('Success, Check your email and verify account');
@@ -93,19 +91,15 @@ class ManageWyreEmail extends Component {
               textStyle={{ color: '#FFF' }}
             />
             <View >
-              <FormLabel labelStyle={styles.formLabel}>
-                Enter Email:
-              </FormLabel>
-              <FormInput
+              <Input
+                label="Enter Email:"
+                labelStyle={styles.formLabel}
                 underlineColorAndroid={Colors.quaternaryColor}
                 onChangeText={(text) => this.setState({ email: text })}
                 value={this.state.email}
                 autoCorrect={false}
                 inputStyle={styles.formInputContainer}
               />
-              <FormValidationMessage labelStyle={styles.formValidationLabel}>
-                {this.state.error}
-              </FormValidationMessage>
             </View>
             <View style={styles.buttonContainerBottom}>
               <StandardButton

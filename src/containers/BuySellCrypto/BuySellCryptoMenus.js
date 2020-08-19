@@ -12,7 +12,9 @@ import { connect } from 'react-redux';
 import BottomNavigation, {
   FullTab
 } from 'react-native-material-bottom-navigation'
-//import SellCrypto from './SellCrypto/SellCrypto'
+import SellCrypto from './SellCrypto/SellCrypto'
+import AccountRenderers from './PaymentMethod/renderers/mappings';
+import { SUPPORTED_PAYMENT_METHODS } from '../../utils/constants/constants';
 import BuyCrypto from './BuyCrypto/BuyCrypto'
 import { Icon } from "react-native-elements"
 import Colors from '../../globals/colors';
@@ -26,6 +28,10 @@ class BuySellCryptoMenus extends Component {
       tabs: stateObj.tabs,
       activeTab: stateObj.activeTab,
     };
+  }
+
+  componentDidMount(){
+    console.log(`activeTab: ${JSON.stringify(this.state.activeTab.screen)}`)
   }
 
   static navigationOptions = ({ route }) => {
@@ -104,18 +110,21 @@ class BuySellCryptoMenus extends Component {
     this.setState({ activeTab: newTab })
   }
 
+
   render() {
     return (
       <View style={{ flex: 1 }}>
-          {this.state.activeTab.screen === "SellCrypto" ? <BuyCrypto navigation={this.props.navigation}/> :
-          (this.state.activeTab.screen === "BuyCrypto" ? <BuyCrypto navigation={this.props.navigation} buy/> :
-          null)}
-        <BottomNavigation
-          onTabPress={newTab => this.switchTab(newTab)}
-          renderTab={this.renderTab}
-          tabs={this.state.tabs}
-          activeTab={this.state.activeTab.key}
-        />
+        {this.state.activeTab.screen === "SellCrypto" ?
+            <BuyCrypto navigation={this.props.navigation}/> :
+        (this.state.activeTab.screen === "BuyCrypto" ?
+        <BuyCrypto navigation={this.props.navigation} buy/> :
+        null)}
+          <BottomNavigation
+            onTabPress={newTab => this.switchTab(newTab)}
+            renderTab={this.renderTab}
+            tabs={this.state.tabs}
+            activeTab={this.state.activeTab.key}
+          />
       </View>
     );
   }

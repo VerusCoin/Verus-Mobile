@@ -16,7 +16,7 @@ import {
 import { ListItem } from "react-native-elements";
 import { NavigationActions } from '@react-navigation/compat';
 import Spinner from 'react-native-loading-spinner-overlay';
-import { FormLabel, FormInput, FormValidationMessage, Icon, TouchableOpacity } from 'react-native-elements'
+import { FormLabel, Input, FormValidationMessage, Icon, TouchableOpacity } from 'react-native-elements'
 import { connect } from 'react-redux'
 import { Dropdown } from 'react-native-material-dropdown'
 import { isNumber } from '../../../utils/math';
@@ -307,7 +307,7 @@ class BuyCrypto extends Component {
         );
       }
     );
-    
+
     if (this.props.buy && !coinIsAlreadyAddedToWallet) {
       this.canAddCoin(coin).then(res => {
         if (res) {
@@ -426,6 +426,16 @@ class BuyCrypto extends Component {
     });
   };
 
+  onCheatNav = () => {
+    this.usBankAcctPayment(
+      this.state.fromVal,
+      this.state.fromCurr,
+      this.state.toCurr,
+      this.state.toVal
+    );
+  }
+
+
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -456,182 +466,179 @@ class BuyCrypto extends Component {
               />
             }
           >
-            <View style={styles.inputAndDropDownContainer}>
-              <View style={styles.formInputLabelContainer}>
-                <FormLabel labelStyle={styles.formLabel}>
-                  {`${this.props.buy ? "Spend:" : "Sell: "} `}
-                </FormLabel>
-                <FormInput
-                  underlineColorAndroid="black"
-                  value={this.state.fromVal}
-                  inputStyle={styles.formInput}
-                  containerStyle={styles.formInputContainer}
-                  keyboardType={"decimal-pad"}
-                  autoCapitalize="words"
-                  shake={this.state.errors.fromVal}
-                  onChangeText={text => this.setFromVal(text)}
-                />
-              </View>
-              <View>
-                <Dropdown
-                  rippleOpacity={0}
-                  rippleDuration={0}
-                  labelExtractor={item => {
-                    return item.value;
-                  }}
-                  valueExtractor={item => {
-                    return item.value;
-                  }}
-                  data={
-                    this.props.buy
-                      ? SUPPORTED_FIAT_CURRENCIES
-                      : SUPPORTED_CRYPTOCURRENCIES
-                  }
-                  onChangeText={value => this.switchFromCurr(value)}
-                  textColor=""
-                  selectedItemColor="#232323"
-                  value={this.state.fromCurr}
-                  containerStyle={styles.currencyDropDownContainer}
-                  renderBase={() => {
-                    return (
-                      <View style={styles.dropDownBase}>
-                        <Text style={styles.currencyLabel}>
-                          {this.state.fromCurr}
-                        </Text>
-                        <Icon
-                          size={24}
-                          style={styles.dropDownIcon}
-                          color="#86939e"
-                          name={"arrow-drop-down"}
-                        />
-                      </View>
-                    );
-                  }}
-                  pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
-                  itemTextStyle={{ fontFamily: "Avenir" }}
-                />
-              </View>
-            </View>
-            <View style={styles.valueContainer}>
-              <FormValidationMessage>
-                {this.state.errors.fromVal ? this.state.errors.fromVal : null}
-              </FormValidationMessage>
-            </View>
-            <View style={styles.inputAndDropDownContainer}>
-              <View style={styles.formInputLabelContainer}>
-                <FormLabel labelStyle={styles.formLabel}>Receive</FormLabel>
-                <FormInput
-                  underlineColorAndroid="black"
-                  value={this.state.toVal}
-                  inputStyle={styles.formInput}
-                  containerStyle={styles.formInputContainer}
-                  keyboardType={"decimal-pad"}
-                  autoCapitalize="words"
-                  shake={this.state.errors.toVal}
-                  onChangeText={text => this.setToVal(text)}
-                  editable={false}
-                />
-              </View>
-              <View>
-                <Dropdown
-                  rippleOpacity={0}
-                  rippleDuration={0}
-                  labelExtractor={item => {
-                    return item.value;
-                  }}
-                  valueExtractor={item => {
-                    return item.value;
-                  }}
-                  data={
-                    this.props.buy
-                      ? SUPPORTED_CRYPTOCURRENCIES
-                      : SUPPORTED_FIAT_CURRENCIES
-                  }
-                  onChangeText={value => this.switchToCurr(value)}
-                  textColor="#E9F1F7"
-                  selectedItemColor="#232323"
-                  value={this.state.toCurr}
-                  containerStyle={styles.currencyDropDownContainer}
-                  renderBase={() => {
-                    return (
-                      <View style={styles.dropDownBase}>
-                        <Text style={styles.currencyLabel}>
-                          {this.state.toCurr}
-                        </Text>
-                        <Icon
-                          size={24}
-                          style={styles.dropDownIcon}
-                          color="#86939e"
-                          name={"arrow-drop-down"}
-                        />
-                      </View>
-                    );
-                  }}
-                  pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
-                  itemTextStyle={{ fontFamily: "Avenir" }}
-                />
-              </View>
-            </View>
-            <View style={styles.valueContainer}>
-              <FormValidationMessage>
-                {this.state.errors.toVal ? this.state.errors.toVal : null}
-              </FormValidationMessage>
-            </View>
-
-            {ENABLE_WYRE ? (
-              <View style={styles.touchableInputBank}>
-                <TouchableWithoutFeedback
-                  onPress={this.openPaymentMethodOptions}
-                >
-                  <View style={styles.formInput}>
-                    <ListItem
-                      title={
-                        <Text style={styles.coinItemLabel}>
-                          {this.state.paymentMethod.name}
-                        </Text>
-                      }
-                      avatar={BankBuildingBlack}
-                      avatarOverlayContainerStyle={{
-                        backgroundColor: "transparent"
-                      }}
-                      avatarStyle={{ resizeMode: "contain" }}
-                      containerStyle={{ borderBottomWidth: 0 }}
-                      chevronColor={"black"}
-                    />
-                  </View>
-                </TouchableWithoutFeedback>
-              </View>
-            ) : (
-              <View style={styles.inputAndDropDownContainer}>
-                <View style={styles.formInput}>
-                  <Dropdown
-                    labelExtractor={item => item.name}
-                    valueExtractor={item => item}
-                    label="Pay With"
-                    labelTextStyle={{
-                      fontWeight: "bold",
-                      fontFamily: "Avenir"
-                    }}
-                    labelFontSize={12}
-                    data={SUPPORTED_PAYMENT_METHODS}
-                    onChangeText={method => this.switchPaymentMethod(method)}
-                    textColor="black"
-                    selectedItemColor="#232323"
-                    baseColor="#86939e"
-                    value={this.state.paymentMethod.name}
-                    containerStyle={styles.dropDownContainer}
+        </ScrollView>
+        <View style={styles.inputAndDropDownContainer}>
+          <View style={styles.formInputLabelContainer}>
+            <Input
+              label={`${this.props.buy ? "Spend:" : "Sell: "} `}
+              labelStyle={styles.formLabel}
+              underlineColorAndroid="black"
+              value={this.state.fromVal}
+              inputStyle={styles.formInput}
+              containerStyle={styles.formInputContainer}
+              keyboardType={"decimal-pad"}
+              autoCapitalize="words"
+              shake={this.state.errors.fromVal}
+              onChangeText={text => this.setFromVal(text)}
+            />
+          </View>
+        </View>
+        <View>
+          <Dropdown
+            rippleOpacity={0}
+            rippleDuration={0}
+            labelExtractor={item => {
+              return item.value;
+            }}
+            valueExtractor={item => {
+              return item.value;
+            }}
+            data={
+              this.props.buy
+                ? SUPPORTED_FIAT_CURRENCIES
+                : SUPPORTED_CRYPTOCURRENCIES
+            }
+            onChangeText={value => this.switchFromCurr(value)}
+            textColor=""
+            selectedItemColor="#232323"
+            value={this.state.fromCurr}
+            containerStyle={styles.currencyDropDownContainer}
+            renderBase={() => {
+              return (
+                <View style={styles.dropDownBase}>
+                  <Text style={styles.currencyLabel}>
+                    {this.state.fromCurr}
+                  </Text>
+                  <Icon
+                    size={24}
+                    style={styles.dropDownIcon}
+                    color="#86939e"
+                    name={"arrow-drop-down"}
                   />
                 </View>
-              </View>
-            )}
-            <View style={styles.buttonContainer}>
-              <StandardButton
-                style={styles.saveChangesButton}
-                title="PROCEED"
-                onPress={this._handleSubmit}
+              );
+            }}
+            pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
+            itemTextStyle={{ fontFamily: "Avenir" }}
+          />
+        </View>
+          <View style={styles.inputAndDropDownContainer}>
+            <View style={styles.formInputLabelContainer}>
+              <Input
+                label="Receive"
+                labelStyle={styles.formLabel}
+                underlineColorAndroid="black"
+                value={this.state.toVal}
+                inputStyle={styles.formInput}
+                containerStyle={styles.formInputContainer}
+                keyboardType={"decimal-pad"}
+                autoCapitalize="words"
+                shake={this.state.errors.toVal}
+                onChangeText={text => this.setToVal(text)}
+                editable={false}
               />
             </View>
-          </ScrollView>
+            <View>
+              <Dropdown
+                rippleOpacity={0}
+                rippleDuration={0}
+                labelExtractor={item => {
+                  return item.value;
+                }}
+                valueExtractor={item => {
+                  return item.value;
+                }}
+                data={
+                  this.props.buy
+                    ? SUPPORTED_CRYPTOCURRENCIES
+                    : SUPPORTED_FIAT_CURRENCIES
+                }
+                onChangeText={value => this.switchToCurr(value)}
+                textColor="#E9F1F7"
+                selectedItemColor="#232323"
+                value={this.state.toCurr}
+                containerStyle={styles.currencyDropDownContainer}
+                renderBase={() => {
+                  return (
+                    <View style={styles.dropDownBase}>
+                      <Text style={styles.currencyLabel}>
+                        {this.state.toCurr}
+                      </Text>
+                      <Icon
+                        size={24}
+                        style={styles.dropDownIcon}
+                        color="#86939e"
+                        name={"arrow-drop-down"}
+                      />
+                    </View>
+                  );
+
+                        }}
+                pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
+                itemTextStyle={{ fontFamily: "Avenir" }}
+              />
+            </View>
+          </View>
+          {ENABLE_WYRE ? (
+            <View style={styles.touchableInputBank}>
+              <TouchableWithoutFeedback
+                onPress={this.openPaymentMethodOptions}
+              >
+                <View style={styles.formInput}>
+                  <ListItem
+                    title={
+                      <Text style={styles.coinItemLabel}>
+                        {this.state.paymentMethod.name}
+                      </Text>
+                    }
+                    avatar={BankBuildingBlack}
+                    avatarOverlayContainerStyle={{
+                      backgroundColor: "transparent"
+                    }}
+                    avatarStyle={{ resizeMode: "contain" }}
+                    containerStyle={{ borderBottomWidth: 0 }}
+                    chevronColor={"black"}
+                  />
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          ) : (
+            <View style={styles.inputAndDropDownContainer}>
+              <View style={styles.formInput}>
+                <Dropdown
+                  labelExtractor={item => item.name}
+                  valueExtractor={item => item}
+                  label="Pay With"
+                  labelTextStyle={{
+                    fontWeight: "bold",
+                    fontFamily: "Avenir"
+                  }}
+                  labelFontSize={12}
+                  data={SUPPORTED_PAYMENT_METHODS}
+                  onChangeText={method => this.switchPaymentMethod(method)}
+                  textColor="black"
+                  selectedItemColor="#232323"
+                  baseColor="#86939e"
+                  value={this.state.paymentMethod.name}
+                  containerStyle={styles.dropDownContainer}
+                />
+              </View>
+            </View>
+          )}
+          <View style={styles.buttonContainer}>
+            <StandardButton
+              style={styles.saveChangesButton}
+              title="PROCEED"
+              onPress={this._handleSubmit}
+            />
+        </View>
+        <View style={styles.buttonContainer}>
+          <StandardButton
+            style={styles.saveChangesButton}
+            title="cheatnav"
+            onPress={this.onCheatNav}
+          />
+      </View>
         </View>
       </TouchableWithoutFeedback>
     );
