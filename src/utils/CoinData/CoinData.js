@@ -2,7 +2,7 @@ import { electrumServers } from 'agama-wallet-lib/src/electrum-servers';
 import { MAX_VERIFICATION } from '../constants/constants'
 import Colors from '../../globals/colors'
 import { coinsList } from './CoinsList'
-import { DLIGHT, ELECTRUM } from '../constants/intervalConstants';
+import { DLIGHT, ELECTRUM, GENERAL } from '../constants/intervalConstants';
 
 const getDefaultApps = (coinName, canBuySell = false) => {
   return ({

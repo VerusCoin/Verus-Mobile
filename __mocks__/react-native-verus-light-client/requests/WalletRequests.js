@@ -26,6 +26,30 @@ function getInfo(id, params) {
   })
 }
 
+function listAddresses(id, params) {
+  return new Promise((resolve, reject) => {
+    if (params.length > 0) {
+      formatResponse(id, null, {
+        data: "listaddresses expected 0 params, received " + params,
+        message: "Invalid Parameters",
+        code: -32602,
+      });
+    } else
+      resolve(
+        formatResponse(
+          id,
+          [
+            "zs1z7rejlpsa98s2rrrfkwmaxu53e4ue0ulcrw0h4x5g8jl04tak0d3mm47vdtahatqrlkngh9sly",
+            "zs1z7rejlpsa98s2rrrfkwmaxu53e4ue0ulcrw0h4x5g8jl04tak0d3mm47vdtahatqrlkngh9sly",
+            "zs1z7rejlpsa98s2rrrfkwmaxu53e4ue0ulcrw0h4x5g8jl04tak0d3mm47vdtahatqrlkngh9sly",
+            "zs1z7rejlpsa98s2rrrfkwmaxu53e4ue0ulcrw0h4x5g8jl04tak0d3mm47vdtahatqrlkngh9sly",
+          ],
+          null
+        )
+      );
+  })
+}
+
 function getTransactions(id, params) {
   return new Promise((resolve, reject) => {
     if (params.length > 1) {
@@ -86,7 +110,8 @@ function getTransactions(id, params) {
 const requestFunctions = {
   ['getprivatebalance']: getPrivateBalance,
   ['listprivatetransactions']: getTransactions,
-  ['getinfo']: getInfo
+  ['getinfo']: getInfo,
+  ['listaddresses']: listAddresses
 }
 
 module.exports = requestFunctions

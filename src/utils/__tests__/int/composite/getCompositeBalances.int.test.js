@@ -32,7 +32,7 @@ describe('Composite balance updater for BTC based chains', () => {
       expect(typeof success.payload.body.pending).toBe('number')
       expect(typeof success.payload.body.total).toBe('number')
     
-      expect(success.payload.body.total).toBe(undefined)
+      expect(success.payload.body.total).toBe(70)
     })
   })
 
@@ -74,7 +74,7 @@ describe('Composite balance updater for BTC based chains', () => {
       expect(typeof success.payload.body.pending).toBe('number')
       expect(typeof success.payload.body.total).toBe('number')
       
-      expect(success.payload.body.total).toBe(undefined)
+      expect(success.payload.body.total).toBe(30)
     })
   })
   
@@ -111,9 +111,9 @@ describe('Composite balance updater for BTC based chains', () => {
       expect(typeof successElectrum.payload.body.confirmed).toBe('number')
       expect(typeof successElectrum.payload.body.pending).toBe('number')
       expect(typeof successElectrum.payload.body.total).toBe('number')
-      expect(typeof successDlight.payload.body.z_confirmed).toBe('number')
-      expect(typeof successDlight.payload.body.z_pending).toBe('number')
-      expect(typeof successDlight.payload.body.z_total).toBe('number')
+      expect(typeof successDlight.payload.body.confirmed).toBe('number')
+      expect(typeof successDlight.payload.body.pending).toBe('number')
+      expect(typeof successDlight.payload.body.total).toBe('number')
     })
   })
 })

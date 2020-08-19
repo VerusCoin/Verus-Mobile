@@ -15,3 +15,10 @@ export default Store = createStore(rootReducer, composeWithDevTools(
 ));
 
 sagaMiddleware.run(rootSaga)
+
+// Use this for testing with Jest
+// import { createStore, applyMiddleware } from 'redux';
+// import thunk from 'redux-thunk';
+// import rootReducer from '../reducers/index'
+
+// export default store = createStore(rootReducer, applyMiddleware(thunk))

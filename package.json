@@ -152,8 +152,8 @@
   "jest": {
     "preset": "react-native",
     "setupFiles": [
-      "./debug/setupJest.js",
-      "./global.js"
+      "./global.js",
+      "./debug/setupJest.js"
     ]
   },
   "react-native": {
