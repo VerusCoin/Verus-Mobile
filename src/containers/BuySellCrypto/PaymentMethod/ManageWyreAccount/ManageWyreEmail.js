@@ -32,7 +32,7 @@ class ManageWyreEmail extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      email: typeof this.props.field ===  'undefined'? "" : this.props.field.value,
+      email:  this.props.field == null? "" : this.props.field.value,
       error: null,
     };
   }

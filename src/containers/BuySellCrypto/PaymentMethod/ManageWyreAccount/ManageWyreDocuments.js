@@ -83,7 +83,7 @@ class ManageWyreDocuments extends Component {
             <View>
               <Text style={styles.formLabel}>
                 Uploaded documents: &nbsp; &nbsp;
-                {typeof this.props.field === 'undefined' ? 0 : this.props.field.value.length}
+                { this.props.field == null ? 0 : this.props.field.value.length}
               </Text>
             </View>
             {!this.state.image && (
