@@ -25,7 +25,6 @@ import Colors from '../../../../globals/colors';
 class ManageWyreAddress extends Component {
   constructor(props) {
     super(props);
-    console.log(JSON.stringify(this.props.individualResidenceAddress))
 
     const individualAddress = typeof this.props.individualResidenceAddress === 'undefined' ? {} : this.props.individualResidenceAddress.value;
 

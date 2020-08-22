@@ -30,10 +30,8 @@ class SelectPaymentMethod extends Component {
   onSelect = (method) => {
     const { onSelect } = this.props.route.params;
     if (!onSelect){
-      console.log("not found");
       return;
     }
-    console.log("found");
     onSelect(method);
     this.back();
   }

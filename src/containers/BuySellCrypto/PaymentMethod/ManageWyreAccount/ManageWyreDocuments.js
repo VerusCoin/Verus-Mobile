@@ -81,7 +81,7 @@ class ManageWyreDocuments extends Component {
               textStyle={{ color: '#FFF' }}
             />
             <View>
-              <Text Style={styles.formLabel}>
+              <Text style={styles.formLabel}>
                 Uploaded documents: &nbsp; &nbsp;
                 {typeof this.props.field === 'undefined' ? 0 : this.props.field.value.length}
               </Text>

@@ -31,9 +31,9 @@ class ManageWyrePersonalDetails extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      name: typeof this.props.individualLegalName === 'undefined'? "" : this.props.individualLegalName.value,
-      dateOfBirth: typeof this.props.individualDateOfBirth === 'undefined'? "" : this.props.individualDateOfBirth.value,
-      socialSecurityNumber: typeof this.props.individualSsn === 'undefined'? "" : this.props.individualSsn.value,
+      name:  this.props.individualLegalName == null? "" : this.props.individualLegalName.value,
+      dateOfBirth:  this.props.individualDateOfBirth == null? "" : this.props.individualDateOfBirth.value,
+      socialSecurityNumber:  this.props.individualSsn == null? "" : this.props.individualSsn.value,
       errors: {
         name: null,
         dateOfBirth: null,

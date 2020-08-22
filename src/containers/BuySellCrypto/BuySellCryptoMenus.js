@@ -31,7 +31,7 @@ class BuySellCryptoMenus extends Component {
   }
 
   componentDidMount(){
-    console.log(`activeTab: ${JSON.stringify(this.state.activeTab.screen)}`)
+  
   }
 
   static navigationOptions = ({ route }) => {
