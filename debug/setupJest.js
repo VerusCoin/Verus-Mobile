@@ -9,3 +9,9 @@ jest.mock('react-native-alert-async', () => mockRnAlertAsync());
 jest.mock('redux', () => mockRedux());
 
 global.fetch = require('../__mocks__/react-native-fetch/fetch')
+
+// App functionality
+global.ENABLE_FIAT_GATEWAY = true;
+global.ENABLE_VERUS_IDENTITIES = true;
+global.ENABLE_DLIGHT = true;
+

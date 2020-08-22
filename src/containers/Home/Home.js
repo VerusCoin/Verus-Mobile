@@ -31,7 +31,6 @@ import { CommonActions } from '@react-navigation/native';
 import Styles from '../../styles/index'
 import Colors from "../../globals/colors";
 import Store from '../../store/index'
-import { ENABLE_WYRE } from "../../utils/constants/constants";
 import { API_GET_FIATPRICE, API_GET_ADDRESSES, API_GET_BALANCES, API_GET_INFO, ELECTRUM, DLIGHT, GENERAL, USD } from "../../utils/constants/intervalConstants";
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 import VerusLightClient from 'react-native-verus-light-client';
@@ -51,8 +50,6 @@ class Home extends Component {
   }
 
   componentDidMount() {
-    this.refresh();
-
     this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
       this.refresh();
     });
@@ -62,7 +59,7 @@ class Home extends Component {
     this._unsubscribeFocus()
   }
 
-  refresh = () => {
+  refresh = () => {    
     this.setState({ loading: true }, () => {
       Promise.all(this.props.activeCoinsForUser.map(async (coinObj) => {
         await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, coinObj.id, API_GET_FIATPRICE)
@@ -174,6 +171,7 @@ class Home extends Component {
     let navigation = this.props.navigation ;
     navigation.navigate("Identity", { selectedScreen: "Identity" } );
   }
+  
   _addCoin = () => {
     let navigation = this.props.navigation
     navigation.navigate("AddCoin", { refresh: this.refresh });
@@ -205,38 +203,51 @@ class Home extends Component {
       >
         <TouchableOpacity onPress={this._verusPay}>
           <ListItem
-            title={<Text style={Styles.listItemLeftTitleDefault}>VerusPay</Text>}
+            title={
+              <Text style={Styles.listItemLeftTitleDefault}>VerusPay</Text>
+            }
             hideChevron
             leftAvatar={{
-              source: require("../../images/customIcons/verusPay.png")
+              source: require("../../images/customIcons/verusPay.png"),
             }}
             containerStyle={Styles.bottomlessListItemContainer}
           />
         </TouchableOpacity>
-        {activeCoinsForUser.some(coin => coin.id === "VRSC" || coin.id === "ZECTEST") && (
-          <View>
-            <TouchableOpacity onPress={this._handleIdentity}>
-              <ListItem
-                title={<Text style={Styles.listItemLeftTitleDefault}>Identity</Text>}
-                hideChevron
-                leftAvatar={{
-                  source: require("../../images/customIcons/id-card.png")
-                }}
-                containerStyle={Styles.bottomlessListItemContainer}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={this.handleScanToVerify}>
-              <ListItem
-                title={<Text style={Styles.listItemLeftTitleDefault}>Scan to verify</Text>}
-                hideChevron
-                leftAvatar={{
-                  source: require("../../images/customIcons/verusPay.png")
-                }}
-                containerStyle={Styles.bottomlessListItemContainer}
-              />
-            </TouchableOpacity>
-          </View>
-        )}
+        {global.ENABLE_VERUS_IDENTITIES &&
+          activeCoinsForUser.some(
+            (coin) => coin.id === "VRSC" || coin.id === "ZECTEST"
+          ) && (
+            <View>
+              <TouchableOpacity onPress={this._handleIdentity}>
+                <ListItem
+                  title={
+                    <Text style={Styles.listItemLeftTitleDefault}>
+                      Identity
+                    </Text>
+                  }
+                  hideChevron
+                  leftAvatar={{
+                    source: require("../../images/customIcons/id-card.png"),
+                  }}
+                  containerStyle={Styles.bottomlessListItemContainer}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={this.handleScanToVerify}>
+                <ListItem
+                  title={
+                    <Text style={Styles.listItemLeftTitleDefault}>
+                      Scan to verify
+                    </Text>
+                  }
+                  hideChevron
+                  leftAvatar={{
+                    source: require("../../images/customIcons/verusPay.png"),
+                  }}
+                  containerStyle={Styles.bottomlessListItemContainer}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
         <FlatList
           data={activeCoinsForUser}
           scrollEnabled={false}
@@ -248,7 +259,11 @@ class Home extends Component {
             >
               <ListItem
                 roundAvatar
-                title={<Text style={Styles.listItemLeftTitleDefault}>{item.name}</Text>}
+                title={
+                  <Text style={Styles.listItemLeftTitleDefault}>
+                    {item.name}
+                  </Text>
+                }
                 subtitle={
                   balances.public.hasOwnProperty(item.id) ||
                   balances.errors.public[item.id]
@@ -264,7 +279,7 @@ class Home extends Component {
                     : null
                 }
                 leftAvatar={{
-                  source: item.logo
+                  source: item.logo,
                 }}
                 subtitleStyle={
                   (balances.public.hasOwnProperty(item.id) ||
@@ -282,26 +297,32 @@ class Home extends Component {
                   isNaN(balances.public[item.id].confirmed)
                     ? "-"
                     : truncateDecimal(
-                        (rates[item.id] && rates[item.id][displayCurrency] != null
+                        (rates[item.id] &&
+                        rates[item.id][displayCurrency] != null
                           ? rates[item.id][displayCurrency]
-                          : 0) *
-                          balances.public[item.id].confirmed,
+                          : 0) * balances.public[item.id].confirmed,
                         2
-                      )) + ' ' + displayCurrency
+                      )) +
+                  " " +
+                  displayCurrency
                 }
               />
             </TouchableOpacity>
           )}
           extraData={balances.public}
-          keyExtractor={item => item.id}
+          keyExtractor={(item) => item.id}
         />
         <Divider style={Styles.defaultDivider} />
-        {ENABLE_WYRE && (
+        {global.ENABLE_FIAT_GATEWAY && (
           <TouchableOpacity onPress={this._buySellCrypto}>
             <ListItem
-              title={<Text style={Styles.listItemLeftTitleDefault}>Buy/Sell Crypto</Text>}
+              title={
+                <Text style={Styles.listItemLeftTitleDefault}>
+                  Buy/Sell Crypto
+                </Text>
+              }
               leftAvatar={{
-                source: require("../../images/customIcons/buySell.png")
+                source: require("../../images/customIcons/buySell.png"),
               }}
               containerStyle={Styles.bottomlessListItemContainer}
               hideChevron
@@ -310,9 +331,11 @@ class Home extends Component {
         )}
         <TouchableOpacity onPress={this._addCoin}>
           <ListItem
-            title={<Text style={Styles.listItemLeftTitleDefault}>Add Coin</Text>}
+            title={
+              <Text style={Styles.listItemLeftTitleDefault}>Add Coin</Text>
+            }
             leftAvatar={{
-              source: require("../../images/customIcons/coinAdd.png")
+              source: require("../../images/customIcons/coinAdd.png"),
             }}
             containerStyle={{ borderBottomWidth: 0 }}
             hideChevron

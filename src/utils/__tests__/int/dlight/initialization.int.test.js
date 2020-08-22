@@ -57,7 +57,7 @@ describe('dlight initialization tester', () => {
         
         return skip100Seconds
       }) 
-      .then(() => {        
+      .then(() => {      
         clearChainLifecycle(MOCK_STATE.coins.activeCoinsForUser[0].id)
         return closeDlightWallet(MOCK_STATE.coins.activeCoinsForUser[0], true)
       })

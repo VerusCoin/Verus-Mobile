@@ -24,7 +24,6 @@ import { getKeyByValue } from '../../utils/objectManip'
 import { CommonActions } from '@react-navigation/native';
 import AlertAsync from "react-native-alert-async";
 import Styles from '../../styles/index'
-import { ENABLE_WYRE } from '../../utils/constants/constants';
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 
 const APP_INFO = 'App Info'
@@ -231,7 +230,7 @@ class SideMenu extends Component {
         )}
         ListFooterComponent={
           <React.Fragment>
-            {ENABLE_WYRE && (
+            {global.ENABLE_FIAT_GATEWAY && (
               <ListItem
                 title={"BUY/SELL COIN"}
                 titleStyle={Styles.infoText}

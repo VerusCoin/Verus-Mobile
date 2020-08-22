@@ -82,7 +82,7 @@ export const conditionallyUpdateWallet = async (state, dispatch, chainTicker, up
 
     if (openChannels.length === 0) {
       //dispatch(logDebugWarning(`The ${updateId} call for ${chainTicker} is taking a very long time to complete. This may impact performace.`)
-      console.warn(`The ${updateId} call for ${chainTicker} is taking a very long time to complete. This may impact performace.`)
+      console.log(`A ${updateId} call for ${chainTicker} has been called while another example of the same call is busy.`)
     } else if (updateInfo && updateInfo.needs_update) {    
       if (coin_bound && (!coinMenuFocused || activeCoin == null || activeCoin.id !== chainTicker)) {
         return API_ABORTED

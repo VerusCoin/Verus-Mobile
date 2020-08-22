@@ -43,10 +43,9 @@ export const getServerVersion = (proxyServer, ip, port, proto, httpsEnabled) => 
           return OLD_DEFAULT_VERSION
         }
 
-      } else if (response.msg === "error" && result.message) {
-        throw new Error(result.message)
+      } else if (response.msg === "error" && response.result.message) {
+        throw new Error(response.result.message)
       } else {
-        console.log(response)
         throw new Error("Network error in getServerVersion.js")
       }
     })

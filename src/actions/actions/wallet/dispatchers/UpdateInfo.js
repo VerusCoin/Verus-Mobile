@@ -27,7 +27,7 @@ export const updateInfo = async (
 
   await Promise.all(
     channels.map(async channel => {
-      if (channel === DLIGHT) {
+      if (channel === DLIGHT && global.ENABLE_DLIGHT) {
         try {
           const syncInfo = await getInfo(
             chainTicker,

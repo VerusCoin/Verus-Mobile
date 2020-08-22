@@ -37,7 +37,6 @@ import styles from './BuyCrypto.styles'
 import DelayedAsyncAlert from '../../../utils/delayedAsyncAlert'
 import DelayedAlert from '../../../utils/delayedAlert';
 import Colors from '../../../globals/colors';
-import { ENABLE_WYRE } from '../../../utils/constants/constants'
 
 import {
   BankBuildingBlack, Bank,
@@ -409,7 +408,7 @@ class BuyCrypto extends Component {
   };
 
   usBankAcctPayment = (fromVal, fromCurr, toCurr, toVal) => {
-    if (ENABLE_WYRE) {
+    if (global.ENABLE_FIAT_GATEWAY) {
       this.props.navigation.navigate("SendTransaction", {
         paymentMethod: this.state.paymentMethod,
         fromCurr,
@@ -652,6 +651,69 @@ class BuyCrypto extends Component {
     );
   }
 }
+
+/*
+            <View style={styles.valueContainer}>
+              <FormValidationMessage>
+                {this.state.errors.toVal ? this.state.errors.toVal : null}
+              </FormValidationMessage>
+            </View>
+
+            {global.ENABLE_FIAT_GATEWAY ? (
+              <View style={styles.touchableInputBank}>
+                <TouchableWithoutFeedback
+                  onPress={this.openPaymentMethodOptions}
+                >
+                  <View style={styles.formInput}>
+                    <ListItem
+                      title={
+                        <Text style={styles.coinItemLabel}>
+                          {this.state.paymentMethod.name}
+                        </Text>
+                      }
+                      avatar={BankBuildingBlack}
+                      avatarOverlayContainerStyle={{
+                        backgroundColor: "transparent"
+                      }}
+                      avatarStyle={{ resizeMode: "contain" }}
+                      containerStyle={{ borderBottomWidth: 0 }}
+                      chevronColor={"black"}
+                    />
+                  </View>
+                </TouchableWithoutFeedback>
+              </View>
+            ) : (
+              <View style={styles.inputAndDropDownContainer}>
+                <View style={styles.formInput}>
+                  <Dropdown
+                    labelExtractor={item => item.name}
+                    valueExtractor={item => item}
+                    label="Pay With"
+                    labelTextStyle={{
+                      fontWeight: "bold",
+                      fontFamily: "Avenir"
+                    }}
+                    labelFontSize={12}
+                    data={SUPPORTED_PAYMENT_METHODS}
+                    onChangeText={method => this.switchPaymentMethod(method)}
+                    textColor="black"
+                    selectedItemColor="#232323"
+                    baseColor="#86939e"
+                    value={this.state.paymentMethod.name}
+                    containerStyle={styles.dropDownContainer}
+                  />
+                </View>
+              </View>
+            )}
+            <View style={styles.buttonContainer}>
+              <StandardButton
+                style={styles.saveChangesButton}
+                title="PROCEED"
+                onPress={this._handleSubmit}
+              />
+            </View>
+          </ScrollView>
+*/
 
 const mapStateToProps = (state) => ({
   activeCoin: state.coins.activeCoin,

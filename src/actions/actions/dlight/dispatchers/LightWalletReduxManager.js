@@ -87,6 +87,7 @@ export const initDlightWallet = (coinObj) => {
         type: OPEN_DLIGHT_SOCKET,
         payload: { chainTicker: id }
       })
+      
       dispatch({
         type: START_DLIGHT_SYNC,
         payload: { chainTicker: id }

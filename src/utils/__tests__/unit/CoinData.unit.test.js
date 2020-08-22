@@ -1,7 +1,7 @@
 import {
   findCoinObj,
   createCoinObj
-} from '../../CoinData'
+} from '../../CoinData/CoinData'
 
 import {
   MOCK_USER_OBJ

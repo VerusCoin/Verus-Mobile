@@ -52,12 +52,7 @@ class SignUp extends Component {
     };
   }
 
-  componentWillMount() {
-    /*if (this.props.updateIntervalID) {
-      console.log("Update interval ID detected as " + this.props.updateIntervalID + ", clearing...")
-      clearInterval(this.props.updateIntervalID)
-      this.props.dispatch(setUpdateIntervalID(null))
-    }*/
+  componentDidMount() {
     this.props.activeCoinList.map((coinObj) => {
       clearAllCoinIntervals(coinObj.id);
     });
@@ -142,7 +137,7 @@ class SignUp extends Component {
           _errors = true;
         }
 
-        if (_seeds[ELECTRUM] == null || _seeds[DLIGHT] == null) {
+        if (_seeds[ELECTRUM] == null || (_seeds[DLIGHT] == null && global.ENABLE_DLIGHT === true)) {
           Alert.alert(
             "Error",
             "Please configure both a primary seed, and a secondary seed."
@@ -175,11 +170,16 @@ class SignUp extends Component {
         if (!_errors && !_warnings) {
           addUser(
             this.state.userName,
-            { [ELECTRUM]: _seeds[ELECTRUM], [DLIGHT]: _seeds[DLIGHT] },
+            {
+              [ELECTRUM]: _seeds[ELECTRUM],
+              [DLIGHT]: global.ENABLE_DLIGHT
+                ? _seeds[ELECTRUM]
+                : _seeds[DLIGHT],
+            },
             this.state.pin,
             this.props.accounts
           ).then((action) => {
-            this.createAccount(action)
+            this.createAccount(action);
           });
         } else if (!_errors) {
           this.canMakeAccount()
@@ -297,7 +297,10 @@ class SignUp extends Component {
         <View style={Styles.headerContainer}>
           <Text style={Styles.centralHeader}>Create New Account</Text>
         </View>
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <TouchableWithoutFeedback
+          onPress={Keyboard.dismiss}
+          accessible={false}
+        >
           <View style={Styles.flexBackground}>
             <ScrollView
               contentContainerStyle={{
@@ -353,17 +356,19 @@ class SignUp extends Component {
               </View>
               <View style={Styles.wideBlock}>
                 <CheckBox
-                  title="Setup Primary (T Address) Seed"
+                  title={global.ENABLE_DLIGHT ? "Setup Primary (T Address) Seed" : "Setup Wallet Seed"}
                   checked={this.state.seeds[ELECTRUM] != null}
                   textStyle={Styles.defaultText}
                   onPress={() => this.setupSeed(ELECTRUM)}
                 />
-                <CheckBox
-                  title="Setup Secondary (Z Address) Seed"
-                  checked={this.state.seeds[DLIGHT] != null}
-                  textStyle={Styles.defaultText}
-                  onPress={() => this.setupSeed(DLIGHT)}
-                />
+                {global.ENABLE_DLIGHT && (
+                  <CheckBox
+                    title="Setup Secondary (Z Address) Seed"
+                    checked={this.state.seeds[DLIGHT] != null}
+                    textStyle={Styles.defaultText}
+                    onPress={() => this.setupSeed(DLIGHT)}
+                  />
+                )}
               </View>
               <View style={Styles.fullWidthFlexCenterBlock}>
                 <View style={Styles.wideBlock}>
@@ -385,7 +390,9 @@ class SignUp extends Component {
                     labelStyle={Styles.formInputLabel}
                     label={"Confirm account password:"}
                     inputStyle={Styles.inputTextDefaultStyle}
-                    onChangeText={(text) => this.setState({ confirmPin: text })}
+                    onChangeText={(text) =>
+                      this.setState({ confirmPin: text })
+                    }
                     autoCapitalize={"none"}
                     autoCorrect={false}
                     secureTextEntry={true}

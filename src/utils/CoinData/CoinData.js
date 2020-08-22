@@ -2,7 +2,7 @@ import { electrumServers } from 'agama-wallet-lib/src/electrum-servers';
 import { MAX_VERIFICATION } from '../constants/constants'
 import Colors from '../../globals/colors'
 import { coinsList } from './CoinsList'
-import { DLIGHT, ELECTRUM } from '../constants/intervalConstants';
+import { DLIGHT, ELECTRUM, GENERAL } from '../constants/intervalConstants';
 
 const getDefaultApps = (coinName, canBuySell = false) => {
   return ({
@@ -109,7 +109,7 @@ export const findCoinObj = (id, userName) => {
     
     if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
       const DEFAULT_APPS = getDefaultApps(coinObj.name)
-      if (coinObj.id === 'VRSC' || coinObj.id === 'ZECTEST') {
+      if (global.ENABLE_VERUS_IDENTITIES && (coinObj.id === 'VRSC' || coinObj.id === 'ZECTEST')) {
         coinObj.apps = {...identityApp, ...DEFAULT_APPS.apps};
       } else {
         coinObj.apps = DEFAULT_APPS.apps;

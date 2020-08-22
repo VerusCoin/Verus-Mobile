@@ -32,7 +32,7 @@ export const updateBalances = async (
 
   await Promise.all(
     channels.map(async channel => {
-      if (channel === DLIGHT) {
+      if (channel === DLIGHT && global.ENABLE_DLIGHT) {
         try {
           const zBalances = await getPrivateBalance(
             chainTicker,

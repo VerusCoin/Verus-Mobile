@@ -17,6 +17,7 @@ import {
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 
+<<<<<<< HEAD
 import {
   getAddresses,
   getZTransactions,
@@ -32,6 +33,8 @@ import {
 import VerusLightClient from "react-native-verus-light-client";
 import { hashAccountId } from "./utils/crypto/hash";
 
+=======
+>>>>>>> upstream/gateway
 
 class VerusMobile extends React.Component {
   constructor(props) {

@@ -22,7 +22,7 @@ describe('Composite fiat rates updater', () => {
       const success = resultActions[0]
 
       expect(success.type).toBe('SET_RATES')
-      expect(Object.keys(success.payload.body.rates).length).toBe(33)
+      expect(Object.keys(success.payload.body).length).toBe(33)
       expect(success.payload.header.source).toBe('https://api.coinpaprika.com/v1/coins/vrsc-test-coin/ohlcv/latest')
     })
   })

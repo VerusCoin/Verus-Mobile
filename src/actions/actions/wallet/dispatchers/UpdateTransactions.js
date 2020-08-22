@@ -20,7 +20,7 @@ export const updateTransactions = async (state, dispatch, channels, chainTicker)
   let channelsPassed = []
 
   await Promise.all(channels.map(async (channel) => {
-    if (channel === DLIGHT) {
+    if (channel === DLIGHT && global.ENABLE_DLIGHT) {
       try {
         const zTransactions = await getZTransactions(chainTicker, accountHash, coinObj.proto)
         const { result, ...header } = zTransactions
