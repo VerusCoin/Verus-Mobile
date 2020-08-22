@@ -51,6 +51,7 @@ import AttestationDetails from '../../containers/Identity/Home/AttestationDetail
 import ClaimManager from '../../containers/Identity/PersonalInfo/ClaimManager';
 import MoveIntoCategory from '../../containers/Identity/PersonalInfo/ClaimManager/MoveIntoCategory';
 import AddIdentity from '../../containers/Identity/AddIdentity';
+import KYCstart from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCstart';
 
 const WALLET = 'wallet';
 
@@ -345,6 +346,11 @@ function MainStackScreens() {
           title: "Select Payment Method",
           drawerLockMode: "locked-closed",
         }}
+      />
+
+      <MainStack.Screen
+        name="KYCStartScreen"
+        component={KYCstart}
       />
 
       <MainStack.Screen

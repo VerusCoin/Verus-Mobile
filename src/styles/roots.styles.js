@@ -6,6 +6,11 @@ export default roots = {
     padding: '5%',
     backgroundColor: Colors.secondaryColor,
   },
+  rootBlue:{
+    flex: 1,
+    padding: '5%',
+    backgroundColor: Colors.primaryColor,
+  },
   focalCenter: {
     backgroundColor: Colors.secondaryColor,
     flex: 1,
@@ -30,6 +35,9 @@ export default roots = {
   },
   secondaryBackground: {
     backgroundColor: Colors.secondaryColor,
+  },
+  primaryBackground: {
+    backgroundColor: Colors.primaryColor,
   },
   linkButtonColor:{
     backgroundColor: Colors.linkButtonColor,

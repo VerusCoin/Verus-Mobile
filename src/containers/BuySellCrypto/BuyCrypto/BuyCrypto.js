@@ -435,6 +435,10 @@ class BuyCrypto extends Component {
     );
   }
 
+  onKYCScreen = () => {
+    this.props.navigation.navigate("KYCStartScreen");
+  }
+
 
   render() {
     return (
@@ -630,6 +634,10 @@ class BuyCrypto extends Component {
               style={styles.saveChangesButton}
               title="PROCEED"
               onPress={this._handleSubmit}
+            />
+          <StandardButton
+            title="go to kyc screen"
+            onPress={this.onKYCScreen}
             />
         </View>
         <View style={styles.buttonContainer}>

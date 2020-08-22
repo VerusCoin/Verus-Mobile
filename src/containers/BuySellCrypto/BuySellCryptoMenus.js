@@ -16,7 +16,7 @@ import SellCrypto from './SellCrypto/SellCrypto'
 import AccountRenderers from './PaymentMethod/renderers/mappings';
 import { SUPPORTED_PAYMENT_METHODS } from '../../utils/constants/constants';
 import BuyCrypto from './BuyCrypto/BuyCrypto'
-import { Icon } from "react-native-elements"
+import { Icon, Button } from "react-native-elements"
 import Colors from '../../globals/colors';
 import { Buy, Sell } from '../../images/customIcons';
 
@@ -109,6 +109,8 @@ class BuySellCryptoMenus extends Component {
     this.props.navigation.setOptions({ title: newTab.label })
     this.setState({ activeTab: newTab })
   }
+
+
 
 
   render() {
