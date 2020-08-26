@@ -8,6 +8,8 @@ import {
   GENERAL,
   DLIGHT,
   ELECTRUM,
+  ETH,
+  ERC20
 } from './intervalConstants'
 
 /**
@@ -125,7 +127,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
     }
   },
   [API_GET_TRANSACTIONS]: {
-    channels: [DLIGHT, ELECTRUM],
+    channels: [DLIGHT, ELECTRUM, ETH, ERC20],
     restrictions: [],
     pre_data: {
       tracking_info: {
@@ -177,7 +179,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
     }
   },
   [API_GET_BALANCES]: {
-    channels: [DLIGHT, ELECTRUM],
+    channels: [DLIGHT, ELECTRUM, ETH, ERC20],
     restrictions: [],
     pre_data: {
       tracking_info: {

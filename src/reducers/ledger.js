@@ -24,32 +24,14 @@ import {
   SET_INFO
 } from '../utils/constants/storeType'
 import {
-  ELECTRUM,
-  DLIGHT,
-  GENERAL
+  CHANNELS_TEMPLATE
 } from "../utils/constants/intervalConstants";
 
 export const ledger = (state = {
-  balances: {
-    [ELECTRUM]: {},
-    [DLIGHT]: {},
-    [GENERAL]: {},
-  },
-  transactions: {
-    [ELECTRUM]: {},
-    [DLIGHT]: {},
-    [GENERAL]: {},
-  },
-  rates: {
-    [ELECTRUM]: {},
-    [DLIGHT]: {},
-    [GENERAL]: {},
-  },
-  info: {
-    [ELECTRUM]: {},
-    [DLIGHT]: {},
-    [GENERAL]: {},
-  }
+  balances: CHANNELS_TEMPLATE,
+  transactions: CHANNELS_TEMPLATE,
+  rates: CHANNELS_TEMPLATE,
+  info: CHANNELS_TEMPLATE
 }, action) => {
   const { chainTicker, channel, body } = action.payload || {}
 
@@ -89,26 +71,10 @@ export const ledger = (state = {
     case SIGN_OUT:
       return {
         ...state,
-        balances: {
-          [ELECTRUM]: {},
-          [DLIGHT]: {},
-          [GENERAL]: {},
-        },
-        transactions: {
-          [ELECTRUM]: {},
-          [DLIGHT]: {},
-          [GENERAL]: {},
-        },
-        rates: {
-          [ELECTRUM]: {},
-          [DLIGHT]: {},
-          [GENERAL]: {},
-        },
-        info: {
-          [ELECTRUM]: {},
-          [DLIGHT]: {},
-          [GENERAL]: {},
-        },
+        balances: CHANNELS_TEMPLATE,
+        transactions: CHANNELS_TEMPLATE,
+        rates: CHANNELS_TEMPLATE,
+        info: CHANNELS_TEMPLATE,
       };
     /*case SET_INTERVAL_ID:
       return {

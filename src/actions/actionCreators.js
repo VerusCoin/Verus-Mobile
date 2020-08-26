@@ -414,10 +414,11 @@ export const getTransactionHistoryResponse = (history = {}) => ({
   }
 });
 
-	export const requestSeedData = () => ({
+export const requestSeedData = () => ({
   type: REQUEST_SEED_DATA,
   payload: {},
 });
+
 export const appSetup = () => ({
   type: APP_SETUP,
   payload: {},

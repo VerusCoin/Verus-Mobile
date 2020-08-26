@@ -13,11 +13,10 @@ import { resolveSequentially } from '../../../../utils/promises'
 import { canRetryDlightInitialization, blockchainQuitError } from './AlertManager'
 import {
   ERROR_DLIGHT_INIT,
-  OPEN_DLIGHT_SOCKET,
-  START_DLIGHT_SYNC,
   STOP_DLIGHT_SYNC,
   SET_DLIGHT_ADDRESSES,
   CLOSE_DLIGHT_SOCKET,
+  INIT_DLIGHT_CHANNEL,
 } from "../../../../utils/constants/storeType";
 
 // Initializes dlight wallet by either creating a backend native wallet and opening it or just opening it
@@ -25,8 +24,8 @@ export const initDlightWallet = (coinObj) => {
   const { dispatch, getState } = Store
   const State = getState()
 
-  const { coins, settings, authentication } = State
-  const { dlightSockets, dlightSyncing } = coins
+  const { settings, authentication, channelStore_dlight } = State
+  const { dlightSockets, dlightSyncing } = channelStore_dlight
   const { activeAccount } = authentication
   const { accountHash } = activeAccount
   const { dlightEndpoints, id, proto } = coinObj
@@ -84,12 +83,7 @@ export const initDlightWallet = (coinObj) => {
     resolveSequentially(initializationPromises)
     .then(res => {
       dispatch({
-        type: OPEN_DLIGHT_SOCKET,
-        payload: { chainTicker: id }
-      })
-      
-      dispatch({
-        type: START_DLIGHT_SYNC,
+        type: INIT_DLIGHT_CHANNEL,
         payload: { chainTicker: id }
       })
 

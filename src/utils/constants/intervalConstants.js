@@ -9,6 +9,9 @@ export const API_SUCCESS = "success"
 
 // Intitalization errors
 export const INIT_DLIGHT_ERRORS = 'init_dlight_errors'
+export const INIT_ELECTRUM_ERRORS = 'init_electrum_errors'
+export const INIT_ERC20_ERRORS = 'init_erc20_errors'
+export const INIT_ETH_ERRORS = 'init_eth_errors'
 
 // API call names
 export const API_GET_ADDRESSES = "get_addresses"
@@ -27,6 +30,13 @@ export const IS_PBAAS_ROOT = "is_pbaas_root"
 export const DLIGHT = 'dlight'
 export const ELECTRUM = 'electrum'
 export const GENERAL = 'general'
+export const ETH = 'eth'
+export const ERC20 = 'erc20'
+export const CHANNELS = [DLIGHT, ELECTRUM, GENERAL, ETH, ERC20]
+export const CHANNELS_TEMPLATE = Object.freeze(CHANNELS.reduce((acc, curr) => {
+  acc[curr] = {}
+  return acc
+}, {}))
 
 // API coin lifecycle types
 export const PRE_DATA = "pre_data"

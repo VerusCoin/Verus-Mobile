@@ -457,7 +457,7 @@ const mapStateToProps = (state) => {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
     activeAccount: state.authentication.activeAccount,
-    dlightSockets: state.coins.dlightSockets
+    dlightSockets: state.channelStore_dlight.dlightSockets
   }
 };
 

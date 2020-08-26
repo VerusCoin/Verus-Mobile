@@ -1,20 +1,38 @@
 import { createStore, applyMiddleware } from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import thunk from 'redux-thunk';
-import { composeWithDevTools } from 'redux-devtools-extension';
+import { composeWithDevTools } from 'remote-redux-devtools';
 
 import rootReducer from '../reducers/index';
 import rootSaga from '../sagas'
 
-const sagaMiddleware = createSagaMiddleware();
+const configureStore = () => {
+  if (global.ENABLE_VERUS_IDENTITIES) {
+    const sagaMiddleware = createSagaMiddleware();
+  
+    const middlewares = [thunk, sagaMiddleware];
+    
+    const composeEnhancers = composeWithDevTools({ realtime: true, port: 8000 });
 
-const middlewares = [thunk, sagaMiddleware];
+    const ret = createStore(rootReducer, composeEnhancers(
+      applyMiddleware(...middlewares)
+    ));
 
-export default Store = createStore(rootReducer, composeWithDevTools(
-  applyMiddleware(...middlewares),
-));
+    sagaMiddleware.run(rootSaga)
 
-sagaMiddleware.run(rootSaga)
+    return ret
+  } else {
+    const composeEnhancers = composeWithDevTools({ realtime: true, port: 8000 });
+  
+    return createStore(rootReducer, composeEnhancers(
+      applyMiddleware()
+    ));
+  }  
+}
+
+export default store = configureStore();
+
+
 
 // Use this for testing with Jest
 // import { createStore, applyMiddleware } from 'redux';

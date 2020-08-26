@@ -12,6 +12,7 @@ import { updates } from './updates';
 import { responseHeaders } from './responseHeaders';
 import { errors } from './errors';
 import { coinOverview } from './gui/coinOverview';
+import { channelStore_dlight } from './channelStores/dlight';
 import identity from './identity';
 
 export default combineReducers({
@@ -29,4 +30,5 @@ export default combineReducers({
   responseHeaders,
   coinOverview,
   identity,
+  channelStore_dlight
 });

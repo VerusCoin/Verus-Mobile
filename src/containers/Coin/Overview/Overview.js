@@ -359,24 +359,56 @@ class Overview extends Component {
           animationType="slide"
         />
         <View style={Styles.centralRow}>{this.renderBalanceLabel()}</View>
-          <View style={{...Styles.fullWidth, ...Styles.greyStripeContainer, ...Styles.horizontalPaddingBox}}>
+        <View
+          style={{
+            ...Styles.fullWidth,
+            ...Styles.greyStripeContainer,
+            ...Styles.horizontalPaddingBox,
+          }}
+        >
+          {global.ENABLE_DLIGHT ? (
             <Dropdown
               data={[TOTAL, PUBLIC, PRIVATE]}
               disabled={!global.ENABLE_DLIGHT || enabledChannels.length < 3}
               labelExtractor={(value) => value}
               valueExtractor={(value) => value}
               onChangeText={(value) => {
-                  dispatch(setActiveOverviewFilter(activeCoin.id, value === TOTAL ? null : value))
-                }
-              }
+                dispatch(
+                  setActiveOverviewFilter(
+                    activeCoin.id,
+                    value === TOTAL ? null : value
+                  )
+                );
+              }}
               renderBase={() => (
-                <Text style={{...Styles.greyStripeHeader, ...Styles.capitalizeFirstLetter}}>{`${
-                  activeOverviewFilter == null ? "Total" : activeOverviewFilter
-                } Overview${!global.ENABLE_DLIGHT || enabledChannels.length < 3 ? '' : ' ▾'}`}</Text>
+                <Text
+                  style={{
+                    ...Styles.greyStripeHeader,
+                    ...Styles.capitalizeFirstLetter,
+                  }}
+                >{`${
+                  activeOverviewFilter == null
+                    ? "Total"
+                    : activeOverviewFilter
+                } Overview${
+                  !global.ENABLE_DLIGHT || enabledChannels.length < 3
+                    ? ""
+                    : " ▾"
+                }`}</Text>
               )}
             />
-          </View>
-          {this.renderTransactionList()}
+          ) : (
+            <Text
+              style={{
+                ...Styles.greyStripeHeader,
+                ...Styles.capitalizeFirstLetter,
+              }}
+            >
+              {"Overview"}
+            </Text>
+          )}
+        </View>
+        {this.renderTransactionList()}
       </View>
     );
   }

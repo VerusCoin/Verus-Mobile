@@ -62,7 +62,10 @@ class VerusMobile extends React.Component {
     .catch((err) => {
       Alert.alert("Error", err.message)
     })
-    this.props.dispatch(requestSeedData());
+
+    if (global.ENABLE_VERUS_IDENTITIES) {
+      this.props.dispatch(requestSeedData());
+    }
   }
 
   render() {

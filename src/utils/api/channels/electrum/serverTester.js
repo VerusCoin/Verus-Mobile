@@ -6,7 +6,7 @@
 //if successful, resolves with the result of the passing test, and the working
 //server that passed the test.
 
-import { getBlockHeight } from './electrumCalls/getBlockHeight';
+import { getBlockHeight } from './requests/getBlockHeight';
 import { timeout } from '../../../promises'
 import { httpsEnabled } from './proxyServers'
 import ApiException from '../../errors/apiError';

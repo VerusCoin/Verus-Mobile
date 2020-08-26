@@ -120,6 +120,6 @@ export const refreshCoinIntervals = (chainTicker, onCompletes) => {
     if (newTrackingData[updateId].channels.length > 0) {
       createCoinUpdateExpiredInterval(newIntervalData[updateId].update_expired_interval, chainTicker, updateId, newIntervalData[updateId].update_expired_oncomplete)
       createExpireTimeout(newIntervalData[updateId].expire_timeout, chainTicker, updateId, newIntervalData[updateId].expire_oncomplete)
-    } 
+    }
   }
 }

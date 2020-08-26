@@ -1,20 +1,17 @@
-export * from './electrumCalls/getBlockHeight';
-export * from './electrumCalls/getBalances';
-export * from './electrumCalls/getTransactions';
-export * from './electrumCalls/getTransaction';
-export * from './electrumCalls/getBlockInfo';
-export * from './electrumCalls/getUnspent';
-export * from './electrumCalls/getMerkle';
-export * from './electrumCalls/pushTx';
-export * from './electrumCalls/getServerVersion';
+export * from './requests/getBlockHeight';
+export * from './requests/getBalances';
+export * from './requests/getTransactions';
+export * from './requests/getTransaction';
+export * from './requests/getBlockInfo';
+export * from './requests/getUnspent';
+export * from './requests/getMerkle';
+export * from './requests/pushTx';
+export * from './requests/getServerVersion';
 
 import { proxyServers, httpsEnabled } from './proxyServers';
 import { getGoodServer, testProxy, testElectrum } from './serverTester';
-import { getCoinPaprikaRate } from '../general/ratesAPIs/coinPaprika';
-import { getAtomicExplorerBTCFees } from '../general/btcFeesAPIs/atomicExplorer';
-import { truncateDecimal } from '../../../math';
 import { timeout } from '../../../promises';
-import { getServerVersion } from './electrumCalls/getServerVersion';
+import { getServerVersion } from './requests/getServerVersion';
 import { updateParamObj } from '../../../electrumUpdates';
 import { networks } from 'bitgo-utxo-lib';
 import { isJson } from '../../../objectManip'

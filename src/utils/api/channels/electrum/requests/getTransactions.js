@@ -34,8 +34,10 @@ export const getOneTransactionList = (coinObj, activeUser, maxlength = 10) => {
   });
 }
 
+// TODO: Add getTransaction request headers to header
 export const getParsedTransactionList = (coinObj, activeUser, maxlength) => {
   let network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
+  let header = {}
 
   return new Promise((resolve, reject) => {
     getOneTransactionList(coinObj, activeUser, maxlength)
@@ -43,6 +45,7 @@ export const getParsedTransactionList = (coinObj, activeUser, maxlength) => {
       if (transactionList) {
         let getTransactionPromises = []
         let getTransactionPromise
+        header = transactionList
         
         for (let i = 0; i < transactionList.result.length; i++) {
           let insPromises = []
@@ -145,7 +148,7 @@ export const getParsedTransactionList = (coinObj, activeUser, maxlength) => {
 
       if (error) Alert.alert(`Error reading transaction list for ${coinObj.id}. This may indicate electrum server maintenence.`)
       
-      resolve({result: _parsedTxList})
+      resolve({...header, result: _parsedTxList})
     })
     .catch(err => reject(err))
   });

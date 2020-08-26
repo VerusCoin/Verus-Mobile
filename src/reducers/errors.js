@@ -7,10 +7,11 @@ import {
   API_GET_BALANCES,
   API_GET_FIATPRICE,
   API_GET_INFO,
-  ELECTRUM,
-  DLIGHT,
-  GENERAL,
-  INIT_DLIGHT_ERRORS
+  INIT_DLIGHT_ERRORS,
+  INIT_ELECTRUM_ERRORS,
+  INIT_ETH_ERRORS,
+  INIT_ERC20_ERRORS,
+  CHANNELS_TEMPLATE
 } from "../utils/constants/intervalConstants";
 import {
   ERROR_BALANCES,
@@ -18,37 +19,26 @@ import {
   ERROR_TRANSACTIONS,
   ERROR_RATES,
   ERROR_DLIGHT_INIT,
+  ERROR_ELECTRUM_INIT,
+  ERROR_ERC20_INIT,
+  ERROR_ETH_INIT,
   SET_BALANCES,
   SET_INFO,
   SET_TRANSACTIONS,
   SET_RATES,
-  CLOSE_DLIGHT_SOCKET,
-  OPEN_DLIGHT_SOCKET
+  INIT_DLIGHT_CHANNEL
 } from "../utils/constants/storeType";
 
 export const errors = (state = {
   // Ledger calls for coins
-  [API_GET_TRANSACTIONS]: {
-    [ELECTRUM]: {},
-    [DLIGHT]: {},
-    [GENERAL]: {},
-  },
-  [API_GET_BALANCES]: {
-    [ELECTRUM]: {},
-    [DLIGHT]: {},
-    [GENERAL]: {},
-  },
-  [API_GET_FIATPRICE]: {
-    [ELECTRUM]: {},
-    [DLIGHT]: {},
-    [GENERAL]: {},
-  },
-  [API_GET_INFO]: {
-    [ELECTRUM]: {},
-    [DLIGHT]: {},
-    [GENERAL]: {},
-  },
-  [INIT_DLIGHT_ERRORS]: {}
+  [API_GET_TRANSACTIONS]: CHANNELS_TEMPLATE,
+  [API_GET_BALANCES]: CHANNELS_TEMPLATE,
+  [API_GET_FIATPRICE]: CHANNELS_TEMPLATE,
+  [API_GET_INFO]: CHANNELS_TEMPLATE,
+  [INIT_DLIGHT_ERRORS]: {},
+  [INIT_ELECTRUM_ERRORS]: {},
+  [INIT_ETH_ERRORS]: {},
+  [INIT_ERC20_ERRORS]: {}
 }, action) => {
   const { channel, error, chainTicker } = action.payload || {}
 
@@ -105,15 +95,31 @@ export const errors = (state = {
           [chainTicker]: error
         }
       }
-    case OPEN_DLIGHT_SOCKET:
+    case ERROR_ELECTRUM_INIT:
       return {
         ...state,
         [INIT_DLIGHT_ERRORS]: {
           ...state[INIT_DLIGHT_ERRORS],
-          [chainTicker]: null
+          [chainTicker]: error
         }
       }
-    case CLOSE_DLIGHT_SOCKET:
+    case ERROR_ERC20_INIT:
+      return {
+        ...state,
+        [INIT_DLIGHT_ERRORS]: {
+          ...state[INIT_DLIGHT_ERRORS],
+          [chainTicker]: error
+        }
+      }
+    case ERROR_ETH_INIT:
+      return {
+        ...state,
+        [INIT_DLIGHT_ERRORS]: {
+          ...state[INIT_DLIGHT_ERRORS],
+          [chainTicker]: error
+        }
+      }
+    case INIT_DLIGHT_CHANNEL:
       return {
         ...state,
         [INIT_DLIGHT_ERRORS]: {
