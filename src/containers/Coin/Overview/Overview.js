@@ -34,7 +34,7 @@ import {
 } from '../../../utils/constants/constants'
 import { selectTransactions } from '../../../selectors/transactions';
 import { Dropdown } from 'react-native-material-dropdown'
-import Colors from "../../../globals/colors";
+import { ENABLE_DLIGHT } from '../../../../env/main.json'
 
 const TX_LOGOS = {
   self: {
@@ -366,10 +366,10 @@ class Overview extends Component {
             ...Styles.horizontalPaddingBox,
           }}
         >
-          {global.ENABLE_DLIGHT ? (
+          {ENABLE_DLIGHT ? (
             <Dropdown
               data={[TOTAL, PUBLIC, PRIVATE]}
-              disabled={!global.ENABLE_DLIGHT || enabledChannels.length < 3}
+              disabled={!ENABLE_DLIGHT || enabledChannels.length < 3}
               labelExtractor={(value) => value}
               valueExtractor={(value) => value}
               onChangeText={(value) => {
@@ -391,7 +391,7 @@ class Overview extends Component {
                     ? "Total"
                     : activeOverviewFilter
                 } Overview${
-                  !global.ENABLE_DLIGHT || enabledChannels.length < 3
+                  !ENABLE_DLIGHT || enabledChannels.length < 3
                     ? ""
                     : " ▾"
                 }`}</Text>
@@ -416,14 +416,17 @@ class Overview extends Component {
 
 const mapStateToProps = (state) => {
   const chainTicker = state.coins.activeCoin.id
+  const mainChannel = state.coins.activeCoin.dominant_channel
+    ? state.coins.activeCoin.dominant_channel
+    : ELECTRUM;
 
   return {
     activeCoin: state.coins.activeCoin,
     balances: {
-      public: state.ledger.balances[ELECTRUM][chainTicker],
+      public: state.ledger.balances[mainChannel][chainTicker],
       private: state.ledger.balances[DLIGHT][chainTicker],
       errors: {
-        public: state.errors[API_GET_BALANCES][ELECTRUM][chainTicker],
+        public: state.errors[API_GET_BALANCES][mainChannel][chainTicker],
         private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
       }
     },

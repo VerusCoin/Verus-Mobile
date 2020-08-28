@@ -7,27 +7,19 @@ import rootReducer from '../reducers/index';
 import rootSaga from '../sagas'
 
 const configureStore = () => {
-  if (global.ENABLE_VERUS_IDENTITIES) {
-    const sagaMiddleware = createSagaMiddleware();
+  const sagaMiddleware = createSagaMiddleware();
+
+  const middlewares = [thunk, sagaMiddleware];
   
-    const middlewares = [thunk, sagaMiddleware];
-    
-    const composeEnhancers = composeWithDevTools({ realtime: true, port: 8000 });
+  const composeEnhancers = composeWithDevTools({ realtime: true, port: 8000 });
 
-    const ret = createStore(rootReducer, composeEnhancers(
-      applyMiddleware(...middlewares)
-    ));
+  const ret = createStore(rootReducer, composeEnhancers(
+    applyMiddleware(...middlewares)
+  ));
 
-    sagaMiddleware.run(rootSaga)
+  sagaMiddleware.run(rootSaga)
 
-    return ret
-  } else {
-    const composeEnhancers = composeWithDevTools({ realtime: true, port: 8000 });
-  
-    return createStore(rootReducer, composeEnhancers(
-      applyMiddleware()
-    ));
-  }  
+  return ret
 }
 
 export default store = configureStore();

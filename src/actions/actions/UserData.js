@@ -18,11 +18,13 @@ import {
 } from '../../utils/keys'
 import {
   decryptkey,
-  decryptGeneral,
 } from '../../utils/seedCrypt'
 import { sha256, hashAccountId } from '../../utils/crypto/hash';
 
 import WyreService from '../../services/wyreService';
+import { CHANNELS, ELECTRUM } from '../../utils/constants/intervalConstants';
+import { arrayToObject } from '../../utils/objectManip';
+import { ENABLE_FIAT_GATEWAY } from '../../../env/main.json';
 
 
 //TODO: Fingerprint authentication
@@ -77,22 +79,33 @@ export const fetchUsers = () => {
 
 export const authenticateAccount = (account, password) => {
   let _keys = {};
-  const { electrum, dlight } = account.encryptedKeys
 
-  let seeds = {
-    electrum: electrum != null ? decryptkey(password, electrum) : null,
-    dlight: dlight != null ? decryptkey(password, dlight) : null,
-  }
+  let seeds = arrayToObject(
+    CHANNELS,
+    (acc, key) =>
+      account.encryptedKeys[key]
+        ? decryptkey(password, account.encryptedKeys[key])
+        : null,
+    true
+  );
 
   return new Promise((resolve, reject) => {
     getActiveCoinList()
       .then(activeCoins => {
         for (let i = 0; i < activeCoins.length; i++) {
           if (activeCoins[i].users.includes(account.id)) {
-            _keys[activeCoins[i].id] = {
-              electrum: electrum != null ? makeKeyPair(seeds.electrum, activeCoins[i].id) : null,
-              dlight: dlight != null ? makeKeyPair(seeds.dlight, activeCoins[i].id) : null,
-            }
+            _keys[activeCoins[i].id] = arrayToObject(
+              CHANNELS,
+              (acc, key) =>
+                activeCoins[i].compatible_channels.includes(key)
+                  ? makeKeyPair(
+                      seeds[key] ? seeds[key] : seeds.electrum,
+                      activeCoins[i].id,
+                      key
+                    )
+                  : null,
+              true
+            );
           }
         }
 
@@ -100,7 +113,7 @@ export const authenticateAccount = (account, password) => {
           ...account.paymentMethods
         }
 
-        if (global.ENABLE_FIAT_GATEWAY) {
+        if (ENABLE_FIAT_GATEWAY) {
           const hashedSeed = sha256(seeds.electrum).toString('hex');
 
           WyreService.build().submitAuthToken(hashedSeed).then((response) => {
@@ -162,12 +175,14 @@ export const validateLogin = (account, password) => {
   });
 }
 
-export const addKeypairs = (accountSeeds, coinID, keys) => {
+export const addKeypairs = (accountSeeds, coinObj, keys) => {
   let keypairs = {}
-  Object.keys(accountSeeds).map(seedType => {
-    const seed = accountSeeds[seedType]
-    if (seed != null) {
-      keypairs[seedType] = makeKeyPair(seed, coinID)
+  const coinID = coinObj.id
+
+  CHANNELS.map(seedType => {
+    const seed = accountSeeds[seedType] ? accountSeeds[seedType] : accountSeeds[ELECTRUM]
+    if (coinObj.compatible_channels.includes(seedType)) {
+      keypairs[seedType] = makeKeyPair(seed, coinID, seedType)
     }
   })
 

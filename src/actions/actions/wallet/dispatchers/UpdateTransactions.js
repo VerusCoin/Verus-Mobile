@@ -1,9 +1,11 @@
 import { getZTransactions } from '../../../../utils/api/channels/dlight/callCreators'
 import { getParsedTransactionList } from '../../../../utils/api/channels/electrum/callCreators'
 import { ERROR_TRANSACTIONS, SET_TRANSACTIONS } from '../../../../utils/constants/storeType'
-import { DLIGHT, ELECTRUM } from '../../../../utils/constants/intervalConstants'
+import { DLIGHT, ELECTRUM, ETH, ERC20 } from '../../../../utils/constants/intervalConstants'
 import { standardizeDlightTxObj } from '../../../../utils/standardization/standardizeTxObj'
 import { updateLedgerValue } from './UpdateLedgerValue'
+import { getStandardEthTransactions } from '../../../../utils/api/channels/eth/callCreator'
+import { getStandardErc20Transactions } from '../../../../utils/api/channels/erc20/callCreator'
 
 const channelMap = {
   [DLIGHT]: async (activeUser, coinObj) => {
@@ -35,6 +37,56 @@ const channelMap = {
       header,
       body: result,
     };
+  },
+  [ETH]: async (activeUser, coinObj) => {
+    if (
+      activeUser.keys[coinObj.id] != null &&
+      activeUser.keys[coinObj.id][ETH] != null &&
+      activeUser.keys[coinObj.id][ETH].addresses.length > 0
+    ) {
+      return {
+        chainTicker: coinObj.id,
+        channel: ETH,
+        header: {},
+        body: await getStandardEthTransactions(
+          activeUser.keys[coinObj.id][ETH].addresses[0]
+        ),
+      };
+    } else {
+      throw new Error(
+        "updateTransactions.js: Fatal mismatch error, " +
+          activeUser.id +
+          " user keys for active coin " +
+          coinObj.id +
+          " not found!"
+      );
+    }
+  },
+  [ERC20]: async (activeUser, coinObj) => {
+    if (
+      activeUser.keys[coinObj.id] != null &&
+      activeUser.keys[coinObj.id][ERC20] != null &&
+      activeUser.keys[coinObj.id][ERC20].addresses.length > 0
+    ) {
+      return {
+        chainTicker: coinObj.id,
+        channel: ERC20,
+        header: {},
+        body: await getStandardErc20Transactions(
+          activeUser.keys[coinObj.id][ERC20].addresses[0],
+          coinObj.contract_address,
+          coinObj.decimals
+        ),
+      };
+    } else {
+      throw new Error(
+        "updateTransactions.js: Fatal mismatch error, " +
+          activeUser.id +
+          " user keys for active coin " +
+          coinObj.id +
+          " not found!"
+      );
+    }
   },
 };
 

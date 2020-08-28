@@ -9,7 +9,8 @@ import {
 } from '../../../actionCreators'
 import {
   ALWAYS_ACTIVATED,
-  NEVER_ACTIVATED
+  NEVER_ACTIVATED,
+  CHANNELS
 } from "../../../../utils/constants/intervalConstants";
 import Store from '../../../../store/index'
 import { getCoinObj } from '../../../../utils/CoinData/CoinData';
@@ -94,12 +95,14 @@ export const refreshCoinIntervals = (chainTicker, onCompletes) => {
 
   const coinObj = getCoinObj(state.coins.activeCoinsForUser, chainTicker)
 
-  const channels = state.settings.coinSettings[chainTicker].channels
+  // TODO: Channel manual enabling/disabling
+  // const channels = state.settings.coinSettings[chainTicker].channels
+
   const chainStatus = state.coins.status[chainTicker]
 
   if (!coinObj) throw new Error(`${chainTicker} is not added for current user. Coins must be added to be used.`)
   
-  const updateDataAction = generateUpdateCoinDataAction(chainStatus, chainTicker, coinObj.tags, channels, onCompletes)
+  const updateDataAction = generateUpdateCoinDataAction(chainStatus, chainTicker, coinObj.tags, CHANNELS, onCompletes)
   const oldIntervalData = state.updates.coinUpdateIntervals[chainTicker]
   const newIntervalData = updateDataAction.updateIntervalData
   const newTrackingData = updateDataAction.updateTrackingData

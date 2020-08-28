@@ -29,6 +29,7 @@ import { API_GET_FIATPRICE, API_GET_BALANCES, GENERAL, USD, ELECTRUM, DLIGHT } f
 import { expireData } from "../../../actions/actionCreators"
 import Store from "../../../store"
 import { CONNECTION_ERROR } from "../../../utils/api/errors/errorMessages"
+import { VERUS_QR_VERSION } from '../../../../env/main.json'
 
 class ReceiveCoin extends Component {
   constructor(props) {
@@ -54,21 +55,22 @@ class ReceiveCoin extends Component {
     let index = 0;
     const activeUser = this.props.activeAccount
     const coinObj = this.state.selectedCoin
+    const channel = coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM
 
     if (
       activeUser.keys[coinObj.id] != null &&
-      activeUser.keys[coinObj.id].electrum != null &&
-      activeUser.keys[coinObj.id].electrum.addresses.length > 0
+      activeUser.keys[coinObj.id][channel] != null &&
+      activeUser.keys[coinObj.id][channel].addresses.length > 0
     ) {
       this.setState({
-        address: activeUser.keys[coinObj.id].electrum.addresses[0]
+        address: activeUser.keys[coinObj.id][channel].addresses[0]
       });
     } else {
       throw new Error(
         "ReceiveCoin.js: Fatal mismatch error, " +
           activeUser.id +
           " user keys for active coin " +
-          coinObj[i].id +
+          coinObj.id +
           " not found!"
       );
     }
@@ -137,7 +139,7 @@ class ReceiveCoin extends Component {
     let _price = rates[coinTicker] != null ? rates[coinTicker][displayCurrency] : null
     
     let verusQRJSON = {
-      verusQR: global.VERUS_QR_VERSION,
+      verusQR: VERUS_QR_VERSION,
       coinTicker: coinTicker,
       address: address,
       amount: this.state.amountFiat ? truncateDecimal(coinsToSats(amount/_price), 0) : coinsToSats(amount),
@@ -384,6 +386,9 @@ class ReceiveCoin extends Component {
 
 const mapStateToProps = (state) => {
   const chainTicker = state.coins.activeCoin.id
+  const mainChannel = state.coins.activeCoin.dominant_channel
+    ? state.coins.activeCoin.dominant_channel
+    : ELECTRUM;
 
   return {
     accounts: state.authentication.accounts,
@@ -393,10 +398,10 @@ const mapStateToProps = (state) => {
     rates: state.ledger.rates[GENERAL],
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
     balances: {
-      public: state.ledger.balances[ELECTRUM][chainTicker],
+      public: state.ledger.balances[mainChannel][chainTicker],
       private: state.ledger.balances[DLIGHT][chainTicker],
       errors: {
-        public: state.errors[API_GET_BALANCES][ELECTRUM][chainTicker],
+        public: state.errors[API_GET_BALANCES][mainChannel][chainTicker],
         private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
       }
     },

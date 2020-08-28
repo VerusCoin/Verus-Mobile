@@ -14,6 +14,8 @@ import { ELECTRUM } from '../../../constants/intervalConstants';
 import { NO_VALID_SERVER } from '../../errors/errorCodes';
 import { CONNECTION_ERROR } from '../../errors/errorMessages'
 
+import { REQUEST_TIMEOUT_MS } from '../../../../../env/main.json'
+
 /**
  * @param {Function} tester A tester function that takes in a server and will fail if it does not perform it's purpose
  * @param {String[]} serverList A list of server strings in the format the tester requires
@@ -64,7 +66,7 @@ export const testElectrum = (electrumString, proxy) => {
   }
 
   return new Promise((resolve, reject) => {
-    timeout(global.REQUEST_TIMEOUT_MS, getBlockHeight(proxy, electrum))
+    timeout(REQUEST_TIMEOUT_MS, getBlockHeight(proxy, electrum))
       .then((response) => {
         if (response.msg === 'success') {
           resolve(response)
@@ -80,7 +82,7 @@ export const testElectrum = (electrumString, proxy) => {
 
 export const testProxy = (proxyServer) => {
   return new Promise((resolve, reject) => {
-    timeout(global.REQUEST_TIMEOUT_MS, fetch(`${httpsEnabled ? 'https' : 'http'}://${proxyServer}`))
+    timeout(REQUEST_TIMEOUT_MS, fetch(`${httpsEnabled ? 'https' : 'http'}://${proxyServer}`))
     .then((response) => {
       if (response.status === 200) {
         resolve(true)

@@ -1,3 +1,5 @@
+import { arrayToObject } from "../objectManip"
+
 // Interval expiry special states
 export const ALWAYS_ACTIVATED = "ALWAYS_ACTIVATED" 
 export const NEVER_ACTIVATED = "NEVER_ACTIVATED" 
@@ -33,10 +35,8 @@ export const GENERAL = 'general'
 export const ETH = 'eth'
 export const ERC20 = 'erc20'
 export const CHANNELS = [DLIGHT, ELECTRUM, GENERAL, ETH, ERC20]
-export const CHANNELS_TEMPLATE = Object.freeze(CHANNELS.reduce((acc, curr) => {
-  acc[curr] = {}
-  return acc
-}, {}))
+export const CHANNELS_OBJECT_TEMPLATE = Object.freeze(arrayToObject(CHANNELS, {}))
+export const CHANNELS_NULL_TEMPLATE = Object.freeze(arrayToObject(CHANNELS, null))
 
 // API coin lifecycle types
 export const PRE_DATA = "pre_data"

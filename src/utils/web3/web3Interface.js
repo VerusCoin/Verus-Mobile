@@ -1,4 +1,4 @@
-import ethers from 'ethers'
+import ethers from 'ethers';
 
 class Web3Interface {
   constructor(network, apiKeys) {
@@ -17,13 +17,30 @@ class Web3Interface {
   initContract = async (contractAddress) => {
     try {
       if (this.contracts[contractAddress]) throw new Error("Cannot initialize existing contract " + contractAddress)
-      const abi = await this.EtherscanProvider.perform('getabi', {address: contractAddress})
+      const abi = await this.EtherscanProvider.perform('getabi', { address: contractAddress })
 
-      this.contracts[contractAddress] = new ethers.Contract(address, abi, this.DefaultProvider);
+      this.contracts[contractAddress] = new ethers.Contract(contractAddress, abi, this.DefaultProvider);
     } catch(e) {
       console.error(e)
       throw e
     }
+  }
+
+  deleteContract = (contractAddress) => {
+    try {
+      if (!this.contracts[contractAddress]) throw new Error("Cannot delete uninitialized contract " + contractAddress)
+
+      delete this.contracts[contractAddress] 
+    } catch(e) {
+      console.error(e)
+      throw e
+    }
+  }
+
+  deleteAllContracts = () => {
+    Object.keys(this.contracts).map(contractAddress => {
+      this.deleteContract(contractAddress)
+    })
   }
 
   getContract = (contractAddress) => {

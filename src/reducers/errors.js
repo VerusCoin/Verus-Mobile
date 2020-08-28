@@ -11,7 +11,7 @@ import {
   INIT_ELECTRUM_ERRORS,
   INIT_ETH_ERRORS,
   INIT_ERC20_ERRORS,
-  CHANNELS_TEMPLATE
+  CHANNELS_OBJECT_TEMPLATE
 } from "../utils/constants/intervalConstants";
 import {
   ERROR_BALANCES,
@@ -26,15 +26,15 @@ import {
   SET_INFO,
   SET_TRANSACTIONS,
   SET_RATES,
-  INIT_DLIGHT_CHANNEL
+  INIT_DLIGHT_CHANNEL_START
 } from "../utils/constants/storeType";
 
 export const errors = (state = {
   // Ledger calls for coins
-  [API_GET_TRANSACTIONS]: CHANNELS_TEMPLATE,
-  [API_GET_BALANCES]: CHANNELS_TEMPLATE,
-  [API_GET_FIATPRICE]: CHANNELS_TEMPLATE,
-  [API_GET_INFO]: CHANNELS_TEMPLATE,
+  [API_GET_TRANSACTIONS]: CHANNELS_OBJECT_TEMPLATE,
+  [API_GET_BALANCES]: CHANNELS_OBJECT_TEMPLATE,
+  [API_GET_FIATPRICE]: CHANNELS_OBJECT_TEMPLATE,
+  [API_GET_INFO]: CHANNELS_OBJECT_TEMPLATE,
   [INIT_DLIGHT_ERRORS]: {},
   [INIT_ELECTRUM_ERRORS]: {},
   [INIT_ETH_ERRORS]: {},
@@ -48,9 +48,9 @@ export const errors = (state = {
         ...state,
         [API_GET_BALANCES]: {
           ...state[API_GET_BALANCES],
-          [error.channel]: {
-            ...state[API_GET_BALANCES][error.channel],
-            [error.chainTicker]: error
+          [channel]: {
+            ...state[API_GET_BALANCES][channel],
+            [chainTicker]: error
           }
         }
       };
@@ -59,9 +59,9 @@ export const errors = (state = {
         ...state,
         [API_GET_INFO]: {
           ...state[API_GET_INFO],
-          [error.channel]: {
-            ...state[API_GET_INFO][error.channel],
-            [error.chainTicker]: error
+          [channel]: {
+            ...state[API_GET_INFO][channel],
+            [chainTicker]: error
           }
         }
       };
@@ -70,9 +70,9 @@ export const errors = (state = {
         ...state,
         [API_GET_TRANSACTIONS]: {
           ...state[API_GET_TRANSACTIONS],
-          [error.channel]: {
-            ...state[API_GET_TRANSACTIONS][error.channel],
-            [error.chainTicker]: error
+          [channel]: {
+            ...state[API_GET_TRANSACTIONS][channel],
+            [chainTicker]: error
           }
         }
       };
@@ -81,9 +81,9 @@ export const errors = (state = {
         ...state,
         [API_GET_FIATPRICE]: {
           ...state[API_GET_FIATPRICE],
-          [error.channel]: {
-            ...state[API_GET_FIATPRICE][error.channel],
-            [error.chainTicker]: error
+          [channel]: {
+            ...state[API_GET_FIATPRICE][channel],
+            [chainTicker]: error
           }
         }
       };
@@ -119,7 +119,7 @@ export const errors = (state = {
           [chainTicker]: error
         }
       }
-    case INIT_DLIGHT_CHANNEL:
+    case INIT_DLIGHT_CHANNEL_START:
       return {
         ...state,
         [INIT_DLIGHT_ERRORS]: {

@@ -24,14 +24,14 @@ import {
   SET_INFO
 } from '../utils/constants/storeType'
 import {
-  CHANNELS_TEMPLATE
+  CHANNELS_OBJECT_TEMPLATE
 } from "../utils/constants/intervalConstants";
 
 export const ledger = (state = {
-  balances: CHANNELS_TEMPLATE,
-  transactions: CHANNELS_TEMPLATE,
-  rates: CHANNELS_TEMPLATE,
-  info: CHANNELS_TEMPLATE
+  balances: CHANNELS_OBJECT_TEMPLATE,
+  transactions: CHANNELS_OBJECT_TEMPLATE,
+  rates: CHANNELS_OBJECT_TEMPLATE,
+  info: CHANNELS_OBJECT_TEMPLATE
 }, action) => {
   const { chainTicker, channel, body } = action.payload || {}
 
@@ -71,10 +71,10 @@ export const ledger = (state = {
     case SIGN_OUT:
       return {
         ...state,
-        balances: CHANNELS_TEMPLATE,
-        transactions: CHANNELS_TEMPLATE,
-        rates: CHANNELS_TEMPLATE,
-        info: CHANNELS_TEMPLATE,
+        balances: CHANNELS_OBJECT_TEMPLATE,
+        transactions: CHANNELS_OBJECT_TEMPLATE,
+        rates: CHANNELS_OBJECT_TEMPLATE,
+        info: CHANNELS_OBJECT_TEMPLATE,
       };
     /*case SET_INTERVAL_ID:
       return {

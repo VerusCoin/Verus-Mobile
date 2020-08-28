@@ -7,12 +7,15 @@ import {
   CLOSE_DLIGHT_SOCKET,
   START_DLIGHT_SYNC,
   STOP_DLIGHT_SYNC,
-  INIT_DLIGHT_CHANNEL
+  INIT_DLIGHT_CHANNEL_FINISH,
+  SIGN_OUT,
+  CLOSE_DLIGHT_CHANNEL
 } from '../../utils/constants/storeType'
 
 export const channelStore_dlight = (state = {
   dlightSockets: {},
-  dlightSyncing: {}
+  dlightSyncing: {},
+  openChannels: {}
 }, action) => {
   switch (action.type) {
     case OPEN_DLIGHT_SOCKET:
@@ -31,7 +34,7 @@ export const channelStore_dlight = (state = {
           [action.payload.chainTicker]: false
         },
       };
-    case INIT_DLIGHT_CHANNEL:
+    case INIT_DLIGHT_CHANNEL_FINISH:
       return {
         ...state,
         dlightSockets: {
@@ -42,6 +45,18 @@ export const channelStore_dlight = (state = {
           ...state.dlightSyncing,
           [action.payload.chainTicker]: true
         },
+        openChannels: {
+          ...state.openChannels,
+          [action.payload.chainTicker]: true
+        }
+      }
+    case CLOSE_DLIGHT_CHANNEL:
+      return {
+        ...state,
+        openChannels: {
+          ...state.openChannels,
+          [action.payload.chainTicker]: false
+        }
       }
     case START_DLIGHT_SYNC:
       return {
@@ -59,6 +74,13 @@ export const channelStore_dlight = (state = {
           [action.payload.chainTicker]: false
         },
       };
+    case SIGN_OUT:
+      return {
+        ...state,
+        dlightSockets: {},
+        dlightSyncing: {},
+        openChannels: {}
+      }
     default:
       return state;
   }

@@ -48,3 +48,15 @@ export const hexHashToDecimal = (hexHash) => {
     return parseInt(byte, 16)
   })
 }
+
+// Converts a hex string to a byte array
+export const parseHexString = (str) => { 
+  var result = [];
+  while (str.length >= 8) { 
+      result.push(parseInt(str.substring(0, 8), 16));
+
+      str = str.substring(8, str.length);
+  }
+
+  return result;
+}

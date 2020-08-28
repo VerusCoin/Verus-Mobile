@@ -363,13 +363,16 @@ class SendResult extends Component {
 
 const mapStateToProps = (state) => {
   const chainTicker = state.coins.activeCoin.id
+  const mainChannel = state.coins.activeCoin.dominant_channel
+    ? state.coins.activeCoin.dominant_channel
+    : ELECTRUM;
 
   return {
     balances: {
-      public: state.ledger.balances[ELECTRUM][chainTicker],
+      public: state.ledger.balances[mainChannel][chainTicker],
       private: state.ledger.balances[DLIGHT][chainTicker],
       errors: {
-        public: state.errors[API_GET_BALANCES][ELECTRUM][chainTicker],
+        public: state.errors[API_GET_BALANCES][mainChannel][chainTicker],
         private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
       }
     },

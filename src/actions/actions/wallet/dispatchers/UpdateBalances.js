@@ -6,10 +6,14 @@ import {
 } from "../../../../utils/constants/storeType";
 import {
   DLIGHT,
-  ELECTRUM
+  ELECTRUM,
+  ETH,
+  ERC20
 } from "../../../../utils/constants/intervalConstants";
 import { satsToCoins } from "../../../../utils/math";
 import { updateLedgerValue } from "./UpdateLedgerValue";
+import { getStandardEthBalance } from "../../../../utils/api/channels/eth/callCreator";
+import { getStandardErc20Balance } from "../../../../utils/api/channels/erc20/callCreator";
 
 const channelMap = {
   [DLIGHT]: async (activeUser, coinObj) => {
@@ -49,6 +53,66 @@ const channelMap = {
         total: satsToCoins(unconfirmed + confirmed),
       },
     };
+  },
+  [ETH]: async (activeUser, coinObj) => {
+    if (
+      activeUser.keys[coinObj.id] != null &&
+      activeUser.keys[coinObj.id][ETH] != null &&
+      activeUser.keys[coinObj.id][ETH].addresses.length > 0
+    ) {
+      const balance = await getStandardEthBalance(activeUser.keys[coinObj.id][ETH].addresses[0]);
+
+      return {
+        chainTicker: coinObj.id,
+        channel: ETH,
+        header: {},
+        body: {
+          confirmed: balance,
+          pending: 0,
+          total: balance
+        },
+      };
+    } else {
+      throw new Error(
+        "updateBalances.js: Fatal mismatch error, " +
+          activeUser.id +
+          " user keys for active coin " +
+          coinObj.id +
+          " not found!"
+      );
+    }
+  },
+  [ERC20]: async (activeUser, coinObj) => {
+    if (
+      activeUser.keys[coinObj.id] != null &&
+      activeUser.keys[coinObj.id][ERC20] != null &&
+      activeUser.keys[coinObj.id][ERC20].addresses.length > 0
+    ) {
+      const balance = await getStandardErc20Balance(
+        activeUser.keys[coinObj.id][ERC20].addresses[0],
+        coinObj.contract_address,
+        coinObj.decimals
+      );
+
+      return {
+        chainTicker: coinObj.id,
+        channel: ERC20,
+        header: {},
+        body: {
+          confirmed: balance,
+          pending: 0,
+          total: balance
+        },
+      };
+    } else {
+      throw new Error(
+        "updateBalances.js: Fatal mismatch error, " +
+          activeUser.id +
+          " user keys for active coin " +
+          coinObj.id +
+          " not found!"
+      );
+    }
   }
 };
 

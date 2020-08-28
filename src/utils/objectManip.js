@@ -37,3 +37,10 @@ export const arraysEqual = (a, b) => {
   }
   return true;
 }
+
+export const arrayToObject = (array, defaultValue = null, func = false) => {
+  return array.reduce((acc, curr) => {
+    acc[curr] = func ? defaultValue(acc, curr) : defaultValue
+    return acc
+  }, {})
+}

@@ -1,5 +1,6 @@
 import { DLIGHT } from '../../../../utils/constants/intervalConstants'
 import { getCoinObj } from '../../../../utils/CoinData/CoinData'
+import { ENABLE_DLIGHT } from '../../../../../env/main.json'
 
 /**
  * Fetches the appropriate data from the store for the specified channel's type
@@ -27,7 +28,7 @@ export const updateLedgerValue = async (
 
   await Promise.all(
     channels.map(async (channel) => {
-      if (!channelMap[channel] || (channel === DLIGHT && !global.ENABLE_DLIGHT))
+      if (!channelMap[channel] || (channel === DLIGHT && !ENABLE_DLIGHT))
         return;
 
       try {
@@ -37,7 +38,7 @@ export const updateLedgerValue = async (
         });
         channelsPassed.push(channel);
       } catch (error) {
-        dispatch({ type: errorType, payload: { error } });
+        dispatch({ type: errorType, payload: { error, chainTicker, channel } });
       }
     })
   );

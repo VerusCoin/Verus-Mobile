@@ -1,4 +1,4 @@
-import Store from '../../../../store/index'
+import Store from '../../../../../store/index'
 import {
   initializeWallet,
   openWallet,
@@ -7,17 +7,18 @@ import {
   startSync,
   stopSync,
   getAddresses
-} from '../../../../utils/api/channels/dlight/callCreators'
-import { DEFAULT_PRIVATE_ADDRS } from '../../../../utils/constants/constants'
-import { resolveSequentially } from '../../../../utils/promises'
+} from '../../../../../utils/api/channels/dlight/callCreators'
+import { DEFAULT_PRIVATE_ADDRS } from '../../../../../utils/constants/constants'
+import { resolveSequentially } from '../../../../../utils/promises'
 import { canRetryDlightInitialization, blockchainQuitError } from './AlertManager'
 import {
   ERROR_DLIGHT_INIT,
   STOP_DLIGHT_SYNC,
   SET_DLIGHT_ADDRESSES,
   CLOSE_DLIGHT_SOCKET,
-  INIT_DLIGHT_CHANNEL,
-} from "../../../../utils/constants/storeType";
+  INIT_DLIGHT_CHANNEL_START,
+  CLOSE_DLIGHT_CHANNEL,
+} from "../../../../../utils/constants/storeType";
 
 // Initializes dlight wallet by either creating a backend native wallet and opening it or just opening it
 export const initDlightWallet = (coinObj) => {
@@ -83,7 +84,7 @@ export const initDlightWallet = (coinObj) => {
     resolveSequentially(initializationPromises)
     .then(res => {
       dispatch({
-        type: INIT_DLIGHT_CHANNEL,
+        type: INIT_DLIGHT_CHANNEL_START,
         payload: { chainTicker: id }
       })
 
@@ -154,6 +155,10 @@ export const closeDlightWallet = (coinObj, clearDb) => {
       })
       dispatch({
         type: STOP_DLIGHT_SYNC,
+        payload: { chainTicker: id }
+      })
+      dispatch({
+        type: CLOSE_DLIGHT_CHANNEL,
         payload: { chainTicker: id }
       })
 

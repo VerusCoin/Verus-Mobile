@@ -16,6 +16,7 @@ import {
   checkAndSetVersion
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
+import { ENABLE_VERUS_IDENTITIES } from '../env/main.json'
 
 
 class VerusMobile extends React.Component {
@@ -63,7 +64,7 @@ class VerusMobile extends React.Component {
       Alert.alert("Error", err.message)
     })
 
-    if (global.ENABLE_VERUS_IDENTITIES) {
+    if (ENABLE_VERUS_IDENTITIES) {
       this.props.dispatch(requestSeedData());
     }
   }

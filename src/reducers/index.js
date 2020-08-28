@@ -13,6 +13,9 @@ import { responseHeaders } from './responseHeaders';
 import { errors } from './errors';
 import { coinOverview } from './gui/coinOverview';
 import { channelStore_dlight } from './channelStores/dlight';
+import { channelStore_eth } from './channelStores/eth';
+import { channelStore_erc20 } from './channelStores/erc20';
+import { channelStore_electrum } from './channelStores/electrum';
 import identity from './identity';
 
 export default combineReducers({
@@ -30,5 +33,8 @@ export default combineReducers({
   responseHeaders,
   coinOverview,
   identity,
-  channelStore_dlight
+  channelStore_dlight,
+  channelStore_eth,
+  channelStore_electrum,
+  channelStore_erc20
 });

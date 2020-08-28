@@ -1,5 +1,6 @@
 import { ethers } from "ethers"
 import { ETHERS } from "../../../../constants/web3Constants"
+import Web3Provider from "../../../../web3/provider"
 
 /**
  * Gets the balance of an address in an ERC20 token as a big number
@@ -12,6 +13,6 @@ export const getErc20Balance = async (address, contract) => {
   } else throw new Error(`ERC20 contract ${contract.address} does not support a known balance function.`)
 }
 
-export const getStandardErc20Balance = async (address, contract, decimals = ETHERS) => {
-  return ethers.utils.formatUnits(await getErc20Balance(address, contract), decimals)
+export const getStandardErc20Balance = async (address, contractAddress, decimals = ETHERS) => {
+  return Number(ethers.utils.formatUnits(await getErc20Balance(address, Web3Provider.getContract(contractAddress)), decimals))
 }

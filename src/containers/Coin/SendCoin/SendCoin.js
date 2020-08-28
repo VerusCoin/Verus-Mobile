@@ -27,13 +27,11 @@ import { connect } from "react-redux";
 import { getRecommendedBTCFees } from '../../../utils/api/channels/general/callCreators'
 import { removeSpaces } from '../../../utils/stringUtils'
 import Styles from '../../../styles/index'
-import Colors from '../../../globals/colors';
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import store from "../../../store"
 import { API_GET_FIATPRICE, API_GET_BALANCES, ELECTRUM, DLIGHT } from "../../../utils/constants/intervalConstants"
 
 const VERUSPAY_LOGO_DIR = require('../../../images/customIcons/verusPay.png')
-const DEFAULT_FEE_GUI = 10000;
 
 class SendCoin extends Component {
   constructor(props) {
@@ -425,16 +423,20 @@ class SendCoin extends Component {
 
 const mapStateToProps = (state) => {
   const chainTicker = state.coins.activeCoin.id
+  const mainChannel = state.coins.activeCoin.dominant_channel
+    ? state.coins.activeCoin.dominant_channel
+    : ELECTRUM;
+  
 
   return {
     //needsUpdate: state.ledger.needsUpdate,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoin: state.coins.activeCoin,
     balances: {
-      public: state.ledger.balances[ELECTRUM][chainTicker],
+      public: state.ledger.balances[mainChannel][chainTicker],
       private: state.ledger.balances[DLIGHT][chainTicker],
       errors: {
-        public: state.errors[API_GET_BALANCES][ELECTRUM][chainTicker],
+        public: state.errors[API_GET_BALANCES][mainChannel][chainTicker],
         private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
       }
     },
