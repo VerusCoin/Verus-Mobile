@@ -11,6 +11,16 @@ export default buttons = {
     backgroundColor: Colors.linkButtonColor,
     minWidth: 104,
   },
+  defaultButtonWhite: {
+    alignSelf: 'center',
+    backgroundColor: Colors.secondaryColor,
+    minWidth: 104,
+  },
+  defaultButtonClearWhite: {
+    alignSelf: 'center',
+    borderColor: Colors.secondaryColor,
+    minWidth: 104,
+  },
   redButton: {
     alignSelf: 'center',
     minWidth: 104,
@@ -43,7 +53,7 @@ export default buttons = {
     shadowOpacity: 0.43,
     shadowRadius: 2,
     elevation: 2,
-  
+
   },
 
   greyButtonWithShadow:{

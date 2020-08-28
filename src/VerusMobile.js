@@ -16,6 +16,7 @@ import {
   checkAndSetVersion
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
+import VerusLightClient from 'react-native-verus-light-client';
 
 
 class VerusMobile extends React.Component {

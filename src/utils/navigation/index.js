@@ -52,6 +52,8 @@ import ClaimManager from '../../containers/Identity/PersonalInfo/ClaimManager';
 import MoveIntoCategory from '../../containers/Identity/PersonalInfo/ClaimManager/MoveIntoCategory';
 import AddIdentity from '../../containers/Identity/AddIdentity';
 import KYCstart from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCstart';
+import KYCInfoScreen from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCInfoScreen';
+
 
 const WALLET = 'wallet';
 
@@ -351,6 +353,15 @@ function MainStackScreens() {
       <MainStack.Screen
         name="KYCStartScreen"
         component={KYCstart}
+      />
+
+      <MainStack.Screen
+        name="KYCInfoScreen"
+        component={KYCInfoScreen}
+        options={{
+          username: "Chris",
+          email: "foo@bar"
+        }}
       />
 
       <MainStack.Screen

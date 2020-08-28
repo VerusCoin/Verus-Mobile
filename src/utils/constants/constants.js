@@ -70,6 +70,7 @@ export const TOTAL = 'total'
 
 // Payment Methods
 export const ENABLE_WYRE = true;
+
 export const WYRE_URL = 'https://api.testwyre.com';
 export const WYRE_REFERRER_ACCOUNT_ID = 'verus-valu';
 

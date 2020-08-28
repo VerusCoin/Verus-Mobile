@@ -30,7 +30,7 @@ class ManageWyreCellphone extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      phone: typeof this.props.field === 'undefined'? {} : this.props.field.value,
+      phone:  this.props.field == null? {} : this.props.field.value,
       error: null,
     };
   }

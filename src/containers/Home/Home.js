@@ -9,7 +9,7 @@
 */
 
 import React, { Component } from "react";
-import { ListItem, Divider } from "react-native-elements";
+import { ListItem, Divider, Button } from "react-native-elements";
 import {
   View,
   Text,
@@ -59,7 +59,7 @@ class Home extends Component {
     this._unsubscribeFocus()
   }
 
-  refresh = () => {    
+  refresh = () => {
     this.setState({ loading: true }, () => {
       Promise.all(this.props.activeCoinsForUser.map(async (coinObj) => {
         await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, coinObj.id, API_GET_FIATPRICE)
@@ -171,7 +171,7 @@ class Home extends Component {
     let navigation = this.props.navigation ;
     navigation.navigate("Identity", { selectedScreen: "Identity" } );
   }
-  
+
   _addCoin = () => {
     let navigation = this.props.navigation
     navigation.navigate("AddCoin", { refresh: this.refresh });
@@ -186,6 +186,10 @@ class Home extends Component {
 
   handleScanToVerify = () => {
     this.props.navigation.navigate('ScanBadge');
+  }
+
+  onKYCScreen = () => {
+    this.props.navigation.navigate("KYCStartScreen");
   }
 
   renderCoinList = () => {
@@ -355,6 +359,10 @@ render() {
         </Text>
         <Text style={Styles.boldListHeader}>{"Portfolio"}</Text>
         {this.renderCoinList()}
+        <Button
+          title="go to kyc screen"
+          onPress={this.onKYCScreen}
+          />
       </View>
     );
   }
