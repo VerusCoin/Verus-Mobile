@@ -22,7 +22,7 @@ import Colors from '../../../../globals/colors';
 
 import { NavigationActions } from '@react-navigation/compat'
 
-class KYCInfoScreen extends Component {
+class KYCIdentityInfo extends Component {
 constructor(props) {
   super(props)
 }
@@ -36,7 +36,9 @@ constructor(props) {
 
   }
 
-onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
+
+
+onClick = () => {  this.props.navigation.navigate("KYCIdentityInput") }
 
 
   render() {
@@ -70,7 +72,7 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
         </View>
         <View>
           <View>
-            <Text>title</Text>
+            <Text style={Styles.centralHeader} >verify your Identity</Text>
           </View>
           <View>
             <Text>bla bla bla</Text>
@@ -83,12 +85,12 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
           <View></View>
         </View>
         <View></View>
-          <Button
-          title="next"
-          titleStyle={Styles.whiteText}
-          buttonStyle={Styles.defaultButtonClearWhite}
-          onPress={ this.onClick }
-          />
+        <Button
+        title="next"
+        titleStyle={Styles.whiteText}
+        buttonStyle={Styles.defaultButtonClearWhite}
+        onPress={ this.onClick }
+        />
       </ View>
     );
   }
@@ -100,4 +102,4 @@ const mapStateToProps = (state) => ({
 });
 
 
-export default connect(mapStateToProps)(KYCInfoScreen);
+export default connect(mapStateToProps)(KYCIdentityInfo);

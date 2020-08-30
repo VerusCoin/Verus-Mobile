@@ -53,6 +53,13 @@ import MoveIntoCategory from '../../containers/Identity/PersonalInfo/ClaimManage
 import AddIdentity from '../../containers/Identity/AddIdentity';
 import KYCstart from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCstart';
 import KYCInfoScreen from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCInfoScreen';
+import KYCIdentityInfo from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCIdentityInfo';
+import KYCIdentityInput from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCIdentityInput';
+import KYCAddressInput from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCAddressInput';
+import KYCIdentityFotoInfo from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCIdentityFotoInfo';
+import KYCfoto from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCfoto';
+import KYCphotoAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCphotoAddress';
+import KYCEndInfoScreen from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCEndInfoScreen';
 
 
 const WALLET = 'wallet';
@@ -353,6 +360,41 @@ function MainStackScreens() {
       <MainStack.Screen
         name="KYCStartScreen"
         component={KYCstart}
+      />
+
+      <MainStack.Screen
+        name="KYCfoto"
+        component={KYCfoto}
+      />
+
+      <MainStack.Screen
+        name="KYCphotoAddress"
+        component={KYCphotoAddress}
+      />
+
+      <MainStack.Screen
+        name="KYCEndInfoScreen"
+        component={KYCEndInfoScreen}
+      />
+
+      <MainStack.Screen
+        name="KYCIdentityFotoInfo"
+        component={KYCIdentityFotoInfo}
+      />
+
+      <MainStack.Screen
+        name="KYCAddressInput"
+        component={KYCAddressInput}
+      />
+
+      <MainStack.Screen
+        name="KYCIdentityInfo"
+        component={KYCIdentityInfo}
+      />
+
+      <MainStack.Screen
+        name="KYCIdentityInput"
+        component={KYCIdentityInput}
       />
 
       <MainStack.Screen
