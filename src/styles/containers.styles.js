@@ -210,6 +210,9 @@ export default containers = {
   horizontalPaddingBox10: {
     paddingHorizontal: '10%',
   },
+  horizontalPaddingBox5: {
+    paddingHorizontal: '5%',
+  },
   flexColumn:{
     flexDirection:'column',
   },
@@ -223,6 +226,10 @@ export default containers = {
   alignItemsCenter:{
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  alignItemsRight:{
+    flexDirection: 'column',
+    alignItems: 'flex-start',
   },
   alignItemsCenterColumn:{
     flexDirection: 'column',

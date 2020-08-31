@@ -79,6 +79,12 @@ export default text = {
     textAlign: 'center',
     paddingVertical: 6,
   },
+  leftLightText: {
+    fontFamily: 'Avenir-Book',
+    color: Colors.quaternaryColor,
+    fontSize: 16,
+    textAlign: 'left',
+  },
   centralInfoTextPadded: {
     fontFamily: 'Avenir-Black',
     color: Colors.quaternaryColor,
