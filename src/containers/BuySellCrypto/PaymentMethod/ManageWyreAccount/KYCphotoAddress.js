@@ -84,12 +84,12 @@ class KYCphotoAddress extends Component {
             containerStyle={Styles.horizontalPaddingBox10}
           />
           <Badge
-            status="primary"
+            status="success"
             badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
             containerStyle={Styles.horizontalPaddingBox10}
           />
           <Badge
-            status="primary"
+            status="success"
             badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
             containerStyle={Styles.horizontalPaddingBox10}
           />

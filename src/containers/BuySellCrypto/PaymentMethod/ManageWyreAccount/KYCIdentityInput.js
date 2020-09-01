@@ -260,7 +260,7 @@ class KYCIdentityInput extends Component {
               buttonStyle={Styles.defaultButtonClearWhite}
                 title="CHEAT TO NEXT SCREEN"
                 onPress={()=>{
-                  this.props.navigation.navigate("KYCAddressInput")
+                  this.props.navigation.navigate("KYCIdentityFotoInfo")
                 }
                 }
               />

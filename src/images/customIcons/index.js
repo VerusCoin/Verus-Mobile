@@ -15,6 +15,7 @@ import Sell from './sell.png';
 import Calendar from './calendar.png';
 import Verus from './Verus.png';
 import BankBuildingBlack from './bankBuildingBlack.png';
+import VerifyIdentity from './VerifyIdentity.svg';
 
 export {
   Open,
@@ -33,7 +34,8 @@ export {
   Sell,
   Calendar,
   Verus,
-  BankBuildingBlack
+  BankBuildingBlack,
+  VerifyIdentity
 };
 
 export default Open;

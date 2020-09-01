@@ -117,6 +117,12 @@ export default containers = {
     alignItems: 'center',
     display: 'flex',
   },
+  svgHeader:{
+    width:'100%',
+    height: '20%',
+    justifyContent: 'center',
+    paddingTop: 12
+  },
   fullWidthBlock: {
     paddingVertical: 16,
     width: '100%',

@@ -27,7 +27,7 @@ import { NavigationActions } from '@react-navigation/compat';
 
 const icons = require('../../../../images/customIcons');
 
-class KYCIdentityFotoInfo extends Component {
+class KYCAddressInfo extends Component {
   constructor(props) {
     super(props)
   }
@@ -43,7 +43,7 @@ class KYCIdentityFotoInfo extends Component {
 
 
 
-  onClick = () => {  this.props.navigation.navigate("KYCfoto") }
+  onClick = () => {  this.props.navigation.navigate("KYCAddressInput") }
 
 
     render() {
@@ -65,7 +65,7 @@ class KYCIdentityFotoInfo extends Component {
               containerStyle={Styles.horizontalPaddingBox10}
             />
             <Badge
-              status="primary"
+              status="success"
               badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
               containerStyle={Styles.horizontalPaddingBox10}
             />
@@ -80,22 +80,26 @@ class KYCIdentityFotoInfo extends Component {
           </View>
           <View style={Styles.padding}>
             <View>
-              <Text style={Styles.boldText}>Verify your photo ID</Text>
+              <Text style={Styles.boldText}>Verify your address</Text>
             </View>
             <View>
-              <Text style={{ ...Styles.centralLightTextPadded, textAlign: 'left' }}>In order to comply with federal regulations, PrimeTrust requires to verify your photo ID </Text>
+              <Text style={{ ...Styles.centralLightTextPadded, textAlign: 'left' }}>The last step in the KYC process. Let's verify your address. Make a picture or upload one of these documents:</Text>
             </View>
           </View>
           <View style={Styles.padding}>
           <View style={Styles.alignItemsRight}>
           <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
             <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
-              <Text style={{...Styles.leftLightText, width: '90%'}}>Chose from: passport, driverslisence, or identity card</Text>
+              <Text style={{...Styles.leftLightText, width: '90%'}}>Bank statement</Text>
            </View>
            <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
              <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
-               <Text style={{...Styles.leftLightText, width: '90%'}}>Identity number form the chosen document</Text>
+               <Text style={{...Styles.leftLightText, width: '90%'}}>Utility bill</Text>
             </View>
+            <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
+              <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
+                <Text style={{...Styles.leftLightText, width: '90%'}}>Credit card statement</Text>
+             </View>
           </View>
           </View>
           <View style={Styles.padding}>
@@ -117,4 +121,4 @@ const mapStateToProps = (state) => ({
 });
 
 
-export default connect(mapStateToProps)(KYCIdentityFotoInfo);
+export default connect(mapStateToProps)(KYCAddressInfo);

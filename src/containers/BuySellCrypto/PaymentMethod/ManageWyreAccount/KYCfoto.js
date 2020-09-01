@@ -84,7 +84,7 @@ class KYCfoto extends Component {
             containerStyle={Styles.horizontalPaddingBox10}
           />
           <Badge
-            status="primary"
+            status="success"
             badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
             containerStyle={Styles.horizontalPaddingBox10}
           />
@@ -149,7 +149,7 @@ class KYCfoto extends Component {
           buttonStyle={Styles.defaultButtonClearWhite}
             title="CHEAT TO NEXT SCREEN"
             onPress={()=>{
-              this.props.navigation.navigate("KYCphotoAddress")
+              this.props.navigation.navigate("KYCAddressInfo")
             }
             }
           />
