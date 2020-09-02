@@ -185,18 +185,21 @@ class KYCIdentityInput extends Component {
               textContent="Loading..."
               textStyle={{ color: '#FFF' }}
             />
-            <View>
+          <View style={{padding: 6}}>
               <Input
                 label="Legal Name:"
-                labelStyle={styles.formLabel}
+                labelStyle={Styles.formLabel}
+                containerStyle={Styles.wideCenterBlock}
+                inputStyle={Styles.formLabel}
                 onChangeText={(text) => this.setState({ name: text })}
                 value={this.state.name}
                 autoCorrect={false}
-                inputStyle={styles.formInputContainer}
+
               />
             </View>
-            <View>
-              <Text labelStyle={styles.formLabel}>
+              <TouchableOpacity onPress={this.showCalendar}>
+            <View style={{...Styles.wideCenterBlock, ...Styles.padding}}>
+              <Text style={{...Styles.formLabel}}>
                 Date of Birth YYYY-MM-DD:
               </Text>
               <View style={styles.containerDateOfBirth}>
@@ -206,18 +209,10 @@ class KYCIdentityInput extends Component {
                   }}
                   value={this.state.dateOfBirth}
                   mask={"[0000]-[00]-[00]"}
-                  style={styles.inputMaskDateOfBirth}
+                  style={{...Styles.inputTextDefaultStyle, borderBottomWidth: 1}}
                 />
-                <View style={styles.containerCalendarButton} >
-                  <TouchableOpacity onPress={this.showCalendar}>
-                    <Image
-                      source={Calendar}
-                      style={styles.icon}
-                      resizeMode="contain"
-                    />
-                  </TouchableOpacity>
                 </View>
-              </View>
+
               <View>
                 { this.state.showCalendar && <DateTimePicker
                     value={this.state.date}
@@ -230,8 +225,9 @@ class KYCIdentityInput extends Component {
                 }
               </View>
             </View>
-            <View>
-              <Text labelStyle={styles.formLabel}>
+                </TouchableOpacity>
+            <View style={{...Styles.wideCenterBlock, ...Styles.padding}}>
+              <Text style={{...Styles.formLabel}}>
                 US Social Security Number XXX-XX-XXXX:
               </Text>
               <TextInputMask
@@ -239,13 +235,13 @@ class KYCIdentityInput extends Component {
                   this.setState({socialSecurityNumber: formatted})
                 }}
                 mask={"[000]-[00]-[0000]"}
-                style={styles.inputMask}
+                style={{...Styles.inputTextDefaultStyle, borderBottomWidth: 1}}
               />
             </View>
             <View style={styles.buttonContainerBottom}>
               <Button
               titleStyle={Styles.whiteText}
-              buttonStyle={Styles.defaultButtonClearWhite}
+              buttonStyle={Styles.fullWidthButton}
                 title="SUBMIT"
                 onPress={()=>{
                   if (this.state.showCalendar) {
@@ -255,15 +251,17 @@ class KYCIdentityInput extends Component {
                 }
                 }
               />
+            <View style={Styles.padding}>
               <Button
               titleStyle={Styles.whiteText}
-              buttonStyle={Styles.defaultButtonClearWhite}
+              buttonStyle={Styles.fullWidthButton}
                 title="CHEAT TO NEXT SCREEN"
                 onPress={()=>{
                   this.props.navigation.navigate("KYCIdentityFotoInfo")
                 }
                 }
               />
+            </View>
             </View>
           </View>
         </View>

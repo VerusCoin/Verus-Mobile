@@ -275,6 +275,11 @@ export default containers = {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  containerCalendarButton: {
+      width: '15%',
+      marginTop: '5%',
+      marginLeft: '3%',
+  },
   paddedBorderedBox: {
     borderWidth: 1,
     borderColor: Colors.lightGrey,

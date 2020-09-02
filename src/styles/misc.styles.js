@@ -35,7 +35,29 @@ export default misc = {
   paddingTop:{
     paddingTop:20,
   },
-
+  icon: {
+      width: 20,
+      height: 20,
+      tintColor: 'black'
+  },
+  formLabel: {
+      fontSize: 16,
+      textAlign: 'left',
+      paddingTop: '0%',
+      color: Colors.quaternaryColor,
+      marginVertical: 0,
+      paddingVertical: 0,
+      fontFamily: 'Avenir-Book',
+      fontWeight: 'normal'
+  },
+  inputMaskDateOfBirth: {
+      color: Colors.quaternaryColor,
+      borderBottomColor: '#86939d',
+      borderBottomWidth: 1,
+      width: '85%',
+      marginLeft: 20,
+      paddingVertical: 10,
+  },
   paddingBottom:{
     paddingBottom:4,
   },

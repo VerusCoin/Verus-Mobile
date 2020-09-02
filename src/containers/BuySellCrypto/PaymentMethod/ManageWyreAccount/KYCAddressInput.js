@@ -134,7 +134,7 @@ class KYCAddressInput extends Component {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View style={styles.mainInputView}>
-          <View style={Styles.centralRow}>
+          <View style={{...Styles.centralRow, ...Styles.padding}}>
             <Badge
               status="success"
               badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
@@ -162,23 +162,23 @@ class KYCAddressInput extends Component {
               textStyle={{ color: '#FFF' }}
             />
             <ScrollView>
-            <View style={Styles.root}>
-
+            <View style={Styles.padding}>
+              <View>
               <Input
                 label="Street Address"
-                labelStyle={styles.formLabel}
-
+                labelStyle={Styles.formLabel}
+                containerStyle={Styles.wideCenterBlock}
                 onChangeText={(text) => this.setState({ streetAddress: text })}
                 value={this.state.streetAddress}
                 autoCorrect={false}
-                inputStyle={styles.formInputContainer}
+                inputStyle={Styles.inputTextDefaultStyle}
               />
             </View>
             <View>
               <Input
                 label="City"
-                labelStyle={styles.fromLabel}
-
+                labelStyle={Styles.formLabel}
+                containerStyle={Styles.wideCenterBlock}
                 onChangeText={(text) => this.setState({ city: text })}
                 value={this.state.city}
                 autoCorrect={false}
@@ -186,12 +186,12 @@ class KYCAddressInput extends Component {
               />
             </View>
             <View>
-              <View style={styles.dropdownInput}>
+              <View style={{padding: 10}}>
                 <Dropdown
                   labelExtractor={(item) => item.value}
                   valueExtractor={(item) => item.value}
                   label="State: "
-                  labelTextStyle={{ fontFamily: 'Avenir-Book'}}
+                  labelTextStyle={Styles.formLabel}
                   labelFontSize={13}
                   data={STATES}
                   onChangeText={(value) => this.setState({ countryState: value })}
@@ -199,7 +199,7 @@ class KYCAddressInput extends Component {
                   selectedItemColor={Colors.quaternaryColor}
                   baseColor={Colors.quaternaryColor}
                   value={this.state.countryState}
-                  inputContainerStyle={styles.dropdownInputContainer}
+                  containerStyle={Styles.wideCenterBlock}
                   pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                 />
               </View>
@@ -207,8 +207,8 @@ class KYCAddressInput extends Component {
             <View>
               <Input
                 label="postal Code"
-                labelStyle={styles.formLabel}
-
+                labelStyle={Styles.formLabel}
+                containerStyle={Styles.wideCenterBlock}
                 onChangeText={(text) => this.setState({ postalCode: text })}
                 value={this.state.postalCode}
                 autoCorrect={false}
@@ -216,12 +216,12 @@ class KYCAddressInput extends Component {
               />
             </View>
             <View>
-              <View style={styles.dropdownInput}>
+              <View style={{padding: 10}}>
                 <Dropdown
                   labelExtractor={(item) => item.value}
                   valueExtractor={(item) => item.value}
                   label="Country: "
-                  labelTextStyle={{ fontWeight: '700' }}
+                  labelTextStyle={Styles.formLabel}
                   labelFontSize={13}
                   data={WYRE_COUNTRIES}
                   onChangeText={(value) => this.setState({ country: value })}
@@ -229,12 +229,22 @@ class KYCAddressInput extends Component {
                   selectedItemColor={Colors.quaternaryColor}
                   baseColor={Colors.quaternaryColor}
                   value={this.state.country ? `${this.state.country}` : ''}
-                  inputContainerStyle={styles.dropdownInputContainer}
+                  containerStyle={Styles.wideCenterBlock}
                   pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                 />
               </View>
             </View>
+            </View>
             <View style={styles.buttonContainerBottom}>
+              <Button
+              titleStyle={Styles.whiteText}
+              buttonStyle={Styles.defaultButtonClearWhite}
+                title="CHEAT TO NEXT SCREEN"
+                onPress={()=>{
+                  this.props.navigation.navigate("KYCphotoAddress")
+                }
+                }
+              />
             <Button
             titleStyle={Styles.whiteText}
             buttonStyle={Styles.defaultButtonClearWhite}
@@ -242,15 +252,6 @@ class KYCAddressInput extends Component {
               onPress={()=>{
                 this.handleSubmit();
               } }
-            />
-            <Button
-            titleStyle={Styles.whiteText}
-            buttonStyle={Styles.defaultButtonClearWhite}
-              title="CHEAT TO NEXT SCREEN"
-              onPress={()=>{
-                this.props.navigation.navigate("KYCphotoAddress")
-              }
-              }
             />
             </View>
             </ScrollView>
