@@ -4,7 +4,8 @@ import {
   ScrollView,
   View,
   TouchableWithoutFeedback,
-  Keyboard
+  Keyboard,
+  Text
 } from 'react-native';
 import { Input } from 'react-native-elements';
 import { Dropdown } from 'react-native-material-dropdown';
@@ -162,8 +163,10 @@ class KYCAddressInput extends Component {
               textStyle={{ color: '#FFF' }}
             />
             <ScrollView>
-            <View style={Styles.padding}>
-              <View>
+              <View style={{...Styles.padding, paddingLeft: 26}}>
+                <Text  style={{...Styles.boldText, fontSize: 18}}>Enter your address</Text>
+                <Text style={{ ...Styles.centralLightTextPadded, textAlign: 'left' }}>In order to comply with regulations, enter your primary residential address. Please do not use a PO box or business address</Text>
+              </View>
               <Input
                 label="Street Address"
                 labelStyle={Styles.formLabel}
@@ -173,7 +176,6 @@ class KYCAddressInput extends Component {
                 autoCorrect={false}
                 inputStyle={Styles.inputTextDefaultStyle}
               />
-            </View>
             <View>
               <Input
                 label="City"
@@ -234,8 +236,16 @@ class KYCAddressInput extends Component {
                 />
               </View>
             </View>
-            </View>
             <View style={styles.buttonContainerBottom}>
+              <Button
+              titleStyle={Styles.whiteText}
+              buttonStyle={Styles.defaultButtonClearWhite}
+                title="SUBMIT"
+                onPress={()=>{
+                  this.handleSubmit();
+                } }
+              />
+            <View style={Styles.padding}>
               <Button
               titleStyle={Styles.whiteText}
               buttonStyle={Styles.defaultButtonClearWhite}
@@ -245,17 +255,12 @@ class KYCAddressInput extends Component {
                 }
                 }
               />
-            <Button
-            titleStyle={Styles.whiteText}
-            buttonStyle={Styles.defaultButtonClearWhite}
-              title="SUBMIT"
-              onPress={()=>{
-                this.handleSubmit();
-              } }
-            />
-            </View>
-            </ScrollView>
           </View>
+          <View style={{padding: 26}}></View>
+          </View>
+
+          </ScrollView>
+        </View>
       </TouchableWithoutFeedback>
     );
   }

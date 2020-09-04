@@ -185,7 +185,11 @@ class KYCIdentityInput extends Component {
               textContent="Loading..."
               textStyle={{ color: '#FFF' }}
             />
+
           <View style={{padding: 6}}>
+              <View style={{padding: 24}}>
+              <Text style={{...Styles.boldText, fontSize: 18}}>Enter your personal information</Text>
+              </View>
               <Input
                 label="Legal Name:"
                 labelStyle={Styles.formLabel}
