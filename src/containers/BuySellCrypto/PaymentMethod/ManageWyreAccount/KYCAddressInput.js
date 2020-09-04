@@ -236,10 +236,10 @@ class KYCAddressInput extends Component {
                 />
               </View>
             </View>
-            <View style={styles.buttonContainerBottom}>
+            <View style={Styles.padding}>
               <Button
               titleStyle={Styles.whiteText}
-              buttonStyle={Styles.defaultButtonClearWhite}
+              buttonStyle={Styles.fullWidthButton}
                 title="SUBMIT"
                 onPress={()=>{
                   this.handleSubmit();
@@ -248,7 +248,7 @@ class KYCAddressInput extends Component {
             <View style={Styles.padding}>
               <Button
               titleStyle={Styles.whiteText}
-              buttonStyle={Styles.defaultButtonClearWhite}
+              buttonStyle={Styles.fullWidthButton}
                 title="CHEAT TO NEXT SCREEN"
                 onPress={()=>{
                   this.props.navigation.navigate("KYCphotoAddress")
