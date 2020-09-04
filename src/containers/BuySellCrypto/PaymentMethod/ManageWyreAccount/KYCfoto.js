@@ -5,6 +5,7 @@ import {
   Platform,
   View,
   TouchableWithoutFeedback,
+  TouchableOpacity,
   Keyboard,
   Alert,
   Image,
@@ -15,6 +16,8 @@ import {
   FormLabel,
   FormValidationMessage
 } from 'react-native-elements';
+
+import Passport from '../../../../images/customIcons/Passport.svg';
 
 import Spinner from 'react-native-loading-spinner-overlay';
 
@@ -77,7 +80,7 @@ class KYCfoto extends Component {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={Styles.root}>
-        <View style={Styles.centralRow}>
+        <View style={{...Styles.centralRow, ...Styles.padding}}>
           <Badge
             status="success"
             badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
@@ -106,21 +109,51 @@ class KYCfoto extends Component {
               textStyle={{ color: '#FFF' }}
             />
             <View>
-              <Text style={styles.formLabel}>
+              <Text style={{...Styles.formLabel, ...Styles.padding}}>
                 Uploaded documents: &nbsp; &nbsp;
                 { this.props.field == null ? 0 : this.props.field.value.length}
               </Text>
             </View>
+            <View style={Styles.containerVerticalPadding}>
             {!this.state.image && (
-              <View style={styles.buttonContainerBottom}>
-                <Button
-                titleStyle={Styles.whiteText}
-                buttonStyle={Styles.defaultButtonClearWhite}
-                  title=" DOCUMENT"
-                  onPress={this.handleSelect}
-                />
-              </View>
+              <TouchableOpacity onPress={this.handleSelect} >
+                <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
+                  <Passport  height={'100%'} width={'15%'} />
+                   <View style={{...Styles.alignItemsRight, width: '60%'}}>
+                     <Text style={Styles.leftLightText}> drivers lisence</Text>
+                   </View>
+                  <Text style={Styles.infoText}>Upload</Text>
+                 </View>
+              </TouchableOpacity>
             )}
+          </View>
+          <View style={Styles.containerVerticalPadding}>
+            {!this.state.image && (
+              <TouchableOpacity onPress={this.handleSelect}>
+                <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
+                  <Passport  height={'100%'} width={'15%'} />
+                   <View style={{...Styles.alignItemsRight, width: '60%'}}>
+                     <Text style={Styles.leftLightText}> ID card</Text>
+                   </View>
+                  <Text style={Styles.infoText}>Upload</Text>
+                 </View>
+              </TouchableOpacity>
+            )}
+            </View>
+            <View style={Styles.containerVerticalPadding}>
+            {!this.state.image && (
+              <TouchableOpacity onPress={this.handleSelect}>
+                <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
+                  <Passport  height={'100%'} width={'15%'} />
+                   <View style={{...Styles.alignItemsRight, width: '60%'}}>
+                     <Text style={Styles.leftLightText}>Passport</Text>
+                   </View>
+                  <Text style={Styles.infoText}>Upload</Text>
+                 </View>
+
+              </TouchableOpacity>
+            )}
+            </View>
             {this.state.image && (
               <View>
                 <Image
