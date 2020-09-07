@@ -102,7 +102,7 @@ class KYCIdentityFotoInfo extends Component {
           <Button
           title="CONTINUE"
           titleStyle={Styles.whiteText}
-          buttonStyle={Styles.fullWidthButton}
+          buttonStyle={Styles.fullWidthButtonKYC}
           onPress={ this.onClick }
           />
         </View>

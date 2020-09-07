@@ -194,7 +194,7 @@ class KYCIdentityInput extends Component {
                 label="Legal Name:"
                 labelStyle={Styles.formLabel}
                 containerStyle={Styles.wideCenterBlock}
-                inputStyle={Styles.formLabel}
+                inputStyle={Styles.formInput}
                 onChangeText={(text) => this.setState({ name: text })}
                 value={this.state.name}
                 autoCorrect={false}
@@ -245,7 +245,7 @@ class KYCIdentityInput extends Component {
             <View style={styles.buttonContainerBottom}>
               <Button
               titleStyle={Styles.whiteText}
-              buttonStyle={Styles.fullWidthButton}
+              buttonStyle={Styles.fullWidthButtonKYC}
                 title="SUBMIT"
                 onPress={()=>{
                   if (this.state.showCalendar) {
@@ -258,7 +258,7 @@ class KYCIdentityInput extends Component {
             <View style={Styles.padding}>
               <Button
               titleStyle={Styles.whiteText}
-              buttonStyle={Styles.fullWidthButton}
+              buttonStyle={Styles.fullWidthButtonKYC}
                 title="CHEAT TO NEXT SCREEN"
                 onPress={()=>{
                   this.props.navigation.navigate("KYCIdentityFotoInfo")

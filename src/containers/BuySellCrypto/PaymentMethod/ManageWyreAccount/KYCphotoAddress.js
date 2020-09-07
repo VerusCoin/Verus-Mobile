@@ -119,7 +119,7 @@ class KYCphotoAddress extends Component {
               <View style={styles.buttonContainerBottom}>
                 <Button
                 titleStyle={Styles.whiteText}
-                buttonStyle={Styles.fullWidthButton}
+                buttonStyle={Styles.fullWidthButtonKYC}
                   title=" DOCUMENT"
                   onPress={this.handleSelect}
                 />
@@ -134,13 +134,13 @@ class KYCphotoAddress extends Component {
                 <View style={styles.buttonContainer}>
                   <Button
                   titleStyle={Styles.whiteText}
-                  buttonStyle={Styles.fullWidthButton}
+                  buttonStyle={Styles.fullWidthButtonKYC}
                     title="CONFIRM"
                     onPress={this.handleUpload}
                   />
                   <Button
                   titleStyle={Styles.whiteText}
-                  buttonStyle={Styles.fullWidthButton}
+                  buttonStyle={Styles.fullWidthButtonKYC}
                     title="CANCEL"
                     onPress={this.clearSelectedImage}
                   />
@@ -151,7 +151,7 @@ class KYCphotoAddress extends Component {
           <View style={Styles.padding} >
           <Button
           titleStyle={Styles.whiteText}
-          buttonStyle={Styles.fullWidthButton}
+          buttonStyle={Styles.fullWidthButtonKYC}
             title="CHEAT TO NEXT SCREEN"
             onPress={()=>{
               this.props.navigation.navigate("KYCEndInfoScreen")

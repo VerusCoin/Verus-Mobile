@@ -163,13 +163,13 @@ class KYCfoto extends Component {
                 <View style={styles.buttonContainer}>
                   <Button
                   titleStyle={Styles.whiteText}
-                  buttonStyle={Styles.fullWidthButton}
+                  buttonStyle={Styles.fullWidthButtonKYC}
                     title="CONFIRM"
                     onPress={this.handleUpload}
                   />
                   <Button
                   titleStyle={Styles.whiteText}
-                  buttonStyle={Styles.fullWidthButton}
+                  buttonStyle={Styles.fullWidthButtonKYC}
                     title="CANCEL"
                     onPress={this.clearSelectedImage}
                   />
@@ -179,7 +179,7 @@ class KYCfoto extends Component {
           </View>
           <Button
           titleStyle={Styles.whiteText}
-          buttonStyle={Styles.fullWidthButton}
+          buttonStyle={Styles.fullWidthButtonKYC}
             title="CHEAT TO NEXT SCREEN"
             onPress={()=>{
               this.props.navigation.navigate("KYCAddressInfo")

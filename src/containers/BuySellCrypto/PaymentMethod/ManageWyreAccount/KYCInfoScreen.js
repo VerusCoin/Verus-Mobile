@@ -70,11 +70,11 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
         </View>
         <View>
           <View style={Styles.padding}>
-            <Text style={Styles.boldText}>To use our fiat gateway, primetrust has to verify your identity</Text>
+            <Text style={Styles.boldKYCText}>To use our fiat gateway, primetrust has to verify your identity</Text>
           </View>
 
           <View >
-            <Text style={{ ...Styles.centralLightTextPadded, ...Styles.padding, textAlign: 'left' }}>all documents are handled securely and with care. PrimeTrust Privacy Policy, Terms of Service</Text>
+            <Text style={{ ...Styles.normalKYCText, ...Styles.padding, textAlign: 'left' }}>all documents are handled securely and with care. PrimeTrust Privacy Policy, Terms of Service</Text>
           </View>
 
         </View>
@@ -118,7 +118,7 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
           <Button
           title="START"
           titleStyle={Styles.whiteText}
-          buttonStyle={Styles.fullWidthButton}
+          buttonStyle={Styles.fullWidthButtonKYC}
           onPress={ this.onClick }
           />
         </View>

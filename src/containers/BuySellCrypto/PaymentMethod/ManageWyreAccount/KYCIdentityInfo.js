@@ -102,7 +102,7 @@ onClick = () => {  this.props.navigation.navigate("KYCIdentityInput") }
         <Button
         title="CONTINUE"
         titleStyle={Styles.whiteText}
-        buttonStyle={Styles.fullWidthButton}
+        buttonStyle={Styles.fullWidthButtonKYC}
         onPress={ this.onClick }
         />
       </View>

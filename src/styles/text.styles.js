@@ -85,6 +85,30 @@ export default text = {
     fontSize: 16,
     textAlign: 'left',
   },
+  boldKYCText: {
+    fontSize: 16,
+    fontFamily: 'Avenir-Book',
+    fontWeight: 'bold',
+    color: Colors.kycBlack,
+  },
+  normalKYCText:{
+    fontSize: 16,
+    fontFamily: 'Avenir-Book',
+    fontWeight: 'normal',
+    color: Colors.kycBlack,
+  },
+  smallKYCText:{
+    fontSize: 14,
+    fontFamily: 'Avenir-Book',
+    fontWeight: 'normal',
+    color: Colors.kycLight,
+  },
+  headerKYCText: {
+    fontSize: 20,
+    fontFamily: 'Avenir-Book',
+    fontWeight: 'bold',
+    color: Colors.kycBlack,
+  },
   centralInfoTextPadded: {
     fontFamily: 'Avenir-Black',
     color: Colors.quaternaryColor,

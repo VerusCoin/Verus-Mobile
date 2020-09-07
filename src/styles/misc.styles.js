@@ -41,14 +41,24 @@ export default misc = {
       tintColor: 'black'
   },
   formLabel: {
-      fontSize: 16,
+      fontSize: 14,
       textAlign: 'left',
       paddingTop: '0%',
-      color: Colors.quaternaryColor,
+      color: Colors.kycBlack,
       marginVertical: 0,
       paddingVertical: 0,
       fontFamily: 'Avenir-Book',
-      fontWeight: 'normal'
+      fontWeight: "bold",
+  },
+  formInput: {
+      fontSize: 16,
+      textAlign: 'left',
+      paddingTop: '0%',
+      color: Colors.kycBlack,
+      marginVertical: 0,
+      paddingVertical: 0,
+      fontFamily: 'Avenir-Book',
+      fontWeight: "normal",
   },
   inputMaskDateOfBirth: {
       color: Colors.quaternaryColor,
