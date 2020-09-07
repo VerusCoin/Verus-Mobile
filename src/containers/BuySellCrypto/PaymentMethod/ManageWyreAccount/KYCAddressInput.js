@@ -135,27 +135,29 @@ class KYCAddressInput extends Component {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View style={styles.mainInputView}>
-          <View style={{...Styles.centralRow, ...Styles.padding}}>
+          <View style={{ ...Styles.secondaryBackground, paddingTop: '5%' }}>
+          <View style={{...Styles.centralRow, ...Styles.padding, paddingTop: 12, paddingBottom: 16}}>
             <Badge
               status="success"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeDone}
               containerStyle={Styles.horizontalPaddingBox10}
             />
             <Badge
               status="success"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeDone}
               containerStyle={Styles.horizontalPaddingBox10}
             />
             <Badge
               status="success"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeDone}
               containerStyle={Styles.horizontalPaddingBox10}
             />
             <Badge
               status="primary"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeTodo}
               containerStyle={Styles.horizontalPaddingBox10}
             />
+          </View>
           </View>
             <Spinner
               visible={this.props.isFetching}
@@ -163,14 +165,15 @@ class KYCAddressInput extends Component {
               textStyle={{ color: '#FFF' }}
             />
             <ScrollView>
-              <View style={{...Styles.padding, paddingLeft: 26}}>
-                <Text  style={{...Styles.boldText, fontSize: 18}}>Enter your address</Text>
-                <Text style={{ ...Styles.centralLightTextPadded, textAlign: 'left' }}>In order to comply with regulations, enter your primary residential address. Please do not use a PO box or business address</Text>
+              <View style={Styles.root}>
+              <View style={{...Styles.padding, paddingLeft: 12}}>
+                <Text  style={Styles.boldKYCText}>Enter your address</Text>
+                <Text style={{ ...Styles.normalKYCText, textAlign: 'left' }}>In order to comply with regulations, enter your primary residential address. Please do not use a PO box or business address</Text>
               </View>
               <Input
                 label="Street Address"
                 labelStyle={Styles.formLabel}
-                containerStyle={Styles.wideCenterBlock}
+                containerStyle={{paddingTop: 24}}
                 onChangeText={(text) => this.setState({ streetAddress: text })}
                 value={this.state.streetAddress}
                 autoCorrect={false}
@@ -180,7 +183,7 @@ class KYCAddressInput extends Component {
               <Input
                 label="City"
                 labelStyle={Styles.formLabel}
-                containerStyle={Styles.wideCenterBlock}
+                containerStyle={{paddingTop: 24}}
                 onChangeText={(text) => this.setState({ city: text })}
                 value={this.state.city}
                 autoCorrect={false}
@@ -197,11 +200,11 @@ class KYCAddressInput extends Component {
                   labelFontSize={13}
                   data={STATES}
                   onChangeText={(value) => this.setState({ countryState: value })}
-                  textColor={Colors.quaternaryColor}
+                  textColor={Colors.kycBlack}
+                  fontSize={14}
                   selectedItemColor={Colors.quaternaryColor}
                   baseColor={Colors.quaternaryColor}
                   value={this.state.countryState}
-                  containerStyle={Styles.wideCenterBlock}
                   pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                 />
               </View>
@@ -210,7 +213,7 @@ class KYCAddressInput extends Component {
               <Input
                 label="postal Code"
                 labelStyle={Styles.formLabel}
-                containerStyle={Styles.wideCenterBlock}
+                containerStyle={{paddingTop: 24}}
                 onChangeText={(text) => this.setState({ postalCode: text })}
                 value={this.state.postalCode}
                 autoCorrect={false}
@@ -227,11 +230,12 @@ class KYCAddressInput extends Component {
                   labelFontSize={13}
                   data={WYRE_COUNTRIES}
                   onChangeText={(value) => this.setState({ country: value })}
-                  textColor={Colors.quaternaryColor}
+                  textColor={Colors.kycBlack}
+                  fontSize={14}
                   selectedItemColor={Colors.quaternaryColor}
                   baseColor={Colors.quaternaryColor}
                   value={this.state.country ? `${this.state.country}` : ''}
-                  containerStyle={Styles.wideCenterBlock}
+
                   pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                 />
               </View>
@@ -258,7 +262,7 @@ class KYCAddressInput extends Component {
           </View>
           <View style={{padding: 26}}></View>
           </View>
-
+          </View>
           </ScrollView>
         </View>
       </TouchableWithoutFeedback>

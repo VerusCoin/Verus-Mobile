@@ -80,22 +80,22 @@ class KYCphotoAddress extends Component {
         <View style={Styles.centralRow}>
           <Badge
             status="success"
-            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            badgeStyle={Styles.progessBadgeDone}
             containerStyle={Styles.horizontalPaddingBox10}
           />
           <Badge
             status="success"
-            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            badgeStyle={Styles.progessBadgeDone}
             containerStyle={Styles.horizontalPaddingBox10}
           />
           <Badge
             status="success"
-            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            badgeStyle={Styles.progessBadgeDone}
             containerStyle={Styles.horizontalPaddingBox10}
           />
           <Badge
             status="primary"
-            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            badgeStyle={Styles.progessBadgeTodo}
             containerStyle={Styles.horizontalPaddingBox10}
           />
         </View>
@@ -112,8 +112,8 @@ class KYCphotoAddress extends Component {
               </Text>
             </View>
             <View style={Styles.padding}>
-              <Text  style={{...Styles.boldText, fontSize: 18}}>Proof of address</Text>
-              <Text style={{ ...Styles.centralLightTextPadded, textAlign: 'left' }}>Please make sure th etext is clear and your address matches with your personal information</Text>
+              <Text  style={{...Styles.boldKYCText}}>Proof of address</Text>
+              <Text style={{ ...Styles.normalKYCText, textAlign: 'left' }}>Please make sure th etext is clear and your address matches with your personal information</Text>
             </View>
             {!this.state.image && (
               <View style={styles.buttonContainerBottom}>

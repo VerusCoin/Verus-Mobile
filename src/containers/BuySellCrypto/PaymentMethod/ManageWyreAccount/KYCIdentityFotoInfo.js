@@ -23,6 +23,9 @@ import Colors from '../../../../globals/colors';
 
 import VerifyIdentity from '../../../../images/customIcons/VerifyAddress.svg';
 
+import Nr1 from '../../../../images/customIcons/nr1.svg';
+import Nr2 from '../../../../images/customIcons/nr2.svg';
+
 import { NavigationActions } from '@react-navigation/compat';
 
 const icons = require('../../../../images/customIcons');
@@ -53,25 +56,25 @@ class KYCIdentityFotoInfo extends Component {
 
       return (
         <View style={Styles.root}>
-          <View style={Styles.centralRow}>
+          <View style={{ ...Styles.centralRow, paddingBottom: 16}}>
             <Badge
               status="success"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeDone}
               containerStyle={Styles.horizontalPaddingBox10}
             />
             <Badge
               status="success"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeDone}
               containerStyle={Styles.horizontalPaddingBox10}
             />
             <Badge
               status="primary"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeTodo}
               containerStyle={Styles.horizontalPaddingBox10}
             />
             <Badge
               status="primary"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeTodo}
               containerStyle={Styles.horizontalPaddingBox10}
             />
           </View>
@@ -80,25 +83,25 @@ class KYCIdentityFotoInfo extends Component {
           </View>
           <View style={Styles.padding}>
             <View>
-              <Text style={Styles.boldText}>Verify your photo ID</Text>
+              <Text style={Styles.boldKYCText}>Verify your photo ID</Text>
             </View>
             <View>
-              <Text style={{ ...Styles.centralLightTextPadded, textAlign: 'left' }}>In order to comply with federal regulations, PrimeTrust requires to verify your photo ID </Text>
+              <Text style={{ ...Styles.normalKYCText, textAlign: 'left' }}>In order to comply with federal regulations, PrimeTrust requires to verify your photo ID </Text>
             </View>
           </View>
           <View style={Styles.padding}>
           <View style={Styles.alignItemsRight}>
           <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-            <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
-              <Text style={{...Styles.leftLightText, width: '90%'}}>Chose from: passport, driverslisence, or identity card</Text>
+              <Nr1 height={'110%'} width={'15%'} />
+              <Text style={{...Styles.normalKYCText, width: '90%'}}>Chose from: passport, driverslisence, or identity card</Text>
            </View>
            <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-             <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
-               <Text style={{...Styles.leftLightText, width: '90%'}}>Identity number form the chosen document</Text>
+              <Nr2 height={'110%'} width={'15%'} />
+               <Text style={{...Styles.normalKYCText, width: '90%'}}>Identity number form the chosen document</Text>
             </View>
           </View>
           </View>
-          <View style={Styles.padding}>
+          <View style={{...Styles.padding, paddingTop: 48}}>
           <Button
           title="CONTINUE"
           titleStyle={Styles.whiteText}

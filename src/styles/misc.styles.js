@@ -60,6 +60,16 @@ export default misc = {
       fontFamily: 'Avenir-Book',
       fontWeight: "normal",
   },
+  progessBadgeDone: {
+    scaleX: 2,
+    scaleY: 2,
+    backgroundColor:  Colors.buttonKYC
+  },
+  progessBadgeTodo: {
+    scaleX: 2,
+    scaleY: 2,
+    backgroundColor:  Colors.kycLight
+  },
   inputMaskDateOfBirth: {
       color: Colors.quaternaryColor,
       borderBottomColor: '#86939d',

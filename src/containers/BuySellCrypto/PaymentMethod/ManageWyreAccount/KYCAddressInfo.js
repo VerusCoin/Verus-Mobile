@@ -24,6 +24,9 @@ import Colors from '../../../../globals/colors';
 import VerifyIdentity from '../../../../images/customIcons/VerifyAddress.svg';
 
 import { NavigationActions } from '@react-navigation/compat';
+import Nr1 from '../../../../images/customIcons/nr1.svg';
+import Nr2 from '../../../../images/customIcons/nr2.svg';
+import Nr3 from '../../../../images/customIcons/nr3.svg';
 
 const icons = require('../../../../images/customIcons');
 
@@ -53,25 +56,25 @@ class KYCAddressInfo extends Component {
 
       return (
         <View style={Styles.root}>
-          <View style={Styles.centralRow}>
+          <View style={{...Styles.centralRow, paddingBottom: 16, paddingTop: 12}}>
             <Badge
               status="success"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeDone}
               containerStyle={Styles.horizontalPaddingBox10}
             />
             <Badge
               status="success"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeDone}
               containerStyle={Styles.horizontalPaddingBox10}
             />
             <Badge
               status="success"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeDone}
               containerStyle={Styles.horizontalPaddingBox10}
             />
             <Badge
               status="primary"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeTodo}
               containerStyle={Styles.horizontalPaddingBox10}
             />
           </View>
@@ -80,25 +83,25 @@ class KYCAddressInfo extends Component {
           </View>
           <View style={Styles.padding}>
             <View>
-              <Text style={Styles.boldText}>Verify your address</Text>
+              <Text style={Styles.boldKYCText}>Verify your address</Text>
             </View>
             <View>
-              <Text style={{ ...Styles.centralLightTextPadded, textAlign: 'left' }}>The last step in the KYC process. Let's verify your address. Make a picture or upload one of these documents:</Text>
+              <Text style={{ ...Styles.normalKYCText, textAlign: 'left' }}>The last step in the KYC process. Let's verify your address. Make a picture or upload one of these documents:</Text>
             </View>
           </View>
           <View style={Styles.padding}>
           <View style={Styles.alignItemsRight}>
           <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-            <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
-              <Text style={{...Styles.leftLightText, width: '90%'}}>Bank statement</Text>
+            <Nr1 height={'120%'} width={'15%'} />
+              <Text style={{...Styles.normalKYCText, width: '90%'}}>Bank statement</Text>
            </View>
            <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-             <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
-               <Text style={{...Styles.leftLightText, width: '90%'}}>Utility bill</Text>
+              <Nr2 height={'120%'} width={'15%'} />
+               <Text style={{...Styles.normalKYCText, width: '90%'}}>Utility bill</Text>
             </View>
             <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-              <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
-                <Text style={{...Styles.leftLightText, width: '90%'}}>Credit card statement</Text>
+              <Nr3 height={'120%'} width={'15%'} />
+                <Text style={{...Styles.normalKYCText, width: '90%'}}>Credit card statement</Text>
              </View>
           </View>
           </View>

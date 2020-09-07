@@ -159,22 +159,22 @@ class KYCIdentityInput extends Component {
         <View style={Styles.centralRow}>
           <Badge
             status="success"
-            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            badgeStyle={Styles.progessBadgeDone}
             containerStyle={Styles.horizontalPaddingBox10}
           />
           <Badge
             status="primary"
-            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            badgeStyle={Styles.progessBadgeTodo}
             containerStyle={Styles.horizontalPaddingBox10}
           />
           <Badge
             status="primary"
-            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            badgeStyle={Styles.progessBadgeTodo}
             containerStyle={Styles.horizontalPaddingBox10}
           />
           <Badge
             status="primary"
-            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            badgeStyle={Styles.progessBadgeTodo}
             containerStyle={Styles.horizontalPaddingBox10}
           />
         </View>
@@ -186,34 +186,35 @@ class KYCIdentityInput extends Component {
               textStyle={{ color: '#FFF' }}
             />
 
-          <View style={{padding: 6}}>
-              <View style={{padding: 24}}>
-              <Text style={{...Styles.boldText, fontSize: 18}}>Enter your personal information</Text>
+          <View style={Styles.padding}>
+              <View>
+                <Text style={{...Styles.boldText}}>Enter your personal information</Text>
               </View>
+          </View>
+
+          <View style={{padding: 8}}>
               <Input
                 label="Legal Name:"
                 labelStyle={Styles.formLabel}
-                containerStyle={Styles.wideCenterBlock}
-                inputStyle={Styles.formInput}
+                inputStyle={Styles.normalKYCText}
                 onChangeText={(text) => this.setState({ name: text })}
                 value={this.state.name}
                 autoCorrect={false}
-
               />
-            </View>
+          </View>
               <TouchableOpacity onPress={this.showCalendar}>
-            <View style={{...Styles.wideCenterBlock, ...Styles.padding}}>
-              <Text style={{...Styles.formLabel}}>
+            <View style={{...Styles.wideCenterBlock}}>
+              <Text style={{...Styles.boldKYCText, paddingBottom: 18}}>
                 Date of Birth YYYY-MM-DD:
               </Text>
-              <View style={styles.containerDateOfBirth}>
+              <View>
                 <TextInputMask
                   onChangeText={(formatted) => {
                     this.setState({dateOfBirth: formatted})
                   }}
                   value={this.state.dateOfBirth}
                   mask={"[0000]-[00]-[00]"}
-                  style={{...Styles.inputTextDefaultStyle, borderBottomWidth: 1}}
+                  style={{ ...Styles.formInput, width: '100%', borderBottomWidth: 1}}
                 />
                 </View>
 
@@ -229,9 +230,9 @@ class KYCIdentityInput extends Component {
                 }
               </View>
             </View>
-                </TouchableOpacity>
-            <View style={{...Styles.wideCenterBlock, ...Styles.padding}}>
-              <Text style={{...Styles.formLabel}}>
+              </TouchableOpacity>
+            <View style={{...Styles.wideCenterBlock}}>
+              <Text style={{...Styles.formLabel, paddingBottom: 18}}>
                 US Social Security Number XXX-XX-XXXX:
               </Text>
               <TextInputMask
@@ -239,10 +240,10 @@ class KYCIdentityInput extends Component {
                   this.setState({socialSecurityNumber: formatted})
                 }}
                 mask={"[000]-[00]-[0000]"}
-                style={{...Styles.inputTextDefaultStyle, borderBottomWidth: 1}}
+                style={{...Styles.formInput, borderBottomWidth: 1}}
               />
             </View>
-            <View style={styles.buttonContainerBottom}>
+            <View style={{paddingTop: 48}}>
               <Button
               titleStyle={Styles.whiteText}
               buttonStyle={Styles.fullWidthButtonKYC}

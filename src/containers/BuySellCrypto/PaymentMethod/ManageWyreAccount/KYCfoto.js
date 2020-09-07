@@ -80,25 +80,25 @@ class KYCfoto extends Component {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={Styles.root}>
-        <View style={{...Styles.centralRow, ...Styles.padding}}>
+        <View style={{...Styles.centralRow, paddingBottom: 24}}>
           <Badge
             status="success"
-            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            badgeStyle={Styles.progessBadgeDone}
             containerStyle={Styles.horizontalPaddingBox10}
           />
           <Badge
             status="success"
-            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            badgeStyle={Styles.progessBadgeDone}
             containerStyle={Styles.horizontalPaddingBox10}
           />
           <Badge
             status="primary"
-            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            badgeStyle={Styles.progessBadgeTodo}
             containerStyle={Styles.horizontalPaddingBox10}
           />
           <Badge
             status="primary"
-            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            badgeStyle={Styles.progessBadgeTodo}
             containerStyle={Styles.horizontalPaddingBox10}
           />
         </View>
@@ -120,9 +120,9 @@ class KYCfoto extends Component {
                 <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
                   <Passport  height={'100%'} width={'15%'} />
                    <View style={{...Styles.alignItemsRight, width: '60%'}}>
-                     <Text style={Styles.leftLightText}> drivers lisence</Text>
+                     <Text style={Styles.normalKYCText}> drivers lisence</Text>
                    </View>
-                  <Text style={Styles.infoText}>Upload</Text>
+                  <Text style={Styles.boldKYCText}>Upload</Text>
                  </View>
               </TouchableOpacity>
             )}
@@ -133,9 +133,9 @@ class KYCfoto extends Component {
                 <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
                   <Passport  height={'100%'} width={'15%'} />
                    <View style={{...Styles.alignItemsRight, width: '60%'}}>
-                     <Text style={Styles.leftLightText}> ID card</Text>
+                     <Text style={Styles.normalKYCText}> ID card</Text>
                    </View>
-                  <Text style={Styles.infoText}>Upload</Text>
+                  <Text style={Styles.boldKYCText}>Upload</Text>
                  </View>
               </TouchableOpacity>
             )}
@@ -146,9 +146,9 @@ class KYCfoto extends Component {
                 <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
                   <Passport  height={'100%'} width={'15%'} />
                    <View style={{...Styles.alignItemsRight, width: '60%'}}>
-                     <Text style={Styles.leftLightText}>Passport</Text>
+                     <Text style={Styles.normalKYCText}>Passport</Text>
                    </View>
-                  <Text style={Styles.infoText}>Upload</Text>
+                  <Text style={Styles.boldKYCText}>Upload</Text>
                  </View>
 
               </TouchableOpacity>

@@ -47,35 +47,35 @@ class KYCEndInfoScreen extends Component {
 
       return (
         <View style={Styles.root}>
-          <View style={Styles.centralRow}>
+          <View style={{...Styles.centralRow, paddingTop: 14, paddingBottom: 16}}>
             <Badge
               status="success"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeDone}
               containerStyle={Styles.horizontalPaddingBox10}
             />
             <Badge
               status="success"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeDone}
               containerStyle={Styles.horizontalPaddingBox10}
             />
             <Badge
               status="success"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeDone}
               containerStyle={Styles.horizontalPaddingBox10}
             />
             <Badge
               status="success"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+              badgeStyle={Styles.progessBadgeDone}
               containerStyle={Styles.horizontalPaddingBox10}
             />
           </View>
           <View>
             <View style={Styles.padding}>
-              <Text style={Styles.boldText}>To use our fiat gateway, primetrust has to verify your identity</Text>
+              <Text style={Styles.boldKYCText}>To use our fiat gateway, primetrust has to verify your identity</Text>
             </View>
 
             <View >
-              <Text style={{ ...Styles.centralLightTextPadded, ...Styles.padding, textAlign: 'left' }}>all documents are handled securely and with care. PrimeTrust Privacy Policy, Terms of Service</Text>
+              <Text style={{ ...Styles.normalKYCText, ...Styles.padding, textAlign: 'left' }}>all documents are handled securely and with care. PrimeTrust Privacy Policy, Terms of Service</Text>
             </View>
 
           </View>
@@ -83,32 +83,32 @@ class KYCEndInfoScreen extends Component {
             <View style={Styles.alignItemsRight}>
             <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
               <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
-                <Text style={{...Styles.leftLightText, width: '60%'}}>Create your account</Text>
-                <Text style={Styles.infoText}>Completed</Text>
+                <Text style={{...Styles.normalKYCText, width: '60%'}}>Create your account</Text>
+                <Text style={Styles.boldKYCText}>Completed</Text>
              </View>
              <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
                <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
                 <View style={{...Styles.alignItemsRight, width: '60%'}}>
-                  <Text style={Styles.leftLightText}>My personal information</Text>
-                    <Text>name, date of birth, address</Text>
+                  <Text style={Styles.normalKYCText}>My personal information</Text>
+                    <Text style={Styles.smallKYCText}>name, date of birth, address</Text>
                 </View>
-               <Text style={Styles.infoText}>Completed</Text>
+               <Text style={Styles.boldKYCText}>Completed</Text>
               </View>
               <View style={{...Styles.startRow,...Styles.containerVerticalPadding, width: '100%'}}>
                 <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
                   <View style={{...Styles.alignItemsRight, width: '60%'}}>
-                    <Text style={Styles.leftLightText} >Verify Photo ID</Text>
-                     <Text >Scan or upload document</Text>
+                    <Text style={Styles.normalKYCText} >Verify Photo ID</Text>
+                     <Text style={Styles.smallKYCText} >Scan or upload document</Text>
                   </View>
-                  <Text style={Styles.infoText}>Under review</Text>
+                  <Text style={Styles.boldKYCText}>Under review</Text>
                </View>
                <View style={{...Styles.startRow,...Styles.containerVerticalPadding, width: '100%'}}>
                  <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
                    <View style={{...Styles.alignItemsRight, width: '60%'}}>
-                     <Text style={Styles.leftLightText}>Proof of Address</Text>
-                     <Text>Scan or upload document</Text>
+                     <Text style={Styles.normalKYCText}>Proof of Address</Text>
+                     <Text style={Styles.smallKYCText}>Scan or upload document</Text>
                    </View>
-                   <Text style={{ ...Styles.infoText  }}>Under review</Text>
+                   <Text style={{ ...Styles.boldKYCText  }}>Under review</Text>
                 </View>
                   <View style={Styles.alignItemsRight}>
 
@@ -120,7 +120,7 @@ class KYCEndInfoScreen extends Component {
             style={Styles.paddedBorderedBox}
             onPress={ this.onClick }
             >
-            <Text>it will take a maximum of fice days to get your uploaded documents reviewed and verified. We thank you for your patience.</Text>
+            <Text style={Styles.smallKYCText}>it will take a maximum of fice days to get your uploaded documents reviewed and verified. We thank you for your patience.</Text>
           </TouchableOpacity>
           </View>
         </ View>
