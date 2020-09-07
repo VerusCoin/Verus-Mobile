@@ -23,6 +23,11 @@ import Colors from '../../../../globals/colors';
 
 import { NavigationActions } from '@react-navigation/compat'
 
+import Nr1 from '../../../../images/customIcons/nr1.svg';
+import Nr2 from '../../../../images/customIcons/nr2.svg';
+import Nr3 from '../../../../images/customIcons/nr3.svg';
+import Nr4 from '../../../../images/customIcons/nr4.svg';
+
 class KYCEndInfoScreen extends Component {
   constructor(props) {
     super(props)
@@ -81,48 +86,54 @@ class KYCEndInfoScreen extends Component {
           </View>
           <View>
             <View style={Styles.alignItemsRight}>
+              <View style={{ height: '15%'}}>
             <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-              <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
+                <Nr1 height={'110%'} width={'15%'} />
                 <Text style={{...Styles.normalKYCText, width: '60%'}}>Create your account</Text>
                 <Text style={Styles.boldKYCText}>Completed</Text>
              </View>
+             </View>
+             <View style={{ height: '15%'}}>
              <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-               <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
+                <Nr2 height={'110%'} width={'15%'} />
                 <View style={{...Styles.alignItemsRight, width: '60%'}}>
                   <Text style={Styles.normalKYCText}>My personal information</Text>
                     <Text style={Styles.smallKYCText}>name, date of birth, address</Text>
                 </View>
                <Text style={Styles.boldKYCText}>Completed</Text>
               </View>
+              </View>
+              <View style={{ height: '15%'}}>
               <View style={{...Styles.startRow,...Styles.containerVerticalPadding, width: '100%'}}>
-                <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
+                  <Nr3 height={'110%'} width={'15%'} />
                   <View style={{...Styles.alignItemsRight, width: '60%'}}>
                     <Text style={Styles.normalKYCText} >Verify Photo ID</Text>
                      <Text style={Styles.smallKYCText} >Scan or upload document</Text>
                   </View>
                   <Text style={Styles.boldKYCText}>Under review</Text>
                </View>
+               </View>
+               <View style={{ height: '15%'}}>
                <View style={{...Styles.startRow,...Styles.containerVerticalPadding, width: '100%'}}>
-                 <Badge status="primary" containerStyle={Styles.horizontalPaddingBox5} />
+                   <Nr4 height={'110%'} width={'15%'} />
                    <View style={{...Styles.alignItemsRight, width: '60%'}}>
                      <Text style={Styles.normalKYCText}>Proof of Address</Text>
                      <Text style={Styles.smallKYCText}>Scan or upload document</Text>
                    </View>
                    <Text style={{ ...Styles.boldKYCText  }}>Under review</Text>
                 </View>
-                  <View style={Styles.alignItemsRight}>
-
-                  </View>
+                </View>
+                <View style={Styles.padding}>
+                  <TouchableOpacity
+                  style={Styles.paddedBorderedBox}
+                  onPress={ this.onClick }
+                  >
+                  <Text style={Styles.smallKYCText}>it will take a maximum of fice days to get your uploaded documents reviewed and verified. We thank you for your patience.</Text>
+                </TouchableOpacity>
+                </View>
               </View>
         </View>
-          <View style={Styles.padding}>
-            <TouchableOpacity
-            style={Styles.paddedBorderedBox}
-            onPress={ this.onClick }
-            >
-            <Text style={Styles.smallKYCText}>it will take a maximum of fice days to get your uploaded documents reviewed and verified. We thank you for your patience.</Text>
-          </TouchableOpacity>
-          </View>
+
         </ View>
       );
     }
