@@ -170,96 +170,111 @@ class KYCAddressInput extends Component {
                 <Text  style={Styles.boldKYCText}>Enter your address</Text>
                 <Text style={{ ...Styles.normalKYCText, textAlign: 'left' }}>In order to comply with regulations, enter your primary residential address. Please do not use a PO box or business address</Text>
               </View>
-              <Input
-                label="Street Address"
-                labelStyle={Styles.formLabel}
-                containerStyle={{paddingTop: 24}}
-                onChangeText={(text) => this.setState({ streetAddress: text })}
-                value={this.state.streetAddress}
-                autoCorrect={false}
-                inputStyle={Styles.inputTextDefaultStyle}
-              />
-            <View>
-              <Input
-                label="City"
-                labelStyle={Styles.formLabel}
-                containerStyle={{paddingTop: 24}}
-                onChangeText={(text) => this.setState({ city: text })}
-                value={this.state.city}
-                autoCorrect={false}
-                inputStyle={styles.formInputContainer}
-              />
-            </View>
-            <View>
-              <View style={{padding: 10}}>
-                <Dropdown
-                  labelExtractor={(item) => item.value}
-                  valueExtractor={(item) => item.value}
-                  label="State: "
-                  labelTextStyle={Styles.formLabel}
-                  labelFontSize={13}
-                  data={STATES}
-                  onChangeText={(value) => this.setState({ countryState: value })}
-                  textColor={Colors.kycBlack}
-                  fontSize={14}
-                  selectedItemColor={Colors.quaternaryColor}
-                  baseColor={Colors.quaternaryColor}
-                  value={this.state.countryState}
-                  pickerStyle={{backgroundColor: Colors.tertiaryColor}}
+              <View style={{ height: '130%'}}>
+                <View style={{ height: '8.5%'}}>
+                  <Input
+                    label="Street Address"
+                    labelStyle={Styles.formLabel}
+                    containerStyle={{paddingTop: 24}}
+                    onChangeText={(text) => this.setState({ streetAddress: text })}
+                    value={this.state.streetAddress}
+                    autoCorrect={false}
+                    inputStyle={Styles.formInputContainer}
+                  />
+              </View>
+              <View>
+                <View style={{ height: '9%'}}>
+                <Input
+                  label="City"
+                  labelStyle={Styles.formLabel}
+                  containerStyle={{paddingTop: 24}}
+                  onChangeText={(text) => this.setState({ city: text })}
+                  value={this.state.city}
+                  autoCorrect={false}
+                  inputStyle={styles.formInputContainer}
                 />
               </View>
-            </View>
-            <View>
-              <Input
-                label="postal Code"
-                labelStyle={Styles.formLabel}
-                containerStyle={{paddingTop: 24}}
-                onChangeText={(text) => this.setState({ postalCode: text })}
-                value={this.state.postalCode}
-                autoCorrect={false}
-                inputStyle={styles.formInputContainer}
-              />
-            </View>
-            <View>
-              <View style={{padding: 10}}>
-                <Dropdown
-                  labelExtractor={(item) => item.value}
-                  valueExtractor={(item) => item.value}
-                  label="Country: "
-                  labelTextStyle={Styles.formLabel}
-                  labelFontSize={13}
-                  data={WYRE_COUNTRIES}
-                  onChangeText={(value) => this.setState({ country: value })}
-                  textColor={Colors.kycBlack}
-                  fontSize={14}
-                  selectedItemColor={Colors.quaternaryColor}
-                  baseColor={Colors.quaternaryColor}
-                  value={this.state.country ? `${this.state.country}` : ''}
+              </View>
+              <View style={{ height: '8%'}}>
+                <View style={{paddingLeft: 10, paddingRight: 10, paddingTop: 10}}>
+                  <Text style={Styles.formLabel}>
+                    State
+                  </Text>
+                  <Dropdown
+                    labelExtractor={(item) => item.value}
+                    valueExtractor={(item) => item.value}
+                    labelTextStyle={Styles.formLabel}
+                    labelFontSize={13}
+                    data={STATES}
+                    onChangeText={(value) => this.setState({ countryState: value })}
+                    textColor={Colors.kycBlack}
+                    fontSize={14}
+                    selectedItemColor={Colors.quaternaryColor}
+                    baseColor={Colors.quaternaryColor}
+                    value={this.state.countryState}
+                    pickerStyle={{backgroundColor: Colors.tertiaryColor}}
+                  />
+                </View>
+              </View>
+              <View style={{ height: '10%'}}>
+                <Input
+                  label="postal Code"
+                  labelStyle={Styles.formLabel}
+                  containerStyle={{paddingTop: 24}}
+                  onChangeText={(text) => this.setState({ postalCode: text })}
+                  value={this.state.postalCode}
+                  autoCorrect={false}
+                  inputStyle={styles.formInputContainer}
+                />
+              </View>
+              <View style={{ height: '10%'}}>
+                <View style={{padding: 10}}>
+                  <Text style={Styles.formLabel}>
+                    Country
+                  </Text>
+                  <Dropdown
+                    labelExtractor={(item) => item.value}
+                    valueExtractor={(item) => item.value}
 
-                  pickerStyle={{backgroundColor: Colors.tertiaryColor}}
+                    labelTextStyle={Styles.formLabel}
+                    labelFontSize={13}
+                    data={WYRE_COUNTRIES}
+                    onChangeText={(value) => this.setState({ country: value })}
+                    textColor={Colors.kycBlack}
+                    fontSize={14}
+                    selectedItemColor={Colors.quaternaryColor}
+                    baseColor={Colors.quaternaryColor}
+                    value={this.state.country ? `${this.state.country}` : ''}
+
+                    pickerStyle={{backgroundColor: Colors.tertiaryColor}}
+                  />
+                </View>
+              </View>
+              <View style={{ height: '10%'}}>
+              <View style={Styles.padding}>
+                <Button
+                titleStyle={Styles.whiteText}
+                buttonStyle={Styles.fullWidthButtonKYC}
+                  title="SUBMIT"
+                  onPress={()=>{
+                    this.handleSubmit();
+                  } }
                 />
               </View>
+              <View style={Styles.padding}>
+              <View style={{ height: '10%'}}>
+                <Button
+                titleStyle={Styles.whiteText}
+                buttonStyle={Styles.fullWidthButtonKYC}
+                  title="CHEAT TO NEXT SCREEN"
+                  onPress={()=>{
+                    this.props.navigation.navigate("KYCphotoAddress")
+                  }
+                  }
+                />
             </View>
-            <View style={Styles.padding}>
-              <Button
-              titleStyle={Styles.whiteText}
-              buttonStyle={Styles.fullWidthButtonKYC}
-                title="SUBMIT"
-                onPress={()=>{
-                  this.handleSubmit();
-                } }
-              />
-            <View style={Styles.padding}>
-              <Button
-              titleStyle={Styles.whiteText}
-              buttonStyle={Styles.fullWidthButtonKYC}
-                title="CHEAT TO NEXT SCREEN"
-                onPress={()=>{
-                  this.props.navigation.navigate("KYCphotoAddress")
-                }
-                }
-              />
-          </View>
+            </View>
+            </View>
           <View style={{padding: 26}}></View>
           </View>
           </View>

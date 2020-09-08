@@ -105,12 +105,7 @@ class KYCphotoAddress extends Component {
               textContent="Loading..."
               textStyle={{ color: '#FFF' }}
             />
-          <View style={{paddingTop: 12}}>
-              <Text style={{...Styles.formLabel, ...Styles.padding}}>
-                Uploaded documents: &nbsp; &nbsp;
-                { this.props.field == null ? 0 : this.props.field.value.length}
-              </Text>
-            </View>
+          
             <View style={Styles.padding}>
               <Text  style={{...Styles.boldKYCText}}>Proof of address</Text>
               <Text style={{ ...Styles.normalKYCText, textAlign: 'left' }}>Please make sure th etext is clear and your address matches with your personal information</Text>

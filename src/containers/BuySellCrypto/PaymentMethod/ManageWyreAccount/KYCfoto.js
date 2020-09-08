@@ -130,6 +130,7 @@ class KYCfoto extends Component {
               </TouchableOpacity>
             )}
           </View>
+          
           <View style={Styles.containerVerticalPadding}>
             {!this.state.image && (
               <TouchableOpacity onPress={this.handleSelect}>
