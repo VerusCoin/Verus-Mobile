@@ -280,27 +280,6 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
             value
           );
 
-          // const successObj = {
-          //   err: false,
-          //   result: {
-          //     utxoSet: inputs,
-          //     change: _change,
-          //     inputs,
-          //     outputs,
-          //     fee: btcFees ? satsToCoins(fee) : satsToCoins(_estimatedFee),
-          //     value,
-          //     outputAddress,
-          //     changeAddress,
-          //     network,
-          //     rawtx: _rawtx,
-          //     utxoVerified,
-          //     feeTakenFromAmount,
-          //     amountSubmitted,
-          //     unshieldedFunds,
-          //     extras: {}
-          //   },
-          // };
-
           const successObj = {
             err: false,
             result: {  
