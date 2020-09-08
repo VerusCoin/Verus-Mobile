@@ -52,7 +52,7 @@ class KYCEndInfoScreen extends Component {
 
       return (
         <View style={Styles.root}>
-          <View style={{...Styles.centralRow, paddingTop: 14, paddingBottom: 16}}>
+        <View style={Styles.progressBarContainer}>
             <Badge
               status="success"
               badgeStyle={Styles.progessBadgeDone}

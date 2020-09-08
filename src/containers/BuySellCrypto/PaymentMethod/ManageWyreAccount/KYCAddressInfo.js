@@ -56,7 +56,7 @@ class KYCAddressInfo extends Component {
 
       return (
         <View style={Styles.root}>
-          <View style={{...Styles.centralRow, paddingBottom: 16, paddingTop: 12}}>
+          <View style={Styles.progressBarContainer}>
             <Badge
               status="success"
               badgeStyle={Styles.progessBadgeDone}

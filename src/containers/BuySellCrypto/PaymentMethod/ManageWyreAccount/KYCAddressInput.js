@@ -136,7 +136,7 @@ class KYCAddressInput extends Component {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View style={styles.mainInputView}>
           <View style={{ ...Styles.secondaryBackground, paddingTop: '5%' }}>
-          <View style={{...Styles.centralRow, ...Styles.padding, paddingTop: 12, paddingBottom: 16}}>
+            <View style={Styles.progressBarContainer}>
             <Badge
               status="success"
               badgeStyle={Styles.progessBadgeDone}

@@ -56,7 +56,7 @@ onClick = () => {  this.props.navigation.navigate("KYCIdentityInput") }
 
     return (
       <View style={Styles.root}>
-        <View style={{...Styles.centralRow, paddingBottom: 12 }}>
+      <View style={Styles.progressBarContainer}>
           <Badge
             status="success"
             badgeStyle={Styles.progessBadgeDone }

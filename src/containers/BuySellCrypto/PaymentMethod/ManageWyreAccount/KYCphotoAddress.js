@@ -77,7 +77,7 @@ class KYCphotoAddress extends Component {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={Styles.root}>
-        <View style={Styles.centralRow}>
+        <View style={Styles.progressBarContainer}>
           <Badge
             status="success"
             badgeStyle={Styles.progessBadgeDone}

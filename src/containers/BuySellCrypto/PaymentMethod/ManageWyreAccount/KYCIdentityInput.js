@@ -156,7 +156,7 @@ class KYCIdentityInput extends Component {
         }
       }} accessible={false}>
         <View style={Styles.root}>
-        <View style={Styles.centralRow}>
+      <View style={Styles.progressBarContainer}>
           <Badge
             status="success"
             badgeStyle={Styles.progessBadgeDone}

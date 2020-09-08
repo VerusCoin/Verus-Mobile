@@ -68,7 +68,13 @@ export default misc = {
   progessBadgeTodo: {
     scaleX: 2,
     scaleY: 2,
-    backgroundColor:  Colors.kycLight
+    backgroundColor:  Colors.kycPoint
+  },
+  progressBarContainer:{
+    paddingBottom: 16,
+    paddingTop: 12,
+    flexDirection: 'row',
+    alignSelf: 'center',
   },
   inputMaskDateOfBirth: {
       color: Colors.quaternaryColor,

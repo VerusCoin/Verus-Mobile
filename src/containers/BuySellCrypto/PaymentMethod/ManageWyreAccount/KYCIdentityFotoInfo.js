@@ -56,7 +56,7 @@ class KYCIdentityFotoInfo extends Component {
 
       return (
         <View style={Styles.root}>
-          <View style={{ ...Styles.centralRow, paddingBottom: 16}}>
+          <View style={Styles.progressBarContainer}>
             <Badge
               status="success"
               badgeStyle={Styles.progessBadgeDone}
