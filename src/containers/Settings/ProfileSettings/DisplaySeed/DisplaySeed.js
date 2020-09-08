@@ -19,7 +19,7 @@ import Colors from "../../../../globals/colors";
 import { ELECTRUM } from "../../../../utils/constants/intervalConstants";
 import { Dropdown } from "react-native-material-dropdown";
 
-class ResetPwd extends Component {
+class DisplaySeed extends Component {
   constructor() {
     super();
     this.state = {
@@ -150,4 +150,4 @@ const mapStateToProps = (state) => {
   }
 };
 
-export default connect(mapStateToProps)(ResetPwd);
+export default connect(mapStateToProps)(DisplaySeed);

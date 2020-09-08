@@ -76,7 +76,11 @@ export const conditionallyUpdateWallet = async (state, dispatch, chainTicker, up
   if (updateInfo != null && updateInfo.channels.length > 0) {
     const { coin_bound, update_locations, channels } = updateInfo
     const openChannels = channels.filter(channel => {
-      return !(updateInfo.busy[channel] === true)
+      return (
+        !(updateInfo.busy[channel] === true) &&
+        state[`channelStore_${channel}`] &&
+        state[`channelStore_${channel}`].openChannels[chainTicker]
+      );
     })
     const { activeSection, activeCoin, coinMenuFocused } = state.coins
 

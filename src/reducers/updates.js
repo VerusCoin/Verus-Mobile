@@ -70,65 +70,113 @@ export const updates = (state = {
       return {
         ...state,
         coinUpdateTracker: {
-          ...state.coinUpdateTracker, 
+          ...state.coinUpdateTracker,
           [chainTicker]: {
-            ...state.coinUpdateTracker[chainTicker], 
-            [API_GET_BALANCES]: {
-              ...state.coinUpdateTracker[chainTicker][API_GET_BALANCES],
-              busy: {
-                ...state.coinUpdateTracker[chainTicker][API_GET_BALANCES].busy,
-                [channel]: false
-              }
-            }}}
-      }
+            ...state.coinUpdateTracker[chainTicker],
+            [API_GET_BALANCES]: state.coinUpdateTracker[chainTicker]
+              ? {
+                  ...state.coinUpdateTracker[chainTicker][
+                    API_GET_BALANCES
+                  ],
+                  busy: {
+                    ...state.coinUpdateTracker[chainTicker][
+                      API_GET_BALANCES
+                    ].busy,
+                    [channel]: false,
+                  },
+                }
+              : {
+                  busy: {
+                    [channel]: false,
+                  },
+                },
+          },
+        },
+      };
     case SET_TRANSACTIONS:
     case ERROR_TRANSACTIONS:
       return {
         ...state,
         coinUpdateTracker: {
-          ...state.coinUpdateTracker, 
+          ...state.coinUpdateTracker,
           [chainTicker]: {
-            ...state.coinUpdateTracker[chainTicker], 
-            [API_GET_TRANSACTIONS]: {
-              ...state.coinUpdateTracker[chainTicker][API_GET_TRANSACTIONS],
-              busy: {
-                ...state.coinUpdateTracker[chainTicker][API_GET_TRANSACTIONS].busy,
-                [channel]: false
-              }
-            }}}
-      }
+            ...state.coinUpdateTracker[chainTicker],
+            [API_GET_TRANSACTIONS]: state.coinUpdateTracker[chainTicker]
+              ? {
+                  ...state.coinUpdateTracker[chainTicker][
+                    API_GET_TRANSACTIONS
+                  ],
+                  busy: {
+                    ...state.coinUpdateTracker[chainTicker][
+                      API_GET_TRANSACTIONS
+                    ].busy,
+                    [channel]: false,
+                  },
+                }
+              : {
+                  busy: {
+                    [channel]: false,
+                  },
+                },
+          },
+        },
+      };
     case SET_INFO:
     case ERROR_INFO:
       return {
         ...state,
         coinUpdateTracker: {
-          ...state.coinUpdateTracker, 
+          ...state.coinUpdateTracker,
           [chainTicker]: {
-            ...state.coinUpdateTracker[chainTicker], 
-            [API_GET_INFO]: {
-              ...state.coinUpdateTracker[chainTicker][API_GET_INFO],
-              busy: {
-                ...state.coinUpdateTracker[chainTicker][API_GET_INFO].busy,
-                [channel]: false
-              }
-            }}}
-      }
+            ...state.coinUpdateTracker[chainTicker],
+            [API_GET_INFO]: state.coinUpdateTracker[chainTicker]
+              ? {
+                  ...state.coinUpdateTracker[chainTicker][
+                    API_GET_INFO
+                  ],
+                  busy: {
+                    ...state.coinUpdateTracker[chainTicker][
+                      API_GET_INFO
+                    ].busy,
+                    [channel]: false,
+                  },
+                }
+              : {
+                  busy: {
+                    [channel]: false,
+                  },
+                },
+          },
+        },
+      };
     case SET_RATES:
     case ERROR_RATES:
       return {
         ...state,
         coinUpdateTracker: {
-          ...state.coinUpdateTracker, 
+          ...state.coinUpdateTracker,
           [chainTicker]: {
-            ...state.coinUpdateTracker[chainTicker], 
-            [API_GET_FIATPRICE]: {
-              ...state.coinUpdateTracker[chainTicker][API_GET_FIATPRICE],
-              busy: {
-                ...state.coinUpdateTracker[chainTicker][API_GET_FIATPRICE].busy,
-                [channel]: false
-              }
-            }}}
-      }
+            ...state.coinUpdateTracker[chainTicker],
+            [API_GET_FIATPRICE]: state.coinUpdateTracker[chainTicker]
+              ? {
+                  ...state.coinUpdateTracker[chainTicker][
+                    API_GET_FIATPRICE
+                  ],
+                  busy: {
+                    ...state.coinUpdateTracker[chainTicker][
+                      API_GET_FIATPRICE
+                    ].busy,
+                    [channel]: false,
+                  },
+                }
+              : {
+                  busy: {
+                    [channel]: false,
+                  },
+                },
+          },
+        },
+      };
     case OCCUPY_COIN_API_CALL: 
       return {
         ...state,

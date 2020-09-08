@@ -6,6 +6,7 @@ import {
   fetchUsers, 
   loadServerVersions,
   loadCachedHeaders,
+  loadEthTxReceipts,
   initSettings,
   requestSeedData,
 } from './actions/actionCreators';
@@ -16,6 +17,7 @@ import {
   checkAndSetVersion
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
+import { ENABLE_VERUS_IDENTITIES } from '../env/main.json'
 
 
 class VerusMobile extends React.Component {
@@ -54,7 +56,11 @@ class VerusMobile extends React.Component {
       actionArr.forEach((action) => {
         this.props.dispatch(action)
       })
-      return Promise.all([loadServerVersions(this.props.dispatch), loadCachedHeaders(this.props.dispatch)])
+      return Promise.all([
+        loadServerVersions(this.props.dispatch),
+        loadCachedHeaders(this.props.dispatch),
+        loadEthTxReceipts(this.props.dispatch),
+      ]);
     })
     .then(() => {
       this.setState({ loading: false })
@@ -62,7 +68,10 @@ class VerusMobile extends React.Component {
     .catch((err) => {
       Alert.alert("Error", err.message)
     })
-    this.props.dispatch(requestSeedData());
+
+    if (ENABLE_VERUS_IDENTITIES) {
+      this.props.dispatch(requestSeedData());
+    }
   }
 
   render() {

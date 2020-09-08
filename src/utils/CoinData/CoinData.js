@@ -4,6 +4,8 @@ import Colors from '../../globals/colors'
 import { coinsList } from './CoinsList'
 import { DLIGHT, ELECTRUM, GENERAL } from '../constants/intervalConstants';
 
+import { ENABLE_VERUS_IDENTITIES } from '../../../env/main.json'
+
 const getDefaultApps = (coinName, canBuySell = false) => {
   return ({
     defaultApp: 'wallet',
@@ -66,25 +68,34 @@ const identityApp = {
 export const explorers = {
   KMD: 'https://kmdexplorer.io',
   OOT: 'https://explorer.utrum.io',
-  VRSC: 'https://explorer.veruscoin.io'
+  VRSC: 'https://explorer.veruscoin.io',
+  ETH: 'https://etherscan.io',
+  TST: 'https://ropsten.etherscan.io'
 }
 
 export const defaultAssetsPath = {
   coinLogo: {
-    bch: require('../../images/cryptologo/default/bch.png'),		
-    vrsc: require('../../images/cryptologo/default/vrsc.png'),
-    dash: require('../../images/cryptologo/default/dash.png'),	
-    oot: require('../../images/cryptologo/default/oot.png'),		
-    btc: require('../../images/cryptologo/default/btc.png'),		
-    dgb: require('../../images/cryptologo/default/dgb.png'),		
-    doge: require('../../images/cryptologo/default/doge.png'),	
-    kmd: require('../../images/cryptologo/default/kmd.png'),		
-    zec: require('../../images/cryptologo/default/zec.png'),
-    zectest: require('../../images/cryptologo/default/zectest.png'),
-    zilla: require('../../images/cryptologo/default/zilla.png'),	
-    ltc: require('../../images/cryptologo/default/ltc.png'),		
-    ccl: require('../../images/cryptologo/default/ccl.png'),
-    default: require('../../images/cryptologo/default_chain.png')
+    // btc protocol
+    bch: require('../../images/cryptologo/default/btc/bch.png'),		
+    vrsc: require('../../images/cryptologo/default/btc/vrsc.png'),
+    dash: require('../../images/cryptologo/default/btc/dash.png'),	
+    oot: require('../../images/cryptologo/default/btc/oot.png'),		
+    btc: require('../../images/cryptologo/default/btc/btc.png'),		
+    dgb: require('../../images/cryptologo/default/btc/dgb.png'),		
+    doge: require('../../images/cryptologo/default/btc/doge.png'),	
+    kmd: require('../../images/cryptologo/default/btc/kmd.png'),		
+    zec: require('../../images/cryptologo/default/btc/zec.png'),
+    zectest: require('../../images/cryptologo/default/btc/zectest.png'),
+    zilla: require('../../images/cryptologo/default/btc/zilla.png'),	
+    ltc: require('../../images/cryptologo/default/btc/ltc.png'),		
+    ccl: require('../../images/cryptologo/default/btc/ccl.png'),
+    default: require('../../images/cryptologo/default_chain.png'),
+    
+    // web3 protocol
+    bat: require('../../images/cryptologo/default/web3/bat.png'),
+    tst: require('../../images/cryptologo/default/web3/eth.png'),
+    dai: require('../../images/cryptologo/default/web3/dai.png'),
+    eth: require('../../images/cryptologo/default/web3/eth.png'),
   },
 };
 
@@ -109,7 +120,7 @@ export const findCoinObj = (id, userName) => {
     
     if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
       const DEFAULT_APPS = getDefaultApps(coinObj.name)
-      if (global.ENABLE_VERUS_IDENTITIES && (coinObj.id === 'VRSC' || coinObj.id === 'ZECTEST')) {
+      if (ENABLE_VERUS_IDENTITIES && (coinObj.id === 'VRSC' || coinObj.id === 'ZECTEST')) {
         coinObj.apps = {...identityApp, ...DEFAULT_APPS.apps};
       } else {
         coinObj.apps = DEFAULT_APPS.apps;

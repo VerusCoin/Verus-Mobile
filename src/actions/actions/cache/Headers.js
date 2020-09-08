@@ -1,12 +1,12 @@
 import {
   getHeaderCache,
   setCachedHeader,
-  BLOCK_HEADER_CACHE_CAP
 } from '../../../utils/asyncStore/asyncStore';
 
+import { BLOCK_HEADER_STORE_CAP } from '../../../../env/main.json'
+
 import {
-  setBlockHeaders,
-  addBlockHeader
+  setBlockHeaders
 } from '../../actionCreators'
 
 //Load cached headers into store and pass in dispatch object
@@ -37,7 +37,7 @@ export const saveBlockHeader = (header, height, coinID, store) => {
   return new Promise((resolve, reject) => {
     setCachedHeader(header, height, coinID)
     .then(() => {
-      if (numHeaders < global.BLOCK_HEADER_STORE_CAP) {
+      if (numHeaders < BLOCK_HEADER_STORE_CAP) {
         return false
       } else {
         return loadCachedHeaders(store.dispatch)

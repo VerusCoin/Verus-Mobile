@@ -1,7 +1,7 @@
 import { MOCK_STATE } from '../../../../tests/helpers/MockAppState'
 import Store from '../../../../store/index'
 import { SET_USER_COINS, SET_ACTIVE_SECTION, SET_ACTIVE_COIN, SET_COIN_LIST, AUTHENTICATE_USER, SIGN_IN_USER } from '../../../constants/storeType';
-import { initDlightWallet, closeDlightWallet } from '../../../../actions/actions/dlight/dispatchers/LightWalletReduxManager';
+import { initDlightWallet, closeDlightWallet } from '../../../../actions/actions/channels/dlight/dispatchers/LightWalletReduxManager';
 import { activateChainLifecycle, clearChainLifecycle } from '../../../../actions/actions/intervals/dispatchers/lifecycleManager';
 
 describe('dlight initialization tester', () => {
@@ -67,8 +67,8 @@ describe('dlight initialization tester', () => {
         expect(state.ledger.balances.dlight[MOCK_STATE.coins.activeCoinsForUser[0].id].total).toBe(30)
         expect(state.ledger.balances.dlight[MOCK_STATE.coins.activeCoinsForUser[0].id].confirmed).toBe(20)
         expect(state.ledger.balances.dlight[MOCK_STATE.coins.activeCoinsForUser[0].id].pending).toBe(10)
-        expect(state.coins.dlightSockets.VRSC).toBe(false)
-        expect(state.coins.dlightSyncing.VRSC).toBe(false)
+        expect(state.channelStore_dlight.dlightSockets.VRSC).toBe(false)
+        expect(state.channelStore_dlight.dlightSyncing.VRSC).toBe(false)
 
         resolve()
       })

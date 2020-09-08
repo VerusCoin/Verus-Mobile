@@ -25,6 +25,7 @@ import { CommonActions } from '@react-navigation/native';
 import AlertAsync from "react-native-alert-async";
 import Styles from '../../styles/index'
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
+import { ENABLE_FIAT_GATEWAY } from '../../../env/main.json'
 
 const APP_INFO = 'App Info'
 const PROFILE = 'Profile'
@@ -107,7 +108,7 @@ class SideMenu extends Component {
 
   _removeUserFromCoin = (coinID, deleteWallet) => {
     return new Promise((resolve, reject) => {
-      removeExistingCoin(coinID, this.props.activeCoinList, this.props.activeAccount.id, this.props.dlightSockets[coinID], deleteWallet)
+      removeExistingCoin(coinID, this.props.activeCoinList, this.props.activeAccount.id, deleteWallet)
       .then((res) => {
         clearAllCoinIntervals(coinID)
         this.props.dispatch(res)
@@ -230,7 +231,7 @@ class SideMenu extends Component {
         )}
         ListFooterComponent={
           <React.Fragment>
-            {global.ENABLE_FIAT_GATEWAY && (
+            {ENABLE_FIAT_GATEWAY && (
               <ListItem
                 title={"BUY/SELL COIN"}
                 titleStyle={Styles.infoText}
@@ -457,7 +458,7 @@ const mapStateToProps = (state) => {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
     activeAccount: state.authentication.activeAccount,
-    dlightSockets: state.coins.dlightSockets
+    dlightSockets: state.channelStore_dlight.dlightSockets
   }
 };
 

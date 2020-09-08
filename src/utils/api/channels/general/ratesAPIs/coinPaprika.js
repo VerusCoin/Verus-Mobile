@@ -1,6 +1,8 @@
 import { timeout } from '../../../../promises'
 import { isJson } from '../../../../objectManip'
 
+import { REQUEST_TIMEOUT_MS } from '../../../../../../env/main.json'
+
 export const getCoinPaprikaRate = (coinObj) => {
   let coinID = coinObj.id
   let coinName = coinObj.name
@@ -9,7 +11,7 @@ export const getCoinPaprikaRate = (coinObj) => {
   const address = `https://api.coinpaprika.com/v1/coins/${param}/ohlcv/latest`
 
   return new Promise((resolve) => {
-    timeout(global.REQUEST_TIMEOUT_MS, fetch(address, { method: "GET" }))
+    timeout(REQUEST_TIMEOUT_MS, fetch(address, { method: "GET" }))
       .then(response => {
         if (!isJson(response)) {
           throw new Error(

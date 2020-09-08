@@ -11,13 +11,11 @@ import {
   deleteUserFromCoin
 } from './asyncStore'
 import { hashAccountId } from "../crypto/hash";
+import { CHANNELS_NULL_TEMPLATE } from "../constants/intervalConstants";
 
 //Set storage to hold encrypted user data
 export const storeUser = (authData, users) => {
-  let encryptedKeys = {
-    electrum: null,
-    dlight: null
-  }
+  let encryptedKeys = { ...CHANNELS_NULL_TEMPLATE }
 
   Object.keys(authData.seeds).map(seedType => {
     const { seeds } = authData

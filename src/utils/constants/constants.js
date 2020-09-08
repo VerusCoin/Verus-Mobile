@@ -73,6 +73,15 @@ export const ENABLE_FIAT_GATEWAY = false;
 export const WYRE_URL = 'https://api.testwyre.com';
 export const WYRE_REFERRER_ACCOUNT_ID = 'verus-valu';
 
+// ETH Network IDs
+export const ETH_NETWORK_IDS = {
+    ['homestead']: 1,
+    ['ropsten']: 3,
+    ['rinkeby']: 4,
+    ['goerli']: 5,
+    ['kovan']: 42
+}
+
 export const SUPPORTED_COUNTRIES = ['US'];
 export const WYRE_COUNTRIES = [{ value: 'US' }, ];
 export const STATES = [

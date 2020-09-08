@@ -34,7 +34,7 @@ import {
 import Spinner from 'react-native-loading-spinner-overlay';
 import DelayedAlert from '../../utils/delayedAlert'
 import DelayedAsyncAlert from '../../utils/delayedAsyncAlert'
-import { coinsToSats } from '../../utils/math'
+import { coinsToSats, satsToCoins } from '../../utils/math'
 import {
   FORMAT_UNKNOWN,
   ADDRESS_ONLY,
@@ -354,12 +354,13 @@ class VerusPay extends Component {
     
     return new Promise((resolve, reject) => {
       addCoin(
-        findCoinObj(coinTicker),
+        coinObj,
         this.props.activeCoinList,
         this.props.activeAccount.id,
-        this.props.coinSettings[coinTicker]
-        ? this.props.coinSettings[coinTicker].channels
-        : coinObj.compatible_channels
+        // this.props.coinSettings[coinTicker]
+        // ? this.props.coinSettings[coinTicker].channels
+        // : coinObj.compatible_channels
+        coinObj.compatible_channels
       )
         .then(response => {
           if (response) {
@@ -373,7 +374,7 @@ class VerusPay extends Component {
             this.props.dispatch(
               addKeypairs(
                 this.props.activeAccount.seeds,
-                coinTicker,
+                coinObj,
                 this.props.activeAccount.keys
               )
             );
@@ -554,7 +555,7 @@ class VerusPay extends Component {
       coinObj: this.state.coinObj,
       activeUser: this.state.activeUser,
       address: this.state.address,
-      amount: Number(this.state.amount),
+      amount: satsToCoins(Number(this.state.amount)),
       btcFee: this.state.btcFees.average,
       balance: this.props.balances.public.confirmed,
       memo: this.state.memo
@@ -692,16 +693,19 @@ class VerusPay extends Component {
 
 const mapStateToProps = (state) => {
   const chainTicker = state.coins.activeCoin.id
+  const mainChannel = state.coins.activeCoin.dominant_channel
+    ? state.coins.activeCoin.dominant_channel
+    : ELECTRUM;
 
   return {
     //needsUpdate: state.ledger.needsUpdate,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoin: state.coins.activeCoin,
     balances: {
-      public: state.ledger.balances[ELECTRUM][chainTicker],
+      public: state.ledger.balances[mainChannel][chainTicker],
       private: state.ledger.balances[DLIGHT][chainTicker],
       errors: {
-        public: state.errors[API_GET_BALANCES][ELECTRUM][chainTicker],
+        public: state.errors[API_GET_BALANCES][mainChannel][chainTicker],
         private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
       }
     },
