@@ -16,6 +16,8 @@ import {
   FormValidationMessage
 } from 'react-native-elements';
 
+import Lock from '../../../../images/customIcons/iconmonstr-lock-18.svg';
+
 import Spinner from 'react-native-loading-spinner-overlay';
 
 import {Button, Badge } from 'react-native-elements';
@@ -105,11 +107,13 @@ class KYCphotoAddress extends Component {
               textContent="Loading..."
               textStyle={{ color: '#FFF' }}
             />
-          
+
             <View style={Styles.padding}>
               <Text  style={{...Styles.boldKYCText}}>Proof of address</Text>
               <Text style={{ ...Styles.normalKYCText, textAlign: 'left' }}>Please make sure th etext is clear and your address matches with your personal information</Text>
             </View>
+
+            <View style={Styles.padding}>
             {!this.state.image && (
               <View style={styles.buttonContainerBottom}>
                 <Button
@@ -120,6 +124,7 @@ class KYCphotoAddress extends Component {
                 />
               </View>
             )}
+            </View>
             {this.state.image && (
               <View>
                 <Image
@@ -143,6 +148,8 @@ class KYCphotoAddress extends Component {
               </View>
             )}
           </View>
+
+
           <View style={Styles.padding} >
           <Button
           titleStyle={Styles.whiteText}

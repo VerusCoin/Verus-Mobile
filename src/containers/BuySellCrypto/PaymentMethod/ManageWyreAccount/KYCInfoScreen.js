@@ -52,7 +52,7 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
 
     return (
       <View style={Styles.root}>
-      <View style={Styles.progressBarContainer}>
+        <View style={Styles.progressBarContainer}>
           <Badge
 
             badgeStyle={ Styles.progessBadgeDone }

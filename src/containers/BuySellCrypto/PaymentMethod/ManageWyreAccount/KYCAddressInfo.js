@@ -12,6 +12,8 @@ import {
   selectWyreGetAccountIsFetching,
 } from '../../../../selectors/paymentMethods';
 
+import Lock from '../../../../images/customIcons/iconmonstr-lock-18.svg';
+
 import {
   Badge,
   Button
@@ -105,6 +107,16 @@ class KYCAddressInfo extends Component {
              </View>
           </View>
           </View>
+
+          <View style={Styles.alignItemsRight}>
+            <View style={{ height: '15%'}}>
+            <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
+              <Lock height={'30%'} width={'10%'} />
+                  <Text style={{...Styles.smallKYCText, width: '80%'}}>PrimeTrust uses bank level encryption on all connections when receiving documents.</Text>
+             </View>
+             </View>
+             </View>
+
           <View style={Styles.padding}>
           <Button
           title="CONTINUE"
