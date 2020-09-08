@@ -156,7 +156,7 @@ class KYCIdentityInput extends Component {
         }
       }} accessible={false}>
         <View style={Styles.root}>
-      <View style={Styles.progressBarContainer}>
+          <View style={Styles.progressBarContainer}>
           <Badge
             status="success"
             badgeStyle={Styles.progessBadgeDone}
@@ -204,7 +204,7 @@ class KYCIdentityInput extends Component {
           </View>
               <TouchableOpacity onPress={this.showCalendar}>
             <View style={{...Styles.wideCenterBlock}}>
-              <Text style={{...Styles.boldKYCText, paddingBottom: 18}}>
+              <Text style={{...Styles.formLabel, paddingBottom: 18}}>
                 Date of Birth YYYY-MM-DD:
               </Text>
               <View>
