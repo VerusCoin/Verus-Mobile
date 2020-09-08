@@ -17,7 +17,8 @@ import {
   FormValidationMessage
 } from 'react-native-elements';
 
-import Passport from '../../../../images/customIcons/Passport.svg';
+import IDsIcon from '../../../../images/customIcons/IDsIcon.svg';
+import Arrow from '../../../../images/customIcons/iconmonstr-arrow-29.svg';
 
 import Spinner from 'react-native-loading-spinner-overlay';
 
@@ -109,20 +110,22 @@ class KYCfoto extends Component {
               textStyle={{ color: '#FFF' }}
             />
             <View>
-              <Text style={{...Styles.formLabel, ...Styles.padding}}>
-                Uploaded documents: &nbsp; &nbsp;
-                { this.props.field == null ? 0 : this.props.field.value.length}
+
+            </View>
+            <View style={{padding: 8}}>
+              <Text style={Styles.headerKYCText}>
+                  Select your ID type
               </Text>
             </View>
             <View style={Styles.containerVerticalPadding}>
             {!this.state.image && (
               <TouchableOpacity onPress={this.handleSelect} >
                 <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-                  <Passport  height={'100%'} width={'15%'} />
+                  <IDsIcon  height={'100%'} width={'15%'} />
                    <View style={{...Styles.alignItemsRight, width: '60%'}}>
                      <Text style={Styles.normalKYCText}> drivers lisence</Text>
                    </View>
-                  <Text style={Styles.boldKYCText}>Upload</Text>
+                   <Arrow height={'50%'} width={'15%'} />
                  </View>
               </TouchableOpacity>
             )}
@@ -131,11 +134,11 @@ class KYCfoto extends Component {
             {!this.state.image && (
               <TouchableOpacity onPress={this.handleSelect}>
                 <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-                  <Passport  height={'100%'} width={'15%'} />
+                  <IDsIcon  height={'100%'} width={'15%'} />
                    <View style={{...Styles.alignItemsRight, width: '60%'}}>
                      <Text style={Styles.normalKYCText}> ID card</Text>
                    </View>
-                  <Text style={Styles.boldKYCText}>Upload</Text>
+                   <Arrow height={'50%'} width={'15%'} />
                  </View>
               </TouchableOpacity>
             )}
@@ -144,11 +147,11 @@ class KYCfoto extends Component {
             {!this.state.image && (
               <TouchableOpacity onPress={this.handleSelect}>
                 <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-                  <Passport  height={'100%'} width={'15%'} />
+                  <IDsIcon  height={'100%'} width={'15%'} />
                    <View style={{...Styles.alignItemsRight, width: '60%'}}>
                      <Text style={Styles.normalKYCText}>Passport</Text>
                    </View>
-                  <Text style={Styles.boldKYCText}>Upload</Text>
+                   <Arrow height={'50%'} width={'15%'} />
                  </View>
 
               </TouchableOpacity>
@@ -177,6 +180,7 @@ class KYCfoto extends Component {
               </View>
             )}
           </View>
+
           <Button
           titleStyle={Styles.whiteText}
           buttonStyle={Styles.fullWidthButtonKYC}
