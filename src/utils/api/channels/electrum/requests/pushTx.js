@@ -1,6 +1,6 @@
 import { postElectrum } from '../callCreators'
 import { getUnspentFormatted } from './getUnspent';
-import { maxSpendBalance, satsToCoins } from '../../../../math'
+import { maxSpendBalance, satsToCoins, coinsToSats } from '../../../../math'
 import coinSelect from 'coinselect';
 import { buildSignedTx } from '../../../../crypto/buildTx'
 import { TxDecoder } from '../../../../crypto/txDecoder'
@@ -23,14 +23,20 @@ export const pushTx = (coinObj, _rawtx) => {
       else {
         resolve({
           err: false,
-          result: response
+          result: {
+            txid: response.result,
+            params: {}
+          },
         })
       }
     })
   });
 }
 
-export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFee, network, verifyMerkle, verifyTxid) => {
+export const txPreflight = (coinObj, activeUser, outputAddress, value, params) => {
+  let { defaultFee, network, verifyMerkle, verifyTxid } = params
+  value = coinsToSats(value)
+
   console.log("Value passed to tx preflight: " + value)
   return new Promise((resolve, reject) => {
     getUnspentFormatted(coinObj, activeUser, verifyMerkle, verifyTxid)
@@ -274,24 +280,47 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
             value
           );
 
+          // const successObj = {
+          //   err: false,
+          //   result: {
+          //     utxoSet: inputs,
+          //     change: _change,
+          //     inputs,
+          //     outputs,
+          //     fee: btcFees ? satsToCoins(fee) : satsToCoins(_estimatedFee),
+          //     value,
+          //     outputAddress,
+          //     changeAddress,
+          //     network,
+          //     rawtx: _rawtx,
+          //     utxoVerified,
+          //     feeTakenFromAmount,
+          //     amountSubmitted,
+          //     unshieldedFunds,
+          //     extras: {}
+          //   },
+          // };
+
           const successObj = {
             err: false,
-            result: {
-              utxoSet: inputs,
-              change: _change,
-              inputs,
-              outputs,
-              // electrumKey,
+            result: {  
               fee: btcFees ? satsToCoins(fee) : satsToCoins(_estimatedFee),
-              value,
-              outputAddress,
-              changeAddress,
-              network,
-              rawtx: _rawtx,
-              utxoVerified,
-              feeTakenFromAmount,
-              amountSubmitted,
-              unshieldedFunds
+              value: satsToCoins(value),
+              toAddress: outputAddress,
+              fromAddress: changeAddress,
+              amountSubmitted: satsToCoins(amountSubmitted),
+              memo: null,
+              params: {
+                utxoSet: inputs,
+                change: _change,
+                inputs,
+                outputs,
+                feeTakenFromAmount,
+                network,
+                rawtx: _rawtx,
+                utxoVerified,
+                unshieldedFunds,
+              }
             },
           };
 
@@ -313,20 +342,22 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, defaultFe
   });
 }
 
-export const sendRawTx = (coinObj, activeUser, outputAddress, value, defaultFee, network, verifyMerkle, verifyTxid) => {
+export const sendRawTx = (coinObj, activeUser, outputAddress, value, params) => {
+  const { defaultFee, network, verifyMerkle, verifyTxid } = params
+
   console.log("Value to send raw tx: " + value)
   return new Promise((resolve, reject) => {
-    txPreflight(coinObj, activeUser, outputAddress, value, defaultFee, network, verifyMerkle, verifyTxid)
+    txPreflight(coinObj, activeUser, outputAddress, value, { defaultFee, network, verifyMerkle, verifyTxid })
     .then((resObj) => {
       if (resObj.err) {
         console.log(resObj)
         throw (resObj)
       } else {
-        return pushTx(coinObj, resObj.result.rawtx)
+        return pushTx(coinObj, resObj.result.params.rawtx)
       }
     })
     .then((resObj) => {
-      if (resObj.result.result.code) {
+      if (resObj.result.code) {
         console.log(resObj)
         throw ({
           err: true,
@@ -335,7 +366,7 @@ export const sendRawTx = (coinObj, activeUser, outputAddress, value, defaultFee,
       } else {
         console.log("Transaction sent succesfully")
         console.log(resObj)
-        resolve(resObj.result)
+        resolve(resObj)
       }
     })
     .catch((err) => {

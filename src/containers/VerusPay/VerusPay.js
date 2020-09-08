@@ -34,7 +34,7 @@ import {
 import Spinner from 'react-native-loading-spinner-overlay';
 import DelayedAlert from '../../utils/delayedAlert'
 import DelayedAsyncAlert from '../../utils/delayedAsyncAlert'
-import { coinsToSats } from '../../utils/math'
+import { coinsToSats, satsToCoins } from '../../utils/math'
 import {
   FORMAT_UNKNOWN,
   ADDRESS_ONLY,
@@ -555,7 +555,7 @@ class VerusPay extends Component {
       coinObj: this.state.coinObj,
       activeUser: this.state.activeUser,
       address: this.state.address,
-      amount: Number(this.state.amount),
+      amount: satsToCoins(Number(this.state.amount)),
       btcFee: this.state.btcFees.average,
       balance: this.props.balances.public.confirmed,
       memo: this.state.memo

@@ -6,6 +6,7 @@ import {
   fetchUsers, 
   loadServerVersions,
   loadCachedHeaders,
+  loadEthTxReceipts,
   initSettings,
   requestSeedData,
 } from './actions/actionCreators';
@@ -55,7 +56,11 @@ class VerusMobile extends React.Component {
       actionArr.forEach((action) => {
         this.props.dispatch(action)
       })
-      return Promise.all([loadServerVersions(this.props.dispatch), loadCachedHeaders(this.props.dispatch)])
+      return Promise.all([
+        loadServerVersions(this.props.dispatch),
+        loadCachedHeaders(this.props.dispatch),
+        loadEthTxReceipts(this.props.dispatch),
+      ]);
     })
     .then(() => {
       this.setState({ loading: false })

@@ -6,7 +6,8 @@ import {
 import { networks } from 'bitgo-utxo-lib';
 import store from '../../../../../store/index';
 import { saveBlockHeader } from '../../../../../actions/actionCreators';
-import { ELECTRUM_PROTOCOL_CHANGE } from '../../../../constants/constants' 
+import { ELECTRUM_PROTOCOL_CHANGE } from '../../../../constants/constants';
+import { MIN_HEADER_CACHE_CONFS } from '../../../../../../env/main.json'
 
 export const getBlockInfo = (coinObj, blockheight) => {
   const callType = 'getblockinfo'
@@ -49,7 +50,7 @@ export const getBlockInfo = (coinObj, blockheight) => {
     })
     .catch((err) => {
       console.log("Caught error in getBlockInfo.js")
-      console.log(err.stack)
+      console.error(err)
       reject(err)
     })
   });

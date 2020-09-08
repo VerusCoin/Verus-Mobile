@@ -6,6 +6,7 @@ import erc20Saga from './channels/erc20';
 import ethSaga from './channels/eth';
 import electrumSaga from './channels/electrum';
 import dlightSaga from './channels/dlight';
+import generalSaga from './channels/general';
 
 import {
   ENABLE_VERUS_IDENTITIES,
@@ -13,6 +14,7 @@ import {
   ENABLE_ERC20,
   ENABLE_ELECTRUM,
   ENABLE_ETH,
+  ENABLE_GENERAL
 } from "../../env/main.json";
 
 const generateSagas = () => {
@@ -28,6 +30,7 @@ const generateSagas = () => {
   if (ENABLE_ERC20) sagas.push(erc20Saga)
   if (ENABLE_ELECTRUM) sagas.push(electrumSaga)
   if (ENABLE_ETH) sagas.push(ethSaga)
+  if (ENABLE_GENERAL) sagas.push(generalSaga)
 
   return sagas
 }

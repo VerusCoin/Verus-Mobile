@@ -56,6 +56,8 @@ class SendCoin extends Component {
   }
 
   componentDidMount() {
+    this.initializeState();
+
     this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
       this.initializeState();
     });
@@ -83,13 +85,15 @@ class SendCoin extends Component {
   };
 
   handleState = async (activeUser, coinObj) => {
+    const channel = coinObj.dominant_channel != null ? coinObj.dominant_channel : ELECTRUM
+
     if (
       activeUser.keys[coinObj.id] != null &&
-      activeUser.keys[coinObj.id].electrum != null &&
-      activeUser.keys[coinObj.id].electrum.addresses.length > 0
+      activeUser.keys[coinObj.id][channel] != null &&
+      activeUser.keys[coinObj.id][channel].addresses.length > 0
     ) {
       this.setState({
-        fromAddress: activeUser.keys[coinObj.id].electrum.addresses[0]
+        fromAddress: activeUser.keys[coinObj.id][channel].addresses[0]
       });
     } else {
       throw new Error(
@@ -166,7 +170,7 @@ class SendCoin extends Component {
       coinObj: coinObj,
       activeUser: activeUser,
       address: address,
-      amount: coinsToSats(Number(amount)),
+      amount: Number(amount),
       btcFee: this.state.btcFees.average,
       balance: (this.props.balances.public.confirmed + (this.props.balances.private ? this.props.balances.private.confirmed : 0))
     };
@@ -207,11 +211,7 @@ class SendCoin extends Component {
       () => {
         const coin = this.state.coin;
 
-        const spendableBalance =
-          coin.id === "BTC"
-            ? truncateDecimal(this.props.balances.public.confirmed, 4)
-            : this.props.balances.public.confirmed -
-              satsToCoins(this.props.activeCoin.fee ? this.props.activeCoin.fee : 10000);
+        const spendableBalance = this.props.balances.public.confirmed
 
         const toAddress = removeSpaces(this.state.toAddress);
         const fromAddress = this.state.fromAddress;
@@ -227,7 +227,7 @@ class SendCoin extends Component {
         if (!toAddress || toAddress.length < 1) {
           this.handleFormError("Required field", "toAddress");
           _errors = true;
-        } else if (toAddress.length < 34 || toAddress.length > 35) {
+        } else if (toAddress.length < 34 || toAddress.length > 42) {
           this.handleFormError("Invalid address", "toAddress");
           _errors = true;
         }
@@ -243,24 +243,24 @@ class SendCoin extends Component {
             "Insufficient funds, " +
               (spendableBalance < 0
                 ? "available amount is less than fee"
-                : truncateDecimal(spendableBalance, 4) + " available"),
+                : spendableBalance + " available"),
             "amount"
           );
           _errors = true;
         }
 
         if (!coin) {
-          Alert.alert("No active coin", "no current active coin");
+          Alert.alert("No active coin", "No current active coin");
           _errors = true;
         }
 
         if (!account) {
-          Alert.alert("No active account", "no current active account");
+          Alert.alert("No active account", "No current active account");
           _errors = true;
         }
 
         if (!fromAddress) {
-          Alert.alert("No from address", "no current active from address");
+          Alert.alert("No from address", "No current active from address");
           _errors = true;
         }
 
@@ -286,10 +286,14 @@ class SendCoin extends Component {
                 balances.public
                   ? () =>
                       this.fillAmount(
-                        balances.public.confirmed -
-                          satsToCoins(
-                            activeCoin.fee ? activeCoin.fee : 10000
-                          )
+                        activeCoin.id !== "BTC" ||
+                          (activeCoin.dominant_channel != null &&
+                            activeCoin.dominant_channel != ELECTRUM)
+                          ? balances.public.confirmed
+                          : balances.public.confirmed -
+                              satsToCoins(
+                                activeCoin.fee ? activeCoin.fee : 10000
+                              )
                       )
                   : () => {
                       return 0;

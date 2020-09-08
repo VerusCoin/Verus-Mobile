@@ -7,6 +7,7 @@ import { decryptkey } from './seedCrypt';
 import {
   wifToWif,
   seedToWif,
+  seedToPriv
 } from 'agama-wallet-lib/src/keys';
 import { ETH, ERC20 } from './constants/intervalConstants';
 import ethers from 'ethers';
@@ -29,7 +30,7 @@ export const makeKeyPair = (seed, coinID, channel) => {
 
   keyObj = {
     pubKey: _seedToWif.pubHex,
-    privKey: _seedToWif.priv,
+    privKey: channel === ETH || channel === ERC20 ? seedToPriv(_seedToWif.priv, 'eth') : _seedToWif.priv,
     addresses: [
       channel === ETH || channel === ERC20
         ? ethers.utils.computeAddress(Buffer.from(_seedToWif.pubHex, "hex"))

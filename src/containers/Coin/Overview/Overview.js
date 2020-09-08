@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { ListItem } from "react-native-elements";
 import { connect } from 'react-redux';
-import { truncateDecimal } from '../../../utils/math';
+import { truncateDecimal, MathableNumber } from '../../../utils/math';
 import { expireData, setActiveOverviewFilter } from '../../../actions/actionCreators';
 import Styles from '../../../styles/index'
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
@@ -25,7 +25,8 @@ import {
   API_GET_INFO,
   API_GET_TRANSACTIONS,
   ELECTRUM,
-  DLIGHT
+  DLIGHT,
+  ETH
 } from "../../../utils/constants/intervalConstants";
 import {
   PUBLIC,
@@ -35,6 +36,8 @@ import {
 import { selectTransactions } from '../../../selectors/transactions';
 import { Dropdown } from 'react-native-material-dropdown'
 import { ENABLE_DLIGHT } from '../../../../env/main.json'
+import { ETHERS } from "../../../utils/constants/web3Constants";
+import { ethers } from "ethers";
 
 const TX_LOGOS = {
   self: {
@@ -144,17 +147,24 @@ class Overview extends Component {
     let amount = 0;
     let avatarImg;
     let subtitle = "";
+    const decimals = this.props.activeCoin.decimals != null ? this.props.activeCoin.decimals : ETHERS
+    const gasFees = item.feeCurr === ETH.toUpperCase()
 
     if (item.txArray != null) {
       const { txArray, visibility } = item
       let toAddresses = [];
       const confirmations = txArray[0].confirmations
-
-      amount = Number(txArray[0].amount) - Number(txArray[1].amount);
+      
+      amount = new MathableNumber(ethers.utils.formatUnits(
+        ethers.utils
+          .parseUnits(txArray[0].amount.toString(), decimals)
+          .sub(ethers.utils.parseUnits(txArray[1].amount.toString(), decimals))
+      ),
+      decimals)
 
       if (txArray[1].interest) {
         let interest = txArray[1].interest * -1;
-        amount = Number(amount) + Number(interest);
+        amount = amount.num.add(new MathableNumber(interest.toString(), decimals).num)
       }
 
       for (let i = 0; i < txArray[0].to.length; i++) {
@@ -175,6 +185,7 @@ class Overview extends Component {
         address: toAddresses.join(' & '),
         amount,
         confirmations,
+        fee: txArray[0].fee,
         from: txArray[0].from,
         timestamp: txArray[0].timestamp,
         to: toAddresses,
@@ -183,7 +194,7 @@ class Overview extends Component {
         visibility
       }
     } else {
-      amount = item.amount ? Number(item.amount) : "??";
+      amount = item.amount != null ? new MathableNumber(item.amount.toString(), decimals) : "??";
 
       if (item.type === "received") {
         avatarImg = TX_LOGOS.in;
@@ -192,13 +203,13 @@ class Overview extends Component {
         avatarImg = TX_LOGOS.out;
         subtitle = item.address == null ? (item.visibility === PRIVATE ? "hidden" : "??") : item.address;
       } else if (item.type === "self") {
-        if (item.amount !== "??" && amount < 0) {
+        if (item.amount !== "??" && amount.num.lt(0)) {
           subtitle = "me";
           avatarImg = TX_LOGOS.interest;
-          amount = amount * -1;
+          amount.num = amount.num.mul(new MathableNumber("-1").num);
         } else {
           avatarImg = TX_LOGOS.self;
-          subtitle = "fees";
+          subtitle = gasFees ? "gas" : "fees";
         }
       } else {
         avatarImg = TX_LOGOS.unknown;
@@ -210,6 +221,25 @@ class Overview extends Component {
 
     subtitle = "to: " + subtitle;
 
+    let displayAmount = null
+
+    // Handle possible int overflows
+    try { 
+      if (gasFees) {
+        let newAmount = new MathableNumber(0, amount.maxDecimals)
+        
+        newAmount.num = amount.num.add(
+          new MathableNumber(
+            item.fee.toString(),
+            amount.maxDecimals
+          ).num
+        )
+
+        displayAmount = newAmount.display()
+      } else displayAmount = Number(amount.display()) 
+    }
+    catch(e) { console.error(e) }
+
     return (
       <TouchableOpacity
         onPress={() =>
@@ -218,9 +248,13 @@ class Overview extends Component {
               parsedAmount: amount,
               txData: item,
               activeCoinID: this.props.activeCoin.id,
-              txLogo: avatarImg
+              txLogo: avatarImg,
+              decimals:
+                this.props.activeCoin.decimals != null
+                  ? this.props.activeCoin.decimals
+                  : 8,
             },
-            txDetailsModalOpen: true
+            txDetailsModalOpen: true,
           })
         }
       >
@@ -228,16 +262,24 @@ class Overview extends Component {
           roundAvatar
           title={
             <Text style={Styles.listItemLeftTitleDefault}>
-              {amount < 0.0001
-                ? "< " + truncateDecimal(amount, 4)
-                : truncateDecimal(amount, 4)}
+              {`${
+                displayAmount != null
+                  ? displayAmount < 0.0001 && displayAmount !== 0
+                    ? displayAmount.toExponential()
+                    : displayAmount
+                  : "??"
+              } ${
+                item.feeCurr != null && item.type === 'self'
+                  ? item.feeCurr
+                  : this.props.activeCoin.id
+              }`}
             </Text>
           }
           subtitle={subtitle}
           subtitleProps={{ numberOfLines: 1 }}
           leftAvatar={{
             source: avatarImg,
-            avatarStyle: Styles.secondaryBackground
+            avatarStyle: Styles.secondaryBackground,
           }}
           chevron
           containerStyle={Styles.bottomlessListItemContainer}
@@ -263,6 +305,9 @@ class Overview extends Component {
     ];
 
     return txList.sort((a, b) => {
+      a = a.txArray ? a.txArray[0] : a
+      b = b.txArray ? b.txArray[0] : b
+
       if (a.timestamp == null) return 1
       else if (b.timestamp == null) return -1
       else if (b.timestamp == a.timestamp) return 0
@@ -342,22 +387,25 @@ class Overview extends Component {
 
     return (
       <View style={Styles.defaultRoot}>
-        <TxDetailsModal
-          {...this.state.txDetailProps}
-          cancel={() =>
-            this.setState({
-              txDetailsModalOpen: false,
-              txDetailProps: {
-                parsedAmount: 0,
-                txData: {},
-                activeCoinID: null,
-                txLogo: TX_LOGOS.unknown[PUBLIC],
-              },
-            })
-          }
-          visible={this.state.txDetailsModalOpen}
-          animationType="slide"
-        />
+        {this.state.txDetailsModalOpen && (
+          <TxDetailsModal
+            {...this.state.txDetailProps}
+            cancel={() =>
+              this.setState({
+                txDetailsModalOpen: false,
+                txDetailProps: {
+                  parsedAmount: 0,
+                  txData: {},
+                  activeCoinID: null,
+                  txLogo: TX_LOGOS.unknown[PUBLIC],
+                  decimals: this.props.activeCoin.decimals != null ? this.props.activeCoin.decimals : ETHERS
+                },
+              })
+            }
+            visible={this.state.txDetailsModalOpen}
+            animationType="slide"
+          />
+        )}
         <View style={Styles.centralRow}>{this.renderBalanceLabel()}</View>
         <View
           style={{
@@ -391,9 +439,7 @@ class Overview extends Component {
                     ? "Total"
                     : activeOverviewFilter
                 } Overview${
-                  !ENABLE_DLIGHT || enabledChannels.length < 3
-                    ? ""
-                    : " ▾"
+                  !ENABLE_DLIGHT || enabledChannels.length < 3 ? "" : " ▾"
                 }`}</Text>
               )}
             />

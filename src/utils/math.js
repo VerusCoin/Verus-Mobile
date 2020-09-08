@@ -1,3 +1,6 @@
+import { ethers } from "ethers"
+import { ETHERS } from "./constants/web3Constants"
+
 //Math done to eliminate JS rounding errors when moving from statoshis to coin denominations
 export const coinsToSats = (coins) => {
   return (Math.round(coins*10000000000))/100
@@ -70,3 +73,14 @@ export const maxSpendBalance = (utxoList, fee) => {
 export const isNumber = (value) => {
   return !isNaN(parseFloat(value)) && isFinite(value);
 }
+
+export class MathableNumber {
+  constructor(num, maxDecimals = ETHERS, bigNum = null) {
+    this.num = bigNum == null ? ethers.utils.parseUnits(num.toString(), maxDecimals) : bigNum
+    this.maxDecimals = maxDecimals
+  }
+
+  display() {
+    return ethers.utils.formatUnits(this.num, this.maxDecimals)
+  }
+} 

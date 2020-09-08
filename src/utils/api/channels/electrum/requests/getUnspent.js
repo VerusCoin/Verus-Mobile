@@ -6,6 +6,7 @@ import { arraysEqual } from '../../../../objectManip'
 import { resolveSequentially } from '../../../../promises'
 import { networks } from 'bitgo-utxo-lib'
 import { coinsToSats, satsToCoins, kmdCalcInterest, truncateDecimal } from '../../../../math'
+import { ELECTRUM } from '../../../../constants/intervalConstants'
 
 export const getUnspent = (coinObj, activeUser) => {
   const callType = 'listunspent'
@@ -98,7 +99,7 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
           formattedUtxos.push({
             txid: _utxoItem['tx_hash'],
             vout: _utxoItem['tx_pos'],
-            address: activeUser.keys[coinObj.id].pubKey,
+            address: activeUser.keys[coinObj.id][ELECTRUM].addresses[0],
             amountSats: _utxoItem.value,
             blockHeight: _utxoItem.height,
             interestSats: 0,
@@ -183,7 +184,7 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
           } 
         }
         else if (!getMerkleRes[i]) {
-          throw new Error("getUnspent.js: Fatal mismatch error, no utxo list found for verified merkle root or length of verified merkle root array does not match length of uspent transaction array. If you just sent a transaction, try waiting a few minutes and sending again.")
+          throw new Error("Fatal mismatch error, no UTXO list found for verified merkle root. If you just sent a transaction, try waiting a few minutes and sending again.")
         } else {
           throw new Error("Server error, unable to crosscheck merkle root across multiple electrum servers.")
         }

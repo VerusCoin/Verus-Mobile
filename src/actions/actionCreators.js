@@ -4,6 +4,7 @@ export * from './actions/WalletSettings'
 export * from './actions/cache/Electrum'
 export * from './actions/cache/Headers'
 export * from './actions/cache/Cache'
+export * from './actions/cache/EthTransactionReceipts'
 export * from './actions/updateManager'
 
 export * from './actionCreators/claims';
@@ -61,6 +62,8 @@ import {
   CLOSE_DLIGHT_SOCKET,
   REQUEST_SEED_DATA,
   APP_SETUP,
+  SET_ETH_TX_RECEIPTS,
+  ADD_ETH_TX_RECEIPT,
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -295,6 +298,24 @@ export const setBlockHeaders = (headers) => {
   return {
     type: SET_HEADERS,
     headers: headers
+  }
+}
+
+//Reducer Name: headers
+export const addTxReceipt = (receipt, txid) => {
+  let key = txid
+  return {
+    type: ADD_ETH_TX_RECEIPT,
+    key: key,
+    receipt
+  }
+}
+
+//Reducer Name: ethtxreceipts
+export const setEthTxReceipts = (receipts) => {
+  return {
+    type: SET_ETH_TX_RECEIPTS,
+    receipts
   }
 }
 

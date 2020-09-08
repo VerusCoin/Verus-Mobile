@@ -6,11 +6,12 @@ import {
   storeCoins,
   getActiveCoinList
 } from '../../../utils/asyncStore/asyncStore';
-import { DLIGHT, ETH, ERC20, ELECTRUM } from '../../../utils/constants/intervalConstants';
+import { DLIGHT, ETH, ERC20, ELECTRUM, GENERAL } from '../../../utils/constants/intervalConstants';
 import { initDlightWallet, closeDlightWallet } from '../channels/dlight/dispatchers/LightWalletReduxManager';
 import { initEthWallet, closeEthWallet } from '../channels/eth/dispatchers/EthWalletReduxManager';
 import { initErc20Wallet, closeErc20Wallet } from '../channels/erc20/dispatchers/Erc20WalletReduxManager';
 import { initElectrumWallet, closeElectrumWallet } from '../channels/electrum/dispatchers/ElectrumWalletReduxManager';
+import { initGeneralWallet, closeGeneralWallet } from '../channels/general/dispatchers/GeneralWalletReduxManager';
 import { DISABLED_CHANNELS } from '../../../../env/main.json'
 
 export const COIN_MANAGER_MAP = {
@@ -18,13 +19,15 @@ export const COIN_MANAGER_MAP = {
     [ETH]: initEthWallet,
     [ERC20]: initErc20Wallet,
     [ELECTRUM]: initElectrumWallet,
-    [DLIGHT]: initDlightWallet
+    [DLIGHT]: initDlightWallet,
+    [GENERAL]: initGeneralWallet
   },
   closers: {
     [ETH]: closeEthWallet,
     [ERC20]: closeErc20Wallet,
     [ELECTRUM]: closeElectrumWallet,
-    [DLIGHT]: closeDlightWallet
+    [DLIGHT]: closeDlightWallet,
+    [GENERAL]: closeGeneralWallet
   }
 }
 
@@ -88,7 +91,7 @@ export const removeExistingCoin = (coinID, activeCoins, userName, deleteWallet =
 
     Object.keys(COIN_MANAGER_MAP.closers).map(channel => {
       if (!DISABLED_CHANNELS.includes(channel)) {
-        closers.push(COIN_MANAGER_MAP.initializers[channel](activeCoins[coinIndex], deleteWallet))
+        closers.push(COIN_MANAGER_MAP.closers[channel](activeCoins[coinIndex], deleteWallet))
       }
     })
 

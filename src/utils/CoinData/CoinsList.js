@@ -50,7 +50,8 @@ export const coinsList = {
     compatible_channels: [ETH, GENERAL],
     dominant_channel: ETH,
     tags: [],
-    proto: 'eth'
+    proto: 'eth',
+    decimals: ETHERS
   },
   bat: {
     id: "BAT",
@@ -59,7 +60,18 @@ export const coinsList = {
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     contract_address: '0x0d8775f648430679a709e98d2b0cb6250d2887ef',
-    decimals: 18,
+    decimals: ETHERS,
+    tags: [],
+    proto: 'erc20'
+  },
+  tst: {
+    id: "TST",
+    name: "ERC20 Test Token",
+    description: "A test token for testing the ERC20 protocol.",
+    compatible_channels: [ERC20, GENERAL],
+    dominant_channel: ERC20,
+    contract_address: '0x722dd3F80BAC40c951b51BdD28Dd19d435762180',
+    decimals: ETHERS,
     tags: [],
     proto: 'erc20'
   },
@@ -70,7 +82,7 @@ export const coinsList = {
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     contract_address: '0x6b175474e89094c44da98b954eedeac495271d0f',
-    decimals: 18,
+    decimals: ETHERS,
     tags: [],
     proto: 'erc20'
   },

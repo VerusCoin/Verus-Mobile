@@ -69,7 +69,8 @@ export const explorers = {
   KMD: 'https://kmdexplorer.io',
   OOT: 'https://explorer.utrum.io',
   VRSC: 'https://explorer.veruscoin.io',
-  ETH: 'https://etherscan.io'
+  ETH: 'https://etherscan.io',
+  TST: 'https://ropsten.etherscan.io'
 }
 
 export const defaultAssetsPath = {
@@ -92,6 +93,7 @@ export const defaultAssetsPath = {
     
     // web3 protocol
     bat: require('../../images/cryptologo/default/web3/bat.png'),
+    tst: require('../../images/cryptologo/default/web3/eth.png'),
     dai: require('../../images/cryptologo/default/web3/dai.png'),
     eth: require('../../images/cryptologo/default/web3/eth.png'),
   },
