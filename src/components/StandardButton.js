@@ -24,7 +24,7 @@ export default class StandardButton extends Component {
 
   render() {
     return (
-      <Button 
+      <Button
         onPress={this._onPress}
         disabled={this.state.onPressingInProgress || this.props.disabled}
         titleStyle={Styles.fullWidthButtonTitle}
