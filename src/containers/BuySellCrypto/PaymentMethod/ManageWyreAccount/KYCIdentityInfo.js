@@ -92,11 +92,19 @@ onClick = () => {  this.props.navigation.navigate("KYCIdentityInput") }
         <View style={Styles.padding}>
         <View style={Styles.alignItemsRight}>
         <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-            <Nr1 height={'110%'} width={'15%'} />
+          <Badge
+            status="primary"
+            badgeStyle={Styles.smallBlackDot}
+            containerStyle={Styles.smallBlackDotContainer}
+          />
             <Text style={{...Styles.normalKYCText, width: '90%'}}>legalname, home address and date of birth</Text>
          </View>
          <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-             <Nr2 height={'110%'} width={'15%'} />
+           <Badge
+             status="primary"
+             badgeStyle={Styles.smallBlackDot}
+             containerStyle={Styles.smallBlackDotContainer}
+           />
              <Text style={{...Styles.normalKYCText, width: '90%'}}>tax identitification number(TIN) for U.S. residents only</Text>
           </View>
         </View>

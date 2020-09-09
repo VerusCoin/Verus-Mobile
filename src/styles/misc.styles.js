@@ -61,20 +61,30 @@ export default misc = {
       fontWeight: "normal",
   },
   progessBadgeDone: {
-    scaleX: 2,
-    scaleY: 2,
+    paddingRight: 60,
     backgroundColor:  Colors.buttonKYC
   },
   progessBadgeTodo: {
-    scaleX: 2,
-    scaleY: 2,
+    paddingRight: 60,
     backgroundColor:  Colors.kycPoint
   },
   progressBarContainer:{
     paddingBottom: 16,
     paddingTop: 12,
     flexDirection: 'row',
-    alignSelf: 'center',
+    alignSelf: 'flex-start',
+    width: "30%",
+  },
+  smallBlackDotContainer:{
+    paddingTop: 5,
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    width: "5%",
+  },
+  smallBlackDot: {
+    scaleX: 0.5,
+    scaleY: 0.5,
+    backgroundColor:  Colors.kycBlack,
   },
   inputMaskDateOfBirth: {
       color: Colors.quaternaryColor,

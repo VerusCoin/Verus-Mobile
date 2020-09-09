@@ -92,11 +92,19 @@ class KYCIdentityFotoInfo extends Component {
           <View style={Styles.padding}>
           <View style={Styles.alignItemsRight}>
           <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-              <Nr1 height={'110%'} width={'15%'} />
+            <Badge
+              status="primary"
+              badgeStyle={Styles.smallBlackDot}
+              containerStyle={Styles.smallBlackDotContainer}
+            />
               <Text style={{...Styles.normalKYCText, width: '90%'}}>Chose from: passport, driverslisence, or identity card</Text>
            </View>
            <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-              <Nr2 height={'110%'} width={'15%'} />
+             <Badge
+               status="primary"
+               badgeStyle={Styles.smallBlackDot}
+               containerStyle={Styles.smallBlackDotContainer}
+             />
                <Text style={{...Styles.normalKYCText, width: '90%'}}>Identity number form the chosen document</Text>
             </View>
           </View>

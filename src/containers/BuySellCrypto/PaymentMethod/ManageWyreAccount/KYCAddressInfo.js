@@ -94,15 +94,27 @@ class KYCAddressInfo extends Component {
           <View style={Styles.padding}>
           <View style={Styles.alignItemsRight}>
           <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-            <Nr1 height={'120%'} width={'15%'} />
+            <Badge
+              status="primary"
+              badgeStyle={Styles.smallBlackDot}
+              containerStyle={Styles.smallBlackDotContainer}
+            />
               <Text style={{...Styles.normalKYCText, width: '90%'}}>Bank statement</Text>
            </View>
            <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-              <Nr2 height={'120%'} width={'15%'} />
+             <Badge
+               status="primary"
+               badgeStyle={Styles.smallBlackDot}
+               containerStyle={Styles.smallBlackDotContainer}
+             />
                <Text style={{...Styles.normalKYCText, width: '90%'}}>Utility bill</Text>
             </View>
             <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-              <Nr3 height={'120%'} width={'15%'} />
+              <Badge
+                status="primary"
+                badgeStyle={Styles.smallBlackDot}
+                containerStyle={Styles.smallBlackDotContainer}
+              />
                 <Text style={{...Styles.normalKYCText, width: '90%'}}>Credit card statement</Text>
              </View>
           </View>
