@@ -87,25 +87,25 @@ export default text = {
   },
   boldKYCText: {
     fontSize: 16,
-    fontFamily: 'Avenir-Book',
+    fontFamily: 'SourceSansPro-Bold',
     fontWeight: 'bold',
     color: Colors.kycBlack,
   },
   normalKYCText:{
     fontSize: 16,
-    fontFamily: 'Avenir-Book',
+    fontFamily: 'SourceSansPro-Regular',
     fontWeight: 'normal',
     color: Colors.kycBlack,
   },
   smallKYCText:{
     fontSize: 14,
-    fontFamily: 'Avenir-Book',
+    fontFamily: 'SourceSansPro-Regular',
     fontWeight: 'normal',
     color: Colors.kycLight,
   },
   headerKYCText: {
     fontSize: 20,
-    fontFamily: 'Avenir-Book',
+    fontFamily: 'SourceSansPro-Bold',
     fontWeight: 'bold',
     color: Colors.kycBlack,
   },
@@ -116,7 +116,7 @@ export default text = {
     paddingVertical: 6,
   },
   whiteText: {
-    fontFamily: 'Avenir-Book',
+    fontFamily: 'SourceSansPro-Regular',
     color: Colors.secondaryColor,
   },
   linkText: {

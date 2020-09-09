@@ -9,6 +9,7 @@ export default buttons = {
   fullWidthButtonKYC: {
     width: '100%',
     alignSelf: 'center',
+    fontFamily: 'SourceSansPro-Regular',
     backgroundColor: Colors.buttonKYC,
   },
   defaultButton: {

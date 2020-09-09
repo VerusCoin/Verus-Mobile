@@ -47,7 +47,7 @@ export default misc = {
       color: Colors.kycBlack,
       marginVertical: 0,
       paddingVertical: 0,
-      fontFamily: 'Avenir-Book',
+      fontFamily: 'SourceSansPro-Regular',
       fontWeight: "bold",
   },
   formInput: {
@@ -57,7 +57,7 @@ export default misc = {
       color: Colors.kycBlack,
       marginVertical: 0,
       paddingVertical: 0,
-      fontFamily: 'Avenir-Book',
+      fontFamily: 'SourceSansPro-Regular',
       fontWeight: "normal",
   },
   progessBadgeDone: {
