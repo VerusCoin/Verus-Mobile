@@ -140,7 +140,7 @@
     "rn-nodeify": "github:tradle/rn-nodeify"
   },
   "resolutions": {
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "typeforce": "git+https://github.com/michaeltout/typeforce",
     "braces": "^3.0.2",
     "tar": "^4.4.8",
@@ -148,7 +148,12 @@
     "level-filesystem": "1.2.0",
     "levelup": "4.1.0",
     "mem": "5.1.1",
-    "handlebars": "^4.5.3"
+    "handlebars": "^4.5.3",
+    "elliptic": "^6.5.3",
+    "node-fetch": "^2.6.1",
+    "yargs-parser": "^13.1.2",
+    "minimist": "^0.2.1",
+    "debug": "^2.6.9"
   },
   "jest": {
     "preset": "react-native",
