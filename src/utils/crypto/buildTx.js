@@ -16,7 +16,6 @@ export const buildSignedTx = (sendTo, changeAddress, wif, network, utxo, changeV
   console.log(utxo);
   console.log('UTXOs added to transaction')
 
-
   tx.addOutput(sendTo, Number(spendValue));
 
   if (changeValue > 0) {

@@ -1,25 +1,24 @@
-export * from './electrumCalls/getBlockHeight';
-export * from './electrumCalls/getBalances';
-export * from './electrumCalls/getTransactions';
-export * from './electrumCalls/getTransaction';
-export * from './electrumCalls/getBlockInfo';
-export * from './electrumCalls/getUnspent';
-export * from './electrumCalls/getMerkle';
-export * from './electrumCalls/pushTx';
-export * from './electrumCalls/getServerVersion';
+export * from './requests/getBlockHeight';
+export * from './requests/getBalances';
+export * from './requests/getTransactions';
+export * from './requests/getTransaction';
+export * from './requests/getBlockInfo';
+export * from './requests/getUnspent';
+export * from './requests/getMerkle';
+export * from './requests/pushTx';
+export * from './requests/getServerVersion';
 
 import { proxyServers, httpsEnabled } from './proxyServers';
 import { getGoodServer, testProxy, testElectrum } from './serverTester';
-import { getCoinPaprikaRate } from '../general/ratesAPIs/coinPaprika';
-import { getAtomicExplorerBTCFees } from '../general/btcFeesAPIs/atomicExplorer';
-import { truncateDecimal } from '../../../math';
 import { timeout } from '../../../promises';
-import { getServerVersion } from './electrumCalls/getServerVersion';
+import { getServerVersion } from './requests/getServerVersion';
 import { updateParamObj } from '../../../electrumUpdates';
 import { networks } from 'bitgo-utxo-lib';
 import { isJson } from '../../../objectManip'
 import ApiException from '../../errors/apiError';
 import { ELECTRUM } from '../../../constants/intervalConstants'
+
+import { REQUEST_TIMEOUT_MS } from '../../../../../env/main.json'
 
 // This purpose of this method is to take in a list of electrum servers,
 // and use a valid one to call a specified command given a set of parameters
@@ -115,7 +114,7 @@ export const getElectrum = (serverList, callType, params, toSkip, coinID) => {
 //Function to update only if values have changed
 export const updateValues = (oldResponse, serverList, callType, params, coinID, toSkip) => {
   return new Promise((resolve, reject) => {
-    timeout(global.REQUEST_TIMEOUT_MS, getElectrum(serverList, callType, params, toSkip, coinID))
+    timeout(REQUEST_TIMEOUT_MS, getElectrum(serverList, callType, params, toSkip, coinID))
     .then((response) => {
       if(response === oldResponse) {
         resolve({
@@ -150,7 +149,7 @@ export const updateValues = (oldResponse, serverList, callType, params, coinID, 
 //Function to update only if values have changed
 export const electrumRequest = (serverList, callType, params, coinID, toSkip) => {
   return new Promise((resolve, reject) => {
-    timeout(global.REQUEST_TIMEOUT_MS, getElectrum(serverList, callType, params, toSkip, coinID))
+    timeout(REQUEST_TIMEOUT_MS, getElectrum(serverList, callType, params, toSkip, coinID))
     .then((response) => {
       resolve(!response ? false : {coin: coinID, ...response})
     })

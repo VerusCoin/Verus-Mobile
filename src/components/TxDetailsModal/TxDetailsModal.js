@@ -16,11 +16,13 @@ import {
   Alert,
   Modal
 } from "react-native";
-import { unixToDate } from '../../utils/math';
+import { unixToDate, MathableNumber } from '../../utils/math';
 import { explorers } from '../../utils/CoinData/CoinData';
 import { truncateDecimal } from '../../utils/math';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
+import { ETHERS } from "../../utils/constants/web3Constants";
+import { ethers } from "ethers";
 
 class TxDetailsModal extends Component {
   constructor(props) {
@@ -81,9 +83,19 @@ class TxDetailsModal extends Component {
       txLogo,
       cancel,
       parsedAmount,
-      activeCoinID
+      activeCoinID,
+      decimals
     } = this.props;
 
+    let amountShown = parsedAmount
+
+    if (txData.fee != null && (txData.feeCurr == null || txData.feeCurr === activeCoinID)) {
+      amountShown = new MathableNumber(ethers.utils.formatUnits(
+        parsedAmount.num
+          .sub(ethers.utils.parseUnits(txData.fee.toString(), parsedAmount.maxDecimals))
+      ))
+    }
+    
     return (
       <Modal
         animationType={animationType}
@@ -98,30 +110,56 @@ class TxDetailsModal extends Component {
         >
           <View style={Styles.tallHeaderContainer}>
             <Image style={{ width: 50, height: 50 }} source={txLogo} />
-            <Text style={Styles.centralHeader}>{"Transaction Details"}</Text>
+            <Text style={Styles.centralHeader}>
+              {"Transaction Details"}
+            </Text>
           </View>
           <View style={Styles.standardWidthFlexGrowCenterBlock}>
             <View style={Styles.infoTable}>
               <View style={Styles.infoTableRow}>
                 <Text style={Styles.infoTableHeaderCell}>Type:</Text>
-                <Text style={Styles.infoTableCell}>{txData.type || "??"}</Text>
-              </View>
-              <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>Category:</Text>
-                <Text style={Styles.infoTableCell}>{txData.visibility || "??"}</Text>
-              </View>
-              <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>Amount:</Text>
-                <Text style={Styles.infoTableCell}>
-                  {parsedAmount != null
-                    ? truncateDecimal(parsedAmount, 8) + " " + activeCoinID
-                    : "??"}
+                <Text style={{...Styles.infoTableCell, ...Styles.capitalizeFirstLetter}}>
+                  {txData.type || "??"}
                 </Text>
               </View>
               <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>Confirmations:</Text>
+                <Text style={Styles.infoTableHeaderCell}>Category:</Text>
+                <Text style={{...Styles.infoTableCell, ...Styles.capitalizeFirstLetter}}>
+                  {txData.visibility || "??"}
+                </Text>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>{`Amount ${
+                  txData.type === "received" ? "Received" : "Sent"
+                }:`}</Text>
                 <Text style={Styles.infoTableCell}>
-                  {txData.confirmations != null ? txData.confirmations : "??"}
+                  {amountShown != null
+                    ? amountShown.display() + " " + activeCoinID
+                    : "??"}
+                </Text>
+              </View>
+              {txData.fee != null && (
+                <View style={Styles.infoTableRow}>
+                  <Text style={Styles.infoTableHeaderCell}>Fee:</Text>
+                  <Text style={Styles.infoTableCell}>
+                    {(txData.fee < 0.0001
+                      ? txData.fee.toExponential()
+                      : Number(txData.fee)) +
+                      " " +
+                      (txData.feeCurr != null
+                        ? txData.feeCurr
+                        : activeCoinID)}
+                  </Text>
+                </View>
+              )}
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>
+                  Confirmations:
+                </Text>
+                <Text style={Styles.infoTableCell}>
+                  {txData.confirmations != null
+                    ? txData.confirmations
+                    : "??"}
                 </Text>
               </View>
               <View style={Styles.infoTableRow}>
@@ -129,11 +167,17 @@ class TxDetailsModal extends Component {
                 <Text
                   style={{
                     ...Styles.blockTextAlignRight,
-                    ...(txData.address ? Styles.linkText : {})
+                    ...(txData.address ? Styles.linkText : {}),
                   }}
-                  onPress={txData.address ? this.copyAddressToClipboard : () => {}}
+                  onPress={
+                    txData.address ? this.copyAddressToClipboard : () => {}
+                  }
                 >
-                  {txData.address == null ? (txData.visibility === "private" ? "hidden" : "??") : txData.address}
+                  {txData.address == null
+                    ? txData.visibility === "private"
+                      ? "hidden"
+                      : "??"
+                    : txData.address}
                 </Text>
               </View>
               <View style={Styles.infoTableRow}>
@@ -149,9 +193,13 @@ class TxDetailsModal extends Component {
                 <Text
                   style={{
                     ...Styles.blockTextAlignRight,
-                    ...(txData.txid != null ? Styles.linkText : {})
+                    ...(txData.txid != null ? Styles.linkText : {}),
                   }}
-                  onPress={txData.txid != null ? this.copyTxIDToClipboard : () => {}}
+                  onPress={
+                    txData.txid != null
+                      ? this.copyTxIDToClipboard
+                      : () => {}
+                  }
                 >
                   {txData.txid != null
                     ? activeCoinID === "BTC"

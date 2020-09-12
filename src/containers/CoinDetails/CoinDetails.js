@@ -66,9 +66,10 @@ class CoinDetails extends Component {
       this.state.fullCoinData,
       this.props.activeCoinList,
       this.props.activeAccount.id,
-      this.props.coinSettings[this.state.fullCoinData.id] != null
-        ? this.props.coinSettings[this.state.fullCoinData.id].channels
-        : this.state.fullCoinData.compatible_channels
+      // this.props.coinSettings[this.state.fullCoinData.id] != null
+      //   ? this.props.coinSettings[this.state.fullCoinData.id].channels
+      //   : this.state.fullCoinData.compatible_channels
+      this.state.fullCoinData.compatible_channels
     )
       .then((response) => {
         if (response) {
@@ -83,7 +84,7 @@ class CoinDetails extends Component {
           this.props.dispatch(
             addKeypairs(
               this.props.activeAccount.seeds,
-              chainId,
+              this.state.fullCoinData,
               this.props.activeAccount.keys
             )
           );

@@ -101,7 +101,7 @@ class RecoverSeed extends Component {
             this.setState({password: null}, () => {
               let seeds = res.pop()
 
-              //DELETE/REFACTOR, change to show both seeds
+              //DELETE/REFACTOR, change to show all seeds
               this.showSeed(seeds)
             })
           } 

@@ -8,20 +8,25 @@ import {
 
 const selectTransactionsReducerState = (state) => state.ledger.transactions;
 
-const selectActiveCoinId = (state) => state.coins.activeCoin.id;
+const selectActiveCoin = (state) => state.coins.activeCoin;
 
 const selectErrors = (state) => state.errors;
 
 export const selectTransactions = createSelector(
-  [selectTransactionsReducerState, selectActiveCoinId, selectErrors],
-  (transactions, activeCoinId, errors) => ({
-    public: transactions[ELECTRUM][activeCoinId],
-    private: transactions[DLIGHT][activeCoinId],
-    errors: {
-      public: errors[API_GET_TRANSACTIONS][ELECTRUM][activeCoinId],
-      private: errors[API_GET_TRANSACTIONS][DLIGHT][activeCoinId],
-    },
-  }),
+  [selectTransactionsReducerState, selectActiveCoin, selectErrors],
+  (transactions, activeCoin, errors) => {
+    const activeCoinId = activeCoin.id
+    const mainChannel = activeCoin.dominant_channel ? activeCoin.dominant_channel : ELECTRUM
+
+    return {
+      public: transactions[mainChannel][activeCoinId],
+      private: transactions[DLIGHT][activeCoinId],
+      errors: {
+        public: errors[API_GET_TRANSACTIONS][mainChannel][activeCoinId],
+        private: errors[API_GET_TRANSACTIONS][DLIGHT][activeCoinId],
+      },
+    };
+  }
 );
 
 export default selectTransactions;

@@ -7,9 +7,12 @@ import { decryptkey } from './seedCrypt';
 import {
   wifToWif,
   seedToWif,
+  seedToPriv
 } from 'agama-wallet-lib/src/keys';
+import { ETH, ERC20 } from './constants/intervalConstants';
+import ethers from 'ethers';
 
-export const makeKeyPair = (seed, coinID) => {
+export const makeKeyPair = (seed, coinID, channel) => {
   let isWif = false;
   let _seedToWif;
   let keyObj = {};
@@ -25,7 +28,15 @@ export const makeKeyPair = (seed, coinID) => {
     _seedToWif = seedToWif(seed, isKomodoCoin(coinID) ? electrumJSNetworks.kmd : electrumJSNetworks[coinID.toLowerCase()], true);
   }
 
-  keyObj = {pubKey: _seedToWif.pubHex, privKey: _seedToWif.priv, addresses: [_seedToWif.pub]}
+  keyObj = {
+    pubKey: _seedToWif.pubHex,
+    privKey: channel === ETH || channel === ERC20 ? seedToPriv(_seedToWif.priv, 'eth') : _seedToWif.priv,
+    addresses: [
+      channel === ETH || channel === ERC20
+        ? ethers.utils.computeAddress(Buffer.from(_seedToWif.pubHex, "hex"))
+        : _seedToWif.pub,
+    ],
+  };
 
   return keyObj;
 }

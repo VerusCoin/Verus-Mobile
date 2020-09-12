@@ -7,11 +7,11 @@ export * from './state/synchronizer'
 export * from './state/walletFolder'
 
 // JSON-RPC requests
-export * from './dlightRequests/getAddresses'
-export * from './dlightRequests/getPrivateBalance'
-export * from './dlightRequests/getBlockCount'
-export * from './dlightRequests/getInfo'
-export * from './dlightRequests/getTransactions'
+export * from './requests/getAddresses'
+export * from './requests/getPrivateBalance'
+export * from './requests/getBlockCount'
+export * from './requests/getInfo'
+export * from './requests/getTransactions'
 
 /**
  * Makes a request to the light daemon client

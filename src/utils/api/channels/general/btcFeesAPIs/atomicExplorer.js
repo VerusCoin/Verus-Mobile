@@ -1,11 +1,13 @@
 import { timeout } from '../../../../promises'
 import { isJson } from '../../../../objectManip'
 
+import { REQUEST_TIMEOUT_MS } from '../../../../../../env/main.json'
+
 export const getAtomicExplorerBTCFees = () => {
   const address = `https://www.atomicexplorer.com/api/btc/fees`
 
   return new Promise((resolve, reject) => {
-    timeout(global.REQUEST_TIMEOUT_MS, fetch(address, {method: 'GET'}))
+    timeout(REQUEST_TIMEOUT_MS, fetch(address, {method: 'GET'}))
     .then((response) => {
       if (!isJson(response)) {
         throw new Error("Invalid JSON in atomicExplorer.js, received: " + response)

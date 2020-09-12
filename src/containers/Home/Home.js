@@ -26,8 +26,6 @@ import {
   expireData,
 } from '../../actions/actionCreators';
 
-
-
 import { connect } from 'react-redux';
 import { truncateDecimal } from '../../utils/math';
 import { CommonActions } from '@react-navigation/native';

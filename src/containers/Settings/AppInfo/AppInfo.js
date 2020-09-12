@@ -16,6 +16,7 @@ import {
   Linking
 } from "react-native";
 import Styles from '../../../styles/index'
+import { APP_VERSION, VERUS_QR_VERSION } from '../../../../env/main.json'
 
 const DISCORD_URL = "https://discord.gg/VRKMP2S"
 const REDDIT_URL = "https://www.reddit.com/r/VerusCoin/"
@@ -59,7 +60,7 @@ class AppInfo extends Component {
           <View style={Styles.infoTable}>
             <View style={Styles.infoTableRow}>
               <Text style={Styles.infoTableHeaderCell}>App Version:</Text>
-              <Text style={Styles.infoTableCell}>{global.APP_VERSION}</Text>
+              <Text style={Styles.infoTableCell}>{APP_VERSION}</Text>
             </View>
             <View style={Styles.infoTableRow}>
               <Text style={Styles.infoTableHeaderCell}>Platform:</Text>
@@ -71,7 +72,7 @@ class AppInfo extends Component {
             </View>
             <View style={Styles.infoTableRow}>
               <Text style={Styles.infoTableHeaderCell}>VerusQR Version:</Text>
-              <Text style={Styles.infoTableCell}>{global.VERUS_QR_VERSION}</Text>
+              <Text style={Styles.infoTableCell}>{VERUS_QR_VERSION}</Text>
             </View>
             <View style={Styles.infoTableRow}>
               <Text style={Styles.infoTableHeaderCell}>Docs:</Text>

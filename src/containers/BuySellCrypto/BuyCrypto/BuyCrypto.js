@@ -21,7 +21,11 @@ import { connect } from 'react-redux'
 import { Dropdown } from 'react-native-material-dropdown'
 import { isNumber } from '../../../utils/math';
 import { calculatePrice } from '../../../utils/price';
-import { SUPPORTED_CRYPTOCURRENCIES, SUPPORTED_FIAT_CURRENCIES, SUPPORTED_PAYMENT_METHODS } from '../../../utils/constants/constants'
+import {
+  SUPPORTED_CRYPTOCURRENCIES,
+  SUPPORTED_FIAT_CURRENCIES,
+  SUPPORTED_PAYMENT_METHODS,
+} from "../../../utils/constants/constants";
 import {
   //everythingNeedsUpdate,
   addCoin,
@@ -37,6 +41,7 @@ import styles from './BuyCrypto.styles'
 import DelayedAsyncAlert from '../../../utils/delayedAsyncAlert'
 import DelayedAlert from '../../../utils/delayedAlert';
 import Colors from '../../../globals/colors';
+import { ENABLE_FIAT_GATEWAY } from '../../../../env/main.json'
 
 import {
   BankBuildingBlack, Bank,
@@ -211,9 +216,10 @@ class BuyCrypto extends Component {
         coinObj,
         this.props.activeCoinList,
         this.props.activeAccount.id,
-        this.props.coinSettings[coinTicker]
-        ? this.props.coinSettings[coinTicker].channels
-        : coinObj.compatible_channels
+        // this.props.coinSettings[coinTicker]
+        // ? this.props.coinSettings[coinTicker].channels
+        // : coinObj.compatible_channels
+        coinObj.compatible_channels
       ).then(response => {
         if (response) {
           this.props.dispatch(response);
@@ -223,7 +229,7 @@ class BuyCrypto extends Component {
           this.props.dispatch(
             addKeypairs(
               this.props.activeAccount.seeds,
-              coinTicker,
+              coinObj,
               this.props.activeAccount.keys
             )
           );
@@ -408,7 +414,7 @@ class BuyCrypto extends Component {
   };
 
   usBankAcctPayment = (fromVal, fromCurr, toCurr, toVal) => {
-    if (global.ENABLE_FIAT_GATEWAY) {
+    if (ENABLE_FIAT_GATEWAY) {
       this.props.navigation.navigate("SendTransaction", {
         paymentMethod: this.state.paymentMethod,
         fromCurr,
@@ -659,7 +665,7 @@ class BuyCrypto extends Component {
               </FormValidationMessage>
             </View>
 
-            {global.ENABLE_FIAT_GATEWAY ? (
+            {ENABLE_FIAT_GATEWAY ? (
               <View style={styles.touchableInputBank}>
                 <TouchableWithoutFeedback
                   onPress={this.openPaymentMethodOptions}

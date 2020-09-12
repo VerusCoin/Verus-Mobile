@@ -11,7 +11,7 @@
 import React, { Component } from "react"
 import StandardButton from "../../../../components/StandardButton"
 import { connect } from 'react-redux'
-import { sendRawTx } from '../../../../utils/api/channels/electrum/callCreators'
+import { send } from "../../../../utils/api/routers/send";
 import { networks } from 'bitgo-utxo-lib'
 import { 
   View, 
@@ -57,28 +57,28 @@ class SendResult extends Component {
         fee: 0,
         amount: 0,
         txid: "",
+        feeCurr: null,
         remainingBalance: 0,
         loadingProgress: 0.175,
         loadingMessage: "Preparing transaction..."
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     const coinObj = this.props.route.params.data.coinObj
     const activeUser = this.props.route.params.data.activeUser
+    const address = this.props.route.params.data.address
     const toAddress = this.props.route.params.data.toAddress
     const fromAddress = this.props.route.params.data.fromAddress
     const amount = Number(this.props.route.params.data.amount)
     const fee = coinObj.id === 'BTC' ? { feePerByte: Number(this.props.route.params.data.btcFee) } : Number(this.props.route.params.data.coinObj.fee)
     const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
+    //const memo = this.props.route.params.data.memo
     
     this.timeoutTimer = setTimeout(() => {
       if (this.state.loading) {
-        this.setState({
-          err: 'timed out while trying to send transaction', 
-          loading: false,
-          coinObj: coinObj,
-        })
+        this.setState({err: 'timed out while trying to build transaction, this may be a networking error, try sending again', 
+          loading: false})
       }
     }, TIMEOUT_LIMIT)
 
@@ -92,45 +92,67 @@ class SendResult extends Component {
       verifyMerkle = this.props.coinSettings[coinObj.id].verificationLvl > MID_VERIFICATION ? true : false
       verifyTxid = this.props.coinSettings[coinObj.id].verificationLvl > NO_VERIFICATION ? true : false 
     } else {
-      console.warn(`No coin settings data found for ${coinObj.id} in SendResult, assuming highest verification level`)
+      console.warn(`No coin settings data found for ${coinObj.id} in ConfirmSend, assuming highest verification level`)
       verifyMerkle = true
       verifyTxid = true
     }
 
-    sendRawTx(coinObj, activeUser, toAddress, amount, fee, network, verifyMerkle, verifyTxid)
-    .then((res) => {
+    try {
+      const res = await send(
+        coinObj,
+        activeUser,
+        toAddress,
+        amount,
+        coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM,
+        { defaultFee: fee, network, verifyMerkle, verifyTxid }
+      );
+
       if(res.err || !res) {
         this.setState({
           loading: false,
-          err: res.result,
-          coinObj: coinObj,
+          err: res.result ? res.result : res.message
         });
         clearInterval(this.loadingInterval);
       } else {
         clearInterval(this.loadingInterval);
+
         this.setState({
           loading: false,
-          txid: res.result,
-          remainingBalance: this.props.balances.public.confirmed - (amount + fee),
-          toAddress: toAddress,
-          fromAddress: fromAddress,
-          coinObj: coinObj,
-          network: network,
-          fee: coinObj.id === 'BTC' ? fee.feePerByte : fee,
-          amount: amount,
+          txid: res.result.txid,
+          remainingBalance:
+            res.result.value != null && res.result.fee != null
+              ? this.props.balances.public.confirmed -
+                (res.result.feeCurr != null &&
+                res.result.feeCurr !== coinObj.id
+                  ? res.result.value
+                  : res.result.value + res.result.fee)
+              : this.props.balances.public.confirmed - (amount + fee),
+          toAddress: res.result.toAddress || toAddress,
+          fromAddress: res.result.fromAddress || fromAddress,
+          coinObj,
+          network: res.result.params.network || network,
+          fee:
+            res.result.fee ||
+            (coinObj.id === "BTC"
+              ? satsToCoins(fee.feePerByte)
+              : satsToCoins(fee)),
+          feeCurr: res.result.feeCurr,
+          amount: res.result.value != null ? res.result.value : amount,
         });
+
+        Alert.alert("Success!", "Transaction sent. Your balance and transactions may take a few minutes to update.")
         
         this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE))
         this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS))
       }
-    })
-    .catch((e) => {
+    } catch (e) {
       this.setState({
         loading: false,
-        err: e.message ? e.message : "Unknown error while building transaction, double check form data"
+        err: e.message ? e.message : "Unknown error while building transaction, double check form data",
+        coinObj
       });
       console.log(e)
-    })
+    }
   }
 
   componentWillUnmount() {
@@ -158,7 +180,7 @@ class SendResult extends Component {
     if (route === "Send") {
       data = {
         coinObj: coinObj,
-        balance: this.props.balances.public.result.confirmed,
+        balance: this.props.balances.public.confirmed,
         activeAccount: this.props.activeAccount
       }
     } else {
@@ -220,14 +242,14 @@ class SendResult extends Component {
                 ...Styles.successText,
               }}
             >
-              {'Sent'}
+              {"Sent"}
             </Text>
           </View>
         </View>
         <ScrollView
           contentContainerStyle={{
             ...Styles.centerContainer,
-            ...Styles.innerHeaderFooterContainer
+            ...Styles.innerHeaderFooterContainer,
           }}
           style={Styles.secondaryBackground}
         >
@@ -249,35 +271,47 @@ class SendResult extends Component {
                   </Text>
                 </View>
               </View>
-              <View style={Styles.infoTableRow}>
+              {/* <View style={Styles.infoTableRow}>
                 <Text style={Styles.infoTableHeaderCell}>Balance:</Text>
                 <Text style={Styles.infoTableCell}>
-                  {truncateDecimal(this.state.balance, 8) +
+                  {truncateDecimal(this.state.remainingBalance, this.state.coinObj.decimals || 8) +
                     " " +
                     this.state.coinObj.id}
                 </Text>
-              </View>
+              </View>} */}
               <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>
-                  Amount Sent:
-                </Text>
+                <Text style={Styles.infoTableHeaderCell}>Amount Sent:</Text>
                 <Text style={Styles.infoTableCell}>
                   {truncateDecimal(
-                    satsToCoins(this.state.amount),
-                    8
+                    this.state.amount,
+                    this.state.coinObj.decimals || 8
                   ) +
                     " " +
                     this.state.coinObj.id}
                 </Text>
               </View>
               <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>{this.state.coinObj.id === 'BTC' ? 'Fee/byte: ' : 'Fee: '}</Text>
-                <Text style={Styles.infoTableCell}>{satsToCoins(this.state.fee) + ' ' + this.state.coinObj.id}</Text>
+                <Text style={Styles.infoTableHeaderCell}>
+                  {this.state.coinObj.id === "BTC" ? "Fee/byte: " : "Fee: "}
+                </Text>
+                <Text style={Styles.infoTableCell}>
+                  {this.state.fee +
+                    " " +
+                    (this.state.feeCurr != null
+                      ? this.state.feeCurr
+                      : this.state.coinObj.id)}
+                </Text>
               </View>
               <View style={Styles.infoTableRow}>
                 <Text style={Styles.infoTableHeaderCell}>ID:</Text>
                 <View style={Styles.infoTableCell}>
-                  <Text style={{...Styles.blockTextAlignRight, ...Styles.linkText}} onPress={this.copyTxIDToClipboard}>
+                  <Text
+                    style={{
+                      ...Styles.blockTextAlignRight,
+                      ...Styles.linkText,
+                    }}
+                    onPress={this.copyTxIDToClipboard}
+                  >
                     {this.state.txid}
                   </Text>
                 </View>
@@ -295,7 +329,9 @@ class SendResult extends Component {
             <StandardButton
               color={Colors.linkButtonColor}
               title="HOME"
-              onPress={() => {this.navigateToScreen(this.state.coinObj, "Home")}}
+              onPress={() => {
+                this.navigateToScreen(this.state.coinObj, "Home");
+              }}
             />
           </View>
         </View>
@@ -363,13 +399,16 @@ class SendResult extends Component {
 
 const mapStateToProps = (state) => {
   const chainTicker = state.coins.activeCoin.id
+  const mainChannel = state.coins.activeCoin.dominant_channel
+    ? state.coins.activeCoin.dominant_channel
+    : ELECTRUM;
 
   return {
     balances: {
-      public: state.ledger.balances[ELECTRUM][chainTicker],
+      public: state.ledger.balances[mainChannel][chainTicker],
       private: state.ledger.balances[DLIGHT][chainTicker],
       errors: {
-        public: state.errors[API_GET_BALANCES][ELECTRUM][chainTicker],
+        public: state.errors[API_GET_BALANCES][mainChannel][chainTicker],
         private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
       }
     },

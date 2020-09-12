@@ -20,7 +20,7 @@ describe("Main wallet keypair generator", () => {
   })
 
   it('can create keypair from modern encrypted key', () => {
-    let keyPair = pairFromPwd(MOCK_PIN, MOCK_LEGACY_ENCRYPTEDKEY, 'VRSC')
+    let keyPair = pairFromPwd(MOCK_PIN, MOCK_ENCRYPTEDKEY, 'VRSC')
     
     expect(keyPair).toHaveProperty('pubKey')
     expect(keyPair).toHaveProperty('privKey')
