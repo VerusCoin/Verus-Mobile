@@ -81,11 +81,11 @@ class KYCIdentityFotoInfo extends Component {
           <View style={Styles.svgHeader}>
             <VerifyIdentity height={'100%'} width={'100%'}/>
           </View>
-          <View style={Styles.padding}>
-            <View>
+          <View >
+            <View style={Styles.padding}>
               <Text style={Styles.boldKYCText}>Verify your photo ID</Text>
             </View>
-            <View>
+            <View style={Styles.padding}>
               <Text style={{ ...Styles.normalKYCText, textAlign: 'left' }}>In order to comply with federal regulations, PrimeTrust requires to verify your photo ID </Text>
             </View>
           </View>

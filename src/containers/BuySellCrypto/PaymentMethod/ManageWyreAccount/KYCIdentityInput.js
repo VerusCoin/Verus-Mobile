@@ -192,7 +192,8 @@ class KYCIdentityInput extends Component {
               </View>
           </View>
 
-          <View style={{padding: 8}}>
+
+          <View style={{...Styles.wideCenterBlockInput, ...Styles.topPadding}}>
               <Input
                 label="Legal Name:"
                 labelStyle={Styles.formLabel}
@@ -202,9 +203,10 @@ class KYCIdentityInput extends Component {
                 autoCorrect={false}
               />
           </View>
+
+            <View style={Styles.wideCenterBlockInput90}>
               <TouchableOpacity onPress={this.showCalendar}>
-            <View style={{...Styles.wideCenterBlock}}>
-              <Text style={{...Styles.formLabel, paddingBottom: 18}}>
+              <Text style={{...Styles.formLabel}}>
                 Date of Birth YYYY-MM-DD:
               </Text>
               <View>
@@ -214,7 +216,7 @@ class KYCIdentityInput extends Component {
                   }}
                   value={this.state.dateOfBirth}
                   mask={"[0000]-[00]-[00]"}
-                  style={{ ...Styles.formInput, width: '100%', borderBottomWidth: 1}}
+                  style={{ ...Styles.formInput, borderBottomWidth: 1}}
                 />
                 </View>
 
@@ -229,10 +231,12 @@ class KYCIdentityInput extends Component {
                     style={{backgroundColor: 'white'}} />
                 }
               </View>
-            </View>
+
               </TouchableOpacity>
-            <View style={{...Styles.wideCenterBlock}}>
-              <Text style={{...Styles.formLabel, paddingBottom: 18}}>
+              </View>
+
+            <View style={Styles.wideCenterBlockInput90}>
+              <Text style={Styles.formLabel}>
                 US Social Security Number XXX-XX-XXXX:
               </Text>
               <TextInputMask
@@ -240,9 +244,11 @@ class KYCIdentityInput extends Component {
                   this.setState({socialSecurityNumber: formatted})
                 }}
                 mask={"[000]-[00]-[0000]"}
-                style={{...Styles.formInput, borderBottomWidth: 1}}
+                style={{...Styles.formInput,  borderBottomWidth: 1}}
               />
             </View>
+
+
             <View style={{paddingTop: 48}}>
               <Button
               titleStyle={Styles.whiteText}

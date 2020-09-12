@@ -82,13 +82,12 @@ onClick = () => {  this.props.navigation.navigate("KYCIdentityInput") }
           <VerifyIdentity height={'100%'} width={'100%'}/>
         </View>
         <View style={Styles.padding}>
-          <View style={{ paddingBottom: 12}}>
             <Text style={Styles.boldKYCText} >verify your Identity</Text>
           </View>
-          <View>
-            <Text style={{ ...Styles.normalKYCText, textAlign: 'left' }}>In order to comply with federal regulation, we need some basic personal information</Text>
+          <View style={Styles.padding}>
+            <Text style={{ ...Styles.normalKYCText}}>In order to comply with federal regulation, we need some basic personal information</Text>
           </View>
-        </View>
+
         <View style={Styles.padding}>
         <View style={Styles.alignItemsRight}>
         <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>

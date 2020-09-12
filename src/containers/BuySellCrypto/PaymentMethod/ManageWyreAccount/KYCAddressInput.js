@@ -166,12 +166,15 @@ class KYCAddressInput extends Component {
             />
             <ScrollView>
               <View style={Styles.root}>
-              <View style={{...Styles.padding, paddingLeft: 12}}>
+              <View style={{...Styles.padding}}>
                 <Text  style={Styles.boldKYCText}>Enter your address</Text>
+              </View>
+              <View style={Styles.padding}>
                 <Text style={{ ...Styles.normalKYCText, textAlign: 'left' }}>In order to comply with regulations, enter your primary residential address. Please do not use a PO box or business address</Text>
               </View>
-              <View style={{ height: '130%'}}>
-                <View style={{ height: '8.5%'}}>
+
+
+                <View style={Styles.wideCenterBlockInput}>
                   <Input
                     label="Street Address"
                     labelStyle={Styles.formLabel}
@@ -183,11 +186,10 @@ class KYCAddressInput extends Component {
                   />
               </View>
               <View>
-                <View style={{ height: '9%'}}>
+                <View style={Styles.wideCenterBlockInput}>
                 <Input
                   label="City"
                   labelStyle={Styles.formLabel}
-                  containerStyle={{paddingTop: 24}}
                   onChangeText={(text) => this.setState({ city: text })}
                   value={this.state.city}
                   autoCorrect={false}
@@ -195,8 +197,8 @@ class KYCAddressInput extends Component {
                 />
               </View>
               </View>
-              <View style={{ height: '8%'}}>
-                <View style={{paddingLeft: 10, paddingRight: 10, paddingTop: 10}}>
+              <View style={Styles.wideCenterBlockInput}>
+                <View style={{paddingLeft:10}}>
                   <Text style={Styles.formLabel}>
                     State
                   </Text>
@@ -216,26 +218,24 @@ class KYCAddressInput extends Component {
                   />
                 </View>
               </View>
-              <View style={{ height: '10%'}}>
+              <View style={Styles.wideCenterBlockInput}>
                 <Input
                   label="postal Code"
                   labelStyle={Styles.formLabel}
-                  containerStyle={{paddingTop: 24}}
                   onChangeText={(text) => this.setState({ postalCode: text })}
                   value={this.state.postalCode}
                   autoCorrect={false}
                   inputStyle={styles.formInputContainer}
                 />
               </View>
-              <View style={{ height: '10%'}}>
-                <View style={{padding: 10}}>
+              <View style={Styles.wideCenterBlockInput}>
+                <View style={{paddingLeft: 10}}>
                   <Text style={Styles.formLabel}>
                     Country
                   </Text>
                   <Dropdown
                     labelExtractor={(item) => item.value}
                     valueExtractor={(item) => item.value}
-
                     labelTextStyle={Styles.formLabel}
                     labelFontSize={13}
                     data={WYRE_COUNTRIES}
@@ -245,12 +245,11 @@ class KYCAddressInput extends Component {
                     selectedItemColor={Colors.quaternaryColor}
                     baseColor={Colors.quaternaryColor}
                     value={this.state.country ? `${this.state.country}` : ''}
-
                     pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                   />
                 </View>
               </View>
-              <View style={{ height: '10%'}}>
+              <View style={Styles.wideCenterBlockInput}>
               <View style={Styles.padding}>
                 <Button
                 titleStyle={Styles.whiteText}
@@ -262,7 +261,7 @@ class KYCAddressInput extends Component {
                 />
               </View>
               <View style={Styles.padding}>
-              <View style={{ height: '10%'}}>
+              <View style={Styles.wideCenterBlockInput}>
                 <Button
                 titleStyle={Styles.whiteText}
                 buttonStyle={Styles.fullWidthButtonKYC}
@@ -276,7 +275,6 @@ class KYCAddressInput extends Component {
             </View>
             </View>
           <View style={{padding: 26}}></View>
-          </View>
           </View>
           </ScrollView>
         </View>

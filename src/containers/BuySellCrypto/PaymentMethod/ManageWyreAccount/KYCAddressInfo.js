@@ -83,11 +83,11 @@ class KYCAddressInfo extends Component {
           <View style={Styles.svgHeader}>
             <VerifyIdentity height={'100%'} width={'100%'}/>
           </View>
-          <View style={Styles.padding}>
-            <View>
+          <View >
+            <View style={Styles.padding}>
               <Text style={Styles.boldKYCText}>Verify your address</Text>
             </View>
-            <View>
+            <View style={Styles.padding}>
               <Text style={{ ...Styles.normalKYCText, textAlign: 'left' }}>The last step in the KYC process. Let's verify your address. Make a picture or upload one of these documents:</Text>
             </View>
           </View>

@@ -114,11 +114,12 @@ class KYCfoto extends Component {
             <View>
 
             </View>
-            <View style={{padding: 8}}>
+            <View style={Styles.padding}>
               <Text style={Styles.headerKYCText}>
                   Select your ID type
               </Text>
             </View>
+            <View style={Styles.topPadding}>
             <View style={Styles.containerVerticalPadding}>
             {!this.state.image && (
               <TouchableOpacity onPress={this.handleSelect} >
@@ -182,6 +183,7 @@ class KYCfoto extends Component {
                 </View>
               </View>
             )}
+          </View>
           </View>
           <View style={Styles.alignItemsRight}>
             <View style={{ height: '15%'}}>
