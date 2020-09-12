@@ -123,7 +123,7 @@ class KYCAddressInfo extends Component {
           <View style={Styles.alignItemsRight}>
             <View style={{ height: '15%'}}>
             <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-              <Lock height={'30%'} width={'10%'} />
+              <Lock style={{marginTop: 4}} height={'30%'} width={'10%'} />
                   <Text style={{...Styles.smallKYCText, width: '80%'}}>PrimeTrust uses bank level encryption on all connections when receiving documents.</Text>
              </View>
              </View>
