@@ -110,7 +110,7 @@
     "jest": "^24.9.0",
     "jetifier": "^1.6.4",
     "metro-react-native-babel-preset": "0.53.1",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "react-test-renderer": "16.5.0",
     "rn-nodeify": "github:tradle/rn-nodeify"
   },
