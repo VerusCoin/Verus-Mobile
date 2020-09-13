@@ -115,7 +115,7 @@ class KYCfoto extends Component {
 
             </View>
             <View style={Styles.padding}>
-              <Text style={Styles.headerKYCText}>
+              <Text style={Styles.boldKYCText}>
                   Select your ID type
               </Text>
             </View>
