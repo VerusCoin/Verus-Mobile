@@ -85,56 +85,56 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
         </View>
         <View>
           <View style={Styles.alignItemsRight}>
-            <View style={{ height: '15%'}}>
-            <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-              <Nr1 height={'110%'} width={'15%'} />
-                  <Text style={{...Styles.normalKYCText, width: '60%'}}>Create your account</Text>
+            <View style={Styles.height15}>
+              <View style={Styles.infoKYCContainer}>
+                <Nr1 height={'110%'} width={'15%'} />
+                  <Text style={{...Styles.normalKYCText, ...Styles.narrow}}>Create your account</Text>
                   <Text style={Styles.boldKYCText}>Completed</Text>
-             </View>
-             </View>
-             </View>
-             <View style={{ height: '15%'}}>
-           <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-              <Nr2 height={'100%'} width={'15%'} />
-              <View style={{...Styles.alignItemsRight, width: '60%'}}>
-                <Text style={Styles.normalKYCText}>My personal information</Text>
-                  <Text style={Styles.smallKYCText}>name, date of birth, address</Text>
               </View>
-             <Text style={Styles.boldKYCText}>1 min</Text>
             </View>
-            </View>
-            <View style={{ height: '15%'}}>
-            <View style={{...Styles.startRow,...Styles.containerVerticalPadding, width: '100%'}}>
+          </View>
+        <View style={Styles.height15}>
+           <View style={Styles.infoKYCContainer}>
+              <Nr2 height={'100%'} width={'15%'} />
+              <View style={{...Styles.alignItemsRight, ...Styles.narrow}}>
+                <Text style={Styles.normalKYCText}>My personal information</Text>
+                <Text style={Styles.smallKYCText}>name, date of birth, address</Text>
+              </View>
+              <Text style={Styles.boldKYCText}>1 min</Text>
+           </View>
+        </View>
+          <View style={Styles.height15}>
+            <View style={Styles.infoKYCContainer}>
                 <Nr3 height={'100%'} width={'15%'} />
-                <View style={{...Styles.alignItemsRight, width: '60%'}}>
-                  <Text style={Styles.normalKYCText} >Verify Photo ID</Text>
+                <View style={{...Styles.alignItemsRight, ...Styles.narrow}}>
+                   <Text style={Styles.normalKYCText} >Verify Photo ID</Text>
                    <Text style={Styles.smallKYCText}>Scan or upload document</Text>
                 </View>
                 <Text style={Styles.boldKYCText}>2 min</Text>
-             </View>
-             </View>
-             <View style={{ height: '15%'}}>
-             <View style={{...Styles.startRow,...Styles.containerVerticalPadding, width: '100%'}}>
-                <Nr4 height={'100%'} width={'15%'} />
-                 <View style={{...Styles.alignItemsRight, width: '60%'}}>
-                   <Text style={Styles.normalKYCText}>Proof of Address</Text>
-                   <Text style={Styles.smallKYCText}>Scan or upload document</Text>
-                 </View>
-                 <Text style={{ ...Styles.boldKYCText  }}>2 min</Text>
-              </View>
             </View>
+          </View>
+        <View style={Styles.height15}>
+          <View style={Styles.infoKYCContainer}>
+            <Nr4 height={'100%'} width={'15%'} />
+            <View style={{...Styles.alignItemsRight, ...Styles.narrow}}>
+              <Text style={Styles.normalKYCText}>Proof of Address</Text>
+              <Text style={Styles.smallKYCText}>Scan or upload document</Text>
             </View>
-            <View style={{ height: '5%'}}>
-            <View style={{...Styles.buttonKYC, width: '100%'}}>
-                 <Button
-                 title="START"
-                 titleStyle={Styles.whiteText}
-                 buttonStyle={Styles.fullWidthButtonKYC}
-                 onPress={ this.onClick }
-                 />
-             </View>
-           </View>
+            <Text style={{ ...Styles.boldKYCText  }}>2 min</Text>
+          </View>
+        </View>
+       </View>
+      <View style={{ height: '5%'}}>
+        <View style={{...Styles.buttonKYC}}>
+          <Button
+            title="START"
+            titleStyle={Styles.whiteText}
+            buttonStyle={Styles.fullWidthButtonKYC}
+            onPress={ this.onClick }
+           />
+        </View>
       </View>
+   </View>
     );
   }
 }

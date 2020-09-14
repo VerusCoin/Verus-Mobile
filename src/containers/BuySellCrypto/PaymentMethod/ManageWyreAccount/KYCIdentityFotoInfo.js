@@ -48,12 +48,7 @@ class KYCIdentityFotoInfo extends Component {
 
   onClick = () => {  this.props.navigation.navigate("KYCfoto") }
 
-
     render() {
-
-      const scaleFactorY = 2;
-      const scalefatorX = 2;
-
       return (
         <View style={Styles.root}>
           <View style={Styles.progressBarContainer}>
@@ -81,45 +76,49 @@ class KYCIdentityFotoInfo extends Component {
           <View style={Styles.svgHeader}>
             <VerifyIdentity height={'100%'} width={'100%'}/>
           </View>
-          <View >
+          <View>
             <View style={Styles.padding}>
               <Text style={Styles.boldKYCText}>Verify your photo ID</Text>
             </View>
             <View style={Styles.padding}>
-              <Text style={{ ...Styles.normalKYCText, textAlign: 'left' }}>In order to comply with federal regulations, PrimeTrust requires to verify your photo ID </Text>
+              <Text style={{ ...Styles.normalKYCText}}>In order to comply with federal regulations, PrimeTrust requires to verify your photo ID </Text>
             </View>
           </View>
           <View style={Styles.padding}>
-          <View style={Styles.alignItemsRight}>
-          <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-            <Badge
-              status="primary"
-              badgeStyle={Styles.smallBlackDot}
-              containerStyle={Styles.smallBlackDotContainer}
-            />
-              <Text style={{...Styles.normalKYCText, width: '90%'}}>Chose from: passport, driverslisence, or identity card</Text>
-           </View>
-           <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-             <Badge
-               status="primary"
-               badgeStyle={Styles.smallBlackDot}
-               containerStyle={Styles.smallBlackDotContainer}
-             />
-               <Text style={{...Styles.normalKYCText, width: '90%'}}>Identity number form the chosen document</Text>
-            </View>
+            <View style={Styles.alignItemsRight}>
+              <View style={Styles.infoKYCContainer}>
+                <Badge
+                  status="primary"
+                  badgeStyle={Styles.smallBlackDot}
+                  containerStyle={Styles.smallBlackDotContainer}
+                />
+                <View style={Styles.wide}>
+                  <Text style={{...Styles.normalKYCText}}>Chose from: passport, driverslisence, or identity card</Text>
+                </View>
+              </View>
+              <View style={Styles.infoKYCContainer}>
+                <Badge
+                   status="primary"
+                   badgeStyle={Styles.smallBlackDot}
+                   containerStyle={Styles.smallBlackDotContainer}
+                />
+                <View style={Styles.wide}>
+                  <Text style={{...Styles.normalKYCText}}>Identity number form the chosen document</Text>
+                </View>
+              </View>
           </View>
-          </View>
-          <View style={{...Styles.padding, paddingTop: 48}}>
+        </View>
+        <View style={{...Styles.padding, paddingTop: 48}}>
           <Button
           title="CONTINUE"
           titleStyle={Styles.whiteText}
           buttonStyle={Styles.fullWidthButtonKYC}
           onPress={ this.onClick }
           />
-        </View>
-        </ View>
+      </View>
+    </View>
       );
-    }
+  }
 }
 
 const mapStateToProps = (state) => ({

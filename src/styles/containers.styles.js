@@ -82,8 +82,17 @@ export default containers = {
     paddingVertical: 16,
     alignSelf: 'center',
   },
+  infoKYCContainer: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    paddingVertical:8,
+    width: '100%'
+  },
   wide: {
     width: '90%',
+  },
+  narrow: {
+    width: '60%'
   },
   wideCenter: {
     width: '90%',
@@ -291,6 +300,9 @@ export default containers = {
       width: '15%',
       marginTop: '5%',
       marginLeft: '3%',
+  },
+  height15: {
+    height: '15%'
   },
   paddedBorderedBox: {
     borderWidth: 1,

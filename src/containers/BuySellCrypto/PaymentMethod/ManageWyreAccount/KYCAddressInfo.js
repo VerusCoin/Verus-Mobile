@@ -93,30 +93,36 @@ class KYCAddressInfo extends Component {
           </View>
           <View style={Styles.padding}>
           <View style={Styles.alignItemsRight}>
-          <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
+          <View style={Styles.infoKYCContainer}>
             <Badge
               status="primary"
               badgeStyle={Styles.smallBlackDot}
               containerStyle={Styles.smallBlackDotContainer}
             />
-              <Text style={{...Styles.normalKYCText, width: '90%'}}>Bank statement</Text>
-           </View>
-           <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
+            	<View style={Styles.wide}>
+              <Text style={{...Styles.normalKYCText}}>Bank statement</Text>
+              </View>
+            </View>
+           <View style={Styles.infoKYCContainer}>
              <Badge
                status="primary"
                badgeStyle={Styles.smallBlackDot}
                containerStyle={Styles.smallBlackDotContainer}
              />
-               <Text style={{...Styles.normalKYCText, width: '90%'}}>Utility bill</Text>
-            </View>
-            <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
+              <View style={Styles.wide}>
+               <Text style={{...Styles.normalKYCText}}>Utility bill</Text>
+               </View>
+             </View>
+            <View style={Styles.infoKYCContainer}>
               <Badge
                 status="primary"
                 badgeStyle={Styles.smallBlackDot}
                 containerStyle={Styles.smallBlackDotContainer}
               />
-                <Text style={{...Styles.normalKYCText, width: '90%'}}>Credit card statement</Text>
-             </View>
+                <View style={Styles.wide}>
+                  <Text style={{...Styles.normalKYCText}}>Credit card statement</Text>
+                </View>
+           </View>
           </View>
           </View>
 
