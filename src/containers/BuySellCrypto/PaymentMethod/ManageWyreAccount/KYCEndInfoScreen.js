@@ -133,8 +133,7 @@ class KYCEndInfoScreen extends Component {
                 </View>
               </View>
         </View>
-
-        </ View>
+        </View>
       );
     }
 }

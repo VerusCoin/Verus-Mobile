@@ -123,9 +123,9 @@ class KYCfoto extends Component {
             <View style={Styles.containerVerticalPadding}>
             {!this.state.image && (
               <TouchableOpacity onPress={this.handleSelect} >
-                <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
+                <View style={Styles.infoKYCContainer}>
                   <IDsIcon  height={'100%'} width={'15%'} />
-                   <View style={{...Styles.alignItemsRight, width: '60%'}}>
+                   <View style={{...Styles.alignItemsRight, ...Styles.narrow}}>
                      <Text style={Styles.normalKYCText}> drivers lisence</Text>
                    </View>
                    <Arrow height={'50%'} width={'15%'} />
@@ -137,9 +137,9 @@ class KYCfoto extends Component {
           <View style={Styles.containerVerticalPadding}>
             {!this.state.image && (
               <TouchableOpacity onPress={this.handleSelect}>
-                <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
+                <View style={Styles.infoKYCContainer}>
                   <IDsIcon  height={'100%'} width={'15%'} />
-                   <View style={{...Styles.alignItemsRight, width: '60%'}}>
+                   <View style={{...Styles.alignItemsRight, ...Styles.narrow}}>
                      <Text style={Styles.normalKYCText}> ID card</Text>
                    </View>
                    <Arrow height={'50%'} width={'15%'} />
@@ -150,9 +150,9 @@ class KYCfoto extends Component {
             <View style={Styles.containerVerticalPadding}>
             {!this.state.image && (
               <TouchableOpacity onPress={this.handleSelect}>
-                <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
+                <View style={Styles.infoKYCContainer}>
                   <IDsIcon  height={'100%'} width={'15%'} />
-                   <View style={{...Styles.alignItemsRight, width: '60%'}}>
+                   <View style={{...Styles.alignItemsRight, ...Styles.narrow}}>
                      <Text style={Styles.normalKYCText}>Passport</Text>
                    </View>
                    <Arrow height={'50%'} width={'15%'} />

@@ -112,7 +112,7 @@ class KYCphotoAddress extends Component {
               <Text  style={{...Styles.boldKYCText}}>Proof of address</Text>
             </View>
             <View style={Styles.padding}>
-              <Text style={{ ...Styles.normalKYCText, textAlign: 'left' }}>Please make sure th etext is clear and your address matches with your personal information</Text>
+              <Text style={{ ...Styles.normalKYCText}}>Please make sure th etext is clear and your address matches with your personal information</Text>
             </View>
 
             <View style={Styles.padding}>
