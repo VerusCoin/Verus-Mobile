@@ -83,7 +83,7 @@ class KYCAddressInfo extends Component {
           <View style={Styles.svgHeader}>
             <VerifyIdentity height={'100%'} width={'100%'}/>
           </View>
-          <View >
+          <View>
             <View style={Styles.padding}>
               <Text style={Styles.boldKYCText}>Verify your address</Text>
             </View>
@@ -92,50 +92,48 @@ class KYCAddressInfo extends Component {
             </View>
           </View>
           <View style={Styles.padding}>
-          <View style={Styles.alignItemsRight}>
-          <View style={Styles.infoKYCContainer}>
-            <Badge
-              status="primary"
-              badgeStyle={Styles.smallBlackDot}
-              containerStyle={Styles.smallBlackDotContainer}
-            />
-            	<View style={Styles.wide}>
-              <Text style={{...Styles.normalKYCText}}>Bank statement</Text>
+            <View style={Styles.alignItemsRight}>
+              <View style={Styles.infoKYCContainer}>
+                <Badge
+                  status="primary"
+                  badgeStyle={Styles.smallBlackDot}
+                  containerStyle={Styles.smallBlackDotContainer}
+                />
+            	  <View style={Styles.wide}>
+                  <Text style={{...Styles.normalKYCText}}>Bank statement</Text>
+                </View>
               </View>
-            </View>
-           <View style={Styles.infoKYCContainer}>
-             <Badge
-               status="primary"
-               badgeStyle={Styles.smallBlackDot}
-               containerStyle={Styles.smallBlackDotContainer}
-             />
-              <View style={Styles.wide}>
-               <Text style={{...Styles.normalKYCText}}>Utility bill</Text>
+              <View style={Styles.infoKYCContainer}>
+               <Badge
+                 status="primary"
+                 badgeStyle={Styles.smallBlackDot}
+                 containerStyle={Styles.smallBlackDotContainer}
+               />
+               <View style={Styles.wide}>
+                 <Text style={{...Styles.normalKYCText}}>Utility bill</Text>
                </View>
              </View>
-            <View style={Styles.infoKYCContainer}>
+             <View style={Styles.infoKYCContainer}>
               <Badge
                 status="primary"
                 badgeStyle={Styles.smallBlackDot}
                 containerStyle={Styles.smallBlackDotContainer}
               />
-                <View style={Styles.wide}>
-                  <Text style={{...Styles.normalKYCText}}>Credit card statement</Text>
-                </View>
-           </View>
+              <View style={Styles.wide}>
+                <Text style={{...Styles.normalKYCText}}>Credit card statement</Text>
+              </View>
+            </View>
           </View>
-          </View>
-
-          <View style={Styles.alignItemsRight}>
-            <View style={{ height: '15%'}}>
+        </View>
+        <View style={Styles.alignItemsRight}>
+          <View style={{ height: '15%'}}>
             <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
               <Lock style={{marginTop: 4}} height={'30%'} width={'10%'} />
-                  <Text style={{...Styles.smallKYCText, width: '80%'}}>PrimeTrust uses bank level encryption on all connections when receiving documents.</Text>
+              <Text style={{...Styles.smallKYCText, width: '80%'}}>PrimeTrust uses bank level encryption on all connections when receiving documents.</Text>
              </View>
-             </View>
-             </View>
-
-          <View style={Styles.padding}>
+           </View>
+         </View>
+        <View style={Styles.padding}>
           <Button
           title="CONTINUE"
           titleStyle={Styles.whiteText}
@@ -143,7 +141,7 @@ class KYCAddressInfo extends Component {
           onPress={ this.onClick }
           />
         </View>
-        </ View>
+      </View>
       );
     }
 }

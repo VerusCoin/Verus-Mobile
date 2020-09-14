@@ -106,17 +106,17 @@ class KYCIdentityFotoInfo extends Component {
                   <Text style={{...Styles.normalKYCText}}>Identity number form the chosen document</Text>
                 </View>
               </View>
+            </View>
           </View>
-        </View>
-        <View style={{...Styles.padding, paddingTop: 48}}>
-          <Button
-          title="CONTINUE"
-          titleStyle={Styles.whiteText}
-          buttonStyle={Styles.fullWidthButtonKYC}
-          onPress={ this.onClick }
-          />
-      </View>
-    </View>
+          <View style={{...Styles.padding, paddingTop: 48}}>
+           <Button
+            title="CONTINUE"
+            titleStyle={Styles.whiteText}
+            buttonStyle={Styles.fullWidthButtonKYC}
+            onPress={ this.onClick }
+           />
+         </View>
+       </View>
       );
   }
 }

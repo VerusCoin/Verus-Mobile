@@ -79,43 +79,41 @@ class KYCphotoAddress extends Component {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={Styles.root}>
-        <View style={Styles.progressBarContainer}>
-          <Badge
-            status="success"
-            badgeStyle={Styles.progessBadgeDone}
-            containerStyle={Styles.horizontalPaddingBox10}
-          />
-          <Badge
-            status="success"
-            badgeStyle={Styles.progessBadgeDone}
-            containerStyle={Styles.horizontalPaddingBox10}
-          />
-          <Badge
-            status="success"
-            badgeStyle={Styles.progessBadgeDone}
-            containerStyle={Styles.horizontalPaddingBox10}
-          />
-          <Badge
-            status="primary"
-            badgeStyle={Styles.progessBadgeTodo}
-            containerStyle={Styles.horizontalPaddingBox10}
-          />
-        </View>
-          <View style={styles.mainInputView}>
-            <Spinner
-              visible={this.props.isFetching}
-              textContent="Loading..."
-              textStyle={{ color: '#FFF' }}
+          <View style={Styles.progressBarContainer}>
+            <Badge
+              status="success"
+              badgeStyle={Styles.progessBadgeDone}
+              containerStyle={Styles.horizontalPaddingBox10}
             />
-
-            <View style={Styles.padding}>
-              <Text  style={{...Styles.boldKYCText}}>Proof of address</Text>
-            </View>
-            <View style={Styles.padding}>
-              <Text style={{ ...Styles.normalKYCText}}>Please make sure th etext is clear and your address matches with your personal information</Text>
-            </View>
-
-            <View style={Styles.padding}>
+            <Badge
+              status="success"
+              badgeStyle={Styles.progessBadgeDone}
+              containerStyle={Styles.horizontalPaddingBox10}
+            />
+            <Badge
+              status="success"
+              badgeStyle={Styles.progessBadgeDone}
+              containerStyle={Styles.horizontalPaddingBox10}
+            />
+            <Badge
+              status="primary"
+              badgeStyle={Styles.progessBadgeTodo}
+              containerStyle={Styles.horizontalPaddingBox10}
+            />
+        </View>
+        <View style={styles.mainInputView}>
+          <Spinner
+            visible={this.props.isFetching}
+            textContent="Loading..."
+            textStyle={{ color: '#FFF' }}
+          />
+        <View style={Styles.padding}>
+          <Text  style={{...Styles.boldKYCText}}>Proof of address</Text>
+        </View>
+        <View style={Styles.padding}>
+          <Text style={{ ...Styles.normalKYCText}}>Please make sure th etext is clear and your address matches with your personal information</Text>
+        </View>
+        <View style={Styles.padding}>
             {!this.state.image && (
               <View style={styles.buttonContainerBottom}>
                 <Button
@@ -126,7 +124,7 @@ class KYCphotoAddress extends Component {
                 />
               </View>
             )}
-            </View>
+        </View>
             {this.state.image && (
               <View>
                 <Image
@@ -150,21 +148,19 @@ class KYCphotoAddress extends Component {
               </View>
             )}
           </View>
-
-
           <View style={Styles.padding} >
-          <Button
-          titleStyle={Styles.whiteText}
-          buttonStyle={Styles.fullWidthButtonKYC}
-            title="CHEAT TO NEXT SCREEN"
-            onPress={()=>{
-              this.props.navigation.navigate("KYCEndInfoScreen")
-            }
-            }
-          />
+            <Button
+            titleStyle={Styles.whiteText}
+            buttonStyle={Styles.fullWidthButtonKYC}
+              title="CHEAT TO NEXT SCREEN"
+              onPress={()=>{
+                this.props.navigation.navigate("KYCEndInfoScreen")
+              }
+              }
+            />
         </View>
-        </View>
-      </TouchableWithoutFeedback>
+      </View>
+    </TouchableWithoutFeedback>
     );
   }
 }

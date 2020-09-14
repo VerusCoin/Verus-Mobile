@@ -134,68 +134,66 @@ class KYCAddressInput extends Component {
 
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <View style={styles.mainInputView}>
+        <View style={styles.mainInputView}>
           <View style={{ ...Styles.secondaryBackground, paddingTop: '5%' }}>
             <View style={Styles.progressBarContainer}>
-            <Badge
-              status="success"
-              badgeStyle={Styles.progessBadgeDone}
-              containerStyle={Styles.horizontalPaddingBox10}
-            />
-            <Badge
-              status="success"
-              badgeStyle={Styles.progessBadgeDone}
-              containerStyle={Styles.horizontalPaddingBox10}
-            />
-            <Badge
-              status="success"
-              badgeStyle={Styles.progessBadgeDone}
-              containerStyle={Styles.horizontalPaddingBox10}
-            />
-            <Badge
-              status="primary"
-              badgeStyle={Styles.progessBadgeTodo}
-              containerStyle={Styles.horizontalPaddingBox10}
-            />
+              <Badge
+                status="success"
+                badgeStyle={Styles.progessBadgeDone}
+                containerStyle={Styles.horizontalPaddingBox10}
+              />
+              <Badge
+                status="success"
+                badgeStyle={Styles.progessBadgeDone}
+                containerStyle={Styles.horizontalPaddingBox10}
+              />
+              <Badge
+                status="success"
+                badgeStyle={Styles.progessBadgeDone}
+                containerStyle={Styles.horizontalPaddingBox10}
+              />
+              <Badge
+                status="primary"
+                badgeStyle={Styles.progessBadgeTodo}
+                containerStyle={Styles.horizontalPaddingBox10}
+              />
+            </View>
           </View>
-          </View>
-            <Spinner
-              visible={this.props.isFetching}
-              textContent="Loading..."
-              textStyle={{ color: '#FFF' }}
-            />
-            <ScrollView>
-              <View style={Styles.root}>
+          <Spinner
+            visible={this.props.isFetching}
+            textContent="Loading..."
+            textStyle={{ color: '#FFF' }}
+          />
+          <ScrollView>
+            <View style={Styles.root}>
               <View style={{...Styles.padding}}>
                 <Text  style={Styles.boldKYCText}>Enter your address</Text>
               </View>
               <View style={Styles.padding}>
                 <Text style={{ ...Styles.normalKYCText, textAlign: 'left' }}>In order to comply with regulations, enter your primary residential address. Please do not use a PO box or business address</Text>
               </View>
-
-
-                <View style={Styles.wideCenterBlockInput}>
-                  <Input
-                    label="Street Address"
-                    labelStyle={Styles.formLabel}
-                    containerStyle={{paddingTop: 24}}
-                    onChangeText={(text) => this.setState({ streetAddress: text })}
-                    value={this.state.streetAddress}
-                    autoCorrect={false}
-                    inputStyle={Styles.formInputContainer}
-                  />
+              <View style={Styles.wideCenterBlockInput}>
+                <Input
+                  label="Street Address"
+                  labelStyle={Styles.formLabel}
+                  containerStyle={{paddingTop: 24}}
+                  onChangeText={(text) => this.setState({ streetAddress: text })}
+                  value={this.state.streetAddress}
+                  autoCorrect={false}
+                  inputStyle={Styles.formInputContainer}
+                />
               </View>
               <View>
                 <View style={Styles.wideCenterBlockInput}>
-                <Input
-                  label="City"
-                  labelStyle={Styles.formLabel}
-                  onChangeText={(text) => this.setState({ city: text })}
-                  value={this.state.city}
-                  autoCorrect={false}
-                  inputStyle={styles.formInputContainer}
-                />
-              </View>
+                  <Input
+                    label="City"
+                    labelStyle={Styles.formLabel}
+                    onChangeText={(text) => this.setState({ city: text })}
+                    value={this.state.city}
+                    autoCorrect={false}
+                    inputStyle={styles.formInputContainer}
+                  />
+                </View>
               </View>
               <View style={Styles.wideCenterBlockInput}>
                 <View style={{paddingLeft:10}}>
@@ -250,35 +248,35 @@ class KYCAddressInput extends Component {
                 </View>
               </View>
               <View style={Styles.wideCenterBlockInput}>
-              <View style={Styles.padding}>
-                <Button
-                titleStyle={Styles.whiteText}
-                buttonStyle={Styles.fullWidthButtonKYC}
-                  title="SUBMIT"
-                  onPress={()=>{
-                    this.handleSubmit();
-                  } }
-                />
+                <View style={Styles.padding}>
+                  <Button
+                  titleStyle={Styles.whiteText}
+                  buttonStyle={Styles.fullWidthButtonKYC}
+                    title="SUBMIT"
+                    onPress={()=>{
+                      this.handleSubmit();
+                    } }
+                  />
+                </View>
+                <View style={Styles.padding}>
+                  <View style={Styles.wideCenterBlockInput}>
+                    <Button
+                    titleStyle={Styles.whiteText}
+                    buttonStyle={Styles.fullWidthButtonKYC}
+                      title="CHEAT TO NEXT SCREEN"
+                      onPress={()=>{
+                        this.props.navigation.navigate("KYCphotoAddress")
+                      }
+                      }
+                    />
+                  </View>
+                </View>
               </View>
-              <View style={Styles.padding}>
-              <View style={Styles.wideCenterBlockInput}>
-                <Button
-                titleStyle={Styles.whiteText}
-                buttonStyle={Styles.fullWidthButtonKYC}
-                  title="CHEAT TO NEXT SCREEN"
-                  onPress={()=>{
-                    this.props.navigation.navigate("KYCphotoAddress")
-                  }
-                  }
-                />
-            </View>
-            </View>
-            </View>
-          <View style={{padding: 26}}></View>
+              <View style={{padding: 26}}></View>
+              </View>
+            </ScrollView>
           </View>
-          </ScrollView>
-        </View>
-      </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback>
     );
   }
 }

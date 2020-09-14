@@ -145,8 +145,6 @@ class KYCIdentityInput extends Component {
   };
 
   render() {
-    const scaleFactorY = 2;
-    const scalefatorX = 2;
 
     return (
       <TouchableWithoutFeedback onPress={() =>{
@@ -178,22 +176,18 @@ class KYCIdentityInput extends Component {
             containerStyle={Styles.horizontalPaddingBox10}
           />
         </View>
-
           <View style={styles.mainInputView}>
             <Spinner
               visible={this.props.isFetching}
               textContent="Loading..."
               textStyle={{ color: '#FFF' }}
             />
-
-          <View style={Styles.padding}>
+            <View style={Styles.padding}>
               <View>
                 <Text style={{...Styles.boldText}}>Enter your personal information</Text>
               </View>
-          </View>
-
-
-          <View style={{...Styles.wideCenterBlockInput, ...Styles.topPadding}}>
+            </View>
+            <View style={{...Styles.wideCenterBlockInput, ...Styles.topPadding}}>
               <Input
                 label="Legal Name:"
                 labelStyle={Styles.formLabel}
@@ -202,8 +196,7 @@ class KYCIdentityInput extends Component {
                 value={this.state.name}
                 autoCorrect={false}
               />
-          </View>
-
+            </View>
             <View style={Styles.wideCenterBlockInput90}>
               <TouchableOpacity onPress={this.showCalendar}>
               <Text style={{...Styles.formLabel}}>
@@ -218,8 +211,7 @@ class KYCIdentityInput extends Component {
                   mask={"[0000]-[00]-[00]"}
                   style={{ ...Styles.formInput, borderBottomWidth: 1}}
                 />
-                </View>
-
+              </View>
               <View>
                 { this.state.showCalendar && <DateTimePicker
                     value={this.state.date}
@@ -231,10 +223,8 @@ class KYCIdentityInput extends Component {
                     style={{backgroundColor: 'white'}} />
                 }
               </View>
-
-              </TouchableOpacity>
-              </View>
-
+            </TouchableOpacity>
+          </View>
             <View style={Styles.wideCenterBlockInput90}>
               <Text style={Styles.formLabel}>
                 US Social Security Number XXX-XX-XXXX:
@@ -247,8 +237,6 @@ class KYCIdentityInput extends Component {
                 style={{...Styles.formInput,  borderBottomWidth: 1}}
               />
             </View>
-
-
             <View style={{paddingTop: 48}}>
               <Button
               titleStyle={Styles.whiteText}
@@ -273,10 +261,10 @@ class KYCIdentityInput extends Component {
                 }
               />
             </View>
-            </View>
           </View>
         </View>
-      </TouchableWithoutFeedback>
+      </View>
+    </TouchableWithoutFeedback>
     );
   }
 }
