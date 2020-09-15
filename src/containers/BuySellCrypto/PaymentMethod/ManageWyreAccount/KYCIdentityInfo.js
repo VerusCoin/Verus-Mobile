@@ -50,8 +50,6 @@ onClick = () => {  this.props.navigation.navigate("KYCIdentityInput") }
 
 render() {
 
-
-
 return (
   <View style={Styles.root}>
     <View style={Styles.progressBarContainer}>
