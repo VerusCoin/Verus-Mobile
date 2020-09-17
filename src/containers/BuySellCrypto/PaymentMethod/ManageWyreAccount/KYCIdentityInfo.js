@@ -6,6 +6,7 @@ import {
   Text,
   Alert,
   Image,
+  ScrollView
 } from 'react-native';
 import {
   selectWyreAccount,
@@ -74,6 +75,7 @@ return (
         containerStyle={Styles.horizontalPaddingBox10}
       />
     </View>
+    <ScrollView>
     <View style={Styles.svgHeader}>
       <VerifyIdentity height={'100%'} width={'100%'}/>
     </View>
@@ -108,6 +110,7 @@ return (
         </View>
       </View>
     </View>
+    </ScrollView>
     <View style={{...Styles.padding, paddingTop: 42}}>
       <Button
       title="CONTINUE"

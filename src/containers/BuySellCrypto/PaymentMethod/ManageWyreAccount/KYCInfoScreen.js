@@ -5,6 +5,7 @@ import {
   View,
   Text,
   Alert,
+  ScrollView
 } from 'react-native';
 import {
   selectWyreAccount,
@@ -47,9 +48,6 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
 
   render() {
 
-    const scaleFactorY = 2;
-    const scalefatorX = 2;
-
     return (
       <View style={Styles.root}>
         <View style={Styles.progressBarContainer}>
@@ -74,18 +72,19 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
             containerStyle={Styles.horizontalPaddingBox10}
           />
         </View>
+        <ScrollView>
         <View>
           <View style={Styles.padding}>
             <Text style={Styles.boldKYCText}>To use our fiat gateway, primetrust has to verify your identity</Text>
           </View>
 
           <View >
-            <Text style={{ ...Styles.normalKYCText, ...Styles.padding, textAlign: 'left' }}>all documents are handled securely and with care. PrimeTrust Privacy Policy, Terms of Service</Text>
+            <Text style={{ ...Styles.normalKYCText, ...Styles.padding }}>all documents are handled securely and with care. PrimeTrust Privacy Policy, Terms of Service</Text>
           </View>
         </View>
         <View>
           <View style={Styles.alignItemsRight}>
-            <View style={Styles.height15}>
+            <View style={Styles.height50}>
               <View style={Styles.infoKYCContainer}>
                 <Nr1 height={'110%'} width={'15%'} />
                   <Text style={{...Styles.normalKYCText, ...Styles.narrow}}>Create your account</Text>
@@ -93,7 +92,7 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
               </View>
             </View>
           </View>
-        <View style={Styles.height15}>
+        <View style={Styles.height50}>
            <View style={Styles.infoKYCContainer}>
               <Nr2 height={'100%'} width={'15%'} />
               <View style={{...Styles.alignItemsRight, ...Styles.narrow}}>
@@ -103,7 +102,7 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
               <Text style={Styles.boldKYCText}>1 min</Text>
            </View>
         </View>
-          <View style={Styles.height15}>
+          <View style={Styles.height50}>
             <View style={Styles.infoKYCContainer}>
                 <Nr3 height={'100%'} width={'15%'} />
                 <View style={{...Styles.alignItemsRight, ...Styles.narrow}}>
@@ -113,7 +112,7 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
                 <Text style={Styles.boldKYCText}>2 min</Text>
             </View>
           </View>
-        <View style={Styles.height15}>
+        <View style={Styles.height50}>
           <View style={Styles.infoKYCContainer}>
             <Nr4 height={'100%'} width={'15%'} />
             <View style={{...Styles.alignItemsRight, ...Styles.narrow}}>
@@ -124,7 +123,8 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
           </View>
         </View>
        </View>
-      <View style={{ height: '5%'}}>
+     </ScrollView>
+      <View >
         <View style={{...Styles.buttonKYC}}>
           <Button
             title="START"
