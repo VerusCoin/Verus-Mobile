@@ -190,6 +190,8 @@ class KYCfoto extends Component {
             </View>
           </View>
           </ScrollView>
+
+          <View style={Styles.footerContainerKYC}>
           <Button
           titleStyle={Styles.whiteText}
           buttonStyle={Styles.fullWidthButtonKYC}
@@ -199,6 +201,8 @@ class KYCfoto extends Component {
             }
             }
           />
+        </View>
+
         </View>
       </TouchableWithoutFeedback>
     );

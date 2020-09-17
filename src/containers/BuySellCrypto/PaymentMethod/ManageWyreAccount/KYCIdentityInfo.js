@@ -111,7 +111,8 @@ return (
       </View>
     </View>
     </ScrollView>
-    <View style={{...Styles.padding, paddingTop: 42}}>
+
+    <View style={{...Styles.footerContainerKYC}}>
       <Button
       title="CONTINUE"
       titleStyle={Styles.whiteText}
@@ -119,6 +120,7 @@ return (
       onPress={ this.onClick }
       />
     </View>
+
   </View>
 );}
 }

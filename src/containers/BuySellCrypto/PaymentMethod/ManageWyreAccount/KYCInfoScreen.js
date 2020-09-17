@@ -124,8 +124,9 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
         </View>
        </View>
      </ScrollView>
-      <View >
-        <View style={{...Styles.buttonKYC}}>
+
+
+        <View style={Styles.footerContainerKYC}>
           <Button
             title="START"
             titleStyle={Styles.whiteText}
@@ -133,7 +134,7 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
             onPress={ this.onClick }
            />
         </View>
-      </View>
+  
    </View>
     );
   }

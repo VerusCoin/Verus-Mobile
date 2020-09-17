@@ -241,7 +241,8 @@ class KYCIdentityInput extends Component {
             </View>
             </View>
           </ScrollView>
-            <View style={{paddingTop: 48}}>
+
+            <View style={Styles.footerContainerKYC}>
               <Button
               titleStyle={Styles.whiteText}
               buttonStyle={Styles.fullWidthButtonKYC}
@@ -265,6 +266,7 @@ class KYCIdentityInput extends Component {
                 }
               />
             </View>
+
           </View>
       </View>
     </TouchableWithoutFeedback>

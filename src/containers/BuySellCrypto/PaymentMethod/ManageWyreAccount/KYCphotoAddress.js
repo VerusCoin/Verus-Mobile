@@ -115,7 +115,7 @@ class KYCphotoAddress extends Component {
         <View style={Styles.padding}>
           <Text style={{ ...Styles.normalKYCText}}>Please make sure th etext is clear and your address matches with your personal information</Text>
         </View>
-        <View style={Styles.padding}>
+        <View style={Styles.footerContainerKYC}>
             {!this.state.image && (
               <View style={styles.buttonContainerBottom}>
                 <Button
@@ -151,7 +151,8 @@ class KYCphotoAddress extends Component {
             )}
           </View>
           </ScrollView>
-          <View style={Styles.padding} >
+
+          <View style={Styles.footerContainerKYC} >
             <Button
             titleStyle={Styles.whiteText}
             buttonStyle={Styles.fullWidthButtonKYC}
@@ -161,7 +162,8 @@ class KYCphotoAddress extends Component {
               }
               }
             />
-        </View>
+          </View>
+
       </View>
     </TouchableWithoutFeedback>
     );

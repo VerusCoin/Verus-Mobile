@@ -134,13 +134,15 @@ class KYCAddressInfo extends Component {
            </View>
          </View>
          </ScrollView>
-        <View style={Styles.padding}>
+
+        <View style={Styles.footerContainerKYC}>
           <Button
           title="CONTINUE"
           titleStyle={Styles.whiteText}
           buttonStyle={Styles.fullWidthButtonKYC}
           onPress={ this.onClick }
           />
+
         </View>
       </View>
       );

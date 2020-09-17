@@ -172,6 +172,14 @@ export default containers = {
     borderTopWidth: 1,
     borderColor: Colors.tertiaryColor,
   },
+  footerContainerKYC: {
+    width: '100%',
+    bottom: 0,
+    paddingBottom: 5,
+    flex: 1,
+    backgroundColor: Colors.secondaryColor,
+    borderColor: Colors.tertiaryColor,
+  },
   highFooterContainer: {
     width: '100%',
     alignItems: 'center',

@@ -111,7 +111,8 @@ class KYCIdentityFotoInfo extends Component {
             </View>
           </View>
           </ScrollView>
-          <View style={{...Styles.padding, paddingTop: 48}}>
+
+          <View style={Styles.footerContainerKYC}>
            <Button
             title="CONTINUE"
             titleStyle={Styles.whiteText}
@@ -119,6 +120,7 @@ class KYCIdentityFotoInfo extends Component {
             onPress={ this.onClick }
            />
          </View>
+  
        </View>
       );
   }

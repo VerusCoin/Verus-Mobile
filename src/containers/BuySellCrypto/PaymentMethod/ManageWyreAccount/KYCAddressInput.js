@@ -247,7 +247,7 @@ class KYCAddressInput extends Component {
                   />
                 </View>
               </View>
-              <View style={Styles.wideCenterBlockInput}>
+              <View>
                 <View style={Styles.padding}>
                   <Button
                   titleStyle={Styles.whiteText}
@@ -271,6 +271,7 @@ class KYCAddressInput extends Component {
                     />
                   </View>
                 </View>
+                
               </View>
               <View style={{padding: 26}}></View>
               </View>
