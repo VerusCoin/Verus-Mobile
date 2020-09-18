@@ -37,14 +37,6 @@ constructor(props) {
 }
 
 
-  componentDidMount() {
-
-  }
-
-  componentWillUnmount() {
-
-  }
-
 
 
 onClick = () => {  this.props.navigation.navigate("KYCIdentityInput") }
