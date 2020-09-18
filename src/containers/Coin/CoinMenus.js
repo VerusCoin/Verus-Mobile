@@ -43,14 +43,6 @@ class CoinMenus extends Component {
       this.props.dispatch(setIsCoinMenuFocused(this.props.isFocused))
     }
 
-    /*var testArray = ['VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99'];
-
-    VerusLightClient.request( 0, "listprivatetransactions", testArray)
-    .then(res => {
-      console.log("Check Dit")
-      console.log(res)
-    })*/
-
   }
 
   generateTabs = () => {

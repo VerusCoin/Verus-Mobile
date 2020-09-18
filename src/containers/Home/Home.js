@@ -33,7 +33,7 @@ import Styles from '../../styles/index'
 import Colors from "../../globals/colors";
 import Store from '../../store/index'
 import { API_GET_FIATPRICE, API_GET_ADDRESSES, API_GET_BALANCES, API_GET_INFO, ELECTRUM, DLIGHT, GENERAL, USD } from "../../utils/constants/intervalConstants";
-import { ENABLE_WYRE } from '../../utils/constants/constants';
+import { ENABLE_FIAT_GATEWAY } from '../../utils/constants/constants';
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 import VerusLightClient from 'react-native-verus-light-client';
 
@@ -361,7 +361,7 @@ render() {
         </Text>
         <Text style={Styles.boldListHeader}>{"Portfolio"}</Text>
         {this.renderCoinList()}
-        {ENABLE_WYRE == true? <Button
+        {ENABLE_FIAT_GATEWAY == true? <Button
           title="go to kyc screen"
           onPress={this.onKYCScreen}
           /> : null

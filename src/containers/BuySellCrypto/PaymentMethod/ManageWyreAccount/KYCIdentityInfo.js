@@ -6,6 +6,7 @@ import {
   Text,
   Alert,
   Image,
+  ScrollView
 } from 'react-native';
 import {
   selectWyreAccount,
@@ -35,14 +36,6 @@ constructor(props) {
   super(props)
 }
 
-
-  componentDidMount() {
-
-  }
-
-  componentWillUnmount() {
-
-  }
 
 
 
@@ -74,6 +67,7 @@ return (
         containerStyle={Styles.horizontalPaddingBox10}
       />
     </View>
+    <ScrollView>
     <View style={Styles.svgHeader}>
       <VerifyIdentity height={'100%'} width={'100%'}/>
     </View>
@@ -108,7 +102,9 @@ return (
         </View>
       </View>
     </View>
-    <View style={{...Styles.padding, paddingTop: 42}}>
+    </ScrollView>
+
+    <View style={{...Styles.footerContainerKYC}}>
       <Button
       title="CONTINUE"
       titleStyle={Styles.whiteText}
@@ -116,6 +112,7 @@ return (
       onPress={ this.onClick }
       />
     </View>
+
   </View>
 );}
 }

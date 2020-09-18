@@ -140,7 +140,7 @@ export default containers = {
   },
   svgHeader:{
     width:'100%',
-    height: '20%',
+    height: 150,
     justifyContent: 'center',
     paddingTop: 12
   },
@@ -170,6 +170,14 @@ export default containers = {
     maxHeight: '14%',
     backgroundColor: Colors.secondaryColor,
     borderTopWidth: 1,
+    borderColor: Colors.tertiaryColor,
+  },
+  footerContainerKYC: {
+    width: '100%',
+    bottom: 0,
+    paddingBottom: 5,
+    flex: 1,
+    backgroundColor: Colors.secondaryColor,
     borderColor: Colors.tertiaryColor,
   },
   highFooterContainer: {
@@ -301,8 +309,8 @@ export default containers = {
       marginTop: '5%',
       marginLeft: '3%',
   },
-  height15: {
-    height: '15%'
+  height50: {
+    height: 50
   },
   paddedBorderedBox: {
     borderWidth: 1,

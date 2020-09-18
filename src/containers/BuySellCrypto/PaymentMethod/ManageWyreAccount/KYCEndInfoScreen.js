@@ -80,14 +80,14 @@ class KYCEndInfoScreen extends Component {
           </View>
           <View>
             <View style={Styles.alignItemsRight}>
-              <View style={Styles.height15}>
+              <View style={Styles.height50}>
                 <View style={Styles.infoKYCContainer}>
                   <Nr1 height={'110%'} width={'15%'} />
                   <Text style={{...Styles.normalKYCText,  ...Styles.narrow}}>Create your account</Text>
                   <Text style={Styles.boldKYCText}>Completed</Text>
                 </View>
               </View>
-             <View style={Styles.height15}>
+             <View style={Styles.height50}>
                <View style={Styles.infoKYCContainer}>
                  <Nr2 height={'110%'} width={'15%'} />
                  <View style={{...Styles.alignItemsRight,  ...Styles.narrow}}>
@@ -97,7 +97,7 @@ class KYCEndInfoScreen extends Component {
                  <Text style={Styles.boldKYCText}>Completed</Text>
                </View>
               </View>
-              <View style={Styles.height15}>
+              <View style={Styles.height50}>
                 <View style={Styles.infoKYCContainer}>
                   <Nr3 height={'110%'} width={'15%'} />
                   <View style={{...Styles.alignItemsRight,  ...Styles.narrow}}>
@@ -107,7 +107,7 @@ class KYCEndInfoScreen extends Component {
                   <Text style={Styles.boldKYCText}>Under review</Text>
                 </View>
                </View>
-               <View style={Styles.height15}>
+               <View style={Styles.height50}>
                  <View style={Styles.infoKYCContainer}>
                    <Nr4 height={'110%'} width={'15%'} />
                    <View style={{...Styles.alignItemsRight, ...Styles.narrow}}>
@@ -122,7 +122,7 @@ class KYCEndInfoScreen extends Component {
                   style={Styles.paddedBorderedBox}
                   onPress={ this.onClick }
                   >
-                  <Text style={Styles.smallKYCText}>it will take a maximum of fice days to get your uploaded documents reviewed and verified. We thank you for your patience.</Text>
+                  <Text style={Styles.smallKYCText}>it will take a maximum of five days to get your uploaded documents reviewed and verified. We thank you for your patience.</Text>
                 </TouchableOpacity>
               </View>
             </View>

@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Platform,
   Text,
+  ScrollView
 } from 'react-native';
 import { Input } from 'react-native-elements';
 import Spinner from 'react-native-loading-spinner-overlay';
@@ -176,6 +177,7 @@ class KYCIdentityInput extends Component {
             containerStyle={Styles.horizontalPaddingBox10}
           />
         </View>
+        <ScrollView>
           <View style={styles.mainInputView}>
             <Spinner
               visible={this.props.isFetching}
@@ -237,7 +239,10 @@ class KYCIdentityInput extends Component {
                 style={{...Styles.formInput,  borderBottomWidth: 1}}
               />
             </View>
-            <View style={{paddingTop: 48}}>
+            </View>
+          </ScrollView>
+
+            <View style={Styles.footerContainerKYC}>
               <Button
               titleStyle={Styles.whiteText}
               buttonStyle={Styles.fullWidthButtonKYC}
@@ -261,8 +266,8 @@ class KYCIdentityInput extends Component {
                 }
               />
             </View>
+
           </View>
-        </View>
       </View>
     </TouchableWithoutFeedback>
     );

@@ -9,6 +9,7 @@ import {
   Alert,
   Image,
   Text,
+  ScrollView
 } from 'react-native';
 
 import {
@@ -101,6 +102,7 @@ class KYCphotoAddress extends Component {
               containerStyle={Styles.horizontalPaddingBox10}
             />
         </View>
+        <ScrollView>
         <View style={styles.mainInputView}>
           <Spinner
             visible={this.props.isFetching}
@@ -113,7 +115,7 @@ class KYCphotoAddress extends Component {
         <View style={Styles.padding}>
           <Text style={{ ...Styles.normalKYCText}}>Please make sure th etext is clear and your address matches with your personal information</Text>
         </View>
-        <View style={Styles.padding}>
+        <View style={Styles.footerContainerKYC}>
             {!this.state.image && (
               <View style={styles.buttonContainerBottom}>
                 <Button
@@ -148,7 +150,9 @@ class KYCphotoAddress extends Component {
               </View>
             )}
           </View>
-          <View style={Styles.padding} >
+          </ScrollView>
+
+          <View style={Styles.footerContainerKYC} >
             <Button
             titleStyle={Styles.whiteText}
             buttonStyle={Styles.fullWidthButtonKYC}
@@ -158,7 +162,8 @@ class KYCphotoAddress extends Component {
               }
               }
             />
-        </View>
+          </View>
+
       </View>
     </TouchableWithoutFeedback>
     );

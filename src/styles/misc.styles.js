@@ -43,7 +43,7 @@ export default misc = {
   formLabel: {
       fontSize: 14,
       textAlign: 'left',
-      paddingTop: '0%',
+      paddingTop: 0,
       color: Colors.kycBlack,
       marginVertical: 0,
       paddingVertical: 0,
@@ -53,10 +53,11 @@ export default misc = {
   formInput: {
       fontSize: 16,
       textAlign: 'left',
-      paddingTop: '0%',
+      paddingTop: 0,
       color: Colors.kycBlack,
       marginVertical: 0,
       paddingVertical: 0,
+      height: 50,
       fontFamily: 'SourceSansPro-Regular',
       fontWeight: "normal",
   },

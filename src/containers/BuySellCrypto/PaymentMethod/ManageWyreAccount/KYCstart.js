@@ -5,6 +5,7 @@ import {
   View,
   Text,
   Alert,
+  ScrollView
 } from 'react-native';
 import {
   selectWyreAccount,
@@ -88,6 +89,7 @@ onFlip = () => { this.state.checked === true ? this.setState({ checked: false })
   render() {
     return (
       <View style={Styles.rootBlue}>
+        <ScrollView>
         <View style={Styles.secondaryBackground }>
           <Input
             label="name"
@@ -123,6 +125,7 @@ onFlip = () => { this.state.checked === true ? this.setState({ checked: false })
             onPress={ this.onFlip }
            />
         </View>
+      </ScrollView>
         <View style={ {...Styles.blockWithFlexStart, ...Styles.centralRow }}>
           <View style={Styles.padding}>
             <Button

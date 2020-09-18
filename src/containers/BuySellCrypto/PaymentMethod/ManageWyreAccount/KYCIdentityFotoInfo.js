@@ -6,6 +6,7 @@ import {
   Text,
   Alert,
   Image,
+  ScrollView,
 } from 'react-native';
 import {
   selectWyreAccount,
@@ -73,6 +74,7 @@ class KYCIdentityFotoInfo extends Component {
               containerStyle={Styles.horizontalPaddingBox10}
             />
           </View>
+          <ScrollView>
           <View style={Styles.svgHeader}>
             <VerifyIdentity height={'100%'} width={'100%'}/>
           </View>
@@ -108,7 +110,9 @@ class KYCIdentityFotoInfo extends Component {
               </View>
             </View>
           </View>
-          <View style={{...Styles.padding, paddingTop: 48}}>
+          </ScrollView>
+
+          <View style={Styles.footerContainerKYC}>
            <Button
             title="CONTINUE"
             titleStyle={Styles.whiteText}
@@ -116,6 +120,7 @@ class KYCIdentityFotoInfo extends Component {
             onPress={ this.onClick }
            />
          </View>
+  
        </View>
       );
   }

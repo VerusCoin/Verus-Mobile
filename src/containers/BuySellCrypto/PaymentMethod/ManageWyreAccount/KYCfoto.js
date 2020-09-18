@@ -10,6 +10,7 @@ import {
   Alert,
   Image,
   Text,
+  ScrollView,
 } from 'react-native';
 
 import Lock from '../../../../images/customIcons/iconmonstr-lock-18.svg';
@@ -103,6 +104,7 @@ class KYCfoto extends Component {
               containerStyle={Styles.horizontalPaddingBox10}
             />
           </View>
+          <ScrollView>
           <View style={styles.mainInputView}>
             <Spinner
               visible={this.props.isFetching}
@@ -187,6 +189,9 @@ class KYCfoto extends Component {
              </View>
             </View>
           </View>
+          </ScrollView>
+
+          <View style={Styles.footerContainerKYC}>
           <Button
           titleStyle={Styles.whiteText}
           buttonStyle={Styles.fullWidthButtonKYC}
@@ -196,6 +201,8 @@ class KYCfoto extends Component {
             }
             }
           />
+        </View>
+
         </View>
       </TouchableWithoutFeedback>
     );
