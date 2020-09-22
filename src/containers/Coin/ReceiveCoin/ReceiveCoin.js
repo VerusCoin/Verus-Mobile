@@ -19,17 +19,18 @@ import {
  } from "react-native"
 import { Input } from 'react-native-elements'
 import { connect } from 'react-redux'
-import { Dropdown } from 'react-native-material-dropdown'
 import Styles from '../../../styles/index'
 import QRModal from '../../../components/QRModal'
 import { coinsToSats, isNumber, truncateDecimal } from '../../../utils/math'
 import Colors from '../../../globals/colors';
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
-import { API_GET_FIATPRICE, API_GET_BALANCES, GENERAL, USD, ELECTRUM, DLIGHT } from "../../../utils/constants/intervalConstants"
+import { API_GET_FIATPRICE, API_GET_BALANCES, GENERAL } from "../../../utils/constants/intervalConstants"
+import { USD } from '../../../utils/constants/currencies'
 import { expireData } from "../../../actions/actionCreators"
 import Store from "../../../store"
-import { CONNECTION_ERROR } from "../../../utils/api/errors/errorMessages"
 import { VERUS_QR_VERSION } from '../../../../env/main.json'
+import { Portal } from "react-native-paper"
+import selectAddresses from "../../../selectors/address"
 
 class ReceiveCoin extends Component {
   constructor(props) {
@@ -50,29 +51,20 @@ class ReceiveCoin extends Component {
   componentDidMount() {
     this.setAddress()
   }
+  
+  componentDidUpdate(lastProps) {
+    if (lastProps.addresses !== this.props.addresses) {
+      this.setAddress()
+    }
+  }
 
   setAddress = () => {
-    let index = 0;
-    const activeUser = this.props.activeAccount
-    const coinObj = this.state.selectedCoin
-    const channel = coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM
-
-    if (
-      activeUser.keys[coinObj.id] != null &&
-      activeUser.keys[coinObj.id][channel] != null &&
-      activeUser.keys[coinObj.id][channel].addresses.length > 0
-    ) {
+    if (this.props.addresses && this.props.addresses.results != null) {
       this.setState({
-        address: activeUser.keys[coinObj.id][channel].addresses[0]
+        address: this.props.addresses.results[0]
       });
     } else {
-      throw new Error(
-        "ReceiveCoin.js: Fatal mismatch error, " +
-          activeUser.id +
-          " user keys for active coin " +
-          coinObj.id +
-          " not found!"
-      );
+      throw new Error("Couldn't load address.");
     }
   }
 
@@ -216,30 +208,6 @@ class ReceiveCoin extends Component {
     });
   }
 
-  renderBalanceLabel = () => {
-    const { activeCoin, balances } = this.props;
-
-    if (balances.errors.public) {
-      return (
-        <Text
-          style={{ ...Styles.largeCentralPaddedHeader, ...Styles.errorText }}
-        >
-          {CONNECTION_ERROR}
-        </Text>
-      );
-    } else if (balances.public) {
-      return (
-        <Text style={Styles.largeCentralPaddedHeader}>
-          {truncateDecimal(balances.public.confirmed, 4) +
-            " " +
-            activeCoin.id}
-        </Text>
-      );
-    } else {
-      return null;
-    }
-  };
-
   render() {
     const _price = this.getPrice()
     const {
@@ -264,10 +232,6 @@ class ReceiveCoin extends Component {
 
     return (
       <View style={Styles.defaultRoot}>
-        <View style={Styles.centralRow}>{this.renderBalanceLabel()}</View>
-        <Text style={Styles.greyStripeHeader}>
-          {"Generate VerusQR Invoice"}
-        </Text>
         <ScrollView
           style={Styles.fullWidth}
           contentContainerStyle={Styles.horizontalCenterContainer}
@@ -275,36 +239,21 @@ class ReceiveCoin extends Component {
             <RefreshControl refreshing={loading} onRefresh={forceUpdate} />
           }
         >
-          <QRModal
-            animationType="slide"
-            transparent={false}
-            visible={showModal && verusQRString && verusQRString.length > 0}
-            qrString={verusQRString}
-            cancel={() => {
-              this.setState({ showModal: false });
-            }}
-          />
-          <Dropdown
-            // TODO: Determine why width must be 85 here, cant be wide block
-            containerStyle={{ ...Styles.wideBlock, width: "85%" }}
-            labelExtractor={(item, index) => {
-              return item.id;
-            }}
-            valueExtractor={(item, index) => {
-              return item;
-            }}
-            data={activeCoinsForUser}
-            onChangeText={(value, index, data) => switchInvoiceCoin(value)}
-            textColor={Colors.quinaryColor}
-            selectedItemColor={Colors.quinaryColor}
-            baseColor={Colors.quinaryColor}
-            label="Selected Coin:"
-            labelTextStyle={{ fontFamily: "Avenir-Book" }}
-            labelFontSize={17}
-            value={selectedCoin}
-            pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
-            itemTextStyle={{ fontFamily: "Avenir-Book" }}
-          />
+          {showModal && (
+            <Portal>
+              <QRModal
+                animationType="slide"
+                transparent={false}
+                visible={
+                  showModal && verusQRString && verusQRString.length > 0
+                }
+                qrString={verusQRString}
+                cancel={() => {
+                  this.setState({ showModal: false });
+                }}
+              />
+            </Portal>
+          )}
           <View style={Styles.wideBlock}>
             <TouchableOpacity onPress={copyAddressToClipboard}>
               <Input
@@ -348,13 +297,15 @@ class ReceiveCoin extends Component {
                 fiatEnabled ? (
                   <Text
                     style={Styles.ghostText}
-                    onPress={() => this.setState({ amountFiat: !amountFiat })}
+                    onPress={() =>
+                      this.setState({ amountFiat: !amountFiat })
+                    }
                   >{`~${_price} ${
                     amountFiat ? selectedCoin.id : displayCurrency
                   }`}</Text>
                 ) : null
               }
-              onChangeText={text => this.setState({ amount: text })}
+              onChangeText={(text) => this.setState({ amount: text })}
               keyboardType={"decimal-pad"}
               autoCapitalize="words"
               errorMessage={errors.amount ? errors.amount : null}
@@ -363,7 +314,7 @@ class ReceiveCoin extends Component {
           <View style={Styles.wideBlock}>
             <Input
               labelStyle={Styles.formInputLabel}
-              onChangeText={text => this.setState({ memo: text })}
+              onChangeText={(text) => this.setState({ memo: text })}
               autoCapitalize={"none"}
               label={"Enter a note for the receiver (optional):"}
               autoCorrect={false}
@@ -385,11 +336,6 @@ class ReceiveCoin extends Component {
 }
 
 const mapStateToProps = (state) => {
-  const chainTicker = state.coins.activeCoin.id
-  const mainChannel = state.coins.activeCoin.dominant_channel
-    ? state.coins.activeCoin.dominant_channel
-    : ELECTRUM;
-
   return {
     accounts: state.authentication.accounts,
     activeCoin: state.coins.activeCoin,
@@ -397,15 +343,7 @@ const mapStateToProps = (state) => {
     activeAccount: state.authentication.activeAccount,
     rates: state.ledger.rates[GENERAL],
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
-    balances: {
-      public: state.ledger.balances[mainChannel][chainTicker],
-      private: state.ledger.balances[DLIGHT][chainTicker],
-      errors: {
-        public: state.errors[API_GET_BALANCES][mainChannel][chainTicker],
-        private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
-      }
-    },
-    //needsUpdate: state.ledger.needsUpdate,
+    addresses: selectAddresses(state)
   }
 };
 

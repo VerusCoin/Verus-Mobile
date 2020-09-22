@@ -1225,6 +1225,15 @@
     "@types/yargs" "^15.0.0"
     chalk "^3.0.0"
 
+"@react-native-community/art@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@react-native-community/art/-/art-1.2.0.tgz#386d95393f6042d9006f9d4bc6063fb898794460"
+  integrity sha512-a+ZcRGl/BzLa89yi33Mbn5SHavsEXqKUMdbfLf3U8MDLElndPqUetoJyGkv63+BcPO49UMWiQRP1YUz6/zfJ+A==
+  dependencies:
+    art "^0.10.3"
+    invariant "^2.2.4"
+    prop-types "^15.7.2"
+
 "@react-native-community/async-storage@^1.5.1", "@react-native-community/async-storage@^1.6.1":
   version "1.10.1"
   resolved "https://registry.yarnpkg.com/@react-native-community/async-storage/-/async-storage-1.10.1.tgz#23902625cf146a25b2929d72558caa437c72c4a8"
@@ -2144,7 +2153,7 @@ array.prototype.flat@^1.2.1:
     define-properties "^1.1.3"
     es-abstract "^1.17.0-next.1"
 
-art@^0.10.0, art@^0.10.1:
+art@^0.10.0, art@^0.10.1, art@^0.10.3:
   version "0.10.3"
   resolved "https://registry.yarnpkg.com/art/-/art-0.10.3.tgz#b01d84a968ccce6208df55a733838c96caeeaea2"
   integrity sha512-HXwbdofRTiJT6qZX/FnchtldzJjS3vkLJxQilc3Xj+ma2MXjY4UAyQ0ls1XZYVnDvVIBiFZbC6QsvtW86TD6tQ==
@@ -9101,10 +9110,6 @@ node-int64@^0.4.0:
   resolved "https://registry.yarnpkg.com/node-int64/-/node-int64-0.4.0.tgz#87a9065cdb355d3182d8f94ce11188b825c68a3b"
   integrity sha1-h6kGXNs1XTGC2PlM4RGIuCXGijs=
 
-"node-jest-testing-boilerplate@https://github.com/michaeltout/verus-zkedid-utils":
-  version "1.0.0"
-  resolved "https://github.com/michaeltout/verus-zkedid-utils#56fd601220d4e6b5e5fea2d5b3d2e11514204d96"
-
 node-modules-regexp@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/node-modules-regexp/-/node-modules-regexp-1.0.0.tgz#8d9dbe28964a4ac5712e9131642107c71e90ec40"
@@ -10670,6 +10675,11 @@ react-native-permissions@^2.1.5:
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/react-native-permissions/-/react-native-permissions-2.1.5.tgz#6cfc4f1ab1590f4952299b7cdc9698525ad540e0"
   integrity sha512-b9KO/4UEV9qddl+kcSybmdk8nlAifclSDBR2rSvc5KZM06vIaJWJNIzK2ZwPXqDQ5yD3CJLuKTRj7Fz+jM9qyQ==
+
+react-native-pie@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/react-native-pie/-/react-native-pie-1.1.2.tgz#9cd4d428e85cc232877e5f7cdb2bea9f724fcbac"
+  integrity sha512-aShbks0NA4QzXftKpdQd/lNfkvj23yS2pF1A61Y+bKhFMnky0xubN1m4edcDNVWC0a2l40rM9C3JwJOIchv3kQ==
 
 react-native-plaid-link@^1.4.4:
   version "1.4.4"
@@ -12995,6 +13005,10 @@ version_compare@^0.0.3:
   version "0.0.3"
   resolved "https://registry.yarnpkg.com/version_compare/-/version_compare-0.0.3.tgz#ec30bbd187526a7f8b55027ac1cb2e65993483a5"
   integrity sha1-7DC70YdSan+LVQJ6wcsuZZk0g6U=
+
+"verus-zkedid-utils@https://github.com/michaeltout/verus-zkedid-utils":
+  version "1.0.0"
+  resolved "https://github.com/michaeltout/verus-zkedid-utils#5bf6e059768ba8cc55af994a1fe697fb65db7bed"
 
 vlq@^1.0.0:
   version "1.0.1"

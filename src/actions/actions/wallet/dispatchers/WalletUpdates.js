@@ -88,10 +88,20 @@ export const conditionallyUpdateWallet = async (state, dispatch, chainTicker, up
       //dispatch(logDebugWarning(`The ${updateId} call for ${chainTicker} is taking a very long time to complete. This may impact performace.`)
       console.log(`A ${updateId} call for ${chainTicker} has been called while another example of the same call is busy.`)
     } else if (updateInfo && updateInfo.needs_update) {    
-      if (coin_bound && (!coinMenuFocused || activeCoin == null || activeCoin.id !== chainTicker)) {
-        return API_ABORTED
-      } else if (update_locations != null && (!coinMenuFocused || activeSection == null || !update_locations.includes(activeSection.key))) {
-        return API_ABORTED
+      if (
+        coin_bound &&
+        (!coinMenuFocused ||
+          activeCoin == null ||
+          activeCoin.id !== chainTicker)
+      ) {
+        return API_ABORTED;
+      } else if (
+        update_locations != null &&
+        (!coinMenuFocused ||
+          activeSection == null ||
+          !update_locations.includes(activeSection.key))
+      ) {
+        return API_ABORTED;
       }
 
       if(await udpateWalletData(state, dispatch, openChannels, chainTicker, updateId)) {

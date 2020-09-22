@@ -102,6 +102,10 @@ export const ERROR_ETH_INIT = 'ERROR_ETH_INIT';
 // Overview Screen GUI state
 export const SET_OVERVIEW_FILTER = 'SET_OVERVIEW_FILTER';
 
+// Coin Menus Screens GUI state
+export const SET_COIN_SUB_WALLET = 'SET_COIN_SUB_WALLET'
+export const INIT_COIN_SUB_WALLETS = 'INIT_COIN_SUB_WALLETS'
+
 // Identity app
 export const APP_SETUP = 'APP_SETUP';
 export const REQUEST_SEED_DATA = 'REQUEST_SEED_DATA';

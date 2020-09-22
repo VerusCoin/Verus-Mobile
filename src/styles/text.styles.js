@@ -37,7 +37,7 @@ export default text = {
     fontSize: 24,
     textAlign: 'center',
     color: Colors.quinaryColor,
-    fontFamily: 'Avenir-Black',
+    fontFamily: 'Avenir-Black'
   },
   errorText: {
     color: Colors.warningButtonColor,
@@ -181,8 +181,11 @@ export default text = {
   listItemRightTitleDefault: {
     color: Colors.quinaryColor,
   },
-  listItemSubtitleDefault: {
+  listItemSubtitleError: {
     color: 'rgba(206,68,70,1)',
+  },
+  listItemSubtitleDefault: {
+    color: 'gray',
   },
   fiatLabel: {
     backgroundColor: Colors.tertiaryColor,

@@ -322,11 +322,17 @@ function MainStackScreens() {
         name="GeneralWalletSettings"
         component={GeneralWalletSettings}
         options={{
-          title: "General Wallet Settings",
+          title: "General",
         }}
       />
 
-      <MainStack.Screen name="CoinSettings" component={CoinSettings} />
+      <MainStack.Screen
+        name="CoinSettings"
+        component={CoinSettings}
+        options={({ route }) => ({
+          title: route.params != null ? route.params.title : null,
+        })}
+      />
 
       <MainStack.Screen
         name="DeleteProfile"

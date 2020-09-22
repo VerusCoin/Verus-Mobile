@@ -90,8 +90,16 @@ export const removeExistingCoin = (coinID, activeCoins, userName, deleteWallet =
     let closers = []
 
     Object.keys(COIN_MANAGER_MAP.closers).map(channel => {
-      if (!DISABLED_CHANNELS.includes(channel)) {
-        closers.push(COIN_MANAGER_MAP.closers[channel](activeCoins[coinIndex], deleteWallet))
+      if (
+        activeCoins[coinIndex].compatible_channels.includes(channel) &&
+        !DISABLED_CHANNELS.includes(channel)
+      ) {
+        closers.push(
+          COIN_MANAGER_MAP.closers[channel](
+            activeCoins[coinIndex],
+            deleteWallet
+          )
+        );
       }
     })
 

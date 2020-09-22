@@ -37,11 +37,9 @@ import {
   API_GET_INFO,
   ELECTRUM,
   DLIGHT,
-  GENERAL,
-  USD,
-  ETH,
-  ERC20,
+  GENERAL
 } from "../../utils/constants/intervalConstants";
+import { USD } from '../../utils/constants/currencies'
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 import { arrayToObject } from "../../utils/objectManip";
 
@@ -95,6 +93,7 @@ class Home extends Component {
       ],
     })
 
+    this.props.navigation.closeDrawer();
     this.props.navigation.dispatch(resetAction)
   }
 
@@ -305,7 +304,7 @@ class Home extends Component {
                       balanceErrors[item.id]) &&
                     (balanceErrors[item.id] ||
                       isNaN(_balances[item.id].confirmed))
-                      ? Styles.listItemSubtitleDefault
+                      ? Styles.listItemSubtitleError
                       : null
                   }
                   containerStyle={Styles.bottomlessListItemContainer}

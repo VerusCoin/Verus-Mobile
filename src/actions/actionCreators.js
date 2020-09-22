@@ -64,6 +64,7 @@ import {
   APP_SETUP,
   SET_ETH_TX_RECEIPTS,
   ADD_ETH_TX_RECEIPT,
+  SET_COIN_SUB_WALLET,
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -340,6 +341,16 @@ export const setActiveOverviewFilter = (chainTicker, filterType) => {
     payload: {
       chainTicker,
       filterType
+    }
+  }
+}
+
+export const setCoinSubWallet = (chainTicker, subWallet) => {
+  return {
+    type: SET_COIN_SUB_WALLET,
+    payload: {
+      chainTicker,
+      subWallet
     }
   }
 }

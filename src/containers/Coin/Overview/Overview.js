@@ -24,46 +24,23 @@ import {
   API_GET_BALANCES,
   API_GET_INFO,
   API_GET_TRANSACTIONS,
-  ELECTRUM,
-  DLIGHT,
   ETH
 } from "../../../utils/constants/intervalConstants";
-import {
-  PUBLIC,
-  PRIVATE,
-  TOTAL
-} from '../../../utils/constants/constants'
 import { selectTransactions } from '../../../selectors/transactions';
-import { Dropdown } from 'react-native-material-dropdown'
-import { ENABLE_DLIGHT } from '../../../../env/main.json'
 import { ETHERS } from "../../../utils/constants/web3Constants";
 import { ethers } from "ethers";
+import { Portal } from "react-native-paper";
+import DynamicHeader from "../DynamicHeader";
 
 const TX_LOGOS = {
-  self: {
-    [PUBLIC]: require('../../../images/customIcons/self-arrow.png'),
-    [PRIVATE]: require('../../../images/customIcons/self-arrow-private.png')
-  },
-  out: {
-    [PUBLIC]: require('../../../images/customIcons/out-arrow.png'),
-    [PRIVATE]: require('../../../images/customIcons/out-arrow-private.png')
-  },
-  in: {
-    [PUBLIC]: require('../../../images/customIcons/in-arrow.png'),
-    [PRIVATE]: require('../../../images/customIcons/in-arrow-private.png')
-  },
-  pending: {
-    [PUBLIC]: require('../../../images/customIcons/pending-clock.png'),
-    [PRIVATE]: require('../../../images/customIcons/pending-clock-private.png')
-  },
-  unknown: {
-    [PUBLIC]: require('../../../images/customIcons/unknown-logo.png'),
-    [PRIVATE]: require('../../../images/customIcons/unknown-logo.png')
-  },
-  interest: {
-    [PUBLIC]: require('../../../images/customIcons/interest-plus.png')
-  }
+  self: require('../../../images/customIcons/self-arrow.png'),
+  out: require('../../../images/customIcons/out-arrow.png'),
+  in: require('../../../images/customIcons/in-arrow.png'),
+  pending: require('../../../images/customIcons/pending-clock.png'),
+  unknown: require('../../../images/customIcons/unknown-logo.png'),
+  interest: require('../../../images/customIcons/interest-plus.png'),
 }
+
 const CONNECTION_ERROR = "Connection Error"
 
 class Overview extends Component {
@@ -79,16 +56,15 @@ class Overview extends Component {
         parsedAmount: 0,
         txData: {},
         activeCoinID: null,
-        txLogo: TX_LOGOS.unknown[PUBLIC]
+        txLogo: TX_LOGOS.unknown
       }
     };
     //this.updateProps = this.updateProps.bind(this);
     this.refresh = this.refresh.bind(this);
-
-    this.refresh();
   }
 
   componentDidMount() {
+    this.refresh();
     this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
       this.refresh();
     });
@@ -99,31 +75,33 @@ class Overview extends Component {
   }
 
   refresh = () => {
-    this.setState({ loading: true }, () => {
-      const updates = [
-        API_GET_FIATPRICE,
-        API_GET_BALANCES,
-        API_GET_INFO,
-        API_GET_TRANSACTIONS
-      ];
-      Promise.all(
-        updates.map(async update => {
-          await conditionallyUpdateWallet(
-            store.getState(),
-            this.props.dispatch,
-            this.props.activeCoin.id,
-            update
-          );
-        })
-      )
-        .then(res => {
-          this.setState({ loading: false });
-        })
-        .catch(error => {
-          this.setState({ loading: false });
-          console.warn(error);
-        });
-    });
+    if (!this.state.loading) {
+      this.setState({ loading: true }, () => {
+        const updates = [
+          API_GET_FIATPRICE,
+          API_GET_BALANCES,
+          API_GET_INFO,
+          API_GET_TRANSACTIONS
+        ];
+        Promise.all(
+          updates.map(async update => {
+            await conditionallyUpdateWallet(
+              store.getState(),
+              this.props.dispatch,
+              this.props.activeCoin.id,
+              update
+            );
+          })
+        )
+          .then(res => {
+            this.setState({ loading: false });
+          })
+          .catch(error => {
+            this.setState({ loading: false });
+            console.warn(error);
+          });
+      });
+    }
   };
 
   forceUpdate = () => {
@@ -150,8 +128,8 @@ class Overview extends Component {
     const decimals = this.props.activeCoin.decimals != null ? this.props.activeCoin.decimals : ETHERS
     const gasFees = item.feeCurr === ETH.toUpperCase()
 
-    if (item.txArray != null) {
-      const { txArray, visibility } = item
+    if (Array.isArray(item)) {
+      const txArray = item
       let toAddresses = [];
       const confirmations = txArray[0].confirmations
       
@@ -191,17 +169,16 @@ class Overview extends Component {
         to: toAddresses,
         txid: txArray[0].txid,
         type: "sent",
-        visibility
       }
     } else {
-      amount = item.amount != null ? new MathableNumber(item.amount.toString(), decimals) : "??";
+      amount = item.amount != null ? new MathableNumber(item.amount.toString(), decimals) : new MathableNumber(0, decimals);
 
       if (item.type === "received") {
         avatarImg = TX_LOGOS.in;
         subtitle = "me";
       } else if (item.type === "sent") {
         avatarImg = TX_LOGOS.out;
-        subtitle = item.address == null ? (item.visibility === PRIVATE ? "hidden" : "??") : item.address;
+        subtitle = item.address == null ? "??" : item.address;
       } else if (item.type === "self") {
         if (item.amount !== "??" && amount.num.lt(0)) {
           subtitle = "me";
@@ -216,8 +193,6 @@ class Overview extends Component {
         subtitle = "??";
       }
     }
-
-    avatarImg = avatarImg[item.visibility]
 
     subtitle = "to: " + subtitle;
 
@@ -293,18 +268,15 @@ class Overview extends Component {
 
   parseTransactionLists = () => {
     const { transactions } = this.props
-    let privateTxs = transactions.private || []
-    let publicTxs = transactions.public || []
-    let txList = [
-      ...privateTxs.map(object => {
-        return { ...object, visibility: PRIVATE };
-      }),
-      ...publicTxs.map(object => {
-        return Array.isArray(object) ? { txArray: object, visibility: PUBLIC } : { ...object, visibility: PUBLIC };
-      })
-    ];
+    let txs =
+      transactions != null && transactions.results != null
+        ? transactions.results
+        : [];
+    // let txList = txs.map(object => {
+    //   return Array.isArray(object) ? { txArray: object, visibility: PUBLIC } : { ...object, visibility: PUBLIC };
+    // })
 
-    return txList.sort((a, b) => {
+    return txs.sort((a, b) => {
       a = a.txArray ? a.txArray[0] : a
       b = b.txArray ? b.txArray[0] : b
 
@@ -335,125 +307,33 @@ class Overview extends Component {
     this.props.dispatch(setActiveOverviewFilter(this.props.activeCoin.id, filter))
   }
 
-  renderBalanceLabel = () => {
-    const { activeCoin, balances, activeOverviewFilter } = this.props;
-    let displayBalance = null
-    let balanceName = null
-
-    if (activeOverviewFilter == null) {
-      displayBalance =
-        balances.public != null && balances.private != null
-          ? balances.public.total + balances.private.total
-          : balances.public != null
-          ? balances.public.total
-          : balances.private != null
-          ? balances.private.total
-          : null;
-    } else {
-      balanceName = activeOverviewFilter
-
-      if (activeOverviewFilter === PRIVATE) {
-        displayBalance = balances.private != null ? balances.private.total : null
-      } else if (activeOverviewFilter === PUBLIC) {
-        displayBalance = balances.public != null ? balances.public.total : null
-      }
-    }
-
-    if (balances.errors.public && balances.errors.private) {
-      return (
-        <Text
-          style={{ ...Styles.largeCentralPaddedHeader, ...Styles.errorText }}
-        >
-          {CONNECTION_ERROR}
-        </Text>
-      );
-    } else {
-      return (
-        <Text style={Styles.largeCentralPaddedHeader}>
-          {`${
-            displayBalance != null
-              ? `${truncateDecimal(displayBalance, 4)}${
-                  balanceName != null ? ` ${balanceName}` : ''
-                }`
-              : "-"
-          } ${activeCoin.id}`}
-        </Text>
-      );
-    } 
-  };
-
   render() {
-    const { activeOverviewFilter, enabledChannels, activeCoin, dispatch } = this.props;
-
     return (
       <View style={Styles.defaultRoot}>
         {this.state.txDetailsModalOpen && (
-          <TxDetailsModal
-            {...this.state.txDetailProps}
-            cancel={() =>
-              this.setState({
-                txDetailsModalOpen: false,
-                txDetailProps: {
-                  parsedAmount: 0,
-                  txData: {},
-                  activeCoinID: null,
-                  txLogo: TX_LOGOS.unknown[PUBLIC],
-                  decimals: this.props.activeCoin.decimals != null ? this.props.activeCoin.decimals : ETHERS
-                },
-              })
-            }
-            visible={this.state.txDetailsModalOpen}
-            animationType="slide"
-          />
-        )}
-        <View style={Styles.centralRow}>{this.renderBalanceLabel()}</View>
-        <View
-          style={{
-            ...Styles.fullWidth,
-            ...Styles.greyStripeContainer,
-            ...Styles.horizontalPaddingBox,
-          }}
-        >
-          {ENABLE_DLIGHT ? (
-            <Dropdown
-              data={[TOTAL, PUBLIC, PRIVATE]}
-              disabled={!ENABLE_DLIGHT || enabledChannels.length < 3}
-              labelExtractor={(value) => value}
-              valueExtractor={(value) => value}
-              onChangeText={(value) => {
-                dispatch(
-                  setActiveOverviewFilter(
-                    activeCoin.id,
-                    value === TOTAL ? null : value
-                  )
-                );
-              }}
-              renderBase={() => (
-                <Text
-                  style={{
-                    ...Styles.greyStripeHeader,
-                    ...Styles.capitalizeFirstLetter,
-                  }}
-                >{`${
-                  activeOverviewFilter == null
-                    ? "Total"
-                    : activeOverviewFilter
-                } Overview${
-                  !ENABLE_DLIGHT || enabledChannels.length < 3 ? "" : " ▾"
-                }`}</Text>
-              )}
+          <Portal>
+            <TxDetailsModal
+              {...this.state.txDetailProps}
+              cancel={() =>
+                this.setState({
+                  txDetailsModalOpen: false,
+                  txDetailProps: {
+                    parsedAmount: 0,
+                    txData: {},
+                    activeCoinID: null,
+                    txLogo: TX_LOGOS.unknown,
+                    decimals:
+                      this.props.activeCoin.decimals != null
+                        ? this.props.activeCoin.decimals
+                        : ETHERS,
+                  },
+                })
+              }
+              visible={this.state.txDetailsModalOpen}
+              animationType="slide"
             />
-          ) : (
-            <Text
-              style={{
-                ...Styles.greyStripeHeader,
-                ...Styles.capitalizeFirstLetter,
-              }}
-            >
-              {"Overview"}
-            </Text>
-          )}
-        </View>
+          </Portal>
+        )}
         {this.renderTransactionList()}
       </View>
     );
@@ -461,27 +341,12 @@ class Overview extends Component {
 }
 
 const mapStateToProps = (state) => {
-  const chainTicker = state.coins.activeCoin.id
-  const mainChannel = state.coins.activeCoin.dominant_channel
-    ? state.coins.activeCoin.dominant_channel
-    : ELECTRUM;
-
   return {
     activeCoin: state.coins.activeCoin,
-    balances: {
-      public: state.ledger.balances[mainChannel][chainTicker],
-      private: state.ledger.balances[DLIGHT][chainTicker],
-      errors: {
-        public: state.errors[API_GET_BALANCES][mainChannel][chainTicker],
-        private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
-      }
-    },
     transactions: selectTransactions(state),
     activeAccount: state.authentication.activeAccount,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     generalWalletSettings: state.settings.generalWalletSettings,
-    activeOverviewFilter: state.coinOverview.activeOverviewFilter[chainTicker],
-    enabledChannels: state.settings.coinSettings[chainTicker] ? state.settings.coinSettings[chainTicker].channels : []
   }
 };
 

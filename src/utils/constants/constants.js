@@ -57,7 +57,7 @@ export const MAX_VERIFICATION_DESC = 'Complete Verification (Highly recommended)
     'cross verified across at least two different electrum servers, and the transaction IDs of your existing ' +
     'transactions will be double-checked through local transaction hashing.';
 export const VERIFICATION_LOCKED = 'The verification level settings for this coin have been locked and cannot be changed.';
-export const DEFAULT_PRIVATE_ADDRS = 100
+export const DEFAULT_PRIVATE_ADDRS = 1
 
 // Chain QR
 export const INCOMPLETE_CHAIN_QR = 'VerusQR code impartial or incomplete, cannot parse QR data.';
@@ -141,3 +141,8 @@ export const STATES = [
     { value: 'WI' },
     { value: 'WY' }
 ];
+
+export const SUBWALLET_NAMES = {
+    MAIN_WALLET: "Main",
+    PRIVATE_WALLET: "Private"
+}
