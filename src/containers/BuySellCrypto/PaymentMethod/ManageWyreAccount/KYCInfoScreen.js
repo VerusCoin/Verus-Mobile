@@ -52,7 +52,6 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
       <View style={Styles.root}>
         <View style={Styles.progressBarContainer}>
           <Badge
-
             badgeStyle={ Styles.progessBadgeDone }
             containerStyle={Styles.horizontalPaddingBox10}
           />
@@ -83,7 +82,7 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
           </View>
         </View>
         <View>
-          <View style={Styles.alignItemsRight}>
+          <View style={{...Styles.alignItemsRight, justifyContent: 'space-evenly'}}>
             <View style={Styles.height50}>
               <View style={Styles.infoKYCContainer}>
                 <Nr1 height={'110%'} width={'15%'} />
@@ -97,7 +96,7 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
               <Nr2 height={'100%'} width={'15%'} />
               <View style={{...Styles.alignItemsRight, ...Styles.narrow}}>
                 <Text style={Styles.normalKYCText}>My personal information</Text>
-                <Text style={Styles.smallKYCText}>name, date of birth, address</Text>
+                  <Text style={Styles.smallKYCText}>name, date of birth, address</Text>
               </View>
               <Text style={Styles.boldKYCText}>1 min</Text>
            </View>
@@ -124,8 +123,6 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
         </View>
        </View>
      </ScrollView>
-
-
         <View style={Styles.footerContainerKYC}>
           <Button
             title="START"
@@ -134,7 +131,6 @@ onClick = () => {   this.props.navigation.navigate("KYCIdentityInfo") }
             onPress={ this.onClick }
            />
         </View>
-  
    </View>
     );
   }

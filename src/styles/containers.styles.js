@@ -174,7 +174,7 @@ export default containers = {
   },
   footerContainerKYC: {
     width: '100%',
-    bottom: 0,
+    bottom: 15,
     paddingBottom: 5,
     flex: 1,
     backgroundColor: Colors.secondaryColor,
@@ -310,7 +310,7 @@ export default containers = {
       marginLeft: '3%',
   },
   height50: {
-    height: 50
+    height: 85,
   },
   paddedBorderedBox: {
     borderWidth: 1,

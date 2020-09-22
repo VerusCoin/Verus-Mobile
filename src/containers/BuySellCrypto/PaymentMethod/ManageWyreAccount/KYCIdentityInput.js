@@ -241,7 +241,7 @@ class KYCIdentityInput extends Component {
             </View>
             </View>
           </ScrollView>
-
+          <ScrollView>
             <View style={Styles.footerContainerKYC}>
               <Button
               titleStyle={Styles.whiteText}
@@ -268,6 +268,7 @@ class KYCIdentityInput extends Component {
             </View>
 
           </View>
+          </ScrollView>
       </View>
     </TouchableWithoutFeedback>
     );

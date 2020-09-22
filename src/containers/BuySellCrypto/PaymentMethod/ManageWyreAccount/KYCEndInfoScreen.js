@@ -6,6 +6,7 @@ import {
   Text,
   Alert,
   TouchableOpacity,
+  ScrollView
 } from 'react-native';
 import {
   selectWyreAccount,
@@ -70,6 +71,7 @@ class KYCEndInfoScreen extends Component {
               containerStyle={Styles.horizontalPaddingBox10}
             />
           </View>
+          <ScrollView>
           <View>
             <View style={Styles.padding}>
               <Text style={Styles.boldKYCText}>To use our fiat gateway, primetrust has to verify your identity</Text>
@@ -127,6 +129,7 @@ class KYCEndInfoScreen extends Component {
               </View>
             </View>
           </View>
+          </ScrollView>
         </View>
       );
     }

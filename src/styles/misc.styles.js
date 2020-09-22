@@ -47,7 +47,7 @@ export default misc = {
       color: Colors.kycBlack,
       marginVertical: 0,
       paddingVertical: 0,
-      fontFamily: 'SourceSansPro-Regular',
+      fontFamily: 'Avenir-Medium',
       fontWeight: "bold",
   },
   formInput: {
@@ -58,7 +58,7 @@ export default misc = {
       marginVertical: 0,
       paddingVertical: 0,
       height: 50,
-      fontFamily: 'SourceSansPro-Regular',
+      fontFamily: 'Avenir-Medium',
       fontWeight: "normal",
   },
   progessBadgeDone: {
@@ -73,8 +73,9 @@ export default misc = {
     paddingBottom: 16,
     paddingTop: 12,
     flexDirection: 'row',
+    justifyContent: 'space-evenly',
     alignSelf: 'flex-start',
-    width: "30%",
+    width: "100%",
   },
   smallBlackDotContainer:{
     paddingTop: 5,

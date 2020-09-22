@@ -142,7 +142,6 @@ class KYCAddressInfo extends Component {
           buttonStyle={Styles.fullWidthButtonKYC}
           onPress={ this.onClick }
           />
-
         </View>
       </View>
       );
