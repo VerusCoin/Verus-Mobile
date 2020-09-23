@@ -1,7 +1,7 @@
 platform :ios, '12.0'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 $dynamic_frameworks = [
-  'react-native-verus-light-client',
+  'react-native-verus-light-client', 
   'React',
   'React-Core',
   'Folly',
@@ -26,23 +26,23 @@ $dynamic_frameworks = [
   'SwiftGRPC',
   'gRPC-Core',
   'gRPC-Swift',
-  'Logging',
-  'SwiftNIO',
-  'CNIOLinux',
-  'CNIODarwin',
-  'SwiftNIOConcurrencyHelpers',
-  'CNIOAtomics',
-  'CNIOSHA1',
-  'SwiftNIOHTTP2',
-  'SwiftNIOHTTP1',
-  'CNIOHTTPParser',
-  'SwiftNIOTLS',
-  'SwiftNIOHPACK',
-  'SwiftNIOSSL',
-  'CNIOBoringSSL',
-  'CNIOBoringSSLShims',
-  'SwiftNIOTransportServices',
-  'SwiftNIOFoundationCompat',
+  'Logging', 
+  'SwiftNIO', 
+  'CNIOLinux', 
+  'CNIODarwin', 
+  'SwiftNIOConcurrencyHelpers', 
+  'CNIOAtomics', 
+  'CNIOSHA1', 
+  'SwiftNIOHTTP2', 
+  'SwiftNIOHTTP1', 
+  'CNIOHTTPParser', 
+  'SwiftNIOTLS', 
+  'SwiftNIOHPACK', 
+  'SwiftNIOSSL', 
+  'CNIOBoringSSL', 
+  'CNIOBoringSSLShims', 
+  'SwiftNIOTransportServices', 
+  'SwiftNIOFoundationCompat', 
   'CGRPCZlib',
   'BoringSSL-GRPC',
   'nanopb',
@@ -119,7 +119,7 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
 
-
+      
       if target.name == 'ZcashLightClientKit'
          config.build_settings['ZCASH_NETWORK_ENVIRONMENT'] = ENV["ZCASH_NETWORK_ENVIRONMENT"]
       end

@@ -1,14 +1,14 @@
 PODS:
   - boost-for-react-native (1.63.0)
-  - CGRPCZlib (1.0.0-alpha.11)
-  - CNIOAtomics (2.15.0)
-  - CNIOBoringSSL (2.7.1)
-  - CNIOBoringSSLShims (2.7.1):
-    - CNIOBoringSSL (= 2.7.1)
-  - CNIODarwin (2.15.0)
-  - CNIOHTTPParser (2.15.0)
-  - CNIOLinux (2.15.0)
-  - CNIOSHA1 (2.15.0)
+  - CGRPCZlib (1.0.0-alpha.19)
+  - CNIOAtomics (2.22.1)
+  - CNIOBoringSSL (2.9.1)
+  - CNIOBoringSSLShims (2.9.1):
+    - CNIOBoringSSL (= 2.9.1)
+  - CNIODarwin (2.22.1)
+  - CNIOHTTPParser (2.22.1)
+  - CNIOLinux (2.22.1)
+  - CNIOSHA1 (2.22.1)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.61.5)
   - FBReactNativeSpec (0.61.5):
@@ -28,16 +28,16 @@ PODS:
     - DoubleConversion
     - glog
   - glog (0.3.5)
-  - gRPC-Swift (1.0.0-alpha.11):
-    - CGRPCZlib (= 1.0.0-alpha.11)
-    - Logging (= 1.2.0)
-    - SwiftNIO (= 2.15.0)
-    - SwiftNIOHTTP2 (= 1.11.0)
-    - SwiftNIOSSL (= 2.7.1)
-    - SwiftNIOTransportServices (= 1.3.0)
-    - SwiftProtobuf (= 1.8.0)
-  - Logging (1.2.0)
-  - Permission-Camera (2.0.8):
+  - gRPC-Swift (1.0.0-alpha.19):
+    - CGRPCZlib (= 1.0.0-alpha.19)
+    - Logging (< 2, >= 1.2.0)
+    - SwiftNIO (< 3, >= 2.19.0)
+    - SwiftNIOHTTP2 (< 2, >= 1.12.2)
+    - SwiftNIOSSL (< 3, >= 2.8.0)
+    - SwiftNIOTransportServices (< 2, >= 1.6.0)
+    - SwiftProtobuf (< 2, >= 1.9.0)
+  - Logging (1.4.0)
+  - Permission-Camera (2.1.5):
     - RNPermissions
   - RCTRequired (0.61.5)
   - RCTTypeSafety (0.61.5):
@@ -202,28 +202,30 @@ PODS:
     - React-cxxreact (= 0.61.5)
     - React-jsi (= 0.61.5)
   - React-jsinspector (0.61.5)
-  - react-native-camera (3.22.1):
+  - react-native-camera (3.36.0):
     - React
-    - react-native-camera/RCT (= 3.22.1)
-    - react-native-camera/RN (= 3.22.1)
-  - react-native-camera/RCT (3.22.1):
+    - react-native-camera/RCT (= 3.36.0)
+    - react-native-camera/RN (= 3.36.0)
+  - react-native-camera/RCT (3.36.0):
     - React
-  - react-native-camera/RN (3.22.1):
+  - react-native-camera/RN (3.36.0):
     - React
   - react-native-image-picker (1.1.0):
     - React
   - react-native-randombytes (3.5.3):
     - React
+  - react-native-safe-area-context (3.1.1):
+    - React
   - react-native-text-input-mask (2.0.0):
     - React
     - RNInputMask
-  - react-native-udp (2.6.1):
+  - react-native-udp (2.7.0):
     - React
   - react-native-verus-light-client (1.0.0):
     - React
     - React-Core
     - ZcashLightClientKit
-  - react-native-webview (8.0.2):
+  - react-native-webview (8.2.1):
     - React
   - React-RCTActionSheet (0.61.5):
     - React-Core/RCTActionSheetHeaders (= 0.61.5)
@@ -260,22 +262,28 @@ PODS:
     - React-cxxreact (= 0.61.5)
     - React-jsi (= 0.61.5)
     - ReactCommon/jscallinvoker (= 0.61.5)
+  - ReactNativeART (1.2.0):
+    - React
   - rn-fetch-blob (0.11.2):
     - React-Core
-  - RNCAsyncStorage (1.7.1):
+  - RNCAsyncStorage (1.10.1):
     - React
-  - RNDateTimePicker (2.1.0):
+  - RNCMaskedView (0.1.10):
+    - React
+  - RNDateTimePicker (2.3.2):
     - React
   - RNFS (2.15.3):
     - React
-  - RNGestureHandler (1.4.1):
+  - RNGestureHandler (1.7.0):
     - React
   - RNInputMask (4.1.0)
   - RNOS (1.2.6):
     - React
-  - RNPermissions (2.0.8):
+  - RNPermissions (2.1.5):
     - React
-  - RNScreens (1.0.0-alpha.22):
+  - RNReanimated (1.10.1):
+    - React
+  - RNScreens (2.9.0):
     - React
   - RNShare (1.2.1):
     - React
@@ -286,52 +294,52 @@ PODS:
   - SQLite.swift (0.12.2):
     - SQLite.swift/standard (= 0.12.2)
   - SQLite.swift/standard (0.12.2)
-  - SwiftNIO (2.15.0):
-    - CNIOAtomics (= 2.15.0)
-    - CNIODarwin (= 2.15.0)
-    - CNIOLinux (= 2.15.0)
-    - CNIOSHA1 (= 2.15.0)
-    - SwiftNIOConcurrencyHelpers (= 2.15.0)
-  - SwiftNIOConcurrencyHelpers (2.15.0):
-    - CNIOAtomics (= 2.15.0)
-  - SwiftNIOFoundationCompat (2.15.0):
-    - SwiftNIO (= 2.15.0)
-  - SwiftNIOHPACK (1.11.0):
-    - SwiftNIO (= 2.15.0)
-    - SwiftNIOConcurrencyHelpers (= 2.15.0)
-    - SwiftNIOHTTP1 (= 2.15.0)
-  - SwiftNIOHTTP1 (2.15.0):
-    - CNIOHTTPParser (= 2.15.0)
-    - SwiftNIO (= 2.15.0)
-    - SwiftNIOConcurrencyHelpers (= 2.15.0)
-  - SwiftNIOHTTP2 (1.11.0):
-    - SwiftNIO (= 2.15.0)
-    - SwiftNIOConcurrencyHelpers (= 2.15.0)
-    - SwiftNIOHPACK (= 1.11.0)
-    - SwiftNIOHTTP1 (= 2.15.0)
-    - SwiftNIOTLS (= 2.15.0)
-  - SwiftNIOSSL (2.7.1):
-    - CNIOBoringSSL (= 2.7.1)
-    - CNIOBoringSSLShims (= 2.7.1)
-    - SwiftNIO (= 2.15.0)
-    - SwiftNIOConcurrencyHelpers (= 2.15.0)
-    - SwiftNIOTLS (= 2.15.0)
-  - SwiftNIOTLS (2.15.0):
-    - SwiftNIO (= 2.15.0)
-  - SwiftNIOTransportServices (1.3.0):
-    - SwiftNIO (~> 2.0)
-    - SwiftNIOConcurrencyHelpers (~> 2.0)
-    - SwiftNIOFoundationCompat (~> 2.0)
-    - SwiftNIOTLS (~> 2.0)
-  - SwiftProtobuf (1.8.0)
+  - SwiftNIO (2.22.1):
+    - CNIOAtomics (= 2.22.1)
+    - CNIODarwin (= 2.22.1)
+    - CNIOLinux (= 2.22.1)
+    - CNIOSHA1 (= 2.22.1)
+    - SwiftNIOConcurrencyHelpers (= 2.22.1)
+  - SwiftNIOConcurrencyHelpers (2.22.1):
+    - CNIOAtomics (= 2.22.1)
+  - SwiftNIOFoundationCompat (2.22.1):
+    - SwiftNIO (= 2.22.1)
+  - SwiftNIOHPACK (1.14.2):
+    - SwiftNIO (< 3, >= 2.11.0)
+    - SwiftNIOConcurrencyHelpers (< 3, >= 2.11.0)
+    - SwiftNIOHTTP1 (< 3, >= 2.11.0)
+  - SwiftNIOHTTP1 (2.22.1):
+    - CNIOHTTPParser (= 2.22.1)
+    - SwiftNIO (= 2.22.1)
+    - SwiftNIOConcurrencyHelpers (= 2.22.1)
+  - SwiftNIOHTTP2 (1.14.2):
+    - SwiftNIO (< 3, >= 2.11.0)
+    - SwiftNIOConcurrencyHelpers (< 3, >= 2.11.0)
+    - SwiftNIOHPACK (= 1.14.2)
+    - SwiftNIOHTTP1 (< 3, >= 2.11.0)
+    - SwiftNIOTLS (< 3, >= 2.11.0)
+  - SwiftNIOSSL (2.9.1):
+    - CNIOBoringSSL (= 2.9.1)
+    - CNIOBoringSSLShims (= 2.9.1)
+    - SwiftNIO (< 3, >= 2.22.0)
+    - SwiftNIOConcurrencyHelpers (< 3, >= 2.22.0)
+    - SwiftNIOTLS (< 3, >= 2.22.0)
+  - SwiftNIOTLS (2.22.1):
+    - SwiftNIO (= 2.22.1)
+  - SwiftNIOTransportServices (1.9.0):
+    - SwiftNIO (< 3, >= 2.22.0)
+    - SwiftNIOConcurrencyHelpers (< 3, >= 2.22.0)
+    - SwiftNIOFoundationCompat (< 3, >= 2.22.0)
+    - SwiftNIOTLS (< 3, >= 2.22.0)
+  - SwiftProtobuf (1.12.0)
   - TcpSockets (3.3.2):
     - React
   - Yoga (1.14.0)
-  - ZcashLightClientKit (0.4.0):
-    - gRPC-Swift (~> 1.0.0-alpha.11)
+  - ZcashLightClientKit (0.6.3):
+    - gRPC-Swift (= 1.0.0-alpha.19)
     - SQLite.swift (~> 0.12.2)
-  - ZcashLightClientKit/Tests (0.4.0):
-    - gRPC-Swift (~> 1.0.0-alpha.11)
+  - ZcashLightClientKit/Tests (0.6.3):
+    - gRPC-Swift (= 1.0.0-alpha.19)
     - SQLite.swift (~> 0.12.2)
 
 DEPENDENCIES:
@@ -355,6 +363,7 @@ DEPENDENCIES:
   - react-native-camera (from `../node_modules/react-native-camera`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
   - react-native-randombytes (from `../node_modules/react-native-randombytes`)
+  - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-text-input-mask (from `../node_modules/react-native-text-input-mask`)
   - react-native-udp (from `../node_modules/react-native-udp`)
   - react-native-verus-light-client (from `../node_modules/react-native-verus-light-client`)
@@ -370,22 +379,25 @@ DEPENDENCIES:
   - React-RCTVibration (from `../node_modules/react-native/Libraries/Vibration`)
   - ReactCommon/jscallinvoker (from `../node_modules/react-native/ReactCommon`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - "ReactNativeART (from `../node_modules/@react-native-community/art`)"
   - rn-fetch-blob (from `../node_modules/rn-fetch-blob`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-community/async-storage`)"
+  - "RNCMaskedView (from `../node_modules/@react-native-community/masked-view`)"
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
   - RNFS (from `../node_modules/react-native-fs`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNInputMask (from `../node_modules/react-native-text-input-mask/ios/InputMask`)
   - RNOS (from `../node_modules/react-native-os`)
   - RNPermissions (from `../node_modules/react-native-permissions`)
+  - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNShare (from `../node_modules/react-native-share`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
   - TcpSockets (from `../node_modules/react-native-tcp`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
-  - ZcashLightClientKit (from `https://github.com/michaeltout/ZcashLightClientKit.git`)
-  - ZcashLightClientKit/Tests (from `https://github.com/michaeltout/ZcashLightClientKit.git`)
+  - ZcashLightClientKit (from `https://github.com/michaeltout/ZcashLightClientKit.git`, branch `0.6.3`)
+  - ZcashLightClientKit/Tests (from `https://github.com/michaeltout/ZcashLightClientKit.git`, branch `0.6.3`)
 
 SPEC REPOS:
   trunk:
@@ -449,6 +461,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-image-picker"
   react-native-randombytes:
     :path: "../node_modules/react-native-randombytes"
+  react-native-safe-area-context:
+    :path: "../node_modules/react-native-safe-area-context"
   react-native-text-input-mask:
     :path: "../node_modules/react-native-text-input-mask"
   react-native-udp:
@@ -477,10 +491,14 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/Libraries/Vibration"
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  ReactNativeART:
+    :path: "../node_modules/@react-native-community/art"
   rn-fetch-blob:
     :path: "../node_modules/rn-fetch-blob"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-community/async-storage"
+  RNCMaskedView:
+    :path: "../node_modules/@react-native-community/masked-view"
   RNDateTimePicker:
     :path: "../node_modules/@react-native-community/datetimepicker"
   RNFS:
@@ -493,6 +511,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-os"
   RNPermissions:
     :path: "../node_modules/react-native-permissions"
+  RNReanimated:
+    :path: "../node_modules/react-native-reanimated"
   RNScreens:
     :path: "../node_modules/react-native-screens"
   RNShare:
@@ -506,31 +526,32 @@ EXTERNAL SOURCES:
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
   ZcashLightClientKit:
+    :branch: 0.6.3
     :git: https://github.com/michaeltout/ZcashLightClientKit.git
 
 CHECKOUT OPTIONS:
   ZcashLightClientKit:
-    :commit: f79d0b82d23aea387ede28fa107c2f7833101748
+    :commit: ae22b923749128c33e032de414e630f2de1aa13e
     :git: https://github.com/michaeltout/ZcashLightClientKit.git
 
 SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
-  CGRPCZlib: e595387378d0601be796e858dd30c505458c4b1f
-  CNIOAtomics: ba49b1c86f281e1ecfd84c9205fbc27a81826847
-  CNIOBoringSSL: e4766830ab6d7c7fcd3618331f05fcb11638314d
-  CNIOBoringSSLShims: c3f3c6f05b7ce9b576521328a5b1b566d8f4665b
-  CNIODarwin: 2e341dd283fa3972706568b12925366145a8e2cd
-  CNIOHTTPParser: 25e1d1bc84c0612cbbbd6baedc4be05d77a17e01
-  CNIOLinux: 61598a8e49510207acb74c87f8fc11f762f76b5a
-  CNIOSHA1: 7b1dcceef9682aef4c6578b9fc67f87a03f0c48e
+  CGRPCZlib: befd9b92013c647f18aa9b7d9e9231d52e1ced1b
+  CNIOAtomics: 55026298b0bd7524bb8ca85bd9d00983ef2b6ab5
+  CNIOBoringSSL: ee7722e4355434b420eb06b3ca7535a6cfb09cf2
+  CNIOBoringSSLShims: e76fde7b7972f242e250f76dafcfdbd23be26eca
+  CNIODarwin: 65c40ddcfa113c0cb0bf5947dbef3165a0098b59
+  CNIOHTTPParser: 869e928f9f9b7bb68837e085b3ae921125d28d76
+  CNIOLinux: 896c5715ebe479fbfcdac5340717bbbd7936901b
+  CNIOSHA1: fd4d38fb42778ed971a75d87530f842106d4b4f4
   DoubleConversion: 5805e889d232975c086db112ece9ed034df7a0b2
   FBLazyVector: aaeaf388755e4f29cd74acbc9e3b8da6d807c37f
   FBReactNativeSpec: 118d0d177724c2d67f08a59136eb29ef5943ec75
   Folly: 30e7936e1c45c08d884aa59369ed951a8e68cf51
   glog: 1f3da668190260b06b429bb211bfbee5cd790c28
-  gRPC-Swift: 79f04da038f9a62005271d5b638611ce1bb31304
-  Logging: 7838d379d234d7e5ae1265fa02804a9084caf04c
-  Permission-Camera: f9a7b0b01c71febe320436aa74630f23c9483547
+  gRPC-Swift: 75a7a8d7cd08177165ef971159afb84e5130cfc9
+  Logging: beeb016c9c80cf77042d62e83495816847ef108b
+  Permission-Camera: afad27bf90337684d4a86f3825112d648c8c4d3b
   RCTRequired: b153add4da6e7dbc44aebf93f3cf4fcae392ddf1
   RCTTypeSafety: 9aa1b91d7f9310fc6eadc3cf95126ffe818af320
   React: b6a59ef847b2b40bb6e0180a97d0ca716969ac78
@@ -540,13 +561,14 @@ SPEC CHECKSUMS:
   React-jsi: cb2cd74d7ccf4cffb071a46833613edc79cdf8f7
   React-jsiexecutor: d5525f9ed5f782fdbacb64b9b01a43a9323d2386
   React-jsinspector: fa0ecc501688c3c4c34f28834a76302233e29dc0
-  react-native-camera: a49f960eb362b9fbff87667c0ce639eef1161530
+  react-native-camera: 8016138a8348b889e22c95b23f668a234f124335
   react-native-image-picker: 7a85cf7b0a53845f03ae52fb4592a2748ded069b
   react-native-randombytes: 3638d24759d67c68f6ccba60c52a7a8a8faa6a23
+  react-native-safe-area-context: 344b969c45af3d8464d36e8dea264942992ef033
   react-native-text-input-mask: 07227297075f9653315f43b0424d596423a01736
-  react-native-udp: 54a1aa9bf5c0824f930b1ba6dbfb3fd3e733bba9
+  react-native-udp: ff9d13e523f2b58e6bc5d4d32321ac60671b5dc9
   react-native-verus-light-client: b71b8551595c3c75787bc51ff1d2b2989639851a
-  react-native-webview: 99bdfd6c189772b0f15494f728430c23b18b93e4
+  react-native-webview: 160ac8d6bb974e2933f2de6bb7464a8e934ff31d
   React-RCTActionSheet: 600b4d10e3aea0913b5a92256d2719c0cdd26d76
   React-RCTAnimation: 791a87558389c80908ed06cc5dfc5e7920dfa360
   React-RCTBlob: d89293cc0236d9cb0933d85e430b0bbe81ad1d72
@@ -557,33 +579,36 @@ SPEC CHECKSUMS:
   React-RCTText: 9ccc88273e9a3aacff5094d2175a605efa854dbe
   React-RCTVibration: a49a1f42bf8f5acf1c3e297097517c6b3af377ad
   ReactCommon: 198c7c8d3591f975e5431bec1b0b3b581aa1c5dd
+  ReactNativeART: 78edc68dd4a1e675338cd0cd113319cf3a65f2ab
   rn-fetch-blob: f525a73a78df9ed5d35e67ea65e79d53c15255bc
-  RNCAsyncStorage: 44395cb9c7c1523104c2b499eb426ef7aff82bca
-  RNDateTimePicker: 9db00606d689f5653f08aa601c81b9d3266a0a19
+  RNCAsyncStorage: 39831e0dc5f547a1fb2669eb9e091d460a9be2be
+  RNCMaskedView: 5a8ec07677aa885546a0d98da336457e2bea557f
+  RNDateTimePicker: 4bd49e09f91ca73d69119a9e1173b0d43b82f5e5
   RNFS: cf1bd19f8bf3c1400f8d3ececbe84e42aa29d2e7
-  RNGestureHandler: 4cb47a93019c1a201df2644413a0a1569a51c8aa
+  RNGestureHandler: b6b359bb800ae399a9c8b27032bdbf7c18f08a08
   RNInputMask: 815461ebdf396beb62cf58916c35cf6930adb991
   RNOS: 6f2f9a70895bbbfbdad7196abd952e7b01d45027
-  RNPermissions: 923c1506d0bde387fbcfc18a8f87945806d03c19
-  RNScreens: 720a9e6968beb73e8196239801e887d8401f86ed
+  RNPermissions: ad71dd4f767ec254f2cd57592fbee02afee75467
+  RNReanimated: c2bb7438b57a3d987bb2e4e6e4bca94787e30b02
+  RNScreens: c526239bbe0e957b988dacc8d75ac94ec9cb19da
   RNShare: 48cf88cadf9ca2143cdaa557c1ec7f8808040ffc
   RNSVG: 8ba35cbeb385a52fd960fd28db9d7d18b4c2974f
   RNVectorIcons: 0bb4def82230be1333ddaeee9fcba45f0b288ed4
   SQLite.swift: d2b4642190917051ce6bd1d49aab565fe794eea3
-  SwiftNIO: c9889dcd8aed2655af9163b42fc11ebd4ce94252
-  SwiftNIOConcurrencyHelpers: 2357037a16e9c51880c01b896a5ac3cd41066044
-  SwiftNIOFoundationCompat: f09ee499a8a9c636ec9007f73c5a1cedc23dcad3
-  SwiftNIOHPACK: 906596511ff9d1e095b7a72a0011351591bcae03
-  SwiftNIOHTTP1: b05f4061ba18482006a264a5aa087bbcd35d153c
-  SwiftNIOHTTP2: 3a52499594c6ec073af2a2801cf3c5d3d1c8700f
-  SwiftNIOSSL: 7c82b8393a6b69a3ef9b12fe74240e92c2bd7add
-  SwiftNIOTLS: 51580e51240d1a4d51efb2d317e92cf243181042
-  SwiftNIOTransportServices: 26d40c589fc8fe667af51b06ef0aa49fbc9ae7f2
-  SwiftProtobuf: 2cbd9409689b7df170d82a92a33443c8e3e14a70
+  SwiftNIO: 763188229de166e046cc8975383cca388832e992
+  SwiftNIOConcurrencyHelpers: 34d2e9d4d2b7886fa765086e845e6b19417be927
+  SwiftNIOFoundationCompat: 990bf137ed31a0907be67a0f80cfa9d3ad66289d
+  SwiftNIOHPACK: 38b7703a984bf25f7abcd468f66e4ac89e2a52dd
+  SwiftNIOHTTP1: c0a9ce48ba256f349af4f09648a0e0939b11a65c
+  SwiftNIOHTTP2: 2f6ea199f7df6e7041dcfb49fba175c69c8ca925
+  SwiftNIOSSL: 2967e874b40d05904edde5c540c3157621e5ecc4
+  SwiftNIOTLS: 80eed55b4d2a455ba4b387b12cb41962095c713a
+  SwiftNIOTransportServices: 801923921fbecdcde1e1c1ff38e812167d01ead1
+  SwiftProtobuf: 4ef85479c18ca85b5482b343df9c319c62bda699
   TcpSockets: 14306fb79f9750ea7d2ddd02d8bed182abb01797
   Yoga: f2a7cd4280bfe2cca5a7aed98ba0eb3d1310f18b
-  ZcashLightClientKit: 47e707be6657391d5d4fd7db1544b0d98ce45e42
+  ZcashLightClientKit: 6a7a724d5c249bc15983327157fe5ade6600dbcb
 
-PODFILE CHECKSUM: 1b8236064a4376f90220274f1c9cc8d34ab1075c
+PODFILE CHECKSUM: 140944d1ec3abdae92127533323aa4a55cf8a83e
 
 COCOAPODS: 1.8.4
