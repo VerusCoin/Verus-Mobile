@@ -145,6 +145,15 @@ export default containers = {
     borderTopWidth: 1,
     borderColor: Colors.tertiaryColor,
   },
+  shortFooterContainer: {
+    width: '100%',
+    alignItems: 'center',
+    flex: 1,
+    maxHeight: '12%',
+    backgroundColor: Colors.secondaryColor,
+    borderTopWidth: 1,
+    borderColor: Colors.tertiaryColor,
+  },
   highFooterContainer: {
     width: '100%',
     alignItems: 'center',
@@ -200,6 +209,10 @@ export default containers = {
   greyStripeContainer: {
     backgroundColor: Colors.tertiaryColor,
     borderBottomWidth: 0,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   halfWidthBox: {
     maxWidth: '50%',

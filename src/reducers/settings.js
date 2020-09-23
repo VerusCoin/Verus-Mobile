@@ -12,7 +12,8 @@ import {
   SET_COIN_SETTINGS_STATE,
   SET_BUY_SELL_SETTINGS_STATE
 } from '../utils/constants/storeType'
-import { USD, DLIGHT } from '../utils/constants/intervalConstants'
+import { DLIGHT } from '../utils/constants/intervalConstants'
+import { USD } from '../utils/constants/currencies'
 
 export const settings = (state = {
   btcFeesAdvanced: false,

@@ -8,6 +8,7 @@ import { headers } from './cache/headers';
 import { ethtxreceipts } from './cache/ethtxreceipts';
 import { customCoins } from './gui/customCoins';
 import { buySellCrypto } from './gui/buySellCrypto';
+import { coinMenus } from './gui/coinMenus';
 import { paymentMethods } from './paymentMethods';
 import { updates } from './updates';
 import { responseHeaders } from './responseHeaders';
@@ -40,5 +41,6 @@ export default combineReducers({
   channelStore_electrum,
   channelStore_erc20,
   channelStore_general,
-  ethtxreceipts
+  ethtxreceipts,
+  coinMenus
 });

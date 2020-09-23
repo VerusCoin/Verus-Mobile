@@ -120,8 +120,8 @@ export const closeDlightWallet = (coinObj, clearDb) => {
   const { dispatch, getState } = Store
   const State = getState()
 
-  const { coins, authentication } = State
-  const { dlightSockets, dlightSyncing } = coins
+  const { channelStore_dlight, authentication } = State
+  const { dlightSockets, dlightSyncing } = channelStore_dlight
   const { activeAccount } = authentication
   const { accountHash } = activeAccount
   const { id, proto } = coinObj

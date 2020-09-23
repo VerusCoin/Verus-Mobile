@@ -142,16 +142,16 @@ export const coinsList = {
     proto: 'btc',
     dlightEndpoints: dlightServers.zec
   },
-  zectest: {
-    id: "ZECTEST",
-    name: "ZCash Testnet",
-    description: "",
-    fee: 10000,
-    compatible_channels: [DLIGHT, GENERAL],
-    tags: [IS_ZCASH],
-    proto: 'btc',
-    dlightEndpoints: dlightServers.zectest
-  },
+  // zectest: {
+  //   id: "ZECTEST",
+  //   name: "ZCash Testnet",
+  //   description: "",
+  //   fee: 10000,
+  //   compatible_channels: [DLIGHT, GENERAL],
+  //   tags: [IS_ZCASH],
+  //   proto: 'btc',
+  //   dlightEndpoints: dlightServers.zectest
+  // },
   dash: {
     id: "DASH",
     name: "Dash",
