@@ -26,7 +26,7 @@ class ManageWyreAddress extends Component {
   constructor(props) {
     super(props);
 
-    const individualAddress = typeof this.props.individualResidenceAddress === 'undefined' ? {} : this.props.individualResidenceAddress.value;
+    const individualAddress = this.props.individualResidenceAddress == null ? {} : this.props.individualResidenceAddress.value;
 
     this.state = {
       streetAddress: individualAddress.street1,
