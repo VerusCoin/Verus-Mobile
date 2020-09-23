@@ -29,7 +29,7 @@ import { removeSpaces } from '../../../utils/stringUtils'
 import Styles from '../../../styles/index'
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import store from "../../../store"
-import { API_GET_FIATPRICE, API_GET_BALANCES, ELECTRUM, DLIGHT } from "../../../utils/constants/intervalConstants"
+import { API_GET_FIATPRICE, API_GET_BALANCES, ELECTRUM } from "../../../utils/constants/intervalConstants"
 
 const VERUSPAY_LOGO_DIR = require('../../../images/customIcons/verusPay.png')
 
@@ -49,22 +49,22 @@ class SendCoin extends Component {
       btcFeesErr: false,
       activeCoinsForUser: {},
       formErrors: { toAddress: null, amount: null },
-      spendableBalance: 0
+      spendableBalance: 0,
     };
 
-    this._unsubscribeFocus = null
+    this._unsubscribeFocus = null;
   }
 
   componentDidMount() {
     this.initializeState();
 
-    this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
+    this._unsubscribeFocus = this.props.navigation.addListener("focus", () => {
       this.initializeState();
     });
   }
 
   componentWillUnmount() {
-    this._unsubscribeFocus()
+    this._unsubscribeFocus();
   }
 
   initializeState = () => {
@@ -73,7 +73,7 @@ class SendCoin extends Component {
         coin: this.props.activeCoin,
         account: this.props.activeAccount,
         activeCoinsForUser: this.props.activeCoinsForUser,
-        toAddress: this.props.data ? this.props.data.address : null
+        toAddress: this.props.data ? this.props.data.address : null,
       },
       () => {
         const activeUser = this.state.account;
@@ -85,7 +85,7 @@ class SendCoin extends Component {
   };
 
   handleState = async (activeUser, coinObj) => {
-    const channel = coinObj.dominant_channel != null ? coinObj.dominant_channel : ELECTRUM
+    const { channel } = this.props;
 
     if (
       activeUser.keys[coinObj.id] != null &&
@@ -93,7 +93,7 @@ class SendCoin extends Component {
       activeUser.keys[coinObj.id][channel].addresses.length > 0
     ) {
       this.setState({
-        fromAddress: activeUser.keys[coinObj.id][channel].addresses[0]
+        fromAddress: activeUser.keys[coinObj.id][channel].addresses[0],
       });
     } else {
       throw new Error(
@@ -138,14 +138,14 @@ class SendCoin extends Component {
 
   updateBtcFees = () => {
     return new Promise((resolve, reject) => {
-      getRecommendedBTCFees().then(res => {
+      getRecommendedBTCFees().then((res) => {
         if (res) {
           console.log("BTC FEES:");
           console.log(res);
           this.setState(
             {
               btcFees: res,
-              loadingBTCFees: false
+              loadingBTCFees: false,
             },
             resolve
           );
@@ -153,13 +153,26 @@ class SendCoin extends Component {
           this.setState(
             {
               btcFeesErr: true,
-              loadingBTCFees: false
+              loadingBTCFees: false,
             },
             resolve
           );
         }
       });
     });
+  };
+
+  maxAmount = () => {
+    const { activeCoin, balances } = this.props
+    
+    this.fillAmount(
+      activeCoin.id !== "BTC" ||
+        (activeCoin.dominant_channel != null &&
+          activeCoin.dominant_channel != ELECTRUM)
+        ? balances.results.confirmed
+        : balances.results.confirmed -
+            satsToCoins(activeCoin.fee ? activeCoin.fee : 10000)
+    );
   };
 
   goToConfirmScreen = (coinObj, activeUser, address, amount) => {
@@ -172,19 +185,19 @@ class SendCoin extends Component {
       address: address,
       amount: Number(amount),
       btcFee: this.state.btcFees.average,
-      balance: (this.props.balances.public.confirmed + (this.props.balances.private ? this.props.balances.private.confirmed : 0))
+      balance: this.props.balances.results.confirmed,
     };
 
     navigation.navigate(route, {
-      data: data
+      data: data,
     });
   };
 
-  fillAddress = address => {
+  fillAddress = (address) => {
     this.setState({ toAddress: address });
   };
 
-  fillAmount = amount => {
+  fillAmount = (amount) => {
     let amountToFill = amount;
     if (amount < 0) {
       amountToFill = 0;
@@ -197,7 +210,7 @@ class SendCoin extends Component {
 
     navigation.navigate("VerusPay", {
       fillAddress: this.fillAddress,
-      fillAmount: this.fillAmount
+      fillAmount: this.fillAmount,
     });
   };
 
@@ -206,12 +219,12 @@ class SendCoin extends Component {
   validateFormData = () => {
     this.setState(
       {
-        formErrors: { toAddress: null, amount: null }
+        formErrors: { toAddress: null, amount: null },
       },
       () => {
         const coin = this.state.coin;
 
-        const spendableBalance = this.props.balances.public.confirmed
+        const spendableBalance = this.props.balances.results.confirmed;
 
         const toAddress = removeSpaces(this.state.toAddress);
         const fromAddress = this.state.fromAddress;
@@ -272,7 +285,7 @@ class SendCoin extends Component {
   };
 
   render() {
-    const { balances, activeCoin } = this.props;
+    const { balances } = this.props;
 
     return (
       <TouchableWithoutFeedback
@@ -280,45 +293,6 @@ class SendCoin extends Component {
         accessible={false}
       >
         <View style={Styles.defaultRoot}>
-          <View style={Styles.centralRow}>
-            <TouchableOpacity
-              onPress={
-                balances.public
-                  ? () =>
-                      this.fillAmount(
-                        activeCoin.id !== "BTC" ||
-                          (activeCoin.dominant_channel != null &&
-                            activeCoin.dominant_channel != ELECTRUM)
-                          ? balances.public.confirmed
-                          : balances.public.confirmed -
-                              satsToCoins(
-                                activeCoin.fee ? activeCoin.fee : 10000
-                              )
-                      )
-                  : () => {
-                      return 0;
-                    }
-              }
-              style={Styles.centralRow}
-            >
-              <Text
-                style={{
-                  ...Styles.largeCentralPaddedHeader,
-                  ...Styles.linkText,
-                }}
-              >
-                {balances.public &&
-                typeof balances.public.confirmed !== "undefined"
-                  ? truncateDecimal(balances.public.confirmed, 4) +
-                    " " +
-                    activeCoin.id
-                  : `0 ${activeCoin.id}`}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={Styles.greyStripeHeader}>
-            {"Send " + this.state.coin.name}
-          </Text>
           <ScrollView
             style={Styles.fullWidth}
             contentContainerStyle={Styles.horizontalCenterContainer}
@@ -349,6 +323,13 @@ class SendCoin extends Component {
                 onSubmitEditing={Keyboard.dismiss}
                 value={this.state.amount.toString()}
                 shake={this.state.formErrors.amount}
+                rightIcon={
+                  balances.results ? (
+                    <TouchableOpacity onPress={this.maxAmount}>
+                      <Text style={Styles.linkText}>{"MAX"}</Text>
+                    </TouchableOpacity>
+                  ) : null
+                }
                 keyboardType={"decimal-pad"}
                 autoCapitalize="words"
                 errorMessage={
@@ -402,7 +383,7 @@ class SendCoin extends Component {
                   BTC Fees Error!
                 </Text>
               </View>
-            ) : balances.errors.public ? (
+            ) : balances.errors ? (
               <View style={Styles.fullWidthFlexCenterBlock}>
                 <Text
                   style={{ ...Styles.centralHeader, ...Styles.errorText }}
@@ -427,22 +408,15 @@ class SendCoin extends Component {
 
 const mapStateToProps = (state) => {
   const chainTicker = state.coins.activeCoin.id
-  const mainChannel = state.coins.activeCoin.dominant_channel
-    ? state.coins.activeCoin.dominant_channel
-    : ELECTRUM;
+  const channel = state.coinMenus.activeSubWallets[chainTicker].channel
   
-
   return {
-    //needsUpdate: state.ledger.needsUpdate,
+    channel,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoin: state.coins.activeCoin,
     balances: {
-      public: state.ledger.balances[mainChannel][chainTicker],
-      private: state.ledger.balances[DLIGHT][chainTicker],
-      errors: {
-        public: state.errors[API_GET_BALANCES][mainChannel][chainTicker],
-        private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
-      }
+      results: state.ledger.balances[channel][chainTicker],
+      errors: state.errors[API_GET_BALANCES][channel][chainTicker],
     },
     activeAccount: state.authentication.activeAccount,
   }

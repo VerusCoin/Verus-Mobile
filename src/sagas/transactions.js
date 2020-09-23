@@ -3,7 +3,7 @@ import {
 } from 'redux-saga/effects';
 import { v4 as uuidv4 } from 'uuid';
 import isEqual from 'lodash/isEqual';
-import VerusZkedidUtils from 'node-jest-testing-boilerplate';
+import VerusZkedidUtils from 'verus-zkedid-utils';
 
 import { unixToDate } from '../utils/math';
 
@@ -42,9 +42,12 @@ const hashMap = {
 
 function* handleGetMemosFromTransactions() {
   const transactions = yield select(selectTransactions);
+
+  if (transactions.results == null) return []
+  
   const storedBlockHeight = yield call(getStoredBlockHeight);
 
-  const transactionsBlockHeights = transactions.private.map(
+  const transactionsBlockHeights = transactions.results.map(
     (transaction) => transaction.height
   );
   const currentHighestBlockHeight = Math.max(...transactionsBlockHeights);
@@ -55,7 +58,7 @@ function* handleGetMemosFromTransactions() {
 
   yield call(storeBlockHeight, currentHighestBlockHeight);
 
-  const memosArray = transactions.private.map((transaction) => {
+  const memosArray = transactions.results.map((transaction) => {
     try {
       const decodeBase64 = atob(transaction.memo);
       const memoTimeStamp = transaction.timestamp;

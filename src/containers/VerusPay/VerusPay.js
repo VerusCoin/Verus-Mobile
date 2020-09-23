@@ -12,7 +12,7 @@ import {
   Alert
 } from "react-native";
 import QRCodeScanner from 'react-native-qrcode-scanner';
-import { isJson } from '../../utils/objectManip'
+import { arrayToObject, isJson } from '../../utils/objectManip'
 import { NavigationActions } from '@react-navigation/compat';
 import { CommonActions } from '@react-navigation/native';
 import { connect } from 'react-redux';
@@ -32,7 +32,6 @@ import {
   //balancesNeedUpdate
  } from '../../actions/actionCreators'
 import Spinner from 'react-native-loading-spinner-overlay';
-import DelayedAlert from '../../utils/delayedAlert'
 import DelayedAsyncAlert from '../../utils/delayedAsyncAlert'
 import { coinsToSats, satsToCoins } from '../../utils/math'
 import {
@@ -101,6 +100,7 @@ class VerusPay extends Component {
       ]
     });
 
+    this.props.navigation.closeDrawer();
     this.props.navigation.dispatch(resetAction);
   };
 
@@ -113,7 +113,6 @@ class VerusPay extends Component {
       console.log(resultParsed);
 
       if (resultParsed.verusQR) {
-        console.log("handling verusPay");
         this.handleVerusQR(resultParsed);
       } else {
         //TODO: Handle other style QR codes here
@@ -147,7 +146,7 @@ class VerusPay extends Component {
   }
 
   errorHandler = error => {
-    DelayedAlert("Error", error);
+    Alert.alert("Error", error);
     this.props.navigation.dispatch(NavigationActions.back());
   };
 
@@ -257,6 +256,7 @@ class VerusPay extends Component {
     const memo = verusQR.memo;
 
     if (__DEV__) {
+      console.log(verusQR)
       console.log("CoinID: " + coinTicker);
       console.log("Address: " + address);
       if (amount === null || amount <= 0) {
@@ -269,7 +269,7 @@ class VerusPay extends Component {
       console.log("Memo: " + memo);
     }
 
-    if (coinTicker && address && address.length >= 34 && address.length <= 35) {
+    if (coinTicker != null && address != null) {
       if (this.coinExistsInWallet(coinTicker)) {
         let activeCoin = this.getCoinFromActiveCoins(coinTicker);
 
@@ -464,10 +464,10 @@ class VerusPay extends Component {
 
   checkBalance = (amount, activeCoin) => {
     const { balances } = this.props
+    const channel = activeCoin.dominant_channel != null ? activeCoin.dominant_channel : ELECTRUM
 
-    if (activeCoin && balances.public) {
-      const spendableBalance =
-        balances.public.confirmed - activeCoin.fee;
+    if (activeCoin && balances.results && balances.results[channel]) {
+      const spendableBalance = balances.results[channel].confirmed - activeCoin.fee;
 
       if (amount > Number(spendableBalance)) {
         this.errorHandler(INSUFFICIENT_FUNDS);
@@ -557,8 +557,12 @@ class VerusPay extends Component {
       address: this.state.address,
       amount: satsToCoins(Number(this.state.amount)),
       btcFee: this.state.btcFees.average,
-      balance: this.props.balances.public.confirmed,
-      memo: this.state.memo
+      balance: this.props.balances.results[
+        this.state.coinObj.dominant_channel != null
+          ? this.state.coinObj.dominant_channel
+          : ELECTRUM
+      ].confirmed,
+      memo: this.state.memo,
     };
 
     this.resetToScreen(route, "Confirm", data);
@@ -651,7 +655,7 @@ class VerusPay extends Component {
       this.props.route.params &&
       this.props.route.params.fillAddress
     ) {
-      DelayedAlert("Address Only", ADDRESS_ONLY);
+      Alert.alert("Address Only", ADDRESS_ONLY);
       this.props.route.params.fillAddress(address);
       this.props.navigation.dispatch(NavigationActions.back());
     } else {
@@ -661,12 +665,12 @@ class VerusPay extends Component {
 
   render() {
     return (
-      <View style={styles.root}>
+      <View style={Styles.blackRoot}>
         <QRCodeScanner
           onRead={this.onSuccess.bind(this)}
           showMarker={true}
           captureAudio={false}
-          cameraStyle={styles.QRCamera}
+          cameraStyle={Styles.fullHeight}
         />
         <Spinner
           visible={
@@ -692,27 +696,24 @@ class VerusPay extends Component {
 }
 
 const mapStateToProps = (state) => {
-  const chainTicker = state.coins.activeCoin.id
-  const mainChannel = state.coins.activeCoin.dominant_channel
-    ? state.coins.activeCoin.dominant_channel
-    : ELECTRUM;
-
   return {
-    //needsUpdate: state.ledger.needsUpdate,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoin: state.coins.activeCoin,
-    balances: {
-      public: state.ledger.balances[mainChannel][chainTicker],
-      private: state.ledger.balances[DLIGHT][chainTicker],
-      errors: {
-        public: state.errors[API_GET_BALANCES][mainChannel][chainTicker],
-        private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
-      }
-    },
     activeAccount: state.authentication.activeAccount,
-    activeCoinList: state.coins.activeCoinList,
+    balances: {
+      results: arrayToObject(
+        Object.keys(state.ledger.balances),
+        (curr, key) => state.ledger.balances[key],
+        true
+      ),
+      errors: arrayToObject(
+        Object.keys(state.errors[API_GET_BALANCES]),
+        (curr, key) => state.errors[API_GET_BALANCES][key],
+        true
+      ),
+    },
     coinSettings: state.settings.coinSettings
-  }
+  };
 };
 
 export default connect(mapStateToProps)(VerusPay);

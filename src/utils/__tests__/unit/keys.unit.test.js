@@ -6,7 +6,8 @@ import {
   MOCK_PIN,
   MOCK_LEGACY_ENCRYPTEDKEY,
   MOCK_PRIVKEY,
-  MOCK_PUBKEY
+  MOCK_PUBKEY,
+  MOCK_ENCRYPTEDKEY
 } from '../../../tests/helpers/MockAuthData'
 
 describe("Main wallet keypair generator", () => {

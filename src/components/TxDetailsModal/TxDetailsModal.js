@@ -123,12 +123,6 @@ class TxDetailsModal extends Component {
                 </Text>
               </View>
               <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>Category:</Text>
-                <Text style={{...Styles.infoTableCell, ...Styles.capitalizeFirstLetter}}>
-                  {txData.visibility || "??"}
-                </Text>
-              </View>
-              <View style={Styles.infoTableRow}>
                 <Text style={Styles.infoTableHeaderCell}>{`Amount ${
                   txData.type === "received" ? "Received" : "Sent"
                 }:`}</Text>

@@ -163,7 +163,7 @@ class Login extends Component {
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={Styles.focalCenter}>
+        <View style={Styles.focalCenter}>          
           <Image
             source={Verus}
             style={{

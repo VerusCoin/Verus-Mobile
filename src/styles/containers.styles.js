@@ -172,12 +172,22 @@ export default containers = {
     borderTopWidth: 1,
     borderColor: Colors.tertiaryColor,
   },
+<<<<<<< HEAD
   footerContainerKYC: {
     width: '100%',
     bottom: 15,
     paddingBottom: 5,
     flex: 1,
     backgroundColor: Colors.secondaryColor,
+=======
+  shortFooterContainer: {
+    width: '100%',
+    alignItems: 'center',
+    flex: 1,
+    maxHeight: '12%',
+    backgroundColor: Colors.secondaryColor,
+    borderTopWidth: 1,
+>>>>>>> 3d43471dbc114512a1cf687169dc7fba75596af8
     borderColor: Colors.tertiaryColor,
   },
   highFooterContainer: {
@@ -235,6 +245,10 @@ export default containers = {
   greyStripeContainer: {
     backgroundColor: Colors.tertiaryColor,
     borderBottomWidth: 0,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   halfWidthBox: {
     maxWidth: '50%',

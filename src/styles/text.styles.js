@@ -37,7 +37,7 @@ export default text = {
     fontSize: 24,
     textAlign: 'center',
     color: Colors.quinaryColor,
-    fontFamily: 'Avenir-Black',
+    fontFamily: 'Avenir-Black'
   },
   errorText: {
     color: Colors.warningButtonColor,
@@ -211,12 +211,19 @@ export default text = {
   listItemRightTitleDefault: {
     color: Colors.quinaryColor,
   },
+<<<<<<< HEAD
   listItemRightTitleDefaultError: {
     color: Colors.quinaryColor,
     paddingVertical: 2,
   },
   listItemSubtitleDefault: {
+=======
+  listItemSubtitleError: {
+>>>>>>> 3d43471dbc114512a1cf687169dc7fba75596af8
     color: 'rgba(206,68,70,1)',
+  },
+  listItemSubtitleDefault: {
+    color: 'gray',
   },
   fiatLabel: {
     backgroundColor: Colors.tertiaryColor,

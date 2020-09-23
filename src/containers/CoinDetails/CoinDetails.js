@@ -59,53 +59,50 @@ class CoinDetails extends Component {
     this.props.navigation.dispatch(NavigationActions.back())
   }
 
-  _handleAddCoin = () => {
+  _handleAddCoin = async () => {
     this.setState({ loading: true });
 
-    addCoin(
-      this.state.fullCoinData,
-      this.props.activeCoinList,
-      this.props.activeAccount.id,
-      // this.props.coinSettings[this.state.fullCoinData.id] != null
-      //   ? this.props.coinSettings[this.state.fullCoinData.id].channels
-      //   : this.state.fullCoinData.compatible_channels
-      this.state.fullCoinData.compatible_channels
-    )
-      .then((response) => {
-        if (response) {
-          const chainId = this.state.fullCoinData.id;
-          this.props.dispatch(response);
-          this.props.dispatch(
-            setUserCoins(
-              this.props.activeCoinList,
-              this.props.activeAccount.id
-            )
-          );
-          this.props.dispatch(
-            addKeypairs(
-              this.props.activeAccount.seeds,
-              this.state.fullCoinData,
-              this.props.activeAccount.keys
-            )
-          );
+    try {
+      this.props.dispatch(
+        addKeypairs(
+          this.props.activeAccount.seeds,
+          this.state.fullCoinData,
+          this.props.activeAccount.keys
+        )
+      );
 
-          activateChainLifecycle(chainId);
+      const addCoinAction = await addCoin(
+        this.state.fullCoinData,
+        this.props.activeCoinList,
+        this.props.activeAccount.id,
+        this.state.fullCoinData.compatible_channels
+      )
 
-          this.setState({ isActive: true, loading: false });
-        } else {
-          throw new Error("Error adding coin");
-        }
-      })
-      .then(() => {
-        if (!this.state.unmounted) {
-          this.goBack();
-        }
-      })
-      .catch((err) => {
-        Alert.alert("Error Adding Coin", `There was a problem adding ${this.state.fullCoinData.id}.`);
-        console.error(err)
-        this.setState({ loading: false });
-      });
+      if (addCoinAction) {
+        const chainId = this.state.fullCoinData.id;
+        this.props.dispatch(addCoinAction);
+        this.props.dispatch(
+          setUserCoins(
+            this.props.activeCoinList,
+            this.props.activeAccount.id
+          )
+        );
+
+        activateChainLifecycle(chainId);
+
+        this.setState({ isActive: true, loading: false });
+      } else {
+        throw new Error("Error adding coin");
+      }
+
+      if (!this.state.unmounted) {
+        this.goBack();
+      }
+    } catch(e) {
+      Alert.alert("Error Adding Coin", `There was a problem adding ${this.state.fullCoinData.id}.`);
+      console.error(e)
+      this.setState({ loading: false });
+    }
   }
   
   render() {

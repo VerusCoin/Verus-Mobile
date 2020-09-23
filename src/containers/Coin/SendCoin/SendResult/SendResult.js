@@ -103,7 +103,7 @@ class SendResult extends Component {
         activeUser,
         toAddress,
         amount,
-        coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM,
+        this.props.channel,
         { defaultFee: fee, network, verifyMerkle, verifyTxid }
       );
 
@@ -121,12 +121,12 @@ class SendResult extends Component {
           txid: res.result.txid,
           remainingBalance:
             res.result.value != null && res.result.fee != null
-              ? this.props.balances.public.confirmed -
+              ? this.props.balances.results.confirmed -
                 (res.result.feeCurr != null &&
                 res.result.feeCurr !== coinObj.id
                   ? res.result.value
                   : res.result.value + res.result.fee)
-              : this.props.balances.public.confirmed - (amount + fee),
+              : this.props.balances.results.confirmed - (amount + fee),
           toAddress: res.result.toAddress || toAddress,
           fromAddress: res.result.fromAddress || fromAddress,
           coinObj,
@@ -180,7 +180,7 @@ class SendResult extends Component {
     if (route === "Send") {
       data = {
         coinObj: coinObj,
-        balance: this.props.balances.public.confirmed,
+        balance: this.props.balances.results.confirmed,
         activeAccount: this.props.activeAccount
       }
     } else {
@@ -399,20 +399,14 @@ class SendResult extends Component {
 
 const mapStateToProps = (state) => {
   const chainTicker = state.coins.activeCoin.id
-  const mainChannel = state.coins.activeCoin.dominant_channel
-    ? state.coins.activeCoin.dominant_channel
-    : ELECTRUM;
+  const channel = state.coinMenus.activeSubWallets[chainTicker].channel
 
   return {
+    channel,
     balances: {
-      public: state.ledger.balances[mainChannel][chainTicker],
-      private: state.ledger.balances[DLIGHT][chainTicker],
-      errors: {
-        public: state.errors[API_GET_BALANCES][mainChannel][chainTicker],
-        private: state.errors[API_GET_BALANCES][DLIGHT][chainTicker],
-      }
+      results: state.ledger.balances[channel][chainTicker],
+      errors: state.errors[API_GET_BALANCES][channel][chainTicker],
     },
-    //needsUpdate: state.ledger.needsUpdate,
     activeAccount: state.authentication.activeAccount,
     coinSettings: state.settings.coinSettings,
   }
