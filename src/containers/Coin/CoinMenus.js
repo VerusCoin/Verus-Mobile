@@ -16,11 +16,6 @@ import Overview from './Overview/Overview'
 import SendCoin from './SendCoin/SendCoin'
 import ReceiveCoin from './ReceiveCoin/ReceiveCoin'
 import { Icon } from "react-native-elements"
-<<<<<<< HEAD
-import { setIsCoinMenuFocused } from "../../actions/actionCreators";
-import { withNavigationFocus } from '@react-navigation/compat';
-import VerusLightClient from 'react-native-verus-light-client';
-=======
 import { setActiveSection, setCoinSubWallet, setIsCoinMenuFocused } from "../../actions/actionCreators";
 import { NavigationActions, withNavigationFocus } from '@react-navigation/compat';
 import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
@@ -29,7 +24,6 @@ import { truncateDecimal } from '../../utils/math'
 import { Portal } from "react-native-paper";
 import { API_GET_BALANCES } from "../../utils/constants/intervalConstants";
 import { CONNECTION_ERROR } from "../../utils/api/errors/errorMessages";
->>>>>>> 3d43471dbc114512a1cf687169dc7fba75596af8
 
 class CoinMenus extends Component {
   constructor(props) {
@@ -44,14 +38,11 @@ class CoinMenus extends Component {
     this.state = {
       tabs: stateObj.tabs,
       activeTab: stateObj.activeTab,
-<<<<<<< HEAD
-    };
-=======
       subWallets
-    }; 
+    };
 
     if (subWallets.length == 1) props.dispatch(setCoinSubWallet(props.activeCoin.id, subWallets[0]))
->>>>>>> 3d43471dbc114512a1cf687169dc7fba75596af8
+
   }
 
   componentDidMount() {
@@ -137,7 +128,7 @@ class CoinMenus extends Component {
           } ${activeCoin.id}`}
         </Text>
       );
-    } 
+    }
   };
 
   renderTab = ({ tab, isActive }) => (

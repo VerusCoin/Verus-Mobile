@@ -172,14 +172,6 @@ export default containers = {
     borderTopWidth: 1,
     borderColor: Colors.tertiaryColor,
   },
-<<<<<<< HEAD
-  footerContainerKYC: {
-    width: '100%',
-    bottom: 15,
-    paddingBottom: 5,
-    flex: 1,
-    backgroundColor: Colors.secondaryColor,
-=======
   shortFooterContainer: {
     width: '100%',
     alignItems: 'center',
@@ -187,7 +179,6 @@ export default containers = {
     maxHeight: '12%',
     backgroundColor: Colors.secondaryColor,
     borderTopWidth: 1,
->>>>>>> 3d43471dbc114512a1cf687169dc7fba75596af8
     borderColor: Colors.tertiaryColor,
   },
   highFooterContainer: {

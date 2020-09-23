@@ -142,11 +142,8 @@ export const STATES = [
     { value: 'WI' },
     { value: 'WY' }
 ];
-<<<<<<< HEAD
-=======
 
 export const SUBWALLET_NAMES = {
     MAIN_WALLET: "Main",
     PRIVATE_WALLET: "Private"
 }
->>>>>>> 3d43471dbc114512a1cf687169dc7fba75596af8
