@@ -98,8 +98,7 @@ target 'verusmobile' do
   pod 'RNInputMask', :path => '../node_modules/react-native-text-input-mask/ios/InputMask'
   pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
   pod 'Permission-Camera', :path => "#{permissions_path}/Camera.podspec"
-  pod 'ZcashLightClientKit', :git => 'https://github.com/michaeltout/ZcashLightClientKit.git', :branch => '0.6.3', :testspecs => ['Tests']
-  pod 'ReactNativeART', :path => '../node_modules/@react-native-community/art'
+  pod 'ZcashLightClientKit', :git => 'https://github.com/michaeltout/ZcashLightClientKit.git', :testspecs => ['Tests']
 
   target 'verusmobileTests' do
     inherit! :search_paths
