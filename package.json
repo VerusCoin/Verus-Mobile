@@ -55,7 +55,6 @@
     "lodash": "^4.17.15",
     "meteor-node-stubs": "~0.2.4",
     "node-gyp": "^3.8.0",
-    "verus-zkedid-utils": "https://github.com/michaeltout/verus-zkedid-utils",
     "normalizr": "^3.6.0",
     "patch-package": "^6.1.2",
     "path-browserify": "0.0.0",
@@ -97,7 +96,11 @@
     "react-native-screens": "^2.9.0",
     "react-native-share": "1.2.1",
     "react-native-svg": "^9.2.4",
+<<<<<<< HEAD
     "react-native-svg-transformer": "^0.14.3",
+=======
+    "react-native-svg-transformer": "0.14.3",
+>>>>>>> 5339de421e7aa49a707ada34f692422a692943ae
     "react-native-tcp": "^3.3.0",
     "react-native-text-input-mask": "^2.0.0",
     "react-native-udp": "^2.3.1",
@@ -122,6 +125,7 @@
     "url": "^0.10.3",
     "uuid": "^8.0.0",
     "version_compare": "^0.0.3",
+    "verus-zkedid-utils": "https://github.com/michaeltout/verus-zkedid-utils",
     "vm": "^0.1.0",
     "vm-browserify": "0.0.4"
   },
@@ -136,6 +140,7 @@
     "eslint-plugin-react-hooks": "^2.5.1",
     "jest": "^24.9.0",
     "jetifier": "^1.6.4",
+    "metro-minify-terser": "^0.63.0",
     "metro-react-native-babel-preset": "^0.56.0",
     "node-fetch": "^2.6.0",
     "react-test-renderer": "16.9.0",
