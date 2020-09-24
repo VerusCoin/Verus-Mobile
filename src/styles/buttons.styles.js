@@ -10,7 +10,7 @@ export default buttons = {
     width: '100%',
     alignSelf: 'center',
     height: 40,
-    fontFamily: 'SourceSansPro-Regular',
+    fontFamily: 'Avenir-Black',
     backgroundColor: Colors.buttonKYC,
   },
   defaultButton: {
