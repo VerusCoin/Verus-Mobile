@@ -96,11 +96,7 @@
     "react-native-screens": "^2.9.0",
     "react-native-share": "1.2.1",
     "react-native-svg": "^9.2.4",
-<<<<<<< HEAD
-    "react-native-svg-transformer": "^0.14.3",
-=======
     "react-native-svg-transformer": "0.14.3",
->>>>>>> 5339de421e7aa49a707ada34f692422a692943ae
     "react-native-tcp": "^3.3.0",
     "react-native-text-input-mask": "^2.0.0",
     "react-native-udp": "^2.3.1",
