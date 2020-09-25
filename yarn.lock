@@ -13441,7 +13441,7 @@ version_compare@^0.0.3:
 
 "verus-zkedid-utils@https://github.com/michaeltout/verus-zkedid-utils":
   version "1.0.0"
-  resolved "https://github.com/michaeltout/verus-zkedid-utils#20bb2db30ab04e044401842be7a08a041a51ad01"
+  resolved "https://github.com/michaeltout/verus-zkedid-utils#7c4f8615de6f4b8aa07b27b383c42e561833488f"
 
 vlq@^1.0.0:
   version "1.0.1"
