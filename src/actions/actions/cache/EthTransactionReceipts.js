@@ -42,7 +42,7 @@ export const saveEthTxReceipt = (receipt, txid, store) => {
   return new Promise((resolve, reject) => {
     setCachedEthTxReceipt(receipt, txid)
     .then(() => {
-      if (numReceipts < ETH_TRANSACTION_RECEIPT_CAP) {
+      if (numReceipts >= ETH_TRANSACTION_RECEIPT_CAP) {
         return false
       } else {
         return loadEthTxReceipts(store.dispatch)

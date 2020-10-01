@@ -20,16 +20,14 @@ import { namesList, findCoinObj } from '../../utils/CoinData/CoinData'
 import { coinsList } from '../../utils/CoinData/CoinsList'
 import { getRecommendedBTCFees } from '../../utils/api/channels/general/callCreators'
 import { removeSpaces } from '../../utils/stringUtils'
+import VerusPayParser from '../../utils/verusPay/index'
 import {
   setUserCoins,
   addKeypairs,
-  //transactionsNeedUpdate,
   addCoin,
   setActiveApp,
   setActiveCoin,
-  setActiveSection,
-  //updateOneBalance,
-  //balancesNeedUpdate
+  setActiveSection
  } from '../../actions/actionCreators'
 import Spinner from 'react-native-loading-spinner-overlay';
 import DelayedAsyncAlert from '../../utils/delayedAsyncAlert'
@@ -45,7 +43,6 @@ import {
   BALANCE_NULL,
   PARSE_ERROR
 } from '../../utils/constants/constants'
-import styles from './VerusPay.styles'
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import { API_GET_BALANCES, API_GET_INFO, ELECTRUM, DLIGHT } from "../../utils/constants/intervalConstants";
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
@@ -130,14 +127,26 @@ class VerusPay extends Component {
       }
     } else {
       if (typeof result === "string") {
-        let coinURLParsed = this.parseCoinURL(result);
+        try {
+          const request = VerusPayParser.v0.readVerusPay(result)
+          const coinObj = this.findCurrencyByImportId(request)
+          
+          this.handleVerusQR({
+            coinTicker: coinObj.id,
+            address: request.destination,
+            amount: request.amount,
+            memo: request.note
+          })
+        } catch(e) {
+          let coinURLParsed = this.parseCoinURL(result);
 
-        if (coinURLParsed) {
-          this.handleVerusQR(coinURLParsed);
-        } else if (result.length >= 34 && result.length <= 35) {
-          this.addressOnly(result);
-        } else {
-          this.errorHandler(FORMAT_UNKNOWN);
+          if (coinURLParsed) {
+            this.handleVerusQR(coinURLParsed);
+          } else if (result.length >= 34 && result.length <= 35) {
+            this.addressOnly(result);
+          } else {
+            this.errorHandler(FORMAT_UNKNOWN);
+          }
         }
       } else {
         this.errorHandler(FORMAT_UNKNOWN);
@@ -167,6 +176,19 @@ class VerusPay extends Component {
     }
   };
 
+  findCurrencyByImportId = (importObj) => {
+    const allCoins = Object.values(coinsList)
+
+    const coinObj = allCoins.find(coin => {
+      return (
+        coin.system_id === importObj.system_id &&
+        coin.currency_id === importObj.currency_id
+      );
+    })
+
+    return coinObj
+  }
+
   parseCoinURL = qrString => {
     //TODO: Add support for messages in btc urls as well (&message=Hello)
 
@@ -193,7 +215,7 @@ class VerusPay extends Component {
           for (key in coinsList) {
             if (
               coinsList[key] &&
-              removeSpaces(coinsList[key].name).toLowerCase() ===
+              removeSpaces(coinsList[key].display_name).toLowerCase() ===
                 coinName.toLowerCase()
             ) {
               //Create verusQR compatible data from coin URL
@@ -220,7 +242,7 @@ class VerusPay extends Component {
             const coinObj = coinsList[key];
 
             if (
-              removeSpaces(coinObj.name).toLowerCase() ===
+              removeSpaces(coinObj.display_name).toLowerCase() ===
               coinName.toLowerCase()
             ) {
               //Create verusQR compatible data from coin URL
@@ -467,9 +489,9 @@ class VerusPay extends Component {
     const channel = activeCoin.dominant_channel != null ? activeCoin.dominant_channel : ELECTRUM
 
     if (activeCoin && balances.results && balances.results[channel]) {
-      const spendableBalance = balances.results[channel].confirmed - activeCoin.fee;
+      const spendableBalance = balances.results[channel][activeCoin.id].confirmed;
 
-      if (amount > Number(spendableBalance)) {
+      if (Number(amount) > Number(spendableBalance)) {
         this.errorHandler(INSUFFICIENT_FUNDS);
         return false;
       } else {
@@ -555,13 +577,13 @@ class VerusPay extends Component {
       coinObj: this.state.coinObj,
       activeUser: this.state.activeUser,
       address: this.state.address,
-      amount: satsToCoins(Number(this.state.amount)),
+      amount: Number(this.state.amount),
       btcFee: this.state.btcFees.average,
       balance: this.props.balances.results[
         this.state.coinObj.dominant_channel != null
           ? this.state.coinObj.dominant_channel
           : ELECTRUM
-      ].confirmed,
+      ][this.state.coinObj.id].confirmed,
       memo: this.state.memo,
     };
 

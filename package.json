@@ -122,6 +122,7 @@
     "uuid": "^8.0.0",
     "version_compare": "^0.0.3",
     "verus-zkedid-utils": "https://github.com/michaeltout/verus-zkedid-utils",
+    "verus-pay-utils": "https://github.com/michaeltout/verus-pay-utils.git",
     "vm": "^0.1.0",
     "vm-browserify": "0.0.4"
   },

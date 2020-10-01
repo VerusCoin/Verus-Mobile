@@ -279,7 +279,7 @@ class Home extends Component {
                   roundAvatar
                   title={
                     <Text style={Styles.listItemLeftTitleDefault}>
-                      {item.name}
+                      {item.display_name}
                     </Text>
                   }
                   subtitle={

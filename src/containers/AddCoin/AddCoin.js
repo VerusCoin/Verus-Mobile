@@ -8,6 +8,7 @@
 import React, { Component } from "react";
 import { SearchBar, ListItem } from "react-native-elements";
 import { FlatList, TouchableOpacity, Alert } from "react-native";
+import { Searchbar } from 'react-native-paper';
 import { connect } from 'react-redux';
 import Styles from '../../styles/index'
 
@@ -22,14 +23,21 @@ class AddCoin extends Component {
     super(props)
     this.state = {
       loading: true,      
-      error: null,    
+      error: null,
+      query: '',
+      coinList: []
     };
-    //this.arrayholder = [];
   }
 
-  /*componentDidMount() {
-    this.arrayholder = coinsList;
-  }*/
+  componentDidMount() {
+    this.setState({ coinList: this.getCoinList() })
+  }
+
+  componentDidUpdate(lastProps, lastState) {
+    if (lastState.query !== this.state.query) {
+      this.setState({ coinList: this.getCoinList() })
+    }
+  }
 
   componentWillUnmount() {
     if (this.props.route.params && this.props.route.params.refresh) {
@@ -73,18 +81,40 @@ class AddCoin extends Component {
     this.setState({ dataFull: newData });  
   };*/
 
+  getCoinList = () => {
+    const activeCoinIds = this.props.activeCoinsForUser.map(coinObj => coinObj.id)
+    const { query } = this.state
+
+    return namesList.filter((coinId) => {
+      const queryLc = query.toLowerCase()
+      const coinIdLc = coinId.toLowerCase()
+
+      return (
+        !activeCoinIds.includes(coinId) &&
+        (query.length == 0 ||
+          queryLc.includes(coinIdLc) ||
+          coinIdLc.includes(queryLc))
+      );
+    })
+  }
+
   onEndReached = () => {
     this.setState({ loading: false });
   }
 
   render() {
-    const activeCoinIds = this.props.activeCoinsForUser.map(coinObj => coinObj.id)
     return (
       <FlatList
+        ListHeaderComponent={
+          <Searchbar
+            placeholder="Search"
+            onChangeText={(query) => this.setState({ query })}
+            value={this.state.query}
+            autoCorrect={false}
+          />
+        }
         style={Styles.fullWidth}
-        data={namesList.filter((coinId) => {
-          return !activeCoinIds.includes(coinId);
-        })}
+        data={this.state.coinList}
         onEndReached={this.onEndReached}
         onEndReachedThreshold={50}
         renderItem={({ item }) => (

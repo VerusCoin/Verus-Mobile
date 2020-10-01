@@ -28,9 +28,9 @@ import { API_GET_FIATPRICE, API_GET_BALANCES, GENERAL } from "../../../utils/con
 import { USD } from '../../../utils/constants/currencies'
 import { expireData } from "../../../actions/actionCreators"
 import Store from "../../../store"
-import { VERUS_QR_VERSION } from '../../../../env/main.json'
 import { Portal } from "react-native-paper"
 import selectAddresses from "../../../selectors/address"
+import VerusPayParser from '../../../utils/verusPay/index'
 
 class ReceiveCoin extends Component {
   constructor(props) {
@@ -125,20 +125,31 @@ class ReceiveCoin extends Component {
     }) 
   }
 
-  createQRString = (coinTicker, amount, address, memo) => {
+  createQRString = (coinObj, amount, address, memo) => {
     const { rates, displayCurrency } = this.props
+    const coinTicker = coinObj.id
 
     let _price = rates[coinTicker] != null ? rates[coinTicker][displayCurrency] : null
-    
-    let verusQRJSON = {
-      verusQR: VERUS_QR_VERSION,
-      coinTicker: coinTicker,
-      address: address,
-      amount: this.state.amountFiat ? truncateDecimal(coinsToSats(amount/_price), 0) : coinsToSats(amount),
-      memo: memo
-    }
 
-    this.setState({verusQRString: JSON.stringify(verusQRJSON), showModal: true})
+    try {
+      const verusQRString = VerusPayParser.v0.writeVerusPayQR(
+        coinObj,
+        this.state.amountFiat
+          ? truncateDecimal(amount / _price, 0).toString()
+          : amount.toString(),
+        address,
+        memo
+      )
+
+      this.setState({
+        verusQRString,
+        showModal: true,
+      });
+    } catch(e) {
+      console.warn(e)
+      Alert.alert("Error", "Error creating QR payment request.")
+    }
+    
   }
 
   switchInvoiceCoin = (coinObj) => {
@@ -201,7 +212,7 @@ class ReceiveCoin extends Component {
       }
 
       if (!_errors) {
-        this.createQRString(_selectedCoin.id, _amount, _address, _memo)
+        this.createQRString(_selectedCoin, _amount, _address, _memo)
       } else {
         return false;
       }

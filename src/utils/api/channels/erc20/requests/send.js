@@ -5,7 +5,7 @@ import { ERC20, ETH } from "../../../../constants/intervalConstants"
 export const send = async (coinObj, activeUser, address, amount, params) => {
   try {
     const { privKey } = activeUser.keys[coinObj.id][ERC20]
-    const contract = Web3Provider.getContract(coinObj.contract_address)
+    const contract = Web3Provider.getContract(coinObj.currency_id)
     const gasPrice = await Web3Provider.DefaultProvider.getGasPrice()
     const amountBn = ethers.utils.parseUnits(amount.toString(), coinObj.decimals)
     const gasEst = await contract.estimateGas.transfer(address, amountBn)

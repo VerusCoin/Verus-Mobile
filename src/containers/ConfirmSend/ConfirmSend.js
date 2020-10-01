@@ -15,7 +15,7 @@ import { satsToCoins, truncateDecimal, coinsToSats } from '../../utils/math';
 import ProgressBar from 'react-native-progress/Bar';
 import { NavigationActions } from '@react-navigation/compat';
 import { CommonActions } from '@react-navigation/native';
-import { NO_VERIFICATION, MID_VERIFICATION } from '../../utils/constants/constants'
+import { NO_VERIFICATION, MID_VERIFICATION, INSUFFICIENT_FUNDS } from '../../utils/constants/constants'
 import Styles from '../../styles/index'
 import Colors from "../../globals/colors";
 import { preflight } from "../../utils/api/routers/preflight";
@@ -45,7 +45,8 @@ class ConfirmSend extends Component {
       loadingMessage: "Creating transaction...",
       btcFeePerByte: null,
       feeTakenFromAmount: false,
-      feeCurr: null
+      feeCurr: null,
+      note: null
     };
   }
 
@@ -57,7 +58,7 @@ class ConfirmSend extends Component {
     const fee = coinObj.id === 'BTC' ? { feePerByte: Number(this.props.route.params.data.btcFee) } : Number(this.props.route.params.data.coinObj.fee)
     const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
     const balance = Number(this.props.route.params.data.balance)
-    //const memo = this.props.route.params.data.memo
+    const note = this.props.route.params.data.memo
     
     this.timeoutTimer = setTimeout(() => {
       if (this.state.loading) {
@@ -143,9 +144,10 @@ class ConfirmSend extends Component {
           loadingProgress: 1,
           loadingMessage: "Done",
           btcFeePerByte: fee.feePerByte ? fee.feePerByte : null,
-          feeTakenFromAmount: feeTakenFromAmount
+          feeTakenFromAmount: feeTakenFromAmount,
+          note
         });
-      }
+      } 
     } catch (e) {
       this.setState({
         loading: false,
@@ -308,12 +310,12 @@ class ConfirmSend extends Component {
                     this.state.coinObj.id}
                 </Text>
               </View>
-              {this.state.memo && (
+              {this.state.note && (
                 <View style={Styles.infoTableRow}>
                   <Text style={Styles.infoTableHeaderCell}>Note:</Text>
                   <View style={Styles.infoTableCell}>
                     <Text style={Styles.blockTextAlignRight}>
-                      {this.state.memo}
+                      {this.state.note}
                     </Text>
                   </View>
                 </View>

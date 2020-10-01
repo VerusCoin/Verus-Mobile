@@ -5,7 +5,6 @@ const {
   VERUS_RATE_URL
 } = require("./util/mock_urls");
 
-
 /**
  * Mock of the react-native-fetch http call function. If the URL is an electrum string,
  * it will parse the electrum data, and use it to return mock electrum data. Possible
@@ -13,7 +12,7 @@ const {
  * @param {String} url The full URL to fetch. Test commands should be included in here
  * @param {Object} payload Fetch type, body, headers etc.
  */
-const fetch = function(url, payload) {
+const fetch = async function(url, payload) {
   if (url.endsWith(MOCK_PROXY_URL)) {
     return new Promise((resolve) => (resolve({status: 200})))
   } else if (url === FIAT_EXCHANGE_RATES_URL) {

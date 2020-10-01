@@ -27,7 +27,7 @@ import Share from 'react-native-share';
 import Colors from '../globals/colors';
 import Styles from '../styles/index'
 
-const LOGO_DIR = require('../images/customIcons/verusQRLogo.png');
+const LOGO_DIR = require('../images/customIcons/Verus.png');
 const NOT_REAL_ERROR_MSG = "User did not share"
 const DEFAULT_OPACITY = 0.2
 
@@ -148,9 +148,9 @@ class QRModal extends Component {
                 value={this.props.qrString ? this.props.qrString : "-"}
                 size={264}
                 //TODO: Add in differently so it doesn't impact readability
-                //logo={LOGO_DIR}
-                //logoSize={50}
-                //logoBackgroundColor='transparent'
+                // logo={LOGO_DIR}
+                // logoSize={50}
+                // logoBackgroundColor='transparent'
                 getRef={(qr) => (this.QRCodeRef = qr)}
               />
             </View>
