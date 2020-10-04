@@ -15,7 +15,7 @@ export * from './actionCreators/identities';
 import {
   SET_ACCOUNTS,
   SIGN_OUT,
-  FINGER_AUTH,
+  BIOMETRIC_AUTH,
   SET_ACTIVE_COIN,
   SET_CONFIG_SECTION,
   SET_ALL_SETTINGS,
@@ -64,7 +64,8 @@ import {
   APP_SETUP,
   SET_ETH_TX_RECEIPTS,
   ADD_ETH_TX_RECEIPT,
-  SET_COIN_SUB_WALLET,
+  SET_COIN_SUB_WALLET, 
+  DISABLE_SELECT_DEFAULT_ACCOUNT
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -78,6 +79,11 @@ export const setAccounts = (accounts) => {
 //Reducer Name: authentication
 export const signIntoAuthenticatedAccount = () => {
   return { type: SIGN_IN_USER }
+}
+
+//Reducer Name: authentication
+export const disableSelectDefaultAccount = () => {
+  return { type: DISABLE_SELECT_DEFAULT_ACCOUNT }
 }
 
 //Reducer Name: authentication
@@ -95,12 +101,11 @@ export const signOut = () => {
   }
 }
 
-//TODO: Setup finger authentication with this method in redux store
 //Reducer Name: authentication
-export const setFingerAuth = (isEnabled) => {
+export const setBiometricAuthentication = (isEnabled) => {
   return {
-    type: FINGER_AUTH,
-    fingerPrint: isEnabled
+    type: BIOMETRIC_AUTH,
+    biometry: isEnabled
   }
 }
 

@@ -15,7 +15,7 @@ import {
   TouchableWithoutFeedback, 
   ActivityIndicator, 
   Image,
-  Alert,
+  Alert
 } from "react-native";
 import { connect } from 'react-redux';
 import { 
@@ -23,7 +23,8 @@ import {
   setUserCoins, 
   fetchActiveCoins,
   signIntoAuthenticatedAccount,
-  COIN_MANAGER_MAP,
+  COIN_MANAGER_MAP, 
+  saveGeneralSettings
  } from '../../actions/actionCreators';
 import { Dropdown } from 'react-native-material-dropdown';
 import { Verus } from '../../images/customIcons/index';
@@ -33,12 +34,10 @@ import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import StandardButton from "../../components/StandardButton";
 import PasswordInput from '../../components/PasswordInput'
-import { DLIGHT } from "../../utils/constants/intervalConstants";
-import { initDlightWallet } from "../../actions/actions/channels/dlight/dispatchers/LightWalletReduxManager";
-import { DISABLED_CHANNELS, ENABLE_DLIGHT } from '../../../env/main.json'
+import { DISABLED_CHANNELS } from '../../../env/main.json'
 
 import { removeIdentityData } from '../../utils/asyncStore/identityStorage';
-import { TouchableHighlight } from "react-native-gesture-handler";
+import { getBiometricPassword, getSupportedBiometryType } from "../../utils/biometry/biometry";
 
 class Login extends Component {
   constructor(props) {
@@ -48,6 +47,8 @@ class Login extends Component {
       selectedAccount: {id: null},
       loading: false,
       validating: false,
+      simpleLayout: true,
+      makeDefaultAccount: false,
       errors: {selectedAccount: null, password: null}
     };
 
@@ -58,16 +59,32 @@ class Login extends Component {
     this.props.activeCoinList.map(coinObj => {
       clearAllCoinIntervals(coinObj.id)
     })
+
+    if (this.props.defaultAccount != null && this.props.selectDefaultAccount) {
+      const defaultAccountObj = this.props.accounts.find(
+        (account) => account.accountHash === this.props.defaultAccount
+      );
+
+      if (defaultAccountObj) {
+        this.selectAccount(defaultAccountObj)
+      }
+    }
   }
 
   _handleSubmit = () => {
     Keyboard.dismiss();
     const account = this.state.selectedAccount;
-    this.setState({validating: true})
 
-    validateLogin(account, this.state.password)
-      .then(response => {
+    this.setState({ validating: true }, () => {
+      validateLogin(account, this.state.password)
+      .then(async response => {
         if(response !== false) {
+          if (this.state.makeDefaultAccount) {
+            await saveGeneralSettings({
+              defaultAccount: account.accountHash
+            })
+          }
+
           this.setState({loading: true})
           let promiseArr = [fetchActiveCoins(), response]
           return Promise.all(promiseArr);
@@ -95,11 +112,6 @@ class Login extends Component {
               return COIN_MANAGER_MAP.initializers[channel](coinObj)
             } else return null
           }))
-
-          // TODO: Allow selective channel disabling in settings
-          // if (ENABLE_DLIGHT && this.props.coinSettings[activeCoinsForUser[i].id].channels.includes(DLIGHT)) {
-          //   await initDlightWallet(activeCoinsForUser[i])
-          // }
   
           activateChainLifecycle(coinObj.id);
         }
@@ -108,8 +120,12 @@ class Login extends Component {
       })
       .catch(err => {
         console.warn(err)
-        Alert.alert("Error", err.message)
+        this.setState({
+          validating: false,
+          simpleLayout: false
+        })
       });
+    })
   }
 
   handleError = (error, field) => {
@@ -129,7 +145,7 @@ class Login extends Component {
       let _errors = false;
 
       if (!_selectedAccount.id) {
-        Alert.alert("No Account Selected", "Please select an account.")
+        Alert.alert("No Account Selected", "Please select a profile.")
         _errors = true
       } 
 
@@ -160,20 +176,47 @@ class Login extends Component {
     removeIdentityData();
   }
 
+  selectAccount = (account) => {
+    Keyboard.dismiss()
+  
+    this.setState({ selectedAccount: account }, async () => {
+      if (account.biometry && (await getSupportedBiometryType()).biometry) {
+        try {
+          const password = await getBiometricPassword(account.accountHash, "Authenticate to unlock profile")
+
+          this.setState({ password }, this._handleSubmit)
+        } catch(e) {
+          console.warn(e)
+          this.setState({
+            simpleLayout: false,
+            validating: false
+          })
+        }
+      } else {
+        this.setState({
+          simpleLayout: false
+        })
+      }
+    })
+  }
+
   render() {
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={Styles.focalCenter}>          
+      <TouchableWithoutFeedback
+        onPress={Keyboard.dismiss}
+        accessible={false}
+      >
+        <View style={Styles.focalCenter}>
           <Image
             source={Verus}
             style={{
               height: "20%",
-              marginBottom: "5%"
+              marginBottom: "5%",
             }}
             resizeMode="contain"
           />
           {/* {<TouchableHighlight onPress={this.clearIdentityStorage}><Text>Clear identity storage</Text></TouchableHighlight>} */}
-          <Text style={Styles.centralHeader}>Select an Account</Text>
+          <Text style={Styles.centralHeader}>Select a Profile</Text>
           <Dropdown
             containerStyle={Styles.standardWidthBlock}
             labelExtractor={(item, index) => {
@@ -182,28 +225,38 @@ class Login extends Component {
             valueExtractor={(item, index) => {
               return item;
             }}
+            value={
+              this.state.selectedAccount.id == null
+                ? ""
+                : this.state.selectedAccount
+            }
             data={this.props.accounts}
-            onChangeText={(value, index, data) => {
-              this.setState({ selectedAccount: value });
-            }}
+            onChangeText={(value) => this.selectAccount(value)}
             textColor={Colors.quinaryColor}
             selectedItemColor={Colors.quinaryColor}
             baseColor={Colors.quinaryColor}
-            label="Select Account..."
+            label="Select Profile..."
             labelTextStyle={Styles.defaultText}
             pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
             itemTextStyle={Styles.defaultText}
           />
-          <PasswordInput 
-            onChangeText={text => this.setState({ password: text })}
-            errorMessage={
-              this.state.errors.password ? this.state.errors.password : null
-            }
-          />
+          {!this.state.simpleLayout && !this.state.validating && (
+            <PasswordInput
+              onChangeText={(text) => this.setState({ password: text })}
+              errorMessage={
+                this.state.errors.password
+                  ? this.state.errors.password
+                  : null
+              }
+            />
+          )}
           {this.state.loading ? (
             <View style={Styles.fullWidthFlexCenterBlock}>
               <Text style={Styles.centralHeader}>Unlocking Wallet</Text>
-              <ActivityIndicator animating={this.state.loading} size="large" />
+              <ActivityIndicator
+                animating={this.state.loading}
+                size="large"
+              />
             </View>
           ) : this.state.validating ? (
             <View style={Styles.fullWidthFlexCenterBlock}>
@@ -215,16 +268,18 @@ class Login extends Component {
             </View>
           ) : (
             <View style={Styles.fullWidthFlexCenterBlock}>
-              <StandardButton
-                title="UNLOCK"
-                onPress={this.validateFormData}
-                buttonStyle={Styles.fullWidthButton}
-                containerStyle={Styles.standardWidthCenterBlock}
-              />
+              {!this.state.simpleLayout && (
+                <StandardButton
+                  title="UNLOCK"
+                  onPress={this.validateFormData}
+                  buttonStyle={Styles.fullWidthButton}
+                  containerStyle={Styles.standardWidthCenterBlock}
+                />
+              )}
               <View style={Styles.flexCenterRowBlock}>
                 <Text style={Styles.linkText} onPress={this._handleAddUser}>
                   {" "}
-                  Add an account
+                  Add a profile
                 </Text>
               </View>
             </View>
@@ -239,8 +294,9 @@ const mapStateToProps = (state) => {
   return {
     accounts: state.authentication.accounts,
     activeCoinList: state.coins.activeCoinList,
-    coinSettings: state.settings.coinSettings
-    //updateIntervalID: state.ledger.updateIntervalID
+    coinSettings: state.settings.coinSettings,
+    defaultAccount: state.settings.generalWalletSettings.defaultAccount,
+    selectDefaultAccount: state.authentication.selectDefaultAccount
   }
 };
 

@@ -97,7 +97,6 @@ class WalletSettings extends Component {
             titleStyle={Styles.listItemLeftTitleDefault}
             leftIcon={{name: 'clear-all'}}
             containerStyle={Styles.bottomlessListItemContainer} 
-            chevron
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => this._openSettings(GENERAL_WALLET_SETTINGS)}>

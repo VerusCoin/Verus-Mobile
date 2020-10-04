@@ -78,6 +78,7 @@
     "react-native-fs": "~2.15.0",
     "react-native-gesture-handler": "^1.7.0",
     "react-native-image-picker": "^1.1.0",
+    "react-native-keychain": "^6.2.0",
     "react-native-level-fs": "^3.0.1",
     "react-native-loading-spinner-overlay": "^1.0.1",
     "react-native-material-bottom-navigation": "^1.0.2",
@@ -121,8 +122,8 @@
     "url": "^0.10.3",
     "uuid": "^8.0.0",
     "version_compare": "^0.0.3",
-    "verus-zkedid-utils": "https://github.com/michaeltout/verus-zkedid-utils",
     "verus-pay-utils": "https://github.com/michaeltout/verus-pay-utils.git",
+    "verus-zkedid-utils": "https://github.com/michaeltout/verus-zkedid-utils",
     "vm": "^0.1.0",
     "vm-browserify": "0.0.4"
   },
