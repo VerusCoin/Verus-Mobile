@@ -3,7 +3,7 @@
   "version": "0.1.9-beta",
   "private": true,
   "scripts": {
-    "postinstall": "patch-package && ./node_modules/.bin/rn-nodeify --hack --install && npx jetify",
+    "postinstall": "patch-package && ./node_modules/.bin/rn-nodeify --hack --install && npx jetify && remotedev-debugger",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
@@ -141,6 +141,7 @@
     "node-fetch": "^2.6.0",
     "react-test-renderer": "16.9.0",
     "remote-redux-devtools": "^0.5.16",
+    "remotedev-rn-debugger": "^0.8.4",
     "rn-nodeify": "github:tradle/rn-nodeify"
   },
   "resolutions": {
