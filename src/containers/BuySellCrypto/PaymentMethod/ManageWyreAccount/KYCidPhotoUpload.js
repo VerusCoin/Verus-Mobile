@@ -5,25 +5,19 @@ import {
   Platform,
   View,
   TouchableWithoutFeedback,
-  TouchableOpacity,
   Keyboard,
   Alert,
   Image,
   Text,
   StyleSheet,
-  ScrollView,
+
 } from 'react-native';
 
 import { Dropdown } from 'react-native-material-dropdown';
-import Lock from '../../../../images/customIcons/iconmonstr-lock-18.svg';
-
 import {
   FormLabel,
   FormValidationMessage
 } from 'react-native-elements';
-
-import IDsIcon from '../../../../images/customIcons/IDsIcon.svg';
-import Arrow from '../../../../images/customIcons/iconmonstr-arrow-29.svg';
 
 import Spinner from 'react-native-loading-spinner-overlay';
 
@@ -56,23 +50,16 @@ const styles = StyleSheet.create({
   },
 });
 
-let doesContainAddress = false;
 
 
-class KYCfoto extends Component {
+class KYCidPhotoUploads extends Component {
   constructor(props) {
     super(props);
-    //check the id type that is being processed
-    //console.log(this.props);
-    //this.state.documentType = props.route.params.documentType;
-    //this.state.hasAddress = props.route.params.includeAddress;
     this.state = {
       image: null,
       error: null,
       documents: [],
-      isFetching: true,
-      documentType : props.route.params.documentType,
-      hasAddress : props.route.params.includeAddress,
+      isFetching: true
     };
 
     if(PrimeTrustInterface.user === null) {
@@ -84,11 +71,6 @@ class KYCfoto extends Component {
     this.getUploadedDocuments();
     
   }
-/*
-  {"field": undefined, "fieldId": "individualGovernmentId", "isFetching": false, 
-  "navigation": {"addListener": [Function addListener], "canGoBack": [Function canGoBack], "closeDrawer": [Function anonymous], "dangerouslyGetParent": [Function dangerouslyGetParent], "dangerouslyGetState": [Function anonymous], "dispatch": [Function dispatch], "goBack": [Function anonymous], "isFocused": [Function isFocused], "jumpTo": [Function anonymous], "navigate": [Function anonymous], "openDrawer": [Function anonymous], "pop": [Function anonymous], "popToTop": [Function anonymous], "push": [Function anonymous], "removeListener": [Function removeListener], "replace": [Function anonymous], "reset": [Function anonymous], "setOptions": [Function setOptions], "setParams": [Function anonymous], "toggleDrawer": [Function anonymous]}, 
-  "route": {"key": "KYCfoto-McTASvlIPRbt1D9vcjtyr", "name": "KYCfoto", "params": {"documentType": null, "includeAddress": null}}, "uploadWyreAccountDocument": [Function anonymous]}
-*/
 
   handleSelect = () => {
     Keyboard.dismiss();
@@ -147,35 +129,37 @@ class KYCfoto extends Component {
     }
   };
 
+
   
   render() {
+    const scaleFactorY = 2;
+    const scalefatorX = 2;
 
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={Styles.root}>
-          <View style={Styles.progressBarContainer}>
-            <Badge
-              status="success"
-              badgeStyle={Styles.progessBadgeDone}
-              containerStyle={Styles.horizontalPaddingBox10}
-            />
-            <Badge
-              status="success"
-              badgeStyle={Styles.progessBadgeDone}
-              containerStyle={Styles.horizontalPaddingBox10}
-            />
-            <Badge
-              status="primary"
-              badgeStyle={Styles.progessBadgeTodo}
-              containerStyle={Styles.horizontalPaddingBox10}
-            />
-            <Badge
-              status="primary"
-              badgeStyle={Styles.progessBadgeTodo}
-              containerStyle={Styles.horizontalPaddingBox10}
-            />
-          </View>
-          <ScrollView>
+        <View style={Styles.centralRow}>
+          <Badge
+            status="success"
+            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            containerStyle={Styles.horizontalPaddingBox10}
+          />
+          <Badge
+            status="success"
+            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            containerStyle={Styles.horizontalPaddingBox10}
+          />
+          <Badge
+            status="primary"
+            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            containerStyle={Styles.horizontalPaddingBox10}
+          />
+          <Badge
+            status="primary"
+            badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
+            containerStyle={Styles.horizontalPaddingBox10}
+          />
+        </View>
           <View style={styles.mainInputView}>
             <Spinner
               visible={this.state.isFetching}
@@ -210,6 +194,7 @@ class KYCfoto extends Component {
             </View>
             <CheckBox
               title='Contains Address'
+              value={true}
               checked={this.state.containsAddress}
               />
               
@@ -242,46 +227,19 @@ class KYCfoto extends Component {
                     title="CANCEL"
                     onPress={this.clearSelectedImage}
                   />
-                  <View style={styles.buttonContainer}>
-                    <Button
-                    titleStyle={Styles.whiteText}
-                    buttonStyle={Styles.fullWidthButtonKYC}
-                      title="CONFIRM"
-                      onPress={this.handleUpload}
-                    />
-                    <Button
-                    titleStyle={Styles.whiteText}
-                    buttonStyle={Styles.fullWidthButtonKYC}
-                      title="CANCEL"
-                      onPress={this.clearSelectedImage}
-                    />
-                  </View>
                 </View>
               </View>
             )}
-        </View>
-          <View style={Styles.alignItemsRight}>
-           <View style={{ height: '15%'}}>
-            <View style={{...Styles.startRow, ...Styles.containerVerticalPadding, width: '100%'}}>
-              <Lock style={{marginTop: 4}} height={'30%'} width={'10%'} />
-                  <Text style={{...Styles.smallKYCText, width: '80%'}}>PrimeTrust uses bank level encryption on all connections when receiving documents.</Text>
-             </View>
-            </View>
           </View>
-          </ScrollView>
-
-          <View style={Styles.footerContainerKYC}>
           <Button
           titleStyle={Styles.whiteText}
-          buttonStyle={Styles.fullWidthButtonKYC}
+          buttonStyle={Styles.defaultButtonClearWhite}
             title="CHEAT TO NEXT SCREEN"
             onPress={()=>{
               this.props.navigation.navigate("KYCAddressInfo")
             }
             }
           />
-        </View>
-
         </View>
       </TouchableWithoutFeedback>
     );
@@ -298,10 +256,8 @@ const mapDispatchToProps = ({
   uploadWyreAccountDocument,
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(KYCfoto);
-
 export {
   KYCfoto
 }
 
-
+export default connect(mapStateToProps, mapDispatchToProps)(KYCfoto);

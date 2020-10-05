@@ -16,6 +16,7 @@ import Overview from './Overview/Overview'
 import SendCoin from './SendCoin/SendCoin'
 import ReceiveCoin from './ReceiveCoin/ReceiveCoin'
 import { Icon } from "react-native-elements"
+import VerusLightClient from 'react-native-verus-light-client';
 import { setActiveSection, setCoinSubWallet, setIsCoinMenuFocused } from "../../actions/actionCreators";
 import { NavigationActions, withNavigationFocus } from '@react-navigation/compat';
 import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
@@ -39,10 +40,9 @@ class CoinMenus extends Component {
       tabs: stateObj.tabs,
       activeTab: stateObj.activeTab,
       subWallets
-    };
+    }; 
 
     if (subWallets.length == 1) props.dispatch(setCoinSubWallet(props.activeCoin.id, subWallets[0]))
-
   }
 
   componentDidMount() {
@@ -53,6 +53,14 @@ class CoinMenus extends Component {
     if (lastProps.isFocused !== this.props.isFocused) {
       this.props.dispatch(setIsCoinMenuFocused(this.props.isFocused))
     }
+
+    var testArray = ['VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99'];
+
+    VerusLightClient.request( 0, "listprivatetransactions", testArray)
+    .then(res => {
+      console.log("Check Dit")
+      console.log(res)
+    })
 
   }
 
@@ -128,7 +136,7 @@ class CoinMenus extends Component {
           } ${activeCoin.id}`}
         </Text>
       );
-    }
+    } 
   };
 
   renderTab = ({ tab, isActive }) => (
