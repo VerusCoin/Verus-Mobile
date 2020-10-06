@@ -94,7 +94,7 @@ export const getSupportedBiometryType = async () => {
 export const passesSecurityThreshold = async () => {
   if (Platform.OS == 'ios') return true
   
-  const securityLevel = Keychain.getSecurityLevel({ accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY })
+  const securityLevel = await Keychain.getSecurityLevel({ accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY })
 
   return securityLevel == Keychain.SECURITY_LEVEL[BIOMETRIC_SECURITY_THRESHOLD]
 }

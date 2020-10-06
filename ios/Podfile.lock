@@ -225,8 +225,6 @@ PODS:
     - React
     - React-Core
     - ZcashLightClientKit
-  - react-native-webview (8.2.1):
-    - React
   - React-RCTActionSheet (0.61.5):
     - React-Core/RCTActionSheetHeaders (= 0.61.5)
   - React-RCTAnimation (0.61.5):
@@ -369,7 +367,6 @@ DEPENDENCIES:
   - react-native-text-input-mask (from `../node_modules/react-native-text-input-mask`)
   - react-native-udp (from `../node_modules/react-native-udp`)
   - react-native-verus-light-client (from `../node_modules/react-native-verus-light-client`)
-  - react-native-webview (from `../node_modules/react-native-webview`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
   - React-RCTBlob (from `../node_modules/react-native/Libraries/Blob`)
@@ -472,8 +469,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-udp"
   react-native-verus-light-client:
     :path: "../node_modules/react-native-verus-light-client"
-  react-native-webview:
-    :path: "../node_modules/react-native-webview"
   React-RCTActionSheet:
     :path: "../node_modules/react-native/Libraries/ActionSheetIOS"
   React-RCTAnimation:
@@ -573,7 +568,6 @@ SPEC CHECKSUMS:
   react-native-text-input-mask: 07227297075f9653315f43b0424d596423a01736
   react-native-udp: ff9d13e523f2b58e6bc5d4d32321ac60671b5dc9
   react-native-verus-light-client: b71b8551595c3c75787bc51ff1d2b2989639851a
-  react-native-webview: 160ac8d6bb974e2933f2de6bb7464a8e934ff31d
   React-RCTActionSheet: 600b4d10e3aea0913b5a92256d2719c0cdd26d76
   React-RCTAnimation: 791a87558389c80908ed06cc5dfc5e7920dfa360
   React-RCTBlob: d89293cc0236d9cb0933d85e430b0bbe81ad1d72

@@ -32,7 +32,7 @@ const channelMap = {
       header,
       body: {
         confirmed: confirmed,
-        pending: total - confirmed,
+        pending: total.minus(confirmed).toString(),
         total: total,
       },
     };
@@ -48,9 +48,9 @@ const channelMap = {
       channel: ELECTRUM,
       header,
       body: {
-        confirmed: satsToCoins(confirmed),
-        pending: satsToCoins(unconfirmed),
-        total: satsToCoins(unconfirmed + confirmed),
+        confirmed: satsToCoins(confirmed).toString(),
+        pending: satsToCoins(unconfirmed).toString(),
+        total: satsToCoins(unconfirmed.plus(confirmed)).toString(),
       },
     };
   },
@@ -60,7 +60,7 @@ const channelMap = {
       activeUser.keys[coinObj.id][ETH] != null &&
       activeUser.keys[coinObj.id][ETH].addresses.length > 0
     ) {
-      const balance = await getStandardEthBalance(activeUser.keys[coinObj.id][ETH].addresses[0]);
+      const balance = (await getStandardEthBalance(activeUser.keys[coinObj.id][ETH].addresses[0])).toString();
 
       return {
         chainTicker: coinObj.id,
@@ -68,7 +68,7 @@ const channelMap = {
         header: {},
         body: {
           confirmed: balance,
-          pending: 0,
+          pending: "0",
           total: balance
         },
       };
@@ -88,11 +88,11 @@ const channelMap = {
       activeUser.keys[coinObj.id][ERC20] != null &&
       activeUser.keys[coinObj.id][ERC20].addresses.length > 0
     ) {
-      const balance = await getStandardErc20Balance(
+      const balance = (await getStandardErc20Balance(
         activeUser.keys[coinObj.id][ERC20].addresses[0],
         coinObj.currency_id,
         coinObj.decimals
-      );
+      )).toString();
 
       return {
         chainTicker: coinObj.id,
@@ -100,7 +100,7 @@ const channelMap = {
         header: {},
         body: {
           confirmed: balance,
-          pending: 0,
+          pending: "0",
           total: balance
         },
       };

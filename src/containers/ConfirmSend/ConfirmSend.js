@@ -11,15 +11,16 @@ import StandardButton from "../../components/StandardButton";
 import { connect } from 'react-redux';
 import { networks } from 'bitgo-utxo-lib';
 import { View, Text, ScrollView, Keyboard, Alert } from "react-native";
-import { satsToCoins, truncateDecimal, coinsToSats } from '../../utils/math';
+import { isNumber, satsToCoins, truncateDecimal } from '../../utils/math';
 import ProgressBar from 'react-native-progress/Bar';
 import { NavigationActions } from '@react-navigation/compat';
 import { CommonActions } from '@react-navigation/native';
-import { NO_VERIFICATION, MID_VERIFICATION, INSUFFICIENT_FUNDS } from '../../utils/constants/constants'
+import { NO_VERIFICATION, MID_VERIFICATION } from '../../utils/constants/constants'
 import Styles from '../../styles/index'
 import Colors from "../../globals/colors";
 import { preflight } from "../../utils/api/routers/preflight";
 import { ELECTRUM } from "../../utils/constants/intervalConstants";
+import BigNumber from "bignumber.js";
 
 const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
@@ -36,7 +37,7 @@ class ConfirmSend extends Component {
       loading: true,
       network: null,
       fee: 0,
-      amountSubmitted: 0,
+      amountSubmitted: "0",
       balance: 0,
       remainingBalance: 0,
       finalTxAmount: 0,
@@ -54,10 +55,15 @@ class ConfirmSend extends Component {
     const coinObj = this.props.route.params.data.coinObj
     const activeUser = this.props.route.params.data.activeUser
     const address = this.props.route.params.data.address
-    const amount = Number(this.props.route.params.data.amount)
-    const fee = coinObj.id === 'BTC' ? { feePerByte: Number(this.props.route.params.data.btcFee) } : Number(this.props.route.params.data.coinObj.fee)
+    const amount = BigNumber(this.props.route.params.data.amount)
+    const fee =
+      coinObj.id === "BTC"
+        ? { feePerByte: BigNumber(this.props.route.params.data.btcFee) }
+        : isNumber(this.props.route.params.data.coinObj.fee)
+        ? BigNumber(this.props.route.params.data.coinObj.fee)
+        : null;
     const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
-    const balance = Number(this.props.route.params.data.balance)
+    const balance = BigNumber(this.props.route.params.data.balance)
     const note = this.props.route.params.data.memo
     
     this.timeoutTimer = setTimeout(() => {
@@ -105,8 +111,16 @@ class ConfirmSend extends Component {
           (res.result.feeCurr != null &&
             res.result.feeCurr !== coinObj.id)
             ? res.result.value
-            : res.result.value + Number(res.result.fee);
-        let remainingBalance = balance - finalTxAmount
+            : BigNumber(res.result.value).plus(BigNumber(res.result.fee)).toString();
+        let remainingBalance = feeTakenFromAmount
+          ? BigNumber(balance)
+              .minus(BigNumber(finalTxAmount))
+              .minus(BigNumber(res.result.fee))
+              .toString()
+          : BigNumber(balance)
+              .minus(BigNumber(finalTxAmount))
+              .toString();
+              
         clearInterval(this.loadingInterval);
 
         if (feeTakenFromAmount) {
@@ -143,7 +157,7 @@ class ConfirmSend extends Component {
           finalTxAmount: finalTxAmount,
           loadingProgress: 1,
           loadingMessage: "Done",
-          btcFeePerByte: fee.feePerByte ? fee.feePerByte : null,
+          btcFeePerByte: fee != null && fee.feePerByte != null ? fee.feePerByte : null,
           feeTakenFromAmount: feeTakenFromAmount,
           note
         });
@@ -181,7 +195,7 @@ class ConfirmSend extends Component {
         (this.state.feeCurr != null &&
           this.state.feeCurr !== this.state.coinObj.id)
           ? this.state.finalTxAmount
-          : this.state.finalTxAmount - Number(this.state.fee),
+          : BigNumber(this.state.finalTxAmount).minus(BigNumber(this.state.fee)).toString(),
       btcFee: this.state.btcFeePerByte,
     };
 
@@ -305,7 +319,7 @@ class ConfirmSend extends Component {
                   Balance After Tx:
                 </Text>
                 <Text style={Styles.infoTableCell}>
-                  {truncateDecimal(this.state.remainingBalance, this.state.coinObj.decimals || 8) +
+                  {this.state.remainingBalance +
                     " " +
                     this.state.coinObj.id}
                 </Text>

@@ -22,7 +22,7 @@ import {
   ScrollView,
   Image
 } from "react-native"
-import { satsToCoins, truncateDecimal, isNumber, coinsToSats } from '../../../utils/math'
+import { satsToCoins, isNumber } from '../../../utils/math'
 import { connect } from "react-redux";
 import { getRecommendedBTCFees } from '../../../utils/api/channels/general/callCreators'
 import { removeSpaces } from '../../../utils/stringUtils'
@@ -30,6 +30,7 @@ import Styles from '../../../styles/index'
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import store from "../../../store"
 import { API_GET_FIATPRICE, API_GET_BALANCES, ELECTRUM } from "../../../utils/constants/intervalConstants"
+import BigNumber from "bignumber.js"
 
 const VERUSPAY_LOGO_DIR = require('../../../images/customIcons/verusPay.png')
 
@@ -163,16 +164,9 @@ class SendCoin extends Component {
   };
 
   maxAmount = () => {
-    const { activeCoin, balances } = this.props
+    const { balances } = this.props
     
-    this.fillAmount(
-      activeCoin.id !== "BTC" ||
-        (activeCoin.dominant_channel != null &&
-          activeCoin.dominant_channel != ELECTRUM)
-        ? balances.results.confirmed
-        : balances.results.confirmed -
-            satsToCoins(activeCoin.fee ? activeCoin.fee : 10000)
-    );
+    this.fillAmount(BigNumber(balances.results.confirmed));
   };
 
   goToConfirmScreen = (coinObj, activeUser, address, amount) => {
@@ -199,10 +193,11 @@ class SendCoin extends Component {
 
   fillAmount = (amount) => {
     let amountToFill = amount;
-    if (amount < 0) {
-      amountToFill = 0;
+    if (amount.isLessThan(BigNumber(0))) {
+      amountToFill = BigNumber(0);
     }
-    this.setState({ amount: amountToFill });
+
+    this.setState({ amount: amountToFill.toString() });
   };
 
   _verusPay = () => {

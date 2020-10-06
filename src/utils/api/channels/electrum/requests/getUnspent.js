@@ -115,7 +115,7 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
         }
       })
 
-      if (formattedUtxos.length === 0) throw new Error("No confirmed utxos")
+      if (formattedUtxos.length === 0) throw new Error("No confirmed utxos. If you just sent a transaction, try waiting a few minutes and sending again.")
 
       return resolveSequentially(getTxArr)
     })
@@ -144,7 +144,7 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
             if (satsToCoins(Number(formattedUtxo.amountSats)) >= 10 &&
                 decodedTx.format.locktime > 0) {
               interest = kmdCalcInterest(decodedTx.format.locktime, formattedUtxo.amountSats)
-              formattedUtxos[index].interestSats = coinsToSats(truncateDecimal(interest, 8))
+              formattedUtxos[index].interestSats = coinsToSats(Number(truncateDecimal(interest, 8)))
             }
           }
         }

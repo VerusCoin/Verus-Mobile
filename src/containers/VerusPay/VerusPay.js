@@ -47,6 +47,7 @@ import { activateChainLifecycle } from "../../actions/actions/intervals/dispatch
 import { API_GET_BALANCES, API_GET_INFO, ELECTRUM, DLIGHT } from "../../utils/constants/intervalConstants";
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 import store from "../../store";
+import BigNumber from "bignumber.js";
 
 class VerusPay extends Component {
   constructor(props) {
@@ -110,13 +111,18 @@ class VerusPay extends Component {
       console.log(resultParsed);
 
       if (resultParsed.verusQR) {
-        this.handleVerusQR(resultParsed);
+        this.handleVerusQR({
+          ...resultParsed,
+          amount: resultParsed.amount
+            ? satsToCoins(BigNumber(resultParsed.amount))
+            : BigNumber(resultParsed.amount),
+        });
       } else {
         //TODO: Handle other style QR codes here
         if (resultParsed.address && resultParsed.amount && resultParsed.coin) {
           let resultConverted = {
             coinTicker: resultParsed.coin,
-            amount: coinsToSats(resultParsed.amount),
+            amount: BigNumber(resultParsed.amount),
             address: resultParsed.address
           };
 
@@ -134,7 +140,7 @@ class VerusPay extends Component {
           this.handleVerusQR({
             coinTicker: coinObj.id,
             address: request.destination,
-            amount: request.amount,
+            amount: BigNumber(request.amount),
             memo: request.note
           })
         } catch(e) {
@@ -222,7 +228,7 @@ class VerusPay extends Component {
               return {
                 coinTicker: coinsList[key].id,
                 address: address,
-                amount: coinsToSats(Number(amount))
+                amount: BigNumber(amount)
               };
             }
           }
@@ -273,7 +279,7 @@ class VerusPay extends Component {
     const coinTicker = verusQR.coinTicker;
     const address = verusQR.address;
     const amount = verusQR.hasOwnProperty("amount")
-      ? Number(verusQR.amount)
+      ? verusQR.amount
       : null;
     const memo = verusQR.memo;
 
@@ -285,6 +291,7 @@ class VerusPay extends Component {
         console.log(
           "Invalid amount, need additional information for transaction"
         );
+        console.log(amount)
       } else {
         console.log("Amount: " + amount);
       }
@@ -297,7 +304,7 @@ class VerusPay extends Component {
 
         if (activeCoin) {
           if (this.state.fromHome || this.props.activeCoin.id === coinTicker) {
-            if (amount === null || amount <= 0) {
+            if (amount === null || amount.isLessThanOrEqualTo(0)) {
               this.handleMissingAmount(activeCoin, address, memo);
             } else {
               if (this.checkBalance(amount, activeCoin)) {
@@ -314,7 +321,7 @@ class VerusPay extends Component {
             this.canExitWallet(this.props.activeCoin.id, coinTicker).then(
               res => {
                 if (res) {
-                  if (amount === null || amount <= 0) {
+                  if (amount === null || amount.isLessThanOrEqualTo(0)) {
                     this.handleMissingAmount(activeCoin, address, memo);
                   } else {
                     if (this.checkBalance(amount, activeCoin)) {
@@ -340,7 +347,7 @@ class VerusPay extends Component {
                 if (res) {
                   activeCoin = this.getCoinFromActiveCoins(coinTicker);
                   this.handleUpdates().then(() => {
-                    if (amount === null || amount <= 0) {
+                    if (amount === null || amount.isLessThanOrEqualTo(0)) {
                       this.handleMissingAmount(activeCoin, address, memo);
                     } else {
                       if (this.checkBalance(amount, activeCoin)) {
@@ -489,9 +496,9 @@ class VerusPay extends Component {
     const channel = activeCoin.dominant_channel != null ? activeCoin.dominant_channel : ELECTRUM
 
     if (activeCoin && balances.results && balances.results[channel]) {
-      const spendableBalance = balances.results[channel][activeCoin.id].confirmed;
+      const spendableBalance = BigNumber(balances.results[channel][activeCoin.id].confirmed);
 
-      if (Number(amount) > Number(spendableBalance)) {
+      if (amount.isGreaterThan(spendableBalance)) {
         this.errorHandler(INSUFFICIENT_FUNDS);
         return false;
       } else {
@@ -577,7 +584,7 @@ class VerusPay extends Component {
       coinObj: this.state.coinObj,
       activeUser: this.state.activeUser,
       address: this.state.address,
-      amount: Number(this.state.amount),
+      amount: this.state.amount.toString(),
       btcFee: this.state.btcFees.average,
       balance: this.props.balances.results[
         this.state.coinObj.dominant_channel != null

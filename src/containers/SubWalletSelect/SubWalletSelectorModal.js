@@ -14,6 +14,7 @@ import { SUBWALLET_NAMES } from "../../utils/constants/constants";
 import { truncateDecimal } from "../../utils/math";
 import { setCoinSubWallet } from "../../actions/actionCreators";
 import { USD } from "../../utils/constants/currencies";
+import BigNumber from "bignumber.js";
 
 class SubWalletSelectorModal extends Component {
   constructor(props) {
@@ -22,7 +23,7 @@ class SubWalletSelectorModal extends Component {
       cryptoBalances: {},
       fiatBalances: {},
       pieSections: [],
-      totalBalance: 0
+      totalBalance: BigNumber(0)
     };
   }
 
@@ -36,30 +37,38 @@ class SubWalletSelectorModal extends Component {
     const walletColorMap = {}
     const chainTicker = activeCoin.id
     let pieSections = []
-    let totalBalance = 0
+    let totalBalance = BigNumber(0)
 
     subWallets.map(wallet => {
       if (
         allBalances[wallet.channel] &&
         allBalances[wallet.channel][chainTicker]
       ) {
-        cryptoBalances[wallet.id] =
-          allBalances[wallet.channel][chainTicker].total;
-        totalBalance += cryptoBalances[wallet.id];
+        cryptoBalances[wallet.id] = BigNumber(allBalances[wallet.channel][chainTicker].total);
+        totalBalance = totalBalance.plus(cryptoBalances[wallet.id]);
         walletColorMap[wallet.id] = wallet.color
       }
 
       if (cryptoBalances[wallet.id] && rates[chainTicker]) {
-        fiatBalances[wallet.id] = rates[chainTicker][displayCurrency]
+        fiatBalances[wallet.id] = BigNumber(
+          rates[chainTicker][displayCurrency]
+        ).multipliedBy(cryptoBalances[wallet.id]);
       }
     })
 
     for (const walletId in cryptoBalances) {
       if (cryptoBalances[walletId] != null) {
         pieSections.push({
-          percentage: totalBalance == 0 ? 100 : truncateDecimal((cryptoBalances[walletId]/totalBalance) * 100, 0),
-          color: walletColorMap[walletId]
-        })
+          percentage: totalBalance.isEqualTo(0)
+            ? 100
+            : Number(truncateDecimal(
+                cryptoBalances[walletId]
+                  .dividedBy(totalBalance)
+                  .multipliedBy(BigNumber(100)),
+                0
+              )),
+          color: walletColorMap[walletId],
+        });
       }
     }
 
