@@ -22,7 +22,12 @@ export const storeUser = (authData, users) => {
     if (seeds[seedType]) encryptedKeys[seedType] = encryptkey(authData.password, seeds[seedType])
   })
 
-  let userObj = {id: authData.userName, accountHash: hashAccountId(authData.userName), encryptedKeys}
+  let userObj = {
+    id: authData.userName,
+    accountHash: hashAccountId(authData.userName),
+    encryptedKeys,
+    biometry: authData.biometry ? true : false,
+  };
   let _users = users ? users.slice() : [];
   _users.push(userObj)
   let _toStore = {users: _users}
@@ -31,6 +36,19 @@ export const storeUser = (authData, users) => {
     AsyncStorage.setItem('userData', JSON.stringify(_toStore))
       .then(() => {
         resolve(_users);
+      })
+      .catch(err => reject(err));
+  })
+};
+
+//Set storage to hold encrypted user data
+export const setUsers = (users) => {
+  let _toStore = {users}
+
+  return new Promise((resolve, reject) => {
+    AsyncStorage.setItem('userData', JSON.stringify(_toStore))
+      .then(() => {
+        resolve(_toStore.users);
       })
       .catch(err => reject(err));
   })
@@ -130,6 +148,32 @@ export const resetUserPwd = (userID, newPwd, oldPwd) => {
   });
 };
 
+export const setUserBiometry = (userID, biometry) => {
+  return new Promise((resolve, reject) => {
+    AsyncStorage.getItem('userData')
+      .then(async (res) => {
+        let _users = res ? JSON.parse(res).users : [];
+        if(userID !== null) {
+          let userIndex = _users.findIndex(n => n.id === userID);
+
+          if (userIndex > -1) {
+            _users[userIndex].biometry = biometry
+            await AsyncStorage.setItem('userData', JSON.stringify({users: _users}))
+            resolve(_users)
+          } else {
+            throw new Error("User with ID " + userID + " not found")
+          }
+        } else {
+          throw new Error("UserID is null")
+        }
+      })
+      .catch(err => {
+        reject(err)
+        console.warn(err)
+      });
+  });
+};
+
 //TODO: Stop using wifKey to encrypt payment methods before using them in production
 export const putUserPaymentMethods = async (user, paymentMethods) => {
   //const encryptedPaymentMethods = encryptkey(user.wifKey, JSON.stringify(paymentMethods))
@@ -188,13 +232,14 @@ export const getUsers = () => {
 };
 
 // Check user password
-export const checkPinForUser = (pin, userName) => {
+export const checkPinForUser = (pin, userName, alertOnFail = true) => {
   return new Promise((resolve, reject) => {
     AsyncStorage.getItem('userData')
-      .then(res => {
+      .then(async res => {
         let users = res ? JSON.parse(res) : {users: []};
         if(pin !== null && users.users) {
           let user = users.users.find(n => n.id === userName);
+
           if (user) {
             const { electrum, dlight } = user.encryptedKeys
             const _decryptedKeys = {
@@ -205,23 +250,21 @@ export const checkPinForUser = (pin, userName) => {
             if ((electrum == null || _decryptedKeys.electrum) && (dlight == null || _decryptedKeys.dlight)) {
               resolve(_decryptedKeys);
             } else {
-              Alert.alert("Authentication Error", "Incorrect password");
-              resolve(false);
+              if (alertOnFail) Alert.alert("Authentication Error", "Incorrect password")
+              throw new Error("Incorrect password");
             }
           }
           else {
-            Alert.alert("Authentication Error", "Please select an existing user");
-            resolve(false);
+            if (alertOnFail) Alert.alert("Authentication Error", "Please select an existing user")
+            throw new Error("Please select an existing user");
           }
         }
         else {
-          Alert.alert("Authentication Error", "Please enter a password");
-          resolve(false);
+          if (alertOnFail) Alert.alert("Authentication Error", "Please enter a password")
+          throw new Error("Please enter a password");
         }
-
       })
       .catch(err => {
-        console.warn(err)
         reject(err)
       });
   });

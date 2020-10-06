@@ -23,6 +23,8 @@ import Colors from '../../../../globals/colors'
 import { CURRENCY_NAMES, SUPPORTED_CURRENCIES, USD } from '../../../../utils/constants/currencies'
 import { Dropdown } from "react-native-material-dropdown";
 
+const NO_DEFAULT = ""
+
 class WalletSettings extends Component {
   constructor(props) {
     super(props);
@@ -38,6 +40,7 @@ class WalletSettings extends Component {
         generalWalletSettings.displayCurrency != null
           ? generalWalletSettings.displayCurrency
           : USD,
+      defaultAccount: generalWalletSettings.defaultAccount,
       errors: { maxTxCount: false, displayCurrency: false },
       loading: false,
     };
@@ -52,8 +55,12 @@ class WalletSettings extends Component {
     this.setState({ loading: true }, () => {
       const stateToSave = {
         maxTxCount: Number(this.state.maxTxCount),
-        displayCurrency: this.state.displayCurrency
-      }
+        displayCurrency: this.state.displayCurrency,
+        defaultAccount:
+          this.state.defaultAccount === NO_DEFAULT
+            ? null
+            : this.state.defaultAccount,
+      };
 
       saveGeneralSettings(stateToSave)
       .then(res => {
@@ -110,61 +117,101 @@ class WalletSettings extends Component {
   render() {
     return (
       <View style={Styles.defaultRoot}>
-        <ScrollView style={Styles.fullWidth}
-          contentContainerStyle={{...Styles.innerHeaderFooterContainerCentered, ...Styles.fullHeight}}>
-            <Input 
-              label="Maximum Displayed Transaction Count:"
-              labelStyle={Styles.mediumFormInputLabel}
-              containerStyle={Styles.wideCenterBlock}
-              inputStyle={Styles.inputTextDefaultStyle}
-              onChangeText={(text) => this.setState({maxTxCount: text})}
-              value={this.state.maxTxCount.toString()}
-              shake={this.state.errors.maxTxCount}
-              keyboardType={'number-pad'}
-              errorMessage={
-                this.state.errors.maxTxCount ? 
-                  this.state.errors.maxTxCount
-                  :
-                  null
-              }
-            />
-            <Dropdown
-              containerStyle={{...Styles.wideCenterBlock, paddingHorizontal: 9 }}
-              labelExtractor={(item) => `${item} - ${CURRENCY_NAMES[item]}`}
-              valueExtractor={(item) => item}
-              data={SUPPORTED_CURRENCIES}
-              onChangeText={(value, index, data) => {
-                console.log(value)
-                this.setState({ displayCurrency: value });
-              }}
-              value={this.state.displayCurrency}
-              textColor={Colors.quinaryColor}
-              selectedItemColor={Colors.quinaryColor}
-              baseColor={Colors.quinaryColor}
-              label="Fiat display currency:"
-              labelTextStyle={Styles.mediumFormInputLabel}
-              labelFontSize={16}
-              pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
-              itemTextStyle={Styles.defaultText}
-            />
+        <ScrollView
+          style={Styles.fullWidth}
+          contentContainerStyle={{
+            ...Styles.innerHeaderFooterContainerCentered,
+            ...Styles.fullHeight,
+          }}
+        >
+          <Input
+            label="Maximum Electrum Transaction Count:"
+            labelStyle={Styles.mediumFormInputLabel}
+            containerStyle={Styles.wideCenterBlock}
+            inputStyle={Styles.inputTextDefaultStyle}
+            onChangeText={(text) => this.setState({ maxTxCount: text })}
+            value={this.state.maxTxCount.toString()}
+            shake={this.state.errors.maxTxCount}
+            keyboardType={"number-pad"}
+            errorMessage={
+              this.state.errors.maxTxCount
+                ? this.state.errors.maxTxCount
+                : null
+            }
+          />
+          <Dropdown
+            containerStyle={{
+              ...Styles.wideCenterBlock,
+              paddingHorizontal: 9,
+            }}
+            labelExtractor={(item) => `${item} - ${CURRENCY_NAMES[item]}`}
+            valueExtractor={(item) => item}
+            data={SUPPORTED_CURRENCIES}
+            onChangeText={(value) =>
+              this.setState({ displayCurrency: value })
+            }
+            value={this.state.displayCurrency}
+            textColor={Colors.quinaryColor}
+            selectedItemColor={Colors.quinaryColor}
+            baseColor={Colors.quinaryColor}
+            label="Fiat display currency:"
+            labelTextStyle={Styles.mediumFormInputLabel}
+            labelFontSize={16}
+            pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
+            itemTextStyle={Styles.defaultText}
+          />
+          <Dropdown
+            containerStyle={{
+              ...Styles.wideCenterBlock,
+              paddingHorizontal: 9,
+            }}
+            labelExtractor={(item) =>
+              item == NO_DEFAULT
+                ? "None"
+                : `${item.id}${
+                    item.id === this.props.activeAccount.id
+                      ? " (logged in)"
+                      : ""
+                  }`
+            }
+            valueExtractor={(item) =>
+              item == '' ? '' : item.accountHash
+            }
+            data={[NO_DEFAULT, ...this.props.accounts]}
+            onChangeText={(value) =>
+              this.setState({ defaultAccount: value })
+            }
+            value={this.state.defaultAccount || NO_DEFAULT}
+            textColor={Colors.quinaryColor}
+            selectedItemColor={Colors.quinaryColor}
+            baseColor={Colors.quinaryColor}
+            label="Default profile:"
+            labelTextStyle={Styles.mediumFormInputLabel}
+            labelFontSize={16}
+            pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
+            itemTextStyle={Styles.defaultText}
+          />
         </ScrollView>
         <View style={Styles.highFooterContainer}>
-          {this.state.loading ? 
-            <ActivityIndicator animating={this.state.loading} size="large"/>
-          :
-          <View style={Styles.standardWidthSpaceBetweenBlock}>
-              <StandardButton 
+          {this.state.loading ? (
+            <ActivityIndicator
+              animating={this.state.loading}
+              size="large"
+            />
+          ) : (
+            <View style={Styles.standardWidthSpaceBetweenBlock}>
+              <StandardButton
                 color={Colors.warningButtonColor}
-                title="BACK" 
+                title="BACK"
                 onPress={this.back}
               />
-              <StandardButton 
+              <StandardButton
                 color={Colors.linkButtonColor}
-                title="CONFIRM" 
+                title="CONFIRM"
                 onPress={this._handleSubmit}
               />
             </View>
-          }
+          )}
         </View>
       </View>
     );
@@ -174,6 +221,8 @@ class WalletSettings extends Component {
 const mapStateToProps = (state) => {
   return {
     generalWalletSettings: state.settings.generalWalletSettings,
+    accounts: state.authentication.accounts,
+    activeAccount: state.authentication.activeAccount
   }
 };
 

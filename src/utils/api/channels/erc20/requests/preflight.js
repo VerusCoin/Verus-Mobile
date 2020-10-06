@@ -6,7 +6,7 @@ import { ERC20, ETH } from "../../../../constants/intervalConstants"
 export const txPreflight = async (coinObj, activeUser, address, amount, params) => {
   try {
     const fromAddress = activeUser.keys[coinObj.id][ERC20].addresses[0]
-    const contract = Web3Provider.getContract(coinObj.contract_address)
+    const contract = Web3Provider.getContract(coinObj.currency_id)
     const signer = new ethers.VoidSigner(fromAddress, Web3Provider.DefaultProvider)
     const balance = await contract.balanceOf(signer.getAddress())
     const gasPrice = await Web3Provider.DefaultProvider.getGasPrice()

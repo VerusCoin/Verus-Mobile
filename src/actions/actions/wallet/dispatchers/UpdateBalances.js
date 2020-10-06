@@ -90,7 +90,7 @@ const channelMap = {
     ) {
       const balance = await getStandardErc20Balance(
         activeUser.keys[coinObj.id][ERC20].addresses[0],
-        coinObj.contract_address,
+        coinObj.currency_id,
         coinObj.decimals
       );
 

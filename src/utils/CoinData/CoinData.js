@@ -6,7 +6,7 @@ import { DLIGHT, ELECTRUM, GENERAL } from '../constants/intervalConstants';
 
 import { ENABLE_VERUS_IDENTITIES } from '../../../env/main.json'
 
-const getDefaultApps = (coinName, canBuySell = false) => {
+const getDefaultApps = (coinName) => {
   return ({
     defaultApp: 'wallet',
     apps: {
@@ -119,7 +119,7 @@ export const findCoinObj = (id, userName) => {
     }
     
     if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
-      const DEFAULT_APPS = getDefaultApps(coinObj.name)
+      const DEFAULT_APPS = getDefaultApps(coinObj.display_name)
       if (ENABLE_VERUS_IDENTITIES && (coinObj.id === 'VRSC' || coinObj.id === 'ZECTEST')) {
         coinObj.apps = {...identityApp, ...DEFAULT_APPS.apps};
       } else {
@@ -154,7 +154,7 @@ export const createCoinObj = (id, name, description, defaultFee, serverList, use
 
   coinObj = {
     id: id,
-    name: name,
+    display_name: name,
     description: description,
     logo: defaultAssetsPath.coinLogo.default,
     fee: defaultFee,
@@ -170,7 +170,7 @@ export const createCoinObj = (id, name, description, defaultFee, serverList, use
   }
 
   if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
-    const DEFAULT_APPS = getDefaultApps(coinObj.name)
+    const DEFAULT_APPS = getDefaultApps(coinObj.display_name)
     coinObj.apps = DEFAULT_APPS.apps
     if (!coinObj.defaultApp) coinObj.defaultApp = DEFAULT_APPS.defaultApp
   } else if (!coinObj.defaultApp) {

@@ -8,7 +8,8 @@ import {
   SET_ACCOUNTS,
   UPDATE_ACCOUNT_KEYS,
   SIGN_OUT,
-  FINGER_AUTH,
+  DISABLE_SELECT_DEFAULT_ACCOUNT,
+  BIOMETRIC_AUTH,
   AUTHENTICATE_USER,
   SIGN_IN_USER,
   SET_DLIGHT_ADDRESSES
@@ -17,21 +18,25 @@ import {
 export const authentication = (
   state = {
     accounts: [],
-    //activeAccount: {id: null, wifKey: "", keys: {}, paymentMethods: {}},
     activeAccount: {
       id: null,
       accountHash: null,
       seeds: {},
       keys: {},
-      paymentMethods: {}
+      paymentMethods: {},
+      biometry: false
     },
-    unlocked: false,
-    fingerPrint: false,
-    signedIn: false
+    signedIn: false,
+    selectDefaultAccount: true
   },
   action
 ) => {
   switch (action.type) {
+    case DISABLE_SELECT_DEFAULT_ACCOUNT:
+      return {
+        ...state,
+        selectDefaultAccount: false
+      };
     case SET_ACCOUNTS:
       return {
         ...state,
@@ -45,7 +50,8 @@ export const authentication = (
     case SIGN_IN_USER:
       return {
         ...state,
-        signedIn: true
+        signedIn: true,
+        selectDefaultAccount: false
       };
     case UPDATE_ACCOUNT_KEYS:
       return {
@@ -83,10 +89,11 @@ export const authentication = (
         activeAccount: null,
         signedIn: false
       };
-    case FINGER_AUTH:
+    case BIOMETRIC_AUTH:
       return {
         ...state,
-        fingerPrint: action.fingerPrint
+        activeAccount: { ...state.activeAccount, biometry: action.payload.biometry },
+        accounts: action.payload.accounts
       };
     default:
       return state;

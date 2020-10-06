@@ -18,7 +18,7 @@ import {
 } from "react-native"
 import { NavigationActions } from '@react-navigation/compat'
 import { Input, CheckBox } from 'react-native-elements'
-import { addUser } from '../../actions/actionCreators'
+import { addUser, disableSelectDefaultAccount } from '../../actions/actionCreators'
 import { connect } from 'react-redux'
 import AlertAsync from 'react-native-alert-async'
 import SetupSeedModal from '../../components/SetupSeedModal/SetupSeedModal'
@@ -27,7 +27,9 @@ import Colors from '../../globals/colors';
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers"
 import { DLIGHT, ELECTRUM, CHANNELS_NULL_TEMPLATE, CHANNELS } from "../../utils/constants/intervalConstants"
 import { arrayToObject } from "../../utils/objectManip"
-import { DISABLED_CHANNELS, ENABLE_DLIGHT } from '../../../env/main.json'
+import { ENABLE_DLIGHT } from '../../../env/main.json'
+import { getSupportedBiometryType, storeBiometricPassword } from "../../utils/biometry/biometry"
+import { hashAccountId } from "../../utils/crypto/hash"
 
 class SignUp extends Component {
   constructor() {
@@ -39,7 +41,12 @@ class SignUp extends Component {
       publicSeedModalOpen: false,
       privateSeedModalOpen: false,
       disclaimerRealized: false,
+      enableBiometry: false,
       userName: null,
+      biometricAuth: {
+        display_name: "",
+        biometry: false
+      },
       errors: {
         userName: null,
         pin: null,
@@ -51,7 +58,9 @@ class SignUp extends Component {
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    this.props.dispatch(disableSelectDefaultAccount())
+
     this.props.activeCoinList.map((coinObj) => {
       clearAllCoinIntervals(coinObj.id);
     });
@@ -59,6 +68,12 @@ class SignUp extends Component {
     if (this.props.route.params && this.props.route.params.data) {
       this.fillSeed(this.props.route.params.data.seed);
     }
+
+    try {
+      this.setState({
+        biometricAuth: await getSupportedBiometryType()
+      })
+    } catch(e) {}
   }
 
   _handleSubmit = () => {
@@ -116,7 +131,7 @@ class SignUp extends Component {
         },
         warnings: [],
       },
-      () => {
+      async () => {
         const _userName = this.state.userName;
         const _pin = this.state.pin;
         const _seeds = this.state.seeds;
@@ -167,30 +182,47 @@ class SignUp extends Component {
         }
 
         if (!_errors && !_warnings) {
+          let biometry = false
+
+          if (this.state.enableBiometry) {
+            try {
+              await storeBiometricPassword(hashAccountId(this.state.userName), this.state.pin)
+              biometry = true
+            } catch(e) {
+              console.warn(e)
+            }
+          }
+
           addUser(
             this.state.userName,
-            /*{
-              [ELECTRUM]: _seeds[ELECTRUM],
-              [DLIGHT]: ENABLE_DLIGHT
-                ? _seeds[ELECTRUM]
-                : _seeds[DLIGHT],
-              [ETH]: _seeds[ELECTRUM],
-              [ERC20]: _seeds[ELECTRUM]
-            } */arrayToObject(CHANNELS, (acc, channel) => _seeds[channel], true),
+            arrayToObject(CHANNELS, (acc, channel) => _seeds[channel], true),
             this.state.pin,
-            this.props.accounts
+            this.props.accounts,
+            biometry
           ).then((action) => {
             this.createAccount(action);
           });
         } else if (!_errors) {
           this.canMakeAccount()
-            .then((res) => {
+            .then(async (res) => {
               if (res) {
+                let biometry = false
+
+                if (this.state.enableBiometry) {
+                  try {
+                    await storeBiometricPassword(hashAccountId(this.state.userName), this.state.pin)
+                    biometry = true
+                  } catch(e) {
+                    console.warn(e)
+                  }
+                }
+                
                 addUser(
                   this.state.userName,
                   arrayToObject(CHANNELS, (acc, channel) => _seeds[channel], true),
                   this.state.pin,
-                  this.props.accounts
+                  this.props.accounts,
+                  biometry
                 )
                   .then((action) => {
                     this.createAccount(action)
@@ -296,7 +328,7 @@ class SignUp extends Component {
     return (
       <React.Fragment>
         <View style={Styles.headerContainer}>
-          <Text style={Styles.centralHeader}>Create New Account</Text>
+          <Text style={Styles.centralHeader}>Create New Profile</Text>
         </View>
         <TouchableWithoutFeedback
           onPress={Keyboard.dismiss}
@@ -357,7 +389,11 @@ class SignUp extends Component {
               </View>
               <View style={Styles.wideBlock}>
                 <CheckBox
-                  title={ENABLE_DLIGHT ? "Setup Primary (T Address) Seed" : "Setup Wallet Seed"}
+                  title={
+                    ENABLE_DLIGHT
+                      ? "Setup Primary (T Address) Seed"
+                      : "Setup Wallet Seed"
+                  }
                   checked={this.state.seeds[ELECTRUM] != null}
                   textStyle={Styles.defaultText}
                   onPress={() => this.setupSeed(ELECTRUM)}
@@ -375,7 +411,7 @@ class SignUp extends Component {
                 <View style={Styles.wideBlock}>
                   <Input
                     labelStyle={Styles.formInputLabel}
-                    label={"Enter an account password (min. 5 characters):"}
+                    label={"Enter a profile password (min. 5 characters):"}
                     inputStyle={Styles.inputTextDefaultStyle}
                     onChangeText={(text) => this.setState({ pin: text })}
                     autoCapitalize={"none"}
@@ -389,7 +425,7 @@ class SignUp extends Component {
                 <View style={Styles.wideBlock}>
                   <Input
                     labelStyle={Styles.formInputLabel}
-                    label={"Confirm account password:"}
+                    label={"Confirm profile password:"}
                     inputStyle={Styles.inputTextDefaultStyle}
                     onChangeText={(text) =>
                       this.setState({ confirmPin: text })
@@ -407,7 +443,7 @@ class SignUp extends Component {
               </View>
               <View style={Styles.wideBlock}>
                 <CheckBox
-                  title="I realize anybody with access to my seeds/passphrases will have access to my funds:"
+                  title="I realize anybody with access to my seed will have access to my funds"
                   checked={this.state.disclaimerRealized}
                   textStyle={Styles.defaultText}
                   onPress={() =>
@@ -417,6 +453,20 @@ class SignUp extends Component {
                   }
                 />
               </View>
+              {this.state.biometricAuth.biometry && (
+                <View style={Styles.wideBlock}>
+                  <CheckBox
+                    title={`Enable biometric authentication`}
+                    checked={this.state.enableBiometry}
+                    textStyle={Styles.defaultText}
+                    onPress={() =>
+                      this.setState({
+                        enableBiometry: !this.state.enableBiometry,
+                      })
+                    }
+                  />
+                </View>
+              )}
             </ScrollView>
           </View>
         </TouchableWithoutFeedback>

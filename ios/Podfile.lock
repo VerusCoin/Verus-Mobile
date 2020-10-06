@@ -277,6 +277,8 @@ PODS:
   - RNGestureHandler (1.7.0):
     - React
   - RNInputMask (4.1.0)
+  - RNKeychain (6.2.0):
+    - React
   - RNOS (1.2.6):
     - React
   - RNPermissions (2.1.5):
@@ -387,6 +389,7 @@ DEPENDENCIES:
   - RNFS (from `../node_modules/react-native-fs`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNInputMask (from `../node_modules/react-native-text-input-mask/ios/InputMask`)
+  - RNKeychain (from `../node_modules/react-native-keychain`)
   - RNOS (from `../node_modules/react-native-os`)
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
@@ -507,6 +510,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-gesture-handler"
   RNInputMask:
     :path: "../node_modules/react-native-text-input-mask/ios/InputMask"
+  RNKeychain:
+    :path: "../node_modules/react-native-keychain"
   RNOS:
     :path: "../node_modules/react-native-os"
   RNPermissions:
@@ -587,6 +592,7 @@ SPEC CHECKSUMS:
   RNFS: cf1bd19f8bf3c1400f8d3ececbe84e42aa29d2e7
   RNGestureHandler: b6b359bb800ae399a9c8b27032bdbf7c18f08a08
   RNInputMask: 815461ebdf396beb62cf58916c35cf6930adb991
+  RNKeychain: b8e0711b959a19c5b057d1e970d3c83d159b6da5
   RNOS: 6f2f9a70895bbbfbdad7196abd952e7b01d45027
   RNPermissions: ad71dd4f767ec254f2cd57592fbee02afee75467
   RNReanimated: c2bb7438b57a3d987bb2e4e6e4bca94787e30b02

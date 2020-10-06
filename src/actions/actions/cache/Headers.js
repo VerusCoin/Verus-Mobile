@@ -37,7 +37,7 @@ export const saveBlockHeader = (header, height, coinID, store) => {
   return new Promise((resolve, reject) => {
     setCachedHeader(header, height, coinID)
     .then(() => {
-      if (numHeaders < BLOCK_HEADER_STORE_CAP) {
+      if (numHeaders >= BLOCK_HEADER_STORE_CAP) {
         return false
       } else {
         return loadCachedHeaders(store.dispatch)

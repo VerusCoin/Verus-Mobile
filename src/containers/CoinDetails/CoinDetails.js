@@ -120,7 +120,7 @@ class CoinDetails extends Component {
             />
           </View>
         </View>
-        <Text style={Styles.greyStripeHeader}>{this.state.fullCoinData.name}</Text>
+        <Text style={Styles.greyStripeHeader}>{this.state.fullCoinData.display_name}</Text>
         <ScrollView
           style={Styles.fullWidth}
           contentContainerStyle={Styles.horizontalCenterContainer}

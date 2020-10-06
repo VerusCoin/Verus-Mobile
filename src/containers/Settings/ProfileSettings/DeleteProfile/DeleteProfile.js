@@ -24,6 +24,7 @@ import AlertAsync from "react-native-alert-async";
 import { checkPinForUser } from '../../../../utils/asyncStore/asyncStore'
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles/index'
+import { removeBiometricPassword } from "../../../../utils/biometry/biometry";
 
 class DeleteProfile extends Component {
   constructor() {
@@ -76,10 +77,8 @@ class DeleteProfile extends Component {
   }
 
   validateFormData = () => {
-    const userID = (this.props.route.params && this.props.route.params.data) ? 
-      this.props.route.params.data.coinObj
-      :
-      this.props.activeAccount.id
+    const userID = this.props.activeAccount.id
+    const { accountHash, biometry } = this.props.activeAccount
     
     if (userID) {
       this.setState({
@@ -101,19 +100,15 @@ class DeleteProfile extends Component {
   
         if (!_errors) {
           checkPinForUser(_pwd, userID)
-          .then((res) => {
-            if (res) {
-              return this.canDelete()
-            } else {
-              return false
-            }
+          .then(() => {
+            return this.canDelete()
           })
           .then((res) => {
             if (res) {
               let data = {
                 task: this.deleteUser,
                 message: "Deleting profile, please do not close Verus Mobile",
-                input: [userID],
+                input: [userID, accountHash, biometry],
                 dispatchResult: true
               }
               this.resetToScreen("SecureLoading", data)
@@ -129,8 +124,10 @@ class DeleteProfile extends Component {
     }
   }
 
-  deleteUser = async (userId) => {
+  deleteUser = async (userId, accountHash, deleteBiometry) => {
     try {
+      if (deleteBiometry) await removeBiometricPassword(accountHash)
+      
       const res = await deleteUserByID(userId)
       Alert.alert("Account Deleted!", `"${userId}" account successfully deleted.`)
 
