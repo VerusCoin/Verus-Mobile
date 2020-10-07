@@ -53,12 +53,7 @@ class Home extends Component {
       totalFiatBalance: "0.00",
       loading: false
     };
-<<<<<<< HEAD
 
-    this.updateProps = this.updateProps.bind(this);
-=======
-
->>>>>>> 4301f29a779a8382caf9ee6842d9aafef83a096d
     this._unsubscribeFocus = null
   }
 
@@ -72,9 +67,6 @@ class Home extends Component {
     this._unsubscribeFocus()
   }
 
-<<<<<<< HEAD
-  refresh = () => {
-=======
   componentDidUpdate(lastProps) {
     if (this.props.balances !== lastProps.balances) {
       this.setState({
@@ -84,7 +76,6 @@ class Home extends Component {
   }
 
   refresh = () => {
->>>>>>> 4301f29a779a8382caf9ee6842d9aafef83a096d
     this.setState({ loading: true }, () => {
       Promise.all(this.props.activeCoinsForUser.map(async (coinObj) => {
         await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, coinObj.id, API_GET_FIATPRICE)
