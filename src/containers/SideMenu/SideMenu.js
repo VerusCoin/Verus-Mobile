@@ -370,7 +370,7 @@ class SideMenu extends Component {
         /> 
       )}
       sections={[
-        {title: 'Add Coin', data: ['Add coin from list', 'Add custom coin']},
+        {title: 'Add Coin', data: ['Add coin from list'/*, 'Add custom coin'*/]},
       ]}
       keyExtractor={(item, index) => item + index}
       />

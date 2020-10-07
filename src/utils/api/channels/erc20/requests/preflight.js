@@ -22,17 +22,15 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
     return {
       err: false,
       result: {
-        fee: Number(
-          ethers.utils.formatUnits(
+        fee: ethers.utils.formatUnits(
             maxFee,
             coinObj.decimals
-          )
-        ),
+          ),
         feeCurr: ETH.toUpperCase(),
-        value: Number(ethers.utils.formatUnits(amountBn, coinObj.decimals)),
+        value: ethers.utils.formatUnits(amountBn, coinObj.decimals),
         toAddress: address,
         fromAddress: address,
-        amountSubmitted: amount,
+        amountSubmitted: amount.toString(),
         memo: null,
         params: {
           utxoVerified: true,

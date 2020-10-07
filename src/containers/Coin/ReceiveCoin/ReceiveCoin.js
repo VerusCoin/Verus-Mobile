@@ -21,7 +21,7 @@ import { Input } from 'react-native-elements'
 import { connect } from 'react-redux'
 import Styles from '../../../styles/index'
 import QRModal from '../../../components/QRModal'
-import { coinsToSats, isNumber, truncateDecimal } from '../../../utils/math'
+import { isNumber, truncateDecimal } from '../../../utils/math'
 import Colors from '../../../globals/colors';
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import { API_GET_FIATPRICE, API_GET_BALANCES, GENERAL } from "../../../utils/constants/intervalConstants"
@@ -31,6 +31,7 @@ import Store from "../../../store"
 import { Portal } from "react-native-paper"
 import selectAddresses from "../../../selectors/address"
 import VerusPayParser from '../../../utils/verusPay/index'
+import BigNumber from "bignumber.js";
 
 class ReceiveCoin extends Component {
   constructor(props) {
@@ -135,7 +136,7 @@ class ReceiveCoin extends Component {
       const verusQRString = VerusPayParser.v0.writeVerusPayQR(
         coinObj,
         this.state.amountFiat
-          ? truncateDecimal(amount / _price, 0).toString()
+          ? (BigNumber(amount).dividedBy(BigNumber(_price))).toString()
           : amount.toString(),
         address,
         memo
@@ -226,7 +227,6 @@ class ReceiveCoin extends Component {
       props,
       validateFormData,
       forceUpdate,
-      switchInvoiceCoin,
       copyAddressToClipboard
     } = this;
     const { activeCoinsForUser, rates, displayCurrency } = props;

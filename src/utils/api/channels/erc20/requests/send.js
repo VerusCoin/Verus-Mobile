@@ -33,7 +33,7 @@ export const send = async (coinObj, activeUser, address, amount, params) => {
         toAddress: address,
         fromAddress: response.from,
         txid: response.hash,
-        amountSubmitted: amount,
+        amountSubmitted: amount.toString(),
         memo: null,
         params: {
           utxoVerified: true,

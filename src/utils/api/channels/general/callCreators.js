@@ -6,6 +6,9 @@ import { GENERAL } from '../../../constants/intervalConstants';
 import { USD } from '../../../constants/currencies'
 import { CONNECTION_ERROR } from '../../errors/errorMessages';
 import { GENERAL_CONNECTION_ERROR } from '../../errors/errorCodes';
+import { truncateDecimal } from '../../../math';
+import BigNumber from 'bignumber.js';
+
 
 
 export const getRecommendedBTCFees = () => {
@@ -77,12 +80,12 @@ export const getCoinRates = (coinObj) => {
           );
       })
       .then(exchangeRates => {
-        let resObj = { result: { [USD]: rateUsd }, source }
+        let resObj = { result: { [USD]: BigNumber(rateUsd) }, source }
 
         Object.keys(
           exchangeRates.result == null ? {} : exchangeRates.result
         ).map(fiatCurr => {
-          resObj.result[fiatCurr] = exchangeRates.result[fiatCurr] * rateUsd;
+          resObj.result[fiatCurr] = BigNumber(exchangeRates.result[fiatCurr]).multipliedBy(rateUsd).toString();
         });
 
         resolve(resObj)

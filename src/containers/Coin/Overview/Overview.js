@@ -31,6 +31,7 @@ import { ETHERS } from "../../../utils/constants/web3Constants";
 import { ethers } from "ethers";
 import { Portal } from "react-native-paper";
 import DynamicHeader from "../DynamicHeader";
+import BigNumber from "bignumber.js";
 
 const TX_LOGOS = {
   self: require('../../../images/customIcons/self-arrow.png'),
@@ -53,7 +54,7 @@ class Overview extends Component {
       loading: false,
       txDetailsModalOpen: false,
       txDetailProps: {
-        parsedAmount: 0,
+        parsedAmount: "0",
         txData: {},
         activeCoinID: null,
         txLogo: TX_LOGOS.unknown
@@ -122,10 +123,11 @@ class Overview extends Component {
   };
 
   renderTransactionItem = ({ item, index }) => {
-    let amount = 0;
-    let avatarImg;
-    let subtitle = "";
     const decimals = this.props.activeCoin.decimals != null ? this.props.activeCoin.decimals : ETHERS
+    let amount = new MathableNumber(0, decimals);
+    let avatarImg;
+    let pending = false
+    let subtitle = "";
     const gasFees = item.feeCurr === ETH.toUpperCase()
 
     if (Array.isArray(item)) {
@@ -135,14 +137,14 @@ class Overview extends Component {
       
       amount = new MathableNumber(ethers.utils.formatUnits(
         ethers.utils
-          .parseUnits(txArray[0].amount.toString(), decimals)
-          .sub(ethers.utils.parseUnits(txArray[1].amount.toString(), decimals))
+          .parseUnits(txArray[0].amount, decimals)
+          .sub(ethers.utils.parseUnits(txArray[1].amount, decimals))
       ),
       decimals)
 
       if (txArray[1].interest) {
         let interest = txArray[1].interest * -1;
-        amount = amount.num.add(new MathableNumber(interest.toString(), decimals).num)
+        amount = amount.num.add(new MathableNumber(interest, decimals).num)
       }
 
       for (let i = 0; i < txArray[0].to.length; i++) {
@@ -168,10 +170,10 @@ class Overview extends Component {
         timestamp: txArray[0].timestamp,
         to: toAddresses,
         txid: txArray[0].txid,
-        type: "sent",
+        type: "sent"
       }
     } else {
-      amount = item.amount != null ? new MathableNumber(item.amount.toString(), decimals) : new MathableNumber(0, decimals);
+      amount = item.amount != null ? new MathableNumber(item.amount, decimals) : new MathableNumber(0, decimals);
 
       if (item.type === "received") {
         avatarImg = TX_LOGOS.in;
@@ -205,13 +207,13 @@ class Overview extends Component {
         
         newAmount.num = amount.num.add(
           new MathableNumber(
-            item.fee.toString(),
+            item.fee,
             amount.maxDecimals
           ).num
         )
 
-        displayAmount = newAmount.display()
-      } else displayAmount = Number(amount.display()) 
+        displayAmount = BigNumber(newAmount.display())
+      } else displayAmount = BigNumber(amount.display()) 
     }
     catch(e) { console.error(e) }
 
@@ -239,12 +241,13 @@ class Overview extends Component {
             <Text style={Styles.listItemLeftTitleDefault}>
               {`${
                 displayAmount != null
-                  ? displayAmount < 0.0001 && displayAmount !== 0
+                  ? displayAmount.isLessThan(BigNumber(0.0001)) &&
+                    !displayAmount.isEqualTo(BigNumber(0))
                     ? displayAmount.toExponential()
-                    : displayAmount
+                    : displayAmount.toString()
                   : "??"
               } ${
-                item.feeCurr != null && item.type === 'self'
+                item.feeCurr != null && item.type === "self"
                   ? item.feeCurr
                   : this.props.activeCoin.id
               }`}
@@ -318,7 +321,7 @@ class Overview extends Component {
                 this.setState({
                   txDetailsModalOpen: false,
                   txDetailProps: {
-                    parsedAmount: 0,
+                    parsedAmount: "0",
                     txData: {},
                     activeCoinID: null,
                     txLogo: TX_LOGOS.unknown,
