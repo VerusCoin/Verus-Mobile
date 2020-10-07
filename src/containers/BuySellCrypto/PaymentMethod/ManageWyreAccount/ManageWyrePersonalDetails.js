@@ -21,7 +21,7 @@ import {
 } from '../../../../actions/actions/PaymentMethod/WyreAccount';
 import TextInputMask from 'react-native-text-input-mask';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Calendar} from '../../../../images/customIcons/index';
+import { Calendar } from '../../../../images/customIcons/index';
 import { parseDate } from '../../../../utils/date';
 import Colors from '../../../../globals/colors';
 

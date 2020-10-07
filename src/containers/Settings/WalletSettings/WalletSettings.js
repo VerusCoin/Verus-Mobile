@@ -18,6 +18,7 @@ import { CommonActions } from '@react-navigation/native';
 import { clearCacheData } from '../../../actions/actionCreators';
 import Styles from '../../../styles/index'
 import { ELECTRUM } from "../../../utils/constants/intervalConstants";
+import { CoinLogos } from "../../../utils/CoinData/CoinData";
 
 const GENERAL_WALLET_SETTINGS = "GeneralWalletSettings"
 const COIN_SETTINGS = "CoinSettings"
@@ -109,6 +110,7 @@ class WalletSettings extends Component {
           />
         </TouchableOpacity>
         {this.props.activeCoinsForUser.filter((coin) => coin.compatible_channels.includes(ELECTRUM)).map((coin, index) => {
+          const Logo = CoinLogos[coin.id.toLowerCase()]
           return (
             <TouchableOpacity 
               onPress={() => this._openSettings(COIN_SETTINGS, coin.id, coin.display_name)}
@@ -116,10 +118,7 @@ class WalletSettings extends Component {
               <ListItem
                 title={`${coin.display_name} Settings`}
                 titleStyle={Styles.listItemLeftTitleDefault}
-                leftAvatar={{
-                  source: coin.logo,
-                  size: 25
-                }}
+                leftAvatar={Logo ? <Logo width={25} height={25}/> : null}
                 containerStyle={Styles.bottomlessListItemContainer} 
                 chevron
               />

@@ -38,6 +38,7 @@ import { DISABLED_CHANNELS } from '../../../env/main.json'
 
 import { removeIdentityData } from '../../utils/asyncStore/identityStorage';
 import { getBiometricPassword, getSupportedBiometryType } from "../../utils/biometry/biometry";
+import { CoinLogos } from "../../utils/CoinData/CoinData";
 
 class Login extends Component {
   constructor(props) {
@@ -201,20 +202,15 @@ class Login extends Component {
   }
 
   render() {
+    const VerusLogo = CoinLogos.vrsc 
+
     return (
       <TouchableWithoutFeedback
         onPress={Keyboard.dismiss}
         accessible={false}
       >
         <View style={Styles.focalCenter}>
-          <Image
-            source={Verus}
-            style={{
-              height: "20%",
-              marginBottom: "5%",
-            }}
-            resizeMode="contain"
-          />
+          <VerusLogo height={"20%"} style={{marginBottom: "5%"}}/>
           {/* {<TouchableHighlight onPress={this.clearIdentityStorage}><Text>Clear identity storage</Text></TouchableHighlight>} */}
           <Text style={Styles.centralHeader}>Select a Profile</Text>
           <Dropdown

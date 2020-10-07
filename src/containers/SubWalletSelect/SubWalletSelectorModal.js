@@ -112,7 +112,7 @@ class SubWalletSelectorModal extends Component {
         >
           <View style={{position: 'absolute', top: 30}}>
             <Text style={Styles.centralHeader}>
-              {"Select a Sub-Wallet"}
+              {"Select a Card"}
             </Text>
           </View>
           <ScrollView

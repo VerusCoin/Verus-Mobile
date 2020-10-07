@@ -43,6 +43,8 @@ import { USD } from '../../utils/constants/currencies'
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 import { arrayToObject } from "../../utils/objectManip";
 import BigNumber from "bignumber.js";
+import { CoinLogos } from "../../utils/CoinData/CoinData";
+import { AddCoinLogo, VerusPayLogo } from "../../images/customIcons";
 
 const CONNECTION_ERROR = "Connection Error"
 
@@ -228,9 +230,7 @@ class Home extends Component {
               <Text style={Styles.listItemLeftTitleDefault}>VerusPay</Text>
             }
             hideChevron
-            leftAvatar={{
-              source: require("../../images/customIcons/verusPay.png"),
-            }}
+            leftAvatar={<VerusPayLogo width={40} height={40}/>}
             containerStyle={Styles.bottomlessListItemContainer}
           />
         </TouchableOpacity>
@@ -261,9 +261,7 @@ class Home extends Component {
                     </Text>
                   }
                   hideChevron
-                  leftAvatar={{
-                    source: require("../../images/customIcons/verusPay.png"),
-                  }}
+                  leftAvatar={<VerusPayLogo width={40} height={40}/>}
                   containerStyle={Styles.bottomlessListItemContainer}
                 />
               </TouchableOpacity>
@@ -276,6 +274,7 @@ class Home extends Component {
             const channel = item.dominant_channel ? item.dominant_channel : ELECTRUM
             const _balances = balances.public[channel]
             const balanceErrors = balances.errors.public[channel]
+            const Logo = CoinLogos[item.id.toLowerCase()]
 
             return (
               <TouchableOpacity
@@ -304,9 +303,7 @@ class Home extends Component {
                           item.id
                       : null
                   }
-                  leftAvatar={{
-                    source: item.logo,
-                  }}
+                  leftAvatar={Logo ? <Logo width={40} height={40}/> : null}
                   subtitleStyle={
                     (_balances.hasOwnProperty(item.id) ||
                       balanceErrors[item.id]) &&
@@ -361,9 +358,7 @@ class Home extends Component {
             title={
               <Text style={Styles.listItemLeftTitleDefault}>Add Coin</Text>
             }
-            leftAvatar={{
-              source: require("../../images/customIcons/coinAdd.png"),
-            }}
+            leftAvatar={<AddCoinLogo width={40} height={40}/>}
             containerStyle={{ borderBottomWidth: 0 }}
             hideChevron
           />

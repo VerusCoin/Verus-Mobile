@@ -29,6 +29,5 @@ function * handleSignOut() {
 }
 
 function * handleFinishErc20Init(action) {
-  console.log("FINISHING ERC20")
   yield put({type: INIT_ERC20_CHANNEL_FINISH, payload: action.payload})
 }

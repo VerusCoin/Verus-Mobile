@@ -13,7 +13,7 @@ import { connect } from 'react-redux';
 import Styles from '../../styles/index'
 
 import {
-  defaultAssetsPath,
+  CoinLogos,
   namesList,
   findCoinObj
 } from '../../utils/CoinData/CoinData';
@@ -117,19 +117,21 @@ class AddCoin extends Component {
         data={this.state.coinList}
         onEndReached={this.onEndReached}
         onEndReachedThreshold={50}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => this._openDetails(item)}>
-            <ListItem
-              title={item}
-              leftAvatar={{
-                source: defaultAssetsPath.coinLogo[item.toLowerCase()],
-              }}
-              containerStyle={Styles.bottomlessListItemContainer}
-              titleStyle={Styles.listItemLeftTitleDefault}
-              chevron
-            />
-          </TouchableOpacity>
-        )}
+        renderItem={({ item }) => {
+          const Logo = CoinLogos[item.toLowerCase()]
+          
+          return (
+            <TouchableOpacity onPress={() => this._openDetails(item)}>
+              <ListItem
+                title={item}
+                leftAvatar={<Logo width={40} height={40} />}
+                containerStyle={Styles.bottomlessListItemContainer}
+                titleStyle={Styles.listItemLeftTitleDefault}
+                chevron
+              />
+            </TouchableOpacity>
+          );
+        }}
         keyExtractor={(item) => item}
       />
     );

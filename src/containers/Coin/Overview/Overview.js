@@ -30,16 +30,16 @@ import { selectTransactions } from '../../../selectors/transactions';
 import { ETHERS } from "../../../utils/constants/web3Constants";
 import { ethers } from "ethers";
 import { Portal } from "react-native-paper";
-import DynamicHeader from "../DynamicHeader";
 import BigNumber from "bignumber.js";
+import { TransactionLogos } from '../../../images/customIcons/index'
 
 const TX_LOGOS = {
-  self: require('../../../images/customIcons/self-arrow.png'),
-  out: require('../../../images/customIcons/out-arrow.png'),
-  in: require('../../../images/customIcons/in-arrow.png'),
-  pending: require('../../../images/customIcons/pending-clock.png'),
-  unknown: require('../../../images/customIcons/unknown-logo.png'),
-  interest: require('../../../images/customIcons/interest-plus.png'),
+  self: TransactionLogos.SelfArrow,
+  out: TransactionLogos.OutArrow,
+  in: TransactionLogos.InArrow,
+  pending: TransactionLogos.PendingClock,
+  unknown: TransactionLogos.Unknown,
+  interest: TransactionLogos.InterestPlus,
 }
 
 const CONNECTION_ERROR = "Connection Error"
@@ -57,7 +57,7 @@ class Overview extends Component {
         parsedAmount: "0",
         txData: {},
         activeCoinID: null,
-        txLogo: TX_LOGOS.unknown
+        TxLogo: TX_LOGOS.unknown
       }
     };
     //this.updateProps = this.updateProps.bind(this);
@@ -125,8 +125,7 @@ class Overview extends Component {
   renderTransactionItem = ({ item, index }) => {
     const decimals = this.props.activeCoin.decimals != null ? this.props.activeCoin.decimals : ETHERS
     let amount = new MathableNumber(0, decimals);
-    let avatarImg;
-    let pending = false
+    let AvatarImg;
     let subtitle = "";
     const gasFees = item.feeCurr === ETH.toUpperCase()
 
@@ -159,7 +158,7 @@ class Overview extends Component {
         subtitle = toAddresses[0];
       }
 
-      avatarImg = confirmations === 0 || txArray[0].status === "pending" ? TX_LOGOS.pending : TX_LOGOS.out;
+      AvatarImg = confirmations === 0 || txArray[0].status === "pending" ? TX_LOGOS.pending : TX_LOGOS.out;
 
       item = {
         address: toAddresses.join(' & '),
@@ -176,22 +175,22 @@ class Overview extends Component {
       amount = item.amount != null ? new MathableNumber(item.amount, decimals) : new MathableNumber(0, decimals);
 
       if (item.type === "received") {
-        avatarImg = TX_LOGOS.in;
+        AvatarImg = TX_LOGOS.in;
         subtitle = "me";
       } else if (item.type === "sent") {
-        avatarImg = TX_LOGOS.out;
+        AvatarImg = TX_LOGOS.out;
         subtitle = item.address == null ? "??" : item.address;
       } else if (item.type === "self") {
         if (item.amount !== "??" && amount.num.lt(0)) {
           subtitle = "me";
-          avatarImg = TX_LOGOS.interest;
+          AvatarImg = TX_LOGOS.interest;
           amount.num = amount.num.mul(new MathableNumber("-1").num);
         } else {
-          avatarImg = TX_LOGOS.self;
+          AvatarImg = TX_LOGOS.self;
           subtitle = gasFees ? "gas" : "fees";
         }
       } else {
-        avatarImg = TX_LOGOS.unknown;
+        AvatarImg = TX_LOGOS.unknown;
         subtitle = "??";
       }
     }
@@ -225,7 +224,7 @@ class Overview extends Component {
               parsedAmount: amount,
               txData: item,
               activeCoinID: this.props.activeCoin.id,
-              txLogo: avatarImg,
+              TxLogo: AvatarImg,
               decimals:
                 this.props.activeCoin.decimals != null
                   ? this.props.activeCoin.decimals
@@ -255,10 +254,7 @@ class Overview extends Component {
           }
           subtitle={subtitle}
           subtitleProps={{ numberOfLines: 1 }}
-          leftAvatar={{
-            source: avatarImg,
-            avatarStyle: Styles.secondaryBackground,
-          }}
+          leftAvatar={<AvatarImg width={40} height={40} />}
           chevron
           containerStyle={Styles.bottomlessListItemContainer}
           rightTitle={
@@ -324,7 +320,7 @@ class Overview extends Component {
                     parsedAmount: "0",
                     txData: {},
                     activeCoinID: null,
-                    txLogo: TX_LOGOS.unknown,
+                    TxLogo: TX_LOGOS.unknown,
                     decimals:
                       this.props.activeCoin.decimals != null
                         ? this.props.activeCoin.decimals
