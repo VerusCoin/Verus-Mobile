@@ -96,6 +96,16 @@ export const CoinLogos = {
   tst: CoinLogoSvgs.web3.ETH,
   dai: CoinLogoSvgs.web3.DAI,
   eth: CoinLogoSvgs.web3.ETH,
+  bal: CoinLogoSvgs.web3.BAL,
+  bnt: CoinLogoSvgs.web3.BNT,
+  busd: CoinLogoSvgs.web3.BUSD,
+  hot: CoinLogoSvgs.web3.HOT,
+  link: CoinLogoSvgs.web3.LINK,
+  nexo: CoinLogoSvgs.web3.NEXO,
+  uni: CoinLogoSvgs.web3.UNI,
+  ven: CoinLogoSvgs.web3.VEN,
+  yfi: CoinLogoSvgs.web3.YFI,
+  zrx: CoinLogoSvgs.web3.ZRX,
 };
 
 //To make flatlist render faster

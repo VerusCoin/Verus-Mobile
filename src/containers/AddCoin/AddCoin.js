@@ -95,6 +95,11 @@ class AddCoin extends Component {
           queryLc.includes(coinIdLc) ||
           coinIdLc.includes(queryLc))
       );
+    }).sort((a, b) => {
+      if (b === 'VRSC') return 1
+      else if (b === 'BTC') return 1
+      else if (b === 'KMD') return 1
+      else return a <= b ? -1 : 1
     })
   }
 

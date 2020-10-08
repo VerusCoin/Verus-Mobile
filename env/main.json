@@ -20,7 +20,7 @@
   "ENABLE_ELECTRUM": true,
   "ENABLE_GENERAL": true,
 
-  "ETH_NETWORK": "ropsten",
+  "ETH_NETWORK": "homestead",
 
   "BIOMETRIC_SECURITY_THRESHOLD": "SECURE_HARDWARE",
 
