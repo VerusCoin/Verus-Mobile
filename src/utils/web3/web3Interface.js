@@ -20,6 +20,7 @@ class Web3Interface {
         throw new Error(
           "Cannot initialize existing contract " + contractAddress
         );
+
       const abi = await this.EtherscanProvider.perform("getabi", {
         address: contractAddress,
       });

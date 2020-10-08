@@ -160,6 +160,10 @@ class Home extends Component {
       if (rates[key] && rates[key][displayCurrency]) {
         const price = BigNumber(rates[key][displayCurrency])
 
+
+        console.log(channel)
+        console.log( JSON.stringify(balances))
+
         coinBalance =
           balances[channel].hasOwnProperty(key) &&
           !balanceErrors[channel][key] &&
