@@ -46,7 +46,7 @@ export const unixToDate = (unixTime) => {
 }
 
 export const kmdCalcInterest = (locktime, value) => {
-  if (satsToCoins(Number(value)) < 10 || locktime <= 0) return 0
+  if (satsToCoins(BigNumber(value)).toNumber() < 10 || locktime <= 0) return 0
 
   const timestampDiff = Math.floor(Date.now() / 1000) - locktime - 777;
   let timestampDiffMinutes = timestampDiff / 60;
@@ -62,7 +62,7 @@ export const kmdCalcInterest = (locktime, value) => {
     }
     timestampDiffMinutes -= 59;
 
-    interest = (satsToCoins(Number(value)) / 10512000) * timestampDiffMinutes;
+    interest = (satsToCoins(BigNumber(value)).toNumber() / 10512000) * timestampDiffMinutes;
   }
 
   return interest;

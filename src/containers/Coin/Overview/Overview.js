@@ -195,6 +195,9 @@ class Overview extends Component {
       }
     }
 
+    if (item.confirmations === 0 || item.status === "pending")
+      AvatarImg = TX_LOGOS.pending;
+
     subtitle = "to: " + subtitle;
 
     let displayAmount = null

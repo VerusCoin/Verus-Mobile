@@ -78,6 +78,8 @@ export const CLEAR_CACHE = 'CLEAR_CACHE';
 // Electrum data cache
 export const ADD_SERVER_VERSION = 'ADD_SERVER_VERSION';
 export const SET_SERVER_VERSIONS = 'SET_SERVER_VERSIONS';
+export const ADD_GOOD_SERVER = 'ADD_GOOD_SERVER';
+export const ADD_BAD_SERVER = 'ADD_BAD_SERVER';
 
 // Block header cache
 export const ADD_HEADER = 'ADD_HEADER';

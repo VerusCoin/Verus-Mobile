@@ -1,3 +1,12 @@
+// File to make certain libraries compatible with react-native.
+
+// To future devs: IF YOU EXPERIENCE PROBLEMS PARSING HTTP/HTTPS REQUEST RESULTS THE FOLLOWING
+// IS MOST LIKELY WHY:
+
+// FileReader.prototype.readAsArrayBuffer has been overriden on Android
+// to interpret "data:application/octet-stream" as "data:application/json", due to 
+// the data:application/json being simple ignored on android for ETH/ERC20 https calls.
+
 const { Platform } = require('react-native');
 
 if (typeof __dirname === 'undefined') global.__dirname = '/'

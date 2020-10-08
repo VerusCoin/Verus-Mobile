@@ -66,7 +66,7 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
   let formattedUtxos = []
   let firstServer
   let currentHeight
-  let unshieldedFunds = null
+  let unshieldedFunds = BigNumber(0)
 
   /*if (__DEV__) {
     if (verifyMerkle) {
@@ -153,8 +153,8 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
                 formattedUtxo.amountSats
               );
               formattedUtxos[index].interestSats = coinsToSats(
-                Number(truncateDecimal(interest, 8))
-              );
+                BigNumber(truncateDecimal(interest, 8))
+              ).toNumber();
             }
           }
         }
@@ -188,7 +188,11 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
             blockInfoArr.push(getBlockInfo(coinObj, getMerkleRes[i].result.height))
             i++
           } else {
-            if (coinObj.id === 'VRSC') unshieldedFunds += formattedUtxos[i].amountSats
+            if (coinObj.id === "VRSC")
+              unshieldedFunds = unshieldedFunds.plus(
+                BigNumber(formattedUtxos[i].amountSats)
+              ); 
+
             getMerkleRes.splice(i, 1);
             formattedUtxos.splice(i, 1);
           } 

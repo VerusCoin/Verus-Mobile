@@ -31,7 +31,7 @@ import {
  } from '../../actions/actionCreators'
 import Spinner from 'react-native-loading-spinner-overlay';
 import DelayedAsyncAlert from '../../utils/delayedAsyncAlert'
-import { coinsToSats, satsToCoins } from '../../utils/math'
+import { satsToCoins } from '../../utils/math'
 import {
   FORMAT_UNKNOWN,
   ADDRESS_ONLY,

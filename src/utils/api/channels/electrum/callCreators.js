@@ -147,7 +147,7 @@ export const updateValues = (oldResponse, serverList, callType, params, coinID, 
 }
 
 //Function to update only if values have changed
-export const electrumRequest = (serverList, callType, params, coinID, toSkip) => {
+export const electrumRequest = (serverList, callType, params, coinID, toSkip) => {  
   return new Promise((resolve, reject) => {
     timeout(REQUEST_TIMEOUT_MS, getElectrum(serverList, callType, params, toSkip, coinID))
     .then((response) => {

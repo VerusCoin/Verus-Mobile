@@ -64,8 +64,10 @@ import {
   APP_SETUP,
   SET_ETH_TX_RECEIPTS,
   ADD_ETH_TX_RECEIPT,
-  SET_COIN_SUB_WALLET, 
-  DISABLE_SELECT_DEFAULT_ACCOUNT
+  SET_COIN_SUB_WALLET,
+  DISABLE_SELECT_DEFAULT_ACCOUNT,
+  ADD_GOOD_SERVER,
+  ADD_BAD_SERVER,
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -278,6 +280,22 @@ export const addServerVersion = (server, version) => {
     type: ADD_SERVER_VERSION,
     server: server,
     version: version
+  }
+}
+
+//Reducer Name: electrum
+export const recordGoodServer = (server) => {
+  return {
+    type: ADD_GOOD_SERVER,
+    payload: { server }
+  }
+}
+
+//Reducer Name: electrum
+export const recordBadServer = (server) => {
+  return {
+    type: ADD_BAD_SERVER,
+    payload: { server }
   }
 }
 

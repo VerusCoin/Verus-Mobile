@@ -32,6 +32,7 @@ describe('Balance fetcher for BTC based chains', () => {
   it('can get a single balance for a mock user', () => {
     let fetchCalls = 0
     let fetchedUrls = []
+    let firstFetchCalls = 0
 
     const unwrappedFetch = fetch
     fetch = async (url, payload) => {
@@ -42,8 +43,24 @@ describe('Balance fetcher for BTC based chains', () => {
 
     return getOneBalance(MOCK_ACTIVE_COINS_FOR_USER[0], MOCK_USER_OBJ)
     .then((res) => {
-      console.log(`Called fetch ${fetchCalls} time(s)`)
+      console.log(`Called fetch ${fetchCalls} time(s) the first time`)
+      firstFetchCalls = fetchCalls
+
+      expect(res).toHaveProperty('result')
+      expect(res).toHaveProperty('blockHeight')
+      expect(res).toHaveProperty('electrumUsed')
+      expect(res).toHaveProperty('electrumVersion')
+
+      expect(res.result).toHaveProperty('confirmed')
+      expect(res.result).toHaveProperty('unconfirmed')
+
+      return getOneBalance(MOCK_ACTIVE_COINS_FOR_USER[0], MOCK_USER_OBJ)
+    })
+    .then((res) => {
+      console.log(`Called fetch ${fetchCalls - firstFetchCalls} time(s) the second time`)
+      console.log("Total fetched urls:")
       console.log(fetchedUrls)
+
       expect(res).toHaveProperty('result')
       expect(res).toHaveProperty('blockHeight')
       expect(res).toHaveProperty('electrumUsed')

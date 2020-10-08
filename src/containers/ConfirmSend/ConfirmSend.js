@@ -124,7 +124,7 @@ class ConfirmSend extends Component {
         clearInterval(this.loadingInterval);
 
         if (feeTakenFromAmount) {
-          if (!res.result.unshieldedFunds) {
+          if (res.result.unshieldedFunds.isEqualTo(BigNumber(0))) {
             Alert.alert(
               "Warning", 
               "Your transaction amount has been changed to " + finalTxAmount + " " + coinObj.id + 
@@ -132,11 +132,26 @@ class ConfirmSend extends Component {
               " + a fee of " + res.result.fee + " " + coinObj.id + ".");
           } else {
             Alert.alert(
-              "Warning", 
-              "Your transaction amount has been changed to " + finalTxAmount + " " + coinObj.id + 
-              " as you do not have sufficient funds to cover your submitted amount of " + res.result.amountSubmitted + " " + coinObj.id + 
-              " + a fee of " + res.result.fee + " " + coinObj.id + ". This could be due to the " + satsToCoins(res.result.unshieldedFunds) + " in unshielded " + coinObj.id + " your " + 
-              "wallet contains. Log into a native client and shield your mined funds to be able to use them." );
+              "Warning",
+              "Your transaction amount has been changed to " +
+                finalTxAmount +
+                " " +
+                coinObj.id +
+                " as you do not have sufficient funds to cover your submitted amount of " +
+                res.result.amountSubmitted +
+                " " +
+                coinObj.id +
+                " + a fee of " +
+                res.result.fee +
+                " " +
+                coinObj.id +
+                ". This could be due to the " +
+                satsToCoins(res.result.unshieldedFunds).toString() +
+                " in unshielded " +
+                coinObj.id +
+                " your " +
+                "wallet contains. Log into a native client and shield your mined funds to be able to use them."
+            );
           }
         }
         
