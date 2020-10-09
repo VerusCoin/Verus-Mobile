@@ -1,9 +1,10 @@
 import Web3Provider from '../../../../web3/provider'
-import { ethTransactionsToBtc } from 'agama-wallet-lib/src/eth'
 import { ETHERS } from '../../../../constants/web3Constants'
 import { ethers } from 'ethers'
 import { ETH } from '../../../../constants/intervalConstants'
 import { getTxReceipt } from '../../eth/requests/getTxReceipt'
+import BigNumber from 'bignumber.js'
+import { standardizeEthTxObj } from '../../../../standardization/standardizeTxObj'
 
 // Gets an ERC20 token transaction list for an address
 export const getErc20Transactions = async (address, contractAddress) => {
@@ -11,10 +12,9 @@ export const getErc20Transactions = async (address, contractAddress) => {
 }
 
 export const getStandardErc20Transactions = async(address, contractAddress, decimals = ETHERS) => {
-  let processedTxs = ethTransactionsToBtc(
+  let processedTxs = standardizeEthTxObj(
     await getErc20Transactions(address, contractAddress),
     address,
-    true,
     decimals
   );
 
@@ -23,9 +23,9 @@ export const getStandardErc20Transactions = async(address, contractAddress, deci
 
     if (tx.type === 'self') {
       const txReceipt = await getTxReceipt(tx.txid)
-      const fee = Number(ethers.utils.formatEther(txReceipt.gasUsed.mul(ethers.utils.parseEther(tx.gasPrice))))
+      const fee = ethers.utils.formatEther(txReceipt.gasUsed.mul(ethers.utils.parseEther(tx.gasPrice))).toString();
 
-      processedTxs[i] = { ...tx, ...txReceipt, amount: 0, fee, feeCurr: ETH.toUpperCase() }
+      processedTxs[i] = { ...tx, ...txReceipt, amount: "0", fee, feeCurr: ETH.toUpperCase() }
     }
   }
 

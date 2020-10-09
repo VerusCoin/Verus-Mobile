@@ -20,20 +20,18 @@ import { namesList, findCoinObj } from '../../utils/CoinData/CoinData'
 import { coinsList } from '../../utils/CoinData/CoinsList'
 import { getRecommendedBTCFees } from '../../utils/api/channels/general/callCreators'
 import { removeSpaces } from '../../utils/stringUtils'
+import VerusPayParser from '../../utils/verusPay/index'
 import {
   setUserCoins,
   addKeypairs,
-  //transactionsNeedUpdate,
   addCoin,
   setActiveApp,
   setActiveCoin,
-  setActiveSection,
-  //updateOneBalance,
-  //balancesNeedUpdate
+  setActiveSection
  } from '../../actions/actionCreators'
 import Spinner from 'react-native-loading-spinner-overlay';
 import DelayedAsyncAlert from '../../utils/delayedAsyncAlert'
-import { coinsToSats, satsToCoins } from '../../utils/math'
+import { satsToCoins } from '../../utils/math'
 import {
   FORMAT_UNKNOWN,
   ADDRESS_ONLY,
@@ -45,11 +43,11 @@ import {
   BALANCE_NULL,
   PARSE_ERROR
 } from '../../utils/constants/constants'
-import styles from './VerusPay.styles'
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import { API_GET_BALANCES, API_GET_INFO, ELECTRUM, DLIGHT } from "../../utils/constants/intervalConstants";
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 import store from "../../store";
+import BigNumber from "bignumber.js";
 
 class VerusPay extends Component {
   constructor(props) {
@@ -113,13 +111,18 @@ class VerusPay extends Component {
       console.log(resultParsed);
 
       if (resultParsed.verusQR) {
-        this.handleVerusQR(resultParsed);
+        this.handleVerusQR({
+          ...resultParsed,
+          amount: resultParsed.amount
+            ? satsToCoins(BigNumber(resultParsed.amount))
+            : BigNumber(resultParsed.amount),
+        });
       } else {
         //TODO: Handle other style QR codes here
         if (resultParsed.address && resultParsed.amount && resultParsed.coin) {
           let resultConverted = {
             coinTicker: resultParsed.coin,
-            amount: coinsToSats(resultParsed.amount),
+            amount: BigNumber(resultParsed.amount),
             address: resultParsed.address
           };
 
@@ -130,14 +133,26 @@ class VerusPay extends Component {
       }
     } else {
       if (typeof result === "string") {
-        let coinURLParsed = this.parseCoinURL(result);
+        try {
+          const request = VerusPayParser.v0.readVerusPay(result)
+          const coinObj = this.findCurrencyByImportId(request)
+          
+          this.handleVerusQR({
+            coinTicker: coinObj.id,
+            address: request.destination,
+            amount: BigNumber(request.amount),
+            memo: request.note
+          })
+        } catch(e) {
+          let coinURLParsed = this.parseCoinURL(result);
 
-        if (coinURLParsed) {
-          this.handleVerusQR(coinURLParsed);
-        } else if (result.length >= 34 && result.length <= 35) {
-          this.addressOnly(result);
-        } else {
-          this.errorHandler(FORMAT_UNKNOWN);
+          if (coinURLParsed) {
+            this.handleVerusQR(coinURLParsed);
+          } else if (result.length >= 34 && result.length <= 35) {
+            this.addressOnly(result);
+          } else {
+            this.errorHandler(FORMAT_UNKNOWN);
+          }
         }
       } else {
         this.errorHandler(FORMAT_UNKNOWN);
@@ -167,6 +182,19 @@ class VerusPay extends Component {
     }
   };
 
+  findCurrencyByImportId = (importObj) => {
+    const allCoins = Object.values(coinsList)
+
+    const coinObj = allCoins.find(coin => {
+      return (
+        coin.system_id === importObj.system_id &&
+        coin.currency_id === importObj.currency_id
+      );
+    })
+
+    return coinObj
+  }
+
   parseCoinURL = qrString => {
     //TODO: Add support for messages in btc urls as well (&message=Hello)
 
@@ -193,14 +221,14 @@ class VerusPay extends Component {
           for (key in coinsList) {
             if (
               coinsList[key] &&
-              removeSpaces(coinsList[key].name).toLowerCase() ===
+              removeSpaces(coinsList[key].display_name).toLowerCase() ===
                 coinName.toLowerCase()
             ) {
               //Create verusQR compatible data from coin URL
               return {
                 coinTicker: coinsList[key].id,
                 address: address,
-                amount: coinsToSats(Number(amount))
+                amount: BigNumber(amount)
               };
             }
           }
@@ -220,7 +248,7 @@ class VerusPay extends Component {
             const coinObj = coinsList[key];
 
             if (
-              removeSpaces(coinObj.name).toLowerCase() ===
+              removeSpaces(coinObj.display_name).toLowerCase() ===
               coinName.toLowerCase()
             ) {
               //Create verusQR compatible data from coin URL
@@ -251,7 +279,7 @@ class VerusPay extends Component {
     const coinTicker = verusQR.coinTicker;
     const address = verusQR.address;
     const amount = verusQR.hasOwnProperty("amount")
-      ? Number(verusQR.amount)
+      ? verusQR.amount
       : null;
     const memo = verusQR.memo;
 
@@ -263,6 +291,7 @@ class VerusPay extends Component {
         console.log(
           "Invalid amount, need additional information for transaction"
         );
+        console.log(amount)
       } else {
         console.log("Amount: " + amount);
       }
@@ -275,7 +304,7 @@ class VerusPay extends Component {
 
         if (activeCoin) {
           if (this.state.fromHome || this.props.activeCoin.id === coinTicker) {
-            if (amount === null || amount <= 0) {
+            if (amount === null || amount.isLessThanOrEqualTo(0)) {
               this.handleMissingAmount(activeCoin, address, memo);
             } else {
               if (this.checkBalance(amount, activeCoin)) {
@@ -292,7 +321,7 @@ class VerusPay extends Component {
             this.canExitWallet(this.props.activeCoin.id, coinTicker).then(
               res => {
                 if (res) {
-                  if (amount === null || amount <= 0) {
+                  if (amount === null || amount.isLessThanOrEqualTo(0)) {
                     this.handleMissingAmount(activeCoin, address, memo);
                   } else {
                     if (this.checkBalance(amount, activeCoin)) {
@@ -318,7 +347,7 @@ class VerusPay extends Component {
                 if (res) {
                   activeCoin = this.getCoinFromActiveCoins(coinTicker);
                   this.handleUpdates().then(() => {
-                    if (amount === null || amount <= 0) {
+                    if (amount === null || amount.isLessThanOrEqualTo(0)) {
                       this.handleMissingAmount(activeCoin, address, memo);
                     } else {
                       if (this.checkBalance(amount, activeCoin)) {
@@ -394,7 +423,7 @@ class VerusPay extends Component {
   };
 
   handleMissingAmount = (coinObj, address, memo) => {
-    this.canFillAmount(memo, address).then(res => {
+    this.canFillAmount(coinObj.id, memo, address).then(res => {
       if (res) {
         if (coinObj.apps.hasOwnProperty("wallet")) {
           let wallet = coinObj.apps.wallet;
@@ -466,10 +495,17 @@ class VerusPay extends Component {
     const { balances } = this.props
     const channel = activeCoin.dominant_channel != null ? activeCoin.dominant_channel : ELECTRUM
 
-    if (activeCoin && balances.results && balances.results[channel]) {
-      const spendableBalance = balances.results[channel].confirmed - activeCoin.fee;
+    if (
+      activeCoin &&
+      balances.results &&
+      balances.results[channel] &&
+      balances.results[channel][activeCoin.id]
+    ) {
+      const spendableBalance = BigNumber(
+        balances.results[channel][activeCoin.id].confirmed
+      );
 
-      if (amount > Number(spendableBalance)) {
+      if (amount.isGreaterThan(spendableBalance)) {
         this.errorHandler(INSUFFICIENT_FUNDS);
         return false;
       } else {
@@ -503,14 +539,15 @@ class VerusPay extends Component {
     );
   };
 
-  canFillAmount = (memo, address) => {
+  canFillAmount = (currency, memo, address) => {
     return DelayedAsyncAlert(
       "Missing Amount",
       "This invoice does not specify an amount, in order to proceed you " +
         "will need to fill in the amount yourself, would you like to continue?" +
+        (currency ? ("\n\n Currency: " + currency) : null) +
         "\n\n To: " +
         address +
-        (memo ? "\n\n Memo: " + memo : null),
+        (memo ? ("\n\n Memo: " + memo) : ''),
       [
         {
           text: "No, take me back",
@@ -555,13 +592,13 @@ class VerusPay extends Component {
       coinObj: this.state.coinObj,
       activeUser: this.state.activeUser,
       address: this.state.address,
-      amount: satsToCoins(Number(this.state.amount)),
+      amount: this.state.amount.toString(),
       btcFee: this.state.btcFees.average,
       balance: this.props.balances.results[
         this.state.coinObj.dominant_channel != null
           ? this.state.coinObj.dominant_channel
           : ELECTRUM
-      ].confirmed,
+      ][this.state.coinObj.id].confirmed,
       memo: this.state.memo,
     };
 
@@ -712,7 +749,8 @@ const mapStateToProps = (state) => {
         true
       ),
     },
-    coinSettings: state.settings.coinSettings
+    coinSettings: state.settings.coinSettings,
+    activeCoinList: state.coins.activeCoinList
   };
 };
 

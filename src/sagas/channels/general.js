@@ -1,4 +1,4 @@
-import { all, takeLatest, put } from "redux-saga/effects";
+import { all, takeEvery, put } from "redux-saga/effects";
 import {
   INIT_GENERAL_CHANNEL_FINISH,
   INIT_GENERAL_CHANNEL_START,
@@ -6,7 +6,7 @@ import {
 
 export default function * generalSaga() {
   yield all([
-    takeLatest(INIT_GENERAL_CHANNEL_START, handleFinishGeneralInit),
+    takeEvery(INIT_GENERAL_CHANNEL_START, handleFinishGeneralInit),
   ]);
 }
 

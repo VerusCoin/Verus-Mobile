@@ -1,28 +1,25 @@
 import Web3Provider from '../../../../web3/provider'
-import { ethTransactionsToBtc } from 'agama-wallet-lib/src/eth'
-import { ETHERS } from '../../../../constants/web3Constants'
 import { ethers } from 'ethers'
 import { getTxReceipt } from './getTxReceipt'
+import BigNumber from 'bignumber.js'
+import { standardizeEthTxObj } from '../../../../standardization/standardizeTxObj'
 
 // Gets the Ethereum transaction history of an address or name
 export const getEthTransactions = async (address) => {
   return await Web3Provider.EtherscanProvider.getHistory(address)
 }
 
-export const getStandardEthTransactions = async(address) => {
-  let processedTxs = ethTransactionsToBtc(
+export const getStandardEthTransactions = async (address) => {
+  let processedTxs = standardizeEthTxObj(
     await getEthTransactions(address),
-    address,
-    false,
-    ETHERS
-  );
+    address);
 
   for (let i = 0; i < processedTxs.length; i++) {
     let tx = processedTxs[i]
 
     if (tx.type === 'self') {
       const txReceipt = await getTxReceipt(tx.txid)
-      const fee = Number(ethers.utils.formatEther(txReceipt.gasUsed.mul(ethers.utils.parseEther(tx.gasPrice))))
+      const fee = ethers.utils.formatEther(txReceipt.gasUsed.mul(ethers.utils.parseEther(tx.gasPrice))).toString()
 
       processedTxs[i] = { ...tx, ...txReceipt, amount: fee, fee }
     }

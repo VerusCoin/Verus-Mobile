@@ -17,6 +17,8 @@ import { connect } from 'react-redux';
 import { CommonActions } from '@react-navigation/native';
 import { clearCacheData } from '../../../actions/actionCreators';
 import Styles from '../../../styles/index'
+import { ELECTRUM } from "../../../utils/constants/intervalConstants";
+import { CoinLogos } from "../../../utils/CoinData/CoinData";
 
 const GENERAL_WALLET_SETTINGS = "GeneralWalletSettings"
 const COIN_SETTINGS = "CoinSettings"
@@ -94,31 +96,29 @@ class WalletSettings extends Component {
           <ListItem                       
             title="Clear Data Cache"
             titleStyle={Styles.listItemLeftTitleDefault}
-            leftIcon={{name: 'clear-all', size: 40}}
+            leftIcon={{name: 'clear-all'}}
             containerStyle={Styles.bottomlessListItemContainer} 
-            chevron
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => this._openSettings(GENERAL_WALLET_SETTINGS)}>
           <ListItem                       
             title="General Settings"
             titleStyle={Styles.listItemLeftTitleDefault}
-            leftIcon={{name: 'settings-applications', size: 40}}
+            leftIcon={{name: 'settings-applications'}}
             containerStyle={Styles.bottomlessListItemContainer} 
             chevron
           />
         </TouchableOpacity>
-        {this.props.activeCoinsForUser.map((coin, index) => {
+        {this.props.activeCoinsForUser.filter((coin) => coin.compatible_channels.includes(ELECTRUM)).map((coin, index) => {
+          const Logo = CoinLogos[coin.id.toLowerCase()]
           return (
             <TouchableOpacity 
-              onPress={() => this._openSettings(COIN_SETTINGS, coin.id, coin.name)}
+              onPress={() => this._openSettings(COIN_SETTINGS, coin.id, coin.display_name)}
               key={index}>
               <ListItem
-                title={`${coin.name} Settings`}
+                title={`${coin.display_name} Settings`}
                 titleStyle={Styles.listItemLeftTitleDefault}
-                leftAvatar={{
-                  source: coin.logo
-                }}
+                leftAvatar={Logo ? <Logo width={25} height={25}/> : null}
                 containerStyle={Styles.bottomlessListItemContainer} 
                 chevron
               />

@@ -20,7 +20,7 @@ import { setActiveSection, setCoinSubWallet, setIsCoinMenuFocused } from "../../
 import { NavigationActions, withNavigationFocus } from '@react-navigation/compat';
 import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
 import DynamicHeader from "./DynamicHeader";
-import { truncateDecimal } from '../../utils/math'
+import { bigNumberifyBalance, truncateDecimal } from '../../utils/math'
 import { Portal } from "react-native-paper";
 import { API_GET_BALANCES } from "../../utils/constants/intervalConstants";
 import { CONNECTION_ERROR } from "../../utils/api/errors/errorMessages";
@@ -216,13 +216,20 @@ const mapStateToProps = (state) => {
     activeApp: state.coins.activeApp,
     activeSection: state.coins.activeSection,
     coinMenuFocused: state.coins.coinMenuFocused,
-    selectedSubWallet: state.coinMenus.activeSubWallets[state.coins.activeCoin.id],
+    selectedSubWallet:
+      state.coinMenus.activeSubWallets[state.coins.activeCoin.id],
     allSubWallets: state.coinMenus.allSubWallets[state.coins.activeCoin.id],
     balances: {
-      results: channel != null ? state.ledger.balances[channel][chainTicker] : null,
-      errors: channel != null ? state.errors[API_GET_BALANCES][channel][chainTicker] : null,
+      results:
+        channel != null && state.ledger.balances[channel][chainTicker] != null
+          ? bigNumberifyBalance(state.ledger.balances[channel][chainTicker])
+          : null,
+      errors:
+        channel != null
+          ? state.errors[API_GET_BALANCES][channel][chainTicker]
+          : null,
     },
-  }
+  };
 };
 
 export default connect(mapStateToProps)(withNavigationFocus(CoinMenus));

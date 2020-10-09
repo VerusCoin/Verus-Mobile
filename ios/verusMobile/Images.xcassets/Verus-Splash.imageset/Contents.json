@@ -1,23 +1,23 @@
 {
   "images" : [
     {
+      "filename" : "Verus-Splash-2.png",
       "idiom" : "universal",
-      "filename" : "Verus-Splash.png",
       "scale" : "1x"
     },
     {
-      "idiom" : "universal",
       "filename" : "Verus-Splash-1.png",
+      "idiom" : "universal",
       "scale" : "2x"
     },
     {
+      "filename" : "Verus-Splash.png",
       "idiom" : "universal",
-      "filename" : "Verus-Splash-2.png",
       "scale" : "3x"
     }
   ],
   "info" : {
-    "version" : 1,
-    "author" : "xcode"
+    "author" : "xcode",
+    "version" : 1
   }
 }

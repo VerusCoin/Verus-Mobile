@@ -7,6 +7,7 @@ import { resolveSequentially } from '../../../../promises'
 import { networks } from 'bitgo-utxo-lib'
 import { coinsToSats, satsToCoins, kmdCalcInterest, truncateDecimal } from '../../../../math'
 import { ELECTRUM } from '../../../../constants/intervalConstants'
+import BigNumber from 'bignumber.js'
 
 export const getUnspent = (coinObj, activeUser) => {
   const callType = 'listunspent'
@@ -65,7 +66,7 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
   let formattedUtxos = []
   let firstServer
   let currentHeight
-  let unshieldedFunds = null
+  let unshieldedFunds = BigNumber(0)
 
   /*if (__DEV__) {
     if (verifyMerkle) {
@@ -115,7 +116,7 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
         }
       })
 
-      if (formattedUtxos.length === 0) throw new Error("No confirmed utxos")
+      if (formattedUtxos.length === 0) throw new Error("No confirmed utxos. If you just sent a transaction, try waiting a few minutes and sending again.")
 
       return resolveSequentially(getTxArr)
     })
@@ -141,10 +142,19 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
 
             if (!decodedTx) throw new Error('Can\'t decode transaction')
 
-            if (satsToCoins(Number(formattedUtxo.amountSats)) >= 10 &&
-                decodedTx.format.locktime > 0) {
-              interest = kmdCalcInterest(decodedTx.format.locktime, formattedUtxo.amountSats)
-              formattedUtxos[index].interestSats = coinsToSats(truncateDecimal(interest, 8))
+            if (
+              satsToCoins(
+                BigNumber(formattedUtxo.amountSats)
+              ).isGreaterThanOrEqualTo(BigNumber(10)) &&
+              decodedTx.format.locktime > 0
+            ) {
+              interest = kmdCalcInterest(
+                decodedTx.format.locktime,
+                formattedUtxo.amountSats
+              );
+              formattedUtxos[index].interestSats = coinsToSats(
+                BigNumber(truncateDecimal(interest, 8))
+              ).toNumber();
             }
           }
         }
@@ -178,7 +188,11 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
             blockInfoArr.push(getBlockInfo(coinObj, getMerkleRes[i].result.height))
             i++
           } else {
-            if (coinObj.id === 'VRSC') unshieldedFunds += formattedUtxos[i].amountSats
+            if (coinObj.id === "VRSC")
+              unshieldedFunds = unshieldedFunds.plus(
+                BigNumber(formattedUtxos[i].amountSats)
+              ); 
+
             getMerkleRes.splice(i, 1);
             formattedUtxos.splice(i, 1);
           } 

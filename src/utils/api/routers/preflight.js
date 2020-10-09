@@ -15,7 +15,7 @@ const PREFLIGHT_FUNCTION_MAP = {
  * @param {Object} coinObj The coin object describing the chain to send on
  * @param {Object} activeUser The user object of the user performing the send
  * @param {String} address The destination address
- * @param {Number} amount The amount to send
+ * @param {BigNumber} amount The amount to send (in BigNumber form from bignumber.js)
  * @param {String} channel The channel to send on (e.g. ETH/ELECTRUM/ERC20)
  * @param {Object} params Any other parameters specific to the send channel's preflight function
  */

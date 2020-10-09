@@ -22,7 +22,7 @@ import {
   Alert,
   Clipboard
  } from "react-native"
-import { satsToCoins, truncateDecimal } from '../../../../utils/math'
+import { isNumber, satsToCoins, truncateDecimal } from '../../../../utils/math'
 import { explorers } from '../../../../utils/CoinData/CoinData'
 import { 
   //needsUpdate, 
@@ -39,6 +39,7 @@ import { NO_VERIFICATION, MID_VERIFICATION } from '../../../../utils/constants/c
 import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors'
 import { API_GET_FIATPRICE, API_GET_TRANSACTIONS, ELECTRUM, DLIGHT, API_GET_BALANCES } from "../../../../utils/constants/intervalConstants"
+import BigNumber from "bignumber.js";
 
 const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
@@ -58,7 +59,6 @@ class SendResult extends Component {
         amount: 0,
         txid: "",
         feeCurr: null,
-        remainingBalance: 0,
         loadingProgress: 0.175,
         loadingMessage: "Preparing transaction..."
     };
@@ -70,8 +70,13 @@ class SendResult extends Component {
     const address = this.props.route.params.data.address
     const toAddress = this.props.route.params.data.toAddress
     const fromAddress = this.props.route.params.data.fromAddress
-    const amount = Number(this.props.route.params.data.amount)
-    const fee = coinObj.id === 'BTC' ? { feePerByte: Number(this.props.route.params.data.btcFee) } : Number(this.props.route.params.data.coinObj.fee)
+    const amount = BigNumber(this.props.route.params.data.amount)
+    const fee =
+      coinObj.id === "BTC"
+        ? { feePerByte: BigNumber(this.props.route.params.data.btcFee) }
+        : isNumber(this.props.route.params.data.coinObj.fee)
+        ? BigNumber(this.props.route.params.data.coinObj.fee)
+        : null;
     const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
     //const memo = this.props.route.params.data.memo
     
@@ -119,14 +124,6 @@ class SendResult extends Component {
         this.setState({
           loading: false,
           txid: res.result.txid,
-          remainingBalance:
-            res.result.value != null && res.result.fee != null
-              ? this.props.balances.results.confirmed -
-                (res.result.feeCurr != null &&
-                res.result.feeCurr !== coinObj.id
-                  ? res.result.value
-                  : res.result.value + res.result.fee)
-              : this.props.balances.results.confirmed - (amount + fee),
           toAddress: res.result.toAddress || toAddress,
           fromAddress: res.result.fromAddress || fromAddress,
           coinObj,
@@ -271,14 +268,6 @@ class SendResult extends Component {
                   </Text>
                 </View>
               </View>
-              {/* <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>Balance:</Text>
-                <Text style={Styles.infoTableCell}>
-                  {truncateDecimal(this.state.remainingBalance, this.state.coinObj.decimals || 8) +
-                    " " +
-                    this.state.coinObj.id}
-                </Text>
-              </View>} */}
               <View style={Styles.infoTableRow}>
                 <Text style={Styles.infoTableHeaderCell}>Amount Sent:</Text>
                 <Text style={Styles.infoTableCell}>

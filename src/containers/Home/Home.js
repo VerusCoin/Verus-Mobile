@@ -42,6 +42,9 @@ import {
 import { USD } from '../../utils/constants/currencies'
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 import { arrayToObject } from "../../utils/objectManip";
+import BigNumber from "bignumber.js";
+import { CoinLogos } from "../../utils/CoinData/CoinData";
+import { AddCoinLogo, VerusPayLogo } from "../../images/customIcons";
 
 const CONNECTION_ERROR = "Connection Error"
 
@@ -49,11 +52,10 @@ class Home extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      totalFiatBalance: this.getTotalFiatBalance(props),
+      totalFiatBalance: "0.00",
       loading: false
     };
     
-    this.updateProps = this.updateProps.bind(this);
     this._unsubscribeFocus = null
   }
 
@@ -67,6 +69,14 @@ class Home extends Component {
     this._unsubscribeFocus()
   }
 
+  componentDidUpdate(lastProps) {
+    if (this.props.balances !== lastProps.balances) {
+      this.setState({
+        totalFiatBalance: this.getTotalFiatBalance(this.props)
+      })
+    }
+  }
+
   refresh = () => {    
     this.setState({ loading: true }, () => {
       Promise.all(this.props.activeCoinsForUser.map(async (coinObj) => {
@@ -74,7 +84,7 @@ class Home extends Component {
         await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, coinObj.id, API_GET_BALANCES)
         await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, coinObj.id, API_GET_INFO)
       })).then(res => {
-        this.setState({ loading: false })
+        this.setState({ loading: false, totalFiatBalance: this.getTotalFiatBalance(this.props) })
       })
       .catch(error => {
         this.setState({ loading: false })
@@ -139,8 +149,8 @@ class Home extends Component {
   }
 
   getTotalFiatBalance = (props) => {    
-    let _totalFiatBalance = 0
-    let coinBalance = 0
+    let _totalFiatBalance = BigNumber(0)
+    let coinBalance = BigNumber(0)
     const balances = props.balances.public
     const { rates, displayCurrency, activeCoinsForUser } = props
     const balanceErrors = props.balances.errors.public
@@ -150,16 +160,16 @@ class Home extends Component {
       const channel = coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM
 
       if (rates[key] && rates[key][displayCurrency]) {
-        const price = rates[key][displayCurrency]
+        const price = BigNumber(rates[key][displayCurrency])
 
         coinBalance =
           balances[channel].hasOwnProperty(key) &&
           !balanceErrors[channel][key] &&
-          !isNaN(balances[channel][key].confirmed)
-            ? truncateDecimal(balances[channel][key].confirmed, 4)
-            : 0;
+          balances[channel][key].confirmed != null
+            ? BigNumber(balances[channel][key].confirmed)
+            : BigNumber("0");
 
-        _totalFiatBalance += coinBalance*price
+        _totalFiatBalance = _totalFiatBalance.plus(coinBalance.multipliedBy(price))
       }
     })
 
@@ -220,9 +230,7 @@ class Home extends Component {
               <Text style={Styles.listItemLeftTitleDefault}>VerusPay</Text>
             }
             hideChevron
-            leftAvatar={{
-              source: require("../../images/customIcons/verusPay.png"),
-            }}
+            leftAvatar={<VerusPayLogo width={40} height={40}/>}
             containerStyle={Styles.bottomlessListItemContainer}
           />
         </TouchableOpacity>
@@ -253,9 +261,7 @@ class Home extends Component {
                     </Text>
                   }
                   hideChevron
-                  leftAvatar={{
-                    source: require("../../images/customIcons/verusPay.png"),
-                  }}
+                  leftAvatar={<VerusPayLogo width={40} height={40}/>}
                   containerStyle={Styles.bottomlessListItemContainer}
                 />
               </TouchableOpacity>
@@ -268,6 +274,7 @@ class Home extends Component {
             const channel = item.dominant_channel ? item.dominant_channel : ELECTRUM
             const _balances = balances.public[channel]
             const balanceErrors = balances.errors.public[channel]
+            const Logo = CoinLogos[item.id.toLowerCase()]
 
             return (
               <TouchableOpacity
@@ -279,14 +286,14 @@ class Home extends Component {
                   roundAvatar
                   title={
                     <Text style={Styles.listItemLeftTitleDefault}>
-                      {item.name}
+                      {item.display_name}
                     </Text>
                   }
                   subtitle={
                     _balances.hasOwnProperty(item.id) ||
                     balanceErrors[item.id]
                       ? balanceErrors[item.id] ||
-                        isNaN(_balances[item.id].confirmed)
+                        _balances[item.id].confirmed == null
                         ? CONNECTION_ERROR
                         : truncateDecimal(
                             _balances[item.id].confirmed,
@@ -296,14 +303,12 @@ class Home extends Component {
                           item.id
                       : null
                   }
-                  leftAvatar={{
-                    source: item.logo,
-                  }}
+                  leftAvatar={Logo ? <Logo width={40} height={40}/> : null}
                   subtitleStyle={
                     (_balances.hasOwnProperty(item.id) ||
                       balanceErrors[item.id]) &&
                     (balanceErrors[item.id] ||
-                      isNaN(_balances[item.id].confirmed))
+                      _balances[item.id].confirmed) == null
                       ? Styles.listItemSubtitleError
                       : null
                   }
@@ -312,13 +317,13 @@ class Home extends Component {
                   rightTitle={
                     (!_balances.hasOwnProperty(item.id) ||
                     balanceErrors[item.id] ||
-                    isNaN(_balances[item.id].confirmed)
+                    _balances[item.id].confirmed == null
                       ? "-"
                       : truncateDecimal(
                           (rates[item.id] &&
                           rates[item.id][displayCurrency] != null
-                            ? rates[item.id][displayCurrency]
-                            : 0) * _balances[item.id].confirmed,
+                            ? BigNumber(rates[item.id][displayCurrency])
+                            : BigNumber(0)).multipliedBy(BigNumber(_balances[item.id].confirmed)),
                           2
                         )) +
                     " " +
@@ -353,9 +358,7 @@ class Home extends Component {
             title={
               <Text style={Styles.listItemLeftTitleDefault}>Add Coin</Text>
             }
-            leftAvatar={{
-              source: require("../../images/customIcons/coinAdd.png"),
-            }}
+            leftAvatar={<AddCoinLogo width={40} height={40}/>}
             containerStyle={{ borderBottomWidth: 0 }}
             hideChevron
           />
@@ -368,7 +371,7 @@ class Home extends Component {
     return (
       <View style={Styles.defaultRoot}>
         <Text style={Styles.fiatLabel}>
-          {truncateDecimal(this.state.totalFiatBalance, 2) +
+          {this.state.totalFiatBalance +
             " " +
             this.props.displayCurrency}
         </Text>

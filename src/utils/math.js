@@ -1,24 +1,36 @@
 import { ethers } from "ethers"
 import { ETHERS } from "./constants/web3Constants"
+import BigNumber from "bignumber.js";
 
 //Math done to eliminate JS rounding errors when moving from statoshis to coin denominations
 export const coinsToSats = (coins) => {
-  return (Math.round(coins*10000000000))/100
+  return coins.multipliedBy(BigNumber(100000000))
 }
 
 export const satsToCoins = (satoshis) => {
-  return (Math.round(satoshis))/100000000
+  return satoshis.dividedBy(BigNumber(100000000))
 }
 
 export const truncateDecimal = (value, numDecimals) => {
-  let x = Math.pow(10, numDecimals + 5)
-  let y = Math.pow(10, numDecimals)
+  if (typeof value === 'string' || isNumber(value)) value = BigNumber(value)
 
-  let expandedValue = (Math.round(value*x))/100000
-  let truncatedValue = Math.trunc(expandedValue)
-  let newValue = (Math.round(truncatedValue))/y
+  let n = value.toFormat(numDecimals).replace(/\.0+$/,'')
 
-  return Number(newValue.toFixed(numDecimals))
+  if (n.match(/\./)) {
+    n = n.replace(/\.?0+$/, '');
+  }
+
+  return n
+}
+
+export const bigNumberifyBalance = (balanceObj) => {
+  const { confirmed, pending, total } = balanceObj
+
+  return {
+    confirmed: confirmed != null ? BigNumber(confirmed) : confirmed,
+    pending: pending != null ? BigNumber(pending) : pending,
+    total: total != null ? BigNumber(total) : total
+  }
 }
 
 export const findNumDecimals = (value) => {
@@ -34,7 +46,7 @@ export const unixToDate = (unixTime) => {
 }
 
 export const kmdCalcInterest = (locktime, value) => {
-  if (satsToCoins(Number(value)) < 10 || locktime <= 0) return 0
+  if (satsToCoins(BigNumber(value)).toNumber() < 10 || locktime <= 0) return 0
 
   const timestampDiff = Math.floor(Date.now() / 1000) - locktime - 777;
   let timestampDiffMinutes = timestampDiff / 60;
@@ -50,21 +62,21 @@ export const kmdCalcInterest = (locktime, value) => {
     }
     timestampDiffMinutes -= 59;
 
-    interest = (satsToCoins(Number(value)) / 10512000) * timestampDiffMinutes;
+    interest = (satsToCoins(BigNumber(value)).toNumber() / 10512000) * timestampDiffMinutes;
   }
 
   return interest;
 }
 
 export const maxSpendBalance = (utxoList, fee) => {
-  let _maxSpendBalance = 0;
+  let _maxSpendBalance = BigNumber(0);
 
   for (let i = 0; i < utxoList.length; i++) {
-    _maxSpendBalance += Number(utxoList[i].value);
+    _maxSpendBalance = _maxSpendBalance.plus(BigNumber(utxoList[i].value));
   }
 
   if (fee) {
-    return Number(_maxSpendBalance) - Number(fee);
+    return _maxSpendBalance.minus(BigNumber(fee));
   } else {
     return _maxSpendBalance;
   }

@@ -1,7 +1,5 @@
 import {
   setAccounts,
-  setFingerAuth,
-  signIntoAccount,
   updateAccountKeys,
   authenticateUser
 } from '../actionCreators';
@@ -11,7 +9,7 @@ import {
   getActiveCoinList,
   checkPinForUser,
   resetUserPwd,
-  deleteUser
+  deleteUser, setUserBiometry, setUsers
 } from '../../utils/asyncStore/asyncStore';
 import {
   makeKeyPair
@@ -25,13 +23,11 @@ import WyreService from '../../services/wyreService';
 import { CHANNELS, ELECTRUM } from '../../utils/constants/intervalConstants';
 import { arrayToObject } from '../../utils/objectManip';
 import { ENABLE_FIAT_GATEWAY } from '../../../env/main.json';
+import { BIOMETRIC_AUTH } from '../../utils/constants/storeType';
 
-
-//TODO: Fingerprint authentication
-
-export const addUser = (userName, seeds, password, users) => {
+export const addUser = (userName, seeds, password, users, biometry = false) => {
   return new Promise((resolve, reject) => {
-    storeUser({ seeds, password, userName }, users)
+    storeUser({ seeds, password, userName, biometry }, users)
       .then(res => {
         resolve(setAccounts(res))
       })
@@ -48,6 +44,19 @@ export const resetPwd = (userID, newPwd, oldPwd) => {
         } else {
           resolve(false)
         }
+      })
+      .catch(err => reject(err));
+  });
+}
+
+export const setBiometry = (userID, biometry) => {
+  return new Promise((resolve, reject) => {
+    setUserBiometry(userID, biometry)
+      .then((accounts) => {
+        resolve({
+          type: BIOMETRIC_AUTH,
+          payload: { biometry, userID, accounts }
+        })
       })
       .catch(err => reject(err));
   });
@@ -70,14 +79,35 @@ export const deleteUserByID = (userID) => {
 export const fetchUsers = () => {
   return new Promise((resolve, reject) => {
     getUsers()
-      .then(res => {
-        resolve(setAccounts(res))
+      .then(async (users) => {
+
+        // Update for new user representation post v0.2.0
+        if (users.some((value) => (value.encryptedKeys == null && value.encryptedKey))) {
+          console.warn("Updating users to key structure post v0.2.0")
+
+          users = users.map(user => {
+            if (user.encryptedKeys == null && user.encryptedKey) {
+              return {
+                id: user.id,
+                accountHash: hashAccountId(user.id),
+                encryptedKeys: {
+                  [ELECTRUM]: user.encryptedKey
+                },
+                biometry: false
+              }
+            } else return user
+          })
+
+          await setUsers(users)
+        }
+
+        resolve(setAccounts(users))
       })
       .catch(err => reject(err));
   });
 }
 
-export const authenticateAccount = (account, password) => {
+export const authenticateAccount = async (account, password) => {
   let _keys = {};
 
   let seeds = arrayToObject(
@@ -134,7 +164,8 @@ export const authenticateAccount = (account, password) => {
                   : hashAccountId(account.id),
                 seeds,
                 keys: _keys,
-                paymentMethods
+                paymentMethods,
+                biometry: account.biometry ? true : false
               })
             );
           });
@@ -147,7 +178,8 @@ export const authenticateAccount = (account, password) => {
                 : hashAccountId(account.id),
               seeds,
               keys: _keys,
-              paymentMethods: {}
+              paymentMethods: {},
+              biometry: account.biometry ? true : false
             })
           );
         }
@@ -159,17 +191,14 @@ export const authenticateAccount = (account, password) => {
 export const validateLogin = (account, password) => {
   return new Promise((resolve, reject) => {
     checkPinForUser(password, account.id)
-      .then(res => {
-        if (res !== false) {
-          return authenticateAccount(account, password);
-        } else {
-          return res;
-        }
+      .then(() => {
+        return authenticateAccount(account, password);
       })
       .then(loginData => {
         resolve(loginData);
       })
       .catch(err => {
+        reject(err)
         console.warn(err);
       });
   });

@@ -18,10 +18,8 @@ import {
 } from "react-native";
 import { unixToDate, MathableNumber } from '../../utils/math';
 import { explorers } from '../../utils/CoinData/CoinData';
-import { truncateDecimal } from '../../utils/math';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
-import { ETHERS } from "../../utils/constants/web3Constants";
 import { ethers } from "ethers";
 
 class TxDetailsModal extends Component {
@@ -80,11 +78,10 @@ class TxDetailsModal extends Component {
       txData,
       animationType,
       visible,
-      txLogo,
+      TxLogo,
       cancel,
       parsedAmount,
-      activeCoinID,
-      decimals
+      activeCoinID
     } = this.props;
 
     let amountShown = parsedAmount
@@ -109,7 +106,7 @@ class TxDetailsModal extends Component {
           contentContainerStyle={Styles.centerContainer}
         >
           <View style={Styles.tallHeaderContainer}>
-            <Image style={{ width: 50, height: 50 }} source={txLogo} />
+            <TxLogo width={50} height={50} />
             <Text style={Styles.centralHeader}>
               {"Transaction Details"}
             </Text>
@@ -136,9 +133,7 @@ class TxDetailsModal extends Component {
                 <View style={Styles.infoTableRow}>
                   <Text style={Styles.infoTableHeaderCell}>Fee:</Text>
                   <Text style={Styles.infoTableCell}>
-                    {(txData.fee < 0.0001
-                      ? txData.fee.toExponential()
-                      : Number(txData.fee)) +
+                    {txData.fee +
                       " " +
                       (txData.feeCurr != null
                         ? txData.feeCurr

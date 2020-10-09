@@ -15,6 +15,9 @@ import { NO_VALID_SERVER } from '../../errors/errorCodes';
 import { CONNECTION_ERROR } from '../../errors/errorMessages'
 
 import { REQUEST_TIMEOUT_MS } from '../../../../../env/main.json'
+import Store from '../../../../store';
+import { recordBadServer, recordGoodServer } from '../../../../actions/actionCreators';
+import NetInfo from "@react-native-community/netinfo";
 
 /**
  * @param {Function} tester A tester function that takes in a server and will fail if it does not perform it's purpose
@@ -34,21 +37,47 @@ export const getGoodServer = (tester, serverList, xtraTesterParams = []) => {
     );
   }
 
+  const handleBadServer = (index) => {
+    let _serverList = serverList.slice()
+    _serverList.splice(index, 1);
+    return (getGoodServer(tester, _serverList, xtraTesterParams))
+  }
+
+  const state = Store.getState()
+
+  const goodServerCache = state.electrum.goodServers
+  const cachedGoodServer = serverList.find(value => goodServerCache[value] != null)
+
+  if (cachedGoodServer) return new Promise((resolve) => resolve(goodServerCache[cachedGoodServer]))
+
+  const badServerCache = state.electrum.badServers
+  const cachedBadServerIndex = serverList.findIndex(value => badServerCache[value] != null)
+
+  if (cachedBadServerIndex !== -1) return handleBadServer(cachedBadServerIndex)
+
   let index = Math.floor(Math.random() * serverList.length)
   
   return new Promise((resolve, reject) => {
     tester(serverList[index], ...xtraTesterParams)
     .then((res) => {
+      Store.dispatch(recordGoodServer({
+        goodServer: serverList[index],
+        testResult: res
+      }))
+
       resolve({
         goodServer: serverList[index],
         testResult: res
       })
-    }, (rej) => {
-      //console.warn(rej)
+    }, async (rej) => {
+      const networkInfo = await NetInfo.fetch()
 
-      let _serverList = serverList.slice()
-      _serverList.splice(index, 1);
-      return (getGoodServer(tester, _serverList, xtraTesterParams))
+      // Only strike the server if internet connectivity isn't broken
+      if (networkInfo.isConnected && networkInfo.isInternetReachable) {
+        Store.dispatch(recordBadServer(serverList[index]))
+      }
+      
+      return handleBadServer(index)
     })
     .then(res => {
       resolve(res)

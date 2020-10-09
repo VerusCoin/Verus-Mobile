@@ -89,12 +89,8 @@ class RecoverSeed extends Component {
       if (!_errors) {
         checkPinForUser(_password, this.props.activeAccount.id)
         .then((seeds) => {
-          if (seeds) {
-            let promiseArr = [this.canShowSeed(), seeds]
-            return Promise.all(promiseArr)
-          } else {
-            return false
-          }
+          let promiseArr = [this.canShowSeed(), seeds]
+          return Promise.all(promiseArr)
         })
         .then((res) => {
           if (res[0] && Array.isArray(res)) {

@@ -5,6 +5,7 @@ import coinSelect from 'coinselect';
 import { buildSignedTx } from '../../../../crypto/buildTx'
 import { TxDecoder } from '../../../../crypto/txDecoder'
 import { ELECTRUM } from '../../../../constants/intervalConstants';
+import BigNumber from 'bignumber.js';
 
 export const pushTx = (coinObj, _rawtx) => {
   const callType = 'pushtx'
@@ -48,10 +49,8 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
         utxoList.length) {
       let utxoListFormatted = [];
       let totalInterest = 0;
-      let totalInterestUTXOCount = 0;
       let interestClaimThreshold = 200;
       let utxoVerified = true;
-      let index = 0
       let electrumKey
       let changeAddress
       let feePerByte = 0;
@@ -59,12 +58,16 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
       let feeTakenFromAmount = false
       let amountSubmitted = value
 
-      if (typeof defaultFee === 'object' && typeof defaultFee !== 'null') {
-        //BTC Fee style detected, changing fee unit to fee per byte and 
+      if (
+        typeof defaultFee === "object" &&
+        typeof defaultFee !== "null" &&
+        defaultFee.feePerByte != null
+      ) {
+        //BTC Fee style detected, changing fee unit to fee per byte and
         //feeding value into coinselect
-        feePerByte = Number(defaultFee.feePerByte)
-        defaultFee = 0
-        btcFees = true
+        feePerByte = defaultFee.feePerByte.toNumber();
+        defaultFee = BigNumber(0);
+        btcFees = true;
       }
 
       if (
@@ -93,8 +96,8 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
           utxoListFormatted.push({
             txid: utxoList[i].txid,
             vout: utxoList[i].vout,
-            value: Number(utxoList[i].amountSats),
-            interestSats: Number(utxoList[i].interestSats),
+            value: utxoList[i].amountSats,
+            interestSats: utxoList[i].interestSats,
             verifiedMerkle: utxoList[i].verifiedMerkle,
             verifiedTxid: utxoList[i].verifiedTxid
           });
@@ -102,7 +105,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
           utxoListFormatted.push({
             txid: utxoList[i].txid,
             vout: utxoList[i].vout,
-            value: Number(utxoList[i].amountSats),
+            value: utxoList[i].amountSats,
             verified: utxoList[i].verified ? utxoList[i].verified : false,
             verifiedMerkle: utxoList[i].verifiedMerkle,
             verifiedTxid: utxoList[i].verifiedTxid
@@ -110,7 +113,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
         }
       }
 
-      const _maxSpendBalance = Number(maxSpendBalance(utxoListFormatted));
+      const _maxSpendBalance = maxSpendBalance(utxoListFormatted);
 
       let targets = [{
         address: outputAddress,
@@ -121,15 +124,15 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
       if (feePerByte === 0) {
         //if transaction value is more than what is spendable with fee included, subtract fee from amount
         //else, add fee to amount to take fee from wallet  
-        if (value > (_maxSpendBalance - defaultFee)) {
+        if (value.isGreaterThan((_maxSpendBalance.minus(defaultFee)))) {
           console.log('subtracting default fee from amount...')
           amountSubmitted = value
-          value = _maxSpendBalance - defaultFee
+          value = _maxSpendBalance.minus(defaultFee)
           targets[0].value = _maxSpendBalance
 
           feeTakenFromAmount = true
         } else {
-          targets[0].value += defaultFee
+          targets[0].value = targets[0].value.plus(defaultFee)
         }
       }
 
@@ -137,6 +140,8 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
       console.log(targets);
       console.log('searching for utxos...')
 
+      targets[0].value = targets[0].value.toNumber()
+      
       let {
         inputs,
         outputs,
@@ -149,8 +154,8 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
         console.log('tx fee is too great to deduct from wallet, subtracting from tx amount instead')
         console.log('readjusting transaction amount...')
         amountSubmitted = value
-        value -= fee
-        targets[0].value = value
+        value = value.minus(BigNumber(fee))
+        targets[0].value = value.toNumber()
         console.log('readjusted transaction amount: ' + targets[0].value)
         feeTakenFromAmount = true
         
@@ -163,7 +168,11 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
       }
 
       if (!outputs) {
-        throw new Error('Insufficient funds. Failed to calculate acceptable transaction amount with fee of ' + satsToCoins(fee ? fee : defaultFee) + '.')
+        throw new Error(
+          "Insufficient funds. Failed to calculate acceptable transaction amount with fee of " +
+            satsToCoins(BigNumber(fee ? fee : defaultFee)) +
+            "."
+        );
       }
 
       console.log('transaction calculated inputs =>')
@@ -174,7 +183,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
       if (!fee) {
         console.log('no coinselect calculated fee entered, adjusting outputs for default fee =>')
         console.log(outputs)
-        outputs[0].value = outputs[0].value - defaultFee;
+        outputs[0].value = BigNumber(outputs[0].value).minus(defaultFee).toNumber();
       }
 
       let _change = 0;
@@ -208,12 +217,11 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
         }
       }
 
-      if (value > _maxSpendBalance) {
-        console.log("Value is larger than max spend, returning with error")
+      if (value.isGreaterThan(_maxSpendBalance)) {
         const successObj = {
           err: true,
-          result: `Spend value is too large. Max available amount is ${Number((_maxSpendBalance * 0.00000001.toFixed(8)))}.` + 
-          (unshieldedFunds > 0 ? `\n\nThis is most likely due to the fact that you have ${satsToCoins(unshieldedFunds)} ${coinObj.id}
+          result: `Spend value is too large. Max available amount is ${satsToCoins(_maxSpendBalance).toString()}.` + 
+          (unshieldedFunds.isGreaterThan(BigNumber(0)) ? `\n\nThis is most likely due to the fact that you have ${satsToCoins(unshieldedFunds).toString()} ${coinObj.id}
           in unshielded funds received from mining in your wallet. Please unshield through a native client prior to sending through Verus Mobile` : null),
         };
 
@@ -232,11 +240,11 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
             console.log(`current change amount ${_change} (${_change * 0.00000001}), boosted change amount ${_change + (totalInterest - _feeOverhead)} (${(_change + (totalInterest - _feeOverhead)) * 0.00000001})`);
           }
           
-          if (_maxSpendBalance === value) {
+          if (_maxSpendBalance.isEqualTo(value)) {
             _change = Math.abs(totalInterest) - _change - _feeOverhead;
 
             if (outputAddress === changeAddress) {
-              value += _change;
+              value = value.plus(BigNumber(_change));
               _change = 0;
               if (__DEV__) {
                 console.log(`send to self ${outputAddress} = ${changeAddress}`);
@@ -277,17 +285,19 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
             network,
             inputs,
             _change,
-            value
+            value.toNumber()
           );
 
           const successObj = {
             err: false,
-            result: {  
-              fee: btcFees ? satsToCoins(fee) : satsToCoins(_estimatedFee),
-              value: satsToCoins(value),
+            result: {
+              fee: btcFees
+                ? satsToCoins(BigNumber(fee)).toString()
+                : satsToCoins(BigNumber(_estimatedFee)).toString(),
+              value: satsToCoins(value).toString(),
               toAddress: outputAddress,
               fromAddress: changeAddress,
-              amountSubmitted: satsToCoins(amountSubmitted),
+              amountSubmitted: satsToCoins(amountSubmitted).toString(),
               memo: null,
               params: {
                 utxoSet: inputs,
@@ -299,7 +309,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
                 rawtx: _rawtx,
                 utxoVerified,
                 unshieldedFunds,
-              }
+              },
             },
           };
 
@@ -310,7 +320,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
       resolve ({
         err: true,
         result: `No spendable funds found.` + 
-        (unshieldedFunds > 0 ? `\n\nThis is most likely due to the fact that you have ${satsToCoins(unshieldedFunds)} ${coinObj.id}
+        (unshieldedFunds.isGreaterThan(BigNumber(0)) ? `\n\nThis is most likely due to the fact that you have ${satsToCoins(unshieldedFunds).toString()} ${coinObj.id}
         in unshielded funds received from mining in your wallet. Please unshield through a native client prior to sending through Verus Mobile` : null),
       });
     }

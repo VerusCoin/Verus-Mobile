@@ -1,3 +1,6 @@
+// Warning: DEPRECATED
+// TODO: Refactor
+
 /*
   This component's purpose is to display a tab bar of 
   all the different options for adding a custom coin
