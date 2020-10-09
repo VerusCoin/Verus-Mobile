@@ -18,6 +18,7 @@
     "@babel/runtime": "^7.6.2",
     "@react-native-community/art": "^1.2.0",
     "@react-native-community/async-storage": "^1.5.1",
+    "@react-native-community/cameraroll": "^4.0.1",
     "@react-native-community/cli": "^4.2.3",
     "@react-native-community/datetimepicker": "^2.1.0",
     "@react-native-community/eslint-config": "^0.0.5",

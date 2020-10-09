@@ -30,6 +30,7 @@ import { arrayToObject } from "../../utils/objectManip"
 import { ENABLE_DLIGHT } from '../../../env/main.json'
 import { getSupportedBiometryType, storeBiometricPassword } from "../../utils/biometry/biometry"
 import { hashAccountId } from "../../utils/crypto/hash"
+import { BIOMETRY_WARNING } from "../../utils/constants/constants"
 
 class SignUp extends Component {
   constructor() {
@@ -257,6 +258,24 @@ class SignUp extends Component {
     this.setState({ scanning: false });
   };
 
+  canEnableBiometry = () => {
+    return AlertAsync(
+      "Enable biometric authentication?",
+      BIOMETRY_WARNING,
+      [
+        {
+          text: "No",
+          onPress: () => Promise.resolve(false),
+          style: "cancel",
+        },
+        { text: "Yes", onPress: () => Promise.resolve(true) },
+      ],
+      {
+        cancelable: false,
+      }
+    )
+  }
+
   setupSeed = (channel) => {
     const { seeds } = this.state;
     const oppositeChannel = channel === ELECTRUM ? DLIGHT : ELECTRUM;
@@ -459,11 +478,16 @@ class SignUp extends Component {
                     title={`Enable biometric authentication`}
                     checked={this.state.enableBiometry}
                     textStyle={Styles.defaultText}
-                    onPress={() =>
-                      this.setState({
-                        enableBiometry: !this.state.enableBiometry,
-                      })
-                    }
+                    onPress={async () => {
+                      if (
+                        !this.state.enableBiometry &&
+                        (await this.canEnableBiometry())
+                      ) {
+                        this.setState({
+                          enableBiometry: true,
+                        });
+                      } else this.setState({ enableBiometry: false });
+                    }}
                   />
                 </View>
               )}

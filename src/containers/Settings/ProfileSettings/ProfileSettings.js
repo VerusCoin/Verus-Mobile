@@ -19,6 +19,8 @@ import Styles from '../../../styles/index'
 import { getSupportedBiometryType, removeBiometricPassword, storeBiometricPassword } from "../../../utils/biometry/biometry";
 import { setBiometry } from "../../../actions/actionCreators";
 import PasswordCheck from "../../../components/PasswordCheck";
+import AlertAsync from "react-native-alert-async";
+import { BIOMETRY_WARNING } from "../../../utils/constants/constants";
 
 const RESET_PWD = "ResetPwd"
 const RECOVER_SEED = "RecoverSeed"
@@ -46,6 +48,24 @@ class ProfileSettings extends Component {
 
     navigation.navigate(screen);
   };
+
+  canEnableBiometry = () => {
+    return AlertAsync(
+      "Enable biometric authentication?",
+      BIOMETRY_WARNING,
+      [
+        {
+          text: "No",
+          onPress: () => Promise.resolve(false),
+          style: "cancel",
+        },
+        { text: "Yes", onPress: () => Promise.resolve(true) },
+      ],
+      {
+        cancelable: false,
+      }
+    )
+  }
 
   async componentDidMount() {
     this.setState({ supportedBiometryType: await getSupportedBiometryType() });
@@ -130,7 +150,11 @@ class ProfileSettings extends Component {
           />
         </TouchableOpacity>
         {this.state.supportedBiometryType.biometry && (
-          <TouchableOpacity onPress={this.openPasswordCheck}>
+          <TouchableOpacity onPress={async () => {
+            if (this.props.activeAccount.biometry) {
+              this.openPasswordCheck()
+            } else if (await this.canEnableBiometry()) this.openPasswordCheck()
+          }}>
             <ListItem
               title={`${
                 this.props.activeAccount.biometry ? "Disable" : "Setup"

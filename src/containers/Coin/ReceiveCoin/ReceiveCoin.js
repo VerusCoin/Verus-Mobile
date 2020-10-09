@@ -191,7 +191,12 @@ class ReceiveCoin extends Component {
       verusQRString: null
     }, () => {
       const _selectedCoin = this.state.selectedCoin
-      const _amount = this.state.amount
+      const _amount =
+        (this.state.amount.toString().includes(".") &&
+          this.state.amount.toString().includes(",")) ||
+        !this.state.amount
+          ? this.state.amount
+          : this.state.amount.toString().replace(/,/g, ".");
       const _address = this.state.address
       const _memo = this.state.memo
       let _errors = false;

@@ -741,7 +741,8 @@ const mapStateToProps = (state) => {
         true
       ),
     },
-    coinSettings: state.settings.coinSettings
+    coinSettings: state.settings.coinSettings,
+    activeCoinList: state.coins.activeCoinList
   };
 };
 

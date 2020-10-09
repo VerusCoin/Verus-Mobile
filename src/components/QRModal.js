@@ -9,15 +9,14 @@
 import React, { Component } from "react"
 import {
   View,
-  StyleSheet,
   Modal,
   Text,
   Alert,
   TouchableOpacity,
-  CameraRoll,
   ScrollView,
   Platform
 } from "react-native"
+import CameraRoll from "@react-native-community/cameraroll";
 import QRCode from 'react-native-qrcode-svg'
 import StandardButton from "../components/StandardButton"
 import AlertAsync from "react-native-alert-async"
@@ -57,7 +56,7 @@ class QRModal extends Component {
     this.QRCodeRef.toDataURL((data) => {
       RNFS.writeFile(RNFS.CachesDirectoryPath+"/VerusPayQR.png", data, 'base64')
         .then((success) => {
-          return CameraRoll.saveToCameraRoll(RNFS.CachesDirectoryPath+"/VerusPayQR.png", 'photo')
+          return CameraRoll.save(RNFS.CachesDirectoryPath+"/VerusPayQR.png", { type: 'photo' })
         })
         .then(() => {
           return RNFS.unlink(RNFS.CachesDirectoryPath+"/VerusPayQR.png")

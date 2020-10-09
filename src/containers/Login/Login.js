@@ -10,6 +10,7 @@
 import React, { Component } from "react";
 import { 
   View,
+  ScrollView,
   Text, 
   Keyboard, 
   TouchableWithoutFeedback, 
@@ -27,7 +28,6 @@ import {
   saveGeneralSettings
  } from '../../actions/actionCreators';
 import { Dropdown } from 'react-native-material-dropdown';
-import { Verus } from '../../images/customIcons/index';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
@@ -38,7 +38,7 @@ import { DISABLED_CHANNELS } from '../../../env/main.json'
 
 import { removeIdentityData } from '../../utils/asyncStore/identityStorage';
 import { getBiometricPassword, getSupportedBiometryType } from "../../utils/biometry/biometry";
-import { CoinLogos } from "../../utils/CoinData/CoinData";
+import { VerusLogo } from "../../images/customIcons";
 
 class Login extends Component {
   constructor(props) {
@@ -202,17 +202,26 @@ class Login extends Component {
   }
 
   render() {
-    const VerusLogo = CoinLogos.vrsc 
-
     return (
       <TouchableWithoutFeedback
         onPress={Keyboard.dismiss}
         accessible={false}
       >
-        <View style={Styles.focalCenter}>
-          <VerusLogo height={"20%"} style={{marginBottom: "5%"}}/>
+        <ScrollView
+          contentContainerStyle={Styles.focalCenter}
+          style={Styles.backgroundColorWhite}
+        >
+          <VerusLogo
+            width={"60%"}
+            height={"15%"}
+            style={{ marginBottom: "5%" }}
+          />
           {/* {<TouchableHighlight onPress={this.clearIdentityStorage}><Text>Clear identity storage</Text></TouchableHighlight>} */}
-          <Text style={Styles.centralHeader}>Select a Profile</Text>
+          <Text style={Styles.centralHeader}>
+            {this.state.simpleLayout
+              ? "Select a Profile"
+              : "Enter Your Password"}
+          </Text>
           <Dropdown
             containerStyle={Styles.standardWidthBlock}
             labelExtractor={(item, index) => {
@@ -280,7 +289,7 @@ class Login extends Component {
               </View>
             </View>
           )}
-        </View>
+        </ScrollView>
       </TouchableWithoutFeedback>
     );
   }

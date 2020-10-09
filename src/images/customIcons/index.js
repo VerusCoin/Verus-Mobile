@@ -19,6 +19,7 @@ import BankBuildingBlack from './bankBuildingBlack.png';
 import TransactionLogos from './transactions/index'
 
 import VerusPayLogo from './verusPay.svg'
+import VerusLogo from './VerusLogo.svg'
 import AddCoinLogo from './coinAdd.svg'
 
 export {
@@ -41,7 +42,8 @@ export {
   BankBuildingBlack,
   TransactionLogos,
   VerusPayLogo,
-  AddCoinLogo
+  AddCoinLogo,
+  VerusLogo
 };
 
 export default Open;

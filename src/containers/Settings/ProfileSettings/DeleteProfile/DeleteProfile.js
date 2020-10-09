@@ -180,8 +180,7 @@ class DeleteProfile extends Component {
           {this.authenticatePwd()}
           <View style={Styles.wideBlock}>
             <CheckBox
-              title="I confirm that I would like to delete my profile, and acknowledge that 
-              this action cannot be reversed."
+              title="I confirm that I would like to delete my profile, and acknowledge that this action cannot be reversed."
               checked={this.state.confirmSwitch}
               textStyle={Styles.defaultText}
               onPress={() => this.setState({confirmSwitch: !this.state.confirmSwitch})}
