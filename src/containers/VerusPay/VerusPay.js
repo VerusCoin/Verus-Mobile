@@ -495,8 +495,15 @@ class VerusPay extends Component {
     const { balances } = this.props
     const channel = activeCoin.dominant_channel != null ? activeCoin.dominant_channel : ELECTRUM
 
-    if (activeCoin && balances.results && balances.results[channel]) {
-      const spendableBalance = BigNumber(balances.results[channel][activeCoin.id].confirmed);
+    if (
+      activeCoin &&
+      balances.results &&
+      balances.results[channel] &&
+      balances.results[channel][activeCoin.id]
+    ) {
+      const spendableBalance = BigNumber(
+        balances.results[channel][activeCoin.id].confirmed
+      );
 
       if (amount.isGreaterThan(spendableBalance)) {
         this.errorHandler(INSUFFICIENT_FUNDS);
