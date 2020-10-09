@@ -206,16 +206,15 @@ class ReceiveCoin extends Component {
         _errors = true
       }
 
-      if (!(_amount.toString()) || _amount.toString().length < 1) {
-        this.handleError("Required field", "amount")
-        _errors = true
-      } else if (!(isNumber(_amount))) {
-        this.handleError("Invalid amount", "amount")
-        _errors = true
-      } else if (Number(_amount) <= 0) {
-        this.handleError("Enter an amount greater than 0", "amount")
-        _errors = true
-      }
+      if (!(!(_amount.toString()) || _amount.toString().length < 1 || _amount == 0)) {
+        if (!(isNumber(_amount))) {
+          this.handleError("Invalid amount", "amount")
+          _errors = true
+        } else if (Number(_amount) <= 0) {
+          this.handleError("Enter an amount greater than 0", "amount")
+          _errors = true
+        }
+      } 
 
       if (!_errors) {
         this.createQRString(_selectedCoin, _amount, _address, _memo)

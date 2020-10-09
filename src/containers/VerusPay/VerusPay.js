@@ -423,7 +423,7 @@ class VerusPay extends Component {
   };
 
   handleMissingAmount = (coinObj, address, memo) => {
-    this.canFillAmount(memo, address).then(res => {
+    this.canFillAmount(coinObj.id, memo, address).then(res => {
       if (res) {
         if (coinObj.apps.hasOwnProperty("wallet")) {
           let wallet = coinObj.apps.wallet;
@@ -539,14 +539,15 @@ class VerusPay extends Component {
     );
   };
 
-  canFillAmount = (memo, address) => {
+  canFillAmount = (currency, memo, address) => {
     return DelayedAsyncAlert(
       "Missing Amount",
       "This invoice does not specify an amount, in order to proceed you " +
         "will need to fill in the amount yourself, would you like to continue?" +
+        (currency ? ("\n\n Currency: " + currency) : null) +
         "\n\n To: " +
         address +
-        (memo ? "\n\n Memo: " + memo : null),
+        (memo ? ("\n\n Memo: " + memo) : ''),
       [
         {
           text: "No, take me back",
