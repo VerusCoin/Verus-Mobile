@@ -130,19 +130,6 @@ export const coinsList = {
     tags: [],
     proto: 'erc20'
   },
-  busd: {
-    id: "BUSD",
-    currency_id: '0x4fabb145d64652a948d72533023f6e7a623c7c53',
-    system_id: '.eth',
-    display_ticker: 'BUSD',
-    display_name: "Binance USD",
-    description: "",
-    compatible_channels: [ERC20, GENERAL],
-    dominant_channel: ERC20,
-    decimals: ETHERS,
-    tags: [],
-    proto: 'erc20'
-  },
   ven: {
     id: "VEN",
     currency_id: '0xd850942ef8811f2a866692a623011bde52a462c1',
