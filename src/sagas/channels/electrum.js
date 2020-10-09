@@ -1,4 +1,4 @@
-import { all, takeLatest, put } from "redux-saga/effects";
+import { all, takeEvery, put } from "redux-saga/effects";
 import {
   INIT_ELECTRUM_CHANNEL_START,
   INIT_ELECTRUM_CHANNEL_FINISH,
@@ -6,7 +6,7 @@ import {
 
 export default function * electrumSaga() {
   yield all([
-    takeLatest(INIT_ELECTRUM_CHANNEL_START, handleFinishElectrumInit),
+    takeEvery(INIT_ELECTRUM_CHANNEL_START, handleFinishElectrumInit),
   ]);
 }
 

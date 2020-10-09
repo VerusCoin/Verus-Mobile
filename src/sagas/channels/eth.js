@@ -1,4 +1,4 @@
-import { all, takeLatest, put } from "redux-saga/effects";
+import { all, takeEvery, put } from "redux-saga/effects";
 import {
   INIT_ETH_CHANNEL_START,
   INIT_ETH_CHANNEL_FINISH,
@@ -6,7 +6,7 @@ import {
 
 export default function * ethSaga() {
   yield all([
-    takeLatest(INIT_ETH_CHANNEL_START, handleFinishEthInit),
+    takeEvery(INIT_ETH_CHANNEL_START, handleFinishEthInit),
   ]);
 }
 
