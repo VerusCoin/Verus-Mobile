@@ -281,9 +281,7 @@ class Overview extends Component {
     return txs.sort((a, b) => {
       a = Array.isArray(a) ? a[0] : a
       b = Array.isArray(b) ? b[0] : b
-
-      console.log(a.timestamp)
-
+      
       if (a.timestamp == null) return 1
       else if (b.timestamp == null) return -1
       else if (b.timestamp == a.timestamp) return 0
