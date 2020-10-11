@@ -108,7 +108,7 @@ class SendResult extends Component {
         activeUser,
         toAddress,
         amount,
-        this.props.channel,
+        coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM,
         { defaultFee: fee, network, verifyMerkle, verifyTxid }
       );
 
@@ -177,7 +177,6 @@ class SendResult extends Component {
     if (route === "Send") {
       data = {
         coinObj: coinObj,
-        balance: this.props.balances.results.confirmed,
         activeAccount: this.props.activeAccount
       }
     } else {
@@ -387,15 +386,7 @@ class SendResult extends Component {
 }
 
 const mapStateToProps = (state) => {
-  const chainTicker = state.coins.activeCoin.id
-  const channel = state.coinMenus.activeSubWallets[chainTicker].channel
-
   return {
-    channel,
-    balances: {
-      results: state.ledger.balances[channel][chainTicker],
-      errors: state.errors[API_GET_BALANCES][channel][chainTicker],
-    },
     activeAccount: state.authentication.activeAccount,
     coinSettings: state.settings.coinSettings,
   }
