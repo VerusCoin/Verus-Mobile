@@ -353,7 +353,7 @@ class ConfirmSend extends Component {
                     this.state.coinObj.id}
                 </Text>
               </View>
-              {this.state.note && (
+              {this.state.note != null && this.state.note.length > 0 ? (
                 <View style={Styles.infoTableRow}>
                   <Text style={Styles.infoTableHeaderCell}>Note:</Text>
                   <View style={Styles.infoTableCell}>
@@ -362,8 +362,8 @@ class ConfirmSend extends Component {
                     </Text>
                   </View>
                 </View>
-              )}
-              {!this.state.utxoCrossChecked && (
+              ) : null}
+              {!this.state.utxoCrossChecked ? (
                 <View style={Styles.infoTableRow}>
                   <Text style={Styles.infoTableHeaderCell}>Warning:</Text>
                   <View style={Styles.infoTableCell}>
@@ -379,7 +379,7 @@ class ConfirmSend extends Component {
                     </Text>
                   </View>
                 </View>
-              )}
+              ) : null}
             </View>
           </View>
         </ScrollView>
