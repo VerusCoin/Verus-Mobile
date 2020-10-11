@@ -124,13 +124,27 @@ class ConfirmSend extends Component {
         clearInterval(this.loadingInterval);
 
         if (feeTakenFromAmount) {
-          if (res.result.unshieldedFunds.isEqualTo(BigNumber(0))) {
+          if (
+            res.result.unshieldedFunds != null &&
+            res.result.unshieldedFunds.isEqualTo(BigNumber(0))
+          ) {
             Alert.alert(
-              "Warning", 
-              "Your transaction amount has been changed to " + finalTxAmount + " " + coinObj.id + 
-              " as you do not have sufficient funds to cover your submitted amount of " + res.result.amountSubmitted + " " + coinObj.id + 
-              " + a fee of " + res.result.fee + " " + coinObj.id + ".");
-          } else {
+              "Warning",
+              "Your transaction amount has been changed to " +
+                finalTxAmount +
+                " " +
+                coinObj.id +
+                " as you do not have sufficient funds to cover your submitted amount of " +
+                res.result.amountSubmitted +
+                " " +
+                coinObj.id +
+                " + a fee of " +
+                res.result.fee +
+                " " +
+                coinObj.id +
+                "."
+            );
+          } else if (res.result.unshieldedFunds != null) {
             Alert.alert(
               "Warning",
               "Your transaction amount has been changed to " +
