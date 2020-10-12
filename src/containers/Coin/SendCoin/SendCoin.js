@@ -233,7 +233,7 @@ class SendCoin extends Component {
         if (!toAddress || toAddress.length < 1) {
           this.handleFormError("Required field", "toAddress");
           _errors = true;
-        } else if (toAddress.length < 34 || toAddress.length > 42) {
+        } else if (toAddress.length < 33 || toAddress.length > 42) {
           this.handleFormError("Invalid address", "toAddress");
           _errors = true;
         }

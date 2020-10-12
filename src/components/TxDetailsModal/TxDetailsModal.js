@@ -29,7 +29,9 @@ class TxDetailsModal extends Component {
 
   openExplorer = () => {
     let url = `${explorers[this.props.activeCoinID]}/tx/${
-      this.props.txData.txid
+      this.props.activeCoinID === "BTC"
+        ? this.decodeBtcTxid(this.props.txData.txid)
+        : this.props.txData.txid
     }`;
 
     Linking.canOpenURL(url).then(supported => {
@@ -63,14 +65,13 @@ class TxDetailsModal extends Component {
     let txid = this.props.txData.txid;
     let txidArr = txid.split(",");
 
-    for (let i = 0; i < txidArr.length; i++) {
-      txidArr[i] = Number(txidArr[i]).toString(16);
-      if (!isNaN(Number(txidArr[i])) && txidArr[i].length === 1) {
-        txidArr[i] = "0" + txidArr[i];
-      }
+    try {
+      return Buffer.from(txidArr).toString('hex')
+    } catch(e) {
+      console.error(e)
+      Alert.alert("Error", "Error decoding transaction ID.")
+      return '-'
     }
-
-    return txidArr.join("");
   };
 
   render() {

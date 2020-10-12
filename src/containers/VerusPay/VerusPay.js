@@ -469,8 +469,6 @@ class VerusPay extends Component {
     return new Promise((resolve, reject) => {
       getRecommendedBTCFees().then(res => {
         if (res) {
-          console.log("BTC FEES:");
-          console.log(res);
           this.setState(
             {
               btcFees: res,
@@ -646,10 +644,10 @@ class VerusPay extends Component {
               })
               .catch(error => {
                 this.setState({ loading: false });
-                console.warn(error);
+                console.warn(error)
               })
           );
-          if (this.state.loadingBTCFees) promises.push(this.updateBtcFees);
+          if (this.state.loadingBTCFees) promises.push(this.updateBtcFees());
           finishPromise();
         }
       );

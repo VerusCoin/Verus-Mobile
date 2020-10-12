@@ -194,7 +194,11 @@ class ConfirmSend extends Component {
     } catch (e) {
       this.setState({
         loading: false,
-        err: e.message ? e.message : "Unknown error while building transaction, double check form data"
+        err: e.message
+          ? e.message.includes("has no matching Script")
+            ? `"${address}" is not a valid address.`
+            : e.message
+          : "Unknown error while building transaction, double check form data",
       });
       console.log(e)
     }

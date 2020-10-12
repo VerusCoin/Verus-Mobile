@@ -67,7 +67,6 @@ class SendResult extends Component {
   async componentDidMount() {
     const coinObj = this.props.route.params.data.coinObj
     const activeUser = this.props.route.params.data.activeUser
-    const address = this.props.route.params.data.address
     const toAddress = this.props.route.params.data.toAddress
     const fromAddress = this.props.route.params.data.fromAddress
     const amount = BigNumber(this.props.route.params.data.amount)
@@ -308,12 +307,20 @@ class SendResult extends Component {
           </View>
         </ScrollView>
         <View style={Styles.footerContainer}>
-          <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <StandardButton
-              color={Colors.linkButtonColor}
-              title="DETAILS"
-              onPress={() => this.openExplorer()}
-            />
+          <View
+            style={
+              explorers[this.state.coinObj.id]
+                ? Styles.standardWidthSpaceBetweenBlock
+                : Styles.standardWidthCenterBlock
+            }
+          >
+            {explorers[this.state.coinObj.id] && (
+              <StandardButton
+                color={Colors.linkButtonColor}
+                title="DETAILS"
+                onPress={() => this.openExplorer()}
+              />
+            )}
             <StandardButton
               color={Colors.linkButtonColor}
               title="HOME"
