@@ -125,7 +125,7 @@ class ConfirmSend extends Component {
 
         if (feeTakenFromAmount) {
           if (
-            res.result.unshieldedFunds != null &&
+            res.result.unshieldedFunds == null ||
             res.result.unshieldedFunds.isEqualTo(BigNumber(0))
           ) {
             Alert.alert(

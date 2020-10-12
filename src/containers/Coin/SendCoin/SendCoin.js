@@ -31,6 +31,7 @@ import store from "../../../store"
 import { API_GET_FIATPRICE, API_GET_BALANCES } from "../../../utils/constants/intervalConstants"
 import BigNumber from "bignumber.js"
 import { VerusPayLogo } from "../../../images/customIcons"
+import Colors from "../../../globals/colors"
 
 class SendCoin extends Component {
   constructor(props) {
@@ -49,8 +50,11 @@ class SendCoin extends Component {
       activeCoinsForUser: {},
       formErrors: { toAddress: null, amount: null },
       spendableBalance: 0,
+      addressCheckEnabled: true,
+      addressCheckSecretCounter: 0
     };
 
+    this.ADDR_CHECK_SECRET_COUNTER_TRIGGER = 10
     this._unsubscribeFocus = null;
   }
 
@@ -207,6 +211,19 @@ class SendCoin extends Component {
     });
   };
 
+  incrementSecretCounter = () => {
+    this.setState({
+      addressCheckSecretCounter: this.state.addressCheckSecretCounter + 1
+    }, () => {
+      if (this.state.addressCheckSecretCounter >= this.ADDR_CHECK_SECRET_COUNTER_TRIGGER) {
+        Alert.alert("Info", "Simple address validation disabled.")
+        this.setState({
+          addressCheckEnabled: false
+        })
+      }
+    })
+  }
+
   //TODO: Add fee to Bitcoin object in CoinData
 
   validateFormData = () => {
@@ -233,7 +250,7 @@ class SendCoin extends Component {
         if (!toAddress || toAddress.length < 1) {
           this.handleFormError("Required field", "toAddress");
           _errors = true;
-        } else if (toAddress.length < 33 || toAddress.length > 42) {
+        } else if (this.state.addressCheckEnabled && (toAddress.length < 33 || toAddress.length > 42)) {
           this.handleFormError("Invalid address", "toAddress");
           _errors = true;
         }
@@ -338,7 +355,7 @@ class SendCoin extends Component {
                 }}
               >
                 <TouchableOpacity onPress={this._verusPay}>
-                  <VerusPayLogo width={40} height={40}/>
+                  <VerusPayLogo width={40} height={40} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -379,12 +396,27 @@ class SendCoin extends Component {
                 </Text>
               </View>
             ) : (
-              <View style={Styles.fullWidthFlexCenterBlock}>
-                <StandardButton
-                  onPress={this.validateFormData}
-                  title="SEND"
-                />
-              </View>
+              <React.Fragment>
+                <View style={Styles.fullWidthFlexCenterBlock}>
+                  <StandardButton
+                    onPress={this.validateFormData}
+                    title="SEND"
+                  />
+                </View>
+                <View style={Styles.fullWidth}>
+                  <TouchableWithoutFeedback
+                    onPress={this.incrementSecretCounter}
+                  >
+                    <View
+                      style={{
+                        ...Styles.fullWidth,
+                        height: 40,
+                        backgroundColor: Colors.secondaryColor,
+                      }}
+                    />
+                  </TouchableWithoutFeedback>
+                </View>
+              </React.Fragment>
             )}
           </ScrollView>
         </View>
