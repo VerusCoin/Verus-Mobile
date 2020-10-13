@@ -68,23 +68,6 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
   let currentHeight
   let unshieldedFunds = BigNumber(0)
 
-  /*if (__DEV__) {
-    if (verifyMerkle) {
-      console.log("verifyMerkle is true, going to verify merkle roots")
-    }
-
-    if (verifyTxid) {
-      console.log("verifyTxid is true, going to verify txids")
-    } else if (coinObj.id === 'KMD' && !overrideKmdInterest) {
-      console.log("verifyTxid is false but overrideKmdInterest is false as well and the coin is KMD, so still going to verify txid to fetch data for interest calculation")
-    }
-
-    if (overrideKmdInterest) {
-      console.log("overridekmdinterest is true, going to override kmd interest calculations")
-    }
-  }*/
-  
-
   return new Promise((resolve, reject) => {
     getUnspent(coinObj, activeUser)
     .then(getUnspentRes => {

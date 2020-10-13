@@ -125,7 +125,7 @@ class ConfirmSend extends Component {
 
         if (feeTakenFromAmount) {
           if (
-            res.result.unshieldedFunds != null &&
+            res.result.unshieldedFunds == null ||
             res.result.unshieldedFunds.isEqualTo(BigNumber(0))
           ) {
             Alert.alert(
@@ -194,7 +194,11 @@ class ConfirmSend extends Component {
     } catch (e) {
       this.setState({
         loading: false,
-        err: e.message ? e.message : "Unknown error while building transaction, double check form data"
+        err: e.message
+          ? e.message.includes("has no matching Script")
+            ? `"${address}" is not a valid address.`
+            : e.message
+          : "Unknown error while building transaction, double check form data",
       });
       console.log(e)
     }

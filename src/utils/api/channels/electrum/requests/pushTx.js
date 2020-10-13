@@ -38,7 +38,6 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
   let { defaultFee, network, verifyMerkle, verifyTxid } = params
   value = coinsToSats(value)
 
-  console.log("Value passed to tx preflight: " + value)
   return new Promise((resolve, reject) => {
     getUnspentFormatted(coinObj, activeUser, verifyMerkle, verifyTxid)
     .then((res) => {
@@ -192,11 +191,6 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
           outputs.length === 2) {
         _change = outputs[1].value;
       }
-
-      //outputs[0].value = outputs[0].value - defaultFee;
-
-      //console.log('adjusted outputs, value - default fee =>');
-      //console.log(outputs);
 
       // check if any outputs are unverified
       if (inputs &&

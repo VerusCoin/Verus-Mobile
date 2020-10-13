@@ -42,6 +42,15 @@ export const settings = (state = {
             privateAddrs: coinObj.compatible_channels.includes(DLIGHT) ? DEFAULT_PRIVATE_ADDRS: 0,
             ...coinObj.coinSettings,
           }
+        } else {
+          newCoinSettings[coinObj.id] = {
+            verificationLvl: MAX_VERIFICATION, 
+            verificationLock: false,
+            channels: coinObj.compatible_channels,
+            privateAddrs: coinObj.compatible_channels.includes(DLIGHT) ? DEFAULT_PRIVATE_ADDRS: 0,
+            ...state.coinSettings[coinObj.id],
+            ...coinObj.coinSettings,
+          }
         }
 
         if (coinObj.overrideCoinSettings && Object.keys(coinObj.overrideCoinSettings).length > 0) {

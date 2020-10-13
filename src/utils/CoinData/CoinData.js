@@ -72,7 +72,8 @@ export const explorers = {
   OOT: 'https://explorer.utrum.io',
   VRSC: 'https://explorer.veruscoin.io',
   ETH: 'https://etherscan.io',
-  TST: 'https://ropsten.etherscan.io'
+  TST: 'https://ropsten.etherscan.io',
+  BTC: 'https://www.blockchain.com/btc'
 }
 
 export const CoinLogos = {
