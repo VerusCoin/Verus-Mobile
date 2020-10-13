@@ -7,6 +7,7 @@ import { resolveSequentially } from '../../../../promises'
 import { networks } from 'bitgo-utxo-lib'
 import { coinsToSats, satsToCoins, kmdCalcInterest, truncateDecimal } from '../../../../math'
 import { ELECTRUM } from '../../../../constants/intervalConstants'
+import BigNumber from 'bignumber.js'
 
 export const getUnspent = (coinObj, activeUser) => {
   const callType = 'listunspent'
@@ -141,10 +142,19 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
 
             if (!decodedTx) throw new Error('Can\'t decode transaction')
 
-            if (satsToCoins(Number(formattedUtxo.amountSats)) >= 10 &&
-                decodedTx.format.locktime > 0) {
-              interest = kmdCalcInterest(decodedTx.format.locktime, formattedUtxo.amountSats)
-              formattedUtxos[index].interestSats = coinsToSats(Number(truncateDecimal(interest, 8)))
+            if (
+              satsToCoins(
+                BigNumber(formattedUtxo.amountSats)
+              ).isGreaterThanOrEqualTo(BigNumber(10)) &&
+              decodedTx.format.locktime > 0
+            ) {
+              interest = kmdCalcInterest(
+                decodedTx.format.locktime,
+                formattedUtxo.amountSats
+              );
+              formattedUtxos[index].interestSats = coinsToSats(
+                Number(truncateDecimal(interest, 8))
+              );
             }
           }
         }

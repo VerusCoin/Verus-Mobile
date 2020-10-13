@@ -6,6 +6,8 @@ import { DLIGHT, ELECTRUM, GENERAL } from '../constants/intervalConstants';
 
 import { ENABLE_VERUS_IDENTITIES } from '../../../env/main.json'
 
+import CoinLogoSvgs from '../../images/cryptologo/index'
+
 const getDefaultApps = (coinName) => {
   return ({
     defaultApp: 'wallet',
@@ -73,30 +75,27 @@ export const explorers = {
   TST: 'https://ropsten.etherscan.io'
 }
 
-export const defaultAssetsPath = {
-  coinLogo: {
-    // btc protocol
-    bch: require('../../images/cryptologo/default/btc/bch.png'),		
-    vrsc: require('../../images/cryptologo/default/btc/vrsc.png'),
-    dash: require('../../images/cryptologo/default/btc/dash.png'),	
-    oot: require('../../images/cryptologo/default/btc/oot.png'),		
-    btc: require('../../images/cryptologo/default/btc/btc.png'),		
-    dgb: require('../../images/cryptologo/default/btc/dgb.png'),		
-    doge: require('../../images/cryptologo/default/btc/doge.png'),	
-    kmd: require('../../images/cryptologo/default/btc/kmd.png'),		
-    zec: require('../../images/cryptologo/default/btc/zec.png'),
-    zectest: require('../../images/cryptologo/default/btc/zectest.png'),
-    zilla: require('../../images/cryptologo/default/btc/zilla.png'),	
-    ltc: require('../../images/cryptologo/default/btc/ltc.png'),		
-    ccl: require('../../images/cryptologo/default/btc/ccl.png'),
-    default: require('../../images/cryptologo/default_chain.png'),
-    
-    // web3 protocol
-    bat: require('../../images/cryptologo/default/web3/bat.png'),
-    tst: require('../../images/cryptologo/default/web3/eth.png'),
-    dai: require('../../images/cryptologo/default/web3/dai.png'),
-    eth: require('../../images/cryptologo/default/web3/eth.png'),
-  },
+export const CoinLogos = {
+  // btc protocol
+  bch: CoinLogoSvgs.btc.BCH,		
+  vrsc: CoinLogoSvgs.btc.VRSC,
+  dash: CoinLogoSvgs.btc.DASH,	
+  oot: CoinLogoSvgs.btc.OOT,		
+  btc: CoinLogoSvgs.btc.BTC,		
+  dgb: CoinLogoSvgs.btc.DGB,		
+  doge: CoinLogoSvgs.btc.DOGE,	
+  kmd: CoinLogoSvgs.btc.KMD,		
+  zec: CoinLogoSvgs.btc.ZEC,
+  zectest: CoinLogoSvgs.btc.ZECTEST,
+  zilla: CoinLogoSvgs.btc.ZILLA,	
+  ltc: CoinLogoSvgs.btc.LTC,		
+  ccl: CoinLogoSvgs.btc.CCL,
+  
+  // web3 protocol
+  bat: CoinLogoSvgs.web3.BAT,
+  tst: CoinLogoSvgs.web3.ETH,
+  dai: CoinLogoSvgs.web3.DAI,
+  eth: CoinLogoSvgs.web3.ETH,
 };
 
 //To make flatlist render faster
@@ -109,7 +108,6 @@ export const findCoinObj = (id, userName) => {
 
   if (coinObj) {
     coinObj.serverList = coinObj.compatible_channels.includes(ELECTRUM) ? electrumServers[id.toLowerCase()].serverList : []
-    coinObj.logo = defaultAssetsPath.coinLogo[id.toLowerCase()];
     coinObj.users = userName != null ? [userName] : [];
     
     if (!coinObj.compatible_channels.includes(DLIGHT)) {
@@ -156,7 +154,7 @@ export const createCoinObj = (id, name, description, defaultFee, serverList, use
     id: id,
     display_name: name,
     description: description,
-    logo: defaultAssetsPath.coinLogo.default,
+    logo: CoinLogos.default,
     fee: defaultFee,
     serverList: serverList ? serverList : [],
     users: [userName],

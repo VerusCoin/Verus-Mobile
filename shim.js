@@ -1,3 +1,5 @@
+const { Platform } = require('react-native');
+
 if (typeof __dirname === 'undefined') global.__dirname = '/'
 if (typeof __filename === 'undefined') global.__filename = ''
 if (typeof process === 'undefined') {
@@ -56,12 +58,23 @@ FileReader.prototype.readAsArrayBuffer = function (blob) {
 	this._error = null;
 	const fr = new FileReader();
 	fr.onloadend = () => {
-		const content = atob(fr.result.substr("data:application/octet-stream".length));
+		let result = fr.result
+
+		if (
+      result.substr(0, "data:application/octet-stream".length) ===
+        "data:application/octet-stream" &&
+      Platform.OS === "android"
+    ) {
+			result = result.replace("data:application/octet-stream", "data:application/json")
+    }
+
+		const content = atob(result.substr("data:application/octet-stream".length));
 		const buffer = new ArrayBuffer(content.length);
 		const view = new Uint8Array(buffer);
 		view.set(Array.from(content).map(c => c.charCodeAt(0)));
 		this._result = buffer;
 		this._setReadyState(this.DONE);
 	};
+	
 	fr.readAsDataURL(blob);
 }

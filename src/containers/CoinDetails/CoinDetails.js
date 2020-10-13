@@ -25,6 +25,7 @@ import { NavigationActions } from '@react-navigation/compat'
 import Styles from '../../styles/index'
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import Colors from "../../globals/colors";
+import { CoinLogos } from "../../utils/CoinData/CoinData";
 
 class CoinDetails extends Component {
   constructor(props) {
@@ -106,21 +107,20 @@ class CoinDetails extends Component {
   }
   
   render() {
+    const Logo = CoinLogos[this.state.fullCoinData.id.toLowerCase()]
+
     return (
       <View style={Styles.defaultRoot}>
         <View style={Styles.centralRow}>
           <View style={Styles.fullWidthFlexCenterBlock}>
-            <Image
-              style={{
-                width: 75,
-                height: 75,
-                resizeMode: "contain",
-              }}
-              source={this.state.fullCoinData.logo}
-            />
+            {Logo != null && (
+              <Logo height={75} width={75} />
+            )}
           </View>
         </View>
-        <Text style={Styles.greyStripeHeader}>{this.state.fullCoinData.display_name}</Text>
+        <Text style={Styles.greyStripeHeader}>
+          {this.state.fullCoinData.display_name}
+        </Text>
         <ScrollView
           style={Styles.fullWidth}
           contentContainerStyle={Styles.horizontalCenterContainer}
@@ -132,7 +132,10 @@ class CoinDetails extends Component {
           </View>
           <View>
             {this.state.loading ? (
-              <ActivityIndicator animating={this.state.loading} size="large" />
+              <ActivityIndicator
+                animating={this.state.loading}
+                size="large"
+              />
             ) : this.state.isActive ? (
               <Text style={Styles.centralSuccessHeader}>COIN ADDED</Text>
             ) : (

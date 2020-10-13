@@ -218,13 +218,20 @@ const mapStateToProps = (state) => {
     activeApp: state.coins.activeApp,
     activeSection: state.coins.activeSection,
     coinMenuFocused: state.coins.coinMenuFocused,
-    selectedSubWallet: state.coinMenus.activeSubWallets[state.coins.activeCoin.id],
+    selectedSubWallet:
+      state.coinMenus.activeSubWallets[state.coins.activeCoin.id],
     allSubWallets: state.coinMenus.allSubWallets[state.coins.activeCoin.id],
     balances: {
-      results: channel != null ? bigNumberifyBalance(state.ledger.balances[channel][chainTicker]) : null,
-      errors: channel != null ? state.errors[API_GET_BALANCES][channel][chainTicker] : null,
+      results:
+        channel != null && state.ledger.balances[channel][chainTicker] != null
+          ? bigNumberifyBalance(state.ledger.balances[channel][chainTicker])
+          : null,
+      errors:
+        channel != null
+          ? state.errors[API_GET_BALANCES][channel][chainTicker]
+          : null,
     },
-  }
+  };
 };
 
 export default connect(mapStateToProps)(withNavigationFocus(CoinMenus));

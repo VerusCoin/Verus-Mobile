@@ -78,7 +78,7 @@ class TxDetailsModal extends Component {
       txData,
       animationType,
       visible,
-      txLogo,
+      TxLogo,
       cancel,
       parsedAmount,
       activeCoinID
@@ -106,7 +106,7 @@ class TxDetailsModal extends Component {
           contentContainerStyle={Styles.centerContainer}
         >
           <View style={Styles.tallHeaderContainer}>
-            <Image style={{ width: 50, height: 50 }} source={txLogo} />
+            <TxLogo width={50} height={50} />
             <Text style={Styles.centralHeader}>
               {"Transaction Details"}
             </Text>

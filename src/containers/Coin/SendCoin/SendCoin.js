@@ -19,20 +19,18 @@ import {
   ActivityIndicator,
   TouchableWithoutFeedback,
   TouchableOpacity,
-  ScrollView,
-  Image
+  ScrollView
 } from "react-native"
-import { satsToCoins, isNumber } from '../../../utils/math'
+import { isNumber } from '../../../utils/math'
 import { connect } from "react-redux";
 import { getRecommendedBTCFees } from '../../../utils/api/channels/general/callCreators'
 import { removeSpaces } from '../../../utils/stringUtils'
 import Styles from '../../../styles/index'
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import store from "../../../store"
-import { API_GET_FIATPRICE, API_GET_BALANCES, ELECTRUM } from "../../../utils/constants/intervalConstants"
+import { API_GET_FIATPRICE, API_GET_BALANCES } from "../../../utils/constants/intervalConstants"
 import BigNumber from "bignumber.js"
-
-const VERUSPAY_LOGO_DIR = require('../../../images/customIcons/verusPay.png')
+import { VerusPayLogo } from "../../../images/customIcons"
 
 class SendCoin extends Component {
   constructor(props) {
@@ -340,13 +338,7 @@ class SendCoin extends Component {
                 }}
               >
                 <TouchableOpacity onPress={this._verusPay}>
-                  <Image
-                    source={VERUSPAY_LOGO_DIR}
-                    style={{
-                      width: 40,
-                      height: 40,
-                    }}
-                  />
+                  <VerusPayLogo width={40} height={40}/>
                 </TouchableOpacity>
               </View>
             </View>
