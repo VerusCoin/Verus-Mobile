@@ -51,16 +51,19 @@ import AttestationDetails from '../../containers/Identity/Home/AttestationDetail
 import ClaimManager from '../../containers/Identity/PersonalInfo/ClaimManager';
 import MoveIntoCategory from '../../containers/Identity/PersonalInfo/ClaimManager/MoveIntoCategory';
 import AddIdentity from '../../containers/Identity/AddIdentity';
-import KYCstart from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCstart';
+import KYCStart from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCStart';
 import KYCInfoScreen from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCInfoScreen';
 import KYCIdentityInfo from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCIdentityInfo';
 import KYCIdentityInput from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCIdentityInput';
 import KYCAddressInput from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCAddressInput';
 import KYCIdentityFotoInfo from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCIdentityFotoInfo';
 import KYCfoto from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCfoto';
+import KYCDocumentType from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCDocumentType';
 import KYCphotoAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCphotoAddress';
 import KYCEndInfoScreen from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCEndInfoScreen';
 import KYCAddressInfo from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCAddressInfo';
+import KYCLogin from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCLogin';
+import KYCDocumentUpload from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCDocumentUpload';
 
 const WALLET = 'wallet';
 
@@ -381,8 +384,13 @@ function MainStackScreens() {
       />
 
       <MainStack.Screen
-        name="KYCStartScreen"
-        component={KYCstart}
+        name="KYCStart"
+        component={KYCStart}
+      />
+
+      <MainStack.Screen
+        name="KYCLogin"
+        component={KYCLogin}
       />
 
       <MainStack.Screen
@@ -390,6 +398,14 @@ function MainStackScreens() {
         component={KYCfoto}
       />
 
+      <MainStack.Screen
+        name="KYCDocumentType"
+        component={KYCDocumentType}
+      />
+      <MainStack.Screen
+        name="KYCDocumentUpload"
+        component={KYCDocumentUpload}
+      />
       <MainStack.Screen
         name="KYCphotoAddress"
         component={KYCphotoAddress}

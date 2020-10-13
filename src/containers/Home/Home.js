@@ -9,7 +9,7 @@
 */
 
 import React, { Component } from "react";
-import { ListItem, Divider } from "react-native-elements";
+import { ListItem, Divider, Button } from "react-native-elements";
 import {
   View,
   Text,
@@ -29,19 +29,11 @@ import { connect } from 'react-redux';
 import { truncateDecimal } from '../../utils/math';
 import { CommonActions } from '@react-navigation/native';
 import Styles from '../../styles/index'
-import { ENABLE_VERUS_IDENTITIES, ENABLE_FIAT_GATEWAY } from '../../../env/main.json'
+import Colors from "../../globals/colors";
 import Store from '../../store/index'
-import {
-  API_GET_FIATPRICE,
-  API_GET_BALANCES,
-  API_GET_INFO,
-  ELECTRUM,
-  DLIGHT,
-  GENERAL
-} from "../../utils/constants/intervalConstants";
-import { USD } from '../../utils/constants/currencies'
+import { API_GET_FIATPRICE, API_GET_ADDRESSES, API_GET_BALANCES, API_GET_INFO, ELECTRUM, DLIGHT, GENERAL, USD } from "../../utils/constants/intervalConstants";
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
-import { arrayToObject } from "../../utils/objectManip";
+import VerusLightClient from 'react-native-verus-light-client';
 
 const CONNECTION_ERROR = "Connection Error"
 
@@ -93,7 +85,6 @@ class Home extends Component {
       ],
     })
 
-    this.props.navigation.closeDrawer();
     this.props.navigation.dispatch(resetAction)
   }
 
@@ -106,6 +97,9 @@ class Home extends Component {
 
     this.refresh();
   }
+
+
+
 
   updateProps = (promiseArray) => {
     return new Promise((resolve, reject) => {
@@ -142,26 +136,19 @@ class Home extends Component {
     let _totalFiatBalance = 0
     let coinBalance = 0
     const balances = props.balances.public
-    const { rates, displayCurrency, activeCoinsForUser } = props
+    const { rates, displayCurrency } = props
     const balanceErrors = props.balances.errors.public
 
-    activeCoinsForUser.map(coinObj => {
-      const key = coinObj.id
-      const channel = coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM
-
-      if (rates[key] && rates[key][displayCurrency]) {
+    for (let key in rates) {
+      if (rates[key][displayCurrency]) {
         const price = rates[key][displayCurrency]
 
-        coinBalance =
-          balances[channel].hasOwnProperty(key) &&
-          !balanceErrors[channel][key] &&
-          !isNaN(balances[channel][key].confirmed)
-            ? truncateDecimal(balances[channel][key].confirmed, 4)
-            : 0;
+        coinBalance = balances.hasOwnProperty(key) && !balanceErrors[key] && !isNaN(balances[key].confirmed) ?
+        truncateDecimal(balances[key].confirmed, 4) : 0
 
         _totalFiatBalance += coinBalance*price
       }
-    })
+    }
 
     return _totalFiatBalance.toFixed(2)
   }
@@ -194,11 +181,15 @@ class Home extends Component {
     let navigation = this.props.navigation
     this.props.dispatch(setActiveSectionBuySellCrypto('buy-crypto'))
 
-    navigation.navigate("KYCStartScreen");
+    navigation.navigate("BuySellCryptoMenus", {title: "Buy"});
   }
 
   handleScanToVerify = () => {
     this.props.navigation.navigate('ScanBadge');
+  }
+
+  onKYCScreen = () => {
+    this.props.navigation.navigate("KYCLogin");
   }
 
   renderCoinList = () => {
@@ -226,7 +217,7 @@ class Home extends Component {
             containerStyle={Styles.bottomlessListItemContainer}
           />
         </TouchableOpacity>
-        {ENABLE_VERUS_IDENTITIES &&
+        {global.ENABLE_VERUS_IDENTITIES &&
           activeCoinsForUser.some(
             (coin) => coin.id === "VRSC" || coin.id === "ZECTEST"
           ) && (
@@ -264,75 +255,69 @@ class Home extends Component {
         <FlatList
           data={activeCoinsForUser}
           scrollEnabled={false}
-          renderItem={({ item, index }) => {
-            const channel = item.dominant_channel ? item.dominant_channel : ELECTRUM
-            const _balances = balances.public[channel]
-            const balanceErrors = balances.errors.public[channel]
-
-            return (
-              <TouchableOpacity
-                onPress={() => {
-                  this._openCoin(activeCoinsForUser[index], item);
-                }}
-              >
-                <ListItem
-                  roundAvatar
-                  title={
-                    <Text style={Styles.listItemLeftTitleDefault}>
-                      {item.name}
-                    </Text>
-                  }
-                  subtitle={
-                    _balances.hasOwnProperty(item.id) ||
-                    balanceErrors[item.id]
-                      ? balanceErrors[item.id] ||
-                        isNaN(_balances[item.id].confirmed)
-                        ? CONNECTION_ERROR
-                        : truncateDecimal(
-                            _balances[item.id].confirmed,
-                            4
-                          ) +
-                          " " +
-                          item.id
-                      : null
-                  }
-                  leftAvatar={{
-                    source: item.logo,
-                  }}
-                  subtitleStyle={
-                    (_balances.hasOwnProperty(item.id) ||
-                      balanceErrors[item.id]) &&
-                    (balanceErrors[item.id] ||
-                      isNaN(_balances[item.id].confirmed))
-                      ? Styles.listItemSubtitleError
-                      : null
-                  }
-                  containerStyle={Styles.bottomlessListItemContainer}
-                  rightTitleStyle={Styles.listItemRightTitleDefault}
-                  rightTitle={
-                    (!_balances.hasOwnProperty(item.id) ||
-                    balanceErrors[item.id] ||
-                    isNaN(_balances[item.id].confirmed)
-                      ? "-"
+          renderItem={({ item, index }) => (
+            <TouchableOpacity
+              onPress={() => {
+                this._openCoin(activeCoinsForUser[index], item);
+              }}
+            >
+              <ListItem
+                roundAvatar
+                title={
+                  <Text style={Styles.listItemLeftTitleDefault}>
+                    {item.name}
+                  </Text>
+                }
+                subtitle={
+                  balances.public.hasOwnProperty(item.id) ||
+                  balances.errors.public[item.id]
+                    ? balances.errors.public[item.id] ||
+                      isNaN(balances.public[item.id].confirmed)
+                      ? CONNECTION_ERROR
                       : truncateDecimal(
-                          (rates[item.id] &&
-                          rates[item.id][displayCurrency] != null
-                            ? rates[item.id][displayCurrency]
-                            : 0) * _balances[item.id].confirmed,
-                          2
-                        )) +
-                    " " +
-                    displayCurrency
-                  }
-                />
-              </TouchableOpacity>
-            );
-          }}
+                          balances.public[item.id].confirmed,
+                          4
+                        ) +
+                        " " +
+                        item.id
+                    : null
+                }
+                leftAvatar={{
+                  source: item.logo,
+                }}
+                subtitleStyle={
+                  (balances.public.hasOwnProperty(item.id) ||
+                    balances.errors.public[item.id]) &&
+                  (balances.errors.public[item.id] ||
+                    isNaN(balances.public[item.id].confirmed))
+                    ? Styles.listItemSubtitleDefault
+                    : null
+                }
+                containerStyle={Styles.bottomlessListItemContainer}
+                rightTitleStyle={Styles.listItemRightTitleDefault}
+                rightTitle={
+                  (!balances.public.hasOwnProperty(item.id) ||
+                  balances.errors.public[item.id] ||
+                  isNaN(balances.public[item.id].confirmed)
+                    ? "-"
+                    : truncateDecimal(
+                        (rates[item.id] &&
+                        rates[item.id][displayCurrency] != null
+                          ? rates[item.id][displayCurrency]
+                          : 0) * balances.public[item.id].confirmed,
+                        2
+                      )) +
+                  " " +
+                  displayCurrency
+                }
+              />
+            </TouchableOpacity>
+          )}
           extraData={balances.public}
           keyExtractor={(item) => item.id}
         />
         <Divider style={Styles.defaultDivider} />
-        {ENABLE_FIAT_GATEWAY && (
+        {global.ENABLE_FIAT_GATEWAY && (
           <TouchableOpacity onPress={this._buySellCrypto}>
             <ListItem
               title={
@@ -362,9 +347,9 @@ class Home extends Component {
         </TouchableOpacity>
       </ScrollView>
     );
-  }
+}
 
-  render() {
+render() {
     return (
       <View style={Styles.defaultRoot}>
         <Text style={Styles.fiatLabel}>
@@ -374,6 +359,10 @@ class Home extends Component {
         </Text>
         <Text style={Styles.boldListHeader}>{"Portfolio"}</Text>
         {this.renderCoinList()}
+        <Button
+          title="go to kyc screen"
+          onPress={this.onKYCScreen}
+          />
       </View>
     );
   }
@@ -384,27 +373,23 @@ const mapStateToProps = (state) => {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
     activeAccount: state.authentication.activeAccount,
+    info: {
+      public: state.ledger.info[ELECTRUM],
+      private: state.ledger.info[DLIGHT],
+    },
     balances: {
-      public: arrayToObject(
-        Object.keys(state.ledger.balances),
-        (curr, key) => state.ledger.balances[key],
-        true
-      ),
+      public: state.ledger.balances[ELECTRUM],
       private: state.ledger.balances[DLIGHT],
       errors: {
-        public: arrayToObject(
-          Object.keys(state.errors[API_GET_BALANCES]),
-          (curr, key) => state.errors[API_GET_BALANCES][key],
-          true
-        ),
+        public: state.errors[API_GET_BALANCES][ELECTRUM],
         private: state.errors[API_GET_BALANCES][DLIGHT],
-      },
+      }
     },
     //needsUpdate: state.ledger.needsUpdate,
     rates: state.ledger.rates[GENERAL],
-    displayCurrency:
-      state.settings.generalWalletSettings.displayCurrency || USD,
-  };
+    displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD
+  }
 };
+
 
 export default connect(mapStateToProps)(Home);
