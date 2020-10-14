@@ -80,8 +80,8 @@ def keystorePropertiesFile = rootProject.file("keystore.properties");
  */
 
 project.ext.react = [
-    entryFile: "index.js",
-    enableHermes: false,  // clean and rebuild if changing
+        entryFile   : "index.js",
+        enableHermes: false,  // clean and rebuild if changing
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
@@ -128,12 +128,12 @@ android {
 
     defaultConfig {
         applicationId "com.verusmobile"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 29
         multiDexEnabled true
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionRevision * 100 + versionBuild
         missingDimensionStrategy 'react-native-camera', 'general'
-        if ( versionBuild > 0) {
+        if (versionBuild > 0) {
             versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta-${versionBuild}"
         } else {
             versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta"
@@ -144,18 +144,13 @@ android {
         }
     }
 
-    configurations {
-        all {
-            exclude group: 'org.json', module: 'json'
-        }
-    }
 
     dexOptions
-    {
-        incremental false
-        javaMaxHeapSize "2048M"
-        preDexLibraries = false
-    }
+            {
+                incremental false
+                javaMaxHeapSize "2048M"
+                preDexLibraries = false
+            }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -164,14 +159,14 @@ android {
 
     signingConfigs {
         release {
-            if ( keystorePropertiesFile.exists()) {
+            if (keystorePropertiesFile.exists()) {
                 def keystoreProperties = new Properties()
                 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-                    storeFile file(keystoreProperties['storeFile'])
-                    storePassword keystoreProperties['storePassword']
-                    keyAlias keystoreProperties['keyAlias']
-                    keyPassword keystoreProperties['keyPassword']
-                }
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
             if (System.getenv("CI_SERVER") && System.getenv("RELEASE")) {
                 storeFile file(System.getenv('MYAPP_RELEASE_STORE_FILE'))
                 storePassword System.getenv('MYAPP_RELEASE_STORE_PASSWORD')
@@ -195,7 +190,7 @@ android {
         release {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
-	    signingConfig signingConfigs.release
+            signingConfig signingConfigs.release
         }
     }
     // applicationVariants are e.g. debug, release
@@ -213,14 +208,14 @@ dependencies {
     implementation "com.facebook.react:react-native:+"  // From node_modules
     implementation 'com.android.support:multidex:1.0.3'
 
- if (enableHermes) {
-      def hermesPath = "../../node_modules/hermes-engine/android/";
+    if (enableHermes) {
+        def hermesPath = "../../node_modules/hermes-engine/android/";
 
 
-      debugImplementation files(hermesPath + "hermes-debug.aar")
-      releaseImplementation files(hermesPath + "hermes-release.aar")
+        debugImplementation files(hermesPath + "hermes-debug.aar")
+        releaseImplementation files(hermesPath + "hermes-release.aar")
     } else {
-      implementation jscFlavor
+        implementation jscFlavor
     }
 
 }
