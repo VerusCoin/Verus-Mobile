@@ -85,24 +85,24 @@ class KYCIdentityInput extends Component {
     PrimeTrustInterface.getContacts().then((contacts) => {
       if(contacts.data.data[0] != undefined){
         existingContact = contacts.data.data[0];
-        
+
         console.log("existing contact:",existingContact);
         this.setState({contactId : existingContact.id});
         if(this.state.name == "") this.setState({name : existingContact.attributes["name"]});
         if(this.state.taxCountry == "") this.setState({taxCountry : existingContact.attributes["tax-country"]});
         if(this.state.socialSecurityNumber == "") this.setState({socialSecurityNumber : existingContact.attributes["tax-id-number"]});
         if(this.state.gender == "") this.setState({gender : existingContact.attributes["sex"]});
-        
+
         //retrieve the phone number
         let existingPhoneNumberId = contacts.data.data[0].relationships["primary-phone-number"].data.id;
-        let existingPhoneNumber = contacts.data.included.find(item => 
+        let existingPhoneNumber = contacts.data.included.find(item =>
           item.type == "phone-numbers" && item.id == existingPhoneNumberId
         );
         if(existingPhoneNumberId) {
           this.setState({phoneNumberID : existingPhoneNumberId});
           if(this.state.phoneNumber == "") this.setState({phoneNumber : existingPhoneNumber.attributes.number});
         }
-        
+
         if(this.state.dateOfBirth == "") this.setState({dateOfBirth : existingContact.attributes["date-of-birth"]});
       }
       console.log("after State:",this.state)
@@ -198,7 +198,7 @@ class KYCIdentityInput extends Component {
   doSubmit = async () => {
     //create a contact for the id
 
-    //retrieve the current user to get the email and 
+    //retrieve the current user to get the email and
     let userDetail = PrimeTrustInterface.user.data[0].attributes;
     //to create the contact we need an address too, so need to redirect to the address form passing the parameters
     let contact = {
@@ -214,11 +214,27 @@ class KYCIdentityInput extends Component {
     this.props.navigation.navigate("KYCAddressInput", {
       contact: contact
     });
-    
+
 
   };
 
   render() {
+
+/*
+<View style={{ ...Styles.topPadding, width: '100%' }}>
+  <Input
+      label="Social Security/ Tax Number:"
+      labelStyle={Styles.formLabel}
+      inputStyle={Styles.normalKYCText}
+      onChangeText={(text) => this.setState({ socialSecurityNumber: text })}
+      value={this.state.socialSecurityNumber}
+      autoCorrect={false}
+      inputStyle={Styles.formInputContainer}
+    />
+</View>
+
+
+*/
 
     return (
       <TouchableWithoutFeedback onPress={() =>{
@@ -251,7 +267,7 @@ class KYCIdentityInput extends Component {
             />
           </View>
           <ScrollView>
-            <View style={styles.mainInputView}>
+            <View style={Styles.mainInputView}>
               <Spinner
                 visible={this.props.isFetching}
                 textContent="Loading..."
@@ -265,11 +281,12 @@ class KYCIdentityInput extends Component {
             <View style={{...Styles.wideCenterBlockInput, ...Styles.topPadding}}>
                 <Input
                   label="Legal Name:"
-                  labelStyle={styles.formLabel}
+                  labelStyle={Styles.formLabel}
+                  inputStyle={Styles.normalKYCText}
                   onChangeText={(text) => this.setState({ name: text })}
                   value={this.state.name}
                   autoCorrect={false}
-                  inputStyle={styles.formInputContainer}
+                  inputStyle={Styles.formInputContainer}
                 />
               </View>
               <View style={Styles.wideCenterBlockInput90}>
@@ -286,11 +303,11 @@ class KYCIdentityInput extends Component {
                     mask={"[0000]-[00]-[00]"}
                     style={{ ...Styles.formInput, borderBottomWidth: 1}}
                   />
-                  <View style={styles.containerCalendarButton} >
+                  <View style={Styles.containerCalendarButton} >
                     <TouchableOpacity onPress={this.showCalendar}>
                       <Image
                         source={Calendar}
-                        style={styles.icon}
+                        style={Styles.icon}
                         resizeMode="contain"
                       />
                     </TouchableOpacity>
@@ -307,70 +324,70 @@ class KYCIdentityInput extends Component {
                       style={{backgroundColor: 'white'}} />
                   }
                 </View>
-              
               <View>
-                <View style={styles.dropdownInput}>
+                <View style={{ ...Styles.topPadding}}>
                     <Dropdown
                       labelExtractor={(item) => item.value}
                       valueExtractor={(item) => item.value}
                       label="Gender: "
-                      labelTextStyle={{ fontFamily: 'Avenir-Book'}}
-                      labelFontSize={13}
+                      labelTextStyle={{ fontWeight: '700' }}
                       data={[{ value: 'male' },{ value: 'female' },{ value: 'other' } ]}
                       onChangeText={(value) => this.setState({ gender: value })}
                       textColor={Colors.quaternaryColor}
                       selectedItemColor={Colors.quaternaryColor}
                       baseColor={Colors.quaternaryColor}
                       value={this.state.gender}
-                      inputContainerStyle={styles.dropdownInputContainer}
+                      inputContainerStyle={Styles.dropdownInputContainer}
                       pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                     />
                 </View>
               </View>
+
               <View>
-                  <View style={styles.dropdownInput}>
+                    <View style={{ ...Styles.topPadding}}>
                     <Dropdown
                       labelExtractor={(item) => item.value}
                       valueExtractor={(item) => item.value}
                       label="Tax Country: "
                       labelTextStyle={{ fontWeight: '700' }}
-                      labelFontSize={13}
                       data={PRIMETRUST_COUNTRIES}
                       onChangeText={(value) => this.setState({ taxCountry: value })}
                       textColor={Colors.quaternaryColor}
                       selectedItemColor={Colors.quaternaryColor}
                       baseColor={Colors.quaternaryColor}
                       value={this.state.taxCountry ? `${this.state.taxCountry}` : ''}
-                      inputContainerStyle={styles.dropdownInputContainer}
+                      inputContainerStyle={Styles.dropdownInputContainer}
                       pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                     />
                 </View>
-              </View>            
-              <View>
-              <Input
-                  label="Social Security/ Tax Number:"
-                  labelStyle={styles.formLabel}
-                  onChangeText={(text) => this.setState({ socialSecurityNumber: text })}
-                  value={this.state.socialSecurityNumber}
-                  autoCorrect={false}
-                  inputStyle={styles.formInputContainer}
-                />
               </View>
               </TouchableOpacity>
               </View>
-              <View>
-                <View>
+              <View style={{...Styles.wideCenterBlockInput, ...Styles.topPadding}}>
+                <View >
+                  <Input
+                      label="Social Security/ Tax Number:"
+                      labelStyle={Styles.formLabel}
+                      inputStyle={Styles.normalKYCText}
+                      onChangeText={(text) => this.setState({ socialSecurityNumber: text })}
+                      value={this.state.socialSecurityNumber}
+                      autoCorrect={false}
+                      inputStyle={Styles.formInputContainer}
+                    />
+                </View>
+                <View style={{ ...Styles.topPadding }}>
                   <Input
                       label="Phone Number including country code:"
-                      labelStyle={styles.formLabel}
+                      labelStyle={Styles.formLabel}
+                      inputStyle={Styles.normalKYCText}
                       onChangeText={(text) => this.setState({ phoneNumber: text })}
                       value={this.state.phoneNumber}
                       autoCorrect={false}
-                      inputStyle={styles.formInputContainer}
+                      inputStyle={Styles.formInputContainer}
                     />
                  </View>
-              </View>   
-              <View style={styles.buttonContainerBottom}>
+              </View>
+              <View style={Styles.buttonContainerBottom}>
                 <Button
                 titleStyle={Styles.whiteText}
                 buttonStyle={Styles.defaultButtonClearWhite}

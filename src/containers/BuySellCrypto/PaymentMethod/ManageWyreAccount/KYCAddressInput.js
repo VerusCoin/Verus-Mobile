@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import {
   ScrollView,
   View,
+  Text,
   TouchableWithoutFeedback,
   Keyboard,
   Alert
@@ -38,6 +39,7 @@ class KYCAddressInput extends Component {
     }
 
     const individualAddress = typeof this.props.individualResidenceAddress === 'undefined' ? {} : this.props.individualResidenceAddress.value;
+
     //load the contact if there is one on the user
     this.state= {
       streetAddress1: individualAddress.street1,
@@ -57,15 +59,9 @@ class KYCAddressInput extends Component {
     };
 
     let existingContact = null;
-    let updatedContact = props.route.params.contact !=undefined ? this.state.contact = props.route.params.contact : null;
+    let updatedContact = props.route.params? props.route.params.contact? this.state.contact = props.route.params.contact : {} : {};
 
-    if(props.route.params.contact != undefined){
-      this.state.contact = props.route.params.contact;
-
-    } else {
-      //need to load the user and update the address
-      this.state.contact = {};
-    }
+    this.state.contact = props.route.params? props.route.params.contact? props.route.params.contact : {} : {};
 
     let existingAddress = null;
     PrimeTrustInterface.getAddresses().then((addresses) => {
@@ -85,11 +81,11 @@ class KYCAddressInput extends Component {
           if(this.state.country == undefined) this.setState({country : existingAddress["country"]});
          }
       }
-      console.log("state:",this.state);  
+      console.log("state:",this.state);
     });
-    
 
-    
+
+
   }
 
   handleError = (error, field) => {
@@ -102,7 +98,7 @@ class KYCAddressInput extends Component {
     Keyboard.dismiss();
     console.log("handleSunmit",this.state);
     if(!this.validateFormData()){
-      
+
         this.doSubmit();
 
     } else {
@@ -172,18 +168,18 @@ class KYCAddressInput extends Component {
       }
 
       return inputError;
-      
+
     });
   }
 
   doSubmit = async () => {
 
-    //create a contact if there isnt one on the user currently and then add it in 
-    
+    //create a contact if there isnt one on the user currently and then add it in
+
     //need to check if there is an existing contact
     //if there is an existing contact then update that contact
     //let contacts = await PrimeTrustInterface.getContacts();
-    
+
     //create a new contact
     let contact = this.state.contact;
     console.log(this.state);
@@ -218,7 +214,7 @@ class KYCAddressInput extends Component {
         contact.phoneCountry,
         contact.phoneNumber,address);
         console.log("Updated Contact",updatedContact);
-      
+
     } else {
       console.log("Creating new contact",contact.email,
       contact.name,
@@ -236,7 +232,7 @@ class KYCAddressInput extends Component {
         contact.taxCountry,
         contact.phoneCountry,
         contact.phoneNumber,address);
-  
+
     }
     if(updatedContact.success){
       console.log("updated Contact result",updatedContact);
@@ -245,41 +241,42 @@ class KYCAddressInput extends Component {
     } else {
       console.log("Errors",updatedContact.errors);
     }
-      
-    
+
+
 
 
   };
 
   render() {
-    const scaleFactorY = 2;
-    const scalefatorX = 2;
+
 
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <View style={styles.mainInputView}>
-          <View style={Styles.centralRow}>
-            <Badge
-              status="success"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
-              containerStyle={Styles.horizontalPaddingBox10}
-            />
-            <Badge
-              status="success"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
-              containerStyle={Styles.horizontalPaddingBox10}
-            />
-            <Badge
-              status="success"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
-              containerStyle={Styles.horizontalPaddingBox10} 
-            />
-            <Badge
-              status="primary"
-              badgeStyle={ {scaleX: scalefatorX, scaleY: scaleFactorY } }
-              containerStyle={Styles.horizontalPaddingBox10}
-            />
-          </View>
+          <View style={Styles.mainInputView}>
+            <View style={{ ...Styles.secondaryBackground, paddingTop: '5%' }}>
+              <View style={Styles.progressBarContainer}>
+                <Badge
+                  status="success"
+                  badgeStyle={Styles.progessBadgeDone}
+                  containerStyle={Styles.horizontalPaddingBox10}
+                />
+                <Badge
+                  status="success"
+                  badgeStyle={Styles.progessBadgeDone}
+                  containerStyle={Styles.horizontalPaddingBox10}
+                />
+                <Badge
+                  status="success"
+                  badgeStyle={Styles.progessBadgeDone}
+                  containerStyle={Styles.horizontalPaddingBox10}
+                />
+                <Badge
+                  status="primary"
+                  badgeStyle={Styles.progessBadgeTodo}
+                  containerStyle={Styles.horizontalPaddingBox10}
+                />
+              </View>
+            </View>
             <Spinner
               visible={this.props.isFetching}
               textContent="Loading..."
@@ -287,62 +284,67 @@ class KYCAddressInput extends Component {
             />
             <ScrollView>
             <View style={Styles.root}>
+              <View style={{...Styles.padding}}>
+                <Text  style={Styles.boldKYCText}>Enter your address</Text>
+              </View>
+              <View style={Styles.padding}>
+                <Text style={{ ...Styles.normalKYCText, textAlign: 'left' }}>In order to comply with regulations, enter your primary residential address. Please do not use a PO box or business address</Text>
+              </View>
+              <View style={Styles.wideCenterBlockInput}>
               <Input
-                label="Street Address 1"
-                labelStyle={styles.formLabel}
+                label="Street Address"
+                labelStyle={Styles.formLabel}
+                containerStyle={{paddingTop: 24}}
                 onChangeText={(text) => this.setState({ streetAddress1: text })}
-                value={this.state.streetAddress1}
+                value={this.state.streetAddress}
                 autoCorrect={false}
-                inputStyle={styles.formInputContainer}
+                inputStyle={Styles.formInputContainer}
               />
             </View>
-            <View style={Styles.root}>
 
+              <View style={Styles.wideCenterBlockInput}>
               <Input
                 label="Street Address 2"
-                labelStyle={styles.formLabel}
-
+                labelStyle={Styles.formLabel}
+                containerStyle={{paddingTop: 24}}
                 onChangeText={(text) => this.setState({ streetAddress2: text })}
-                value={this.state.streetAddress2}
+                value={this.state.streetAddress}
                 autoCorrect={false}
-                inputStyle={styles.formInputContainer}
+                inputStyle={Styles.formInputContainer}
               />
             </View>
+            <View style={Styles.wideCenterBlockInput}>
+                  <Input
+                    label="City"
+                    labelStyle={Styles.formLabel}
+                    onChangeText={(text) => this.setState({ city: text })}
+                    value={this.state.city}
+                    autoCorrect={false}
+                    inputStyle={styles.formInputContainer}
+                  />
+                </View>
             <View>
-              <Input
-                label="City"
-                labelStyle={styles.fromLabel}
-
-                onChangeText={(text) => this.setState({ city: text })}
-                value={this.state.city}
-                autoCorrect={false}
-                inputStyle={styles.formInputContainer}
-              />
-            </View>
-            <View>
-              <View style={styles.dropdownInput}>
+                <View style={Styles.wideCenterBlockInput90}>
                 <Dropdown
                   labelExtractor={(item) => item.value}
                   valueExtractor={(item) => item.value}
                   label="State: "
-                  labelTextStyle={{ fontFamily: 'Avenir-Book'}}
-                  labelFontSize={13}
+                  labelTextStyle={Styles.formLabel}
                   data={STATES}
                   onChangeText={(value) => this.setState({ region: value })}
                   textColor={Colors.quaternaryColor}
                   selectedItemColor={Colors.quaternaryColor}
                   baseColor={Colors.quaternaryColor}
                   value={this.state.region == null? 'N/A': this.state.region}
-                  inputContainerStyle={styles.dropdownInputContainer}
+                  inputContainerStyle={Styles.dropdownInputContainer}
                   pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                 />
               </View>
             </View>
-            <View>
+            <View style={Styles.wideCenterBlockInput}>
               <Input
-                label="Postal Code"
-                labelStyle={styles.formLabel}
-
+                label="postal Code"
+                labelStyle={Styles.formLabel}
                 onChangeText={(text) => this.setState({ postalCode: text })}
                 value={this.state.postalCode}
                 autoCorrect={false}
@@ -350,25 +352,24 @@ class KYCAddressInput extends Component {
               />
             </View>
             <View>
-              <View style={styles.dropdownInput}>
+            <View style={Styles.wideCenterBlockInput90}>
                 <Dropdown
                   labelExtractor={(item) => item.value}
                   valueExtractor={(item) => item.value}
                   label="Country: "
-                  labelTextStyle={{ fontWeight: '700' }}
-                  labelFontSize={13}
+                  labelTextStyle={Styles.formLabel}
                   data={PRIMETRUST_COUNTRIES}
                   onChangeText={(value) => this.setState({ country: value })}
                   textColor={Colors.quaternaryColor}
                   selectedItemColor={Colors.quaternaryColor}
                   baseColor={Colors.quaternaryColor}
                   value={this.state.country ? `${this.state.country}` : ''}
-                  inputContainerStyle={styles.dropdownInputContainer}
+                  inputContainerStyle={Styles.dropdownInputContainer}
                   pickerStyle={{backgroundColor: Colors.tertiaryColor}}
                 />
               </View>
             </View>
-            <View style={styles.buttonContainerBottom}>
+            <View style={Styles.buttonContainerBottom}>
             <Button
             titleStyle={Styles.whiteText}
             buttonStyle={Styles.defaultButtonClearWhite}
@@ -387,6 +388,7 @@ class KYCAddressInput extends Component {
               }
             />
             </View>
+          </View>
             </ScrollView>
           </View>
       </TouchableWithoutFeedback>

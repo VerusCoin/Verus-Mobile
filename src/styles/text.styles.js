@@ -211,15 +211,11 @@ export default text = {
   listItemRightTitleDefault: {
     color: Colors.quinaryColor,
   },
-  listItemRightTitleDefaultError: {
-    color: Colors.quinaryColor,
-    paddingVertical: 2,
+  listItemSubtitleError: {
+    color: 'rgba(206,68,70,1)',
   },
   listItemSubtitleDefault: {
     color: 'gray',
-  },
-  listItemSubtitleError: {
-    color: 'rgba(206,68,70,1)',
   },
   fiatLabel: {
     backgroundColor: Colors.tertiaryColor,

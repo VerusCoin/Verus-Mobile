@@ -51,7 +51,7 @@ import AttestationDetails from '../../containers/Identity/Home/AttestationDetail
 import ClaimManager from '../../containers/Identity/PersonalInfo/ClaimManager';
 import MoveIntoCategory from '../../containers/Identity/PersonalInfo/ClaimManager/MoveIntoCategory';
 import AddIdentity from '../../containers/Identity/AddIdentity';
-import KYCStart from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCStart';
+import KYCStart from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCstart';
 import KYCInfoScreen from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCInfoScreen';
 import KYCIdentityInfo from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCIdentityInfo';
 import KYCIdentityInput from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/KYCIdentityInput';
@@ -124,7 +124,7 @@ function MainScreens() {
         swipeEnabled: false
       }}
     >
-      <MainDrawer.Screen 
+      <MainDrawer.Screen
         name="MainStack"
         component={MainStackScreens}
       />
