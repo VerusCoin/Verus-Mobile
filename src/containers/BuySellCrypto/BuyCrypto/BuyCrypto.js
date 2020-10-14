@@ -4,7 +4,7 @@
 */
 
 import React, { Component } from "react"
-import Button1 from "../../../symbols/button1"
+import StandardButton from "../../../components/StandardButton"
 import {
   View,
   ScrollView,
@@ -14,30 +14,34 @@ import {
   TouchableWithoutFeedback,
  } from "react-native"
 import { ListItem } from "react-native-elements";
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { FormLabel, FormInput, FormValidationMessage, Icon, TouchableOpacity } from 'react-native-elements'
 import { connect } from 'react-redux'
 import { Dropdown } from 'react-native-material-dropdown'
 import { isNumber } from '../../../utils/math';
 import { calculatePrice } from '../../../utils/price';
-import { SUPPORTED_CRYPTOCURRENCIES, SUPPORTED_FIAT_CURRENCIES, SUPPORTED_PAYMENT_METHODS } from '../../../utils/constants'
 import {
-  setCoinRates,
-  everythingNeedsUpdate,
-  addExistingCoin,
+  SUPPORTED_CRYPTOCURRENCIES,
+  SUPPORTED_FIAT_CURRENCIES,
+  SUPPORTED_PAYMENT_METHODS,
+} from "../../../utils/constants/constants";
+import {
+  //everythingNeedsUpdate,
+  addCoin,
   setUserCoins,
-  addKeypair,
-  transactionsNeedUpdate,
-  needsUpdate,
-  updateCoinBalances
+  addKeypairs,
+  expireData,
+  //transactionsNeedUpdate,
+  //updateOneBalance,
+  //balancesNeedUpdate
 } from '../../../actions/actionCreators'
-import { findCoinObj } from '../../../utils/CoinData'
+import { findCoinObj } from '../../../utils/CoinData/CoinData'
 import styles from './BuyCrypto.styles'
 import DelayedAsyncAlert from '../../../utils/delayedAsyncAlert'
 import DelayedAlert from '../../../utils/delayedAlert';
 import Colors from '../../../globals/colors';
-import { ENABLE_WYRE } from '../../../utils/constants'
+import { ENABLE_FIAT_GATEWAY } from '../../../../env/main.json'
 
 import {
   BankBuildingBlack, Bank,
@@ -54,225 +58,287 @@ import {
 } from '../../../selectors/paymentMethods';
 import { selectWyrePaymentMethod } from '../../../selectors/authentication';
 import hasPaymentMethod from '../../../utils/paymentMethod';
+import { API_GET_FIATPRICE, API_GET_BALANCES, API_GET_INFO, API_GET_TRANSACTIONS, ELECTRUM } from "../../../utils/constants/intervalConstants";
+import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
+import store from "../../../store";
+import { activateChainLifecycle } from "../../../actions/actions/intervals/dispatchers/lifecycleManager";
+
 class BuyCrypto extends Component {
   constructor(props) {
     super(props);
     const initialToCurr = this.props.activeCoinsForUser.find(coin => {
       return SUPPORTED_CRYPTOCURRENCIES.map(x => x.value).includes(coin.id);
-     })
+    });
     this.state = {
       fromCurr: SUPPORTED_FIAT_CURRENCIES[0].value,
-      toCurr: initialToCurr ? initialToCurr.id : 'Select...',
-      fromVal: '',
-      toVal: '',
+      toCurr: initialToCurr ? initialToCurr.id : "Select...",
+      fromVal: "",
+      toVal: "",
       paymentMethod: SUPPORTED_PAYMENT_METHODS[0],
       errors: { fromVal: null, toVal: null },
       loading: false,
       loadingOverlay: false,
-      addingCoin: false,
+      addingCoin: false
     };
+
+    this._unsubscribeFocus = null
   }
+
   componentDidMount() {
     this.props.getExchangeRates();
+
+    this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
+      this.props.getExchangeRates();
+    });
+  }
+
+  componentWillUnmount() {
+    this._unsubscribeFocus()
   }
 
   componentWillReceiveProps(newProps) {
-    if(this.props.buy != newProps.buy) {
+    if (this.props.buy != newProps.buy) {
       this.setState({
         fromCurr: this.state.toCurr,
-        toCurr: this.state.fromCurr,
+        toCurr: this.state.fromCurr
       });
     }
   }
 
-  // back = () => {
-  //   this.props.navigation.dispatch(NavigationActions.back())
-  // }
-
-  static navigationOptions = ({ navigation }) => {
+  static navigationOptions = ({ route }) => {
     return {
-      title: typeof(navigation.state.params)==='undefined' ||
-      typeof(navigation.state.params.title) === 'undefined' ?
-      'undefined': navigation.state.params.title,
+      title:
+        typeof route.params === "undefined" ||
+        typeof route.params.title === "undefined"
+          ? "undefined"
+          : route.params.title
     };
   };
 
   _handleSubmit = () => {
     Keyboard.dismiss();
-    if (!hasPaymentMethod(this.props.paymentMethod)){
-      DelayedAlert('Please Manage Account first')
-      this.props.navigation.navigate('SelectPaymentMethod', {
-        onSelect: this.switchPaymentMethod,
+    if (!hasPaymentMethod(this.props.paymentMethod)) {
+      DelayedAlert("Please Manage Account first");
+      this.props.navigation.navigate("SelectPaymentMethod", {
+        onSelect: this.switchPaymentMethod
       });
-    }else {
-      this.validateFormData()
+    } else {
+      this.validateFormData();
     }
-  }
+  };
 
   handleError = (error, field) => {
-    let _errors = this.state.errors
-    _errors[field] = error
+    let _errors = this.state.errors;
+    _errors[field] = error;
 
-    this.setState({errors: _errors})
-  }
+    this.setState({ errors: _errors });
+  };
 
   forceUpdate = () => {
-    //TODO: Figure out why screen doesnt always update if everything is called seperately
-
-    /*this.props.dispatch(transactionsNeedUpdate(this.props.activeCoin.id, this.props.needsUpdate.transanctions))
-    this.props.dispatch(needsUpdate("balances"))
-    this.props.dispatch(needsUpdate("rates"))*/
-    this.props.dispatch(everythingNeedsUpdate())
+    const coinObj = this.props.activeCoin
+    this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE))
+    this.props.dispatch(expireData(coinObj.id, API_GET_BALANCES))
+    this.props.dispatch(expireData(coinObj.id, API_GET_INFO))
+    this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS))
 
     this.refresh()
   }
 
   refresh = () => {
-    const _activeCoinsForUser = this.props.activeCoinsForUser
-
-    let promiseArray = []
-
-    if(this.props.needsUpdate.rates) {
-      console.log("Rates need update, pushing update to transaction array")
-      if (!this.state.loading) {
-        this.setState({ loading: true });
-      }
-      promiseArray.push(setCoinRates(_activeCoinsForUser))
-    }
-
-    this.updateProps(promiseArray)
-  }
-
-  updateProps = (promiseArray) => {
-    return new Promise((resolve, reject) => {
-      Promise.all(promiseArray)
-        .then((updatesArray) => {
-          if (updatesArray.length > 0) {
-            for (let i = 0; i < updatesArray.length; i++) {
-              if(updatesArray[i]) {
-                this.props.dispatch(updatesArray[i])
-              }
-            }
-            if (this.state.loading) {
-              this.setState({ loading: false });
-            }
-            resolve(true)
-          }
-          else {
-            resolve(false)
-          }
-        })
-    })
-  }
-
-  canAddCoin = (coinTicker) => {
-    return DelayedAsyncAlert(
-      'Coin Inactive',
-      'In order to buy ' + coinTicker + ', you will need to add it to your wallet. Would you like to do so now?',
-      [
-        {
-          text: 'No, take me back',
-          onPress: () => Promise.resolve(false),
-          style: 'cancel',
-        },
-        {text: 'Yes', onPress: () => Promise.resolve(true)},
-      ],
-      {
-        cancelable: false,
-      },
-    )
-  }
-
-  setFromVal = (value) => {
-    const converted = calculatePrice(value, this.state.fromCurr, this.state.toCurr, this.props.rates)
-
-    this.setState({fromVal: value, toVal: (isNumber(converted)) ? converted : this.state.toVal})
-  }
-
-  setToVal = (value) => {
-    const converted = calculatePrice(value, this.state.fromCurr, this.state.toCurr, this.props.rates)
-
-    this.setState({toVal: value, fromVal: (isNumber(converted)) ? converted : this.state.fromVal})
-  }
-
-  handleAddCoin = (coinTicker) => {
-    this.setState({ addingCoin: true });
-    return new Promise((resolve, reject) => {
-      addExistingCoin(findCoinObj(coinTicker), this.props.activeCoinList, this.props.activeAccount.id)
-      .then(response => {
-        if (response) {
-          this.props.dispatch(response)
-          this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
-          this.props.dispatch(addKeypair(this.props.activeAccount.wifKey, coinTicker, this.props.activeAccount.keys))
-          this.props.dispatch(transactionsNeedUpdate(coinTicker, this.props.needsUpdate.transanctions))
-
-          this.props.dispatch(needsUpdate("balances"))
-          this.setState({ addingCoin: false });
-
-          resolve(true)
-        }
-        else {
-          this.errorHandler("Error adding coin")
-        }
+    this.setState({ loading: true }, () => {
+      const updates = [API_GET_FIATPRICE]
+      Promise.all(updates.map(async (update) => {
+        await conditionallyUpdateWallet(store.getState(), this.props.dispatch, this.props.activeCoin.id, update)
+      })).then(() => {
+        this.setState({ loading: false })
+      })
+      .catch(error => {
+        this.setState({ loading: false })
+        console.error(error)
       })
     })
-  }
+  };
 
-  switchFromCurr = (curr) => {
-    this.setState({fromCurr: curr})
-  }
-
-  handleUpdates = () => {
-    let promiseArray = []
-
-    if(this.props.needsUpdate.balances) {
-      console.log("Balances need update, pushing update to transaction array")
-      if (!this.state.loading) {
-        this.setState({ loading: true });
+  canAddCoin = coinTicker => {
+    return DelayedAsyncAlert(
+      "Coin Inactive",
+      "In order to buy " +
+        coinTicker +
+        ", you will need to add it to your wallet. Would you like to do so now?",
+      [
+        {
+          text: "No, take me back",
+          onPress: () => Promise.resolve(false),
+          style: "cancel"
+        },
+        { text: "Yes", onPress: () => Promise.resolve(true) }
+      ],
+      {
+        cancelable: false
       }
-      promiseArray.push(updateCoinBalances(
-        this.props.balances,
-        this.props.activeCoinsForUser,
-        this.props.activeAccount)
-      )
-    }
+    );
+  };
 
-    if(this.state.coinObj && this.state.coinObj.id === 'BTC' && !this.state.loadingBTCFees) {
-      this.setState({ loadingBTCFees: true });
-    }
+  setFromVal = value => {
+    const converted = calculatePrice(
+      value,
+      this.state.fromCurr,
+      this.state.toCurr,
+      this.props.rates
+    );
 
-    return this.updateProps(promiseArray)
-  }
+    this.setState({
+      fromVal: value,
+      toVal: isNumber(converted) ? converted : this.state.toVal
+    });
+  };
 
-  switchToCurr = (coin) => {
-    const coinIsAlreadyAddedToWallet = (this.props.activeCoinsForUser.find(coinObj => {
-      return SUPPORTED_CRYPTOCURRENCIES.map(x => x.value).includes(coinObj.id)
-      }))
-      if (this.props.buy && !coinIsAlreadyAddedToWallet) {
-      this.canAddCoin(coin)
-        .then((res) => {
-          if (res) {
-          this.setState({loadingOverlay: true, addingCoin: true}, () => {
-              this.handleAddCoin(coin)
-              .then((res) => {
-                if (res) {
-                  this.handleUpdates()
-                  .then(() => {
-                    this.setState({toCurr: coin, loadingOverlay: false, addingCoin: false})
-                  })
-                }
+  setToVal = value => {
+    const converted = calculatePrice(
+      value,
+      this.state.fromCurr,
+      this.state.toCurr,
+      this.props.rates
+    );
+
+    this.setState({
+      toVal: value,
+      fromVal: isNumber(converted) ? converted : this.state.fromVal
+    });
+  };
+
+  handleAddCoin = coinTicker => {
+    this.setState({ addingCoin: true });
+    const coinObj = findCoinObj(coinTicker)
+
+    return new Promise((resolve, reject) => {
+      addCoin(
+        coinObj,
+        this.props.activeCoinList,
+        this.props.activeAccount.id,
+        // this.props.coinSettings[coinTicker]
+        // ? this.props.coinSettings[coinTicker].channels
+        // : coinObj.compatible_channels
+        coinObj.compatible_channels
+      ).then(response => {
+        if (response) {
+          this.props.dispatch(response);
+          this.props.dispatch(
+            setUserCoins(this.props.activeCoinList, this.props.activeAccount.id)
+          );
+          this.props.dispatch(
+            addKeypairs(
+              this.props.activeAccount.seeds,
+              coinObj,
+              this.props.activeAccount.keys
+            )
+          );
+
+          activateChainLifecycle(coinTicker)
+          this.setState({ addingCoin: false });
+
+          resolve(true);
+        } else {
+          this.errorHandler("Error adding coin");
+        }
+      })
+      .catch(err => {
+        this.setState({ addingCoin: false })
+        Alert.alert("Error Adding Coin", err.message)
+      })
+    });
+  };
+
+  switchFromCurr = curr => {
+    this.setState({ fromCurr: curr });
+  };
+
+  handleUpdates = async () => {
+    //DELETE/REFACTOR
+    return new Promise((resolve, reject) => {
+      let promises = [];
+      const finishPromise = () => {
+        Promise.all(promises)
+          .then(res => {
+            resolve(res);
+          })
+          .catch(err => {
+            reject(err);
+          });
+      };
+
+      this.setState(
+        {
+          loading: true,
+          loadingBTCFees:
+            this.state.coinObj &&
+            this.state.coinObj.id === "BTC" &&
+            !this.state.loadingBTCFees
+              ? true
+              : false
+        },
+        () => {
+          const updates = [API_GET_BALANCES, API_GET_INFO];
+          promises.push(() =>
+            Promise.all(
+              updates.map(async update => {
+                await conditionallyUpdateWallet(
+                  store.getState(),
+                  this.props.dispatch,
+                  this.props.activeCoin.id,
+                  update
+                );
               })
-            })
-          }
-        })
-      } else {
-        this.setState({toCurr: coin})
-      }
-  }
+            )
+              .then(() => {
+                this.setState({ loading: false });
+              })
+              .catch(error => {
+                this.setState({ loading: false });
+                console.error(error);
+              })
+          );
+          finishPromise();
+        }
+      );
+    });
+  };
 
-  switchPaymentMethod = (method) => {
-    this.setState({paymentMethod: method})
-  }
+  switchToCurr = coin => {
+    const coinIsAlreadyAddedToWallet = this.props.activeCoinsForUser.find(
+      coinObj => {
+        return SUPPORTED_CRYPTOCURRENCIES.map(x => x.value).includes(
+          coinObj.id
+        );
+      }
+    );
+    
+    if (this.props.buy && !coinIsAlreadyAddedToWallet) {
+      this.canAddCoin(coin).then(res => {
+        if (res) {
+          this.setState({ loadingOverlay: true, addingCoin: true }, () => {
+            this.handleAddCoin(coin).then(res => {
+              if (res) {
+                this.handleUpdates().then(() => {
+                  this.setState({
+                    toCurr: coin,
+                    loadingOverlay: false,
+                    addingCoin: false
+                  });
+                });
+              }
+            });
+          });
+        }
+      });
+    } else {
+      this.setState({ toCurr: coin });
+    }
+  };
+
+  switchPaymentMethod = method => {
+    this.setState({ paymentMethod: method });
+  };
 
   /**
    * Gets price from amount based on rates prop
@@ -281,112 +347,124 @@ class BuyCrypto extends Component {
    */
 
   validateFormData = () => {
-    this.setState({
-      errors: { fromVal: null, toVal: null },
-    }, () => {
-      const _fromVal = this.state.fromVal
-      const _toVal = this.state.toVal
-      const _fromCurr = this.state.fromCurr
-      const _toCurr = this.state.toCurr
-      let _errors = false;
+    this.setState(
+      {
+        errors: { fromVal: null, toVal: null }
+      },
+      () => {
+        const _fromVal = this.state.fromVal;
+        const _toVal = this.state.toVal;
+        const _fromCurr = this.state.fromCurr;
+        const _toCurr = this.state.toCurr;
+        let _errors = false;
 
-      if (!_fromCurr) {
-        Alert.alert("Error", "Please select a currency to pay in")
-        _errors = true
-      } else if (!_toCurr) {
-        Alert.alert("Error", "Please select a currency to buy")
-        _errors = true
-      }
+        if (!_fromCurr) {
+          Alert.alert("Error", "Please select a currency to pay in");
+          _errors = true;
+        } else if (!_toCurr) {
+          Alert.alert("Error", "Please select a currency to buy");
+          _errors = true;
+        }
 
-      if (!(_fromVal.toString()) || _fromVal.toString().length < 1) {
-        this.handleError("Required field", "fromVal")
-        _errors = true
-      } else if (!(isNumber(_fromVal))) {
-        this.handleError("Invalid amount", "fromVal")
-        _errors = true
-      } else if (Number(_fromVal) <= 0) {
-        this.handleError("Enter an amount greater than 0", "fromVal")
-        _errors = true
-      } else if(!this.props.buy && _fromVal > this.props.balances[_fromCurr].result.confirmed){
-        this.handleError("You exceeded your balance amount", "fromVal")
-        _errors = true
-      }
+        if (!_fromVal.toString() || _fromVal.toString().length < 1) {
+          this.handleError("Required field", "fromVal");
+          _errors = true;
+        } else if (!isNumber(_fromVal)) {
+          this.handleError("Invalid amount", "fromVal");
+          _errors = true;
+        } else if (Number(_fromVal) <= 0) {
+          this.handleError("Enter an amount greater than 0", "fromVal");
+          _errors = true;
+        } else if (
+          !this.props.buy &&
+          _fromVal > this.props.balances[_fromCurr].confirmed
+        ) {
+          this.handleError("You exceeded your balance amount", "fromVal");
+          _errors = true;
+        }
 
-      if (!(_toVal.toString()) || _toVal.toString().length < 1) {
-        this.handleError("Required field", "toVal")
-        _errors = true
-      } else if (!(isNumber(_toVal))) {
-        this.handleError("Invalid amount", "toVal")
-        _errors = true
-      } else if (Number(_toVal) <= 0) {
-        this.handleError("Enter an amount greater than 0", "toVal")
-        _errors = true
-      }
+        if (!_toVal.toString() || _toVal.toString().length < 1) {
+          this.handleError("Required field", "toVal");
+          _errors = true;
+        } else if (!isNumber(_toVal)) {
+          this.handleError("Invalid amount", "toVal");
+          _errors = true;
+        } else if (Number(_toVal) <= 0) {
+          this.handleError("Enter an amount greater than 0", "toVal");
+          _errors = true;
+        }
 
-      if (!_errors && hasPaymentMethod(this.props.paymentMethod)) {
-        switch (this.state.paymentMethod.id) {
-          case 'US_BANK_ACCT':
+        if (!_errors && hasPaymentMethod(this.props.paymentMethod)) {
+          switch (this.state.paymentMethod.id) {
+            case "US_BANK_ACCT":
               this.usBankAcctPayment(
                 this.state.fromVal,
                 this.state.fromCurr,
                 this.state.toCurr,
                 this.state.toVal
               );
-            break;
-          default:
+              break;
+            default:
+          }
+        } else {
+          return false;
         }
-      } else {
-        return false;
       }
-    });
-  }
+    );
+  };
 
   usBankAcctPayment = (fromVal, fromCurr, toCurr, toVal) => {
-    if (ENABLE_WYRE) {
-      this.props.navigation.navigate('SendTransaction', {
+    if (ENABLE_FIAT_GATEWAY) {
+      this.props.navigation.navigate("SendTransaction", {
         paymentMethod: this.state.paymentMethod,
         fromCurr,
         fromVal,
         toCurr,
-        toVal,
+        toVal
       });
     }
-  }
+  };
 
   openPaymentMethodOptions = () => {
-    this.props.navigation.navigate('SelectPaymentMethod', {
-      onSelect: this.switchPaymentMethod,
+    this.props.navigation.navigate("SelectPaymentMethod", {
+      onSelect: this.switchPaymentMethod
     });
-  }
-  
+  };
 
   render() {
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.root}>
           <Spinner
-            visible={this.state.loadingOverlay || this.state.addingCoin || this.props.inProgress || this.props.exchangeRatesFetching}
-            textContent={
-              this.state.addingCoin ?
-                "Adding coin..."
-                :
-                "Loading..."
+            visible={
+              this.state.loadingOverlay ||
+              this.state.addingCoin ||
+              this.props.inProgress ||
+              this.props.exchangeRatesFetching
             }
-            textStyle={{color: Colors.quaternaryColor}}
+            textContent={
+              this.state.addingCoin ? "Adding coin..." : "Loading..."
+            }
+            textStyle={{ color: Colors.quaternaryColor }}
             color={Colors.quinaryColor}
           />
           <ScrollView
-            contentContainerStyle={{height: "100%", alignItems: "center", justifyContent: 'center'}}
+            contentContainerStyle={{
+              height: "100%",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
             refreshControl={
               <RefreshControl
                 refreshing={this.state.loading}
                 onRefresh={this.forceUpdate}
               />
-          }>
-          <View style={styles.inputAndDropDownContainer}>
+            }
+          >
+            <View style={styles.inputAndDropDownContainer}>
               <View style={styles.formInputLabelContainer}>
                 <FormLabel labelStyle={styles.formLabel}>
-                  {`${this.props.buy ? 'Spend:' : 'Sell: ' } `}
+                  {`${this.props.buy ? "Spend:" : "Sell: "} `}
                 </FormLabel>
                 <FormInput
                   underlineColorAndroid="black"
@@ -394,62 +472,68 @@ class BuyCrypto extends Component {
                   inputStyle={styles.formInput}
                   containerStyle={styles.formInputContainer}
                   keyboardType={"decimal-pad"}
-                  autoCapitalize='words'
+                  autoCapitalize="words"
                   shake={this.state.errors.fromVal}
-                  onChangeText={(text) => this.setFromVal(text)}
+                  onChangeText={text => this.setFromVal(text)}
                 />
               </View>
               <View>
                 <Dropdown
                   rippleOpacity={0}
                   rippleDuration={0}
-                  labelExtractor={(item) => {
-                    return item.value
+                  labelExtractor={item => {
+                    return item.value;
                   }}
-                  valueExtractor={(item) => {
-                    return item.value
+                  valueExtractor={item => {
+                    return item.value;
                   }}
-                  data={this.props.buy ?  SUPPORTED_FIAT_CURRENCIES : SUPPORTED_CRYPTOCURRENCIES}
-                  onChangeText={(value) => this.switchFromCurr(value)}
+                  data={
+                    this.props.buy
+                      ? SUPPORTED_FIAT_CURRENCIES
+                      : SUPPORTED_CRYPTOCURRENCIES
+                  }
+                  onChangeText={value => this.switchFromCurr(value)}
                   textColor=""
                   selectedItemColor="#232323"
                   value={this.state.fromCurr}
                   containerStyle={styles.currencyDropDownContainer}
-                  renderBase={() => { return(
-                    <View style={styles.dropDownBase}>
-                      <Text style={styles.currencyLabel}>{this.state.fromCurr}</Text>
-                      <Icon size={24} style={styles.dropDownIcon} color="#86939e" name={"arrow-drop-down"} />
-                    </View>
-                  ) }}
-                  pickerStyle={{backgroundColor: Colors.tertiaryColor}}
-                  itemTextStyle={{fontFamily: 'Avenir'}}
+                  renderBase={() => {
+                    return (
+                      <View style={styles.dropDownBase}>
+                        <Text style={styles.currencyLabel}>
+                          {this.state.fromCurr}
+                        </Text>
+                        <Icon
+                          size={24}
+                          style={styles.dropDownIcon}
+                          color="#86939e"
+                          name={"arrow-drop-down"}
+                        />
+                      </View>
+                    );
+                  }}
+                  pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
+                  itemTextStyle={{ fontFamily: "Avenir" }}
                 />
               </View>
             </View>
             <View style={styles.valueContainer}>
               <FormValidationMessage>
-              {
-                this.state.errors.fromVal ?
-                  this.state.errors.fromVal
-                  :
-                  null
-              }
+                {this.state.errors.fromVal ? this.state.errors.fromVal : null}
               </FormValidationMessage>
             </View>
             <View style={styles.inputAndDropDownContainer}>
               <View style={styles.formInputLabelContainer}>
-                <FormLabel labelStyle={styles.formLabel}>
-                  Receive
-                </FormLabel>
+                <FormLabel labelStyle={styles.formLabel}>Receive</FormLabel>
                 <FormInput
                   underlineColorAndroid="black"
                   value={this.state.toVal}
                   inputStyle={styles.formInput}
                   containerStyle={styles.formInputContainer}
                   keyboardType={"decimal-pad"}
-                  autoCapitalize='words'
+                  autoCapitalize="words"
                   shake={this.state.errors.toVal}
-                  onChangeText={(text) => this.setToVal(text)}
+                  onChangeText={text => this.setToVal(text)}
                   editable={false}
                 />
               </View>
@@ -457,55 +541,67 @@ class BuyCrypto extends Component {
                 <Dropdown
                   rippleOpacity={0}
                   rippleDuration={0}
-                  labelExtractor={(item) => {
+                  labelExtractor={item => {
                     return item.value;
                   }}
-                  valueExtractor={(item) => {
+                  valueExtractor={item => {
                     return item.value;
                   }}
-                  data={this.props.buy ? SUPPORTED_CRYPTOCURRENCIES : SUPPORTED_FIAT_CURRENCIES }
-                  onChangeText={(value) => this.switchToCurr(value)}
+                  data={
+                    this.props.buy
+                      ? SUPPORTED_CRYPTOCURRENCIES
+                      : SUPPORTED_FIAT_CURRENCIES
+                  }
+                  onChangeText={value => this.switchToCurr(value)}
                   textColor="#E9F1F7"
                   selectedItemColor="#232323"
                   value={this.state.toCurr}
                   containerStyle={styles.currencyDropDownContainer}
-                  renderBase={() => { return(
-                    <View style={styles.dropDownBase}>
-                      <Text style={styles.currencyLabel}>{this.state.toCurr}</Text>
-                      <Icon size={24} style={styles.dropDownIcon} color="#86939e" name={"arrow-drop-down"} />
-                    </View>
-                  ) }}
-                  pickerStyle={{backgroundColor: Colors.tertiaryColor}}
-                  itemTextStyle={{fontFamily: 'Avenir'}}
+                  renderBase={() => {
+                    return (
+                      <View style={styles.dropDownBase}>
+                        <Text style={styles.currencyLabel}>
+                          {this.state.toCurr}
+                        </Text>
+                        <Icon
+                          size={24}
+                          style={styles.dropDownIcon}
+                          color="#86939e"
+                          name={"arrow-drop-down"}
+                        />
+                      </View>
+                    );
+                  }}
+                  pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
+                  itemTextStyle={{ fontFamily: "Avenir" }}
                 />
               </View>
             </View>
             <View style={styles.valueContainer}>
               <FormValidationMessage>
-              {
-                this.state.errors.toVal ?
-                  this.state.errors.toVal
-                  :
-                  null
-              }
+                {this.state.errors.toVal ? this.state.errors.toVal : null}
               </FormValidationMessage>
             </View>
 
-            {ENABLE_WYRE ? (
+            {ENABLE_FIAT_GATEWAY ? (
               <View style={styles.touchableInputBank}>
-                <TouchableWithoutFeedback onPress={this.openPaymentMethodOptions}>
+                <TouchableWithoutFeedback
+                  onPress={this.openPaymentMethodOptions}
+                >
                   <View style={styles.formInput}>
                     <ListItem
-                      title={(
+                      title={
                         <Text style={styles.coinItemLabel}>
                           {this.state.paymentMethod.name}
                         </Text>
-                      )}
+                      }
                       avatar={BankBuildingBlack}
-                      avatarOverlayContainerStyle={{backgroundColor: 'transparent'}}
-                      avatarStyle={{ resizeMode: 'contain'}}
+                      avatarOverlayContainerStyle={{
+                        backgroundColor: "transparent"
+                      }}
+                      avatarStyle={{ resizeMode: "contain" }}
                       containerStyle={{ borderBottomWidth: 0 }}
-                      chevronColor={'black'}
+                      chevronColor={"black"}
                     />
                   </View>
                 </TouchableWithoutFeedback>
@@ -514,13 +610,16 @@ class BuyCrypto extends Component {
               <View style={styles.inputAndDropDownContainer}>
                 <View style={styles.formInput}>
                   <Dropdown
-                    labelExtractor={(item) => item.name}
-                    valueExtractor={(item) => item}
+                    labelExtractor={item => item.name}
+                    valueExtractor={item => item}
                     label="Pay With"
-                    labelTextStyle={{ fontWeight: 'bold', fontFamily: 'Avenir' }}
+                    labelTextStyle={{
+                      fontWeight: "bold",
+                      fontFamily: "Avenir"
+                    }}
                     labelFontSize={12}
                     data={SUPPORTED_PAYMENT_METHODS}
-                    onChangeText={(method) => this.switchPaymentMethod(method)}
+                    onChangeText={method => this.switchPaymentMethod(method)}
                     textColor="black"
                     selectedItemColor="#232323"
                     baseColor="#86939e"
@@ -531,9 +630,9 @@ class BuyCrypto extends Component {
               </View>
             )}
             <View style={styles.buttonContainer}>
-              <Button1
+              <StandardButton
                 style={styles.saveChangesButton}
-                buttonContent="PROCEED"
+                title="PROCEED"
                 onPress={this._handleSubmit}
               />
             </View>
@@ -548,13 +647,14 @@ const mapStateToProps = (state) => ({
   activeCoin: state.coins.activeCoin,
   activeCoinsForUser: state.coins.activeCoinsForUser,
   activeAccount: state.authentication.activeAccount,
-  needsUpdate: state.ledger.needsUpdate,
+  //needsUpdate: state.ledger.needsUpdate,
   activeCoinList: state.coins.activeCoinList,
   inProgress: selectWyreCreatePaymentIsFetching(state),
   rates: selectExchangeRates(state),
   exchangeRatesFetching: selectExchangeRatesIsFetching(state),
   paymentMethod: selectWyrePaymentMethod(state),
-  balances: state.ledger.balances,
+  balances: state.ledger.balances[ELECTRUM],
+  coinSettings: state.settings.coinSettings
 });
 
 const mapDispatchToProps = (dispatch) => ({

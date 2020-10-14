@@ -5,18 +5,18 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../../../symbols/button1";
+import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
-  Text, 
   ScrollView, 
   Keyboard,
   TouchableWithoutFeedback,
   ActivityIndicator,
-  Alert
+  Alert,
+  Text
 } from "react-native";
-import { NavigationActions } from 'react-navigation';
-import { FormLabel, ButtonGroup } from 'react-native-elements'
+import { NavigationActions } from '@react-navigation/compat';
+import { ButtonGroup } from 'react-native-elements'
 import { saveCoinSettings } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import { 
@@ -27,14 +27,14 @@ import {
   MID_VERIFICATION_DESC,
   MAX_VERIFICATION_DESC,
   VERIFICATION_LOCKED
-} from '../../../../utils/constants'
-import styles from './CoinSettings.styles'
+} from '../../../../utils/constants/constants'
+import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors';
 
 class CoinSettings extends Component {
   constructor(props) {
     super(props);
-    this.coinID = this.props.navigation.state.params.data
+    this.coinID = this.props.route.params.data
     this.verificationLock = this.props.coinSettings[this.coinID].verificationLock
 
     if (this.props.coinSettings.hasOwnProperty(this.coinID)) {
@@ -61,9 +61,9 @@ class CoinSettings extends Component {
 
   static navigationOptions = ({ navigation }) => {
     return {
-      title: typeof(navigation.state.params)==='undefined' || 
-      typeof(navigation.state.params.title) === 'undefined' ? 
-      'undefined': `${navigation.state.params.title} Settings`,
+      title: typeof(route.params)==='undefined' || 
+      typeof(route.params.title) === 'undefined' ? 
+      'undefined': `${route.params.title} Settings`,
     };
   };
 
@@ -118,56 +118,57 @@ class CoinSettings extends Component {
     const utxoVerificationBtns = ['Low', 'Mid', 'High']
 
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={styles.root}>
-          <ScrollView contentContainerStyle={{paddingTop: "30%", alignItems: "center", justifyContent: "flex-start"}}>
-            <View style={{...styles.valueContainer, marginTop: 15}}>
-              <FormLabel labelStyle={styles.formLabel}>
-                {"Level of UTXO verification:"}
-              </FormLabel>
+        <View style={Styles.defaultRoot}>
+        <ScrollView style={Styles.fullWidth}
+          contentContainerStyle={{...Styles.innerHeaderFooterContainerCentered, ...Styles.fullHeight}}>
+            <View style={Styles.wideCenterBlock}>
+              <Text style={Styles.centralHeader}>
+                {"Transaction Verification:"}
+              </Text>
               <ButtonGroup
                 onPress={this.verificationLock ? null : this.updateIndex}
                 selectedIndex={this.state.verificationLvl}
                 buttons={utxoVerificationBtns}
                 selectedButtonStyle={{backgroundColor: "#7c858f"}}
                 selectedTextStyle={{color: "#f5f5f5"}}
-                //disabled={true}
-                //^ This doesnt work and it's supposed to (bugged)
+                containerStyle={{backgroundColor: Colors.tertiaryColor}}
+                textStyle={{fontFamily: 'Avenir-Book'}}
               />
-              <FormLabel labelStyle={{...styles.utxoVerificationDesc, color: this.verificationLock ? "#EDAE49" : "#2E86AB"}}>
-                { this.verificationLock ? 
-                    VERIFICATION_LOCKED
-                    :
-                    this.state.verificationLvl === NO_VERIFICATION ? 
-                      NO_VERIFICATION_DESC
+              <View style={Styles.fullWidthBlock}> 
+                <Text style={Styles.smallerDescriptiveText}>
+                  { this.verificationLock ? 
+                      VERIFICATION_LOCKED
                       :
-                      this.state.verificationLvl === MID_VERIFICATION ? 
-                        MID_VERIFICATION_DESC
+                      this.state.verificationLvl === NO_VERIFICATION ? 
+                        NO_VERIFICATION_DESC
                         :
-                        MAX_VERIFICATION_DESC}
-              </FormLabel>
+                        this.state.verificationLvl === MID_VERIFICATION ? 
+                          MID_VERIFICATION_DESC
+                          :
+                          MAX_VERIFICATION_DESC}
+                </Text>
+              </View>
             </View>
           </ScrollView>
-          <View style={styles.bottom}>
+          <View style={Styles.highFooterContainer}>
             {this.state.loading ? 
               <ActivityIndicator animating={this.state.loading} size="large"/>
             :
-              <View style={styles.buttonContainer}>
-                <Button1 
-                  style={styles.backButton} 
-                  buttonContent="BACK" 
+            <View style={Styles.standardWidthSpaceBetweenBlock}>
+                <StandardButton 
+                  color={Colors.warningButtonColor}
+                  title="BACK" 
                   onPress={this.back}
                 />
-                <Button1 
-                  style={styles.saveChangesButton} 
-                  buttonContent="CONFIRM" 
+                <StandardButton 
+                  color={Colors.linkButtonColor}
+                  title="CONFIRM" 
                   onPress={this._handleSubmit}
                 />
               </View>
             }
           </View>
         </View>
-      </TouchableWithoutFeedback>
     );
   }
 }

@@ -16,6 +16,12 @@ import Calendar from './calendar.png';
 import Verus from './Verus.png';
 import BankBuildingBlack from './bankBuildingBlack.png';
 
+import TransactionLogos from './transactions/index'
+
+import VerusPayLogo from './verusPay.svg'
+import VerusLogo from './VerusLogo.svg'
+import AddCoinLogo from './coinAdd.svg'
+
 export {
   Open,
   Approved,
@@ -33,7 +39,11 @@ export {
   Sell,
   Calendar,
   Verus,
-  BankBuildingBlack
+  BankBuildingBlack,
+  TransactionLogos,
+  VerusPayLogo,
+  AddCoinLogo,
+  VerusLogo
 };
 
 export default Open;

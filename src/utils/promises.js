@@ -3,7 +3,9 @@ export const timeout = (ms, promise) => {
     setTimeout(function() {
       reject(new Error("Network request timed out"))
     }, ms)
-    promise.then(resolve, reject)
+    promise.then(resolve, reject).catch(err => {
+      reject(err)
+    })
   })
 }
 

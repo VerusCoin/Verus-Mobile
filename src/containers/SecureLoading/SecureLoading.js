@@ -20,7 +20,7 @@ import {
   ActivityIndicator,
   Alert
 } from "react-native";
-import { NavigationActions } from 'react-navigation';
+import { CommonActions } from '@react-navigation/native';
 import { connect } from 'react-redux';
 import { signOut } from '../../actions/actionCreators';
 import { Icon } from "react-native-elements";
@@ -47,9 +47,9 @@ class SecureLoading extends Component {
     };
   }
 
-  componentWillMount() {
-    const navigation = this.props.navigation
-    const data = navigation.state.params ? navigation.state.params.data : null
+  componentDidMount() {
+    const { route } = this.props
+    const data = route.params ? route.params.data : null
 
     this.timeoutTimer = setTimeout(() => {
       this.setState({status: 'timeout'})
@@ -73,13 +73,15 @@ class SecureLoading extends Component {
             .then((res) => {
               clearTimeout(this.timeoutTimer);
               if (this.state.status !== 'timeout') {
-                if (this.state.dispatchResult) this.props.dispatch(res)
-                this.setState({ status: 'success' })
-                if (this.state.route) {
-                  this.resetToScreen(this.state.route)
-                } else {
-                  this.props.dispatch(signOut())
-                }
+                this.setState({ status: 'success' }, () => {
+                  if (this.state.dispatchResult) this.props.dispatch(res)
+
+                  if (this.state.route) {
+                    this.resetToScreen(this.state.route)
+                  } else {
+                    this.props.dispatch(signOut())
+                  }
+                })
               }
             })
           } else {
@@ -96,13 +98,14 @@ class SecureLoading extends Component {
   }
 
   resetToScreen = (route) => {
-    const resetAction = NavigationActions.reset({
+    const resetAction = CommonActions.reset({
       index: 0, // <-- currect active route from actions array
-      actions: [
-        NavigationActions.navigate({ routeName: route }),
+      routes: [
+        { name: route },
       ],
     })
 
+    this.props.navigation.closeDrawer();
     this.props.navigation.dispatch(resetAction)
   }
 

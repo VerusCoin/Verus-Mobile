@@ -6,19 +6,26 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../symbols/button1";
-import { View, Text, ScrollView, Image, ActivityIndicator } from "react-native";
-import { Icon } from "react-native-elements";
+import StandardButton from "../../components/StandardButton";
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { connect } from 'react-redux';
 import { 
-  addExistingCoin, 
+  addCoin, 
   setUserCoins, 
-  needsUpdate, 
-  addKeypair,
-  transactionsNeedUpdate
+  addKeypairs,
  } from '../../actions/actionCreators';
-import { NavigationActions } from 'react-navigation'
-import styles from './CoinDetails.styles'
+import { NavigationActions } from '@react-navigation/compat'
+import Styles from '../../styles/index'
+import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
+import Colors from "../../globals/colors";
+import { CoinLogos } from "../../utils/CoinData/CoinData";
 
 class CoinDetails extends Component {
   constructor(props) {
@@ -41,7 +48,7 @@ class CoinDetails extends Component {
   }
 
   isActiveCoin = () => {
-    let selectedCoin = this.props.navigation.state.params.data
+    let selectedCoin = this.props.route.params.data
     let activeCoinIndex = this.props.activeCoinsForUser.findIndex(coin => {
       return coin.id === selectedCoin.id
     })
@@ -53,68 +60,93 @@ class CoinDetails extends Component {
     this.props.navigation.dispatch(NavigationActions.back())
   }
 
-  _handleAddCoin = () => {
+  _handleAddCoin = async () => {
     this.setState({ loading: true });
-    addExistingCoin(this.state.fullCoinData, this.props.activeCoinList, this.props.activeAccount.id)
-    .then(response => {
-      if (response) {
-        this.props.dispatch(response)
-        this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
-        this.props.dispatch(addKeypair(this.props.activeAccount.wifKey, this.state.fullCoinData.id, this.props.activeAccount.keys))
-        this.props.dispatch(transactionsNeedUpdate(this.state.fullCoinData.id, this.props.needsUpdate.transanctions))
 
-        this.props.dispatch(needsUpdate("balances"))
-        this.props.dispatch(needsUpdate("rates"))
+    try {
+      this.props.dispatch(
+        addKeypairs(
+          this.props.activeAccount.seeds,
+          this.state.fullCoinData,
+          this.props.activeAccount.keys
+        )
+      );
+
+      const addCoinAction = await addCoin(
+        this.state.fullCoinData,
+        this.props.activeCoinList,
+        this.props.activeAccount.id,
+        this.state.fullCoinData.compatible_channels
+      )
+
+      if (addCoinAction) {
+        const chainId = this.state.fullCoinData.id;
+        this.props.dispatch(addCoinAction);
+        this.props.dispatch(
+          setUserCoins(
+            this.props.activeCoinList,
+            this.props.activeAccount.id
+          )
+        );
+
+        activateChainLifecycle(chainId);
+
         this.setState({ isActive: true, loading: false });
+      } else {
+        throw new Error("Error adding coin");
       }
-      else {
-        throw new Error("Error adding coin")
-      }
-    })
-    .then(() => {
+
       if (!this.state.unmounted) {
         this.goBack();
       }
-    })
+    } catch(e) {
+      Alert.alert("Error Adding Coin", `There was a problem adding ${this.state.fullCoinData.id}.`);
+      console.error(e)
+      this.setState({ loading: false });
+    }
   }
   
   render() {
+    const Logo = CoinLogos[this.state.fullCoinData.id.toLowerCase()]
+
     return (
-      <View style={styles.root}>
-        <Image
-          style={{width: 100,height: 100, resizeMode: 'contain', marginTop: '10%'}}
-          source={this.state.fullCoinData.logo}
-        />
-        <Text style={styles.homeLabel}>{this.state.fullCoinData.id} Details</Text>
-        <Text style={styles.titleLabel}>
-            Full Name:
-        </Text>
-        <Text style={styles.fullName}>
-            {this.state.fullCoinData.name}
-        </Text>
-        <Text style={styles.titleLabel}>
-            Description:
-        </Text>
-        <ScrollView>
-            <Text style={styles.description}>
-                {this.state.fullCoinData.description}
-            </Text>
-        </ScrollView>
-        <View style={styles.addCoinBtn}>
-        {
-          this.state.loading ? 
-            <ActivityIndicator animating={this.state.loading} size="large"/>
-          :
-            this.state.isActive ?
-              <View style={styles.coinAddedBox}>
-              <Text style={styles.coinAddedLabel}>COIN ADDED</Text>
-              <Icon name="check" color="#50C3A5" size={30}/>
-              </View>
-            :
-              <Button1 style={styles.receiveBtn} buttonContent="ADD COIN" onPress={() => this._handleAddCoin()}/>
-        }
+      <View style={Styles.defaultRoot}>
+        <View style={Styles.centralRow}>
+          <View style={Styles.fullWidthFlexCenterBlock}>
+            {Logo != null && (
+              <Logo height={75} width={75} />
+            )}
+          </View>
         </View>
-        
+        <Text style={Styles.greyStripeHeader}>
+          {this.state.fullCoinData.display_name}
+        </Text>
+        <ScrollView
+          style={Styles.fullWidth}
+          contentContainerStyle={Styles.horizontalCenterContainer}
+        >
+          <View style={Styles.wideCenterBlock}>
+            <Text style={Styles.defaultDescriptiveText}>
+              {this.state.fullCoinData.description}
+            </Text>
+          </View>
+          <View>
+            {this.state.loading ? (
+              <ActivityIndicator
+                animating={this.state.loading}
+                size="large"
+              />
+            ) : this.state.isActive ? (
+              <Text style={Styles.centralSuccessHeader}>COIN ADDED</Text>
+            ) : (
+              <StandardButton
+                color={Colors.linkButtonColor}
+                title="ADD COIN"
+                onPress={() => this._handleAddCoin()}
+              />
+            )}
+          </View>
+        </ScrollView>
       </View>
     );
   }
@@ -125,8 +157,8 @@ const mapStateToProps = (state) => {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
     activeAccount: state.authentication.activeAccount,
-    balances: state.ledger.balances,
-    needsUpdate: state.ledger.needsUpdate
+    coinSettings: state.settings.coinSettings
+    //needsUpdate: state.ledger.needsUpdate
   }
 };
 

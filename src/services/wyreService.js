@@ -2,7 +2,7 @@ import axios from 'axios';
 import crypto from 'crypto';
 import RNFetchBlob from 'rn-fetch-blob';
 
-import { WYRE_URL, WYRE_REFERRER_ACCOUNT_ID } from '../utils/constants';
+import { WYRE_URL, WYRE_REFERRER_ACCOUNT_ID } from '../utils/constants/constants';
 
 const parseError = (error) => (
   error.response ? error.response.data.message : error.toString()

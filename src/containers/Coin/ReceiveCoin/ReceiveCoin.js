@@ -6,7 +6,7 @@
 */
 
 import React, { Component } from "react"
-import Button1 from "../../../symbols/button1"
+import StandardButton from "../../../components/StandardButton"
 import { 
   View, 
   Text, 
@@ -15,18 +15,23 @@ import {
   Keyboard, 
   Clipboard,
   Alert,
-  RefreshControl,
-  Modal
+  RefreshControl
  } from "react-native"
-import { FormLabel, FormInput, FormValidationMessage, Icon } from 'react-native-elements'
+import { Input } from 'react-native-elements'
 import { connect } from 'react-redux'
-import { Dropdown } from 'react-native-material-dropdown'
-import QRCode from 'react-native-qrcode-svg';
+import Styles from '../../../styles/index'
 import QRModal from '../../../components/QRModal'
-import { coinsToSats, isNumber, truncateDecimal } from '../../../utils/math'
-import { setCoinRates, everythingNeedsUpdate } from '../../../actions/actionCreators'
-import styles from './ReceiveCoin.styles'
+import { isNumber, truncateDecimal } from '../../../utils/math'
 import Colors from '../../../globals/colors';
+import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
+import { API_GET_FIATPRICE, API_GET_BALANCES, GENERAL } from "../../../utils/constants/intervalConstants"
+import { USD } from '../../../utils/constants/currencies'
+import { expireData } from "../../../actions/actionCreators"
+import Store from "../../../store"
+import { Portal } from "react-native-paper"
+import selectAddresses from "../../../selectors/address"
+import VerusPayParser from '../../../utils/verusPay/index'
+import BigNumber from "bignumber.js";
 
 class ReceiveCoin extends Component {
   constructor(props) {
@@ -47,16 +52,20 @@ class ReceiveCoin extends Component {
   componentDidMount() {
     this.setAddress()
   }
+  
+  componentDidUpdate(lastProps) {
+    if (lastProps.addresses !== this.props.addresses) {
+      this.setAddress()
+    }
+  }
 
   setAddress = () => {
-    let index = 0;
-    const activeUser = this.props.activeAccount
-    const coinObj = this.state.selectedCoin
-
-    if (activeUser.keys.hasOwnProperty(coinObj.id)) {
-      this.setState({ address: activeUser.keys[coinObj.id].pubKey });  
+    if (this.props.addresses && this.props.addresses.results != null) {
+      this.setState({
+        address: this.props.addresses.results[0]
+      });
     } else {
-      throw new Error("ReceiveCoin.js: Fatal mismatch error, " + activeUser.id + " user keys for active coin " + coinObj[i].id + " not found!");
+      throw new Error("Couldn't load address.");
     }
   }
 
@@ -73,30 +82,26 @@ class ReceiveCoin extends Component {
   }
 
   forceUpdate = () => {
-    //TODO: Figure out why screen doesnt always update if everything is called seperately
-
-    /*this.props.dispatch(transactionsNeedUpdate(this.props.activeCoin.id, this.props.needsUpdate.transanctions))
-    this.props.dispatch(needsUpdate("balances"))
-    this.props.dispatch(needsUpdate("rates"))*/
-    this.props.dispatch(everythingNeedsUpdate())
+    const coinObj = this.props.activeCoin
+    this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE))
+    this.props.dispatch(expireData(coinObj.id, API_GET_BALANCES))
 
     this.refresh()
   }
 
   refresh = () => {
-    const _activeCoinsForUser = this.props.activeCoinsForUser
-
-    let promiseArray = []
-
-    if(this.props.needsUpdate.rates) {
-      console.log("Rates need update, pushing update to transaction array")
-      if (!this.state.loading) {
-        this.setState({ loading: true });  
-      }  
-      promiseArray.push(setCoinRates(_activeCoinsForUser))
-    }
-  
-    this.updateProps(promiseArray)
+    this.setState({ loading: true }, () => {
+      const updates = [API_GET_FIATPRICE, API_GET_BALANCES]
+      Promise.all(updates.map(async (update) => {
+        await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, this.props.activeCoin.id, update)
+      })).then(res => {
+        this.setState({ loading: false })
+      })
+      .catch(error => {
+        this.setState({ loading: false })
+        console.warn(error)
+      })
+    })
   }
 
   updateProps = (promiseArray) => {
@@ -121,17 +126,31 @@ class ReceiveCoin extends Component {
     }) 
   }
 
-  createQRString = (coinTicker, amount, address, memo) => {
-    let _price = this.props.rates[this.state.selectedCoin.id]
-    let verusQRJSON = {
-      verusQR: global.VERUS_QR_VERSION,
-      coinTicker: coinTicker,
-      address: address,
-      amount: this.state.amountFiat ? truncateDecimal(coinsToSats(amount/_price), 0) : coinsToSats(amount),
-      memo: memo
-    }
+  createQRString = (coinObj, amount, address, memo) => {
+    const { rates, displayCurrency } = this.props
+    const coinTicker = coinObj.id
 
-    this.setState({verusQRString: JSON.stringify(verusQRJSON), showModal: true})
+    let _price = rates[coinTicker] != null ? rates[coinTicker][displayCurrency] : null
+
+    try {
+      const verusQRString = VerusPayParser.v0.writeVerusPayQR(
+        coinObj,
+        this.state.amountFiat
+          ? (BigNumber(amount).dividedBy(BigNumber(_price))).toString()
+          : amount.toString(),
+        address,
+        memo
+      )
+
+      this.setState({
+        verusQRString,
+        showModal: true,
+      });
+    } catch(e) {
+      console.warn(e)
+      Alert.alert("Error", "Error creating QR payment request.")
+    }
+    
   }
 
   switchInvoiceCoin = (coinObj) => {
@@ -147,19 +166,22 @@ class ReceiveCoin extends Component {
   }
 
   getPrice = () => {
-    const _amount = this.state.amount
-    const _price = this.props.rates[this.state.selectedCoin.id]
+    const { state, props } = this
+    const { amount, selectedCoin, amountFiat } = state
+    const { rates, displayCurrency } = props
+
+    let _price = rates[selectedCoin.id] != null ? rates[selectedCoin.id][displayCurrency] : null
     
-    if (!(_amount.toString()) ||
-      !(isNumber(_amount)) ||
+    if (!(amount.toString()) ||
+      !(isNumber(amount)) ||
       !_price) {
       return 0
     } 
 
-    if (this.state.amountFiat) {
-      return truncateDecimal(_amount/_price, 8)
+    if (amountFiat) {
+      return truncateDecimal(amount/_price, 8)
     } else {
-      return truncateDecimal(_amount*_price, 2)
+      return truncateDecimal(amount*_price, 2)
     }
   }
 
@@ -169,29 +191,33 @@ class ReceiveCoin extends Component {
       verusQRString: null
     }, () => {
       const _selectedCoin = this.state.selectedCoin
-      const _amount = this.state.amount
+      const _amount =
+        (this.state.amount.toString().includes(".") &&
+          this.state.amount.toString().includes(",")) ||
+        !this.state.amount
+          ? this.state.amount
+          : this.state.amount.toString().replace(/,/g, ".");
       const _address = this.state.address
       const _memo = this.state.memo
       let _errors = false;
 
       if (!_selectedCoin) {
-        this.handleError("Required field", "selectedCoin")
+        Alert.alert("Error", "Please select a coin to receive.")
         _errors = true
       }
 
-      if (!(_amount.toString()) || _amount.toString().length < 1) {
-        this.handleError("Required field", "amount")
-        _errors = true
-      } else if (!(isNumber(_amount))) {
-        this.handleError("Invalid amount", "amount")
-        _errors = true
-      } else if (Number(_amount) <= 0) {
-        this.handleError("Enter an amount greater than 0", "amount")
-        _errors = true
-      }
+      if (!(!(_amount.toString()) || _amount.toString().length < 1 || _amount == 0)) {
+        if (!(isNumber(_amount))) {
+          this.handleError("Invalid amount", "amount")
+          _errors = true
+        } else if (Number(_amount) <= 0) {
+          this.handleError("Enter an amount greater than 0", "amount")
+          _errors = true
+        }
+      } 
 
       if (!_errors) {
-        this.createQRString(_selectedCoin.id, _amount, _address, _memo)
+        this.createQRString(_selectedCoin, _amount, _address, _memo)
       } else {
         return false;
       }
@@ -200,149 +226,126 @@ class ReceiveCoin extends Component {
 
   render() {
     const _price = this.getPrice()
+    const {
+      state,
+      props,
+      validateFormData,
+      forceUpdate,
+      copyAddressToClipboard
+    } = this;
+    const { activeCoinsForUser, rates, displayCurrency } = props;
+    const {
+      loading,
+      showModal,
+      verusQRString,
+      selectedCoin,
+      address,
+      errors,
+      amountFiat
+    } = state;
+    const fiatEnabled = rates[selectedCoin.id] && rates[selectedCoin.id][displayCurrency] != null
+
     return (
-      <ScrollView 
-        style={styles.root} 
-        contentContainerStyle={{alignItems: "center", justifyContent: "center"}}
-        refreshControl={
-          <RefreshControl
-            refreshing={this.state.loading}
-            onRefresh={this.forceUpdate}
-          />
-        }>
-        <QRModal
-          animationType="slide"
-          transparent={false}
-          visible={this.state.showModal && this.state.verusQRString && this.state.verusQRString.length > 0}
-          qrString={this.state.verusQRString}
-          cancel={() => {this.setState({showModal: false})}}/>
-        <Text style={styles.wifLabel}>
-          {"Generate VerusQR Invoice"}
-        </Text>
-        <View style={styles.dropDownContainer}>
-          <Dropdown
-            containerStyle={styles.dropDown}
-            labelExtractor={(item, index) => {
-              return item.id
-            }}
-            valueExtractor={(item, index) => {
-              return item
-            }}
-            data={this.props.activeCoinsForUser}
-            onChangeText={(value, index, data) => this.switchInvoiceCoin(value)}
-            textColor={Colors.quinaryColor}
-            selectedItemColor={Colors.quinaryColor}
-            baseColor={Colors.quinaryColor}
-            label="Selected Coin:"
-            labelTextStyle={{fontFamily: 'Avenir-Book'}}
-            labelFontSize={17}
-            value={this.state.selectedCoin}
-            pickerStyle={{backgroundColor: Colors.tertiaryColor}}
-            itemTextStyle={{fontFamily: 'Avenir-Book'}}
-          />
-        </View>
-        <View style={styles.valueContainer}>
-          <FormValidationMessage>
-          {
-            this.state.errors.selectedCoin ? 
-              this.state.errors.selectedCoin
-              :
-              null
+      <View style={Styles.defaultRoot}>
+        <ScrollView
+          style={Styles.fullWidth}
+          contentContainerStyle={Styles.horizontalCenterContainer}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={forceUpdate} />
           }
-          </FormValidationMessage>
-        </View>
-        <View style={styles.valueContainer}>
-          <FormLabel labelStyle={styles.formLabel}>
-          Your address:
-          </FormLabel>
-          <FormInput 
-            underlineColorAndroid={Colors.quinaryColor}
-            editable={false}
-            value={this.state.address}
-            autoCapitalize={"none"}
-            autoCorrect={false}
-            inputStyle={styles.wifInput}
-            multiline={true}
-          />
-          {this.state.errors.address &&
-          <FormValidationMessage>
-          {
-            this.state.errors.address ? 
-              this.state.errors.address
-              :
-              null
-          }
-          </FormValidationMessage>}
-        </View>
-        <TouchableOpacity onPress={this.copyAddressToClipboard} style={{marginTop: 5}}>
-          <Icon name="content-copy" size={25} color={Colors.quinaryColor}/>
-        </TouchableOpacity>
-        <View style={styles.valueContainer}>
-          <View style={styles.labelContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-            {`Enter an amount in ${this.state.amountFiat ? 'USD' : this.state.selectedCoin.id}:`}
-            </FormLabel>
-            {this.props.rates[this.state.selectedCoin.id] && (isNumber(_price)) &&
-              <TouchableOpacity onPress={() => {this.setState({ amountFiat: !this.state.amountFiat })}}>
-                <FormLabel labelStyle={styles.swapInputTypeBtnBordered}>
-                  {this.state.amountFiat ? 'USD' : this.state.selectedCoin.id}
-                </FormLabel>
-              </TouchableOpacity>
-            }
+        >
+          {showModal && (
+            <Portal>
+              <QRModal
+                animationType="slide"
+                transparent={false}
+                visible={
+                  showModal && verusQRString && verusQRString.length > 0
+                }
+                qrString={verusQRString}
+                cancel={() => {
+                  this.setState({ showModal: false });
+                }}
+              />
+            </Portal>
+          )}
+          <View style={Styles.wideBlock}>
+            <TouchableOpacity onPress={copyAddressToClipboard}>
+              <Input
+                labelStyle={Styles.formInputLabel}
+                editable={false}
+                value={address}
+                autoCapitalize={"none"}
+                autoCorrect={false}
+                inputStyle={Styles.mediumInlineLink}
+                pointerEvents="none"
+                multiline={true}
+                label={"Your address:"}
+                errorMessage={errors.address ? errors.address : null}
+              />
+            </TouchableOpacity>
           </View>
-          <FormInput 
-            underlineColorAndroid={Colors.quinaryColor}
-            onChangeText={(text) => this.setState({amount: text})}
-            shake={this.state.errors.amount}
-            inputStyle={styles.formInput}
-            keyboardType={"decimal-pad"}
-            autoCapitalize='words'
-          />
-          {this.state.errors.amount &&
-          <FormValidationMessage>
-          {
-            this.state.errors.amount ? 
-              this.state.errors.amount
-              :
-              null
-          }
-          </FormValidationMessage>}
-          {this.props.rates[this.state.selectedCoin.id] && (isNumber(_price)) &&
-          <TouchableOpacity onPress={() => {this.setState({ amountFiat: !this.state.amountFiat })}}>
-            <FormLabel labelStyle={styles.swapInputTypeBtn}>
-              {`~${_price} ${this.state.amountFiat ? this.state.selectedCoin.id : 'USD'}`}
-            </FormLabel>
-          </TouchableOpacity>}
-        </View>
-        <View style={styles.valueContainer}>
-          <FormLabel labelStyle={styles.formLabel}>
-            {"Enter a note for the receiver (optional):"}
-          </FormLabel>
-          <FormInput 
-            underlineColorAndroid={Colors.quinaryColor}
-            onChangeText={(text) => this.setState({memo: text})}
-            autoCapitalize={"none"}
-            autoCorrect={false}
-            shake={this.state.errors.memo}
-            inputStyle={styles.formInput}
-          />
-          <FormValidationMessage>
-          {
-            this.state.errors.memo ? 
-              this.state.errors.memo
-              :
-              null
-          }
-          </FormValidationMessage>
-        </View>
-        <View style={styles.singleButtonContainer}>
-          <Button1 
-            style={styles.addAccountButton} 
-            buttonContent="GENERATE QR" 
-            onPress={this.validateFormData}
-          />
-        </View>
-      </ScrollView>
+          <View style={Styles.wideBlock}>
+            <Input
+              label={
+                <View style={Styles.startRow}>
+                  <Text style={Styles.mediumFormInputLabel}>
+                    {"Enter an amount in "}
+                  </Text>
+                  <Text
+                    style={
+                      fiatEnabled
+                        ? Styles.mediumInlineLink
+                        : Styles.mediumFormInputLabel
+                    }
+                    onPress={
+                      fiatEnabled
+                        ? () => this.setState({ amountFiat: !amountFiat })
+                        : () => {}
+                    }
+                  >
+                    {amountFiat ? displayCurrency : selectedCoin.id}
+                  </Text>
+                </View>
+              }
+              rightIcon={
+                fiatEnabled ? (
+                  <Text
+                    style={Styles.ghostText}
+                    onPress={() =>
+                      this.setState({ amountFiat: !amountFiat })
+                    }
+                  >{`~${_price} ${
+                    amountFiat ? selectedCoin.id : displayCurrency
+                  }`}</Text>
+                ) : null
+              }
+              onChangeText={(text) => this.setState({ amount: text })}
+              keyboardType={"decimal-pad"}
+              autoCapitalize="words"
+              errorMessage={errors.amount ? errors.amount : null}
+            />
+          </View>
+          <View style={Styles.wideBlock}>
+            <Input
+              labelStyle={Styles.formInputLabel}
+              onChangeText={(text) => this.setState({ memo: text })}
+              autoCapitalize={"none"}
+              label={"Enter a note for the receiver (optional):"}
+              autoCorrect={false}
+              shake={errors.memo}
+              errorMessage={errors.memo ? errors.memo : null}
+            />
+          </View>
+          <View style={Styles.wideBlock}>
+            <StandardButton
+              color={Colors.linkButtonColor}
+              title="GENERATE QR"
+              onPress={validateFormData}
+            />
+          </View>
+        </ScrollView>
+      </View>
     );
   }
 }
@@ -353,8 +356,9 @@ const mapStateToProps = (state) => {
     activeCoin: state.coins.activeCoin,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeAccount: state.authentication.activeAccount,
-    rates: state.ledger.rates,
-    needsUpdate: state.ledger.needsUpdate,
+    rates: state.ledger.rates[GENERAL],
+    displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
+    addresses: selectAddresses(state)
   }
 };
 

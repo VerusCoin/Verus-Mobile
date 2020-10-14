@@ -9,7 +9,7 @@
 */
 
 import React, { Component } from "react";
-import { ListItem } from "react-native-elements";
+import { ListItem, Divider } from "react-native-elements";
 import { 
   View, 
   Text, 
@@ -18,21 +18,33 @@ import {
   ScrollView,
   RefreshControl
 } from "react-native";
-import { 
-  updateCoinBalances, 
-  setCoinRates, 
+import {  
   setActiveCoin, 
   setActiveApp,
   setActiveSection,
-  everythingNeedsUpdate,
-  setActiveSectionBuySellCrypto
+  setActiveSectionBuySellCrypto,
+  expireData,
 } from '../../actions/actionCreators';
 import { connect } from 'react-redux';
-import { satsToCoins, truncateDecimal } from '../../utils/math';
-import { NavigationActions } from 'react-navigation';
-import styles from './Home.styles'
-import Colors from "../../globals/colors";
-import { ENABLE_WYRE } from "../../utils/constants";
+import { truncateDecimal } from '../../utils/math';
+import { CommonActions } from '@react-navigation/native';
+import Styles from '../../styles/index'
+import { ENABLE_VERUS_IDENTITIES, ENABLE_FIAT_GATEWAY } from '../../../env/main.json'
+import Store from '../../store/index'
+import {
+  API_GET_FIATPRICE,
+  API_GET_BALANCES,
+  API_GET_INFO,
+  ELECTRUM,
+  DLIGHT,
+  GENERAL
+} from "../../utils/constants/intervalConstants";
+import { USD } from '../../utils/constants/currencies'
+import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
+import { arrayToObject } from "../../utils/objectManip";
+import BigNumber from "bignumber.js";
+import { CoinLogos } from "../../utils/CoinData/CoinData";
+import { AddCoinLogo, VerusPayLogo } from "../../images/customIcons";
 
 const CONNECTION_ERROR = "Connection Error"
 
@@ -40,66 +52,68 @@ class Home extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      totalFiatBalance: 0,
-      coinRates: {},
+      totalFiatBalance: "0.00",
       loading: false
     };
-    this.calculateTotalBalance = this.calculateTotalBalance.bind(this);
-    this.updateProps = this.updateProps.bind(this);
+    
+    this._unsubscribeFocus = null
   }
 
   componentDidMount() {
-    this.refresh();
+    this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
+      this.refresh();
+    });
   }
 
-  //TODO: Fix the fact that at this point, activeUser doesnt have their keys yet
-  //componentWillReceiveProps() {
-  //  //TODO: Evaluate whether this is a performance issue
-  //  this.refresh();
-  //}
+  componentWillUnmount() {
+    this._unsubscribeFocus()
+  }
 
-  refresh = () => {
-    const _activeCoinsForUser = this.props.activeCoinsForUser
-    const _balances = this.props.balances
-    const _activeAccount = this.props.activeAccount
-    let promiseArray = []
-
-    if (this.props.activeCoinsForUser.length > 0) {
-      if(this.props.needsUpdate.rates) {
-        console.log("Rates need update, pushing update to transaction array")
-        if (!this.state.loading) {
-          this.setState({ loading: true });  
-        }  
-        promiseArray.push(setCoinRates(_activeCoinsForUser))
-      }
-      
-      if(this.props.needsUpdate.balances) {
-        console.log("Balances need update, pushing update to transaction array")
-        if (!this.state.loading) {
-          this.setState({ loading: true });  
-        }  
-        promiseArray.push(updateCoinBalances(_balances, _activeCoinsForUser, _activeAccount))
-      } 
-      
-      this.calculateTotalBalance()
-      this.updateProps(promiseArray)
+  componentDidUpdate(lastProps) {
+    if (this.props.balances !== lastProps.balances) {
+      this.setState({
+        totalFiatBalance: this.getTotalFiatBalance(this.props)
+      })
     }
   }
 
+  refresh = () => {    
+    this.setState({ loading: true }, () => {
+      Promise.all(this.props.activeCoinsForUser.map(async (coinObj) => {
+        await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, coinObj.id, API_GET_FIATPRICE)
+        await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, coinObj.id, API_GET_BALANCES)
+        await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, coinObj.id, API_GET_INFO)
+      })).then(res => {
+        this.setState({ loading: false, totalFiatBalance: this.getTotalFiatBalance(this.props) })
+      })
+      .catch(error => {
+        this.setState({ loading: false })
+        console.warn(error)
+      })
+    })
+    
+  }
+
   resetToScreen = (route, title, data) => {
-    const resetAction = NavigationActions.reset({
+    const resetAction = CommonActions.reset({
       index: 1, // <-- currect active route from actions array
-      actions: [
-        NavigationActions.navigate({ routeName: "Home" }),
-        NavigationActions.navigate({ routeName: route, params: {title: title, data: data} }),
+      routes: [
+        { name: "Home" },
+        { name: route, params: { title: title, data: data } },
       ],
     })
 
+    this.props.navigation.closeDrawer();
     this.props.navigation.dispatch(resetAction)
   }
 
   forceUpdate = () => {
-    this.props.dispatch(everythingNeedsUpdate())
+    this.props.activeCoinsForUser.map(coinObj => {
+      this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE))
+      this.props.dispatch(expireData(coinObj.id, API_GET_BALANCES))
+      this.props.dispatch(expireData(coinObj.id, API_GET_INFO))
+    })
+
     this.refresh();
   }
 
@@ -124,7 +138,7 @@ class Home extends Component {
         })
         .then((res) => {
           if (res) {
-            this.calculateTotalBalance()
+            this.setState({ totalFiatBalance: this.getTotalFiatBalance(this.props) })
             resolve(true)
           }
           else {
@@ -134,21 +148,32 @@ class Home extends Component {
     }) 
   }
 
-  calculateTotalBalance = () => {
-    let _totalFiatBalance = 0
-    let coinBalance = 0
-    const balances = this.props.balances
-    
-    for (let key in this.props.rates) {
-      if (typeof this.props.rates[key] === "number") {
-        coinBalance = balances.hasOwnProperty(key) && !balances[key].error && !isNaN(balances[key].result.confirmed) ? 
-        satsToCoins(balances[key].result.confirmed) : 0
+  getTotalFiatBalance = (props) => {    
+    let _totalFiatBalance = BigNumber(0)
+    let coinBalance = BigNumber(0)
+    const balances = props.balances.public
+    const { rates, displayCurrency, activeCoinsForUser } = props
+    const balanceErrors = props.balances.errors.public
 
-        _totalFiatBalance += coinBalance*this.props.rates[key]
+    activeCoinsForUser.map(coinObj => {
+      const key = coinObj.id
+      const channel = coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM
+
+      if (rates[key] && rates[key][displayCurrency]) {
+        const price = BigNumber(rates[key][displayCurrency])
+
+        coinBalance =
+          balances[channel].hasOwnProperty(key) &&
+          !balanceErrors[channel][key] &&
+          balances[channel][key].confirmed != null
+            ? BigNumber(balances[channel][key].confirmed)
+            : BigNumber("0");
+
+        _totalFiatBalance = _totalFiatBalance.plus(coinBalance.multipliedBy(price))
       }
-    }
+    })
 
-    this.setState({ totalFiatBalance: _totalFiatBalance });
+    return _totalFiatBalance.toFixed(2)
   }
 
   _verusPay = () => {
@@ -165,9 +190,13 @@ class Home extends Component {
     this.resetToScreen('CoinMenus', 'Overview');
   }
 
+  _handleIdentity = () => {
+    let navigation = this.props.navigation ; 
+    navigation.navigate("Identity", { selectedScreen: "Identity" } );
+  }
+  
   _addCoin = () => {
     let navigation = this.props.navigation  
-
     navigation.navigate("AddCoin", { refresh: this.refresh });
   }
 
@@ -178,102 +207,175 @@ class Home extends Component {
     navigation.navigate("BuySellCryptoMenus", {title: "Buy"});
   }
 
+  handleScanToVerify = () => {
+    this.props.navigation.navigate('ScanBadge');
+  }
+
   renderCoinList = () => {
+    const { rates, balances, activeCoinsForUser, displayCurrency } = this.props;
+
     return (
-      <ScrollView 
-      style={styles.coinList} 
-      refreshControl={
-        <RefreshControl
-          refreshing={this.state.loading}
-          onRefresh={this.forceUpdate}
-        />
-      }>
+      <ScrollView
+        style={Styles.wide}
+        refreshControl={
+          <RefreshControl
+            refreshing={this.state.loading}
+            onRefresh={this.forceUpdate}
+          />
+        }
+      >
         <TouchableOpacity onPress={this._verusPay}>
-          <ListItem       
-            roundAvatar                
-            title={<Text style={styles.coinItemLabel}>VerusPay</Text>}
+          <ListItem
+            title={
+              <Text style={Styles.listItemLeftTitleDefault}>VerusPay</Text>
+            }
             hideChevron
-            avatar={require('../../images/customIcons/verusPay.png')}
-            containerStyle={{ borderBottomWidth: 0 }} 
+            leftAvatar={<VerusPayLogo width={40} height={40}/>}
+            containerStyle={Styles.bottomlessListItemContainer}
           />
         </TouchableOpacity>
-        <FlatList   
-        data={this.props.activeCoinsForUser}    
-        scrollEnabled={false}
-        renderItem={({ item, index }) => ( 
-          <TouchableOpacity onPress={() => {this._openCoin(this.props.activeCoinsForUser[index], item)}}>
-            <ListItem              
-              roundAvatar          
-              title={<Text style={styles.coinItemLabel}>{item.name}</Text>}   
-              subtitle={
-                this.props.balances.hasOwnProperty(item.id) ? 
-                  this.props.balances[item.id].error || isNaN(this.props.balances[item.id].result.confirmed) ? 
-                    CONNECTION_ERROR
-                    :
-                    truncateDecimal(satsToCoins(this.props.balances[item.id].result.confirmed), 4) + ' ' + item.id 
-                :
-                null
-              }                       
-              avatar={item.logo}  
-              subtitleStyle={this.props.balances.hasOwnProperty(item.id) && (this.props.balances[item.id].error || isNaN(this.props.balances[item.id].result.confirmed)) ? {color: "rgba(206,68,70,1)", fontFamily: 'Avenir-Book'} : null} 
-              containerStyle={{ borderBottomWidth: 0 }} 
-              rightTitleStyle={{color: 'black'}}
-              rightTitle={
-                ('$' + 
-                (!this.props.balances.hasOwnProperty(item.id) || this.props.balances[item.id].error || isNaN(this.props.balances[item.id].result.confirmed) ? 
-                  '0.00'
-                  :
-                  truncateDecimal(((typeof(this.props.rates[item.id]) === 'number' ? this.props.rates[item.id] : 0)*(this.props.balances.hasOwnProperty(item.id) ? 
-                  satsToCoins(this.props.balances[item.id].result.confirmed) :
-                  0)), 2)))
-              }
-            />
-          </TouchableOpacity>   
-        )}   
-        extraData={this.props.balances}       
-        keyExtractor={item => item.id}                            
-        /> 
-        <View style={{
-            borderBottomColor: Colors.tertiaryColor,
-            borderBottomWidth: 1,
-            width: '100%',
-            alignSelf: 'center',
-            width: "90%",
-            marginVertical: '3%'
-          }}> 
-        </View>
-        {
-          ENABLE_WYRE &&
+        {ENABLE_VERUS_IDENTITIES &&
+          activeCoinsForUser.some(
+            (coin) => coin.id === "VRSC" || coin.id === "ZECTEST"
+          ) && (
+            <View>
+              <TouchableOpacity onPress={this._handleIdentity}>
+                <ListItem
+                  title={
+                    <Text style={Styles.listItemLeftTitleDefault}>
+                      Identity
+                    </Text>
+                  }
+                  hideChevron
+                  leftAvatar={{
+                    source: require("../../images/customIcons/id-card.png"),
+                  }}
+                  containerStyle={Styles.bottomlessListItemContainer}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={this.handleScanToVerify}>
+                <ListItem
+                  title={
+                    <Text style={Styles.listItemLeftTitleDefault}>
+                      Scan to verify
+                    </Text>
+                  }
+                  hideChevron
+                  leftAvatar={<VerusPayLogo width={40} height={40}/>}
+                  containerStyle={Styles.bottomlessListItemContainer}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
+        <FlatList
+          data={activeCoinsForUser}
+          scrollEnabled={false}
+          renderItem={({ item, index }) => {
+            const channel = item.dominant_channel ? item.dominant_channel : ELECTRUM
+            const _balances = balances.public[channel]
+            const balanceErrors = balances.errors.public[channel]
+            const Logo = CoinLogos[item.id.toLowerCase()]
+
+            return (
+              <TouchableOpacity
+                onPress={() => {
+                  this._openCoin(activeCoinsForUser[index], item);
+                }}
+              >
+                <ListItem
+                  roundAvatar
+                  title={
+                    <Text style={Styles.listItemLeftTitleDefault}>
+                      {item.display_name}
+                    </Text>
+                  }
+                  subtitle={
+                    _balances.hasOwnProperty(item.id) ||
+                    balanceErrors[item.id]
+                      ? balanceErrors[item.id] ||
+                        _balances[item.id].confirmed == null
+                        ? CONNECTION_ERROR
+                        : truncateDecimal(
+                            _balances[item.id].confirmed,
+                            4
+                          ) +
+                          " " +
+                          item.id
+                      : null
+                  }
+                  leftAvatar={Logo ? <Logo width={40} height={40}/> : null}
+                  subtitleStyle={
+                    (_balances.hasOwnProperty(item.id) ||
+                      balanceErrors[item.id]) &&
+                    (balanceErrors[item.id] ||
+                      _balances[item.id].confirmed) == null
+                      ? Styles.listItemSubtitleError
+                      : null
+                  }
+                  containerStyle={Styles.bottomlessListItemContainer}
+                  rightTitleStyle={Styles.listItemRightTitleDefault}
+                  rightTitle={
+                    (!_balances.hasOwnProperty(item.id) ||
+                    balanceErrors[item.id] ||
+                    _balances[item.id].confirmed == null
+                      ? "-"
+                      : truncateDecimal(
+                          (rates[item.id] &&
+                          rates[item.id][displayCurrency] != null
+                            ? BigNumber(rates[item.id][displayCurrency])
+                            : BigNumber(0)).multipliedBy(BigNumber(_balances[item.id].confirmed)),
+                          2
+                        )) +
+                    " " +
+                    displayCurrency
+                  }
+                />
+              </TouchableOpacity>
+            );
+          }}
+          extraData={balances.public}
+          keyExtractor={(item) => item.id}
+        />
+        <Divider style={Styles.defaultDivider} />
+        {ENABLE_FIAT_GATEWAY && (
           <TouchableOpacity onPress={this._buySellCrypto}>
-            <ListItem    
-              roundAvatar
-              title={<Text style={styles.coinItemLabel}>Buy/Sell Crypto</Text>}                            
-              avatar={require('../../images/customIcons/buySell.png')}
-              containerStyle={{ borderBottomWidth: 0 }} 
+            <ListItem
+              title={
+                <Text style={Styles.listItemLeftTitleDefault}>
+                  Buy/Sell Crypto
+                </Text>
+              }
+              leftAvatar={{
+                source: require("../../images/customIcons/buySell.png"),
+              }}
+              containerStyle={Styles.bottomlessListItemContainer}
               hideChevron
-            /> 
+            />
           </TouchableOpacity>
-        }
+        )}
         <TouchableOpacity onPress={this._addCoin}>
-          <ListItem    
-            roundAvatar                    
-            title={<Text style={styles.coinItemLabel}>Add Coin</Text>}                            
-            avatar={require('../../images/customIcons/coinAdd.png')}
+          <ListItem
+            title={
+              <Text style={Styles.listItemLeftTitleDefault}>Add Coin</Text>
+            }
+            leftAvatar={<AddCoinLogo width={40} height={40}/>}
             containerStyle={{ borderBottomWidth: 0 }}
             hideChevron
-          /> 
+          />
         </TouchableOpacity>
       </ScrollView>
-    )
+    );
   }
 
   render() {
     return (
-      <View style={styles.root}>
-        <Text style={styles.fiatBalanceLabel} >
-        {'$' + truncateDecimal(this.state.totalFiatBalance, 2)}
+      <View style={Styles.defaultRoot}>
+        <Text style={Styles.fiatLabel}>
+          {this.state.totalFiatBalance +
+            " " +
+            this.props.displayCurrency}
         </Text>
-        <Text style={styles.balanceSheetLabel}>Portfolio</Text>
+        <Text style={Styles.boldListHeader}>{"Portfolio"}</Text>
         {this.renderCoinList()}
       </View>
     );
@@ -285,10 +387,27 @@ const mapStateToProps = (state) => {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
     activeAccount: state.authentication.activeAccount,
-    balances: state.ledger.balances,
-    needsUpdate: state.ledger.needsUpdate,
-    rates: state.ledger.rates,
-  }
+    balances: {
+      public: arrayToObject(
+        Object.keys(state.ledger.balances),
+        (curr, key) => state.ledger.balances[key],
+        true
+      ),
+      private: state.ledger.balances[DLIGHT],
+      errors: {
+        public: arrayToObject(
+          Object.keys(state.errors[API_GET_BALANCES]),
+          (curr, key) => state.errors[API_GET_BALANCES][key],
+          true
+        ),
+        private: state.errors[API_GET_BALANCES][DLIGHT],
+      },
+    },
+    //needsUpdate: state.ledger.needsUpdate,
+    rates: state.ledger.rates[GENERAL],
+    displayCurrency:
+      state.settings.generalWalletSettings.displayCurrency || USD,
+  };
 };
 
 export default connect(mapStateToProps)(Home);

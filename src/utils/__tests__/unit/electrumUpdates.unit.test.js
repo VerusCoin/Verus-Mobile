@@ -13,7 +13,7 @@ import {
 
 import {
   ELECTRUM_PROTOCOL_CHANGE
-} from '../../constants'
+} from '../../constants/constants'
 
 describe('Data modifier for new electrum protocol', () => {
   it('can change address string to scripthash format if server version is greater than 1.4', () => {

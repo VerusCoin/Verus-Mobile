@@ -1,36 +1,33 @@
 import {
   setAccounts,
-  setFingerAuth,
-  signIntoAccount,
-  updateAccountKeys
+  updateAccountKeys,
+  authenticateUser
 } from '../actionCreators';
 import {
   storeUser,
   getUsers,
-  getActiveCoinsList,
+  getActiveCoinList,
   checkPinForUser,
   resetUserPwd,
-  deleteUser
+  deleteUser, setUserBiometry, setUsers
 } from '../../utils/asyncStore/asyncStore';
 import {
   makeKeyPair
 } from '../../utils/keys'
 import {
   decryptkey,
-  decryptGeneral,
 } from '../../utils/seedCrypt'
-import { sha256 } from '../../utils/crypto/hash';
+import { sha256, hashAccountId } from '../../utils/crypto/hash';
 
 import WyreService from '../../services/wyreService';
-import { ENABLE_WYRE } from '../../utils/constants';
+import { CHANNELS, ELECTRUM } from '../../utils/constants/intervalConstants';
+import { arrayToObject } from '../../utils/objectManip';
+import { ENABLE_FIAT_GATEWAY } from '../../../env/main.json';
+import { BIOMETRIC_AUTH } from '../../utils/constants/storeType';
 
-
-//TODO: Fingerprint authentication
-
-export const addUser = (userName, wifKey, pin, users) => {
-  let authData = { wifKey: wifKey, pin: pin, userName: userName }
+export const addUser = (userName, seeds, password, users, biometry = false) => {
   return new Promise((resolve, reject) => {
-    storeUser(authData, users)
+    storeUser({ seeds, password, userName, biometry }, users)
       .then(res => {
         resolve(setAccounts(res))
       })
@@ -47,6 +44,19 @@ export const resetPwd = (userID, newPwd, oldPwd) => {
         } else {
           resolve(false)
         }
+      })
+      .catch(err => reject(err));
+  });
+}
+
+export const setBiometry = (userID, biometry) => {
+  return new Promise((resolve, reject) => {
+    setUserBiometry(userID, biometry)
+      .then((accounts) => {
+        resolve({
+          type: BIOMETRIC_AUTH,
+          payload: { biometry, userID, accounts }
+        })
       })
       .catch(err => reject(err));
   });
@@ -69,22 +79,63 @@ export const deleteUserByID = (userID) => {
 export const fetchUsers = () => {
   return new Promise((resolve, reject) => {
     getUsers()
-      .then(res => {
-        resolve(setAccounts(res))
+      .then(async (users) => {
+
+        // Update for new user representation post v0.2.0
+        if (users.some((value) => (value.encryptedKeys == null && value.encryptedKey))) {
+          console.warn("Updating users to key structure post v0.2.0")
+
+          users = users.map(user => {
+            if (user.encryptedKeys == null && user.encryptedKey) {
+              return {
+                id: user.id,
+                accountHash: hashAccountId(user.id),
+                encryptedKeys: {
+                  [ELECTRUM]: user.encryptedKey
+                },
+                biometry: false
+              }
+            } else return user
+          })
+
+          await setUsers(users)
+        }
+
+        resolve(setAccounts(users))
       })
       .catch(err => reject(err));
   });
 }
 
-export const loginUser = (account, password) => {
+export const authenticateAccount = async (account, password) => {
   let _keys = {};
-  let seed = decryptkey(password, account.encryptedKey);
+
+  let seeds = arrayToObject(
+    CHANNELS,
+    (acc, key) =>
+      account.encryptedKeys[key]
+        ? decryptkey(password, account.encryptedKeys[key])
+        : null,
+    true
+  );
+
   return new Promise((resolve, reject) => {
-    getActiveCoinsList()
+    getActiveCoinList()
       .then(activeCoins => {
         for (let i = 0; i < activeCoins.length; i++) {
           if (activeCoins[i].users.includes(account.id)) {
-            _keys[activeCoins[i].id] = makeKeyPair(seed, activeCoins[i].id)
+            _keys[activeCoins[i].id] = arrayToObject(
+              CHANNELS,
+              (acc, key) =>
+                activeCoins[i].compatible_channels.includes(key)
+                  ? makeKeyPair(
+                      seeds[key] ? seeds[key] : seeds.electrum,
+                      activeCoins[i].id,
+                      key
+                    )
+                  : null,
+              true
+            );
           }
         }
 
@@ -92,8 +143,8 @@ export const loginUser = (account, password) => {
           ...account.paymentMethods
         }
 
-        if (ENABLE_WYRE) {
-          const hashedSeed = sha256(seed).toString('hex');
+        if (ENABLE_FIAT_GATEWAY) {
+          const hashedSeed = sha256(seeds.electrum).toString('hex');
 
           WyreService.build().submitAuthToken(hashedSeed).then((response) => {
 
@@ -105,10 +156,32 @@ export const loginUser = (account, password) => {
               key: hashedSeed
             }
   
-            resolve(signIntoAccount({ id: account.id, wifKey: seed, keys: _keys, paymentMethods }));
+            resolve(
+              authenticateUser({
+                id: account.id,
+                accountHash: account.accountHash
+                  ? account.accountHash
+                  : hashAccountId(account.id),
+                seeds,
+                keys: _keys,
+                paymentMethods,
+                biometry: account.biometry ? true : false
+              })
+            );
           });
         } else {
-          resolve(signIntoAccount({ id: account.id, wifKey: seed, keys: _keys, paymentMethods: {} }));
+          resolve(
+            authenticateUser({
+              id: account.id,
+              accountHash: account.accountHash
+                ? account.accountHash
+                : hashAccountId(account.id),
+              seeds,
+              keys: _keys,
+              paymentMethods: {},
+              biometry: account.biometry ? true : false
+            })
+          );
         }
       })
       .catch(err => reject(err));
@@ -118,25 +191,29 @@ export const loginUser = (account, password) => {
 export const validateLogin = (account, password) => {
   return new Promise((resolve, reject) => {
     checkPinForUser(password, account.id)
-      .then(res => {
-        if (res !== false) {
-          return loginUser(account, password)
-        }
-        else {
-          return res
-        }
+      .then(() => {
+        return authenticateAccount(account, password);
       })
       .then(loginData => {
-        resolve(loginData)
+        resolve(loginData);
       })
+      .catch(err => {
+        reject(err)
+        console.warn(err);
+      });
   });
 }
 
-export const addKeypair = (seed, coinID, keys) => {
-  let keypair = makeKeyPair(seed, coinID)
-  let _keys = {}
-  Object.assign(_keys, keys)
-  _keys[coinID] = keypair
+export const addKeypairs = (accountSeeds, coinObj, keys) => {
+  let keypairs = {}
+  const coinID = coinObj.id
 
-  return updateAccountKeys(_keys)
+  CHANNELS.map(seedType => {
+    const seed = accountSeeds[seedType] ? accountSeeds[seedType] : accountSeeds[ELECTRUM]
+    if (coinObj.compatible_channels.includes(seedType)) {
+      keypairs[seedType] = makeKeyPair(seed, coinID, seedType)
+    }
+  })
+
+  return updateAccountKeys({...keys, [coinID]: keypairs})
 }

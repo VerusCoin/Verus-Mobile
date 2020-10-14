@@ -14,10 +14,11 @@ import {
 } from "react-native";
 import AlertAsync from "react-native-alert-async";
 import { connect } from 'react-redux';
-import { NavigationActions } from 'react-navigation';
+import { CommonActions } from '@react-navigation/native';
 import { clearCacheData } from '../../../actions/actionCreators';
-import styles from './WalletSettings.styles';
-import Colors from '../../../globals/colors';
+import Styles from '../../../styles/index'
+import { ELECTRUM } from "../../../utils/constants/intervalConstants";
+import { CoinLogos } from "../../../utils/CoinData/CoinData";
 
 const GENERAL_WALLET_SETTINGS = "GeneralWalletSettings"
 const COIN_SETTINGS = "CoinSettings"
@@ -77,48 +78,49 @@ class WalletSettings extends Component {
   }
 
   resetToScreen = (route, data) => {
-    const resetAction = NavigationActions.reset({
+    const resetAction = CommonActions.reset({
       index: 0, // <-- currect active route from actions array
-      actions: [
-        NavigationActions.navigate({ routeName: route, params: {data: data} }),
+      routes: [
+        { name: route, params: { data: data } },
       ],
     })
 
+    this.props.navigation.closeDrawer();
     this.props.navigation.dispatch(resetAction)
   }
 
   renderSettingsList = () => {
     return (
-      <ScrollView style={styles.coinList}>
+      <ScrollView style={Styles.wide}>
         <TouchableOpacity onPress={() => this.clearCache()}>
           <ListItem                       
-            title={<Text style={styles.coinItemLabel}>Clear Data Cache</Text>}
+            title="Clear Data Cache"
+            titleStyle={Styles.listItemLeftTitleDefault}
             leftIcon={{name: 'clear-all'}}
-            rightIcon={{name: 'close'}}
-            containerStyle={{ borderBottomWidth: 0 }} 
-            chevron={false}
-            chevronColor={Colors.quaternaryColor}
+            containerStyle={Styles.bottomlessListItemContainer} 
           />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => this._openSettings(GENERAL_WALLET_SETTINGS)}>
           <ListItem                       
-            title={<Text style={styles.coinItemLabel}>{"General Settings"}</Text>}
+            title="General Settings"
+            titleStyle={Styles.listItemLeftTitleDefault}
             leftIcon={{name: 'settings-applications'}}
-            containerStyle={{ borderBottomWidth: 0 }} 
-            chevronColor={Colors.quaternaryColor}
+            containerStyle={Styles.bottomlessListItemContainer} 
+            chevron
           />
         </TouchableOpacity>
-        {this.props.activeCoinsForUser.map((coin, index) => {
+        {this.props.activeCoinsForUser.filter((coin) => coin.compatible_channels.includes(ELECTRUM)).map((coin, index) => {
+          const Logo = CoinLogos[coin.id.toLowerCase()]
           return (
             <TouchableOpacity 
-              onPress={() => this._openSettings(COIN_SETTINGS, coin.id, coin.name)}
+              onPress={() => this._openSettings(COIN_SETTINGS, coin.id, coin.display_name)}
               key={index}>
               <ListItem
-                title={<Text style={styles.coinItemLabel}>{`${coin.name} Settings`}</Text>}
-                avatar={coin.logo}
-                roundAvatar
-                containerStyle={{ borderBottomWidth: 0 }} 
-                chevronColor={Colors.quaternaryColor}
+                title={`${coin.display_name} Settings`}
+                titleStyle={Styles.listItemLeftTitleDefault}
+                leftAvatar={Logo ? <Logo width={25} height={25}/> : null}
+                containerStyle={Styles.bottomlessListItemContainer} 
+                chevron
               />
             </TouchableOpacity>
           )
@@ -129,12 +131,12 @@ class WalletSettings extends Component {
 
   render() {
     return (
-      <View style={styles.root}>
-        <Text style={styles.fiatBalanceLabel}>
+      <View style={Styles.defaultRoot}>
+        <Text style={Styles.largeCentralPaddedHeader}>
         {this.props.activeAccount.id.length < 15 ? 
           this.props.activeAccount.id : "My Account"}
         </Text>
-        <Text style={styles.balanceSheetLabel}>{"Wallet Settings"}</Text>
+        <Text style={Styles.greyStripeHeader}>{"Wallet Settings"}</Text>
         {this.renderSettingsList()}
       </View>
     );

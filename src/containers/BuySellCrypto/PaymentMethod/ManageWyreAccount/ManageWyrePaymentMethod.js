@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 
 import { View } from 'react-native';
-import { NavigationActions } from 'react-navigation';
-import PlaidAuthenticator from 'react-native-plaid-link';
+import { NavigationActions } from '@react-navigation/compat';
+//import PlaidAuthenticator from 'react-native-plaid-link';
 import Spinner from 'react-native-loading-spinner-overlay';
 
 import {
@@ -41,15 +41,16 @@ class ManageWyrePaymentMethod extends Component {
       return null;
     }
     return (
-      <PlaidAuthenticator
-        onMessage={this.onMessage}
-        publicKey={this.props.config.plaidPublicKey}
-        env={this.props.config.plaidEnvironment}
-        webhook={this.props.config.plaidWebhook}
-        product="identity"
-        clientName="Wyre"
-        selectAccount
-      />
+      null
+      // <PlaidAuthenticator
+      //   onMessage={this.onMessage}
+      //   publicKey={this.props.config.plaidPublicKey}
+      //   env={this.props.config.plaidEnvironment}
+      //   webhook={this.props.config.plaidWebhook}
+      //   product="identity"
+      //   clientName="Wyre"
+      //   selectAccount
+      // />
     );
   }
 

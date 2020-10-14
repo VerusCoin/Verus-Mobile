@@ -24,6 +24,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+import BigNumber from 'bignumber.js';
+import { satsToCoins } from '../math';
+
 var bitcoin = require('bitgo-utxo-lib');
 // zcash fallback
 const Buffer = require('safe-buffer').Buffer;
@@ -75,9 +78,10 @@ const decodeInput = (tx) => {
 
 const decodeOutput = (tx, network) => {
   var format = (out, n, network) => {
+    const satoshi = BigNumber(out.value)
     var vout = {
-      satoshi: out.value,
-      value: (1e-8 * out.value).toFixed(8),
+      satoshi,
+      value: satsToCoins(satoshi),
       n: n,
       scriptPubKey: {
         asm: bitcoin.script.toASM(out.script),
@@ -207,12 +211,12 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
     outputs: {},
   };
   let _sum = {
-    inputs: 0,
-    outputs: 0,
+    inputs: BigNumber(0),
+    outputs: BigNumber(0),
   };
   let _total = {
-    inputs: 0,
-    outputs: 0,
+    inputs: BigNumber(0),
+    outputs: BigNumber(0),
   };
   let _addresses = {
     inputs: [],
@@ -239,8 +243,9 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
     }
 
     for (let i = 0; i < _parse[key].length; i++) {
+      const bnValue = _parse[key][i].value != null ? BigNumber(_parse[key][i].value) : BigNumber(0)
 
-      _total[key] += Number(_parse[key][i].value);
+      _total[key] = _total[key].plus(bnValue);
 
       // ignore op return outputs
       if (_parse[key][i].scriptPubKey &&
@@ -248,7 +253,7 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
           _parse[key][i].scriptPubKey.addresses[0] &&
           _parse[key][i].scriptPubKey.addresses[0] === targetAddress &&
           _parse[key][i].value) {
-        _sum[key] += Number(_parse[key][i].value);
+          _sum[key] = _sum[key].plus(bnValue);
       }
 
       if (_parse[key][i].scriptPubKey &&
@@ -281,32 +286,28 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
     }
   }
 
-  if (_sum.inputs > 0 &&
-      _sum.outputs > 0) {
-    // vin + change, break into two tx
+  const inOutDiff = _total.inputs.minus(_total.outputs)
 
+  if (_sum.inputs.isGreaterThan(BigNumber(0)) &&
+      _sum.outputs.isGreaterThan(BigNumber(0))) {
     // send to self
-    if (isSelfSend.inputs && isSelfSend.outputs) {
+    if (isSelfSend.inputs && isSelfSend.outputs) {      
       result = {
         type: 'self',
-        amount: Number(_sum.inputs - _sum.outputs).toFixed(8),
+        fee: inOutDiff.toString(),
+        amount: inOutDiff.toString(),
         address: targetAddress,
         timestamp: tx.timestamp,
         txid: tx.format.txid,
         confirmations: tx.confirmations,
       };
 
-      if (network === 'kmd') { // calc claimed interest amount
-        const vinVoutDiff = _total.inputs - _total.outputs;
-
-        if (vinVoutDiff < 0) {
-          result.interest = Number(vinVoutDiff.toFixed(8));
-        }
-      }
+      if (network === 'kmd' && inOutDiff.isLessThan(BigNumber(0))) result.interest = inOutDiff
     } else {
       result = [{ // reorder since tx sort by default is from newest to oldest
         type: 'sent',
-        amount: Number(_sum.inputs.toFixed(8)),
+        amount: _sum.inputs.toString(),
+        fee: inOutDiff.toString(),
         address: _addresses.outputs[0],
         timestamp: tx.timestamp,
         txid: tx.format.txid,
@@ -315,7 +316,7 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
         to: _addresses.outputs,
       }, {
         type: 'received',
-        amount: Number(_sum.outputs.toFixed(8)),
+        amount: _sum.outputs.toString(),
         address: targetAddress,
         timestamp: tx.timestamp,
         txid: tx.format.txid,
@@ -324,18 +325,12 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
         to: _addresses.outputs,
       }];
 
-      if (network === 'kmd') { // calc claimed interest amount
-        const vinVoutDiff = _total.inputs - _total.outputs;
-
-        if (vinVoutDiff < 0) {
-          result[1].interest = Number(vinVoutDiff.toFixed(8));
-        }
-      }
+      if (network === 'kmd' && inOutDiff.isLessThan(BigNumber(0))) result.interest = inOutDiff
     }
-  } else if (_sum.inputs === 0 && _sum.outputs > 0) {
+  } else if (_sum.inputs.isEqualTo(BigNumber(0)) && _sum.outputs.isGreaterThan(BigNumber(0))) {
     result = {
       type: 'received',
-      amount: Number(_sum.outputs.toFixed(8)),
+      amount: _sum.outputs.toString(),
       address: targetAddress,
       timestamp: tx.timestamp,
       txid: tx.format.txid,
@@ -343,10 +338,11 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
       from: _addresses.inputs,
       to: _addresses.outputs,
     };
-  } else if (_sum.inputs > 0 && _sum.outputs === 0) {
+  } else if (_sum.inputs.isGreaterThan(BigNumber(0)) && _sum.outputs.isEqualTo(BigNumber(0))) {
     result = {
       type: 'sent',
-      amount: Number(_sum.inputs.toFixed(8)),
+      amount: _sum.inputs.toString(),
+      fee: inOutDiff.toString(),
       address: isSelfSend.inputs && isSelfSend.outputs ? targetAddress : _addresses.outputs[0],
       timestamp: tx.timestamp,
       txid: tx.format.txid,
@@ -358,7 +354,7 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
     // (?)
     result = {
       type: 'other',
-      amount: 'unknown',
+      amount: '0',
       address: 'unknown',
       timestamp: tx.timestamp,
       txid: tx.format.txid,

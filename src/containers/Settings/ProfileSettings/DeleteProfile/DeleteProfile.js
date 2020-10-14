@@ -8,24 +8,23 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../../../symbols/button1";
+import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
-  Text, 
   Alert,
   ScrollView, 
   Keyboard,
-  TouchableWithoutFeedback,
-  Switch
 } from "react-native";
-import { NavigationActions } from 'react-navigation';
-import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements'
+import { NavigationActions } from '@react-navigation/compat';
+import { CommonActions } from '@react-navigation/native';
+import { Input, CheckBox } from 'react-native-elements'
 import { deleteUserByID } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
 import { checkPinForUser } from '../../../../utils/asyncStore/asyncStore'
 import Colors from '../../../../globals/colors';
-import styles from './DeleteProfile.styles'
+import Styles from '../../../../styles/index'
+import { removeBiometricPassword } from "../../../../utils/biometry/biometry";
 
 class DeleteProfile extends Component {
   constructor() {
@@ -36,16 +35,11 @@ class DeleteProfile extends Component {
       errors: {pwd: null, confirmSwitch: null},
       loading: false,
     };
-    this.updateIndex = this.updateIndex.bind(this)
   }
 
   _handleSubmit = () => {
     Keyboard.dismiss();
     this.validateFormData()
-  }
-
-  updateIndex (selectedButtonIndex) {
-    this.setState({selectedButtonIndex: selectedButtonIndex})
   }
 
   handleError = (error, field) => {
@@ -83,10 +77,8 @@ class DeleteProfile extends Component {
   }
 
   validateFormData = () => {
-    const userID = (this.props.navigation.state.params && this.props.navigation.state.params.data) ? 
-      this.props.navigation.state.params.data.coinObj
-      :
-      this.props.activeAccount.id
+    const userID = this.props.activeAccount.id
+    const { accountHash, biometry } = this.props.activeAccount
     
     if (userID) {
       this.setState({
@@ -96,31 +88,27 @@ class DeleteProfile extends Component {
         const _confirmSwitch = this.state.confirmSwitch
         let _errors = false;
   
-        if ((!_pwd || _pwd.length < 1) && (this.state.selectedButtonIndex === 0)) {
+        if (!_pwd || _pwd.length < 1) {
           this.handleError("Required field", "pwd")
           _errors = true
         } 
   
-        if (!this.state.confirmSwitch) {
-          this.handleError("Please confirm", "confirmSwitch")
+        if (!this.state.confirmSwitch && !_errors) {
+          Alert.alert("Please confirm", "Please confirm you are aware of what deleting your profile entails.")
           _errors = true
         }
   
         if (!_errors) {
           checkPinForUser(_pwd, userID)
-          .then((res) => {
-            if (res) {
-              return this.canDelete()
-            } else {
-              return false
-            }
+          .then(() => {
+            return this.canDelete()
           })
           .then((res) => {
             if (res) {
               let data = {
-                task: deleteUserByID,
+                task: this.deleteUser,
                 message: "Deleting profile, please do not close Verus Mobile",
-                input: [userID],
+                input: [userID, accountHash, biometry],
                 dispatchResult: true
               }
               this.resetToScreen("SecureLoading", data)
@@ -136,86 +124,84 @@ class DeleteProfile extends Component {
     }
   }
 
+  deleteUser = async (userId, accountHash, deleteBiometry) => {
+    try {
+      if (deleteBiometry) await removeBiometricPassword(accountHash)
+      
+      const res = await deleteUserByID(userId)
+      Alert.alert("Account Deleted!", `"${userId}" account successfully deleted.`)
+
+      return res
+    } catch (error) {
+      console.error(error)
+      Alert.alert("Error.", `Failed to delete "${userId}" account.`)
+    }
+  }
+
   authenticatePwd = () => {
     return (
-      <View style={styles.valueContainer}>
-        <FormLabel labelStyle={styles.formLabel}>
-        Enter your password:
-        </FormLabel>
-        <FormInput 
-          underlineColorAndroid={Colors.quaternaryColor}
-          onChangeText={(text) => this.setState({pwd: text})}
-          autoCapitalize={"none"}
-          autoCorrect={false}
-          secureTextEntry={true}
-          shake={this.state.errors.pwd}
-          inputStyle={styles.formInput}
-        />
-        <FormValidationMessage>
-        {
+      <Input 
+        label="Enter your password:"
+        labelStyle={Styles.formCenterLabel}
+        containerStyle={Styles.wideCenterBlock}
+        inputStyle={Styles.inputTextDefaultStyle}
+        onChangeText={(text) => this.setState({pwd: text})}
+        autoCapitalize={"none"}
+        autoCorrect={false}
+        secureTextEntry={true}
+        shake={this.state.errors.pwd}
+        errorMessage={
           this.state.errors.pwd ? 
             this.state.errors.pwd
             :
             null
         }
-        </FormValidationMessage>
-      </View>
+      />
     )
   }
 
   resetToScreen = (route, data) => {
-    const resetAction = NavigationActions.reset({
+    const resetAction = CommonActions.reset({
       index: 0, // <-- currect active route from actions array
-      actions: [
-        NavigationActions.navigate({ routeName: route, params: {data: data} }),
+      routes: [
+        { name: route, params: { data: data } },
       ],
     })
 
+    this.props.navigation.closeDrawer();
     this.props.navigation.dispatch(resetAction)
   }
 
   render() {
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <ScrollView style={styles.root} contentContainerStyle={{height: '100%' ,alignItems: "center", justifyContent: "center"}}>
-          <Text style={styles.wifLabel}>
-            {"Delete Profile"}
-          </Text>
+      <View style={Styles.defaultRoot}>
+        <ScrollView style={Styles.fullWidth}
+          contentContainerStyle={{...Styles.innerHeaderFooterContainerCentered, ...Styles.fullHeight}}>
           {this.authenticatePwd()}
-          <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-              I confirm that I would like to delete my profile, and acknowledge that 
-              this action cannot be reversed.
-            </FormLabel>
-            <View style={styles.switchContainer}>
-              <Switch 
-                value={this.state.confirmSwitch}
-                onValueChange={(value) => this.setState({confirmSwitch: value})}
-              />
-            </View>
-            <FormValidationMessage>
-            {
-              this.state.errors.confirmSwitch ? 
-                this.state.errors.confirmSwitch
-                :
-                null
-            }
-            </FormValidationMessage>
-          </View>
-          <View style={styles.buttonContainer}>
-            <Button1 
-              style={styles.cancelButton} 
-              buttonContent="CANCEL" 
-              onPress={this.cancel}
-            />
-            <Button1 
-              style={styles.addAccountButton} 
-              buttonContent="DELETE" 
-              onPress={this._handleSubmit}
+          <View style={Styles.wideBlock}>
+            <CheckBox
+              title="I confirm that I would like to delete my profile, and acknowledge that this action cannot be reversed."
+              checked={this.state.confirmSwitch}
+              textStyle={Styles.defaultText}
+              onPress={() => this.setState({confirmSwitch: !this.state.confirmSwitch})}
             />
           </View>
         </ScrollView>
-      </TouchableWithoutFeedback>
+        <View style={Styles.highFooterContainer}>
+          <View style={Styles.standardWidthSpaceBetweenBlock}>
+            <StandardButton 
+              color={Colors.warningButtonColor}
+              title="CANCEL" 
+              onPress={this.cancel}
+            />
+            <StandardButton 
+              color={Colors.linkButtonColor}
+              title="DELETE" 
+              onPress={this._handleSubmit}
+            />
+          </View>
+        </View>
+      </View>
     );
   }
 }

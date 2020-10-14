@@ -16,15 +16,15 @@ import {
 } from "react-native";
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import { isJson } from '../../../utils/objectManip'
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 import { connect } from 'react-redux';
-import { namesList } from '../../../utils/CoinData'
+import { namesList } from '../../../utils/CoinData/CoinData'
 import {
   FORMAT_UNKNOWN,
   INCOMPLETE_CHAIN_QR
-} from '../../../utils/constants'
+} from '../../../utils/constants/constants'
 import CustomChainForm from '../CustomChainForm/CustomChainForm'
-import styles from './CustomChainScan.styles'
+import Styles from '../../../styles/index'
 
 class CustomChainScan extends Component {
   constructor(props) {
@@ -38,11 +38,11 @@ class CustomChainScan extends Component {
     this.handleChainQR = this.handleChainQR.bind(this)
   }
 
-  static navigationOptions = ({ navigation }) => {
+  static navigationOptions = ({ route }) => {
     return {
-      title: typeof(navigation.state.params)==='undefined' || 
-      typeof(navigation.state.params.title) === 'undefined' ? 
-      'undefined': navigation.state.params.title,
+      title: typeof(route.params)==='undefined' || 
+      typeof(route.params.title) === 'undefined' ? 
+      'undefined': route.params.title,
     };
   };
 
@@ -143,7 +143,7 @@ class CustomChainScan extends Component {
 
   render() {
     return (
-      <View style={styles.root}>
+      <View style={Styles.defaultRoot}>
         <Modal 
           visible={this.state.modalVisible}
           animationType={"slide"}>
@@ -161,7 +161,7 @@ class CustomChainScan extends Component {
             onRead={this.onSuccess.bind(this)}
             showMarker={true}
             captureAudio={false}
-            cameraStyle={styles.QRCamera}
+            cameraStyle={{...Styles.fullWidth, ...Styles.fullHeight}}
           />
         }
       </View>

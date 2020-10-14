@@ -7,7 +7,7 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import { ListItem } from 'react-native-elements';
-import Button1 from '../../../../../symbols/button1';
+import StandardButton from '../../../../../components/StandardButton';
 
 import { manageAccount } from '../../../../../actions/actions/PaymentMethod/WyreAccount';
 
@@ -38,9 +38,9 @@ class WyreAccount extends Component {
             />
           </View>
           <View style={styles.manageAccountView}>
-            <Button1
+            <StandardButton
                 style={styles.manageAccountLabel}
-                buttonContent="MANAGE ACCOUNT"
+                title="MANAGE ACCOUNT"
                 onPress={this.manageAccount}
               />
           </View>

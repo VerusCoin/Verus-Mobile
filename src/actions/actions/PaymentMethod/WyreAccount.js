@@ -1,7 +1,7 @@
 import DelayedAlert from '../../../utils/delayedAlert';
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 
-import { WYRE_URL } from '../../../utils/constants';
+import { WYRE_URL } from '../../../utils/constants/constants';
 
 import WyreService from '../../../services/wyreService';
 import { putUserPaymentMethods } from '../../../utils/asyncStore/asyncStore';
@@ -71,6 +71,7 @@ export const manageAccount = (navigation) => async (dispatch, getState) => {
                 }
             };
 
+            //TODO: REFACTOR signIntoAccount is deprecated
             dispatch(signIntoAccount(newActiveAccount));
 
         } catch (error) {

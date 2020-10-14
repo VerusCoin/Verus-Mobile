@@ -1,7 +1,0 @@
-import { StyleSheet } from "react-native";
-
-export default styles = StyleSheet.create({
-  coinList: {
-    width: "100%",
-  },
-});

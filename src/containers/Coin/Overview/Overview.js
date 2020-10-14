@@ -13,243 +13,329 @@ import {
 } from "react-native";
 import { ListItem } from "react-native-elements";
 import { connect } from 'react-redux';
-import { satsToCoins, truncateDecimal } from '../../../utils/math';
-import { 
-  fetchTransactionsForCoin, 
-  updateCoinBalances,
-  everythingNeedsUpdate
-} from '../../../actions/actionCreators';
-import styles from './Overview.styles';
+import { truncateDecimal, MathableNumber } from '../../../utils/math';
+import { expireData, setActiveOverviewFilter } from '../../../actions/actionCreators';
+import Styles from '../../../styles/index'
+import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
+import store from "../../../store";
+import TxDetailsModal from '../../../components/TxDetailsModal/TxDetailsModal'
+import {
+  API_GET_FIATPRICE,
+  API_GET_BALANCES,
+  API_GET_INFO,
+  API_GET_TRANSACTIONS,
+  ETH
+} from "../../../utils/constants/intervalConstants";
+import { selectTransactions } from '../../../selectors/transactions';
+import { ETHERS } from "../../../utils/constants/web3Constants";
+import { ethers } from "ethers";
+import { Portal } from "react-native-paper";
+import BigNumber from "bignumber.js";
+import { TransactionLogos } from '../../../images/customIcons/index'
 
-const SELF = require('../../../images/customIcons/selfArrow.png')
-const OUT = require('../../../images/customIcons/outgoingArrow.png')
-const IN = require('../../../images/customIcons/incomingArrow.png')
-const UNKNOWN = require('../../../images/customIcons/unknownLogo.png')
-const INTEREST = require('../../../images/customIcons/interestPlus.png')
+const TX_LOGOS = {
+  self: TransactionLogos.SelfArrow,
+  out: TransactionLogos.OutArrow,
+  in: TransactionLogos.InArrow,
+  pending: TransactionLogos.PendingClock,
+  unknown: TransactionLogos.Unknown,
+  interest: TransactionLogos.InterestPlus,
+}
+
 const CONNECTION_ERROR = "Connection Error"
 
 class Overview extends Component {
   constructor(props) {
-    super(props)
+    super(props);
+
     this.state = {
       parsedTxList: [],
       coinRates: {},
-      loading: false
+      loading: false,
+      txDetailsModalOpen: false,
+      txDetailProps: {
+        parsedAmount: "0",
+        txData: {},
+        activeCoinID: null,
+        TxLogo: TX_LOGOS.unknown
+      }
     };
-    this.updateProps = this.updateProps.bind(this);
+    //this.updateProps = this.updateProps.bind(this);
+    this.refresh = this.refresh.bind(this);
   }
 
-
   componentDidMount() {
-    this.refresh()
+    this.refresh();
+    this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
+      this.refresh();
+    });
+  }
+
+  componentWillUnmount() {
+    this._unsubscribeFocus()
   }
 
   refresh = () => {
-    const _coinObj = this.props.activeCoin
-    const _oldTransactions = this.props.transactions
-    const _activeAccount = this.props.activeAccount
-    const _needsUpdateObj = this.props.needsUpdate.transactions
-    const _balances = this.props.balances
-    const _activeCoinsForUser = this.props.activeCoinsForUser
-
-    let promiseArray = []
-
-    if (_needsUpdateObj[_coinObj.id]){
-      console.log("Transactions need update, pushing update to promise array")
-      if (!this.state.loading) {
-        this.setState({ loading: true });  
-      }
-
-      promiseArray.push(fetchTransactionsForCoin(_oldTransactions, _coinObj, _activeAccount, _needsUpdateObj, Number(this.props.generalWalletSettings.maxTxCount)))
+    if (!this.state.loading) {
+      this.setState({ loading: true }, () => {
+        const updates = [
+          API_GET_FIATPRICE,
+          API_GET_BALANCES,
+          API_GET_INFO,
+          API_GET_TRANSACTIONS
+        ];
+        Promise.all(
+          updates.map(async update => {
+            await conditionallyUpdateWallet(
+              store.getState(),
+              this.props.dispatch,
+              this.props.activeCoin.id,
+              update
+            );
+          })
+        )
+          .then(res => {
+            this.setState({ loading: false });
+          })
+          .catch(error => {
+            this.setState({ loading: false });
+            console.warn(error);
+          });
+      });
     }
-
-    if(this.props.needsUpdate.balances) {
-      console.log("Balances need update, pushing update to promise array")
-      if (!this.state.loading) {
-        this.setState({ loading: true });  
-      }
-      promiseArray.push(updateCoinBalances(_balances, _activeCoinsForUser, _activeAccount))
-    }
-  
-    this.updateProps(promiseArray)
-  }
+  };
 
   forceUpdate = () => {
-    //TODO: Figure out why screen doesnt always update if everything is called seperately
+    const coinObj = this.props.activeCoin;
+    this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE));
+    this.props.dispatch(expireData(coinObj.id, API_GET_BALANCES));
+    this.props.dispatch(expireData(coinObj.id, API_GET_INFO));
+    this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS));
 
-    /*this.props.dispatch(transactionsNeedUpdate(this.props.activeCoin.id, this.props.needsUpdate.transanctions))
-    this.props.dispatch(needsUpdate("balances"))
-    this.props.dispatch(needsUpdate("rates"))*/
-    this.props.dispatch(everythingNeedsUpdate())
+    this.refresh();
+  };
 
-    this.refresh()
-  }
-
-  _openDetails = (item) => {  
-    let navigation = this.props.navigation  
+  _openDetails = item => {
+    let navigation = this.props.navigation;
     navigation.navigate("TxDetails", {
       data: item
     });
   };
 
-  _sendButton = () => {
-    let navigation = this.props.navigation  
+  renderTransactionItem = ({ item, index }) => {
+    const decimals = this.props.activeCoin.decimals != null ? this.props.activeCoin.decimals : ETHERS
+    let amount = new MathableNumber(0, decimals);
+    let AvatarImg;
+    let subtitle = "";
+    const gasFees = item.feeCurr === ETH.toUpperCase()
 
-    data = {
-      coinObj: this.props.activeCoin, 
-      balances: this.props.balances,
-      activeAccount: this.props.activeAccount,
-      activeCoinsForUser: this.props.activeCoinsForUser
-    }
+    if (Array.isArray(item)) {
+      const txArray = item
+      let toAddresses = [];
+      const confirmations = txArray[0].confirmations
+      
+      amount = new MathableNumber(ethers.utils.formatUnits(
+        ethers.utils
+          .parseUnits(txArray[0].amount, decimals)
+          .sub(ethers.utils.parseUnits(txArray[1].amount, decimals))
+      ),
+      decimals)
 
-    navigation.navigate("Send", {
-      data: data
-    });
-  }
-
-  updateProps = (promiseArray) => {
-    return new Promise((resolve, reject) => {
-      Promise.all(promiseArray)
-        .then((updatesArray) => {
-          if (updatesArray.length > 0) {
-            for (let i = 0; i < updatesArray.length; i++) {
-              if(updatesArray[i]) {
-                this.props.dispatch(updatesArray[i])
-              }
-            }
-            if (this.state.loading) {
-              this.setState({ loading: false });  
-            }
-            resolve(true)
-          }
-          else {
-            resolve(false)
-          }
-        })
-    }) 
-  }
-
-  renderTransactionItem = ({item, index}) => {
-    let amount = 0
-    let avatarImg
-    let subtitle = ''
-    
-    if(Array.isArray(item)) {
-      let toAddresses = []
-      amount = Number(item[0].amount) - Number(item[1].amount)
-
-      if (item[1].interest) {
-        let interest = item[1].interest*-1
-        amount = Number(amount) + Number(interest)
+      if (txArray[1].interest) {
+        let interest = txArray[1].interest * -1;
+        amount = amount.num.add(new MathableNumber(interest, decimals).num)
       }
-          
-      avatarImg = OUT
-      for (let i = 0; i < item[0].to.length; i++) {
-        if (item[0].to[i] !== item[0].from[0]) {
-          toAddresses.push(item[0].to[i])
+
+      for (let i = 0; i < txArray[0].to.length; i++) {
+        if (txArray[0].to[i] !== txArray[0].from[0]) {
+          toAddresses.push(txArray[0].to[i]);
         }
       }
 
       if (toAddresses.length > 1) {
-        subtitle = toAddresses[0] + ' + ' + (toAddresses.length - 1) + ' more'
+        subtitle = toAddresses[0] + " + " + (toAddresses.length - 1) + " more";
+      } else {
+        subtitle = toAddresses[0];
       }
-      else {
-        subtitle = toAddresses[0]
+
+      AvatarImg = confirmations === 0 || txArray[0].status === "pending" ? TX_LOGOS.pending : TX_LOGOS.out;
+
+      item = {
+        address: toAddresses.join(' & '),
+        amount,
+        confirmations,
+        fee: txArray[0].fee,
+        from: txArray[0].from,
+        timestamp: txArray[0].timestamp,
+        to: toAddresses,
+        txid: txArray[0].txid,
+        type: "sent"
+      }
+    } else {
+      amount = item.amount != null ? new MathableNumber(item.amount, decimals) : new MathableNumber(0, decimals);
+
+      if (item.type === "received") {
+        AvatarImg = TX_LOGOS.in;
+        subtitle = "me";
+      } else if (item.type === "sent") {
+        AvatarImg = TX_LOGOS.out;
+        subtitle = item.address == null ? "??" : item.address;
+      } else if (item.type === "self") {
+        if (item.amount !== "??" && amount.num.lt(0)) {
+          subtitle = "me";
+          AvatarImg = TX_LOGOS.interest;
+          amount.num = amount.num.mul(new MathableNumber("-1").num);
+        } else {
+          AvatarImg = TX_LOGOS.self;
+          subtitle = gasFees ? "gas" : "fees";
+        }
+      } else {
+        AvatarImg = TX_LOGOS.unknown;
+        subtitle = "??";
       }
     }
-    else {
-      amount = item.amount ? Number(item.amount) : '???'
 
-      if(item.type === 'received') {
-        avatarImg = IN
-        subtitle = 'me'
-      }
-      else if (item.type === 'sent') {
-        avatarImg = OUT
-        subtitle = item.address
-      }
-      else if (item.type === 'self') {
-        if (item.amount !== '???' && amount < 0) {
-          subtitle = 'me'
-          avatarImg = INTEREST
-          amount = amount*-1
-        }
-        else {
-          avatarImg = SELF
-          subtitle = 'fees'
-        }
-      }
-      else {
-        avatarImg = UNKNOWN
-        subtitle = '???'
-      }
+    if (item.confirmations === 0 || item.status === "pending")
+      AvatarImg = TX_LOGOS.pending;
+
+    subtitle = "to: " + subtitle;
+
+    let displayAmount = null
+
+    // Handle possible int overflows
+    try { 
+      if (gasFees) {
+        let newAmount = new MathableNumber(0, amount.maxDecimals)
+        
+        newAmount.num = amount.num.add(
+          new MathableNumber(
+            item.fee,
+            amount.maxDecimals
+          ).num
+        )
+
+        displayAmount = BigNumber(newAmount.display())
+      } else displayAmount = BigNumber(amount.display()) 
     }
-
-    subtitle = 'to: ' + subtitle
+    catch(e) { console.error(e) }
 
     return (
-      <TouchableOpacity onPress={() => this._openDetails({amount: amount, tx: item, coinID: this.props.activeCoin.id})}>
-        <ListItem              
-          roundAvatar          
-          title={<Text style={styles.transactionItemLabel}>
-                {amount < 0.0001 ? '< ' + truncateDecimal(amount, 4) : truncateDecimal(amount, 4)}
-                </Text>}   
-          subtitle={subtitle}                  
-          avatar={avatarImg}   
-          containerStyle={{ borderBottomWidth: 0 }} 
-          rightTitle={'info'}
-        /> 
-      </TouchableOpacity>    
-    )
+      <TouchableOpacity
+        onPress={() =>
+          this.setState({
+            txDetailProps: {
+              parsedAmount: amount,
+              txData: item,
+              activeCoinID: this.props.activeCoin.id,
+              TxLogo: AvatarImg,
+              decimals:
+                this.props.activeCoin.decimals != null
+                  ? this.props.activeCoin.decimals
+                  : 8,
+            },
+            txDetailsModalOpen: true,
+          })
+        }
+      >
+        <ListItem
+          roundAvatar
+          title={
+            <Text style={Styles.listItemLeftTitleDefault}>
+              {`${
+                displayAmount != null
+                  ? displayAmount.isLessThan(BigNumber(0.0001)) &&
+                    !displayAmount.isEqualTo(BigNumber(0))
+                    ? displayAmount.toExponential()
+                    : displayAmount.toString()
+                  : "??"
+              } ${
+                item.feeCurr != null && item.type === "self"
+                  ? item.feeCurr
+                  : this.props.activeCoin.id
+              }`}
+            </Text>
+          }
+          subtitle={subtitle}
+          subtitleProps={{ numberOfLines: 1 }}
+          leftAvatar={<AvatarImg width={40} height={40} />}
+          chevron
+          containerStyle={Styles.bottomlessListItemContainer}
+          rightTitle={
+            <Text style={Styles.listItemRightTitleDefault}>{"info"}</Text>
+          }
+        />
+      </TouchableOpacity>
+    );
+  };
+
+  parseTransactionLists = () => {
+    const { transactions } = this.props
+    let txs =
+      transactions != null && transactions.results != null
+        ? transactions.results
+        : [];
+    // let txList = txs.map(object => {
+    //   return Array.isArray(object) ? { txArray: object, visibility: PUBLIC } : { ...object, visibility: PUBLIC };
+    // })
+
+    return txs.sort((a, b) => {
+      a = Array.isArray(a) ? a[0] : a
+      b = Array.isArray(b) ? b[0] : b
+      
+      if (a.timestamp == null) return 1
+      else if (b.timestamp == null) return -1
+      else if (b.timestamp == a.timestamp) return 0
+      else if (b.timestamp < a.timestamp) return -1
+      else return 1
+    })
   }
 
   renderTransactionList = () => {
     return (
-      <FlatList 
-      style={styles.transactionList}         
-      data={this.props.transactions[this.props.activeCoin.id]}
-      scrollEnabled={true}
-      refreshing={this.state.loading}
-      onRefresh={this.forceUpdate}
-      renderItem={this.renderTransactionItem}   
-      //extraData={this.props.balances}       
-      keyExtractor={this.keyExtractor}                            
-      /> 
-    )
-  }
+      <FlatList
+        style={Styles.fullWidth}
+        data={this.parseTransactionLists()}
+        scrollEnabled={true}
+        keyExtractor={(item, index) => index}
+        refreshing={this.state.loading}
+        onRefresh={this.forceUpdate}
+        renderItem={this.renderTransactionItem}
+        //extraData={this.props.balances}
+      />
+    );
+  };
 
-  keyExtractor = (item, index) => {
-    if (Array.isArray(item)) {
-      return item[0].txid
-    }
-    return item.txid
-  }
-
-  renderBalanceLabel = () => {
-    if (this.props.balances.hasOwnProperty(this.props.activeCoin.id) && (this.props.balances[this.props.activeCoin.id].error || isNaN(this.props.balances[this.props.activeCoin.id].result.confirmed))) {
-      return (
-        <Text style={styles.connectionErrorLabel}>
-          {CONNECTION_ERROR}  
-        </Text>
-      )
-    } else if (this.props.balances.hasOwnProperty(this.props.activeCoin.id)) {
-      return (
-      <Text style={styles.coinBalanceLabel}>
-          {truncateDecimal(satsToCoins(this.props.balances[this.props.activeCoin.id].result.confirmed), 4) + ' ' + this.props.activeCoin.id }
-      </Text>
-      )
-    } else {
-      return null;
-    }
+  setOverviewFilter = (filter) => {
+    this.props.dispatch(setActiveOverviewFilter(this.props.activeCoin.id, filter))
   }
 
   render() {
     return (
-      <View style={styles.root}>
-      <View style={styles.headerContainer}>
-        {this.renderBalanceLabel()}
-      </View>
-        <Text style={styles.transactionLabel}>Transactions</Text>
+      <View style={Styles.defaultRoot}>
+        {this.state.txDetailsModalOpen && (
+          <Portal>
+            <TxDetailsModal
+              {...this.state.txDetailProps}
+              cancel={() =>
+                this.setState({
+                  txDetailsModalOpen: false,
+                  txDetailProps: {
+                    parsedAmount: "0",
+                    txData: {},
+                    activeCoinID: null,
+                    TxLogo: TX_LOGOS.unknown,
+                    decimals:
+                      this.props.activeCoin.decimals != null
+                        ? this.props.activeCoin.decimals
+                        : ETHERS,
+                  },
+                })
+              }
+              visible={this.state.txDetailsModalOpen}
+              animationType="slide"
+            />
+          </Portal>
+        )}
         {this.renderTransactionList()}
       </View>
     );
@@ -259,9 +345,7 @@ class Overview extends Component {
 const mapStateToProps = (state) => {
   return {
     activeCoin: state.coins.activeCoin,
-    balances: state.ledger.balances,
-    needsUpdate: state.ledger.needsUpdate,
-    transactions: state.ledger.transactions,
+    transactions: selectTransactions(state),
     activeAccount: state.authentication.activeAccount,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     generalWalletSettings: state.settings.generalWalletSettings,

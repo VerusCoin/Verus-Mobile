@@ -2,15 +2,32 @@ import { setFetchParams } from './SetFetchParams'
 
 export const MOCK_USER_OBJ = {
   id: 'AzureDiamond',
-  seed: 'hunter2',
+  accountHash: '0d09a83e8659dd37b875e43498823459b3e27b42299d80960557d443f6bf98e0',
+  seeds: {
+    electrum: 'hunter2',
+    dlight: "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol."
+  },
   keys: {
     VRSC: {
-      pubKey: 'RTbZS48ASp9qtCg4ucyHC8GwF6KG49UNjF',
-      privKey: 'Ux4SB7LdzdMVg2s2BuapntC2aiVjEiNdabfhZsb6NCPNJTLEYHTX'
+      electrum: {
+        pubKey: '033b467f6c3e5042a14cef1711498c08a08787999443c200f6dd9fd72b619454f1',
+        privKey: 'Ux4SB7LdzdMVg2s2BuapntC2aiVjEiNdabfhZsb6NCPNJTLEYHTX',
+        addresses: ['RTbZS48ASp9qtCg4ucyHC8GwF6KG49UNjF']
+      }
     },
     KMD: {
-      pubKey: 'RTbZS48ASp9qtCg4ucyHC8GwF6KG49UNjF',
-      privKey: 'Ux4SB7LdzdMVg2s2BuapntC2aiVjEiNdabfhZsb6NCPNJTLEYHTX'
+      electrum: {
+        pubKey: '033b467f6c3e5042a14cef1711498c08a08787999443c200f6dd9fd72b619454f1',
+        privKey: 'Ux4SB7LdzdMVg2s2BuapntC2aiVjEiNdabfhZsb6NCPNJTLEYHTX',
+        addresses: ['RTbZS48ASp9qtCg4ucyHC8GwF6KG49UNjF']
+      }
+    },
+    ZEC: {
+      electrum: {
+        pubKey: '033b467f6c3e5042a14cef1711498c08a08787999443c200f6dd9fd72b619454f1',
+        privKey: 'Ux4SB7LdzdMVg2s2BuapntC2aiVjEiNdabfhZsb6NCPNJTLEYHTX',
+        addresses: ['RTbZS48ASp9qtCg4ucyHC8GwF6KG49UNjF']
+      }
     },
   }
 }
@@ -21,15 +38,24 @@ export const MOCK_USER_OBJ = {
 //knowledge.
 export const MOCK_USER_OBJ_BALANCE_LARGE_VRSC = {
   id: 'VRSC Richlist #2 Address at https://dexstats.info/richlist.php?asset=VRSC as of July 31st, 2019',
-  seed: '',
+  seeds: {
+    electrum: '',
+    dlight: ''
+  },
   keys: {
     VRSC: {
-      pubKey: 'RFeHXibrwdnrxdKPozadvH8XAsNGXY7bxP',
-      privKey: ''
+      electrum: {
+        pubKey: '',
+        privKey: '',
+        addresses: ['RFeHXibrwdnrxdKPozadvH8XAsNGXY7bxP']
+      }
     },
-    KMD: {
-      pubKey: 'RFeHXibrwdnrxdKPozadvH8XAsNGXY7bxP',
-      privKey: ''
+    VRSC: {
+      electrum: {
+        pubKey: '',
+        privKey: '',
+        addresses: ['RFeHXibrwdnrxdKPozadvH8XAsNGXY7bxP']
+      }
     },
   }
 }
@@ -37,30 +63,48 @@ export const MOCK_USER_OBJ_BALANCE_LARGE_VRSC = {
 //TODO: Change to an address with more than one utxo
 export const MOCK_USER_OBJ_BALANCE_SMALL_VRSC = {
   id: 'Random address with balance of ~3000 VRSC taken from https://dexstats.info/richlist.php?asset=VRSC on July 31st, 2019',
-  seed: '',
+  seeds: {
+    electrum: '',
+    dlight: ''
+  },
   keys: {
     VRSC: {
-      pubKey: 'RY7eX5Pm2vJV9SXh2CMC1higVYzLrUeukD',
-      privKey: ''
+      electrum: {
+        pubKey: '',
+        privKey: '',
+        addresses: ['RY7eX5Pm2vJV9SXh2CMC1higVYzLrUeukD']
+      }
     },
-    KMD: {
-      pubKey: 'RY7eX5Pm2vJV9SXh2CMC1higVYzLrUeukD',
-      privKey: ''
+    VRSC: {
+      electrum: {
+        pubKey: '',
+        privKey: '',
+        addresses: ['RY7eX5Pm2vJV9SXh2CMC1higVYzLrUeukD']
+      }
     },
   }
 }
 
 export const MOCK_USER_OBJ_BALANCE_SMALL_KMD = {
   id: 'KMD Richlist #1000 Address at https://dexstats.info/richlist.php?asset=KMD as of July 31st, 2019',
-  seed: '',
+  seeds: {
+    electrum: '',
+    dlight: ''
+  },
   keys: {
     VRSC: {
-      pubKey: 'RYZ62rj6VEgojsWhkxT5ucV6kZnwMGBKr7',
-      privKey: ''
+      electrum: {
+        pubKey: '',
+        privKey: '',
+        addresses: ['RYZ62rj6VEgojsWhkxT5ucV6kZnwMGBKr7']
+      }
     },
-    KMD: {
-      pubKey: 'RYZ62rj6VEgojsWhkxT5ucV6kZnwMGBKr7',
-      privKey: ''
+    VRSC: {
+      electrum: {
+        pubKey: '',
+        privKey: '',
+        addresses: ['RYZ62rj6VEgojsWhkxT5ucV6kZnwMGBKr7']
+      }
     },
   }
 }
@@ -77,14 +121,18 @@ export const MOCK_USER_OBJ_BALANCE_SMALL_KMD = {
  */
 export const getTempActiveCoin = (coinID, callsSucceed, code, params, errorMsg = '') => {return ({
   id: coinID, 
+  proto: coinID === 'VRSC' ? 'vrsc' : 'btc',
   name: "Test Coin", 
   description: "Coin for testing", 
   fee: 10000,
+  compatible_channels: [ 'dlight', 'electrum', 'general' ],
+  tags: [ 'is_verus', 'is_zcash', 'is_pbaas', 'is_pbaas_root' ],
   users: [
   'AzureDiamond',
   'Random address with balance of ~3000 VRSC taken from https://dexstats.info/richlist.php?asset=VRSC on July 31st, 2019',
   'VRSC Richlist #2 Address at https://dexstats.info/richlist.php?asset=VRSC as of July 31st, 2019'],
   serverList: setFetchParams(callsSucceed, code, params, false, errorMsg),
+  dlightEndpoints: ['light.virtualsoundnw.com:9077'],
   apps: {
     wallet: {
       title: 'VRSC Wallet', 
@@ -120,8 +168,11 @@ export const getTempActiveCoin = (coinID, callsSucceed, code, params, errorMsg =
 })}
 
 export const MOCK_PIN = '12345'
+export const MOCK_PIN_TWO = '67890'
 export const MOCK_SEED = 'hunter2'
 export const MOCK_ADDRESS = 'RTbZS48ASp9qtCg4ucyHC8GwF6KG49UNjF'
+export const MOCK_PUBKEY = '033b467f6c3e5042a14cef1711498c08a08787999443c200f6dd9fd72b619454f1'
 export const MOCK_SCRIPTHASH = '371acb1c695c759b5049653f4893697187c07e88fe07ee22b30ad4cf39d3ca87'
-export const MOCK_ENCRYPTEDKEY = 'a76WqKD6uDccOd5fUEY6CBZEMEhfHBA='
+export const MOCK_LEGACY_ENCRYPTEDKEY = 'a76WqKD6uDccOd5fUEY6CBZEMEhfHBA='
+export const MOCK_ENCRYPTEDKEY = 'k8PB3ZWVVYgf9x9yB3pbwYfs/2DTjq6KCBPXXfUa179kMhMegyF0'
 export const MOCK_PRIVKEY = 'Ux4SB7LdzdMVg2s2BuapntC2aiVjEiNdabfhZsb6NCPNJTLEYHTX'

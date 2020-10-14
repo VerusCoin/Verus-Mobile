@@ -7,13 +7,13 @@ import {
   Keyboard,
 } from 'react-native';
 
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 
 import { selectWyreCreateAccountIsFetching } from '../../../../selectors/paymentMethods'
 
 import AccountRenderers from '../renderers/mappings';
 
-import { SUPPORTED_PAYMENT_METHODS } from '../../../../utils/constants';
+import { SUPPORTED_PAYMENT_METHODS } from '../../../../utils/constants/constants';
 
 import Spinner from 'react-native-loading-spinner-overlay';
 
@@ -27,7 +27,7 @@ class SelectPaymentMethod extends Component {
   }
 
   onSelect = (method) => {
-    const { onSelect } = this.props.navigation.state.params;
+    const { onSelect } = this.props.route.params;
     if (!onSelect) return;
     onSelect(method);
     this.back();

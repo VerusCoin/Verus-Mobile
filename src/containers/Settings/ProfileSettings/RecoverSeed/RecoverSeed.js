@@ -10,21 +10,18 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../../../symbols/button1";
+import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
-  Text, 
   Alert,
   ScrollView, 
-  Keyboard,
-  TouchableWithoutFeedback,
 } from "react-native";
-import { NavigationActions } from 'react-navigation';
-import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements'
+import { NavigationActions } from '@react-navigation/compat';
+import { Input } from 'react-native-elements'
 import { checkPinForUser } from '../../../../utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
-import styles from './RecoverSeed.styles'
+import Styles from '../../../../styles/index'
 import Colors from "../../../../globals/colors";
 
 class RecoverSeed extends Component {
@@ -91,19 +88,17 @@ class RecoverSeed extends Component {
 
       if (!_errors) {
         checkPinForUser(_password, this.props.activeAccount.id)
-        .then((seed) => {
-          if (seed) {
-            let promiseArr = [this.canShowSeed(), seed]
-            return Promise.all(promiseArr)
-          } else {
-            return false
-          }
+        .then((seeds) => {
+          let promiseArr = [this.canShowSeed(), seeds]
+          return Promise.all(promiseArr)
         })
         .then((res) => {
           if (res[0] && Array.isArray(res)) {
             this.setState({password: null}, () => {
-              let seed = res.pop()
-              this.showSeed(seed)
+              let seeds = res.pop()
+
+              //DELETE/REFACTOR, change to show all seeds
+              this.showSeed(seeds)
             })
           } 
         })
@@ -114,56 +109,51 @@ class RecoverSeed extends Component {
     });
   }
 
-  showSeed = (seed) => {
+  showSeed = (seeds) => {
     this.props.navigation.navigate("DisplaySeed", {
-      data: {seed: seed}
+      data: {seeds}
     });
   }
 
   render() {
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <ScrollView style={styles.root} contentContainerStyle={{alignItems: "center", justifyContent: "center"}}>
-          <Text style={styles.wifLabel}>
-            Recover Wallet Seed
-          </Text>
-          <View style={styles.valueContainer}>
-            <FormLabel style={styles.formLabel}>
-            Enter your account password:
-            </FormLabel>
-            <FormInput 
-              underlineColorAndroid={Colors.quaternaryColor}
+      <View style={Styles.defaultRoot}>
+        <ScrollView style={Styles.fullWidth}
+          contentContainerStyle={{...Styles.innerHeaderFooterContainerCentered, ...Styles.fullHeight}}>
+          <View style={Styles.wideCenterBlock}>
+            <Input 
+              label="Enter your account password:"
+              labelStyle={Styles.formCenterLabel}
               onChangeText={(text) => this.setState({password: text})}
               value={this.state.password}
               autoCapitalize={"none"}
               autoCorrect={false}
               secureTextEntry={true}
               shake={this.state.errors.password}
-              inputStyle={styles.formInput}
-            />
-            <FormValidationMessage>
-            {
-              this.state.errors.password ? 
-                this.state.errors.password
-                :
-                null
-            }
-            </FormValidationMessage>
-          </View>
-          <View style={styles.buttonContainer}>
-            <Button1 
-              style={styles.cancelButton} 
-              buttonContent="CANCEL" 
-              onPress={this.cancel}
-            />
-            <Button1 
-              style={styles.addAccountButton} 
-              buttonContent="RECOVER" 
-              onPress={this._handleSubmit}
+              errorMessage={
+                this.state.errors.password ? 
+                  this.state.errors.password
+                  :
+                  null
+              }
             />
           </View>
         </ScrollView>
-      </TouchableWithoutFeedback>
+        <View style={Styles.highFooterContainer}>
+          <View style={Styles.standardWidthSpaceBetweenBlock}>
+            <StandardButton 
+              color={Colors.warningButtonColor}
+              title="CANCEL" 
+              onPress={this.cancel}
+            />
+            <StandardButton 
+              color={Colors.linkButtonColor} 
+              title="RECOVER" 
+              onPress={this._handleSubmit}
+            />
+          </View>
+        </View>
+      </View>
     );
   }
 }

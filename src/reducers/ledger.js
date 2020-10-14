@@ -5,75 +5,82 @@
   and set to false again when that componenet updates.
 */
 
-import { namesList } from '../utils/CoinData'
+import { namesList } from '../utils/CoinData/CoinData'
 //TODO: Change this to get coin names from activeCoinForUser
 //so that when people add custom coins they also get told to 
 //update
 
+import {
+  SET_BALANCES,
+  SET_RATES,
+  SET_TRANSACTIONS,
+  SIGN_OUT,
+  //SET_ONE_BALANCE,
+  //BALANCES_NEED_UPDATE,
+  //TRANSACTIONS_NEED_UPDATE,
+  //RATES_NEED_UPDATE,
+  //EVERYTHING_NEEDS_UPDATE,
+  //SET_INTERVAL_ID,
+  SET_INFO
+} from '../utils/constants/storeType'
+import {
+  CHANNELS_OBJECT_TEMPLATE
+} from "../utils/constants/intervalConstants";
+
 export const ledger = (state = {
-  balances: {},
-  transactions: {},
-  rates: {},
-  needsUpdate: {balances: true, transactions: {}, rates: true},
-  updateIntervalID: null
+  balances: CHANNELS_OBJECT_TEMPLATE,
+  transactions: CHANNELS_OBJECT_TEMPLATE,
+  rates: CHANNELS_OBJECT_TEMPLATE,
+  info: CHANNELS_OBJECT_TEMPLATE
 }, action) => {
+  const { chainTicker, channel, body } = action.payload || {}
+
   switch (action.type) {
-    case 'SET_BALANCES':
+    case SET_BALANCES:
       return {
         ...state,
-        balances: action.balances,
-        needsUpdate: {...state.needsUpdate, balances: false}
+        balances: {
+          ...state.balances,
+          [channel]: { ...state.balances[channel], [chainTicker]: body }
+        }
       };
-    case 'SET_TRANSACTIONS':
+    case SET_INFO:
       return {
         ...state,
-        transactions: action.transactions,
-        needsUpdate: {...state.needsUpdate, transactions: action.needsUpdateObj}
+        info: {
+          ...state.info,
+          [channel]: { ...state.info[channel], [chainTicker]: body }
+        }
       };
-    case 'SET_RATES':
+    case SET_TRANSACTIONS:
       return {
         ...state,
-        rates: action.rates,
-        needsUpdate: {...state.needsUpdate, rates: false}
+        transactions: {
+          ...state.transactions,
+          [channel]: { ...state.transactions[channel], [chainTicker]: body }
+        }
       };
-    case 'BALANCES_NEED_UPDATE':
+    case SET_RATES:
       return {
         ...state,
-        needsUpdate: {...state.needsUpdate, balances: true}
+        rates: {
+          ...state.rates,
+          [channel]: { ...state.rates[channel], [chainTicker]: body }
+        }
       };
-    case 'TRANSACTIONS_NEED_UPDATE':
+    case SIGN_OUT:
       return {
         ...state,
-        needsUpdate: {...state.needsUpdate, transactions: action.needsUpdateObj}
+        balances: CHANNELS_OBJECT_TEMPLATE,
+        transactions: CHANNELS_OBJECT_TEMPLATE,
+        rates: CHANNELS_OBJECT_TEMPLATE,
+        info: CHANNELS_OBJECT_TEMPLATE,
       };
-    case 'RATES_NEED_UPDATE':
-      return {
-        ...state,
-        needsUpdate: {...state.needsUpdate, rates: true}
-      };
-    case 'EVERYTHING_NEEDS_UPDATE':
-      let _transactions = state.needsUpdate.transactions
-      for (let i = 0; i < namesList.length; i++) {
-        _transactions[namesList[i]] = true
-      }
-      return {
-        ...state,
-        needsUpdate: {balances: true, 
-                      transactions: _transactions,
-                      rates: true}
-      };
-    case 'SIGN_OUT':
-      return {
-        ...state,
-        balances: {},
-        transactions: {},
-        rates: {},
-      };
-    case 'SET_INTERVAL_ID':
+    /*case SET_INTERVAL_ID:
       return {
         ...state,
         updateIntervalID: action.updateIntervalID
-      };
+      };*/
     default:
       return state;
   }

@@ -9,7 +9,7 @@ import {
 import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements';
 import { Dropdown } from 'react-native-material-dropdown';
 import Spinner from 'react-native-loading-spinner-overlay';
-import Button1 from '../../../../symbols/button1';
+import StandardButton from '../../../../components/StandardButton';
 import styles from './ManageWyreAccount.styles';
 import {
   selectWyreAccountField,
@@ -18,7 +18,7 @@ import {
 import {
   putWyreAccountField
 } from '../../../../actions/actions/PaymentMethod/WyreAccount';
-import { STATES, WYRE_COUNTRIES } from '../../../../utils/constants';
+import { STATES, WYRE_COUNTRIES } from '../../../../utils/constants/constants';
 import Colors from '../../../../globals/colors';
 
 
@@ -223,9 +223,9 @@ class ManageWyreAddress extends Component {
               </FormValidationMessage>
             </View>
             <View style={styles.buttonContainerBottom}>
-              <Button1
+              <StandardButton
                 style={styles.buttonSubmit}
-                buttonContent="SUBMIT"
+                title="SUBMIT"
                 onPress={this.handleSubmit}
               />
             </View>

@@ -9,24 +9,24 @@
 import React, { Component } from "react"
 import {
   View,
-  StyleSheet,
   Modal,
   Text,
   Alert,
   TouchableOpacity,
-  CameraRoll,
   ScrollView,
   Platform
 } from "react-native"
+import CameraRoll from "@react-native-community/cameraroll";
 import QRCode from 'react-native-qrcode-svg'
-import Button1 from "../symbols/button1"
+import StandardButton from "../components/StandardButton"
 import AlertAsync from "react-native-alert-async"
 import { Icon } from "react-native-elements"
 import RNFS from "react-native-fs"
 import Share from 'react-native-share';
 import Colors from '../globals/colors';
+import Styles from '../styles/index'
 
-const LOGO_DIR = require('../images/customIcons/verusQRLogo.png');
+const LOGO_DIR = require('../images/customIcons/Verus.png');
 const NOT_REAL_ERROR_MSG = "User did not share"
 const DEFAULT_OPACITY = 0.2
 
@@ -56,7 +56,7 @@ class QRModal extends Component {
     this.QRCodeRef.toDataURL((data) => {
       RNFS.writeFile(RNFS.CachesDirectoryPath+"/VerusPayQR.png", data, 'base64')
         .then((success) => {
-          return CameraRoll.saveToCameraRoll(RNFS.CachesDirectoryPath+"/VerusPayQR.png", 'photo')
+          return CameraRoll.save(RNFS.CachesDirectoryPath+"/VerusPayQR.png", { type: 'photo' })
         })
         .then(() => {
           return RNFS.unlink(RNFS.CachesDirectoryPath+"/VerusPayQR.png")
@@ -130,48 +130,50 @@ class QRModal extends Component {
       visible={this.props.visible}
       onRequestClose={this.cancelHandler}>
         <ScrollView 
-          style={styles.root} 
-          contentContainerStyle={{flex: 1, alignItems: "center", justifyContent: "center"}}>
-          <View style={{...styles.textContainer, marginTop: 25}}>
-            <Text style={styles.mainLabel}>
+          style={Styles.flexBackground}
+          contentContainerStyle={Styles.centerContainer}>
+          <View style={Styles.headerContainer}>
+            <Text style={Styles.centralHeader}>
               {"VerusPay Invoice"}
             </Text>
-            <Text style={styles.mainDesc}>
+          </View>
+          <View style={Styles.standardWidthFlexGrowCenterBlock}>
+            <Text style={{...Styles.defaultDescriptiveText, ...Styles.fullWidthSpaceBetweenCenterBlock}}>
               {"Scan this QR code with VerusPay on another device to automatically create" + 
                 " a transaction."}
             </Text>
+            <View style={Styles.fullWidthAlignCenter}>
+              <QRCode
+                value={this.props.qrString ? this.props.qrString : "-"}
+                size={264}
+                //TODO: Add in differently so it doesn't impact readability
+                // logo={LOGO_DIR}
+                // logoSize={50}
+                // logoBackgroundColor='transparent'
+                getRef={(qr) => (this.QRCodeRef = qr)}
+              />
+            </View>
           </View>
-          <View style={{padding: 10, backgroundColor: '#FFF'}}>
-            <QRCode
-              value={this.props.qrString ? this.props.qrString : "-"}
-              size={250}
-              //TODO: Add in differently so it doesn't impact readability
-              //logo={LOGO_DIR}
-              //logoSize={50}
-              //logoBackgroundColor='transparent'
-              getRef={(qr) => (this.QRCodeRef = qr)}
-            />
-          </View>
-          <View style={styles.multiButtonContainer}>
-            <TouchableOpacity 
-              onPress={this.state.libraryPressed ? () => {return 0} : this.requestSaveQR} 
-              activeOpacity={this.state.libraryPressed ? 1 : DEFAULT_OPACITY}>
-              <Icon name="camera-roll" size={35} color={Colors.quinaryColor}/>
-            </TouchableOpacity>
-            {Platform.OS === 'ios' && 
+          <View style={Styles.footerContainer}>
+            <View style={Styles.standardWidthSpaceBetweenBlock}>
               <TouchableOpacity 
-                onPress={this.state.sharePressed ? () => {return 0} : this.requestShareQR} 
-                activeOpacity={this.state.sharePressed ? 1 : DEFAULT_OPACITY}>
-                <Icon name="share" size={35} color={Colors.quinaryColor}/>
+                onPress={this.state.libraryPressed ? () => {return 0} : this.requestSaveQR} 
+                activeOpacity={this.state.libraryPressed ? 1 : DEFAULT_OPACITY}>
+                <Icon name="camera-roll" size={35} color={Colors.quinaryColor}/>
               </TouchableOpacity>
-            }
-          </View>
-          <View style={styles.singleButtonContainer}>
-            <Button1 
-              style={styles.cancelBtn} 
-              buttonContent="CLOSE" 
-              onPress={this.cancelHandler}
-            />
+              <StandardButton 
+                color={Colors.warningButtonColor}
+                title="CLOSE" 
+                onPress={this.cancelHandler}
+              />
+              {Platform.OS === 'ios' && 
+                <TouchableOpacity 
+                  onPress={this.state.sharePressed ? () => {return 0} : this.requestShareQR} 
+                  activeOpacity={this.state.sharePressed ? 1 : DEFAULT_OPACITY}>
+                  <Icon name="share" size={35} color={Colors.quinaryColor}/>
+                </TouchableOpacity>
+              }
+            </View>
           </View>
         </ScrollView>
       </Modal>
@@ -180,45 +182,3 @@ class QRModal extends Component {
 }
 
 export default QRModal;
-
-const styles = StyleSheet.create({
-  root: {
-    backgroundColor: Colors.secondaryColor,
-  },
-  singleButtonContainer: {
-    width: "75%",
-    backgroundColor: "transparent",
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  multiButtonContainer: {
-    width: "75%",
-    backgroundColor: "transparent",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 20
-  },
-  cancelBtn: {
-    height: 46,
-    backgroundColor: "rgba(206,68,70,1)",
-    marginTop: 20,
-    marginBottom: 40
-  },
-  mainLabel: {
-    backgroundColor: "transparent",
-    fontSize: 22,
-    color: Colors.quinaryColor,
-    textAlign: "center",
-    paddingBottom: 10
-  },
-  mainDesc: {
-    backgroundColor: "transparent",
-    fontSize: 16,
-    color: Colors.quinaryColor,
-    textAlign: "center"
-  },
-  textContainer: {
-    width: "85%",
-    paddingBottom: 30
-  }
-});

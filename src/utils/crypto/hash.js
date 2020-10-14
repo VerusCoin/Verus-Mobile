@@ -20,6 +20,13 @@ export const hashRawTx = (rawTxString, network) => {
   }
 }
 
+export const hashAccountId = (accountId) => {
+  return crypto
+    .createHash("sha256")
+    .update(new Buffer.from(accountId))
+    .digest("hex");
+}
+
 //Decodes specific bitcoin transaction ID return which is in
 //string format seperated by ','
 export const decodeBitcoinTxID = (rawTxString, network) => {
@@ -40,4 +47,16 @@ export const hexHashToDecimal = (hexHash) => {
   return hexHashArray.map((byte, index) => {
     return parseInt(byte, 16)
   })
+}
+
+// Converts a hex string to a byte array
+export const parseHexString = (str) => { 
+  var result = [];
+  while (str.length >= 8) { 
+      result.push(parseInt(str.substring(0, 8), 16));
+
+      str = str.substring(8, str.length);
+  }
+
+  return result;
 }

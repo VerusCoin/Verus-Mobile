@@ -6,6 +6,7 @@
 import React, { Component } from "react";
 import {
   View,
+  Text
 } from "react-native";
 import { connect } from 'react-redux';
 import BottomNavigation, {
@@ -15,29 +16,43 @@ import Overview from './Overview/Overview'
 import SendCoin from './SendCoin/SendCoin'
 import ReceiveCoin from './ReceiveCoin/ReceiveCoin'
 import { Icon } from "react-native-elements"
+import { setActiveSection, setCoinSubWallet, setIsCoinMenuFocused } from "../../actions/actionCreators";
+import { NavigationActions, withNavigationFocus } from '@react-navigation/compat';
+import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
+import DynamicHeader from "./DynamicHeader";
+import { bigNumberifyBalance, truncateDecimal } from '../../utils/math'
+import { Portal } from "react-native-paper";
+import { API_GET_BALANCES } from "../../utils/constants/intervalConstants";
+import { CONNECTION_ERROR } from "../../utils/api/errors/errorMessages";
 
 class CoinMenus extends Component {
   constructor(props) {
     super(props)
     let stateObj = this.generateTabs();
+    const subWallets = props.allSubWallets
 
     //CoinMenus can be passed data, which will be passed to 
     //the app section components as props
-    this.passthrough = this.props.navigation.state.params ? this.props.navigation.state.params.data : null
+    this.passthrough = this.props.route.params ? this.props.route.params.data : null
     
     this.state = {
       tabs: stateObj.tabs,
       activeTab: stateObj.activeTab,
+      subWallets
     }; 
+
+    if (subWallets.length == 1) props.dispatch(setCoinSubWallet(props.activeCoin.id, subWallets[0]))
   }
 
-  static navigationOptions = ({ navigation }) => {
-    return {
-      title: typeof(navigation.state.params)==='undefined' || 
-      typeof(navigation.state.params.title) === 'undefined' ? 
-      'undefined': navigation.state.params.title,
-    };
-  };
+  componentDidMount() {
+    this.props.dispatch(setIsCoinMenuFocused(true))
+  }
+
+  componentDidUpdate(lastProps) {  
+    if (lastProps.isFocused !== this.props.isFocused) {
+      this.props.dispatch(setIsCoinMenuFocused(this.props.isFocused))
+    }
+  }
 
   generateTabs = () => {
     //this.props.activeSection
@@ -59,7 +74,8 @@ class CoinMenus extends Component {
         label: options[i].name,
         barColor: options[i].color,
         pressColor: 'rgba(255, 255, 255, 0.16)',
-        screen: screens[options[i].screen]
+        screen: screens[options[i].screen],
+        activeSection: options[i]
       }
 
       if (options[i].key === this.props.activeSection.key) {
@@ -73,6 +89,8 @@ class CoinMenus extends Component {
       throw new Error("Tab not found for active section " + this.props.activeSection.key)
     }
 
+    this.props.navigation.setOptions({ title: activeTab.label })
+
     return {
       tabs: tabArray,
       activeTab: activeTab
@@ -82,6 +100,34 @@ class CoinMenus extends Component {
   renderIcon = icon => ({ isActive }) => (
     <Icon size={24} color="white" name={icon} />
   )
+
+  renderBalanceLabel = () => {
+    const { activeCoin, balances } = this.props;
+    let displayBalance =
+      balances != null && balances.results != null
+        ? balances.results.total
+        : null;
+
+    if (balances.errors) {
+      return (
+        <Text
+          style={{ ...Styles.largeCentralPaddedHeader, ...Styles.errorText }}
+        >
+          {CONNECTION_ERROR}
+        </Text>
+      );
+    } else {
+      return (
+        <Text style={Styles.largeCentralPaddedHeader}>
+          {`${
+            displayBalance != null
+              ? truncateDecimal(displayBalance, 4)
+              : "-"
+          } ${activeCoin.id}`}
+        </Text>
+      );
+    } 
+  };
 
   renderTab = ({ tab, isActive }) => (
     <FullTab
@@ -95,8 +141,13 @@ class CoinMenus extends Component {
   )
 
   switchTab = (newTab) => {
-    this.props.navigation.setParams({ title: newTab.label })
+    this.props.navigation.setOptions({ title: newTab.label })
+    this.props.dispatch(setActiveSection(newTab.activeSection))
     this.setState({ activeTab: newTab })
+  }
+
+  goBack = () => {
+    this.props.navigation.dispatch(NavigationActions.back())
   }
 
   //The rendering of overview, send and recieve is temporary, we want to use
@@ -104,29 +155,82 @@ class CoinMenus extends Component {
   //"Cannot Add a child that doesn't have a YogaNode to a parent with out a measure function"
   //bug comes up and it seems like a bug in rn
   render() {
+    const { selectedSubWallet } = this.props
+    const { subWallets } = this.state
+    //const DynamicHeaderPortal = <Portal.Host></Portal.Host>
+
     return (
-      <View style={{ flex: 1 }}>
-          {this.state.activeTab.screen === "Overview" ? <Overview navigation={this.props.navigation} data={this.passthrough}/> :
-          (this.state.activeTab.screen === "SendCoin" ? <SendCoin navigation={this.props.navigation} data={this.passthrough}/> : 
-          (this.state.activeTab.screen === "ReceiveCoin" ? <ReceiveCoin navigation={this.props.navigation} data={this.passthrough}/> : null))}
-        <BottomNavigation
-          onTabPress={newTab => this.switchTab(newTab)}
-          renderTab={this.renderTab}
-          tabs={this.state.tabs}
-          activeTab={this.state.activeTab.key}
-        />
-      </View>
+      <Portal.Host>
+        <View style={{ flex: 1 }}>
+          {selectedSubWallet == null && (
+            <SubWalletSelectorModal
+              visible={selectedSubWallet == null}
+              cancel={this.goBack}
+              animationType="slide"
+              subWallets={subWallets}
+            />
+          )}
+          <View style={Styles.centralRow}>{this.renderBalanceLabel()}</View>
+          {selectedSubWallet != null && <DynamicHeader />}
+          {selectedSubWallet != null && (
+            <React.Fragment>
+              {this.state.activeTab.screen === "Overview" ? (
+                <Overview
+                  navigation={this.props.navigation}
+                  data={this.passthrough}
+                />
+              ) : this.state.activeTab.screen === "SendCoin" ? (
+                <SendCoin
+                  navigation={this.props.navigation}
+                  data={this.passthrough}
+                />
+              ) : this.state.activeTab.screen === "ReceiveCoin" ? (
+                <ReceiveCoin
+                  navigation={this.props.navigation}
+                  data={this.passthrough}
+                />
+              ) : null}
+              <BottomNavigation
+                onTabPress={(newTab) => this.switchTab(newTab)}
+                renderTab={this.renderTab}
+                tabs={this.state.tabs}
+                activeTab={this.state.activeTab.key}
+              />
+            </React.Fragment>
+          )}
+        </View>
+      </Portal.Host>
     );
   }
 }
 
 const mapStateToProps = (state) => {
+  const chainTicker = state.coins.activeCoin.id
+  const channel =
+    state.coinMenus.activeSubWallets[chainTicker] != null
+      ? state.coinMenus.activeSubWallets[chainTicker].channel
+      : null;
+
   return {
     activeCoin: state.coins.activeCoin,
     activeApp: state.coins.activeApp,
-    activeSection: state.coins.activeSection
-  }
+    activeSection: state.coins.activeSection,
+    coinMenuFocused: state.coins.coinMenuFocused,
+    selectedSubWallet:
+      state.coinMenus.activeSubWallets[state.coins.activeCoin.id],
+    allSubWallets: state.coinMenus.allSubWallets[state.coins.activeCoin.id],
+    balances: {
+      results:
+        channel != null && state.ledger.balances[channel][chainTicker] != null
+          ? bigNumberifyBalance(state.ledger.balances[channel][chainTicker])
+          : null,
+      errors:
+        channel != null
+          ? state.errors[API_GET_BALANCES][channel][chainTicker]
+          : null,
+    },
+  };
 };
 
-export default connect(mapStateToProps)(CoinMenus);
+export default connect(mapStateToProps)(withNavigationFocus(CoinMenus));
 

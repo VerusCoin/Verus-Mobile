@@ -15,13 +15,13 @@ import {
 import Spinner from 'react-native-loading-spinner-overlay';
 import DelayedAlert from '../../../../utils/delayedAlert';
 
-import Button1 from '../../../../symbols/button1';
+import StandardButton from '../../../../components/StandardButton';
 
 import {
   selectWyreAccountField,
   selectWyrePutAccountIsFetching,
 } from '../../../../selectors/paymentMethods';
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 
 import {
   putWyreAccountField
@@ -108,9 +108,9 @@ class ManageWyreEmail extends Component {
               </FormValidationMessage>
             </View>
             <View style={styles.buttonContainerBottom}>
-              <Button1
+              <StandardButton
                 style={styles.buttonSubmit}
-                buttonContent="SUBMIT"
+                title="SUBMIT"
                 onPress={this.handleSubmit}
               />
             </View>

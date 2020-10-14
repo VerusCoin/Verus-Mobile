@@ -6,16 +6,16 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../../../symbols/button1";
+import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
   ScrollView, 
   Keyboard,
   TouchableWithoutFeedback
 } from "react-native";
-import { SUPPORTED_COUNTRIES } from '../../../../utils/constants'
+import { SUPPORTED_COUNTRIES } from '../../../../utils/constants/constants'
 import { saveBuySellSettings } from '../../../../actions/actionCreators'
-import { NavigationActions } from 'react-navigation';
+import { NavigationActions } from '@react-navigation/compat';
 import { connect } from 'react-redux';
 import styles from './SelectCountry.styles'
 import CountryPicker from 'react-native-country-picker-modal';
@@ -87,14 +87,14 @@ class SelectCountry extends Component {
           </ScrollView>
           <View style={styles.bottom}>
             <View style={styles.buttonContainer}>
-              <Button1 
+              <StandardButton 
                 style={styles.backButton} 
-                buttonContent="Back" 
+                title="Back" 
                 onPress={this.back}
               />
-              <Button1 
+              <StandardButton 
                 style={styles.saveChangesButton} 
-                buttonContent="Confirm" 
+                title="Confirm" 
                 onPress={this.handleSubmit}
               />
             </View>

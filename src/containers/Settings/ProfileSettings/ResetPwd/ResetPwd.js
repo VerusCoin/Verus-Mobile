@@ -7,7 +7,7 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../../../symbols/button1";
+import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
   Text, 
@@ -16,13 +16,14 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
-import { NavigationActions } from 'react-navigation';
-import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements'
-import { resetPwd } from '../../../../actions/actionCreators';
+import { NavigationActions } from '@react-navigation/compat';
+import { FormLabel, Input, FormValidationMessage } from 'react-native-elements'
+import { resetPwd, setBiometry } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
-import styles from './ResetPwd.styles'
+import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors';
+import { removeBiometricPassword } from "../../../../utils/biometry/biometry";
 
 class ResetPwd extends Component {
   constructor() {
@@ -107,9 +108,11 @@ class ResetPwd extends Component {
 
       if (!_errors) {
         this.canReset()
-        .then((res) => {
+        .then(async (res) => {
           if (res) {
             if (this.props.activeAccount) {
+              removeBiometricPassword(this.props.activeAccount.accountHash)
+              await setBiometry(this.props.activeAccount.id, false)
               return (resetPwd(this.props.activeAccount.id, this.state.newPwd, this.state.oldPwd))
             } else {
               console.warn("Error, no active account")
@@ -137,91 +140,82 @@ class ResetPwd extends Component {
 
   render() {
     return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <ScrollView style={styles.root} contentContainerStyle={{height: '100%' ,alignItems: "center", justifyContent: "center"}}>
-          <Text style={styles.wifLabel}>
-            Reset Password
-          </Text>
-          <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-            Enter your current password:
-            </FormLabel>
-            <FormInput 
-              underlineColorAndroid={Colors.quaternaryColor}
+      <View style={Styles.defaultRoot}>
+        <ScrollView style={Styles.fullWidth}
+          contentContainerStyle={{...Styles.innerHeaderFooterContainerCentered, ...Styles.fullHeight}}>
+          <View style={Styles.wideBlock}>
+            <Input 
+              label="Enter your current password:"
+              labelStyle={Styles.formCenterLabel}
+              containerStyle={Styles.wideCenterBlock}
+              inputStyle={Styles.inputTextDefaultStyle}
               onChangeText={(text) => this.setState({oldPwd: text})}
               autoCapitalize={"none"}
               autoCorrect={false}
               secureTextEntry={true}
-              shake={this.state.errors.oldPwd}
-              inputStyle={styles.formInput}
-            />
-            <FormValidationMessage>
-            {
-              this.state.errors.oldPwd ? 
-                this.state.errors.oldPwd
-                :
-                null
-            }
-            </FormValidationMessage>
+              shake={this.state.errors.pwd}
+              errorMessage={
+                this.state.errors.oldPwd ? 
+                  this.state.errors.oldPwd
+                  :
+                  null
+              }
+              />
           </View>
-          <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-            Enter a new password (min. 5 characters):
-            </FormLabel>
-            <FormInput 
-              underlineColorAndroid={Colors.quaternaryColor}
+          <View style={Styles.wideBlock}>
+            <Input 
+              label="Enter a new password (min. 5 characters):"
+              labelStyle={Styles.formCenterLabel}
+              containerStyle={Styles.wideCenterBlock}
+              inputStyle={Styles.inputTextDefaultStyle}
               onChangeText={(text) => this.setState({newPwd: text})}
               autoCapitalize={"none"}
               autoCorrect={false}
               secureTextEntry={true}
-              shake={this.state.errors.newPwd}
-              inputStyle={styles.formInput}
+              shake={this.state.errors.pwd}
+              errorMessage={
+                this.state.errors.newPwd ? 
+                  this.state.errors.newPwd
+                  :
+                  null
+              }
             />
-            <FormValidationMessage>
-            {
-              this.state.errors.newPwd ? 
-                this.state.errors.newPwd
-                :
-                null
-            }
-            </FormValidationMessage>
           </View>
-          <View style={styles.valueContainer}>
-            <FormLabel labelStyle={styles.formLabel}>
-            Confirm new password:
-            </FormLabel>
-            <FormInput 
-              underlineColorAndroid={Colors.quaternaryColor}
+          <View style={Styles.wideBlock}>
+            <Input 
+              label="Confirm new password:"
+              labelStyle={Styles.formCenterLabel}
+              containerStyle={Styles.wideCenterBlock}
+              inputStyle={Styles.inputTextDefaultStyle}
               onChangeText={(text) => this.setState({confirmNewPwd: text})}
               autoCapitalize={"none"}
               autoCorrect={false}
               secureTextEntry={true}
-              shake={this.state.errors.confirmNewPwd}
-              inputStyle={styles.formInput}
-            />
-            <FormValidationMessage>
-            {
-              this.state.errors.confirmNewPwd ? 
-                this.state.errors.confirmNewPwd
-                :
-                null
-            }
-            </FormValidationMessage>
-          </View>
-          <View style={styles.buttonContainer}>
-            <Button1 
-              style={styles.cancelButton} 
-              buttonContent="CANCEL" 
-              onPress={this.cancel}
-            />
-            <Button1 
-              style={styles.addAccountButton} 
-              buttonContent="RESET" 
-              onPress={this._handleSubmit}
+              shake={this.state.errors.pwd}
+              errorMessage={
+                this.state.errors.confirmNewPwd ? 
+                  this.state.errors.confirmNewPwd
+                  :
+                  null
+              }
             />
           </View>
         </ScrollView>
-      </TouchableWithoutFeedback>
+        <View style={Styles.highFooterContainer}>
+          <View style={Styles.standardWidthSpaceBetweenBlock}>
+            <StandardButton 
+              color={Colors.warningButtonColor}
+              title="CANCEL" 
+              onPress={this.cancel}
+            />
+            <StandardButton 
+              style={Colors.infoButtonColor} 
+              title="RESET" 
+              onPress={this._handleSubmit}
+            />
+          </View>
+        </View>
+      </View>
       
     );
   }

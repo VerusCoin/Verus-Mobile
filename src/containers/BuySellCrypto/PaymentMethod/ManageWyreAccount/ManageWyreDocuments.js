@@ -17,7 +17,7 @@ import {
 
 import Spinner from 'react-native-loading-spinner-overlay';
 
-import Button1 from '../../../../symbols/button1';
+import StandardButton from '../../../../components/StandardButton';
 
 import {
   selectWyreAccountField,
@@ -90,9 +90,9 @@ class ManageWyreDocuments extends Component {
             </View>
             {!this.state.image && (
               <View style={styles.buttonContainerBottom}>
-                <Button1
+                <StandardButton
                   style={styles.buttonSelect}
-                  buttonContent=" DOCUMENT"
+                  title=" DOCUMENT"
                   onPress={this.handleSelect}
                 />
               </View>
@@ -104,14 +104,14 @@ class ManageWyreDocuments extends Component {
                   source={{ uri: this.state.image.uri }}
                 />
                 <View style={styles.buttonContainer}>
-                  <Button1
+                  <StandardButton
                     style={styles.buttonConfirm}
-                    buttonContent="CONFIRM"
+                    title="CONFIRM"
                     onPress={this.handleUpload}
                   />
-                  <Button1
+                  <StandardButton
                     style={styles.buttonCancel}
-                    buttonContent="CANCEL"
+                    title="CANCEL"
                     onPress={this.clearSelectedImage}
                   />
                 </View>

@@ -4,45 +4,98 @@
   completely closed, only the non-sensitive data should persist.
 */
 
-export const authentication = (state = {
-  accounts: [],
-  activeAccount: {id: null, wifKey: "", keys: [], paymentMethods: {}},
-  unlocked: false,
-  fingerPrint: false,
-  signedIn: false
-}, action) => {
+import {
+  SET_ACCOUNTS,
+  UPDATE_ACCOUNT_KEYS,
+  SIGN_OUT,
+  DISABLE_SELECT_DEFAULT_ACCOUNT,
+  BIOMETRIC_AUTH,
+  AUTHENTICATE_USER,
+  SIGN_IN_USER,
+  SET_DLIGHT_ADDRESSES
+} from "../utils/constants/storeType";
+
+export const authentication = (
+  state = {
+    accounts: [],
+    activeAccount: {
+      id: null,
+      accountHash: null,
+      seeds: {},
+      keys: {},
+      paymentMethods: {},
+      biometry: false
+    },
+    signedIn: false,
+    selectDefaultAccount: true
+  },
+  action
+) => {
   switch (action.type) {
-    case 'SET_ACCOUNTS':
+    case DISABLE_SELECT_DEFAULT_ACCOUNT:
       return {
         ...state,
-        accounts: action.accounts,
+        selectDefaultAccount: false
       };
-    case 'SIGN_IN':
+    case SET_ACCOUNTS:
+      return {
+        ...state,
+        accounts: action.accounts
+      };
+    case AUTHENTICATE_USER:
       return {
         ...state,
         activeAccount: action.activeAccount,
-        signedIn: true
       };
-    case 'UPDATE_ACCOUNT_KEYS':
+    case SIGN_IN_USER:
+      return {
+        ...state,
+        signedIn: true,
+        selectDefaultAccount: false
+      };
+    case UPDATE_ACCOUNT_KEYS:
       return {
         ...state,
         activeAccount: {
           ...state.activeAccount,
           keys: action.keys
-        },
+        }
       };
-    case 'SIGN_OUT':
+    case SET_DLIGHT_ADDRESSES:
+      const currentDlightAddrs = state.activeAccount.keys[
+        action.payload.chainTicker
+      ]
+        ? state.activeAccount.keys[action.payload.chainTicker].dlight
+        : {};
+      return {
+        ...state,
+        activeAccount: {
+          ...state.activeAccount,
+          keys: {
+            ...state.activeAccount.keys,
+            [action.payload.chainTicker]: {
+              ...state.activeAccount.keys[action.payload.chainTicker],
+              dlight: {
+                ...currentDlightAddrs,
+                addresses: action.payload.addresses
+              }
+            }
+          }
+        }
+      };
+    case SIGN_OUT:
       return {
         ...state,
         activeAccount: null,
         signedIn: false
       };
-    case 'FINGER_AUTH':
+    case BIOMETRIC_AUTH:
       return {
         ...state,
-        fingerPrint: action.fingerPrint,
+        activeAccount: { ...state.activeAccount, biometry: action.payload.biometry },
+        accounts: action.payload.accounts
       };
     default:
       return state;
   }
-}
+};

@@ -7,16 +7,20 @@
 */
 
 import React, { Component } from "react";
-import Button1 from "../../symbols/button1";
+import StandardButton from "../../components/StandardButton";
 import { connect } from 'react-redux';
-import { txPreflight } from '../../utils/httpCalls/callCreators';
 import { networks } from 'bitgo-utxo-lib';
 import { View, Text, ScrollView, Keyboard, Alert } from "react-native";
-import { satsToCoins, truncateDecimal, coinsToSats } from '../../utils/math';
+import { isNumber, satsToCoins, truncateDecimal } from '../../utils/math';
 import ProgressBar from 'react-native-progress/Bar';
-import { NavigationActions } from 'react-navigation';
-import { NO_VERIFICATION, MID_VERIFICATION } from '../../utils/constants'
-import styles from './ConfirmSend.styles'
+import { NavigationActions } from '@react-navigation/compat';
+import { CommonActions } from '@react-navigation/native';
+import { NO_VERIFICATION, MID_VERIFICATION } from '../../utils/constants/constants'
+import Styles from '../../styles/index'
+import Colors from "../../globals/colors";
+import { preflight } from "../../utils/api/routers/preflight";
+import { ELECTRUM } from "../../utils/constants/intervalConstants";
+import BigNumber from "bignumber.js";
 
 const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
@@ -33,7 +37,7 @@ class ConfirmSend extends Component {
       loading: true,
       network: null,
       fee: 0,
-      amountSubmitted: 0,
+      amountSubmitted: "0",
       balance: 0,
       remainingBalance: 0,
       finalTxAmount: 0,
@@ -41,24 +45,30 @@ class ConfirmSend extends Component {
       loadingProgress: 0.175,
       loadingMessage: "Creating transaction...",
       btcFeePerByte: null,
-      feeTakenFromAmount: false
+      feeTakenFromAmount: false,
+      feeCurr: null,
+      note: null
     };
   }
 
-  componentDidMount() {
-    const coinObj = this.props.navigation.state.params.data.coinObj
-    const activeUser = this.props.navigation.state.params.data.activeUser
-    const address = this.props.navigation.state.params.data.address
-    const amount = Number(this.props.navigation.state.params.data.amount)
-    const fee = coinObj.id === 'BTC' ? { feePerByte: Number(this.props.navigation.state.params.data.btcFee) } : Number(this.props.navigation.state.params.data.coinObj.fee)
+  async componentDidMount() {
+    const coinObj = this.props.route.params.data.coinObj
+    const activeUser = this.props.route.params.data.activeUser
+    const address = this.props.route.params.data.address
+    const amount = BigNumber(this.props.route.params.data.amount)
+    const fee =
+      coinObj.id === "BTC"
+        ? { feePerByte: BigNumber(this.props.route.params.data.btcFee) }
+        : isNumber(this.props.route.params.data.coinObj.fee)
+        ? BigNumber(this.props.route.params.data.coinObj.fee)
+        : null;
     const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
-    const balance = Number(this.props.navigation.state.params.data.balance)
-    const memo = this.props.navigation.state.params.data.memo
+    const balance = BigNumber(this.props.route.params.data.balance)
+    const note = this.props.route.params.data.memo
     
     this.timeoutTimer = setTimeout(() => {
       if (this.state.loading) {
-        this.setState(
-          {err: 'timed out while trying to build transaction, this may be a networking error, try sending again', 
+        this.setState({err: 'timed out while trying to build transaction, this may be a networking error, try sending again', 
           loading: false})
       }
     }, TIMEOUT_LIMIT)
@@ -78,8 +88,16 @@ class ConfirmSend extends Component {
       verifyTxid = true
     }
 
-    txPreflight(coinObj, activeUser, address, amount, fee, network, verifyMerkle, verifyTxid)
-    .then((res) => {
+    try {
+      const res = await preflight(
+        coinObj,
+        activeUser,
+        address,
+        amount,
+        coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM,
+        { defaultFee: fee, network, verifyMerkle, verifyTxid }
+      );
+
       if(res.err || !res) {
         this.setState({
           loading: false,
@@ -87,57 +105,103 @@ class ConfirmSend extends Component {
         });
         clearInterval(this.loadingInterval);
       } else {
-        let feeTakenFromAmount = res.result.feeTakenFromAmount
-        let balanceCoins = satsToCoins(balance)
-        let finalTxAmount = feeTakenFromAmount ? res.result.value : (res.result.value + coinsToSats(Number(res.result.fee)))
-        let remainingBalance = balanceCoins - satsToCoins(finalTxAmount)
+        let feeTakenFromAmount = res.result.params.feeTakenFromAmount
+        let finalTxAmount =
+          feeTakenFromAmount ||
+          (res.result.feeCurr != null &&
+            res.result.feeCurr !== coinObj.id)
+            ? res.result.value
+            : BigNumber(res.result.value).plus(BigNumber(res.result.fee)).toString();
+        let remainingBalance = feeTakenFromAmount
+          ? BigNumber(balance)
+              .minus(BigNumber(finalTxAmount))
+              .minus(BigNumber(res.result.fee))
+              .toString()
+          : BigNumber(balance)
+              .minus(BigNumber(finalTxAmount))
+              .toString();
+              
         clearInterval(this.loadingInterval);
 
-        if (res.result.feeTakenFromAmount) {
-          if (!res.result.unshieldedFunds) {
+        if (feeTakenFromAmount) {
+          if (
+            res.result.unshieldedFunds == null ||
+            res.result.unshieldedFunds.isEqualTo(BigNumber(0))
+          ) {
             Alert.alert(
-              "Warning", 
-              "Your transaction amount has been changed to " + satsToCoins(finalTxAmount) + " " + coinObj.id + 
-              " as you do not have sufficient funds to cover your submitted amount of " + satsToCoins(res.result.amountSubmitted) + " " + coinObj.id + 
-              " + a fee of " + res.result.fee + " " + coinObj.id + ".");
-          } else {
+              "Warning",
+              "Your transaction amount has been changed to " +
+                finalTxAmount +
+                " " +
+                coinObj.id +
+                " as you do not have sufficient funds to cover your submitted amount of " +
+                res.result.amountSubmitted +
+                " " +
+                coinObj.id +
+                " + a fee of " +
+                res.result.fee +
+                " " +
+                coinObj.id +
+                "."
+            );
+          } else if (res.result.unshieldedFunds != null) {
             Alert.alert(
-              "Warning", 
-              "Your transaction amount has been changed to " + satsToCoins(finalTxAmount) + " " + coinObj.id + 
-              " as you do not have sufficient funds to cover your submitted amount of " + satsToCoins(res.result.amountSubmitted) + " " + coinObj.id + 
-              " + a fee of " + res.result.fee + " " + coinObj.id + ". This could be due to the " + satsToCoins(res.result.unshieldedFunds) + " in unshielded " + coinObj.id + " your " + 
-              "wallet contains. Log into a native client and shield your mined funds to be able to use them." );
+              "Warning",
+              "Your transaction amount has been changed to " +
+                finalTxAmount +
+                " " +
+                coinObj.id +
+                " as you do not have sufficient funds to cover your submitted amount of " +
+                res.result.amountSubmitted +
+                " " +
+                coinObj.id +
+                " + a fee of " +
+                res.result.fee +
+                " " +
+                coinObj.id +
+                ". This could be due to the " +
+                satsToCoins(res.result.unshieldedFunds).toString() +
+                " in unshielded " +
+                coinObj.id +
+                " your " +
+                "wallet contains. Log into a native client and shield your mined funds to be able to use them."
+            );
           }
         }
         
         this.setState({
           loading: false,
-          toAddress: res.result.outputAddress,
-          fromAddress: res.result.changeAddress,
-          network: res.result.network,
+          toAddress: res.result.toAddress,
+          fromAddress: res.result.fromAddress,
+          network: res.result.params.network,
           fee: res.result.fee,
+          feeCurr: res.result.feeCurr,
           amountSubmitted: res.result.amountSubmitted,
-          utxoCrossChecked: res.result.utxoVerified,
+          utxoCrossChecked: res.result.params.utxoVerified,
           coinObj: coinObj,
           activeUser: activeUser,
-          balance: balanceCoins,
-          memo: memo,
+          balance,
+          memo: res.result.memo,
           remainingBalance: remainingBalance,
           finalTxAmount: finalTxAmount,
           loadingProgress: 1,
           loadingMessage: "Done",
-          btcFeePerByte: fee.feePerByte ? fee.feePerByte : null,
-          feeTakenFromAmount: res.result.feeTakenFromAmount
+          btcFeePerByte: fee != null && fee.feePerByte != null ? fee.feePerByte : null,
+          feeTakenFromAmount: feeTakenFromAmount,
+          note
         });
-      }
-    })
-    .catch((e) => {
+      } 
+    } catch (e) {
       this.setState({
         loading: false,
-        err: e.message ? e.message : "Unknown error while building transaction, double check form data"
+        err: e.message
+          ? e.message.includes("has no matching Script")
+            ? `"${address}" is not a valid address.`
+            : e.message
+          : "Unknown error while building transaction, double check form data",
       });
       console.log(e)
-    })
+    }
   }
 
   componentWillUnmount() {
@@ -159,17 +223,19 @@ class ConfirmSend extends Component {
       activeUser: this.state.activeUser,
       toAddress: this.state.toAddress,
       fromAddress: this.state.fromAddress,
-      amount: this.state.feeTakenFromAmount ? 
-        truncateDecimal(this.state.finalTxAmount, 0) 
-        : 
-        (truncateDecimal(this.state.finalTxAmount, 0) - coinsToSats(Number(this.state.fee))),
+      amount:
+        this.state.feeTakenFromAmount ||
+        (this.state.feeCurr != null &&
+          this.state.feeCurr !== this.state.coinObj.id)
+          ? this.state.finalTxAmount
+          : BigNumber(this.state.finalTxAmount).minus(BigNumber(this.state.fee)).toString(),
       btcFee: this.state.btcFeePerByte,
-    }
+    };
 
-    const resetAction = NavigationActions.reset({
+    const resetAction = CommonActions.reset({
       index: 0, // <-- currect active route from actions array
-      actions: [
-        NavigationActions.navigate({ routeName: route, params: {data: data} }),
+      routes: [
+        { name: route, params: { data: data } },
       ],
     })
 
@@ -202,104 +268,190 @@ class ConfirmSend extends Component {
 
   renderTransactionInfo = () => {
     clearTimeout(this.timeoutTimer);
-    return(
-      <View style={styles.root}>
-        <Text style={styles.verifiedLabel}>Verified</Text>
-        <View style={styles.rect} />
-        <ScrollView style={{width:"100%", height:"100%"}}>
-          <View style={styles.infoBox}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Status:</Text>
-              <Text style={styles.infoText}>Verified!</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>From:</Text>
-              <Text style={styles.addressText}>{this.state.fromAddress}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>To:</Text>
-              <Text style={styles.addressText}>{this.state.toAddress}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Balance:</Text>
-              <Text style={styles.infoText}>{truncateDecimal(this.state.balance, 8) + ' ' + this.state.coinObj.id}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Amount Submitted:</Text>
-              <Text style={styles.infoText}>{truncateDecimal(satsToCoins(this.state.amountSubmitted), 8) + ' ' + this.state.coinObj.id}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Fee:</Text>
-              <Text style={styles.infoText}>{this.state.fee + ' ' + this.state.coinObj.id}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Tx Amount:</Text>
-              <Text style={this.state.feeTakenFromAmount ? styles.warningText : styles.infoText}>{truncateDecimal(satsToCoins(this.state.finalTxAmount), 8) + ' ' + this.state.coinObj.id}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Balance After Tx:</Text>
-              <Text style={styles.infoText}>{truncateDecimal(this.state.remainingBalance, 8) + ' ' + this.state.coinObj.id}</Text>
-            </View>
-            { this.state.memo && 
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Note:</Text>
-              <Text style={styles.addressText}>{this.state.memo}</Text>
-            </View>
-            }
-            { !this.state.utxoCrossChecked &&
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Warning:</Text>
-              <Text style={styles.addressText}>Funds only verified on one server, proceed at own risk!</Text>
-            </View>
-            }
+    return (
+      <React.Fragment>
+        <View style={Styles.headerContainer}>
+          <View style={Styles.centerContainer}>
+            <Text
+              style={{
+                ...Styles.mediumCentralPaddedHeader,
+                ...Styles.successText,
+              }}
+            >
+              {"Confirm"}
+            </Text>
           </View>
-          <View style={styles.buttonContainer}>
-          <Button1 style={styles.cancelBtn} 
-            buttonContent="CANCEL" 
-            onPress={this.cancel}/>
-          <Button1 style={styles.confirmBtn} 
-            buttonContent="SEND" 
-            onPress={this.sendTx}/>
+        </View>
+        <ScrollView
+          contentContainerStyle={{
+            ...Styles.centerContainer,
+            ...Styles.innerHeaderFooterContainer,
+          }}
+          style={Styles.secondaryBackground}
+        >
+          <View style={Styles.wideBlock}>
+            <View style={Styles.infoTable}>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>From:</Text>
+                <View style={Styles.infoTableCell}>
+                  <Text style={Styles.blockTextAlignRight}>
+                    {this.state.fromAddress}
+                  </Text>
+                </View>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>To:</Text>
+                <View style={Styles.infoTableCell}>
+                  <Text style={Styles.blockTextAlignRight}>
+                    {this.state.toAddress}
+                  </Text>
+                </View>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>Balance:</Text>
+                <Text style={Styles.infoTableCell}>
+                  {truncateDecimal(this.state.balance, this.state.coinObj.decimals || 8) +
+                    " " +
+                    this.state.coinObj.id}
+                </Text>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>
+                  Amount Submitted:
+                </Text>
+                <Text style={Styles.infoTableCell}>
+                  {truncateDecimal(this.state.amountSubmitted, this.state.coinObj.decimals || 8) +
+                    " " +
+                    this.state.coinObj.id}
+                </Text>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>Fee:</Text>
+                <Text style={Styles.infoTableCell}>
+                  {this.state.fee + " " + (this.state.feeCurr
+                    ? this.state.feeCurr
+                    : this.state.coinObj.id)}
+                </Text>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>Tx Amount:</Text>
+                <Text
+                  style={
+                    this.state.feeTakenFromAmount
+                      ? { ...Styles.infoTableCell, ...Styles.warningText }
+                      : Styles.infoTableCell
+                  }
+                >
+                  {truncateDecimal(this.state.finalTxAmount, this.state.coinObj.decimals || 8) +
+                    " " +
+                    this.state.coinObj.id}
+                </Text>
+              </View>
+              <View style={Styles.infoTableRow}>
+                <Text style={Styles.infoTableHeaderCell}>
+                  Balance After Tx:
+                </Text>
+                <Text style={Styles.infoTableCell}>
+                  {this.state.remainingBalance +
+                    " " +
+                    this.state.coinObj.id}
+                </Text>
+              </View>
+              {this.state.note != null && this.state.note.length > 0 ? (
+                <View style={Styles.infoTableRow}>
+                  <Text style={Styles.infoTableHeaderCell}>Note:</Text>
+                  <View style={Styles.infoTableCell}>
+                    <Text style={Styles.blockTextAlignRight}>
+                      {this.state.note}
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
+              {!this.state.utxoCrossChecked ? (
+                <View style={Styles.infoTableRow}>
+                  <Text style={Styles.infoTableHeaderCell}>Warning:</Text>
+                  <View style={Styles.infoTableCell}>
+                    <Text
+                      style={{
+                        ...Styles.blockTextAlignRight,
+                        ...Styles.warningText,
+                      }}
+                    >
+                      {
+                        "Funds only verified on one server, proceed at own risk!"
+                      }
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
+            </View>
           </View>
         </ScrollView>
-      </View>
-    )
+        <View style={Styles.footerContainer}>
+          <View style={Styles.standardWidthSpaceBetweenBlock}>
+            <StandardButton
+              color={Colors.warningButtonColor}
+              title="BACK"
+              onPress={this.cancel}
+            />
+            <StandardButton
+              color={Colors.successButtonColor}
+              title="SEND"
+              onPress={this.sendTx}
+            />
+          </View>
+        </View>
+      </React.Fragment>
+    );
   }
 
   renderError = () => {
     clearTimeout(this.timeoutTimer);
-    return(
-      <View style={styles.root}>
-        <Text style={styles.errorLabel}>Error</Text>
-        <View style={styles.rect} />
-        <ScrollView style={{width:"100%", height:"100%"}}>
-          <View style={styles.infoBox}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Status:</Text>
-              <Text style={styles.infoText}>Error</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoText}>Error Type:</Text>
-              <Text style={styles.addressText}>{this.state.err}</Text>
+    return (
+      <React.Fragment>
+        <View style={Styles.headerContainer}>
+          <View style={Styles.centerContainer}>
+            <Text style={{...Styles.mediumCentralPaddedHeader, ...Styles.errorText}}>Error</Text>
+          </View>
+        </View>
+        <ScrollView
+          contentContainerStyle={{
+            ...Styles.centerContainer,
+            ...Styles.innerHeaderFooterContainer,
+          }}
+          style={Styles.secondaryBackground}
+        >
+        <View style={Styles.wideBlock}>
+          <View style={Styles.infoTable}>
+            <View style={Styles.infoTableRow}>
+              <Text style={Styles.infoTableHeaderCell}>Error Type:</Text>
+              <View style={Styles.infoTableCell}>
+                <Text style={Styles.blockTextAlignRight}>
+                  {this.state.err}
+                </Text>
+              </View>
             </View>
           </View>
-          <View style={styles.buttonContainer}>
-            <Button1 
-            style={styles.cancelBtn} 
-            buttonContent="Back" 
-            onPress={this.cancel}
-            />
           </View>
         </ScrollView>
-      </View>
-    )
+        <View style={Styles.footerContainer}>
+          <View style={Styles.fullWidthFlexCenterBlock}>
+            <StandardButton
+              color={Colors.warningButtonColor}
+              title="BACK"
+              onPress={this.cancel}
+            />
+          </View>
+        </View>
+      </React.Fragment>
+    );
   }
 
   renderLoading = () => {
     return(
-      <View style={styles.loadingRoot}>
-        <ProgressBar progress={this.state.loadingProgress} width={200} color='#2E86AB'/>
-        <Text style={styles.loadingLabel}>{this.state.loadingMessage}</Text>
+      <View style={Styles.focalCenter}>
+        <ProgressBar progress={this.state.loadingProgress} width={200} color={Colors.linkButtonColor}/>
+        <Text style={Styles.mediumCentralPaddedHeader}>{this.state.loadingMessage}</Text>
       </View>
     )
   }

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements';
 import Spinner from 'react-native-loading-spinner-overlay';
-import Button1 from '../../../../symbols/button1';
+import StandardButton from '../../../../components/StandardButton';
 import styles from './ManageWyreAccount.styles';
 import {
   selectWyreAccountField,
@@ -21,7 +21,7 @@ import {
 } from '../../../../actions/actions/PaymentMethod/WyreAccount';
 import TextInputMask from 'react-native-text-input-mask';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Calendar} from '../../../../images/customIcons/index';
+import { Calendar } from '../../../../images/customIcons/index';
 import { parseDate } from '../../../../utils/date';
 import Colors from '../../../../globals/colors';
 
@@ -222,9 +222,9 @@ class ManageWyrePersonalDetails extends Component {
               </FormValidationMessage>
             </View>
             <View style={styles.buttonContainerBottom}>
-              <Button1
+              <StandardButton
                 style={styles.buttonSubmit}
-                buttonContent="SUBMIT"
+                title="SUBMIT"
                 onPress={()=>{
                   if (this.state.showCalendar) {
                     this.hideCalendar();

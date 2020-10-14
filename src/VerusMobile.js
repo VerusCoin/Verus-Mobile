@@ -1,18 +1,23 @@
 import React from "react";
 import { YellowBox, TouchableWithoutFeedback, Keyboard, Alert } from "react-native";
-import { RootNavigator } from './utils/navigation/index';
+import RootStackScreens from './utils/navigation/index';
+import { NavigationContainer } from '@react-navigation/native';
 import { 
   fetchUsers, 
   loadServerVersions,
   loadCachedHeaders,
-  initSettings
+  loadEthTxReceipts,
+  initSettings,
+  requestSeedData,
 } from './actions/actionCreators';
 import {
   initCache,
   clearCachedVersions,
+  updateActiveCoinList,
   checkAndSetVersion
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
+import { ENABLE_VERUS_IDENTITIES } from '../env/main.json'
 
 
 class VerusMobile extends React.Component {
@@ -25,7 +30,8 @@ class VerusMobile extends React.Component {
     YellowBox.ignoreWarnings([
       "Warning: componentWillMount is deprecated",
       "Warning: componentWillReceiveProps is deprecated",
-      "Warning: componentWillUpdate is deprecated"
+      "Warning: componentWillUpdate is deprecated",
+      'RCTRootView cancelTouches', 
     ]);
   }
   
@@ -40,8 +46,8 @@ class VerusMobile extends React.Component {
     .then(() => {
       return checkAndSetVersion()
     })
-    .then((versionCompare) => {
-      let promiseArr = [fetchUsers(), initSettings()]
+    .then(() => {
+      let promiseArr = [fetchUsers(), initSettings(), updateActiveCoinList()]
 
       return Promise.all(promiseArr)
     })
@@ -50,8 +56,11 @@ class VerusMobile extends React.Component {
       actionArr.forEach((action) => {
         this.props.dispatch(action)
       })
-      
-      return Promise.all([loadServerVersions(this.props.dispatch), loadCachedHeaders(this.props.dispatch)])
+      return Promise.all([
+        loadServerVersions(this.props.dispatch),
+        loadCachedHeaders(this.props.dispatch),
+        loadEthTxReceipts(this.props.dispatch),
+      ]);
     })
     .then(() => {
       this.setState({ loading: false })
@@ -59,16 +68,22 @@ class VerusMobile extends React.Component {
     .catch((err) => {
       Alert.alert("Error", err.message)
     })
+
+    if (ENABLE_VERUS_IDENTITIES) {
+      this.props.dispatch(requestSeedData());
+    }
   }
 
   render() {
-    const Layout = RootNavigator(
+    const Layout = () => RootStackScreens(
       this.props.accountsLength > 0, 
       this.state.loading, 
       this.props.signedIn);
     
-    return(
-       <Layout />
+    return (
+      <NavigationContainer>
+        <Layout />
+      </NavigationContainer>
     );
   }
 }

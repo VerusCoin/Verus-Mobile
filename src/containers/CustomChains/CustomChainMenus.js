@@ -1,3 +1,6 @@
+// Warning: DEPRECATED
+// TODO: Refactor
+
 /*
   This component's purpose is to display a tab bar of 
   all the different options for adding a custom coin
@@ -26,11 +29,11 @@ class CustomChainMenus extends Component {
     };
   }
 
-  static navigationOptions = ({ navigation }) => {
+  static navigationOptions = ({ route }) => {
     return {
-      title: typeof(navigation.state.params)==='undefined' || 
-      typeof(navigation.state.params.title) === 'undefined' ? 
-      'undefined': navigation.state.params.title,
+      title: typeof(route.params)==='undefined' || 
+      typeof(route.params.title) === 'undefined' ? 
+      'undefined': route.params.title,
     };
   };
 
@@ -66,6 +69,8 @@ class CustomChainMenus extends Component {
       throw new Error("Tab not found for active section " + this.props.activeSection)
     }
 
+    this.props.navigation.setOptions({ title: activeTab.label })
+
     return {
       tabs: tabArray,
       activeTab: activeTab
@@ -88,7 +93,7 @@ class CustomChainMenus extends Component {
   )
 
   switchTab = (newTab) => {
-    this.props.navigation.setParams({ title: newTab.label })
+    this.props.navigation.setOptions({ title: newTab.label })
     this.setState({ activeTab: newTab })
   }
 
