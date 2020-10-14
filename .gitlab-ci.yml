@@ -2,7 +2,7 @@ stages:
   - build
 
 variables:
-  VERSION: 0.1.9-beta-1
+  VERSION: 0.2.0-beta
   POST_MESSAGE: "Pipeline Trigger: ${CI_PIPELINE_SOURCE}\n
   Branch: ${CI_COMMIT_REF_NAME}\n
   Commit: ${CI_COMMIT_SHA}\n
@@ -15,6 +15,8 @@ Android:debug:
   tags: ["Mobile"]
   stage: build
   script:
+    - sed -i -e "s/PUT_KEY_HERE/${ETHERSCAN_API_KEY}/g" env/main.json
+    - sed -i -e "s/PUT_ID_HERE/${INFURA_PROJECT_ID}/g" env/main.json
     - yarn install
     - yarn run bundle-android
     - cd android && ./gradlew assembleDebug
@@ -33,6 +35,8 @@ Android:release:
     RELEASE: 1
   stage: build
   script:
+    - sed -i -e "s/PUT_KEY_HERE/'${ETHERSCAN_API_KEY}'/g" env/main.json
+    - sed -i -e "s/PUT_ID_HERE/'${INFURA_PROJECT_ID}'/g" env/main.json
     - yarn install
     - cd android
     - echo ${KEYSTORE}  | xxd -r -p - > app/${MYAPP_RELEASE_STORE_FILE}
