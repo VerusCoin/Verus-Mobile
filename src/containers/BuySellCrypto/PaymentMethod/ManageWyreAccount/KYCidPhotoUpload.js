@@ -32,7 +32,7 @@ import {
   uploadWyreAccountDocument
 } from '../../../../actions/actions/PaymentMethod/WyreAccount';
 
-//import PrimeTrustInterface from '../../../../utils/PrimeTrust/provider';
+import PrimeTrustInterface from '../../../../utils/PrimeTrust/provider';
 
 import Styles from '../../../../styles/index';
 import Colors from '../../../../globals/colors';
@@ -62,7 +62,7 @@ class KYCidPhotoUploads extends Component {
       isFetching: true
     };
 
-  /*  if(PrimeTrustInterface.user === null) {
+    if(PrimeTrustInterface.user === null) {
       //redirect to  the  login page
       console.log("redirecting to login page:");
       this.props.navigation.navigate("KYCStart");
@@ -129,7 +129,7 @@ class KYCidPhotoUploads extends Component {
     }
   };
 
-*/
+
 
   render() {
     const scaleFactorY = 2;
@@ -160,7 +160,77 @@ class KYCidPhotoUploads extends Component {
             containerStyle={Styles.horizontalPaddingBox10}
           />
         </View>
-          
+          <View style={styles.mainInputView}>
+            <Spinner
+              visible={this.state.isFetching}
+              textContent="Loading..."
+              textStyle={{ color: '#FFF' }}
+            />
+            <View>
+              <Text style={styles.formLabel}>
+                Uploaded documents: &nbsp; &nbsp;
+                { this.state.documents == null ? 0 : this.state.documents.length}
+              </Text>
+            <FlatList data={this.state.documents} renderItem={({item}) => <View><Text>{item.attributes.label}</Text><Image style={styles.logo} source={{uri: item.attributes["file-url"]}}/></View>} />
+            </View>
+            {!this.state.image && (
+            <View>
+            <View style={styles.dropdownInput}>
+              <Dropdown
+                labelExtractor={(item) => item.value}
+                valueExtractor={(item) => item.value}
+                label="Select Document Type"
+                labelTextStyle={{ fontFamily: 'Avenir-Book'}}
+                labelFontSize={13}
+                data={[{value:'Drivers License Front'},{value:'Drivers License Back'},{value:'Identity Card Front'},{value:'Identity Card Back'},{value:'Passport'}]}
+                onChangeText={(value) => this.setState({ documentType: value })}
+                textColor={Colors.quaternaryColor}
+                selectedItemColor={Colors.quaternaryColor}
+                baseColor={Colors.quaternaryColor}
+                value={this.state.documentType == null? 'N/A': this.state.documentType}
+                inputContainerStyle={styles.dropdownInputContainer}
+                pickerStyle={{backgroundColor: Colors.tertiaryColor}}
+              />
+            </View>
+            <CheckBox
+              title='Contains Address'
+              value={true}
+              checked={this.state.containsAddress}
+              />
+
+              <View style={styles.buttonContainerBottom}>
+                <Button
+                titleStyle={Styles.whiteText}
+                buttonStyle={Styles.defaultButtonClearWhite}
+                  title="UPLOAD DOCUMENT"
+                  onPress={this.handleSelect}
+                />
+              </View>
+              </View>
+            )}
+            {this.state.image && (
+              <View>
+                <Image
+                  style={styles.imageContainer}
+                  source={{ uri: this.state.image.uri }}
+                />
+                <View style={styles.buttonContainer}>
+                  <Button
+                  titleStyle={Styles.whiteText}
+                  buttonStyle={Styles.defaultButtonClearWhite}
+                    title="CONFIRM"
+                    onPress={this.handleUpload}
+                  />
+                  <Button
+                  titleStyle={Styles.whiteText}
+                  buttonStyle={Styles.defaultButtonClearWhite}
+                    title="CANCEL"
+                    onPress={this.clearSelectedImage}
+                  />
+                </View>
+              </View>
+            )}
+          </View>
           <Button
           titleStyle={Styles.whiteText}
           buttonStyle={Styles.defaultButtonClearWhite}
