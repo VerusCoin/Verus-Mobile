@@ -35,8 +35,8 @@ Android:release:
     RELEASE: 1
   stage: build
   script:
-    - sed -i -e "s/PUT_KEY_HERE/'${ETHERSCAN_API_KEY}'/g" env/main.json
-    - sed -i -e "s/PUT_ID_HERE/'${INFURA_PROJECT_ID}'/g" env/main.json
+    - sed -i -e "s/PUT_KEY_HERE/${ETHERSCAN_API_KEY}/g" env/main.json
+    - sed -i -e "s/PUT_ID_HERE/${INFURA_PROJECT_ID}/g" env/main.json
     - yarn install
     - cd android
     - echo ${KEYSTORE}  | xxd -r -p - > app/${MYAPP_RELEASE_STORE_FILE}
