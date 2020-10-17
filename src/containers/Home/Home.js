@@ -382,10 +382,10 @@ class Home extends Component {
         </Text>
         <Text style={Styles.boldListHeader}>{"Portfolio"}</Text>
         {this.renderCoinList()}
-        <Button
+        {ENABLE_FIAT_GATEWAY? <Button
           title="go to kyc screen"
           onPress={this.onKYCScreen}
-          />
+          /> : null}
       </View>
     );
   }
