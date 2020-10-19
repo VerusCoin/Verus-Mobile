@@ -16,6 +16,7 @@
   "dependencies": {
     "@babel/core": "^7.6.2",
     "@babel/runtime": "^7.6.2",
+    "@ethersproject/signing-key": "^5.0.5",
     "@react-native-community/art": "^1.2.0",
     "@react-native-community/async-storage": "^1.5.1",
     "@react-native-community/cameraroll": "^4.0.1",

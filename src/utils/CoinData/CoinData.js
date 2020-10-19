@@ -107,6 +107,7 @@ export const CoinLogos = {
   ven: CoinLogoSvgs.web3.VEN,
   yfi: CoinLogoSvgs.web3.YFI,
   zrx: CoinLogoSvgs.web3.ZRX,
+  rfox: CoinLogoSvgs.web3.RFOX
 };
 
 //To make flatlist render faster
