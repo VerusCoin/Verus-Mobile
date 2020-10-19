@@ -6,7 +6,7 @@ import { ERC20, ETH } from "../../../../constants/intervalConstants"
 export const txPreflight = async (coinObj, activeUser, address, amount, params) => {
   try {
     const fromAddress = activeUser.keys[coinObj.id][ERC20].addresses[0]
-    const contract = Web3Provider.getContract(coinObj.contract_address)
+    const contract = Web3Provider.getContract(coinObj.currency_id)
     const signer = new ethers.VoidSigner(fromAddress, Web3Provider.DefaultProvider)
     const balance = await contract.balanceOf(signer.getAddress())
     const gasPrice = await Web3Provider.DefaultProvider.getGasPrice()
@@ -22,17 +22,15 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
     return {
       err: false,
       result: {
-        fee: Number(
-          ethers.utils.formatUnits(
+        fee: ethers.utils.formatUnits(
             maxFee,
             coinObj.decimals
-          )
-        ),
+          ),
         feeCurr: ETH.toUpperCase(),
-        value: Number(ethers.utils.formatUnits(amountBn, coinObj.decimals)),
+        value: ethers.utils.formatUnits(amountBn, coinObj.decimals),
         toAddress: address,
         fromAddress: address,
-        amountSubmitted: amount,
+        amountSubmitted: amount.toString(),
         memo: null,
         params: {
           utxoVerified: true,

@@ -5,7 +5,7 @@ import { REQUEST_TIMEOUT_MS } from '../../../../../../env/main.json'
 
 export const getCoinPaprikaRate = (coinObj) => {
   let coinID = coinObj.id
-  let coinName = coinObj.name
+  let coinName = coinObj.display_name
   let param = (coinID.toLowerCase()) + '-' + (coinName.replace(/ /g,"-")).toLowerCase()
 
   const address = `https://api.coinpaprika.com/v1/coins/${param}/ohlcv/latest`

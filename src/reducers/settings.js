@@ -23,7 +23,8 @@ export const settings = (state = {
   activeConfigSection: null,
   generalWalletSettings: {
     maxTxCount: 10,
-    displayCurrency: USD
+    displayCurrency: USD,
+    defaultAccount: null,
   },
   buySellSettings: {}, //e.g. {user1': {buySellEnabled: true, wyreData: {}}, 'user2: {buySellEnabled: false, wyreData: {}}}
   coinSettings: {}, //e.g. {VRSC: {verificationLvl: 2, verificationLock: false, channels: ['dlight', 'electrum', 'general'], privateAddrs: 100}}
@@ -39,6 +40,15 @@ export const settings = (state = {
             verificationLock: false,
             channels: coinObj.compatible_channels,
             privateAddrs: coinObj.compatible_channels.includes(DLIGHT) ? DEFAULT_PRIVATE_ADDRS: 0,
+            ...coinObj.coinSettings,
+          }
+        } else {
+          newCoinSettings[coinObj.id] = {
+            verificationLvl: MAX_VERIFICATION, 
+            verificationLock: false,
+            channels: coinObj.compatible_channels,
+            privateAddrs: coinObj.compatible_channels.includes(DLIGHT) ? DEFAULT_PRIVATE_ADDRS: 0,
+            ...state.coinSettings[coinObj.id],
             ...coinObj.coinSettings,
           }
         }

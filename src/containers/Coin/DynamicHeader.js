@@ -116,7 +116,7 @@ class DynamicHeader extends Component {
   };
 
   render() {
-    const { allSubWallets, selectedSubWallet } = this.props;
+    const { allSubWallets, chainTicker } = this.props;
     const subWalletSelectable = allSubWallets.length > 1;
 
     return (
@@ -159,7 +159,6 @@ class DynamicHeader extends Component {
                 <Text
                   style={{
                     ...Styles.greyStripeHeader,
-                    ...Styles.capitalizeFirstLetter,
                     ...(subWalletSelectable ? Styles.linkText : {}),
                   }}
                   numberOfLines={1}
@@ -168,7 +167,7 @@ class DynamicHeader extends Component {
                     SUBWALLET_NAMES[wallet.id] != null
                       ? SUBWALLET_NAMES[wallet.id]
                       : wallet.id
-                  } Sub-Wallet`}
+                  } ${chainTicker.toUpperCase()} Wallet`}
                 </Text>
               </TouchableOpacity>
             );

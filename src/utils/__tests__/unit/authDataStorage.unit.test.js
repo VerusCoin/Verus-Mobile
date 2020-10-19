@@ -51,8 +51,11 @@ describe('Authentication data storage and retrieval', () => {
   it('fails on incorrect password', () => {
     return checkPinForUser("bad_pass", MOCK_USER_OBJ.id)
     .then(res => {
-      expect(res).toBe(false)
+      expect(res).toBe(undefined)
     })
+    .catch(e => {
+      expect(e).toBeDefined()
+    }) 
   })
 
   it('can reset user password', () => {

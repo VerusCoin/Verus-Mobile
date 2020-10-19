@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import Styles from '../../../styles/index'
 import { APP_VERSION, VERUS_QR_VERSION } from '../../../../env/main.json'
+import { CoinLogos } from "../../../utils/CoinData/CoinData";
 
 const DISCORD_URL = "https://discord.gg/VRKMP2S"
 const REDDIT_URL = "https://www.reddit.com/r/VerusCoin/"
@@ -38,18 +39,12 @@ class AppInfo extends Component {
   }
 
   render() {
+    const VerusLogo = CoinLogos.vrsc
     return(
       <View style={Styles.defaultRoot}>
         <View style={Styles.centralRow}>
           <View style={Styles.fullWidthFlexCenterBlock}>
-            <Image
-              style={{
-                width: 75,
-                height: 75,
-                resizeMode: "contain",
-              }}
-              source={LOGO_DIR}
-            />
+            <VerusLogo width={75} height={75}/>
           </View>
         </View>
         <Text style={Styles.centralHeader}>Verus Mobile</Text>

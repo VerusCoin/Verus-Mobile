@@ -18,11 +18,12 @@ import {
 } from "react-native";
 import { NavigationActions } from '@react-navigation/compat';
 import { FormLabel, Input, FormValidationMessage } from 'react-native-elements'
-import { resetPwd } from '../../../../actions/actionCreators';
+import { resetPwd, setBiometry } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
 import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors';
+import { removeBiometricPassword } from "../../../../utils/biometry/biometry";
 
 class ResetPwd extends Component {
   constructor() {
@@ -107,9 +108,11 @@ class ResetPwd extends Component {
 
       if (!_errors) {
         this.canReset()
-        .then((res) => {
+        .then(async (res) => {
           if (res) {
             if (this.props.activeAccount) {
+              removeBiometricPassword(this.props.activeAccount.accountHash)
+              await setBiometry(this.props.activeAccount.id, false)
               return (resetPwd(this.props.activeAccount.id, this.state.newPwd, this.state.oldPwd))
             } else {
               console.warn("Error, no active account")

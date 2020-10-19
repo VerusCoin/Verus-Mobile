@@ -3,6 +3,7 @@ import Web3Provider from '../../../../web3/provider'
 import { ETH } from "../../../../constants/intervalConstants"
 import { ETH_NETWORK_IDS } from "../../../../constants/constants"
 import { ETH_NETWORK } from '../../../../../../env/main.json'
+import BigNumber from "bignumber.js"
 
 export const txPreflight = async (coinObj, activeUser, address, amount, params) => {
   try {
@@ -14,7 +15,7 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
     const transaction = await signer.populateTransaction({
       to: address,
       from: fromAddress,
-      value: ethers.utils.parseUnits(amount.toString()),
+      value,
       chainId: ETH_NETWORK_IDS[ETH_NETWORK]
     })
 
@@ -33,7 +34,7 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
           coinObj,
           activeUser,
           address,
-          Number(ethers.utils.formatUnits(adjustedValue)),
+          BigNumber(ethers.utils.formatUnits(adjustedValue)),
           {
             ...params,
             feeTakenFromAmount: true,
@@ -48,12 +49,10 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
     return {
       err: false,
       result: {
-        fee: Number(
-          ethers.utils.formatUnits(
+        fee: ethers.utils.formatUnits(
             transaction.gasLimit.mul(transaction.gasPrice)
-          )
-        ),
-        value: Number(ethers.utils.formatUnits(transaction.value)),
+          ),
+        value: ethers.utils.formatUnits(transaction.value),
         toAddress: transaction.to,
         fromAddress: transaction.from,
         amountSubmitted:

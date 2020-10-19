@@ -1,4 +1,4 @@
-import { all, takeLatest, put } from "redux-saga/effects";
+import { all, takeEvery, put } from "redux-saga/effects";
 import {
   INIT_DLIGHT_CHANNEL_START,
   INIT_DLIGHT_CHANNEL_FINISH,
@@ -6,7 +6,7 @@ import {
 
 export default function * dlightSaga() {
   yield all([
-    takeLatest(INIT_DLIGHT_CHANNEL_START, handleFinishDlightInit),
+    takeEvery(INIT_DLIGHT_CHANNEL_START, handleFinishDlightInit),
   ]);
 }
 

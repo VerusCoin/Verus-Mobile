@@ -21,16 +21,17 @@ import { Input } from 'react-native-elements'
 import { connect } from 'react-redux'
 import Styles from '../../../styles/index'
 import QRModal from '../../../components/QRModal'
-import { coinsToSats, isNumber, truncateDecimal } from '../../../utils/math'
+import { isNumber, truncateDecimal } from '../../../utils/math'
 import Colors from '../../../globals/colors';
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import { API_GET_FIATPRICE, API_GET_BALANCES, GENERAL } from "../../../utils/constants/intervalConstants"
 import { USD } from '../../../utils/constants/currencies'
 import { expireData } from "../../../actions/actionCreators"
 import Store from "../../../store"
-import { VERUS_QR_VERSION } from '../../../../env/main.json'
 import { Portal } from "react-native-paper"
 import selectAddresses from "../../../selectors/address"
+import VerusPayParser from '../../../utils/verusPay/index'
+import BigNumber from "bignumber.js";
 
 class ReceiveCoin extends Component {
   constructor(props) {
@@ -125,20 +126,31 @@ class ReceiveCoin extends Component {
     }) 
   }
 
-  createQRString = (coinTicker, amount, address, memo) => {
+  createQRString = (coinObj, amount, address, memo) => {
     const { rates, displayCurrency } = this.props
+    const coinTicker = coinObj.id
 
     let _price = rates[coinTicker] != null ? rates[coinTicker][displayCurrency] : null
-    
-    let verusQRJSON = {
-      verusQR: VERUS_QR_VERSION,
-      coinTicker: coinTicker,
-      address: address,
-      amount: this.state.amountFiat ? truncateDecimal(coinsToSats(amount/_price), 0) : coinsToSats(amount),
-      memo: memo
-    }
 
-    this.setState({verusQRString: JSON.stringify(verusQRJSON), showModal: true})
+    try {
+      const verusQRString = VerusPayParser.v0.writeVerusPayQR(
+        coinObj,
+        this.state.amountFiat
+          ? (BigNumber(amount).dividedBy(BigNumber(_price))).toString()
+          : amount.toString(),
+        address,
+        memo
+      )
+
+      this.setState({
+        verusQRString,
+        showModal: true,
+      });
+    } catch(e) {
+      console.warn(e)
+      Alert.alert("Error", "Error creating QR payment request.")
+    }
+    
   }
 
   switchInvoiceCoin = (coinObj) => {
@@ -179,7 +191,12 @@ class ReceiveCoin extends Component {
       verusQRString: null
     }, () => {
       const _selectedCoin = this.state.selectedCoin
-      const _amount = this.state.amount
+      const _amount =
+        (this.state.amount.toString().includes(".") &&
+          this.state.amount.toString().includes(",")) ||
+        !this.state.amount
+          ? this.state.amount
+          : this.state.amount.toString().replace(/,/g, ".");
       const _address = this.state.address
       const _memo = this.state.memo
       let _errors = false;
@@ -189,19 +206,18 @@ class ReceiveCoin extends Component {
         _errors = true
       }
 
-      if (!(_amount.toString()) || _amount.toString().length < 1) {
-        this.handleError("Required field", "amount")
-        _errors = true
-      } else if (!(isNumber(_amount))) {
-        this.handleError("Invalid amount", "amount")
-        _errors = true
-      } else if (Number(_amount) <= 0) {
-        this.handleError("Enter an amount greater than 0", "amount")
-        _errors = true
-      }
+      if (!(!(_amount.toString()) || _amount.toString().length < 1 || _amount == 0)) {
+        if (!(isNumber(_amount))) {
+          this.handleError("Invalid amount", "amount")
+          _errors = true
+        } else if (Number(_amount) <= 0) {
+          this.handleError("Enter an amount greater than 0", "amount")
+          _errors = true
+        }
+      } 
 
       if (!_errors) {
-        this.createQRString(_selectedCoin.id, _amount, _address, _memo)
+        this.createQRString(_selectedCoin, _amount, _address, _memo)
       } else {
         return false;
       }
@@ -215,7 +231,6 @@ class ReceiveCoin extends Component {
       props,
       validateFormData,
       forceUpdate,
-      switchInvoiceCoin,
       copyAddressToClipboard
     } = this;
     const { activeCoinsForUser, rates, displayCurrency } = props;

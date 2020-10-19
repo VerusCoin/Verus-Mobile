@@ -9,15 +9,14 @@
 import React, { Component } from "react"
 import {
   View,
-  StyleSheet,
   Modal,
   Text,
   Alert,
   TouchableOpacity,
-  CameraRoll,
   ScrollView,
   Platform
 } from "react-native"
+import CameraRoll from "@react-native-community/cameraroll";
 import QRCode from 'react-native-qrcode-svg'
 import StandardButton from "../components/StandardButton"
 import AlertAsync from "react-native-alert-async"
@@ -27,7 +26,7 @@ import Share from 'react-native-share';
 import Colors from '../globals/colors';
 import Styles from '../styles/index'
 
-const LOGO_DIR = require('../images/customIcons/verusQRLogo.png');
+const LOGO_DIR = require('../images/customIcons/Verus.png');
 const NOT_REAL_ERROR_MSG = "User did not share"
 const DEFAULT_OPACITY = 0.2
 
@@ -57,7 +56,7 @@ class QRModal extends Component {
     this.QRCodeRef.toDataURL((data) => {
       RNFS.writeFile(RNFS.CachesDirectoryPath+"/VerusPayQR.png", data, 'base64')
         .then((success) => {
-          return CameraRoll.saveToCameraRoll(RNFS.CachesDirectoryPath+"/VerusPayQR.png", 'photo')
+          return CameraRoll.save(RNFS.CachesDirectoryPath+"/VerusPayQR.png", { type: 'photo' })
         })
         .then(() => {
           return RNFS.unlink(RNFS.CachesDirectoryPath+"/VerusPayQR.png")
@@ -148,9 +147,9 @@ class QRModal extends Component {
                 value={this.props.qrString ? this.props.qrString : "-"}
                 size={264}
                 //TODO: Add in differently so it doesn't impact readability
-                //logo={LOGO_DIR}
-                //logoSize={50}
-                //logoBackgroundColor='transparent'
+                // logo={LOGO_DIR}
+                // logoSize={50}
+                // logoBackgroundColor='transparent'
                 getRef={(qr) => (this.QRCodeRef = qr)}
               />
             </View>

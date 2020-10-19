@@ -17,6 +17,12 @@ import Verus from './Verus.png';
 import BankBuildingBlack from './bankBuildingBlack.png';
 import VerifyIdentity from './VerifyIdentity.svg';
 
+import TransactionLogos from './transactions/index'
+
+import VerusPayLogo from './verusPay.svg'
+import VerusLogo from './VerusLogo.svg'
+import AddCoinLogo from './coinAdd.svg'
+
 export {
   Open,
   Approved,
@@ -35,7 +41,14 @@ export {
   Calendar,
   Verus,
   BankBuildingBlack,
+<<<<<<< HEAD
   VerifyIdentity
+=======
+  TransactionLogos,
+  VerusPayLogo,
+  AddCoinLogo,
+  VerusLogo
+>>>>>>> fdd14df66670066b78cc89433bceea85677d0e1d
 };
 
 export default Open;

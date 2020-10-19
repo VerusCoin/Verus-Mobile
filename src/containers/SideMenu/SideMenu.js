@@ -26,6 +26,8 @@ import AlertAsync from "react-native-alert-async";
 import Styles from '../../styles/index'
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { ENABLE_FIAT_GATEWAY } from '../../../env/main.json'
+import { CoinLogos } from "../../utils/CoinData/CoinData";
+import { AddCoinLogo } from "../../images/customIcons";
 
 const APP_INFO = 'App Info'
 const PROFILE = 'Profile'
@@ -150,26 +152,29 @@ class SideMenu extends Component {
       <FlatList
         data={this.props.activeCoinsForUser}
         style={Styles.underflow}
-        renderItem={({ item, index }) => (
-          <ListItem
-            title={item.id}
-            leftAvatar={{
-              source: item.logo,
-            }}
-            containerStyle={Styles.bottomlessListItemContainer}
-            onPress={() =>
-              this.setState({ mainDrawer: false, currentCoinIndex: index })
-            }
-            titleStyle={Styles.listItemLeftTitleUppercase}
-          />
-        )}
+        renderItem={({ item, index }) => {
+          const Logo = CoinLogos[item.id.toLowerCase()]
+
+          return (
+            <ListItem
+              title={item.id}
+              leftAvatar={Logo ? <Logo width={40} height={40} /> : null}
+              containerStyle={Styles.bottomlessListItemContainer}
+              onPress={() =>
+                this.setState({
+                  mainDrawer: false,
+                  currentCoinIndex: index,
+                })
+              }
+              titleStyle={Styles.listItemLeftTitleUppercase}
+            />
+          );
+        }}
         ListFooterComponent={
           <React.Fragment>
             <ListItem
               title="ADD COIN"
-              leftAvatar={{
-                source: require("../../images/customIcons/coinAdd.png"),
-              }}
+              leftAvatar={<AddCoinLogo width={40} height={40}/>}
               containerStyle={Styles.bottomlessListItemContainer}
               onPress={() =>
                 this.setState({ mainDrawer: false, currentCoinIndex: -1 })
@@ -370,7 +375,7 @@ class SideMenu extends Component {
         /> 
       )}
       sections={[
-        {title: 'Add Coin', data: ['Add coin from list', 'Add custom coin']},
+        {title: 'Add Coin', data: ['Add coin from list'/*, 'Add custom coin'*/]},
       ]}
       keyExtractor={(item, index) => item + index}
       />

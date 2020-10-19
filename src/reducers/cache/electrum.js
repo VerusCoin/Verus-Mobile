@@ -4,8 +4,15 @@
   app starts, so that constant calls to Async Storage are avoided
 */
 
+import {
+  ADD_GOOD_SERVER,
+  ADD_BAD_SERVER,
+} from "../../utils/constants/storeType";
+
 export const electrum = (state = {
-  serverVersions: {}
+  serverVersions: {},
+  goodServers: {},
+  badServers: {}
 }, action) => {
   switch (action.type) {
     case 'ADD_SERVER_VERSION':
@@ -14,6 +21,22 @@ export const electrum = (state = {
       return {
         ...state, 
         serverVersions: _serverVersions,
+      };
+    case ADD_GOOD_SERVER:
+      return {
+        ...state,
+        goodServers: {
+          ...state.goodServers,
+          [action.payload.server.goodServer]: action.payload.server,
+        },
+      };
+    case ADD_BAD_SERVER:
+      return {
+        ...state,
+        badServers: {
+          ...state.badServers,
+          [action.payload.server]: true,
+        },
       };
     case 'SET_SERVER_VERSIONS':
       return {
@@ -24,6 +47,8 @@ export const electrum = (state = {
       return {
         ...state, 
         serverVersions: {},
+        goodServers: {},
+        badServers: {}
       };
     default:
       return state;

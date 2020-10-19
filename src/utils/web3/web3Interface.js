@@ -1,8 +1,15 @@
 import ethers from 'ethers';
+import Store from '../../store';
+import {
+  ADD_WEB3_CONTRACT,
+  CLEAR_WEB3_CONTRACTS,
+  REMOVE_WEB3_CONTRACT,
+} from "../constants/storeType";
 
 class Web3Interface {
   constructor(network, apiKeys) {
     this.network = network;
+    this.keys = apiKeys
 
     this.DefaultProvider = new ethers.getDefaultProvider(this.network, apiKeys);
 
@@ -10,25 +17,27 @@ class Web3Interface {
       this.network,
       apiKeys.etherscan
     );
-
-    this.contracts = {};
   }
 
-  initContract = async (contractAddress) => {
+  initContract = async (contractAddress) => {   
+    const web3Contracts = Store.getState().channelStore_erc20.web3Contracts
+
     try {
-      if (this.contracts[contractAddress])
+      if (web3Contracts[contractAddress])
         throw new Error(
           "Cannot initialize existing contract " + contractAddress
         );
+
       const abi = await this.EtherscanProvider.perform("getabi", {
         address: contractAddress,
       });
 
-      this.contracts[contractAddress] = new ethers.Contract(
-        contractAddress,
-        abi,
-        this.DefaultProvider
-      );
+      Store.dispatch({
+        type: ADD_WEB3_CONTRACT,
+        payload: {
+          contract: [contractAddress, abi],
+        }
+      })
     } catch (e) {
       console.error(e);
       throw e;
@@ -36,29 +45,35 @@ class Web3Interface {
   };
 
   deleteContract = (contractAddress) => {
+    const web3Contracts = Store.getState().channelStore_erc20.web3Contracts
+
     try {
-      if (!this.contracts[contractAddress])
+      if (!web3Contracts[contractAddress])
         throw new Error(
           "Cannot delete uninitialized contract " + contractAddress
         );
 
-      delete this.contracts[contractAddress];
+      Store.dispatch({
+        type: REMOVE_WEB3_CONTRACT,
+        payload: {
+          contractAddress,
+        }
+      })
     } catch (e) {
       console.error(e);
       throw e;
     }
   };
 
-  deleteAllContracts = () => {
-    Object.keys(this.contracts).map((contractAddress) => {
-      this.deleteContract(contractAddress);
-    });
-  };
+  deleteAllContracts = () => Store.dispatch({ type: CLEAR_WEB3_CONTRACTS })
 
   getContract = (contractAddress) => {
-    if (!this.contracts[contractAddress])
+    const web3Contracts = Store.getState().channelStore_erc20.web3Contracts
+    const params = web3Contracts[contractAddress]
+
+    if (!params)
       throw new Error(`ERC20 contract ${contractAddress} not initialized`);
-    return this.contracts[contractAddress];
+    return new ethers.Contract(params[0], params[1], this.DefaultProvider)
   };
 }
 

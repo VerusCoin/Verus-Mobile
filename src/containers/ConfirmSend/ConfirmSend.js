@@ -11,7 +11,7 @@ import StandardButton from "../../components/StandardButton";
 import { connect } from 'react-redux';
 import { networks } from 'bitgo-utxo-lib';
 import { View, Text, ScrollView, Keyboard, Alert } from "react-native";
-import { satsToCoins, truncateDecimal, coinsToSats } from '../../utils/math';
+import { isNumber, satsToCoins, truncateDecimal } from '../../utils/math';
 import ProgressBar from 'react-native-progress/Bar';
 import { NavigationActions } from '@react-navigation/compat';
 import { CommonActions } from '@react-navigation/native';
@@ -20,6 +20,7 @@ import Styles from '../../styles/index'
 import Colors from "../../globals/colors";
 import { preflight } from "../../utils/api/routers/preflight";
 import { ELECTRUM } from "../../utils/constants/intervalConstants";
+import BigNumber from "bignumber.js";
 
 const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
@@ -36,7 +37,7 @@ class ConfirmSend extends Component {
       loading: true,
       network: null,
       fee: 0,
-      amountSubmitted: 0,
+      amountSubmitted: "0",
       balance: 0,
       remainingBalance: 0,
       finalTxAmount: 0,
@@ -45,7 +46,8 @@ class ConfirmSend extends Component {
       loadingMessage: "Creating transaction...",
       btcFeePerByte: null,
       feeTakenFromAmount: false,
-      feeCurr: null
+      feeCurr: null,
+      note: null
     };
   }
 
@@ -53,11 +55,16 @@ class ConfirmSend extends Component {
     const coinObj = this.props.route.params.data.coinObj
     const activeUser = this.props.route.params.data.activeUser
     const address = this.props.route.params.data.address
-    const amount = Number(this.props.route.params.data.amount)
-    const fee = coinObj.id === 'BTC' ? { feePerByte: Number(this.props.route.params.data.btcFee) } : Number(this.props.route.params.data.coinObj.fee)
+    const amount = BigNumber(this.props.route.params.data.amount)
+    const fee =
+      coinObj.id === "BTC"
+        ? { feePerByte: BigNumber(this.props.route.params.data.btcFee) }
+        : isNumber(this.props.route.params.data.coinObj.fee)
+        ? BigNumber(this.props.route.params.data.coinObj.fee)
+        : null;
     const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
-    const balance = Number(this.props.route.params.data.balance)
-    //const memo = this.props.route.params.data.memo
+    const balance = BigNumber(this.props.route.params.data.balance)
+    const note = this.props.route.params.data.memo
     
     this.timeoutTimer = setTimeout(() => {
       if (this.state.loading) {
@@ -104,24 +111,61 @@ class ConfirmSend extends Component {
           (res.result.feeCurr != null &&
             res.result.feeCurr !== coinObj.id)
             ? res.result.value
-            : res.result.value + Number(res.result.fee);
-        let remainingBalance = balance - finalTxAmount
+            : BigNumber(res.result.value).plus(BigNumber(res.result.fee)).toString();
+        let remainingBalance = feeTakenFromAmount
+          ? BigNumber(balance)
+              .minus(BigNumber(finalTxAmount))
+              .minus(BigNumber(res.result.fee))
+              .toString()
+          : BigNumber(balance)
+              .minus(BigNumber(finalTxAmount))
+              .toString();
+              
         clearInterval(this.loadingInterval);
 
         if (feeTakenFromAmount) {
-          if (!res.result.unshieldedFunds) {
+          if (
+            res.result.unshieldedFunds == null ||
+            res.result.unshieldedFunds.isEqualTo(BigNumber(0))
+          ) {
             Alert.alert(
-              "Warning", 
-              "Your transaction amount has been changed to " + finalTxAmount + " " + coinObj.id + 
-              " as you do not have sufficient funds to cover your submitted amount of " + res.result.amountSubmitted + " " + coinObj.id + 
-              " + a fee of " + res.result.fee + " " + coinObj.id + ".");
-          } else {
+              "Warning",
+              "Your transaction amount has been changed to " +
+                finalTxAmount +
+                " " +
+                coinObj.id +
+                " as you do not have sufficient funds to cover your submitted amount of " +
+                res.result.amountSubmitted +
+                " " +
+                coinObj.id +
+                " + a fee of " +
+                res.result.fee +
+                " " +
+                coinObj.id +
+                "."
+            );
+          } else if (res.result.unshieldedFunds != null) {
             Alert.alert(
-              "Warning", 
-              "Your transaction amount has been changed to " + finalTxAmount + " " + coinObj.id + 
-              " as you do not have sufficient funds to cover your submitted amount of " + res.result.amountSubmitted + " " + coinObj.id + 
-              " + a fee of " + res.result.fee + " " + coinObj.id + ". This could be due to the " + satsToCoins(res.result.unshieldedFunds) + " in unshielded " + coinObj.id + " your " + 
-              "wallet contains. Log into a native client and shield your mined funds to be able to use them." );
+              "Warning",
+              "Your transaction amount has been changed to " +
+                finalTxAmount +
+                " " +
+                coinObj.id +
+                " as you do not have sufficient funds to cover your submitted amount of " +
+                res.result.amountSubmitted +
+                " " +
+                coinObj.id +
+                " + a fee of " +
+                res.result.fee +
+                " " +
+                coinObj.id +
+                ". This could be due to the " +
+                satsToCoins(res.result.unshieldedFunds).toString() +
+                " in unshielded " +
+                coinObj.id +
+                " your " +
+                "wallet contains. Log into a native client and shield your mined funds to be able to use them."
+            );
           }
         }
         
@@ -142,14 +186,19 @@ class ConfirmSend extends Component {
           finalTxAmount: finalTxAmount,
           loadingProgress: 1,
           loadingMessage: "Done",
-          btcFeePerByte: fee.feePerByte ? fee.feePerByte : null,
-          feeTakenFromAmount: feeTakenFromAmount
+          btcFeePerByte: fee != null && fee.feePerByte != null ? fee.feePerByte : null,
+          feeTakenFromAmount: feeTakenFromAmount,
+          note
         });
-      }
+      } 
     } catch (e) {
       this.setState({
         loading: false,
-        err: e.message ? e.message : "Unknown error while building transaction, double check form data"
+        err: e.message
+          ? e.message.includes("has no matching Script")
+            ? `"${address}" is not a valid address.`
+            : e.message
+          : "Unknown error while building transaction, double check form data",
       });
       console.log(e)
     }
@@ -179,7 +228,7 @@ class ConfirmSend extends Component {
         (this.state.feeCurr != null &&
           this.state.feeCurr !== this.state.coinObj.id)
           ? this.state.finalTxAmount
-          : this.state.finalTxAmount - Number(this.state.fee),
+          : BigNumber(this.state.finalTxAmount).minus(BigNumber(this.state.fee)).toString(),
       btcFee: this.state.btcFeePerByte,
     };
 
@@ -303,22 +352,22 @@ class ConfirmSend extends Component {
                   Balance After Tx:
                 </Text>
                 <Text style={Styles.infoTableCell}>
-                  {truncateDecimal(this.state.remainingBalance, this.state.coinObj.decimals || 8) +
+                  {this.state.remainingBalance +
                     " " +
                     this.state.coinObj.id}
                 </Text>
               </View>
-              {this.state.memo && (
+              {this.state.note != null && this.state.note.length > 0 ? (
                 <View style={Styles.infoTableRow}>
                   <Text style={Styles.infoTableHeaderCell}>Note:</Text>
                   <View style={Styles.infoTableCell}>
                     <Text style={Styles.blockTextAlignRight}>
-                      {this.state.memo}
+                      {this.state.note}
                     </Text>
                   </View>
                 </View>
-              )}
-              {!this.state.utxoCrossChecked && (
+              ) : null}
+              {!this.state.utxoCrossChecked ? (
                 <View style={Styles.infoTableRow}>
                   <Text style={Styles.infoTableHeaderCell}>Warning:</Text>
                   <View style={Styles.infoTableCell}>
@@ -334,7 +383,7 @@ class ConfirmSend extends Component {
                     </Text>
                   </View>
                 </View>
-              )}
+              ) : null}
             </View>
           </View>
         </ScrollView>

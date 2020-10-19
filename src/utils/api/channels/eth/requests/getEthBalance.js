@@ -1,5 +1,6 @@
 import Web3Provider from '../../../../web3/provider'
 import ethers from 'ethers';
+import BigNumber from "bignumber.js";
 
 // Gets the Ethereum balance of an address or name as a big number
 export const getEthBalance = async (address) => {
@@ -8,5 +9,5 @@ export const getEthBalance = async (address) => {
 
 //TODO: Handle BigNumbers
 export const getStandardEthBalance = async (address) => {
-  return Number(ethers.utils.formatUnits(await getEthBalance(address)))
+  return BigNumber(ethers.utils.formatUnits(await getEthBalance(address)))
 }
