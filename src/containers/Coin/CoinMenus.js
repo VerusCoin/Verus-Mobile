@@ -16,12 +16,11 @@ import Overview from './Overview/Overview'
 import SendCoin from './SendCoin/SendCoin'
 import ReceiveCoin from './ReceiveCoin/ReceiveCoin'
 import { Icon } from "react-native-elements"
-import VerusLightClient from 'react-native-verus-light-client';
 import { setActiveSection, setCoinSubWallet, setIsCoinMenuFocused } from "../../actions/actionCreators";
 import { NavigationActions, withNavigationFocus } from '@react-navigation/compat';
 import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
 import DynamicHeader from "./DynamicHeader";
-import { truncateDecimal } from '../../utils/math'
+import { bigNumberifyBalance, truncateDecimal } from '../../utils/math'
 import { Portal } from "react-native-paper";
 import { API_GET_BALANCES } from "../../utils/constants/intervalConstants";
 import { CONNECTION_ERROR } from "../../utils/api/errors/errorMessages";
@@ -40,7 +39,7 @@ class CoinMenus extends Component {
       tabs: stateObj.tabs,
       activeTab: stateObj.activeTab,
       subWallets
-    }; 
+    };
 
     if (subWallets.length == 1) props.dispatch(setCoinSubWallet(props.activeCoin.id, subWallets[0]))
   }
@@ -53,15 +52,6 @@ class CoinMenus extends Component {
     if (lastProps.isFocused !== this.props.isFocused) {
       this.props.dispatch(setIsCoinMenuFocused(this.props.isFocused))
     }
-
-    var testArray = ['VRSC', 'vrsc', '8ccb033c0e48b27ff91e1ab948367e3bbc6921487c97624ed7ad064025e3dc99'];
-
-    VerusLightClient.request( 0, "listprivatetransactions", testArray)
-    .then(res => {
-      console.log("Check Dit")
-      console.log(res)
-    })
-
   }
 
   generateTabs = () => {
@@ -136,7 +126,7 @@ class CoinMenus extends Component {
           } ${activeCoin.id}`}
         </Text>
       );
-    } 
+    }
   };
 
   renderTab = ({ tab, isActive }) => (
@@ -226,13 +216,20 @@ const mapStateToProps = (state) => {
     activeApp: state.coins.activeApp,
     activeSection: state.coins.activeSection,
     coinMenuFocused: state.coins.coinMenuFocused,
-    selectedSubWallet: state.coinMenus.activeSubWallets[state.coins.activeCoin.id],
+    selectedSubWallet:
+      state.coinMenus.activeSubWallets[state.coins.activeCoin.id],
     allSubWallets: state.coinMenus.allSubWallets[state.coins.activeCoin.id],
     balances: {
-      results: channel != null ? state.ledger.balances[channel][chainTicker] : null,
-      errors: channel != null ? state.errors[API_GET_BALANCES][channel][chainTicker] : null,
+      results:
+        channel != null && state.ledger.balances[channel][chainTicker] != null
+          ? bigNumberifyBalance(state.ledger.balances[channel][chainTicker])
+          : null,
+      errors:
+        channel != null
+          ? state.errors[API_GET_BALANCES][channel][chainTicker]
+          : null,
     },
-  }
+  };
 };
 
 export default connect(mapStateToProps)(withNavigationFocus(CoinMenus));
