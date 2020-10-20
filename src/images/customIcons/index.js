@@ -41,14 +41,11 @@ export {
   Calendar,
   Verus,
   BankBuildingBlack,
-<<<<<<< HEAD
   VerifyIdentity
-=======
   TransactionLogos,
   VerusPayLogo,
   AddCoinLogo,
   VerusLogo
->>>>>>> fdd14df66670066b78cc89433bceea85677d0e1d
 };
 
 export default Open;
