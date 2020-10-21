@@ -101,7 +101,7 @@ class ConfirmSend extends Component {
       if(res.err || !res) {
         this.setState({
           loading: false,
-          err: res.result
+          err: res ? res.result : "Unknown error"
         });
         clearInterval(this.loadingInterval);
       } else {

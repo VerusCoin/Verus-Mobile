@@ -93,8 +93,10 @@ export const getSupportedBiometryType = async () => {
 
 export const passesSecurityThreshold = async () => {
   if (Platform.OS == 'ios') return true
+  else return false
   
-  const securityLevel = await Keychain.getSecurityLevel({ accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY })
+  //TODO: RE-Enable Biometry on Android when it can be forced to prompt every login
+  // const securityLevel = await Keychain.getSecurityLevel({ accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY })
 
-  return securityLevel == Keychain.SECURITY_LEVEL[BIOMETRIC_SECURITY_THRESHOLD]
+  // return securityLevel == Keychain.SECURITY_LEVEL[BIOMETRIC_SECURITY_THRESHOLD]
 }

@@ -158,7 +158,7 @@ export const coinsList = {
   },
   rfox: {
     id: "RFOX",
-    currency_id: '0xdb558DE7A385db8190eEE2A3f0886A8EB30CE7ca',
+    currency_id: '0xa1d6Df714F91DeBF4e0802A542E13067f31b8262',
     system_id: '.eth',
     display_ticker: 'RFOX',
     display_name: "RedFOX Labs",

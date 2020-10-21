@@ -149,7 +149,7 @@ class ProfileSettings extends Component {
             chevron
           />
         </TouchableOpacity>
-        {this.state.supportedBiometryType.biometry && (
+        {(this.props.activeAccount.biometry || this.state.supportedBiometryType.biometry) && (
           <TouchableOpacity onPress={async () => {
             if (this.props.activeAccount.biometry) {
               this.openPasswordCheck()
