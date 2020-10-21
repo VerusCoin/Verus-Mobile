@@ -116,7 +116,12 @@ class TxDetailsModal extends Component {
             <View style={Styles.infoTable}>
               <View style={Styles.infoTableRow}>
                 <Text style={Styles.infoTableHeaderCell}>Type:</Text>
-                <Text style={{...Styles.infoTableCell, ...Styles.capitalizeFirstLetter}}>
+                <Text
+                  style={{
+                    ...Styles.infoTableCell,
+                    ...Styles.capitalizeFirstLetter,
+                  }}
+                >
                   {txData.type || "??"}
                 </Text>
               </View>
@@ -142,16 +147,19 @@ class TxDetailsModal extends Component {
                   </Text>
                 </View>
               )}
-              <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>
-                  Confirmations:
-                </Text>
-                <Text style={Styles.infoTableCell}>
-                  {txData.confirmations != null
-                    ? txData.confirmations
-                    : "??"}
-                </Text>
-              </View>
+              {explorers[activeCoinID] &&
+              explorers[activeCoinID].includes("etherscan") ? (
+                <View style={Styles.infoTableRow}>
+                  <Text style={Styles.infoTableHeaderCell}>
+                    {"Confirmations:"}
+                  </Text>
+                  <Text style={Styles.infoTableCell}>
+                    {txData.confirmations != null
+                      ? txData.confirmations
+                      : "??"}
+                  </Text>
+                </View>
+              ) : null}
               <View style={Styles.infoTableRow}>
                 <Text style={Styles.infoTableHeaderCell}>Address:</Text>
                 <Text
