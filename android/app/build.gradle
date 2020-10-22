@@ -3,9 +3,9 @@ apply plugin: "com.android.application"
 import com.android.build.OutputFile
 
 def versionMajor = 0
-def versionMinor = 2
-def versionRevision = 0
-def versionBuild = 0
+def versionMinor = 1
+def versionRevision = 9
+def versionBuild = 1
 
 def keystorePropertiesFile = rootProject.file("keystore.properties");
 
@@ -80,8 +80,8 @@ def keystorePropertiesFile = rootProject.file("keystore.properties");
  */
 
 project.ext.react = [
-        entryFile   : "index.js",
-        enableHermes: false,  // clean and rebuild if changing
+    entryFile: "index.js",
+    enableHermes: false,  // clean and rebuild if changing
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
@@ -123,33 +123,40 @@ def jscFlavor = 'org.webkit:android-jsc:+'
 def enableHermes = project.ext.react.get("enableHermes", false);
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion '29.0.3'
+    compileSdkVersion 27
+    buildToolsVersion '27.0.3'
+
+    lintOptions {
+          checkReleaseBuilds false
+          // Or, if you prefer, you can continue to check for errors in release builds,
+          // but continue the build even when errors are found:
+          abortOnError false
+      }
 
     defaultConfig {
         applicationId "com.verusmobile"
-        minSdkVersion 21
-        targetSdkVersion 29
+        minSdkVersion 19
+        targetSdkVersion 26
         multiDexEnabled true
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionRevision * 100 + versionBuild
         missingDimensionStrategy 'react-native-camera', 'general'
-        if (versionBuild > 0) {
+        if ( versionBuild > 0) {
             versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta-${versionBuild}"
         } else {
             versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta"
         }
         ndk {
+            //abiFilters "x86"
             abiFilters "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
         }
     }
 
-
     dexOptions
-            {
-                incremental false
-                javaMaxHeapSize "2048M"
-                preDexLibraries = false
-            }
+    {
+        incremental false
+        javaMaxHeapSize "2048M"
+        preDexLibraries = false
+    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -157,29 +164,20 @@ android {
     }
 
     signingConfigs {
-        release {
-            if (keystorePropertiesFile.exists()) {
-                def keystoreProperties = new Properties()
-                keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-                storeFile file(keystoreProperties['storeFile'])
-                storePassword keystoreProperties['storePassword']
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
-            }
-            if (System.getenv("CI_SERVER") && System.getenv("RELEASE")) {
-                storeFile file(System.getenv('MYAPP_RELEASE_STORE_FILE'))
-                storePassword System.getenv('MYAPP_RELEASE_STORE_PASSWORD')
-                keyAlias System.getenv('MYAPP_RELEASE_KEY_ALIAS')
-                keyPassword System.getenv('MYAPP_RELEASE_KEY_PASSWORD')
-            }
-        }
+      release {
+        storeFile file('your_key_name.keystore')
+        storePassword 'IloveVerus'
+        keyAlias 'your_key_alias'
+        keyPassword 'IloveVerus'
+      }
+
     }
     splits {
         abi {
             reset()
             enable enableSeparateBuildPerCPUArchitecture
             universalApk false  // If true, also generate a universal APK
-            include "armeabi-v7a", "arm64-v8a", "x86_64"
+            include "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
         }
     }
     buildTypes {
@@ -189,7 +187,7 @@ android {
         release {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
-            signingConfig signingConfigs.release
+	    signingConfig signingConfigs.release
         }
     }
     // applicationVariants are e.g. debug, release
@@ -207,14 +205,14 @@ dependencies {
     implementation "com.facebook.react:react-native:+"  // From node_modules
     implementation 'com.android.support:multidex:1.0.3'
 
-    if (enableHermes) {
-        def hermesPath = "../../node_modules/hermes-engine/android/";
+ if (enableHermes) {
+      def hermesPath = "../../node_modules/hermes-engine/android/";
 
 
-        debugImplementation files(hermesPath + "hermes-debug.aar")
-        releaseImplementation files(hermesPath + "hermes-release.aar")
+      debugImplementation files(hermesPath + "hermes-debug.aar")
+      releaseImplementation files(hermesPath + "hermes-release.aar")
     } else {
-        implementation jscFlavor
+      implementation jscFlavor
     }
 
 }

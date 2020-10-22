@@ -41,7 +41,7 @@ export {
   Calendar,
   Verus,
   BankBuildingBlack,
-  VerifyIdentity
+  VerifyIdentity,
   TransactionLogos,
   VerusPayLogo,
   AddCoinLogo,
