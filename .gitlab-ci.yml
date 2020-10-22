@@ -40,7 +40,7 @@ Android:release:
     - yarn install
     - cd android
     - echo ${KEYSTORE}  | xxd -r -p - > app/${MYAPP_RELEASE_STORE_FILE}
-    - ./gradlew assembleRelease;
+    - ./gradlew assembleRelease
     - rm app/${MYAPP_RELEASE_STORE_FILE}
   after_script:
     - curl -F file=@"android/app/build/outputs/apk/release/VerusMobile-${VERSION}.apk"
