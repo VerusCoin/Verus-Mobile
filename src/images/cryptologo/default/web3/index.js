@@ -11,6 +11,7 @@ import UNI from './uni.svg'
 import VEN from './ven.svg'
 import YFI from './yfi.svg'
 import ZRX from './zrx.svg'
+import RFOX from './rfox.svg'
 
 export default {
   ETH,
@@ -25,5 +26,6 @@ export default {
   UNI,
   VEN,
   YFI,
-  ZRX
+  ZRX,
+  RFOX
 }

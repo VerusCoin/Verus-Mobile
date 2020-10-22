@@ -2,11 +2,12 @@ import { electrumServers } from 'agama-wallet-lib/src/electrum-servers';
 import { MAX_VERIFICATION } from '../constants/constants'
 import Colors from '../../globals/colors'
 import { coinsList } from './CoinsList'
-import { DLIGHT, ELECTRUM, GENERAL } from '../constants/intervalConstants';
+import { DLIGHT, ELECTRUM, ERC20, GENERAL } from '../constants/intervalConstants';
 
 import { ENABLE_VERUS_IDENTITIES } from '../../../env/main.json'
 
 import CoinLogoSvgs from '../../images/cryptologo/index'
+import { ETHERS } from '../constants/web3Constants';
 
 const getDefaultApps = (coinName) => {
   return ({
@@ -72,6 +73,19 @@ export const explorers = {
   OOT: 'https://explorer.utrum.io',
   VRSC: 'https://explorer.veruscoin.io',
   ETH: 'https://etherscan.io',
+  RFOX: 'https://etherscan.io',
+  BAT: 'https://etherscan.io',
+  DAI: 'https://etherscan.io',
+  BAL: 'https://etherscan.io',
+  BUSD: 'https://etherscan.io',
+  BNT: 'https://etherscan.io',
+  HOT: 'https://etherscan.io',
+  LINK: 'https://etherscan.io',
+  NEXO: 'https://etherscan.io',
+  UNI: 'https://etherscan.io',
+  VEN: 'https://etherscan.io',
+  YFI: 'https://etherscan.io',
+  ZRX: 'https://etherscan.io',
   TST: 'https://ropsten.etherscan.io',
   BTC: 'https://www.blockchain.com/btc'
 }
@@ -107,6 +121,7 @@ export const CoinLogos = {
   ven: CoinLogoSvgs.web3.VEN,
   yfi: CoinLogoSvgs.web3.YFI,
   zrx: CoinLogoSvgs.web3.ZRX,
+  rfox: CoinLogoSvgs.web3.RFOX
 };
 
 //To make flatlist render faster
@@ -146,6 +161,46 @@ export const findCoinObj = (id, userName) => {
   return coinObj;
 }
 
+export const getCoinObj = (coinList, coinId) => {
+  return coinList.find(coinObj => {
+    return coinObj.id === coinId
+  })
+}
+
+export const getCoinLogo = (id) => {
+  const idLc = id.toLowerCase()
+  
+  if (coinsList[idLc]) return CoinLogos[idLc]
+  else return null
+}
+
+export const createErc20CoinObj = (contractAddress, displayName, displayTicker, description, userName) => {
+  if (coinsList[displayTicker.toLowerCase()]) throw new Error(`Coin with ticker ${displayTicker} already exists in coin list`)
+  let coinObj = {
+    id: displayTicker,
+    currency_id: contractAddress,
+    system_id: '.eth',
+    display_ticker: displayTicker,
+    display_name: displayName,
+    description: description,
+    compatible_channels: [ERC20, GENERAL],
+    dominant_channel: ERC20,
+    decimals: ETHERS,
+    tags: [],
+    proto: 'erc20'
+  }
+
+  coinObj.users = userName != null ? [userName] : [];
+
+  const DEFAULT_APPS = getDefaultApps(coinObj.display_name)
+
+  coinObj.apps = DEFAULT_APPS.apps;
+  coinObj.defaultApp = DEFAULT_APPS.defaultApp
+
+  return coinObj;
+}
+
+// DEPRECATED
 /**
  * @param {String} id The coin's identifier to be used in code
  * @param {String} name The coin's full name for display
@@ -187,11 +242,5 @@ export const createCoinObj = (id, name, description, defaultFee, serverList, use
   }
 
   return coinObj;
-}
-
-export const getCoinObj = (coinList, coinId) => {
-  return coinList.find(coinObj => {
-    return coinObj.id === coinId
-  })
 }
 

@@ -78,19 +78,19 @@ export const coinsList = {
     tags: [],
     proto: 'erc20'
   },
-  // tst: {
-  //   id: "TST",
-  //   currency_id: '0x722dd3F80BAC40c951b51BdD28Dd19d435762180',
-  //   system_id: '.eth',
-  //   display_ticker: 'TST',
-  //   display_name: "ERC20 Test Token",
-  //   description: "A test token for testing the ERC20 protocol.",
-  //   compatible_channels: [ERC20, GENERAL],
-  //   dominant_channel: ERC20,
-  //   decimals: ETHERS,
-  //   tags: [],
-  //   proto: 'erc20'
-  // },
+  tst: {
+    id: "TST",
+    currency_id: '0x722dd3F80BAC40c951b51BdD28Dd19d435762180',
+    system_id: '.eth',
+    display_ticker: 'TST',
+    display_name: "ERC20 Test Token",
+    description: "A test token for testing the ERC20 protocol.",
+    compatible_channels: [ERC20, GENERAL],
+    dominant_channel: ERC20,
+    decimals: ETHERS,
+    tags: [],
+    proto: 'erc20'
+  },
   yfi: {
     id: "YFI",
     currency_id: '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',
@@ -149,6 +149,19 @@ export const coinsList = {
     system_id: '.eth',
     display_ticker: 'BNT',
     display_name: "Bancor",
+    description: "",
+    compatible_channels: [ERC20, GENERAL],
+    dominant_channel: ERC20,
+    decimals: ETHERS,
+    tags: [],
+    proto: 'erc20'
+  },
+  rfox: {
+    id: "RFOX",
+    currency_id: '0xa1d6Df714F91DeBF4e0802A542E13067f31b8262',
+    system_id: '.eth',
+    display_ticker: 'RFOX',
+    display_name: "RedFOX Labs",
     description: "",
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,

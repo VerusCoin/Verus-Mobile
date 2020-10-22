@@ -4,6 +4,7 @@ import { ETH } from "../../../../constants/intervalConstants"
 import { ETH_NETWORK_IDS } from "../../../../constants/constants"
 import { ETH_NETWORK } from '../../../../../../env/main.json'
 import { etherKeys } from "agama-wallet-lib/src/keys"
+import { scientificToDecimal } from "../../../../math"
 
 export const send = async (coinObj, activeUser, address, amount, params) => {
   try {
@@ -13,7 +14,7 @@ export const send = async (coinObj, activeUser, address, amount, params) => {
 
     let transaction = await voidSigner.populateTransaction({
       to: address,
-      value: ethers.utils.parseUnits(amount.toString()),
+      value: ethers.utils.parseUnits(scientificToDecimal(amount.toString())),
       chainId: ETH_NETWORK_IDS[ETH_NETWORK]
     })
 

@@ -1,17 +1,18 @@
 import { ethers } from "ethers"
 import Web3Provider from '../../../../web3/provider'
 import { ERC20, ETH } from "../../../../constants/intervalConstants"
+import { scientificToDecimal } from "../../../../math"
 
 export const send = async (coinObj, activeUser, address, amount, params) => {
   try {
     const { privKey } = activeUser.keys[coinObj.id][ERC20]
     const contract = Web3Provider.getContract(coinObj.currency_id)
     const gasPrice = await Web3Provider.DefaultProvider.getGasPrice()
-    const amountBn = ethers.utils.parseUnits(amount.toString(), coinObj.decimals)
-    const gasEst = await contract.estimateGas.transfer(address, amountBn)
+    const amountBn = ethers.utils.parseUnits(scientificToDecimal(amount.toString()), coinObj.decimals)
     const signableContract = contract.connect(
       new ethers.Wallet(ethers.utils.hexlify(privKey), Web3Provider.DefaultProvider)
     );
+    const gasEst = await signableContract.estimateGas.transfer(address, amountBn)
     const response = await signableContract.transfer(
       address,
       amountBn

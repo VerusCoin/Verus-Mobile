@@ -32,6 +32,12 @@ import { API_GET_FIATPRICE, API_GET_BALANCES } from "../../../utils/constants/in
 import BigNumber from "bignumber.js"
 import { VerusPayLogo } from "../../../images/customIcons"
 import Colors from "../../../globals/colors"
+import { UtilityContracts } from "../../../utils/api/channels/erc20/callCreator"
+import { ethers } from "ethers"
+import { stubFalse } from "lodash"
+import RFoxClaim from "../../../components/RFoxClaim"
+import { Portal } from "react-native-paper"
+import { DISABLE_CLAIM_BUTTON } from "../../../utils/constants/storeType"
 
 class SendCoin extends Component {
   constructor(props) {
@@ -51,11 +57,15 @@ class SendCoin extends Component {
       formErrors: { toAddress: null, amount: null },
       spendableBalance: 0,
       addressCheckEnabled: true,
-      addressCheckSecretCounter: 0
+      addressCheckSecretCounter: 0,
+      rewards: ethers.BigNumber.from(0),
+      rewardModalOpen: false,
+      pubKey: null
     };
 
     this.ADDR_CHECK_SECRET_COUNTER_TRIGGER = 10
     this._unsubscribeFocus = null;
+    this.ZERO = ethers.BigNumber.from(0)
   }
 
   componentDidMount() {
@@ -70,13 +80,24 @@ class SendCoin extends Component {
     this._unsubscribeFocus();
   }
 
+  componentDidUpdate(lastProps, lastState) {
+    if (lastState.rewardModalOpen !== this.state.rewardModalOpen && this.state.rewardModalOpen === false) {
+      this.initializeState()
+    }
+  }
+
   initializeState = () => {
     this.setState(
       {
         coin: this.props.activeCoin,
         account: this.props.activeAccount,
         activeCoinsForUser: this.props.activeCoinsForUser,
-        toAddress: this.props.data ? this.props.data.address : null,
+        toAddress:
+          this.state.toAddress && this.state.toAddress.length > 0
+            ? this.state.toAddress
+            : this.props.data
+            ? this.props.data.address
+            : null,
       },
       () => {
         const activeUser = this.state.account;
@@ -86,6 +107,15 @@ class SendCoin extends Component {
       }
     );
   };
+
+  checkRfoxClaims = async (pubKey) => {
+    const balances = await UtilityContracts.rfox.getRfoxAccountBalances(pubKey)
+
+    this.setState({
+      rewards: balances.available,
+      pubKey
+    })
+  }
 
   handleState = async (activeUser, coinObj) => {
     const { channel } = this.props;
@@ -125,6 +155,14 @@ class SendCoin extends Component {
         );
         if (coinObj.id === "BTC") {
           await this.updateBtcFees();
+        }
+
+        if (
+          coinObj.id === "RFOX" &&
+          activeUser.keys[coinObj.id] != null &&
+          activeUser.keys[coinObj.id][channel] != null
+        ) {
+          await this.checkRfoxClaims(activeUser.keys[coinObj.id][channel].pubKey);
         }
 
         this.setState({ loading: false });
@@ -224,6 +262,14 @@ class SendCoin extends Component {
     })
   }
 
+  getPrivKey = () => {
+    const { activeAccount, activeCoin, channel } = this.props
+
+    if (activeAccount != null && activeAccount.keys[activeCoin.id] != null && activeAccount.keys[activeCoin.id][channel] != null) {
+      return activeAccount.keys[activeCoin.id][channel].privKey
+    } else return null
+  }
+
   //TODO: Add fee to Bitcoin object in CoinData
 
   validateFormData = () => {
@@ -294,8 +340,22 @@ class SendCoin extends Component {
     );
   };
 
+  claimSuccess() {
+    this.props.dispatch({
+      type: DISABLE_CLAIM_BUTTON
+    })
+
+    this.setState({
+      rewardModalOpen: false
+    }, () => {
+      Alert.alert("Success!", "RFOX claimed, it may take a few minutes to show in your wallet.")
+    })
+  }
+
   render() {
-    const { balances } = this.props;
+    const { balances, claimDisabled } = this.props;
+    const hasRewards = this.state.rewards.gt(this.ZERO)
+    const privKey = this.getPrivKey()
 
     return (
       <TouchableWithoutFeedback
@@ -307,6 +367,22 @@ class SendCoin extends Component {
             style={Styles.fullWidth}
             contentContainerStyle={Styles.horizontalCenterContainer}
           >
+            <Portal>
+              {this.state.rewardModalOpen && <RFoxClaim 
+                animationType="slide"
+                rewards={this.state.rewards}
+                pubKey={this.state.pubKey}
+                fromAddress={this.state.fromAddress}
+                privKey={privKey}
+                transparent={false}
+
+                visible={this.state.rewardModalOpen}
+                onSuccess={() => this.claimSuccess()}
+                cancel={() => {
+                  this.setState({ rewardModalOpen: false });
+                }}
+              />}
+            </Portal>
             <View style={Styles.wideBlock}>
               <Input
                 labelStyle={Styles.formInputLabel}
@@ -397,7 +473,23 @@ class SendCoin extends Component {
               </View>
             ) : (
               <React.Fragment>
-                <View style={Styles.fullWidthFlexCenterBlock}>
+                <View
+                  style={
+                    hasRewards
+                      ? Styles.standardWidthSpaceBetweenBlock
+                      : Styles.fullWidthFlexCenterBlock
+                  }
+                >
+                  {hasRewards ? (
+                    <StandardButton
+                      onPress={() => this.setState({
+                        rewardModalOpen: true
+                      })}
+                      title="CLAIM"
+                      color={Colors.successButtonColor}
+                      disabled={claimDisabled}
+                    />
+                  ) : null}
                   <StandardButton
                     onPress={this.validateFormData}
                     title="SEND"
@@ -438,6 +530,7 @@ const mapStateToProps = (state) => {
       errors: state.errors[API_GET_BALANCES][channel][chainTicker],
     },
     activeAccount: state.authentication.activeAccount,
+    claimDisabled: state.coinMenus.claimDisabled
   }
 };
 
