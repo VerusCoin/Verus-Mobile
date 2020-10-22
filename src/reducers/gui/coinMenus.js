@@ -9,15 +9,18 @@
 */
 
 import {
+  DISABLE_CLAIM_BUTTON,
   INIT_COIN_SUB_WALLETS,
   SET_COIN_SUB_WALLET,
-  SET_USER_COINS
+  SET_USER_COINS,
+  SIGN_OUT
 } from '../../utils/constants/storeType'
 import { getDefaultSubWallets } from '../../utils/defaultSubWallets';
 
 export const coinMenus = (state = {
   activeSubWallets: {},
-  allSubWallets: {}
+  allSubWallets: {},
+  claimDisabled: false
 }, action) => {
   switch (action.type) {
     case SET_COIN_SUB_WALLET:
@@ -39,6 +42,16 @@ export const coinMenus = (state = {
       return {
         ...state,
         allSubWallets: subWallets
+      };
+    case DISABLE_CLAIM_BUTTON:
+      return {
+        ...state,
+        claimDisabled: true
+      };
+    case SIGN_OUT:
+      return {
+        ...state,
+        claimDisabled: false
       };
     default:
       return state;

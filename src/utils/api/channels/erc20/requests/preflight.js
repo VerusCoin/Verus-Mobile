@@ -1,16 +1,17 @@
 import { ethers } from "ethers"
 import Web3Provider from '../../../../web3/provider'
 import { ERC20, ETH } from "../../../../constants/intervalConstants"
+import { scientificToDecimal } from "../../../../math"
 
 // TODO: Add balance recalculation with eth gas
 export const txPreflight = async (coinObj, activeUser, address, amount, params) => {
   try {
     const fromAddress = activeUser.keys[coinObj.id][ERC20].addresses[0]
-    const contract = Web3Provider.getContract(coinObj.currency_id)
     const signer = new ethers.VoidSigner(fromAddress, Web3Provider.DefaultProvider)
+    const contract = Web3Provider.getContract(coinObj.currency_id).connect(signer)
     const balance = await contract.balanceOf(signer.getAddress())
     const gasPrice = await Web3Provider.DefaultProvider.getGasPrice()
-    const amountBn = ethers.utils.parseUnits(amount.toString(), coinObj.decimals)
+    const amountBn = ethers.utils.parseUnits(scientificToDecimal(amount.toString()), coinObj.decimals)
     const gasEst = await contract.estimateGas.transfer(address, amountBn)
     const transaction = await contract.callStatic.transfer(
       address,

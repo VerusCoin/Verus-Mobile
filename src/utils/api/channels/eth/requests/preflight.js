@@ -4,13 +4,14 @@ import { ETH } from "../../../../constants/intervalConstants"
 import { ETH_NETWORK_IDS } from "../../../../constants/constants"
 import { ETH_NETWORK } from '../../../../../../env/main.json'
 import BigNumber from "bignumber.js"
+import { scientificToDecimal } from "../../../../math"
 
 export const txPreflight = async (coinObj, activeUser, address, amount, params) => {
   try {
     const fromAddress = activeUser.keys[coinObj.id][ETH].addresses[0]
     const signer = new ethers.VoidSigner(fromAddress, Web3Provider.DefaultProvider)
     const balance = await signer.getBalance()
-    const value = ethers.utils.parseUnits(amount.toString())
+    const value = ethers.utils.parseUnits(scientificToDecimal(amount.toString()))
 
     const transaction = await signer.populateTransaction({
       to: address,

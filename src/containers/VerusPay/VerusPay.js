@@ -148,7 +148,7 @@ class VerusPay extends Component {
 
           if (coinURLParsed) {
             this.handleVerusQR(coinURLParsed);
-          } else if (result.length >= 34 && result.length <= 35) {
+          } else if (result.length >= 33 && result.length <= 42) {
             this.addressOnly(result);
           } else {
             this.errorHandler(FORMAT_UNKNOWN);
@@ -200,7 +200,7 @@ class VerusPay extends Component {
 
     let fullURL = /^\w{1,30}:\w{33,36}\?amount\=\d*\.{1}\d*/;
     //<coinName>:<address>?amount=<amount>
-    let partialURL = /^\w{1,30}:\w{33,36}$/;
+    let partialURL = /\w{1,30}:\w{33,36}/;
     //<coinName>:<address>
 
     try {
