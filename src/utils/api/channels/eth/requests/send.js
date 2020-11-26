@@ -23,11 +23,6 @@ export const send = async (coinObj, activeUser, address, amount, params) => {
 
     const signedTx = await etherKeys(privKey, true).sign(transaction)
 
-    console.log(signedTx)
-    console.log(
-      ethers.utils.parseTransaction(ethers.utils.hexlify(signedTx))
-    );
-
     const response = await Web3Provider.EtherscanProvider.sendTransaction(signedTx);
     
     return {

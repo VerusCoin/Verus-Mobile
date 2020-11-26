@@ -206,7 +206,6 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
         for (let i = 0; i < inputs.length; i++) {
           if (Number(inputs[i].interestSats) > interestClaimThreshold) {
             totalInterest += Number(inputs[i].interestSats);
-            totalInterestUTXOCount++;
           }
         }
       }
