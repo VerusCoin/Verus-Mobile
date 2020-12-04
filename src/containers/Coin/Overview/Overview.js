@@ -184,7 +184,7 @@ class Overview extends Component {
         if (item.amount !== "??" && amount.num.lt(0)) {
           subtitle = "me";
           AvatarImg = TX_LOGOS.interest;
-          amount.num = amount.num.mul(new MathableNumber("-1").num);
+          amount.num = amount.num.mul(-1);
         } else {
           AvatarImg = TX_LOGOS.self;
           subtitle = gasFees ? "gas" : "fees";
