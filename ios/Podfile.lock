@@ -339,10 +339,10 @@ PODS:
   - TcpSockets (3.3.2):
     - React
   - Yoga (1.14.0)
-  - ZcashLightClientKit (0.6.3):
+  - ZcashLightClientKit (0.9.1):
     - gRPC-Swift (= 1.0.0-alpha.19)
     - SQLite.swift (~> 0.12.2)
-  - ZcashLightClientKit/Tests (0.6.3):
+  - ZcashLightClientKit/Tests (0.9.1):
     - gRPC-Swift (= 1.0.0-alpha.19)
     - SQLite.swift (~> 0.12.2)
 
@@ -402,8 +402,8 @@ DEPENDENCIES:
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
   - TcpSockets (from `../node_modules/react-native-tcp`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
-  - ZcashLightClientKit (from `https://github.com/michaeltout/ZcashLightClientKit.git`, branch `0.6.3`)
-  - ZcashLightClientKit/Tests (from `https://github.com/michaeltout/ZcashLightClientKit.git`, branch `0.6.3`)
+  - ZcashLightClientKit (from `https://github.com/michaeltout/ZcashLightClientKit.git`, branch `0.9.1`)
+  - ZcashLightClientKit/Tests (from `https://github.com/michaeltout/ZcashLightClientKit.git`, branch `0.9.1`)
 
 SPEC REPOS:
   trunk:
@@ -536,12 +536,12 @@ EXTERNAL SOURCES:
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
   ZcashLightClientKit:
-    :branch: 0.6.3
+    :branch: 0.9.1
     :git: https://github.com/michaeltout/ZcashLightClientKit.git
 
 CHECKOUT OPTIONS:
   ZcashLightClientKit:
-    :commit: ae22b923749128c33e032de414e630f2de1aa13e
+    :commit: 574912b845da81929845b01e9705876c1d2b1f4e
     :git: https://github.com/michaeltout/ZcashLightClientKit.git
 
 SPEC CHECKSUMS:
@@ -619,8 +619,8 @@ SPEC CHECKSUMS:
   SwiftProtobuf: 4ef85479c18ca85b5482b343df9c319c62bda699
   TcpSockets: 14306fb79f9750ea7d2ddd02d8bed182abb01797
   Yoga: f2a7cd4280bfe2cca5a7aed98ba0eb3d1310f18b
-  ZcashLightClientKit: 6a7a724d5c249bc15983327157fe5ade6600dbcb
+  ZcashLightClientKit: d5a681033b3f59c59c93837232ed7890d3e07918
 
-PODFILE CHECKSUM: 140944d1ec3abdae92127533323aa4a55cf8a83e
+PODFILE CHECKSUM: 71ad3316da01ed6db9419b1cc4f558dba9ca6ecc
 
 COCOAPODS: 1.8.4

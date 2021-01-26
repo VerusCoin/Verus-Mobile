@@ -1,4 +1,4 @@
-import axios from 'axios';
+//import axios from 'axios';
 import crypto from 'crypto';
 import RNFetchBlob from 'rn-fetch-blob';
 
@@ -15,13 +15,13 @@ class WyreService {
   }
 
   static build() {
-    const service = axios.create({
-      baseURL: WYRE_URL,
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    return new WyreService(WYRE_URL, service);
+    // const service = axios.create({
+    //   baseURL: WYRE_URL,
+    //   headers: {
+    //     'Content-Type': 'application/json'
+    //   }
+    // });
+    // return new WyreService(WYRE_URL, service);
   }
 
   setHeader = (name, value) => {

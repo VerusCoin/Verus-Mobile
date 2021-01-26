@@ -10981,9 +10981,9 @@ react-native-vector-icons@^6.2.0:
     prop-types "^15.6.2"
     yargs "^13.2.2"
 
-"react-native-verus-light-client@git+https://github.com/VerusCoin/react-native-verus-light-client.git":
+"react-native-verus-light-client@git+https://github.com/michaeltout/react-native-verus-light-client.git#new_dlight":
   version "1.0.0"
-  resolved "git+https://github.com/VerusCoin/react-native-verus-light-client.git#227e36637b69ff60b0d1546a6f7eaca59777b071"
+  resolved "git+https://github.com/michaeltout/react-native-verus-light-client.git#660b3283fd74aab2c2104519b8681067a4044547"
   dependencies:
     react "16.9.0"
     react-native "0.61.5"
@@ -11076,11 +11076,6 @@ react-timer-mixin@^0.13.4:
   version "0.13.4"
   resolved "https://registry.yarnpkg.com/react-timer-mixin/-/react-timer-mixin-0.13.4.tgz#75a00c3c94c13abe29b43d63b4c65a88fc8264d3"
   integrity sha512-4+ow23tp/Tv7hBM5Az5/Be/eKKF7DIvJ09voz5LyHGQaqqz9WV8YMs31eFvcYQs7d451LSg7kDJV70XYN/Ug/Q==
-
-react-uuid@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/react-uuid/-/react-uuid-1.0.2.tgz#c77cea91cf38eafb1aaa7910f92621b2ed91b969"
-  integrity sha512-5e0GM16uuQj9MdRJlZ0GdLC8LKMwpU9PIqYmF27s3fIV2z+rLyASTaiW4aKzSY4DyGanz+ImzsECkftwGWfAwA==
 
 react@16.9.0:
   version "16.9.0"

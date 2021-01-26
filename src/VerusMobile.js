@@ -18,7 +18,7 @@ import {
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 import { ENABLE_VERUS_IDENTITIES } from '../env/main.json'
-
+import AlertModal from "./components/Alert";
 
 class VerusMobile extends React.Component {
   constructor(props) {
@@ -35,7 +35,7 @@ class VerusMobile extends React.Component {
     ]);
   }
   
-  componentDidMount() {
+  componentDidMount() {    
     //TODO: Figure out what should trigger a cache clear on startup of server 
     //versions. (The action that triggers it should indicate a server upgraded it's 
     //version)
@@ -79,9 +79,21 @@ class VerusMobile extends React.Component {
       this.props.accountsLength > 0, 
       this.state.loading, 
       this.props.signedIn);
-    
+
     return (
       <NavigationContainer>
+        {this.props.activeAlert != null && (
+          <AlertModal
+            visible={this.props.activeAlert != null}
+            title={this.props.activeAlert.title}
+            description={this.props.activeAlert.message}
+            buttons={this.props.activeAlert.buttons}
+            cancelable={
+              this.props.activeAlert.options != null &&
+              this.props.activeAlert.cancelable
+            }
+          />
+        )}
         <Layout />
       </NavigationContainer>
     );
@@ -99,6 +111,7 @@ const mapStateToProps = (state) => {
   return {
     accountsLength: state.authentication.accounts.length,
     signedIn: state.authentication.signedIn,
+    activeAlert: state.alert.active
   }
 };
 

@@ -111,6 +111,14 @@ export const initDlightWallet = (coinObj) => {
           resolve()
         }
       })
+      .catch(e => {
+        dispatch({
+          type: ERROR_DLIGHT_INIT,
+          payload: { chainTicker: id, error: e }
+        })
+        
+        resolve()
+      })
     })
   })
 }

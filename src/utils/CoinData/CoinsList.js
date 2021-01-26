@@ -295,32 +295,32 @@ export const coinsList = {
     tags: [],
     proto: 'btc'
   },
-  zec: {
-    id: "ZEC",
-    currency_id: '',
-    system_id: '.zec',
-    display_ticker: 'ZEC',
-    display_name: "ZCash",
-    description: "",
-    fee: 10000,
-    compatible_channels: [DLIGHT, ELECTRUM, GENERAL],
-    tags: [IS_ZCASH],
-    proto: 'btc',
-    dlightEndpoints: dlightServers.zec
-  },
-  // zectest: {
-  //   id: "ZECTEST",
-  //   currency_id: '.zectest',
-  //   system_id: null,
-  //   display_ticker: 'ZECTEST',
-  //   display_name: "ZCash Testnet",
+  // zec: {
+  //   id: "ZEC",
+  //   currency_id: '',
+  //   system_id: '.zec',
+  //   display_ticker: 'ZEC',
+  //   display_name: "ZCash",
   //   description: "",
   //   fee: 10000,
-  //   compatible_channels: [DLIGHT, GENERAL],
+  //   compatible_channels: [DLIGHT, ELECTRUM, GENERAL],
   //   tags: [IS_ZCASH],
   //   proto: 'btc',
-  //   dlightEndpoints: dlightServers.zectest
+  //   dlightEndpoints: dlightServers.zec
   // },
+  zectest: {
+    id: "ZECTEST",
+    currency_id: '.zectest',
+    system_id: null,
+    display_ticker: 'ZECTEST',
+    display_name: "ZCash Testnet",
+    description: "",
+    fee: 10000,
+    compatible_channels: [DLIGHT, GENERAL],
+    tags: [IS_ZCASH],
+    proto: 'btc',
+    dlightEndpoints: dlightServers.zectest
+  },
   dash: {
     id: "DASH",
     currency_id: '.dash',

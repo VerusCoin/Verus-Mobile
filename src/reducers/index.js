@@ -19,6 +19,7 @@ import { channelStore_eth } from './channelStores/eth';
 import { channelStore_erc20 } from './channelStores/erc20';
 import { channelStore_electrum } from './channelStores/electrum';
 import { channelStore_general } from './channelStores/general';
+import { alert } from './alert'
 import identity from './identity';
 
 export default combineReducers({
@@ -42,5 +43,6 @@ export default combineReducers({
   channelStore_erc20,
   channelStore_general,
   ethtxreceipts,
-  coinMenus
+  coinMenus,
+  alert
 });
