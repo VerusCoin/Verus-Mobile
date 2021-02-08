@@ -21,7 +21,7 @@ import { NavigationActions, withNavigationFocus } from '@react-navigation/compat
 import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
 import DynamicHeader from "./DynamicHeader";
 import { bigNumberifyBalance, truncateDecimal } from '../../utils/math'
-import { Portal } from "react-native-paper";
+import { Portal, IconButton } from "react-native-paper";
 import { API_GET_BALANCES } from "../../utils/constants/intervalConstants";
 import { CONNECTION_ERROR } from "../../utils/api/errors/errorMessages";
 
@@ -98,7 +98,7 @@ class CoinMenus extends Component {
   }
 
   renderIcon = icon => ({ isActive }) => (
-    <Icon size={24} color="white" name={icon} />
+    <IconButton style={{ padding: 0, margin: 0 }} color="white" icon={icon} />
   )
 
   renderBalanceLabel = () => {
@@ -136,7 +136,6 @@ class CoinMenus extends Component {
       labelStyle={{fontFamily: 'Avenir-Black',paddingLeft: 5}}
       label={tab.label ? tab.label : ''}
       renderIcon={this.renderIcon(tab.icon)}
-      style={{flexDirection: 'row', alignSelf: 'center', justifyContent: 'center'}}
     />
   )
 
@@ -195,6 +194,7 @@ class CoinMenus extends Component {
                 renderTab={this.renderTab}
                 tabs={this.state.tabs}
                 activeTab={this.state.activeTab.key}
+                style={{ paddingBottom: 8 }}
               />
             </React.Fragment>
           )}

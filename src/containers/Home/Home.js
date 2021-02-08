@@ -15,6 +15,7 @@ import {
   setActiveSection,
   setActiveSectionBuySellCrypto,
   expireData,
+  setCoinSubWallet,
 } from '../../actions/actionCreators';
 import { connect } from 'react-redux';
 import { Animated } from 'react-native';
@@ -242,7 +243,8 @@ class Home extends Component {
     navigation.navigate("VerusPay", { refresh: this.refresh });
   }
 
-  _openCoin = (coinObj) => {
+  openCoin = (coinObj, subWallet) => {
+    if (subWallet != null) this.props.dispatch(setCoinSubWallet(coinObj.id, subWallet))
     this.props.dispatch(setActiveCoin(coinObj))
     this.props.dispatch(setActiveApp(coinObj.defaultApp))
     this.props.dispatch(setActiveSection(coinObj.apps[coinObj.defaultApp].data[0]))

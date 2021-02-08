@@ -30,7 +30,7 @@ export const getDefaultSubWallets = (coinObj) => {
     },
     id: "MAIN_WALLET",
     params: {},
-    color: '#2E86AB'
+    color: '#3165D4'
   },
   {
     channel: DLIGHT_PRIVATE,
@@ -43,7 +43,7 @@ export const getDefaultSubWallets = (coinObj) => {
     },
     id: "PRIVATE_WALLET",
     params: {},
-    color: '#EDAE49'
+    color: '#000000'
   }] : [{
     channel: coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM,
     api_channels: {
@@ -55,6 +55,6 @@ export const getDefaultSubWallets = (coinObj) => {
     },
     id: "MAIN_WALLET",
     params: {},
-    color: '#2E86AB'
+    color: '#3165D4'
   }]
 }

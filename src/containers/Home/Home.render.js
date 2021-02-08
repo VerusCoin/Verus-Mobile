@@ -7,12 +7,14 @@ import {
   RefreshControl,
   Animated
 } from "react-native";
-import { List, Text, Card, IconButton, Provider, Avatar } from 'react-native-paper';
+import { List, Text, Card, IconButton, Provider } from 'react-native-paper';
 import { SUBWALLET_NAMES } from "../../utils/constants/constants";
 import { truncateDecimal } from "../../utils/math";
 import BigNumber from "bignumber.js";
 import styles from "../../styles";
 import { HomeListItemThemeDark, HomeListItemThemeLight } from "./Home.themes";
+import { RenderSquareLogo } from "../../utils/CoinData/Graphics";
+import Colors from "../../globals/colors";
 
 export const HomeRender = function() {
   return (
@@ -107,6 +109,8 @@ export const HomeListItemRender = function(coinObj, isParent, subWallet, index =
     : null;
   const syncProgress = isParent ? null : this.calculateSyncProgress(coinObj, subWallet)
   const Logo = CoinLogos[ticker.toLowerCase()] ? CoinLogos[ticker.toLowerCase()].light : null
+  const balanceErrors = this.props.balanceErrors[coinObj.id]
+  const subWalletError = isParent || balanceErrors == null ? null : balanceErrors[subWallet.id]
 
   return (
     <Provider
@@ -136,7 +140,7 @@ export const HomeListItemRender = function(coinObj, isParent, subWallet, index =
         >
           <List.Item
             onPress={
-              isParent ? null : () => this.openCoin(coinObj, subWallet)
+              () => this.openCoin(coinObj, isParent ? subWallets[0] : subWallet)
             }
             expanded={expanded}
             left={(props) => (
@@ -158,12 +162,13 @@ export const HomeListItemRender = function(coinObj, isParent, subWallet, index =
                     height={25}
                   />
                 ) : (
-                  <Avatar.Icon
+                  <List.Icon
                     icon="wallet"
-                    color={"white"}
+                    color={subWallet.color}
                     style={{
-                      backgroundColor: subWallet.color,
                       alignSelf: "center",
+                      margin: 0,
+                      padding: 0
                     }}
                     size={30}
                   />
@@ -229,7 +234,11 @@ export const HomeListItemRender = function(coinObj, isParent, subWallet, index =
                     >
                       <Text style={{ fontWeight: "300" }}>
                         {isParent || syncProgress == 100
-                          ? renderFiatBalance.call(this, balance, coinObj.id)
+                          ? renderFiatBalance.call(
+                              this,
+                              balance,
+                              coinObj.id
+                            )
                           : syncProgress == -1
                           ? "Error"
                           : "Syncing "}
@@ -242,13 +251,14 @@ export const HomeListItemRender = function(coinObj, isParent, subWallet, index =
                           </Text>
                         )}
                     </View>
-                    {isParent && (
+                    {(isParent || subWalletError != null) && (
                       <View
                         style={{
                           fontSize: 14,
                           textAlign: "right",
                           display: "flex",
                           flexDirection: "row",
+                          alignItems: "center",
                         }}
                       >
                         {isParent && (
@@ -256,7 +266,40 @@ export const HomeListItemRender = function(coinObj, isParent, subWallet, index =
                             {subWallets.length}
                           </Text>
                         )}
-                        <Text style={{ fontWeight: "300" }}>{" Cards"}</Text>
+                        {(isParent || subWalletError != null) && (
+                          <Text
+                            style={{
+                              fontWeight: "300",
+                              color:
+                                subWalletError != null
+                                  ? Colors.warningButtonColor
+                                  : Colors.secondaryColor,
+                            }}
+                          >
+                            {subWalletError != null
+                              ? "Connection Error"
+                              : ` Card${
+                                  subWallets.length == 1
+                                    ? ""
+                                    : "s"
+                                }`}
+                          </Text>
+                        )}
+                        {isParent &&
+                          balanceErrors != null &&
+                          (Object.values(balanceErrors).some(
+                            (value) => value != null
+                          ) && (
+                            <IconButton
+                              icon="alert"
+                              color={"white"}
+                              style={{
+                                margin: 0,
+                                padding: 0,
+                              }}
+                              size={15}
+                            />
+                          ))}
                       </View>
                     )}
                   </View>
@@ -266,7 +309,10 @@ export const HomeListItemRender = function(coinObj, isParent, subWallet, index =
                     onPress={
                       isParent
                         ? () =>
-                            this.toggleListItem(coinObj.id, subWallets.length)
+                            this.toggleListItem(
+                              coinObj.id,
+                              subWallets.length
+                            )
                         : null
                     }
                     icon={
