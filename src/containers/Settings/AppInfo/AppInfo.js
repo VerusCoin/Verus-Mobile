@@ -39,7 +39,7 @@ class AppInfo extends Component {
   }
 
   render() {
-    const VerusLogo = CoinLogos.vrsc
+    const VerusLogo = CoinLogos.vrsc.dark
     return(
       <View style={Styles.defaultRoot}>
         <View style={Styles.centralRow}>

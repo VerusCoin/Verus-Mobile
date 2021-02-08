@@ -6,7 +6,7 @@ import {
   storeCoins,
   getActiveCoinList
 } from '../../../utils/asyncStore/asyncStore';
-import { DLIGHT, ETH, ERC20, ELECTRUM, GENERAL } from '../../../utils/constants/intervalConstants';
+import { DLIGHT_PRIVATE, ETH, ERC20, ELECTRUM, GENERAL } from '../../../utils/constants/intervalConstants';
 import { initDlightWallet, closeDlightWallet } from '../channels/dlight/dispatchers/LightWalletReduxManager';
 import { initEthWallet, closeEthWallet } from '../channels/eth/dispatchers/EthWalletReduxManager';
 import { initErc20Wallet, closeErc20Wallet } from '../channels/erc20/dispatchers/Erc20WalletReduxManager';
@@ -19,14 +19,14 @@ export const COIN_MANAGER_MAP = {
     [ETH]: initEthWallet,
     [ERC20]: initErc20Wallet,
     [ELECTRUM]: initElectrumWallet,
-    [DLIGHT]: initDlightWallet,
+    [DLIGHT_PRIVATE]: initDlightWallet,
     [GENERAL]: initGeneralWallet
   },
   closers: {
     [ETH]: closeEthWallet,
     [ERC20]: closeErc20Wallet,
     [ELECTRUM]: closeElectrumWallet,
-    [DLIGHT]: closeDlightWallet,
+    [DLIGHT_PRIVATE]: closeDlightWallet,
     [GENERAL]: closeGeneralWallet
   }
 }

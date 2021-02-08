@@ -519,7 +519,7 @@ class SendCoin extends Component {
 
 const mapStateToProps = (state) => {
   const chainTicker = state.coins.activeCoin.id
-  const channel = state.coinMenus.activeSubWallets[chainTicker].channel
+  const channel = state.coinMenus.activeSubWallets[chainTicker].api_channels[API_GET_BALANCES]
   
   return {
     channel,

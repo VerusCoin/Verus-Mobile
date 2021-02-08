@@ -6,7 +6,7 @@ import {
   API_GET_TRANSACTIONS,
   API_GET_FIATPRICE,
   GENERAL,
-  DLIGHT,
+  DLIGHT_PRIVATE,
   ELECTRUM,
   ETH,
   ERC20
@@ -71,7 +71,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
     }
   },
   [API_GET_INFO]: {
-    channels: [DLIGHT],
+    channels: [DLIGHT_PRIVATE],
     restrictions: [],
     pre_data: {
       tracking_info: {
@@ -127,7 +127,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
     }
   },
   [API_GET_TRANSACTIONS]: {
-    channels: [DLIGHT, ELECTRUM, ETH, ERC20],
+    channels: [DLIGHT_PRIVATE, ELECTRUM, ETH, ERC20],
     restrictions: [],
     pre_data: {
       tracking_info: {
@@ -179,7 +179,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
     }
   },
   [API_GET_BALANCES]: {
-    channels: [DLIGHT, ELECTRUM, ETH, ERC20],
+    channels: [DLIGHT_PRIVATE, ELECTRUM, ETH, ERC20],
     restrictions: [],
     pre_data: {
       tracking_info: {

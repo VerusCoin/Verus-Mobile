@@ -107,7 +107,8 @@ class CoinDetails extends Component {
   }
   
   render() {
-    const Logo = CoinLogos[this.state.fullCoinData.id.toLowerCase()]
+    const tickerLc = this.state.fullCoinData.id.toLowerCase()
+    const Logo = CoinLogos[tickerLc] ? CoinLogos[tickerLc].dark : null
 
     return (
       <View style={Styles.defaultRoot}>

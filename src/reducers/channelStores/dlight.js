@@ -12,7 +12,7 @@ import {
   CLOSE_DLIGHT_CHANNEL
 } from '../../utils/constants/storeType'
 
-export const channelStore_dlight = (state = {
+export const channelStore_dlight_private = (state = {
   dlightSockets: {},
   dlightSyncing: {},
   openChannels: {}

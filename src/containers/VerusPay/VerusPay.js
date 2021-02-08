@@ -44,7 +44,7 @@ import {
   PARSE_ERROR
 } from '../../utils/constants/constants'
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
-import { API_GET_BALANCES, API_GET_INFO, ELECTRUM, DLIGHT } from "../../utils/constants/intervalConstants";
+import { API_GET_BALANCES, API_GET_INFO, ELECTRUM, DLIGHT_PRIVATE } from "../../utils/constants/intervalConstants";
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 import store from "../../store";
 import BigNumber from "bignumber.js";

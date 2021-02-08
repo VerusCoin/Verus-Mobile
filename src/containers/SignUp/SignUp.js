@@ -25,7 +25,7 @@ import SetupSeedModal from '../../components/SetupSeedModal/SetupSeedModal'
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers"
-import { DLIGHT, ELECTRUM, CHANNELS_NULL_TEMPLATE, CHANNELS } from "../../utils/constants/intervalConstants"
+import { DLIGHT_PRIVATE, ELECTRUM, CHANNELS_NULL_TEMPLATE, CHANNELS } from "../../utils/constants/intervalConstants"
 import { arrayToObject } from "../../utils/objectManip"
 import { ENABLE_DLIGHT } from '../../../env/main.json'
 import { getSupportedBiometryType, storeBiometricPassword } from "../../utils/biometry/biometry"
@@ -152,7 +152,7 @@ class SignUp extends Component {
           _errors = true;
         }
 
-        if (_seeds[ELECTRUM] == null || (_seeds[DLIGHT] == null && ENABLE_DLIGHT === true)) {
+        if (_seeds[ELECTRUM] == null || (_seeds[DLIGHT_PRIVATE] == null && ENABLE_DLIGHT === true)) {
           Alert.alert(
             "Error",
             "Please configure both a primary seed, and a secondary seed."
@@ -278,7 +278,7 @@ class SignUp extends Component {
 
   setupSeed = (channel) => {
     const { seeds } = this.state;
-    const oppositeChannel = channel === ELECTRUM ? DLIGHT : ELECTRUM;
+    const oppositeChannel = channel === ELECTRUM ? DLIGHT_PRIVATE : ELECTRUM;
 
     if (!seeds[channel] && seeds[oppositeChannel]) {
       AlertAsync(
@@ -307,12 +307,12 @@ class SignUp extends Component {
           });
         } else if (channel === ELECTRUM) {
           this.setState({ publicSeedModalOpen: true });
-        } else if (channel === DLIGHT)
+        } else if (channel === DLIGHT_PRIVATE)
           this.setState({ privateSeedModalOpen: true });
       });
     } else if (channel === ELECTRUM) {
       this.setState({ publicSeedModalOpen: true });
-    } else if (channel === DLIGHT)
+    } else if (channel === DLIGHT_PRIVATE)
       this.setState({ privateSeedModalOpen: true });
   };
 
@@ -388,7 +388,7 @@ class SignUp extends Component {
                     seeds: { ...this.state.seeds, [channel]: seed },
                   });
                 }}
-                channel={DLIGHT}
+                channel={DLIGHT_PRIVATE}
               />
               <View style={Styles.wideBlock}>
                 <Input
@@ -420,9 +420,9 @@ class SignUp extends Component {
                 {ENABLE_DLIGHT && (
                   <CheckBox
                     title="Setup Secondary (Z Address) Seed"
-                    checked={this.state.seeds[DLIGHT] != null}
+                    checked={this.state.seeds[DLIGHT_PRIVATE] != null}
                     textStyle={Styles.defaultText}
-                    onPress={() => this.setupSeed(DLIGHT)}
+                    onPress={() => this.setupSeed(DLIGHT_PRIVATE)}
                   />
                 )}
               </View>

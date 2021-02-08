@@ -2,7 +2,7 @@ import { electrumServers } from 'agama-wallet-lib/src/electrum-servers';
 import { MAX_VERIFICATION } from '../constants/constants'
 import Colors from '../../globals/colors'
 import { coinsList } from './CoinsList'
-import { DLIGHT, ELECTRUM, ERC20, GENERAL } from '../constants/intervalConstants';
+import { DLIGHT_PRIVATE, ELECTRUM, ERC20, GENERAL } from '../constants/intervalConstants';
 
 import { ENABLE_VERUS_IDENTITIES } from '../../../env/main.json'
 
@@ -18,7 +18,7 @@ const getDefaultApps = (coinName) => {
       data: [
         {
           screen: 'Overview',
-          icon: 'account-balance-wallet',
+          icon: 'format-list-bulleted',
           name: 'Overview',
           key: 'wallet-overview',
           color: Colors.primaryColor
@@ -26,7 +26,7 @@ const getDefaultApps = (coinName) => {
         },
         {
           screen: 'SendCoin',
-          icon: 'arrow-upward',
+          icon: 'arrow-up',
           name: 'Send',
           key: 'wallet-send',
           color: Colors.infoButtonColor
@@ -34,7 +34,7 @@ const getDefaultApps = (coinName) => {
         },
         {
           screen: 'ReceiveCoin',
-          icon: 'arrow-downward',
+          icon: 'arrow-down',
           name: 'Receive',
           key: 'wallet-receive',
           color: Colors.successButtonColor
@@ -77,7 +77,6 @@ export const explorers = {
   BAT: 'https://etherscan.io',
   DAI: 'https://etherscan.io',
   BAL: 'https://etherscan.io',
-  BUSD: 'https://etherscan.io',
   BNT: 'https://etherscan.io',
   HOT: 'https://etherscan.io',
   LINK: 'https://etherscan.io',
@@ -113,7 +112,6 @@ export const CoinLogos = {
   eth: CoinLogoSvgs.web3.ETH,
   bal: CoinLogoSvgs.web3.BAL,
   bnt: CoinLogoSvgs.web3.BNT,
-  busd: CoinLogoSvgs.web3.BUSD,
   hot: CoinLogoSvgs.web3.HOT,
   link: CoinLogoSvgs.web3.LINK,
   nexo: CoinLogoSvgs.web3.NEXO,
@@ -136,7 +134,7 @@ export const findCoinObj = (id, userName) => {
     coinObj.serverList = coinObj.compatible_channels.includes(ELECTRUM) ? electrumServers[id.toLowerCase()].serverList : []
     coinObj.users = userName != null ? [userName] : [];
     
-    if (!coinObj.compatible_channels.includes(DLIGHT)) {
+    if (!coinObj.compatible_channels.includes(DLIGHT_PRIVATE)) {
       coinObj.overrideCoinSettings = {
         privateAddrs: 0
       }

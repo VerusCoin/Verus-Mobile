@@ -6,17 +6,18 @@
 */
 
 import React, { Component } from "react";
-import { SearchBar, ListItem } from "react-native-elements";
+import { SearchBar } from "react-native-elements";
 import { FlatList, TouchableOpacity, Alert } from "react-native";
+import { List } from "react-native-paper";
 import { Searchbar } from 'react-native-paper';
 import { connect } from 'react-redux';
 import Styles from '../../styles/index'
 
 import {
-  CoinLogos,
   namesList,
   findCoinObj
 } from '../../utils/CoinData/CoinData';
+import { RenderSquareCoinLogo } from "../../utils/CoinData/Graphics";
 
 class AddCoin extends Component {
   constructor(props) {
@@ -122,17 +123,21 @@ class AddCoin extends Component {
         data={this.state.coinList}
         onEndReached={this.onEndReached}
         onEndReachedThreshold={50}
-        renderItem={({ item }) => {
-          const Logo = CoinLogos[item.toLowerCase()]
-          
+        renderItem={({ item }) => {          
           return (
             <TouchableOpacity onPress={() => this._openDetails(item)}>
-              <ListItem
+              <List.Item
                 title={item}
-                leftAvatar={<Logo width={40} height={40} />}
-                containerStyle={Styles.bottomlessListItemContainer}
+                left={(props) => RenderSquareCoinLogo(item)}
+                right={(props) => <List.Icon
+                  {...props}
+                  icon={"chevron-right"}
+                  size={20}
+                />}
                 titleStyle={Styles.listItemLeftTitleDefault}
-                chevron
+                style={{
+                  backgroundColor: "white"
+                }}
               />
             </TouchableOpacity>
           );

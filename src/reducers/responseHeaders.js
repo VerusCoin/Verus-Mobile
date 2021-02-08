@@ -13,7 +13,7 @@ import {
 } from '../utils/constants/storeType'
 import {
   ELECTRUM,
-  DLIGHT,
+  DLIGHT_PRIVATE,
   GENERAL,
   CHANNELS_OBJECT_TEMPLATE
 } from "../utils/constants/intervalConstants";

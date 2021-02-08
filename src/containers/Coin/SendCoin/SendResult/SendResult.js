@@ -38,7 +38,7 @@ import { Icon } from 'react-native-elements'
 import { NO_VERIFICATION, MID_VERIFICATION } from '../../../../utils/constants/constants'
 import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors'
-import { API_GET_FIATPRICE, API_GET_TRANSACTIONS, ELECTRUM, DLIGHT, API_GET_BALANCES } from "../../../../utils/constants/intervalConstants"
+import { API_GET_FIATPRICE, API_GET_TRANSACTIONS, ELECTRUM, DLIGHT_PRIVATE, API_GET_BALANCES } from "../../../../utils/constants/intervalConstants"
 import BigNumber from "bignumber.js";
 
 const TIMEOUT_LIMIT = 120000

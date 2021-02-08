@@ -110,7 +110,7 @@ class WalletSettings extends Component {
           />
         </TouchableOpacity>
         {this.props.activeCoinsForUser.filter((coin) => coin.compatible_channels.includes(ELECTRUM)).map((coin, index) => {
-          const Logo = CoinLogos[coin.id.toLowerCase()]
+          const Logo = CoinLogos[coin.id.toLowerCase()].dark
           return (
             <TouchableOpacity 
               onPress={() => this._openSettings(COIN_SETTINGS, coin.id, coin.display_name)}

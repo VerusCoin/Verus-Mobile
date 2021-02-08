@@ -25,8 +25,8 @@ export const initDlightWallet = (coinObj) => {
   const { dispatch, getState } = Store
   const State = getState()
 
-  const { settings, authentication, channelStore_dlight } = State
-  const { dlightSockets, dlightSyncing } = channelStore_dlight
+  const { settings, authentication, channelStore_dlight_private } = State
+  const { dlightSockets, dlightSyncing } = channelStore_dlight_private
   const { activeAccount } = authentication
   const { accountHash } = activeAccount
   const { dlightEndpoints, id, proto } = coinObj
@@ -55,7 +55,7 @@ export const initDlightWallet = (coinObj) => {
           lightWalletEndpointArr[0],
           Number(lightWalletEndpointArr[1]),
           coinSettings[id] != null ? coinSettings[id].privateAddrs : DEFAULT_PRIVATE_ADDRS,
-          activeAccount.seeds.dlight
+          activeAccount.seeds.dlight_private
         ),
         openWallet(id, proto, accountHash),
         startSync(id, proto, accountHash),
@@ -128,8 +128,8 @@ export const closeDlightWallet = (coinObj, clearDb) => {
   const { dispatch, getState } = Store
   const State = getState()
 
-  const { channelStore_dlight, authentication } = State
-  const { dlightSockets, dlightSyncing } = channelStore_dlight
+  const { channelStore_dlight_private, authentication } = State
+  const { dlightSockets, dlightSyncing } = channelStore_dlight_private
   const { activeAccount } = authentication
   const { accountHash } = activeAccount
   const { id, proto } = coinObj

@@ -1,14 +1,14 @@
 import { getZTransactions } from '../../../../utils/api/channels/dlight/callCreators'
 import { getParsedTransactionList } from '../../../../utils/api/channels/electrum/callCreators'
 import { ERROR_TRANSACTIONS, SET_TRANSACTIONS } from '../../../../utils/constants/storeType'
-import { DLIGHT, ELECTRUM, ETH, ERC20 } from '../../../../utils/constants/intervalConstants'
+import { DLIGHT_PRIVATE, ELECTRUM, ETH, ERC20 } from '../../../../utils/constants/intervalConstants'
 import { standardizeDlightTxObj } from '../../../../utils/standardization/standardizeTxObj'
 import { updateLedgerValue } from './UpdateLedgerValue'
 import { getStandardEthTransactions } from '../../../../utils/api/channels/eth/callCreator'
 import { getStandardErc20Transactions } from '../../../../utils/api/channels/erc20/callCreator'
 
 const channelMap = {
-  [DLIGHT]: async (activeUser, coinObj) => {
+  [DLIGHT_PRIVATE]: async (activeUser, coinObj) => {
     const zTransactions = await getZTransactions(
       coinObj.id,
       activeUser.accountHash,
@@ -18,7 +18,7 @@ const channelMap = {
 
     return {
       chainTicker: coinObj.id,
-      channel: DLIGHT,
+      channel: DLIGHT_PRIVATE,
       header,
       body: result.map(standardizeDlightTxObj),
     };

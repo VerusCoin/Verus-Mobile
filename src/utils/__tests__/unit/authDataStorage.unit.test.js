@@ -24,7 +24,7 @@ describe('Authentication data storage and retrieval', () => {
 
       expect(userObj.id).toBe(MOCK_USER_OBJ.id)
       expect(decryptkey(MOCK_PIN, electrum)).toBe(seeds.electrum)
-      expect(decryptkey(MOCK_PIN, dlight)).toBe(seeds.dlight)
+      expect(decryptkey(MOCK_PIN, dlight)).toBe(seeds.dlight_private)
     })
   })
 

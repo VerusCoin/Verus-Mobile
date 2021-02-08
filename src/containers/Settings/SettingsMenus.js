@@ -14,7 +14,7 @@ import BottomNavigation, {
 import AppInfo from './AppInfo/AppInfo'
 import ProfileSettings from './ProfileSettings/ProfileSettings'
 import WalletSettings from './WalletSettings/WalletSettings'
-import { Icon } from "react-native-elements"
+import { IconButton } from "react-native-paper"
 import Colors from '../../globals/colors';
 
 class SettingsMenus extends Component {
@@ -39,7 +39,7 @@ class SettingsMenus extends Component {
     let tabArray = [
       {
         key: "settings-profile",
-        icon: "account-circle",
+        icon: "account-settings",
         label: "Profile",
         barColor: Colors.primaryColor,
         pressColor: 'rgba(255, 255, 255, 0.16)',
@@ -47,7 +47,7 @@ class SettingsMenus extends Component {
       },
       {
         key: "settings-wallet",
-        icon: "account-balance-wallet",
+        icon: "credit-card-settings",
         label: "Wallet",
         barColor: Colors.infoButtonColor,
         pressColor: 'rgba(255, 255, 255, 0.16)',
@@ -55,7 +55,7 @@ class SettingsMenus extends Component {
       },
       {
         key: "settings-info",
-        icon: "info",
+        icon: "information",
         label: "App Info",
         barColor: Colors.successButtonColor,
         pressColor: 'rgba(255, 255, 255, 0.16)',
@@ -84,7 +84,7 @@ class SettingsMenus extends Component {
   }
 
   renderIcon = icon => ({ isActive }) => (
-    <Icon size={24} color="white" name={icon} />
+    <IconButton style={{ padding: 0, margin: 0 }} color="white" icon={icon} />
   )
 
   renderTab = ({ tab, isActive }) => (
@@ -92,9 +92,7 @@ class SettingsMenus extends Component {
       isActive={isActive}
       key={tab.key ? tab.key : ''}
       label={tab.label ? tab.label : ''}
-      labelStyle={{fontFamily: 'Avenir-Black',paddingLeft: 5}}
       renderIcon={this.renderIcon(tab.icon)}
-      style={{flexDirection: 'row', alignSelf: 'center', justifyContent: 'center'}}
     />
   )
 
@@ -115,6 +113,7 @@ class SettingsMenus extends Component {
           renderTab={this.renderTab}
           tabs={this.state.tabs}
           activeTab={this.state.activeTab.key}
+          style={{ paddingBottom: 8 }}
         />
       </View>
     );

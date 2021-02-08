@@ -1,5 +1,5 @@
-export const DLIGHT_ADDRESSES = 'listaddresses'
-export const DLIGHT_BALANCES = 'getprivatebalance'
-export const DLIGHT_TRANSACTIONS = 'listprivatetransactions'
+export const DLIGHT_PRIVATE_ADDRESSES = 'listaddresses'
+export const DLIGHT_PRIVATE_BALANCES = 'getprivatebalance'
+export const DLIGHT_PRIVATE_TRANSACTIONS = 'listprivatetransactions'
 export const DLIGHT_INFO = 'getinfo'
 export const DLIGHT_BLOCKCOUNT = 'getblockcount'

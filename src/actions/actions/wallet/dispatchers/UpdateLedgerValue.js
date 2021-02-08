@@ -1,4 +1,4 @@
-import { DLIGHT } from '../../../../utils/constants/intervalConstants'
+import { DLIGHT_PRIVATE } from '../../../../utils/constants/intervalConstants'
 import { getCoinObj } from '../../../../utils/CoinData/CoinData'
 import { ENABLE_DLIGHT } from '../../../../../env/main.json'
 
@@ -28,7 +28,7 @@ export const updateLedgerValue = async (
 
   await Promise.all(
     channels.map(async (channel) => {
-      if (!channelMap[channel] || (channel === DLIGHT && !ENABLE_DLIGHT))
+      if (!channelMap[channel] || (channel === DLIGHT_PRIVATE && !ENABLE_DLIGHT))
         return;
 
       try {

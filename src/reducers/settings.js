@@ -12,7 +12,7 @@ import {
   SET_COIN_SETTINGS_STATE,
   SET_BUY_SELL_SETTINGS_STATE
 } from '../utils/constants/storeType'
-import { DLIGHT } from '../utils/constants/intervalConstants'
+import { DLIGHT_PRIVATE } from '../utils/constants/intervalConstants'
 import { USD } from '../utils/constants/currencies'
 
 export const settings = (state = {
@@ -39,7 +39,7 @@ export const settings = (state = {
             verificationLvl: MAX_VERIFICATION, 
             verificationLock: false,
             channels: coinObj.compatible_channels,
-            privateAddrs: coinObj.compatible_channels.includes(DLIGHT) ? DEFAULT_PRIVATE_ADDRS: 0,
+            privateAddrs: coinObj.compatible_channels.includes(DLIGHT_PRIVATE) ? DEFAULT_PRIVATE_ADDRS: 0,
             ...coinObj.coinSettings,
           }
         } else {
@@ -47,7 +47,7 @@ export const settings = (state = {
             verificationLvl: MAX_VERIFICATION, 
             verificationLock: false,
             channels: coinObj.compatible_channels,
-            privateAddrs: coinObj.compatible_channels.includes(DLIGHT) ? DEFAULT_PRIVATE_ADDRS: 0,
+            privateAddrs: coinObj.compatible_channels.includes(DLIGHT_PRIVATE) ? DEFAULT_PRIVATE_ADDRS: 0,
             ...state.coinSettings[coinObj.id],
             ...coinObj.coinSettings,
           }
