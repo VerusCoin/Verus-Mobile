@@ -126,12 +126,27 @@ export default containers = {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  halfModalHeaderContainer: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 10,
+    width: '100%',
+  },
+  halfModalContainer: {
+    height: '50%'
+  },
   horizontalCenterContainer: {
     alignItems: 'center',
   },
   flexBackground: {
     flex: 1,
     backgroundColor: Colors.secondaryColor,
+  },
+  flexBackgroundDark: {
+    flex: 1,
+    backgroundColor: Colors.quinaryColor,
   },
   passwordInputContainer: {
     width: '91%',

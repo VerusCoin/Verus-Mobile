@@ -13,7 +13,7 @@ import {
 import { DEVICE_WINDOW_WIDTH, SUBWALLET_NAMES } from "../../utils/constants/constants";
 import { setCoinSubWallet } from "../../actions/actionCreators";
 import SnapCarousel from "../../components/SnapCarousel";
-import { API_GET_BALANCES, GENERAL } from "../../utils/constants/intervalConstants";
+import { API_GET_BALANCES, API_GET_INFO, GENERAL } from "../../utils/constants/intervalConstants";
 import Colors from "../../globals/colors";
 import { Card, Avatar, Paragraph, Title } from "react-native-paper";
 import BigNumber from "bignumber.js";
@@ -77,6 +77,17 @@ class DynamicHeader extends Component {
     })
   };
 
+  calculateSyncProgress = (subWallet) => {
+    const syncInfo = this.props.info 
+
+    if (
+      syncInfo == null ||
+      syncInfo[subWallet.id] == null
+    )
+      return 100;
+    else return syncInfo[subWallet.id].percent;
+  }
+
   _handleItemPress = (item, index) => {
     if (this.props.selectedSubWallet != null) {
       if (item.index !== this.state.currentIndex) this.carousel.snapToNext()
@@ -95,6 +106,8 @@ class DynamicHeader extends Component {
 
       fiatBalance = BigNumber(displayBalance).multipliedBy(price).toFixed(2)
     }
+
+    const syncProgress = this.calculateSyncProgress(item)
 
     return (
       <Animated.View
@@ -141,9 +154,11 @@ class DynamicHeader extends Component {
             <Paragraph
               style={{ ...Styles.listItemSubtitleDefault, fontSize: 12 }}
             >
-              {`${fiatBalance == null ? "-" : fiatBalance} ${
-                this.props.displayCurrency
-              }`}
+              {syncProgress != 100 && syncProgress != -1
+                ? `Syncing - ${syncProgress.toFixed(2)}%`
+                : `${fiatBalance == null ? "-" : fiatBalance} ${
+                    this.props.displayCurrency
+                  }`}
             </Paragraph>
           </Card.Content>
         </Card>
@@ -221,6 +236,7 @@ const mapStateToProps = (state) => {
     selectedSubWallet: state.coinMenus.activeSubWallets[chainTicker],
     allSubWallets: state.coinMenus.allSubWallets[chainTicker],
     balances: extractLedgerData(state, 'balances', API_GET_BALANCES, chainTicker),
+    info: extractLedgerData(state, 'info', API_GET_INFO, chainTicker),
     balanceErrors: extractErrorData(state, API_GET_BALANCES, chainTicker),
     totalBalance: Object.values(balances).reduce((a, b) => {
       if (a == null) return b == null ? 0 : b 

@@ -10,6 +10,9 @@ export default text = {
   mediumFont: {
     fontSize: 24,
   },
+  smallMediumFont: {
+    fontSize: 20,
+  },
   centralSuccessHeader: {
     fontSize: 24,
     color: Colors.successButtonColor,

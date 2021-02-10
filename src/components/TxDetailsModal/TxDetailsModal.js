@@ -14,13 +14,15 @@ import {
   TouchableOpacity,
   Clipboard,
   Alert,
-  Modal
+  FlatList
 } from "react-native";
 import { unixToDate, MathableNumber } from '../../utils/math';
 import { explorers } from '../../utils/CoinData/CoinData';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
 import { ethers } from "ethers";
+import { Button, List } from "react-native-paper"
+import HalfModal from "../HalfModal";
 
 class TxDetailsModal extends Component {
   constructor(props) {
@@ -95,142 +97,163 @@ class TxDetailsModal extends Component {
     }
     
     return (
-      <Modal
+      <HalfModal
         animationType={animationType}
-        transparent={false}
+        transparent={true}
         visible={visible}
         onRequestClose={cancel}
-        coverScreen={false}
       >
-        <ScrollView
-          style={Styles.flexBackground}
-          contentContainerStyle={Styles.centerContainer}
-        >
-          <View style={Styles.headerContainer}>
-            <Text style={Styles.centralHeader}>
-              {"Transaction Details"}
-            </Text>
+        <View style={Styles.centerContainer}>
+          <View style={{ ...Styles.headerContainer, maxHeight: "12%" }}>
+            <View style={Styles.halfModalHeaderContainer}>
+              <Button onPress={cancel} color={Colors.primaryColor}>
+                {"Close"}
+              </Button>
+              <Text
+                style={{
+                  ...Styles.centralHeader,
+                  ...Styles.smallMediumFont,
+                }}
+              >
+                {"Transaction"}
+              </Text>
+              <Button
+                onPress={() => this.openExplorer()}
+                color={Colors.primaryColor}
+                disabled={!explorers[activeCoinID]}
+              >
+                {"Details"}
+              </Button>
+            </View>
           </View>
-          <View style={Styles.standardWidthFlexGrowCenterBlock}>
-            <View style={Styles.infoTable}>
-              <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>Type:</Text>
-                <Text
-                  style={{
-                    ...Styles.infoTableCell,
-                    ...Styles.capitalizeFirstLetter,
-                  }}
-                >
-                  {txData.type || "??"}
-                </Text>
-              </View>
-              <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>{`Amount ${
+          <FlatList
+            style={Styles.fullWidth}
+            renderItem={({item}) => {
+              if (
+                item.condition == null ||
+                item.condition === true
+              )
+                return (
+                  <List.Item title={item.key} style={{ marginRight: 8 }} right={item.data} />
+                );
+              else return null;
+            }}
+            data={[
+              {
+                key: "Type:",
+                data: (props) => (
+                  <Text
+                    style={{
+                      ...Styles.capitalizeFirstLetter,
+                      ...Styles.listItemTableCell
+                    }}
+                  >
+                    {txData.type || "??"}
+                  </Text>
+                ),
+              },
+              {
+                key: `Amount ${
                   txData.type === "received" ? "Received" : "Sent"
-                }:`}</Text>
-                <Text style={Styles.infoTableCell}>
-                  {amountShown != null
-                    ? amountShown.display() + " " + activeCoinID
-                    : "??"}
-                </Text>
-              </View>
-              {txData.fee != null && (
-                <View style={Styles.infoTableRow}>
-                  <Text style={Styles.infoTableHeaderCell}>Fee:</Text>
-                  <Text style={Styles.infoTableCell}>
+                }:`,
+                data: () => (
+                  <Text style={Styles.listItemTableCell}>
+                    {amountShown != null
+                      ? amountShown.display() + " " + activeCoinID
+                      : "??"}
+                  </Text>
+                ),
+              },
+              {
+                key: "Fee:",
+                data: () => (
+                  <Text style={Styles.listItemTableCell}>
                     {txData.fee +
                       " " +
                       (txData.feeCurr != null
                         ? txData.feeCurr
                         : activeCoinID)}
                   </Text>
-                </View>
-              )}
-              {explorers[activeCoinID] &&
-              explorers[activeCoinID].includes("etherscan") ? (
-                <View style={Styles.infoTableRow}>
-                  <Text style={Styles.infoTableHeaderCell}>
-                    {"Confirmations:"}
-                  </Text>
-                  <Text style={Styles.infoTableCell}>
+                ),
+                condition: txData.fee != null,
+              },
+              {
+                key: "Confirmations",
+                data: () => (
+                  <Text style={Styles.listItemTableCell}>
                     {txData.confirmations != null
                       ? txData.confirmations
                       : "??"}
                   </Text>
-                </View>
-              ) : null}
-              <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>Address:</Text>
-                <Text
-                  style={{
-                    ...Styles.blockTextAlignRight,
-                    ...(txData.address ? Styles.linkText : {}),
-                  }}
-                  onPress={
-                    txData.address ? this.copyAddressToClipboard : () => {}
-                  }
-                >
-                  {txData.address == null
-                    ? txData.visibility === "private"
-                      ? "hidden"
-                      : "??"
-                    : txData.address}
-                </Text>
-              </View>
-              <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>Time:</Text>
-                <Text style={Styles.infoTableCell}>
-                  {txData && txData.timestamp != null
-                    ? unixToDate(txData.timestamp)
-                    : "??"}
-                </Text>
-              </View>
-              <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>ID:</Text>
-                <Text
-                  style={{
-                    ...Styles.blockTextAlignRight,
-                    ...(txData.txid != null ? Styles.linkText : {}),
-                  }}
-                  onPress={
-                    txData.txid != null
-                      ? this.copyTxIDToClipboard
-                      : () => {}
-                  }
-                >
-                  {txData.txid != null
-                    ? activeCoinID === "BTC"
-                      ? this.decodeBtcTxid(txData.txid)
-                      : txData.txid
-                    : "??"}
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View style={Styles.footerContainer}>
-            <View
-              style={
-                explorers[activeCoinID]
-                  ? Styles.standardWidthSpaceBetweenBlock
-                  : Styles.standardWidthCenterBlock
-              }
-            >
-              <StandardButton
-                title={"CLOSE"}
-                onPress={cancel}
-                color={Colors.warningButtonColor}
-              />
-              {explorers[activeCoinID] && (
-                <StandardButton
-                  title="DETAILS"
-                  onPress={() => this.openExplorer()}
-                  color={Colors.primaryColor}
-                />
-              )}
-            </View>
-          </View>
-        </ScrollView>
-      </Modal>
+                ),
+                condition:
+                  explorers[activeCoinID] &&
+                  explorers[activeCoinID].includes("etherscan"),
+              },
+              {
+                key: "Address:",
+                data: () => (
+                  <Text
+                    style={{
+                      ...(txData.address ? Styles.linkText : {}),
+                      ...Styles.listItemTableCell,
+                      ...Styles.halfWidthBox
+                    }}
+                    numberOfLines={1}
+                    ellipsizeMode="middle"
+                    onPress={
+                      txData.address
+                        ? this.copyAddressToClipboard
+                        : () => {}
+                    }
+                  >
+                    {txData.address == null
+                      ? txData.visibility === "private"
+                        ? "hidden"
+                        : "??"
+                      : txData.address}
+                  </Text>
+                ),
+              },
+              {
+                key: "Time:",
+                data: () => (
+                  <Text style={Styles.listItemTableCell}>
+                    {txData && txData.timestamp != null
+                      ? unixToDate(txData.timestamp)
+                      : "??"}
+                  </Text>
+                ),
+              },
+              {
+                key: "TxID:",
+                data: () => (
+                  <Text
+                    style={{
+                      ...(txData.txid != null ? Styles.linkText : {}),
+                      ...Styles.listItemTableCell,
+                      ...Styles.halfWidthBox
+                    }}
+                    numberOfLines={1}
+                    ellipsizeMode="middle"
+                    onPress={
+                      txData.txid != null
+                        ? this.copyTxIDToClipboard
+                        : () => {}
+                    }
+                  >
+                    {txData.txid != null
+                      ? activeCoinID === "BTC"
+                        ? this.decodeBtcTxid(txData.txid)
+                        : txData.txid
+                      : "??"}
+                  </Text>
+                ),
+              },
+            ]}
+          />
+        </View>
+      </HalfModal>
     );
   }
 }
