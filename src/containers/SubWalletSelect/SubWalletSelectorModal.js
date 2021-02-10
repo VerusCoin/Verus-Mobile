@@ -7,7 +7,6 @@ import {
   Text
 } from "react-native"
 import Styles from '../../styles/index'
-import StandardPieChart from "../../components/StandardPieChart";
 import SubWalletCard from "../../components/SubWalletCard";
 import { GENERAL } from "../../utils/constants/intervalConstants";
 import { SUBWALLET_NAMES } from "../../utils/constants/constants";
@@ -123,15 +122,6 @@ class SubWalletSelectorModal extends Component {
               paddingTop: 80
             }}
           >
-            <StandardPieChart
-              radius={90}
-              sections={pieSections}
-              innerText={`${truncateDecimal(totalBalance, 2)} ${activeCoin.id}`}
-              containerStyle={{
-                justifyContent: "center",
-                height: 200,
-              }}
-            />
             <View
               style={{
                 display: "flex",

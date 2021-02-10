@@ -15,15 +15,11 @@ import BottomNavigation, {
 import Overview from './Overview/Overview'
 import SendCoin from './SendCoin/SendCoin'
 import ReceiveCoin from './ReceiveCoin/ReceiveCoin'
-import { Icon } from "react-native-elements"
 import { setActiveSection, setCoinSubWallet, setIsCoinMenuFocused } from "../../actions/actionCreators";
 import { NavigationActions, withNavigationFocus } from '@react-navigation/compat';
 import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
 import DynamicHeader from "./DynamicHeader";
-import { bigNumberifyBalance, truncateDecimal } from '../../utils/math'
 import { Portal, IconButton } from "react-native-paper";
-import { API_GET_BALANCES } from "../../utils/constants/intervalConstants";
-import { CONNECTION_ERROR } from "../../utils/api/errors/errorMessages";
 
 class CoinMenus extends Component {
   constructor(props) {
@@ -101,34 +97,6 @@ class CoinMenus extends Component {
     <IconButton style={{ padding: 0, margin: 0 }} color="white" icon={icon} />
   )
 
-  renderBalanceLabel = () => {
-    const { activeCoin, balances } = this.props;
-    let displayBalance =
-      balances != null && balances.results != null
-        ? balances.results.total
-        : null;
-
-    if (balances.errors) {
-      return (
-        <Text
-          style={{ ...Styles.largeCentralPaddedHeader, ...Styles.errorText }}
-        >
-          {CONNECTION_ERROR}
-        </Text>
-      );
-    } else {
-      return (
-        <Text style={Styles.largeCentralPaddedHeader}>
-          {`${
-            displayBalance != null
-              ? truncateDecimal(displayBalance, 4)
-              : "-"
-          } ${activeCoin.id}`}
-        </Text>
-      );
-    } 
-  };
-
   renderTab = ({ tab, isActive }) => (
     <FullTab
       isActive={isActive}
@@ -160,7 +128,7 @@ class CoinMenus extends Component {
 
     return (
       <Portal.Host>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, display: 'flex' }}>
           {selectedSubWallet == null && (
             <SubWalletSelectorModal
               visible={selectedSubWallet == null}
@@ -169,10 +137,9 @@ class CoinMenus extends Component {
               subWallets={subWallets}
             />
           )}
-          <View style={Styles.centralRow}>{this.renderBalanceLabel()}</View>
           {selectedSubWallet != null && <DynamicHeader />}
           {selectedSubWallet != null && (
-            <React.Fragment>
+            <View style={{flex: 2}}>
               {this.state.activeTab.screen === "Overview" ? (
                 <Overview
                   navigation={this.props.navigation}
@@ -196,7 +163,7 @@ class CoinMenus extends Component {
                 activeTab={this.state.activeTab.key}
                 style={{ paddingBottom: 8 }}
               />
-            </React.Fragment>
+            </View>
           )}
         </View>
       </Portal.Host>
@@ -205,12 +172,6 @@ class CoinMenus extends Component {
 }
 
 const mapStateToProps = (state) => {
-  const chainTicker = state.coins.activeCoin.id
-  const channel =
-    state.coinMenus.activeSubWallets[chainTicker] != null
-      ? state.coinMenus.activeSubWallets[chainTicker].api_channels[API_GET_BALANCES]
-      : null;
-
   return {
     activeCoin: state.coins.activeCoin,
     activeApp: state.coins.activeApp,
@@ -219,16 +180,6 @@ const mapStateToProps = (state) => {
     selectedSubWallet:
       state.coinMenus.activeSubWallets[state.coins.activeCoin.id],
     allSubWallets: state.coinMenus.allSubWallets[state.coins.activeCoin.id],
-    balances: {
-      results:
-        channel != null && state.ledger.balances[channel][chainTicker] != null
-          ? bigNumberifyBalance(state.ledger.balances[channel][chainTicker])
-          : null,
-      errors:
-        channel != null
-          ? state.errors[API_GET_BALANCES][channel][chainTicker]
-          : null,
-    },
   };
 };
 

@@ -29,7 +29,7 @@ import {
 import { selectTransactions } from '../../../selectors/transactions';
 import { ETHERS } from "../../../utils/constants/web3Constants";
 import { ethers } from "ethers";
-import { Portal } from "react-native-paper";
+import { Portal, List } from "react-native-paper";
 import BigNumber from "bignumber.js";
 import { TransactionLogos } from '../../../images/customIcons/index'
 
@@ -237,32 +237,34 @@ class Overview extends Component {
           })
         }
       >
-        <ListItem
-          roundAvatar
-          title={
-            <Text style={Styles.listItemLeftTitleDefault}>
-              {`${
-                displayAmount != null
-                  ? displayAmount.isLessThan(BigNumber(0.0001)) &&
-                    !displayAmount.isEqualTo(BigNumber(0))
-                    ? displayAmount.toExponential()
-                    : displayAmount.toString()
-                  : "??"
-              } ${
-                item.feeCurr != null && item.type === "self"
-                  ? item.feeCurr
-                  : this.props.activeCoin.id
-              }`}
-            </Text>
-          }
-          subtitle={subtitle}
-          subtitleProps={{ numberOfLines: 1 }}
-          leftAvatar={<AvatarImg width={40} height={40} />}
-          chevron
-          containerStyle={Styles.bottomlessListItemContainer}
-          rightTitle={
-            <Text style={Styles.listItemRightTitleDefault}>{"info"}</Text>
-          }
+        <List.Item
+          title={`${
+            displayAmount != null
+              ? displayAmount.isLessThan(BigNumber(0.0001)) &&
+                !displayAmount.isEqualTo(BigNumber(0))
+                ? displayAmount.toExponential()
+                : displayAmount.toString()
+              : "??"
+          } ${
+            item.feeCurr != null && item.type === "self"
+              ? item.feeCurr
+              : this.props.activeCoin.id
+          }`}
+          description={subtitle}
+          left={() => (
+            <AvatarImg
+              width={24}
+              height={24}
+              style={{
+                alignSelf: "center",
+                marginLeft: 16,
+                marginRight: 16,
+              }}
+            />
+          )}
+          right={(props) => (
+            <List.Icon {...props} icon={"chevron-right"} size={20} />
+          )}
         />
       </TouchableOpacity>
     );

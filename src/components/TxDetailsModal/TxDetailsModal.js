@@ -106,8 +106,7 @@ class TxDetailsModal extends Component {
           style={Styles.flexBackground}
           contentContainerStyle={Styles.centerContainer}
         >
-          <View style={Styles.tallHeaderContainer}>
-            <TxLogo width={50} height={50} />
+          <View style={Styles.headerContainer}>
             <Text style={Styles.centralHeader}>
               {"Transaction Details"}
             </Text>

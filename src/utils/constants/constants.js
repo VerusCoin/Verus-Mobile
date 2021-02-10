@@ -1,3 +1,5 @@
+import { Dimensions } from "react-native";
+
 // Electrum
 export const ELECTRUM_PROTOCOL_CHANGE = 1.4;
 
@@ -149,3 +151,7 @@ export const SUBWALLET_NAMES = {
     MAIN_WALLET: "Main",
     PRIVATE_WALLET: "Private"
 }
+
+//Display 
+export const DEVICE_WINDOW_WIDTH = Dimensions.get('window').width;
+export const DEVICE_WINDOW_HEIGHT = Dimensions.get('window').height;

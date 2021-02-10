@@ -51,6 +51,7 @@ import AttestationDetails from '../../containers/Identity/Home/AttestationDetail
 import ClaimManager from '../../containers/Identity/PersonalInfo/ClaimManager';
 import MoveIntoCategory from '../../containers/Identity/PersonalInfo/ClaimManager/MoveIntoCategory';
 import AddIdentity from '../../containers/Identity/AddIdentity';
+import { DEVICE_WINDOW_WIDTH } from '../constants/constants';
 
 const WALLET = 'wallet';
 
@@ -70,7 +71,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#E9F1F7',
     paddingTop: 15,
-    width: Dimensions.get('window').width, // width of both buttons + no left-right padding
+    width: DEVICE_WINDOW_WIDTH, // width of both buttons + no left-right padding
   },
 
   header_title_back: {
@@ -81,7 +82,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#E9F1F7',
     paddingTop: 15,
-    width: Dimensions.get('window').width - 110, // width of both buttons + no left-right padding
+    width: DEVICE_WINDOW_WIDTH - 110, // width of both buttons + no left-right padding
   },
 
   menuButton: {
