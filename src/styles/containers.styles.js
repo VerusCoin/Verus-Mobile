@@ -126,7 +126,7 @@ export default containers = {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  halfModalHeaderContainer: {
+  semiModalHeaderContainer: {
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
@@ -134,8 +134,8 @@ export default containers = {
     paddingBottom: 10,
     width: '100%',
   },
-  halfModalContainer: {
-    height: '50%'
+  semiModalContainer: {
+    height: '75%'
   },
   horizontalCenterContainer: {
     alignItems: 'center',

@@ -43,7 +43,7 @@ class DynamicHeader extends Component {
     Animated.timing(this.fadeAnimation, {
       toValue: 1,
       duration: 1000
-    }).start(() => this.carousel.triggerRenderingHack(0));
+    }).start(() => { if (this.carousel != null) this.carousel.triggerRenderingHack(0)});
   };
 
   prepareCarouselItems(allSubWallets, selectedSubWallet) {
@@ -117,8 +117,6 @@ class DynamicHeader extends Component {
       >
         <Card
           style={{
-            margin: "2%",
-            width: "46%",
             height: 120,
             minWidth: 250,
             borderRadius: 10,
@@ -170,7 +168,7 @@ class DynamicHeader extends Component {
     return (
       <View
         style={{
-          flex: 1,
+          height: 232,
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",

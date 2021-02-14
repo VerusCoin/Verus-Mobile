@@ -1,5 +1,5 @@
 /*
-  The authentication reducer handles the alert queue, where app alerts get pushed
+  The alert reducer handles the alert queue, where app alerts get pushed
   to be shown
 */
 

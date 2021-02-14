@@ -6,7 +6,6 @@
 import React, { Component } from "react";
 import {
   View,
-  Text
 } from "react-native";
 import { connect } from 'react-redux';
 import BottomNavigation, {
@@ -94,14 +93,13 @@ class CoinMenus extends Component {
   }
 
   renderIcon = icon => ({ isActive }) => (
-    <IconButton style={{ padding: 0, margin: 0 }} color="white" icon={icon} />
+    <IconButton style={{ padding: 0, margin: 0 }} color="white" size={16} icon={icon} />
   )
 
   renderTab = ({ tab, isActive }) => (
     <FullTab
       isActive={isActive}
       key={tab.key ? tab.key : ''}
-      labelStyle={{fontFamily: 'Avenir-Black',paddingLeft: 5}}
       label={tab.label ? tab.label : ''}
       renderIcon={this.renderIcon(tab.icon)}
     />
@@ -161,7 +159,7 @@ class CoinMenus extends Component {
                 renderTab={this.renderTab}
                 tabs={this.state.tabs}
                 activeTab={this.state.activeTab.key}
-                style={{ paddingBottom: 8 }}
+                style={{ display: 'flex' }}
               />
             </View>
           )}

@@ -2,7 +2,7 @@ import store from "../../../../store"
 import getUid from '../../../../utils/uid'
 import { completeAlert, pushAlert, setActiveAlert, shiftAlerts } from "../creators/alert"
 
-export const createAlert = (title, message, buttons, options, type) => {
+export const createAlert = (title, message, buttons = [{text: "OK", onPress: () => resolveAlert(true)}], options, type) => {
   return new Promise((resolve) => {
     const alertId = getUid()
     let opened = false

@@ -9,11 +9,8 @@
 */
 
 import React, { Component } from "react"
-import StandardButton from "../../../components/StandardButton"
-import { FormLabel, Input, FormValidationMessage } from "react-native-elements"
 import {
   View,
-  Text,
   Alert,
   Keyboard,
   ActivityIndicator,
@@ -30,14 +27,15 @@ import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import store from "../../../store"
 import { API_GET_FIATPRICE, API_GET_BALANCES } from "../../../utils/constants/intervalConstants"
 import BigNumber from "bignumber.js"
-import { VerusPayLogo } from "../../../images/customIcons"
 import Colors from "../../../globals/colors"
 import { UtilityContracts } from "../../../utils/api/channels/erc20/callCreator"
 import { ethers } from "ethers"
-import { stubFalse } from "lodash"
 import RFoxClaim from "../../../components/RFoxClaim"
-import { Portal } from "react-native-paper"
+import { Portal, TextInput, Button, Text } from "react-native-paper"
 import { DISABLE_CLAIM_BUTTON } from "../../../utils/constants/storeType"
+import NumberPadModal from "../../../components/NumberPadModal/NumberPadModal"
+import { createAlert } from "../../../actions/actions/alert/dispatchers/alert"
+import TextInputModal from "../../../components/TextInputModal/TextInputModal"
 
 class SendCoin extends Component {
   constructor(props) {
@@ -60,12 +58,14 @@ class SendCoin extends Component {
       addressCheckSecretCounter: 0,
       rewards: ethers.BigNumber.from(0),
       rewardModalOpen: false,
-      pubKey: null
+      amountModalOpen: false,
+      addressModalOpen: false,
+      pubKey: null,
     };
 
-    this.ADDR_CHECK_SECRET_COUNTER_TRIGGER = 10
+    this.ADDR_CHECK_SECRET_COUNTER_TRIGGER = 10;
     this._unsubscribeFocus = null;
-    this.ZERO = ethers.BigNumber.from(0)
+    this.ZERO = ethers.BigNumber.from(0);
   }
 
   componentDidMount() {
@@ -81,8 +81,11 @@ class SendCoin extends Component {
   }
 
   componentDidUpdate(lastProps, lastState) {
-    if (lastState.rewardModalOpen !== this.state.rewardModalOpen && this.state.rewardModalOpen === false) {
-      this.initializeState()
+    if (
+      lastState.rewardModalOpen !== this.state.rewardModalOpen &&
+      this.state.rewardModalOpen === false
+    ) {
+      this.initializeState();
     }
   }
 
@@ -109,13 +112,13 @@ class SendCoin extends Component {
   };
 
   checkRfoxClaims = async (pubKey) => {
-    const balances = await UtilityContracts.rfox.getRfoxAccountBalances(pubKey)
+    const balances = await UtilityContracts.rfox.getRfoxAccountBalances(pubKey);
 
     this.setState({
       rewards: balances.available,
-      pubKey
-    })
-  }
+      pubKey,
+    });
+  };
 
   handleState = async (activeUser, coinObj) => {
     const { channel } = this.props;
@@ -162,7 +165,9 @@ class SendCoin extends Component {
           activeUser.keys[coinObj.id] != null &&
           activeUser.keys[coinObj.id][channel] != null
         ) {
-          await this.checkRfoxClaims(activeUser.keys[coinObj.id][channel].pubKey);
+          await this.checkRfoxClaims(
+            activeUser.keys[coinObj.id][channel].pubKey
+          );
         }
 
         this.setState({ loading: false });
@@ -204,8 +209,8 @@ class SendCoin extends Component {
   };
 
   maxAmount = () => {
-    const { balances } = this.props
-    
+    const { balances } = this.props;
+
     this.fillAmount(BigNumber(balances.results.confirmed));
   };
 
@@ -250,25 +255,35 @@ class SendCoin extends Component {
   };
 
   incrementSecretCounter = () => {
-    this.setState({
-      addressCheckSecretCounter: this.state.addressCheckSecretCounter + 1
-    }, () => {
-      if (this.state.addressCheckSecretCounter >= this.ADDR_CHECK_SECRET_COUNTER_TRIGGER) {
-        Alert.alert("Info", "Simple address validation disabled.")
-        this.setState({
-          addressCheckEnabled: false
-        })
+    this.setState(
+      {
+        addressCheckSecretCounter: this.state.addressCheckSecretCounter + 1,
+      },
+      () => {
+        if (
+          this.state.addressCheckSecretCounter >=
+          this.ADDR_CHECK_SECRET_COUNTER_TRIGGER
+        ) {
+          Alert.alert("Info", "Simple address validation disabled.");
+          this.setState({
+            addressCheckEnabled: false,
+          });
+        }
       }
-    })
-  }
+    );
+  };
 
   getPrivKey = () => {
-    const { activeAccount, activeCoin, channel } = this.props
+    const { activeAccount, activeCoin, channel } = this.props;
 
-    if (activeAccount != null && activeAccount.keys[activeCoin.id] != null && activeAccount.keys[activeCoin.id][channel] != null) {
-      return activeAccount.keys[activeCoin.id][channel].privKey
-    } else return null
-  }
+    if (
+      activeAccount != null &&
+      activeAccount.keys[activeCoin.id] != null &&
+      activeAccount.keys[activeCoin.id][channel] != null
+    ) {
+      return activeAccount.keys[activeCoin.id][channel].privKey;
+    } else return null;
+  };
 
   //TODO: Add fee to Bitcoin object in CoinData
 
@@ -295,41 +310,51 @@ class SendCoin extends Component {
 
         if (!toAddress || toAddress.length < 1) {
           this.handleFormError("Required field", "toAddress");
+          createAlert("Required Field", "Address is a required field.")
           _errors = true;
-        } else if (this.state.addressCheckEnabled && (toAddress.length < 33 || toAddress.length > 42)) {
+        } else if (
+          this.state.addressCheckEnabled &&
+          (toAddress.length < 33 || toAddress.length > 42)
+        ) {
           this.handleFormError("Invalid address", "toAddress");
+          createAlert("Invalid Address", "Please enter a valid address.")
           _errors = true;
         }
 
         if (!amount.toString()) {
           this.handleFormError("Required field", "amount");
+          createAlert("Required Field", "Amount is a required field.")
           _errors = true;
         } else if (!isNumber(amount)) {
           this.handleFormError("Invalid amount", "amount");
+          createAlert("Invalid Amount", "Please enter a valid number amount.")
           _errors = true;
         } else if (Number(amount) > Number(spendableBalance)) {
+          const message = "Insufficient funds, " +
+          (spendableBalance < 0
+            ? "available amount is less than fee"
+            : spendableBalance + " available.")
+
           this.handleFormError(
-            "Insufficient funds, " +
-              (spendableBalance < 0
-                ? "available amount is less than fee"
-                : spendableBalance + " available"),
+            message,
             "amount"
           );
+          createAlert("Insufficient Funds", message)
           _errors = true;
         }
 
         if (!coin) {
-          Alert.alert("No active coin", "No current active coin");
+          createAlert("No active coin", "No current active coin.");
           _errors = true;
         }
 
         if (!account) {
-          Alert.alert("No active account", "No current active account");
+          createAlert("No active account", "No current active account.");
           _errors = true;
         }
 
         if (!fromAddress) {
-          Alert.alert("No from address", "No current active from address");
+          createAlert("No from address", "No current active from address.");
           _errors = true;
         }
 
@@ -342,20 +367,26 @@ class SendCoin extends Component {
 
   claimSuccess() {
     this.props.dispatch({
-      type: DISABLE_CLAIM_BUTTON
-    })
+      type: DISABLE_CLAIM_BUTTON,
+    });
 
-    this.setState({
-      rewardModalOpen: false
-    }, () => {
-      Alert.alert("Success!", "RFOX claimed, it may take a few minutes to show in your wallet.")
-    })
+    this.setState(
+      {
+        rewardModalOpen: false,
+      },
+      () => {
+        Alert.alert(
+          "Success!",
+          "RFOX claimed, it may take a few minutes to show in your wallet."
+        );
+      }
+    );
   }
 
   render() {
     const { balances, claimDisabled } = this.props;
     const hasRewards = this.state.rewards.gt(this.ZERO)
-    const privKey = this.getPrivKey()
+    const privKey = this.getPrivKey();
 
     return (
       <TouchableWithoutFeedback
@@ -368,148 +399,172 @@ class SendCoin extends Component {
             contentContainerStyle={Styles.horizontalCenterContainer}
           >
             <Portal>
-              {this.state.rewardModalOpen && <RFoxClaim 
-                animationType="slide"
-                rewards={this.state.rewards}
-                pubKey={this.state.pubKey}
-                fromAddress={this.state.fromAddress}
-                privKey={privKey}
-                transparent={false}
-
-                visible={this.state.rewardModalOpen}
-                onSuccess={() => this.claimSuccess()}
-                cancel={() => {
-                  this.setState({ rewardModalOpen: false });
-                }}
-              />}
+              {this.state.rewardModalOpen && (
+                <RFoxClaim
+                  animationType="slide"
+                  rewards={this.state.rewards}
+                  pubKey={this.state.pubKey}
+                  fromAddress={this.state.fromAddress}
+                  privKey={privKey}
+                  transparent={false}
+                  visible={this.state.rewardModalOpen}
+                  onSuccess={() => this.claimSuccess()}
+                  cancel={() => {
+                    this.setState({ rewardModalOpen: false });
+                  }}
+                />
+              )}
+              {this.state.amountModalOpen && (
+                <NumberPadModal
+                  value={Number(this.state.amount)}
+                  visible={this.state.amountModalOpen}
+                  onChange={(number) =>
+                    this.setState({ amount: number.toString() })
+                  }
+                  cancel={() => {
+                    this.setState({ amountModalOpen: false });
+                  }}
+                  decimals={this.props.activeCoin.decimals}
+                />
+              )}
+              {this.state.addressModalOpen && (
+                <TextInputModal
+                  value={this.state.toAddress}
+                  visible={this.state.addressModalOpen}
+                  onChange={(text) => {
+                    if (text != null)
+                      this.setState({ toAddress: removeSpaces(text) });
+                  }}
+                  cancel={() => {
+                    this.setState({ addressModalOpen: false });
+                  }}
+                />
+              )}
             </Portal>
             <View style={Styles.wideBlock}>
-              <Input
-                labelStyle={Styles.formInputLabel}
-                label={"To:"}
-                onChangeText={(text) =>
-                  this.setState({ toAddress: removeSpaces(text) })
-                }
-                onSubmitEditing={Keyboard.dismiss}
-                value={this.state.toAddress}
-                autoCapitalize={"none"}
-                autoCorrect={false}
-                errorMessage={
-                  this.state.formErrors.toAddress
-                    ? this.state.formErrors.toAddress
-                    : null
-                }
-              />
+              <View style={Styles.flexRow}>
+                <TouchableOpacity
+                  onPress={() => this.setState({ amountModalOpen: true })}
+                  style={{ ...Styles.flex }}
+                >
+                  <TextInput
+                    label="Amount"
+                    dense
+                    value={this.state.amount}
+                    editable={false}
+                    pointerEvents="none"
+                    style={{
+                      backgroundColor: Colors.secondaryColor,
+                    }}
+                    error={this.state.formErrors.amount}
+                  />
+                </TouchableOpacity>
+                <Button
+                  onPress={this.maxAmount}
+                  color={Colors.primaryColor}
+                  style={{
+                    alignSelf: "center",
+                    marginTop: 6,
+                    marginLeft: 8,
+                    marginRight: 8,
+                  }}
+                  compact
+                >
+                  {"Max"}
+                </Button>
+              </View>
             </View>
             <View style={Styles.wideBlock}>
-              <Input
-                labelStyle={Styles.formInputLabel}
-                label={"Amount:"}
-                onChangeText={(text) => this.setState({ amount: text })}
-                onSubmitEditing={Keyboard.dismiss}
-                value={this.state.amount.toString()}
-                shake={this.state.formErrors.amount}
-                rightIcon={
-                  balances.results ? (
-                    <TouchableOpacity onPress={this.maxAmount}>
-                      <Text style={Styles.linkText}>{"MAX"}</Text>
-                    </TouchableOpacity>
-                  ) : null
-                }
-                keyboardType={"decimal-pad"}
-                autoCapitalize="words"
-                errorMessage={
-                  this.state.formErrors.amount
-                    ? this.state.formErrors.amount
-                    : null
-                }
-              />
-              <View
-                style={{
-                  ...Styles.fullWidthFlexCenterBlock,
-                  paddingBottom: 0,
-                }}
-              >
-                <TouchableOpacity onPress={this._verusPay}>
-                  <VerusPayLogo width={40} height={40} />
+              <View style={Styles.flexRow}>
+                <TouchableOpacity
+                  onPress={() => this.setState({ addressModalOpen: true })}
+                  style={{ ...Styles.flex }}
+                >
+                  <TextInput
+                    label="Address"
+                    dense
+                    value={this.state.toAddress}
+                    editable={false}
+                    pointerEvents="none"
+                    style={{
+                      backgroundColor: Colors.secondaryColor,
+                    }}
+                    error={this.state.formErrors.amount}
+                  />
                 </TouchableOpacity>
+                <Button
+                  onPress={this._verusPay}
+                  color={Colors.primaryColor}
+                  style={{
+                    alignSelf: "center",
+                    marginTop: 6,
+                    marginLeft: 8,
+                  }}
+                  compact
+                >
+                  {"Scan"}
+                </Button>
               </View>
             </View>
-            {this.state.loading ? (
-              <View style={Styles.fullWidthFlexCenterBlock}>
-                <Text style={Styles.centralHeader}>
-                  Updating balance...
-                </Text>
-                <ActivityIndicator
-                  animating={this.state.loading}
-                  size="large"
-                />
-              </View>
-            ) : this.state.loadingBTCFees ? (
-              <View style={Styles.fullWidthFlexCenterBlock}>
-                <Text style={Styles.centralHeader}>
-                  Loading BTC Fees...
-                </Text>
-                <ActivityIndicator
-                  animating={this.state.loadingBTCFees}
-                  size="large"
-                />
-              </View>
-            ) : this.state.btcFeesErr ? (
-              <View style={Styles.fullWidthFlexCenterBlock}>
-                <Text
-                  style={{ ...Styles.centralHeader, ...Styles.errorText }}
-                >
-                  BTC Fees Error!
-                </Text>
-              </View>
-            ) : balances.errors ? (
-              <View style={Styles.fullWidthFlexCenterBlock}>
-                <Text
-                  style={{ ...Styles.centralHeader, ...Styles.errorText }}
-                >
-                  Connection Error
-                </Text>
-              </View>
-            ) : (
-              <React.Fragment>
-                <View
-                  style={
-                    hasRewards
-                      ? Styles.standardWidthSpaceBetweenBlock
-                      : Styles.fullWidthFlexCenterBlock
+            <View
+              style={
+                hasRewards
+                  ? Styles.standardWidthSpaceBetweenBlock
+                  : Styles.fullWidthFlexCenterBlock
+              }
+            >
+              {hasRewards &&
+              !this.state.loading &&
+              !this.state.loadingBTCFees ? (
+                <Button
+                  onPress={() =>
+                    this.setState({
+                      rewardModalOpen: true,
+                    })
                   }
+                  color={Colors.successButtonColor}
+                  disabled={claimDisabled}
                 >
-                  {hasRewards ? (
-                    <StandardButton
-                      onPress={() => this.setState({
-                        rewardModalOpen: true
-                      })}
-                      title="CLAIM"
-                      color={Colors.successButtonColor}
-                      disabled={claimDisabled}
-                    />
-                  ) : null}
-                  <StandardButton
-                    onPress={this.validateFormData}
-                    title="SEND"
-                  />
-                </View>
-                <View style={Styles.fullWidth}>
-                  <TouchableWithoutFeedback
-                    onPress={this.incrementSecretCounter}
-                  >
-                    <View
-                      style={{
-                        ...Styles.fullWidth,
-                        height: 40,
-                        backgroundColor: Colors.secondaryColor,
-                      }}
-                    />
-                  </TouchableWithoutFeedback>
-                </View>
-              </React.Fragment>
-            )}
+                  {"Claim"}
+                </Button>
+              ) : null}
+              <Button
+                onPress={this.validateFormData}
+                color={Colors.primaryColor}
+                loading={
+                  this.state.loading || this.state.loadingBTCFees
+                }
+                disabled={
+                  this.state.loading ||
+                  this.state.loadingBTCFees ||
+                  balances.errors ||
+                  this.state.btcFeesErr
+                }
+              >
+                {this.state.btcFeesErr
+                  ? "Fee Error"
+                  : balances.errors
+                  ? "Connection Error"
+                  : this.state.loading
+                  ? "Updating balance..."
+                  : this.state.loadingBTCFees
+                  ? "Loading fees..."
+                  : "Send"}
+              </Button>
+            </View>
+            <View style={Styles.fullWidth}>
+              <TouchableWithoutFeedback
+                onPress={this.incrementSecretCounter}
+              >
+                <View
+                  style={{
+                    ...Styles.fullWidth,
+                    height: 40,
+                    backgroundColor: Colors.secondaryColor,
+                  }}
+                />
+              </TouchableWithoutFeedback>
+            </View>
           </ScrollView>
         </View>
       </TouchableWithoutFeedback>

@@ -84,7 +84,7 @@ class SettingsMenus extends Component {
   }
 
   renderIcon = icon => ({ isActive }) => (
-    <IconButton style={{ padding: 0, margin: 0 }} color="white" icon={icon} />
+    <IconButton style={{ padding: 0, margin: 0 }} color="white" size={16} icon={icon} />
   )
 
   renderTab = ({ tab, isActive }) => (
@@ -113,7 +113,7 @@ class SettingsMenus extends Component {
           renderTab={this.renderTab}
           tabs={this.state.tabs}
           activeTab={this.state.activeTab.key}
-          style={{ paddingBottom: 8 }}
+          style={{ display: 'flex' }}
         />
       </View>
     );

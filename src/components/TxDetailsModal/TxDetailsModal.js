@@ -9,9 +9,7 @@ import {
   View, 
   Text, 
   ScrollView, 
-  Image, 
   Linking, 
-  TouchableOpacity,
   Clipboard,
   Alert,
   FlatList
@@ -22,7 +20,7 @@ import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
 import { ethers } from "ethers";
 import { Button, List } from "react-native-paper"
-import HalfModal from "../HalfModal";
+import SemiModal from "../SemiModal";
 
 class TxDetailsModal extends Component {
   constructor(props) {
@@ -97,15 +95,16 @@ class TxDetailsModal extends Component {
     }
     
     return (
-      <HalfModal
+      <SemiModal
         animationType={animationType}
         transparent={true}
         visible={visible}
         onRequestClose={cancel}
+        flexHeight={1}
       >
         <View style={Styles.centerContainer}>
-          <View style={{ ...Styles.headerContainer, maxHeight: "12%" }}>
-            <View style={Styles.halfModalHeaderContainer}>
+          <View style={{ ...Styles.headerContainer, minHeight: 48 }}>
+            <View style={Styles.semiModalHeaderContainer}>
               <Button onPress={cancel} color={Colors.primaryColor}>
                 {"Close"}
               </Button>
@@ -253,7 +252,7 @@ class TxDetailsModal extends Component {
             ]}
           />
         </View>
-      </HalfModal>
+      </SemiModal>
     );
   }
 }

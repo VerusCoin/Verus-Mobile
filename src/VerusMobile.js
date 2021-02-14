@@ -1,5 +1,5 @@
 import React from "react";
-import { YellowBox, TouchableWithoutFeedback, Keyboard, Alert } from "react-native";
+import { YellowBox, TouchableWithoutFeedback, Keyboard, Alert, KeyboardAvoidingView } from "react-native";
 import RootStackScreens from './utils/navigation/index';
 import { NavigationContainer } from '@react-navigation/native';
 import { 
@@ -19,6 +19,7 @@ import {
 import { connect } from 'react-redux';
 import { ENABLE_VERUS_IDENTITIES } from '../env/main.json'
 import AlertModal from "./components/Alert";
+import { activateKeyboardListener } from "./actions/actionDispatchers";
 
 class VerusMobile extends React.Component {
   constructor(props) {
@@ -36,6 +37,8 @@ class VerusMobile extends React.Component {
   }
   
   componentDidMount() {    
+    activateKeyboardListener()
+    
     //TODO: Figure out what should trigger a cache clear on startup of server 
     //versions. (The action that triggers it should indicate a server upgraded it's 
     //version)
@@ -82,18 +85,7 @@ class VerusMobile extends React.Component {
 
     return (
       <NavigationContainer>
-        {this.props.activeAlert != null && (
-          <AlertModal
-            visible={this.props.activeAlert != null}
-            title={this.props.activeAlert.title}
-            description={this.props.activeAlert.message}
-            buttons={this.props.activeAlert.buttons}
-            cancelable={
-              this.props.activeAlert.options != null &&
-              this.props.activeAlert.cancelable
-            }
-          />
-        )}
+        <AlertModal />
         <Layout />
       </NavigationContainer>
     );
@@ -110,8 +102,7 @@ const DismissKeyboard = ({children}) => (
 const mapStateToProps = (state) => {
   return {
     accountsLength: state.authentication.accounts.length,
-    signedIn: state.authentication.signedIn,
-    activeAlert: state.alert.active
+    signedIn: state.authentication.signedIn
   }
 };
 

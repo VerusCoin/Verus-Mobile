@@ -13,7 +13,7 @@ import {
 import Colors from "../globals/colors";
 import Styles from "../styles/index";
 
-class HalfModal extends Component {
+class SemiModal extends Component {
   constructor(props) {
     super(props);
     this.state = {};
@@ -45,6 +45,8 @@ class HalfModal extends Component {
   };
 
   render() {
+    const flexHeight = this.props.flexHeight != null ? this.props.flexHeight : 1
+
     return (
       <React.Fragment>
         <Animated.View
@@ -64,16 +66,16 @@ class HalfModal extends Component {
         >
           <TouchableWithoutFeedback onPress={this.props.onRequestClose}>
             <View
-              style={{ ...Styles.halfModalContainer, ...Styles.flex }}
+              style={{ flex: 1 }}
             />
           </TouchableWithoutFeedback>
           <View
             style={{
-              ...Styles.halfModalContainer,
-              ...Styles.flex,
+              flex: flexHeight,
               backgroundColor: Colors.secondaryColor,
               borderRadius: 10,
-              paddingTop: 10
+              paddingTop: 10,
+              ...(this.props.contentContainerStyle ? this.props.contentContainerStyle : {})
             }}
           >
             {this.props.children}
@@ -84,4 +86,4 @@ class HalfModal extends Component {
   }
 }
 
-export default HalfModal;
+export default SemiModal;

@@ -4,7 +4,8 @@ import {
   Modal,
   ScrollView,
   View,
-  Text
+  Text,
+  SafeAreaView
 } from "react-native"
 import Styles from '../../styles/index'
 import SubWalletCard from "../../components/SubWalletCard";
@@ -106,20 +107,17 @@ class SubWalletSelectorModal extends Component {
         visible={visible}
         onRequestClose={cancelHandler}
       >
-        <View
+        <SafeAreaView
           style={{ ...Styles.centerContainer, ...Styles.flexBackground }}
         >
-          <View style={{position: 'absolute', top: 30}}>
-            <Text style={Styles.centralHeader}>
-              {"Select a Card"}
-            </Text>
-          </View>
+          <Text style={Styles.centralHeader}>
+            {"Select a Card"}
+          </Text>
           <ScrollView
             contentContainerStyle={{
               display: "flex",
               alignItems: "center",
               width: '100%',
-              paddingTop: 80
             }}
           >
             <View
@@ -155,7 +153,7 @@ class SubWalletSelectorModal extends Component {
               ))}
             </View>
           </ScrollView>
-        </View>
+        </SafeAreaView>
       </Modal>
     );
   }
