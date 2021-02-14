@@ -18,7 +18,6 @@ import SignUp from '../../containers/SignUp/SignUp';
 import CoinDetails from '../../containers/CoinDetails/CoinDetails';
 import LoadingScreen from '../../containers/LoadingScreen/LoadingScreen';
 import ConfirmSend from '../../containers/ConfirmSend/ConfirmSend';
-import SendResult from '../../containers/Coin/SendCoin/SendResult/SendResult';
 import CoinMenus from '../../containers/Coin/CoinMenus';
 import VerusPay from '../../containers/VerusPay/VerusPay';
 import SettingsMenus from '../../containers/Settings/SettingsMenus';
@@ -260,17 +259,7 @@ function MainStackScreens() {
         name="ConfirmSend"
         component={ConfirmSend}
         options={{
-          title: "Confirm Send",
-        }}
-      />
-
-      <MainStack.Screen
-        name="SendResult"
-        component={SendResult}
-        options={{
-          title: "Send Result",
-          headerLeft: () => null,
-          headerRight: () => null,
+          title: "Send",
         }}
       />
 

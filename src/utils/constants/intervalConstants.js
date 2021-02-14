@@ -22,6 +22,9 @@ export const API_GET_INFO = "get_info"
 export const API_GET_TRANSACTIONS = "get_transactions"
 export const API_GET_FIATPRICE = "get_fiatprice"
 
+export const API_SEND = 'send'
+export const API_GET_KEYS = 'get_keys'
+
 // Interval restriction labels
 export const IS_VERUS = "is_verus"
 export const IS_PBAAS = "is_pbaas"

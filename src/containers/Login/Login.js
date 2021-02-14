@@ -18,6 +18,7 @@ import {
   Image,
   Alert
 } from "react-native";
+import { Button } from "react-native-paper"
 import { connect } from 'react-redux';
 import { 
   validateLogin, 
@@ -39,6 +40,7 @@ import { DISABLED_CHANNELS } from '../../../env/main.json'
 import { removeIdentityData } from '../../utils/asyncStore/identityStorage';
 import { getBiometricPassword, getSupportedBiometryType } from "../../utils/biometry/biometry";
 import { VerusLogo } from "../../images/customIcons";
+import buttonsStyles from "../../styles/buttons.styles";
 
 class Login extends Component {
   constructor(props) {
@@ -255,40 +257,36 @@ class Login extends Component {
               }
             />
           )}
-          {this.state.loading ? (
-            <View style={Styles.fullWidthFlexCenterBlock}>
-              <Text style={Styles.centralHeader}>Unlocking Wallet</Text>
-              <ActivityIndicator
-                animating={this.state.loading}
-                size="large"
-              />
-            </View>
-          ) : this.state.validating ? (
-            <View style={Styles.fullWidthFlexCenterBlock}>
-              <Text style={Styles.centralHeader}>Validating User</Text>
-              <ActivityIndicator
-                animating={this.state.validating}
-                size="large"
-              />
-            </View>
-          ) : (
-            <View style={Styles.fullWidthFlexCenterBlock}>
-              {!this.state.simpleLayout && (
-                <StandardButton
-                  title="UNLOCK"
+          <View style={Styles.fullWidthFlexCenterBlock}>
+            {(!this.state.simpleLayout ||
+              this.state.validating ||
+              this.state.loading) && (
+              <View style={Styles.standardWidthCenterBlock}>
+                <Button
                   onPress={this.validateFormData}
-                  buttonStyle={Styles.fullWidthButton}
-                  containerStyle={Styles.standardWidthCenterBlock}
-                />
-              )}
-              <View style={Styles.flexCenterRowBlock}>
-                <Text style={Styles.linkText} onPress={this._handleAddUser}>
-                  {" "}
-                  Add a profile
-                </Text>
+                  color={Colors.primaryColor}
+                  disabled={this.state.validating || this.state.loading}
+                  loading={this.state.validating || this.state.loading}
+                >
+                  {this.state.loading
+                    ? "Unlocking Wallet"
+                    : this.state.validating
+                    ? "Validating User"
+                    : "Unlock"}
+                </Button>
               </View>
-            </View>
-          )}
+            )}
+            {!(this.state.validating || this.state.loading) && (
+              <View style={Styles.standardWidthCenterBlock}>
+                <Button
+                  onPress={this._handleAddUser}
+                  color={Colors.primaryColor}
+                >
+                  {"Add a profile"}
+                </Button>
+              </View>
+            )}
+          </View>
         </ScrollView>
       </TouchableWithoutFeedback>
     );

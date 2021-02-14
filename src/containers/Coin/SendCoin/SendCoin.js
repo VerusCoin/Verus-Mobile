@@ -25,7 +25,7 @@ import { removeSpaces } from '../../../utils/stringUtils'
 import Styles from '../../../styles/index'
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import store from "../../../store"
-import { API_GET_FIATPRICE, API_GET_BALANCES } from "../../../utils/constants/intervalConstants"
+import { API_GET_FIATPRICE, API_GET_BALANCES, API_GET_KEYS, API_SEND } from "../../../utils/constants/intervalConstants"
 import BigNumber from "bignumber.js"
 import Colors from "../../../globals/colors"
 import { UtilityContracts } from "../../../utils/api/channels/erc20/callCreator"
@@ -121,15 +121,15 @@ class SendCoin extends Component {
   };
 
   handleState = async (activeUser, coinObj) => {
-    const { channel } = this.props;
+    const { key_channel } = this.props;
 
     if (
       activeUser.keys[coinObj.id] != null &&
-      activeUser.keys[coinObj.id][channel] != null &&
-      activeUser.keys[coinObj.id][channel].addresses.length > 0
+      activeUser.keys[coinObj.id][key_channel] != null &&
+      activeUser.keys[coinObj.id][key_channel].addresses.length > 0
     ) {
       this.setState({
-        fromAddress: activeUser.keys[coinObj.id][channel].addresses[0],
+        fromAddress: activeUser.keys[coinObj.id][key_channel].addresses[0],
       });
     } else {
       throw new Error(
@@ -163,10 +163,10 @@ class SendCoin extends Component {
         if (
           coinObj.id === "RFOX" &&
           activeUser.keys[coinObj.id] != null &&
-          activeUser.keys[coinObj.id][channel] != null
+          activeUser.keys[coinObj.id][key_channel] != null
         ) {
           await this.checkRfoxClaims(
-            activeUser.keys[coinObj.id][channel].pubKey
+            activeUser.keys[coinObj.id][key_channel].pubKey
           );
         }
 
@@ -225,6 +225,7 @@ class SendCoin extends Component {
       amount: Number(amount),
       btcFee: this.state.btcFees.average,
       balance: this.props.balances.results.confirmed,
+      channel: this.props.send_channel
     };
 
     navigation.navigate(route, {
@@ -274,14 +275,14 @@ class SendCoin extends Component {
   };
 
   getPrivKey = () => {
-    const { activeAccount, activeCoin, channel } = this.props;
+    const { activeAccount, activeCoin, balance_channel } = this.props;
 
     if (
       activeAccount != null &&
       activeAccount.keys[activeCoin.id] != null &&
-      activeAccount.keys[activeCoin.id][channel] != null
+      activeAccount.keys[activeCoin.id][balance_channel] != null
     ) {
-      return activeAccount.keys[activeCoin.id][channel].privKey;
+      return activeAccount.keys[activeCoin.id][balance_channel].privKey;
     } else return null;
   };
 
@@ -489,7 +490,7 @@ class SendCoin extends Component {
                     style={{
                       backgroundColor: Colors.secondaryColor,
                     }}
-                    error={this.state.formErrors.amount}
+                    error={this.state.formErrors.toAddress}
                   />
                 </TouchableOpacity>
                 <Button
@@ -574,15 +575,19 @@ class SendCoin extends Component {
 
 const mapStateToProps = (state) => {
   const chainTicker = state.coins.activeCoin.id
-  const channel = state.coinMenus.activeSubWallets[chainTicker].api_channels[API_GET_BALANCES]
+  const balance_channel = state.coinMenus.activeSubWallets[chainTicker].api_channels[API_GET_BALANCES]
+  const key_channel = state.coinMenus.activeSubWallets[chainTicker].api_channels[API_GET_KEYS]
+  const send_channel = state.coinMenus.activeSubWallets[chainTicker].api_channels[API_SEND]
   
   return {
-    channel,
+    balance_channel,
+    key_channel,
+    send_channel,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoin: state.coins.activeCoin,
     balances: {
-      results: state.ledger.balances[channel][chainTicker],
-      errors: state.errors[API_GET_BALANCES][channel][chainTicker],
+      results: state.ledger.balances[balance_channel][chainTicker],
+      errors: state.errors[API_GET_BALANCES][balance_channel][chainTicker],
     },
     activeAccount: state.authentication.activeAccount,
     claimDisabled: state.coinMenus.claimDisabled

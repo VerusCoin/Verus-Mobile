@@ -3,7 +3,9 @@ import {
   API_GET_BALANCES,
   API_GET_FIATPRICE,
   API_GET_INFO,
+  API_GET_KEYS,
   API_GET_TRANSACTIONS,
+  API_SEND,
   DLIGHT_PRIVATE,
   ELECTRUM,
   GENERAL,
@@ -26,7 +28,9 @@ export const getDefaultSubWallets = (coinObj) => {
       [API_GET_INFO]: dominantChannel,
       [API_GET_ADDRESSES]: dominantChannel,
       [API_GET_TRANSACTIONS]: dominantChannel,
-      [API_GET_FIATPRICE]: GENERAL
+      [API_GET_FIATPRICE]: GENERAL,
+      [API_SEND]: dominantChannel,
+      [API_GET_KEYS]: dominantChannel
     },
     id: "MAIN_WALLET",
     params: {},
@@ -39,7 +43,9 @@ export const getDefaultSubWallets = (coinObj) => {
       [API_GET_INFO]: DLIGHT_PRIVATE,
       [API_GET_ADDRESSES]: DLIGHT_PRIVATE,
       [API_GET_TRANSACTIONS]: DLIGHT_PRIVATE,
-      [API_GET_FIATPRICE]: GENERAL
+      [API_GET_FIATPRICE]: GENERAL,
+      [API_SEND]: DLIGHT_PRIVATE,
+      [API_GET_KEYS]: DLIGHT_PRIVATE
     },
     id: "PRIVATE_WALLET",
     params: {},
@@ -51,7 +57,9 @@ export const getDefaultSubWallets = (coinObj) => {
       [API_GET_INFO]: dominantChannel,
       [API_GET_ADDRESSES]: dominantChannel,
       [API_GET_TRANSACTIONS]: dominantChannel,
-      [API_GET_FIATPRICE]: GENERAL
+      [API_GET_FIATPRICE]: GENERAL,
+      [API_SEND]: dominantChannel,
+      [API_GET_KEYS]: dominantChannel
     },
     id: "MAIN_WALLET",
     params: {},
