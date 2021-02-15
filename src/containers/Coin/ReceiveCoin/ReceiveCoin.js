@@ -6,32 +6,22 @@
 */
 
 import React, { Component } from "react"
-import StandardButton from "../../../components/StandardButton"
 import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  ScrollView, 
   Keyboard, 
   Clipboard,
-  Alert,
-  RefreshControl
  } from "react-native"
-import { Input } from 'react-native-elements'
 import { connect } from 'react-redux'
-import Styles from '../../../styles/index'
-import QRModal from '../../../components/QRModal'
 import { isNumber, truncateDecimal } from '../../../utils/math'
-import Colors from '../../../globals/colors';
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import { API_GET_FIATPRICE, API_GET_BALANCES, GENERAL } from "../../../utils/constants/intervalConstants"
 import { USD } from '../../../utils/constants/currencies'
 import { expireData } from "../../../actions/actionCreators"
 import Store from "../../../store"
-import { Portal } from "react-native-paper"
 import selectAddresses from "../../../selectors/address"
 import VerusPayParser from '../../../utils/verusPay/index'
 import BigNumber from "bignumber.js";
+import { RenderReceiveCoin } from "./ReceiveCoin.render"
+import { createAlert } from "../../../actions/actions/alert/dispatchers/alert"
 
 class ReceiveCoin extends Component {
   constructor(props) {
@@ -45,8 +35,34 @@ class ReceiveCoin extends Component {
       verusQRString: null,
       amountFiat: false,
       loading: false,
-      showModal: false
+      showModal: false,
+      currentTextInputModal: null,
+      currentNumberInputModal: null
     };
+  }
+
+  openNumberInputModal(inputKey) {
+    this.setState({
+      currentNumberInputModal: inputKey
+    })
+  }
+
+  closeNumberInputModal() {
+    this.setState({
+      currentNumberInputModal: null
+    })
+  }
+
+  openTextInputModal(inputKey) {
+    this.setState({
+      currentTextInputModal: inputKey
+    })
+  }
+
+  closeTextInputModal() {
+    this.setState({
+      currentTextInputModal: null
+    })
   }
 
   componentDidMount() {
@@ -148,7 +164,7 @@ class ReceiveCoin extends Component {
       });
     } catch(e) {
       console.warn(e)
-      Alert.alert("Error", "Error creating QR payment request.")
+      createAlert("Error", "Error creating QR payment request.")
     }
     
   }
@@ -162,7 +178,7 @@ class ReceiveCoin extends Component {
 
   copyAddressToClipboard = () => {
     Clipboard.setString(this.state.address);
-    Alert.alert("Address Copied", "Address copied to clipboard")
+    createAlert("Address Copied", `"${this.state.address}" copied to clipboard`)
   }
 
   getPrice = () => {
@@ -202,16 +218,18 @@ class ReceiveCoin extends Component {
       let _errors = false;
 
       if (!_selectedCoin) {
-        Alert.alert("Error", "Please select a coin to receive.")
+        createAlert("Error", "Please select a coin to receive.")
         _errors = true
       }
 
       if (!(!(_amount.toString()) || _amount.toString().length < 1 || _amount == 0)) {
         if (!(isNumber(_amount))) {
           this.handleError("Invalid amount", "amount")
+          createAlert("Invalid Amount", "Please enter a valid amount.")
           _errors = true
         } else if (Number(_amount) <= 0) {
           this.handleError("Enter an amount greater than 0", "amount")
+          createAlert("Invalid Amount", "Please enter an amount greater than 0.")
           _errors = true
         }
       } 
@@ -225,128 +243,7 @@ class ReceiveCoin extends Component {
   }
 
   render() {
-    const _price = this.getPrice()
-    const {
-      state,
-      props,
-      validateFormData,
-      forceUpdate,
-      copyAddressToClipboard
-    } = this;
-    const { activeCoinsForUser, rates, displayCurrency } = props;
-    const {
-      loading,
-      showModal,
-      verusQRString,
-      selectedCoin,
-      address,
-      errors,
-      amountFiat
-    } = state;
-    const fiatEnabled = rates[selectedCoin.id] && rates[selectedCoin.id][displayCurrency] != null
-
-    return (
-      <View style={Styles.defaultRoot}>
-        <ScrollView
-          style={Styles.fullWidth}
-          contentContainerStyle={Styles.horizontalCenterContainer}
-          refreshControl={
-            <RefreshControl refreshing={loading} onRefresh={forceUpdate} />
-          }
-        >
-          {showModal && (
-            <Portal>
-              <QRModal
-                animationType="slide"
-                transparent={false}
-                visible={
-                  showModal && verusQRString && verusQRString.length > 0
-                }
-                qrString={verusQRString}
-                cancel={() => {
-                  this.setState({ showModal: false });
-                }}
-              />
-            </Portal>
-          )}
-          <View style={Styles.wideBlock}>
-            <TouchableOpacity onPress={copyAddressToClipboard}>
-              <Input
-                labelStyle={Styles.formInputLabel}
-                editable={false}
-                value={address}
-                autoCapitalize={"none"}
-                autoCorrect={false}
-                inputStyle={Styles.mediumInlineLink}
-                pointerEvents="none"
-                multiline={true}
-                label={"Your address:"}
-                errorMessage={errors.address ? errors.address : null}
-              />
-            </TouchableOpacity>
-          </View>
-          <View style={Styles.wideBlock}>
-            <Input
-              label={
-                <View style={Styles.startRow}>
-                  <Text style={Styles.mediumFormInputLabel}>
-                    {"Enter an amount in "}
-                  </Text>
-                  <Text
-                    style={
-                      fiatEnabled
-                        ? Styles.mediumInlineLink
-                        : Styles.mediumFormInputLabel
-                    }
-                    onPress={
-                      fiatEnabled
-                        ? () => this.setState({ amountFiat: !amountFiat })
-                        : () => {}
-                    }
-                  >
-                    {amountFiat ? displayCurrency : selectedCoin.id}
-                  </Text>
-                </View>
-              }
-              rightIcon={
-                fiatEnabled ? (
-                  <Text
-                    style={Styles.ghostText}
-                    onPress={() =>
-                      this.setState({ amountFiat: !amountFiat })
-                    }
-                  >{`~${_price} ${
-                    amountFiat ? selectedCoin.id : displayCurrency
-                  }`}</Text>
-                ) : null
-              }
-              onChangeText={(text) => this.setState({ amount: text })}
-              keyboardType={"decimal-pad"}
-              autoCapitalize="words"
-              errorMessage={errors.amount ? errors.amount : null}
-            />
-          </View>
-          <View style={Styles.wideBlock}>
-            <Input
-              labelStyle={Styles.formInputLabel}
-              onChangeText={(text) => this.setState({ memo: text })}
-              autoCapitalize={"none"}
-              label={"Enter a note for the receiver (optional):"}
-              autoCorrect={false}
-              shake={errors.memo}
-              errorMessage={errors.memo ? errors.memo : null}
-            />
-          </View>
-          <View style={Styles.wideBlock}>
-            <StandardButton
-              color={Colors.linkButtonColor}
-              title="GENERATE QR"
-              onPress={validateFormData}
-            />
-          </View>
-        </ScrollView>
-      </View>
-    );
+    return RenderReceiveCoin.call(this)
   }
 }
 

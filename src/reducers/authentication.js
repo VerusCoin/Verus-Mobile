@@ -75,7 +75,7 @@ export const authentication = (
             ...state.activeAccount.keys,
             [action.payload.chainTicker]: {
               ...state.activeAccount.keys[action.payload.chainTicker],
-              dlight: {
+              dlight_private: {
                 ...currentDlightAddrs,
                 addresses: action.payload.addresses
               }

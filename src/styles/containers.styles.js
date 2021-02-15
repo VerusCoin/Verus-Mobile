@@ -232,6 +232,9 @@ export default containers = {
   halfWidthBox: {
     maxWidth: '50%',
   },
+  threeQuarterWidthBlock: {
+    maxWidth: '75%',
+  },
   horizontalPaddingBox: {
     paddingHorizontal: '25%',
   },
