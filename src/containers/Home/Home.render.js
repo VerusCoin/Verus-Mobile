@@ -7,47 +7,53 @@ import {
   RefreshControl,
   Animated
 } from "react-native";
-import { List, Text, Card, IconButton, Provider } from 'react-native-paper';
+import { List, Text, Card, IconButton, Provider, Portal } from 'react-native-paper';
 import { SUBWALLET_NAMES } from "../../utils/constants/constants";
 import { truncateDecimal } from "../../utils/math";
 import BigNumber from "bignumber.js";
 import styles from "../../styles";
 import { HomeListItemThemeDark, HomeListItemThemeLight } from "./Home.themes";
-import { RenderSquareLogo } from "../../utils/CoinData/Graphics";
 import Colors from "../../globals/colors";
+import HomeFAB from "./HomeFAB/HomeFAB";
 
 export const HomeRender = function() {
   return (
-    <ScrollView
-      style={styles.fullWidth}
-      refreshControl={
-        <RefreshControl
-          refreshing={this.state.loading}
-          onRefresh={this.forceUpdate}
+    <Portal.Host>
+      <ScrollView
+        style={{...styles.fullWidth, ...styles.backgroundColorWhite}}
+        refreshControl={
+          <RefreshControl
+            refreshing={this.state.loading}
+            onRefresh={this.forceUpdate}
+          />
+        }
+      >
+        <HomeFAB 
+          handleAddCoin={() => this._addCoin()}
+          handleVerusPay={() => this._verusPay()}
         />
-      }
-    >
-      <List.Section>
-        <View
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-            flexDirection: "row",
-            padding: 8
-          }}
-        >
-          <Text style={{ fontSize: 16, fontWeight: "bold" }}>{"Wallets"}</Text>
-          <View style={{ display: "flex", flexDirection: "column" }}>
-            <Text style={{ fontSize: 10 }}>{"Total Value"}</Text>
-            <Text style={{ fontSize: 16, fontWeight: "bold" }}>{`${
-              this.state.totalFiatBalance
-            } ${this.props.displayCurrency}`}</Text>
+        <List.Section>
+          <View
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              flexDirection: "row",
+              padding: 8
+            }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: "bold" }}>{"Wallets"}</Text>
+            <View style={{ display: "flex", flexDirection: "column" }}>
+              <Text style={{ fontSize: 10 }}>{"Total Value"}</Text>
+              <Text style={{ fontSize: 16, fontWeight: "bold" }}>{`${
+                this.state.totalFiatBalance
+              } ${this.props.displayCurrency}`}</Text>
+            </View>
           </View>
-        </View>
-        {HomeRenderCoinsList.call(this)}
-      </List.Section>
-    </ScrollView>
+          {HomeRenderCoinsList.call(this)}
+        </List.Section>
+      </ScrollView>
+    </Portal.Host>
   );
 };
 

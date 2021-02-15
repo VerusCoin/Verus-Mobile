@@ -71,17 +71,6 @@ class AddCoin extends Component {
     }
   };
 
-  /*searchFilterFunction = text => {    
-    const newData = this.arrayholder.filter(item => {      
-      const itemData = `${item.id.toUpperCase()}   
-      ${item.name.toUpperCase()}`;
-       const textData = text.toUpperCase();
-        
-       return itemData.indexOf(textData) > -1;    
-    });    
-    this.setState({ dataFull: newData });  
-  };*/
-
   getCoinList = () => {
     const activeCoinIds = this.props.activeCoinsForUser.map(coinObj => coinObj.id)
     const { query } = this.state
@@ -119,7 +108,7 @@ class AddCoin extends Component {
             autoCorrect={false}
           />
         }
-        style={Styles.fullWidth}
+        style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}
         data={this.state.coinList}
         onEndReached={this.onEndReached}
         onEndReachedThreshold={50}
