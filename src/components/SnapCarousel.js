@@ -2,6 +2,7 @@ import * as React from "react";
 import { Text, View } from "react-native";
 
 import Carousel from "react-native-snap-carousel";
+import { triggerLightHaptic } from "../utils/haptics/haptics";
 
 export default class SnapCarousel extends React.Component {
   constructor(props) {
@@ -40,7 +41,10 @@ export default class SnapCarousel extends React.Component {
           renderItem={
             this.props.renderItem ? this.props.renderItem : this._renderItem
           }
-          onSnapToItem={(index) => this.props.onSnapToItem(index)}
+          onSnapToItem={(index) => {
+            triggerLightHaptic()
+            this.props.onSnapToItem(index)
+          }}
           {...extraProps}
         />
     );

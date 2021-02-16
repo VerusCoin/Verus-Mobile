@@ -6,7 +6,7 @@ import React, { Component } from "react";
 import NumberPad, { Input, Display } from '../NumberPad/index';
 import SemiModal from "../SemiModal";
 import { IconButton } from "react-native-paper"
-import { SafeAreaView } from "react-native";
+import { triggerLightHaptic } from "../../utils/haptics/haptics";
 
 class NumberPadModal extends Component {
   constructor(props) {
@@ -38,7 +38,10 @@ class NumberPadModal extends Component {
             value={value}
             decimals={decimals}
             autofocus
-            onChange={(number) => onChange(number)}
+            onChange={(number) => {
+              triggerLightHaptic()
+              onChange(number)
+            }}
           />
           <Input
             backspaceIcon={
