@@ -8,6 +8,7 @@
 
 import React, { Component } from "react";
 import { ListItem } from "react-native-elements";
+import { Divider, List } from "react-native-paper"
 import { 
   View, 
   Text, 
@@ -19,8 +20,9 @@ import Styles from '../../../styles/index'
 import { getSupportedBiometryType, removeBiometricPassword, storeBiometricPassword } from "../../../utils/biometry/biometry";
 import { setBiometry } from "../../../actions/actionCreators";
 import PasswordCheck from "../../../components/PasswordCheck";
-import AlertAsync from "react-native-alert-async";
-import { BIOMETRY_WARNING } from "../../../utils/constants/constants";
+import { canEnableBiometry, canShowSeed } from "../../../actions/actions/channels/dlight/dispatchers/AlertManager";
+import { createAlert } from "../../../actions/actions/alert/dispatchers/alert";
+import { checkPinForUser } from "../../../utils/asyncStore/asyncStore";
 
 const RESET_PWD = "ResetPwd"
 const RECOVER_SEED = "RecoverSeed"
@@ -40,6 +42,7 @@ class ProfileSettings extends Component {
         display_name: null,
         biometry: false,
       },
+      onPasswordCorrect: () => {},
     };
   }
 
@@ -49,80 +52,100 @@ class ProfileSettings extends Component {
     navigation.navigate(screen);
   };
 
-  canEnableBiometry = () => {
-    return AlertAsync(
-      "Enable biometric authentication?",
-      BIOMETRY_WARNING,
-      [
-        {
-          text: "No",
-          onPress: () => Promise.resolve(false),
-          style: "cancel",
-        },
-        { text: "Yes", onPress: () => Promise.resolve(true) },
-      ],
-      {
-        cancelable: false,
-      }
-    )
-  }
-
   async componentDidMount() {
     this.setState({ supportedBiometryType: await getSupportedBiometryType() });
   }
 
   closePasswordDialog = (cb) => {
-    this.setState({
-      passwordDialogOpen: false,
-    }, cb)
-  }
+    this.setState(
+      {
+        passwordDialogOpen: false,
+        onPasswordCorrect: () => {},
+      },
+      cb
+    );
+  };
 
   toggleBiometry = async (passwordCheck) => {
     if (passwordCheck.valid) {
-      const { activeAccount } = this.props
-      const { supportedBiometryType } = this.state
-      const { biometry, accountHash, id } = activeAccount
+      const { activeAccount } = this.props;
+      const { supportedBiometryType } = this.state;
+      const { biometry, accountHash, id } = activeAccount;
 
       this.closePasswordDialog(async () => {
         try {
-          if (accountHash == null) throw new Error("No account hash for profile: " + id)
+          if (accountHash == null)
+            throw new Error("No account hash for profile: " + id);
 
           if (biometry) {
-            await removeBiometricPassword(accountHash)
-            this.props.dispatch(await setBiometry(id, false))
-            Alert.alert("Success", `${supportedBiometryType.display_name} authentication disabled for profile "${id}"`)
+            await removeBiometricPassword(accountHash);
+            this.props.dispatch(await setBiometry(id, false));
+            createAlert(
+              "Success",
+              `${
+                supportedBiometryType.display_name
+              } authentication disabled for profile "${id}"`
+            );
           } else {
-            await storeBiometricPassword(accountHash, passwordCheck.password)
-            this.props.dispatch(await setBiometry(id, true))
-            Alert.alert("Success", `${supportedBiometryType.display_name} authentication enabled for profile "${id}"`)
+            await storeBiometricPassword(accountHash, passwordCheck.password);
+            this.props.dispatch(await setBiometry(id, true));
+            createAlert(
+              "Success",
+              `${
+                supportedBiometryType.display_name
+              } authentication enabled for profile "${id}"`
+            );
           }
-        } catch(e) {
-          console.warn(e)
-          Alert.alert(
+        } catch (e) {
+          console.warn(e);
+          createAlert(
             "Error",
             `Failed to ${
               biometry ? "disable" : "enable"
-            } biometric authentication (${
-              supportedBiometryType.display_name
-            }).`
+            } biometric authentication (${supportedBiometryType.display_name}).`
           );
         }
-        
-      })
+      });
     } else {
-      Alert.alert("Authentication Error", "Incorrect password")
+      createAlert("Authentication Error", "Incorrect password");
     }
-  }
+  };
 
-  openPasswordCheck = () =>
+  showSeed = async (passwordCheck) => {
+    if (passwordCheck.valid) {
+      const { activeAccount } = this.props;
+      const { id } = activeAccount;
+
+      this.closePasswordDialog(async () => {
+        checkPinForUser(passwordCheck.password, id)
+          .then((seeds) => {
+            this.setState({ password: null }, () => {
+              this.props.navigation.navigate("DisplaySeed", {
+                data: { seeds },
+              });
+            });
+          })
+          .catch((e) => {
+            console.warn(e);
+          });
+      });
+    } else {
+      createAlert("Authentication Error", "Incorrect password");
+    }
+  };
+
+  openPasswordCheck = (onPasswordCorrect) =>
     this.setState({
       passwordDialogOpen: true,
-      passwordDialogTitle: `Enter password for "${this.props.activeAccount.id}"`,
+      passwordDialogTitle: `Enter password for "${
+        this.props.activeAccount.id
+      }"`,
+      onPasswordCorrect,
     });
 
   renderSettingsList = () => {
     return (
-      <ScrollView style={Styles.wide}>
+      <ScrollView style={Styles.fullWidthBlock}>
         {/* TODO: Add back in when more interesting profile data and/or settings are implemented
           <TouchableOpacity onPress={() => this._openSettings(PROFILE_INFO)}>
             <ListItem                       
@@ -131,74 +154,75 @@ class ProfileSettings extends Component {
               containerStyle={{ borderBottomWidth: 0 }} 
             />
           </TouchableOpacity>*/}
-        <TouchableOpacity onPress={() => this._openSettings(RECOVER_SEED)}>
-          <ListItem
-            title="Recover Seed"
-            titleStyle={Styles.listItemLeftTitleDefault}
-            leftIcon={{ name: "lock-open" }}
-            containerStyle={Styles.bottomlessListItemContainer}
-            chevron
+        <List.Subheader>{"Security Settings"}</List.Subheader>
+        <TouchableOpacity
+          onPress={async () => {
+            if (await canShowSeed()) this.openPasswordCheck(this.showSeed);
+          }}
+        >
+          <Divider />
+          <List.Item
+            title={"Recover Seed"}
+            left={(props) => <List.Icon {...props} icon={"lock-open"} />}
+            right={(props) => (
+              <List.Icon {...props} icon={"chevron-right"} size={20} />
+            )}
           />
+          <Divider />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => this._openSettings(RESET_PWD)}>
-          <ListItem
-            title="Reset Password"
-            titleStyle={Styles.listItemLeftTitleDefault}
-            leftIcon={{ name: "autorenew" }}
-            containerStyle={Styles.bottomlessListItemContainer}
-            chevron
+          <List.Item
+            title={"Change Password"}
+            left={(props) => <List.Icon {...props} icon={"lock-reset"} />}
+            right={(props) => (
+              <List.Icon {...props} icon={"chevron-right"} size={20} />
+            )}
           />
+          <Divider />
         </TouchableOpacity>
-        {(this.props.activeAccount.biometry || this.state.supportedBiometryType.biometry) && (
-          <TouchableOpacity onPress={async () => {
-            if (this.props.activeAccount.biometry) {
-              this.openPasswordCheck()
-            } else if (await this.canEnableBiometry()) this.openPasswordCheck()
-          }}>
-            <ListItem
+        {(this.props.activeAccount.biometry ||
+          this.state.supportedBiometryType.biometry) && (
+          <TouchableOpacity
+            onPress={async () => {
+              if (this.props.activeAccount.biometry) {
+                this.openPasswordCheck(this.toggleBiometry);
+              } else if (await canEnableBiometry())
+                this.openPasswordCheck(this.toggleBiometry);
+            }}
+          >
+            <List.Item
               title={`${
                 this.props.activeAccount.biometry ? "Disable" : "Setup"
-              } biometric login (${
-                this.state.supportedBiometryType.display_name
-              })`}
-              titleStyle={Styles.listItemLeftTitleDefault}
-              leftIcon={{ name: "lock" }}
-              containerStyle={Styles.bottomlessListItemContainer}
+              } biometric login`}
+              left={(props) => <List.Icon {...props} icon={"lock"} />}
+              right={(props) => <List.Icon {...props} icon={"chevron-right"} />}
             />
+            <Divider />
           </TouchableOpacity>
         )}
-        <PasswordCheck 
+        <PasswordCheck
           cancel={() => this.closePasswordDialog()}
-          submit={this.toggleBiometry}
+          submit={(result) => this.state.onPasswordCorrect(result)}
           visible={this.state.passwordDialogOpen}
           title={this.state.passwordDialogTitle}
           userName={this.props.activeAccount.id}
         />
+        <List.Subheader>{"Profile Actions"}</List.Subheader>
         <TouchableOpacity onPress={() => this._openSettings(REMOVE_PROFILE)}>
-          <ListItem
-            title="Delete Profile"
-            titleStyle={Styles.listItemLeftTitleDefault}
-            leftIcon={{ name: "delete-forever" }}
-            containerStyle={Styles.bottomlessListItemContainer}
-            chevron
+          <Divider />
+          <List.Item
+            title={"Delete Profile"}
+            left={(props) => <List.Icon {...props} icon={"trash-can"} />}
+            right={(props) => <List.Icon {...props} icon={"chevron-right"} />}
           />
+          <Divider />
         </TouchableOpacity>
       </ScrollView>
     );
   };
 
   render() {
-    return (
-      <View style={Styles.defaultRoot}>
-        <Text style={Styles.largeCentralPaddedHeader}>
-          {this.props.activeAccount.id.length < 15
-            ? this.props.activeAccount.id
-            : "My Account"}
-        </Text>
-        <Text style={Styles.greyStripeHeader}>Profile Settings</Text>
-        {this.renderSettingsList()}
-      </View>
-    );
+    return <View style={Styles.defaultRoot}>{this.renderSettingsList()}</View>;
   }
 }
 

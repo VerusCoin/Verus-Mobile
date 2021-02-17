@@ -19,6 +19,8 @@ import { clearCacheData } from '../../../actions/actionCreators';
 import Styles from '../../../styles/index'
 import { ELECTRUM } from "../../../utils/constants/intervalConstants";
 import { CoinLogos } from "../../../utils/CoinData/CoinData";
+import { Divider, List } from "react-native-paper"
+import { RenderSquareCoinLogo } from "../../../utils/CoinData/Graphics";
 
 const GENERAL_WALLET_SETTINGS = "GeneralWalletSettings"
 const COIN_SETTINGS = "CoinSettings"
@@ -90,53 +92,76 @@ class WalletSettings extends Component {
   }
 
   renderSettingsList = () => {
+    const electrumCoins = this.props.activeCoinsForUser.filter((coin) => coin.compatible_channels.includes(ELECTRUM))
     return (
-      <ScrollView style={Styles.wide}>
+      <ScrollView style={Styles.fullWidthBlock}>
+        <List.Subheader>{"Wallet Settings"}</List.Subheader>
+        <TouchableOpacity
+          onPress={() => this._openSettings(GENERAL_WALLET_SETTINGS)}
+        >
+          <Divider />
+            <List.Item
+              title={"General Settings"}
+              left={(props) => (
+                <List.Icon {...props} icon={"card-bulleted-settings"} />
+              )}
+              right={(props) => (
+                <List.Icon {...props} icon={"chevron-right"} />
+              )}
+            />
+          <Divider />
+        </TouchableOpacity>
+        <List.Subheader>{"Wallet Actions"}</List.Subheader>
         <TouchableOpacity onPress={() => this.clearCache()}>
-          <ListItem                       
-            title="Clear Data Cache"
-            titleStyle={Styles.listItemLeftTitleDefault}
-            leftIcon={{name: 'clear-all'}}
-            containerStyle={Styles.bottomlessListItemContainer} 
-          />
+          <Divider />
+            <List.Item
+              title={"Clear Cache"}
+              left={(props) => (
+                <List.Icon {...props} icon={"notification-clear-all"} />
+              )}
+            />
+          <Divider />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => this._openSettings(GENERAL_WALLET_SETTINGS)}>
-          <ListItem                       
-            title="General Settings"
-            titleStyle={Styles.listItemLeftTitleDefault}
-            leftIcon={{name: 'settings-applications'}}
-            containerStyle={Styles.bottomlessListItemContainer} 
-            chevron
-          />
-        </TouchableOpacity>
-        {this.props.activeCoinsForUser.filter((coin) => coin.compatible_channels.includes(ELECTRUM)).map((coin, index) => {
-          const Logo = CoinLogos[coin.id.toLowerCase()].dark
+        {electrumCoins.length > 0 && (
+          <React.Fragment>
+            <List.Subheader>{"Coin Settings"}</List.Subheader>
+            <Divider />
+          </React.Fragment>
+        )}
+        {electrumCoins.map((coin, index) => {
           return (
-            <TouchableOpacity 
-              onPress={() => this._openSettings(COIN_SETTINGS, coin.id, coin.display_name)}
-              key={index}>
-              <ListItem
+            <TouchableOpacity
+              onPress={() =>
+                this._openSettings(
+                  COIN_SETTINGS,
+                  coin.id,
+                  coin.display_name
+                )
+              }
+              key={index}
+            >
+              <List.Item
                 title={`${coin.display_name} Settings`}
-                titleStyle={Styles.listItemLeftTitleDefault}
-                leftAvatar={Logo ? <Logo width={25} height={25}/> : null}
-                containerStyle={Styles.bottomlessListItemContainer} 
-                chevron
+                left={(props) => (
+                  <View {...props}>
+                    {RenderSquareCoinLogo(coin.id.toLowerCase())}
+                  </View>
+                )}
+                right={(props) => (
+                  <List.Icon {...props} icon={"chevron-right"} />
+                )}
               />
+              <Divider />
             </TouchableOpacity>
-          )
+          );
         })}
       </ScrollView>
-    )
+    );
   }
 
   render() {
     return (
       <View style={Styles.defaultRoot}>
-        <Text style={Styles.largeCentralPaddedHeader}>
-        {this.props.activeAccount.id.length < 15 ? 
-          this.props.activeAccount.id : "My Account"}
-        </Text>
-        <Text style={Styles.greyStripeHeader}>{"Wallet Settings"}</Text>
         {this.renderSettingsList()}
       </View>
     );

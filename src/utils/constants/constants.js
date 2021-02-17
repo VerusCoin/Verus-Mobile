@@ -51,9 +51,9 @@ export const MAX_VERIFICATION = 2;
 export const NO_VERIFICATION_DESC = 'No Verification (Not recommended):\n\nOn this setting, before sending a transaction, none of your funds will be ' +
     'cross-verified across different electrum servers, and your existing transactions will not be ' +
     'hashed to check against their transaction ID. This is only suggested for huge wallets that ' +
-    'otherwise wouldn\'t be able to send.';
+    'otherwise would not be able to send.';
 export const MID_VERIFICATION_DESC = 'Incomplete Verification (Not recommended):\n\nOn this setting, your funds will not be cross verified across multiple ' +
-    'servers, but you may experience a little quicker transaction sending times. This is not recommended unless ' +
+    'servers, but you may experience quicker transaction send times. This is not recommended unless ' +
     'necessary for usability.';
 export const MAX_VERIFICATION_DESC = 'Complete Verification (Highly recommended):\n\nOn this setting, before sending a transaction, your funds will be ' +
     'cross verified across at least two different electrum servers, and the transaction IDs of your existing ' +
@@ -155,3 +155,6 @@ export const SUBWALLET_NAMES = {
 //Display 
 export const DEVICE_WINDOW_WIDTH = Dimensions.get('window').width;
 export const DEVICE_WINDOW_HEIGHT = Dimensions.get('window').height;
+
+// Init
+export const START_COINS = ["VRSC", "BTC", "ETH"]

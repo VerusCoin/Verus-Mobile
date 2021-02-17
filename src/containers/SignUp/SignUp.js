@@ -5,32 +5,26 @@
   It is crucial that they understand the importance of their seed.
 */  
 
-import React, { Component } from "react"
-import StandardButton from "../../components/StandardButton"
+import { Component } from "react"
 import { 
-  View, 
-  Text, 
-  ScrollView, 
   Keyboard,
-  TouchableWithoutFeedback,
   Alert,
-  ListView
 } from "react-native"
 import { NavigationActions } from '@react-navigation/compat'
-import { Input, CheckBox } from 'react-native-elements'
-import { addUser, disableSelectDefaultAccount } from '../../actions/actionCreators'
+import { addCoin, addUser, disableSelectDefaultAccount } from '../../actions/actionCreators'
 import { connect } from 'react-redux'
 import AlertAsync from 'react-native-alert-async'
-import SetupSeedModal from '../../components/SetupSeedModal/SetupSeedModal'
-import Styles from '../../styles/index'
-import Colors from '../../globals/colors';
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers"
 import { DLIGHT_PRIVATE, ELECTRUM, CHANNELS_NULL_TEMPLATE, CHANNELS } from "../../utils/constants/intervalConstants"
 import { arrayToObject } from "../../utils/objectManip"
 import { ENABLE_DLIGHT } from '../../../env/main.json'
 import { getSupportedBiometryType, storeBiometricPassword } from "../../utils/biometry/biometry"
 import { hashAccountId } from "../../utils/crypto/hash"
-import { BIOMETRY_WARNING } from "../../utils/constants/constants"
+import { BIOMETRY_WARNING, START_COINS } from "../../utils/constants/constants"
+import { SignUpRender } from "./SignUp.render"
+import { createAlert } from "../../actions/actions/alert/dispatchers/alert"
+import { findCoinObj } from "../../utils/CoinData/CoinData"
+import { canCopySeed } from "../../actions/actions/channels/dlight/dispatchers/AlertManager"
 
 class SignUp extends Component {
   constructor() {
@@ -153,7 +147,7 @@ class SignUp extends Component {
         }
 
         if (_seeds[ELECTRUM] == null || (_seeds[DLIGHT_PRIVATE] == null && ENABLE_DLIGHT === true)) {
-          Alert.alert(
+          createAlert(
             "Error",
             "Please configure both a primary seed, and a secondary seed."
           );
@@ -173,14 +167,14 @@ class SignUp extends Component {
           _errors = true;
         }
 
-        if (!_disclaimerRealized && !_errors) {
-          //this.handleError("Ensure you are aware of the risks of sharing your passphrase/seed", "disclaimerRealized")
-          Alert.alert(
-            "Wait!",
-            "Ensure you are aware of the risks of sharing your passphrase/seed"
-          );
-          _errors = true;
-        }
+        // if (!_disclaimerRealized && !_errors) {
+        //   //this.handleError("Ensure you are aware of the risks of sharing your passphrase/seed", "disclaimerRealized")
+        //   createAlert(
+        //     "Wait!",
+        //     "Ensure you are aware of the risks of sharing your passphrase/seed"
+        //   );
+        //   _errors = true;
+        // }
 
         if (!_errors && !_warnings) {
           let biometry = false
@@ -200,8 +194,12 @@ class SignUp extends Component {
             this.state.pin,
             this.props.accounts,
             biometry
-          ).then((action) => {
+          ).then(async (action) => {
             this.createAccount(action);
+            await this.addStartingCoins(this.state.userName)
+          })
+          .catch((e) => {
+            console.warn(e);
           });
         } else if (!_errors) {
           this.canMakeAccount()
@@ -225,8 +223,9 @@ class SignUp extends Component {
                   this.props.accounts,
                   biometry
                 )
-                  .then((action) => {
+                  .then(async (action) => {
                     this.createAccount(action)
+                    await this.addStartingCoins(this.state.userName)
                   })
                   .catch((e) => {
                     console.warn(e);
@@ -242,12 +241,25 @@ class SignUp extends Component {
   };
 
   createAccount(accountAction) {
-    Alert.alert(
+    createAlert(
       "Account Created!",
       `${this.state.userName} account has been created. Login to continue.`
     );
 
     this.props.dispatch(accountAction);
+  }
+
+  async addStartingCoins(accountId) {
+    for (const coinId of START_COINS) {
+      const fullCoinData = findCoinObj(coinId, accountId)
+
+      this.props.dispatch(await addCoin(
+        fullCoinData,
+        this.props.activeCoinList,
+        accountId,
+        []
+      ))
+    }
   }
 
   scanSeed = () => {
@@ -258,47 +270,13 @@ class SignUp extends Component {
     this.setState({ scanning: false });
   };
 
-  canEnableBiometry = () => {
-    return AlertAsync(
-      "Enable biometric authentication?",
-      BIOMETRY_WARNING,
-      [
-        {
-          text: "No",
-          onPress: () => Promise.resolve(false),
-          style: "cancel",
-        },
-        { text: "Yes", onPress: () => Promise.resolve(true) },
-      ],
-      {
-        cancelable: false,
-      }
-    )
-  }
-
   setupSeed = (channel) => {
     const { seeds } = this.state;
     const oppositeChannel = channel === ELECTRUM ? DLIGHT_PRIVATE : ELECTRUM;
 
     if (!seeds[channel] && seeds[oppositeChannel]) {
-      AlertAsync(
-        "Copy Seed?",
-        "Would you like to use the same seed as both your primary seed, and secondary seed?." +
-          "\n\n" +
-          "If you use private addresses and transactions, this would make your private addresses derived from the same source as your transparent addresses.",
-        [
-          {
-            text: "No",
-            onPress: () => Promise.resolve(false),
-            style: "cancel",
-          },
-          { text: "Yes", onPress: () => Promise.resolve(true) },
-        ],
-        {
-          cancelable: false,
-        }
-      ).then((canCopySeed) => {
-        if (canCopySeed) {
+      canCopySeed().then((res) => {
+        if (res) {
           this.setState({
             seeds: {
               ...seeds,
@@ -344,180 +322,7 @@ class SignUp extends Component {
   };
 
   render() {
-    return (
-      <React.Fragment>
-        <View style={Styles.headerContainer}>
-          <Text style={Styles.centralHeader}>Create New Profile</Text>
-        </View>
-        <TouchableWithoutFeedback
-          onPress={Keyboard.dismiss}
-          accessible={false}
-        >
-          <View style={Styles.flexBackground}>
-            <ScrollView
-              contentContainerStyle={{
-                ...Styles.centerContainer,
-                ...Styles.innerHeaderFooterContainer,
-              }}
-            >
-              <SetupSeedModal
-                animationType="slide"
-                transparent={false}
-                visible={this.state.publicSeedModalOpen}
-                qrString={this.state.verusQRString}
-                cancel={() => {
-                  this.setState({ publicSeedModalOpen: false });
-                }}
-                setSeed={(seed, channel) => {
-                  this.setState({
-                    seeds: { ...this.state.seeds, [channel]: seed },
-                  });
-                }}
-                channel={ELECTRUM}
-              />
-              <SetupSeedModal
-                animationType="slide"
-                transparent={false}
-                visible={this.state.privateSeedModalOpen}
-                qrString={this.state.verusQRString}
-                cancel={() => {
-                  this.setState({ privateSeedModalOpen: false });
-                }}
-                setSeed={(seed, channel) => {
-                  this.setState({
-                    seeds: { ...this.state.seeds, [channel]: seed },
-                  });
-                }}
-                channel={DLIGHT_PRIVATE}
-              />
-              <View style={Styles.wideBlock}>
-                <Input
-                  labelStyle={Styles.formInputLabel}
-                  containerStyle={Styles.fullWidthBlock}
-                  inputStyle={Styles.inputTextDefaultStyle}
-                  label={"Enter a username:"}
-                  onChangeText={(text) => this.setState({ userName: text })}
-                  autoCapitalize={"none"}
-                  autoCorrect={false}
-                  errorMessage={
-                    this.state.errors.userName
-                      ? this.state.errors.userName
-                      : null
-                  }
-                />
-              </View>
-              <View style={Styles.wideBlock}>
-                <CheckBox
-                  title={
-                    ENABLE_DLIGHT
-                      ? "Setup Primary (T Address) Seed"
-                      : "Setup Wallet Seed"
-                  }
-                  checked={this.state.seeds[ELECTRUM] != null}
-                  textStyle={Styles.defaultText}
-                  onPress={() => this.setupSeed(ELECTRUM)}
-                />
-                {ENABLE_DLIGHT && (
-                  <CheckBox
-                    title="Setup Secondary (Z Address) Seed"
-                    checked={this.state.seeds[DLIGHT_PRIVATE] != null}
-                    textStyle={Styles.defaultText}
-                    onPress={() => this.setupSeed(DLIGHT_PRIVATE)}
-                  />
-                )}
-              </View>
-              <View style={Styles.fullWidthFlexCenterBlock}>
-                <View style={Styles.wideBlock}>
-                  <Input
-                    labelStyle={Styles.formInputLabel}
-                    label={"Enter a profile password (min. 5 characters):"}
-                    inputStyle={Styles.inputTextDefaultStyle}
-                    onChangeText={(text) => this.setState({ pin: text })}
-                    autoCapitalize={"none"}
-                    autoCorrect={false}
-                    secureTextEntry={true}
-                    errorMessage={
-                      this.state.errors.pin ? this.state.errors.pin : null
-                    }
-                  />
-                </View>
-                <View style={Styles.wideBlock}>
-                  <Input
-                    labelStyle={Styles.formInputLabel}
-                    label={"Confirm profile password:"}
-                    inputStyle={Styles.inputTextDefaultStyle}
-                    onChangeText={(text) =>
-                      this.setState({ confirmPin: text })
-                    }
-                    autoCapitalize={"none"}
-                    autoCorrect={false}
-                    secureTextEntry={true}
-                    errorMessage={
-                      this.state.errors.confirmPin
-                        ? this.state.errors.confirmPin
-                        : null
-                    }
-                  />
-                </View>
-              </View>
-              <View style={Styles.wideBlock}>
-                <CheckBox
-                  title="I realize anybody with access to my seed will have access to my funds"
-                  checked={this.state.disclaimerRealized}
-                  textStyle={Styles.defaultText}
-                  onPress={() =>
-                    this.setState({
-                      disclaimerRealized: !this.state.disclaimerRealized,
-                    })
-                  }
-                />
-              </View>
-              {this.state.biometricAuth.biometry && (
-                <View style={Styles.wideBlock}>
-                  <CheckBox
-                    title={`Enable biometric authentication`}
-                    checked={this.state.enableBiometry}
-                    textStyle={Styles.defaultText}
-                    onPress={async () => {
-                      if (
-                        !this.state.enableBiometry &&
-                        (await this.canEnableBiometry())
-                      ) {
-                        this.setState({
-                          enableBiometry: true,
-                        });
-                      } else this.setState({ enableBiometry: false });
-                    }}
-                  />
-                </View>
-              )}
-            </ScrollView>
-          </View>
-        </TouchableWithoutFeedback>
-        <View style={Styles.footerContainer}>
-          <View
-            style={
-              this.hasAccount()
-                ? Styles.standardWidthSpaceBetweenBlock
-                : Styles.fullWidthFlexCenterBlock
-            }
-          >
-            {this.hasAccount() && (
-              <StandardButton
-                title="CANCEL"
-                onPress={this.cancel}
-                color={Colors.warningButtonColor}
-              />
-            )}
-            <StandardButton
-              title="ADD ACCOUNT"
-              onPress={this._handleSubmit}
-              color={Colors.successButtonColor}
-            />
-          </View>
-        </View>
-      </React.Fragment>
-    );
+    return SignUpRender.call(this);
   }
 }
 

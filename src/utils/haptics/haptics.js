@@ -8,5 +8,5 @@ export const triggerHaptic = (type) => {
 }
 
 export const triggerLightHaptic = () => {
-  triggerHaptic(impactLight)
+  triggerHaptic("impactLight")
 }

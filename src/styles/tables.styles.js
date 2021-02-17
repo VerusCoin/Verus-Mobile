@@ -21,7 +21,8 @@ export default tables = {
   },
   listItemTableCell: {
     fontSize: 16,
-    alignSelf: "center"
+    alignSelf: "center",
+    paddingRight: 6
   },
   infoTableHeaderCell: {
     fontSize: 16,

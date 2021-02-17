@@ -5,20 +5,18 @@
 */
 
 import React, { Component } from "react";
-import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
   ScrollView, 
 } from "react-native";
 import { NavigationActions } from '@react-navigation/compat';
-import { Input } from 'react-native-elements'
 import { connect } from 'react-redux';
 import QRCode from 'react-native-qrcode-svg';
 import Styles from '../../../../styles/index'
 import Colors from "../../../../globals/colors";
 import { CommonActions } from '@react-navigation/native';
-import { ELECTRUM } from "../../../../utils/constants/intervalConstants";
-import { Dropdown } from "react-native-material-dropdown";
+import { DLIGHT_PRIVATE, ELECTRUM } from "../../../../utils/constants/intervalConstants";
+import { Card, Paragraph, Title, Button } from 'react-native-paper'
 
 class DisplaySeed extends Component {
   constructor() {
@@ -29,6 +27,11 @@ class DisplaySeed extends Component {
       selectedSeedType: ELECTRUM,
       dualSameSeed: false,
     };
+
+    this.SEED_NAMES = {
+      [DLIGHT_PRIVATE]: "Secondary (Z-Address) Seed",
+      [ELECTRUM]: "Primary (T-Address) Seed"
+    }
   }
 
   componentDidMount() {
@@ -80,7 +83,7 @@ class DisplaySeed extends Component {
   };
 
   render() {
-    const { seeds, selectedSeedType, dualSameSeed } = this.state;
+    const { seeds } = this.state;
 
     return (
       <View style={Styles.defaultRoot}>
@@ -88,57 +91,37 @@ class DisplaySeed extends Component {
           style={Styles.fullWidth}
           contentContainerStyle={{
             ...Styles.innerHeaderFooterContainerCentered,
-            ...Styles.fullHeight,
           }}
         >
-          <View style={Styles.wideBlock}>
-            <Dropdown
-              valueExtractor={(item) =>
-                Object.keys(seeds).find((seedType) => seeds[seedType] == item)
-              }
-              data={Object.values(seeds)}
-              onChangeText={(value) =>
-                this.setState({ selectedSeedType: value })
-              }
-              disabled={dualSameSeed}
-              renderBase={() => (
-                <Input
-                  label={`${
-                    dualSameSeed
-                      ? "Primary & Secondary"
-                      : selectedSeedType === ELECTRUM
-                      ? "Primary"
-                      : "Secondary"
-                  } seed:`}
-                  labelStyle={Styles.formCenterLabel}
-                  value={seeds[selectedSeedType]}
-                  inputStyle={Styles.seedText}
-                  multiline={true}
-                />
-              )}
-              renderAccessory={dualSameSeed ? () => null : undefined}
-            />
+          <View style={Styles.fullWidthFlexCenterBlock}>
+            {Object.keys(seeds).map((key) => {
+              return seeds[key] == null ? null : (
+                <View style={Styles.wideBlock}>
+                  <Card elevation={2}>
+                    <Card.Content>
+                      <Title>{this.SEED_NAMES[key]}</Title>
+                      <Paragraph>{seeds[key]}</Paragraph>
+                      <View style={Styles.fullWidthFlexCenterBlock}>
+                        <QRCode value={seeds[key]} size={250} />
+                      </View>
+                    </Card.Content>
+                  </Card>
+                </View>
+              );
+            })}
           </View>
-          {seeds && seeds[selectedSeedType] && (
-            <View
-              style={Styles.fullWidthAlignCenterRowBlock}
-            >
-              <QRCode value={seeds[selectedSeedType]} size={250} />
-            </View>
-          )}
         </ScrollView>
         <View style={Styles.highFooterContainer}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <StandardButton
-              color={Colors.warningButtonColor}
-              title="BACK"
-              onPress={this.back}
-            />
-            <StandardButton
+            <Button color={Colors.warningButtonColor} onPress={this.back}>
+              {"Back"}
+            </Button>
+            <Button
               color={Colors.linkButtonColor}
-              title={this.state.fromDeleteAccount ? "CONTINUE" : "HOME"}
               onPress={this.resetToScreen}
-            />
+            >
+              {this.state.fromDeleteAccount ? "CONTINUE" : "HOME"}
+            </Button>
           </View>
         </View>
       </View>

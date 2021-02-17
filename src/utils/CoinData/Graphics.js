@@ -15,6 +15,7 @@ export const RenderSquareLogo = (LogoComponent, color, width = 40, height = 40) 
         justifyContent: "center",
         flexDirection: "row",
       }}
+      elevation={0}
     >
       {LogoComponent}
     </Card>

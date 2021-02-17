@@ -11,7 +11,8 @@ import {
   deleteUserFromCoin
 } from './asyncStore'
 import { hashAccountId } from "../crypto/hash";
-import { CHANNELS_NULL_TEMPLATE } from "../constants/intervalConstants";
+import { CHANNELS_NULL_TEMPLATE, DLIGHT_PRIVATE, ELECTRUM } from "../constants/intervalConstants";
+import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 
 //Set storage to hold encrypted user data
 export const storeUser = (authData, users) => {
@@ -102,34 +103,34 @@ export const resetUserPwd = (userID, newPwd, oldPwd) => {
 
           if (userIndex > -1) {
             const _oldEncryptedKeys = _users[userIndex].encryptedKeys
-            const { dlight, electrum } = _oldEncryptedKeys
+            const { dlight_private, electrum } = _oldEncryptedKeys
 
             const _decryptedElectrum = electrum != null ? decryptkey(oldPwd, _oldEncryptedKeys.electrum) : null
-            const _decryptedDlight = dlight != null ? decryptkey(oldPwd, _oldEncryptedKeys.dlight) : null
+            const _decryptedDlight = dlight_private != null ? decryptkey(oldPwd, _oldEncryptedKeys.dlight_private) : null
 
-            if ((electrum == null || _decryptedElectrum) && (dlight == null || _decryptedDlight)) {
+            if ((electrum == null || _decryptedElectrum) && (dlight_private == null || _decryptedDlight)) {
               const _newElectrumKey = electrum ? encryptkey(newPwd, _decryptedElectrum) : null
-              const _newDlightKey = dlight ? encryptkey(newPwd, _decryptedDlight) : null
+              const _newDlightKey = dlight_private ? encryptkey(newPwd, _decryptedDlight) : null
 
               _users[userIndex].encryptedKeys = {
-                electrum: _newElectrumKey,
-                dlight: _newDlightKey
+                [ELECTRUM]: _newElectrumKey,
+                [DLIGHT_PRIVATE]: _newDlightKey
               }
               
               let _toStore = {users: _users}
               let promiseArr = [AsyncStorage.setItem('userData', JSON.stringify(_toStore)), _users]
               return Promise.all(promiseArr)
             } else {
-              Alert.alert("Authentication Error", "incorrect password")
+              createAlert("Authentication Error", "incorrect password")
               return "error";
             }
 
           } else {
-            Alert.alert("Error", "User with ID " + userID + " not found")
+            createAlert("Error", "User with ID " + userID + " not found")
             return "error"
           }
         } else {
-          Alert.alert("Error", "UserID is null")
+          createAlert("Error", "UserID is null")
           return "error"
         }
       })
@@ -241,26 +242,26 @@ export const checkPinForUser = (pin, userName, alertOnFail = true) => {
           let user = users.users.find(n => n.id === userName);
 
           if (user) {
-            const { electrum, dlight } = user.encryptedKeys
+            const { electrum, dlight_private } = user.encryptedKeys
             const _decryptedKeys = {
-              electrum: electrum != null ? decryptkey(pin, electrum) : null,
-              dlight: dlight != null ? decryptkey(pin, dlight) : null,
+              [ELECTRUM]: electrum != null ? decryptkey(pin, electrum) : null,
+              [DLIGHT_PRIVATE]: dlight_private != null ? decryptkey(pin, dlight_private) : null,
             }
 
-            if ((electrum == null || _decryptedKeys.electrum) && (dlight == null || _decryptedKeys.dlight)) {
+            if ((electrum == null || _decryptedKeys.electrum) && (dlight_private == null || _decryptedKeys.dlight_private)) {
               resolve(_decryptedKeys);
             } else {
-              if (alertOnFail) Alert.alert("Authentication Error", "Incorrect password")
+              if (alertOnFail) createAlert("Authentication Error", "Incorrect password")
               throw new Error("Incorrect password");
             }
           }
           else {
-            if (alertOnFail) Alert.alert("Authentication Error", "Please select an existing user")
+            if (alertOnFail) createAlert("Authentication Error", "Please select an existing user")
             throw new Error("Please select an existing user");
           }
         }
         else {
-          if (alertOnFail) Alert.alert("Authentication Error", "Please enter a password")
+          if (alertOnFail) createAlert("Authentication Error", "Please enter a password")
           throw new Error("Please enter a password");
         }
       })

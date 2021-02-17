@@ -14,7 +14,7 @@ import BottomNavigation, {
 import AppInfo from './AppInfo/AppInfo'
 import ProfileSettings from './ProfileSettings/ProfileSettings'
 import WalletSettings from './WalletSettings/WalletSettings'
-import { IconButton } from "react-native-paper"
+import { IconButton, Portal } from "react-native-paper"
 import Colors from '../../globals/colors';
 
 class SettingsMenus extends Component {
@@ -103,19 +103,19 @@ class SettingsMenus extends Component {
 
   render() {
     return (
-      <View style={{ flex: 1 }}>
-          {this.state.activeTab.screen === "AppInfo" ? <AppInfo navigation={this.props.navigation}/> :
-          this.state.activeTab.screen === "ProfileSettings" ? <ProfileSettings navigation={this.props.navigation}/> :
-          (this.state.activeTab.screen === "WalletSettings" ? <WalletSettings navigation={this.props.navigation}/> :
-          null)}
-        <BottomNavigation
-          onTabPress={newTab => this.switchTab(newTab)}
-          renderTab={this.renderTab}
-          tabs={this.state.tabs}
-          activeTab={this.state.activeTab.key}
-          style={{ display: 'flex' }}
-        />
-      </View>
+        <View style={{ flex: 1 }}>
+            {this.state.activeTab.screen === "AppInfo" ? <AppInfo navigation={this.props.navigation}/> :
+            this.state.activeTab.screen === "ProfileSettings" ? <ProfileSettings navigation={this.props.navigation}/> :
+            (this.state.activeTab.screen === "WalletSettings" ? <WalletSettings navigation={this.props.navigation}/> :
+            null)}
+          <BottomNavigation
+            onTabPress={newTab => this.switchTab(newTab)}
+            renderTab={this.renderTab}
+            tabs={this.state.tabs}
+            activeTab={this.state.activeTab.key}
+            style={{ display: 'flex' }}
+          />
+        </View>
     );
   }
 }

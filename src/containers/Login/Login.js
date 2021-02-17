@@ -277,7 +277,7 @@ class Login extends Component {
               </View>
             )}
             {!(this.state.validating || this.state.loading) && (
-              <View style={Styles.standardWidthCenterBlock}>
+              <View style={Styles.flexCenterRowBlock}>
                 <Button
                   onPress={this._handleAddUser}
                   color={Colors.primaryColor}

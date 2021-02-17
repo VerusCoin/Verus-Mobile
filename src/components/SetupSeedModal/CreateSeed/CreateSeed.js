@@ -9,10 +9,11 @@ import {
   Text,
   ScrollView,
   View,
+  TextInput as NativeTextInput,
+  Alert
 } from "react-native"
-import { Input } from 'react-native-elements'
 import Styles from '../../../styles/index'
-import StandardButton from "../../StandardButton";
+import { Button, TextInput } from 'react-native-paper'
 import { getKey } from "../../../utils/keyGenerator/keyGenerator";
 import Colors from '../../../globals/colors'
 
@@ -79,6 +80,8 @@ class CreateSeed extends Component {
         }
       })
 
+      if (errors) Alert.alert("Incorrect", "One or more words do not match.")
+
       this.setState({ guessErrors })
 
       if (!errors) {
@@ -103,7 +106,7 @@ class CreateSeed extends Component {
         contentContainerStyle={Styles.centerContainer}
       >
         <View style={Styles.headerContainer}>
-          <Text style={Styles.centralHeader}>Create New Seed</Text>
+          <Text style={Styles.centralHeader}>Seed Setup</Text>
         </View>
         {formStep === 0 && (
           <View style={Styles.standardWidthFlexGrowCenterBlock}>
@@ -143,7 +146,9 @@ class CreateSeed extends Component {
             <Text style={Styles.centralInfoTextPadded}>
               {`Word #${formStep}:`}
             </Text>
-            <Text style={Styles.seedWord}>{newSeedWords[formStep - 1]}</Text>
+            <Text style={Styles.seedWord}>
+              {newSeedWords[formStep - 1]}
+            </Text>
             <Text style={Styles.centralLightTextPadded}>
               {"When you've written it down, press next."}
             </Text>
@@ -153,48 +158,51 @@ class CreateSeed extends Component {
           <View style={Styles.standardWidthFlexGrowCenterBlock}>
             {randomIndices.map((randomI, index) => {
               return (
-                <Input
-                  key={index}
-                  labelStyle={Styles.formCenterLabel}
-                  containerStyle={Styles.fullWidthBlock}
-                  label={`Enter word #${randomI + 1}:`}
-                  onChangeText={text => {
-                    let newGuesses = [...wordGuesses];
+                <View key={index} style={Styles.fullWidthAlignCenterRowBlock}>
+                  <TextInput
+                    dense
+                    style={Styles.flex}
+                    onChangeText={(text) => {
+                      let newGuesses = [...wordGuesses];
 
-                    newGuesses[index] = text;
-                    this.setState({ wordGuesses: newGuesses });
-                  }}
-                  autoCapitalize={"none"}
-                  autoCorrect={false}
-                  errorMessage={
-                    guessErrors[index] ? "This word is incorrect." : null
-                  }
-                  errorStyle={Styles.formCenterError}
-                  inputStyle={Styles.formCenterBlueInput}
-                />
+                      newGuesses[index] = text;
+                      this.setState({ wordGuesses: newGuesses });
+                    }}
+                    label={`Enter word #${randomI + 1}:`}
+                    underlineColor={Colors.primaryColor}
+                    selectionColor={Colors.primaryColor}
+                    render={(props) => (
+                      <NativeTextInput
+                        autoCapitalize={"none"}
+                        autoCorrect={false}
+                        {...props}
+                      />
+                    )}
+                    error={guessErrors[index]}
+                  />
+                </View>
               );
             })}
           </View>
         )}
         <View style={Styles.footerContainer}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <StandardButton
-              title={formStep === 0 ? "CANCEL" : "BACK"}
+            <Button
               onPress={formStep === 0 ? this.cancel : this.goBack}
               color={Colors.warningButtonColor}
-            />
-            <StandardButton
-              title={
-                formStep > DEFAULT_SEED_PHRASE_LENGTH
-                  ? "DONE"
-                  : "NEXT"
-              }
+            >
+              {formStep === 0 ? "Cancel" : "Back"}
+            </Button>
+            <Button
+              color={Colors.primaryColor}
               onPress={
                 formStep > DEFAULT_SEED_PHRASE_LENGTH
                   ? this.verifySeed
                   : this.next
               }
-            />
+            >
+              {formStep > DEFAULT_SEED_PHRASE_LENGTH ? "Done" : "Next"}
+            </Button>
           </View>
         </View>
       </ScrollView>

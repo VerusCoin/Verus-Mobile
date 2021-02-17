@@ -65,7 +65,7 @@ export const authentication = (
       const currentDlightAddrs = state.activeAccount.keys[
         action.payload.chainTicker
       ]
-        ? state.activeAccount.keys[action.payload.chainTicker].dlight
+        ? state.activeAccount.keys[action.payload.chainTicker].dlight_private
         : {};
       return {
         ...state,

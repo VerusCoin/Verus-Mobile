@@ -25,7 +25,7 @@ export const renderSideMenu = function() {
     <View style={Styles.flex}>
       <DrawerHeader navigateToScreen={this.navigateToScreen} />
       <List.Item                        
-      title={<Text style={Styles.listItemLeftTitleUppercase}>{"BACK"}</Text>}                             
+      title={"Back"}                             
       left={(props) => <List.Icon icon="keyboard-backspace"/>}
       onPress={this.toggleMainDrawer}
       /> 
@@ -47,7 +47,6 @@ export const renderChildDrawerComponents = function() {
       renderItem={({ item, index, section }) => (
         <List.Item
           title={item.name}
-          titleStyle={Styles.listItemLeftTitleUppercase}
           left={() => <List.Icon icon={item.icon}/>}
           onPress={() => {
             this._openApp(
@@ -80,8 +79,7 @@ export const renderChildDrawerComponents = function() {
             />
           )}
           <List.Item
-            title={"REMOVE COIN"}
-            titleStyle={Styles.listItemLeftTitlePaddedUppercase}
+            title={"Remove Coin"}
             left={() => <List.Icon icon="close"/>}
             onPress={() => {
               this._removeCoin(
@@ -106,7 +104,6 @@ export const renderSettingsComponents = function() {
         <List.Item
           left={() => <List.Icon icon={item.icon}/>}
           title={item.title}
-          titleStyle={Styles.listItemLeftTitleUppercase}
           onPress={() => this._openSettings(item)}
         />
       )}
@@ -135,7 +132,6 @@ export const renderAddCoinComponents = function() {
       renderItem={({ item }) => (
         <List.Item
           title={item}
-          titleStyle={Styles.listItemLeftTitleUppercase}
           onPress={
             item === "Add coin from list"
               ? () => this.navigateToScreen("AddCoin")
@@ -176,34 +172,29 @@ export const renderMainDrawerComponents = function() {
                 currentCoinIndex: index,
               })
             }
-            titleStyle={Styles.listItemLeftTitleUppercase}
           />
         );
       }}
       ListFooterComponent={
         <React.Fragment>
           <List.Item
-            title="ADD COIN"
+            title="Add Coin"
             left={() => <List.Icon icon="plus"/>}
             onPress={() =>
               this.setState({ mainDrawer: false, currentCoinIndex: -1 })
             }
-            titleStyle={Styles.listItemLeftTitleUppercase}
-            che
           />
           <List.Item
-            title={"SETTINGS"}
+            title={"Settings"}
             left={() => <List.Icon icon="settings"/>}
             onPress={() =>
               this.setState({ mainDrawer: false, currentCoinIndex: -2 })
             }
-            titleStyle={Styles.listItemLeftTitleUppercase}
           />
           <List.Item
-            title={"LOG OUT"}
+            title={"Log Out"}
             left={() => <List.Icon icon="exit-to-app"/>}
             onPress={this.handleLogout}
-            titleStyle={Styles.listItemLeftTitleUppercase}
           />
         </React.Fragment>
       }
