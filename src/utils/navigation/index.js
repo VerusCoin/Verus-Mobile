@@ -51,6 +51,7 @@ import ClaimManager from '../../containers/Identity/PersonalInfo/ClaimManager';
 import MoveIntoCategory from '../../containers/Identity/PersonalInfo/ClaimManager/MoveIntoCategory';
 import AddIdentity from '../../containers/Identity/AddIdentity';
 import { DEVICE_WINDOW_WIDTH } from '../constants/constants';
+import { Component } from 'react';
 
 const WALLET = 'wallet';
 
@@ -528,40 +529,39 @@ function LoadingStackScreens() {
   );
 }
 
-export default function RootStackScreens(hasAccount, loading, signedIn) {
-  return (
-    <RootStack.Navigator
-      screenOptions={{
-        mode: "modal",
-        headerShown: false,
-      }}
-    >
-      {loading ? (
-        <RootStack.Screen
-          name="LoadingStack"
-          component={LoadingStackScreens}
-        />
-      ) : hasAccount ? (
-        signedIn ? (
+export default class RootStackScreens extends Component {
+  render() {
+    return (
+      <RootStack.Navigator
+        screenOptions={{
+          mode: "modal",
+          headerShown: false,
+        }}
+      >
+        {this.props.loading ? (
           <RootStack.Screen
-            name="SignedIn"
-            component={MainScreens}
+            name="LoadingStack"
+            component={LoadingStackScreens}
           />
+        ) : this.props.hasAccount ? (
+          this.props.signedIn ? (
+            <RootStack.Screen name="SignedIn" component={MainScreens} />
+          ) : (
+            <RootStack.Screen
+              name="SignedOutStack"
+              component={SignedOutStackScreens}
+              options={{
+                headerRight: () => null,
+              }}
+            />
+          )
         ) : (
           <RootStack.Screen
-            name="SignedOutStack"
-            component={SignedOutStackScreens}
-            options={{
-              headerRight: () => null,
-            }}
+            name="SignedOutNoKeyStack"
+            component={SignedOutNoKeyStackScreens}
           />
-        )
-      ) : (
-        <RootStack.Screen
-          name="SignedOutNoKeyStack"
-          component={SignedOutNoKeyStackScreens}
-        />
-      )}
-    </RootStack.Navigator>
-  );
+        )}
+      </RootStack.Navigator>
+    );
+  }
 }

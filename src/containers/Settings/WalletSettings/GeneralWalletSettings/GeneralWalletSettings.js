@@ -5,14 +5,11 @@
 */
 
 import React, { Component } from "react";
-import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
   ScrollView, 
   Keyboard,
-  TouchableWithoutFeedback,
   ActivityIndicator,
-  Alert,
   TouchableOpacity
 } from "react-native";
 import { NavigationActions } from '@react-navigation/compat';
@@ -25,6 +22,7 @@ import { Dropdown } from "react-native-material-dropdown";
 import NumberPadModal from "../../../../components/NumberPadModal/NumberPadModal";
 import { Divider, List, Portal, Text, Button } from "react-native-paper";
 import ListSelectionModal from "../../../../components/ListSelectionModal/ListSelectionModal";
+import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 
 const NO_DEFAULT = "None"
 
@@ -108,10 +106,10 @@ class WalletSettings extends Component {
       .then(res => {
         this.props.dispatch(res)
         this.setState({...this.props.generalWalletSettings, loading: false})
-        Alert.alert("Success", "Settings saved")
+        createAlert("Success", "Settings saved")
       })
       .catch(err => {
-        Alert.alert("Error", err.message)
+        createAlert("Error", err.message)
         console.warn(err.message)
         this.setState({ loading: false })
       })
@@ -288,6 +286,9 @@ class WalletSettings extends Component {
           {this.state.loading ? (
             <ActivityIndicator
               animating={this.state.loading}
+              style={{
+                paddingTop: 32
+              }}
               size="large"
             />
           ) : (

@@ -7,17 +7,18 @@
 
 import React, { Component } from "react";
 import { SearchBar } from "react-native-elements";
-import { FlatList, TouchableOpacity, Alert } from "react-native";
+import { FlatList, TouchableOpacity, View } from "react-native";
 import { List } from "react-native-paper";
-import { Searchbar } from 'react-native-paper';
+import { Searchbar, Portal } from 'react-native-paper';
 import { connect } from 'react-redux';
 import Styles from '../../styles/index'
-
 import {
   namesList,
   findCoinObj
 } from '../../utils/CoinData/CoinData';
 import { RenderSquareCoinLogo } from "../../utils/CoinData/Graphics";
+import CoinDetailsModal from "../../components/CoinDetailsModal/CoinDetailsModal";
+import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 
 class AddCoin extends Component {
   constructor(props) {
@@ -26,7 +27,8 @@ class AddCoin extends Component {
       loading: true,      
       error: null,
       query: '',
-      coinList: []
+      coinList: [],
+      fullCoinDetails: null
     };
   }
 
@@ -57,22 +59,18 @@ class AddCoin extends Component {
   };
 
   _openDetails = (item) => {  
-    let navigation = this.props.navigation 
-    let coinData = {}
+    let coinData = null
     
     try {
       coinData = findCoinObj(item, this.props.activeAccount.id)
 
-      navigation.navigate("CoinDetails", {
-        data: coinData
-      });
+      this.setState({ fullCoinDetails: coinData });
     } catch (e) {
-      Alert.alert("Error", e.message || "Unknown error");
+      createAlert("Error", e.message || "Unknown error");
     }
   };
 
   getCoinList = () => {
-    const activeCoinIds = this.props.activeCoinsForUser.map(coinObj => coinObj.id)
     const { query } = this.state
 
     return namesList.filter((coinId) => {
@@ -80,7 +78,6 @@ class AddCoin extends Component {
       const coinIdLc = coinId.toLowerCase()
 
       return (
-        !activeCoinIds.includes(coinId) &&
         (query.length == 0 ||
           queryLc.includes(coinIdLc) ||
           coinIdLc.includes(queryLc))
@@ -98,41 +95,64 @@ class AddCoin extends Component {
   }
 
   render() {
+    const activeCoinIds = this.props.activeCoinsForUser.map(coinObj => coinObj.id)
+
     return (
-      <FlatList
-        ListHeaderComponent={
-          <Searchbar
-            placeholder="Search"
-            onChangeText={(query) => this.setState({ query })}
-            value={this.state.query}
-            autoCorrect={false}
+      <View styles={Styles.root}>
+        <Portal>
+          <CoinDetailsModal
+            data={this.state.fullCoinDetails || {}}
+            added={
+              this.state.fullCoinDetails != null &&
+              activeCoinIds.includes(this.state.fullCoinDetails.id)
+            }
+            activeAccount={this.props.activeAccount}
+            activeCoinList={this.props.activeCoinList}
+            cancel={() =>
+              this.setState({
+                fullCoinDetails: null,
+              })
+            }
+            visible={this.state.fullCoinDetails != null}
+            animationType="slide"
           />
-        }
-        style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}
-        data={this.state.coinList}
-        onEndReached={this.onEndReached}
-        onEndReachedThreshold={50}
-        renderItem={({ item }) => {          
-          return (
-            <TouchableOpacity onPress={() => this._openDetails(item)}>
-              <List.Item
-                title={item}
-                left={(props) => RenderSquareCoinLogo(item)}
-                right={(props) => <List.Icon
-                  {...props}
-                  icon={"chevron-right"}
-                  size={20}
-                />}
-                titleStyle={Styles.listItemLeftTitleDefault}
-                style={{
-                  backgroundColor: "white"
-                }}
-              />
-            </TouchableOpacity>
-          );
-        }}
-        keyExtractor={(item) => item}
-      />
+        </Portal>
+        <FlatList
+          ListHeaderComponent={
+            <Searchbar
+              placeholder="Search"
+              onChangeText={(query) => this.setState({ query })}
+              value={this.state.query}
+              autoCorrect={false}
+            />
+          }
+          style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }}
+          data={this.state.coinList}
+          onEndReached={this.onEndReached}
+          onEndReachedThreshold={50}
+          renderItem={({ item }) => {
+            const added = activeCoinIds.includes(item)
+            return (
+              <TouchableOpacity onPress={() => this._openDetails(item)}>
+                <List.Item
+                  title={item}
+                  left={(props) => RenderSquareCoinLogo(item)}
+                  right={(props) => {
+                    return added ? (
+                      <List.Icon {...props} icon={"check"} size={20} />
+                    ) : null;
+                  }}
+                  titleStyle={Styles.listItemLeftTitleDefault}
+                  style={{
+                    backgroundColor: "white",
+                  }}
+                />
+              </TouchableOpacity>
+            );
+          }}
+          keyExtractor={(item) => item}
+        />
+      </View>
     );
   }
 }
@@ -140,7 +160,8 @@ class AddCoin extends Component {
 const mapStateToProps = (state) => {
   return {
     activeAccount: state.authentication.activeAccount,
-    activeCoinsForUser: state.coins.activeCoinsForUser
+    activeCoinsForUser: state.coins.activeCoinsForUser,
+    activeCoinList: state.coins.activeCoinList,
   }
 }
 

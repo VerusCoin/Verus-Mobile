@@ -20,6 +20,7 @@ import { channelStore_erc20 } from './channelStores/erc20';
 import { channelStore_electrum } from './channelStores/electrum';
 import { channelStore_general } from './channelStores/general';
 import { alert } from './alert'
+import { modal } from './modal'
 import { keyboard } from './keyboard'
 import identity from './identity';
 
@@ -46,5 +47,6 @@ export default combineReducers({
   ethtxreceipts,
   coinMenus,
   alert,
+  modal,
   keyboard
 });

@@ -15,6 +15,7 @@ import styles from "../../styles";
 import { HomeListItemThemeDark, HomeListItemThemeLight } from "./Home.themes";
 import Colors from "../../globals/colors";
 import HomeFAB from "./HomeFAB/HomeFAB";
+import { triggerLightHaptic } from "../../utils/haptics/haptics";
 
 export const HomeRender = function() {
   return (
@@ -136,11 +137,12 @@ export const HomeListItemRender = function(coinObj, isParent, subWallet, index =
           onPress={() =>
             this.openCoin(coinObj, isParent ? subWallets[0] : subWallet)
           }
-          onLongPress={
-            isParent
-              ? () => this.toggleListItem(coinObj.id, subWallets.length)
-              : null
-          }
+          onLongPress={() => {
+            if (isParent) {
+              triggerLightHaptic();
+              this.toggleListItem(coinObj.id, subWallets.length)
+            }   
+          }}
           rippleColor="rgba(0, 0, 0, .32)"
         >
           <Card

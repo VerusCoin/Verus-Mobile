@@ -5,7 +5,6 @@
 
 import React, { Component } from "react"
 import {
-  Modal,
   Text,
   ScrollView,
   View,
@@ -14,24 +13,17 @@ import {
 } from "react-native"
 import Styles from '../../../styles/index'
 import { Button, TextInput } from 'react-native-paper'
-import { getKey } from "../../../utils/keyGenerator/keyGenerator";
 import Colors from '../../../globals/colors'
-
-const DEFAULT_SEED_PHRASE_LENGTH = 12
+import { DEFAULT_SEED_PHRASE_LENGTH } from "../../../utils/constants/constants"
 
 class CreateSeed extends Component {
   constructor(props) {
     super(props);
-    const newSeed = getKey(DEFAULT_SEED_PHRASE_LENGTH);
+    this.state = props.initState
+  }
 
-    this.state = {
-      newSeed,
-      newSeedWords: newSeed.split(" "),
-      formStep: 0,
-      randomIndices: [0, 0, 0],
-      wordGuesses: [null, null, null],
-      guessErrors: [false, false, false]
-    };
+  componentDidUpdate(lastProps, lastState) {
+    if (lastState !== this.state) this.props.saveState(this.state)
   }
 
   cancel = () => {
@@ -106,7 +98,7 @@ class CreateSeed extends Component {
         contentContainerStyle={Styles.centerContainer}
       >
         <View style={Styles.headerContainer}>
-          <Text style={Styles.centralHeader}>Seed Setup</Text>
+          <Text style={Styles.centralHeader}>{"Seed Setup"}</Text>
         </View>
         {formStep === 0 && (
           <View style={Styles.standardWidthFlexGrowCenterBlock}>

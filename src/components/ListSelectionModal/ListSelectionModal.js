@@ -26,7 +26,7 @@ class ListSelectionModal extends Component {
         flexHeight={3}
       >
         <View style={Styles.centerContainer}>
-          <View style={{ ...Styles.headerContainerSafeArea, minHeight: 36, paddingBottom: 8 }}>
+          <View style={{ ...Styles.headerContainerSafeArea, minHeight: 36, maxHeight: 36, paddingBottom: 8 }}>
               <Text
                 style={{
                   ...Styles.centralHeader,

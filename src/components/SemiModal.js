@@ -6,12 +6,12 @@
 import React, { Component } from "react";
 import {
   View,
-  Modal,
   Animated,
   TouchableWithoutFeedback
 } from "react-native";
 import Colors from "../globals/colors";
 import Styles from "../styles/index";
+import Modal from './Modal'
 
 class SemiModal extends Component {
   constructor(props) {
@@ -49,14 +49,16 @@ class SemiModal extends Component {
 
     return (
       <React.Fragment>
-        <Animated.View
-          style={{
-            ...Styles.flexBackgroundDark,
-            ...Styles.fullHeight,
-            ...Styles.fullWidth,
-            opacity: this.animatedOpacity,
-          }}
-        />
+        {this.props.visible && (
+          <Animated.View
+            style={{
+              ...Styles.flexBackgroundDark,
+              ...Styles.fullHeight,
+              ...Styles.fullWidth,
+              opacity: this.animatedOpacity,
+            }}
+          />
+        )}
         <Modal
           animationType={this.props.animationType}
           transparent={true}
@@ -65,9 +67,7 @@ class SemiModal extends Component {
           onDismiss={this.props.onRequestClose}
         >
           <TouchableWithoutFeedback onPress={this.props.onRequestClose}>
-            <View
-              style={{ flex: 1 }}
-            />
+            <View style={{ flex: 1 }} />
           </TouchableWithoutFeedback>
           <View
             style={{
@@ -75,7 +75,9 @@ class SemiModal extends Component {
               backgroundColor: Colors.secondaryColor,
               borderRadius: 10,
               paddingTop: 10,
-              ...(this.props.contentContainerStyle ? this.props.contentContainerStyle : {})
+              ...(this.props.contentContainerStyle
+                ? this.props.contentContainerStyle
+                : {}),
             }}
           >
             {this.props.children}

@@ -4,22 +4,32 @@
 */
 
 import React, { Component } from "react"
-import {
-  Modal,
-  Text,
-  ScrollView,
-} from "react-native"
-import Styles from '../../styles/index'
-import StandardButton from "../StandardButton";
 import CreateSeed from './CreateSeed/CreateSeed'
 import ImportSeed from './ImportSeed/ImportSeed'
+import Modal from '../Modal'
+import { getKey } from "../../utils/keyGenerator/keyGenerator";
+import { DEFAULT_SEED_PHRASE_LENGTH } from '../../utils/constants/constants'
 
 class SetupSeedModal extends Component {
   constructor(props) {
     super(props);
-
+    const newSeed = getKey(DEFAULT_SEED_PHRASE_LENGTH);
+    
     this.state = {
-      firstTimeSeed: true
+      firstTimeSeed: true,
+      createSeedState: {
+        newSeed,
+        newSeedWords: newSeed.split(" "),
+        formStep: 0,
+        randomIndices: [0, 0, 0],
+        wordGuesses: [null, null, null],
+        guessErrors: [false, false, false]
+      },
+      importSeedState: {
+        seed: '',
+        scanning: false,
+        showSeed: false
+      }
     }
   }
 
@@ -38,9 +48,23 @@ class SetupSeedModal extends Component {
         onRequestClose={cancel}
       >
         {this.state.firstTimeSeed ? (
-          <CreateSeed {...parentProps} importSeed={() => this.setState({ firstTimeSeed: false })}/>
+          <CreateSeed
+            {...parentProps}
+            saveState={(createSeedState) =>
+              this.setState({ createSeedState })
+            }
+            initState={this.state.createSeedState}
+            importSeed={() => this.setState({ firstTimeSeed: false })}
+          />
         ) : (
-          <ImportSeed {...parentProps} createSeed={() => this.setState({ firstTimeSeed: true })}/>
+          <ImportSeed
+            {...parentProps}
+            saveState={(importSeedState) =>
+              this.setState({ importSeedState })
+            }
+            initState={this.state.importSeedState}
+            createSeed={() => this.setState({ firstTimeSeed: true })}
+          />
         )}
       </Modal>
     );

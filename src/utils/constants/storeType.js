@@ -188,5 +188,9 @@ export const PUSH_ALERT = 'PUSH_ALERT';
 export const SHIFT_ALERTS = 'SHIFT_ALERTS';
 export const SET_ACTIVE_ALERT = 'SET_ACTIVE_ALERT';
 
+// Modals 
+export const PUSH_MODAL = "PUSH_MODAL";
+export const REMOVE_MODAL = "REMOVE_MODAL"
+
 // Keyboard
 export const SET_KEYBOARD_HEIGHT = "SET_KEYBOARD_HEIGHT"

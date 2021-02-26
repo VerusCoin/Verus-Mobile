@@ -23,11 +23,11 @@ class ImportSeed extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      seed: '',
-      scanning: false,
-      showSeed: false
-    }
+    this.state = props.initState
+  }
+
+  componentDidUpdate(lastProps, lastState) {
+    if (lastState !== this.state) this.props.saveState(this.state)
   }
 
   handleScan = seed => {

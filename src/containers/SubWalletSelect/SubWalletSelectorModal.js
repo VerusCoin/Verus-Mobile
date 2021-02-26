@@ -1,12 +1,12 @@
 import React, { Component } from "react"
 import { connect } from 'react-redux';
 import {
-  Modal,
   ScrollView,
   View,
   Text,
   SafeAreaView
 } from "react-native"
+import Modal from '../../components/Modal'
 import Styles from '../../styles/index'
 import SubWalletCard from "../../components/SubWalletCard";
 import { GENERAL } from "../../utils/constants/intervalConstants";
