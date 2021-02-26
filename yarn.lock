@@ -11013,9 +11013,9 @@ react-native-vector-icons@^6.2.0:
     prop-types "^15.6.2"
     yargs "^13.2.2"
 
-"react-native-verus-light-client@git+https://github.com/michaeltout/react-native-verus-light-client.git#new_dlight":
+"react-native-verus-light-client@git+https://github.com/michaeltout/react-native-verus-light-client.git#new_dlight_ios":
   version "1.0.0"
-  resolved "git+https://github.com/michaeltout/react-native-verus-light-client.git#4d58a3d8d32dc35e3b12f775ca4248a90b5f5d6b"
+  resolved "git+https://github.com/michaeltout/react-native-verus-light-client.git#6bf8517cce5c828735c2fbbe59650a7882e11f8c"
   dependencies:
     react "16.9.0"
     react-native "0.61.5"

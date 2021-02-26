@@ -92,8 +92,7 @@ class RecoverSeed extends Component {
           if (res[0] && Array.isArray(res)) {
             this.setState({password: null}, () => {
               let seeds = res.pop()
-
-              //DELETE/REFACTOR, change to show all seeds
+              
               this.showSeed(seeds)
             })
           } 

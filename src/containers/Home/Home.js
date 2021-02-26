@@ -213,14 +213,17 @@ class Home extends Component {
 
     activeCoinsForUser.map(coinObj => {
       const key = coinObj.id
-      // const channel = coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM
       coinBalances[coinObj.id] = BigNumber("0")
 
       allSubWallets[coinObj.id].map(wallet => {
         if (balances[coinObj.id] != null && balances[coinObj.id][wallet.id] != null) {
-          coinBalances[coinObj.id] = balances[key] && balances[key][wallet.id] && balances[key][wallet.id].total != null
-                ? BigNumber(balances[key][wallet.id].total)
-                : BigNumber("0");
+          coinBalances[coinObj.id] = coinBalances[coinObj.id].plus(
+            balances[key] &&
+              balances[key][wallet.id] &&
+              balances[key][wallet.id].total != null
+              ? BigNumber(balances[key][wallet.id].total)
+              : BigNumber("0")
+          );
 
           if (rates[key] && rates[key][displayCurrency]) {
             const price = BigNumber(rates[key][displayCurrency])

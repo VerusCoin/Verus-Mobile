@@ -12,7 +12,8 @@ const channelMap = {
     const zTransactions = await getZTransactions(
       coinObj.id,
       activeUser.accountHash,
-      coinObj.proto
+      coinObj.proto,
+      "all"
     );
     const { result, ...header } = zTransactions;
 

@@ -36,7 +36,6 @@ export const SignUpRender = function() {
                   animationType="slide"
                   transparent={false}
                   visible={this.state.publicSeedModalOpen}
-                  qrString={this.state.verusQRString}
                   cancel={() => {
                     this.setState({ publicSeedModalOpen: false });
                   }}
@@ -51,7 +50,6 @@ export const SignUpRender = function() {
                   animationType="slide"
                   transparent={false}
                   visible={this.state.privateSeedModalOpen}
-                  qrString={this.state.verusQRString}
                   cancel={() => {
                     this.setState({ privateSeedModalOpen: false });
                   }}

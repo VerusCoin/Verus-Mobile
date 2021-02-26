@@ -25,7 +25,7 @@ import { removeSpaces } from '../../../utils/stringUtils'
 import Styles from '../../../styles/index'
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import store from "../../../store"
-import { API_GET_FIATPRICE, API_GET_BALANCES, API_GET_KEYS, API_SEND } from "../../../utils/constants/intervalConstants"
+import { API_GET_FIATPRICE, API_GET_BALANCES, API_GET_KEYS, API_SEND, API_GET_INFO } from "../../../utils/constants/intervalConstants"
 import BigNumber from "bignumber.js"
 import Colors from "../../../globals/colors"
 import { UtilityContracts } from "../../../utils/api/channels/erc20/callCreator"
@@ -315,7 +315,7 @@ class SendCoin extends Component {
           _errors = true;
         } else if (
           this.state.addressCheckEnabled &&
-          (toAddress.length < 33 || toAddress.length > 42)
+          (toAddress.length < 33)
         ) {
           this.handleFormError("Invalid address", "toAddress");
           createAlert("Invalid Address", "Please enter a valid address.")
@@ -532,14 +532,13 @@ class SendCoin extends Component {
               <Button
                 onPress={this.validateFormData}
                 color={Colors.primaryColor}
-                loading={
-                  this.state.loading || this.state.loadingBTCFees
-                }
+                loading={this.state.loading || this.state.loadingBTCFees || this.props.syncing}
                 disabled={
                   this.state.loading ||
                   this.state.loadingBTCFees ||
                   balances.errors ||
-                  this.state.btcFeesErr
+                  this.state.btcFeesErr || 
+                  this.props.syncing
                 }
               >
                 {this.state.btcFeesErr
@@ -550,6 +549,8 @@ class SendCoin extends Component {
                   ? "Updating balance..."
                   : this.state.loadingBTCFees
                   ? "Loading fees..."
+                  : this.props.syncing
+                  ? "Syncing..."
                   : "Send"}
               </Button>
             </View>
@@ -578,6 +579,7 @@ const mapStateToProps = (state) => {
   const balance_channel = state.coinMenus.activeSubWallets[chainTicker].api_channels[API_GET_BALANCES]
   const key_channel = state.coinMenus.activeSubWallets[chainTicker].api_channels[API_GET_KEYS]
   const send_channel = state.coinMenus.activeSubWallets[chainTicker].api_channels[API_SEND]
+  const info_channel = state.coinMenus.activeSubWallets[chainTicker].api_channels[API_GET_INFO]
   
   return {
     balance_channel,
@@ -590,8 +592,11 @@ const mapStateToProps = (state) => {
       errors: state.errors[API_GET_BALANCES][balance_channel][chainTicker],
     },
     activeAccount: state.authentication.activeAccount,
-    claimDisabled: state.coinMenus.claimDisabled
-  }
+    claimDisabled: state.coinMenus.claimDisabled,
+    syncing:
+      state.ledger.info[info_channel][chainTicker] != null &&
+      state.ledger.info[info_channel][chainTicker].percent != 100,
+  };
 };
 
 export default connect(mapStateToProps)(SendCoin);

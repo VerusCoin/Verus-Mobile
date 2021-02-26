@@ -327,12 +327,10 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
 export const sendRawTx = (coinObj, activeUser, outputAddress, value, params) => {
   const { defaultFee, network, verifyMerkle, verifyTxid } = params
 
-  console.log("Value to send raw tx: " + value)
   return new Promise((resolve, reject) => {
     txPreflight(coinObj, activeUser, outputAddress, value, { defaultFee, network, verifyMerkle, verifyTxid })
     .then((resObj) => {
       if (resObj.err) {
-        console.log(resObj)
         throw (resObj)
       } else {
         return pushTx(coinObj, resObj.result.params.rawtx)
@@ -340,14 +338,11 @@ export const sendRawTx = (coinObj, activeUser, outputAddress, value, params) => 
     })
     .then((resObj) => {
       if (resObj.result.code) {
-        console.log(resObj)
         throw ({
           err: true,
           result: resObj.result.result.message
         })
       } else {
-        console.log("Transaction sent succesfully")
-        console.log(resObj)
         resolve(resObj)
       }
     })

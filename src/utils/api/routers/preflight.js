@@ -1,12 +1,14 @@
-import { ELECTRUM, ETH, ERC20 } from '../../constants/intervalConstants'
+import { ELECTRUM, ETH, ERC20, DLIGHT_PRIVATE } from '../../constants/intervalConstants'
 import * as electrum from '../channels/electrum/callCreators'
 import * as eth from '../channels/eth/callCreator'
 import * as erc20 from '../channels/erc20/callCreator'
+import * as dlight from '../channels/dlight/callCreators'
 
 const PREFLIGHT_FUNCTION_MAP = {
   [ELECTRUM]: electrum.txPreflight,
   [ETH]: eth.txPreflight,
-  [ERC20]: erc20.txPreflight
+  [ERC20]: erc20.txPreflight,
+  [DLIGHT_PRIVATE]: dlight.preflightPrivateTransaction
 }
 
 /**

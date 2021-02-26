@@ -9,9 +9,9 @@ export const getPrivateBalance = async (coinId, accountHash, coinProto) => {
   return {
     ...res,
     result: res.result ? {
-      ...res.result,
       confirmed: BigNumber(res.result.confirmed),
-      total: BigNumber(res.result.total)
+      total: BigNumber(res.result.total),
+      pending: BigNumber(res.result.total).minus(BigNumber(res.result.confirmed))
     } : res.result
   }
 }
