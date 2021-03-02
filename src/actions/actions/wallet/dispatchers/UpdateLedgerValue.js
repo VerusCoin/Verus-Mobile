@@ -1,6 +1,6 @@
 import { DLIGHT_PRIVATE } from '../../../../utils/constants/intervalConstants'
 import { getCoinObj } from '../../../../utils/CoinData/CoinData'
-import { ENABLE_DLIGHT } from '../../../../../env/main.json'
+import { dlightEnabled } from '../../../../utils/enabledChannels';
 
 /**
  * Fetches the appropriate data from the store for the specified channel's type
@@ -28,7 +28,7 @@ export const updateLedgerValue = async (
 
   await Promise.all(
     channels.map(async (channel) => {
-      if (!channelMap[channel] || (channel === DLIGHT_PRIVATE && !ENABLE_DLIGHT))
+      if (!channelMap[channel] || (channel === DLIGHT_PRIVATE && !dlightEnabled()))
         return;
 
       try {

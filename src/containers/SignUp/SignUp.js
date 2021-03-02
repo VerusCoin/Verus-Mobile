@@ -17,10 +17,9 @@ import AlertAsync from 'react-native-alert-async'
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers"
 import { DLIGHT_PRIVATE, ELECTRUM, CHANNELS_NULL_TEMPLATE, CHANNELS } from "../../utils/constants/intervalConstants"
 import { arrayToObject } from "../../utils/objectManip"
-import { ENABLE_DLIGHT } from '../../../env/main.json'
 import { getSupportedBiometryType, storeBiometricPassword } from "../../utils/biometry/biometry"
 import { hashAccountId } from "../../utils/crypto/hash"
-import { BIOMETRY_WARNING, START_COINS } from "../../utils/constants/constants"
+import { START_COINS } from "../../utils/constants/constants"
 import { SignUpRender } from "./SignUp.render"
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert"
 import { findCoinObj } from "../../utils/CoinData/CoinData"
@@ -146,10 +145,10 @@ class SignUp extends Component {
           _errors = true;
         }
 
-        if (_seeds[ELECTRUM] == null || (_seeds[DLIGHT_PRIVATE] == null && ENABLE_DLIGHT === true)) {
+        if (_seeds[ELECTRUM] == null) {
           createAlert(
             "Error",
-            "Please configure both a primary seed, and a secondary seed."
+            "Please configure at least a primary seed."
           );
           _errors = true;
         }
@@ -197,6 +196,10 @@ class SignUp extends Component {
           ).then(async (action) => {
             this.createAccount(action);
             await this.addStartingCoins(this.state.userName)
+
+            if (this.hasAccount()) {
+              this.props.navigation.dispatch(NavigationActions.back());
+            }
           })
           .catch((e) => {
             console.warn(e);
@@ -226,6 +229,10 @@ class SignUp extends Component {
                   .then(async (action) => {
                     this.createAccount(action)
                     await this.addStartingCoins(this.state.userName)
+
+                    if (this.hasAccount()) {
+                      this.props.navigation.dispatch(NavigationActions.back());
+                    }
                   })
                   .catch((e) => {
                     console.warn(e);

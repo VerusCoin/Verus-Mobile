@@ -42,6 +42,32 @@ export const storeUser = (authData, users) => {
   })
 };
 
+//Add user encrypted key for a channel (DOES NOT OVERWRITE)
+export const addEncryptedKeyToUser = async (accountHash, channel, seed, password) => {
+  try {
+    const users = await getUsers()
+
+    const userObjIndex = users.findIndex(user => user.accountHash === accountHash)
+    if (userObjIndex === -1) throw new Error("User with hash " + accountHash + " not found.")
+    const userObj = users[userObjIndex]
+
+    if (userObj.encryptedKeys[channel] != null) {
+      throw new Error(`User with hash ${accountHash} already has as ${channel} seed, cannot overwrite.`)
+    } else {
+      let newUserObj = {...userObj}
+      newUserObj.encryptedKeys[channel] = encryptkey(password, seed)
+      
+      let newUsers = [...users]
+      newUsers[userObjIndex] = newUserObj
+
+      await AsyncStorage.setItem('userData', JSON.stringify({users: newUsers}))
+      return await getUsers()
+    }
+  } catch(e) {
+    throw e
+  }
+};
+
 //Set storage to hold encrypted user data
 export const setUsers = (users) => {
   let _toStore = {users}

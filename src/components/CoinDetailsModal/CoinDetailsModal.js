@@ -51,7 +51,7 @@ class CoinDetailsModal extends Component {
       loading: true
     }, async () => {
       const removePromise = () => new Promise((resolve, reject) => {
-        removeExistingCoin(this.props.data.id, this.props.activeCoinList, this.props.activeAccount.id, true)
+        removeExistingCoin(this.props.data.id, this.props.activeCoinList, this.props.activeAccount.id, false)
         .then((res) => {
           clearAllCoinIntervals(this.props.data.id)
           this.props.dispatch(res)

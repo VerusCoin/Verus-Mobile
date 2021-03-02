@@ -37,7 +37,7 @@ export const addCoin = (fullCoinObj, activeCoins, userName, channels) => {
   let initializers = []
 
   Object.keys(COIN_MANAGER_MAP.initializers).map(channel => {
-    if (!DISABLED_CHANNELS.includes(channel) && channels.includes(channel)) {
+    if (channels.includes(channel)) {
       initializers.push(COIN_MANAGER_MAP.initializers[channel](fullCoinObj))
     }
   })

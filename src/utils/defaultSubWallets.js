@@ -10,7 +10,7 @@ import {
   ELECTRUM,
   GENERAL,
 } from "./constants/intervalConstants";
-import { ENABLE_DLIGHT } from '../../env/main.json'
+import { dlightEnabled } from "./enabledChannels";
 
 // export const API_GET_ADDRESSES = "get_addresses"
 // export const API_GET_BALANCES = "get_balances"
@@ -21,7 +21,7 @@ import { ENABLE_DLIGHT } from '../../env/main.json'
 export const getDefaultSubWallets = (coinObj) => {
   const dominantChannel = coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM
 
-  return coinObj.compatible_channels.includes(DLIGHT_PRIVATE) && ENABLE_DLIGHT ? [{
+  return coinObj.compatible_channels.includes(DLIGHT_PRIVATE) && dlightEnabled() ? [{
     channel: coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM,
     api_channels: {
       [API_GET_BALANCES]: dominantChannel,

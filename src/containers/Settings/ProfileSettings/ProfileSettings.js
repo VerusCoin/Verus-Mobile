@@ -8,7 +8,7 @@
 
 import React, { Component } from "react";
 import { ListItem } from "react-native-elements";
-import { Divider, List } from "react-native-paper"
+import { Divider, List, Portal } from "react-native-paper"
 import { 
   View, 
   Text, 
@@ -18,15 +18,20 @@ import {
 import { connect } from 'react-redux';
 import Styles from '../../../styles/index'
 import { getSupportedBiometryType, removeBiometricPassword, storeBiometricPassword } from "../../../utils/biometry/biometry";
-import { setBiometry } from "../../../actions/actionCreators";
+import { addEncryptedKey, setBiometry } from "../../../actions/actionCreators";
 import PasswordCheck from "../../../components/PasswordCheck";
-import { canEnableBiometry, canShowSeed } from "../../../actions/actions/channels/dlight/dispatchers/AlertManager";
+import {
+  canEnableBiometry,
+  canShowSeed,
+} from "../../../actions/actions/channels/dlight/dispatchers/AlertManager";
 import { createAlert } from "../../../actions/actions/alert/dispatchers/alert";
 import { checkPinForUser } from "../../../utils/asyncStore/asyncStore";
+import { ENABLE_DLIGHT } from '../../../../env/main.json'
+import { dlightEnabled } from "../../../utils/enabledChannels";
+import SetupSeedModal from "../../../components/SetupSeedModal/SetupSeedModal";
+import { DLIGHT_PRIVATE } from "../../../utils/constants/intervalConstants";
 
 const RESET_PWD = "ResetPwd"
-const RECOVER_SEED = "RecoverSeed"
-const PROFILE_INFO = "ProfileInfo"
 const REMOVE_PROFILE = "DeleteProfile"
 
 class ProfileSettings extends Component {
@@ -42,6 +47,7 @@ class ProfileSettings extends Component {
         display_name: null,
         biometry: false,
       },
+      privateSeedModalOpen: false,
       onPasswordCorrect: () => {},
     };
   }
@@ -134,6 +140,32 @@ class ProfileSettings extends Component {
     }
   };
 
+  addZSeed = (seed, channel) => {
+    this.openPasswordCheck(async (result) => {
+      if (result.valid) {
+        try {
+          await addEncryptedKey(
+            this.props.activeAccount.accountHash,
+            channel,
+            seed,
+            result.password
+          );
+
+          createAlert(
+            "Success",
+            `Z Seed set for ${
+              this.props.activeAccount.id
+            }. Restart Verus Mobile and login to start using Z cards!`
+          );
+        } catch(e) {
+          createAlert("Error", e.message);
+        }
+      } else {
+        createAlert("Authentication Error", "Incorrect password");
+      }
+    })
+  }
+
   openPasswordCheck = (onPasswordCorrect) =>
     this.setState({
       passwordDialogOpen: true,
@@ -144,8 +176,22 @@ class ProfileSettings extends Component {
     });
 
   renderSettingsList = () => {
+    const zSetupComplete = dlightEnabled()
+
     return (
       <ScrollView style={Styles.fullWidthBlock}>
+        <Portal>
+          <SetupSeedModal
+            animationType="slide"
+            transparent={false}
+            visible={this.state.privateSeedModalOpen}
+            cancel={() => {
+              this.setState({ privateSeedModalOpen: false });
+            }}
+            setSeed={(seed, channel) => this.addZSeed(seed, channel)}
+            channel={DLIGHT_PRIVATE}
+          />
+        </Portal>
         {/* TODO: Add back in when more interesting profile data and/or settings are implemented
           <TouchableOpacity onPress={() => this._openSettings(PROFILE_INFO)}>
             <ListItem                       
@@ -195,7 +241,9 @@ class ProfileSettings extends Component {
                 this.props.activeAccount.biometry ? "Disable" : "Setup"
               } biometric login`}
               left={(props) => <List.Icon {...props} icon={"lock"} />}
-              right={(props) => <List.Icon {...props} icon={"chevron-right"} />}
+              right={(props) => (
+                <List.Icon {...props} icon={"chevron-right"} />
+              )}
             />
             <Divider />
           </TouchableOpacity>
@@ -208,12 +256,39 @@ class ProfileSettings extends Component {
           userName={this.props.activeAccount.id}
         />
         <List.Subheader>{"Profile Actions"}</List.Subheader>
-        <TouchableOpacity onPress={() => this._openSettings(REMOVE_PROFILE)}>
+        {ENABLE_DLIGHT && (
+          <TouchableOpacity
+            onPress={() => {
+              this.setState({ privateSeedModalOpen: true });
+            }}
+            disabled={zSetupComplete}
+          >
+            <Divider />
+            <List.Item
+              title={
+                zSetupComplete
+                  ? "Z Seed Setup Complete"
+                  : "Setup Z (Shielded Address) Seed"
+              }
+              description={
+                zSetupComplete
+                  ? ""
+                  : "Setting up a Z Seed will allow you to use private transactions on compatible coins (after a restart)"
+              }
+              left={(props) => <List.Icon {...props} icon={"shield-key"} />}
+            />
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity
+          onPress={() => this._openSettings(REMOVE_PROFILE)}
+        >
           <Divider />
           <List.Item
             title={"Delete Profile"}
             left={(props) => <List.Icon {...props} icon={"trash-can"} />}
-            right={(props) => <List.Icon {...props} icon={"chevron-right"} />}
+            right={(props) => (
+              <List.Icon {...props} icon={"chevron-right"} />
+            )}
           />
           <Divider />
         </TouchableOpacity>

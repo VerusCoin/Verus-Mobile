@@ -31,6 +31,8 @@ export const initDlightWallet = (coinObj) => {
   const { accountHash } = activeAccount
   const { dlightEndpoints, id, proto } = coinObj
 
+  if (activeAccount.seeds.dlight_private == null) return Promise.resolve()
+
   // Depends on settings already being added to redux store and initialized
   const { coinSettings } = settings
   let initializationPromises = []
@@ -133,6 +135,8 @@ export const closeDlightWallet = (coinObj, clearDb) => {
   const { activeAccount } = authentication
   const { accountHash } = activeAccount
   const { id, proto } = coinObj
+
+  if (activeAccount.seeds.dlight_private == null) return Promise.resolve()
 
   let closePromises = []
 

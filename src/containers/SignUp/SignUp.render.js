@@ -23,7 +23,10 @@ export const SignUpRender = function() {
         <View style={Styles.headerContainerSafeArea}>
           <Text style={Styles.centralHeader}>Create New Profile</Text>
         </View>
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <TouchableWithoutFeedback
+          onPress={Keyboard.dismiss}
+          accessible={false}
+        >
           <View style={Styles.flexBackground}>
             <ScrollView
               contentContainerStyle={{
@@ -82,13 +85,11 @@ export const SignUpRender = function() {
               <View style={Styles.wideBlock}>
                 <Checkbox.Item
                   color={Colors.primaryColor}
-                  label={
-                    ENABLE_DLIGHT
-                      ? "Setup Primary (T Address) Seed"
-                      : "Setup Wallet Seed"
-                  }
+                  label={"Setup Primary (T Address) Seed"}
                   status={
-                    this.state.seeds[ELECTRUM] != null ? "checked" : "unchecked"
+                    this.state.seeds[ELECTRUM] != null
+                      ? "checked"
+                      : "unchecked"
                   }
                   onPress={() => this.setupSeed(ELECTRUM)}
                   mode="android"
@@ -98,7 +99,7 @@ export const SignUpRender = function() {
                 <View style={Styles.wideBlock}>
                   <Checkbox.Item
                     color={Colors.primaryColor}
-                    label={"Setup Secondary (Z Address) Seed"}
+                    label={"Setup Optional (Z Address) Seed"}
                     status={
                       this.state.seeds[DLIGHT_PRIVATE] != null
                         ? "checked"
@@ -133,7 +134,9 @@ export const SignUpRender = function() {
                   <TextInput
                     value={this.state.confirmPin}
                     dense
-                    onChangeText={(text) => this.setState({ confirmPin: text })}
+                    onChangeText={(text) =>
+                      this.setState({ confirmPin: text })
+                    }
                     label="Confirm Profile Password"
                     underlineColor={Colors.primaryColor}
                     selectionColor={Colors.primaryColor}
@@ -155,9 +158,7 @@ export const SignUpRender = function() {
                     color={Colors.primaryColor}
                     label={"Enable biometric authentication"}
                     status={
-                      this.state.enableBiometry
-                        ? "checked"
-                        : "unchecked"
+                      this.state.enableBiometry ? "checked" : "unchecked"
                     }
                     onPress={async () => {
                       if (
@@ -190,10 +191,10 @@ export const SignUpRender = function() {
               </Button>
             )}
             <Button
-              onPress={this._handleSubmit}
+              onPress={() => this._handleSubmit()}
               color={Colors.successButtonColor}
             >
-              {"Add Account"}
+              {"Add Profile"}
             </Button>
           </View>
         </View>

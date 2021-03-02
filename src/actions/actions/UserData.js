@@ -9,8 +9,11 @@ import {
   getActiveCoinList,
   checkPinForUser,
   resetUserPwd,
-  deleteUser, setUserBiometry, setUsers
-} from '../../utils/asyncStore/asyncStore';
+  addEncryptedKeyToUser,
+  deleteUser,
+  setUserBiometry,
+  setUsers,
+} from "../../utils/asyncStore/asyncStore";
 import {
   makeKeyPair
 } from '../../utils/keys'
@@ -38,6 +41,20 @@ export const addUser = (userName, seeds, password, users, biometry = false) => {
 export const resetPwd = (userID, newPwd, oldPwd) => {
   return new Promise((resolve, reject) => {
     resetUserPwd(userID, newPwd, oldPwd)
+      .then(res => {
+        if (res) {
+          resolve(setAccounts(res))
+        } else {
+          resolve(false)
+        }
+      })
+      .catch(err => reject(err));
+  });
+}
+
+export const addEncryptedKey = (accountHash, channel, seed, password) => {
+  return new Promise((resolve, reject) => {
+    addEncryptedKeyToUser(accountHash, channel, seed, password)
       .then(res => {
         if (res) {
           resolve(setAccounts(res))

@@ -14,6 +14,7 @@ import {
   loadCachedHeaders,
   loadEthTxReceipts,
   initSettings,
+  fetchActiveCoins,
   requestSeedData
 } from './actions/actionCreators';
 import {
@@ -91,13 +92,18 @@ class VerusMobile extends React.Component {
     .then(() => {
       return checkAndSetVersion()
     })
-    .then(() => {
-      let promiseArr = [fetchUsers(), initSettings(), updateActiveCoinList()]
+    .then(async () => {
+      let promiseArr = [
+        fetchUsers(),
+        initSettings(),
+        fetchActiveCoins(),
+      ];
+
+      await updateActiveCoinList()
 
       return Promise.all(promiseArr)
     })
-    .then((res) => {
-      let actionArr = res.slice(0, res.length - 1)
+    .then((actionArr) => {
       actionArr.forEach((action) => {
         this.props.dispatch(action)
       })
