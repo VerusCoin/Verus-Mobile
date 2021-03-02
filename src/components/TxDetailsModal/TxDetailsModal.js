@@ -7,8 +7,6 @@ import React, { Component } from "react";
 import StandardButton from "../StandardButton";
 import { 
   View, 
-  Text, 
-  ScrollView, 
   Linking, 
   Clipboard,
   Alert,
@@ -19,7 +17,7 @@ import { explorers } from '../../utils/CoinData/CoinData';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
 import { ethers } from "ethers";
-import { Button, List } from "react-native-paper"
+import { Button, List, Text } from "react-native-paper"
 import SemiModal from "../SemiModal";
 
 class TxDetailsModal extends Component {
@@ -196,7 +194,7 @@ class TxDetailsModal extends Component {
                     style={{
                       ...(txData.address ? Styles.linkText : {}),
                       ...Styles.listItemTableCell,
-                      ...Styles.halfWidthBox
+                      ...Styles.threeQuarterWidthBlock
                     }}
                     numberOfLines={1}
                     ellipsizeMode="middle"
@@ -231,7 +229,7 @@ class TxDetailsModal extends Component {
                     style={{
                       ...(txData.txid != null ? Styles.linkText : {}),
                       ...Styles.listItemTableCell,
-                      ...Styles.halfWidthBox
+                      ...Styles.threeQuarterWidthBlock
                     }}
                     numberOfLines={1}
                     ellipsizeMode="middle"

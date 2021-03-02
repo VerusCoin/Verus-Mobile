@@ -1,5 +1,6 @@
 import { getPrivateBalance } from "./getPrivateBalance"
 import BigNumber from "bignumber.js";
+import { DLIGHT_PRIVATE } from "../../../../constants/intervalConstants";
 
 //TODO: Calculate fee for each coin seperately
 export const preflightPrivateTransaction = async (coinObj, activeUser, address, amount, params) => {
@@ -43,28 +44,13 @@ export const preflightPrivateTransaction = async (coinObj, activeUser, address, 
     }
   }
 
-  console.log({
-    err: false,
-    result: {
-      fee: defaultFee.toString(),
-      value: amountToSend.toString(),
-      toAddress: address,
-      fromAddress: params.fromAddress,
-      amountSubmitted: amount.toString(),
-      memo: params.memo,
-      params: {
-        feeTakenFromAmount,
-      },
-    },
-  })
-
   return {
     err: false,
     result: {
       fee: defaultFee.toString(),
       value: amountToSend.toString(),
       toAddress: address,
-      fromAddress: params.fromAddress,
+      fromAddress: activeUser.keys[coinObj.id][DLIGHT_PRIVATE].addresses[0],
       amountSubmitted: amount.toString(),
       memo: params.memo,
       params: {

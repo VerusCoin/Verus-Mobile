@@ -7,11 +7,9 @@
 import React, { Component } from "react";
 import {
   View,
-  Text,
   FlatList,
   TouchableOpacity
 } from "react-native";
-import { ListItem } from "react-native-elements";
 import { connect } from 'react-redux';
 import { truncateDecimal, MathableNumber } from '../../../utils/math';
 import { expireData, setActiveOverviewFilter } from '../../../actions/actionCreators';
@@ -29,9 +27,10 @@ import {
 import { selectTransactions } from '../../../selectors/transactions';
 import { ETHERS } from "../../../utils/constants/web3Constants";
 import { ethers } from "ethers";
-import { Portal, List } from "react-native-paper";
+import { Portal, List, Text } from "react-native-paper";
 import BigNumber from "bignumber.js";
 import { TransactionLogos } from '../../../images/customIcons/index'
+import Colors from "../../../globals/colors";
 
 const TX_LOGOS = {
   self: TransactionLogos.SelfArrow,
@@ -251,6 +250,7 @@ class Overview extends Component {
               : this.props.activeCoin.id
           }`}
           description={subtitle}
+          descriptionNumberOfLines={1}
           left={() => (
             <AvatarImg
               width={24}
@@ -296,8 +296,18 @@ class Overview extends Component {
     return (
       <FlatList
         style={Styles.fullWidth}
+        contentContainerStyle={{ flexGrow: 1 }}
         data={this.parseTransactionLists()}
         scrollEnabled={true}
+        ListEmptyComponent={
+          <View
+            style={Styles.focalCenter}
+          >
+            <Text style={{...Styles.centeredText, fontSize: 16, color: Colors.verusDarkGray}}>
+              {"No transactions found..."}
+            </Text>
+          </View>
+        }
         keyExtractor={(item, index) => index}
         refreshing={this.state.loading}
         onRefresh={this.forceUpdate}

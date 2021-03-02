@@ -1,9 +1,9 @@
 import React, { Component } from "react";
-import StandardButton from "../../components/StandardButton";
-import { View, Text, ScrollView, FlatList } from "react-native";
+import LottieView from 'lottie-react-native';
+import { View, ScrollView, FlatList } from "react-native";
+import { Text } from "react-native-paper";
 import { List, Button } from "react-native-paper";
 import { truncateDecimal } from '../../utils/math';
-import ProgressBar from 'react-native-progress/Bar';
 import Styles from '../../styles/index'
 import Colors from "../../globals/colors";
 import { explorers } from "../../utils/CoinData/CoinData";
@@ -240,10 +240,17 @@ export const renderError = function() {
 }
 
 export const renderLoading = function() {
-  return(
+  return (
     <View style={Styles.focalCenter}>
-      <ProgressBar progress={this.state.loadingProgress} width={200} color={Colors.linkButtonColor}/>
-      <Text style={Styles.mediumCentralPaddedHeader}>{this.state.loadingMessage}</Text>
+      <LottieView
+        source={require("../../animations/loading_circle.json")}
+        autoPlay
+        loop
+        style={{
+          width: 128,
+          marginBottom: 64,
+        }}
+      />
     </View>
-  )
+  );
 }

@@ -111,6 +111,12 @@ class CoinMenus extends Component {
     this.setState({ activeTab: newTab })
   }
 
+  switchTabByKey = (key) => {
+    const foundTab = this.props.tabs.find(value => value.key === key) 
+
+    if (foundTab) this.switchTab(foundTab)
+  }
+
   goBack = () => {
     this.props.navigation.dispatch(NavigationActions.back())
   }
@@ -142,16 +148,19 @@ class CoinMenus extends Component {
                 <Overview
                   navigation={this.props.navigation}
                   data={this.passthrough}
+                  switchTab={this.switchTabByKey}
                 />
               ) : this.state.activeTab.screen === "SendCoin" ? (
                 <SendCoin
                   navigation={this.props.navigation}
                   data={this.passthrough}
+                  switchTab={this.switchTabByKey}
                 />
               ) : this.state.activeTab.screen === "ReceiveCoin" ? (
                 <ReceiveCoin
                   navigation={this.props.navigation}
                   data={this.passthrough}
+                  switchTab={this.switchTabByKey}
                 />
               ) : null}
               <BottomNavigation
