@@ -4,17 +4,18 @@ import {
   ScrollView,
   View,
   Text,
-  SafeAreaView
+  SafeAreaView,
 } from "react-native"
+import { List, Card } from "react-native-paper"
 import Modal from '../../components/Modal'
 import Styles from '../../styles/index'
-import SubWalletCard from "../../components/SubWalletCard";
 import { GENERAL } from "../../utils/constants/intervalConstants";
 import { SUBWALLET_NAMES } from "../../utils/constants/constants";
 import { truncateDecimal } from "../../utils/math";
 import { setCoinSubWallet } from "../../actions/actionCreators";
 import { USD } from "../../utils/constants/currencies";
 import BigNumber from "bignumber.js";
+import Colors from "../../globals/colors";
 
 class SubWalletSelectorModal extends Component {
   constructor(props) {
@@ -107,51 +108,52 @@ class SubWalletSelectorModal extends Component {
         visible={visible}
         onRequestClose={cancelHandler}
       >
-        <SafeAreaView
-          style={{ ...Styles.centerContainer, ...Styles.flexBackground }}
-        >
-          <Text style={Styles.centralHeader}>
-            {"Select a Card"}
-          </Text>
-          <ScrollView
-            contentContainerStyle={{
-              display: "flex",
-              alignItems: "center",
-              width: '100%',
-            }}
-          >
-            <View
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                flexWrap: "wrap",
-                padding: "2%",
-                flex: 1,
-              }}
-            >
-              {subWallets.map((wallet, index) => (
-                <SubWalletCard
-                  key={index}
-                  nameTitle={
-                    SUBWALLET_NAMES[wallet.id]
-                      ? SUBWALLET_NAMES[wallet.id]
-                      : wallet.id
-                  }
-                  balanceTitle={`${
-                    cryptoBalances[wallet.id] != null
-                      ? truncateDecimal(cryptoBalances[wallet.id], 4)
-                      : "-"
-                  } ${activeCoin.id}`}
-                  balanceSubtitle={`${
-                    fiatBalances[wallet.id] != null
-                      ? fiatBalances[wallet.id].toFixed(2)
-                      : "-"
-                  } ${displayCurrency}`}
+        <SafeAreaView style={{ ...Styles.flexBackground }}>
+          <Text style={Styles.centralHeader}>{"Select a Card"}</Text>
+          <ScrollView>
+            {subWallets.map((wallet, index) => (
+              <View style={{ margin: 8 }}>
+                <Card
                   onPress={() => this.setSubWallet(wallet)}
-                  color={wallet.color}
-                />
-              ))}
-            </View>
+                  key={index}
+                  style={{ backgroundColor: wallet.color }}
+                >
+                  <List.Item
+                    title={
+                      SUBWALLET_NAMES[wallet.id]
+                        ? SUBWALLET_NAMES[wallet.id]
+                        : wallet.id
+                    }
+                    titleStyle={{
+                      color: Colors.secondaryColor,
+                      fontWeight: "500",
+                    }}
+                    description={`${
+                      fiatBalances[wallet.id] != null
+                        ? fiatBalances[wallet.id].toFixed(2)
+                        : "-"
+                    } ${displayCurrency}`}
+                    left={() => <List.Icon color={Colors.secondaryColor} icon="wallet" />}
+                    descriptionStyle={{ color: Colors.secondaryColor }}
+                    right={() => (
+                      <Text
+                        style={{
+                          alignSelf: "center",
+                          color: Colors.secondaryColor,
+                          fontWeight: "500",
+                          fontSize: 16,
+                          marginRight: 8
+                        }}
+                      >{`${
+                        cryptoBalances[wallet.id] != null
+                          ? truncateDecimal(cryptoBalances[wallet.id], 4)
+                          : "-"
+                      } ${activeCoin.id}`}</Text>
+                    )}
+                  />
+                </Card>
+              </View>
+            ))}
           </ScrollView>
         </SafeAreaView>
       </Modal>

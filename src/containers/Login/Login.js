@@ -11,14 +11,11 @@ import React, { Component } from "react";
 import { 
   View,
   ScrollView,
-  Text, 
   Keyboard, 
-  TouchableWithoutFeedback, 
-  ActivityIndicator, 
-  Image,
+  TouchableWithoutFeedback,
   Alert
 } from "react-native";
-import { Button } from "react-native-paper"
+import { Button, Portal, TextInput, Checkbox } from "react-native-paper";
 import { connect } from 'react-redux';
 import { 
   validateLogin, 
@@ -26,21 +23,23 @@ import {
   fetchActiveCoins,
   signIntoAuthenticatedAccount,
   COIN_MANAGER_MAP, 
-  saveGeneralSettings
+  saveGeneralSettings,
+  initSettings
  } from '../../actions/actionCreators';
-import { Dropdown } from 'react-native-material-dropdown';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
-import StandardButton from "../../components/StandardButton";
 import PasswordInput from '../../components/PasswordInput'
 import { DISABLED_CHANNELS } from '../../../env/main.json'
 
 import { removeIdentityData } from '../../utils/asyncStore/identityStorage';
 import { getBiometricPassword, getSupportedBiometryType } from "../../utils/biometry/biometry";
 import { VerusLogo } from "../../images/customIcons";
-import buttonsStyles from "../../styles/buttons.styles";
+import ListSelectionModal from "../../components/ListSelectionModal/ListSelectionModal";
+import { TouchableOpacity } from "react-native";
+
+const NO_ACCOUNT = "NO_ACCOUNT"
 
 class Login extends Component {
   constructor(props) {
@@ -52,7 +51,8 @@ class Login extends Component {
       validating: false,
       simpleLayout: true,
       makeDefaultAccount: false,
-      errors: {selectedAccount: null, password: null}
+      errors: {selectedAccount: null, password: null},
+      accountSelectModalOpen: false
     };
 
     this.passwordInput = React.createRef();
@@ -106,6 +106,7 @@ class Login extends Component {
         this.props.dispatch(accountAuthenticator)
         this.props.dispatch(coinList)
         this.props.dispatch(setUserCoinsAction)
+        this.props.dispatch(await initSettings())
 
         for (let i = 0; i < activeCoinsForUser.length; i++) {
           const coinObj = activeCoinsForUser[i]
@@ -125,6 +126,7 @@ class Login extends Component {
         console.warn(err)
         this.setState({
           validating: false,
+          loading: false,
           simpleLayout: false
         })
       });
@@ -213,40 +215,52 @@ class Login extends Component {
           contentContainerStyle={Styles.focalCenter}
           style={Styles.backgroundColorWhite}
         >
+          <Portal>
+            {this.state.accountSelectModalOpen && (
+              <ListSelectionModal
+                title="Select a Profile"
+                flexHeight={1}
+                selectedKey={
+                  this.state.selectedAccount.accountHash == null
+                    ? NO_ACCOUNT
+                    : this.state.selectedAccount.accountHash
+                }
+                visible={this.state.accountSelectModalOpen}
+                onSelect={(item) => this.selectAccount(item.account)}
+                data={this.props.accounts.map((item) => {
+                    return {
+                      key: item.accountHash,
+                      title: item.id,
+                      account: item,
+                    };
+                  })}
+                cancel={() =>
+                  this.setState({ accountSelectModalOpen: false })
+                }
+              />
+            )}
+          </Portal>
           <VerusLogo
             width={"60%"}
             height={"15%"}
-            style={{ marginBottom: "5%" }}
           />
-          {/* {<TouchableHighlight onPress={this.clearIdentityStorage}><Text>Clear identity storage</Text></TouchableHighlight>} */}
-          <Text style={Styles.centralHeader}>
-            {this.state.simpleLayout
-              ? "Select a Profile"
-              : "Enter Your Password"}
-          </Text>
-          <Dropdown
-            containerStyle={Styles.standardWidthBlock}
-            labelExtractor={(item, index) => {
-              return item.id;
-            }}
-            valueExtractor={(item, index) => {
-              return item;
-            }}
-            value={
-              this.state.selectedAccount.id == null
-                ? ""
-                : this.state.selectedAccount
-            }
-            data={this.props.accounts}
-            onChangeText={(value) => this.selectAccount(value)}
-            textColor={Colors.quinaryColor}
-            selectedItemColor={Colors.quinaryColor}
-            baseColor={Colors.quinaryColor}
-            label="Select Profile..."
-            labelTextStyle={Styles.defaultText}
-            pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
-            itemTextStyle={Styles.defaultText}
-          />
+          <TouchableOpacity
+            onPress={() => this.setState({ accountSelectModalOpen: true })}
+            style={{...Styles.wideBlock, ...Styles.threeQuarterWidthBlock}}
+          >
+            <TextInput
+              label="Select a Profile"
+              dense
+              value={
+                this.state.selectedAccount.id
+              }
+              editable={false}
+              pointerEvents="none"
+              style={{
+                backgroundColor: Colors.secondaryColor,
+              }}
+            />
+          </TouchableOpacity>
           {!this.state.simpleLayout && !this.state.validating && (
             <PasswordInput
               onChangeText={(text) => this.setState({ password: text })}
@@ -257,6 +271,19 @@ class Login extends Component {
               }
             />
           )}
+          <View style={{...Styles.wideBlock, ...Styles.threeQuarterWidthBlock}}>
+            <Checkbox.Item
+              color={Colors.primaryColor}
+              label={"Make default"}
+              status={
+                this.state.makeDefaultAccount
+                  ? "checked"
+                  : "unchecked"
+              }
+              onPress={() => this.setState({ makeDefaultAccount: !this.state.makeDefaultAccount })}
+              mode="android"
+            />
+          </View>
           <View style={Styles.fullWidthFlexCenterBlock}>
             {(!this.state.simpleLayout ||
               this.state.validating ||

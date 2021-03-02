@@ -15,7 +15,7 @@ class ListSelectionModal extends Component {
   }
 
   render() {
-    const { visible, cancel, selectedKey, onSelect, data, title } = this.props;
+    const { visible, cancel, selectedKey, onSelect, data, title, flexHeight } = this.props;
 
     return (
       <SemiModal
@@ -23,7 +23,7 @@ class ListSelectionModal extends Component {
         transparent={true}
         visible={visible}
         onRequestClose={cancel}
-        flexHeight={3}
+        flexHeight={flexHeight ? flexHeight : 3}
       >
         <View style={Styles.centerContainer}>
           <View style={{ ...Styles.headerContainerSafeArea, minHeight: 36, maxHeight: 36, paddingBottom: 8 }}>

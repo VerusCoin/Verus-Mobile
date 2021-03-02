@@ -135,13 +135,20 @@ export const HomeListItemRender = function(coinObj, isParent, subWallet, index =
       >
         <TouchableRipple
           onPress={() =>
-            this.openCoin(coinObj, isParent ? subWallets[0] : subWallet)
+            this.openCoin(
+              coinObj,
+              isParent
+                ? this.props.activeSubWallets[ticker]
+                  ? this.props.activeSubWallets[ticker]
+                  : subWallets[0]
+                : subWallet
+            )
           }
           onLongPress={() => {
             if (isParent) {
               triggerLightHaptic();
-              this.toggleListItem(coinObj.id, subWallets.length)
-            }   
+              this.toggleListItem(coinObj.id, subWallets.length);
+            }
           }}
           rippleColor="rgba(0, 0, 0, .32)"
         >

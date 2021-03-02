@@ -299,7 +299,8 @@ const mapStateToProps = (state) => {
     rates: state.ledger.rates[GENERAL],
     displayCurrency:
       state.settings.generalWalletSettings.displayCurrency || USD,
-    allSubWallets: extractDisplaySubWallets(state)
+    allSubWallets: extractDisplaySubWallets(state),
+    activeSubWallets: state.coinMenus.activeSubWallets
   };
 };
 
