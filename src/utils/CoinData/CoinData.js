@@ -11,7 +11,7 @@ import { ETHERS } from '../constants/web3Constants';
 
 const getDefaultApps = (coinName) => {
   return ({
-    defaultApp: 'wallet',
+    default_app: 'wallet',
     apps: {
     wallet: {
       title: coinName + ' Wallet', 
@@ -131,7 +131,7 @@ export const findCoinObj = (id, userName) => {
   let coinObj = coinsList[id.toLowerCase()]
 
   if (coinObj) {
-    coinObj.serverList = coinObj.compatible_channels.includes(ELECTRUM) ? electrumServers[id.toLowerCase()].serverList : []
+    coinObj.electrum_endpoints = coinObj.compatible_channels.includes(ELECTRUM) ? electrumServers[id.toLowerCase()].serverList : []
     coinObj.users = userName != null ? [userName] : [];
     
     if (!coinObj.compatible_channels.includes(DLIGHT_PRIVATE)) {
@@ -147,9 +147,9 @@ export const findCoinObj = (id, userName) => {
       } else {
         coinObj.apps = DEFAULT_APPS.apps;
       }
-      if (!coinObj.defaultApp) coinObj.defaultApp = DEFAULT_APPS.defaultApp
-    } else if (!coinObj.defaultApp) {
-      coinObj.defaultApp = Object.keys(coinObj.apps)[0]
+      if (!coinObj.default_app) coinObj.default_app = DEFAULT_APPS.default_app
+    } else if (!coinObj.default_app) {
+      coinObj.default_app = Object.keys(coinObj.apps)[0]
     }
   }
   else {
@@ -193,7 +193,7 @@ export const createErc20CoinObj = (contractAddress, displayName, displayTicker, 
   const DEFAULT_APPS = getDefaultApps(coinObj.display_name)
 
   coinObj.apps = DEFAULT_APPS.apps;
-  coinObj.defaultApp = DEFAULT_APPS.defaultApp
+  coinObj.default_app = DEFAULT_APPS.default_app
 
   return coinObj;
 }
@@ -208,9 +208,9 @@ export const createErc20CoinObj = (contractAddress, displayName, displayTicker, 
  * @param {String} userName The current user's username (coins must be activated with a user)
  * @param {Object} apps A list of applications the coin supports, 
  * fetched to display in the coin's menu (these still need to be written in order to be used)
- * @param {String} defaultApp The key of the app this coin will start on when selected
+ * @param {String} default_app The key of the app this coin will start on when selected
  */
-export const createCoinObj = (id, name, description, defaultFee, serverList, userName, apps, defaultApp) => {
+export const createCoinObj = (id, name, description, defaultFee, serverList, userName, apps, default_app) => {
   let coinObj = coinsList[id];
   if (coinObj) throw new Error(`Coin with ID ${id} already exists in coin list`)
 
@@ -224,7 +224,7 @@ export const createCoinObj = (id, name, description, defaultFee, serverList, use
     users: [userName],
     compatible_channels: [ELECTRUM, GENERAL],
     apps: apps,
-    defaultApp: defaultApp,
+    default_app: default_app,
     overrideCoinSettings: {
       verificationLock: true,
       verificationLvl: MAX_VERIFICATION
@@ -234,9 +234,9 @@ export const createCoinObj = (id, name, description, defaultFee, serverList, use
   if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
     const DEFAULT_APPS = getDefaultApps(coinObj.display_name)
     coinObj.apps = DEFAULT_APPS.apps
-    if (!coinObj.defaultApp) coinObj.defaultApp = DEFAULT_APPS.defaultApp
-  } else if (!coinObj.defaultApp) {
-    coinObj.defaultApp = Object.keys(coinObj.apps)[0]
+    if (!coinObj.default_app) coinObj.default_app = DEFAULT_APPS.default_app
+  } else if (!coinObj.default_app) {
+    coinObj.default_app = Object.keys(coinObj.apps)[0]
   }
 
   return coinObj;

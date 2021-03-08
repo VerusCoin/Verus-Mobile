@@ -17,7 +17,7 @@ import {
 import { TextInput, Button, Checkbox } from 'react-native-paper'
 import { NavigationActions } from '@react-navigation/compat';
 import { CommonActions } from '@react-navigation/native';
-import { deleteUserByID } from '../../../../actions/actionCreators';
+import { deleteProfile } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
 import { checkPinForUser } from '../../../../utils/asyncStore/asyncStore'
@@ -101,11 +101,15 @@ class DeleteProfile extends Component {
           .then((res) => {
             if (res) {
               let data = {
-                task: this.deleteUser,
-                message: "Deleting profile, please do not close Verus Mobile",
-                input: [userID, accountHash, biometry],
-                dispatchResult: true
-              }
+                task: (_account, _biometry) =>
+                  this.deleteUser(
+                    _account,
+                    _biometry
+                  ),
+                message:
+                  "Deleting profile, please do not close Verus Mobile",
+                input: [this.props.activeAccount, biometry],
+              };
               this.resetToScreen("SecureLoading", data)
             } 
           })
@@ -119,17 +123,15 @@ class DeleteProfile extends Component {
     }
   }
 
-  deleteUser = async (userId, accountHash, deleteBiometry) => {
+  deleteUser = async (account, deleteBiometry) => {
     try {
-      if (deleteBiometry) await removeBiometricPassword(accountHash)
+      if (deleteBiometry) await removeBiometricPassword(account.accountHash)
       
-      const res = await deleteUserByID(userId)
-      createAlert("Account Deleted!", `"${userId}" account successfully deleted.`)
-
-      return res
+      await deleteProfile(account, this.props.dispatch)
+      createAlert("Profile Deleted!", `"${account.id}" profile successfully deleted.`)
     } catch (error) {
-      console.error(error)
-      createAlert("Error.", `Failed to delete "${userId}" account.`)
+      console.warn(error)
+      createAlert("Error.", `Failed to delete "${account.id}" profile.`)
     }
   }
 

@@ -249,8 +249,8 @@ class Home extends Component {
   openCoin = (coinObj, subWallet) => {
     if (subWallet != null) this.props.dispatch(setCoinSubWallet(coinObj.id, subWallet))
     this.props.dispatch(setActiveCoin(coinObj))
-    this.props.dispatch(setActiveApp(coinObj.defaultApp))
-    this.props.dispatch(setActiveSection(coinObj.apps[coinObj.defaultApp].data[0]))
+    this.props.dispatch(setActiveApp(coinObj.default_app))
+    this.props.dispatch(setActiveSection(coinObj.apps[coinObj.default_app].data[0]))
 
     this.resetToScreen('CoinMenus', 'Overview');
   }

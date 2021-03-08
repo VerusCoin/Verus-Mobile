@@ -108,7 +108,6 @@ class VerusPay extends Component {
 
     if (isJson(result)) {
       let resultParsed = JSON.parse(result);
-      console.log(resultParsed);
 
       if (resultParsed.verusQR) {
         this.handleVerusQR({

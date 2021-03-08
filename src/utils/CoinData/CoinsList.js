@@ -25,7 +25,7 @@ export const coinsList = {
     compatible_channels: [DLIGHT_PRIVATE, ELECTRUM, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT],
     proto: 'vrsc',
-    dlightEndpoints: dlightServers.vrsc
+    dlight_endpoints: dlightServers.vrsc
   },
   kmd: {
     id: "KMD",
@@ -324,7 +324,7 @@ export const coinsList = {
     compatible_channels: [DLIGHT_PRIVATE, ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
     proto: 'btc',
-    dlightEndpoints: dlightServers.zec
+    dlight_endpoints: dlightServers.zec
   },
   // zectest: {
   //   id: "ZECTEST",
@@ -338,7 +338,7 @@ export const coinsList = {
   //   compatible_channels: [DLIGHT_PRIVATE, GENERAL],
   //   tags: [IS_ZCASH],
   //   proto: 'btc',
-  //   dlightEndpoints: dlightServers.zectest
+  //   dlight_endpoints: dlightServers.zectest
   // },
   dash: {
     id: "DASH",

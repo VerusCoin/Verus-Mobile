@@ -57,7 +57,12 @@ class ConfirmSend extends Component {
 
   copyTxIDToClipboard = () => {
     Clipboard.setString(this.state.txid);
-    createAlert("ID Copied", "Transaction ID copied to clipboard")
+    createAlert("ID Copied", `${this.state.txid} copied to clipboard.`)
+  }
+
+  copyAddressToClipboard = (data) => {
+    Clipboard.setString(data);
+    createAlert("Address Copied", `${data} copied to clipboard.`)
   }
 
   openExplorer = () => {

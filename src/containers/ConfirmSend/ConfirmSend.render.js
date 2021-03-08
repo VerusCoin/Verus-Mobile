@@ -2,11 +2,13 @@ import React, { Component } from "react";
 import LottieView from 'lottie-react-native';
 import { View, ScrollView, FlatList } from "react-native";
 import { Text } from "react-native-paper";
-import { List, Button } from "react-native-paper";
+import { List, Button, Divider } from "react-native-paper";
 import { truncateDecimal } from '../../utils/math';
 import Styles from '../../styles/index'
 import Colors from "../../globals/colors";
 import { explorers } from "../../utils/CoinData/CoinData";
+import AnimatedActivityIndicator from "../../components/AnimatedActivityIndicator";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 export const renderTransactionInfo = function() {
   clearTimeout(this.timeoutTimer);
@@ -31,131 +33,85 @@ export const renderTransactionInfo = function() {
         renderItem={({ item }) => {
           if (item.condition == null || item.condition === true)
             return (
-              <List.Item
-                title={item.key}
-                style={{ marginRight: 8 }}
-                right={item.data}
-              />
+              <React.Fragment>
+                <TouchableOpacity
+                  disabled={item.onPress == null}
+                  onPress={() => item.onPress()}
+                >
+                  <List.Item
+                    title={item.data}
+                    description={item.key}
+                  />
+                  <Divider />
+                </TouchableOpacity>
+              </React.Fragment>
             );
           else return null;
         }}
         data={[
           {
-            key: "From:",
-            data: (props) => (
-              <Text
-                style={[Styles.listItemTableCell, Styles.halfWidthBox]}
-                numberOfLines={1}
-                ellipsizeMode="middle"
-              >
-                {this.state.fromAddress}
-              </Text>
-            ),
+            key: "From",
+            data: this.state.fromAddress,
+            onPress: () => this.copyAddressToClipboard(this.state.fromAddress)
           },
           {
-            key: "To:",
-            data: (props) => (
-              <Text
-                style={[Styles.listItemTableCell, Styles.halfWidthBox]}
-                numberOfLines={1}
-                ellipsizeMode="middle"
-              >
-                {this.state.toAddress}
-              </Text>
-            ),
+            key: "To",
+            data: this.state.toAddress,
+            onPress: () => this.copyAddressToClipboard(this.state.toAddress)
           },
           {
-            key: "Amount Submitted:",
-            data: () => (
-              <Text style={Styles.listItemTableCell}>
-                {truncateDecimal(
+            key: "Amount Submitted",
+            data: (truncateDecimal(
                   this.state.amountSubmitted,
                   this.state.coinObj.decimals || 8
                 ) +
                   " " +
-                  this.state.coinObj.id}
-              </Text>
-            ),
+                  this.state.coinObj.id),
             condition: this.state.amountSubmitted !== "0"
           },
           {
-            key: "Balance:",
-            data: () => (
-              <Text style={Styles.listItemTableCell}>
-                {truncateDecimal(
+            key: "Balance",
+            data: (truncateDecimal(
                   this.state.balance,
                   this.state.coinObj.decimals || 8
                 ) +
                   " " +
-                  this.state.coinObj.id}
-              </Text>
+                  this.state.coinObj.id
             ),
             condition: this.state.balance !== 0
           },
           {
-            key: "Fee:",
-            data: () => (
-              <Text style={Styles.listItemTableCell}>
-                {this.state.fee +
+            key: "Fee",
+            data: (this.state.fee +
                   " " +
                   (this.state.feeCurr
                     ? this.state.feeCurr
-                    : this.state.coinObj.id)}
-              </Text>
-            ),
+                    : this.state.coinObj.id)),
           },
           {
-            key: isSendResult ? "Amount Sent" : "Final Amount:",
-            data: () => (
-              <Text
-                style={
-                  this.state.feeTakenFromAmount
-                    ? { ...Styles.listItemTableCell, ...Styles.warningText }
-                    : Styles.listItemTableCell
-                }
-              >
-                {truncateDecimal(
+            key: isSendResult ? "Amount Sent" : "Final Amount",
+            data: (truncateDecimal(
                   this.state.finalTxAmount,
                   this.state.coinObj.decimals || 8
                 ) +
                   " " +
-                  this.state.coinObj.id}
-              </Text>
-            ),
+                  this.state.coinObj.id),
           },
           {
-            key: "Remaining Balance:",
-            data: () => (
-              <Text style={Styles.listItemTableCell}>
-                {this.state.remainingBalance + " " + this.state.coinObj.id}
-              </Text>
-            ),
+            key: "Remaining Balance",
+            data: (this.state.remainingBalance + " " + this.state.coinObj.id),
             condition: this.state.remainingBalance !== 0
           },
           {
-            key: "Message:",
-            data: () => (
-              <Text style={Styles.listItemTableCell}>{this.state.note}</Text>
-            ),
+            key: "Message",
+            data: (this.state.note),
             condition: this.state.note != null && this.state.note.length > 0,
           },
           {
-            key: "TxID:",
-            data: () => (
-              <Text
-                style={{
-                  ...Styles.linkText,
-                  ...Styles.listItemTableCell,
-                  ...Styles.halfWidthBox,
-                }}
-                numberOfLines={1}
-                ellipsizeMode="middle"
-                onPress={this.copyTxIDToClipboard}
-              >
-                {this.state.txid}
-              </Text>
-            ),
+            key: "TxID",
+            data: (this.state.txid),
             condition: this.state.txid != null,
+            onPress: () => this.copyTxIDToClipboard()
           },
         ]}
       />
@@ -242,10 +198,7 @@ export const renderError = function() {
 export const renderLoading = function() {
   return (
     <View style={Styles.focalCenter}>
-      <LottieView
-        source={require("../../animations/loading_circle.json")}
-        autoPlay
-        loop
+      <AnimatedActivityIndicator
         style={{
           width: 128,
           marginBottom: 64,

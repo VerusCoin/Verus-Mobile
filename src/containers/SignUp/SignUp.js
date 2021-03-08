@@ -79,6 +79,7 @@ class SignUp extends Component {
     let _errors = this.state.errors;
     _errors[field] = error;
 
+    createAlert("Error", error)
     this.setState({ errors: _errors });
   };
 
@@ -135,13 +136,13 @@ class SignUp extends Component {
         let _warnings = false;
 
         if (!_userName || _userName.length < 1) {
-          this.handleError("Required field", "userName");
+          this.handleError("Please enter a profile name.", "userName");
           _errors = true;
         } else if (_userName.length > 15) {
-          this.handleError("Max character count exceeded", "userName");
+          this.handleError("Please enter a profile name shorter than 15 characters.", "userName");
           _errors = true;
         } else if (this.duplicateAccount(_userName)) {
-          this.handleError("Account with this name already exists", "userName");
+          this.handleError("A profile with this name already exists.", "userName");
           _errors = true;
         }
 
@@ -154,15 +155,15 @@ class SignUp extends Component {
         }
 
         if (!_pin || _pin.length < 1) {
-          this.handleError("Required field", "pin");
+          this.handleError("Please enter a password.", "pin");
           _errors = true;
         } else if (_pin.length < 5) {
-          this.handleError("Min 5 characters", "pin");
+          this.handleError("Your password must be at least 5 characters long.", "pin");
           _errors = true;
         }
 
         if (_pin !== _confirmPin) {
-          this.handleError("Passwords do not match", "confirmPin");
+          this.handleError("Passwords do not match.", "confirmPin");
           _errors = true;
         }
 
@@ -187,6 +188,8 @@ class SignUp extends Component {
             }
           }
 
+          const hadAccount = this.hasAccount()
+
           addUser(
             this.state.userName,
             arrayToObject(CHANNELS, (acc, channel) => _seeds[channel], true),
@@ -197,7 +200,7 @@ class SignUp extends Component {
             this.createAccount(action);
             await this.addStartingCoins(this.state.userName)
 
-            if (this.hasAccount()) {
+            if (hadAccount) {
               this.props.navigation.dispatch(NavigationActions.back());
             }
           })
@@ -218,6 +221,8 @@ class SignUp extends Component {
                     console.warn(e)
                   }
                 }
+
+                const hadAccount = this.hasAccount()
                 
                 addUser(
                   this.state.userName,
@@ -230,7 +235,7 @@ class SignUp extends Component {
                     this.createAccount(action)
                     await this.addStartingCoins(this.state.userName)
 
-                    if (this.hasAccount()) {
+                    if (hadAccount) {
                       this.props.navigation.dispatch(NavigationActions.back());
                     }
                   })

@@ -29,7 +29,7 @@ export const initDlightWallet = (coinObj) => {
   const { dlightSockets, dlightSyncing } = channelStore_dlight_private
   const { activeAccount } = authentication
   const { accountHash } = activeAccount
-  const { dlightEndpoints, id, proto } = coinObj
+  const { dlight_endpoints, id, proto } = coinObj
 
   if (activeAccount.seeds.dlight_private == null) return Promise.resolve()
 
@@ -41,10 +41,10 @@ export const initDlightWallet = (coinObj) => {
     if (dlightSyncing[id]) throw new Error("Something went wrong while initializing " + id + ". It is marked as already syncing, before it has been added!?")
 
     if (dlightSockets[id] == null) {
-      if (dlightEndpoints == null || !Array.isArray(dlightEndpoints) || dlightEndpoints.length === 0)
+      if (dlight_endpoints == null || !Array.isArray(dlight_endpoints) || dlight_endpoints.length === 0)
         throw new Error(id + " has been requested as a lightwallet client, but it has no servers!")
 
-      const lightWalletEndpointArr = dlightEndpoints[0].split(':')
+      const lightWalletEndpointArr = dlight_endpoints[0].split(':')
 
       if (isNaN(lightWalletEndpointArr[1])) 
         throw new Error(id + " lightwallet was requested with port " + lightWalletEndpointArr[1], " this is not a valid port.")

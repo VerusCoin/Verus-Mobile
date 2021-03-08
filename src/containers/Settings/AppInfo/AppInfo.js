@@ -43,7 +43,7 @@ class AppInfo extends Component {
   render() {
     return (
       <SafeAreaView style={Styles.defaultRoot}>
-        <ScrollView style={Styles.fullWidthBlock} contentContainerStyle={{ paddingBottom: 16 }}>
+        <ScrollView style={Styles.fullWidth}>
           <List.Subheader>{"Information"}</List.Subheader>
           <Divider />
           <List.Item

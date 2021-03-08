@@ -9,7 +9,7 @@ import BigNumber from 'bignumber.js';
 
 export const pushTx = (coinObj, _rawtx) => {
   const callType = 'pushtx'
-  let serverList = coinObj.serverList
+  let serverList = coinObj.electrum_endpoints
   let data = { rawtx: _rawtx }
 
   return new Promise((resolve, reject) => {

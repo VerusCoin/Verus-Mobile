@@ -21,7 +21,7 @@ export const getBlockInfo = (coinObj, blockheight) => {
   } 
 
   return new Promise((resolve, reject) => {
-    electrumRequest(coinObj.serverList, callType, params, coinID)
+    electrumRequest(coinObj.electrum_endpoints, callType, params, coinID)
     .then((res) => {
       if (res !== false && res.electrumVersion >= ELECTRUM_PROTOCOL_CHANGE) {
         let blockInfo = res

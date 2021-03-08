@@ -179,7 +179,7 @@ class ProfileSettings extends Component {
     const zSetupComplete = dlightEnabled()
 
     return (
-      <ScrollView style={Styles.fullWidthBlock}>
+      <ScrollView style={Styles.fullWidth}>
         <Portal>
           <SetupSeedModal
             animationType="slide"
@@ -200,6 +200,14 @@ class ProfileSettings extends Component {
               containerStyle={{ borderBottomWidth: 0 }} 
             />
           </TouchableOpacity>*/}
+        <List.Subheader>{"Current Profile"}</List.Subheader>
+        <Divider />
+        <List.Item
+          title={this.props.activeAccount.id}
+          description={"Logged In"}
+          left={(props) => <List.Icon {...props} icon={"account"} />}
+        />
+        <Divider />
         <List.Subheader>{"Security Settings"}</List.Subheader>
         <TouchableOpacity
           onPress={async () => {

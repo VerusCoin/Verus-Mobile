@@ -51,17 +51,26 @@ class CoinDetailsModal extends Component {
       loading: true
     }, async () => {
       const removePromise = () => new Promise((resolve, reject) => {
-        removeExistingCoin(this.props.data.id, this.props.activeCoinList, this.props.activeAccount.id, false)
-        .then((res) => {
-          clearAllCoinIntervals(this.props.data.id)
-          this.props.dispatch(res)
-          this.props.dispatch(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
-          resolve()
-        })
-        .catch(err => {
-          console.warn(err)
-          reject(err)
-        })
+        removeExistingCoin(
+          this.props.data.id,
+          this.props.activeAccount.id,
+          this.props.dispatch,
+          true
+        )
+          .then((res) => {
+            clearAllCoinIntervals(this.props.data.id);
+            this.props.dispatch(
+              setUserCoins(
+                this.props.activeCoinList,
+                this.props.activeAccount.id
+              )
+            );
+            resolve();
+          })
+          .catch((err) => {
+            console.warn(err);
+            reject(err);
+          });
       })
 
       try {

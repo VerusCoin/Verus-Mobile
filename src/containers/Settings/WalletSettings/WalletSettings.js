@@ -94,7 +94,7 @@ class WalletSettings extends Component {
   renderSettingsList = () => {
     const electrumCoins = this.props.activeCoinsForUser.filter((coin) => coin.compatible_channels.includes(ELECTRUM))
     return (
-      <ScrollView style={Styles.fullWidthBlock}>
+      <ScrollView style={Styles.fullWidth}>
         <List.Subheader>{"Wallet Settings"}</List.Subheader>
         <TouchableOpacity
           onPress={() => this._openSettings(GENERAL_WALLET_SETTINGS)}

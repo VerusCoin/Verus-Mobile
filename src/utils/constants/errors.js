@@ -1,0 +1,2 @@
+export const UNKNOWN_ERROR = 'UNKNOWN_ERROR'
+export const INACTIVE_COIN = 'INACTIVE_COIN'

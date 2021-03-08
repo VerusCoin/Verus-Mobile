@@ -104,16 +104,25 @@ class SideMenu extends Component {
 
   _removeUserFromCoin = (coinID, deleteWallet) => {
     return new Promise((resolve, reject) => {
-      removeExistingCoin(coinID, this.props.activeCoinList, this.props.activeAccount.id, deleteWallet)
-      .then((res) => {
-        clearAllCoinIntervals(coinID)
-        this.props.dispatch(res)
-        resolve(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
-      })
-      .catch(err => {
-        console.warn(err)
-        reject(err)
-      })
+      removeExistingCoin(
+        coinID,
+        this.props.activeAccount.id,
+        this.props.dispatch,
+        deleteWallet
+      )
+        .then((res) => {
+          clearAllCoinIntervals(coinID);
+          resolve(
+            setUserCoins(
+              this.props.activeCoinList,
+              this.props.activeAccount.id
+            )
+          );
+        })
+        .catch((err) => {
+          console.warn(err);
+          reject(err);
+        });
     })
   }
 

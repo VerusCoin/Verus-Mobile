@@ -123,7 +123,7 @@ class CoinSettings extends Component {
             ...Styles.innerHeaderFooterContainerCentered,
           }}
         >
-          <View style={Styles.fullWidthBlock}>
+          <View style={Styles.fullWidth}>
             <List.Subheader>{"Electrum Transaction Verification"}</List.Subheader>
             <Divider />
               <RadioButton.Group

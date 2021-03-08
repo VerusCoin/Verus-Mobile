@@ -27,6 +27,7 @@ import { CHANNELS, ELECTRUM } from '../../utils/constants/intervalConstants';
 import { arrayToObject } from '../../utils/objectManip';
 import { ENABLE_FIAT_GATEWAY } from '../../../env/main.json';
 import { BIOMETRIC_AUTH } from '../../utils/constants/storeType';
+import { fetchActiveCoins, removeExistingCoin } from './coins/Coins';
 
 export const addUser = (userName, seeds, password, users, biometry = false) => {
   return new Promise((resolve, reject) => {
@@ -79,17 +80,17 @@ export const setBiometry = (userID, biometry) => {
   });
 }
 
-export const deleteUserByID = (userID) => {
-  return new Promise((resolve, reject) => {
-    deleteUser(userID)
-      .then(res => {
-        if (res) {
-          resolve(setAccounts(res))
-        } else {
-          resolve(false)
-        }
-      })
-      .catch(err => reject(err));
+export const deleteProfile = (account, dispatch) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await removeExistingCoin(null, account.id, dispatch, true)
+      const deleteAction = setAccounts(await deleteUser(account.accountHash))
+      dispatch(deleteAction)
+
+      resolve()
+    } catch(e) {
+      reject(e)
+    }
   });
 }
 

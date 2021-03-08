@@ -13,6 +13,9 @@ import { initErc20Wallet, closeErc20Wallet } from '../channels/erc20/dispatchers
 import { initElectrumWallet, closeElectrumWallet } from '../channels/electrum/dispatchers/ElectrumWalletReduxManager';
 import { initGeneralWallet, closeGeneralWallet } from '../channels/general/dispatchers/GeneralWalletReduxManager';
 import { DISABLED_CHANNELS } from '../../../../env/main.json'
+import store from '../../../store';
+import { throwError } from '../../../utils/errors';
+import { INACTIVE_COIN } from '../../../utils/constants/errors';
 
 export const COIN_MANAGER_MAP = {
   initializers: {
@@ -81,43 +84,62 @@ export const addCoin = (fullCoinObj, activeCoins, userName, channels) => {
   }
 }
 
-// Remove a user's name from an active coin
-export const removeExistingCoin = (coinID, activeCoins, userName, deleteWallet = false) => {
-  let coinIndex = activeCoins.findIndex(x => x.id === coinID);
+// Remove a user's name from an active coin, or removes from all if coinID is 
+// null
+export const removeExistingCoin = async (coinID, userName, dispatch, deleteWallet = false) => {
+  const state = store.getState()
+  const activeCoins = state.coins.activeCoinList
   
-  if (coinIndex > -1 && activeCoins[coinIndex].users.includes(userName)) {
-    let userIndex = activeCoins[coinIndex].users.findIndex(n => n === userName);
-    let closers = []
-
-    Object.keys(COIN_MANAGER_MAP.closers).map(channel => {
-      if (
-        activeCoins[coinIndex].compatible_channels.includes(channel) &&
-        !DISABLED_CHANNELS.includes(channel)
-      ) {
-        closers.push(
-          COIN_MANAGER_MAP.closers[channel](
-            activeCoins[coinIndex],
-            deleteWallet
-          )
-        );
-      }
-    })
-
-    activeCoins[coinIndex].users.splice(userIndex, 1)
-
-    return new Promise((resolve, reject) => {
-      storeCoins(activeCoins)
-      .then(() => {
-        return Promise.all(closers)
+  const removeWithIndex = (coinIndex) => {
+    if (coinIndex > -1 && activeCoins[coinIndex].users.includes(userName)) {
+      let userIndex = activeCoins[coinIndex].users.findIndex(n => n === userName);
+      let closers = []
+  
+      Object.keys(COIN_MANAGER_MAP.closers).map(channel => {
+        if (
+          activeCoins[coinIndex].compatible_channels.includes(channel) &&
+          !DISABLED_CHANNELS.includes(channel)
+        ) {
+          closers.push(
+            COIN_MANAGER_MAP.closers[channel](
+              activeCoins[coinIndex],
+              deleteWallet
+            )
+          );
+        }
       })
-      .then(() => {
-        resolve(setCoinList(activeCoins))
-      })
-      .catch(err => reject(err))
-    });
+  
+      activeCoins[coinIndex].users.splice(userIndex, 1)
+  
+      return new Promise((resolve, reject) => {
+        storeCoins(activeCoins)
+        .then(() => {
+          return Promise.all(closers)
+        })
+        .then(() => {
+          resolve(setCoinList(activeCoins))
+        })
+        .catch(err => reject(err))
+      });
+    } else throwError("Inactive coin", INACTIVE_COIN)
   }
-  else {
-    throw new Error("User " + userName + " has not activated coin " + coinID);
+  
+  if (coinID != null) {
+    let index = activeCoins.findIndex(x => x.id === coinID);
+
+    try {
+      dispatch(await removeWithIndex(index))
+    } catch(e) {
+      if (e.name !== INACTIVE_COIN) throw e
+    }
+  } else {
+    for (let i = 0; i < activeCoins.length; i++) {
+      try {
+        dispatch(await removeWithIndex(i))
+      } catch(e) {
+        if (e.name !== INACTIVE_COIN) throw e
+      }
+    }
   }
 }
 
