@@ -18,9 +18,9 @@ import {
  } from '../../actions/actionCreators'
 import { getKeyByValue } from '../../utils/objectManip'
 import { CommonActions } from '@react-navigation/native';
-import AlertAsync from "react-native-alert-async";
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { renderSideMenu } from "./SideMenu.render";
+import { createAlert, resolveAlert } from "../../actions/actions/alert/dispatchers/alert";
 
 class SideMenu extends Component {
   constructor(props) {
@@ -162,33 +162,33 @@ class SideMenu extends Component {
 
   canRemoveCoin = (coinID) => {
     if (this.props.dlightSockets[coinID]) {
-      return AlertAsync(
+      return createAlert(
         'Confirm',
-        "Would you like to remove " + coinID + " and delete all its blockchain data?",
+        `You have chosen to remove ${coinID}. Would you also like to delete local ${coinID} blockchain data?`,
         [
           {
             text: 'Cancel',
-            onPress: () => Promise.resolve(this.CANCEL),
+            onPress: () => resolveAlert(this.CANCEL),
             style: 'cancel',
           },
-          {text: 'Remove', onPress: () => Promise.resolve(this.REMOVE)},
-          {text: 'Remove & Delete', onPress: () => Promise.resolve(this.REMOVE_DELETE)},
+          {text: 'Remove', onPress: () => resolveAlert(this.REMOVE)},
+          {text: 'Remove & Delete', onPress: () => resolveAlert(this.REMOVE_DELETE)},
         ],
         {
           cancelable: false,
         },
       )
     } else {
-      return AlertAsync(
+      return createAlert(
         'Confirm',
         "Are you sure you would like to remove " + coinID + "?",
         [
           {
             text: 'No',
-            onPress: () => Promise.resolve(this.CANCEL),
+            onPress: () => resolveAlert(this.CANCEL),
             style: 'cancel',
           },
-          {text: 'Yes', onPress: () => Promise.resolve(this.REMOVE)},
+          {text: 'Yes', onPress: () => resolveAlert(this.REMOVE)},
         ],
         {
           cancelable: false,
@@ -199,7 +199,18 @@ class SideMenu extends Component {
   }
 
   handleLogout = () => {
-    this.props.dispatch(signOut())
+    this.resetToScreen("SecureLoading", null, {
+      task: () => {
+        return new Promise((resolve, reject) => {
+          this.props.dispatch(signOut())
+          resolve()
+        })
+      },
+      message: "Signing out...",
+      route: "Home",
+      successMsg: "Signed out",
+      errorMsg: "Failed to sign out"
+    }, true)
   }
 
   _openSettings = (drawerItem) => {

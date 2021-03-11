@@ -19,6 +19,7 @@ import { Card, Avatar, Paragraph, Title } from "react-native-paper";
 import BigNumber from "bignumber.js";
 import { extractErrorData, extractLedgerData } from "../../utils/ledger/extractLedgerData";
 import { CONNECTION_ERROR } from "../../utils/api/errors/errorMessages";
+import { truncateDecimal } from "../../utils/math";
 
 class DynamicHeader extends Component {
   constructor(props) {
@@ -145,9 +146,11 @@ class DynamicHeader extends Component {
             <Paragraph style={{ fontSize: 16, paddingTop: 8 }}>
               {this.props.balanceErrors[item.id]
                 ? CONNECTION_ERROR
-                : `${displayBalance == null ? "-" : displayBalance} ${
-                    this.props.chainTicker
-                  }`}
+                : `${
+                    displayBalance == null
+                      ? "-"
+                      : truncateDecimal(displayBalance, 8)
+                  } ${this.props.chainTicker}`}
             </Paragraph>
             <Paragraph
               style={{ ...Styles.listItemSubtitleDefault, fontSize: 12 }}

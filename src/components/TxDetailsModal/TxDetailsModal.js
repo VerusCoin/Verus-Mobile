@@ -10,15 +10,18 @@ import {
   Linking, 
   Clipboard,
   Alert,
-  FlatList
+  FlatList,
+  TouchableOpacity,
+  SafeAreaView
 } from "react-native";
 import { unixToDate, MathableNumber } from '../../utils/math';
 import { explorers } from '../../utils/CoinData/CoinData';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
 import { ethers } from "ethers";
-import { Button, List, Text } from "react-native-paper"
+import { Button, List, Text, Divider } from "react-native-paper"
 import SemiModal from "../SemiModal";
+import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 
 class TxDetailsModal extends Component {
   constructor(props) {
@@ -42,19 +45,25 @@ class TxDetailsModal extends Component {
   };
 
   copyTxIDToClipboard = () => {
-    Clipboard.setString(
-      this.props.activeCoinID === "BTC"
-        ? this.decodeBtcTxid(this.props.txData.txid)
-        : this.props.txData.txid
-    );
+    const txid = this.props.activeCoinID === "BTC"
+    ? this.decodeBtcTxid(this.props.txData.txid)
+    : this.props.txData.txid
 
-    Alert.alert("ID Copied", "Transaction ID copied to clipboard");
+    Clipboard.setString(txid);
+
+    Alert.alert("TxID Copied", txid);
   };
 
   copyAddressToClipboard = () => {
     Clipboard.setString(this.props.txData.address);
 
-    Alert.alert("Address Copied", "Transaction Address copied to clipboard");
+    Alert.alert("Address Copied", this.props.txData.address);
+  };
+
+  copyMemoToClipboard = () => {
+    Clipboard.setString(this.props.txData.memo);
+
+    Alert.alert("Message Copied", this.props.txData.memo);
   };
 
   //TODO: Move this higher up to txid source
@@ -98,9 +107,9 @@ class TxDetailsModal extends Component {
         transparent={true}
         visible={visible}
         onRequestClose={cancel}
-        flexHeight={1}
+        flexHeight={2}
       >
-        <View style={Styles.centerContainer}>
+        <SafeAreaView style={Styles.centerContainer}>
           <View style={{ ...Styles.headerContainer, minHeight: 48 }}>
             <View style={Styles.semiModalHeaderContainer}>
               <Button onPress={cancel} color={Colors.primaryColor}>
@@ -125,131 +134,116 @@ class TxDetailsModal extends Component {
           </View>
           <FlatList
             style={Styles.fullWidth}
-            renderItem={({item}) => {
-              if (
-                item.condition == null ||
-                item.condition === true
-              )
+            renderItem={({ item }) => {
+              if (item.condition == null || item.condition === true)
                 return (
-                  <List.Item title={item.key} style={{ marginRight: 8 }} right={item.data} />
+                  <React.Fragment>
+                    <TouchableOpacity
+                      disabled={item.onPress == null}
+                      onPress={() => item.onPress()}
+                    >
+                      <List.Item
+                        title={item.data}
+                        description={item.key}
+                        titleNumberOfLines={item.numLines || 1}
+                        titleStyle={
+                          item.capitalized
+                            ? Styles.capitalizeFirstLetter
+                            : undefined
+                        }
+                        right={(props) =>
+                          item.right ? (
+                            <Text
+                              {...props}
+                              style={{
+                                fontSize: 16,
+                                alignSelf: "center",
+                                marginRight: 8,
+                              }}
+                            >
+                              {item.right}
+                            </Text>
+                          ) : null
+                        }
+                      />
+                      <Divider />
+                    </TouchableOpacity>
+                  </React.Fragment>
                 );
               else return null;
             }}
             data={[
               {
-                key: "Type:",
-                data: (props) => (
-                  <Text
-                    style={{
-                      ...Styles.capitalizeFirstLetter,
-                      ...Styles.listItemTableCell
-                    }}
-                  >
-                    {txData.type || "??"}
-                  </Text>
-                ),
+                key: "Type",
+                data: txData.type || "Unknown",
+                capitalized: true
               },
               {
                 key: `Amount ${
                   txData.type === "received" ? "Received" : "Sent"
-                }:`,
-                data: () => (
-                  <Text style={Styles.listItemTableCell}>
-                    {amountShown != null
-                      ? amountShown.display() + " " + activeCoinID
-                      : "??"}
-                  </Text>
-                ),
+                }`,
+                data:
+                  amountShown != null
+                    ? amountShown.display() + " " + activeCoinID
+                    : "Unknown",
               },
               {
-                key: "Fee:",
-                data: () => (
-                  <Text style={Styles.listItemTableCell}>
-                    {txData.fee +
-                      " " +
-                      (txData.feeCurr != null
-                        ? txData.feeCurr
-                        : activeCoinID)}
-                  </Text>
-                ),
+                key: "Fee",
+                data:
+                  txData.fee +
+                  " " +
+                  (txData.feeCurr != null ? txData.feeCurr : activeCoinID),
                 condition: txData.fee != null,
               },
               {
-                key: "Confirmations",
-                data: () => (
-                  <Text style={Styles.listItemTableCell}>
-                    {txData.confirmations != null
-                      ? txData.confirmations
-                      : "??"}
-                  </Text>
-                ),
-                condition:
-                  explorers[activeCoinID] &&
-                  explorers[activeCoinID].includes("etherscan"),
+                key: "Status",
+                data:
+                  txData.confirmed != null
+                    ? txData.confirmed
+                      ? "Confirmed"
+                      : "Pending"
+                    : "Unknown",
               },
               {
-                key: "Address:",
-                data: () => (
-                  <Text
-                    style={{
-                      ...(txData.address ? Styles.linkText : {}),
-                      ...Styles.listItemTableCell,
-                      ...Styles.threeQuarterWidthBlock
-                    }}
-                    numberOfLines={1}
-                    ellipsizeMode="middle"
-                    onPress={
-                      txData.address
-                        ? this.copyAddressToClipboard
-                        : () => {}
-                    }
-                  >
-                    {txData.address == null
-                      ? txData.visibility === "private"
-                        ? "hidden"
-                        : "??"
-                      : txData.address}
-                  </Text>
-                ),
+                key: "Address",
+                onPress: txData.address
+                  ? this.copyAddressToClipboard
+                  : () => {},
+                data:
+                  txData.address == null
+                    ? txData.visibility === "private"
+                      ? "hidden"
+                      : "Unknown"
+                    : txData.address,
               },
               {
-                key: "Time:",
-                data: () => (
-                  <Text style={Styles.listItemTableCell}>
-                    {txData && txData.timestamp != null
-                      ? unixToDate(txData.timestamp)
-                      : "??"}
-                  </Text>
-                ),
+                key: "Time",
+                data:
+                  txData && txData.timestamp != null
+                    ? unixToDate(txData.timestamp)
+                    : "Unknown",
               },
               {
-                key: "TxID:",
-                data: () => (
-                  <Text
-                    style={{
-                      ...(txData.txid != null ? Styles.linkText : {}),
-                      ...Styles.listItemTableCell,
-                      ...Styles.threeQuarterWidthBlock
-                    }}
-                    numberOfLines={1}
-                    ellipsizeMode="middle"
-                    onPress={
-                      txData.txid != null
-                        ? this.copyTxIDToClipboard
-                        : () => {}
-                    }
-                  >
-                    {txData.txid != null
-                      ? activeCoinID === "BTC"
-                        ? this.decodeBtcTxid(txData.txid)
-                        : txData.txid
-                      : "??"}
-                  </Text>
-                ),
+                key: "TxID",
+                onPress:
+                  txData.txid != null ? this.copyTxIDToClipboard : () => {},
+                data:
+                  txData.txid != null
+                    ? activeCoinID === "BTC"
+                      ? this.decodeBtcTxid(txData.txid)
+                      : txData.txid
+                    : "Unknown",
+              },
+              {
+                key: "Message",
+                data: txData.memo,
+                onPress: this.copyMemoToClipboard,
+                condition: txData.memo != null && txData.memo.length > 0,
+                numLines: 100
               },
             ]}
           />
-        </View>
+        </SafeAreaView>
       </SemiModal>
     );
   }

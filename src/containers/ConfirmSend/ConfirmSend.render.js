@@ -9,10 +9,34 @@ import Colors from "../../globals/colors";
 import { explorers } from "../../utils/CoinData/CoinData";
 import AnimatedActivityIndicator from "../../components/AnimatedActivityIndicator";
 import { TouchableOpacity } from "react-native-gesture-handler";
+import BigNumber from "bignumber.js";
 
 export const renderTransactionInfo = function() {
   clearTimeout(this.timeoutTimer);
   const isSendResult = this.state.sendTx
+  const validFiatMultiplier =
+    this.props.rates[this.state.coinObj.id] != null &&
+    this.props.rates[this.state.coinObj.id][this.props.displayCurrency] !=
+      null;
+  const fiatMultiplier = validFiatMultiplier
+    ? BigNumber(
+        this.props.rates[this.state.coinObj.id][this.props.displayCurrency]
+      )
+    : null;
+  const validFeeFiatMultiplier =
+    this.state.feeCurr == null
+      ? validFiatMultiplier
+      : this.props.rates[this.state.feeCurr] != null &&
+        this.props.rates[this.state.feeCurr][this.props.displayCurrency] !=
+          null;
+  const feeFiatMultiplier =
+    this.state.feeCurr == null
+      ? fiatMultiplier
+      : validFeeFiatMultiplier
+      ? BigNumber(
+          this.props.rates[this.state.feeCurr][this.props.displayCurrency]
+        )
+      : null;
 
   return (
     <React.Fragment>
@@ -41,6 +65,21 @@ export const renderTransactionInfo = function() {
                   <List.Item
                     title={item.data}
                     description={item.key}
+                    titleNumberOfLines={item.numLines || 1}
+                    right={(props) =>
+                      item.right ? (
+                        <Text
+                          {...props}
+                          style={{
+                            fontSize: 16,
+                            alignSelf: "center",
+                            marginRight: 8,
+                          }}
+                        >
+                          {item.right}
+                        </Text>
+                      ) : null
+                    }
                   />
                   <Divider />
                 </TouchableOpacity>
@@ -52,66 +91,102 @@ export const renderTransactionInfo = function() {
           {
             key: "From",
             data: this.state.fromAddress,
-            onPress: () => this.copyAddressToClipboard(this.state.fromAddress)
+            onPress: () =>
+              this.copyAddressToClipboard(this.state.fromAddress),
           },
           {
             key: "To",
             data: this.state.toAddress,
-            onPress: () => this.copyAddressToClipboard(this.state.toAddress)
+            onPress: () => this.copyAddressToClipboard(this.state.toAddress),
           },
           {
             key: "Amount Submitted",
-            data: (truncateDecimal(
-                  this.state.amountSubmitted,
-                  this.state.coinObj.decimals || 8
-                ) +
-                  " " +
-                  this.state.coinObj.id),
-            condition: this.state.amountSubmitted !== "0"
+            data:
+              truncateDecimal(
+                this.state.amountSubmitted,
+                this.state.coinObj.decimals || 8
+              ) +
+              " " +
+              this.state.coinObj.id,
+            right: validFiatMultiplier
+              ? `${fiatMultiplier
+                  .multipliedBy(this.state.amountSubmitted)
+                  .toFixed(2)} ${this.props.displayCurrency}`
+              : null,
+            condition: this.state.amountSubmitted !== "0",
           },
           {
             key: "Balance",
-            data: (truncateDecimal(
-                  this.state.balance,
-                  this.state.coinObj.decimals || 8
-                ) +
-                  " " +
-                  this.state.coinObj.id
-            ),
-            condition: this.state.balance !== 0
+            data:
+              truncateDecimal(
+                this.state.balance,
+                this.state.coinObj.decimals || 8
+              ) +
+              " " +
+              this.state.coinObj.id,
+            right: validFiatMultiplier
+              ? `${fiatMultiplier
+                  .multipliedBy(this.state.balance)
+                  .toFixed(2)} ${this.props.displayCurrency}`
+              : null,
+            condition: this.state.balance !== 0,
           },
           {
             key: "Fee",
-            data: (this.state.fee +
-                  " " +
-                  (this.state.feeCurr
-                    ? this.state.feeCurr
-                    : this.state.coinObj.id)),
+            data:
+              this.state.fee +
+              " " +
+              (this.state.feeCurr
+                ? this.state.feeCurr
+                : this.state.coinObj.id),
+            right: validFeeFiatMultiplier
+              ? `${feeFiatMultiplier
+                  .multipliedBy(this.state.fee)
+                  .toFixed(2)} ${this.props.displayCurrency}`
+              : null,
           },
           {
             key: isSendResult ? "Amount Sent" : "Final Amount",
-            data: (truncateDecimal(
-                  this.state.finalTxAmount,
-                  this.state.coinObj.decimals || 8
-                ) +
-                  " " +
-                  this.state.coinObj.id),
+            data:
+              truncateDecimal(
+                this.state.finalTxAmount,
+                this.state.coinObj.decimals || 8
+              ) +
+              " " +
+              this.state.coinObj.id,
+            right: validFiatMultiplier
+              ? `${fiatMultiplier
+                  .multipliedBy(this.state.finalTxAmount)
+                  .toFixed(2)} ${this.props.displayCurrency}`
+              : null,
           },
           {
             key: "Remaining Balance",
-            data: (this.state.remainingBalance + " " + this.state.coinObj.id),
-            condition: this.state.remainingBalance !== 0
+            data: this.state.remainingBalance + " " + this.state.coinObj.id,
+            condition: this.state.remainingBalance !== 0,
+            right: validFiatMultiplier
+              ? `${fiatMultiplier
+                  .multipliedBy(this.state.remainingBalance)
+                  .toFixed(2)} ${this.props.displayCurrency}`
+              : null,
           },
           {
-            key: "Message",
-            data: (this.state.note),
+            key: "Note from Invoice",
+            data: this.state.note,
             condition: this.state.note != null && this.state.note.length > 0,
           },
           {
+            key: "Message to Send",
+            numLines: 100,
+            data: this.state.memo,
+            condition: this.state.memo != null && this.state.memo.length > 0,
+          },
+          {
             key: "TxID",
-            data: (this.state.txid),
+            data: this.state.txid,
+            numLines: 100,
             condition: this.state.txid != null,
-            onPress: () => this.copyTxIDToClipboard()
+            onPress: () => this.copyTxIDToClipboard(),
           },
         ]}
       />
@@ -133,7 +208,9 @@ export const renderTransactionInfo = function() {
           </Button>
           <Button
             onPress={isSendResult ? this.openExplorer : this.sendTx}
-            disabled={isSendResult && explorers[this.state.coinObj.id] == null}
+            disabled={
+              isSendResult && explorers[this.state.coinObj.id] == null
+            }
             color={
               isSendResult ? Colors.primaryColor : Colors.successButtonColor
             }

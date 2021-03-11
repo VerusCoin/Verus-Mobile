@@ -126,7 +126,7 @@ class CoinMenus extends Component {
   //"Cannot Add a child that doesn't have a YogaNode to a parent with out a measure function"
   //bug comes up and it seems like a bug in rn
   render() {
-    const { selectedSubWallet } = this.props
+    const { selectedSubWallet, activeCoin } = this.props
     const { subWallets } = this.state
     //const DynamicHeaderPortal = <Portal.Host></Portal.Host>
 
@@ -139,6 +139,7 @@ class CoinMenus extends Component {
               cancel={this.goBack}
               animationType="slide"
               subWallets={subWallets}
+              chainTicker={activeCoin.id}
             />
           )}
           {selectedSubWallet != null && <DynamicHeader />}

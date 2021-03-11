@@ -131,7 +131,7 @@ class Overview extends Component {
     if (Array.isArray(item)) {
       const txArray = item
       let toAddresses = [];
-      const confirmations = txArray[0].confirmations
+      const confirmed = txArray[0].confirmed
       
       amount = new MathableNumber(ethers.utils.formatUnits(
         ethers.utils
@@ -157,12 +157,12 @@ class Overview extends Component {
         subtitle = toAddresses[0];
       }
 
-      AvatarImg = confirmations === 0 || txArray[0].status === "pending" ? TX_LOGOS.pending : TX_LOGOS.out;
+      AvatarImg = !confirmed || txArray[0].status === "pending" ? TX_LOGOS.pending : TX_LOGOS.out;
 
       item = {
         address: toAddresses.join(' & '),
         amount,
-        confirmations,
+        confirmed,
         fee: txArray[0].fee,
         from: txArray[0].from,
         timestamp: txArray[0].timestamp,
@@ -194,7 +194,7 @@ class Overview extends Component {
       }
     }
 
-    if (item.confirmations === 0 || item.status === "pending")
+    if (!item.confirmed || item.status === "pending")
       AvatarImg = TX_LOGOS.pending;
 
     subtitle = "to: " + subtitle;

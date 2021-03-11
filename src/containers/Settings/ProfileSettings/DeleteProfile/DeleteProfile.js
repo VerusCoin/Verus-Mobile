@@ -19,12 +19,11 @@ import { NavigationActions } from '@react-navigation/compat';
 import { CommonActions } from '@react-navigation/native';
 import { deleteProfile } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
-import AlertAsync from "react-native-alert-async";
 import { checkPinForUser } from '../../../../utils/asyncStore/asyncStore'
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles/index'
 import { removeBiometricPassword } from "../../../../utils/biometry/biometry";
-import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
+import { createAlert, resolveAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 
 class DeleteProfile extends Component {
   constructor() {
@@ -54,16 +53,16 @@ class DeleteProfile extends Component {
   }
 
   canDelete = () => {
-    return AlertAsync(
+    return createAlert(
       'Confirm Deletion',
       "Are you sure you would like to delete this profile?",
       [
         {
           text: 'No, take me back',
-          onPress: () => Promise.resolve(false),
+          onPress: () => resolveAlert(false),
           style: 'cancel',
         },
-        {text: 'Yes', onPress: () => Promise.resolve(true)},
+        {text: 'Yes', onPress: () => resolveAlert(true)},
       ],
       {
         cancelable: false,

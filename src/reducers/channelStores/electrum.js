@@ -5,7 +5,7 @@
 import {
   INIT_ELECTRUM_CHANNEL_FINISH,
   CLOSE_ELECTRUM_CHANNEL,
-  SIGN_OUT
+  SIGN_OUT_COMPLETE
 } from '../../utils/constants/storeType'
 
 export const channelStore_electrum = (state = {
@@ -28,7 +28,7 @@ export const channelStore_electrum = (state = {
           [action.payload.chainTicker]: false
         },
       }
-    case SIGN_OUT:
+    case SIGN_OUT_COMPLETE:
       return {
         openChannels: {}
       }

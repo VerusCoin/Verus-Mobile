@@ -15,13 +15,14 @@ import { NavigationActions } from '@react-navigation/compat';
 import { CommonActions } from '@react-navigation/native';
 import { NO_VERIFICATION, MID_VERIFICATION } from '../../utils/constants/constants'
 import { preflight } from "../../utils/api/routers/preflight";
-import { API_GET_FIATPRICE, API_GET_TRANSACTIONS, ELECTRUM } from "../../utils/constants/intervalConstants";
+import { API_GET_FIATPRICE, API_GET_TRANSACTIONS, ELECTRUM, GENERAL } from "../../utils/constants/intervalConstants";
 import BigNumber from "bignumber.js";
 import { renderError, renderLoading, renderTransactionInfo } from './ConfirmSend.render'
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import { send } from "../../utils/api/routers/send";
 import { explorers } from "../../utils/CoinData/CoinData";
 import { expireData } from "../../actions/actionCreators";
+import { USD } from "../../utils/constants/currencies";
 
 const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
@@ -111,7 +112,8 @@ class ConfirmSend extends Component {
         : null;
     const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
     const balance = BigNumber(this.props.route.params.data.balance)
-    const note = this.props.route.params.data.memo
+    const note = this.props.route.params.data.note
+    const memo = this.props.route.params.data.memo
     
     this.timeoutTimer = setTimeout(() => {
       if (this.state.loading) {
@@ -142,7 +144,7 @@ class ConfirmSend extends Component {
         address,
         amount,
         channel,
-        { defaultFee: fee, network, verifyMerkle, verifyTxid }
+        { defaultFee: fee, network, verifyMerkle, verifyTxid, memo }
       ];
 
       this.setState({ sendTx, channel })
@@ -177,7 +179,7 @@ class ConfirmSend extends Component {
             utxoCrossChecked: true,
             coinObj: coinObj,
             activeUser: activeUser,
-            memo: note,
+            memo,
             finalTxAmount: res.result.value != null ? res.result.value : amount,
             loadingProgress: 1,
             loadingMessage: "Done",
@@ -319,7 +321,8 @@ class ConfirmSend extends Component {
           ? this.state.finalTxAmount
           : BigNumber(this.state.finalTxAmount).minus(BigNumber(this.state.fee)).toString(),
       btcFee: this.state.btcFeePerByte,
-      channel: this.state.channel
+      channel: this.state.channel,
+      memo: this.state.memo
     };
 
     const resetAction = CommonActions.reset({
@@ -364,6 +367,8 @@ class ConfirmSend extends Component {
 const mapStateToProps = (state) => {
   return {
     coinSettings: state.settings.coinSettings,
+    rates: state.ledger.rates[GENERAL],
+    displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
   }
 };
 

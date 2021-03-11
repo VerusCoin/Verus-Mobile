@@ -30,7 +30,6 @@ import {
   setActiveSection
  } from '../../actions/actionCreators'
 import Spinner from 'react-native-loading-spinner-overlay';
-import DelayedAsyncAlert from '../../utils/delayedAsyncAlert'
 import { satsToCoins } from '../../utils/math'
 import {
   FORMAT_UNKNOWN,
@@ -44,10 +43,13 @@ import {
   PARSE_ERROR
 } from '../../utils/constants/constants'
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
-import { API_GET_BALANCES, API_GET_INFO, ELECTRUM, DLIGHT_PRIVATE } from "../../utils/constants/intervalConstants";
+import { API_GET_BALANCES, API_GET_INFO, ELECTRUM, DLIGHT_PRIVATE, API_SEND } from "../../utils/constants/intervalConstants";
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 import store from "../../store";
 import BigNumber from "bignumber.js";
+import { Portal } from "react-native-paper";
+import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
+import { createAlert, resolveAlert } from "../../actions/actions/alert/dispatchers/alert";
 
 class VerusPay extends Component {
   constructor(props) {
@@ -64,7 +66,9 @@ class VerusPay extends Component {
       activeUser: null,
       address: null,
       amount: null,
-      memo: null
+      note: null,
+      subWalletSelectorOpen: false,
+      subWalletSelectorCoin: null
     };
   }
 
@@ -140,7 +144,7 @@ class VerusPay extends Component {
             coinTicker: coinObj.id,
             address: request.destination,
             amount: BigNumber(request.amount),
-            memo: request.note
+            note: request.note
           })
         } catch(e) {
           let coinURLParsed = this.parseCoinURL(result);
@@ -160,7 +164,7 @@ class VerusPay extends Component {
   }
 
   errorHandler = error => {
-    Alert.alert("Error", error);
+    createAlert("Error", error);
     this.props.navigation.dispatch(NavigationActions.back());
   };
 
@@ -280,7 +284,7 @@ class VerusPay extends Component {
     const amount = verusQR.hasOwnProperty("amount")
       ? verusQR.amount
       : null;
-    const memo = verusQR.memo;
+    const note = verusQR.note;
 
     if (__DEV__) {
       console.log(verusQR)
@@ -294,7 +298,7 @@ class VerusPay extends Component {
       } else {
         console.log("Amount: " + amount);
       }
-      console.log("Memo: " + memo);
+      console.log("Memo: " + note);
     }
 
     if (coinTicker != null && address != null) {
@@ -304,7 +308,7 @@ class VerusPay extends Component {
         if (activeCoin) {
           if (this.state.fromHome || this.props.activeCoin.id === coinTicker) {
             if (amount === null || amount.isLessThanOrEqualTo(0)) {
-              this.handleMissingAmount(activeCoin, address, memo);
+              this.handleMissingAmount(activeCoin, address, note);
             } else {
               if (this.checkBalance(amount, activeCoin)) {
                 this.preConfirm(
@@ -312,7 +316,7 @@ class VerusPay extends Component {
                   this.props.activeAccount,
                   address,
                   amount,
-                  memo
+                  note
                 );
               }
             }
@@ -321,7 +325,7 @@ class VerusPay extends Component {
               res => {
                 if (res) {
                   if (amount === null || amount.isLessThanOrEqualTo(0)) {
-                    this.handleMissingAmount(activeCoin, address, memo);
+                    this.handleMissingAmount(activeCoin, address, note);
                   } else {
                     if (this.checkBalance(amount, activeCoin)) {
                       this.preConfirm(
@@ -329,7 +333,8 @@ class VerusPay extends Component {
                         this.props.activeAccount,
                         address,
                         amount,
-                        memo
+                        note,
+                        true
                       );
                     }
                   }
@@ -347,7 +352,7 @@ class VerusPay extends Component {
                   activeCoin = this.getCoinFromActiveCoins(coinTicker);
                   this.handleUpdates().then(() => {
                     if (amount === null || amount.isLessThanOrEqualTo(0)) {
-                      this.handleMissingAmount(activeCoin, address, memo);
+                      this.handleMissingAmount(activeCoin, address, note);
                     } else {
                       if (this.checkBalance(amount, activeCoin)) {
                         this.preConfirm(
@@ -355,7 +360,8 @@ class VerusPay extends Component {
                           this.props.activeAccount,
                           address,
                           amount,
-                          memo
+                          note,
+                          true
                         );
                       }
                     }
@@ -421,8 +427,8 @@ class VerusPay extends Component {
     });
   };
 
-  handleMissingAmount = (coinObj, address, memo) => {
-    this.canFillAmount(coinObj.id, memo, address).then(res => {
+  handleMissingAmount = (coinObj, address, note) => {
+    this.canFillAmount(coinObj.id, note, address).then(res => {
       if (res) {
         if (coinObj.apps.hasOwnProperty("wallet")) {
           let wallet = coinObj.apps.wallet;
@@ -447,18 +453,22 @@ class VerusPay extends Component {
     });
   };
 
-  preConfirm = (coinObj, activeUser, address, amount, memo) => {
+  preConfirm = (coinObj, activeUser, address, amount, note, sourceSwitch = false) => {
+    const channel = this.props.route.params && !sourceSwitch
+      ? this.props.route.params.channel
+      : null;
+
     this.setState(
       {
         coinObj: coinObj,
         activeUser: activeUser,
         address: address,
         amount: amount,
-        memo: memo
+        note: note
       },
       () => {
         this.handleUpdates().then(() => {
-          this.goToConfirmScreen();
+          this.goToConfirmScreen(channel);
         });
       }
     );
@@ -514,8 +524,8 @@ class VerusPay extends Component {
   };
 
   canExitWallet = (fromTicker, toTicker) => {
-    return DelayedAsyncAlert(
-      "Exiting Wallet",
+    return createAlert(
+      "Leaving Wallet",
       "This invoice is requesting funds in " +
         toTicker +
         ", but you are currently " +
@@ -525,42 +535,36 @@ class VerusPay extends Component {
       [
         {
           text: "No, take me back",
-          onPress: () => Promise.resolve(false),
+          onPress: () => resolveAlert(false),
           style: "cancel"
         },
-        { text: "Yes", onPress: () => Promise.resolve(true) }
-      ],
-      {
-        cancelable: false
-      }
+        { text: "Yes", onPress: () => resolveAlert(true) }
+      ]
     );
   };
 
-  canFillAmount = (currency, memo, address) => {
-    return DelayedAsyncAlert(
+  canFillAmount = (currency, note, address) => {
+    return createAlert(
       "Missing Amount",
       "This invoice does not specify an amount, in order to proceed you " +
         "will need to fill in the amount yourself, would you like to continue?" +
         (currency ? ("\n\n Currency: " + currency) : null) +
         "\n\n To: " +
         address +
-        (memo ? ("\n\n Memo: " + memo) : ''),
+        (note ? ("\n\n Memo: " + note) : ''),
       [
         {
           text: "No, take me back",
-          onPress: () => Promise.resolve(false),
+          onPress: () => resolveAlert(false),
           style: "cancel"
         },
-        { text: "Yes", onPress: () => Promise.resolve(true) }
-      ],
-      {
-        cancelable: false
-      }
+        { text: "Yes", onPress: () => resolveAlert(true) }
+      ]
     );
   };
 
   canAddCoin = coinTicker => {
-    return DelayedAsyncAlert(
+    return createAlert(
       "Coin Inactive",
       "This invoice is requesting funds in " +
         coinTicker +
@@ -571,10 +575,10 @@ class VerusPay extends Component {
       [
         {
           text: "No, take me back",
-          onPress: () => Promise.resolve(false),
+          onPress: () => resolveAlert(false),
           style: "cancel"
         },
-        { text: "Yes", onPress: () => Promise.resolve(true) }
+        { text: "Yes", onPress: () => resolveAlert(true) }
       ],
       {
         cancelable: false
@@ -582,24 +586,54 @@ class VerusPay extends Component {
     );
   };
 
-  goToConfirmScreen = () => {
-    const route = "ConfirmSend";
+  goToConfirmScreen = (channel) => {
+    if (channel != null) {
+      const route = "ConfirmSend";
 
-    let data = {
-      coinObj: this.state.coinObj,
-      activeUser: this.state.activeUser,
-      address: this.state.address,
-      amount: this.state.amount.toString(),
-      btcFee: this.state.btcFees.average,
-      balance: this.props.balances.results[
-        this.state.coinObj.dominant_channel != null
-          ? this.state.coinObj.dominant_channel
-          : ELECTRUM
-      ][this.state.coinObj.id].confirmed,
-      memo: this.state.memo,
-    };
+      let data = {
+        coinObj: this.state.coinObj,
+        activeUser: this.state.activeUser,
+        address: this.state.address,
+        amount: this.state.amount.toString(),
+        btcFee: this.state.btcFees.average,
+        balance: this.props.balances.results[channel][this.state.coinObj.id]
+          .confirmed,
+        note: this.state.note,
+        channel,
+      };
 
-    this.resetToScreen(route, "Confirm", data);
+      this.resetToScreen(route, "Confirm", data);
+    } else {
+      this.setState({
+        subWalletSelectorCoin: this.state.coinObj.id,
+      }, () => {
+        const subWallets = this.props.allSubWallets[
+          this.state.subWalletSelectorCoin
+        ]
+
+        if (subWallets.length == 1) {
+          this.goToConfirmScreen(subWallets[0].api_channels[API_SEND])
+        } else {
+          createAlert(
+            "Select a Card",
+            `Select a card from which to send ${this.state.amount.toString()} ${
+              this.state.coinObj.id
+            } to the address "${this.state.address}".`,
+            [
+              {
+                text: "Continue",
+                onPress: () => {
+                  this.setState({
+                    subWalletSelectorOpen: true,
+                  });
+                  resolveAlert(true);
+                },
+              },
+            ]
+          );
+        }
+      });
+    }
   };
 
   handleUpdates = async () => {
@@ -689,7 +723,7 @@ class VerusPay extends Component {
       this.props.route.params &&
       this.props.route.params.fillAddress
     ) {
-      Alert.alert("Address Only", ADDRESS_ONLY);
+      createAlert("Address Only", ADDRESS_ONLY);
       this.props.route.params.fillAddress(address);
       this.props.navigation.dispatch(NavigationActions.back());
     } else {
@@ -700,6 +734,31 @@ class VerusPay extends Component {
   render() {
     return (
       <View style={Styles.blackRoot}>
+        <Portal>
+          {this.state.subWalletSelectorOpen && (
+            <SubWalletSelectorModal
+              visible={this.state.subWalletSelectorOpen}
+              chainTicker={this.state.subWalletSelectorCoin}
+              cancel={() =>
+                this.setState({
+                  subWalletSelectorOpen: false,
+                  subWalletSelectorCoin: null,
+                })
+              }
+              animationType="slide"
+              subWallets={
+                this.state.subWalletSelectorCoin == null
+                  ? []
+                  : this.props.allSubWallets[
+                      this.state.subWalletSelectorCoin
+                    ]
+              }
+              onSelect={(wallet) =>
+                this.goToConfirmScreen(wallet.api_channels[API_SEND])
+              }
+            />
+          )}
+        </Portal>
         <QRCodeScanner
           onRead={this.onSuccess.bind(this)}
           showMarker={true}
@@ -708,10 +767,12 @@ class VerusPay extends Component {
         />
         <Spinner
           visible={
-            this.state.loading ||
-            this.state.loadingBTCFees ||
-            this.state.addingCoin ||
-            this.state.spinnerOverlay
+            (this.state.loading ||
+              this.state.loadingBTCFees ||
+              this.state.addingCoin ||
+              this.state.spinnerOverlay) &&
+            !this.state.subWalletSelectorOpen &&
+            this.state.subWalletSelectorCoin == null
           }
           textContent={
             this.state.addingCoin
@@ -747,7 +808,8 @@ const mapStateToProps = (state) => {
       ),
     },
     coinSettings: state.settings.coinSettings,
-    activeCoinList: state.coins.activeCoinList
+    activeCoinList: state.coins.activeCoinList,
+    allSubWallets: state.coinMenus.allSubWallets,
   };
 };
 

@@ -81,7 +81,9 @@ class ReceiveCoin extends Component {
         address: this.props.addresses.results[0]
       });
     } else {
-      throw new Error("Couldn't load address.");
+      this.setState({
+        address: ""
+      });
     }
   }
 
@@ -252,7 +254,6 @@ const mapStateToProps = (state) => {
     accounts: state.authentication.accounts,
     activeCoin: state.coins.activeCoin,
     activeCoinsForUser: state.coins.activeCoinsForUser,
-    activeAccount: state.authentication.activeAccount,
     rates: state.ledger.rates[GENERAL],
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
     addresses: selectAddresses(state)

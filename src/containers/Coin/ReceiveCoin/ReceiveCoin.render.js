@@ -3,7 +3,8 @@ import {
   View, 
   TouchableOpacity, 
   ScrollView, 
-  RefreshControl
+  RefreshControl,
+  TextInput as NativeTextInput,
  } from "react-native"
 import Styles from '../../../styles/index'
 import QRModal from '../../../components/QRModal'
@@ -91,9 +92,14 @@ export const RenderReceiveCoin = function() {
             >
               <TextInput
                 label={"Address"}
-                dense
                 value={address}
+                render={(props) => (
+                  <NativeTextInput
+                    {...props}
+                  />
+                )}
                 editable={false}
+                multiline
                 pointerEvents="none"
                 style={{
                   backgroundColor: Colors.secondaryColor,

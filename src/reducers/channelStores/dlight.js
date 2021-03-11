@@ -8,7 +8,7 @@ import {
   START_DLIGHT_SYNC,
   STOP_DLIGHT_SYNC,
   INIT_DLIGHT_CHANNEL_FINISH,
-  SIGN_OUT,
+  SIGN_OUT_COMPLETE,
   CLOSE_DLIGHT_CHANNEL
 } from '../../utils/constants/storeType'
 
@@ -74,7 +74,7 @@ export const channelStore_dlight_private = (state = {
           [action.payload.chainTicker]: false
         },
       };
-    case SIGN_OUT:
+    case SIGN_OUT_COMPLETE:
       return {
         ...state,
         dlightSockets: {},

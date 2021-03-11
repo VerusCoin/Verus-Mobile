@@ -81,17 +81,18 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
       _utxoList.forEach((_utxoItem) => {
         if(Number(currentHeight) - Number(_utxoItem.height) !== 0) {
           formattedUtxos.push({
-            txid: _utxoItem['tx_hash'],
-            vout: _utxoItem['tx_pos'],
-            address: activeUser.keys[coinObj.id][ELECTRUM].addresses[0],
+            txid: _utxoItem["tx_hash"],
+            vout: _utxoItem["tx_pos"],
+            address:
+              activeUser.keys[coinObj.id][ELECTRUM].addresses[0],
             amountSats: _utxoItem.value,
             blockHeight: _utxoItem.height,
             interestSats: 0,
-            confirmations: Number(_utxoItem.height) === 0 ? 0 : currentHeight - _utxoItem.height,
+            confirmed: Number(_utxoItem.height) === 0 ? false : true,
             verifiedMerkle: false,
             verifiedTxid: false,
-            merkleRoot: null
-          })
+            merkleRoot: null,
+          });
 
           if (verifyTxid || (!verifyTxid && coinObj.id === 'KMD' && !overrideKmdInterest)) {
             getTxArr.push(getOneTransaction(coinObj, _utxoItem.tx_hash))

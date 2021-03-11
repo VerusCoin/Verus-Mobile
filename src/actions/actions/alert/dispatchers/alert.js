@@ -1,4 +1,5 @@
 import store from "../../../../store"
+import { triggerHaptic } from "../../../../utils/haptics/haptics"
 import getUid from '../../../../utils/uid'
 import { completeAlert, pushAlert, setActiveAlert, shiftAlerts } from "../creators/alert"
 
@@ -21,6 +22,7 @@ export const createAlert = (title, message, buttons = [{text: "OK", onPress: () 
               type,
               uid: alertId
             }))
+            triggerHaptic("notificationWarning")
           } else {
             store.dispatch(shiftAlerts())
             unsub()

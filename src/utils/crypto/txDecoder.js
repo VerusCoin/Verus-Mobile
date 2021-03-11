@@ -230,7 +230,7 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
       address: targetAddress,
       timestamp: tx.timestamp,
       txid: tx.format.txid,
-      confirmations: tx.confirmations,
+      confirmed: tx.confirmed,
     }
   }
 
@@ -299,7 +299,7 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
         address: targetAddress,
         timestamp: tx.timestamp,
         txid: tx.format.txid,
-        confirmations: tx.confirmations,
+        confirmed: tx.confirmed,
       };
 
       if (network === 'kmd' && inOutDiff.isLessThan(BigNumber(0))) result.interest = inOutDiff
@@ -311,7 +311,7 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
         address: _addresses.outputs[0],
         timestamp: tx.timestamp,
         txid: tx.format.txid,
-        confirmations: tx.confirmations,
+        confirmed: tx.confirmed,
         from: _addresses.inputs,
         to: _addresses.outputs,
       }, {
@@ -320,7 +320,7 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
         address: targetAddress,
         timestamp: tx.timestamp,
         txid: tx.format.txid,
-        confirmations: tx.confirmations,
+        confirmed: tx.confirmed,
         from: _addresses.inputs,
         to: _addresses.outputs,
       }];
@@ -334,7 +334,7 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
       address: targetAddress,
       timestamp: tx.timestamp,
       txid: tx.format.txid,
-      confirmations: tx.confirmations,
+      confirmed: tx.confirmed,
       from: _addresses.inputs,
       to: _addresses.outputs,
     };
@@ -346,7 +346,7 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
       address: isSelfSend.inputs && isSelfSend.outputs ? targetAddress : _addresses.outputs[0],
       timestamp: tx.timestamp,
       txid: tx.format.txid,
-      confirmations: tx.confirmations,
+      confirmed: tx.confirmed,
       from: _addresses.inputs,
       to: _addresses.outputs,
     };
@@ -358,14 +358,14 @@ parseTransactionAddresses = (tx, targetAddress, network, skipTargetAddress) => {
       address: 'unknown',
       timestamp: tx.timestamp,
       txid: tx.format.txid,
-      confirmations: tx.confirmations,
+      confirmed: tx.confirmed,
     };
   }
 
   return result;
 }
 
-export const formatTx = (transactionObj, targetAddress, network, currentHeight) => {
+export const formatTx = (transactionObj, targetAddress, network) => {
   // Check if any txins contain errors, if so, return false (skips transaction when called)
   if (transactionObj.rawIns && Array.isArray(transactionObj.rawIns)) {
     if (!transactionObj.rawIns.every((txIn) => {
@@ -405,7 +405,7 @@ export const formatTx = (transactionObj, targetAddress, network, currentHeight) 
         outputs: txOutDecoded.outputs,
         height: transactionObj.height,
         timestamp: Number(transactionObj.height) === 0 ? Math.floor(Date.now() / 1000) : transactionObj.timestamp,
-        confirmations: Number(transactionObj.height) === 0 ? 0 : currentHeight - transactionObj.height,
+        confirmed: Number(transactionObj.height) === 0 ? false : true,
       }
 
       let formattedTx = parseTransactionAddresses(_parsedTx, targetAddress, network.coin, false)

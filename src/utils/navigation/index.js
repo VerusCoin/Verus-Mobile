@@ -261,6 +261,8 @@ function MainStackScreens() {
         component={ConfirmSend}
         options={{
           title: "Send",
+          headerRight: () => null,
+          headerLeft: () => null,
         }}
       />
 

@@ -9,7 +9,7 @@ import {
 import { List, Card } from "react-native-paper"
 import Modal from '../../components/Modal'
 import Styles from '../../styles/index'
-import { GENERAL } from "../../utils/constants/intervalConstants";
+import { API_GET_BALANCES, GENERAL } from "../../utils/constants/intervalConstants";
 import { SUBWALLET_NAMES } from "../../utils/constants/constants";
 import { truncateDecimal } from "../../utils/math";
 import { setCoinSubWallet } from "../../actions/actionCreators";
@@ -34,20 +34,28 @@ class SubWalletSelectorModal extends Component {
 
   updateBalances = () => {
     const { cryptoBalances, fiatBalances } = this.state
-    const { allBalances, activeCoin, rates, displayCurrency, subWallets } = this.props
+    const {
+      allBalances,
+      rates,
+      chainTicker,
+      displayCurrency,
+      subWallets,
+    } = this.props;
     const walletColorMap = {}
-    const chainTicker = activeCoin.id
     let pieSections = []
     let totalBalance = BigNumber(0)
 
     subWallets.map(wallet => {
       if (
-        allBalances[wallet.channel] &&
-        allBalances[wallet.channel][chainTicker]
+        allBalances[wallet.api_channels[API_GET_BALANCES]] &&
+        allBalances[wallet.api_channels[API_GET_BALANCES]][chainTicker]
       ) {
-        cryptoBalances[wallet.id] = BigNumber(allBalances[wallet.channel][chainTicker].total);
+        cryptoBalances[wallet.id] = BigNumber(
+          allBalances[wallet.api_channels[API_GET_BALANCES]][chainTicker]
+            .total
+        );
         totalBalance = totalBalance.plus(cryptoBalances[wallet.id]);
-        walletColorMap[wallet.id] = wallet.color
+        walletColorMap[wallet.id] = wallet.color;
       }
 
       if (cryptoBalances[wallet.id] && rates[chainTicker]) {
@@ -88,15 +96,20 @@ class SubWalletSelectorModal extends Component {
   };
 
   setSubWallet = (subWallet) => {
-    this.props.dispatch(setCoinSubWallet(this.props.activeCoin.id, subWallet))
+    this.props.dispatch(setCoinSubWallet(this.props.chainTicker, subWallet))
   }
 
   render() {
     const { props, state, cancelHandler } = this
-    const { animationType, visible, activeCoin, displayCurrency, subWallets } = props
     const {
-      totalBalance,
-      pieSections,
+      animationType,
+      visible,
+      chainTicker,
+      displayCurrency,
+      subWallets,
+      onSelect
+    } = props;
+    const {
       cryptoBalances,
       fiatBalances,
     } = state;
@@ -114,7 +127,11 @@ class SubWalletSelectorModal extends Component {
             {subWallets.map((wallet, index) => (
               <View style={{ margin: 8 }}>
                 <Card
-                  onPress={() => this.setSubWallet(wallet)}
+                  onPress={
+                    onSelect == null
+                      ? () => this.setSubWallet(wallet)
+                      : () => onSelect(wallet)
+                  }
                   key={index}
                   style={{ backgroundColor: wallet.color }}
                 >
@@ -133,7 +150,12 @@ class SubWalletSelectorModal extends Component {
                         ? fiatBalances[wallet.id].toFixed(2)
                         : "-"
                     } ${displayCurrency}`}
-                    left={() => <List.Icon color={Colors.secondaryColor} icon="wallet" />}
+                    left={() => (
+                      <List.Icon
+                        color={Colors.secondaryColor}
+                        icon="wallet"
+                      />
+                    )}
                     descriptionStyle={{ color: Colors.secondaryColor }}
                     right={() => (
                       <Text
@@ -142,13 +164,13 @@ class SubWalletSelectorModal extends Component {
                           color: Colors.secondaryColor,
                           fontWeight: "500",
                           fontSize: 16,
-                          marginRight: 8
+                          marginRight: 8,
                         }}
                       >{`${
                         cryptoBalances[wallet.id] != null
                           ? truncateDecimal(cryptoBalances[wallet.id], 4)
                           : "-"
-                      } ${activeCoin.id}`}</Text>
+                      } ${chainTicker}`}</Text>
                     )}
                   />
                 </Card>
@@ -163,7 +185,6 @@ class SubWalletSelectorModal extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    activeCoin: state.coins.activeCoin,
     allBalances: state.ledger.balances,
     rates: state.ledger.rates[GENERAL],
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,

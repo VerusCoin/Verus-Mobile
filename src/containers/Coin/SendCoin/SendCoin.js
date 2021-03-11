@@ -18,14 +18,14 @@ import {
   TouchableOpacity,
   ScrollView
 } from "react-native"
-import { isNumber } from '../../../utils/math'
+import { isNumber, truncateDecimal } from '../../../utils/math'
 import { connect } from "react-redux";
 import { getRecommendedBTCFees } from '../../../utils/api/channels/general/callCreators'
 import { removeSpaces } from '../../../utils/stringUtils'
 import Styles from '../../../styles/index'
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import store from "../../../store"
-import { API_GET_FIATPRICE, API_GET_BALANCES, API_GET_KEYS, API_SEND, API_GET_INFO } from "../../../utils/constants/intervalConstants"
+import { API_GET_FIATPRICE, API_GET_BALANCES, API_GET_KEYS, API_SEND, API_GET_INFO, GENERAL } from "../../../utils/constants/intervalConstants"
 import BigNumber from "bignumber.js"
 import Colors from "../../../globals/colors"
 import { UtilityContracts } from "../../../utils/api/channels/erc20/callCreator"
@@ -36,6 +36,7 @@ import { DISABLE_CLAIM_BUTTON } from "../../../utils/constants/storeType"
 import NumberPadModal from "../../../components/NumberPadModal/NumberPadModal"
 import { createAlert } from "../../../actions/actions/alert/dispatchers/alert"
 import TextInputModal from "../../../components/TextInputModal/TextInputModal"
+import { USD } from "../../../utils/constants/currencies";
 
 class SendCoin extends Component {
   constructor(props) {
@@ -46,7 +47,9 @@ class SendCoin extends Component {
       account: "none",
       fromAddress: "",
       toAddress: "",
+      memo: "",
       amount: 0,
+      amountFiat: false,
       btcFees: {},
       loadingBTCFees: false,
       loading: false,
@@ -60,6 +63,7 @@ class SendCoin extends Component {
       rewardModalOpen: false,
       amountModalOpen: false,
       addressModalOpen: false,
+      memoModalOpen: false,
       pubKey: null,
     };
 
@@ -225,7 +229,11 @@ class SendCoin extends Component {
       amount: Number(amount),
       btcFee: this.state.btcFees.average,
       balance: this.props.balances.results.confirmed,
-      channel: this.props.send_channel
+      channel: this.props.send_channel,
+      memo:
+        this.props.subWalletId === "PRIVATE_WALLET"
+          ? this.state.memo
+          : null,
     };
 
     navigation.navigate(route, {
@@ -238,12 +246,16 @@ class SendCoin extends Component {
   };
 
   fillAmount = (amount) => {
-    let amountToFill = amount;
-    if (amount.isLessThan(BigNumber(0))) {
-      amountToFill = BigNumber(0);
+    let cryptoAmount = BigNumber(this.translateAmount(amount));
+    if (cryptoAmount.isLessThan(BigNumber(0))) {
+      cryptoAmount = BigNumber(0);
     }
 
-    this.setState({ amount: amountToFill.toString() });
+    this.setState({
+      amount: this.state.amountFiat
+        ? truncateDecimal(cryptoAmount, 2)
+        : cryptoAmount.toString(),
+    });
   };
 
   _verusPay = () => {
@@ -252,6 +264,7 @@ class SendCoin extends Component {
     navigation.navigate("VerusPay", {
       fillAddress: this.fillAddress,
       fillAmount: this.fillAmount,
+      channel: this.props.send_channel
     });
   };
 
@@ -286,6 +299,27 @@ class SendCoin extends Component {
     } else return null;
   };
 
+  translateAmount = (amount, fromFiat = false) => {
+    let _price =
+      this.props.rates[this.props.activeCoin.id] != null
+        ? this.props.rates[this.props.activeCoin.id][
+            this.props.displayCurrency
+          ]
+        : null;
+    
+    return _price == null
+      ? "0"
+      : this.state.amountFiat
+      ? fromFiat
+        ? BigNumber(amount)
+            .dividedBy(BigNumber(_price))
+            .toString()
+        : BigNumber(amount)
+            .multipliedBy(BigNumber(_price))
+            .toString()
+      : amount.toString();
+  }
+
   //TODO: Add fee to Bitcoin object in CoinData
 
   validateFormData = () => {
@@ -307,6 +341,7 @@ class SendCoin extends Component {
             ? this.state.amount
             : this.state.amount.toString().replace(/,/g, ".");
         const account = this.state.account;
+        let translatedAmount;
         let _errors = false;
 
         if (!toAddress || toAddress.length < 1) {
@@ -315,7 +350,7 @@ class SendCoin extends Component {
           _errors = true;
         } else if (
           this.state.addressCheckEnabled &&
-          (toAddress.length < 33)
+          !((new RegExp(this.props.addressFormat)).test(toAddress))
         ) {
           this.handleFormError("Invalid address", "toAddress");
           createAlert("Invalid Address", "Please enter a valid address.")
@@ -324,26 +359,33 @@ class SendCoin extends Component {
 
         if (!amount.toString()) {
           this.handleFormError("Required field", "amount");
-          createAlert("Required Field", "Amount is a required field.")
+          createAlert("Required Field", "Amount is a required field.");
           _errors = true;
         } else if (!isNumber(amount)) {
           this.handleFormError("Invalid amount", "amount");
-          createAlert("Invalid Amount", "Please enter a valid number amount.")
-          _errors = true;
-        } else if (Number(amount) > Number(spendableBalance)) {
-          const message = "Insufficient funds, " +
-          (spendableBalance < 0
-            ? "available amount is less than fee"
-            : spendableBalance + " available.")
-
-          this.handleFormError(
-            message,
-            "amount"
+          createAlert(
+            "Invalid Amount",
+            "Please enter a valid number amount."
           );
-          createAlert("Insufficient Funds", message)
           _errors = true;
-        }
+        } else {
+          translatedAmount = this.translateAmount(amount, true)
 
+          if (
+            Number(translatedAmount) > Number(spendableBalance)
+          ) {
+            const message =
+              "Insufficient funds, " +
+              (spendableBalance < 0
+                ? "available amount is less than fee"
+                : spendableBalance + " " + coin.id + " available.");
+  
+            this.handleFormError(message, "amount");
+            createAlert("Insufficient Funds", message);
+            _errors = true;
+          }
+        }
+        
         if (!coin) {
           createAlert("No active coin", "No current active coin.");
           _errors = true;
@@ -360,7 +402,7 @@ class SendCoin extends Component {
         }
 
         if (!_errors) {
-          this.goToConfirmScreen(coin, account, toAddress, amount);
+          this.goToConfirmScreen(coin, account, toAddress, translatedAmount);
         }
       }
     );
@@ -384,10 +426,40 @@ class SendCoin extends Component {
     );
   }
 
+  getPrice = () => {
+    const { state, props } = this
+    const { amount, amountFiat } = state
+    const { rates, displayCurrency, activeCoin } = props
+
+    let _price = rates[activeCoin.id] != null ? rates[activeCoin.id][displayCurrency] : null
+    
+    if (!(amount.toString()) ||
+      !(isNumber(amount)) ||
+      !_price) {
+      return 0
+    } 
+
+    if (amountFiat) {
+      return truncateDecimal(amount/_price, 8)
+    } else {
+      return truncateDecimal(amount*_price, 2)
+    }
+  }
+
   render() {
-    const { balances, claimDisabled } = this.props;
+    const {
+      balances,
+      claimDisabled,
+      rates,
+      activeCoin,
+      displayCurrency,
+    } = this.props;
+    const { amountFiat } = this.state
     const hasRewards = this.state.rewards.gt(this.ZERO)
     const privKey = this.getPrivKey();
+    const _price = this.getPrice();
+    const fiatEnabled =
+      rates[activeCoin.id] && rates[activeCoin.id][displayCurrency] != null;
 
     return (
       <TouchableWithoutFeedback
@@ -441,6 +513,18 @@ class SendCoin extends Component {
                   }}
                 />
               )}
+              {this.state.memoModalOpen && (
+                <TextInputModal
+                  value={this.state.memo}
+                  visible={this.state.memoModalOpen}
+                  onChange={(text) => {
+                    if (text != null) this.setState({ memo: text });
+                  }}
+                  cancel={() => {
+                    this.setState({ memoModalOpen: false });
+                  }}
+                />
+              )}
             </Portal>
             <View style={Styles.wideBlock}>
               <View style={Styles.flexRow}>
@@ -449,7 +533,13 @@ class SendCoin extends Component {
                   style={{ ...Styles.flex }}
                 >
                   <TextInput
-                    label="Amount"
+                    label={`Amount${
+                      fiatEnabled && _price != 0
+                        ? ` (~${_price} ${
+                            amountFiat ? activeCoin.id : displayCurrency
+                          })`
+                        : ""
+                    }`}
                     dense
                     value={this.state.amount}
                     editable={false}
@@ -460,6 +550,22 @@ class SendCoin extends Component {
                     error={this.state.formErrors.amount}
                   />
                 </TouchableOpacity>
+                <Button
+                  onPress={() =>
+                    this.setState({
+                      amountFiat: !amountFiat,
+                    })
+                  }
+                  color={Colors.primaryColor}
+                  disabled={!fiatEnabled}
+                  style={{
+                    alignSelf: "center",
+                    marginTop: 6,
+                  }}
+                  compact
+                >
+                  {amountFiat ? displayCurrency : activeCoin.id}
+                </Button>
                 <Button
                   onPress={this.maxAmount}
                   color={Colors.primaryColor}
@@ -485,6 +591,7 @@ class SendCoin extends Component {
                     label="Address"
                     dense
                     value={this.state.toAddress}
+                    multiline
                     editable={false}
                     pointerEvents="none"
                     style={{
@@ -507,6 +614,29 @@ class SendCoin extends Component {
                 </Button>
               </View>
             </View>
+            {this.props.subWalletId === "PRIVATE_WALLET" && (
+              <View style={Styles.wideBlock}>
+                <View style={Styles.flexRow}>
+                  <TouchableOpacity
+                    onPress={() => this.setState({ memoModalOpen: true })}
+                    style={{ ...Styles.flex }}
+                  >
+                    <TextInput
+                      label="Message"
+                      dense
+                      multiline
+                      value={this.state.memo}
+                      editable={false}
+                      pointerEvents="none"
+                      style={{
+                        backgroundColor: Colors.secondaryColor,
+                      }}
+                      error={this.state.formErrors.memo}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
             <View
               style={
                 hasRewards
@@ -532,12 +662,16 @@ class SendCoin extends Component {
               <Button
                 onPress={this.validateFormData}
                 color={Colors.primaryColor}
-                loading={this.state.loading || this.state.loadingBTCFees || this.props.syncing}
+                loading={
+                  this.state.loading ||
+                  this.state.loadingBTCFees ||
+                  this.props.syncing
+                }
                 disabled={
                   this.state.loading ||
                   this.state.loadingBTCFees ||
                   balances.errors ||
-                  this.state.btcFeesErr || 
+                  this.state.btcFeesErr ||
                   this.props.syncing
                 }
               >
@@ -580,11 +714,13 @@ const mapStateToProps = (state) => {
   const key_channel = state.coinMenus.activeSubWallets[chainTicker].api_channels[API_GET_KEYS]
   const send_channel = state.coinMenus.activeSubWallets[chainTicker].api_channels[API_SEND]
   const info_channel = state.coinMenus.activeSubWallets[chainTicker].api_channels[API_GET_INFO]
-  
+ 
   return {
     balance_channel,
     key_channel,
     send_channel,
+    addressFormat: state.coinMenus.activeSubWallets[chainTicker].address_format,
+    subWalletId: state.coinMenus.activeSubWallets[chainTicker].id,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoin: state.coins.activeCoin,
     balances: {
@@ -596,6 +732,8 @@ const mapStateToProps = (state) => {
     syncing:
       state.ledger.info[info_channel][chainTicker] != null &&
       state.ledger.info[info_channel][chainTicker].percent != 100,
+    rates: state.ledger.rates[GENERAL],
+    displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
   };
 };
 

@@ -3265,6 +3265,11 @@ base-64@0.1.0, base-64@^0.1.0:
   resolved "https://registry.yarnpkg.com/base-64/-/base-64-0.1.0.tgz#780a99c84e7d600260361511c4877613bf24f6bb"
   integrity sha1-eAqZyE59YAJgNhURxId2E78k9rs=
 
+base-64@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/base-64/-/base-64-1.0.0.tgz#09d0f2084e32a3fd08c2475b973788eee6ae8f4a"
+  integrity sha512-kwDPIFCGx0NZHog36dj+tHiwP4QMzsZ3AgMViUBKI0+V5n4U0ufTCUMhnQ04diaRI8EX/QcPfql7zlhZ7j4zgg==
+
 base-x@3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/base-x/-/base-x-3.0.4.tgz#94c1788736da065edb1d68808869e357c977fa77"
@@ -11047,7 +11052,7 @@ react-native-vector-icons@^6.2.0:
 
 "react-native-verus-light-client@git+https://github.com/michaeltout/react-native-verus-light-client.git#new_dlight_ios":
   version "1.0.0"
-  resolved "git+https://github.com/michaeltout/react-native-verus-light-client.git#6bf8517cce5c828735c2fbbe59650a7882e11f8c"
+  resolved "git+https://github.com/michaeltout/react-native-verus-light-client.git#2aaa22d971e95b14c0b48c00da9d9d8f3bb4b604"
   dependencies:
     react "16.9.0"
     react-native "0.61.5"

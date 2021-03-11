@@ -33,6 +33,7 @@ export const getDefaultSubWallets = (coinObj) => {
       [API_GET_KEYS]: dominantChannel
     },
     id: "MAIN_WALLET",
+    address_format: '^[a-zA-Z0-9]{20,50}$',
     params: {},
     color: '#3165D4'
   },
@@ -47,6 +48,7 @@ export const getDefaultSubWallets = (coinObj) => {
       [API_SEND]: DLIGHT_PRIVATE,
       [API_GET_KEYS]: DLIGHT_PRIVATE
     },
+    address_format: '^zs[a-zA-Z0-9]{65,85}$',
     id: "PRIVATE_WALLET",
     params: {},
     color: '#000000'
@@ -61,6 +63,7 @@ export const getDefaultSubWallets = (coinObj) => {
       [API_SEND]: dominantChannel,
       [API_GET_KEYS]: dominantChannel
     },
+    address_format: '^[a-zA-Z0-9]{20,50}$',
     id: "MAIN_WALLET",
     params: {},
     color: '#3165D4'

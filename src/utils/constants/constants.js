@@ -4,7 +4,7 @@ import { Dimensions } from "react-native";
 export const ELECTRUM_PROTOCOL_CHANGE = 1.4;
 
 // Seed init params
-export const DEFAULT_SEED_PHRASE_LENGTH = 12
+export const DEFAULT_SEED_PHRASE_LENGTH = 24
 
 // Wyre integration testing
 export const SUPPORTED_FIAT_CURRENCIES = [{ value: 'USD' }]; // Before API is connected, use only USD as so far we only have USD rate data

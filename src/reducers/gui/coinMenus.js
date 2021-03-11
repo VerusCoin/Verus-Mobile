@@ -13,7 +13,7 @@ import {
   INIT_COIN_SUB_WALLETS,
   SET_COIN_SUB_WALLET,
   SET_USER_COINS,
-  SIGN_OUT
+  SIGN_OUT_COMPLETE
 } from '../../utils/constants/storeType'
 import { getDefaultSubWallets } from '../../utils/defaultSubWallets';
 
@@ -48,7 +48,7 @@ export const coinMenus = (state = {
         ...state,
         claimDisabled: true
       };
-    case SIGN_OUT:
+    case SIGN_OUT_COMPLETE:
       return {
         ...state,
         claimDisabled: false

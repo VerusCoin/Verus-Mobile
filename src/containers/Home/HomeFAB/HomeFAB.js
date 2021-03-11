@@ -22,7 +22,7 @@ const HomeFAB = (props) => {
         actions={[
           {
             icon: 'qrcode-scan',
-            label: 'Scan VerusPay Invoice',
+            label: 'Scan QR Code',
             onPress: handleVerusPay,
           },
           {

@@ -8,7 +8,7 @@ import {
   SET_BALANCES,
   SET_RATES,
   SET_TRANSACTIONS,
-  SIGN_OUT,
+  SIGN_OUT_COMPLETE,
   SET_INFO
 } from '../utils/constants/storeType'
 import {
@@ -59,7 +59,7 @@ export const responseHeaders = (state = {
           [channel]: { ...state.rates[channel], [chainTicker]: header }
         }
       };
-    case SIGN_OUT:
+    case SIGN_OUT_COMPLETE:
       return {
         ...state,
         balances: CHANNELS_OBJECT_TEMPLATE,

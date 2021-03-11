@@ -17,6 +17,7 @@ export const selectAddresses = createSelector(
         : null;
 
     if (
+      activeAccount &&
       activeAccount.keys[activeCoinId] != null &&
       activeAccount.keys[activeCoinId][channel] != null &&
       activeAccount.keys[activeCoinId][channel].addresses.length > 0

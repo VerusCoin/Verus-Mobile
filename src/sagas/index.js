@@ -7,6 +7,7 @@ import ethSaga from './channels/eth';
 import electrumSaga from './channels/electrum';
 import dlightSaga from './channels/dlight';
 import generalSaga from './channels/general';
+import authenticationSaga from './authentication'
 
 import {
   ENABLE_VERUS_IDENTITIES,
@@ -18,7 +19,7 @@ import {
 } from "../../env/main.json";
 
 const generateSagas = () => {
-  let sagas = []
+  let sagas = [authenticationSaga]
 
   if (ENABLE_VERUS_IDENTITIES) sagas.push(identitySaga)
 
