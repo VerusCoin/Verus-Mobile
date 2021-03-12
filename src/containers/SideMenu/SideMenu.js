@@ -201,9 +201,13 @@ class SideMenu extends Component {
   handleLogout = () => {
     this.resetToScreen("SecureLoading", null, {
       task: () => {
+        // Hack to prevent crash on screens that require activeAccount not to be null
+        // TODO: Find a more elegant solution
         return new Promise((resolve, reject) => {
-          this.props.dispatch(signOut())
-          resolve()
+          setTimeout(() => {
+            this.props.dispatch(signOut())
+            resolve()
+          }, 1000)
         })
       },
       message: "Signing out...",

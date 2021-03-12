@@ -18,43 +18,60 @@ import { Input } from 'react-native-elements'
 import { Button, TextInput, Text } from 'react-native-paper'
 import Colors from "../../../globals/colors";
 import ScanSeed from "../../ScanSeed";
+import { DLIGHT_PRIVATE } from "../../../utils/constants/intervalConstants";
+import { parseDlightSeed } from "../../../utils/keys";
+import { createAlert } from "../../../actions/actions/alert/dispatchers/alert";
 
 class ImportSeed extends Component {
   constructor(props) {
     super(props);
 
-    this.state = props.initState
+    this.state = props.initState;
   }
 
   componentDidUpdate(lastProps, lastState) {
-    if (lastState !== this.state) this.props.saveState(this.state)
+    if (lastState !== this.state) this.props.saveState(this.state);
   }
 
-  handleScan = seed => {
+  handleScan = (seed) => {
     this.setState({ seed, scanning: false });
   };
 
-  verifySeed = () => {
-    const { seed } = this.state 
-    let _errors = false
+  verifySeed = async () => {
+    this.setState({ loading: true }, async () => {
+      const { seed } = this.state;
+      let _errors = false;
 
-    if (!seed || seed.length < 1) {
-      Alert.alert("Error", "Please enter a seed, WIF key or spending key.");
-      _errors = true;
-    } 
+      if (!seed || seed.length < 1) {
+        Alert.alert("Error", "Please enter a seed, WIF key or spending key.");
+        _errors = true;
+      }
 
-    if (!_errors) {
-      this.props.setSeed(this.state.seed, this.props.channel)
-      this.props.cancel()
-    }
-  }
+      if (this.props.channel === DLIGHT_PRIVATE) {
+        try {
+          await parseDlightSeed(this.state.seed)
+          
+          this.setState({ loading: false });
+          this.props.setSeed(this.state.seed, this.props.channel);
+          this.props.cancel();
+        } catch (e) {
+          this.setState({ loading: false });
+          Alert.alert(
+            "Invalid Seed",
+            "Please enter a valid 24 word seed phrase, or an extended spending key belonging to a Z address."
+          );
+        }
+      } else {
+        this.setState({ loading: false });
+        this.props.setSeed(this.state.seed, this.props.channel);
+        this.props.cancel();
+      }
+    });
+  };
 
   render() {
     return (
-      <TouchableWithoutFeedback
-        onPress={Keyboard.dismiss}
-        accessible={false}
-      >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         {!this.state.scanning ? (
           <ScrollView
             style={Styles.flexBackground}
@@ -68,7 +85,9 @@ class ImportSeed extends Component {
             <View style={Styles.fullWidthFlexGrowCenterBlock}>
               <View style={Styles.wideCenterBlock}>
                 <Text style={[Styles.textWithGreyColor, Styles.centeredText]}>
-                  {"Enter or scan an existing spending key, WIF key, or seed."}
+                  {this.props.channel === DLIGHT_PRIVATE
+                    ? "Enter or scan a 24 word seed phrase, or Z spending key."
+                    : "Enter or scan an existing spending key, WIF key, or seed phrase."}
                 </Text>
               </View>
               <View style={Styles.wideCenterBlock}>
@@ -79,9 +98,7 @@ class ImportSeed extends Component {
                   selectionColor={Colors.primaryColor}
                   value={this.state.seed}
                   multiline={
-                    Platform.OS === "ios" && !this.state.showSeed
-                      ? false
-                      : true
+                    Platform.OS === "ios" && !this.state.showSeed ? false : true
                   }
                   render={(props) => (
                     <NativeTextInput
@@ -119,9 +136,13 @@ class ImportSeed extends Component {
                   {"Back"}
                 </Button>
                 <Button
-                  onPress={this.verifySeed}
+                  onPress={() => this.verifySeed()}
                   color={Colors.primaryColor}
-                  disabled={!this.state.seed || this.state.seed.length < 1}
+                  disabled={
+                    !this.state.seed ||
+                    this.state.seed.length < 1 ||
+                    this.state.loading
+                  }
                 >
                   {"Import"}
                 </Button>

@@ -15,6 +15,7 @@ import Styles from '../../../styles/index'
 import { Button, TextInput } from 'react-native-paper'
 import Colors from '../../../globals/colors'
 import { DEFAULT_SEED_PHRASE_LENGTH } from "../../../utils/constants/constants"
+import { DLIGHT_PRIVATE } from "../../../utils/constants/intervalConstants"
 
 class CreateSeed extends Component {
   constructor(props) {
@@ -128,7 +129,9 @@ class CreateSeed extends Component {
                 style={{ ...Styles.linkText, textAlign: "center" }}
                 onPress={this.props.importSeed}
               >
-                {"import an existing seed/wallet."}
+                {this.props.channel === DLIGHT_PRIVATE
+                  ? "import an existing seed phrase/spending key."
+                  : "import an existing seed/wallet."}
               </Text>
             </View>
           </View>
@@ -150,7 +153,10 @@ class CreateSeed extends Component {
           <View style={Styles.standardWidthFlexGrowCenterBlock}>
             {randomIndices.map((randomI, index) => {
               return (
-                <View key={index} style={Styles.fullWidthAlignCenterRowBlock}>
+                <View
+                  key={index}
+                  style={Styles.fullWidthAlignCenterRowBlock}
+                >
                   <TextInput
                     dense
                     style={Styles.flex}

@@ -109,10 +109,10 @@ export const HomeListItemRender = function(coinObj, isParent, subWallet, index =
   const balance = isParent
     ? (this.state.totalCryptoBalances[coinObj.id] == null
       ? null
-      : this.state.totalCryptoBalances[coinObj.id].toString())
+      : truncateDecimal(this.state.totalCryptoBalances[coinObj.id], 8))
     : this.props.balances[coinObj.id] &&
       this.props.balances[coinObj.id][subWallet.id] != null
-    ? this.props.balances[coinObj.id][subWallet.id].total.toString()
+    ? truncateDecimal(this.props.balances[coinObj.id][subWallet.id].total, 8)
     : null;
   const syncProgress = isParent ? null : this.calculateSyncProgress(coinObj, subWallet)
   const Logo = CoinLogos[ticker.toLowerCase()] ? CoinLogos[ticker.toLowerCase()].light : null

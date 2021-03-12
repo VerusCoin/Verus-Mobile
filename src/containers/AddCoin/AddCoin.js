@@ -101,6 +101,7 @@ class AddCoin extends Component {
       <View styles={Styles.root}>
         <Portal>
           <CoinDetailsModal
+            navigation={this.props.navigation}
             data={this.state.fullCoinDetails || {}}
             added={
               this.state.fullCoinDetails != null &&

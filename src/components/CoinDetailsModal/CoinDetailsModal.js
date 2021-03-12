@@ -22,6 +22,7 @@ import { addCoin, addKeypairs, removeExistingCoin, setUserCoins } from "../../ac
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import { connect } from 'react-redux';
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
+import { CommonActions } from '@react-navigation/native';
 
 class CoinDetailsModal extends Component {
   constructor(props) {
@@ -46,6 +47,19 @@ class CoinDetailsModal extends Component {
     }
   };
 
+  resetToScreen = (route, title, data) => {
+    const resetAction = CommonActions.reset({
+      index: 1, // <-- currect active route from actions array
+      routes: [
+        { name: "Home" },
+        { name: route, params: { title: title, data: data } },
+      ],
+    })
+
+    this.props.navigation.closeDrawer();
+    this.props.navigation.dispatch(resetAction)
+  }
+
   _handleRemoveCoin = () => {
     this.setState({ 
       loading: true
@@ -55,7 +69,7 @@ class CoinDetailsModal extends Component {
           this.props.data.id,
           this.props.activeAccount.id,
           this.props.dispatch,
-          true
+          false
         )
           .then((res) => {
             clearAllCoinIntervals(this.props.data.id);
@@ -65,6 +79,7 @@ class CoinDetailsModal extends Component {
                 this.props.activeAccount.id
               )
             );
+            this.resetToScreen("AddCoin", "Add Coin")
             resolve();
           })
           .catch((err) => {
@@ -92,7 +107,7 @@ class CoinDetailsModal extends Component {
 
     try {
       this.props.dispatch(
-        addKeypairs(
+        await addKeypairs(
           this.props.activeAccount.seeds,
           this.props.data,
           this.props.activeAccount.keys

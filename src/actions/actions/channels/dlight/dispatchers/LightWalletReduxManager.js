@@ -31,7 +31,11 @@ export const initDlightWallet = (coinObj) => {
   const { accountHash } = activeAccount
   const { dlight_endpoints, id, proto } = coinObj
 
-  if (activeAccount.seeds.dlight_private == null) return Promise.resolve()
+  if (
+    activeAccount.keys[coinObj.id] == null ||
+    activeAccount.keys[coinObj.id].dlight_private == null
+  )
+    return Promise.resolve();
 
   // Depends on settings already being added to redux store and initialized
   const { coinSettings } = settings
@@ -57,7 +61,7 @@ export const initDlightWallet = (coinObj) => {
           lightWalletEndpointArr[0],
           Number(lightWalletEndpointArr[1]),
           coinSettings[id] != null ? coinSettings[id].privateAddrs : DEFAULT_PRIVATE_ADDRS,
-          activeAccount.seeds.dlight_private
+          [activeAccount.keys[coinObj.id].dlight_private.viewingKey]
         ),
         openWallet(id, proto, accountHash),
         startSync(id, proto, accountHash),

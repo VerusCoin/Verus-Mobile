@@ -16,7 +16,6 @@ const HomeFAB = (props) => {
         fabStyle={{
           backgroundColor: Colors.primaryColor,
         }}
-        label={"Brop"}
         open={open}
         icon={open ? "minus" : "plus"}
         actions={[
@@ -26,17 +25,12 @@ const HomeFAB = (props) => {
             onPress: handleVerusPay,
           },
           {
-            icon: 'plus',
-            label: 'Add Coin',
+            icon: 'format-list-bulleted',
+            label: 'Manage Coins',
             onPress: handleAddCoin,
           },
         ]}
         onStateChange={onStateChange}
-        onPress={() => {
-          if (open) {
-            // do something if the speed dial is open
-          }
-        }}
       />
     </Portal>
   );

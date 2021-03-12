@@ -65,7 +65,7 @@ class CoinDetails extends Component {
 
     try {
       this.props.dispatch(
-        addKeypairs(
+        await addKeypairs(
           this.props.activeAccount.seeds,
           this.state.fullCoinData,
           this.props.activeAccount.keys

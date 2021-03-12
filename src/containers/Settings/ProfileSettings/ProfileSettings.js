@@ -141,25 +141,27 @@ class ProfileSettings extends Component {
   };
 
   addZSeed = (seed, channel) => {
-    this.openPasswordCheck(async (result) => {
+    this.openPasswordCheck((result) => {
       if (result.valid) {
-        try {
-          await addEncryptedKey(
-            this.props.activeAccount.accountHash,
-            channel,
-            seed,
-            result.password
-          );
-
-          createAlert(
-            "Success",
-            `Z Seed set for ${
-              this.props.activeAccount.id
-            }. Restart Verus Mobile and login to start using Z cards!`
-          );
-        } catch(e) {
-          createAlert("Error", e.message);
-        }
+        this.closePasswordDialog(async () => {
+          try {
+            await addEncryptedKey(
+              this.props.activeAccount.accountHash,
+              channel,
+              seed,
+              result.password
+            );
+  
+            createAlert(
+              "Success",
+              `Z Seed set for ${
+                this.props.activeAccount.id
+              }. Restart Verus Mobile and login to start using Z cards!`
+            );
+          } catch(e) {
+            createAlert("Error", e.message);
+          }
+        })
       } else {
         createAlert("Authentication Error", "Incorrect password");
       }

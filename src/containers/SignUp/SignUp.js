@@ -283,27 +283,11 @@ class SignUp extends Component {
   };
 
   setupSeed = (channel) => {
-    const { seeds } = this.state;
-    const oppositeChannel = channel === ELECTRUM ? DLIGHT_PRIVATE : ELECTRUM;
-
-    if (!seeds[channel] && seeds[oppositeChannel]) {
-      canCopySeed().then((res) => {
-        if (res) {
-          this.setState({
-            seeds: {
-              ...seeds,
-              [channel]: seeds[oppositeChannel],
-            },
-          });
-        } else if (channel === ELECTRUM) {
-          this.setState({ publicSeedModalOpen: true });
-        } else if (channel === DLIGHT_PRIVATE)
-          this.setState({ privateSeedModalOpen: true });
-      });
-    } else if (channel === ELECTRUM) {
+    if (channel === ELECTRUM) {
       this.setState({ publicSeedModalOpen: true });
-    } else if (channel === DLIGHT_PRIVATE)
+    } else if (channel === DLIGHT_PRIVATE) {
       this.setState({ privateSeedModalOpen: true });
+    }
   };
 
   canMakeAccount = () => {

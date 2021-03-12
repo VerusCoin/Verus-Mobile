@@ -396,7 +396,7 @@ class VerusPay extends Component {
         // : coinObj.compatible_channels
         coinObj.compatible_channels
       )
-        .then(response => {
+        .then(async response => {
           if (response) {
             this.props.dispatch(response);
             this.props.dispatch(
@@ -406,7 +406,7 @@ class VerusPay extends Component {
               )
             );
             this.props.dispatch(
-              addKeypairs(
+              await addKeypairs(
                 this.props.activeAccount.seeds,
                 coinObj,
                 this.props.activeAccount.keys

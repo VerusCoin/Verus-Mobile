@@ -144,8 +144,8 @@ export const renderAddCoinComponents = function() {
       )}
       sections={[
         {
-          title: "Add Coin",
-          data: ["Add coin from list" /*, 'Add custom coin'*/],
+          title: "Manage Coins",
+          data: ["Manage coins from list" /*, 'Add custom coin'*/],
         },
       ]}
       keyExtractor={(item, index) => item + index}
@@ -178,11 +178,9 @@ export const renderMainDrawerComponents = function() {
       ListFooterComponent={
         <React.Fragment>
           <List.Item
-            title="Add Coin"
-            left={() => <List.Icon icon="plus"/>}
-            onPress={() =>
-              this.setState({ mainDrawer: false, currentCoinIndex: -1 })
-            }
+            title="Manage Coins"
+            left={() => <List.Icon icon="format-list-bulleted"/>}
+            onPress={() => this.navigateToScreen("AddCoin")}
           />
           <List.Item
             title={"Settings"}

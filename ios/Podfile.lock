@@ -42,6 +42,7 @@ PODS:
   - lottie-react-native (3.5.0):
     - lottie-ios (~> 3.1.8)
     - React
+  - MnemonicSwift (2.0.0)
   - Permission-Camera (2.1.5):
     - RNPermissions
   - RCTRequired (0.61.5)
@@ -231,6 +232,7 @@ PODS:
   - react-native-udp (2.7.0):
     - React
   - react-native-verus-light-client (1.0.0):
+    - MnemonicSwift
     - React
     - React-Core
     - ZcashLightClientKit
@@ -362,6 +364,7 @@ DEPENDENCIES:
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - lottie-ios (from `../node_modules/lottie-ios`)
   - lottie-react-native (from `../node_modules/lottie-react-native`)
+  - MnemonicSwift (~> 2.0.0)
   - Permission-Camera (from `../node_modules/react-native-permissions/ios/Camera.podspec`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -430,6 +433,7 @@ SPEC REPOS:
     - CNIOWindows
     - gRPC-Swift
     - Logging
+    - MnemonicSwift
     - SQLite.swift
     - SwiftNIO
     - SwiftNIOConcurrencyHelpers
@@ -582,6 +586,7 @@ SPEC CHECKSUMS:
   Logging: beeb016c9c80cf77042d62e83495816847ef108b
   lottie-ios: 48fac6be217c76937e36e340e2d09cf7b10b7f5f
   lottie-react-native: 1fb4ce21d6ad37dab8343eaff8719df76035bd93
+  MnemonicSwift: 36384fc6b2640d93df9fe9fb60a8da7957cec36d
   Permission-Camera: afad27bf90337684d4a86f3825112d648c8c4d3b
   RCTRequired: b153add4da6e7dbc44aebf93f3cf4fcae392ddf1
   RCTTypeSafety: 9aa1b91d7f9310fc6eadc3cf95126ffe818af320
@@ -600,7 +605,7 @@ SPEC CHECKSUMS:
   react-native-safe-area-context: b6e0e284002381d2ff29fa4fff42b4d8282e3c94
   react-native-text-input-mask: 07227297075f9653315f43b0424d596423a01736
   react-native-udp: ff9d13e523f2b58e6bc5d4d32321ac60671b5dc9
-  react-native-verus-light-client: b71b8551595c3c75787bc51ff1d2b2989639851a
+  react-native-verus-light-client: ba8400658314adecefa08593e46d9fa69029bea8
   React-RCTActionSheet: 600b4d10e3aea0913b5a92256d2719c0cdd26d76
   React-RCTAnimation: 791a87558389c80908ed06cc5dfc5e7920dfa360
   React-RCTBlob: d89293cc0236d9cb0933d85e430b0bbe81ad1d72
@@ -643,6 +648,6 @@ SPEC CHECKSUMS:
   Yoga: f2a7cd4280bfe2cca5a7aed98ba0eb3d1310f18b
   ZcashLightClientKit: d5a681033b3f59c59c93837232ed7890d3e07918
 
-PODFILE CHECKSUM: c5cacedeb395913ac771051915504b6a498f5d5c
+PODFILE CHECKSUM: 444789b9830d7c45bccace44937d91c1c074ee1f
 
 COCOAPODS: 1.8.4
