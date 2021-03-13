@@ -11,7 +11,7 @@ import {
   TouchableOpacity
 } from "react-native";
 import { connect } from 'react-redux';
-import { truncateDecimal, MathableNumber } from '../../../utils/math';
+import { MathableNumber } from '../../../utils/math';
 import { expireData, setActiveOverviewFilter } from '../../../actions/actionCreators';
 import Styles from '../../../styles/index'
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
@@ -27,7 +27,7 @@ import {
 import { selectTransactions } from '../../../selectors/transactions';
 import { ETHERS } from "../../../utils/constants/web3Constants";
 import { ethers } from "ethers";
-import { Portal, List, Text } from "react-native-paper";
+import { Portal, List, Text, Badge } from "react-native-paper";
 import BigNumber from "bignumber.js";
 import { TransactionLogos } from '../../../images/customIcons/index'
 import Colors from "../../../globals/colors";
@@ -263,7 +263,10 @@ class Overview extends Component {
             />
           )}
           right={(props) => (
-            <List.Icon {...props} icon={"chevron-right"} size={20} />
+            <React.Fragment>
+              {item.memo != null && <List.Icon {...props} icon={"email"} size={20} />}
+              <List.Icon {...props} icon={"chevron-right"} size={20} />
+            </React.Fragment>
           )}
         />
       </TouchableOpacity>

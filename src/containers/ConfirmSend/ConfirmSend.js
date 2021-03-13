@@ -10,7 +10,7 @@ import React, { Component } from "react";
 import { connect } from 'react-redux';
 import { networks } from 'bitgo-utxo-lib';
 import { Keyboard, Clipboard, Linking } from "react-native";
-import { isNumber, satsToCoins } from '../../utils/math';
+import { isNumber, satsToCoins, truncateDecimal } from '../../utils/math';
 import { NavigationActions } from '@react-navigation/compat';
 import { CommonActions } from '@react-navigation/native';
 import { NO_VERIFICATION, MID_VERIFICATION } from '../../utils/constants/constants'
@@ -101,7 +101,12 @@ class ConfirmSend extends Component {
     const coinObj = this.props.route.params.data.coinObj
     const activeUser = this.props.route.params.data.activeUser
     const address = this.props.route.params.data.address
-    const amount = BigNumber(this.props.route.params.data.amount)
+    const amount = BigNumber(
+      truncateDecimal(
+        this.props.route.params.data.amount,
+        this.props.route.params.data.coinObj.decimals
+      )
+    );
     const fromAddress = this.props.route.params.data.fromAddress
     const channel = this.props.route.params.data.channel
     const fee =

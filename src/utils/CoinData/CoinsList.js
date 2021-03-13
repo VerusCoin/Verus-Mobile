@@ -10,7 +10,7 @@ import {
   ERC20,
 } from "../constants/intervalConstants";
 import { dlightServers } from 'agama-wallet-lib/src/dlight-servers';
-import { ETHERS } from "../constants/web3Constants";
+import { DEFAULT_DECIMALS, ETHERS } from "../constants/web3Constants";
 
 export const coinsList = {
   vrsc: {
@@ -25,7 +25,8 @@ export const coinsList = {
     compatible_channels: [DLIGHT_PRIVATE, ELECTRUM, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT],
     proto: 'vrsc',
-    dlight_endpoints: dlightServers.vrsc
+    dlight_endpoints: dlightServers.vrsc,
+    decimals: DEFAULT_DECIMALS
   },
   kmd: {
     id: "KMD",
@@ -38,7 +39,8 @@ export const coinsList = {
     fee: 10000,
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   btc: {
     id: "BTC",
@@ -50,7 +52,8 @@ export const coinsList = {
     website: "https://bitcoin.org/en/",
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   eth: {
     id: "ETH",
@@ -80,19 +83,19 @@ export const coinsList = {
     tags: [],
     proto: 'erc20'
   },
-  tst: {
-    id: "TST",
-    currency_id: '0x722dd3F80BAC40c951b51BdD28Dd19d435762180',
-    system_id: '.eth',
-    display_ticker: 'TST',
-    display_name: "ERC20 Test Token",
-    website: "",
-    compatible_channels: [ERC20, GENERAL],
-    dominant_channel: ERC20,
-    decimals: ETHERS,
-    tags: [],
-    proto: 'erc20'
-  },
+  // tst: {
+  //   id: "TST",
+  //   currency_id: '0x722dd3F80BAC40c951b51BdD28Dd19d435762180',
+  //   system_id: '.eth',
+  //   display_ticker: 'TST',
+  //   display_name: "ERC20 Test Token",
+  //   website: "",
+  //   compatible_channels: [ERC20, GENERAL],
+  //   dominant_channel: ERC20,
+  //   decimals: ETHERS,
+  //   tags: [],
+  //   proto: 'erc20'
+  // },
   yfi: {
     id: "YFI",
     currency_id: '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',
@@ -258,7 +261,8 @@ export const coinsList = {
     fee: 10000,
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   ccl: {
     id: "CCL",
@@ -271,7 +275,8 @@ export const coinsList = {
     theme_color: "#36AFF3",
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   doge: {
     id: "DOGE",
@@ -284,7 +289,8 @@ export const coinsList = {
     fee: 100000000,
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   dgb: {
     id: "DGB",
@@ -297,7 +303,8 @@ export const coinsList = {
     fee: 100000,
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   bch: {
     id: "BCH",
@@ -310,7 +317,8 @@ export const coinsList = {
     theme_color: "#8CC351",
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   zec: {
     id: "ZEC",
@@ -324,7 +332,8 @@ export const coinsList = {
     compatible_channels: [DLIGHT_PRIVATE, ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
     proto: 'btc',
-    dlight_endpoints: dlightServers.zec
+    dlight_endpoints: dlightServers.zec,
+    decimals: DEFAULT_DECIMALS
   },
   // zectest: {
   //   id: "ZECTEST",
@@ -351,7 +360,8 @@ export const coinsList = {
     fee: 10000,
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   ltc: {
     id: "LTC",
@@ -364,7 +374,8 @@ export const coinsList = {
     fee: 30000,
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   zilla: {
     id: "ZILLA",
@@ -377,6 +388,7 @@ export const coinsList = {
     fee: 10000,
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   }
 };
