@@ -161,7 +161,7 @@
     "levelup": "4.1.0",
     "mem": "5.1.1",
     "handlebars": "^4.5.3",
-    "elliptic": "^6.5.3",
+    "elliptic": "^6.5.4",
     "node-fetch": "^2.6.1",
     "yargs-parser": "^13.1.2",
     "minimist": "^0.2.1",
