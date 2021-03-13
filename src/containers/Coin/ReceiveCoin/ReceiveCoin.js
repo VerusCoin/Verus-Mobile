@@ -180,7 +180,7 @@ class ReceiveCoin extends Component {
 
   copyAddressToClipboard = () => {
     Clipboard.setString(this.state.address);
-    createAlert("Address Copied", `"${this.state.address}" copied to clipboard`)
+    createAlert("Address Copied", `"${this.state.address}" copied to clipboard.`)
   }
 
   getPrice = () => {

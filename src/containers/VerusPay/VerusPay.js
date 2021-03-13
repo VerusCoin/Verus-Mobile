@@ -50,6 +50,7 @@ import BigNumber from "bignumber.js";
 import { Portal } from "react-native-paper";
 import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
 import { createAlert, resolveAlert } from "../../actions/actions/alert/dispatchers/alert";
+import { ADDRESS_FORMATS } from "../../utils/defaultSubWallets";
 
 class VerusPay extends Component {
   constructor(props) {
@@ -107,7 +108,6 @@ class VerusPay extends Component {
   };
 
   onSuccess(e) {
-    console.log(e);
     let result = e.data;
 
     if (isJson(result)) {
@@ -151,7 +151,11 @@ class VerusPay extends Component {
 
           if (coinURLParsed) {
             this.handleVerusQR(coinURLParsed);
-          } else if (result.length >= 33 && result.length <= 42) {
+          } else if (
+            Object.values(ADDRESS_FORMATS).some((format) =>
+              new RegExp(format).test(result)
+            )
+          ) {
             this.addressOnly(result);
           } else {
             this.errorHandler(FORMAT_UNKNOWN);
@@ -498,29 +502,31 @@ class VerusPay extends Component {
     });
   };
 
+  // TODO: Fix this to account for different channels
   checkBalance = (amount, activeCoin) => {
-    const { balances } = this.props
-    const channel = activeCoin.dominant_channel != null ? activeCoin.dominant_channel : ELECTRUM
+    // const { balances } = this.props
+    // const channel = activeCoin.dominant_channel != null ? activeCoin.dominant_channel : ELECTRUM
 
-    if (
-      activeCoin &&
-      balances.results &&
-      balances.results[channel] &&
-      balances.results[channel][activeCoin.id]
-    ) {
-      const spendableBalance = BigNumber(
-        balances.results[channel][activeCoin.id].confirmed
-      );
+    // if (
+    //   activeCoin &&
+    //   balances.results &&
+    //   balances.results[channel] &&
+    //   balances.results[channel][activeCoin.id]
+    // ) {
+    //   const spendableBalance = BigNumber(
+    //     balances.results[channel][activeCoin.id].confirmed
+    //   );
 
-      if (amount.isGreaterThan(spendableBalance)) {
-        this.errorHandler(INSUFFICIENT_FUNDS);
-        return false;
-      } else {
-        return true;
-      }
-    } else {
-      this.errorHandler(BALANCE_NULL);
-    }
+    //   if (amount.isGreaterThan(spendableBalance)) {
+    //     this.errorHandler(INSUFFICIENT_FUNDS);
+    //     return false;
+    //   } else {
+    //     return true;
+    //   }
+    // } else {
+    //   this.errorHandler(BALANCE_NULL);
+    // }
+    return true
   };
 
   canExitWallet = (fromTicker, toTicker) => {

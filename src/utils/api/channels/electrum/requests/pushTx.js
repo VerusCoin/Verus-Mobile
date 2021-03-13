@@ -1,9 +1,8 @@
 import { postElectrum } from '../callCreators'
 import { getUnspentFormatted } from './getUnspent';
-import { maxSpendBalance, satsToCoins, coinsToSats } from '../../../../math'
+import { maxSpendBalance, satsToCoins, coinsToSats, truncateDecimal } from '../../../../math'
 import coinSelect from 'coinselect';
 import { buildSignedTx } from '../../../../crypto/buildTx'
-import { TxDecoder } from '../../../../crypto/txDecoder'
 import { ELECTRUM } from '../../../../constants/intervalConstants';
 import BigNumber from 'bignumber.js';
 
@@ -36,7 +35,7 @@ export const pushTx = (coinObj, _rawtx) => {
 
 export const txPreflight = (coinObj, activeUser, outputAddress, value, params) => {
   let { defaultFee, network, verifyMerkle, verifyTxid } = params
-  value = coinsToSats(value)
+  value = BigNumber(truncateDecimal(coinsToSats(value), coinObj.decimals))
 
   return new Promise((resolve, reject) => {
     getUnspentFormatted(coinObj, activeUser, verifyMerkle, verifyTxid)

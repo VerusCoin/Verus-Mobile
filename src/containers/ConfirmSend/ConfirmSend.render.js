@@ -53,7 +53,7 @@ export const renderTransactionInfo = function() {
         </View>
       </View>
       <FlatList
-        style={{ ...Styles.fullWidth, ...Styles.secondaryBackground }}
+        style={{ ...Styles.fullWidth, ...Styles.secondaryBackground, ...Styles.flex }}
         renderItem={({ item }) => {
           if (item.condition == null || item.condition === true)
             return (
@@ -91,12 +91,14 @@ export const renderTransactionInfo = function() {
           {
             key: "From",
             data: this.state.fromAddress,
+            numLines: 100,
             onPress: () =>
               this.copyAddressToClipboard(this.state.fromAddress),
           },
           {
             key: "To",
             data: this.state.toAddress,
+            numLines: 100,
             onPress: () => this.copyAddressToClipboard(this.state.toAddress),
           },
           {

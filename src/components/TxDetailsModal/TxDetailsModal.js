@@ -107,7 +107,7 @@ class TxDetailsModal extends Component {
         transparent={true}
         visible={visible}
         onRequestClose={cancel}
-        flexHeight={2}
+        flexHeight={4}
       >
         <SafeAreaView style={Styles.centerContainer}>
           <View style={{ ...Styles.headerContainer, minHeight: 48 }}>

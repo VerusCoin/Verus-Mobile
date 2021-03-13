@@ -332,7 +332,10 @@ class SendCoin extends Component {
 
         const spendableBalance = this.props.balances.results.confirmed;
 
-        const toAddress = removeSpaces(this.state.toAddress);
+        const toAddress =
+          this.state.toAddress != null
+            ? removeSpaces(this.state.toAddress)
+            : "";
         const fromAddress = this.state.fromAddress;
         const amount =
           (this.state.amount.toString().includes(".") &&
@@ -353,7 +356,12 @@ class SendCoin extends Component {
           !((new RegExp(this.props.addressFormat)).test(toAddress))
         ) {
           this.handleFormError("Invalid address", "toAddress");
-          createAlert("Invalid Address", "Please enter a valid address.")
+          createAlert(
+            "Invalid Address",
+            `Please enter a valid ${
+              this.props.subWalletId === "PRIVATE_WALLET" ? "Z " : ""
+            }address.`
+          );
           _errors = true;
         }
 
@@ -378,7 +386,10 @@ class SendCoin extends Component {
               "Insufficient funds, " +
               (spendableBalance < 0
                 ? "available amount is less than fee"
-                : spendableBalance + " " + coin.id + " available.");
+                : spendableBalance +
+                  " confirmed " +
+                  coin.id +
+                  " available. If you recently recieved funds, it may take a few minutes for them to become spendable.");
   
             this.handleFormError(message, "amount");
             createAlert("Insufficient Funds", message);
@@ -572,8 +583,7 @@ class SendCoin extends Component {
                   style={{
                     alignSelf: "center",
                     marginTop: 6,
-                    marginLeft: 8,
-                    marginRight: 8,
+                    marginLeft: 8
                   }}
                   compact
                 >

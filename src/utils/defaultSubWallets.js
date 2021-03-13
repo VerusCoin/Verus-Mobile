@@ -18,6 +18,11 @@ import { dlightEnabled } from "./enabledChannels";
 // export const API_GET_TRANSACTIONS = "get_transactions"
 // export const API_GET_FIATPRICE = "get_fiatprice"
 
+export const ADDRESS_FORMATS = {
+  ["MAIN_WALLET"]: '^[a-zA-Z0-9]{20,50}$',
+  ["PRIVATE_WALLET"]: '^zs[a-zA-Z0-9]{65,85}$'
+}
+
 export const getDefaultSubWallets = (coinObj) => {
   const dominantChannel = coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM
 
@@ -33,7 +38,7 @@ export const getDefaultSubWallets = (coinObj) => {
       [API_GET_KEYS]: dominantChannel
     },
     id: "MAIN_WALLET",
-    address_format: '^[a-zA-Z0-9]{20,50}$',
+    address_format: ADDRESS_FORMATS["MAIN_WALLET"],
     params: {},
     color: '#3165D4'
   },
@@ -48,7 +53,7 @@ export const getDefaultSubWallets = (coinObj) => {
       [API_SEND]: DLIGHT_PRIVATE,
       [API_GET_KEYS]: DLIGHT_PRIVATE
     },
-    address_format: '^zs[a-zA-Z0-9]{65,85}$',
+    address_format: ADDRESS_FORMATS["PRIVATE_WALLET"],
     id: "PRIVATE_WALLET",
     params: {},
     color: '#000000'
@@ -63,7 +68,7 @@ export const getDefaultSubWallets = (coinObj) => {
       [API_SEND]: dominantChannel,
       [API_GET_KEYS]: dominantChannel
     },
-    address_format: '^[a-zA-Z0-9]{20,50}$',
+    address_format: ADDRESS_FORMATS["MAIN_WALLET"],
     id: "MAIN_WALLET",
     params: {},
     color: '#3165D4'
