@@ -3564,7 +3564,7 @@ bitcoinjs-message@^2.0.0:
 
 "bitgo-utxo-lib@git+https://github.com/VerusCoin/bitgo-utxo-lib.git#react-native":
   version "1.2.1"
-  resolved "git+https://github.com/VerusCoin/bitgo-utxo-lib.git#73e694ee2586175f14ca59206694e29e52784a09"
+  resolved "git+https://github.com/VerusCoin/bitgo-utxo-lib.git#aff0871d4523ab98f2f9d12b749ac5c30dba1ba8"
   dependencies:
     bech32 "0.0.3"
     bigi "^1.4.0"

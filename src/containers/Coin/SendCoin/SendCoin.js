@@ -25,7 +25,7 @@ import { removeSpaces } from '../../../utils/stringUtils'
 import Styles from '../../../styles/index'
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import store from "../../../store"
-import { API_GET_FIATPRICE, API_GET_BALANCES, API_GET_KEYS, API_SEND, API_GET_INFO, GENERAL } from "../../../utils/constants/intervalConstants"
+import { API_GET_FIATPRICE, API_GET_BALANCES, API_GET_KEYS, API_SEND, API_GET_INFO, GENERAL, DLIGHT_PRIVATE } from "../../../utils/constants/intervalConstants"
 import BigNumber from "bignumber.js"
 import Colors from "../../../globals/colors"
 import { UtilityContracts } from "../../../utils/api/channels/erc20/callCreator"
@@ -190,8 +190,6 @@ class SendCoin extends Component {
     return new Promise((resolve, reject) => {
       getRecommendedBTCFees().then((res) => {
         if (res) {
-          console.log("BTC FEES:");
-          console.log(res);
           this.setState(
             {
               btcFees: res,
@@ -231,7 +229,8 @@ class SendCoin extends Component {
       balance: this.props.balances.results.confirmed,
       channel: this.props.send_channel,
       memo:
-        this.props.subWalletId === "PRIVATE_WALLET"
+        this.props.subWalletId === "PRIVATE_WALLET" &&
+        this.isPrivateSend()
           ? this.state.memo
           : null,
     };
@@ -308,7 +307,9 @@ class SendCoin extends Component {
         : null;
     
     return _price == null
-      ? "0"
+      ? fromFiat
+        ? "0"
+        : amount
       : this.state.amountFiat
       ? fromFiat
         ? BigNumber(amount)
@@ -351,19 +352,18 @@ class SendCoin extends Component {
           this.handleFormError("Required field", "toAddress");
           createAlert("Required Field", "Address is a required field.")
           _errors = true;
-        } else if (
-          this.state.addressCheckEnabled &&
-          !((new RegExp(this.props.addressFormat)).test(toAddress))
-        ) {
-          this.handleFormError("Invalid address", "toAddress");
-          createAlert(
-            "Invalid Address",
-            `Please enter a valid ${
-              this.props.subWalletId === "PRIVATE_WALLET" ? "Z " : ""
-            }address.`
-          );
-          _errors = true;
         }
+        // } else if (
+        //   this.state.addressCheckEnabled &&
+        //   !((new RegExp(this.props.addressFormat)).test(toAddress))
+        // ) {
+        //   this.handleFormError("Invalid address", "toAddress");
+        //   createAlert(
+        //     "Invalid Address",
+        //     `Please enter a valid address.`
+        //   );
+        //   _errors = true;
+        // }
 
         if (!amount.toString()) {
           this.handleFormError("Required field", "amount");
@@ -389,7 +389,10 @@ class SendCoin extends Component {
                 : spendableBalance +
                   " confirmed " +
                   coin.id +
-                  " available. If you recently recieved funds, it may take a few minutes for them to become spendable.");
+                  " available." +
+                  (this.props.balance_channel === DLIGHT_PRIVATE
+                    ? "\n\nFunds from private transactions require 10 confirmations (~10 minutes) before they can be spent."
+                    : ""));
   
             this.handleFormError(message, "amount");
             createAlert("Insufficient Funds", message);
@@ -434,6 +437,14 @@ class SendCoin extends Component {
           "RFOX claimed, it may take a few minutes to show in your wallet."
         );
       }
+    );
+  }
+
+  isPrivateSend() {
+    return (
+      this.state.toAddress != null &&
+      (this.state.toAddress[0] === "z" ||
+        this.state.toAddress.includes(":private"))
     );
   }
 
@@ -583,7 +594,7 @@ class SendCoin extends Component {
                   style={{
                     alignSelf: "center",
                     marginTop: 6,
-                    marginLeft: 8
+                    marginLeft: 8,
                   }}
                   compact
                 >
@@ -624,29 +635,30 @@ class SendCoin extends Component {
                 </Button>
               </View>
             </View>
-            {this.props.subWalletId === "PRIVATE_WALLET" && (
-              <View style={Styles.wideBlock}>
-                <View style={Styles.flexRow}>
-                  <TouchableOpacity
-                    onPress={() => this.setState({ memoModalOpen: true })}
-                    style={{ ...Styles.flex }}
-                  >
-                    <TextInput
-                      label="Message"
-                      dense
-                      multiline
-                      value={this.state.memo}
-                      editable={false}
-                      pointerEvents="none"
-                      style={{
-                        backgroundColor: Colors.secondaryColor,
-                      }}
-                      error={this.state.formErrors.memo}
-                    />
-                  </TouchableOpacity>
+            {this.props.subWalletId === "PRIVATE_WALLET" &&
+              this.isPrivateSend() && (
+                <View style={Styles.wideBlock}>
+                  <View style={Styles.flexRow}>
+                    <TouchableOpacity
+                      onPress={() => this.setState({ memoModalOpen: true })}
+                      style={{ ...Styles.flex }}
+                    >
+                      <TextInput
+                        label="Message"
+                        dense
+                        multiline
+                        value={this.state.memo}
+                        editable={false}
+                        pointerEvents="none"
+                        style={{
+                          backgroundColor: Colors.secondaryColor,
+                        }}
+                        error={this.state.formErrors.memo}
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            )}
+              )}
             <View
               style={
                 hasRewards
@@ -729,7 +741,6 @@ const mapStateToProps = (state) => {
     balance_channel,
     key_channel,
     send_channel,
-    addressFormat: state.coinMenus.activeSubWallets[chainTicker].address_format,
     subWalletId: state.coinMenus.activeSubWallets[chainTicker].id,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoin: state.coins.activeCoin,

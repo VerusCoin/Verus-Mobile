@@ -9,8 +9,6 @@ import { GENERAL_CONNECTION_ERROR } from '../../errors/errorCodes';
 import { truncateDecimal } from '../../../math';
 import BigNumber from 'bignumber.js';
 
-
-
 export const getRecommendedBTCFees = () => {
   //Fees are measured in satoshis per byte, slowest should 
   //take around an hour, average should take around 30 minutes, 

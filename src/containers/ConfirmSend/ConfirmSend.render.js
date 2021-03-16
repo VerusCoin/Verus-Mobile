@@ -55,7 +55,10 @@ export const renderTransactionInfo = function() {
       <FlatList
         style={{ ...Styles.fullWidth, ...Styles.secondaryBackground, ...Styles.flex }}
         renderItem={({ item }) => {
-          if (item.condition == null || item.condition === true)
+          if (
+            item.data != null &&
+            (item.condition == null || item.condition === true)
+          )
             return (
               <React.Fragment>
                 <TouchableOpacity
@@ -96,10 +99,17 @@ export const renderTransactionInfo = function() {
               this.copyAddressToClipboard(this.state.fromAddress),
           },
           {
-            key: "To",
+            key: "Destination",
             data: this.state.toAddress,
             numLines: 100,
             onPress: () => this.copyAddressToClipboard(this.state.toAddress),
+          },
+          {
+            key: "Destination Source",
+            data: this.state.identity,
+            numLines: 100,
+            onPress: () => this.copyVerusIDToClipboard(this.state.identity),
+            condition: this.state.identity != null,
           },
           {
             key: "Amount Submitted",
@@ -178,7 +188,7 @@ export const renderTransactionInfo = function() {
             condition: this.state.note != null && this.state.note.length > 0,
           },
           {
-            key: "Message to Send",
+            key: "Message",
             numLines: 100,
             data: this.state.memo,
             condition: this.state.memo != null && this.state.memo.length > 0,

@@ -78,7 +78,7 @@ class CoinSettings extends Component {
       .then(res => {
         this.props.dispatch(res)
         this.setState({ ...this.props.coinSettings[this.coinID], loading: false })
-        createAlert("Success", `${this.coinID} settings saved`)
+        createAlert("Success", `${this.coinID} settings saved.`)
       })
       .catch(err => {
         createAlert("Error", err.message)

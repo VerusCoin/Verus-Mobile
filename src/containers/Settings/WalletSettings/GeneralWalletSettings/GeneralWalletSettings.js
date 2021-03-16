@@ -18,11 +18,10 @@ import { connect } from 'react-redux';
 import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors'
 import { CURRENCY_NAMES, SUPPORTED_CURRENCIES, USD } from '../../../../utils/constants/currencies'
-import { Dropdown } from "react-native-material-dropdown";
 import NumberPadModal from "../../../../components/NumberPadModal/NumberPadModal";
-import { Divider, List, Portal, Text, Button } from "react-native-paper";
+import { Divider, List, Portal, Text, Button, Checkbox } from "react-native-paper";
 import ListSelectionModal from "../../../../components/ListSelectionModal/ListSelectionModal";
-import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
+import { createAlert, resolveAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 
 const NO_DEFAULT = "None"
 
@@ -37,6 +36,10 @@ class WalletSettings extends Component {
         generalWalletSettings.maxTxCount != null
           ? generalWalletSettings.maxTxCount
           : "10",
+      verusIdShortcutsEnabled:
+        generalWalletSettings.verusIdShortcutsEnabled != null
+          ? generalWalletSettings.verusIdShortcutsEnabled
+          : false,
       displayCurrency:
         generalWalletSettings.displayCurrency != null
           ? generalWalletSettings.displayCurrency
@@ -46,7 +49,7 @@ class WalletSettings extends Component {
       loading: false,
       currentNumberInputModal: null,
       displayCurrencyModalOpen: false,
-      defaultProfileModalOpen: false
+      defaultProfileModalOpen: false,
     };
   }
 
@@ -96,6 +99,7 @@ class WalletSettings extends Component {
       const stateToSave = {
         maxTxCount: Number(this.state.maxTxCount),
         displayCurrency: this.state.displayCurrency,
+        verusIdShortcutsEnabled: this.state.verusIdShortcutsEnabled,
         defaultAccount:
           this.state.defaultAccount === NO_DEFAULT
             ? null
@@ -105,8 +109,8 @@ class WalletSettings extends Component {
       saveGeneralSettings(stateToSave)
       .then(res => {
         this.props.dispatch(res)
+        createAlert("Success", "General wallet settings saved.")
         this.setState({...this.props.generalWalletSettings, loading: false})
-        createAlert("Success", "Settings saved")
       })
       .catch(err => {
         createAlert("Error", err.message)
@@ -125,6 +129,34 @@ class WalletSettings extends Component {
 
   back = () => {
     this.props.navigation.dispatch(NavigationActions.back())
+  }
+
+  toggleVerusIdShortcuts() {
+    if (this.state.verusIdShortcutsEnabled) {
+      this.setState({
+        verusIdShortcutsEnabled: false
+      })
+    } else {
+      createAlert(
+        "Enable VerusID Shortcuts?",
+        "VerusID Shortcuts is an experimental feature and does not actually send to the destination ID itself, meaning it will show up on the controlling or private address of the ID, not the ID." +
+        "\n\nRevoking or transferring the ID will not affect the funds once sent." +
+        "\n\nThe feature is actually intended to support non-Verus chains, as it can send to that same public key hash address on any blockchain with compatible PKH support (Bitcoin, Zcash, etc.)." +
+        "\n\nWhen VerusIDs are fully supported in Verus Mobile, this feature will still work for non-Verus blockchain systems as it does today." +
+          "\n\nAt the moment, VerusIDs, and the addresses connected to them, are retrieved by Verus Mobile through trusted centralized servers." +
+          "\n\nEnsure you are aware of the implications of using centralized systems before enabling VerusID shortcuts.",
+        [
+          { text: "Cancel", onPress: () => resolveAlert(false) },
+          { text: "Continue", onPress: () => resolveAlert(true) },
+        ]
+      ).then((res) => {
+        if (res) {
+          this.setState({
+            verusIdShortcutsEnabled: true,
+          });
+        }
+      });
+    }
   }
 
   validateFormData = () => {
@@ -228,7 +260,7 @@ class WalletSettings extends Component {
             />
           )}
         </Portal>
-        <ScrollView style={Styles.fullWidthBlock}>
+        <ScrollView style={Styles.fullWidth}>
           <List.Subheader>{"Display Settings"}</List.Subheader>
           <TouchableOpacity
             onPress={() => this.openNumberInputModal("maxTxCount")}
@@ -259,6 +291,24 @@ class WalletSettings extends Component {
                   {this.state.displayCurrency}
                 </Text>
               )}
+            />
+            <Divider />
+          </TouchableOpacity>
+          <List.Subheader>{"VerusID Settings"}</List.Subheader>
+          <TouchableOpacity
+            style={{ ...Styles.flex }}
+          >
+            <Divider />
+            <Checkbox.Item
+              color={Colors.primaryColor}
+              label={"Enable VerusID Shortcuts"}
+              status={
+                this.state.verusIdShortcutsEnabled
+                  ? "checked"
+                  : "unchecked"
+              }
+              onPress={() => this.toggleVerusIdShortcuts()}
+              mode="android"
             />
             <Divider />
           </TouchableOpacity>

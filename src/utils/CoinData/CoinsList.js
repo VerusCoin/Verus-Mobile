@@ -329,7 +329,7 @@ export const coinsList = {
     theme_color: "#000000",
     website: "https://z.cash/",
     fee: 10000,
-    compatible_channels: [DLIGHT_PRIVATE, ELECTRUM, GENERAL],
+    compatible_channels: [ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
     proto: 'btc',
     dlight_endpoints: dlightServers.zec,

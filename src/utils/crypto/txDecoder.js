@@ -159,9 +159,6 @@ export const TxDecoder = (rawtx, network) => {
   } catch (e) {
     console.log(e);
     if (network.isZcash) {
-      console.log(rawtx)
-      console.log('z tx decode fallback');
-
       const buffer = Buffer.from(rawtx, 'hex');
 
       const decodeTx = buffer => (
@@ -371,8 +368,6 @@ export const formatTx = (transactionObj, targetAddress, network) => {
     if (!transactionObj.rawIns.every((txIn) => {
       return !txIn.code
     })) {
-      console.log("Error formatting tx:")
-      console.log(transactionObj)
       return false
     }
 

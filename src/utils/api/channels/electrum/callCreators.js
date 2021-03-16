@@ -231,7 +231,6 @@ export const postElectrum = (serverList, callType, data, toSkip) => {
       }
 
       responseArray[0] = responseArray[0].json()
-      console.log("Received response from push to electrum")
 
       return Promise.all(responseArray)
     })

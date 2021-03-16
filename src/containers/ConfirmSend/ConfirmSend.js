@@ -23,13 +23,14 @@ import { send } from "../../utils/api/routers/send";
 import { explorers } from "../../utils/CoinData/CoinData";
 import { expireData } from "../../actions/actionCreators";
 import { USD } from "../../utils/constants/currencies";
+import { extractIdentityAddress } from "../../utils/api/channels/dlight/callCreators";
 
 const TIMEOUT_LIMIT = 120000
 const LOADING_TICKER = 5000
 
 class ConfirmSend extends Component {
   constructor(props) {
-    super(props)
+    super(props);
     this.state = {
       toAddress: "",
       fromAddress: "",
@@ -52,128 +53,167 @@ class ConfirmSend extends Component {
       note: null,
       txid: null,
       sendTx: false,
-      channel: null
+      channel: null,
+      identity: null
     };
   }
 
   copyTxIDToClipboard = () => {
     Clipboard.setString(this.state.txid);
-    createAlert("ID Copied", `${this.state.txid} copied to clipboard.`)
-  }
+    createAlert("ID Copied", `${this.state.txid} copied to clipboard.`);
+  };
 
   copyAddressToClipboard = (data) => {
     Clipboard.setString(data);
-    createAlert("Address Copied", `${data} copied to clipboard.`)
-  }
+    createAlert("Address Copied", `${data} copied to clipboard.`);
+  };
+
+  copyVerusIDToClipboard = (data) => {
+    Clipboard.setString(data);
+    createAlert("VerusID Destination Copied", `${data} copied to clipboard.`);
+  };
 
   openExplorer = () => {
-    let url = `${explorers[this.state.coinObj.id]}/tx/${this.state.txid}`
+    let url = `${explorers[this.state.coinObj.id]}/tx/${this.state.txid}`;
 
-    Linking.canOpenURL(url).then(supported => {
+    Linking.canOpenURL(url).then((supported) => {
       if (supported) {
         Linking.openURL(url);
       } else {
         console.log("Don't know how to open URI: " + url);
       }
     });
-  }
+  };
 
   navigateToScreen = (coinObj, route) => {
-    let navigation = this.props.navigation
-    let data = {}
+    let navigation = this.props.navigation;
+    let data = {};
 
     if (route === "Send") {
       data = {
         coinObj: coinObj,
-        activeAccount: this.props.activeAccount
-      }
+        activeAccount: this.props.activeAccount,
+      };
     } else {
-      data = coinObj
+      data = coinObj;
     }
 
     navigation.navigate(route, {
-      data: data
+      data: data,
     });
-  }
+  };
 
   async componentDidMount() {
-    const sendTx = this.props.route.params.data.sendTx
-    const coinObj = this.props.route.params.data.coinObj
-    const activeUser = this.props.route.params.data.activeUser
-    const address = this.props.route.params.data.address
+    const sendTx = this.props.route.params.data.sendTx;
+    const coinObj = this.props.route.params.data.coinObj;
+    const activeUser = this.props.route.params.data.activeUser;
+    const address = this.props.route.params.data.address;
     const amount = BigNumber(
       truncateDecimal(
         this.props.route.params.data.amount,
         this.props.route.params.data.coinObj.decimals
       )
     );
-    const fromAddress = this.props.route.params.data.fromAddress
-    const channel = this.props.route.params.data.channel
+    const fromAddress = this.props.route.params.data.fromAddress;
+    const channel = this.props.route.params.data.channel;
     const fee =
       coinObj.id === "BTC"
         ? { feePerByte: BigNumber(this.props.route.params.data.btcFee) }
         : isNumber(this.props.route.params.data.coinObj.fee)
         ? BigNumber(this.props.route.params.data.coinObj.fee)
         : null;
-    const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
-    const balance = BigNumber(this.props.route.params.data.balance)
-    const note = this.props.route.params.data.note
-    const memo = this.props.route.params.data.memo
-    
+    const network = networks[coinObj.id.toLowerCase()]
+      ? networks[coinObj.id.toLowerCase()]
+      : networks["default"];
+    const balance = BigNumber(this.props.route.params.data.balance);
+    const note = this.props.route.params.data.note;
+    const memo = this.props.route.params.data.memo;
+
     this.timeoutTimer = setTimeout(() => {
       if (this.state.loading) {
-        this.setState({err: 'Timed out while trying to build transaction, this may be a networking error.', 
-          loading: false})
+        this.setState({
+          err:
+            "Timed out while trying to build transaction, this may be a networking error.",
+          loading: false,
+        });
       }
-    }, TIMEOUT_LIMIT)
+    }, TIMEOUT_LIMIT);
 
     this.loadingInterval = setInterval(() => {
-      this.tickLoading()
+      this.tickLoading();
     }, LOADING_TICKER);
 
-    let verifyMerkle, verifyTxid
+    let verifyMerkle, verifyTxid;
 
     if (this.props.coinSettings[coinObj.id]) {
-      verifyMerkle = this.props.coinSettings[coinObj.id].verificationLvl > MID_VERIFICATION ? true : false
-      verifyTxid = this.props.coinSettings[coinObj.id].verificationLvl > NO_VERIFICATION ? true : false 
+      verifyMerkle =
+        this.props.coinSettings[coinObj.id].verificationLvl > MID_VERIFICATION
+          ? true
+          : false;
+      verifyTxid =
+        this.props.coinSettings[coinObj.id].verificationLvl > NO_VERIFICATION
+          ? true
+          : false;
     } else {
-      console.warn(`No coin settings data found for ${coinObj.id} in ConfirmSend, assuming highest verification level`)
-      verifyMerkle = true
-      verifyTxid = true
+      console.warn(
+        `No coin settings data found for ${
+          coinObj.id
+        } in ConfirmSend, assuming highest verification level`
+      );
+      verifyMerkle = true;
+      verifyTxid = true;
     }
 
     try {
+      let identity
+      let destinationAddress
+
+      if (address.includes("@")) {
+        if (this.props.verusIdShortcutsEnabled) {
+          destinationAddress = await extractIdentityAddress(address, coinObj.id)
+          identity = address
+        } else {
+          throw new Error('VerusID Shortcuts are not enabled. To enable them, turn them on in the "General Wallet Settings" menu.')
+        }
+      } else {
+        destinationAddress = address
+      }
+
       const params = [
         coinObj,
         activeUser,
-        address,
+        destinationAddress,
         amount,
         channel,
-        { defaultFee: fee, network, verifyMerkle, verifyTxid, memo }
+        { defaultFee: fee, network, verifyMerkle, verifyTxid, memo },
       ];
 
-      this.setState({ sendTx, channel })
+      this.setState({ sendTx, channel });
 
-      const res = sendTx ? await send(...params) : await preflight(...params)
+      const res = sendTx ? await send(...params) : await preflight(...params);
 
-      if(res.err || !res) {
+      if (res.err || !res) {
         this.setState({
           loading: false,
-          err: res ? res.result : "Unknown error"
+          err: res ? res.result : "Unknown error",
         });
         clearInterval(this.loadingInterval);
       } else {
         clearInterval(this.loadingInterval);
 
         if (sendTx) {
-          createAlert("Success!", "Transaction sent. Your balance and transactions may take a few minutes to update.")
-        
-          this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE))
-          this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS))
+          createAlert(
+            "Success!",
+            "Transaction sent. Your balance and transactions may take a few minutes to update."
+          );
+
+          this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE));
+          this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS));
 
           this.setState({
             loading: false,
-            toAddress: address,
+            toAddress: destinationAddress,
+            identity: this.props.route.params.data.identity,
             fromAddress,
             fee:
               res.result.fee ||
@@ -189,9 +229,7 @@ class ConfirmSend extends Component {
             loadingProgress: 1,
             loadingMessage: "Done",
             btcFeePerByte:
-              fee != null && fee.feePerByte != null
-                ? fee.feePerByte
-                : null,
+              fee != null && fee.feePerByte != null ? fee.feePerByte : null,
             note,
             txid: res.result.txid,
           });
@@ -200,13 +238,12 @@ class ConfirmSend extends Component {
 
           let finalTxAmount =
             feeTakenFromAmount ||
-            (res.result.feeCurr != null &&
-              res.result.feeCurr !== coinObj.id)
+            (res.result.feeCurr != null && res.result.feeCurr !== coinObj.id)
               ? res.result.value
               : BigNumber(res.result.value)
                   .plus(BigNumber(res.result.fee))
                   .toString();
-  
+
           let remainingBalance = feeTakenFromAmount
             ? BigNumber(balance)
                 .minus(BigNumber(finalTxAmount))
@@ -265,6 +302,7 @@ class ConfirmSend extends Component {
           this.setState({
             loading: false,
             toAddress: res.result.toAddress,
+            identity,
             fromAddress: res.result.fromAddress,
             network: res.result.params.network,
             fee: res.result.fee,
@@ -279,23 +317,24 @@ class ConfirmSend extends Component {
             finalTxAmount: finalTxAmount,
             loadingProgress: 1,
             loadingMessage: "Done",
-            btcFeePerByte: fee != null && fee.feePerByte != null ? fee.feePerByte : null,
+            btcFeePerByte:
+              fee != null && fee.feePerByte != null ? fee.feePerByte : null,
             feeTakenFromAmount: feeTakenFromAmount,
             note,
-            txid: res.result.txid
+            txid: res.result.txid,
           });
         }
-      } 
+      }
     } catch (e) {
       this.setState({
         loading: false,
         err: e.message
           ? e.message.includes("has no matching Script")
-            ? `"${address}" is not a valid address.`
+            ? `"${address}" is not a valid destination.`
             : e.message
           : "Unknown error while building transaction, double check form data",
       });
-      console.log(e)
+      console.log(e);
     }
   }
 
@@ -304,19 +343,20 @@ class ConfirmSend extends Component {
       clearInterval(this.loadingInterval);
     }
   }
-  
+
   cancel = () => {
-    this.props.navigation.dispatch(NavigationActions.back())
-  }
+    this.props.navigation.dispatch(NavigationActions.back());
+  };
 
   sendTx = () => {
     Keyboard.dismiss();
-    const route = "ConfirmSend"
-    let navigation = this.props.navigation
+    const route = "ConfirmSend";
+    let navigation = this.props.navigation;
     let data = {
       sendTx: true,
       coinObj: this.state.coinObj,
       activeUser: this.state.activeUser,
+      identity: this.state.identity,
       address: this.state.toAddress,
       fromAddress: this.state.fromAddress,
       amount:
@@ -324,54 +364,66 @@ class ConfirmSend extends Component {
         (this.state.feeCurr != null &&
           this.state.feeCurr !== this.state.coinObj.id)
           ? this.state.finalTxAmount
-          : BigNumber(this.state.finalTxAmount).minus(BigNumber(this.state.fee)).toString(),
+          : BigNumber(this.state.finalTxAmount)
+              .minus(BigNumber(this.state.fee))
+              .toString(),
       btcFee: this.state.btcFeePerByte,
       channel: this.state.channel,
-      memo: this.state.memo
+      memo: this.state.memo,
     };
 
     const resetAction = CommonActions.reset({
       index: 0, // <-- currect active route from actions array
-      routes: [
-        { name: route, params: { data: data } },
-      ],
-    })
+      routes: [{ name: route, params: { data: data } }],
+    });
 
-    navigation.dispatch(resetAction)
-  }
+    navigation.dispatch(resetAction);
+  };
 
   tickLoading = () => {
     //This is cheeky but it actually does all these things
     let loadingMessages = [
-      'Bundling transaction info...',
-      'Verifying transaction info...',
-      'Verifying merkle root...',
-      'Signing Transaction...'
-    ]
-    
-    let index = 0
+      "Bundling transaction info...",
+      "Verifying transaction info...",
+      "Verifying merkle root...",
+      "Signing Transaction...",
+    ];
 
-    while (index < loadingMessages.length && loadingMessages[index] !== this.state.loadingMessage) {
-      index++
+    let index = 0;
+
+    while (
+      index < loadingMessages.length &&
+      loadingMessages[index] !== this.state.loadingMessage
+    ) {
+      index++;
     }
 
-    if (index < (loadingMessages.length - 1)) {
-      this.setState({loadingMessage: loadingMessages[index+1], loadingProgress: this.state.loadingProgress + 0.175})
+    if (index < loadingMessages.length - 1) {
+      this.setState({
+        loadingMessage: loadingMessages[index + 1],
+        loadingProgress: this.state.loadingProgress + 0.175,
+      });
     } else if (index === loadingMessages.length) {
-      this.setState({loadingMessage: loadingMessages[0], loadingProgress: this.state.loadingProgress + 0.175})
+      this.setState({
+        loadingMessage: loadingMessages[0],
+        loadingProgress: this.state.loadingProgress + 0.175,
+      });
     }
-  }
+  };
 
   render() {
-    return (
-      this.state.loading ? renderLoading.call(this) : this.state.err ? renderError.call(this) : renderTransactionInfo.call(this)
-    );
+    return this.state.loading
+      ? renderLoading.call(this)
+      : this.state.err
+      ? renderError.call(this)
+      : renderTransactionInfo.call(this);
   }
 }
 
 const mapStateToProps = (state) => {
   return {
     coinSettings: state.settings.coinSettings,
+    verusIdShortcutsEnabled: state.settings.generalWalletSettings.verusIdShortcutsEnabled,
     rates: state.ledger.rates[GENERAL],
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
   }

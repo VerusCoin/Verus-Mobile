@@ -14,20 +14,23 @@ export const pushTx = (coinObj, _rawtx) => {
   return new Promise((resolve, reject) => {
     postElectrum(serverList, callType, data)
     .then((response) => {
-      if(!response || !response.result) {
+      if (
+        !response ||
+        !response.result ||
+        typeof response.result !== "string"
+      ) {
         resolve({
           err: true,
-          result: response
-        })
-      }
-      else {
+          result: response,
+        });
+      } else {
         resolve({
           err: false,
           result: {
             txid: response.result,
-            params: {}
+            params: {},
           },
-        })
+        });
       }
     })
   });
@@ -85,9 +88,6 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
         );
       }
 
-      console.log('Utxo list ==>') 
-      console.log(utxoList)
-
       for (let i = 0; i < utxoList.length; i++) {
         if (network.coin === 'komodo' ||
             network.coin === 'kmd') {
@@ -123,7 +123,6 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
         //if transaction value is more than what is spendable with fee included, subtract fee from amount
         //else, add fee to amount to take fee from wallet  
         if (value.isGreaterThan((_maxSpendBalance.minus(defaultFee)))) {
-          console.log('subtracting default fee from amount...')
           amountSubmitted = value
           value = _maxSpendBalance.minus(defaultFee)
           targets[0].value = _maxSpendBalance
@@ -134,10 +133,6 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
         }
       }
 
-      console.log('transaction targets =>');
-      console.log(targets);
-      console.log('searching for utxos...')
-
       targets[0].value = targets[0].value.toNumber()
       
       let {
@@ -146,23 +141,16 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
         fee
       } = coinSelect(utxoListFormatted, targets, feePerByte);
 
-      console.log('calculated transaction fee: ' + (fee ? fee : defaultFee))
-
       if (!outputs) {
-        console.log('tx fee is too great to deduct from wallet, subtracting from tx amount instead')
-        console.log('readjusting transaction amount...')
         amountSubmitted = value
         value = value.minus(BigNumber(fee))
         targets[0].value = value.toNumber()
-        console.log('readjusted transaction amount: ' + targets[0].value)
         feeTakenFromAmount = true
         
         let secondRun = coinSelect(utxoListFormatted, targets, feePerByte);
         inputs = secondRun.inputs
         outputs = secondRun.outputs
         fee = secondRun.fee
-
-        console.log('readjusted transaction fee: ' + fee)
       }
 
       if (!outputs) {
@@ -173,14 +161,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
         );
       }
 
-      console.log('transaction calculated inputs =>')
-      console.log(inputs)
-      console.log('transaction calculated outputs =>')
-      console.log(outputs)
-
       if (!fee) {
-        console.log('no coinselect calculated fee entered, adjusting outputs for default fee =>')
-        console.log(outputs)
         outputs[0].value = BigNumber(outputs[0].value).minus(defaultFee).toNumber();
       }
 
@@ -265,9 +246,6 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
 
           const _estimatedFee = vinSum - outputs[0].value - _change;
 
-          console.log(`vin sum ${vinSum} (${vinSum * 0.00000001})`);
-          console.log(`estimatedFee ${_estimatedFee} (${_estimatedFee * 0.00000001})`);
-
           let _rawtx;
 
           _rawtx = buildSignedTx(
@@ -336,7 +314,7 @@ export const sendRawTx = (coinObj, activeUser, outputAddress, value, params) => 
       }
     })
     .then((resObj) => {
-      if (resObj.result.code) {
+      if (resObj.err || resObj.result.code) {
         throw ({
           err: true,
           result: resObj.result.result.message

@@ -50,7 +50,6 @@ import BigNumber from "bignumber.js";
 import { Portal } from "react-native-paper";
 import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
 import { createAlert, resolveAlert } from "../../actions/actions/alert/dispatchers/alert";
-import { ADDRESS_FORMATS } from "../../utils/defaultSubWallets";
 
 class VerusPay extends Component {
   constructor(props) {
@@ -151,15 +150,9 @@ class VerusPay extends Component {
 
           if (coinURLParsed) {
             this.handleVerusQR(coinURLParsed);
-          } else if (
-            Object.values(ADDRESS_FORMATS).some((format) =>
-              new RegExp(format).test(result)
-            )
-          ) {
-            this.addressOnly(result);
           } else {
-            this.errorHandler(FORMAT_UNKNOWN);
-          }
+            this.addressOnly(result);
+          } 
         }
       } else {
         this.errorHandler(FORMAT_UNKNOWN);

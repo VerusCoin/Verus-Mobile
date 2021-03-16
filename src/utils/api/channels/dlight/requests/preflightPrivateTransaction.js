@@ -13,6 +13,16 @@ export const preflightPrivateTransaction = async (coinObj, activeUser, address, 
   const accountHash = activeUser.accountHash
   const coinProto = coinObj.proto
 
+  const transparentAddressTest = new RegExp('^[a-zA-Z0-9]{20,50}$')
+  const privateAddressTest = new RegExp('^zs[a-zA-Z0-9]{65,85}$')
+
+  if (!transparentAddressTest.test(address) && !privateAddressTest.test(address)) {
+    return {
+      err: true,
+      result: `"${address}" is not a valid destination.`
+    }
+  }
+
   try {
     const privBalance = await getPrivateBalance(coinId, accountHash, coinProto)
 
