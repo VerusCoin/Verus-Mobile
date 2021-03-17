@@ -53,7 +53,7 @@ class AddCoin extends Component {
       <SearchBar        
         placeholder="Type Here..."                    
         onChangeText={text => this.searchFilterFunction(text)}
-        autoCorrect={false}             
+        autoCorrect={false}           
       />    
     );  
   };

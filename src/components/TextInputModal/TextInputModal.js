@@ -43,6 +43,7 @@ class TextInputModal extends Component {
             <NativeTextInput
               autoCapitalize={"none"}
               autoCorrect={false}
+              autoComplete="false"
               {...props}
             />
           )}

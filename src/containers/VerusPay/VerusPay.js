@@ -342,33 +342,37 @@ class VerusPay extends Component {
             );
           }
         } else {
-          this.canAddCoin(coinTicker).then(res => {
-            if (res) {
-              this.handleAddCoin(coinTicker).then(res => {
-                if (res) {
-                  activeCoin = this.getCoinFromActiveCoins(coinTicker);
-                  this.handleUpdates().then(() => {
-                    if (amount === null || amount.isLessThanOrEqualTo(0)) {
-                      this.handleMissingAmount(activeCoin, address, note);
-                    } else {
-                      if (this.checkBalance(amount, activeCoin)) {
-                        this.preConfirm(
-                          activeCoin,
-                          this.props.activeAccount,
-                          address,
-                          amount,
-                          note,
-                          true
-                        );
-                      }
-                    }
-                  });
-                }
-              });
-            } else {
-              this.cancelHandler();
-            }
-          });
+          // TODO: Add back in when problems with private addrs are resolved
+          // this.canAddCoin(coinTicker).then(res => {
+          //   if (res) {
+          //     this.handleAddCoin(coinTicker).then(res => {
+          //       if (res) {
+          //         activeCoin = this.getCoinFromActiveCoins(coinTicker);
+          //         this.handleUpdates().then(() => {
+          //           if (amount === null || amount.isLessThanOrEqualTo(0)) {
+          //             this.handleMissingAmount(activeCoin, address, note);
+          //           } else {
+          //             if (this.checkBalance(amount, activeCoin)) {
+          //               this.preConfirm(
+          //                 activeCoin,
+          //                 this.props.activeAccount,
+          //                 address,
+          //                 amount,
+          //                 note,
+          //                 true
+          //               );
+          //             }
+          //           }
+          //         });
+          //       }
+          //     });
+          //   } else {
+          //     this.cancelHandler();
+          //   }
+          // });
+          this.errorHandler(
+            `This invoice is requesting funds in ${coinTicker}. Activate ${coinTicker} and rescan to continue.`
+          );
         }
       } else {
         //TODO: Handle adding coin that doesn't exist yet in wallet here
