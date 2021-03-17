@@ -7,7 +7,7 @@ import SemiModal from "../SemiModal";
 import { TextInput } from "react-native-paper"
 import Colors from "../../globals/colors";
 import { connect } from 'react-redux';
-import { TextInput as NativeTextInput } from 'react-native'
+import { Platform, TextInput as NativeTextInput } from 'react-native'
 
 class TextInputModal extends Component {
   constructor(props) {
@@ -23,7 +23,11 @@ class TextInputModal extends Component {
         transparent={true}
         visible={visible}
         onRequestClose={cancel}
-        contentContainerStyle={{ height: this.props.keyboardHeight + 64, flex: 0 }}
+        contentContainerStyle={{
+          height:
+            Platform.OS === "android" ? 64 : this.props.keyboardHeight + 64,
+          flex: 0,
+        }}
       >
         <TextInput
           value={value}
@@ -35,7 +39,13 @@ class TextInputModal extends Component {
           autoFocus
           underlineColor={Colors.primaryColor}
           selectionColor={Colors.primaryColor}
-          render={(props) => <NativeTextInput autoCapitalize={"none"} autoCorrect={false} {...props}/>}
+          render={(props) => (
+            <NativeTextInput
+              autoCapitalize={"none"}
+              autoCorrect={false}
+              {...props}
+            />
+          )}
         />
       </SemiModal>
     );

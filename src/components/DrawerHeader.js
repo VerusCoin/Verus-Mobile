@@ -20,7 +20,7 @@ const DrawerHeader = ({ navigateToScreen }) => (
 				paddingTop: '30%',
 				paddingLeft: '5%',
 				paddingBottom : '15%',
-				paddingTop: Platform.OS === 'ios' ? 35 : 90,
+				paddingTop: 35,
 				alignItems: 'flex-end',
 			}}
 		>

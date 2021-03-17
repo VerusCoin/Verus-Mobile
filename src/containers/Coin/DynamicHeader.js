@@ -119,7 +119,7 @@ class DynamicHeader extends Component {
         <Card
           style={{
             height: 120,
-            minWidth: 250,
+            minWidth: 150,
             borderRadius: 10,
             marginLeft: 30,
           }}

@@ -47,11 +47,15 @@ class VerusMobile extends React.Component {
     ]);
   }
 
+  // TODO: Implement own lifecycle manager to account for 
+  // android "inactivity"
   _handleAppStateChange(nextAppState) {
-    if (nextAppState === "active" && this.state.securityCover == true) {
-      this.setSecurityCover(false)
-    } else if (nextAppState === "inactive" && this.state.securityCover == false) {
-      this.handleInactivity()
+    if (Platform.OS === 'ios') {
+      if (nextAppState === "active" && this.state.securityCover == true) {
+        this.setSecurityCover(false)
+      } else if (nextAppState === "inactive" && this.state.securityCover == false) {
+        this.handleInactivity()
+      }
     }
   };
 
@@ -73,14 +77,7 @@ class VerusMobile extends React.Component {
   componentDidMount() {    
     activateKeyboardListener()
 
-    if (Platform.OS === "ios") {
-      AppState.addEventListener("change", (nextAppState) => this._handleAppStateChange(nextAppState));
-    } else if (Platform.OS === "android") {
-      AppState.addEventListener("blur", () => {
-        this.handleInactivity()
-      });
-      AppState.addEventListener("focus", () => this.setSecurityCover(false));
-    }
+    AppState.addEventListener("change", (nextAppState) => this._handleAppStateChange(nextAppState));
     
     //TODO: Figure out what should trigger a cache clear on startup of server 
     //versions. (The action that triggers it should indicate a server upgraded it's 
