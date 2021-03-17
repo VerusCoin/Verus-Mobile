@@ -172,7 +172,7 @@ class SideMenu extends Component {
             style: 'cancel',
           },
           {text: 'Remove', onPress: () => resolveAlert(this.REMOVE)},
-          {text: 'Remove & Delete', onPress: () => resolveAlert(this.REMOVE_DELETE)},
+          {text: 'Delete', onPress: () => resolveAlert(this.REMOVE_DELETE)},
         ],
         {
           cancelable: false,

@@ -12,7 +12,7 @@ export const standardizeDlightTxObj = (txObj) => {
     address,
     amount: typeof amount !== "string" ? amount.toString() : amount,
     type: category,
-    confirmed: status === "pending" ? false : true,
+    confirmed: status === "pending" || height < 0 ? false : true,
     height,
     status,
     timestamp: time,
