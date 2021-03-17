@@ -14,14 +14,12 @@ import {
   TouchableOpacity,
   SafeAreaView
 } from "react-native";
-import { unixToDate, MathableNumber } from '../../utils/math';
+import { unixToDate, truncateDecimal } from '../../utils/math';
 import { explorers } from '../../utils/CoinData/CoinData';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
-import { ethers } from "ethers";
 import { Button, List, Text, Divider } from "react-native-paper"
 import SemiModal from "../SemiModal";
-import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 
 class TxDetailsModal extends Component {
   constructor(props) {
@@ -88,18 +86,9 @@ class TxDetailsModal extends Component {
       visible,
       TxLogo,
       cancel,
-      parsedAmount,
+      displayAmount,
       activeCoinID
     } = this.props;
-
-    let amountShown = parsedAmount
-
-    if (txData.fee != null && (txData.feeCurr == null || txData.feeCurr === activeCoinID)) {
-      amountShown = new MathableNumber(ethers.utils.formatUnits(
-        parsedAmount.num
-          .sub(ethers.utils.parseUnits(txData.fee.toString(), parsedAmount.maxDecimals))
-      ))
-    }
     
     return (
       <SemiModal
@@ -176,16 +165,22 @@ class TxDetailsModal extends Component {
               {
                 key: "Type",
                 data: txData.type || "Unknown",
-                capitalized: true
+                capitalized: true,
               },
               {
                 key: `Amount ${
                   txData.type === "received" ? "Received" : "Sent"
                 }`,
-                data:
-                  amountShown != null
-                    ? amountShown.display() + " " + activeCoinID
-                    : "Unknown",
+                data: `${
+                  displayAmount != null
+                    ? truncateDecimal(displayAmount, this.props.decimals)
+                    : "??"
+                } ${
+                  txData.feeCurr != null && txData.type === "self"
+                    ? txData.feeCurr
+                    : activeCoinID
+                }`,
+                numLines: 100,
               },
               {
                 key: "Fee",
@@ -194,6 +189,7 @@ class TxDetailsModal extends Component {
                   " " +
                   (txData.feeCurr != null ? txData.feeCurr : activeCoinID),
                 condition: txData.fee != null,
+                numLines: 100,
               },
               {
                 key: "Status",
@@ -239,7 +235,7 @@ class TxDetailsModal extends Component {
                 data: txData.memo,
                 onPress: this.copyMemoToClipboard,
                 condition: txData.memo != null && txData.memo.length > 0,
-                numLines: 100
+                numLines: 100,
               },
             ]}
           />

@@ -93,7 +93,7 @@ export const SignUpRender = function() {
                 <View style={Styles.wideBlock}>
                   <Checkbox.Item
                     color={Colors.primaryColor}
-                    label={"Setup Primary (T Address) Seed"}
+                    label={"Setup Primary Seed"}
                     status={
                       this.state.seeds[ELECTRUM] != null
                         ? "checked"

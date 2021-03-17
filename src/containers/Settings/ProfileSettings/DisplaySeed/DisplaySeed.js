@@ -30,7 +30,7 @@ class DisplaySeed extends Component {
 
     this.SEED_NAMES = {
       [DLIGHT_PRIVATE]: "Secondary (Z-Address) Seed",
-      [ELECTRUM]: "Primary (T-Address) Seed"
+      [ELECTRUM]: "Primary Seed"
     }
   }
 

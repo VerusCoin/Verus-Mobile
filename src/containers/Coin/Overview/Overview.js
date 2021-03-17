@@ -25,7 +25,7 @@ import {
   ETH
 } from "../../../utils/constants/intervalConstants";
 import { selectTransactions } from '../../../selectors/transactions';
-import { ETHERS } from "../../../utils/constants/web3Constants";
+import { DEFAULT_DECIMALS, ETHERS } from "../../../utils/constants/web3Constants";
 import { ethers } from "ethers";
 import { Portal, List, Text, Badge } from "react-native-paper";
 import BigNumber from "bignumber.js";
@@ -122,7 +122,10 @@ class Overview extends Component {
   };
 
   renderTransactionItem = ({ item, index }) => {
-    const decimals = this.props.activeCoin.decimals != null ? this.props.activeCoin.decimals : ETHERS
+    const decimals =
+      this.props.activeCoin.decimals != null
+        ? this.props.activeCoin.decimals
+        : DEFAULT_DECIMALS;
     let amount = new MathableNumber(0, decimals);
     let AvatarImg;
     let subtitle = "";
@@ -133,16 +136,13 @@ class Overview extends Component {
       let toAddresses = [];
       const confirmed = txArray[0].confirmed
       
-      amount = new MathableNumber(ethers.utils.formatUnits(
-        ethers.utils
-          .parseUnits(txArray[0].amount, decimals)
-          .sub(ethers.utils.parseUnits(txArray[1].amount, decimals))
-      ),
-      decimals)
+      amount = new MathableNumber(txArray[0].amount, decimals)
+      amount.num = amount.num.sub(new MathableNumber(txArray[1].amount, decimals).num)
 
       if (txArray[1].interest) {
         let interest = txArray[1].interest * -1;
-        amount = amount.num.add(new MathableNumber(interest, decimals).num)
+
+        amount.num = amount.num.add(new MathableNumber(interest, decimals).num)
       }
 
       for (let i = 0; i < txArray[0].to.length; i++) {
@@ -223,14 +223,11 @@ class Overview extends Component {
         onPress={() =>
           this.setState({
             txDetailProps: {
-              parsedAmount: amount,
+              displayAmount: displayAmount,
               txData: item,
               activeCoinID: this.props.activeCoin.id,
               TxLogo: AvatarImg,
-              decimals:
-                this.props.activeCoin.decimals != null
-                  ? this.props.activeCoin.decimals
-                  : 8,
+              decimals: decimals,
             },
             txDetailsModalOpen: true,
           })

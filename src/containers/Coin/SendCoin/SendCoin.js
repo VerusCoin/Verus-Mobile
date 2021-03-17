@@ -462,7 +462,7 @@ class SendCoin extends Component {
     } 
 
     if (amountFiat) {
-      return truncateDecimal(amount/_price, 8)
+      return truncateDecimal(amount/_price, 5)
     } else {
       return truncateDecimal(amount*_price, 2)
     }

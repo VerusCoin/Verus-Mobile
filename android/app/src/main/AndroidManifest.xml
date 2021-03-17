@@ -10,11 +10,13 @@
       android:name=".MainApplication"
       android:label="@string/app_name"
       android:icon="@mipmap/ic_launcher"
+      android:screenOrientation="portrait"
       android:allowBackup="false"
       android:theme="@style/AppTheme"
       android:testOnly="false">
       <activity
         android:name=".MainActivity"
+        android:screenOrientation="portrait"
         android:label="@string/app_name"
         android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
         android:windowSoftInputMode="adjustPan"
@@ -23,6 +25,7 @@
       <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" />
       <activity
         android:name=".SplashActivity"
+        android:screenOrientation="portrait"
         android:theme="@style/SplashTheme"
         android:label="@string/app_name">
         <intent-filter>

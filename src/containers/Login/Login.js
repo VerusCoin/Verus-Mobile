@@ -174,7 +174,10 @@ class Login extends Component {
 
   _selectAccount = (index) => {
     let account = this.props.accounts[index]
-    this.setState({selectedAccount: account})
+    this.setState({
+      selectedAccount: account,
+      makeDefaultAccount: this.props.defaultAccount === account.accountHash,
+    });
   }
 
   clearIdentityStorage = () => {
@@ -184,25 +187,38 @@ class Login extends Component {
   selectAccount = (account) => {
     Keyboard.dismiss()
   
-    this.setState({ selectedAccount: account }, async () => {
-      if (account.biometry && (await getSupportedBiometryType()).biometry) {
-        try {
-          const password = await getBiometricPassword(account.accountHash, "Authenticate to unlock profile")
+    this.setState(
+      {
+        selectedAccount: account,
+        makeDefaultAccount:
+          this.props.defaultAccount === account.accountHash,
+      },
+      async () => {
+        if (
+          account.biometry &&
+          (await getSupportedBiometryType()).biometry
+        ) {
+          try {
+            const password = await getBiometricPassword(
+              account.accountHash,
+              "Authenticate to unlock profile"
+            );
 
-          this.setState({ password }, this._handleSubmit)
-        } catch(e) {
-          console.warn(e)
+            this.setState({ password }, this._handleSubmit);
+          } catch (e) {
+            console.warn(e);
+            this.setState({
+              simpleLayout: false,
+              validating: false,
+            });
+          }
+        } else {
           this.setState({
             simpleLayout: false,
-            validating: false
-          })
+          });
         }
-      } else {
-        this.setState({
-          simpleLayout: false
-        })
       }
-    })
+    );
   }
 
   render() {

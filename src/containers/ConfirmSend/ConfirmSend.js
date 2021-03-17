@@ -25,7 +25,7 @@ import { expireData } from "../../actions/actionCreators";
 import { USD } from "../../utils/constants/currencies";
 import { extractIdentityAddress } from "../../utils/api/channels/dlight/callCreators";
 
-const TIMEOUT_LIMIT = 120000
+const TIMEOUT_LIMIT = 300000
 const LOADING_TICKER = 5000
 
 class ConfirmSend extends Component {

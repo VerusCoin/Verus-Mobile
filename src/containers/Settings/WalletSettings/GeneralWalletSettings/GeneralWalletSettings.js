@@ -141,8 +141,6 @@ class WalletSettings extends Component {
         "Enable VerusID Shortcuts?",
         "VerusID Shortcuts is an experimental feature and does not actually send to the destination ID itself, meaning it will show up on the controlling or private address of the ID, not the ID." +
         "\n\nRevoking or transferring the ID will not affect the funds once sent." +
-        "\n\nThe feature is actually intended to support non-Verus chains, as it can send to that same public key hash address on any blockchain with compatible PKH support (Bitcoin, Zcash, etc.)." +
-        "\n\nWhen VerusIDs are fully supported in Verus Mobile, this feature will still work for non-Verus blockchain systems as it does today." +
           "\n\nAt the moment, VerusIDs, and the addresses connected to them, are retrieved by Verus Mobile through trusted centralized servers." +
           "\n\nEnsure you are aware of the implications of using centralized systems before enabling VerusID shortcuts.",
         [
