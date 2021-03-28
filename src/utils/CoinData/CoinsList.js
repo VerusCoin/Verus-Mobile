@@ -290,7 +290,8 @@ export const coinsList = {
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
     proto: 'btc',
-    decimals: DEFAULT_DECIMALS
+    decimals: DEFAULT_DECIMALS,
+    max_fee_rate_per_byte: 1000000,
   },
   dgb: {
     id: "DGB",

@@ -28,8 +28,8 @@ class TxDetailsModal extends Component {
 
   openExplorer = () => {
     let url = `${explorers[this.props.activeCoinID]}/tx/${
-      this.props.activeCoinID === "BTC"
-        ? this.decodeBtcTxid(this.props.txData.txid)
+      this.props.txData.txid != null
+        ? this.decodeTxid(this.props.txData.txid)
         : this.props.txData.txid
     }`;
 
@@ -43,8 +43,8 @@ class TxDetailsModal extends Component {
   };
 
   copyTxIDToClipboard = () => {
-    const txid = this.props.activeCoinID === "BTC"
-    ? this.decodeBtcTxid(this.props.txData.txid)
+    const txid = this.props.txData.txid != null
+    ? this.decodeTxid(this.props.txData.txid)
     : this.props.txData.txid
 
     Clipboard.setString(txid);
@@ -65,13 +65,15 @@ class TxDetailsModal extends Component {
   };
 
   //TODO: Move this higher up to txid source
-  decodeBtcTxid = () => {
+  decodeTxid = () => {
     //Decode decimal txid to hex string
     let txid = this.props.txData.txid;
     let txidArr = txid.split(",");
 
     try {
-      return Buffer.from(txidArr).toString('hex')
+      if (txidArr.length > 1) {
+        return Buffer.from(txidArr).toString('hex')
+      } else return txid
     } catch(e) {
       console.error(e)
       Alert.alert("Error", "Error decoding transaction ID.")
@@ -225,9 +227,7 @@ class TxDetailsModal extends Component {
                   txData.txid != null ? this.copyTxIDToClipboard : () => {},
                 data:
                   txData.txid != null
-                    ? activeCoinID === "BTC"
-                      ? this.decodeBtcTxid(txData.txid)
-                      : txData.txid
+                    ? this.decodeTxid(txData.txid)
                     : "Unknown",
               },
               {

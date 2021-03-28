@@ -255,7 +255,8 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
             network,
             inputs,
             _change,
-            value.toNumber()
+            value.toNumber(),
+            coinObj.max_fee_rate_per_byte
           );
 
           const successObj = {

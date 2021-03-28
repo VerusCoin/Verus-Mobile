@@ -86,7 +86,8 @@ export const explorers = {
   YFI: 'https://etherscan.io',
   ZRX: 'https://etherscan.io',
   TST: 'https://ropsten.etherscan.io',
-  BTC: 'https://www.blockchain.com/btc'
+  BTC: 'https://www.blockchain.com/btc',
+  DOGE: 'https://dogeblocks.com/'
 }
 
 export const CoinLogos = {
