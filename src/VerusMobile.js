@@ -90,13 +90,13 @@ class VerusMobile extends React.Component {
       return checkAndSetVersion()
     })
     .then(async () => {
+      await updateActiveCoinList()
+      
       let promiseArr = [
         fetchUsers(),
         initSettings(),
         fetchActiveCoins(),
       ];
-
-      await updateActiveCoinList()
 
       return Promise.all(promiseArr)
     })
