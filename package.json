@@ -41,6 +41,7 @@
     "base-64": "^1.0.0",
     "base-x": "3.0.4",
     "bignumber.js": "^9.0.1",
+    "bip39": "https://github.com/michaeltout/bip39.git",
     "bitgo-utxo-lib": "git+https://github.com/VerusCoin/bitgo-utxo-lib.git#react-native",
     "browserify": "^16.2.3",
     "browserify-zlib": "^0.1.4",

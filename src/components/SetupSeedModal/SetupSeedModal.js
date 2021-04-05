@@ -38,7 +38,7 @@ class SetupSeedModal extends Component {
 
   async componentDidMount() {
     try {
-      const newSeed = await getKey(DEFAULT_SEED_PHRASE_LENGTH);
+      const newSeed = await getKey(256);
 
       this.setState({
         loading: false,

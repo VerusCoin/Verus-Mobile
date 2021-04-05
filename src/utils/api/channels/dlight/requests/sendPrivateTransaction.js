@@ -10,17 +10,27 @@ export const sendPrivateTransaction = async (coinObj, activeUser, address, amoun
   const coinId = coinObj.id
   const accountHash = activeUser.accountHash
   const coinProto = coinObj.proto
-
-  //TODO: Change spending key source to user keys, after parsing seed into extended spending key
-  //at the moment this only works if your seed is an extended spending key
-  const spendingKey = activeUser.seeds[DLIGHT_PRIVATE]
   
   try {
+    if (
+      activeUser.keys[coinObj.id] == null ||
+      activeUser.keys[coinObj.id][DLIGHT_PRIVATE] == null
+    ) {
+      throw new Error(
+        "Cannot spend transaction because user keys cannot be calculated."
+      );
+    }
+
+    const spendingKey = activeUser.keys[coinObj.id][DLIGHT_PRIVATE].privKey
     const preflight = await preflightPrivateTransaction(coinObj, activeUser, address, amount, params);
 
     if (preflight.err) throw new Error(err.result)
     else {
-      let params = [coinsToSats(BigNumber(preflight.result.value)).toString(), preflight.result.toAddress, spendingKey]
+      let params = [
+        coinsToSats(BigNumber(preflight.result.value)).toString(),
+        preflight.result.toAddress,
+        spendingKey,
+      ];
 
       if (preflight.result.fromAddress != null) params.push(preflight.result.fromAddress)
       if (preflight.result.memo != null) params.push(preflight.result.memo)

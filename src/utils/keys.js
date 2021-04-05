@@ -65,7 +65,7 @@ export const isDlightSpendingKey = (seed) => {
 
 export const parseDlightSeed = async (seed) => {
   if (isDlightSpendingKey(seed)) return seed
-
+  
   try {
     const keys = await VerusLightClient.deriveSpendingKeys(seed, true, 1)
     return keys[0]

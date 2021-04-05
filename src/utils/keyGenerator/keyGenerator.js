@@ -1,15 +1,6 @@
 import { randomBytes } from '../crypto/randomBytes';
-import { words } from './wordList'
+import { generateMnemonic } from 'bip39'
 
-export const getKey = async (numWords) => {
-  let key = [];
-
-  for (let i = 0; i < numWords; i++) {
-    const rand = await randomBytes(2)
-    const result = (((rand['0'] & 0xFF) << 8) | (rand['1'] & 0xFF));
-
-    key.push(words[(result % words.length)])
-  }
-
-  return key.join(" ")
+export const getKey = async (strength) => {
+  return await generateMnemonic(strength, randomBytes)
 }
