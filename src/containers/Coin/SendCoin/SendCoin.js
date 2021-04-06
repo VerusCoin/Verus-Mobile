@@ -377,7 +377,7 @@ class SendCoin extends Component {
           );
           _errors = true;
         } else {
-          translatedAmount = this.translateAmount(amount, true)
+          translatedAmount = this.translateAmount(amount, this.state.amountFiat)
 
           if (
             Number(translatedAmount) > Number(spendableBalance)
