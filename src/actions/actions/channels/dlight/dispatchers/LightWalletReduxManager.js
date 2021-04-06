@@ -50,7 +50,7 @@ export const initDlightWallet = (coinObj) => {
 
       const lightWalletEndpointArr = dlight_endpoints[0].split(':')
 
-      if (isNaN(lightWalletEndpointArr[1])) 
+      if (lightWalletEndpointArr[1] == null || isNaN(lightWalletEndpointArr[1])) 
         throw new Error(id + " lightwallet was requested with port " + lightWalletEndpointArr[1], " this is not a valid port.")
 
       initializationPromises = [

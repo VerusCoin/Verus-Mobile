@@ -20,6 +20,7 @@ import BigNumber from "bignumber.js";
 import { extractErrorData, extractLedgerData } from "../../utils/ledger/extractLedgerData";
 import { CONNECTION_ERROR } from "../../utils/api/errors/errorMessages";
 import { truncateDecimal } from "../../utils/math";
+import { USD } from "../../utils/constants/currencies";
 
 class DynamicHeader extends Component {
   constructor(props) {
