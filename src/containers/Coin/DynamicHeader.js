@@ -198,7 +198,7 @@ class DynamicHeader extends Component {
             {"Total Balance"}
           </Title>
           <Title style={{ color: Colors.secondaryColor }}>{`${
-            this.props.totalBalance
+            truncateDecimal(this.props.totalBalance, 8)
           } ${this.props.chainTicker}`}</Title>
         </View>
         <View
