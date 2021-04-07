@@ -38,7 +38,6 @@ export const initDlightWallet = (coinObj) => {
     return Promise.resolve();
 
   // Depends on settings already being added to redux store and initialized
-  const { coinSettings } = settings
   let initializationPromises = []
 
   try {
@@ -60,7 +59,7 @@ export const initDlightWallet = (coinObj) => {
           accountHash,
           lightWalletEndpointArr[0],
           Number(lightWalletEndpointArr[1]),
-          coinSettings[id] != null ? coinSettings[id].privateAddrs : DEFAULT_PRIVATE_ADDRS,
+          DEFAULT_PRIVATE_ADDRS,
           [activeAccount.keys[coinObj.id].dlight_private.viewingKey]
         ),
         openWallet(id, proto, accountHash),
