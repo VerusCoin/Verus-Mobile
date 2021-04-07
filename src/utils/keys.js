@@ -19,7 +19,7 @@ export const makeKeyPair = async (seed, coinID, channel) => {
 
     return {
       pubKey: null,
-      privKey: await parseDlightSeed(seed),
+      privKey: spendingKey,
       viewingKey: await VerusLightClient.deriveViewingKey(spendingKey),
       addresses: [],
     };

@@ -133,9 +133,7 @@ export const getParsedTransactionList = (coinObj, activeUser, maxlength) => {
         throw new Error(
           "Ledger.js: Fatal mismatch error, " +
             activeUser.id +
-            " user keys for active coin " +
-            coinObj[i].id +
-            " not found!"
+            " user keys for active coin not found!"
         );
       }
 

@@ -139,9 +139,7 @@ class SendCoin extends Component {
       throw new Error(
         "SendCoin.js: Fatal mismatch error, " +
           activeUser.id +
-          " user keys for active coin " +
-          coinObj[i].id +
-          " not found!"
+          " user keys for active coin not found!"
       );
     }
 
@@ -579,7 +577,7 @@ class SendCoin extends Component {
                     })
                   }
                   color={Colors.primaryColor}
-                  disabled={!fiatEnabled}
+                  disabled={!fiatEnabled || balances.results == null}
                   style={{
                     alignSelf: "center",
                     marginTop: 6,
@@ -596,6 +594,7 @@ class SendCoin extends Component {
                     marginTop: 6,
                     marginLeft: 8,
                   }}
+                  disabled={balances.results == null}
                   compact
                 >
                   {"Max"}
@@ -624,6 +623,7 @@ class SendCoin extends Component {
                 <Button
                   onPress={this._verusPay}
                   color={Colors.primaryColor}
+                  disabled={balances.results == null}
                   style={{
                     alignSelf: "center",
                     marginTop: 6,
@@ -694,7 +694,8 @@ class SendCoin extends Component {
                   this.state.loadingBTCFees ||
                   balances.errors ||
                   this.state.btcFeesErr ||
-                  this.props.syncing
+                  this.props.syncing ||
+                  balances.results == null
                 }
               >
                 {this.state.btcFeesErr

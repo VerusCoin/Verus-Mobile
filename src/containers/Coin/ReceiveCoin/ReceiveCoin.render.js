@@ -42,7 +42,10 @@ export const RenderReceiveCoin = function() {
         style={Styles.fullWidth}
         contentContainerStyle={Styles.horizontalCenterContainer}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={() => this.forceUpdate()} />
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={() => this.forceUpdate()}
+          />
         }
       >
         <Portal>
@@ -93,11 +96,7 @@ export const RenderReceiveCoin = function() {
               <TextInput
                 label={"Address"}
                 value={address}
-                render={(props) => (
-                  <NativeTextInput
-                    {...props}
-                  />
-                )}
+                render={(props) => <NativeTextInput {...props} />}
                 editable={false}
                 multiline
                 pointerEvents="none"
@@ -183,7 +182,11 @@ export const RenderReceiveCoin = function() {
           </View>
         </View>
         <View style={Styles.fullWidthFlexCenterBlock}>
-          <Button color={Colors.primaryColor} onPress={() => this.validateFormData()}>
+          <Button
+            color={Colors.primaryColor}
+            disabled={address == null || address.length === 0}
+            onPress={() => this.validateFormData()}
+          >
             {"Generate Invoice"}
           </Button>
         </View>
