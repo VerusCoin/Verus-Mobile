@@ -23,7 +23,7 @@ import {
 import { sha256, hashAccountId } from '../../utils/crypto/hash';
 
 import WyreService from '../../services/wyreService';
-import { CHANNELS, ELECTRUM, ERC20, ETH } from '../../utils/constants/intervalConstants';
+import { CHANNELS, ELECTRUM, ERC20, ETH, DLIGHT_PRIVATE } from '../../utils/constants/intervalConstants';
 import { arrayToObject } from '../../utils/objectManip';
 import { ENABLE_FIAT_GATEWAY } from '../../../env/main.json';
 import { BIOMETRIC_AUTH } from '../../utils/constants/storeType';
@@ -250,8 +250,11 @@ export const addKeypairs = async (accountSeeds, coinObj, keys) => {
 
   for (seedType of CHANNELS) {
     const seed = accountSeeds[seedType] ? accountSeeds[seedType] : accountSeeds[ELECTRUM]
-    if (coinObj.compatible_channels.includes(seedType)) {
-      keypairs[seedType] = await makeKeyPair(seed, coinID, seedType)
+    if (
+      coinObj.compatible_channels.includes(seedType) &&
+      (seedType !== DLIGHT_PRIVATE || accountSeeds[seedType])
+    ) {
+      keypairs[seedType] = await makeKeyPair(seed, coinID, seedType);
     }
   }
 
