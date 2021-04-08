@@ -13,7 +13,6 @@ import {
   View,
   Alert,
   Keyboard,
-  ActivityIndicator,
   TouchableWithoutFeedback,
   TouchableOpacity,
   ScrollView
@@ -21,11 +20,18 @@ import {
 import { isNumber, truncateDecimal } from '../../../utils/math'
 import { connect } from "react-redux";
 import { getRecommendedBTCFees } from '../../../utils/api/channels/general/callCreators'
-import { removeSpaces } from '../../../utils/stringUtils'
 import Styles from '../../../styles/index'
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import store from "../../../store"
-import { API_GET_FIATPRICE, API_GET_BALANCES, API_GET_KEYS, API_SEND, API_GET_INFO, GENERAL, DLIGHT_PRIVATE } from "../../../utils/constants/intervalConstants"
+import {
+  API_GET_FIATPRICE,
+  API_GET_BALANCES,
+  API_GET_KEYS,
+  API_SEND,
+  API_GET_INFO,
+  GENERAL,
+  DLIGHT_PRIVATE,
+} from "../../../utils/constants/intervalConstants";
 import BigNumber from "bignumber.js"
 import Colors from "../../../globals/colors"
 import { UtilityContracts } from "../../../utils/api/channels/erc20/callCreator"
@@ -333,7 +339,7 @@ class SendCoin extends Component {
 
         const toAddress =
           this.state.toAddress != null
-            ? removeSpaces(this.state.toAddress)
+            ? this.state.toAddress.trim()
             : "";
         const fromAddress = this.state.fromAddress;
         const amount =
@@ -526,7 +532,7 @@ class SendCoin extends Component {
                   visible={this.state.addressModalOpen}
                   onChange={(text) => {
                     if (text != null)
-                      this.setState({ toAddress: removeSpaces(text) });
+                      this.setState({ toAddress: text });
                   }}
                   cancel={() => {
                     this.setState({ addressModalOpen: false });
