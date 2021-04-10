@@ -917,7 +917,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 0.07;
+				CURRENT_PROJECT_VERSION = 0.00;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_TEAM = J8Y97B5NMQ;
 				ENABLE_BITCODE = NO;
@@ -968,7 +968,7 @@
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/react-native-webview\"",
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/rn-fetch-blob\"",
 				);
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.verusmobile;
 				PRODUCT_NAME = verusmobile;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -987,7 +987,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 0.07;
+				CURRENT_PROJECT_VERSION = 0.00;
 				DEVELOPMENT_TEAM = J8Y97B5NMQ;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = verusmobile/Info.plist;
@@ -1037,7 +1037,7 @@
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/react-native-webview\"",
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/rn-fetch-blob\"",
 				);
-				MARKETING_VERSION = 0.2.0;
+				MARKETING_VERSION = 0.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.verusmobile;
 				PRODUCT_NAME = verusmobile;
 				PROVISIONING_PROFILE_SPECIFIER = "";
