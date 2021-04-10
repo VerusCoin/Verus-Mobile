@@ -2,7 +2,7 @@ import { electrumServers } from 'agama-wallet-lib/src/electrum-servers';
 import { MAX_VERIFICATION } from '../constants/constants'
 import Colors from '../../globals/colors'
 import { coinsList } from './CoinsList'
-import { DLIGHT, ELECTRUM, ERC20, GENERAL } from '../constants/intervalConstants';
+import { DLIGHT_PRIVATE, ELECTRUM, ERC20, GENERAL } from '../constants/intervalConstants';
 
 import { ENABLE_VERUS_IDENTITIES } from '../../../env/main.json'
 
@@ -11,14 +11,14 @@ import { ETHERS } from '../constants/web3Constants';
 
 const getDefaultApps = (coinName) => {
   return ({
-    defaultApp: 'wallet',
+    default_app: 'wallet',
     apps: {
     wallet: {
       title: coinName + ' Wallet', 
       data: [
         {
           screen: 'Overview',
-          icon: 'account-balance-wallet',
+          icon: 'format-list-bulleted',
           name: 'Overview',
           key: 'wallet-overview',
           color: Colors.primaryColor
@@ -26,7 +26,7 @@ const getDefaultApps = (coinName) => {
         },
         {
           screen: 'SendCoin',
-          icon: 'arrow-upward',
+          icon: 'arrow-up',
           name: 'Send',
           key: 'wallet-send',
           color: Colors.infoButtonColor
@@ -34,7 +34,7 @@ const getDefaultApps = (coinName) => {
         },
         {
           screen: 'ReceiveCoin',
-          icon: 'arrow-downward',
+          icon: 'arrow-down',
           name: 'Receive',
           key: 'wallet-receive',
           color: Colors.successButtonColor
@@ -77,7 +77,6 @@ export const explorers = {
   BAT: 'https://etherscan.io',
   DAI: 'https://etherscan.io',
   BAL: 'https://etherscan.io',
-  BUSD: 'https://etherscan.io',
   BNT: 'https://etherscan.io',
   HOT: 'https://etherscan.io',
   LINK: 'https://etherscan.io',
@@ -87,7 +86,8 @@ export const explorers = {
   YFI: 'https://etherscan.io',
   ZRX: 'https://etherscan.io',
   TST: 'https://ropsten.etherscan.io',
-  BTC: 'https://www.blockchain.com/btc'
+  BTC: 'https://www.blockchain.com/btc',
+  DOGE: 'https://dogeblocks.com/'
 }
 
 export const CoinLogos = {
@@ -113,7 +113,6 @@ export const CoinLogos = {
   eth: CoinLogoSvgs.web3.ETH,
   bal: CoinLogoSvgs.web3.BAL,
   bnt: CoinLogoSvgs.web3.BNT,
-  busd: CoinLogoSvgs.web3.BUSD,
   hot: CoinLogoSvgs.web3.HOT,
   link: CoinLogoSvgs.web3.LINK,
   nexo: CoinLogoSvgs.web3.NEXO,
@@ -133,10 +132,10 @@ export const findCoinObj = (id, userName) => {
   let coinObj = coinsList[id.toLowerCase()]
 
   if (coinObj) {
-    coinObj.serverList = coinObj.compatible_channels.includes(ELECTRUM) ? electrumServers[id.toLowerCase()].serverList : []
+    coinObj.electrum_endpoints = coinObj.compatible_channels.includes(ELECTRUM) ? electrumServers[id.toLowerCase()].serverList : []
     coinObj.users = userName != null ? [userName] : [];
     
-    if (!coinObj.compatible_channels.includes(DLIGHT)) {
+    if (!coinObj.compatible_channels.includes(DLIGHT_PRIVATE)) {
       coinObj.overrideCoinSettings = {
         privateAddrs: 0
       }
@@ -149,9 +148,9 @@ export const findCoinObj = (id, userName) => {
       } else {
         coinObj.apps = DEFAULT_APPS.apps;
       }
-      if (!coinObj.defaultApp) coinObj.defaultApp = DEFAULT_APPS.defaultApp
-    } else if (!coinObj.defaultApp) {
-      coinObj.defaultApp = Object.keys(coinObj.apps)[0]
+      if (!coinObj.default_app) coinObj.default_app = DEFAULT_APPS.default_app
+    } else if (!coinObj.default_app) {
+      coinObj.default_app = Object.keys(coinObj.apps)[0]
     }
   }
   else {
@@ -195,7 +194,7 @@ export const createErc20CoinObj = (contractAddress, displayName, displayTicker, 
   const DEFAULT_APPS = getDefaultApps(coinObj.display_name)
 
   coinObj.apps = DEFAULT_APPS.apps;
-  coinObj.defaultApp = DEFAULT_APPS.defaultApp
+  coinObj.default_app = DEFAULT_APPS.default_app
 
   return coinObj;
 }
@@ -210,9 +209,9 @@ export const createErc20CoinObj = (contractAddress, displayName, displayTicker, 
  * @param {String} userName The current user's username (coins must be activated with a user)
  * @param {Object} apps A list of applications the coin supports, 
  * fetched to display in the coin's menu (these still need to be written in order to be used)
- * @param {String} defaultApp The key of the app this coin will start on when selected
+ * @param {String} default_app The key of the app this coin will start on when selected
  */
-export const createCoinObj = (id, name, description, defaultFee, serverList, userName, apps, defaultApp) => {
+export const createCoinObj = (id, name, description, defaultFee, serverList, userName, apps, default_app) => {
   let coinObj = coinsList[id];
   if (coinObj) throw new Error(`Coin with ID ${id} already exists in coin list`)
 
@@ -226,7 +225,7 @@ export const createCoinObj = (id, name, description, defaultFee, serverList, use
     users: [userName],
     compatible_channels: [ELECTRUM, GENERAL],
     apps: apps,
-    defaultApp: defaultApp,
+    default_app: default_app,
     overrideCoinSettings: {
       verificationLock: true,
       verificationLvl: MAX_VERIFICATION
@@ -236,9 +235,9 @@ export const createCoinObj = (id, name, description, defaultFee, serverList, use
   if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
     const DEFAULT_APPS = getDefaultApps(coinObj.display_name)
     coinObj.apps = DEFAULT_APPS.apps
-    if (!coinObj.defaultApp) coinObj.defaultApp = DEFAULT_APPS.defaultApp
-  } else if (!coinObj.defaultApp) {
-    coinObj.defaultApp = Object.keys(coinObj.apps)[0]
+    if (!coinObj.default_app) coinObj.default_app = DEFAULT_APPS.default_app
+  } else if (!coinObj.default_app) {
+    coinObj.default_app = Object.keys(coinObj.apps)[0]
   }
 
   return coinObj;

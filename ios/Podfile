@@ -1,4 +1,4 @@
-platform :ios, '12.0'
+platform :ios, '13.0'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 $dynamic_frameworks = [
   'react-native-verus-light-client', 
@@ -40,6 +40,7 @@ $dynamic_frameworks = [
   'SwiftNIOHPACK', 
   'SwiftNIOSSL', 
   'CNIOBoringSSL', 
+  'CNIOWindows',
   'CNIOBoringSSLShims', 
   'SwiftNIOTransportServices', 
   'SwiftNIOFoundationCompat', 
@@ -47,7 +48,8 @@ $dynamic_frameworks = [
   'BoringSSL-GRPC',
   'nanopb',
   'SwiftProtobuf',
-  'SQLite.swift'
+  'SQLite.swift',
+  'MnemonicSwift'
 ]
 
 pre_install do |installer|
@@ -98,8 +100,9 @@ target 'verusmobile' do
   pod 'RNInputMask', :path => '../node_modules/react-native-text-input-mask/ios/InputMask'
   pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
   pod 'Permission-Camera', :path => "#{permissions_path}/Camera.podspec"
-  pod 'ZcashLightClientKit', :git => 'https://github.com/michaeltout/ZcashLightClientKit.git', :branch => '0.6.3', :testspecs => ['Tests']
+  pod 'ZcashLightClientKit', :git => 'https://github.com/michaeltout/ZcashLightClientKit.git', :branch => '0.9.1', :testspecs => ['Tests']
   pod 'ReactNativeART', :path => '../node_modules/@react-native-community/art'
+  pod 'MnemonicSwift', '~> 2.0.0'
 
   target 'verusmobileTests' do
     inherit! :search_paths

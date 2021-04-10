@@ -9,40 +9,65 @@ import {
   seedToWif,
   seedToPriv
 } from 'agama-wallet-lib/src/keys';
-import { ETH, ERC20 } from './constants/intervalConstants';
+import { ETH, ERC20, DLIGHT_PRIVATE } from './constants/intervalConstants';
 import ethers from 'ethers';
+import VerusLightClient from 'react-native-verus-light-client'
 
-export const makeKeyPair = (seed, coinID, channel) => {
-  let isWif = false;
-  let _seedToWif;
-  let keyObj = {};
+export const makeKeyPair = async (seed, coinID, channel) => {
+  if (channel === DLIGHT_PRIVATE) {
+    const spendingKey = await parseDlightSeed(seed)
 
-  try {
-    bs58check.decode(seed);
-    isWif = true;
-  } catch (e) {}
-
-  if (isWif) {
-    _seedToWif = wifToWif(seed, isKomodoCoin(coinID) ? electrumJSNetworks.kmd : electrumJSNetworks[coinID.toLowerCase()]);
+    return {
+      pubKey: null,
+      privKey: spendingKey,
+      viewingKey: await VerusLightClient.deriveViewingKey(spendingKey),
+      addresses: [],
+    };
   } else {
-    _seedToWif = seedToWif(seed, isKomodoCoin(coinID) ? electrumJSNetworks.kmd : electrumJSNetworks[coinID.toLowerCase()], true);
+    let isWif = false;
+    let _seedToWif;
+    let keyObj = {};
+  
+    try {
+      bs58check.decode(seed);
+      isWif = true;
+    } catch (e) {}
+  
+    if (isWif) {
+      _seedToWif = wifToWif(seed, isKomodoCoin(coinID) ? electrumJSNetworks.kmd : electrumJSNetworks[coinID.toLowerCase()]);
+    } else {
+      _seedToWif = seedToWif(seed, isKomodoCoin(coinID) ? electrumJSNetworks.kmd : electrumJSNetworks[coinID.toLowerCase()], true);
+    }
+  
+    keyObj = {
+      pubKey: _seedToWif.pubHex,
+      privKey: channel === ETH || channel === ERC20 ? seedToPriv(_seedToWif.priv, 'eth') : _seedToWif.priv,
+      addresses: [
+        channel === ETH || channel === ERC20
+          ? ethers.utils.computeAddress(Buffer.from(_seedToWif.pubHex, "hex"))
+          : _seedToWif.pub,
+      ],
+    };
+  
+    return keyObj;
   }
-
-  keyObj = {
-    pubKey: _seedToWif.pubHex,
-    privKey: channel === ETH || channel === ERC20 ? seedToPriv(_seedToWif.priv, 'eth') : _seedToWif.priv,
-    addresses: [
-      channel === ETH || channel === ERC20
-        ? ethers.utils.computeAddress(Buffer.from(_seedToWif.pubHex, "hex"))
-        : _seedToWif.pub,
-    ],
-  };
-
-  return keyObj;
 }
 
-export const pairFromPwd = (password, encryptedKey, coinID) => {
+export const pairFromPwd = async (password, encryptedKey, coinID) => {
   let seed = decryptkey(password, encryptedKey);
 
-  return makeKeyPair(seed, coinID);
+  return await makeKeyPair(seed, coinID);
+}
+
+export const isDlightSpendingKey = (seed) => {
+  return seed.startsWith('secret-extended-key-main')
+}
+
+export const parseDlightSeed = async (seed) => {
+  if (isDlightSpendingKey(seed)) return seed
+  
+  try {
+    const keys = await VerusLightClient.deriveSpendingKeys(seed, true, 1)
+    return keys[0]
+  } catch(e) { throw e }
 }

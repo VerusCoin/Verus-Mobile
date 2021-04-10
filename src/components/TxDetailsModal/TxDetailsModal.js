@@ -7,20 +7,19 @@ import React, { Component } from "react";
 import StandardButton from "../StandardButton";
 import { 
   View, 
-  Text, 
-  ScrollView, 
-  Image, 
   Linking, 
-  TouchableOpacity,
   Clipboard,
   Alert,
-  Modal
+  FlatList,
+  TouchableOpacity,
+  SafeAreaView
 } from "react-native";
-import { unixToDate, MathableNumber } from '../../utils/math';
+import { unixToDate, truncateDecimal } from '../../utils/math';
 import { explorers } from '../../utils/CoinData/CoinData';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
-import { ethers } from "ethers";
+import { Button, List, Text, Divider } from "react-native-paper"
+import SemiModal from "../SemiModal";
 
 class TxDetailsModal extends Component {
   constructor(props) {
@@ -29,8 +28,8 @@ class TxDetailsModal extends Component {
 
   openExplorer = () => {
     let url = `${explorers[this.props.activeCoinID]}/tx/${
-      this.props.activeCoinID === "BTC"
-        ? this.decodeBtcTxid(this.props.txData.txid)
+      this.props.txData.txid != null
+        ? this.decodeTxid(this.props.txData.txid)
         : this.props.txData.txid
     }`;
 
@@ -44,29 +43,37 @@ class TxDetailsModal extends Component {
   };
 
   copyTxIDToClipboard = () => {
-    Clipboard.setString(
-      this.props.activeCoinID === "BTC"
-        ? this.decodeBtcTxid(this.props.txData.txid)
-        : this.props.txData.txid
-    );
+    const txid = this.props.txData.txid != null
+    ? this.decodeTxid(this.props.txData.txid)
+    : this.props.txData.txid
 
-    Alert.alert("ID Copied", "Transaction ID copied to clipboard");
+    Clipboard.setString(txid);
+
+    Alert.alert("TxID Copied", txid);
   };
 
   copyAddressToClipboard = () => {
     Clipboard.setString(this.props.txData.address);
 
-    Alert.alert("Address Copied", "Transaction Address copied to clipboard");
+    Alert.alert("Address Copied", this.props.txData.address);
+  };
+
+  copyMemoToClipboard = () => {
+    Clipboard.setString(this.props.txData.memo);
+
+    Alert.alert("Message Copied", this.props.txData.memo);
   };
 
   //TODO: Move this higher up to txid source
-  decodeBtcTxid = () => {
+  decodeTxid = () => {
     //Decode decimal txid to hex string
     let txid = this.props.txData.txid;
     let txidArr = txid.split(",");
 
     try {
-      return Buffer.from(txidArr).toString('hex')
+      if (txidArr.length > 1) {
+        return Buffer.from(txidArr).toString('hex')
+      } else return txid
     } catch(e) {
       console.error(e)
       Alert.alert("Error", "Error decoding transaction ID.")
@@ -81,157 +88,159 @@ class TxDetailsModal extends Component {
       visible,
       TxLogo,
       cancel,
-      parsedAmount,
+      displayAmount,
       activeCoinID
     } = this.props;
-
-    let amountShown = parsedAmount
-
-    if (txData.fee != null && (txData.feeCurr == null || txData.feeCurr === activeCoinID)) {
-      amountShown = new MathableNumber(ethers.utils.formatUnits(
-        parsedAmount.num
-          .sub(ethers.utils.parseUnits(txData.fee.toString(), parsedAmount.maxDecimals))
-      ))
-    }
     
     return (
-      <Modal
+      <SemiModal
         animationType={animationType}
-        transparent={false}
+        transparent={true}
         visible={visible}
         onRequestClose={cancel}
-        coverScreen={false}
+        flexHeight={4}
       >
-        <ScrollView
-          style={Styles.flexBackground}
-          contentContainerStyle={Styles.centerContainer}
-        >
-          <View style={Styles.tallHeaderContainer}>
-            <TxLogo width={50} height={50} />
-            <Text style={Styles.centralHeader}>
-              {"Transaction Details"}
-            </Text>
+        <SafeAreaView style={Styles.centerContainer}>
+          <View style={{ ...Styles.headerContainer, minHeight: 48 }}>
+            <View style={Styles.semiModalHeaderContainer}>
+              <Button onPress={cancel} color={Colors.primaryColor}>
+                {"Close"}
+              </Button>
+              <Text
+                style={{
+                  ...Styles.centralHeader,
+                  ...Styles.smallMediumFont,
+                }}
+              >
+                {"Transaction"}
+              </Text>
+              <Button
+                onPress={() => this.openExplorer()}
+                color={Colors.primaryColor}
+                disabled={!explorers[activeCoinID]}
+              >
+                {"Details"}
+              </Button>
+            </View>
           </View>
-          <View style={Styles.standardWidthFlexGrowCenterBlock}>
-            <View style={Styles.infoTable}>
-              <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>Type:</Text>
-                <Text
-                  style={{
-                    ...Styles.infoTableCell,
-                    ...Styles.capitalizeFirstLetter,
-                  }}
-                >
-                  {txData.type || "??"}
-                </Text>
-              </View>
-              <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>{`Amount ${
+          <FlatList
+            style={Styles.fullWidth}
+            renderItem={({ item }) => {
+              if (item.condition == null || item.condition === true)
+                return (
+                  <React.Fragment>
+                    <TouchableOpacity
+                      disabled={item.onPress == null}
+                      onPress={() => item.onPress()}
+                    >
+                      <List.Item
+                        title={item.data}
+                        description={item.key}
+                        titleNumberOfLines={item.numLines || 1}
+                        titleStyle={
+                          item.capitalized
+                            ? Styles.capitalizeFirstLetter
+                            : undefined
+                        }
+                        right={(props) =>
+                          item.right ? (
+                            <Text
+                              {...props}
+                              style={{
+                                fontSize: 16,
+                                alignSelf: "center",
+                                marginRight: 8,
+                              }}
+                            >
+                              {item.right}
+                            </Text>
+                          ) : null
+                        }
+                      />
+                      <Divider />
+                    </TouchableOpacity>
+                  </React.Fragment>
+                );
+              else return null;
+            }}
+            data={[
+              {
+                key: "Type",
+                data: txData.type || "Unknown",
+                capitalized: true,
+              },
+              {
+                key: `Amount ${
                   txData.type === "received" ? "Received" : "Sent"
-                }:`}</Text>
-                <Text style={Styles.infoTableCell}>
-                  {amountShown != null
-                    ? amountShown.display() + " " + activeCoinID
-                    : "??"}
-                </Text>
-              </View>
-              {txData.fee != null && (
-                <View style={Styles.infoTableRow}>
-                  <Text style={Styles.infoTableHeaderCell}>Fee:</Text>
-                  <Text style={Styles.infoTableCell}>
-                    {txData.fee +
-                      " " +
-                      (txData.feeCurr != null
-                        ? txData.feeCurr
-                        : activeCoinID)}
-                  </Text>
-                </View>
-              )}
-              {explorers[activeCoinID] &&
-              explorers[activeCoinID].includes("etherscan") ? (
-                <View style={Styles.infoTableRow}>
-                  <Text style={Styles.infoTableHeaderCell}>
-                    {"Confirmations:"}
-                  </Text>
-                  <Text style={Styles.infoTableCell}>
-                    {txData.confirmations != null
-                      ? txData.confirmations
-                      : "??"}
-                  </Text>
-                </View>
-              ) : null}
-              <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>Address:</Text>
-                <Text
-                  style={{
-                    ...Styles.blockTextAlignRight,
-                    ...(txData.address ? Styles.linkText : {}),
-                  }}
-                  onPress={
-                    txData.address ? this.copyAddressToClipboard : () => {}
-                  }
-                >
-                  {txData.address == null
+                }`,
+                data: `${
+                  displayAmount != null
+                    ? truncateDecimal(displayAmount, this.props.decimals)
+                    : "??"
+                } ${
+                  txData.feeCurr != null && txData.type === "self"
+                    ? txData.feeCurr
+                    : activeCoinID
+                }`,
+                numLines: 100,
+              },
+              {
+                key: "Fee",
+                data:
+                  txData.fee +
+                  " " +
+                  (txData.feeCurr != null ? txData.feeCurr : activeCoinID),
+                condition: txData.fee != null,
+                numLines: 100,
+              },
+              {
+                key: "Status",
+                data:
+                  txData.confirmed != null
+                    ? txData.confirmed
+                      ? "Confirmed"
+                      : "Pending"
+                    : "Unknown",
+              },
+              {
+                key: "Address",
+                onPress: txData.address
+                  ? this.copyAddressToClipboard
+                  : () => {},
+                data:
+                  txData.address == null
                     ? txData.visibility === "private"
                       ? "hidden"
-                      : "??"
-                    : txData.address}
-                </Text>
-              </View>
-              <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>Time:</Text>
-                <Text style={Styles.infoTableCell}>
-                  {txData && txData.timestamp != null
+                      : "Unknown"
+                    : txData.address,
+              },
+              {
+                key: "Time",
+                data:
+                  txData && txData.timestamp != null
                     ? unixToDate(txData.timestamp)
-                    : "??"}
-                </Text>
-              </View>
-              <View style={Styles.infoTableRow}>
-                <Text style={Styles.infoTableHeaderCell}>ID:</Text>
-                <Text
-                  style={{
-                    ...Styles.blockTextAlignRight,
-                    ...(txData.txid != null ? Styles.linkText : {}),
-                  }}
-                  onPress={
-                    txData.txid != null
-                      ? this.copyTxIDToClipboard
-                      : () => {}
-                  }
-                >
-                  {txData.txid != null
-                    ? activeCoinID === "BTC"
-                      ? this.decodeBtcTxid(txData.txid)
-                      : txData.txid
-                    : "??"}
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View style={Styles.footerContainer}>
-            <View
-              style={
-                explorers[activeCoinID]
-                  ? Styles.standardWidthSpaceBetweenBlock
-                  : Styles.standardWidthCenterBlock
-              }
-            >
-              <StandardButton
-                title={"CLOSE"}
-                onPress={cancel}
-                color={Colors.warningButtonColor}
-              />
-              {explorers[activeCoinID] && (
-                <StandardButton
-                  title="DETAILS"
-                  onPress={() => this.openExplorer()}
-                  color={Colors.primaryColor}
-                />
-              )}
-            </View>
-          </View>
-        </ScrollView>
-      </Modal>
+                    : "Unknown",
+              },
+              {
+                key: "TxID",
+                onPress:
+                  txData.txid != null ? this.copyTxIDToClipboard : () => {},
+                data:
+                  txData.txid != null
+                    ? this.decodeTxid(txData.txid)
+                    : "Unknown",
+              },
+              {
+                key: "Message",
+                data: txData.memo,
+                onPress: this.copyMemoToClipboard,
+                condition: txData.memo != null && txData.memo.length > 0,
+                numLines: 100,
+              },
+            ]}
+          />
+        </SafeAreaView>
+      </SemiModal>
     );
   }
 }

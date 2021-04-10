@@ -1,4 +1,5 @@
 import { createSelector } from 'reselect';
+import { API_GET_ADDRESSES } from '../utils/constants/intervalConstants';
 
 const selectActiveAccount = (state) => state.authentication.activeAccount;
 
@@ -10,9 +11,13 @@ export const selectAddresses = createSelector(
   [selectActiveAccount, selectActiveCoin, selectSubWallets],
   (activeAccount, activeCoin, activeSubWallets) => {
     const activeCoinId = activeCoin.id
-    const channel = activeSubWallets[activeCoinId] != null ? activeSubWallets[activeCoinId].channel : null
+    const channel =
+      activeSubWallets[activeCoinId] != null
+        ? activeSubWallets[activeCoinId].api_channels[API_GET_ADDRESSES]
+        : null;
 
     if (
+      activeAccount &&
       activeAccount.keys[activeCoinId] != null &&
       activeAccount.keys[activeCoinId][channel] != null &&
       activeAccount.keys[activeCoinId][channel].addresses.length > 0

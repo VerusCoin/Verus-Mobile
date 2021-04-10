@@ -3,18 +3,18 @@ import {
   ERROR_INFO,
   SET_INFO
 } from "../../../../utils/constants/storeType";
-import { DLIGHT } from "../../../../utils/constants/intervalConstants";
+import { DLIGHT_PRIVATE } from "../../../../utils/constants/intervalConstants";
 import { updateLedgerValue } from "./UpdateLedgerValue";
 
 const channelMap = {
-  [DLIGHT]: async (activeUser, coinObj) => {
+  [DLIGHT_PRIVATE]: async (activeUser, coinObj) => {
     const syncInfo = await getInfo(coinObj.id, activeUser.accountHash, coinObj.proto);
 
     const { result, ...header } = syncInfo;
 
     return {
       chainTicker: coinObj.id,
-      channel: DLIGHT,
+      channel: DLIGHT_PRIVATE,
       header,
       body: result,
     };

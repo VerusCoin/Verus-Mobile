@@ -18,7 +18,6 @@ import SignUp from '../../containers/SignUp/SignUp';
 import CoinDetails from '../../containers/CoinDetails/CoinDetails';
 import LoadingScreen from '../../containers/LoadingScreen/LoadingScreen';
 import ConfirmSend from '../../containers/ConfirmSend/ConfirmSend';
-import SendResult from '../../containers/Coin/SendCoin/SendResult/SendResult';
 import CoinMenus from '../../containers/Coin/CoinMenus';
 import VerusPay from '../../containers/VerusPay/VerusPay';
 import SettingsMenus from '../../containers/Settings/SettingsMenus';
@@ -51,6 +50,8 @@ import AttestationDetails from '../../containers/Identity/Home/AttestationDetail
 import ClaimManager from '../../containers/Identity/PersonalInfo/ClaimManager';
 import MoveIntoCategory from '../../containers/Identity/PersonalInfo/ClaimManager/MoveIntoCategory';
 import AddIdentity from '../../containers/Identity/AddIdentity';
+import { DEVICE_WINDOW_WIDTH } from '../constants/constants';
+import { Component } from 'react';
 
 const WALLET = 'wallet';
 
@@ -70,7 +71,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#E9F1F7',
     paddingTop: 15,
-    width: Dimensions.get('window').width, // width of both buttons + no left-right padding
+    width: DEVICE_WINDOW_WIDTH, // width of both buttons + no left-right padding
   },
 
   header_title_back: {
@@ -81,7 +82,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#E9F1F7',
     paddingTop: 15,
-    width: Dimensions.get('window').width - 110, // width of both buttons + no left-right padding
+    width: DEVICE_WINDOW_WIDTH - 110, // width of both buttons + no left-right padding
   },
 
   menuButton: {
@@ -259,17 +260,9 @@ function MainStackScreens() {
         name="ConfirmSend"
         component={ConfirmSend}
         options={{
-          title: "Confirm Send",
-        }}
-      />
-
-      <MainStack.Screen
-        name="SendResult"
-        component={SendResult}
-        options={{
-          title: "Send Result",
-          headerLeft: () => null,
+          title: "Send",
           headerRight: () => null,
+          headerLeft: () => null,
         }}
       />
 
@@ -538,40 +531,39 @@ function LoadingStackScreens() {
   );
 }
 
-export default function RootStackScreens(hasAccount, loading, signedIn) {
-  return (
-    <RootStack.Navigator
-      screenOptions={{
-        mode: "modal",
-        headerShown: false,
-      }}
-    >
-      {loading ? (
-        <RootStack.Screen
-          name="LoadingStack"
-          component={LoadingStackScreens}
-        />
-      ) : hasAccount ? (
-        signedIn ? (
+export default class RootStackScreens extends Component {
+  render() {
+    return (
+      <RootStack.Navigator
+        screenOptions={{
+          mode: "modal",
+          headerShown: false,
+        }}
+      >
+        {this.props.loading ? (
           <RootStack.Screen
-            name="SignedIn"
-            component={MainScreens}
+            name="LoadingStack"
+            component={LoadingStackScreens}
           />
+        ) : this.props.hasAccount ? (
+          this.props.signedIn ? (
+            <RootStack.Screen name="SignedIn" component={MainScreens} />
+          ) : (
+            <RootStack.Screen
+              name="SignedOutStack"
+              component={SignedOutStackScreens}
+              options={{
+                headerRight: () => null,
+              }}
+            />
+          )
         ) : (
           <RootStack.Screen
-            name="SignedOutStack"
-            component={SignedOutStackScreens}
-            options={{
-              headerRight: () => null,
-            }}
+            name="SignedOutNoKeyStack"
+            component={SignedOutNoKeyStackScreens}
           />
-        )
-      ) : (
-        <RootStack.Screen
-          name="SignedOutNoKeyStack"
-          component={SignedOutNoKeyStackScreens}
-        />
-      )}
-    </RootStack.Navigator>
-  );
+        )}
+      </RootStack.Navigator>
+    );
+  }
 }

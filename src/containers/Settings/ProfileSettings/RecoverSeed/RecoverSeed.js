@@ -23,6 +23,7 @@ import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
 import Styles from '../../../../styles/index'
 import Colors from "../../../../globals/colors";
+import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 
 class RecoverSeed extends Component {
   constructor() {
@@ -45,11 +46,6 @@ class RecoverSeed extends Component {
   }
 
   cancel = () => {
-    this.props.navigation.dispatch(NavigationActions.back())
-  }
-
-  onSuccess = () => {
-    Alert.alert("Success!", "Password for " + this.props.activeAccount.id + " reset successfully.");
     this.props.navigation.dispatch(NavigationActions.back())
   }
 
@@ -96,8 +92,7 @@ class RecoverSeed extends Component {
           if (res[0] && Array.isArray(res)) {
             this.setState({password: null}, () => {
               let seeds = res.pop()
-
-              //DELETE/REFACTOR, change to show all seeds
+              
               this.showSeed(seeds)
             })
           } 

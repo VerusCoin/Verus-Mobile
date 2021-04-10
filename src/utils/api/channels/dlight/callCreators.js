@@ -1,6 +1,6 @@
 import VerusLightClient from 'react-native-verus-light-client'
 import ApiException from '../../errors/apiError'
-import { DLIGHT } from '../../../constants/intervalConstants'
+import { DLIGHT_PRIVATE } from '../../../constants/intervalConstants'
 
 // State requests
 export * from './state/synchronizer'
@@ -12,6 +12,9 @@ export * from './requests/getPrivateBalance'
 export * from './requests/getBlockCount'
 export * from './requests/getInfo'
 export * from './requests/getTransactions'
+export * from './requests/preflightPrivateTransaction'
+export * from './requests/sendPrivateTransaction'
+export * from './requests/getIdentity'
 
 /**
  * Makes a request to the light daemon client
@@ -23,30 +26,16 @@ export * from './requests/getTransactions'
  * @param {String[]} params Paramters to pass in with the request
  */
 export const makeDlightRequest = (coinId, accountHash, coinProto, reqId, method, params) => {
-  
   return new Promise((resolve, reject) => {
     VerusLightClient.request(reqId, method, [coinId, coinProto, accountHash, ...params])
-    .then(res => {
+    .then(res => {      
       if (res.error != null) {
-        // DELETE/REFACTOR when proper error displays are made
-        console.log(" ------- DLIGHT EXCEPTION ------- ")
-        console.log(res.error)
-        console.log(res.error.message)
-        console.log(res.error.data)
-        console.log(reqId)
-        console.log(params)
-        console.log(coinId)
-        console.log(coinProto)
-        console.log(accountHash)
-        console.log(method)
-        console.log(" ------- END DLIGHT EXCEPTION ------- ")
-
         reject(
           new ApiException(
             res.error.message,
             res.error.data,
             coinId,
-            DLIGHT,
+            DLIGHT_PRIVATE,
             res.error.code
           )
         );

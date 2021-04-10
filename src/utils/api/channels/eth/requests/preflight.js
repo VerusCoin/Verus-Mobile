@@ -20,6 +20,10 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
       chainId: ETH_NETWORK_IDS[ETH_NETWORK]
     })
 
+    if (transaction.to == null) {
+      throw new Error(`"${address}" is not a valid destination.`)
+    }
+
     const maxFee = transaction.gasLimit.mul(transaction.gasPrice)
     const maxValue = maxFee.add(value)
 
@@ -66,8 +70,6 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
       },
     };
   } catch(e) {
-    console.error(e)
-
     return {
       err: true,
       result: e.message

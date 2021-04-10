@@ -2,8 +2,10 @@ const mocked_results = require('./mocked_results/mocked_results.js')
 const {
   MOCK_PROXY_URL,
   FIAT_EXCHANGE_RATES_URL,
-  VERUS_RATE_URL
+  VERUS_RATE_URL,
+  UNMOCK_FETCH
 } = require("./util/mock_urls");
+const nodeFetch = require('node-fetch');
 
 /**
  * Mock of the react-native-fetch http call function. If the URL is an electrum string,
@@ -13,7 +15,9 @@ const {
  * @param {Object} payload Fetch type, body, headers etc.
  */
 const fetch = async function(url, payload) {
-  if (url.endsWith(MOCK_PROXY_URL)) {
+  if (url.endsWith(UNMOCK_FETCH)) {
+    return nodeFetch(url.split(' ')[0], payload)
+  } else if (url.endsWith(MOCK_PROXY_URL)) {
     return new Promise((resolve) => (resolve({status: 200})))
   } else if (url === FIAT_EXCHANGE_RATES_URL) {
     return new Promise(resolve =>

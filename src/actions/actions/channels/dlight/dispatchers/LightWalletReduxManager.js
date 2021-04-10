@@ -25,26 +25,31 @@ export const initDlightWallet = (coinObj) => {
   const { dispatch, getState } = Store
   const State = getState()
 
-  const { settings, authentication, channelStore_dlight } = State
-  const { dlightSockets, dlightSyncing } = channelStore_dlight
+  const { settings, authentication, channelStore_dlight_private } = State
+  const { dlightSockets, dlightSyncing } = channelStore_dlight_private
   const { activeAccount } = authentication
   const { accountHash } = activeAccount
-  const { dlightEndpoints, id, proto } = coinObj
+  const { dlight_endpoints, id, proto } = coinObj
+
+  if (
+    activeAccount.keys[coinObj.id] == null ||
+    activeAccount.keys[coinObj.id].dlight_private == null
+  )
+    return Promise.resolve();
 
   // Depends on settings already being added to redux store and initialized
-  const { coinSettings } = settings
   let initializationPromises = []
 
   try {
     if (dlightSyncing[id]) throw new Error("Something went wrong while initializing " + id + ". It is marked as already syncing, before it has been added!?")
 
     if (dlightSockets[id] == null) {
-      if (dlightEndpoints == null || !Array.isArray(dlightEndpoints) || dlightEndpoints.length === 0)
+      if (dlight_endpoints == null || !Array.isArray(dlight_endpoints) || dlight_endpoints.length === 0)
         throw new Error(id + " has been requested as a lightwallet client, but it has no servers!")
 
-      const lightWalletEndpointArr = dlightEndpoints[0].split(':')
+      const lightWalletEndpointArr = dlight_endpoints[0].split(':')
 
-      if (isNaN(lightWalletEndpointArr[1])) 
+      if (lightWalletEndpointArr[1] == null || isNaN(lightWalletEndpointArr[1])) 
         throw new Error(id + " lightwallet was requested with port " + lightWalletEndpointArr[1], " this is not a valid port.")
 
       initializationPromises = [
@@ -54,8 +59,8 @@ export const initDlightWallet = (coinObj) => {
           accountHash,
           lightWalletEndpointArr[0],
           Number(lightWalletEndpointArr[1]),
-          coinSettings[id] != null ? coinSettings[id].privateAddrs : DEFAULT_PRIVATE_ADDRS,
-          activeAccount.seeds.dlight
+          DEFAULT_PRIVATE_ADDRS,
+          [activeAccount.keys[coinObj.id].dlight_private.viewingKey]
         ),
         openWallet(id, proto, accountHash),
         startSync(id, proto, accountHash),
@@ -111,6 +116,14 @@ export const initDlightWallet = (coinObj) => {
           resolve()
         }
       })
+      .catch(e => {
+        dispatch({
+          type: ERROR_DLIGHT_INIT,
+          payload: { chainTicker: id, error: e }
+        })
+        
+        resolve()
+      })
     })
   })
 }
@@ -120,11 +133,13 @@ export const closeDlightWallet = (coinObj, clearDb) => {
   const { dispatch, getState } = Store
   const State = getState()
 
-  const { channelStore_dlight, authentication } = State
-  const { dlightSockets, dlightSyncing } = channelStore_dlight
+  const { channelStore_dlight_private, authentication } = State
+  const { dlightSockets, dlightSyncing } = channelStore_dlight_private
   const { activeAccount } = authentication
   const { accountHash } = activeAccount
   const { id, proto } = coinObj
+
+  if (activeAccount.seeds.dlight_private == null) return Promise.resolve()
 
   let closePromises = []
 

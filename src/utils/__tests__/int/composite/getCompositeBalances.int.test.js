@@ -7,7 +7,7 @@ import {
 import VerusLightClient from 'react-native-verus-light-client'
 
 import { MOCK_STATE } from '../../../../tests/helpers/MockAppState'
-import { ELECTRUM, DLIGHT } from '../../../constants/intervalConstants'
+import { ELECTRUM, DLIGHT_PRIVATE } from '../../../constants/intervalConstants'
 import ApiException from '../../../api/errors/apiError'
 
 describe('Composite balance updater for BTC based chains', () => {
@@ -16,7 +16,7 @@ describe('Composite balance updater for BTC based chains', () => {
 
     return updateBalances(MOCK_STATE, (action) => {
       resultActions.push(action)
-    }, [DLIGHT, ELECTRUM], 'VRSC')
+    }, [DLIGHT_PRIVATE, ELECTRUM], 'VRSC')
     .then(() => {
       expect(resultActions.length).toBe(2)
 
@@ -58,7 +58,7 @@ describe('Composite balance updater for BTC based chains', () => {
 
       return updateBalances(MOCK_STATE, (action) => {
         resultActions.push(action)
-      }, [DLIGHT, ELECTRUM], 'ZEC')
+      }, [DLIGHT_PRIVATE, ELECTRUM], 'ZEC')
     }).then(() => {
       expect(resultActions.length).toBe(2)
 
@@ -101,9 +101,9 @@ describe('Composite balance updater for BTC based chains', () => {
 
       return updateBalances(MOCK_STATE, (action) => {
         resultActions.push(action)
-      }, [DLIGHT, ELECTRUM], 'VRSC')
+      }, [DLIGHT_PRIVATE, ELECTRUM], 'VRSC')
     }).then(() => {
-      const successDlight = resultActions.find(action => action.payload.channel === DLIGHT)
+      const successDlight = resultActions.find(action => action.payload.channel === DLIGHT_PRIVATE)
       const successElectrum = resultActions.find(action => action.payload.channel === ELECTRUM)
 
       expect(successElectrum.type).toBe('SET_BALANCES')

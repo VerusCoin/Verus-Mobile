@@ -10,10 +10,9 @@
 import React, { Component } from "react";
 import {
   View,
-  StyleSheet,
-  Alert,
-  Modal
+  Alert
 } from "react-native";
+import Modal from '../../../components/Modal'
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import { isJson } from '../../../utils/objectManip'
 import { NavigationActions } from '@react-navigation/compat';

@@ -5,7 +5,7 @@ import {
 } from '../../../../actions/actions/wallet/dispatchers/UpdateFiatPrices'
 import { MOCK_STATE } from '../../../../tests/helpers/MockAppState'
 import {
-  DLIGHT,
+  DLIGHT_PRIVATE,
   ELECTRUM,
   GENERAL
 } from "../../../constants/intervalConstants";
@@ -16,7 +16,7 @@ describe('Composite fiat rates updater', () => {
 
     return updateFiatPrices(MOCK_STATE, (action) => {
       resultActions.push(action)
-    }, [DLIGHT, ELECTRUM, GENERAL], 'VRSC')
+    }, [DLIGHT_PRIVATE, ELECTRUM, GENERAL], 'VRSC')
     .then(() => {
       expect(resultActions.length).toBe(1)
       const success = resultActions[0]

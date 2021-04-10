@@ -126,12 +126,28 @@ export default containers = {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  semiModalHeaderContainer: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 10,
+    width: '100%',
+    height: '100%'
+  },
+  semiModalContainer: {
+    height: '75%'
+  },
   horizontalCenterContainer: {
     alignItems: 'center',
   },
   flexBackground: {
     flex: 1,
     backgroundColor: Colors.secondaryColor,
+  },
+  flexBackgroundDark: {
+    flex: 1,
+    backgroundColor: Colors.quinaryColor,
   },
   passwordInputContainer: {
     width: '91%',
@@ -141,6 +157,16 @@ export default containers = {
     alignItems: 'center',
     flex: 1,
     maxHeight: '14%',
+    backgroundColor: Colors.secondaryColor,
+    borderTopWidth: 1,
+    borderColor: Colors.tertiaryColor,
+  },
+  footerContainerSafeArea: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: "center",
+    flex: 1,
+    maxHeight: 72,
     backgroundColor: Colors.secondaryColor,
     borderTopWidth: 1,
     borderColor: Colors.tertiaryColor,
@@ -169,6 +195,16 @@ export default containers = {
     maxHeight: '10%',
     flex: 1,
     justifyContent: 'flex-end',
+    backgroundColor: Colors.secondaryColor,
+    borderBottomWidth: 1,
+    borderColor: Colors.tertiaryColor,
+  },
+  headerContainerSafeArea: {
+    width: '100%',
+    alignItems: 'center',
+    maxHeight: 56,
+    flex: 1,
+    justifyContent: 'center',
     backgroundColor: Colors.secondaryColor,
     borderBottomWidth: 1,
     borderColor: Colors.tertiaryColor,
@@ -216,6 +252,9 @@ export default containers = {
   },
   halfWidthBox: {
     maxWidth: '50%',
+  },
+  threeQuarterWidthBlock: {
+    maxWidth: '75%',
   },
   horizontalPaddingBox: {
     paddingHorizontal: '25%',

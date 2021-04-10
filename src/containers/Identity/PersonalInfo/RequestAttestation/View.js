@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  Modal,
   Platform,
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
 import { SearchBar, ListItem, Button } from 'react-native-elements';
-
+import Modal from '../../../../components/Modal'
 import DelayedAlert from '../../../../utils/delayedAlert';
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';

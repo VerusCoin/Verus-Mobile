@@ -67,8 +67,8 @@ describe('dlight initialization tester', () => {
         expect(state.ledger.balances.dlight[MOCK_STATE.coins.activeCoinsForUser[0].id].total).toBe(30)
         expect(state.ledger.balances.dlight[MOCK_STATE.coins.activeCoinsForUser[0].id].confirmed).toBe(20)
         expect(state.ledger.balances.dlight[MOCK_STATE.coins.activeCoinsForUser[0].id].pending).toBe(10)
-        expect(state.channelStore_dlight.dlightSockets.VRSC).toBe(false)
-        expect(state.channelStore_dlight.dlightSyncing.VRSC).toBe(false)
+        expect(state.channelStore_dlight_private.dlightSockets.VRSC).toBe(false)
+        expect(state.channelStore_dlight_private.dlightSyncing.VRSC).toBe(false)
 
         resolve()
       })

@@ -16,7 +16,10 @@ export const selectTransactions = createSelector(
   [selectTransactionsReducerState, selectActiveCoin, selectErrors, selectSubWallets],
   (transactions, activeCoin, errors, activeSubWallets) => {
     const activeCoinId = activeCoin.id
-    const channel = activeSubWallets[activeCoinId] != null ? activeSubWallets[activeCoinId].channel : null
+    const channel =
+      activeSubWallets[activeCoinId] != null
+        ? activeSubWallets[activeCoinId].api_channels[API_GET_TRANSACTIONS]
+        : null;
 
     return {
       results: channel != null ? transactions[channel][activeCoinId] : null,

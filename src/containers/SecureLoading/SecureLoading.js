@@ -17,7 +17,6 @@ import React, { Component } from "react";
 import { 
   View, 
   Text, 
-  ActivityIndicator,
   Alert
 } from "react-native";
 import { CommonActions } from '@react-navigation/native';
@@ -25,6 +24,7 @@ import { connect } from 'react-redux';
 import { signOut } from '../../actions/actionCreators';
 import { Icon } from "react-native-elements";
 import styles from './SecureLoading.styles'
+import AnimatedActivityIndicator from "../../components/AnimatedActivityIndicator";
 
 const DEFAULT_TIMEOUT = 30000
 const DEFAULT_MESSAGE = "Loading..."
@@ -118,34 +118,28 @@ class SecureLoading extends Component {
   }
 
   render() {
-    return(
+    return (
       <View style={styles.loadingRoot}>
-        <ActivityIndicator 
-          animating={
-            this.state.status === 'loading' || 
-            (this.state.status === 'success' && (!this.state.successMsg)) || 
-            (this.state.status !== 'error' && (!this.state.errorMsg))} 
-          size="large"
-        />
-        { this.state.status === 'success' && this.state.successMsg &&
-          <Icon name="check" color="#50C3A5" size={45}/>
-        }
-        { this.state.status === 'error' && this.state.errorMsg &&
-          <Icon name="close" color="rgba(206,68,70,1)" size={45}/>
-        }
+        {(this.state.status === "loading" ||
+          (this.state.status === "success" && !this.state.successMsg) ||
+          (this.state.status !== "error" && !this.state.errorMsg)) && (
+          <AnimatedActivityIndicator style={{ width: 128 }} />
+        )}
+        {this.state.status === "success" && this.state.successMsg && (
+          <Icon name="check" color="#50C3A5" size={45} />
+        )}
+        {this.state.status === "error" && this.state.errorMsg && (
+          <Icon name="close" color="rgba(206,68,70,1)" size={45} />
+        )}
         <Text style={styles.loadingLabel}>
-          {
-            this.state.status === 'success' && this.state.successMsg ? 
-              this.state.successMsg
-              :
-              this.state.status === 'error' && this.state.errorMsg ? 
-                this.state.errorMsg
-                :
-                this.state.message
-          }
+          {this.state.status === "success" && this.state.successMsg
+            ? this.state.successMsg
+            : this.state.status === "error" && this.state.errorMsg
+            ? this.state.errorMsg
+            : this.state.message}
         </Text>
       </View>
-    )
+    );
   }
 }
 

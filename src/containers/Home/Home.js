@@ -9,54 +9,48 @@
 */
 
 import React, { Component } from "react";
-import { ListItem, Divider } from "react-native-elements";
-import { 
-  View, 
-  Text, 
-  FlatList,
-  TouchableOpacity,
-  ScrollView,
-  RefreshControl
-} from "react-native";
 import {  
   setActiveCoin, 
   setActiveApp,
   setActiveSection,
   setActiveSectionBuySellCrypto,
   expireData,
+  setCoinSubWallet,
 } from '../../actions/actionCreators';
 import { connect } from 'react-redux';
-import { truncateDecimal } from '../../utils/math';
+import { Animated } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
-import Styles from '../../styles/index'
-import { ENABLE_VERUS_IDENTITIES, ENABLE_FIAT_GATEWAY } from '../../../env/main.json'
 import Store from '../../store/index'
 import {
   API_GET_FIATPRICE,
   API_GET_BALANCES,
   API_GET_INFO,
-  ELECTRUM,
-  DLIGHT,
   GENERAL
 } from "../../utils/constants/intervalConstants";
 import { USD } from '../../utils/constants/currencies'
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
-import { arrayToObject } from "../../utils/objectManip";
 import BigNumber from "bignumber.js";
-import { CoinLogos } from "../../utils/CoinData/CoinData";
-import { AddCoinLogo, VerusPayLogo } from "../../images/customIcons";
-
-const CONNECTION_ERROR = "Connection Error"
+import { extractLedgerData, extractErrorData } from "../../utils/ledger/extractLedgerData";
+import { HomeRender } from "./Home.render";
+import { extractDisplaySubWallets } from "../../utils/subwallet/extractSubWallets";
 
 class Home extends Component {
   constructor(props) {
     super(props)
     this.state = {
       totalFiatBalance: "0.00",
-      loading: false
+      totalCryptoBalances: {},
+      loading: false,
+      listItemHeights: {},
+
+      //TODO: MOVE TO REDUX
+      expandedListItems: {},
     };
     
     this._unsubscribeFocus = null
+    this.LIST_ITEM_INITIAL_HEIGHT = 58
+    this.LIST_ITEM_MARGINS = 8
+    this.LIST_ITEM_ANIMATION_DURATION = 250
   }
 
   componentDidMount() {
@@ -65,14 +59,66 @@ class Home extends Component {
     });
   }
 
+  animateHeightChange(anim, toValue, cb = () => {}) {    
+    Animated.timing(anim, {
+      toValue,
+      duration: this.LIST_ITEM_ANIMATION_DURATION
+    }).start(cb);
+  }
+
+  toggleListItem(id, numCards) {
+    const _toggleListItem = () => {
+      const newExpanded = !this.state.expandedListItems[id]
+      const changeExpandState = (cb = () => {}) => {
+        this.setState({
+          expandedListItems: {
+            ...this.state.expandedListItems,
+            [id]: newExpanded,
+          },
+        }, cb);
+      }
+
+      if (newExpanded) {
+        changeExpandState(
+          this.animateHeightChange(
+            this.state.listItemHeights[id],
+            newExpanded
+              ? ((this.LIST_ITEM_INITIAL_HEIGHT + (this.LIST_ITEM_MARGINS)) * (numCards + 1))
+              : this.LIST_ITEM_INITIAL_HEIGHT
+          )
+        );
+      } else {
+        this.animateHeightChange(
+          this.state.listItemHeights[id],
+          newExpanded
+            ? (this.LIST_ITEM_INITIAL_HEIGHT + this.LIST_ITEM_MARGINS) * (numCards + 1)
+            : this.LIST_ITEM_INITIAL_HEIGHT,
+          () => changeExpandState()
+        );
+      }
+    }
+
+    if (this.state.listItemHeights[id] == null) {
+      this.setState({
+        listItemHeights: {
+          ...this.state.listItemHeights,
+          [id]: new Animated.Value(this.LIST_ITEM_INITIAL_HEIGHT)
+        }
+      }, () => _toggleListItem())
+    } else _toggleListItem()
+  }
+
   componentWillUnmount() {
     this._unsubscribeFocus()
   }
 
   componentDidUpdate(lastProps) {
     if (this.props.balances !== lastProps.balances) {
+      const totalBalances = this.getTotalBalances(this.props)
+
       this.setState({
-        totalFiatBalance: this.getTotalFiatBalance(this.props)
+        totalFiatBalance: totalBalances.fiat,
+        totalCryptoBalances: totalBalances.crypto
       })
     }
   }
@@ -83,8 +129,14 @@ class Home extends Component {
         await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, coinObj.id, API_GET_FIATPRICE)
         await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, coinObj.id, API_GET_BALANCES)
         await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, coinObj.id, API_GET_INFO)
-      })).then(res => {
-        this.setState({ loading: false, totalFiatBalance: this.getTotalFiatBalance(this.props) })
+      })).then(() => {
+        const totalBalances = this.getTotalBalances(this.props)
+
+        this.setState({
+          loading: false,
+          totalFiatBalance: totalBalances.fiat,
+          totalCryptoBalances: totalBalances.crypto,
+        });
       })
       .catch(error => {
         this.setState({ loading: false })
@@ -138,7 +190,12 @@ class Home extends Component {
         })
         .then((res) => {
           if (res) {
-            this.setState({ totalFiatBalance: this.getTotalFiatBalance(this.props) })
+            const totalBalances = this.getTotalBalances(this.props)
+
+            this.setState({
+              totalFiatBalance: totalBalances.fiat,
+              totalCryptoBalances: totalBalances.crypto,
+            });
             resolve(true)
           }
           else {
@@ -148,32 +205,39 @@ class Home extends Component {
     }) 
   }
 
-  getTotalFiatBalance = (props) => {    
+  getTotalBalances = (props) => {    
     let _totalFiatBalance = BigNumber(0)
-    let coinBalance = BigNumber(0)
-    const balances = props.balances.public
-    const { rates, displayCurrency, activeCoinsForUser } = props
-    const balanceErrors = props.balances.errors.public
+    let coinBalances = {}
+    const balances = props.balances
+    const { rates, displayCurrency, activeCoinsForUser, allSubWallets } = props
 
     activeCoinsForUser.map(coinObj => {
       const key = coinObj.id
-      const channel = coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM
+      coinBalances[coinObj.id] = BigNumber("0")
 
-      if (rates[key] && rates[key][displayCurrency]) {
-        const price = BigNumber(rates[key][displayCurrency])
+      allSubWallets[coinObj.id].map(wallet => {
+        if (balances[coinObj.id] != null && balances[coinObj.id][wallet.id] != null) {
+          coinBalances[coinObj.id] = coinBalances[coinObj.id].plus(
+            balances[key] &&
+              balances[key][wallet.id] &&
+              balances[key][wallet.id].total != null
+              ? BigNumber(balances[key][wallet.id].total)
+              : BigNumber("0")
+          );
 
-        coinBalance =
-          balances[channel].hasOwnProperty(key) &&
-          !balanceErrors[channel][key] &&
-          balances[channel][key].confirmed != null
-            ? BigNumber(balances[channel][key].confirmed)
-            : BigNumber("0");
-
-        _totalFiatBalance = _totalFiatBalance.plus(coinBalance.multipliedBy(price))
-      }
+          if (rates[key] && rates[key][displayCurrency]) {
+            const price = BigNumber(rates[key][displayCurrency])
+    
+            _totalFiatBalance = _totalFiatBalance.plus(coinBalances[coinObj.id].multipliedBy(price))
+          }
+        }
+      })
     })
 
-    return _totalFiatBalance.toFixed(2)
+    return {
+      fiat: _totalFiatBalance.toFixed(2),
+      crypto: coinBalances
+    }
   }
 
   _verusPay = () => {
@@ -182,10 +246,11 @@ class Home extends Component {
     navigation.navigate("VerusPay", { refresh: this.refresh });
   }
 
-  _openCoin = (coinObj) => {
+  openCoin = (coinObj, subWallet) => {
+    if (subWallet != null) this.props.dispatch(setCoinSubWallet(coinObj.id, subWallet))
     this.props.dispatch(setActiveCoin(coinObj))
-    this.props.dispatch(setActiveApp(coinObj.defaultApp))
-    this.props.dispatch(setActiveSection(coinObj.apps[coinObj.defaultApp].data[0]))
+    this.props.dispatch(setActiveApp(coinObj.default_app))
+    this.props.dispatch(setActiveSection(coinObj.apps[coinObj.default_app].data[0]))
 
     this.resetToScreen('CoinMenus', 'Overview');
   }
@@ -193,6 +258,13 @@ class Home extends Component {
   _handleIdentity = () => {
     let navigation = this.props.navigation ; 
     navigation.navigate("Identity", { selectedScreen: "Identity" } );
+  }
+
+  calculateSyncProgress = (coinObj, subWallet) => {
+    const syncInfo = this.props.info 
+
+    if (syncInfo[coinObj.id] == null || syncInfo[coinObj.id][subWallet.id] == null) return 100
+    else return syncInfo[coinObj.id][subWallet.id].percent
   }
   
   _addCoin = () => {
@@ -211,174 +283,8 @@ class Home extends Component {
     this.props.navigation.navigate('ScanBadge');
   }
 
-  renderCoinList = () => {
-    const { rates, balances, activeCoinsForUser, displayCurrency } = this.props;
-
-    return (
-      <ScrollView
-        style={Styles.wide}
-        refreshControl={
-          <RefreshControl
-            refreshing={this.state.loading}
-            onRefresh={this.forceUpdate}
-          />
-        }
-      >
-        <TouchableOpacity onPress={this._verusPay}>
-          <ListItem
-            title={
-              <Text style={Styles.listItemLeftTitleDefault}>VerusPay</Text>
-            }
-            hideChevron
-            leftAvatar={<VerusPayLogo width={40} height={40}/>}
-            containerStyle={Styles.bottomlessListItemContainer}
-          />
-        </TouchableOpacity>
-        {ENABLE_VERUS_IDENTITIES &&
-          activeCoinsForUser.some(
-            (coin) => coin.id === "VRSC" || coin.id === "ZECTEST"
-          ) && (
-            <View>
-              <TouchableOpacity onPress={this._handleIdentity}>
-                <ListItem
-                  title={
-                    <Text style={Styles.listItemLeftTitleDefault}>
-                      Identity
-                    </Text>
-                  }
-                  hideChevron
-                  leftAvatar={{
-                    source: require("../../images/customIcons/id-card.png"),
-                  }}
-                  containerStyle={Styles.bottomlessListItemContainer}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={this.handleScanToVerify}>
-                <ListItem
-                  title={
-                    <Text style={Styles.listItemLeftTitleDefault}>
-                      Scan to verify
-                    </Text>
-                  }
-                  hideChevron
-                  leftAvatar={<VerusPayLogo width={40} height={40}/>}
-                  containerStyle={Styles.bottomlessListItemContainer}
-                />
-              </TouchableOpacity>
-            </View>
-          )}
-        <FlatList
-          data={activeCoinsForUser}
-          scrollEnabled={false}
-          renderItem={({ item, index }) => {
-            const channel = item.dominant_channel ? item.dominant_channel : ELECTRUM
-            const _balances = balances.public[channel]
-            const balanceErrors = balances.errors.public[channel]
-            const Logo = CoinLogos[item.id.toLowerCase()]
-
-            return (
-              <TouchableOpacity
-                onPress={() => {
-                  this._openCoin(activeCoinsForUser[index], item);
-                }}
-              >
-                <ListItem
-                  roundAvatar
-                  title={
-                    <Text style={Styles.listItemLeftTitleDefault}>
-                      {item.display_name}
-                    </Text>
-                  }
-                  subtitle={
-                    _balances.hasOwnProperty(item.id) ||
-                    balanceErrors[item.id]
-                      ? balanceErrors[item.id] ||
-                        _balances[item.id].confirmed == null
-                        ? CONNECTION_ERROR
-                        : truncateDecimal(
-                            _balances[item.id].confirmed,
-                            4
-                          ) +
-                          " " +
-                          item.id
-                      : null
-                  }
-                  leftAvatar={Logo ? <Logo width={40} height={40}/> : null}
-                  subtitleStyle={
-                    (_balances.hasOwnProperty(item.id) ||
-                      balanceErrors[item.id]) &&
-                    (balanceErrors[item.id] ||
-                      _balances[item.id].confirmed) == null
-                      ? Styles.listItemSubtitleError
-                      : null
-                  }
-                  containerStyle={Styles.bottomlessListItemContainer}
-                  rightTitleStyle={Styles.listItemRightTitleDefault}
-                  rightTitle={
-                    (!_balances.hasOwnProperty(item.id) ||
-                    balanceErrors[item.id] ||
-                    _balances[item.id].confirmed == null
-                      ? "-"
-                      : truncateDecimal(
-                          (rates[item.id] &&
-                          rates[item.id][displayCurrency] != null
-                            ? BigNumber(rates[item.id][displayCurrency])
-                            : BigNumber(0)).multipliedBy(BigNumber(_balances[item.id].confirmed)),
-                          2
-                        )) +
-                    " " +
-                    displayCurrency
-                  }
-                />
-              </TouchableOpacity>
-            );
-          }}
-          extraData={balances.public}
-          keyExtractor={(item) => item.id}
-        />
-        <Divider style={Styles.defaultDivider} />
-        {ENABLE_FIAT_GATEWAY && (
-          <TouchableOpacity onPress={this._buySellCrypto}>
-            <ListItem
-              title={
-                <Text style={Styles.listItemLeftTitleDefault}>
-                  Buy/Sell Crypto
-                </Text>
-              }
-              leftAvatar={{
-                source: require("../../images/customIcons/buySell.png"),
-              }}
-              containerStyle={Styles.bottomlessListItemContainer}
-              hideChevron
-            />
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity onPress={this._addCoin}>
-          <ListItem
-            title={
-              <Text style={Styles.listItemLeftTitleDefault}>Add Coin</Text>
-            }
-            leftAvatar={<AddCoinLogo width={40} height={40}/>}
-            containerStyle={{ borderBottomWidth: 0 }}
-            hideChevron
-          />
-        </TouchableOpacity>
-      </ScrollView>
-    );
-  }
-
   render() {
-    return (
-      <View style={Styles.defaultRoot}>
-        <Text style={Styles.fiatLabel}>
-          {this.state.totalFiatBalance +
-            " " +
-            this.props.displayCurrency}
-        </Text>
-        <Text style={Styles.boldListHeader}>{"Portfolio"}</Text>
-        {this.renderCoinList()}
-      </View>
-    );
+    return HomeRender.call(this);
   }
 }
 
@@ -387,26 +293,14 @@ const mapStateToProps = (state) => {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
     activeAccount: state.authentication.activeAccount,
-    balances: {
-      public: arrayToObject(
-        Object.keys(state.ledger.balances),
-        (curr, key) => state.ledger.balances[key],
-        true
-      ),
-      private: state.ledger.balances[DLIGHT],
-      errors: {
-        public: arrayToObject(
-          Object.keys(state.errors[API_GET_BALANCES]),
-          (curr, key) => state.errors[API_GET_BALANCES][key],
-          true
-        ),
-        private: state.errors[API_GET_BALANCES][DLIGHT],
-      },
-    },
-    //needsUpdate: state.ledger.needsUpdate,
+    balances: extractLedgerData(state, 'balances', API_GET_BALANCES),
+    balanceErrors: extractErrorData(state, API_GET_BALANCES),
+    info: extractLedgerData(state, 'info', API_GET_INFO),
     rates: state.ledger.rates[GENERAL],
     displayCurrency:
       state.settings.generalWalletSettings.displayCurrency || USD,
+    allSubWallets: extractDisplaySubWallets(state),
+    activeSubWallets: state.coinMenus.activeSubWallets
   };
 };
 

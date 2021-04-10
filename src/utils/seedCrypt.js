@@ -2,7 +2,7 @@ import aes256 from './crypto/aes256';
 
 // TODO: check pin strength
 
-export const encryptkey = (cipherKey, string) => {
+export const encryptkey = async (cipherKey, string) => {
   // test pin security
   // - at least 1 char in upper case
   // - at least 1 digit
@@ -10,7 +10,7 @@ export const encryptkey = (cipherKey, string) => {
   // - min length 8
 
   // const _pinTest = _pin.match('^(?=.*[A-Z])(?=.*[^<>{}\"/|;:.,~!?@#$%^=&*\\]\\\\()\\[_+]*$)(?=.*[0-9])(?=.*[a-z]).{8}$');
-  const encryptedString = aes256.encrypt(cipherKey, string);
+  const encryptedString = await aes256.encrypt(cipherKey, string);
 
   return encryptedString;
 }

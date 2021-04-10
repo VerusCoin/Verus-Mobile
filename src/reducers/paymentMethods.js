@@ -68,7 +68,6 @@ const account = (state, action) => {
 };
 
 const wyre = (state, action) => {
-  console.log(action)
   switch (action.type) {
     case CREATE_WYRE_ACCOUNT:
     case GET_WYRE_ACCOUNT:

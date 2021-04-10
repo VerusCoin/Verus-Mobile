@@ -3,6 +3,7 @@ const Colors = {
     primaryColor: '#3165d4', // verus blue //blue
     secondaryColor: '#FFFFFF', // white
     tertiaryColor: '#dee5fe', //grey white
+    verusDarkGray: '#959595',
     quaternaryColor: '#232323', // dark gray
     quinaryColor: 'black',
     successButtonColor: '#00B231', // Green

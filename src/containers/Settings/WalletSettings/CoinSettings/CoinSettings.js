@@ -10,13 +10,10 @@ import {
   View, 
   ScrollView, 
   Keyboard,
-  TouchableWithoutFeedback,
   ActivityIndicator,
-  Alert,
-  Text
 } from "react-native";
+import { List, Button, RadioButton, Divider, Paragraph } from 'react-native-paper'
 import { NavigationActions } from '@react-navigation/compat';
-import { ButtonGroup } from 'react-native-elements'
 import { saveCoinSettings } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import { 
@@ -30,6 +27,7 @@ import {
 } from '../../../../utils/constants/constants'
 import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors';
+import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 
 class CoinSettings extends Component {
   constructor(props) {
@@ -80,10 +78,10 @@ class CoinSettings extends Component {
       .then(res => {
         this.props.dispatch(res)
         this.setState({ ...this.props.coinSettings[this.coinID], loading: false })
-        Alert.alert("Success", `${this.coinID} settings saved`)
+        createAlert("Success", `${this.coinID} settings saved.`)
       })
       .catch(err => {
-        Alert.alert("Error", err.message)
+        createAlert("Error", err.message)
         console.warn(err.message)
         this.setState({ loading: false })
       })
@@ -118,57 +116,72 @@ class CoinSettings extends Component {
     const utxoVerificationBtns = ['Low', 'Mid', 'High']
 
     return (
-        <View style={Styles.defaultRoot}>
-        <ScrollView style={Styles.fullWidth}
-          contentContainerStyle={{...Styles.innerHeaderFooterContainerCentered, ...Styles.fullHeight}}>
+      <View style={Styles.defaultRoot}>
+        <ScrollView
+          style={Styles.fullWidth}
+          contentContainerStyle={{
+            ...Styles.innerHeaderFooterContainerCentered,
+          }}
+        >
+          <View style={Styles.fullWidth}>
+            <List.Subheader>{"Electrum Transaction Verification"}</List.Subheader>
+            <Divider />
+              <RadioButton.Group
+                onValueChange={
+                  this.verificationLock
+                    ? () => {}
+                    : (newValue) => this.updateIndex(newValue)
+                }
+                value={this.state.verificationLvl}
+              >
+                <RadioButton.Item
+                  color={Colors.primaryColor}
+                  label={utxoVerificationBtns[0]}
+                  value={0}
+                  mode="android"
+                />
+                <RadioButton.Item
+                  color={Colors.primaryColor}
+                  label={utxoVerificationBtns[1]}
+                  value={1}
+                  mode="android"
+                />
+                <RadioButton.Item
+                  color={Colors.primaryColor}
+                  label={utxoVerificationBtns[2]}
+                  value={2}
+                  mode="android"
+                />
+              </RadioButton.Group>
+            <Divider />
             <View style={Styles.wideCenterBlock}>
-              <Text style={Styles.centralHeader}>
-                {"Transaction Verification:"}
-              </Text>
-              <ButtonGroup
-                onPress={this.verificationLock ? null : this.updateIndex}
-                selectedIndex={this.state.verificationLvl}
-                buttons={utxoVerificationBtns}
-                selectedButtonStyle={{backgroundColor: "#7c858f"}}
-                selectedTextStyle={{color: "#f5f5f5"}}
-                containerStyle={{backgroundColor: Colors.tertiaryColor}}
-                textStyle={{fontFamily: 'Avenir-Book'}}
-              />
-              <View style={Styles.fullWidthBlock}> 
-                <Text style={Styles.smallerDescriptiveText}>
-                  { this.verificationLock ? 
-                      VERIFICATION_LOCKED
-                      :
-                      this.state.verificationLvl === NO_VERIFICATION ? 
-                        NO_VERIFICATION_DESC
-                        :
-                        this.state.verificationLvl === MID_VERIFICATION ? 
-                          MID_VERIFICATION_DESC
-                          :
-                          MAX_VERIFICATION_DESC}
-                </Text>
-              </View>
+              <Paragraph>
+                {this.verificationLock
+                  ? VERIFICATION_LOCKED
+                  : this.state.verificationLvl === NO_VERIFICATION
+                  ? NO_VERIFICATION_DESC
+                  : this.state.verificationLvl === MID_VERIFICATION
+                  ? MID_VERIFICATION_DESC
+                  : MAX_VERIFICATION_DESC}
+              </Paragraph>
             </View>
-          </ScrollView>
-          <View style={Styles.highFooterContainer}>
-            {this.state.loading ? 
-              <ActivityIndicator animating={this.state.loading} size="large"/>
-            :
-            <View style={Styles.standardWidthSpaceBetweenBlock}>
-                <StandardButton 
-                  color={Colors.warningButtonColor}
-                  title="BACK" 
-                  onPress={this.back}
-                />
-                <StandardButton 
-                  color={Colors.linkButtonColor}
-                  title="CONFIRM" 
-                  onPress={this._handleSubmit}
-                />
-              </View>
-            }
+          </View>
+        </ScrollView>
+        <View style={Styles.highFooterContainer}>
+          <View style={Styles.standardWidthSpaceBetweenBlock}>
+            <Button
+              color={Colors.warningButtonColor}
+              onPress={this.back}
+              disabled={this.state.loading}
+            >{"Back"}</Button>
+            <Button
+              color={Colors.linkButtonColor}
+              onPress={this._handleSubmit}
+              disabled={this.state.loading}
+            >{"Confirm"}</Button>
           </View>
         </View>
+      </View>
     );
   }
 }

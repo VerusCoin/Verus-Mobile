@@ -10,8 +10,8 @@ import {
 } from '../../../tests/helpers/MockAuthData'
 
 describe("Main wallet encryptor/decryptor", () => {
-  it('can encrypt and then decrypt modern key', () => {
-    let key = encryptkey(MOCK_PIN, MOCK_SEED)
+  it('can encrypt and then decrypt modern key', async () => {
+    let key = await encryptkey(MOCK_PIN, MOCK_SEED)
     expect(key).toBeDefined()
 
     key = decryptkey(MOCK_PIN, key)
@@ -19,8 +19,8 @@ describe("Main wallet encryptor/decryptor", () => {
     expect(key).toBe(MOCK_SEED)
   })
 
-  it('fails to decrypt modern key with incorrect password', () => {
-    let key = encryptkey(MOCK_PIN, MOCK_SEED)
+  it('fails to decrypt modern key with incorrect password', async () => {
+    let key = await encryptkey(MOCK_PIN, MOCK_SEED)
     expect(key).toBeDefined()
 
     key = decryptkey("bad_pin", key)

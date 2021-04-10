@@ -5,32 +5,26 @@
 
 import React, { Component } from "react"
 import {
-  Modal,
   Text,
   ScrollView,
   View,
+  TextInput as NativeTextInput,
+  Alert
 } from "react-native"
-import { Input } from 'react-native-elements'
 import Styles from '../../../styles/index'
-import StandardButton from "../../StandardButton";
-import { getKey } from "../../../utils/keyGenerator/keyGenerator";
+import { Button, TextInput } from 'react-native-paper'
 import Colors from '../../../globals/colors'
-
-const DEFAULT_SEED_PHRASE_LENGTH = 12
+import { DEFAULT_SEED_PHRASE_LENGTH } from "../../../utils/constants/constants"
+import { DLIGHT_PRIVATE } from "../../../utils/constants/intervalConstants"
 
 class CreateSeed extends Component {
   constructor(props) {
     super(props);
-    const newSeed = getKey(DEFAULT_SEED_PHRASE_LENGTH);
+    this.state = props.initState
+  }
 
-    this.state = {
-      newSeed,
-      newSeedWords: newSeed.split(" "),
-      formStep: 0,
-      randomIndices: [0, 0, 0],
-      wordGuesses: [null, null, null],
-      guessErrors: [false, false, false]
-    };
+  componentDidUpdate(lastProps, lastState) {
+    if (lastState !== this.state) this.props.saveState(this.state)
   }
 
   cancel = () => {
@@ -79,6 +73,8 @@ class CreateSeed extends Component {
         }
       })
 
+      if (errors) Alert.alert("Incorrect", "One or more words do not match.")
+
       this.setState({ guessErrors })
 
       if (!errors) {
@@ -103,7 +99,7 @@ class CreateSeed extends Component {
         contentContainerStyle={Styles.centerContainer}
       >
         <View style={Styles.headerContainer}>
-          <Text style={Styles.centralHeader}>Create New Seed</Text>
+          <Text style={Styles.centralHeader}>{"Seed Setup"}</Text>
         </View>
         {formStep === 0 && (
           <View style={Styles.standardWidthFlexGrowCenterBlock}>
@@ -133,7 +129,9 @@ class CreateSeed extends Component {
                 style={{ ...Styles.linkText, textAlign: "center" }}
                 onPress={this.props.importSeed}
               >
-                {"import an existing seed/wallet."}
+                {this.props.channel === DLIGHT_PRIVATE
+                  ? "import an existing seed phrase/spending key."
+                  : "import an existing seed/wallet."}
               </Text>
             </View>
           </View>
@@ -143,7 +141,9 @@ class CreateSeed extends Component {
             <Text style={Styles.centralInfoTextPadded}>
               {`Word #${formStep}:`}
             </Text>
-            <Text style={Styles.seedWord}>{newSeedWords[formStep - 1]}</Text>
+            <Text style={Styles.seedWord}>
+              {newSeedWords[formStep - 1]}
+            </Text>
             <Text style={Styles.centralLightTextPadded}>
               {"When you've written it down, press next."}
             </Text>
@@ -153,48 +153,55 @@ class CreateSeed extends Component {
           <View style={Styles.standardWidthFlexGrowCenterBlock}>
             {randomIndices.map((randomI, index) => {
               return (
-                <Input
+                <View
                   key={index}
-                  labelStyle={Styles.formCenterLabel}
-                  containerStyle={Styles.fullWidthBlock}
-                  label={`Enter word #${randomI + 1}:`}
-                  onChangeText={text => {
-                    let newGuesses = [...wordGuesses];
+                  style={Styles.fullWidthAlignCenterRowBlock}
+                >
+                  <TextInput
+                    dense
+                    style={Styles.flex}
+                    onChangeText={(text) => {
+                      let newGuesses = [...wordGuesses];
 
-                    newGuesses[index] = text;
-                    this.setState({ wordGuesses: newGuesses });
-                  }}
-                  autoCapitalize={"none"}
-                  autoCorrect={false}
-                  errorMessage={
-                    guessErrors[index] ? "This word is incorrect." : null
-                  }
-                  errorStyle={Styles.formCenterError}
-                  inputStyle={Styles.formCenterBlueInput}
-                />
+                      newGuesses[index] = text;
+                      this.setState({ wordGuesses: newGuesses });
+                    }}
+                    label={`Enter word #${randomI + 1}:`}
+                    underlineColor={Colors.primaryColor}
+                    selectionColor={Colors.primaryColor}
+                    render={(props) => (
+                      <NativeTextInput
+                        autoCapitalize={"none"}
+                        autoCorrect={false}
+                        autoComplete="false"
+                        {...props}
+                      />
+                    )}
+                    error={guessErrors[index]}
+                  />
+                </View>
               );
             })}
           </View>
         )}
         <View style={Styles.footerContainer}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <StandardButton
-              title={formStep === 0 ? "CANCEL" : "BACK"}
+            <Button
               onPress={formStep === 0 ? this.cancel : this.goBack}
               color={Colors.warningButtonColor}
-            />
-            <StandardButton
-              title={
-                formStep > DEFAULT_SEED_PHRASE_LENGTH
-                  ? "DONE"
-                  : "NEXT"
-              }
+            >
+              {formStep === 0 ? "Cancel" : "Back"}
+            </Button>
+            <Button
+              color={Colors.primaryColor}
               onPress={
                 formStep > DEFAULT_SEED_PHRASE_LENGTH
                   ? this.verifySeed
                   : this.next
               }
-            />
+            >
+              {formStep > DEFAULT_SEED_PHRASE_LENGTH ? "Done" : "Next"}
+            </Button>
           </View>
         </View>
       </ScrollView>

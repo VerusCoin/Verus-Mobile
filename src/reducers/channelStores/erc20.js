@@ -5,7 +5,7 @@
 import {
   INIT_ERC20_CHANNEL_FINISH,
   CLOSE_ERC20_CHANNEL,
-  SIGN_OUT,
+  SIGN_OUT_COMPLETE,
   ADD_WEB3_CONTRACT,
   REMOVE_WEB3_CONTRACT,
   CLEAR_WEB3_CONTRACTS
@@ -53,7 +53,7 @@ export const channelStore_erc20 = (state = {
           [action.payload.chainTicker]: false
         },
       }
-    case SIGN_OUT:
+    case SIGN_OUT_COMPLETE:
       return {
         openChannels: {}
       }

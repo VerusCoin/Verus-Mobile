@@ -7,7 +7,7 @@ export const getMerkleHashes = (coinObj, txid, height, toSkip) => {
   const coinID = coinObj.id
 
   return new Promise((resolve, reject) => {
-    electrumRequest(coinObj.serverList, callType, params, coinID, toSkip)
+    electrumRequest(coinObj.electrum_endpoints, callType, params, coinID, toSkip)
     .then((response) => {
       resolve(response)
     })

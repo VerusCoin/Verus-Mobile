@@ -1,6 +1,7 @@
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
 import { ETHERS } from "../constants/web3Constants";
+import { decodeMemo } from "../memoUtils";
 const { formatEther, formatUnits } = ethers.utils
 
 // Makes transaction objects from lightwalletd client resemble those from electrum,
@@ -9,14 +10,15 @@ export const standardizeDlightTxObj = (txObj) => {
   const { address, amount, category, height, status, time, txid, memo } = txObj
   return {
     address,
-    amount: typeof amount !== 'string' ? amount.toString() : amount,
+    amount: typeof amount !== "string" ? amount.toString() : amount,
     type: category,
+    confirmed: status === "pending" || height < 0 ? false : true,
     height,
     status,
     timestamp: time,
     txid,
-    memo
-  }
+    memo: decodeMemo(memo),
+  };
 }
 
 export const standardizeEthTxObj = (transactions, address, decimals = ETHERS) => {
@@ -75,7 +77,11 @@ export const standardizeEthTxObj = (transactions, address, decimals = ETHERS) =>
             : null,
         input: transactions[i].input,
         contractAddress: transactions[i].contractAddress,
-        confirmations: transactions[i].confirmations,
+        confirmed:
+          transactions[i].confirmations != null &&
+          transactions[i].confirmations > 0
+            ? true
+            : false,
       };
       
       _txs.push(_txObj);

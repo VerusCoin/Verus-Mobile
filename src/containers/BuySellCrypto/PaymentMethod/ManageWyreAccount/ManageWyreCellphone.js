@@ -75,7 +75,6 @@ class ManageWyreCellphone extends Component {
   };
 
   render() {
-    console.log(this.props)
     return (
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View>

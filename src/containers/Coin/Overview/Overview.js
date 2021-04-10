@@ -7,13 +7,11 @@
 import React, { Component } from "react";
 import {
   View,
-  Text,
   FlatList,
   TouchableOpacity
 } from "react-native";
-import { ListItem } from "react-native-elements";
 import { connect } from 'react-redux';
-import { truncateDecimal, MathableNumber } from '../../../utils/math';
+import { MathableNumber } from '../../../utils/math';
 import { expireData, setActiveOverviewFilter } from '../../../actions/actionCreators';
 import Styles from '../../../styles/index'
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
@@ -27,11 +25,12 @@ import {
   ETH
 } from "../../../utils/constants/intervalConstants";
 import { selectTransactions } from '../../../selectors/transactions';
-import { ETHERS } from "../../../utils/constants/web3Constants";
+import { DEFAULT_DECIMALS, ETHERS } from "../../../utils/constants/web3Constants";
 import { ethers } from "ethers";
-import { Portal } from "react-native-paper";
+import { Portal, List, Text, Badge } from "react-native-paper";
 import BigNumber from "bignumber.js";
 import { TransactionLogos } from '../../../images/customIcons/index'
+import Colors from "../../../globals/colors";
 
 const TX_LOGOS = {
   self: TransactionLogos.SelfArrow,
@@ -123,7 +122,10 @@ class Overview extends Component {
   };
 
   renderTransactionItem = ({ item, index }) => {
-    const decimals = this.props.activeCoin.decimals != null ? this.props.activeCoin.decimals : ETHERS
+    const decimals =
+      this.props.activeCoin.decimals != null
+        ? this.props.activeCoin.decimals
+        : DEFAULT_DECIMALS;
     let amount = new MathableNumber(0, decimals);
     let AvatarImg;
     let subtitle = "";
@@ -132,18 +134,15 @@ class Overview extends Component {
     if (Array.isArray(item)) {
       const txArray = item
       let toAddresses = [];
-      const confirmations = txArray[0].confirmations
+      const confirmed = txArray[0].confirmed
       
-      amount = new MathableNumber(ethers.utils.formatUnits(
-        ethers.utils
-          .parseUnits(txArray[0].amount, decimals)
-          .sub(ethers.utils.parseUnits(txArray[1].amount, decimals))
-      ),
-      decimals)
+      amount = new MathableNumber(txArray[0].amount, decimals)
+      amount.num = amount.num.sub(new MathableNumber(txArray[1].amount, decimals).num)
 
       if (txArray[1].interest) {
         let interest = txArray[1].interest * -1;
-        amount = amount.num.add(new MathableNumber(interest, decimals).num)
+
+        amount.num = amount.num.add(new MathableNumber(interest, decimals).num)
       }
 
       for (let i = 0; i < txArray[0].to.length; i++) {
@@ -158,12 +157,12 @@ class Overview extends Component {
         subtitle = toAddresses[0];
       }
 
-      AvatarImg = confirmations === 0 || txArray[0].status === "pending" ? TX_LOGOS.pending : TX_LOGOS.out;
+      AvatarImg = !confirmed || txArray[0].status === "pending" ? TX_LOGOS.pending : TX_LOGOS.out;
 
       item = {
         address: toAddresses.join(' & '),
         amount,
-        confirmations,
+        confirmed,
         fee: txArray[0].fee,
         from: txArray[0].from,
         timestamp: txArray[0].timestamp,
@@ -195,7 +194,7 @@ class Overview extends Component {
       }
     }
 
-    if (item.confirmations === 0 || item.status === "pending")
+    if (!item.confirmed || item.status === "pending")
       AvatarImg = TX_LOGOS.pending;
 
     subtitle = "to: " + subtitle;
@@ -224,45 +223,48 @@ class Overview extends Component {
         onPress={() =>
           this.setState({
             txDetailProps: {
-              parsedAmount: amount,
+              displayAmount: displayAmount,
               txData: item,
               activeCoinID: this.props.activeCoin.id,
               TxLogo: AvatarImg,
-              decimals:
-                this.props.activeCoin.decimals != null
-                  ? this.props.activeCoin.decimals
-                  : 8,
+              decimals: decimals,
             },
             txDetailsModalOpen: true,
           })
         }
       >
-        <ListItem
-          roundAvatar
-          title={
-            <Text style={Styles.listItemLeftTitleDefault}>
-              {`${
-                displayAmount != null
-                  ? displayAmount.isLessThan(BigNumber(0.0001)) &&
-                    !displayAmount.isEqualTo(BigNumber(0))
-                    ? displayAmount.toExponential()
-                    : displayAmount.toString()
-                  : "??"
-              } ${
-                item.feeCurr != null && item.type === "self"
-                  ? item.feeCurr
-                  : this.props.activeCoin.id
-              }`}
-            </Text>
-          }
-          subtitle={subtitle}
-          subtitleProps={{ numberOfLines: 1 }}
-          leftAvatar={<AvatarImg width={40} height={40} />}
-          chevron
-          containerStyle={Styles.bottomlessListItemContainer}
-          rightTitle={
-            <Text style={Styles.listItemRightTitleDefault}>{"info"}</Text>
-          }
+        <List.Item
+          title={`${
+            displayAmount != null
+              ? displayAmount.isLessThan(BigNumber(0.0001)) &&
+                !displayAmount.isEqualTo(BigNumber(0))
+                ? displayAmount.toExponential()
+                : displayAmount.toString()
+              : "??"
+          } ${
+            item.feeCurr != null && item.type === "self"
+              ? item.feeCurr
+              : this.props.activeCoin.id
+          }`}
+          description={subtitle}
+          descriptionNumberOfLines={1}
+          left={() => (
+            <AvatarImg
+              width={24}
+              height={24}
+              style={{
+                alignSelf: "center",
+                marginLeft: 16,
+                marginRight: 16,
+              }}
+            />
+          )}
+          right={(props) => (
+            <React.Fragment>
+              {item.memo != null && <List.Icon {...props} icon={"email"} size={20} />}
+              <List.Icon {...props} icon={"chevron-right"} size={20} />
+            </React.Fragment>
+          )}
         />
       </TouchableOpacity>
     );
@@ -294,8 +296,18 @@ class Overview extends Component {
     return (
       <FlatList
         style={Styles.fullWidth}
+        contentContainerStyle={{ flexGrow: 1 }}
         data={this.parseTransactionLists()}
         scrollEnabled={true}
+        ListEmptyComponent={
+          <View
+            style={Styles.focalCenter}
+          >
+            <Text style={{...Styles.centeredText, fontSize: 16, color: Colors.verusDarkGray}}>
+              {"No transactions found..."}
+            </Text>
+          </View>
+        }
         keyExtractor={(item, index) => index}
         refreshing={this.state.loading}
         onRefresh={this.forceUpdate}

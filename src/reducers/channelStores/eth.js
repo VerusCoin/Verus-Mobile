@@ -5,7 +5,7 @@
 import {
   INIT_ETH_CHANNEL_FINISH,
   CLOSE_ETH_CHANNEL,
-  SIGN_OUT
+  SIGN_OUT_COMPLETE
 } from '../../utils/constants/storeType'
 
 export const channelStore_eth = (state = {
@@ -28,7 +28,7 @@ export const channelStore_eth = (state = {
           [action.payload.chainTicker]: false
         },
       }
-    case SIGN_OUT:
+    case SIGN_OUT_COMPLETE:
       return {
         openChannels: {}
       }

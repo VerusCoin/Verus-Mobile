@@ -5,25 +5,25 @@
 */
 
 import React, { Component } from "react";
-import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
   ScrollView, 
   Keyboard,
-  TouchableWithoutFeedback,
   ActivityIndicator,
-  Alert
+  TouchableOpacity
 } from "react-native";
 import { NavigationActions } from '@react-navigation/compat';
-import { FormLabel, Input, FormValidationMessage } from 'react-native-elements'
 import { saveGeneralSettings } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors'
 import { CURRENCY_NAMES, SUPPORTED_CURRENCIES, USD } from '../../../../utils/constants/currencies'
-import { Dropdown } from "react-native-material-dropdown";
+import NumberPadModal from "../../../../components/NumberPadModal/NumberPadModal";
+import { Divider, List, Portal, Text, Button, Checkbox } from "react-native-paper";
+import ListSelectionModal from "../../../../components/ListSelectionModal/ListSelectionModal";
+import { createAlert, resolveAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 
-const NO_DEFAULT = ""
+const NO_DEFAULT = "None"
 
 class WalletSettings extends Component {
   constructor(props) {
@@ -36,6 +36,10 @@ class WalletSettings extends Component {
         generalWalletSettings.maxTxCount != null
           ? generalWalletSettings.maxTxCount
           : "10",
+      verusIdShortcutsEnabled:
+        generalWalletSettings.verusIdShortcutsEnabled != null
+          ? generalWalletSettings.verusIdShortcutsEnabled
+          : false,
       displayCurrency:
         generalWalletSettings.displayCurrency != null
           ? generalWalletSettings.displayCurrency
@@ -43,7 +47,46 @@ class WalletSettings extends Component {
       defaultAccount: generalWalletSettings.defaultAccount,
       errors: { maxTxCount: false, displayCurrency: false },
       loading: false,
+      currentNumberInputModal: null,
+      displayCurrencyModalOpen: false,
+      defaultProfileModalOpen: false,
     };
+  }
+
+  openNumberInputModal(inputKey) {
+    this.setState({
+      currentNumberInputModal: inputKey
+    })
+  }
+
+  closeNumberInputModal() {
+    this.setState({
+      currentNumberInputModal: null
+    })
+  }
+
+  openDisplayCurrencyModal() {
+    this.setState({
+      displayCurrencyModalOpen: true
+    })
+  }
+
+  closeDisplayCurrencyModal() {
+    this.setState({
+      displayCurrencyModalOpen: false
+    })
+  }
+
+  openDefaultProfileModal() {
+    this.setState({
+      defaultProfileModalOpen: true
+    })
+  }
+
+  closeDefaultProfileModal() {
+    this.setState({
+      defaultProfileModalOpen: false
+    })
   }
 
   _handleSubmit = () => {
@@ -56,6 +99,7 @@ class WalletSettings extends Component {
       const stateToSave = {
         maxTxCount: Number(this.state.maxTxCount),
         displayCurrency: this.state.displayCurrency,
+        verusIdShortcutsEnabled: this.state.verusIdShortcutsEnabled,
         defaultAccount:
           this.state.defaultAccount === NO_DEFAULT
             ? null
@@ -65,11 +109,11 @@ class WalletSettings extends Component {
       saveGeneralSettings(stateToSave)
       .then(res => {
         this.props.dispatch(res)
+        createAlert("Success", "General wallet settings saved.")
         this.setState({...this.props.generalWalletSettings, loading: false})
-        Alert.alert("Success", "Settings saved")
       })
       .catch(err => {
-        Alert.alert("Error", err.message)
+        createAlert("Error", err.message)
         console.warn(err.message)
         this.setState({ loading: false })
       })
@@ -85,6 +129,32 @@ class WalletSettings extends Component {
 
   back = () => {
     this.props.navigation.dispatch(NavigationActions.back())
+  }
+
+  toggleVerusIdShortcuts() {
+    if (this.state.verusIdShortcutsEnabled) {
+      this.setState({
+        verusIdShortcutsEnabled: false
+      })
+    } else {
+      createAlert(
+        "Enable VerusID Shortcuts?",
+        "VerusID Shortcuts is an experimental feature and does not actually send to the destination ID itself, meaning it will show up on the controlling or private address of the ID, not the ID." +
+        "\n\nRevoking or transferring the ID will not affect the funds once sent." +
+          "\n\nAt the moment, VerusIDs, and the addresses connected to them, are retrieved by Verus Mobile through trusted centralized servers." +
+          "\n\nEnsure you are aware of the implications of using centralized systems before enabling VerusID shortcuts.",
+        [
+          { text: "Cancel", onPress: () => resolveAlert(false) },
+          { text: "Continue", onPress: () => resolveAlert(true) },
+        ]
+      ).then((res) => {
+        if (res) {
+          this.setState({
+            verusIdShortcutsEnabled: true,
+          });
+        }
+      });
+    }
   }
 
   validateFormData = () => {
@@ -115,101 +185,171 @@ class WalletSettings extends Component {
   }
 
   render() {
+    const { currentNumberInputModal, displayCurrencyModalOpen, defaultProfileModalOpen } = this.state
+    const defaultAccount = this.state.defaultAccount == null ? null : this.props.accounts.find(
+      (item) => item.accountHash === this.state.defaultAccount
+    )
+    const defaultAccountName = defaultAccount == null ? null : defaultAccount.id
+
     return (
       <View style={Styles.defaultRoot}>
-        <ScrollView
-          style={Styles.fullWidth}
-          contentContainerStyle={{
-            ...Styles.innerHeaderFooterContainerCentered,
-            ...Styles.fullHeight,
-          }}
-        >
-          <Input
-            label="Maximum Electrum Transaction Count:"
-            labelStyle={Styles.mediumFormInputLabel}
-            containerStyle={Styles.wideCenterBlock}
-            inputStyle={Styles.inputTextDefaultStyle}
-            onChangeText={(text) => this.setState({ maxTxCount: text })}
-            value={this.state.maxTxCount.toString()}
-            shake={this.state.errors.maxTxCount}
-            keyboardType={"number-pad"}
-            errorMessage={
-              this.state.errors.maxTxCount
-                ? this.state.errors.maxTxCount
-                : null
-            }
-          />
-          <Dropdown
-            containerStyle={{
-              ...Styles.wideCenterBlock,
-              paddingHorizontal: 9,
-            }}
-            labelExtractor={(item) => `${item} - ${CURRENCY_NAMES[item]}`}
-            valueExtractor={(item) => item}
-            data={SUPPORTED_CURRENCIES}
-            onChangeText={(value) =>
-              this.setState({ displayCurrency: value })
-            }
-            value={this.state.displayCurrency}
-            textColor={Colors.quinaryColor}
-            selectedItemColor={Colors.quinaryColor}
-            baseColor={Colors.quinaryColor}
-            label="Fiat display currency:"
-            labelTextStyle={Styles.mediumFormInputLabel}
-            labelFontSize={16}
-            pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
-            itemTextStyle={Styles.defaultText}
-          />
-          <Dropdown
-            containerStyle={{
-              ...Styles.wideCenterBlock,
-              paddingHorizontal: 9,
-            }}
-            labelExtractor={(item) =>
-              item == NO_DEFAULT
-                ? "None"
-                : `${item.id}${
-                    item.id === this.props.activeAccount.id
-                      ? " (logged in)"
-                      : ""
-                  }`
-            }
-            valueExtractor={(item) =>
-              item == '' ? '' : item.accountHash
-            }
-            data={[NO_DEFAULT, ...this.props.accounts]}
-            onChangeText={(value) =>
-              this.setState({ defaultAccount: value })
-            }
-            value={this.state.defaultAccount || NO_DEFAULT}
-            textColor={Colors.quinaryColor}
-            selectedItemColor={Colors.quinaryColor}
-            baseColor={Colors.quinaryColor}
-            label="Default profile:"
-            labelTextStyle={Styles.mediumFormInputLabel}
-            labelFontSize={16}
-            pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
-            itemTextStyle={Styles.defaultText}
-          />
+        <Portal>
+          {currentNumberInputModal != null && (
+            <NumberPadModal
+              value={Number(this.state[currentNumberInputModal])}
+              visible={currentNumberInputModal != null}
+              onChange={(number) =>
+                this.setState({
+                  [currentNumberInputModal]: number.toString(),
+                })
+              }
+              cancel={() => this.closeNumberInputModal()}
+              decimals={0}
+            />
+          )}
+          {displayCurrencyModalOpen && (
+            <ListSelectionModal
+              title="Currencies"
+              selectedKey={this.state.displayCurrency}
+              visible={displayCurrencyModalOpen}
+              onSelect={(item) =>
+                this.setState({
+                  displayCurrency: item.key,
+                })
+              }
+              data={SUPPORTED_CURRENCIES.map((key) => {
+                return {
+                  key,
+                  title: key,
+                  description: CURRENCY_NAMES[key],
+                };
+              })}
+              cancel={() => this.closeDisplayCurrencyModal()}
+            />
+          )}
+          {defaultProfileModalOpen && (
+            <ListSelectionModal
+              title="Profiles"
+              selectedKey={this.state.defaultAccount}
+              visible={defaultProfileModalOpen}
+              onSelect={(item) =>
+                this.setState({
+                  defaultAccount: item.key,
+                })
+              }
+              data={[
+                {
+                  key: NO_DEFAULT,
+                  title: "None",
+                  description: "Manually select profile on app start",
+                },
+                ...this.props.accounts.map((item) => {
+                  return {
+                    key: item.accountHash,
+                    title: item.id,
+                    description:
+                      item.id === this.props.activeAccount.id
+                        ? "Currently logged in"
+                        : null,
+                  };
+                }),
+              ]}
+              cancel={() => this.closeDefaultProfileModal()}
+            />
+          )}
+        </Portal>
+        <ScrollView style={Styles.fullWidth}>
+          <List.Subheader>{"Display Settings"}</List.Subheader>
+          <TouchableOpacity
+            onPress={() => this.openNumberInputModal("maxTxCount")}
+            style={{ ...Styles.flex }}
+          >
+            <Divider />
+            <List.Item
+              title={"Max. Display TXs"}
+              description="Max. displayed Electrum transactions"
+              right={() => (
+                <Text style={Styles.listItemTableCell}>
+                  {this.state.maxTxCount}
+                </Text>
+              )}
+            />
+            <Divider />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => this.openDisplayCurrencyModal()}
+            style={{ ...Styles.flex }}
+          >
+            <Divider />
+            <List.Item
+              title={"Universal Display Currency"}
+              description="The currency used to display value"
+              right={() => (
+                <Text style={Styles.listItemTableCell}>
+                  {this.state.displayCurrency}
+                </Text>
+              )}
+            />
+            <Divider />
+          </TouchableOpacity>
+          <List.Subheader>{"VerusID Settings"}</List.Subheader>
+          <TouchableOpacity
+            style={{ ...Styles.flex }}
+          >
+            <Divider />
+            <Checkbox.Item
+              color={Colors.primaryColor}
+              label={"Enable VerusID Shortcuts"}
+              status={
+                this.state.verusIdShortcutsEnabled
+                  ? "checked"
+                  : "unchecked"
+              }
+              onPress={() => this.toggleVerusIdShortcuts()}
+              mode="android"
+            />
+            <Divider />
+          </TouchableOpacity>
+          <List.Subheader>{"Start Settings"}</List.Subheader>
+          <TouchableOpacity
+            onPress={() => this.openDefaultProfileModal()}
+            style={{ ...Styles.flex }}
+          >
+            <Divider />
+            <List.Item
+              title={"Default Profile"}
+              description="Automatically selected profile on app start"
+              right={() => (
+                <Text style={Styles.listItemTableCell}>
+                  {defaultAccountName == null
+                    ? NO_DEFAULT
+                    : defaultAccountName}
+                </Text>
+              )}
+            />
+            <Divider />
+          </TouchableOpacity>
         </ScrollView>
         <View style={Styles.highFooterContainer}>
           {this.state.loading ? (
             <ActivityIndicator
               animating={this.state.loading}
+              style={{
+                paddingTop: 32
+              }}
               size="large"
             />
           ) : (
             <View style={Styles.standardWidthSpaceBetweenBlock}>
-              <StandardButton
-                color={Colors.warningButtonColor}
-                title="BACK"
-                onPress={this.back}
-              />
-              <StandardButton
-                color={Colors.linkButtonColor}
-                title="CONFIRM"
+              <Button color={Colors.warningButtonColor} onPress={this.back}>
+                {"Back"}
+              </Button>
+              <Button
+                color={Colors.primaryColor}
                 onPress={this._handleSubmit}
-              />
+              >
+                {"Confirm"}
+              </Button>
             </View>
           )}
         </View>

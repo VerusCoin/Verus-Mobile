@@ -13,6 +13,7 @@ export default class PasswordInput extends Component {
           onChangeText={this.props.onChangeText}
           autoCapitalize={"none"}
           autoCorrect={false}
+          autoComplete="false"
           secureTextEntry={true}
           containerStyle={Styles.passwordInputContainer}
           errorMessage={this.props.errorMessage}

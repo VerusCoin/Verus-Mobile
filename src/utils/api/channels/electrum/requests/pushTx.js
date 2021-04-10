@@ -1,34 +1,36 @@
 import { postElectrum } from '../callCreators'
 import { getUnspentFormatted } from './getUnspent';
-import { maxSpendBalance, satsToCoins, coinsToSats } from '../../../../math'
+import { maxSpendBalance, satsToCoins, coinsToSats, truncateDecimal } from '../../../../math'
 import coinSelect from 'coinselect';
 import { buildSignedTx } from '../../../../crypto/buildTx'
-import { TxDecoder } from '../../../../crypto/txDecoder'
 import { ELECTRUM } from '../../../../constants/intervalConstants';
 import BigNumber from 'bignumber.js';
 
 export const pushTx = (coinObj, _rawtx) => {
   const callType = 'pushtx'
-  let serverList = coinObj.serverList
+  let serverList = coinObj.electrum_endpoints
   let data = { rawtx: _rawtx }
 
   return new Promise((resolve, reject) => {
     postElectrum(serverList, callType, data)
     .then((response) => {
-      if(!response || !response.result) {
+      if (
+        !response ||
+        !response.result ||
+        typeof response.result !== "string"
+      ) {
         resolve({
           err: true,
-          result: response
-        })
-      }
-      else {
+          result: response,
+        });
+      } else {
         resolve({
           err: false,
           result: {
             txid: response.result,
-            params: {}
+            params: {},
           },
-        })
+        });
       }
     })
   });
@@ -36,7 +38,7 @@ export const pushTx = (coinObj, _rawtx) => {
 
 export const txPreflight = (coinObj, activeUser, outputAddress, value, params) => {
   let { defaultFee, network, verifyMerkle, verifyTxid } = params
-  value = coinsToSats(value)
+  value = BigNumber(truncateDecimal(coinsToSats(value), coinObj.decimals))
 
   return new Promise((resolve, reject) => {
     getUnspentFormatted(coinObj, activeUser, verifyMerkle, verifyTxid)
@@ -86,9 +88,6 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
         );
       }
 
-      console.log('Utxo list ==>') 
-      console.log(utxoList)
-
       for (let i = 0; i < utxoList.length; i++) {
         if (network.coin === 'komodo' ||
             network.coin === 'kmd') {
@@ -124,7 +123,6 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
         //if transaction value is more than what is spendable with fee included, subtract fee from amount
         //else, add fee to amount to take fee from wallet  
         if (value.isGreaterThan((_maxSpendBalance.minus(defaultFee)))) {
-          console.log('subtracting default fee from amount...')
           amountSubmitted = value
           value = _maxSpendBalance.minus(defaultFee)
           targets[0].value = _maxSpendBalance
@@ -135,10 +133,6 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
         }
       }
 
-      console.log('transaction targets =>');
-      console.log(targets);
-      console.log('searching for utxos...')
-
       targets[0].value = targets[0].value.toNumber()
       
       let {
@@ -147,23 +141,16 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
         fee
       } = coinSelect(utxoListFormatted, targets, feePerByte);
 
-      console.log('calculated transaction fee: ' + (fee ? fee : defaultFee))
-
       if (!outputs) {
-        console.log('tx fee is too great to deduct from wallet, subtracting from tx amount instead')
-        console.log('readjusting transaction amount...')
         amountSubmitted = value
         value = value.minus(BigNumber(fee))
         targets[0].value = value.toNumber()
-        console.log('readjusted transaction amount: ' + targets[0].value)
         feeTakenFromAmount = true
         
         let secondRun = coinSelect(utxoListFormatted, targets, feePerByte);
         inputs = secondRun.inputs
         outputs = secondRun.outputs
         fee = secondRun.fee
-
-        console.log('readjusted transaction fee: ' + fee)
       }
 
       if (!outputs) {
@@ -174,14 +161,7 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
         );
       }
 
-      console.log('transaction calculated inputs =>')
-      console.log(inputs)
-      console.log('transaction calculated outputs =>')
-      console.log(outputs)
-
       if (!fee) {
-        console.log('no coinselect calculated fee entered, adjusting outputs for default fee =>')
-        console.log(outputs)
         outputs[0].value = BigNumber(outputs[0].value).minus(defaultFee).toNumber();
       }
 
@@ -266,9 +246,6 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
 
           const _estimatedFee = vinSum - outputs[0].value - _change;
 
-          console.log(`vin sum ${vinSum} (${vinSum * 0.00000001})`);
-          console.log(`estimatedFee ${_estimatedFee} (${_estimatedFee * 0.00000001})`);
-
           let _rawtx;
 
           _rawtx = buildSignedTx(
@@ -278,7 +255,8 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
             network,
             inputs,
             _change,
-            value.toNumber()
+            value.toNumber(),
+            coinObj.max_fee_rate_per_byte
           );
 
           const successObj = {
@@ -327,27 +305,22 @@ export const txPreflight = (coinObj, activeUser, outputAddress, value, params) =
 export const sendRawTx = (coinObj, activeUser, outputAddress, value, params) => {
   const { defaultFee, network, verifyMerkle, verifyTxid } = params
 
-  console.log("Value to send raw tx: " + value)
   return new Promise((resolve, reject) => {
     txPreflight(coinObj, activeUser, outputAddress, value, { defaultFee, network, verifyMerkle, verifyTxid })
     .then((resObj) => {
       if (resObj.err) {
-        console.log(resObj)
         throw (resObj)
       } else {
         return pushTx(coinObj, resObj.result.params.rawtx)
       }
     })
     .then((resObj) => {
-      if (resObj.result.code) {
-        console.log(resObj)
+      if (resObj.err || resObj.result.code) {
         throw ({
           err: true,
           result: resObj.result.result.message
         })
       } else {
-        console.log("Transaction sent succesfully")
-        console.log(resObj)
         resolve(resObj)
       }
     })

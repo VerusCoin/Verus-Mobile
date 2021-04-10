@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 import {
-  View, Text, Modal,
+  View, Text,
 } from 'react-native';
+import Modal from '../../../../components/Modal'
 import QRCode from 'react-native-qrcode-svg';
 import { Button } from 'react-native-elements';
 import Colors from '../../../../globals/colors';

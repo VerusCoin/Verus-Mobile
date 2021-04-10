@@ -7,7 +7,7 @@ import {
 import VerusLightClient from 'react-native-verus-light-client'
 
 import { MOCK_STATE } from '../../../../tests/helpers/MockAppState'
-import { ELECTRUM, DLIGHT } from '../../../constants/intervalConstants'
+import { ELECTRUM, DLIGHT_PRIVATE } from '../../../constants/intervalConstants'
 import ApiException from '../../../api/errors/apiError'
 
 describe('Composite info updater for BTC based chains', () => {
@@ -16,7 +16,7 @@ describe('Composite info updater for BTC based chains', () => {
 
     return updateInfo(MOCK_STATE, (action) => {
       resultActions.push(action)
-    }, [DLIGHT, ELECTRUM], 'VRSC')
+    }, [DLIGHT_PRIVATE, ELECTRUM], 'VRSC')
     .then(() => {
       expect(resultActions.length).toBe(1)
       const error = resultActions[0]
@@ -49,7 +49,7 @@ describe('Composite info updater for BTC based chains', () => {
 
       return updateInfo(MOCK_STATE, (action) => {
         resultActions.push(action)
-      }, [DLIGHT, ELECTRUM], 'VRSC')
+      }, [DLIGHT_PRIVATE, ELECTRUM], 'VRSC')
     }).then(() => {
       const successDlight = resultActions[0]
 
