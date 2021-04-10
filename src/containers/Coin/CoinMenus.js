@@ -6,7 +6,6 @@
 import React, { Component } from "react";
 import {
   View,
-  Text
 } from "react-native";
 import { connect } from 'react-redux';
 import BottomNavigation, {
@@ -15,15 +14,11 @@ import BottomNavigation, {
 import Overview from './Overview/Overview'
 import SendCoin from './SendCoin/SendCoin'
 import ReceiveCoin from './ReceiveCoin/ReceiveCoin'
-import { Icon } from "react-native-elements"
 import { setActiveSection, setCoinSubWallet, setIsCoinMenuFocused } from "../../actions/actionCreators";
 import { NavigationActions, withNavigationFocus } from '@react-navigation/compat';
 import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
 import DynamicHeader from "./DynamicHeader";
-import { bigNumberifyBalance, truncateDecimal } from '../../utils/math'
-import { Portal } from "react-native-paper";
-import { API_GET_BALANCES } from "../../utils/constants/intervalConstants";
-import { CONNECTION_ERROR } from "../../utils/api/errors/errorMessages";
+import { Portal, IconButton } from "react-native-paper";
 
 class CoinMenus extends Component {
   constructor(props) {
@@ -98,45 +93,15 @@ class CoinMenus extends Component {
   }
 
   renderIcon = icon => ({ isActive }) => (
-    <Icon size={24} color="white" name={icon} />
+    <IconButton style={{ padding: 0, margin: 0 }} color="white" size={16} icon={icon} />
   )
-
-  renderBalanceLabel = () => {
-    const { activeCoin, balances } = this.props;
-    let displayBalance =
-      balances != null && balances.results != null
-        ? balances.results.total
-        : null;
-
-    if (balances.errors) {
-      return (
-        <Text
-          style={{ ...Styles.largeCentralPaddedHeader, ...Styles.errorText }}
-        >
-          {CONNECTION_ERROR}
-        </Text>
-      );
-    } else {
-      return (
-        <Text style={Styles.largeCentralPaddedHeader}>
-          {`${
-            displayBalance != null
-              ? truncateDecimal(displayBalance, 4)
-              : "-"
-          } ${activeCoin.id}`}
-        </Text>
-      );
-    } 
-  };
 
   renderTab = ({ tab, isActive }) => (
     <FullTab
       isActive={isActive}
       key={tab.key ? tab.key : ''}
-      labelStyle={{fontFamily: 'Avenir-Black',paddingLeft: 5}}
       label={tab.label ? tab.label : ''}
       renderIcon={this.renderIcon(tab.icon)}
-      style={{flexDirection: 'row', alignSelf: 'center', justifyContent: 'center'}}
     />
   )
 
@@ -144,6 +109,12 @@ class CoinMenus extends Component {
     this.props.navigation.setOptions({ title: newTab.label })
     this.props.dispatch(setActiveSection(newTab.activeSection))
     this.setState({ activeTab: newTab })
+  }
+
+  switchTabByKey = (key) => {
+    const foundTab = this.props.tabs.find(value => value.key === key) 
+
+    if (foundTab) this.switchTab(foundTab)
   }
 
   goBack = () => {
@@ -155,39 +126,42 @@ class CoinMenus extends Component {
   //"Cannot Add a child that doesn't have a YogaNode to a parent with out a measure function"
   //bug comes up and it seems like a bug in rn
   render() {
-    const { selectedSubWallet } = this.props
+    const { selectedSubWallet, activeCoin } = this.props
     const { subWallets } = this.state
     //const DynamicHeaderPortal = <Portal.Host></Portal.Host>
 
     return (
       <Portal.Host>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, display: 'flex' }}>
           {selectedSubWallet == null && (
             <SubWalletSelectorModal
               visible={selectedSubWallet == null}
               cancel={this.goBack}
               animationType="slide"
               subWallets={subWallets}
+              chainTicker={activeCoin.id}
             />
           )}
-          <View style={Styles.centralRow}>{this.renderBalanceLabel()}</View>
           {selectedSubWallet != null && <DynamicHeader />}
           {selectedSubWallet != null && (
-            <React.Fragment>
+            <View style={{flex: 2}}>
               {this.state.activeTab.screen === "Overview" ? (
                 <Overview
                   navigation={this.props.navigation}
                   data={this.passthrough}
+                  switchTab={this.switchTabByKey}
                 />
               ) : this.state.activeTab.screen === "SendCoin" ? (
                 <SendCoin
                   navigation={this.props.navigation}
                   data={this.passthrough}
+                  switchTab={this.switchTabByKey}
                 />
               ) : this.state.activeTab.screen === "ReceiveCoin" ? (
                 <ReceiveCoin
                   navigation={this.props.navigation}
                   data={this.passthrough}
+                  switchTab={this.switchTabByKey}
                 />
               ) : null}
               <BottomNavigation
@@ -195,8 +169,9 @@ class CoinMenus extends Component {
                 renderTab={this.renderTab}
                 tabs={this.state.tabs}
                 activeTab={this.state.activeTab.key}
+                style={{ display: 'flex' }}
               />
-            </React.Fragment>
+            </View>
           )}
         </View>
       </Portal.Host>
@@ -205,12 +180,6 @@ class CoinMenus extends Component {
 }
 
 const mapStateToProps = (state) => {
-  const chainTicker = state.coins.activeCoin.id
-  const channel =
-    state.coinMenus.activeSubWallets[chainTicker] != null
-      ? state.coinMenus.activeSubWallets[chainTicker].channel
-      : null;
-
   return {
     activeCoin: state.coins.activeCoin,
     activeApp: state.coins.activeApp,
@@ -219,16 +188,6 @@ const mapStateToProps = (state) => {
     selectedSubWallet:
       state.coinMenus.activeSubWallets[state.coins.activeCoin.id],
     allSubWallets: state.coinMenus.allSubWallets[state.coins.activeCoin.id],
-    balances: {
-      results:
-        channel != null && state.ledger.balances[channel][chainTicker] != null
-          ? bigNumberifyBalance(state.ledger.balances[channel][chainTicker])
-          : null,
-      errors:
-        channel != null
-          ? state.errors[API_GET_BALANCES][channel][chainTicker]
-          : null,
-    },
   };
 };
 

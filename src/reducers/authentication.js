@@ -7,12 +7,13 @@
 import {
   SET_ACCOUNTS,
   UPDATE_ACCOUNT_KEYS,
-  SIGN_OUT,
   DISABLE_SELECT_DEFAULT_ACCOUNT,
   BIOMETRIC_AUTH,
   AUTHENTICATE_USER,
   SIGN_IN_USER,
-  SET_DLIGHT_ADDRESSES
+  SET_DLIGHT_ADDRESSES,
+  SIGN_OUT_COMPLETE,
+  SIGN_OUT
 } from "../utils/constants/storeType";
 
 export const authentication = (
@@ -65,7 +66,7 @@ export const authentication = (
       const currentDlightAddrs = state.activeAccount.keys[
         action.payload.chainTicker
       ]
-        ? state.activeAccount.keys[action.payload.chainTicker].dlight
+        ? state.activeAccount.keys[action.payload.chainTicker].dlight_private
         : {};
       return {
         ...state,
@@ -75,7 +76,7 @@ export const authentication = (
             ...state.activeAccount.keys,
             [action.payload.chainTicker]: {
               ...state.activeAccount.keys[action.payload.chainTicker],
-              dlight: {
+              dlight_private: {
                 ...currentDlightAddrs,
                 addresses: action.payload.addresses
               }
@@ -83,10 +84,14 @@ export const authentication = (
           }
         }
       };
+    case SIGN_OUT_COMPLETE:
+      return {
+        ...state,
+        activeAccount: null
+      };
     case SIGN_OUT:
       return {
         ...state,
-        activeAccount: null,
         signedIn: false
       };
     case BIOMETRIC_AUTH:

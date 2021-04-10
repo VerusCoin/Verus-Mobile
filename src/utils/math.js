@@ -11,10 +11,16 @@ export const satsToCoins = (satoshis) => {
   return satoshis.dividedBy(BigNumber(100000000))
 }
 
+export const toFixedWithoutRounding = (num, decimals) => {
+  return num
+    .toString()
+    .match(new RegExp("^-?\\d+(?:.\\d{0," + (decimals || -1) + "})?"))[0];
+}
+
 export const truncateDecimal = (value, numDecimals) => {
   if (typeof value === 'string' || isNumber(value)) value = BigNumber(value)
 
-  let n = value.toFormat(numDecimals).replace(/\.0+$/,'')
+  let n = toFixedWithoutRounding(value, numDecimals).replace(/\.0+$/,'')
 
   if (n.match(/\./)) {
     n = n.replace(/\.?0+$/, '');

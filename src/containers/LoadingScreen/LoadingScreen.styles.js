@@ -3,10 +3,9 @@ import Colors from '../../globals/colors';
 
 export default styles = StyleSheet.create({
   loadingRoot: {
-    backgroundColor: Colors.tertiaryColor,
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center"
+    backgroundColor: Colors.primaryColor,
+    height: "100%",
+    width: "100%"
   },
   loadingLabel: {
     backgroundColor: "transparent",

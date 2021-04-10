@@ -10,7 +10,7 @@ export const API_ABORTED = "aborted"
 export const API_SUCCESS = "success"
 
 // Intitalization errors
-export const INIT_DLIGHT_ERRORS = 'init_dlight_errors'
+export const INIT_DLIGHT_PRIVATE_ERRORS = 'init_dlight_private_errors'
 export const INIT_ELECTRUM_ERRORS = 'init_electrum_errors'
 export const INIT_ERC20_ERRORS = 'init_erc20_errors'
 export const INIT_ETH_ERRORS = 'init_eth_errors'
@@ -22,6 +22,9 @@ export const API_GET_INFO = "get_info"
 export const API_GET_TRANSACTIONS = "get_transactions"
 export const API_GET_FIATPRICE = "get_fiatprice"
 
+export const API_SEND = 'send'
+export const API_GET_KEYS = 'get_keys'
+
 // Interval restriction labels
 export const IS_VERUS = "is_verus"
 export const IS_PBAAS = "is_pbaas"
@@ -29,12 +32,12 @@ export const IS_ZCASH = "is_zcash"
 export const IS_PBAAS_ROOT = "is_pbaas_root"
 
 // API channel types
-export const DLIGHT = 'dlight'
+export const DLIGHT_PRIVATE = 'dlight_private'
 export const ELECTRUM = 'electrum'
 export const GENERAL = 'general'
 export const ETH = 'eth'
 export const ERC20 = 'erc20'
-export const CHANNELS = [DLIGHT, ELECTRUM, GENERAL, ETH, ERC20]
+export const CHANNELS = [DLIGHT_PRIVATE, ELECTRUM, GENERAL, ETH, ERC20]
 export const CHANNELS_OBJECT_TEMPLATE = Object.freeze(arrayToObject(CHANNELS, {}))
 export const CHANNELS_NULL_TEMPLATE = Object.freeze(arrayToObject(CHANNELS, null))
 

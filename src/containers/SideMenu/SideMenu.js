@@ -3,11 +3,8 @@
   side of the screen to display components.
 */
 
-import React, { Component } from "react";
-import { View, Text, FlatList, SectionList } from "react-native";
-import { Icon, ListItem } from "react-native-elements";
+import { Component } from "react";
 import PropTypes from 'prop-types';
-import DrawerHeader from '../../components/DrawerHeader';
 import { connect } from 'react-redux';
 import { 
   setActiveCoin, 
@@ -17,24 +14,13 @@ import {
   setConfigSection,
   removeExistingCoin,
   setUserCoins,
-  setActiveSectionCustomCoins,
-  setActiveSectionBuySellCrypto,
+  setActiveSectionCustomCoins
  } from '../../actions/actionCreators'
 import { getKeyByValue } from '../../utils/objectManip'
 import { CommonActions } from '@react-navigation/native';
-import AlertAsync from "react-native-alert-async";
-import Styles from '../../styles/index'
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
-import { ENABLE_FIAT_GATEWAY } from '../../../env/main.json'
-import { CoinLogos } from "../../utils/CoinData/CoinData";
-import { AddCoinLogo } from "../../images/customIcons";
-
-const APP_INFO = 'App Info'
-const PROFILE = 'Profile'
-const WALLET = 'Wallet'
-const CANCEL = 0
-const REMOVE = 1
-const REMOVE_DELETE = 2
+import { renderSideMenu } from "./SideMenu.render";
+import { createAlert, resolveAlert } from "../../actions/actions/alert/dispatchers/alert";
 
 class SideMenu extends Component {
   constructor(props) {
@@ -44,6 +30,14 @@ class SideMenu extends Component {
       mainDrawer: true, 
       currentCoinIndex: null,
     };
+
+    this.APP_INFO = 'App Info'
+    this.PROFILE = 'Profile'
+    this.WALLET = 'Wallet'
+
+    this.CANCEL = 0
+    this.REMOVE = 1
+    this.REMOVE_DELETE = 2
   }
 
   navigateToScreen = (route) => {
@@ -95,12 +89,12 @@ class SideMenu extends Component {
       let data = {
         task: this._removeUserFromCoin,
         message: "Removing " + coinID + " from user " + this.props.activeAccount.id + ", please do not close Verus Mobile.",
-        input: [coinID, answer === REMOVE_DELETE],
+        input: [coinID, answer === this.REMOVE_DELETE],
         route: "Home",
         dispatchResult: true
       }
 
-      if (answer === REMOVE_DELETE || answer === REMOVE) {
+      if (answer === this.REMOVE_DELETE || answer === this.REMOVE) {
         this.setState({ mainDrawer: true }, () => {
           this.resetToScreen("SecureLoading", null, data, true)
         })
@@ -110,16 +104,25 @@ class SideMenu extends Component {
 
   _removeUserFromCoin = (coinID, deleteWallet) => {
     return new Promise((resolve, reject) => {
-      removeExistingCoin(coinID, this.props.activeCoinList, this.props.activeAccount.id, deleteWallet)
-      .then((res) => {
-        clearAllCoinIntervals(coinID)
-        this.props.dispatch(res)
-        resolve(setUserCoins(this.props.activeCoinList, this.props.activeAccount.id))
-      })
-      .catch(err => {
-        console.warn(err)
-        reject(err)
-      })
+      removeExistingCoin(
+        coinID,
+        this.props.activeAccount.id,
+        this.props.dispatch,
+        deleteWallet
+      )
+        .then((res) => {
+          clearAllCoinIntervals(coinID);
+          resolve(
+            setUserCoins(
+              this.props.activeCoinList,
+              this.props.activeAccount.id
+            )
+          );
+        })
+        .catch((err) => {
+          console.warn(err);
+          reject(err);
+        });
     })
   }
 
@@ -147,135 +150,6 @@ class SideMenu extends Component {
     this.props.navigation.dispatch(resetAction)
   }
 
-  renderMainDrawerComponents = () => {
-    return (
-      <FlatList
-        data={this.props.activeCoinsForUser}
-        style={Styles.underflow}
-        renderItem={({ item, index }) => {
-          const Logo = CoinLogos[item.id.toLowerCase()]
-
-          return (
-            <ListItem
-              title={item.id}
-              leftAvatar={Logo ? <Logo width={40} height={40} /> : null}
-              containerStyle={Styles.bottomlessListItemContainer}
-              onPress={() =>
-                this.setState({
-                  mainDrawer: false,
-                  currentCoinIndex: index,
-                })
-              }
-              titleStyle={Styles.listItemLeftTitleUppercase}
-            />
-          );
-        }}
-        ListFooterComponent={
-          <React.Fragment>
-            <ListItem
-              title="ADD COIN"
-              leftAvatar={<AddCoinLogo width={40} height={40}/>}
-              containerStyle={Styles.bottomlessListItemContainer}
-              onPress={() =>
-                this.setState({ mainDrawer: false, currentCoinIndex: -1 })
-              }
-              titleStyle={Styles.listItemLeftTitleUppercase}
-            />
-            <ListItem
-              title={"SETTINGS"}
-              leftIcon={{ name: "settings", size: 34 }}
-              containerStyle={Styles.bottomlessListItemContainer}
-              onPress={() =>
-                this.setState({ mainDrawer: false, currentCoinIndex: -2 })
-              }
-              titleStyle={Styles.listItemLeftTitlePaddedUppercase}
-            />
-            <ListItem
-              title={"LOG OUT"}
-              leftIcon={{ name: "exit-to-app", size: 34 }}
-              containerStyle={Styles.bottomlessListItemContainer}
-              onPress={this.handleLogout}
-              titleStyle={Styles.listItemLeftTitlePaddedUppercase}
-            />
-          </React.Fragment>
-        }
-        keyExtractor={(item) => item.id}
-      />
-    );
-  }
-
-  renderChildDrawerComponents = () => {
-    return (
-      <SectionList
-        style={Styles.fullWidth}
-        renderItem={({ item, index, section }) => (
-          <ListItem
-            title={item.name}
-            titleStyle={Styles.listItemLeftTitleUppercase}
-            leftIcon={{ name: item.icon, size: 30 }}
-            containerStyle={Styles.bottomlessListItemContainer}
-            onPress={() => {
-              this._openApp(
-                this.props.activeCoinsForUser[this.state.currentCoinIndex],
-                item.name,
-                section,
-              );
-            }}
-          />
-        )}
-        renderSectionHeader={({ section: { title } }) => (
-          <ListItem
-            title={
-              <Text style={Styles.infoText}>{title}</Text>
-            }
-            containerStyle={Styles.greyStripeContainer}
-            hideChevron
-            onPress={() => {
-              return 0;
-            }}
-          />
-        )}
-        ListFooterComponent={
-          <React.Fragment>
-            {ENABLE_FIAT_GATEWAY && (
-              <ListItem
-                title={"BUY/SELL COIN"}
-                titleStyle={Styles.infoText}
-                leftIcon={{ name: "account-balance" }}
-                hideChevron
-                containerStyle={Styles.bottomlessListItemContainer}
-                onPress={() => {
-                  let navigation = this.props.navigation;
-                  this.props.dispatch(
-                    setActiveSectionBuySellCrypto("buy-crypto")
-                  );
-                  navigation.navigate("BuySellCryptoMenus", {
-                    title: "Buy Crypto",
-                  });
-                }}
-              />
-            )}
-            <ListItem
-              title={"REMOVE COIN"}
-              titleStyle={Styles.listItemLeftTitlePaddedUppercase}
-              leftIcon={{ name: "close" }}
-              hideChevron
-              containerStyle={Styles.bottomlessListItemContainer}
-              onPress={() => {
-                this._removeCoin(
-                  this.props.activeCoinsForUser[this.state.currentCoinIndex]
-                    .id
-                );
-              }}
-            />
-          </React.Fragment>
-        }
-        sections={this.sectionExtractor(this.state.currentCoinIndex)}
-        keyExtractor={(item, index) => item + index}
-      />
-    );
-  }
-
   sectionExtractor = (currentCoinIndex) => {
     let sections = []
     let coinApps = this.props.activeCoinsForUser[currentCoinIndex].apps
@@ -288,33 +162,33 @@ class SideMenu extends Component {
 
   canRemoveCoin = (coinID) => {
     if (this.props.dlightSockets[coinID]) {
-      return AlertAsync(
+      return createAlert(
         'Confirm',
-        "Would you like to remove " + coinID + " and delete all its blockchain data?",
+        `You have chosen to remove ${coinID}. Would you also like to delete local ${coinID} blockchain data?`,
         [
           {
             text: 'Cancel',
-            onPress: () => Promise.resolve(CANCEL),
+            onPress: () => resolveAlert(this.CANCEL),
             style: 'cancel',
           },
-          {text: 'Remove', onPress: () => Promise.resolve(REMOVE)},
-          {text: 'Remove & Delete', onPress: () => Promise.resolve(REMOVE_DELETE)},
+          {text: 'Remove', onPress: () => resolveAlert(this.REMOVE)},
+          {text: 'Delete', onPress: () => resolveAlert(this.REMOVE_DELETE)},
         ],
         {
           cancelable: false,
         },
       )
     } else {
-      return AlertAsync(
+      return createAlert(
         'Confirm',
         "Are you sure you would like to remove " + coinID + "?",
         [
           {
             text: 'No',
-            onPress: () => Promise.resolve(CANCEL),
+            onPress: () => resolveAlert(this.CANCEL),
             style: 'cancel',
           },
-          {text: 'Yes', onPress: () => Promise.resolve(REMOVE)},
+          {text: 'Yes', onPress: () => resolveAlert(this.REMOVE)},
         ],
         {
           cancelable: false,
@@ -325,16 +199,31 @@ class SideMenu extends Component {
   }
 
   handleLogout = () => {
-    this.props.dispatch(signOut())
+    this.resetToScreen("SecureLoading", null, {
+      task: () => {
+        // Hack to prevent crash on screens that require activeAccount not to be null
+        // TODO: Find a more elegant solution
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            this.props.dispatch(signOut())
+            resolve()
+          }, 1000)
+        })
+      },
+      message: "Signing out...",
+      route: "Home",
+      successMsg: "Signed out",
+      errorMsg: "Failed to sign out"
+    }, true)
   }
 
   _openSettings = (drawerItem) => {
     let navigation = this.props.navigation
-    if (drawerItem.title === APP_INFO) {
+    if (drawerItem.title === this.APP_INFO) {
       this.props.dispatch(setConfigSection('settings-info'))
-    } else if (drawerItem.title === PROFILE){
+    } else if (drawerItem.title === this.PROFILE){
       this.props.dispatch(setConfigSection('settings-profile'))
-    } else if (drawerItem.title === WALLET){
+    } else if (drawerItem.title === this.WALLET){
       this.props.dispatch(setConfigSection('settings-wallet'))
     } else {
       throw new Error("Option " + drawerItem.title + " not found in possible settings values")
@@ -351,107 +240,11 @@ class SideMenu extends Component {
     navigation.navigate("CustomChainMenus", { title: "Scan QR" })
   }
 
-  renderAddCoinComponents = () => {
-    return (
-      <SectionList
-      style={Styles.fullWidth}
-      renderItem={({item}) => (
-        <ListItem                        
-        title={item}
-        titleStyle={Styles.listItemLeftTitleUppercase}  
-        containerStyle={Styles.bottomlessListItemContainer} 
-        onPress={
-          item === 'Add coin from list' ? 
-            () => this.navigateToScreen('AddCoin') 
-          : 
-            () => this._openCustomCoinMenus()}
-        /> 
-      )}
-      renderSectionHeader={({section: {title}}) => (
-        <ListItem                        
-        title={<Text style={Styles.infoText}>{title}</Text>}                             
-        containerStyle={Styles.greyStripeContainer} 
-        hideChevron
-        /> 
-      )}
-      sections={[
-        {title: 'Add Coin', data: ['Add coin from list'/*, 'Add custom coin'*/]},
-      ]}
-      keyExtractor={(item, index) => item + index}
-      />
-    )
-  }
-
-  renderSettingsComponents = () => {
-    return (
-      <SectionList
-      style={Styles.fullWidth}
-      renderItem={({item}) => (
-        <ListItem    
-        leftIcon={{name: item.icon, size: 30}}  
-        title={item.title}  
-        titleStyle={Styles.listItemLeftTitleUppercase}                  
-        containerStyle={Styles.bottomlessListItemContainer} 
-        onPress={() => this._openSettings(item)}
-        /> 
-      )}
-      renderSectionHeader={({section: {title}}) => (
-        <ListItem                        
-        title={<Text style={Styles.infoText}>{title}</Text>}                             
-        containerStyle={Styles.greyStripeContainer} 
-        hideChevron
-        /> 
-      )}
-      sections={[
-        {title: 'Settings', 
-        data: [
-          {title: PROFILE, icon: "account-circle"},
-          {title: WALLET, icon: "account-balance-wallet"},
-          {title: APP_INFO, icon: "info"}
-        ]},
-      ]}
-      keyExtractor={(item, index) => item + index}
-      />
-    )
-  }
-
   toggleMainDrawer = () =>
 		this.setState(prevState => ({ mainDrawer: !prevState.mainDrawer }));
 
   render() {
-    if (this.state.mainDrawer) {
-      return (
-        <View style={Styles.flex}>
-					<DrawerHeader navigateToScreen={this.navigateToScreen} />
-          {this.renderMainDrawerComponents()}
-				</View>
-      );
-    } 
-
-    return (
-      <View style={Styles.flex}>
-        <DrawerHeader navigateToScreen={this.navigateToScreen} />
-        <ListItem                        
-        title={<Text style={Styles.listItemLeftTitleUppercase}>{"BACK"}</Text>}                             
-        containerStyle={Styles.bottomlessListItemContainer} 
-        hideChevron
-        leftIcon={
-          <Icon
-          name="arrow-back"
-          size={30}
-          />
-        }
-        onPress={this.toggleMainDrawer}
-        /> 
-        {this.state.currentCoinIndex === -1 ? 
-          this.renderAddCoinComponents() 
-          : 
-          this.state.currentCoinIndex === -2 ? 
-            this.renderSettingsComponents()
-            :
-            this.renderChildDrawerComponents()}
-      </View>
-    );
+    return renderSideMenu.call(this)
   }
 }
 
@@ -464,7 +257,7 @@ const mapStateToProps = (state) => {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
     activeAccount: state.authentication.activeAccount,
-    dlightSockets: state.channelStore_dlight.dlightSockets
+    dlightSockets: state.channelStore_dlight_private.dlightSockets
   }
 };
 

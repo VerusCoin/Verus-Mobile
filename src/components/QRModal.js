@@ -9,18 +9,16 @@
 import React, { Component } from "react"
 import {
   View,
-  Modal,
-  Text,
   Alert,
   TouchableOpacity,
   ScrollView,
   Platform
 } from "react-native"
+import Modal from '../components/Modal'
 import CameraRoll from "@react-native-community/cameraroll";
 import QRCode from 'react-native-qrcode-svg'
-import StandardButton from "../components/StandardButton"
 import AlertAsync from "react-native-alert-async"
-import { Icon } from "react-native-elements"
+import { Button, IconButton, Text } from "react-native-paper"
 import RNFS from "react-native-fs"
 import Share from 'react-native-share';
 import Colors from '../globals/colors';
@@ -125,21 +123,26 @@ class QRModal extends Component {
   render() {
     return (
       <Modal
-      animationType={this.props.animationType}
-      transparent={false}
-      visible={this.props.visible}
-      onRequestClose={this.cancelHandler}>
-        <ScrollView 
+        animationType={this.props.animationType}
+        transparent={false}
+        visible={this.props.visible}
+        onRequestClose={this.cancelHandler}
+      >
+        <ScrollView
           style={Styles.flexBackground}
-          contentContainerStyle={Styles.centerContainer}>
+          contentContainerStyle={Styles.centerContainer}
+        >
           <View style={Styles.headerContainer}>
-            <Text style={Styles.centralHeader}>
-              {"VerusPay Invoice"}
-            </Text>
+            <Text style={Styles.centralHeader}>{"VerusPay Invoice"}</Text>
           </View>
           <View style={Styles.standardWidthFlexGrowCenterBlock}>
-            <Text style={{...Styles.defaultDescriptiveText, ...Styles.fullWidthSpaceBetweenCenterBlock}}>
-              {"Scan this QR code with VerusPay on another device to automatically create" + 
+            <Text
+              style={{
+                ...Styles.defaultDescriptiveText,
+                ...Styles.fullWidthSpaceBetweenCenterBlock,
+              }}
+            >
+              {"Scan this QR code with VerusPay on another device to automatically create" +
                 " a transaction."}
             </Text>
             <View style={Styles.fullWidthAlignCenter}>
@@ -156,23 +159,46 @@ class QRModal extends Component {
           </View>
           <View style={Styles.footerContainer}>
             <View style={Styles.standardWidthSpaceBetweenBlock}>
-              <TouchableOpacity 
-                onPress={this.state.libraryPressed ? () => {return 0} : this.requestSaveQR} 
-                activeOpacity={this.state.libraryPressed ? 1 : DEFAULT_OPACITY}>
-                <Icon name="camera-roll" size={35} color={Colors.quinaryColor}/>
+              <TouchableOpacity
+                onPress={
+                  this.state.libraryPressed
+                    ? () => {
+                        return 0;
+                      }
+                    : this.requestSaveQR
+                }
+                activeOpacity={
+                  this.state.libraryPressed ? 1 : DEFAULT_OPACITY
+                }
+              >
+                <IconButton
+                  icon="content-save"
+                  color={Colors.quinaryColor}
+                />
               </TouchableOpacity>
-              <StandardButton 
+              <Button
                 color={Colors.warningButtonColor}
-                title="CLOSE" 
                 onPress={this.cancelHandler}
-              />
-              {Platform.OS === 'ios' && 
-                <TouchableOpacity 
-                  onPress={this.state.sharePressed ? () => {return 0} : this.requestShareQR} 
-                  activeOpacity={this.state.sharePressed ? 1 : DEFAULT_OPACITY}>
-                  <Icon name="share" size={35} color={Colors.quinaryColor}/>
+                style={{ alignSelf: "center" }}
+              >
+                {"Close"}
+              </Button>
+              {Platform.OS === "ios" && (
+                <TouchableOpacity
+                  onPress={
+                    this.state.sharePressed
+                      ? () => {
+                          return 0;
+                        }
+                      : this.requestShareQR
+                  }
+                  activeOpacity={
+                    this.state.sharePressed ? 1 : DEFAULT_OPACITY
+                  }
+                >
+                  <IconButton icon="share" color={Colors.quinaryColor} />
                 </TouchableOpacity>
-              }
+              )}
             </View>
           </View>
         </ScrollView>

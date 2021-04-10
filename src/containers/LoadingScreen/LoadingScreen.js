@@ -9,12 +9,9 @@
 
 import React, { Component } from "react";
 import { 
-  View, 
-  Text
+  View
 } from "react-native";
-import ProgressBar from 'react-native-progress/Bar';
 import styles from './LoadingScreen.styles';
-import Colors from '../../globals/colors';
 
 export default class LoadingScreen extends Component {
   constructor(props) {
@@ -23,10 +20,7 @@ export default class LoadingScreen extends Component {
 
   render() {
     return (
-      <View style={styles.loadingRoot}>
-        <ProgressBar width={200} height={2} indeterminate={true} color={Colors.primaryColor}/>
-        <Text style={styles.loadingLabel}>{"Initializing Verus Mobile..."}</Text>
-      </View>
+      <View style={styles.loadingRoot} />
     );
   }
 }

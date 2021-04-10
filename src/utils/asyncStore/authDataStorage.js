@@ -1,4 +1,3 @@
-import { Alert } from "react-native";
 import AsyncStorage from '@react-native-community/async-storage';
 // react-native's version of local storage
 
@@ -7,38 +6,69 @@ import {
   decryptkey,
 } from '../seedCrypt'
 
-import {
-  deleteUserFromCoin
-} from './asyncStore'
 import { hashAccountId } from "../crypto/hash";
-import { CHANNELS_NULL_TEMPLATE } from "../constants/intervalConstants";
+import { CHANNELS_NULL_TEMPLATE, DLIGHT_PRIVATE, ELECTRUM } from "../constants/intervalConstants";
+import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
+import store from '../../store';
+import { fetchUsers, setAccounts } from '../../actions/actionCreators';
 
 //Set storage to hold encrypted user data
 export const storeUser = (authData, users) => {
-  let encryptedKeys = { ...CHANNELS_NULL_TEMPLATE }
+  return new Promise(async (resolve, reject) => {
+    let encryptedKeys = { ...CHANNELS_NULL_TEMPLATE };
+    const { seeds } = authData;
 
-  Object.keys(authData.seeds).map(seedType => {
-    const { seeds } = authData
-    if (seeds[seedType]) encryptedKeys[seedType] = encryptkey(authData.password, seeds[seedType])
-  })
+    for (const seedType in authData.seeds) {
+      if (seeds[seedType])
+        encryptedKeys[seedType] = await encryptkey(
+          authData.password,
+          seeds[seedType]
+        );
+    }
 
-  let userObj = {
-    id: authData.userName,
-    accountHash: hashAccountId(authData.userName),
-    encryptedKeys,
-    biometry: authData.biometry ? true : false,
-  };
-  let _users = users ? users.slice() : [];
-  _users.push(userObj)
-  let _toStore = {users: _users}
+    let userObj = {
+      id: authData.userName,
+      accountHash: hashAccountId(authData.userName),
+      encryptedKeys,
+      biometry: authData.biometry ? true : false,
+    };
+    let _users = users ? users.slice() : [];
+    _users.push(userObj);
+    let _toStore = { users: _users };
 
-  return new Promise((resolve, reject) => {
+  
     AsyncStorage.setItem('userData', JSON.stringify(_toStore))
       .then(() => {
         resolve(_users);
       })
       .catch(err => reject(err));
   })
+};
+
+//Add user encrypted key for a channel
+export const addEncryptedKeyToUser = async (accountHash, channel, seed, password, overwrite = false) => {
+  try {
+    const users = await getUsers()
+
+    const userObjIndex = users.findIndex(user => user.accountHash === accountHash)
+    if (userObjIndex === -1) throw new Error("User with hash " + accountHash + " not found.")
+    const userObj = users[userObjIndex]
+
+    if (userObj.encryptedKeys[channel] != null && !overwrite) {
+      throw new Error(`User with hash ${accountHash} already has as ${channel} seed, cannot overwrite.`)
+    } else {
+      let newUserObj = {...userObj}
+      newUserObj.encryptedKeys[channel] = await encryptkey(password, seed)
+      
+      let newUsers = [...users]
+      newUsers[userObjIndex] = newUserObj
+
+      await AsyncStorage.setItem('userData', JSON.stringify({users: newUsers}))
+      return await getUsers()
+    }
+  } catch(e) {
+    throw e
+  }
 };
 
 //Set storage to hold encrypted user data
@@ -55,38 +85,33 @@ export const setUsers = (users) => {
 };
 
 //Delete user by user ID and return new user array
-export const deleteUser = (userID) => {
+export const deleteUser = (accountHash) => {
   return new Promise((resolve, reject) => {
     AsyncStorage.getItem('userData')
       .then(res => {
         let _users = res ? JSON.parse(res).users : [];
-        if(userID !== null) {
-          let userIndex = _users.findIndex(n => n.id === userID);
+        if(accountHash !== null) {
+          let userIndex = _users.findIndex(n => n.accountHash === accountHash);
 
           if (userIndex > -1) {
             _users.splice(userIndex, 1);
             let _toStore = {users: _users}
             let promiseArr = [
               AsyncStorage.setItem('userData', JSON.stringify(_toStore)),
-              deleteUserFromCoin(userID, null),
               _users]
             return Promise.all(promiseArr)
           } else {
-            Alert.alert("Error", "User with ID " + userID + " not found");
-            return "error"
+            createAlert("Error", "User with hash " + accountHash + " not found");
+            throw new Error("User with hash " + accountHash + " not found")
           }
         } else {
-          Alert.alert("Error", "UserID is null");
-          return "error"
+          createAlert("Error", "accountHash is null");
+          throw new Error("accountHash is null")
         }
       })
       .then((res) => {
-        if (res === "error") {
-          resolve(false);
-        } else if (Array.isArray(res)) {
-          let _users = res.pop()
-          resolve(_users);
-        }
+        let _users = res.pop()
+        resolve(_users);
       })
       .catch(err => reject(err));
   });
@@ -95,41 +120,41 @@ export const deleteUser = (userID) => {
 export const resetUserPwd = (userID, newPwd, oldPwd) => {
   return new Promise((resolve, reject) => {
     AsyncStorage.getItem('userData')
-      .then(res => {
+      .then(async res => {
         let _users = res ? JSON.parse(res).users : [];
         if(userID !== null) {
           let userIndex = _users.findIndex(n => n.id === userID);
 
           if (userIndex > -1) {
             const _oldEncryptedKeys = _users[userIndex].encryptedKeys
-            const { dlight, electrum } = _oldEncryptedKeys
+            const { dlight_private, electrum } = _oldEncryptedKeys
 
             const _decryptedElectrum = electrum != null ? decryptkey(oldPwd, _oldEncryptedKeys.electrum) : null
-            const _decryptedDlight = dlight != null ? decryptkey(oldPwd, _oldEncryptedKeys.dlight) : null
+            const _decryptedDlight = dlight_private != null ? decryptkey(oldPwd, _oldEncryptedKeys.dlight_private) : null
 
-            if ((electrum == null || _decryptedElectrum) && (dlight == null || _decryptedDlight)) {
-              const _newElectrumKey = electrum ? encryptkey(newPwd, _decryptedElectrum) : null
-              const _newDlightKey = dlight ? encryptkey(newPwd, _decryptedDlight) : null
+            if ((electrum == null || _decryptedElectrum) && (dlight_private == null || _decryptedDlight)) {
+              const _newElectrumKey = electrum ? await encryptkey(newPwd, _decryptedElectrum) : null
+              const _newDlightKey = dlight_private ? await encryptkey(newPwd, _decryptedDlight) : null
 
               _users[userIndex].encryptedKeys = {
-                electrum: _newElectrumKey,
-                dlight: _newDlightKey
+                [ELECTRUM]: _newElectrumKey,
+                [DLIGHT_PRIVATE]: _newDlightKey
               }
               
               let _toStore = {users: _users}
               let promiseArr = [AsyncStorage.setItem('userData', JSON.stringify(_toStore)), _users]
               return Promise.all(promiseArr)
             } else {
-              Alert.alert("Authentication Error", "incorrect password")
+              createAlert("Authentication Error", "incorrect password")
               return "error";
             }
 
           } else {
-            Alert.alert("Error", "User with ID " + userID + " not found")
+            createAlert("Error", "User with ID " + userID + " not found")
             return "error"
           }
         } else {
-          Alert.alert("Error", "UserID is null")
+          createAlert("Error", "UserID is null")
           return "error"
         }
       })
@@ -241,26 +266,53 @@ export const checkPinForUser = (pin, userName, alertOnFail = true) => {
           let user = users.users.find(n => n.id === userName);
 
           if (user) {
-            const { electrum, dlight } = user.encryptedKeys
-            const _decryptedKeys = {
-              electrum: electrum != null ? decryptkey(pin, electrum) : null,
-              dlight: dlight != null ? decryptkey(pin, dlight) : null,
+            const { electrum, dlight_private } = user.encryptedKeys
+            const _decryptedSeeds = {
+              [ELECTRUM]: electrum != null ? decryptkey(pin, electrum) : null,
+              [DLIGHT_PRIVATE]: dlight_private != null ? decryptkey(pin, dlight_private) : null,
             }
 
-            if ((electrum == null || _decryptedKeys.electrum) && (dlight == null || _decryptedKeys.dlight)) {
-              resolve(_decryptedKeys);
+            if (
+              (electrum == null || _decryptedSeeds.electrum) &&
+              (dlight_private == null ||
+                _decryptedSeeds.dlight_private)
+            ) {
+              for (const channel in _decryptedSeeds) {
+                if (_decryptedSeeds[channel]) {
+                  try {
+                    store.dispatch(setAccounts(await addEncryptedKeyToUser(
+                      hashAccountId(userName),
+                      channel,
+                      _decryptedSeeds[channel],
+                      pin,
+                      true
+                    )))
+                  } catch(e) {
+                    createAlert(
+                      "Authentication Error",
+                      "Internal authentication error."
+                    );
+                  }
+                }
+              }
+
+              resolve(_decryptedSeeds);
             } else {
-              if (alertOnFail) Alert.alert("Authentication Error", "Incorrect password")
+              if (alertOnFail)
+                createAlert(
+                  "Authentication Error",
+                  "Incorrect password"
+                );
               throw new Error("Incorrect password");
             }
           }
           else {
-            if (alertOnFail) Alert.alert("Authentication Error", "Please select an existing user")
+            if (alertOnFail) createAlert("Authentication Error", "Please select an existing user")
             throw new Error("Please select an existing user");
           }
         }
         else {
-          if (alertOnFail) Alert.alert("Authentication Error", "Please enter a password")
+          if (alertOnFail) createAlert("Authentication Error", "Please enter a password")
           throw new Error("Please enter a password");
         }
       })

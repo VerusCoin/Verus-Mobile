@@ -7,11 +7,11 @@ import { ethers } from "ethers";
 import React, { Component } from "react"
 import {
   View,
-  Modal,
   Text,
   ScrollView,
   Alert,
 } from "react-native"
+import Modal from '../components/Modal'
 import AlertAsync from "react-native-alert-async";
 import StandardButton from "../components/StandardButton"
 import Colors from '../globals/colors';

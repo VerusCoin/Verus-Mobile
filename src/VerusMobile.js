@@ -1,14 +1,21 @@
 import React from "react";
-import { YellowBox, TouchableWithoutFeedback, Keyboard, Alert } from "react-native";
+import {
+  YellowBox,
+  Alert,
+  AppState,
+  Platform,
+  View
+} from "react-native";
+import Modal from './components/Modal'
 import RootStackScreens from './utils/navigation/index';
-import { NavigationContainer } from '@react-navigation/native';
 import { 
   fetchUsers, 
   loadServerVersions,
   loadCachedHeaders,
   loadEthTxReceipts,
   initSettings,
-  requestSeedData,
+  fetchActiveCoins,
+  requestSeedData
 } from './actions/actionCreators';
 import {
   initCache,
@@ -18,13 +25,18 @@ import {
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 import { ENABLE_VERUS_IDENTITIES } from '../env/main.json'
-
+import AlertModal from "./components/Alert";
+import { activateKeyboardListener } from "./actions/actionDispatchers";
+import Colors from "./globals/colors";
+import { CoinLogos } from "./utils/CoinData/CoinData";
+import { Portal } from 'react-native-paper';
 
 class VerusMobile extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      loading: true   
+      loading: true,
+      securityCover: false
     };
     
     YellowBox.ignoreWarnings([
@@ -34,8 +46,39 @@ class VerusMobile extends React.Component {
       'RCTRootView cancelTouches', 
     ]);
   }
+
+  // TODO: Implement own lifecycle manager to account for 
+  // android "inactivity"
+  _handleAppStateChange(nextAppState) {
+    if (Platform.OS === 'ios') {
+      if (nextAppState === "active" && this.state.securityCover == true) {
+        this.setSecurityCover(false)
+      } else if (nextAppState === "inactive" && this.state.securityCover == false) {
+        this.handleInactivity()
+      }
+    }
+  };
+
+  handleInactivity() {
+    this.setSecurityCover(true)
+
+    // TODO: Add lock on app re-entry
+    // if (this.props.signedIn) {
+    //   this.props.dispatch(signOut())
+    // }
+  }
+
+  setSecurityCover(cover) {
+    this.setState({
+      securityCover: cover
+    })
+  }
   
-  componentDidMount() {
+  componentDidMount() {    
+    activateKeyboardListener()
+
+    AppState.addEventListener("change", (nextAppState) => this._handleAppStateChange(nextAppState));
+    
     //TODO: Figure out what should trigger a cache clear on startup of server 
     //versions. (The action that triggers it should indicate a server upgraded it's 
     //version)
@@ -46,13 +89,18 @@ class VerusMobile extends React.Component {
     .then(() => {
       return checkAndSetVersion()
     })
-    .then(() => {
-      let promiseArr = [fetchUsers(), initSettings(), updateActiveCoinList()]
+    .then(async () => {
+      await updateActiveCoinList()
+      
+      let promiseArr = [
+        fetchUsers(),
+        initSettings(),
+        fetchActiveCoins(),
+      ];
 
       return Promise.all(promiseArr)
     })
-    .then((res) => {
-      let actionArr = res.slice(0, res.length - 1)
+    .then((actionArr) => {
       actionArr.forEach((action) => {
         this.props.dispatch(action)
       })
@@ -74,31 +122,49 @@ class VerusMobile extends React.Component {
     }
   }
 
-  render() {
-    const Layout = () => RootStackScreens(
-      this.props.accountsLength > 0, 
-      this.state.loading, 
-      this.props.signedIn);
-    
+  render() {    
+    const VrscLogo = CoinLogos.vrsc.light
+
     return (
-      <NavigationContainer>
-        <Layout />
-      </NavigationContainer>
+      <View style={{ flex: 1 }}>
+        <Portal.Host>
+          <AlertModal />
+          <RootStackScreens
+            hasAccount={this.props.accountsLength > 0}
+            loading={this.state.loading}
+            signedIn={this.props.signedIn}
+          />
+        </Portal.Host>
+        <Modal
+          animationType={this.state.loading ? "fade" : "slide"}
+          transparent={false}
+          visible={this.state.securityCover || this.state.loading}
+        >
+          <View
+            style={[
+              {
+                width: "100%",
+                height: "100%",
+                backgroundColor: Colors.primaryColor,
+              },
+              {
+                alignItems: "center",
+                justifyContent: "center",
+              },
+            ]}
+          >
+            <VrscLogo height={100} width={100} />
+          </View>
+        </Modal>
+      </View>
     );
   }
 }
 
-//TODO: Connect this correctly instead of relying on individual cases
-const DismissKeyboard = ({children}) => (
-  <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-    {children}
-  </TouchableWithoutFeedback>
-);
-
 const mapStateToProps = (state) => {
   return {
     accountsLength: state.authentication.accounts.length,
-    signedIn: state.authentication.signedIn,
+    signedIn: state.authentication.signedIn
   }
 };
 

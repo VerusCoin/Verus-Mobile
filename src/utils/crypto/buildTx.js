@@ -1,30 +1,27 @@
 import bitcoin from 'bitgo-utxo-lib';
 
-export const buildSignedTx = (sendTo, changeAddress, wif, network, utxo, changeValue, spendValue, opreturn) => {
-  console.log('Initiating transaction build procedure')
-
+export const buildSignedTx = (
+  sendTo,
+  changeAddress,
+  wif,
+  network,
+  utxo,
+  changeValue,
+  spendValue,
+  maxFeeRate = 2500
+) => {
   let key = bitcoin.ECPair.fromWIF(wif, network);
-  let tx = new bitcoin.TransactionBuilder(network);
-
-  console.log('Keypair intialized and transaction defined')
-  console.log('Unsigned transaction structure constructed successfully');
+  let tx = new bitcoin.TransactionBuilder(network, maxFeeRate);
 
   for (let i = 0; i < utxo.length; i++) {
     tx.addInput(utxo[i].txid, utxo[i].vout);
   }
 
-  console.log(utxo);
-  console.log('UTXOs added to transaction')
-
   tx.addOutput(sendTo, Number(spendValue));
 
   if (changeValue > 0) {
-    console.log('Change value larger than 0, adding change value output')
-    console.log(changeValue)
     tx.addOutput(changeAddress, Number(changeValue));
   }
-
-  console.log('added change value')
 
   //Fix this
   /*
@@ -38,34 +35,33 @@ export const buildSignedTx = (sendTo, changeAddress, wif, network, utxo, changeV
   }
   */
 
-  if (network.coin === 'kmd') {
-    console.log('Network detected as ' + network)
+  if (network.coin === "kmd") {
     const _locktime = Math.floor(Date.now() / 1000) - 777;
     tx.setLockTime(_locktime);
   }
 
   let versionNum;
 
-  if (network.version){
+  if (network.version) {
     versionNum = network.version;
-  }
-  else {
+  } else {
     versionNum = 1;
   }
 
-
   tx.setVersion(versionNum);
 
-  console.log('Set version to ' + versionNum)
-
   for (let i = 0; i < utxo.length; i++) {
-    if (bitcoin.coins.isBitcoinCash(network) || bitcoin.coins.isBitcoinGold(network)) {
-      const hashType = bitcoin.Transaction.SIGHASH_ALL | bitcoin.Transaction.SIGHASH_BITCOINCASHBIP143;
+    if (
+      bitcoin.coins.isBitcoinCash(network) ||
+      bitcoin.coins.isBitcoinGold(network)
+    ) {
+      const hashType =
+        bitcoin.Transaction.SIGHASH_ALL |
+        bitcoin.Transaction.SIGHASH_BITCOINCASHBIP143;
       tx.sign(i, key, null, hashType, utxo[i].value);
     } else {
-      tx.sign(i, key, '', null, utxo[i].value);
+      tx.sign(i, key, "", null, utxo[i].value);
     }
-    console.log('Standard transaction signed')
   }
 
   const rawtx = tx.build().toHex();
@@ -73,6 +69,5 @@ export const buildSignedTx = (sendTo, changeAddress, wif, network, utxo, changeV
   //shepherd.log('buildSignedTx signed tx hex', true);
   //shepherd.log(rawtx, true);
 
-
   return rawtx;
-}
+};

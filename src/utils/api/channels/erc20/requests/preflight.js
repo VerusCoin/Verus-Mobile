@@ -11,7 +11,10 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
     const contract = Web3Provider.getContract(coinObj.currency_id).connect(signer)
     const balance = await contract.balanceOf(signer.getAddress())
     const gasPrice = await Web3Provider.DefaultProvider.getGasPrice()
-    const amountBn = ethers.utils.parseUnits(scientificToDecimal(amount.toString()), coinObj.decimals)
+    const amountBn = ethers.utils.parseUnits(
+      scientificToDecimal(amount.toString()),
+      coinObj.decimals
+    );
     const gasEst = await contract.estimateGas.transfer(address, amountBn)
     const transaction = await contract.callStatic.transfer(
       address,
@@ -30,7 +33,7 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
         feeCurr: ETH.toUpperCase(),
         value: ethers.utils.formatUnits(amountBn, coinObj.decimals),
         toAddress: address,
-        fromAddress: address,
+        fromAddress,
         amountSubmitted: amount.toString(),
         memo: null,
         params: {

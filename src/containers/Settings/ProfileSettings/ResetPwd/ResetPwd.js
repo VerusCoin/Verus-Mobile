@@ -10,20 +10,20 @@ import React, { Component } from "react";
 import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
-  Text, 
   Alert,
   ScrollView, 
   Keyboard,
-  TouchableWithoutFeedback,
+  TextInput as NativeTextInput
 } from "react-native";
 import { NavigationActions } from '@react-navigation/compat';
-import { FormLabel, Input, FormValidationMessage } from 'react-native-elements'
 import { resetPwd, setBiometry } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
+import { TextInput, Button } from "react-native-paper";
 import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors';
 import { removeBiometricPassword } from "../../../../utils/biometry/biometry";
+import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 
 class ResetPwd extends Component {
   constructor() {
@@ -54,7 +54,7 @@ class ResetPwd extends Component {
   }
 
   onSuccess = () => {
-    Alert.alert("Success!", "Password for " + this.props.activeAccount.id + " reset successfully.");
+    createAlert("Success!", "Password for " + this.props.activeAccount.id + " reset successfully.");
     this.props.navigation.dispatch(NavigationActions.back())
   }
 
@@ -98,11 +98,13 @@ class ResetPwd extends Component {
         _errors = true
       } else if (_newPwd === _oldPwd) {
         this.handleError("Current and new passwords must be different", "newPwd")
+        createAlert("Error", "Current and new passwords must be different")
         _errors = true
       }
 
       if (_newPwd !== _confirmNewPwd) {
         this.handleError("Passwords do not match", "confirmNewPwd")
+        createAlert("Error", "Passwords do not match")
         _errors = true
       }
 
@@ -141,82 +143,84 @@ class ResetPwd extends Component {
   render() {
     return (
       <View style={Styles.defaultRoot}>
-        <ScrollView style={Styles.fullWidth}
-          contentContainerStyle={{...Styles.innerHeaderFooterContainerCentered, ...Styles.fullHeight}}>
+        <ScrollView
+          style={Styles.fullWidth}
+          contentContainerStyle={{
+            ...Styles.innerHeaderFooterContainerCentered,
+            ...Styles.fullHeight,
+          }}
+        >
           <View style={Styles.wideBlock}>
-            <Input 
-              label="Enter your current password:"
-              labelStyle={Styles.formCenterLabel}
-              containerStyle={Styles.wideCenterBlock}
-              inputStyle={Styles.inputTextDefaultStyle}
-              onChangeText={(text) => this.setState({oldPwd: text})}
-              autoCapitalize={"none"}
-              autoCorrect={false}
-              secureTextEntry={true}
-              shake={this.state.errors.pwd}
-              errorMessage={
-                this.state.errors.oldPwd ? 
-                  this.state.errors.oldPwd
-                  :
-                  null
-              }
-              />
-          </View>
-          <View style={Styles.wideBlock}>
-            <Input 
-              label="Enter a new password (min. 5 characters):"
-              labelStyle={Styles.formCenterLabel}
-              containerStyle={Styles.wideCenterBlock}
-              inputStyle={Styles.inputTextDefaultStyle}
-              onChangeText={(text) => this.setState({newPwd: text})}
-              autoCapitalize={"none"}
-              autoCorrect={false}
-              secureTextEntry={true}
-              shake={this.state.errors.pwd}
-              errorMessage={
-                this.state.errors.newPwd ? 
-                  this.state.errors.newPwd
-                  :
-                  null
-              }
+            <TextInput
+              dense
+              onChangeText={(text) => this.setState({ oldPwd: text })}
+              label="Current Password"
+              underlineColor={Colors.primaryColor}
+              selectionColor={Colors.primaryColor}
+              render={(props) => (
+                <NativeTextInput
+                  autoCapitalize={"none"}
+                  autoCorrect={false}
+                  secureTextEntry={true}
+                  {...props}
+                />
+              )}
+              error={this.state.errors.oldPwd}
             />
           </View>
           <View style={Styles.wideBlock}>
-            <Input 
-              label="Confirm new password:"
-              labelStyle={Styles.formCenterLabel}
-              containerStyle={Styles.wideCenterBlock}
-              inputStyle={Styles.inputTextDefaultStyle}
-              onChangeText={(text) => this.setState({confirmNewPwd: text})}
-              autoCapitalize={"none"}
-              autoCorrect={false}
-              secureTextEntry={true}
-              shake={this.state.errors.pwd}
-              errorMessage={
-                this.state.errors.confirmNewPwd ? 
-                  this.state.errors.confirmNewPwd
-                  :
-                  null
+            <TextInput
+              dense
+              onChangeText={(text) => this.setState({ newPwd: text })}
+              label="New Password (min. 5 characters)"
+              underlineColor={Colors.primaryColor}
+              selectionColor={Colors.primaryColor}
+              render={(props) => (
+                <NativeTextInput
+                  autoCapitalize={"none"}
+                  autoCorrect={false}
+                  secureTextEntry={true}
+                  {...props}
+                />
+              )}
+              error={this.state.errors.newPwd}
+            />
+          </View>
+          <View style={Styles.wideBlock}>
+            <TextInput
+              dense
+              onChangeText={(text) =>
+                this.setState({ confirmNewPwd: text })
               }
+              label="Confirm New Password"
+              underlineColor={Colors.primaryColor}
+              selectionColor={Colors.primaryColor}
+              render={(props) => (
+                <NativeTextInput
+                  autoCapitalize={"none"}
+                  autoCorrect={false}
+                  secureTextEntry={true}
+                  {...props}
+                />
+              )}
+              error={this.state.errors.confirmNewPwd}
             />
           </View>
         </ScrollView>
         <View style={Styles.highFooterContainer}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <StandardButton 
-              color={Colors.warningButtonColor}
-              title="CANCEL" 
-              onPress={this.cancel}
-            />
-            <StandardButton 
-              style={Colors.infoButtonColor} 
-              title="RESET" 
+            <Button color={Colors.warningButtonColor} onPress={this.cancel}>
+              {"Cancel"}
+            </Button>
+            <Button
+              color={Colors.primaryColor}
               onPress={this._handleSubmit}
-            />
+            >
+              {"Reset"}
+            </Button>
           </View>
         </View>
       </View>
-      
     );
   }
 }

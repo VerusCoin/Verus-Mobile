@@ -26,7 +26,7 @@ export const getOneTransactionList = (coinObj, activeUser, maxlength = 10) => {
   }
 
   return new Promise((resolve, reject) => {
-    electrumRequest(coinObj.serverList, callType, params, coinID)
+    electrumRequest(coinObj.electrum_endpoints, callType, params, coinID)
     .then((response) => {
       resolve(response)
     })
@@ -133,9 +133,7 @@ export const getParsedTransactionList = (coinObj, activeUser, maxlength) => {
         throw new Error(
           "Ledger.js: Fatal mismatch error, " +
             activeUser.id +
-            " user keys for active coin " +
-            coinObj[i].id +
-            " not found!"
+            " user keys for active coin not found!"
         );
       }
 

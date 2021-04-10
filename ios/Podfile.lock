@@ -1,14 +1,15 @@
 PODS:
   - boost-for-react-native (1.63.0)
   - CGRPCZlib (1.0.0-alpha.19)
-  - CNIOAtomics (2.22.1)
-  - CNIOBoringSSL (2.9.1)
-  - CNIOBoringSSLShims (2.9.1):
-    - CNIOBoringSSL (= 2.9.1)
-  - CNIODarwin (2.22.1)
-  - CNIOHTTPParser (2.22.1)
-  - CNIOLinux (2.22.1)
-  - CNIOSHA1 (2.22.1)
+  - CNIOAtomics (2.25.1)
+  - CNIOBoringSSL (2.10.2)
+  - CNIOBoringSSLShims (2.10.2):
+    - CNIOBoringSSL (= 2.10.2)
+  - CNIODarwin (2.25.1)
+  - CNIOHTTPParser (2.25.1)
+  - CNIOLinux (2.25.1)
+  - CNIOSHA1 (2.25.1)
+  - CNIOWindows (2.25.1)
   - DoubleConversion (1.1.6)
   - FBLazyVector (0.61.5)
   - FBReactNativeSpec (0.61.5):
@@ -37,6 +38,11 @@ PODS:
     - SwiftNIOTransportServices (< 2, >= 1.6.0)
     - SwiftProtobuf (< 2, >= 1.9.0)
   - Logging (1.4.0)
+  - lottie-ios (3.1.8)
+  - lottie-react-native (3.5.0):
+    - lottie-ios (~> 3.1.8)
+    - React
+  - MnemonicSwift (2.0.0)
   - Permission-Camera (2.1.5):
     - RNPermissions
   - RCTRequired (0.61.5)
@@ -218,14 +224,15 @@ PODS:
     - React-Core
   - react-native-randombytes (3.5.3):
     - React
-  - react-native-safe-area-context (3.1.1):
-    - React
+  - react-native-safe-area-context (3.1.9):
+    - React-Core
   - react-native-text-input-mask (2.0.0):
     - React
     - RNInputMask
   - react-native-udp (2.7.0):
     - React
   - react-native-verus-light-client (1.0.0):
+    - MnemonicSwift
     - React
     - React-Core
     - ZcashLightClientKit
@@ -285,6 +292,8 @@ PODS:
     - React
   - RNPermissions (2.1.5):
     - React
+  - RNReactNativeHapticFeedback (1.11.0):
+    - React-Core
   - RNReanimated (1.10.1):
     - React
   - RNScreens (2.9.0):
@@ -298,51 +307,52 @@ PODS:
   - SQLite.swift (0.12.2):
     - SQLite.swift/standard (= 0.12.2)
   - SQLite.swift/standard (0.12.2)
-  - SwiftNIO (2.22.1):
-    - CNIOAtomics (= 2.22.1)
-    - CNIODarwin (= 2.22.1)
-    - CNIOLinux (= 2.22.1)
-    - CNIOSHA1 (= 2.22.1)
-    - SwiftNIOConcurrencyHelpers (= 2.22.1)
-  - SwiftNIOConcurrencyHelpers (2.22.1):
-    - CNIOAtomics (= 2.22.1)
-  - SwiftNIOFoundationCompat (2.22.1):
-    - SwiftNIO (= 2.22.1)
-  - SwiftNIOHPACK (1.14.2):
-    - SwiftNIO (< 3, >= 2.11.0)
-    - SwiftNIOConcurrencyHelpers (< 3, >= 2.11.0)
-    - SwiftNIOHTTP1 (< 3, >= 2.11.0)
-  - SwiftNIOHTTP1 (2.22.1):
-    - CNIOHTTPParser (= 2.22.1)
-    - SwiftNIO (= 2.22.1)
-    - SwiftNIOConcurrencyHelpers (= 2.22.1)
-  - SwiftNIOHTTP2 (1.14.2):
-    - SwiftNIO (< 3, >= 2.11.0)
-    - SwiftNIOConcurrencyHelpers (< 3, >= 2.11.0)
-    - SwiftNIOHPACK (= 1.14.2)
-    - SwiftNIOHTTP1 (< 3, >= 2.11.0)
-    - SwiftNIOTLS (< 3, >= 2.11.0)
-  - SwiftNIOSSL (2.9.1):
-    - CNIOBoringSSL (= 2.9.1)
-    - CNIOBoringSSLShims (= 2.9.1)
-    - SwiftNIO (< 3, >= 2.22.0)
-    - SwiftNIOConcurrencyHelpers (< 3, >= 2.22.0)
-    - SwiftNIOTLS (< 3, >= 2.22.0)
-  - SwiftNIOTLS (2.22.1):
-    - SwiftNIO (= 2.22.1)
-  - SwiftNIOTransportServices (1.9.0):
-    - SwiftNIO (< 3, >= 2.22.0)
-    - SwiftNIOConcurrencyHelpers (< 3, >= 2.22.0)
-    - SwiftNIOFoundationCompat (< 3, >= 2.22.0)
-    - SwiftNIOTLS (< 3, >= 2.22.0)
-  - SwiftProtobuf (1.12.0)
+  - SwiftNIO (2.25.1):
+    - CNIOAtomics (= 2.25.1)
+    - CNIODarwin (= 2.25.1)
+    - CNIOLinux (= 2.25.1)
+    - CNIOSHA1 (= 2.25.1)
+    - CNIOWindows (= 2.25.1)
+    - SwiftNIOConcurrencyHelpers (= 2.25.1)
+  - SwiftNIOConcurrencyHelpers (2.25.1):
+    - CNIOAtomics (= 2.25.1)
+  - SwiftNIOFoundationCompat (2.25.1):
+    - SwiftNIO (= 2.25.1)
+  - SwiftNIOHPACK (1.16.2):
+    - SwiftNIO (< 3, >= 2.18.0)
+    - SwiftNIOConcurrencyHelpers (< 3, >= 2.18.0)
+    - SwiftNIOHTTP1 (< 3, >= 2.18.0)
+  - SwiftNIOHTTP1 (2.25.1):
+    - CNIOHTTPParser (= 2.25.1)
+    - SwiftNIO (= 2.25.1)
+    - SwiftNIOConcurrencyHelpers (= 2.25.1)
+  - SwiftNIOHTTP2 (1.16.2):
+    - SwiftNIO (< 3, >= 2.18.0)
+    - SwiftNIOConcurrencyHelpers (< 3, >= 2.18.0)
+    - SwiftNIOHPACK (= 1.16.2)
+    - SwiftNIOHTTP1 (< 3, >= 2.18.0)
+    - SwiftNIOTLS (< 3, >= 2.18.0)
+  - SwiftNIOSSL (2.10.2):
+    - CNIOBoringSSL (= 2.10.2)
+    - CNIOBoringSSLShims (= 2.10.2)
+    - SwiftNIO (< 3, >= 2.15.0)
+    - SwiftNIOConcurrencyHelpers (< 3, >= 2.15.0)
+    - SwiftNIOTLS (< 3, >= 2.15.0)
+  - SwiftNIOTLS (2.25.1):
+    - SwiftNIO (= 2.25.1)
+  - SwiftNIOTransportServices (1.9.1):
+    - SwiftNIO (< 3, >= 2.19.0)
+    - SwiftNIOConcurrencyHelpers (< 3, >= 2.19.0)
+    - SwiftNIOFoundationCompat (< 3, >= 2.19.0)
+    - SwiftNIOTLS (< 3, >= 2.19.0)
+  - SwiftProtobuf (1.15.0)
   - TcpSockets (3.3.2):
     - React
   - Yoga (1.14.0)
-  - ZcashLightClientKit (0.6.3):
+  - ZcashLightClientKit (0.9.1):
     - gRPC-Swift (= 1.0.0-alpha.19)
     - SQLite.swift (~> 0.12.2)
-  - ZcashLightClientKit/Tests (0.6.3):
+  - ZcashLightClientKit/Tests (0.9.1):
     - gRPC-Swift (= 1.0.0-alpha.19)
     - SQLite.swift (~> 0.12.2)
 
@@ -352,6 +362,9 @@ DEPENDENCIES:
   - FBReactNativeSpec (from `../node_modules/react-native/Libraries/FBReactNativeSpec`)
   - Folly (from `../node_modules/react-native/third-party-podspecs/Folly.podspec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
+  - lottie-ios (from `../node_modules/lottie-ios`)
+  - lottie-react-native (from `../node_modules/lottie-react-native`)
+  - MnemonicSwift (~> 2.0.0)
   - Permission-Camera (from `../node_modules/react-native-permissions/ios/Camera.podspec`)
   - RCTRequired (from `../node_modules/react-native/Libraries/RCTRequired`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -395,6 +408,7 @@ DEPENDENCIES:
   - RNKeychain (from `../node_modules/react-native-keychain`)
   - RNOS (from `../node_modules/react-native-os`)
   - RNPermissions (from `../node_modules/react-native-permissions`)
+  - RNReactNativeHapticFeedback (from `../node_modules/react-native-haptic-feedback`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNShare (from `../node_modules/react-native-share`)
@@ -402,8 +416,8 @@ DEPENDENCIES:
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
   - TcpSockets (from `../node_modules/react-native-tcp`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
-  - ZcashLightClientKit (from `https://github.com/michaeltout/ZcashLightClientKit.git`, branch `0.6.3`)
-  - ZcashLightClientKit/Tests (from `https://github.com/michaeltout/ZcashLightClientKit.git`, branch `0.6.3`)
+  - ZcashLightClientKit (from `https://github.com/michaeltout/ZcashLightClientKit.git`, branch `0.9.1`)
+  - ZcashLightClientKit/Tests (from `https://github.com/michaeltout/ZcashLightClientKit.git`, branch `0.9.1`)
 
 SPEC REPOS:
   trunk:
@@ -416,8 +430,10 @@ SPEC REPOS:
     - CNIOHTTPParser
     - CNIOLinux
     - CNIOSHA1
+    - CNIOWindows
     - gRPC-Swift
     - Logging
+    - MnemonicSwift
     - SQLite.swift
     - SwiftNIO
     - SwiftNIOConcurrencyHelpers
@@ -441,6 +457,10 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/Folly.podspec"
   glog:
     :podspec: "../node_modules/react-native/third-party-podspecs/glog.podspec"
+  lottie-ios:
+    :path: "../node_modules/lottie-ios"
+  lottie-react-native:
+    :path: "../node_modules/lottie-react-native"
   Permission-Camera:
     :path: "../node_modules/react-native-permissions/ios/Camera.podspec"
   RCTRequired:
@@ -521,6 +541,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-os"
   RNPermissions:
     :path: "../node_modules/react-native-permissions"
+  RNReactNativeHapticFeedback:
+    :path: "../node_modules/react-native-haptic-feedback"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
@@ -536,24 +558,25 @@ EXTERNAL SOURCES:
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
   ZcashLightClientKit:
-    :branch: 0.6.3
+    :branch: 0.9.1
     :git: https://github.com/michaeltout/ZcashLightClientKit.git
 
 CHECKOUT OPTIONS:
   ZcashLightClientKit:
-    :commit: ae22b923749128c33e032de414e630f2de1aa13e
+    :commit: 97ca6d5a2fac37bce7a42a56d42daec503fe3a3f
     :git: https://github.com/michaeltout/ZcashLightClientKit.git
 
 SPEC CHECKSUMS:
   boost-for-react-native: 39c7adb57c4e60d6c5479dd8623128eb5b3f0f2c
   CGRPCZlib: befd9b92013c647f18aa9b7d9e9231d52e1ced1b
-  CNIOAtomics: 55026298b0bd7524bb8ca85bd9d00983ef2b6ab5
-  CNIOBoringSSL: ee7722e4355434b420eb06b3ca7535a6cfb09cf2
-  CNIOBoringSSLShims: e76fde7b7972f242e250f76dafcfdbd23be26eca
-  CNIODarwin: 65c40ddcfa113c0cb0bf5947dbef3165a0098b59
-  CNIOHTTPParser: 869e928f9f9b7bb68837e085b3ae921125d28d76
-  CNIOLinux: 896c5715ebe479fbfcdac5340717bbbd7936901b
-  CNIOSHA1: fd4d38fb42778ed971a75d87530f842106d4b4f4
+  CNIOAtomics: 2ae668942b9e7ac71e0fe286d11ac9b4fe329024
+  CNIOBoringSSL: 3d59b923c8ec524308685664ae6388179c678ac7
+  CNIOBoringSSLShims: 18b267690ba0d57b22e4e69dff2904a6b1d030b8
+  CNIODarwin: 3874630a0e3506c3e86f272ad436103d27055831
+  CNIOHTTPParser: 976fcf22759946c80ff74c8a2926728d88954a83
+  CNIOLinux: e6394d7fd56d36ff43ada5796e9d96c14fcb3546
+  CNIOSHA1: 43c4a0cfdea5e8be20927d9d2237ebe4233071f8
+  CNIOWindows: 89048520e4a1484bcd5e20c252edf4089913aa7d
   DoubleConversion: 5805e889d232975c086db112ece9ed034df7a0b2
   FBLazyVector: aaeaf388755e4f29cd74acbc9e3b8da6d807c37f
   FBReactNativeSpec: 118d0d177724c2d67f08a59136eb29ef5943ec75
@@ -561,6 +584,9 @@ SPEC CHECKSUMS:
   glog: 1f3da668190260b06b429bb211bfbee5cd790c28
   gRPC-Swift: 75a7a8d7cd08177165ef971159afb84e5130cfc9
   Logging: beeb016c9c80cf77042d62e83495816847ef108b
+  lottie-ios: 48fac6be217c76937e36e340e2d09cf7b10b7f5f
+  lottie-react-native: 1fb4ce21d6ad37dab8343eaff8719df76035bd93
+  MnemonicSwift: 36384fc6b2640d93df9fe9fb60a8da7957cec36d
   Permission-Camera: afad27bf90337684d4a86f3825112d648c8c4d3b
   RCTRequired: b153add4da6e7dbc44aebf93f3cf4fcae392ddf1
   RCTTypeSafety: 9aa1b91d7f9310fc6eadc3cf95126ffe818af320
@@ -576,10 +602,10 @@ SPEC CHECKSUMS:
   react-native-image-picker: 7a85cf7b0a53845f03ae52fb4592a2748ded069b
   react-native-netinfo: 250dc0ca126512f618a8a2ca6a936577e1f66586
   react-native-randombytes: 3638d24759d67c68f6ccba60c52a7a8a8faa6a23
-  react-native-safe-area-context: 344b969c45af3d8464d36e8dea264942992ef033
+  react-native-safe-area-context: b6e0e284002381d2ff29fa4fff42b4d8282e3c94
   react-native-text-input-mask: 07227297075f9653315f43b0424d596423a01736
   react-native-udp: ff9d13e523f2b58e6bc5d4d32321ac60671b5dc9
-  react-native-verus-light-client: b71b8551595c3c75787bc51ff1d2b2989639851a
+  react-native-verus-light-client: ba8400658314adecefa08593e46d9fa69029bea8
   React-RCTActionSheet: 600b4d10e3aea0913b5a92256d2719c0cdd26d76
   React-RCTAnimation: 791a87558389c80908ed06cc5dfc5e7920dfa360
   React-RCTBlob: d89293cc0236d9cb0933d85e430b0bbe81ad1d72
@@ -601,26 +627,27 @@ SPEC CHECKSUMS:
   RNKeychain: b8e0711b959a19c5b057d1e970d3c83d159b6da5
   RNOS: 6f2f9a70895bbbfbdad7196abd952e7b01d45027
   RNPermissions: ad71dd4f767ec254f2cd57592fbee02afee75467
+  RNReactNativeHapticFeedback: 653a8c126a0f5e88ce15ffe280b3ff37e1fbb285
   RNReanimated: c2bb7438b57a3d987bb2e4e6e4bca94787e30b02
   RNScreens: c526239bbe0e957b988dacc8d75ac94ec9cb19da
   RNShare: 48cf88cadf9ca2143cdaa557c1ec7f8808040ffc
   RNSVG: 8ba35cbeb385a52fd960fd28db9d7d18b4c2974f
   RNVectorIcons: 0bb4def82230be1333ddaeee9fcba45f0b288ed4
   SQLite.swift: d2b4642190917051ce6bd1d49aab565fe794eea3
-  SwiftNIO: 763188229de166e046cc8975383cca388832e992
-  SwiftNIOConcurrencyHelpers: 34d2e9d4d2b7886fa765086e845e6b19417be927
-  SwiftNIOFoundationCompat: 990bf137ed31a0907be67a0f80cfa9d3ad66289d
-  SwiftNIOHPACK: 38b7703a984bf25f7abcd468f66e4ac89e2a52dd
-  SwiftNIOHTTP1: c0a9ce48ba256f349af4f09648a0e0939b11a65c
-  SwiftNIOHTTP2: 2f6ea199f7df6e7041dcfb49fba175c69c8ca925
-  SwiftNIOSSL: 2967e874b40d05904edde5c540c3157621e5ecc4
-  SwiftNIOTLS: 80eed55b4d2a455ba4b387b12cb41962095c713a
-  SwiftNIOTransportServices: 801923921fbecdcde1e1c1ff38e812167d01ead1
-  SwiftProtobuf: 4ef85479c18ca85b5482b343df9c319c62bda699
+  SwiftNIO: 3f9a197581f6dfebf65a5c85099f25197d892c8c
+  SwiftNIOConcurrencyHelpers: 3670690a0fb8d8a0a4759804d07aaf89c9599839
+  SwiftNIOFoundationCompat: 707c223452d1606e1619c2309f089aeadbf2943e
+  SwiftNIOHPACK: a86298d347455478dcc0d0178b80bbbd38bdf299
+  SwiftNIOHTTP1: 566744e4a9b4425009b59dce9ed962591052b0d0
+  SwiftNIOHTTP2: 474925ac2ebabc5899892f7cafc0323eceb67f8c
+  SwiftNIOSSL: 39756339a7425d68b48f00c0f9a9e068b8f536d0
+  SwiftNIOTLS: 434418842a6bebc21864ec84229e5e3d2762ca0b
+  SwiftNIOTransportServices: a8a17a43695a09bfdd5a56426f6e515120d5dbf3
+  SwiftProtobuf: 3320217e9d8fb75f36b40282e78c482640fd75dd
   TcpSockets: 14306fb79f9750ea7d2ddd02d8bed182abb01797
   Yoga: f2a7cd4280bfe2cca5a7aed98ba0eb3d1310f18b
-  ZcashLightClientKit: 6a7a724d5c249bc15983327157fe5ade6600dbcb
+  ZcashLightClientKit: d5a681033b3f59c59c93837232ed7890d3e07918
 
-PODFILE CHECKSUM: 140944d1ec3abdae92127533323aa4a55cf8a83e
+PODFILE CHECKSUM: 444789b9830d7c45bccace44937d91c1c074ee1f
 
 COCOAPODS: 1.8.4

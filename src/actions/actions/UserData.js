@@ -9,8 +9,11 @@ import {
   getActiveCoinList,
   checkPinForUser,
   resetUserPwd,
-  deleteUser, setUserBiometry, setUsers
-} from '../../utils/asyncStore/asyncStore';
+  addEncryptedKeyToUser,
+  deleteUser,
+  setUserBiometry,
+  setUsers,
+} from "../../utils/asyncStore/asyncStore";
 import {
   makeKeyPair
 } from '../../utils/keys'
@@ -20,10 +23,11 @@ import {
 import { sha256, hashAccountId } from '../../utils/crypto/hash';
 
 import WyreService from '../../services/wyreService';
-import { CHANNELS, ELECTRUM } from '../../utils/constants/intervalConstants';
+import { CHANNELS, ELECTRUM, ERC20, ETH, DLIGHT_PRIVATE } from '../../utils/constants/intervalConstants';
 import { arrayToObject } from '../../utils/objectManip';
 import { ENABLE_FIAT_GATEWAY } from '../../../env/main.json';
 import { BIOMETRIC_AUTH } from '../../utils/constants/storeType';
+import { fetchActiveCoins, removeExistingCoin } from './coins/Coins';
 
 export const addUser = (userName, seeds, password, users, biometry = false) => {
   return new Promise((resolve, reject) => {
@@ -49,6 +53,20 @@ export const resetPwd = (userID, newPwd, oldPwd) => {
   });
 }
 
+export const addEncryptedKey = (accountHash, channel, seed, password) => {
+  return new Promise((resolve, reject) => {
+    addEncryptedKeyToUser(accountHash, channel, seed, password)
+      .then(res => {
+        if (res) {
+          resolve(setAccounts(res))
+        } else {
+          resolve(false)
+        }
+      })
+      .catch(err => reject(err));
+  });
+}
+
 export const setBiometry = (userID, biometry) => {
   return new Promise((resolve, reject) => {
     setUserBiometry(userID, biometry)
@@ -62,17 +80,17 @@ export const setBiometry = (userID, biometry) => {
   });
 }
 
-export const deleteUserByID = (userID) => {
-  return new Promise((resolve, reject) => {
-    deleteUser(userID)
-      .then(res => {
-        if (res) {
-          resolve(setAccounts(res))
-        } else {
-          resolve(false)
-        }
-      })
-      .catch(err => reject(err));
+export const deleteProfile = (account, dispatch) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await removeExistingCoin(null, account.id, dispatch, true)
+      const deleteAction = setAccounts(await deleteUser(account.accountHash))
+      dispatch(deleteAction)
+
+      resolve()
+    } catch(e) {
+      reject(e)
+    }
   });
 }
 
@@ -121,21 +139,43 @@ export const authenticateAccount = async (account, password) => {
 
   return new Promise((resolve, reject) => {
     getActiveCoinList()
-      .then(activeCoins => {
+      .then(async activeCoins => {
         for (let i = 0; i < activeCoins.length; i++) {
           if (activeCoins[i].users.includes(account.id)) {
-            _keys[activeCoins[i].id] = arrayToObject(
-              CHANNELS,
-              (acc, key) =>
-                activeCoins[i].compatible_channels.includes(key)
-                  ? makeKeyPair(
-                      seeds[key] ? seeds[key] : seeds.electrum,
-                      activeCoins[i].id,
-                      key
-                    )
-                  : null,
-              true
-            );
+            _keys[activeCoins[i].id] = {}
+
+            for (const channel of CHANNELS) {
+              if (
+                (activeCoins[i].compatible_channels.includes(
+                  channel
+                ) &&
+                  seeds[channel]) ||
+                channel === ETH ||
+                channel === ERC20
+              ) {
+                try {
+                  const seedChannel =
+                    channel === ETH || channel === ERC20
+                      ? ELECTRUM
+                      : channel;
+
+                  _keys[activeCoins[i].id][
+                    channel
+                  ] = await makeKeyPair(
+                    seeds[seedChannel],
+                    activeCoins[i].id,
+                    channel
+                  );
+                } catch (e) {
+                  console.warn(
+                    `Key generation failed for ${
+                      activeCoins[i].id
+                    } channel ${channel}`
+                  );
+                  console.warn(e);
+                }
+              }
+            }
           }
         }
 
@@ -204,16 +244,19 @@ export const validateLogin = (account, password) => {
   });
 }
 
-export const addKeypairs = (accountSeeds, coinObj, keys) => {
+export const addKeypairs = async (accountSeeds, coinObj, keys) => {
   let keypairs = {}
   const coinID = coinObj.id
 
-  CHANNELS.map(seedType => {
+  for (seedType of CHANNELS) {
     const seed = accountSeeds[seedType] ? accountSeeds[seedType] : accountSeeds[ELECTRUM]
-    if (coinObj.compatible_channels.includes(seedType)) {
-      keypairs[seedType] = makeKeyPair(seed, coinID, seedType)
+    if (
+      coinObj.compatible_channels.includes(seedType) &&
+      (seedType !== DLIGHT_PRIVATE || accountSeeds[seedType])
+    ) {
+      keypairs[seedType] = await makeKeyPair(seed, coinID, seedType);
     }
-  })
+  }
 
   return updateAccountKeys({...keys, [coinID]: keypairs})
 }

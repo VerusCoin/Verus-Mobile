@@ -1,26 +1,53 @@
 import { timeout } from '../../../../promises'
-import { isJson } from '../../../../objectManip'
+const { DOMParser } = require('xmldom')
 
 import { REQUEST_TIMEOUT_MS } from '../../../../../../env/main.json'
 
 export const getFiatExchangeRates = () => {
-  const address = `https://api.exchangeratesapi.io/latest?base=USD`
+  const address = `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     timeout(REQUEST_TIMEOUT_MS, fetch(address, {method: 'GET'}))
+    .then(response => response.text())
     .then((response) => {
-      if (!isJson(response)) {
-        throw new Error("Invalid JSON in fiatExchangeRates.js, received: " + response)
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(response, "text/xml");
+      let exchangeRates = {}
+
+      x = xmlDoc.getElementsByTagName('Cube');
+      for (i = 0; i < x.length; i++) {
+        const currency = x[i].getAttribute('currency')
+        const rate = x[i].getAttribute('rate')
+
+        if (
+          currency != null &&
+          /^[a-zA-Z]+$/.test(currency) &&
+          rate != null &&
+          !isNaN(Number(rate))
+        ) {
+          exchangeRates[currency] = Number(rate)
+        }
       }
 
-      return response.json()
-    })
-    .then((response) => {
-      if (response.error || !response || !response.rates) {
-        resolve({error: new Error("Fiat exchange rate response unreadable.")})
-      } else {
-        resolve({result: response.rates});
+      exchangeRates['EUR'] = 1
+
+      for (const currencyTicker in exchangeRates) {
+        if (currencyTicker !== 'USD') {
+          if (
+            exchangeRates["USD"] == null ||
+            exchangeRates["USD"] == 0
+          ) {
+            exchangeRates[currencyTicker] = null;
+          } else {
+            exchangeRates[currencyTicker] =
+              exchangeRates[currencyTicker] / exchangeRates["USD"];
+          }
+        }
       }
+
+      exchangeRates['USD'] = 1
+
+      resolve({ result: exchangeRates });
     })
     .catch((error) => {
       resolve({error})

@@ -4,7 +4,7 @@ import {
   SYNCING,
   POST_SYNC,
   API_GET_INFO,
-  DLIGHT
+  DLIGHT_PRIVATE
 } from "../../../../utils/constants/intervalConstants";
 import { setCoinStatus } from '../../../actionCreators'
 import { getCoinObj } from '../../../../utils/CoinData/CoinData';
@@ -25,7 +25,7 @@ export const getInfoOnComplete = (state, dispatch, chainTicker) => {
 
   const currentStatus = state.coins.status[chainTicker]
   const getInfoResult = state.ledger.info[chainTicker];
-  const getInfoError = state.errors[API_GET_INFO][DLIGHT][chainTicker];
+  const getInfoError = state.errors[API_GET_INFO][DLIGHT_PRIVATE][chainTicker];
   const refresh = () =>
     refreshCoinIntervals(chainTicker, {
       [API_GET_INFO]: { update_expired_oncomplete: getInfoOnComplete }

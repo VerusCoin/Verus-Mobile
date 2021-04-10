@@ -6,7 +6,7 @@ export const getOneTransaction = (coinObj, txid) => {
   const coinID = coinObj.id
 
   return new Promise((resolve, reject) => {
-    electrumRequest(coinObj.serverList, callType, params, coinID)
+    electrumRequest(coinObj.electrum_endpoints, callType, params, coinID)
     .then((response) => {
       resolve(response)
     })

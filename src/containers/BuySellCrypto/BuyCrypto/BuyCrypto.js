@@ -220,14 +220,14 @@ class BuyCrypto extends Component {
         // ? this.props.coinSettings[coinTicker].channels
         // : coinObj.compatible_channels
         coinObj.compatible_channels
-      ).then(response => {
+      ).then(async response => {
         if (response) {
           this.props.dispatch(response);
           this.props.dispatch(
             setUserCoins(this.props.activeCoinList, this.props.activeAccount.id)
           );
           this.props.dispatch(
-            addKeypairs(
+            await addKeypairs(
               this.props.activeAccount.seeds,
               coinObj,
               this.props.activeAccount.keys

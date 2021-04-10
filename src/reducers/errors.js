@@ -7,7 +7,7 @@ import {
   API_GET_BALANCES,
   API_GET_FIATPRICE,
   API_GET_INFO,
-  INIT_DLIGHT_ERRORS,
+  INIT_DLIGHT_PRIVATE_ERRORS,
   INIT_ELECTRUM_ERRORS,
   INIT_ETH_ERRORS,
   INIT_ERC20_ERRORS,
@@ -35,7 +35,7 @@ export const errors = (state = {
   [API_GET_BALANCES]: CHANNELS_OBJECT_TEMPLATE,
   [API_GET_FIATPRICE]: CHANNELS_OBJECT_TEMPLATE,
   [API_GET_INFO]: CHANNELS_OBJECT_TEMPLATE,
-  [INIT_DLIGHT_ERRORS]: {},
+  [INIT_DLIGHT_PRIVATE_ERRORS]: {},
   [INIT_ELECTRUM_ERRORS]: {},
   [INIT_ETH_ERRORS]: {},
   [INIT_ERC20_ERRORS]: {}
@@ -90,40 +90,40 @@ export const errors = (state = {
     case ERROR_DLIGHT_INIT:
       return {
         ...state,
-        [INIT_DLIGHT_ERRORS]: {
-          ...state[INIT_DLIGHT_ERRORS],
+        [INIT_DLIGHT_PRIVATE_ERRORS]: {
+          ...state[INIT_DLIGHT_PRIVATE_ERRORS],
           [chainTicker]: error
         }
       }
     case ERROR_ELECTRUM_INIT:
       return {
         ...state,
-        [INIT_DLIGHT_ERRORS]: {
-          ...state[INIT_DLIGHT_ERRORS],
+        [INIT_DLIGHT_PRIVATE_ERRORS]: {
+          ...state[INIT_DLIGHT_PRIVATE_ERRORS],
           [chainTicker]: error
         }
       }
     case ERROR_ERC20_INIT:
       return {
         ...state,
-        [INIT_DLIGHT_ERRORS]: {
-          ...state[INIT_DLIGHT_ERRORS],
+        [INIT_DLIGHT_PRIVATE_ERRORS]: {
+          ...state[INIT_DLIGHT_PRIVATE_ERRORS],
           [chainTicker]: error
         }
       }
     case ERROR_ETH_INIT:
       return {
         ...state,
-        [INIT_DLIGHT_ERRORS]: {
-          ...state[INIT_DLIGHT_ERRORS],
+        [INIT_DLIGHT_PRIVATE_ERRORS]: {
+          ...state[INIT_DLIGHT_PRIVATE_ERRORS],
           [chainTicker]: error
         }
       }
     case INIT_DLIGHT_CHANNEL_START:
       return {
         ...state,
-        [INIT_DLIGHT_ERRORS]: {
-          ...state[INIT_DLIGHT_ERRORS],
+        [INIT_DLIGHT_PRIVATE_ERRORS]: {
+          ...state[INIT_DLIGHT_PRIVATE_ERRORS],
           [chainTicker]: null
         }
       }

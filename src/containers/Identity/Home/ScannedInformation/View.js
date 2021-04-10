@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, View, Modal } from 'react-native';
+import { Text, View } from 'react-native';
+import Modal from '../../../../components/Modal'
 import Icon from 'react-native-vector-icons/AntDesign';
 import data from './mockData';
 import Styles from '../../../../styles';

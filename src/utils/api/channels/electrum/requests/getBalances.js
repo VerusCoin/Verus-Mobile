@@ -22,7 +22,7 @@ export const getOneBalance = (coinObj, activeUser) => {
   }
 
   return new Promise((resolve, reject) => {
-    electrumRequest(coinObj.serverList, callType, params, coinObj.id)
+    electrumRequest(coinObj.electrum_endpoints, callType, params, coinObj.id)
     .then((response) => {
       resolve({
         ...response,

@@ -8,23 +8,22 @@
 */
 
 import React, { Component } from "react";
-import StandardButton from "../../../../components/StandardButton";
 import { 
   View, 
-  Alert,
   ScrollView, 
   Keyboard,
+  TextInput as NativeTextInput
 } from "react-native";
+import { TextInput, Button, Checkbox } from 'react-native-paper'
 import { NavigationActions } from '@react-navigation/compat';
 import { CommonActions } from '@react-navigation/native';
-import { Input, CheckBox } from 'react-native-elements'
-import { deleteUserByID } from '../../../../actions/actionCreators';
+import { deleteProfile } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
-import AlertAsync from "react-native-alert-async";
 import { checkPinForUser } from '../../../../utils/asyncStore/asyncStore'
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles/index'
 import { removeBiometricPassword } from "../../../../utils/biometry/biometry";
+import { createAlert, resolveAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 
 class DeleteProfile extends Component {
   constructor() {
@@ -53,22 +52,17 @@ class DeleteProfile extends Component {
     this.props.navigation.dispatch(NavigationActions.back())
   }
 
-  onSuccess = () => {
-    Alert.alert("Success!", "Password for " + this.props.activeAccount.id + " reset successfully.");
-    this.props.navigation.dispatch(NavigationActions.back())
-  }
-
   canDelete = () => {
-    return AlertAsync(
+    return createAlert(
       'Confirm Deletion',
       "Are you sure you would like to delete this profile?",
       [
         {
           text: 'No, take me back',
-          onPress: () => Promise.resolve(false),
+          onPress: () => resolveAlert(false),
           style: 'cancel',
         },
-        {text: 'Yes', onPress: () => Promise.resolve(true)},
+        {text: 'Yes', onPress: () => resolveAlert(true)},
       ],
       {
         cancelable: false,
@@ -94,7 +88,7 @@ class DeleteProfile extends Component {
         } 
   
         if (!this.state.confirmSwitch && !_errors) {
-          Alert.alert("Please confirm", "Please confirm you are aware of what deleting your profile entails.")
+          createAlert("Please confirm", "Please confirm you are aware of what deleting your profile entails.")
           _errors = true
         }
   
@@ -106,11 +100,15 @@ class DeleteProfile extends Component {
           .then((res) => {
             if (res) {
               let data = {
-                task: this.deleteUser,
-                message: "Deleting profile, please do not close Verus Mobile",
-                input: [userID, accountHash, biometry],
-                dispatchResult: true
-              }
+                task: (_account, _biometry) =>
+                  this.deleteUser(
+                    _account,
+                    _biometry
+                  ),
+                message:
+                  "Deleting profile, please do not close Verus Mobile",
+                input: [this.props.activeAccount, biometry],
+              };
               this.resetToScreen("SecureLoading", data)
             } 
           })
@@ -120,44 +118,41 @@ class DeleteProfile extends Component {
         } 
       });
     } else {
-      Alert.alert("Error", "No account ID");
+      createAlert("Error", "No account ID");
     }
   }
 
-  deleteUser = async (userId, accountHash, deleteBiometry) => {
+  deleteUser = async (account, deleteBiometry) => {
     try {
-      if (deleteBiometry) await removeBiometricPassword(accountHash)
+      if (deleteBiometry) await removeBiometricPassword(account.accountHash)
       
-      const res = await deleteUserByID(userId)
-      Alert.alert("Account Deleted!", `"${userId}" account successfully deleted.`)
-
-      return res
+      await deleteProfile(account, this.props.dispatch)
+      createAlert("Profile Deleted!", `"${account.id}" profile successfully deleted.`)
     } catch (error) {
-      console.error(error)
-      Alert.alert("Error.", `Failed to delete "${userId}" account.`)
+      console.warn(error)
+      createAlert("Error.", `Failed to delete "${account.id}" profile.`)
     }
   }
 
   authenticatePwd = () => {
     return (
-      <Input 
-        label="Enter your password:"
-        labelStyle={Styles.formCenterLabel}
-        containerStyle={Styles.wideCenterBlock}
-        inputStyle={Styles.inputTextDefaultStyle}
-        onChangeText={(text) => this.setState({pwd: text})}
-        autoCapitalize={"none"}
-        autoCorrect={false}
-        secureTextEntry={true}
-        shake={this.state.errors.pwd}
-        errorMessage={
-          this.state.errors.pwd ? 
-            this.state.errors.pwd
-            :
-            null
-        }
+      <TextInput
+        dense
+        onChangeText={(text) => this.setState({ pwd: text })}
+        label="Profile Password"
+        underlineColor={Colors.primaryColor}
+        selectionColor={Colors.primaryColor}
+        render={(props) => (
+          <NativeTextInput
+            autoCapitalize={"none"}
+            autoCorrect={false}
+            secureTextEntry={true}
+            {...props}
+          />
+        )}
+        error={this.state.errors.pwd}
       />
-    )
+    );
   }
 
   resetToScreen = (route, data) => {
@@ -177,28 +172,33 @@ class DeleteProfile extends Component {
       <View style={Styles.defaultRoot}>
         <ScrollView style={Styles.fullWidth}
           contentContainerStyle={{...Styles.innerHeaderFooterContainerCentered, ...Styles.fullHeight}}>
-          {this.authenticatePwd()}
           <View style={Styles.wideBlock}>
-            <CheckBox
-              title="I confirm that I would like to delete my profile, and acknowledge that this action cannot be reversed."
-              checked={this.state.confirmSwitch}
-              textStyle={Styles.defaultText}
-              onPress={() => this.setState({confirmSwitch: !this.state.confirmSwitch})}
-            />
+            {this.authenticatePwd()}
           </View>
+            <View style={Styles.wideBlock}>
+              <Checkbox.Item
+                color={Colors.primaryColor}
+                label={"I confirm that I would like to delete my profile, and acknowledge that this action cannot be reversed."}
+                status={
+                  this.state.confirmSwitch
+                    ? "checked"
+                    : "unchecked"
+                }
+                onPress={() => this.setState({confirmSwitch: !this.state.confirmSwitch})}
+                mode="android"
+              />
+            </View>
         </ScrollView>
         <View style={Styles.highFooterContainer}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <StandardButton 
+            <Button 
               color={Colors.warningButtonColor}
-              title="CANCEL" 
               onPress={this.cancel}
-            />
-            <StandardButton 
-              color={Colors.linkButtonColor}
-              title="DELETE" 
+            >{"Cancel"}</Button>
+            <Button 
+              color={Colors.primaryColor}
               onPress={this._handleSubmit}
-            />
+            >{"Delete"}</Button>
           </View>
         </View>
       </View>

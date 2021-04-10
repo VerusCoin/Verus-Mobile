@@ -5,7 +5,7 @@ import {
   SET_BALANCES
 } from "../../../../utils/constants/storeType";
 import {
-  DLIGHT,
+  DLIGHT_PRIVATE,
   ELECTRUM,
   ETH,
   ERC20
@@ -16,7 +16,7 @@ import { getStandardEthBalance } from "../../../../utils/api/channels/eth/callCr
 import { getStandardErc20Balance } from "../../../../utils/api/channels/erc20/callCreator";
 
 const channelMap = {
-  [DLIGHT]: async (activeUser, coinObj) => {
+  [DLIGHT_PRIVATE]: async (activeUser, coinObj) => {
     const zBalances = await getPrivateBalance(
       coinObj.id,
       activeUser.accountHash,
@@ -28,7 +28,7 @@ const channelMap = {
 
     return {
       chainTicker: coinObj.id,
-      channel: DLIGHT,
+      channel: DLIGHT_PRIVATE,
       header,
       body: {
         confirmed: confirmed,

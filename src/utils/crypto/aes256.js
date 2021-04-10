@@ -22,17 +22,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. 
 */
 
+const { randomBytes } = require('./randomBytes');
+
 var aes256 = {},
     crypto = require('crypto'),
     algorithm = 'aes-256-gcm',
     legacy_algorithm = 'aes-256-ctr';
 
-aes256.encrypt = function (key, data) {
+aes256.encrypt = async function (key, data) {
     var sha256 = crypto.createHash('sha256');
     sha256.update(key);
 
-    var iv = crypto.randomBytes(16),
-        plaintext = new Buffer(data),
+    var iv = await randomBytes(16)
+
+    var plaintext = new Buffer(data),
         cipher = crypto.createCipheriv(algorithm, sha256.digest(), iv),
         ciphertext = cipher.update(plaintext);
     ciphertext = Buffer.concat([iv, ciphertext, cipher.final(), cipher.getAuthTag()]);
@@ -58,12 +61,13 @@ aes256.decrypt = function (key, data) {
     return plaintext;
 };
 
-aes256.legacy_encrypt = function (key, data) {
+aes256.legacy_encrypt = async function (key, data) {
     var sha256 = crypto.createHash('sha256');
     sha256.update(key);
 
-    var iv = crypto.randomBytes(16),
-        plaintext = new Buffer(data),
+    var iv = await randomBytes(16)
+
+    var plaintext = new Buffer(data),
         cipher = crypto.createCipheriv(legacy_algorithm, sha256.digest(), iv),
         ciphertext = cipher.update(plaintext);
     ciphertext = Buffer.concat([iv, ciphertext, cipher.final()]);

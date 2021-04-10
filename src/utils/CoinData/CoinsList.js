@@ -1,5 +1,5 @@
 import {
-  DLIGHT,
+  DLIGHT_PRIVATE,
   ELECTRUM,
   GENERAL,
   IS_VERUS,
@@ -10,7 +10,7 @@ import {
   ERC20,
 } from "../constants/intervalConstants";
 import { dlightServers } from 'agama-wallet-lib/src/dlight-servers';
-import { ETHERS } from "../constants/web3Constants";
+import { DEFAULT_DECIMALS, ETHERS } from "../constants/web3Constants";
 
 export const coinsList = {
   vrsc: {
@@ -19,13 +19,14 @@ export const coinsList = {
     system_id: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
     display_ticker: 'VRSC',
     display_name: "Verus Coin",
-    description:
-      "Verus Coin includes the first proven 51% hash attack resistant proof of power algorithm. The Verus vision is PBaaS, public blockchains as a service, provisioned for conditional rewards by Verus miners and stakers.",
+    theme_color: "#3165D4",
+    website: "https://verus.io",
     fee: 10000,
-    compatible_channels: [DLIGHT, ELECTRUM, GENERAL],
+    compatible_channels: [DLIGHT_PRIVATE, ELECTRUM, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT],
     proto: 'vrsc',
-    dlightEndpoints: dlightServers.vrsc
+    dlight_endpoints: dlightServers.vrsc,
+    decimals: DEFAULT_DECIMALS
   },
   kmd: {
     id: "KMD",
@@ -33,12 +34,13 @@ export const coinsList = {
     currency_id: '.kmd',
     system_id: '',
     display_ticker: 'KMD',
-    description:
-      "Komodo is an open, modular, multi-chain platform that provides an autonomous, customizable blockchain to every project that builds within the ecosystem.",
+    theme_color: "#2B6680",
+    website: "https://komodoplatform.com/en/",
     fee: 10000,
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   btc: {
     id: "BTC",
@@ -46,11 +48,12 @@ export const coinsList = {
     system_id: '',
     display_ticker: 'BTC',
     display_name: "Bitcoin",
-    description:
-      "The coin that started it all. Bitcoin (BTC) is a peer to peer digital currency created in 2009 by Satoshi Nakamoto.",
+    theme_color: "#F7931B",
+    website: "https://bitcoin.org/en/",
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   eth: {
     id: "ETH",
@@ -58,7 +61,8 @@ export const coinsList = {
     system_id: '.eth',
     display_ticker: 'ETH',
     display_name: "Ethereum",
-    description: "Ethereum is a global, open-source platform for decentralized applications.",
+    theme_color: "#141C30", 
+    website: "https://ethereum.org/en/",
     compatible_channels: [ETH, GENERAL],
     dominant_channel: ETH,
     tags: [],
@@ -71,33 +75,35 @@ export const coinsList = {
     system_id: '.eth',
     display_ticker: 'BAT',
     display_name: "Basic Attention Token",
-    description: "A decentralized, transparent digital ad exchange based on Ethereum Blockchain.",
+    theme_color: "#FB542B",
+    website: "https://basicattentiontoken.org/",
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     decimals: ETHERS,
     tags: [],
     proto: 'erc20'
   },
-  tst: {
-    id: "TST",
-    currency_id: '0x722dd3F80BAC40c951b51BdD28Dd19d435762180',
-    system_id: '.eth',
-    display_ticker: 'TST',
-    display_name: "ERC20 Test Token",
-    description: "A test token for testing the ERC20 protocol.",
-    compatible_channels: [ERC20, GENERAL],
-    dominant_channel: ERC20,
-    decimals: ETHERS,
-    tags: [],
-    proto: 'erc20'
-  },
+  // tst: {
+  //   id: "TST",
+  //   currency_id: '0x722dd3F80BAC40c951b51BdD28Dd19d435762180',
+  //   system_id: '.eth',
+  //   display_ticker: 'TST',
+  //   display_name: "ERC20 Test Token",
+  //   website: "",
+  //   compatible_channels: [ERC20, GENERAL],
+  //   dominant_channel: ERC20,
+  //   decimals: ETHERS,
+  //   tags: [],
+  //   proto: 'erc20'
+  // },
   yfi: {
     id: "YFI",
     currency_id: '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',
     system_id: '.eth',
     display_ticker: 'YFI',
     display_name: "yearn.finance",
-    description: "",
+    theme_color: "#0A6AE3",
+    website: "https://yearn.finance/",
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     decimals: ETHERS,
@@ -110,7 +116,8 @@ export const coinsList = {
     system_id: '.eth',
     display_ticker: 'LUNK',
     display_name: "ChainLink",
-    description: "",
+    theme_color: "#375BD2",
+    website: "https://chain.link/",
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     decimals: ETHERS,
@@ -123,7 +130,8 @@ export const coinsList = {
     system_id: '.eth',
     display_ticker: 'UNI',
     display_name: "Uniswap",
-    description: "",
+    theme_color: "#FF007A",
+    website: "https://uniswap.org/",
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     decimals: ETHERS,
@@ -136,7 +144,8 @@ export const coinsList = {
     system_id: '.eth',
     display_ticker: 'VEN',
     display_name: "VeChain",
-    description: "",
+    theme_color: "#33A4F1",
+    website: "https://www.vechain.org/",
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     decimals: ETHERS,
@@ -149,7 +158,8 @@ export const coinsList = {
     system_id: '.eth',
     display_ticker: 'BNT',
     display_name: "Bancor",
-    description: "",
+    theme_color: "#000D2B",
+    website: "https://app.bancor.network/eth/data",
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     decimals: ETHERS,
@@ -162,7 +172,8 @@ export const coinsList = {
     system_id: '.eth',
     display_ticker: 'RFOX',
     display_name: "RedFOX Labs",
-    description: "",
+    theme_color: "#D73937",
+    website: "https://www.redfoxlabs.io/",
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     decimals: ETHERS,
@@ -175,7 +186,8 @@ export const coinsList = {
     system_id: '.eth',
     display_ticker: 'BAL',
     display_name: "Balancer",
-    description: "",
+    theme_color: "#1E1E1E",
+    website: "https://balancer.finance/",
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     decimals: ETHERS,
@@ -187,8 +199,9 @@ export const coinsList = {
     currency_id: '0xe41d2489571d322189246dafa5ebde1f4699f498',
     system_id: '.eth',
     display_ticker: 'ZRX',
-    display_name: "ZRX",
-    description: "",
+    display_name: "0x",
+    theme_color: "#000000",
+    website: "https://0x.org/",
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     decimals: ETHERS,
@@ -201,7 +214,8 @@ export const coinsList = {
     system_id: '.eth',
     display_ticker: 'HOT',
     display_name: "HoloToken",
-    description: "",
+    theme_color: "#08838D",
+    website: "https://holochain.org/",
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     decimals: ETHERS,
@@ -214,7 +228,8 @@ export const coinsList = {
     system_id: '.eth',
     display_ticker: 'NEXO',
     display_name: "Nexo",
-    description: "",
+    theme_color: "#1E4DD8",
+    website: "https://nexo.io/",
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     decimals: ETHERS,
@@ -225,9 +240,10 @@ export const coinsList = {
     id: "DAI",
     currency_id: '0x6b175474e89094c44da98b954eedeac495271d0f',
     system_id: '.eth',
-    display_ticker: 'TST',
+    display_ticker: 'DAI',
     display_name: "Dai",
-    description: "",
+    theme_color: "#F5AC37",
+    website: "https://makerdao.com/en/",
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     decimals: ETHERS,
@@ -240,12 +256,13 @@ export const coinsList = {
     system_id: '.kmd',
     display_ticker: 'OOT',
     display_name: "Utrum",
-    description:
-      "A reward platform for crypto analysis, reviews and predictions",
+    theme_color: "#24AAE1",
+    website: "https://utrum.io/",
     fee: 10000,
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   ccl: {
     id: "CCL",
@@ -253,11 +270,13 @@ export const coinsList = {
     system_id: '',
     display_ticker: 'CCL',
     display_name: "CoinCollect",
-    description: "",
+    website: "https://coincollect.cc/",
     fee: 10000,
+    theme_color: "#36AFF3",
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   doge: {
     id: "DOGE",
@@ -265,11 +284,14 @@ export const coinsList = {
     system_id: '',
     display_ticker: 'CCL',
     display_name: "Dogecoin",
-    description: "",
+    theme_color: "#BB9F32",
+    website: "https://dogecoin.com/",
     fee: 100000000,
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS,
+    max_fee_rate_per_byte: 1000000,
   },
   dgb: {
     id: "DGB",
@@ -277,11 +299,13 @@ export const coinsList = {
     system_id: '',
     display_ticker: 'DGB',
     display_name: "Digibyte",
-    description: "",
+    theme_color: "#0866CC",
+    website: "https://digibyte.io/en-gb/",
     fee: 100000,
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   bch: {
     id: "BCH",
@@ -289,24 +313,28 @@ export const coinsList = {
     system_id: '',
     display_ticker: 'BCH',
     display_name: "Bitcoin Cash",
-    description: "",
+    website: "https://bch.info/en/",
     fee: 10000,
+    theme_color: "#8CC351",
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   zec: {
     id: "ZEC",
     currency_id: '',
     system_id: '.zec',
     display_ticker: 'ZEC',
-    display_name: "ZCash",
-    description: "",
+    display_name: "Zcash",
+    theme_color: "#000000",
+    website: "https://z.cash/",
     fee: 10000,
-    compatible_channels: [DLIGHT, ELECTRUM, GENERAL],
+    compatible_channels: [ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
     proto: 'btc',
-    dlightEndpoints: dlightServers.zec
+    dlight_endpoints: dlightServers.zec,
+    decimals: DEFAULT_DECIMALS
   },
   // zectest: {
   //   id: "ZECTEST",
@@ -314,24 +342,27 @@ export const coinsList = {
   //   system_id: null,
   //   display_ticker: 'ZECTEST',
   //   display_name: "ZCash Testnet",
-  //   description: "",
+  //   theme_color: "#000000",
+  //   website: "",
   //   fee: 10000,
-  //   compatible_channels: [DLIGHT, GENERAL],
+  //   compatible_channels: [DLIGHT_PRIVATE, GENERAL],
   //   tags: [IS_ZCASH],
   //   proto: 'btc',
-  //   dlightEndpoints: dlightServers.zectest
+  //   dlight_endpoints: dlightServers.zectest
   // },
   dash: {
     id: "DASH",
     currency_id: '.dash',
     system_id: '',
     display_ticker: 'DASH',
+    theme_color: "#0D8DE4",
     display_name: "Dash",
-    description: "",
+    website: "https://www.dash.org/",
     fee: 10000,
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   ltc: {
     id: "LTC",
@@ -339,11 +370,13 @@ export const coinsList = {
     system_id: '',
     display_ticker: 'LTC',
     display_name: "Litecoin",
-    description: "",
+    theme_color: "#345D9D",
+    website: "https://litecoin.org/",
     fee: 30000,
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   },
   zilla: {
     id: "ZILLA",
@@ -351,11 +384,12 @@ export const coinsList = {
     system_id: '',
     display_ticker: 'ZILLA',
     display_name: "ChainZilla",
-    description:
-      "The native token of Chainzilla Blockchain Solutions. They are a blockchain consulting company that develops easy to use whitelabel blockchain wallets and applications.",
+    theme_color: "#111126",
+    website: "https://chainzilla.io/",
     fee: 10000,
     compatible_channels: [ELECTRUM, GENERAL],
     tags: [IS_ZCASH],
-    proto: 'btc'
+    proto: 'btc',
+    decimals: DEFAULT_DECIMALS
   }
 };

@@ -14,7 +14,7 @@ import {
   SET_BALANCES,
   SET_RATES,
   SET_TRANSACTIONS,
-  SIGN_OUT,
+  SIGN_OUT_COMPLETE,
   //SET_ONE_BALANCE,
   //BALANCES_NEED_UPDATE,
   //TRANSACTIONS_NEED_UPDATE,
@@ -68,7 +68,7 @@ export const ledger = (state = {
           [channel]: { ...state.rates[channel], [chainTicker]: body }
         }
       };
-    case SIGN_OUT:
+    case SIGN_OUT_COMPLETE:
       return {
         ...state,
         balances: CHANNELS_OBJECT_TEMPLATE,

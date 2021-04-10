@@ -132,7 +132,7 @@ export const getTempActiveCoin = (coinID, callsSucceed, code, params, errorMsg =
   'Random address with balance of ~3000 VRSC taken from https://dexstats.info/richlist.php?asset=VRSC on July 31st, 2019',
   'VRSC Richlist #2 Address at https://dexstats.info/richlist.php?asset=VRSC as of July 31st, 2019'],
   serverList: setFetchParams(callsSucceed, code, params, false, errorMsg),
-  dlightEndpoints: ['light.virtualsoundnw.com:9077'],
+  dlight_endpoints: ['light.virtualsoundnw.com:9077'],
   apps: {
     wallet: {
       title: 'VRSC Wallet', 

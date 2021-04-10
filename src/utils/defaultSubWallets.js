@@ -1,22 +1,68 @@
-import { DLIGHT, ELECTRUM } from "./constants/intervalConstants"
-import { ENABLE_DLIGHT } from '../../env/main.json'
+import {
+  API_GET_ADDRESSES,
+  API_GET_BALANCES,
+  API_GET_FIATPRICE,
+  API_GET_INFO,
+  API_GET_KEYS,
+  API_GET_TRANSACTIONS,
+  API_SEND,
+  DLIGHT_PRIVATE,
+  ELECTRUM,
+  GENERAL,
+} from "./constants/intervalConstants";
+import { dlightEnabled } from "./enabledChannels";
+
+// export const API_GET_ADDRESSES = "get_addresses"
+// export const API_GET_BALANCES = "get_balances"
+// export const API_GET_INFO = "get_info"
+// export const API_GET_TRANSACTIONS = "get_transactions"
+// export const API_GET_FIATPRICE = "get_fiatprice"
 
 export const getDefaultSubWallets = (coinObj) => {
-  return coinObj.compatible_channels.includes(DLIGHT) && ENABLE_DLIGHT ? [{
+  const dominantChannel = coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM
+
+  return coinObj.compatible_channels.includes(DLIGHT_PRIVATE) && dlightEnabled() ? [{
     channel: coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM,
+    api_channels: {
+      [API_GET_BALANCES]: dominantChannel,
+      [API_GET_INFO]: dominantChannel,
+      [API_GET_ADDRESSES]: dominantChannel,
+      [API_GET_TRANSACTIONS]: dominantChannel,
+      [API_GET_FIATPRICE]: GENERAL,
+      [API_SEND]: dominantChannel,
+      [API_GET_KEYS]: dominantChannel
+    },
     id: "MAIN_WALLET",
     params: {},
-    color: '#2E86AB'
+    color: '#3165D4'
   },
   {
-    channel: DLIGHT,
+    channel: DLIGHT_PRIVATE,
+    api_channels: {
+      [API_GET_BALANCES]: DLIGHT_PRIVATE,
+      [API_GET_INFO]: DLIGHT_PRIVATE,
+      [API_GET_ADDRESSES]: DLIGHT_PRIVATE,
+      [API_GET_TRANSACTIONS]: DLIGHT_PRIVATE,
+      [API_GET_FIATPRICE]: GENERAL,
+      [API_SEND]: DLIGHT_PRIVATE,
+      [API_GET_KEYS]: DLIGHT_PRIVATE
+    },
     id: "PRIVATE_WALLET",
     params: {},
-    color: '#EDAE49'
+    color: '#000000'
   }] : [{
     channel: coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM,
+    api_channels: {
+      [API_GET_BALANCES]: dominantChannel,
+      [API_GET_INFO]: dominantChannel,
+      [API_GET_ADDRESSES]: dominantChannel,
+      [API_GET_TRANSACTIONS]: dominantChannel,
+      [API_GET_FIATPRICE]: GENERAL,
+      [API_SEND]: dominantChannel,
+      [API_GET_KEYS]: dominantChannel
+    },
     id: "MAIN_WALLET",
     params: {},
-    color: '#2E86AB'
+    color: '#3165D4'
   }]
 }

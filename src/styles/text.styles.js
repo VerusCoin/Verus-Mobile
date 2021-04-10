@@ -2,13 +2,16 @@ import Colors from '../globals/colors';
 
 export default text = {
   centralHeader: {
-    fontSize: 24,
+    fontSize: 20,
     color: Colors.quaternaryColor,
     textAlign: 'center',
     fontFamily: 'Avenir-Medium',
   },
   mediumFont: {
     fontSize: 24,
+  },
+  smallMediumFont: {
+    fontSize: 20,
   },
   centralSuccessHeader: {
     fontSize: 24,
@@ -60,9 +63,7 @@ export default text = {
     fontFamily: 'Avenir-Book',
   },
   smallerDescriptiveText: {
-    textAlign: 'center',
     fontSize: 14,
-    fontFamily: 'Avenir-Book',
   },
   seedText: {
     color: Colors.primaryColor,
@@ -251,7 +252,6 @@ export default text = {
   },
   textWithGreyColor:{
     color: Colors.quaternaryColor,
-    paddingTop: 3,
   },
   textWithHorizontalPadding:{
     paddingHorizontal: 10,
