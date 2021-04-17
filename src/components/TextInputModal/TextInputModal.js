@@ -44,6 +44,8 @@ class TextInputModal extends Component {
               autoCapitalize={"none"}
               autoCorrect={false}
               autoComplete="false"
+              returnKeyType="done"
+              onSubmitEditing={cancel != null ? () => cancel() : () => {}}
               {...props}
             />
           )}

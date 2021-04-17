@@ -136,7 +136,7 @@ class VerusMobile extends React.Component {
           />
         </Portal.Host>
         <Modal
-          animationType={this.state.loading ? "fade" : "slide"}
+          animationType={this.state.loading ? "fade" : "none"}
           transparent={false}
           visible={this.state.securityCover || this.state.loading}
         >

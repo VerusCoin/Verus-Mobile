@@ -76,6 +76,8 @@ export const renderTransactionInfo = function() {
                           style={{
                             fontSize: 16,
                             alignSelf: "center",
+                            color: Colors.verusDarkGray,
+                            fontWeight: "300",
                             marginRight: 8,
                           }}
                         >
@@ -112,7 +114,7 @@ export const renderTransactionInfo = function() {
             condition: this.state.identity != null,
           },
           {
-            key: "Amount Submitted",
+            key: "Amount Requested",
             data:
               truncateDecimal(
                 this.state.amountSubmitted,
@@ -158,7 +160,7 @@ export const renderTransactionInfo = function() {
               : null,
           },
           {
-            key: isSendResult ? "Amount Sent" : "Final Amount",
+            key: "Amount Deducted",
             data:
               truncateDecimal(
                 this.state.finalTxAmount,
