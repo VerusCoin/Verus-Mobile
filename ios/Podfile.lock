@@ -38,12 +38,12 @@ PODS:
     - SwiftNIOTransportServices (< 2, >= 1.6.0)
     - SwiftProtobuf (< 2, >= 1.9.0)
   - Logging (1.4.0)
-  - lottie-ios (3.1.8)
+  - lottie-ios (3.1.9)
   - lottie-react-native (3.5.0):
     - lottie-ios (~> 3.1.8)
     - React
   - MnemonicSwift (2.0.0)
-  - Permission-Camera (2.1.5):
+  - Permission-Camera (2.2.2):
     - RNPermissions
   - RCTRequired (0.61.5)
   - RCTTypeSafety (0.61.5):
@@ -229,8 +229,6 @@ PODS:
   - react-native-text-input-mask (2.0.0):
     - React
     - RNInputMask
-  - react-native-udp (2.7.0):
-    - React
   - react-native-verus-light-client (1.0.0):
     - MnemonicSwift
     - React
@@ -288,10 +286,8 @@ PODS:
   - RNInputMask (4.1.0)
   - RNKeychain (6.2.0):
     - React
-  - RNOS (1.2.6):
-    - React
-  - RNPermissions (2.1.5):
-    - React
+  - RNPermissions (2.2.2):
+    - React-Core
   - RNReactNativeHapticFeedback (1.11.0):
     - React-Core
   - RNReanimated (1.10.1):
@@ -346,8 +342,6 @@ PODS:
     - SwiftNIOFoundationCompat (< 3, >= 2.19.0)
     - SwiftNIOTLS (< 3, >= 2.19.0)
   - SwiftProtobuf (1.15.0)
-  - TcpSockets (3.3.2):
-    - React
   - Yoga (1.14.0)
   - ZcashLightClientKit (0.9.1):
     - gRPC-Swift (= 1.0.0-alpha.19)
@@ -362,7 +356,6 @@ DEPENDENCIES:
   - FBReactNativeSpec (from `../node_modules/react-native/Libraries/FBReactNativeSpec`)
   - Folly (from `../node_modules/react-native/third-party-podspecs/Folly.podspec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
-  - lottie-ios (from `../node_modules/lottie-ios`)
   - lottie-react-native (from `../node_modules/lottie-react-native`)
   - MnemonicSwift (~> 2.0.0)
   - Permission-Camera (from `../node_modules/react-native-permissions/ios/Camera.podspec`)
@@ -384,7 +377,6 @@ DEPENDENCIES:
   - react-native-randombytes (from `../node_modules/react-native-randombytes`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-text-input-mask (from `../node_modules/react-native-text-input-mask`)
-  - react-native-udp (from `../node_modules/react-native-udp`)
   - react-native-verus-light-client (from `../node_modules/react-native-verus-light-client`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
@@ -406,7 +398,6 @@ DEPENDENCIES:
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNInputMask (from `../node_modules/react-native-text-input-mask/ios/InputMask`)
   - RNKeychain (from `../node_modules/react-native-keychain`)
-  - RNOS (from `../node_modules/react-native-os`)
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNReactNativeHapticFeedback (from `../node_modules/react-native-haptic-feedback`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
@@ -414,7 +405,6 @@ DEPENDENCIES:
   - RNShare (from `../node_modules/react-native-share`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
-  - TcpSockets (from `../node_modules/react-native-tcp`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
   - ZcashLightClientKit (from `https://github.com/michaeltout/ZcashLightClientKit.git`, branch `0.9.1`)
   - ZcashLightClientKit/Tests (from `https://github.com/michaeltout/ZcashLightClientKit.git`, branch `0.9.1`)
@@ -433,6 +423,7 @@ SPEC REPOS:
     - CNIOWindows
     - gRPC-Swift
     - Logging
+    - lottie-ios
     - MnemonicSwift
     - SQLite.swift
     - SwiftNIO
@@ -457,8 +448,6 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/Folly.podspec"
   glog:
     :podspec: "../node_modules/react-native/third-party-podspecs/glog.podspec"
-  lottie-ios:
-    :path: "../node_modules/lottie-ios"
   lottie-react-native:
     :path: "../node_modules/lottie-react-native"
   Permission-Camera:
@@ -495,8 +484,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-text-input-mask:
     :path: "../node_modules/react-native-text-input-mask"
-  react-native-udp:
-    :path: "../node_modules/react-native-udp"
   react-native-verus-light-client:
     :path: "../node_modules/react-native-verus-light-client"
   React-RCTActionSheet:
@@ -537,8 +524,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-text-input-mask/ios/InputMask"
   RNKeychain:
     :path: "../node_modules/react-native-keychain"
-  RNOS:
-    :path: "../node_modules/react-native-os"
   RNPermissions:
     :path: "../node_modules/react-native-permissions"
   RNReactNativeHapticFeedback:
@@ -553,8 +538,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-svg"
   RNVectorIcons:
     :path: "../node_modules/react-native-vector-icons"
-  TcpSockets:
-    :path: "../node_modules/react-native-tcp"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
   ZcashLightClientKit:
@@ -584,10 +567,10 @@ SPEC CHECKSUMS:
   glog: 1f3da668190260b06b429bb211bfbee5cd790c28
   gRPC-Swift: 75a7a8d7cd08177165ef971159afb84e5130cfc9
   Logging: beeb016c9c80cf77042d62e83495816847ef108b
-  lottie-ios: 48fac6be217c76937e36e340e2d09cf7b10b7f5f
+  lottie-ios: 3a3758ef5a008e762faec9c9d50a39842f26d124
   lottie-react-native: 1fb4ce21d6ad37dab8343eaff8719df76035bd93
   MnemonicSwift: 36384fc6b2640d93df9fe9fb60a8da7957cec36d
-  Permission-Camera: afad27bf90337684d4a86f3825112d648c8c4d3b
+  Permission-Camera: 5d2aaf95592660b6dcb5e8d1d90ed5d0156cad02
   RCTRequired: b153add4da6e7dbc44aebf93f3cf4fcae392ddf1
   RCTTypeSafety: 9aa1b91d7f9310fc6eadc3cf95126ffe818af320
   React: b6a59ef847b2b40bb6e0180a97d0ca716969ac78
@@ -604,7 +587,6 @@ SPEC CHECKSUMS:
   react-native-randombytes: 3638d24759d67c68f6ccba60c52a7a8a8faa6a23
   react-native-safe-area-context: b6e0e284002381d2ff29fa4fff42b4d8282e3c94
   react-native-text-input-mask: 07227297075f9653315f43b0424d596423a01736
-  react-native-udp: ff9d13e523f2b58e6bc5d4d32321ac60671b5dc9
   react-native-verus-light-client: ba8400658314adecefa08593e46d9fa69029bea8
   React-RCTActionSheet: 600b4d10e3aea0913b5a92256d2719c0cdd26d76
   React-RCTAnimation: 791a87558389c80908ed06cc5dfc5e7920dfa360
@@ -625,8 +607,7 @@ SPEC CHECKSUMS:
   RNGestureHandler: b6b359bb800ae399a9c8b27032bdbf7c18f08a08
   RNInputMask: 815461ebdf396beb62cf58916c35cf6930adb991
   RNKeychain: b8e0711b959a19c5b057d1e970d3c83d159b6da5
-  RNOS: 6f2f9a70895bbbfbdad7196abd952e7b01d45027
-  RNPermissions: ad71dd4f767ec254f2cd57592fbee02afee75467
+  RNPermissions: 5df468064df661a4c8c017e2791ce90d7695eea5
   RNReactNativeHapticFeedback: 653a8c126a0f5e88ce15ffe280b3ff37e1fbb285
   RNReanimated: c2bb7438b57a3d987bb2e4e6e4bca94787e30b02
   RNScreens: c526239bbe0e957b988dacc8d75ac94ec9cb19da
@@ -644,7 +625,6 @@ SPEC CHECKSUMS:
   SwiftNIOTLS: 434418842a6bebc21864ec84229e5e3d2762ca0b
   SwiftNIOTransportServices: a8a17a43695a09bfdd5a56426f6e515120d5dbf3
   SwiftProtobuf: 3320217e9d8fb75f36b40282e78c482640fd75dd
-  TcpSockets: 14306fb79f9750ea7d2ddd02d8bed182abb01797
   Yoga: f2a7cd4280bfe2cca5a7aed98ba0eb3d1310f18b
   ZcashLightClientKit: d5a681033b3f59c59c93837232ed7890d3e07918
 
