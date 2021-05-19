@@ -2,12 +2,11 @@ import React, { useEffect, useCallback } from 'react';
 
 import { Map as IMap } from 'immutable';
 import {
-  View, Text, Platform, TouchableOpacity,
+  View, Text, Platform, TouchableOpacity, ScrollView
 } from 'react-native';
 import {
   SearchBar, CheckBox, ListItem, Button, Badge,
 } from 'react-native-elements';
-import { ScrollView } from 'react-native-gesture-handler';
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome5';
 
 import AddCategoryDialog from './CategoryDialogs/AddCategory';

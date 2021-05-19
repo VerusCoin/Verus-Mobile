@@ -125,7 +125,7 @@ class SubWalletSelectorModal extends Component {
           <Text style={Styles.centralHeader}>{"Select a Card"}</Text>
           <ScrollView>
             {subWallets.map((wallet, index) => (
-              <View style={{ margin: 8 }}>
+              <View style={{ margin: 8 }} key={index}>
                 <Card
                   onPress={
                     onSelect == null

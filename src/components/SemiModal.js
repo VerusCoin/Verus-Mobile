@@ -33,14 +33,16 @@ class SemiModal extends Component {
   fadeIn = () => {
     Animated.timing(this.animatedOpacity, {
       toValue: 0.6,
-      duration: 300
+      duration: 300,
+      useNativeDriver: true
     }).start();
   };
 
   fadeOut = () => {
     Animated.timing(this.animatedOpacity, {
       toValue: 0,
-      duration: 300
+      duration: 300,
+      useNativeDriver: true
     }).start();
   };
 

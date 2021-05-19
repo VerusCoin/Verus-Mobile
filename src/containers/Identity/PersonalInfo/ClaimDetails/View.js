@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, Platform, TouchableOpacity,
+  View, Text, Platform, TouchableOpacity, ScrollView
 } from 'react-native';
 import { SearchBar, ListItem, Button } from 'react-native-elements';
 import { Map as IMap } from 'immutable';
-import { ScrollView } from 'react-native-gesture-handler';
 import Styles from '../../../../styles';
 import Colors from '../../../../globals/colors';
 import AttestationDetails from '../../Home/AttestationDetails';

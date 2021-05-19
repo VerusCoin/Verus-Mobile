@@ -29,7 +29,7 @@ export default class NumberPad extends Component {
 
     // set current display
     this.setState({
-      display: display._reactInternalFiber.key,
+      display: display._reactInternals.key,
     });
 
     // show input
@@ -64,19 +64,19 @@ export default class NumberPad extends Component {
   };
 
   registerDisplay = (display) => {
-    this.displays[display._reactInternalFiber.key] = display;
+    this.displays[display._reactInternals.key] = display;
   };
 
   unregisterDisplay = (display) => {
-    delete this.displays[display._reactInternalFiber.key];
+    delete this.displays[display._reactInternals.key];
   };
 
   registerAvoidingView = (view) => {
-    this.avoidingViews[view._reactInternalFiber.key] = view;
+    this.avoidingViews[view._reactInternals.key] = view;
   };
 
   unregisterAvoidingView = (view) => {
-    delete this.avoidingViews[view._reactInternalFiber.key];
+    delete this.avoidingViews[view._reactInternals.key];
   };
 
   registerInput = (input) => {

@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { Map as IMap } from 'immutable';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View, ScrollView } from 'react-native';
 import { Button } from 'react-native-elements';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { ScrollView } from 'react-native-gesture-handler';
 
 import { selectActiveIdentity, selectPinnedAttestations, selectAttestationModalVisibility } from '../../../selectors/identity';
 

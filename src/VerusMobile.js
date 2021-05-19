@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  YellowBox,
+  LogBox,
   Alert,
   AppState,
   Platform,
@@ -39,7 +39,7 @@ class VerusMobile extends React.Component {
       securityCover: false
     };
     
-    YellowBox.ignoreWarnings([
+    LogBox.ignoreLogs([
       "Warning: componentWillMount is deprecated",
       "Warning: componentWillReceiveProps is deprecated",
       "Warning: componentWillUpdate is deprecated",

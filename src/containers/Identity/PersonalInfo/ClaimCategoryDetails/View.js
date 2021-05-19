@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Map as IMap } from 'immutable';
-import { View, Platform, Text } from 'react-native';
+import { View, Platform, Text, ScrollView } from 'react-native';
 import { ListItem, CheckBox, SearchBar } from 'react-native-elements';
-import { ScrollView } from 'react-native-gesture-handler';
 import AlphabeticalSort from '../AlphaSort/AlphabeticalSort';
 import Styles from '../../../../styles';
 import Colors from '../../../../globals/colors';

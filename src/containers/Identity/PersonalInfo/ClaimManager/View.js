@@ -2,8 +2,14 @@ import React, {
   useCallback, useEffect, useState,
 } from 'react';
 import { Map as IMap } from 'immutable';
-import { View, Text, Platform } from 'react-native';
-import { ScrollView, TouchableWithoutFeedback, TouchableOpacity } from 'react-native-gesture-handler';
+import {
+  View,
+  Text,
+  Platform,
+  ScrollView,
+  TouchableWithoutFeedback,
+  TouchableOpacity,
+} from "react-native";
 import MaterialIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { CheckBox, SearchBar } from 'react-native-elements';
 import { truncateString } from './utils/truncateString';

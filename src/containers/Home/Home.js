@@ -62,7 +62,8 @@ class Home extends Component {
   animateHeightChange(anim, toValue, cb = () => {}) {    
     Animated.timing(anim, {
       toValue,
-      duration: this.LIST_ITEM_ANIMATION_DURATION
+      duration: this.LIST_ITEM_ANIMATION_DURATION,
+      useNativeDriver: false
     }).start(cb);
   }
 
