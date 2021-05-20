@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import ImagePicker from 'react-native-image-picker';
+//import ImagePicker from 'react-native-image-picker';
 import {
   Platform,
   View,
@@ -44,18 +44,18 @@ class ManageWyreDocuments extends Component {
   }
 
   handleSelect = () => {
-    Keyboard.dismiss();
-    ImagePicker.showImagePicker((response) => {
-      if (response.error) {
-        Alert.alert(response.error);
-      } else if (response.type !== 'image/jpeg') {
-        Alert.alert('Please select image in jpeg format');
-      } else {
-        this.setState({
-          image: response,
-        });
-      }
-    });
+    // Keyboard.dismiss();
+    // ImagePicker.showImagePicker((response) => {
+    //   if (response.error) {
+    //     Alert.alert(response.error);
+    //   } else if (response.type !== 'image/jpeg') {
+    //     Alert.alert('Please select image in jpeg format');
+    //   } else {
+    //     this.setState({
+    //       image: response,
+    //     });
+    //   }
+    // });
   };
 
   clearSelectedImage = () => {

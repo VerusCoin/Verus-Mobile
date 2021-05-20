@@ -54,7 +54,7 @@ class SendCoin extends Component {
       fromAddress: "",
       toAddress: "",
       memo: "",
-      amount: "0",
+      amount: 0,
       amountFiat: false,
       btcFees: {},
       loadingBTCFees: false,

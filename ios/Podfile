@@ -82,7 +82,6 @@ target 'verusmobile' do
   # Pods for Verus-Mobile
   pod 'ZcashLightClientKit', :git => 'https://github.com/michaeltout/ZcashLightClientKit.git', :branch => '0.9.1', :testspecs => ['Tests']
   pod 'MnemonicSwift', '~> 2.0.0'
-  pod 'RNInputMask', :path => '../node_modules/react-native-text-input-mask/ios/InputMask'
   pod 'Permission-Camera', :path => "#{permissions_path}/Camera/Permission-Camera.podspec"
 
   # Enables Flipper.

@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 
-import IconVector from 'react-native-vector-icons/Ionicons';
+//import IconVector from 'react-native-vector-icons/Ionicons';
 import Colors from '../../globals/colors';
 import SideMenu from '../../containers/SideMenu/SideMenu';
 
@@ -194,14 +194,14 @@ function MainStackScreens() {
               }}
               style={styles.goBackBtn}
             >
-              <IconVector
+              {/* <IconVector
                 name={
                   Platform.OS === "ios" ? "ios-arrow-back" : "md-arrow-back"
                 }
                 size={35}
                 color="white"
                 style={{ paddingLeft: 8 }}
-              />
+              /> */}
               <Text style={styles.goBackBtnText}>Back</Text>
             </TouchableOpacity>
           ),

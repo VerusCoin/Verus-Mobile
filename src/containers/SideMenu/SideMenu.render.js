@@ -1,6 +1,5 @@
 import React from "react";
-import { View, Text, FlatList, SectionList } from "react-native";
-import { Icon, ListItem } from "react-native-elements";
+import { View, FlatList, SectionList } from "react-native";
 import DrawerHeader from '../../components/DrawerHeader';
 import { 
   setActiveSectionBuySellCrypto,
@@ -184,7 +183,7 @@ export const renderMainDrawerComponents = function() {
           />
           <List.Item
             title={"Settings"}
-            left={() => <List.Icon icon="settings"/>}
+            left={() => <List.Icon icon="cog"/>}
             onPress={() =>
               this.setState({ mainDrawer: false, currentCoinIndex: -2 })
             }
