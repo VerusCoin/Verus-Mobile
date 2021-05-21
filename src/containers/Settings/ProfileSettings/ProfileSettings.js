@@ -8,6 +8,7 @@
 
 import React, { Component } from "react";
 import { ListItem } from "react-native-elements";
+import { CommonActions } from '@react-navigation/native';
 import { Divider, List, Portal } from "react-native-paper"
 import { 
   View, 
@@ -17,19 +18,29 @@ import {
 } from "react-native";
 import { connect } from 'react-redux';
 import Styles from '../../../styles/index'
-import { getSupportedBiometryType, removeBiometricPassword, storeBiometricPassword } from "../../../utils/biometry/biometry";
-import { addEncryptedKey, setBiometry } from "../../../actions/actionCreators";
+import {
+  getSupportedBiometryType,
+  removeBiometricPassword,
+  storeBiometricPassword
+} from "../../../utils/biometry/biometry";
+import {
+  addEncryptedKey,
+  setBiometry,
+  setKeyDerivationVersion,
+  signOut,
+} from "../../../actions/actionCreators";
 import PasswordCheck from "../../../components/PasswordCheck";
 import {
   canEnableBiometry,
   canShowSeed,
 } from "../../../actions/actions/channels/dlight/dispatchers/AlertManager";
-import { createAlert } from "../../../actions/actions/alert/dispatchers/alert";
+import { createAlert, resolveAlert } from "../../../actions/actions/alert/dispatchers/alert";
 import { checkPinForUser } from "../../../utils/asyncStore/asyncStore";
-import { ENABLE_DLIGHT } from '../../../../env/main.json'
+import { ENABLE_DLIGHT, APP_VERSION } from '../../../../env/main.json'
 import { dlightEnabled } from "../../../utils/enabledChannels";
 import SetupSeedModal from "../../../components/SetupSeedModal/SetupSeedModal";
 import { DLIGHT_PRIVATE } from "../../../utils/constants/intervalConstants";
+import ListSelectionModal from "../../../components/ListSelectionModal/ListSelectionModal";
 
 const RESET_PWD = "ResetPwd"
 const REMOVE_PROFILE = "DeleteProfile"
@@ -48,8 +59,14 @@ class ProfileSettings extends Component {
         biometry: false,
       },
       privateSeedModalOpen: false,
+      keyDerivationVersionModalOpen: false,
       onPasswordCorrect: () => {},
     };
+
+    this.KEY_DERIVATION_VERSION_LABELS = {
+      [0]: "<= 0.2.1-beta",
+      [1]: APP_VERSION
+    }
   }
 
   _openSettings = (screen) => {
@@ -71,6 +88,30 @@ class ProfileSettings extends Component {
       cb
     );
   };
+
+  resetToScreen = (route, title, data, fullReset) => {
+    let resetAction
+
+    if (fullReset) {
+      resetAction = CommonActions.reset({
+        index: 0, // <-- currect active route from actions array
+        routes: [
+          { name: route, params: { data: data } },
+        ],
+      })
+    } else {
+      resetAction = CommonActions.reset({
+        index: 1, // <-- currect active route from actions array
+        routes: [
+          { name: "Home" },
+          { name: route, params: { title: title, data: data } },
+        ],
+      })
+    }
+
+    this.props.navigation.closeDrawer();
+    this.props.navigation.dispatch(resetAction)
+  }
 
   toggleBiometry = async (passwordCheck) => {
     if (passwordCheck.valid) {
@@ -117,6 +158,60 @@ class ProfileSettings extends Component {
     }
   };
 
+  canSetUserKeyDerivationVersion = () => {
+    return createAlert(
+      'Change key derivation version?',
+      "Changing the key derivation version will change how your addresses are derived from your " + 
+      "seed for this profile. This will log you out.",
+      [
+        {
+          text: 'No',
+          onPress: () => resolveAlert(false),
+          style: 'cancel',
+        },
+        {text: 'Yes', onPress: () => resolveAlert(true)},
+      ],
+      {
+        cancelable: true,
+      },
+    )
+  }
+
+  setUserKeyDerivationVersion = async (keyDerivationVersion) => {
+    if (
+      keyDerivationVersion !== this.props.activeAccount.keyDerivationVersion &&
+      (await this.canSetUserKeyDerivationVersion())
+    ) {
+      const { activeAccount } = this.props;
+      const { id } = activeAccount;
+
+      this.props.dispatch(
+        await setKeyDerivationVersion(id, keyDerivationVersion)
+      );
+      this.resetToScreen(
+        "SecureLoading",
+        null,
+        {
+          task: () => {
+            // Hack to prevent crash on screens that require activeAccount not to be null
+            // TODO: Find a more elegant solution
+            return new Promise((resolve, reject) => {
+              setTimeout(() => {
+                this.props.dispatch(signOut());
+                resolve();
+              }, 1000);
+            });
+          },
+          message: "Signing out...",
+          route: "Home",
+          successMsg: "Signed out",
+          errorMsg: "Failed to sign out",
+        },
+        true
+      );
+    }
+  };
+
   showSeed = async (passwordCheck) => {
     if (passwordCheck.valid) {
       const { activeAccount } = this.props;
@@ -139,6 +234,18 @@ class ProfileSettings extends Component {
       createAlert("Authentication Error", "Incorrect password");
     }
   };
+
+  openKeyDerivationVersionModal = () => {
+    this.setState({
+      keyDerivationVersionModalOpen: true
+    })
+  }
+
+  closeKeyDerivationVersionModal = () => {
+    this.setState({
+      keyDerivationVersionModalOpen: false
+    })
+  }
 
   addZSeed = (seed, channel) => {
     this.openPasswordCheck((result) => {
@@ -193,6 +300,28 @@ class ProfileSettings extends Component {
             setSeed={(seed, channel) => this.addZSeed(seed, channel)}
             channel={DLIGHT_PRIVATE}
           />
+          {this.state.keyDerivationVersionModalOpen && (
+            <ListSelectionModal
+              flexHeight={1}
+              title="Key Derivation Versions"
+              selectedKey={this.props.activeAccount.keyDerivationVersion}
+              visible={this.state.keyDerivationVersionModalOpen}
+              onSelect={(item) => this.setUserKeyDerivationVersion(item.key)}
+              data={Object.keys(this.KEY_DERIVATION_VERSION_LABELS).map(
+                (key) => {
+                  return {
+                    key: Number(key),
+                    title: this.KEY_DERIVATION_VERSION_LABELS[key],
+                    description:
+                      this.KEY_DERIVATION_VERSION_LABELS[key] === APP_VERSION
+                        ? "Latest"
+                        : "Legacy",
+                  };
+                }
+              )}
+              cancel={() => this.closeKeyDerivationVersionModal()}
+            />
+          )}
         </Portal>
         {/* TODO: Add back in when more interesting profile data and/or settings are implemented
           <TouchableOpacity onPress={() => this._openSettings(PROFILE_INFO)}>
@@ -249,15 +378,32 @@ class ProfileSettings extends Component {
             <List.Item
               title={`${
                 this.props.activeAccount.biometry ? "Disable" : "Setup"
-              } biometric login`}
+              } Biometric Authentication`}
               left={(props) => <List.Icon {...props} icon={"lock"} />}
-              right={(props) => (
-                <List.Icon {...props} icon={"chevron-right"} />
-              )}
             />
             <Divider />
           </TouchableOpacity>
         )}
+        <List.Subheader>{"Key Settings"}</List.Subheader>
+        <TouchableOpacity
+          onPress={() => this.openKeyDerivationVersionModal()}
+          style={{ ...Styles.flex }}
+        >
+          <Divider />
+          <List.Item
+            title={"Key Derivation Version"}
+            right={() => (
+              <Text style={Styles.listItemTableCell}>
+                {
+                  this.KEY_DERIVATION_VERSION_LABELS[
+                    this.props.activeAccount.keyDerivationVersion
+                  ]
+                }
+              </Text>
+            )}
+          />
+          <Divider />
+        </TouchableOpacity>
         <PasswordCheck
           cancel={() => this.closePasswordDialog()}
           submit={(result) => this.state.onPasswordCorrect(result)}
@@ -289,16 +435,12 @@ class ProfileSettings extends Component {
             />
           </TouchableOpacity>
         )}
-        <TouchableOpacity
-          onPress={() => this._openSettings(REMOVE_PROFILE)}
-        >
+        <TouchableOpacity onPress={() => this._openSettings(REMOVE_PROFILE)}>
           <Divider />
           <List.Item
             title={"Delete Profile"}
             left={(props) => <List.Icon {...props} icon={"trash-can"} />}
-            right={(props) => (
-              <List.Icon {...props} icon={"chevron-right"} />
-            )}
+            right={(props) => <List.Icon {...props} icon={"chevron-right"} />}
           />
           <Divider />
         </TouchableOpacity>

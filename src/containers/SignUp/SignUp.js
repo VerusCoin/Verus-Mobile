@@ -7,8 +7,7 @@
 
 import { Component } from "react"
 import { 
-  Keyboard,
-  Alert,
+  Keyboard
 } from "react-native"
 import { NavigationActions } from '@react-navigation/compat'
 import { addCoin, addUser, disableSelectDefaultAccount } from '../../actions/actionCreators'
@@ -23,7 +22,9 @@ import { START_COINS } from "../../utils/constants/constants"
 import { SignUpRender } from "./SignUp.render"
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert"
 import { findCoinObj } from "../../utils/CoinData/CoinData"
-import { canCopySeed } from "../../actions/actions/channels/dlight/dispatchers/AlertManager"
+import {
+  KEY_DERIVATION_VERSION,
+} from "../../../env/main.json";
 
 class SignUp extends Component {
   constructor() {
@@ -195,7 +196,8 @@ class SignUp extends Component {
             arrayToObject(CHANNELS, (acc, channel) => _seeds[channel], true),
             this.state.pin,
             this.props.accounts,
-            biometry
+            biometry,
+            KEY_DERIVATION_VERSION
           ).then(async (action) => {
             this.createAccount(action);
             await this.addStartingCoins(this.state.userName)
@@ -229,7 +231,8 @@ class SignUp extends Component {
                   arrayToObject(CHANNELS, (acc, channel) => _seeds[channel], true),
                   this.state.pin,
                   this.props.accounts,
-                  biometry
+                  biometry,
+                  KEY_DERIVATION_VERSION
                 )
                   .then(async (action) => {
                     this.createAccount(action)

@@ -13,9 +13,10 @@ import {
   deleteUser,
   setUserBiometry,
   setUsers,
+  setUserKeyDerivationVersion,
 } from "../../utils/asyncStore/asyncStore";
 import {
-  makeKeyPair
+  deriveKeyPair
 } from '../../utils/keys'
 import {
   decryptkey,
@@ -25,19 +26,32 @@ import { sha256, hashAccountId } from '../../utils/crypto/hash';
 import WyreService from '../../services/wyreService';
 import { CHANNELS, ELECTRUM, ERC20, ETH, DLIGHT_PRIVATE } from '../../utils/constants/intervalConstants';
 import { arrayToObject } from '../../utils/objectManip';
-import { ENABLE_FIAT_GATEWAY } from '../../../env/main.json';
-import { BIOMETRIC_AUTH } from '../../utils/constants/storeType';
-import { fetchActiveCoins, removeExistingCoin } from './coins/Coins';
+import {
+  ENABLE_FIAT_GATEWAY,
+  KEY_DERIVATION_VERSION,
+} from "../../../env/main.json";
+import { BIOMETRIC_AUTH, SET_ACCOUNTS } from '../../utils/constants/storeType';
+import { removeExistingCoin } from './coins/Coins';
 
-export const addUser = (userName, seeds, password, users, biometry = false) => {
+export const addUser = (
+  userName,
+  seeds,
+  password,
+  users,
+  biometry = false,
+  keyDerivationVersion = KEY_DERIVATION_VERSION
+) => {
   return new Promise((resolve, reject) => {
-    storeUser({ seeds, password, userName, biometry }, users)
-      .then(res => {
-        resolve(setAccounts(res))
+    storeUser(
+      { seeds, password, userName, biometry, keyDerivationVersion },
+      users
+    )
+      .then((res) => {
+        resolve(setAccounts(res));
       })
-      .catch(err => reject(err));
+      .catch((err) => reject(err));
   });
-}
+};
 
 export const resetPwd = (userID, newPwd, oldPwd) => {
   return new Promise((resolve, reject) => {
@@ -80,6 +94,20 @@ export const setBiometry = (userID, biometry) => {
   });
 }
 
+// Requires user to logout and log back in
+export const setKeyDerivationVersion = async (userID, keyDerivationVersion) => {
+  return new Promise((resolve, reject) => {
+    setUserKeyDerivationVersion(userID, keyDerivationVersion)
+      .then((accounts) => {
+        resolve({
+          type: SET_ACCOUNTS,
+          payload: { accounts }
+        })
+      })
+      .catch(err => reject(err));
+  });
+}
+
 export const deleteProfile = (account, dispatch) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -109,10 +137,14 @@ export const fetchUsers = () => {
                 id: user.id,
                 accountHash: hashAccountId(user.id),
                 encryptedKeys: {
-                  [ELECTRUM]: user.encryptedKey
+                  [ELECTRUM]: user.encryptedKey,
                 },
-                biometry: false
-              }
+                biometry: false,
+                keyDerivationVersion:
+                  user.keyDerivationVersion == null
+                    ? 0
+                    : user.keyDerivationVersion,
+              };
             } else return user
           })
 
@@ -159,12 +191,13 @@ export const authenticateAccount = async (account, password) => {
                       ? ELECTRUM
                       : channel;
 
-                  _keys[activeCoins[i].id][
-                    channel
-                  ] = await makeKeyPair(
+                  _keys[activeCoins[i].id][channel] = await deriveKeyPair(
                     seeds[seedChannel],
                     activeCoins[i].id,
-                    channel
+                    channel,
+                    account.keyDerivationVersion == null
+                      ? 0
+                      : account.keyDerivationVersion
                   );
                 } catch (e) {
                   console.warn(
@@ -205,7 +238,11 @@ export const authenticateAccount = async (account, password) => {
                 seeds,
                 keys: _keys,
                 paymentMethods,
-                biometry: account.biometry ? true : false
+                biometry: account.biometry ? true : false,
+                keyDerivationVersion:
+                  account.keyDerivationVersion == null
+                    ? 0
+                    : account.keyDerivationVersion,
               })
             );
           });
@@ -219,7 +256,11 @@ export const authenticateAccount = async (account, password) => {
               seeds,
               keys: _keys,
               paymentMethods: {},
-              biometry: account.biometry ? true : false
+              biometry: account.biometry ? true : false,
+              keyDerivationVersion:
+                account.keyDerivationVersion == null
+                  ? 0
+                  : account.keyDerivationVersion,
             })
           );
         }
@@ -244,19 +285,31 @@ export const validateLogin = (account, password) => {
   });
 }
 
-export const addKeypairs = async (accountSeeds, coinObj, keys) => {
-  let keypairs = {}
-  const coinID = coinObj.id
+export const addKeypairs = async (
+  accountSeeds,
+  coinObj,
+  keys,
+  derivationVersion = KEY_DERIVATION_VERSION
+) => {
+  let keypairs = {};
+  const coinID = coinObj.id;
 
   for (seedType of CHANNELS) {
-    const seed = accountSeeds[seedType] ? accountSeeds[seedType] : accountSeeds[ELECTRUM]
+    const seed = accountSeeds[seedType]
+      ? accountSeeds[seedType]
+      : accountSeeds[ELECTRUM];
     if (
       coinObj.compatible_channels.includes(seedType) &&
       (seedType !== DLIGHT_PRIVATE || accountSeeds[seedType])
     ) {
-      keypairs[seedType] = await makeKeyPair(seed, coinID, seedType);
+      keypairs[seedType] = await deriveKeyPair(
+        seed,
+        coinID,
+        seedType,
+        derivationVersion
+      );
     }
   }
 
-  return updateAccountKeys({...keys, [coinID]: keypairs})
-}
+  return updateAccountKeys({ ...keys, [coinID]: keypairs });
+};

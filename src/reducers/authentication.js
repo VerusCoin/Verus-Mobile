@@ -25,7 +25,8 @@ export const authentication = (
       seeds: {},
       keys: {},
       paymentMethods: {},
-      biometry: false
+      biometry: false,
+      keyDerivationVersion: 1
     },
     signedIn: false,
     selectDefaultAccount: true
@@ -41,7 +42,7 @@ export const authentication = (
     case SET_ACCOUNTS:
       return {
         ...state,
-        accounts: action.accounts
+        accounts: action.payload.accounts
       };
     case AUTHENTICATE_USER:
       return {

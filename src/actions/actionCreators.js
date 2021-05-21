@@ -74,7 +74,9 @@ import {
 export const setAccounts = (accounts) => {
   return {
     type: SET_ACCOUNTS,
-    accounts: accounts
+    payload: {
+      accounts
+    }
   }
 }
 

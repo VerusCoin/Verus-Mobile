@@ -110,7 +110,10 @@ class CoinDetailsModal extends Component {
         await addKeypairs(
           this.props.activeAccount.seeds,
           this.props.data,
-          this.props.activeAccount.keys
+          this.props.activeAccount.keys,
+          this.props.activeAccount.keyDerivationVersion == null
+            ? 0
+            : this.props.activeAccount.keyDerivationVersion
         )
       );
 

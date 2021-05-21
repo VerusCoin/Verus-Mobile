@@ -103,10 +103,10 @@ class Login extends Component {
         const setUserCoinsAction = setUserCoins(coinList.activeCoinList, account.id)
         const { activeCoinsForUser } = setUserCoinsAction
 
+        this.props.dispatch(await initSettings())
         this.props.dispatch(accountAuthenticator)
         this.props.dispatch(coinList)
         this.props.dispatch(setUserCoinsAction)
-        this.props.dispatch(await initSettings())
 
         for (let i = 0; i < activeCoinsForUser.length; i++) {
           const coinObj = activeCoinsForUser[i]
