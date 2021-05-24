@@ -1,6 +1,8 @@
 import * as Keychain from 'react-native-keychain';
-import { BIOMETRIC_SECURITY_THRESHOLD, INTERNAL_APP_ID } from '../../../env/main.json'
+import { INTERNAL_APP_ID } from '../../../env/main.json'
 import { Platform } from 'react-native'
+
+const SERVER_NAME = `${INTERNAL_APP_ID}_Session`
 
 export const getBiometricPassword = async (accountHash, title = "Authenticate to retreive password") => {
   const credentials = await Keychain.getGenericPassword({
@@ -9,6 +11,30 @@ export const getBiometricPassword = async (accountHash, title = "Authenticate to
 
   if (credentials != null) return (JSON.parse(credentials.password))[accountHash]
   else throw new Error("Biometric authentication not enabled on this device!")
+}
+
+export const getSessionPassword = async (title = "Authenticate Profile") => {
+  const credentials = await Keychain.getInternetCredentials(SERVER_NAME, {
+    authenticationPrompt: { title }
+  });
+
+  if (credentials != null) return credentials.password
+  else throw new Error("Failed to retrieve session password")
+}
+
+export const setSessionPassword = async (password) => {
+  await Keychain.setInternetCredentials(
+    SERVER_NAME,
+    INTERNAL_APP_ID,
+    password,
+    {
+      accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+    }
+  );
+}
+
+export const removeSessionPassword = async () => {
+  await Keychain.resetInternetCredentials(SERVER_NAME)
 }
 
 export const storeBiometricPassword = async (accountHash, password) => {

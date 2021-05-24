@@ -22,7 +22,7 @@ import {
   getSupportedBiometryType,
   removeBiometricPassword,
   storeBiometricPassword
-} from "../../../utils/biometry/biometry";
+} from "../../../utils/keychain/keychain";
 import {
   addEncryptedKey,
   setBiometry,

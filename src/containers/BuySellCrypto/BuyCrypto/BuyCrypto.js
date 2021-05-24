@@ -228,7 +228,6 @@ class BuyCrypto extends Component {
           );
           this.props.dispatch(
             await addKeypairs(
-              this.props.activeAccount.seeds,
               coinObj,
               this.props.activeAccount.keys,
               this.props.activeAccount.keyDerivationVersion == null

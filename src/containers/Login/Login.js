@@ -34,7 +34,7 @@ import PasswordInput from '../../components/PasswordInput'
 import { DISABLED_CHANNELS } from '../../../env/main.json'
 
 import { removeIdentityData } from '../../utils/asyncStore/identityStorage';
-import { getBiometricPassword, getSupportedBiometryType } from "../../utils/biometry/biometry";
+import { getBiometricPassword, getSupportedBiometryType } from "../../utils/keychain/keychain";
 import { VerusLogo } from "../../images/customIcons";
 import ListSelectionModal from "../../components/ListSelectionModal/ListSelectionModal";
 import { TouchableOpacity } from "react-native";

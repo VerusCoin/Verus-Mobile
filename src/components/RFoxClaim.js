@@ -18,6 +18,8 @@ import Colors from '../globals/colors';
 import Styles from '../styles/index'
 import { claimRFoxAccountBalances, estimateGasClaimRFoxAccountBalances } from "../utils/api/channels/erc20/requests/specific/rfox/claimAccountBalance";
 import { ETHERS } from "../utils/constants/web3Constants";
+import { requestPrivKey } from "../utils/auth/authBox";
+import { ETH } from "../utils/constants/intervalConstants";
 
 class RFoxClaim extends Component {
   constructor(props) {
@@ -65,7 +67,8 @@ class RFoxClaim extends Component {
 
         if (await this.canClaim(gasFee.toString())) {
           try {
-            await claimRFoxAccountBalances(this.props.privKey, this.props.pubKey)            
+            const privKey = await requestPrivKey('RFOX', ETH)
+            await claimRFoxAccountBalances(privKey, this.props.pubKey)            
     
             this.props.onSuccess()
           } catch(e) {

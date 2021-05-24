@@ -65,7 +65,7 @@ const deriveElectrumKeypair = async (seed, coinID) => {
 };
 
 const deriveWeb3Keypair = async (seed, coinID) => {
-  const electrumKeys = deriveElectrumKeypair(seed, coinID);
+  const electrumKeys = await deriveElectrumKeypair(seed, coinID);
 
   return {
     pubKey: electrumKeys.pubKey,
@@ -137,7 +137,7 @@ export const DERIVATION_VERSIONS = {
   [1]: deriveKeyPairV1
 }
 
-export const deriveKeyPair = async (seed, coinID, channel, version = KEY_DERIVATION_VERSION) => {  
+export const deriveKeyPair = async (seed, coinID, channel, version = KEY_DERIVATION_VERSION) => {
   if (DERIVATION_VERSIONS[version] == null) throw new Error("Cannot derive keypair for version " + version)
   else {
     return await DERIVATION_VERSIONS[version](seed, coinID, channel)

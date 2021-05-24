@@ -17,7 +17,8 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
       to: address,
       from: fromAddress,
       value,
-      chainId: ETH_NETWORK_IDS[ETH_NETWORK]
+      chainId: ETH_NETWORK_IDS[ETH_NETWORK],
+      gasLimit: ethers.BigNumber.from(21000)
     })
 
     if (transaction.to == null) {

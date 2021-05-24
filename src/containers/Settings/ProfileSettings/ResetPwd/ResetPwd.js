@@ -22,7 +22,7 @@ import AlertAsync from "react-native-alert-async";
 import { TextInput, Button } from "react-native-paper";
 import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors';
-import { removeBiometricPassword } from "../../../../utils/biometry/biometry";
+import { removeBiometricPassword } from "../../../../utils/keychain/keychain";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 
 class ResetPwd extends Component {

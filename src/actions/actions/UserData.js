@@ -19,19 +19,16 @@ import {
   deriveKeyPair
 } from '../../utils/keys'
 import {
-  decryptkey,
+  decryptkey, encryptkey,
 } from '../../utils/seedCrypt'
-import { sha256, hashAccountId } from '../../utils/crypto/hash';
-
-import WyreService from '../../services/wyreService';
+import { hashAccountId } from '../../utils/crypto/hash';
 import { CHANNELS, ELECTRUM, ERC20, ETH, DLIGHT_PRIVATE } from '../../utils/constants/intervalConstants';
-import { arrayToObject } from '../../utils/objectManip';
 import {
-  ENABLE_FIAT_GATEWAY,
   KEY_DERIVATION_VERSION,
 } from "../../../env/main.json";
 import { BIOMETRIC_AUTH, SET_ACCOUNTS } from '../../utils/constants/storeType';
 import { removeExistingCoin } from './coins/Coins';
+import { initSession, requestPassword, requestSeeds } from '../../utils/auth/authBox';
 
 export const addUser = (
   userName,
@@ -160,14 +157,7 @@ export const fetchUsers = () => {
 export const authenticateAccount = async (account, password) => {
   let _keys = {};
 
-  let seeds = arrayToObject(
-    CHANNELS,
-    (acc, key) =>
-      account.encryptedKeys[key]
-        ? decryptkey(password, account.encryptedKeys[key])
-        : null,
-    true
-  );
+  let seeds = account.encryptedKeys
 
   return new Promise((resolve, reject) => {
     getActiveCoinList()
@@ -191,14 +181,24 @@ export const authenticateAccount = async (account, password) => {
                       ? ELECTRUM
                       : channel;
 
-                  _keys[activeCoins[i].id][channel] = await deriveKeyPair(
-                    seeds[seedChannel],
+                  const keyObj = await deriveKeyPair(
+                    decryptkey(password, seeds[seedChannel]),
                     activeCoins[i].id,
                     channel,
                     account.keyDerivationVersion == null
                       ? 0
                       : account.keyDerivationVersion
                   );
+
+                  _keys[activeCoins[i].id][channel] = {
+                    pubKey: keyObj.pubKey,
+                    encryptedPrivKey: await encryptkey(password, keyObj.privKey),
+                    encryptedViewingKey:
+                      keyObj.viewingKey == null
+                        ? null
+                        : await encryptkey(password, keyObj.viewingKey),
+                    addresses: keyObj.addresses,
+                  };
                 } catch (e) {
                   console.warn(
                     `Key generation failed for ${
@@ -212,43 +212,9 @@ export const authenticateAccount = async (account, password) => {
           }
         }
 
-        let paymentMethods = {
-          ...account.paymentMethods
-        }
-
-        if (ENABLE_FIAT_GATEWAY) {
-          const hashedSeed = sha256(seeds.electrum).toString('hex');
-
-          WyreService.build().submitAuthToken(hashedSeed).then((response) => {
-
-            const submitAuthTokenResponse = response.data;
-  
-            paymentMethods.wyre = {
-              id: submitAuthTokenResponse.authenticatedAs ?
-                submitAuthTokenResponse.authenticatedAs.slice(8) : null,
-              key: hashedSeed
-            }
-  
-            resolve(
-              authenticateUser({
-                id: account.id,
-                accountHash: account.accountHash
-                  ? account.accountHash
-                  : hashAccountId(account.id),
-                seeds,
-                keys: _keys,
-                paymentMethods,
-                biometry: account.biometry ? true : false,
-                keyDerivationVersion:
-                  account.keyDerivationVersion == null
-                    ? 0
-                    : account.keyDerivationVersion,
-              })
-            );
-          });
-        } else {
-          resolve(
-            authenticateUser({
+        resolve(
+          authenticateUser(
+            {
               id: account.id,
               accountHash: account.accountHash
                 ? account.accountHash
@@ -261,9 +227,10 @@ export const authenticateAccount = async (account, password) => {
                 account.keyDerivationVersion == null
                   ? 0
                   : account.keyDerivationVersion,
-            })
-          );
-        }
+            },
+            await initSession(password)
+          )
+        );
       })
       .catch(err => reject(err));
   });
@@ -286,13 +253,14 @@ export const validateLogin = (account, password) => {
 }
 
 export const addKeypairs = async (
-  accountSeeds,
   coinObj,
   keys,
   derivationVersion = KEY_DERIVATION_VERSION
 ) => {
   let keypairs = {};
   const coinID = coinObj.id;
+  const accountPass = await requestPassword()
+  const accountSeeds = await requestSeeds()
 
   for (seedType of CHANNELS) {
     const seed = accountSeeds[seedType]
@@ -302,12 +270,22 @@ export const addKeypairs = async (
       coinObj.compatible_channels.includes(seedType) &&
       (seedType !== DLIGHT_PRIVATE || accountSeeds[seedType])
     ) {
-      keypairs[seedType] = await deriveKeyPair(
+      const keyObj = await deriveKeyPair(
         seed,
         coinID,
         seedType,
         derivationVersion
       );
+
+      keypairs[seedType] = {
+        pubKey: keyObj.pubKey,
+        encryptedPrivKey: await encryptkey(accountPass, keyObj.privKey),
+        encryptedViewingKey:
+          keyObj.viewingKey == null
+            ? null
+            : await encryptkey(accountPass, keyObj.viewingKey),
+        addresses: keyObj.addresses,
+      };
     }
   }
 

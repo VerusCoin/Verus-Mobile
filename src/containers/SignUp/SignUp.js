@@ -16,7 +16,7 @@ import AlertAsync from 'react-native-alert-async'
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers"
 import { DLIGHT_PRIVATE, ELECTRUM, CHANNELS_NULL_TEMPLATE, CHANNELS } from "../../utils/constants/intervalConstants"
 import { arrayToObject } from "../../utils/objectManip"
-import { getSupportedBiometryType, storeBiometricPassword } from "../../utils/biometry/biometry"
+import { getSupportedBiometryType, storeBiometricPassword } from "../../utils/keychain/keychain"
 import { hashAccountId } from "../../utils/crypto/hash"
 import { START_COINS } from "../../utils/constants/constants"
 import { SignUpRender } from "./SignUp.render"

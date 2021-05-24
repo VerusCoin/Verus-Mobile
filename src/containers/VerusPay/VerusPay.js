@@ -146,13 +146,17 @@ class VerusPay extends Component {
             note: request.note
           })
         } catch(e) {
-          let coinURLParsed = this.parseCoinURL(result);
+          try {
+            let coinURLParsed = this.parseCoinURL(result);
 
-          if (coinURLParsed) {
-            this.handleVerusQR(coinURLParsed);
-          } else {
-            this.addressOnly(result);
-          } 
+            if (coinURLParsed) {
+              this.handleVerusQR(coinURLParsed);
+            } else {
+              this.addressOnly(result);
+            } 
+          } catch (e) {
+            this.errorHandler(e.message);
+          }
         }
       } else {
         this.errorHandler(FORMAT_UNKNOWN);
@@ -221,20 +225,22 @@ class VerusPay extends Component {
           for (key in coinsList) {
             if (
               coinsList[key] &&
-              removeSpaces(coinsList[key].display_name).toLowerCase() ===
-                coinName.toLowerCase()
+              (removeSpaces(coinsList[key].display_name).toLowerCase() ===
+                coinName.toLowerCase() ||
+                coinsList[key].alt_names.some(
+                  (name) => name === coinName.toLowerCase()
+                ))
             ) {
               //Create verusQR compatible data from coin URL
               return {
                 coinTicker: coinsList[key].id,
                 address: address,
-                amount: BigNumber(amount)
+                amount: BigNumber(amount),
               };
             }
           }
 
-          this.errorHandler(INCOMPATIBLE_COIN);
-          return false;
+          throw new Error(INCOMPATIBLE_COIN)
         }
       } else {
         let secondTry = qrString.match(partialURL);
@@ -249,25 +255,27 @@ class VerusPay extends Component {
 
             if (
               removeSpaces(coinObj.display_name).toLowerCase() ===
-              coinName.toLowerCase()
+                coinName.toLowerCase() ||
+              coinObj.alt_names.some((name) => name === coinName.toLowerCase())
             ) {
               //Create verusQR compatible data from coin URL
               return {
                 coinTicker: coinObj.id,
-                address: address
+                address: address,
               };
             }
           }
 
-          this.errorHandler(INCOMPATIBLE_COIN);
-          return false;
+          throw new Error(INCOMPATIBLE_COIN)
         } else {
           return false;
         }
       }
     } catch (e) {
-      console.warn(e);
-      this.errorHandler(PARSE_ERROR);
+      if (e.message !== INCOMPATIBLE_COIN) {
+        console.warn(e);
+        throw new Error(PARSE_ERROR)
+      } else throw e
     }
   };
 
@@ -408,7 +416,6 @@ class VerusPay extends Component {
             );
             this.props.dispatch(
               await addKeypairs(
-                this.props.activeAccount.seeds,
                 coinObj,
                 this.props.activeAccount.keys,
                 this.props.activeAccount.keyDerivationVersion == null
