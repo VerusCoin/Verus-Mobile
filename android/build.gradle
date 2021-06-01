@@ -48,7 +48,7 @@ subprojects {
         }
 
         if (details.requested.group == 'org.bouncycastle' && details.requested.name == 'bcprov-jdk15on') {
-            details.useVersion '1.67'
+            details.useVersion '1.68'
             details.because 'https://snyk.io/vuln/SNYK-JAVA-ORGBOUNCYCASTLE-32340'
         }
 

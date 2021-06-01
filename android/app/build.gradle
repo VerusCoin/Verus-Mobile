@@ -233,7 +233,7 @@ dependencies {
         force = true
     }
 
-    implementation('org.bouncycastle:bcprov-jdk15on:1.67') {
+    implementation('org.bouncycastle:bcprov-jdk15on:1.68') {
         force = true
     }
 
