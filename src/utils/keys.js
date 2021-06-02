@@ -66,13 +66,19 @@ const deriveElectrumKeypair = async (seed, coinID) => {
 
 const deriveWeb3Keypair = async (seed, coinID) => {
   const electrumKeys = await deriveElectrumKeypair(seed, coinID);
+  let seedIsEthPrivkey = false
+
+  try {
+    new ethers.utils.SigningKey(seed)
+    seedIsEthPrivkey = true
+  } catch(e) {}
 
   return {
     pubKey: electrumKeys.pubKey,
-    privKey: true ? seed : seedToPriv(electrumKeys.privKey, "eth"),
+    privKey: seedIsEthPrivkey ? seed : seedToPriv(electrumKeys.privKey, "eth"),
     addresses: [
       ethers.utils.computeAddress(
-        true ? seed : Buffer.from(electrumKeys.pubKey, "hex")
+        seedIsEthPrivkey ? seed : Buffer.from(electrumKeys.pubKey, "hex")
       ),
     ],
   };
