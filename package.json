@@ -155,7 +155,9 @@
     "node-notifier": "5.4.5",
     "merge-deep": "3.0.3",
     "metro": "0.64.0",
-    "metro-config": "0.64.0"
+    "metro-config": "0.64.0",
+    "css-what": "5.0.1",
+    "path-parse": "1.0.7"
   },
   "jest": {
     "preset": "react-native",
