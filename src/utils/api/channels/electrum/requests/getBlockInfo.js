@@ -7,7 +7,7 @@ import { networks } from 'bitgo-utxo-lib';
 import store from '../../../../../store/index';
 import { saveBlockHeader } from '../../../../../actions/actionCreators';
 import { ELECTRUM_PROTOCOL_CHANGE } from '../../../../constants/constants';
-import { MIN_HEADER_CACHE_CONFS } from '../../../../../../env/main.json'
+import { MIN_HEADER_CACHE_CONFS } from '../../../../../../env/index'
 
 export const getBlockInfo = (coinObj, blockheight) => {
   const callType = 'getblockinfo'

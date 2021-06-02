@@ -36,7 +36,7 @@ import {
 } from "../../../actions/actions/channels/dlight/dispatchers/AlertManager";
 import { createAlert, resolveAlert } from "../../../actions/actions/alert/dispatchers/alert";
 import { checkPinForUser } from "../../../utils/asyncStore/asyncStore";
-import { ENABLE_DLIGHT, APP_VERSION } from '../../../../env/main.json'
+import { ENABLE_DLIGHT, APP_VERSION } from '../../../../env/index'
 import { dlightEnabled } from "../../../utils/enabledChannels";
 import SetupSeedModal from "../../../components/SetupSeedModal/SetupSeedModal";
 import { DLIGHT_PRIVATE } from "../../../utils/constants/intervalConstants";

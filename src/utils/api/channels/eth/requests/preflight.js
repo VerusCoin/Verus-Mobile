@@ -2,7 +2,7 @@ import { ethers } from "ethers"
 import Web3Provider from '../../../../web3/provider'
 import { ETH } from "../../../../constants/intervalConstants"
 import { ETH_NETWORK_IDS } from "../../../../constants/constants"
-import { ETH_NETWORK } from '../../../../../../env/main.json'
+import { ETH_NETWORK } from '../../../../../../env/index'
 import BigNumber from "bignumber.js"
 import { scientificToDecimal } from "../../../../math"
 

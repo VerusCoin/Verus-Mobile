@@ -41,7 +41,7 @@ import styles from './BuyCrypto.styles'
 import DelayedAsyncAlert from '../../../utils/delayedAsyncAlert'
 import DelayedAlert from '../../../utils/delayedAlert';
 import Colors from '../../../globals/colors';
-import { ENABLE_FIAT_GATEWAY } from '../../../../env/main.json'
+import { ENABLE_FIAT_GATEWAY } from '../../../../env/index'
 
 import {
   BankBuildingBlack, Bank,

@@ -18,7 +18,7 @@ import {
 } from "react-native";
 import { List, DataTable, Divider } from 'react-native-paper'
 import Styles from '../../../styles/index'
-import { APP_VERSION, VERUS_QR_VERSION } from '../../../../env/main.json'
+import { APP_VERSION, VERUS_QR_VERSION } from '../../../../env/index'
 import { CoinLogos } from "../../../utils/CoinData/CoinData";
 
 const DISCORD_URL = "https://discord.gg/VRKMP2S"

@@ -31,7 +31,7 @@ import Colors from '../../globals/colors';
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import PasswordInput from '../../components/PasswordInput'
-import { DISABLED_CHANNELS } from '../../../env/main.json'
+import { DISABLED_CHANNELS } from '../../../env/index'
 
 import { removeIdentityData } from '../../utils/asyncStore/identityStorage';
 import { getBiometricPassword, getSupportedBiometryType } from "../../utils/keychain/keychain";

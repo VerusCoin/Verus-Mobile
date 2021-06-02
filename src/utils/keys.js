@@ -13,7 +13,7 @@ import ethers from 'ethers';
 import VerusLightClient from 'react-native-verus-light-client'
 import {
   KEY_DERIVATION_VERSION,
-} from "../../env/main.json";
+} from "../../env/index";
 
 const deriveLightwalletdKeyPair = async (seed) => {
   const spendingKey = await parseDlightSeed(seed);

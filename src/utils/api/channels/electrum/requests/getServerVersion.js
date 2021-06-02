@@ -8,7 +8,7 @@ import { timeout } from '../../../../promises';
 import { saveServerVersion } from '../../../../../actions/actionCreators';
 import { isJson } from '../../../../objectManip';
 
-import { REQUEST_TIMEOUT_MS } from '../../../../../../env/main.json'
+import { REQUEST_TIMEOUT_MS } from '../../../../../../env/index'
 
 const OLD_DEFAULT_VERSION = 1.0
 

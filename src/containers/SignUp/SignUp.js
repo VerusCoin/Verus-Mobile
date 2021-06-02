@@ -24,7 +24,7 @@ import { createAlert } from "../../actions/actions/alert/dispatchers/alert"
 import { findCoinObj } from "../../utils/CoinData/CoinData"
 import {
   KEY_DERIVATION_VERSION,
-} from "../../../env/main.json";
+} from "../../../env/index";
 
 class SignUp extends Component {
   constructor() {

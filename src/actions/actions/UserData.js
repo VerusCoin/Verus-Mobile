@@ -25,7 +25,7 @@ import { hashAccountId } from '../../utils/crypto/hash';
 import { CHANNELS, ELECTRUM, ERC20, ETH, DLIGHT_PRIVATE } from '../../utils/constants/intervalConstants';
 import {
   KEY_DERIVATION_VERSION,
-} from "../../../env/main.json";
+} from "../../../env/index";
 import { BIOMETRIC_AUTH, SET_ACCOUNTS } from '../../utils/constants/storeType';
 import { removeExistingCoin } from './coins/Coins';
 import { initSession, requestPassword, requestSeeds } from '../../utils/auth/authBox';

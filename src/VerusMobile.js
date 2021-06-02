@@ -24,7 +24,7 @@ import {
   checkAndSetVersion
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
-import { ENABLE_VERUS_IDENTITIES } from '../env/main.json'
+import { ENABLE_VERUS_IDENTITIES } from '../env/index'
 import AlertModal from "./components/Alert";
 import { activateKeyboardListener } from "./actions/actionDispatchers";
 import Colors from "./globals/colors";

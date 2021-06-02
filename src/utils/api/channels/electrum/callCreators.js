@@ -18,7 +18,7 @@ import { isJson } from '../../../objectManip'
 import ApiException from '../../errors/apiError';
 import { ELECTRUM } from '../../../constants/intervalConstants'
 
-import { REQUEST_TIMEOUT_MS } from '../../../../../env/main.json'
+import { REQUEST_TIMEOUT_MS } from '../../../../../env/index'
 
 // This purpose of this method is to take in a list of electrum servers,
 // and use a valid one to call a specified command given a set of parameters

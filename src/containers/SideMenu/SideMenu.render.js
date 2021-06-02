@@ -5,7 +5,7 @@ import {
   setActiveSectionBuySellCrypto,
  } from '../../actions/actionCreators'
 import Styles from '../../styles/index'
-import { ENABLE_FIAT_GATEWAY } from '../../../env/main.json'
+import { ENABLE_FIAT_GATEWAY } from '../../../env/index'
 import { CoinLogos } from "../../utils/CoinData/CoinData";
 import { RenderSquareCoinLogo } from "../../utils/CoinData/Graphics";
 import { List } from "react-native-paper";

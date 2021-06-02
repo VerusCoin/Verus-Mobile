@@ -1,5 +1,5 @@
 import * as Keychain from 'react-native-keychain';
-import { INTERNAL_APP_ID } from '../../../env/main.json'
+import { INTERNAL_APP_ID } from '../../../env/index'
 import { Platform } from 'react-native'
 
 const SERVER_NAME = `${INTERNAL_APP_ID}_Session`

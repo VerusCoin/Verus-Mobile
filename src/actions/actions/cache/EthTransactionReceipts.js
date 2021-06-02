@@ -3,7 +3,7 @@ import {
   setCachedEthTxReceipt
 } from '../../../utils/asyncStore/asyncStore';
 
-import { ETH_TRANSACTION_RECEIPT_CAP } from '../../../../env/main.json'
+import { ETH_TRANSACTION_RECEIPT_CAP } from '../../../../env/index'
 
 import {
   setEthTxReceipts

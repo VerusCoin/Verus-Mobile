@@ -1,6 +1,6 @@
 import store from '../../../../../store/index';
 import { saveEthTxReceipt } from '../../../../../actions/actionCreators';
-import { MIN_ETH_TX_CONFS } from '../../../../../../env/main.json'
+import { MIN_ETH_TX_CONFS } from '../../../../../../env/index'
 import Web3Provider from '../../../../web3/provider'
 
 export const getTxReceipt = async (txid) => {

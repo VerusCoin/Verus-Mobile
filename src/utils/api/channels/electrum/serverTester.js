@@ -14,7 +14,7 @@ import { ELECTRUM } from '../../../constants/intervalConstants';
 import { NO_VALID_SERVER } from '../../errors/errorCodes';
 import { CONNECTION_ERROR } from '../../errors/errorMessages'
 
-import { REQUEST_TIMEOUT_MS } from '../../../../../env/main.json'
+import { REQUEST_TIMEOUT_MS } from '../../../../../env/index'
 import Store from '../../../../store';
 import { recordBadServer, recordGoodServer } from '../../../../actions/actionCreators';
 import NetInfo from "@react-native-community/netinfo";
