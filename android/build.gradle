@@ -58,7 +58,7 @@ subprojects {
         }
 
         if (details.requested.group == 'org.powermock' && details.requested.name == 'powermock-classloading-xstream') {
-            details.useVersion '2.0.9'
+            details.useVersion '2.0.0'
             details.because 'https://snyk.io/vuln/SNYK-JAVA-COMTHOUGHTWORKSXSTREAM-31394'
         }
 
