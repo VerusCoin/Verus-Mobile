@@ -27,13 +27,13 @@ const deriveLightwalletdKeyPair = async (seed) => {
 };
 
 const deriveElectrumKeypair = async (seed, coinID) => {
-  const privKey = seedToPriv(seed, "btc");
-
+  let privKey
   let isWif = false;
   let _seedToWif;
   let keyObj = {};
 
   try {
+    privKey = seedToPriv(seed, "btc");
     bs58check.decode(privKey);
     isWif = true;
   } catch (e) {}
@@ -47,7 +47,7 @@ const deriveElectrumKeypair = async (seed, coinID) => {
     );
   } else {
     _seedToWif = seedToWif(
-      seeprivKeyd,
+      seed,
       isKomodoCoin(coinID)
         ? electrumJSNetworks.kmd
         : electrumJSNetworks[coinID.toLowerCase()],
