@@ -165,12 +165,22 @@ android {
     }
 
     signingConfigs {
-      release {
-        storeFile file('your_key_name.keystore')
-        storePassword 'IloveVerus'
-        keyAlias 'your_key_alias'
-        keyPassword 'IloveVerus'
-      }
+    release {
+  if (keystorePropertiesFile.exists()) {
+      def keystoreProperties = new Properties()
+      keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+      storeFile file(keystoreProperties['storeFile'])
+      storePassword keystoreProperties['storePassword']
+      keyAlias keystoreProperties['keyAlias']
+      keyPassword keystoreProperties['keyPassword']
+  }
+  if (System.getenv("CI_SERVER") && System.getenv("RELEASE")) {
+      storeFile file(System.getenv('MYAPP_RELEASE_STORE_FILE'))
+      storePassword System.getenv('MYAPP_RELEASE_STORE_PASSWORD')
+      keyAlias System.getenv('MYAPP_RELEASE_KEY_ALIAS')
+      keyPassword System.getenv('MYAPP_RELEASE_KEY_PASSWORD')
+  }
+}
 
     }
     splits {
