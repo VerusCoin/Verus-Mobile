@@ -610,7 +610,7 @@ SPEC CHECKSUMS:
   CNIOWindows: 0af55cf84c3811318aee91888737e0b124552029
   DoubleConversion: cf9b38bf0b2d048436d9a82ad2abe1404f11e7de
   FBLazyVector: 49cbe4b43e445b06bf29199b6ad2057649e4c8f5
-  FBReactNativeSpec: 89e4c4afb52ab45a4a6691028c65b967b89e3bfb
+  FBReactNativeSpec: a58bbb782bf2ade7a67eb3a372d56fcbff81d5c9
   glog: 73c2498ac6884b13ede40eda8228cb1eee9d9d62
   gRPC-Swift: 75a7a8d7cd08177165ef971159afb84e5130cfc9
   Logging: beeb016c9c80cf77042d62e83495816847ef108b
