@@ -39,7 +39,7 @@ export const getUnspent = (coinObj, activeUser) => {
       resolve(response)
     })
     .catch((err) => {
-      console.log("Caught error in getUnspent.js")
+      console.error(err)
       reject(err)
     })
   });

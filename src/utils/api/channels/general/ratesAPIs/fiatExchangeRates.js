@@ -1,7 +1,7 @@
 import { timeout } from '../../../../promises'
 const { DOMParser } = require('xmldom')
 
-import { REQUEST_TIMEOUT_MS } from '../../../../../../env/main.json'
+import { REQUEST_TIMEOUT_MS } from '../../../../../../env/index'
 
 export const getFiatExchangeRates = () => {
   const address = `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`

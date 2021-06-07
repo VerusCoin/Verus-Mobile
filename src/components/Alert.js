@@ -40,12 +40,13 @@ const AlertModal = (props) => {
         </Dialog.Content>
         <Dialog.Actions>
           {buttons != null
-            ? buttons.map((button) => {
+            ? buttons.map((button, index) => {
                 return (
                   <Button
                     disabled={button.disabled || disabled}
                     onPress={button.onPress}
                     color={Colors.primaryColor}
+                    key={index}
                   >
                     {button.text}
                   </Button>

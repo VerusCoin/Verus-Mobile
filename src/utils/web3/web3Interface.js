@@ -17,6 +17,11 @@ class Web3Interface {
       this.network,
       apiKeys.etherscan
     );
+    
+    this.InfuraProvider = new ethers.providers.InfuraProvider(
+      this.network,
+      apiKeys.infura
+    );
   }
 
   initContract = async (contractAddress) => {   

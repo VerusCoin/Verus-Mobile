@@ -31,10 +31,10 @@ import Colors from '../../globals/colors';
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import PasswordInput from '../../components/PasswordInput'
-import { DISABLED_CHANNELS } from '../../../env/main.json'
+import { DISABLED_CHANNELS } from '../../../env/index'
 
 import { removeIdentityData } from '../../utils/asyncStore/identityStorage';
-import { getBiometricPassword, getSupportedBiometryType } from "../../utils/biometry/biometry";
+import { getBiometricPassword, getSupportedBiometryType } from "../../utils/keychain/keychain";
 import { VerusLogo } from "../../images/customIcons";
 import ListSelectionModal from "../../components/ListSelectionModal/ListSelectionModal";
 import { TouchableOpacity } from "react-native";
@@ -103,10 +103,10 @@ class Login extends Component {
         const setUserCoinsAction = setUserCoins(coinList.activeCoinList, account.id)
         const { activeCoinsForUser } = setUserCoinsAction
 
+        this.props.dispatch(await initSettings())
         this.props.dispatch(accountAuthenticator)
         this.props.dispatch(coinList)
         this.props.dispatch(setUserCoinsAction)
-        this.props.dispatch(await initSettings())
 
         for (let i = 0; i < activeCoinsForUser.length; i++) {
           const coinObj = activeCoinsForUser[i]

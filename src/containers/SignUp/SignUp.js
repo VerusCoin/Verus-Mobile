@@ -7,8 +7,7 @@
 
 import { Component } from "react"
 import { 
-  Keyboard,
-  Alert,
+  Keyboard
 } from "react-native"
 import { NavigationActions } from '@react-navigation/compat'
 import { addCoin, addUser, disableSelectDefaultAccount } from '../../actions/actionCreators'
@@ -17,13 +16,15 @@ import AlertAsync from 'react-native-alert-async'
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers"
 import { DLIGHT_PRIVATE, ELECTRUM, CHANNELS_NULL_TEMPLATE, CHANNELS } from "../../utils/constants/intervalConstants"
 import { arrayToObject } from "../../utils/objectManip"
-import { getSupportedBiometryType, storeBiometricPassword } from "../../utils/biometry/biometry"
+import { getSupportedBiometryType, storeBiometricPassword } from "../../utils/keychain/keychain"
 import { hashAccountId } from "../../utils/crypto/hash"
 import { START_COINS } from "../../utils/constants/constants"
 import { SignUpRender } from "./SignUp.render"
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert"
 import { findCoinObj } from "../../utils/CoinData/CoinData"
-import { canCopySeed } from "../../actions/actions/channels/dlight/dispatchers/AlertManager"
+import {
+  KEY_DERIVATION_VERSION,
+} from "../../../env/index";
 
 class SignUp extends Component {
   constructor() {
@@ -195,7 +196,8 @@ class SignUp extends Component {
             arrayToObject(CHANNELS, (acc, channel) => _seeds[channel], true),
             this.state.pin,
             this.props.accounts,
-            biometry
+            biometry,
+            KEY_DERIVATION_VERSION
           ).then(async (action) => {
             this.createAccount(action);
             await this.addStartingCoins(this.state.userName)
@@ -229,7 +231,8 @@ class SignUp extends Component {
                   arrayToObject(CHANNELS, (acc, channel) => _seeds[channel], true),
                   this.state.pin,
                   this.props.accounts,
-                  biometry
+                  biometry,
+                  KEY_DERIVATION_VERSION
                 )
                   .then(async (action) => {
                     this.createAccount(action)

@@ -1,12 +1,11 @@
 import React from "react";
-import { View, Text, FlatList, SectionList } from "react-native";
-import { Icon, ListItem } from "react-native-elements";
+import { View, FlatList, SectionList } from "react-native";
 import DrawerHeader from '../../components/DrawerHeader';
 import { 
   setActiveSectionBuySellCrypto,
  } from '../../actions/actionCreators'
 import Styles from '../../styles/index'
-import { ENABLE_FIAT_GATEWAY } from '../../../env/main.json'
+import { ENABLE_FIAT_GATEWAY } from '../../../env/index'
 import { CoinLogos } from "../../utils/CoinData/CoinData";
 import { RenderSquareCoinLogo } from "../../utils/CoinData/Graphics";
 import { List } from "react-native-paper";
@@ -184,7 +183,7 @@ export const renderMainDrawerComponents = function() {
           />
           <List.Item
             title={"Settings"}
-            left={() => <List.Icon icon="settings"/>}
+            left={() => <List.Icon icon="cog"/>}
             onPress={() =>
               this.setState({ mainDrawer: false, currentCoinIndex: -2 })
             }

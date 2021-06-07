@@ -61,18 +61,15 @@ export const HomeRender = function() {
 export const HomeRenderCoinsList = function() {
   const { activeCoinsForUser } = this.props;
   
-  return (
-    <FlatList
-      data={activeCoinsForUser}
-      scrollEnabled={false}
-      renderItem={({ item, index }) => {
-        const coinObj = activeCoinsForUser[index]
-
-        return HomeListItemRender.call(this, coinObj, true, null)
-      }}
-      keyExtractor={(item) => item.id}
-    />
-  )
+  return activeCoinsForUser.map((item, index) => {
+    return HomeListItemRender.call(
+      this,
+      activeCoinsForUser[index],
+      true,
+      null,
+      index
+    );
+  })
 }
 
 export const renderFiatBalance = function(balance, ticker) {

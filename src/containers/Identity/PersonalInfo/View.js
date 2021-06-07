@@ -2,13 +2,12 @@ import React, { useEffect, useCallback } from 'react';
 
 import { Map as IMap } from 'immutable';
 import {
-  View, Text, Platform, TouchableOpacity,
+  View, Text, Platform, TouchableOpacity, ScrollView
 } from 'react-native';
 import {
   SearchBar, CheckBox, ListItem, Button, Badge,
 } from 'react-native-elements';
-import { ScrollView } from 'react-native-gesture-handler';
-import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome5';
+//import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome5';
 
 import AddCategoryDialog from './CategoryDialogs/AddCategory';
 import DeleteCategoryDialog from './CategoryDialogs/DeleteCategory';
@@ -130,12 +129,13 @@ const PersonalInfo = (props) => {
       return null;
     }
     return (
-      <FontAwesomeIcon
-        name="trash-alt"
-        textStyle={{ color: Colors.secondaryColor }}
-        size={15}
-        onPress={() => openDeleteCategoryDialog(selectedCategory)}
-      />
+      // <FontAwesomeIcon
+      //   name="trash-alt"
+      //   textStyle={{ color: Colors.secondaryColor }}
+      //   size={15}
+      //   onPress={() => openDeleteCategoryDialog(selectedCategory)}
+      // />
+      null
     );
   };
 
@@ -158,7 +158,7 @@ const PersonalInfo = (props) => {
           onPress={() => navigation.navigate('ClaimManager')}
           style={Styles.marginLeftAuto}
         >
-          <FontAwesomeIcon name="cogs" size={20} />
+          {/* <FontAwesomeIcon name="cogs" size={20} /> */}
         </TouchableOpacity>
       </View>
       <View style={Styles.fullWidthSpaceBetween}>

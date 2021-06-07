@@ -17,7 +17,7 @@ import {
   DLIGHT_PRIVATE,
   ELECTRUM,
 } from "../../utils/constants/intervalConstants";
-import { ENABLE_DLIGHT } from "../../../env/main.json";
+import { ENABLE_DLIGHT } from "../../../env/index";
 import { canEnableBiometry } from "../../actions/actions/channels/dlight/dispatchers/AlertManager";
 
 export const SignUpRender = function() {

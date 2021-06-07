@@ -1,7 +1,7 @@
 import { timeout } from '../../../../promises'
 import { isJson } from '../../../../objectManip'
 
-import { REQUEST_TIMEOUT_MS } from '../../../../../../env/main.json'
+import { REQUEST_TIMEOUT_MS } from '../../../../../../env/index'
 
 export const getAtomicExplorerBTCFees = () => {
   const address = `https://www.atomicexplorer.com/api/btc/fees`

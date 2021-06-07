@@ -12,7 +12,7 @@ import { initEthWallet, closeEthWallet } from '../channels/eth/dispatchers/EthWa
 import { initErc20Wallet, closeErc20Wallet } from '../channels/erc20/dispatchers/Erc20WalletReduxManager';
 import { initElectrumWallet, closeElectrumWallet } from '../channels/electrum/dispatchers/ElectrumWalletReduxManager';
 import { initGeneralWallet, closeGeneralWallet } from '../channels/general/dispatchers/GeneralWalletReduxManager';
-import { DISABLED_CHANNELS } from '../../../../env/main.json'
+import { DISABLED_CHANNELS } from '../../../../env/index'
 import store from '../../../store';
 import { throwError } from '../../../utils/errors';
 import { INACTIVE_COIN } from '../../../utils/constants/errors';

@@ -15,8 +15,8 @@
 
   "ENABLE_FIAT_GATEWAY": false,
   "ENABLE_VERUS_IDENTITIES": false,
-  "DISABLED_CHANNELS": [],
-  "ENABLE_DLIGHT": true,
+  "DISABLED_CHANNELS": ["dlight_private"],
+  "ENABLE_DLIGHT": false,
   "ENABLE_ERC20": true,
   "ENABLE_ETH": true,
   "ENABLE_ELECTRUM": true,

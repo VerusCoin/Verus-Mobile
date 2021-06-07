@@ -4,7 +4,7 @@ import Colors from '../../globals/colors'
 import { coinsList } from './CoinsList'
 import { DLIGHT_PRIVATE, ELECTRUM, ERC20, GENERAL } from '../constants/intervalConstants';
 
-import { ENABLE_VERUS_IDENTITIES } from '../../../env/main.json'
+import { ENABLE_VERUS_IDENTITIES } from '../../../env/index'
 
 import CoinLogoSvgs from '../../images/cryptologo/index'
 import { ETHERS } from '../constants/web3Constants';

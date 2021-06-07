@@ -44,7 +44,8 @@ class DynamicHeader extends Component {
   fadeIn = () => {
     Animated.timing(this.fadeAnimation, {
       toValue: 1,
-      duration: 1000
+      duration: 1000,
+      useNativeDriver: true
     }).start(() => { if (this.carousel != null) this.carousel.triggerRenderingHack(0)});
   };
 

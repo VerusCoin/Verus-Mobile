@@ -16,7 +16,7 @@ import {
   ENABLE_ELECTRUM,
   ENABLE_ETH,
   ENABLE_GENERAL
-} from "../../env/main.json";
+} from "../../env/index";
 
 const generateSagas = () => {
   let sagas = [authenticationSaga]

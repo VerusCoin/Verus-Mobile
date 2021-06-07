@@ -18,7 +18,7 @@ import { isJson } from '../../../objectManip'
 import ApiException from '../../errors/apiError';
 import { ELECTRUM } from '../../../constants/intervalConstants'
 
-import { REQUEST_TIMEOUT_MS } from '../../../../../env/main.json'
+import { REQUEST_TIMEOUT_MS } from '../../../../../env/index'
 
 // This purpose of this method is to take in a list of electrum servers,
 // and use a valid one to call a specified command given a set of parameters
@@ -43,7 +43,14 @@ export const getElectrum = (serverList, callType, params, toSkip, coinID) => {
         return getGoodServer(testElectrum, _serverList, [proxyServer])
       }
 
-      return getGoodServer(testElectrum, serverList, [proxyServer])
+      const proxyIndex = serverList.findIndex(server => server.split(":")[0] === proxyServer)
+
+      return getGoodServer(
+        testElectrum,
+        serverList,
+        [proxyServer],
+        proxyIndex !== -1 ? proxyIndex : null
+      );
     })
     .then((result) => {
       let electrumSplit = result.goodServer.split(":")
@@ -79,8 +86,9 @@ export const getElectrum = (serverList, callType, params, toSkip, coinID) => {
 
       promiseArray.push(
         fetch(httpAddr, {
-        method: 'GET'
-        }))
+          method: "GET",
+        })
+      );
 
       promiseArray.push(resultObj.blockHeight)
       promiseArray.push(resultObj.goodServer)

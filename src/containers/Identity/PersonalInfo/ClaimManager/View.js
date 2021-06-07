@@ -2,9 +2,15 @@ import React, {
   useCallback, useEffect, useState,
 } from 'react';
 import { Map as IMap } from 'immutable';
-import { View, Text, Platform } from 'react-native';
-import { ScrollView, TouchableWithoutFeedback, TouchableOpacity } from 'react-native-gesture-handler';
-import MaterialIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {
+  View,
+  Text,
+  Platform,
+  ScrollView,
+  TouchableWithoutFeedback,
+  TouchableOpacity,
+} from "react-native";
+//import MaterialIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { CheckBox, SearchBar } from 'react-native-elements';
 import { truncateString } from './utils/truncateString';
 import getShowHideIcon from './utils/getShowHideIcon';
@@ -120,7 +126,7 @@ const ClaimManager = (props) => {
             <View style={[Styles.paddingRight, Styles.flexRow]}>
               <View>
                 <TouchableOpacity onPress={() => moveSingleClaim(claims.get(claim))} style={Styles.paddingHorizontal}>
-                  <MaterialIcons name="content-save-move" size={28} st />
+                  {/* <MaterialIcons name="content-save-move" size={28} st /> */}
                 </TouchableOpacity>
               </View>
               <TouchableOpacity onPress={() => toggleClaimVisibility(claims.get(claim))}>

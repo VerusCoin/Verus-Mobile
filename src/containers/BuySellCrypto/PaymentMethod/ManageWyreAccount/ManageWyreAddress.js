@@ -7,7 +7,7 @@ import {
   Keyboard
 } from 'react-native';
 import { FormLabel, FormInput, FormValidationMessage } from 'react-native-elements';
-import { Dropdown } from 'react-native-material-dropdown';
+//import { Dropdown } from 'react-native-material-dropdown';
 import Spinner from 'react-native-loading-spinner-overlay';
 import StandardButton from '../../../../components/StandardButton';
 import styles from './ManageWyreAccount.styles';
@@ -165,7 +165,7 @@ class ManageWyreAddress extends Component {
             </View>
             <View>
               <View style={styles.dropdownInput}>
-                <Dropdown
+                {/* <Dropdown
                   labelExtractor={(item) => item.value}
                   valueExtractor={(item) => item.value}
                   label="State: "
@@ -179,7 +179,7 @@ class ManageWyreAddress extends Component {
                   value={this.state.countryState}
                   inputContainerStyle={styles.dropdownInputContainer}
                   pickerStyle={{backgroundColor: Colors.tertiaryColor}}
-                />
+                /> */}
               </View>
               <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.errors.countryState}
@@ -202,7 +202,7 @@ class ManageWyreAddress extends Component {
             </View>
             <View>
               <View style={styles.dropdownInput}>
-                <Dropdown
+                {/* <Dropdown
                   labelExtractor={(item) => item.value}
                   valueExtractor={(item) => item.value}
                   label="Country: "
@@ -216,7 +216,7 @@ class ManageWyreAddress extends Component {
                   value={this.state.country ? `${this.state.country}` : ''}
                   inputContainerStyle={styles.dropdownInputContainer}
                   pickerStyle={{backgroundColor: Colors.tertiaryColor}}
-                />
+                /> */}
               </View>
               <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.errors.country}

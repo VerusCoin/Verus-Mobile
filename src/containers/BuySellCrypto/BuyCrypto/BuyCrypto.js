@@ -18,7 +18,7 @@ import { NavigationActions } from '@react-navigation/compat';
 import Spinner from 'react-native-loading-spinner-overlay';
 import { FormLabel, FormInput, FormValidationMessage, Icon, TouchableOpacity } from 'react-native-elements'
 import { connect } from 'react-redux'
-import { Dropdown } from 'react-native-material-dropdown'
+//import { Dropdown } from 'react-native-material-dropdown'
 import { isNumber } from '../../../utils/math';
 import { calculatePrice } from '../../../utils/price';
 import {
@@ -41,7 +41,7 @@ import styles from './BuyCrypto.styles'
 import DelayedAsyncAlert from '../../../utils/delayedAsyncAlert'
 import DelayedAlert from '../../../utils/delayedAlert';
 import Colors from '../../../globals/colors';
-import { ENABLE_FIAT_GATEWAY } from '../../../../env/main.json'
+import { ENABLE_FIAT_GATEWAY } from '../../../../env/index'
 
 import {
   BankBuildingBlack, Bank,
@@ -228,9 +228,11 @@ class BuyCrypto extends Component {
           );
           this.props.dispatch(
             await addKeypairs(
-              this.props.activeAccount.seeds,
               coinObj,
-              this.props.activeAccount.keys
+              this.props.activeAccount.keys,
+              this.props.activeAccount.keyDerivationVersion == null
+                ? 0
+                : this.props.activeAccount.keyDerivationVersion
             )
           );
 
@@ -478,7 +480,7 @@ class BuyCrypto extends Component {
                 />
               </View>
               <View>
-                <Dropdown
+                {/* <Dropdown
                   rippleOpacity={0}
                   rippleDuration={0}
                   labelExtractor={item => {
@@ -514,7 +516,7 @@ class BuyCrypto extends Component {
                   }}
                   pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
                   itemTextStyle={{ fontFamily: "Avenir" }}
-                />
+                /> */}
               </View>
             </View>
             <View style={styles.valueContainer}>
@@ -538,7 +540,7 @@ class BuyCrypto extends Component {
                 />
               </View>
               <View>
-                <Dropdown
+                {/* <Dropdown
                   rippleOpacity={0}
                   rippleDuration={0}
                   labelExtractor={item => {
@@ -574,7 +576,7 @@ class BuyCrypto extends Component {
                   }}
                   pickerStyle={{ backgroundColor: Colors.tertiaryColor }}
                   itemTextStyle={{ fontFamily: "Avenir" }}
-                />
+                /> */}
               </View>
             </View>
             <View style={styles.valueContainer}>
@@ -609,7 +611,7 @@ class BuyCrypto extends Component {
             ) : (
               <View style={styles.inputAndDropDownContainer}>
                 <View style={styles.formInput}>
-                  <Dropdown
+                  {/* <Dropdown
                     labelExtractor={item => item.name}
                     valueExtractor={item => item}
                     label="Pay With"
@@ -625,7 +627,7 @@ class BuyCrypto extends Component {
                     baseColor="#86939e"
                     value={this.state.paymentMethod.name}
                     containerStyle={styles.dropDownContainer}
-                  />
+                  /> */}
                 </View>
               </View>
             )}

@@ -62,7 +62,8 @@ class Home extends Component {
   animateHeightChange(anim, toValue, cb = () => {}) {    
     Animated.timing(anim, {
       toValue,
-      duration: this.LIST_ITEM_ANIMATION_DURATION
+      duration: this.LIST_ITEM_ANIMATION_DURATION,
+      useNativeDriver: false
     }).start(cb);
   }
 
@@ -224,14 +225,14 @@ class Home extends Component {
               ? BigNumber(balances[key][wallet.id].total)
               : BigNumber("0")
           );
-
-          if (rates[key] && rates[key][displayCurrency]) {
-            const price = BigNumber(rates[key][displayCurrency])
-    
-            _totalFiatBalance = _totalFiatBalance.plus(coinBalances[coinObj.id].multipliedBy(price))
-          }
         }
       })
+
+      if (rates[key] && rates[key][displayCurrency]) {
+        const price = BigNumber(rates[key][displayCurrency])
+
+        _totalFiatBalance = _totalFiatBalance.plus(coinBalances[coinObj.id].multipliedBy(price))
+      }
     })
 
     return {

@@ -1,8 +1,7 @@
 import React from 'react';
 import { Map as IMap } from 'immutable';
-import { View, Text } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import { ListItem } from 'react-native-elements';
-import { ScrollView } from 'react-native-gesture-handler';
 import DelayedAlert from '../../../../../utils/delayedAlert';
 import Styles from '../../../../../styles';
 

@@ -106,7 +106,7 @@ export default class Display extends Component {
   };
 
   blur = (propagate = true) => {
-    if (propagate && this.context.display === this._reactInternalFiber.key) {
+    if (propagate && this.context.display === this._reactInternals.key) {
       this.context.blur();
     }
 

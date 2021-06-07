@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { Map as IMap } from 'immutable';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View, ScrollView } from 'react-native';
 import { Button } from 'react-native-elements';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { ScrollView } from 'react-native-gesture-handler';
+//import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { selectActiveIdentity, selectPinnedAttestations, selectAttestationModalVisibility } from '../../../selectors/identity';
 
@@ -49,7 +48,7 @@ const Home = (props) => {
       <View style={Styles.alignItemsStart}>
         <Text style={Styles.textHeader}>{activeIdentity.get('name', '')}</Text>
         <TouchableOpacity onPress={goToAddIdentity}>
-          <MaterialCommunityIcons name="account-switch" size={iconAccountSwitchSize} style={Styles.textWithGreyColor} />
+          {/* <MaterialCommunityIcons name="account-switch" size={iconAccountSwitchSize} style={Styles.textWithGreyColor} /> */}
         </TouchableOpacity>
       </View>
       <View>

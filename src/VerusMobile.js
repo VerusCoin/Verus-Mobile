@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  YellowBox,
+  LogBox,
   Alert,
   AppState,
   Platform,
@@ -24,7 +24,7 @@ import {
   checkAndSetVersion
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
-import { ENABLE_VERUS_IDENTITIES } from '../env/main.json'
+import { ENABLE_VERUS_IDENTITIES } from '../env/index'
 import AlertModal from "./components/Alert";
 import { activateKeyboardListener } from "./actions/actionDispatchers";
 import Colors from "./globals/colors";
@@ -39,7 +39,7 @@ class VerusMobile extends React.Component {
       securityCover: false
     };
     
-    YellowBox.ignoreWarnings([
+    LogBox.ignoreLogs([
       "Warning: componentWillMount is deprecated",
       "Warning: componentWillReceiveProps is deprecated",
       "Warning: componentWillUpdate is deprecated",
@@ -136,7 +136,7 @@ class VerusMobile extends React.Component {
           />
         </Portal.Host>
         <Modal
-          animationType={this.state.loading ? "fade" : "slide"}
+          animationType={this.state.loading ? "fade" : "none"}
           transparent={false}
           visible={this.state.securityCover || this.state.loading}
         >

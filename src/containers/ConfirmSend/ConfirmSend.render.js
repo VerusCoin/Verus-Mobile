@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import LottieView from 'lottie-react-native';
-import { View, ScrollView, FlatList } from "react-native";
+import { View, ScrollView, FlatList, TouchableOpacity } from "react-native";
 import { Text } from "react-native-paper";
 import { List, Button, Divider } from "react-native-paper";
 import { truncateDecimal } from '../../utils/math';
@@ -8,7 +8,6 @@ import Styles from '../../styles/index'
 import Colors from "../../globals/colors";
 import { explorers } from "../../utils/CoinData/CoinData";
 import AnimatedActivityIndicator from "../../components/AnimatedActivityIndicator";
-import { TouchableOpacity } from "react-native-gesture-handler";
 import BigNumber from "bignumber.js";
 
 export const renderTransactionInfo = function() {
@@ -76,6 +75,8 @@ export const renderTransactionInfo = function() {
                           style={{
                             fontSize: 16,
                             alignSelf: "center",
+                            color: Colors.verusDarkGray,
+                            fontWeight: "300",
                             marginRight: 8,
                           }}
                         >
@@ -112,7 +113,7 @@ export const renderTransactionInfo = function() {
             condition: this.state.identity != null,
           },
           {
-            key: "Amount Submitted",
+            key: "Amount Requested",
             data:
               truncateDecimal(
                 this.state.amountSubmitted,
@@ -158,7 +159,7 @@ export const renderTransactionInfo = function() {
               : null,
           },
           {
-            key: isSendResult ? "Amount Sent" : "Final Amount",
+            key: "Amount Deducted",
             data:
               truncateDecimal(
                 this.state.finalTxAmount,

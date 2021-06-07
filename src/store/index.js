@@ -11,11 +11,13 @@ const configureStore = () => {
 
   const middlewares = [thunk, sagaMiddleware];
   
-  const composeEnhancers = composeWithDevTools({ realtime: true, port: 8000 });
+  // const composeEnhancers = composeWithDevTools({ realtime: true, port: 8000 });
 
-  const ret = createStore(rootReducer, composeEnhancers(
-    applyMiddleware(...middlewares)
-  ));
+  // const ret = createStore(rootReducer, composeEnhancers(
+  //   applyMiddleware(...middlewares)
+  // ));
+
+  const ret = createStore(rootReducer, applyMiddleware(...middlewares));
 
   sagaMiddleware.run(rootSaga)
 

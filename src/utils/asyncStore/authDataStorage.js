@@ -31,6 +31,10 @@ export const storeUser = (authData, users) => {
       accountHash: hashAccountId(authData.userName),
       encryptedKeys,
       biometry: authData.biometry ? true : false,
+      keyDerivationVersion:
+        authData.keyDerivationVersion == null
+          ? 0
+          : authData.keyDerivationVersion,
     };
     let _users = users ? users.slice() : [];
     _users.push(userObj);
@@ -183,6 +187,32 @@ export const setUserBiometry = (userID, biometry) => {
 
           if (userIndex > -1) {
             _users[userIndex].biometry = biometry
+            await AsyncStorage.setItem('userData', JSON.stringify({users: _users}))
+            resolve(_users)
+          } else {
+            throw new Error("User with ID " + userID + " not found")
+          }
+        } else {
+          throw new Error("UserID is null")
+        }
+      })
+      .catch(err => {
+        reject(err)
+        console.warn(err)
+      });
+  });
+};
+
+export const setUserKeyDerivationVersion = (userID, keyDerivationVersion) => {
+  return new Promise((resolve, reject) => {
+    AsyncStorage.getItem('userData')
+      .then(async (res) => {
+        let _users = res ? JSON.parse(res).users : [];
+        if(userID !== null) {
+          let userIndex = _users.findIndex(n => n.id === userID);
+
+          if (userIndex > -1) {
+            _users[userIndex].keyDerivationVersion = keyDerivationVersion
             await AsyncStorage.setItem('userData', JSON.stringify({users: _users}))
             resolve(_users)
           } else {

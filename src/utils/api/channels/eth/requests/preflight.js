@@ -2,7 +2,7 @@ import { ethers } from "ethers"
 import Web3Provider from '../../../../web3/provider'
 import { ETH } from "../../../../constants/intervalConstants"
 import { ETH_NETWORK_IDS } from "../../../../constants/constants"
-import { ETH_NETWORK } from '../../../../../../env/main.json'
+import { ETH_NETWORK } from '../../../../../../env/index'
 import BigNumber from "bignumber.js"
 import { scientificToDecimal } from "../../../../math"
 
@@ -17,7 +17,8 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
       to: address,
       from: fromAddress,
       value,
-      chainId: ETH_NETWORK_IDS[ETH_NETWORK]
+      chainId: ETH_NETWORK_IDS[ETH_NETWORK],
+      gasLimit: ethers.BigNumber.from(21000)
     })
 
     if (transaction.to == null) {

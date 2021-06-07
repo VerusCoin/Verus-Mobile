@@ -74,7 +74,9 @@ import {
 export const setAccounts = (accounts) => {
   return {
     type: SET_ACCOUNTS,
-    accounts: accounts
+    payload: {
+      accounts
+    }
   }
 }
 
@@ -89,10 +91,11 @@ export const disableSelectDefaultAccount = () => {
 }
 
 //Reducer Name: authentication
-export const authenticateUser = (account) => {
+export const authenticateUser = (account, sessionKey) => {
   return {
     type: AUTHENTICATE_USER,
-    activeAccount: account
+    activeAccount: account,
+    sessionKey: sessionKey
   }
 }
 

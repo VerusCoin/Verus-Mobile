@@ -1,6 +1,6 @@
 // Handle all calls to Async Storage (persistent) in this file
 
-import { APP_VERSION } from '../../../env/main.json'
+import { APP_VERSION } from '../../../env/index'
 
 import AsyncStorage from '@react-native-community/async-storage';
 // react-native's version of local storage

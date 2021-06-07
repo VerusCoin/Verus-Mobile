@@ -3,7 +3,7 @@ import {
   setCachedHeader,
 } from '../../../utils/asyncStore/asyncStore';
 
-import { BLOCK_HEADER_STORE_CAP } from '../../../../env/main.json'
+import { BLOCK_HEADER_STORE_CAP } from '../../../../env/index'
 
 import {
   setBlockHeaders

@@ -290,18 +290,6 @@ class SendCoin extends Component {
     );
   };
 
-  getPrivKey = () => {
-    const { activeAccount, activeCoin, balance_channel } = this.props;
-
-    if (
-      activeAccount != null &&
-      activeAccount.keys[activeCoin.id] != null &&
-      activeAccount.keys[activeCoin.id][balance_channel] != null
-    ) {
-      return activeAccount.keys[activeCoin.id][balance_channel].privKey;
-    } else return null;
-  };
-
   translateAmount = (amount, fromFiat = false) => {
     let _price =
       this.props.rates[this.props.activeCoin.id] != null
@@ -482,7 +470,6 @@ class SendCoin extends Component {
     } = this.props;
     const { amountFiat } = this.state
     const hasRewards = this.state.rewards.gt(this.ZERO)
-    const privKey = this.getPrivKey();
     const _price = this.getPrice();
     const fiatEnabled =
       rates[activeCoin.id] && rates[activeCoin.id][displayCurrency] != null;
@@ -504,7 +491,6 @@ class SendCoin extends Component {
                   rewards={this.state.rewards}
                   pubKey={this.state.pubKey}
                   fromAddress={this.state.fromAddress}
-                  privKey={privKey}
                   transparent={false}
                   visible={this.state.rewardModalOpen}
                   onSuccess={() => this.claimSuccess()}

@@ -36,16 +36,61 @@ subprojects {
               && !details.requested.name.contains('multidex') ) {
            details.useVersion "26.1.0"
         }
+
+        if (details.requested.group == 'junit' && details.requested.name == 'junit') {
+            details.useVersion '4.13.1'
+            details.because 'https://snyk.io/vuln/SNYK-JAVA-JUNIT-1017047'
+        }
+
+        if (details.requested.group == 'org.robolectric' && details.requested.name == 'robolectric') {
+            details.useVersion '4.4'
+            details.because 'https://snyk.io/vuln/SNYK-JAVA-ORGBOUNCYCASTLE-32340'
+        }
+
+        if (details.requested.group == 'org.bouncycastle' && details.requested.name == 'bcprov-jdk15on') {
+            details.useVersion '1.68'
+            details.because 'https://snyk.io/vuln/SNYK-JAVA-ORGBOUNCYCASTLE-32340'
+        }
+
+        if (details.requested.group == 'com.drewnoakes' && details.requested.name == 'metadata-extractor') {
+            details.useVersion '2.13.0'
+            details.because 'https://snyk.io/vuln/SNYK-JAVA-COMDREWNOAKES-455419'
+        }
+
+        if (details.requested.group == 'org.powermock' && details.requested.name == 'powermock-classloading-xstream') {
+            details.useVersion '2.0.0'
+            details.because 'https://snyk.io/vuln/SNYK-JAVA-COMTHOUGHTWORKSXSTREAM-31394'
+        }
+
+        if (details.requested.group == 'org.apache.httpcomponents' && details.requested.name == 'httpclient') {
+            details.useVersion '4.5.13'
+            details.because 'https://snyk.io/vuln/SNYK-JAVA-ORGAPACHEHTTPCOMPONENTS-31517'
+        }
+
+        if (details.requested.group == 'org.apache.commons' && details.requested.name == 'commons-compress') {
+            details.useVersion '1.19'
+            details.because 'https://snyk.io/vuln/SNYK-JAVA-ORGAPACHECOMMONS-32473'
+        }
+
+        if (details.requested.group == 'commons-codec' && details.requested.name == 'commons-codec') {
+            details.useVersion '1.13'
+            details.because 'https://snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518'
+        }
+
+        if (details.requested.group == 'com.google.guava' && details.requested.name == 'guava') {
+            details.useVersion '30.0-jre'
+            details.because 'https://snyk.io/vuln/SNYK-JAVA-COMGOOGLEGUAVA-1015415'
+        }
      }
   }
 
    afterEvaluate {
-            project ->
-                if (project.hasProperty("android")) {
-                    android {
-                        compileSdkVersion = 29
-                        buildToolsVersion = "29.0.3"
-                    }
+        project ->
+            if (project.hasProperty("android")) {
+                android {
+                    compileSdkVersion = 29
+                    buildToolsVersion = "29.0.3"
                 }
-        }
+            }
+    }
 }

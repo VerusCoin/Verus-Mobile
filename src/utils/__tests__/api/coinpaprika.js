@@ -1,5 +1,5 @@
 import { findCoinObj, namesList } from '../../CoinData/CoinData';
-import { REQUEST_TIMEOUT_MS } from '../../../../env/main.json';
+import { REQUEST_TIMEOUT_MS } from '../../../../env/index';
 import { timeout } from '../../promises';
 import { isJson } from '../../objectManip';
 

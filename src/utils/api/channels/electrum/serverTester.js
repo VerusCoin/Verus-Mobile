@@ -14,7 +14,7 @@ import { ELECTRUM } from '../../../constants/intervalConstants';
 import { NO_VALID_SERVER } from '../../errors/errorCodes';
 import { CONNECTION_ERROR } from '../../errors/errorMessages'
 
-import { REQUEST_TIMEOUT_MS } from '../../../../../env/main.json'
+import { REQUEST_TIMEOUT_MS } from '../../../../../env/index'
 import Store from '../../../../store';
 import { recordBadServer, recordGoodServer } from '../../../../actions/actionCreators';
 import NetInfo from "@react-native-community/netinfo";
@@ -23,8 +23,9 @@ import NetInfo from "@react-native-community/netinfo";
  * @param {Function} tester A tester function that takes in a server and will fail if it does not perform it's purpose
  * @param {String[]} serverList A list of server strings in the format the tester requires
  * @param {Array} xtraTesterParams (Optional) A list of extra parameters for the tester function
+ * @param {Number} startIndex (Optional) The index in the serverlist that will be checked first
  */
-export const getGoodServer = (tester, serverList, xtraTesterParams = []) => {
+export const getGoodServer = (tester, serverList, xtraTesterParams = [], startIndex = null) => {
   if (serverList.length === 0) {
     return Promise.reject(
       new ApiException(
@@ -55,7 +56,10 @@ export const getGoodServer = (tester, serverList, xtraTesterParams = []) => {
 
   if (cachedBadServerIndex !== -1) return handleBadServer(cachedBadServerIndex)
 
-  let index = Math.floor(Math.random() * serverList.length)
+  let index =
+    startIndex == null
+      ? Math.floor(Math.random() * serverList.length)
+      : startIndex;
   
   return new Promise((resolve, reject) => {
     tester(serverList[index], ...xtraTesterParams)

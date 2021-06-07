@@ -2,18 +2,103 @@ const bs58check = require('bs58check');
 
 import { isKomodoCoin } from 'agama-wallet-lib/src/coin-helpers';
 import electrumJSNetworks from 'agama-wallet-lib/src/bitcoinjs-networks';
-import { decryptkey } from './seedCrypt';
 
 import {
   wifToWif,
   seedToWif,
   seedToPriv
 } from 'agama-wallet-lib/src/keys';
-import { ETH, ERC20, DLIGHT_PRIVATE } from './constants/intervalConstants';
+import { ETH, ERC20, DLIGHT_PRIVATE, ELECTRUM } from './constants/intervalConstants';
 import ethers from 'ethers';
 import VerusLightClient from 'react-native-verus-light-client'
+import {
+  KEY_DERIVATION_VERSION,
+} from "../../env/index";
 
-export const makeKeyPair = async (seed, coinID, channel) => {
+const deriveLightwalletdKeyPair = async (seed) => {
+  const spendingKey = await parseDlightSeed(seed);
+
+  return {
+    pubKey: null,
+    privKey: spendingKey,
+    viewingKey: await VerusLightClient.deriveViewingKey(spendingKey),
+    addresses: [],
+  };
+};
+
+const deriveElectrumKeypair = async (seed, coinID) => {
+  let privKey
+  let isWif = false;
+  let _seedToWif;
+  let keyObj = {};
+
+  try {
+    privKey = seedToPriv(seed, "btc");
+    bs58check.decode(privKey);
+    isWif = true;
+  } catch (e) {}
+
+  if (isWif) {
+    _seedToWif = wifToWif(
+      privKey,
+      isKomodoCoin(coinID)
+        ? electrumJSNetworks.kmd
+        : electrumJSNetworks[coinID.toLowerCase()]
+    );
+  } else {
+    _seedToWif = seedToWif(
+      seed,
+      isKomodoCoin(coinID)
+        ? electrumJSNetworks.kmd
+        : electrumJSNetworks[coinID.toLowerCase()],
+      true
+    );
+  }
+
+  keyObj = {
+    pubKey: _seedToWif.pubHex,
+    privKey: _seedToWif.priv,
+    addresses: [_seedToWif.pub],
+  };
+
+  return keyObj;
+};
+
+const deriveWeb3Keypair = async (seed, coinID) => {
+  const electrumKeys = await deriveElectrumKeypair(seed, coinID);
+  let seedIsEthPrivkey = false
+
+  try {
+    new ethers.utils.SigningKey(seed)
+    seedIsEthPrivkey = true
+  } catch(e) {}
+
+  return {
+    pubKey: electrumKeys.pubKey,
+    privKey: seedIsEthPrivkey ? seed : seedToPriv(electrumKeys.privKey, "eth"),
+    addresses: [
+      ethers.utils.computeAddress(
+        seedIsEthPrivkey ? seed : Buffer.from(electrumKeys.pubKey, "hex")
+      ),
+    ],
+  };
+};
+
+const CHANNEL_DERIVATIONS = {
+  [DLIGHT_PRIVATE]: deriveLightwalletdKeyPair,
+  [ETH]: deriveWeb3Keypair,
+  [ERC20]: deriveWeb3Keypair,
+  [ELECTRUM]: deriveElectrumKeypair
+}
+
+export const deriveKeyPairV1 = async (seed, coinID, channel) => {
+  if (CHANNEL_DERIVATIONS[channel]) {
+    return await CHANNEL_DERIVATIONS[channel](seed, coinID)
+  } else return await deriveElectrumKeypair(seed, coinID)
+}
+
+// This is purely for backwards compatibility, DO NOT USE
+export const deriveKeypairV0 = async (seed, coinID, channel) => {
   if (channel === DLIGHT_PRIVATE) {
     const spendingKey = await parseDlightSeed(seed)
 
@@ -53,10 +138,16 @@ export const makeKeyPair = async (seed, coinID, channel) => {
   }
 }
 
-export const pairFromPwd = async (password, encryptedKey, coinID) => {
-  let seed = decryptkey(password, encryptedKey);
+export const DERIVATION_VERSIONS = {
+  [0]: deriveKeypairV0,
+  [1]: deriveKeyPairV1
+}
 
-  return await makeKeyPair(seed, coinID);
+export const deriveKeyPair = async (seed, coinID, channel, version = KEY_DERIVATION_VERSION) => {
+  if (DERIVATION_VERSIONS[version] == null) throw new Error("Cannot derive keypair for version " + version)
+  else {
+    return await DERIVATION_VERSIONS[version](seed, coinID, channel)
+  }
 }
 
 export const isDlightSpendingKey = (seed) => {

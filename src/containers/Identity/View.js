@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { View } from 'react-native';
 import BottomNavigation, { FullTab } from 'react-native-material-bottom-navigation';
-import Icon from 'react-native-vector-icons/FontAwesome';
+//import Icon from 'react-native-vector-icons/FontAwesome';
 import AddIdentity from './AddIdentity';
 import tabs from './tabs';
 import Styles from '../../styles/index';
@@ -17,7 +17,8 @@ const Identity = (props) => {
   const tabIndex = Object.keys(tabs).findIndex((tabKey) => tabs[tabKey].label.toLowerCase() === selectedTab.toLowerCase());
 
   const renderIcon = (icon) => () => (
-    <Icon size={sizeIcon} name={icon} style={Styles.whiteText} />
+    // <Icon size={sizeIcon} name={icon} style={Styles.whiteText} />
+    null
   );
 
   useEffect(() => {

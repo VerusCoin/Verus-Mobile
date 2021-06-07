@@ -10,7 +10,8 @@ import {
   View,
   Keyboard,
   Alert,
-  TextInput as NativeTextInput
+  TextInput as NativeTextInput,
+  Platform
 } from "react-native"
 import Styles from '../../../styles/index'
 import StandardButton from "../../StandardButton";
@@ -71,10 +72,7 @@ class ImportSeed extends Component {
 
   render() {
     return (
-      <TouchableWithoutFeedback
-        onPress={Keyboard.dismiss}
-        accessible={false}
-      >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         {!this.state.scanning ? (
           <ScrollView
             style={Styles.flexBackground}
@@ -87,9 +85,7 @@ class ImportSeed extends Component {
             </View>
             <View style={Styles.fullWidthFlexGrowCenterBlock}>
               <View style={Styles.wideCenterBlock}>
-                <Text
-                  style={[Styles.textWithGreyColor, Styles.centeredText]}
-                >
+                <Text style={[Styles.textWithGreyColor, Styles.centeredText]}>
                   {this.props.channel === DLIGHT_PRIVATE
                     ? "Enter or scan a 24 word seed phrase, or Z spending key."
                     : "Enter or scan an existing spending key, WIF key, or seed phrase."}
@@ -102,7 +98,9 @@ class ImportSeed extends Component {
                   underlineColor={Colors.primaryColor}
                   selectionColor={Colors.primaryColor}
                   value={this.state.seed}
-                  multiline={!this.state.showSeed ? false : true}
+                  multiline={
+                    !this.state.showSeed || Platform.OS === "ios" ? false : true
+                  }
                   render={(props) => (
                     <NativeTextInput
                       secureTextEntry={!this.state.showSeed}

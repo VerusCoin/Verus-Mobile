@@ -1,4 +1,4 @@
-import { ENABLE_DLIGHT, DISABLED_CHANNELS } from '../../env/main.json'
+import { ENABLE_DLIGHT, DISABLED_CHANNELS } from '../../env/index'
 import store from '../store'
 import { DLIGHT_PRIVATE } from './constants/intervalConstants';
 

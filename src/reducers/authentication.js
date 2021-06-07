@@ -19,13 +19,15 @@ import {
 export const authentication = (
   state = {
     accounts: [],
+    sessionKey: null,
     activeAccount: {
       id: null,
       accountHash: null,
       seeds: {},
       keys: {},
       paymentMethods: {},
-      biometry: false
+      biometry: false,
+      keyDerivationVersion: 1
     },
     signedIn: false,
     selectDefaultAccount: true
@@ -41,12 +43,13 @@ export const authentication = (
     case SET_ACCOUNTS:
       return {
         ...state,
-        accounts: action.accounts
+        accounts: action.payload.accounts
       };
     case AUTHENTICATE_USER:
       return {
         ...state,
         activeAccount: action.activeAccount,
+        sessionKey: action.sessionKey
       };
     case SIGN_IN_USER:
       return {
@@ -87,12 +90,13 @@ export const authentication = (
     case SIGN_OUT_COMPLETE:
       return {
         ...state,
-        activeAccount: null
+        activeAccount: null,
+        sessionKey: null
       };
     case SIGN_OUT:
       return {
         ...state,
-        signedIn: false
+        signedIn: false,
       };
     case BIOMETRIC_AUTH:
       return {

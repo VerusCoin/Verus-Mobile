@@ -19,9 +19,11 @@ import {
   INIT_DLIGHT_CHANNEL_START,
   CLOSE_DLIGHT_CHANNEL,
 } from "../../../../../utils/constants/storeType";
+import { requestViewingKey } from '../../../../../utils/auth/authBox'
+import { DLIGHT_PRIVATE } from '../../../../../utils/constants/intervalConstants'
 
 // Initializes dlight wallet by either creating a backend native wallet and opening it or just opening it
-export const initDlightWallet = (coinObj) => {
+export const initDlightWallet = async (coinObj) => {
   const { dispatch, getState } = Store
   const State = getState()
 
@@ -60,12 +62,12 @@ export const initDlightWallet = (coinObj) => {
           lightWalletEndpointArr[0],
           Number(lightWalletEndpointArr[1]),
           DEFAULT_PRIVATE_ADDRS,
-          [activeAccount.keys[coinObj.id].dlight_private.viewingKey]
+          [await requestViewingKey(coinObj.id, DLIGHT_PRIVATE)]
         ),
         openWallet(id, proto, accountHash),
         startSync(id, proto, accountHash),
-        getAddresses(id, accountHash, proto)
-      ]
+        getAddresses(id, accountHash, proto),
+      ];
 
     } else if (dlightSockets[id] === false) {
       initializationPromises = [

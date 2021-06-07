@@ -4,6 +4,7 @@ import { preflightPrivateTransaction } from './preflightPrivateTransaction'
 import { coinsToSats } from '../../../../math'
 import BigNumber from 'bignumber.js'
 import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
+import { requestPrivKey } from '../../../../auth/authBox'
 
 // Sends a private transaction with given parameters
 export const sendPrivateTransaction = async (coinObj, activeUser, address, amount, params) => {
@@ -21,7 +22,16 @@ export const sendPrivateTransaction = async (coinObj, activeUser, address, amoun
       );
     }
 
-    const spendingKey = activeUser.keys[coinObj.id][DLIGHT_PRIVATE].privKey
+    let spendingKey;
+
+    try {
+      spendingKey = await requestPrivKey(coinObj.id, DLIGHT_PRIVATE)
+    } catch(e) {
+      throw new Error(
+        "Cannot spend transaction because user keys cannot be calculated."
+      );
+    }
+
     const preflight = await preflightPrivateTransaction(coinObj, activeUser, address, amount, params);
 
     if (preflight.err) throw new Error(err.result)
