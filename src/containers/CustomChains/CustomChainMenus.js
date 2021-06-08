@@ -11,9 +11,9 @@ import {
   View,
 } from "react-native";
 import { connect } from 'react-redux';
-import BottomNavigation, {
-  FullTab
-} from 'react-native-material-bottom-navigation'
+// import BottomNavigation, {
+//   FullTab
+// } from 'react-native-material-bottom-navigation'
 import CustomChainForm from './CustomChainForm/CustomChainForm'
 import CustomChainScan from './CustomChainScan/CustomChainScan'
 import { Icon } from "react-native-elements"
@@ -81,16 +81,16 @@ class CustomChainMenus extends Component {
     <Icon size={24} color="white" name={icon} />
   )
 
-  renderTab = ({ tab, isActive }) => (
-    <FullTab
-      isActive={isActive}
-      key={tab.key ? tab.key : ''}
-      label={tab.label ? tab.label : ''}
-      labelStyle={{fontFamily: 'Avenir-Black',paddingLeft: 5}}
-      renderIcon={this.renderIcon(tab.icon)}
-      style={{flexDirection: 'row', alignSelf: 'center', justifyContent: 'center'}}
-    />
-  )
+  // renderTab = ({ tab, isActive }) => (
+  //   <FullTab
+  //     isActive={isActive}
+  //     key={tab.key ? tab.key : ''}
+  //     label={tab.label ? tab.label : ''}
+  //     labelStyle={{fontFamily: 'Avenir-Black',paddingLeft: 5}}
+  //     renderIcon={this.renderIcon(tab.icon)}
+  //     style={{flexDirection: 'row', alignSelf: 'center', justifyContent: 'center'}}
+  //   />
+  // )
 
   switchTab = (newTab) => {
     this.props.navigation.setOptions({ title: newTab.label })
@@ -103,12 +103,12 @@ class CustomChainMenus extends Component {
           {this.state.activeTab.screen === "CustomChainForm" ? <CustomChainForm navigation={this.props.navigation}/> :
           (this.state.activeTab.screen === "CustomChainScan" ? <CustomChainScan navigation={this.props.navigation}/> :
           null)}
-        <BottomNavigation
+        {/* <BottomNavigation
           onTabPress={newTab => this.switchTab(newTab)}
           renderTab={this.renderTab}
           tabs={this.state.tabs}
           activeTab={this.state.activeTab.key}
-        />
+        /> */}
       </View>
     );
   }

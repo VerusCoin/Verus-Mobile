@@ -8,9 +8,6 @@ import {
   View,
 } from "react-native";
 import { connect } from 'react-redux';
-import BottomNavigation, {
-  FullTab
-} from 'react-native-material-bottom-navigation'
 import Overview from './Overview/Overview'
 import SendCoin from './SendCoin/SendCoin'
 import ReceiveCoin from './ReceiveCoin/ReceiveCoin'
@@ -18,7 +15,7 @@ import { setActiveSection, setCoinSubWallet, setIsCoinMenuFocused } from "../../
 import { NavigationActions, withNavigationFocus } from '@react-navigation/compat';
 import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
 import DynamicHeader from "./DynamicHeader";
-import { Portal, IconButton } from "react-native-paper";
+import { Portal, BottomNavigation } from "react-native-paper";
 
 class CoinMenus extends Component {
   constructor(props) {
@@ -33,10 +30,17 @@ class CoinMenus extends Component {
     this.state = {
       tabs: stateObj.tabs,
       activeTab: stateObj.activeTab,
+      activeTabIndex: stateObj.activeTabIndex,
       subWallets
     }; 
 
     if (subWallets.length == 1) props.dispatch(setCoinSubWallet(props.activeCoin.id, subWallets[0]))
+
+    this.Routes = {
+      ['wallet-overview']: Overview,
+      ['wallet-send']: SendCoin,
+      ['wallet-receive']: ReceiveCoin
+    }
   }
 
   componentDidMount() {
@@ -50,31 +54,23 @@ class CoinMenus extends Component {
   }
 
   generateTabs = () => {
-    //this.props.activeSection
     let tabArray = []
     let activeTab;
+    let activeTabIndex;
     let options = this.props.activeCoin.apps[this.props.activeApp].data
-    const screens = {
-      //Overview: <Overview/>,
-      //SendCoin: <SendCoin/>
-      Overview: "Overview",
-      SendCoin: "SendCoin",
-      ReceiveCoin: "ReceiveCoin"
-    }
 
     for (let i = 0; i < options.length; i++) {
       let _tab = {
         key: options[i].key,
         icon: options[i].icon,
-        label: options[i].name,
-        barColor: options[i].color,
-        pressColor: 'rgba(255, 255, 255, 0.16)',
-        screen: screens[options[i].screen],
+        title: options[i].name,
+        //color: options[i].color, // Disregarded for now
         activeSection: options[i]
       }
 
       if (options[i].key === this.props.activeSection.key) {
         activeTab = _tab
+        activeTabIndex = i
       }
 
       tabArray.push(_tab)
@@ -84,37 +80,36 @@ class CoinMenus extends Component {
       throw new Error("Tab not found for active section " + this.props.activeSection.key)
     }
 
-    this.props.navigation.setOptions({ title: activeTab.label })
+    this.props.navigation.setOptions({ title: activeTab.title })
 
     return {
       tabs: tabArray,
-      activeTab: activeTab
+      activeTab: activeTab,
+      activeTabIndex
     };
   }
 
-  renderIcon = icon => ({ isActive }) => (
-    <IconButton style={{ padding: 0, margin: 0 }} color="white" size={16} icon={icon} />
-  )
+  renderScene = ({ route, jumpTo }) => {
+    if (this.Routes[route.key] == null) return null
+    else {
+      const Route = this.Routes[route.key]
 
-  renderTab = ({ tab, isActive }) => (
-    <FullTab
-      isActive={isActive}
-      key={tab.key ? tab.key : ''}
-      label={tab.label ? tab.label : ''}
-      renderIcon={this.renderIcon(tab.icon)}
-    />
-  )
-
-  switchTab = (newTab) => {
-    this.props.navigation.setOptions({ title: newTab.label })
-    this.props.dispatch(setActiveSection(newTab.activeSection))
-    this.setState({ activeTab: newTab })
+      return (
+        <Route
+          navigation={this.props.navigation}
+          data={this.passthrough}
+          switchTab={jumpTo}
+        />
+      );
+    }
   }
 
-  switchTabByKey = (key) => {
-    const foundTab = this.props.tabs.find(value => value.key === key) 
+  switchTab = (index) => {
+    const newTab = this.state.tabs[index]
 
-    if (foundTab) this.switchTab(foundTab)
+    this.props.navigation.setOptions({ title: newTab.title })
+    this.props.dispatch(setActiveSection(newTab.activeSection))
+    this.setState({ activeTab: newTab, activeTabIndex: index })
   }
 
   goBack = () => {
@@ -128,11 +123,10 @@ class CoinMenus extends Component {
   render() {
     const { selectedSubWallet, activeCoin } = this.props
     const { subWallets } = this.state
-    //const DynamicHeaderPortal = <Portal.Host></Portal.Host>
 
     return (
       <Portal.Host>
-        <View style={{ flex: 1, display: 'flex' }}>
+        <View style={{ flex: 1, display: "flex" }}>
           {selectedSubWallet == null && (
             <SubWalletSelectorModal
               visible={selectedSubWallet == null}
@@ -144,34 +138,14 @@ class CoinMenus extends Component {
           )}
           {selectedSubWallet != null && <DynamicHeader />}
           {selectedSubWallet != null && (
-            <View style={{flex: 2}}>
-              {this.state.activeTab.screen === "Overview" ? (
-                <Overview
-                  navigation={this.props.navigation}
-                  data={this.passthrough}
-                  switchTab={this.switchTabByKey}
-                />
-              ) : this.state.activeTab.screen === "SendCoin" ? (
-                <SendCoin
-                  navigation={this.props.navigation}
-                  data={this.passthrough}
-                  switchTab={this.switchTabByKey}
-                />
-              ) : this.state.activeTab.screen === "ReceiveCoin" ? (
-                <ReceiveCoin
-                  navigation={this.props.navigation}
-                  data={this.passthrough}
-                  switchTab={this.switchTabByKey}
-                />
-              ) : null}
-              <BottomNavigation
-                onTabPress={(newTab) => this.switchTab(newTab)}
-                renderTab={this.renderTab}
-                tabs={this.state.tabs}
-                activeTab={this.state.activeTab.key}
-                style={{ display: 'flex' }}
-              />
-            </View>
+            <BottomNavigation
+              navigationState={{
+                index: this.state.activeTabIndex,
+                routes: this.state.tabs,
+              }}
+              onIndexChange={this.switchTab}
+              renderScene={this.renderScene}
+            />
           )}
         </View>
       </Portal.Host>

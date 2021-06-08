@@ -65,7 +65,6 @@
     "react-native-keychain": "^6.2.0",
     "react-native-level-fs": "^3.0.0",
     "react-native-loading-spinner-overlay": "^1.0.1",
-    "react-native-material-bottom-navigation": "^1.0.2",
     "react-native-os": "^1.0.1",
     "react-native-paper": "^4.7.1",
     "react-native-permissions": "^3.0.3",

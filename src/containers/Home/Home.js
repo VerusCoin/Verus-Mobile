@@ -55,7 +55,7 @@ class Home extends Component {
 
   componentDidMount() {
     this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
-      this.refresh();
+      this.refresh(false);
     });
   }
 
@@ -124,8 +124,8 @@ class Home extends Component {
     }
   }
 
-  refresh = () => {    
-    this.setState({ loading: true }, () => {
+  refresh = (showLoading = true) => {    
+    this.setState({ loading: showLoading }, () => {
       Promise.all(this.props.activeCoinsForUser.map(async (coinObj) => {
         await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, coinObj.id, API_GET_FIATPRICE)
         await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, coinObj.id, API_GET_BALANCES)

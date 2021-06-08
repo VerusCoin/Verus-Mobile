@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { View } from 'react-native';
-import BottomNavigation, { FullTab } from 'react-native-material-bottom-navigation';
+// import BottomNavigation, { FullTab } from 'react-native-material-bottom-navigation';
 //import Icon from 'react-native-vector-icons/FontAwesome';
 import AddIdentity from './AddIdentity';
 import tabs from './tabs';
@@ -25,16 +25,16 @@ const Identity = (props) => {
     setActiveTab(tabs[tabIndex]);
   }, [selectedTab, tabIndex, tabs]);
 
-  const renderTabItem = ({ tab, isActive }) => (
-    <FullTab
-      isActive={isActive}
-      key={tab.key}
-      label={tab.label}
-      style={Styles.contentCenter}
-      renderIcon={renderIcon(tab.icon)}
-      labelStyle={Styles.labelBold}
-    />
-  );
+  // const renderTabItem = ({ tab, isActive }) => (
+  //   <FullTab
+  //     isActive={isActive}
+  //     key={tab.key}
+  //     label={tab.label}
+  //     style={Styles.contentCenter}
+  //     renderIcon={renderIcon(tab.icon)}
+  //     labelStyle={Styles.labelBold}
+  //   />
+  // );
 
   if (!activeIdentityId) {
     return <AddIdentity />;
@@ -48,14 +48,14 @@ const Identity = (props) => {
   return (
     <View style={Styles.flexBackground}>
       <activeTab.screen navigation={navigation} />
-      <BottomNavigation
+      {/* <BottomNavigation
         useLayoutAnimation={false}
         onTabPress={(newTab) => switchTab(newTab)}
         renderTab={renderTabItem}
         tabs={tabs}
         activeTab={activeTab.key}
         style={Styles.linkButtonColor}
-      />
+      /> */}
     </View>
   );
 };
