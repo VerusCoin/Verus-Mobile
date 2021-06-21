@@ -1,16 +1,16 @@
 /*
-  The purpose of this component is to be the first screen a user is 
-  met with after login. This screen should have all necesarry or 
+  The purpose of this component is to be the first screen a user is
+  met with after login. This screen should have all necesarry or
   essential wallet components available at the press of one button.
-  This includes VerusPay, adding coins, and coin menus. Keeping this 
-  screen clean is also essential, as users will spend alot of time with 
-  it in their faces. It updates the balances and the rates upon loading 
+  This includes VerusPay, adding coins, and coin menus. Keeping this
+  screen clean is also essential, as users will spend alot of time with
+  it in their faces. It updates the balances and the rates upon loading
   if they are flagged to be updated in the redux store.
 */
 
 import React, { Component } from "react";
-import {  
-  setActiveCoin, 
+import {
+  setActiveCoin,
   setActiveApp,
   setActiveSection,
   setActiveSectionBuySellCrypto,
@@ -46,7 +46,7 @@ class Home extends Component {
       //TODO: MOVE TO REDUX
       expandedListItems: {},
     };
-    
+
     this._unsubscribeFocus = null
     this.LIST_ITEM_INITIAL_HEIGHT = 58
     this.LIST_ITEM_MARGINS = 8
@@ -59,7 +59,7 @@ class Home extends Component {
     });
   }
 
-  animateHeightChange(anim, toValue, cb = () => {}) {    
+  animateHeightChange(anim, toValue, cb = () => {}) {
     Animated.timing(anim, {
       toValue,
       duration: this.LIST_ITEM_ANIMATION_DURATION,
@@ -124,7 +124,7 @@ class Home extends Component {
     }
   }
 
-  refresh = () => {    
+  refresh = () => {
     this.setState({ loading: true }, () => {
       Promise.all(this.props.activeCoinsForUser.map(async (coinObj) => {
         await conditionallyUpdateWallet(Store.getState(), this.props.dispatch, coinObj.id, API_GET_FIATPRICE)
@@ -144,7 +144,7 @@ class Home extends Component {
         console.warn(error)
       })
     })
-    
+
   }
 
   resetToScreen = (route, title, data) => {
@@ -181,7 +181,7 @@ class Home extends Component {
               }
             }
             if (this.state.loading) {
-              this.setState({ loading: false });  
+              this.setState({ loading: false });
             }
             return true
           }
@@ -203,10 +203,10 @@ class Home extends Component {
             resolve(false)
           }
         })
-    }) 
+    })
   }
 
-  getTotalBalances = (props) => {    
+  getTotalBalances = (props) => {
     let _totalFiatBalance = BigNumber(0)
     let coinBalances = {}
     const balances = props.balances
@@ -242,7 +242,7 @@ class Home extends Component {
   }
 
   _verusPay = () => {
-    let navigation = this.props.navigation  
+    let navigation = this.props.navigation
 
     navigation.navigate("VerusPay", { refresh: this.refresh });
   }
@@ -257,24 +257,24 @@ class Home extends Component {
   }
 
   _handleIdentity = () => {
-    let navigation = this.props.navigation ; 
+    let navigation = this.props.navigation ;
     navigation.navigate("Identity", { selectedScreen: "Identity" } );
   }
 
   calculateSyncProgress = (coinObj, subWallet) => {
-    const syncInfo = this.props.info 
+    const syncInfo = this.props.info
 
     if (syncInfo[coinObj.id] == null || syncInfo[coinObj.id][subWallet.id] == null) return 100
     else return syncInfo[coinObj.id][subWallet.id].percent
   }
-  
+
   _addCoin = () => {
-    let navigation = this.props.navigation  
+    let navigation = this.props.navigation
     navigation.navigate("AddCoin", { refresh: this.refresh });
   }
 
   _buySellCrypto = () => {
-    let navigation = this.props.navigation  
+    let navigation = this.props.navigation
     this.props.dispatch(setActiveSectionBuySellCrypto('buy-crypto'))
 
     navigation.navigate("BuySellCryptoMenus", {title: "Buy"});

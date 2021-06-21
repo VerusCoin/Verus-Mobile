@@ -211,6 +211,7 @@ android {
 
 dependencies {
     implementation project(':react-native-vector-icons')
+    implementation project(':react-native-verus-light-client')
     implementation project(':greeting')
     implementation fileTree(dir: "libs", include: ["*.jar"])
     //implementation 'androidx.appcompat:appcompat:1.0.0'

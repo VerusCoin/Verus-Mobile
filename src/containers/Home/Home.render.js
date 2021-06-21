@@ -1,7 +1,7 @@
 import React from "react";
 import { CoinLogos } from "../../utils/CoinData/CoinData";
-import { 
-  View, 
+import {
+  View,
   FlatList,
   ScrollView,
   RefreshControl,
@@ -29,7 +29,7 @@ export const HomeRender = function() {
           />
         }
       >
-        <HomeFAB 
+        <HomeFAB
           handleAddCoin={() => this._addCoin()}
           handleVerusPay={() => this._verusPay()}
         />
@@ -60,7 +60,7 @@ export const HomeRender = function() {
 
 export const HomeRenderCoinsList = function() {
   const { activeCoinsForUser } = this.props;
-  
+
   return activeCoinsForUser.map((item, index) => {
     return HomeListItemRender.call(
       this,
