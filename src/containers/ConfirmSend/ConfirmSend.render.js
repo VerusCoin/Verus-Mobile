@@ -225,7 +225,7 @@ export const renderTransactionInfo = function() {
               isSendResult && explorers[this.state.coinObj.id] == null
             }
             color={
-              isSendResult ? Colors.primaryColor : Colors.successButtonColor
+              isSendResult ? Colors.primaryColor : Colors.verusGreenColor
             }
           >
             {isSendResult ? "Details" : "Send"}

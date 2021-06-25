@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-community/async-storage';
+import { SETTINGS_STORAGE_INTERNAL_KEY } from '../../../env/index';
 
 /**
  * Saves the current settings state object into AsyncStorage and returns 
@@ -9,7 +10,7 @@ export const storeSettings = (settings) => {
   if (typeof settings !== 'object') throw new Error(`Wallet settings store function expected object, recieved ${typeof settings}`)
 
   return new Promise((resolve, reject) => {
-    AsyncStorage.setItem('settings', JSON.stringify(settings))
+    AsyncStorage.setItem(SETTINGS_STORAGE_INTERNAL_KEY, JSON.stringify(settings))
       .then(() => {
         resolve(settings);
       })
@@ -24,7 +25,7 @@ export const storeSettings = (settings) => {
  */
 export const loadSettings = () => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem('settings')
+    AsyncStorage.getItem(SETTINGS_STORAGE_INTERNAL_KEY)
       .then(res => {
         if (!res) {
           resolve({});

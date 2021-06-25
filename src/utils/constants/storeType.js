@@ -196,3 +196,6 @@ export const REMOVE_MODAL = "REMOVE_MODAL"
 
 // Keyboard
 export const SET_KEYBOARD_HEIGHT = "SET_KEYBOARD_HEIGHT"
+
+// Personal 
+export const SET_PERSONAL_DATA = "SET_PERSONAL_DATA"

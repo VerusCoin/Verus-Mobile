@@ -28,7 +28,7 @@ import {
  } from '../../actions/actionCreators';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
-import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
+import { clearAllCoinIntervals, initPersonalDataForUser } from "../../actions/actionDispatchers";
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import PasswordInput from '../../components/PasswordInput'
 import { DISABLED_CHANNELS } from '../../../env/index'
@@ -120,6 +120,7 @@ class Login extends Component {
           activateChainLifecycle(coinObj.id);
         }
 
+        await initPersonalDataForUser(account.accountHash)
         this.props.dispatch(signIntoAuthenticatedAccount())
       })
       .catch(err => {

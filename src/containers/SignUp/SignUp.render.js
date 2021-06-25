@@ -201,7 +201,7 @@ export const SignUpRender = function() {
             )}
             <Button
               onPress={() => this._handleSubmit()}
-              color={Colors.successButtonColor}
+              color={Colors.verusGreenColor}
             >
               {"Add Profile"}
             </Button>

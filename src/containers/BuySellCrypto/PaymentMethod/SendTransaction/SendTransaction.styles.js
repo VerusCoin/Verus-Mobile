@@ -28,7 +28,7 @@ export default styles = StyleSheet.create({
   },
   saveChangesButton: {
     height: 44,
-    backgroundColor: Colors.successButtonColor,
+    backgroundColor: Colors.verusGreenColor,
     width: '63%',
     marginVertical: 3,
   },

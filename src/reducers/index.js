@@ -3,6 +3,7 @@ import { authentication } from './authentication';
 import { coins } from './coins';
 import { ledger } from './ledger';
 import { settings } from './settings';
+import { personal } from './personal';
 import { electrum } from './cache/electrum';
 import { headers } from './cache/headers';
 import { ethtxreceipts } from './cache/ethtxreceipts';
@@ -48,5 +49,6 @@ export default combineReducers({
   coinMenus,
   alert,
   modal,
-  keyboard
+  keyboard,
+  personal
 });

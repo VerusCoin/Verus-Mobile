@@ -37,7 +37,7 @@ const getDefaultApps = (coinName) => {
           icon: 'arrow-down',
           name: 'Receive',
           key: 'wallet-receive',
-          color: Colors.successButtonColor
+          color: Colors.verusGreenColor
           //Green
         }
       ]

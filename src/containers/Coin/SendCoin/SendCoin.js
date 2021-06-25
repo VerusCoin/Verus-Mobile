@@ -667,7 +667,7 @@ class SendCoin extends Component {
                       rewardModalOpen: true,
                     })
                   }
-                  color={Colors.successButtonColor}
+                  color={Colors.verusGreenColor}
                   disabled={claimDisabled}
                 >
                   {"Claim"}

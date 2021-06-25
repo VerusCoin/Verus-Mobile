@@ -6,6 +6,7 @@ export * from './actions/cache/Headers'
 export * from './actions/cache/Cache'
 export * from './actions/cache/EthTransactionReceipts'
 export * from './actions/updateManager'
+export * from './actions/personal/creators/personal'
 
 export * from './actionCreators/claims';
 export * from './actionCreators/claimCategories';

@@ -6,6 +6,8 @@ import {
   StyleSheet, TouchableOpacity, Dimensions, Text, Platform,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 
 //import IconVector from 'react-native-vector-icons/Ionicons';
 import Colors from '../../globals/colors';
@@ -41,17 +43,9 @@ import ManageWyrePersonalDetails from '../../containers/BuySellCrypto/PaymentMet
 import ManageWyreProofOfAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreProofOfAddress';
 import ManageWyreAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreAddress';
 import SendTransaction from '../../containers/BuySellCrypto/PaymentMethod/SendTransaction/SendTransaction';
-import Identity from '../../containers/Identity';
-import ScanBadge from '../../containers/Identity/Home/ScanBadge';
-import PersonalInfo from '../../containers/Identity/PersonalInfo';
-import ClaimDetails from '../../containers/Identity/PersonalInfo/ClaimDetails';
-import ClaimCategory from '../../containers/Identity/PersonalInfo/ClaimCategoryDetails';
-import AttestationDetails from '../../containers/Identity/Home/AttestationDetails';
-import ClaimManager from '../../containers/Identity/PersonalInfo/ClaimManager';
-import MoveIntoCategory from '../../containers/Identity/PersonalInfo/ClaimManager/MoveIntoCategory';
-import AddIdentity from '../../containers/Identity/AddIdentity';
 import { DEVICE_WINDOW_WIDTH } from '../constants/constants';
 import { Component } from 'react';
+import Personal from '../../containers/Personal/Personal';
 
 const WALLET = 'wallet';
 
@@ -61,6 +55,7 @@ const SignedOutStack = createStackNavigator()
 const SignedOutNoKeyStack = createStackNavigator()
 const LoadingStack = createStackNavigator()
 const RootStack = createStackNavigator()
+const Tabs = createMaterialBottomTabNavigator()
 
 const styles = StyleSheet.create({
   header_title_noBack: {
@@ -120,6 +115,35 @@ function MainScreens() {
   );
 }
 
+function HomeScreens() {
+  return (
+    <Tabs.Navigator barStyle={{ backgroundColor: Colors.primaryColor }}>
+      <Tabs.Screen
+        name="WalletHome"
+        component={Home}
+        options={{
+          title: "Home",
+          headerLeft: () => null,
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="home" color={color} size={26} />
+          )
+        }}
+      />
+      <Tabs.Screen
+        name="PersonalHome"
+        component={Personal}
+        options={{
+          title: "Personal Profile",
+          headerLeft: () => null,
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="fingerprint" color={color} size={26} />
+          )
+        }}
+      />
+    </Tabs.Navigator>
+  );
+}
+
 function MainStackScreens() {
   return (
     <MainStack.Navigator
@@ -148,11 +172,7 @@ function MainStackScreens() {
     >
       <MainStack.Screen
         name="Home"
-        component={Home}
-        options={{
-          title: "Home",
-          headerLeft: () => null,
-        }}
+        component={HomeScreens}
       />
 
       <MainStack.Screen
@@ -168,91 +188,6 @@ function MainStackScreens() {
         component={CoinDetails}
         options={{
           title: "Details",
-        }}
-      />
-
-      <MainStack.Screen
-        name="ClaimManager"
-        component={ClaimManager}
-        options={{
-          title: "Claim Manager",
-        }}
-      />
-
-      <MainStack.Screen
-        name="MoveIntoCategory"
-        component={MoveIntoCategory}
-        options={({ navigation, route }) => ({
-          title: "Categories",
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => {
-                if (route.params != null) {
-                  route.params.clearClaims();
-                  navigation.goBack();
-                }
-              }}
-              style={styles.goBackBtn}
-            >
-              {/* <IconVector
-                name={
-                  Platform.OS === "ios" ? "ios-arrow-back" : "md-arrow-back"
-                }
-                size={35}
-                color="white"
-                style={{ paddingLeft: 8 }}
-              /> */}
-              <Text style={styles.goBackBtnText}>Back</Text>
-            </TouchableOpacity>
-          ),
-        })}
-      />
-
-      <MainStack.Screen
-        name="AttestationDetails"
-        component={AttestationDetails}
-        options={({ route }) => ({
-          title: route.params != null ? route.params.id : null,
-        })}
-      />
-
-      <MainStack.Screen
-        name="Identity"
-        component={Identity}
-        options={({ route }) => ({
-          title: route.params != null ? route.params.selectedScreen : null,
-        })}
-      />
-
-      <MainStack.Screen
-        name="AddIdentity"
-        component={AddIdentity}
-        options={{
-          title: "Add Identity",
-        }}
-      />
-
-      <MainStack.Screen
-        name="ClaimDetails"
-        component={ClaimDetails}
-        options={({ route }) => ({
-          title: route.params != null ? route.params.claimName : null,
-        })}
-      />
-
-      <MainStack.Screen
-        name="ClaimCategory"
-        component={ClaimCategory}
-        options={({ route }) => ({
-          title: route.params != null ? route.params.claimCategoryName : null,
-        })}
-      />
-
-      <MainStack.Screen
-        name="ScanBadge"
-        component={ScanBadge}
-        options={{
-          title: "Verify Attestation",
         }}
       />
 

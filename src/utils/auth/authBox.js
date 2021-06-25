@@ -127,3 +127,30 @@ export const requestViewingKey = async (chainTicker, channel) => {
     }
   }
 }
+
+export const requestPersonalData = async (dataType) => {
+  const state = store.getState()
+
+  if (
+    state.authentication.activeAccount == null
+  ) {
+    throw new Error("You must be signed in to retrieve personal data");
+  } else if (state.personal[dataType] === null) {
+    return null
+  } else if (state.personal[dataType] == null) {
+    throw new Error(`${dataType} is not a valid personal data type`);
+  } else {
+    const password = await requestPassword()
+    const data = decryptkey(password, state.personal[dataType])
+    
+    if (data !== false) {
+      try {
+        return JSON.parse(data)
+      } catch(e) {
+        throw new Error("Unable to parse personal data")
+      }
+    } else {
+      throw new Error("Unable to decrypt personal data");
+    }
+  }
+}

@@ -10,7 +10,8 @@ import { hashAccountId } from "../crypto/hash";
 import { CHANNELS_NULL_TEMPLATE, DLIGHT_PRIVATE, ELECTRUM } from "../constants/intervalConstants";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import store from '../../store';
-import { fetchUsers, setAccounts } from '../../actions/actionCreators';
+import { setAccounts } from '../../actions/actionCreators';
+import { USER_DATA_STORAGE_INTERNAL_KEY } from '../../../env/index';
 
 //Set storage to hold encrypted user data
 export const storeUser = (authData, users) => {
@@ -41,7 +42,7 @@ export const storeUser = (authData, users) => {
     let _toStore = { users: _users };
 
   
-    AsyncStorage.setItem('userData', JSON.stringify(_toStore))
+    AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(_toStore))
       .then(() => {
         resolve(_users);
       })
@@ -67,7 +68,7 @@ export const addEncryptedKeyToUser = async (accountHash, channel, seed, password
       let newUsers = [...users]
       newUsers[userObjIndex] = newUserObj
 
-      await AsyncStorage.setItem('userData', JSON.stringify({users: newUsers}))
+      await AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify({users: newUsers}))
       return await getUsers()
     }
   } catch(e) {
@@ -80,7 +81,7 @@ export const setUsers = (users) => {
   let _toStore = {users}
 
   return new Promise((resolve, reject) => {
-    AsyncStorage.setItem('userData', JSON.stringify(_toStore))
+    AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(_toStore))
       .then(() => {
         resolve(_toStore.users);
       })
@@ -91,7 +92,7 @@ export const setUsers = (users) => {
 //Delete user by user ID and return new user array
 export const deleteUser = (accountHash) => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem('userData')
+    AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(res => {
         let _users = res ? JSON.parse(res).users : [];
         if(accountHash !== null) {
@@ -101,7 +102,7 @@ export const deleteUser = (accountHash) => {
             _users.splice(userIndex, 1);
             let _toStore = {users: _users}
             let promiseArr = [
-              AsyncStorage.setItem('userData', JSON.stringify(_toStore)),
+              AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(_toStore)),
               _users]
             return Promise.all(promiseArr)
           } else {
@@ -123,7 +124,7 @@ export const deleteUser = (accountHash) => {
 
 export const resetUserPwd = (userID, newPwd, oldPwd) => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem('userData')
+    AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(async res => {
         let _users = res ? JSON.parse(res).users : [];
         if(userID !== null) {
@@ -146,7 +147,7 @@ export const resetUserPwd = (userID, newPwd, oldPwd) => {
               }
               
               let _toStore = {users: _users}
-              let promiseArr = [AsyncStorage.setItem('userData', JSON.stringify(_toStore)), _users]
+              let promiseArr = [AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(_toStore)), _users]
               return Promise.all(promiseArr)
             } else {
               createAlert("Authentication Error", "incorrect password")
@@ -179,7 +180,7 @@ export const resetUserPwd = (userID, newPwd, oldPwd) => {
 
 export const setUserBiometry = (userID, biometry) => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem('userData')
+    AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(async (res) => {
         let _users = res ? JSON.parse(res).users : [];
         if(userID !== null) {
@@ -187,7 +188,7 @@ export const setUserBiometry = (userID, biometry) => {
 
           if (userIndex > -1) {
             _users[userIndex].biometry = biometry
-            await AsyncStorage.setItem('userData', JSON.stringify({users: _users}))
+            await AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify({users: _users}))
             resolve(_users)
           } else {
             throw new Error("User with ID " + userID + " not found")
@@ -205,7 +206,7 @@ export const setUserBiometry = (userID, biometry) => {
 
 export const setUserKeyDerivationVersion = (userID, keyDerivationVersion) => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem('userData')
+    AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(async (res) => {
         let _users = res ? JSON.parse(res).users : [];
         if(userID !== null) {
@@ -213,7 +214,7 @@ export const setUserKeyDerivationVersion = (userID, keyDerivationVersion) => {
 
           if (userIndex > -1) {
             _users[userIndex].keyDerivationVersion = keyDerivationVersion
-            await AsyncStorage.setItem('userData', JSON.stringify({users: _users}))
+            await AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify({users: _users}))
             resolve(_users)
           } else {
             throw new Error("User with ID " + userID + " not found")
@@ -240,7 +241,7 @@ export const putUserPaymentMethods = async (user, paymentMethods) => {
 
 export const putUser = (userID, userParams) => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem('userData')
+    AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(res => {
         const _users = res ? JSON.parse(res).users : [];
         if(userID !== null) {
@@ -252,7 +253,7 @@ export const putUser = (userID, userParams) => {
               ...userParams,
             }
             const _toStore = { users: _users }
-            const promiseArr = [AsyncStorage.setItem('userData', JSON.stringify(_toStore)), _users]
+            const promiseArr = [AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(_toStore)), _users]
             return Promise.all(promiseArr)
           }
         }
@@ -277,7 +278,7 @@ export const putUser = (userID, userParams) => {
 export const getUsers = () => {
   let users = {}
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem('userData')
+    AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(res => {
         users = res ? JSON.parse(res) : {users: []};
         resolve(users.users)
@@ -289,7 +290,7 @@ export const getUsers = () => {
 // Check user password
 export const checkPinForUser = (pin, userName, alertOnFail = true) => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem('userData')
+    AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(async res => {
         let users = res ? JSON.parse(res) : {users: []};
         if(pin !== null && users.users) {

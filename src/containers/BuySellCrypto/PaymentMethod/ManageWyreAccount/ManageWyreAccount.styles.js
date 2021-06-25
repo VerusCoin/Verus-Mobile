@@ -170,7 +170,7 @@ export default StyleSheet.create({
         marginTop: 15
     },
     statusButtonAdd: {
-        backgroundColor: Colors.successButtonColor,
+        backgroundColor: Colors.verusGreenColor,
         width: 110,
         height: 35,
         marginRight: 15,

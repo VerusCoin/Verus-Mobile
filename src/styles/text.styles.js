@@ -15,7 +15,7 @@ export default text = {
   },
   centralSuccessHeader: {
     fontSize: 24,
-    color: Colors.successButtonColor,
+    color: Colors.verusGreenColor,
     textAlign: 'center',
     fontFamily: 'Avenir-Medium',
   },
@@ -46,7 +46,7 @@ export default text = {
     color: Colors.warningButtonColor,
   },
   successText: {
-    color: Colors.successButtonColor,
+    color: Colors.verusGreenColor,
   },
   warningText: {
     color: Colors.infoButtonColor,

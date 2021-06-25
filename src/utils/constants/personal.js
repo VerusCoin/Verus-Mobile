@@ -1,0 +1,1 @@
+export const PERSONAL_ATTRIBUTES = "attributes"
