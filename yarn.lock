@@ -12090,9 +12090,9 @@ react-native-udp@^2.1.0:
     prop-types "^15.7.2"
     yargs "^16.1.1"
 
-"react-native-verus-light-client@git+https://github.com/diesmaster/react-native-verus-light-client.git#5219a2f04a09bee006be739e3c91a6553e187487":
+"react-native-verus-light-client@git+https://github.com/VerusCoin/react-native-verus-light-client.git":
   version "1.0.0"
-  resolved "git+https://github.com/diesmaster/react-native-verus-light-client.git#5219a2f04a09bee006be739e3c91a6553e187487"
+  resolved "git+https://github.com/VerusCoin/react-native-verus-light-client.git#9ee102f3cf00a8ca08911d52289cb9a3612d06a0"
   dependencies:
     react "17.0.1"
     react-native "0.64.0"
