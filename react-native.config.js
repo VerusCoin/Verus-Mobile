@@ -1,4 +1,4 @@
-module.exports = {
+/*module.exports = {
   dependencies: {
     "react-native-verus-light-client": {
       platforms: {
@@ -7,3 +7,4 @@ module.exports = {
     }
   }
 }
+*/
