@@ -15,6 +15,7 @@ import Colors from "../../../globals/colors";
 import { useEffect } from "react";
 import { modifyPersonalDataForUser } from "../../../actions/actionDispatchers";
 import { PERSONAL_ATTRIBUTES } from "../../../utils/constants/personal";
+import { createAlert } from "../../../actions/actions/alert/dispatchers/alert";
 
 const slides = [
   {
@@ -180,6 +181,11 @@ class PersonalIntroSlider extends Component {
         PERSONAL_ATTRIBUTES, 
         this.props.activeAccount.accountHash
       )
+
+      createAlert(
+        "Success!",
+        "You've created your own personal profile! Your name has been encrypted and stored on your device (and nowhere else). If you'd like, you can continue add to it through your personal profile tab."
+      );
     })
   }
 

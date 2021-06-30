@@ -38,6 +38,7 @@ import { getBiometricPassword, getSupportedBiometryType } from "../../utils/keyc
 import { VerusLogo } from "../../images/customIcons";
 import ListSelectionModal from "../../components/ListSelectionModal/ListSelectionModal";
 import { TouchableOpacity } from "react-native";
+import { clearAllPersonalData } from "../../utils/asyncStore/personalDataStorage";
 
 const NO_ACCOUNT = "NO_ACCOUNT"
 

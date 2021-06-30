@@ -18,7 +18,7 @@
     "@react-native-community/async-storage": "^1.5.1",
     "@react-native-community/cameraroll": "^4.0.1",
     "@react-native-community/cli": "^4.2.3",
-    "@react-native-community/datetimepicker": "^2.1.0",
+    "@react-native-community/datetimepicker": "^3.5.2",
     "@react-native-community/masked-view": "^0.1.10",
     "@react-native-community/netinfo": "^5.9.7",
     "@react-navigation/compat": "^5.2.4",

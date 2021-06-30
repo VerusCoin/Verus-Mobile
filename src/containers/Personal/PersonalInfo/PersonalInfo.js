@@ -12,8 +12,8 @@ import { PERSONAL_ATTRIBUTES } from "../../../utils/constants/personal";
 import { PersonalInfoRender } from "./PersonalInfo.render"
 
 class PersonalInfo extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
       attributes: {
         name: {
@@ -26,7 +26,17 @@ class PersonalInfo extends Component {
     };
   }
 
-  componentDidMount() {
+  openAttributes() {
+    this.props.navigation.navigate("PersonalAttributes")
+  }
+
+  componentDidUpdate(lastProps) {
+    if (lastProps.encryptedAttributes !== this.props.encryptedAttributes) {
+      this.loadPersonalAttributes()
+    }
+  }
+
+  loadPersonalAttributes() {
     this.setState({loading: true}, async () => {
       this.setState({
         attributes: await requestPersonalData(PERSONAL_ATTRIBUTES),
@@ -35,13 +45,19 @@ class PersonalInfo extends Component {
     })
   }
 
+  componentDidMount() {
+    this.loadPersonalAttributes()
+  }
+
   render() {
     return PersonalInfoRender.call(this);
   }
 }
 
 const mapStateToProps = (state) => {
-  return {}
+  return {
+    encryptedAttributes: state.personal.attributes
+  }
 };
 
 export default connect(mapStateToProps)(PersonalInfo);

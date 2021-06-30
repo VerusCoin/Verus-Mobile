@@ -10,8 +10,8 @@ import { connect } from 'react-redux'
 import { PersonalRender } from "./Personal.render"
 
 class Personal extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {};
   }
 

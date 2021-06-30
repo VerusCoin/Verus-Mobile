@@ -6,6 +6,6 @@ export const PersonalRender = function() {
   return this.props.attributes == null ? (
     <PersonalIntroSlider />
   ) : (
-    <PersonalInfo />
+    <PersonalInfo navigation={this.props.navigation} />
   );
 };

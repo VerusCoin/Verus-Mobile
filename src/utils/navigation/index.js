@@ -46,16 +46,18 @@ import SendTransaction from '../../containers/BuySellCrypto/PaymentMethod/SendTr
 import { DEVICE_WINDOW_WIDTH } from '../constants/constants';
 import { Component } from 'react';
 import Personal from '../../containers/Personal/Personal';
-
-const WALLET = 'wallet';
+import PersonalAttributes from '../../containers/Personal/PersonalAttributes/PersonalAttributes';
+import PersonalAttributesEditName from '../../containers/Personal/PersonalAttributes/PersonalAttributesEditName/PersonalAttributesEditName';
 
 const MainStack = createStackNavigator()
 const MainDrawer = createDrawerNavigator()
+const ProfileStack = createStackNavigator()
+const WalletStack = createStackNavigator()
 const SignedOutStack = createStackNavigator()
 const SignedOutNoKeyStack = createStackNavigator()
 const LoadingStack = createStackNavigator()
 const RootStack = createStackNavigator()
-const Tabs = createMaterialBottomTabNavigator()
+const HomeTabs = createMaterialBottomTabNavigator()
 
 const styles = StyleSheet.create({
   header_title_noBack: {
@@ -94,8 +96,29 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     fontSize: 18,
   },
-
 });
+
+const defaultHeaderOptions = ({ navigation, params, route }) => ({
+  headerShown: true,
+  headerStyle: {
+    backgroundColor: Colors.primaryColor,
+  },
+  headerTitleStyle: {
+    fontFamily: "Avenir-Black",
+    fontWeight: "normal",
+    fontSize: 22,
+    color: Colors.secondaryColor,
+  },
+  headerRight: () => (
+    <TouchableOpacity
+      onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+      style={styles.menuButton}
+    >
+      <Icon name="menu" size={35} color={Colors.secondaryColor} />
+    </TouchableOpacity>
+  ),
+  headerTintColor: Colors.secondaryColor,
+})
 
 function MainScreens() {
   return (
@@ -115,32 +138,86 @@ function MainScreens() {
   );
 }
 
-function HomeScreens() {
+function ProfileScreens() {
   return (
-    <Tabs.Navigator barStyle={{ backgroundColor: Colors.primaryColor }}>
-      <Tabs.Screen
-        name="WalletHome"
-        component={Home}
-        options={{
-          title: "Home",
-          headerLeft: () => null,
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="home" color={color} size={26} />
-          )
-        }}
-      />
-      <Tabs.Screen
-        name="PersonalHome"
+    <ProfileStack.Navigator
+      headerMode="screen"
+      screenOptions={defaultHeaderOptions}
+    >
+      <ProfileStack.Screen
+        name="PersonalProfile"
         component={Personal}
         options={{
           title: "Personal Profile",
-          headerLeft: () => null,
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="fingerprint" color={color} size={26} />
-          )
         }}
       />
-    </Tabs.Navigator>
+      <ProfileStack.Screen
+        name="PersonalAttributes"
+        component={PersonalAttributes}
+        options={{
+          title: "Personal Details",
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalAttributesEditName"
+        component={PersonalAttributesEditName}
+        options={{
+          title: "Name"
+        }}
+      />
+    </ProfileStack.Navigator>
+  );
+}
+
+function WalletScreens() {
+  return (
+    <WalletStack.Navigator
+      headerMode="screen"
+      screenOptions={defaultHeaderOptions}
+    >
+      <WalletStack.Screen
+        name="Wallets"
+        component={Home}
+        options={{
+          title: "Wallets",
+        }}
+      />
+    </WalletStack.Navigator>
+  );
+}
+
+function HomeScreens() {
+  return (
+    <HomeTabs.Navigator
+      headerMode="screen"
+      barStyle={{ backgroundColor: Colors.primaryColor }}
+    >
+      <HomeTabs.Screen
+        name="WalletHome"
+        component={WalletScreens}
+        options={{
+          title: "Wallets",
+          headerLeft: () => null,
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="wallet" color={color} size={26} />
+          ),
+        }}
+      />
+      <HomeTabs.Screen
+        name="PersonalHome"
+        component={ProfileScreens}
+        options={{
+          title: "Personal Profile",
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons
+              name="fingerprint"
+              color={color}
+              size={26}
+            />
+          ),
+        }}
+      />
+    </HomeTabs.Navigator>
   );
 }
 
@@ -148,31 +225,12 @@ function MainStackScreens() {
   return (
     <MainStack.Navigator
       headerMode="screen"
-      screenOptions={({ navigation, params }) => ({
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: Colors.primaryColor,
-        },
-        headerTitleStyle: {
-          fontFamily: "Avenir-Black",
-          fontWeight: "normal",
-          fontSize: 22,
-          color: Colors.secondaryColor,
-        },
-        headerRight: () => (
-          <TouchableOpacity
-            onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
-            style={styles.menuButton}
-          >
-            <Icon name="menu" size={35} color={Colors.secondaryColor} />
-          </TouchableOpacity>
-        ),
-        headerTintColor: Colors.secondaryColor,
-      })}
+      screenOptions={defaultHeaderOptions}
     >
       <MainStack.Screen
         name="Home"
         component={HomeScreens}
+        options={{ headerShown: false }}
       />
 
       <MainStack.Screen

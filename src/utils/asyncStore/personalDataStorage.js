@@ -28,6 +28,16 @@ export const loadPersonalData = () => {
   }) 
 };
 
+export const clearAllPersonalData = () => {
+  return new Promise((resolve, reject) => {
+    AsyncStorage.removeItem(PERSONAL_DATA_STORAGE_INTERNAL_KEY)
+      .then(() => {
+        resolve();
+      })
+      .catch(err => reject(err));
+  }) 
+};
+
 export const storePersonalDataForUser = async (data, accountHash) => {
   let allPersonalData = {...(await loadPersonalData())}
   allPersonalData[accountHash] = data
