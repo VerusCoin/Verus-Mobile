@@ -135,10 +135,8 @@ export const requestPersonalData = async (dataType) => {
     state.authentication.activeAccount == null
   ) {
     throw new Error("You must be signed in to retrieve personal data");
-  } else if (state.personal[dataType] === null) {
-    return null
   } else if (state.personal[dataType] == null) {
-    throw new Error(`${dataType} is not a valid personal data type`);
+    return {}
   } else {
     const password = await requestPassword()
     const data = decryptkey(password, state.personal[dataType])

@@ -14,7 +14,7 @@ const theme = {
   colors: {
     ...DefaultTheme.colors,
     primary: Colors.primaryColor,
-    accent: Colors.secondaryColor,
+    accent: Colors.verusGreenColor,
   },
 };
 

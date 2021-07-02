@@ -39,8 +39,9 @@ export const PersonalInfoRender = function () {
         />
         <Divider />
         <List.Item
-          title={"Contact Points"}
+          title={"Contact"}
           description={"Email addresses, phone numbers, etc."}
+          onPress={this.state.loading ? () => {} : () => this.openContact()}
           right={(props) => (
             <List.Icon {...props} icon={"chevron-right"} size={20} />
           )}

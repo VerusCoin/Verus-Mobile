@@ -7,6 +7,12 @@ import {
   SET_PERSONAL_DATA
 } from "../utils/constants/storeType";
 
+// Personal Contact:
+// {
+//   emails: [],
+//   phone_numbers: [],
+// }
+
 // Personal Attributes:
 // {
 //   name: {
@@ -19,17 +25,14 @@ import {
 //     month: null,
 //     year: null
 //   },
-//   email: null,
-//   sex: null,
-//   tax_country: null,
-//   tax_state: null,
-//   tax_id_number: null
+//   nationalities: []
 // }
 
 export const personal = (
   state = {
     // Encrypted string containing stringified JSON of personal attributes
-    attributes: null
+    attributes: null,
+    contact: null
   },
   action
 ) => {

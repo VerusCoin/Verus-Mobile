@@ -48,6 +48,7 @@ import { Component } from 'react';
 import Personal from '../../containers/Personal/Personal';
 import PersonalAttributes from '../../containers/Personal/PersonalAttributes/PersonalAttributes';
 import PersonalAttributesEditName from '../../containers/Personal/PersonalAttributes/PersonalAttributesEditName/PersonalAttributesEditName';
+import PersonalContact from '../../containers/Personal/PersonalContact/PersonalContact';
 
 const MainStack = createStackNavigator()
 const MainDrawer = createDrawerNavigator()
@@ -163,6 +164,13 @@ function ProfileScreens() {
         component={PersonalAttributesEditName}
         options={{
           title: "Name"
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalContact"
+        component={PersonalContact}
+        options={{
+          title: "Personal Contact",
         }}
       />
     </ProfileStack.Navigator>
