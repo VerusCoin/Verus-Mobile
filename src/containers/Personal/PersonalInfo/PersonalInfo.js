@@ -34,6 +34,10 @@ class PersonalInfo extends Component {
     this.props.navigation.navigate("PersonalContact")
   }
 
+  openLocations() {
+    this.props.navigation.navigate("PersonalLocations")
+  }
+
   componentDidUpdate(lastProps) {
     if (lastProps.encryptedAttributes !== this.props.encryptedAttributes) {
       this.loadPersonalAttributes()

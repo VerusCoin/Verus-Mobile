@@ -47,6 +47,7 @@ export const storePersonalDataForUser = async (data, accountHash) => {
 export const loadPersonalDataForUser = async (accountHash) => {
   const allPersonalData = await loadPersonalData()
 
-  if (allPersonalData[accountHash] == null) return { attributes: null, contact: null }
-  else return allPersonalData[accountHash]
+  if (allPersonalData[accountHash] == null)
+    return { attributes: null, contact: null, locations: null };
+  else return allPersonalData[accountHash];
 };

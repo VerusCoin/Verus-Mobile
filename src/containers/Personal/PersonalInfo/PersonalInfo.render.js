@@ -50,6 +50,7 @@ export const PersonalInfoRender = function () {
         <List.Item
           title={"Locations"}
           description={"Physical addresses, tax countries, etc."}
+          onPress={this.state.loading ? () => {} : () => this.openLocations()}
           right={(props) => (
             <List.Icon {...props} icon={"chevron-right"} size={20} />
           )}

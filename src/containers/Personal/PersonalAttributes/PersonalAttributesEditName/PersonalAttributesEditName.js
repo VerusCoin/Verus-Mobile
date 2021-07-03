@@ -22,7 +22,7 @@ class PersonalAttributesEditName extends Component {
   updateName() {
     this.setState({ loading: true }, async () => {
       await modifyPersonalDataForUser(
-        {...this.props.attributes, name: this.state.name},
+        {...this.state.attributes, name: this.state.name},
         PERSONAL_ATTRIBUTES,
         this.props.activeAccount.accountHash
       );

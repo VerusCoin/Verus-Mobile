@@ -70,7 +70,7 @@ export const ISO_3166_COUNTRIES = {
     emoji: '🇦🇸'
   },
   AD: {
-    name: 'AndorrA',
+    name: 'Andorra',
     'alpha-2': 'AD',
     'alpha-3': 'AND',
     'country-code': '020',

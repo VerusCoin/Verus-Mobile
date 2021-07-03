@@ -49,6 +49,8 @@ import Personal from '../../containers/Personal/Personal';
 import PersonalAttributes from '../../containers/Personal/PersonalAttributes/PersonalAttributes';
 import PersonalAttributesEditName from '../../containers/Personal/PersonalAttributes/PersonalAttributesEditName/PersonalAttributesEditName';
 import PersonalContact from '../../containers/Personal/PersonalContact/PersonalContact';
+import PersonalLocations from '../../containers/Personal/PersonalLocations/PersonalLocations';
+import PersonalLocationsEditAddress from "../../containers/Personal/PersonalLocations/PersonalLocationsEditAddress/PersonalLocationsEditAddress";
 
 const MainStack = createStackNavigator()
 const MainDrawer = createDrawerNavigator()
@@ -171,6 +173,20 @@ function ProfileScreens() {
         component={PersonalContact}
         options={{
           title: "Personal Contact",
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalLocations"
+        component={PersonalLocations}
+        options={{
+          title: "Personal Locations"
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalLocationsEditAddress"
+        component={PersonalLocationsEditAddress}
+        options={{
+          title: "Address"
         }}
       />
     </ProfileStack.Navigator>
