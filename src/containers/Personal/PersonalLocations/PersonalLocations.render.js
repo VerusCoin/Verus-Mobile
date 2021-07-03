@@ -15,33 +15,6 @@ export const PersonalLocationsRender = function () {
     <SafeAreaView style={Styles.defaultRoot}>
       <ScrollView style={Styles.fullWidth}>
         <Portal>
-          {this.state.addPropertyModal.open &&
-            this.state.addPropertyModal.property === PERSONAL_TAX_COUNTRIES && (
-              <ListSelectionModal
-                title={this.state.addPropertyModal.label}
-                flexHeight={3}
-                visible={
-                  this.state.addPropertyModal.open &&
-                  this.state.addPropertyModal.property ===
-                    PERSONAL_TAX_COUNTRIES
-                }
-                onSelect={(item) =>
-                  this.editTaxCountry(
-                    item.key,
-                    this.state.addPropertyModal.index
-                  )
-                }
-                data={ISO_3166_ALPHA_2_CODES.map((code) => {
-                  const item = ISO_3166_COUNTRIES[code];
-
-                  return {
-                    key: code,
-                    title: `${item.emoji} ${item.name}`,
-                  };
-                })}
-                cancel={() => this.clearAddPropertyModal()}
-              />
-            )}
           {this.state.editPropertyModal.open && (
             <ListSelectionModal
               title={this.state.editPropertyModal.label}
@@ -53,38 +26,36 @@ export const PersonalLocationsRender = function () {
             />
           )}
         </Portal>
-        <List.Subheader>{"Tax countries"}</List.Subheader>
+        <List.Subheader>{"Tax countries & IDs"}</List.Subheader>
         <Divider />
         {this.state.locations.tax_countries == null
           ? null
-          : this.state.locations.tax_countries.map((code, index) => {
-              const nationality = ISO_3166_COUNTRIES[code];
+          : this.state.locations.tax_countries.map((taxCountry, index) => {
+              const nationality = ISO_3166_COUNTRIES[taxCountry.country];
 
               return (
                 <React.Fragment key={index}>
                   <List.Item
                     key={index}
-                    title={`${nationality.emoji} ${nationality.name}`}
-                    description={`Tax country ${index + 1}`}
+                    title={nationality == null ? "Unknown Country" : `${nationality.emoji} ${nationality.name}`}
+                    description={
+                      taxCountry.tin.length > 2
+                        ? `Tax ID: ****${taxCountry.tin.slice(-2)}`
+                        : null
+                    }
                     right={(props) => (
                       <List.Icon {...props} icon={"account-edit"} size={20} />
                     )}
-                    onPress={() =>
-                      this.openEditPropertyModal(
-                        `Tax Country ${index + 1}`,
-                        PERSONAL_TAX_COUNTRIES,
-                        index
-                      )
-                    }
+                    onPress={() => this.openEditTaxCountry(index)}
                   />
                   <Divider />
                 </React.Fragment>
               );
             })}
         <List.Item
-          title={"Add tax country"}
-          right={(props) => <List.Icon {...props} icon={"plus"} size={20} />}
-          onPress={() => this.openTaxCountryModal()}
+          title={"Add tax country & ID"}
+          right={(props) => <List.Icon {...props} icon={"chevron-right"} size={20} />}
+          onPress={() => this.openEditTaxCountry()}
         />
         <Divider />
         <List.Subheader>{"Addresses"}</List.Subheader>

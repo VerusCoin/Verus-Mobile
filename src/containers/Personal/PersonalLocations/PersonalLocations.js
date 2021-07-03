@@ -62,25 +62,6 @@ class PersonalLocations extends Component {
 
   selectEditPropertyButton(button) {
     switch (this.state.editPropertyModal.property) {
-      case PERSONAL_TAX_COUNTRIES:
-        switch (button) {
-          case EDIT:
-            this.setState({
-              addPropertyModal: {
-                open: true,
-                property: PERSONAL_TAX_COUNTRIES,
-                label: "Edit Tax Country",
-                index: this.state.editPropertyModal.index
-              }
-            })
-            break;
-          case REMOVE:
-            this.removeTaxCountry(this.state.editPropertyModal.index)
-            break;
-          default:
-            break;
-        }
-        break;
       default:
         break;
     }
@@ -112,23 +93,6 @@ class PersonalLocations extends Component {
     );
   }
 
-  editTaxCountry(code, index) {
-    let taxCountries = this.state.locations.tax_countries ? this.state.locations.tax_countries : []
-
-    if (index == null) {
-      this.updateLocations(PERSONAL_TAX_COUNTRIES, [...taxCountries, code])
-    } else {
-      taxCountries[index] = code
-      this.updateLocations(PERSONAL_TAX_COUNTRIES, taxCountries)
-    }
-  }
-
-  removeTaxCountry(index) {
-    let countries = this.state.locations.tax_countries ? this.state.locations.tax_countries : []
-    countries.splice(index, 1);
-    this.updateLocations(PERSONAL_TAX_COUNTRIES, countries)
-  }
-
   clearAddPropertyModal() {
     this.setState({
       addPropertyModal: {
@@ -140,15 +104,11 @@ class PersonalLocations extends Component {
     });
   }
 
-  openTaxCountryModal(index) {
-    this.setState({
-      addPropertyModal: {
-        open: true,
-        property: PERSONAL_TAX_COUNTRIES,
-        label: "Select a Country",
-        index,
-      },
-    });
+  openEditTaxCountry(index) {
+    this.props.navigation.navigate("PersonalLocationsEditTaxCountry", {
+      locations: this.state.locations,
+      index
+    })
   }
 
   componentDidMount() {

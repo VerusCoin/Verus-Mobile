@@ -49,7 +49,7 @@ export const PersonalInfoRender = function () {
         <Divider />
         <List.Item
           title={"Locations"}
-          description={"Physical addresses, tax countries, etc."}
+          description={"Physical addresses, tax countries & IDs, etc."}
           onPress={this.state.loading ? () => {} : () => this.openLocations()}
           right={(props) => (
             <List.Icon {...props} icon={"chevron-right"} size={20} />
