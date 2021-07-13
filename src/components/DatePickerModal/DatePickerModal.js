@@ -26,7 +26,11 @@ class DatePickerModal extends Component {
         animationType="slide"
         transparent={true}
         visible={visible}
-        onRequestClose={() => cancel(this.state.date)}
+        onRequestClose={() => cancel({
+          day: this.state.date.getDate(),
+          month: this.state.date.getMonth(),
+          year: this.state.date.getFullYear()
+        })}
         flexHeight={flexHeight ? flexHeight : 3}
       >
         <View style={Styles.centerContainer}>
@@ -48,7 +52,11 @@ class DatePickerModal extends Component {
                 this.setState({
                   date
                 }, () => {
-                  onSelect(date)
+                  onSelect({
+                    day: date.getDate(),
+                    month: date.getMonth(),
+                    year: date.getFullYear()
+                  })
                 })
               }}
               style={{width: "100%"}}

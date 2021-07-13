@@ -52,6 +52,9 @@ import PersonalContact from '../../containers/Personal/PersonalContact/PersonalC
 import PersonalLocations from '../../containers/Personal/PersonalLocations/PersonalLocations';
 import PersonalLocationsEditAddress from "../../containers/Personal/PersonalLocations/PersonalLocationsEditAddress/PersonalLocationsEditAddress";
 import PersonalLocationsEditTaxCountry from "../../containers/Personal/PersonalLocations/PersonalLocationsEditTaxCountry/PersonalLocationsEditTaxCountry";
+import PersonalPaymentMethods from '../../containers/Personal/PersonalPaymentMethods/PersonalPaymentMethods';
+import PersonalPaymentMethodsEditBankAccount from '../../containers/Personal/PersonalPaymentMethods/PersonalPaymentMethodsEditBankAccount/PersonalPaymentMethodsEditBankAccount';
+import PersonalPaymentMethodsEditBankAccountAddress from "../../containers/Personal/PersonalPaymentMethods/PersonalPaymentMethodsEditBankAccountAddress/PersonalPaymentMethodsEditBankAccountAddress";
 
 const MainStack = createStackNavigator()
 const MainDrawer = createDrawerNavigator()
@@ -195,6 +198,27 @@ function ProfileScreens() {
         component={PersonalLocationsEditTaxCountry}
         options={{
           title: "Tax Country"
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalPaymentMethods"
+        component={PersonalPaymentMethods}
+        options={{
+          title: "Banking Info"
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalPaymentMethodsEditBankAccount"
+        component={PersonalPaymentMethodsEditBankAccount}
+        options={{
+          title: "Bank Account"
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalPaymentMethodsEditBankAccountAddress"
+        component={PersonalPaymentMethodsEditBankAccountAddress}
+        options={{
+          title: "Account Address"
         }}
       />
     </ProfileStack.Navigator>

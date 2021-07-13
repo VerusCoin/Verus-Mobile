@@ -7,6 +7,12 @@ import {
   SET_PERSONAL_DATA
 } from "../utils/constants/storeType";
 
+// payment_methods:
+// {
+//   bank_accounts: [],
+//   bank_cards: [],
+// }
+
 // Locations:
 // {
 //   physical_addresses: [],
@@ -39,7 +45,8 @@ export const personal = (
     // Encrypted string containing stringified JSON of personal attributes
     attributes: null,
     contact: null,
-    locations: null
+    locations: null,
+    payment_methods: null
   },
   action
 ) => {

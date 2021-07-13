@@ -23,13 +23,19 @@ export const PersonalContactRender = function () {
                   this.state.addPropertyModal.property === PERSONAL_EMAILS
                 }
                 onChange={() => {}}
-                cancel={(text) => this.finishEditEmailFromAddress(text, this.state.addPropertyModal.index)}
+                cancel={(text) =>
+                  this.finishEditEmailFromAddress(
+                    text,
+                    this.state.addPropertyModal.index
+                  )
+                }
               />
             )}
           {this.state.addPropertyModal.open &&
             this.state.addPropertyModal.property === PERSONAL_PHONE_NUMBERS && (
               <PhoneNumberModal
                 initialPhone={
+                  this.state.contact.phone_numbers &&
                   this.state.contact.phone_numbers[
                     this.state.addPropertyModal.index
                   ]

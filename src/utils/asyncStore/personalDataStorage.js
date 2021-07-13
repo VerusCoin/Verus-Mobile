@@ -48,6 +48,6 @@ export const loadPersonalDataForUser = async (accountHash) => {
   const allPersonalData = await loadPersonalData()
 
   if (allPersonalData[accountHash] == null)
-    return { attributes: null, contact: null, locations: null };
+    return { attributes: null, contact: null, locations: null, payment_methods: null };
   else return allPersonalData[accountHash];
 };

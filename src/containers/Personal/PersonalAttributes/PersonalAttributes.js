@@ -130,11 +130,7 @@ class PersonalAttributes extends Component {
     this.setState({
       birthdaySelectorModalOpen: false
     }, () => {
-      this.updateAttribute(PERSONAL_BIRTHDAY, {
-        day: date.getDate(),
-        month: date.getMonth(),
-        year: date.getFullYear()
-      })
+      this.updateAttribute(PERSONAL_BIRTHDAY, date)
     })
   }
 

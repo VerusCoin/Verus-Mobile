@@ -53,7 +53,7 @@ export const PersonalLocationsRender = function () {
               );
             })}
         <List.Item
-          title={"Add tax country & ID"}
+          title={"Add tax country & Tax ID"}
           right={(props) => <List.Icon {...props} icon={"chevron-right"} size={20} />}
           onPress={() => this.openEditTaxCountry()}
         />
