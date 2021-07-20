@@ -52,7 +52,7 @@
     "punycode": "^1.2.4",
     "querystring-es3": "~0.2.0",
     "react": "17.0.1",
-    "react-native": "0.64.0",
+    "react-native": "0.64.1",
     "react-native-alert-async": "^1.0.3",
     "react-native-cache": "https://github.com/michaeltout/react-native-cache.git",
     "react-native-camera": "^3.22.1",
