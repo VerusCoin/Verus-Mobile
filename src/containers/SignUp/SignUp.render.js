@@ -93,7 +93,7 @@ export const SignUpRender = function() {
                 <View style={Styles.wideBlock}>
                   <Checkbox.Item
                     color={Colors.primaryColor}
-                    label={"Setup Primary Seed"}
+                    label={"Configure account seed"}
                     status={
                       this.state.seeds[ELECTRUM] != null
                         ? "checked"
@@ -103,7 +103,7 @@ export const SignUpRender = function() {
                     mode="android"
                   />
                 </View>
-                {ENABLE_DLIGHT && (
+                {/* {ENABLE_DLIGHT && (
                   <View style={Styles.wideBlock}>
                     <Checkbox.Item
                       color={Colors.primaryColor}
@@ -117,7 +117,7 @@ export const SignUpRender = function() {
                       mode="android"
                     />
                   </View>
-                )}
+                )} */}
                 <View style={Styles.fullWidthFlexCenterBlock}>
                   <View style={Styles.wideBlock}>
                     <TextInput

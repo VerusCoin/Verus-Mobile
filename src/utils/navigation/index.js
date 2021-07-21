@@ -55,10 +55,13 @@ import PersonalLocationsEditTaxCountry from "../../containers/Personal/PersonalL
 import PersonalPaymentMethods from '../../containers/Personal/PersonalPaymentMethods/PersonalPaymentMethods';
 import PersonalPaymentMethodsEditBankAccount from '../../containers/Personal/PersonalPaymentMethods/PersonalPaymentMethodsEditBankAccount/PersonalPaymentMethodsEditBankAccount';
 import PersonalPaymentMethodsEditBankAccountAddress from "../../containers/Personal/PersonalPaymentMethods/PersonalPaymentMethodsEditBankAccountAddress/PersonalPaymentMethodsEditBankAccountAddress";
+import Services from '../../containers/Services/Services';
+import Service from '../../containers/Services/Service/Service';
 
 const MainStack = createStackNavigator()
 const MainDrawer = createDrawerNavigator()
 const ProfileStack = createStackNavigator()
+const ServicesStack = createStackNavigator()
 const WalletStack = createStackNavigator()
 const SignedOutStack = createStackNavigator()
 const SignedOutNoKeyStack = createStackNavigator()
@@ -225,6 +228,27 @@ function ProfileScreens() {
   );
 }
 
+function ServicesScreens() {
+  return (
+    <ServicesStack.Navigator
+      headerMode="screen"
+      screenOptions={defaultHeaderOptions}
+    >
+      <ServicesStack.Screen
+        name="Services"
+        component={Services}
+        options={{
+          title: "Services",
+        }}
+      />
+      <ServicesStack.Screen
+        name="Service"
+        component={Service}
+      />
+    </ServicesStack.Navigator>
+  );
+}
+
 function WalletScreens() {
   return (
     <WalletStack.Navigator
@@ -267,6 +291,20 @@ function HomeScreens() {
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name="fingerprint"
+              color={color}
+              size={26}
+            />
+          ),
+        }}
+      />
+      <HomeTabs.Screen
+        name="ServicesHome"
+        component={ServicesScreens}
+        options={{
+          title: "Services",
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons
+              name="power-plug"
               color={color}
               size={26}
             />

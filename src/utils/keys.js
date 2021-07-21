@@ -8,12 +8,13 @@ import {
   seedToWif,
   seedToPriv
 } from 'agama-wallet-lib/src/keys';
-import { ETH, ERC20, DLIGHT_PRIVATE, ELECTRUM } from './constants/intervalConstants';
+import { ETH, ERC20, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from './constants/intervalConstants';
 import ethers from 'ethers';
 import VerusLightClient from 'react-native-verus-light-client'
 import {
   KEY_DERIVATION_VERSION,
 } from "../../env/index";
+import { validateMnemonic } from "bip39"
 
 const deriveLightwalletdKeyPair = async (seed) => {
   const spendingKey = await parseDlightSeed(seed);
@@ -84,11 +85,20 @@ const deriveWeb3Keypair = async (seed, coinID) => {
   };
 };
 
+const deriveWyreKeypair = async (seed) => {
+  return {
+    pubKey: "",
+    privKey: "",
+    addresses: [],
+  };
+};
+
 const CHANNEL_DERIVATIONS = {
   [DLIGHT_PRIVATE]: deriveLightwalletdKeyPair,
   [ETH]: deriveWeb3Keypair,
   [ERC20]: deriveWeb3Keypair,
-  [ELECTRUM]: deriveElectrumKeypair
+  [ELECTRUM]: deriveElectrumKeypair,
+  [WYRE_SERVICE]: deriveWyreKeypair
 }
 
 export const deriveKeyPairV1 = async (seed, coinID, channel) => {
@@ -161,4 +171,10 @@ export const parseDlightSeed = async (seed) => {
     const keys = await VerusLightClient.deriveSpendingKeys(seed, true, 1)
     return keys[0]
   } catch(e) { throw e }
+}
+
+export const isSeedPhrase = (seed, minWordLength = 12) => {
+  return (
+    seed.split(/\s+/g).length >= minWordLength && validateMnemonic(seed)
+  );
 }

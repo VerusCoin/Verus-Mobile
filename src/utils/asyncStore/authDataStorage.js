@@ -7,7 +7,7 @@ import {
 } from '../seedCrypt'
 
 import { hashAccountId } from "../crypto/hash";
-import { CHANNELS_NULL_TEMPLATE, DLIGHT_PRIVATE, ELECTRUM } from "../constants/intervalConstants";
+import { CHANNELS_NULL_TEMPLATE, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from "../constants/intervalConstants";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import store from '../../store';
 import { setAccounts } from '../../actions/actionCreators';
@@ -132,18 +132,21 @@ export const resetUserPwd = (userID, newPwd, oldPwd) => {
 
           if (userIndex > -1) {
             const _oldEncryptedKeys = _users[userIndex].encryptedKeys
-            const { dlight_private, electrum } = _oldEncryptedKeys
+            const { dlight_private, electrum, wyre_service } = _oldEncryptedKeys
 
             const _decryptedElectrum = electrum != null ? decryptkey(oldPwd, _oldEncryptedKeys.electrum) : null
             const _decryptedDlight = dlight_private != null ? decryptkey(oldPwd, _oldEncryptedKeys.dlight_private) : null
+            const _decryptedWyre = wyre_service != null ? decryptkey(oldPwd, _oldEncryptedKeys.wyre_service) : null
 
             if ((electrum == null || _decryptedElectrum) && (dlight_private == null || _decryptedDlight)) {
               const _newElectrumKey = electrum ? await encryptkey(newPwd, _decryptedElectrum) : null
               const _newDlightKey = dlight_private ? await encryptkey(newPwd, _decryptedDlight) : null
+              const _newWyreKey = wyre_service ? await encryptkey(newPwd, _decryptedWyre) : null
 
               _users[userIndex].encryptedKeys = {
                 [ELECTRUM]: _newElectrumKey,
-                [DLIGHT_PRIVATE]: _newDlightKey
+                [DLIGHT_PRIVATE]: _newDlightKey,
+                [WYRE_SERVICE]: _newWyreKey
               }
               
               let _toStore = {users: _users}

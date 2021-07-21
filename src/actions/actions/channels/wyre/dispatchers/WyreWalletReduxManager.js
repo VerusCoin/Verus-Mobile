@@ -1,0 +1,23 @@
+import Store from '../../../../../store/index'
+import {
+  INIT_WYRE_SERVICE_CHANNEL_START,
+  CLOSE_WYRE_SERVICE_CHANNEL,
+} from "../../../../../utils/constants/storeType";
+
+export const initWyreServiceChannel = async (coinObj) => {
+  Store.dispatch({
+    type: INIT_WYRE_SERVICE_CHANNEL_START,
+    payload: { chainTicker: coinObj.id }
+  })
+
+  return
+}
+
+export const closeWyreServiceWallet = async (coinObj) => {
+  Store.dispatch({
+    type: CLOSE_WYRE_SERVICE_CHANNEL,
+    payload: { chainTicker: coinObj.id }
+  })
+
+  return
+}

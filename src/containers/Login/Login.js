@@ -28,7 +28,7 @@ import {
  } from '../../actions/actionCreators';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
-import { clearAllCoinIntervals, initPersonalDataForUser } from "../../actions/actionDispatchers";
+import { clearActiveAccountLifecycles, clearAllCoinIntervals, initializeAccountData, initPersonalDataForUser, initServiceAuthDataForUser } from "../../actions/actionDispatchers";
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import PasswordInput from '../../components/PasswordInput'
 import { DISABLED_CHANNELS } from '../../../env/index'
@@ -39,6 +39,7 @@ import { VerusLogo } from "../../images/customIcons";
 import ListSelectionModal from "../../components/ListSelectionModal/ListSelectionModal";
 import { TouchableOpacity } from "react-native";
 import { clearAllPersonalData } from "../../utils/asyncStore/personalDataStorage";
+import { LOADING_ACCOUNT, VALIDATING_ACCOUNT } from "../../utils/constants/constants";
 
 const NO_ACCOUNT = "NO_ACCOUNT"
 
@@ -60,9 +61,7 @@ class Login extends Component {
   }
 
   componentDidMount() {
-    this.props.activeCoinList.map(coinObj => {
-      clearAllCoinIntervals(coinObj.id)
-    })
+    clearActiveAccountLifecycles()
 
     if (this.props.defaultAccount != null && this.props.selectDefaultAccount) {
       const defaultAccountObj = this.props.accounts.find(
@@ -75,63 +74,45 @@ class Login extends Component {
     }
   }
 
+  setLoadingStep = (loadingStep) => {
+    switch (loadingStep) {
+      case VALIDATING_ACCOUNT:
+        this.setState({
+          validating: true,
+          loading: false
+        })
+        break;
+      case LOADING_ACCOUNT:
+        this.setState({
+          validating: false,
+          loading: true
+        })
+        break;
+      default:
+        break;
+    }
+  }
+
   _handleSubmit = () => {
     Keyboard.dismiss();
     const account = this.state.selectedAccount;
 
-    this.setState({ validating: true }, () => {
-      validateLogin(account, this.state.password)
-      .then(async response => {
-        if(response !== false) {
-          if (this.state.makeDefaultAccount) {
-            await saveGeneralSettings({
-              defaultAccount: account.accountHash
-            })
-          }
-
-          this.setState({loading: true})
-          let promiseArr = [fetchActiveCoins(), response]
-          return Promise.all(promiseArr);
-        }
-        else {
-          this.setState({validating: false})
-          throw new Error("Account not validated")
-        }
-      })
-      .then(async (resArr) => {
-        const accountAuthenticator = resArr[1]
-        const coinList = resArr[0]
-        const setUserCoinsAction = setUserCoins(coinList.activeCoinList, account.id)
-        const { activeCoinsForUser } = setUserCoinsAction
-
-        this.props.dispatch(await initSettings())
-        this.props.dispatch(accountAuthenticator)
-        this.props.dispatch(coinList)
-        this.props.dispatch(setUserCoinsAction)
-
-        for (let i = 0; i < activeCoinsForUser.length; i++) {
-          const coinObj = activeCoinsForUser[i]
-
-          await Promise.all(coinObj.compatible_channels.map(channel => {
-            if (!DISABLED_CHANNELS.includes(channel) && COIN_MANAGER_MAP.initializers[channel]) {
-              return COIN_MANAGER_MAP.initializers[channel](coinObj)
-            } else return null
-          }))
-  
-          activateChainLifecycle(coinObj.id);
-        }
-
-        await initPersonalDataForUser(account.accountHash)
-        this.props.dispatch(signIntoAuthenticatedAccount())
-      })
-      .catch(err => {
-        console.warn(err)
+    this.setState({ validating: true }, async () => {
+      try {
+        await initializeAccountData(
+          account,
+          this.state.password,
+          this.state.makeDefaultAccount,
+          (step) => this.setLoadingStep(step)
+        );
+      } catch(e) {
+        console.warn(e)
         this.setState({
           validating: false,
           loading: false,
           simpleLayout: false
         })
-      });
+      }
     })
   }
 

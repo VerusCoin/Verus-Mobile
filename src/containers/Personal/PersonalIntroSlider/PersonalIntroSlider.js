@@ -100,7 +100,6 @@ class PersonalIntroSlider extends Component {
   constructor() {
     super();
     this.state = {
-      showRealApp: false,
       name: {
         first: '',
         middle: '',

@@ -7,6 +7,7 @@ export * from './actions/cache/Cache'
 export * from './actions/cache/EthTransactionReceipts'
 export * from './actions/updateManager'
 export * from './actions/personal/creators/personal'
+export * from './actions/services/creators/services'
 
 export * from './actionCreators/claims';
 export * from './actionCreators/claimCategories';
@@ -68,7 +69,7 @@ import {
   SET_COIN_SUB_WALLET,
   DISABLE_SELECT_DEFAULT_ACCOUNT,
   ADD_GOOD_SERVER,
-  ADD_BAD_SERVER,
+  ADD_BAD_SERVER
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -104,14 +105,6 @@ export const authenticateUser = (account, sessionKey) => {
 export const signOut = () => {
   return {
     type: SIGN_OUT,
-  }
-}
-
-//Reducer Name: authentication
-export const setBiometricAuthentication = (isEnabled) => {
-  return {
-    type: BIOMETRIC_AUTH,
-    biometry: isEnabled
   }
 }
 
