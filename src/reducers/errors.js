@@ -11,7 +11,8 @@ import {
   INIT_ELECTRUM_ERRORS,
   INIT_ETH_ERRORS,
   INIT_ERC20_ERRORS,
-  CHANNELS_OBJECT_TEMPLATE
+  CHANNELS_OBJECT_TEMPLATE,
+  API_GET_SERVICE_ACCOUNT
 } from "../utils/constants/intervalConstants";
 import {
   ERROR_BALANCES,
@@ -26,7 +27,9 @@ import {
   SET_INFO,
   SET_TRANSACTIONS,
   SET_RATES,
-  INIT_DLIGHT_CHANNEL_START
+  INIT_DLIGHT_CHANNEL_START,
+  ERROR_SERVICE_ACCOUNT,
+  SET_SERVICE_ACCOUNT
 } from "../utils/constants/storeType";
 
 export const errors = (state = {
@@ -38,7 +41,8 @@ export const errors = (state = {
   [INIT_DLIGHT_PRIVATE_ERRORS]: {},
   [INIT_ELECTRUM_ERRORS]: {},
   [INIT_ETH_ERRORS]: {},
-  [INIT_ERC20_ERRORS]: {}
+  [INIT_ERC20_ERRORS]: {},
+  [API_GET_SERVICE_ACCOUNT]: {}
 }, action) => {
   const { channel, error, chainTicker } = action.payload || {}
 
@@ -119,6 +123,11 @@ export const errors = (state = {
           [chainTicker]: error
         }
       }
+    case ERROR_SERVICE_ACCOUNT:
+      return {
+        ...state,
+        [API_GET_SERVICE_ACCOUNT]: error
+      }
     case INIT_DLIGHT_CHANNEL_START:
       return {
         ...state,
@@ -169,6 +178,14 @@ export const errors = (state = {
             ...state[API_GET_FIATPRICE][channel],
             [chainTicker]: null
           }
+        }
+      };
+    case SET_SERVICE_ACCOUNT:
+      return {
+        ...state,
+        [API_GET_SERVICE_ACCOUNT]: {
+          ...state[API_GET_SERVICE_ACCOUNT],
+          [channel]: null
         }
       };
     default:

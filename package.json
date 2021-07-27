@@ -29,6 +29,7 @@
     "@tradle/react-native-http": "^2.0.0",
     "agama-wallet-lib": "git://github.com/VerusCoin/agama-wallet-lib.git#mobile",
     "assert": "^1.1.1",
+    "axios": "^0.21.1",
     "base-64": "^1.0.0",
     "bignumber.js": "^9.0.1",
     "bip39": "https://github.com/michaeltout/bip39.git",

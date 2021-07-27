@@ -160,6 +160,12 @@ class WyreServiceIntroSlider extends Component {
     });
   }
 
+  async linkCurrentSeed() {
+    const accountSeeds = await requestSeeds();
+
+    return this.linkWyre(accountSeeds[ELECTRUM], WYRE_SERVICE)
+  }
+
   renderSlideOne = (key) => {
     const WyreLogo = ServiceLogos[WYRE_SERVICE_ID].light;
 
@@ -215,7 +221,7 @@ class WyreServiceIntroSlider extends Component {
           <Button
             style={{ marginTop: 16 }}
             mode="contained"
-            onPress={() => console.log("Pressed")}
+            onPress={() => this.linkCurrentSeed()}
           >
             {"Link current seed"}
           </Button>

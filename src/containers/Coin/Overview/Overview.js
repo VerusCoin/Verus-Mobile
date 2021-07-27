@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { connect } from 'react-redux';
 import { MathableNumber } from '../../../utils/math';
-import { expireData, setActiveOverviewFilter } from '../../../actions/actionCreators';
+import { expireCoinData, setActiveOverviewFilter } from '../../../actions/actionCreators';
 import Styles from '../../../styles/index'
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
 import store from "../../../store";
@@ -106,10 +106,10 @@ class Overview extends Component {
 
   forceUpdate = () => {
     const coinObj = this.props.activeCoin;
-    this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE));
-    this.props.dispatch(expireData(coinObj.id, API_GET_BALANCES));
-    this.props.dispatch(expireData(coinObj.id, API_GET_INFO));
-    this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS));
+    this.props.dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE));
+    this.props.dispatch(expireCoinData(coinObj.id, API_GET_BALANCES));
+    this.props.dispatch(expireCoinData(coinObj.id, API_GET_INFO));
+    this.props.dispatch(expireCoinData(coinObj.id, API_GET_TRANSACTIONS));
 
     this.refresh();
   };

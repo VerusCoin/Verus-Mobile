@@ -25,6 +25,9 @@ export const API_GET_FIATPRICE = "get_fiatprice"
 export const API_SEND = 'send'
 export const API_GET_KEYS = 'get_keys'
 
+// Service API call names
+export const API_GET_SERVICE_ACCOUNT = "get_account"
+
 // Interval restriction labels
 export const IS_VERUS = "is_verus"
 export const IS_PBAAS = "is_pbaas"

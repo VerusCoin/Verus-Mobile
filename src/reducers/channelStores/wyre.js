@@ -3,34 +3,69 @@
 */
 
 import {
-  INIT_WYRE_SERVICE_CHANNEL_FINISH,
+  INIT_WYRE_COIN_CHANNEL_FINISH,
+  CLOSE_WYRE_COIN_CHANNEL,
+  SIGN_OUT_COMPLETE,
+  OPEN_WYRE_SERVICE_CHANNEL,
   CLOSE_WYRE_SERVICE_CHANNEL,
-  SIGN_OUT_COMPLETE
+  AUTHENTICATE_WYRE_SERVICE,
+  DEAUTHENTICATE_WYRE_SERVICE,
+  SET_WYRE_ACCOUNT_ID
 } from '../../utils/constants/storeType'
 
-export const channelStore_wyre = (state = {
-  openChannels: {},
+export const channelStore_wyre_service = (state = {
+  openCoinChannels: {},
+  serviceChannelOpen: true,
+  authenticated: false,
+  accountId: null
 }, action) => {
   switch (action.type) {
-    case INIT_WYRE_SERVICE_CHANNEL_FINISH:
+    case INIT_WYRE_COIN_CHANNEL_FINISH:
       return {
         ...state,
-        openChannels: {
-          ...state.openChannels,
+        openCoinChannels: {
+          ...state.openCoinChannels,
           [action.payload.chainTicker]: true
         },
+      }
+    case CLOSE_WYRE_COIN_CHANNEL:
+      return {
+        ...state,
+        openCoinChannels: {
+          ...state.openCoinChannels,
+          [action.payload.chainTicker]: false
+        },
+      }
+    case OPEN_WYRE_SERVICE_CHANNEL:
+      return {
+        ...state,
+        serviceChannelOpen: true
       }
     case CLOSE_WYRE_SERVICE_CHANNEL:
       return {
         ...state,
-        openChannels: {
-          ...state.openChannels,
-          [action.payload.chainTicker]: false
-        },
+        serviceChannelOpen: false
+      }
+    case AUTHENTICATE_WYRE_SERVICE:
+      return {
+        ...state,
+        authenticated: true,
+        accountId: action.payload.accountId
+      }
+    case DEAUTHENTICATE_WYRE_SERVICE:
+      return {
+        ...state,
+        authenticated: false,
+        accountId: null
+      }
+    case SET_WYRE_ACCOUNT_ID:
+      return {
+        ...state,
+        accountId: action.payload.accountId
       }
     case SIGN_OUT_COMPLETE:
       return {
-        openChannels: {}
+        openCoinChannels: {}
       }
     default:
       return state;

@@ -1,11 +1,15 @@
 import { conditionallyUpdateWallet } from '../../../actionDispatchers'
 import { 
-  expireData, 
-  setExpireTimeoutId, 
-  clearExpireTimeoutId, 
-  setUpdateExpiredIntervalId, 
-  clearUpdateExpiredIntervalId,
+  expireCoinData, 
+  setCoinExpireTimeoutId, 
+  clearCoinExpireTimeoutId, 
+  setCoinUpdateExpiredIntervalId, 
+  clearCoinUpdateExpiredIntervalId,
   generateUpdateCoinDataAction,
+  setServiceExpireTimeoutId,
+  clearServiceExpireTimeoutId,
+  expireServiceData,
+  generateUpdateServiceDataAction
 } from '../../../actionCreators'
 import {
   ALWAYS_ACTIVATED,
@@ -14,6 +18,8 @@ import {
 } from "../../../../utils/constants/intervalConstants";
 import Store from '../../../../store/index'
 import { getCoinObj } from '../../../../utils/CoinData/CoinData';
+import { clearServiceUpdateExpiredIntervalId, setServiceUpdateExpiredIntervalId } from '../../updateManager';
+import { conditionallyUpdateService } from '../../services/dispatchers/updates';
 //TODO: If app is ever used in any server side rendering scenario, switch store
 //to a function parameter on all of these functions rather than an import
 
@@ -24,18 +30,37 @@ import { getCoinObj } from '../../../../utils/CoinData/CoinData';
  * @param {String} updateId Name of API call
  * @param {Function} onComplete (Optional) Function to execute on timeout completion
  */
-export const createExpireTimeout = (timeout, chainTicker, updateId, onComplete) => {
+export const createCoinExpireTimeout = (timeout, chainTicker, updateId, onComplete) => {
   if (timeout !== ALWAYS_ACTIVATED && timeout !== NEVER_ACTIVATED) {
     const timeoutId = setTimeout(() => {
-      Store.dispatch(expireData(chainTicker, updateId))
+      Store.dispatch(expireCoinData(chainTicker, updateId))
       //console.log(`${updateId} expired for ${chainTicker}`)
       if (onComplete != null) onComplete(Store.getState(), Store.dispatch, chainTicker) 
     }, timeout);
     //console.log(`${updateId} expire timeout set to ${timeout} with id ${timeoutId}`)
     
-    Store.dispatch(setExpireTimeoutId(chainTicker, updateId, timeoutId))
+    Store.dispatch(setCoinExpireTimeoutId(chainTicker, updateId, timeoutId))
   } else {
-    Store.dispatch(clearExpireTimeoutId(chainTicker, updateId))
+    Store.dispatch(clearCoinExpireTimeoutId(chainTicker, updateId))
+  }
+}
+
+/**
+ * Creates the timeout that will expire data from a service API call
+ * @param {Integer} timeout Time until expiry in ms
+ * @param {String} updateId Name of API call
+ * @param {Function} onComplete (Optional) Function to execute on timeout completion
+ */
+ export const createServiceExpireTimeout = (timeout, updateId, onComplete) => {
+  if (timeout !== ALWAYS_ACTIVATED && timeout !== NEVER_ACTIVATED) {
+    const timeoutId = setTimeout(() => {
+      Store.dispatch(expireServiceData(updateId))
+      if (onComplete != null) onComplete(Store.getState(), Store.dispatch) 
+    }, timeout);
+    
+    Store.dispatch(setServiceExpireTimeoutId(updateId, timeoutId))
+  } else {
+    Store.dispatch(clearServiceExpireTimeoutId(updateId))
   }
 }
 
@@ -62,9 +87,35 @@ export const createCoinUpdateExpiredInterval = (interval, chainTicker, updateId,
     intervalAction()
     const intervalId = setInterval(async () => intervalAction(), interval);
     
-    Store.dispatch(setUpdateExpiredIntervalId(chainTicker, updateId, intervalId))
+    Store.dispatch(setCoinUpdateExpiredIntervalId(chainTicker, updateId, intervalId))
   } else {
-    Store.dispatch(clearUpdateExpiredIntervalId(chainTicker, updateId))
+    Store.dispatch(clearCoinUpdateExpiredIntervalId(chainTicker, updateId))
+  }
+}
+
+/**
+ * Creates the interval that will update expired data through a service API call
+ * @param {Integer} interval Length of interval in ms
+ * @param {String[]} channels The enabled channels for the information request e.g. ['wyre_service']
+ * @param {String} updateId Name of API call
+ * @param {Function} onComplete (Optional) Function to execute on interval completion (every interval)
+ */
+ export const createServiceUpdateExpiredInterval = (interval, updateId, onComplete) => {
+  if (interval !== ALWAYS_ACTIVATED && interval !== NEVER_ACTIVATED) {
+    const intervalAction = async () => {
+      const state = Store.getState()
+    
+      await conditionallyUpdateService(state, Store.dispatch, updateId)
+
+      if (onComplete != null) onComplete(state, Store.dispatch) 
+    }
+
+    intervalAction()
+    const intervalId = setInterval(async () => intervalAction(), interval);
+    
+    Store.dispatch(setServiceUpdateExpiredIntervalId(updateId, intervalId))
+  } else {
+    Store.dispatch(clearServiceUpdateExpiredIntervalId(updateId))
   }
 }
 
@@ -77,9 +128,24 @@ export const clearAllCoinIntervals = (chainTicker) => {
 
   for (let updateType in intervalData) { 
     clearTimeout(intervalData[updateType].expire_id)
-    Store.dispatch(clearExpireTimeoutId(chainTicker, updateType))
+    Store.dispatch(clearCoinExpireTimeoutId(chainTicker, updateType))
     clearInterval(intervalData[updateType].update_expired_id)
-    Store.dispatch(clearUpdateExpiredIntervalId(chainTicker, updateType))
+    Store.dispatch(clearCoinUpdateExpiredIntervalId(chainTicker, updateType))
+  }
+}
+
+/**
+ * Clears all running api intervals for a chain ticker
+ * @param {String} chainTicker Ticker of chain to clear intervals for
+ */
+ export const clearAllServiceIntervals = () => {
+  const intervalData = Store.getState().updates.serviceUpdateIntervals
+
+  for (let updateType in intervalData) { 
+    clearTimeout(intervalData[updateType].expire_id)
+    Store.dispatch(clearServiceExpireTimeoutId(updateType))
+    clearInterval(intervalData[updateType].update_expired_id)
+    Store.dispatch(clearServiceUpdateExpiredIntervalId(updateType))
   }
 }
 
@@ -122,7 +188,46 @@ export const refreshCoinIntervals = (chainTicker, onCompletes) => {
   for (let updateId in newIntervalData) {
     if (newTrackingData[updateId].channels.length > 0) {
       createCoinUpdateExpiredInterval(newIntervalData[updateId].update_expired_interval, chainTicker, updateId, newIntervalData[updateId].update_expired_oncomplete)
-      createExpireTimeout(newIntervalData[updateId].expire_timeout, chainTicker, updateId, newIntervalData[updateId].expire_oncomplete)
+      createCoinExpireTimeout(newIntervalData[updateId].expire_timeout, chainTicker, updateId, newIntervalData[updateId].expire_oncomplete)
+    }
+  }
+}
+
+/**
+ * Clears old intervals (if present) and creates new ones for system updates
+ */
+ export const refreshServiceIntervals = (onCompletes = {}) => {
+  const state = Store.getState()
+
+  const updateDataAction = generateUpdateServiceDataAction(CHANNELS, onCompletes)
+  const oldUpdateData = state.updates.serviceUpdateIntervals
+  const newIntervalData = updateDataAction.updateIntervalData
+  const newTrackingData = updateDataAction.updateTrackingData
+
+  if (oldUpdateData) {
+    // Clear all previously existing intervals
+
+    for (let updateId in oldUpdateData) {
+      clearTimeout(oldUpdateData[updateId].expire_id)
+      clearInterval(oldUpdateData[updateId].update_expired_id)
+    }
+  }
+
+  //Update state
+  Store.dispatch(updateDataAction)
+
+  for (let updateId in newIntervalData) {
+    if (newTrackingData[updateId].channels.length > 0) {
+      createServiceUpdateExpiredInterval(
+        newIntervalData[updateId].update_expired_interval,
+        updateId,
+        newIntervalData[updateId].update_expired_oncomplete
+      );
+      createServiceExpireTimeout(
+        newIntervalData[updateId].expire_timeout,
+        updateId,
+        newIntervalData[updateId].expire_oncomplete
+      );
     }
   }
 }

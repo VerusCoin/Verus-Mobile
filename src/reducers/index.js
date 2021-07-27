@@ -21,7 +21,7 @@ import { channelStore_eth } from './channelStores/eth';
 import { channelStore_erc20 } from './channelStores/erc20';
 import { channelStore_electrum } from './channelStores/electrum';
 import { channelStore_general } from './channelStores/general';
-import { channelStore_wyre } from './channelStores/wyre';
+import { channelStore_wyre_service } from './channelStores/wyre';
 import { alert } from './alert'
 import { modal } from './modal'
 import { keyboard } from './keyboard'
@@ -47,7 +47,7 @@ export default combineReducers({
   channelStore_electrum,
   channelStore_erc20,
   channelStore_general,
-  channelStore_wyre,
+  channelStore_wyre_service,
   ethtxreceipts,
   coinMenus,
   alert,

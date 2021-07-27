@@ -4,6 +4,7 @@ import styles from "../../../../styles";
 import WyreServiceIntroSlider from "./WyreServiceIntroSlider/WyreServiceIntroSlider";
 import AnimatedActivityIndicator from "../../../../components/AnimatedActivityIndicator";
 import { WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
+import WyreServiceAccount from "./WyreServiceAccount/WyreServiceAccount";
 
 export const WyreServiceRender = function () {
   return (
@@ -26,7 +27,12 @@ export const WyreServiceRender = function () {
           />
         </View>
       )}
-      {this.props.encryptedSeeds[WYRE_SERVICE] != null ? null : (
+      {this.props.encryptedSeeds[WYRE_SERVICE] != null ? (
+        <WyreServiceAccount
+          navigation={this.props.navigation}
+          setLoading={(loading, callback) => this.setLoading(loading, callback)}
+        />
+      ) : (
         <WyreServiceIntroSlider
           setLoading={(loading, callback) => this.setLoading(loading, callback)}
           navigation={this.props.navigation}

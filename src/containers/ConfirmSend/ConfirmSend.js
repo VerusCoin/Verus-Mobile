@@ -21,7 +21,7 @@ import { renderError, renderLoading, renderTransactionInfo } from './ConfirmSend
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import { send } from "../../utils/api/routers/send";
 import { explorers } from "../../utils/CoinData/CoinData";
-import { expireData } from "../../actions/actionCreators";
+import { expireCoinData } from "../../actions/actionCreators";
 import { USD } from "../../utils/constants/currencies";
 import { extractIdentityAddress } from "../../utils/api/channels/dlight/callCreators";
 
@@ -207,8 +207,8 @@ class ConfirmSend extends Component {
             "Transaction sent. Your balance and transactions may take a few minutes to update."
           );
 
-          this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE));
-          this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS));
+          this.props.dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE));
+          this.props.dispatch(expireCoinData(coinObj.id, API_GET_TRANSACTIONS));
 
           this.setState({
             loading: false,

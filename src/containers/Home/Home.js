@@ -14,7 +14,7 @@ import {
   setActiveApp,
   setActiveSection,
   setActiveSectionBuySellCrypto,
-  expireData,
+  expireCoinData,
   setCoinSubWallet,
 } from '../../actions/actionCreators';
 import { connect } from 'react-redux';
@@ -162,9 +162,9 @@ class Home extends Component {
 
   forceUpdate = () => {
     this.props.activeCoinsForUser.map(coinObj => {
-      this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE))
-      this.props.dispatch(expireData(coinObj.id, API_GET_BALANCES))
-      this.props.dispatch(expireData(coinObj.id, API_GET_INFO))
+      this.props.dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE))
+      this.props.dispatch(expireCoinData(coinObj.id, API_GET_BALANCES))
+      this.props.dispatch(expireCoinData(coinObj.id, API_GET_INFO))
     })
 
     this.refresh();

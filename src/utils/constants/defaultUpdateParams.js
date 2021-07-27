@@ -9,14 +9,34 @@ import {
   DLIGHT_PRIVATE,
   ELECTRUM,
   ETH,
-  ERC20
+  ERC20,
+  API_GET_SERVICE_ACCOUNT,
+  WYRE_SERVICE
 } from './intervalConstants'
+
+export const DEFAULT_SERVICE_UPDATE_PARAMS = {
+  [API_GET_SERVICE_ACCOUNT]: {
+    channels: [WYRE_SERVICE],
+    tracking_info: {
+      update_locations: null,
+      needs_update: true,
+      busy: {},
+    },
+    interval_info: {
+      expire_id: null,
+      update_expired_id: null,
+      expire_oncomplete: null,
+      update_expired_oncomplete: null,
+      expire_timeout: 60000,
+      update_expired_interval: 10000
+    }
+  }
+}
 
 /**
  * The constant parameter object that holds all settings for deciding the timing and frequency of how certain coin modes
  * call their API to get their data.
  */
-
 export const DEFAULT_COIN_UPDATE_PARAMS = {
   [API_GET_FIATPRICE]: {
     channels: [GENERAL],

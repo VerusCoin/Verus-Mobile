@@ -43,7 +43,12 @@ export const initDlightWallet = async (coinObj) => {
   let initializationPromises = []
 
   try {
-    if (dlightSyncing[id]) throw new Error("Something went wrong while initializing " + id + ". It is marked as already syncing, before it has been added!?")
+    if (dlightSyncing[id])
+      throw new Error(
+        "Something went wrong while initializing " +
+          id +
+          ". It is marked as already syncing, before it has been added!?"
+      );
 
     if (dlightSockets[id] == null) {
       if (dlight_endpoints == null || !Array.isArray(dlight_endpoints) || dlight_endpoints.length === 0)

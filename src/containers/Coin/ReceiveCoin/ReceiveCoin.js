@@ -15,7 +15,7 @@ import { isNumber, truncateDecimal } from '../../../utils/math'
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers"
 import { API_GET_FIATPRICE, API_GET_BALANCES, GENERAL } from "../../../utils/constants/intervalConstants"
 import { USD } from '../../../utils/constants/currencies'
-import { expireData } from "../../../actions/actionCreators"
+import { expireCoinData } from "../../../actions/actionCreators"
 import Store from "../../../store"
 import selectAddresses from "../../../selectors/address"
 import VerusPayParser from '../../../utils/verusPay/index'
@@ -101,8 +101,8 @@ class ReceiveCoin extends Component {
 
   forceUpdate = () => {
     const coinObj = this.props.activeCoin
-    this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE))
-    this.props.dispatch(expireData(coinObj.id, API_GET_BALANCES))
+    this.props.dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE))
+    this.props.dispatch(expireCoinData(coinObj.id, API_GET_BALANCES))
 
     this.refresh()
   }

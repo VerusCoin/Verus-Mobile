@@ -24,8 +24,8 @@ import store from '../../../store';
 import { throwError } from '../../../utils/errors';
 import { INACTIVE_COIN } from '../../../utils/constants/errors';
 import {
-  closeWyreServiceWallet,
-  initWyreServiceChannel,
+  closeWyreCoinWallet,
+  initWyreCoinChannel,
 } from "../channels/wyre/dispatchers/WyreWalletReduxManager";
 
 export const COIN_MANAGER_MAP = {
@@ -35,7 +35,7 @@ export const COIN_MANAGER_MAP = {
     [ELECTRUM]: initElectrumWallet,
     [DLIGHT_PRIVATE]: initDlightWallet,
     [GENERAL]: initGeneralWallet,
-    [WYRE_SERVICE]: initWyreServiceChannel
+    [WYRE_SERVICE]: initWyreCoinChannel
   },
   closers: {
     [ETH]: closeEthWallet,
@@ -43,7 +43,7 @@ export const COIN_MANAGER_MAP = {
     [ELECTRUM]: closeElectrumWallet,
     [DLIGHT_PRIVATE]: closeDlightWallet,
     [GENERAL]: closeGeneralWallet,
-    [WYRE_SERVICE]: closeWyreServiceWallet
+    [WYRE_SERVICE]: closeWyreCoinWallet
   }
 }
 

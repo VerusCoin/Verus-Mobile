@@ -9,28 +9,28 @@ import {
 } from '../../utils/constants/storeType'
 
 export const channelStore_electrum = (state = {
-  openChannels: {},
+  openCoinChannels: {},
 }, action) => {
   switch (action.type) {
     case INIT_ELECTRUM_CHANNEL_FINISH:
       return {
         ...state,
-        openChannels: {
-          ...state.openChannels,
+        openCoinChannels: {
+          ...state.openCoinChannels,
           [action.payload.chainTicker]: true
         },
       }
     case CLOSE_ELECTRUM_CHANNEL:
       return {
         ...state,
-        openChannels: {
-          ...state.openChannels,
+        openCoinChannels: {
+          ...state.openCoinChannels,
           [action.payload.chainTicker]: false
         },
       }
     case SIGN_OUT_COMPLETE:
       return {
-        openChannels: {}
+        openCoinChannels: {}
       }
     default:
       return state;

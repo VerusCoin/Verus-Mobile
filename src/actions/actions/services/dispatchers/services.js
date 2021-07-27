@@ -3,7 +3,8 @@ import {
   loadServiceAuthDataForUser,
   storeServiceAuthDataForUser,
 } from "../../../../utils/asyncStore/serviceAuthStorage";
-import { requestPassword } from "../../../../utils/auth/authBox";
+import { requestPassword, requestSeeds } from "../../../../utils/auth/authBox";
+import { CONNECTED_SERVICES, CONNECTED_SERVICE_CHANNELS, CONNECTED_SERVICE_PROVIDERS } from "../../../../utils/constants/services";
 import { encryptkey } from "../../../../utils/seedCrypt";
 import { setServiceAuth } from "../creators/services";
 
@@ -39,3 +40,23 @@ export const initServiceAuthDataForUser = async (accountHash) => {
   store.dispatch(setServiceAuth(serviceAuthData));
   return serviceAuthData;
 };
+
+export const authenticateServices = async () => {
+  const seeds = await requestSeeds()
+  
+  for (const connectedService of CONNECTED_SERVICES) {
+    if (
+      CONNECTED_SERVICE_CHANNELS[connectedService] &&
+      CONNECTED_SERVICE_PROVIDERS[connectedService] &&
+      seeds[CONNECTED_SERVICE_CHANNELS[connectedService]]
+    ) {
+      try {
+        await CONNECTED_SERVICE_PROVIDERS[connectedService].authenticate(
+          seeds[CONNECTED_SERVICE_CHANNELS[connectedService]]
+        );
+      } catch(e) {
+        console.warn(e)
+      }
+    }
+  }
+}

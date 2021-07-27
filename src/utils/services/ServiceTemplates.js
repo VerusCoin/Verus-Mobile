@@ -1,30 +1,21 @@
 export class ServiceTemplate {
-  constructor(id, displayInfo, api) {
+  constructor(id, api) {
     this.id = id
-    this.displayInfo = displayInfo
     this.api = api
-  }
-
-  get displayTitle() {
-    return this.displayInfo.title
-  }
-
-  get displayDescription() {
-    return this.displayInfo.description
   }
 }
 
 export class AccountBasedFintechApiTemplate extends ServiceTemplate {
-  constructor(id, displayInfo, api) {
-    super(id, displayInfo, api)
+  constructor(id, api) {
+    super(id, api)
   }
 
-  async login(payload) {
-    return await this.api.login(payload)
+  async authenticate(seed) {
+    return await this.api.authenticate(seed)
   }
 
-  async logout(payload) {
-    return await this.api.logout(payload)
+  async reset(payload) {
+    return await this.api.reset(payload)
   }
 
   async createAccount(payload) {

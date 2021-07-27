@@ -8,8 +8,9 @@ export * from './actions/keyboard/dispatchers/keyboardListener'
 // Personal data 
 export * from './actions/personal/dispatchers/personal'
 
-// Service auth data
+// Service data
 export * from './actions/services/dispatchers/services'
+export * from './actions/services/dispatchers/updates'
 
 // Account 
 export * from './actions/account/dispatchers/account'

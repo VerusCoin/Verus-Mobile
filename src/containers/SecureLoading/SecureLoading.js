@@ -84,6 +84,20 @@ class SecureLoading extends Component {
                 })
               }
             })
+            .catch(e => {
+              clearTimeout(this.timeoutTimer);
+              if (this.state.status !== 'timeout') {
+                this.setState({ status: 'error' }, () => {
+                  if (this.state.dispatchResult) this.props.dispatch(res)
+
+                  if (this.state.route) {
+                    this.resetToScreen(this.state.route)
+                  } else {
+                    this.props.dispatch(signOut())
+                  }
+                })
+              }
+            })
           } else {
             if (this.state.onError) this.state.onError()
             clearTimeout(this.timeoutTimer);
