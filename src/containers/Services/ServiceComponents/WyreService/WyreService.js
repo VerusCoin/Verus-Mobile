@@ -11,12 +11,6 @@ class WyreService extends Component {
     this.props.navigation.setOptions({ title: "Wyre" })
   }
 
-  setLoading(loading, callback) {
-    this.setState({
-      loading
-    }, callback)
-  }
-
   render() {
     return WyreServiceRender.call(this)
   }
@@ -24,7 +18,8 @@ class WyreService extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    encryptedSeeds: state.authentication.activeAccount.seeds
+    encryptedSeeds: state.authentication.activeAccount.seeds,
+    loading: state.services.loading
   }
 };
 

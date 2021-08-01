@@ -3,6 +3,7 @@ export const PERSONAL_CONTACT = "contact"
 export const PERSONAL_LOCATIONS = "locations"
 export const PERSONAL_PAYMENT_METHODS = "payment_methods"
 
+export const PERSONAL_NAME = 'name'
 export const PERSONAL_NATIONALITIES = "nationalities"
 export const PERSONAL_BIRTHDAY = "birthday"
 
@@ -14,6 +15,7 @@ export const PERSONAL_PHONE_TYPE_HOME = 'home'
 export const PERSONAL_PHONE_TYPE_WORK = 'work'
 
 export const PERSONAL_TAX_COUNTRIES = 'tax_countries'
+export const PERSONAL_PHYSICAL_ADDRESSES = 'physical_addresses'
 
 export const PERSONAL_BANK_COUNTRY = 'country'
 export const PERSONAL_BANK_PRIMARY_CURRENCY = 'primary_currency'

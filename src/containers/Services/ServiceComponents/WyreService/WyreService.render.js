@@ -9,7 +9,7 @@ import WyreServiceAccount from "./WyreServiceAccount/WyreServiceAccount";
 export const WyreServiceRender = function () {
   return (
     <React.Fragment>
-      {this.state.loading && (
+      {this.props.loading && (
         <View
           style={{
             ...styles.centerContainer,
@@ -30,11 +30,9 @@ export const WyreServiceRender = function () {
       {this.props.encryptedSeeds[WYRE_SERVICE] != null ? (
         <WyreServiceAccount
           navigation={this.props.navigation}
-          setLoading={(loading, callback) => this.setLoading(loading, callback)}
         />
       ) : (
         <WyreServiceIntroSlider
-          setLoading={(loading, callback) => this.setLoading(loading, callback)}
           navigation={this.props.navigation}
         />
       )}

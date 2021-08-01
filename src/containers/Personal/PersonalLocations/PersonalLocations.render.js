@@ -1,14 +1,10 @@
 import React from "react";
 import { SafeAreaView, ScrollView } from "react-native";
 import { Divider, List, Portal } from "react-native-paper";
-import DatePickerModal from "../../../components/DatePickerModal/DatePickerModal";
 import ListSelectionModal from "../../../components/ListSelectionModal/ListSelectionModal";
-import PhoneNumberModal from "../../../components/PhoneNumberModal/PhoneNumberModal";
-import TextInputModal from "../../../components/TextInputModal/TextInputModal";
 import Styles from "../../../styles";
-import { ISO_3166_COUNTRIES, ISO_3166_ALPHA_2_CODES } from "../../../utils/constants/iso3166";
-import { CALLING_CODES_TO_ISO_3166 } from "../../../utils/constants/callingCodes";
-import { PERSONAL_TAX_COUNTRIES } from "../../../utils/constants/personal";
+import { ISO_3166_COUNTRIES } from "../../../utils/constants/iso3166";
+import { renderPersonalTaxId } from "../../../utils/personal/displayUtils";
 
 export const PersonalLocationsRender = function () {
   return (
@@ -40,7 +36,7 @@ export const PersonalLocationsRender = function () {
                     title={nationality == null ? "Unknown Country" : `${nationality.emoji} ${nationality.name}`}
                     description={
                       taxCountry.tin.length > 2
-                        ? `Tax ID: ****${taxCountry.tin.slice(-2)}`
+                        ? `Tax ID: ${renderPersonalTaxId(taxCountry).title}`
                         : null
                     }
                     right={(props) => (

@@ -4,12 +4,14 @@
 
 import {
   SET_SERVICE_ACCOUNT,
-  SIGN_OUT
+  SIGN_OUT,
+  SET_SERVICE_LOADING
 } from "../utils/constants/storeType";
 
 export const services = (
   state = {
-    accounts: {}
+    accounts: {},
+    loading: false
   },
   action
 ) => {
@@ -22,9 +24,16 @@ export const services = (
           [action.payload.channel]: action.payload.body
         }
       }
+    case SET_SERVICE_LOADING:
+      return {
+        ...state,
+        loading: action.payload.loading
+      }
     case SIGN_OUT:
       return {
-        accounts: {}
+        ...state,
+        accounts: {},
+        loading: false
       }
     default:
       return state;

@@ -4,7 +4,6 @@
   completely closed, only the non-sensitive data should persist.
 */
 
-import { WYRE_SERVICE_ID } from "../utils/constants/services";
 import {
   SET_ACCOUNTS,
   UPDATE_ACCOUNT_KEYS,
@@ -92,8 +91,7 @@ export const authentication = (
       return {
         ...state,
         activeAccount: null,
-        sessionKey: null,
-        services: {}
+        sessionKey: null
       };
     case SIGN_OUT:
       return {

@@ -2,6 +2,7 @@ import React from "react";
 import { Text, SafeAreaView, ScrollView, View } from "react-native";
 import { Divider, List, Avatar, Title } from "react-native-paper";
 import Styles from "../../../styles";
+import { renderPersonalFullName } from "../../../utils/personal/displayUtils";
 
 export const PersonalInfoRender = function () {
   return (
@@ -19,14 +20,9 @@ export const PersonalInfoRender = function () {
               marginVertical: 16,
             }}
           />
-          <Title style={{ fontSize: 28, marginBottom: 16, padding: 0 }}>{`${
-            this.state.attributes.name.first
-          } ${
-            this.state.attributes.name.middle != null &&
-            this.state.attributes.name.middle.length > 0
-              ? this.state.attributes.name.middle + " "
-              : ""
-          }${this.state.attributes.name.last}`}</Title>
+          <Title style={{ fontSize: 28, marginBottom: 16, padding: 0 }}>
+            {renderPersonalFullName(this.state.attributes.name).title}
+          </Title>
         </View>
         <Divider />
         <List.Item
@@ -59,7 +55,9 @@ export const PersonalInfoRender = function () {
         <List.Item
           title={"Banking Info"}
           description={"Bank accounts"}
-          onPress={this.state.loading ? () => {} : () => this.openPaymentMethods()}
+          onPress={
+            this.state.loading ? () => {} : () => this.openPaymentMethods()
+          }
           right={(props) => (
             <List.Icon {...props} icon={"chevron-right"} size={20} />
           )}

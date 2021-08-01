@@ -12,7 +12,7 @@ import Colors from "../../../../../../globals/colors";
 import { createAlert, resolveAlert } from "../../../../../../actions/actions/alert/dispatchers/alert";
 import { ISO_3166_COUNTRIES } from "../../../../../../utils/constants/iso3166";
 import ListSelectionModal from "../../../../../../components/ListSelectionModal/ListSelectionModal";
-import { setWyreAccountId } from "../../../../../../actions/actionCreators";
+import { setServiceLoading, setWyreAccountId } from "../../../../../../actions/actionCreators";
 import { CommonActions } from "@react-navigation/native";
 
 class WyreServiceAccountCreator extends Component {
@@ -129,26 +129,26 @@ class WyreServiceAccountCreator extends Component {
     }
   }
 
-  initSupportedCountries = () => {
-    this.props.setLoading(true, async () => {
-      try {
-        this.getSupportedCountries(() => {
-          this.props.setLoading(false);
-        });
-      } catch (e) {
-        console.warn(e);
-        createAlert("Error", "Failed to retrieve Wyre supported countries.", [
-          {
-            text: "Try again",
-            onPress: () => {
-              this.initSupportedCountries();
-              resolveAlert();
-            },
+  initSupportedCountries = async () => {
+    this.props.dispatch(setServiceLoading(true))
+
+    try {
+      this.getSupportedCountries(() => {
+        this.props.dispatch(setServiceLoading(false))
+      });
+    } catch (e) {
+      console.warn(e);
+      createAlert("Error", "Failed to retrieve Wyre supported countries.", [
+        {
+          text: "Try again",
+          onPress: async () => {
+            await this.initSupportedCountries();
+            resolveAlert();
           },
-          { text: "Ok", onPress: () => resolveAlert() },
-        ]);
-      }
-    });
+        },
+        { text: "Ok", onPress: () => resolveAlert() },
+      ]);
+    }
   };
 
   async getSupportedCountries(cb = () => {}) {

@@ -7,6 +7,7 @@ import {
   PERSONAL_EMAILS,
   PERSONAL_PHONE_NUMBERS,
 } from "../../../utils/constants/personal";
+import { provideCustomBackButton } from "../../../utils/navigation/customBack";
 import { PersonalContactRender } from "./PersonalContact.render"
 
 const EDIT = 'edit'
@@ -49,6 +50,14 @@ class PersonalContact extends Component {
   }
 
   componentDidMount() {
+    if (this.props.route.params != null && this.props.route.params.customBack != null) {
+      provideCustomBackButton(
+        this,
+        this.props.route.params.customBack.route,
+        this.props.route.params.customBack.params
+      );
+    }
+
     this.loadPersonalContact()
   }
 

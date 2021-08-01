@@ -2,6 +2,7 @@ import { Component } from "react"
 import { connect } from 'react-redux'
 import { modifyPersonalDataForUser } from "../../../../actions/actionDispatchers";
 import { PERSONAL_ATTRIBUTES } from "../../../../utils/constants/personal";
+import { provideCustomBackButton } from "../../../../utils/navigation/customBack";
 import { PersonalAttributesEditNameRender } from "./PersonalAttributesEditName.render"
 
 class PersonalAttributesEditName extends Component {
@@ -19,6 +20,16 @@ class PersonalAttributesEditName extends Component {
     };
   }
 
+  componentDidMount() {
+    if (this.props.route.params != null && this.props.route.params.customBack != null) {
+      provideCustomBackButton(
+        this,
+        this.props.route.params.customBack.route,
+        this.props.route.params.customBack.params
+      );
+    }
+  }
+
   updateName() {
     this.setState({ loading: true }, async () => {
       await modifyPersonalDataForUser(
@@ -33,13 +44,7 @@ class PersonalAttributesEditName extends Component {
 
   closeTextInputModal() {
     this.setState({currentTextInputModal: null}, () => {
-      if (
-        this.state.name.first !== this.state.attributes.name.first ||
-        this.state.name.middle !== this.state.attributes.name.middle ||
-        this.state.name.last !== this.state.attributes.name.last
-      ) {
-        this.updateName()
-      }
+      this.updateName()
     })
   }
 

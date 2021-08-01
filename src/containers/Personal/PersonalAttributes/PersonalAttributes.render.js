@@ -6,6 +6,7 @@ import ListSelectionModal from "../../../components/ListSelectionModal/ListSelec
 import Styles from "../../../styles";
 import { ISO_3166_COUNTRIES, ISO_3166_ALPHA_2_CODES } from "../../../utils/constants/iso3166";
 import { PERSONAL_NATIONALITIES } from "../../../utils/constants/personal";
+import { renderPersonalBirthday, renderPersonalFullName } from "../../../utils/personal/displayUtils";
 
 export const PersonalAttributesRender = function () {
   return (
@@ -61,12 +62,7 @@ export const PersonalAttributesRender = function () {
         <List.Subheader>{"Name"}</List.Subheader>
         <Divider />
         <List.Item
-          title={`${this.state.attributes.name.first} ${
-            this.state.attributes.name.middle != null &&
-            this.state.attributes.name.middle.length > 0
-              ? this.state.attributes.name.middle + " "
-              : ""
-          }${this.state.attributes.name.last}`}
+          title={renderPersonalFullName(this.state.attributes.name).title}
           right={(props) => (
             <List.Icon {...props} icon={"chevron-right"} size={20} />
           )}
@@ -77,7 +73,7 @@ export const PersonalAttributesRender = function () {
         <Divider />
         {this.state.attributes.birthday != null ? (
           <List.Item
-            title={this.renderDate()}
+            title={renderPersonalBirthday(this.state.attributes.birthday).title}
             right={(props) => (
               <List.Icon {...props} icon={"account-edit"} size={20} />
             )}

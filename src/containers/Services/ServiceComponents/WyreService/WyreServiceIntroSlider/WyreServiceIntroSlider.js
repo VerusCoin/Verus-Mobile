@@ -18,7 +18,7 @@ import { WYRE_SERVICE_ID } from "../../../../../utils/constants/services";
 import Colors from "../../../../../globals/colors";
 import SetupSeedModal from "../../../../../components/SetupSeedModal/SetupSeedModal";
 import PasswordCheck from "../../../../../components/PasswordCheck";
-import { addEncryptedKey } from "../../../../../actions/actionCreators";
+import { addEncryptedKey, setServiceLoading } from "../../../../../actions/actionCreators";
 import { refreshAccountData } from "../../../../../actions/actionDispatchers";
 
 class WyreServiceIntroSlider extends Component {
@@ -135,29 +135,29 @@ class WyreServiceIntroSlider extends Component {
     })
   }
 
-  initWyreSeedStatus() {
-    this.props.setLoading(true, async () => {
-      try {
-        const accountSeeds = await requestSeeds();
-        let hasElectrum24WordSeed = false;
+  async initWyreSeedStatus() {
+    this.props.dispatch(setServiceLoading(true))
 
-        if (
-          accountSeeds[ELECTRUM] != null &&
-          isSeedPhrase(accountSeeds[ELECTRUM], this.WYRE_SEED_PHRASE_LENGTH)
-        )
-          hasElectrum24WordSeed = true;
+    try {
+      const accountSeeds = await requestSeeds();
+      let hasElectrum24WordSeed = false;
 
-        this.setState(
-          {
-            hasElectrum24WordSeed,
-          },
-          () => this.props.setLoading(false)
-        );
-      } catch (e) {
-        console.warn(e);
-        createAlert("Error", "Error fetching wyre account information");
-      }
-    });
+      if (
+        accountSeeds[ELECTRUM] != null &&
+        isSeedPhrase(accountSeeds[ELECTRUM], this.WYRE_SEED_PHRASE_LENGTH)
+      )
+        hasElectrum24WordSeed = true;
+
+      this.setState(
+        {
+          hasElectrum24WordSeed,
+        },
+        () => this.props.dispatch(setServiceLoading(false))
+      );
+    } catch (e) {
+      console.warn(e);
+      createAlert("Error", "Error fetching wyre account information");
+    }
   }
 
   async linkCurrentSeed() {

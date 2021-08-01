@@ -5,6 +5,7 @@ import { requestPersonalData } from "../../../utils/auth/authBox";
 import {
   PERSONAL_LOCATIONS, PERSONAL_TAX_COUNTRIES,
 } from "../../../utils/constants/personal";
+import { provideCustomBackButton } from "../../../utils/navigation/customBack";
 import { PersonalLocationsRender } from "./PersonalLocations.render"
 
 const EDIT = 'edit'
@@ -112,6 +113,14 @@ class PersonalLocations extends Component {
   }
 
   componentDidMount() {
+    if (this.props.route.params != null && this.props.route.params.customBack != null) {
+      provideCustomBackButton(
+        this,
+        this.props.route.params.customBack.route,
+        this.props.route.params.customBack.params
+      );
+    }
+
     this.loadPersonalLocations();
   }
 

@@ -10,14 +10,16 @@ import {
   CLOSE_WYRE_SERVICE_CHANNEL,
   AUTHENTICATE_WYRE_SERVICE,
   DEAUTHENTICATE_WYRE_SERVICE,
-  SET_WYRE_ACCOUNT_ID
+  SET_WYRE_ACCOUNT_ID,
+  SET_CURRENT_WYRE_ACCOUNT_DATA
 } from '../../utils/constants/storeType'
 
 export const channelStore_wyre_service = (state = {
   openCoinChannels: {},
   serviceChannelOpen: true,
   authenticated: false,
-  accountId: null
+  accountId: null,
+  currentAccountDataScreenParams: null
 }, action) => {
   switch (action.type) {
     case INIT_WYRE_COIN_CHANNEL_FINISH:
@@ -65,7 +67,13 @@ export const channelStore_wyre_service = (state = {
       }
     case SIGN_OUT_COMPLETE:
       return {
+        ...state,
         openCoinChannels: {}
+      }
+    case SET_CURRENT_WYRE_ACCOUNT_DATA:
+      return {
+        ...state,
+        currentAccountDataScreenParams: action.payload.accountData
       }
     default:
       return state;

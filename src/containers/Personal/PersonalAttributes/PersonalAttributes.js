@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import { modifyPersonalDataForUser } from "../../../actions/actionDispatchers";
 import { requestPersonalData } from "../../../utils/auth/authBox";
 import { PERSONAL_ATTRIBUTES, PERSONAL_BIRTHDAY, PERSONAL_NATIONALITIES } from "../../../utils/constants/personal";
+import { provideCustomBackButton } from "../../../utils/navigation/customBack";
 import { PersonalAttributesRender } from "./PersonalAttributes.render"
 
 const EDIT = 'edit'
@@ -50,6 +51,14 @@ class PersonalAttributes extends Component {
   }
 
   componentDidMount() {
+    if (this.props.route.params != null && this.props.route.params.customBack != null) {
+      provideCustomBackButton(
+        this,
+        this.props.route.params.customBack.route,
+        this.props.route.params.customBack.params
+      );
+    }
+
     this.loadPersonalAttributes()
   }
 

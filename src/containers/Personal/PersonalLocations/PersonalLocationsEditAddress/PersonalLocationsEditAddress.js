@@ -4,6 +4,7 @@ import { connect } from 'react-redux'
 import { modifyPersonalDataForUser } from "../../../../actions/actionDispatchers";
 import { createAlert, resolveAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import { PERSONAL_LOCATIONS } from "../../../../utils/constants/personal";
+import { provideCustomBackButton } from "../../../../utils/navigation/customBack";
 import { PersonalLocationsEditAddressRender } from "./PersonalLocationsEditAddress.render"
 
 class PersonalLocationsEditAddress extends Component {
@@ -61,11 +62,23 @@ class PersonalLocationsEditAddress extends Component {
     }
   }
 
+  componentDidMount() {
+    if (this.props.route.params != null && this.props.route.params.customBack != null) {
+      provideCustomBackButton(
+        this,
+        this.props.route.params.customBack.route,
+        this.props.route.params.customBack.params
+      );
+    }
+  }
+
   updateAddress() {
     this.setState({ loading: true }, async () => {
       let addresses = this.state.locations.physical_addresses
       
-      if (this.state.index == null) {
+      if (addresses == null) {
+        addresses = [this.state.address]
+      } else if (this.state.index == null) {
         addresses.push(this.state.address)
       } else {
         addresses[this.state.index] = this.state.address
@@ -80,7 +93,9 @@ class PersonalLocationsEditAddress extends Component {
       this.setState({
         loading: false,
         index:
-          this.state.index == null
+          this.state.locations.physical_addresses == null
+            ? 0
+            : this.state.index == null
             ? this.state.locations.physical_addresses.length - 1
             : this.state.index,
       });

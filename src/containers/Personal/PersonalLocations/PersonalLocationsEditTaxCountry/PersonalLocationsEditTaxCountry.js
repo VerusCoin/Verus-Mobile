@@ -44,7 +44,9 @@ class PersonalLocationsEditTaxCountry extends Component {
     this.setState({ loading: true }, async () => {
       let taxCountries = this.state.locations.tax_countries
       
-      if (this.state.index == null) {
+      if (taxCountries == null) {
+        taxCountries = [this.state.taxCountry]
+      } else if (this.state.index == null) {
         taxCountries.push(this.state.taxCountry)
       } else {
         taxCountries[this.state.index] = this.state.taxCountry
@@ -59,7 +61,9 @@ class PersonalLocationsEditTaxCountry extends Component {
       this.setState({
         loading: false,
         index:
-          this.state.index == null
+          this.state.locations.tax_countries == null
+            ? 0
+            : this.state.index == null
             ? this.state.locations.tax_countries.length - 1
             : this.state.index,
       });

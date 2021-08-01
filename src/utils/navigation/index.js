@@ -57,6 +57,7 @@ import PersonalPaymentMethodsEditBankAccount from '../../containers/Personal/Per
 import PersonalPaymentMethodsEditBankAccountAddress from "../../containers/Personal/PersonalPaymentMethods/PersonalPaymentMethodsEditBankAccountAddress/PersonalPaymentMethodsEditBankAccountAddress";
 import Services from '../../containers/Services/Services';
 import Service from '../../containers/Services/Service/Service';
+import WyreServiceAccountData from '../../containers/Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceAccountData/WyreServiceAccountData';
 
 const MainStack = createStackNavigator()
 const MainDrawer = createDrawerNavigator()
@@ -245,6 +246,10 @@ function ServicesScreens() {
         name="Service"
         component={Service}
       />
+      <ServicesStack.Screen
+        name="WyreServiceAccountData"
+        component={WyreServiceAccountData}
+      />
     </ServicesStack.Navigator>
   );
 }
@@ -277,7 +282,6 @@ function HomeScreens() {
         component={WalletScreens}
         options={{
           title: "Wallets",
-          headerLeft: () => null,
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="wallet" color={color} size={26} />
           ),

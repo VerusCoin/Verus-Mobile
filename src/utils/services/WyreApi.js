@@ -11,9 +11,7 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
       reset: () => this.reset(),
       createAccount: (payload) => this.createAccount(payload),
       getAccount: (payload) => this.getAccount(payload),
-      updateAccount: async () => {
-        //TODO
-      },
+      updateAccount: (payload) => this.updateAccount(payload),
       uploadDocument: async () => {
         //TODO
       },
@@ -74,6 +72,13 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
 
   createAccount = async ({ account }) => {
     return await this.service.createAccount(account)
+  }
+
+  updateAccount = async ({ accountId, updateObj }) => {
+    return await this.service.updateAccount(
+      accountId == null ? this.accountId : accountId,
+      updateObj
+    );
   }
 
   getAccount = async ({ accountId }) => {

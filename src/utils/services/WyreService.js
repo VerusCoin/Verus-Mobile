@@ -39,48 +39,53 @@ class WyreService {
   static formatCall = async (call) => {
     try {
       const { data } = await call();
-      return data
+      return data;
     } catch (error) {
-      throw new Error(parseError(error))
+      throw new Error(parseError(error));
     }
   };
 
   static bearerFromSeed = async (seed) => {
-    var ripemd160 = crypto.createHash('ripemd160');
-    var sha256 = crypto.createHash('sha256');
+    var ripemd160 = crypto.createHash("ripemd160");
+    var sha256 = crypto.createHash("sha256");
 
-    const WYRE_SERVICE_CANONICAL = Buffer.from(WYRE_SERVICE_ID, 'utf8')
+    const WYRE_SERVICE_CANONICAL = Buffer.from(WYRE_SERVICE_ID, "utf8");
 
     const sha256Hash = sha256
       .update(await mnemonicToSeed(seed))
       .update(WYRE_SERVICE_CANONICAL)
       .digest();
 
-    return (ripemd160.update(sha256Hash).digest()).toString('hex')
-  }
+    return ripemd160.update(sha256Hash).digest().toString("hex");
+  };
 
   authenticate(wyreToken, apiKey) {
-    this.service.interceptors.request.use((config) => {
-      config.url = config.url + `?timestamp=${Date.now()}`
+    this.authInterceptor = this.service.interceptors.request.use(
+      (config) => {
+        config.url = config.url + `?timestamp=${Date.now()}`;
 
-      if (config.method === 'post') {
-        config.headers.common["X-Api-Signature"] = WyreService.calculateSignature(
-          axios.getUri(config) + JSON.stringify(config.data),
-          wyreToken
-        );
-      } else {
-        config.headers.common["X-Api-Signature"] = WyreService.calculateSignature(
-          config.baseURL.replace(/\/+$/, "") + axios.getUri(config),
-          wyreToken
-        );
+        if (config.method === "post") {
+          config.headers.common["X-Api-Signature"] =
+            WyreService.calculateSignature(
+              axios.getUri(config) + JSON.stringify(config.data),
+              wyreToken
+            );
+        } else {
+          config.headers.common["X-Api-Signature"] =
+            WyreService.calculateSignature(
+              config.baseURL.replace(/\/+$/, "") + axios.getUri(config),
+              wyreToken
+            );
+        }
+
+        config.headers.common["X-Api-Key"] = apiKey;
+
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
       }
-      
-      config.headers.common["X-Api-Key"] = apiKey
-      
-      return config;
-    }, (error) => {
-      return Promise.reject(error);
-    });
+    );
   }
 
   deauthenticate() {
@@ -89,29 +94,28 @@ class WyreService {
 
   submitAuthToken = async (secretKey) => {
     return await WyreService.formatCall(() => {
-      return this.service.post(`${this.url}/v2/sessions/auth/key`, { secretKey });
-    })
-  }
+      return this.service.post(`${this.url}/v2/sessions/auth/key`, {
+        secretKey,
+      });
+    });
+  };
 
   createAccount = async (wyreAccount) => {
     return await WyreService.formatCall(() => {
-      return this.service.post(
-        `${this.url}/v3/accounts`,
-        wyreAccount
-      );
-    }, true)
+      return this.service.post(`${this.url}/v3/accounts`, wyreAccount);
+    }, true);
   };
 
   getAccount = async (id) => {
     return await WyreService.formatCall(() => {
       return this.service.get(`/v3/accounts/${id}`);
-    }, true)
+    }, true);
   };
 
-  putAccount = async (id, updateObj) => {
+  updateAccount = async (id, updateObj) => {
     return await WyreService.formatCall(() => {
-      return this.service.post(`/v3/accounts/${id}`, updateObj);
-    }, true)
+      return this.service.post(`${this.url}/v3/accounts/${id}`, updateObj);
+    }, true);
   };
 
   // uploadDocument = async (id, field, uri, type) => {
@@ -152,17 +156,14 @@ class WyreService {
         country: "US",
       };
 
-      return this.service.post(
-        "/v2/paymentMethods",
-        paymentMethod
-      );
-    }, true)
+      return this.service.post("/v2/paymentMethods", paymentMethod);
+    }, true);
   };
 
   getPaymentMethods = async () => {
     return await WyreService.formatCall(() => {
       return this.service.get("/v2/paymentMethods");
-    }, true)
+    }, true);
   };
 
   createTransfer = async (source, fromCurr, fromVal, dest, toCurr) => {
@@ -177,25 +178,25 @@ class WyreService {
       };
 
       return this.service.post("/v3/transfers", transfer);
-    }, true)
+    }, true);
   };
 
   getRates = async () => {
     return await WyreService.formatCall(() => {
       return axios.get(`${this.url}/v3/rates`);
-    })
+    });
   };
 
   getSupportedCountries = async () => {
     return await WyreService.formatCall(() => {
       return axios.get(`${this.url}/v3/widget/supportedCountries`);
-    })
+    });
   };
 
   getTransactions = async () => {
     return await WyreService.formatCall(() => {
       return this.service.get(`${this.url}/v3/transfers`);
-    }, true)
+    }, true);
   };
 }
 

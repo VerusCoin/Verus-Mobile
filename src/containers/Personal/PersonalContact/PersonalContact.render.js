@@ -9,6 +9,7 @@ import Styles from "../../../styles";
 import { ISO_3166_COUNTRIES, ISO_3166_ALPHA_2_CODES } from "../../../utils/constants/iso3166";
 import { CALLING_CODES_TO_ISO_3166 } from "../../../utils/constants/callingCodes";
 import { PERSONAL_EMAILS, PERSONAL_NATIONALITIES, PERSONAL_PHONE_NUMBERS } from "../../../utils/constants/personal";
+import { renderPersonalPhoneNumber } from "../../../utils/personal/displayUtils";
 
 export const PersonalContactRender = function () {
   return (
@@ -110,18 +111,7 @@ export const PersonalContactRender = function () {
                 <React.Fragment key={index}>
                   <List.Item
                     key={index}
-                    title={`${
-                      CALLING_CODES_TO_ISO_3166[phone.calling_code] != null &&
-                      ISO_3166_COUNTRIES[
-                        CALLING_CODES_TO_ISO_3166[phone.calling_code]
-                      ] != null
-                        ? ISO_3166_COUNTRIES[
-                            CALLING_CODES_TO_ISO_3166[phone.calling_code]
-                          ].emoji + " "
-                        : ""
-                    }${
-                      phone.calling_code.length > 0 ? phone.calling_code : "+0"
-                    } ${phone.number.length > 0 ? phone.number : "000000000"}`}
+                    title={renderPersonalPhoneNumber(phone).title}
                     description={typeFr}
                     right={(props) => (
                       <List.Icon {...props} icon={"account-edit"} size={20} />
