@@ -12,7 +12,8 @@ import {
   INIT_ETH_ERRORS,
   INIT_ERC20_ERRORS,
   CHANNELS_OBJECT_TEMPLATE,
-  API_GET_SERVICE_ACCOUNT
+  API_GET_SERVICE_ACCOUNT,
+  API_GET_SERVICE_PAYMENT_METHODS
 } from "../utils/constants/intervalConstants";
 import {
   ERROR_BALANCES,
@@ -29,7 +30,9 @@ import {
   SET_RATES,
   INIT_DLIGHT_CHANNEL_START,
   ERROR_SERVICE_ACCOUNT,
-  SET_SERVICE_ACCOUNT
+  SET_SERVICE_ACCOUNT,
+  SET_SERVICE_PAYMENT_METHODS,
+  ERROR_SERVICE_PAYMENT_METHODS
 } from "../utils/constants/storeType";
 
 export const errors = (state = {
@@ -126,7 +129,18 @@ export const errors = (state = {
     case ERROR_SERVICE_ACCOUNT:
       return {
         ...state,
-        [API_GET_SERVICE_ACCOUNT]: error
+        [API_GET_SERVICE_ACCOUNT]: {
+          ...state[API_GET_SERVICE_ACCOUNT],
+          [channel]: error
+        }
+      }
+    case ERROR_SERVICE_PAYMENT_METHODS:
+      return {
+        ...state,
+        [API_GET_SERVICE_PAYMENT_METHODS]: {
+          ...state[API_GET_SERVICE_PAYMENT_METHODS],
+          [channel]: error
+        }
       }
     case INIT_DLIGHT_CHANNEL_START:
       return {
@@ -188,6 +202,14 @@ export const errors = (state = {
           [channel]: null
         }
       };
+    case SET_SERVICE_PAYMENT_METHODS:
+      return {
+        ...state,
+        [API_GET_SERVICE_PAYMENT_METHODS]: {
+          ...state[API_GET_SERVICE_PAYMENT_METHODS],
+          [channel]: null
+        }
+      }
     default:
       return state;
   }

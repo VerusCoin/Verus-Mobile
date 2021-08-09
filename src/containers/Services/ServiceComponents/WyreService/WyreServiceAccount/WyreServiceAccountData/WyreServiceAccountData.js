@@ -10,7 +10,7 @@ import { conditionallyUpdateService } from "../../../../../../actions/actionDisp
 import { createAlert, resolveAlert } from "../../../../../../actions/actions/alert/dispatchers/alert";
 import Store from "../../../../../../store";
 import { requestPersonalData } from "../../../../../../utils/auth/authBox";
-import { API_GET_SERVICE_ACCOUNT } from "../../../../../../utils/constants/intervalConstants";
+import { API_GET_SERVICE_ACCOUNT, API_GET_SERVICE_PAYMENT_METHODS } from "../../../../../../utils/constants/intervalConstants";
 import {
   PERSONAL_BIRTHDAY,
   PERSONAL_EMAILS,
@@ -237,12 +237,17 @@ class WyreServiceAccountData extends Component {
   }
 
   async forceUpdate() {
-    this.props.dispatch(expireServiceData(API_GET_SERVICE_ACCOUNT));
-    await conditionallyUpdateService(
-      Store.getState(),
-      this.props.dispatch,
-      API_GET_SERVICE_ACCOUNT
-    );
+    const updates = [API_GET_SERVICE_ACCOUNT, API_GET_SERVICE_PAYMENT_METHODS]
+
+    for (update of updates) {
+      this.props.dispatch(expireServiceData(update));
+
+      await conditionallyUpdateService(
+        Store.getState(),
+        this.props.dispatch,
+        update
+      );
+    }
   }
 
   async canSubmitDataToWyre() {
@@ -268,7 +273,7 @@ class WyreServiceAccountData extends Component {
       }
     } else return false;
   }
-  
+
   async submitDataToWyre(submissionPromise) {
     try {
       this.props.dispatch(setServiceLoading(true));

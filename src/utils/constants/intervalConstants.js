@@ -27,6 +27,7 @@ export const API_GET_KEYS = 'get_keys'
 
 // Service API call names
 export const API_GET_SERVICE_ACCOUNT = "get_account"
+export const API_GET_SERVICE_PAYMENT_METHODS = 'get_paymentmethods'
 
 // Interval restriction labels
 export const IS_VERUS = "is_verus"

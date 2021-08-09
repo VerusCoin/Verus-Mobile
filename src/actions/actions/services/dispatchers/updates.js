@@ -3,7 +3,8 @@ import {
   API_ERROR,
   API_SUCCESS,
   ALWAYS_ACTIVATED,
-  API_GET_SERVICE_ACCOUNT
+  API_GET_SERVICE_ACCOUNT,
+  API_GET_SERVICE_PAYMENT_METHODS
 } from '../../../../utils/constants/intervalConstants'
 import {
   occupyServiceApiCall,
@@ -11,9 +12,11 @@ import {
 } from "../../../actionCreators";
 import { createServiceExpireTimeout } from '../../../actionDispatchers'
 import { updateServiceAccount } from './UpdateServiceAccount';
+import { updateServicePaymentMethods } from './UpdateServicePaymentMethods';
 
 export const serviceUpdates = {
-  [API_GET_SERVICE_ACCOUNT]: updateServiceAccount
+  [API_GET_SERVICE_ACCOUNT]: updateServiceAccount,
+  [API_GET_SERVICE_PAYMENT_METHODS]: updateServicePaymentMethods
 }
 
 /**

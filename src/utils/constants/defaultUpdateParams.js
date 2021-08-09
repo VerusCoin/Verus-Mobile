@@ -11,7 +11,8 @@ import {
   ETH,
   ERC20,
   API_GET_SERVICE_ACCOUNT,
-  WYRE_SERVICE
+  WYRE_SERVICE,
+  API_GET_SERVICE_PAYMENT_METHODS
 } from './intervalConstants'
 
 export const DEFAULT_SERVICE_UPDATE_PARAMS = {
@@ -28,6 +29,22 @@ export const DEFAULT_SERVICE_UPDATE_PARAMS = {
       expire_oncomplete: null,
       update_expired_oncomplete: null,
       expire_timeout: 60000,
+      update_expired_interval: 10000
+    }
+  },
+  [API_GET_SERVICE_PAYMENT_METHODS]: {
+    channels: [WYRE_SERVICE],
+    tracking_info: {
+      update_locations: null,
+      needs_update: true,
+      busy: {},
+    },
+    interval_info: {
+      expire_id: null,
+      update_expired_id: null,
+      expire_oncomplete: null,
+      update_expired_oncomplete: null,
+      expire_timeout: 120000,
       update_expired_interval: 10000
     }
   }

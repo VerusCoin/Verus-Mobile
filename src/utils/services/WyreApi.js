@@ -13,6 +13,7 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
       getAccount: (payload) => this.getAccount(payload),
       updateAccount: (payload) => this.updateAccount(payload),
       uploadDocument: (payload) => this.uploadDocument(payload),
+      listPaymentMethods: (payload) => this.listPaymentMethods(payload),
       getTransactions: async () => {
         //TODO
       },
@@ -104,6 +105,10 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
       accountId == null ? this.accountId : accountId
     );
   };
+
+  listPaymentMethods = async () => {
+    return await this.service.listPaymentMethods()
+  }
 
   getSupportedCountries = async () => {
     return await this.service.getSupportedCountries();

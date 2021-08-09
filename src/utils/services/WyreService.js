@@ -8,7 +8,6 @@ import { WYRE_URL } from '../constants/constants';
 import { WYRE_SERVICE_ID } from '../constants/services';
 import { Buffer } from 'buffer'
 import { mapWyreDocumentIds } from '../../actions/actions/services/dispatchers/wyre';
-import { requestServiceStoredData } from '../auth/authBox';
 
 const parseError = (error) => (
   error.response ? error.response.data.message : error.toString()
@@ -57,7 +56,7 @@ class WyreService {
     try {
       const { data } = await call();
       return data;
-    } catch (error) {      
+    } catch (error) {
       throw new Error(parseError(error));
     }
   };
@@ -86,7 +85,9 @@ class WyreService {
 
     this.authInterceptor = this.service.interceptors.request.use(
       (config) => {
-        config.url = config.url + `?timestamp=${Date.now()}`;
+        config.url = config.url.includes("timestamp")
+          ? config.url
+          : config.url + `?timestamp=${Date.now()}`;
 
         if (config.method === "post") {
           config.headers.common["X-Api-Signature"] =
@@ -232,7 +233,7 @@ class WyreService {
     }, true);
   };
 
-  getPaymentMethods = async () => {
+  listPaymentMethods = async () => {
     return await WyreService.formatCall(() => {
       return this.service.get("/v2/paymentMethods");
     }, true);

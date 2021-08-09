@@ -7,8 +7,8 @@ import { connect } from 'react-redux'
 import { setCurrentWyreAccountDataScreenParams, setServiceLoading } from "../../../../../../actions/actionCreators";
 import { conditionallyUpdateService } from "../../../../../../actions/actionDispatchers";
 import { createAlert } from "../../../../../../actions/actions/alert/dispatchers/alert";
-import { requestPersonalData, requestServiceStoredData } from "../../../../../../utils/auth/authBox";
-import { API_GET_SERVICE_ACCOUNT, WYRE_SERVICE } from "../../../../../../utils/constants/intervalConstants";
+import { requestServiceStoredData } from "../../../../../../utils/auth/authBox";
+import { API_GET_SERVICE_ACCOUNT, API_GET_SERVICE_PAYMENT_METHODS, WYRE_SERVICE } from "../../../../../../utils/constants/intervalConstants";
 import {
   PERSONAL_ATTRIBUTES,
   PERSONAL_BIRTHDAY,
@@ -165,11 +165,16 @@ class WyreServiceAccountOverview extends Component {
 
   async fetchAccountData() {
     this.props.dispatch(setServiceLoading(true))
-    await conditionallyUpdateService(
-      store.getState(),
-      this.props.dispatch,
-      API_GET_SERVICE_ACCOUNT
-    );
+    const updates = [API_GET_SERVICE_ACCOUNT, API_GET_SERVICE_PAYMENT_METHODS]
+
+    for (update of updates) {
+      await conditionallyUpdateService(
+        store.getState(),
+        this.props.dispatch,
+        update
+      );
+    }
+
     this.props.dispatch(setServiceLoading(false))
   }
 

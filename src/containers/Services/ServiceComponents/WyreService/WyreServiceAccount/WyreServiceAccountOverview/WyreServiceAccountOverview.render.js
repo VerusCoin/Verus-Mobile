@@ -128,6 +128,7 @@ export const WyreServiceAccountOverviewRender = function () {
         );
       })}
       <Divider />
+      <List.Subheader>{"Payment methods"}</List.Subheader>
     </ScrollView>
   );
 };
