@@ -58,6 +58,8 @@ import PersonalPaymentMethodsEditBankAccountAddress from "../../containers/Perso
 import Services from '../../containers/Services/Services';
 import Service from '../../containers/Services/Service/Service';
 import WyreServiceAccountData from '../../containers/Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceAccountData/WyreServiceAccountData';
+import PersonalImages from '../../containers/Personal/PersonalImages/PersonalImages';
+import PersonalImagesEditImage from '../../containers/Personal/PersonalImages/PersonalLocationsEditImage/PersonalImagesEditImage';
 
 const MainStack = createStackNavigator()
 const MainDrawer = createDrawerNavigator()
@@ -166,7 +168,7 @@ function ProfileScreens() {
         name="PersonalAttributes"
         component={PersonalAttributes}
         options={{
-          title: "Personal Details",
+          title: "Details",
         }}
       />
       <ProfileStack.Screen
@@ -180,7 +182,21 @@ function ProfileScreens() {
         name="PersonalContact"
         component={PersonalContact}
         options={{
-          title: "Personal Contact",
+          title: "Contact",
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalImages"
+        component={PersonalImages}
+        options={{
+          title: "Images",
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalImagesEditImage"
+        component={PersonalImagesEditImage}
+        options={{
+          title: "Image"
         }}
       />
       <ProfileStack.Screen

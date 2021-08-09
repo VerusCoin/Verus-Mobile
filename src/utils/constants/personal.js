@@ -2,6 +2,109 @@ export const PERSONAL_ATTRIBUTES = "attributes"
 export const PERSONAL_CONTACT = "contact"
 export const PERSONAL_LOCATIONS = "locations"
 export const PERSONAL_PAYMENT_METHODS = "payment_methods"
+export const PERSONAL_IMAGES = 'images'
+export const PERSONAL_IMAGES_DOCUMENTS = 'documents'
+
+// Document types
+export const PERSONAL_DOCUMENT_GOVT_ID = 'govt_id'
+export const PERSONAL_DOCUMENT_DRIVING_LICENSE = 'driving_license'
+export const PERSONAL_DOCUMENT_PASSPORT_CARD = 'passport_card'
+export const PERSONAL_DOCUMENT_PASSPORT = 'passport'
+export const PERSONAL_DOCUMENT_UTILITY_BILL = 'utility_bill'
+export const PERSONAL_DOCUMENT_BANK_STATEMENT = 'bank_statement'
+export const PERSONAL_DOCUMENT_OTHER = 'other'
+export const PERSONAL_DOCUMENT_SUBTYPE_FRONT = 'front'
+export const PERSONAL_DOCUMENT_SUBTYPE_BACK = 'back'
+
+export const PERSONAL_IMAGE_TYPE_SCHEMA = {
+  [PERSONAL_DOCUMENT_GOVT_ID]: {
+    id: PERSONAL_DOCUMENT_GOVT_ID,
+    title: "Government ID",
+    description: "General government issued identity",
+    images: [{
+      key: PERSONAL_DOCUMENT_SUBTYPE_FRONT,
+      title: "Front",
+      addLabel: "Add image of front"
+    }, {
+      key: PERSONAL_DOCUMENT_SUBTYPE_BACK,
+      title: "Back",
+      addLabel: "Add image of back"
+    }],
+  },
+  [PERSONAL_DOCUMENT_PASSPORT]: {
+    id: PERSONAL_DOCUMENT_PASSPORT,
+    title: "Passport",
+    description: "Government issued passport booklet",
+    images: [{
+      key: PERSONAL_DOCUMENT_SUBTYPE_FRONT,
+      title: "Front",
+      addLabel: "Add image of picture page"
+    }],
+  },
+  [PERSONAL_DOCUMENT_PASSPORT_CARD]: {
+    id: PERSONAL_DOCUMENT_PASSPORT_CARD,
+    title: "Passport card",
+    description: "Government issued passport card",
+    images: [{
+      key: PERSONAL_DOCUMENT_SUBTYPE_FRONT,
+      title: "Front",
+      addLabel: "Add image of front"
+    }, {
+      key: PERSONAL_DOCUMENT_SUBTYPE_BACK,
+      title: "Back",
+      addLabel: "Add image of back"
+    }],
+  },
+  [PERSONAL_DOCUMENT_DRIVING_LICENSE]: {
+    id: PERSONAL_DOCUMENT_DRIVING_LICENSE,
+    title: "Driving licence",
+    description: "Government issued driving licence",
+    images: [{
+      key: PERSONAL_DOCUMENT_SUBTYPE_FRONT,
+      title: "Front",
+      addLabel: "Add image of front"
+    }, {
+      key: PERSONAL_DOCUMENT_SUBTYPE_BACK,
+      title: "Back",
+      addLabel: "Add image of back"
+    }],
+  },
+  [PERSONAL_DOCUMENT_BANK_STATEMENT]: {
+    id: PERSONAL_DOCUMENT_BANK_STATEMENT,
+    title: "Bank statement",
+    description: "Bank statement with address included",
+  },
+  [PERSONAL_DOCUMENT_UTILITY_BILL]: {
+    id: PERSONAL_DOCUMENT_UTILITY_BILL,
+    title: "Utility bill",
+    description: "Utility bill with address included",
+  },
+  [PERSONAL_DOCUMENT_OTHER]: {
+    id: PERSONAL_DOCUMENT_OTHER,
+    title: "Other",
+    description: "Any image not listed here",
+    images: [{
+      key: PERSONAL_DOCUMENT_SUBTYPE_FRONT,
+      title: "Front",
+      addLabel: "Add image of front"
+    }, {
+      key: PERSONAL_DOCUMENT_SUBTYPE_BACK,
+      title: "Back",
+      addLabel: "Add image of back"
+    }],
+  },
+};
+
+export const PERSONAL_IMAGE_SUBTYPE_SCHEMA = {
+  [PERSONAL_DOCUMENT_SUBTYPE_FRONT]: {
+    id: PERSONAL_DOCUMENT_SUBTYPE_FRONT,
+    title: "Front",
+  },
+  [PERSONAL_DOCUMENT_SUBTYPE_BACK]: {
+    id: PERSONAL_DOCUMENT_SUBTYPE_BACK,
+    title: "Back",
+  },
+}
 
 export const PERSONAL_NAME = 'name'
 export const PERSONAL_NATIONALITIES = "nationalities"

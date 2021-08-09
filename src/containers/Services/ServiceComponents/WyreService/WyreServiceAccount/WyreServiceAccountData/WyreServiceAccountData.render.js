@@ -44,13 +44,20 @@ export const WyreServiceAccountDataRender = function () {
         <Divider />
         <List.Item
           title={
-            wyreFieldData.value == null
+            wyreFieldData.value == null ||
+            (Array.isArray(wyreFieldData.value) &&
+              wyreFieldData.value.length == 0)
               ? "None"
-              : renderWyreDataField(wyreFieldData.fieldId, wyreFieldData.value).title
+              : Array.isArray(wyreFieldData.value)
+              ? "Submitted"
+              : renderWyreDataField(wyreFieldData.fieldId, wyreFieldData.value)
+                  .title
           }
           titleStyle={{
             color:
-              wyreFieldData.value == null
+              wyreFieldData.value == null ||
+              (Array.isArray(wyreFieldData.value) &&
+                wyreFieldData.value.length == 0)
                 ? Colors.verusDarkGray
                 : Colors.quaternaryColor,
           }}
@@ -59,7 +66,9 @@ export const WyreServiceAccountDataRender = function () {
         <Divider />
         <List.Item
           title={
-            wyreFieldData.status === WYRE_DATA_SUBMISSION_OPEN
+            wyreFieldData.note != null
+              ? wyreFieldData.note
+              : wyreFieldData.status === WYRE_DATA_SUBMISSION_OPEN
               ? "None"
               : wyreFieldData.status === WYRE_DATA_SUBMISSION_PENDING
               ? "Pending approval"
@@ -69,7 +78,8 @@ export const WyreServiceAccountDataRender = function () {
           }
           titleStyle={{
             color:
-              wyreFieldData.status === WYRE_DATA_SUBMISSION_OPEN
+              wyreFieldData.status === WYRE_DATA_SUBMISSION_OPEN ||
+              wyreFieldData.note != null
                 ? Colors.verusDarkGray
                 : wyreFieldData.status === WYRE_DATA_SUBMISSION_PENDING
                 ? Colors.infoButtonColor
@@ -90,7 +100,12 @@ export const WyreServiceAccountDataRender = function () {
                   <List.Item
                     title={option.title}
                     description={option.description}
-                    onPress={() => this.submitOption(option.submission)}
+                    left={option.left}
+                    onPress={() =>
+                      option.incomplete
+                        ? this.alertIncompleteOption()
+                        : this.submitOption(option.submission)
+                    }
                   />
                   <Divider />
                 </React.Fragment>

@@ -53,10 +53,21 @@ export const PersonalInfoRender = function () {
         />
         <Divider />
         <List.Item
-          title={"Banking Info"}
+          title={"Banking Information"}
           description={"Bank accounts"}
           onPress={
             this.state.loading ? () => {} : () => this.openPaymentMethods()
+          }
+          right={(props) => (
+            <List.Icon {...props} icon={"chevron-right"} size={20} />
+          )}
+        />
+        <Divider />
+        <List.Item
+          title={"Documents & Images"}
+          description={"Proof of identity, proof of address, etc."}
+          onPress={
+            this.state.loading ? () => {} : () => this.openImages()
           }
           right={(props) => (
             <List.Icon {...props} icon={"chevron-right"} size={20} />

@@ -5,12 +5,14 @@
 import {
   SET_SERVICE_ACCOUNT,
   SIGN_OUT,
-  SET_SERVICE_LOADING
+  SET_SERVICE_LOADING,
+  SET_SERVICE_STORED_DATA
 } from "../utils/constants/storeType";
 
 export const services = (
   state = {
     accounts: {},
+    stored: {},
     loading: false
   },
   action
@@ -24,6 +26,11 @@ export const services = (
           [action.payload.channel]: action.payload.body
         }
       }
+    case SET_SERVICE_STORED_DATA:
+      return {
+        ...state,
+        stored: action.payload.data,
+      };
     case SET_SERVICE_LOADING:
       return {
         ...state,

@@ -28,7 +28,7 @@ import {
  } from '../../actions/actionCreators';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
-import { clearActiveAccountLifecycles, clearAllCoinIntervals, initializeAccountData, initPersonalDataForUser, initServiceAuthDataForUser } from "../../actions/actionDispatchers";
+import { clearActiveAccountLifecycles, clearAllCoinIntervals, initializeAccountData, initPersonalDataForUser, initServiceStoredDataForUser } from "../../actions/actionDispatchers";
 import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import PasswordInput from '../../components/PasswordInput'
 import { DISABLED_CHANNELS } from '../../../env/index'

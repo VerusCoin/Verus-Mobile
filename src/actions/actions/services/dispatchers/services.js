@@ -1,44 +1,45 @@
 import store from "../../../../store";
 import {
-  loadServiceAuthDataForUser,
-  storeServiceAuthDataForUser,
-} from "../../../../utils/asyncStore/serviceAuthStorage";
+  clearServiceStoredData,
+  loadServiceStoredDataForUser,
+  storeServiceStoredDataForUser,
+} from "../../../../utils/asyncStore/serviceStoredDataStorage";
 import { requestPassword, requestSeeds } from "../../../../utils/auth/authBox";
 import { CONNECTED_SERVICES, CONNECTED_SERVICE_CHANNELS, CONNECTED_SERVICE_PROVIDERS } from "../../../../utils/constants/services";
 import { encryptkey } from "../../../../utils/seedCrypt";
-import { setServiceAuth } from "../creators/services";
+import { setServiceStored } from "../creators/services";
 
-export const saveEncryptedServiceAuthDataForUser = async (
+export const saveEncryptedServiceStoredDataForUser = async (
   encryptedData = {},
   accountHash
 ) => {
-  const serviceAuthData = await storeServiceAuthDataForUser(
+  const serviceStoredData = await storeServiceStoredDataForUser(
     encryptedData,
     accountHash
   );
-  store.dispatch(setServiceAuth(encryptedData));
-  return serviceAuthData;
+  store.dispatch(setServiceStored(encryptedData));
+  return serviceStoredData;
 };
 
-export const modifyServiceAuthDataForUser = async (
+export const modifyServiceStoredDataForUser = async (
   data = {},
   service,
   accountHash
 ) => {
-  let serviceAuthData = { ...(await loadServiceAuthDataForUser(accountHash)) };
-  serviceAuthData[service] = await encryptkey(
+  let serviceStoredData = { ...(await loadServiceStoredDataForUser(accountHash)) };
+  serviceStoredData[service] = await encryptkey(
     await requestPassword(),
     JSON.stringify(data)
   );
-  await saveEncryptedPersonalDataForUser(serviceAuthData, accountHash);
+  await saveEncryptedServiceStoredDataForUser(serviceStoredData, accountHash);
 
   return data;
 };
 
-export const initServiceAuthDataForUser = async (accountHash) => {
-  const serviceAuthData = await loadServiceAuthDataForUser(accountHash);
-  store.dispatch(setServiceAuth(serviceAuthData));
-  return serviceAuthData;
+export const initServiceStoredDataForUser = async (accountHash) => {
+  const serviceStoredData = await loadServiceStoredDataForUser(accountHash);
+  store.dispatch(setServiceStored(serviceStoredData));
+  return serviceStoredData;
 };
 
 export const authenticateServices = async () => {

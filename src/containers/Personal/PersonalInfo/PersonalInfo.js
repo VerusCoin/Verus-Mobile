@@ -34,6 +34,10 @@ class PersonalInfo extends Component {
     this.props.navigation.navigate("PersonalContact")
   }
 
+  openImages() {
+    this.props.navigation.navigate("PersonalImages")
+  }
+
   openLocations() {
     this.props.navigation.navigate("PersonalLocations")
   }

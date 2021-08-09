@@ -153,27 +153,27 @@ export const requestPersonalData = async (dataType) => {
   }
 }
 
-export const requestServiceAuthData = async (service) => {
+export const requestServiceStoredData = async (service) => {
   const state = store.getState();
 
   if (state.authentication.activeAccount == null) {
     throw new Error(
-      "You must be signed in to retrieve service auth data for " + service
+      "You must be signed in to retrieve service stored data for " + service
     );
-  } else if (state.services.auth[service] == null) {
-    return null;
+  } else if (state.services.stored[service] == null) {
+    return {};
   } else {
     const password = await requestPassword();
-    const data = decryptkey(password, state.services.auth[service]);
+    const data = decryptkey(password, state.services.stored[service]);
 
     if (data !== false) {
       try {
         return JSON.parse(data);
       } catch (e) {
-        throw new Error("Unable to parse service auth data for " + service);
+        throw new Error("Unable to parse service stored data for " + service);
       }
     } else {
-      throw new Error("Unable to decrypt service auth data for " + service);
+      throw new Error("Unable to decrypt service stored data for " + service);
     }
   }
 };

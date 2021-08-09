@@ -2,7 +2,8 @@
   This component represents the overview screen for KYC info given to a service
 */  
 
-import { Component } from "react"
+import React, { Component } from "react"
+import { Avatar } from "react-native-paper";
 import { connect } from 'react-redux'
 import { expireServiceData, setServiceLoading } from "../../../../../../actions/actionCreators";
 import { conditionallyUpdateService } from "../../../../../../actions/actionDispatchers";
@@ -13,6 +14,8 @@ import { API_GET_SERVICE_ACCOUNT } from "../../../../../../utils/constants/inter
 import {
   PERSONAL_BIRTHDAY,
   PERSONAL_EMAILS,
+  PERSONAL_IMAGES_DOCUMENTS,
+  PERSONAL_IMAGE_TYPE_SCHEMA,
   PERSONAL_NAME,
   PERSONAL_PHONE_NUMBERS,
   PERSONAL_PHYSICAL_ADDRESSES,
@@ -31,6 +34,7 @@ import {
 import {
   renderPersonalAddress,
   renderPersonalBirthday,
+  renderPersonalDocument,
   renderPersonalEmail,
   renderPersonalFullName,
   renderPersonalPhoneNumber,
@@ -39,6 +43,7 @@ import {
 import {
   translatePersonalAddressToWyre,
   translatePersonalBirthdayToWyre,
+  translatePersonalDocumentToWyreUpload,
 } from "../../../../../../utils/services/translationUtils";
 import WyreProvider from "../../../../../../utils/services/WyreProvider";
 import { WyreServiceAccountDataRender } from "./WyreServiceAccountData.render"
@@ -110,8 +115,12 @@ class WyreServiceAccountData extends Component {
     });
   }
 
-  formatWyreSubmission(fieldId, value) {
-    return [{ fieldId, value }];
+  formatWyreDataFieldSubmission(fieldId, value) {
+    return {
+      updateObj: {
+        profileFields: [{ fieldId, value }],
+      },
+    };
   }
 
   formatOptions(options, infoKey) {
@@ -122,7 +131,7 @@ class WyreServiceAccountData extends Component {
 
           return {
             title: fullNameString,
-            submission: this.formatWyreSubmission(
+            submission: this.formatWyreDataFieldSubmission(
               WYRE_INDIVIDUAL_NAME,
               fullNameString
             ),
@@ -130,17 +139,17 @@ class WyreServiceAccountData extends Component {
         case PERSONAL_PHONE_NUMBERS:
           return {
             title: renderPersonalPhoneNumber(option).title,
-            submission: this.formatWyreSubmission(
+            submission: this.formatWyreDataFieldSubmission(
               WYRE_INDIVIDUAL_CELL,
               renderPersonalPhoneNumber(option, false)
             ),
           };
         case PERSONAL_EMAILS:
-          const emailAddress = renderPersonalEmail(option).title
+          const emailAddress = renderPersonalEmail(option).title;
 
           return {
             title: emailAddress,
-            submission: this.formatWyreSubmission(
+            submission: this.formatWyreDataFieldSubmission(
               WYRE_INDIVIDUAL_EMAIL,
               emailAddress
             ),
@@ -148,7 +157,7 @@ class WyreServiceAccountData extends Component {
         case PERSONAL_BIRTHDAY:
           return {
             title: renderPersonalBirthday(option).title,
-            submission: this.formatWyreSubmission(
+            submission: this.formatWyreDataFieldSubmission(
               WYRE_INDIVIDUAL_DOB,
               translatePersonalBirthdayToWyre(option)
             ),
@@ -156,21 +165,53 @@ class WyreServiceAccountData extends Component {
         case PERSONAL_TAX_COUNTRIES:
           return {
             title: renderPersonalTaxId(option).title,
-            submission: this.formatWyreSubmission(
+            submission: this.formatWyreDataFieldSubmission(
               WYRE_INDIVIDUAL_SSN,
               option.tin
             ),
           };
         case PERSONAL_PHYSICAL_ADDRESSES:
-          const addressRender = renderPersonalAddress(option)
+          const addressRender = renderPersonalAddress(option);
 
           return {
             title: addressRender.title,
-            submission: this.formatWyreSubmission(
+            submission: this.formatWyreDataFieldSubmission(
               WYRE_INDIVIDUAL_RESIDENCE_ADDRESS,
               translatePersonalAddressToWyre(option)
             ),
-            description: addressRender.description
+            description: addressRender.description,
+          };
+        case PERSONAL_IMAGES_DOCUMENTS:
+          const documentRender = renderPersonalDocument(option);
+          const submission = translatePersonalDocumentToWyreUpload(
+            option,
+            this.state.params.wyreFieldData != null
+              ? this.state.params.wyreFieldData.fieldId
+              : null
+          );
+
+          return {
+            title: documentRender.title,
+            incomplete:
+              option.uris.length == null ||
+              option.image_type == null ||
+              PERSONAL_IMAGE_TYPE_SCHEMA[option.image_type] == null ||
+              (PERSONAL_IMAGE_TYPE_SCHEMA[option.image_type].images != null &&
+                option.uris.length !==
+                  PERSONAL_IMAGE_TYPE_SCHEMA[option.image_type].images.length),
+            submission: submission,
+            description: documentRender.description,
+            left: (props) => {
+              return option.uris.length == 0 ? null : (
+                <Avatar.Image
+                  {...props}
+                  size={96}
+                  source={{
+                    uri: option.uris[0],
+                  }}
+                />
+              );
+            },
           };
         default:
           return {
@@ -180,10 +221,19 @@ class WyreServiceAccountData extends Component {
     });
   }
 
+  alertIncompleteOption() {
+    createAlert("Cannot submit", "The option you have selected is missing data required for submission to Wyre")
+  }
+
   async submitOption(submission) {
-    if (await this.canUpdateWyreAccount()) {
-      return this.updateWyreAccount(submission)
-    } 
+    if (await this.canSubmitDataToWyre()) {
+      return this.submitDataToWyre(
+        this.state.params.wyreFieldData != null &&
+          this.state.params.wyreFieldData.fieldType === "DOCUMENT"
+          ? WyreProvider.uploadDocument(submission)
+          : WyreProvider.updateAccount(submission)
+      );
+    }
   }
 
   async forceUpdate() {
@@ -195,10 +245,11 @@ class WyreServiceAccountData extends Component {
     );
   }
 
-  async canUpdateWyreAccount() {
+  async canSubmitDataToWyre() {
     if (this.state.params.wyreFieldData != null) {
-      if (this.state.params.wyreFieldData.status == WYRE_DATA_SUBMISSION_OPEN) return true
-      else  {
+      if (this.state.params.wyreFieldData.status == WYRE_DATA_SUBMISSION_OPEN)
+        return true;
+      else {
         return await createAlert(
           "Are you sure?",
           this.state.params.wyreFieldData.status == WYRE_DATA_SUBMISSION_PENDING
@@ -215,17 +266,13 @@ class WyreServiceAccountData extends Component {
           ]
         );
       }
-    } else return false
+    } else return false;
   }
-
-  async updateWyreAccount(profileUpdates) {
+  
+  async submitDataToWyre(submissionPromise) {
     try {
       this.props.dispatch(setServiceLoading(true));
-      await WyreProvider.updateAccount({
-        updateObj: {
-          profileFields: profileUpdates,
-        },
-      });
+      await submissionPromise;
 
       await this.forceUpdate();
 
@@ -254,7 +301,7 @@ class WyreServiceAccountData extends Component {
       );
 
       if (tryAgain) {
-        return await this.updateWyreAccount(profileUpdates);
+        return await this.submitDataToWyre(submissionPromise);
       } else {
         this.props.dispatch(setServiceLoading(false));
       }

@@ -1,26 +1,14 @@
 import {
   SET_CURRENT_WYRE_ACCOUNT_DATA,
-  SET_SERVICE_AUTH,
-  SET_SERVICE_DATA,
+  SET_SERVICE_STORED_DATA,
   SET_SERVICE_LOADING,
   SET_WYRE_ACCOUNT_ID,
 } from "../../../../utils/constants/storeType";
 
-export const setServiceAuth = (service, data) => {
+export const setServiceStored = (data) => {
   return {
-    type: SET_SERVICE_AUTH,
+    type: SET_SERVICE_STORED_DATA,
     payload: {
-      service,
-      data,
-    },
-  };
-};
-
-export const setServiceData = (service, data) => {
-  return {
-    type: SET_SERVICE_DATA,
-    payload: {
-      service,
       data,
     },
   };

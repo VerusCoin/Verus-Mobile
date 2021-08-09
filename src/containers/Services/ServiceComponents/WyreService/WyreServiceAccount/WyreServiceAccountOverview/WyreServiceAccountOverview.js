@@ -7,13 +7,15 @@ import { connect } from 'react-redux'
 import { setCurrentWyreAccountDataScreenParams, setServiceLoading } from "../../../../../../actions/actionCreators";
 import { conditionallyUpdateService } from "../../../../../../actions/actionDispatchers";
 import { createAlert } from "../../../../../../actions/actions/alert/dispatchers/alert";
-import { requestPersonalData } from "../../../../../../utils/auth/authBox";
+import { requestPersonalData, requestServiceStoredData } from "../../../../../../utils/auth/authBox";
 import { API_GET_SERVICE_ACCOUNT, WYRE_SERVICE } from "../../../../../../utils/constants/intervalConstants";
 import {
   PERSONAL_ATTRIBUTES,
   PERSONAL_BIRTHDAY,
   PERSONAL_CONTACT,
   PERSONAL_EMAILS,
+  PERSONAL_IMAGES,
+  PERSONAL_IMAGES_DOCUMENTS,
   PERSONAL_LOCATIONS,
   PERSONAL_NAME,
   PERSONAL_PHONE_NUMBERS,
@@ -24,9 +26,12 @@ import {
   WYRE_INDIVIDUAL_CELL,
   WYRE_INDIVIDUAL_DOB,
   WYRE_INDIVIDUAL_EMAIL,
+  WYRE_INDIVIDUAL_GOVERNMENT_ID,
   WYRE_INDIVIDUAL_NAME,
+  WYRE_INDIVIDUAL_PROOF_OF_ADDRESS,
   WYRE_INDIVIDUAL_RESIDENCE_ADDRESS,
   WYRE_INDIVIDUAL_SSN,
+  WYRE_SERVICE_ID,
 } from "../../../../../../utils/constants/services";
 import { renderPersonalAddress, renderPersonalFullName } from "../../../../../../utils/personal/displayUtils";
 import { renderWyreDataField, translateWyreAddressToPersonal } from "../../../../../../utils/services/translationUtils";
@@ -37,7 +42,8 @@ class WyreServiceAccountOverview extends Component {
     super(props);
     this.state = {
       loading: false,
-      wyreProfileFieldIndexMap: null
+      wyreProfileFieldIndexMap: null,
+      documentRenders: {},
     };
 
     this.WYRE_ACCOUNT_PERSONAL_INFO_SCHEMA = {
@@ -111,6 +117,31 @@ class WyreServiceAccountOverview extends Component {
       },
     };
 
+    this.WYRE_ACCOUNT_DOCUMENTS_SCHEMA = {
+      [WYRE_INDIVIDUAL_GOVERNMENT_ID]: {
+        wyreFieldId: WYRE_INDIVIDUAL_GOVERNMENT_ID,
+        configureRoute: "PersonalImages",
+        configureLabel: "Configure documents",
+        infoType: PERSONAL_IMAGES,
+        infoKey: PERSONAL_IMAGES_DOCUMENTS,
+        label: "Government ID",
+        placeholder: "Submit your passport or ID card",
+        selectLabel: "Select image to submit",
+        optionsLabel: "Image options"
+      },
+      [WYRE_INDIVIDUAL_PROOF_OF_ADDRESS]: {
+        wyreFieldId: WYRE_INDIVIDUAL_PROOF_OF_ADDRESS,
+        configureRoute: "PersonalImages",
+        configureLabel: "Configure documents",
+        infoType: PERSONAL_IMAGES,
+        infoKey: PERSONAL_IMAGES_DOCUMENTS,
+        label: "Proof of address",
+        placeholder: "Submit bank statement or utility bill",
+        selectLabel: "Select bank statement or utility bill to submit",
+        optionsLabel: "Image options"
+      }
+    };
+
     this.WYRE_ACCOUNT_PERSONAL_INFO_FORM_ORDER = [
       WYRE_INDIVIDUAL_NAME,
       WYRE_INDIVIDUAL_CELL,
@@ -118,11 +149,17 @@ class WyreServiceAccountOverview extends Component {
       WYRE_INDIVIDUAL_RESIDENCE_ADDRESS,
       WYRE_INDIVIDUAL_DOB,
       WYRE_INDIVIDUAL_SSN,
+    ]
+
+    this.WYRE_ACCOUNT_DOCUMENTS_FORM_ORDER = [
+      WYRE_INDIVIDUAL_GOVERNMENT_ID,
+      WYRE_INDIVIDUAL_PROOF_OF_ADDRESS
     ];
   }
 
   async componentDidMount() {
     await this.fetchAccountData()
+    this.loadDocumentRenders()
     this.loadWyreProfileFieldIndexMap()
   }
 
@@ -136,9 +173,43 @@ class WyreServiceAccountOverview extends Component {
     this.props.dispatch(setServiceLoading(false))
   }
 
+  async loadDocumentRenders() {
+    const serviceData = await requestServiceStoredData(WYRE_SERVICE_ID)
+    let documentRenders = this.state.documentRenders
+
+    this.WYRE_ACCOUNT_DOCUMENTS_FORM_ORDER.map((documentField) => {
+      const fieldData = this.getWyreProfileFieldData(documentField)
+
+      if (fieldData != null) {
+        const documentIds = serviceData.field_document_map[documentField]
+        const documentFieldData =
+          documentIds == null ||
+          serviceData.document_ids[documentIds[0]] == null
+            ? {}
+            : serviceData.document_ids[documentIds[0]];
+
+        if (
+          serviceData.document_ids != null &&
+          documentIds != null &&
+          documentIds.length > 0
+        ) {
+          documentRenders[documentField] = {
+            ...documentFieldData,
+            documentIds
+          }
+        }
+      }
+    })
+
+    this.setState({
+      documentRenders
+    });
+  }
+
   componentDidUpdate(lastProps) {
     if (lastProps.wyreAccount !== this.props.wyreAccount) {
       this.loadWyreProfileFieldIndexMap()
+      this.loadDocumentRenders()
 
       if (this.props.wyreScreenParams.wyreFieldData == null) {
         this.props.dispatch(
@@ -153,12 +224,10 @@ class WyreServiceAccountOverview extends Component {
     }
   }
 
-  openAccountData(dataTypeKey) {
+  openAccountData(infoSchema) {
     this.props.dispatch(setServiceLoading(true))
 
     try {
-      const infoSchema = this.WYRE_ACCOUNT_PERSONAL_INFO_SCHEMA[dataTypeKey]
-
       const {
         configureRoute,
         infoType,
@@ -173,8 +242,8 @@ class WyreServiceAccountOverview extends Component {
       } = infoSchema
 
       this.props.dispatch(setCurrentWyreAccountDataScreenParams({
-        wyreFieldData: this.getWyreProfileFieldData(dataTypeKey),
-        wyreFieldId: dataTypeKey,
+        wyreFieldData: this.getWyreProfileFieldData(infoSchema.wyreFieldId),
+        wyreFieldId: infoSchema.wyreFieldId,
         configureRoute,
         infoType,
         infoKey,
@@ -230,7 +299,7 @@ class WyreServiceAccountOverview extends Component {
 
     if (profileFieldData == null) return null 
     else {
-      return renderWyreDataField(wyreFieldId, profileFieldData.value).title;
+      return renderWyreDataField(wyreFieldId, profileFieldData.value);
     }
   }
 

@@ -1,5 +1,9 @@
 import { CALLING_CODES_TO_ISO_3166 } from '../constants/callingCodes'
 import { ISO_3166_COUNTRIES } from '../constants/iso3166'
+import {
+  PERSONAL_IMAGE_TYPE_SCHEMA,
+  PERSONAL_IMAGE_SUBTYPE_SCHEMA,
+} from "../constants/personal";
 
 export const renderPersonalFullName = (name) => {
   return {
@@ -34,6 +38,25 @@ export const renderPersonalBirthday = (birthday) => {
       month: "long",
       day: "numeric",
     }),
+  };
+};
+
+export const renderPersonalDocument = (document) => {
+  return {
+    description: document.description,
+    title:
+      document.image_type == null
+        ? 'Document'
+        : PERSONAL_IMAGE_TYPE_SCHEMA[document.image_type] == null
+        ? "??"
+        : `${PERSONAL_IMAGE_TYPE_SCHEMA[document.image_type].title}${
+            document.image_subtype == null ||
+            PERSONAL_IMAGE_SUBTYPE_SCHEMA[document.image_subtype] == null
+              ? ""
+              : ` (${PERSONAL_IMAGE_SUBTYPE_SCHEMA[
+                  document.image_subtype
+                ].title.toLowerCase()})`
+          }`,
   };
 };
 

@@ -46,7 +46,8 @@ export const personal = (
     attributes: null,
     contact: null,
     locations: null,
-    payment_methods: null
+    payment_methods: null,
+    images: null
   },
   action
 ) => {

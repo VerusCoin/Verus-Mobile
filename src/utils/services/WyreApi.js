@@ -12,9 +12,7 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
       createAccount: (payload) => this.createAccount(payload),
       getAccount: (payload) => this.getAccount(payload),
       updateAccount: (payload) => this.updateAccount(payload),
-      uploadDocument: async () => {
-        //TODO
-      },
+      uploadDocument: (payload) => this.uploadDocument(payload),
       getTransactions: async () => {
         //TODO
       },
@@ -27,67 +25,87 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
       sendTransaction: async () => {
         //TODO
       },
-    })
+    });
 
-    this.service = WyreService.build()
-    this.bearerToken = null
-    this.apiKey = null
-    this.accountId = null
+    this.service = WyreService.build();
+    this.bearerToken = null;
+    this.apiKey = null;
+    this.accountId = null;
   }
 
   authenticate = async (seed) => {
-    const key = await WyreService.bearerFromSeed(seed)
-    const authenticated = Store.getState().channelStore_wyre_service.authenticated
+    const key = await WyreService.bearerFromSeed(seed);
+    const authenticated =
+      Store.getState().channelStore_wyre_service.authenticated;
 
-    if (authenticated) return { apiKey: this.apiKey, authenticatedAs: this.accountId }
+    if (authenticated)
+      return { apiKey: this.apiKey, authenticatedAs: this.accountId };
 
-    const res = await this.service.submitAuthToken(key)
-    this.bearerToken = key
-    this.apiKey = res.apiKey
-    this.accountId = res.authenticatedAs.split(':')[1]
+    const res = await this.service.submitAuthToken(key);
+    this.bearerToken = key;
+    this.apiKey = res.apiKey;
+    this.accountId = res.authenticatedAs.split(":")[1];
 
-    this.service.authenticate(this.bearerToken, this.apiKey)
+    this.service.authenticate(this.bearerToken, this.apiKey);
 
     Store.dispatch({
       type: AUTHENTICATE_WYRE_SERVICE,
       payload: {
-        accountId: this.accountId
-      }
-    })
+        accountId: this.accountId,
+      },
+    });
 
-    return res
-  }
+    return res;
+  };
 
   reset = () => {
-    this.bearerToken = null
-    this.apiKey = null
-    this.accountId = null
-    this.service.deauthenticate()
-    this.service = WyreService.build()
+    this.bearerToken = null;
+    this.apiKey = null;
+    this.accountId = null;
+    this.service.deauthenticate();
+    this.service = WyreService.build();
 
     Store.dispatch({
-      type: DEAUTHENTICATE_WYRE_SERVICE
-    })
-  }
+      type: DEAUTHENTICATE_WYRE_SERVICE,
+    });
+  };
 
   createAccount = async ({ account }) => {
-    return await this.service.createAccount(account)
-  }
+    return await this.service.createAccount(account);
+  };
 
   updateAccount = async ({ accountId, updateObj }) => {
     return await this.service.updateAccount(
       accountId == null ? this.accountId : accountId,
       updateObj
     );
-  }
+  };
+
+  uploadDocument = async ({
+    accountId,
+    field,
+    uris,
+    format,
+    documentType,
+    documentSubTypes,
+  }) => {
+    return await this.service.uploadDocument(
+      accountId == null ? this.accountId : accountId,
+      field,
+      uris,
+      documentType,
+      documentSubTypes,
+      format == null ? "image/jpeg" : format,
+    );
+  };
 
   getAccount = async ({ accountId }) => {
     return await this.service.getAccount(
       accountId == null ? this.accountId : accountId
     );
-  }
+  };
 
   getSupportedCountries = async () => {
     return await this.service.getSupportedCountries();
-  }
+  };
 }

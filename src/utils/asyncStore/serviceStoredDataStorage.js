@@ -1,8 +1,8 @@
 import AsyncStorage from "@react-native-community/async-storage";
-import { SERVICE_AUTH_STORAGE_INTERNAL_KEY } from "../../../env/index";
+import { SERVICE_STORAGE_INTERNAL_KEY } from "../../../env/index";
 import { WYRE_SERVICE_ID } from "../constants/services";
 
-export const storeServiceAuthData = (data) => {
+export const storeServiceStoredData = (data) => {
   if (typeof data !== "object")
     throw new Error(
       `Service auth store function expected object, recieved ${typeof data}`
@@ -10,7 +10,7 @@ export const storeServiceAuthData = (data) => {
 
   return new Promise((resolve, reject) => {
     AsyncStorage.setItem(
-      SERVICE_AUTH_STORAGE_INTERNAL_KEY,
+      SERVICE_STORAGE_INTERNAL_KEY,
       JSON.stringify(data)
     )
       .then(() => {
@@ -20,9 +20,9 @@ export const storeServiceAuthData = (data) => {
   });
 };
 
-export const loadServiceAuthData = () => {
+export const loadServiceStoredData = () => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem(SERVICE_AUTH_STORAGE_INTERNAL_KEY)
+    AsyncStorage.getItem(SERVICE_STORAGE_INTERNAL_KEY)
       .then((res) => {
         if (!res) {
           resolve({});
@@ -35,9 +35,9 @@ export const loadServiceAuthData = () => {
   });
 };
 
-export const clearServiceAuthData = () => {
+export const clearServiceStoredData = () => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.removeItem(SERVICE_AUTH_STORAGE_INTERNAL_KEY)
+    AsyncStorage.removeItem(SERVICE_STORAGE_INTERNAL_KEY)
       .then(() => {
         resolve();
       })
@@ -45,15 +45,15 @@ export const clearServiceAuthData = () => {
   });
 };
 
-export const storeServiceAuthDataForUser = async (data, accountHash) => {
-  let allAuthData = { ...(await loadServiceAuthData()) };
-  allAuthData[accountHash] = data;
-  return (await storeServiceAuthData(allAuthData))[accountHash];
+export const storeServiceStoredDataForUser = async (data, accountHash) => {
+  let allStoredData = { ...(await loadServiceStoredData()) };
+  allStoredData[accountHash] = data;
+  return (await storeServiceStoredData(allStoredData))[accountHash];
 };
 
-export const loadServiceAuthDataForUser = async (accountHash) => {
-  const allAuthData = await loadServiceAuthData();
+export const loadServiceStoredDataForUser = async (accountHash) => {
+  const allStoredData = await loadServiceStoredData();
 
-  if (allAuthData[accountHash] == null) return { [WYRE_SERVICE_ID]: null };
-  else return allAuthData[accountHash];
+  if (allStoredData[accountHash] == null) return { [WYRE_SERVICE_ID]: null };
+  else return allStoredData[accountHash];
 };

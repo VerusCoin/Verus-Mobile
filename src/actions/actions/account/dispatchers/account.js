@@ -8,7 +8,7 @@ import {
   clearChainLifecycle,
 } from "../../intervals/dispatchers/lifecycleManager";
 import { initPersonalDataForUser } from "../../personal/dispatchers/personal";
-import { initServiceAuthDataForUser } from "../../services/dispatchers/services";
+import { initServiceStoredDataForUser } from "../../services/dispatchers/services";
 import { fetchUsers, validateLogin } from "../../UserData";
 import { initSettings, saveGeneralSettings } from "../../WalletSettings";
 import { DISABLED_CHANNELS } from '../../../../../env/index'
@@ -55,7 +55,7 @@ export const initializeAccountData = async (
 
     activateServiceLifecycle()
     await initPersonalDataForUser(account.accountHash)
-    await initServiceAuthDataForUser(account.accountHash)
+    await initServiceStoredDataForUser(account.accountHash)
     store.dispatch(signIntoAuthenticatedAccount())
   } else {
     throw new Error(
