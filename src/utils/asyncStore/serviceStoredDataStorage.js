@@ -5,7 +5,7 @@ import { WYRE_SERVICE_ID } from "../constants/services";
 export const storeServiceStoredData = (data) => {
   if (typeof data !== "object")
     throw new Error(
-      `Service auth store function expected object, recieved ${typeof data}`
+      `Service auth store function expected object, received ${typeof data}`
     );
 
   return new Promise((resolve, reject) => {

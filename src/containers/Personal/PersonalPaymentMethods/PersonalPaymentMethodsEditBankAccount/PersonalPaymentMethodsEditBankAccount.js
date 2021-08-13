@@ -8,7 +8,9 @@ import { CURRENCY_NAMES, SUPPORTED_BANK_CURRENCIES } from "../../../../utils/con
 import { ISO_3166_ALPHA_2_CODES, ISO_3166_COUNTRIES } from "../../../../utils/constants/iso3166";
 import {
   PERSONAL_BANK_ACCOUNT_NUMBER,
-  PERSONAL_BANK_BENEFICIARY_NAME,
+  PERSONAL_BANK_BENEFICIARY_NAME_FIRST,
+  PERSONAL_BANK_BENEFICIARY_NAME_FULL,
+  PERSONAL_BANK_BENEFICIARY_NAME_LAST,
   PERSONAL_BANK_BRANCH_CODE,
   PERSONAL_BANK_BRANCH_NAME,
   PERSONAL_BANK_BSB_NUMBER,
@@ -31,7 +33,8 @@ import {
   PERSONAL_BANK_ACCOUNT_TYPE_CHECKING,
   PERSONAL_BANK_ACCOUNT_TYPE_SAVINGS,
   PERSONAL_PAYMENT_METHODS,
-  PERSONAL_BENEFICIARY_TYPE_INDIVIDUAL
+  PERSONAL_BENEFICIARY_TYPE_INDIVIDUAL,
+  PERSONAL_BANK_CLABE
 } from "../../../../utils/constants/personal";
 import { PersonalPaymentMethodsEditBankAccountRender } from "./PersonalPaymentMethodsEditBankAccount.render"
 
@@ -59,7 +62,8 @@ class PersonalPaymentMethodsEditBankAccount extends Component {
               postal_code: "",
               country: "",
             },
-            [PERSONAL_BANK_BENEFICIARY_NAME]: "",
+            [PERSONAL_BANK_BENEFICIARY_NAME_FIRST]: "",
+            [PERSONAL_BANK_BENEFICIARY_NAME_LAST]: "",
             [PERSONAL_BANK_BENEFICIARY_PHONE]: {
               calling_code: "",
               number: "",
@@ -88,9 +92,19 @@ class PersonalPaymentMethodsEditBankAccount extends Component {
     };
 
     this.TEXT_INPUT_FIELDS = {
-      [PERSONAL_BANK_BENEFICIARY_NAME]: {
-        title: "Name on account",
-        description: "The name associated with this bank account",
+      [PERSONAL_BANK_BENEFICIARY_NAME_FIRST]: {
+        title: "First name",
+        description: "The legal first name of the account holder",
+        placeholder: "Enter first name",
+      },
+      [PERSONAL_BANK_BENEFICIARY_NAME_LAST]: {
+        title: "Last name",
+        description: "The legal last name of the account holder",
+        placeholder: "Enter last name",
+      },
+      [PERSONAL_BANK_BENEFICIARY_NAME_FULL]: {
+        title: "Full name",
+        description: "The legal full name of the account holder",
         placeholder: "Enter full name",
       },
       [PERSONAL_BANK_SWIFT_BIC]: {
@@ -152,6 +166,11 @@ class PersonalPaymentMethodsEditBankAccount extends Component {
         title: "Routing number",
         description: "This bank's routing number",
         placeholder: "Enter routing number",
+      },
+      [PERSONAL_BANK_CLABE]: {
+        title: "CLABE Number",
+        description: "Your standardized bank key",
+        placeholder: "Enter CLABE",
       },
     };
 

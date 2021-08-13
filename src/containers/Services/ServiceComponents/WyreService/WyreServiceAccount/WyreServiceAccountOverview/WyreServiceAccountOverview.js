@@ -43,7 +43,7 @@ class WyreServiceAccountOverview extends Component {
     this.state = {
       loading: false,
       wyreProfileFieldIndexMap: null,
-      documentRenders: {},
+      documentRenders: {}
     };
 
     this.WYRE_ACCOUNT_PERSONAL_INFO_SCHEMA = {
@@ -323,6 +323,7 @@ class WyreServiceAccountOverview extends Component {
 const mapStateToProps = (state) => {
   return {
     wyreAccount: state.services.accounts[WYRE_SERVICE],
+    wyrePaymentMethods: state.services.paymentMethods[WYRE_SERVICE],
     wyreScreenParams: state.channelStore_wyre_service.currentAccountDataScreenParams || {},
   }
 };

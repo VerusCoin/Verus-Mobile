@@ -1,7 +1,9 @@
 import {
   PERSONAL_BANK_ACCOUNT_TYPE,
   PERSONAL_BANK_BENEFICIARY_DOB,
-  PERSONAL_BANK_BENEFICIARY_NAME,
+  PERSONAL_BANK_BENEFICIARY_NAME_FIRST,
+  PERSONAL_BANK_BENEFICIARY_NAME_FULL,
+  PERSONAL_BANK_BENEFICIARY_NAME_LAST,
   PERSONAL_BANK_BENEFICIARY_PHONE,
   PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS,
   PERSONAL_BANK_BENEFICIARY_TYPE,
@@ -18,7 +20,8 @@ import {
   PERSONAL_BANK_PROVINCE,
   PERSONAL_BANK_ROUTING_NUMBER,
   PERSONAL_BANK_SWIFT_BIC,
-  PERSONAL_BANK_ACCOUNT_NUMBER
+  PERSONAL_BANK_ACCOUNT_NUMBER,
+  PERSONAL_BANK_CLABE
 } from "./personal";
 
 
@@ -27,7 +30,8 @@ const EUROPEAN_BANK_KEYS = [
   PERSONAL_BANK_PRIMARY_CURRENCY,
   PERSONAL_BANK_BENEFICIARY_TYPE,
   PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS,
-  PERSONAL_BANK_BENEFICIARY_NAME,
+  PERSONAL_BANK_BENEFICIARY_NAME_FIRST,
+  PERSONAL_BANK_BENEFICIARY_NAME_LAST,
   PERSONAL_BANK_BENEFICIARY_PHONE,
   PERSONAL_BANK_SWIFT_BIC,
   PERSONAL_BANK_ACCOUNT_NUMBER,
@@ -39,7 +43,8 @@ export const DEFAULT_BANK_KEYS = [
   PERSONAL_BANK_PRIMARY_CURRENCY,
   PERSONAL_BANK_BENEFICIARY_TYPE,
   PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS,
-  PERSONAL_BANK_BENEFICIARY_NAME,
+  PERSONAL_BANK_BENEFICIARY_NAME_FIRST,
+  PERSONAL_BANK_BENEFICIARY_NAME_LAST,
   PERSONAL_BANK_BENEFICIARY_PHONE,
   PERSONAL_BANK_SWIFT_BIC,
   PERSONAL_BANK_BENEFICIARY_DOB,
@@ -53,7 +58,8 @@ export const BANK_ACCOUNT_KEYS = {
     PERSONAL_BANK_PRIMARY_CURRENCY,
     PERSONAL_BANK_BENEFICIARY_TYPE,
     PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS,
-    PERSONAL_BANK_BENEFICIARY_NAME,
+    PERSONAL_BANK_BENEFICIARY_NAME_FIRST,
+    PERSONAL_BANK_BENEFICIARY_NAME_LAST,
     PERSONAL_BANK_BENEFICIARY_PHONE,
     PERSONAL_BANK_ACCOUNT_NUMBER,
     PERSONAL_BANK_ACCOUNT_TYPE,
@@ -63,7 +69,7 @@ export const BANK_ACCOUNT_KEYS = {
     PERSONAL_BANK_COUNTRY,
     PERSONAL_BANK_PRIMARY_CURRENCY,
     PERSONAL_BANK_BENEFICIARY_TYPE,
-    PERSONAL_BANK_BENEFICIARY_NAME,
+    PERSONAL_BANK_BENEFICIARY_NAME_FULL,
     PERSONAL_BANK_BENEFICIARY_PHONE,
     PERSONAL_BANK_ACCOUNT_NUMBER,
     PERSONAL_BANK_ACCOUNT_TYPE,
@@ -76,7 +82,7 @@ export const BANK_ACCOUNT_KEYS = {
     PERSONAL_BANK_COUNTRY,
     PERSONAL_BANK_PRIMARY_CURRENCY,
     PERSONAL_BANK_BENEFICIARY_TYPE,
-    PERSONAL_BANK_BENEFICIARY_NAME,
+    PERSONAL_BANK_BENEFICIARY_NAME_FULL,
     PERSONAL_BANK_BENEFICIARY_PHONE,
     PERSONAL_BANK_ACCOUNT_NUMBER,
     PERSONAL_BANK_ACCOUNT_TYPE,
@@ -91,13 +97,23 @@ export const BANK_ACCOUNT_KEYS = {
     PERSONAL_BANK_PRIMARY_CURRENCY,
     PERSONAL_BANK_BENEFICIARY_TYPE,
     PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS,
-    PERSONAL_BANK_BENEFICIARY_NAME,
+    PERSONAL_BANK_BENEFICIARY_NAME_FIRST,
+    PERSONAL_BANK_BENEFICIARY_NAME_LAST,
     PERSONAL_BANK_BENEFICIARY_PHONE,
     PERSONAL_BANK_ACCOUNT_NUMBER,
     PERSONAL_BANK_ACCOUNT_TYPE,
     PERSONAL_BANK_BENEFICIARY_DOB,
     PERSONAL_BANK_NAME,
     PERSONAL_BANK_ROUTING_NUMBER
+  ],
+  ["MX"]: [
+    PERSONAL_BANK_COUNTRY,
+    PERSONAL_BANK_PRIMARY_CURRENCY,
+    PERSONAL_BANK_BENEFICIARY_TYPE,
+    PERSONAL_BANK_BENEFICIARY_NAME_FIRST,
+    PERSONAL_BANK_BENEFICIARY_NAME_LAST,
+    PERSONAL_BANK_ACCOUNT_NUMBER,
+    PERSONAL_BANK_CLABE
   ],
   ["AT"]: EUROPEAN_BANK_KEYS,
   ["BE"]: EUROPEAN_BANK_KEYS,
@@ -129,3 +145,111 @@ export const BANK_ACCOUNT_KEYS = {
   ["GB"]: EUROPEAN_BANK_KEYS,
 }
 
+export const BANK_ACCOUNT_KEY_DISPLAY_INFO = {
+  [PERSONAL_BANK_BENEFICIARY_NAME_FIRST]: {
+    title: "First name",
+    description: "The legal first name of the account holder",
+    placeholder: "Enter first name",
+  },
+  [PERSONAL_BANK_BENEFICIARY_NAME_LAST]: {
+    title: "Last name",
+    description: "The legal last name of the account holder",
+    placeholder: "Enter last name",
+  },
+  [PERSONAL_BANK_BENEFICIARY_NAME_FULL]: {
+    title: "Full name",
+    description: "The legal full name of the account holder",
+    placeholder: "Enter full name",
+  },
+  [PERSONAL_BANK_SWIFT_BIC]: {
+    title: "SWIFT/BIC",
+    description: "The SWIFT/BIC code of this bank",
+    placeholder: "Enter SWIFT/BIC",
+  },
+  [PERSONAL_BANK_ACCOUNT_NUMBER]: {
+    title: "Account number",
+    description: "The bank account number",
+    placeholder: "Enter account number",
+  },
+  [PERSONAL_BANK_BSB_NUMBER]: {
+    title: "BSB number",
+    description: "The bank state branch number",
+    placeholder: "Enter BSB number",
+  },
+  [PERSONAL_BANK_CODE]: {
+    title: "Bank code",
+    description: "The code for this bank",
+    placeholder: "Enter bank code",
+  },
+  [PERSONAL_BANK_NAME]: {
+    title: "Bank name",
+    description: "The name of this bank",
+    placeholder: "Enter full name",
+  },
+  [PERSONAL_BANK_BRANCH_CODE]: {
+    title: "Bank branch code",
+    description: "The code for this bank branch",
+    placeholder: "Enter branch code",
+  },
+  [PERSONAL_BANK_BRANCH_NAME]: {
+    title: "Bank branch name",
+    description: "The name for this bank branch",
+    placeholder: "Enter branch name",
+  },
+  [PERSONAL_BANK_CPF_CNPJ]: {
+    title: "CNPJ",
+    description: "Your CNPJ",
+    placeholder: "Enter CNPJ",
+  },
+  [PERSONAL_BANK_CHINESE_NATIONAL_ID]: {
+    title: "Bank ID",
+    description: "This bank's Chinese National ID",
+    placeholder: "Enter bank ID",
+  },
+  [PERSONAL_BANK_CITY]: {
+    title: "Bank city",
+    description: "The city where this bank is located",
+    placeholder: "Enter city",
+  },
+  [PERSONAL_BANK_PROVINCE]: {
+    title: "Bank province",
+    description: "The province where this bank is located",
+    placeholder: "Enter province",
+  },
+  [PERSONAL_BANK_ROUTING_NUMBER]: {
+    title: "Routing number",
+    description: "This bank's routing number",
+    placeholder: "Enter routing number",
+  },
+  [PERSONAL_BANK_CLABE]: {
+    title: "CLABE Number",
+    description: "Your standardized bank key",
+    placeholder: "Enter CLABE",
+  },
+  [PERSONAL_BANK_COUNTRY]: {
+    title: "Bank country",
+    placeholder: "Select bank country",
+  },
+  [PERSONAL_BANK_PRIMARY_CURRENCY]: {
+    title: "Primary currency",
+    placeholder: "Select currency",
+    description: "The primary currency of this bank account",
+  },
+  [PERSONAL_BANK_ACCOUNT_TYPE]: {
+    title: "Account type",
+    placeholder: "Select account type",
+  },
+  [PERSONAL_BANK_BENEFICIARY_DOB]: {
+    title: "Date of birth",
+    description: "The account holder's date of birth",
+    placeholder: "Select birthday",
+  },
+  [PERSONAL_BANK_BENEFICIARY_PHONE]: {
+    title: "Phone number",
+    description: "The account holder's phone number",
+    placeholder: "Enter phone number",
+  },
+  [PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS]: {
+    title: "Account holder address",
+  },
+};

@@ -3289,6 +3289,20 @@ export const ISO_3166_COUNTRIES = {
     'intermediate-region-code': '',
     emoji: '🇬🇧'
   },
+  UK: {
+    name: 'United Kingdom',
+    'alpha-2': 'GB',
+    'alpha-3': 'GBR',
+    'country-code': '826',
+    'iso_3166-2': 'ISO 3166-2:GB',
+    region: 'Europe',
+    'sub-region': 'Northern Europe',
+    'intermediate-region': '',
+    'region-code': '150',
+    'sub-region-code': '154',
+    'intermediate-region-code': '',
+    emoji: '🇬🇧'
+  },
   US: {
     name: 'United States',
     'alpha-2': 'US',

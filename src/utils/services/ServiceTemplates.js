@@ -30,6 +30,14 @@ export class AccountBasedFintechApiTemplate extends ServiceTemplate {
     return await this.api.listPaymentMethods(payload)
   }
 
+  async createPaymentMethod(payload) {
+    return await this.api.createPaymentMethod(payload)
+  }
+
+  async deletePaymentMethod(payload) {
+    return await this.api.deletePaymentMethod(payload)
+  }
+
   async updateAccount(payload) {
     return await this.api.updateAccount(payload)
   }

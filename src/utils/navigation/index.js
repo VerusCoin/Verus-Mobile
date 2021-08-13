@@ -60,6 +60,8 @@ import Service from '../../containers/Services/Service/Service';
 import WyreServiceAccountData from '../../containers/Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceAccountData/WyreServiceAccountData';
 import PersonalImages from '../../containers/Personal/PersonalImages/PersonalImages';
 import PersonalImagesEditImage from '../../containers/Personal/PersonalImages/PersonalLocationsEditImage/PersonalImagesEditImage';
+import WyreServiceAddPaymentMethod from '../../containers/Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceAddPaymentMethod/WyreServiceAddPaymentMethod';
+import WyreServiceEditPaymentMethod from '../../containers/Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceEditPaymentMethod/WyreServiceEditPaymentMethod';
 
 const MainStack = createStackNavigator()
 const MainDrawer = createDrawerNavigator()
@@ -265,6 +267,20 @@ function ServicesScreens() {
       <ServicesStack.Screen
         name="WyreServiceAccountData"
         component={WyreServiceAccountData}
+      />
+      <ServicesStack.Screen
+        name="WyreServiceAddPaymentMethod"
+        component={WyreServiceAddPaymentMethod}
+        options={{
+          title: "Connect",
+        }}
+      />
+      <ServicesStack.Screen
+        name="WyreServiceEditPaymentMethod"
+        component={WyreServiceEditPaymentMethod}
+        options={{
+          title: "Edit Account",
+        }}
       />
     </ServicesStack.Navigator>
   );

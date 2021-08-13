@@ -3,6 +3,7 @@ import { SafeAreaView, ScrollView } from "react-native";
 import { Divider, List } from "react-native-paper";
 import Styles from "../../../styles";
 import { ISO_3166_COUNTRIES } from "../../../utils/constants/iso3166";
+import { renderPersonalBankAccount } from "../../../utils/personal/displayUtils";
 
 export const PersonalPaymentMethodsRender = function () {
   return (
@@ -13,29 +14,14 @@ export const PersonalPaymentMethodsRender = function () {
         {this.state.payment_methods.bank_accounts == null
           ? null
           : this.state.payment_methods.bank_accounts.map((bankAccount, index) => {
-              const accountLocaleString = ISO_3166_COUNTRIES[
-                bankAccount.country
-              ]
-                ? `${ISO_3166_COUNTRIES[bankAccount.country].emoji} Account`
-                : "Bank Account";
-              const accountNumberString =
-                bankAccount.account_number != null &&
-                bankAccount.account_number.length > 4
-                  ? ` ending in ${bankAccount.account_number.slice(-4)}`
-                  : "";
-              const accountDescription = `${
-                bankAccount.primary_currency != null &&
-                bankAccount.primary_currency.length > 0
-                  ? bankAccount.primary_currency + " "
-                  : ""
-              }${bankAccount.account_type}`;
+              const { title, description } = renderPersonalBankAccount(bankAccount)
 
               return (
                 <React.Fragment key={index}>
                   <List.Item
                     key={index}
-                    title={`${accountLocaleString}${accountNumberString}`}
-                    description={accountDescription}
+                    title={title}
+                    description={description}
                     right={(props) => (
                       <List.Icon {...props} icon={"account-edit"} size={20} />
                     )}

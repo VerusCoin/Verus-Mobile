@@ -201,17 +201,7 @@ class WyreServiceAccountData extends Component {
                   PERSONAL_IMAGE_TYPE_SCHEMA[option.image_type].images.length),
             submission: submission,
             description: documentRender.description,
-            left: (props) => {
-              return option.uris.length == 0 ? null : (
-                <Avatar.Image
-                  {...props}
-                  size={96}
-                  source={{
-                    uri: option.uris[0],
-                  }}
-                />
-              );
-            },
+            left: documentRender.left
           };
         default:
           return {
@@ -230,8 +220,8 @@ class WyreServiceAccountData extends Component {
       return this.submitDataToWyre(
         this.state.params.wyreFieldData != null &&
           this.state.params.wyreFieldData.fieldType === "DOCUMENT"
-          ? WyreProvider.uploadDocument(submission)
-          : WyreProvider.updateAccount(submission)
+          ? () => WyreProvider.uploadDocument(submission)
+          : () => WyreProvider.updateAccount(submission)
       );
     }
   }
@@ -274,10 +264,10 @@ class WyreServiceAccountData extends Component {
     } else return false;
   }
 
-  async submitDataToWyre(submissionPromise) {
+  async submitDataToWyre(submissionFunction) {
     try {
       this.props.dispatch(setServiceLoading(true));
-      await submissionPromise;
+      await submissionFunction();
 
       await this.forceUpdate();
 
@@ -306,7 +296,7 @@ class WyreServiceAccountData extends Component {
       );
 
       if (tryAgain) {
-        return await this.submitDataToWyre(submissionPromise);
+        return await this.submitDataToWyre(submissionFunction);
       } else {
         this.props.dispatch(setServiceLoading(false));
       }

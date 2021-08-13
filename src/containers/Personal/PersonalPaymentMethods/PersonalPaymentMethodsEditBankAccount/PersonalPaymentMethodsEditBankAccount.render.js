@@ -78,6 +78,8 @@ const PersonalPaymentMethodsEditBankAccountRenderAddressSelector = function (
 };
 
 const PersonalPaymentMethodsEditBankAccountRenderInputKey = function (key, renderIndex) {
+  if (this.state.bankAccount == null) return null
+  
   if (this.TEXT_INPUT_FIELDS[key]) {
     return PersonalPaymentMethodsEditBankAccountRenderInputBlock.call(
       this,

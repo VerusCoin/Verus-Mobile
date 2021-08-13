@@ -7,7 +7,7 @@ import { SETTINGS_STORAGE_INTERNAL_KEY } from '../../../env/index';
  * @param {Object} settings The current state of the settings object in the redux store
  */
 export const storeSettings = (settings) => {
-  if (typeof settings !== 'object') throw new Error(`Wallet settings store function expected object, recieved ${typeof settings}`)
+  if (typeof settings !== 'object') throw new Error(`Wallet settings store function expected object, received ${typeof settings}`)
 
   return new Promise((resolve, reject) => {
     AsyncStorage.setItem(SETTINGS_STORAGE_INTERNAL_KEY, JSON.stringify(settings))

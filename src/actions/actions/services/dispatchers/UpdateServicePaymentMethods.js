@@ -18,15 +18,17 @@ const channelMap = {
 
       const res = await WyreProvider.listPaymentMethods()
       let mapping = {}
+      let list = []
 
       res.data.map(paymentMethod => {
         mapping[paymentMethod.id] = paymentMethod
+        list.push(paymentMethod.id)
       })
 
       return {
         channel: WYRE_SERVICE,
         body: {
-          list: res.data,
+          list,
           mapping: mapping
         },
       };

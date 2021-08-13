@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 import { PERSONAL_DATA_STORAGE_INTERNAL_KEY } from '../../../env/index'
 
 export const storePersonalData = (data) => {
-  if (typeof data !== 'object') throw new Error(`Personal data store function expected object, recieved ${typeof data}`)
+  if (typeof data !== 'object') throw new Error(`Personal data store function expected object, received ${typeof data}`)
 
   return new Promise((resolve, reject) => {
     AsyncStorage.setItem(PERSONAL_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(data))

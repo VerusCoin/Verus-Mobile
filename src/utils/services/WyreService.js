@@ -80,41 +80,46 @@ class WyreService {
   };
 
   authenticate(wyreToken, apiKey) {
-    this.apiKey = apiKey;
-    this.wyreToken = wyreToken;
+    if (this.wyreToken == null) {
+      this.apiKey = apiKey;
+      this.wyreToken = wyreToken;
 
-    this.authInterceptor = this.service.interceptors.request.use(
-      (config) => {
-        config.url = config.url.includes("timestamp")
-          ? config.url
-          : config.url + `?timestamp=${Date.now()}`;
+      this.authInterceptor = this.service.interceptors.request.use(
+        (config) => {
+          config.url = config.url.includes("timestamp")
+            ? config.url
+            : config.url + `?timestamp=${Date.now()}`;
 
-        if (config.method === "post") {
-          config.headers.common["X-Api-Signature"] =
-            WyreService.signUrlString(
-              axios.getUri(config) + JSON.stringify(config.data),
-              wyreToken
-            );
-        } else {
-          config.headers.common["X-Api-Signature"] =
-            WyreService.signUrlString(
+          if (config.method === "get") {
+            config.headers.common["X-Api-Signature"] = WyreService.signUrlString(
               config.baseURL.replace(/\/+$/, "") + axios.getUri(config),
               wyreToken
             );
+          } else {
+            config.headers.common["X-Api-Signature"] = WyreService.signUrlString(
+              config.data == null
+                ? axios.getUri(config)
+                : axios.getUri(config) + JSON.stringify(config.data),
+              wyreToken
+            );
+          }
+
+          config.headers.common["X-Api-Key"] = apiKey;
+
+          return config;
+        },
+        (error) => {
+          return Promise.reject(error);
         }
-
-        config.headers.common["X-Api-Key"] = apiKey;
-
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      }
-    );
+      );
+    }
   }
 
   deauthenticate() {
+    this.wyreToken = null;
+    this.apiKey = null;
     this.service.interceptors.request.eject(this.authInterceptor);
+    this.authInterceptor = null;
   }
 
   submitAuthToken = async (secretKey) => {
@@ -134,6 +139,12 @@ class WyreService {
   getAccount = async (id) => {
     return await WyreService.formatCall(() => {
       return this.service.get(`/v3/accounts/${id}`);
+    }, true);
+  };
+
+  getPaymentMethod = async (id) => {
+    return await WyreService.formatCall(() => {
+      return this.service.get(`/v2/paymentMethod/${id}`);
     }, true);
   };
 
@@ -164,7 +175,7 @@ class WyreService {
           documentSubTypes[uri] != null ? `documentSubType=${documentSubTypes[uri]}&` : ""
         }timestamp=${Date.now()}`;
 
-        const { buffer } = await this.uploadImage(uri, url, format)
+        const { buffer } = await this.uploadFile(uri, url, format)
 
         hashes.push(
           crypto
@@ -194,7 +205,41 @@ class WyreService {
     }, true);
   };
 
-  uploadImage = async (
+  followupPaymentMethod = async (
+    paymentMethod,
+    uris,
+    format = "image/jpeg"
+  ) => {
+    return await WyreService.formatCall(async () => {
+      let index = 0;
+      let hashes = [];
+
+      for (const uri of uris) {
+        const url = `${this.url}/v2/paymentMethod/${paymentMethod.id}/followup?timestamp=${Date.now()}`;
+        const { buffer } = await this.uploadFile(uri, url, format);
+        hashes.push(crypto.createHash("sha256").update(buffer).digest().toString("hex"));
+
+        index++;
+      }
+
+      const res = { data: await this.getPaymentMethod(paymentMethod.id) };
+
+      const beforeDocuments = paymentMethod.documents;
+      const afterDocuments = res.data.documents;
+
+      if (beforeDocuments != null && afterDocuments != null) {
+        const submittedDocumentDifference = afterDocuments
+          .filter((x) => !beforeDocuments.includes(x))
+          .concat(beforeDocuments.filter((x) => !afterDocuments.includes(x)));
+
+        await mapWyreDocumentIds(paymentMethod.id, submittedDocumentDifference, uris, hashes);
+      }
+
+      return res;
+    }, true);
+  }
+
+  uploadFile = async (
     uri,
     url,
     format = "image/jpeg"
@@ -203,8 +248,7 @@ class WyreService {
       const base64 = await RNFS.readFile(uri, 'base64')
       const buffer = Buffer.from(base64, 'base64')
 
-      const res = await fetch(url, {
-        method: "POST",
+      const res = await axios.post(url, buffer, {
         headers: {
           "Content-Type": `${format}; charset=utf-8`,
           "X-Api-Key": this.apiKey,
@@ -214,28 +258,41 @@ class WyreService {
             this.wyreToken
           ),
         },
-        body: buffer,
-      });
+      })
+
+      // const res = await fetch(url, {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": `${format}; charset=utf-8`,
+      //     "X-Api-Key": this.apiKey,
+      //     "X-Api-Signature": WyreService.signUrlBuffer(
+      //       url,
+      //       buffer,
+      //       this.wyreToken
+      //     ),
+      //   },
+      //   body: buffer,
+      // });
 
       return { data: { buffer, res } }
     }, true);
   };
 
-  createPaymentMethod = async (publicToken) => {
+  createPaymentMethod = async (paymentMethod) => {
     return await WyreService.formatCall(() => {
-      const paymentMethod = {
-        publicToken,
-        paymentMethodType: "LOCAL_TRANSFER",
-        country: "US",
-      };
+      return this.service.post(`${this.url}/v2/paymentMethods`, paymentMethod);
+    }, true);
+  };
 
-      return this.service.post("/v2/paymentMethods", paymentMethod);
+  deletePaymentMethod = async (paymentMethod) => {
+    return await WyreService.formatCall(() => {
+      return this.service.delete(`${this.url}/v2/paymentMethod/${paymentMethod.id}`);
     }, true);
   };
 
   listPaymentMethods = async () => {
     return await WyreService.formatCall(() => {
-      return this.service.get("/v2/paymentMethods");
+      return this.service.get('/v2/paymentMethods');
     }, true);
   };
 

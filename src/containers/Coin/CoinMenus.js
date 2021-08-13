@@ -116,7 +116,7 @@ class CoinMenus extends Component {
     this.props.navigation.dispatch(NavigationActions.back())
   }
 
-  //The rendering of overview, send and recieve is temporary, we want to use
+  //The rendering of overview, send and receive is temporary, we want to use
   //this.state.activeTab.screen, but the 
   //"Cannot Add a child that doesn't have a YogaNode to a parent with out a measure function"
   //bug comes up and it seems like a bug in rn

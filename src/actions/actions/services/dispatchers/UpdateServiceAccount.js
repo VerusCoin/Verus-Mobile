@@ -5,7 +5,6 @@ import {
 import { WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
 import { updateServiceDataValue } from "./UpdateServiceDataValue";
 import WyreProvider from "../../../../utils/services/WyreProvider";
-import ApiException from "../../../../utils/api/errors/apiError";
 import { requestSeeds } from "../../../../utils/auth/authBox";
 
 const channelMap = {

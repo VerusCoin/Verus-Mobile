@@ -185,6 +185,7 @@ export const PersonalImagesEditImageRender = function () {
           </React.Fragment>
         )}
         <List.Subheader>{"Images"}</List.Subheader>
+        <Divider />
         {(this.state.loadingImage ||
           schema.images == null ||
           this.state.image.uris.length < schema.images.length) && (

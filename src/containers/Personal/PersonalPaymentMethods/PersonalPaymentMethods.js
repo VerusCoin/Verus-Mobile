@@ -5,6 +5,7 @@ import { requestPersonalData } from "../../../utils/auth/authBox";
 import {
   PERSONAL_PAYMENT_METHODS,
 } from "../../../utils/constants/personal";
+import { provideCustomBackButton } from "../../../utils/navigation/customBack";
 import { PersonalPaymentMethodsRender } from "./PersonalPaymentMethods.render"
 
 class PersonalPaymentMethods extends Component {
@@ -42,6 +43,17 @@ class PersonalPaymentMethods extends Component {
   }
 
   componentDidMount() {
+    if (
+      this.props.route.params != null &&
+      this.props.route.params.customBack != null
+    ) {
+      provideCustomBackButton(
+        this,
+        this.props.route.params.customBack.route,
+        this.props.route.params.customBack.params
+      );
+    }
+
     this.loadPersonalPaymentMethods();
   }
 

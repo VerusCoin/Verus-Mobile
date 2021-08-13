@@ -1,3 +1,5 @@
+import React from 'react'
+import { Avatar } from 'react-native-paper';
 import { CALLING_CODES_TO_ISO_3166 } from '../constants/callingCodes'
 import { ISO_3166_COUNTRIES } from '../constants/iso3166'
 import {
@@ -44,6 +46,17 @@ export const renderPersonalBirthday = (birthday) => {
 export const renderPersonalDocument = (document) => {
   return {
     description: document.description,
+    left: (props) => {
+      return document.uris.length == 0 ? null : (
+        <Avatar.Image
+          {...props}
+          size={96}
+          source={{
+            uri: document.uris[0],
+          }}
+        />
+      );
+    },
     title:
       document.image_type == null
         ? 'Document'
@@ -99,3 +112,23 @@ export const renderPersonalAddress = (address) => {
     }`
   }
 }
+
+export const renderPersonalBankAccount = (account) => {
+  const accountLocaleString = ISO_3166_COUNTRIES[account.country]
+    ? `${ISO_3166_COUNTRIES[account.country].emoji} Account`
+    : "Bank Account";
+  const accountNumberString =
+    account.account_number != null && account.account_number.length > 4
+      ? ` ending in ${account.account_number.slice(-4)}`
+      : "";
+  const accountDescription = `${
+    account.primary_currency != null && account.primary_currency.length > 0
+      ? account.primary_currency + " "
+      : ""
+  }${account.account_type}`;
+
+  return {
+    title: `${accountLocaleString}${accountNumberString}`,
+    description: accountDescription,
+  };
+};

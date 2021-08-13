@@ -14,6 +14,8 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
       updateAccount: (payload) => this.updateAccount(payload),
       uploadDocument: (payload) => this.uploadDocument(payload),
       listPaymentMethods: (payload) => this.listPaymentMethods(payload),
+      createPaymentMethod: (payload) => this.createPaymentMethod(payload),
+      deletePaymentMethod: (payload) => this.deletePaymentMethod(payload),
       getTransactions: async () => {
         //TODO
       },
@@ -36,11 +38,9 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
 
   authenticate = async (seed) => {
     const key = await WyreService.bearerFromSeed(seed);
-    const authenticated =
-      Store.getState().channelStore_wyre_service.authenticated;
+    const authenticated = Store.getState().channelStore_wyre_service.authenticated;
 
-    if (authenticated)
-      return { apiKey: this.apiKey, authenticatedAs: this.accountId };
+    if (authenticated) return { apiKey: this.apiKey, authenticatedAs: this.accountId };
 
     const res = await this.service.submitAuthToken(key);
     this.bearerToken = key;
@@ -82,33 +82,36 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
     );
   };
 
-  uploadDocument = async ({
-    accountId,
-    field,
-    uris,
-    format,
-    documentType,
-    documentSubTypes,
-  }) => {
+  uploadDocument = async ({ accountId, field, uris, format, documentType, documentSubTypes }) => {
     return await this.service.uploadDocument(
       accountId == null ? this.accountId : accountId,
       field,
       uris,
       documentType,
       documentSubTypes,
-      format == null ? "image/jpeg" : format,
+      format == null ? "image/jpeg" : format
     );
+  };
+
+  followupPaymentMethod = async ({ paymentMethod, uris, format }) => {
+    return await this.service.followupPaymentMethod(paymentMethod, uris, format);
   };
 
   getAccount = async ({ accountId }) => {
-    return await this.service.getAccount(
-      accountId == null ? this.accountId : accountId
-    );
+    return await this.service.getAccount(accountId == null ? this.accountId : accountId);
   };
 
   listPaymentMethods = async () => {
-    return await this.service.listPaymentMethods()
-  }
+    return await this.service.listPaymentMethods();
+  };
+
+  createPaymentMethod = async ({ paymentMethod }) => {
+    return await this.service.createPaymentMethod(paymentMethod);
+  };
+
+  deletePaymentMethod = async ({ paymentMethod }) => {
+    return await this.service.deletePaymentMethod(paymentMethod);
+  };
 
   getSupportedCountries = async () => {
     return await this.service.getSupportedCountries();
