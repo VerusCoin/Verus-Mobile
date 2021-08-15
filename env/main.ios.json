@@ -21,6 +21,7 @@
   "ENABLE_ETH": true,
   "ENABLE_ELECTRUM": true,
   "ENABLE_GENERAL": true,
+  "ENABLE_WYRE_COIN": true,
 
   "ETH_NETWORK": "homestead",
 

@@ -10,7 +10,6 @@ import { createAlert, resolveAlert } from "../../../../../../actions/actions/ale
 import Store from "../../../../../../store";
 import { requestPersonalData } from "../../../../../../utils/auth/authBox";
 import {
-  API_GET_SERVICE_ACCOUNT,
   API_GET_SERVICE_PAYMENT_METHODS,
   WYRE_SERVICE,
 } from "../../../../../../utils/constants/intervalConstants";

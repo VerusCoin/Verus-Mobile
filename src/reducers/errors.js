@@ -13,7 +13,8 @@ import {
   INIT_ERC20_ERRORS,
   CHANNELS_OBJECT_TEMPLATE,
   API_GET_SERVICE_ACCOUNT,
-  API_GET_SERVICE_PAYMENT_METHODS
+  API_GET_SERVICE_PAYMENT_METHODS,
+  API_GET_SERVICE_TRANSFERS
 } from "../utils/constants/intervalConstants";
 import {
   ERROR_BALANCES,
@@ -32,7 +33,9 @@ import {
   ERROR_SERVICE_ACCOUNT,
   SET_SERVICE_ACCOUNT,
   SET_SERVICE_PAYMENT_METHODS,
-  ERROR_SERVICE_PAYMENT_METHODS
+  ERROR_SERVICE_PAYMENT_METHODS,
+  SET_SERVICE_TRANSFERS,
+  ERROR_SERVICE_TRANSFERS
 } from "../utils/constants/storeType";
 
 export const errors = (state = {
@@ -45,7 +48,8 @@ export const errors = (state = {
   [INIT_ELECTRUM_ERRORS]: {},
   [INIT_ETH_ERRORS]: {},
   [INIT_ERC20_ERRORS]: {},
-  [API_GET_SERVICE_ACCOUNT]: {}
+  [API_GET_SERVICE_ACCOUNT]: {},
+  [API_GET_SERVICE_TRANSFERS]: {}
 }, action) => {
   const { channel, error, chainTicker } = action.payload || {}
 
@@ -142,6 +146,14 @@ export const errors = (state = {
           [channel]: error
         }
       }
+    case ERROR_SERVICE_TRANSFERS:
+      return {
+        ...state,
+        [API_GET_SERVICE_TRANSFERS]: {
+          ...state[API_GET_SERVICE_TRANSFERS],
+          [channel]: error
+        }
+      }
     case INIT_DLIGHT_CHANNEL_START:
       return {
         ...state,
@@ -207,6 +219,14 @@ export const errors = (state = {
         ...state,
         [API_GET_SERVICE_PAYMENT_METHODS]: {
           ...state[API_GET_SERVICE_PAYMENT_METHODS],
+          [channel]: null
+        }
+      }
+    case SET_SERVICE_TRANSFERS:
+      return {
+        ...state,
+        [API_GET_SERVICE_TRANSFERS]: {
+          ...state[API_GET_SERVICE_TRANSFERS],
           [channel]: null
         }
       }

@@ -27,7 +27,7 @@ class NumberPadModal extends Component {
         animationType="slide"
         transparent={true}
         visible={visible}
-        onRequestClose={() => cancel(this.state.phone)}
+        onRequestClose={() => cancel(this.props.value)}
         flexHeight={3}
         contentContainerStyle={{ maxHeight: 384, backgroundColor: "#F8F8F8" }}
       >

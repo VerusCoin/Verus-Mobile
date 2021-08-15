@@ -744,6 +744,7 @@ const mapStateToProps = (state) => {
     activeAccount: state.authentication.activeAccount,
     claimDisabled: state.coinMenus.claimDisabled,
     syncing:
+      info_channel != null &&
       state.ledger.info[info_channel][chainTicker] != null &&
       state.ledger.info[info_channel][chainTicker].percent != 100,
     rates: state.ledger.rates[GENERAL],

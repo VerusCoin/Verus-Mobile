@@ -152,7 +152,8 @@ export const STATES = [
 
 export const SUBWALLET_NAMES = {
     MAIN_WALLET: "Main",
-    PRIVATE_WALLET: "Private"
+    PRIVATE_WALLET: "Private",
+    WYRE_ACCOUNT_WALLET: "Wyre"
 }
 
 //Display 

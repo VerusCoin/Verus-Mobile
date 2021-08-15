@@ -8,6 +8,7 @@ import {
   IS_PBAAS_ROOT,
   ETH,
   ERC20,
+  WYRE_SERVICE,
 } from "../constants/intervalConstants";
 import { dlightServers } from 'agama-wallet-lib/src/dlight-servers';
 import { DEFAULT_DECIMALS, ETHERS } from "../constants/web3Constants";
@@ -67,7 +68,7 @@ export const coinsList = {
     alt_names: [],
     theme_color: "#141C30", 
     website: "https://ethereum.org/en/",
-    compatible_channels: [ETH, GENERAL],
+    compatible_channels: [ETH, GENERAL, WYRE_SERVICE],
     dominant_channel: ETH,
     tags: [],
     proto: 'eth',

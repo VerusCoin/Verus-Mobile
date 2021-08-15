@@ -7,7 +7,8 @@ import {
   SIGN_OUT,
   SET_SERVICE_LOADING,
   SET_SERVICE_STORED_DATA,
-  SET_SERVICE_PAYMENT_METHODS
+  SET_SERVICE_PAYMENT_METHODS,
+  SET_SERVICE_TRANSFERS
 } from "../utils/constants/storeType";
 
 export const services = (
@@ -15,6 +16,7 @@ export const services = (
     accounts: {},
     paymentMethods: {},
     stored: {},
+    transfers: {},
     loading: false
   },
   action
@@ -33,6 +35,14 @@ export const services = (
         ...state,
         paymentMethods: {
           ...state.paymentMethods,
+          [action.payload.channel]: action.payload.body
+        }
+      }
+    case SET_SERVICE_TRANSFERS:
+      return {
+        ...state,
+        transfers: {
+          ...state.transfers,
           [action.payload.channel]: action.payload.body
         }
       }

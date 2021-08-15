@@ -296,6 +296,12 @@ class WyreService {
     }, true);
   };
 
+  getTransferHistory = async () => {
+    return await WyreService.formatCall(() => {
+      return this.service.get('/v3/transfers');
+    }, true);
+  };
+
   createTransfer = async (source, fromCurr, fromVal, dest, toCurr) => {
     return await WyreService.formatCall(() => {
       const transfer = {
@@ -321,12 +327,6 @@ class WyreService {
     return await WyreService.formatCall(() => {
       return axios.get(`${this.url}/v3/widget/supportedCountries`);
     });
-  };
-
-  getTransactions = async () => {
-    return await WyreService.formatCall(() => {
-      return this.service.get(`${this.url}/v3/transfers`);
-    }, true);
   };
 }
 

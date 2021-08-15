@@ -291,21 +291,6 @@ class VerusPay extends Component {
       : null;
     const note = verusQR.note;
 
-    if (__DEV__) {
-      console.log(verusQR)
-      console.log("CoinID: " + coinTicker);
-      console.log("Address: " + address);
-      if (amount === null || amount <= 0) {
-        console.log(
-          "Invalid amount, need additional information for transaction"
-        );
-        console.log(amount)
-      } else {
-        console.log("Amount: " + amount);
-      }
-      console.log("Memo: " + note);
-    }
-
     if (coinTicker != null && address != null) {
       if (this.coinExistsInWallet(coinTicker)) {
         let activeCoin = this.getCoinFromActiveCoins(coinTicker);
@@ -350,34 +335,6 @@ class VerusPay extends Component {
             );
           }
         } else {
-          // TODO: Add back in when problems with private addrs are resolved
-          // this.canAddCoin(coinTicker).then(res => {
-          //   if (res) {
-          //     this.handleAddCoin(coinTicker).then(res => {
-          //       if (res) {
-          //         activeCoin = this.getCoinFromActiveCoins(coinTicker);
-          //         this.handleUpdates().then(() => {
-          //           if (amount === null || amount.isLessThanOrEqualTo(0)) {
-          //             this.handleMissingAmount(activeCoin, address, note);
-          //           } else {
-          //             if (this.checkBalance(amount, activeCoin)) {
-          //               this.preConfirm(
-          //                 activeCoin,
-          //                 this.props.activeAccount,
-          //                 address,
-          //                 amount,
-          //                 note,
-          //                 true
-          //               );
-          //             }
-          //           }
-          //         });
-          //       }
-          //     });
-          //   } else {
-          //     this.cancelHandler();
-          //   }
-          // });
           this.errorHandler(
             `This invoice is requesting funds in ${coinTicker}. Activate ${coinTicker} and rescan to continue.`
           );

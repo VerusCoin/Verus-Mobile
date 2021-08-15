@@ -16,9 +16,7 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
       listPaymentMethods: (payload) => this.listPaymentMethods(payload),
       createPaymentMethod: (payload) => this.createPaymentMethod(payload),
       deletePaymentMethod: (payload) => this.deletePaymentMethod(payload),
-      getTransactions: async () => {
-        //TODO
-      },
+      getTransferHistory: (payload) => this.getTransferHistory(payload),
       getRates: async () => {
         //TODO
       },
@@ -103,6 +101,10 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
 
   listPaymentMethods = async () => {
     return await this.service.listPaymentMethods();
+  };
+
+  getTransferHistory = async () => {
+    return await this.service.getTransferHistory();
   };
 
   createPaymentMethod = async ({ paymentMethod }) => {

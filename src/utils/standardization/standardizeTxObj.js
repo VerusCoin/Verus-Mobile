@@ -93,3 +93,16 @@ export const standardizeEthTxObj = (transactions, address, decimals = ETHERS) =>
 
   return _uniqueTxs;
 };
+
+export const standardizeWyreTxObj = (transaction, accountAddress) => {
+  return {
+    type: transaction.type === "INCOMING" ? "received" : "sent",
+    height: transaction.blockNumber,
+    timestamp: transaction.createdAt,
+    txid: transaction.blockchainTxId,
+    src: transaction.sourceName,
+    address: transaction.type === "INCOMING" ? accountAddress : transaction.destName,
+    amount: transaction.destAmount.toString(),
+    confirmed: transaction.status === "COMPLETED",
+  };
+};

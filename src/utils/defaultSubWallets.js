@@ -1,3 +1,4 @@
+import Colors from "../globals/colors";
 import {
   API_GET_ADDRESSES,
   API_GET_BALANCES,
@@ -9,8 +10,9 @@ import {
   DLIGHT_PRIVATE,
   ELECTRUM,
   GENERAL,
+  WYRE_SERVICE,
 } from "./constants/intervalConstants";
-import { dlightEnabled } from "./enabledChannels";
+import { dlightEnabled, wyreCoinChannelEnabled } from "./enabledChannels";
 
 // export const API_GET_ADDRESSES = "get_addresses"
 // export const API_GET_BALANCES = "get_balances"
@@ -18,51 +20,80 @@ import { dlightEnabled } from "./enabledChannels";
 // export const API_GET_TRANSACTIONS = "get_transactions"
 // export const API_GET_FIATPRICE = "get_fiatprice"
 
-export const getDefaultSubWallets = (coinObj) => {
-  const dominantChannel = coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM
+const getMainSubwallet = (dominantChannel) => {
+  return {
+    channel: dominantChannel ? dominantChannel : ELECTRUM,
+    api_channels: {
+      [API_GET_BALANCES]: dominantChannel,
+      [API_GET_INFO]: dominantChannel,
+      [API_GET_ADDRESSES]: dominantChannel,
+      [API_GET_TRANSACTIONS]: dominantChannel,
+      [API_GET_FIATPRICE]: GENERAL,
+      [API_SEND]: dominantChannel,
+      [API_GET_KEYS]: dominantChannel
+    },
+    id: "MAIN_WALLET",
+    params: {},
+    color: Colors.primaryColor
+  }
+}
 
-  return coinObj.compatible_channels.includes(DLIGHT_PRIVATE) && dlightEnabled() ? [{
-    channel: coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM,
-    api_channels: {
-      [API_GET_BALANCES]: dominantChannel,
-      [API_GET_INFO]: dominantChannel,
-      [API_GET_ADDRESSES]: dominantChannel,
-      [API_GET_TRANSACTIONS]: dominantChannel,
-      [API_GET_FIATPRICE]: GENERAL,
-      [API_SEND]: dominantChannel,
-      [API_GET_KEYS]: dominantChannel
-    },
-    id: "MAIN_WALLET",
-    params: {},
-    color: '#3165D4'
+const PRIVATE_SUBWALLET = {
+  channel: DLIGHT_PRIVATE,
+  api_channels: {
+    [API_GET_BALANCES]: DLIGHT_PRIVATE,
+    [API_GET_INFO]: DLIGHT_PRIVATE,
+    [API_GET_ADDRESSES]: DLIGHT_PRIVATE,
+    [API_GET_TRANSACTIONS]: DLIGHT_PRIVATE,
+    [API_GET_FIATPRICE]: GENERAL,
+    [API_SEND]: DLIGHT_PRIVATE,
+    [API_GET_KEYS]: DLIGHT_PRIVATE
   },
-  {
-    channel: DLIGHT_PRIVATE,
-    api_channels: {
-      [API_GET_BALANCES]: DLIGHT_PRIVATE,
-      [API_GET_INFO]: DLIGHT_PRIVATE,
-      [API_GET_ADDRESSES]: DLIGHT_PRIVATE,
-      [API_GET_TRANSACTIONS]: DLIGHT_PRIVATE,
-      [API_GET_FIATPRICE]: GENERAL,
-      [API_SEND]: DLIGHT_PRIVATE,
-      [API_GET_KEYS]: DLIGHT_PRIVATE
+  id: "PRIVATE_WALLET",
+  params: {},
+  color: Colors.quinaryColor
+}
+
+const WYRE_ACCOUNT_SUBWALLET = {
+  channel: WYRE_SERVICE,
+  api_channels: {
+    [API_GET_TRANSACTIONS]: WYRE_SERVICE,
+    [API_GET_BALANCES]: WYRE_SERVICE,
+    // [API_GET_INFO]: WYRE_SERVICE,
+    // [API_GET_ADDRESSES]: WYRE_SERVICE,
+    // [API_GET_FIATPRICE]: GENERAL,
+    // [API_SEND]: WYRE_SERVICE,
+    // [API_GET_KEYS]: WYRE_SERVICE
+  },
+  id: "WYRE_ACCOUNT_WALLET",
+  params: {},
+  color: Colors.verusGreenColor
+}
+
+export const getDefaultSubWallets = (coinObj) => {
+  const MAIN_WALLET = getMainSubwallet(coinObj.dominant_channel)
+
+  const SUBWALLET_CONDITIONS = [
+    {
+      met: () => true,
+      subwallet: MAIN_WALLET,
     },
-    id: "PRIVATE_WALLET",
-    params: {},
-    color: '#000000'
-  }] : [{
-    channel: coinObj.dominant_channel ? coinObj.dominant_channel : ELECTRUM,
-    api_channels: {
-      [API_GET_BALANCES]: dominantChannel,
-      [API_GET_INFO]: dominantChannel,
-      [API_GET_ADDRESSES]: dominantChannel,
-      [API_GET_TRANSACTIONS]: dominantChannel,
-      [API_GET_FIATPRICE]: GENERAL,
-      [API_SEND]: dominantChannel,
-      [API_GET_KEYS]: dominantChannel
+    {
+      met: () => coinObj.compatible_channels.includes(DLIGHT_PRIVATE) && dlightEnabled(),
+      subwallet: PRIVATE_SUBWALLET,
     },
-    id: "MAIN_WALLET",
-    params: {},
-    color: '#3165D4'
-  }]
+    {
+      met: () =>
+        coinObj.compatible_channels.includes(WYRE_SERVICE) && wyreCoinChannelEnabled(),
+      subwallet: WYRE_ACCOUNT_SUBWALLET,
+    },
+  ];
+
+  let subwallets = []
+
+  for (const condition of SUBWALLET_CONDITIONS) {
+    if (condition.met()) subwallets.push(condition.subwallet)
+  }
+
+  return subwallets
 }

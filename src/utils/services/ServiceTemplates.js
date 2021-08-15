@@ -46,8 +46,8 @@ export class AccountBasedFintechApiTemplate extends ServiceTemplate {
     return await this.api.uploadDocument(payload)
   }
 
-  async getTransactions(payload) {
-    return await this.api.getTransactions(payload)
+  async getTransferHistory(payload) {
+    return await this.api.getTransferHistory(payload)
   }
 
   async getRates(payload) {
