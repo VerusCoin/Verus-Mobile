@@ -41,9 +41,10 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
     if (authenticated) return { apiKey: this.apiKey, authenticatedAs: this.accountId };
 
     const res = await this.service.submitAuthToken(key);
+
     this.bearerToken = key;
     this.apiKey = res.apiKey;
-    this.accountId = res.authenticatedAs.split(":")[1];
+    this.accountId = res.authenticatedAs == null ? null : res.authenticatedAs.split(":")[1];
 
     this.service.authenticate(this.bearerToken, this.apiKey);
 

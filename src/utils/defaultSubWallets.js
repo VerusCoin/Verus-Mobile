@@ -12,6 +12,7 @@ import {
   GENERAL,
   WYRE_SERVICE,
 } from "./constants/intervalConstants";
+import { SEND_MODAL, TRADITIONAL_CRYPTO_SEND_MODAL } from "./constants/sendModal";
 import { dlightEnabled, wyreCoinChannelEnabled } from "./enabledChannels";
 
 // export const API_GET_ADDRESSES = "get_addresses"
@@ -20,9 +21,9 @@ import { dlightEnabled, wyreCoinChannelEnabled } from "./enabledChannels";
 // export const API_GET_TRANSACTIONS = "get_transactions"
 // export const API_GET_FIATPRICE = "get_fiatprice"
 
-const getMainSubwallet = (dominantChannel) => {
+const getMainSubwallet = (dominantChannel = ELECTRUM) => {
   return {
-    channel: dominantChannel ? dominantChannel : ELECTRUM,
+    channel: dominantChannel,
     api_channels: {
       [API_GET_BALANCES]: dominantChannel,
       [API_GET_INFO]: dominantChannel,
@@ -31,6 +32,9 @@ const getMainSubwallet = (dominantChannel) => {
       [API_GET_FIATPRICE]: GENERAL,
       [API_SEND]: dominantChannel,
       [API_GET_KEYS]: dominantChannel
+    },
+    modals: {
+      [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL
     },
     id: "MAIN_WALLET",
     params: {},
@@ -49,6 +53,9 @@ const PRIVATE_SUBWALLET = {
     [API_SEND]: DLIGHT_PRIVATE,
     [API_GET_KEYS]: DLIGHT_PRIVATE
   },
+  modals: {
+    [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL
+  },
   id: "PRIVATE_WALLET",
   params: {},
   color: Colors.quinaryColor
@@ -64,6 +71,9 @@ const WYRE_ACCOUNT_SUBWALLET = {
     // [API_GET_FIATPRICE]: GENERAL,
     // [API_SEND]: WYRE_SERVICE,
     // [API_GET_KEYS]: WYRE_SERVICE
+  },
+  modals: {
+    [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL
   },
   id: "WYRE_ACCOUNT_WALLET",
   params: {},

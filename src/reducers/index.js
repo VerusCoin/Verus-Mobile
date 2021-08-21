@@ -26,6 +26,7 @@ import { alert } from './alert'
 import { modal } from './modal'
 import { keyboard } from './keyboard'
 import identity from './identity';
+import { sendModal } from './sendModal';
 
 export default combineReducers({
   authentication,
@@ -54,5 +55,6 @@ export default combineReducers({
   modal,
   keyboard,
   personal,
-  services
+  services,
+  sendModal
 });

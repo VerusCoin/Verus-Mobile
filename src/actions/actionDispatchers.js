@@ -14,3 +14,6 @@ export * from './actions/services/dispatchers/updates'
 
 // Account 
 export * from './actions/account/dispatchers/account'
+
+// Send
+export * from './actions/send/dispatchers/traditionalCryptoSend'

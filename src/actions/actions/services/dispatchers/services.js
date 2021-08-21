@@ -5,8 +5,14 @@ import {
   storeServiceStoredDataForUser,
 } from "../../../../utils/asyncStore/serviceStoredDataStorage";
 import { requestPassword, requestSeeds } from "../../../../utils/auth/authBox";
-import { CONNECTED_SERVICES, CONNECTED_SERVICE_CHANNELS, CONNECTED_SERVICE_PROVIDERS } from "../../../../utils/constants/services";
+import {
+  CONNECTED_SERVICES,
+  CONNECTED_SERVICE_CHANNELS,
+  CONNECTED_SERVICE_PROVIDERS,
+  WYRE_SERVICE_ID,
+} from "../../../../utils/constants/services";
 import { encryptkey } from "../../../../utils/seedCrypt";
+import WyreProvider from "../../../../utils/services/WyreProvider";
 import { setServiceStored } from "../creators/services";
 
 export const saveEncryptedServiceStoredDataForUser = async (
@@ -42,22 +48,16 @@ export const initServiceStoredDataForUser = async (accountHash) => {
   return serviceStoredData;
 };
 
-export const authenticateServices = async () => {
-  const seeds = await requestSeeds()
-  
-  for (const connectedService of CONNECTED_SERVICES) {
-    if (
-      CONNECTED_SERVICE_CHANNELS[connectedService] &&
-      CONNECTED_SERVICE_PROVIDERS[connectedService] &&
-      seeds[CONNECTED_SERVICE_CHANNELS[connectedService]]
-    ) {
-      try {
-        await CONNECTED_SERVICE_PROVIDERS[connectedService].authenticate(
-          seeds[CONNECTED_SERVICE_CHANNELS[connectedService]]
-        );
-      } catch(e) {
-        console.warn(e)
-      }
+export const resetServices = async () => {
+  const CONNECTED_SERVICE_PROVIDERS = {
+    [WYRE_SERVICE_ID]: WyreProvider
+  }
+
+  for (const connectedService of CONNECTED_SERVICES) {    
+    try {
+      await CONNECTED_SERVICE_PROVIDERS[connectedService].reset();
+    } catch (e) {
+      console.warn(e);
     }
   }
-}
+};

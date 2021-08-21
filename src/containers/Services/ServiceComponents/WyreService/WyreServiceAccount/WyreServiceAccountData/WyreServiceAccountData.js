@@ -141,7 +141,7 @@ class WyreServiceAccountData extends Component {
             title: renderPersonalPhoneNumber(option).title,
             submission: this.formatWyreDataFieldSubmission(
               WYRE_INDIVIDUAL_CELL,
-              renderPersonalPhoneNumber(option, false)
+              renderPersonalPhoneNumber(option, false).title
             ),
           };
         case PERSONAL_EMAILS:

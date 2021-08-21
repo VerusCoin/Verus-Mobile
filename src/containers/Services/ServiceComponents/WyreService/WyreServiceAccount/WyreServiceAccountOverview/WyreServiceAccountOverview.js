@@ -84,8 +84,6 @@ class WyreServiceAccountOverview extends Component {
         wyreFieldId: WYRE_INDIVIDUAL_RESIDENCE_ADDRESS,
         configureRoute: "PersonalLocations",
         configureLabel: "Configure addresses",
-        addRoute: "PersonalLocationsEditAddress",
-        addLabel: "Add new address",
         infoType: PERSONAL_LOCATIONS,
         infoKey: PERSONAL_PHYSICAL_ADDRESSES,
         label: "Residence address",
@@ -185,23 +183,18 @@ class WyreServiceAccountOverview extends Component {
     this.WYRE_ACCOUNT_DOCUMENTS_FORM_ORDER.map((documentField) => {
       const fieldData = this.getWyreProfileFieldData(documentField)
 
-      if (fieldData != null) {
-        const documentIds = serviceData.field_document_map[documentField]
+      if (fieldData != null && serviceData.field_document_map != null) {
+        const documentIds = serviceData.field_document_map[documentField];
         const documentFieldData =
-          documentIds == null ||
-          serviceData.document_ids[documentIds[0]] == null
+          documentIds == null || serviceData.document_ids[documentIds[0]] == null
             ? {}
             : serviceData.document_ids[documentIds[0]];
 
-        if (
-          serviceData.document_ids != null &&
-          documentIds != null &&
-          documentIds.length > 0
-        ) {
+        if (serviceData.document_ids != null && documentIds != null && documentIds.length > 0) {
           documentRenders[documentField] = {
             ...documentFieldData,
-            documentIds
-          }
+            documentIds,
+          };
         }
       }
     })

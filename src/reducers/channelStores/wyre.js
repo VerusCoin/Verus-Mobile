@@ -68,7 +68,11 @@ export const channelStore_wyre_service = (state = {
     case SIGN_OUT_COMPLETE:
       return {
         ...state,
-        openCoinChannels: {}
+        openCoinChannels: {},
+        serviceChannelOpen: true,
+        authenticated: false,
+        accountId: null,
+        currentAccountDataScreenParams: null
       }
     case SET_CURRENT_WYRE_ACCOUNT_DATA:
       return {

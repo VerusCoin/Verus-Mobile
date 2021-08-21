@@ -23,9 +23,7 @@ export default class App extends React.Component {
     return (
       <PaperProvider theme={theme}>
         <Provider store={store}>
-          <NavigationContainer>
-            <VerusMobile/>
-          </NavigationContainer>
+          <VerusMobile/>
         </Provider>
       </PaperProvider>
     );

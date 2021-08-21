@@ -11,12 +11,12 @@ class PersonalAttributesEditName extends Component {
     this.state = {
       attributes: props.route.params.attributes,
       name: {
-        first: props.route.params.attributes.name.first,
-        middle: props.route.params.attributes.name.middle,
-        last: props.route.params.attributes.name.last
+        first: props.route.params.attributes.name ? props.route.params.attributes.name.first : "",
+        middle: props.route.params.attributes.name ? props.route.params.attributes.name.middle : "",
+        last: props.route.params.attributes.name ? props.route.params.attributes.name.last : "",
       },
       currentTextInputModal: null,
-      loading: false
+      loading: false,
     };
   }
 

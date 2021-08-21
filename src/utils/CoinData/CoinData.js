@@ -128,6 +128,50 @@ export const namesList = Object.values(coinsList).map(function(coin) {
   return coin.id;
 });
 
+export const coinExistsInWallet = (coinTicker) => {
+  let index = 0;
+
+  while (index < namesList.length && namesList[index] !== coinTicker) {
+    index++;
+  }
+
+  if (index < namesList.length) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+export const getCoinFromActiveCoins = (coinTicker, activeCoinsForUser) => {
+  let index = 0;
+
+  while (
+    index < activeCoinsForUser.length &&
+    activeCoinsForUser[index].id !== coinTicker
+  ) {
+    index++;
+  }
+
+  if (index < namesList.length) {
+    return activeCoinsForUser[index];
+  } else {
+    return false;
+  }
+};
+
+export const findCurrencyByImportId = (importObj) => {
+  const allCoins = Object.values(coinsList)
+
+  const coinObj = allCoins.find(coin => {
+    return (
+      coin.system_id === importObj.system_id &&
+      coin.currency_id === importObj.currency_id
+    );
+  })
+
+  return coinObj
+}
+
 export const findCoinObj = (id, userName) => {
   let coinObj = coinsList[id.toLowerCase()]
 

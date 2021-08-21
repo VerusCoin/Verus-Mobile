@@ -244,7 +244,7 @@ class Home extends Component {
   _verusPay = () => {
     let navigation = this.props.navigation  
 
-    navigation.navigate("VerusPay", { refresh: this.refresh });
+    navigation.navigate("VerusPay");
   }
 
   openCoin = (coinObj, subWallet) => {

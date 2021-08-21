@@ -1,0 +1,177 @@
+import React, { Component } from "react";
+import { Platform, SafeAreaView } from "react-native";
+import { Text, Portal, Button } from "react-native-paper";
+import { Colors } from "react-native/Libraries/NewAppScreen";
+import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
+import Styles from "../../styles";
+import {
+  SEND_MODAL_FORM_STEP_CONFIRM,
+  SEND_MODAL_FORM_STEP_FORM,
+  SEND_MODAL_FORM_STEP_RESULT,
+  TRADITIONAL_CRYPTO_SEND_MODAL,
+} from "../../utils/constants/sendModal";
+import SemiModal from "../SemiModal";
+import TraditionalCryptoSendForm from "./TraditionalCryptoSend/TraditionalCryptoSendForm/TraditionalCryptoSendForm";
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import LoadingScreen from "../../containers/LoadingScreen/LoadingScreen";
+import AnimatedActivityIndicatorBox from "../AnimatedActivityIndicatorBox";
+import TraditionalCryptoSendConfirm from "./TraditionalCryptoSend/TraditionalCryptoSendConfirm/TraditionalCryptoSendConfirm";
+import TraditionalCryptoSendResult from "./TraditionalCryptoSend/TraditionalCryptoSendResult/TraditionalCryptoSendResult";
+
+const TopTabs = createMaterialTopTabNavigator();
+const Root = createStackNavigator();
+
+const SEND_FORMS = {
+  [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendForm
+};
+
+const SEND_CONFIRMATION = {
+  [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendConfirm
+}
+
+const SEND_RESULTS = {
+  [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendResult
+}
+
+export const SendModalRender = function () {
+  const { visible, title } = this.props.sendModal;
+  const modalStarterHeight = this.state.modalHeight;
+  const modalHeight = this.props.keyboard.active
+    ? this.props.keyboard.height + modalStarterHeight
+    : modalStarterHeight;
+
+
+  return (
+    <Portal>
+      <NavigationContainer>
+        <SemiModal
+          animationType="slide"
+          transparent={true}
+          visible={visible}
+          onRequestClose={() => this.cancel()}
+          contentContainerStyle={{
+            height: Platform.OS === "android" ? modalStarterHeight : modalHeight,
+            flex: 0,
+            backgroundColor: "white",
+          }}
+        >
+          <SafeAreaView style={{ flex: 1 }}>
+            <Root.Navigator
+              screenOptions={{
+                headerTitle: () => <Text style={{ marginBottom: 10, fontSize: 16 }}>{title}</Text>,
+                headerRight: (props) => (
+                  <Button
+                    {...props}
+                    style={{ marginBottom: 10 }}
+                    onPress={() => this.showHelpModal()}
+                    color={Colors.primaryColor}
+                    disabled={this.state.preventExit}
+                  >
+                    {"Help"}
+                  </Button>
+                ),
+                headerLeft: (props) => (
+                  <Button
+                    {...props}
+                    style={{ marginBottom: 10 }}
+                    onPress={() => this.cancel()}
+                    color={Colors.primaryColor}
+                    disabled={this.state.preventExit}
+                  >
+                    {"Close"}
+                  </Button>
+                ),
+                headerStyle: {
+                  height: 42,
+                },
+              }}
+            >
+              <Root.Screen name="SendModalInner">{SendModalInnerAreaRender.call(this)}</Root.Screen>
+            </Root.Navigator>
+          </SafeAreaView>
+        </SemiModal>
+      </NavigationContainer>
+    </Portal>
+  );
+};
+
+export const SendModalInnerAreaRender = function () {
+  const starterProps = {
+    updateSendFormData: (key, value) => this.updateSendFormData(key, value),
+    setLoading: (loading) => this.setLoading(loading),
+    setModalHeight: (height) => this.setModalHeight(height),
+    setPreventExit: (preventExit) => this.setPreventExit(preventExit)
+  };
+
+  const Form =
+    this.state.loading || SEND_FORMS[this.props.sendModal.type] == null
+      ? AnimatedActivityIndicatorBox
+      : SEND_FORMS[this.props.sendModal.type];
+
+  const Confirmation =
+    this.state.loading || SEND_CONFIRMATION[this.props.sendModal.type] == null
+      ? AnimatedActivityIndicatorBox
+      : SEND_CONFIRMATION[this.props.sendModal.type];
+  
+  const Result =
+    this.state.loading || SEND_RESULTS[this.props.sendModal.type] == null
+      ? AnimatedActivityIndicatorBox
+      : SEND_RESULTS[this.props.sendModal.type];
+
+  return () => (
+    <TopTabs.Navigator
+      initialRouteName={SEND_MODAL_FORM_STEP_FORM}
+      swipeEnabled={false}
+      backBehavior={"none"}
+      tabBarPosition="bottom"
+      tabBarOptions={{
+        pressColor: "transparent",
+        pressOpacity: 1,
+      }}
+      lazy={true}
+      lazyPlaceholder={() => <AnimatedActivityIndicatorBox />}
+    >
+      <TopTabs.Screen
+        name={SEND_MODAL_FORM_STEP_FORM}
+        options={{
+          tabBarLabel: "Enter",
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+          },
+        }}
+      >
+        {(props) => <Form {...props} {...starterProps} />}
+      </TopTabs.Screen>
+      <TopTabs.Screen
+        name={SEND_MODAL_FORM_STEP_CONFIRM}
+        options={{
+          tabBarLabel: "Confirm",
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+          },
+        }}
+      >
+        {(props) => <Confirmation {...props} {...starterProps} />}
+      </TopTabs.Screen>
+      <TopTabs.Screen
+        name={SEND_MODAL_FORM_STEP_RESULT}
+        options={{
+          tabBarLabel: "Result",
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+          },
+        }}
+      >
+        {(props) => <Result {...props} {...starterProps} />}
+      </TopTabs.Screen>
+    </TopTabs.Navigator>
+  );
+};
