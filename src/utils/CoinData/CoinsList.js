@@ -82,7 +82,7 @@ export const coinsList = {
     alt_names: [],
     theme_color: "#141C30", 
     website: "https://ethereum.org/en/",
-    compatible_channels: [ETH, GENERAL],
+    compatible_channels: [ETH, GENERAL, WYRE_SERVICE],
     dominant_channel: ETH,
     tags: [],
     proto: 'eth',

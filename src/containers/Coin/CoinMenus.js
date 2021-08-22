@@ -16,6 +16,8 @@ import { NavigationActions, withNavigationFocus } from '@react-navigation/compat
 import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
 import DynamicHeader from "./DynamicHeader";
 import { Portal, BottomNavigation } from "react-native-paper";
+import { subWalletActivity } from "../../utils/subwallet/subWalletStatus";
+import WyreServiceMissingInfoRedirect from "../Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceMissingInfoRedirect/WyreServiceMissingInfoRedirect";
 
 class CoinMenus extends Component {
   constructor(props) {
@@ -89,16 +91,27 @@ class CoinMenus extends Component {
     };
   }
 
-  renderScene = ({ route, jumpTo }) => {
-    if (this.Routes[route.key] == null) return null
-    else {
-      const Route = this.Routes[route.key]
+  goToServices() {
+    this.props.navigation.navigate("Home", {
+      screen: "ServicesHome",
+      initial: false,
+    });
+  }
 
-      return (
-        <Route
-          navigation={this.props.navigation}
-          data={this.passthrough}
-          switchTab={jumpTo}
+  renderScene = ({ route, jumpTo }) => {
+    if (this.Routes[route.key] == null) return null;
+    else {
+      const Route = this.Routes[route.key];
+      const { placeholder, active } = subWalletActivity(this.props.selectedSubWallet.id);
+
+      return active(this.props.services) ? (
+        <Route navigation={this.props.navigation} data={this.passthrough} switchTab={jumpTo} />
+      ) : (
+        <WyreServiceMissingInfoRedirect
+          icon={placeholder.icon}
+          label={placeholder.label}
+          buttonLabel="configure services"
+          onPress={() => this.goToServices()}
         />
       );
     }
@@ -162,6 +175,7 @@ const mapStateToProps = (state) => {
     selectedSubWallet:
       state.coinMenus.activeSubWallets[state.coins.activeCoin.id],
     allSubWallets: state.coinMenus.allSubWallets[state.coins.activeCoin.id],
+    services: state.services
   };
 };
 
