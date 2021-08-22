@@ -12,7 +12,8 @@ export const TraditionalCryptoSendResultRender = function () {
 };
 
 export const TraditionalCryptoSendSuccessRender = function () {
-  const { txid, toAddress, coinObj, finalTxAmount } = this.state.params;
+  const { txid, toAddress, finalTxAmount } = this.state.params;
+  const coinObj = this.state.params.coinObj == null ? {} : this.state.params.coinObj;
 
   return (
     <ScrollView

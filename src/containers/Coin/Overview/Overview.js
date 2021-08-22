@@ -203,10 +203,10 @@ class Overview extends Component {
 
     // Handle possible int overflows
     try { 
-      if (gasFees) {
+      if (!gasFees && item.fee) {
         let newAmount = new MathableNumber(0, amount.maxDecimals)
         
-        newAmount.num = amount.num.add(
+        newAmount.num = amount.num.sub(
           new MathableNumber(
             item.fee,
             amount.maxDecimals

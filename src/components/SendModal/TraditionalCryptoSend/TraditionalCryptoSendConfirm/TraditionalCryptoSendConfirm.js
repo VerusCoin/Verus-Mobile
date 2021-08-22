@@ -39,10 +39,11 @@ class TraditionalCryptoSendConfirm extends Component {
       balanceDelta,
       memo,
     } = this.state.params;
-
+    
     const balance = this.props.balances.results.total;
     const fee = fees[0];
     const remainingBalance = BigNumber(balanceDelta).plus(BigNumber(balance));
+    const deductedAmount = BigNumber(balanceDelta).absoluteValue()
 
     const validFiatMultiplier =
       this.props.rates[coinObj.id] != null &&
@@ -94,15 +95,16 @@ class TraditionalCryptoSendConfirm extends Component {
                 this.props.displayCurrency
               }`
             : null,
-          condition: amountSubmitted !== "0",
+          condition: amountSubmitted !== "0" && amountSubmitted !== finalTxAmount,
         },
         {
-          key: "Balance",
-          data: truncateDecimal(balance, coinObj.decimals || 8) + " " + coinObj.id,
+          key: "Amount Sent",
+          data: truncateDecimal(finalTxAmount, coinObj.decimals || 8) + " " + coinObj.id,
           right: validFiatMultiplier
-            ? `${fiatMultiplier.multipliedBy(balance).toFixed(2)} ${this.props.displayCurrency}`
+            ? `${fiatMultiplier.multipliedBy(finalTxAmount).toFixed(2)} ${
+                this.props.displayCurrency
+              }`
             : null,
-          condition: balance !== 0,
         },
         {
           key: "Fee",
@@ -115,9 +117,9 @@ class TraditionalCryptoSendConfirm extends Component {
         },
         {
           key: "Amount Deducted",
-          data: truncateDecimal(finalTxAmount, coinObj.decimals || 8) + " " + coinObj.id,
+          data: truncateDecimal(deductedAmount, coinObj.decimals || 8) + " " + coinObj.id,
           right: validFiatMultiplier
-            ? `${fiatMultiplier.multipliedBy(finalTxAmount).toFixed(2)} ${
+            ? `${fiatMultiplier.multipliedBy(deductedAmount).toFixed(2)} ${
                 this.props.displayCurrency
               }`
             : null,

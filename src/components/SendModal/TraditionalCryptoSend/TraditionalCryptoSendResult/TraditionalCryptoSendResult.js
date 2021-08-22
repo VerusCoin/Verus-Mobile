@@ -10,7 +10,7 @@ class TraditionalCryptoSendResult extends Component {
     super(props);
 
     this.state = {
-      params: props.route.params.txResult,
+      params: props.route.params == null ? {} : props.route.params.txResult,
     };
   }
 

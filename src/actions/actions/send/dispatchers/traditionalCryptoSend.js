@@ -120,14 +120,9 @@ export const traditionalCryptoSend = async (
       } else {
         const feeTakenFromAmount = res.result.params.feeTakenFromAmount;
 
-        const finalTxAmount =
-          feeTakenFromAmount || (res.result.feeCurr != null && res.result.feeCurr !== coinObj.id)
-            ? res.result.value
-            : (BigNumber(res.result.value).plus(BigNumber(res.result.fee))).toString();
+        const finalTxAmount = res.result.value
 
-        const balanceDelta = feeTakenFromAmount
-          ? BigNumber(0).minus(BigNumber(finalTxAmount)).minus(BigNumber(res.result.fee)).toString()
-          : BigNumber(0).minus(BigNumber(finalTxAmount)).toString();
+        const balanceDelta = BigNumber(0).minus(BigNumber(finalTxAmount)).minus(BigNumber(res.result.fee)).toString()
         
         let feeTakenMessage;
 

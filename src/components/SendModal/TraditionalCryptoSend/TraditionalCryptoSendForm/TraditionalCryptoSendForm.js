@@ -174,6 +174,11 @@ class TraditionalCryptoSendForm extends Component {
       );
 
       this.props.setModalHeight(696);
+      
+      if (res.feeTakenMessage != null) {
+        Alert.alert("Amount changed", res.feeTakenMessage)
+      }
+
       this.props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, { txConfirmation: res });
     } catch (e) {
       Alert.alert("Error", e.message);
