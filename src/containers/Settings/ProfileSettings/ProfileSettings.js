@@ -410,6 +410,8 @@ class ProfileSettings extends Component {
           visible={this.state.passwordDialogOpen}
           title={this.state.passwordDialogTitle}
           userName={this.props.activeAccount.id}
+          account={this.props.activeAccount}
+          allowBiometry={true}
         />
         <List.Subheader>{"Profile Actions"}</List.Subheader>
         {ENABLE_DLIGHT && (

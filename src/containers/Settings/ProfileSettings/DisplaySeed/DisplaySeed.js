@@ -95,9 +95,9 @@ class DisplaySeed extends Component {
           }}
         >
           <View style={Styles.fullWidthFlexCenterBlock}>
-            {Object.keys(seeds).map((key) => {
+            {Object.keys(seeds).map((key, index) => {
               return seeds[key] == null ? null : (
-                <View style={Styles.wideBlock}>
+                <View style={Styles.wideBlock} key={index}>
                   <Card elevation={2}>
                     <Card.Content>
                       <Title>{this.SEED_NAMES[key]}</Title>
@@ -117,10 +117,7 @@ class DisplaySeed extends Component {
             <Button color={Colors.warningButtonColor} onPress={this.back}>
               {"Back"}
             </Button>
-            <Button
-              color={Colors.linkButtonColor}
-              onPress={this.resetToScreen}
-            >
+            <Button color={Colors.linkButtonColor} onPress={this.resetToScreen}>
               {this.state.fromDeleteAccount ? "CONTINUE" : "HOME"}
             </Button>
           </View>

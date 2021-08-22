@@ -19,6 +19,7 @@ export default class PasswordInput extends Component {
           errorMessage={this.props.errorMessage}
           clearTextOnFocus
           ref={this.props.reference}
+          value={this.props.value}
         />
       </View>
     );
