@@ -26,7 +26,8 @@ export const traditionalCryptoSend = async (
   amount,
   memo,
   tradSendFee,
-  returnTx = false
+  returnTx = false,
+  passthrough = {}
 ) => {
   const state = store.getState()
 
@@ -85,6 +86,7 @@ export const traditionalCryptoSend = async (
         verifyMerkle,
         verifyTxid,
         memo,
+        ...passthrough
       },
     ];
 
@@ -100,7 +102,7 @@ export const traditionalCryptoSend = async (
             {
               amount:
                 res.result.fee != null
-                  ? new TraditionalSendFee(res.result.fee).getParamValue
+                  ? new TraditionalCryptoSendFee(res.result.fee).getParamValue
                   : tradSendFee != null
                   ? tradSendFee.getParamValue
                   : coinObj.fee,

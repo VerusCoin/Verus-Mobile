@@ -74,9 +74,9 @@ class WyreServiceEditPaymentMethod extends Component {
       screen: route,
       params: {
         ...params,
-        customBack: {
-          route: "ServicesHome",
-        },
+        // customBack: {
+        //   route: "ServicesHome",
+        // },
       },
       initial: false,
     });

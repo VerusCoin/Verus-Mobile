@@ -39,6 +39,7 @@ export const TraditionalCryptoSendFormRender = function () {
           <TextInput
             label="Recipient address"
             value={data[SEND_MODAL_TO_ADDRESS_FIELD]}
+            multiline={true}
             mode="outlined"
             onChangeText={(text) =>
               this.props.updateSendFormData(SEND_MODAL_TO_ADDRESS_FIELD, text)

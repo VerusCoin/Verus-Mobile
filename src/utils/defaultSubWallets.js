@@ -69,16 +69,16 @@ const WYRE_ACCOUNT_SUBWALLET = {
     // [API_GET_INFO]: WYRE_SERVICE,
     // [API_GET_ADDRESSES]: WYRE_SERVICE,
     // [API_GET_FIATPRICE]: GENERAL,
-    // [API_SEND]: WYRE_SERVICE,
+    [API_SEND]: WYRE_SERVICE,
     // [API_GET_KEYS]: WYRE_SERVICE
   },
   modals: {
-    [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL
+    [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL,
   },
   id: "WYRE_ACCOUNT_WALLET",
   params: {},
-  color: Colors.verusGreenColor
-}
+  color: Colors.verusGreenColor,
+};
 
 export const getDefaultSubWallets = (coinObj) => {
   const MAIN_WALLET = getMainSubwallet(coinObj.dominant_channel)

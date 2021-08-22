@@ -6,8 +6,10 @@ import {
   WYRE_SERVICE,
 } from "../../../constants/intervalConstants";
 
-export * from './requests/getBalances'
-export * from './requests/getTransactions'
+export * from "./requests/getBalances";
+export * from "./requests/getTransactions";
+export * from "./requests/preflightTransaction";
+export * from "./requests/sendTransaction";
 
 export const getActiveWyreAccount = async () => {
   await conditionallyUpdateService(store.getState(), store.dispatch, API_GET_SERVICE_ACCOUNT);

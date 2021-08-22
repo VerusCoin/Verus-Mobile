@@ -1,18 +1,26 @@
-import { ELECTRUM, ETH, ERC20, DLIGHT_PRIVATE } from '../../constants/intervalConstants'
-import * as electrum from '../channels/electrum/callCreators'
-import * as eth from '../channels/eth/callCreator'
-import * as erc20 from '../channels/erc20/callCreator'
-import * as dlight from '../channels/dlight/callCreators'
+import {
+  ELECTRUM,
+  ETH,
+  ERC20,
+  DLIGHT_PRIVATE,
+  WYRE_SERVICE,
+} from "../../constants/intervalConstants";
+import * as electrum from "../channels/electrum/callCreators";
+import * as eth from "../channels/eth/callCreator";
+import * as erc20 from "../channels/erc20/callCreator";
+import * as dlight from "../channels/dlight/callCreators";
+import * as wyre from "../channels/wyre/callCreators";
 
 const PREFLIGHT_FUNCTION_MAP = {
   [ELECTRUM]: electrum.txPreflight,
   [ETH]: eth.txPreflight,
   [ERC20]: erc20.txPreflight,
-  [DLIGHT_PRIVATE]: dlight.preflightPrivateTransaction
-}
+  [DLIGHT_PRIVATE]: dlight.preflightPrivateTransaction,
+  [WYRE_SERVICE]: wyre.txPreflight,
+};
 
 /**
- * Creates and returns an object describing a potential transaction without sending the transaction. 
+ * Creates and returns an object describing a potential transaction without sending the transaction.
  * Returns an error object if the transaction were to fail.
  * @param {Object} coinObj The coin object describing the chain to send on
  * @param {Object} activeUser The user object of the user performing the send
@@ -22,6 +30,7 @@ const PREFLIGHT_FUNCTION_MAP = {
  * @param {Object} params Any other parameters specific to the send channel's preflight function
  */
 export const preflight = async (coinObj, activeUser, address, amount, channel, params) => {
-  if (PREFLIGHT_FUNCTION_MAP[channel] == null) throw new Error(`No preflight function available for channel ${channel}`)
-  else return await PREFLIGHT_FUNCTION_MAP[channel](coinObj, activeUser, address, amount, params)
-}
+  if (PREFLIGHT_FUNCTION_MAP[channel] == null)
+    throw new Error(`No preflight function available for channel ${channel}`);
+  else return await PREFLIGHT_FUNCTION_MAP[channel](coinObj, activeUser, address, amount, params);
+};

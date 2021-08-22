@@ -68,6 +68,7 @@ class WyreServiceAccountData extends Component {
         addRoute: null,
         addRouteParams: {},
         options: null,
+        missingDataDisplay: {}
       },
     };
   }
@@ -107,9 +108,9 @@ class WyreServiceAccountData extends Component {
       screen: route,
       params: {
         ...params,
-        customBack: {
-          route: "ServicesHome",
-        },
+        // customBack: {
+        //   route: "ServicesHome",
+        // },
       },
       initial: false,
     });

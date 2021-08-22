@@ -6,7 +6,7 @@ import { traditionalCryptoSend, TraditionalCryptoSendFee } from "../../../../act
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import { getRecommendedBTCFees } from "../../../../utils/api/channels/general/callCreators";
 import { USD } from "../../../../utils/constants/currencies";
-import { API_GET_BALANCES, API_SEND, DLIGHT_PRIVATE, GENERAL } from "../../../../utils/constants/intervalConstants";
+import { API_GET_BALANCES, API_SEND, DLIGHT_PRIVATE, ELECTRUM, GENERAL } from "../../../../utils/constants/intervalConstants";
 import { SEND_MODAL_CRYPTO_AMOUNT_FIELD, SEND_MODAL_FORM_STEP_CONFIRM, SEND_MODAL_MEMO_FIELD, SEND_MODAL_TO_ADDRESS_FIELD } from "../../../../utils/constants/sendModal";
 import { isNumber, truncateDecimal } from "../../../../utils/math";
 import { TraditionalCryptoSendFormRender } from "./TraditionalCryptoSendForm.render"
@@ -22,8 +22,10 @@ class TraditionalCryptoSendForm extends Component {
 
     this.FEE_CALCULATORS = {
       ["BTC"]: {
-        calculator: getRecommendedBTCFees,
-        isPerByte: false,
+        [ELECTRUM]: {
+          calculator: getRecommendedBTCFees,
+          isPerByte: false,
+        },
       },
     };
   }
@@ -151,10 +153,12 @@ class TraditionalCryptoSendForm extends Component {
 
     let tradCryptoFees;
 
-    if (this.FEE_CALCULATORS[coinObj.id]) {
+    if (this.FEE_CALCULATORS[coinObj.id] && this.FEE_CALCULATORS[coinObj.id][channel]) {
+      const feeData = this.FEE_CALCULATORS[coinObj.id][channel];
+
       tradCryptoFees = new TraditionalCryptoSendFee(
-        (await this.FEE_CALCULATORS[coinObj.id]()).average,
-        true
+        (await feeData.calculator()).average,
+        feeData.isPerByte
       );
     }
 

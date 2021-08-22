@@ -48,7 +48,7 @@ class QrScanner {
         return this.processVerusQr(
           {
             coinTicker: coinObj.id,
-            address: request.address,
+            address: request.destination,
             amount: BigNumber(request.amount),
             note: request.note,
           },

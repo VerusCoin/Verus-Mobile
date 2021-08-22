@@ -33,7 +33,7 @@ class SendCoin extends Component {
       <View style={Styles.defaultRoot}>
         <VerusPay
           channel={this.props.subWallet}
-          fillAddress={true}
+          acceptAddressOnly={true}
           containerStyle={{
             backgroundColor: Colors.primaryColor,
             width: "100%",

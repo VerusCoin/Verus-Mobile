@@ -34,7 +34,7 @@ export const WyreServiceAddPaymentMethodRender = function () {
         <WyreServiceMissingInfoRedirect 
           icon="bank"
           label="You'll need to add at least one bank account to your personal profile to submit one here."
-          buttonLabel="Configure bank info"
+          buttonLabel="edit personal profile"
           onPress={() => this.goToPersonalInfoScreen("PersonalPaymentMethods")}
         />
       )}

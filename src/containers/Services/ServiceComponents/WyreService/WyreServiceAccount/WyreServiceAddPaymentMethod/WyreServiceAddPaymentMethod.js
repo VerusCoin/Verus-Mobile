@@ -42,9 +42,9 @@ class WyreServiceAddPaymentMethod extends Component {
       screen: route,
       params: {
         ...params,
-        customBack: {
-          route: "WyreServiceAddPaymentMethod",
-        },
+        // customBack: {
+        //   route: "WyreServiceAddPaymentMethod",
+        // },
       },
       initial: false,
     });

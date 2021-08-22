@@ -1,4 +1,4 @@
-import { electrumServers } from 'agama-wallet-lib/src/electrum-servers';
+import { electrumServers } from './electrum/servers';
 import { MAX_VERIFICATION } from '../constants/constants'
 import Colors from '../../globals/colors'
 import { coinsList } from './CoinsList'
@@ -96,7 +96,8 @@ export const CoinLogos = {
   vrsc: CoinLogoSvgs.btc.VRSC,
   dash: CoinLogoSvgs.btc.DASH,	
   oot: CoinLogoSvgs.btc.OOT,		
-  btc: CoinLogoSvgs.btc.BTC,		
+  btc: CoinLogoSvgs.btc.BTC,
+  testnet: CoinLogoSvgs.btc.BTC,
   dgb: CoinLogoSvgs.btc.DGB,		
   doge: CoinLogoSvgs.btc.DOGE,	
   kmd: CoinLogoSvgs.btc.KMD,		

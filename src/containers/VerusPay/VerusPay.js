@@ -306,43 +306,24 @@ class VerusPay extends Component {
 
   handleUpdates = async () => {
     return new Promise((resolve, reject) => {
-      let promises = [];
-      const finishPromise = () => {
-        Promise.all(promises)
-          .then((res) => {
-            resolve(res);
-          })
-          .catch((err) => {
-            reject(err);
-          });
-      };
-
       this.setState(
         {
           loading: true,
         },
-        () => {
+        async () => {
           const updates = [API_GET_BALANCES, API_GET_INFO];
-          promises.push(() =>
-            Promise.all(
-              updates.map(async (update) => {
-                await conditionallyUpdateWallet(
-                  store.getState(),
-                  this.props.dispatch,
-                  this.props.activeCoin.id,
-                  update
-                );
-              })
-            )
-              .then(() => {
-                this.setState({ loading: false });
-              })
-              .catch((error) => {
-                this.setState({ loading: false });
-                console.warn(error);
-              })
-          );
-          finishPromise();
+
+          for (const update of updates) {
+            await conditionallyUpdateWallet(
+              store.getState(),
+              this.props.dispatch,
+              this.state.coinObj.id,
+              update
+            );
+          }
+
+          this.setState({ loading: false });
+          resolve()
         }
       );
     });
