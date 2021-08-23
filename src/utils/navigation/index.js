@@ -340,7 +340,7 @@ function HomeScreens() {
           title: "Services",
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
-              name="power-plug"
+              name="room-service"
               color={color}
               size={26}
             />

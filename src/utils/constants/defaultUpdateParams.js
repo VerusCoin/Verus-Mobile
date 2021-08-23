@@ -1,3 +1,4 @@
+import { WALLET_APP_OVERVIEW } from './apps'
 import { 
   ALWAYS_ACTIVATED, 
   NEVER_ACTIVATED, 
@@ -186,7 +187,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
     pre_data: {
       tracking_info: {
         coin_bound: true, 
-        update_locations: ['wallet-overview'], 
+        update_locations: [WALLET_APP_OVERVIEW], 
         needs_update: true,
         busy: {},
       },
@@ -202,7 +203,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
     syncing: {
       tracking_info: {
         coin_bound: true, 
-        update_locations: ['wallet-overview'], 
+        update_locations: [WALLET_APP_OVERVIEW], 
         needs_update: true,
         busy: {},
       },
@@ -218,7 +219,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
     post_sync: {
       tracking_info: {
         coin_bound: true, 
-        update_locations: ['wallet-overview'], 
+        update_locations: [WALLET_APP_OVERVIEW], 
         needs_update: true,
         busy: {},
       },

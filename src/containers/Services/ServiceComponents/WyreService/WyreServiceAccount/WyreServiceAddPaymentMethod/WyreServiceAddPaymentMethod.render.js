@@ -4,7 +4,7 @@ import { List, Divider } from "react-native-paper";
 import AnimatedActivityIndicator from "../../../../../../components/AnimatedActivityIndicator";
 import Styles from "../../../../../../styles";
 import { renderPersonalBankAccount } from "../../../../../../utils/personal/displayUtils";
-import WyreServiceMissingInfoRedirect from "../WyreServiceMissingInfoRedirect/WyreServiceMissingInfoRedirect";
+import MissingInfoRedirect from "../../../../../../components/MissingInfoRedirect/MissingInfoRedirect";
 
 export const WyreServiceAddPaymentMethodRender = function () {
   const hasPersonalBankAccounts = !(this.state.payment_methods.bank_accounts == null ||
@@ -31,7 +31,8 @@ export const WyreServiceAddPaymentMethodRender = function () {
         </View>
       )}
       {!hasPersonalBankAccounts && (
-        <WyreServiceMissingInfoRedirect 
+        <MissingInfoRedirect 
+          loading={this.props.loading}
           icon="bank"
           label="You'll need to add at least one bank account to your personal profile to submit one here."
           buttonLabel="edit personal profile"

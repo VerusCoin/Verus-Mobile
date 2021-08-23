@@ -10,7 +10,7 @@ import {
   WYRE_DATA_SUBMISSION_APPROVED,
 } from "../../../../../../utils/constants/services";
 import { renderWyreDataField } from "../../../../../../utils/services/translationUtils";
-import WyreServiceMissingInfoRedirect from "../WyreServiceMissingInfoRedirect/WyreServiceMissingInfoRedirect";
+import MissingInfoRedirect from "../../../../../../components/MissingInfoRedirect/MissingInfoRedirect";
 
 export const WyreServiceAccountDataRender = function () {
   const wyreFieldData =
@@ -41,10 +41,11 @@ export const WyreServiceAccountDataRender = function () {
         </View>
       )}
       {options.length == 0 && (
-        <WyreServiceMissingInfoRedirect
+        <MissingInfoRedirect
           icon={missingDataDisplay.icon}
           label={missingDataDisplay.label}
           buttonLabel="edit personal profile"
+          loading={this.props.loading}
           onPress={() =>
             this.goToPersonalInfoScreen(
               this.state.params.configureRoute,

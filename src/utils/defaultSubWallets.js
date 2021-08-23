@@ -1,4 +1,5 @@
 import Colors from "../globals/colors";
+import { WALLET_APP_CONVERT, WALLET_APP_OVERVIEW, WALLET_APP_RECEIVE, WALLET_APP_SEND } from "./constants/apps";
 import {
   API_GET_ADDRESSES,
   API_GET_BALANCES,
@@ -31,15 +32,16 @@ const getMainSubwallet = (dominantChannel = ELECTRUM) => {
       [API_GET_TRANSACTIONS]: dominantChannel,
       [API_GET_FIATPRICE]: GENERAL,
       [API_SEND]: dominantChannel,
-      [API_GET_KEYS]: dominantChannel
+      [API_GET_KEYS]: dominantChannel,
     },
+    compatible_apps: [WALLET_APP_OVERVIEW, WALLET_APP_SEND, WALLET_APP_RECEIVE],
     modals: {
-      [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL
+      [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL,
     },
     id: "MAIN_WALLET",
     params: {},
-    color: Colors.primaryColor
-  }
+    color: Colors.primaryColor,
+  };
 }
 
 const PRIVATE_SUBWALLET = {
@@ -53,6 +55,7 @@ const PRIVATE_SUBWALLET = {
     [API_SEND]: DLIGHT_PRIVATE,
     [API_GET_KEYS]: DLIGHT_PRIVATE
   },
+  compatible_apps: [WALLET_APP_OVERVIEW, WALLET_APP_SEND, WALLET_APP_RECEIVE],
   modals: {
     [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL
   },
@@ -72,6 +75,7 @@ const WYRE_ACCOUNT_SUBWALLET = {
     [API_SEND]: WYRE_SERVICE,
     // [API_GET_KEYS]: WYRE_SERVICE
   },
+  compatible_apps: [WALLET_APP_OVERVIEW, WALLET_APP_SEND, WALLET_APP_RECEIVE, WALLET_APP_CONVERT],
   modals: {
     [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL,
   },

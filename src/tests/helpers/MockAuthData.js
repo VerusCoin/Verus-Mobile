@@ -1,3 +1,4 @@
+import { WALLET_APP_OVERVIEW, WALLET_APP_RECEIVE, WALLET_APP_SEND } from '../../utils/constants/apps'
 import { setFetchParams } from './SetFetchParams'
 
 export const MOCK_USER_OBJ = {
@@ -141,7 +142,7 @@ export const getTempActiveCoin = (coinID, callsSucceed, code, params, errorMsg =
           screen: 'Overview',
           icon: 'account-balance-wallet',
           name: 'Overview',
-          key: 'wallet-overview',
+          key: WALLET_APP_OVERVIEW,
           color: '#2E86AB'
           //Blue
         },
@@ -149,7 +150,7 @@ export const getTempActiveCoin = (coinID, callsSucceed, code, params, errorMsg =
           screen: 'SendCoin',
           icon: 'arrow-upward',
           name: 'Send',
-          key: 'wallet-send',
+          key: WALLET_APP_SEND,
           color: '#EDAE49'
           //Orange
         },
@@ -157,7 +158,7 @@ export const getTempActiveCoin = (coinID, callsSucceed, code, params, errorMsg =
           screen: 'ReceiveCoin',
           icon: 'arrow-downward',
           name: 'Receive',
-          key: 'wallet-receive',
+          key: WALLET_APP_RECEIVE,
           color: '#009B72'
           //Green
         }

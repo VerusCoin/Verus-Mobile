@@ -11,55 +11,72 @@ import { connect } from 'react-redux';
 import Overview from './Overview/Overview'
 import SendCoin from './SendCoin/SendCoin'
 import ReceiveCoin from './ReceiveCoin/ReceiveCoin'
+import ConvertCoin from "./ConvertCoin/ConvertCoin";
 import { setActiveSection, setCoinSubWallet, setIsCoinMenuFocused } from "../../actions/actionCreators";
 import { NavigationActions, withNavigationFocus } from '@react-navigation/compat';
 import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
 import DynamicHeader from "./DynamicHeader";
 import { Portal, BottomNavigation } from "react-native-paper";
 import { subWalletActivity } from "../../utils/subwallet/subWalletStatus";
-import WyreServiceMissingInfoRedirect from "../Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceMissingInfoRedirect/WyreServiceMissingInfoRedirect";
+import MissingInfoRedirect from "../../components/MissingInfoRedirect/MissingInfoRedirect";
+import { WALLET_APP_CONVERT, WALLET_APP_OVERVIEW, WALLET_APP_RECEIVE, WALLET_APP_SEND } from "../../utils/constants/apps";
+import { SUBWALLET_NAMES } from "../../utils/constants/constants";
+import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 
 class CoinMenus extends Component {
   constructor(props) {
-    super(props)
+    super(props);
     let stateObj = this.generateTabs();
-    const subWallets = props.allSubWallets
+    const subWallets = props.allSubWallets;
 
-    //CoinMenus can be passed data, which will be passed to 
+    //CoinMenus can be passed data, which will be passed to
     //the app section components as props
-    this.passthrough = this.props.route.params ? this.props.route.params.data : null
-    
+    this.passthrough = this.props.route.params ? this.props.route.params.data : null;
+
     this.state = {
       tabs: stateObj.tabs,
       activeTab: stateObj.activeTab,
       activeTabIndex: stateObj.activeTabIndex,
-      subWallets
-    }; 
+      subWallets,
+      filteredSubWallets: null,
+    };
 
-    if (subWallets.length == 1) props.dispatch(setCoinSubWallet(props.activeCoin.id, subWallets[0]))
+    if (subWallets.length == 1)
+      props.dispatch(setCoinSubWallet(props.activeCoin.id, subWallets[0]));
 
     this.Routes = {
-      ['wallet-overview']: Overview,
-      ['wallet-send']: SendCoin,
-      ['wallet-receive']: ReceiveCoin
-    }
+      [WALLET_APP_OVERVIEW]: Overview,
+      [WALLET_APP_SEND]: SendCoin,
+      [WALLET_APP_RECEIVE]: ReceiveCoin,
+      [WALLET_APP_CONVERT]: ConvertCoin,
+    };
   }
 
   componentDidMount() {
-    this.props.dispatch(setIsCoinMenuFocused(true))
+    this.props.dispatch(setIsCoinMenuFocused(true));
   }
 
-  componentDidUpdate(lastProps) {  
+  componentDidUpdate(lastProps) {
     if (lastProps.isFocused !== this.props.isFocused) {
-      this.props.dispatch(setIsCoinMenuFocused(this.props.isFocused))
+      this.props.dispatch(setIsCoinMenuFocused(this.props.isFocused));
+    }
+
+    if (
+      lastProps.selectedSubWallet != this.props.selectedSubWallet &&
+      this.state.filteredSubWallets != null &&
+      this.props.selectedSubWallet != null
+    ) {
+      this.setState({
+        filteredSubWallets: null,
+      });
     }
   }
 
   generateTabs = () => {
-    let tabArray = []
+    let tabArray = [];
     let activeTab;
     let activeTabIndex;
-    let options = this.props.activeCoin.apps[this.props.activeApp].data
+    let options = this.props.activeCoin.apps[this.props.activeApp].data;
 
     for (let i = 0; i < options.length; i++) {
       let _tab = {
@@ -67,29 +84,29 @@ class CoinMenus extends Component {
         icon: options[i].icon,
         title: options[i].name,
         //color: options[i].color, // Disregarded for now
-        activeSection: options[i]
-      }
+        activeSection: options[i],
+      };
 
       if (options[i].key === this.props.activeSection.key) {
-        activeTab = _tab
-        activeTabIndex = i
+        activeTab = _tab;
+        activeTabIndex = i;
       }
 
-      tabArray.push(_tab)
+      tabArray.push(_tab);
     }
 
     if (!activeTab) {
-      throw new Error("Tab not found for active section " + this.props.activeSection.key)
+      throw new Error("Tab not found for active section " + this.props.activeSection.key);
     }
 
-    this.props.navigation.setOptions({ title: activeTab.title })
+    this.props.navigation.setOptions({ title: activeTab.title });
 
     return {
       tabs: tabArray,
       activeTab: activeTab,
-      activeTabIndex
+      activeTabIndex,
     };
-  }
+  };
 
   goToServices() {
     this.props.navigation.navigate("Home", {
@@ -104,38 +121,66 @@ class CoinMenus extends Component {
       const Route = this.Routes[route.key];
       const { placeholder, active } = subWalletActivity(this.props.selectedSubWallet.id);
 
-      return active(this.props.services) ? (
-        <Route navigation={this.props.navigation} data={this.passthrough} switchTab={jumpTo} />
+      return this.props.selectedSubWallet.compatible_apps.includes(route.key) ? (
+        active(this.props.services) ? (
+          <Route navigation={this.props.navigation} data={this.passthrough} switchTab={jumpTo} />
+        ) : (
+          <MissingInfoRedirect
+            icon={placeholder.icon}
+            label={placeholder.label}
+            buttonLabel="configure services"
+            onPress={() => this.goToServices()}
+          />
+        )
       ) : (
-        <WyreServiceMissingInfoRedirect
-          icon={placeholder.icon}
-          label={placeholder.label}
-          buttonLabel="configure services"
-          onPress={() => this.goToServices()}
+        <MissingInfoRedirect
+          icon={"power-plug-off"}
+          label={`This tab isn't accesible from the ${
+            SUBWALLET_NAMES[this.props.selectedSubWallet.id]
+          } card.`}
+          buttonLabel="Switch cards"
+          onPress={() => this.findCompatibleSubwallet(route.key)}
         />
       );
     }
-  }
+  };
+
+  findCompatibleSubwallet = (tabKey) => {
+    const subwalletsForTab = this.state.subWallets.filter((wallet) =>
+      wallet.compatible_apps.includes(tabKey)
+    );
+
+    if (subwalletsForTab.length > 0) {
+      this.setState(
+        {
+          filteredSubWallets: subwalletsForTab,
+        },
+        () => this.props.dispatch(setCoinSubWallet(this.props.activeCoin.id, null))
+      );
+    } else {
+      createAlert("Error", "No compatible cards found.");
+    }
+  };
 
   switchTab = (index) => {
-    const newTab = this.state.tabs[index]
+    const newTab = this.state.tabs[index];
 
-    this.props.navigation.setOptions({ title: newTab.title })
-    this.props.dispatch(setActiveSection(newTab.activeSection))
-    this.setState({ activeTab: newTab, activeTabIndex: index })
-  }
+    this.props.navigation.setOptions({ title: newTab.title });
+    this.props.dispatch(setActiveSection(newTab.activeSection));
+    this.setState({ activeTab: newTab, activeTabIndex: index });
+  };
 
   goBack = () => {
-    this.props.navigation.dispatch(NavigationActions.back())
-  }
+    this.props.navigation.dispatch(NavigationActions.back());
+  };
 
   //The rendering of overview, send and receive is temporary, we want to use
-  //this.state.activeTab.screen, but the 
+  //this.state.activeTab.screen, but the
   //"Cannot Add a child that doesn't have a YogaNode to a parent with out a measure function"
   //bug comes up and it seems like a bug in rn
   render() {
-    const { selectedSubWallet, activeCoin } = this.props
-    const { subWallets } = this.state
+    const { selectedSubWallet, activeCoin } = this.props;
+    const { subWallets, filteredSubWallets } = this.state;
 
     return (
       <Portal.Host>
@@ -145,7 +190,7 @@ class CoinMenus extends Component {
               visible={selectedSubWallet == null}
               cancel={this.goBack}
               animationType="slide"
-              subWallets={subWallets}
+              subWallets={filteredSubWallets == null ? subWallets : filteredSubWallets}
               chainTicker={activeCoin.id}
             />
           )}
