@@ -14,7 +14,8 @@ import {
   API_GET_SERVICE_ACCOUNT,
   WYRE_SERVICE,
   API_GET_SERVICE_PAYMENT_METHODS,
-  API_GET_SERVICE_TRANSFERS
+  API_GET_SERVICE_TRANSFERS,
+  API_GET_SERVICE_RATES
 } from './intervalConstants'
 
 export const DEFAULT_SERVICE_UPDATE_PARAMS = {
@@ -65,6 +66,22 @@ export const DEFAULT_SERVICE_UPDATE_PARAMS = {
       expire_timeout: 120000,
       update_expired_interval: 10000
     }
+  },
+  [API_GET_SERVICE_RATES]: {
+    channels: [WYRE_SERVICE],
+    tracking_info: {
+      update_locations: null,
+      needs_update: true,
+      busy: {},
+    },
+    interval_info: {
+      expire_id: null,
+      update_expired_id: null,
+      expire_oncomplete: null,
+      update_expired_oncomplete: null,
+      expire_timeout: 120000,
+      update_expired_interval: 10000
+    }
   }
 }
 
@@ -74,7 +91,7 @@ export const DEFAULT_SERVICE_UPDATE_PARAMS = {
  */
 export const DEFAULT_COIN_UPDATE_PARAMS = {
   [API_GET_FIATPRICE]: {
-    channels: [GENERAL],
+    channels: [GENERAL, WYRE_SERVICE],
     restrictions: [],
     pre_data: {
       tracking_info: {

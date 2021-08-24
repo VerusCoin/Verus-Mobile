@@ -5,7 +5,8 @@ import {
   ALWAYS_ACTIVATED,
   API_GET_SERVICE_ACCOUNT,
   API_GET_SERVICE_PAYMENT_METHODS,
-  API_GET_SERVICE_TRANSFERS
+  API_GET_SERVICE_TRANSFERS,
+  API_GET_SERVICE_RATES
 } from '../../../../utils/constants/intervalConstants'
 import {
   occupyServiceApiCall,
@@ -14,12 +15,14 @@ import {
 import { createServiceExpireTimeout } from '../../../actionDispatchers'
 import { updateServiceAccount } from './UpdateServiceAccount';
 import { updateServicePaymentMethods } from './UpdateServicePaymentMethods';
+import { updateServiceRates } from './UpdateServiceRates';
 import { updateServiceTransfers } from './UpdateServiceTransfers';
 
 export const serviceUpdates = {
   [API_GET_SERVICE_ACCOUNT]: updateServiceAccount,
   [API_GET_SERVICE_PAYMENT_METHODS]: updateServicePaymentMethods,
-  [API_GET_SERVICE_TRANSFERS]: updateServiceTransfers
+  [API_GET_SERVICE_TRANSFERS]: updateServiceTransfers,
+  [API_GET_SERVICE_RATES]: updateServiceRates
 }
 
 /**

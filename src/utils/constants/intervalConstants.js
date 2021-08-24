@@ -29,12 +29,14 @@ export const API_GET_KEYS = 'get_keys'
 export const API_GET_SERVICE_ACCOUNT = "get_account"
 export const API_GET_SERVICE_PAYMENT_METHODS = 'get_paymentmethods'
 export const API_GET_SERVICE_TRANSFERS = 'get_transfers'
+export const API_GET_SERVICE_RATES = 'get_rates'
 
 // Interval restriction labels
 export const IS_VERUS = "is_verus"
 export const IS_PBAAS = "is_pbaas"
 export const IS_ZCASH = "is_zcash"
 export const IS_PBAAS_ROOT = "is_pbaas_root"
+export const IS_FIAT = 'is_fiat'
 
 // API channel types
 export const DLIGHT_PRIVATE = 'dlight_private'

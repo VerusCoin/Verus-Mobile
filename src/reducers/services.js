@@ -8,7 +8,8 @@ import {
   SET_SERVICE_LOADING,
   SET_SERVICE_STORED_DATA,
   SET_SERVICE_PAYMENT_METHODS,
-  SET_SERVICE_TRANSFERS
+  SET_SERVICE_TRANSFERS,
+  SET_SERVICE_RATES
 } from "../utils/constants/storeType";
 
 export const services = (
@@ -17,6 +18,7 @@ export const services = (
     paymentMethods: {},
     stored: {},
     transfers: {},
+    rates: {},
     loading: false
   },
   action
@@ -43,6 +45,14 @@ export const services = (
         ...state,
         transfers: {
           ...state.transfers,
+          [action.payload.channel]: action.payload.body
+        }
+      }
+    case SET_SERVICE_RATES:
+      return {
+        ...state,
+        rates: {
+          ...state.rates,
           [action.payload.channel]: action.payload.body
         }
       }

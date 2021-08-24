@@ -9,9 +9,11 @@ import {
   ETH,
   ERC20,
   WYRE_SERVICE,
+  IS_FIAT,
 } from "../constants/intervalConstants";
 import { dlightServers } from 'agama-wallet-lib/src/dlight-servers';
-import { DEFAULT_DECIMALS, ETHERS } from "../constants/web3Constants";
+import { DEFAULT_DECIMALS, ETHERS, FIAT_DECIMALS } from "../constants/web3Constants";
+import { WYRE_SERVICE_ID } from "../constants/services";
 
 export const coinsList = {
   vrsc: {
@@ -29,6 +31,48 @@ export const coinsList = {
     proto: 'vrsc',
     dlight_endpoints: dlightServers.vrsc,
     decimals: DEFAULT_DECIMALS
+  },
+  usd: {
+    id: "USD",
+    currency_id: 'usd',
+    system_id: '.fiat',
+    display_ticker: 'USD',
+    display_name: "US Dollar",
+    alt_names: [],
+    theme_color: "#85bb65",
+    website: "https://home.treasury.gov",
+    compatible_channels: [WYRE_SERVICE_ID],
+    tags: [IS_FIAT],
+    proto: 'fiat',
+    decimals: FIAT_DECIMALS
+  },
+  aud: {
+    id: "AUD",
+    currency_id: 'aud',
+    system_id: '.fiat',
+    display_ticker: 'AUD',
+    display_name: "Australian Dollar",
+    alt_names: [],
+    theme_color: "#002167",
+    website: "https://treasury.gov.au",
+    compatible_channels: [WYRE_SERVICE_ID],
+    tags: [IS_FIAT],
+    proto: 'fiat',
+    decimals: FIAT_DECIMALS
+  },
+  eur: {
+    id: "EUR",
+    currency_id: 'eur',
+    system_id: '.fiat',
+    display_ticker: 'EUR',
+    display_name: "Euro",
+    alt_names: [],
+    theme_color: "#003399",
+    website: "https://www.ecb.europa.eu/home/html/index.en.html",
+    compatible_channels: [WYRE_SERVICE_ID],
+    tags: [IS_FIAT],
+    proto: 'fiat',
+    decimals: FIAT_DECIMALS
   },
   kmd: {
     id: "KMD",

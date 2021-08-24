@@ -34,7 +34,9 @@ import {
   SET_SERVICE_PAYMENT_METHODS,
   ERROR_SERVICE_PAYMENT_METHODS,
   SET_SERVICE_TRANSFERS,
-  ERROR_SERVICE_TRANSFERS
+  ERROR_SERVICE_TRANSFERS,
+  SET_SERVICE_RATES,
+  ERROR_SERVICE_RATES
 } from "../utils/constants/storeType";
 import {
   API_GET_BALANCES,
@@ -44,6 +46,7 @@ import {
   API_GET_SERVICE_ACCOUNT,
   API_GET_SERVICE_PAYMENT_METHODS,
   API_GET_SERVICE_TRANSFERS,
+  API_GET_SERVICE_RATES,
 } from "../utils/constants/intervalConstants";
 
 export const updates = (state = {
@@ -280,6 +283,25 @@ export const updates = (state = {
             busy: {
               ...state.serviceUpdateTracker[
                 API_GET_SERVICE_TRANSFERS
+              ].busy,
+              [channel]: false,
+            },
+          }
+        },
+      };
+    case SET_SERVICE_RATES:
+    case ERROR_SERVICE_RATES:
+      return {
+        ...state,
+        serviceUpdateTracker: {
+          ...state.serviceUpdateTracker,
+          [API_GET_SERVICE_RATES]: {
+            ...state.serviceUpdateTracker[
+              API_GET_SERVICE_RATES
+            ],
+            busy: {
+              ...state.serviceUpdateTracker[
+                API_GET_SERVICE_RATES
               ].busy,
               [channel]: false,
             },

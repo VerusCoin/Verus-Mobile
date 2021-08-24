@@ -9,7 +9,13 @@ import { ENABLE_VERUS_IDENTITIES } from '../../../env/index'
 import CoinLogoSvgs from '../../images/cryptologo/index'
 import { ETHERS } from '../constants/web3Constants';
 import { getDefaultSubWallets } from '../defaultSubWallets';
-import { WALLET_APP_CONVERT, WALLET_APP_OVERVIEW, WALLET_APP_RECEIVE, WALLET_APP_SEND } from '../constants/apps';
+import {
+  WALLET_APP_CONVERT,
+  WALLET_APP_OVERVIEW,
+  WALLET_APP_RECEIVE,
+  WALLET_APP_SEND,
+  WALLET_APP_MANAGE
+} from "../constants/apps";
 
 const getDefaultApps = (coinObj) => {
   const coinName = coinObj.display_name
@@ -47,6 +53,13 @@ const getDefaultApps = (coinObj) => {
       key: WALLET_APP_CONVERT,
       color: Colors.primaryColor,
     },
+    {
+      screen: "ManageCoin",
+      icon: "bank-transfer",
+      name: "Manage",
+      key: WALLET_APP_MANAGE,
+      color: Colors.primaryColor
+    }
   ];
 
   return {
@@ -142,7 +155,12 @@ export const CoinLogos = {
   ven: CoinLogoSvgs.web3.VEN,
   yfi: CoinLogoSvgs.web3.YFI,
   zrx: CoinLogoSvgs.web3.ZRX,
-  rfox: CoinLogoSvgs.web3.RFOX
+  rfox: CoinLogoSvgs.web3.RFOX,
+
+  // fiat "protocol"
+  usd: CoinLogoSvgs.fiat.USD,
+  aud: CoinLogoSvgs.fiat.AUD,
+  eur: CoinLogoSvgs.fiat.EUR,
 };
 
 //To make flatlist render faster

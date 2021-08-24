@@ -17,12 +17,7 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
       createPaymentMethod: (payload) => this.createPaymentMethod(payload),
       deletePaymentMethod: (payload) => this.deletePaymentMethod(payload),
       getTransferHistory: (payload) => this.getTransferHistory(payload),
-      getRates: async () => {
-        //TODO
-      },
-      getBalances: async () => {
-        //TODO
-      },
+      getRates: async (payload) => this.getRates(payload),
       sendTransaction: async (payload) => this.sendTransaction(payload),
       preflightTransaction: async (payload) => this.preflightTransaction(payload),
     });
@@ -144,5 +139,9 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
 
   getAccountSrn = () => {
     return WyreService.formatSrn(this.accountId, "account")
+  }
+
+  getRates = async ({ mode }) => {
+    return await this.service.getRates(mode)
   }
 }

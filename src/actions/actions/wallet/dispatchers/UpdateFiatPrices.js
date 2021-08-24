@@ -3,8 +3,9 @@ import {
   ERROR_RATES,
   SET_RATES
 } from "../../../../utils/constants/storeType";
-import { GENERAL } from "../../../../utils/constants/intervalConstants";
+import { GENERAL, WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
 import { updateLedgerValue } from "./UpdateLedgerValue";
+import store from "../../../../store";
 
 const channelMap = {
   [GENERAL]: async (activeUser, coinObj) => {
@@ -17,6 +18,21 @@ const channelMap = {
       channel: GENERAL,
       header,
       body: result,
+    };
+  },
+  [WYRE_SERVICE]: async (activeUser, coinObj) => {
+    const state = store.getState();
+    let body = null;
+
+    if (state.services.rates[WYRE_SERVICE] != null) {
+      body = state.services.rates[WYRE_SERVICE][coinObj.id];
+    }
+
+    return {
+      chainTicker: coinObj.id,
+      channel: WYRE_SERVICE,
+      header: {},
+      body,
     };
   },
 };

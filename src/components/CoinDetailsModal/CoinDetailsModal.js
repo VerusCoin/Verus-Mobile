@@ -235,7 +235,7 @@ class CoinDetailsModal extends Component {
                     marginTop: 32,
                   }}
                 >
-                  {added ? "Remove Coin" : "Add Coin"}
+                  {added ? "Remove Currency" : "Add Currency"}
                 </Button>
               </TouchableOpacity>
             )}

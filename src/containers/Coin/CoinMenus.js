@@ -12,6 +12,7 @@ import Overview from './Overview/Overview'
 import SendCoin from './SendCoin/SendCoin'
 import ReceiveCoin from './ReceiveCoin/ReceiveCoin'
 import ConvertCoin from "./ConvertCoin/ConvertCoin";
+import ManageCoin from "./ManageCoin/ManageCoin";
 import { setActiveSection, setCoinSubWallet, setIsCoinMenuFocused } from "../../actions/actionCreators";
 import { NavigationActions, withNavigationFocus } from '@react-navigation/compat';
 import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
@@ -19,7 +20,7 @@ import DynamicHeader from "./DynamicHeader";
 import { Portal, BottomNavigation } from "react-native-paper";
 import { subWalletActivity } from "../../utils/subwallet/subWalletStatus";
 import MissingInfoRedirect from "../../components/MissingInfoRedirect/MissingInfoRedirect";
-import { WALLET_APP_CONVERT, WALLET_APP_OVERVIEW, WALLET_APP_RECEIVE, WALLET_APP_SEND } from "../../utils/constants/apps";
+import { WALLET_APP_CONVERT, WALLET_APP_MANAGE, WALLET_APP_OVERVIEW, WALLET_APP_RECEIVE, WALLET_APP_SEND } from "../../utils/constants/apps";
 import { SUBWALLET_NAMES } from "../../utils/constants/constants";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 
@@ -49,6 +50,7 @@ class CoinMenus extends Component {
       [WALLET_APP_SEND]: SendCoin,
       [WALLET_APP_RECEIVE]: ReceiveCoin,
       [WALLET_APP_CONVERT]: ConvertCoin,
+      [WALLET_APP_MANAGE]: ManageCoin
     };
   }
 
@@ -197,6 +199,7 @@ class CoinMenus extends Component {
           {selectedSubWallet != null && <DynamicHeader />}
           {selectedSubWallet != null && (
             <BottomNavigation
+              shifting={false}
               navigationState={{
                 index: this.state.activeTabIndex,
                 routes: this.state.tabs,

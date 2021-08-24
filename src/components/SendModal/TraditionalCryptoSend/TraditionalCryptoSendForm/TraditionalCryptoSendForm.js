@@ -6,7 +6,7 @@ import { traditionalCryptoSend, TraditionalCryptoSendFee } from "../../../../act
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import { getRecommendedBTCFees } from "../../../../utils/api/channels/general/callCreators";
 import { USD } from "../../../../utils/constants/currencies";
-import { API_GET_BALANCES, API_SEND, DLIGHT_PRIVATE, ELECTRUM, GENERAL } from "../../../../utils/constants/intervalConstants";
+import { API_GET_BALANCES, API_GET_FIATPRICE, API_SEND, DLIGHT_PRIVATE, ELECTRUM, GENERAL } from "../../../../utils/constants/intervalConstants";
 import { SEND_MODAL_CRYPTO_AMOUNT_FIELD, SEND_MODAL_FORM_STEP_CONFIRM, SEND_MODAL_MEMO_FIELD, SEND_MODAL_TO_ADDRESS_FIELD } from "../../../../utils/constants/sendModal";
 import { isNumber, truncateDecimal } from "../../../../utils/math";
 import { TraditionalCryptoSendFormRender } from "./TraditionalCryptoSendForm.render"
@@ -174,7 +174,7 @@ class TraditionalCryptoSendForm extends Component {
       );
 
       this.props.setModalHeight(696);
-      
+
       if (res.feeTakenMessage != null) {
         Alert.alert("Amount changed", res.feeTakenMessage)
       }
@@ -201,6 +201,7 @@ class TraditionalCryptoSendForm extends Component {
 const mapStateToProps = (state) => {
   const chainTicker = state.sendModal.coinObj.id
   const balance_channel = state.sendModal.subWallet.api_channels[API_GET_BALANCES];
+  const rates_channel = state.sendModal.subWallet.api_channels[API_GET_FIATPRICE];
  
   return {
     sendModal: state.sendModal,
@@ -209,7 +210,7 @@ const mapStateToProps = (state) => {
       errors: state.errors[API_GET_BALANCES][balance_channel][chainTicker],
     },
     activeAccount: state.authentication.activeAccount,
-    rates: state.ledger.rates[GENERAL],
+    rates: state.ledger.rates[rates_channel],
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
   };
 };

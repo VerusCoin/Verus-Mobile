@@ -13,7 +13,7 @@ import {
 import { DEVICE_WINDOW_WIDTH, SUBWALLET_NAMES } from "../../utils/constants/constants";
 import { setCoinSubWallet } from "../../actions/actionCreators";
 import SnapCarousel from "../../components/SnapCarousel";
-import { API_GET_BALANCES, API_GET_INFO, GENERAL } from "../../utils/constants/intervalConstants";
+import { API_GET_BALANCES, API_GET_FIATPRICE, API_GET_INFO, GENERAL } from "../../utils/constants/intervalConstants";
 import Colors from "../../globals/colors";
 import { Card, Avatar, Paragraph, Title } from "react-native-paper";
 import BigNumber from "bignumber.js";
@@ -103,9 +103,13 @@ class DynamicHeader extends Component {
         ? this.props.balances[item.id].total
         : null;
     let fiatBalance = null
+    const rates =
+      this.props.rates[item.api_channels[API_GET_FIATPRICE]] != null
+        ? this.props.rates[item.api_channels[API_GET_FIATPRICE]][this.props.chainTicker]
+        : null;
 
-    if (displayBalance != null && this.props.rates != null && this.props.rates[this.props.displayCurrency] != null) {
-      const price = BigNumber(this.props.rates[this.props.displayCurrency])
+    if (displayBalance != null && rates != null && rates[this.props.displayCurrency] != null) {
+      const price = BigNumber(rates[this.props.displayCurrency])
 
       fiatBalance = BigNumber(displayBalance).multipliedBy(price).toFixed(2)
     }
@@ -251,7 +255,7 @@ const mapStateToProps = (state) => {
       return aTotal.plus(bTotal)
     }, BigNumber(0)),
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
-    rates: state.ledger.rates[GENERAL][chainTicker],
+    rates: state.ledger.rates,
   }
 };
 

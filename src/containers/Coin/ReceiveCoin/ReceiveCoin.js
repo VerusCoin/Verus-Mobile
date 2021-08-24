@@ -22,6 +22,7 @@ import VerusPayParser from '../../../utils/verusPay/index'
 import BigNumber from "bignumber.js";
 import { RenderReceiveCoin } from "./ReceiveCoin.render"
 import { createAlert } from "../../../actions/actions/alert/dispatchers/alert"
+import selectRates from "../../../selectors/rates"
 
 class ReceiveCoin extends Component {
   constructor(props) {
@@ -145,8 +146,9 @@ class ReceiveCoin extends Component {
   }
 
   createQRString = (coinObj, amount, address, memo) => {
-    const { rates, displayCurrency } = this.props
+    const { displayCurrency } = this.props
     const coinTicker = coinObj.id
+    const rates = this.props.rates.results
 
     let _price = rates[coinTicker] != null ? rates[coinTicker][displayCurrency] : null
 
@@ -254,7 +256,7 @@ const mapStateToProps = (state) => {
     accounts: state.authentication.accounts,
     activeCoin: state.coins.activeCoin,
     activeCoinsForUser: state.coins.activeCoinsForUser,
-    rates: state.ledger.rates[GENERAL],
+    rates: selectRates(state),
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
     addresses: selectAddresses(state)
   }

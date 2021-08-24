@@ -189,6 +189,7 @@ class TraditionalCryptoSendConfirm extends Component {
 
 const mapStateToProps = (state, ownProps) => { 
   const balance_channel = state.sendModal.subWallet.api_channels[API_GET_BALANCES];
+  const rates_channel = state.sendModal.subWallet.api_channels[API_GET_FIATPRICE];
   const chainTicker = ownProps.route.params.txConfirmation.coinObj.id
 
   return {
@@ -196,7 +197,7 @@ const mapStateToProps = (state, ownProps) => {
       results: state.ledger.balances[balance_channel][chainTicker],
       errors: state.errors[API_GET_BALANCES][balance_channel][chainTicker],
     },
-    rates: state.ledger.rates[GENERAL],
+    rates: state.ledger.rates[API_GET_FIATPRICE],
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
   };
 };

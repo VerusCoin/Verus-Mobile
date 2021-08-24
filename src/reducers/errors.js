@@ -14,7 +14,8 @@ import {
   CHANNELS_OBJECT_TEMPLATE,
   API_GET_SERVICE_ACCOUNT,
   API_GET_SERVICE_PAYMENT_METHODS,
-  API_GET_SERVICE_TRANSFERS
+  API_GET_SERVICE_TRANSFERS,
+  API_GET_SERVICE_RATES
 } from "../utils/constants/intervalConstants";
 import {
   ERROR_BALANCES,
@@ -35,7 +36,9 @@ import {
   SET_SERVICE_PAYMENT_METHODS,
   ERROR_SERVICE_PAYMENT_METHODS,
   SET_SERVICE_TRANSFERS,
-  ERROR_SERVICE_TRANSFERS
+  ERROR_SERVICE_TRANSFERS,
+  SET_SERVICE_RATES,
+  ERROR_SERVICE_RATES
 } from "../utils/constants/storeType";
 
 export const errors = (state = {
@@ -154,6 +157,14 @@ export const errors = (state = {
           [channel]: error
         }
       }
+    case ERROR_SERVICE_RATES:
+      return {
+        ...state,
+        [API_GET_SERVICE_RATES]: {
+          ...state[API_GET_SERVICE_RATES],
+          [channel]: error
+        }
+      }
     case INIT_DLIGHT_CHANNEL_START:
       return {
         ...state,
@@ -227,6 +238,14 @@ export const errors = (state = {
         ...state,
         [API_GET_SERVICE_TRANSFERS]: {
           ...state[API_GET_SERVICE_TRANSFERS],
+          [channel]: null
+        }
+      }
+    case SET_SERVICE_RATES:
+      return {
+        ...state,
+        [API_GET_SERVICE_RATES]: {
+          ...state[API_GET_SERVICE_RATES],
           [channel]: null
         }
       }

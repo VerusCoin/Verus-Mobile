@@ -47,24 +47,24 @@ class WyreService {
   static formatCryptoSrn = (coinObj, address) => {
     switch (coinObj.id) {
       case "BTC":
-        return this.formatSrn(address, "bitcoin")
+        return this.formatSrn(address, "bitcoin");
       default:
-        throw new Error(`${coinObj.id} SRNs are not supported.`)
+        throw new Error(`${coinObj.id} SRNs are not supported.`);
     }
-  }
+  };
 
   static decodeSrn = (srn) => {
-    const srnArr = srn.split(':')
+    const srnArr = srn.split(":");
 
     return {
       id: srnArr[1],
-      type: srnArr[0]
-    }
-  }
+      type: srnArr[0],
+    };
+  };
 
   static formatSrn = (id, srnType) => {
-    return `${srnType}:${id}`
-  }
+    return `${srnType}:${id}`;
+  };
 
   static formatCall = async (call) => {
     try {
@@ -351,15 +351,29 @@ class WyreService {
     }, true);
   };
 
-  getRates = async () => {
+  getRates = async (mode = "PRICED") => {
+    const oneTimeService = axios.create({
+      baseURL: this.url,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
     return await WyreService.formatCall(() => {
-      return axios.get(`${this.url}/v3/rates`);
+      return oneTimeService.get(`/v3/rates?as=${mode}`);
     });
   };
 
   getSupportedCountries = async () => {
+    const oneTimeService = axios.create({
+      baseURL: this.url,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
     return await WyreService.formatCall(() => {
-      return axios.get(`${this.url}/v3/widget/supportedCountries`);
+      return oneTimeService.get('/v3/widget/supportedCountries');
     });
   };
 }

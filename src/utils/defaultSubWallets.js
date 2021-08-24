@@ -1,5 +1,11 @@
 import Colors from "../globals/colors";
-import { WALLET_APP_CONVERT, WALLET_APP_OVERVIEW, WALLET_APP_RECEIVE, WALLET_APP_SEND } from "./constants/apps";
+import {
+  WALLET_APP_CONVERT,
+  WALLET_APP_MANAGE,
+  WALLET_APP_OVERVIEW,
+  WALLET_APP_RECEIVE,
+  WALLET_APP_SEND,
+} from "./constants/apps";
 import {
   API_GET_ADDRESSES,
   API_GET_BALANCES,
@@ -10,17 +16,13 @@ import {
   API_SEND,
   DLIGHT_PRIVATE,
   ELECTRUM,
+  ERC20,
+  ETH,
   GENERAL,
   WYRE_SERVICE,
 } from "./constants/intervalConstants";
 import { SEND_MODAL, TRADITIONAL_CRYPTO_SEND_MODAL } from "./constants/sendModal";
 import { dlightEnabled, wyreCoinChannelEnabled } from "./enabledChannels";
-
-// export const API_GET_ADDRESSES = "get_addresses"
-// export const API_GET_BALANCES = "get_balances"
-// export const API_GET_INFO = "get_info"
-// export const API_GET_TRANSACTIONS = "get_transactions"
-// export const API_GET_FIATPRICE = "get_fiatprice"
 
 const getMainSubwallet = (dominantChannel = ELECTRUM) => {
   return {
@@ -44,6 +46,37 @@ const getMainSubwallet = (dominantChannel = ELECTRUM) => {
   };
 }
 
+const getWyreSubwallet = (protocol) => {
+  let compatible_apps = [
+    WALLET_APP_OVERVIEW,
+    WALLET_APP_SEND,
+    WALLET_APP_RECEIVE,
+    WALLET_APP_CONVERT,
+  ];
+
+  if (protocol == "fiat") compatible_apps.push(WALLET_APP_MANAGE);
+
+  return {
+    channel: WYRE_SERVICE,
+    api_channels: {
+      [API_GET_TRANSACTIONS]: WYRE_SERVICE,
+      [API_GET_BALANCES]: WYRE_SERVICE,
+      // [API_GET_INFO]: WYRE_SERVICE,
+      // [API_GET_ADDRESSES]: WYRE_SERVICE,
+      [API_GET_FIATPRICE]: WYRE_SERVICE,
+      [API_SEND]: WYRE_SERVICE,
+      // [API_GET_KEYS]: WYRE_SERVICE
+    },
+    compatible_apps,
+    modals: {
+      [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL,
+    },
+    id: "WYRE_ACCOUNT_WALLET",
+    params: {},
+    color: Colors.verusGreenColor,
+  };
+};
+
 const PRIVATE_SUBWALLET = {
   channel: DLIGHT_PRIVATE,
   api_channels: {
@@ -64,32 +97,16 @@ const PRIVATE_SUBWALLET = {
   color: Colors.quinaryColor
 }
 
-const WYRE_ACCOUNT_SUBWALLET = {
-  channel: WYRE_SERVICE,
-  api_channels: {
-    [API_GET_TRANSACTIONS]: WYRE_SERVICE,
-    [API_GET_BALANCES]: WYRE_SERVICE,
-    // [API_GET_INFO]: WYRE_SERVICE,
-    // [API_GET_ADDRESSES]: WYRE_SERVICE,
-    // [API_GET_FIATPRICE]: GENERAL,
-    [API_SEND]: WYRE_SERVICE,
-    // [API_GET_KEYS]: WYRE_SERVICE
-  },
-  compatible_apps: [WALLET_APP_OVERVIEW, WALLET_APP_SEND, WALLET_APP_RECEIVE, WALLET_APP_CONVERT],
-  modals: {
-    [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL,
-  },
-  id: "WYRE_ACCOUNT_WALLET",
-  params: {},
-  color: Colors.verusGreenColor,
-};
-
 export const getDefaultSubWallets = (coinObj) => {
   const MAIN_WALLET = getMainSubwallet(coinObj.dominant_channel)
+  const WYRE_ACCOUNT_SUBWALLET = getWyreSubwallet(coinObj.proto)
 
   const SUBWALLET_CONDITIONS = [
     {
-      met: () => true,
+      met: () =>
+        coinObj.compatible_channels.includes(ELECTRUM) ||
+        coinObj.compatible_channels.includes(ETH) ||
+        coinObj.compatible_channels.includes(ERC20),
       subwallet: MAIN_WALLET,
     },
     {
@@ -97,8 +114,7 @@ export const getDefaultSubWallets = (coinObj) => {
       subwallet: PRIVATE_SUBWALLET,
     },
     {
-      met: () =>
-        coinObj.compatible_channels.includes(WYRE_SERVICE) && wyreCoinChannelEnabled(),
+      met: () => coinObj.compatible_channels.includes(WYRE_SERVICE) && wyreCoinChannelEnabled(),
       subwallet: WYRE_ACCOUNT_SUBWALLET,
     },
   ];
