@@ -14,7 +14,7 @@ import { isNumber, satsToCoins, truncateDecimal } from '../../utils/math';
 import { NavigationActions } from '@react-navigation/compat';
 import { CommonActions } from '@react-navigation/native';
 import { NO_VERIFICATION, MID_VERIFICATION } from '../../utils/constants/constants'
-import { preflight } from "../../utils/api/routers/preflight";
+import { preflightSend } from "../../utils/api/routers/preflightSend";
 import { API_GET_FIATPRICE, API_GET_TRANSACTIONS, ELECTRUM, GENERAL } from "../../utils/constants/intervalConstants";
 import BigNumber from "bignumber.js";
 import { renderError, renderLoading, renderTransactionInfo } from './ConfirmSend.render'
@@ -190,7 +190,7 @@ class ConfirmSend extends Component {
 
       this.setState({ sendTx, channel });
 
-      const res = sendTx ? await send(...params) : await preflight(...params);
+      const res = sendTx ? await send(...params) : await preflightSend(...params);
 
       if (res.err || !res) {
         this.setState({

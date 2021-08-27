@@ -19,11 +19,13 @@ export const INIT_ETH_ERRORS = 'init_eth_errors'
 export const API_GET_ADDRESSES = "get_addresses"
 export const API_GET_BALANCES = "get_balances"
 export const API_GET_INFO = "get_info"
+export const API_GET_CONVERSION_PATHS = 'get_conversion_paths'
 export const API_GET_TRANSACTIONS = "get_transactions"
 export const API_GET_FIATPRICE = "get_fiatprice"
 
 export const API_SEND = 'send'
 export const API_GET_KEYS = 'get_keys'
+export const API_CONVERT = 'convert'
 
 // Service API call names
 export const API_GET_SERVICE_ACCOUNT = "get_account"

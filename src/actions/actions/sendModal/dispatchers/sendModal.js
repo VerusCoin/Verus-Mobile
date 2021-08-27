@@ -1,9 +1,12 @@
 import store from "../../../../store"
 import {
+  CONVERSION_SEND_MODAL,
   SEND_MODAL,
-  SEND_MODAL_CRYPTO_AMOUNT_FIELD,
+  SEND_MODAL_AMOUNT_FIELD,
+  SEND_MODAL_FROM_CURRENCY_FIELD,
   SEND_MODAL_MEMO_FIELD,
   SEND_MODAL_TO_ADDRESS_FIELD,
+  SEND_MODAL_TO_CURRENCY_FIELD,
   TRADITIONAL_CRYPTO_SEND_MODAL,
 } from "../../../../utils/constants/sendModal";
 import {
@@ -34,7 +37,7 @@ export const openTraditionalCryptoSendModal = (coinObj, subWallet, data) => {
     subWallet,
     data == null ? {
       [SEND_MODAL_TO_ADDRESS_FIELD]: "",
-      [SEND_MODAL_CRYPTO_AMOUNT_FIELD]: "",
+      [SEND_MODAL_AMOUNT_FIELD]: "",
       [SEND_MODAL_MEMO_FIELD]: "",
     } : data,
     TRADITIONAL_CRYPTO_SEND_MODAL,
@@ -42,7 +45,23 @@ export const openTraditionalCryptoSendModal = (coinObj, subWallet, data) => {
   );
 };
 
-export const getAndOpenSendModal = (coinObj, subWallet, data) => {
+export const openConversionSendModal = (coinObj, subWallet, data) => {
+  openSendModal(
+    `Convert Currency`,
+    coinObj,
+    subWallet,
+    data == null ? {
+      //[SEND_MODAL_TO_ADDRESS_FIELD]: "",
+      [SEND_MODAL_AMOUNT_FIELD]: "",
+      [SEND_MODAL_FROM_CURRENCY_FIELD]: null,
+      [SEND_MODAL_TO_CURRENCY_FIELD]: null
+    } : data,
+    CONVERSION_SEND_MODAL,
+    'To send cryptocurrency, enter a recipients address in the address field, enter an amount to send, and press "send". You will be shown your transaction details before they are sent so you can confirm them.'
+  );
+};
+
+export const openSubwalletSendModal = (coinObj, subWallet, data) => {
   switch (subWallet.modals[SEND_MODAL]) {
     case TRADITIONAL_CRYPTO_SEND_MODAL:
       return openTraditionalCryptoSendModal(coinObj, subWallet, data);

@@ -7,8 +7,10 @@ import {
   WALLET_APP_SEND,
 } from "./constants/apps";
 import {
+  API_CONVERT,
   API_GET_ADDRESSES,
   API_GET_BALANCES,
+  API_GET_CONVERSION_PATHS,
   API_GET_FIATPRICE,
   API_GET_INFO,
   API_GET_KEYS,
@@ -61,6 +63,8 @@ const getWyreSubwallet = (protocol) => {
     api_channels: {
       [API_GET_TRANSACTIONS]: WYRE_SERVICE,
       [API_GET_BALANCES]: WYRE_SERVICE,
+      [API_CONVERT]: WYRE_SERVICE,
+      [API_GET_CONVERSION_PATHS]: WYRE_SERVICE,
       // [API_GET_INFO]: WYRE_SERVICE,
       // [API_GET_ADDRESSES]: WYRE_SERVICE,
       [API_GET_FIATPRICE]: WYRE_SERVICE,

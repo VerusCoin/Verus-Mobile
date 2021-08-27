@@ -5,6 +5,7 @@ import { Colors } from "react-native/Libraries/NewAppScreen";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import Styles from "../../styles";
 import {
+  CONVERSION_SEND_MODAL,
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_FORM_STEP_FORM,
   SEND_MODAL_FORM_STEP_RESULT,
@@ -19,21 +20,27 @@ import LoadingScreen from "../../containers/LoadingScreen/LoadingScreen";
 import AnimatedActivityIndicatorBox from "../AnimatedActivityIndicatorBox";
 import TraditionalCryptoSendConfirm from "./TraditionalCryptoSend/TraditionalCryptoSendConfirm/TraditionalCryptoSendConfirm";
 import TraditionalCryptoSendResult from "./TraditionalCryptoSend/TraditionalCryptoSendResult/TraditionalCryptoSendResult";
+import ConversionSendForm from "./ConversionSend/ConversionSendForm/ConversionSendForm";
+import ConversionSendConfirm from "./ConversionSend/ConversionSendConfirm/ConversionSendConfirm";
+import ConversionSendResult from "./ConversionSend/ConversionSendResult/ConversionSendResult";
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
 
 const SEND_FORMS = {
-  [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendForm
+  [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendForm,
+  [CONVERSION_SEND_MODAL]: ConversionSendForm,
 };
 
 const SEND_CONFIRMATION = {
-  [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendConfirm
-}
+  [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendConfirm,
+  [CONVERSION_SEND_MODAL]: ConversionSendConfirm,
+};
 
 const SEND_RESULTS = {
-  [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendResult
-}
+  [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendResult,
+  [CONVERSION_SEND_MODAL]: ConversionSendResult,
+};
 
 export const SendModalRender = function () {
   const { visible, title } = this.props.sendModal;
@@ -102,7 +109,8 @@ export const SendModalInnerAreaRender = function () {
     updateSendFormData: (key, value) => this.updateSendFormData(key, value),
     setLoading: (loading) => this.setLoading(loading),
     setModalHeight: (height) => this.setModalHeight(height),
-    setPreventExit: (preventExit) => this.setPreventExit(preventExit)
+    setPreventExit: (preventExit) => this.setPreventExit(preventExit),
+    setVisible: (visible) => this.setVisible(visible)
   };
 
   const Form =

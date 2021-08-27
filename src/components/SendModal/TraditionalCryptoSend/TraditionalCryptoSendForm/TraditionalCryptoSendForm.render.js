@@ -5,7 +5,7 @@ import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import { API_SEND, DLIGHT_PRIVATE } from "../../../../utils/constants/intervalConstants";
 import {
-  SEND_MODAL_CRYPTO_AMOUNT_FIELD,
+  SEND_MODAL_AMOUNT_FIELD,
   SEND_MODAL_MEMO_FIELD,
   SEND_MODAL_TO_ADDRESS_FIELD,
 } from "../../../../utils/constants/sendModal";
@@ -59,10 +59,10 @@ export const TraditionalCryptoSendFormRender = function () {
               keyboardType={"decimal-pad"}
               autoCapitalize={"none"}
               autoCorrect={false}
-              value={data[SEND_MODAL_CRYPTO_AMOUNT_FIELD]}
+              value={data[SEND_MODAL_AMOUNT_FIELD]}
               mode="outlined"
               onChangeText={(text) =>
-                this.props.updateSendFormData(SEND_MODAL_CRYPTO_AMOUNT_FIELD, text)
+                this.props.updateSendFormData(SEND_MODAL_AMOUNT_FIELD, text)
               }
               style={{
                 flex: 1,

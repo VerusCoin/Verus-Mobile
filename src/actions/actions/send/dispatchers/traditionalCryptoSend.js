@@ -5,7 +5,7 @@ import { networks } from 'bitgo-utxo-lib';
 import { extractIdentityAddress } from "../../../../utils/api/channels/dlight/callCreators";
 import { createAlert } from "../../alert/dispatchers/alert";
 import { send } from "../../../../utils/api/routers/send";
-import { preflight } from "../../../../utils/api/routers/preflight";
+import { preflightSend } from "../../../../utils/api/routers/preflightSend";
 import store from "../../../../store";
 
 export class TraditionalCryptoSendFee {
@@ -90,7 +90,7 @@ export const traditionalCryptoSend = async (
       },
     ];
 
-    const res = !returnTx ? await send(...params) : await preflight(...params);
+    const res = !returnTx ? await send(...params) : await preflightSend(...params);
 
     if (res.err || !res) {
       throw new Error(res ? res.result : "Unknown error");

@@ -21,7 +21,8 @@ import {
   //RATES_NEED_UPDATE,
   //EVERYTHING_NEEDS_UPDATE,
   //SET_INTERVAL_ID,
-  SET_INFO
+  SET_INFO,
+  SET_CONVERSION_PATHS
 } from '../utils/constants/storeType'
 import {
   CHANNELS_OBJECT_TEMPLATE
@@ -31,7 +32,8 @@ export const ledger = (state = {
   balances: CHANNELS_OBJECT_TEMPLATE,
   transactions: CHANNELS_OBJECT_TEMPLATE,
   rates: CHANNELS_OBJECT_TEMPLATE,
-  info: CHANNELS_OBJECT_TEMPLATE
+  info: CHANNELS_OBJECT_TEMPLATE,
+  conversions: CHANNELS_OBJECT_TEMPLATE
 }, action) => {
   const { chainTicker, channel, body } = action.payload || {}
 
@@ -41,32 +43,40 @@ export const ledger = (state = {
         ...state,
         balances: {
           ...state.balances,
-          [channel]: { ...state.balances[channel], [chainTicker]: body }
-        }
+          [channel]: { ...state.balances[channel], [chainTicker]: body },
+        },
       };
     case SET_INFO:
       return {
         ...state,
         info: {
           ...state.info,
-          [channel]: { ...state.info[channel], [chainTicker]: body }
-        }
+          [channel]: { ...state.info[channel], [chainTicker]: body },
+        },
+      };
+    case SET_CONVERSION_PATHS:
+      return {
+        ...state,
+        conversions: {
+          ...state.conversions,
+          [channel]: { ...state.conversions[channel], [chainTicker]: body },
+        },
       };
     case SET_TRANSACTIONS:
       return {
         ...state,
         transactions: {
           ...state.transactions,
-          [channel]: { ...state.transactions[channel], [chainTicker]: body }
-        }
+          [channel]: { ...state.transactions[channel], [chainTicker]: body },
+        },
       };
     case SET_RATES:
       return {
         ...state,
         rates: {
           ...state.rates,
-          [channel]: { ...state.rates[channel], [chainTicker]: body }
-        }
+          [channel]: { ...state.rates[channel], [chainTicker]: body },
+        },
       };
     case SIGN_OUT_COMPLETE:
       return {

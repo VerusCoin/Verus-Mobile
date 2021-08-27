@@ -10,19 +10,22 @@ import {
   API_ABORTED,
   API_ERROR,
   API_SUCCESS,
-  ALWAYS_ACTIVATED
+  ALWAYS_ACTIVATED,
+  API_GET_CONVERSION_PATHS
 } from '../../../../utils/constants/intervalConstants'
 import {
   renewCoinData,
   occupyCoinApiCall
 } from "../../../actionCreators";
 import { createCoinExpireTimeout } from '../../../actionDispatchers'
+import { updateConversionPaths } from './UpdateConversionPaths'
 
 // Map of update functions to be able to call them through standardized 
 // API call constants. Each function requires the same three parameters: (store, mode, chainTicker)
 export const walletUpdates = {
   [API_GET_BALANCES]: updateBalances,
   [API_GET_INFO]: updateInfo,
+  [API_GET_CONVERSION_PATHS]: updateConversionPaths,
   [API_GET_TRANSACTIONS]: updateTransactions,
   [API_GET_FIATPRICE]: updateFiatPrices,
 }

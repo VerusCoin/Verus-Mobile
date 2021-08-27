@@ -20,7 +20,7 @@ import {
 import { Button } from "react-native-paper"
 import VerusPay from "../../VerusPay/VerusPay";
 import Colors from "../../../globals/colors";
-import { getAndOpenSendModal, openTraditionalCryptoSendModal } from "../../../actions/actions/sendModal/dispatchers/sendModal";
+import { openSubwalletSendModal, openTraditionalCryptoSendModal } from "../../../actions/actions/sendModal/dispatchers/sendModal";
 import { SEND_MODAL } from "../../../utils/constants/sendModal";
 
 class SendCoin extends Component {
@@ -48,7 +48,7 @@ class SendCoin extends Component {
               color={Colors.secondaryColor}
               mode={"contained"}
               onPress={() =>
-                getAndOpenSendModal(
+                openSubwalletSendModal(
                   this.props.activeCoin,
                   this.props.subWallet
                 )

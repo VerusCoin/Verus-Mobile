@@ -46,9 +46,13 @@ const channelMap = {
       channel: ELECTRUM,
       header,
       body: {
-        confirmed: satsToCoins(confirmed).toString(),
-        pending: satsToCoins(unconfirmed).toString(),
-        total: satsToCoins(unconfirmed.plus(confirmed)).toString(),
+        confirmed: confirmed != null && !isNaN(confirmed) ? satsToCoins(confirmed).toString() : "0",
+        pending:
+          unconfirmed != null && !isNaN(unconfirmed) ? satsToCoins(unconfirmed).toString() : "0",
+        total:
+          unconfirmed != null && !isNaN(unconfirmed) && confirmed != null && !isNaN(confirmed)
+            ? satsToCoins(unconfirmed.plus(confirmed)).toString()
+            : "0",
       },
     };
   },

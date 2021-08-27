@@ -7,7 +7,7 @@ import { traditionalCryptoSend } from "../../../../actions/actionDispatchers";
 import { copyToClipboard } from "../../../../utils/clipboard/clipboard";
 import { USD } from "../../../../utils/constants/currencies";
 import { API_GET_BALANCES, API_GET_FIATPRICE, API_GET_TRANSACTIONS, DLIGHT_PRIVATE, GENERAL } from "../../../../utils/constants/intervalConstants";
-import { SEND_MODAL_CRYPTO_AMOUNT_FIELD, SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT, SEND_MODAL_MEMO_FIELD, SEND_MODAL_TO_ADDRESS_FIELD } from "../../../../utils/constants/sendModal";
+import { SEND_MODAL_AMOUNT_FIELD, SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT, SEND_MODAL_MEMO_FIELD, SEND_MODAL_TO_ADDRESS_FIELD } from "../../../../utils/constants/sendModal";
 import { isNumber, truncateDecimal } from "../../../../utils/math";
 import { TraditionalCryptoSendConfirmRender } from "./TraditionalCryptoSendConfirm.render"
 
@@ -197,7 +197,7 @@ const mapStateToProps = (state, ownProps) => {
       results: state.ledger.balances[balance_channel][chainTicker],
       errors: state.errors[API_GET_BALANCES][balance_channel][chainTicker],
     },
-    rates: state.ledger.rates[API_GET_FIATPRICE],
+    rates: state.ledger.rates[rates_channel],
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
   };
 };

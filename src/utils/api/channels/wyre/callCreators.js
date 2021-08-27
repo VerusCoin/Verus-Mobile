@@ -10,6 +10,9 @@ export * from "./requests/getBalances";
 export * from "./requests/getTransactions";
 export * from "./requests/preflightTransaction";
 export * from "./requests/sendTransaction";
+export * from "./requests/getCurrencyConversionPaths";
+export * from './requests/preflightConversion';
+export * from './requests/convert';
 
 export const getActiveWyreAccount = async () => {
   await conditionallyUpdateService(store.getState(), store.dispatch, API_GET_SERVICE_ACCOUNT);

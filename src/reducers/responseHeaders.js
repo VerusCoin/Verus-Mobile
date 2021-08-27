@@ -9,7 +9,8 @@ import {
   SET_RATES,
   SET_TRANSACTIONS,
   SIGN_OUT_COMPLETE,
-  SET_INFO
+  SET_INFO,
+  SET_CONVERSION_PATHS
 } from '../utils/constants/storeType'
 import {
   ELECTRUM,
@@ -23,6 +24,7 @@ export const responseHeaders = (state = {
   transactions: CHANNELS_OBJECT_TEMPLATE,
   rates: CHANNELS_OBJECT_TEMPLATE,
   info: CHANNELS_OBJECT_TEMPLATE,
+  conversions: CHANNELS_OBJECT_TEMPLATE
 }, action) => {
   const { chainTicker, header, channel } = action.payload || {}
 
@@ -32,32 +34,40 @@ export const responseHeaders = (state = {
         ...state,
         balances: {
           ...state.balances,
-          [channel]: { ...state.balances[channel], [chainTicker]: header }
-        }
+          [channel]: { ...state.balances[channel], [chainTicker]: header },
+        },
       };
     case SET_INFO:
       return {
         ...state,
         info: {
           ...state.info,
-          [channel]: { ...state.info[channel], [chainTicker]: header }
-        }
+          [channel]: { ...state.info[channel], [chainTicker]: header },
+        },
+      };
+    case SET_CONVERSION_PATHS:
+      return {
+        ...state,
+        conversions: {
+          ...state.conversions,
+          [channel]: { ...state.conversions[channel], [chainTicker]: header },
+        },
       };
     case SET_TRANSACTIONS:
       return {
         ...state,
         transactions: {
           ...state.transactions,
-          [channel]: { ...state.transactions[channel], [chainTicker]: header }
-        }
+          [channel]: { ...state.transactions[channel], [chainTicker]: header },
+        },
       };
     case SET_RATES:
       return {
         ...state,
         rates: {
           ...state.rates,
-          [channel]: { ...state.rates[channel], [chainTicker]: header }
-        }
+          [channel]: { ...state.rates[channel], [chainTicker]: header },
+        },
       };
     case SIGN_OUT_COMPLETE:
       return {

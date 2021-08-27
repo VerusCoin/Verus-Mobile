@@ -15,7 +15,8 @@ import {
   API_GET_SERVICE_ACCOUNT,
   API_GET_SERVICE_PAYMENT_METHODS,
   API_GET_SERVICE_TRANSFERS,
-  API_GET_SERVICE_RATES
+  API_GET_SERVICE_RATES,
+  API_GET_CONVERSION_PATHS
 } from "../utils/constants/intervalConstants";
 import {
   ERROR_BALANCES,
@@ -38,7 +39,9 @@ import {
   SET_SERVICE_TRANSFERS,
   ERROR_SERVICE_TRANSFERS,
   SET_SERVICE_RATES,
-  ERROR_SERVICE_RATES
+  ERROR_SERVICE_RATES,
+  SET_CONVERSION_PATHS,
+  ERROR_CONVERSION_PATHS
 } from "../utils/constants/storeType";
 
 export const errors = (state = {
@@ -52,7 +55,8 @@ export const errors = (state = {
   [INIT_ETH_ERRORS]: {},
   [INIT_ERC20_ERRORS]: {},
   [API_GET_SERVICE_ACCOUNT]: {},
-  [API_GET_SERVICE_TRANSFERS]: {}
+  [API_GET_SERVICE_TRANSFERS]: {},
+  [API_GET_CONVERSION_PATHS]: {}
 }, action) => {
   const { channel, error, chainTicker } = action.payload || {}
 
@@ -75,6 +79,17 @@ export const errors = (state = {
           ...state[API_GET_INFO],
           [channel]: {
             ...state[API_GET_INFO][channel],
+            [chainTicker]: error
+          }
+        }
+      };
+    case ERROR_CONVERSION_PATHS:
+      return {
+        ...state,
+        [API_GET_CONVERSION_PATHS]: {
+          ...state[API_GET_CONVERSION_PATHS],
+          [channel]: {
+            ...state[API_GET_CONVERSION_PATHS][channel],
             [chainTicker]: error
           }
         }
@@ -194,6 +209,17 @@ export const errors = (state = {
             [chainTicker]: null
           }
         }
+      };
+    case SET_CONVERSION_PATHS:
+      return {
+        ...state,
+        [API_GET_CONVERSION_PATHS]: {
+          ...state[API_GET_CONVERSION_PATHS],
+          [channel]: {
+            ...state[API_GET_CONVERSION_PATHS][channel],
+            [chainTicker]: null,
+          },
+        },
       };
     case SET_TRANSACTIONS:
       return {

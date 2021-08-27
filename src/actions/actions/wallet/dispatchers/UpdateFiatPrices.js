@@ -5,7 +5,7 @@ import {
 } from "../../../../utils/constants/storeType";
 import { GENERAL, WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
 import { updateLedgerValue } from "./UpdateLedgerValue";
-import store from "../../../../store";
+import { getRates as getWyreRates } from "../../../../utils/api/channels/wyre/requests/getRates";
 
 const channelMap = {
   [GENERAL]: async (activeUser, coinObj) => {
@@ -21,12 +21,7 @@ const channelMap = {
     };
   },
   [WYRE_SERVICE]: async (activeUser, coinObj) => {
-    const state = store.getState();
-    let body = null;
-
-    if (state.services.rates[WYRE_SERVICE] != null) {
-      body = state.services.rates[WYRE_SERVICE][coinObj.id];
-    }
+    let body = await getWyreRates(coinObj);
 
     return {
       chainTicker: coinObj.id,

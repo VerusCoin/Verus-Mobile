@@ -7,7 +7,7 @@ import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert
 import { getRecommendedBTCFees } from "../../../../utils/api/channels/general/callCreators";
 import { USD } from "../../../../utils/constants/currencies";
 import { API_GET_BALANCES, API_GET_FIATPRICE, API_SEND, DLIGHT_PRIVATE, ELECTRUM, GENERAL } from "../../../../utils/constants/intervalConstants";
-import { SEND_MODAL_CRYPTO_AMOUNT_FIELD, SEND_MODAL_FORM_STEP_CONFIRM, SEND_MODAL_MEMO_FIELD, SEND_MODAL_TO_ADDRESS_FIELD } from "../../../../utils/constants/sendModal";
+import { SEND_MODAL_AMOUNT_FIELD, SEND_MODAL_FORM_STEP_CONFIRM, SEND_MODAL_MEMO_FIELD, SEND_MODAL_TO_ADDRESS_FIELD } from "../../../../utils/constants/sendModal";
 import { isNumber, truncateDecimal } from "../../../../utils/math";
 import { TraditionalCryptoSendFormRender } from "./TraditionalCryptoSendForm.render"
 
@@ -54,7 +54,7 @@ class TraditionalCryptoSendForm extends Component {
     }
 
     this.props.updateSendFormData(
-      SEND_MODAL_CRYPTO_AMOUNT_FIELD,
+      SEND_MODAL_AMOUNT_FIELD,
       this.state.amountFiat ? truncateDecimal(displayAmount, 2) : displayAmount.toString()
     );
   };
@@ -65,7 +65,7 @@ class TraditionalCryptoSendForm extends Component {
     const { rates, displayCurrency, sendModal } = props;
     const { coinObj } = sendModal
 
-    const amount = Number(sendModal.data[SEND_MODAL_CRYPTO_AMOUNT_FIELD]);
+    const amount = Number(sendModal.data[SEND_MODAL_AMOUNT_FIELD]);
 
     let _price = rates[coinObj.id] != null ? rates[coinObj.id][displayCurrency] : null;
 
@@ -84,11 +84,11 @@ class TraditionalCryptoSendForm extends Component {
     const { data } = this.props.sendModal;
 
     const amount =
-      (data[SEND_MODAL_CRYPTO_AMOUNT_FIELD].includes(".") &&
-        data[SEND_MODAL_CRYPTO_AMOUNT_FIELD].includes(",")) ||
-      !data[SEND_MODAL_CRYPTO_AMOUNT_FIELD]
-        ? data[SEND_MODAL_CRYPTO_AMOUNT_FIELD]
-        : data[SEND_MODAL_CRYPTO_AMOUNT_FIELD].replace(/,/g, ".");
+      (data[SEND_MODAL_AMOUNT_FIELD].includes(".") &&
+        data[SEND_MODAL_AMOUNT_FIELD].includes(",")) ||
+      !data[SEND_MODAL_AMOUNT_FIELD]
+        ? data[SEND_MODAL_AMOUNT_FIELD]
+        : data[SEND_MODAL_AMOUNT_FIELD].replace(/,/g, ".");
 
     if (!amount || amount.length < 0) {
       return null;

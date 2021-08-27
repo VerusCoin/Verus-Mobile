@@ -34,8 +34,8 @@ import QrScanner from "../../utils/QrScanner/QrScanner";
 import styles from "../../styles";
 import BarcodeReader from "../../components/BarcodeReader/BarcodeReader";
 import AnimatedActivityIndicator from "../../components/AnimatedActivityIndicator";
-import { getAndOpenSendModal } from "../../actions/actions/sendModal/dispatchers/sendModal";
-import { SEND_MODAL_CRYPTO_AMOUNT_FIELD, SEND_MODAL_MEMO_FIELD, SEND_MODAL_TO_ADDRESS_FIELD } from "../../utils/constants/sendModal";
+import { openSubwalletSendModal } from "../../actions/actions/sendModal/dispatchers/sendModal";
+import { SEND_MODAL_AMOUNT_FIELD, SEND_MODAL_MEMO_FIELD, SEND_MODAL_TO_ADDRESS_FIELD } from "../../utils/constants/sendModal";
 
 class VerusPay extends Component {
   constructor(props) {
@@ -264,9 +264,9 @@ class VerusPay extends Component {
 
   openSendModal = (subWallet) => {
     if (subWallet != null) {
-      getAndOpenSendModal(this.state.coinObj, subWallet, {
+      openSubwalletSendModal(this.state.coinObj, subWallet, {
         [SEND_MODAL_TO_ADDRESS_FIELD]: this.state.address,
-        [SEND_MODAL_CRYPTO_AMOUNT_FIELD]: this.state.amount.toString(),
+        [SEND_MODAL_AMOUNT_FIELD]: this.state.amount.toString(),
         [SEND_MODAL_MEMO_FIELD]: "",
       });
     } else {

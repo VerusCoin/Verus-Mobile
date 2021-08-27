@@ -7,7 +7,7 @@ import {
   setSendModalDataField,
   setSendModalVisible,
 } from "../../actions/actions/sendModal/dispatchers/sendModal";
-import { TRADITIONAL_CRYPTO_SEND_MODAL } from "../../utils/constants/sendModal";
+import { CONVERSION_SEND_MODAL, TRADITIONAL_CRYPTO_SEND_MODAL } from "../../utils/constants/sendModal";
 import { SendModalRender } from "./SendModal.render"
 
 class SendModal extends Component {
@@ -15,7 +15,8 @@ class SendModal extends Component {
     super(props);
 
     this.DEFAULT_MODAL_HEIGHTS = {
-      [TRADITIONAL_CRYPTO_SEND_MODAL]: 442
+      [TRADITIONAL_CRYPTO_SEND_MODAL]: 442,
+      [CONVERSION_SEND_MODAL]: 546
     }
 
     this.state = {
@@ -66,6 +67,22 @@ class SendModal extends Component {
     });
   }
 
+  // This is to be called from sub-components, so it doesn't call
+  // cancel()
+  setVisible(visible) {
+    return new Promise((resolve) => {
+      this.setState(
+        {
+          persistFormDataOnClose: !visible
+        },
+        () => {
+          setSendModalVisible(visible);
+          resolve()
+        }
+      );
+    });
+  }
+
   updateSendFormData(key, value) {
     setSendModalDataField(key, value);
   }
@@ -103,7 +120,7 @@ const mapStateToProps = (state) => {
   return {
     sendModal: state.sendModal,
     keyboard: state.keyboard,
-    alertActive: state.alert.active
+    alertActive: state.alert.active,
   }
 };
 
