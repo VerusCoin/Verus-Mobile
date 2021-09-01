@@ -285,7 +285,12 @@ class ConversionSendForm extends Component {
 
       this.props.setModalHeight(696);
 
-      this.props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, { txConfirmation: res.result });
+      this.props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
+        coinObj,
+        activeAccount: this.props.activeAccount,
+        txConfirmation: res.result,
+        channel
+      });
     } catch (e) {
       Alert.alert("Error", e.message);
     }

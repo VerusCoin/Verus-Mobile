@@ -16,7 +16,7 @@ export const preflightConversion = async (coinObj, activeUser, from, to, address
     return {
       err: false,
       result: {
-        fees: res.totalFees,
+        fee: res.totalFees,
         valueSent: res.sourceAmount.toString(),
         valueReceived: res.destAmount.toString(),
         price: res.exchangeRate,
@@ -24,6 +24,11 @@ export const preflightConversion = async (coinObj, activeUser, from, to, address
         fromAddress: `Wyre ${res.sourceCurrency} wallet`,
         amountSubmitted: amount.toString(),
         memo: res.message,
+        fromCurrency: res.sourceCurrency,
+        toCurrency: res.destCurrency,
+        params: {
+          transferId: res.id,
+        },
       },
     };
   } catch (e) {

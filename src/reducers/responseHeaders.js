@@ -10,12 +10,10 @@ import {
   SET_TRANSACTIONS,
   SIGN_OUT_COMPLETE,
   SET_INFO,
-  SET_CONVERSION_PATHS
+  SET_CONVERSION_PATHS,
+  SET_WITHDRAW_DESTINATIONS
 } from '../utils/constants/storeType'
 import {
-  ELECTRUM,
-  DLIGHT_PRIVATE,
-  GENERAL,
   CHANNELS_OBJECT_TEMPLATE
 } from "../utils/constants/intervalConstants";
 
@@ -24,7 +22,8 @@ export const responseHeaders = (state = {
   transactions: CHANNELS_OBJECT_TEMPLATE,
   rates: CHANNELS_OBJECT_TEMPLATE,
   info: CHANNELS_OBJECT_TEMPLATE,
-  conversions: CHANNELS_OBJECT_TEMPLATE
+  conversions: CHANNELS_OBJECT_TEMPLATE,
+  withdrawDestinations: CHANNELS_OBJECT_TEMPLATE
 }, action) => {
   const { chainTicker, header, channel } = action.payload || {}
 
@@ -51,6 +50,14 @@ export const responseHeaders = (state = {
         conversions: {
           ...state.conversions,
           [channel]: { ...state.conversions[channel], [chainTicker]: header },
+        },
+      };
+    case SET_WITHDRAW_DESTINATIONS:
+      return {
+        ...state,
+        withdrawDestinations: {
+          ...state.withdrawDestinations,
+          [channel]: { ...state.withdrawDestinations[channel], [chainTicker]: header },
         },
       };
     case SET_TRANSACTIONS:

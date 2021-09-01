@@ -22,7 +22,8 @@ import {
   //EVERYTHING_NEEDS_UPDATE,
   //SET_INTERVAL_ID,
   SET_INFO,
-  SET_CONVERSION_PATHS
+  SET_CONVERSION_PATHS,
+  SET_WITHDRAW_DESTINATIONS
 } from '../utils/constants/storeType'
 import {
   CHANNELS_OBJECT_TEMPLATE
@@ -33,7 +34,8 @@ export const ledger = (state = {
   transactions: CHANNELS_OBJECT_TEMPLATE,
   rates: CHANNELS_OBJECT_TEMPLATE,
   info: CHANNELS_OBJECT_TEMPLATE,
-  conversions: CHANNELS_OBJECT_TEMPLATE
+  conversions: CHANNELS_OBJECT_TEMPLATE,
+  withrawDestinations: CHANNELS_OBJECT_TEMPLATE
 }, action) => {
   const { chainTicker, channel, body } = action.payload || {}
 
@@ -60,6 +62,14 @@ export const ledger = (state = {
         conversions: {
           ...state.conversions,
           [channel]: { ...state.conversions[channel], [chainTicker]: body },
+        },
+      };
+    case SET_WITHDRAW_DESTINATIONS:
+      return {
+        ...state,
+        withrawDestinations: {
+          ...state.withrawDestinations,
+          [channel]: { ...state.withrawDestinations[channel], [chainTicker]: body },
         },
       };
     case SET_TRANSACTIONS:

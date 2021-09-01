@@ -98,7 +98,7 @@ export const standardizeWyreTxObj = (transaction, accountAddress) => {
   return {
     type: transaction.type === "INCOMING" ? "received" : "sent",
     height: transaction.blockNumber,
-    timestamp: transaction.createdAt,
+    timestamp: transaction.createdAt / 1000,
     txid: transaction.blockchainTxId,
     src: transaction.sourceName,
     address: transaction.type === "INCOMING" ? accountAddress : transaction.destName,

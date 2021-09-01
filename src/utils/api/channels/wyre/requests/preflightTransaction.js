@@ -1,3 +1,4 @@
+import BigNumber from "bignumber.js"
 import WyreProvider from "../../../../services/WyreProvider"
 import WyreService from "../../../../services/WyreService"
 
@@ -15,11 +16,12 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
     return {
       err: false,
       result: {
-        fees: res.totalFees,
+        fee: res.totalFees != null ? res.totalFees.toString() : "0",
         value: res.destAmount.toString(),
         toAddress: address,
         fromAddress: `Wyre ${coinObj.id} wallet`,
         amountSubmitted: amount.toString(),
+        balanceDelta: BigNumber(res.sourceAmount).multipliedBy(-1),
         memo: res.message,
         params: {
           transferId: res.id,

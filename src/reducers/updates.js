@@ -38,7 +38,9 @@ import {
   SET_SERVICE_RATES,
   ERROR_SERVICE_RATES,
   SET_CONVERSION_PATHS,
-  ERROR_CONVERSION_PATHS
+  ERROR_CONVERSION_PATHS,
+  SET_WITHDRAW_DESTINATIONS,
+  ERROR_WITHDRAW_DESTINATIONS
 } from "../utils/constants/storeType";
 import {
   API_GET_BALANCES,
@@ -50,6 +52,7 @@ import {
   API_GET_SERVICE_TRANSFERS,
   API_GET_SERVICE_RATES,
   API_GET_CONVERSION_PATHS,
+  API_GET_WITHDRAW_DESTINATIONS,
 } from "../utils/constants/intervalConstants";
 
 export const updates = (state = {
@@ -223,6 +226,34 @@ export const updates = (state = {
                   busy: {
                     ...state.coinUpdateTracker[chainTicker][
                       API_GET_CONVERSION_PATHS
+                    ].busy,
+                    [channel]: false,
+                  },
+                }
+              : {
+                  busy: {
+                    [channel]: false,
+                  },
+                },
+          },
+        },
+      };
+    case SET_WITHDRAW_DESTINATIONS:
+    case ERROR_WITHDRAW_DESTINATIONS:
+      return {
+        ...state,
+        coinUpdateTracker: {
+          ...state.coinUpdateTracker,
+          [chainTicker]: {
+            ...state.coinUpdateTracker[chainTicker],
+            [API_GET_WITHDRAW_DESTINATIONS]: state.coinUpdateTracker[chainTicker]
+              ? {
+                  ...state.coinUpdateTracker[chainTicker][
+                    API_GET_WITHDRAW_DESTINATIONS
+                  ],
+                  busy: {
+                    ...state.coinUpdateTracker[chainTicker][
+                      API_GET_WITHDRAW_DESTINATIONS
                     ].busy,
                     [channel]: false,
                   },

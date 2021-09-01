@@ -156,7 +156,8 @@ class TraditionalCryptoSendConfirm extends Component {
       coinObj,
       finalTxAmount,
       memo,
-      channel
+      channel,
+      fullResult
     } = this.state.params;
 
     try {
@@ -165,7 +166,7 @@ class TraditionalCryptoSendConfirm extends Component {
           finalTxAmount,
           coinObj.decimals
         )
-      ), memo, tradSendFee, false)
+      ), memo, tradSendFee, false, fullResult)
 
       if (res.txid == null) throw new Error("Transaction failed.")
   

@@ -1,21 +1,26 @@
+import BigNumber from "bignumber.js";
 import WyreProvider from "../../../../services/WyreProvider"
 
-export const send = async (coinObj, activeUser, address, amount, params) => {
+export const send = async (coinObj, activeUser, address, amount, passthrough) => {
   try {
     const res = await WyreProvider.sendTransaction({
-      transferId: params.transferId
-    })
+      transferId: passthrough.params.transferId,
+    });
     
     return {
       err: false,
       result: {
-        fee: res.totalFees,
+        fee: res.totalFees != null ? res.totalFees.toString() : "0",
         value: res.destAmount.toString(),
         toAddress: address,
         fromAddress: `Wyre ${coinObj.id} wallet`,
         amountSubmitted: amount.toString(),
+        balanceDelta: BigNumber(res.sourceAmount).multipliedBy(-1),
         memo: res.message,
-        params: {},
+        txid: res.id,
+        params: {
+          transferId: res.id,
+        },
       },
     };
   } catch(e) {

@@ -20,6 +20,7 @@ export const API_GET_ADDRESSES = "get_addresses"
 export const API_GET_BALANCES = "get_balances"
 export const API_GET_INFO = "get_info"
 export const API_GET_CONVERSION_PATHS = 'get_conversion_paths'
+export const API_GET_WITHDRAW_DESTINATIONS = 'get_withdraw_destinations'
 export const API_GET_TRANSACTIONS = "get_transactions"
 export const API_GET_FIATPRICE = "get_fiatprice"
 

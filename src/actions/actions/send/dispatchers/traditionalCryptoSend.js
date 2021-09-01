@@ -116,6 +116,7 @@ export const traditionalCryptoSend = async (
           memo,
           finalTxAmount: res.result.value != null ? res.result.value : amount.toString(),
           txid: res.result.txid,
+          fullResult: res.result
         };
       } else {
         const feeTakenFromAmount = res.result.params.feeTakenFromAmount;
@@ -189,6 +190,7 @@ export const traditionalCryptoSend = async (
           tradSendFee,
           txid: res.result.txid,
           feeTakenMessage,
+          fullResult: res.result
         };
       }
     }

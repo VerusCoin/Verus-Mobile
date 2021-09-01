@@ -137,11 +137,7 @@ class TxDetailsModal extends Component {
                         title={item.data}
                         description={item.key}
                         titleNumberOfLines={item.numLines || 1}
-                        titleStyle={
-                          item.capitalized
-                            ? Styles.capitalizeFirstLetter
-                            : undefined
-                        }
+                        titleStyle={item.capitalized ? Styles.capitalizeFirstLetter : undefined}
                         right={(props) =>
                           item.right ? (
                             <Text
@@ -166,30 +162,26 @@ class TxDetailsModal extends Component {
             data={[
               {
                 key: "Type",
-                data: txData.type || "Unknown",
+                data:
+                  (txData.type === "sent"
+                    ? "Outgoing"
+                    : txData.type === "received"
+                    ? "Incoming"
+                    : txData.type) || "Unknown",
                 capitalized: true,
               },
               {
-                key: `Amount ${
-                  txData.type === "received" ? "Received" : "Sent"
-                }`,
+                key: "Amount",
                 data: `${
-                  displayAmount != null
-                    ? truncateDecimal(displayAmount, this.props.decimals)
-                    : "??"
+                  displayAmount != null ? truncateDecimal(displayAmount, this.props.decimals) : "??"
                 } ${
-                  txData.feeCurr != null && txData.type === "self"
-                    ? txData.feeCurr
-                    : activeCoinID
+                  txData.feeCurr != null && txData.type === "self" ? txData.feeCurr : activeCoinID
                 }`,
                 numLines: 100,
               },
               {
                 key: "Fee",
-                data:
-                  txData.fee +
-                  " " +
-                  (txData.feeCurr != null ? txData.feeCurr : activeCoinID),
+                data: txData.fee + " " + (txData.feeCurr != null ? txData.feeCurr : activeCoinID),
                 condition: txData.fee != null,
                 numLines: 100,
               },
@@ -204,9 +196,7 @@ class TxDetailsModal extends Component {
               },
               {
                 key: "Address",
-                onPress: txData.address
-                  ? this.copyAddressToClipboard
-                  : () => {},
+                onPress: txData.address ? this.copyAddressToClipboard : () => {},
                 data:
                   txData.address == null
                     ? txData.visibility === "private"
@@ -216,19 +206,12 @@ class TxDetailsModal extends Component {
               },
               {
                 key: "Time",
-                data:
-                  txData && txData.timestamp != null
-                    ? unixToDate(txData.timestamp)
-                    : "Unknown",
+                data: txData && txData.timestamp != null ? unixToDate(txData.timestamp) : "Unknown",
               },
               {
                 key: "TxID",
-                onPress:
-                  txData.txid != null ? this.copyTxIDToClipboard : () => {},
-                data:
-                  txData.txid != null
-                    ? this.decodeTxid(txData.txid)
-                    : "Unknown",
+                onPress: txData.txid != null ? this.copyTxIDToClipboard : () => {},
+                data: txData.txid != null ? this.decodeTxid(txData.txid) : "Unknown",
               },
               {
                 key: "Message",

@@ -6,6 +6,7 @@ import { WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
 import { updateServiceDataValue } from "./UpdateServiceDataValue";
 import WyreProvider from "../../../../utils/services/WyreProvider";
 import { extractWyreRates } from "../../../../utils/standardization/extractWyreRates";
+import { SUPPORTED_BANK_CURRENCIES } from "../../../../utils/constants/currencies";
 
 const channelMap = {
   [WYRE_SERVICE]: async (activeUser, channelStore) => {
@@ -14,7 +15,7 @@ const channelMap = {
 
       return {
         channel: WYRE_SERVICE,
-        body: extractWyreRates(res, ["BTC", "USD", "AUD", "EUR"]),
+        body: extractWyreRates(res, ["BTC", ...SUPPORTED_BANK_CURRENCIES]),
       };
     } catch(e) {
       throw e

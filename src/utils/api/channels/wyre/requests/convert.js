@@ -1,15 +1,15 @@
 import WyreProvider from "../../../../services/WyreProvider"
 
-export const convert = async (coinObj, activeUser, from, to, address, amount, params) => {
+export const convert = async (coinObj, activeUser, from, to, address, amount, passthrough) => {
   try {
     const res = await WyreProvider.sendTransaction({
-      transferId: params.transferId
+      transferId: passthrough.params.transferId
     })
     
     return {
       err: false,
       result: {
-        fees: res.totalFees,
+        fee: res.totalFees,
         valueSent: res.sourceAmount.toString(),
         valueReceived: res.destAmount.toString(),
         price: res.exchangeRate,
@@ -17,6 +17,12 @@ export const convert = async (coinObj, activeUser, from, to, address, amount, pa
         fromAddress: `Wyre ${res.sourceCurrency} wallet`,
         amountSubmitted: amount.toString(),
         memo: res.message,
+        fromCurrency: res.sourceCurrency,
+        toCurrency: res.destCurrency,
+        txid: res.id,
+        params: {
+          transferId: res.id,
+        },
       },
     };
   } catch(e) {

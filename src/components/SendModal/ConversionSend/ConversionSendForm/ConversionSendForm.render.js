@@ -101,7 +101,7 @@ export const ConversionSendFormRenderInputForm = function() {
               paddingTop: 8,
             }}
           >
-            <Title style={{ color: Colors.primaryColor }}>Receive</Title>
+            <Title style={{ color: Colors.primaryColor }}>Receive (estimated)</Title>
             <View style={{ alignItems: "center", justifyContent: "center" }}>
               <View style={Styles.flexRow}>
                 <TextInput

@@ -318,7 +318,7 @@ class WyreService {
         sourceAmount,
         dest,
         destCurrency,
-        message,
+        message: message == null ? "" : message,
         autoConfirm,
       });
     }, true);
@@ -336,18 +336,9 @@ class WyreService {
     }, true);
   };
 
-  createTransfer = async (source, fromCurr, fromVal, dest, toCurr) => {
+  getTransfer = async (transferId) => {
     return await WyreService.formatCall(() => {
-      const transfer = {
-        source,
-        sourceCurrency: fromCurr,
-        sourceAmount: fromVal,
-        dest,
-        destCurrency: toCurr,
-        autoConfirm: true,
-      };
-
-      return this.service.post("/v3/transfers", transfer);
+      return this.service.get(`/v3/transfers/${transferId}`);
     }, true);
   };
 
@@ -373,7 +364,7 @@ class WyreService {
     });
 
     return await WyreService.formatCall(() => {
-      return oneTimeService.get('/v3/widget/supportedCountries');
+      return oneTimeService.get("/v3/widget/supportedCountries");
     });
   };
 }
