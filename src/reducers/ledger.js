@@ -35,7 +35,7 @@ export const ledger = (state = {
   rates: CHANNELS_OBJECT_TEMPLATE,
   info: CHANNELS_OBJECT_TEMPLATE,
   conversions: CHANNELS_OBJECT_TEMPLATE,
-  withrawDestinations: CHANNELS_OBJECT_TEMPLATE
+  withdrawDestinations: CHANNELS_OBJECT_TEMPLATE
 }, action) => {
   const { chainTicker, channel, body } = action.payload || {}
 
@@ -67,9 +67,9 @@ export const ledger = (state = {
     case SET_WITHDRAW_DESTINATIONS:
       return {
         ...state,
-        withrawDestinations: {
-          ...state.withrawDestinations,
-          [channel]: { ...state.withrawDestinations[channel], [chainTicker]: body },
+        withdrawDestinations: {
+          ...state.withdrawDestinations,
+          [channel]: { ...state.withdrawDestinations[channel], [chainTicker]: body },
         },
       };
     case SET_TRANSACTIONS:

@@ -92,7 +92,7 @@ export const conditionallyUpdateWallet = async (state, dispatch, chainTicker, up
 
     if (openCoinChannels.length === 0) {
       //dispatch(logDebugWarning(`The ${updateId} call for ${chainTicker} is taking a very long time to complete. This may impact performace.`)
-    } else if (updateInfo && updateInfo.needs_update) {    
+    } else if (updateInfo && updateInfo.needs_update) {
       if (
         coin_bound &&
         (!coinMenuFocused ||

@@ -1,6 +1,7 @@
 import store from "../../../../store"
 import {
   CONVERSION_SEND_MODAL,
+  WITHDRAW_SEND_MODAL,
   SEND_MODAL,
   SEND_MODAL_AMOUNT_FIELD,
   SEND_MODAL_FROM_CURRENCY_FIELD,
@@ -8,6 +9,7 @@ import {
   SEND_MODAL_TO_ADDRESS_FIELD,
   SEND_MODAL_TO_CURRENCY_FIELD,
   TRADITIONAL_CRYPTO_SEND_MODAL,
+  SEND_MODAL_DESTINATION_FIELD,
 } from "../../../../utils/constants/sendModal";
 import {
   CLOSE_SEND_COIN_MODAL,
@@ -57,7 +59,22 @@ export const openConversionSendModal = (coinObj, subWallet, data) => {
       [SEND_MODAL_TO_CURRENCY_FIELD]: null
     } : data,
     CONVERSION_SEND_MODAL,
-    'To send cryptocurrency, enter a recipients address in the address field, enter an amount to send, and press "send". You will be shown your transaction details before they are sent so you can confirm them.'
+    'To convert cryptocurrency, select a source and destination currency, enter an amount to convert, and press "convert". All rates shown on the form page are estimations.'
+  );
+};
+
+export const openWithdrawSendModal = (coinObj, subWallet, data) => {
+  openSendModal(
+    `Withdraw ${coinObj.id}`,
+    coinObj,
+    subWallet,
+    data == null ? {
+      [SEND_MODAL_AMOUNT_FIELD]: "",
+      [SEND_MODAL_DESTINATION_FIELD]: {},
+      [SEND_MODAL_TO_CURRENCY_FIELD]: {}
+    } : data,
+    WITHDRAW_SEND_MODAL,
+    'Select a bank account and enter an amount to withdraw from your wallet.'
   );
 };
 

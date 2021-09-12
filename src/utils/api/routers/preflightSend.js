@@ -29,7 +29,7 @@ const PREFLIGHT_FUNCTION_MAP = {
  * @param {String} channel The channel to send on (e.g. ETH/ELECTRUM/ERC20)
  * @param {Object} params Any other parameters specific to the send channel's preflight function
  */
-export const preflightSend = async (coinObj, activeUser, address, amount, channel, params) => {
+export const preflightSend = async (coinObj, activeUser, address, amount, channel, params) => {  
   if (PREFLIGHT_FUNCTION_MAP[channel] == null)
     throw new Error(`No preflight function available for channel ${channel}`);
   else return await PREFLIGHT_FUNCTION_MAP[channel](coinObj, activeUser, address, amount, params);

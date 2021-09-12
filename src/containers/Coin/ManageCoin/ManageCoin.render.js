@@ -3,21 +3,15 @@ import {
   View
  } from "react-native"
 import { Button } from "react-native-paper"
+import { openWithdrawSendModal } from "../../../actions/actions/sendModal/dispatchers/sendModal";
 import Styles from '../../../styles/index'
 
 export const ManageCoinRenderDeposit = function() {
   return (
     <View style={Styles.defaultRoot}>
-      <Button>Open deposit modal</Button>
-    </View>
-  );
-};
-
-
-export const ManageCoinRenderWithdraw = function() {
-  return (
-    <View style={Styles.defaultRoot}>
-      <Button>Open withdrawal modal</Button>
+      <Button onPress={() => {}}>
+        Open deposit modal
+      </Button>
     </View>
   );
 };

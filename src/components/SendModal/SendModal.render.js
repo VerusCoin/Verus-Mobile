@@ -10,6 +10,7 @@ import {
   SEND_MODAL_FORM_STEP_FORM,
   SEND_MODAL_FORM_STEP_RESULT,
   TRADITIONAL_CRYPTO_SEND_MODAL,
+  WITHDRAW_SEND_MODAL,
 } from "../../utils/constants/sendModal";
 import SemiModal from "../SemiModal";
 import TraditionalCryptoSendForm from "./TraditionalCryptoSend/TraditionalCryptoSendForm/TraditionalCryptoSendForm";
@@ -23,6 +24,9 @@ import TraditionalCryptoSendResult from "./TraditionalCryptoSend/TraditionalCryp
 import ConversionSendForm from "./ConversionSend/ConversionSendForm/ConversionSendForm";
 import ConversionSendConfirm from "./ConversionSend/ConversionSendConfirm/ConversionSendConfirm";
 import ConversionSendResult from "./ConversionSend/ConversionSendResult/ConversionSendResult";
+import WithdrawSendForm from "./WithdrawSend/WithdrawSendForm/WithdrawSendForm";
+import WithdrawSendConfirm from "./WithdrawSend/WithdrawSendConfirm/WithdrawSendConfirm";
+import WithdrawSendResult from "./WithdrawSend/WithdrawSendResult/WithdrawSendResult";
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
@@ -30,16 +34,19 @@ const Root = createStackNavigator();
 const SEND_FORMS = {
   [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendForm,
   [CONVERSION_SEND_MODAL]: ConversionSendForm,
+  [WITHDRAW_SEND_MODAL]: WithdrawSendForm
 };
 
 const SEND_CONFIRMATION = {
   [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendConfirm,
   [CONVERSION_SEND_MODAL]: ConversionSendConfirm,
+  [WITHDRAW_SEND_MODAL]: WithdrawSendConfirm
 };
 
 const SEND_RESULTS = {
   [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendResult,
   [CONVERSION_SEND_MODAL]: ConversionSendResult,
+  [WITHDRAW_SEND_MODAL]: WithdrawSendResult
 };
 
 export const SendModalRender = function () {

@@ -154,7 +154,7 @@ class WyreService {
     }, true);
   };
 
-  getAccount = async (id) => {
+  getAccount = async (id) => {    
     return await WyreService.formatCall(() => {
       return this.service.get(`/v3/accounts/${id}`);
     }, true);

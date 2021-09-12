@@ -7,7 +7,11 @@ import {
   setSendModalDataField,
   setSendModalVisible,
 } from "../../actions/actions/sendModal/dispatchers/sendModal";
-import { CONVERSION_SEND_MODAL, TRADITIONAL_CRYPTO_SEND_MODAL } from "../../utils/constants/sendModal";
+import {
+  CONVERSION_SEND_MODAL,
+  WITHDRAW_SEND_MODAL,
+  TRADITIONAL_CRYPTO_SEND_MODAL,
+} from "../../utils/constants/sendModal";
 import { SendModalRender } from "./SendModal.render"
 
 class SendModal extends Component {
@@ -16,8 +20,9 @@ class SendModal extends Component {
 
     this.DEFAULT_MODAL_HEIGHTS = {
       [TRADITIONAL_CRYPTO_SEND_MODAL]: 442,
-      [CONVERSION_SEND_MODAL]: 546
-    }
+      [CONVERSION_SEND_MODAL]: 546,
+      [WITHDRAW_SEND_MODAL]: 624,
+    };
 
     this.state = {
       persistFormDataOnClose: false,

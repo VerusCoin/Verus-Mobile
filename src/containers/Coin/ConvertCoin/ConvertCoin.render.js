@@ -39,7 +39,7 @@ export const ConvertCoinRender = function () {
               style={{
                 height: 58,
                 marginBottom: 4,
-                marginTop: index > 0 ? 4 : 8,
+                marginTop: index > 0 ? 8 : 12,
                 width: "95%",
               }}
             >

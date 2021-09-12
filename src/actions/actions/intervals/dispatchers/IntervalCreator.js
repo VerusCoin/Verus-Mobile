@@ -187,8 +187,24 @@ export const refreshCoinIntervals = (chainTicker, onCompletes) => {
 
   for (let updateId in newIntervalData) {
     if (newTrackingData[updateId].channels.length > 0) {
-      createCoinUpdateExpiredInterval(newIntervalData[updateId].update_expired_interval, chainTicker, updateId, newIntervalData[updateId].update_expired_oncomplete)
-      createCoinExpireTimeout(newIntervalData[updateId].expire_timeout, chainTicker, updateId, newIntervalData[updateId].expire_oncomplete)
+      const updateExpiredInterval = newIntervalData[updateId].update_expired_interval
+      const antiCollisionOffsetMargin = (updateExpiredInterval * 0.30)
+      const antiCollisionOffset = Math.floor(
+        Math.random() * ((antiCollisionOffsetMargin * 0.5) - 1) * (Math.random() > 0.5 ? 1 : -1)
+      );
+
+      createCoinUpdateExpiredInterval(
+        newIntervalData[updateId].update_expired_interval + antiCollisionOffset,
+        chainTicker,
+        updateId,
+        newIntervalData[updateId].update_expired_oncomplete
+      );
+      createCoinExpireTimeout(
+        newIntervalData[updateId].expire_timeout,
+        chainTicker,
+        updateId,
+        newIntervalData[updateId].expire_oncomplete
+      );
     }
   }
 }

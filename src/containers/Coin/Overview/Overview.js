@@ -11,7 +11,6 @@ import {
   TouchableOpacity
 } from "react-native";
 import { connect } from 'react-redux';
-import { MathableNumber } from '../../../utils/math';
 import { expireCoinData, setActiveOverviewFilter } from '../../../actions/actionCreators';
 import Styles from '../../../styles/index'
 import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
@@ -26,7 +25,6 @@ import {
 } from "../../../utils/constants/intervalConstants";
 import { selectTransactions } from '../../../selectors/transactions';
 import { DEFAULT_DECIMALS, ETHERS } from "../../../utils/constants/web3Constants";
-import { ethers } from "ethers";
 import { Portal, List, Text, Badge } from "react-native-paper";
 import BigNumber from "bignumber.js";
 import { TransactionLogos } from '../../../images/customIcons/index'
@@ -126,7 +124,7 @@ class Overview extends Component {
       this.props.activeCoin.decimals != null
         ? this.props.activeCoin.decimals
         : DEFAULT_DECIMALS;
-    let amount = new MathableNumber(0, decimals);
+    let amount = BigNumber(0)
     let AvatarImg;
     let subtitle = "";
     const gasFees = item.feeCurr === ETH.toUpperCase()
@@ -136,13 +134,12 @@ class Overview extends Component {
       let toAddresses = [];
       const confirmed = txArray[0].confirmed
       
-      amount = new MathableNumber(txArray[0].amount, decimals)
-      amount.num = amount.num.sub(new MathableNumber(txArray[1].amount, decimals).num)
+      amount = BigNumber(txArray[0].amount).minus(txArray[1].amount)
 
       if (txArray[1].interest) {
         let interest = txArray[1].interest * -1;
 
-        amount.num = amount.num.add(new MathableNumber(interest, decimals).num)
+        amount = amount.plus(interest)
       }
 
       for (let i = 0; i < txArray[0].to.length; i++) {
@@ -171,7 +168,7 @@ class Overview extends Component {
         type: "sent"
       }
     } else {
-      amount = item.amount != null ? new MathableNumber(item.amount, decimals) : new MathableNumber(0, decimals);
+      amount = item.amount != null ? BigNumber(item.amount) : BigNumber(0);
 
       if (item.type === "received") {
         AvatarImg = TX_LOGOS.in;
@@ -180,10 +177,10 @@ class Overview extends Component {
         AvatarImg = TX_LOGOS.out;
         subtitle = item.address == null ? "??" : item.address;
       } else if (item.type === "self") {
-        if (item.amount !== "??" && amount.num.lt(0)) {
+        if (item.amount !== "??" && amount.isLessThan(0)) {
           subtitle = "me";
           AvatarImg = TX_LOGOS.interest;
-          amount.num = amount.num.mul(-1);
+          amount = amount.multipliedBy(-1);
         } else {
           AvatarImg = TX_LOGOS.self;
           subtitle = gasFees ? "gas" : "fees";
@@ -204,17 +201,8 @@ class Overview extends Component {
     // Handle possible int overflows
     try { 
       if (!gasFees && item.fee) {
-        let newAmount = new MathableNumber(0, amount.maxDecimals)
-        
-        newAmount.num = amount.num.sub(
-          new MathableNumber(
-            item.fee,
-            amount.maxDecimals
-          ).num
-        )
-
-        displayAmount = BigNumber(newAmount.display())
-      } else displayAmount = BigNumber(amount.display()) 
+        displayAmount = amount.minus(item.fee)
+      } else displayAmount = amount
     }
     catch(e) { console.error(e) }
 

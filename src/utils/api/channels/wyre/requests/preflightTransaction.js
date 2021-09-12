@@ -7,11 +7,12 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
     const res = await WyreProvider.preflightTransaction({
       source: WyreProvider.getAccountSrn(),
       sourceCurrency: coinObj.id,
-      sourceAmount: amount.toString(),
-      dest: WyreService.formatCryptoSrn(coinObj, address),
-      destCurrency: coinObj.id,
-      message: params.memo
-    })
+      sourceAmount: params.amountAsDest ? undefined : amount.toString(),
+      destAmount: !params.amountAsDest ? undefined : amount.toString(),
+      dest: address.includes(":") ? address : WyreService.formatCryptoSrn(coinObj, address),
+      destCurrency: params.destCurrency == null ? coinObj.id : params.destCurrency,
+      message: params.memo,
+    });
     
     return {
       err: false,
@@ -20,6 +21,11 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
         value: res.destAmount.toString(),
         toAddress: address,
         fromAddress: `Wyre ${coinObj.id} wallet`,
+        fromCurrency: res.sourceCurrency,
+        toCurrency: res.destCurrency,
+        price: res.exchangeRate,
+        sourceAmount: res.sourceAmount.toString(),
+        destAmount: res.destAmount.toString(),
         amountSubmitted: amount.toString(),
         balanceDelta: BigNumber(res.sourceAmount).multipliedBy(-1),
         memo: res.message,
