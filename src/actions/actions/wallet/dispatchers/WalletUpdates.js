@@ -12,7 +12,9 @@ import {
   API_SUCCESS,
   ALWAYS_ACTIVATED,
   API_GET_CONVERSION_PATHS,
-  API_GET_WITHDRAW_DESTINATIONS
+  API_GET_WITHDRAW_DESTINATIONS,
+  API_GET_DEPOSIT_SOURCES,
+  API_GET_PENDING_DEPOSITS
 } from '../../../../utils/constants/intervalConstants'
 import {
   renewCoinData,
@@ -21,6 +23,8 @@ import {
 import { createCoinExpireTimeout } from '../../../actionDispatchers'
 import { updateConversionPaths } from './UpdateConversionPaths'
 import { updateWithdrawDestinations } from './UpdateWithdrawDestinations'
+import { updateDepositSources } from './UpdateDepositSources'
+import { updatePendingDeposits } from './UpdatePendingDeposits'
 
 // Map of update functions to be able to call them through standardized 
 // API call constants. Each function requires the same three parameters: (store, mode, chainTicker)
@@ -29,8 +33,10 @@ export const walletUpdates = {
   [API_GET_INFO]: updateInfo,
   [API_GET_CONVERSION_PATHS]: updateConversionPaths,
   [API_GET_WITHDRAW_DESTINATIONS]: updateWithdrawDestinations,
+  [API_GET_DEPOSIT_SOURCES]: updateDepositSources,
   [API_GET_TRANSACTIONS]: updateTransactions,
   [API_GET_FIATPRICE]: updateFiatPrices,
+  [API_GET_PENDING_DEPOSITS]: updatePendingDeposits
 }
 
 /**

@@ -10,6 +10,8 @@ import {
   SEND_MODAL_TO_CURRENCY_FIELD,
   TRADITIONAL_CRYPTO_SEND_MODAL,
   SEND_MODAL_DESTINATION_FIELD,
+  DEPOSIT_SEND_MODAL,
+  SEND_MODAL_SOURCE_FIELD,
 } from "../../../../utils/constants/sendModal";
 import {
   CLOSE_SEND_COIN_MODAL,
@@ -75,6 +77,21 @@ export const openWithdrawSendModal = (coinObj, subWallet, data) => {
     } : data,
     WITHDRAW_SEND_MODAL,
     'Select a bank account and enter an amount to withdraw from your wallet.'
+  );
+};
+
+export const openDepositSendModal = (coinObj, subWallet, data) => {
+  openSendModal(
+    `Deposit ${coinObj.id}`,
+    coinObj,
+    subWallet,
+    data == null ? {
+      [SEND_MODAL_AMOUNT_FIELD]: "",
+      [SEND_MODAL_SOURCE_FIELD]: {},
+      [SEND_MODAL_TO_CURRENCY_FIELD]: {}
+    } : data,
+    DEPOSIT_SEND_MODAL,
+    'Select a bank account and enter an amount to deposit into your wallet.'
   );
 };
 

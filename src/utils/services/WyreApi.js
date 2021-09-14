@@ -20,6 +20,7 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
       getRates: async (payload) => this.getRates(payload),
       sendTransaction: async (payload) => this.sendTransaction(payload),
       preflightTransaction: async (payload) => this.preflightTransaction(payload),
+      getTransferInstructions: async (payload) => this.getTransferInstructions(payload)
     });
 
     this.service = WyreService.build();
@@ -112,6 +113,10 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
 
   getSupportedCountries = async () => {
     return await this.service.getSupportedCountries();
+  };
+
+  getTransferInstructions = async ({ transferId }) => {
+    return await this.service.getTransferInstructions(transferId);
   };
 
   preflightTransaction = async ({

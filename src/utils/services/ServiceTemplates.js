@@ -65,4 +65,8 @@ export class AccountBasedFintechApiTemplate extends ServiceTemplate {
   async preflightTransaction(payload) {
     return await this.api.preflightTransaction(payload)
   }
+
+  async getTransferInstructions(payload) {
+    return await this.api.getTransferInstructions(payload)
+  }
 }

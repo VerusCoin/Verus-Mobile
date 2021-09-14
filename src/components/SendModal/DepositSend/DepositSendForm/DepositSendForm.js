@@ -3,37 +3,33 @@ import { Component } from "react"
 import { Alert } from "react-native";
 import { connect } from 'react-redux'
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
-import { preflightConversion } from "../../../../utils/api/routers/preflightConversion";
 import { preflightSend } from "../../../../utils/api/routers/preflightSend";
 import { USD } from "../../../../utils/constants/currencies";
 import {
-  API_CONVERT,
   API_GET_BALANCES,
   API_GET_FIATPRICE,
   API_GET_WITHDRAW_DESTINATIONS,
-  API_SEND,
-  DLIGHT_PRIVATE,
 } from "../../../../utils/constants/intervalConstants";
 import { ISO_3166_COUNTRIES } from "../../../../utils/constants/iso3166";
 import {
   SEND_MODAL_AMOUNT_FIELD,
-  SEND_MODAL_DESTINATION_FIELD,
+  SEND_MODAL_SOURCE_FIELD,
   SEND_MODAL_FORM_STEP_CONFIRM,
-  SEND_MODAL_TO_CURRENCY_FIELD,
+  SEND_MODAL_FROM_CURRENCY_FIELD,
 } from "../../../../utils/constants/sendModal";
-import { WithdrawSendFormRender } from "./WithdrawSendForm.render"
+import { DepositSendFormRender } from "./DepositSendForm.render"
 
-class WithdrawSendForm extends Component {
+class DepositSendForm extends Component {
   constructor(props) {
     super(props);
-    this.RECEIVE_CURRENCY = "receive";
+    this.SOURCE_CURRENCY = "source";
 
     this.LIST_OPTIONS = {
-      [this.RECEIVE_CURRENCY]: {
+      [this.SOURCE_CURRENCY]: {
         formatData: (option) => {
           return {
-            key: option.destinationCurrencyId,
-            title: `Convert to ${option.destinationCurrencyId}`,
+            key: option.sourceCurrencyId,
+            title: `Convert from ${option.sourceCurrencyId}`,
             value: option,
           };
         },
@@ -43,16 +39,16 @@ class WithdrawSendForm extends Component {
     this.state = {
       conversionPaths: {},
       selectedConversionPath: null,
-      sendAmount: "",
-      receiveAmount: "",
+      depositAmount: "",
+      chargeAmount: "",
       loading: false,
       controlAmounts: false,
       selectCurrencyModalParams: {
-        type: this.RECEIVE_CURRENCY,
+        type: this.SOURCE_CURRENCY,
         options: [],
         open: false,
       },
-      destinationListParams: {
+      sourceListParams: {
         options: [],
         open: false,
       }
@@ -61,7 +57,7 @@ class WithdrawSendForm extends Component {
 
   formHasError = () => {
     const { data } = this.props.sendModal;
-    const to = data[SEND_MODAL_TO_CURRENCY_FIELD];
+    const to = data[SEND_MODAL_FROM_CURRENCY_FIELD];
     const amount = data[SEND_MODAL_AMOUNT_FIELD];
 
     if (!amount || amount.length < 1 || isNaN(Number(amount))) {
@@ -77,20 +73,20 @@ class WithdrawSendForm extends Component {
     return false;
   };
 
-  async openDestinationCurrencyOptions() {
+  async openSourceCurrencyOptions() {
     this.setState({
       selectCurrencyModalParams: {
-        type: this.RECEIVE_CURRENCY,
+        type: this.SOURCE_CURRENCY,
         options: Object.values(this.state.conversionPaths),
         open: true,
       },
     });
   }
 
-  async openDestinationOptions() {
+  async openSourceOptions() {
     this.setState({
-      destinationListParams: {
-        options: this.props.withdrawDestinations.map(destination => {
+      sourceListParams: {
+        options: this.props.depositSources.map(destination => {
           const country = ISO_3166_COUNTRIES[destination.countryCode]
 
           return {
@@ -112,14 +108,14 @@ class WithdrawSendForm extends Component {
     this.setState(
       {
         selectCurrencyModalParams: {
-          type: this.RECEIVE_CURRENCY,
+          type: this.SOURCE_CURRENCY,
           options: [],
           open: false,
         },
       },
       async () => {
         if (option != null) {
-          if (selectionType === this.RECEIVE_CURRENCY) {
+          if (selectionType === this.SOURCE_CURRENCY) {
             this.selectConversionPath(option);
           }
         }
@@ -127,17 +123,17 @@ class WithdrawSendForm extends Component {
     );
   }
 
-  selectDestinationOption(destination) {
+  selectSourceOption(destination) {
     this.setState(
       {
-        destinationListParams: {
+        sourceListParams: {
           options: [],
           open: false,
         },
       },
       async () => {
         if (destination != null) {
-          this.props.updateSendFormData(SEND_MODAL_DESTINATION_FIELD, destination);
+          this.props.updateSendFormData(SEND_MODAL_SOURCE_FIELD, destination);
           await this.fetchConversionPaths()
           this.selectConversionPath(
             this.state.conversionPaths[Object.keys(this.state.conversionPaths)[0]]
@@ -153,7 +149,7 @@ class WithdrawSendForm extends Component {
         selectedConversionPath: path,
       },
       () => {
-        this.props.updateSendFormData(SEND_MODAL_TO_CURRENCY_FIELD, path);
+        this.props.updateSendFormData(SEND_MODAL_FROM_CURRENCY_FIELD, path);
       }
     );
   }
@@ -174,14 +170,14 @@ class WithdrawSendForm extends Component {
   async fetchConversionPaths() {
     await this.setLocalLoading(true);
     const { data } = this.props.sendModal
-    const destination = data[SEND_MODAL_DESTINATION_FIELD]
+    const source = data[SEND_MODAL_SOURCE_FIELD]
 
     try {
-      this.setState({ conversionPaths: destination.currencies });
+      this.setState({ conversionPaths: source.currencies });
       await this.setLocalLoading(false);
     } catch (e) {
       console.warn(e);
-      Alert.alert("Error", `Error while fetching potential conversions for ${destination.displayName}!`);
+      Alert.alert("Error", `Error while fetching potential conversions for ${source.displayName}!`);
       await this.setLocalLoading(false);
     }
   }
@@ -202,14 +198,14 @@ class WithdrawSendForm extends Component {
 
   updateDisplayAmount(amount, send) {
     this.setState({
-      [send ? "sendAmount" : "receiveAmount"]: amount,
+      [send ? "depositAmount" : "chargeAmount"]: amount,
     });
   }
 
   updateFormAmount(value, isSend) {
     const validInput = this.isValidAmount(value);
 
-    if (isSend) {
+    if (!isSend) {
       this.updateDisplayAmount(value || "", true);
 
       if (validInput) {
@@ -248,11 +244,12 @@ class WithdrawSendForm extends Component {
       const res = await preflightSend(
         coinObj,
         this.props.activeAccount,
-        data[SEND_MODAL_DESTINATION_FIELD].destinationId,
+        data[SEND_MODAL_SOURCE_FIELD].destinationId,
         BigNumber(data[SEND_MODAL_AMOUNT_FIELD]),
         channel,
         {
-          destCurrency: data[SEND_MODAL_TO_CURRENCY_FIELD].destinationCurrencyId
+          sourceCurrency: data[SEND_MODAL_FROM_CURRENCY_FIELD].sourceCurrencyId,
+          invertSourceDest: true
         }
       );
 
@@ -265,7 +262,7 @@ class WithdrawSendForm extends Component {
         activeAccount: this.props.activeAccount,
         txConfirmation: res.result,
         channel,
-        destination: data[SEND_MODAL_DESTINATION_FIELD]
+        source: data[SEND_MODAL_SOURCE_FIELD]
       });
     } catch (e) {
       Alert.alert("Error", e.message);
@@ -275,7 +272,7 @@ class WithdrawSendForm extends Component {
   };
 
   render() {
-    return WithdrawSendFormRender.call(this);
+    return DepositSendFormRender.call(this);
   }
 }
 
@@ -283,7 +280,7 @@ const mapStateToProps = (state) => {
   const chainTicker = state.sendModal.coinObj.id
   const balance_channel = state.sendModal.subWallet.api_channels[API_GET_BALANCES];
   const rates_channel = state.sendModal.subWallet.api_channels[API_GET_FIATPRICE];
-  const withdraw_channel = state.sendModal.subWallet.api_channels[API_GET_WITHDRAW_DESTINATIONS];
+  const deposit_channel = state.sendModal.subWallet.api_channels[API_GET_WITHDRAW_DESTINATIONS];
  
   return {
     sendModal: state.sendModal,
@@ -291,14 +288,14 @@ const mapStateToProps = (state) => {
       results: state.ledger.balances[balance_channel][chainTicker],
       errors: state.errors[API_GET_BALANCES][balance_channel][chainTicker],
     },
-    withdrawDestinations:
-      state.ledger.withdrawDestinations[withdraw_channel][chainTicker] == null
+    depositSources:
+      state.ledger.depositSources[deposit_channel][chainTicker] == null
         ? []
-        : state.ledger.withdrawDestinations[withdraw_channel][chainTicker],
+        : state.ledger.depositSources[deposit_channel][chainTicker],
     activeAccount: state.authentication.activeAccount,
     rates: state.ledger.rates[rates_channel],
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
   };
 };
 
-export default connect(mapStateToProps)(WithdrawSendForm);
+export default connect(mapStateToProps)(DepositSendForm);

@@ -6,6 +6,7 @@ import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import Styles from "../../styles";
 import {
   CONVERSION_SEND_MODAL,
+  DEPOSIT_SEND_MODAL,
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_FORM_STEP_FORM,
   SEND_MODAL_FORM_STEP_RESULT,
@@ -27,6 +28,9 @@ import ConversionSendResult from "./ConversionSend/ConversionSendResult/Conversi
 import WithdrawSendForm from "./WithdrawSend/WithdrawSendForm/WithdrawSendForm";
 import WithdrawSendConfirm from "./WithdrawSend/WithdrawSendConfirm/WithdrawSendConfirm";
 import WithdrawSendResult from "./WithdrawSend/WithdrawSendResult/WithdrawSendResult";
+import DepositSendForm from "./DepositSend/DepositSendForm/DepositSendForm";
+import DepositSendConfirm from "./DepositSend/DepositSendConfirm/DepositSendConfirm";
+import DepositSendResult from "./DepositSend/DepositSendResult/DepositSendResult";
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
@@ -34,19 +38,22 @@ const Root = createStackNavigator();
 const SEND_FORMS = {
   [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendForm,
   [CONVERSION_SEND_MODAL]: ConversionSendForm,
-  [WITHDRAW_SEND_MODAL]: WithdrawSendForm
+  [WITHDRAW_SEND_MODAL]: WithdrawSendForm,
+  [DEPOSIT_SEND_MODAL]: DepositSendForm
 };
 
 const SEND_CONFIRMATION = {
   [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendConfirm,
   [CONVERSION_SEND_MODAL]: ConversionSendConfirm,
-  [WITHDRAW_SEND_MODAL]: WithdrawSendConfirm
+  [WITHDRAW_SEND_MODAL]: WithdrawSendConfirm,
+  [DEPOSIT_SEND_MODAL]: DepositSendConfirm
 };
 
 const SEND_RESULTS = {
   [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendResult,
   [CONVERSION_SEND_MODAL]: ConversionSendResult,
-  [WITHDRAW_SEND_MODAL]: WithdrawSendResult
+  [WITHDRAW_SEND_MODAL]: WithdrawSendResult,
+  [DEPOSIT_SEND_MODAL]: DepositSendResult
 };
 
 export const SendModalRender = function () {

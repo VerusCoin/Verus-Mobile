@@ -16,6 +16,9 @@ export * from "./requests/getCurrencyConversionPaths";
 export * from './requests/preflightConversion';
 export * from './requests/convert';
 export * from './requests/getWithdrawMethods';
+export * from './requests/getDepositMethods';
+export * from './requests/getTransferFollowup';
+export * from './requests/getPendingDeposits';
 
 export const getActiveWyreAccount = async () => {
   await conditionallyUpdateService(store.getState(), store.dispatch, API_GET_SERVICE_ACCOUNT);

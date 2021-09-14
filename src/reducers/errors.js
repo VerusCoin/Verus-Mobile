@@ -17,7 +17,9 @@ import {
   API_GET_SERVICE_TRANSFERS,
   API_GET_SERVICE_RATES,
   API_GET_CONVERSION_PATHS,
-  API_GET_WITHDRAW_DESTINATIONS
+  API_GET_WITHDRAW_DESTINATIONS,
+  API_GET_DEPOSIT_SOURCES,
+  API_GET_PENDING_DEPOSITS
 } from "../utils/constants/intervalConstants";
 import {
   ERROR_BALANCES,
@@ -44,7 +46,11 @@ import {
   SET_CONVERSION_PATHS,
   ERROR_CONVERSION_PATHS,
   ERROR_WITHDRAW_DESTINATIONS,
-  SET_WITHDRAW_DESTINATIONS
+  SET_WITHDRAW_DESTINATIONS,
+  SET_DEPOSIT_SOURCES,
+  ERROR_DEPOSIT_SOURCES,
+  SET_PENDING_DEPOSITS,
+  ERROR_PENDING_DEPOSITS
 } from "../utils/constants/storeType";
 
 export const errors = (state = {
@@ -60,7 +66,9 @@ export const errors = (state = {
   [API_GET_SERVICE_ACCOUNT]: {},
   [API_GET_SERVICE_TRANSFERS]: {},
   [API_GET_CONVERSION_PATHS]: {},
-  [API_GET_WITHDRAW_DESTINATIONS]: {}
+  [API_GET_WITHDRAW_DESTINATIONS]: {},
+  [API_GET_DEPOSIT_SOURCES]: {},
+  [API_GET_PENDING_DEPOSITS]: {}
 }, action) => {
   const { channel, error, chainTicker } = action.payload || {}
 
@@ -105,6 +113,28 @@ export const errors = (state = {
           ...state[API_GET_WITHDRAW_DESTINATIONS],
           [channel]: {
             ...state[API_GET_WITHDRAW_DESTINATIONS][channel],
+            [chainTicker]: error
+          }
+        }
+      };
+    case ERROR_DEPOSIT_SOURCES:
+      return {
+        ...state,
+        [API_GET_DEPOSIT_SOURCES]: {
+          ...state[API_GET_DEPOSIT_SOURCES],
+          [channel]: {
+            ...state[API_GET_DEPOSIT_SOURCES][channel],
+            [chainTicker]: error
+          }
+        }
+      };
+    case ERROR_PENDING_DEPOSITS:
+      return {
+        ...state,
+        [API_GET_PENDING_DEPOSITS]: {
+          ...state[API_GET_PENDING_DEPOSITS],
+          [channel]: {
+            ...state[API_GET_PENDING_DEPOSITS][channel],
             [chainTicker]: error
           }
         }
@@ -243,6 +273,28 @@ export const errors = (state = {
           ...state[API_GET_WITHDRAW_DESTINATIONS],
           [channel]: {
             ...state[API_GET_WITHDRAW_DESTINATIONS][channel],
+            [chainTicker]: null,
+          },
+        },
+      };
+    case SET_DEPOSIT_SOURCES:
+      return {
+        ...state,
+        [API_GET_DEPOSIT_SOURCES]: {
+          ...state[API_GET_DEPOSIT_SOURCES],
+          [channel]: {
+            ...state[API_GET_DEPOSIT_SOURCES][channel],
+            [chainTicker]: null,
+          },
+        },
+      };
+    case SET_PENDING_DEPOSITS:
+      return {
+        ...state,
+        [API_GET_PENDING_DEPOSITS]: {
+          ...state[API_GET_PENDING_DEPOSITS],
+          [channel]: {
+            ...state[API_GET_PENDING_DEPOSITS][channel],
             [chainTicker]: null,
           },
         },

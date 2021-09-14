@@ -5,22 +5,26 @@ import WyreService from "../../../../services/WyreService"
 export const txPreflight = async (coinObj, activeUser, address, amount, params) => {
   try {
     const res = await WyreProvider.preflightTransaction({
-      source: WyreProvider.getAccountSrn(),
-      sourceCurrency: coinObj.id,
+      source: params.invertSourceDest ? address : WyreProvider.getAccountSrn(),
+      sourceCurrency: params.sourceCurrency == null ? coinObj.id : params.sourceCurrency,
       sourceAmount: params.amountAsDest ? undefined : amount.toString(),
       destAmount: !params.amountAsDest ? undefined : amount.toString(),
-      dest: address.includes(":") ? address : WyreService.formatCryptoSrn(coinObj, address),
+      dest: params.invertSourceDest
+      ? WyreProvider.getAccountSrn()
+      : address.includes(":")
+      ? address
+      : WyreService.formatCryptoSrn(coinObj, address),
       destCurrency: params.destCurrency == null ? coinObj.id : params.destCurrency,
       message: params.memo,
     });
-    
+
     return {
       err: false,
       result: {
         fee: res.totalFees != null ? res.totalFees.toString() : "0",
         value: res.destAmount.toString(),
-        toAddress: address,
-        fromAddress: `Wyre ${coinObj.id} wallet`,
+        toAddress: params.invertSourceDest ? `Wyre ${coinObj.id} wallet` : address,
+        fromAddress: params.invertSourceDest ? address : `Wyre ${coinObj.id} wallet`,
         fromCurrency: res.sourceCurrency,
         toCurrency: res.destCurrency,
         price: res.exchangeRate,

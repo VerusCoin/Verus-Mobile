@@ -330,6 +330,12 @@ class WyreService {
     }, true);
   };
 
+  getTransferInstructions = async (transferId) => {
+    return await WyreService.formatCall(() => {
+      return this.service.get(`/v2/transfer/${transferId}`);
+    }, true);
+  }
+
   getTransferHistory = async () => {
     return await WyreService.formatCall(() => {
       return this.service.get("/v3/transfers");

@@ -17,7 +17,9 @@ import {
   API_GET_SERVICE_TRANSFERS,
   API_GET_SERVICE_RATES,
   API_GET_CONVERSION_PATHS,
-  API_GET_WITHDRAW_DESTINATIONS
+  API_GET_WITHDRAW_DESTINATIONS,
+  API_GET_DEPOSIT_SOURCES,
+  API_GET_PENDING_DEPOSITS
 } from './intervalConstants'
 
 export const DEFAULT_SERVICE_UPDATE_PARAMS = {
@@ -305,6 +307,110 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
     }
   },
   [API_GET_WITHDRAW_DESTINATIONS]: {
+    channels: [WYRE_SERVICE],
+    restrictions: [],
+    pre_data: {
+      tracking_info: {
+        coin_bound: true, 
+        update_locations: null, 
+        needs_update: true,
+        busy: {},
+      },
+      interval_info: {
+        expire_id: null,
+        update_expired_id: null,
+        expire_oncomplete: null,
+        update_expired_oncomplete: null,
+        expire_timeout: 120000,
+        update_expired_interval: 30000,
+      }
+    },
+    syncing: {
+      tracking_info: {
+        coin_bound: true, 
+        update_locations: null, 
+        needs_update: true,
+        busy: {},
+      },
+      interval_info: {
+        expire_id: null,
+        update_expired_id: null,
+        expire_oncomplete: null,
+        update_expired_oncomplete: null,
+        expire_timeout: 120000,
+        update_expired_interval: 30000,
+      }
+    },
+    post_sync: {
+      tracking_info: {
+        coin_bound: true, 
+        update_locations: null, 
+        needs_update: true,
+        busy: {},
+      },
+      interval_info: {
+        expire_id: null,
+        update_expired_id: null,
+        expire_oncomplete: null,
+        update_expired_oncomplete: null,
+        expire_timeout: 120000,
+        update_expired_interval: 30000,
+      }
+    }
+  },
+  [API_GET_DEPOSIT_SOURCES]: {
+    channels: [WYRE_SERVICE],
+    restrictions: [],
+    pre_data: {
+      tracking_info: {
+        coin_bound: true, 
+        update_locations: null, 
+        needs_update: true,
+        busy: {},
+      },
+      interval_info: {
+        expire_id: null,
+        update_expired_id: null,
+        expire_oncomplete: null,
+        update_expired_oncomplete: null,
+        expire_timeout: 120000,
+        update_expired_interval: 30000,
+      }
+    },
+    syncing: {
+      tracking_info: {
+        coin_bound: true, 
+        update_locations: null, 
+        needs_update: true,
+        busy: {},
+      },
+      interval_info: {
+        expire_id: null,
+        update_expired_id: null,
+        expire_oncomplete: null,
+        update_expired_oncomplete: null,
+        expire_timeout: 120000,
+        update_expired_interval: 30000,
+      }
+    },
+    post_sync: {
+      tracking_info: {
+        coin_bound: true, 
+        update_locations: null, 
+        needs_update: true,
+        busy: {},
+      },
+      interval_info: {
+        expire_id: null,
+        update_expired_id: null,
+        expire_oncomplete: null,
+        update_expired_oncomplete: null,
+        expire_timeout: 120000,
+        update_expired_interval: 30000,
+      }
+    }
+  },
+  [API_GET_PENDING_DEPOSITS]: {
     channels: [WYRE_SERVICE],
     restrictions: [],
     pre_data: {

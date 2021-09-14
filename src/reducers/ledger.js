@@ -15,15 +15,11 @@ import {
   SET_RATES,
   SET_TRANSACTIONS,
   SIGN_OUT_COMPLETE,
-  //SET_ONE_BALANCE,
-  //BALANCES_NEED_UPDATE,
-  //TRANSACTIONS_NEED_UPDATE,
-  //RATES_NEED_UPDATE,
-  //EVERYTHING_NEEDS_UPDATE,
-  //SET_INTERVAL_ID,
   SET_INFO,
   SET_CONVERSION_PATHS,
-  SET_WITHDRAW_DESTINATIONS
+  SET_WITHDRAW_DESTINATIONS,
+  SET_DEPOSIT_SOURCES,
+  SET_PENDING_DEPOSITS
 } from '../utils/constants/storeType'
 import {
   CHANNELS_OBJECT_TEMPLATE
@@ -35,7 +31,9 @@ export const ledger = (state = {
   rates: CHANNELS_OBJECT_TEMPLATE,
   info: CHANNELS_OBJECT_TEMPLATE,
   conversions: CHANNELS_OBJECT_TEMPLATE,
-  withdrawDestinations: CHANNELS_OBJECT_TEMPLATE
+  withdrawDestinations: CHANNELS_OBJECT_TEMPLATE,
+  depositSources: CHANNELS_OBJECT_TEMPLATE,
+  pendingDeposits: CHANNELS_OBJECT_TEMPLATE
 }, action) => {
   const { chainTicker, channel, body } = action.payload || {}
 
@@ -70,6 +68,22 @@ export const ledger = (state = {
         withdrawDestinations: {
           ...state.withdrawDestinations,
           [channel]: { ...state.withdrawDestinations[channel], [chainTicker]: body },
+        },
+      };
+    case SET_DEPOSIT_SOURCES:
+      return {
+        ...state,
+        depositSources: {
+          ...state.depositSources,
+          [channel]: { ...state.depositSources[channel], [chainTicker]: body },
+        },
+      };
+    case SET_PENDING_DEPOSITS:
+      return {
+        ...state,
+        pendingDeposits: {
+          ...state.pendingDeposits,
+          [channel]: { ...state.pendingDeposits[channel], [chainTicker]: body },
         },
       };
     case SET_TRANSACTIONS:

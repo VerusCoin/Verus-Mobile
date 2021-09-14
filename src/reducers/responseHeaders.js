@@ -11,7 +11,9 @@ import {
   SIGN_OUT_COMPLETE,
   SET_INFO,
   SET_CONVERSION_PATHS,
-  SET_WITHDRAW_DESTINATIONS
+  SET_WITHDRAW_DESTINATIONS,
+  SET_DEPOSIT_SOURCES,
+  SET_PENDING_DEPOSITS
 } from '../utils/constants/storeType'
 import {
   CHANNELS_OBJECT_TEMPLATE
@@ -23,7 +25,9 @@ export const responseHeaders = (state = {
   rates: CHANNELS_OBJECT_TEMPLATE,
   info: CHANNELS_OBJECT_TEMPLATE,
   conversions: CHANNELS_OBJECT_TEMPLATE,
-  withdrawDestinations: CHANNELS_OBJECT_TEMPLATE
+  withdrawDestinations: CHANNELS_OBJECT_TEMPLATE,
+  depositSources: CHANNELS_OBJECT_TEMPLATE,
+  pendingDeposits: CHANNELS_OBJECT_TEMPLATE
 }, action) => {
   const { chainTicker, header, channel } = action.payload || {}
 
@@ -58,6 +62,22 @@ export const responseHeaders = (state = {
         withdrawDestinations: {
           ...state.withdrawDestinations,
           [channel]: { ...state.withdrawDestinations[channel], [chainTicker]: header },
+        },
+      };
+    case SET_DEPOSIT_SOURCES:
+      return {
+        ...state,
+        depositSources: {
+          ...state.depositSources,
+          [channel]: { ...state.depositSources[channel], [chainTicker]: header },
+        },
+      };
+    case SET_PENDING_DEPOSITS:
+      return {
+        ...state,
+        pendingDeposits: {
+          ...state.pendingDeposits,
+          [channel]: { ...state.pendingDeposits[channel], [chainTicker]: header },
         },
       };
     case SET_TRANSACTIONS:

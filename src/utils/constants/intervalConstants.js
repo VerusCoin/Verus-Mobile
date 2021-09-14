@@ -21,6 +21,8 @@ export const API_GET_BALANCES = "get_balances"
 export const API_GET_INFO = "get_info"
 export const API_GET_CONVERSION_PATHS = 'get_conversion_paths'
 export const API_GET_WITHDRAW_DESTINATIONS = 'get_withdraw_destinations'
+export const API_GET_DEPOSIT_SOURCES = 'get_deposit_sources'
+export const API_GET_PENDING_DEPOSITS = 'get_pending_deposits'
 export const API_GET_TRANSACTIONS = "get_transactions"
 export const API_GET_FIATPRICE = "get_fiatprice"
 

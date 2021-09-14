@@ -5,10 +5,10 @@
 
 import React, { Component } from "react"
 import { useWindowDimensions } from 'react-native'
-import { ManageCoinRenderDeposit, ManageCoinRenderWithdraw } from "./ManageCoin.render"
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import Colors from "../../../globals/colors";
 import WithdrawCoin from "./WithdrawCoin/WithdrawCoin";
+import DepositCoin from "./DepositCoin/DepositCoin";
 
 export default function ManageCoin() {
   const layout = useWindowDimensions();
@@ -18,11 +18,9 @@ export default function ManageCoin() {
     { key: 'deposit', title: 'Deposit' },
     { key: 'withdraw', title: 'Withdraw' },
   ]);
-
-  const Deposit = () => ManageCoinRenderDeposit();
   
   const renderScene = SceneMap({
-    deposit: Deposit,
+    deposit: DepositCoin,
     withdraw: WithdrawCoin,
   });
   
