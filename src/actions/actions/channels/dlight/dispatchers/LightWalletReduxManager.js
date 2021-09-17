@@ -14,7 +14,7 @@ import { canRetryDlightInitialization, blockchainQuitError } from './AlertManage
 import {
   ERROR_DLIGHT_INIT,
   STOP_DLIGHT_SYNC,
-  SET_DLIGHT_ADDRESSES,
+  SET_ADDRESSES,
   CLOSE_DLIGHT_SOCKET,
   INIT_DLIGHT_CHANNEL_START,
   CLOSE_DLIGHT_CHANNEL,
@@ -101,9 +101,9 @@ export const initDlightWallet = async (coinObj) => {
       })
 
       dispatch({
-        type: SET_DLIGHT_ADDRESSES,
-        payload: { chainTicker: id, addresses: res.pop().result }
-      })
+        type: SET_ADDRESSES,
+        payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: res.pop().result },
+      });
 
       resolve()
     })

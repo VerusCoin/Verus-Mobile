@@ -1,6 +1,7 @@
 import Store from "../../store";
+import { WYRE_SERVICE } from "../constants/intervalConstants";
 import { WYRE_SERVICE_ID, CONNECTED_SERVICE_DISPLAY_INFO } from "../constants/services";
-import { AUTHENTICATE_WYRE_SERVICE, DEAUTHENTICATE_WYRE_SERVICE } from "../constants/storeType";
+import { AUTHENTICATE_WYRE_SERVICE, DEAUTHENTICATE_WYRE_SERVICE, SET_ADDRESSES } from "../constants/storeType";
 import { AccountBasedFintechApiTemplate } from "./ServiceTemplates";
 import WyreService from './WyreService'
 
@@ -42,6 +43,25 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
     this.accountId = res.authenticatedAs == null ? null : res.authenticatedAs.split(":")[1];
 
     this.service.authenticate(this.bearerToken, this.apiKey);
+
+    try {
+      if (this.accountId != null) {
+        const { depositAddresses } = await this.getAccount()
+
+        for (const chainTicker of Object.keys(depositAddresses)) {
+          Store.dispatch({
+            type: SET_ADDRESSES,
+            payload: {
+              chainTicker,
+              channel: WYRE_SERVICE,
+              addresses: [depositAddresses[chainTicker]]
+            },
+          });
+        }        
+      }
+    } catch(e) {
+      console.warn(e)
+    }
 
     Store.dispatch({
       type: AUTHENTICATE_WYRE_SERVICE,
@@ -91,7 +111,8 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
     return await this.service.followupPaymentMethod(paymentMethod, uris, format);
   };
 
-  getAccount = async ({ accountId }) => {
+  getAccount = async (payload = {}) => {
+    const { accountId } = payload
     return await this.service.getAccount(accountId == null ? this.accountId : accountId);
   };
 

@@ -72,9 +72,9 @@ const getWyreSubwallet = (protocol) => {
       [API_GET_DEPOSIT_SOURCES]: WYRE_SERVICE,
       [API_GET_PENDING_DEPOSITS]: WYRE_SERVICE,
       // [API_GET_INFO]: WYRE_SERVICE,
-      // [API_GET_ADDRESSES]: WYRE_SERVICE,
       [API_GET_FIATPRICE]: WYRE_SERVICE,
       [API_SEND]: WYRE_SERVICE,
+      [API_GET_ADDRESSES]: WYRE_SERVICE,
       // [API_GET_KEYS]: WYRE_SERVICE
     },
     compatible_apps,
