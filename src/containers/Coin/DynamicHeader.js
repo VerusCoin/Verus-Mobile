@@ -100,8 +100,13 @@ class DynamicHeader extends Component {
 
   _renderCarouselItem({ item, index }) {
     const displayBalance = this.props.balances[item.id] != null
-        ? this.props.balances[item.id].total
+        ? this.props.balances[item.id].confirmed
         : null;
+
+    const pendingBalance = this.props.balances[item.id] != null
+      ? this.props.balances[item.id].pending
+      : null;
+
     let fiatBalance = null
     const rates =
       this.props.rates[item.api_channels[API_GET_FIATPRICE]] != null
@@ -145,27 +150,23 @@ class DynamicHeader extends Component {
                 style={{ backgroundColor: "white" }}
                 size={30}
               />
-              <Text style={{ fontSize: 16, marginLeft: 8 }}>
-                {SUBWALLET_NAMES[item.id]}
-              </Text>
+              <Text style={{ fontSize: 16, marginLeft: 8 }}>{SUBWALLET_NAMES[item.id]}</Text>
             </View>
             <Paragraph style={{ fontSize: 16, paddingTop: 8 }}>
               {this.props.balanceErrors[item.id]
                 ? CONNECTION_ERROR
-                : `${
-                    displayBalance == null
-                      ? "-"
-                      : truncateDecimal(displayBalance, 8)
+                : `${displayBalance == null ? "-" : truncateDecimal(displayBalance, 8)}${
+                    pendingBalance != null && !BigNumber(pendingBalance).isEqualTo(0)
+                      ? ` (${
+                          BigNumber(pendingBalance).isGreaterThan(0) ? "+" : ""
+                        }${truncateDecimal(pendingBalance, 4)})`
+                      : ""
                   } ${this.props.chainTicker}`}
             </Paragraph>
-            <Paragraph
-              style={{ ...Styles.listItemSubtitleDefault, fontSize: 12 }}
-            >
+            <Paragraph style={{ ...Styles.listItemSubtitleDefault, fontSize: 12 }}>
               {syncProgress != 100 && syncProgress != -1
                 ? `Syncing - ${syncProgress.toFixed(2)}%`
-                : `${fiatBalance == null ? "-" : fiatBalance} ${
-                    this.props.displayCurrency
-                  }`}
+                : `${fiatBalance == null ? "-" : fiatBalance} ${this.props.displayCurrency}`}
             </Paragraph>
           </Card.Content>
         </Card>
@@ -190,21 +191,38 @@ class DynamicHeader extends Component {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            paddingBottom: 16,
+            justifyContent: "center",
+            flex: 1
           }}
         >
-          <Title
+          <Text
             style={{
               fontSize: 16,
               fontWeight: "300",
               color: Colors.secondaryColor,
             }}
           >
-            {"Total Balance"}
-          </Title>
-          <Title style={{ color: Colors.secondaryColor }}>{`${
-            truncateDecimal(this.props.totalBalance, 8)
-          } ${this.props.chainTicker}`}</Title>
+            {"Confirmed Balance"}
+          </Text>
+          <Text
+            style={{ color: Colors.secondaryColor, fontWeight: "500", fontSize: 18 }}
+          >{`${truncateDecimal(this.props.confirmedBalance, 8)} ${this.props.chainTicker}`}</Text>
+          {!this.props.pendingBalance.isEqualTo(0) && (
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: "300",
+                color: Colors.secondaryColor,
+                paddingTop: 4,
+              }}
+            >
+              <Text>{this.props.pendingBalance.isGreaterThan(0) ? "+" : ""}</Text>
+              <Text style={{ fontWeight: "500" }}>
+                {truncateDecimal(this.props.pendingBalance, 8)}
+              </Text>
+              <Text>{" change pending"}</Text>
+            </Text>
+          )}
         </View>
         <View
           style={{
@@ -220,9 +238,7 @@ class DynamicHeader extends Component {
             sliderWidth={DEVICE_WINDOW_WIDTH / 2}
             items={this.state.carouselItems}
             renderItem={(props) => this._renderCarouselItem(props)}
-            onSnapToItem={(index) =>
-              this.setSubWallet(this.state.carouselItems[index])
-            }
+            onSnapToItem={(index) => this.setSubWallet(this.state.carouselItems[index])}
             carouselProps={{
               loop: true,
               ref: (ref) => (this.carousel = ref),
@@ -245,14 +261,23 @@ const mapStateToProps = (state) => {
     balances: extractLedgerData(state, 'balances', API_GET_BALANCES, chainTicker),
     info: extractLedgerData(state, 'info', API_GET_INFO, chainTicker),
     balanceErrors: extractErrorData(state, API_GET_BALANCES, chainTicker),
-    totalBalance: Object.values(balances).reduce((a, b) => {
+    pendingBalance: Object.values(balances).reduce((a, b) => {
       if (a == null) return b == null ? 0 : b 
       if (b == null) return a == null ? 0 : a
 
-      const aTotal = BigNumber.isBigNumber(a) ? a : BigNumber(a.total)
-      const bTotal = BigNumber.isBigNumber(b) ? b : BigNumber(b.total)
+      const aPending = BigNumber.isBigNumber(a) ? a : BigNumber(a.pending)
+      const bPending = BigNumber.isBigNumber(b) ? b : BigNumber(b.pending)
 
-      return aTotal.plus(bTotal)
+      return aPending.plus(bPending)
+    }, BigNumber(0)),
+    confirmedBalance: Object.values(balances).reduce((a, b) => {
+      if (a == null) return b == null ? 0 : b 
+      if (b == null) return a == null ? 0 : a
+
+      const aConfirmed = BigNumber.isBigNumber(a) ? a : BigNumber(a.confirmed)
+      const bConfirmed = BigNumber.isBigNumber(b) ? b : BigNumber(b.confirmed)
+
+      return aConfirmed.plus(bConfirmed)
     }, BigNumber(0)),
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
     rates: state.ledger.rates,
