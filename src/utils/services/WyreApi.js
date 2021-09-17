@@ -1,4 +1,5 @@
 import Store from "../../store";
+import { requestSeeds } from "../auth/authBox";
 import { WYRE_SERVICE } from "../constants/intervalConstants";
 import { WYRE_SERVICE_ID, CONNECTED_SERVICE_DISPLAY_INFO } from "../constants/services";
 import { AUTHENTICATE_WYRE_SERVICE, DEAUTHENTICATE_WYRE_SERVICE, SET_ADDRESSES } from "../constants/storeType";
@@ -21,7 +22,7 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
       getRates: async (payload) => this.getRates(payload),
       sendTransaction: async (payload) => this.sendTransaction(payload),
       preflightTransaction: async (payload) => this.preflightTransaction(payload),
-      getTransferInstructions: async (payload) => this.getTransferInstructions(payload)
+      getTransferInstructions: async (payload) => this.getTransferInstructions(payload),
     });
 
     this.service = WyreService.build();
@@ -30,11 +31,16 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
     this.accountId = null;
   }
 
-  authenticate = async (seed) => {
+  authenticate = async (seed, reauthenticate = false) => {
+    if (reauthenticate) {
+      this.service.deauthenticate()
+    }
+    
     const key = await WyreService.bearerFromSeed(seed);
     const authenticated = Store.getState().channelStore_wyre_service.authenticated;
 
-    if (authenticated) return { apiKey: this.apiKey, authenticatedAs: this.accountId };
+    if (authenticated && !reauthenticate)
+      return { apiKey: this.apiKey, authenticatedAs: this.accountId };
 
     const res = await this.service.submitAuthToken(key);
 
@@ -44,9 +50,15 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
 
     this.service.authenticate(this.bearerToken, this.apiKey);
 
+    await this.initAccountData()
+
+    return res;
+  };
+
+  initAccountData = async () => {
     try {
       if (this.accountId != null) {
-        const { depositAddresses } = await this.getAccount()
+        const { depositAddresses } = await this.getAccount();
 
         for (const chainTicker of Object.keys(depositAddresses)) {
           Store.dispatch({
@@ -54,13 +66,13 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
             payload: {
               chainTicker,
               channel: WYRE_SERVICE,
-              addresses: [depositAddresses[chainTicker]]
+              addresses: [depositAddresses[chainTicker]],
             },
           });
-        }        
+        }
       }
-    } catch(e) {
-      console.warn(e)
+    } catch (e) {
+      console.warn(e);
     }
 
     Store.dispatch({
@@ -69,8 +81,6 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
         accountId: this.accountId,
       },
     });
-
-    return res;
   };
 
   reset = () => {
@@ -86,7 +96,9 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
   };
 
   createAccount = async ({ account }) => {
-    return await this.service.createAccount(account);
+    const newAccount = await this.service.createAccount(account);
+    await this.authenticate((await requestSeeds())[WYRE_SERVICE], true)
+    return newAccount
   };
 
   updateAccount = async ({ accountId, updateObj }) => {
@@ -112,7 +124,7 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
   };
 
   getAccount = async (payload = {}) => {
-    const { accountId } = payload
+    const { accountId } = payload;
     return await this.service.getAccount(accountId == null ? this.accountId : accountId);
   };
 
@@ -164,10 +176,10 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
   };
 
   getAccountSrn = () => {
-    return WyreService.formatSrn(this.accountId, "account")
-  }
+    return WyreService.formatSrn(this.accountId, "account");
+  };
 
   getRates = async ({ mode }) => {
-    return await this.service.getRates(mode)
-  }
+    return await this.service.getRates(mode);
+  };
 }
