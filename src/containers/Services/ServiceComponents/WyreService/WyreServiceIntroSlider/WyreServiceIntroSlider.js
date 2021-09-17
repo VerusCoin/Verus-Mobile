@@ -120,6 +120,7 @@ class WyreServiceIntroSlider extends Component {
                 },
                 message: "Linking Wyre...",
                 route: "Home",
+                screen: "ServicesHome",
                 successMsg: "Wyre linked!",
                 errorMsg: "Failed to link Wyre.",
               },

@@ -94,6 +94,7 @@ class WyreServiceAccountCreator extends Component {
         },
         message: "Creating Wyre account...",
         route: "Home",
+        screen: "ServicesHome",
         successMsg: "Account created!",
         errorMsg: "Failed to create Wyre account.",
       },
