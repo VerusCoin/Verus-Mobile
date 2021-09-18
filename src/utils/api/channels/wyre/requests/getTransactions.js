@@ -14,7 +14,7 @@ export const getTransactions = async (coinObj) => {
       if (transfer.sourceCurrency === coinObj.id || transfer.destCurrency === coinObj.id) {
 
         processedTransfers.push(
-          standardizeWyreTxObj(transfer, account.depositAddresses[coinObj.id])
+          standardizeWyreTxObj(transfer, account.depositAddresses[coinObj.id], coinObj)
         );
       }
     }
