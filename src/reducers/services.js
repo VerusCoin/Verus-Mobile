@@ -70,6 +70,10 @@ export const services = (
       return {
         ...state,
         accounts: {},
+        paymentMethods: {},
+        stored: {},
+        transfers: {},
+        rates: {},
         loading: false
       }
     default:
