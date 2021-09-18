@@ -61,8 +61,6 @@ class Login extends Component {
   }
 
   componentDidMount() {
-    clearActiveAccountLifecycles()
-
     if (this.props.defaultAccount != null && this.props.selectDefaultAccount) {
       const defaultAccountObj = this.props.accounts.find(
         (account) => account.accountHash === this.props.defaultAccount
