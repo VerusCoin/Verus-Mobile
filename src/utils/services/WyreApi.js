@@ -1,5 +1,6 @@
 import Store from "../../store";
 import { requestSeeds } from "../auth/authBox";
+import { coinsList } from "../CoinData/CoinsList";
 import { WYRE_SERVICE } from "../constants/intervalConstants";
 import { WYRE_SERVICE_ID, CONNECTED_SERVICE_DISPLAY_INFO } from "../constants/services";
 import { AUTHENTICATE_WYRE_SERVICE, DEAUTHENTICATE_WYRE_SERVICE, SET_ADDRESSES } from "../constants/storeType";
@@ -58,17 +59,23 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
   initAccountData = async () => {
     try {
       if (this.accountId != null) {
-        const { depositAddresses } = await this.getAccount();
+        const { depositAddresses, id } = await this.getAccount();
 
-        for (const chainTicker of Object.keys(depositAddresses)) {
-          Store.dispatch({
-            type: SET_ADDRESSES,
-            payload: {
-              chainTicker,
-              channel: WYRE_SERVICE,
-              addresses: [depositAddresses[chainTicker]],
-            },
-          });
+        for (const coinObj of Object.values(coinsList)) {
+          if (coinObj.compatible_channels.includes(WYRE_SERVICE)) {
+            Store.dispatch({
+              type: SET_ADDRESSES,
+              payload: {
+                chainTicker: coinObj.id,
+                channel: WYRE_SERVICE,
+                addresses: [
+                  depositAddresses[coinObj.id] == null
+                    ? `account:${id}`
+                    : depositAddresses[coinObj.id],
+                ],
+              },
+            });
+          }
         }
       }
     } catch (e) {
