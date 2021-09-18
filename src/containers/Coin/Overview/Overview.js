@@ -11,9 +11,9 @@ import {
   TouchableOpacity
 } from "react-native";
 import { connect } from 'react-redux';
-import { expireCoinData, setActiveOverviewFilter } from '../../../actions/actionCreators';
+import { expireCoinData, expireServiceData, setActiveOverviewFilter } from '../../../actions/actionCreators';
 import Styles from '../../../styles/index'
-import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
+import { conditionallyUpdateService, conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
 import store from "../../../store";
 import TxDetailsModal from '../../../components/TxDetailsModal/TxDetailsModal'
 import {
@@ -21,7 +21,11 @@ import {
   API_GET_BALANCES,
   API_GET_INFO,
   API_GET_TRANSACTIONS,
-  ETH
+  ETH,
+  API_GET_SERVICE_ACCOUNT,
+  API_GET_SERVICE_PAYMENT_METHODS,
+  API_GET_SERVICE_TRANSFERS,
+  API_GET_SERVICE_RATES
 } from "../../../utils/constants/intervalConstants";
 import { selectTransactions } from '../../../selectors/transactions';
 import { DEFAULT_DECIMALS, ETHERS } from "../../../utils/constants/web3Constants";
@@ -74,30 +78,43 @@ class Overview extends Component {
 
   refresh = () => {
     if (!this.state.loading) {
-      this.setState({ loading: true }, () => {
-        const updates = [
+      this.setState({ loading: true }, async () => {
+        const serviceUpdates = [
+          API_GET_SERVICE_ACCOUNT,
+          API_GET_SERVICE_PAYMENT_METHODS,
+          API_GET_SERVICE_TRANSFERS,
+          API_GET_SERVICE_RATES
+        ]
+
+        const coinUpdates = [
           API_GET_FIATPRICE,
           API_GET_BALANCES,
           API_GET_INFO,
           API_GET_TRANSACTIONS
         ];
-        Promise.all(
-          updates.map(async update => {
-            await conditionallyUpdateWallet(
-              store.getState(),
-              this.props.dispatch,
-              this.props.activeCoin.id,
-              update
-            );
-          })
-        )
-          .then(res => {
-            this.setState({ loading: false });
-          })
-          .catch(error => {
-            this.setState({ loading: false });
-            console.warn(error);
-          });
+
+        const updates = [{
+          keys: serviceUpdates,
+          update: conditionallyUpdateService,
+          params: [this.props.dispatch],
+        }, {
+          keys: coinUpdates,
+          update: conditionallyUpdateWallet,
+          params: [this.props.dispatch, this.props.activeCoin.id],
+        }]
+
+        for (const update of updates) {
+          for (const key of update.keys) {
+            try {
+              await update.update(store.getState(), ...update.params, key)
+            } catch(e) {
+              console.warn("Error forcing update to " + key)
+              console.warn(e)
+            }
+          }
+        }
+
+        this.setState({ loading: false });
       });
     }
   };
@@ -108,7 +125,11 @@ class Overview extends Component {
     this.props.dispatch(expireCoinData(coinObj.id, API_GET_BALANCES));
     this.props.dispatch(expireCoinData(coinObj.id, API_GET_INFO));
     this.props.dispatch(expireCoinData(coinObj.id, API_GET_TRANSACTIONS));
-
+    this.props.dispatch(expireServiceData(API_GET_SERVICE_ACCOUNT));
+    this.props.dispatch(expireServiceData(API_GET_SERVICE_PAYMENT_METHODS));
+    this.props.dispatch(expireServiceData(API_GET_SERVICE_TRANSFERS));
+    this.props.dispatch(expireServiceData(API_GET_SERVICE_RATES));
+    
     this.refresh();
   };
 

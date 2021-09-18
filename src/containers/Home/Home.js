@@ -16,6 +16,7 @@ import {
   setActiveSectionBuySellCrypto,
   expireCoinData,
   setCoinSubWallet,
+  expireServiceData,
 } from '../../actions/actionCreators';
 import { connect } from 'react-redux';
 import { Animated } from 'react-native';
@@ -26,10 +27,14 @@ import {
   API_GET_BALANCES,
   API_GET_INFO,
   GENERAL,
-  WYRE_SERVICE
+  WYRE_SERVICE,
+  API_GET_SERVICE_ACCOUNT,
+  API_GET_SERVICE_PAYMENT_METHODS,
+  API_GET_SERVICE_TRANSFERS,
+  API_GET_SERVICE_RATES
 } from "../../utils/constants/intervalConstants";
 import { USD } from '../../utils/constants/currencies'
-import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
+import { conditionallyUpdateService, conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 import BigNumber from "bignumber.js";
 import { extractLedgerData, extractErrorData } from "../../utils/ledger/extractLedgerData";
 import { HomeRender } from "./Home.render";
@@ -132,42 +137,45 @@ class Home extends Component {
   }
 
   refresh = (showLoading = true) => {
-    this.setState({ loading: showLoading }, () => {
-      Promise.all(
-        this.props.activeCoinsForUser.map(async (coinObj) => {
-          await conditionallyUpdateWallet(
-            Store.getState(),
-            this.props.dispatch,
-            coinObj.id,
-            API_GET_FIATPRICE
-          );
-          await conditionallyUpdateWallet(
-            Store.getState(),
-            this.props.dispatch,
-            coinObj.id,
-            API_GET_BALANCES
-          );
-          await conditionallyUpdateWallet(
-            Store.getState(),
-            this.props.dispatch,
-            coinObj.id,
-            API_GET_INFO
-          );
-        })
-      )
-        .then(() => {
-          const totalBalances = this.getTotalBalances(this.props);
+    this.setState({ loading: showLoading }, async () => {
+      const serviceUpdates = [
+        API_GET_SERVICE_ACCOUNT,
+        API_GET_SERVICE_PAYMENT_METHODS,
+        API_GET_SERVICE_RATES
+      ]
 
-          this.setState({
-            loading: false,
-            totalFiatBalance: totalBalances.fiat,
-            totalCryptoBalances: totalBalances.crypto,
-          });
-        })
-        .catch((error) => {
-          this.setState({ loading: false });
-          console.warn(error);
-        });
+      const coinUpdates = [
+        API_GET_FIATPRICE,
+        API_GET_BALANCES,
+        API_GET_INFO,
+      ];
+
+      const updates = [{
+        keys: serviceUpdates,
+        update: conditionallyUpdateService,
+        params: [[this.props.dispatch]],
+      }, {
+        keys: coinUpdates,
+        update: conditionallyUpdateWallet,
+        params: this.props.activeCoinsForUser.map(coinObj => {
+          return [this.props.dispatch, coinObj.id]
+        }),
+      }]
+
+      for (const update of updates) {
+        for (const key of update.keys) {
+          try {
+            for (const paramList of update.params) {
+              await update.update(store.getState(), ...paramList, key)
+            }
+          } catch(e) {
+            console.warn("Error forcing update to " + key)
+            console.warn(e)
+          }
+        }
+      }
+
+      this.setState({ loading: false })
     });
   };
 
@@ -187,6 +195,10 @@ class Home extends Component {
       this.props.dispatch(expireCoinData(coinObj.id, API_GET_BALANCES));
       this.props.dispatch(expireCoinData(coinObj.id, API_GET_INFO));
     });
+
+    this.props.dispatch(expireServiceData(API_GET_SERVICE_ACCOUNT));
+    this.props.dispatch(expireServiceData(API_GET_SERVICE_PAYMENT_METHODS));
+    this.props.dispatch(expireServiceData(API_GET_SERVICE_RATES));
 
     this.refresh();
   };

@@ -52,6 +52,16 @@ class TxDetailsModal extends Component {
     Alert.alert("TxID Copied", txid);
   };
 
+  copyBlockchainTxIDToClipboard = () => {
+    const txid = this.props.txData.blockchainTxId != null
+    ? this.decodeTxid(this.props.txData.blockchainTxId)
+    : this.props.txData.blockchainTxId
+
+    Clipboard.setString(txid);
+
+    Alert.alert("TxID Copied", txid);
+  }
+
   copyAddressToClipboard = () => {
     Clipboard.setString(this.props.txData.address);
 
@@ -212,6 +222,12 @@ class TxDetailsModal extends Component {
                 key: "TxID",
                 onPress: txData.txid != null ? this.copyTxIDToClipboard : () => {},
                 data: txData.txid != null ? this.decodeTxid(txData.txid) : "Unknown",
+              },
+              {
+                key: "Blockchain TxID",
+                onPress: txData.blockchainTxId != null ? this.copyTxIDToClipboard : () => {},
+                data: txData.blockchainTxId,
+                condition: txData.blockchainTxId != null
               },
               {
                 key: "Message",
