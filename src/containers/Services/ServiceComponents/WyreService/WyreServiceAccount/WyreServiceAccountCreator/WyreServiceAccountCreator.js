@@ -177,7 +177,7 @@ class WyreServiceAccountCreator extends Component {
           {this.state.countryModalOpen && (
             <ListSelectionModal
               title="Select a Country"
-              flexHeight={3}
+              flexHeight={0.3}
               visible={this.state.countryModalOpen}
               onSelect={(item) => this.tryCreateAccount(item.key)}
               data={this.state.supportedCountries.map((code) => {

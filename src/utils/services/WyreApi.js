@@ -35,7 +35,7 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
     if (reauthenticate) {
       this.service.deauthenticate()
     }
-    
+
     const key = await WyreService.bearerFromSeed(seed);
     const authenticated = Store.getState().channelStore_wyre_service.authenticated;
 
@@ -145,7 +145,7 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
   };
 
   getSupportedCountries = async () => {
-    return await this.service.getSupportedCountries();
+    return ["US"]//await this.service.getSupportedCountries();
   };
 
   getTransferInstructions = async ({ transferId }) => {
