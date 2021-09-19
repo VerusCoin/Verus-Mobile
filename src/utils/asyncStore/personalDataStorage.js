@@ -44,6 +44,12 @@ export const storePersonalDataForUser = async (data, accountHash) => {
   return (await storePersonalData(allPersonalData))[accountHash]
 }
 
+export const deletePersonalDataForUser = async (accountHash) => {
+  let allPersonalData = {...(await loadPersonalData())}
+  delete allPersonalData[accountHash]
+  return (await storePersonalData(allPersonalData))[accountHash]
+}
+
 export const loadPersonalDataForUser = async (accountHash) => {
   const allPersonalData = await loadPersonalData()
 

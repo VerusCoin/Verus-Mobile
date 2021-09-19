@@ -13,14 +13,15 @@ export const PersonalInfoRender = function () {
             size={96}
             label={`${this.state.attributes.name.first
               .charAt(0)
-              .toUpperCase()}${this.state.attributes.name.last
-              .charAt(0)
-              .toUpperCase()}`}
+              .toUpperCase()}${this.state.attributes.name.last.charAt(0).toUpperCase()}`}
             style={{
               marginVertical: 16,
             }}
           />
-          <Title style={{ fontSize: 28, marginBottom: 16, padding: 0 }}>
+          <Title
+            numberOfLines={1}
+            style={{ fontSize: 28, marginBottom: 16, paddingVertical: 0, paddingHorizontal: 16 }}
+          >
             {renderPersonalFullName(this.state.attributes.name).title}
           </Title>
         </View>
@@ -29,49 +30,35 @@ export const PersonalInfoRender = function () {
           title={"Personal Details"}
           description={"Name, birthday, nationalities, etc."}
           onPress={this.state.loading ? () => {} : () => this.openAttributes()}
-          right={(props) => (
-            <List.Icon {...props} icon={"chevron-right"} size={20} />
-          )}
+          right={(props) => <List.Icon {...props} icon={"chevron-right"} size={20} />}
         />
         <Divider />
         <List.Item
           title={"Contact"}
           description={"Email addresses, phone numbers, etc."}
           onPress={this.state.loading ? () => {} : () => this.openContact()}
-          right={(props) => (
-            <List.Icon {...props} icon={"chevron-right"} size={20} />
-          )}
+          right={(props) => <List.Icon {...props} icon={"chevron-right"} size={20} />}
         />
         <Divider />
         <List.Item
           title={"Locations"}
           description={"Physical addresses, tax countries & IDs, etc."}
           onPress={this.state.loading ? () => {} : () => this.openLocations()}
-          right={(props) => (
-            <List.Icon {...props} icon={"chevron-right"} size={20} />
-          )}
+          right={(props) => <List.Icon {...props} icon={"chevron-right"} size={20} />}
         />
         <Divider />
         <List.Item
           title={"Banking Information"}
           description={"Bank accounts"}
-          onPress={
-            this.state.loading ? () => {} : () => this.openPaymentMethods()
-          }
-          right={(props) => (
-            <List.Icon {...props} icon={"chevron-right"} size={20} />
-          )}
+          onPress={this.state.loading ? () => {} : () => this.openPaymentMethods()}
+          right={(props) => <List.Icon {...props} icon={"chevron-right"} size={20} />}
         />
         <Divider />
         <List.Item
           title={"Documents & Images"}
           description={"Proof of identity, proof of address, etc."}
-          onPress={
-            this.state.loading ? () => {} : () => this.openImages()
-          }
-          right={(props) => (
-            <List.Icon {...props} icon={"chevron-right"} size={20} />
-          )}
+          onPress={this.state.loading ? () => {} : () => this.openImages()}
+          right={(props) => <List.Icon {...props} icon={"chevron-right"} size={20} />}
         />
         <Divider />
       </ScrollView>

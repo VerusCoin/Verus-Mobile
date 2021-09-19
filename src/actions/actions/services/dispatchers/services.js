@@ -1,6 +1,7 @@
 import store from "../../../../store";
 import {
   clearServiceStoredData,
+  deleteServiceStoredDataForUser,
   loadServiceStoredDataForUser,
   storeServiceStoredDataForUser,
 } from "../../../../utils/asyncStore/serviceStoredDataStorage";
@@ -24,6 +25,16 @@ export const saveEncryptedServiceStoredDataForUser = async (
     accountHash
   );
   store.dispatch(setServiceStored(encryptedData));
+  return serviceStoredData;
+};
+
+export const clearEncryptedServiceStoredDataForUser = async (
+  accountHash
+) => {
+  const serviceStoredData = await deleteServiceStoredDataForUser(
+    accountHash
+  );
+  store.dispatch(setServiceStored({}));
   return serviceStoredData;
 };
 

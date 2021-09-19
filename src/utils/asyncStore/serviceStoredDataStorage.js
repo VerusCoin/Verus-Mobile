@@ -51,6 +51,12 @@ export const storeServiceStoredDataForUser = async (data, accountHash) => {
   return (await storeServiceStoredData(allStoredData))[accountHash];
 };
 
+export const deleteServiceStoredDataForUser = async (accountHash) => {
+  let allStoredData = { ...(await loadServiceStoredData()) };
+  delete allStoredData[accountHash]
+  return (await storeServiceStoredData(allStoredData))[accountHash];
+};
+
 export const loadServiceStoredDataForUser = async (accountHash) => {
   const allStoredData = await loadServiceStoredData();
 

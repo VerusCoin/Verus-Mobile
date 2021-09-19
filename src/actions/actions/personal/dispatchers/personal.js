@@ -1,5 +1,5 @@
 import store from "../../../../store"
-import { loadPersonalDataForUser, storePersonalDataForUser } from "../../../../utils/asyncStore/personalDataStorage"
+import { deletePersonalDataForUser, loadPersonalDataForUser, storePersonalDataForUser } from "../../../../utils/asyncStore/personalDataStorage"
 import { requestPassword } from "../../../../utils/auth/authBox"
 import { encryptkey } from "../../../../utils/seedCrypt"
 import { setPersonalData } from "../creators/personal"
@@ -7,6 +7,12 @@ import { setPersonalData } from "../creators/personal"
 export const saveEncryptedPersonalDataForUser = async (encryptedData = {}, accountHash) => {  
   const personalData = await storePersonalDataForUser(encryptedData, accountHash)
   store.dispatch(setPersonalData(encryptedData))
+  return personalData
+}
+
+export const clearEncryptedPersonalDataForUser = async (accountHash) => {  
+  const personalData = await deletePersonalDataForUser(accountHash)
+  store.dispatch(setPersonalData({}))
   return personalData
 }
 
