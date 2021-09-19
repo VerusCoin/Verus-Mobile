@@ -13,12 +13,25 @@ import {
   SEND_MODAL_DESTINATION_FIELD,
   SEND_MODAL_TO_CURRENCY_FIELD,
 } from "../../../../utils/constants/sendModal";
+import MissingInfoRedirect from "../../../../components/MissingInfoRedirect/MissingInfoRedirect";
 
 export const WithdrawCoinRender = function () {
+  const hasDestinations = this.props.withdrawDestinations != null && this.props.withdrawDestinations.length > 0
   const destinations = this.props.withdrawDestinations == null ? [] : this.props.withdrawDestinations;
   
-  return destinations.length == 0 ? (
+  return this.props.withdrawDestinations == null ? (
     <AnimatedActivityIndicatorBox />
+  ) : !hasDestinations ? (
+    <MissingInfoRedirect
+      icon={"bank-transfer-in"}
+      label={"Add withdraw destinations under the services tab to see them here."}
+      onPress={() =>
+        this.props.navigation.navigate("Home", {
+          screen: "ServicesHome",
+          initial: false,
+        })
+      }
+    />
   ) : (
     <View style={Styles.defaultRoot}>
       <ScrollView style={Styles.fullWidth} contentContainerStyle={Styles.horizontalCenterContainer}>

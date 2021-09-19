@@ -109,6 +109,10 @@ export const ledger = (state = {
         transactions: CHANNELS_OBJECT_TEMPLATE,
         rates: CHANNELS_OBJECT_TEMPLATE,
         info: CHANNELS_OBJECT_TEMPLATE,
+        conversions: CHANNELS_OBJECT_TEMPLATE,
+        withdrawDestinations: CHANNELS_OBJECT_TEMPLATE,
+        depositSources: CHANNELS_OBJECT_TEMPLATE,
+        pendingDeposits: CHANNELS_OBJECT_TEMPLATE
       };
     /*case SET_INTERVAL_ID:
       return {

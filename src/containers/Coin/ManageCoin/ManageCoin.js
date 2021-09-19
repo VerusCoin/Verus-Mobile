@@ -10,7 +10,7 @@ import Colors from "../../../globals/colors";
 import WithdrawCoin from "./WithdrawCoin/WithdrawCoin";
 import DepositCoin from "./DepositCoin/DepositCoin";
 
-export default function ManageCoin() {
+export default function ManageCoin(props) {
   const layout = useWindowDimensions();
 
   const [index, setIndex] = React.useState(0);
@@ -21,7 +21,7 @@ export default function ManageCoin() {
   
   const renderScene = SceneMap({
     deposit: DepositCoin,
-    withdraw: WithdrawCoin,
+    withdraw: WithdrawCoin
   });
   
   return (

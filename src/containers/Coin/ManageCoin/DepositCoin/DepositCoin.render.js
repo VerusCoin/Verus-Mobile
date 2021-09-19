@@ -16,13 +16,26 @@ import {
   SEND_MODAL_TO_CURRENCY_FIELD,
 } from "../../../../utils/constants/sendModal";
 import BankTransferDetailsModal from "../../../../components/BankTransferDetailsModal/BankTransferDetailsModal";
+import MissingInfoRedirect from "../../../../components/MissingInfoRedirect/MissingInfoRedirect";
 
-export const DepositCoinRender = function () {
+export const DepositCoinRender = function () {  
+  const hasSources = this.props.depositSources != null && this.props.depositSources.length > 0
   const sources = this.props.depositSources == null ? [] : this.props.depositSources;
   const pendingDeposits = this.props.pendingDeposits == null ? [] : this.props.pendingDeposits;
   
-  return sources.length == 0 ? (
+  return this.props.depositSources == null ? (
     <AnimatedActivityIndicatorBox />
+  ) : !hasSources ? (
+    <MissingInfoRedirect
+      icon={"bank-transfer-out"}
+      label={"Add funding sources under the services tab to see them here."}
+      onPress={() =>
+        this.props.navigation.navigate("Home", {
+          screen: "ServicesHome",
+          initial: false,
+        })
+      }
+    />
   ) : (
     <View style={Styles.defaultRoot}>
       <ScrollView style={Styles.fullWidth} contentContainerStyle={Styles.horizontalCenterContainer}>
@@ -59,7 +72,9 @@ export const DepositCoinRender = function () {
                         ? `from ${sourceName}`
                         : "Press here to manually complete this deposit"
                     }
-                    onPress={() => this.selectBankTransfer({ amount: transfer.amount, ...followup })}
+                    onPress={() =>
+                      this.selectBankTransfer({ amount: transfer.amount, ...followup })
+                    }
                   />
                   <Divider />
                 </View>

@@ -56,7 +56,11 @@ export const personal = (
       return action.data
     case SIGN_OUT:
       return {
-        attributes: null
+        attributes: null,
+        contact: null,
+        locations: null,
+        payment_methods: null,
+        images: null
       }
     default:
       return state;

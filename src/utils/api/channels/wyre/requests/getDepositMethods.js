@@ -2,9 +2,12 @@ import { getActiveWyrePaymentMethods, getActiveWyreRates } from "../callCreators
 
 export const getDepositSources = async (coinObj) => {
   const methods = await getActiveWyrePaymentMethods();
+  
+  if (methods == null) return null
+
   const rates = await getActiveWyreRates();
-  const list = (methods == null ? [] : methods.list);
-  const mapping = (methods == null ? {} : methods.mapping);
+  const list = methods.list;
+  const mapping = methods.mapping;
 
   return list
     .filter((methodId) => {
