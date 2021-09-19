@@ -61,9 +61,7 @@ export const TraditionalCryptoSendFormRender = function () {
               autoCorrect={false}
               value={data[SEND_MODAL_AMOUNT_FIELD]}
               mode="outlined"
-              onChangeText={(text) =>
-                this.props.updateSendFormData(SEND_MODAL_AMOUNT_FIELD, text)
-              }
+              onChangeText={(text) => this.props.updateSendFormData(SEND_MODAL_AMOUNT_FIELD, text)}
               style={{
                 flex: 1,
               }}
@@ -98,16 +96,20 @@ export const TraditionalCryptoSendFormRender = function () {
             </Button>
           </View>
         </View>
-        {channel === DLIGHT_PRIVATE && (
-          <View style={{ ...Styles.wideBlock, paddingTop: 0 }}>
-            <TextInput
-              label="Memo"
-              value={data[SEND_MODAL_MEMO_FIELD]}
-              mode="outlined"
-              onChangeText={(text) => this.props.updateSendFormData(SEND_MODAL_MEMO_FIELD, text)}
-            />
-          </View>
-        )}
+        {channel === DLIGHT_PRIVATE &&
+          data[SEND_MODAL_TO_ADDRESS_FIELD] != null &&
+          (data[SEND_MODAL_TO_ADDRESS_FIELD].includes(":private") ||
+            (data[SEND_MODAL_TO_ADDRESS_FIELD][0] === "z" &&
+              !data[SEND_MODAL_TO_ADDRESS_FIELD].includes("@"))) && (
+            <View style={{ ...Styles.wideBlock, paddingTop: 0 }}>
+              <TextInput
+                label="Memo"
+                value={data[SEND_MODAL_MEMO_FIELD]}
+                mode="outlined"
+                onChangeText={(text) => this.props.updateSendFormData(SEND_MODAL_MEMO_FIELD, text)}
+              />
+            </View>
+          )}
         <View style={{ ...Styles.wideBlock, paddingTop: 0 }}>
           <Button mode="contained" onPress={() => this.submitData()}>
             Send
