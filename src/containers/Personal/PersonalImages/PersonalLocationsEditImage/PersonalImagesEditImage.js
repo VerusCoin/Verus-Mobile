@@ -159,6 +159,12 @@ class PersonalImagesEditImage extends Component {
               PERMISSIONS.ANDROID.CAMERA
             );
 
+            // Hack to prevent library modal from bugging out and disappearing 
+            // if security cover comes up because of permissions alert
+            await (() => new Promise((resolve, reject) => {
+              setTimeout(() => resolve(), 500)
+            }))()
+
             if (libraryPermissions.canUse) {
               launchImageLibrary({ mediaType: "photo", selectionLimit: 1 }, async (res) => {
                 if (res.errorCode != null) {

@@ -18,7 +18,7 @@ export const verifyPermissions = async (ios, android) => {
         reason: permissionCheck
       }
     case RESULTS.DENIED:
-      const permissionRequest = request(Platform.OS === "ios" ? ios : android)
+      const permissionRequest = await request(Platform.OS === "ios" ? ios : android)
 
       switch (permissionRequest) {
         case RESULTS.LIMITED:
