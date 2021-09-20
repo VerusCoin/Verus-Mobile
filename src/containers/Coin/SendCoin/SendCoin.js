@@ -32,6 +32,7 @@ class SendCoin extends Component {
     return (
       <View style={Styles.defaultRoot}>
         <VerusPay
+          coinObj={this.props.activeCoin}
           channel={this.props.subWallet}
           acceptAddressOnly={true}
           containerStyle={{

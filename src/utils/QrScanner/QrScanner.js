@@ -106,7 +106,7 @@ class QrScanner {
   processPaymentRequestURI = (uri) => {
     //TODO: Add support for messages in btc urls as well (&message=Hello)
 
-    let fullURL = /^\w{1,30}:\w{33,36}\?amount\=\d*\.{1}\d*/;
+    let fullURL = /^\w{1,30}:\w{33,36}\?amount\=[+-]?([0-9]+\.?[0-9]*|\.[0-9]+)/;
     //<coinName>:<address>?amount=<amount>
     let partialURL = /\w{1,30}:\w{33,36}/;
     //<coinName>:<address>

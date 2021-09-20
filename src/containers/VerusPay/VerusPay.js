@@ -167,21 +167,26 @@ class VerusPay extends Component {
   // };
 
   handleMissingAmount = (coinObj, address, note) => {
-    this.canFillAmount(coinObj.id, note, address).then((res) => {
-      if (res) {
-        if (coinObj.apps.hasOwnProperty("wallet")) {
-          this.preConfirm(coinObj, this.props.activeAccount, address, "", note, false);
-        } else {
-          this.errorHandler(INCOMPATIBLE_APP);
-        }
-      } else {
-        this.cancelHandler();
-      }
-    });
+    // this.canFillAmount(coinObj.id, note, address).then((res) => {
+    //   if (res) {
+    //     if (coinObj.apps.hasOwnProperty("wallet")) {
+    //       this.preConfirm(coinObj, this.props.activeAccount, address, "", note, false);
+    //     } else {
+    //       this.errorHandler(INCOMPATIBLE_APP);
+    //     }
+    //   } else {
+    //     this.cancelHandler();
+    //   }
+    // });
+    if (coinObj.apps.hasOwnProperty("wallet")) {
+      this.preConfirm(coinObj, this.props.activeAccount, address, "", note, false);
+    } else {
+      this.errorHandler(INCOMPATIBLE_APP);
+    }
   };
 
   preConfirm = (coinObj, activeUser, address, amount, note, sourceSwitch = false) => {
-    const subWallet = this.props.subWallet && !sourceSwitch ? this.props.subWallet : null;
+    const subWallet = this.props.channel && !sourceSwitch ? this.props.channel : null;
 
     this.setState(
       {
@@ -264,11 +269,16 @@ class VerusPay extends Component {
 
   openSendModal = (subWallet) => {
     if (subWallet != null) {
-      openSubwalletSendModal(this.state.coinObj, subWallet, {
-        [SEND_MODAL_TO_ADDRESS_FIELD]: this.state.address,
-        [SEND_MODAL_AMOUNT_FIELD]: this.state.amount.toString(),
-        [SEND_MODAL_MEMO_FIELD]: "",
-      });
+      this.setState({
+        subWalletSelectorOpen: false,
+        subWalletSelectorCoin: null,
+      }, () => {
+        openSubwalletSendModal(this.state.coinObj, subWallet, {
+          [SEND_MODAL_TO_ADDRESS_FIELD]: this.state.address,
+          [SEND_MODAL_AMOUNT_FIELD]: this.state.amount.toString(),
+          [SEND_MODAL_MEMO_FIELD]: "",
+        });
+      })
     } else {
       this.setState(
         {
@@ -280,24 +290,28 @@ class VerusPay extends Component {
           if (subWallets.length == 1) {
             this.openSendModal(subWallets[0]);
           } else {
-            createAlert(
-              "Select a Card",
-              `Select a card from which to send ${this.state.amount.toString()} ${
-                this.state.coinObj.id
-              } to the address "${this.state.address}".`,
-              [
-                {
-                  text: "Continue",
-                  onPress: () => {
-                    this.setState({
-                      subWalletSelectorOpen: true,
-                    });
+            this.setState({
+              subWalletSelectorOpen: true,
+            });
 
-                    resolveAlert(true);
-                  },
-                },
-              ]
-            );
+            // createAlert(
+            //   "Select a Card",
+            //   `Select a card from which to send ${this.state.amount.toString()} ${
+            //     this.state.coinObj.id
+            //   } to the address "${this.state.address}".`,
+            //   [
+            //     {
+            //       text: "Continue",
+            //       onPress: () => {
+            //         this.setState({
+            //           subWalletSelectorOpen: true,
+            //         });
+
+            //         resolveAlert(true);
+            //       },
+            //     },
+            //   ]
+            // );
           }
         }
       );
@@ -331,8 +345,6 @@ class VerusPay extends Component {
 
   addressOnly = (address) => {
     if (this.props.acceptAddressOnly) {
-      createAlert("Address Only", ADDRESS_ONLY);
-
       this.preConfirm(this.props.coinObj, this.props.activeAccount, address, "", "", false);
     } else {
       this.errorHandler(ONLY_ADDRESS);
