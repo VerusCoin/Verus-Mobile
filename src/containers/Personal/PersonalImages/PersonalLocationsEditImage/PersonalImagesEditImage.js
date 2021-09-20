@@ -150,7 +150,7 @@ class PersonalImagesEditImage extends Component {
   }
 
   addImage(addImageOption, index) {
-    this.setState({ loadingImage: true, loading: true }, async () => {
+    this.setState({ loadingImage: true, loading: true, imageAddModalIndex: null }, async () => {
       try {
         switch (addImageOption) {
           case this.SELECT_PHOTO_FROM_LIBRARY:
@@ -160,32 +160,26 @@ class PersonalImagesEditImage extends Component {
             );
 
             if (libraryPermissions.canUse) {
-              launchImageLibrary(
-                { mediaType: "photo", selectionLimit: 1 },
-                async (res) => {
-                  if (res.errorCode != null) {
-                    console.warn(res);
+              launchImageLibrary({ mediaType: "photo", selectionLimit: 1 }, async (res) => {
+                if (res.errorCode != null) {
+                  console.warn(res);
 
-                    if (res.errorCode === "camera_unavailable") {
-                      createAlert(
-                        "Error",
-                        "Verus Mobile encountered a problem while trying to access your photo library"
-                      );
-                    }
-
-                    this.setState({ loadingImage: false, loading: false });
-                  } else if (!res.didCancel) {
-                    await this.updateUris(res.assets, index);
-                  } else {
-                    this.setState({ loadingImage: false, loading: false });
+                  if (res.errorCode === "camera_unavailable") {
+                    createAlert(
+                      "Error",
+                      "Verus Mobile encountered a problem while trying to access your photo library"
+                    );
                   }
+
+                  this.setState({ loadingImage: false, loading: false });
+                } else if (!res.didCancel) {
+                  await this.updateUris(res.assets, index);
+                } else {
+                  this.setState({ loadingImage: false, loading: false });
                 }
-              );
+              });
             } else {
-              createAlert(
-                "Error",
-                "Verus Mobile cannot access your photo library"
-              );
+              createAlert("Error", "Verus Mobile cannot access your photo library");
               this.setState({ loadingImage: false, loading: false });
             }
 
@@ -195,6 +189,12 @@ class PersonalImagesEditImage extends Component {
               PERMISSIONS.IOS.CAMERA,
               PERMISSIONS.ANDROID.CAMERA
             );
+
+            // Hack to prevent camera modal from bugging out and disappearing 
+            // if camera options modal isn't fully hidden yet
+            await (() => new Promise((resolve, reject) => {
+              setTimeout(() => resolve(), 500)
+            }))()
 
             if (cameraPermissions.canUse) {
               launchCamera(
