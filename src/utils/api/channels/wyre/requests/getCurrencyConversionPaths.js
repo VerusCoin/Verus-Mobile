@@ -1,28 +1,38 @@
 import { coinsList } from "../../../../CoinData/CoinsList"
 import { getRates } from "./getRates"
 
-const { btc, aud, eur, usd } = coinsList
+const { btc, aud, eur, usd, eth } = coinsList
 
 const COMPATIBLE_WYRE_CONVERSIONS = {
   ["BTC"]: {
     ["USD"]: { destination: usd },
     ["AUD"]: { destination: aud },
     ["EUR"]: { destination: eur },
+    ["ETH"]: { destination: eth },
   },
   ["USD"]: {
     ["AUD"]: { destination: aud },
     ["EUR"]: { destination: eur },
     ["BTC"]: { destination: btc },
+    ["ETH"]: { destination: eth },
   },
   ["AUD"]: {
     ["USD"]: { destination: usd },
     ["BTC"]: { destination: btc },
     ["EUR"]: { destination: eur },
+    ["ETH"]: { destination: eth },
   },
   ["EUR"]: {
     ["USD"]: { destination: usd },
     ["AUD"]: { destination: aud },
     ["BTC"]: { destination: btc },
+    ["ETH"]: { destination: eth },
+  },
+  ["ETH"]: {
+    ["USD"]: { destination: usd },
+    ["AUD"]: { destination: aud },
+    ["BTC"]: { destination: btc },
+    ["EUR"]: { destination: eur },
   },
 }
 

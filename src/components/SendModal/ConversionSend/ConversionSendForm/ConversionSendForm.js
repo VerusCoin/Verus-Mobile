@@ -237,7 +237,8 @@ class ConversionSendForm extends Component {
     });
   }
 
-  updateFormAmount(value, isSend) {
+  updateFormAmount(input, isSend) {
+    const value = input.replace(/,/g, '.')
     const validInput = this.isValidAmount(value);
 
     if (isSend) {

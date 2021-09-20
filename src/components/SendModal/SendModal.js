@@ -21,7 +21,7 @@ class SendModal extends Component {
 
     this.DEFAULT_MODAL_HEIGHTS = {
       [TRADITIONAL_CRYPTO_SEND_MODAL]: 442,
-      [CONVERSION_SEND_MODAL]: 546,
+      [CONVERSION_SEND_MODAL]: 624,
       [WITHDRAW_SEND_MODAL]: 624,
       [DEPOSIT_SEND_MODAL]: 624
     };

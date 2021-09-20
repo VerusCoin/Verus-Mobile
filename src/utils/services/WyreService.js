@@ -309,7 +309,8 @@ class WyreService {
     dest,
     destCurrency,
     message,
-    autoConfirm
+    autoConfirm,
+    amountIncludesFees = false
   ) => {
     return await WyreService.formatCall(() => {
       return this.service.post(`${this.url}/v3/transfers`, {
@@ -320,6 +321,7 @@ class WyreService {
         destCurrency,
         message: message == null ? "" : message,
         autoConfirm,
+        amountIncludesFees
       });
     }, true);
   };

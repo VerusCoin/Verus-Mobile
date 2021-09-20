@@ -8,6 +8,7 @@ export const preflightConversion = async (coinObj, activeUser, from, to, address
       source: accountSrn,
       sourceCurrency: from.id,
       sourceAmount: amount.toString(),
+      amountIncludesFees: true,
       dest: accountSrn,
       destCurrency: to.id,
       message: params.memo,

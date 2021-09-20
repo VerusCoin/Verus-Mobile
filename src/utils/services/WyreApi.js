@@ -166,6 +166,7 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
     dest,
     destCurrency,
     message,
+    amountIncludesFees
   }) => {
     return await this.service.createTransfer(
       source,
@@ -174,7 +175,8 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
       dest,
       destCurrency,
       message,
-      false
+      false,
+      amountIncludesFees
     );
   };
 
