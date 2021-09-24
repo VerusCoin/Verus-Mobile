@@ -214,16 +214,10 @@ class WyreServiceIntroSlider extends Component {
           }}
         /> */}
         <Text style={{ textAlign: "center", width: "75%", color: "white" }}>
-          {this.state.hasElectrum24WordSeed
-            ? "Your Wyre account will be created from a 24 word seed phrase. You can create/import a new one, or you can use your current wallet seed to create an account."
-            : "Your Wyre account will be created from a 24 word seed phrase. You can either create a new one, or import an existing one."}
+          {"Your Wyre account will be created from a 24 word seed phrase."}
         </Text>
         {this.state.hasElectrum24WordSeed && (
-          <Button
-            style={{ marginTop: 16 }}
-            mode="contained"
-            onPress={() => this.linkCurrentSeed()}
-          >
+          <Button style={{ marginTop: 16 }} mode="contained" onPress={() => this.linkCurrentSeed()}>
             {"Link current seed"}
           </Button>
         )}
@@ -260,6 +254,18 @@ class WyreServiceIntroSlider extends Component {
           >
             {" privacy policy."}
           </Text>
+        </Text>
+        <Text
+          style={{
+            textAlign: "center",
+            width: "75%",
+            color: "white",
+            marginTop: 16,
+          }}
+        >
+          {
+            "You also acknowledge the risks of using experimental and unfinished software like Verus Mobile, and Verus Mobile's Wyre integration, and assume all responsibility for doing so."
+          }
         </Text>
       </View>
     );

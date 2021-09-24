@@ -202,7 +202,7 @@ class WyreServiceAccountCreator extends Component {
           {"Wyre Country"}
         </Text>
         <Text style={{ textAlign: "center", width: "75%", marginTop: 20 }}>
-          {`Select a country to create your Wyre account with. This cannot be changed later.\n\nCountries not shown are currently not supported.`}
+          {`Select a country to create your Wyre account with.\n\nThis cannot be changed later, and must be a country where you are a resident.\n\nCountries not shown are currently not supported.`}
           <Text
             style={{ color: Colors.primaryColor, fontWeight: "800" }}
             onPress={() => {
@@ -222,9 +222,7 @@ class WyreServiceAccountCreator extends Component {
             marginVertical: 40,
           }}
         >
-          <TouchableOpacity
-            onPress={() => this.setState({ countryModalOpen: true })}
-          >
+          <TouchableOpacity onPress={() => this.setState({ countryModalOpen: true })}>
             <TextInput
               label="Select country"
               value={""}
