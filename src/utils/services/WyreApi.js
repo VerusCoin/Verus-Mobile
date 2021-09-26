@@ -56,7 +56,7 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
     return res;
   };
 
-  initAccountData = async () => {
+  loadWyreCoinAddresses = async () => {
     try {
       if (this.accountId != null) {
         const { depositAddresses, id } = await this.getAccount();
@@ -81,6 +81,10 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
     } catch (e) {
       console.warn(e);
     }
+  }
+
+  initAccountData = async () => {
+    await this.loadWyreCoinAddresses()
 
     Store.dispatch({
       type: AUTHENTICATE_WYRE_SERVICE,

@@ -3,8 +3,11 @@ import {
   INIT_WYRE_COIN_CHANNEL_START,
   CLOSE_WYRE_COIN_CHANNEL,
 } from "../../../../../utils/constants/storeType";
+import WyreProvider from '../../../../../utils/services/WyreProvider';
 
 export const initWyreCoinChannel = async (coinObj) => {
+  await WyreProvider.loadWyreCoinAddresses()
+
   Store.dispatch({
     type: INIT_WYRE_COIN_CHANNEL_START,
     payload: { chainTicker: coinObj.id }

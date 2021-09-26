@@ -20,6 +20,10 @@ class WyreService {
     this.authInterceptor = null;
     this.wyreToken = null;
     this.apiKey = null;
+
+    this.cache = {
+      accounts: {}
+    }
   }
 
   static build() {
@@ -138,6 +142,10 @@ class WyreService {
     this.apiKey = null;
     this.service.interceptors.request.eject(this.authInterceptor);
     this.authInterceptor = null;
+
+    this.cache = {
+      accounts: {}
+    }
   }
 
   submitAuthToken = async (secretKey) => {
@@ -154,10 +162,15 @@ class WyreService {
     }, true);
   };
 
-  getAccount = async (id) => {    
-    return await WyreService.formatCall(() => {
+  getAccount = async (id) => {   
+    if (this.cache.accounts[id] != null) return this.cache.accounts[id]
+
+    const account = await WyreService.formatCall(() => {
       return this.service.get(`/v3/accounts/${id}`);
     }, true);
+
+    this.cache.accounts[id] = account
+    return account
   };
 
   getPaymentMethod = async (id) => {
