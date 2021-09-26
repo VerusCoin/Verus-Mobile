@@ -150,7 +150,8 @@ class ReceiveCoin extends Component {
     const coinTicker = coinObj.id
     const rates = this.props.rates.results
 
-    let _price = rates[coinTicker] != null ? rates[coinTicker][displayCurrency] : null
+    let _price =
+      rates != null && rates[coinTicker] != null ? rates[coinTicker][displayCurrency] : null;
 
     try {
       const verusQRString = VerusPayParser.v0.writeVerusPayQR(
