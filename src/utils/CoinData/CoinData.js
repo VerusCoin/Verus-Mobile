@@ -156,6 +156,9 @@ export const CoinLogos = {
   yfi: CoinLogoSvgs.web3.YFI,
   zrx: CoinLogoSvgs.web3.ZRX,
   rfox: CoinLogoSvgs.web3.RFOX,
+  usdt: CoinLogoSvgs.web3.USDT,
+  usdc: CoinLogoSvgs.web3.USDC,
+  aave: CoinLogoSvgs.web3.AAVE,
 
   // fiat "protocol"
   usd: CoinLogoSvgs.fiat.USD,

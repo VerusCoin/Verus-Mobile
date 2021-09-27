@@ -72,13 +72,17 @@ class Web3Interface {
 
   deleteAllContracts = () => Store.dispatch({ type: CLEAR_WEB3_CONTRACTS })
 
-  getContract = (contractAddress) => {
+  getContract = (contractAddress, customAbiFragment) => {
     const web3Contracts = Store.getState().channelStore_erc20.web3Contracts
     const params = web3Contracts[contractAddress]
 
     if (!params)
       throw new Error(`ERC20 contract ${contractAddress} not initialized`);
-    return new ethers.Contract(params[0], params[1], this.DefaultProvider)
+    return new ethers.Contract(
+      params[0],
+      customAbiFragment != null ? customAbiFragment : params[1],
+      this.DefaultProvider
+    );
   };
 }
 
