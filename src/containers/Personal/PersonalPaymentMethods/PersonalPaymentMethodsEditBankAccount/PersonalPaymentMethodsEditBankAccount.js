@@ -1,4 +1,5 @@
 import { NavigationActions } from "@react-navigation/compat";
+import moment from "moment";
 import { Component } from "react"
 import { connect } from 'react-redux'
 import { modifyPersonalDataForUser } from "../../../../actions/actionDispatchers";
@@ -308,7 +309,7 @@ class PersonalPaymentMethodsEditBankAccount extends Component {
   }
 
   getDateClassInstance(day, month, year) {
-    return new Date(Date.UTC(year, month, day, 3, 0, 0));
+    return moment({year, month, day}).toDate()
   }
 
   renderDate(day, month, year) {

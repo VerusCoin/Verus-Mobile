@@ -35,11 +35,7 @@ export const renderPersonalBirthday = (birthday) => {
   const date = new Date(Date.UTC(year, month, day, 3, 0, 0));
 
   return {
-    title: date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }),
+    title: date.toUTCString().split(' ').slice(0, 4).join(' '),
   };
 };
 

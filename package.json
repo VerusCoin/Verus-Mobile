@@ -49,6 +49,7 @@
     "immutable": "^4.0.0-rc.12",
     "lodash": "^4.17.15",
     "lottie-react-native": "^3.5.0",
+    "moment": "^2.29.1",
     "normalizr": "^3.6.0",
     "patch-package": "^6.1.2",
     "path-browserify": "0.0.0",
