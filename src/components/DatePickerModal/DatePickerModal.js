@@ -53,9 +53,9 @@ class DatePickerModal extends Component {
                   date
                 }, () => {
                   onSelect({
-                    day: date.getDate(),
-                    month: date.getMonth(),
-                    year: date.getFullYear()
+                    day: date.getUTCDate(),
+                    month: date.getUTCMonth(),
+                    year: date.getUTCFullYear()
                   })
                 })
               }}
