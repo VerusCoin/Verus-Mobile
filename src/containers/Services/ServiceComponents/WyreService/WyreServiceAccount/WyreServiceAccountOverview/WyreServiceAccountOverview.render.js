@@ -8,6 +8,7 @@ import {
   WYRE_DATA_SUBMISSION_OPEN,
   WYRE_DATA_SUBMISSION_PENDING,
   WYRE_DATA_SUBMISSION_REJECTED,
+  WYRE_INDIVIDUAL_EMAIL,
 } from "../../../../../../utils/constants/services";
 import {
   ISO_3166_COUNTRIES
@@ -17,7 +18,14 @@ export const WyreServiceAccountOverviewRender = function () {
   return (
     <ScrollView style={Styles.flexBackground}>
       <List.Subheader>{"Submitted personal information"}</List.Subheader>
-      {this.WYRE_ACCOUNT_PERSONAL_INFO_FORM_ORDER.map((formKey, index) => {
+      {this.WYRE_ACCOUNT_PERSONAL_INFO_FORM_ORDER.filter(formKey => {
+        const submittedEmail = this.getWyreProfileFieldData(WYRE_INDIVIDUAL_EMAIL)
+        
+        return (
+          formKey === WYRE_INDIVIDUAL_EMAIL ||
+          (submittedEmail != null && submittedEmail.value != null)
+        );
+      }).map((formKey, index) => {
         const form = this.WYRE_ACCOUNT_PERSONAL_INFO_SCHEMA[formKey];
         const valueField = this.renderValueField(formKey);
         const title = valueField == null ? null : valueField.title;
@@ -54,63 +62,71 @@ export const WyreServiceAccountOverviewRender = function () {
         );
       })}
       <Divider />
-      <List.Subheader>{"Connected bank accounts"}</List.Subheader>
-      {this.props.wyrePaymentMethods != null &&
-        this.props.wyrePaymentMethods.list.map((paymentMethodId, index) => {
-          const { name, countryCode, status, supportsPayment } =
-            this.props.wyrePaymentMethods.mapping[paymentMethodId];
+      {this.props.wyrePaymentMethods != null && this.props.wyrePaymentMethods.list.length > 0 && (
+        <React.Fragment>
+          <List.Subheader>{"Connected bank accounts"}</List.Subheader>
+          {this.props.wyrePaymentMethods != null &&
+            this.props.wyrePaymentMethods.list.map((paymentMethodId, index) => {
+              const { name, countryCode, status, supportsPayment } =
+                this.props.wyrePaymentMethods.mapping[paymentMethodId];
 
-          return (
-            <React.Fragment key={index}>
-              <Divider />
-              <List.Item
-                title={name}
-                description={`${
-                  ISO_3166_COUNTRIES[countryCode] == null
-                    ? countryCode
-                    : ISO_3166_COUNTRIES[countryCode].emoji
-                } ${supportsPayment ? "" : "recipient "}account`}
-                right={(props) => (
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    {status == WYRE_DATA_SUBMISSION_AWAITING_FOLLOWUP ? null : status ==
-                      WYRE_DATA_SUBMISSION_PENDING ? (
-                      <List.Icon
-                        {...props}
-                        color={Colors.infoButtonColor}
-                        icon={"timer-sand"}
-                        size={20}
-                      />
-                    ) : status == WYRE_DATA_SUBMISSION_REJECTED ? (
-                      <List.Icon
-                        {...props}
-                        color={Colors.warningButtonColor}
-                        icon={"close"}
-                        size={20}
-                      />
-                    ) : (
-                      <List.Icon
-                        {...props}
-                        color={Colors.verusGreenColor}
-                        icon={"check"}
-                        size={20}
-                      />
+              return (
+                <React.Fragment key={index}>
+                  <Divider />
+                  <List.Item
+                    title={name}
+                    description={`${
+                      ISO_3166_COUNTRIES[countryCode] == null
+                        ? countryCode
+                        : ISO_3166_COUNTRIES[countryCode].emoji
+                    } ${supportsPayment ? "" : "recipient "}account`}
+                    right={(props) => (
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        {status == WYRE_DATA_SUBMISSION_AWAITING_FOLLOWUP ? null : status ==
+                          WYRE_DATA_SUBMISSION_PENDING ? (
+                          <List.Icon
+                            {...props}
+                            color={Colors.infoButtonColor}
+                            icon={"timer-sand"}
+                            size={20}
+                          />
+                        ) : status == WYRE_DATA_SUBMISSION_REJECTED ? (
+                          <List.Icon
+                            {...props}
+                            color={Colors.warningButtonColor}
+                            icon={"close"}
+                            size={20}
+                          />
+                        ) : (
+                          <List.Icon
+                            {...props}
+                            color={Colors.verusGreenColor}
+                            icon={"check"}
+                            size={20}
+                          />
+                        )}
+                        <List.Icon {...props} icon={"chevron-right"} size={20} />
+                      </View>
                     )}
-                    <List.Icon {...props} icon={"chevron-right"} size={20} />
-                  </View>
-                )}
-                onPress={() => this.props.navigation.navigate("WyreServiceEditPaymentMethod", { paymentMethodId })}
-              />
-            </React.Fragment>
-          );
-        })}
-      <Divider />
-      <List.Item
-        title={"Connect bank account"}
-        right={(props) => <List.Icon {...props} icon={"plus"} size={20} />}
-        onPress={() => this.props.navigation.navigate("WyreServiceAddPaymentMethod")}
-      />
-      <Divider />
-      <List.Subheader>{"Submitted documents"}</List.Subheader>
+                    onPress={() =>
+                      this.props.navigation.navigate("WyreServiceEditPaymentMethod", {
+                        paymentMethodId,
+                      })
+                    }
+                  />
+                </React.Fragment>
+              );
+            })}
+          <Divider />
+          {/* <List.Item
+          title={"Connect bank account"}
+          right={(props) => <List.Icon {...props} icon={"plus"} size={20} />}
+          onPress={() => this.props.navigation.navigate("WyreServiceAddPaymentMethod")}
+        />
+        <Divider /> */}
+        </React.Fragment>
+      )}
+      {/* <List.Subheader>{"Submitted documents"}</List.Subheader>
       {this.WYRE_ACCOUNT_DOCUMENTS_FORM_ORDER.map((formKey, index) => {
         const form = this.WYRE_ACCOUNT_DOCUMENTS_SCHEMA[formKey];
         const title =
@@ -164,7 +180,7 @@ export const WyreServiceAccountOverviewRender = function () {
           </React.Fragment>
         );
       })}
-      <Divider />
+      <Divider /> */}
     </ScrollView>
   );
 };

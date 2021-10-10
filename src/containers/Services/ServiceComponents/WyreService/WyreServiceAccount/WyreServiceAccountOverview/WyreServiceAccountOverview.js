@@ -47,37 +47,6 @@ class WyreServiceAccountOverview extends Component {
     };
 
     this.WYRE_ACCOUNT_PERSONAL_INFO_SCHEMA = {
-      [WYRE_INDIVIDUAL_NAME]: {
-        wyreFieldId: WYRE_INDIVIDUAL_NAME,
-        configureRoute: "PersonalAttributesEditName",
-        configureLabel: "Configure name",
-        infoType: PERSONAL_ATTRIBUTES,
-        infoKey: PERSONAL_NAME,
-        label: "Legal name",
-        placeholder: "Submit name",
-        selectLabel: "Select name to submit",
-        optionsLabel: "Name options",
-        missingDataDisplay: {
-          icon: "format-letter-case",
-          label: "You'll need to add your name to your personal profile to submit it here.",
-        },
-      },
-      [WYRE_INDIVIDUAL_CELL]: {
-        wyreFieldId: WYRE_INDIVIDUAL_CELL,
-        configureRoute: "PersonalContact",
-        configureLabel: "Configure phone numbers",
-        infoType: PERSONAL_CONTACT,
-        infoKey: PERSONAL_PHONE_NUMBERS,
-        label: "Phone number",
-        placeholder: "Submit phone",
-        selectLabel: "Select number to submit",
-        optionsLabel: "Name options",
-        missingDataDisplay: {
-          icon: "phone",
-          label:
-            "You'll need to add at least one phone number to your personal profile to submit one here.",
-        },
-      },
       [WYRE_INDIVIDUAL_EMAIL]: {
         wyreFieldId: WYRE_INDIVIDUAL_EMAIL,
         configureRoute: "PersonalContact",
@@ -93,6 +62,27 @@ class WyreServiceAccountOverview extends Component {
           label:
             "You'll need to add at least one email to your personal profile to submit one here.",
         },
+        nativeSubmission: true
+      },
+      [WYRE_INDIVIDUAL_NAME]: {
+        wyreFieldId: WYRE_INDIVIDUAL_NAME,
+        configureRoute: "PersonalAttributesEditName",
+        configureLabel: "Configure name",
+        infoType: PERSONAL_ATTRIBUTES,
+        infoKey: PERSONAL_NAME,
+        label: "Legal name",
+        placeholder: "Submit name",
+        selectLabel: "Submission instructions",
+      },
+      [WYRE_INDIVIDUAL_CELL]: {
+        wyreFieldId: WYRE_INDIVIDUAL_CELL,
+        configureRoute: "PersonalContact",
+        configureLabel: "Configure phone numbers",
+        infoType: PERSONAL_CONTACT,
+        infoKey: PERSONAL_PHONE_NUMBERS,
+        label: "Phone number",
+        placeholder: "Submit phone",
+        selectLabel: "Submission instructions",
       },
       [WYRE_INDIVIDUAL_RESIDENCE_ADDRESS]: {
         wyreFieldId: WYRE_INDIVIDUAL_RESIDENCE_ADDRESS,
@@ -102,13 +92,7 @@ class WyreServiceAccountOverview extends Component {
         infoKey: PERSONAL_PHYSICAL_ADDRESSES,
         label: "Residence address",
         placeholder: "Submit address",
-        selectLabel: "Select address to submit",
-        optionsLabel: "Name options",
-        missingDataDisplay: {
-          icon: "home",
-          label:
-            "You'll need to add at least one address to your personal profile to submit one here.",
-        },
+        selectLabel: "Submission instructions",
       },
       [WYRE_INDIVIDUAL_DOB]: {
         wyreFieldId: WYRE_INDIVIDUAL_DOB,
@@ -118,12 +102,7 @@ class WyreServiceAccountOverview extends Component {
         infoKey: PERSONAL_BIRTHDAY,
         label: "Date of birth",
         placeholder: "Submit birthday",
-        selectLabel: "Select birthday to submit",
-        optionsLabel: "Name options",
-        missingDataDisplay: {
-          icon: "cake-variant",
-          label: "You'll need to add your birthday to your personal profile to submit it here.",
-        },
+        selectLabel: "Submission instructions",
       },
       [WYRE_INDIVIDUAL_SSN]: {
         wyreFieldId: WYRE_INDIVIDUAL_SSN,
@@ -133,13 +112,7 @@ class WyreServiceAccountOverview extends Component {
         infoKey: PERSONAL_TAX_COUNTRIES,
         label: "Taxpayer ID",
         placeholder: "Submit tax ID",
-        selectLabel: "Select ID to submit",
-        optionsLabel: "Name options",
-        missingDataDisplay: {
-          icon: "card-text-outline",
-          label:
-            "You'll need to add your social security number to your personal profile to submit it here.",
-        },
+        selectLabel: "Submission instructions",
       },
     };
 
@@ -179,9 +152,9 @@ class WyreServiceAccountOverview extends Component {
     };
 
     this.WYRE_ACCOUNT_PERSONAL_INFO_FORM_ORDER = [
+      WYRE_INDIVIDUAL_EMAIL,
       WYRE_INDIVIDUAL_NAME,
       WYRE_INDIVIDUAL_CELL,
-      WYRE_INDIVIDUAL_EMAIL,
       WYRE_INDIVIDUAL_RESIDENCE_ADDRESS,
       WYRE_INDIVIDUAL_DOB,
       WYRE_INDIVIDUAL_SSN,
@@ -275,7 +248,8 @@ class WyreServiceAccountOverview extends Component {
         configureLabel,
         addLabel,
         addRoute,
-        missingDataDisplay
+        missingDataDisplay,
+        nativeSubmission
       } = infoSchema
 
       this.props.dispatch(setCurrentWyreAccountDataScreenParams({
@@ -291,7 +265,8 @@ class WyreServiceAccountOverview extends Component {
         configureLabel,
         addLabel,
         addRoute,
-        missingDataDisplay
+        missingDataDisplay,
+        nativeSubmission
       }))
       this.props.dispatch(setServiceLoading(false))
       this.props.navigation.navigate("WyreServiceAccountData");      

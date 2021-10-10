@@ -4,9 +4,11 @@ import { connect } from 'react-redux'
 import {
   View,
   Linking,
-  TouchableOpacity
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  Keyboard
 } from "react-native";
-import { Text, TextInput, Portal } from 'react-native-paper'
+import { Text, TextInput, Portal, Button } from 'react-native-paper'
 import WyreProvider from "../../../../../../utils/services/WyreProvider";
 import Colors from "../../../../../../globals/colors";
 import { createAlert, resolveAlert } from "../../../../../../actions/actions/alert/dispatchers/alert";
@@ -14,6 +16,7 @@ import { ISO_3166_COUNTRIES } from "../../../../../../utils/constants/iso3166";
 import ListSelectionModal from "../../../../../../components/ListSelectionModal/ListSelectionModal";
 import { setServiceLoading, setWyreAccountId } from "../../../../../../actions/actionCreators";
 import { CommonActions } from "@react-navigation/native";
+import { WYRE_INDIVIDUAL_EMAIL } from "../../../../../../utils/constants/services";
 
 class WyreServiceAccountCreator extends Component {
   constructor() {
@@ -21,6 +24,11 @@ class WyreServiceAccountCreator extends Component {
     this.state = {
       supportedCountries: [],
       countryModalOpen: false,
+      email: "",
+      country: {
+        key: "",
+        title: ""
+      }
     };
 
     this.WYRE_SUPPORTED_COUNTRIES_INFO =
@@ -50,7 +58,7 @@ class WyreServiceAccountCreator extends Component {
     );
   }
 
-  async createAccount(code) {
+  async createAccount(code, email) {
     try {
       const account = await WyreProvider.createAccount({
         account: {
@@ -60,10 +68,48 @@ class WyreServiceAccountCreator extends Component {
           profileFields: [],
         },
       });
+      
+      let emailFail = null;
+      
+      try {
+        WyreProvider.updateAccount({
+          updateObj: {
+            profileFields: [{ fieldId: WYRE_INDIVIDUAL_EMAIL, value: email }],
+          },
+        });
+      } catch(e) {
+        emailFail = e.message
+      }
 
       this.props.dispatch(setWyreAccountId(account.id));
-      await createAlert("Success", 'Wyre account created! Access your Wyre details through the Service tab.');
+      
+      if (emailFail == null) {
+        await createAlert(
+          "Success",
+          "Wyre account created! Verify your Wyre account by creating an account password and logging in at https://dash.sendwyre.com/reset-password.",
+          [
+            {
+              text: "Later",
+              onPress: () => resolveAlert(false),
+              style: "cancel",
+            },
+            {
+              text: "Take me there",
+              onPress: () => {
+                Linking.openURL("https://dash.sendwyre.com/reset-password");
 
+                resolveAlert(true);
+              },
+            },
+          ]
+        );
+      } else {
+        await createAlert(
+          "Success",
+          `Wyre account created, but email submission failed (${emailFail}). Try to resubmit your email through the service tab.`
+        );
+      }
+      
       return;
     } catch (e) {
       console.warn(e);
@@ -72,7 +118,6 @@ class WyreServiceAccountCreator extends Component {
           text: "Try again",
           onPress: async () => {
             resolveAlert(true);
-            
           },
         },
         { text: "Ok", onPress: () => resolveAlert(false) },
@@ -84,13 +129,13 @@ class WyreServiceAccountCreator extends Component {
     }
   }
 
-  resetAndCreateAccount(code) {
+  resetAndCreateAccount(code, email) {
     this.resetToScreen(
       "SecureLoading",
       null,
       {
         task: async () => {
-          await this.createAccount(code)
+          await this.createAccount(code, email)
         },
         message: "Creating Wyre account...",
         route: "Home",
@@ -124,9 +169,11 @@ class WyreServiceAccountCreator extends Component {
     this.props.navigation.dispatch(resetAction);
   };
 
-  async tryCreateAccount(code) {
-    if (await this.canSetCountry(code)) {
-      this.resetAndCreateAccount(code)
+  async tryCreateAccount() {
+    const { country, email } = this.state
+
+    if (await this.canSetCountry(country.key)) {
+      this.resetAndCreateAccount(country.key, email.trim())
     }
   }
 
@@ -163,78 +210,96 @@ class WyreServiceAccountCreator extends Component {
 
   render() {
     return (
-      <View
-        style={{
-          backgroundColor: "white",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          flex: 1,
-          alignItems: "center",
-        }}
-      >
-        <Portal>
-          {this.state.countryModalOpen && (
-            <ListSelectionModal
-              title="Select a Country"
-              flexHeight={0.3}
-              visible={this.state.countryModalOpen}
-              onSelect={(item) => this.tryCreateAccount(item.key)}
-              data={this.state.supportedCountries.map((code) => {
-                const item = ISO_3166_COUNTRIES[code];
-
-                return {
-                  key: code,
-                  title: `${item.emoji} ${item.name}`,
-                };
-              })}
-              cancel={() => this.setState({ countryModalOpen: false })}
-            />
-          )}
-        </Portal>
-        <Text
-          style={{
-            fontSize: 32,
-            fontWeight: "bold",
-            textAlign: "center",
-          }}
-        >
-          {"Wyre Country"}
-        </Text>
-        <Text style={{ textAlign: "center", width: "75%", marginTop: 20 }}>
-          {`Select a country to create your Wyre account with.\n\nThis cannot be changed later, and must be a country where you are a resident.\n\nCountries not shown are currently not supported.`}
-          <Text
-            style={{ color: Colors.primaryColor, fontWeight: "800" }}
-            onPress={() => {
-              Linking.openURL(this.WYRE_SUPPORTED_COUNTRIES_INFO);
-            }}
-          >
-            {" Press here to learn more about Wyre's geographic restrictions."}
-          </Text>
-        </Text>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View
           style={{
+            backgroundColor: "white",
             display: "flex",
             flexDirection: "column",
-            alignItems: "stretch",
-            height: 168,
-            width: "75%",
-            marginVertical: 40,
+            justifyContent: "center",
+            flex: 1,
+            alignItems: "center",
           }}
         >
-          <TouchableOpacity onPress={() => this.setState({ countryModalOpen: true })}>
+          <Portal>
+            {this.state.countryModalOpen && (
+              <ListSelectionModal
+                title="Select a Country"
+                flexHeight={0.3}
+                visible={this.state.countryModalOpen}
+                onSelect={(item) => this.setState({ country: item })}
+                data={this.state.supportedCountries.map((code) => {
+                  const item = ISO_3166_COUNTRIES[code];
+
+                  return {
+                    key: code,
+                    title: `${item.emoji} ${item.name}`,
+                  };
+                })}
+                cancel={() => this.setState({ countryModalOpen: false })}
+              />
+            )}
+          </Portal>
+          <Text style={{ textAlign: "center", width: "75%", marginBottom: 20 }}>
+            {"Enter an email and select a country to create your Wyre account with."}
+          </Text>
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "stretch",
+              width: "75%",
+            }}
+          >
             <TextInput
-              label="Select country"
-              value={""}
+              label="Enter email"
+              value={this.state.email}
               mode={"outlined"}
-              placeholder="Select country"
-              dense={true}
-              editable={false}
-              pointerEvents="none"
+              placeholder="email@example.com"
+              onChangeText={(text) => this.setState({ email: text })}
+              autoCapitalize={"none"}
+              keyboardType={"email-address"}
             />
-          </TouchableOpacity>
+          </View>
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "stretch",
+              width: "75%",
+              marginTop: 8
+            }}
+          >
+            <TouchableOpacity onPress={() => this.setState({ countryModalOpen: true })}>
+              <TextInput
+                label="Select country"
+                value={this.state.country.title}
+                mode={"outlined"}
+                placeholder="Select country"
+                editable={false}
+                pointerEvents="none"
+              />
+            </TouchableOpacity>
+          </View>
+          <Text style={{ textAlign: "center", width: "75%", marginTop: 20, marginBottom: 20 }}>
+            {`Your chosen country must be a residence country of yours. Countries not shown are currently not supported.`}
+            <Text
+              style={{ color: Colors.primaryColor, fontWeight: "800" }}
+              onPress={() => {
+                Linking.openURL(this.WYRE_SUPPORTED_COUNTRIES_INFO);
+              }}
+            >
+              {" Press here to learn more about Wyre's geographic restrictions."}
+            </Text>
+          </Text>
+          <Button
+            disabled={this.state.email.length == 0 || this.state.country.key.length == 0}
+            onPress={async () => this.tryCreateAccount()}
+          >
+            {"Create Account"}
+          </Button>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     );
   }
 }

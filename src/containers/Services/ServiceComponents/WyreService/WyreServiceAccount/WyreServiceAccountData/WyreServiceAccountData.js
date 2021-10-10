@@ -3,7 +3,7 @@
 */  
 
 import React, { Component } from "react"
-import { Avatar } from "react-native-paper";
+import { Linking } from "react-native";
 import { connect } from 'react-redux'
 import { expireServiceData, setServiceLoading } from "../../../../../../actions/actionCreators";
 import { conditionallyUpdateService } from "../../../../../../actions/actionDispatchers";
@@ -68,7 +68,8 @@ class WyreServiceAccountData extends Component {
         addRoute: null,
         addRouteParams: {},
         options: null,
-        missingDataDisplay: {}
+        missingDataDisplay: {},
+        nativeSubmission: false,
       },
     };
   }
@@ -86,6 +87,16 @@ class WyreServiceAccountData extends Component {
       this.initParams();
     }
   }
+
+  openInstructionUrl = (url) => {
+    Linking.canOpenURL(url).then((supported) => {
+      if (supported) {
+        Linking.openURL(url);
+      } else {
+        console.log("Don't know how to open URI: " + url);
+      }
+    });
+  };
 
   async getPersonalInfoOptions(infoType, infoKey) {
     const personalInfo = await requestPersonalData(infoType);
@@ -132,10 +143,7 @@ class WyreServiceAccountData extends Component {
 
           return {
             title: fullNameString,
-            submission: this.formatWyreDataFieldSubmission(
-              WYRE_INDIVIDUAL_NAME,
-              fullNameString
-            ),
+            submission: this.formatWyreDataFieldSubmission(WYRE_INDIVIDUAL_NAME, fullNameString),
           };
         case PERSONAL_PHONE_NUMBERS:
           return {
@@ -150,10 +158,7 @@ class WyreServiceAccountData extends Component {
 
           return {
             title: emailAddress,
-            submission: this.formatWyreDataFieldSubmission(
-              WYRE_INDIVIDUAL_EMAIL,
-              emailAddress
-            ),
+            submission: this.formatWyreDataFieldSubmission(WYRE_INDIVIDUAL_EMAIL, emailAddress),
           };
         case PERSONAL_BIRTHDAY:
           return {
@@ -166,10 +171,7 @@ class WyreServiceAccountData extends Component {
         case PERSONAL_TAX_COUNTRIES:
           return {
             title: renderPersonalTaxId(option).title,
-            submission: this.formatWyreDataFieldSubmission(
-              WYRE_INDIVIDUAL_SSN,
-              option.tin
-            ),
+            submission: this.formatWyreDataFieldSubmission(WYRE_INDIVIDUAL_SSN, option.tin),
           };
         case PERSONAL_PHYSICAL_ADDRESSES:
           const addressRender = renderPersonalAddress(option);
@@ -186,9 +188,7 @@ class WyreServiceAccountData extends Component {
           const documentRender = renderPersonalDocument(option);
           const submission = translatePersonalDocumentToWyreUpload(
             option,
-            this.state.params.wyreFieldData != null
-              ? this.state.params.wyreFieldData.fieldId
-              : null
+            this.state.params.wyreFieldData != null ? this.state.params.wyreFieldData.fieldId : null
           );
 
           return {
@@ -198,11 +198,10 @@ class WyreServiceAccountData extends Component {
               option.image_type == null ||
               PERSONAL_IMAGE_TYPE_SCHEMA[option.image_type] == null ||
               (PERSONAL_IMAGE_TYPE_SCHEMA[option.image_type].images != null &&
-                option.uris.length !==
-                  PERSONAL_IMAGE_TYPE_SCHEMA[option.image_type].images.length),
+                option.uris.length !== PERSONAL_IMAGE_TYPE_SCHEMA[option.image_type].images.length),
             submission: submission,
             description: documentRender.description,
-            left: documentRender.left
+            left: documentRender.left,
           };
         default:
           return {
@@ -213,7 +212,10 @@ class WyreServiceAccountData extends Component {
   }
 
   alertIncompleteOption() {
-    createAlert("Cannot submit", "The option you have selected is missing data required for submission to Wyre")
+    createAlert(
+      "Cannot submit",
+      "The option you have selected is missing data required for submission to Wyre"
+    );
   }
 
   async submitOption(submission) {
@@ -228,23 +230,18 @@ class WyreServiceAccountData extends Component {
   }
 
   async forceUpdate() {
-    const updates = [API_GET_SERVICE_ACCOUNT, API_GET_SERVICE_PAYMENT_METHODS]
+    const updates = [API_GET_SERVICE_ACCOUNT, API_GET_SERVICE_PAYMENT_METHODS];
 
     for (update of updates) {
       this.props.dispatch(expireServiceData(update));
 
-      await conditionallyUpdateService(
-        Store.getState(),
-        this.props.dispatch,
-        update
-      );
+      await conditionallyUpdateService(Store.getState(), this.props.dispatch, update);
     }
   }
 
   async canSubmitDataToWyre() {
     if (this.state.params.wyreFieldData != null) {
-      if (this.state.params.wyreFieldData.status == WYRE_DATA_SUBMISSION_OPEN)
-        return true;
+      if (this.state.params.wyreFieldData.status == WYRE_DATA_SUBMISSION_OPEN) return true;
       else {
         return await createAlert(
           "Are you sure?",
@@ -274,10 +271,7 @@ class WyreServiceAccountData extends Component {
 
       this.props.navigation.goBack();
       this.props.dispatch(setServiceLoading(false));
-      createAlert(
-        "Success",
-        "Data submitted to Wyre! Track its status in your Wyre service menu."
-      );
+      createAlert("Success", "Data submitted to Wyre! Track its status in your Wyre service menu.");
 
       return;
     } catch (e) {

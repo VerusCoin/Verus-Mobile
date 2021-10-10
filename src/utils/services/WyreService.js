@@ -163,13 +163,10 @@ class WyreService {
   };
 
   getAccount = async (id) => {   
-    if (this.cache.accounts[id] != null) return this.cache.accounts[id]
-
     const account = await WyreService.formatCall(() => {
       return this.service.get(`/v3/accounts/${id}`);
     }, true);
 
-    this.cache.accounts[id] = account
     return account
   };
 

@@ -3,14 +3,17 @@ import { WYRE_SERVICE_ID } from "../constants/services"
 const SUBWALLET_ACTIVITY_FUNCTIONS = {
   ["WYRE_ACCOUNT_WALLET"]: {
     active: (services) => {
-      return services.accounts[WYRE_SERVICE_ID]
+      return (
+        services.accounts[WYRE_SERVICE_ID] &&
+        services.accounts[WYRE_SERVICE_ID].status === "APPROVED"
+      );
     },
     placeholder: {
-      icon: 'room-service',
-      label: `To access this card, you'll need to link your wallet with the Wyre service under the "Services" tab`
-    }
-  }
-}
+      icon: "room-service",
+      label: `To access this card, you'll need to create and verify a Wyre account under the "Services" tab`,
+    },
+  },
+};
 
 export const subWalletActivity = (id) => {
   if (SUBWALLET_ACTIVITY_FUNCTIONS[id] != null) {
