@@ -52,7 +52,7 @@ export default text = {
     color: Colors.infoButtonColor,
   },
   seedWord: {
-    fontSize: 32,
+    fontSize: 24,
     color: Colors.primaryColor,
     textAlign: 'center',
     fontFamily: 'Avenir-Medium',
@@ -84,7 +84,8 @@ export default text = {
     fontFamily: 'Avenir-Black',
     color: Colors.quaternaryColor,
     textAlign: 'center',
-    paddingVertical: 6,
+    paddingVertical: 3,
+    fontSize: 12
   },
   whiteText: {
     fontFamily: 'Avenir-Book',

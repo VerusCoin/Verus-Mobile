@@ -49,7 +49,7 @@ class CreateSeed extends Component {
 
   next = () => {
     this.setState({ formStep: this.state.formStep + 1 }, () => {
-      if (this.state.formStep > DEFAULT_SEED_PHRASE_LENGTH) {
+      if (this.state.formStep > this.state.newSeedWords.length / 8) {
         const first = this.getRandIndex()
         const second = this.getRandIndex([first])
         const third = this.getRandIndex([first, second])
@@ -93,11 +93,13 @@ class CreateSeed extends Component {
       newSeedWords
     } = this.state;
 
+    const isAtEnd = formStep > newSeedWords.length / 8
+    const isAtWordPhase = !(formStep === 0 || isAtEnd)
+    const firstIndex = (formStep - 1) * 8
+    const displayWords = isAtWordPhase ? newSeedWords.slice(firstIndex, firstIndex + 8) : []
+
     return (
-      <ScrollView
-        style={Styles.flexBackground}
-        contentContainerStyle={Styles.centerContainer}
-      >
+      <ScrollView style={Styles.flexBackground} contentContainerStyle={Styles.centerContainer}>
         <View style={Styles.headerContainer}>
           <Text style={Styles.centralHeader}>{"Seed Setup"}</Text>
         </View>
@@ -107,19 +109,13 @@ class CreateSeed extends Component {
               {`You will now be shown a sequence of ${DEFAULT_SEED_PHRASE_LENGTH} words.`}
             </Text>
             <Text style={Styles.centralLightTextPadded}>
-              {
-                "This sequence of words is a seed phrase, a secret key used to access your wallet."
-              }
+              {"This sequence of words is a seed phrase, a secret key used to access your wallet."}
             </Text>
             <Text style={Styles.centralLightTextPadded}>
-              {
-                "Write each word down, seperated by a space, and keep your words safe."
-              }
+              {"Write each word down, seperated by a space, and keep your words safe."}
             </Text>
             <Text style={Styles.centralInfoTextPadded}>
-              {
-                "Anyone with access to your words, will have full access to your wallet."
-              }
+              {"Anyone with access to your words, will have full access to your wallet."}
             </Text>
             <View style={Styles.centralInfoTextPadded}>
               <Text style={{ ...Styles.defaultText, textAlign: "center" }}>
@@ -138,18 +134,33 @@ class CreateSeed extends Component {
             </View>
           </View>
         )}
-        {formStep > 0 && formStep < DEFAULT_SEED_PHRASE_LENGTH + 1 && (
+        {isAtWordPhase && (
           <View style={Styles.standardWidthFlexGrowCenterBlock}>
-            <Text style={Styles.centralInfoTextPadded}>
-              {`Word #${formStep}:`}
-            </Text>
-            <Text style={Styles.seedWord}>{newSeedWords[formStep - 1]}</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {displayWords.map((word, index) => {
+                return (
+                  <View key={index} style={{ flex: 1, minWidth: "50%" }}>
+                    <Text style={Styles.centralInfoTextPadded}>{`Word #${
+                      firstIndex + index + 1
+                    }:`}</Text>
+                    <Text style={Styles.seedWord}>{word}</Text>
+                  </View>
+                );
+              })}
+            </View>
             <Text style={Styles.centralLightTextPadded}>
-              {"When you've written it down, press next."}
+              {"When you've written them down, press next."}
             </Text>
           </View>
         )}
-        {formStep > DEFAULT_SEED_PHRASE_LENGTH && (
+        {isAtEnd && (
           <View style={Styles.standardWidthFlexGrowCenterBlock}>
             {randomIndices.map((randomI, index) => {
               return (
@@ -190,15 +201,8 @@ class CreateSeed extends Component {
             >
               {formStep === 0 ? "Cancel" : "Back"}
             </Button>
-            <Button
-              color={Colors.primaryColor}
-              onPress={
-                formStep > DEFAULT_SEED_PHRASE_LENGTH
-                  ? this.verifySeed
-                  : this.next
-              }
-            >
-              {formStep > DEFAULT_SEED_PHRASE_LENGTH ? "Done" : "Next"}
+            <Button color={Colors.primaryColor} onPress={isAtEnd ? this.verifySeed : this.next}>
+              {isAtEnd ? "Done" : "Next"}
             </Button>
           </View>
         </View>
