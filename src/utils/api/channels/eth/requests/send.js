@@ -20,7 +20,7 @@ export const send = async (coinObj, activeUser, address, amount, params) => {
       to: address,
       value: ethers.utils.parseUnits(scientificToDecimal(amount.toString())),
       chainId: ETH_NETWORK_IDS[ETH_NETWORK],
-      gasLimit: ethers.BigNumber.from(21000)
+      gasLimit: ethers.BigNumber.from(42000)
     })
 
     const response = await signer.sendTransaction(transaction);

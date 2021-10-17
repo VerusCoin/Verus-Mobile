@@ -129,8 +129,8 @@ const fees = {
   qmc: 10000,
   rdd: 0, // todo
   // eth, gas limit in wei
-  eth: 21000,
-  eth_ropsten: 21000,
+  eth: 42000,
+  eth_ropsten: 42000,
 };
 
 module.exports = fees;
