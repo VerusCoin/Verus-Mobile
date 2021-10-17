@@ -173,14 +173,6 @@ class ManageWyrePersonalDetails extends Component {
                 Date of Birth YYYY-MM-DD:
               </FormLabel>
               <View style={styles.containerDateOfBirth}>
-                {/* <TextInputMask
-                  onChangeText={(formatted) => {
-                    this.setState({dateOfBirth: formatted})
-                  }}
-                  value={this.state.dateOfBirth}
-                  mask={"[0000]-[00]-[00]"}
-                  style={styles.inputMaskDateOfBirth}
-                /> */}
                 <View style={styles.containerCalendarButton} >
                   <TouchableOpacity onPress={this.showCalendar}>
                     <Image
@@ -210,13 +202,6 @@ class ManageWyrePersonalDetails extends Component {
               <FormLabel labelStyle={styles.formLabel}>
                 US Social Security Number XXX-XX-XXXX:
               </FormLabel>
-              {/* <TextInputMask
-                onChangeText={(formatted) => {
-                  this.setState({socialSecurityNumber: formatted})
-                }}
-                mask={"[000]-[00]-[0000]"}
-                style={styles.inputMask}
-              /> */}
               <FormValidationMessage labelStyle={styles.formValidationLabel}>
                 {this.state.errors.socialSecurityNumber}
               </FormValidationMessage>

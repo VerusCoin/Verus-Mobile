@@ -37,9 +37,9 @@ export const TraditionalCryptoSendFormRender = function () {
       >
         <View style={Styles.wideBlock}>
           <TextInput
+            returnKeyType="done"
             label="Recipient address"
             value={data[SEND_MODAL_TO_ADDRESS_FIELD]}
-            multiline={true}
             mode="outlined"
             onChangeText={(text) =>
               this.props.updateSendFormData(SEND_MODAL_TO_ADDRESS_FIELD, text)
@@ -51,6 +51,7 @@ export const TraditionalCryptoSendFormRender = function () {
         <View style={{ ...Styles.wideBlock, paddingTop: 0 }}>
           <View style={Styles.flexRow}>
             <TextInput
+              returnKeyType="done"
               label={`Amount${
                 fiatEnabled && _price != 0
                   ? ` (~${_price} ${amountFiat ? coinObj.id : displayCurrency})`
@@ -103,6 +104,7 @@ export const TraditionalCryptoSendFormRender = function () {
               !data[SEND_MODAL_TO_ADDRESS_FIELD].includes("@"))) && (
             <View style={{ ...Styles.wideBlock, paddingTop: 0 }}>
               <TextInput
+                returnKeyType="done"
                 label="Memo"
                 value={data[SEND_MODAL_MEMO_FIELD]}
                 mode="outlined"

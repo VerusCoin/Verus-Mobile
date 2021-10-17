@@ -155,6 +155,7 @@ class CreateSeed extends Component {
               return (
                 <View key={index} style={Styles.fullWidthAlignCenterRowBlock}>
                   <TextInput
+                    returnKeyType="done"
                     dense
                     style={Styles.flex}
                     onChangeText={(text) => {

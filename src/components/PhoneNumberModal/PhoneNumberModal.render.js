@@ -62,6 +62,7 @@ export const PhoneNumberModalRender = function () {
               style={{ flex: 1 }}
               label="Ext."
               mode="outlined"
+              returnKeyType="done"
               value={this.state.formattedExt}
               right={<Text>{"t"}</Text>}
               render={(props) => (
@@ -79,6 +80,7 @@ export const PhoneNumberModalRender = function () {
               style={{ flex: 2 }}
               label="Phone"
               mode="outlined"
+              returnKeyType="done"
               value={this.state.formattedPhone}
               render={(props) => (
                 <TextInputMask

@@ -94,6 +94,7 @@ export const RenderReceiveCoin = function() {
               style={{ ...Styles.flex }}
             >
               <TextInput
+                returnKeyType="done"
                 label={"Address"}
                 value={address}
                 render={(props) => <NativeTextInput {...props} />}
@@ -126,6 +127,7 @@ export const RenderReceiveCoin = function() {
               style={{ ...Styles.flex }}
             >
               <TextInput
+                returnKeyType="done"
                 label={`Amount${
                   fiatEnabled && _price != 0
                     ? ` (~${_price} ${
@@ -168,6 +170,7 @@ export const RenderReceiveCoin = function() {
               style={{ ...Styles.flex }}
             >
               <TextInput
+                returnKeyType="done"
                 label={"Note for receiver (optional)"}
                 dense
                 value={memo}

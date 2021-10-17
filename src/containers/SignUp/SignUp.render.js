@@ -74,6 +74,7 @@ export const SignUpRender = function() {
                 </Portal>
                 <View style={Styles.wideBlock}>
                   <TextInput
+                    returnKeyType="done"
                     value={this.state.userName}
                     dense
                     onChangeText={(text) => this.setState({ userName: text })}
@@ -121,6 +122,7 @@ export const SignUpRender = function() {
                 <View style={Styles.fullWidthFlexCenterBlock}>
                   <View style={Styles.wideBlock}>
                     <TextInput
+                      returnKeyType="done"
                       value={this.state.pin}
                       dense
                       onChangeText={(text) => this.setState({ pin: text })}
@@ -140,6 +142,7 @@ export const SignUpRender = function() {
                   </View>
                   <View style={Styles.wideBlock}>
                     <TextInput
+                      returnKeyType="done"
                       value={this.state.confirmPin}
                       dense
                       onChangeText={(text) =>

@@ -64,6 +64,7 @@ export const WithdrawSendFormRenderInputForm = function() {
             <Title style={{ color: Colors.primaryColor }}>Withdraw</Title>
             <View style={Styles.flexRow}>
               <TextInput
+                returnKeyType="done"
                 label={"Amount"}
                 keyboardType={"decimal-pad"}
                 autoCapitalize={"none"}
@@ -104,6 +105,7 @@ export const WithdrawSendFormRenderInputForm = function() {
             <View style={{ alignItems: "center", justifyContent: "center" }}>
               <View style={Styles.flexRow}>
                 <TextInput
+                  returnKeyType="done"
                   label={"Amount"}
                   keyboardType={"decimal-pad"}
                   autoCapitalize={"none"}

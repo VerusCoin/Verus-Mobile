@@ -260,6 +260,7 @@ class WyreServiceAccountCreator extends Component {
             }}
           >
             <TextInput
+              returnKeyType="done"
               label="Enter email"
               value={this.state.email}
               mode={"outlined"}

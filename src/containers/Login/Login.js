@@ -246,6 +246,7 @@ class Login extends Component {
             style={{...Styles.wideBlock, ...Styles.threeQuarterWidthBlock}}
           >
             <TextInput
+              returnKeyType="done"
               label="Select a Profile"
               dense
               value={

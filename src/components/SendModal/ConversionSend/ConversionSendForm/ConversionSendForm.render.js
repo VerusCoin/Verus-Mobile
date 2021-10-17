@@ -61,6 +61,7 @@ export const ConversionSendFormRenderInputForm = function() {
             <Title style={{ color: Colors.primaryColor }}>Send</Title>
             <View style={Styles.flexRow}>
               <TextInput
+                returnKeyType="done"
                 label={"Amount"}
                 keyboardType={"decimal-pad"}
                 autoCapitalize={"none"}
@@ -105,6 +106,7 @@ export const ConversionSendFormRenderInputForm = function() {
             <View style={{ alignItems: "center", justifyContent: "center" }}>
               <View style={Styles.flexRow}>
                 <TextInput
+                  returnKeyType="done"
                   label={"Amount"}
                   keyboardType={"decimal-pad"}
                   autoCapitalize={"none"}
@@ -139,20 +141,6 @@ export const ConversionSendFormRenderInputForm = function() {
                   />
                 </TouchableOpacity>
               </View>
-              {/* <View style={Styles.flexRow}>
-                <TextInput
-                  label={"Address"}
-                  autoCapitalize={"none"}
-                  autoCorrect={false}
-                  // value={data[SEND_MODAL_AMOUNT_FIELD]}
-                  mode="outlined"
-                  // onChangeText={(text) => this.props.updateSendFormData(SEND_MODAL_AMOUNT_FIELD, text)}
-                  style={{
-                    flex: 1,
-                    marginTop: 2,
-                  }}
-                />
-              </View> */}
             </View>
           </Card>
         </View>

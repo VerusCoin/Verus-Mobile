@@ -64,6 +64,7 @@ const NameForm = (props) => {
         }}
       >
         <TextInput
+          returnKeyType="done"
           label="First"
           value={first}
           mode={"outlined"}
@@ -73,6 +74,7 @@ const NameForm = (props) => {
           onChangeText={(text) => setFirst(text)}
         />
         <TextInput
+          returnKeyType="done"
           label="Middle"
           value={middle}
           mode={"outlined"}
@@ -83,6 +85,7 @@ const NameForm = (props) => {
           style={{ marginVertical: 8 }}
         />
         <TextInput
+          returnKeyType="done"
           label="Last"
           value={last}
           mode={"outlined"}
