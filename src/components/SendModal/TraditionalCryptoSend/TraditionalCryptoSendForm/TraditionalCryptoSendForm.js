@@ -24,7 +24,13 @@ class TraditionalCryptoSendForm extends Component {
       ["BTC"]: {
         [ELECTRUM]: {
           calculator: getRecommendedBTCFees,
-          isPerByte: false,
+          isPerByte: true,
+        },
+      },
+      ["TESTNET"]: {
+        [ELECTRUM]: {
+          calculator: () => getRecommendedBTCFees(true),
+          isPerByte: true,
         },
       },
     };

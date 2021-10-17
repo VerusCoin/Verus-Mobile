@@ -9,7 +9,16 @@ import { GENERAL_CONNECTION_ERROR } from '../../errors/errorCodes';
 import { truncateDecimal } from '../../../math';
 import BigNumber from 'bignumber.js';
 
-export const getRecommendedBTCFees = () => {
+export const getRecommendedBTCFees = (testnet = false) => {
+  if (testnet)
+    return new Promise((resolve) =>
+      resolve({
+        slowest: truncateDecimal(102, 0),
+        average: truncateDecimal(102, 0),
+        fastest: truncateDecimal(102, 0),
+      })
+    );
+
   //Fees are measured in satoshis per byte, slowest should 
   //take around an hour, average should take around 30 minutes, 
   //and fastest should take around 20 to 30 minutes
