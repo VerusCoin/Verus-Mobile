@@ -48,7 +48,7 @@ const NameForm = (props) => {
   const [last, setLast] = React.useState('');
 
   useEffect(() => {
-    onChange({first, middle, last})
+    onChange({ first: first.trim(), middle: middle.trim(), last: last.trim() });
   }, [first, middle, last]);
 
   return (

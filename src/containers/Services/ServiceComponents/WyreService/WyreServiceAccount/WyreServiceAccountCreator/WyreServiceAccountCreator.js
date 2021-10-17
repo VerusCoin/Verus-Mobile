@@ -18,8 +18,10 @@ import { expireServiceData, setServiceLoading, setWyreAccountId } from "../../..
 import { CommonActions } from "@react-navigation/native";
 import { WYRE_INDIVIDUAL_EMAIL, WYRE_SERVICE_ID } from "../../../../../../utils/constants/services";
 import { API_GET_SERVICE_ACCOUNT } from "../../../../../../utils/constants/intervalConstants";
-import { conditionallyUpdateService } from "../../../../../../actions/actionDispatchers";
+import { conditionallyUpdateService, modifyPersonalDataForUser } from "../../../../../../actions/actionDispatchers";
 import store from "../../../../../../store";
+import { requestPersonalData } from "../../../../../../utils/auth/authBox";
+import { PERSONAL_CONTACT, PERSONAL_EMAILS } from "../../../../../../utils/constants/personal";
 
 class WyreServiceAccountCreator extends Component {
   constructor() {
@@ -89,6 +91,24 @@ class WyreServiceAccountCreator extends Component {
       await conditionallyUpdateService(store.getState(), store.dispatch, API_GET_SERVICE_ACCOUNT)
       
       if (emailFail == null) {
+        try {
+          const contact = await requestPersonalData(PERSONAL_CONTACT)
+
+          if (!contact.emails || contact.emails.find(x => x.address === email) == null) {
+            const emails = contact.emails
+              ? [...contact.emails, { address: email }]
+              : [{ address: email }];
+
+            await modifyPersonalDataForUser(
+              {...contact, [PERSONAL_EMAILS]: emails},
+              PERSONAL_CONTACT,
+              this.props.activeAccount.accountHash
+            );
+          }
+        } catch(e) {
+          console.warn(e)
+        }
+
         await createAlert(
           "Success",
           "Wyre account created! Verify your Wyre account by creating an account password and logging in at https://dash.sendwyre.com/reset-password.",
