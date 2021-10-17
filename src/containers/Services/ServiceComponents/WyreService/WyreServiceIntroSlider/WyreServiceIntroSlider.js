@@ -115,12 +115,15 @@ class WyreServiceIntroSlider extends Component {
                   await this.addWyreSeed(seed, channel, result.password)
                   createAlert(
                     "Success",
-                    'Wyre linked! Access your Wyre profile through the services tab.'
+                    'Wyre linked! Enter your email and country of residence to continue.'
                   );
                 },
                 message: "Linking Wyre...",
                 route: "Home",
                 screen: "ServicesHome",
+                successData: {
+                  service: WYRE_SERVICE_ID
+                },
                 successMsg: "Wyre linked!",
                 errorMsg: "Failed to link Wyre.",
               },

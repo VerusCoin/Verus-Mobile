@@ -155,8 +155,12 @@ export const WyreServiceAccountDataRender = function () {
         />
         <Divider />
         <React.Fragment>
-          <List.Subheader>{this.state.params.selectLabel}</List.Subheader>
-          <Divider />
+          {options != null && options.length > 0 && (
+            <React.Fragment>
+              <List.Subheader>{this.state.params.selectLabel}</List.Subheader>
+              <Divider />
+            </React.Fragment>
+          )}
           {nativeSubmission
             ? options.map((option, index) => {
                 return (

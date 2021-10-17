@@ -65,8 +65,12 @@ const mapStateToProps = (state) => {
   return {
     encryptedSeeds: state.authentication.activeAccount.seeds,
     hasWyreAccount: state.channelStore_wyre_service.accountId != null,
-    wyreAuthenticated: state.channelStore_wyre_service.authenticated 
-  }
+    hasWyreAccountEmail:
+      state.services.accounts[WYRE_SERVICE] != null &&
+      state.services.accounts[WYRE_SERVICE].profileFields.find((x) => x.fieldType === "EMAIL")
+        .value != null,
+    wyreAuthenticated: state.channelStore_wyre_service.authenticated,
+  };
 };
 
 export default connect(mapStateToProps)(WyreServiceAccount);

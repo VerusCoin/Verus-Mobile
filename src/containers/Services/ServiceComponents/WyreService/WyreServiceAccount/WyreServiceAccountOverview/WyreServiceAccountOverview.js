@@ -71,7 +71,7 @@ class WyreServiceAccountOverview extends Component {
         infoType: PERSONAL_ATTRIBUTES,
         infoKey: PERSONAL_NAME,
         label: "Legal name",
-        placeholder: "Submit name",
+        placeholder: "Name",
         selectLabel: "Submission instructions",
       },
       [WYRE_INDIVIDUAL_CELL]: {
@@ -81,7 +81,7 @@ class WyreServiceAccountOverview extends Component {
         infoType: PERSONAL_CONTACT,
         infoKey: PERSONAL_PHONE_NUMBERS,
         label: "Phone number",
-        placeholder: "Submit phone",
+        placeholder: "Phone",
         selectLabel: "Submission instructions",
       },
       [WYRE_INDIVIDUAL_RESIDENCE_ADDRESS]: {
@@ -91,7 +91,7 @@ class WyreServiceAccountOverview extends Component {
         infoType: PERSONAL_LOCATIONS,
         infoKey: PERSONAL_PHYSICAL_ADDRESSES,
         label: "Residence address",
-        placeholder: "Submit address",
+        placeholder: "Address",
         selectLabel: "Submission instructions",
       },
       [WYRE_INDIVIDUAL_DOB]: {
@@ -101,7 +101,7 @@ class WyreServiceAccountOverview extends Component {
         infoType: PERSONAL_ATTRIBUTES,
         infoKey: PERSONAL_BIRTHDAY,
         label: "Date of birth",
-        placeholder: "Submit birthday",
+        placeholder: "Birthday",
         selectLabel: "Submission instructions",
       },
       [WYRE_INDIVIDUAL_SSN]: {
@@ -111,7 +111,7 @@ class WyreServiceAccountOverview extends Component {
         infoType: PERSONAL_LOCATIONS,
         infoKey: PERSONAL_TAX_COUNTRIES,
         label: "Taxpayer ID",
-        placeholder: "Submit tax ID",
+        placeholder: "SSN",
         selectLabel: "Submission instructions",
       },
     };

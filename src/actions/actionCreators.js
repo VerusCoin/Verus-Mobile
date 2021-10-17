@@ -69,7 +69,10 @@ import {
   SET_COIN_SUB_WALLET,
   DISABLE_SELECT_DEFAULT_ACCOUNT,
   ADD_GOOD_SERVER,
-  ADD_BAD_SERVER
+  ADD_BAD_SERVER,
+  SET_SECURE_LOADING_SUCCESS_DATA,
+  SET_SECURE_LOADING_ERROR_DATA,
+  CLEAR_SECURE_LOADING_DATA
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -475,3 +478,12 @@ export const appSetup = () => ({
   type: APP_SETUP,
   payload: {},
 });
+
+export const setSecureLoadingData = (data, isSuccess) => ({
+  type: isSuccess ? SET_SECURE_LOADING_SUCCESS_DATA : SET_SECURE_LOADING_ERROR_DATA,
+  payload: { data }
+})
+
+export const clearSecureLoadingData = () => ({
+  type: CLEAR_SECURE_LOADING_DATA
+})

@@ -14,9 +14,12 @@ import Colors from "../../../../../../globals/colors";
 import { createAlert, resolveAlert } from "../../../../../../actions/actions/alert/dispatchers/alert";
 import { ISO_3166_COUNTRIES } from "../../../../../../utils/constants/iso3166";
 import ListSelectionModal from "../../../../../../components/ListSelectionModal/ListSelectionModal";
-import { setServiceLoading, setWyreAccountId } from "../../../../../../actions/actionCreators";
+import { expireServiceData, setServiceLoading, setWyreAccountId } from "../../../../../../actions/actionCreators";
 import { CommonActions } from "@react-navigation/native";
-import { WYRE_INDIVIDUAL_EMAIL } from "../../../../../../utils/constants/services";
+import { WYRE_INDIVIDUAL_EMAIL, WYRE_SERVICE_ID } from "../../../../../../utils/constants/services";
+import { API_GET_SERVICE_ACCOUNT } from "../../../../../../utils/constants/intervalConstants";
+import { conditionallyUpdateService } from "../../../../../../actions/actionDispatchers";
+import store from "../../../../../../store";
 
 class WyreServiceAccountCreator extends Component {
   constructor() {
@@ -72,7 +75,7 @@ class WyreServiceAccountCreator extends Component {
       let emailFail = null;
       
       try {
-        WyreProvider.updateAccount({
+        await WyreProvider.updateAccount({
           updateObj: {
             profileFields: [{ fieldId: WYRE_INDIVIDUAL_EMAIL, value: email }],
           },
@@ -82,6 +85,8 @@ class WyreServiceAccountCreator extends Component {
       }
 
       this.props.dispatch(setWyreAccountId(account.id));
+      this.props.dispatch(expireServiceData(API_GET_SERVICE_ACCOUNT))
+      await conditionallyUpdateService(store.getState(), store.dispatch, API_GET_SERVICE_ACCOUNT)
       
       if (emailFail == null) {
         await createAlert(
@@ -140,6 +145,9 @@ class WyreServiceAccountCreator extends Component {
         message: "Creating Wyre account...",
         route: "Home",
         screen: "ServicesHome",
+        successData: {
+          service: WYRE_SERVICE_ID
+        },
         successMsg: "Account created!",
         errorMsg: "Failed to create Wyre account.",
       },

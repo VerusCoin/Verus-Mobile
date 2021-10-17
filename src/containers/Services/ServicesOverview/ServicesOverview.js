@@ -5,11 +5,19 @@
 
 import React, { Component } from "react"
 import { connect } from 'react-redux'
+import { clearSecureLoadingData } from "../../../actions/actionCreators";
 import { ServicesOverviewRender } from "./ServicesOverview.render"
 
 class ServicesOverview extends Component {
   constructor(props) {
     super(props);
+  }
+
+  componentDidMount() {
+    if (this.props.passthrough && this.props.passthrough.service) {
+      this.openService(this.props.passthrough.service)
+      this.props.dispatch(clearSecureLoadingData())
+    }
   }
 
   openService(service) {
@@ -22,7 +30,9 @@ class ServicesOverview extends Component {
 }
 
 const mapStateToProps = (state) => {
-  return {}
+  return {
+    passthrough: state.secureLoading.successData,
+  }
 };
 
 export default connect(mapStateToProps)(ServicesOverview);

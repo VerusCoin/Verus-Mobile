@@ -21,7 +21,7 @@ import {
 } from "react-native";
 import { CommonActions } from '@react-navigation/native';
 import { connect } from 'react-redux';
-import { signOut } from '../../actions/actionCreators';
+import { clearSecureLoadingData, setSecureLoadingData, signOut } from '../../actions/actionCreators';
 import { Icon } from "react-native-elements";
 import styles from './SecureLoading.styles'
 import AnimatedActivityIndicator from "../../components/AnimatedActivityIndicator";
@@ -68,6 +68,8 @@ class SecureLoading extends Component {
           successMsg: data.successMsg ? data.successMsg : null,
           errorMsg: data.errorMsg ? data.errorMsg : null,
           screen: data.screen ? data.screen : null,
+          successData: data.successData ? data.successData : {},
+          errorData: data.errorData ? data.errorData : {},
         },
         () => {
           if (typeof this.state.task === "function") {
@@ -80,7 +82,13 @@ class SecureLoading extends Component {
                     if (this.state.dispatchResult) this.props.dispatch(res);
 
                     if (this.state.route) {
-                      this.resetToScreen(this.state.route, this.state.screen);
+                      this.props.dispatch(clearSecureLoadingData())
+                      this.props.dispatch(setSecureLoadingData(this.state.successData, true))
+                      
+                      this.resetToScreen(
+                        this.state.route,
+                        this.state.screen
+                      );
                     } else {
                       this.props.dispatch(signOut());
                     }
@@ -94,7 +102,9 @@ class SecureLoading extends Component {
                     if (this.state.dispatchResult) this.props.dispatch(res);
 
                     if (this.state.route) {
-                      this.resetToScreen(this.state.route, this.state.screen);
+                      this.props.dispatch(clearSecureLoadingData())
+                      this.props.dispatch(setSecureLoadingData(this.state.errorData, false))
+                      this.resetToScreen(this.state.route, this.state.screen, this.state.errorData);
                     } else {
                       this.props.dispatch(signOut());
                     }
@@ -122,10 +132,17 @@ class SecureLoading extends Component {
   resetToScreen = (route, screen) => {
     const resetAction = CommonActions.reset({
       index: 0, // <-- currect active route from actions array
-      routes: [screen != null ? { name: route, params: {
-        screen,
-        initial: false,
-      } } : { name: route }],
+      routes: [
+        screen != null
+          ? {
+              name: route,
+              params: {
+                screen,
+                initial: false,
+              },
+            }
+          : { name: route },
+      ],
     });
 
     this.props.navigation.closeDrawer();
