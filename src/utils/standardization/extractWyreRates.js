@@ -12,10 +12,14 @@ export const extractWyreRates = (wyreRates, searchCurrencies) => {
     results[currency] = {}
   
     for (const pair of pairs) {
-      const match = pair.split(currency).filter(x => x.length > 0)[0]
+      const currencyMatch = pair.substring(0, currency.length)
+
+      if (currencyMatch === currency) {
+        const match = pair.substring(currency.length, pair.length)
   
-      if (match != null && wyreRates[pair][match] != null) {
-        results[currency][match] = wyreRates[pair][match]
+        if (match != null && wyreRates[pair][match] != null) {
+          results[currency][match] = wyreRates[pair][match]
+        }
       }
     }
   }

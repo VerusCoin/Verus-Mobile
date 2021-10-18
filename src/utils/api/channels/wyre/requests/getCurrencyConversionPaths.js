@@ -1,37 +1,49 @@
 import { coinsList } from "../../../../CoinData/CoinsList"
 import { getRates } from "./getRates"
 
-const { btc, aud, eur, usd, eth } = coinsList
+const { btc, aud, eur, usd, eth, usdt, usdc, dai } = coinsList
 
 const COMPATIBLE_WYRE_CONVERSIONS = {
-  ["BTC"]: {
-    ["USD"]: { destination: usd },
-    ["AUD"]: { destination: aud },
-    ["EUR"]: { destination: eur },
-    ["ETH"]: { destination: eth },
-  },
   ["USD"]: {
     ["AUD"]: { destination: aud },
     ["EUR"]: { destination: eur },
-    ["BTC"]: { destination: btc },
-    ["ETH"]: { destination: eth },
+    ["USDT"]: { destination: usdt },
+    ["USDC"]: { destination: usdc },
+    ["DAI"]: { destination: dai }
   },
   ["AUD"]: {
     ["USD"]: { destination: usd },
-    ["BTC"]: { destination: btc },
+    ["USDT"]: { destination: usdt },
     ["EUR"]: { destination: eur },
-    ["ETH"]: { destination: eth },
+    ["USDC"]: { destination: usdc },
+    ["DAI"]: { destination: dai }
   },
   ["EUR"]: {
     ["USD"]: { destination: usd },
     ["AUD"]: { destination: aud },
-    ["BTC"]: { destination: btc },
-    ["ETH"]: { destination: eth },
+    ["USDT"]: { destination: usdt },
+    ["USDC"]: { destination: usdc },
+    ["DAI"]: { destination: dai }
   },
-  ["ETH"]: {
+  ["USDC"]: {
     ["USD"]: { destination: usd },
     ["AUD"]: { destination: aud },
-    ["BTC"]: { destination: btc },
+    ["USDT"]: { destination: usdt },
+    ["EUR"]: { destination: eur },
+    ["DAI"]: { destination: dai }
+  },
+  ["USDT"]: {
+    ["USD"]: { destination: usd },
+    ["AUD"]: { destination: aud },
+    ["USDC"]: { destination: usdc },
+    ["EUR"]: { destination: eur },
+    ["DAI"]: { destination: dai }
+  },
+  ["DAI"]: {
+    ["USD"]: { destination: usd },
+    ["AUD"]: { destination: aud },
+    ["USDC"]: { destination: usdc },
+    ["USDT"]: { destination: usdt },
     ["EUR"]: { destination: eur },
   },
 }

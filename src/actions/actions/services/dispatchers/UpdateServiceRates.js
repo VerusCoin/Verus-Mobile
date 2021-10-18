@@ -15,7 +15,7 @@ const channelMap = {
 
       return {
         channel: WYRE_SERVICE,
-        body: extractWyreRates(res, ["BTC", "ETH", ...SUPPORTED_BANK_CURRENCIES]),
+        body: extractWyreRates(res, ["USDT", "USDC", "DAI", ...SUPPORTED_BANK_CURRENCIES]),
       };
     } catch(e) {
       throw e
