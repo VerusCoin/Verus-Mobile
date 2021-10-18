@@ -311,7 +311,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
     restrictions: [],
     pre_data: {
       tracking_info: {
-        coin_bound: true, 
+        coin_bound: false, 
         update_locations: null, 
         needs_update: true,
         busy: {},
@@ -322,12 +322,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 30000,
+        update_expired_interval: 15000,
       }
     },
     syncing: {
       tracking_info: {
-        coin_bound: true, 
+        coin_bound: false, 
         update_locations: null, 
         needs_update: true,
         busy: {},
@@ -338,12 +338,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 30000,
+        update_expired_interval: 15000,
       }
     },
     post_sync: {
       tracking_info: {
-        coin_bound: true, 
+        coin_bound: false, 
         update_locations: null, 
         needs_update: true,
         busy: {},
@@ -354,7 +354,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 30000,
+        update_expired_interval: 15000,
       }
     }
   },
@@ -363,7 +363,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
     restrictions: [],
     pre_data: {
       tracking_info: {
-        coin_bound: true, 
+        coin_bound: false, 
         update_locations: null, 
         needs_update: true,
         busy: {},
@@ -374,12 +374,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 30000,
+        update_expired_interval: 15000,
       }
     },
     syncing: {
       tracking_info: {
-        coin_bound: true, 
+        coin_bound: false, 
         update_locations: null, 
         needs_update: true,
         busy: {},
@@ -390,12 +390,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 30000,
+        update_expired_interval: 15000,
       }
     },
     post_sync: {
       tracking_info: {
-        coin_bound: true, 
+        coin_bound: false, 
         update_locations: null, 
         needs_update: true,
         busy: {},
@@ -406,7 +406,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 30000,
+        update_expired_interval: 15000,
       }
     }
   },
@@ -415,7 +415,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
     restrictions: [],
     pre_data: {
       tracking_info: {
-        coin_bound: true, 
+        coin_bound: false, 
         update_locations: null, 
         needs_update: true,
         busy: {},
@@ -426,12 +426,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 30000,
+        update_expired_interval: 15000,
       }
     },
     syncing: {
       tracking_info: {
-        coin_bound: true, 
+        coin_bound: false, 
         update_locations: null, 
         needs_update: true,
         busy: {},
@@ -442,12 +442,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 30000,
+        update_expired_interval: 15000,
       }
     },
     post_sync: {
       tracking_info: {
-        coin_bound: true, 
+        coin_bound: false, 
         update_locations: null, 
         needs_update: true,
         busy: {},
@@ -458,7 +458,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 30000,
+        update_expired_interval: 15000,
       }
     }
   },

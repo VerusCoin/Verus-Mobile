@@ -352,6 +352,7 @@ class Overview extends Component {
                   },
                 })
               }
+              jumpTo={this.props.jumpTo}
               visible={this.state.txDetailsModalOpen}
               animationType="slide"
             />

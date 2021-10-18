@@ -125,7 +125,7 @@ class CoinMenus extends Component {
 
       return this.props.selectedSubWallet.compatible_apps.includes(route.key) ? (
         active(this.props.services) ? (
-          <Route navigation={this.props.navigation} data={this.passthrough} switchTab={jumpTo} />
+          <Route navigation={this.props.navigation} data={this.passthrough} jumpTo={jumpTo} />
         ) : (
           <MissingInfoRedirect
             icon={placeholder.icon}

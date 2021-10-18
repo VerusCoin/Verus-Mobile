@@ -69,7 +69,9 @@ export const DepositSendSuccessRender = function () {
             }}
           >
             {"to "}
-            <Text style={{ color: Colors.basicButtonColor, textAlign: "center" }}>{`Wyre ${toCurrency} wallet`}</Text>
+            <Text
+              style={{ color: Colors.basicButtonColor, textAlign: "center" }}
+            >{`Wyre ${toCurrency} wallet`}</Text>
           </Text>
         </TouchableOpacity>
         <View style={{ paddingVertical: 16, width: "75%" }}>
@@ -80,7 +82,9 @@ export const DepositSendSuccessRender = function () {
               color: Colors.verusDarkGray,
             }}
           >
-            {"Keep track of your deposit under the manage tab, where you'll be notified if further action is required."}
+            {
+              "Complete this deposit manually through a wire transfer to the account specified under the 'manage' tab. Your pending deposit may take a few minutes to appear."
+            }
           </Text>
         </View>
         <View
