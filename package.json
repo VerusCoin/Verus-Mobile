@@ -21,7 +21,7 @@
     "@react-native-community/clipboard": "^1.5.1",
     "@react-native-community/datetimepicker": "^3.5.2",
     "@react-native-community/masked-view": "^0.1.10",
-    "@react-native-community/netinfo": "^5.9.7",
+    "@react-native-community/netinfo": "6.0.2",
     "@react-navigation/compat": "^5.2.4",
     "@react-navigation/drawer": "^5.8.7",
     "@react-navigation/material-bottom-tabs": "^5.3.15",
