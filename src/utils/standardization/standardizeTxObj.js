@@ -114,6 +114,9 @@ export const standardizeWyreTxObj = (transaction, accountAddress, coinObj) => {
     amount:
       type === "sent" ? transaction.sourceAmount.toString() : transaction.destAmount.toString(),
     confirmed: transaction.status === "COMPLETED",
-    deposit: transaction.source != null && transaction.source.split(":")[0] === "paymentmethod",
+    deposit:
+      transaction.status === "PENDING" &&
+      transaction.source != null &&
+      transaction.source.split(":")[0] === "paymentmethod",
   };
 };
