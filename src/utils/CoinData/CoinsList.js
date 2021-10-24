@@ -490,7 +490,7 @@ export const coinsList = {
     alt_names: [],
     theme_color: "#4E4E50",
     website: "https://www.centre.io/usdc",
-    compatible_channels: [ERC20, GENERAL],
+    compatible_channels: [ERC20, GENERAL, WYRE_SERVICE],
     dominant_channel: ERC20,
     decimals: STABLECOIN_DECIMALS,
     tags: [],
