@@ -229,7 +229,9 @@ class WyreServiceIntroSlider extends Component {
           mode="contained"
           onPress={() => this.setState({ setupWyreSeedModalOpen: true })}
         >
-          {this.state.hasElectrum24WordSeed ? "Create & link new seed" : "Create & link seed"}
+          {this.state.hasElectrum24WordSeed
+            ? "Create/Import & link new seed"
+            : "Create/Import & link seed"}
         </Button>
         <Text
           style={{

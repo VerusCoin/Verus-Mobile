@@ -61,7 +61,8 @@ class BankTransferDetailsModal extends Component {
       country,
       accountType,
       iban,
-      amount
+      amount,
+      currency
     } = transfer;
 
     return (
@@ -103,6 +104,12 @@ class BankTransferDetailsModal extends Component {
                       disabled={item.onPress == null}
                       onPress={() => item.onPress()}
                     >
+                      {item.header != null && (
+                        <React.Fragment>
+                          <List.Subheader>{item.header}</List.Subheader>
+                          <Divider />
+                        </React.Fragment>
+                      )}
                       <List.Item
                         title={item.data}
                         description={item.key}
@@ -110,7 +117,7 @@ class BankTransferDetailsModal extends Component {
                           copyToClipboard(item.data, {
                             title: `${item.key} copied`,
                             message: `"${item.data}" copied to clipboard.`,
-                          })
+                          });
                         }}
                         titleNumberOfLines={100}
                         right={(props) =>
@@ -136,12 +143,16 @@ class BankTransferDetailsModal extends Component {
             }}
             data={[
               {
-                key: "Amount to send",
-                data: amount,
+                key: "Exact amount to send",
+                data: `${amount} ${currency}`,
               },
               {
                 key: "IBAN",
                 data: iban,
+              },
+              {
+                key: "Bank + Bank Address",
+                data: bankAddress,
               },
               {
                 key: "Beneficiary",
@@ -164,14 +175,6 @@ class BankTransferDetailsModal extends Component {
                 data: routingNumber,
               },
               {
-                key: "Bank",
-                data: intermediaryBank,
-              },
-              {
-                key: "SWIFT code",
-                data: swiftCode,
-              },
-              {
                 key: "ABA number",
                 data: abaNumber,
               },
@@ -180,8 +183,8 @@ class BankTransferDetailsModal extends Component {
                 data: branchCode,
               },
               {
-                key: "Bank address",
-                data: bankAddress,
+                key: "SWIFT code",
+                data: swiftCode,
               },
               {
                 key: "City",
@@ -194,6 +197,11 @@ class BankTransferDetailsModal extends Component {
               {
                 key: "Bank phone",
                 data: bankPhone,
+              },
+              {
+                key: "Intermediary bank (for international wires only)",
+                data: intermediaryBank,
+                header: "In case of international wire only:"
               },
             ]}
           />

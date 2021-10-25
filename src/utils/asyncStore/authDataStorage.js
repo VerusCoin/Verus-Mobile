@@ -300,43 +300,41 @@ export const checkPinForUser = (pin, userName, alertOnFail = true) => {
           let user = users.users.find(n => n.id === userName);
 
           if (user) {
-            const { electrum, dlight_private } = user.encryptedKeys
+            const { electrum, dlight_private, wyre_service } = user.encryptedKeys
             const _decryptedSeeds = {
               [ELECTRUM]: electrum != null ? decryptkey(pin, electrum) : null,
               [DLIGHT_PRIVATE]: dlight_private != null ? decryptkey(pin, dlight_private) : null,
+              [WYRE_SERVICE]: wyre_service != null ? decryptkey(pin, wyre_service) : null,
             }
 
             if (
               (electrum == null || _decryptedSeeds.electrum) &&
-              (dlight_private == null ||
-                _decryptedSeeds.dlight_private)
+              (dlight_private == null || _decryptedSeeds.dlight_private) &&
+              (wyre_service == null || _decryptedSeeds.wyre_service)
             ) {
               for (const channel in _decryptedSeeds) {
                 if (_decryptedSeeds[channel]) {
                   try {
-                    store.dispatch(setAccounts(await addEncryptedKeyToUser(
-                      hashAccountId(userName),
-                      channel,
-                      _decryptedSeeds[channel],
-                      pin,
-                      true
-                    )))
-                  } catch(e) {
-                    createAlert(
-                      "Authentication Error",
-                      "Internal authentication error."
+                    store.dispatch(
+                      setAccounts(
+                        await addEncryptedKeyToUser(
+                          hashAccountId(userName),
+                          channel,
+                          _decryptedSeeds[channel],
+                          pin,
+                          true
+                        )
+                      )
                     );
+                  } catch (e) {
+                    createAlert("Authentication Error", "Internal authentication error.");
                   }
                 }
               }
 
               resolve(_decryptedSeeds);
             } else {
-              if (alertOnFail)
-                createAlert(
-                  "Authentication Error",
-                  "Incorrect password"
-                );
+              if (alertOnFail) createAlert("Authentication Error", "Incorrect password");
               throw new Error("Incorrect password");
             }
           }

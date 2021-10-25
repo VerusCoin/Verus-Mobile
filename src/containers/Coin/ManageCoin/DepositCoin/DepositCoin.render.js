@@ -56,7 +56,8 @@ export const DepositCoinRender = function () {
             </View>
             {pendingDeposits.map((deposit, index) => {
               const { transfer, followup } = deposit;
-              const { sourceName, destAmount, destCurrency } = transfer;
+              const { sourceName, destAmount, destCurrency, sourceAmount, sourceCurrency } =
+                transfer;
 
               return (
                 <View
@@ -73,7 +74,11 @@ export const DepositCoinRender = function () {
                         : "Press here to manually complete this deposit"
                     }
                     onPress={() =>
-                      this.selectBankTransfer({ amount: transfer.amount, ...followup })
+                      this.selectBankTransfer({
+                        amount: sourceAmount,
+                        currency: sourceCurrency,
+                        ...followup,
+                      })
                     }
                   />
                   <Divider />
