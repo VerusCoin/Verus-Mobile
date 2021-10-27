@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-community/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SERVICE_STORAGE_INTERNAL_KEY } from "../../../env/index";
 import { WYRE_SERVICE_ID } from "../constants/services";
 

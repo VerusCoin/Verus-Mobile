@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PERSONAL_DATA_STORAGE_INTERNAL_KEY } from '../../../env/index'
 
 export const storePersonalData = (data) => {

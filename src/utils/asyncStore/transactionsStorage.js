@@ -1,5 +1,5 @@
 
-import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BLOCK_HEIGHT_STORAGE_INTERNAL_KEY } from '../../../env/index';
 
 export const storeBlockHeight = async (blockHeight) => {

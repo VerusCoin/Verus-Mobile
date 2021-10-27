@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { findCoinObj } from '../CoinData/CoinData';
 import { COIN_STORAGE_INTERNAL_KEY } from '../../../env/index'
 // react-native's version of local storage
