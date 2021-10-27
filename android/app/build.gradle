@@ -123,13 +123,14 @@ def jscFlavor = 'org.webkit:android-jsc:+'
 def enableHermes = project.ext.react.get("enableHermes", false);
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion '29.0.3'
+ //  ndkVersion rootProject.ext.ndkVersion
 
-    defaultConfig {
-        applicationId "com.verusmobile"
-        minSdkVersion 21
-        targetSdkVersion 29
+   compileSdkVersion rootProject.ext.compileSdkVersion
+
+   defaultConfig {
+       applicationId "com.verusmobile"
+       minSdkVersion rootProject.ext.minSdkVersion
+       targetSdkVersion rootProject.ext.targetSdkVersion
         multiDexEnabled true
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionRevision * 100 + versionBuild
         missingDimensionStrategy 'react-native-camera', 'general'
@@ -209,7 +210,7 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation 'androidx.appcompat:appcompat:1.0.0'
     implementation "com.facebook.react:react-native:+"  // From node_modules
-    implementation 'com.android.support:multidex:1.0.3'
+    implementation 'com.android.support:multidex:2.0.3'
 
     if (enableHermes) {
         def hermesPath = "../../node_modules/hermes-engine/android/";
