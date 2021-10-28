@@ -72,7 +72,7 @@ export const txPreflight = (
           ) {
             //BTC Fee style detected, changing fee unit to fee per byte and
             //feeding value into coinselect
-            feePerByte = defaultFee.feePerByte.toNumber();
+            feePerByte = Number(defaultFee.feePerByte);
             defaultFee = BigNumber(0);
             btcFees = true;
           }
@@ -360,24 +360,24 @@ export const sendRawTx = (coinObj, activeUser, outputAddress, value, params) => 
     )
       .then((resObj) => {
         if (resObj.err) {
-          throw resObj;
+          reject(resObj);
         } else {
           return pushTx(coinObj, resObj.result.params.rawtx);
         }
       })
       .then((resObj) => {
         if (resObj.err || resObj.result.code) {
-          throw {
+          reject({
             err: true,
             result: resObj.result.result.message,
-          };
+          });
         } else {
           resolve(resObj);
         }
       })
       .catch((err) => {
         console.log(err);
-        resolve(err);
+        reject(err);
       });
   });
 }

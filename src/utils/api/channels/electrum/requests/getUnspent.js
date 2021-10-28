@@ -76,7 +76,7 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
       let _utxoList = getUnspentRes.result
       let getTxArr = []
 
-      if (!_utxoList.length) throw new Error("No valid utxo")
+      if (!_utxoList.length) throw new Error("No valid UTXO")
 
       _utxoList.forEach((_utxoItem) => {
         if(Number(currentHeight) - Number(_utxoItem.height) !== 0) {
@@ -100,7 +100,7 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
         }
       })
 
-      if (formattedUtxos.length === 0) throw new Error("No confirmed utxos. If you just sent a transaction, try waiting a few minutes and sending again.")
+      if (formattedUtxos.length === 0) throw new Error("No confirmed UTXOs. If you just sent a transaction, try waiting a few minutes and sending again.")
 
       return resolveSequentially(getTxArr)
     })
@@ -108,7 +108,7 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
       let getMerkleArr = []
 
       if (getTxsRes.length !== 0 && getTxsRes.length !== formattedUtxos.length) {
-        throw new Error("Fatal mismatch error, couldn't fetch raw transactions for all UTXOs. If you just sent a transaction, try waiting a few minutes and sending again.")
+        throw new Error("Mismatch error, couldn't fetch raw transactions for all UTXOs. If you just sent a transaction, try waiting a few minutes and sending again.")
       }
 
       formattedUtxos.forEach((formattedUtxo, index) => {

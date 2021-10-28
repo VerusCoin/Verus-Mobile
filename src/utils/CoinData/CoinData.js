@@ -1,4 +1,4 @@
-import { electrumServers } from 'agama-wallet-lib/src/electrum-servers';
+import { electrumServers } from './electrum/servers';
 import { MAX_VERIFICATION } from '../constants/constants'
 import Colors from '../../globals/colors'
 import { coinsList } from './CoinsList'
@@ -8,41 +8,75 @@ import { ENABLE_VERUS_IDENTITIES } from '../../../env/index'
 
 import CoinLogoSvgs from '../../images/cryptologo/index'
 import { ETHERS } from '../constants/web3Constants';
+import { getDefaultSubWallets } from '../defaultSubWallets';
+import {
+  WALLET_APP_CONVERT,
+  WALLET_APP_OVERVIEW,
+  WALLET_APP_RECEIVE,
+  WALLET_APP_SEND,
+  WALLET_APP_MANAGE
+} from "../constants/apps";
 
-const getDefaultApps = (coinName) => {
-  return ({
-    default_app: 'wallet',
+const getDefaultApps = (coinObj) => {
+  const coinName = coinObj.display_name
+  let subwallets = getDefaultSubWallets(coinObj)
+
+  let data = [
+    {
+      screen: "Overview",
+      icon: "format-list-bulleted",
+      name: "Overview",
+      key: WALLET_APP_OVERVIEW,
+      color: Colors.primaryColor,
+      //Verus Blue
+    },
+    {
+      screen: "SendCoin",
+      icon: "arrow-up",
+      name: "Send",
+      key: WALLET_APP_SEND,
+      color: Colors.infoButtonColor,
+      //Orange
+    },
+    {
+      screen: "ReceiveCoin",
+      icon: "arrow-down",
+      name: "Receive",
+      key: WALLET_APP_RECEIVE,
+      color: Colors.verusGreenColor,
+      //Green
+    },
+    {
+      screen: "ConvertCoin",
+      icon: "swap-horizontal-circle",
+      name: "Convert",
+      key: WALLET_APP_CONVERT,
+      color: Colors.primaryColor,
+    },
+    {
+      screen: "ManageCoin",
+      icon: "bank-transfer",
+      name: "Manage",
+      key: WALLET_APP_MANAGE,
+      color: Colors.primaryColor
+    }
+  ];
+
+  return {
+    default_app: "wallet",
     apps: {
-    wallet: {
-      title: coinName + ' Wallet', 
-      data: [
-        {
-          screen: 'Overview',
-          icon: 'format-list-bulleted',
-          name: 'Overview',
-          key: 'wallet-overview',
-          color: Colors.primaryColor
-          //Verus Blue
-        },
-        {
-          screen: 'SendCoin',
-          icon: 'arrow-up',
-          name: 'Send',
-          key: 'wallet-send',
-          color: Colors.infoButtonColor
-          //Orange
-        },
-        {
-          screen: 'ReceiveCoin',
-          icon: 'arrow-down',
-          name: 'Receive',
-          key: 'wallet-receive',
-          color: Colors.successButtonColor
-          //Green
-        }
-      ]
-    }}
-  })
+      wallet: {
+        title: coinName + " Wallet",
+        data: data.filter((app) => {
+          for (const subwallet of subwallets) {
+            if (subwallet.compatible_apps.includes(app.key)) return true;
+          }
+
+          return false;
+        }),
+      },
+    },
+  };
 }
 
 const identityApp = {
@@ -96,7 +130,8 @@ export const CoinLogos = {
   vrsc: CoinLogoSvgs.btc.VRSC,
   dash: CoinLogoSvgs.btc.DASH,	
   oot: CoinLogoSvgs.btc.OOT,		
-  btc: CoinLogoSvgs.btc.BTC,		
+  btc: CoinLogoSvgs.btc.BTC,
+  testnet: CoinLogoSvgs.btc.BTC,
   dgb: CoinLogoSvgs.btc.DGB,		
   doge: CoinLogoSvgs.btc.DOGE,	
   kmd: CoinLogoSvgs.btc.KMD,		
@@ -120,13 +155,69 @@ export const CoinLogos = {
   ven: CoinLogoSvgs.web3.VEN,
   yfi: CoinLogoSvgs.web3.YFI,
   zrx: CoinLogoSvgs.web3.ZRX,
-  rfox: CoinLogoSvgs.web3.RFOX
+  rfox: CoinLogoSvgs.web3.RFOX,
+  usdt: CoinLogoSvgs.web3.USDT,
+  usdc: CoinLogoSvgs.web3.USDC,
+  aave: CoinLogoSvgs.web3.AAVE,
+  crv: CoinLogoSvgs.web3.CRV,
+  sushi: CoinLogoSvgs.web3.SUSHI,
+  mkr: CoinLogoSvgs.web3.MKR,
+  wbtc: CoinLogoSvgs.web3.WBTC,
+
+  // fiat "protocol"
+  usd: CoinLogoSvgs.fiat.USD,
+  aud: CoinLogoSvgs.fiat.AUD,
+  eur: CoinLogoSvgs.fiat.EUR,
 };
 
 //To make flatlist render faster
 export const namesList = Object.values(coinsList).map(function(coin) {
   return coin.id;
 });
+
+export const coinExistsInWallet = (coinTicker) => {
+  let index = 0;
+
+  while (index < namesList.length && namesList[index] !== coinTicker) {
+    index++;
+  }
+
+  if (index < namesList.length) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+export const getCoinFromActiveCoins = (coinTicker, activeCoinsForUser) => {
+  let index = 0;
+
+  while (
+    index < activeCoinsForUser.length &&
+    activeCoinsForUser[index].id !== coinTicker
+  ) {
+    index++;
+  }
+
+  if (index < namesList.length) {
+    return activeCoinsForUser[index];
+  } else {
+    return false;
+  }
+};
+
+export const findCurrencyByImportId = (importObj) => {
+  const allCoins = Object.values(coinsList)
+
+  const coinObj = allCoins.find(coin => {
+    return (
+      coin.system_id === importObj.system_id &&
+      coin.currency_id === importObj.currency_id
+    );
+  })
+
+  return coinObj
+}
 
 export const findCoinObj = (id, userName) => {
   let coinObj = coinsList[id.toLowerCase()]
@@ -142,7 +233,8 @@ export const findCoinObj = (id, userName) => {
     }
     
     if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
-      const DEFAULT_APPS = getDefaultApps(coinObj.display_name)
+      const DEFAULT_APPS = getDefaultApps(coinObj)
+      
       if (ENABLE_VERUS_IDENTITIES && (coinObj.id === 'VRSC' || coinObj.id === 'ZECTEST')) {
         coinObj.apps = {...identityApp, ...DEFAULT_APPS.apps};
       } else {
@@ -191,7 +283,7 @@ export const createErc20CoinObj = (contractAddress, displayName, displayTicker, 
 
   coinObj.users = userName != null ? [userName] : [];
 
-  const DEFAULT_APPS = getDefaultApps(coinObj.display_name)
+  const DEFAULT_APPS = getDefaultApps(coinObj)
 
   coinObj.apps = DEFAULT_APPS.apps;
   coinObj.default_app = DEFAULT_APPS.default_app
@@ -233,7 +325,7 @@ export const createCoinObj = (id, name, description, defaultFee, serverList, use
   }
 
   if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
-    const DEFAULT_APPS = getDefaultApps(coinObj.display_name)
+    const DEFAULT_APPS = getDefaultApps(coinObj)
     coinObj.apps = DEFAULT_APPS.apps
     if (!coinObj.default_app) coinObj.default_app = DEFAULT_APPS.default_app
   } else if (!coinObj.default_app) {

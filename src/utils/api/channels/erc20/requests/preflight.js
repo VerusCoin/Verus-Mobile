@@ -9,7 +9,6 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
     const fromAddress = activeUser.keys[coinObj.id][ERC20].addresses[0]
     const signer = new ethers.VoidSigner(fromAddress, Web3Provider.DefaultProvider)
     const contract = Web3Provider.getContract(coinObj.currency_id).connect(signer)
-    const balance = await contract.balanceOf(signer.getAddress())
     const gasPrice = await Web3Provider.DefaultProvider.getGasPrice()
     const amountBn = ethers.utils.parseUnits(
       scientificToDecimal(amount.toString()),

@@ -1,4 +1,5 @@
-import { all, takeEvery, put } from "redux-saga/effects";
+import { all, takeEvery, put, call } from "redux-saga/effects";
+import { resetServices } from "../actions/actionDispatchers";
 import { SIGN_OUT, SIGN_OUT_COMPLETE } from "../utils/constants/storeType";
 
 export default function * authenticationSaga() {
@@ -8,5 +9,11 @@ export default function * authenticationSaga() {
 }
 
 function * handleFinishSignOut() {
+  try {
+    yield call(resetServices)
+  } catch(e) {
+    console.warn(e)
+  }
+  
   yield put({type: SIGN_OUT_COMPLETE})
 }

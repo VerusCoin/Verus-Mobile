@@ -14,14 +14,14 @@ import { isNumber, satsToCoins, truncateDecimal } from '../../utils/math';
 import { NavigationActions } from '@react-navigation/compat';
 import { CommonActions } from '@react-navigation/native';
 import { NO_VERIFICATION, MID_VERIFICATION } from '../../utils/constants/constants'
-import { preflight } from "../../utils/api/routers/preflight";
+import { preflightSend } from "../../utils/api/routers/preflightSend";
 import { API_GET_FIATPRICE, API_GET_TRANSACTIONS, ELECTRUM, GENERAL } from "../../utils/constants/intervalConstants";
 import BigNumber from "bignumber.js";
 import { renderError, renderLoading, renderTransactionInfo } from './ConfirmSend.render'
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import { send } from "../../utils/api/routers/send";
 import { explorers } from "../../utils/CoinData/CoinData";
-import { expireData } from "../../actions/actionCreators";
+import { expireCoinData } from "../../actions/actionCreators";
 import { USD } from "../../utils/constants/currencies";
 import { extractIdentityAddress } from "../../utils/api/channels/dlight/callCreators";
 
@@ -190,7 +190,7 @@ class ConfirmSend extends Component {
 
       this.setState({ sendTx, channel });
 
-      const res = sendTx ? await send(...params) : await preflight(...params);
+      const res = sendTx ? await send(...params) : await preflightSend(...params);
 
       if (res.err || !res) {
         this.setState({
@@ -207,8 +207,8 @@ class ConfirmSend extends Component {
             "Transaction sent. Your balance and transactions may take a few minutes to update."
           );
 
-          this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE));
-          this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS));
+          this.props.dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE));
+          this.props.dispatch(expireCoinData(coinObj.id, API_GET_TRANSACTIONS));
 
           this.setState({
             loading: false,

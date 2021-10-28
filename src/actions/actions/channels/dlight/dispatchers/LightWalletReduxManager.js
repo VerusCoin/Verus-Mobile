@@ -14,7 +14,7 @@ import { canRetryDlightInitialization, blockchainQuitError } from './AlertManage
 import {
   ERROR_DLIGHT_INIT,
   STOP_DLIGHT_SYNC,
-  SET_DLIGHT_ADDRESSES,
+  SET_ADDRESSES,
   CLOSE_DLIGHT_SOCKET,
   INIT_DLIGHT_CHANNEL_START,
   CLOSE_DLIGHT_CHANNEL,
@@ -43,7 +43,12 @@ export const initDlightWallet = async (coinObj) => {
   let initializationPromises = []
 
   try {
-    if (dlightSyncing[id]) throw new Error("Something went wrong while initializing " + id + ". It is marked as already syncing, before it has been added!?")
+    if (dlightSyncing[id])
+      throw new Error(
+        "Something went wrong while initializing " +
+          id +
+          ". It is marked as already syncing, before it has been added!?"
+      );
 
     if (dlightSockets[id] == null) {
       if (dlight_endpoints == null || !Array.isArray(dlight_endpoints) || dlight_endpoints.length === 0)
@@ -96,9 +101,9 @@ export const initDlightWallet = async (coinObj) => {
       })
 
       dispatch({
-        type: SET_DLIGHT_ADDRESSES,
-        payload: { chainTicker: id, addresses: res.pop().result }
-      })
+        type: SET_ADDRESSES,
+        payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: res.pop().result },
+      });
 
       resolve()
     })

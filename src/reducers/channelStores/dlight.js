@@ -15,7 +15,7 @@ import {
 export const channelStore_dlight_private = (state = {
   dlightSockets: {},
   dlightSyncing: {},
-  openChannels: {}
+  openCoinChannels: {}
 }, action) => {
   switch (action.type) {
     case OPEN_DLIGHT_SOCKET:
@@ -45,16 +45,16 @@ export const channelStore_dlight_private = (state = {
           ...state.dlightSyncing,
           [action.payload.chainTicker]: true
         },
-        openChannels: {
-          ...state.openChannels,
+        openCoinChannels: {
+          ...state.openCoinChannels,
           [action.payload.chainTicker]: true
         }
       }
     case CLOSE_DLIGHT_CHANNEL:
       return {
         ...state,
-        openChannels: {
-          ...state.openChannels,
+        openCoinChannels: {
+          ...state.openCoinChannels,
           [action.payload.chainTicker]: false
         }
       }
@@ -79,7 +79,7 @@ export const channelStore_dlight_private = (state = {
         ...state,
         dlightSockets: {},
         dlightSyncing: {},
-        openChannels: {}
+        openCoinChannels: {}
       }
     default:
       return state;

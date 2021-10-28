@@ -4,12 +4,14 @@
 */
 
 import {
+  SET_KEYBOARD_ACTIVE,
   SET_KEYBOARD_HEIGHT
 } from "../utils/constants/storeType";
 
 export const keyboard = (
   state = {
-    height: 0
+    height: 0,
+    active: false
   },
   action
 ) => {
@@ -19,6 +21,11 @@ export const keyboard = (
         ...state,
         height: action.payload.height
       };
+    case SET_KEYBOARD_ACTIVE:
+      return {
+        ...state,
+        active: action.payload.active
+      }
     default:
       return state;
   }

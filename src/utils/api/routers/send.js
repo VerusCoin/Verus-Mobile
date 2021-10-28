@@ -1,15 +1,23 @@
-import { ELECTRUM, ETH, ERC20, DLIGHT_PRIVATE } from '../../constants/intervalConstants'
-import * as electrum from '../channels/electrum/callCreators'
-import * as eth from '../channels/eth/callCreator'
-import * as erc20 from '../channels/erc20/callCreator'
-import * as dlight from '../channels/dlight/callCreators'
+import {
+  ELECTRUM,
+  ETH,
+  ERC20,
+  DLIGHT_PRIVATE,
+  WYRE_SERVICE,
+} from "../../constants/intervalConstants";
+import * as electrum from "../channels/electrum/callCreators";
+import * as eth from "../channels/eth/callCreator";
+import * as erc20 from "../channels/erc20/callCreator";
+import * as dlight from "../channels/dlight/callCreators";
+import * as wyre from "../channels/wyre/callCreators";
 
 const SEND_FUNCTION_MAP = {
   [ELECTRUM]: electrum.sendRawTx,
   [ETH]: eth.send,
   [ERC20]: erc20.send,
-  [DLIGHT_PRIVATE]: dlight.sendPrivateTransaction
-}
+  [DLIGHT_PRIVATE]: dlight.sendPrivateTransaction,
+  [WYRE_SERVICE]: wyre.send,
+};
 
 /**
  * Sends a transaction and returns an object describing the sent transaction
@@ -21,6 +29,7 @@ const SEND_FUNCTION_MAP = {
  * @param {Object} params Any other parameters specific to the send channel's preflight function
  */
 export const send = async (coinObj, activeUser, address, amount, channel, params) => {
-  if (SEND_FUNCTION_MAP[channel] == null) throw new Error(`No send function available for channel ${channel}`)
-  else return await SEND_FUNCTION_MAP[channel](coinObj, activeUser, address, amount, params)
-}
+  if (SEND_FUNCTION_MAP[channel] == null)
+    throw new Error(`No send function available for channel ${channel}`);
+  else return await SEND_FUNCTION_MAP[channel](coinObj, activeUser, address, amount, params);
+};

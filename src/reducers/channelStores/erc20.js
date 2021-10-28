@@ -12,15 +12,15 @@ import {
 } from '../../utils/constants/storeType'
 
 export const channelStore_erc20 = (state = {
-  openChannels: {},
+  openCoinChannels: {},
   web3Contracts: {},
 }, action) => {
   switch (action.type) {
     case INIT_ERC20_CHANNEL_FINISH:
       return {
         ...state,
-        openChannels: {
-          ...state.openChannels,
+        openCoinChannels: {
+          ...state.openCoinChannels,
           [action.payload.chainTicker]: true
         },
       }
@@ -48,14 +48,14 @@ export const channelStore_erc20 = (state = {
     case CLOSE_ERC20_CHANNEL:
       return {
         ...state,
-        openChannels: {
-          ...state.openChannels,
+        openCoinChannels: {
+          ...state.openCoinChannels,
           [action.payload.chainTicker]: false
         },
       }
     case SIGN_OUT_COMPLETE:
       return {
-        openChannels: {}
+        openCoinChannels: {}
       }
     default:
       return state;

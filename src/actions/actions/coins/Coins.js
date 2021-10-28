@@ -6,7 +6,14 @@ import {
   storeCoins,
   getActiveCoinList
 } from '../../../utils/asyncStore/asyncStore';
-import { DLIGHT_PRIVATE, ETH, ERC20, ELECTRUM, GENERAL } from '../../../utils/constants/intervalConstants';
+import {
+  DLIGHT_PRIVATE,
+  ETH,
+  ERC20,
+  ELECTRUM,
+  GENERAL,
+  WYRE_SERVICE,
+} from "../../../utils/constants/intervalConstants";
 import { initDlightWallet, closeDlightWallet } from '../channels/dlight/dispatchers/LightWalletReduxManager';
 import { initEthWallet, closeEthWallet } from '../channels/eth/dispatchers/EthWalletReduxManager';
 import { initErc20Wallet, closeErc20Wallet } from '../channels/erc20/dispatchers/Erc20WalletReduxManager';
@@ -16,6 +23,10 @@ import { DISABLED_CHANNELS } from '../../../../env/index'
 import store from '../../../store';
 import { throwError } from '../../../utils/errors';
 import { INACTIVE_COIN } from '../../../utils/constants/errors';
+import {
+  closeWyreCoinWallet,
+  initWyreCoinChannel,
+} from "../channels/wyre/dispatchers/WyreWalletReduxManager";
 
 export const COIN_MANAGER_MAP = {
   initializers: {
@@ -23,14 +34,16 @@ export const COIN_MANAGER_MAP = {
     [ERC20]: initErc20Wallet,
     [ELECTRUM]: initElectrumWallet,
     [DLIGHT_PRIVATE]: initDlightWallet,
-    [GENERAL]: initGeneralWallet
+    [GENERAL]: initGeneralWallet,
+    [WYRE_SERVICE]: initWyreCoinChannel
   },
   closers: {
     [ETH]: closeEthWallet,
     [ERC20]: closeErc20Wallet,
     [ELECTRUM]: closeElectrumWallet,
     [DLIGHT_PRIVATE]: closeDlightWallet,
-    [GENERAL]: closeGeneralWallet
+    [GENERAL]: closeGeneralWallet,
+    [WYRE_SERVICE]: closeWyreCoinWallet
   }
 }
 

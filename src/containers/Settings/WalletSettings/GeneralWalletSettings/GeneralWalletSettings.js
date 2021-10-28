@@ -17,7 +17,7 @@ import { saveGeneralSettings } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors'
-import { CURRENCY_NAMES, SUPPORTED_CURRENCIES, USD } from '../../../../utils/constants/currencies'
+import { CURRENCY_NAMES, SUPPORTED_UNIVERSAL_DISPLAY_CURRENCIES, USD } from '../../../../utils/constants/currencies'
 import NumberPadModal from "../../../../components/NumberPadModal/NumberPadModal";
 import { Divider, List, Portal, Text, Button, Checkbox } from "react-native-paper";
 import ListSelectionModal from "../../../../components/ListSelectionModal/ListSelectionModal";
@@ -217,7 +217,7 @@ class WalletSettings extends Component {
                   displayCurrency: item.key,
                 })
               }
-              data={SUPPORTED_CURRENCIES.map((key) => {
+              data={SUPPORTED_UNIVERSAL_DISPLAY_CURRENCIES.map((key) => {
                 return {
                   key,
                   title: key,

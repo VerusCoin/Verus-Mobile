@@ -11,6 +11,13 @@ import VEN_LIGHT from './ven/ven_light.svg'
 import YFI_LIGHT from './yfi/yfi_light.svg'
 import ZRX_LIGHT from './zrx/zrx_light.svg'
 import RFOX_LIGHT from './rfox/rfox_light.svg'
+import USDT_LIGHT from './usdt/usdt_light.svg'
+import USDC_LIGHT from './usdc/usdc_light.svg'
+import AAVE_LIGHT from './aave/aave_light.svg'
+import CRV_LIGHT from './crv/crv_light.svg'
+import MKR_LIGHT from './mkr/mkr_light.svg'
+import SUSHI_LIGHT from './sushi/sushi_light.svg'
+import WBTC_LIGHT from './wbtc/wbtc_light.svg'
 import ETH_DARK from './eth/eth_dark.svg'
 import DAI_DARK from './dai/dai_dark.svg'
 import BAT_DARK from './bat/bat_dark.svg'
@@ -24,6 +31,13 @@ import VEN_DARK from './ven/ven_dark.svg'
 import YFI_DARK from './yfi/yfi_dark.svg'
 import ZRX_DARK from './zrx/zrx_dark.svg'
 import RFOX_DARK from './rfox/rfox_dark.svg'
+import USDT_DARK from './usdt/usdt_dark.svg'
+import USDC_DARK from './usdc/usdc_dark.svg'
+import AAVE_DARK from './aave/aave_dark.svg'
+import CRV_DARK from './crv/crv_dark.svg'
+import MKR_DARK from './mkr/mkr_dark.svg'
+import SUSHI_DARK from './sushi/sushi_dark.svg'
+import WBTC_DARK from './wbtc/wbtc_dark.svg'
 
 export default {
   ETH: { light: ETH_LIGHT, dark: ETH_DARK },
@@ -39,4 +53,11 @@ export default {
   YFI: { light: YFI_LIGHT, dark: YFI_DARK },
   ZRX: { light: ZRX_LIGHT, dark: ZRX_DARK },
   RFOX: { light: RFOX_LIGHT, dark: RFOX_DARK },
+  USDT: { light: USDT_LIGHT, dark: USDT_DARK },
+  USDC: { light: USDC_LIGHT, dark: USDC_DARK },
+  AAVE: { light: AAVE_LIGHT, dark: AAVE_DARK },
+  CRV: { light: CRV_LIGHT, dark: CRV_DARK },
+  MKR: { light: MKR_LIGHT, dark: MKR_DARK },
+  SUSHI: { light: SUSHI_LIGHT, dark: SUSHI_DARK },
+  WBTC: { light: WBTC_LIGHT, dark: WBTC_DARK },
 }

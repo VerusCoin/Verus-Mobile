@@ -4,18 +4,11 @@
 */
 
 import React, { Component } from "react";
-import {
-  View,
-} from "react-native";
 import { connect } from 'react-redux';
-import BottomNavigation, {
-  FullTab
-} from 'react-native-material-bottom-navigation'
 import AppInfo from './AppInfo/AppInfo'
 import ProfileSettings from './ProfileSettings/ProfileSettings'
 import WalletSettings from './WalletSettings/WalletSettings'
-import { IconButton, Portal } from "react-native-paper"
-import Colors from '../../globals/colors';
+import { BottomNavigation } from "react-native-paper"
 
 class SettingsMenus extends Component {
   constructor(props) {
@@ -24,7 +17,14 @@ class SettingsMenus extends Component {
     this.state = {
       tabs: stateObj.tabs,
       activeTab: stateObj.activeTab,
+      activeTabIndex: stateObj.activeTabIndex
     };
+
+    this.Routes = {
+      ['settings-profile']: ProfileSettings,
+      ['settings-wallet']: WalletSettings,
+      ['settings-info']: AppInfo
+    }
   }
 
   static navigationOptions = ({ route }) => {
@@ -40,29 +40,24 @@ class SettingsMenus extends Component {
       {
         key: "settings-profile",
         icon: "account-settings",
-        label: "Profile",
-        barColor: Colors.primaryColor,
-        pressColor: 'rgba(255, 255, 255, 0.16)',
+        title: "Profile",
         screen: "ProfileSettings"
       },
       {
         key: "settings-wallet",
         icon: "credit-card-settings",
-        label: "Wallet",
-        barColor: Colors.infoButtonColor,
-        pressColor: 'rgba(255, 255, 255, 0.16)',
+        title: "Wallet",
         screen: "WalletSettings"
       },
       {
         key: "settings-info",
         icon: "information",
-        label: "App Info",
-        barColor: Colors.successButtonColor,
-        pressColor: 'rgba(255, 255, 255, 0.16)',
+        title: "App Info",
         screen: "AppInfo"
       },
     ]
     let activeTab
+    let activeTabIndex
     let index = 0
 
     while (index < tabArray.length && tabArray[index].key !== this.props.activeConfigSection) {
@@ -71,51 +66,51 @@ class SettingsMenus extends Component {
 
     if (index < tabArray.length) {
       activeTab = tabArray[index]
+      activeTabIndex = index
     } else {
       throw new Error("Tab not found for active section " + this.props.activeConfigSection)
     }
 
-    this.props.navigation.setOptions({ title: activeTab.label })
+    this.props.navigation.setOptions({ title: activeTab.title })
 
     return {
       tabs: tabArray,
-      activeTab: activeTab
+      activeTab: activeTab,
+      activeTabIndex
     };
   }
 
-  renderIcon = icon => ({ isActive }) => (
-    <IconButton style={{ padding: 0, margin: 0 }} color="white" size={16} icon={icon} />
-  )
+  renderScene = ({ route, jumpTo }) => {
+    if (this.Routes[route.key] == null) return null
+    else {
+      const Route = this.Routes[route.key]
 
-  renderTab = ({ tab, isActive }) => (
-    <FullTab
-      isActive={isActive}
-      key={tab.key ? tab.key : ''}
-      label={tab.label ? tab.label : ''}
-      renderIcon={this.renderIcon(tab.icon)}
-    />
-  )
+      return (
+        <Route
+          navigation={this.props.navigation}
+        />
+      );
+    }
+  }
 
-  switchTab = (newTab) => {
-    this.props.navigation.setOptions({ title: newTab.label })
-    this.setState({ activeTab: newTab })
+  switchTab = (index) => {
+    const newTab = this.state.tabs[index]
+
+    this.props.navigation.setOptions({ title: newTab.title })
+    this.setState({ activeTab: newTab, activeTabIndex: index })
   }
 
   render() {
     return (
-        <View style={{ flex: 1 }}>
-            {this.state.activeTab.screen === "AppInfo" ? <AppInfo navigation={this.props.navigation}/> :
-            this.state.activeTab.screen === "ProfileSettings" ? <ProfileSettings navigation={this.props.navigation}/> :
-            (this.state.activeTab.screen === "WalletSettings" ? <WalletSettings navigation={this.props.navigation}/> :
-            null)}
-          <BottomNavigation
-            onTabPress={newTab => this.switchTab(newTab)}
-            renderTab={this.renderTab}
-            tabs={this.state.tabs}
-            activeTab={this.state.activeTab.key}
-            style={{ display: 'flex' }}
-          />
-        </View>
+      <BottomNavigation
+        navigationState={{
+          index: this.state.activeTabIndex,
+          routes: this.state.tabs,
+        }}
+        onIndexChange={this.switchTab}
+        renderScene={this.renderScene}
+        style={{ display: 'flex' }}
+      />
     );
   }
 }

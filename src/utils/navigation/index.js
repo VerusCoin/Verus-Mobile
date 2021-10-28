@@ -6,6 +6,8 @@ import {
   StyleSheet, TouchableOpacity, Dimensions, Text, Platform,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 
 //import IconVector from 'react-native-vector-icons/Ionicons';
 import Colors from '../../globals/colors';
@@ -41,26 +43,36 @@ import ManageWyrePersonalDetails from '../../containers/BuySellCrypto/PaymentMet
 import ManageWyreProofOfAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreProofOfAddress';
 import ManageWyreAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreAddress';
 import SendTransaction from '../../containers/BuySellCrypto/PaymentMethod/SendTransaction/SendTransaction';
-import Identity from '../../containers/Identity';
-import ScanBadge from '../../containers/Identity/Home/ScanBadge';
-import PersonalInfo from '../../containers/Identity/PersonalInfo';
-import ClaimDetails from '../../containers/Identity/PersonalInfo/ClaimDetails';
-import ClaimCategory from '../../containers/Identity/PersonalInfo/ClaimCategoryDetails';
-import AttestationDetails from '../../containers/Identity/Home/AttestationDetails';
-import ClaimManager from '../../containers/Identity/PersonalInfo/ClaimManager';
-import MoveIntoCategory from '../../containers/Identity/PersonalInfo/ClaimManager/MoveIntoCategory';
-import AddIdentity from '../../containers/Identity/AddIdentity';
 import { DEVICE_WINDOW_WIDTH } from '../constants/constants';
 import { Component } from 'react';
-
-const WALLET = 'wallet';
+import Personal from '../../containers/Personal/Personal';
+import PersonalAttributes from '../../containers/Personal/PersonalAttributes/PersonalAttributes';
+import PersonalAttributesEditName from '../../containers/Personal/PersonalAttributes/PersonalAttributesEditName/PersonalAttributesEditName';
+import PersonalContact from '../../containers/Personal/PersonalContact/PersonalContact';
+import PersonalLocations from '../../containers/Personal/PersonalLocations/PersonalLocations';
+import PersonalLocationsEditAddress from "../../containers/Personal/PersonalLocations/PersonalLocationsEditAddress/PersonalLocationsEditAddress";
+import PersonalLocationsEditTaxCountry from "../../containers/Personal/PersonalLocations/PersonalLocationsEditTaxCountry/PersonalLocationsEditTaxCountry";
+import PersonalPaymentMethods from '../../containers/Personal/PersonalPaymentMethods/PersonalPaymentMethods';
+import PersonalPaymentMethodsEditBankAccount from '../../containers/Personal/PersonalPaymentMethods/PersonalPaymentMethodsEditBankAccount/PersonalPaymentMethodsEditBankAccount';
+import PersonalPaymentMethodsEditBankAccountAddress from "../../containers/Personal/PersonalPaymentMethods/PersonalPaymentMethodsEditBankAccountAddress/PersonalPaymentMethodsEditBankAccountAddress";
+import Services from '../../containers/Services/Services';
+import Service from '../../containers/Services/Service/Service';
+import WyreServiceAccountData from '../../containers/Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceAccountData/WyreServiceAccountData';
+import PersonalImages from '../../containers/Personal/PersonalImages/PersonalImages';
+import PersonalImagesEditImage from '../../containers/Personal/PersonalImages/PersonalLocationsEditImage/PersonalImagesEditImage';
+import WyreServiceAddPaymentMethod from '../../containers/Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceAddPaymentMethod/WyreServiceAddPaymentMethod';
+import WyreServiceEditPaymentMethod from '../../containers/Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceEditPaymentMethod/WyreServiceEditPaymentMethod';
 
 const MainStack = createStackNavigator()
 const MainDrawer = createDrawerNavigator()
+const ProfileStack = createStackNavigator()
+const ServicesStack = createStackNavigator()
+const WalletStack = createStackNavigator()
 const SignedOutStack = createStackNavigator()
 const SignedOutNoKeyStack = createStackNavigator()
 const LoadingStack = createStackNavigator()
 const RootStack = createStackNavigator()
+const HomeTabs = createMaterialBottomTabNavigator()
 
 const styles = StyleSheet.create({
   header_title_noBack: {
@@ -99,8 +111,29 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     fontSize: 18,
   },
-
 });
+
+const defaultHeaderOptions = ({ navigation, params, route }) => ({
+  headerShown: true,
+  headerStyle: {
+    backgroundColor: Colors.primaryColor,
+  },
+  headerTitleStyle: {
+    fontFamily: "Avenir-Black",
+    fontWeight: "normal",
+    fontSize: 22,
+    color: Colors.secondaryColor,
+  },
+  headerRight: () => (
+    <TouchableOpacity
+      onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+      style={styles.menuButton}
+    >
+      <Icon name="menu" size={35} color={Colors.secondaryColor} />
+    </TouchableOpacity>
+  ),
+  headerTintColor: Colors.secondaryColor,
+})
 
 function MainScreens() {
   return (
@@ -120,39 +153,214 @@ function MainScreens() {
   );
 }
 
+function ProfileScreens() {
+  return (
+    <ProfileStack.Navigator
+      headerMode="screen"
+      screenOptions={defaultHeaderOptions}
+    >
+      <ProfileStack.Screen
+        name="PersonalProfile"
+        component={Personal}
+        options={{
+          title: "Personal Profile",
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalAttributes"
+        component={PersonalAttributes}
+        options={{
+          title: "Details",
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalAttributesEditName"
+        component={PersonalAttributesEditName}
+        options={{
+          title: "Name"
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalContact"
+        component={PersonalContact}
+        options={{
+          title: "Contact",
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalImages"
+        component={PersonalImages}
+        options={{
+          title: "Images",
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalImagesEditImage"
+        component={PersonalImagesEditImage}
+        options={{
+          title: "Image"
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalLocations"
+        component={PersonalLocations}
+        options={{
+          title: "Personal Locations"
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalLocationsEditAddress"
+        component={PersonalLocationsEditAddress}
+        options={{
+          title: "Address"
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalLocationsEditTaxCountry"
+        component={PersonalLocationsEditTaxCountry}
+        options={{
+          title: "Tax Country"
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalPaymentMethods"
+        component={PersonalPaymentMethods}
+        options={{
+          title: "Banking Info"
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalPaymentMethodsEditBankAccount"
+        component={PersonalPaymentMethodsEditBankAccount}
+        options={{
+          title: "Bank Account"
+        }}
+      />
+      <ProfileStack.Screen
+        name="PersonalPaymentMethodsEditBankAccountAddress"
+        component={PersonalPaymentMethodsEditBankAccountAddress}
+        options={{
+          title: "Account Address"
+        }}
+      />
+    </ProfileStack.Navigator>
+  );
+}
+
+function ServicesScreens() {
+  return (
+    <ServicesStack.Navigator
+      headerMode="screen"
+      screenOptions={defaultHeaderOptions}
+    >
+      <ServicesStack.Screen
+        name="Services"
+        component={Services}
+        options={{
+          title: "Services",
+        }}
+      />
+      <ServicesStack.Screen
+        name="Service"
+        component={Service}
+      />
+      <ServicesStack.Screen
+        name="WyreServiceAccountData"
+        component={WyreServiceAccountData}
+      />
+      <ServicesStack.Screen
+        name="WyreServiceAddPaymentMethod"
+        component={WyreServiceAddPaymentMethod}
+        options={{
+          title: "Connect",
+        }}
+      />
+      <ServicesStack.Screen
+        name="WyreServiceEditPaymentMethod"
+        component={WyreServiceEditPaymentMethod}
+        options={{
+          title: "Edit Account",
+        }}
+      />
+    </ServicesStack.Navigator>
+  );
+}
+
+function WalletScreens() {
+  return (
+    <WalletStack.Navigator
+      headerMode="screen"
+      screenOptions={defaultHeaderOptions}
+    >
+      <WalletStack.Screen
+        name="Wallets"
+        component={Home}
+        options={{
+          title: "Wallets",
+        }}
+      />
+    </WalletStack.Navigator>
+  );
+}
+
+function HomeScreens() {
+  return (
+    <HomeTabs.Navigator
+      headerMode="screen"
+      barStyle={{ backgroundColor: Colors.primaryColor }}
+    >
+      <HomeTabs.Screen
+        name="WalletHome"
+        component={WalletScreens}
+        options={{
+          title: "Wallets",
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="wallet" color={color} size={26} />
+          ),
+        }}
+      />
+      <HomeTabs.Screen
+        name="PersonalHome"
+        component={ProfileScreens}
+        options={{
+          title: "Personal Profile",
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons
+              name="fingerprint"
+              color={color}
+              size={26}
+            />
+          ),
+        }}
+      />
+      <HomeTabs.Screen
+        name="ServicesHome"
+        component={ServicesScreens}
+        options={{
+          title: "Services",
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons
+              name="room-service"
+              color={color}
+              size={26}
+            />
+          ),
+        }}
+      />
+    </HomeTabs.Navigator>
+  );
+}
+
 function MainStackScreens() {
   return (
     <MainStack.Navigator
       headerMode="screen"
-      screenOptions={({ navigation, params }) => ({
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: Colors.primaryColor,
-        },
-        headerTitleStyle: {
-          fontFamily: "Avenir-Black",
-          fontWeight: "normal",
-          fontSize: 22,
-          color: Colors.secondaryColor,
-        },
-        headerRight: () => (
-          <TouchableOpacity
-            onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
-            style={styles.menuButton}
-          >
-            <Icon name="menu" size={35} color={Colors.secondaryColor} />
-          </TouchableOpacity>
-        ),
-        headerTintColor: Colors.secondaryColor,
-      })}
+      screenOptions={defaultHeaderOptions}
     >
       <MainStack.Screen
         name="Home"
-        component={Home}
-        options={{
-          title: "Home",
-          headerLeft: () => null,
-        }}
+        component={HomeScreens}
+        options={{ headerShown: false }}
       />
 
       <MainStack.Screen
@@ -168,91 +376,6 @@ function MainStackScreens() {
         component={CoinDetails}
         options={{
           title: "Details",
-        }}
-      />
-
-      <MainStack.Screen
-        name="ClaimManager"
-        component={ClaimManager}
-        options={{
-          title: "Claim Manager",
-        }}
-      />
-
-      <MainStack.Screen
-        name="MoveIntoCategory"
-        component={MoveIntoCategory}
-        options={({ navigation, route }) => ({
-          title: "Categories",
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => {
-                if (route.params != null) {
-                  route.params.clearClaims();
-                  navigation.goBack();
-                }
-              }}
-              style={styles.goBackBtn}
-            >
-              {/* <IconVector
-                name={
-                  Platform.OS === "ios" ? "ios-arrow-back" : "md-arrow-back"
-                }
-                size={35}
-                color="white"
-                style={{ paddingLeft: 8 }}
-              /> */}
-              <Text style={styles.goBackBtnText}>Back</Text>
-            </TouchableOpacity>
-          ),
-        })}
-      />
-
-      <MainStack.Screen
-        name="AttestationDetails"
-        component={AttestationDetails}
-        options={({ route }) => ({
-          title: route.params != null ? route.params.id : null,
-        })}
-      />
-
-      <MainStack.Screen
-        name="Identity"
-        component={Identity}
-        options={({ route }) => ({
-          title: route.params != null ? route.params.selectedScreen : null,
-        })}
-      />
-
-      <MainStack.Screen
-        name="AddIdentity"
-        component={AddIdentity}
-        options={{
-          title: "Add Identity",
-        }}
-      />
-
-      <MainStack.Screen
-        name="ClaimDetails"
-        component={ClaimDetails}
-        options={({ route }) => ({
-          title: route.params != null ? route.params.claimName : null,
-        })}
-      />
-
-      <MainStack.Screen
-        name="ClaimCategory"
-        component={ClaimCategory}
-        options={({ route }) => ({
-          title: route.params != null ? route.params.claimCategoryName : null,
-        })}
-      />
-
-      <MainStack.Screen
-        name="ScanBadge"
-        component={ScanBadge}
-        options={{
-          title: "Verify Attestation",
         }}
       />
 

@@ -83,6 +83,7 @@ target 'verusmobile' do
   pod 'ZcashLightClientKit', :git => 'https://github.com/michaeltout/ZcashLightClientKit.git', :branch => '0.9.1', :testspecs => ['Tests']
   pod 'MnemonicSwift', '~> 2.0.0'
   pod 'Permission-Camera', :path => "#{permissions_path}/Camera/Permission-Camera.podspec"
+  pod 'Permission-PhotoLibrary', :path => "#{permissions_path}/PhotoLibrary/Permission-PhotoLibrary.podspec"
 
   # Enables Flipper.
   #

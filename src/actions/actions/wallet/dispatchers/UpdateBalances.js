@@ -8,20 +8,18 @@ import {
   DLIGHT_PRIVATE,
   ELECTRUM,
   ETH,
-  ERC20
+  ERC20,
+  WYRE_SERVICE
 } from "../../../../utils/constants/intervalConstants";
 import { satsToCoins } from "../../../../utils/math";
 import { updateLedgerValue } from "./UpdateLedgerValue";
 import { getStandardEthBalance } from "../../../../utils/api/channels/eth/callCreator";
 import { getStandardErc20Balance } from "../../../../utils/api/channels/erc20/callCreator";
+import { getBalance } from "../../../../utils/api/channels/wyre/callCreators";
 
 const channelMap = {
   [DLIGHT_PRIVATE]: async (activeUser, coinObj) => {
-    const zBalances = await getPrivateBalance(
-      coinObj.id,
-      activeUser.accountHash,
-      coinObj.proto
-    );
+    const zBalances = await getPrivateBalance(coinObj.id, activeUser.accountHash, coinObj.proto);
 
     const { result, ...header } = zBalances;
     const { confirmed, total } = result;
@@ -48,9 +46,13 @@ const channelMap = {
       channel: ELECTRUM,
       header,
       body: {
-        confirmed: satsToCoins(confirmed).toString(),
-        pending: satsToCoins(unconfirmed).toString(),
-        total: satsToCoins(unconfirmed.plus(confirmed)).toString(),
+        confirmed: confirmed != null && !isNaN(confirmed) ? satsToCoins(confirmed).toString() : "0",
+        pending:
+          unconfirmed != null && !isNaN(unconfirmed) ? satsToCoins(unconfirmed).toString() : "0",
+        total:
+          unconfirmed != null && !isNaN(unconfirmed) && confirmed != null && !isNaN(confirmed)
+            ? satsToCoins(unconfirmed.plus(confirmed)).toString()
+            : "0",
       },
     };
   },
@@ -60,7 +62,9 @@ const channelMap = {
       activeUser.keys[coinObj.id][ETH] != null &&
       activeUser.keys[coinObj.id][ETH].addresses.length > 0
     ) {
-      const balance = (await getStandardEthBalance(activeUser.keys[coinObj.id][ETH].addresses[0])).toString();
+      const balance = (
+        await getStandardEthBalance(activeUser.keys[coinObj.id][ETH].addresses[0])
+      ).toString();
 
       return {
         chainTicker: coinObj.id,
@@ -69,7 +73,7 @@ const channelMap = {
         body: {
           confirmed: balance,
           pending: "0",
-          total: balance
+          total: balance,
         },
       };
     } else {
@@ -88,11 +92,13 @@ const channelMap = {
       activeUser.keys[coinObj.id][ERC20] != null &&
       activeUser.keys[coinObj.id][ERC20].addresses.length > 0
     ) {
-      const balance = (await getStandardErc20Balance(
-        activeUser.keys[coinObj.id][ERC20].addresses[0],
-        coinObj.currency_id,
-        coinObj.decimals
-      )).toString();
+      const balance = (
+        await getStandardErc20Balance(
+          activeUser.keys[coinObj.id][ERC20].addresses[0],
+          coinObj.currency_id,
+          coinObj.decimals
+        )
+      ).toString();
 
       return {
         chainTicker: coinObj.id,
@@ -101,7 +107,7 @@ const channelMap = {
         body: {
           confirmed: balance,
           pending: "0",
-          total: balance
+          total: balance,
         },
       };
     } else {
@@ -113,7 +119,21 @@ const channelMap = {
           " not found!"
       );
     }
-  }
+  },
+  [WYRE_SERVICE]: async (activeUser, coinObj) => {
+    const balances = await getBalance(coinObj)
+
+    return {
+      chainTicker: coinObj.id,
+      channel: WYRE_SERVICE,
+      header: {},
+      body: {
+        confirmed: balances.confirmed.toString(),
+        pending: balances.pending.toString(),
+        total: balances.total.toString(),
+      },
+    };
+  },
 };
 
 /**

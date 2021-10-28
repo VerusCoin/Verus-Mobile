@@ -1,5 +1,5 @@
 import { IS_PBAAS, IS_ZCASH, IS_PBAAS_ROOT } from '../../utils/constants/intervalConstants'
-import { DEFAULT_COIN_UPDATE_PARAMS } from '../../utils/constants/defaultUpdateParams'
+import { DEFAULT_COIN_UPDATE_PARAMS, DEFAULT_SERVICE_UPDATE_PARAMS } from '../../utils/constants/defaultUpdateParams'
 import {
   SET_COIN_UPDATE_DATA,
   EXPIRE_COIN_DATA,
@@ -11,6 +11,14 @@ import {
   OCCUPY_COIN_API_CALL,
   ENABLE_COIN_API_CALL,
   DISABLE_COIN_API_CALL,
+  OCCUPY_SERVICE_API_CALL,
+  SET_SERVICE_EXPIRE_ID,
+  CLEAR_SERVICE_EXPIRE_ID,
+  SET_SERVICE_UPDATE_EXPIRED_ID,
+  CLEAR_SERVICE_UPDATE_EXPIRED_ID,
+  SET_SERVICE_UPDATE_DATA,
+  EXPIRE_SERVICE_DATA,
+  RENEW_SERVICE_DATA,
 } from "../../utils/constants/storeType";
 
 /**
@@ -55,7 +63,35 @@ export const generateUpdateCoinDataAction = (chainStatus, chainTicker, chainTags
   }
 }
 
-export const expireData = (chainTicker, dataType) => {
+/**
+ * Returns an action to initialize all service related API call update data
+ * @param {String[]} enabledChannels The enabled channels for the information request e.g. ['wyre_service']
+ * @param {Object} onCompletes Object with optional onCompletes to each updateInterval to be called with state and dispatch function.
+ * e.g. {get_info: {update_expired_oncomplete: increaseGetInfoInterval}}
+ */
+ export const generateUpdateServiceDataAction = (enabledChannels, onCompletes = {}) => {  
+  let updateIntervalData = {}
+  let updateTrackingData = {}
+
+  for (let key in DEFAULT_SERVICE_UPDATE_PARAMS) {
+    const channelsToUse = DEFAULT_SERVICE_UPDATE_PARAMS[key].channels.filter(value => -1 !== enabledChannels.indexOf(value))
+
+    updateIntervalData[key] = DEFAULT_SERVICE_UPDATE_PARAMS[key].interval_info
+    updateTrackingData[key] = {
+      ...DEFAULT_SERVICE_UPDATE_PARAMS[key].tracking_info,
+      channels: channelsToUse
+    };
+    if (onCompletes[key]) updateIntervalData[key] = {...updateIntervalData[key], ...onCompletes[key]}
+  }
+
+  return {
+    type: SET_SERVICE_UPDATE_DATA,
+    updateIntervalData,
+    updateTrackingData
+  }
+}
+
+export const expireCoinData = (chainTicker, dataType) => {
   return {
     type: EXPIRE_COIN_DATA,
     chainTicker,
@@ -63,10 +99,24 @@ export const expireData = (chainTicker, dataType) => {
   }
 }
 
-export const renewData = (chainTicker, dataType) => {
+export const renewCoinData = (chainTicker, dataType) => {
   return {
     type: RENEW_COIN_DATA,
     chainTicker,
+    dataType
+  }
+}
+
+export const expireServiceData = (dataType) => {
+  return {
+    type: EXPIRE_SERVICE_DATA,
+    dataType
+  }
+}
+
+export const renewServiceData = (dataType) => {
+  return {
+    type: RENEW_SERVICE_DATA,
     dataType
   }
 }
@@ -103,7 +153,7 @@ export const disableCoinApiCall = (chainTicker, dataType) => {
   }
 }
 
-export const setExpireTimeoutId = (chainTicker, dataType, timeoutId) => {
+export const setCoinExpireTimeoutId = (chainTicker, dataType, timeoutId) => {
   return {
     type: SET_COIN_EXPIRE_ID,
     chainTicker,
@@ -112,7 +162,7 @@ export const setExpireTimeoutId = (chainTicker, dataType, timeoutId) => {
   }
 }
 
-export const clearExpireTimeoutId = (chainTicker, dataType) => {
+export const clearCoinExpireTimeoutId = (chainTicker, dataType) => {
   return {
     type: CLEAR_COIN_EXPIRE_ID,
     chainTicker,
@@ -120,7 +170,7 @@ export const clearExpireTimeoutId = (chainTicker, dataType) => {
   }
 }
 
-export const setUpdateExpiredIntervalId = (chainTicker, dataType, intervalId) => {
+export const setCoinUpdateExpiredIntervalId = (chainTicker, dataType, intervalId) => {
   return {
     type: SET_COIN_UPDATE_EXPIRED_ID,
     chainTicker,
@@ -129,10 +179,47 @@ export const setUpdateExpiredIntervalId = (chainTicker, dataType, intervalId) =>
   }
 }
 
-export const clearUpdateExpiredIntervalId = (chainTicker, dataType) => {
+export const clearCoinUpdateExpiredIntervalId = (chainTicker, dataType) => {
   return {
     type: CLEAR_COIN_UPDATE_EXPIRED_ID,
     chainTicker,
+    dataType
+  }
+}
+
+export const occupyServiceApiCall = (dataType) => {
+  return {
+    type: OCCUPY_SERVICE_API_CALL,
+    dataType
+  }
+}
+
+export const setServiceExpireTimeoutId = (dataType, timeoutId) => {
+  return {
+    type: SET_SERVICE_EXPIRE_ID,
+    dataType,
+    timeoutId
+  }
+}
+
+export const clearServiceExpireTimeoutId = (dataType) => {
+  return {
+    type: CLEAR_SERVICE_EXPIRE_ID,
+    dataType
+  }
+}
+
+export const setServiceUpdateExpiredIntervalId = (dataType, intervalId) => {
+  return {
+    type: SET_SERVICE_UPDATE_EXPIRED_ID,
+    dataType,
+    intervalId
+  }
+}
+
+export const clearServiceUpdateExpiredIntervalId = (dataType) => {
+  return {
+    type: CLEAR_SERVICE_UPDATE_EXPIRED_ID,
     dataType
   }
 }

@@ -29,7 +29,7 @@ export default containers = {
     alignSelf: 'center',
   },
   fullHeight: {
-    height: '100%',
+    height: '100%'
   },
   startRow: {
     flexDirection: 'row',

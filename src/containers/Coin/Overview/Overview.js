@@ -11,10 +11,9 @@ import {
   TouchableOpacity
 } from "react-native";
 import { connect } from 'react-redux';
-import { MathableNumber } from '../../../utils/math';
-import { expireData, setActiveOverviewFilter } from '../../../actions/actionCreators';
+import { expireCoinData, expireServiceData, setActiveOverviewFilter } from '../../../actions/actionCreators';
 import Styles from '../../../styles/index'
-import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
+import { conditionallyUpdateService, conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
 import store from "../../../store";
 import TxDetailsModal from '../../../components/TxDetailsModal/TxDetailsModal'
 import {
@@ -22,11 +21,14 @@ import {
   API_GET_BALANCES,
   API_GET_INFO,
   API_GET_TRANSACTIONS,
-  ETH
+  ETH,
+  API_GET_SERVICE_ACCOUNT,
+  API_GET_SERVICE_PAYMENT_METHODS,
+  API_GET_SERVICE_TRANSFERS,
+  API_GET_SERVICE_RATES
 } from "../../../utils/constants/intervalConstants";
 import { selectTransactions } from '../../../selectors/transactions';
 import { DEFAULT_DECIMALS, ETHERS } from "../../../utils/constants/web3Constants";
-import { ethers } from "ethers";
 import { Portal, List, Text, Badge } from "react-native-paper";
 import BigNumber from "bignumber.js";
 import { TransactionLogos } from '../../../images/customIcons/index'
@@ -76,41 +78,58 @@ class Overview extends Component {
 
   refresh = () => {
     if (!this.state.loading) {
-      this.setState({ loading: true }, () => {
-        const updates = [
+      this.setState({ loading: true }, async () => {
+        const serviceUpdates = [
+          API_GET_SERVICE_ACCOUNT,
+          API_GET_SERVICE_PAYMENT_METHODS,
+          API_GET_SERVICE_TRANSFERS,
+          API_GET_SERVICE_RATES
+        ]
+
+        const coinUpdates = [
           API_GET_FIATPRICE,
           API_GET_BALANCES,
           API_GET_INFO,
           API_GET_TRANSACTIONS
         ];
-        Promise.all(
-          updates.map(async update => {
-            await conditionallyUpdateWallet(
-              store.getState(),
-              this.props.dispatch,
-              this.props.activeCoin.id,
-              update
-            );
-          })
-        )
-          .then(res => {
-            this.setState({ loading: false });
-          })
-          .catch(error => {
-            this.setState({ loading: false });
-            console.warn(error);
-          });
+
+        const updates = [{
+          keys: serviceUpdates,
+          update: conditionallyUpdateService,
+          params: [this.props.dispatch],
+        }, {
+          keys: coinUpdates,
+          update: conditionallyUpdateWallet,
+          params: [this.props.dispatch, this.props.activeCoin.id],
+        }]
+
+        for (const update of updates) {
+          for (const key of update.keys) {
+            try {
+              await update.update(store.getState(), ...update.params, key)
+            } catch(e) {
+              console.warn("Error forcing update to " + key)
+              console.warn(e)
+            }
+          }
+        }
+
+        this.setState({ loading: false });
       });
     }
   };
 
   forceUpdate = () => {
     const coinObj = this.props.activeCoin;
-    this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE));
-    this.props.dispatch(expireData(coinObj.id, API_GET_BALANCES));
-    this.props.dispatch(expireData(coinObj.id, API_GET_INFO));
-    this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS));
-
+    this.props.dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE));
+    this.props.dispatch(expireCoinData(coinObj.id, API_GET_BALANCES));
+    this.props.dispatch(expireCoinData(coinObj.id, API_GET_INFO));
+    this.props.dispatch(expireCoinData(coinObj.id, API_GET_TRANSACTIONS));
+    this.props.dispatch(expireServiceData(API_GET_SERVICE_ACCOUNT));
+    this.props.dispatch(expireServiceData(API_GET_SERVICE_PAYMENT_METHODS));
+    this.props.dispatch(expireServiceData(API_GET_SERVICE_TRANSFERS));
+    this.props.dispatch(expireServiceData(API_GET_SERVICE_RATES));
+    
     this.refresh();
   };
 
@@ -126,7 +145,7 @@ class Overview extends Component {
       this.props.activeCoin.decimals != null
         ? this.props.activeCoin.decimals
         : DEFAULT_DECIMALS;
-    let amount = new MathableNumber(0, decimals);
+    let amount = BigNumber(0)
     let AvatarImg;
     let subtitle = "";
     const gasFees = item.feeCurr === ETH.toUpperCase()
@@ -136,13 +155,12 @@ class Overview extends Component {
       let toAddresses = [];
       const confirmed = txArray[0].confirmed
       
-      amount = new MathableNumber(txArray[0].amount, decimals)
-      amount.num = amount.num.sub(new MathableNumber(txArray[1].amount, decimals).num)
+      amount = BigNumber(txArray[0].amount).minus(txArray[1].amount)
 
       if (txArray[1].interest) {
         let interest = txArray[1].interest * -1;
 
-        amount.num = amount.num.add(new MathableNumber(interest, decimals).num)
+        amount = amount.plus(interest)
       }
 
       for (let i = 0; i < txArray[0].to.length; i++) {
@@ -171,7 +189,7 @@ class Overview extends Component {
         type: "sent"
       }
     } else {
-      amount = item.amount != null ? new MathableNumber(item.amount, decimals) : new MathableNumber(0, decimals);
+      amount = item.amount != null ? BigNumber(item.amount) : BigNumber(0);
 
       if (item.type === "received") {
         AvatarImg = TX_LOGOS.in;
@@ -180,10 +198,10 @@ class Overview extends Component {
         AvatarImg = TX_LOGOS.out;
         subtitle = item.address == null ? "??" : item.address;
       } else if (item.type === "self") {
-        if (item.amount !== "??" && amount.num.lt(0)) {
+        if (item.amount !== "??" && amount.isLessThan(0)) {
           subtitle = "me";
           AvatarImg = TX_LOGOS.interest;
-          amount.num = amount.num.mul(-1);
+          amount = amount.multipliedBy(-1);
         } else {
           AvatarImg = TX_LOGOS.self;
           subtitle = gasFees ? "gas" : "fees";
@@ -203,18 +221,9 @@ class Overview extends Component {
 
     // Handle possible int overflows
     try { 
-      if (gasFees) {
-        let newAmount = new MathableNumber(0, amount.maxDecimals)
-        
-        newAmount.num = amount.num.add(
-          new MathableNumber(
-            item.fee,
-            amount.maxDecimals
-          ).num
-        )
-
-        displayAmount = BigNumber(newAmount.display())
-      } else displayAmount = BigNumber(amount.display()) 
+      if (!gasFees && item.fee) {
+        displayAmount = amount.minus(item.fee)
+      } else displayAmount = amount
     }
     catch(e) { console.error(e) }
 
@@ -343,6 +352,7 @@ class Overview extends Component {
                   },
                 })
               }
+              jumpTo={this.props.jumpTo}
               visible={this.state.txDetailsModalOpen}
               animationType="slide"
             />

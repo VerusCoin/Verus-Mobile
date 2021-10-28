@@ -19,6 +19,7 @@ import {
 import { RenderSquareCoinLogo } from "../../utils/CoinData/Graphics";
 import CoinDetailsModal from "../../components/CoinDetailsModal/CoinDetailsModal";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
+import { coinsList } from "../../utils/CoinData/CoinsList";
 
 class AddCoin extends Component {
   constructor(props) {
@@ -83,10 +84,9 @@ class AddCoin extends Component {
           coinIdLc.includes(queryLc))
       );
     }).sort((a, b) => {
-      if (b === 'VRSC') return 1
-      else if (b === 'BTC') return 1
-      else if (b === 'KMD') return 1
-      else return a <= b ? -1 : 1
+      if (b === "VRSC" || b === "BTC") return 1;
+      else if (a === "VRSC" || a === "BTC") return -1;
+      else return a <= b ? -1 : 1;
     })
   }
 
@@ -133,17 +133,19 @@ class AddCoin extends Component {
           onEndReachedThreshold={50}
           renderItem={({ item }) => {
             const added = activeCoinIds.includes(item)
+            const coinInfo = coinsList[item.toLowerCase()]
+            const { display_name } = coinInfo
+
             return (
               <TouchableOpacity onPress={() => this._openDetails(item)}>
                 <List.Item
-                  title={item}
+                  title={`${display_name} (${item})`}
                   left={(props) => RenderSquareCoinLogo(item)}
                   right={(props) => {
                     return added ? (
                       <List.Icon {...props} icon={"check"} size={20} />
                     ) : null;
                   }}
-                  titleStyle={Styles.listItemLeftTitleDefault}
                   style={{
                     backgroundColor: "white",
                   }}

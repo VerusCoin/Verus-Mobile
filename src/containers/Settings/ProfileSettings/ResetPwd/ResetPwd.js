@@ -152,6 +152,7 @@ class ResetPwd extends Component {
         >
           <View style={Styles.wideBlock}>
             <TextInput
+              returnKeyType="done"
               dense
               onChangeText={(text) => this.setState({ oldPwd: text })}
               label="Current Password"
@@ -170,6 +171,7 @@ class ResetPwd extends Component {
           </View>
           <View style={Styles.wideBlock}>
             <TextInput
+              returnKeyType="done"
               dense
               onChangeText={(text) => this.setState({ newPwd: text })}
               label="New Password (min. 5 characters)"
@@ -188,6 +190,7 @@ class ResetPwd extends Component {
           </View>
           <View style={Styles.wideBlock}>
             <TextInput
+              returnKeyType="done"
               dense
               onChangeText={(text) =>
                 this.setState({ confirmNewPwd: text })

@@ -6,6 +6,8 @@ export * from './actions/cache/Headers'
 export * from './actions/cache/Cache'
 export * from './actions/cache/EthTransactionReceipts'
 export * from './actions/updateManager'
+export * from './actions/personal/creators/personal'
+export * from './actions/services/creators/services'
 
 export * from './actionCreators/claims';
 export * from './actionCreators/claimCategories';
@@ -68,6 +70,9 @@ import {
   DISABLE_SELECT_DEFAULT_ACCOUNT,
   ADD_GOOD_SERVER,
   ADD_BAD_SERVER,
+  SET_SECURE_LOADING_SUCCESS_DATA,
+  SET_SECURE_LOADING_ERROR_DATA,
+  CLEAR_SECURE_LOADING_DATA
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -103,14 +108,6 @@ export const authenticateUser = (account, sessionKey) => {
 export const signOut = () => {
   return {
     type: SIGN_OUT,
-  }
-}
-
-//Reducer Name: authentication
-export const setBiometricAuthentication = (isEnabled) => {
-  return {
-    type: BIOMETRIC_AUTH,
-    biometry: isEnabled
   }
 }
 
@@ -481,3 +478,12 @@ export const appSetup = () => ({
   type: APP_SETUP,
   payload: {},
 });
+
+export const setSecureLoadingData = (data, isSuccess) => ({
+  type: isSuccess ? SET_SECURE_LOADING_SUCCESS_DATA : SET_SECURE_LOADING_ERROR_DATA,
+  payload: { data }
+})
+
+export const clearSecureLoadingData = () => ({
+  type: CLEAR_SECURE_LOADING_DATA
+})

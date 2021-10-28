@@ -12,6 +12,16 @@ import { Platform, TextInput as NativeTextInput } from 'react-native'
 class TextInputModal extends Component {
   constructor(props) {
     super(props);
+
+    this.state = {
+      text: props.value == null ? "" : props.value
+    }
+  }
+
+  setText(text) {
+    this.setState({
+      text
+    })
   }
 
   render() {
@@ -22,7 +32,7 @@ class TextInputModal extends Component {
         animationType="slide"
         transparent={true}
         visible={visible}
-        onRequestClose={cancel}
+        onRequestClose={() => cancel(this.state.text)}
         contentContainerStyle={{
           height:
             Platform.OS === "android" ? 64 : this.props.keyboardHeight + 64,
@@ -31,7 +41,10 @@ class TextInputModal extends Component {
       >
         <TextInput
           value={value}
-          onChangeText={onChange}
+          onChangeText={(text) => {
+            this.setText(text)
+            onChange(text)
+          }}
           mode={mode}
           style={{
             marginTop: -10,
@@ -45,7 +58,7 @@ class TextInputModal extends Component {
               autoCorrect={false}
               autoComplete="false"
               returnKeyType="done"
-              onSubmitEditing={cancel != null ? () => cancel() : () => {}}
+              onSubmitEditing={cancel != null ? () => cancel(this.state.text) : () => {}}
               {...props}
             />
           )}

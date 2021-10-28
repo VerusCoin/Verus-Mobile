@@ -75,7 +75,7 @@ export const TOTAL = 'total'
 
 // Payment Methods
 export const ENABLE_FIAT_GATEWAY = false;
-export const WYRE_URL = 'https://api.testwyre.com';
+export const WYRE_URL = 'https://api.sendwyre.com';
 export const WYRE_REFERRER_ACCOUNT_ID = 'verus-valu';
 
 // Biometry
@@ -152,12 +152,18 @@ export const STATES = [
 
 export const SUBWALLET_NAMES = {
     MAIN_WALLET: "Main",
-    PRIVATE_WALLET: "Private"
+    PRIVATE_WALLET: "Private",
+    WYRE_ACCOUNT_WALLET: "Wyre"
 }
 
-//Display 
+//Display
 export const DEVICE_WINDOW_WIDTH = Dimensions.get('window').width;
 export const DEVICE_WINDOW_HEIGHT = Dimensions.get('window').height;
 
 // Init
 export const START_COINS = ["VRSC", "BTC", "ETH"]
+
+// Account data initialization steps
+export const VALIDATING_ACCOUNT = 'validating'
+export const LOADING_ACCOUNT = 'loading'
+export const ACCOUNT_DATA_INIT_ORDER = [VALIDATING_ACCOUNT, LOADING_ACCOUNT]

@@ -17,6 +17,6 @@ export default [
     pressColor: 'rgba(255, 255, 255, 0.16)',
     screen: PersonalInfo,
     icon: 'user-circle',
-    barColor: Colors.successButtonColor,
+    barColor: Colors.verusGreenColor,
   },
 ];
