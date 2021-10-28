@@ -75,7 +75,7 @@ export const TOTAL = 'total'
 
 // Payment Methods
 export const ENABLE_FIAT_GATEWAY = false;
-export const WYRE_URL = 'https://api.testwyre.com';
+export const WYRE_URL = 'https://api.sendwyre.com';
 export const WYRE_REFERRER_ACCOUNT_ID = 'verus-valu';
 
 // Biometry
@@ -156,7 +156,7 @@ export const SUBWALLET_NAMES = {
     WYRE_ACCOUNT_WALLET: "Wyre"
 }
 
-//Display 
+//Display
 export const DEVICE_WINDOW_WIDTH = Dimensions.get('window').width;
 export const DEVICE_WINDOW_HEIGHT = Dimensions.get('window').height;
 
