@@ -1,3 +1,7 @@
+/**
+ * @format
+ * @flow strict-local
+ */
 import React from 'react';
 import VerusMobile from './src/VerusMobile'
 import store from './src/store'

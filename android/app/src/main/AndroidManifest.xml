@@ -2,7 +2,6 @@
     package="com.verusmobile">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
@@ -18,11 +17,11 @@
         android:name=".MainActivity"
         android:screenOrientation="portrait"
         android:label="@string/app_name"
-        android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
-        android:windowSoftInputMode="adjustPan"
+        android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
+        android:launchMode="singleTask"
+        android:windowSoftInputMode="adjustResize"
         android:exported="true">
       </activity>
-      <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" />
       <activity
         android:name=".SplashActivity"
         android:screenOrientation="portrait"
