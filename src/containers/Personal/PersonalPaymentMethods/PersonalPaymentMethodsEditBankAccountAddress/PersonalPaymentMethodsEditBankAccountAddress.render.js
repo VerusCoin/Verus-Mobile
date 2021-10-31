@@ -22,25 +22,19 @@ export const PersonalPaymentMethodsEditBankAccountAddressRender = function () {
                     title={
                       address.street1.length > 0
                         ? `${address.street1}${
-                            address.street2.length > 0
+                            address.street2 != null && address.street2.length > 0
                               ? `, ${address.street2}`
                               : ""
                           }`
                         : "Empty address"
                     }
                     description={`${
-                      address.postal_code.length > 0
-                        ? `${address.postal_code} `
-                        : ""
+                      address.postal_code.length > 0 ? `${address.postal_code} ` : ""
                     }${
                       address.state_province_region.length > 0
                         ? `${address.state_province_region}, `
                         : ""
-                    }${
-                      address.city.length > 0
-                        ? `${address.city}, `
-                        : "Unknown City, "
-                    }${
+                    }${address.city.length > 0 ? `${address.city}, ` : "Unknown City, "}${
                       ISO_3166_COUNTRIES[address.country] != null
                         ? `${ISO_3166_COUNTRIES[address.country].emoji} ${
                             ISO_3166_COUNTRIES[address.country].name
