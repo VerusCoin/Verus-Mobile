@@ -1,12 +1,48 @@
-import USD_LIGHT from './usd/usd_light.svg'
-import AUD_LIGHT from './aud/aud_light.svg'
-import EUR_LIGHT from './eur/eur_light.svg'
-import USD_DARK from './usd/usd_dark.svg'
-import AUD_DARK from './aud/aud_dark.svg'
-import EUR_DARK from './eur/eur_dark.svg'
+import React from 'react'
+import { View, Text } from "react-native"
+import Colors from "../../../../globals/colors"
+
+const RenderFiatCoinLogo = (symbol, darkColor = Colors.primaryColor) => {
+  const RenderTextLogo = (symbol, color, size) => {
+    return (<View style={{ width: size, marginHorizontal: 8, justifyContent: "center", alignItems: "center" }}>
+        <Text style={{ fontSize: Number((size / symbol.length).toFixed(0)), color: color }}>{symbol}</Text>
+      </View>)
+  }
+
+  return  {
+    light: (props) => RenderTextLogo(symbol, Colors.secondaryColor, props.width),
+    dark: (props) => RenderTextLogo(symbol, darkColor, props.width),
+  }
+}
 
 export default {
-  USD: { light: USD_LIGHT, dark: USD_DARK },
-  AUD: { light: AUD_LIGHT, dark: AUD_DARK },
-  EUR: { light: EUR_LIGHT, dark: EUR_DARK }
+  USD: RenderFiatCoinLogo("$"),
+  AUD: RenderFiatCoinLogo("$"),
+  EUR: RenderFiatCoinLogo("€"),
+  CHF: RenderFiatCoinLogo("CHF"),
+  MXN: RenderFiatCoinLogo("$"),
+  CLP: RenderFiatCoinLogo("$"),
+  ZAR: RenderFiatCoinLogo("R"),
+  VND: RenderFiatCoinLogo("₫"),
+  ILS: RenderFiatCoinLogo("₪"),
+  HKD: RenderFiatCoinLogo("$"),
+  DKK: RenderFiatCoinLogo("kr"),
+  CAD: RenderFiatCoinLogo("$"),
+  MYR: RenderFiatCoinLogo("RM"),
+  NOK: RenderFiatCoinLogo("kr"),
+  CZK: RenderFiatCoinLogo("Kč"),
+  SEK: RenderFiatCoinLogo("kr"),
+  ARS: RenderFiatCoinLogo("$"),
+  INR: RenderFiatCoinLogo("₹"),
+  THB: RenderFiatCoinLogo("฿"),
+  KRW: RenderFiatCoinLogo("₩"),
+  JPY: RenderFiatCoinLogo("¥"),
+  PLN: RenderFiatCoinLogo("zł"),
+  GBP: RenderFiatCoinLogo("£"),
+  PHP: RenderFiatCoinLogo("₱"),
+  ISK: RenderFiatCoinLogo("kr"),
+  COP: RenderFiatCoinLogo("$"),
+  SGD: RenderFiatCoinLogo("$"),
+  NZD: RenderFiatCoinLogo("$"),
+  BRL: RenderFiatCoinLogo("R$"),
 }

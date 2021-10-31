@@ -1,67 +1,62 @@
 import { coinsList } from "../../../../CoinData/CoinsList"
 import { getRates } from "./getRates"
 
-const { btc, aud, eur, usd, eth, usdt, usdc, dai } = coinsList
-
-const COMPATIBLE_WYRE_CONVERSIONS = {
-  ["USD"]: {
-    ["AUD"]: { destination: aud },
-    ["EUR"]: { destination: eur },
-    ["USDT"]: { destination: usdt },
-    ["USDC"]: { destination: usdc },
-    ["DAI"]: { destination: dai }
-  },
-  ["AUD"]: {
-    ["USD"]: { destination: usd },
-    ["USDT"]: { destination: usdt },
-    ["EUR"]: { destination: eur },
-    ["USDC"]: { destination: usdc },
-    ["DAI"]: { destination: dai }
-  },
-  ["EUR"]: {
-    ["USD"]: { destination: usd },
-    ["AUD"]: { destination: aud },
-    ["USDT"]: { destination: usdt },
-    ["USDC"]: { destination: usdc },
-    ["DAI"]: { destination: dai }
-  },
-  ["USDC"]: {
-    ["USD"]: { destination: usd },
-    ["AUD"]: { destination: aud },
-    ["USDT"]: { destination: usdt },
-    ["EUR"]: { destination: eur },
-    ["DAI"]: { destination: dai }
-  },
-  ["USDT"]: {
-    ["USD"]: { destination: usd },
-    ["AUD"]: { destination: aud },
-    ["USDC"]: { destination: usdc },
-    ["EUR"]: { destination: eur },
-    ["DAI"]: { destination: dai }
-  },
-  ["DAI"]: {
-    ["USD"]: { destination: usd },
-    ["AUD"]: { destination: aud },
-    ["USDC"]: { destination: usdc },
-    ["USDT"]: { destination: usdt },
-    ["EUR"]: { destination: eur },
-  },
-}
+const WYRE_CONVERTABLES = [
+  "USD",
+  "AUD",
+  "EUR",
+  "USDC",
+  "USDT",
+  "DAI",
+  "CHF",
+  "MXN",
+  "CLP",
+  "ZAR",
+  "VND",
+  "ILS",
+  "HKD",
+  "DKK",
+  "CAD",
+  "MYR",
+  "NOK",
+  "CZK",
+  "SEK",
+  "ARS",
+  "INR",
+  "THB",
+  "KRW",
+  "JPY",
+  "PLN",
+  "GBP",
+  "PHP",
+  "ISK",
+  "COP",
+  "SGD",
+  "NZD",
+  "BRL",
+];
 
 export const getCurrencyConversionPaths = async (coinObj) => {
-  const conversions = COMPATIBLE_WYRE_CONVERSIONS[coinObj.id]
-  const rates = await getRates(coinObj)
+  if (WYRE_CONVERTABLES.includes(coinObj.id)) {
+    const rates = await getRates(coinObj)
   
-  if (conversions != null && rates != null) {
-    let processedConversions = {}
+    if (rates != null) {
+      let processedConversions = {}
 
-    Object.keys(conversions).map(chainTicker => {
-      processedConversions[chainTicker] = {
-        ...conversions[chainTicker],
-        price: rates[conversions[chainTicker].destination.id]
+      for (const chainTicker of WYRE_CONVERTABLES) {
+        const destination = coinsList[chainTicker.toLowerCase()]
+
+        if (chainTicker !== coinObj.id && destination != null && rates[destination.id] != null) {
+          processedConversions[chainTicker] = {
+            destination,
+            price: rates[destination.id],
+          };
+        }
       }
-    })
-
-    return processedConversions
-  } else return {}
+  
+      return processedConversions
+    } 
+  }
+  
+  return {}
 }
