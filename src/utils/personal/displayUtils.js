@@ -84,29 +84,20 @@ export const renderPersonalTaxId = (taxCountry) => {
 
 export const renderPersonalAddress = (address) => {
   return {
-    title: address.street1.length > 0
-    ? `${address.street1}${
-        address.street2.length > 0
-          ? `, ${address.street2}`
-          : ""
-      }`
-    : "Empty address",
-    description: `${
-      address.postal_code.length > 0
-        ? `${address.postal_code} `
-        : ""
-    }${
-      address.state_province_region.length > 0
-        ? `${address.state_province_region}, `
-        : ""
+    title:
+      address.street1.length > 0
+        ? `${address.street1}${
+            address.street2 != null && address.street2.length > 0 ? `, ${address.street2}` : ""
+          }`
+        : "Empty address",
+    description: `${address.postal_code.length > 0 ? `${address.postal_code} ` : ""}${
+      address.state_province_region.length > 0 ? `${address.state_province_region}, ` : ""
     }${address.city.length > 0 ? `${address.city}, ` : "Unknown City, "}${
       ISO_3166_COUNTRIES[address.country] != null
-        ? `${ISO_3166_COUNTRIES[address.country].emoji} ${
-            ISO_3166_COUNTRIES[address.country].name
-          }`
+        ? `${ISO_3166_COUNTRIES[address.country].emoji} ${ISO_3166_COUNTRIES[address.country].name}`
         : "Unknown Country"
-    }`
-  }
+    }`,
+  };
 }
 
 export const renderPersonalBankAccount = (account) => {

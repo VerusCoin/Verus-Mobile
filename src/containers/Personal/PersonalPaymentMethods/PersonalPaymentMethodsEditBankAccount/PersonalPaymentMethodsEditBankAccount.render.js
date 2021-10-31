@@ -138,13 +138,11 @@ const PersonalPaymentMethodsEditBankAccountRenderInputKey = function (key, rende
       this,
       address.street1.length > 0
         ? `${address.street1}${
-            address.street2.length > 0 ? `, ${address.street2}` : ""
+            address.street2 != null && address.street2.length > 0 ? `, ${address.street2}` : ""
           }`
         : "Configure address",
       `${address.postal_code.length > 0 ? `${address.postal_code} ` : ""}${
-        address.state_province_region.length > 0
-          ? `${address.state_province_region}, `
-          : ""
+        address.state_province_region.length > 0 ? `${address.state_province_region}, ` : ""
       }${address.city.length > 0 ? `${address.city}, ` : "Unknown City, "}${
         ISO_3166_COUNTRIES[address.country] != null
           ? `${ISO_3166_COUNTRIES[address.country].emoji} ${

@@ -31,6 +31,7 @@ import { removeExistingCoin } from './coins/Coins';
 import { initSession, requestPassword, requestSeeds } from '../../utils/auth/authBox';
 import { clearEncryptedPersonalDataForUser } from './personal/dispatchers/personal';
 import { clearEncryptedServiceStoredDataForUser } from './services/dispatchers/services';
+import { clearActiveAccountLifecycles } from './account/dispatchers/account';
 
 export const addUser = (
   userName,
@@ -108,6 +109,9 @@ export const setKeyDerivationVersion = async (userID, keyDerivationVersion) => {
 }
 
 export const deleteProfile = async (account, dispatch) => {
+  // Clear existing account lifecycles
+  await clearActiveAccountLifecycles()
+  
   // Remove active coins
   await removeExistingCoin(null, account.id, dispatch, true)
 
