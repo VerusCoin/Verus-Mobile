@@ -2,7 +2,7 @@
 
 import { APP_VERSION } from '../../../env/index'
 
-import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 // react-native's version of local storage
 
 export * from './authDataStorage'
