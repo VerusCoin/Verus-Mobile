@@ -1,4 +1,4 @@
-import { electrumServers } from 'agama-wallet-lib/src/electrum-servers';
+import { electrumServers } from './electrum/servers';
 import { MAX_VERIFICATION } from '../constants/constants'
 import Colors from '../../globals/colors'
 import { coinsList } from './CoinsList'
@@ -6,43 +6,77 @@ import { DLIGHT_PRIVATE, ELECTRUM, ERC20, GENERAL } from '../constants/intervalC
 
 import { ENABLE_VERUS_IDENTITIES } from '../../../env/index'
 
-import CoinLogoSvgs from '../../images/cryptologo/index'
+import CoinLogoIcons from '../../images/cryptologo/index'
 import { ETHERS } from '../constants/web3Constants';
+import { getDefaultSubWallets } from '../defaultSubWallets';
+import {
+  WALLET_APP_CONVERT,
+  WALLET_APP_OVERVIEW,
+  WALLET_APP_RECEIVE,
+  WALLET_APP_SEND,
+  WALLET_APP_MANAGE
+} from "../constants/apps";
 
-const getDefaultApps = (coinName) => {
-  return ({
-    default_app: 'wallet',
+const getDefaultApps = (coinObj) => {
+  const coinName = coinObj.display_name
+  let subwallets = getDefaultSubWallets(coinObj)
+
+  let data = [
+    {
+      screen: "Overview",
+      icon: "format-list-bulleted",
+      name: "Overview",
+      key: WALLET_APP_OVERVIEW,
+      color: Colors.primaryColor,
+      //Verus Blue
+    },
+    {
+      screen: "SendCoin",
+      icon: "arrow-up",
+      name: "Send",
+      key: WALLET_APP_SEND,
+      color: Colors.infoButtonColor,
+      //Orange
+    },
+    {
+      screen: "ReceiveCoin",
+      icon: "arrow-down",
+      name: "Receive",
+      key: WALLET_APP_RECEIVE,
+      color: Colors.verusGreenColor,
+      //Green
+    },
+    {
+      screen: "ConvertCoin",
+      icon: "swap-horizontal-circle",
+      name: "Convert",
+      key: WALLET_APP_CONVERT,
+      color: Colors.primaryColor,
+    },
+    {
+      screen: "ManageCoin",
+      icon: "bank-transfer",
+      name: "Manage",
+      key: WALLET_APP_MANAGE,
+      color: Colors.primaryColor
+    }
+  ];
+
+  return {
+    default_app: "wallet",
     apps: {
-    wallet: {
-      title: coinName + ' Wallet', 
-      data: [
-        {
-          screen: 'Overview',
-          icon: 'format-list-bulleted',
-          name: 'Overview',
-          key: 'wallet-overview',
-          color: Colors.primaryColor
-          //Verus Blue
-        },
-        {
-          screen: 'SendCoin',
-          icon: 'arrow-up',
-          name: 'Send',
-          key: 'wallet-send',
-          color: Colors.infoButtonColor
-          //Orange
-        },
-        {
-          screen: 'ReceiveCoin',
-          icon: 'arrow-down',
-          name: 'Receive',
-          key: 'wallet-receive',
-          color: Colors.successButtonColor
-          //Green
-        }
-      ]
-    }}
-  })
+      wallet: {
+        title: coinName + " Wallet",
+        data: data.filter((app) => {
+          for (const subwallet of subwallets) {
+            if (subwallet.compatible_apps.includes(app.key)) return true;
+          }
+
+          return false;
+        }),
+      },
+    },
+  };
 }
 
 const identityApp = {
@@ -92,41 +126,124 @@ export const explorers = {
 
 export const CoinLogos = {
   // btc protocol
-  bch: CoinLogoSvgs.btc.BCH,		
-  vrsc: CoinLogoSvgs.btc.VRSC,
-  dash: CoinLogoSvgs.btc.DASH,	
-  oot: CoinLogoSvgs.btc.OOT,		
-  btc: CoinLogoSvgs.btc.BTC,		
-  dgb: CoinLogoSvgs.btc.DGB,		
-  doge: CoinLogoSvgs.btc.DOGE,	
-  kmd: CoinLogoSvgs.btc.KMD,		
-  zec: CoinLogoSvgs.btc.ZEC,
-  zectest: CoinLogoSvgs.btc.ZECTEST,
-  zilla: CoinLogoSvgs.btc.ZILLA,	
-  ltc: CoinLogoSvgs.btc.LTC,		
-  ccl: CoinLogoSvgs.btc.CCL,
-  
+  bch: CoinLogoIcons.btc.BCH,
+  vrsc: CoinLogoIcons.btc.VRSC,
+  dash: CoinLogoIcons.btc.DASH,
+  oot: CoinLogoIcons.btc.OOT,
+  btc: CoinLogoIcons.btc.BTC,
+  testnet: CoinLogoIcons.btc.BTC,
+  dgb: CoinLogoIcons.btc.DGB,
+  doge: CoinLogoIcons.btc.DOGE,
+  kmd: CoinLogoIcons.btc.KMD,
+  zec: CoinLogoIcons.btc.ZEC,
+  zectest: CoinLogoIcons.btc.ZECTEST,
+  zilla: CoinLogoIcons.btc.ZILLA,
+  ltc: CoinLogoIcons.btc.LTC,
+  ccl: CoinLogoIcons.btc.CCL,
+
   // web3 protocol
-  bat: CoinLogoSvgs.web3.BAT,
-  tst: CoinLogoSvgs.web3.ETH,
-  dai: CoinLogoSvgs.web3.DAI,
-  eth: CoinLogoSvgs.web3.ETH,
-  bal: CoinLogoSvgs.web3.BAL,
-  bnt: CoinLogoSvgs.web3.BNT,
-  hot: CoinLogoSvgs.web3.HOT,
-  link: CoinLogoSvgs.web3.LINK,
-  nexo: CoinLogoSvgs.web3.NEXO,
-  uni: CoinLogoSvgs.web3.UNI,
-  ven: CoinLogoSvgs.web3.VEN,
-  yfi: CoinLogoSvgs.web3.YFI,
-  zrx: CoinLogoSvgs.web3.ZRX,
-  rfox: CoinLogoSvgs.web3.RFOX
+  bat: CoinLogoIcons.web3.BAT,
+  tst: CoinLogoIcons.web3.ETH,
+  dai: CoinLogoIcons.web3.DAI,
+  eth: CoinLogoIcons.web3.ETH,
+  bal: CoinLogoIcons.web3.BAL,
+  bnt: CoinLogoIcons.web3.BNT,
+  hot: CoinLogoIcons.web3.HOT,
+  link: CoinLogoIcons.web3.LINK,
+  nexo: CoinLogoIcons.web3.NEXO,
+  uni: CoinLogoIcons.web3.UNI,
+  ven: CoinLogoIcons.web3.VEN,
+  yfi: CoinLogoIcons.web3.YFI,
+  zrx: CoinLogoIcons.web3.ZRX,
+  rfox: CoinLogoIcons.web3.RFOX,
+  usdt: CoinLogoIcons.web3.USDT,
+  usdc: CoinLogoIcons.web3.USDC,
+  aave: CoinLogoIcons.web3.AAVE,
+  crv: CoinLogoIcons.web3.CRV,
+  sushi: CoinLogoIcons.web3.SUSHI,
+  mkr: CoinLogoIcons.web3.MKR,
+  wbtc: CoinLogoIcons.web3.WBTC,
+
+  // fiat "protocol"
+  usd: CoinLogoIcons.fiat.USD,
+  aud: CoinLogoIcons.fiat.AUD,
+  eur: CoinLogoIcons.fiat.EUR,
+  chf: CoinLogoIcons.fiat.CHF,
+  mxn: CoinLogoIcons.fiat.MXN,
+  clp: CoinLogoIcons.fiat.CLP,
+  zar: CoinLogoIcons.fiat.ZAR,
+  vnd: CoinLogoIcons.fiat.VND,
+  ils: CoinLogoIcons.fiat.ILS,
+  hkd: CoinLogoIcons.fiat.HKD,
+  dkk: CoinLogoIcons.fiat.DKK,
+  cad: CoinLogoIcons.fiat.CAD,
+  myr: CoinLogoIcons.fiat.MYR,
+  nok: CoinLogoIcons.fiat.NOK,
+  czk: CoinLogoIcons.fiat.CZK,
+  sek: CoinLogoIcons.fiat.SEK,
+  ars: CoinLogoIcons.fiat.ARS,
+  inr: CoinLogoIcons.fiat.INR,
+  thb: CoinLogoIcons.fiat.THB,
+  krw: CoinLogoIcons.fiat.KRW,
+  jpy: CoinLogoIcons.fiat.JPY,
+  pln: CoinLogoIcons.fiat.PLN,
+  gbp: CoinLogoIcons.fiat.GBP,
+  php: CoinLogoIcons.fiat.PHP,
+  isk: CoinLogoIcons.fiat.ISK,
+  cop: CoinLogoIcons.fiat.COP,
+  sgd: CoinLogoIcons.fiat.SGD,
+  nzd: CoinLogoIcons.fiat.NZD,
+  brl: CoinLogoIcons.fiat.BRL,
 };
 
 //To make flatlist render faster
 export const namesList = Object.values(coinsList).map(function(coin) {
   return coin.id;
 });
+
+export const coinExistsInWallet = (coinTicker) => {
+  let index = 0;
+
+  while (index < namesList.length && namesList[index] !== coinTicker) {
+    index++;
+  }
+
+  if (index < namesList.length) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+export const getCoinFromActiveCoins = (coinTicker, activeCoinsForUser) => {
+  let index = 0;
+
+  while (
+    index < activeCoinsForUser.length &&
+    activeCoinsForUser[index].id !== coinTicker
+  ) {
+    index++;
+  }
+
+  if (index < namesList.length) {
+    return activeCoinsForUser[index];
+  } else {
+    return false;
+  }
+};
+
+export const findCurrencyByImportId = (importObj) => {
+  const allCoins = Object.values(coinsList)
+
+  const coinObj = allCoins.find(coin => {
+    return (
+      coin.system_id === importObj.system_id &&
+      coin.currency_id === importObj.currency_id
+    );
+  })
+
+  return coinObj
+}
 
 export const findCoinObj = (id, userName) => {
   let coinObj = coinsList[id.toLowerCase()]
@@ -142,7 +259,8 @@ export const findCoinObj = (id, userName) => {
     }
     
     if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
-      const DEFAULT_APPS = getDefaultApps(coinObj.display_name)
+      const DEFAULT_APPS = getDefaultApps(coinObj)
+      
       if (ENABLE_VERUS_IDENTITIES && (coinObj.id === 'VRSC' || coinObj.id === 'ZECTEST')) {
         coinObj.apps = {...identityApp, ...DEFAULT_APPS.apps};
       } else {
@@ -191,7 +309,7 @@ export const createErc20CoinObj = (contractAddress, displayName, displayTicker, 
 
   coinObj.users = userName != null ? [userName] : [];
 
-  const DEFAULT_APPS = getDefaultApps(coinObj.display_name)
+  const DEFAULT_APPS = getDefaultApps(coinObj)
 
   coinObj.apps = DEFAULT_APPS.apps;
   coinObj.default_app = DEFAULT_APPS.default_app
@@ -233,7 +351,7 @@ export const createCoinObj = (id, name, description, defaultFee, serverList, use
   }
 
   if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
-    const DEFAULT_APPS = getDefaultApps(coinObj.display_name)
+    const DEFAULT_APPS = getDefaultApps(coinObj)
     coinObj.apps = DEFAULT_APPS.apps
     if (!coinObj.default_app) coinObj.default_app = DEFAULT_APPS.default_app
   } else if (!coinObj.default_app) {

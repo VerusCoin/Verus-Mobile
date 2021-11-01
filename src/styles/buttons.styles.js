@@ -18,7 +18,7 @@ export default buttons = {
   greenButton: {
     alignSelf: 'center',
     minWidth: 104,
-    backgroundColor: Colors.successButtonColor,
+    backgroundColor: Colors.verusGreenColor,
   },
   fullWidthButtonTitle: {
     fontSize: 16,
@@ -74,7 +74,7 @@ export default buttons = {
   },
 
   buttonWithSuccessColor: {
-    backgroundColor: Colors.successButtonColor,
+    backgroundColor: Colors.verusGreenColor,
     paddingHorizontal: '16%',
     borderRadius: 5,
     paddingVertical: 16,

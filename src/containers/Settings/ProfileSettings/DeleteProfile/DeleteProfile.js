@@ -138,6 +138,7 @@ class DeleteProfile extends Component {
     return (
       <TextInput
         dense
+        returnKeyType="done"
         onChangeText={(text) => this.setState({ pwd: text })}
         label="Profile Password"
         underlineColor={Colors.primaryColor}

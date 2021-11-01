@@ -8,170 +8,205 @@ import {
   View,
 } from "react-native";
 import { connect } from 'react-redux';
-import BottomNavigation, {
-  FullTab
-} from 'react-native-material-bottom-navigation'
 import Overview from './Overview/Overview'
 import SendCoin from './SendCoin/SendCoin'
 import ReceiveCoin from './ReceiveCoin/ReceiveCoin'
+import ConvertCoin from "./ConvertCoin/ConvertCoin";
+import ManageCoin from "./ManageCoin/ManageCoin";
 import { setActiveSection, setCoinSubWallet, setIsCoinMenuFocused } from "../../actions/actionCreators";
 import { NavigationActions, withNavigationFocus } from '@react-navigation/compat';
 import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
 import DynamicHeader from "./DynamicHeader";
-import { Portal, IconButton } from "react-native-paper";
+import { Portal, BottomNavigation } from "react-native-paper";
+import { subWalletActivity } from "../../utils/subwallet/subWalletStatus";
+import MissingInfoRedirect from "../../components/MissingInfoRedirect/MissingInfoRedirect";
+import { WALLET_APP_CONVERT, WALLET_APP_MANAGE, WALLET_APP_OVERVIEW, WALLET_APP_RECEIVE, WALLET_APP_SEND } from "../../utils/constants/apps";
+import { SUBWALLET_NAMES } from "../../utils/constants/constants";
+import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 
 class CoinMenus extends Component {
   constructor(props) {
-    super(props)
+    super(props);
     let stateObj = this.generateTabs();
-    const subWallets = props.allSubWallets
+    const subWallets = props.allSubWallets;
 
-    //CoinMenus can be passed data, which will be passed to 
+    //CoinMenus can be passed data, which will be passed to
     //the app section components as props
-    this.passthrough = this.props.route.params ? this.props.route.params.data : null
-    
+    this.passthrough = this.props.route.params ? this.props.route.params.data : null;
+
     this.state = {
       tabs: stateObj.tabs,
       activeTab: stateObj.activeTab,
-      subWallets
-    }; 
+      activeTabIndex: stateObj.activeTabIndex,
+      subWallets,
+      filteredSubWallets: null,
+    };
 
-    if (subWallets.length == 1) props.dispatch(setCoinSubWallet(props.activeCoin.id, subWallets[0]))
+    if (subWallets.length == 1)
+      props.dispatch(setCoinSubWallet(props.activeCoin.id, subWallets[0]));
+
+    this.Routes = {
+      [WALLET_APP_OVERVIEW]: Overview,
+      [WALLET_APP_SEND]: SendCoin,
+      [WALLET_APP_RECEIVE]: ReceiveCoin,
+      [WALLET_APP_CONVERT]: ConvertCoin,
+      [WALLET_APP_MANAGE]: ManageCoin
+    };
   }
 
   componentDidMount() {
-    this.props.dispatch(setIsCoinMenuFocused(true))
+    this.props.dispatch(setIsCoinMenuFocused(true));
   }
 
-  componentDidUpdate(lastProps) {  
+  componentDidUpdate(lastProps) {
     if (lastProps.isFocused !== this.props.isFocused) {
-      this.props.dispatch(setIsCoinMenuFocused(this.props.isFocused))
+      this.props.dispatch(setIsCoinMenuFocused(this.props.isFocused));
+    }
+
+    if (
+      lastProps.selectedSubWallet != this.props.selectedSubWallet &&
+      this.state.filteredSubWallets != null &&
+      this.props.selectedSubWallet != null
+    ) {
+      this.setState({
+        filteredSubWallets: null,
+      });
     }
   }
 
   generateTabs = () => {
-    //this.props.activeSection
-    let tabArray = []
+    let tabArray = [];
     let activeTab;
-    let options = this.props.activeCoin.apps[this.props.activeApp].data
-    const screens = {
-      //Overview: <Overview/>,
-      //SendCoin: <SendCoin/>
-      Overview: "Overview",
-      SendCoin: "SendCoin",
-      ReceiveCoin: "ReceiveCoin"
-    }
+    let activeTabIndex;
+    let options = this.props.activeCoin.apps[this.props.activeApp].data;
 
     for (let i = 0; i < options.length; i++) {
       let _tab = {
         key: options[i].key,
         icon: options[i].icon,
-        label: options[i].name,
-        barColor: options[i].color,
-        pressColor: 'rgba(255, 255, 255, 0.16)',
-        screen: screens[options[i].screen],
-        activeSection: options[i]
-      }
+        title: options[i].name,
+        //color: options[i].color, // Disregarded for now
+        activeSection: options[i],
+      };
 
       if (options[i].key === this.props.activeSection.key) {
-        activeTab = _tab
+        activeTab = _tab;
+        activeTabIndex = i;
       }
 
-      tabArray.push(_tab)
+      tabArray.push(_tab);
     }
 
     if (!activeTab) {
-      throw new Error("Tab not found for active section " + this.props.activeSection.key)
+      throw new Error("Tab not found for active section " + this.props.activeSection.key);
     }
 
-    this.props.navigation.setOptions({ title: activeTab.label })
+    this.props.navigation.setOptions({ title: activeTab.title });
 
     return {
       tabs: tabArray,
-      activeTab: activeTab
+      activeTab: activeTab,
+      activeTabIndex,
     };
+  };
+
+  goToServices() {
+    this.props.navigation.navigate("Home", {
+      screen: "ServicesHome",
+      initial: false,
+    });
   }
 
-  renderIcon = icon => ({ isActive }) => (
-    <IconButton style={{ padding: 0, margin: 0 }} color="white" size={16} icon={icon} />
-  )
+  renderScene = ({ route, jumpTo }) => {
+    if (this.Routes[route.key] == null) return null;
+    else {
+      const Route = this.Routes[route.key];
+      const { placeholder, active } = subWalletActivity(this.props.selectedSubWallet.id);
 
-  renderTab = ({ tab, isActive }) => (
-    <FullTab
-      isActive={isActive}
-      key={tab.key ? tab.key : ''}
-      label={tab.label ? tab.label : ''}
-      renderIcon={this.renderIcon(tab.icon)}
-    />
-  )
+      return this.props.selectedSubWallet.compatible_apps.includes(route.key) ? (
+        active(this.props.services) ? (
+          <Route navigation={this.props.navigation} data={this.passthrough} jumpTo={jumpTo} />
+        ) : (
+          <MissingInfoRedirect
+            icon={placeholder.icon}
+            label={placeholder.label}
+            buttonLabel="configure services"
+            onPress={() => this.goToServices()}
+          />
+        )
+      ) : (
+        <MissingInfoRedirect
+          icon={"power-plug-off"}
+          label={`This tab isn't accesible from the ${
+            SUBWALLET_NAMES[this.props.selectedSubWallet.id]
+          } card.`}
+          buttonLabel="Switch cards"
+          onPress={() => this.findCompatibleSubwallet(route.key)}
+        />
+      );
+    }
+  };
 
-  switchTab = (newTab) => {
-    this.props.navigation.setOptions({ title: newTab.label })
-    this.props.dispatch(setActiveSection(newTab.activeSection))
-    this.setState({ activeTab: newTab })
-  }
+  findCompatibleSubwallet = (tabKey) => {
+    const subwalletsForTab = this.state.subWallets.filter((wallet) =>
+      wallet.compatible_apps.includes(tabKey)
+    );
 
-  switchTabByKey = (key) => {
-    const foundTab = this.props.tabs.find(value => value.key === key) 
+    if (subwalletsForTab.length > 0) {
+      this.setState(
+        {
+          filteredSubWallets: subwalletsForTab,
+        },
+        () => this.props.dispatch(setCoinSubWallet(this.props.activeCoin.id, null))
+      );
+    } else {
+      createAlert("Error", "No compatible cards found.");
+    }
+  };
 
-    if (foundTab) this.switchTab(foundTab)
-  }
+  switchTab = (index) => {
+    const newTab = this.state.tabs[index];
+
+    this.props.navigation.setOptions({ title: newTab.title });
+    this.props.dispatch(setActiveSection(newTab.activeSection));
+    this.setState({ activeTab: newTab, activeTabIndex: index });
+  };
 
   goBack = () => {
-    this.props.navigation.dispatch(NavigationActions.back())
-  }
+    this.props.navigation.dispatch(NavigationActions.back());
+  };
 
-  //The rendering of overview, send and recieve is temporary, we want to use
-  //this.state.activeTab.screen, but the 
+  //The rendering of overview, send and receive is temporary, we want to use
+  //this.state.activeTab.screen, but the
   //"Cannot Add a child that doesn't have a YogaNode to a parent with out a measure function"
   //bug comes up and it seems like a bug in rn
   render() {
-    const { selectedSubWallet, activeCoin } = this.props
-    const { subWallets } = this.state
-    //const DynamicHeaderPortal = <Portal.Host></Portal.Host>
+    const { selectedSubWallet, activeCoin } = this.props;
+    const { subWallets, filteredSubWallets } = this.state;
 
     return (
       <Portal.Host>
-        <View style={{ flex: 1, display: 'flex' }}>
+        <View style={{ flex: 1, display: "flex" }}>
           {selectedSubWallet == null && (
             <SubWalletSelectorModal
               visible={selectedSubWallet == null}
               cancel={this.goBack}
               animationType="slide"
-              subWallets={subWallets}
+              subWallets={filteredSubWallets == null ? subWallets : filteredSubWallets}
               chainTicker={activeCoin.id}
             />
           )}
           {selectedSubWallet != null && <DynamicHeader />}
           {selectedSubWallet != null && (
-            <View style={{flex: 2}}>
-              {this.state.activeTab.screen === "Overview" ? (
-                <Overview
-                  navigation={this.props.navigation}
-                  data={this.passthrough}
-                  switchTab={this.switchTabByKey}
-                />
-              ) : this.state.activeTab.screen === "SendCoin" ? (
-                <SendCoin
-                  navigation={this.props.navigation}
-                  data={this.passthrough}
-                  switchTab={this.switchTabByKey}
-                />
-              ) : this.state.activeTab.screen === "ReceiveCoin" ? (
-                <ReceiveCoin
-                  navigation={this.props.navigation}
-                  data={this.passthrough}
-                  switchTab={this.switchTabByKey}
-                />
-              ) : null}
-              <BottomNavigation
-                onTabPress={(newTab) => this.switchTab(newTab)}
-                renderTab={this.renderTab}
-                tabs={this.state.tabs}
-                activeTab={this.state.activeTab.key}
-                style={{ display: 'flex' }}
-              />
-            </View>
+            <BottomNavigation
+              shifting={false}
+              navigationState={{
+                index: this.state.activeTabIndex,
+                routes: this.state.tabs,
+              }}
+              onIndexChange={this.switchTab}
+              renderScene={this.renderScene}
+            />
           )}
         </View>
       </Portal.Host>
@@ -188,6 +223,7 @@ const mapStateToProps = (state) => {
     selectedSubWallet:
       state.coinMenus.activeSubWallets[state.coins.activeCoin.id],
     allSubWallets: state.coinMenus.allSubWallets[state.coins.activeCoin.id],
+    services: state.services
   };
 };
 

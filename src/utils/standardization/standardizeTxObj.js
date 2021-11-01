@@ -93,3 +93,30 @@ export const standardizeEthTxObj = (transactions, address, decimals = ETHERS) =>
 
   return _uniqueTxs;
 };
+
+export const standardizeWyreTxObj = (transaction, accountAddress, coinObj) => {
+  const type = transaction.type === "EXCHANGE"
+  ? transaction.sourceCurrency === coinObj.id
+    ? "sent"
+    : "received"
+  : transaction.type === "INCOMING"
+  ? "received"
+  : "sent"
+
+  return {
+    type,
+    height: transaction.blockNumber,
+    timestamp: transaction.createdAt / 1000,
+    txid: transaction.id,
+    blockchainTxId: transaction.blockchainTxId,
+    src: transaction.sourceName,
+    address: transaction.type === "INCOMING" ? accountAddress : transaction.destName,
+    amount:
+      type === "sent" ? transaction.sourceAmount.toString() : transaction.destAmount.toString(),
+    confirmed: transaction.status === "COMPLETED",
+    deposit:
+      transaction.status === "PENDING" &&
+      transaction.source != null &&
+      transaction.source.split(":")[0] === "paymentmethod",
+  };
+};

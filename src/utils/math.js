@@ -48,7 +48,7 @@ export const findNumDecimals = (value) => {
 }
 
 export const unixToDate = (unixTime) => {
-  return (new Date(unixTime*1000)).toUTCString();
+  return (new Date(unixTime*1000)).toLocaleString();
 }
 
 export const kmdCalcInterest = (locktime, value) => {

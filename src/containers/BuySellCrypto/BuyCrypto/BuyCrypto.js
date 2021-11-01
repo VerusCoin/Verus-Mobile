@@ -31,7 +31,7 @@ import {
   addCoin,
   setUserCoins,
   addKeypairs,
-  expireData,
+  expireCoinData,
   //transactionsNeedUpdate,
   //updateOneBalance,
   //balancesNeedUpdate
@@ -136,10 +136,10 @@ class BuyCrypto extends Component {
 
   forceUpdate = () => {
     const coinObj = this.props.activeCoin
-    this.props.dispatch(expireData(coinObj.id, API_GET_FIATPRICE))
-    this.props.dispatch(expireData(coinObj.id, API_GET_BALANCES))
-    this.props.dispatch(expireData(coinObj.id, API_GET_INFO))
-    this.props.dispatch(expireData(coinObj.id, API_GET_TRANSACTIONS))
+    this.props.dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE))
+    this.props.dispatch(expireCoinData(coinObj.id, API_GET_BALANCES))
+    this.props.dispatch(expireCoinData(coinObj.id, API_GET_INFO))
+    this.props.dispatch(expireCoinData(coinObj.id, API_GET_TRANSACTIONS))
 
     this.refresh()
   }

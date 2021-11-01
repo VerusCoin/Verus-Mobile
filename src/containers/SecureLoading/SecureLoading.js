@@ -21,7 +21,7 @@ import {
 } from "react-native";
 import { CommonActions } from '@react-navigation/native';
 import { connect } from 'react-redux';
-import { signOut } from '../../actions/actionCreators';
+import { clearSecureLoadingData, setSecureLoadingData, signOut } from '../../actions/actionCreators';
 import { Icon } from "react-native-elements";
 import styles from './SecureLoading.styles'
 import AnimatedActivityIndicator from "../../components/AnimatedActivityIndicator";
@@ -56,54 +56,94 @@ class SecureLoading extends Component {
     }, DEFAULT_TIMEOUT)
 
     if (data) {
-      this.setState({
-        task: data.task ? data.task : null, 
-        message: data.message ? data.message: DEFAULT_MESSAGE, 
-        timeout: data.timeout ? data.timeout : DEFAULT_TIMEOUT,
-        route: data.route ? data.route : null,
-        input: data.input ? data.input : [],
-        dispatchResult: data.dispatchResult ? true : false,
-        onError: data.onError ? data.onError : null,
-        successMsg: data.successMsg ? data.successMsg : null,
-        errorMsg: data.errorMsg ? data.errorMsg : null
-      },
+      this.setState(
+        {
+          task: data.task ? data.task : null,
+          message: data.message ? data.message : DEFAULT_MESSAGE,
+          timeout: data.timeout ? data.timeout : DEFAULT_TIMEOUT,
+          route: data.route ? data.route : null,
+          input: data.input ? data.input : [],
+          dispatchResult: data.dispatchResult ? true : false,
+          onError: data.onError ? data.onError : null,
+          successMsg: data.successMsg ? data.successMsg : null,
+          errorMsg: data.errorMsg ? data.errorMsg : null,
+          screen: data.screen ? data.screen : null,
+          successData: data.successData ? data.successData : {},
+          errorData: data.errorData ? data.errorData : {},
+        },
         () => {
           if (typeof this.state.task === "function") {
-            this.state.task(...this.state.input)
-            .then((res) => {
-              clearTimeout(this.timeoutTimer);
-              if (this.state.status !== 'timeout') {
-                this.setState({ status: 'success' }, () => {
-                  if (this.state.dispatchResult) this.props.dispatch(res)
+            this.state
+              .task(...this.state.input)
+              .then((res) => {
+                clearTimeout(this.timeoutTimer);
+                if (this.state.status !== "timeout") {
+                  this.setState({ status: "success" }, () => {
+                    if (this.state.dispatchResult) this.props.dispatch(res);
 
-                  if (this.state.route) {
-                    this.resetToScreen(this.state.route)
-                  } else {
-                    this.props.dispatch(signOut())
-                  }
-                })
-              }
-            })
+                    if (this.state.route) {
+                      this.props.dispatch(clearSecureLoadingData())
+                      this.props.dispatch(setSecureLoadingData(this.state.successData, true))
+                      
+                      this.resetToScreen(
+                        this.state.route,
+                        this.state.screen
+                      );
+                    } else {
+                      this.props.dispatch(signOut());
+                    }
+                  });
+                }
+              })
+              .catch((e) => {
+                clearTimeout(this.timeoutTimer);
+                if (this.state.status !== "timeout") {
+                  this.setState({ status: "error" }, () => {
+                    if (this.state.dispatchResult) this.props.dispatch(res);
+
+                    if (this.state.route) {
+                      this.props.dispatch(clearSecureLoadingData())
+                      this.props.dispatch(setSecureLoadingData(this.state.errorData, false))
+                      this.resetToScreen(this.state.route, this.state.screen, this.state.errorData);
+                    } else {
+                      this.props.dispatch(signOut());
+                    }
+                  });
+                }
+              });
           } else {
-            if (this.state.onError) this.state.onError()
+            if (this.state.onError) this.state.onError();
             clearTimeout(this.timeoutTimer);
-            this.setState({ status: 'error' })
+            this.setState({ status: "error" });
 
-            throw new Error("Error, task given to loading screen is " + (typeof this.state.task) + ", expected function")
+            throw new Error(
+              "Error, task given to loading screen is " +
+                typeof this.state.task +
+                ", expected function"
+            );
           }
-        })
+        }
+      );
     } else {
       throw new Error("Error, no task given to loading screen, expected Promise")
     }
   }
 
-  resetToScreen = (route) => {
+  resetToScreen = (route, screen) => {
     const resetAction = CommonActions.reset({
       index: 0, // <-- currect active route from actions array
       routes: [
-        { name: route },
+        screen != null
+          ? {
+              name: route,
+              params: {
+                screen,
+                initial: false,
+              },
+            }
+          : { name: route },
       ],
-    })
+    });
 
     this.props.navigation.closeDrawer();
     this.props.navigation.dispatch(resetAction)

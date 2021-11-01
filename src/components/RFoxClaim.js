@@ -121,7 +121,7 @@ class RFoxClaim extends Component {
                 onPress={this.cancelHandler}
               />
               <StandardButton 
-                color={Colors.successButtonColor}
+                color={Colors.verusGreenColor}
                 disabled={this.state.loading}
                 title="CLAIM" 
                 onPress={this.claim}

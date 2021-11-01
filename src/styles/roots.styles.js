@@ -21,7 +21,7 @@ export default roots = {
   blackRoot: {
     backgroundColor: Colors.quinaryColor,
     flex: 1,
-    alignItems: 'center',
+    flexDirection: 'column',
     borderTopWidth: 0,
   },
   rootWithoutPadding:{

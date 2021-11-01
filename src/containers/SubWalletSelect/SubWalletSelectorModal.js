@@ -9,7 +9,7 @@ import {
 import { List, Card } from "react-native-paper"
 import Modal from '../../components/Modal'
 import Styles from '../../styles/index'
-import { API_GET_BALANCES, GENERAL } from "../../utils/constants/intervalConstants";
+import { API_GET_BALANCES, API_GET_FIATPRICE, GENERAL } from "../../utils/constants/intervalConstants";
 import { SUBWALLET_NAMES } from "../../utils/constants/constants";
 import { truncateDecimal } from "../../utils/math";
 import { setCoinSubWallet } from "../../actions/actionCreators";
@@ -58,9 +58,13 @@ class SubWalletSelectorModal extends Component {
         walletColorMap[wallet.id] = wallet.color;
       }
 
-      if (cryptoBalances[wallet.id] && rates[chainTicker]) {
+      if (
+        cryptoBalances[wallet.id] &&
+        rates[wallet.api_channels[API_GET_FIATPRICE]] &&
+        rates[wallet.api_channels[API_GET_FIATPRICE]][chainTicker]
+      ) {
         fiatBalances[wallet.id] = BigNumber(
-          rates[chainTicker][displayCurrency]
+          rates[wallet.api_channels[API_GET_FIATPRICE]][chainTicker][displayCurrency]
         ).multipliedBy(cryptoBalances[wallet.id]);
       }
     })
@@ -186,7 +190,7 @@ class SubWalletSelectorModal extends Component {
 const mapStateToProps = (state) => {
   return {
     allBalances: state.ledger.balances,
-    rates: state.ledger.rates[GENERAL],
+    rates: state.ledger.rates,
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
   }
 };

@@ -23,10 +23,10 @@ export default misc = {
     marginVertical:'10%',
   },
   borderWithGreenColor: {
-    color: Colors.successButtonColor,
+    color: Colors.verusGreenColor,
     borderWidth: 1,
     padding: 4,
-    borderColor:Colors.successButtonColor,
+    borderColor:Colors.verusGreenColor,
     fontWeight: 'bold',
   },
   backgroundColorWhite:{

@@ -3,8 +3,9 @@ import {
   ERROR_RATES,
   SET_RATES
 } from "../../../../utils/constants/storeType";
-import { GENERAL } from "../../../../utils/constants/intervalConstants";
+import { GENERAL, WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
 import { updateLedgerValue } from "./UpdateLedgerValue";
+import { getRates as getWyreRates } from "../../../../utils/api/channels/wyre/requests/getRates";
 
 const channelMap = {
   [GENERAL]: async (activeUser, coinObj) => {
@@ -17,6 +18,16 @@ const channelMap = {
       channel: GENERAL,
       header,
       body: result,
+    };
+  },
+  [WYRE_SERVICE]: async (activeUser, coinObj) => {
+    let body = await getWyreRates(coinObj);
+
+    return {
+      chainTicker: coinObj.id,
+      channel: WYRE_SERVICE,
+      header: {},
+      body,
     };
   },
 };

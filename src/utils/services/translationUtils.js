@@ -1,0 +1,400 @@
+import {
+  PERSONAL_BANK_COUNTRY,
+  PERSONAL_BANK_PRIMARY_CURRENCY,
+  PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS,
+  PERSONAL_DOCUMENT_DRIVING_LICENSE,
+  PERSONAL_DOCUMENT_GOVT_ID,
+  PERSONAL_DOCUMENT_PASSPORT,
+  PERSONAL_DOCUMENT_PASSPORT_CARD,
+  PERSONAL_DOCUMENT_SUBTYPE_BACK,
+  PERSONAL_DOCUMENT_SUBTYPE_FRONT,
+  PERSONAL_IMAGE_TYPE_SCHEMA,
+  PERSONAL_BANK_BSB_NUMBER,
+  PERSONAL_BANK_BENEFICIARY_PHONE,
+  PERSONAL_BANK_BENEFICIARY_NAME_FIRST,
+  PERSONAL_BANK_BENEFICIARY_NAME_LAST,
+  PERSONAL_BANK_ACCOUNT_NUMBER,
+  PERSONAL_BANK_ACCOUNT_TYPE,
+  PERSONAL_BANK_CODE,
+  PERSONAL_BANK_NAME,
+  PERSONAL_BANK_BRANCH_CODE,
+  PERSONAL_BANK_ACCOUNT_TYPE_CHECKING,
+  PERSONAL_BANK_CPF_CNPJ,
+  PERSONAL_BANK_CHINESE_NATIONAL_ID,
+  PERSONAL_BANK_BENEFICIARY_NAME_FULL,
+  PERSONAL_BANK_BRANCH_NAME,
+  PERSONAL_BANK_CITY,
+  PERSONAL_BANK_PROVINCE,
+  PERSONAL_BANK_CLABE,
+  PERSONAL_BANK_BENEFICIARY_DOB,
+  PERSONAL_BANK_ROUTING_NUMBER,
+  PERSONAL_BANK_SWIFT_BIC
+} from "../constants/personal";
+import {
+  WYRE_INDIVIDUAL_GOVERNMENT_ID,
+  WYRE_INDIVIDUAL_GOVERNMENT_ID_BACK,
+  WYRE_INDIVIDUAL_GOVERNMENT_ID_DRIVING_LICENSE,
+  WYRE_INDIVIDUAL_GOVERNMENT_ID_FRONT,
+  WYRE_INDIVIDUAL_GOVERNMENT_ID_GOVT_ID,
+  WYRE_INDIVIDUAL_GOVERNMENT_ID_PASSPORT,
+  WYRE_INDIVIDUAL_GOVERNMENT_ID_PASSPORT_CARD,
+  WYRE_INDIVIDUAL_PROOF_OF_ADDRESS,
+  WYRE_INDIVIDUAL_RESIDENCE_ADDRESS,
+  WYRE_PAYMENT_METHOD_TYPE,
+  WYRE_PAYMENT_METHOD_TYPE_INTERNATIONAL_TRANSFER,
+  WYRE_PAYMENT_TYPE,
+  WYRE_PAYMENT_TYPE_LOCAL_BANK_TRANSFER,
+  WYRE_PAYMENT_TYPE_LOCAL_BANK_WIRE,
+  WYRE_PERSONAL_BANK_ACCEPTS_PAYMENTS,
+  WYRE_PERSONAL_BANK_ACCOUNT_HOLDER_PHONE,
+  WYRE_PERSONAL_BANK_ACCOUNT_NUMBER,
+  WYRE_PERSONAL_BANK_ACCOUNT_TYPE,
+  WYRE_PERSONAL_BANK_ACCOUNT_TYPE_CHECKING_BR,
+  WYRE_PERSONAL_BANK_ACCOUNT_TYPE_SAVINGS_BR,
+  WYRE_PERSONAL_BANK_BENEFICIARY_ADDRESS_1,
+  WYRE_PERSONAL_BANK_BENEFICIARY_ADDRESS_2,
+  WYRE_PERSONAL_BANK_BENEFICIARY_CITY,
+  WYRE_PERSONAL_BANK_BENEFICIARY_DOB_DAY,
+  WYRE_PERSONAL_BANK_BENEFICIARY_DOB_MONTH,
+  WYRE_PERSONAL_BANK_BENEFICIARY_DOB_YEAR,
+  WYRE_PERSONAL_BANK_BENEFICIARY_NAME,
+  WYRE_PERSONAL_BANK_BENEFICIARY_PHONE,
+  WYRE_PERSONAL_BANK_BENEFICIARY_POSTAL,
+  WYRE_PERSONAL_BANK_BENEFICIARY_STATE,
+  WYRE_PERSONAL_BANK_BENEFICIARY_TYPE,
+  WYRE_PERSONAL_BANK_BENEFICIARY_TYPE_INDIVIDUAL,
+  WYRE_PERSONAL_BANK_BRANCH_CODE,
+  WYRE_PERSONAL_BANK_BRANCH_NAME,
+  WYRE_PERSONAL_BANK_BSB_NUMBER,
+  WYRE_PERSONAL_BANK_CHINESE_NATIONAL_ID,
+  WYRE_PERSONAL_BANK_CITY,
+  WYRE_PERSONAL_BANK_CLABE,
+  WYRE_PERSONAL_BANK_CODE,
+  WYRE_PERSONAL_BANK_COUNTRY,
+  WYRE_PERSONAL_BANK_CPF_CNPJ,
+  WYRE_PERSONAL_BANK_FIRST_NAME,
+  WYRE_PERSONAL_BANK_FULL_NAME,
+  WYRE_PERSONAL_BANK_LAST_NAME,
+  WYRE_PERSONAL_BANK_NAME,
+  WYRE_PERSONAL_BANK_PRIMARY_CURRENCY,
+  WYRE_PERSONAL_BANK_PROVINCE,
+  WYRE_PERSONAL_BANK_ROUTING_NUMBER,
+  WYRE_PERSONAL_BANK_SWIFT_BIC
+} from "../constants/services";
+import { renderPersonalAddress } from "../personal/displayUtils";
+import { BANK_ACCOUNT_KEYS, DEFAULT_BANK_KEYS } from '../constants/bankAccountKeys'
+import { PERSONAL_BANK_VALIDATION_MAP } from "../personal/validation";
+
+export const translatePersonalBirthdayToWyre = (birthday) => {
+  const { day, month, year } = birthday;
+  const date = new Date(Date.UTC(year, month, day, 3, 0, 0));
+
+  return date.toISOString().split("T")[0];
+};
+
+export const translatePersonalAddressToWyre = (address) => {
+  return {
+    street1: address.street1,
+    street2: address.street2,
+    city: address.city,
+    state: address.state_province_region,
+    postalCode: address.postal_code,
+    country: address.country,
+  };
+};
+
+export const translatePersonalDocumentToWyreUpload = (document, fieldId) => {
+  const typeMap = {
+    [WYRE_INDIVIDUAL_GOVERNMENT_ID]: {
+      [PERSONAL_DOCUMENT_GOVT_ID]: WYRE_INDIVIDUAL_GOVERNMENT_ID_GOVT_ID,
+      [PERSONAL_DOCUMENT_PASSPORT]: WYRE_INDIVIDUAL_GOVERNMENT_ID_PASSPORT,
+      [PERSONAL_DOCUMENT_PASSPORT_CARD]:
+        WYRE_INDIVIDUAL_GOVERNMENT_ID_PASSPORT_CARD,
+      [PERSONAL_DOCUMENT_DRIVING_LICENSE]:
+        WYRE_INDIVIDUAL_GOVERNMENT_ID_DRIVING_LICENSE,
+    },
+    [WYRE_INDIVIDUAL_PROOF_OF_ADDRESS]: {},
+  };
+
+  const subtypeMap = {
+    [PERSONAL_DOCUMENT_SUBTYPE_FRONT]: WYRE_INDIVIDUAL_GOVERNMENT_ID_FRONT,
+    [PERSONAL_DOCUMENT_SUBTYPE_BACK]: WYRE_INDIVIDUAL_GOVERNMENT_ID_BACK,
+  };
+
+  return {
+    field: fieldId,
+    uris: document.uris,
+    format: "image/jpeg",
+    documentType:
+      document.image_type == null ||
+      typeMap[fieldId] == null ||
+      typeMap[fieldId][document.image_type] == null
+        ? null
+        : typeMap[fieldId][document.image_type],
+    documentSubTypes:
+      document.image_type == null ||
+      PERSONAL_IMAGE_TYPE_SCHEMA[document.image_type] == null ||
+      PERSONAL_IMAGE_TYPE_SCHEMA[document.image_type].images == null
+        ? []
+        : PERSONAL_IMAGE_TYPE_SCHEMA[document.image_type].images.map(
+            (imageSchema) => subtypeMap[imageSchema.key]
+          ),
+  };
+};
+
+export const translateWyreAddressToPersonal = (address) => {
+  return {
+    street1: address.street1,
+    street2: address.street2,
+    city: address.city,
+    state_province_region: address.state,
+    postal_code: address.postalCode,
+    country: address.country,
+  };
+};
+
+export const translatePersonalPhoneToWyre = (phone) => {
+  return `${phone.calling_code}${phone.number}`
+};
+
+export const renderWyreDataField = (fieldId, value) => {
+  if (value == null) return { title: null };
+
+  switch (fieldId) {
+    case WYRE_INDIVIDUAL_RESIDENCE_ADDRESS:
+      return renderPersonalAddress(translateWyreAddressToPersonal(value));
+    default:
+      return {
+        title: value,
+      };
+  }
+};
+
+export const translatePersonalBankAccountToWyreUpload = (account) => {
+  const country = account[PERSONAL_BANK_COUNTRY]
+  let missing = []
+
+  if (country == null || country.length == 0) {
+    missingFields.push(PERSONAL_BANK_COUNTRY)
+    return {
+      submission: null,
+      missing,
+    }
+  } else {
+    const accountKeys =
+      BANK_ACCOUNT_KEYS[country] == null
+        ? DEFAULT_BANK_KEYS
+        : BANK_ACCOUNT_KEYS[country];
+    
+    for (accountKey of accountKeys) {
+      const validator = PERSONAL_BANK_VALIDATION_MAP[accountKey]
+
+      if (validator == null) {
+        return {
+          submission: null,
+          missing,
+        };
+      } else if (!validator(account[accountKey])) {
+        missing.push(accountKey)
+      }
+    }
+
+    if (missing.length > 0)
+      return {
+        submission: null,
+        missing,
+      };
+
+    const getWyreFormat = () => {
+      switch (country) {
+        case "AU":
+          return {
+            [WYRE_PAYMENT_METHOD_TYPE]: WYRE_PAYMENT_METHOD_TYPE_INTERNATIONAL_TRANSFER,
+            [WYRE_PAYMENT_TYPE]: WYRE_PAYMENT_TYPE_LOCAL_BANK_WIRE,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_TYPE]: WYRE_PERSONAL_BANK_BENEFICIARY_TYPE_INDIVIDUAL,
+            [WYRE_PERSONAL_BANK_COUNTRY]: country,
+            [WYRE_PERSONAL_BANK_PRIMARY_CURRENCY]: account[PERSONAL_BANK_PRIMARY_CURRENCY],
+            [WYRE_PERSONAL_BANK_BENEFICIARY_ADDRESS_1]:
+              account[PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS].street1,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_ADDRESS_2]:
+              account[PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS].street2,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_CITY]:
+              account[PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS].city,
+            [WYRE_PERSONAL_BANK_BSB_NUMBER]: account[PERSONAL_BANK_BSB_NUMBER],
+            [WYRE_PERSONAL_BANK_BENEFICIARY_PHONE]: translatePersonalPhoneToWyre(
+              account[PERSONAL_BANK_BENEFICIARY_PHONE]
+            ),
+            [WYRE_PERSONAL_BANK_FIRST_NAME]: account[PERSONAL_BANK_BENEFICIARY_NAME_FIRST],
+            [WYRE_PERSONAL_BANK_LAST_NAME]: account[PERSONAL_BANK_BENEFICIARY_NAME_LAST],
+            [WYRE_PERSONAL_BANK_ACCOUNT_NUMBER]: account[PERSONAL_BANK_ACCOUNT_NUMBER],
+            [WYRE_PERSONAL_BANK_ACCOUNT_TYPE]: account[PERSONAL_BANK_ACCOUNT_TYPE].toUpperCase(),
+            [WYRE_PERSONAL_BANK_ACCEPTS_PAYMENTS]: true,
+          };
+        case "BR":
+          return {
+            [WYRE_PAYMENT_METHOD_TYPE]: WYRE_PAYMENT_METHOD_TYPE_INTERNATIONAL_TRANSFER,
+            [WYRE_PERSONAL_BANK_COUNTRY]: country,
+            [WYRE_PERSONAL_BANK_PRIMARY_CURRENCY]: account[PERSONAL_BANK_PRIMARY_CURRENCY],
+            [WYRE_PERSONAL_BANK_ACCEPTS_PAYMENTS]: true,
+            [WYRE_PERSONAL_BANK_CODE]: account[PERSONAL_BANK_CODE],
+            [WYRE_PERSONAL_BANK_NAME]: account[PERSONAL_BANK_NAME],
+            [WYRE_PERSONAL_BANK_BRANCH_CODE]: account[PERSONAL_BANK_BRANCH_CODE],
+            [WYRE_PERSONAL_BANK_FULL_NAME]: account[PERSONAL_BANK_BENEFICIARY_NAME_FULL],
+            [WYRE_PERSONAL_BANK_ACCOUNT_NUMBER]: account[PERSONAL_BANK_ACCOUNT_NUMBER],
+            [WYRE_PERSONAL_BANK_ACCOUNT_TYPE]:
+              account[PERSONAL_BANK_ACCOUNT_TYPE] == PERSONAL_BANK_ACCOUNT_TYPE_CHECKING
+                ? WYRE_PERSONAL_BANK_ACCOUNT_TYPE_CHECKING_BR
+                : WYRE_PERSONAL_BANK_ACCOUNT_TYPE_SAVINGS_BR,
+            [WYRE_PERSONAL_BANK_CPF_CNPJ]: account[PERSONAL_BANK_CPF_CNPJ],
+            [WYRE_PERSONAL_BANK_ACCOUNT_HOLDER_PHONE]: translatePersonalPhoneToWyre(
+              account[PERSONAL_BANK_BENEFICIARY_PHONE]
+            ),
+          };
+        case "CN":
+          return {
+            [WYRE_PAYMENT_METHOD_TYPE]: WYRE_PAYMENT_METHOD_TYPE_INTERNATIONAL_TRANSFER,
+            [WYRE_PERSONAL_BANK_COUNTRY]: country,
+            [WYRE_PERSONAL_BANK_PRIMARY_CURRENCY]: account[PERSONAL_BANK_PRIMARY_CURRENCY],
+            [WYRE_PERSONAL_BANK_ACCEPTS_PAYMENTS]: true,
+            [WYRE_PAYMENT_TYPE]: WYRE_PAYMENT_TYPE_LOCAL_BANK_TRANSFER,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_TYPE]: WYRE_PERSONAL_BANK_BENEFICIARY_TYPE_INDIVIDUAL,
+            [WYRE_PERSONAL_BANK_CHINESE_NATIONAL_ID]: account[PERSONAL_BANK_CHINESE_NATIONAL_ID],
+            [WYRE_PERSONAL_BANK_FULL_NAME]: account[PERSONAL_BANK_BENEFICIARY_NAME_FULL],
+            [WYRE_PERSONAL_BANK_ACCOUNT_NUMBER]: account[PERSONAL_BANK_ACCOUNT_NUMBER],
+            [WYRE_PERSONAL_BANK_NAME]: account[PERSONAL_BANK_NAME],
+            [WYRE_PERSONAL_BANK_BRANCH_NAME]: account[PERSONAL_BANK_BRANCH_NAME],
+            [WYRE_PERSONAL_BANK_CITY]: account[PERSONAL_BANK_CITY],
+            [WYRE_PERSONAL_BANK_PROVINCE]: account[PERSONAL_BANK_PROVINCE],
+          };
+        case "MX":
+          return {
+            [WYRE_PAYMENT_METHOD_TYPE]: WYRE_PAYMENT_METHOD_TYPE_INTERNATIONAL_TRANSFER,
+            [WYRE_PERSONAL_BANK_COUNTRY]: country,
+            [WYRE_PERSONAL_BANK_PRIMARY_CURRENCY]: account[PERSONAL_BANK_PRIMARY_CURRENCY],
+            [WYRE_PERSONAL_BANK_ACCEPTS_PAYMENTS]: true,
+            [WYRE_PAYMENT_TYPE]: WYRE_PAYMENT_TYPE_LOCAL_BANK_WIRE,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_TYPE]: WYRE_PERSONAL_BANK_BENEFICIARY_TYPE_INDIVIDUAL,
+            [WYRE_PERSONAL_BANK_ACCOUNT_NUMBER]: account[PERSONAL_BANK_ACCOUNT_NUMBER],
+            [WYRE_PERSONAL_BANK_FIRST_NAME]: account[PERSONAL_BANK_BENEFICIARY_NAME_FIRST],
+            [WYRE_PERSONAL_BANK_LAST_NAME]: account[PERSONAL_BANK_BENEFICIARY_NAME_LAST],
+            [WYRE_PERSONAL_BANK_CLABE]: account[PERSONAL_BANK_CLABE],
+          };
+        case "US":
+          return {
+            [WYRE_PAYMENT_METHOD_TYPE]: WYRE_PAYMENT_METHOD_TYPE_INTERNATIONAL_TRANSFER,
+            [WYRE_PERSONAL_BANK_COUNTRY]: country,
+            [WYRE_PERSONAL_BANK_PRIMARY_CURRENCY]: account[PERSONAL_BANK_PRIMARY_CURRENCY],
+            [WYRE_PERSONAL_BANK_ACCEPTS_PAYMENTS]: true,
+            [WYRE_PAYMENT_TYPE]: WYRE_PAYMENT_TYPE_LOCAL_BANK_WIRE,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_TYPE]: WYRE_PERSONAL_BANK_BENEFICIARY_TYPE_INDIVIDUAL,
+            [WYRE_PERSONAL_BANK_ACCOUNT_NUMBER]: account[PERSONAL_BANK_ACCOUNT_NUMBER],
+            [WYRE_PERSONAL_BANK_ROUTING_NUMBER]: account[PERSONAL_BANK_ROUTING_NUMBER],
+            [WYRE_PERSONAL_BANK_FIRST_NAME]: account[PERSONAL_BANK_BENEFICIARY_NAME_FIRST],
+            [WYRE_PERSONAL_BANK_LAST_NAME]: account[PERSONAL_BANK_BENEFICIARY_NAME_LAST],
+            [WYRE_PERSONAL_BANK_BENEFICIARY_ADDRESS_1]:
+              account[PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS].street1,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_ADDRESS_2]:
+              account[PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS].street2,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_CITY]:
+              account[PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS].city,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_POSTAL]:
+              account[PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS].postal_code,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_STATE]:
+              account[PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS].state_province_region,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_PHONE]: translatePersonalPhoneToWyre(
+              account[PERSONAL_BANK_BENEFICIARY_PHONE]
+            ),
+            [WYRE_PERSONAL_BANK_BENEFICIARY_DOB_DAY]: account[PERSONAL_BANK_BENEFICIARY_DOB].day,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_DOB_MONTH]:
+              account[PERSONAL_BANK_BENEFICIARY_DOB].month,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_DOB_YEAR]: account[PERSONAL_BANK_BENEFICIARY_DOB].year,
+            [WYRE_PERSONAL_BANK_ACCOUNT_TYPE]: account[PERSONAL_BANK_ACCOUNT_TYPE].toUpperCase(),
+          };
+        case "AT":
+        case "BE":
+        case "BG":
+        case "HR":
+        case "CY":
+        case "CZ":
+        case "DK":
+        case "EE":
+        case "FI":
+        case "FR":
+        case "DE":
+        case "GR":
+        case "HU":
+        case "IE":
+        case "IT":
+        case "LV":
+        case "LT":
+        case "LU":
+        case "MT":
+        case "NL":
+        case "PL":
+        case "PT":
+        case "RO":
+        case "SK":
+        case "SI":
+        case "ES":
+        case "SE":
+        case "GB":
+          return {
+            [WYRE_PAYMENT_METHOD_TYPE]: WYRE_PAYMENT_METHOD_TYPE_INTERNATIONAL_TRANSFER,
+            [WYRE_PAYMENT_TYPE]: WYRE_PAYMENT_TYPE_LOCAL_BANK_WIRE,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_TYPE]: WYRE_PERSONAL_BANK_BENEFICIARY_TYPE_INDIVIDUAL,
+            [WYRE_PERSONAL_BANK_COUNTRY]: country == "GB" ? "UK" : country, // Why doesn't Wyre follow ISO-3166???
+            [WYRE_PERSONAL_BANK_PRIMARY_CURRENCY]: account[PERSONAL_BANK_PRIMARY_CURRENCY],
+            [WYRE_PERSONAL_BANK_ACCEPTS_PAYMENTS]: true,
+            [WYRE_PERSONAL_BANK_FIRST_NAME]: account[PERSONAL_BANK_BENEFICIARY_NAME_FIRST],
+            [WYRE_PERSONAL_BANK_LAST_NAME]: account[PERSONAL_BANK_BENEFICIARY_NAME_LAST],
+            [WYRE_PERSONAL_BANK_BENEFICIARY_NAME]: `${account[PERSONAL_BANK_BENEFICIARY_NAME_FIRST]} ${account[PERSONAL_BANK_BENEFICIARY_NAME_LAST]}`,
+            [WYRE_PERSONAL_BANK_ACCOUNT_NUMBER]: account[PERSONAL_BANK_ACCOUNT_NUMBER],
+            [WYRE_PERSONAL_BANK_ACCOUNT_TYPE]: account[PERSONAL_BANK_ACCOUNT_TYPE].toUpperCase(),
+            [WYRE_PERSONAL_BANK_BENEFICIARY_PHONE]: translatePersonalPhoneToWyre(
+              account[PERSONAL_BANK_BENEFICIARY_PHONE]
+            ),
+            [WYRE_PERSONAL_BANK_SWIFT_BIC]: account[PERSONAL_BANK_SWIFT_BIC],
+            [WYRE_PERSONAL_BANK_BENEFICIARY_ADDRESS_1]:
+              account[PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS].street1,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_ADDRESS_2]:
+              account[PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS].street2,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_CITY]:
+              account[PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS].city,
+          };
+        default:
+          return {
+            [WYRE_PAYMENT_METHOD_TYPE]: WYRE_PAYMENT_METHOD_TYPE_INTERNATIONAL_TRANSFER,
+            [WYRE_PAYMENT_TYPE]: WYRE_PAYMENT_TYPE_LOCAL_BANK_WIRE,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_TYPE]: WYRE_PERSONAL_BANK_BENEFICIARY_TYPE_INDIVIDUAL,
+            [WYRE_PERSONAL_BANK_COUNTRY]: country,
+            [WYRE_PERSONAL_BANK_PRIMARY_CURRENCY]: account[PERSONAL_BANK_PRIMARY_CURRENCY],
+            [WYRE_PERSONAL_BANK_ACCEPTS_PAYMENTS]: true,
+            [WYRE_PERSONAL_BANK_FIRST_NAME]: account[PERSONAL_BANK_BENEFICIARY_NAME_FIRST],
+            [WYRE_PERSONAL_BANK_LAST_NAME]: account[PERSONAL_BANK_BENEFICIARY_NAME_LAST],
+            [WYRE_PERSONAL_BANK_BENEFICIARY_NAME]: `${account[PERSONAL_BANK_BENEFICIARY_NAME_FIRST]} ${account[PERSONAL_BANK_BENEFICIARY_NAME_LAST]}`,
+            [WYRE_PERSONAL_BANK_ACCOUNT_NUMBER]: account[PERSONAL_BANK_ACCOUNT_NUMBER],
+            [WYRE_PERSONAL_BANK_ACCOUNT_TYPE]: account[PERSONAL_BANK_ACCOUNT_TYPE].toUpperCase(),
+            [WYRE_PERSONAL_BANK_BENEFICIARY_PHONE]: translatePersonalPhoneToWyre(
+              account[PERSONAL_BANK_BENEFICIARY_PHONE]
+            ),
+            [WYRE_PERSONAL_BANK_SWIFT_BIC]: account[PERSONAL_BANK_SWIFT_BIC],
+            [WYRE_PERSONAL_BANK_BENEFICIARY_ADDRESS_1]:
+              account[PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS].street1,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_ADDRESS_2]:
+              account[PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS].street2,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_CITY]:
+              account[PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS].city,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_DOB_DAY]: account[PERSONAL_BANK_BENEFICIARY_DOB].day,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_DOB_MONTH]:
+              account[PERSONAL_BANK_BENEFICIARY_DOB].month,
+            [WYRE_PERSONAL_BANK_BENEFICIARY_DOB_YEAR]: account[PERSONAL_BANK_BENEFICIARY_DOB].year,
+          };
+      }
+    };
+    
+    return {
+      submission: getWyreFormat(),
+      missing,
+    }
+  }
+}

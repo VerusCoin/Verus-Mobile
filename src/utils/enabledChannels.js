@@ -1,4 +1,4 @@
-import { ENABLE_DLIGHT, DISABLED_CHANNELS } from '../../env/index'
+import { ENABLE_DLIGHT, ENABLE_WYRE_COIN, DISABLED_CHANNELS } from '../../env/index'
 import store from '../store'
 import { DLIGHT_PRIVATE } from './constants/intervalConstants';
 
@@ -9,6 +9,10 @@ export const dlightEnabled = () => {
     ENABLE_DLIGHT &&
     state.authentication.activeAccount.seeds[DLIGHT_PRIVATE]
   );
+}
+
+export const wyreCoinChannelEnabled = () => {
+  return ENABLE_WYRE_COIN
 }
 
 export const getDisabledChannels = () => {

@@ -19,8 +19,8 @@ import { Input } from 'react-native-elements'
 import { Button, TextInput, Text } from 'react-native-paper'
 import Colors from "../../../globals/colors";
 import ScanSeed from "../../ScanSeed";
-import { DLIGHT_PRIVATE } from "../../../utils/constants/intervalConstants";
-import { parseDlightSeed } from "../../../utils/keys";
+import { DLIGHT_PRIVATE, WYRE_SERVICE } from "../../../utils/constants/intervalConstants";
+import { isSeedPhrase, parseDlightSeed } from "../../../utils/keys";
 import { createAlert } from "../../../actions/actions/alert/dispatchers/alert";
 
 class ImportSeed extends Component {
@@ -28,6 +28,7 @@ class ImportSeed extends Component {
     super(props);
 
     this.state = props.initState;
+    this.WYRE_SERVICE_SEED_LENGTH = 24
   }
 
   componentDidUpdate(lastProps, lastState) {
@@ -50,8 +51,8 @@ class ImportSeed extends Component {
 
       if (this.props.channel === DLIGHT_PRIVATE) {
         try {
-          await parseDlightSeed(this.state.seed)
-          
+          await parseDlightSeed(this.state.seed);
+
           this.setState({ loading: false });
           this.props.setSeed(this.state.seed, this.props.channel);
           this.props.cancel();
@@ -63,9 +64,20 @@ class ImportSeed extends Component {
           );
         }
       } else {
-        this.setState({ loading: false });
-        this.props.setSeed(this.state.seed, this.props.channel);
-        this.props.cancel();
+        if (
+          this.props.channel === WYRE_SERVICE &&
+          !isSeedPhrase(this.state.seed, this.WYRE_SERVICE_SEED_LENGTH)
+        ) {
+          this.setState({ loading: false });
+          Alert.alert(
+            "Invalid Seed",
+            "Please enter a valid 24 word seed phrase."
+          );
+        } else {
+          this.setState({ loading: false });
+          this.props.setSeed(this.state.seed, this.props.channel);
+          this.props.cancel();
+        }
       }
     });
   };
@@ -86,7 +98,9 @@ class ImportSeed extends Component {
             <View style={Styles.fullWidthFlexGrowCenterBlock}>
               <View style={Styles.wideCenterBlock}>
                 <Text style={[Styles.textWithGreyColor, Styles.centeredText]}>
-                  {this.props.channel === DLIGHT_PRIVATE
+                  {this.props.channel === WYRE_SERVICE
+                    ? "Enter or scan a 24 word seed phrase."
+                    : this.props.channel === DLIGHT_PRIVATE
                     ? "Enter or scan a 24 word seed phrase, or Z spending key."
                     : "Enter or scan an existing spending key, WIF key, or seed phrase."}
                 </Text>

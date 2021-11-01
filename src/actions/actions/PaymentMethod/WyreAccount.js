@@ -3,8 +3,7 @@ import { NavigationActions } from '@react-navigation/compat';
 
 import { WYRE_URL } from '../../../utils/constants/constants';
 
-import WyreService from '../../../services/wyreService';
-import { putUserPaymentMethods } from '../../../utils/asyncStore/asyncStore';
+import WyreService from '../../../utils/services/WyreService';
 
 import {
     selectWyrePaymentMethod,

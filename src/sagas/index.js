@@ -7,6 +7,7 @@ import ethSaga from './channels/eth';
 import electrumSaga from './channels/electrum';
 import dlightSaga from './channels/dlight';
 import generalSaga from './channels/general';
+import wyreCoinSaga from './channels/wyre';
 import authenticationSaga from './authentication'
 
 import {
@@ -15,7 +16,8 @@ import {
   ENABLE_ERC20,
   ENABLE_ELECTRUM,
   ENABLE_ETH,
-  ENABLE_GENERAL
+  ENABLE_GENERAL,
+  ENABLE_WYRE_COIN
 } from "../../env/index";
 
 const generateSagas = () => {
@@ -32,6 +34,7 @@ const generateSagas = () => {
   if (ENABLE_ELECTRUM) sagas.push(electrumSaga)
   if (ENABLE_ETH) sagas.push(ethSaga)
   if (ENABLE_GENERAL) sagas.push(generalSaga)
+  if (ENABLE_WYRE_COIN) sagas.push(wyreCoinSaga)
 
   return sagas
 }

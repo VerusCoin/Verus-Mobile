@@ -72,26 +72,20 @@ export const HomeRenderCoinsList = function() {
   })
 }
 
-export const renderFiatBalance = function(balance, ticker) {
-  const { rates, displayCurrency } = this.props
+export const renderFiatBalance = function (balance, ticker) {
+  const { displayCurrency } = this.props;
+  const rate = this.getRate(ticker, displayCurrency);
 
   return (
     <Text>
-      {(balance == null ||
-      rates[ticker] == null ||
-      rates[ticker][displayCurrency] == null
+      {(balance == null || rate == null
         ? "-"
-        : truncateDecimal(
-            BigNumber(rates[ticker][displayCurrency]).multipliedBy(
-              BigNumber(balance)
-            ),
-            2
-          )) +
+        : truncateDecimal(BigNumber(rate).multipliedBy(BigNumber(balance)), 2)) +
         " " +
         displayCurrency}
     </Text>
   );
-}
+};
 
 /**
  * Render a list item for a cryptocurrency in your wallet

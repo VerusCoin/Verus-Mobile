@@ -1,7 +1,7 @@
 import { Cache } from "react-native-cache"
 //Cache library built on AsyncStorage
 
-import AsyncStorage from '@react-native-community/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const BLOCK_HEADER_CACHE_CAP = 1000
 

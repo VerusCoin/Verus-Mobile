@@ -18,7 +18,7 @@ import {
  } from '../../actions/actionCreators'
 import { getKeyByValue } from '../../utils/objectManip'
 import { CommonActions } from '@react-navigation/native';
-import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
+import { clearActiveAccountLifecycles, clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { renderSideMenu } from "./SideMenu.render";
 import { createAlert, resolveAlert } from "../../actions/actions/alert/dispatchers/alert";
 
@@ -204,7 +204,8 @@ class SideMenu extends Component {
         // Hack to prevent crash on screens that require activeAccount not to be null
         // TODO: Find a more elegant solution
         return new Promise((resolve, reject) => {
-          setTimeout(() => {
+          setTimeout(async () => {
+            await clearActiveAccountLifecycles()
             this.props.dispatch(signOut())
             resolve()
           }, 1000)

@@ -20,6 +20,11 @@ import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
 import { Button, List, Text, Divider } from "react-native-paper"
 import SemiModal from "../SemiModal";
+import { WALLET_APP_MANAGE } from "../../utils/constants/apps";
+import { expireCoinData } from "../../actions/actionCreators";
+import { API_GET_DEPOSIT_SOURCES, API_GET_PENDING_DEPOSITS } from "../../utils/constants/intervalConstants";
+import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
+import store from "../../store";
 
 class TxDetailsModal extends Component {
   constructor(props) {
@@ -52,6 +57,16 @@ class TxDetailsModal extends Component {
     Alert.alert("TxID Copied", txid);
   };
 
+  copyBlockchainTxIDToClipboard = () => {
+    const txid = this.props.txData.blockchainTxId != null
+    ? this.decodeTxid(this.props.txData.blockchainTxId)
+    : this.props.txData.blockchainTxId
+
+    Clipboard.setString(txid);
+
+    Alert.alert("TxID Copied", txid);
+  }
+
   copyAddressToClipboard = () => {
     Clipboard.setString(this.props.txData.address);
 
@@ -63,6 +78,26 @@ class TxDetailsModal extends Component {
 
     Alert.alert("Message Copied", this.props.txData.memo);
   };
+
+  goToManageTab = () => {
+    store.dispatch(expireCoinData(this.props.activeCoinID, API_GET_DEPOSIT_SOURCES));
+    store.dispatch(expireCoinData(this.props.activeCoinID, API_GET_PENDING_DEPOSITS));
+    conditionallyUpdateWallet(
+      store.getState(),
+      store.dispatch,
+      this.props.activeCoinID,
+      API_GET_DEPOSIT_SOURCES
+    );
+    conditionallyUpdateWallet(
+      store.getState(),
+      store.dispatch,
+      this.props.activeCoinID,
+      API_GET_PENDING_DEPOSITS
+    );
+
+    this.props.jumpTo(WALLET_APP_MANAGE)
+    this.props.cancel()
+  }
 
   //TODO: Move this higher up to txid source
   decodeTxid = () => {
@@ -86,7 +121,6 @@ class TxDetailsModal extends Component {
       txData,
       animationType,
       visible,
-      TxLogo,
       cancel,
       displayAmount,
       activeCoinID
@@ -137,11 +171,7 @@ class TxDetailsModal extends Component {
                         title={item.data}
                         description={item.key}
                         titleNumberOfLines={item.numLines || 1}
-                        titleStyle={
-                          item.capitalized
-                            ? Styles.capitalizeFirstLetter
-                            : undefined
-                        }
+                        titleStyle={item.capitalized ? Styles.capitalizeFirstLetter : undefined}
                         right={(props) =>
                           item.right ? (
                             <Text
@@ -166,30 +196,26 @@ class TxDetailsModal extends Component {
             data={[
               {
                 key: "Type",
-                data: txData.type || "Unknown",
+                data:
+                  (txData.type === "sent"
+                    ? "Outgoing"
+                    : txData.type === "received"
+                    ? "Incoming"
+                    : txData.type) || "Unknown",
                 capitalized: true,
               },
               {
-                key: `Amount ${
-                  txData.type === "received" ? "Received" : "Sent"
-                }`,
+                key: "Amount",
                 data: `${
-                  displayAmount != null
-                    ? truncateDecimal(displayAmount, this.props.decimals)
-                    : "??"
+                  displayAmount != null ? truncateDecimal(displayAmount, this.props.decimals) : "??"
                 } ${
-                  txData.feeCurr != null && txData.type === "self"
-                    ? txData.feeCurr
-                    : activeCoinID
+                  txData.feeCurr != null && txData.type === "self" ? txData.feeCurr : activeCoinID
                 }`,
                 numLines: 100,
               },
               {
                 key: "Fee",
-                data:
-                  txData.fee +
-                  " " +
-                  (txData.feeCurr != null ? txData.feeCurr : activeCoinID),
+                data: txData.fee + " " + (txData.feeCurr != null ? txData.feeCurr : activeCoinID),
                 condition: txData.fee != null,
                 numLines: 100,
               },
@@ -204,9 +230,7 @@ class TxDetailsModal extends Component {
               },
               {
                 key: "Address",
-                onPress: txData.address
-                  ? this.copyAddressToClipboard
-                  : () => {},
+                onPress: txData.address ? this.copyAddressToClipboard : () => {},
                 data:
                   txData.address == null
                     ? txData.visibility === "private"
@@ -216,19 +240,18 @@ class TxDetailsModal extends Component {
               },
               {
                 key: "Time",
-                data:
-                  txData && txData.timestamp != null
-                    ? unixToDate(txData.timestamp)
-                    : "Unknown",
+                data: txData && txData.timestamp != null ? unixToDate(txData.timestamp) : "Unknown",
               },
               {
                 key: "TxID",
-                onPress:
-                  txData.txid != null ? this.copyTxIDToClipboard : () => {},
-                data:
-                  txData.txid != null
-                    ? this.decodeTxid(txData.txid)
-                    : "Unknown",
+                onPress: txData.txid != null ? this.copyTxIDToClipboard : () => {},
+                data: txData.txid != null ? this.decodeTxid(txData.txid) : "Unknown",
+              },
+              {
+                key: "Blockchain TxID",
+                onPress: txData.blockchainTxId != null ? this.copyTxIDToClipboard : () => {},
+                data: txData.blockchainTxId,
+                condition: txData.blockchainTxId != null,
               },
               {
                 key: "Message",
@@ -239,6 +262,9 @@ class TxDetailsModal extends Component {
               },
             ]}
           />
+          {txData.deposit && (
+            <Button onPress={() => this.goToManageTab()}>{"Complete this deposit"}</Button>
+          )}
         </SafeAreaView>
       </SemiModal>
     );

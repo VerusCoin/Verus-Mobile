@@ -30,6 +30,8 @@ import { activateKeyboardListener } from "./actions/actionDispatchers";
 import Colors from "./globals/colors";
 import { CoinLogos } from "./utils/CoinData/CoinData";
 import { Portal } from 'react-native-paper';
+import SendModal from "./components/SendModal/SendModal";
+import { NavigationContainer } from "@react-navigation/native";
 
 class VerusMobile extends React.Component {
   constructor(props) {
@@ -129,11 +131,14 @@ class VerusMobile extends React.Component {
       <View style={{ flex: 1 }}>
         <Portal.Host>
           <AlertModal />
-          <RootStackScreens
-            hasAccount={this.props.accountsLength > 0}
-            loading={this.state.loading}
-            signedIn={this.props.signedIn}
-          />
+          {this.props.sendModal.type != null && <SendModal />}
+          <NavigationContainer>
+            <RootStackScreens
+              hasAccount={this.props.accountsLength > 0}
+              loading={this.state.loading}
+              signedIn={this.props.signedIn}
+            />
+          </NavigationContainer>
         </Portal.Host>
         <Modal
           animationType={this.state.loading ? "fade" : "none"}
@@ -164,7 +169,8 @@ class VerusMobile extends React.Component {
 const mapStateToProps = (state) => {
   return {
     accountsLength: state.authentication.accounts.length,
-    signedIn: state.authentication.signedIn
+    signedIn: state.authentication.signedIn,
+    sendModal: state.sendModal,
   }
 };
 

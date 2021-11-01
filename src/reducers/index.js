@@ -3,6 +3,8 @@ import { authentication } from './authentication';
 import { coins } from './coins';
 import { ledger } from './ledger';
 import { settings } from './settings';
+import { personal } from './personal';
+import { services } from './services';
 import { electrum } from './cache/electrum';
 import { headers } from './cache/headers';
 import { ethtxreceipts } from './cache/ethtxreceipts';
@@ -19,10 +21,13 @@ import { channelStore_eth } from './channelStores/eth';
 import { channelStore_erc20 } from './channelStores/erc20';
 import { channelStore_electrum } from './channelStores/electrum';
 import { channelStore_general } from './channelStores/general';
+import { channelStore_wyre_service } from './channelStores/wyre';
 import { alert } from './alert'
 import { modal } from './modal'
 import { keyboard } from './keyboard'
 import identity from './identity';
+import { sendModal } from './sendModal';
+import { secureLoading } from './secureLoading';
 
 export default combineReducers({
   authentication,
@@ -44,9 +49,14 @@ export default combineReducers({
   channelStore_electrum,
   channelStore_erc20,
   channelStore_general,
+  channelStore_wyre_service,
   ethtxreceipts,
   coinMenus,
   alert,
   modal,
-  keyboard
+  keyboard,
+  personal,
+  services,
+  sendModal,
+  secureLoading
 });

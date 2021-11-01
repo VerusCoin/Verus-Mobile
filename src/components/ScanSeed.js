@@ -7,13 +7,18 @@ import React, { Component } from "react";
 import {
   View,
   StyleSheet,
-  Alert
+  Alert,
+  TouchableOpacity,
+  Text
 } from "react-native";
+import {
+  Button
+} from "react-native-paper";
 import QRCodeScanner from 'react-native-qrcode-scanner';
-import StandardButton from "../components/StandardButton";
 import QRCode from 'react-native-qrcode-svg';
 import Colors from "../globals/colors";
 import Styles from '../styles/index'
+import BarcodeReader from "./BarcodeReader/BarcodeReader";
 
 const FORMAT_UNKNOWN = "QR Data format unrecognized."
 
@@ -46,20 +51,22 @@ class ScanSeed extends Component {
   render() {
     return (
       <View style={Styles.blackRoot}>
-        <QRCodeScanner
-          onRead={this.onSuccess.bind(this)}
-          showMarker={true}
-          captureAudio={false}
-          cameraStyle={Styles.fullHeight}
+        <BarcodeReader
+          prompt="Scan a QR seed or private key"
+          onScan={(e) => this.onSuccess(e)}
+          button={() => (
+            <Button
+              mode="contained"
+              color={Colors.warningButtonColor}
+              onPress={this.cancelHandler}
+              style={{
+                marginBottom: 48
+              }}
+            >
+              {"Cancel"}
+            </Button>
+          )}
         />
-        <View style={{...Styles.footerContainer, ...Styles.blackRoot}}>
-          <StandardButton 
-            color={Colors.warningButtonColor}
-            style={Styles.redButton}
-            title="CANCEL" 
-            onPress={this.cancelHandler}
-          />
-        </View>
       </View>
     );
   }

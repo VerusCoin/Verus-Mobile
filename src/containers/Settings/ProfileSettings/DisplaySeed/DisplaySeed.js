@@ -15,7 +15,7 @@ import QRCode from 'react-native-qrcode-svg';
 import Styles from '../../../../styles/index'
 import Colors from "../../../../globals/colors";
 import { CommonActions } from '@react-navigation/native';
-import { DLIGHT_PRIVATE, ELECTRUM } from "../../../../utils/constants/intervalConstants";
+import { DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
 import { Card, Paragraph, Title, Button } from 'react-native-paper'
 
 class DisplaySeed extends Component {
@@ -30,7 +30,8 @@ class DisplaySeed extends Component {
 
     this.SEED_NAMES = {
       [DLIGHT_PRIVATE]: "Secondary (Z-Address) Seed",
-      [ELECTRUM]: "Primary Seed"
+      [ELECTRUM]: "Primary Seed",
+      [WYRE_SERVICE]: "Wyre Account Seed"
     }
   }
 
@@ -94,9 +95,9 @@ class DisplaySeed extends Component {
           }}
         >
           <View style={Styles.fullWidthFlexCenterBlock}>
-            {Object.keys(seeds).map((key) => {
+            {Object.keys(seeds).map((key, index) => {
               return seeds[key] == null ? null : (
-                <View style={Styles.wideBlock}>
+                <View style={Styles.wideBlock} key={index}>
                   <Card elevation={2}>
                     <Card.Content>
                       <Title>{this.SEED_NAMES[key]}</Title>
@@ -116,10 +117,7 @@ class DisplaySeed extends Component {
             <Button color={Colors.warningButtonColor} onPress={this.back}>
               {"Back"}
             </Button>
-            <Button
-              color={Colors.linkButtonColor}
-              onPress={this.resetToScreen}
-            >
+            <Button color={Colors.linkButtonColor} onPress={this.resetToScreen}>
               {this.state.fromDeleteAccount ? "CONTINUE" : "HOME"}
             </Button>
           </View>

@@ -1,5 +1,8 @@
-// API Fiat currencies
+export const ARS = "ARS"
 export const CAD = "CAD"
+export const CLP = "CLP"
+export const COP = "COP"
+export const VND = "VND"
 export const HKD = "HKD"
 export const ISK = "ISK"
 export const PHP = "PHP"
@@ -34,11 +37,14 @@ export const KRW = "KRW"
 export const PLN = "PLN"
 
 export const CURRENCY_NAMES = {
+  ARS: "Argentine Peso",
   AUD: "Australian Dollar",
   BGN: "Bulgarian Lev",
   BRL: "Brazilian Real",
   CAD: "Canadian Dollar",
   CHF: "Swiss Franc",
+  CLP: "Chilean Peso",
+  COP: "Colombian Peso",
   CNY: "Chinese Yuan",
   CZK: "Czech Koruna",
   DKK: "Danish Krone",
@@ -66,7 +72,18 @@ export const CURRENCY_NAMES = {
   THB: "Thai Baht",
   TRY: "Turkish Lira",
   USD: "US Dollar",
-  ZAR: "South African Rand"
+  VND: "Vietnamese Dong",
+  ZAR: "South African Rand",
 }
 
-export const SUPPORTED_CURRENCIES = Object.keys(CURRENCY_NAMES)
+export const SUPPORTED_UNIVERSAL_DISPLAY_CURRENCIES = [
+  AUD, BGN, BRL, CAD, CHF,
+  CNY, CZK, DKK, EUR, GBP,
+  HKD, HRK, HUF, IDR, ILS,
+  INR, ISK, JPY, KRW, MXN,
+  MYR, NOK, NZD, PHP, PLN,
+  RON, RUB, SEK, SGD, THB,
+  TRY, USD, ZAR
+]
+
+export const SUPPORTED_BANK_CURRENCIES = Object.keys(CURRENCY_NAMES)

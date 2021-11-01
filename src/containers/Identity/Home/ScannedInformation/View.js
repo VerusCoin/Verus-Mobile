@@ -41,7 +41,7 @@ const ScannedInformation = (props) => {
           <View style={Styles.padding}>
             <View style={Styles.blockWithBorderBottom}>
               <Text style={Styles.textWithBlackColor}>The Department of Health@</Text>
-              {/* <Icon name="checkcircle" color={Colors.successButtonColor} size={23} /> */}
+              {/* <Icon name="checkcircle" color={Colors.verusGreenColor} size={23} /> */}
             </View>
             <View style={Styles.marginVertical}>
               <View style={Styles.blockWithBorderBottom}>
@@ -49,7 +49,7 @@ const ScannedInformation = (props) => {
                   <Text style={Styles.textWithRightPadding}>Birth Date:</Text>
                   <Text style={Styles.textWithBlackColor}>{getClaimData(data.data)}</Text>
                 </View>
-                {/* <Icon name="checkcircle" color={Colors.successButtonColor} size={23} /> */}
+                {/* <Icon name="checkcircle" color={Colors.verusGreenColor} size={23} /> */}
               </View>
 
               <View style={Styles.blockWithBorderBottom}>
@@ -57,7 +57,7 @@ const ScannedInformation = (props) => {
                   <Text style={Styles.textWithRightPadding}>First name:</Text>
                   <Text style={Styles.textWithBlackColor}>{data.firstName}</Text>
                 </View>
-                {/* <Icon name="checkcircle" color={Colors.successButtonColor} size={23} /> */}
+                {/* <Icon name="checkcircle" color={Colors.verusGreenColor} size={23} /> */}
               </View>
 
               <View style={Styles.blockWithBorderBottom}>
@@ -65,7 +65,7 @@ const ScannedInformation = (props) => {
                   <Text style={Styles.textWithRightPadding}>Last name:</Text>
                   <Text style={Styles.textWithBlackColor}>{data.lastName}</Text>
                 </View>
-                {/* <Icon name="checkcircle" color={Colors.successButtonColor} size={23} /> */}
+                {/* <Icon name="checkcircle" color={Colors.verusGreenColor} size={23} /> */}
               </View>
             </View>
           </View>

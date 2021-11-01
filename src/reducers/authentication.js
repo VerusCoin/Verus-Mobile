@@ -11,7 +11,7 @@ import {
   BIOMETRIC_AUTH,
   AUTHENTICATE_USER,
   SIGN_IN_USER,
-  SET_DLIGHT_ADDRESSES,
+  SET_ADDRESSES,
   SIGN_OUT_COMPLETE,
   SIGN_OUT
 } from "../utils/constants/storeType";
@@ -65,12 +65,13 @@ export const authentication = (
           keys: action.keys
         }
       };
-    case SET_DLIGHT_ADDRESSES:
-      const currentDlightAddrs = state.activeAccount.keys[
-        action.payload.chainTicker
-      ]
-        ? state.activeAccount.keys[action.payload.chainTicker].dlight_private
+    case SET_ADDRESSES:
+      const currentAddrs = state.activeAccount.keys[action.payload.chainTicker]
+        ? state.activeAccount.keys[action.payload.chainTicker][action.payload.channel]
         : {};
+
+      if (state.activeAccount.keys[action.payload.chainTicker] == null) return state
+
       return {
         ...state,
         activeAccount: {
@@ -79,8 +80,8 @@ export const authentication = (
             ...state.activeAccount.keys,
             [action.payload.chainTicker]: {
               ...state.activeAccount.keys[action.payload.chainTicker],
-              dlight_private: {
-                ...currentDlightAddrs,
+              [action.payload.channel]: {
+                ...currentAddrs,
                 addresses: action.payload.addresses
               }
             }

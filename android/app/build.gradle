@@ -3,8 +3,8 @@ apply plugin: "com.android.application"
 import com.android.build.OutputFile
 
 def versionMajor = 0
-def versionMinor = 2
-def versionRevision = 2
+def versionMinor = 3
+def versionRevision = 0
 def versionBuild = 0
 
 def keystorePropertiesFile = rootProject.file("keystore.properties");
@@ -80,7 +80,6 @@ def keystorePropertiesFile = rootProject.file("keystore.properties");
  */
 
 project.ext.react = [
-        entryFile   : "index.js",
         enableHermes: false,  // clean and rebuild if changing
 ]
 
@@ -123,23 +122,21 @@ def jscFlavor = 'org.webkit:android-jsc:+'
 def enableHermes = project.ext.react.get("enableHermes", false);
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion '29.0.3'
+   ndkVersion rootProject.ext.ndkVersion
 
-    defaultConfig {
-        applicationId "com.verusmobile"
-        minSdkVersion 21
-        targetSdkVersion 29
+   compileSdkVersion rootProject.ext.compileSdkVersion
+
+   defaultConfig {
+       applicationId "com.verusmobile"
+       minSdkVersion rootProject.ext.minSdkVersion
+       targetSdkVersion rootProject.ext.targetSdkVersion
         multiDexEnabled true
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionRevision * 100 + versionBuild
         missingDimensionStrategy 'react-native-camera', 'general'
         if (versionBuild > 0) {
-            versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta-${versionBuild}"
+            versionName "${versionMajor}.${versionMinor}.${versionRevision}-${versionBuild}"
         } else {
-            versionName "${versionMajor}.${versionMinor}.${versionRevision}-beta"
-        }
-        ndk {
-            abiFilters "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
+            versionName "${versionMajor}.${versionMinor}.${versionRevision}"
         }
     }
     configurations {
@@ -148,13 +145,6 @@ android {
             exclude group: 'org.powermock', module: 'powermock-classloading-xstream'
         }
     }
-
-    dexOptions
-            {
-                incremental false
-                javaMaxHeapSize "2048M"
-                preDexLibraries = false
-            }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -207,14 +197,22 @@ android {
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation 'androidx.appcompat:appcompat:1.0.0'
+    //noinspection GradleDynamicVersion
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
     implementation "com.facebook.react:react-native:+"  // From node_modules
-    implementation 'com.android.support:multidex:1.0.3'
+    debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
+      exclude group:'com.facebook.fbjni'
+    }
+    debugImplementation("com.facebook.flipper:flipper-network-plugin:${FLIPPER_VERSION}") {
+        exclude group:'com.facebook.flipper'
+        exclude group:'com.squareup.okhttp3', module:'okhttp'
+    }
+    debugImplementation("com.facebook.flipper:flipper-fresco-plugin:${FLIPPER_VERSION}") {
+        exclude group:'com.facebook.flipper'
+    }
 
     if (enableHermes) {
         def hermesPath = "../../node_modules/hermes-engine/android/";
-
-
         debugImplementation files(hermesPath + "hermes-debug.aar")
         releaseImplementation files(hermesPath + "hermes-release.aar")
     } else {
@@ -233,7 +231,7 @@ dependencies {
         force = true
     }
 
-    implementation('org.bouncycastle:bcprov-jdk15on:1.68') {
+    implementation('org.bouncycastle:bcprov-jdk15on:1.69') {
         force = true
     }
 
