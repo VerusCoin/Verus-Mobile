@@ -1,5 +1,6 @@
 import ethers from 'ethers';
 import Store from '../../store';
+import { DEFAULT_ERC20_ABI } from '../constants/abi';
 import {
   ADD_WEB3_CONTRACT,
   CLEAR_WEB3_CONTRACTS,
@@ -33,9 +34,7 @@ class Web3Interface {
           "Cannot initialize existing contract " + contractAddress
         );
 
-      const abi = await this.EtherscanProvider.perform("getabi", {
-        address: contractAddress,
-      });
+      const abi = DEFAULT_ERC20_ABI
 
       Store.dispatch({
         type: ADD_WEB3_CONTRACT,
