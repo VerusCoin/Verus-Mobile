@@ -14,14 +14,10 @@ import {
 } from "react-native"
 import { connect } from "react-redux";
 import Styles from '../../../styles/index'
-import {
-  API_SEND,
-} from "../../../utils/constants/intervalConstants";
 import { Button } from "react-native-paper"
 import VerusPay from "../../VerusPay/VerusPay";
 import Colors from "../../../globals/colors";
-import { openSubwalletSendModal, openTraditionalCryptoSendModal } from "../../../actions/actions/sendModal/dispatchers/sendModal";
-import { SEND_MODAL } from "../../../utils/constants/sendModal";
+import { openSubwalletSendModal } from "../../../actions/actions/sendModal/dispatchers/sendModal";
 
 class SendCoin extends Component {
   constructor(props) {

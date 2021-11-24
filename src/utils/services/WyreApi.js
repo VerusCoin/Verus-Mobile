@@ -63,16 +63,20 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
 
         for (const coinObj of Object.values(coinsList)) {
           if (coinObj.compatible_channels.includes(WYRE_SERVICE)) {
+            const depositAddressId =
+              coinObj.proto === 'erc20' || coinObj.proto === 'eth'
+                ? 'ETH'
+                : coinObj.id;
+
             Store.dispatch({
               type: SET_ADDRESSES,
               payload: {
                 chainTicker: coinObj.id,
                 channel: WYRE_SERVICE,
-                addresses: [
-                  depositAddresses[coinObj.id] == null
-                    ? `account:${id}`
-                    : depositAddresses[coinObj.id],
-                ],
+                addresses:
+                  depositAddresses[depositAddressId] === null
+                    ? [`account:${id}`]
+                    : [`account:${id}`, depositAddresses[depositAddressId]],
               },
             });
           }

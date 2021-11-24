@@ -48,6 +48,7 @@ const getMainSubwallet = (dominantChannel = ELECTRUM) => {
     id: "MAIN_WALLET",
     params: {},
     color: Colors.primaryColor,
+    address_info: [{ label: "Address" }]
   };
 }
 
@@ -81,9 +82,13 @@ const getWyreSubwallet = (protocol) => {
     modals: {
       [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL,
     },
-    id: "WYRE_ACCOUNT_WALLET",
+    id: 'WYRE_ACCOUNT_WALLET',
     params: {},
     color: Colors.verusGreenColor,
+    address_info: [
+      {label: 'Wyre Address'},
+      {label: 'Blockchain Address'},
+    ],
   };
 };
 
@@ -104,7 +109,8 @@ const PRIVATE_SUBWALLET = {
   },
   id: "PRIVATE_WALLET",
   params: {},
-  color: Colors.quinaryColor
+  color: Colors.quinaryColor,
+  address_info: [{ label: "Address" }]
 }
 
 export const getDefaultSubWallets = (coinObj) => {
