@@ -3,6 +3,7 @@ import Web3Provider from '../../../../web3/provider'
 import { ERC20, ETH } from "../../../../constants/intervalConstants"
 import { scientificToDecimal } from "../../../../math"
 import { requestPrivKey } from "../../../../auth/authBox"
+import { ETHERS } from "../../../../constants/web3Constants"
 
 export const send = async (coinObj, activeUser, address, amount, params) => {
   try {
@@ -27,7 +28,7 @@ export const send = async (coinObj, activeUser, address, amount, params) => {
         fee: Number(
           ethers.utils.formatUnits(
             maxFee,
-            coinObj.decimals
+            ETHERS
           )
         ),
         feeCurr: ETH.toUpperCase(),

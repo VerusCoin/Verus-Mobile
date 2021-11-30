@@ -49,11 +49,12 @@ class WyreService {
   };
 
   static formatCryptoSrn = (coinObj, address) => {
-    switch (coinObj.id) {
-      case "BTC":
-        return this.formatSrn(address, "bitcoin");
-      default:
-        throw new Error(`${coinObj.id} SRNs are not supported.`);
+    if (coinObj.id === "BTC") {
+      return this.formatSrn(address, "bitcoin");
+    } else if (coinObj.proto === "erc20" || coinObj.proto === "eth") {
+      return this.formatSrn(address, "ethereum");
+    } else {
+      throw new Error(`${coinObj.id} SRNs are not supported.`);
     }
   };
 

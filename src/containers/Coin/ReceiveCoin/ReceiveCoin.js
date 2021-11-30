@@ -30,15 +30,17 @@ class ReceiveCoin extends Component {
     this.state = {
       selectedCoin: this.props.activeCoin,
       amount: 0,
-      address: null,
+      addresses: [null],
       memo: null,
-      errors: {selectedCoin: null, amount: null, address: null, memo: null },
+      errors: {selectedCoin: null, amount: null, addresses: null, memo: null },
       verusQRString: null,
       amountFiat: false,
       loading: false,
       showModal: false,
       currentTextInputModal: null,
-      currentNumberInputModal: null
+      currentNumberInputModal: null,
+      addressSelectModalOpen: false,
+      infoIndexes: []
     };
   }
 
@@ -78,12 +80,20 @@ class ReceiveCoin extends Component {
 
   setAddress = () => {
     if (this.props.addresses && this.props.addresses.results != null) {
+      let infoIndexes = {}
+      this.props.addresses.results.map((addr, index) => {
+        if (addr != null && addr.length > 0) infoIndexes[addr] = index
+      })
+
       this.setState({
-        address: this.props.addresses.results[0]
+        addresses: this.props.addresses.results.filter(
+          (addr) => infoIndexes[addr] != null
+        ),
+        infoIndexes
       });
     } else {
       this.setState({
-        address: ""
+        addresses: []
       });
     }
   }
@@ -181,9 +191,9 @@ class ReceiveCoin extends Component {
       })
   }
 
-  copyAddressToClipboard = () => {
-    Clipboard.setString(this.state.address);
-    createAlert("Address Copied", `"${this.state.address}" copied to clipboard.`)
+  copyAddressToClipboard = (address) => {
+    Clipboard.setString(address);
+    createAlert("Address Copied", `"${address}" copied to clipboard.`)
   }
 
   getPrice = () => {
@@ -206,9 +216,9 @@ class ReceiveCoin extends Component {
     }
   }
 
-  validateFormData = () => {
+  validateFormData = (addressIndex) => {
     this.setState({
-      errors: {selectedCoin: null, amount: null, address: null, memo: null },
+      errors: {selectedCoin: null, amount: null, addresses: null, memo: null },
       verusQRString: null
     }, () => {
       const _selectedCoin = this.state.selectedCoin
@@ -218,7 +228,7 @@ class ReceiveCoin extends Component {
         !this.state.amount
           ? this.state.amount
           : this.state.amount.toString().replace(/,/g, ".");
-      const _address = this.state.address
+      const _address = this.state.addresses[addressIndex]
       const _memo = this.state.memo
       let _errors = false;
 
@@ -253,13 +263,16 @@ class ReceiveCoin extends Component {
 }
 
 const mapStateToProps = (state) => {
+  const chainTicker = state.coins.activeCoin.id
+
   return {
     accounts: state.authentication.accounts,
     activeCoin: state.coins.activeCoin,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     rates: selectRates(state),
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
-    addresses: selectAddresses(state)
+    addresses: selectAddresses(state),
+    subWallet: state.coinMenus.activeSubWallets[chainTicker]
   }
 };
 
