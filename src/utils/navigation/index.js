@@ -1,17 +1,13 @@
 import React from 'react';
-import {createDrawerNavigator} from '@react-navigation/drawer';
-import {createStackNavigator} from '@react-navigation/stack';
-import {DrawerActions} from '@react-navigation/compat';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createStackNavigator } from '@react-navigation/stack';
+import { DrawerActions } from '@react-navigation/compat';
 import {
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-  Text,
-  Platform,
+  StyleSheet, TouchableOpacity, Dimensions, Text, Platform,
 } from 'react-native';
-import {Icon} from 'react-native-elements';
+import { Icon } from 'react-native-elements';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {createMaterialBottomTabNavigator} from '@react-navigation/material-bottom-tabs';
+import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 
 //import IconVector from 'react-native-vector-icons/Ionicons';
 import Colors from '../../globals/colors';
@@ -47,18 +43,18 @@ import ManageWyrePersonalDetails from '../../containers/BuySellCrypto/PaymentMet
 import ManageWyreProofOfAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreProofOfAddress';
 import ManageWyreAddress from '../../containers/BuySellCrypto/PaymentMethod/ManageWyreAccount/ManageWyreAddress';
 import SendTransaction from '../../containers/BuySellCrypto/PaymentMethod/SendTransaction/SendTransaction';
-import {DEVICE_WINDOW_WIDTH} from '../constants/constants';
-import {Component} from 'react';
+import { DEVICE_WINDOW_WIDTH } from '../constants/constants';
+import { Component } from 'react';
 import Personal from '../../containers/Personal/Personal';
 import PersonalAttributes from '../../containers/Personal/PersonalAttributes/PersonalAttributes';
 import PersonalAttributesEditName from '../../containers/Personal/PersonalAttributes/PersonalAttributesEditName/PersonalAttributesEditName';
 import PersonalContact from '../../containers/Personal/PersonalContact/PersonalContact';
 import PersonalLocations from '../../containers/Personal/PersonalLocations/PersonalLocations';
-import PersonalLocationsEditAddress from '../../containers/Personal/PersonalLocations/PersonalLocationsEditAddress/PersonalLocationsEditAddress';
-import PersonalLocationsEditTaxCountry from '../../containers/Personal/PersonalLocations/PersonalLocationsEditTaxCountry/PersonalLocationsEditTaxCountry';
+import PersonalLocationsEditAddress from "../../containers/Personal/PersonalLocations/PersonalLocationsEditAddress/PersonalLocationsEditAddress";
+import PersonalLocationsEditTaxCountry from "../../containers/Personal/PersonalLocations/PersonalLocationsEditTaxCountry/PersonalLocationsEditTaxCountry";
 import PersonalPaymentMethods from '../../containers/Personal/PersonalPaymentMethods/PersonalPaymentMethods';
 import PersonalPaymentMethodsEditBankAccount from '../../containers/Personal/PersonalPaymentMethods/PersonalPaymentMethodsEditBankAccount/PersonalPaymentMethodsEditBankAccount';
-import PersonalPaymentMethodsEditBankAccountAddress from '../../containers/Personal/PersonalPaymentMethods/PersonalPaymentMethodsEditBankAccountAddress/PersonalPaymentMethodsEditBankAccountAddress';
+import PersonalPaymentMethodsEditBankAccountAddress from "../../containers/Personal/PersonalPaymentMethods/PersonalPaymentMethodsEditBankAccountAddress/PersonalPaymentMethodsEditBankAccountAddress";
 import Services from '../../containers/Services/Services';
 import Service from '../../containers/Services/Service/Service';
 import WyreServiceAccountData from '../../containers/Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceAccountData/WyreServiceAccountData';
@@ -67,16 +63,16 @@ import PersonalImagesEditImage from '../../containers/Personal/PersonalImages/Pe
 import WyreServiceAddPaymentMethod from '../../containers/Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceAddPaymentMethod/WyreServiceAddPaymentMethod';
 import WyreServiceEditPaymentMethod from '../../containers/Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceEditPaymentMethod/WyreServiceEditPaymentMethod';
 
-const MainStack = createStackNavigator();
-const MainDrawer = createDrawerNavigator();
-const ProfileStack = createStackNavigator();
-const ServicesStack = createStackNavigator();
-const WalletStack = createStackNavigator();
-const SignedOutStack = createStackNavigator();
-const SignedOutNoKeyStack = createStackNavigator();
-const LoadingStack = createStackNavigator();
-const RootStack = createStackNavigator();
-const HomeTabs = createMaterialBottomTabNavigator();
+const MainStack = createStackNavigator()
+const MainDrawer = createDrawerNavigator()
+const ProfileStack = createStackNavigator()
+const ServicesStack = createStackNavigator()
+const WalletStack = createStackNavigator()
+const SignedOutStack = createStackNavigator()
+const SignedOutNoKeyStack = createStackNavigator()
+const LoadingStack = createStackNavigator()
+const RootStack = createStackNavigator()
+const HomeTabs = createMaterialBottomTabNavigator()
 
 const styles = StyleSheet.create({
   header_title_noBack: {
@@ -117,37 +113,42 @@ const styles = StyleSheet.create({
   },
 });
 
-const defaultHeaderOptions = ({navigation, params, route}) => ({
+const defaultHeaderOptions = ({ navigation, params, route }) => ({
   headerShown: true,
   headerStyle: {
     backgroundColor: Colors.primaryColor,
   },
   headerTitleStyle: {
-    fontFamily: 'Avenir-Black',
-    fontWeight: 'normal',
+    fontFamily: "Avenir-Black",
+    fontWeight: "normal",
     fontSize: 22,
     color: Colors.secondaryColor,
   },
   headerRight: () => (
     <TouchableOpacity
       onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
-      style={styles.menuButton}>
+      style={styles.menuButton}
+    >
       <Icon name="menu" size={35} color={Colors.secondaryColor} />
     </TouchableOpacity>
   ),
   headerTintColor: Colors.secondaryColor,
-});
+})
 
 function MainScreens() {
   return (
     <MainDrawer.Navigator
       drawerWidth={250}
       drawerPosition="right"
-      drawerContent={props => <SideMenu {...props} />}
+      drawerContent={(props) => <SideMenu {...props} />}
       screenOptions={{
-        swipeEnabled: false,
-      }}>
-      <MainDrawer.Screen name="MainStack" component={MainStackScreens} />
+        swipeEnabled: false
+      }}
+    >
+      <MainDrawer.Screen 
+        name="MainStack"
+        component={MainStackScreens}
+      />
     </MainDrawer.Navigator>
   );
 }
@@ -156,89 +157,90 @@ function ProfileScreens() {
   return (
     <ProfileStack.Navigator
       headerMode="screen"
-      screenOptions={defaultHeaderOptions}>
+      screenOptions={defaultHeaderOptions}
+    >
       <ProfileStack.Screen
         name="PersonalProfile"
         component={Personal}
         options={{
-          title: 'Personal Profile',
+          title: "Personal Profile",
         }}
       />
       <ProfileStack.Screen
         name="PersonalAttributes"
         component={PersonalAttributes}
         options={{
-          title: 'Details',
+          title: "Details",
         }}
       />
       <ProfileStack.Screen
         name="PersonalAttributesEditName"
         component={PersonalAttributesEditName}
         options={{
-          title: 'Name',
+          title: "Name"
         }}
       />
       <ProfileStack.Screen
         name="PersonalContact"
         component={PersonalContact}
         options={{
-          title: 'Contact',
+          title: "Contact",
         }}
       />
       <ProfileStack.Screen
         name="PersonalImages"
         component={PersonalImages}
         options={{
-          title: 'Images',
+          title: "Images",
         }}
       />
       <ProfileStack.Screen
         name="PersonalImagesEditImage"
         component={PersonalImagesEditImage}
         options={{
-          title: 'Image',
+          title: "Image"
         }}
       />
       <ProfileStack.Screen
         name="PersonalLocations"
         component={PersonalLocations}
         options={{
-          title: 'Personal Locations',
+          title: "Personal Locations"
         }}
       />
       <ProfileStack.Screen
         name="PersonalLocationsEditAddress"
         component={PersonalLocationsEditAddress}
         options={{
-          title: 'Address',
+          title: "Address"
         }}
       />
       <ProfileStack.Screen
         name="PersonalLocationsEditTaxCountry"
         component={PersonalLocationsEditTaxCountry}
         options={{
-          title: 'Tax Country',
+          title: "Tax Country"
         }}
       />
       <ProfileStack.Screen
         name="PersonalPaymentMethods"
         component={PersonalPaymentMethods}
         options={{
-          title: 'Banking Info',
+          title: "Banking Info"
         }}
       />
       <ProfileStack.Screen
         name="PersonalPaymentMethodsEditBankAccount"
         component={PersonalPaymentMethodsEditBankAccount}
         options={{
-          title: 'Bank Account',
+          title: "Bank Account"
         }}
       />
       <ProfileStack.Screen
         name="PersonalPaymentMethodsEditBankAccountAddress"
         component={PersonalPaymentMethodsEditBankAccountAddress}
         options={{
-          title: 'Account Address',
+          title: "Account Address"
         }}
       />
     </ProfileStack.Navigator>
@@ -249,15 +251,19 @@ function ServicesScreens() {
   return (
     <ServicesStack.Navigator
       headerMode="screen"
-      screenOptions={defaultHeaderOptions}>
+      screenOptions={defaultHeaderOptions}
+    >
       <ServicesStack.Screen
         name="Services"
         component={Services}
         options={{
-          title: 'Services',
+          title: "Services",
         }}
       />
-      <ServicesStack.Screen name="Service" component={Service} />
+      <ServicesStack.Screen
+        name="Service"
+        component={Service}
+      />
       <ServicesStack.Screen
         name="WyreServiceAccountData"
         component={WyreServiceAccountData}
@@ -266,14 +272,14 @@ function ServicesScreens() {
         name="WyreServiceAddPaymentMethod"
         component={WyreServiceAddPaymentMethod}
         options={{
-          title: 'Connect',
+          title: "Connect",
         }}
       />
       <ServicesStack.Screen
         name="WyreServiceEditPaymentMethod"
         component={WyreServiceEditPaymentMethod}
         options={{
-          title: 'Edit Account',
+          title: "Edit Account",
         }}
       />
     </ServicesStack.Navigator>
@@ -284,12 +290,13 @@ function WalletScreens() {
   return (
     <WalletStack.Navigator
       headerMode="screen"
-      screenOptions={defaultHeaderOptions}>
+      screenOptions={defaultHeaderOptions}
+    >
       <WalletStack.Screen
         name="Wallets"
         component={Home}
         options={{
-          title: 'Wallets',
+          title: "Wallets",
         }}
       />
     </WalletStack.Navigator>
@@ -300,13 +307,14 @@ function HomeScreens() {
   return (
     <HomeTabs.Navigator
       headerMode="screen"
-      barStyle={{backgroundColor: Colors.primaryColor}}>
+      barStyle={{ backgroundColor: Colors.primaryColor }}
+    >
       <HomeTabs.Screen
         name="WalletHome"
         component={WalletScreens}
         options={{
-          title: 'Wallets',
-          tabBarIcon: ({color}) => (
+          title: "Wallets",
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="wallet" color={color} size={26} />
           ),
         }}
@@ -315,8 +323,8 @@ function HomeScreens() {
         name="PersonalHome"
         component={ProfileScreens}
         options={{
-          title: 'Personal Profile',
-          tabBarIcon: ({color}) => (
+          title: "Personal Profile",
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name="fingerprint"
               color={color}
@@ -329,8 +337,8 @@ function HomeScreens() {
         name="ServicesHome"
         component={ServicesScreens}
         options={{
-          title: 'Services',
-          tabBarIcon: ({color}) => (
+          title: "Services",
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name="room-service"
               color={color}
@@ -347,18 +355,19 @@ function MainStackScreens() {
   return (
     <MainStack.Navigator
       headerMode="screen"
-      screenOptions={defaultHeaderOptions}>
+      screenOptions={defaultHeaderOptions}
+    >
       <MainStack.Screen
         name="Home"
         component={HomeScreens}
-        options={{headerShown: false}}
+        options={{ headerShown: false }}
       />
 
       <MainStack.Screen
         name="AddCoin"
         component={AddCoin}
         options={{
-          title: 'Add Coin',
+          title: "Add Coin",
         }}
       />
 
@@ -366,7 +375,7 @@ function MainStackScreens() {
         name="CoinDetails"
         component={CoinDetails}
         options={{
-          title: 'Details',
+          title: "Details",
         }}
       />
 
@@ -374,7 +383,7 @@ function MainStackScreens() {
         name="ConfirmSend"
         component={ConfirmSend}
         options={{
-          title: 'Send',
+          title: "Send",
           headerRight: () => null,
           headerLeft: () => null,
         }}
@@ -384,7 +393,7 @@ function MainStackScreens() {
         name="DisplaySeed"
         component={DisplaySeed}
         options={{
-          title: 'Seed',
+          title: "Seed",
           headerRight: () => null,
         }}
       />
@@ -397,7 +406,7 @@ function MainStackScreens() {
         name="VerusPay"
         component={VerusPay}
         options={{
-          title: 'VerusPay',
+          title: "VerusPay",
         }}
       />
 
@@ -405,7 +414,7 @@ function MainStackScreens() {
         name="ProfileInfo"
         component={ProfileInfo}
         options={{
-          title: 'Info',
+          title: "Info",
         }}
       />
 
@@ -413,7 +422,7 @@ function MainStackScreens() {
         name="ResetPwd"
         component={ResetPwd}
         options={{
-          title: 'Reset',
+          title: "Reset",
         }}
       />
 
@@ -421,7 +430,7 @@ function MainStackScreens() {
         name="RecoverSeed"
         component={RecoverSeed}
         options={{
-          title: 'Recover',
+          title: "Recover",
         }}
       />
 
@@ -429,14 +438,14 @@ function MainStackScreens() {
         name="GeneralWalletSettings"
         component={GeneralWalletSettings}
         options={{
-          title: 'General',
+          title: "General",
         }}
       />
 
       <MainStack.Screen
         name="CoinSettings"
         component={CoinSettings}
-        options={({route}) => ({
+        options={({ route }) => ({
           title: route.params != null ? route.params.title : null,
         })}
       />
@@ -445,7 +454,7 @@ function MainStackScreens() {
         name="DeleteProfile"
         component={DeleteProfile}
         options={{
-          title: 'Delete',
+          title: "Delete",
         }}
       />
 
@@ -453,13 +462,16 @@ function MainStackScreens() {
         name="SecureLoading"
         component={SecureLoading}
         options={{
-          title: 'Loading',
+          title: "Loading",
           headerRight: () => null,
           headerLeft: () => null,
         }}
       />
 
-      <MainStack.Screen name="CustomChainMenus" component={CustomChainMenus} />
+      <MainStack.Screen
+        name="CustomChainMenus"
+        component={CustomChainMenus}
+      />
 
       <MainStack.Screen
         name="BuySellCryptoMenus"
@@ -470,7 +482,7 @@ function MainStackScreens() {
         name="SelectPaymentMethod"
         component={SelectPaymentMethod}
         options={{
-          title: 'Select Payment Method',
+          title: "Select Payment Method",
         }}
       />
 
@@ -478,7 +490,7 @@ function MainStackScreens() {
         name="ManageWyreAccount"
         component={ManageWyreAccount}
         options={{
-          title: 'Manage Wyre Account',
+          title: "Manage Wyre Account",
         }}
       />
 
@@ -486,7 +498,7 @@ function MainStackScreens() {
         name="ManageWyreEmail"
         component={ManageWyreEmail}
         options={{
-          title: 'Manage Wyre Email',
+          title: "Manage Wyre Email",
           headerRight: () => null,
         }}
       />
@@ -495,7 +507,7 @@ function MainStackScreens() {
         name="ManageWyreCellphone"
         component={ManageWyreCellphone}
         options={{
-          title: 'Manage Wyre Cellphone',
+          title: "Manage Wyre Cellphone",
           headerRight: () => null,
         }}
       />
@@ -504,7 +516,7 @@ function MainStackScreens() {
         name="ManageWyreDocuments"
         component={ManageWyreDocuments}
         options={{
-          title: 'Upload Documents',
+          title: "Upload Documents",
           headerRight: () => null,
         }}
       />
@@ -513,7 +525,7 @@ function MainStackScreens() {
         name="ManageWyrePaymentMethod"
         component={ManageWyrePaymentMethod}
         options={{
-          title: 'Manage Payment Method',
+          title: "Manage Payment Method",
           headerRight: () => null,
         }}
       />
@@ -522,7 +534,7 @@ function MainStackScreens() {
         name="ManageWyrePersonalDetails"
         component={ManageWyrePersonalDetails}
         options={{
-          title: 'Upload Personal Details',
+          title: "Upload Personal Details",
           headerRight: () => null,
         }}
       />
@@ -531,7 +543,7 @@ function MainStackScreens() {
         name="ManageWyreProofOfAddress"
         component={ManageWyreProofOfAddress}
         options={{
-          title: 'Upload Proof of Address',
+          title: "Upload Proof of Address",
           headerRight: () => null,
         }}
       />
@@ -540,7 +552,7 @@ function MainStackScreens() {
         name="ManageWyreAddress"
         component={ManageWyreAddress}
         options={{
-          title: 'Manage Wyre Address',
+          title: "Manage Wyre Address",
           headerRight: () => null,
         }}
       />
@@ -549,7 +561,7 @@ function MainStackScreens() {
         name="SendTransaction"
         component={SendTransaction}
         options={{
-          title: 'Confirm transaction',
+          title: "Confirm transaction",
           headerRight: () => null,
         }}
       />
@@ -647,9 +659,10 @@ export default class RootStackScreens extends Component {
     return (
       <RootStack.Navigator
         screenOptions={{
-          mode: 'modal',
+          mode: "modal",
           headerShown: false,
-        }}>
+        }}
+      >
         {this.props.loading ? (
           <RootStack.Screen
             name="LoadingStack"
