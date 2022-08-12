@@ -29,7 +29,7 @@
     "@react-navigation/native": "5.7.2",
     "@react-navigation/stack": "5.8.0",
     "@tradle/react-native-http": "2.0.0",
-    "agama-wallet-lib": "git://github.com/VerusCoin/agama-wallet-lib.git#mobile",
+    "agama-wallet-lib": "https://github.com/VerusCoin/agama-wallet-lib.git#mobile",
     "assert": "1.1.1",
     "axios": "0.21.3",
     "base-64": "1.0.0",
