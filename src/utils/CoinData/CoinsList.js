@@ -10,6 +10,7 @@ import {
   ERC20,
   WYRE_SERVICE,
   IS_FIAT,
+  VRPC,
 } from "../constants/intervalConstants";
 import { dlightServers } from 'agama-wallet-lib/src/dlight-servers';
 import {
@@ -34,6 +35,7 @@ export const coinsList = {
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT],
     proto: "vrsc",
     dlight_endpoints: dlightServers.vrsc,
+    vrpc_endpoints: ["https://api.verus.services"],
     decimals: DEFAULT_DECIMALS,
   },
   kmd: {

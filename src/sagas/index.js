@@ -3,6 +3,7 @@ import { all, spawn } from 'redux-saga/effects';
 import identitySaga from './identity'
 import transactionsSaga from './transactions';
 import erc20Saga from './channels/erc20';
+import vrpcSaga from './channels/vrpc';
 import ethSaga from './channels/eth';
 import electrumSaga from './channels/electrum';
 import dlightSaga from './channels/dlight';
@@ -14,6 +15,7 @@ import {
   ENABLE_VERUS_IDENTITIES,
   ENABLE_DLIGHT,
   ENABLE_ERC20,
+  ENABLE_VRPC,
   ENABLE_ELECTRUM,
   ENABLE_ETH,
   ENABLE_GENERAL,
@@ -35,6 +37,7 @@ const generateSagas = () => {
   if (ENABLE_ETH) sagas.push(ethSaga)
   if (ENABLE_GENERAL) sagas.push(generalSaga)
   if (ENABLE_WYRE_COIN) sagas.push(wyreCoinSaga)
+  if (ENABLE_VRPC) sagas.push(vrpcSaga)
 
   return sagas
 }

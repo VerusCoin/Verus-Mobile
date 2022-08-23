@@ -4,19 +4,12 @@ import {
 } from "../../../../utils/constants/storeType";
 import { WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
 import { updateLedgerValue } from "./UpdateLedgerValue";
-import { getConversionPaths } from "../../../../utils/api/routers/getConversionPaths";
+import { updateWyreConversionPaths } from "./wyre/updates";
 
-const channelMap = {
-  [WYRE_SERVICE]: async (activeUser, coinObj) => {
-    const paths = await getConversionPaths(coinObj, WYRE_SERVICE);
-
-    return {
-      chainTicker: coinObj.id,
-      channel: WYRE_SERVICE,
-      header: {},
-      body: paths,
-    };
-  },
+const fetchChannels = () => {
+  return {
+    [WYRE_SERVICE]: (coinObj) => updateWyreConversionPaths(coinObj)
+  }
 };
 
 /**
@@ -35,5 +28,5 @@ export const updateConversionPaths = (state, dispatch, channels, chainTicker) =>
     chainTicker,
     SET_CONVERSION_PATHS,
     ERROR_CONVERSION_PATHS,
-    channelMap
+    fetchChannels
   );

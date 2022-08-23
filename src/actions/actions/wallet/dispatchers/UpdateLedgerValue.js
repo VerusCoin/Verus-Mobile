@@ -11,7 +11,8 @@ import { dlightEnabled } from '../../../../utils/enabledChannels';
  * @param {String} chainTicker Chain ticker id for chain to fetch balances for
  * @param {String} successType Action type for success action
  * @param {String} errorType Action type for error action
- * @param {Object} channelMap Object that contains the functions to execute for each channel, functions must take in (activeUser, coinObj)
+ * @param {Function} fetchChannels Function that takes activeUser object and returns 
+ * an object that contains the functions to execute for each channel, functions must take in (activeUser, coinObj)
  */
 export const updateLedgerValue = async (
   state,
@@ -20,11 +21,12 @@ export const updateLedgerValue = async (
   chainTicker,
   successType,
   errorType,
-  channelMap
+  fetchChannels
 ) => {
   const activeUser = state.authentication.activeAccount;
   const coinObj = getCoinObj(state.coins.activeCoinsForUser, chainTicker);
   let channelsPassed = [];
+  const channelMap = fetchChannels(activeUser)
 
   await Promise.all(
     channels.map(async (channel) => {
@@ -34,7 +36,7 @@ export const updateLedgerValue = async (
       try {
         dispatch({
           type: successType,
-          payload: await channelMap[channel](activeUser, coinObj),
+          payload: await channelMap[channel](coinObj),
         });
         channelsPassed.push(channel);
       } catch (error) {
