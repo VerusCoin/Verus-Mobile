@@ -113,7 +113,7 @@
     "verus-pay-utils": "https://github.com/michaeltout/verus-pay-utils.git",
     "verus-zkedid-utils": "https://github.com/michaeltout/verus-zkedid-utils",
     "vm-browserify": "0.0.4",
-    "xmldom": "^0.6.0"
+    "xmldom": "0.6.0"
   },
   "devDependencies": {
     "@babel/core": "7.12.9",
