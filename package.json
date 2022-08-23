@@ -112,6 +112,7 @@
     "version_compare": "0.0.3",
     "verus-pay-utils": "https://github.com/michaeltout/verus-pay-utils.git",
     "verus-zkedid-utils": "https://github.com/michaeltout/verus-zkedid-utils",
+    "verusd-rpc-ts-client": "https://github.com/VerusCoin/verusd-rpc-ts-client.git",
     "vm-browserify": "0.0.4"
   },
   "devDependencies": {

@@ -1,35 +1,17 @@
-import { getCoinRates } from "../../../../utils/api/channels/general/callCreators";
 import {
   ERROR_RATES,
   SET_RATES
 } from "../../../../utils/constants/storeType";
 import { GENERAL, WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
 import { updateLedgerValue } from "./UpdateLedgerValue";
-import { getRates as getWyreRates } from "../../../../utils/api/channels/wyre/requests/getRates";
+import { updateGeneralFiatPrices } from "./general/updates";
+import { updateWyreFiatPrices } from "./wyre/updates";
 
-const channelMap = {
-  [GENERAL]: async (activeUser, coinObj) => {
-    const coinRates = await getCoinRates(coinObj);
-
-    const { result, ...header } = coinRates;
-
-    return {
-      chainTicker: coinObj.id,
-      channel: GENERAL,
-      header,
-      body: result,
-    };
-  },
-  [WYRE_SERVICE]: async (activeUser, coinObj) => {
-    let body = await getWyreRates(coinObj);
-
-    return {
-      chainTicker: coinObj.id,
-      channel: WYRE_SERVICE,
-      header: {},
-      body,
-    };
-  },
+const fetchChannels = () => {
+  return {
+    [GENERAL]: coinObj => updateGeneralFiatPrices(coinObj),
+    [WYRE_SERVICE]: coinObj => updateWyreFiatPrices(coinObj),
+  };
 };
 
 /**
@@ -48,5 +30,5 @@ export const updateFiatPrices = (state, dispatch, channels, chainTicker) =>
     chainTicker,
     SET_RATES,
     ERROR_RATES,
-    channelMap
+    fetchChannels
   );

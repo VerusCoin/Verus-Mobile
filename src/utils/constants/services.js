@@ -1,8 +1,13 @@
 import { WYRE_SERVICE } from "./intervalConstants"
 
 export const WYRE_SERVICE_ID = 'wyre_service'
+export const VERUSID_SERVICE_ID = 'verusid_service'
 
 export const CONNECTED_SERVICE_DISPLAY_INFO = {
+  [VERUSID_SERVICE_ID]: {
+    title: "VerusID",
+    description: "By connecting your VerusIDs to your wallet, you can use them to hold funds and/or sign into services"
+  },
   [WYRE_SERVICE_ID]: {
     title: "Wyre",
     description: "Connecting your wallet with Wyre allows you to convert between cryptocurrency and fiat"
@@ -13,7 +18,7 @@ export const CONNECTED_SERVICE_CHANNELS = {
   [WYRE_SERVICE_ID]: WYRE_SERVICE
 }
 
-export const CONNECTED_SERVICES = [WYRE_SERVICE_ID]
+export const CONNECTED_SERVICES = [VERUSID_SERVICE_ID, WYRE_SERVICE_ID]
 
 // Wyre specific constants
 export const WYRE_INDIVIDUAL_NAME = 'individualLegalName'

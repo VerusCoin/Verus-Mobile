@@ -156,7 +156,7 @@ export const clearAllCoinIntervals = (chainTicker) => {
  * @param {Function{}} onCompletes Object with optional onCompletes to each updateInterval to be called with state and dispatch function.
  * e.g. {get_info: {update_expired_oncomplete: increaseGetInfoInterval}}
  */
-export const refreshCoinIntervals = (chainTicker, onCompletes) => {
+export const refreshCoinIntervals = (chainTicker, onCompletes, updateParams) => {
   const state = Store.getState()
 
   const coinObj = getCoinObj(state.coins.activeCoinsForUser, chainTicker)
@@ -168,7 +168,7 @@ export const refreshCoinIntervals = (chainTicker, onCompletes) => {
 
   if (!coinObj) throw new Error(`${chainTicker} is not added for current user. Coins must be added to be used.`)
   
-  const updateDataAction = generateUpdateCoinDataAction(chainStatus, chainTicker, coinObj.tags, CHANNELS, onCompletes)
+  const updateDataAction = generateUpdateCoinDataAction(chainStatus, chainTicker, coinObj.tags, CHANNELS, onCompletes, updateParams)
   const oldIntervalData = state.updates.coinUpdateIntervals[chainTicker]
   const newIntervalData = updateDataAction.updateIntervalData
   const newTrackingData = updateDataAction.updateTrackingData

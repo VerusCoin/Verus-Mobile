@@ -50,6 +50,7 @@ export const ELECTRUM = 'electrum'
 export const GENERAL = 'general'
 export const ETH = 'eth'
 export const ERC20 = 'erc20'
+export const VRPC = 'vrpc'
 export const CHANNELS = [DLIGHT_PRIVATE, ELECTRUM, GENERAL, ETH, ERC20, WYRE_SERVICE]
 export const CHANNELS_OBJECT_TEMPLATE = Object.freeze(arrayToObject(CHANNELS, {}))
 export const CHANNELS_NULL_TEMPLATE = Object.freeze(arrayToObject(CHANNELS, null))

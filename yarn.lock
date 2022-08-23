@@ -3946,7 +3946,7 @@ aws4@^1.8.0:
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.9.1.tgz#7e33d8f7d449b3f673cd72deb9abdc552dbe528e"
   integrity sha512-wMHVg2EOHaMRxbzgFJ9gtjOOCrI80OHLG14rxi28XwOW8ux6IiEbRCGGGqCtdAIg4FQCbW20k9RsT4y3gJlFug==
 
-axios@0.21.3, axios@^0.21.1:
+axios@0.21.3, axios@^0.21.1, axios@^0.27.2:
   version "0.21.3"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.3.tgz#f85d9b747f9b66d59ca463605cedf1844872b82e"
   integrity sha512-JtoZ3Ndke/+Iwt5n+BgSli/3idTvpt5OjKyoCmz4LX5+lPiY5l7C1colYezhlxThjNa/NhngCUWZSZFypIFuaA==
@@ -15024,6 +15024,10 @@ version_compare@0.0.3:
     bignumber.js "^9.0.0"
     verus-zkedid-utils "https://github.com/michaeltout/verus-zkedid-utils#dev"
 
+"verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git":
+  version "1.0.0"
+  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#6ccadfee6b5a056c97a05782ca66c42d220af1ef"
+
 "verus-zkedid-utils@https://github.com/michaeltout/verus-zkedid-utils":
   version "1.0.0"
   resolved "https://github.com/michaeltout/verus-zkedid-utils#7c4f8615de6f4b8aa07b27b383c42e561833488f"
@@ -15031,6 +15035,13 @@ version_compare@0.0.3:
 "verus-zkedid-utils@https://github.com/michaeltout/verus-zkedid-utils#dev":
   version "1.0.0"
   resolved "https://github.com/michaeltout/verus-zkedid-utils#6132ea884f3a6caec31014ec993fce5eca3f1d53"
+
+"verusd-rpc-ts-client@https://github.com/VerusCoin/verusd-rpc-ts-client.git":
+  version "0.1.0"
+  resolved "https://github.com/VerusCoin/verusd-rpc-ts-client.git#443fa238d18682c772db8b5d097e6b03774af84f"
+  dependencies:
+    axios "^0.27.2"
+    verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git"
 
 vlq@^1.0.0:
   version "1.0.1"
