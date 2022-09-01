@@ -91,7 +91,7 @@ class CoinDetails extends Component {
           )
         );
 
-        activateChainLifecycle(chainId);
+        activateChainLifecycle(this.state.fullCoinData);
 
         this.setState({ isActive: true, loading: false });
       } else {

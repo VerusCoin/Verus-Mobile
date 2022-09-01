@@ -21,7 +21,6 @@ import { Portal, BottomNavigation } from "react-native-paper";
 import { subWalletActivity } from "../../utils/subwallet/subWalletStatus";
 import MissingInfoRedirect from "../../components/MissingInfoRedirect/MissingInfoRedirect";
 import { WALLET_APP_CONVERT, WALLET_APP_MANAGE, WALLET_APP_OVERVIEW, WALLET_APP_RECEIVE, WALLET_APP_SEND } from "../../utils/constants/apps";
-import { SUBWALLET_NAMES } from "../../utils/constants/constants";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 
 class CoinMenus extends Component {
@@ -138,7 +137,7 @@ class CoinMenus extends Component {
         <MissingInfoRedirect
           icon={"power-plug-off"}
           label={`This tab isn't accesible from the ${
-            SUBWALLET_NAMES[this.props.selectedSubWallet.id]
+            this.props.selectedSubWallet.name
           } card.`}
           buttonLabel="Switch cards"
           onPress={() => this.findCompatibleSubwallet(route.key)}

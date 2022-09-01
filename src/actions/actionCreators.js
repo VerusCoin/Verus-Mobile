@@ -213,8 +213,10 @@ export const setCoinStatus = (chainTicker, status) => {
 export const setCurrentUserCoins = (activeCoinsForUser) => {
   return {
     type: SET_USER_COINS,
-    activeCoinsForUser: activeCoinsForUser
-  }
+    payload: {
+      activeCoinsForUser,
+    },
+  };
 }
 
 //Reducer name: coins

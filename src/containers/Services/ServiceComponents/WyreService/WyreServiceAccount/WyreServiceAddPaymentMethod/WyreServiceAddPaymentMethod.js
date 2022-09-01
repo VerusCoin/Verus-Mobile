@@ -12,6 +12,7 @@ import { requestPersonalData } from "../../../../../../utils/auth/authBox";
 import { BANK_ACCOUNT_KEY_DISPLAY_INFO } from "../../../../../../utils/constants/bankAccountKeys";
 import { API_GET_SERVICE_PAYMENT_METHODS } from "../../../../../../utils/constants/intervalConstants";
 import { PERSONAL_PAYMENT_METHODS } from "../../../../../../utils/constants/personal";
+import { WYRE_SERVICE_ID } from "../../../../../../utils/constants/services";
 import { translatePersonalBankAccountToWyreUpload } from "../../../../../../utils/services/translationUtils";
 import WyreProvider from "../../../../../../utils/services/WyreProvider";
 import { WyreServiceAddPaymentMethodRender } from "./WyreServiceAddPaymentMethod.render"
@@ -84,7 +85,7 @@ class WyreServiceAddPaymentMethod extends Component {
     } else if (wyreFormattedData.submission == null) {
       createAlert("Error", "An error occured while attempting to format your bank data");
     } else {
-      this.props.dispatch(setServiceLoading(true));
+      this.props.dispatch(setServiceLoading(true, WYRE_SERVICE_ID));
       try {
         // Create payment method
         await WyreProvider.createPaymentMethod({ paymentMethod: wyreFormattedData.submission })
@@ -99,10 +100,10 @@ class WyreServiceAddPaymentMethod extends Component {
 
         // Stop loading and go back
         createAlert("Success", "Your bank account has been connected as a recipient account. If you would like to transfer & convert fiat from this account to your wallet, you can enable payments from it by pressing it, and submitting a bank statement.");
-        this.props.dispatch(setServiceLoading(false));
+        this.props.dispatch(setServiceLoading(false, WYRE_SERVICE_ID));
         this.props.navigation.goBack();
       } catch (e) {
-        this.props.dispatch(setServiceLoading(false));
+        this.props.dispatch(setServiceLoading(false, WYRE_SERVICE_ID));
         console.warn(e);
         const tryAgain = await createAlert(
           "Error",
@@ -140,7 +141,7 @@ class WyreServiceAddPaymentMethod extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    loading: state.services.loading,
+    loading: state.services.loading[WYRE_SERVICE_ID],
     encryptedPaymentMethods: state.personal.payment_methods
   };
 };

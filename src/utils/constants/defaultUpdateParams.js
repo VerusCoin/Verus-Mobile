@@ -19,7 +19,10 @@ import {
   API_GET_CONVERSION_PATHS,
   API_GET_WITHDRAW_DESTINATIONS,
   API_GET_DEPOSIT_SOURCES,
-  API_GET_PENDING_DEPOSITS
+  API_GET_PENDING_DEPOSITS,
+  API_GET_LINKED_IDENTITIES,
+  VERUSID,
+  VRPC
 } from './intervalConstants'
 
 export const DEFAULT_SERVICE_UPDATE_PARAMS = {
@@ -110,8 +113,8 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 60000,
-        update_expired_interval: 30000
-      }
+        update_expired_interval: 30000,
+      },
     },
     syncing: {
       tracking_info: {
@@ -126,8 +129,8 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 60000,
-        update_expired_interval: 30000
-      }
+        update_expired_interval: 30000,
+      },
     },
     post_sync: {
       tracking_info: {
@@ -142,21 +145,21 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 60000,
-        update_expired_interval: 30000
-      }
-    }
+        update_expired_interval: 30000,
+      },
+    },
   },
   [API_GET_INFO]: {
     channels: [DLIGHT_PRIVATE],
     restrictions: [],
     pre_data: {
       tracking_info: {
-        // Set this to only enable this update when the chainticker that the update interval was created for is 
+        // Set this to only enable this update when the chainticker that the update interval was created for is
         // active
-        coin_bound: false, 
+        coin_bound: false,
         // Set this to an array of screen keys to restrict this update to happening only inside of a coin application,
         // on the specified screens
-        update_locations: null, 
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -166,13 +169,13 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: ALWAYS_ACTIVATED,
-        update_expired_interval: 5000
-      }
+        update_expired_interval: 5000,
+      },
     },
     syncing: {
       tracking_info: {
-        coin_bound: false, 
-        update_locations: null, 
+        coin_bound: false,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -182,13 +185,13 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: ALWAYS_ACTIVATED,
-        update_expired_interval: 30000
-      }
+        update_expired_interval: 30000,
+      },
     },
     post_sync: {
       tracking_info: {
-        coin_bound: false, 
-        update_locations: null, 
+        coin_bound: false,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -198,17 +201,17 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 30000,
-        update_expired_interval: 30000
-      }
-    }
+        update_expired_interval: 30000,
+      },
+    },
   },
   [API_GET_TRANSACTIONS]: {
-    channels: [DLIGHT_PRIVATE, ELECTRUM, ETH, ERC20, WYRE_SERVICE],
+    channels: [DLIGHT_PRIVATE, ELECTRUM, ETH, ERC20, WYRE_SERVICE, VRPC],
     restrictions: [],
     pre_data: {
       tracking_info: {
-        coin_bound: true, 
-        update_locations: [WALLET_APP_OVERVIEW], 
+        coin_bound: true,
+        update_locations: [WALLET_APP_OVERVIEW],
         needs_update: true,
         busy: {},
       },
@@ -219,12 +222,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         update_expired_oncomplete: null,
         expire_timeout: 60000,
         update_expired_interval: 30000,
-      }
+      },
     },
     syncing: {
       tracking_info: {
-        coin_bound: true, 
-        update_locations: [WALLET_APP_OVERVIEW], 
+        coin_bound: true,
+        update_locations: [WALLET_APP_OVERVIEW],
         needs_update: true,
         busy: {},
       },
@@ -235,12 +238,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         update_expired_oncomplete: null,
         expire_timeout: 60000,
         update_expired_interval: 30000,
-      }
+      },
     },
     post_sync: {
       tracking_info: {
-        coin_bound: true, 
-        update_locations: [WALLET_APP_OVERVIEW], 
+        coin_bound: true,
+        update_locations: [WALLET_APP_OVERVIEW],
         needs_update: true,
         busy: {},
       },
@@ -251,16 +254,68 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         update_expired_oncomplete: null,
         expire_timeout: 60000,
         update_expired_interval: 30000,
-      }
-    }
+      },
+    },
+  },
+  [API_GET_LINKED_IDENTITIES]: {
+    channels: [VERUSID],
+    restrictions: [],
+    pre_data: {
+      tracking_info: {
+        coin_bound: false,
+        update_locations: null,
+        needs_update: true,
+        busy: {},
+      },
+      interval_info: {
+        expire_id: null,
+        update_expired_id: null,
+        expire_oncomplete: null,
+        update_expired_oncomplete: null,
+        expire_timeout: 60000,
+        update_expired_interval: 30000,
+      },
+    },
+    syncing: {
+      tracking_info: {
+        coin_bound: false,
+        update_locations: null,
+        needs_update: true,
+        busy: {},
+      },
+      interval_info: {
+        expire_id: null,
+        update_expired_id: null,
+        expire_oncomplete: null,
+        update_expired_oncomplete: null,
+        expire_timeout: 60000,
+        update_expired_interval: 30000,
+      },
+    },
+    post_sync: {
+      tracking_info: {
+        coin_bound: false,
+        update_locations: null,
+        needs_update: true,
+        busy: {},
+      },
+      interval_info: {
+        expire_id: null,
+        update_expired_id: null,
+        expire_oncomplete: null,
+        update_expired_oncomplete: null,
+        expire_timeout: 60000,
+        update_expired_interval: 30000,
+      },
+    },
   },
   [API_GET_CONVERSION_PATHS]: {
     channels: [WYRE_SERVICE],
     restrictions: [],
     pre_data: {
       tracking_info: {
-        coin_bound: true, 
-        update_locations: null, 
+        coin_bound: true,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -271,12 +326,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         update_expired_oncomplete: null,
         expire_timeout: 120000,
         update_expired_interval: 30000,
-      }
+      },
     },
     syncing: {
       tracking_info: {
-        coin_bound: true, 
-        update_locations: null, 
+        coin_bound: true,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -287,12 +342,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         update_expired_oncomplete: null,
         expire_timeout: 120000,
         update_expired_interval: 30000,
-      }
+      },
     },
     post_sync: {
       tracking_info: {
-        coin_bound: true, 
-        update_locations: null, 
+        coin_bound: true,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -303,16 +358,16 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         update_expired_oncomplete: null,
         expire_timeout: 120000,
         update_expired_interval: 30000,
-      }
-    }
+      },
+    },
   },
   [API_GET_WITHDRAW_DESTINATIONS]: {
     channels: [WYRE_SERVICE],
     restrictions: [],
     pre_data: {
       tracking_info: {
-        coin_bound: false, 
-        update_locations: null, 
+        coin_bound: false,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -323,12 +378,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         update_expired_oncomplete: null,
         expire_timeout: 120000,
         update_expired_interval: 15000,
-      }
+      },
     },
     syncing: {
       tracking_info: {
-        coin_bound: false, 
-        update_locations: null, 
+        coin_bound: false,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -339,12 +394,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         update_expired_oncomplete: null,
         expire_timeout: 120000,
         update_expired_interval: 15000,
-      }
+      },
     },
     post_sync: {
       tracking_info: {
-        coin_bound: false, 
-        update_locations: null, 
+        coin_bound: false,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -355,16 +410,16 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         update_expired_oncomplete: null,
         expire_timeout: 120000,
         update_expired_interval: 15000,
-      }
-    }
+      },
+    },
   },
   [API_GET_DEPOSIT_SOURCES]: {
     channels: [WYRE_SERVICE],
     restrictions: [],
     pre_data: {
       tracking_info: {
-        coin_bound: false, 
-        update_locations: null, 
+        coin_bound: false,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -375,12 +430,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         update_expired_oncomplete: null,
         expire_timeout: 120000,
         update_expired_interval: 15000,
-      }
+      },
     },
     syncing: {
       tracking_info: {
-        coin_bound: false, 
-        update_locations: null, 
+        coin_bound: false,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -391,12 +446,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         update_expired_oncomplete: null,
         expire_timeout: 120000,
         update_expired_interval: 15000,
-      }
+      },
     },
     post_sync: {
       tracking_info: {
-        coin_bound: false, 
-        update_locations: null, 
+        coin_bound: false,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -407,16 +462,16 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         update_expired_oncomplete: null,
         expire_timeout: 120000,
         update_expired_interval: 15000,
-      }
-    }
+      },
+    },
   },
   [API_GET_PENDING_DEPOSITS]: {
     channels: [WYRE_SERVICE],
     restrictions: [],
     pre_data: {
       tracking_info: {
-        coin_bound: false, 
-        update_locations: null, 
+        coin_bound: false,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -427,12 +482,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         update_expired_oncomplete: null,
         expire_timeout: 120000,
         update_expired_interval: 15000,
-      }
+      },
     },
     syncing: {
       tracking_info: {
-        coin_bound: false, 
-        update_locations: null, 
+        coin_bound: false,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -443,12 +498,12 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         update_expired_oncomplete: null,
         expire_timeout: 120000,
         update_expired_interval: 15000,
-      }
+      },
     },
     post_sync: {
       tracking_info: {
-        coin_bound: false, 
-        update_locations: null, 
+        coin_bound: false,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -459,16 +514,16 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         update_expired_oncomplete: null,
         expire_timeout: 120000,
         update_expired_interval: 15000,
-      }
-    }
+      },
+    },
   },
   [API_GET_BALANCES]: {
-    channels: [DLIGHT_PRIVATE, ELECTRUM, ETH, ERC20, WYRE_SERVICE],
+    channels: [DLIGHT_PRIVATE, ELECTRUM, ETH, ERC20, WYRE_SERVICE, VRPC],
     restrictions: [],
     pre_data: {
       tracking_info: {
-        coin_bound: false, 
-        update_locations: null, 
+        coin_bound: false,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -478,13 +533,13 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 60000,
-        update_expired_interval: 30000
-      }
+        update_expired_interval: 30000,
+      },
     },
     syncing: {
       tracking_info: {
-        coin_bound: false, 
-        update_locations: null, 
+        coin_bound: false,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -494,13 +549,13 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 60000,
-        update_expired_interval: 30000
-      }
+        update_expired_interval: 30000,
+      },
     },
     post_sync: {
       tracking_info: {
-        coin_bound: false, 
-        update_locations: null, 
+        coin_bound: false,
+        update_locations: null,
         needs_update: true,
         busy: {},
       },
@@ -510,8 +565,8 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 60000,
-        update_expired_interval: 30000
-      }
-    }
+        update_expired_interval: 30000,
+      },
+    },
   },
-}
+};

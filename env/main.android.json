@@ -22,6 +22,8 @@
   "ENABLE_ELECTRUM": true,
   "ENABLE_GENERAL": true,
   "ENABLE_WYRE_COIN": true,
+  "ENABLE_VRPC": true,
+  "ENABLE_VERUSID": true,
 
   "ETH_NETWORK": "homestead",
 

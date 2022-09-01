@@ -11,7 +11,10 @@ export const extractData = (state, statePath, apiCallKey, chainTicker) => {
               .api_channels[apiCallKey];
 
             if (apiChannel == null) return null;
-            else return state[statePath[0]][statePath[1]][apiChannel][chainTicker];
+            else
+              return state[statePath[0]][statePath[1]][apiChannel]
+                ? state[statePath[0]][statePath[1]][apiChannel][chainTicker]
+                : null;
           },
           true
         )
@@ -25,7 +28,10 @@ export const extractData = (state, statePath, apiCallKey, chainTicker) => {
                 .api_channels[apiCallKey];
 
               if (apiChannel == null) return null;
-              else return state[statePath[0]][statePath[1]][apiChannel][key];
+              else
+                return state[statePath[0]][statePath[1]][apiChannel]
+                  ? state[statePath[0]][statePath[1]][apiChannel][key]
+                  : null;
             },
             true
           ),

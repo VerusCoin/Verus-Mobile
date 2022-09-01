@@ -173,7 +173,7 @@ class WyreServiceAccountOverview extends Component {
   }
 
   async fetchAccountData() {
-    this.props.dispatch(setServiceLoading(true))
+    this.props.dispatch(setServiceLoading(true, WYRE_SERVICE_ID))
     const updates = [API_GET_SERVICE_ACCOUNT, API_GET_SERVICE_PAYMENT_METHODS]
 
     for (update of updates) {
@@ -184,7 +184,7 @@ class WyreServiceAccountOverview extends Component {
       );
     }
 
-    this.props.dispatch(setServiceLoading(false))
+    this.props.dispatch(setServiceLoading(false, WYRE_SERVICE_ID))
   }
 
   async loadDocumentRenders() {
@@ -234,7 +234,7 @@ class WyreServiceAccountOverview extends Component {
   }
 
   openAccountData(infoSchema) {
-    this.props.dispatch(setServiceLoading(true))
+    this.props.dispatch(setServiceLoading(true, WYRE_SERVICE_ID))
 
     try {
       const {
@@ -268,12 +268,12 @@ class WyreServiceAccountOverview extends Component {
         missingDataDisplay,
         nativeSubmission
       }))
-      this.props.dispatch(setServiceLoading(false))
+      this.props.dispatch(setServiceLoading(false, WYRE_SERVICE_ID))
       this.props.navigation.navigate("WyreServiceAccountData");      
     } catch(e) {
       console.warn(e)
       createAlert("Error", "Error fetching Wyre service account data.")
-      this.props.dispatch(setServiceLoading(false))
+      this.props.dispatch(setServiceLoading(false, WYRE_SERVICE_ID))
     }
   }
 

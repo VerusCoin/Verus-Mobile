@@ -1,7 +1,3 @@
-/*
-  The coin reducer contains erc20 channel specific information
-*/
-
 import {
   INIT_VRPC_CHANNEL_FINISH,
   CLOSE_VRPC_CHANNEL,
@@ -55,7 +51,8 @@ export const channelStore_vrpc = (state = {
       }
     case SIGN_OUT_COMPLETE:
       return {
-        openCoinChannels: {}
+        openCoinChannels: {},
+        vrpcEndpoints: {},
       }
     default:
       return state;

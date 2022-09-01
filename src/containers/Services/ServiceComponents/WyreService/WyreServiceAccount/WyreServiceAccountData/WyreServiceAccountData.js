@@ -30,6 +30,7 @@ import {
   WYRE_INDIVIDUAL_NAME,
   WYRE_INDIVIDUAL_RESIDENCE_ADDRESS,
   WYRE_INDIVIDUAL_SSN,
+  WYRE_SERVICE_ID,
 } from "../../../../../../utils/constants/services";
 import {
   renderPersonalAddress,
@@ -264,13 +265,13 @@ class WyreServiceAccountData extends Component {
 
   async submitDataToWyre(submissionFunction) {
     try {
-      this.props.dispatch(setServiceLoading(true));
+      this.props.dispatch(setServiceLoading(true, WYRE_SERVICE_ID));
       await submissionFunction();
 
       await this.forceUpdate();
 
       this.props.navigation.goBack();
-      this.props.dispatch(setServiceLoading(false));
+      this.props.dispatch(setServiceLoading(false, WYRE_SERVICE_ID));
       createAlert("Success", "Data submitted to Wyre! Track its status in your Wyre service menu.");
 
       return;
@@ -293,14 +294,14 @@ class WyreServiceAccountData extends Component {
       if (tryAgain) {
         return await this.submitDataToWyre(submissionFunction);
       } else {
-        this.props.dispatch(setServiceLoading(false));
+        this.props.dispatch(setServiceLoading(false, WYRE_SERVICE_ID));
       }
     }
   }
 
   initParams() {
     if (this.props.params.wyreFieldData == null) {
-      this.props.dispatch(setServiceLoading(true));
+      this.props.dispatch(setServiceLoading(true, WYRE_SERVICE_ID));
     } else {
       this.setState(
         {
@@ -312,7 +313,7 @@ class WyreServiceAccountData extends Component {
         async () => {
           try {
             if (this.state.params.options == null) {
-              this.props.dispatch(setServiceLoading(true));
+              this.props.dispatch(setServiceLoading(true, WYRE_SERVICE_ID));
             }
 
             const { personalInfo, options } = await this.getPersonalInfoOptions(
@@ -334,7 +335,7 @@ class WyreServiceAccountData extends Component {
                 },
               },
               () => {
-                this.props.dispatch(setServiceLoading(false));
+                this.props.dispatch(setServiceLoading(false, WYRE_SERVICE_ID));
               }
             );
           } catch (e) {
@@ -357,7 +358,7 @@ const mapStateToProps = (state) => {
   return {
     params:
       state.channelStore_wyre_service.currentAccountDataScreenParams || {},
-    loading: state.services.loading,
+    loading: state.services.loading[WYRE_SERVICE_ID],
     encryptedPersonalInfo: state.personal
   };
 };

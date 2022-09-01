@@ -17,28 +17,16 @@ import {
 } from "react-native";
 import { Button, Portal, TextInput, Checkbox } from "react-native-paper";
 import { connect } from 'react-redux';
-import { 
-  validateLogin, 
-  setUserCoins, 
-  fetchActiveCoins,
-  signIntoAuthenticatedAccount,
-  COIN_MANAGER_MAP, 
-  saveGeneralSettings,
-  initSettings
- } from '../../actions/actionCreators';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
-import { clearActiveAccountLifecycles, clearAllCoinIntervals, initializeAccountData, initPersonalDataForUser, initServiceStoredDataForUser } from "../../actions/actionDispatchers";
-import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
+import { initializeAccountData } from "../../actions/actionDispatchers";
 import PasswordInput from '../../components/PasswordInput'
-import { DISABLED_CHANNELS } from '../../../env/index'
 
 import { removeIdentityData } from '../../utils/asyncStore/identityStorage';
 import { getBiometricPassword, getSupportedBiometryType } from "../../utils/keychain/keychain";
 import { VerusLogo } from "../../images/customIcons";
 import ListSelectionModal from "../../components/ListSelectionModal/ListSelectionModal";
 import { TouchableOpacity } from "react-native";
-import { clearAllPersonalData } from "../../utils/asyncStore/personalDataStorage";
 import { LOADING_ACCOUNT, VALIDATING_ACCOUNT } from "../../utils/constants/constants";
 
 const NO_ACCOUNT = "NO_ACCOUNT"

@@ -25,6 +25,7 @@ export const API_GET_DEPOSIT_SOURCES = 'get_deposit_sources'
 export const API_GET_PENDING_DEPOSITS = 'get_pending_deposits'
 export const API_GET_TRANSACTIONS = "get_transactions"
 export const API_GET_FIATPRICE = "get_fiatprice"
+export const API_GET_LINKED_IDENTITIES = "get_linked_identities"
 
 export const API_SEND = 'send'
 export const API_GET_KEYS = 'get_keys'
@@ -51,7 +52,8 @@ export const GENERAL = 'general'
 export const ETH = 'eth'
 export const ERC20 = 'erc20'
 export const VRPC = 'vrpc'
-export const CHANNELS = [DLIGHT_PRIVATE, ELECTRUM, GENERAL, ETH, ERC20, WYRE_SERVICE]
+export const VERUSID = 'verusid'
+export const CHANNELS = [DLIGHT_PRIVATE, ELECTRUM, GENERAL, ETH, ERC20, WYRE_SERVICE, VERUSID, VRPC]
 export const CHANNELS_OBJECT_TEMPLATE = Object.freeze(arrayToObject(CHANNELS, {}))
 export const CHANNELS_NULL_TEMPLATE = Object.freeze(arrayToObject(CHANNELS, null))
 

@@ -20,6 +20,7 @@ import { channelStore_dlight_private } from './channelStores/dlight';
 import { channelStore_eth } from './channelStores/eth';
 import { channelStore_erc20 } from './channelStores/erc20';
 import { channelStore_vrpc } from './channelStores/vrpc';
+import { channelStore_verusid } from './channelStores/verusid';
 import { channelStore_electrum } from './channelStores/electrum';
 import { channelStore_general } from './channelStores/general';
 import { channelStore_wyre_service } from './channelStores/wyre';
@@ -52,6 +53,7 @@ export default combineReducers({
   channelStore_vrpc,
   channelStore_general,
   channelStore_wyre_service,
+  channelStore_verusid,
   ethtxreceipts,
   coinMenus,
   alert,

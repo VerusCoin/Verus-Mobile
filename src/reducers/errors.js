@@ -19,7 +19,8 @@ import {
   API_GET_CONVERSION_PATHS,
   API_GET_WITHDRAW_DESTINATIONS,
   API_GET_DEPOSIT_SOURCES,
-  API_GET_PENDING_DEPOSITS
+  API_GET_PENDING_DEPOSITS,
+  API_GET_LINKED_IDENTITIES
 } from "../utils/constants/intervalConstants";
 import {
   ERROR_BALANCES,
@@ -50,7 +51,9 @@ import {
   SET_DEPOSIT_SOURCES,
   ERROR_DEPOSIT_SOURCES,
   SET_PENDING_DEPOSITS,
-  ERROR_PENDING_DEPOSITS
+  ERROR_PENDING_DEPOSITS,
+  SET_LINKED_IDENTITIES,
+  ERROR_LINKED_IDENTITIES
 } from "../utils/constants/storeType";
 
 export const errors = (state = {
@@ -68,7 +71,8 @@ export const errors = (state = {
   [API_GET_CONVERSION_PATHS]: {},
   [API_GET_WITHDRAW_DESTINATIONS]: {},
   [API_GET_DEPOSIT_SOURCES]: {},
-  [API_GET_PENDING_DEPOSITS]: {}
+  [API_GET_PENDING_DEPOSITS]: {},
+  [API_GET_LINKED_IDENTITIES]: {}
 }, action) => {
   const { channel, error, chainTicker } = action.payload || {}
 
@@ -157,6 +161,17 @@ export const errors = (state = {
           ...state[API_GET_FIATPRICE],
           [channel]: {
             ...state[API_GET_FIATPRICE][channel],
+            [chainTicker]: error
+          }
+        }
+      };
+    case ERROR_LINKED_IDENTITIES:
+      return {
+        ...state,
+        [API_GET_LINKED_IDENTITIES]: {
+          ...state[API_GET_LINKED_IDENTITIES],
+          [channel]: {
+            ...state[API_GET_LINKED_IDENTITIES][channel],
             [chainTicker]: error
           }
         }
@@ -317,6 +332,17 @@ export const errors = (state = {
           ...state[API_GET_FIATPRICE],
           [channel]: {
             ...state[API_GET_FIATPRICE][channel],
+            [chainTicker]: null
+          }
+        }
+      };
+    case SET_LINKED_IDENTITIES:
+      return {
+        ...state,
+        [API_GET_LINKED_IDENTITIES]: {
+          ...state[API_GET_LINKED_IDENTITIES],
+          [channel]: {
+            ...state[API_GET_LINKED_IDENTITIES][channel],
             [chainTicker]: null
           }
         }

@@ -3,7 +3,7 @@ import {requestServiceStoredData} from '../../../../../utils/auth/authBox';
 import {VERUSID_SERVICE_ID} from '../../../../../utils/constants/services';
 import {modifyServiceStoredDataForUser} from '../services';
 
-export const linkVerusId = async (iAddress, friendlyName) => {
+export const linkVerusId = async (iAddress, friendlyName, chain) => {
   const state = store.getState();
 
   if (state.authentication.activeAccount == null) {
@@ -19,7 +19,12 @@ export const linkVerusId = async (iAddress, friendlyName) => {
       ...serviceData,
       linked_ids: {
         ...currentLinkedIdentities,
-        [iAddress]: friendlyName,
+        [chain]: currentLinkedIdentities[chain]
+          ? {
+              ...currentLinkedIdentities[chain],
+              [iAddress]: friendlyName,
+            }
+          : {[iAddress]: friendlyName},
       },
     },
     VERUSID_SERVICE_ID,
@@ -27,7 +32,7 @@ export const linkVerusId = async (iAddress, friendlyName) => {
   );
 };
 
-export const unlinkVerusId = async iAddress => {
+export const unlinkVerusId = async (iAddress, chain) => {
   const state = store.getState();
 
   if (state.authentication.activeAccount == null) {
@@ -38,8 +43,10 @@ export const unlinkVerusId = async iAddress => {
   let currentLinkedIdentities =
     serviceData.linked_ids == null ? {} : serviceData.linked_ids;
 
-  delete currentLinkedIdentities[iAddress];
-
+  if (currentLinkedIdentities[chain]) {
+    delete currentLinkedIdentities[chain][iAddress];
+  }
+  
   return await modifyServiceStoredDataForUser(
     {
       ...serviceData,

@@ -34,7 +34,7 @@ export const initializeAccountData = async (
 
     const coinList = await fetchActiveCoins()
     const setUserCoinsAction = setUserCoins(coinList.activeCoinList, account.id)
-    const { activeCoinsForUser } = setUserCoinsAction
+    const { activeCoinsForUser } = setUserCoinsAction.payload
 
     store.dispatch(await initSettings())
     store.dispatch(accountAuthenticator)
@@ -50,7 +50,7 @@ export const initializeAccountData = async (
         } else return null
       }))
 
-      activateChainLifecycle(coinObj.id);
+      activateChainLifecycle(coinObj);
     }
 
     activateServiceLifecycle()

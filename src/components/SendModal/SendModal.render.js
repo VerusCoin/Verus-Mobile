@@ -2,11 +2,10 @@ import React, { Component } from "react";
 import { Platform, SafeAreaView } from "react-native";
 import { Text, Portal, Button } from "react-native-paper";
 import { Colors } from "react-native/Libraries/NewAppScreen";
-import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
-import Styles from "../../styles";
 import {
   CONVERSION_SEND_MODAL,
   DEPOSIT_SEND_MODAL,
+  LINK_IDENTITY_SEND_MODAL,
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_FORM_STEP_FORM,
   SEND_MODAL_FORM_STEP_RESULT,
@@ -18,7 +17,6 @@ import TraditionalCryptoSendForm from "./TraditionalCryptoSend/TraditionalCrypto
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
-import LoadingScreen from "../../containers/LoadingScreen/LoadingScreen";
 import AnimatedActivityIndicatorBox from "../AnimatedActivityIndicatorBox";
 import TraditionalCryptoSendConfirm from "./TraditionalCryptoSend/TraditionalCryptoSendConfirm/TraditionalCryptoSendConfirm";
 import TraditionalCryptoSendResult from "./TraditionalCryptoSend/TraditionalCryptoSendResult/TraditionalCryptoSendResult";
@@ -31,6 +29,9 @@ import WithdrawSendResult from "./WithdrawSend/WithdrawSendResult/WithdrawSendRe
 import DepositSendForm from "./DepositSend/DepositSendForm/DepositSendForm";
 import DepositSendConfirm from "./DepositSend/DepositSendConfirm/DepositSendConfirm";
 import DepositSendResult from "./DepositSend/DepositSendResult/DepositSendResult";
+import LinkIdentityForm from "./LinkIdentity/LinkIdentityForm/LinkIdentityForm";
+import LinkIdentityConfirm from "./LinkIdentity/LinkIdentityConfirm/LinkIdentityConfirm";
+import LinkIdentityResult from "./LinkIdentity/LinkIdentityResult/LinkIdentityResult";
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
@@ -39,21 +40,24 @@ const SEND_FORMS = {
   [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendForm,
   [CONVERSION_SEND_MODAL]: ConversionSendForm,
   [WITHDRAW_SEND_MODAL]: WithdrawSendForm,
-  [DEPOSIT_SEND_MODAL]: DepositSendForm
+  [DEPOSIT_SEND_MODAL]: DepositSendForm,
+  [LINK_IDENTITY_SEND_MODAL]: LinkIdentityForm
 };
 
 const SEND_CONFIRMATION = {
   [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendConfirm,
   [CONVERSION_SEND_MODAL]: ConversionSendConfirm,
   [WITHDRAW_SEND_MODAL]: WithdrawSendConfirm,
-  [DEPOSIT_SEND_MODAL]: DepositSendConfirm
+  [DEPOSIT_SEND_MODAL]: DepositSendConfirm,
+  [LINK_IDENTITY_SEND_MODAL]: LinkIdentityConfirm
 };
 
 const SEND_RESULTS = {
   [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendResult,
   [CONVERSION_SEND_MODAL]: ConversionSendResult,
   [WITHDRAW_SEND_MODAL]: WithdrawSendResult,
-  [DEPOSIT_SEND_MODAL]: DepositSendResult
+  [DEPOSIT_SEND_MODAL]: DepositSendResult,
+  [LINK_IDENTITY_SEND_MODAL]: LinkIdentityResult
 };
 
 export const SendModalRender = function () {

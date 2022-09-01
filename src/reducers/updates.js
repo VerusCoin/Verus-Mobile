@@ -44,7 +44,9 @@ import {
   SET_DEPOSIT_SOURCES,
   ERROR_DEPOSIT_SOURCES,
   SET_PENDING_DEPOSITS,
-  ERROR_PENDING_DEPOSITS
+  ERROR_PENDING_DEPOSITS,
+  SET_LINKED_IDENTITIES,
+  ERROR_LINKED_IDENTITIES
 } from "../utils/constants/storeType";
 import {
   API_GET_BALANCES,
@@ -59,6 +61,7 @@ import {
   API_GET_WITHDRAW_DESTINATIONS,
   API_GET_DEPOSIT_SOURCES,
   API_GET_PENDING_DEPOSITS,
+  API_GET_LINKED_IDENTITIES,
 } from "../utils/constants/intervalConstants";
 
 export const updates = (state = {
@@ -344,6 +347,34 @@ export const updates = (state = {
                   busy: {
                     ...state.coinUpdateTracker[chainTicker][
                       API_GET_FIATPRICE
+                    ].busy,
+                    [channel]: false,
+                  },
+                }
+              : {
+                  busy: {
+                    [channel]: false,
+                  },
+                },
+          },
+        },
+      };
+    case SET_LINKED_IDENTITIES:
+    case ERROR_LINKED_IDENTITIES:
+      return {
+        ...state,
+        coinUpdateTracker: {
+          ...state.coinUpdateTracker,
+          [chainTicker]: {
+            ...state.coinUpdateTracker[chainTicker],
+            [API_GET_LINKED_IDENTITIES]: state.coinUpdateTracker[chainTicker]
+              ? {
+                  ...state.coinUpdateTracker[chainTicker][
+                    API_GET_LINKED_IDENTITIES
+                  ],
+                  busy: {
+                    ...state.coinUpdateTracker[chainTicker][
+                      API_GET_LINKED_IDENTITIES
                     ].busy,
                     [channel]: false,
                   },

@@ -53,7 +53,7 @@ describe('dlight initialization tester', () => {
         const state = Store.getState()
         expect(state.coins.dlightSockets.VRSC).toBe(true)
         expect(state.coins.dlightSyncing.VRSC).toBe(true)
-        activateChainLifecycle(MOCK_STATE.coins.activeCoinsForUser[0].id)
+        activateChainLifecycle(MOCK_STATE.coins.activeCoinsForUser[0])
         
         return skip100Seconds
       }) 

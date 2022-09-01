@@ -14,8 +14,8 @@ import {
   refreshServiceIntervals,
 } from "./IntervalCreator";
 
-export const activateChainLifecycle = (chainTicker) => {  
-  refreshCoinIntervals(chainTicker, {[API_GET_INFO]: {update_expired_oncomplete: getInfoOnComplete}})
+export const activateChainLifecycle = (coinObj) => {  
+  refreshCoinIntervals(coinObj, {[API_GET_INFO]: {update_expired_oncomplete: getInfoOnComplete}})
 }
 
 export const clearChainLifecycle = (chainTicker) => {
@@ -33,13 +33,13 @@ export const clearServiceIntervals = () => {
 export const getInfoOnComplete = (state, dispatch, chainTicker) => {
   const activeCoin = getCoinObj(state.coins.activeCoinsForUser, chainTicker)
   
-  if (activeCoin == null) throw new Error(`${chainTicker} is not an active coin.`)
+  if (activeCoin == null) return;
 
   const currentStatus = state.coins.status[chainTicker]
   const getInfoResult = state.ledger.info[chainTicker];
   const getInfoError = state.errors[API_GET_INFO][DLIGHT_PRIVATE][chainTicker];
   const refresh = () =>
-    refreshCoinIntervals(chainTicker, {
+    refreshCoinIntervals(activeCoin, {
       [API_GET_INFO]: { update_expired_oncomplete: getInfoOnComplete }
     });
 

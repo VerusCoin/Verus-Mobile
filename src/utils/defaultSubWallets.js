@@ -6,6 +6,7 @@ import {
   WALLET_APP_RECEIVE,
   WALLET_APP_SEND,
 } from "./constants/apps";
+import { SUBWALLET_NAMES } from "./constants/constants";
 import {
   API_CONVERT,
   API_GET_ADDRESSES,
@@ -15,6 +16,7 @@ import {
   API_GET_FIATPRICE,
   API_GET_INFO,
   API_GET_KEYS,
+  API_GET_LINKED_IDENTITIES,
   API_GET_PENDING_DEPOSITS,
   API_GET_TRANSACTIONS,
   API_GET_WITHDRAW_DESTINATIONS,
@@ -24,10 +26,12 @@ import {
   ERC20,
   ETH,
   GENERAL,
+  VERUSID,
+  VRPC,
   WYRE_SERVICE,
 } from "./constants/intervalConstants";
 import { SEND_MODAL, TRADITIONAL_CRYPTO_SEND_MODAL } from "./constants/sendModal";
-import { dlightEnabled, wyreCoinChannelEnabled } from "./enabledChannels";
+import { dlightEnabled, vrpcChannelEnabled, wyreCoinChannelEnabled } from "./enabledChannels";
 
 const getMainSubwallet = (dominantChannel = ELECTRUM) => {
   return {
@@ -40,17 +44,45 @@ const getMainSubwallet = (dominantChannel = ELECTRUM) => {
       [API_GET_FIATPRICE]: GENERAL,
       [API_SEND]: dominantChannel,
       [API_GET_KEYS]: dominantChannel,
+      [API_GET_LINKED_IDENTITIES]: VERUSID,
     },
     compatible_apps: [WALLET_APP_OVERVIEW, WALLET_APP_SEND, WALLET_APP_RECEIVE],
     modals: {
       [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL,
     },
-    id: "MAIN_WALLET",
+    id: 'MAIN_WALLET',
     params: {},
     color: Colors.primaryColor,
-    address_info: [{ label: "Address" }]
+    address_info: [{label: 'Address'}],
+    name: SUBWALLET_NAMES['MAIN_WALLET']
   };
-}
+};
+
+const getVerusIdSubwallet = (channelId, name) => {
+  const iAddress = channelId.split('.')[1];
+
+  return {
+    channel: channelId,
+    api_channels: {
+      [API_GET_BALANCES]: channelId,
+      [API_GET_INFO]: channelId,
+      [API_GET_ADDRESSES]: channelId,
+      [API_GET_TRANSACTIONS]: channelId,
+      [API_GET_FIATPRICE]: GENERAL,
+      [API_SEND]: channelId,
+      [API_GET_KEYS]: channelId,
+    },
+    compatible_apps: [WALLET_APP_OVERVIEW, WALLET_APP_SEND, WALLET_APP_RECEIVE],
+    modals: {
+      [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL,
+    },
+    id: `VERUSID_WALLET_${iAddress}`,
+    params: {},
+    color: Colors.primaryColor,
+    address_info: [{label: 'Address'}],
+    name
+  };
+};
 
 const getWyreSubwallet = (protocol) => {
   let compatible_apps = [
@@ -89,6 +121,7 @@ const getWyreSubwallet = (protocol) => {
       {label: 'Wyre Address'},
       {label: 'Blockchain Address'},
     ],
+    name: SUBWALLET_NAMES['WYRE_ACCOUNT_WALLET']
   };
 };
 
@@ -110,10 +143,11 @@ const PRIVATE_SUBWALLET = {
   id: "PRIVATE_WALLET",
   params: {},
   color: Colors.quinaryColor,
-  address_info: [{ label: "Address" }]
+  address_info: [{ label: "Address" }],
+  name: SUBWALLET_NAMES['PRIVATE_WALLET']
 }
 
-export const getDefaultSubWallets = (coinObj) => {
+export const getDefaultSubWallets = (coinObj, dynamicChannels = [], dynamicChannelNames = {}) => {
   const MAIN_WALLET = getMainSubwallet(coinObj.dominant_channel)
   const WYRE_ACCOUNT_SUBWALLET = getWyreSubwallet(coinObj.proto)
 
@@ -123,22 +157,32 @@ export const getDefaultSubWallets = (coinObj) => {
         coinObj.compatible_channels.includes(ELECTRUM) ||
         coinObj.compatible_channels.includes(ETH) ||
         coinObj.compatible_channels.includes(ERC20),
-      subwallet: MAIN_WALLET,
+      subwallets: [MAIN_WALLET],
     },
     {
-      met: () => coinObj.compatible_channels.includes(DLIGHT_PRIVATE) && dlightEnabled(),
-      subwallet: PRIVATE_SUBWALLET,
+      met: () =>
+        coinObj.compatible_channels.includes(DLIGHT_PRIVATE) && dlightEnabled(),
+      subwallets: [PRIVATE_SUBWALLET],
     },
     {
-      met: () => coinObj.compatible_channels.includes(WYRE_SERVICE) && wyreCoinChannelEnabled(),
-      subwallet: WYRE_ACCOUNT_SUBWALLET,
+      met: () =>
+        coinObj.compatible_channels.includes(WYRE_SERVICE) &&
+        wyreCoinChannelEnabled(),
+      subwallets: [WYRE_ACCOUNT_SUBWALLET],
+    },
+    {
+      met: () =>
+        coinObj.compatible_channels.includes(VRPC) && vrpcChannelEnabled(),
+      subwallets: dynamicChannels
+        .filter(x => x.split('.')[0] === VRPC)
+        .map(channelId => getVerusIdSubwallet(channelId, dynamicChannelNames[channelId])),
     },
   ];
 
   let subwallets = []
 
   for (const condition of SUBWALLET_CONDITIONS) {
-    if (condition.met()) subwallets.push(condition.subwallet)
+    if (condition.met()) subwallets = [...subwallets, ...condition.subwallets]
   }
 
   return subwallets

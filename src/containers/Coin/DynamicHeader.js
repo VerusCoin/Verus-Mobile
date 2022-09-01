@@ -10,7 +10,7 @@ import {
   Text,
   Animated
 } from "react-native"
-import { DEVICE_WINDOW_WIDTH, SUBWALLET_NAMES } from "../../utils/constants/constants";
+import { DEVICE_WINDOW_WIDTH } from "../../utils/constants/constants";
 import { setCoinSubWallet } from "../../actions/actionCreators";
 import SnapCarousel from "../../components/SnapCarousel";
 import { API_GET_BALANCES, API_GET_FIATPRICE, API_GET_INFO, GENERAL } from "../../utils/constants/intervalConstants";
@@ -150,7 +150,7 @@ class DynamicHeader extends Component {
                 style={{ backgroundColor: "white" }}
                 size={30}
               />
-              <Text style={{ fontSize: 16, marginLeft: 8 }}>{SUBWALLET_NAMES[item.id]}</Text>
+              <Text style={{ fontSize: 16, marginLeft: 8 }}>{item.name}</Text>
             </View>
             <Paragraph style={{ fontSize: 16, paddingTop: 8 }}>
               {this.props.balanceErrors[item.id]

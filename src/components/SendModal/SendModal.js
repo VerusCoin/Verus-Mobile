@@ -12,6 +12,7 @@ import {
   WITHDRAW_SEND_MODAL,
   TRADITIONAL_CRYPTO_SEND_MODAL,
   DEPOSIT_SEND_MODAL,
+  LINK_IDENTITY_SEND_MODAL,
 } from "../../utils/constants/sendModal";
 import { SendModalRender } from "./SendModal.render"
 
@@ -23,7 +24,8 @@ class SendModal extends Component {
       [TRADITIONAL_CRYPTO_SEND_MODAL]: 442,
       [CONVERSION_SEND_MODAL]: 624,
       [WITHDRAW_SEND_MODAL]: 624,
-      [DEPOSIT_SEND_MODAL]: 624
+      [DEPOSIT_SEND_MODAL]: 624,
+      [LINK_IDENTITY_SEND_MODAL]: 442
     };
 
     this.state = {

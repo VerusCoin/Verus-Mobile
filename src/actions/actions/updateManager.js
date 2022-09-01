@@ -45,8 +45,12 @@ export const generateUpdateCoinDataAction = (chainStatus, chainTicker, chainTags
     if (!isPbaasRoot && updateParams[key].restrictions.includes(IS_PBAAS_ROOT)) continue 
     if (chainTicker && updateParams[key].restrictions.includes(chainTicker.toUpperCase())) continue
 
-    const channelsToUse = updateParams[key].channels.filter(value => -1 !== enabledChannels.indexOf(value))
+    const channelsToUse = enabledChannels.filter(enabledChannel => {
+      const parentChannel = enabledChannel.split('.')[0]
 
+      return -1 !== updateParams[key].channels.indexOf(parentChannel);
+    })
+    
     updateIntervalData[key] = updateParams[key][chainStatus].interval_info
     updateTrackingData[key] = {
       ...updateParams[key][chainStatus].tracking_info,

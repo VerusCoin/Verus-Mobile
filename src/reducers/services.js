@@ -2,6 +2,7 @@
   The personal reducer stores data used by services
 */
 
+import { VERUSID_SERVICE_ID, WYRE_SERVICE_ID } from "../utils/constants/services";
 import {
   SET_SERVICE_ACCOUNT,
   SIGN_OUT,
@@ -16,10 +17,13 @@ export const services = (
   state = {
     accounts: {},
     paymentMethods: {},
-    stored: {}, // { [WYRE_SERVICE_ID]: { wyre document references }, [VERUSID_SERVICE_ID]: { linked_ids: { [key: iAddress]: friendlyName } }}
+    stored: {},
     transfers: {},
     rates: {},
-    loading: false,
+    loading: {
+      [WYRE_SERVICE_ID]: false,
+      [VERUSID_SERVICE_ID]: false,
+    },
   },
   action,
 ) => {
@@ -64,7 +68,10 @@ export const services = (
     case SET_SERVICE_LOADING:
       return {
         ...state,
-        loading: action.payload.loading,
+        loading: {
+          ...state.loading,
+          [action.payload.service]: action.payload.loading,
+        },
       };
     case SIGN_OUT:
       return {
@@ -74,7 +81,10 @@ export const services = (
         stored: {},
         transfers: {},
         rates: {},
-        loading: false,
+        loading: {
+          [WYRE_SERVICE_ID]: false,
+          [VERUSID_SERVICE_ID]: false,
+        },
       };
     default:
       return state;

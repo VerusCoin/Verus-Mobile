@@ -8,7 +8,6 @@ import {
   Animated
 } from "react-native";
 import { List, Text, Card, IconButton, Provider, Portal, TouchableRipple } from 'react-native-paper';
-import { SUBWALLET_NAMES } from "../../utils/constants/constants";
 import { truncateDecimal } from "../../utils/math";
 import BigNumber from "bignumber.js";
 import styles from "../../styles";
@@ -205,7 +204,7 @@ export const HomeListItemRender = function(coinObj, isParent, subWallet, index =
                     >
                       {isParent
                         ? coinObj.display_name
-                        : SUBWALLET_NAMES[subWallet.id]}
+                        : subWallet.name}
                     </Text>
                     <View
                       style={{
