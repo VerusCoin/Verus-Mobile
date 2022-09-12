@@ -25,6 +25,7 @@ export const initializeAccountData = async (
   
   if (accountAuthenticator) {
     setInitStep(LOADING_ACCOUNT)
+    await initServiceStoredDataForUser(account.accountHash)
 
     if (makeDefault) {
       await saveGeneralSettings({
@@ -55,7 +56,6 @@ export const initializeAccountData = async (
 
     activateServiceLifecycle()
     await initPersonalDataForUser(account.accountHash)
-    await initServiceStoredDataForUser(account.accountHash)
     store.dispatch(signIntoAuthenticatedAccount())
   } else {
     throw new Error(

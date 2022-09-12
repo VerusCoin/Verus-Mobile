@@ -84,11 +84,11 @@ class LinkIdentityForm extends Component {
         }
       }
 
-      // if (!isInWallet) {
-      //   throw new Error(
-      //     'Ensure that your wallet address for this account matches a primary address of the VerusID you are trying to add.',
-      //   );
-      // }
+      if (!isInWallet) {
+        throw new Error(
+          'Ensure that your wallet address for this account matches a primary address of the VerusID you are trying to add.',
+        );
+      }
 
       const friendlyNames = await getFriendlyNameMap(coinObj, res.result);
 

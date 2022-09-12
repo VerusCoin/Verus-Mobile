@@ -44,7 +44,7 @@ const getMainSubwallet = (dominantChannel = ELECTRUM) => {
       [API_GET_FIATPRICE]: GENERAL,
       [API_SEND]: dominantChannel,
       [API_GET_KEYS]: dominantChannel,
-      [API_GET_LINKED_IDENTITIES]: VERUSID,
+      //[API_GET_LINKED_IDENTITIES]: VERUSID,
     },
     compatible_apps: [WALLET_APP_OVERVIEW, WALLET_APP_SEND, WALLET_APP_RECEIVE],
     modals: {

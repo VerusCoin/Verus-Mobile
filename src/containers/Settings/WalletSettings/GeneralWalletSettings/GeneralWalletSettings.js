@@ -36,10 +36,6 @@ class WalletSettings extends Component {
         generalWalletSettings.maxTxCount != null
           ? generalWalletSettings.maxTxCount
           : "10",
-      verusIdShortcutsEnabled:
-        generalWalletSettings.verusIdShortcutsEnabled != null
-          ? generalWalletSettings.verusIdShortcutsEnabled
-          : false,
       displayCurrency:
         generalWalletSettings.displayCurrency != null
           ? generalWalletSettings.displayCurrency
@@ -99,7 +95,6 @@ class WalletSettings extends Component {
       const stateToSave = {
         maxTxCount: Number(this.state.maxTxCount),
         displayCurrency: this.state.displayCurrency,
-        verusIdShortcutsEnabled: this.state.verusIdShortcutsEnabled,
         defaultAccount:
           this.state.defaultAccount === NO_DEFAULT
             ? null
@@ -129,32 +124,6 @@ class WalletSettings extends Component {
 
   back = () => {
     this.props.navigation.dispatch(NavigationActions.back())
-  }
-
-  toggleVerusIdShortcuts() {
-    if (this.state.verusIdShortcutsEnabled) {
-      this.setState({
-        verusIdShortcutsEnabled: false
-      })
-    } else {
-      createAlert(
-        "Enable VerusID Shortcuts?",
-        "VerusID Shortcuts is an experimental feature and does not actually send to the destination ID itself, meaning it will show up on the controlling or private address of the ID, not the ID." +
-        "\n\nRevoking or transferring the ID will not affect the funds once sent." +
-          "\n\nAt the moment, VerusIDs, and the addresses connected to them, are retrieved by Verus Mobile through trusted centralized servers." +
-          "\n\nEnsure you are aware of the implications of using centralized systems before enabling VerusID shortcuts.",
-        [
-          { text: "Cancel", onPress: () => resolveAlert(false) },
-          { text: "Continue", onPress: () => resolveAlert(true) },
-        ]
-      ).then((res) => {
-        if (res) {
-          this.setState({
-            verusIdShortcutsEnabled: true,
-          });
-        }
-      });
-    }
   }
 
   validateFormData = () => {
@@ -292,7 +261,7 @@ class WalletSettings extends Component {
             />
             <Divider />
           </TouchableOpacity>
-          <List.Subheader>{"VerusID Settings"}</List.Subheader>
+          {/* <List.Subheader>{"VerusID Settings"}</List.Subheader>
           <TouchableOpacity
             style={{ ...Styles.flex }}
           >
@@ -309,7 +278,7 @@ class WalletSettings extends Component {
               mode="android"
             />
             <Divider />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <List.Subheader>{"Start Settings"}</List.Subheader>
           <TouchableOpacity
             onPress={() => this.openDefaultProfileModal()}

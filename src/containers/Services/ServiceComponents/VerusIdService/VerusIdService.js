@@ -44,6 +44,12 @@ class VerusIdService extends Component {
     this.getLinkedIds();
   }
 
+  componentDidUpdate(lastProps) {
+    if (lastProps.encryptedIds !== this.props.encryptedIds) {
+      this.getLinkedIds()
+    }
+  }
+
   render() {
     return VerusIdServiceRender.call(this);
   }
@@ -52,6 +58,7 @@ class VerusIdService extends Component {
 const mapStateToProps = state => {
   return {
     loading: state.services.loading[VERUSID_SERVICE_ID],
+    encryptedIds: state.services.stored[VERUSID_SERVICE_ID]
   };
 };
 

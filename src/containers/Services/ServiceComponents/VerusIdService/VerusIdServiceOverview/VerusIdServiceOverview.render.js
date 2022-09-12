@@ -1,8 +1,9 @@
 import React from "react";
-import { ScrollView } from 'react-native'
+import { ScrollView, View } from 'react-native'
 import styles from "../../../../../styles";
-import { List, Divider, Portal } from "react-native-paper";
+import { List, Divider, Portal, Button } from "react-native-paper";
 import VerusIdDetailsModal from "../../../../../components/VerusIdDetailsModal/VerusIdDetailsModal";
+import Colors from "../../../../../globals/colors";
 
 export const VerusIdServiceOverviewRender = function () {
   const {linkedIds} = this.props;
@@ -23,16 +24,42 @@ export const VerusIdServiceOverviewRender = function () {
   }
 
   return (
-    <ScrollView style={styles.fullWidth}>
+    <ScrollView style={{...styles.fullWidth, ...styles.backgroundColorWhite}}>
       <Portal>
         {this.state.verusIdDetailsModalProps != null && (
-          <VerusIdDetailsModal {...this.state.verusIdDetailsModalProps} />
+          <VerusIdDetailsModal
+            {...this.state.verusIdDetailsModalProps}
+            ListFooterComponent={
+              <View
+                style={{
+                  ...styles.fullWidthBlock,
+                  paddingHorizontal: 16,
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  display: 'flex',
+                }}>
+                <Button
+                  color={Colors.warningButtonColor}
+                  style={{width: 148}}
+                  onPress={() =>
+                    this.tryUnlinkIdentity(
+                      this.state.verusIdDetailsModalProps.iAddress,
+                      this.state.verusIdDetailsModalProps.chain,
+                    )
+                  }>
+                  Unlink
+                </Button>
+              </View>
+            }
+          />
         )}
       </Portal>
       {Object.keys(sortedIdKeysPerChain).map(chainId => {
         return (
           <React.Fragment key={chainId}>
-            <List.Subheader>{`Linked ${chainId} VerusIDs`}</List.Subheader>
+            {sortedIdKeysPerChain[chainId].length > 0 && (
+              <List.Subheader>{`Linked ${chainId} VerusIDs`}</List.Subheader>
+            )}
             {sortedIdKeysPerChain[chainId].map(iAddr => {
               return (
                 <React.Fragment key={iAddr}>

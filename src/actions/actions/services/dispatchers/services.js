@@ -63,7 +63,9 @@ export const resetServices = async () => {
 
   for (const connectedService of CONNECTED_SERVICES) {    
     try {
-      await CONNECTED_SERVICE_PROVIDERS[connectedService].reset();
+      if (CONNECTED_SERVICE_PROVIDERS[connectedService]) {
+        await CONNECTED_SERVICE_PROVIDERS[connectedService].reset();
+      }
     } catch (e) {
       console.warn(e);
     }

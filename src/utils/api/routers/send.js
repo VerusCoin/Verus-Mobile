@@ -4,12 +4,14 @@ import {
   ERC20,
   DLIGHT_PRIVATE,
   WYRE_SERVICE,
+  VRPC,
 } from "../../constants/intervalConstants";
 import * as electrum from "../channels/electrum/callCreators";
 import * as eth from "../channels/eth/callCreator";
 import * as erc20 from "../channels/erc20/callCreator";
 import * as dlight from "../channels/dlight/callCreators";
 import * as wyre from "../channels/wyre/callCreators";
+import * as vrpc from "../channels/vrpc/callCreators";
 
 const SEND_FUNCTION_MAP = {
   [ELECTRUM]: electrum.sendRawTx,
@@ -17,6 +19,7 @@ const SEND_FUNCTION_MAP = {
   [ERC20]: erc20.send,
   [DLIGHT_PRIVATE]: dlight.sendPrivateTransaction,
   [WYRE_SERVICE]: wyre.send,
+  [VRPC]: vrpc.send
 };
 
 /**
@@ -25,11 +28,13 @@ const SEND_FUNCTION_MAP = {
  * @param {Object} activeUser The user object of the user performing the send
  * @param {String} address The destination address
  * @param {Number} amount The amount to send
- * @param {String} channel The channel to send on (e.g. ETH/ELECTRUM/ERC20)
+ * @param {String} channelId The channel id to send on (e.g. ETH/ELECTRUM/ERC20)
  * @param {Object} params Any other parameters specific to the send channel's preflight function
  */
-export const send = async (coinObj, activeUser, address, amount, channel, params) => {
-  if (SEND_FUNCTION_MAP[channel] == null)
-    throw new Error(`No send function available for channel ${channel}`);
-  else return await SEND_FUNCTION_MAP[channel](coinObj, activeUser, address, amount, params);
+export const send = async (coinObj, activeUser, address, amount, channelId, params) => {
+  const parentChannel = channelId.split('.')[0]
+
+  if (SEND_FUNCTION_MAP[parentChannel] == null)
+    throw new Error(`No send function available for channel ${channelId}`);
+  else return await SEND_FUNCTION_MAP[parentChannel](coinObj, activeUser, address, amount, params, channelId);
 };

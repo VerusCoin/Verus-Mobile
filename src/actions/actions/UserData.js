@@ -22,7 +22,7 @@ import {
   decryptkey, encryptkey,
 } from '../../utils/seedCrypt'
 import { hashAccountId } from '../../utils/crypto/hash';
-import { CHANNELS, ELECTRUM, ERC20, ETH, DLIGHT_PRIVATE } from '../../utils/constants/intervalConstants';
+import { CHANNELS, ELECTRUM, ERC20, ETH, DLIGHT_PRIVATE, VRPC } from '../../utils/constants/intervalConstants';
 import {
   KEY_DERIVATION_VERSION,
 } from "../../../env/index";
@@ -176,16 +176,15 @@ export const authenticateAccount = async (account, password) => {
 
             for (const channel of CHANNELS) {
               if (
-                (activeCoins[i].compatible_channels.includes(
-                  channel
-                ) &&
+                (activeCoins[i].compatible_channels.includes(channel) &&
                   seeds[channel]) ||
                 channel === ETH ||
-                channel === ERC20
+                channel === ERC20 ||
+                channel === VRPC
               ) {
                 try {
                   const seedChannel =
-                    channel === ETH || channel === ERC20
+                    channel === ETH || channel === ERC20 || channel === VRPC
                       ? ELECTRUM
                       : channel;
 
@@ -195,12 +194,15 @@ export const authenticateAccount = async (account, password) => {
                     channel,
                     account.keyDerivationVersion == null
                       ? 0
-                      : account.keyDerivationVersion
+                      : account.keyDerivationVersion,
                   );
 
                   _keys[activeCoins[i].id][channel] = {
                     pubKey: keyObj.pubKey,
-                    encryptedPrivKey: await encryptkey(password, keyObj.privKey),
+                    encryptedPrivKey: await encryptkey(
+                      password,
+                      keyObj.privKey,
+                    ),
                     encryptedViewingKey:
                       keyObj.viewingKey == null
                         ? null
@@ -209,9 +211,7 @@ export const authenticateAccount = async (account, password) => {
                   };
                 } catch (e) {
                   console.warn(
-                    `Key generation failed for ${
-                      activeCoins[i].id
-                    } channel ${channel}`
+                    `Key generation failed for ${activeCoins[i].id} channel ${channel}`,
                   );
                   console.warn(e);
                 }

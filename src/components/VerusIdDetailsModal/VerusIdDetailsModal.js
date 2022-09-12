@@ -13,7 +13,7 @@ import VerusIdObjectData from "../VerusIdObjectData";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 
 export default function VerusIdDetailsModal(props) {
-  const { loadVerusId, visible, animationType, cancel, loadFriendlyNames } = props
+  const { loadVerusId, visible, animationType, cancel, loadFriendlyNames, ListFooterComponent } = props
 
   const [verusId, setVerusId] = useState(null);
   const [friendlyNames, setFriendlyNames] = useState(null);
@@ -73,7 +73,11 @@ export default function VerusIdDetailsModal(props) {
               </Button>
             </View>
           </View>
-          <VerusIdObjectData verusId={verusId} friendlyNames={friendlyNames} />
+          <VerusIdObjectData
+            verusId={verusId}
+            friendlyNames={friendlyNames}
+            ListFooterComponent={ListFooterComponent}
+          />
         </SafeAreaView>
       )}
     </SemiModal>

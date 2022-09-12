@@ -12,13 +12,14 @@ export const LinkIdentityConfirmRender = function () {
         verusId={this.state.verusId}
         friendlyNames={this.state.friendlyNames}
         ListFooterComponent={
-          <View style={{
-          ...Styles.fullWidthBlock,
-          paddingHorizontal: 16,
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          display: "flex"
-        }}>
+          <View
+            style={{
+              ...Styles.fullWidthBlock,
+              paddingHorizontal: 16,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              display: 'flex',
+            }}>
             <Button
               color={Colors.warningButtonColor}
               style={{width: 148}}

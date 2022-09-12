@@ -36,7 +36,7 @@ function* handleSignOut() {
   VrpcProvider.deleteAllEndpoints();
 }
 
-function* handleFinishVerusidInit(action) {
+function* handleFinishVerusidInit(action) { 
   yield put({type: SET_WATCHED_VERUSIDS, payload: action.payload});
   yield put({type: INIT_VERUSID_CHANNEL_FINISH, payload: action.payload});
 }

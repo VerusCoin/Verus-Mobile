@@ -1,7 +1,14 @@
 import {Component} from 'react';
 import {Alert} from 'react-native';
 import {connect} from 'react-redux';
-import {SEND_MODAL_FORM_STEP_FORM} from '../../../../utils/constants/sendModal';
+import { setUserCoins } from '../../../../actions/actionCreators';
+import {updateVerusIdWallet} from '../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager';
+import {
+  activateChainLifecycle,
+  clearChainLifecycle,
+} from '../../../../actions/actions/intervals/dispatchers/lifecycleManager';
+import {linkVerusId} from '../../../../actions/actions/services/dispatchers/verusid/verusid';
+import {SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT} from '../../../../utils/constants/sendModal';
 import {LinkIdentityConfirmRender} from './LinkIdentityConfirm.render';
 
 class LinkIdentityConfirm extends Component {
@@ -24,7 +31,23 @@ class LinkIdentityConfirm extends Component {
     await this.props.setPreventExit(true);
 
     try {
-      //this.props.navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, { txResult: res });
+      const {identityaddress, name} = this.state.verusId.identity;
+      const {coinObj} = this.props.sendModal;
+
+      await linkVerusId(identityaddress, `${name}@`, coinObj.id);
+      await updateVerusIdWallet();
+      clearChainLifecycle(coinObj.id);
+      this.props.dispatch(
+        setUserCoins(
+          this.props.activeCoinList,
+          this.props.activeAccount.id
+        )
+      );
+      activateChainLifecycle(coinObj);
+      this.props.navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, {
+        verusId: this.state.verusId,
+        friendlyNames: this.state.friendlyNames,
+      });
     } catch (e) {
       Alert.alert('Error', e.message);
     }
@@ -39,7 +62,11 @@ class LinkIdentityConfirm extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  return {};
+  return {
+    sendModal: state.sendModal,
+    activeAccount: state.authentication.activeAccount,
+    activeCoinList: state.coins.activeCoinList,
+  };
 };
 
 export default connect(mapStateToProps)(LinkIdentityConfirm);

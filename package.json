@@ -14,6 +14,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@bitgo/utxo-lib": "https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus",
     "@ethersproject/signing-key": "5.0.5",
     "@react-native-async-storage/async-storage": "1.15.9",
     "@react-native-community/cameraroll": "4.0.1",
@@ -112,9 +113,9 @@
     "version_compare": "0.0.3",
     "verus-pay-utils": "https://github.com/michaeltout/verus-pay-utils.git",
     "verus-zkedid-utils": "https://github.com/michaeltout/verus-zkedid-utils",
-    "xmldom": "0.6.0",
     "verusd-rpc-ts-client": "https://github.com/VerusCoin/verusd-rpc-ts-client.git",
-    "vm-browserify": "0.0.4"
+    "vm-browserify": "0.0.4",
+    "xmldom": "0.6.0"
   },
   "devDependencies": {
     "@babel/core": "7.12.9",

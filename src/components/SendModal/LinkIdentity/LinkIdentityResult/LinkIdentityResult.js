@@ -1,16 +1,16 @@
-import { Component } from "react"
-import { connect } from 'react-redux'
-import { Linking } from 'react-native'
-import { closeSendModal } from "../../../../actions/actions/sendModal/dispatchers/sendModal";
-import { explorers } from "../../../../utils/CoinData/CoinData";
-import { LinkIdentityResultRender } from "./LinkIdentityResult.render"
+import {Component} from 'react';
+import {connect} from 'react-redux';
+import {closeSendModal} from '../../../../actions/actions/sendModal/dispatchers/sendModal';
+import {LinkIdentityResultRender} from './LinkIdentityResult.render';
 
 class LinkIdentityResult extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      params: props.route.params == null ? {} : props.route.params.txResult,
+      verusId: props.route.params == null ? {} : props.route.params.verusId,
+      friendlyNames:
+        props.route.params == null ? {} : props.route.params.friendlyNames,
     };
   }
 
@@ -18,25 +18,15 @@ class LinkIdentityResult extends Component {
     closeSendModal();
   }
 
-  openExplorer = () => {
-    const url = `${explorers[this.state.params.coinObj.id]}/tx/${this.state.params.txid}`;
-
-    Linking.canOpenURL(url).then((supported) => {
-      if (supported) {
-        Linking.openURL(url);
-      } else {
-        console.warn("Don't know how to open URI: " + url);
-      }
-    });
-  };
-
   render() {
     return LinkIdentityResultRender.call(this);
   }
 }
 
-const mapStateToProps = (state) => { 
-  return {};
+const mapStateToProps = state => {
+  return {
+    sendModal: state.sendModal,
+  };
 };
 
 export default connect(mapStateToProps)(LinkIdentityResult);

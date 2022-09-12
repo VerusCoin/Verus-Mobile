@@ -30,14 +30,14 @@ import {
   closeWyreCoinWallet,
   initWyreCoinChannel,
 } from "../channels/wyre/dispatchers/WyreWalletReduxManager";
-import { closeVerusidWallet, initVerusidWallet } from '../channels/verusid/dispatchers/VerusidWalletReduxManager';
+import { closeVerusIdWallet, initVerusIdWallet } from '../channels/verusid/dispatchers/VerusidWalletReduxManager';
 
 export const COIN_MANAGER_MAP = {
   initializers: {
     [ETH]: initEthWallet,
     [ERC20]: initErc20Wallet,
     [VRPC]: initVrpcWallet,
-    [VERUSID]: initVerusidWallet,
+    [VERUSID]: initVerusIdWallet,
     [ELECTRUM]: initElectrumWallet,
     [DLIGHT_PRIVATE]: initDlightWallet,
     [GENERAL]: initGeneralWallet,
@@ -47,7 +47,7 @@ export const COIN_MANAGER_MAP = {
     [ETH]: closeEthWallet,
     [ERC20]: closeErc20Wallet,
     [VRPC]: closeVrpcWallet,
-    [VERUSID]: closeVerusidWallet,
+    [VERUSID]: closeVerusIdWallet,
     [ELECTRUM]: closeElectrumWallet,
     [DLIGHT_PRIVATE]: closeDlightWallet,
     [GENERAL]: closeGeneralWallet,

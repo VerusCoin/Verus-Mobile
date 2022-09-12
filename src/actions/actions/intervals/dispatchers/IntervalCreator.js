@@ -22,6 +22,7 @@ import Store from '../../../../store/index'
 import { getCoinObj } from '../../../../utils/CoinData/CoinData';
 import { clearServiceUpdateExpiredIntervalId, setServiceUpdateExpiredIntervalId } from '../../updateManager';
 import { conditionallyUpdateService } from '../../services/dispatchers/updates';
+import { SET_ADDRESSES } from '../../../../utils/constants/storeType';
 //TODO: If app is ever used in any server side rendering scenario, switch store
 //to a function parameter on all of these functions rather than an import
 
@@ -154,7 +155,7 @@ export const clearAllCoinIntervals = (chainTicker) => {
 /**
  * Clears old intervals and creates new ones for a certain point in an added
  * coins lifecycle (e.g. post_sync)
- * @param {String} coinObj Coin object of chain that data is for
+ * @param {Object} coinObj Coin object of chain that data is for
  * @param {Function{}} onCompletes Object with optional onCompletes to each updateInterval to be called with state and dispatch function.
  * e.g. {get_info: {update_expired_oncomplete: increaseGetInfoInterval}}
  */
@@ -168,7 +169,14 @@ export const refreshCoinIntervals = (coinObj, onCompletes, updateParams) => {
 
   const verusIdChannels = watchedVerusIds[chainTicker]
     ? Object.keys(watchedVerusIds[chainTicker]).map(iAddr => {
-        return `${VRPC}.${iAddr}`;
+        const channelId = `${VRPC}.${iAddr}`;
+
+        Store.dispatch({
+          type: SET_ADDRESSES,
+          payload: {chainTicker, channel: channelId, addresses: [iAddr]},
+        });
+
+        return channelId;
       })
     : [];
 
