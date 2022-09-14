@@ -2,20 +2,20 @@ import { timeout } from '../../../../promises'
 import { isJson } from '../../../../objectManip'
 
 import { REQUEST_TIMEOUT_MS } from '../../../../../../env/index'
+import axios from 'axios'
 
 export const getAtomicExplorerBTCFees = () => {
   const address = `https://www.atomicexplorer.com/api/btc/fees`
 
   return new Promise((resolve, reject) => {
-    timeout(REQUEST_TIMEOUT_MS, fetch(address, {method: 'GET'}))
-    .then((response) => {
-      if (!isJson(response)) {
-        throw new Error("Invalid JSON in atomicExplorer.js, received: " + response)
+    axios.get(address)
+    .then((res) => {
+      if (!isJson(res.data)) {
+        throw new Error("Invalid JSON in atomicExplorer.js, received: " + res)
       }
 
-      return response.json()
-    })
-    .then((response) => {
+      const response = res.data
+      
       if (response.msg !== "success") {
         resolve(false)
       }

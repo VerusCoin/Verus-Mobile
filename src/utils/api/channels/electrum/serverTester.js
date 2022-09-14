@@ -18,6 +18,7 @@ import { REQUEST_TIMEOUT_MS } from '../../../../../env/index'
 import Store from '../../../../store';
 import { recordBadServer, recordGoodServer } from '../../../../actions/actionCreators';
 import NetInfo from "@react-native-community/netinfo";
+import axios from 'axios';
 
 /**
  * @param {Function} tester A tester function that takes in a server and will fail if it does not perform it's purpose
@@ -60,7 +61,7 @@ export const getGoodServer = (tester, serverList, xtraTesterParams = [], startIn
     startIndex == null
       ? Math.floor(Math.random() * serverList.length)
       : startIndex;
-  
+
   return new Promise((resolve, reject) => {
     tester(serverList[index], ...xtraTesterParams)
     .then((res) => {
@@ -86,7 +87,9 @@ export const getGoodServer = (tester, serverList, xtraTesterParams = [], startIn
     .then(res => {
       resolve(res)
     })
-    .catch(reject)
+    .catch((err) => {      
+      reject(err)
+    })
   })
 }
 
@@ -99,7 +102,7 @@ export const testElectrum = (electrumString, proxy) => {
   }
 
   return new Promise((resolve, reject) => {
-    timeout(REQUEST_TIMEOUT_MS, getBlockHeight(proxy, electrum))
+    getBlockHeight(proxy, electrum)
       .then((response) => {
         if (response.msg === 'success') {
           resolve(response)
@@ -113,19 +116,12 @@ export const testElectrum = (electrumString, proxy) => {
   })
 }
 
-export const testProxy = (proxyServer) => {
-  return new Promise((resolve, reject) => {
-    timeout(REQUEST_TIMEOUT_MS, fetch(`${httpsEnabled ? 'https' : 'http'}://${proxyServer}`))
-    .then((response) => {
-      if (response.status === 200) {
-        resolve(true)
-      } else {
-        reject(new Error(response))
-      }
-    })
-    .catch((error) => {
-      console.log(error)
-      reject(error)
-    })
-  })
+export const testProxy = async (proxyServer) => {
+  const res = await axios.get(`${httpsEnabled ? 'https' : 'http'}://${proxyServer}`)
+
+  if (res.status === 200) {
+    return true
+  } else {
+    throw new Error(res.data)
+  }
 }

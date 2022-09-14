@@ -9,6 +9,7 @@ import { saveServerVersion } from '../../../../../actions/actionCreators';
 import { isJson } from '../../../../objectManip';
 
 import { REQUEST_TIMEOUT_MS } from '../../../../../../env/index'
+import axios from 'axios';
 
 const OLD_DEFAULT_VERSION = 1.0
 
@@ -22,15 +23,14 @@ export const getServerVersion = (proxyServer, ip, port, proto, httpsEnabled) => 
   return new Promise((resolve, reject) => {
     let httpAddr = `${httpsEnabled ? 'https' : 'http'}://${proxyServer}/api/server/version?port=${port}&ip=${ip}&proto=${proto}`
 
-    timeout(REQUEST_TIMEOUT_MS, fetch(httpAddr, {method: 'GET'}))
-    .then((response) => {
-      if (!isJson(response)) {
-        throw new Error("Invalid JSON in getServerVersion.js, received: " + response)
+    axios.get(httpAddr)
+    .then((res) => {
+      if (!isJson(res.data)) {
+        throw new Error("Invalid JSON in getServerVersion.js, received: " + res)
       }
 
-      return response.json()
-    })
-    .then((response) => {
+      const response = res.data
+
       if (response.msg === "success" &&
         response.result &&
         (typeof response.result === 'object' || typeof response.result === 'string')) {

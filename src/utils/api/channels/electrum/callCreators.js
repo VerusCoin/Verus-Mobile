@@ -19,6 +19,7 @@ import ApiException from '../../errors/apiError';
 import { ELECTRUM } from '../../../constants/intervalConstants'
 
 import { REQUEST_TIMEOUT_MS } from '../../../../../env/index'
+import axios from 'axios';
 
 // This purpose of this method is to take in a list of electrum servers,
 // and use a valid one to call a specified command given a set of parameters
@@ -26,103 +27,69 @@ import { REQUEST_TIMEOUT_MS } from '../../../../../env/index'
 // servers are working by attempting to call getBlockHeight on each of them.
 // It then calls the specified command with the specified params (passed in as an object)
 // on that electrum server with an HTTP get
-export const getElectrum = (serverList, callType, params, toSkip, coinID) => {
-  let proxyServer
+export const getElectrum = async (serverList, callType, params, toSkip, coinID) => {
+  const proxyServer = (await getGoodServer(testProxy, proxyServers)).goodServer
 
-  return new Promise((resolve, reject) => {
-    //Get working proxy server
-    getGoodServer(testProxy, proxyServers)
-    .then((_proxyServer) => {
-      proxyServer = _proxyServer.goodServer
-      
-      if (toSkip) {
-        let _serverList = serverList.filter((server) => {
-          return !toSkip.includes(server)
-        })
-
-        return getGoodServer(testElectrum, _serverList, [proxyServer])
-      }
-
-      const proxyIndex = serverList.findIndex(server => server.split(":")[0] === proxyServer)
-
-      return getGoodServer(
-        testElectrum,
-        serverList,
-        [proxyServer],
-        proxyIndex !== -1 ? proxyIndex : null
-      );
+  if (toSkip) {
+    let _serverList = serverList.filter((server) => {
+      return !toSkip.includes(server)
     })
-    .then((result) => {
-      let electrumSplit = result.goodServer.split(":")
-      let goodServer = {
-        ip: electrumSplit[0],
-        port: electrumSplit[1],
-        proto: electrumSplit[2],
-      }
 
-      resultObj = { goodServer: goodServer, blockHeight: result.testResult.result }
-      return resultObj
-    })
-    .then((serverObj) => {
-      let eServer = serverObj.goodServer
-      return Promise.all([serverObj, getServerVersion(proxyServer, eServer.ip, eServer.port, eServer.proto, httpsEnabled)])
-    })
-    .then((resultArr) => {
-      let resultObj = resultArr[0]
-      resultObj.electrumVersion = resultArr[1]
+    return getGoodServer(testElectrum, _serverList, [proxyServer])
+  }
 
-      let electrumServer = resultObj.goodServer
-      let httpAddr = `${httpsEnabled ? 'https' : 'http'}://${proxyServer}/api/${callType}?port=${electrumServer.port}&ip=${electrumServer.ip}&proto=${electrumServer.proto}`
-      let promiseArray = []
+  const proxyIndex = serverList.findIndex(server => server.split(":")[0] === proxyServer)
 
-      updateParamObj(
-        params, 
-        networks[coinID.toLowerCase()] ? networks[coinID.toLowerCase()] : networks['default'], 
-        resultObj.electrumVersion)
+  const goodServerRes = await getGoodServer(
+    testElectrum,
+    serverList,
+    [proxyServer],
+    proxyIndex !== -1 ? proxyIndex : null
+  );
 
-      for (let key in params) {
-        httpAddr += `&${key}=${params[key]}`
-      }
+  let electrumSplit = goodServerRes.goodServer.split(":")
+  let goodServer = {
+    ip: electrumSplit[0],
+    port: electrumSplit[1],
+    proto: electrumSplit[2],
+  }
 
-      promiseArray.push(
-        fetch(httpAddr, {
-          method: "GET",
-        })
-      );
+  const resultObj = { goodServer: goodServer, blockHeight: goodServerRes.testResult.result }
+  
+  let eServer = resultObj.goodServer
 
-      promiseArray.push(resultObj.blockHeight)
-      promiseArray.push(resultObj.goodServer)
-      promiseArray.push(resultObj.electrumVersion)
+  resultObj.electrumVersion = await getServerVersion(proxyServer, eServer.ip, eServer.port, eServer.proto, httpsEnabled)
 
-      return Promise.all(promiseArray)
-    })
-    .then((responseArray) => {
-      if (!isJson(responseArray[0])) {
-        throw new Error("Invalid JSON in callCreators.js, received: " + responseArray[0])
-      }
-      
-      responseArray[0] = responseArray[0].json()
-      
-      return Promise.all(responseArray)
-    })
-    .then((responseArray) => {
-      let resultObj = {
-        result: responseArray[0].result, 
-        blockHeight: responseArray[1], 
-        electrumUsed: responseArray[2], 
-        electrumVersion: responseArray[3]}
-      resolve(resultObj)
-    })
-    .catch(err => {
-      reject(err)
-    })
-  });
+  let electrumServer = resultObj.goodServer
+  let httpAddr = `${httpsEnabled ? 'https' : 'http'}://${proxyServer}/api/${callType}?port=${electrumServer.port}&ip=${electrumServer.ip}&proto=${electrumServer.proto}`
+
+  updateParamObj(
+    params,
+    networks[coinID.toLowerCase()] ? networks[coinID.toLowerCase()] : networks['default'],
+    resultObj.electrumVersion)
+
+  for (let key in params) {
+    httpAddr += `&${key}=${params[key]}`
+  }
+
+  const res = await axios.get(httpAddr)
+
+  if (!isJson(res.data)) {
+    throw new Error("Invalid JSON in callCreators.js, received: " + res)
+  }
+
+  return {
+    result: res.data.result,
+    blockHeight: resultObj.blockHeight,
+    electrumUsed: resultObj.goodServer,
+    electrumVersion: resultObj.electrumVersion
+  }
 }
 
 //Function to update only if values have changed
 export const updateValues = (oldResponse, serverList, callType, params, coinID, toSkip) => {
   return new Promise((resolve, reject) => {
-    timeout(REQUEST_TIMEOUT_MS, getElectrum(serverList, callType, params, toSkip, coinID))
+    getElectrum(serverList, callType, params, toSkip, coinID)
     .then((response) => {
       if(response === oldResponse) {
         resolve({
@@ -155,24 +122,21 @@ export const updateValues = (oldResponse, serverList, callType, params, coinID, 
 }
 
 //Function to update only if values have changed
-export const electrumRequest = (serverList, callType, params, coinID, toSkip) => {  
-  return new Promise((resolve, reject) => {
-    timeout(REQUEST_TIMEOUT_MS, getElectrum(serverList, callType, params, toSkip, coinID))
-    .then((response) => {
-      resolve(!response ? false : {coin: coinID, ...response})
-    })
-    .catch((err) => {
-      console.warn(err)
+export const electrumRequest = async (serverList, callType, params, coinID, toSkip) => {
+  try {
+    const response = await getElectrum(serverList, callType, params, toSkip, coinID)
+    return !response ? false : {coin: coinID, ...response}
+  } catch(err) {
+    console.warn(err)
       
-      reject(new ApiException(
-        err.name,
-        err.message,
-        coinID,
-        ELECTRUM,
-        err.code
-      ))
-    })
-  });
+    throw new ApiException(
+      err.name,
+      err.message,
+      coinID,
+      ELECTRUM,
+      err.code
+    )
+  }
 }
 
 export const postElectrum = (serverList, callType, data, toSkip) => {
@@ -219,14 +183,11 @@ export const postElectrum = (serverList, callType, data, toSkip) => {
         bodyObj[key] = data[key]
       }
 
-      promiseArray.push(
-        fetch(httpAddr, {
-        method: 'POST',
+      promiseArray.push(axios.post(httpAddr, bodyObj, {
         headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(bodyObj)
-        }))
+          "Content-type": "application/json",
+        }
+      }))
 
       promiseArray.push(resultObj.blockHeight)
       promiseArray.push(resultObj.goodServer)
@@ -234,11 +195,11 @@ export const postElectrum = (serverList, callType, data, toSkip) => {
       return Promise.all(promiseArray)
     })
     .then((responseArray) => {
-      if (!isJson(responseArray[0])) {
+      if (!isJson(responseArray[0].data)) {
         throw new Error("Invalid JSON in callCreators.js, received: " + responseArray[0])
       }
 
-      responseArray[0] = responseArray[0].json()
+      responseArray[0] = responseArray[0].data
 
       return Promise.all(responseArray)
     })
