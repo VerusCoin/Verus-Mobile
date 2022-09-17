@@ -166,6 +166,7 @@ export const refreshCoinIntervals = (coinObj, onCompletes, updateParams) => {
   // TODO: Channel manual enabling/disabling
   // const channels = state.settings.coinSettings[chainTicker].channels
   const { watchedVerusIds } = state.channelStore_verusid
+  const { watchedAddresses } = state.channelStore_vrpc
 
   const verusIdChannels = watchedVerusIds[chainTicker]
     ? Object.keys(watchedVerusIds[chainTicker]).map(iAddr => {
@@ -180,13 +181,26 @@ export const refreshCoinIntervals = (coinObj, onCompletes, updateParams) => {
       })
     : [];
 
+  const vrpcChannels = watchedAddresses[chainTicker]
+    ? Object.keys(watchedAddresses[chainTicker]).map(addr => {
+        const channelId = `${VRPC}.${addr}`;
+
+        Store.dispatch({
+          type: SET_ADDRESSES,
+          payload: {chainTicker, channel: channelId, addresses: [addr]},
+        });
+
+        return channelId;
+      })
+    : [];
+
   if (!coinObj) throw new Error(`${chainTicker} is not added for current user. Coins must be added to be used.`)
   
   const updateDataAction = generateUpdateCoinDataAction(
     PRE_DATA,
     chainTicker,
     coinObj.tags,
-    [...CHANNELS, ...verusIdChannels],
+    [...CHANNELS, ...verusIdChannels, ...vrpcChannels],
     onCompletes,
     updateParams,
   );

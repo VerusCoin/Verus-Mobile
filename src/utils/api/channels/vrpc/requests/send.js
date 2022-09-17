@@ -10,7 +10,6 @@ import {
   TransactionBuilder,
   networks,
   Transaction,
-  TxDestination,
   address as addressUtils,
   ECPair,
 } from '@bitgo/utxo-lib';
@@ -18,6 +17,8 @@ import {getInfo} from './getInfo';
 import coinSelect from 'coinselect';
 import { VRPC } from '../../../../constants/intervalConstants';
 import { sendRawTransaction } from './sendRawTransaction';
+import { IADDRESS_VERSION } from '../../../../constants/constants';
+import { generateOutputScript } from '../../../../crypto/script';
 
 export const buildTx = async (
   coinObj,
@@ -55,10 +56,10 @@ export const buildTx = async (
       fee: defaultFee,
       value,
       toAddress,
-      fromAddress,
-      params
+      fromAddress
     } = preflightRes.result;
     let inputValueSats = BigNumber(0)
+    let isCC = false;
 
     let utxos;
     const valueSats = BigNumber(
@@ -102,7 +103,7 @@ export const buildTx = async (
           params.evalCode === 0 &&
           master.evalCode === 0
         ) {
-          pushUtxo(utxo);
+          pushUtxo({...utxo, cc: true});
         } else continue;
       } else pushUtxo(utxo);
     }
@@ -148,50 +149,22 @@ export const buildTx = async (
     }
 
     const addr = addressUtils.fromBase58Check(address);
+    const selfAddr = addressUtils.fromBase58Check(fromAddress);
 
-    const outMaster = new OptCCParams(3, 0, 0, 0);
-    const outParams = new OptCCParams(3, 0, 1, 1, [
-      new TxDestination(
-        addr.version === 102
-          ? new TxDestination().typeID
-          : new TxDestination().typePKH,
-        addr.hash,
-      ),
-    ]);
-
-    const outputScript = script.compile([
-      outMaster.toChunk(),
-      opcodes.OP_CHECKCRYPTOCONDITION,
-      outParams.toChunk(),
-      opcodes.OP_DROP,
-    ]);
+    if (!isCC && addr.version === IADDRESS_VERSION) isCC = true;
 
     let actualFeeSats = inputValueSats.minus(valueSats)
+
+    const outputScript = generateOutputScript(addr.hash, addr.version, isCC)
 
     if (actualFeeSats.isLessThanOrEqualTo(BigNumber(0))) {
       throw new Error(`Cannot send transaction with fee of ${satsToCoins(actualFeeSats).toString()}.`)
     } else if (actualFeeSats.isGreaterThan(feeSats)) {
       // If fee > target fee, create change output
-      const selfAddr = addressUtils.fromBase58Check(fromAddress);
       const changeSats = actualFeeSats.minus(feeSats)
       actualFeeSats = actualFeeSats.minus(changeSats)
 
-      const changeMaster = new OptCCParams(3, 0, 0, 0);
-      const changeParams = new OptCCParams(3, 0, 1, 1, [
-        new TxDestination(
-          selfAddr.version === 102
-            ? new TxDestination().typeID
-            : new TxDestination().typePKH,
-          selfAddr.hash,
-        ),
-      ]);
-
-      const changeOutputScript = script.compile([
-        changeMaster.toChunk(),
-        opcodes.OP_CHECKCRYPTOCONDITION,
-        changeParams.toChunk(),
-        opcodes.OP_DROP,
-      ]);
+      const changeOutputScript = generateOutputScript(selfAddr.hash, selfAddr.version, isCC)
 
       txb.addOutput(changeOutputScript, changeSats.toNumber());
     }

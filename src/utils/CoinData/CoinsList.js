@@ -20,6 +20,12 @@ import {
   FIAT_DECIMALS,
   STABLECOIN_DECIMALS,
 } from "../constants/web3Constants";
+import {
+  WALLET_APP_OVERVIEW,
+  WALLET_APP_RECEIVE,
+  WALLET_APP_SEND,
+} from '../constants/apps';
+import Colors from "../../globals/colors";
 
 export const coinsList = {
   vrsc: {
@@ -32,14 +38,43 @@ export const coinsList = {
     theme_color: '#3165D4',
     website: 'https://verus.io',
     fee: 10000,
-    compatible_channels: [DLIGHT_PRIVATE, ELECTRUM, GENERAL, VERUSID, VRPC],
+    compatible_channels: [DLIGHT_PRIVATE, GENERAL, VERUSID, VRPC],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT],
     proto: 'vrsc',
     dlight_endpoints: dlightServers.vrsc,
     vrpc_endpoints: ['https://api.verus.services'],
     decimals: DEFAULT_DECIMALS,
     start_time: 1526886961,
-    seconds_per_block: 60
+    seconds_per_block: 60,
+    default_app: 'wallet',
+    apps: {
+      wallet: {
+        title: 'Verus Coin Wallet',
+        data: [
+          {
+            screen: 'Overview',
+            icon: 'format-list-bulleted',
+            name: 'Overview',
+            key: WALLET_APP_OVERVIEW,
+            color: Colors.primaryColor,
+          },
+          {
+            screen: 'SendCoin',
+            icon: 'arrow-up',
+            name: 'Send',
+            key: WALLET_APP_SEND,
+            color: Colors.infoButtonColor,
+          },
+          {
+            screen: 'ReceiveCoin',
+            icon: 'arrow-down',
+            name: 'Receive',
+            key: WALLET_APP_RECEIVE,
+            color: Colors.verusGreenColor,
+          },
+        ],
+      },
+    },
   },
   kmd: {
     id: 'KMD',

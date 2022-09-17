@@ -290,7 +290,7 @@ class Home extends Component {
     navigation.navigate("VerusPay");
   };
 
-  openCoin = (coinObj, subWallet) => {
+  openCoin = (coinObj, subWallet) => {    
     if (subWallet != null) this.props.dispatch(setCoinSubWallet(coinObj.id, subWallet));
     this.props.dispatch(setActiveCoin(coinObj));
     this.props.dispatch(setActiveApp(coinObj.default_app));

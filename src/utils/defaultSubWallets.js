@@ -58,8 +58,8 @@ const getMainSubwallet = (dominantChannel = ELECTRUM) => {
   };
 };
 
-const getVerusIdSubwallet = (channelId, name) => {
-  const iAddress = channelId.split('.')[1];
+const getDynamicVrpcSubwallet = (channelId, name) => {
+  const addr = channelId.split('.')[1];
 
   return {
     channel: channelId,
@@ -76,7 +76,7 @@ const getVerusIdSubwallet = (channelId, name) => {
     modals: {
       [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL,
     },
-    id: `VERUSID_WALLET_${iAddress}`,
+    id: `VERUSID_WALLET_${addr}`,
     params: {},
     color: Colors.primaryColor,
     address_info: [{label: 'Address'}],
@@ -175,7 +175,7 @@ export const getDefaultSubWallets = (coinObj, dynamicChannels = [], dynamicChann
         coinObj.compatible_channels.includes(VRPC) && vrpcChannelEnabled(),
       subwallets: dynamicChannels
         .filter(x => x.split('.')[0] === VRPC)
-        .map(channelId => getVerusIdSubwallet(channelId, dynamicChannelNames[channelId])),
+        .map(channelId => getDynamicVrpcSubwallet(channelId, dynamicChannelNames[channelId])),
     },
   ];
 

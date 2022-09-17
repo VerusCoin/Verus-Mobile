@@ -167,3 +167,5 @@ export const START_COINS = ["VRSC", "BTC", "ETH"]
 export const VALIDATING_ACCOUNT = 'validating'
 export const LOADING_ACCOUNT = 'loading'
 export const ACCOUNT_DATA_INIT_ORDER = [VALIDATING_ACCOUNT, LOADING_ACCOUNT]
+
+export const IADDRESS_VERSION = 102

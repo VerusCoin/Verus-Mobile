@@ -1,4 +1,5 @@
 import {all, takeEvery, put, call} from 'redux-saga/effects';
+import store from '../store';
 import { requestServiceStoredData } from '../utils/auth/authBox';
 import { PRE_DATA, VRPC } from '../utils/constants/intervalConstants';
 import { VERUSID_SERVICE_ID } from '../utils/constants/services';
@@ -23,6 +24,8 @@ function* handleFinishSetUserCoins(action) {
     );
     const linkedIds =
       verusIdStoredData.linked_ids == null ? {} : verusIdStoredData.linked_ids;
+    const state = store.getState()
+    const { watchedAddresses } = state.channelStore_vrpc
 
     action.payload.activeCoinsForUser.map(coinObj => {
       const dynamicChannelNames = {}
@@ -34,11 +37,20 @@ function* handleFinishSetUserCoins(action) {
             return channelId;
           })
         : [];
+      
+      const vrpcChannels = watchedAddresses[coinObj.id]
+        ? Object.keys(watchedAddresses[coinObj.id]).map((addr, index) => {
+            const channelId = `${VRPC}.${addr}`;
+            dynamicChannelNames[channelId] =
+              index === 0 ? 'Main' : `Wallet ${index + 1}`;
+            return channelId;
+          })
+        : [];
 
       coinStatus[coinObj.id] = PRE_DATA;
       allSubWallets[coinObj.id] = getDefaultSubWallets(
         coinObj,
-        verusIdChannels,
+        [...vrpcChannels, ...verusIdChannels],
         linkedIds[coinObj.id] ? dynamicChannelNames : {},
       );
     });

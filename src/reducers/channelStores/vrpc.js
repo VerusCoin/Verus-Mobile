@@ -4,12 +4,14 @@ import {
   SIGN_OUT_COMPLETE,
   ADD_VRPC_ENDPOINT,
   REMOVE_VRPC_ENDPOINT,
-  CLEAR_VRPC_ENDPOINTS
+  CLEAR_VRPC_ENDPOINTS,
+  SET_WATCHED_VRPC_ADDRESSES
 } from '../../utils/constants/storeType'
 
 export const channelStore_vrpc = (state = {
   openCoinChannels: {},
   vrpcEndpoints: {},
+  watchedAddresses: {}
 }, action) => {
   switch (action.type) {
     case INIT_VRPC_CHANNEL_FINISH:
@@ -53,6 +55,15 @@ export const channelStore_vrpc = (state = {
       return {
         openCoinChannels: {},
         vrpcEndpoints: {},
+        watchedAddresses: {}
+      }
+    case SET_WATCHED_VRPC_ADDRESSES:
+      return {
+        ...state,
+        watchedAddresses: {
+          ...state.watchedAddresses,
+          [action.payload.chainTicker]: action.payload.watchedAddresses
+        }
       }
     default:
       return state;
