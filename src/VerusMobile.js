@@ -7,7 +7,7 @@ import {
   View
 } from "react-native";
 import Modal from './components/Modal'
-import RootStackScreens from './utils/navigation/index';
+import RootStackScreens from './containers/RootStack/RootStackScreens';
 import { 
   fetchUsers, 
   loadServerVersions,
@@ -26,12 +26,15 @@ import {
 import { connect } from 'react-redux';
 import { ENABLE_VERUS_IDENTITIES } from '../env/index'
 import AlertModal from "./components/Alert";
-import { activateKeyboardListener } from "./actions/actionDispatchers";
+import { activateKeyboardListener, updateDeeplinkUrl } from "./actions/actionDispatchers";
 import Colors from "./globals/colors";
 import { CoinLogos } from "./utils/CoinData/CoinData";
 import { Portal } from 'react-native-paper';
 import SendModal from "./components/SendModal/SendModal";
 import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+
+const NavigatorStack = createStackNavigator();
 
 class VerusMobile extends React.Component {
   constructor(props) {
@@ -52,6 +55,10 @@ class VerusMobile extends React.Component {
   // TODO: Implement own lifecycle manager to account for 
   // android "inactivity"
   _handleAppStateChange(nextAppState) {
+    if (nextAppState === "active") {
+      updateDeeplinkUrl()
+    }
+
     if (Platform.OS === 'ios') {
       if (nextAppState === "active" && this.state.securityCover == true) {
         this.setSecurityCover(false)

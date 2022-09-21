@@ -12,6 +12,7 @@ import wyreCoinSaga from './channels/wyre';
 import authenticationSaga from './authentication';
 import verusidSaga from './channels/verusid';
 import coinsSaga from './coins';
+import deeplinkSaga from './deeplink';
 
 import {
   ENABLE_VERUS_IDENTITIES,
@@ -26,7 +27,7 @@ import {
 } from "../../env/index";
 
 const generateSagas = () => {
-  let sagas = [authenticationSaga, coinsSaga]
+  let sagas = [authenticationSaga, coinsSaga, deeplinkSaga]
 
   if (ENABLE_VERUS_IDENTITIES) sagas.push(identitySaga)
 

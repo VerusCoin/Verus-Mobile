@@ -1,4 +1,5 @@
 import { VerusdRpcInterface } from 'verusd-rpc-ts-client';
+import { VerusIdInterface } from 'verusid-ts-client';
 import Store from '../../store';
 import {
   ADD_VRPC_ENDPOINT,
@@ -123,6 +124,19 @@ class VrpcInterface {
       );
     return new VerusdRpcInterface(chain, endpoint);
   };
+
+  getVerusIdInterface = chain => {
+    const endpoint = this.getEndpointAddressForChain(chain);
+    const endpoints = Store.getState().channelStore_vrpc.vrpcEndpoints;
+    const id = VrpcInterface.getEndpointId(chain, endpoint);
+    const params = endpoints[id];
+
+    if (!params)
+      throw new Error(
+        `Verus RPC endpoint ${endpoint} not initialized for chain ${chain}`,
+      );
+    return new VerusIdInterface(chain, endpoint)
+  }
 }
 
 export default new VrpcInterface()

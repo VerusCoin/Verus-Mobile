@@ -8,6 +8,7 @@ export * from './actions/cache/EthTransactionReceipts'
 export * from './actions/updateManager'
 export * from './actions/personal/creators/personal'
 export * from './actions/services/creators/services'
+export * from './actions/deeplink/creators/deeplink'
 
 export * from './actionCreators/claims';
 export * from './actionCreators/claimCategories';

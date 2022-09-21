@@ -5,3 +5,5 @@ export * from './requests/getInfo'
 export * from './requests/preflight';
 export * from './requests/send';
 export * from './requests/sendRawTransaction';
+export * from './requests/verifyMessage';
+export * from './requests/signMessage';

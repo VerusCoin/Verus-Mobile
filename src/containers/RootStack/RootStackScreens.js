@@ -1,0 +1,48 @@
+import React, { useEffect } from 'react';
+import {createStackNavigator} from '@react-navigation/stack';
+import LoadingStackScreens from './LoadingStackScreens/LoadingStackScreens';
+import SignedInStackScreens from './SignedInStackScreens/SignedInStackScreens';
+import SignedOutStackScreens from './SignedOutStackScreens/SignedOutStackScreens';
+import SignedOutNoKeyStackScreens from './SignedOutNoKeyStackScreens/SignedOutNoKeyStackScreens';
+import DeepLinkStackScreens from './DeepLinkStackScreens/DeepLinkStackScreens';
+import { useSelector } from 'react-redux';
+
+const RootStack = createStackNavigator();
+
+const RootStackScreens = props => {
+  return (
+    <RootStack.Navigator
+      screenOptions={{
+        mode: 'modal',
+        headerShown: false,
+      }}>
+      {props.loading ? (
+        <RootStack.Screen name="LoadingStack" component={LoadingStackScreens} />
+      ) : props.hasAccount ? (
+        props.signedIn ? (
+          <RootStack.Screen name="SignedIn" component={SignedInStackScreens} />
+        ) : (
+          <RootStack.Screen
+            name="SignedOutStack"
+            component={SignedOutStackScreens}
+            options={{
+              headerRight: () => null,
+            }}
+          />
+        )
+      ) : (
+        <RootStack.Screen
+          name="SignedOutNoKeyStack"
+          component={SignedOutNoKeyStackScreens}
+        />
+      )}
+      <RootStack.Screen
+        name="DeepLink"
+        component={DeepLinkStackScreens}
+        options={{headerShown: false}}
+      />
+    </RootStack.Navigator>
+  );
+};
+
+export default RootStackScreens;

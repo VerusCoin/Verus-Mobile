@@ -30,6 +30,8 @@ import { keyboard } from './keyboard'
 import identity from './identity';
 import { sendModal } from './sendModal';
 import { secureLoading } from './secureLoading';
+import { deeplink } from './deeplink';
+
 
 export default combineReducers({
   authentication,
@@ -62,5 +64,6 @@ export default combineReducers({
   personal,
   services,
   sendModal,
-  secureLoading
+  secureLoading,
+  deeplink
 });
