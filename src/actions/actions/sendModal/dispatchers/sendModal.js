@@ -14,6 +14,8 @@ import {
   SEND_MODAL_SOURCE_FIELD,
   SEND_MODAL_IDENTITY_TO_LINK_FIELD,
   LINK_IDENTITY_SEND_MODAL,
+  SEND_MODAL_USER_TO_AUTHENTICATE,
+  AUTHENTICATE_USER_SEND_MODAL,
 } from '../../../../utils/constants/sendModal';
 import {
   CLOSE_SEND_COIN_MODAL,
@@ -29,6 +31,7 @@ export const openSendModal = (
   data,
   type,
   helpText,
+  initialRouteName
 ) => {
   store.dispatch({
     type: OPEN_SEND_COIN_MODAL,
@@ -39,6 +42,7 @@ export const openSendModal = (
       data,
       type,
       helpText,
+      initialRouteName
     },
   });
 };
@@ -72,6 +76,22 @@ export const openLinkIdentityModal = (coinObj, data) => {
       : data,
     LINK_IDENTITY_SEND_MODAL,
     'To link a VerusID with your wallet, enter the handle or i-Address of a VerusID with a primary address that you have in your wallet.',
+  );
+};
+
+export const openAuthenticateUserModal = (data, initialRouteName) => {
+  openSendModal(
+    `Login`,
+    null,
+    null,
+    data == null
+      ? {
+          [SEND_MODAL_USER_TO_AUTHENTICATE]: null,
+        }
+      : data,
+    AUTHENTICATE_USER_SEND_MODAL,
+    'To login, select a user profile, then enter your password.',
+    initialRouteName
   );
 };
 

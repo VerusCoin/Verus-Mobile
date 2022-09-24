@@ -13,3 +13,10 @@ export const setDeeplinkData = (id, data) => {
     payload: { id, data }
   }
 }
+
+export const resetDeeplinkData = () => {
+  return {
+    type: SET_DEEPLINK_DATA,
+    payload: { id: null, data: {} }
+  }
+}

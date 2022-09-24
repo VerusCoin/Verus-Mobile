@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import SideMenu from '../../SideMenu/SideMenu';
 import MainStackScreens from '../MainStackScreens/MainStackScreens';
@@ -8,9 +8,12 @@ const MainDrawer = createDrawerNavigator()
 
 const SignedInStackScreens = props => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
+  const [prevDeeplinkId, setPrevDeeplinkId] = useState(deeplinkId)
 
   useEffect(() => {
-    if (deeplinkId != null) {
+    if (deeplinkId != null && deeplinkId !== prevDeeplinkId) {
+      setPrevDeeplinkId(deeplinkId)
+      
       props.navigation.navigate('DeepLink');
     }
   }, [deeplinkId]);

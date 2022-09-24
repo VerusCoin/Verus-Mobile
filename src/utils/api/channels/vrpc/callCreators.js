@@ -7,3 +7,4 @@ export * from './requests/send';
 export * from './requests/sendRawTransaction';
 export * from './requests/verifyMessage';
 export * from './requests/signMessage';
+export * from './requests/getBlock';

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createStackNavigator } from "@react-navigation/stack";
 import DisplaySeed from '../../Settings/ProfileSettings/DisplaySeed/DisplaySeed'
 import RecoverSeed from '../../Settings/ProfileSettings/RecoverSeed/RecoverSeed'
@@ -12,9 +12,12 @@ const SignedOutStack = createStackNavigator();
 
 const SignedOutStackScreens = props => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
+  const [prevDeeplinkId, setPrevDeeplinkId] = useState(deeplinkId)
 
   useEffect(() => {
-    if (deeplinkId != null) {
+    if (deeplinkId != null && deeplinkId !== prevDeeplinkId) {
+      setPrevDeeplinkId(deeplinkId)
+      
       props.navigation.navigate('DeepLink');
     }
   }, [deeplinkId]);

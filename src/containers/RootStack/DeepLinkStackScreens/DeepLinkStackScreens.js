@@ -15,8 +15,7 @@ const DeepLinkStackScreens = props => {
         name="VerifyDeepLink"
         component={DeepLink}
         options={{
-          title: "Verifying",
-          headerRight: () => null
+          headerShown: false
         }}
       />
     </DeepLinkStack.Navigator>

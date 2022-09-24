@@ -32,9 +32,6 @@ import { CoinLogos } from "./utils/CoinData/CoinData";
 import { Portal } from 'react-native-paper';
 import SendModal from "./components/SendModal/SendModal";
 import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
-
-const NavigatorStack = createStackNavigator();
 
 class VerusMobile extends React.Component {
   constructor(props) {
@@ -49,6 +46,7 @@ class VerusMobile extends React.Component {
       "Warning: componentWillReceiveProps is deprecated",
       "Warning: componentWillUpdate is deprecated",
       'RCTRootView cancelTouches', 
+      "Require cycle"
     ]);
   }
 

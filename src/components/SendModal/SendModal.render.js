@@ -3,6 +3,7 @@ import { Platform, SafeAreaView } from "react-native";
 import { Text, Portal, Button } from "react-native-paper";
 import { Colors } from "react-native/Libraries/NewAppScreen";
 import {
+  AUTHENTICATE_USER_SEND_MODAL,
   CONVERSION_SEND_MODAL,
   DEPOSIT_SEND_MODAL,
   LINK_IDENTITY_SEND_MODAL,
@@ -32,6 +33,9 @@ import DepositSendResult from "./DepositSend/DepositSendResult/DepositSendResult
 import LinkIdentityForm from "./LinkIdentity/LinkIdentityForm/LinkIdentityForm";
 import LinkIdentityConfirm from "./LinkIdentity/LinkIdentityConfirm/LinkIdentityConfirm";
 import LinkIdentityResult from "./LinkIdentity/LinkIdentityResult/LinkIdentityResult";
+import AuthenticateUserForm from "./AuthenticateUser/AuthenticateUserForm/AuthenticateUserForm";
+import AuthenticateUserPassword from "./AuthenticateUser/AuthenticateUserPassword/AuthenticateUserPassword";
+import AuthenticateUserResult from "./AuthenticateUser/AuthenticateUserResult/AuthenticateUserResult";
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
@@ -41,7 +45,8 @@ const SEND_FORMS = {
   [CONVERSION_SEND_MODAL]: ConversionSendForm,
   [WITHDRAW_SEND_MODAL]: WithdrawSendForm,
   [DEPOSIT_SEND_MODAL]: DepositSendForm,
-  [LINK_IDENTITY_SEND_MODAL]: LinkIdentityForm
+  [LINK_IDENTITY_SEND_MODAL]: LinkIdentityForm,
+  [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserForm
 };
 
 const SEND_CONFIRMATION = {
@@ -49,7 +54,8 @@ const SEND_CONFIRMATION = {
   [CONVERSION_SEND_MODAL]: ConversionSendConfirm,
   [WITHDRAW_SEND_MODAL]: WithdrawSendConfirm,
   [DEPOSIT_SEND_MODAL]: DepositSendConfirm,
-  [LINK_IDENTITY_SEND_MODAL]: LinkIdentityConfirm
+  [LINK_IDENTITY_SEND_MODAL]: LinkIdentityConfirm,
+  [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserPassword
 };
 
 const SEND_RESULTS = {
@@ -57,7 +63,8 @@ const SEND_RESULTS = {
   [CONVERSION_SEND_MODAL]: ConversionSendResult,
   [WITHDRAW_SEND_MODAL]: WithdrawSendResult,
   [DEPOSIT_SEND_MODAL]: DepositSendResult,
-  [LINK_IDENTITY_SEND_MODAL]: LinkIdentityResult
+  [LINK_IDENTITY_SEND_MODAL]: LinkIdentityResult,
+  [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserResult
 };
 
 export const SendModalRender = function () {
@@ -85,11 +92,11 @@ export const SendModalRender = function () {
           <SafeAreaView style={{ flex: 1 }}>
             <Root.Navigator
               screenOptions={{
-                headerTitle: () => <Text style={{ marginBottom: 10, fontSize: 16 }}>{title}</Text>,
+                headerTitle: () => <Text style={{ marginBottom: 16, fontSize: 16, textAlign: "center" }}>{title}</Text>,
                 headerRight: (props) => (
                   <Button
                     {...props}
-                    style={{ marginBottom: 10 }}
+                    style={{ marginBottom: 16 }}
                     onPress={() => this.showHelpModal()}
                     color={Colors.primaryColor}
                     disabled={this.state.preventExit}
@@ -100,7 +107,7 @@ export const SendModalRender = function () {
                 headerLeft: (props) => (
                   <Button
                     {...props}
-                    style={{ marginBottom: 10 }}
+                    style={{ marginBottom: 16 }}
                     onPress={() => this.cancel()}
                     color={Colors.primaryColor}
                     disabled={this.state.preventExit}
@@ -109,7 +116,7 @@ export const SendModalRender = function () {
                   </Button>
                 ),
                 headerStyle: {
-                  height: 42,
+                  height: 52,
                 },
               }}
             >
@@ -148,55 +155,61 @@ export const SendModalInnerAreaRender = function () {
 
   return () => (
     <TopTabs.Navigator
-      initialRouteName={SEND_MODAL_FORM_STEP_FORM}
+      initialRouteName={
+        this.props.sendModal.initialRouteName
+          ? this.props.sendModal.initialRouteName
+          : SEND_MODAL_FORM_STEP_FORM
+      }
       swipeEnabled={false}
-      backBehavior={"none"}
+      backBehavior={'none'}
       tabBarPosition="bottom"
       tabBarOptions={{
-        pressColor: "transparent",
+        pressColor: 'transparent',
         pressOpacity: 1,
       }}
       lazy={true}
-      lazyPlaceholder={() => <AnimatedActivityIndicatorBox />}
-    >
+      lazyPlaceholder={() => <AnimatedActivityIndicatorBox />}>
       <TopTabs.Screen
         name={SEND_MODAL_FORM_STEP_FORM}
         options={{
-          tabBarLabel: "Enter",
+          tabBarLabel:
+            this.props.sendModal.type == AUTHENTICATE_USER_SEND_MODAL
+              ? 'Select'
+              : 'Enter',
         }}
         listeners={{
-          tabPress: (e) => {
+          tabPress: e => {
             e.preventDefault();
           },
-        }}
-      >
-        {(props) => <Form {...props} {...starterProps} />}
+        }}>
+        {props => <Form {...props} {...starterProps} />}
       </TopTabs.Screen>
       <TopTabs.Screen
         name={SEND_MODAL_FORM_STEP_CONFIRM}
         options={{
-          tabBarLabel: "Confirm",
+          tabBarLabel:
+            this.props.sendModal.type == AUTHENTICATE_USER_SEND_MODAL
+              ? 'Authenticate'
+              : 'Confirm',
         }}
         listeners={{
-          tabPress: (e) => {
+          tabPress: e => {
             e.preventDefault();
           },
-        }}
-      >
-        {(props) => <Confirmation {...props} {...starterProps} />}
+        }}>
+        {props => <Confirmation {...props} {...starterProps} />}
       </TopTabs.Screen>
       <TopTabs.Screen
         name={SEND_MODAL_FORM_STEP_RESULT}
         options={{
-          tabBarLabel: "Result",
+          tabBarLabel: 'Result',
         }}
         listeners={{
-          tabPress: (e) => {
+          tabPress: e => {
             e.preventDefault();
           },
-        }}
-      >
-        {(props) => <Result {...props} {...starterProps} />}
+        }}>
+        {props => <Result {...props} {...starterProps} />}
       </TopTabs.Screen>
     </TopTabs.Navigator>
   );
