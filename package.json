@@ -133,7 +133,7 @@
     "react-test-renderer": "17.0.1",
     "remote-redux-devtools": "0.5.16",
     "rn-nodeify": "github:tradle/rn-nodeify",
-    "snyk": "1.601.0"
+    "snyk": "1.996.0"
   },
   "resolutions": {
     "typeforce": "git+https://github.com/michaeltout/typeforce",
