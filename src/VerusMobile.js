@@ -4,7 +4,8 @@ import {
   Alert,
   AppState,
   Platform,
-  View
+  View,
+  Linking
 } from "react-native";
 import Modal from './components/Modal'
 import RootStackScreens from './containers/RootStack/RootStackScreens';
@@ -46,17 +47,14 @@ class VerusMobile extends React.Component {
       "Warning: componentWillReceiveProps is deprecated",
       "Warning: componentWillUpdate is deprecated",
       'RCTRootView cancelTouches', 
-      "Require cycle"
+      "Require cycle",
+      "long period"
     ]);
   }
 
   // TODO: Implement own lifecycle manager to account for 
   // android "inactivity"
   _handleAppStateChange(nextAppState) {
-    if (nextAppState === "active") {
-      updateDeeplinkUrl()
-    }
-
     if (Platform.OS === 'ios') {
       if (nextAppState === "active" && this.state.securityCover == true) {
         this.setSecurityCover(false)
@@ -85,6 +83,18 @@ class VerusMobile extends React.Component {
     activateKeyboardListener()
 
     AppState.addEventListener("change", (nextAppState) => this._handleAppStateChange(nextAppState));
+
+    // Handle deeplinks
+    Linking.addEventListener("url", ({ url }) => {
+      updateDeeplinkUrl(url)
+    })
+    const updateUrlState = async () => {
+      const url = await Linking.getInitialURL()
+
+      updateDeeplinkUrl(url)
+    }
+
+    updateUrlState()
     
     //TODO: Figure out what should trigger a cache clear on startup of server 
     //versions. (The action that triggers it should indicate a server upgraded it's 

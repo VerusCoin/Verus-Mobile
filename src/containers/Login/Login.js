@@ -46,32 +46,18 @@ const Login = props => {
     props.navigation.navigate("SignIn")
   }
 
-  useEffect(() => {
-    if (defaultAccount) {
-      openAuthModal()
-    }
-  }, [])
-
   return (
     <ScrollView
       contentContainerStyle={Styles.focalCenter}
       style={Styles.backgroundColorWhite}>
       <VerusLogo width={'60%'} height={'15%'} />
-      <TouchableOpacity
-        onPress={() => openAuthModal(true)}
-        style={{...Styles.wideBlock, ...Styles.threeQuarterWidthBlock}}>
-        <TextInput
-          returnKeyType="done"
-          label="Select a Profile"
-          dense
-          value={null}
-          editable={false}
-          pointerEvents="none"
-          style={{
-            backgroundColor: Colors.secondaryColor,
-          }}
-        />
-      </TouchableOpacity>
+      <View style={Styles.fullWidthFlexCenterBlock}>
+        <View style={Styles.flexCenterRowBlock}>
+          <Button onPress={() => openAuthModal()} color={Colors.primaryColor}>
+            {'Login'}
+          </Button>
+        </View>
+      </View>
       <View style={Styles.fullWidthFlexCenterBlock}>
         <View style={Styles.flexCenterRowBlock}>
           <Button onPress={() => handleAddUser()} color={Colors.primaryColor}>

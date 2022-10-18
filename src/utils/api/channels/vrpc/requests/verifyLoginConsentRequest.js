@@ -1,13 +1,10 @@
-import { LoginConsentRequest } from "verus-typescript-primitives";
-import { verifyMessage } from "./verifyMessage";
+import { primitives } from "verusid-ts-client"
+import VrpcProvider from "../../../../vrpc/vrpcInterface"
 
 export const verifyLoginConsentRequest = (coinObj, request) => {
-  const loginConsentRequest = new LoginConsentRequest(request);
+  const loginConsentRequest = new primitives.LoginConsentRequest(request);
 
-  return verifyMessage(
-    coinObj,
-    loginConsentRequest.signing_id,
-    loginConsentRequest.signature.signature,
-    loginConsentRequest.getSignedData(),
+  return VrpcProvider.getVerusIdInterface(coinObj.id).verifyLoginConsentRequest(
+    loginConsentRequest,
   );
 };

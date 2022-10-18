@@ -1,8 +1,8 @@
-import { LoginConsentRequest } from "verus-typescript-primitives";
+import { primitives } from "verusid-ts-client"
 import { getSignatureInfo } from "./getSignatureInfo";
 
 export const extractLoginConsentSig = (coinObj, request) => {
-  const loginConsentRequest = new LoginConsentRequest(request);
+  const loginConsentRequest = new primitives.LoginConsentRequest(request);
 
   return getSignatureInfo(
     coinObj,

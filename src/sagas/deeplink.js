@@ -7,7 +7,7 @@ import {
 } from '../utils/constants/storeType';
 import base64url from 'base64url';
 import { URL } from 'react-native-url-polyfill';
-import { LOGIN_CONSENT_REQUEST_VDXF_KEY } from 'verus-typescript-primitives';
+import { primitives } from 'verusid-ts-client'
 
 export default function* deeplinkSaga() {
   yield all([takeEvery(SET_DEEPLINK_URL, handleDeeplinkUrl)]);
@@ -25,16 +25,21 @@ function* handleDeeplinkUrl(action) {
       const id = url.pathname.replace(/\//g, '');
   
       if (!SUPPORTED_DLS.includes(id)) throw new Error('Unsupported url path.');
+
+      const req = new primitives.LoginConsentRequest();
+      req.fromBuffer(
+        base64url.toBuffer(
+          url.searchParams.get(
+            primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid,
+          ),
+        ),
+      );
   
       yield call(handleFinishDeeplink, {
         type: SET_DEEPLINK_DATA,
         payload: {
           id,
-          data: JSON.parse(
-            base64url.decode(
-              url.searchParams.get(LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid),
-            ),
-          ),
+          data: req.toJson(),
         },
       });
     } catch (e) {

@@ -1,27 +1,33 @@
-import {CommonActions} from '@react-navigation/native';
 import React, {useState, useEffect} from 'react';
 import {SafeAreaView, ScrollView, TouchableOpacity, View} from 'react-native';
 import Styles from '../../../styles/index';
-import {LoginConsentRequest} from 'verus-typescript-primitives';
+import { primitives } from "verusid-ts-client"
 import { Button, Divider, List, Portal, Text } from 'react-native-paper';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import { getIdentity } from '../../../utils/api/channels/verusid/callCreators';
 import { unixToDate } from '../../../utils/math';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
-import { resetDeeplinkData } from '../../../actions/actionCreators';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import Colors from '../../../globals/colors';
 import { VerusIdLogo } from '../../../images/customIcons';
+import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
+import { AUTHENTICATE_USER_SEND_MODAL } from '../../../utils/constants/sendModal';
+import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
+import { getCoinIdFromSystemId } from '../../../utils/CoinData/CoinData';
 
 const LoginRequestInfo = props => {
   const { deeplinkData, sigtime, cancel } = props
-  const req = new LoginConsentRequest(deeplinkData)
+  const req = new primitives.LoginConsentRequest(deeplinkData)
+  const [loading, setLoading] = useState(false)
   const [verusIdDetailsModalProps, setVerusIdDetailsModalProps] = useState(null)
   const [sigDateString, setSigDateString] = useState(unixToDate(sigtime))
+  const [waitingForSignin, setWaitingForSignin] = useState(false)
+  const signedIn = useSelector(state => state.authentication.signedIn)
+  const sendModalType = useSelector(state => state.sendModal.type)
 
-  const { chain_id, signing_id, challenge } = req
-  const { client, requested_scope } = challenge // TODO HARDENING: DISPLAY REQUESTED SCOPE!!
-  const { name } = client
+  const { system_id, signing_id, challenge } = req
+  const chain_id = getCoinIdFromSystemId(system_id)
+  const { requested_scope } = challenge // TODO HARDENING: DISPLAY REQUESTED SCOPE!!
 
   const getVerusId = async (chain, iAddrOrName) => {
     const identity = await getIdentity({id: chain}, iAddrOrName);
@@ -50,20 +56,34 @@ const LoginRequestInfo = props => {
     })
   }
 
-  const onBehalfOfWarning = () => {
-    createAlert(
-      'Warning',
-      `The creator of this request claims to represent ${name}. Make sure you trust the VerusID that made this request to do so.`,
-    );
-  }
+  useEffect(() => {
+    if (signedIn && waitingForSignin) {
+      props.navigation.navigate("LoginRequestIdentity", {
+        deeplinkData
+      })
+    }
+  }, [signedIn, waitingForSignin]);
 
   useEffect(() => {
-    if (name != null) {
-      onBehalfOfWarning();
-    }
-  }, []);
+    if (sendModalType != AUTHENTICATE_USER_SEND_MODAL) {
+      setLoading(false)
+    } else setLoading(true)
+  }, [sendModalType]);
 
-  return (
+  handleContinue = () => {
+    if (signedIn) {
+      props.navigation.navigate("LoginRequestIdentity", {
+        deeplinkData
+      })
+    } else {
+      setWaitingForSignin(true)
+      openAuthenticateUserModal()
+    }
+  }
+
+  return loading ? (
+    <AnimatedActivityIndicatorBox />
+  ) : (
     <SafeAreaView style={Styles.defaultRoot}>
       <Portal>
         {verusIdDetailsModalProps != null && (
@@ -73,10 +93,10 @@ const LoginRequestInfo = props => {
       <ScrollView
         style={Styles.fullWidth}
         contentContainerStyle={Styles.focalCenter}>
-        <VerusIdLogo width={'70%'} height={'25%'} />
+        <VerusIdLogo width={'55%'} height={'10%'} />
         <View style={Styles.wideBlock}>
           <Text style={{fontSize: 20, textAlign: 'center'}}>
-            {`${signing_id} is requesting a login with VerusID`}
+            {`${signing_id} is requesting login with VerusID`}
           </Text>
         </View>
         <View style={Styles.fullWidth}>
@@ -91,23 +111,6 @@ const LoginRequestInfo = props => {
             />
             <Divider />
           </TouchableOpacity>
-          {name && (
-            <TouchableOpacity onPress={() => onBehalfOfWarning()}>
-              <List.Item
-                title={name}
-                description={'On behalf of'}
-                right={props => (
-                  <List.Icon
-                    {...props}
-                    icon={'exclamation'}
-                    size={20}
-                    color={Colors.infoButtonColor}
-                  />
-                )}
-              />
-              <Divider />
-            </TouchableOpacity>
-          )}
           <TouchableOpacity>
             <List.Item title={sigDateString} description={'Signed on'} />
             <Divider />
@@ -118,7 +121,7 @@ const LoginRequestInfo = props => {
             ...Styles.fullWidthBlock,
             paddingHorizontal: 16,
             flexDirection: 'row',
-            justifyContent: "space-between",
+            justifyContent: 'space-between',
             display: 'flex',
           }}>
           <Button
@@ -130,7 +133,7 @@ const LoginRequestInfo = props => {
           <Button
             color={Colors.verusGreenColor}
             style={{width: 148}}
-            onPress={() => cancel()}>
+            onPress={() => handleContinue()}>
             Continue
           </Button>
         </View>

@@ -245,7 +245,17 @@ export const findCurrencyByImportId = (importObj) => {
   return coinObj
 }
 
-export const findCoinObj = (id, userName) => {
+export const getCoinIdFromSystemId = (systemId) => {
+  switch (systemId) {
+    case "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV":
+      return "VRSC"
+    default:
+      throw new Error("Could not find coin for system id " + systemId)
+  }
+}
+
+export const findCoinObj = (key, userName, useSystemId = false) => {
+  const id = useSystemId ? getCoinIdFromSystemId(key) : key;
   let coinObj = coinsList[id.toLowerCase()]
 
   if (coinObj) {

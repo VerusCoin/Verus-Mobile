@@ -114,7 +114,6 @@
     "uuid": "8.0.0",
     "version_compare": "0.0.3",
     "verus-pay-utils": "https://github.com/michaeltout/verus-pay-utils.git",
-    "verus-typescript-primitives": "https://github.com/VerusCoin/verus-typescript-primitives.git",
     "verus-zkedid-utils": "https://github.com/michaeltout/verus-zkedid-utils",
     "verusd-rpc-ts-client": "https://github.com/VerusCoin/verusd-rpc-ts-client.git",
     "verusid-ts-client": "https://github.com/VerusCoin/verusid-ts-client.git",

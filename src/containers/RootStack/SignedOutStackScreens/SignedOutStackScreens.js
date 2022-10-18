@@ -6,21 +6,22 @@ import DeleteProfile from '../../Settings/ProfileSettings/DeleteProfile/DeletePr
 import SecureLoading from '../../SecureLoading/SecureLoading'
 import Login from '../../Login/Login';
 import SignUp from '../../SignUp/SignUp';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { setDeeplinkUrl } from '../../../actions/actionCreators';
 
 const SignedOutStack = createStackNavigator();
 
 const SignedOutStackScreens = props => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
-  const [prevDeeplinkId, setPrevDeeplinkId] = useState(deeplinkId)
+  const deeplinkUrl = useSelector((state) => state.deeplink.url)
+  const dispatch = useDispatch()
 
   useEffect(() => {
-    if (deeplinkId != null && deeplinkId !== prevDeeplinkId) {
-      setPrevDeeplinkId(deeplinkId)
-      
+    if (deeplinkId != null && deeplinkUrl != null) {    
+      dispatch(setDeeplinkUrl(null))  
       props.navigation.navigate('DeepLink');
     }
-  }, [deeplinkId]);
+  }, [deeplinkId, deeplinkUrl]);
 
   return (
     <SignedOutStack.Navigator>

@@ -1,5 +1,5 @@
 import { Dimensions } from "react-native";
-import { LOGIN_CONSENT_REQUEST_VDXF_KEY } from "verus-typescript-primitives"
+import { primitives } from "verusid-ts-client"
 
 // Electrum
 export const ELECTRUM_PROTOCOL_CHANGE = 1.4;
@@ -173,4 +173,4 @@ export const IADDRESS_VERSION = 102
 
 // Deep links
 export const CALLBACK_HOST = 'x-callback-url'
-export const SUPPORTED_DLS = [LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid]
+export const SUPPORTED_DLS = [primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid]

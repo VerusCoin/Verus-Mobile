@@ -1,16 +1,14 @@
 import { CommonActions } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
 import { View } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import AnimatedActivityIndicatorBox from '../../components/AnimatedActivityIndicatorBox';
 import Styles from '../../styles/index';
-import { LOGIN_CONSENT_REQUEST_VDXF_KEY } from "verus-typescript-primitives"
+import { primitives } from "verusid-ts-client"
 import { verifyLoginConsentRequest } from '../../utils/api/channels/vrpc/requests/verifyLoginConsentRequest';
 import { createAlert } from '../../actions/actions/alert/dispatchers/alert';
-import { resetDeeplinkData, setDeeplinkData } from '../../actions/actionCreators';
 import VrpcProvider from '../../utils/vrpc/vrpcInterface';
 import { findCoinObj } from '../../utils/CoinData/CoinData';
-import { getSignatureInfo } from '../../utils/api/channels/vrpc/requests/getSignatureInfo';
 import { extractLoginConsentSig } from '../../utils/api/channels/vrpc/requests/extractLoginConsentSig';
 import { getBlock } from '../../utils/api/channels/vrpc/callCreators';
 import { LOGIN_CONSENT_INFO } from '../../utils/constants/deeplink';
@@ -20,8 +18,8 @@ const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
   const deeplinkData = useSelector((state) => state.deeplink.data)
   const signedIn = useSelector((state) => state.authentication.signedIn)
-  const dispatch = useDispatch()
   const [displayKey, setDisplayKey] = useState(null)
+  const [loading, setLoading] = useState(false)
   const [displayProps, setDisplayProps] = useState({})
 
   const cancel = () => {
@@ -46,8 +44,8 @@ const DeepLink = (props) => {
   const processDeeplink = async () => {
     try {
       switch (deeplinkId) {
-        case LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid:
-          const coinObj = findCoinObj(deeplinkData.chain_id)
+        case primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid:
+          const coinObj = findCoinObj(deeplinkData.system_id, null, true)
           VrpcProvider.initEndpoint(coinObj.id, coinObj.vrpc_endpoints[0])
 
           if (await verifyLoginConsentRequest(coinObj, deeplinkData)) {
@@ -90,12 +88,19 @@ const DeepLink = (props) => {
   }, [])
 
   const screens = {
-    [LOGIN_CONSENT_INFO]: () => <LoginRequestInfo {...displayProps} cancel={cancel}/>
-  }
+    [LOGIN_CONSENT_INFO]: () => (
+      <LoginRequestInfo
+        {...displayProps}
+        cancel={cancel}
+        setLoading={setLoading}
+        navigation={props.navigation}
+      />
+    ),
+  };
   
   return (
     <View style={Styles.flexBackground}>
-      {displayKey == null ? <AnimatedActivityIndicatorBox /> : screens[displayKey]()}
+      {displayKey == null || loading ? <AnimatedActivityIndicatorBox /> : screens[displayKey]()}
     </View>
   );
 };
