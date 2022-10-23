@@ -17,123 +17,117 @@ export const TraditionalCryptoSendSuccessRender = function () {
 
   return (
     <ScrollView
-      style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }}
-      contentContainerStyle={{ ...Styles.focalCenter, justifyContent: "space-between" }}
-    >
-      <View style={Styles.focalCenter}>
-        <TouchableOpacity
-          onPress={() =>
-            copyToClipboard(finalTxAmount, {
-              title: "Amount copied",
-              message: `${finalTxAmount} copied to clipboard.`,
-            })
-          }
+      style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}
+      contentContainerStyle={{
+        ...Styles.focalCenter,
+        justifyContent: 'space-between'
+      }}>
+      <TouchableOpacity
+        onPress={() =>
+          copyToClipboard(finalTxAmount, {
+            title: 'Amount copied',
+            message: `${finalTxAmount} copied to clipboard.`,
+          })
+        }
+        style={{
+          width: '75%',
+          marginTop: 16,
+        }}>
+        <Text
+          numberOfLines={1}
           style={{
-            width: "75%",
-            marginTop: 16,
-          }}
-        >
-          <Text
-            numberOfLines={1}
-            style={{
-              textAlign: "center",
-              fontSize: 20,
-              color: Colors.verusDarkGray,
-            }}
-          >
-            <Text
-              style={{ color: Colors.basicButtonColor, textAlign: "center" }}
-            >{`${finalTxAmount} ${coinObj.id}`}</Text>
-            {" sent"}
-          </Text>
-        </TouchableOpacity>
-        <View style={{ paddingVertical: 16 }}>
-          <AnimatedSuccessCheckmark
-            style={{
-              width: 128,
-            }}
-          />
-        </View>
-        <TouchableOpacity
-          onPress={() =>
-            copyToClipboard(toAddress, {
-              title: "Address copied",
-              message: `${toAddress} copied to clipboard.`,
-            })
-          }
-          style={{
-            width: "75%",
-          }}
-        >
-          <Text
-            numberOfLines={1}
-            style={{
-              textAlign: "center",
-              fontSize: 20,
-              color: Colors.verusDarkGray,
-            }}
-          >
-            {"to "}
-            <Text style={{ color: Colors.basicButtonColor, textAlign: "center" }}>{toAddress}</Text>
-          </Text>
-        </TouchableOpacity>
-        <View style={{ paddingVertical: 16, width: "75%" }}>
+            textAlign: 'center',
+            fontSize: 20,
+            color: Colors.verusDarkGray,
+          }}>
           <Text
             style={{
-              textAlign: "center",
-              fontSize: 20,
-              color: Colors.verusDarkGray,
-            }}
-          >
-            {"The transaction may take a few minutes to appear in your wallet."}
-          </Text>
-        </View>
-        <View
+              color: Colors.basicButtonColor,
+              textAlign: 'center',
+            }}>{`${finalTxAmount} ${coinObj.id}`}</Text>
+          {' sent'}
+        </Text>
+      </TouchableOpacity>
+      <View style={{paddingVertical: 16}}>
+        <AnimatedSuccessCheckmark
           style={{
-            width: "90%",
-            flexDirection: "row",
-            justifyContent: "space-evenly",
+            width: 128,
           }}
-        >
-          {explorers[coinObj.id] != null && (
-            <Button
-              color={Colors.primaryColor}
-              style={{ width: 148 }}
-              labelStyle={{ fontSize: 18 }}
-              onPress={() => this.openExplorer()}
-            >
-              Details
-            </Button>
-          )}
+        />
+      </View>
+      <TouchableOpacity
+        onPress={() =>
+          copyToClipboard(toAddress, {
+            title: 'Address copied',
+            message: `${toAddress} copied to clipboard.`,
+          })
+        }
+        style={{
+          width: '75%',
+        }}>
+        <Text
+          numberOfLines={1}
+          style={{
+            textAlign: 'center',
+            fontSize: 20,
+            color: Colors.verusDarkGray,
+          }}>
+          {'to '}
+          <Text style={{color: Colors.basicButtonColor, textAlign: 'center'}}>
+            {toAddress}
+          </Text>
+        </Text>
+      </TouchableOpacity>
+      <View style={{paddingVertical: 16, width: '75%'}}>
+        <Text
+          style={{
+            textAlign: 'center',
+            fontSize: 20,
+            color: Colors.verusDarkGray,
+          }}>
+          {'The transaction may take a few minutes to appear in your wallet.'}
+        </Text>
+      </View>
+      <View
+        style={{
+          width: '90%',
+          flexDirection: 'row',
+          justifyContent: 'space-evenly',
+        }}>
+        {explorers[coinObj.id] != null && (
           <Button
-            color={Colors.verusGreenColor}
-            style={{ width: 148 }}
-            labelStyle={{ fontSize: 18 }}
-            onPress={() => this.finishSend()}
-          >
-            Done
+            color={Colors.primaryColor}
+            style={{width: 148}}
+            labelStyle={{fontSize: 18}}
+            onPress={() => this.openExplorer()}>
+            Details
           </Button>
-        </View>
+        )}
+        <Button
+          color={Colors.verusGreenColor}
+          style={{width: 148}}
+          labelStyle={{fontSize: 18}}
+          onPress={() => this.finishSend()}>
+          Done
+        </Button>
       </View>
       <TouchableOpacity
         onPress={() =>
           copyToClipboard(txid, {
-            title: "Transaction ID copied",
+            title: 'Transaction ID copied',
             message: `${txid} copied to clipboard.`,
           })
         }
         style={{
-          width: "75%"
-        }}
-      >
+          width: '75%',
+        }}>
         <Text
           numberOfLines={1}
           style={{
-            textAlign: "center",
+            textAlign: 'center',
             fontSize: 14,
             color: Colors.verusDarkGray,
-          }}
-        >
+          }}>
           {`id: ${txid}`}
         </Text>
       </TouchableOpacity>

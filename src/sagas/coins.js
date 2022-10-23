@@ -4,6 +4,7 @@ import { requestServiceStoredData } from '../utils/auth/authBox';
 import { PRE_DATA, VRPC } from '../utils/constants/intervalConstants';
 import { VERUSID_SERVICE_ID } from '../utils/constants/services';
 import {
+  LOG_NEW_CHANNELS,
   SET_USER_COINS,
   SET_USER_COINS_COMPLETE,
 } from '../utils/constants/storeType';
@@ -16,6 +17,7 @@ export default function* setUserCoinsSaga() {
 function* handleFinishSetUserCoins(action) {
   let allSubWallets = {};
   let coinStatus = {};
+  let allNewChannels = []
 
   try {
     const verusIdStoredData = yield call(
@@ -46,16 +48,18 @@ function* handleFinishSetUserCoins(action) {
             return channelId;
           })
         : [];
+      
+      allNewChannels = [...(new Set([...verusIdChannels, ...vrpcChannels]))];
 
       coinStatus[coinObj.id] = PRE_DATA;
       allSubWallets[coinObj.id] = getDefaultSubWallets(
         coinObj,
         [...vrpcChannels, ...verusIdChannels],
-        linkedIds[coinObj.id] ? dynamicChannelNames : {},
+        dynamicChannelNames
       );
     });
   } catch (e) {
-    console.warn(e);
+    console.error(e);
   }
 
   yield put({
@@ -64,6 +68,12 @@ function* handleFinishSetUserCoins(action) {
       allSubWallets,
       status: coinStatus,
       activeCoinsForUser: action.payload.activeCoinsForUser,
+    },
+  });
+  yield put({
+    type: LOG_NEW_CHANNELS,
+    payload: {
+      channels: allNewChannels
     },
   });
 }

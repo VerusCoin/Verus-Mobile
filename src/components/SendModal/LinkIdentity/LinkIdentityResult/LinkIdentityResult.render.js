@@ -19,9 +19,8 @@ export const LinkIdentitySuccessRender = function () {
       style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}
       contentContainerStyle={{
         ...Styles.focalCenter,
-        justifyContent: 'space-between',
+        justifyContent: 'space-between'
       }}>
-      <View style={Styles.focalCenter}>
         <TouchableOpacity
           onPress={() =>
             copyToClipboard(verusId.identity.identityaddress, {
@@ -74,7 +73,6 @@ export const LinkIdentitySuccessRender = function () {
             Done
           </Button>
         </View>
-      </View>
     </ScrollView>
   );
 };

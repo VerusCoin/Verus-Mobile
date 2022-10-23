@@ -7,7 +7,7 @@ const SignedOutNoKeyStack = createStackNavigator();
 const SignedOutNoKeyStackScreens = props => {
   return (
     <SignedOutNoKeyStack.Navigator>
-      <SignedOutStack.Screen
+      <SignedOutNoKeyStack.Screen
         name="SignIn"
         component={SignUp}
         options={{

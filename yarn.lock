@@ -4256,6 +4256,11 @@ bignumber.js@9.0.1, bignumber.js@^9.0.0:
   resolved "https://registry.yarnpkg.com/bignumber.js/-/bignumber.js-9.0.1.tgz#8d7ba124c882bfd8e43260c67475518d0689e4e5"
   integrity sha512-IdZR9mh6ahOBv/hYGiXyVuyCetmGJhtYkqLBpTStdhEGjegpPlUawydyaF3pbIOFynJTpllEs+NP+CS9jKFLjA==
 
+bignumber.js@9.1.0:
+  version "9.1.0"
+  resolved "https://registry.yarnpkg.com/bignumber.js/-/bignumber.js-9.1.0.tgz#8d340146107fe3a6cb8d40699643c302e8773b62"
+  integrity sha512-4LwHK4nfDOraBCtst+wOWIHbu1vhvAPJK8g8nROd4iuc3PSEjWif/qwbkh8jwCJz6yDBvtU4KPynETgrfh7y3A==
+
 bin-links@^2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/bin-links/-/bin-links-2.2.1.tgz#347d9dbb48f7d60e6c11fe68b77a424bee14d61b"
@@ -14920,10 +14925,11 @@ version_compare@0.0.3:
 
 "verusid-ts-client@https://github.com/VerusCoin/verusid-ts-client.git":
   version "0.1.0"
-  resolved "https://github.com/VerusCoin/verusid-ts-client.git#6c1817aed2d577b7fac32c6de41c7f8d90b925b5"
+  resolved "https://github.com/VerusCoin/verusid-ts-client.git#f6c02e7b4aeae201b1e2dc57f0e24c4b862f9a2d"
   dependencies:
     "@bitgo/utxo-lib" "https://github.com/VerusCoin/BitGoJS.git#dceba5dc289c34a1d767d7d79e9b5d7161d0c8da"
-    axios "^0.27.2"
+    axios "0.27.2"
+    bignumber.js "9.1.0"
     verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git#75252ddc8251381261809cb88e827c17af116225"
     verusd-rpc-ts-client "https://github.com/VerusCoin/verusd-rpc-ts-client.git#ecd5734ee42c03e1f2dcec936f16571bcb3f81cb"
 

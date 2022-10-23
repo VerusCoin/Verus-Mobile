@@ -64,6 +64,7 @@ export const TRANSACTIONS_NEED_UPDATE = 'TRANSACTIONS_NEED_UPDATE';
 export const RATES_NEED_UPDATE = 'RATES_NEED_UPDATE';
 export const EVERYTHING_NEEDS_UPDATE = 'EVERYTHING_NEEDS_UPDATE';
 // export const SET_INTERVAL_ID = "SET_INTERVAL_ID"
+export const LOG_NEW_CHANNELS = 'LOG_NEW_CHANNELS'
 
 // Service Information Ledger
 export const SET_SERVICE_ACCOUNT = 'SET_SERVICE_ACCOUNT'
@@ -142,7 +143,6 @@ export const SET_OVERVIEW_FILTER = 'SET_OVERVIEW_FILTER';
 
 // Coin Menus Screens GUI state
 export const SET_COIN_SUB_WALLET = 'SET_COIN_SUB_WALLET'
-export const INIT_COIN_SUB_WALLETS = 'INIT_COIN_SUB_WALLETS'
 
 // Identity app
 export const APP_SETUP = 'APP_SETUP';

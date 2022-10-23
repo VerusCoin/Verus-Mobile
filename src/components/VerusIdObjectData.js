@@ -106,6 +106,7 @@ export default function VerusIdObjectData(props) {
     <FlatList
       ListFooterComponent={ListFooterComponent}
       style={Styles.fullWidth}
+      contentContainerStyle={{ paddingBottom: 152 }}
       renderItem={({item}) => {
         if (item.condition == null || item.condition === true)
           return (

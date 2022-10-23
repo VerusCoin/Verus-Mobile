@@ -13,6 +13,7 @@ import { extractLoginConsentSig } from '../../utils/api/channels/vrpc/requests/e
 import { getBlock } from '../../utils/api/channels/vrpc/callCreators';
 import { LOGIN_CONSENT_INFO } from '../../utils/constants/deeplink';
 import LoginRequestInfo from './LoginRequestInfo/LoginRequestInfo';
+import { getIdentity } from '../../utils/api/channels/verusid/callCreators';
 
 const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
@@ -45,13 +46,31 @@ const DeepLink = (props) => {
     try {
       switch (deeplinkId) {
         case primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid:
-          const coinObj = findCoinObj(deeplinkData.system_id, null, true)
+          const request = new primitives.LoginConsentRequest(deeplinkData)
+
+          const coinObj = findCoinObj(request.system_id, null, true)
           VrpcProvider.initEndpoint(coinObj.id, coinObj.vrpc_endpoints[0])
 
-          if (await verifyLoginConsentRequest(coinObj, deeplinkData)) {
-            const sig = await extractLoginConsentSig(coinObj, deeplinkData)
+          if (await verifyLoginConsentRequest(coinObj, request)) {
+            for (const requestedPermission of request.challenge
+              .requested_access) {
+              if (
+                requestedPermission.vdxfkey !== primitives.IDENTITY_VIEW.vdxfid
+              ) {
+                throw new Error(
+                  'Unrecognized requested permission ' +
+                    requestedPermission.vdxfkey,
+                );
+              }
+            }
 
-            //TODO HARDENING: Verify height against time of signature
+            if (request.challenge.requested_access.length == 0) {
+              throw new Error(
+                'No permissions being requested in loginconsent request.',
+              );
+            }
+
+            const sig = await extractLoginConsentSig(coinObj, request)
 
             const sigblock = await getBlock(coinObj, sig.height)
            
@@ -59,9 +78,14 @@ const DeepLink = (props) => {
 
             const sigtime = sigblock.result.time
 
+            const signedBy = await getIdentity(coinObj, request.signing_id)
+
+            if (signedBy.error) throw new Error(signedBy.error.message)
+
             setDisplayProps({
               deeplinkData,
-              sigtime
+              sigtime,
+              signerName: signedBy.result.identity.name
             })
             setDisplayKey(LOGIN_CONSENT_INFO)
           } else {

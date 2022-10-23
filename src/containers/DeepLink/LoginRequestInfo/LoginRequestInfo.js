@@ -6,7 +6,6 @@ import { Button, Divider, List, Portal, Text } from 'react-native-paper';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import { getIdentity } from '../../../utils/api/channels/verusid/callCreators';
 import { unixToDate } from '../../../utils/math';
-import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import { useSelector } from 'react-redux';
 import Colors from '../../../globals/colors';
 import { VerusIdLogo } from '../../../images/customIcons';
@@ -16,7 +15,7 @@ import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIn
 import { getCoinIdFromSystemId } from '../../../utils/CoinData/CoinData';
 
 const LoginRequestInfo = props => {
-  const { deeplinkData, sigtime, cancel } = props
+  const { deeplinkData, sigtime, cancel, signerName } = props
   const req = new primitives.LoginConsentRequest(deeplinkData)
   const [loading, setLoading] = useState(false)
   const [verusIdDetailsModalProps, setVerusIdDetailsModalProps] = useState(null)
@@ -27,7 +26,6 @@ const LoginRequestInfo = props => {
 
   const { system_id, signing_id, challenge } = req
   const chain_id = getCoinIdFromSystemId(system_id)
-  const { requested_scope } = challenge // TODO HARDENING: DISPLAY REQUESTED SCOPE!!
 
   const getVerusId = async (chain, iAddrOrName) => {
     const identity = await getIdentity({id: chain}, iAddrOrName);
@@ -96,19 +94,30 @@ const LoginRequestInfo = props => {
         <VerusIdLogo width={'55%'} height={'10%'} />
         <View style={Styles.wideBlock}>
           <Text style={{fontSize: 20, textAlign: 'center'}}>
-            {`${signing_id} is requesting login with VerusID`}
+            {`${signerName}@ is requesting login with VerusID`}
           </Text>
         </View>
         <View style={Styles.fullWidth}>
           <TouchableOpacity
             onPress={() => openVerusIdDetailsModal(chain_id, signing_id)}>
             <List.Item
-              title={signing_id}
+              title={`${signerName}@`}
               description={'Requested by'}
               right={props => (
                 <List.Icon {...props} icon={'information'} size={20} />
               )}
             />
+            <Divider />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <List.Item
+              title={'View your chosen identity'}
+              description={'This will allow them to'}
+            />
+            <Divider />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <List.Item title={chain_id} description={'System name'} />
             <Divider />
           </TouchableOpacity>
           <TouchableOpacity>

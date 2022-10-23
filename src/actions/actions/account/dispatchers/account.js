@@ -40,6 +40,7 @@ export const initializeAccountData = async (
     store.dispatch(await initSettings())
     store.dispatch(accountAuthenticator)
     store.dispatch(coinList)
+
     store.dispatch(setUserCoinsAction)
 
     for (let i = 0; i < activeCoinsForUser.length; i++) {
@@ -53,6 +54,8 @@ export const initializeAccountData = async (
 
       activateChainLifecycle(coinObj);
     }
+
+    store.dispatch(setUserCoinsAction)
 
     activateServiceLifecycle()
     await initPersonalDataForUser(account.accountHash)

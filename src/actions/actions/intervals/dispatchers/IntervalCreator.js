@@ -16,10 +16,10 @@ import {
   NEVER_ACTIVATED,
   CHANNELS,
   VRPC,
-  PRE_DATA
+  PRE_DATA,
+  DEFAULT_INTERVAL_CHANNELS
 } from "../../../../utils/constants/intervalConstants";
 import Store from '../../../../store/index'
-import { getCoinObj } from '../../../../utils/CoinData/CoinData';
 import { clearServiceUpdateExpiredIntervalId, setServiceUpdateExpiredIntervalId } from '../../updateManager';
 import { conditionallyUpdateService } from '../../services/dispatchers/updates';
 import { SET_ADDRESSES } from '../../../../utils/constants/storeType';
@@ -200,7 +200,7 @@ export const refreshCoinIntervals = (coinObj, onCompletes, updateParams) => {
     PRE_DATA,
     chainTicker,
     coinObj.tags,
-    [...CHANNELS, ...verusIdChannels, ...vrpcChannels],
+    [...DEFAULT_INTERVAL_CHANNELS, ...verusIdChannels, ...vrpcChannels],
     onCompletes,
     updateParams,
   );

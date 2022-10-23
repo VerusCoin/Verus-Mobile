@@ -166,6 +166,9 @@ export const SendModalInnerAreaRender = function () {
       tabBarOptions={{
         pressColor: 'transparent',
         pressOpacity: 1,
+        labelStyle: {
+          fontSize: 12
+        }
       }}
       lazy={true}
       lazyPlaceholder={() => <AnimatedActivityIndicatorBox />}>
@@ -189,7 +192,7 @@ export const SendModalInnerAreaRender = function () {
         options={{
           tabBarLabel:
             this.props.sendModal.type == AUTHENTICATE_USER_SEND_MODAL
-              ? 'Authenticate'
+              ? 'Login'
               : 'Confirm',
         }}
         listeners={{

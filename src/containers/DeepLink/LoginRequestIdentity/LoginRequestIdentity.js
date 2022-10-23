@@ -21,6 +21,10 @@ const LoginRequestIdentity = props => {
   const req = new primitives.LoginConsentRequest(deeplinkData)
   const encryptedIds = useSelector(state => state.services.stored[VERUSID_SERVICE_ID])
 
+  const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser)
+
+  const activeCoinIds = activeCoinsForUser.map(coinObj => coinObj.id)
+
   const { system_id } = req
 
   useEffect(async () => {
@@ -46,18 +50,18 @@ const LoginRequestIdentity = props => {
   useEffect(() => {
     const sortedIdKeysPerChain = {}
 
-    for (const chainId of Object.keys(linkedIds)) {
-      sortedIdKeysPerChain[chainId] = Object.keys(
-        linkedIds[chainId],
-      ).sort(function (x, y) {
-        if (linkedIds[x] < linkedIds[y]) {
-          return -1;
-        }
-        if (linkedIds[x] > linkedIds[y]) {
-          return 1;
-        }
-        return 0;
-      });
+    for (const chainId of activeCoinIds) {
+      sortedIdKeysPerChain[chainId] = linkedIds[chainId]
+        ? Object.keys(linkedIds[chainId]).sort(function (x, y) {
+            if (linkedIds[chainId][x] < linkedIds[chainId][y]) {
+              return -1;
+            }
+            if (linkedIds[chainId][x] > linkedIds[chainId][y]) {
+              return 1;
+            }
+            return 0;
+          })
+        : [];
     }
 
     setSortedIds(sortedIdKeysPerChain)

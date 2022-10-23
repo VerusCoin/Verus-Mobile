@@ -13,10 +13,10 @@ export const VerusIdServiceOverviewRender = function () {
     sortedIdKeysPerChain[chainId] = Object.keys(
       this.props.linkedIds[chainId],
     ).sort(function (x, y) {
-      if (linkedIds[x] < linkedIds[y]) {
+      if (linkedIds[chainId][x] < linkedIds[chainId][y]) {
         return -1;
       }
-      if (linkedIds[x] > linkedIds[y]) {
+      if (linkedIds[chainId][x] > linkedIds[chainId][y]) {
         return 1;
       }
       return 0;

@@ -1,5 +1,28 @@
 import { arrayToObject } from "../objectManip"
 
+// Ledger keys
+export const BALANCES = 'balances'
+export const TRANSACTIONS = 'transactions'
+export const RATES = 'rates'
+export const INFO = 'info'
+export const CONVERSIONS = 'conversions'
+export const WITHDRAW_DESTINATIONS = 'withdrawDestinations'
+export const DEPOSIT_SOURCES = 'depositSources'
+export const PENDING_DEPOSITS = 'pendingDeposits'
+export const LINKED_IDS = 'linkedIdentities'
+
+export const LEDGER_KEYS = [
+  BALANCES,
+  TRANSACTIONS,
+  RATES,
+  INFO,
+  CONVERSIONS,
+  WITHDRAW_DESTINATIONS,
+  DEPOSIT_SOURCES,
+  PENDING_DEPOSITS,
+  LINKED_IDS,
+];
+
 // Interval expiry special states
 export const ALWAYS_ACTIVATED = "ALWAYS_ACTIVATED" 
 export const NEVER_ACTIVATED = "NEVER_ACTIVATED" 
@@ -53,7 +76,25 @@ export const ETH = 'eth'
 export const ERC20 = 'erc20'
 export const VRPC = 'vrpc'
 export const VERUSID = 'verusid'
-export const CHANNELS = [DLIGHT_PRIVATE, ELECTRUM, GENERAL, ETH, ERC20, WYRE_SERVICE, VERUSID, VRPC]
+export const CHANNELS = [
+  DLIGHT_PRIVATE,
+  ELECTRUM,
+  GENERAL,
+  ETH,
+  ERC20,
+  WYRE_SERVICE,
+  VERUSID,
+  VRPC,
+];
+export const DEFAULT_INTERVAL_CHANNELS = [
+  DLIGHT_PRIVATE,
+  ELECTRUM,
+  GENERAL,
+  ETH,
+  ERC20,
+  WYRE_SERVICE,
+  VERUSID,
+];
 export const CHANNELS_OBJECT_TEMPLATE = Object.freeze(arrayToObject(CHANNELS, {}))
 export const CHANNELS_NULL_TEMPLATE = Object.freeze(arrayToObject(CHANNELS, null))
 

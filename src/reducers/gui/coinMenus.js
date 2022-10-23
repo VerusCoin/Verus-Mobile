@@ -10,7 +10,6 @@
 
 import {
   DISABLE_CLAIM_BUTTON,
-  INIT_COIN_SUB_WALLETS,
   SET_COIN_SUB_WALLET,
   SET_USER_COINS_COMPLETE,
   SIGN_OUT_COMPLETE
@@ -26,11 +25,6 @@ export const coinMenus = (state = {
       return {
         ...state,
         activeSubWallets: {...state.activeSubWallets, [action.payload.chainTicker]: action.payload.subWallet},
-      };
-    case INIT_COIN_SUB_WALLETS:
-      return {
-        ...state,
-        allSubWallets: {...state.allSubWallets, [action.payload.chainTicker]: action.payload.subWallets},
       };
     case SET_USER_COINS_COMPLETE:
       return {
