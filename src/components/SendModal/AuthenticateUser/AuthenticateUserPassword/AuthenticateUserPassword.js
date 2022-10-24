@@ -55,7 +55,8 @@ const AuthenticateUserPassword = props => {
       account != null &&
       account.biometry &&
       (await getSupportedBiometryType()).biometry &&
-      activeAccount.accountHash !== account.accountHash
+      (activeAccount == null ||
+        activeAccount.accountHash !== account.accountHash)
     ) {
       try {
         const password = await getBiometricPassword(
