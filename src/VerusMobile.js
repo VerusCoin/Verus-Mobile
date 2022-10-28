@@ -4,10 +4,11 @@ import {
   Alert,
   AppState,
   Platform,
-  View
+  View,
+  Linking
 } from "react-native";
 import Modal from './components/Modal'
-import RootStackScreens from './utils/navigation/index';
+import RootStackScreens from './containers/RootStack/RootStackScreens';
 import { 
   fetchUsers, 
   loadServerVersions,
@@ -26,7 +27,7 @@ import {
 import { connect } from 'react-redux';
 import { ENABLE_VERUS_IDENTITIES } from '../env/index'
 import AlertModal from "./components/Alert";
-import { activateKeyboardListener } from "./actions/actionDispatchers";
+import { activateKeyboardListener, updateDeeplinkUrl } from "./actions/actionDispatchers";
 import Colors from "./globals/colors";
 import { CoinLogos } from "./utils/CoinData/CoinData";
 import { Portal } from 'react-native-paper';
@@ -46,6 +47,8 @@ class VerusMobile extends React.Component {
       "Warning: componentWillReceiveProps is deprecated",
       "Warning: componentWillUpdate is deprecated",
       'RCTRootView cancelTouches', 
+      "Require cycle",
+      "long period"
     ]);
   }
 
@@ -80,6 +83,18 @@ class VerusMobile extends React.Component {
     activateKeyboardListener()
 
     AppState.addEventListener("change", (nextAppState) => this._handleAppStateChange(nextAppState));
+
+    // Handle deeplinks
+    Linking.addEventListener("url", ({ url }) => {
+      updateDeeplinkUrl(url)
+    })
+    const updateUrlState = async () => {
+      const url = await Linking.getInitialURL()
+
+      updateDeeplinkUrl(url)
+    }
+
+    updateUrlState()
     
     //TODO: Figure out what should trigger a cache clear on startup of server 
     //versions. (The action that triggers it should indicate a server upgraded it's 

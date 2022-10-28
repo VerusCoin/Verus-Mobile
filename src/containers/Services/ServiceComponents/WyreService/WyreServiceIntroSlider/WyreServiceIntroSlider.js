@@ -140,7 +140,7 @@ class WyreServiceIntroSlider extends Component {
   }
 
   async initWyreSeedStatus() {
-    this.props.dispatch(setServiceLoading(true))
+    this.props.dispatch(setServiceLoading(true, WYRE_SERVICE_ID))
 
     try {
       const accountSeeds = await requestSeeds();
@@ -156,7 +156,7 @@ class WyreServiceIntroSlider extends Component {
         {
           hasElectrum24WordSeed,
         },
-        () => this.props.dispatch(setServiceLoading(false))
+        () => this.props.dispatch(setServiceLoading(false, WYRE_SERVICE_ID))
       );
     } catch (e) {
       console.warn(e);

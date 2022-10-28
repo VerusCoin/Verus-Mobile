@@ -1,11 +1,12 @@
 import { ERROR_TRANSACTIONS, SET_TRANSACTIONS } from '../../../../utils/constants/storeType'
-import { DLIGHT_PRIVATE, ELECTRUM, ETH, ERC20, WYRE_SERVICE } from '../../../../utils/constants/intervalConstants'
+import { DLIGHT_PRIVATE, ELECTRUM, ETH, ERC20, WYRE_SERVICE, VRPC } from '../../../../utils/constants/intervalConstants'
 import { updateLedgerValue } from './UpdateLedgerValue'
 import { updateDlightTransactions } from './dlight/updates'
 import { updateElectrumTransactions } from './electrum/updates'
 import { updateErc20Transactions } from './erc20/updates'
 import { updateEthTransactions } from './eth/updates'
 import { updateWyreTransactions } from './wyre/updates'
+import { updateVrpcTransactions } from './vrpc/updates'
 
 const fetchChannels = activeUser => {
   return {
@@ -14,6 +15,7 @@ const fetchChannels = activeUser => {
     [ETH]: coinObj => updateEthTransactions(activeUser, coinObj),
     [ERC20]: coinObj => updateErc20Transactions(activeUser, coinObj),
     [WYRE_SERVICE]: coinObj => updateWyreTransactions(coinObj),
+    [VRPC]: (coinObj, channelId) => updateVrpcTransactions(coinObj, channelId)
   };
 };
 

@@ -4,6 +4,7 @@ import { setServiceLoading } from "../../../../../actions/actionCreators";
 import { createAlert, resolveAlert } from "../../../../../actions/actions/alert/dispatchers/alert";
 import { requestSeeds } from "../../../../../utils/auth/authBox";
 import { WYRE_SERVICE } from "../../../../../utils/constants/intervalConstants";
+import { WYRE_SERVICE_ID } from "../../../../../utils/constants/services";
 import WyreProvider from "../../../../../utils/services/WyreProvider";
 import WyreServiceAccountCreator from "./WyreServiceAccountCreator/WyreServiceAccountCreator";
 import WyreServiceAccountOverview from "./WyreServiceAccountOverview/WyreServiceAccountOverview";
@@ -19,11 +20,11 @@ class WyreServiceAccount extends Component {
   }
 
   initAccountStatus = async () => {
-    this.props.dispatch(setServiceLoading(true))
+    this.props.dispatch(setServiceLoading(true, WYRE_SERVICE_ID))
 
     try {
       await this.checkAccountCreationStatus();
-      this.props.dispatch(setServiceLoading(false))
+      this.props.dispatch(setServiceLoading(false, WYRE_SERVICE_ID))
     } catch (e) {        
       console.warn(e)
 

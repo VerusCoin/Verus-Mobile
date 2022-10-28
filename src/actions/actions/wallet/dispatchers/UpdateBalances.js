@@ -16,6 +16,7 @@ import { updateElectrumBalances } from "./electrum/updates";
 import { updateErc20Balances } from "./erc20/updates";
 import { updateEthBalances } from "./eth/updates";
 import { updateWyreBalances } from "./wyre/updates";
+import { updateVrpcBalances } from "./vrpc/updates";
 
 const fetchChannels = (activeUser) => {
   return {
@@ -24,6 +25,7 @@ const fetchChannels = (activeUser) => {
     [ETH]: (coinObj) => updateEthBalances(activeUser, coinObj),
     [ERC20]: (coinObj) => updateErc20Balances(activeUser, coinObj),
     [WYRE_SERVICE]: (coinObj) => updateWyreBalances(activeUser, coinObj),
+    [VRPC]: (coinObj, channelId) => updateVrpcBalances(coinObj, channelId)
   };
 };
 

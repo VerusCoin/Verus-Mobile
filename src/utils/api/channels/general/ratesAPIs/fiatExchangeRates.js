@@ -2,14 +2,16 @@ import { timeout } from '../../../../promises'
 const { DOMParser } = require('xmldom')
 
 import { REQUEST_TIMEOUT_MS } from '../../../../../../env/index'
+import axios from 'axios'
 
 export const getFiatExchangeRates = () => {
   const address = `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`
 
   return new Promise((resolve) => {
-    timeout(REQUEST_TIMEOUT_MS, fetch(address, {method: 'GET'}))
-    .then(response => response.text())
-    .then((response) => {
+    axios.get(address)
+    .then((res) => {
+      const response = res.data
+      
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(response, "text/xml");
       let exchangeRates = {}

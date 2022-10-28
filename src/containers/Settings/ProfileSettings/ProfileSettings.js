@@ -7,14 +7,13 @@
 */
 
 import React, { Component } from "react";
-import { ListItem } from "react-native-elements";
 import { CommonActions } from '@react-navigation/native';
 import { Divider, List, Portal } from "react-native-paper"
 import { 
   View, 
   Text, 
   TouchableOpacity,
-  ScrollView, Alert
+  ScrollView
 } from "react-native";
 import { connect } from 'react-redux';
 import Styles from '../../../styles/index'

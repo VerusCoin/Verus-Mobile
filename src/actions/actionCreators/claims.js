@@ -1,3 +1,5 @@
+// DEPRECATED, TODO: Remove
+
 import {
   SET_CLAIMS,
   SET_ACTIVE_CLAIM,

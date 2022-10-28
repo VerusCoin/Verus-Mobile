@@ -206,11 +206,11 @@ class WyreServiceAccountCreator extends Component {
   }
 
   initSupportedCountries = async () => {
-    this.props.dispatch(setServiceLoading(true))
+    this.props.dispatch(setServiceLoading(true, WYRE_SERVICE_ID))
 
     try {
       this.getSupportedCountries(() => {
-        this.props.dispatch(setServiceLoading(false))
+        this.props.dispatch(setServiceLoading(false, WYRE_SERVICE_ID))
       });
     } catch (e) {
       console.warn(e);

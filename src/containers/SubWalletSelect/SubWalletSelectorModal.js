@@ -10,7 +10,6 @@ import { List, Card } from "react-native-paper"
 import Modal from '../../components/Modal'
 import Styles from '../../styles/index'
 import { API_GET_BALANCES, API_GET_FIATPRICE, GENERAL } from "../../utils/constants/intervalConstants";
-import { SUBWALLET_NAMES } from "../../utils/constants/constants";
 import { truncateDecimal } from "../../utils/math";
 import { setCoinSubWallet } from "../../actions/actionCreators";
 import { USD } from "../../utils/constants/currencies";
@@ -123,13 +122,12 @@ class SubWalletSelectorModal extends Component {
         animationType={animationType}
         transparent={false}
         visible={visible}
-        onRequestClose={cancelHandler}
-      >
-        <SafeAreaView style={{ ...Styles.flexBackground }}>
-          <Text style={Styles.centralHeader}>{"Select a Card"}</Text>
+        onRequestClose={cancelHandler}>
+        <SafeAreaView style={{...Styles.flexBackground}}>
+          <Text style={Styles.centralHeader}>{'Select a Card'}</Text>
           <ScrollView>
             {subWallets.map((wallet, index) => (
-              <View style={{ margin: 8 }} key={index}>
+              <View style={{margin: 8}} key={index}>
                 <Card
                   onPress={
                     onSelect == null
@@ -137,43 +135,34 @@ class SubWalletSelectorModal extends Component {
                       : () => onSelect(wallet)
                   }
                   key={index}
-                  style={{ backgroundColor: wallet.color }}
-                >
+                  style={{backgroundColor: wallet.color}}>
                   <List.Item
-                    title={
-                      SUBWALLET_NAMES[wallet.id]
-                        ? SUBWALLET_NAMES[wallet.id]
-                        : wallet.id
-                    }
+                    title={wallet.name}
                     titleStyle={{
                       color: Colors.secondaryColor,
-                      fontWeight: "500",
+                      fontWeight: '500',
                     }}
                     description={`${
                       fiatBalances[wallet.id] != null
                         ? fiatBalances[wallet.id].toFixed(2)
-                        : "-"
+                        : '-'
                     } ${displayCurrency}`}
                     left={() => (
-                      <List.Icon
-                        color={Colors.secondaryColor}
-                        icon="wallet"
-                      />
+                      <List.Icon color={Colors.secondaryColor} icon="wallet" />
                     )}
-                    descriptionStyle={{ color: Colors.secondaryColor }}
+                    descriptionStyle={{color: Colors.secondaryColor}}
                     right={() => (
                       <Text
                         style={{
-                          alignSelf: "center",
+                          alignSelf: 'center',
                           color: Colors.secondaryColor,
-                          fontWeight: "500",
+                          fontWeight: '500',
                           fontSize: 16,
                           marginRight: 8,
-                        }}
-                      >{`${
+                        }}>{`${
                         cryptoBalances[wallet.id] != null
                           ? truncateDecimal(cryptoBalances[wallet.id], 4)
-                          : "-"
+                          : '-'
                       } ${chainTicker}`}</Text>
                     )}
                   />

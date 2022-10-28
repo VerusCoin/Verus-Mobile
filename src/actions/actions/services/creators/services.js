@@ -23,11 +23,12 @@ export const setWyreAccountId = (accountId) => {
   };
 };
 
-export const setServiceLoading = (loading) => {
+export const setServiceLoading = (loading, service) => {
   return {
     type: SET_SERVICE_LOADING,
     payload: {
       loading,
+      service
     },
   };
 }

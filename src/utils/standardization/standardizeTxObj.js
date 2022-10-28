@@ -1,6 +1,8 @@
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
+import { estimateBlocktimeAtHeight } from "../block";
 import { ETHERS } from "../constants/web3Constants";
+import { satsToCoins } from "../math";
 import { decodeMemo } from "../memoUtils";
 const { formatEther, formatUnits } = ethers.utils
 
@@ -118,5 +120,29 @@ export const standardizeWyreTxObj = (transaction, accountAddress, coinObj) => {
       transaction.status === "PENDING" &&
       transaction.source != null &&
       transaction.source.split(":")[0] === "paymentmethod",
+  };
+};
+
+export const standardizeVrpcTxObj = (transaction, coinObj, currHeight) => {
+  const {satoshis, txid, height, address, blocktime} = transaction;
+  let timeEstimate;
+
+  if (!blocktime && currHeight) {
+    const confirmations = BigNumber(currHeight).minus(BigNumber(height));
+    const currTime = BigNumber(new Date().getTime()).dividedBy(BigNumber(1000));
+
+    timeEstimate = currTime
+      .minus(confirmations.multipliedBy(BigNumber(coinObj.seconds_per_block)))
+      .toNumber();
+  }
+
+  return {
+    address,
+    amount: satsToCoins(BigNumber(satoshis).abs()).toString(),
+    type: satoshis >= 0 ? 'received' : 'sent',
+    confirmed: true,
+    height,
+    timestamp: blocktime ? blocktime : timeEstimate,
+    txid,
   };
 };

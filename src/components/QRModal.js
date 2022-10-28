@@ -142,13 +142,13 @@ class QRModal extends Component {
                 ...Styles.fullWidthSpaceBetweenCenterBlock,
               }}
             >
-              {"Scan this QR code with VerusPay on another device to automatically create" +
+              {"Scan this QR code with VerusPay to automatically create" +
                 " a transaction."}
             </Text>
             <View style={Styles.fullWidthAlignCenter}>
               <QRCode
                 value={this.props.qrString ? this.props.qrString : "-"}
-                size={264}
+                size={232}
                 //TODO: Add in differently so it doesn't impact readability
                 // logo={LOGO_DIR}
                 // logoSize={50}

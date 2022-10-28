@@ -4,6 +4,7 @@ import {
   CLOSE_VRPC_CHANNEL,
   SIGN_OUT_COMPLETE,
   INIT_VRPC_CHANNEL_FINISH,
+  SET_WATCHED_VRPC_ADDRESSES,
 } from "../../utils/constants/storeType";
 import VrpcProvider from '../../utils/vrpc/vrpcInterface';
 
@@ -32,5 +33,6 @@ function * handleSignOut() {
 }
 
 function * handleFinishVrpcInit(action) {
+  yield put({type: SET_WATCHED_VRPC_ADDRESSES, payload: action.payload})
   yield put({type: INIT_VRPC_CHANNEL_FINISH, payload: action.payload})
 }

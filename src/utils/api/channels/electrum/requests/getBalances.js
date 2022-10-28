@@ -33,7 +33,7 @@ export const getOneBalance = (coinObj, activeUser) => {
         } : response.result
       })
     })
-    .catch((err) => {
+    .catch((err) => {      
       reject(err)
     })
   });

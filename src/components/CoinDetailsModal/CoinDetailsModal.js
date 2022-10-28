@@ -133,7 +133,7 @@ class CoinDetailsModal extends Component {
           )
         );
 
-        activateChainLifecycle(chainId);
+        activateChainLifecycle(this.props.data);
 
         this.setState({ loading: false });
         this.props.cancel()

@@ -29,18 +29,20 @@ export const updateLedgerValue = async (
   const channelMap = fetchChannels(activeUser)
 
   await Promise.all(
-    channels.map(async (channel) => {
-      if (!channelMap[channel] || (channel === DLIGHT_PRIVATE && !dlightEnabled()))
+    channels.map(async (channelId) => {
+      const parentChannel = channelId.split('.')[0]
+
+      if (!channelMap[parentChannel] || (parentChannel === DLIGHT_PRIVATE && !dlightEnabled()))
         return;
 
       try {
         dispatch({
           type: successType,
-          payload: await channelMap[channel](coinObj),
+          payload: await channelMap[parentChannel](coinObj, channelId),
         });
-        channelsPassed.push(channel);
+        channelsPassed.push(channelId);
       } catch (error) {
-        dispatch({ type: errorType, payload: { error, chainTicker, channel } });
+        dispatch({ type: errorType, payload: { error, chainTicker, channel: channelId } });
       }
     })
   );

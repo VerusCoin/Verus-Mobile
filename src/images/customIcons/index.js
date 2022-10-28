@@ -20,6 +20,7 @@ import TransactionLogos from './transactions/index'
 
 import VerusPayLogo from './verusPay.svg'
 import VerusLogo from './VerusLogo.svg'
+import VerusIdLogo from './VerusIdLogo.svg'
 import AddCoinLogo from './coinAdd.svg'
 
 export {
@@ -43,7 +44,8 @@ export {
   TransactionLogos,
   VerusPayLogo,
   AddCoinLogo,
-  VerusLogo
+  VerusLogo,
+  VerusIdLogo
 };
 
 export default Open;
