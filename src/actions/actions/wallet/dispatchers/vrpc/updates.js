@@ -24,7 +24,7 @@ export const updateVrpcBalances = async (coinObj, channelId) => {
 
 export const updateVrpcTransactions = async (coinObj, channelId) => {
   const iAddress = channelId.split('.')[1]
-  const res = await getAddressDeltas(coinObj, [iAddress])
+  const res = await getAddressDeltas(coinObj, [iAddress], true, 1)
   const infoRes = await getInfo(coinObj)
 
   if (res.error) throw new Error(res.error.message)
