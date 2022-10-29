@@ -60,6 +60,7 @@ export const buildTx = async (
     } = preflightRes.result;
     let inputValueSats = BigNumber(0)
     let isCC = false;
+    let isChangeCC = false;
 
     let utxos;
     const valueSats = BigNumber(
@@ -160,11 +161,13 @@ export const buildTx = async (
     if (actualFeeSats.isLessThanOrEqualTo(BigNumber(0))) {
       throw new Error(`Cannot send transaction with fee of ${satsToCoins(actualFeeSats).toString()}.`)
     } else if (actualFeeSats.isGreaterThan(feeSats)) {
+      if (!isChangeCC && selfAddr.version === IADDRESS_VERSION) isChangeCC = true;
+
       // If fee > target fee, create change output
       const changeSats = actualFeeSats.minus(feeSats)
       actualFeeSats = actualFeeSats.minus(changeSats)
 
-      const changeOutputScript = generateOutputScript(selfAddr.hash, selfAddr.version, isCC)
+      const changeOutputScript = generateOutputScript(selfAddr.hash, selfAddr.version, isChangeCC)
 
       txb.addOutput(changeOutputScript, changeSats.toNumber());
     }

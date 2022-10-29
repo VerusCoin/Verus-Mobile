@@ -149,7 +149,10 @@ export const standardizeVrpcTxObj = (transaction, coinObj, currHeight) => {
   } else addresses = [address];
 
   return {
-    address: addresses.length === 0 ? null : addresses.join(' & '),
+    address: addresses.length === 0 ? null : addresses.sort((a, b) => {
+      if (b !== address) return 1;
+      else return -1;
+    }).join(' & '),
     amount: satsToCoins(BigNumber(satoshis).abs()).toString(),
     type: satoshis >= 0 ? 'received' : 'sent',
     confirmed: true,

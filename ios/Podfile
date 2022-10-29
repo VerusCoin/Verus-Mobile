@@ -52,7 +52,11 @@ $dynamic_frameworks = [
   'SwiftNIOFoundationCompat', 
   'SwiftProtobuf', 
   'CGRPCZlib',
-  'SQLite.swift'
+  'SQLite.swift',
+  'SwiftNIOCore',
+  '_NIODataStructures',
+  'SwiftNIOPosix',
+  'SwiftNIOEmbedded'
 ]
 
 platform :ios, '13.0'
@@ -84,6 +88,7 @@ target 'verusmobile' do
   pod 'MnemonicSwift', '~> 2.0.0'
   pod 'Permission-Camera', :path => "#{permissions_path}/Camera/Permission-Camera.podspec"
   pod 'Permission-PhotoLibrary', :path => "#{permissions_path}/PhotoLibrary/Permission-PhotoLibrary.podspec"
+  pod 'SwiftNIO', '2.40.0'
 
   # Enables Flipper.
   #

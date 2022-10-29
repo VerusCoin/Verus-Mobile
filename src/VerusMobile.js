@@ -65,8 +65,10 @@ class VerusMobile extends React.Component {
   };
 
   handleInactivity() {
-    this.setSecurityCover(true)
-
+    if (this.props.sendModal.type == null) {
+      this.setSecurityCover(true)
+    }
+    
     // TODO: Add lock on app re-entry
     // if (this.props.signedIn) {
     //   this.props.dispatch(signOut())

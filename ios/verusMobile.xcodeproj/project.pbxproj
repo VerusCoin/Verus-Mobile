@@ -21,7 +21,7 @@
 		4E80A310241028FC00F037A9 /* bridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E80A30F241028FC00F037A9 /* bridge.swift */; };
 		4E9EA99B23BB63A800B9FA10 /* main.jsbundle in Resources */ = {isa = PBXBuildFile; fileRef = 008F07F21AC5B25A0029DE68 /* main.jsbundle */; };
 		4E9EA99D23BB985300B9FA10 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 4E9EA99C23BB985200B9FA10 /* assets */; };
-		4EAC77502411690900A7D427 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4EAC77502411690900A7D427 /* BuildFile in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		C3F0F1EC224C38D900279E92 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C3F0F1EB224C38D900279E92 /* JavaScriptCore.framework */; };
 /* End PBXBuildFile section */
 
@@ -49,7 +49,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				4EAC77502411690900A7D427 /* (null) in Embed Frameworks */,
+				4EAC77502411690900A7D427 /* BuildFile in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -608,16 +608,20 @@
 				"${BUILT_PRODUCTS_DIR}/SQLite.swift/SQLite.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftNIO/NIO.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftNIOConcurrencyHelpers/NIOConcurrencyHelpers.framework",
+				"${BUILT_PRODUCTS_DIR}/SwiftNIOCore/NIOCore.framework",
+				"${BUILT_PRODUCTS_DIR}/SwiftNIOEmbedded/NIOEmbedded.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftNIOFoundationCompat/NIOFoundationCompat.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftNIOHPACK/NIOHPACK.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftNIOHTTP1/NIOHTTP1.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftNIOHTTP2/NIOHTTP2.framework",
+				"${BUILT_PRODUCTS_DIR}/SwiftNIOPosix/NIOPosix.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftNIOSSL/NIOSSL.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftNIOTLS/NIOTLS.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftNIOTransportServices/NIOTransportServices.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftProtobuf/SwiftProtobuf.framework",
 				"${BUILT_PRODUCTS_DIR}/Yoga/yoga.framework",
 				"${BUILT_PRODUCTS_DIR}/ZcashLightClientKit/ZcashLightClientKit.framework",
+				"${BUILT_PRODUCTS_DIR}/_NIODataStructures/_NIODataStructures.framework",
 				"${BUILT_PRODUCTS_DIR}/gRPC-Swift/GRPC.framework",
 				"${BUILT_PRODUCTS_DIR}/glog/glog.framework",
 				"${BUILT_PRODUCTS_DIR}/react-native-verus-light-client/react_native_verus_light_client.framework",
@@ -656,16 +660,20 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SQLite.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIO.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOConcurrencyHelpers.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOCore.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOEmbedded.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOFoundationCompat.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOHPACK.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOHTTP1.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOHTTP2.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOPosix.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOSSL.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOTLS.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOTransportServices.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftProtobuf.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/yoga.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ZcashLightClientKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/_NIODataStructures.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GRPC.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/glog.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/react_native_verus_light_client.framework",
