@@ -4,6 +4,7 @@
   completely closed, only the non-sensitive data should persist.
 */
 
+import { AUTHENTICATE_USER_SEND_MODAL } from "../utils/constants/sendModal";
 import {
   SET_ACCOUNTS,
   UPDATE_ACCOUNT_KEYS,
@@ -13,7 +14,9 @@ import {
   SIGN_IN_USER,
   SET_ADDRESSES,
   SIGN_OUT_COMPLETE,
-  SIGN_OUT
+  SIGN_OUT,
+  PUSH_MODAL,
+  OPEN_SEND_COIN_MODAL
 } from "../utils/constants/storeType";
 
 export const authentication = (
@@ -30,11 +33,20 @@ export const authentication = (
       keyDerivationVersion: 1
     },
     signedIn: false,
-    selectDefaultAccount: true
+    selectDefaultAccount: true,
+    authModalUsed: false
   },
   action
 ) => {
   switch (action.type) {
+    case OPEN_SEND_COIN_MODAL:
+      return {
+        ...state,
+        authModalUsed:
+          action.payload.type === AUTHENTICATE_USER_SEND_MODAL
+            ? true
+            : state.authModalUsed,
+      };
     case DISABLE_SELECT_DEFAULT_ACCOUNT:
       return {
         ...state,

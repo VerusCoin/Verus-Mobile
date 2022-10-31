@@ -25,6 +25,9 @@ const Login = props => {
   const defaultAccount = useSelector(
     state => state.settings.generalWalletSettings.defaultAccount,
   );
+  const authModalUsed = useSelector(
+    state => state.authentication.authModalUsed,
+  );
   const accounts = useSelector(state => state.authentication.accounts)
 
   openAuthModal = ignoreDefault => {
@@ -41,6 +44,18 @@ const Login = props => {
       );
     }
   };
+
+  useEffect(() => {
+    if (
+      !authModalUsed &&
+      defaultAccount != null &&
+      accounts.find(x => x.accountHash === defaultAccount) != null
+    ) {
+      setTimeout(() => {
+        openAuthModal();
+      }, 700);
+    }   
+  }, []);
 
   handleAddUser = () => {
     props.navigation.navigate("SignIn")

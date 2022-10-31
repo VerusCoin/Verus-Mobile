@@ -108,6 +108,7 @@ export const traditionalCryptoSend = async (
           channel,
           memo,
           finalTxAmount: res.result.value != null ? res.result.value : amount.toString(),
+          fromAddress: res.result.fromAddress,
           txid: res.result.txid,
           fullResult: res.result
         };
@@ -180,6 +181,7 @@ export const traditionalCryptoSend = async (
           memo: res.result.memo,
           balanceDelta,
           finalTxAmount: finalTxAmount,
+          fromAddress: res.result.fromAddress,
           fees: [
             {
               amount: res.result.fee,
