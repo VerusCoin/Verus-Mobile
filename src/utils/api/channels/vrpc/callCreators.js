@@ -1,5 +1,6 @@
 export * from './requests/getAddressBalances';
 export * from './requests/getAddressDeltas';
+export * from './requests/getAddressMempool';
 export * from './requests/getAddressUtxos';
 export * from './requests/getInfo'
 export * from './requests/preflight';

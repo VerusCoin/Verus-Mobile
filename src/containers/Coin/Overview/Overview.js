@@ -285,16 +285,13 @@ class Overview extends Component {
       transactions != null && transactions.results != null
         ? transactions.results
         : [];
-    // let txList = txs.map(object => {
-    //   return Array.isArray(object) ? { txArray: object, visibility: PUBLIC } : { ...object, visibility: PUBLIC };
-    // })
 
     return txs.sort((a, b) => {
       a = Array.isArray(a) ? a[0] : a
       b = Array.isArray(b) ? b[0] : b
       
-      if (a.timestamp == null) return 1
-      else if (b.timestamp == null) return -1
+      if (a.timestamp == null) return -1
+      else if (b.timestamp == null) return 1
       else if (b.timestamp == a.timestamp) return 0
       else if (b.timestamp < a.timestamp) return -1
       else return 1

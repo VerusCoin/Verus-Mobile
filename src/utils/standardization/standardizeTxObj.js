@@ -125,10 +125,10 @@ export const standardizeWyreTxObj = (transaction, accountAddress, coinObj) => {
 };
 
 export const standardizeVrpcTxObj = (transaction, coinObj, currHeight) => {
-  const {satoshis, txid, height, address, blocktime, sent} = transaction;
+  const {satoshis, txid, height, address, blocktime, sent, mempool} = transaction;
   let timeEstimate;
 
-  if (!blocktime && currHeight) {
+  if (!blocktime && currHeight && height) {
     const confirmations = BigNumber(currHeight).minus(BigNumber(height));
     const currTime = BigNumber(new Date().getTime()).dividedBy(BigNumber(1000));
 
@@ -155,7 +155,7 @@ export const standardizeVrpcTxObj = (transaction, coinObj, currHeight) => {
     }).join(' & '),
     amount: satsToCoins(BigNumber(satoshis).abs()).toString(),
     type: satoshis >= 0 ? 'received' : 'sent',
-    confirmed: true,
+    confirmed: mempool ? false : true,
     height,
     timestamp: blocktime ? blocktime : timeEstimate,
     txid,

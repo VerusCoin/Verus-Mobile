@@ -14901,6 +14901,16 @@ version_compare@0.0.3:
     bs58check "https://github.com/bitcoinjs/bs58check"
     create-hash "1.2.0"
 
+"verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git#fa427373ac240a32bc6ab905ae892290bf3e6c09":
+  version "1.0.0"
+  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#fa427373ac240a32bc6ab905ae892290bf3e6c09"
+  dependencies:
+    "@types/bs58check" "2.1.0"
+    "@types/create-hash" "1.2.2"
+    base64url "3.0.1"
+    bs58check "https://github.com/bitcoinjs/bs58check"
+    create-hash "1.2.0"
+
 "verus-zkedid-utils@https://github.com/michaeltout/verus-zkedid-utils":
   version "1.0.0"
   resolved "https://github.com/michaeltout/verus-zkedid-utils#7c4f8615de6f4b8aa07b27b383c42e561833488f"
@@ -14911,10 +14921,10 @@ version_compare@0.0.3:
 
 "verusd-rpc-ts-client@https://github.com/VerusCoin/verusd-rpc-ts-client.git":
   version "0.1.0"
-  resolved "https://github.com/VerusCoin/verusd-rpc-ts-client.git#443fa238d18682c772db8b5d097e6b03774af84f"
+  resolved "https://github.com/VerusCoin/verusd-rpc-ts-client.git#6c4ea38fcab6d3c8cc4858ced6aed820a799c284"
   dependencies:
-    axios "^0.27.2"
-    verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git"
+    axios "0.27.2"
+    verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git#fa427373ac240a32bc6ab905ae892290bf3e6c09"
 
 "verusd-rpc-ts-client@https://github.com/VerusCoin/verusd-rpc-ts-client.git#ecd5734ee42c03e1f2dcec936f16571bcb3f81cb":
   version "0.1.0"
