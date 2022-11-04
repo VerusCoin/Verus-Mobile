@@ -20,7 +20,7 @@ class VerusIdServiceIntroSlider extends Component {
   }
 
   renderSlideOne = (key) => {
-    const WyreLogo = ServiceLogos[VERUSID_SERVICE_ID].light;
+    const VerusIDLogo = ServiceLogos[VERUSID_SERVICE_ID].light;
 
     return (
       <View
@@ -34,7 +34,7 @@ class VerusIdServiceIntroSlider extends Component {
         }}
         key={key}
       >
-        <WyreLogo width={148} />
+        <VerusIDLogo width={148} />
         <Text style={{ textAlign: "center", width: "75%", color: "white" }}>
           {
             "Linking your wallet with VerusID allows you to use your VerusID to sign into services and hold funds."

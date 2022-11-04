@@ -38,6 +38,7 @@ const Login = props => {
           [SEND_MODAL_USER_TO_AUTHENTICATE]: defaultAccount,
         },
         defaultAccount != null &&
+          !authModalUsed &&
           accounts.find(x => x.accountHash === defaultAccount) != null
           ? SEND_MODAL_FORM_STEP_CONFIRM
           : SEND_MODAL_FORM_STEP_FORM,

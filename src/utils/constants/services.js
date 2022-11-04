@@ -6,7 +6,8 @@ export const VERUSID_SERVICE_ID = 'verusid_service'
 export const CONNECTED_SERVICE_DISPLAY_INFO = {
   [VERUSID_SERVICE_ID]: {
     title: "VerusID",
-    description: "By connecting your VerusIDs to your wallet, you can use them to hold funds and/or sign into services"
+    description: "By connecting your VerusIDs to your wallet, you can use them to hold funds and/or sign into services",
+    decentralized: true
   },
   [WYRE_SERVICE_ID]: {
     title: "Wyre",
