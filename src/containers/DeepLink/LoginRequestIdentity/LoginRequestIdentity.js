@@ -101,7 +101,7 @@ const LoginRequestIdentity = props => {
     <AnimatedActivityIndicatorBox />
   ) : (
     <ScrollView style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}>
-      {Object.keys(sortedIds).map(chainId => {
+      {Object.keys(sortedIds).filter(x => x === "VRSC").map(chainId => {
         return (
           <React.Fragment key={chainId}>
             {sortedIds[chainId].length > 0 && (

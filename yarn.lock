@@ -2247,10 +2247,10 @@
     sprintf-js "^1.1.2"
     utf8 "^3.0.0"
 
-"@react-native-async-storage/async-storage@1.15.9", "@react-native-async-storage/async-storage@^1.13.4":
-  version "1.15.9"
-  resolved "https://registry.yarnpkg.com/@react-native-async-storage/async-storage/-/async-storage-1.15.9.tgz#744ecd566f108e86b6b59e617c23fdb4b8d53358"
-  integrity sha512-LrVPfhKqodRiDWCgZp7J2X55JQqOhdQUxbl17RrktIGCZ0ud2XHdNoTIvyI1VccqHoF/CZK6v+G0IoX5NYZ1JA==
+"@react-native-async-storage/async-storage@1.17.10", "@react-native-async-storage/async-storage@^1.13.4":
+  version "1.17.10"
+  resolved "https://registry.yarnpkg.com/@react-native-async-storage/async-storage/-/async-storage-1.17.10.tgz#8d6a4771912be8454a9e215eebd469b1b8e2e638"
+  integrity sha512-KrR021BmBLsA0TT1AAsfH16bHYy0MSbhdAeBAqpriak3GS1T2alFcdTUvn13p0ZW6FKRD6Bd3ryU2zhU/IYYJQ==
   dependencies:
     merge-options "^3.0.4"
 
@@ -14887,13 +14887,10 @@ version_compare@0.0.3:
     bignumber.js "^9.0.0"
     verus-zkedid-utils "https://github.com/michaeltout/verus-zkedid-utils#dev"
 
-"verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git":
+"verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git", "verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git#4cc793e54303938c4a968130ca7279b9c246acfb":
   version "1.0.0"
-  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#3b37804fcf064ff206e1a05dd5095090a424387a"
-
-"verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git#75252ddc8251381261809cb88e827c17af116225":
-  version "1.0.0"
-  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#75252ddc8251381261809cb88e827c17af116225"
+  uid "4cc793e54303938c4a968130ca7279b9c246acfb"
+  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#4cc793e54303938c4a968130ca7279b9c246acfb"
   dependencies:
     "@types/bs58check" "2.1.0"
     "@types/create-hash" "1.2.2"
@@ -14935,12 +14932,12 @@ version_compare@0.0.3:
 
 "verusid-ts-client@https://github.com/VerusCoin/verusid-ts-client.git":
   version "0.1.0"
-  resolved "https://github.com/VerusCoin/verusid-ts-client.git#f6c02e7b4aeae201b1e2dc57f0e24c4b862f9a2d"
+  resolved "https://github.com/VerusCoin/verusid-ts-client.git#8b472b67cd330b8189b4452924f05661351cd6cc"
   dependencies:
     "@bitgo/utxo-lib" "https://github.com/VerusCoin/BitGoJS.git#dceba5dc289c34a1d767d7d79e9b5d7161d0c8da"
     axios "0.27.2"
     bignumber.js "9.1.0"
-    verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git#75252ddc8251381261809cb88e827c17af116225"
+    verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git#4cc793e54303938c4a968130ca7279b9c246acfb"
     verusd-rpc-ts-client "https://github.com/VerusCoin/verusd-rpc-ts-client.git#ecd5734ee42c03e1f2dcec936f16571bcb3f81cb"
 
 vlq@^1.0.0:
