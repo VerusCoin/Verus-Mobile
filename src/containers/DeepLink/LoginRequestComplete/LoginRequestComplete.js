@@ -87,8 +87,7 @@ const LoginRequestComplete = props => {
               }}>
               {`Press done to complete login and return to\n`}
               <Text
-                style={{color: Colors.basicButtonColor, textAlign: 'center'}}
-                numberOfLines={1}>
+                style={{color: Colors.basicButtonColor, textAlign: 'center'}}>
                 {redirectinfo.uri}
               </Text>
             </Text>
