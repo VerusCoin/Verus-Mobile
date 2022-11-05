@@ -30,11 +30,12 @@
     "@react-navigation/native": "5.7.2",
     "@react-navigation/stack": "5.8.0",
     "@tradle/react-native-http": "2.0.0",
+    "@xmldom/xmldom": "0.8.6",
     "agama-wallet-lib": "https://github.com/VerusCoin/agama-wallet-lib.git#mobile",
     "assert": "1.1.1",
     "axios": "0.27.2",
     "base-64": "1.0.0",
-    "base64url": "^3.0.1",
+    "base64url": "3.0.1",
     "bignumber.js": "9.0.1",
     "bip39": "https://github.com/michaeltout/bip39.git",
     "bitgo-utxo-lib": "git+https://github.com/VerusCoin/bitgo-utxo-lib.git#react-native",
@@ -94,7 +95,7 @@
     "react-native-tcp": "3.3.2",
     "react-native-text-input-mask": "3.1.4",
     "react-native-udp": "2.7.0",
-    "react-native-url-polyfill": "^1.3.0",
+    "react-native-url-polyfill": "1.3.0",
     "react-native-vector-icons": "git+https://github.com/michaeltout/react-native-vector-icons.git",
     "react-native-verus-light-client": "git+https://github.com/VerusCoin/react-native-verus-light-client.git",
     "react-redux": "8.0.2",
@@ -117,8 +118,7 @@
     "verus-zkedid-utils": "https://github.com/michaeltout/verus-zkedid-utils",
     "verusd-rpc-ts-client": "https://github.com/VerusCoin/verusd-rpc-ts-client.git",
     "verusid-ts-client": "https://github.com/VerusCoin/verusid-ts-client.git",
-    "vm-browserify": "0.0.4",
-    "xmldom": "0.6.0"
+    "vm-browserify": "0.0.4"
   },
   "devDependencies": {
     "@babel/core": "7.12.9",
@@ -139,7 +139,7 @@
     "react-test-renderer": "17.0.1",
     "remote-redux-devtools": "0.5.16",
     "rn-nodeify": "github:tradle/rn-nodeify",
-    "snyk": "1.601.0"
+    "snyk": "1.996.0"
   },
   "resolutions": {
     "typeforce": "git+https://github.com/michaeltout/typeforce",
@@ -157,7 +157,6 @@
     "ini": "1.3.7",
     "npm-user-validate": "1.0.1",
     "y18n": "4.0.1",
-    "xmldom": "0.5.0",
     "ua-parser-js": "0.7.24",
     "hosted-git-info": "3.0.8",
     "ssri": "8.0.1",
@@ -201,7 +200,8 @@
     "simple-plist": "1.3.1",
     "cross-fetch": "3.1.5",
     "parse-link-header": "2.0.0",
-    "@react-native-async-storage/async-storage": "1.17.10"
+    "@react-native-async-storage/async-storage": "1.17.10",
+    "minimatch": "3.0.5"
   },
   "jest": {
     "preset": "react-native",

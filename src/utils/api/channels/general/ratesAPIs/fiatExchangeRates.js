@@ -1,7 +1,4 @@
-import { timeout } from '../../../../promises'
-const { DOMParser } = require('xmldom')
-
-import { REQUEST_TIMEOUT_MS } from '../../../../../../env/index'
+const { DOMParser } = require('@xmldom/xmldom')
 import axios from 'axios'
 
 export const getFiatExchangeRates = () => {
