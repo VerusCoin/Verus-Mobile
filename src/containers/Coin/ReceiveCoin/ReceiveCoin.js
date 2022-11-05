@@ -157,11 +157,9 @@ class ReceiveCoin extends Component {
 
   createQRString = (coinObj, amount, address, memo) => {
     const { displayCurrency } = this.props
-    const coinTicker = coinObj.id
-    const rates = this.props.rates.results
+    const rates = this.props.rates
 
-    let _price =
-      rates != null && rates[coinTicker] != null ? rates[coinTicker][displayCurrency] : null;
+    let _price = rates[displayCurrency];
 
     try {
       const verusQRString = VerusPayParser.v0.writeVerusPayQR(
@@ -201,7 +199,7 @@ class ReceiveCoin extends Component {
     const { amount, selectedCoin, amountFiat } = state
     const { rates, displayCurrency } = props
 
-    let _price = rates[selectedCoin.id] != null ? rates[selectedCoin.id][displayCurrency] : null
+    let _price = rates[displayCurrency]
     
     if (!(amount.toString()) ||
       !(isNumber(amount)) ||
@@ -264,12 +262,13 @@ class ReceiveCoin extends Component {
 
 const mapStateToProps = (state) => {
   const chainTicker = state.coins.activeCoin.id
+  const { results, errors } = selectRates(state)
 
   return {
     accounts: state.authentication.accounts,
     activeCoin: state.coins.activeCoin,
     activeCoinsForUser: state.coins.activeCoinsForUser,
-    rates: selectRates(state),
+    rates: results ? results : {},
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
     addresses: selectAddresses(state),
     subWallet: state.coinMenus.activeSubWallets[chainTicker]
