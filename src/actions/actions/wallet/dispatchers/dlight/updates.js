@@ -4,6 +4,7 @@ import {
   getZTransactions,
 } from '../../../../../utils/api/channels/dlight/callCreators';
 import {DLIGHT_PRIVATE} from '../../../../../utils/constants/intervalConstants';
+import { standardizeDlightTxObj } from '../../../../../utils/standardization/standardizeTxObj';
 
 export const updateDlightBalances = async (activeUser, coinObj) => {
   const zBalances = await getPrivateBalance(
