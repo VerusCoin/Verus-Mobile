@@ -92,6 +92,31 @@ subprojects {
             details.useVersion '30.0-jre'
             details.because 'https://snyk.io/vuln/SNYK-JAVA-COMGOOGLEGUAVA-1015415'
         }
+
+        if (details.requested.group == 'com.google.android.gms' && details.requested.name == 'play-services-basement') {
+            details.useVersion '18.0.2'
+            details.because 'https://security.snyk.io/vuln/SNYK-JAVA-COMGOOGLEANDROIDGMS-2987459'
+        }
+
+        if (details.requested.group == 'com.google.protobuf' && details.requested.name == 'protobuf-java') {
+            details.useVersion '3.19.6'
+            details.because 'https://security.snyk.io/vuln/SNYK-JAVA-COMGOOGLEPROTOBUF-2331703'
+        }
+
+        if (details.requested.group == 'org.apache.commons' && details.requested.name == 'commons-compress') {
+            details.useVersion '1.21'
+            details.because 'https://security.snyk.io/vuln/SNYK-JAVA-ORGAPACHECOMMONS-1316641'
+        }
+
+        if (details.requested.group == 'org.jetbrains.kotlin' && details.requested.name == 'kotlin-stdlib') {
+            details.useVersion '1.6.0'
+            details.because 'https://security.snyk.io/vuln/SNYK-JAVA-ORGJETBRAINSKOTLIN-2628385'
+        }
+
+        if (details.requested.group == 'com.google.code.gson' && details.requested.name == 'gson') {
+            details.useVersion '2.8.9'
+            details.because 'https://security.snyk.io/vuln/SNYK-JAVA-COMGOOGLECODEGSON-1730327'
+        }
      }
   }
 }
