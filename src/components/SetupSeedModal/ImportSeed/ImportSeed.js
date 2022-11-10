@@ -120,7 +120,7 @@ class ImportSeed extends Component {
                       secureTextEntry={!this.state.showSeed}
                       autoCapitalize={"none"}
                       autoCorrect={false}
-                      autoComplete="false"
+                      autoComplete="off"
                       {...props}
                     />
                   )}

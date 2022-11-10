@@ -15,7 +15,7 @@ import {
   Platform
 } from "react-native"
 import Modal from '../components/Modal'
-import CameraRoll from "@react-native-community/cameraroll";
+import CameraRoll from "@react-native-camera-roll/camera-roll";
 import QRCode from 'react-native-qrcode-svg'
 import AlertAsync from "react-native-alert-async"
 import { Button, IconButton, Text } from "react-native-paper"

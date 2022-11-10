@@ -18,6 +18,18 @@ export default function VerusIdDetailsModal(props) {
   const [verusId, setVerusId] = useState(null);
   const [friendlyNames, setFriendlyNames] = useState(null);
 
+  async function onVisibleUpdate() {
+    if (visible) {
+      try {
+        setVerusId(await loadVerusId());
+        setFriendlyNames(await loadFriendlyNames());
+      } catch (e) {
+        createAlert('Error Loading VerusID', e.message);
+        cancel();
+      }
+    }
+  }
+
   openIdDetails = () => {
     let url = `https://verus.io/verusid-lookup/${verusId.identity.name}@`;
 
@@ -30,16 +42,8 @@ export default function VerusIdDetailsModal(props) {
     });
   };
 
-  useEffect(async () => {
-    if (visible) {
-      try {
-        setVerusId(await loadVerusId());
-        setFriendlyNames(await loadFriendlyNames());
-      } catch (e) {
-        createAlert('Error Loading VerusID', e.message);
-        cancel()
-      }
-    }
+  useEffect(() => {
+    onVisibleUpdate();
   }, [visible]);
 
   return (

@@ -7,10 +7,14 @@ import Styles from '../../../../styles';
 import AnimatedSuccessCheckmark from '../../../AnimatedSuccessCheckmark';
 
 const AuthenticateUserResult = props => {
-  useEffect(async () => {
+  async function onMount() {
     setTimeout(() => {
       closeSendModal()
     }, 500)
+  }
+  
+  useEffect(() => {
+    onMount()
   }, [])
 
   return (

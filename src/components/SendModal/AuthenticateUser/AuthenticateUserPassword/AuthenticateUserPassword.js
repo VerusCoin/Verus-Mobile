@@ -50,7 +50,7 @@ const AuthenticateUserPassword = props => {
     }
   }
 
-  useEffect(async () => {
+  async function onMount() {
     if (
       account != null &&
       account.biometry &&
@@ -70,6 +70,10 @@ const AuthenticateUserPassword = props => {
         console.error(e);
       }
     }
+  }
+
+  useEffect(() => {
+    onMount();
   }, []);
 
   goBack = () => {

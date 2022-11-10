@@ -27,7 +27,7 @@ const LoginRequestIdentity = props => {
 
   const { system_id } = req
 
-  useEffect(async () => {
+  async function onEncryptedIdsUpdate() {
     setLoading(true)
 
     try {
@@ -45,6 +45,10 @@ const LoginRequestIdentity = props => {
     }
 
     setLoading(false)
+  }
+
+  useEffect(() => {
+    onEncryptedIdsUpdate()
   }, [encryptedIds])
 
   useEffect(() => {
