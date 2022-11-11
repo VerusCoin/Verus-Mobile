@@ -111,7 +111,7 @@ class WyreService {
 
           if (config.method === "get") {
             config.headers.common["X-Api-Signature"] = WyreService.signUrlString(
-              config.baseURL.replace(/\/+$/, "") + axios.getUri(config),
+              axios.getUri(config),
               wyreToken
             );
           } else {
