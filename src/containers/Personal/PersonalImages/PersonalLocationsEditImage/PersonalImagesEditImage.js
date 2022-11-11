@@ -10,8 +10,6 @@ import {
   PERSONAL_DOCUMENT_OTHER,
   PERSONAL_DOCUMENT_PASSPORT,
   PERSONAL_DOCUMENT_PASSPORT_CARD,
-  PERSONAL_DOCUMENT_SUBTYPE_BACK,
-  PERSONAL_DOCUMENT_SUBTYPE_FRONT,
   PERSONAL_DOCUMENT_UTILITY_BILL,
   PERSONAL_IMAGES,
   PERSONAL_IMAGES_DOCUMENTS,
@@ -22,6 +20,7 @@ import { PersonalImagesEditImageRender } from "./PersonalImagesEditImage.render"
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { verifyPermissions } from "../../../../utils/permissions";
 import { PERMISSIONS } from "react-native-permissions";
+var RNFS = require('react-native-fs');
 
 const getImageTypeOrders = (imageCategory) => {
   switch (imageCategory) {
@@ -149,6 +148,13 @@ class PersonalImagesEditImage extends Component {
     }
   }
 
+  async saveImage(uri, fileName) {
+    const path = RNFS.DocumentDirectoryPath + `/${fileName}`;
+
+    await RNFS.copyFile(uri, path)
+    await RNFS.unlink(uri)
+  }
+
   addImage(addImageOption, index) {
     this.setState({ loadingImage: true, loading: true, imageAddModalIndex: null }, async () => {
       try {
@@ -179,7 +185,7 @@ class PersonalImagesEditImage extends Component {
 
                   this.setState({ loadingImage: false, loading: false });
                 } else if (!res.didCancel) {
-                  await this.updateUris(res.assets, index);
+                  await this.saveNewAssets(res.assets, index);
                 } else {
                   this.setState({ loadingImage: false, loading: false });
                 }
@@ -209,7 +215,7 @@ class PersonalImagesEditImage extends Component {
                   selectionLimit: 1,
                   saveToPhotos: false,
                 },
-                async (res) => {
+                async (res) => {                  
                   if (res.errorCode != null) {
                     console.warn(res);
 
@@ -222,7 +228,7 @@ class PersonalImagesEditImage extends Component {
 
                     this.setState({ loadingImage: false, loading: false });
                   } else if (!res.didCancel) {
-                    await this.updateUris(res.assets, index);
+                    await this.saveNewAssets(res.assets, index);
                   } else {
                     this.setState({ loadingImage: false, loading: false });
                   }
@@ -261,14 +267,21 @@ class PersonalImagesEditImage extends Component {
     );
   }
 
-  async updateUris(assets, index) {
+  async saveNewAssets(assets, index) {
     let uris = this.state.image.uris.slice();
 
     if (assets != null) {
-      if (index != null) uris[index] = assets[0].uri;
-      else if (index >= uris.length) uris.push(assets[0].uri);
-    }
+      const asset = assets[0]
 
+      if (!asset.fileName || !asset.uri)
+        throw new Error('Could not save image, no uri or no filename');
+
+      await this.saveImage(asset.uri, asset.fileName)
+
+      if (index != null) uris[index] = asset.fileName;
+      else if (index >= uris.length) uris.push(asset.fileName);
+    }
+    
     this.setState(
       {
         image: {

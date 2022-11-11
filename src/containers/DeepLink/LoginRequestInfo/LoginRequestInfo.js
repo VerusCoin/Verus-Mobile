@@ -112,7 +112,7 @@ const LoginRequestInfo = props => {
           <TouchableOpacity>
             <List.Item
               title={'View your chosen identity'}
-              description={'This will allow them to'}
+              description={'Permissions requested'}
             />
             <Divider />
           </TouchableOpacity>

@@ -78,6 +78,9 @@ class AddCoin extends Component {
       const queryLc = query.toLowerCase()
       const coinIdLc = coinId.toLowerCase()
 
+      if (coinIdLc === 'oot' || coinIdLc === 'zilla' || coinIdLc === 'rfox')
+        return false;
+
       return (
         (query.length == 0 ||
           queryLc.includes(coinIdLc) ||
