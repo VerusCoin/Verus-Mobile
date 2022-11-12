@@ -29,23 +29,28 @@ import axios from 'axios';
 // on that electrum server with an HTTP get
 export const getElectrum = async (serverList, callType, params, toSkip, coinID) => {
   const proxyServer = (await getGoodServer(testProxy, proxyServers)).goodServer
+  let goodServerRes = null
 
   if (toSkip) {
     let _serverList = serverList.filter((server) => {
       return !toSkip.includes(server)
     })
 
-    return getGoodServer(testElectrum, _serverList, [proxyServer])
+    goodServerRes = await getGoodServer(testElectrum, _serverList, [
+      proxyServer,
+    ]);
   }
 
   const proxyIndex = serverList.findIndex(server => server.split(":")[0] === proxyServer)
 
-  const goodServerRes = await getGoodServer(
-    testElectrum,
-    serverList,
-    [proxyServer],
-    proxyIndex !== -1 ? proxyIndex : null
-  );
+  if (goodServerRes == null) {
+    goodServerRes = await getGoodServer(
+      testElectrum,
+      serverList,
+      [proxyServer],
+      proxyIndex !== -1 ? proxyIndex : null
+    );
+  }
 
   let electrumSplit = goodServerRes.goodServer.split(":")
   let goodServer = {
@@ -125,6 +130,7 @@ export const updateValues = (oldResponse, serverList, callType, params, coinID, 
 export const electrumRequest = async (serverList, callType, params, coinID, toSkip) => {
   try {
     const response = await getElectrum(serverList, callType, params, toSkip, coinID)
+
     return !response ? false : {coin: coinID, ...response}
   } catch(err) {
     console.warn(err)
