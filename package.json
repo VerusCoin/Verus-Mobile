@@ -22,7 +22,7 @@
     "@ethersproject/signing-key": "5.0.5",
     "@react-native-async-storage/async-storage": "1.17.10",
     "@react-native-camera-roll/camera-roll": "5.0.4",
-    "@react-native-community/cli": "5.0.1",
+    "@react-native-community/cli": "7.0.3",
     "@react-native-community/clipboard": "1.5.1",
     "@react-native-community/datetimepicker": "3.5.2",
     "@react-native-community/masked-view": "0.1.10",
@@ -137,7 +137,7 @@
     "eslint-plugin-react-hooks": "2.5.1",
     "jest": "26.6.3",
     "jetifier": "1.6.4",
-    "metro-minify-terser": "0.63.0",
+    "metro-minify-terser": "0.67.0",
     "metro-react-native-babel-preset": "0.67.0",
     "node-fetch": "2.6.7",
     "react-test-renderer": "17.0.1",
@@ -206,7 +206,9 @@
     "parse-link-header": "2.0.0",
     "@react-native-async-storage/async-storage": "1.17.10",
     "minimatch": "3.0.5",
-    "verus-typescript-primitives": "../verus-typescript-primitives/"
+    "verus-typescript-primitives": "../verus-typescript-primitives/",
+    "verusd-rpc-ts-client": "../verusd-rpc-ts-client/",
+    "verusid-ts-client": "../verusid-ts-client/"
   },
   "jest": {
     "preset": "react-native",
