@@ -91,22 +91,32 @@ export const buildTx = async (
     for (const utxo of utxoRes.result) {
       const _script = script.decompile(Buffer.from(utxo.script, 'hex'));
 
+      //TODO: Remove when currencies are implemented, for now we can ignore
+      //0 satoshi utxos
+      if (utxo.satoshis === 0) continue;
+
       if (
         _script.length === 4 &&
         _script[1] === opcodes.OP_CHECKCRYPTOCONDITION &&
         _script[3] === opcodes.OP_DROP
       ) {
-        const master = OptCCParams.fromChunk(_script[0]);
-        const params = OptCCParams.fromChunk(_script[2]);
-
-        if (
-          params.isValid() &&
-          master.isValid() &&
-          params.evalCode === 0 &&
-          master.evalCode === 0
-        ) {
-          pushUtxo({...utxo, cc: true});
-        } else continue;
+        try {
+          const master = OptCCParams.fromChunk(_script[0]);
+          const params = OptCCParams.fromChunk(_script[2]);
+  
+          if (
+            params.isValid() &&
+            master.isValid() &&
+            params.evalCode === 0 &&
+            master.evalCode === 0
+          ) {
+            pushUtxo({...utxo, cc: true});
+          } else continue;
+        } catch(e) {
+          console.warn("Failed to parse smart transaction utxo: ")
+          console.log(utxo)
+          console.log(`Error: ${e.message}`)
+        }
       } else pushUtxo(utxo);
     }
 
