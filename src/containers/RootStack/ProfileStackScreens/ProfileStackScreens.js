@@ -19,7 +19,6 @@ const ProfileStack = createStackNavigator();
 const ProfileStackScreens = props => {
   return (
     <ProfileStack.Navigator
-      headerMode="screen"
       screenOptions={defaultHeaderOptions}
     >
       <ProfileStack.Screen

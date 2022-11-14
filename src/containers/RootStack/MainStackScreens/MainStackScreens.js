@@ -22,7 +22,6 @@ const MainStack = createStackNavigator();
 const MainStackScreens = props => {
   return (
     <MainStack.Navigator
-      headerMode="screen"
       screenOptions={defaultHeaderOptions}
     >
       <MainStack.Screen

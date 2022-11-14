@@ -12,7 +12,6 @@ const ServicesStack = createStackNavigator();
 const ServicesStackScreens = props => {
   return (
     <ServicesStack.Navigator
-      headerMode="screen"
       screenOptions={defaultHeaderOptions}
     >
       <ServicesStack.Screen

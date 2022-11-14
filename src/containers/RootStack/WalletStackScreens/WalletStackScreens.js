@@ -8,7 +8,6 @@ const WalletStack = createStackNavigator();
 const WalletStackScreens = props => {
   return (
     <WalletStack.Navigator
-      headerMode="screen"
       screenOptions={defaultHeaderOptions}
     >
       <WalletStack.Screen

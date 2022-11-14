@@ -10,7 +10,6 @@ const DeepLinkStack = createStackNavigator();
 const DeepLinkStackScreens = props => {
   return (
     <DeepLinkStack.Navigator
-      headerMode="screen"
       screenOptions={defaultHeaderOptions}
     >
       <DeepLinkStack.Screen

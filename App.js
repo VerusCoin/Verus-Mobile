@@ -7,9 +7,9 @@ import VerusMobile from './src/VerusMobile'
 import store from './src/store'
 import { Provider } from 'react-redux'
 import { Provider as PaperProvider, DefaultTheme } from 'react-native-paper';
-import { NavigationContainer } from '@react-navigation/native';
 import BigNumber from 'bignumber.js';
 import Colors from './src/globals/colors';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 BigNumber.set({EXPONENTIAL_AT: 1000000});
 
@@ -25,11 +25,13 @@ const theme = {
 export default class App extends React.Component {
   render() {
     return (
-      <PaperProvider theme={theme}>
-        <Provider store={store}>
-          <VerusMobile/>
-        </Provider>
-      </PaperProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <PaperProvider theme={theme}>
+          <Provider store={store}>
+            <VerusMobile/>
+          </Provider>
+        </PaperProvider>
+      </GestureHandlerRootView>
     );
   }
 }

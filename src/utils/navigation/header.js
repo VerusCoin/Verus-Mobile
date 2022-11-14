@@ -7,6 +7,7 @@ import styles from '../../styles';
 
 export const defaultHeaderOptions = ({navigation, params, route}) => ({
   headerShown: true,
+  headerMode: "screen",
   headerStyle: {
     backgroundColor: Colors.primaryColor,
   },
@@ -19,7 +20,7 @@ export const defaultHeaderOptions = ({navigation, params, route}) => ({
   headerRight: () => (
     <TouchableOpacity
       onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
-      style={styles.menuButton}>
+      style={{ paddingRight: 8 }}>
       <Icon name="menu" size={35} color={Colors.secondaryColor} />
     </TouchableOpacity>
   ),

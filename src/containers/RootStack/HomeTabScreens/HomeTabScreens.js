@@ -11,7 +11,6 @@ const HomeTabs = createMaterialBottomTabNavigator()
 const HomeTabScreens = props => {
   return (
     <HomeTabs.Navigator
-      headerMode="screen"
       barStyle={{ backgroundColor: Colors.primaryColor }}
     >
       <HomeTabs.Screen

@@ -22,10 +22,11 @@ const SignedInStackScreens = props => {
   return (
     <MainDrawer.Navigator
       drawerWidth={250}
-      drawerPosition="right"
       drawerContent={props => <SideMenu {...props} />}
       screenOptions={{
         swipeEnabled: false,
+        headerShown: false,
+        drawerPosition: "right"
       }}>
       <MainDrawer.Screen name="MainStack" component={MainStackScreens} />
     </MainDrawer.Navigator>
