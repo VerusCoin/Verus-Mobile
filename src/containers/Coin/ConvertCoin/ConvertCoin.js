@@ -5,6 +5,9 @@
 
 import React, { Component } from "react"
 import { connect } from 'react-redux'
+import { expireCoinData } from "../../../actions/actionCreators";
+import { conditionallyUpdateWallet } from "../../../actions/actionDispatchers";
+import store from "../../../store";
 import { API_GET_CONVERSION_PATHS } from "../../../utils/constants/intervalConstants";
 import { ConvertCoinRender } from "./ConvertCoin.render"
 
@@ -12,6 +15,23 @@ class ConvertCoin extends Component {
   constructor(props) {
     super(props);
     this.state = {};
+  }
+
+  componentDidMount() {
+    this.loadManagedData()
+  }
+
+  loadManagedData() {
+    if (this.props.updateIntervals != null) {
+      this.props.dispatch(expireCoinData(this.props.activeCoin.id, API_GET_CONVERSION_PATHS))
+      
+      conditionallyUpdateWallet(
+        store.getState(),
+        this.props.dispatch,
+        this.props.activeCoin.id,
+        API_GET_CONVERSION_PATHS
+      );
+    }
   }
 
   render() {
@@ -27,7 +47,8 @@ const mapStateToProps = (state) => {
   return {
     activeCoin: state.coins.activeCoin,
     subWallet: state.coinMenus.activeSubWallets[chainTicker],
-    conversions: state.ledger.conversions[channel][chainTicker]
+    conversions: state.ledger.conversions[channel][chainTicker],
+    updateIntervals: state.updates.coinUpdateTracker[chainTicker]
   }
 };
 

@@ -206,11 +206,14 @@ const mapStateToProps = (state, ownProps) => {
 
   return {
     balances: {
-      results: state.ledger.balances[balance_channel][chainTicker],
+      results: state.ledger.balances[balance_channel]
+        ? state.ledger.balances[balance_channel][chainTicker]
+        : null,
       errors: state.errors[API_GET_BALANCES][balance_channel][chainTicker],
     },
     rates: state.ledger.rates[rates_channel],
-    displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
+    displayCurrency:
+      state.settings.generalWalletSettings.displayCurrency || USD,
   };
 };
 

@@ -24,7 +24,7 @@ const fetchChannels = (activeUser) => {
     [ELECTRUM]: (coinObj) => updateElectrumBalances(activeUser, coinObj),
     [ETH]: (coinObj) => updateEthBalances(activeUser, coinObj),
     [ERC20]: (coinObj) => updateErc20Balances(activeUser, coinObj),
-    [WYRE_SERVICE]: (coinObj) => updateWyreBalances(activeUser, coinObj),
+    [WYRE_SERVICE]: (coinObj) => updateWyreBalances(coinObj),
     [VRPC]: (coinObj, channelId) => updateVrpcBalances(coinObj, channelId)
   };
 };

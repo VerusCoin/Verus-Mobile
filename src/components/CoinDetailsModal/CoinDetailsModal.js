@@ -124,7 +124,6 @@ class CoinDetailsModal extends Component {
       )
 
       if (addCoinAction) {
-        const chainId = this.props.data.id;
         this.props.dispatch(addCoinAction);
         this.props.dispatch(
           setUserCoins(

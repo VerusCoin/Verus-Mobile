@@ -59,6 +59,7 @@ export const buildTx = async (
       fromAddress
     } = preflightRes.result;
     let inputValueSats = BigNumber(0)
+    const inputValues = []
     let isCC = false;
     let isChangeCC = false;
 
@@ -139,7 +140,10 @@ export const buildTx = async (
 
     for (const input of inputs) {
       const {txid, vout, script, value} = input;
-      inputValueSats = inputValueSats.plus(BigNumber(value))
+      const inputValueBigNum = BigNumber(value)
+
+      inputValues.push(inputValueBigNum)
+      inputValueSats = inputValueSats.plus(inputValueBigNum)
 
       txb.addInput(
         txid,
@@ -173,13 +177,16 @@ export const buildTx = async (
     }
 
     txb.addOutput(outputScript, valueSats.toNumber());
-    txb.sign(
-      0,
-      keyPair,
-      null,
-      Transaction.SIGHASH_ALL,
-      inputValueSats.toNumber(),
-    );
+
+    for (let i = 0; i < txb.inputs.length; i++) {
+      txb.sign(
+        i,
+        keyPair,
+        null,
+        Transaction.SIGHASH_ALL,
+        inputValues[i].toNumber(),
+      );
+    }
 
     const tx = txb.build();
 

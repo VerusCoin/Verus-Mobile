@@ -318,12 +318,15 @@ const mapStateToProps = (state) => {
   return {
     sendModal: state.sendModal,
     balances: {
-      results: state.ledger.balances[balance_channel][chainTicker],
+      results: state.ledger.balances[balance_channel]
+        ? state.ledger.balances[balance_channel][chainTicker]
+        : null,
       errors: state.errors[API_GET_BALANCES][balance_channel][chainTicker],
     },
     activeAccount: state.authentication.activeAccount,
     rates: state.ledger.rates[rates_channel],
-    displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
+    displayCurrency:
+      state.settings.generalWalletSettings.displayCurrency || USD,
   };
 };
 
