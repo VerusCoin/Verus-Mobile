@@ -182,7 +182,7 @@ class CreateSeed extends Component {
                       <NativeTextInput
                         autoCapitalize={"none"}
                         autoCorrect={false}
-                        autoComplete="false"
+                        autoComplete="off"
                         {...props}
                       />
                     )}

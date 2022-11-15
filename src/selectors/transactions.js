@@ -22,8 +22,14 @@ export const selectTransactions = createSelector(
         : null;
 
     return {
-      results: channel != null ? transactions[channel][activeCoinId] : null,
-      errors: channel != null ? errors[API_GET_TRANSACTIONS][channel][activeCoinId] : null,
+      results:
+        channel != null && transactions[channel] != null
+          ? transactions[channel][activeCoinId]
+          : null,
+      errors:
+        channel != null && errors[API_GET_TRANSACTIONS][channel] != null
+          ? errors[API_GET_TRANSACTIONS][channel][activeCoinId]
+          : null,
     };
   }
 );

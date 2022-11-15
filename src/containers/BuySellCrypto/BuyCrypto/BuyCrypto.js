@@ -236,7 +236,7 @@ class BuyCrypto extends Component {
             )
           );
 
-          activateChainLifecycle(coinTicker)
+          activateChainLifecycle(coinObj)
           this.setState({ addingCoin: false });
 
           resolve(true);

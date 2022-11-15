@@ -4,38 +4,12 @@ import {
 } from "../../../../utils/constants/storeType";
 import { WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
 import { updateServiceDataValue } from "./UpdateServiceDataValue";
-import WyreProvider from "../../../../utils/services/WyreProvider";
-import { requestSeeds } from "../../../../utils/auth/authBox";
+import { updateWyrePaymentMethods } from "./wyre/updates";
 
-const channelMap = {
-  [WYRE_SERVICE]: async (activeUser, channelStore) => {
-    try {
-      if (!channelStore.authenticated) {
-        const seed = (await requestSeeds())[WYRE_SERVICE];
-        if (seed == null) throw new Error("No Wyre seed present");
-        await WyreProvider.authenticate(seed);
-      }
-
-      const res = await WyreProvider.listPaymentMethods()
-      let mapping = {}
-      let list = []
-
-      res.data.map(paymentMethod => {
-        mapping[paymentMethod.id] = paymentMethod
-        list.push(paymentMethod.id)
-      })
-
-      return {
-        channel: WYRE_SERVICE,
-        body: {
-          list,
-          mapping: mapping
-        },
-      };
-    } catch(e) {
-      throw e
-    }
-  },
+const fetchChannels = () => {
+  return {
+    [WYRE_SERVICE]: channelStore => updateWyrePaymentMethods(channelStore),
+  };
 };
 
 export const updateServicePaymentMethods = (state, dispatch, channels) =>
@@ -45,5 +19,5 @@ export const updateServicePaymentMethods = (state, dispatch, channels) =>
     channels,
     SET_SERVICE_PAYMENT_METHODS,
     ERROR_SERVICE_PAYMENT_METHODS,
-    channelMap
+    fetchChannels
   );

@@ -23,7 +23,7 @@ import { send } from "../../utils/api/routers/send";
 import { explorers } from "../../utils/CoinData/CoinData";
 import { expireCoinData } from "../../actions/actionCreators";
 import { USD } from "../../utils/constants/currencies";
-import { extractIdentityAddress } from "../../utils/api/channels/dlight/callCreators";
+import { extractIdentityAddress } from "../../utils/api/channels/verusid/callCreators";
 
 const TIMEOUT_LIMIT = 300000
 const LOADING_TICKER = 5000
@@ -169,12 +169,8 @@ class ConfirmSend extends Component {
       let destinationAddress
 
       if (address.includes("@")) {
-        if (this.props.verusIdShortcutsEnabled) {
-          destinationAddress = await extractIdentityAddress(address, coinObj.id)
-          identity = address
-        } else {
-          throw new Error('VerusID Shortcuts are not enabled. To enable them, turn them on in the "General Wallet Settings" menu.')
-        }
+        destinationAddress = await extractIdentityAddress(address, coinObj.id)
+        identity = address
       } else {
         destinationAddress = address
       }
@@ -423,7 +419,6 @@ class ConfirmSend extends Component {
 const mapStateToProps = (state) => {
   return {
     coinSettings: state.settings.coinSettings,
-    verusIdShortcutsEnabled: state.settings.generalWalletSettings.verusIdShortcutsEnabled,
     rates: state.ledger.rates[GENERAL],
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
   }

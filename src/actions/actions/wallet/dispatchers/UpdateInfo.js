@@ -1,24 +1,15 @@
-import { getInfo } from "../../../../utils/api/channels/dlight/callCreators";
 import {
   ERROR_INFO,
   SET_INFO
 } from "../../../../utils/constants/storeType";
 import { DLIGHT_PRIVATE } from "../../../../utils/constants/intervalConstants";
 import { updateLedgerValue } from "./UpdateLedgerValue";
+import { updateDlightInfo } from "./dlight/updates";
 
-const channelMap = {
-  [DLIGHT_PRIVATE]: async (activeUser, coinObj) => {
-    const syncInfo = await getInfo(coinObj.id, activeUser.accountHash, coinObj.proto);
-
-    const { result, ...header } = syncInfo;
-
-    return {
-      chainTicker: coinObj.id,
-      channel: DLIGHT_PRIVATE,
-      header,
-      body: result,
-    };
-  },
+const fetchChannels = (activeUser) => {
+  return {
+    [DLIGHT_PRIVATE]: (coinObj) => updateDlightInfo(activeUser, coinObj)
+  }
 };
 
 /**
@@ -37,5 +28,5 @@ export const updateInfo = (state, dispatch, channels, chainTicker) =>
     chainTicker,
     SET_INFO,
     ERROR_INFO,
-    channelMap
+    fetchChannels
   );

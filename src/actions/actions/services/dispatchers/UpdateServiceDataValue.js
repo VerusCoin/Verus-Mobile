@@ -4,10 +4,11 @@ export const updateServiceDataValue = async (
   channels,
   successType,
   errorType,
-  channelMap
+  fetchChannels
 ) => {
   const activeUser = state.authentication.activeAccount;
   let channelsPassed = [];
+  const channelMap = fetchChannels(activeUser)
 
   await Promise.all(
     channels.map(async (channel) => {
@@ -18,7 +19,7 @@ export const updateServiceDataValue = async (
       try {
         dispatch({
           type: successType,
-          payload: await channelMap[channel](activeUser, channelStore),
+          payload: await channelMap[channel](channelStore),
         });
         channelsPassed.push(channel);
       } catch (error) {

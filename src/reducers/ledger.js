@@ -5,11 +5,6 @@
   and set to false again when that componenet updates.
 */
 
-import { namesList } from '../utils/CoinData/CoinData'
-//TODO: Change this to get coin names from activeCoinForUser
-//so that when people add custom coins they also get told to 
-//update
-
 import {
   SET_BALANCES,
   SET_RATES,
@@ -19,21 +14,34 @@ import {
   SET_CONVERSION_PATHS,
   SET_WITHDRAW_DESTINATIONS,
   SET_DEPOSIT_SOURCES,
-  SET_PENDING_DEPOSITS
+  SET_PENDING_DEPOSITS,
+  SET_LINKED_IDENTITIES,
+  LOG_NEW_CHANNELS
 } from '../utils/constants/storeType'
 import {
-  CHANNELS_OBJECT_TEMPLATE
+  BALANCES,
+  CHANNELS_OBJECT_TEMPLATE,
+  CONVERSIONS,
+  DEPOSIT_SOURCES,
+  INFO,
+  LEDGER_KEYS,
+  LINKED_IDS,
+  PENDING_DEPOSITS,
+  RATES,
+  TRANSACTIONS,
+  WITHDRAW_DESTINATIONS
 } from "../utils/constants/intervalConstants";
 
 export const ledger = (state = {
-  balances: CHANNELS_OBJECT_TEMPLATE,
-  transactions: CHANNELS_OBJECT_TEMPLATE,
-  rates: CHANNELS_OBJECT_TEMPLATE,
-  info: CHANNELS_OBJECT_TEMPLATE,
-  conversions: CHANNELS_OBJECT_TEMPLATE,
-  withdrawDestinations: CHANNELS_OBJECT_TEMPLATE,
-  depositSources: CHANNELS_OBJECT_TEMPLATE,
-  pendingDeposits: CHANNELS_OBJECT_TEMPLATE
+  [BALANCES]: CHANNELS_OBJECT_TEMPLATE,
+  [TRANSACTIONS]: CHANNELS_OBJECT_TEMPLATE,
+  [RATES]: CHANNELS_OBJECT_TEMPLATE,
+  [INFO]: CHANNELS_OBJECT_TEMPLATE,
+  [CONVERSIONS]: CHANNELS_OBJECT_TEMPLATE,
+  [WITHDRAW_DESTINATIONS]: CHANNELS_OBJECT_TEMPLATE,
+  [DEPOSIT_SOURCES]: CHANNELS_OBJECT_TEMPLATE,
+  [PENDING_DEPOSITS]: CHANNELS_OBJECT_TEMPLATE,
+  [LINKED_IDS]: CHANNELS_OBJECT_TEMPLATE
 }, action) => {
   const { chainTicker, channel, body } = action.payload || {}
 
@@ -102,6 +110,34 @@ export const ledger = (state = {
           [channel]: { ...state.rates[channel], [chainTicker]: body },
         },
       };
+    case SET_LINKED_IDENTITIES:
+      return {
+        ...state,
+        linkedIdentities: {
+          ...state.linkedIdentities,
+          [channel]: { ...state.linkedIdentities[channel], [chainTicker]: body },
+        },
+      };
+    case LOG_NEW_CHANNELS:
+      let _state = {}
+      
+      for (const ledgerKey of LEDGER_KEYS) {
+        _state[ledgerKey] = {...state[ledgerKey]};
+
+        for (const newChannel of action.payload.channels) {
+          if (!_state[ledgerKey][newChannel]) {
+            _state[ledgerKey] = {
+              ...state[ledgerKey],
+              [newChannel]: {}
+            }
+          }
+        }
+      }
+
+      return {
+        ...state,
+        ..._state
+      }
     case SIGN_OUT_COMPLETE:
       return {
         ...state,

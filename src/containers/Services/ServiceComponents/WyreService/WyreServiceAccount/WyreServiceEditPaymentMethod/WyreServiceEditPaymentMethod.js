@@ -18,6 +18,7 @@ import {
   WYRE_DATA_SUBMISSION_ACTIVE,
   WYRE_DATA_SUBMISSION_AWAITING_FOLLOWUP,
   WYRE_DATA_SUBMISSION_PENDING,
+  WYRE_SERVICE_ID,
 } from "../../../../../../utils/constants/services";
 import WyreProvider from "../../../../../../utils/services/WyreProvider";
 import { WyreServiceEditPaymentMethodRender } from "./WyreServiceEditPaymentMethod.render"
@@ -53,19 +54,19 @@ class WyreServiceEditPaymentMethod extends Component {
 
   async initPersonalDocuments() {
     try {
-      this.props.dispatch(setServiceLoading(true));
+      this.props.dispatch(setServiceLoading(true, WYRE_SERVICE_ID));
       const personalInfo = await requestPersonalData(PERSONAL_IMAGES);
 
       this.setState(
         {
           documents: personalInfo.documents == null ? [] : personalInfo.documents,
         },
-        () => this.props.dispatch(setServiceLoading(false))
+        () => this.props.dispatch(setServiceLoading(false, WYRE_SERVICE_ID))
       );
     } catch (e) {
       console.warn(e);
       createAlert("Error", "Error retrieving personal images");
-      this.props.dispatch(setServiceLoading(false));
+      this.props.dispatch(setServiceLoading(false, WYRE_SERVICE_ID));
     }
   }
 
@@ -162,13 +163,13 @@ class WyreServiceEditPaymentMethod extends Component {
     successMsg = "Data submitted to Wyre! Track its status in your Wyre service menu."
   ) {
     try {
-      this.props.dispatch(setServiceLoading(true));
+      this.props.dispatch(setServiceLoading(true, WYRE_SERVICE_ID));
       await submissionFunction();
 
       await this.forceUpdate();
 
       this.props.navigation.goBack();
-      this.props.dispatch(setServiceLoading(false));
+      this.props.dispatch(setServiceLoading(false, WYRE_SERVICE_ID));
       createAlert("Success", successMsg);
 
       return;
@@ -191,7 +192,7 @@ class WyreServiceEditPaymentMethod extends Component {
       if (tryAgain) {
         return await this.submitDataToWyre(submissionFunction, successMsg);
       } else {
-        this.props.dispatch(setServiceLoading(false));
+        this.props.dispatch(setServiceLoading(false, WYRE_SERVICE_ID));
       }
     }
   }
@@ -203,7 +204,7 @@ class WyreServiceEditPaymentMethod extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    loading: state.services.loading,
+    loading: state.services.loading[WYRE_SERVICE_ID],
     encryptedPersonalImages: state.personal.images,
     wyrePaymentMethods:
       state.services.paymentMethods[WYRE_SERVICE] == null

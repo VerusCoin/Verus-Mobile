@@ -4,6 +4,7 @@
   stack contains unique modal ids.
 */
 
+import { SEND_MODAL_FORM_STEP_CONFIRM, SEND_MODAL_FORM_STEP_FORM } from "../utils/constants/sendModal";
 import {
   OPEN_SEND_COIN_MODAL,
   CLOSE_SEND_COIN_MODAL,
@@ -19,7 +20,8 @@ export const sendModal = (
     title: "",
     type: null,
     data: {},
-    helpText: null
+    helpText: null,
+    initialRouteName: SEND_MODAL_FORM_STEP_FORM
   },
   action
 ) => {
@@ -32,7 +34,8 @@ export const sendModal = (
         title: action.payload.title,
         subWallet: action.payload.subWallet,
         coinObj: action.payload.coinObj,
-        helpText: action.payload.helpText
+        helpText: action.payload.helpText,
+        initialRouteName: action.payload.initialRouteName
       };
     case CLOSE_SEND_COIN_MODAL:
       return {
@@ -42,7 +45,8 @@ export const sendModal = (
         title: "",
         type: null,
         data: {},
-        helpText: null
+        helpText: null,
+        initialRouteName: SEND_MODAL_FORM_STEP_FORM
       };
     case SET_SEND_COIN_MODAL_DATA_FIELD:
       return {

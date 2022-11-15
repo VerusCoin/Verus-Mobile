@@ -1,15 +1,12 @@
 import store from "../../../../store";
 import {
-  clearServiceStoredData,
   deleteServiceStoredDataForUser,
   loadServiceStoredDataForUser,
   storeServiceStoredDataForUser,
 } from "../../../../utils/asyncStore/serviceStoredDataStorage";
-import { requestPassword, requestSeeds } from "../../../../utils/auth/authBox";
+import { requestPassword } from "../../../../utils/auth/authBox";
 import {
   CONNECTED_SERVICES,
-  CONNECTED_SERVICE_CHANNELS,
-  CONNECTED_SERVICE_PROVIDERS,
   WYRE_SERVICE_ID,
 } from "../../../../utils/constants/services";
 import { encryptkey } from "../../../../utils/seedCrypt";
@@ -66,7 +63,9 @@ export const resetServices = async () => {
 
   for (const connectedService of CONNECTED_SERVICES) {    
     try {
-      await CONNECTED_SERVICE_PROVIDERS[connectedService].reset();
+      if (CONNECTED_SERVICE_PROVIDERS[connectedService]) {
+        await CONNECTED_SERVICE_PROVIDERS[connectedService].reset();
+      }
     } catch (e) {
       console.warn(e);
     }

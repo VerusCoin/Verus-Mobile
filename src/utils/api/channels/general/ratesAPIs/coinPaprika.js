@@ -2,6 +2,7 @@ import { timeout } from '../../../../promises'
 import { isJson } from '../../../../objectManip'
 
 import { REQUEST_TIMEOUT_MS } from '../../../../../../env/index'
+import axios from 'axios'
 
 export const getCoinPaprikaRate = (coinObj) => {
   let coinID = coinObj.id
@@ -14,17 +15,16 @@ export const getCoinPaprikaRate = (coinObj) => {
   const address = `https://api.coinpaprika.com/v1/coins/${param}/ohlcv/latest`
 
   return new Promise((resolve) => {
-    timeout(REQUEST_TIMEOUT_MS, fetch(address, { method: "GET" }))
-      .then(response => {
-        if (!isJson(response)) {
+    axios.get(address)
+      .then(res => {
+        if (!isJson(res.data)) {
           throw new Error(
-            "Invalid JSON in coinPaprika.js, received: " + response
+            "Invalid JSON in coinPaprika.js, received: " + res
           );
         }
 
-        return response.json();
-      })
-      .then(response => {
+        const response = res.data
+        
         if (response.error || !response || !response[0] || !response[0].close) {
           resolve({error: new Error(`Failed to get price for ${coinID} through CoinPaprika API.`)});
         } else {

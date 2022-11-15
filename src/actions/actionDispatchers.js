@@ -17,3 +17,6 @@ export * from './actions/account/dispatchers/account'
 
 // Send
 export * from './actions/send/dispatchers/traditionalCryptoSend'
+
+// Deeplink
+export * from './actions/deeplink/dispatchers/deeplinkListener'

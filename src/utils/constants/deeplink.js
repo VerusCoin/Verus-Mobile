@@ -1,0 +1,1 @@
+export const LOGIN_CONSENT_INFO = 'LOGIN_CONSENT_INFO'

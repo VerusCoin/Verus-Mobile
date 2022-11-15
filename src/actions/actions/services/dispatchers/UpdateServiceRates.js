@@ -4,23 +4,12 @@ import {
 } from "../../../../utils/constants/storeType";
 import { WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
 import { updateServiceDataValue } from "./UpdateServiceDataValue";
-import WyreProvider from "../../../../utils/services/WyreProvider";
-import { extractWyreRates } from "../../../../utils/standardization/extractWyreRates";
-import { SUPPORTED_BANK_CURRENCIES } from "../../../../utils/constants/currencies";
+import { updateWyreRates } from "./wyre/updates";
 
-const channelMap = {
-  [WYRE_SERVICE]: async (activeUser, channelStore) => {
-    try {
-      const res = await WyreProvider.getRates("PRICED")
-
-      return {
-        channel: WYRE_SERVICE,
-        body: extractWyreRates(res, ["USDT", "USDC", "DAI", ...SUPPORTED_BANK_CURRENCIES]),
-      };
-    } catch(e) {
-      throw e
-    }
-  },
+const fetchChannels = () => {
+  return {
+    [WYRE_SERVICE]: () => updateWyreRates(),
+  }
 };
 
 export const updateServiceRates = (state, dispatch, channels) =>
@@ -30,5 +19,5 @@ export const updateServiceRates = (state, dispatch, channels) =>
     channels,
     SET_SERVICE_RATES,
     ERROR_SERVICE_RATES,
-    channelMap
+    fetchChannels
   );

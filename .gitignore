@@ -91,6 +91,7 @@ android/app/src/main/res/drawable-mdpi/src_images_customicons_verus.png
 android/app/src/main/res/drawable-xhdpi/node_modules_reactnavigation_stack_src_views_assets_backicon.png
 android/app/src/main/res/drawable-xxhdpi/node_modules_reactnavigation_stack_src_views_assets_backicon.png
 android/app/src/main/res/drawable-xxxhdpi/node_modules_reactnavigation_stack_src_views_assets_backicon.png
+android/app/src/main/res/**
 android/java_pid17246.hprof
 android/java_pid22456.hprof
 android/app/debug.keystore

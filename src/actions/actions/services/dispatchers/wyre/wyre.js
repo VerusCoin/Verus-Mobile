@@ -1,7 +1,7 @@
-import store from "../../../../store"
-import { requestServiceStoredData } from "../../../../utils/auth/authBox"
-import { WYRE_SERVICE_ID } from "../../../../utils/constants/services"
-import { modifyServiceStoredDataForUser } from "./services"
+import store from "../../../../../store"
+import { requestServiceStoredData } from "../../../../../utils/auth/authBox"
+import { WYRE_SERVICE_ID } from "../../../../../utils/constants/services"
+import { modifyServiceStoredDataForUser } from "../services"
 
 export const mapWyreDocumentIds = async (fieldId, documentIds, uris, hashes) => {
   const state = store.getState()

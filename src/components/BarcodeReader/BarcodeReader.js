@@ -36,19 +36,23 @@ const BarcodeReader = (props) => {
     }
   }
 
-  useEffect(async () => {
+  async function onMount() {
     const permissionStatus = await verifyPermissions(
       PERMISSIONS.IOS.CAMERA,
-      PERMISSIONS.ANDROID.CAMERA
+      PERMISSIONS.ANDROID.CAMERA,
     );
 
     if (permissionStatus.reason === RESULTS.BLOCKED) {
-      setNeedToGoToSettings(true)
+      setNeedToGoToSettings(true);
     }
 
     return () => {
-      componentIsMounted.current = false
-    }
+      componentIsMounted.current = false;
+    };
+  }
+
+  useEffect(() => {
+    onMount();
   }, []);
 
   return cameraOff || loading ? (

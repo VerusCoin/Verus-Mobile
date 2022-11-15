@@ -2,6 +2,7 @@
   The personal reducer stores data used by services
 */
 
+import { VERUSID_SERVICE_ID, WYRE_SERVICE_ID } from "../utils/constants/services";
 import {
   SET_SERVICE_ACCOUNT,
   SIGN_OUT,
@@ -19,9 +20,12 @@ export const services = (
     stored: {},
     transfers: {},
     rates: {},
-    loading: false
+    loading: {
+      [WYRE_SERVICE_ID]: false,
+      [VERUSID_SERVICE_ID]: false,
+    },
   },
-  action
+  action,
 ) => {
   switch (action.type) {
     case SET_SERVICE_ACCOUNT:
@@ -29,33 +33,33 @@ export const services = (
         ...state,
         accounts: {
           ...state.accounts,
-          [action.payload.channel]: action.payload.body
-        }
-      }
+          [action.payload.channel]: action.payload.body,
+        },
+      };
     case SET_SERVICE_PAYMENT_METHODS:
       return {
         ...state,
         paymentMethods: {
           ...state.paymentMethods,
-          [action.payload.channel]: action.payload.body
-        }
-      }
+          [action.payload.channel]: action.payload.body,
+        },
+      };
     case SET_SERVICE_TRANSFERS:
       return {
         ...state,
         transfers: {
           ...state.transfers,
-          [action.payload.channel]: action.payload.body
-        }
-      }
+          [action.payload.channel]: action.payload.body,
+        },
+      };
     case SET_SERVICE_RATES:
       return {
         ...state,
         rates: {
           ...state.rates,
-          [action.payload.channel]: action.payload.body
-        }
-      }
+          [action.payload.channel]: action.payload.body,
+        },
+      };
     case SET_SERVICE_STORED_DATA:
       return {
         ...state,
@@ -64,8 +68,11 @@ export const services = (
     case SET_SERVICE_LOADING:
       return {
         ...state,
-        loading: action.payload.loading
-      }
+        loading: {
+          ...state.loading,
+          [action.payload.service]: action.payload.loading,
+        },
+      };
     case SIGN_OUT:
       return {
         ...state,
@@ -74,8 +81,11 @@ export const services = (
         stored: {},
         transfers: {},
         rates: {},
-        loading: false
-      }
+        loading: {
+          [WYRE_SERVICE_ID]: false,
+          [VERUSID_SERVICE_ID]: false,
+        },
+      };
     default:
       return state;
   }

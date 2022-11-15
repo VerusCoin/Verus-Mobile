@@ -4,23 +4,12 @@ import {
 } from "../../../../utils/constants/storeType";
 import { WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
 import { updateLedgerValue } from "./UpdateLedgerValue";
-import { getPendingDeposits } from "../../../../utils/api/routers/getPendingDeposits";
+import { updateWyrePendingDeposits } from "./wyre/updates";
 
-const channelMap = {
-  [WYRE_SERVICE]: async (activeUser, coinObj) => {
-    try {
-      const deposits = await getPendingDeposits(coinObj, WYRE_SERVICE);
-      return {
-        chainTicker: coinObj.id,
-        channel: WYRE_SERVICE,
-        header: {},
-        body: deposits,
-      };
-    } catch (e) {
-      console.warn(e);
-      throw e;
-    }
-  },
+const fetchChannels = () => {
+  return {
+    [WYRE_SERVICE]: (coinObj) => updateWyrePendingDeposits(coinObj),
+  };
 };
 
 /**
@@ -39,5 +28,5 @@ export const updatePendingDeposits = (state, dispatch, channels, chainTicker) =>
     chainTicker,
     SET_PENDING_DEPOSITS,
     ERROR_PENDING_DEPOSITS,
-    channelMap
+    fetchChannels
   );

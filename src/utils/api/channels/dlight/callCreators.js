@@ -14,7 +14,6 @@ export * from './requests/getInfo'
 export * from './requests/getTransactions'
 export * from './requests/preflightPrivateTransaction'
 export * from './requests/sendPrivateTransaction'
-export * from './requests/getIdentity'
 
 /**
  * Makes a request to the light daemon client

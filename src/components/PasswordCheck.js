@@ -13,19 +13,37 @@ const PasswordCheck = (props) => {
   const [freeze, setFreeze] = React.useState(false);
   const [biometryType, setBiometryType] = React.useState(null);
 
-  React.useEffect(async () => {
+  async function setSupportedBiometry() {
     if (allowBiometry && account.biometry) {
       setBiometryType(await getSupportedBiometryType())
     }
-  }, [account, allowBiometry]);
+  }
 
-  React.useEffect(async () => {
+  async function clearPasswordIfAppropriate() {
     if (visible == false) {
       setPassword({
         text: "",
         usingBiometry: false,
       });
     }
+  }
+
+  async function submitBiometricIfAble() {
+    if (password.usingBiometry) {      
+      submit(await validatePassword())
+      setPassword({
+        text: password.text,
+        usingBiometry: false,
+      });
+    }
+  }
+
+  React.useEffect(() => {
+    setSupportedBiometry()
+  }, [account, allowBiometry]);
+
+  React.useEffect(() => {
+    clearPasswordIfAppropriate()
   }, [visible]);
 
   const validatePassword = async () => {
@@ -47,14 +65,8 @@ const PasswordCheck = (props) => {
     }
   }
 
-  React.useEffect(async () => {
-    if (password.usingBiometry) {      
-      submit(await validatePassword())
-      setPassword({
-        text: password.text,
-        usingBiometry: false,
-      });
-    }
+  React.useEffect(() => {
+    submitBiometricIfAble();
   }, [password.text]);
 
   const tryBiometricAuth = async () => {

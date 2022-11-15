@@ -3,7 +3,6 @@ import {
   API_GET_FIATPRICE,
 } from '../utils/constants/intervalConstants';
 
-
 const selectRatesReducerState = (state) => state.ledger.rates;
 
 const selectActiveCoin = (state) => state.coins.activeCoin;

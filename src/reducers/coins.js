@@ -8,9 +8,9 @@ import {
   SET_ACTIVE_APP,
   SET_ACTIVE_SECTION,
   SET_COIN_LIST,
-  SET_USER_COINS,
   SET_COIN_STATUS,
   SET_COINMENU_FOCUS,
+  SET_USER_COINS_COMPLETE,
 } from '../utils/constants/storeType'
 import {
   PRE_DATA,
@@ -52,16 +52,11 @@ export const coins = (state = {
         ...state,
         activeCoinList: action.activeCoinList,
       };
-    case SET_USER_COINS:
-      let status = {}
-      action.activeCoinsForUser.map(coinObj => {
-        status[coinObj.id] = PRE_DATA
-      })
-
+    case SET_USER_COINS_COMPLETE:
       return {
         ...state,
-        activeCoinsForUser: action.activeCoinsForUser,
-        status
+        activeCoinsForUser: action.payload.activeCoinsForUser,
+        status: action.payload.status
       };
     case SET_COIN_STATUS:
       return {

@@ -31,6 +31,7 @@ class TraditionalCryptoSendConfirm extends Component {
 
     const {
       toAddress,
+      fromAddress,
       identity,
       amountSubmitted,
       coinObj,
@@ -67,39 +68,46 @@ class TraditionalCryptoSendConfirm extends Component {
     this.setState({
       confirmationFields: [
         {
-          key: "Destination",
-          data: toAddress,
+          key: 'Destination',
+          data: identity == null ? toAddress : `${identity} (${toAddress})`,
           numLines: 100,
           onPress: () =>
             copyToClipboard(toAddress, {
-              title: "Address copied",
+              title: 'Address copied',
               message: `${toAddress} copied to clipboard.`,
             }),
         },
         {
-          key: "Destination Source",
-          data: identity,
+          key: 'Source',
+          data: fromAddress,
           numLines: 100,
           onPress: () =>
-            copyToClipboard(identity, {
-              title: "Identity copied",
-              message: `${identity} copied to clipboard.`,
+            copyToClipboard(fromAddress, {
+              title: 'Address copied',
+              message: `${fromAddress} copied to clipboard.`,
             }),
-          condition: identity != null,
+          condition: fromAddress != null,
         },
         {
-          key: "Amount Requested",
-          data: truncateDecimal(amountSubmitted, coinObj.decimals || 8) + " " + coinObj.id,
+          key: 'Amount Requested',
+          data:
+            truncateDecimal(amountSubmitted, coinObj.decimals || 8) +
+            ' ' +
+            coinObj.id,
           right: validFiatMultiplier
             ? `${fiatMultiplier.multipliedBy(amountSubmitted).toFixed(2)} ${
                 this.props.displayCurrency
               }`
             : null,
-          condition: amountSubmitted !== "0" && amountSubmitted !== finalTxAmount,
+          condition:
+            amountSubmitted !== '0' && amountSubmitted !== finalTxAmount,
         },
         {
-          key: "Amount Sent",
-          data: truncateDecimal(finalTxAmount, coinObj.decimals || 8) + " " + coinObj.id,
+          key: 'Amount Sent',
+          data:
+            truncateDecimal(finalTxAmount, coinObj.decimals || 8) +
+            ' ' +
+            coinObj.id,
           right: validFiatMultiplier
             ? `${fiatMultiplier.multipliedBy(finalTxAmount).toFixed(2)} ${
                 this.props.displayCurrency
@@ -107,8 +115,8 @@ class TraditionalCryptoSendConfirm extends Component {
             : null,
         },
         {
-          key: "Fee",
-          data: fee.amount + " " + fee.currency,
+          key: 'Fee',
+          data: fee.amount + ' ' + fee.currency,
           right: validFeeFiatMultiplier
             ? `${feeFiatMultiplier.multipliedBy(fee.amount).toFixed(2)} ${
                 this.props.displayCurrency
@@ -116,8 +124,11 @@ class TraditionalCryptoSendConfirm extends Component {
             : null,
         },
         {
-          key: "Amount Deducted",
-          data: truncateDecimal(deductedAmount, coinObj.decimals || 8) + " " + coinObj.id,
+          key: 'Amount Deducted',
+          data:
+            truncateDecimal(deductedAmount, coinObj.decimals || 8) +
+            ' ' +
+            coinObj.id,
           right: validFiatMultiplier
             ? `${fiatMultiplier.multipliedBy(deductedAmount).toFixed(2)} ${
                 this.props.displayCurrency
@@ -125,8 +136,8 @@ class TraditionalCryptoSendConfirm extends Component {
             : null,
         },
         {
-          key: "Remaining Balance",
-          data: remainingBalance + " " + coinObj.id,
+          key: 'Remaining Balance',
+          data: remainingBalance + ' ' + coinObj.id,
           condition: remainingBalance !== 0,
           right: validFiatMultiplier
             ? `${fiatMultiplier.multipliedBy(remainingBalance).toFixed(2)} ${
@@ -135,7 +146,7 @@ class TraditionalCryptoSendConfirm extends Component {
             : null,
         },
         {
-          key: "Message",
+          key: 'Message',
           numLines: 100,
           data: memo,
           condition: memo != null && memo.length > 0,
@@ -195,11 +206,14 @@ const mapStateToProps = (state, ownProps) => {
 
   return {
     balances: {
-      results: state.ledger.balances[balance_channel][chainTicker],
+      results: state.ledger.balances[balance_channel]
+        ? state.ledger.balances[balance_channel][chainTicker]
+        : null,
       errors: state.errors[API_GET_BALANCES][balance_channel][chainTicker],
     },
     rates: state.ledger.rates[rates_channel],
-    displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
+    displayCurrency:
+      state.settings.generalWalletSettings.displayCurrency || USD,
   };
 };
 

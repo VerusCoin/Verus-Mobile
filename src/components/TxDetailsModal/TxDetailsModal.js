@@ -237,6 +237,7 @@ class TxDetailsModal extends Component {
                       ? "hidden"
                       : "Unknown"
                     : txData.address,
+                numLines: 100,
               },
               {
                 key: "Time",

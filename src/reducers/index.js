@@ -19,6 +19,8 @@ import { coinOverview } from './gui/coinOverview';
 import { channelStore_dlight_private } from './channelStores/dlight';
 import { channelStore_eth } from './channelStores/eth';
 import { channelStore_erc20 } from './channelStores/erc20';
+import { channelStore_vrpc } from './channelStores/vrpc';
+import { channelStore_verusid } from './channelStores/verusid';
 import { channelStore_electrum } from './channelStores/electrum';
 import { channelStore_general } from './channelStores/general';
 import { channelStore_wyre_service } from './channelStores/wyre';
@@ -28,6 +30,8 @@ import { keyboard } from './keyboard'
 import identity from './identity';
 import { sendModal } from './sendModal';
 import { secureLoading } from './secureLoading';
+import { deeplink } from './deeplink';
+
 
 export default combineReducers({
   authentication,
@@ -48,8 +52,10 @@ export default combineReducers({
   channelStore_eth,
   channelStore_electrum,
   channelStore_erc20,
+  channelStore_vrpc,
   channelStore_general,
   channelStore_wyre_service,
+  channelStore_verusid,
   ethtxreceipts,
   coinMenus,
   alert,
@@ -58,5 +64,6 @@ export default combineReducers({
   personal,
   services,
   sendModal,
-  secureLoading
+  secureLoading,
+  deeplink
 });

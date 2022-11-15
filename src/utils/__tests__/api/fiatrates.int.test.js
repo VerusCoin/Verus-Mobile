@@ -1,6 +1,6 @@
 import { REQUEST_TIMEOUT_MS } from '../../../../env/index';
 import { timeout } from '../../promises';
-const { DOMParser } = require('xmldom')
+const { DOMParser } = require('@xmldom/xmldom')
 
 describe('fiat exchange rates API is online and works as expected', () => {
   it('can fetch a basic fiat exchange rate call', () => {

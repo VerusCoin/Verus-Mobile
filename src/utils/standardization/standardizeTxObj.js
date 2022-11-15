@@ -1,6 +1,9 @@
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
+import { estimateBlocktimeAtHeight } from "../block";
+import { getCoinIdFromSystemId } from "../CoinData/CoinData";
 import { ETHERS } from "../constants/web3Constants";
+import { satsToCoins } from "../math";
 import { decodeMemo } from "../memoUtils";
 const { formatEther, formatUnits } = ethers.utils
 
@@ -118,5 +121,43 @@ export const standardizeWyreTxObj = (transaction, accountAddress, coinObj) => {
       transaction.status === "PENDING" &&
       transaction.source != null &&
       transaction.source.split(":")[0] === "paymentmethod",
+  };
+};
+
+export const standardizeVrpcTxObj = (transaction, coinObj, currHeight) => {
+  const {satoshis, txid, height, address, blocktime, sent, mempool} = transaction;
+  let timeEstimate;
+
+  if (!blocktime && currHeight && height) {
+    const confirmations = BigNumber(currHeight).minus(BigNumber(height));
+    const currTime = BigNumber(new Date().getTime()).dividedBy(BigNumber(1000));
+
+    timeEstimate = currTime
+      .minus(confirmations.multipliedBy(BigNumber(coinObj.seconds_per_block)))
+      .toNumber();
+  }
+
+  let addresses = [];
+
+  if (sent) {
+    for (const out of sent.outputs) {
+      if (Array.isArray(out.addresses))
+        addresses = [...new Set([...addresses, ...out.addresses])];
+      else if (!addresses.includes(out.addresses))
+        addresses.push(out.addresses);
+    }
+  } else addresses = [address];
+
+  return {
+    address: addresses.length === 0 ? null : addresses.sort((a, b) => {
+      if (b !== address) return 1;
+      else return -1;
+    }).join(' & '),
+    amount: satsToCoins(BigNumber(satoshis).abs()).toString(),
+    type: satoshis >= 0 ? 'received' : 'sent',
+    confirmed: mempool ? false : true,
+    height,
+    timestamp: blocktime ? blocktime : timeEstimate,
+    txid,
   };
 };

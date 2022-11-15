@@ -1,5 +1,6 @@
 import React, { Component } from "react"
 import { connect } from 'react-redux'
+import { WYRE_SERVICE_ID } from "../../../../utils/constants/services";
 import { WyreServiceRender } from "./WyreService.render";
 
 class WyreService extends Component {
@@ -19,7 +20,7 @@ class WyreService extends Component {
 const mapStateToProps = (state) => {
   return {
     encryptedSeeds: state.authentication.activeAccount.seeds,
-    loading: state.services.loading
+    loading: state.services.loading[WYRE_SERVICE_ID]
   }
 };
 

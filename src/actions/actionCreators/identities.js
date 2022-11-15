@@ -1,3 +1,5 @@
+// DEPRECATED, TODO: Remove
+
 import {
   SET_ACTIVE_IDENTITY,
   STORE_IDENTITIES,

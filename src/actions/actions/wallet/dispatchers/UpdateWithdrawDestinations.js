@@ -4,23 +4,12 @@ import {
 } from "../../../../utils/constants/storeType";
 import { WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
 import { updateLedgerValue } from "./UpdateLedgerValue";
-import { getWithdrawDestinations } from "../../../../utils/api/routers/getWithdrawDestinations";
+import { updateWyreWithdrawalDestinations } from "./wyre/updates";
 
-const channelMap = {
-  [WYRE_SERVICE]: async (activeUser, coinObj) => {
-    try {
-      const destinations = await getWithdrawDestinations(coinObj, WYRE_SERVICE);
-      return {
-        chainTicker: coinObj.id,
-        channel: WYRE_SERVICE,
-        header: {},
-        body: destinations,
-      };
-    } catch (e) {
-      console.warn(e);
-      throw e;
-    }
-  },
+const fetchChannels = () => {
+  return {
+    [WYRE_SERVICE]: coinObj => updateWyreWithdrawalDestinations(coinObj),
+  }
 };
 
 /**
@@ -39,5 +28,5 @@ export const updateWithdrawDestinations = (state, dispatch, channels, chainTicke
     chainTicker,
     SET_WITHDRAW_DESTINATIONS,
     ERROR_WITHDRAW_DESTINATIONS,
-    channelMap
+    fetchChannels
   );

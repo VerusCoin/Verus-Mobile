@@ -29,6 +29,7 @@ import {
     getTransactionHistory,
     getTransactionHistoryResponse
 } from '../../actionCreators';
+import axios from 'axios';
 
 
 const getPaymentAddress = (account, currency) => {
@@ -153,11 +154,10 @@ export const uploadWyreAccountDocument = (field, uri, type, onSuccess) => async 
 export const getConfig = () => async (dispatch) => {
     dispatch(getWyreConfig());
     try {
-        const response = await fetch(`${WYRE_URL}/v2/client/config/plaid`);
+        const response = await axios.get(`${WYRE_URL}/v2/client/config/plaid`)
 
-        if (response.ok) {
-            const config = await response.json();
-            dispatch(getWyreConfigResponse(config));
+        if (response.status === 200) {
+            dispatch(getWyreConfigResponse(response.data));
         } else {
             DelayedAlert('Failed fetching Wyre payment method configuration');
         }

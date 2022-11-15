@@ -25,6 +25,7 @@ export const initializeAccountData = async (
   
   if (accountAuthenticator) {
     setInitStep(LOADING_ACCOUNT)
+    await initServiceStoredDataForUser(account.accountHash)
 
     if (makeDefault) {
       await saveGeneralSettings({
@@ -34,11 +35,12 @@ export const initializeAccountData = async (
 
     const coinList = await fetchActiveCoins()
     const setUserCoinsAction = setUserCoins(coinList.activeCoinList, account.id)
-    const { activeCoinsForUser } = setUserCoinsAction
+    const { activeCoinsForUser } = setUserCoinsAction.payload
 
     store.dispatch(await initSettings())
     store.dispatch(accountAuthenticator)
     store.dispatch(coinList)
+
     store.dispatch(setUserCoinsAction)
 
     for (let i = 0; i < activeCoinsForUser.length; i++) {
@@ -50,12 +52,13 @@ export const initializeAccountData = async (
         } else return null
       }))
 
-      activateChainLifecycle(coinObj.id);
+      activateChainLifecycle(coinObj);
     }
+
+    store.dispatch(setUserCoinsAction)
 
     activateServiceLifecycle()
     await initPersonalDataForUser(account.accountHash)
-    await initServiceStoredDataForUser(account.accountHash)
     store.dispatch(signIntoAuthenticatedAccount())
   } else {
     throw new Error(

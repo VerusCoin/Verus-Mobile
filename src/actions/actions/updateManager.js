@@ -30,38 +30,61 @@ import {
  * @param {Object} onCompletes Object with optional onCompletes to each updateInterval to be called with state and dispatch function.
  * e.g. {get_info: {update_expired_oncomplete: increaseGetInfoInterval}}
  */
-export const generateUpdateCoinDataAction = (chainStatus, chainTicker, chainTags, enabledChannels, onCompletes = {}) => {
-  if (!chainTicker) throw new Error("No chain ticker specified for generateUpdateCoinDataAction")
-  
-  let updateIntervalData = {}
-  let updateTrackingData = {}
-  const isPbaasRoot = chainTags.includes(IS_PBAAS_ROOT)
-  const isPbaas = chainTags.includes(IS_PBAAS) || isPbaasRoot
-  const isZcash = chainTags.includes(IS_ZCASH)
+export const generateUpdateCoinDataAction = (
+  chainStatus,
+  chainTicker,
+  chainTags,
+  enabledChannels,
+  onCompletes = {},
+  updateParams = DEFAULT_COIN_UPDATE_PARAMS,
+) => {
+  if (!chainTicker)
+    throw new Error(
+      'No chain ticker specified for generateUpdateCoinDataAction',
+    );
 
-  for (let key in DEFAULT_COIN_UPDATE_PARAMS) {
-    if (!isPbaas && DEFAULT_COIN_UPDATE_PARAMS[key].restrictions.includes(IS_PBAAS)) continue 
-    if (!isZcash && DEFAULT_COIN_UPDATE_PARAMS[key].restrictions.includes(IS_ZCASH)) continue 
-    if (!isPbaasRoot && DEFAULT_COIN_UPDATE_PARAMS[key].restrictions.includes(IS_PBAAS_ROOT)) continue 
-    if (chainTicker && DEFAULT_COIN_UPDATE_PARAMS[key].restrictions.includes(chainTicker.toUpperCase())) continue
+  let updateIntervalData = {};
+  let updateTrackingData = {};
+  const isPbaasRoot = chainTags.includes(IS_PBAAS_ROOT);
+  const isPbaas = chainTags.includes(IS_PBAAS) || isPbaasRoot;
+  const isZcash = chainTags.includes(IS_ZCASH);
 
-    const channelsToUse = DEFAULT_COIN_UPDATE_PARAMS[key].channels.filter(value => -1 !== enabledChannels.indexOf(value))
+  for (let key in updateParams) {
+    if (!isPbaas && updateParams[key].restrictions.includes(IS_PBAAS)) continue;
+    if (!isZcash && updateParams[key].restrictions.includes(IS_ZCASH)) continue;
+    if (!isPbaasRoot && updateParams[key].restrictions.includes(IS_PBAAS_ROOT))
+      continue;
+    if (
+      chainTicker &&
+      updateParams[key].restrictions.includes(chainTicker.toUpperCase())
+    )
+      continue;
 
-    updateIntervalData[key] = DEFAULT_COIN_UPDATE_PARAMS[key][chainStatus].interval_info
+    const channelsToUse = enabledChannels.filter(enabledChannel => {
+      const parentChannel = enabledChannel.split('.')[0];
+
+      return -1 !== updateParams[key].channels.indexOf(parentChannel);
+    });
+
+    updateIntervalData[key] = updateParams[key][chainStatus].interval_info;
     updateTrackingData[key] = {
-      ...DEFAULT_COIN_UPDATE_PARAMS[key][chainStatus].tracking_info,
-      channels: channelsToUse
+      ...updateParams[key][chainStatus].tracking_info,
+      channels: channelsToUse,
     };
-    if (onCompletes[key]) updateIntervalData[key] = {...updateIntervalData[key], ...onCompletes[key]}
+    if (onCompletes[key])
+      updateIntervalData[key] = {
+        ...updateIntervalData[key],
+        ...onCompletes[key],
+      };
   }
 
   return {
     type: SET_COIN_UPDATE_DATA,
     chainTicker,
     updateIntervalData,
-    updateTrackingData
-  }
-}
+    updateTrackingData,
+  };
+};
 
 /**
  * Returns an action to initialize all service related API call update data

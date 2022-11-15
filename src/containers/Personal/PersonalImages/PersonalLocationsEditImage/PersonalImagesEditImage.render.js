@@ -13,6 +13,7 @@ import TextInputModal from "../../../../components/TextInputModal/TextInputModal
 import ListSelectionModal from "../../../../components/ListSelectionModal/ListSelectionModal";
 import Colors from "../../../../globals/colors";
 import { PERSONAL_DOCUMENT_OTHER, PERSONAL_IMAGE_SUBTYPE_SCHEMA, PERSONAL_IMAGE_TYPE_SCHEMA } from "../../../../utils/constants/personal";
+import { getPersonalImageDisplayUri } from "../../../../utils/personal/displayUtils";
 
 export const PersonalImagesEditImageRender = function () {
   const schema =
@@ -221,6 +222,8 @@ export const PersonalImagesEditImageRender = function () {
           />
         )}
         {this.state.image.uris.map((uri, index, uris) => {
+          const docUri = getPersonalImageDisplayUri(uri)
+
           return (
             <Card
               onPress={
@@ -238,7 +241,7 @@ export const PersonalImagesEditImageRender = function () {
               key={index}
             >
               <Card.Cover
-                source={{ uri }}
+                source={{ uri: docUri }}
                 style={{
                   borderRadius: 0,
                 }}

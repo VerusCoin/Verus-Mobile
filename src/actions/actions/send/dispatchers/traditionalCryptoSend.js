@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js";
 import { MID_VERIFICATION, NO_VERIFICATION } from "../../../../utils/constants/constants";
 import { isNumber, satsToCoins, truncateDecimal } from "../../../../utils/math";
 import { networks } from 'bitgo-utxo-lib';
-import { extractIdentityAddress } from "../../../../utils/api/channels/dlight/callCreators";
+import { extractIdentityAddress } from "../../../../utils/api/channels/verusid/callCreators";
 import { createAlert } from "../../alert/dispatchers/alert";
 import { send } from "../../../../utils/api/routers/send";
 import { preflightSend } from "../../../../utils/api/routers/preflightSend";
@@ -33,7 +33,6 @@ export const traditionalCryptoSend = async (
 
   const activeUser = state.authentication.activeAccount;
   const coinSettings = state.settings.coinSettings;
-  const useIdShortcuts = state.settings.generalWalletSettings.verusIdShortcutsEnabled
 
   const network = networks[coinObj.id.toLowerCase()]
     ? networks[coinObj.id.toLowerCase()]
@@ -57,14 +56,8 @@ export const traditionalCryptoSend = async (
     let destinationAddress;
 
     if (address.includes("@")) {
-      if (useIdShortcuts) {
-        destinationAddress = await extractIdentityAddress(address, coinObj.id);
-        identity = address;
-      } else {
-        throw new Error(
-          'VerusID Shortcuts are not enabled. To enable them, turn them on in the "General Wallet Settings" menu.'
-        );
-      }
+      destinationAddress = await extractIdentityAddress(address, coinObj.id);
+      identity = address;
     } else {
       destinationAddress = address;
     }
@@ -115,6 +108,7 @@ export const traditionalCryptoSend = async (
           channel,
           memo,
           finalTxAmount: res.result.value != null ? res.result.value : amount.toString(),
+          fromAddress: res.result.fromAddress,
           txid: res.result.txid,
           fullResult: res.result
         };
@@ -187,6 +181,7 @@ export const traditionalCryptoSend = async (
           memo: res.result.memo,
           balanceDelta,
           finalTxAmount: finalTxAmount,
+          fromAddress: res.result.fromAddress,
           fees: [
             {
               amount: res.result.fee,

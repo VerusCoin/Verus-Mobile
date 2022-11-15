@@ -35,8 +35,7 @@ export const RenderReceiveCoin = function() {
     memo,
     addressSelectModalOpen
   } = state;
-  const fiatEnabled =
-    rates[selectedCoin.id] && rates[selectedCoin.id][displayCurrency] != null;
+  const fiatEnabled = rates[displayCurrency] != null;
 
   return (
     <View style={Styles.defaultRoot}>

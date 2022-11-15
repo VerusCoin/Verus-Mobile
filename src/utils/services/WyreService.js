@@ -7,7 +7,7 @@ import RNFS from "react-native-fs"
 import { WYRE_URL } from '../constants/constants';
 import { WYRE_SERVICE_ID } from '../constants/services';
 import { Buffer } from 'buffer'
-import { mapWyreDocumentIds } from '../../actions/actions/services/dispatchers/wyre';
+import { mapWyreDocumentIds } from '../../actions/actions/services/dispatchers/wyre/wyre';
 
 const parseError = (error) => (
   error.response ? error.response.data.message : error.toString()
@@ -111,7 +111,7 @@ class WyreService {
 
           if (config.method === "get") {
             config.headers.common["X-Api-Signature"] = WyreService.signUrlString(
-              config.baseURL.replace(/\/+$/, "") + axios.getUri(config),
+              axios.getUri(config),
               wyreToken
             );
           } else {

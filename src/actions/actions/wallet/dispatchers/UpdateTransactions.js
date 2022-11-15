@@ -1,103 +1,22 @@
-import { getZTransactions } from '../../../../utils/api/channels/dlight/callCreators'
-import { getParsedTransactionList } from '../../../../utils/api/channels/electrum/callCreators'
 import { ERROR_TRANSACTIONS, SET_TRANSACTIONS } from '../../../../utils/constants/storeType'
-import { DLIGHT_PRIVATE, ELECTRUM, ETH, ERC20, WYRE_SERVICE } from '../../../../utils/constants/intervalConstants'
-import { standardizeDlightTxObj } from '../../../../utils/standardization/standardizeTxObj'
+import { DLIGHT_PRIVATE, ELECTRUM, ETH, ERC20, WYRE_SERVICE, VRPC } from '../../../../utils/constants/intervalConstants'
 import { updateLedgerValue } from './UpdateLedgerValue'
-import { getStandardEthTransactions } from '../../../../utils/api/channels/eth/callCreator'
-import { getStandardErc20Transactions } from '../../../../utils/api/channels/erc20/callCreator'
-import { getTransactions as getWyreTransactions } from '../../../../utils/api/channels/wyre/callCreators'
+import { updateDlightTransactions } from './dlight/updates'
+import { updateElectrumTransactions } from './electrum/updates'
+import { updateErc20Transactions } from './erc20/updates'
+import { updateEthTransactions } from './eth/updates'
+import { updateWyreTransactions } from './wyre/updates'
+import { updateVrpcTransactions } from './vrpc/updates'
 
-const channelMap = {
-  [DLIGHT_PRIVATE]: async (activeUser, coinObj) => {
-    const zTransactions = await getZTransactions(
-      coinObj.id,
-      activeUser.accountHash,
-      coinObj.proto,
-      "all"
-    );
-    const { result, ...header } = zTransactions;
-
-    return {
-      chainTicker: coinObj.id,
-      channel: DLIGHT_PRIVATE,
-      header,
-      body: result.map(standardizeDlightTxObj),
-    };
-  },
-  [ELECTRUM]: async (activeUser, coinObj) => {
-    const transactions = await getParsedTransactionList(
-      coinObj,
-      activeUser,
-      10
-    );
-    const { result, ...header } = transactions;
-
-    return {
-      chainTicker: coinObj.id,
-      channel: ELECTRUM,
-      header,
-      body: result,
-    };
-  },
-  [ETH]: async (activeUser, coinObj) => {
-    if (
-      activeUser.keys[coinObj.id] != null &&
-      activeUser.keys[coinObj.id][ETH] != null &&
-      activeUser.keys[coinObj.id][ETH].addresses.length > 0
-    ) {
-      return {
-        chainTicker: coinObj.id,
-        channel: ETH,
-        header: {},
-        body: await getStandardEthTransactions(
-          activeUser.keys[coinObj.id][ETH].addresses[0]
-        ),
-      };
-    } else {
-      throw new Error(
-        "updateTransactions.js: Fatal mismatch error, " +
-          activeUser.id +
-          " user keys for active coin " +
-          coinObj.id +
-          " not found!"
-      );
-    }
-  },
-  [ERC20]: async (activeUser, coinObj) => {
-    if (
-      activeUser.keys[coinObj.id] != null &&
-      activeUser.keys[coinObj.id][ERC20] != null &&
-      activeUser.keys[coinObj.id][ERC20].addresses.length > 0
-    ) {
-      return {
-        chainTicker: coinObj.id,
-        channel: ERC20,
-        header: {},
-        body: await getStandardErc20Transactions(
-          activeUser.keys[coinObj.id][ERC20].addresses[0],
-          coinObj.currency_id,
-          coinObj.decimals
-        ),
-      };
-    } else {
-      throw new Error(
-        "updateTransactions.js: Fatal mismatch error, " +
-          activeUser.id +
-          " user keys for active coin " +
-          coinObj.id +
-          " not found!"
-      );
-    }
-  },
-  [WYRE_SERVICE]: async (activeUser, coinObj) => {
-    return {
-      chainTicker: coinObj.id,
-      channel: WYRE_SERVICE,
-      header: {},
-      body: await getWyreTransactions(coinObj),
-    };
-  },
+const fetchChannels = activeUser => {
+  return {
+    [DLIGHT_PRIVATE]: coinObj => updateDlightTransactions(activeUser, coinObj),
+    [ELECTRUM]: coinObj => updateElectrumTransactions(activeUser, coinObj),
+    [ETH]: coinObj => updateEthTransactions(activeUser, coinObj),
+    [ERC20]: coinObj => updateErc20Transactions(activeUser, coinObj),
+    [WYRE_SERVICE]: coinObj => updateWyreTransactions(coinObj),
+    [VRPC]: (coinObj, channelId) => updateVrpcTransactions(coinObj, channelId)
+  };
 };
 
 /**
@@ -116,5 +35,5 @@ export const updateTransactions = (state, dispatch, channels, chainTicker) =>
     chainTicker,
     SET_TRANSACTIONS,
     ERROR_TRANSACTIONS,
-    channelMap
+    fetchChannels
   );

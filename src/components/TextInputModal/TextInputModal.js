@@ -56,7 +56,7 @@ class TextInputModal extends Component {
             <NativeTextInput
               autoCapitalize={"none"}
               autoCorrect={false}
-              autoComplete="false"
+              autoComplete="off"
               returnKeyType="done"
               onSubmitEditing={cancel != null ? () => cancel(this.state.text) : () => {}}
               {...props}

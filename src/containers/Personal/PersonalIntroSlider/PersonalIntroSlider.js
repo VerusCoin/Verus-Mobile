@@ -23,22 +23,22 @@ const slides = [
     title: 'Personal Profile',
     text: 'Your personal profile is a safe, private place to store personal information.',
     backgroundColor: Colors.verusGreenColor,
-    icon: "fingerprint"
+    icon: 'fingerprint',
   },
   {
     key: 2,
     title: 'Privacy',
-    text: 'Your personal profile is encrypted and stored locally. No part of it will ever leave your device without your explicit consent.',
+    text: 'Unlike your private keys, which are stored fully encrypted, your personal profile is stored locally, and images are unencrypted.\n\nVerus Mobile will not share any of your personal profile data without your explicit consent, but your phone may automatically backup your stored data or grant access to other applications if you have it configured to do so.',
     backgroundColor: Colors.quaternaryColor,
-    icon: "shield-account"
+    icon: 'shield-account',
   },
   {
     key: 3,
     title: 'Get Started',
     text: 'Enter your name to create your personal profile and get started.',
     backgroundColor: Colors.secondaryColor,
-    form: true
-  }
+    form: true,
+  },
 ];
 
 const NameForm = (props) => {
