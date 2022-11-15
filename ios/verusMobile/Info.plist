@@ -1,115 +1,115 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-	<dict>
-		<key>CFBundleDevelopmentRegion</key>
-		<string>en</string>
-		<key>CFBundleDisplayName</key>
-		<string>Verus Mobile</string>
-		<key>CFBundleExecutable</key>
-		<string>$(EXECUTABLE_NAME)</string>
-		<key>CFBundleIdentifier</key>
-		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-		<key>CFBundleInfoDictionaryVersion</key>
-		<string>6.0</string>
-		<key>CFBundleName</key>
-		<string>$(PRODUCT_NAME)</string>
-		<key>CFBundlePackageType</key>
-		<string>APPL</string>
-		<key>CFBundleShortVersionString</key>
-		<string>$(MARKETING_VERSION)</string>
-		<key>CFBundleSignature</key>
-		<string>????</string>
-		<key>CFBundleVersion</key>
-		<string>$(CURRENT_PROJECT_VERSION)</string>
-		<key>LSApplicationCategoryType</key>
-		<string/>
-		<key>LSRequiresIPhoneOS</key>
-		<true/>
-		<key>NSAppTransportSecurity</key>
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>Verus Mobile</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
 		<dict>
-			<key>NSAllowsArbitraryLoads</key>
-			<true/>
-			<key>NSExceptionDomains</key>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>i5jtwbp6zymeay9llnraglgjqgdrffsau4</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSApplicationCategoryType</key>
+	<string></string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>localhost</key>
 			<dict>
-				<key>localhost</key>
-				<dict>
-					<key>NSExceptionAllowsInsecureHTTPLoads</key>
-					<true/>
-				</dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
 			</dict>
 		</dict>
-		<key>NSAppleMusicUsageDescription</key>
-		<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-		<key>NSBluetoothAlwaysUsageDescription</key>
-		<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-		<key>NSBluetoothPeripheralUsageDescription</key>
-		<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-		<key>NSCalendarsUsageDescription</key>
-		<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-		<key>NSCameraUsageDescription</key>
-		<string>Verus Mobile needs access to the camera to scan QR codes, and to allow you to add images to your locally encrypted personal profile</string>
-		<key>NSContactsUsageDescription</key>
-		<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-		<key>NSFaceIDUsageDescription</key>
-		<string>Enabling Face ID allows you quick and secure access to your account.</string>
-		<key>NSLocationAlwaysUsageDescription</key>
-		<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-		<key>NSMicrophoneUsageDescription</key>
-		<string>Verus Mobile needs access to the camera to scan QR codes</string>
-		<key>NSMotionUsageDescription</key>
-		<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-		<key>NSPhotoLibraryAddUsageDescription</key>
-		<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-		<key>NSPhotoLibraryUsageDescription</key>
-		<string>The user can use the photo library to add images to their locally encrypted personal profile</string>
-		<key>NSSiriUsageDescription</key>
-		<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-		<key>NSSpeechRecognitionUsageDescription</key>
-		<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-		<key>UIAppFonts</key>
-		<array>
-			<string>AntDesign.ttf</string>
-			<string>Entypo.ttf</string>
-			<string>EvilIcons.ttf</string>
-			<string>Feather.ttf</string>
-			<string>FontAwesome.ttf</string>
-			<string>FontAwesome5_Brands.ttf</string>
-			<string>FontAwesome5_Regular.ttf</string>
-			<string>FontAwesome5_Solid.ttf</string>
-			<string>Fontisto.ttf</string>
-			<string>Foundation.ttf</string>
-			<string>Ionicons.ttf</string>
-			<string>MaterialCommunityIcons.ttf</string>
-			<string>MaterialIcons.ttf</string>
-			<string>Octicons.ttf</string>
-			<string>SimpleLineIcons.ttf</string>
-			<string>Zocial.ttf</string>
-		</array>
-		<key>UILaunchStoryboardName</key>
-		<string>LaunchScreen</string>
-		<key>UIRequiredDeviceCapabilities</key>
-		<array>
-			<string>armv7</string>
-		</array>
-		<key>UISupportedInterfaceOrientations</key>
-		<array>
-			<string>UIInterfaceOrientationPortrait</string>
-		</array>
-		<key>UIUserInterfaceStyle</key>
-		<string>Light</string>
-		<key>UIViewControllerBasedStatusBarAppearance</key>
-		<false/>
-		<key>CFBundleURLTypes</key>
-		<array>
-			<dict>
-				<key>CFBundleURLSchemes</key>
-				<array>
-					<string>i5jtwbp6zymeay9llnraglgjqgdrffsau4</string>
-				</array>
-			</dict>
-		</array>
 	</dict>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Verus Mobile needs access to the camera to scan QR codes, and to allow you to add images to your locally encrypted personal profile</string>
+	<key>NSContactsUsageDescription</key>
+	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Enabling Face ID allows you quick and secure access to your account.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Verus Mobile needs access to the camera to scan QR codes</string>
+	<key>NSMotionUsageDescription</key>
+	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>The user can use the photo library to add images to their locally encrypted personal profile</string>
+	<key>NSSiriUsageDescription</key>
+	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>AntDesign.ttf</string>
+		<string>Entypo.ttf</string>
+		<string>EvilIcons.ttf</string>
+		<string>Feather.ttf</string>
+		<string>FontAwesome.ttf</string>
+		<string>FontAwesome5_Brands.ttf</string>
+		<string>FontAwesome5_Regular.ttf</string>
+		<string>FontAwesome5_Solid.ttf</string>
+		<string>Fontisto.ttf</string>
+		<string>Foundation.ttf</string>
+		<string>Ionicons.ttf</string>
+		<string>MaterialCommunityIcons.ttf</string>
+		<string>MaterialIcons.ttf</string>
+		<string>Octicons.ttf</string>
+		<string>SimpleLineIcons.ttf</string>
+		<string>Zocial.ttf</string>
+	</array>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
+</dict>
 </plist>
