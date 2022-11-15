@@ -5,7 +5,7 @@ import com.android.build.OutputFile
 def versionMajor = 0
 def versionMinor = 3
 def versionRevision = 0
-def versionBuild = 1
+def versionBuild = 24
 
 def keystorePropertiesFile = rootProject.file("keystore.properties");
 
@@ -242,7 +242,7 @@ android {
         pickFirst '**/x86_64/libfbjni.so'
         pickFirst '**/x86/libfbjni.so'
     }
-    
+
     signingConfigs {
         release {
             if (keystorePropertiesFile.exists()) {
