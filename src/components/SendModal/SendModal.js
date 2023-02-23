@@ -14,6 +14,7 @@ import {
   DEPOSIT_SEND_MODAL,
   LINK_IDENTITY_SEND_MODAL,
   AUTHENTICATE_USER_SEND_MODAL,
+  PROVISION_IDENTITY_SEND_MODAL,
 } from "../../utils/constants/sendModal";
 import { SendModalRender } from "./SendModal.render"
 
@@ -27,6 +28,7 @@ class SendModal extends Component {
       [WITHDRAW_SEND_MODAL]: 624,
       [DEPOSIT_SEND_MODAL]: 624,
       [LINK_IDENTITY_SEND_MODAL]: 442,
+      [PROVISION_IDENTITY_SEND_MODAL]: 442,
       [AUTHENTICATE_USER_SEND_MODAL]: 442
     };
 

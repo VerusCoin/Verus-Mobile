@@ -3,13 +3,14 @@ import {
   Clipboard,
   FlatList,
   TouchableOpacity,
-  Alert
+  Alert,
+  View
 } from 'react-native';
 import { Text, List, Divider } from "react-native-paper";
 import Styles from "../styles";
 
 export default function VerusIdObjectData(props) {
-  const { friendlyNames, verusId, ListFooterComponent } = props
+  const { friendlyNames, verusId, StickyFooterComponent } = props
   const [listData, setListData] = useState([]);
 
   tryDisplayFriendlyName = (iAddr) => {
@@ -103,45 +104,47 @@ export default function VerusIdObjectData(props) {
   };
 
   return (
-    <FlatList
-      ListFooterComponent={ListFooterComponent}
-      style={Styles.fullWidth}
-      contentContainerStyle={{ paddingBottom: 152 }}
-      renderItem={({item}) => {
-        if (item.condition == null || item.condition === true)
-          return (
-            <React.Fragment>
-              <TouchableOpacity
-                disabled={item.onPress == null}
-                onPress={() => item.onPress()}>
-                <List.Item
-                  title={item.data}
-                  description={item.key}
-                  titleNumberOfLines={item.numLines || 1}
-                  titleStyle={
-                    item.capitalized ? Styles.capitalizeFirstLetter : undefined
-                  }
-                  right={props =>
-                    item.right ? (
-                      <Text
-                        {...props}
-                        style={{
-                          fontSize: 16,
-                          alignSelf: 'center',
-                          marginRight: 8,
-                        }}>
-                        {item.right}
-                      </Text>
-                    ) : null
-                  }
-                />
-                <Divider />
-              </TouchableOpacity>
-            </React.Fragment>
-          );
-        else return null;
-      }}
-      data={listData}
-    />
+    <View style={{flex: 1, ...Styles.fullWidth}}>
+      <FlatList
+        style={{...Styles.fullWidth, flex: 1}}
+        contentContainerStyle={{ paddingBottom: 152 }}
+        renderItem={({item}) => {
+          if (item.condition == null || item.condition === true)
+            return (
+              <React.Fragment>
+                <TouchableOpacity
+                  disabled={item.onPress == null}
+                  onPress={() => item.onPress()}>
+                  <List.Item
+                    title={item.data}
+                    description={item.key}
+                    titleNumberOfLines={item.numLines || 1}
+                    titleStyle={
+                      item.capitalized ? Styles.capitalizeFirstLetter : undefined
+                    }
+                    right={props =>
+                      item.right ? (
+                        <Text
+                          {...props}
+                          style={{
+                            fontSize: 16,
+                            alignSelf: 'center',
+                            marginRight: 8,
+                          }}>
+                          {item.right}
+                        </Text>
+                      ) : null
+                    }
+                  />
+                  <Divider />
+                </TouchableOpacity>
+              </React.Fragment>
+            );
+          else return null;
+        }}
+        data={listData}
+      />
+      {StickyFooterComponent != null ? StickyFooterComponent : null}
+    </View>
   );
 }

@@ -11,7 +11,7 @@ export const LinkIdentityConfirmRender = function () {
       <VerusIdObjectData
         verusId={this.state.verusId}
         friendlyNames={this.state.friendlyNames}
-        ListFooterComponent={
+        StickyFooterComponent={
           <View
             style={{
               ...Styles.fullWidthBlock,

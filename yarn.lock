@@ -1676,9 +1676,9 @@
     "@bitgo/blake2b-wasm" "^3.0.1"
     nanoassert "^2.0.0"
 
-"@bitgo/utxo-lib@git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus":
+"@bitgo/utxo-lib@https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337":
   version "1.9.6"
-  resolved "git+https://github.com/VerusCoin/BitGoJS.git#dceba5dc289c34a1d767d7d79e9b5d7161d0c8da"
+  resolved "https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337"
   dependencies:
     "@bitgo/blake2b" "3.0.1"
     bech32 "0.0.3"
@@ -1701,9 +1701,9 @@
   optionalDependencies:
     secp256k1 "3.5.2"
 
-"@bitgo/utxo-lib@https://github.com/VerusCoin/BitGoJS.git#dceba5dc289c34a1d767d7d79e9b5d7161d0c8da":
+"@bitgo/utxo-lib@https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus":
   version "1.9.6"
-  resolved "https://github.com/VerusCoin/BitGoJS.git#dceba5dc289c34a1d767d7d79e9b5d7161d0c8da"
+  resolved "https://github.com/VerusCoin/BitGoJS.git#1619f87dac70a40de8d272f0c21f2bd428d644f7"
   dependencies:
     "@bitgo/blake2b" "3.0.1"
     bech32 "0.0.3"
@@ -3492,9 +3492,9 @@ aes-js@3.0.0:
   resolved "https://registry.yarnpkg.com/aes-js/-/aes-js-3.0.0.tgz#e21df10ad6c2053295bcbb8dab40b09dbea87e4d"
   integrity sha1-4h3xCtbCBTKVvLuNq0Cwnb6ofk0=
 
-"agama-wallet-lib@git+https://github.com/VerusCoin/agama-wallet-lib.git#mobile":
+"agama-wallet-lib@https://github.com/VerusCoin/agama-wallet-lib.git#mobile":
   version "0.3.4"
-  resolved "git+https://github.com/VerusCoin/agama-wallet-lib.git#7d743ffe639dd68fac167c31210b0fc8745be5c1"
+  resolved "https://github.com/VerusCoin/agama-wallet-lib.git#fdd5ca635f6204b41400ea95553d3c9d6bddfd6d"
   dependencies:
     bigi "^1.4.2"
     bip32 "^1.0.2"
@@ -3982,6 +3982,11 @@ base-64@^0.1.0:
   resolved "https://registry.yarnpkg.com/base-64/-/base-64-0.1.0.tgz#780a99c84e7d600260361511c4877613bf24f6bb"
   integrity sha1-eAqZyE59YAJgNhURxId2E78k9rs=
 
+base-x@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/base-x/-/base-x-1.1.0.tgz#42d3d717474f9ea02207f6d1aa1f426913eeb7ac"
+  integrity sha1-QtPXF0dPnqAiB/bRqh9CaRPut6w=
+
 base-x@^3.0.2:
   version "3.0.8"
   resolved "https://registry.yarnpkg.com/base-x/-/base-x-3.0.8.tgz#1e1106c2537f0162e8b52474a557ebb09000018d"
@@ -4114,9 +4119,9 @@ bip39@^2.3.1, bip39@^2.4.0:
     safe-buffer "^5.0.1"
     unorm "^1.3.3"
 
-"bip39@git+https://github.com/michaeltout/bip39.git":
+"bip39@https://github.com/michaeltout/bip39.git":
   version "3.0.3"
-  resolved "git+https://github.com/michaeltout/bip39.git#17d3bbefc80d243903eabd60e0ed64f20aa2bf31"
+  resolved "https://github.com/michaeltout/bip39.git#17d3bbefc80d243903eabd60e0ed64f20aa2bf31"
   dependencies:
     "@types/node" "11.11.6"
     create-hash "^1.1.0"
@@ -4512,6 +4517,13 @@ bs58@=2.0.0:
   resolved "https://registry.yarnpkg.com/bs58/-/bs58-2.0.0.tgz#72b713bed223a0ac518bbda0e3ce3f4817f39eb5"
   integrity sha1-crcTvtIjoKxRi72g484/SBfznrU=
 
+bs58@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/bs58/-/bs58-3.1.0.tgz#d4c26388bf4804cac714141b1945aa47e5eb248e"
+  integrity sha1-1MJjiL9IBMrHFBQbGUWqR+XrJI4=
+  dependencies:
+    base-x "^1.1.0"
+
 bs58@^4.0.0:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/bs58/-/bs58-4.0.1.tgz#be161e76c354f6f788ae4071f63f34e8c4f0a42a"
@@ -4519,14 +4531,29 @@ bs58@^4.0.0:
   dependencies:
     base-x "^3.0.2"
 
-bs58check@2.0.0, bs58check@2.1.2, bs58check@<3.0.0, bs58check@^1.0.5, bs58check@^1.0.6, bs58check@^2.0.0, bs58check@^2.1.1, bs58check@^2.1.2, "bs58check@https://github.com/bitcoinjs/bs58check":
+bs58check@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/bs58check/-/bs58check-2.0.0.tgz#b70fffd80bc72de18a040a547d7e5e08ce1b1e4e"
+  integrity sha512-afttdRHvL1HCgBJqcMtoRXe8xCQ7fbUidoLp1JTRXT4bAvtfDyZx7mb79w82XkcdIFFstG3A4NhKOBdEsLbQbw==
+  dependencies:
+    bs58 "^4.0.0"
+    create-hash "^1.1.0"
+
+bs58check@<3.0.0, bs58check@^2.0.0, bs58check@^2.1.1, bs58check@^2.1.2, "bs58check@https://github.com/bitcoinjs/bs58check":
   version "2.1.2"
-  resolved "https://registry.npmjs.org/bs58check/-/bs58check-2.1.2.tgz#53b018291228d82a5aa08e7d796fdafda54aebfc"
-  integrity sha512-0TS1jicxdU09dwJMNZtVAfzPi6Q6QeN0pM1Fkzrjn+XYHvzMKPU3pHVpva+769iNVSfIYWf7LJ6WR+BuuMf8cA==
+  resolved "https://github.com/bitcoinjs/bs58check#12b3e700f355c5c49d0be3f8fc29be6c66e753e9"
   dependencies:
     bs58 "^4.0.0"
     create-hash "^1.1.0"
     safe-buffer "^5.1.2"
+
+bs58check@^1.0.5, bs58check@^1.0.6:
+  version "1.3.4"
+  resolved "https://registry.yarnpkg.com/bs58check/-/bs58check-1.3.4.tgz#c52540073749117714fa042c3047eb8f9151cbf8"
+  integrity sha512-+cZ/mYuyfHboELKvDTYF6onDT4XEgbM9kBsKW91q2YlyDsGRpgT/O6pU4ws5n+LD38XAiD7LChgB3+NBqMGk6g==
+  dependencies:
+    bs58 "^3.1.0"
+    create-hash "^1.1.0"
 
 bser@2.1.1:
   version "2.1.1"
@@ -6283,9 +6310,24 @@ ethereumjs-util@^6.0.0:
     ethjs-util "0.1.6"
     rlp "^2.2.3"
 
-"ethers@git+https://github.com/michaeltout/ethersjs-package.git":
+"ethers@git+https://github.com/pbca26/ethers.js":
+  version "4.0.7"
+  resolved "git+https://github.com/pbca26/ethers.js#26671ceccb7a828e405b70f7ea42025efef19b73"
+  dependencies:
+    "@types/node" "^10.3.2"
+    aes-js "3.0.0"
+    bn.js "^4.4.0"
+    elliptic "6.3.3"
+    hash.js "1.1.3"
+    js-sha3 "0.5.7"
+    scrypt-js "2.0.4"
+    setimmediate "1.0.4"
+    uuid "2.0.1"
+    xmlhttprequest "1.8.0"
+
+"ethers@https://github.com/michaeltout/ethersjs-package.git":
   version "5.0.8"
-  resolved "git+https://github.com/michaeltout/ethersjs-package.git#cec8e071f373116182e7804278c78da7a7493f33"
+  resolved "https://github.com/michaeltout/ethersjs-package.git#cec8e071f373116182e7804278c78da7a7493f33"
   dependencies:
     "@ethersproject/abi" "^5.0.0"
     "@ethersproject/abstract-provider" "^5.0.0"
@@ -6317,21 +6359,6 @@ ethereumjs-util@^6.0.0:
     "@ethersproject/wallet" "^5.0.0"
     "@ethersproject/web" "^5.0.0"
     "@ethersproject/wordlists" "^5.0.0"
-
-"ethers@git+https://github.com/pbca26/ethers.js":
-  version "4.0.7"
-  resolved "git+https://github.com/pbca26/ethers.js#26671ceccb7a828e405b70f7ea42025efef19b73"
-  dependencies:
-    "@types/node" "^10.3.2"
-    aes-js "3.0.0"
-    bn.js "^4.4.0"
-    elliptic "6.3.3"
-    hash.js "1.1.3"
-    js-sha3 "0.5.7"
-    scrypt-js "2.0.4"
-    setimmediate "1.0.4"
-    uuid "2.0.1"
-    xmlhttprequest "1.8.0"
 
 ethjs-util@0.1.6:
   version "0.1.6"
@@ -11135,9 +11162,9 @@ react-native-barcode-mask@1.2.4:
   dependencies:
     prop-types "^15.6.2"
 
-"react-native-cache@git+https://github.com/michaeltout/react-native-cache.git":
+"react-native-cache@https://github.com/michaeltout/react-native-cache.git":
   version "1.1.7"
-  resolved "git+https://github.com/michaeltout/react-native-cache.git#f8c1a72b50177aa93de5e8c329b1523409505dd6"
+  resolved "https://github.com/michaeltout/react-native-cache.git#f8c1a72b50177aa93de5e8c329b1523409505dd6"
   dependencies:
     async "^2.6.1"
 
@@ -13275,9 +13302,9 @@ typedarray@^0.0.6:
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
 
-typeforce@1.11.3, typeforce@^1.0.0, typeforce@^1.11.1, typeforce@^1.11.3, typeforce@^1.11.5, typeforce@^1.8.7, "typeforce@git+https://github.com/michaeltout/typeforce", "typeforce@git+https://github.com/michaeltout/typeforce.git":
+typeforce@1.11.3, typeforce@^1.0.0, typeforce@^1.11.1, typeforce@^1.11.3, typeforce@^1.11.5, typeforce@^1.8.7, "typeforce@git+https://github.com/michaeltout/typeforce":
   version "1.18.0"
-  resolved "git+https://github.com/michaeltout/typeforce.git#c9b0abc33ff006d7a6a6150eff034bc7eb8b07de"
+  resolved "git+https://github.com/michaeltout/typeforce#c9b0abc33ff006d7a6a6150eff034bc7eb8b07de"
 
 typescript-compare@^0.0.2:
   version "0.0.2"
@@ -13597,16 +13624,16 @@ version_compare@0.0.3:
   resolved "https://registry.yarnpkg.com/version_compare/-/version_compare-0.0.3.tgz#ec30bbd187526a7f8b55027ac1cb2e65993483a5"
   integrity sha1-7DC70YdSan+LVQJ6wcsuZZk0g6U=
 
-"verus-pay-utils@git+https://github.com/michaeltout/verus-pay-utils.git":
+"verus-pay-utils@https://github.com/michaeltout/verus-pay-utils.git":
   version "2.0.0"
-  resolved "git+https://github.com/michaeltout/verus-pay-utils.git#cc34a4cae48f30714200742eca3d43ee42e13290"
+  resolved "https://github.com/michaeltout/verus-pay-utils.git#cc34a4cae48f30714200742eca3d43ee42e13290"
   dependencies:
     bignumber.js "^9.0.0"
     verus-zkedid-utils "https://github.com/michaeltout/verus-zkedid-utils#dev"
 
-"verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git#4cc793e54303938c4a968130ca7279b9c246acfb":
+"verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git#23b0ef2490a25f7e751e776e4edba3f2f14ab4d1":
   version "1.0.0"
-  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#4cc793e54303938c4a968130ca7279b9c246acfb"
+  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#23b0ef2490a25f7e751e776e4edba3f2f14ab4d1"
   dependencies:
     "@types/bs58check" "2.1.0"
     "@types/create-hash" "1.2.2"
@@ -13614,9 +13641,9 @@ version_compare@0.0.3:
     bs58check "https://github.com/bitcoinjs/bs58check"
     create-hash "1.2.0"
 
-"verus-zkedid-utils@git+https://github.com/michaeltout/verus-zkedid-utils.git":
+"verus-zkedid-utils@https://github.com/michaeltout/verus-zkedid-utils":
   version "1.0.0"
-  resolved "git+https://github.com/michaeltout/verus-zkedid-utils.git#7c4f8615de6f4b8aa07b27b383c42e561833488f"
+  resolved "https://github.com/michaeltout/verus-zkedid-utils#7c4f8615de6f4b8aa07b27b383c42e561833488f"
 
 "verus-zkedid-utils@https://github.com/michaeltout/verus-zkedid-utils#dev":
   version "1.0.0"
@@ -13624,10 +13651,10 @@ version_compare@0.0.3:
 
 "verusd-rpc-ts-client@git+https://github.com/VerusCoin/verusd-rpc-ts-client.git":
   version "0.1.0"
-  resolved "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git#aabeadd849667e9892f8458c12d1522c41b8001b"
+  resolved "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git#c3f9092a6dbbececa68a8599ea77fb768ab7a61f"
   dependencies:
     axios "0.27.2"
-    verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git#4cc793e54303938c4a968130ca7279b9c246acfb"
+    verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git#23b0ef2490a25f7e751e776e4edba3f2f14ab4d1"
 
 "verusd-rpc-ts-client@https://github.com/VerusCoin/verusd-rpc-ts-client.git#aabeadd849667e9892f8458c12d1522c41b8001b":
   version "0.1.0"
@@ -13639,13 +13666,13 @@ version_compare@0.0.3:
 
 "verusid-ts-client@git+https://github.com/VerusCoin/verusid-ts-client.git":
   version "0.1.0"
-  resolved "git+https://github.com/VerusCoin/verusid-ts-client.git#79035d83ede648199d2b25342ef285842a2926e4"
+  resolved "git+https://github.com/VerusCoin/verusid-ts-client.git#9b622f064ba152edd35e45b6c03cf65ea0be4a39"
   dependencies:
     "@bitgo/utxo-lib" "https://github.com/VerusCoin/BitGoJS.git#dceba5dc289c34a1d767d7d79e9b5d7161d0c8da"
     axios "0.27.2"
     bignumber.js "9.1.0"
     verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git#4cc793e54303938c4a968130ca7279b9c246acfb"
-    verusd-rpc-ts-client "https://github.com/VerusCoin/verusd-rpc-ts-client.git#aabeadd849667e9892f8458c12d1522c41b8001b"
+    verusd-rpc-ts-client "https://github.com/VerusCoin/verusd-rpc-ts-client.git#c3f9092a6dbbececa68a8599ea77fb768ab7a61f"
 
 vlq@^1.0.0:
   version "1.0.1"
