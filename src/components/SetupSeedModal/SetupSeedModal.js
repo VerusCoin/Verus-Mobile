@@ -18,7 +18,7 @@ class SetupSeedModal extends Component {
   constructor(props) {
     super(props);    
     this.state = {
-      firstTimeSeed: true,
+      firstTimeSeed: props.importOnly ? false : true,
       createSeedState: {
         newSeed: null,
         newSeedWords: null,
@@ -56,7 +56,7 @@ class SetupSeedModal extends Component {
   }
 
   render() {
-    const { cancel, setSeed, channel } = this.props
+    const { cancel, setSeed, channel, importOnly } = this.props
     const parentProps = {
       cancel,
       setSeed,
@@ -91,7 +91,8 @@ class SetupSeedModal extends Component {
               this.setState({ importSeedState })
             }
             initState={this.state.importSeedState}
-            createSeed={() => this.setState({ firstTimeSeed: true })}
+            backLabel={importOnly ? "Cancel" : "Back"}
+            onBack={importOnly ? cancel : () => this.setState({ firstTimeSeed: true })}
           />
         )}
       </Modal>

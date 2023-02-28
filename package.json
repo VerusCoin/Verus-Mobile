@@ -141,11 +141,11 @@
     "metro-react-native-babel-preset": "0.67.0",
     "node-fetch": "2.6.7",
     "react-test-renderer": "17.0.1",
-    "remote-redux-devtools": "0.5.16",
     "rn-nodeify": "github:tradle/rn-nodeify",
     "snyk": "1.996.0"
   },
   "resolutions": {
+    "@bitgo/utxo-lib": "git+https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337",
     "typeforce": "git+https://github.com/michaeltout/typeforce.git",
     "bs58check": "2.1.2",
     "braces": "3.0.2",

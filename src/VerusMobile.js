@@ -41,15 +41,6 @@ class VerusMobile extends React.Component {
       loading: true,
       securityCover: false
     };
-    
-    LogBox.ignoreLogs([
-      "Warning: componentWillMount is deprecated",
-      "Warning: componentWillReceiveProps is deprecated",
-      "Warning: componentWillUpdate is deprecated",
-      'RCTRootView cancelTouches', 
-      "Require cycle",
-      "long period"
-    ]);
   }
 
   // TODO: Implement own lifecycle manager to account for 

@@ -146,10 +146,10 @@ class ImportSeed extends Component {
             <View style={Styles.footerContainer}>
               <View style={Styles.standardWidthSpaceBetweenBlock}>
                 <Button
-                  onPress={this.props.createSeed}
+                  onPress={this.props.onBack}
                   color={Colors.warningButtonColor}
                 >
-                  {"Back"}
+                  {this.props.backLabel ? this.props.backLabel : "Back"}
                 </Button>
                 <Button
                   onPress={() => this.verifySeed()}

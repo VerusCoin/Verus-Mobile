@@ -39,7 +39,7 @@ import {
   POSSIBLY_UNSUPPORTED_CHAIN
 } from '../../../utils/constants/constants'
 import extraCoins from '../../../utils/extraCoins/extraCoins'
-import { createCoinObj, namesList } from '../../../utils/CoinData/CoinData'
+import { createCoinObj, fullCoinList } from '../../../utils/CoinData/CoinData'
 import { networks } from 'bitgo-utxo-lib';
 import { isKomodoCoin } from 'agama-wallet-lib/src/coin-helpers';
 import Styles from '../../../styles/index'
@@ -160,7 +160,7 @@ class CustomChainForm extends Component {
    * @param {String} ticker The ticker symbol to check
    */
   isReservedTicker = (ticker) => {
-    return namesList.includes(ticker.toUpperCase())
+    return fullCoinList.includes(ticker.toUpperCase())
   }
 
   /**

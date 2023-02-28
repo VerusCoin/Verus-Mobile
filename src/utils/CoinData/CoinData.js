@@ -2,7 +2,7 @@ import { electrumServers } from './electrum/servers';
 import { MAX_VERIFICATION } from '../constants/constants'
 import Colors from '../../globals/colors'
 import { coinsList } from './CoinsList'
-import { DLIGHT_PRIVATE, ELECTRUM, ERC20, GENERAL } from '../constants/intervalConstants';
+import { DLIGHT_PRIVATE, ELECTRUM, ERC20, GENERAL, WYRE_SERVICE } from '../constants/intervalConstants';
 
 import { ENABLE_VERUS_IDENTITIES } from '../../../env/index'
 
@@ -196,19 +196,31 @@ export const CoinLogos = {
   brl: CoinLogoIcons.fiat.BRL,
 };
 
-//To make flatlist render faster
-export const namesList = Object.values(coinsList).map(function(coin) {
+//To make flatlist render faster we make these lists here, once
+export const fullCoinList = Object.values(coinsList).map(function(coin) {
   return coin.id;
 });
+
+export const supportedCoinList = fullCoinList.filter(x => x !== 'OOT' && x !== 'ZILLA' && x !== 'RFOX');
+
+export const disabledNameList = supportedCoinList.filter(x => {
+  return (
+    coinsList[x.toLowerCase()].compatible_channels.filter(y => y !== WYRE_SERVICE).length == 0
+  );
+});
+
+export const enabledNameList = supportedCoinList.filter(
+  x => !disabledNameList.includes(x),
+);
 
 export const coinExistsInWallet = (coinTicker) => {
   let index = 0;
 
-  while (index < namesList.length && namesList[index] !== coinTicker) {
+  while (index < fullCoinList.length && fullCoinList[index] !== coinTicker) {
     index++;
   }
 
-  if (index < namesList.length) {
+  if (index < fullCoinList.length) {
     return true;
   } else {
     return false;
@@ -225,7 +237,7 @@ export const getCoinFromActiveCoins = (coinTicker, activeCoinsForUser) => {
     index++;
   }
 
-  if (index < namesList.length) {
+  if (index < fullCoinList.length) {
     return activeCoinsForUser[index];
   } else {
     return false;

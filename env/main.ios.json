@@ -25,6 +25,11 @@
   "ENABLE_VRPC": true,
   "ENABLE_VERUSID": true,
 
+  "SERVICES_DISABLED_DEFAULT": {
+    "wyre_service": true,
+    "verusid_service": false
+  },
+
   "ETH_NETWORK": "homestead",
 
   "BIOMETRIC_SECURITY_THRESHOLD": "SECURE_HARDWARE",

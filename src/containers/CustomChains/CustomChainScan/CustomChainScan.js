@@ -17,7 +17,7 @@ import QRCodeScanner from 'react-native-qrcode-scanner';
 import { isJson } from '../../../utils/objectManip'
 import { NavigationActions } from '@react-navigation/compat';
 import { connect } from 'react-redux';
-import { namesList } from '../../../utils/CoinData/CoinData'
+import { fullCoinList } from '../../../utils/CoinData/CoinData'
 import {
   FORMAT_UNKNOWN,
   INCOMPLETE_CHAIN_QR
@@ -129,11 +129,11 @@ class CustomChainScan extends Component {
   coinExistsInWallet = (coinTicker) => {
     let index = 0;
 
-    while (index < namesList.length && namesList[index] !== coinTicker) {
+    while (index < fullCoinList.length && fullCoinList[index] !== coinTicker) {
       index++;
     }
 
-    if (index < namesList.length) {
+    if (index < fullCoinList.length) {
       return true
     } else {
       return false

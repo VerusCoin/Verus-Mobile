@@ -12,19 +12,21 @@ import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import store from '../../store';
 import { setAccounts } from '../../actions/actionCreators';
 import { USER_DATA_STORAGE_INTERNAL_KEY } from '../../../env/index';
+import { WYRE_SERVICE_ID } from '../constants/services';
 
 //Set storage to hold encrypted user data
 export const storeUser = (authData, users) => {
   return new Promise(async (resolve, reject) => {
-    let encryptedKeys = { ...CHANNELS_NULL_TEMPLATE };
-    const { seeds } = authData;
+    let encryptedKeys = {...CHANNELS_NULL_TEMPLATE};
+    const {seeds} = authData;
 
     for (const seedType in authData.seeds) {
-      if (seeds[seedType])
+      if (seeds[seedType]) {
         encryptedKeys[seedType] = await encryptkey(
           authData.password,
-          seeds[seedType]
+          seeds[seedType],
         );
+      }
     }
 
     let userObj = {
@@ -36,19 +38,30 @@ export const storeUser = (authData, users) => {
         authData.keyDerivationVersion == null
           ? 0
           : authData.keyDerivationVersion,
+      disabledServices:
+        authData.disabledServices == null
+          ? encryptedKeys[WYRE_SERVICE]
+            ? {}
+            : {[WYRE_SERVICE_ID]: true}
+          : authData.disabledServices,
     };
+
     let _users = users ? users.slice() : [];
     _users.push(userObj);
-    let _toStore = { users: _users };
+    let _toStore = {users: _users};
 
-  
-    AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(_toStore))
+    AsyncStorage.setItem(
+      USER_DATA_STORAGE_INTERNAL_KEY,
+      JSON.stringify(_toStore),
+    )
       .then(() => {
         resolve(_users);
       })
       .catch(err => reject(err));
-  })
+  });
 };
+
+
 
 //Add user encrypted key for a channel
 export const addEncryptedKeyToUser = async (accountHash, channel, seed, password, overwrite = false) => {
@@ -181,7 +194,7 @@ export const resetUserPwd = (userID, newPwd, oldPwd) => {
   });
 };
 
-export const setUserBiometry = (userID, biometry) => {
+const setUserSetting = (userID, settingKey, setting) => {
   return new Promise((resolve, reject) => {
     AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(async (res) => {
@@ -190,7 +203,7 @@ export const setUserBiometry = (userID, biometry) => {
           let userIndex = _users.findIndex(n => n.id === userID);
 
           if (userIndex > -1) {
-            _users[userIndex].biometry = biometry
+            _users[userIndex][settingKey] = setting
             await AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify({users: _users}))
             resolve(_users)
           } else {
@@ -207,30 +220,16 @@ export const setUserBiometry = (userID, biometry) => {
   });
 };
 
-export const setUserKeyDerivationVersion = (userID, keyDerivationVersion) => {
-  return new Promise((resolve, reject) => {
-    AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
-      .then(async (res) => {
-        let _users = res ? JSON.parse(res).users : [];
-        if(userID !== null) {
-          let userIndex = _users.findIndex(n => n.id === userID);
+export const setUserBiometry = (userID, biometry) => {
+  return setUserSetting(userID, "biometry", biometry)
+};
 
-          if (userIndex > -1) {
-            _users[userIndex].keyDerivationVersion = keyDerivationVersion
-            await AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify({users: _users}))
-            resolve(_users)
-          } else {
-            throw new Error("User with ID " + userID + " not found")
-          }
-        } else {
-          throw new Error("UserID is null")
-        }
-      })
-      .catch(err => {
-        reject(err)
-        console.warn(err)
-      });
-  });
+export const setUserKeyDerivationVersion = (userID, keyDerivationVersion) => {
+  return setUserSetting(userID, "keyDerivationVersion", keyDerivationVersion)
+};
+
+export const setUserDisabledServices = (userID, disabledServices) => {
+  return setUserSetting(userID, "disabledServices", disabledServices)
 };
 
 //TODO: Stop using wifKey to encrypt payment methods before using them in production
