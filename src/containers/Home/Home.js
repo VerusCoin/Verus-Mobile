@@ -329,13 +329,6 @@ class Home extends Component {
     navigation.navigate('AddCoin', {refresh: this.refresh});
   };
 
-  _buySellCrypto = () => {
-    let navigation = this.props.navigation;
-    this.props.dispatch(setActiveSectionBuySellCrypto('buy-crypto'));
-
-    navigation.navigate('BuySellCryptoMenus', {title: 'Buy'});
-  };
-
   handleScanToVerify = () => {
     this.props.navigation.navigate('ScanBadge');
   };

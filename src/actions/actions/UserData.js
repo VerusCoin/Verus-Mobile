@@ -232,7 +232,7 @@ export const authenticateAccount = async (account, password) => {
                   };
                 } catch (e) {
                   console.warn(
-                    `Key generation failed for ${activeCoins[i].id} channel ${channel}`,
+                    `Key generation failed for ${activeCoins[i].display_ticker} channel ${channel}`,
                   );
                   console.warn(e);
                 }

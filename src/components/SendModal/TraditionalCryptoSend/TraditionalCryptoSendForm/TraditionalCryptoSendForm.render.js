@@ -54,7 +54,7 @@ export const TraditionalCryptoSendFormRender = function () {
               returnKeyType="done"
               label={`Amount${
                 fiatEnabled && _price != 0
-                  ? ` (~${_price} ${amountFiat ? coinObj.id : displayCurrency})`
+                  ? ` (~${_price} ${amountFiat ? coinObj.display_ticker : displayCurrency})`
                   : ""
               }`}
               keyboardType={"decimal-pad"}
@@ -81,7 +81,7 @@ export const TraditionalCryptoSendFormRender = function () {
               }}
               compact
             >
-              {amountFiat ? displayCurrency : coinObj.id}
+              {amountFiat ? displayCurrency : coinObj.display_ticker}
             </Button>
             <Button
               onPress={() => this.maxAmount()}

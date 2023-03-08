@@ -206,7 +206,7 @@ export const HomeListItemRender = function(coinObj, isParent, subWallet, index =
                         flexDirection: 'row',
                       }}>
                       <Text style={{fontWeight: '500'}}>{balance || '-'}</Text>
-                      <Text style={{fontWeight: '300'}}>{` ${ticker}`}</Text>
+                      <Text style={{fontWeight: '300'}}>{` ${coinObj.display_ticker}`}</Text>
                     </View>
                   </View>
                 </View>

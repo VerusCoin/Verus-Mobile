@@ -51,7 +51,7 @@ export const openSendModal = (
 
 export const openTraditionalCryptoSendModal = (coinObj, subWallet, data) => {
   openSendModal(
-    `Send ${coinObj.id}`,
+    `Send ${coinObj.display_ticker}`,
     coinObj,
     subWallet,
     data == null
@@ -131,7 +131,7 @@ export const openConversionSendModal = (coinObj, subWallet, data) => {
 
 export const openWithdrawSendModal = (coinObj, subWallet, data) => {
   openSendModal(
-    `Withdraw ${coinObj.id}`,
+    `Withdraw ${coinObj.display_ticker}`,
     coinObj,
     subWallet,
     data == null
@@ -148,7 +148,7 @@ export const openWithdrawSendModal = (coinObj, subWallet, data) => {
 
 export const openDepositSendModal = (coinObj, subWallet, data) => {
   openSendModal(
-    `Deposit ${coinObj.id}`,
+    `Deposit ${coinObj.display_ticker}`,
     coinObj,
     subWallet,
     data == null

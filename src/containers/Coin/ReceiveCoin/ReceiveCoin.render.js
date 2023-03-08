@@ -151,7 +151,7 @@ export const RenderReceiveCoin = function() {
                 label={`Amount${
                   fiatEnabled && _price != 0
                     ? ` (~${_price} ${
-                        amountFiat ? selectedCoin.id : displayCurrency
+                        amountFiat ? selectedCoin.display_ticker : displayCurrency
                       })`
                     : ''
                 }`}
@@ -178,7 +178,7 @@ export const RenderReceiveCoin = function() {
                 marginTop: 6,
               }}
               compact>
-              {amountFiat ? displayCurrency : selectedCoin.id}
+              {amountFiat ? displayCurrency : selectedCoin.display_ticket}
             </Button>
           </View>
         </View>

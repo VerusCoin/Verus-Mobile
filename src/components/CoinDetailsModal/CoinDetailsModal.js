@@ -94,7 +94,7 @@ class CoinDetailsModal extends Component {
         this.setState({loading: false})
         this.props.cancel()
       } catch(e) {
-        createAlert("Error Removing Coin", `There was a problem removing ${this.props.data.id}.`);
+        createAlert("Error Removing Coin", `There was a problem removing ${this.props.data.display_ticker}.`);
         console.error(e)
         this.setState({ loading: false });
         this.props.cancel()
@@ -140,7 +140,7 @@ class CoinDetailsModal extends Component {
         throw new Error("Error adding coin");
       }
     } catch(e) {
-      createAlert("Error Adding Coin", `There was a problem adding ${this.props.data.id}.`);
+      createAlert("Error Adding Coin", `There was a problem adding ${this.props.data.display_ticker}.`);
       console.error(e)
       this.setState({ loading: false });
       this.props.cancel()

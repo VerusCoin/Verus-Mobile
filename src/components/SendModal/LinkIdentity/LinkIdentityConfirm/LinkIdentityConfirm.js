@@ -34,7 +34,7 @@ class LinkIdentityConfirm extends Component {
       const {identityaddress, name} = this.state.verusId.identity;
       const {coinObj} = this.props.sendModal;
 
-      await linkVerusId(identityaddress, `${name}@`, coinObj.id);
+      await linkVerusId(identityaddress, `${name}@`, coinObj.display_ticker);
       await updateVerusIdWallet();
       clearChainLifecycle(coinObj.id);
       this.props.dispatch(

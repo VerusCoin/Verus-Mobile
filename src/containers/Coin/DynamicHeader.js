@@ -161,7 +161,7 @@ class DynamicHeader extends Component {
                           BigNumber(pendingBalance).isGreaterThan(0) ? "+" : ""
                         }${truncateDecimal(pendingBalance, 4)})`
                       : ""
-                  } ${this.props.chainTicker}`}
+                  } ${this.props.displayTicker}`}
             </Paragraph>
             <Paragraph style={{ ...Styles.listItemSubtitleDefault, fontSize: 12 }}>
               {syncProgress != 100 && syncProgress != -1
@@ -206,7 +206,7 @@ class DynamicHeader extends Component {
           </Text>
           <Text
             style={{ color: Colors.secondaryColor, fontWeight: "500", fontSize: 18 }}
-          >{`${truncateDecimal(this.props.confirmedBalance, 8)} ${this.props.chainTicker}`}</Text>
+          >{`${truncateDecimal(this.props.confirmedBalance, 8)} ${this.props.displayTicker}`}</Text>
           {!this.props.pendingBalance.isEqualTo(0) && (
             <Text
               style={{
@@ -256,6 +256,7 @@ const mapStateToProps = (state) => {
   
   return {
     chainTicker,
+    displayTicker: state.coins.activeCoin.display_ticker,
     selectedSubWallet: state.coinMenus.activeSubWallets[chainTicker],
     allSubWallets: state.coinMenus.allSubWallets[chainTicker],
     balances: extractLedgerData(state, 'balances', API_GET_BALANCES, chainTicker),

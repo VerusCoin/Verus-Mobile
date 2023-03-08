@@ -88,7 +88,7 @@ export const txPreflight = (
               "Error, " +
                 activeUser.id +
                 " user keys for active coin " +
-                coinObj.id +
+                coinObj.display_ticker +
                 " not found!"
             );
           }
@@ -329,7 +329,7 @@ export const txPreflight = (
               (unshieldedFunds.isGreaterThan(BigNumber(0))
                 ? `\n\nThis is most likely due to the fact that you have ${satsToCoins(
                     unshieldedFunds
-                  ).toString()} ${coinObj.id}
+                  ).toString()} ${coinObj.display_ticker}
         in unshielded funds received from mining in your wallet. Please unshield through a native client prior to sending through Verus Mobile`
                 : null),
           });

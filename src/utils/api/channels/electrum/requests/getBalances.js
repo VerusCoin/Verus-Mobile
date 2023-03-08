@@ -16,7 +16,7 @@ export const getOneBalance = (coinObj, activeUser) => {
       "getBalances.js: Fatal mismatch error, " +
         activeUser.id +
         " user keys for active coin " +
-        coinObj.id +
+        coinObj.display_ticker +
         " not found!"
     );
   }

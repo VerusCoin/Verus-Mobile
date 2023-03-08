@@ -6,7 +6,7 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
   try {
     const res = await WyreProvider.preflightTransaction({
       source: params.invertSourceDest ? address : WyreProvider.getAccountSrn(),
-      sourceCurrency: params.sourceCurrency == null ? coinObj.id : params.sourceCurrency,
+      sourceCurrency: params.sourceCurrency == null ? coinObj.currency_id : params.sourceCurrency,
       sourceAmount: params.amountAsDest ? undefined : amount.toString(),
       destAmount: !params.amountAsDest ? undefined : amount.toString(),
       dest: params.invertSourceDest
@@ -14,7 +14,7 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
       : address.includes(":")
       ? address
       : WyreService.formatCryptoSrn(coinObj, address),
-      destCurrency: params.destCurrency == null ? coinObj.id : params.destCurrency,
+      destCurrency: params.destCurrency == null ? coinObj.currency_id : params.destCurrency,
       message: params.memo,
     });
 
@@ -23,8 +23,8 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
       result: {
         fee: res.totalFees != null ? res.totalFees.toString() : "0",
         value: res.destAmount.toString(),
-        toAddress: params.invertSourceDest ? `Wyre ${coinObj.id} wallet` : address,
-        fromAddress: params.invertSourceDest ? address : `Wyre ${coinObj.id} wallet`,
+        toAddress: params.invertSourceDest ? `Wyre ${coinObj.display_ticker} wallet` : address,
+        fromAddress: params.invertSourceDest ? address : `Wyre ${coinObj.display_ticker} wallet`,
         fromCurrency: res.sourceCurrency,
         toCurrency: res.destCurrency,
         price: res.exchangeRate,

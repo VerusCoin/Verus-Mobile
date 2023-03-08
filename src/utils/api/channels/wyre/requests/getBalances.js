@@ -13,11 +13,11 @@ export const getBalance = async (coinObj) => {
   } else {
     const { totalBalances, availableBalances } = account;
     const totalBalance =
-      totalBalances[coinObj.id] == null ? BigNumber(0) : BigNumber(totalBalances[coinObj.id]);
+      totalBalances[coinObj.currency_id] == null ? BigNumber(0) : BigNumber(totalBalances[coinObj.currency_id]);
     const availableBalance =
-      availableBalances[coinObj.id] == null
+      availableBalances[coinObj.currency_id] == null
         ? BigNumber(0)
-        : BigNumber(availableBalances[coinObj.id]);
+        : BigNumber(availableBalances[coinObj.currency_id]);
 
     return {
       confirmed: availableBalance,

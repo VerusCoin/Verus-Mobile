@@ -20,11 +20,11 @@ export const getWithdrawDestinations = async (coinObj) => {
         currencies[currencyId] = {
           destinationCurrencyId: currencyId,
           price:
-            rates[coinObj.id] == null
+            rates[coinObj.currency_id] == null
               ? null
-              : currencyId == coinObj.id
+              : currencyId == coinObj.currency_id
               ? 1
-              : rates[coinObj.id][currencyId],
+              : rates[coinObj.currency_id][currencyId],
         };
       });
       

@@ -11,7 +11,7 @@ import {
 
 export const modal = (
   state = {
-    stack: [],
+    stack: [], // Array<number> of uids
   },
   action
 ) => {

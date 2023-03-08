@@ -144,12 +144,12 @@ class AddCoin extends Component {
           renderItem={({item}) => {
             const added = activeCoinIds.includes(item);
             const coinInfo = coinsList[item.toLowerCase()];
-            const {display_name} = coinInfo;
+            const {display_name, display_ticker} = coinInfo;
 
             return (
               <TouchableOpacity onPress={() => this._openDetails(item)}>
                 <List.Item
-                  title={`${display_name} (${item})`}
+                  title={`${display_name} (${display_ticker})`}
                   left={props => RenderSquareCoinLogo(item)}
                   right={props => {
                     return added ? (

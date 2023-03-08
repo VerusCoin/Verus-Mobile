@@ -11,10 +11,10 @@ export const getTransactions = async (coinObj) => {
     let processedTransfers = []
 
     for (const transfer of transfers) {
-      if (transfer.sourceCurrency === coinObj.id || transfer.destCurrency === coinObj.id) {
+      if (transfer.sourceCurrency === coinObj.currency_id || transfer.destCurrency === coinObj.currency_id) {
 
         processedTransfers.push(
-          standardizeWyreTxObj(transfer, account.depositAddresses[coinObj.id], coinObj)
+          standardizeWyreTxObj(transfer, account.depositAddresses[coinObj.currency_id], coinObj)
         );
       }
     }

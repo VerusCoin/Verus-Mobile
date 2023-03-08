@@ -93,7 +93,7 @@ class TraditionalCryptoSendConfirm extends Component {
           data:
             truncateDecimal(amountSubmitted, coinObj.decimals || 8) +
             ' ' +
-            coinObj.id,
+            coinObj.display_ticker,
           right: validFiatMultiplier
             ? `${fiatMultiplier.multipliedBy(amountSubmitted).toFixed(2)} ${
                 this.props.displayCurrency
@@ -107,7 +107,7 @@ class TraditionalCryptoSendConfirm extends Component {
           data:
             truncateDecimal(finalTxAmount, coinObj.decimals || 8) +
             ' ' +
-            coinObj.id,
+            coinObj.display_ticker,
           right: validFiatMultiplier
             ? `${fiatMultiplier.multipliedBy(finalTxAmount).toFixed(2)} ${
                 this.props.displayCurrency
@@ -128,7 +128,7 @@ class TraditionalCryptoSendConfirm extends Component {
           data:
             truncateDecimal(deductedAmount, coinObj.decimals || 8) +
             ' ' +
-            coinObj.id,
+            coinObj.display_ticker,
           right: validFiatMultiplier
             ? `${fiatMultiplier.multipliedBy(deductedAmount).toFixed(2)} ${
                 this.props.displayCurrency
@@ -137,7 +137,7 @@ class TraditionalCryptoSendConfirm extends Component {
         },
         {
           key: 'Remaining Balance',
-          data: remainingBalance + ' ' + coinObj.id,
+          data: remainingBalance + ' ' + coinObj.display_ticker,
           condition: remainingBalance !== 0,
           right: validFiatMultiplier
             ? `${fiatMultiplier.multipliedBy(remainingBalance).toFixed(2)} ${

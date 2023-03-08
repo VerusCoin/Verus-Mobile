@@ -9,7 +9,7 @@ export const getRates = async (coinObj) => {
   let body = null;
 
   if (state.services.rates[WYRE_SERVICE] != null) {
-    body = state.services.rates[WYRE_SERVICE][coinObj.id];
+    body = state.services.rates[WYRE_SERVICE][coinObj.currency_id];
   }
 
   return body 

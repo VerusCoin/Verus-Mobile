@@ -56,7 +56,7 @@ export const ProvisionIdentitySuccessRender = function () {
               fontSize: 20,
               color: Colors.verusDarkGray,
             }}>
-            {`Your VerusID will now appear as a card in your ${coinObj.id} wallet.`}
+            {`Your VerusID will now appear as a card in your ${coinObj.display_ticker} wallet.`}
           </Text>
         </View> */}
         <View

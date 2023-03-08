@@ -132,7 +132,7 @@ class TraditionalCryptoSendForm extends Component {
             ? "available amount is less than fee"
             : spendableBalance +
               " confirmed " +
-              coinObj.id +
+              coinObj.display_ticker +
               " available." +
               (channel === DLIGHT_PRIVATE
                 ? "\n\nFunds from private transactions require 10 confirmations (~10 minutes) before they can be spent."

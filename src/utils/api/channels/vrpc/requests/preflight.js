@@ -23,7 +23,7 @@ export const preflight = async (coinObj, activeUser, address, amount, params, ch
         'Error, ' +
         activeUser.id +
         ' user keys for active coin ' +
-        coinObj.id +
+        coinObj.display_ticker +
         ' not found!',
     };
   }
