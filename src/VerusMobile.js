@@ -16,7 +16,8 @@ import {
   loadEthTxReceipts,
   initSettings,
   fetchActiveCoins,
-  requestSeedData
+  requestSeedData,
+  initNotifications
 } from './actions/actionCreators';
 import {
   initCache,
@@ -105,6 +106,7 @@ class VerusMobile extends React.Component {
       let promiseArr = [
         fetchUsers(),
         initSettings(),
+        initNotifications(),
         fetchActiveCoins(),
       ];
 
@@ -117,7 +119,7 @@ class VerusMobile extends React.Component {
       return Promise.all([
         loadServerVersions(this.props.dispatch),
         loadCachedHeaders(this.props.dispatch),
-        loadEthTxReceipts(this.props.dispatch),
+        loadEthTxReceipts(this.props.dispatch)
       ]);
     })
     .then(() => {

@@ -26,6 +26,7 @@ import { channelStore_general } from './channelStores/general';
 import { channelStore_wyre_service } from './channelStores/wyre';
 import { alert } from './alert'
 import { modal } from './modal'
+import { notifications } from './notifications'
 import { keyboard } from './keyboard'
 import identity from './identity';
 import { sendModal } from './sendModal';
@@ -60,6 +61,7 @@ export default combineReducers({
   coinMenus,
   alert,
   modal,
+  notifications,
   keyboard,
   personal,
   services,
