@@ -79,7 +79,7 @@ end
 
 target 'verusmobile' do
   config = use_native_modules!
-  use_frameworks!
+  use_modular_headers!
   permissions_path = '../node_modules/react-native-permissions/ios'
 
   # Flags change depending on the env values.
@@ -101,14 +101,16 @@ target 'verusmobile' do
   pod 'Permission-PhotoLibrary', :path => "#{permissions_path}/PhotoLibrary/Permission-PhotoLibrary.podspec"
   pod 'SwiftNIO', '2.40.0'
   pod 'CocoaAsyncSocket'
+  pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec', :modular_headers => false
 
   # Enables Flipper.
   #
   # Note that if you have use_frameworks! enabled, Flipper will not work and
   # you should disable the next line.
-  # use_flipper!()
+  # use_flipper!({ 'Flipper' => '0.159.0', 'Flipper-Folly' => '2.6.10', 'Flipper-DoubleConversion' => '3.2.0', 'Flipper-Glog' => '0.5.0.3', 'Flipper-PeerTalk' => '0.0.4', 'OpenSSL-Universal' => '1.1.1100' })
 
   post_install do |installer|
+    #flipper_post_install(installer)
     react_native_post_install(installer)
     __apply_Xcode_12_5_M1_post_install_workaround(installer)
 

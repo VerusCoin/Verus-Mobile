@@ -34,11 +34,13 @@ import {
   API_GET_SERVICE_RATES
 } from "../../utils/constants/intervalConstants";
 import { USD } from '../../utils/constants/currencies'
-import { conditionallyUpdateService, conditionallyUpdateWallet } from "../../actions/actionDispatchers";
+import { conditionallyUpdateService, conditionallyUpdateWallet, dispatchAddWidget } from "../../actions/actionDispatchers";
 import BigNumber from "bignumber.js";
 import { extractLedgerData, extractErrorData } from "../../utils/ledger/extractLedgerData";
 import { HomeRender } from "./Home.render";
 import { extractDisplaySubWallets } from "../../utils/subwallet/extractSubWallets";
+import { CURRENCY_WIDGET_TYPE, TOTAL_UNI_BALANCE_WIDGET_TYPE } from "../../utils/constants/widgets";
+import { findCoinObj } from "../../utils/CoinData/CoinData";
 
 class Home extends Component {
   constructor(props) {
@@ -48,6 +50,7 @@ class Home extends Component {
       totalCryptoBalances: {},
       loading: false,
       listItemHeights: {},
+      widgets: [],
 
       //TODO: MOVE TO REDUX
       expandedListItems: {},
@@ -59,10 +62,82 @@ class Home extends Component {
     this.LIST_ITEM_ANIMATION_DURATION = 250;
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
       this.refresh(false);
     });
+
+    await this.getWidgets()
+  }
+
+  async getWidgets() {
+    this.setState({
+      widgets: []
+    }, () => {
+      const widgets = [...Object.keys(this.props.widgetOrder)].sort((a, b) => {
+        return this.props.widgetOrder[a] <= this.props.widgetOrder[b] ? -1 : 1;
+      });
+  
+      const activeAccount = this.props.activeAccount
+      const widgetsToRemove = []
+
+      // Remove currency widgets for coins that arent active
+      for (let i = 0; i < widgets.length; i++) {
+        const widgetId = widgets[i]
+        const widgetSplit = widgetId.split(":")
+        const widgetType = widgetSplit[0]
+
+        if (widgetType === CURRENCY_WIDGET_TYPE && !this.props.activeCoinsForUser.some(x => x.id === widgetSplit[1])) {
+          widgetsToRemove.unshift(i)
+        }
+      }
+
+      for (const widgetIndex of widgetsToRemove) {
+        widgets.splice(widgetIndex, 1)
+      }
+  
+      // Add the balance widget if not present
+      if (!widgets.includes(TOTAL_UNI_BALANCE_WIDGET_TYPE)) {
+        widgets.push(TOTAL_UNI_BALANCE_WIDGET_TYPE)
+        dispatchAddWidget(TOTAL_UNI_BALANCE_WIDGET_TYPE, activeAccount.accountHash)
+      }
+  
+      // Add currency widgets for active coins
+      for (const coinObj of this.props.activeCoinsForUser) {
+        const currencyWidgetId = `${CURRENCY_WIDGET_TYPE}:${coinObj.id}`
+  
+        if (!widgets.includes(currencyWidgetId)) {
+          widgets.push(currencyWidgetId)
+          dispatchAddWidget(currencyWidgetId, activeAccount.accountHash)
+        }
+      }
+  
+      this.setState({
+        widgets
+      })
+    })
+  }
+
+  handleWidgetPress(widgetId) {
+    const widgetSplit = widgetId.split(":")
+    const widgetType = widgetSplit[0]
+
+    const widgetOnPress = {
+      [CURRENCY_WIDGET_TYPE]: () => {
+        const coinId = widgetSplit[1]
+        const coinObj = this.props.activeCoinsForUser.find(x => x.id === coinId)
+
+        if (coinObj) {
+          const subWallets = this.props.allSubWallets[coinId]
+
+          this.openCoin(coinObj, this.props.activeSubWallets[coinId]
+            ? this.props.activeSubWallets[coinId]
+            : subWallets[0])
+        }
+      }
+    }
+
+    if (widgetOnPress[widgetType]) widgetOnPress[widgetType]()
   }
 
   animateHeightChange(anim, toValue, cb = () => {}) {
@@ -130,6 +205,10 @@ class Home extends Component {
         totalFiatBalance: totalBalances.fiat,
         totalCryptoBalances: totalBalances.crypto,
       });
+    }
+
+    if (this.props.activeCoinsForUser !== lastProps.activeCoinsForUser) {
+      this.getWidgets()
     }
   }
 
@@ -350,7 +429,8 @@ const mapStateToProps = (state) => {
     displayCurrency:
       state.settings.generalWalletSettings.displayCurrency || USD,
     allSubWallets: extractDisplaySubWallets(state),
-    activeSubWallets: state.coinMenus.activeSubWallets
+    activeSubWallets: state.coinMenus.activeSubWallets,
+    widgetOrder: state.widgets.order
   };
 };
 

@@ -2,8 +2,7 @@ import {
   ENABLE_DLIGHT,
   ENABLE_WYRE_COIN,
   DISABLED_CHANNELS,
-  ENABLE_VRPC,
-  CHANNEL_SERVICE_DEPENDENCIES,
+  ENABLE_VRPC
 } from '../../env/index';
 import store from '../store';
 import {DLIGHT_PRIVATE} from './constants/intervalConstants';

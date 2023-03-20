@@ -1,5 +1,5 @@
 import React from "react";
-import { CoinLogos } from "../../utils/CoinData/CoinData";
+import { CoinLogos, findCoinObj } from "../../utils/CoinData/CoinData";
 import { 
   View, 
   FlatList,
@@ -15,61 +15,111 @@ import { HomeListItemThemeDark, HomeListItemThemeLight } from "./Home.themes";
 import Colors from "../../globals/colors";
 import HomeFAB from "./HomeFAB/HomeFAB";
 import { triggerLightHaptic } from "../../utils/haptics/haptics";
+import TestDrag from "./test";
+import CurrencyWidget from "./HomeWidgets/CurrencyWidget";
+import { SortableContainer, SortableGrid, SortableTile } from "../../components/DragSort";
+import { CURRENCY_WIDGET_TYPE } from "../../utils/constants/widgets";
+import { setAndSaveAccountWidgets } from "../../actions/actionCreators";
 
 export const HomeRender = function() {
   return (
     <Portal.Host>
-      <ScrollView
-        style={{...styles.fullWidth, ...styles.backgroundColorWhite}}
-        refreshControl={
-          <RefreshControl
-            refreshing={this.state.loading}
-            onRefresh={this.forceUpdate}
-          />
-        }
-      >
         <HomeFAB 
           handleAddCoin={() => this._addCoin()}
           handleVerusPay={() => this._verusPay()}
         />
-        <List.Section>
-          <View
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-end",
-              flexDirection: "row",
-              padding: 8
-            }}
-          >
-            <Text style={{ fontSize: 16, fontWeight: "bold" }}>{"Wallets"}</Text>
-            <View style={{ display: "flex", flexDirection: "column" }}>
-              <Text style={{ fontSize: 10 }}>{"Total Value"}</Text>
-              <Text style={{ fontSize: 16, fontWeight: "bold" }}>{`${
-                this.state.totalFiatBalance
-              } ${this.props.displayCurrency}`}</Text>
-            </View>
-          </View>
-          {HomeRenderCoinsList.call(this)}
-        </List.Section>
-      </ScrollView>
+        {HomeRenderCoinsList.call(this)}
     </Portal.Host>
   );
 };
 
+export const HomeRenderWidget = function(widgetId) {
+  const widgetSplit = widgetId.split(":")
+  const widgetType = widgetSplit[0]
+
+  const renderers = {
+    [CURRENCY_WIDGET_TYPE]: () => {
+      const coinId = widgetSplit[1]
+      const coinObj = findCoinObj(coinId)
+
+      const balance = this.state.totalCryptoBalances[coinObj.id] == null
+          ? null
+          : truncateDecimal(this.state.totalCryptoBalances[coinObj.id], 8)
+
+      return (
+        <Provider theme={HomeListItemThemeDark}>
+          <CurrencyWidget currencyBalance={balance} coinObj={coinObj} />
+        </Provider>
+      );
+    },
+  };
+
+  return renderers[widgetType] ? renderers[widgetType]() : <View />
+}
+
 export const HomeRenderCoinsList = function() {
-  const { activeCoinsForUser } = this.props;
-  
-  return activeCoinsForUser.map((item, index) => {
-    return HomeListItemRender.call(
-      this,
-      activeCoinsForUser[index],
-      true,
-      null,
-      index,
-      activeCoinsForUser.length
-    );
-  })
+  const { widgets } = this.state;
+
+  return widgets.length == 0 ? (
+    <View />
+  ) : (
+    <View
+      style={{
+        height: '100%',
+        backgroundColor: 'white',
+        width: '100%',
+        overflow: 'visible',
+      }}>
+      <SortableContainer customconfig={{}}>
+        <SortableGrid
+          refreshControl={
+            <RefreshControl
+              refreshing={this.state.loading}
+              onRefresh={this.forceUpdate}
+            />
+          }
+          onPressDetected={(id) => this.handleWidgetPress(id)}
+          editing={true}
+          onDragEnd={positions =>
+            this.props.dispatch(
+              setAndSaveAccountWidgets(
+                positions,
+                this.props.activeAccount.accountHash,
+              ),
+            )
+          }>
+          {widgets
+            .filter(x => x !== 'totalunibalance')
+            .map((widgetId, index) => (
+              <SortableTile key={index} id={widgetId}>
+                <View
+                  style={{
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    overflow: 'visible',
+                    paddingTop: 12,
+                  }}>
+                  {HomeRenderWidget.call(this, widgetId)}
+                </View>
+              </SortableTile>
+            ))}
+        </SortableGrid>
+      </SortableContainer>
+    </View>
+  );
+
+
+
+  // return activeCoinsForUser.map((item, index) => {
+  //   return HomeListItemRender.call(
+  //     this,
+  //     activeCoinsForUser[index],
+  //     true,
+  //     null,
+  //     index,
+  //     activeCoinsForUser.length
+  //   );
+  // })
 }
 
 export const renderFiatBalance = function (balance, ticker) {
@@ -94,9 +144,6 @@ export const renderFiatBalance = function (balance, ticker) {
  * @param {Object} subWallet The subwallet (child only)
  */
 export const HomeListItemRender = function(coinObj, isParent, subWallet, index = 0, length) {
-  const ticker = coinObj.id
-  const expanded = this.state.expandedListItems[coinObj.id]
-  const subWallets = this.props.allSubWallets[coinObj.id]
   const balance = isParent
     ? (this.state.totalCryptoBalances[coinObj.id] == null
       ? null
@@ -105,233 +152,13 @@ export const HomeListItemRender = function(coinObj, isParent, subWallet, index =
       this.props.balances[coinObj.id][subWallet.id] != null
     ? truncateDecimal(this.props.balances[coinObj.id][subWallet.id].total, 8)
     : null;
-  const syncProgress = isParent ? null : this.calculateSyncProgress(coinObj, subWallet)
-  const Logo = CoinLogos[ticker.toLowerCase()] ? CoinLogos[ticker.toLowerCase()].light : null
-  const balanceErrors = this.props.balanceErrors[coinObj.id]
-  const subWalletError = isParent || balanceErrors == null ? null : balanceErrors[subWallet.id]
 
   return (
-    <Provider
-      theme={isParent ? HomeListItemThemeDark : HomeListItemThemeLight}
-      key={index}>
-      <Animated.View
-        style={{
-          height: isParent
-            ? this.state.listItemHeights[coinObj.id]
-            : this.LIST_ITEM_INITIAL_HEIGHT,
-          marginHorizontal: 8,
-          marginBottom: isParent ? 8 : 0
-        }}>
-        <TouchableRipple
-          onPress={() =>
-            this.openCoin(
-              coinObj,
-              isParent
-                ? this.props.activeSubWallets[ticker]
-                  ? this.props.activeSubWallets[ticker]
-                  : subWallets[0]
-                : subWallet,
-            )
-          }
-          onLongPress={() => {
-            if (isParent) {
-              triggerLightHaptic();
-              this.toggleListItem(coinObj.id, subWallets.length);
-            }
-          }}
-          rippleColor="rgba(0, 0, 0, .32)">
-          <Card
-            elevation={isParent ? 2 : 0}
-            style={{
-              height: '100%',
-              backgroundColor: isParent
-                ? coinObj.theme_color
-                  ? coinObj.theme_color
-                  : '#1C1C1C'
-                : '#FFFFFF',
-              overflow: 'hidden',
-            }}>
-            <List.Item
-              expanded={expanded}
-              left={props => (
-                <View
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                  }}>
-                  {isParent ? (
-                    <Logo
-                      style={{
-                        alignSelf: 'center',
-                        marginLeft: 8,
-                        marginRight: 8,
-                      }}
-                      width={25}
-                      height={25}
-                    />
-                  ) : (
-                    <List.Icon
-                      icon="wallet"
-                      color={subWallet.color}
-                      style={{
-                        alignSelf: 'center',
-                        margin: 0,
-                        padding: 0,
-                      }}
-                      size={30}
-                    />
-                  )}
-                  <View
-                    {...props}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      marginLeft: 8,
-                    }}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        textAlign: 'left',
-                        fontWeight: '500',
-                      }}>
-                      {isParent ? coinObj.display_name : subWallet.name}
-                    </Text>
-                    <View
-                      style={{
-                        fontSize: 14,
-                        textAlign: 'left',
-                        display: 'flex',
-                        flexDirection: 'row',
-                      }}>
-                      <Text style={{fontWeight: '500'}}>{balance || '-'}</Text>
-                      <Text style={{fontWeight: '300'}}>{` ${coinObj.display_ticker}`}</Text>
-                    </View>
-                  </View>
-                </View>
-              )}
-              right={props => {
-                return (
-                  <View
-                    {...props}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                    }}>
-                    <View
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'space-between',
-                      }}>
-                      <View
-                        style={{
-                          fontSize: 14,
-                          textAlign: 'right',
-                          display: 'flex',
-                          flexDirection: 'row',
-                        }}>
-                        <Text style={{fontWeight: '300'}}>
-                          {isParent || syncProgress == 100
-                            ? renderFiatBalance.call(this, balance, coinObj.id)
-                            : syncProgress == -1
-                            ? 'Error'
-                            : 'Syncing '}
-                        </Text>
-                        {syncProgress != 100 &&
-                          syncProgress != -1 &&
-                          !isParent && (
-                            <Text style={{fontWeight: '500'}}>
-                              {`${syncProgress.toFixed(2)}%`}
-                            </Text>
-                          )}
-                      </View>
-                      {(isParent || subWalletError != null) && (
-                        <View
-                          style={{
-                            fontSize: 14,
-                            textAlign: 'right',
-                            display: 'flex',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                          }}>
-                          {isParent && (
-                            <Text style={{fontWeight: '500'}}>
-                              {subWallets.length}
-                            </Text>
-                          )}
-                          {(isParent || subWalletError != null) && (
-                            <Text
-                              style={{
-                                fontWeight: '300',
-                                color:
-                                  subWalletError != null
-                                    ? Colors.warningButtonColor
-                                    : Colors.secondaryColor,
-                              }}>
-                              {subWalletError != null
-                                ? 'Connection Error'
-                                : ` Card${subWallets.length == 1 ? '' : 's'}`}
-                            </Text>
-                          )}
-                          {isParent &&
-                            balanceErrors != null &&
-                            Object.values(balanceErrors).some(
-                              value => value != null,
-                            ) && (
-                              <IconButton
-                                icon="alert"
-                                color={'white'}
-                                style={{
-                                  margin: 0,
-                                  padding: 0,
-                                }}
-                                size={15}
-                              />
-                            )}
-                        </View>
-                      )}
-                    </View>
-                    <IconButton
-                      {...props}
-                      style={{alignSelf: 'center'}}
-                      onPress={
-                        isParent
-                          ? () =>
-                              this.toggleListItem(coinObj.id, subWallets.length)
-                          : null
-                      }
-                      icon={
-                        !isParent
-                          ? 'chevron-right'
-                          : expanded
-                          ? 'chevron-up'
-                          : 'chevron-down'
-                      }
-                      size={20}
-                    />
-                  </View>
-                );
-              }}
-              style={{padding: 8, paddingRight: 0}}
-            />
-            {expanded &&
-              isParent &&
-              subWallets.map((wallet, index) =>
-                HomeListItemRender.call(
-                  this,
-                  coinObj,
-                  false,
-                  wallet,
-                  index,
-                  subWallets.length,
-                ),
-              )}
-          </Card>
-        </TouchableRipple>
-      </Animated.View>
+    <Provider key={index} theme={HomeListItemThemeDark}>
+      <CurrencyWidget 
+        currencyBalance={balance}
+        coinObj={coinObj}
+      />
     </Provider>
   );
 }

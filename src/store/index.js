@@ -1,7 +1,6 @@
-import { createStore, applyMiddleware } from 'redux';
+import { createStore, applyMiddleware, compose } from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import thunk from 'redux-thunk';
-import { composeWithDevTools } from 'remote-redux-devtools';
 
 import rootReducer from '../reducers/index';
 import rootSaga from '../sagas'
@@ -11,11 +10,14 @@ const configureStore = () => {
 
   const middlewares = [thunk, sagaMiddleware];
   
-  // const composeEnhancers = composeWithDevTools({ realtime: true, port: 8000 });
-
-  // const ret = createStore(rootReducer, composeEnhancers(
-  //   applyMiddleware(...middlewares)
-  // ));
+  // const ret = createStore(
+  //   rootReducer,
+  //   compose(
+  //     applyMiddleware(...middlewares),
+  //     window.__REDUX_DEVTOOLS_EXTENSION__ &&
+  //       window.__REDUX_DEVTOOLS_EXTENSION__(),
+  //   ),
+  // );
 
   const ret = createStore(rootReducer, applyMiddleware(...middlewares));
 

@@ -10,6 +10,7 @@ export * from './actions/personal/creators/personal'
 export * from './actions/services/creators/services'
 export * from './actions/deeplink/creators/deeplink'
 export * from './actions/notifications/creators/notifications'
+export * from './actions/widgets/creators/widgets'
 
 export * from './actionCreators/claims';
 export * from './actionCreators/claimCategories';

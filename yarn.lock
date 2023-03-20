@@ -1676,9 +1676,8 @@
     "@bitgo/blake2b-wasm" "^3.0.1"
     nanoassert "^2.0.0"
 
-"@bitgo/utxo-lib@git+https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337", "@bitgo/utxo-lib@git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus":
+"@bitgo/utxo-lib@git+https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337":
   version "1.9.6"
-  uid f8723bcc2bf4052de171ca8654de23fc06a03337
   resolved "git+https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337"
   dependencies:
     "@bitgo/blake2b" "3.0.1"
@@ -11157,6 +11156,10 @@ react-native-elements@1.0.0:
     prop-types "^15.5.8"
     react-native-ratings "^6.3.0"
     react-native-status-bar-height "^2.2.0"
+
+"react-native-format-currency@https://github.com/michaeltout/react-native-format-currency.git":
+  version "0.0.3"
+  resolved "https://github.com/michaeltout/react-native-format-currency.git#9fe8e36ab9da3921e453f7c7fa4c4fb7a62bcdaf"
 
 react-native-fs@2.18.0:
   version "2.18.0"

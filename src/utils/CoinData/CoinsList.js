@@ -33,7 +33,7 @@ export const coinsList = {
     currency_id: '',
     system_id: '.vrsc',
     display_ticker: 'VRSC',
-    display_name: 'Verus Coin',
+    display_name: 'Verus',
     alt_names: ['verus'],
     theme_color: '#3165D4',
     website: 'https://verus.io',

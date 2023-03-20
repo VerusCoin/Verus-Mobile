@@ -23,3 +23,4 @@ export * from './actions/deeplink/dispatchers/deeplinkListener'
 
 // Notifications
 export * from './actions/notifications/dispatchers/notifications'
+export * from './actions/widgets/dispatchers/widgets'

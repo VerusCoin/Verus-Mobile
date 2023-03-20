@@ -74,6 +74,7 @@
     "react-native-crypto": "2.1.2",
     "react-native-dialog": "5.6.0",
     "react-native-elements": "1.0.0",
+    "react-native-format-currency": "https://github.com/michaeltout/react-native-format-currency.git",
     "react-native-fs": "2.18.0",
     "react-native-gesture-handler": "2.8.0",
     "react-native-haptic-feedback": "1.11.0",
