@@ -8,6 +8,8 @@ import { USD } from '../../../utils/constants/currencies';
 import { GENERAL } from '../../../utils/constants/intervalConstants';
 import { truncateDecimal } from '../../../utils/math';
 import { formatCurrency } from "react-native-format-currency";
+import SubWalletsLogo from '../../../images/customIcons/SubWallets.svg'
+import { extractDisplaySubWallets } from '../../../utils/subwallet/extractSubWallets';
 
 const CurrencyWidget = props => {
   const { currencyBalance, coinObj } = props;
@@ -17,6 +19,7 @@ const CurrencyWidget = props => {
   const Logo = CoinLogos[coinIdLc] ? CoinLogos[coinIdLc].light : null;
   const themeColor = coinObj.theme_color ? coinObj.theme_color : '#1C1C1C'
   
+  const allSubwallets = useSelector(state => extractDisplaySubWallets(state))
   const displayCurrency = useSelector(state =>
     state.settings.generalWalletSettings.displayCurrency
       ? state.settings.generalWalletSettings.displayCurrency
@@ -62,25 +65,55 @@ const CurrencyWidget = props => {
           style={{
             display: 'flex',
             flexDirection: 'row',
-            alignItems: 'center',
+            alignItems: "flex-start",
+            justifyContent: "space-between",
           }}>
-          {Logo == null ? (
-            <Avatar.Icon
-              icon="wallet"
-              color={themeColor}
-              style={{ backgroundColor: 'white' }}
-              size={26}
-            />
-          ) : (
-            <Logo
-              style={{
-                alignSelf: 'center',
-              }}
-              width={26}
-              height={26}
-            />
-          )}
-          <Paragraph style={{ fontSize: 16, marginLeft: 8, fontWeight: "bold" }}>{displayedName}</Paragraph>
+          <View
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: "visible"
+            }}>
+            {Logo == null ? (
+              <Avatar.Icon
+                icon="wallet"
+                color={themeColor}
+                style={{backgroundColor: 'white'}}
+                size={26}
+              />
+            ) : (
+              <Logo
+                style={{
+                  alignSelf: 'center',
+                }}
+                width={26}
+                height={26}
+              />
+            )}
+            <Paragraph
+              style={{fontSize: 16, marginLeft: 8, fontWeight: 'bold', maxWidth: 100}}
+              numberOfLines={1}>
+              {displayedName}
+            </Paragraph>
+          </View>
+          <View
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: -10,
+              marginTop: -12
+            }}>
+            <Paragraph style={{fontSize: 12}}>
+              {allSubwallets[coinObj.display_ticker]
+                ? allSubwallets[coinObj.display_ticker].length
+                : 0}
+            </Paragraph>
+            <SubWalletsLogo />
+          </View>
         </View>
         <Paragraph style={{ fontSize: 16, paddingTop: 8, fontWeight: "500" }}>
           {uniValueDisplay === '-' ? `${currencyBalance == null ? '-' : truncateDecimal(currencyBalance, 8)} ${
