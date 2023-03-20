@@ -1,37 +1,52 @@
 import React from "react";
-import { CoinLogos, findCoinObj } from "../../utils/CoinData/CoinData";
+import { findCoinObj } from "../../utils/CoinData/CoinData";
 import { 
   View, 
-  FlatList,
-  ScrollView,
   RefreshControl,
-  Animated
 } from "react-native";
-import { List, Text, Card, IconButton, Provider, Portal, TouchableRipple } from 'react-native-paper';
+import { Text, Provider, Portal } from 'react-native-paper';
 import { truncateDecimal } from "../../utils/math";
 import BigNumber from "bignumber.js";
-import styles from "../../styles";
 import { HomeListItemThemeDark, HomeListItemThemeLight } from "./Home.themes";
-import Colors from "../../globals/colors";
 import HomeFAB from "./HomeFAB/HomeFAB";
-import { triggerLightHaptic } from "../../utils/haptics/haptics";
-import TestDrag from "./test";
 import CurrencyWidget from "./HomeWidgets/CurrencyWidget";
 import { SortableContainer, SortableGrid, SortableTile } from "../../components/DragSort";
-import { CURRENCY_WIDGET_TYPE } from "../../utils/constants/widgets";
+import { CURRENCY_WIDGET_TYPE, TOTAL_UNI_BALANCE_WIDGET_TYPE } from "../../utils/constants/widgets";
 import { setAndSaveAccountWidgets } from "../../actions/actionCreators";
+import TotalUniBalanceWidget from "./HomeWidgets/TotalUniBalanceWidget";
+import ListSelectionModal from "../../components/ListSelectionModal/ListSelectionModal";
+import { CURRENCY_NAMES, SUPPORTED_UNIVERSAL_DISPLAY_CURRENCIES } from "../../utils/constants/currencies";
 
-export const HomeRender = function() {
+export const HomeRender = function () {
   return (
     <Portal.Host>
-        <HomeFAB 
-          handleAddCoin={() => this._addCoin()}
-          handleVerusPay={() => this._verusPay()}
-        />
-        {HomeRenderCoinsList.call(this)}
+      <Portal>
+        {this.state.displayCurrencyModalOpen && (
+          <ListSelectionModal
+            title="Currencies"
+            selectedKey={this.props.displayCurrency}
+            visible={this.state.displayCurrencyModalOpen}
+            onSelect={item => this.setDisplayCurrency(item.key)}
+            data={SUPPORTED_UNIVERSAL_DISPLAY_CURRENCIES.map(key => {
+              return {
+                key,
+                title: key,
+                description: CURRENCY_NAMES[key],
+              };
+            })}
+            cancel={() => this.setState({ displayCurrencyModalOpen: false })}
+          />
+        )}
+      </Portal>
+      <HomeFAB
+        handleAddCoin={() => this._addCoin()}
+        handleVerusPay={() => this._verusPay()}
+      />
+      {HomeRenderCoinsList.call(this)}
     </Portal.Host>
   );
 };
+
 
 export const HomeRenderWidget = function(widgetId) {
   const widgetSplit = widgetId.split(":")
@@ -52,6 +67,13 @@ export const HomeRenderWidget = function(widgetId) {
         </Provider>
       );
     },
+    [TOTAL_UNI_BALANCE_WIDGET_TYPE]: () => {          
+      return (
+        <Provider theme={HomeListItemThemeLight}>
+          <TotalUniBalanceWidget totalBalance={this.state.totalFiatBalance}/>
+        </Provider>
+      );
+    }
   };
 
   return renderers[widgetType] ? renderers[widgetType]() : <View />
@@ -88,9 +110,7 @@ export const HomeRenderCoinsList = function() {
               ),
             )
           }>
-          {widgets
-            .filter(x => x !== 'totalunibalance')
-            .map((widgetId, index) => (
+          {widgets.map((widgetId, index) => (
               <SortableTile key={index} id={widgetId}>
                 <View
                   style={{
@@ -107,19 +127,6 @@ export const HomeRenderCoinsList = function() {
       </SortableContainer>
     </View>
   );
-
-
-
-  // return activeCoinsForUser.map((item, index) => {
-  //   return HomeListItemRender.call(
-  //     this,
-  //     activeCoinsForUser[index],
-  //     true,
-  //     null,
-  //     index,
-  //     activeCoinsForUser.length
-  //   );
-  // })
 }
 
 export const renderFiatBalance = function (balance, ticker) {

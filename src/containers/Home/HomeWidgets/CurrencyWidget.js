@@ -1,14 +1,11 @@
-import { CommonActions } from '@react-navigation/native';
 import BigNumber from 'bignumber.js';
 import React, { useState, useEffect } from 'react';
-import { View, Text, Dimensions } from 'react-native';
+import { View, Dimensions } from 'react-native';
 import { Avatar, Card, Paragraph } from 'react-native-paper';
 import { useSelector } from 'react-redux';
-import Styles from '../../../styles/index';
 import { CoinLogos } from '../../../utils/CoinData/CoinData';
 import { USD } from '../../../utils/constants/currencies';
-import { API_GET_BALANCES, GENERAL } from '../../../utils/constants/intervalConstants';
-import { extractErrorData } from '../../../utils/ledger/extractLedgerData';
+import { GENERAL } from '../../../utils/constants/intervalConstants';
 import { truncateDecimal } from '../../../utils/math';
 import { formatCurrency } from "react-native-format-currency";
 
@@ -53,11 +50,13 @@ const CurrencyWidget = props => {
   return (
     <Card
       style={{
-        height: 120,
+        height: 110,
         width: width / 2 - 16,
         borderRadius: 10,
         backgroundColor: themeColor,
-      }}>
+      }}
+      mode="elevated"
+      elevation={5}>
       <Card.Content>
         <View
           style={{
@@ -70,15 +69,15 @@ const CurrencyWidget = props => {
               icon="wallet"
               color={themeColor}
               style={{ backgroundColor: 'white' }}
-              size={30}
+              size={26}
             />
           ) : (
             <Logo
               style={{
                 alignSelf: 'center',
               }}
-              width={30}
-              height={30}
+              width={26}
+              height={26}
             />
           )}
           <Paragraph style={{ fontSize: 16, marginLeft: 8, fontWeight: "bold" }}>{displayedName}</Paragraph>

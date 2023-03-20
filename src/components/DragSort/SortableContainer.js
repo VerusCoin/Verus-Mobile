@@ -37,7 +37,7 @@ export default function SortableContainer({
     MARGIN: -12,
     COL: 2,
     WIDTH: width / 2 - 6,
-    HEIGHT: 128,
+    HEIGHT: 118,
     getPosition, 
     getOrder,
   });

@@ -17,6 +17,7 @@ import {
   expireCoinData,
   setCoinSubWallet,
   expireServiceData,
+  saveGeneralSettings,
 } from '../../actions/actionCreators';
 import { connect } from 'react-redux';
 import { Animated } from 'react-native';
@@ -41,16 +42,18 @@ import { HomeRender } from "./Home.render";
 import { extractDisplaySubWallets } from "../../utils/subwallet/extractSubWallets";
 import { CURRENCY_WIDGET_TYPE, TOTAL_UNI_BALANCE_WIDGET_TYPE } from "../../utils/constants/widgets";
 import { findCoinObj } from "../../utils/CoinData/CoinData";
+import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 
 class Home extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      totalFiatBalance: '0.00',
+      totalFiatBalance: 0,
       totalCryptoBalances: {},
       loading: false,
       listItemHeights: {},
       widgets: [],
+      displayCurrencyModalOpen: false,
 
       //TODO: MOVE TO REDUX
       expandedListItems: {},
@@ -134,10 +137,23 @@ class Home extends Component {
             ? this.props.activeSubWallets[coinId]
             : subWallets[0])
         }
+      },
+      [TOTAL_UNI_BALANCE_WIDGET_TYPE]: () => {
+        this.setState({
+          displayCurrencyModalOpen: true
+        })
       }
     }
 
     if (widgetOnPress[widgetType]) widgetOnPress[widgetType]()
+  }
+
+  async setDisplayCurrency(displayCurrency) {
+    try {
+      this.props.dispatch(await saveGeneralSettings({ displayCurrency }))
+    } catch(e) {
+      createAlert("Error setting display currency", e.message)
+    }
   }
 
   animateHeightChange(anim, toValue, cb = () => {}) {
@@ -352,7 +368,7 @@ class Home extends Component {
     });
 
     return {
-      fiat: _totalFiatBalance.toFixed(2),
+      fiat: _totalFiatBalance.toNumber(),
       crypto: coinBalances,
     };
   };
