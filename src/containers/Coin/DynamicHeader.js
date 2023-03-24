@@ -68,7 +68,7 @@ class DynamicHeader extends Component {
     }
 
     if (wallets.length === 1) {
-      return [{...wallets[0], index: 0}, {...wallets[0], index: 1}]
+      return [{...wallets[0], index: 0}]
     } else return wallets.map((x, index) => {return {...x, index}})
   }
 
@@ -98,7 +98,7 @@ class DynamicHeader extends Component {
     }
   }
 
-  _renderCarouselItem({ item, index }) {
+  _renderCarouselItem({ item, index, alone }) {
     const displayBalance = this.props.balances[item.id] != null
         ? this.props.balances[item.id].confirmed
         : null;
@@ -130,9 +130,9 @@ class DynamicHeader extends Component {
         <Card
           style={{
             height: 120,
-            minWidth: 150,
+            minWidth: alone ? 236 : 150,
             borderRadius: 10,
-            marginLeft: 30,
+            marginLeft: alone ? 0 : 30,
           }}
           onPress={() => this._handleItemPress(item, index)}
         >
@@ -233,17 +233,20 @@ class DynamicHeader extends Component {
             backgroundColor: Colors.primaryColor,
           }}
         >
-          <SnapCarousel
-            itemWidth={256}
-            sliderWidth={DEVICE_WINDOW_WIDTH / 2}
-            items={this.state.carouselItems}
-            renderItem={(props) => this._renderCarouselItem(props)}
-            onSnapToItem={(index) => this.setSubWallet(this.state.carouselItems[index])}
-            carouselProps={{
-              loop: true,
-              ref: (ref) => (this.carousel = ref),
-            }}
-          />
+          {this.state.carouselItems.length == 1 ? 
+            this._renderCarouselItem({item: this.state.carouselItems[0], index: 0, alone: true}) 
+            : 
+            <SnapCarousel
+              itemWidth={256}
+              sliderWidth={DEVICE_WINDOW_WIDTH / 2}
+              items={this.state.carouselItems}
+              renderItem={(props) => this._renderCarouselItem(props)}
+              onSnapToItem={(index) => this.setSubWallet(this.state.carouselItems[index])}
+              carouselProps={{
+                loop: true,
+                ref: (ref) => (this.carousel = ref),
+              }}
+            />}
         </View>
       </View>
     );
