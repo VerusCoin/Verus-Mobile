@@ -31,6 +31,7 @@ import { widgets } from './widgets'
 import { keyboard } from './keyboard'
 import identity from './identity';
 import { sendModal } from './sendModal';
+import { loadingModal } from './loadingModal';
 import { secureLoading } from './secureLoading';
 import { deeplink } from './deeplink';
 
@@ -68,6 +69,7 @@ export default combineReducers({
   personal,
   services,
   sendModal,
+  loadingModal,
   secureLoading,
   deeplink
 });

@@ -1,24 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { createStackNavigator } from "@react-navigation/stack";
-import DisplaySeed from '../../Settings/ProfileSettings/DisplaySeed/DisplaySeed'
-import RecoverSeed from '../../Settings/ProfileSettings/RecoverSeed/RecoverSeed'
-import DeleteProfile from '../../Settings/ProfileSettings/DeleteProfile/DeleteProfile'
-import SecureLoading from '../../SecureLoading/SecureLoading'
+import React, {useEffect, useState} from 'react';
+import {createStackNavigator} from '@react-navigation/stack';
+import DisplaySeed from '../../Settings/ProfileSettings/DisplaySeed/DisplaySeed';
+import RecoverSeed from '../../Settings/ProfileSettings/RecoverSeed/RecoverSeed';
+import DeleteProfile from '../../Settings/ProfileSettings/DeleteProfile/DeleteProfile';
+import SecureLoading from '../../SecureLoading/SecureLoading';
 import Login from '../../Login/Login';
 import SignUp from '../../SignUp/SignUp';
-import { useDispatch, useSelector } from 'react-redux';
-import { setDeeplinkUrl } from '../../../actions/actionCreators';
+import {useDispatch, useSelector} from 'react-redux';
+import {setDeeplinkUrl} from '../../../actions/actionCreators';
+import CreateProfile from '../../Onboard/CreateProfile/CreateProfile';
 
 const SignedOutStack = createStackNavigator();
 
 const SignedOutStackScreens = props => {
-  const deeplinkId = useSelector((state) => state.deeplink.id)
-  const deeplinkUrl = useSelector((state) => state.deeplink.url)
-  const dispatch = useDispatch()
+  const deeplinkId = useSelector(state => state.deeplink.id);
+  const deeplinkUrl = useSelector(state => state.deeplink.url);
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    if (deeplinkId != null && deeplinkUrl != null) {    
-      dispatch(setDeeplinkUrl(null))  
+    if (deeplinkId != null && deeplinkUrl != null) {
+      dispatch(setDeeplinkUrl(null));
       props.navigation.navigate('DeepLink');
     }
   }, [deeplinkId, deeplinkUrl]);
@@ -75,8 +76,16 @@ const SignedOutStackScreens = props => {
           drawerLockMode: 'locked-closed',
         }}
       />
+
+      <SignedOutStack.Screen
+        name="CreateProfile"
+        component={CreateProfile}
+        options={{
+          headerShown: false,
+        }}
+      />
     </SignedOutStack.Navigator>
   );
 };
 
-export default SignedOutStackScreens
+export default SignedOutStackScreens;

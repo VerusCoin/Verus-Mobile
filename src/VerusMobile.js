@@ -34,6 +34,7 @@ import { CoinLogos } from "./utils/CoinData/CoinData";
 import { Portal } from 'react-native-paper';
 import SendModal from "./components/SendModal/SendModal";
 import { NavigationContainer } from "@react-navigation/native";
+import LoadingModal from "./components/LoadingModal/LoadingModal";
 
 class VerusMobile extends React.Component {
   constructor(props) {
@@ -70,6 +71,12 @@ class VerusMobile extends React.Component {
   setSecurityCover(cover) {
     this.setState({
       securityCover: cover
+    })
+  }
+
+  setLoading(loading) {
+    this.setState({
+      loading
     })
   }
   
@@ -142,6 +149,7 @@ class VerusMobile extends React.Component {
         <Portal.Host>
           <AlertModal />
           {this.props.sendModal.type != null && <SendModal />}
+          {this.props.loadingModal.visible && <LoadingModal />}
           <NavigationContainer>
             <RootStackScreens
               hasAccount={this.props.accountsLength > 0}
@@ -181,6 +189,7 @@ const mapStateToProps = (state) => {
     accountsLength: state.authentication.accounts.length,
     signedIn: state.authentication.signedIn,
     sendModal: state.sendModal,
+    loadingModal: state.loadingModal
   }
 };
 

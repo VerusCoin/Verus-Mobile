@@ -23,6 +23,16 @@ import VerusLogo from './VerusLogo.svg'
 import VerusIdLogo from './VerusIdLogo.svg'
 import AddCoinLogo from './coinAdd.svg'
 
+import EncryptLocally from './EncryptLocally.svg'
+import MyWallet from './MyWallet.svg'
+import MyWalletLight from './MyWalletLight.svg'
+import MyProfile from './MyProfile.svg'
+import Biometrics from './Biometrics.svg'
+import MnemonicSeed from './MnemonicSeed.svg'
+import TwentyFourWordIcon from './TwentyFourWordIcon'
+import EnterKeyIcon from './EnterKeyIcon'
+import ScanQrIcon from './ScanQrIcon'
+
 export {
   Open,
   Approved,
@@ -45,7 +55,16 @@ export {
   VerusPayLogo,
   AddCoinLogo,
   VerusLogo,
-  VerusIdLogo
+  VerusIdLogo,
+  EncryptLocally,
+  MyProfile,
+  MyWallet,
+  MyWalletLight,
+  Biometrics,
+  MnemonicSeed,
+  TwentyFourWordIcon,
+  EnterKeyIcon,
+  ScanQrIcon
 };
 
 export default Open;

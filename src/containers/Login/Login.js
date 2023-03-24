@@ -59,7 +59,7 @@ const Login = props => {
   }, []);
 
   handleAddUser = () => {
-    props.navigation.navigate("SignIn")
+    props.navigation.navigate("CreateProfile")
   }
 
   return (

@@ -29,6 +29,7 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import { 
+  Platform,
   ScrollView
 } from "react-native";
 
@@ -59,7 +60,8 @@ const AnimatedList = ({ children, editing, onDragEnd, refreshControl, onPressDet
       onScroll={onScroll}
       ref={scrollView}
       contentContainerStyle={{
-        height: Math.ceil(children.length / COL) * HEIGHT + 16
+        height: Platform.OS === 'ios' ? Math.ceil(children.length / COL) * HEIGHT + 16 : "100%",
+        overflow: "visible"
       }}
       showsVerticalScrollIndicator={false}
       bounces={false}
@@ -91,12 +93,11 @@ const NonAnimatedList = ({ children, refreshControl }) => {
 
   return (
     <ScrollView
-      refreshControl
+      refreshControl={refreshControl}
       contentContainerStyle={{
         height: Math.ceil(children.length / COL) * HEIGHT,
         flex: 1,
-        flexDirection: "row",
-        flexWrap: "wrap"
+        flexDirection: "row"
       }}
       showsVerticalScrollIndicator={false}
       bounces={false}
