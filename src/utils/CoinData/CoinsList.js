@@ -34,6 +34,7 @@ export const coinsList = {
     system_id: '.vrsc',
     display_ticker: 'VRSC',
     display_name: 'Verus',
+    rate_url_params: {coin_paprika: 'vrsc-verus-coin'},
     alt_names: ['verus'],
     theme_color: '#3165D4',
     website: 'https://verus.io',
