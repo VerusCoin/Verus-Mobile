@@ -8,19 +8,23 @@ import {
   Keyboard,
 } from 'react-native';
 import {Text, Button, Paragraph, TextInput} from 'react-native-paper';
+import { useSelector } from 'react-redux';
 import { createAlert } from '../../../../../actions/actions/alert/dispatchers/alert';
 import ScanSeed from '../../../../../components/ScanSeed';
 import Colors from '../../../../../globals/colors';
 
 export default function ImportText({
+  qr,
   setImportedSeed,
   importedSeed,
   onComplete
 }) {
   const {height} = Dimensions.get('window');
 
+  const isKeyboardActive = useSelector(state => state.keyboard.active);
+
   const [showSeed, setShowSeed] = useState(false);
-  const [scanQr, setScanQr] = useState(false);
+  const [scanQr, setScanQr] = useState(qr === true);
 
   const handleScan = (seed) => {
     setScanQr(false)
@@ -108,7 +112,7 @@ export default function ImportText({
             {'Scan QR'}
           </Button>
         </View>
-        <Button
+        {!isKeyboardActive && <Button
           onPress={handleImport}
           mode="contained"
           labelStyle={{fontWeight: 'bold'}}
@@ -119,7 +123,7 @@ export default function ImportText({
             width: 280,
           }}>
           {'Import'}
-        </Button>
+        </Button>}
       </View>
     </TouchableWithoutFeedback>
   );

@@ -40,6 +40,7 @@ import {
 
 import { ConfigContext, animationConfig } from './ConfigContext';
 import { isConfigured } from 'react-native-reanimated/lib/reanimated2/core';
+import { triggerLightHaptic } from '../../utils/haptics/haptics';
 
 const NonAnimatedItem = ({
   children,
@@ -76,6 +77,8 @@ const AnimatedItem = ({
   const contentHeight = (Object.keys(positions.value).length / COL) * HEIGHT;
   const isGestureActive = useSharedValue(false);
 
+  const isHapticPrimed = useSharedValue(false)
+
   if (positions.value[id] == null) throw new Error("Cannot get value ID of null position")
 
   const position = getPosition(config, positions.value[id]);
@@ -101,6 +104,8 @@ const AnimatedItem = ({
         if (scrollY.value === lastScrollY.value) runOnJS(onPressDetected)(id);
         
         lastScrollY.value = scrollY.value
+
+        isHapticPrimed.value = false
       }
     },
     onStart: (_, ctx) => {
@@ -110,11 +115,18 @@ const AnimatedItem = ({
         ctx.y = translateY.value;
 
         lastScrollY.value = scrollY.value
+
+        isHapticPrimed.value = true
       }
     },
     onActive: ({ translationX, translationY }, ctx) => {
       // dont allow drag if we're done editing
       if (editing) {
+        if (isHapticPrimed.value === true) {
+          isHapticPrimed.value = false
+          triggerLightHaptic()
+        }
+        
         isGestureActive.value = true;
         
         translateX.value = ctx.x + translationX;

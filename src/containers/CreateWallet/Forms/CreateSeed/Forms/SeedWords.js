@@ -8,11 +8,14 @@ import {
   Alert,
 } from 'react-native';
 import {Text, Button, TextInput} from 'react-native-paper';
+import {useSelector} from 'react-redux';
 import Colors from '../../../../../globals/colors';
 import {DEFAULT_SEED_PHRASE_LENGTH} from '../../../../../utils/constants/constants';
 
 export default function SeedWords({navigation, newSeed, onComplete}) {
   const {height} = Dimensions.get('window');
+
+  const isKeyboardActive = useSelector(state => state.keyboard.active);
 
   const [formStep, setFormStep] = useState(0);
   const [seedWords, setSeedWords] = useState(newSeed.split(' '));
@@ -63,7 +66,7 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
     setWordErrors(guessErrors);
 
     if (!errors) {
-      onComplete()
+      onComplete();
     }
   };
 
@@ -107,7 +110,7 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
   }, [isAtEnd]);
 
   useEffect(() => {
-    setWordErrors([false, false, false])
+    setWordErrors([false, false, false]);
   }, [wordGuesses, randomIndices]);
 
   return (
@@ -119,7 +122,7 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
           justifyContent: 'center',
           flex: 1,
           alignItems: 'center',
-          backgroundColor: Colors.secondaryColor
+          backgroundColor: Colors.secondaryColor,
         }}>
         <View
           style={{
@@ -218,45 +221,49 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
             </View>
           )}
         </View>
-        <View
-          style={{
-            position: 'absolute',
-            bottom: 40,
-            width: 280,
-          }}>
-          <Text style={{textAlign: 'center', paddingBottom: 8}}>
-            {isAtEnd ? "Please verify the listed words." : "When you've written them down, press next."}
-          </Text>
-          <Button
-            onPress={next}
-            mode="contained"
-            disabled={
-              isAtEnd &&
-              (wordGuesses[0].length == 0 ||
-                wordGuesses[1].length == 0 ||
-                wordGuesses[2].length == 0)
-            }
-            labelStyle={{fontWeight: 'bold'}}
+        {!isKeyboardActive && (
+          <View
             style={{
-              marginTop: 8,
+              position: 'absolute',
+              bottom: 40,
+              width: 280,
             }}>
-            {isAtEnd ? 'Complete' : 'Next'}
-          </Button>
-          {formStep > 0 && (
+            <Text style={{textAlign: 'center', paddingBottom: 8}}>
+              {isAtEnd
+                ? 'Please verify the listed words.'
+                : "When you've written them down, press next."}
+            </Text>
             <Button
-              onPress={back}
-              mode="text"
-              labelStyle={{
-                fontWeight: 'bold',
-                color: Colors.warningButtonColor,
-              }}
+              onPress={next}
+              mode="contained"
+              disabled={
+                isAtEnd &&
+                (wordGuesses[0].length == 0 ||
+                  wordGuesses[1].length == 0 ||
+                  wordGuesses[2].length == 0)
+              }
+              labelStyle={{fontWeight: 'bold'}}
               style={{
                 marginTop: 8,
               }}>
-              {'Back'}
+              {isAtEnd ? 'Complete' : 'Next'}
             </Button>
-          )}
-        </View>
+            {formStep > 0 && (
+              <Button
+                onPress={back}
+                mode="text"
+                labelStyle={{
+                  fontWeight: 'bold',
+                  color: Colors.warningButtonColor,
+                }}
+                style={{
+                  marginTop: 8,
+                }}>
+                {'Back'}
+              </Button>
+            )}
+          </View>
+        )}
       </View>
     </TouchableWithoutFeedback>
   );

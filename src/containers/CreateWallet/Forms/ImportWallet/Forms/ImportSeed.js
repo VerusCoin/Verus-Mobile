@@ -6,6 +6,7 @@ import {
   Keyboard,
   TouchableOpacity,
   TouchableHighlight,
+  Platform,
 } from 'react-native';
 import {
   Text,
@@ -187,7 +188,7 @@ export default function ImportSeed({
           keyboardOffset !== 0
             ? {
                 position: 'absolute',
-                bottom: keyboardOffset + 16,
+                bottom: Platform.OS === 'ios' ? keyboardOffset + 16 : 0,
                 width: '75%',
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -224,7 +225,7 @@ export default function ImportSeed({
           {'Next'}
         </Button>
       </View>
-      <Button
+      {keyboardOffset === 0 && <Button
         onPress={handleImport}
         mode="contained"
         labelStyle={{fontWeight: 'bold'}}
@@ -235,7 +236,7 @@ export default function ImportSeed({
           width: 280,
         }}>
         {'Import'}
-      </Button>
+      </Button>}
     </View>
   );
 }

@@ -80,7 +80,7 @@ export default function ImportIntro({navigation}) {
             marginTop: 8
           }}
           mode="outlined"
-          onPress={() => console.log('Pressed')}>
+          onPress={() => navigation.navigate("ScanQr")}>
           {"Scan QR-Code"}
         </Button>
         <Button

@@ -8,6 +8,7 @@ import Colors from '../../../../globals/colors';
 export default function ChooseName({ profileName, setProfileName, navigation }) {
   const {height} = Dimensions.get('window');
   const accounts = useSelector(state => state.authentication.accounts)
+  const isKeyboardActive = useSelector(state => state.keyboard.active);
 
   const isDuplicateAccount = (accountID) => {
     let index = 0;
@@ -101,7 +102,7 @@ export default function ChooseName({ profileName, setProfileName, navigation }) 
             onChangeText={(text) => setProfileName(text)}
           />
         </View>
-        <Button
+        {!isKeyboardActive && <Button
           onPress={next}
           mode="contained"
           labelStyle={{fontWeight: "bold"}}
@@ -112,7 +113,7 @@ export default function ChooseName({ profileName, setProfileName, navigation }) 
             width: 280
           }}>
           {"Next"}
-        </Button>
+        </Button>}
       </View>
     </TouchableWithoutFeedback>
   );

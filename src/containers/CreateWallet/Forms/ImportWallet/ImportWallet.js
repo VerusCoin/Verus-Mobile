@@ -41,6 +41,21 @@ export default function ImportWalletStackScreens({
         )}
       </ImportWalletStack.Screen>
       <ImportWalletStack.Screen
+        name="ScanQr"
+        options={{
+          headerShown: false,
+        }}>
+        {() => (
+          <ImportText
+            navigation={navigation}
+            importedSeed={importedSeed}
+            setImportedSeed={setImportedSeed}
+            onComplete={onComplete}
+            qr={true}
+          />
+        )}
+      </ImportWalletStack.Screen>
+      <ImportWalletStack.Screen
         name="ImportSeed"
         options={{
           headerShown: false,

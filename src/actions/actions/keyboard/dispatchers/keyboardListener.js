@@ -16,6 +16,7 @@ export const activateKeyboardListener = () => {
     "keyboardDidShow",
     (e) => {
       dispatchKeyboardHeight(e)
+      dispatchKeyboardActive(true)
     }
   );
 
