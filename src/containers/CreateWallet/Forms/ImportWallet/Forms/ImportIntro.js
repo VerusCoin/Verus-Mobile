@@ -55,7 +55,7 @@ export default function ImportIntro({navigation}) {
             marginTop: 8
           }}
           mode="outlined"
-          onPress={() => console.log('Pressed')}>
+          onPress={() => navigation.navigate("ImportSeed")}>
           {"Import 24-word seed"}
         </Button>
         <Button

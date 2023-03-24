@@ -1,6 +1,7 @@
 import {createStackNavigator} from '@react-navigation/stack';
 import React, {useState} from 'react';
 import ImportIntro from './Forms/ImportIntro';
+import ImportSeed from './Forms/ImportSeed';
 import ImportText from './Forms/ImportText';
 const ImportWalletStack = createStackNavigator();
 
@@ -32,6 +33,20 @@ export default function ImportWalletStackScreens({
         }}>
         {() => (
           <ImportText
+            navigation={navigation}
+            importedSeed={importedSeed}
+            setImportedSeed={setImportedSeed}
+            onComplete={onComplete}
+          />
+        )}
+      </ImportWalletStack.Screen>
+      <ImportWalletStack.Screen
+        name="ImportSeed"
+        options={{
+          headerShown: false,
+        }}>
+        {() => (
+          <ImportSeed
             navigation={navigation}
             importedSeed={importedSeed}
             setImportedSeed={setImportedSeed}
