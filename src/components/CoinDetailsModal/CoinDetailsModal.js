@@ -5,8 +5,7 @@
 
 import React, { Component } from "react";
 import { 
-  View, 
-  Text, 
+  View,
   ScrollView, 
   Linking, 
   TouchableOpacity,
@@ -15,7 +14,7 @@ import {
 import { CoinLogos } from '../../utils/CoinData/CoinData';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
-import { Button } from "react-native-paper"
+import { Button, Text } from "react-native-paper"
 import SemiModal from "../SemiModal";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import { addCoin, addKeypairs, removeExistingCoin, setUserCoins } from "../../actions/actionCreators";

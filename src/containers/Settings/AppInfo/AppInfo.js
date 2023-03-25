@@ -7,8 +7,7 @@
 
 import React, { Component } from "react";
 import { 
-  View, 
-  Text, 
+  View,
   ScrollView, 
   Platform, 
   TouchableOpacity,
@@ -16,7 +15,7 @@ import {
   Linking,
   SafeAreaView
 } from "react-native";
-import { List, DataTable, Divider } from 'react-native-paper'
+import { List, DataTable, Divider, Text } from 'react-native-paper'
 import Styles from '../../../styles/index'
 import { APP_VERSION, VERUS_QR_VERSION } from '../../../../env/index'
 import { CoinLogos } from "../../../utils/CoinData/CoinData";

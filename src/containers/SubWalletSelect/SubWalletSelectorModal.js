@@ -3,10 +3,9 @@ import { connect } from 'react-redux';
 import {
   ScrollView,
   View,
-  Text,
   SafeAreaView,
 } from "react-native"
-import { List, Card } from "react-native-paper"
+import { List, Card, Text } from "react-native-paper"
 import Modal from '../../components/Modal'
 import Styles from '../../styles/index'
 import { API_GET_BALANCES, API_GET_FIATPRICE, GENERAL } from "../../utils/constants/intervalConstants";

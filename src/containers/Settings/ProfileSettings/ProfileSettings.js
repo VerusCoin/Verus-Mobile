@@ -10,11 +10,11 @@ import React, { Component } from "react";
 import { CommonActions } from '@react-navigation/native';
 import { Divider, List, Portal } from "react-native-paper"
 import { 
-  View, 
-  Text, 
+  View,
   TouchableOpacity,
   ScrollView
 } from "react-native";
+import { Text } from "react-native-paper"
 import { connect } from 'react-redux';
 import Styles from '../../../styles/index'
 import {

@@ -1,13 +1,13 @@
 import React from 'react';
 import { 
   View, 
-  Text, 
   Image, 
   StatusBar, 
   TouchableOpacity, 
   Platform,
 	SafeAreaView
 } from 'react-native';
+import { Text } from 'react-native-paper';
 import Colors from '../globals/colors';
 
 const LOGO_DIR = require('../images/customIcons/Verus.png');

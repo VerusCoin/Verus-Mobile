@@ -141,7 +141,7 @@ export default function ImportSeed({
         style={{
           alignItems: 'center',
           position: 'absolute',
-          top: height / 2 - 250,
+          top: keyboardOffset !== 0 ? 0 : height / 2 - 250,
         }}>
         <Text
           style={{
@@ -158,7 +158,7 @@ export default function ImportSeed({
             minWidth: '86%',
             maxWidth: '86%',
             flexDirection: 'row',
-            marginTop: 64,
+            marginTop: keyboardOffset !== 0 ? 8 : 64,
             flexWrap: 'wrap',
           }}>
           {words.map((word, index) => (
@@ -188,10 +188,11 @@ export default function ImportSeed({
           keyboardOffset !== 0
             ? {
                 position: 'absolute',
-                bottom: Platform.OS === 'ios' ? keyboardOffset + 16 : 0,
+                bottom: Platform.OS === 'ios' ? keyboardOffset + 16 : 16,
                 width: '75%',
                 flexDirection: 'row',
                 alignItems: 'center',
+                justifyContent: "center"
               }
             : {
                 position: 'absolute',
@@ -199,6 +200,7 @@ export default function ImportSeed({
                 width: '75%',
                 flexDirection: 'row',
                 alignItems: 'center',
+                justifyContent: "center"
               }
         }>
         <TextInput
@@ -213,14 +215,14 @@ export default function ImportSeed({
           dense
           mode="outlined"
           style={{
-            width: '70%',
+            width: 180,
           }}
         />
         <Button
           onPress={() => addWord(currentWord)}
           mode="contained"
-          labelStyle={{fontWeight: 'bold', paddingTop: 2}}
-          style={{height: 41, marginTop: 6, width: '25%', marginLeft: '5%'}}
+          labelStyle={{fontWeight: 'bold', fontSize: 16}}
+          style={{height: 41, marginTop: 6, width: 80, marginLeft: 8}}
           disabled={currentWord == null || currentWord.length == 0}>
           {'Next'}
         </Button>

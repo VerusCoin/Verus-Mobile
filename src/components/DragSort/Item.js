@@ -124,7 +124,7 @@ const AnimatedItem = ({
       if (editing) {
         if (isHapticPrimed.value === true) {
           isHapticPrimed.value = false
-          triggerLightHaptic()
+          runOnJS(triggerLightHaptic)();
         }
         
         isGestureActive.value = true;

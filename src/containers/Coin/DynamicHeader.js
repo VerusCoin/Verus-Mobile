@@ -7,7 +7,6 @@ import React, { Component } from "react"
 import { connect } from 'react-redux';
 import {
   View,
-  Text,
   Animated
 } from "react-native"
 import { DEVICE_WINDOW_WIDTH } from "../../utils/constants/constants";
@@ -15,7 +14,7 @@ import { setCoinSubWallet } from "../../actions/actionCreators";
 import SnapCarousel from "../../components/SnapCarousel";
 import { API_GET_BALANCES, API_GET_FIATPRICE, API_GET_INFO, GENERAL } from "../../utils/constants/intervalConstants";
 import Colors from "../../globals/colors";
-import { Card, Avatar, Paragraph, Title } from "react-native-paper";
+import { Card, Avatar, Paragraph, Text } from "react-native-paper";
 import BigNumber from "bignumber.js";
 import { extractErrorData, extractLedgerData } from "../../utils/ledger/extractLedgerData";
 import { CONNECTION_ERROR } from "../../utils/api/errors/errorMessages";

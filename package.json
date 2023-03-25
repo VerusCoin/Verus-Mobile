@@ -85,7 +85,6 @@
     "react-native-os": "git+https://github.com/michaeltout/react-native-os.git#1f79a5ae777ff296bd4911e2eb37e1de6f711d12",
     "react-native-paper": "4.7.1",
     "react-native-permissions": "3.1.0",
-    "react-native-pie": "1.1.2",
     "react-native-qrcode-scanner": "1.5.4",
     "react-native-qrcode-svg": "6.1.1",
     "react-native-randombytes": "3.6.1",

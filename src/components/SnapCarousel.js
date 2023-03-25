@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from 'react-native-paper';
 
 import Carousel from "react-native-snap-carousel";
 import { triggerLightHaptic } from "../utils/haptics/haptics";

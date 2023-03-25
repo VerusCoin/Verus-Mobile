@@ -5,9 +5,9 @@
 
 import React, { Component } from "react";
 import { 
-  View, 
-  Text, 
+  View,
 } from "react-native";
+import { Text } from "react-native-paper"
 import { Icon } from "react-native-elements"
 import { connect } from 'react-redux';
 import styles from './ProfileInfo.styles'
