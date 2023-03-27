@@ -21,7 +21,7 @@ const TotalUniBalanceWidget = props => {
   useEffect(() => {
     if (totalBalance != null && displayCurrency != null) {
       const [valueFormattedWithSymbol, valueFormattedWithoutSymbol, symbol] =
-        formatCurrency({amount: totalBalance, code: displayCurrency});
+        formatCurrency({amount: Number(totalBalance.toFixed(2)), code: displayCurrency});
 
       setUniValueDisplay(valueFormattedWithSymbol);
     }
