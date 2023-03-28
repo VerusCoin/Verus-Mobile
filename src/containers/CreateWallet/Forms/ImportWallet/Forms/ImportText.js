@@ -87,7 +87,7 @@ export default function ImportText({
               selectionColor={Colors.primaryColor}
               value={importedSeed}
               mode="outlined"
-              multiline={showSeed || Platform.OS === 'ios' ? false : true}
+              multiline={!showSeed || Platform.OS === 'ios' ? false : true}
               render={props => (
                 <NativeTextInput
                   secureTextEntry={!showSeed}
