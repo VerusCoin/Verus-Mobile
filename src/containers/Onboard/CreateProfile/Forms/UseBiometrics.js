@@ -50,9 +50,8 @@ export default function UseBiometrics({ setUseBiometrics, navigation }) {
         <Paragraph
           style={{
             textAlign: 'center',
-            width: '75%',
-            marginTop: 24,
-            width: 280
+            width: '60%',
+            marginTop: 24
           }}>
           {"Sign into your profile with biometric authentication. You can always change this later."}
         </Paragraph>

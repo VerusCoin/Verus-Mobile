@@ -62,9 +62,8 @@ export default function WalletIntro({ navigation, setNewSeed }) {
         <Paragraph
           style={{
             textAlign: 'center',
-            width: '75%',
-            marginTop: 24,
-            width: 280
+            width: '60%',
+            marginTop: 24
           }}>
           {"Create a wallet, or import a seed or private key you already control."}
         </Paragraph>

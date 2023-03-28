@@ -36,9 +36,8 @@ export default function LandingScreen(props) {
         <Paragraph
           style={{
             textAlign: 'center',
-            width: "75%",
-            marginTop: 24,
-            width: 280
+            width: "60%",
+            marginTop: 24
           }}>
           {'The mobile wallet for Verus and its ecosystem.\nHere you can easily and securely send, receive and store VRSC, BTC, ETH and more.'}
         </Paragraph>

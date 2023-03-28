@@ -150,7 +150,7 @@ const LoginRequestIdentity = props => {
               onPress={() => openLinkIdentityModalFromChain(chainId)}
             />
             <Divider />
-            {canProvision && (
+            {/* {canProvision && (
               <React.Fragment>
                 <List.Item
                   title={'Request new VerusID'}
@@ -161,7 +161,7 @@ const LoginRequestIdentity = props => {
                 />
                 <Divider />
               </React.Fragment>
-            )}
+            )} */}
           </React.Fragment>
         );
       })}

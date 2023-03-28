@@ -19,6 +19,7 @@ import {
   initializeAccountData,
   openLoadingModal,
 } from '../../../actions/actionDispatchers';
+import { deriveKeyPair } from '../../../utils/keys';
 
 const CreateProfileStack = createStackNavigator();
 
@@ -45,6 +46,19 @@ export default function CreateProfileStackScreens(props) {
       const _userName = profileName;
       const _pin = password;
       const _seeds = {[ELECTRUM]: seed};
+
+      try {
+        for (const startCoin of START_COINS) {
+          await deriveKeyPair(
+            seed,
+            startCoin,
+            ELECTRUM,
+            KEY_DERIVATION_VERSION,
+          );
+        }
+      } catch(e) {
+        throw new Error(`Could not create keypair from seed: ${e.message}`);
+      }
 
       if (_seeds[ELECTRUM] == null) {
         throw new Error('Please configure at least a primary seed.');

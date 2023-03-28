@@ -250,7 +250,6 @@ export default containers = {
     borderBottomWidth: 0,
   },
   underflow: {
-    overflow: 'visible',
     zIndex: -1,
   },
   greyStripeContainer: {
