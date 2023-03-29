@@ -3,6 +3,7 @@ import { primitives } from "verusid-ts-client"
 import {URL} from 'react-native-url-polyfill';
 import base64url from 'base64url';
 import { Linking } from "react-native";
+import { openUrl } from "../linking";
 
 const handlers = {
   [primitives.LOGIN_CONSENT_WEBHOOK_VDXF_KEY.vdxfid]: async (uri, response) => {
@@ -20,14 +21,8 @@ const handlers = {
     );
 
     const urlstring = url.toString()
-    
-    Linking.canOpenURL(urlstring).then(supported => {
-      if (supported) {
-        Linking.openURL(urlstring.toString());
-      } else {
-        throw new Error(`Failed to open ${urlstring}`)
-      }
-    });
+
+    openUrl(urlstring.toString())
 
     return null
   }

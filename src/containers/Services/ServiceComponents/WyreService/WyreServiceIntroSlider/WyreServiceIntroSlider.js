@@ -20,6 +20,7 @@ import SetupSeedModal from "../../../../../components/SetupSeedModal/SetupSeedMo
 import PasswordCheck from "../../../../../components/PasswordCheck";
 import { addEncryptedKey, setServiceLoading } from "../../../../../actions/actionCreators";
 import { refreshAccountData } from "../../../../../actions/actionDispatchers";
+import { openUrl } from "../../../../../utils/linking";
 
 class WyreServiceIntroSlider extends Component {
   constructor() {
@@ -245,7 +246,7 @@ class WyreServiceIntroSlider extends Component {
           <Text
             style={{ color: Colors.primaryColor, fontWeight: "800" }}
             onPress={() => {
-              Linking.openURL(this.WYRE_USER_AGREEMENT);
+              openUrl(this.WYRE_USER_AGREEMENT);
             }}
           >
             {" user agreement "}
@@ -254,7 +255,7 @@ class WyreServiceIntroSlider extends Component {
           <Text
             style={{ color: Colors.primaryColor, fontWeight: "800" }}
             onPress={() => {
-              Linking.openURL(this.WYRE_PRIVACY_POLICY);
+              openUrl(this.WYRE_PRIVACY_POLICY);
             }}
           >
             {" privacy policy."}

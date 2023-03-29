@@ -1,21 +1,16 @@
-import React, { useEffect, useState } from "react"
-import {
-  Clipboard,
-  FlatList,
-  TouchableOpacity,
-  Alert,
-  View
-} from 'react-native';
-import { Text, List, Divider } from "react-native-paper";
-import Styles from "../styles";
+import React, {useEffect, useState} from 'react';
+import {Clipboard, FlatList, TouchableOpacity, Alert, View} from 'react-native';
+import {Text, List, Divider, Button} from 'react-native-paper';
+import Colors from '../globals/colors';
+import Styles from '../styles';
 
 export default function VerusIdObjectData(props) {
-  const { friendlyNames, verusId, StickyFooterComponent } = props
+  const {friendlyNames, verusId, StickyFooterComponent, flex} = props;
   const [listData, setListData] = useState([]);
 
-  tryDisplayFriendlyName = (iAddr) => {
+  tryDisplayFriendlyName = iAddr => {
     return friendlyNames[iAddr] ? friendlyNames[iAddr] : iAddr;
-  }
+  };
 
   copyDataToClipboard = (data, name) => {
     Clipboard.setString(data);
@@ -24,13 +19,12 @@ export default function VerusIdObjectData(props) {
   };
 
   useEffect(() => {
-    if (friendlyNames != null && verusId != null) {      
+    if (friendlyNames != null && verusId != null) {
       let data = [
         {
           key: 'Name',
           data: verusId.identity.name,
-          onPress: () =>
-            copyDataToClipboard(verusId.identity.name, 'Name'),
+          onPress: () => copyDataToClipboard(verusId.identity.name, 'Name'),
         },
         {
           key: 'i-Address',
@@ -41,7 +35,7 @@ export default function VerusIdObjectData(props) {
         {
           key: 'Status',
           data: verusId.status,
-          capitalized: true
+          capitalized: true,
         },
         {
           key: 'Revocation Authority',
@@ -56,14 +50,11 @@ export default function VerusIdObjectData(props) {
           key: 'Recovery Authority',
           data: tryDisplayFriendlyName(verusId.identity.recoveryauthority),
           onPress: () =>
-            copyDataToClipboard(
-              verusId.identity.recoveryauthority,
-              'Recovery',
-            ),
+            copyDataToClipboard(verusId.identity.recoveryauthority, 'Recovery'),
         },
         {
           key: 'System',
-          data: tryDisplayFriendlyName(verusId.identity.systemid),
+          data: tryDisplayFriendlyName(verusId.identity.systemid).replace(/@/g,''),
           onPress: () =>
             copyDataToClipboard(verusId.identity.systemid, 'System ID'),
         },
@@ -104,12 +95,12 @@ export default function VerusIdObjectData(props) {
   };
 
   return (
-    <View style={{flex: 1, ...Styles.fullWidth}}>
+    <View style={flex ? {...Styles.fullWidth, flex: 1} : {...Styles.fullWidth}}>
       <FlatList
-        style={{...Styles.fullWidth, flex: 1}}
-        contentContainerStyle={{ paddingBottom: 152 }}
+        style={flex ? {...Styles.fullWidth, flex: 1} : {...Styles.fullWidth}}
+        contentContainerStyle={{paddingBottom: 152}}
         renderItem={({item}) => {
-          if (item.condition == null || item.condition === true)
+          if (item.condition == null || item.condition === true) {
             return (
               <React.Fragment>
                 <TouchableOpacity
@@ -120,7 +111,9 @@ export default function VerusIdObjectData(props) {
                     description={item.key}
                     titleNumberOfLines={item.numLines || 1}
                     titleStyle={
-                      item.capitalized ? Styles.capitalizeFirstLetter : undefined
+                      item.capitalized
+                        ? Styles.capitalizeFirstLetter
+                        : undefined
                     }
                     right={props =>
                       item.right ? (
@@ -140,7 +133,9 @@ export default function VerusIdObjectData(props) {
                 </TouchableOpacity>
               </React.Fragment>
             );
-          else return null;
+          } else {
+            return null;
+          }
         }}
         data={listData}
       />

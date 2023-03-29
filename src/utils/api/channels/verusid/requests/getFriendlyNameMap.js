@@ -1,3 +1,4 @@
+import { convertFqnToDisplayFormat } from "../../../../fullyqualifiedname";
 import { getIdentity } from "./getIdentity";
 
 export const getFriendlyNameMap = async (coinObj, identityObj) => {
@@ -7,7 +8,7 @@ export const getFriendlyNameMap = async (coinObj, identityObj) => {
 
   iAddresses.push(iAddress);
 
-  names[iAddress] = `${identityObj.identity.name}@`;
+  names[iAddress] = convertFqnToDisplayFormat(identityObj.fullyqualifiedname);
 
   iAddresses.push(identityObj.identity.revocationauthority);
   iAddresses.push(identityObj.identity.recoveryauthority);
@@ -17,7 +18,7 @@ export const getFriendlyNameMap = async (coinObj, identityObj) => {
     try {
       const id = await getIdentity(coinObj, addr);
 
-      names[addr] = `${id.identity.name}@`;
+      names[addr] = convertFqnToDisplayFormat(id.result.fullyqualifiedname);
     } catch (e) {
       continue;
     }

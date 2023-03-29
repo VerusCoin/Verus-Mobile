@@ -8,6 +8,8 @@ import AnimatedActivityIndicatorBox from '../AnimatedActivityIndicatorBox';
 import VerusIdObjectData from '../VerusIdObjectData';
 import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
 import MissingInfoRedirect from '../MissingInfoRedirect/MissingInfoRedirect';
+import { convertFqnToDisplayFormat } from '../../utils/fullyqualifiedname';
+import { openUrl } from '../../utils/linking';
 
 export default function VerusIdDetailsModal(props) {
   const {
@@ -41,15 +43,9 @@ export default function VerusIdDetailsModal(props) {
   }
 
   openIdDetails = () => {
-    let url = `https://verus.io/verusid-lookup/${verusId.identity.name}@`;
+    let url = `https://verus.io/verusid-lookup/${verusId.fullyqualifiedname}`;
 
-    Linking.canOpenURL(url).then(supported => {
-      if (supported) {
-        Linking.openURL(url);
-      } else {
-        console.log("Don't know how to open URI: " + url);
-      }
-    });
+    openUrl(url)
   };
 
   useEffect(() => {
@@ -77,7 +73,7 @@ export default function VerusIdDetailsModal(props) {
                   ...Styles.centralHeader,
                   ...Styles.smallMediumFont,
                 }}>
-                {failedToLoad ? "Error" : `${verusId.identity.name}@`}
+                {failedToLoad ? "Error" : convertFqnToDisplayFormat(verusId.fullyqualifiedname)}
               </Text>
               <Button
                 onPresscolor={Colors.primaryColor}
@@ -100,6 +96,7 @@ export default function VerusIdDetailsModal(props) {
               verusId={verusId}
               friendlyNames={friendlyNames}
               StickyFooterComponent={StickyFooterComponent}
+              flex={true}
             />
           )}
         </SafeAreaView>

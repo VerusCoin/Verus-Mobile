@@ -22,6 +22,7 @@ import { activateChainLifecycle } from "../../actions/actions/intervals/dispatch
 import { connect } from 'react-redux';
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { CommonActions } from '@react-navigation/native';
+import { openUrl } from "../../utils/linking";
 
 class CoinDetailsModal extends Component {
   constructor(props) {
@@ -35,15 +36,7 @@ class CoinDetailsModal extends Component {
   openWebsite = () => {
     let url = this.props.data.website
 
-    if (url != null) {
-      Linking.canOpenURL(url).then(supported => {
-        if (supported) {
-          Linking.openURL(url);
-        } else {
-          console.log("Don't know how to open URI: " + url);
-        }
-      });
-    }
+    openUrl(url)
   };
 
   resetToScreen = (route, title, data) => {

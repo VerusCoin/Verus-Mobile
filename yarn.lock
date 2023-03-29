@@ -11159,7 +11159,7 @@ react-native-elements@1.0.0:
 
 "react-native-format-currency@https://github.com/michaeltout/react-native-format-currency.git":
   version "0.0.3"
-  resolved "https://github.com/michaeltout/react-native-format-currency.git#9fe8e36ab9da3921e453f7c7fa4c4fb7a62bcdaf"
+  resolved "https://github.com/michaeltout/react-native-format-currency.git#7002ee86a689ea52f1ff1e7fb71e216f282fad35"
 
 react-native-fs@2.18.0:
   version "2.18.0"

@@ -3,7 +3,7 @@ import {requestServiceStoredData} from '../../../../../utils/auth/authBox';
 import {VERUSID_SERVICE_ID} from '../../../../../utils/constants/services';
 import {modifyServiceStoredDataForUser} from '../services';
 
-export const linkVerusId = async (iAddress, friendlyName, chain) => {
+export const linkVerusId = async (iAddress, fqn, chain) => {
   const state = store.getState();
 
   if (state.authentication.activeAccount == null) {
@@ -22,9 +22,9 @@ export const linkVerusId = async (iAddress, friendlyName, chain) => {
         [chain]: currentLinkedIdentities[chain]
           ? {
               ...currentLinkedIdentities[chain],
-              [iAddress]: friendlyName,
+              [iAddress]: fqn,
             }
-          : {[iAddress]: friendlyName},
+          : {[iAddress]: fqn},
       },
     },
     VERUSID_SERVICE_ID,

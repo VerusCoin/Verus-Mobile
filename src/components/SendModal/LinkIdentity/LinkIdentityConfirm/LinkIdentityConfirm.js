@@ -9,6 +9,7 @@ import {
 } from '../../../../actions/actions/intervals/dispatchers/lifecycleManager';
 import {linkVerusId} from '../../../../actions/actions/services/dispatchers/verusid/verusid';
 import {SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT} from '../../../../utils/constants/sendModal';
+import { convertFqnToDisplayFormat } from '../../../../utils/fullyqualifiedname';
 import {LinkIdentityConfirmRender} from './LinkIdentityConfirm.render';
 
 class LinkIdentityConfirm extends Component {
@@ -31,10 +32,15 @@ class LinkIdentityConfirm extends Component {
     await this.props.setPreventExit(true);
 
     try {
-      const {identityaddress, name} = this.state.verusId.identity;
+      const {identityaddress} = this.state.verusId.identity;
       const {coinObj} = this.props.sendModal;
 
-      await linkVerusId(identityaddress, `${name}@`, coinObj.display_ticker);
+      await linkVerusId(
+        identityaddress,
+        convertFqnToDisplayFormat(this.state.verusId.fullyqualifiedname),
+        coinObj.display_ticker,
+      );
+
       await updateVerusIdWallet();
       clearChainLifecycle(coinObj.id);
       this.props.dispatch(

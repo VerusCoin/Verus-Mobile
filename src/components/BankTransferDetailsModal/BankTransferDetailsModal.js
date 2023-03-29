@@ -17,6 +17,7 @@ import { Button, List, Divider } from "react-native-paper"
 import SemiModal from "../SemiModal";
 import { connect } from 'react-redux';
 import { copyToClipboard } from "../../utils/clipboard/clipboard";
+import { openUrl } from "../../utils/linking";
 
 class BankTransferDetailsModal extends Component {
   constructor(props) {
@@ -26,15 +27,7 @@ class BankTransferDetailsModal extends Component {
   }
 
   openWebsite = (url) => {
-    if (url != null) {
-      Linking.canOpenURL(url).then(supported => {
-        if (supported) {
-          Linking.openURL(url);
-        } else {
-          console.log("Don't know how to open URI: " + url);
-        }
-      });
-    }
+    openUrl(url);
   };
 
   render() {

@@ -14,6 +14,7 @@ import { getBlock } from '../../utils/api/channels/vrpc/callCreators';
 import { LOGIN_CONSENT_INFO } from '../../utils/constants/deeplink';
 import LoginRequestInfo from './LoginRequestInfo/LoginRequestInfo';
 import { getIdentity } from '../../utils/api/channels/verusid/callCreators';
+import { convertFqnToDisplayFormat } from '../../utils/fullyqualifiedname';
 
 const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
@@ -47,6 +48,12 @@ const DeepLink = (props) => {
       switch (deeplinkId) {
         case primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid:
           const request = new primitives.LoginConsentRequest(deeplinkData)
+
+          if (request.challenge.context != null) {
+            if (Object.keys(request.challenge.context.kv).length !== 0) {
+              throw new Error("Login requests with context are currently unsupported.")
+            }
+          }
 
           const coinObj = findCoinObj(request.system_id, null, true)
           VrpcProvider.initEndpoint(coinObj.id, coinObj.vrpc_endpoints[0])
@@ -85,7 +92,7 @@ const DeepLink = (props) => {
             setDisplayProps({
               deeplinkData,
               sigtime,
-              signerName: signedBy.result.identity.name
+              signerFqn: convertFqnToDisplayFormat(signedBy.result.fullyqualifiedname)
             })
             setDisplayKey(LOGIN_CONSENT_INFO)
           } else {

@@ -15,7 +15,7 @@ import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIn
 import { getCoinIdFromSystemId } from '../../../utils/CoinData/CoinData';
 
 const LoginRequestInfo = props => {
-  const { deeplinkData, sigtime, cancel, signerName } = props
+  const { deeplinkData, sigtime, cancel, signerFqn } = props
   const [req, setReq] = useState(new primitives.LoginConsentRequest(deeplinkData))
   const [loading, setLoading] = useState(false)
   const [verusIdDetailsModalProps, setVerusIdDetailsModalProps] = useState(null)
@@ -102,14 +102,14 @@ const LoginRequestInfo = props => {
         <VerusIdLogo width={'55%'} height={'10%'} />
         <View style={Styles.wideBlock}>
           <Text style={{fontSize: 20, textAlign: 'center'}}>
-            {`${signerName}@ is requesting login with VerusID`}
+            {`${signerFqn} is requesting login with VerusID`}
           </Text>
         </View>
         <View style={Styles.fullWidth}>
           <TouchableOpacity
             onPress={() => openVerusIdDetailsModal(chain_id, signing_id)}>
             <List.Item
-              title={`${signerName}@`}
+              title={signerFqn}
               description={'Requested by'}
               right={props => (
                 <List.Icon {...props} icon={'information'} size={20} />
