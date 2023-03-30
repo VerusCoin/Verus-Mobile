@@ -60,6 +60,10 @@ export default containers = {
     width: '90%',
     paddingVertical: 16,
   },
+  wideBlockDense: {
+    width: '90%',
+    paddingVertical: 8,
+  },
   wideCenterBlock: {
     width: '90%',
     paddingVertical: 16,
@@ -112,6 +116,13 @@ export default containers = {
   },
   fullWidthFlexCenterBlock: {
     paddingVertical: 16,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    display: 'flex',
+  },
+  fullWidthFlexCenterBlockDense: {
+    paddingVertical: 8,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
@@ -239,7 +250,6 @@ export default containers = {
     borderBottomWidth: 0,
   },
   underflow: {
-    overflow: 'visible',
     zIndex: -1,
   },
   greyStripeContainer: {

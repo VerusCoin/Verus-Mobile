@@ -4,7 +4,7 @@ import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import { useSelector } from 'react-redux';
-import { openLinkIdentityModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
+import { openLinkIdentityModal, openProvisionIdentityModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import { requestServiceStoredData } from '../../../utils/auth/authBox';
 import { VERUSID_SERVICE_ID } from '../../../utils/constants/services';
@@ -20,6 +20,14 @@ const LoginRequestIdentity = props => {
   const [sortedIds, setSortedIds] = useState({})
   const req = new primitives.LoginConsentRequest(deeplinkData)
   const encryptedIds = useSelector(state => state.services.stored[VERUSID_SERVICE_ID])
+
+  const canProvision = req.challenge.provisioning_info && req.challenge.provisioning_info.some(x => {
+    return (
+      x.vdxfkey ===
+      primitives.LOGIN_CONSENT_ID_PROVISIONING_WEBHOOK_VDXF_KEY
+        .vdxfid
+    );
+  })
 
   const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser)
 
@@ -73,6 +81,10 @@ const LoginRequestIdentity = props => {
 
   const openLinkIdentityModalFromChain = () => {
     return openLinkIdentityModal(findCoinObj(system_id, null, true));
+  }
+
+  const openProvisionIdentityModalFromChain = () => {
+    openProvisionIdentityModal(findCoinObj(system_id, null, true), req)
   }
 
   const selectIdentity = async (iAddress) => {
@@ -138,6 +150,18 @@ const LoginRequestIdentity = props => {
               onPress={() => openLinkIdentityModalFromChain(chainId)}
             />
             <Divider />
+            {/* {canProvision && (
+              <React.Fragment>
+                <List.Item
+                  title={'Request new VerusID'}
+                  right={props => (
+                    <List.Icon {...props} icon={'plus'} size={20} />
+                  )}
+                  onPress={() => openProvisionIdentityModalFromChain(chainId)}
+                />
+                <Divider />
+              </React.Fragment>
+            )} */}
           </React.Fragment>
         );
       })}

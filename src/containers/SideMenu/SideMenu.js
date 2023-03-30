@@ -233,14 +233,6 @@ class SideMenu extends Component {
     navigation.navigate("SettingsMenus", { title: drawerItem.title })
   }
 
-  _openCustomCoinMenus = () => {
-    let navigation = this.props.navigation
-    this.props.dispatch(setActiveSectionCustomCoins('custom-coin-qr'))
-
-    //TODO: Change this when coin adding is refactored
-    navigation.navigate("CustomChainMenus", { title: "Scan QR" })
-  }
-
   toggleMainDrawer = () =>
 		this.setState(prevState => ({ mainDrawer: !prevState.mainDrawer }));
 

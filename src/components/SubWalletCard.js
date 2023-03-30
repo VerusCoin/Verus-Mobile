@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import Styles from '../styles/index'
-import { Avatar, Card, Title, Paragraph } from 'react-native-paper';
-import { View, Text } from "react-native";
+import { Avatar, Card, Text, Paragraph } from 'react-native-paper';
+import { View } from "react-native";
 
 export default class SubWalletCard extends Component {
   render() {

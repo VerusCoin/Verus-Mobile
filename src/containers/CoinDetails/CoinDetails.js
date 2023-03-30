@@ -9,12 +9,12 @@ import React, { Component } from "react";
 import StandardButton from "../../components/StandardButton";
 import {
   View,
-  Text,
   ScrollView,
   Image,
   ActivityIndicator,
   Alert,
 } from "react-native";
+import { Text } from "react-native-paper"
 import { connect } from 'react-redux';
 import { 
   addCoin, 

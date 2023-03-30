@@ -32,6 +32,7 @@ class ServicesOverview extends Component {
 const mapStateToProps = (state) => {
   return {
     passthrough: state.secureLoading.successData,
+    activeAccount: state.authentication.activeAccount
   }
 };
 

@@ -7,7 +7,6 @@ import React, { Component } from "react"
 import { connect } from 'react-redux';
 import {
   View,
-  Text,
   Animated
 } from "react-native"
 import { DEVICE_WINDOW_WIDTH } from "../../utils/constants/constants";
@@ -15,7 +14,7 @@ import { setCoinSubWallet } from "../../actions/actionCreators";
 import SnapCarousel from "../../components/SnapCarousel";
 import { API_GET_BALANCES, API_GET_FIATPRICE, API_GET_INFO, GENERAL } from "../../utils/constants/intervalConstants";
 import Colors from "../../globals/colors";
-import { Card, Avatar, Paragraph, Title } from "react-native-paper";
+import { Card, Avatar, Paragraph, Text } from "react-native-paper";
 import BigNumber from "bignumber.js";
 import { extractErrorData, extractLedgerData } from "../../utils/ledger/extractLedgerData";
 import { CONNECTION_ERROR } from "../../utils/api/errors/errorMessages";
@@ -68,7 +67,7 @@ class DynamicHeader extends Component {
     }
 
     if (wallets.length === 1) {
-      return [{...wallets[0], index: 0}, {...wallets[0], index: 1}]
+      return [{...wallets[0], index: 0}]
     } else return wallets.map((x, index) => {return {...x, index}})
   }
 
@@ -98,7 +97,7 @@ class DynamicHeader extends Component {
     }
   }
 
-  _renderCarouselItem({ item, index }) {
+  _renderCarouselItem({ item, index, alone }) {
     const displayBalance = this.props.balances[item.id] != null
         ? this.props.balances[item.id].confirmed
         : null;
@@ -130,9 +129,9 @@ class DynamicHeader extends Component {
         <Card
           style={{
             height: 120,
-            minWidth: 150,
+            minWidth: alone ? 236 : 150,
             borderRadius: 10,
-            marginLeft: 30,
+            marginLeft: alone ? 0 : 30,
           }}
           onPress={() => this._handleItemPress(item, index)}
         >
@@ -161,7 +160,7 @@ class DynamicHeader extends Component {
                           BigNumber(pendingBalance).isGreaterThan(0) ? "+" : ""
                         }${truncateDecimal(pendingBalance, 4)})`
                       : ""
-                  } ${this.props.chainTicker}`}
+                  } ${this.props.displayTicker}`}
             </Paragraph>
             <Paragraph style={{ ...Styles.listItemSubtitleDefault, fontSize: 12 }}>
               {syncProgress != 100 && syncProgress != -1
@@ -206,7 +205,7 @@ class DynamicHeader extends Component {
           </Text>
           <Text
             style={{ color: Colors.secondaryColor, fontWeight: "500", fontSize: 18 }}
-          >{`${truncateDecimal(this.props.confirmedBalance, 8)} ${this.props.chainTicker}`}</Text>
+          >{`${truncateDecimal(this.props.confirmedBalance, 8)} ${this.props.displayTicker}`}</Text>
           {!this.props.pendingBalance.isEqualTo(0) && (
             <Text
               style={{
@@ -233,17 +232,20 @@ class DynamicHeader extends Component {
             backgroundColor: Colors.primaryColor,
           }}
         >
-          <SnapCarousel
-            itemWidth={256}
-            sliderWidth={DEVICE_WINDOW_WIDTH / 2}
-            items={this.state.carouselItems}
-            renderItem={(props) => this._renderCarouselItem(props)}
-            onSnapToItem={(index) => this.setSubWallet(this.state.carouselItems[index])}
-            carouselProps={{
-              loop: true,
-              ref: (ref) => (this.carousel = ref),
-            }}
-          />
+          {this.state.carouselItems.length == 1 ? 
+            this._renderCarouselItem({item: this.state.carouselItems[0], index: 0, alone: true}) 
+            : 
+            <SnapCarousel
+              itemWidth={256}
+              sliderWidth={DEVICE_WINDOW_WIDTH / 2}
+              items={this.state.carouselItems}
+              renderItem={(props) => this._renderCarouselItem(props)}
+              onSnapToItem={(index) => this.setSubWallet(this.state.carouselItems[index])}
+              carouselProps={{
+                loop: true,
+                ref: (ref) => (this.carousel = ref),
+              }}
+            />}
         </View>
       </View>
     );
@@ -256,6 +258,7 @@ const mapStateToProps = (state) => {
   
   return {
     chainTicker,
+    displayTicker: state.coins.activeCoin.display_ticker,
     selectedSubWallet: state.coinMenus.activeSubWallets[chainTicker],
     allSubWallets: state.coinMenus.allSubWallets[chainTicker],
     balances: extractLedgerData(state, 'balances', API_GET_BALANCES, chainTicker),

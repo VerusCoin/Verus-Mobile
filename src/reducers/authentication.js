@@ -15,9 +15,12 @@ import {
   SET_ADDRESSES,
   SIGN_OUT_COMPLETE,
   SIGN_OUT,
-  PUSH_MODAL,
-  OPEN_SEND_COIN_MODAL
+  OPEN_SEND_COIN_MODAL,
+  UPDATE_ACCOUNT_DISABLED_SERVICES
 } from "../utils/constants/storeType";
+import {
+  SERVICES_DISABLED_DEFAULT
+} from "../../env/index";
 
 export const authentication = (
   state = {
@@ -30,7 +33,8 @@ export const authentication = (
       keys: {},
       paymentMethods: {},
       biometry: false,
-      keyDerivationVersion: 1
+      keyDerivationVersion: 1,
+      disabledServices: SERVICES_DISABLED_DEFAULT
     },
     signedIn: false,
     selectDefaultAccount: true,
@@ -115,6 +119,12 @@ export const authentication = (
       return {
         ...state,
         activeAccount: { ...state.activeAccount, biometry: action.payload.biometry },
+        accounts: action.payload.accounts
+      };
+    case UPDATE_ACCOUNT_DISABLED_SERVICES:
+      return {
+        ...state,
+        activeAccount: { ...state.activeAccount, disabledServices: action.payload.disabledServices },
         accounts: action.payload.accounts
       };
     default:

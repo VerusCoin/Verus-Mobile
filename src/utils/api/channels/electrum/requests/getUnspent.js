@@ -25,7 +25,7 @@ export const getUnspent = (coinObj, activeUser) => {
       "getUnspent.js: Fatal mismatch error, " +
         activeUser.id +
         " user keys for active coin " +
-        coinID +
+        coinObj.display_ticker +
         " not found!"
     );
   }

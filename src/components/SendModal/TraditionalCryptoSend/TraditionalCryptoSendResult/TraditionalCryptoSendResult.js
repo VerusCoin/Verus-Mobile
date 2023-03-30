@@ -4,6 +4,7 @@ import { Linking } from 'react-native'
 import { closeSendModal } from "../../../../actions/actions/sendModal/dispatchers/sendModal";
 import { explorers } from "../../../../utils/CoinData/CoinData";
 import { TraditionalCryptoSendResultRender } from "./TraditionalCryptoSendResult.render"
+import { openUrl } from "../../../../utils/linking";
 
 class TraditionalCryptoSendResult extends Component {
   constructor(props) {
@@ -21,13 +22,7 @@ class TraditionalCryptoSendResult extends Component {
   openExplorer = () => {
     const url = `${explorers[this.state.params.coinObj.id]}/tx/${this.state.params.txid}`;
 
-    Linking.canOpenURL(url).then((supported) => {
-      if (supported) {
-        Linking.openURL(url);
-      } else {
-        console.warn("Don't know how to open URI: " + url);
-      }
-    });
+    openUrl(url)
   };
 
   render() {

@@ -1,16 +1,14 @@
 import React from 'react';
 import { 
   View, 
-  Text, 
-  Image, 
-  StatusBar, 
-  TouchableOpacity, 
-  Platform,
+  TouchableOpacity,
 	SafeAreaView
 } from 'react-native';
+import { Text } from 'react-native-paper';
 import Colors from '../globals/colors';
+import { CoinLogos } from '../utils/CoinData/CoinData';
 
-const LOGO_DIR = require('../images/customIcons/Verus.png');
+const VrscLogo = CoinLogos.vrsc.light
 
 const DrawerHeader = ({ navigateToScreen }) => (
   <TouchableOpacity onPress={() => navigateToScreen("Home")}>
@@ -23,14 +21,15 @@ const DrawerHeader = ({ navigateToScreen }) => (
         style={{
           flexDirection: "row",
           backgroundColor: Colors.primaryColor,
-          paddingLeft: 10,
+          paddingLeft: 20,
 					paddingBottom: 24,
+          paddingTop: 24,
           alignItems: "center",
         }}
       >
-        <Image
-          source={LOGO_DIR}
-          style={{ width: 50, height: 40, overflow: "hidden" }}
+        <VrscLogo
+          width={35}
+          height={35}
         />
         <Text
           style={{

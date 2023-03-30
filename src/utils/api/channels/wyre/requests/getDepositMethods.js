@@ -22,9 +22,9 @@ export const getDepositSources = async (coinObj) => {
           price:
             rates[currencyId] == null
               ? null
-              : currencyId == coinObj.id
+              : currencyId == coinObj.currency_id
               ? 1
-              : rates[currencyId][coinObj.id],
+              : rates[currencyId][coinObj.currency_id],
         };
       });
       

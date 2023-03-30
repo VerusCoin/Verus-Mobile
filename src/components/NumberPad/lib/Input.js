@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { TouchableOpacity, View, Text, Animated } from 'react-native';
+import { TouchableOpacity, View, Animated } from 'react-native';
+import { Text } from 'react-native-paper';
 
 import NumberPadContext from './NumberPadContext';
 import styles from './styles';

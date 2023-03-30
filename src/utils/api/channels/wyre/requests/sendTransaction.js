@@ -13,7 +13,7 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
         fee: res.totalFees != null ? res.totalFees.toString() : "0",
         value: res.destAmount.toString(),
         toAddress: address,
-        fromAddress: `Wyre ${coinObj.id} wallet`,
+        fromAddress: `Wyre ${coinObj.display_ticker} wallet`,
         amountSubmitted: amount.toString(),
         balanceDelta: BigNumber(res.sourceAmount).multipliedBy(-1),
         memo: res.message,

@@ -7,6 +7,7 @@ import {
   CONVERSION_SEND_MODAL,
   DEPOSIT_SEND_MODAL,
   LINK_IDENTITY_SEND_MODAL,
+  PROVISION_IDENTITY_SEND_MODAL,
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_FORM_STEP_FORM,
   SEND_MODAL_FORM_STEP_RESULT,
@@ -36,6 +37,9 @@ import LinkIdentityResult from "./LinkIdentity/LinkIdentityResult/LinkIdentityRe
 import AuthenticateUserForm from "./AuthenticateUser/AuthenticateUserForm/AuthenticateUserForm";
 import AuthenticateUserPassword from "./AuthenticateUser/AuthenticateUserPassword/AuthenticateUserPassword";
 import AuthenticateUserResult from "./AuthenticateUser/AuthenticateUserResult/AuthenticateUserResult";
+import ProvisionIdentityForm from "./ProvisionIdentity/ProvisionIdentityForm/ProvisionIdentityForm";
+import ProvisionIdentityConfirm from "./ProvisionIdentity/ProvisionIdentityConfirm/ProvisionIdentityConfirm";
+import ProvisionIdentityResult from "./ProvisionIdentity/ProvisionIdentityResult/ProvisionIdentityResult";
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
@@ -46,6 +50,7 @@ const SEND_FORMS = {
   [WITHDRAW_SEND_MODAL]: WithdrawSendForm,
   [DEPOSIT_SEND_MODAL]: DepositSendForm,
   [LINK_IDENTITY_SEND_MODAL]: LinkIdentityForm,
+  [PROVISION_IDENTITY_SEND_MODAL]: ProvisionIdentityForm,
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserForm
 };
 
@@ -55,6 +60,7 @@ const SEND_CONFIRMATION = {
   [WITHDRAW_SEND_MODAL]: WithdrawSendConfirm,
   [DEPOSIT_SEND_MODAL]: DepositSendConfirm,
   [LINK_IDENTITY_SEND_MODAL]: LinkIdentityConfirm,
+  [PROVISION_IDENTITY_SEND_MODAL]: ProvisionIdentityConfirm,
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserPassword
 };
 
@@ -64,6 +70,7 @@ const SEND_RESULTS = {
   [WITHDRAW_SEND_MODAL]: WithdrawSendResult,
   [DEPOSIT_SEND_MODAL]: DepositSendResult,
   [LINK_IDENTITY_SEND_MODAL]: LinkIdentityResult,
+  [PROVISION_IDENTITY_SEND_MODAL]: ProvisionIdentityResult,
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserResult
 };
 

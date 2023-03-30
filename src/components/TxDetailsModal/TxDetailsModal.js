@@ -25,6 +25,7 @@ import { expireCoinData } from "../../actions/actionCreators";
 import { API_GET_DEPOSIT_SOURCES, API_GET_PENDING_DEPOSITS } from "../../utils/constants/intervalConstants";
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 import store from "../../store";
+import { openUrl } from "../../utils/linking";
 
 class TxDetailsModal extends Component {
   constructor(props) {
@@ -38,13 +39,7 @@ class TxDetailsModal extends Component {
         : this.props.txData.txid
     }`;
 
-    Linking.canOpenURL(url).then(supported => {
-      if (supported) {
-        Linking.openURL(url);
-      } else {
-        console.log("Don't know how to open URI: " + url);
-      }
-    });
+    openUrl(url)
   };
 
   copyTxIDToClipboard = () => {

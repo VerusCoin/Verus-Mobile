@@ -99,7 +99,7 @@ export const standardizeEthTxObj = (transactions, address, decimals = ETHERS) =>
 
 export const standardizeWyreTxObj = (transaction, accountAddress, coinObj) => {
   const type = transaction.type === "EXCHANGE"
-  ? transaction.sourceCurrency === coinObj.id
+  ? transaction.sourceCurrency === coinObj.currency_id
     ? "sent"
     : "received"
   : transaction.type === "INCOMING"

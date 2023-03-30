@@ -75,7 +75,6 @@ export const PUBLIC = 'public'
 export const TOTAL = 'total'
 
 // Payment Methods
-export const ENABLE_FIAT_GATEWAY = false;
 export const WYRE_URL = 'https://api.sendwyre.com';
 export const WYRE_REFERRER_ACCOUNT_ID = 'verus-valu';
 

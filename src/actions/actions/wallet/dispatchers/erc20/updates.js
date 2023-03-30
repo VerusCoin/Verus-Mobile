@@ -30,7 +30,7 @@ export const updateErc20Balances = async (activeUser, coinObj) => {
       'updateBalances.js: Fatal mismatch error, ' +
         activeUser.id +
         ' user keys for active coin ' +
-        coinObj.id +
+        coinObj.display_ticker +
         ' not found!',
     );
   }
@@ -57,7 +57,7 @@ export const updateErc20Transactions = async (activeUser, coinObj) => {
       'updateTransactions.js: Fatal mismatch error, ' +
         activeUser.id +
         ' user keys for active coin ' +
-        coinObj.id +
+        coinObj.display_ticker +
         ' not found!',
     );
   }

@@ -5,8 +5,7 @@
 
 import React, { Component } from "react";
 import { 
-  View, 
-  Text, 
+  View,
   ScrollView, 
   Linking, 
   TouchableOpacity,
@@ -15,7 +14,7 @@ import {
 import { CoinLogos } from '../../utils/CoinData/CoinData';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
-import { Button } from "react-native-paper"
+import { Button, Text } from "react-native-paper"
 import SemiModal from "../SemiModal";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import { addCoin, addKeypairs, removeExistingCoin, setUserCoins } from "../../actions/actionCreators";
@@ -23,6 +22,7 @@ import { activateChainLifecycle } from "../../actions/actions/intervals/dispatch
 import { connect } from 'react-redux';
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { CommonActions } from '@react-navigation/native';
+import { openUrl } from "../../utils/linking";
 
 class CoinDetailsModal extends Component {
   constructor(props) {
@@ -36,15 +36,7 @@ class CoinDetailsModal extends Component {
   openWebsite = () => {
     let url = this.props.data.website
 
-    if (url != null) {
-      Linking.canOpenURL(url).then(supported => {
-        if (supported) {
-          Linking.openURL(url);
-        } else {
-          console.log("Don't know how to open URI: " + url);
-        }
-      });
-    }
+    openUrl(url)
   };
 
   resetToScreen = (route, title, data) => {
@@ -94,7 +86,7 @@ class CoinDetailsModal extends Component {
         this.setState({loading: false})
         this.props.cancel()
       } catch(e) {
-        createAlert("Error Removing Coin", `There was a problem removing ${this.props.data.id}.`);
+        createAlert("Error Removing Coin", `There was a problem removing ${this.props.data.display_ticker}.`);
         console.error(e)
         this.setState({ loading: false });
         this.props.cancel()
@@ -140,7 +132,7 @@ class CoinDetailsModal extends Component {
         throw new Error("Error adding coin");
       }
     } catch(e) {
-      createAlert("Error Adding Coin", `There was a problem adding ${this.props.data.id}.`);
+      createAlert("Error Adding Coin", `There was a problem adding ${this.props.data.display_ticker}.`);
       console.error(e)
       this.setState({ loading: false });
       this.props.cancel()

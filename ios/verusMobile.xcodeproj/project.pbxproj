@@ -15,14 +15,26 @@
 		2D02E4BD1E0B4A84006451C7 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		2D02E4BF1E0B4AB3006451C7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		2DCD954D1E0B4F2C00145EB5 /* verusmobileTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* verusmobileTests.m */; };
-		4BC2936DE8E3E0E956DE653A /* Pods_verusmobile.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C4D1B30F0F93AD7E19428A00 /* Pods_verusmobile.framework */; };
 		4E4D0A66241530330069A5A7 /* sapling-output.params in Resources */ = {isa = PBXBuildFile; fileRef = 4E4D0A6424152FE90069A5A7 /* sapling-output.params */; };
 		4E4D0A67241530350069A5A7 /* sapling-spend.params in Resources */ = {isa = PBXBuildFile; fileRef = 4E4D0A6524152FF00069A5A7 /* sapling-spend.params */; };
 		4E80A310241028FC00F037A9 /* bridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E80A30F241028FC00F037A9 /* bridge.swift */; };
 		4E9EA99B23BB63A800B9FA10 /* main.jsbundle in Resources */ = {isa = PBXBuildFile; fileRef = 008F07F21AC5B25A0029DE68 /* main.jsbundle */; };
 		4E9EA99D23BB985300B9FA10 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 4E9EA99C23BB985200B9FA10 /* assets */; };
 		4EAC77502411690900A7D427 /* BuildFile in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		8BA771AEA58BD885BB404D85 /* libPods-verusmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 751808351752CF908B2602F1 /* libPods-verusmobile.a */; };
 		C3F0F1EC224C38D900279E92 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C3F0F1EB224C38D900279E92 /* JavaScriptCore.framework */; };
+		0C59AB24F8894E178CAADBCF /* SourceSansPro-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F9BEFF74016C4E76B8E3F8E8 /* SourceSansPro-Black.ttf */; };
+		81602464E283406280F9ADAE /* SourceSansPro-BlackItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CC50E27923FC4379A9C3F9AD /* SourceSansPro-BlackItalic.ttf */; };
+		2D096AA5ABC545E7B4421AA6 /* SourceSansPro-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C37976CFD29D43DEBE8AB634 /* SourceSansPro-Bold.ttf */; };
+		7575623222F346C1998DBA73 /* SourceSansPro-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AE7959201E5F412EAC047D5C /* SourceSansPro-BoldItalic.ttf */; };
+		B46C523B6F814306BB98FE97 /* SourceSansPro-ExtraLight.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 25892E8D04D14F4D9D56BB7A /* SourceSansPro-ExtraLight.ttf */; };
+		14120DFC78524B278EF25500 /* SourceSansPro-ExtraLightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1F6DE040AD384CD4926B9D03 /* SourceSansPro-ExtraLightItalic.ttf */; };
+		9AE9535D72AD468595BE61AF /* SourceSansPro-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4C1B7B5EBF81438E92B482C1 /* SourceSansPro-Italic.ttf */; };
+		A0E779FFA9884610B8FC5A93 /* SourceSansPro-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DC363AC392FE4516AE9F7301 /* SourceSansPro-Light.ttf */; };
+		5E192C160435467282AA50EC /* SourceSansPro-LightItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3D75763453624C50830E810F /* SourceSansPro-LightItalic.ttf */; };
+		B99FA08CBA3F486F9EBDD929 /* SourceSansPro-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1FDCBCD1026441C7B868F375 /* SourceSansPro-Regular.ttf */; };
+		11D3A4425840432AADAC830C /* SourceSansPro-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E7CAC9CBB65F47A6B883FBD2 /* SourceSansPro-SemiBold.ttf */; };
+		4D8F8BC85DF4453FBF0515FE /* SourceSansPro-SemiBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1BBB92052F164D6388DFCB56 /* SourceSansPro-SemiBoldItalic.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -67,7 +79,6 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = verusmobile/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = verusmobile/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = verusmobile/main.m; sourceTree = "<group>"; };
-		1AEC895D4793BB4EC73B73C1 /* Pods-verusmobile-verusmobileTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-verusmobile-verusmobileTests.release.xcconfig"; path = "Target Support Files/Pods-verusmobile-verusmobileTests/Pods-verusmobile-verusmobileTests.release.xcconfig"; sourceTree = "<group>"; };
 		2D02E47B1E0B4A5D006451C7 /* verusmobile-tvOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "verusmobile-tvOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D02E4901E0B4A5D006451C7 /* verusmobile-tvOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "verusmobile-tvOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3755AB9F237EB50400393E99 /* InputMask.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = InputMask.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -110,16 +121,24 @@
 		4E9EA98923BA7F7E00B9FA10 /* RNPermissionHandlerReminders.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RNPermissionHandlerReminders.h; path = "../node_modules/react-native-permissions/ios/Reminders/RNPermissionHandlerReminders.h"; sourceTree = "<group>"; };
 		4E9EA98A23BA7F7E00B9FA10 /* RNPermissionHandlerReminders.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = RNPermissionHandlerReminders.m; path = "../node_modules/react-native-permissions/ios/Reminders/RNPermissionHandlerReminders.m"; sourceTree = "<group>"; };
 		4E9EA99C23BB985200B9FA10 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = "<group>"; };
-		682F73CE411AA298CC80C4D2 /* Pods-verusmobile-verusmobileTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-verusmobile-verusmobileTests.debug.xcconfig"; path = "Target Support Files/Pods-verusmobile-verusmobileTests/Pods-verusmobile-verusmobileTests.debug.xcconfig"; sourceTree = "<group>"; };
-		6888F431593C690AA00F7E1C /* Pods-verusmobile.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-verusmobile.debug.xcconfig"; path = "Target Support Files/Pods-verusmobile/Pods-verusmobile.debug.xcconfig"; sourceTree = "<group>"; };
-		85A51E6D533356E203B09806 /* Pods-verusmobile.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-verusmobile.release.xcconfig"; path = "Target Support Files/Pods-verusmobile/Pods-verusmobile.release.xcconfig"; sourceTree = "<group>"; };
-		AA8D0456F254775CC8BC7FB7 /* Pods_verusmobile_verusmobileTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_verusmobile_verusmobileTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		B7CBC878349D6EF975068E45 /* Pods-verusmobileTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-verusmobileTests.debug.xcconfig"; path = "Target Support Files/Pods-verusmobileTests/Pods-verusmobileTests.debug.xcconfig"; sourceTree = "<group>"; };
+		751808351752CF908B2602F1 /* libPods-verusmobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-verusmobile.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		99B508937B4B89C61185EBA3 /* Pods-verusmobile.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-verusmobile.release.xcconfig"; path = "Target Support Files/Pods-verusmobile/Pods-verusmobile.release.xcconfig"; sourceTree = "<group>"; };
+		B854F99812A154D2147F8983 /* Pods-verusmobile.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-verusmobile.debug.xcconfig"; path = "Target Support Files/Pods-verusmobile/Pods-verusmobile.debug.xcconfig"; sourceTree = "<group>"; };
 		C3F0F1EB224C38D900279E92 /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		C4D1B30F0F93AD7E19428A00 /* Pods_verusmobile.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_verusmobile.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CD8B5748E6514788A6364B4A /* libReactNativePermissions.a */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = archive.ar; path = libReactNativePermissions.a; sourceTree = "<group>"; };
 		DFF57B3EB4F24D3E91E7F92C /* ReactNativePermissions.xcodeproj */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = "wrapper.pb-project"; name = ReactNativePermissions.xcodeproj; path = "../node_modules/react-native-permissions/ios/ReactNativePermissions.xcodeproj"; sourceTree = "<group>"; };
-		F6FA73370B923D51DCFA622C /* Pods-verusmobileTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-verusmobileTests.release.xcconfig"; path = "Target Support Files/Pods-verusmobileTests/Pods-verusmobileTests.release.xcconfig"; sourceTree = "<group>"; };
+		F9BEFF74016C4E76B8E3F8E8 /* SourceSansPro-Black.ttf */ = {isa = PBXFileReference; name = "SourceSansPro-Black.ttf"; path = "../assets/fonts/SourceSansPro-Black.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		CC50E27923FC4379A9C3F9AD /* SourceSansPro-BlackItalic.ttf */ = {isa = PBXFileReference; name = "SourceSansPro-BlackItalic.ttf"; path = "../assets/fonts/SourceSansPro-BlackItalic.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		C37976CFD29D43DEBE8AB634 /* SourceSansPro-Bold.ttf */ = {isa = PBXFileReference; name = "SourceSansPro-Bold.ttf"; path = "../assets/fonts/SourceSansPro-Bold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		AE7959201E5F412EAC047D5C /* SourceSansPro-BoldItalic.ttf */ = {isa = PBXFileReference; name = "SourceSansPro-BoldItalic.ttf"; path = "../assets/fonts/SourceSansPro-BoldItalic.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		25892E8D04D14F4D9D56BB7A /* SourceSansPro-ExtraLight.ttf */ = {isa = PBXFileReference; name = "SourceSansPro-ExtraLight.ttf"; path = "../assets/fonts/SourceSansPro-ExtraLight.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		1F6DE040AD384CD4926B9D03 /* SourceSansPro-ExtraLightItalic.ttf */ = {isa = PBXFileReference; name = "SourceSansPro-ExtraLightItalic.ttf"; path = "../assets/fonts/SourceSansPro-ExtraLightItalic.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		4C1B7B5EBF81438E92B482C1 /* SourceSansPro-Italic.ttf */ = {isa = PBXFileReference; name = "SourceSansPro-Italic.ttf"; path = "../assets/fonts/SourceSansPro-Italic.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		DC363AC392FE4516AE9F7301 /* SourceSansPro-Light.ttf */ = {isa = PBXFileReference; name = "SourceSansPro-Light.ttf"; path = "../assets/fonts/SourceSansPro-Light.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		3D75763453624C50830E810F /* SourceSansPro-LightItalic.ttf */ = {isa = PBXFileReference; name = "SourceSansPro-LightItalic.ttf"; path = "../assets/fonts/SourceSansPro-LightItalic.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		1FDCBCD1026441C7B868F375 /* SourceSansPro-Regular.ttf */ = {isa = PBXFileReference; name = "SourceSansPro-Regular.ttf"; path = "../assets/fonts/SourceSansPro-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		E7CAC9CBB65F47A6B883FBD2 /* SourceSansPro-SemiBold.ttf */ = {isa = PBXFileReference; name = "SourceSansPro-SemiBold.ttf"; path = "../assets/fonts/SourceSansPro-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		1BBB92052F164D6388DFCB56 /* SourceSansPro-SemiBoldItalic.ttf */ = {isa = PBXFileReference; name = "SourceSansPro-SemiBoldItalic.ttf"; path = "../assets/fonts/SourceSansPro-SemiBoldItalic.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -128,7 +147,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C3F0F1EC224C38D900279E92 /* JavaScriptCore.framework in Frameworks */,
-				4BC2936DE8E3E0E956DE653A /* Pods_verusmobile.framework in Frameworks */,
+				8BA771AEA58BD885BB404D85 /* libPods-verusmobile.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -187,8 +206,7 @@
 			children = (
 				C3F0F1EB224C38D900279E92 /* JavaScriptCore.framework */,
 				3755AB9F237EB50400393E99 /* InputMask.framework */,
-				C4D1B30F0F93AD7E19428A00 /* Pods_verusmobile.framework */,
-				AA8D0456F254775CC8BC7FB7 /* Pods_verusmobile_verusmobileTests.framework */,
+				751808351752CF908B2602F1 /* libPods-verusmobile.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -291,6 +309,18 @@
 		9FA1689132444214AF5B6A83 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				F9BEFF74016C4E76B8E3F8E8 /* SourceSansPro-Black.ttf */,
+				CC50E27923FC4379A9C3F9AD /* SourceSansPro-BlackItalic.ttf */,
+				C37976CFD29D43DEBE8AB634 /* SourceSansPro-Bold.ttf */,
+				AE7959201E5F412EAC047D5C /* SourceSansPro-BoldItalic.ttf */,
+				25892E8D04D14F4D9D56BB7A /* SourceSansPro-ExtraLight.ttf */,
+				1F6DE040AD384CD4926B9D03 /* SourceSansPro-ExtraLightItalic.ttf */,
+				4C1B7B5EBF81438E92B482C1 /* SourceSansPro-Italic.ttf */,
+				DC363AC392FE4516AE9F7301 /* SourceSansPro-Light.ttf */,
+				3D75763453624C50830E810F /* SourceSansPro-LightItalic.ttf */,
+				1FDCBCD1026441C7B868F375 /* SourceSansPro-Regular.ttf */,
+				E7CAC9CBB65F47A6B883FBD2 /* SourceSansPro-SemiBold.ttf */,
+				1BBB92052F164D6388DFCB56 /* SourceSansPro-SemiBoldItalic.ttf */
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -306,12 +336,8 @@
 		EBFAC370DE4C56362A208F3E /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				6888F431593C690AA00F7E1C /* Pods-verusmobile.debug.xcconfig */,
-				85A51E6D533356E203B09806 /* Pods-verusmobile.release.xcconfig */,
-				B7CBC878349D6EF975068E45 /* Pods-verusmobileTests.debug.xcconfig */,
-				F6FA73370B923D51DCFA622C /* Pods-verusmobileTests.release.xcconfig */,
-				682F73CE411AA298CC80C4D2 /* Pods-verusmobile-verusmobileTests.debug.xcconfig */,
-				1AEC895D4793BB4EC73B73C1 /* Pods-verusmobile-verusmobileTests.release.xcconfig */,
+				B854F99812A154D2147F8983 /* Pods-verusmobile.debug.xcconfig */,
+				99B508937B4B89C61185EBA3 /* Pods-verusmobile.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -323,14 +349,13 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "verusmobile" */;
 			buildPhases = (
-				12CD2C70A9F290C012FF62D4 /* [CP] Check Pods Manifest.lock */,
+				51B6AD6FC89BC6FEFF8093D6 /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				3755ABA2237EB50400393E99 /* Embed Frameworks */,
-				C6E4DB29E494E08008035C30 /* [CP] Embed Pods Frameworks */,
-				13C5B52AE376CB8803FB634D /* [CP] Copy Pods Resources */,
+				CF6D80B7ACEEB5FAC4DFD37A /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -450,6 +475,18 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				4E4D0A66241530330069A5A7 /* sapling-output.params in Resources */,
 				13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */,
+				0C59AB24F8894E178CAADBCF /* SourceSansPro-Black.ttf in Resources */,
+				81602464E283406280F9ADAE /* SourceSansPro-BlackItalic.ttf in Resources */,
+				2D096AA5ABC545E7B4421AA6 /* SourceSansPro-Bold.ttf in Resources */,
+				7575623222F346C1998DBA73 /* SourceSansPro-BoldItalic.ttf in Resources */,
+				B46C523B6F814306BB98FE97 /* SourceSansPro-ExtraLight.ttf in Resources */,
+				14120DFC78524B278EF25500 /* SourceSansPro-ExtraLightItalic.ttf in Resources */,
+				9AE9535D72AD468595BE61AF /* SourceSansPro-Italic.ttf in Resources */,
+				A0E779FFA9884610B8FC5A93 /* SourceSansPro-Light.ttf in Resources */,
+				5E192C160435467282AA50EC /* SourceSansPro-LightItalic.ttf in Resources */,
+				B99FA08CBA3F486F9EBDD929 /* SourceSansPro-Regular.ttf in Resources */,
+				11D3A4425840432AADAC830C /* SourceSansPro-SemiBold.ttf in Resources */,
+				4D8F8BC85DF4453FBF0515FE /* SourceSansPro-SemiBoldItalic.ttf in Resources */
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -485,7 +522,21 @@
 			shellPath = /bin/sh;
 			shellScript = "export NODE_BINARY=node\\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
 		};
-		12CD2C70A9F290C012FF62D4 /* [CP] Check Pods Manifest.lock */ = {
+		2D02E4CB1E0B4B27006451C7 /* Bundle React Native Code And Images */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Bundle React Native Code And Images";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh";
+		};
+		51B6AD6FC89BC6FEFF8093D6 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -507,7 +558,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		13C5B52AE376CB8803FB634D /* [CP] Copy Pods Resources */ = {
+		CF6D80B7ACEEB5FAC4DFD37A /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -530,6 +581,7 @@
 				"${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/Octicons.ttf",
 				"${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/SimpleLineIcons.ttf",
 				"${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/Zocial.ttf",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/AccessibilityResources.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
@@ -549,142 +601,11 @@
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Octicons.ttf",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/SimpleLineIcons.ttf",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Zocial.ttf",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/AccessibilityResources.bundle",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-verusmobile/Pods-verusmobile-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		2D02E4CB1E0B4B27006451C7 /* Bundle React Native Code And Images */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Bundle React Native Code And Images";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "export NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh";
-		};
-		C6E4DB29E494E08008035C30 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-verusmobile/Pods-verusmobile-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/CGRPCZlib/CGRPCZlib.framework",
-				"${BUILT_PRODUCTS_DIR}/CNIOAtomics/CNIOAtomics.framework",
-				"${BUILT_PRODUCTS_DIR}/CNIOBoringSSL/CNIOBoringSSL.framework",
-				"${BUILT_PRODUCTS_DIR}/CNIOBoringSSLShims/CNIOBoringSSLShims.framework",
-				"${BUILT_PRODUCTS_DIR}/CNIODarwin/CNIODarwin.framework",
-				"${BUILT_PRODUCTS_DIR}/CNIOHTTPParser/CNIOHTTPParser.framework",
-				"${BUILT_PRODUCTS_DIR}/CNIOLinux/CNIOLinux.framework",
-				"${BUILT_PRODUCTS_DIR}/CNIOWindows/CNIOWindows.framework",
-				"${BUILT_PRODUCTS_DIR}/DoubleConversion/DoubleConversion.framework",
-				"${BUILT_PRODUCTS_DIR}/Logging/Logging.framework",
-				"${BUILT_PRODUCTS_DIR}/MnemonicSwift/MnemonicSwift.framework",
-				"${BUILT_PRODUCTS_DIR}/RCT-Folly/folly.framework",
-				"${BUILT_PRODUCTS_DIR}/RCTTypeSafety/RCTTypeSafety.framework",
-				"${BUILT_PRODUCTS_DIR}/React-Codegen/React_Codegen.framework",
-				"${BUILT_PRODUCTS_DIR}/React-Core/React.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTAnimation/RCTAnimation.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTBlob/RCTBlob.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTImage/RCTImage.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTLinking/RCTLinking.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTNetwork/RCTNetwork.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTSettings/RCTSettings.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTText/RCTText.framework",
-				"${BUILT_PRODUCTS_DIR}/React-RCTVibration/RCTVibration.framework",
-				"${BUILT_PRODUCTS_DIR}/React-cxxreact/cxxreact.framework",
-				"${BUILT_PRODUCTS_DIR}/React-jsi/jsi.framework",
-				"${BUILT_PRODUCTS_DIR}/React-jsiexecutor/jsireact.framework",
-				"${BUILT_PRODUCTS_DIR}/React-jsinspector/jsinspector.framework",
-				"${BUILT_PRODUCTS_DIR}/React-logger/logger.framework",
-				"${BUILT_PRODUCTS_DIR}/React-perflogger/reactperflogger.framework",
-				"${BUILT_PRODUCTS_DIR}/ReactCommon/ReactCommon.framework",
-				"${BUILT_PRODUCTS_DIR}/SQLite.swift/SQLite.framework",
-				"${BUILT_PRODUCTS_DIR}/SwiftNIO/NIO.framework",
-				"${BUILT_PRODUCTS_DIR}/SwiftNIOConcurrencyHelpers/NIOConcurrencyHelpers.framework",
-				"${BUILT_PRODUCTS_DIR}/SwiftNIOCore/NIOCore.framework",
-				"${BUILT_PRODUCTS_DIR}/SwiftNIOEmbedded/NIOEmbedded.framework",
-				"${BUILT_PRODUCTS_DIR}/SwiftNIOFoundationCompat/NIOFoundationCompat.framework",
-				"${BUILT_PRODUCTS_DIR}/SwiftNIOHPACK/NIOHPACK.framework",
-				"${BUILT_PRODUCTS_DIR}/SwiftNIOHTTP1/NIOHTTP1.framework",
-				"${BUILT_PRODUCTS_DIR}/SwiftNIOHTTP2/NIOHTTP2.framework",
-				"${BUILT_PRODUCTS_DIR}/SwiftNIOPosix/NIOPosix.framework",
-				"${BUILT_PRODUCTS_DIR}/SwiftNIOSSL/NIOSSL.framework",
-				"${BUILT_PRODUCTS_DIR}/SwiftNIOTLS/NIOTLS.framework",
-				"${BUILT_PRODUCTS_DIR}/SwiftNIOTransportServices/NIOTransportServices.framework",
-				"${BUILT_PRODUCTS_DIR}/SwiftProtobuf/SwiftProtobuf.framework",
-				"${BUILT_PRODUCTS_DIR}/Yoga/yoga.framework",
-				"${BUILT_PRODUCTS_DIR}/ZcashLightClientKit/ZcashLightClientKit.framework",
-				"${BUILT_PRODUCTS_DIR}/_NIODataStructures/_NIODataStructures.framework",
-				"${BUILT_PRODUCTS_DIR}/fmt/fmt.framework",
-				"${BUILT_PRODUCTS_DIR}/gRPC-Swift/GRPC.framework",
-				"${BUILT_PRODUCTS_DIR}/glog/glog.framework",
-				"${BUILT_PRODUCTS_DIR}/react-native-verus-light-client/react_native_verus_light_client.framework",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CGRPCZlib.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CNIOAtomics.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CNIOBoringSSL.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CNIOBoringSSLShims.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CNIODarwin.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CNIOHTTPParser.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CNIOLinux.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CNIOWindows.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DoubleConversion.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Logging.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MnemonicSwift.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/folly.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTTypeSafety.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React_Codegen.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTAnimation.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTBlob.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTImage.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTLinking.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTNetwork.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTSettings.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTText.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RCTVibration.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/cxxreact.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/jsi.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/jsireact.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/jsinspector.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/logger.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/reactperflogger.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactCommon.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SQLite.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIO.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOConcurrencyHelpers.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOCore.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOEmbedded.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOFoundationCompat.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOHPACK.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOHTTP1.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOHTTP2.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOPosix.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOSSL.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOTLS.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIOTransportServices.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftProtobuf.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/yoga.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ZcashLightClientKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/_NIODataStructures.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/fmt.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GRPC.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/glog.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/react_native_verus_light_client.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-verusmobile/Pods-verusmobile-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -742,13 +663,13 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6888F431593C690AA00F7E1C /* Pods-verusmobile.debug.xcconfig */;
+			baseConfigurationReference = B854F99812A154D2147F8983 /* Pods-verusmobile.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 24;
+				CURRENT_PROJECT_VERSION = 27;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_TEAM = J8Y97B5NMQ;
 				ENABLE_BITCODE = NO;
@@ -813,13 +734,13 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 85A51E6D533356E203B09806 /* Pods-verusmobile.release.xcconfig */;
+			baseConfigurationReference = 99B508937B4B89C61185EBA3 /* Pods-verusmobile.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 24;
+				CURRENT_PROJECT_VERSION = 27;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J8Y97B5NMQ;
 				ENABLE_BITCODE = NO;

@@ -139,8 +139,8 @@ class SignUp extends Component {
         if (!_userName || _userName.length < 1) {
           this.handleError("Please enter a profile name.", "userName");
           _errors = true;
-        } else if (_userName.length > 15) {
-          this.handleError("Please enter a profile name shorter than 15 characters.", "userName");
+        } else if (_userName.length > 50) {
+          this.handleError("Please enter a profile name shorter than 50 characters.", "userName");
           _errors = true;
         } else if (this.duplicateAccount(_userName)) {
           this.handleError("A profile with this name already exists.", "userName");

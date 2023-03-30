@@ -10,11 +10,11 @@ import React, { Component } from "react";
 import { CommonActions } from '@react-navigation/native';
 import { Divider, List, Portal } from "react-native-paper"
 import { 
-  View, 
-  Text, 
+  View,
   TouchableOpacity,
   ScrollView
 } from "react-native";
+import { Text } from "react-native-paper"
 import { connect } from 'react-redux';
 import Styles from '../../../styles/index'
 import {
@@ -25,6 +25,7 @@ import {
 import {
   addEncryptedKey,
   setBiometry,
+  setDisabledServices,
   setKeyDerivationVersion,
   signOut,
 } from "../../../actions/actionCreators";
@@ -35,11 +36,12 @@ import {
 } from "../../../actions/actions/channels/dlight/dispatchers/AlertManager";
 import { createAlert, resolveAlert } from "../../../actions/actions/alert/dispatchers/alert";
 import { checkPinForUser } from "../../../utils/asyncStore/asyncStore";
-import { ENABLE_DLIGHT, APP_VERSION } from '../../../../env/index'
+import { ENABLE_DLIGHT, ENABLE_WYRE, APP_VERSION } from '../../../../env/index'
 import { dlightEnabled } from "../../../utils/enabledChannels";
 import SetupSeedModal from "../../../components/SetupSeedModal/SetupSeedModal";
 import { DLIGHT_PRIVATE } from "../../../utils/constants/intervalConstants";
 import ListSelectionModal from "../../../components/ListSelectionModal/ListSelectionModal";
+import { WYRE_SERVICE_ID } from "../../../utils/constants/services";
 
 const RESET_PWD = "ResetPwd"
 const REMOVE_PROFILE = "DeleteProfile"
@@ -207,6 +209,58 @@ class ProfileSettings extends Component {
           errorMsg: "Failed to sign out",
         },
         true
+      );
+    }
+  };
+
+  canEnableWyre = () => {
+    return createAlert(
+      'Enable deprecated Wyre features?',
+      "Wyre wallet features are no longer supported. Only enable them if you already have a Wyre account you would like to access.",
+      [
+        {
+          text: 'Cancel',
+          onPress: () => resolveAlert(false),
+          style: 'cancel',
+        },
+        {text: 'Continue', onPress: () => resolveAlert(true)},
+      ],
+      {
+        cancelable: true,
+      },
+    )
+  }
+
+  canDisableWyre = () => {
+    return createAlert(
+      'Disable deprecated Wyre features?',
+      "Wyre wallet features are no longer supported. Disabling them will hide Wyre features from your wallet.",
+      [
+        {
+          text: 'Cancel',
+          onPress: () => resolveAlert(false),
+          style: 'cancel',
+        },
+        {text: 'Continue', onPress: () => resolveAlert(true)},
+      ],
+      {
+        cancelable: true,
+      },
+    )
+  }
+
+  toggleWyreEnabled = async () => {
+    if ((this.props.wyreEnabled && await this.canDisableWyre()) || (!this.props.wyreEnabled && await this.canEnableWyre())) {
+      const { activeAccount } = this.props;
+      const { id, disabledServices } = activeAccount;
+
+      this.props.dispatch(
+        await setDisabledServices(
+          id, 
+          {...disabledServices, 
+            [WYRE_SERVICE_ID]: disabledServices[WYRE_SERVICE_ID] ? false : true
+          }
+        )
       );
     }
   };
@@ -433,9 +487,30 @@ class ProfileSettings extends Component {
                   : "Setting up a Z Seed will allow you to use private transactions on compatible coins (after a restart)"
               }
               left={(props) => <List.Icon {...props} icon={"shield-key"} />}
+              descriptionNumberOfLines={100}
             />
           </TouchableOpacity>
         )}
+        <TouchableOpacity
+          onPress={() => this.toggleWyreEnabled()}
+          //disabled={this.props.wyreEnabled}
+        >
+          <Divider />
+          <List.Item
+            title={
+              this.props.wyreEnabled
+                ? "Wyre Enabled"
+                : "Enable Deprecated Wyre Features"
+            }
+            description={
+              this.props.wyreEnabled
+                ? ""
+                : "Enabling deprecated Wyre features will allow you to access your existing Wyre account from the services tab"
+            }
+            left={(props) => <List.Icon {...props} icon={"account-cash"} />}
+            descriptionNumberOfLines={100}
+          />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => this._openSettings(REMOVE_PROFILE)}>
           <Divider />
           <List.Item
@@ -454,10 +529,14 @@ class ProfileSettings extends Component {
   }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     activeAccount: state.authentication.activeAccount,
-  }
+    wyreEnabled:
+      state.authentication.activeAccount != null &&
+      state.authentication.activeAccount.disabledServices[WYRE_SERVICE_ID] != true,
+  };
 };
+
 
 export default connect(mapStateToProps)(ProfileSettings);

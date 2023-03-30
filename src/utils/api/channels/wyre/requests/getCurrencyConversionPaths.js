@@ -5,9 +5,9 @@ const WYRE_CONVERTABLES = [
   "USD",
   "AUD",
   "EUR",
-  "USDC",
-  "USDT",
-  "DAI",
+  "USDCWYRE",
+  "USDTWYRE",
+  "DAIWYRE",
   "CHF",
   "MXN",
   "CLP",
@@ -46,10 +46,10 @@ export const getCurrencyConversionPaths = async (coinObj) => {
       for (const chainTicker of WYRE_CONVERTABLES) {
         const destination = coinsList[chainTicker.toLowerCase()]
 
-        if (chainTicker !== coinObj.id && destination != null && rates[destination.id] != null) {
+        if (chainTicker !== coinObj.id && destination != null && rates[destination.currency_id] != null) {
           processedConversions[chainTicker] = {
             destination,
-            price: rates[destination.id],
+            price: rates[destination.currency_id],
           };
         }
       }

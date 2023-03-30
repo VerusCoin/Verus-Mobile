@@ -29,7 +29,7 @@ export const VerusIdServiceOverviewRender = function () {
         {this.state.verusIdDetailsModalProps != null && (
           <VerusIdDetailsModal
             {...this.state.verusIdDetailsModalProps}
-            ListFooterComponent={
+            StickyFooterComponent={
               <View
                 style={{
                   ...styles.fullWidthBlock,

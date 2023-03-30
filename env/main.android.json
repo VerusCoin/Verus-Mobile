@@ -13,7 +13,6 @@
   "ETH_TRANSACTION_RECEIPT_CAP": 100,
   "MIN_ETH_TX_CONFS": 100,
 
-  "ENABLE_FIAT_GATEWAY": false,
   "ENABLE_VERUS_IDENTITIES": false,
   "DISABLED_CHANNELS": ["dlight_private"],
   "ENABLE_DLIGHT": false,
@@ -24,6 +23,11 @@
   "ENABLE_WYRE_COIN": true,
   "ENABLE_VRPC": true,
   "ENABLE_VERUSID": true,
+
+  "SERVICES_DISABLED_DEFAULT": {
+    "wyre_service": true,
+    "verusid_service": false
+  },
 
   "ETH_NETWORK": "homestead",
 
@@ -39,5 +43,7 @@
   "SETTINGS_STORAGE_INTERNAL_KEY": "settings",
   "BLOCK_HEIGHT_STORAGE_INTERNAL_KEY": "blockHeight",
   "PERSONAL_DATA_STORAGE_INTERNAL_KEY": "personal",
-  "SERVICE_STORAGE_INTERNAL_KEY": "serviceStoredData"
+  "SERVICE_STORAGE_INTERNAL_KEY": "serviceStoredData",
+  "NOTIFICATIONS_STORAGE_INTERNAL_KEY": "notifications",
+  "WIDGET_STORAGE_INTERNAL_KEY": "widgets"
 }

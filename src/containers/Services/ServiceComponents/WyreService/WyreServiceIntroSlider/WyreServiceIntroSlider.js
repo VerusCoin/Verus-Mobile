@@ -20,6 +20,7 @@ import SetupSeedModal from "../../../../../components/SetupSeedModal/SetupSeedMo
 import PasswordCheck from "../../../../../components/PasswordCheck";
 import { addEncryptedKey, setServiceLoading } from "../../../../../actions/actionCreators";
 import { refreshAccountData } from "../../../../../actions/actionDispatchers";
+import { openUrl } from "../../../../../utils/linking";
 
 class WyreServiceIntroSlider extends Component {
   constructor() {
@@ -217,7 +218,7 @@ class WyreServiceIntroSlider extends Component {
           }}
         /> */}
         <Text style={{ textAlign: "center", width: "75%", color: "white" }}>
-          {"Your Wyre account will be created from a 24 word seed phrase."}
+          {"Import a 24 word seed phrase associated with a Wyre account."}
         </Text>
         {this.state.hasElectrum24WordSeed && (
           <Button style={{ marginTop: 16 }} mode="contained" onPress={() => this.linkCurrentSeed()}>
@@ -230,8 +231,8 @@ class WyreServiceIntroSlider extends Component {
           onPress={() => this.setState({ setupWyreSeedModalOpen: true })}
         >
           {this.state.hasElectrum24WordSeed
-            ? "Create/Import & link new seed"
-            : "Create/Import & link seed"}
+            ? "Import & link different seed"
+            : "Import & link seed"}
         </Button>
         <Text
           style={{
@@ -245,7 +246,7 @@ class WyreServiceIntroSlider extends Component {
           <Text
             style={{ color: Colors.primaryColor, fontWeight: "800" }}
             onPress={() => {
-              Linking.openURL(this.WYRE_USER_AGREEMENT);
+              openUrl(this.WYRE_USER_AGREEMENT);
             }}
           >
             {" user agreement "}
@@ -254,7 +255,7 @@ class WyreServiceIntroSlider extends Component {
           <Text
             style={{ color: Colors.primaryColor, fontWeight: "800" }}
             onPress={() => {
-              Linking.openURL(this.WYRE_PRIVACY_POLICY);
+              openUrl(this.WYRE_PRIVACY_POLICY);
             }}
           >
             {" privacy policy."}
@@ -298,24 +299,10 @@ class WyreServiceIntroSlider extends Component {
             }}
             setSeed={(seed, channel) => this.linkWyre(seed, channel)}
             channel={WYRE_SERVICE}
+            importOnly={true}
           />
         </Portal>
-        <AppIntroSlider
-          showSkipButton={true}
-          renderItem={({ item, index }) => item.component(index)}
-          data={[
-            {
-              key: 0,
-              component: this.renderSlideOne,
-            },
-            {
-              key: 1,
-              component: this.renderActionSlide,
-            },
-          ]}
-          renderDoneButton={() => null}
-          renderSkipButton={() => null}
-        />
+        {this.renderActionSlide(0)}
       </KeyboardAvoidingView>
     );
   }

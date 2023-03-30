@@ -9,6 +9,7 @@ export * from './authDataStorage'
 export * from './settingsStorage'
 export * from './coinStorage'
 export * from './cache/cache'
+export * from './notificationsStorage'
 
 const vc = require('version_compare')
 export const PIN = "pin"
@@ -54,19 +55,3 @@ export const checkAndSetVersion = () => {
 
 export const clearStorage = () => AsyncStorage.clear()
 //For testing purposes
-
-export const isSignedIn = () => {
-  return new Promise((resolve, reject) => {
-    AsyncStorage.getItem(KEY)
-      .then(res => {
-        if (res !== null) {
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-      })
-      .catch(err => reject(err));
-  });
-};
-
-

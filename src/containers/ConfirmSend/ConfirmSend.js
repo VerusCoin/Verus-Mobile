@@ -24,6 +24,7 @@ import { explorers } from "../../utils/CoinData/CoinData";
 import { expireCoinData } from "../../actions/actionCreators";
 import { USD } from "../../utils/constants/currencies";
 import { extractIdentityAddress } from "../../utils/api/channels/verusid/callCreators";
+import { openUrl } from "../../utils/linking";
 
 const TIMEOUT_LIMIT = 300000
 const LOADING_TICKER = 5000
@@ -76,13 +77,7 @@ class ConfirmSend extends Component {
   openExplorer = () => {
     let url = `${explorers[this.state.coinObj.id]}/tx/${this.state.txid}`;
 
-    Linking.canOpenURL(url).then((supported) => {
-      if (supported) {
-        Linking.openURL(url);
-      } else {
-        console.log("Don't know how to open URI: " + url);
-      }
-    });
+    openUrl(url)
   };
 
   navigateToScreen = (coinObj, route) => {

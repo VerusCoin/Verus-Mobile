@@ -20,7 +20,7 @@ export const getOneTransactionList = (coinObj, activeUser, maxlength = 10) => {
       "getTransactions.js: Fatal mismatch error, " +
         activeUser.id +
         " user keys for active coin " +
-        coinObj.id +
+        coinObj.display_ticker +
         " not found!"
     );
   }
@@ -144,7 +144,7 @@ export const getParsedTransactionList = (coinObj, activeUser, maxlength) => {
         else error = true
       }
 
-      if (error) Alert.alert(`Error reading transaction list for ${coinObj.id}. This may indicate electrum server maintenence.`)
+      if (error) Alert.alert(`Error reading transaction list for ${coinObj.display_ticker}. This may indicate electrum server maintenence.`)
       
       resolve({...header, result: _parsedTxList})
     })

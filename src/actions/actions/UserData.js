@@ -14,6 +14,7 @@ import {
   setUserBiometry,
   setUsers,
   setUserKeyDerivationVersion,
+  setUserDisabledServices,
 } from "../../utils/asyncStore/asyncStore";
 import {
   deriveKeyPair
@@ -22,16 +23,18 @@ import {
   decryptkey, encryptkey,
 } from '../../utils/seedCrypt'
 import { hashAccountId } from '../../utils/crypto/hash';
-import { CHANNELS, ELECTRUM, ERC20, ETH, DLIGHT_PRIVATE, VRPC } from '../../utils/constants/intervalConstants';
+import { CHANNELS, ELECTRUM, ERC20, ETH, DLIGHT_PRIVATE, VRPC, WYRE_SERVICE } from '../../utils/constants/intervalConstants';
 import {
   KEY_DERIVATION_VERSION,
+  SERVICES_DISABLED_DEFAULT
 } from "../../../env/index";
-import { BIOMETRIC_AUTH, SET_ACCOUNTS } from '../../utils/constants/storeType';
+import { BIOMETRIC_AUTH, SET_ACCOUNTS, UPDATE_ACCOUNT_DISABLED_SERVICES } from '../../utils/constants/storeType';
 import { removeExistingCoin } from './coins/Coins';
 import { initSession, requestPassword, requestSeeds } from '../../utils/auth/authBox';
 import { clearEncryptedPersonalDataForUser } from './personal/dispatchers/personal';
 import { clearEncryptedServiceStoredDataForUser } from './services/dispatchers/services';
 import { clearActiveAccountLifecycles } from './account/dispatchers/account';
+import { WYRE_SERVICE_ID } from '../../utils/constants/services';
 
 export const addUser = (
   userName,
@@ -39,11 +42,12 @@ export const addUser = (
   password,
   users,
   biometry = false,
-  keyDerivationVersion = KEY_DERIVATION_VERSION
+  keyDerivationVersion = KEY_DERIVATION_VERSION,
+  disabledServices = SERVICES_DISABLED_DEFAULT
 ) => {
   return new Promise((resolve, reject) => {
     storeUser(
-      { seeds, password, userName, biometry, keyDerivationVersion },
+      { seeds, password, userName, biometry, keyDerivationVersion, disabledServices },
       users
     )
       .then((res) => {
@@ -108,6 +112,19 @@ export const setKeyDerivationVersion = async (userID, keyDerivationVersion) => {
   });
 }
 
+export const setDisabledServices = async (userID, disabledServices) => {
+  return new Promise((resolve, reject) => {
+    setUserDisabledServices(userID, disabledServices)
+      .then((accounts) => {
+        resolve({
+          type: UPDATE_ACCOUNT_DISABLED_SERVICES,
+          payload: { disabledServices, accounts }
+        })
+      })
+      .catch(err => reject(err));
+  });
+}
+
 export const deleteProfile = async (account, dispatch) => {
   // Clear existing account lifecycles
   await clearActiveAccountLifecycles()
@@ -149,6 +166,10 @@ export const fetchUsers = () => {
                   user.keyDerivationVersion == null
                     ? 0
                     : user.keyDerivationVersion,
+                disabledServices: 
+                  user.disabledServices == null ? 
+                    {} 
+                    : user.disabledServices
               };
             } else return user
           })
@@ -211,7 +232,7 @@ export const authenticateAccount = async (account, password) => {
                   };
                 } catch (e) {
                   console.warn(
-                    `Key generation failed for ${activeCoins[i].id} channel ${channel}`,
+                    `Key generation failed for ${activeCoins[i].display_ticker} channel ${channel}`,
                   );
                   console.warn(e);
                 }
@@ -235,6 +256,10 @@ export const authenticateAccount = async (account, password) => {
                 account.keyDerivationVersion == null
                   ? 0
                   : account.keyDerivationVersion,
+              disabledServices: 
+                account.disabledServices == null 
+                  ? account.encryptedKeys && account.encryptedKeys[WYRE_SERVICE] ? {} : { [WYRE_SERVICE_ID]: true } 
+                  : account.disabledServices
             },
             await initSession(password)
           )

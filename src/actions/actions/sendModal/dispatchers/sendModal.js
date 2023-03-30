@@ -16,6 +16,8 @@ import {
   LINK_IDENTITY_SEND_MODAL,
   SEND_MODAL_USER_TO_AUTHENTICATE,
   AUTHENTICATE_USER_SEND_MODAL,
+  PROVISION_IDENTITY_SEND_MODAL,
+  SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
 } from '../../../../utils/constants/sendModal';
 import {
   CLOSE_SEND_COIN_MODAL,
@@ -49,7 +51,7 @@ export const openSendModal = (
 
 export const openTraditionalCryptoSendModal = (coinObj, subWallet, data) => {
   openSendModal(
-    `Send ${coinObj.id}`,
+    `Send ${coinObj.display_ticker}`,
     coinObj,
     subWallet,
     data == null
@@ -76,6 +78,20 @@ export const openLinkIdentityModal = (coinObj, data) => {
       : data,
     LINK_IDENTITY_SEND_MODAL,
     'To link a VerusID with your wallet, enter the handle or i-Address of a VerusID with a primary address that you have in your wallet.',
+  );
+};
+
+export const openProvisionIdentityModal = (coinObj, req) => {
+  openSendModal(
+    `Request VerusID`,
+    coinObj,
+    null,
+    {
+      request: req,
+      [SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]: ''
+    },
+    PROVISION_IDENTITY_SEND_MODAL,
+    'This login request allows you to request a new identity to login with, enter a name and press continue to begin.',
   );
 };
 
@@ -115,7 +131,7 @@ export const openConversionSendModal = (coinObj, subWallet, data) => {
 
 export const openWithdrawSendModal = (coinObj, subWallet, data) => {
   openSendModal(
-    `Withdraw ${coinObj.id}`,
+    `Withdraw ${coinObj.display_ticker}`,
     coinObj,
     subWallet,
     data == null
@@ -132,7 +148,7 @@ export const openWithdrawSendModal = (coinObj, subWallet, data) => {
 
 export const openDepositSendModal = (coinObj, subWallet, data) => {
   openSendModal(
-    `Deposit ${coinObj.id}`,
+    `Deposit ${coinObj.display_ticker}`,
     coinObj,
     subWallet,
     data == null

@@ -5,7 +5,6 @@ import {
   setActiveSectionBuySellCrypto,
  } from '../../actions/actionCreators'
 import Styles from '../../styles/index'
-import { ENABLE_FIAT_GATEWAY } from '../../../env/index'
 import { CoinLogos } from "../../utils/CoinData/CoinData";
 import { RenderSquareCoinLogo } from "../../utils/CoinData/Graphics";
 import { List } from "react-native-paper";
@@ -61,22 +60,6 @@ export const renderChildDrawerComponents = function() {
       )}
       ListFooterComponent={
         <React.Fragment>
-          {ENABLE_FIAT_GATEWAY && (
-            <List.Item
-              title={"BUY/SELL COIN"}
-              titleStyle={Styles.infoText}
-              left={() => <List.Icon icon="account-balance"/>}
-              onPress={() => {
-                let navigation = this.props.navigation;
-                this.props.dispatch(
-                  setActiveSectionBuySellCrypto("buy-crypto")
-                );
-                navigation.navigate("BuySellCryptoMenus", {
-                  title: "Buy Crypto",
-                });
-              }}
-            />
-          )}
           <List.Item
             title={"Remove Coin"}
             left={() => <List.Icon icon="close"/>}
@@ -131,11 +114,7 @@ export const renderAddCoinComponents = function() {
       renderItem={({ item }) => (
         <List.Item
           title={item}
-          onPress={
-            item === "Add coin from list"
-              ? () => this.navigateToScreen("AddCoin")
-              : () => this._openCustomCoinMenus()
-          }
+          onPress={() => this.navigateToScreen("AddCoin")}
         />
       )}
       renderSectionHeader={({ section: { title } }) => (
@@ -162,7 +141,7 @@ export const renderMainDrawerComponents = function() {
 
         return (
           <List.Item
-            title={item.id}
+            title={item.display_ticker}
             left={() => Logo ? <View style={{ paddingLeft: 8, paddingRight: 8 }}>{RenderSquareCoinLogo(item.id)}</View> : null}
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
             onPress={() =>

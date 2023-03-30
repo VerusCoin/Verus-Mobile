@@ -22,6 +22,7 @@ import { conditionallyUpdateService, modifyPersonalDataForUser } from "../../../
 import store from "../../../../../../store";
 import { requestPersonalData } from "../../../../../../utils/auth/authBox";
 import { PERSONAL_CONTACT, PERSONAL_EMAILS } from "../../../../../../utils/constants/personal";
+import { openUrl } from "../../../../../../utils/linking";
 
 class WyreServiceAccountCreator extends Component {
   constructor() {
@@ -121,7 +122,7 @@ class WyreServiceAccountCreator extends Component {
             {
               text: "Take me there",
               onPress: () => {
-                Linking.openURL("https://dash.sendwyre.com/reset-password");
+                openUrl("https://dash.sendwyre.com/reset-password");
 
                 resolveAlert(true);
               },
@@ -315,7 +316,7 @@ class WyreServiceAccountCreator extends Component {
             <Text
               style={{ color: Colors.primaryColor, fontWeight: "800" }}
               onPress={() => {
-                Linking.openURL(this.WYRE_SUPPORTED_COUNTRIES_INFO);
+                openUrl(this.WYRE_SUPPORTED_COUNTRIES_INFO);
               }}
             >
               {" Press here to learn more about Wyre's geographic restrictions."}

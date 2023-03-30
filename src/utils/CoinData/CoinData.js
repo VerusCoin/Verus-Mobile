@@ -2,7 +2,7 @@ import { electrumServers } from './electrum/servers';
 import { MAX_VERIFICATION } from '../constants/constants'
 import Colors from '../../globals/colors'
 import { coinsList } from './CoinsList'
-import { DLIGHT_PRIVATE, ELECTRUM, ERC20, GENERAL } from '../constants/intervalConstants';
+import { DLIGHT_PRIVATE, ELECTRUM, ERC20, GENERAL, WYRE_SERVICE } from '../constants/intervalConstants';
 
 import { ENABLE_VERUS_IDENTITIES } from '../../../env/index'
 
@@ -110,6 +110,7 @@ export const explorers = {
   RFOX: 'https://etherscan.io',
   BAT: 'https://etherscan.io',
   DAI: 'https://etherscan.io',
+  DAIW: 'https://etherscan.io',
   BAL: 'https://etherscan.io',
   BNT: 'https://etherscan.io',
   HOT: 'https://etherscan.io',
@@ -145,6 +146,7 @@ export const CoinLogos = {
   bat: CoinLogoIcons.web3.BAT,
   tst: CoinLogoIcons.web3.ETH,
   dai: CoinLogoIcons.web3.DAI,
+  daiwyre: CoinLogoIcons.web3.DAI,
   eth: CoinLogoIcons.web3.ETH,
   bal: CoinLogoIcons.web3.BAL,
   bnt: CoinLogoIcons.web3.BNT,
@@ -158,6 +160,8 @@ export const CoinLogos = {
   rfox: CoinLogoIcons.web3.RFOX,
   usdt: CoinLogoIcons.web3.USDT,
   usdc: CoinLogoIcons.web3.USDC,
+  usdtwyre: CoinLogoIcons.web3.USDT,
+  usdcwyre: CoinLogoIcons.web3.USDC,
   aave: CoinLogoIcons.web3.AAVE,
   crv: CoinLogoIcons.web3.CRV,
   sushi: CoinLogoIcons.web3.SUSHI,
@@ -196,19 +200,29 @@ export const CoinLogos = {
   brl: CoinLogoIcons.fiat.BRL,
 };
 
-//To make flatlist render faster
-export const namesList = Object.values(coinsList).map(function(coin) {
+//To make flatlist render faster we make these lists here, once
+export const fullCoinList = Object.values(coinsList).map(function(coin) {
   return coin.id;
 });
+
+export const supportedCoinList = fullCoinList.filter(x => x !== 'OOT' && x !== 'ZILLA' && x !== 'RFOX');
+
+export const disabledNameList = supportedCoinList.filter(x => {
+  return coinsList[x.toLowerCase()].compatible_channels.includes(WYRE_SERVICE);
+});
+
+export const enabledNameList = supportedCoinList.filter(
+  x => !disabledNameList.includes(x),
+);
 
 export const coinExistsInWallet = (coinTicker) => {
   let index = 0;
 
-  while (index < namesList.length && namesList[index] !== coinTicker) {
+  while (index < fullCoinList.length && fullCoinList[index] !== coinTicker) {
     index++;
   }
 
-  if (index < namesList.length) {
+  if (index < fullCoinList.length) {
     return true;
   } else {
     return false;
@@ -225,7 +239,7 @@ export const getCoinFromActiveCoins = (coinTicker, activeCoinsForUser) => {
     index++;
   }
 
-  if (index < namesList.length) {
+  if (index < fullCoinList.length) {
     return activeCoinsForUser[index];
   } else {
     return false;
@@ -300,74 +314,3 @@ export const getCoinLogo = (id) => {
   if (coinsList[idLc]) return CoinLogos[idLc]
   else return null
 }
-
-export const createErc20CoinObj = (contractAddress, displayName, displayTicker, description, userName) => {
-  if (coinsList[displayTicker.toLowerCase()]) throw new Error(`Coin with ticker ${displayTicker} already exists in coin list`)
-  let coinObj = {
-    id: displayTicker,
-    currency_id: contractAddress,
-    system_id: '.eth',
-    display_ticker: displayTicker,
-    display_name: displayName,
-    description: description,
-    compatible_channels: [ERC20, GENERAL],
-    dominant_channel: ERC20,
-    decimals: ETHERS,
-    tags: [],
-    proto: 'erc20'
-  }
-
-  coinObj.users = userName != null ? [userName] : [];
-
-  const DEFAULT_APPS = getDefaultApps(coinObj)
-
-  coinObj.apps = DEFAULT_APPS.apps;
-  coinObj.default_app = DEFAULT_APPS.default_app
-
-  return coinObj;
-}
-
-// DEPRECATED
-/**
- * @param {String} id The coin's identifier to be used in code
- * @param {String} name The coin's full name for display
- * @param {String} description A brief display description of the coin
- * @param {Number} defaultFee The default transaction fee for the coin (in sats)
- * @param {String[]} serverList A list of electrum servers for the coin
- * @param {String} userName The current user's username (coins must be activated with a user)
- * @param {Object} apps A list of applications the coin supports, 
- * fetched to display in the coin's menu (these still need to be written in order to be used)
- * @param {String} default_app The key of the app this coin will start on when selected
- */
-export const createCoinObj = (id, name, description, defaultFee, serverList, userName, apps, default_app) => {
-  let coinObj = coinsList[id];
-  if (coinObj) throw new Error(`Coin with ID ${id} already exists in coin list`)
-
-  coinObj = {
-    id: id,
-    display_name: name,
-    description: description,
-    logo: CoinLogos.default,
-    fee: defaultFee,
-    serverList: serverList ? serverList : [],
-    users: [userName],
-    compatible_channels: [ELECTRUM, GENERAL],
-    apps: apps,
-    default_app: default_app,
-    overrideCoinSettings: {
-      verificationLock: true,
-      verificationLvl: MAX_VERIFICATION
-    }
-  }
-
-  if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
-    const DEFAULT_APPS = getDefaultApps(coinObj)
-    coinObj.apps = DEFAULT_APPS.apps
-    if (!coinObj.default_app) coinObj.default_app = DEFAULT_APPS.default_app
-  } else if (!coinObj.default_app) {
-    coinObj.default_app = Object.keys(coinObj.apps)[0]
-  }
-
-  return coinObj;
-}
-

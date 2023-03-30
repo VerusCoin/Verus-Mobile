@@ -32,6 +32,7 @@ import {
   WYRE_INDIVIDUAL_SSN,
   WYRE_SERVICE_ID,
 } from "../../../../../../utils/constants/services";
+import { openUrl } from "../../../../../../utils/linking";
 import {
   renderPersonalAddress,
   renderPersonalBirthday,
@@ -90,13 +91,7 @@ class WyreServiceAccountData extends Component {
   }
 
   openInstructionUrl = (url) => {
-    Linking.canOpenURL(url).then((supported) => {
-      if (supported) {
-        Linking.openURL(url);
-      } else {
-        console.log("Don't know how to open URI: " + url);
-      }
-    });
+    openUrl(url);
   };
 
   async getPersonalInfoOptions(infoType, infoKey) {

@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
+import React, {useEffect} from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
 import LoadingStackScreens from './LoadingStackScreens/LoadingStackScreens';
 import SignedInStackScreens from './SignedInStackScreens/SignedInStackScreens';
 import SignedOutStackScreens from './SignedOutStackScreens/SignedOutStackScreens';
 import SignedOutNoKeyStackScreens from './SignedOutNoKeyStackScreens/SignedOutNoKeyStackScreens';
 import DeepLinkStackScreens from './DeepLinkStackScreens/DeepLinkStackScreens';
-import { useSelector } from 'react-redux';
+import {useSelector} from 'react-redux';
 import LoginRequestInfo from '../DeepLink/LoginRequestInfo/LoginRequestInfo';
 
 const RootStack = createStackNavigator();

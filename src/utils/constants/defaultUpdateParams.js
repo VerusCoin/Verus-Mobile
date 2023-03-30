@@ -39,7 +39,7 @@ export const DEFAULT_SERVICE_UPDATE_PARAMS = {
       expire_oncomplete: null,
       update_expired_oncomplete: null,
       expire_timeout: 60000,
-      update_expired_interval: 30000
+      update_expired_interval: 300000
     }
   },
   [API_GET_SERVICE_PAYMENT_METHODS]: {
@@ -55,7 +55,7 @@ export const DEFAULT_SERVICE_UPDATE_PARAMS = {
       expire_oncomplete: null,
       update_expired_oncomplete: null,
       expire_timeout: 120000,
-      update_expired_interval: 30000
+      update_expired_interval: 300000
     }
   },
   [API_GET_SERVICE_TRANSFERS]: {
@@ -71,7 +71,7 @@ export const DEFAULT_SERVICE_UPDATE_PARAMS = {
       expire_oncomplete: null,
       update_expired_oncomplete: null,
       expire_timeout: 120000,
-      update_expired_interval: 30000
+      update_expired_interval: 300000
     }
   },
   [API_GET_SERVICE_RATES]: {
@@ -87,7 +87,7 @@ export const DEFAULT_SERVICE_UPDATE_PARAMS = {
       expire_oncomplete: null,
       update_expired_oncomplete: null,
       expire_timeout: 120000,
-      update_expired_interval: 30000
+      update_expired_interval: 300000
     }
   }
 }
@@ -113,7 +113,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 60000,
-        update_expired_interval: 30000,
+        update_expired_interval: 300000,
       },
     },
     syncing: {
@@ -129,7 +129,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 60000,
-        update_expired_interval: 30000,
+        update_expired_interval: 300000,
       },
     },
     post_sync: {
@@ -145,7 +145,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 60000,
-        update_expired_interval: 30000,
+        update_expired_interval: 300000,
       },
     },
   },
@@ -201,7 +201,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 30000,
-        update_expired_interval: 30000,
+        update_expired_interval: 300000,
       },
     },
   },
@@ -221,7 +221,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 60000,
-        update_expired_interval: 30000,
+        update_expired_interval: 300000,
       },
     },
     syncing: {
@@ -237,7 +237,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 60000,
-        update_expired_interval: 30000,
+        update_expired_interval: 300000,
       },
     },
     post_sync: {
@@ -253,62 +253,10 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 60000,
-        update_expired_interval: 30000,
+        update_expired_interval: 300000,
       },
     },
   },
-  // [API_GET_LINKED_IDENTITIES]: {
-  //   channels: [VERUSID],
-  //   restrictions: [],
-  //   pre_data: {
-  //     tracking_info: {
-  //       coin_bound: false,
-  //       update_locations: null,
-  //       needs_update: true,
-  //       busy: {},
-  //     },
-  //     interval_info: {
-  //       expire_id: null,
-  //       update_expired_id: null,
-  //       expire_oncomplete: null,
-  //       update_expired_oncomplete: null,
-  //       expire_timeout: 60000,
-  //       update_expired_interval: 30000,
-  //     },
-  //   },
-  //   syncing: {
-  //     tracking_info: {
-  //       coin_bound: false,
-  //       update_locations: null,
-  //       needs_update: true,
-  //       busy: {},
-  //     },
-  //     interval_info: {
-  //       expire_id: null,
-  //       update_expired_id: null,
-  //       expire_oncomplete: null,
-  //       update_expired_oncomplete: null,
-  //       expire_timeout: 60000,
-  //       update_expired_interval: 30000,
-  //     },
-  //   },
-  //   post_sync: {
-  //     tracking_info: {
-  //       coin_bound: false,
-  //       update_locations: null,
-  //       needs_update: true,
-  //       busy: {},
-  //     },
-  //     interval_info: {
-  //       expire_id: null,
-  //       update_expired_id: null,
-  //       expire_oncomplete: null,
-  //       update_expired_oncomplete: null,
-  //       expire_timeout: 60000,
-  //       update_expired_interval: 30000,
-  //     },
-  //   },
-  // },
   [API_GET_CONVERSION_PATHS]: {
     channels: [WYRE_SERVICE],
     restrictions: [],
@@ -325,7 +273,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 30000,
+        update_expired_interval: 300000,
       },
     },
     syncing: {
@@ -341,7 +289,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 30000,
+        update_expired_interval: 300000,
       },
     },
     post_sync: {
@@ -357,7 +305,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 30000,
+        update_expired_interval: 300000,
       },
     },
   },
@@ -377,7 +325,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 15000,
+        update_expired_interval: 150000,
       },
     },
     syncing: {
@@ -393,7 +341,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 15000,
+        update_expired_interval: 150000,
       },
     },
     post_sync: {
@@ -409,7 +357,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 15000,
+        update_expired_interval: 150000,
       },
     },
   },
@@ -429,7 +377,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 15000,
+        update_expired_interval: 150000,
       },
     },
     syncing: {
@@ -445,7 +393,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 15000,
+        update_expired_interval: 150000,
       },
     },
     post_sync: {
@@ -461,7 +409,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 15000,
+        update_expired_interval: 150000,
       },
     },
   },
@@ -481,7 +429,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 15000,
+        update_expired_interval: 150000,
       },
     },
     syncing: {
@@ -497,7 +445,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 15000,
+        update_expired_interval: 150000,
       },
     },
     post_sync: {
@@ -513,7 +461,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 120000,
-        update_expired_interval: 15000,
+        update_expired_interval: 150000,
       },
     },
   },
@@ -533,7 +481,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 60000,
-        update_expired_interval: 30000,
+        update_expired_interval: 300000,
       },
     },
     syncing: {
@@ -549,7 +497,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 60000,
-        update_expired_interval: 30000,
+        update_expired_interval: 300000,
       },
     },
     post_sync: {
@@ -565,7 +513,7 @@ export const DEFAULT_COIN_UPDATE_PARAMS = {
         expire_oncomplete: null,
         update_expired_oncomplete: null,
         expire_timeout: 60000,
-        update_expired_interval: 30000,
+        update_expired_interval: 300000,
       },
     },
   },

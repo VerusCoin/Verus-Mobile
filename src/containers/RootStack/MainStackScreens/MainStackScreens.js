@@ -14,7 +14,6 @@ import GeneralWalletSettings from '../../Settings/WalletSettings/GeneralWalletSe
 import CoinSettings from '../../Settings/WalletSettings/CoinSettings/CoinSettings'
 import DeleteProfile from '../../Settings/ProfileSettings/DeleteProfile/DeleteProfile'
 import SecureLoading from '../../SecureLoading/SecureLoading'
-import CustomChainMenus from '../../CustomChains/CustomChainMenus'
 import HomeTabScreens from '../HomeTabScreens/HomeTabScreens';
 
 const MainStack = createStackNavigator();
@@ -123,11 +122,6 @@ const MainStackScreens = props => {
           headerRight: () => null,
           headerLeft: () => null,
         }}
-      />
-
-      <MainStack.Screen
-        name="CustomChainMenus"
-        component={CustomChainMenus}
       />
     </MainStack.Navigator>
   );

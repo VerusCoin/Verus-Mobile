@@ -72,15 +72,16 @@ export const SignUpRender = function() {
                     channel={DLIGHT_PRIVATE}
                   />
                 </Portal>
-                <View style={Styles.wideBlock}>
+                <View style={Styles.wideBlockDense}>
                   <TextInput
                     returnKeyType="done"
                     value={this.state.userName}
-                    dense
                     onChangeText={(text) => this.setState({ userName: text })}
                     label="Profile Name"
                     underlineColor={Colors.primaryColor}
                     selectionColor={Colors.primaryColor}
+                    mode="outlined"
+                    dense
                     render={(props) => (
                       <NativeTextInput
                         autoCapitalize={"none"}
@@ -91,7 +92,7 @@ export const SignUpRender = function() {
                     error={this.state.errors.userName}
                   />
                 </View>
-                <View style={Styles.wideBlock}>
+                <View style={Styles.wideBlockDense}>
                   <Checkbox.Item
                     color={Colors.primaryColor}
                     label={"Configure account seed"}
@@ -105,7 +106,7 @@ export const SignUpRender = function() {
                   />
                 </View>
                 {/* {ENABLE_DLIGHT && (
-                  <View style={Styles.wideBlock}>
+                  <View style={Styles.wideBlockDense}>
                     <Checkbox.Item
                       color={Colors.primaryColor}
                       label={"Setup Optional (Z Address) Seed"}
@@ -119,8 +120,8 @@ export const SignUpRender = function() {
                     />
                   </View>
                 )} */}
-                <View style={Styles.fullWidthFlexCenterBlock}>
-                  <View style={Styles.wideBlock}>
+                <View style={{...Styles.fullWidthFlexCenterBlockDense, padding: 0}}>
+                  <View style={Styles.wideBlockDense}>
                     <TextInput
                       returnKeyType="done"
                       value={this.state.pin}
@@ -128,6 +129,7 @@ export const SignUpRender = function() {
                       onChangeText={(text) => this.setState({ pin: text })}
                       label="Profile Password"
                       underlineColor={Colors.primaryColor}
+                      mode="outlined"
                       selectionColor={Colors.primaryColor}
                       render={(props) => (
                         <NativeTextInput
@@ -140,7 +142,7 @@ export const SignUpRender = function() {
                       error={this.state.errors.pin}
                     />
                   </View>
-                  <View style={Styles.wideBlock}>
+                  <View style={Styles.wideBlockDense}>
                     <TextInput
                       returnKeyType="done"
                       value={this.state.confirmPin}
@@ -151,6 +153,7 @@ export const SignUpRender = function() {
                       label="Confirm Profile Password"
                       underlineColor={Colors.primaryColor}
                       selectionColor={Colors.primaryColor}
+                      mode="outlined"
                       render={(props) => (
                         <NativeTextInput
                           autoCapitalize={"none"}
@@ -164,7 +167,7 @@ export const SignUpRender = function() {
                   </View>
                 </View>
                 {this.state.biometricAuth.biometry && (
-                  <View style={Styles.wideBlock}>
+                  <View style={Styles.wideBlockDense}>
                     <Checkbox.Item
                       color={Colors.primaryColor}
                       label={"Enable biometric authentication"}
@@ -194,7 +197,7 @@ export const SignUpRender = function() {
             style={
               this.hasAccount()
                 ? Styles.standardWidthSpaceBetweenBlock
-                : Styles.fullWidthFlexCenterBlock
+                : Styles.fullWidthFlexCenterBlockDense
             }
           >
             {this.hasAccount() && (

@@ -1,4 +1,4 @@
-import { findCoinObj, namesList } from '../../CoinData/CoinData';
+import { findCoinObj, fullCoinList } from '../../CoinData/CoinData';
 import { REQUEST_TIMEOUT_MS } from '../../../../env/index';
 import { timeout } from '../../promises';
 import { isJson } from '../../objectManip';
@@ -40,7 +40,7 @@ describe('coinpaprika API is online and works as expected', () => {
     })
   }
 
-  for (const name of namesList) {
+  for (const name of fullCoinList) {
     testCoinID(name)
   }
 })

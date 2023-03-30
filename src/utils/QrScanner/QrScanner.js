@@ -60,9 +60,11 @@ class QrScanner {
 
         if (parsedURI != null) {
           return this.processVerusQr(parsedURI, raw);
-        } else {
+        } else if (raw.length < 100) {
           // Assume QR is simply an address QR and return an address
           return new ProcessedPaymentRequest(raw, null, raw, null, null);
+        } else {
+          throw new Error(FORMAT_UNKNOWN);
         }
       }
     } else {

@@ -44,7 +44,7 @@ export const TraditionalCryptoSendSuccessRender = function () {
             style={{
               color: Colors.basicButtonColor,
               textAlign: 'center',
-            }}>{`${finalTxAmount} ${coinObj.id}`}</Text>
+            }}>{`${finalTxAmount} ${coinObj.display_ticker}`}</Text>
           {' sent'}
         </Text>
       </TouchableOpacity>

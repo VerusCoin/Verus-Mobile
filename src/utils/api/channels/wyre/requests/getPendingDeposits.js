@@ -10,7 +10,7 @@ export const getPendingDeposits = async (coinObj) => {
     if (
       transfer.status == "PENDING" &&
       transfer.source.split(":")[0] === "paymentmethod" &&
-      transfer.destCurrency === coinObj.id
+      transfer.destCurrency === coinObj.currency_id
     ) {
       try {
         const processedDeposit = await getTransferFollowup({ transferId: transfer.id });

@@ -1,5 +1,6 @@
 import React from 'react'
-import { View, Text } from "react-native"
+import { View } from "react-native"
+import { Text } from "react-native-paper"
 import Colors from "../../../../globals/colors"
 
 const RenderFiatCoinLogo = (symbol, darkColor = Colors.primaryColor) => {
