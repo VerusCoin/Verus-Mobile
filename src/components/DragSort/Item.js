@@ -23,7 +23,7 @@
 // SOFTWARE.
 
 import React, { useContext } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, {
   useAnimatedGestureHandler,
   useAnimatedStyle,
@@ -35,29 +35,32 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import {
-  PanGestureHandler
+  PanGestureHandler, TouchableWithoutFeedback
 } from 'react-native-gesture-handler';
 
 import { ConfigContext, animationConfig } from './ConfigContext';
-import { isConfigured } from 'react-native-reanimated/lib/reanimated2/core';
 import { triggerLightHaptic } from '../../utils/haptics/haptics';
 
 const NonAnimatedItem = ({
   children,
-  id
+  id,
+  onPressDetected
 }) => {
   const config = useContext(ConfigContext);
   const { WIDTH, HEIGHT, COL, getOrder, getPosition } = config;
 
-  const style = StyleSheet.create({
-    width: WIDTH,
-    height: HEIGHT
-  });
-
   return (
-    <View style={style}>
+    <TouchableWithoutFeedback
+      style={{
+        width: WIDTH,
+        height: HEIGHT,
+        overflow: 'visible',
+        justifyContent: "center",
+        alignItems: "center"
+      }}
+      onPress={() => onPressDetected(id)}>
       {children}
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -69,11 +72,12 @@ const AnimatedItem = ({
   scrollView,
   scrollY,
   editing,
-  onPressDetected
+  onPressDetected,
+  minDist
 }) => {
   const config = useContext(ConfigContext);
   const { WIDTH, HEIGHT, COL, getOrder, getPosition } = config;
-  const containerHeight = Dimensions.get('window').height - 40;
+  const containerHeight = Dimensions.get('window').height - 160;
   const contentHeight = (Object.keys(positions.value).length / COL) * HEIGHT;
   const isGestureActive = useSharedValue(false);
 
@@ -85,7 +89,8 @@ const AnimatedItem = ({
   const translateX = useSharedValue(position.x);
   const translateY = useSharedValue(position.y);
 
-  const lastScrollY = useSharedValue(scrollY.value)
+  const lastY = useSharedValue(0)
+  const lastX = useSharedValue(0)
 
   useAnimatedReaction(
     () => positions.value[id],
@@ -100,10 +105,8 @@ const AnimatedItem = ({
 
   const onGestureEvent = useAnimatedGestureHandler({
     onFail: (_, ctx) => {
-      if (editing) {
-        if (scrollY.value === lastScrollY.value) runOnJS(onPressDetected)(id);
-        
-        lastScrollY.value = scrollY.value
+      if (editing) {        
+        if (lastY.value === _.y && lastX.value === _.x) runOnJS(onPressDetected)(id);
 
         isHapticPrimed.value = false
       }
@@ -114,7 +117,8 @@ const AnimatedItem = ({
         ctx.x = translateX.value;
         ctx.y = translateY.value;
 
-        lastScrollY.value = scrollY.value
+        lastX.value = _.x
+        lastY.value = _.y
 
         isHapticPrimed.value = true
       }
@@ -210,7 +214,7 @@ const AnimatedItem = ({
   
   return (
     <Animated.View style={style}>
-      <PanGestureHandler enabled={editing} onGestureEvent={onGestureEvent} minDist={60}>
+      <PanGestureHandler enabled={editing} onGestureEvent={onGestureEvent} minDist={minDist}>
         <Animated.View style={StyleSheet.absoluteFill}>
           {children}
         </Animated.View>
@@ -219,6 +223,8 @@ const AnimatedItem = ({
   );
 };
 
-const Item = isConfigured(false) ? AnimatedItem : NonAnimatedItem
+const Item = (props) => {
+  return props.animate ? <AnimatedItem {...props}/> : <NonAnimatedItem {...props}/>
+};
 
 export default Item;

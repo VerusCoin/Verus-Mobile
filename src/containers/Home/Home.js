@@ -54,6 +54,7 @@ class Home extends Component {
       listItemHeights: {},
       widgets: [],
       displayCurrencyModalOpen: false,
+      editingCards: false,
 
       //TODO: MOVE TO REDUX
       expandedListItems: {},
@@ -71,6 +72,22 @@ class Home extends Component {
     });
 
     await this.getWidgets()
+  }
+
+  setEditingCards(editing) {
+    this.setState({
+      editingCards: editing
+    })
+  }
+
+  sortWidgets() {
+    const widgets = this.state.widgets.sort((a, b) => {
+      return this.props.widgetOrder[a] <= this.props.widgetOrder[b] ? -1 : 1;
+    });
+
+    this.setState({
+      widgets
+    })
   }
 
   async getWidgets() {
@@ -225,6 +242,8 @@ class Home extends Component {
 
     if (this.props.activeCoinsForUser !== lastProps.activeCoinsForUser) {
       this.getWidgets()
+    } else if (this.props.widgetOrder !== lastProps.widgetOrder) {
+      this.sortWidgets()
     }
   }
 
