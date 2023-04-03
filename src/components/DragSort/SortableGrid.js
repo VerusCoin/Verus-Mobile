@@ -22,34 +22,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import React, { useContext } from 'react';
+import React, {useContext} from 'react';
 import Animated, {
   useAnimatedRef,
   useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
-import { 
-  Platform,
-  ScrollView
-} from "react-native";
+import {Platform, ScrollView} from 'react-native';
 
 import Item from './Item';
-import { ConfigContext } from './ConfigContext';
-import { isConfigured } from 'react-native-reanimated/lib/reanimated2/core';
+import {ConfigContext} from './ConfigContext';
 
-const AnimatedList = ({ children, editing, onDragEnd, refreshControl, onPressDetected }) => {
+const AnimatedList = ({
+  children,
+  editing,
+  onDragEnd,
+  refreshControl,
+  onPressDetected,
+  animate,
+  minDist,
+}) => {
   const config = useContext(ConfigContext);
-  const { COL, HEIGHT } = config;
+  const {COL, HEIGHT} = config;
   const scrollY = useSharedValue(0);
   const scrollView = useAnimatedRef();
   const positions = useSharedValue(
     Object.assign(
       {},
-      ...children.map((child, index) => ({ [child.props.id]: index }))
-    )
+      ...children.map((child, index) => ({[child.props.id]: index})),
+    ),
   );
   const onScroll = useAnimatedScrollHandler({
-    onScroll: ({ contentOffset: { y } }) => {
+    onScroll: ({contentOffset: {y}}) => {
       scrollY.value = y;
     },
   });
@@ -60,14 +64,16 @@ const AnimatedList = ({ children, editing, onDragEnd, refreshControl, onPressDet
       onScroll={onScroll}
       ref={scrollView}
       contentContainerStyle={{
-        height: Platform.OS === 'ios' ? Math.ceil(children.length / COL) * HEIGHT + 16 : "100%",
-        overflow: "visible"
+        height: Math.ceil(children.length / COL) * HEIGHT + 16,
+        overflow: 'visible'
+      }}
+      style={{
+        paddingTop: 10
       }}
       showsVerticalScrollIndicator={false}
       bounces={false}
-      scrollEventThrottle={16}
-    >
-      {children.map((child) => {
+      scrollEventThrottle={16}>
+      {children.map(child => {
         return (
           <Item
             key={child.props.id}
@@ -78,7 +84,8 @@ const AnimatedList = ({ children, editing, onDragEnd, refreshControl, onPressDet
             scrollView={scrollView}
             scrollY={scrollY}
             onPressDetected={onPressDetected}
-          >
+            animate={animate}
+            minDist={minDist}>
             {child}
           </Item>
         );
@@ -87,28 +94,40 @@ const AnimatedList = ({ children, editing, onDragEnd, refreshControl, onPressDet
   );
 };
 
-const NonAnimatedList = ({ children, refreshControl }) => {
+const NonAnimatedList = ({
+  children,
+  refreshControl,
+  onPressDetected,
+  animate,
+}) => {
   const config = useContext(ConfigContext);
-  const { WIDTH, HEIGHT, COL } = config;
+  const {WIDTH, HEIGHT, COL} = config;
 
   return (
     <ScrollView
       refreshControl={refreshControl}
       contentContainerStyle={{
-        height: Math.ceil(children.length / COL) * HEIGHT,
-        flex: 1,
-        flexDirection: "row"
-      }}
-      showsVerticalScrollIndicator={false}
-      bounces={false}
-      scrollEventThrottle={16}
-    >
-      {children.map((child) => {
+        height: Math.ceil(children.length / COL) * HEIGHT + 16,
+        overflow: 'visible',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: "space-between",
+        paddingHorizontal: 6,
+        paddingTop: 10
+      }}>
+      {children.map(child => {
         return (
           <Item
             key={child.props.id}
             id={child.props.id}
-          >
+            onPressDetected={onPressDetected}
+            animate={animate}
+            positions={{
+              value: Object.assign(
+                {},
+                ...children.map((child, index) => ({[child.props.id]: index})),
+              ),
+            }}>
             {child}
           </Item>
         );
@@ -117,6 +136,12 @@ const NonAnimatedList = ({ children, refreshControl }) => {
   );
 };
 
-const List = isConfigured(false) ? AnimatedList : NonAnimatedList
+const List = props => {
+  return props.animate ? (
+    <AnimatedList {...props} />
+  ) : (
+    <NonAnimatedList {...props} />
+  );
+};
 
 export default List;
