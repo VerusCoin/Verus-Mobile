@@ -29,10 +29,7 @@ class DynamicHeader extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      carouselItems: this.prepareCarouselItems(
-        props.allSubWallets,
-        props.selectedSubWallet,
-      ),
+      carouselItems: [],
       currentIndex: 0,
     };
 
@@ -42,6 +39,13 @@ class DynamicHeader extends Component {
 
   componentDidMount() {
     this.fadeIn();
+
+    this.setState({
+      carouselItems: this.prepareCarouselItems(
+        this.props.allSubWallets,
+        this.props.selectedSubWallet,
+      )
+    })
   }
 
   fadeIn = () => {
@@ -63,10 +67,8 @@ class DynamicHeader extends Component {
       wallets = allSubWallets;
     } else {
       let newSubWallets = [...allSubWallets];
-      let i = 0;
 
       while (
-        i < allSubWallets.length &&
         newSubWallets[0].id !== selectedSubWallet.id
       ) {
         newSubWallets.push(newSubWallets.shift());

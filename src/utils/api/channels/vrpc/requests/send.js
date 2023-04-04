@@ -15,10 +15,10 @@ import {
 } from '@bitgo/utxo-lib';
 import {getInfo} from './getInfo';
 import coinSelect from 'coinselect';
-import { VRPC } from '../../../../constants/intervalConstants';
-import { sendRawTransaction } from './sendRawTransaction';
-import { IADDRESS_VERSION } from '../../../../constants/constants';
-import { generateOutputScript } from '../../../../crypto/script';
+import {VRPC} from '../../../../constants/intervalConstants';
+import {sendRawTransaction} from './sendRawTransaction';
+import {IADDRESS_VERSION} from '../../../../constants/constants';
+import {generateOutputScript} from '../../../../crypto/script';
 
 export const buildTx = async (
   coinObj,
@@ -28,7 +28,7 @@ export const buildTx = async (
   params,
   channelId,
 ) => {
-  const network = networks['verus'];
+  const network = networks.verus;
 
   let keyPair;
 
@@ -50,16 +50,17 @@ export const buildTx = async (
     channelId,
   );
 
-  if (preflightRes.err) throw new Error(preflightRes.result);
-  else {
+  if (preflightRes.err) {
+    throw new Error(preflightRes.result);
+  } else {
     const {
       fee: defaultFee,
       value,
       toAddress,
-      fromAddress
+      fromAddress,
     } = preflightRes.result;
-    let inputValueSats = BigNumber(0)
-    const inputValues = []
+    let inputValueSats = BigNumber(0);
+    const inputValues = [];
     let isCC = false;
     let isChangeCC = false;
 
@@ -74,8 +75,12 @@ export const buildTx = async (
     const utxoRes = await getAddressUtxos(coinObj, [fromAddress]);
     const infoRes = await getInfo(coinObj);
 
-    if (infoRes.error) throw new Error(infoRes.error.message);
-    if (utxoRes.error) throw new Error(utxoRes.error.message);
+    if (infoRes.error) {
+      throw new Error(infoRes.error.message);
+    }
+    if (utxoRes.error) {
+      throw new Error(utxoRes.error.message);
+    }
 
     utxos = [];
 
@@ -91,9 +96,18 @@ export const buildTx = async (
     for (const utxo of utxoRes.result) {
       const _script = script.decompile(Buffer.from(utxo.script, 'hex'));
 
-      //TODO: Remove when currencies are implemented, for now we can ignore
-      //0 satoshi utxos
-      if (utxo.satoshis === 0) continue;
+      const {currencyvalues} = utxo;
+
+      //TODO: Refactor when currencies are implemented
+      if (
+        utxo.satoshis === 0 ||
+        !utxo.isspendable ||
+        (currencyvalues != null &&
+          Object.keys(currencyvalues).filter(x => x !== coinObj.system_id).length >
+            0)
+      ) {
+        continue;
+      }
 
       if (
         _script.length === 4 &&
@@ -103,7 +117,7 @@ export const buildTx = async (
         try {
           const master = OptCCParams.fromChunk(_script[0]);
           const params = OptCCParams.fromChunk(_script[2]);
-  
+
           if (
             params.isValid() &&
             master.isValid() &&
@@ -111,13 +125,17 @@ export const buildTx = async (
             master.evalCode === 0
           ) {
             pushUtxo({...utxo, cc: true});
-          } else continue;
-        } catch(e) {
-          console.warn("Failed to parse smart transaction utxo: ")
-          console.log(utxo)
-          console.log(`Error: ${e.message}`)
+          } else {
+            continue;
+          }
+        } catch (e) {
+          console.warn('Failed to parse smart transaction utxo: ');
+          console.log(utxo);
+          console.log(`Error: ${e.message}`);
         }
-      } else pushUtxo(utxo);
+      } else {
+        pushUtxo(utxo);
+      }
     }
 
     let targets = [
@@ -150,10 +168,10 @@ export const buildTx = async (
 
     for (const input of inputs) {
       const {txid, vout, script, value} = input;
-      const inputValueBigNum = BigNumber(value)
+      const inputValueBigNum = BigNumber(value);
 
-      inputValues.push(inputValueBigNum)
-      inputValueSats = inputValueSats.plus(inputValueBigNum)
+      inputValues.push(inputValueBigNum);
+      inputValueSats = inputValueSats.plus(inputValueBigNum);
 
       txb.addInput(
         txid,
@@ -166,22 +184,34 @@ export const buildTx = async (
     const addr = addressUtils.fromBase58Check(address);
     const selfAddr = addressUtils.fromBase58Check(fromAddress);
 
-    if (!isCC && addr.version === IADDRESS_VERSION) isCC = true;
+    if (!isCC && addr.version === IADDRESS_VERSION) {
+      isCC = true;
+    }
 
-    let actualFeeSats = inputValueSats.minus(valueSats)
+    let actualFeeSats = inputValueSats.minus(valueSats);
 
-    const outputScript = generateOutputScript(addr.hash, addr.version, isCC)
+    const outputScript = generateOutputScript(addr.hash, addr.version, isCC);
 
     if (actualFeeSats.isLessThanOrEqualTo(BigNumber(0))) {
-      throw new Error(`Cannot send transaction with fee of ${satsToCoins(actualFeeSats).toString()}.`)
+      throw new Error(
+        `Cannot send transaction with fee of ${satsToCoins(
+          actualFeeSats,
+        ).toString()}.`,
+      );
     } else if (actualFeeSats.isGreaterThan(feeSats)) {
-      if (!isChangeCC && selfAddr.version === IADDRESS_VERSION) isChangeCC = true;
+      if (!isChangeCC && selfAddr.version === IADDRESS_VERSION) {
+        isChangeCC = true;
+      }
 
       // If fee > target fee, create change output
-      const changeSats = actualFeeSats.minus(feeSats)
-      actualFeeSats = actualFeeSats.minus(changeSats)
+      const changeSats = actualFeeSats.minus(feeSats);
+      actualFeeSats = actualFeeSats.minus(changeSats);
 
-      const changeOutputScript = generateOutputScript(selfAddr.hash, selfAddr.version, isChangeCC)
+      const changeOutputScript = generateOutputScript(
+        selfAddr.hash,
+        selfAddr.version,
+        isChangeCC,
+      );
 
       txb.addOutput(changeOutputScript, changeSats.toNumber());
     }
@@ -223,12 +253,13 @@ export const send = async (
     );
     const sendRes = await sendRawTransaction(coinObj, txHex);
 
-    if (sendRes.error) throw new Error(sendRes.error.message);
-    else {
+    if (sendRes.error) {
+      throw new Error(sendRes.error.message);
+    } else {
       return {
         err: false,
         result: {
-          txid: sendRes.result
+          txid: sendRes.result,
         },
       };
     }

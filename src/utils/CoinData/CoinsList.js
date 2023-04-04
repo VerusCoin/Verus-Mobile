@@ -30,8 +30,8 @@ import Colors from "../../globals/colors";
 export const coinsList = {
   vrsc: {
     id: 'VRSC',
-    currency_id: '',
-    system_id: '.vrsc',
+    currency_id: 'VRSC',
+    system_id: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
     display_ticker: 'VRSC',
     display_name: 'Verus',
     rate_url_params: {coin_paprika: 'vrsc-verus-coin'},
