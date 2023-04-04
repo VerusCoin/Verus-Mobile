@@ -5,6 +5,7 @@ import Colors from '../../../globals/colors';
 import WalletStackScreens from '../WalletStackScreens/WalletStackScreens';
 import ProfileStackScreens from '../ProfileStackScreens/ProfileStackScreens';
 import ServicesStackScreens from '../ServicesStackScreens/ServicesStackScreens';
+import VerusPay from '../../VerusPay/VerusPay';
 
 const HomeTabs = createMaterialBottomTabNavigator()
 
@@ -12,6 +13,7 @@ const HomeTabScreens = props => {
   return (
     <HomeTabs.Navigator
       barStyle={{ backgroundColor: Colors.primaryColor }}
+      shifting={false}
     >
       <HomeTabs.Screen
         name="WalletHome"
@@ -27,7 +29,7 @@ const HomeTabScreens = props => {
         name="PersonalHome"
         component={ProfileStackScreens}
         options={{
-          title: "Personal Profile",
+          title: "Personal",
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name="fingerprint"
@@ -45,6 +47,20 @@ const HomeTabScreens = props => {
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name="room-service"
+              color={color}
+              size={26}
+            />
+          ),
+        }}
+      />
+      <HomeTabs.Screen
+        name="VerusPay"
+        component={VerusPay}
+        options={{
+          title: "Scan",
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons
+              name="camera"
               color={color}
               size={26}
             />

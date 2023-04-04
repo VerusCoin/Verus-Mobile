@@ -16,13 +16,11 @@ import base64url from 'base64url';
 import { URL } from 'react-native-url-polyfill';
 import { primitives } from 'verusid-ts-client'
 import {
-  ADDRESS_ONLY,
   CALLBACK_HOST,
   INCOMPATIBLE_APP,
   ONLY_ADDRESS,
   SUPPORTED_DLS,
 } from '../../utils/constants/constants'
-import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import { API_GET_BALANCES, API_GET_FIATPRICE, API_GET_INFO, API_SEND } from "../../utils/constants/intervalConstants";
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 import store from "../../store";
@@ -178,59 +176,7 @@ class VerusPay extends Component {
     });
   };
 
-  // handleAddCoin = (coinTicker) => {
-  //   this.setState({ addingCoin: true });
-  //   const coinObj = findCoinObj(coinTicker);
-
-  //   return new Promise((resolve, reject) => {
-  //     addCoin(
-  //       coinObj,
-  //       this.props.activeCoinList,
-  //       this.props.activeAccount.id,
-  //       coinObj.compatible_channels
-  //     )
-  //       .then(async (response) => {
-  //         if (response) {
-  //           this.props.dispatch(response);
-  //           this.props.dispatch(
-  //             setUserCoins(this.props.activeCoinList, this.props.activeAccount.id)
-  //           );
-  //           this.props.dispatch(
-  //             await addKeypairs(
-  //               coinObj,
-  //               this.props.activeAccount.keys,
-  //               this.props.activeAccount.keyDerivationVersion == null
-  //                 ? 0
-  //                 : this.props.activeAccount.keyDerivationVersion
-  //             )
-  //           );
-  //           activateChainLifecycle(coinTicker);
-
-  //           this.setState({ addingCoin: false });
-
-  //           resolve(true);
-  //         } else {
-  //           this.errorHandler("Error adding coin");
-  //         }
-  //       })
-  //       .catch((err) => {
-  //         this.errorHandler(err.message);
-  //       });
-  //   });
-  // };
-
   handleMissingAmount = (coinObj, address, note) => {
-    // this.canFillAmount(coinObj.id, note, address).then((res) => {
-    //   if (res) {
-    //     if (coinObj.apps.hasOwnProperty("wallet")) {
-    //       this.preConfirm(coinObj, this.props.activeAccount, address, "", note, false);
-    //     } else {
-    //       this.errorHandler(INCOMPATIBLE_APP);
-    //     }
-    //   } else {
-    //     this.cancelHandler();
-    //   }
-    // });
     if (coinObj.apps.hasOwnProperty('wallet')) {
       this.preConfirm(
         coinObj,

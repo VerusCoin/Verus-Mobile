@@ -33,7 +33,7 @@ const TotalUniBalanceWidget = props => {
         height: 110,
         width: width / 2 - 16,
         borderRadius: 10,
-        backgroundColor: Colors.secondaryColor
+        backgroundColor: Colors.ultraUltraLightGrey
       }}
       mode="outlined">
       <Card.Content>
