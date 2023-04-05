@@ -59,14 +59,6 @@ const MainStackScreens = props => {
       <MainStack.Screen name="SettingsMenus" component={SettingsMenus} />
 
       <MainStack.Screen
-        name="VerusPay"
-        component={VerusPay}
-        options={{
-          title: "VerusPay",
-        }}
-      />
-
-      <MainStack.Screen
         name="ProfileInfo"
         component={ProfileInfo}
         options={{

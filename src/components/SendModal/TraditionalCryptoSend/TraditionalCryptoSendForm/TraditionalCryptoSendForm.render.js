@@ -1,6 +1,6 @@
 import React from "react";
 import { ScrollView, View, TouchableWithoutFeedback, Keyboard } from "react-native";
-import { TextInput, Button } from "react-native-paper";
+import { TextInput, Button, Text } from "react-native-paper";
 import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import { API_SEND, DLIGHT_PRIVATE } from "../../../../utils/constants/intervalConstants";
@@ -36,6 +36,14 @@ export const TraditionalCryptoSendFormRender = function () {
         }}
       >
         <View style={Styles.wideBlock}>
+          <TextInput
+            label="Sending from"
+            value={subWallet.name}
+            mode="outlined"
+            disabled={true}
+          />
+        </View>
+        <View style={{ ...Styles.wideBlock, paddingTop: 0 }}>
           <TextInput
             returnKeyType="done"
             label="Recipient address"

@@ -28,13 +28,13 @@ const DrawerHeader = ({ navigateToScreen }) => (
         }}
       >
         <VrscLogo
-          width={35}
-          height={35}
+          width={30}
+          height={30}
         />
         <Text
           style={{
             color: "#FFF",
-            paddingLeft: 9,
+            paddingLeft: 22,
             fontSize: 16,
             fontFamily: "Avenir-Black",
           }}

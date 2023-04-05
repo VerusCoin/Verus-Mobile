@@ -15,6 +15,7 @@ import {
 import {
   CURRENCY_WIDGET_TYPE,
   TOTAL_UNI_BALANCE_WIDGET_TYPE,
+  VERUSID_WIDGET_TYPE,
 } from '../../utils/constants/widgets';
 import {setAndSaveAccountWidgets} from '../../actions/actionCreators';
 import TotalUniBalanceWidget from './HomeWidgets/TotalUniBalanceWidget';
@@ -23,6 +24,7 @@ import {
   CURRENCY_NAMES,
   SUPPORTED_UNIVERSAL_DISPLAY_CURRENCIES,
 } from '../../utils/constants/currencies';
+import VerusIdWidget from './HomeWidgets/VerusIdWidget';
 
 export const HomeRender = function () {
   return (
@@ -93,6 +95,13 @@ export const HomeRenderWidget = function (widgetId) {
         </Provider>
       );
     },
+    [VERUSID_WIDGET_TYPE]: () => {
+      return (
+        <Provider theme={HomeListItemThemeLight}>
+          <VerusIdWidget />
+        </Provider>
+      );
+    }
   };
 
   return renderers[widgetType] ? renderers[widgetType]() : <View />;

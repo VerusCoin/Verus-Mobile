@@ -13,6 +13,7 @@ const Colors = {
     basicButtonColor: 'black',
     lightGrey:'#b5b5b5',
     ultraLightGrey:'#d6cccb',
+    ultraUltraLightGrey: "#FBFBFB"
 }
 
 export default Colors

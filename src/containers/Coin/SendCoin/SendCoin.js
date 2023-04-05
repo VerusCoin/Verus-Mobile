@@ -37,8 +37,8 @@ class SendCoin extends Component {
           }}
           navigation={this.props.navigation}
           maskProps={{
-            height: 180,
-            width: 180,
+            height: 120,
+            width: 150,
           }}
           button={() => (
             <Button
