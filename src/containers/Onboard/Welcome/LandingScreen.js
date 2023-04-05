@@ -1,6 +1,7 @@
 import React from 'react';
 import {View, Dimensions} from 'react-native';
-import {Text, Paragraph, Button} from 'react-native-paper';
+import {Text, Paragraph} from 'react-native-paper';
+import TallButton from '../../../components/LargerButton';
 import Colors from '../../../globals/colors';
 import {VerusLogo} from '../../../images/customIcons';
 import styles from '../../../styles';
@@ -42,7 +43,7 @@ export default function LandingScreen(props) {
           {'The mobile wallet for Verus and its ecosystem.\nHere you can easily and securely send, receive and store VRSC, BTC, ETH and more.'}
         </Paragraph>
       </View>
-      <Button
+      <TallButton
         onPress={() => props.navigation.navigate("WelcomeSlider")}
         mode="contained"
         labelStyle={{fontWeight: "bold"}}
@@ -52,7 +53,7 @@ export default function LandingScreen(props) {
           width: 280
         }}>
         {"Get Started"}
-      </Button>
+      </TallButton>
     </View>
   );
 }

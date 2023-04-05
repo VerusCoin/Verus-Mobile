@@ -3,6 +3,7 @@ import {View, Dimensions} from 'react-native';
 import {Text, Paragraph, Button, Checkbox, List} from 'react-native-paper';
 import {MnemonicSeed} from '../../../../../images/customIcons';
 import Colors from '../../../../../globals/colors';
+import TallButton from '../../../../../components/LargerButton';
 
 export default function SeedIntro({navigation}) {
   const {height} = Dimensions.get('window');
@@ -94,7 +95,7 @@ export default function SeedIntro({navigation}) {
           onPress={() => setUserAgrees(!userAgrees)}
           mode="android"
         />
-        <Button
+        <TallButton
           onPress={() => navigation.navigate("SeedWords")}
           mode="contained"
           disabled={!userAgrees}
@@ -103,7 +104,7 @@ export default function SeedIntro({navigation}) {
             marginTop: 8,
           }}>
           {'Show words 1-8'}
-        </Button>
+        </TallButton>
       </View>
     </View>
   );

@@ -17,6 +17,7 @@ import {
   TouchableRipple,
 } from 'react-native-paper';
 import {createAlert} from '../../../../../actions/actions/alert/dispatchers/alert';
+import TallButton from '../../../../../components/LargerButton';
 import Colors from '../../../../../globals/colors';
 
 export default function ImportSeed({
@@ -141,7 +142,10 @@ export default function ImportSeed({
         style={{
           alignItems: 'center',
           position: 'absolute',
-          top: keyboardOffset !== 0 ? 0 : height / 2 - 250,
+          top:
+            Platform.OS !== 'ios' && keyboardOffset !== 0
+              ? 0
+              : height / 2 - 250,
         }}>
         <Text
           style={{
@@ -192,7 +196,7 @@ export default function ImportSeed({
                 width: '75%',
                 flexDirection: 'row',
                 alignItems: 'center',
-                justifyContent: "center"
+                justifyContent: 'center',
               }
             : {
                 position: 'absolute',
@@ -200,7 +204,7 @@ export default function ImportSeed({
                 width: '75%',
                 flexDirection: 'row',
                 alignItems: 'center',
-                justifyContent: "center"
+                justifyContent: 'center',
               }
         }>
         <TextInput
@@ -227,18 +231,20 @@ export default function ImportSeed({
           {'Next'}
         </Button>
       </View>
-      {keyboardOffset === 0 && <Button
-        onPress={handleImport}
-        mode="contained"
-        labelStyle={{fontWeight: 'bold'}}
-        disabled={!isValidMnemonic}
-        style={{
-          position: 'absolute',
-          bottom: 80,
-          width: 280,
-        }}>
-        {'Import'}
-      </Button>}
+      {keyboardOffset === 0 && (
+        <TallButton
+          onPress={handleImport}
+          mode="contained"
+          labelStyle={{fontWeight: 'bold'}}
+          disabled={!isValidMnemonic}
+          style={{
+            position: 'absolute',
+            bottom: 80,
+            width: 280,
+          }}>
+          {'Import'}
+        </TallButton>
+      )}
     </View>
   );
 }

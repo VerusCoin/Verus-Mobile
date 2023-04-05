@@ -8,6 +8,7 @@ import {
 import {Text, Paragraph, Button, TextInput} from 'react-native-paper';
 import {useSelector} from 'react-redux';
 import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
+import TallButton from '../../../../components/LargerButton';
 import Colors from '../../../../globals/colors';
 import { getSupportedBiometryType } from '../../../../utils/keychain/keychain';
 
@@ -126,7 +127,7 @@ export default function CreatePassword({password, setPassword, navigation}) {
           />
         </View>
         {!isKeyboardActive && (
-          <Button
+          <TallButton
             onPress={next}
             mode="contained"
             labelStyle={{fontWeight: 'bold'}}
@@ -137,7 +138,7 @@ export default function CreatePassword({password, setPassword, navigation}) {
               width: 280,
             }}>
             {'Next'}
-          </Button>
+          </TallButton>
         )}
       </View>
     </TouchableWithoutFeedback>

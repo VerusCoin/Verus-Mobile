@@ -4,6 +4,7 @@ import {Text, Paragraph, Button, TextInput} from 'react-native-paper';
 import Colors from '../../../../globals/colors';
 import { canEnableBiometry } from '../../../../actions/actions/channels/dlight/dispatchers/AlertManager';
 import { Biometrics } from '../../../../images/customIcons';
+import TallButton from '../../../../components/LargerButton';
 
 export default function UseBiometrics({ setUseBiometrics, navigation }) {
   const {height} = Dimensions.get('window');
@@ -56,18 +57,18 @@ export default function UseBiometrics({ setUseBiometrics, navigation }) {
           {"Sign into your profile with biometric authentication. You can always change this later."}
         </Paragraph>
       </View>
-      <Button
+      <TallButton
         onPress={() => next(true)}
         mode="contained"
         labelStyle={{fontWeight: "bold"}}
         style={{
           position: "absolute",
-          bottom: 80,
+          bottom: 96,
           width: 280
         }}>
         {"Enable"}
-      </Button>
-      <Button
+      </TallButton>
+      <TallButton
         onPress={() => next(false)}
         mode="text"
         labelStyle={{fontWeight: "bold", color: Colors.primaryColor}}
@@ -77,7 +78,7 @@ export default function UseBiometrics({ setUseBiometrics, navigation }) {
           width: 280
         }}>
         {"Skip"}
-      </Button>
+      </TallButton>
     </View>
   );
 }

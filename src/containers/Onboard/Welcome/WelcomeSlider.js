@@ -3,6 +3,7 @@ import {View, Dimensions} from 'react-native';
 import AppIntroSlider from 'react-native-app-intro-slider';
 import {Text, Paragraph, Button} from 'react-native-paper';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import TallButton from '../../../components/LargerButton';
 import Colors from '../../../globals/colors';
 import {
   EncryptLocally,
@@ -114,7 +115,7 @@ export default function WelcomeSlider(props) {
         ]}
         renderNextButton={() => {
           return (
-            <Button
+            <TallButton
               mode="text"
               labelStyle={{fontWeight: 'bold', color: Colors.primaryColor}}
               style={{
@@ -123,12 +124,12 @@ export default function WelcomeSlider(props) {
                 backgroundColor: Colors.secondaryColor,
               }}>
               {'Next'}
-            </Button>
+            </TallButton>
           );
         }}
         renderDoneButton={() => {
           return (
-            <Button
+            <TallButton
               mode="text"
               labelStyle={{fontWeight: 'bold', color: Colors.primaryColor}}
               style={{
@@ -137,12 +138,12 @@ export default function WelcomeSlider(props) {
                 backgroundColor: Colors.secondaryColor,
               }}>
               {'Create my profile'}
-            </Button>
+            </TallButton>
           );
         }}
         renderSkipButton={() => {
           return (
-            <Button
+            <TallButton
               mode="text"
               labelStyle={{fontWeight: 'bold', color: Colors.secondaryColor}}
               style={{
@@ -150,7 +151,7 @@ export default function WelcomeSlider(props) {
                 width: 280,
               }}>
               {'Skip'}
-            </Button>
+            </TallButton>
           );
         }}
       />
