@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import {Text, Button, TextInput} from 'react-native-paper';
 import {useSelector} from 'react-redux';
+import TallButton from '../../../../../components/LargerButton';
 import Colors from '../../../../../globals/colors';
 import {DEFAULT_SEED_PHRASE_LENGTH} from '../../../../../utils/constants/constants';
 
@@ -233,7 +234,7 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
                 ? 'Please verify the listed words.'
                 : "When you've written them down, press next."}
             </Text>
-            <Button
+            <TallButton
               onPress={next}
               mode="contained"
               disabled={
@@ -247,9 +248,9 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
                 marginTop: 8,
               }}>
               {isAtEnd ? 'Complete' : 'Next'}
-            </Button>
+            </TallButton>
             {formStep > 0 && (
-              <Button
+              <TallButton
                 onPress={back}
                 mode="text"
                 labelStyle={{
@@ -260,7 +261,7 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
                   marginTop: 8,
                 }}>
                 {'Back'}
-              </Button>
+              </TallButton>
             )}
           </View>
         )}

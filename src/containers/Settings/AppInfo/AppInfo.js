@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { List, DataTable, Divider, Text } from 'react-native-paper'
 import Styles from '../../../styles/index'
-import { APP_VERSION, VERUS_QR_VERSION } from '../../../../env/index'
+import { APP_VERSION } from '../../../../env/index'
 import { CoinLogos } from "../../../utils/CoinData/CoinData";
 import { openUrl } from "../../../utils/linking";
 
@@ -53,15 +53,6 @@ class AppInfo extends Component {
             right={() => (
               <Text style={Styles.listItemTableCell}>
                 {Platform.Version}
-              </Text>
-            )}
-          />
-          <Divider />
-          <List.Item
-            title={"VerusQR Version"}
-            right={() => (
-              <Text style={Styles.listItemTableCell}>
-                {VERUS_QR_VERSION}
               </Text>
             )}
           />

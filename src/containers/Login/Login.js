@@ -21,8 +21,9 @@ import {
   SEND_MODAL_USER_TO_AUTHENTICATE,
 } from '../../utils/constants/sendModal';
 import {useSelector} from 'react-redux';
+import TallButton from '../../components/LargerButton';
 
-const { height } = Dimensions.get("window")
+const {height} = Dimensions.get('window');
 
 const Login = props => {
   const defaultAccount = useSelector(
@@ -101,28 +102,28 @@ const Login = props => {
           {'Truth and Privacy for All'}
         </Text>
       </View>
-      <Button
+      <TallButton
         onPress={() => openAuthModal()}
         mode="contained"
         labelStyle={{fontWeight: 'bold'}}
         style={{
           position: 'absolute',
-          bottom: 80,
+          bottom: 86, // Adjusted position
           width: 280,
         }}>
         {'Login'}
-      </Button>
-      <Button
+      </TallButton>
+      <TallButton
         onPress={() => handleAddUser()}
         mode="text"
         labelStyle={{fontWeight: 'bold'}}
         style={{
           position: 'absolute',
-          bottom: 36,
+          bottom: 30, // Adjusted position
           width: 280,
         }}>
         {'Add a profile'}
-      </Button>
+      </TallButton>
     </SafeAreaView>
   );
 };

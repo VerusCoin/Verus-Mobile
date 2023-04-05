@@ -36,7 +36,7 @@ import {
 } from "../../../actions/actions/channels/dlight/dispatchers/AlertManager";
 import { createAlert, resolveAlert } from "../../../actions/actions/alert/dispatchers/alert";
 import { checkPinForUser } from "../../../utils/asyncStore/asyncStore";
-import { ENABLE_DLIGHT, ENABLE_WYRE, APP_VERSION } from '../../../../env/index'
+import { ENABLE_DLIGHT, APP_VERSION, WYRE_ACCESSIBLE } from '../../../../env/index'
 import { dlightEnabled } from "../../../utils/enabledChannels";
 import SetupSeedModal from "../../../components/SetupSeedModal/SetupSeedModal";
 import { DLIGHT_PRIVATE } from "../../../utils/constants/intervalConstants";
@@ -65,8 +65,8 @@ class ProfileSettings extends Component {
     };
 
     this.KEY_DERIVATION_VERSION_LABELS = {
-      [0]: "<= 0.2.1-beta",
-      [1]: APP_VERSION
+      [0]: "Legacy",
+      [1]: "Latest"
     }
   }
 
@@ -364,11 +364,7 @@ class ProfileSettings extends Component {
                 (key) => {
                   return {
                     key: Number(key),
-                    title: this.KEY_DERIVATION_VERSION_LABELS[key],
-                    description:
-                      this.KEY_DERIVATION_VERSION_LABELS[key] === APP_VERSION
-                        ? "Latest"
-                        : "Legacy",
+                    title: this.KEY_DERIVATION_VERSION_LABELS[key]
                   };
                 }
               )}
@@ -491,26 +487,27 @@ class ProfileSettings extends Component {
             />
           </TouchableOpacity>
         )}
-        <TouchableOpacity
-          onPress={() => this.toggleWyreEnabled()}
-          //disabled={this.props.wyreEnabled}
-        >
-          <Divider />
-          <List.Item
-            title={
-              this.props.wyreEnabled
-                ? "Wyre Enabled"
-                : "Enable Deprecated Wyre Features"
-            }
-            description={
-              this.props.wyreEnabled
-                ? ""
-                : "Enabling deprecated Wyre features will allow you to access your existing Wyre account from the services tab"
-            }
-            left={(props) => <List.Icon {...props} icon={"account-cash"} />}
-            descriptionNumberOfLines={100}
-          />
-        </TouchableOpacity>
+        {
+          WYRE_ACCESSIBLE && (
+            <TouchableOpacity onPress={() => this.toggleWyreEnabled()}>
+              <Divider />
+              <List.Item
+                title={
+                  this.props.wyreEnabled
+                    ? 'Wyre Enabled'
+                    : 'Enable Deprecated Wyre Features'
+                }
+                description={
+                  this.props.wyreEnabled
+                    ? ''
+                    : 'Enabling deprecated Wyre features will allow you to access your existing Wyre account from the services tab'
+                }
+                left={props => <List.Icon {...props} icon={'account-cash'} />}
+                descriptionNumberOfLines={100}
+              />
+            </TouchableOpacity>
+          )
+        }
         <TouchableOpacity onPress={() => this._openSettings(REMOVE_PROFILE)}>
           <Divider />
           <List.Item

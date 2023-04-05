@@ -1,7 +1,7 @@
 PODS:
   - _NIODataStructures (2.40.0)
   - boost (1.76.0)
-  - CGRPCZlib (1.0.0-alpha.19)
+  - CGRPCZlib (1.7.2)
   - CNIOAtomics (2.40.0)
   - CNIOBoringSSL (2.19.0)
   - CNIOBoringSSLShims (2.19.0):
@@ -22,14 +22,15 @@ PODS:
     - ReactCommon/turbomodule/core (= 0.68.5)
   - fmt (6.2.1)
   - glog (0.3.5)
-  - gRPC-Swift (1.0.0-alpha.19):
-    - CGRPCZlib (= 1.0.0-alpha.19)
-    - Logging (< 2, >= 1.2.0)
-    - SwiftNIO (< 3, >= 2.19.0)
-    - SwiftNIOHTTP2 (< 2, >= 1.12.2)
-    - SwiftNIOSSL (< 3, >= 2.8.0)
-    - SwiftNIOTransportServices (< 2, >= 1.6.0)
-    - SwiftProtobuf (< 2, >= 1.9.0)
+  - gRPC-Swift (1.7.2):
+    - CGRPCZlib (= 1.7.2)
+    - Logging (< 2.0.0, >= 1.4.0)
+    - SwiftNIO (< 3.0.0, >= 2.32.0)
+    - SwiftNIOExtras (< 2.0.0, >= 1.4.0)
+    - SwiftNIOHTTP2 (< 2.0.0, >= 1.19.2)
+    - SwiftNIOSSL (< 3.0.0, >= 2.14.0)
+    - SwiftNIOTransportServices (< 2.0.0, >= 1.11.1)
+    - SwiftProtobuf (< 2.0.0, >= 1.9.0)
   - InputMask (6.1.0)
   - Logging (1.4.0)
   - lottie-ios (3.4.4)
@@ -423,6 +424,17 @@ PODS:
     - CNIOLinux (= 2.40.0)
     - SwiftNIOConcurrencyHelpers (= 2.40.0)
     - SwiftNIOCore (= 2.40.0)
+  - SwiftNIOExtras (1.11.0):
+    - _NIODataStructures (< 3, >= 2.32.0)
+    - CNIOAtomics (< 3, >= 2.32.0)
+    - CNIODarwin (< 3, >= 2.32.0)
+    - CNIOLinux (< 3, >= 2.32.0)
+    - CNIOWindows (< 3, >= 2.32.0)
+    - SwiftNIO (< 3, >= 2.32.0)
+    - SwiftNIOConcurrencyHelpers (< 3, >= 2.32.0)
+    - SwiftNIOCore (< 3, >= 2.32.0)
+    - SwiftNIOEmbedded (< 3, >= 2.32.0)
+    - SwiftNIOPosix (< 3, >= 2.32.0)
   - SwiftNIOFoundationCompat (2.40.0):
     - _NIODataStructures (= 2.40.0)
     - CNIOAtomics (= 2.40.0)
@@ -520,15 +532,15 @@ PODS:
     - SwiftNIOFoundationCompat (< 3, >= 2.32.0)
     - SwiftNIOPosix (< 3, >= 2.32.0)
     - SwiftNIOTLS (< 3, >= 2.32.0)
-  - SwiftProtobuf (1.20.3)
+  - SwiftProtobuf (1.21.0)
   - TcpSockets (4.0.0):
     - React
   - Yoga (1.14.0)
   - ZcashLightClientKit (0.9.1):
-    - gRPC-Swift (= 1.0.0-alpha.19)
+    - gRPC-Swift (= 1.7.2)
     - SQLite.swift (~> 0.12.2)
   - ZcashLightClientKit/Tests (0.9.1):
-    - gRPC-Swift (= 1.0.0-alpha.19)
+    - gRPC-Swift (= 1.7.2)
     - SQLite.swift (~> 0.12.2)
 
 DEPENDENCIES:
@@ -622,6 +634,7 @@ SPEC REPOS:
     - SwiftNIOConcurrencyHelpers
     - SwiftNIOCore
     - SwiftNIOEmbedded
+    - SwiftNIOExtras
     - SwiftNIOFoundationCompat
     - SwiftNIOHPACK
     - SwiftNIOHTTP1
@@ -757,13 +770,13 @@ EXTERNAL SOURCES:
 
 CHECKOUT OPTIONS:
   ZcashLightClientKit:
-    :commit: 8e3f0269f4fb312d01face170520e954aaa7c71b
+    :commit: 607ae6be94deeb7310a6b7ab241a428356c9c44b
     :git: https://github.com/michaeltout/ZcashLightClientKit.git
 
 SPEC CHECKSUMS:
   _NIODataStructures: 3d45d8e70a1d17a15b1dc59d102c63dbc0525ffd
   boost: a7c83b31436843459a1961bfd74b96033dc77234
-  CGRPCZlib: befd9b92013c647f18aa9b7d9e9231d52e1ced1b
+  CGRPCZlib: 290fba348cc0c620ebb461f82c1c2d05bb7b9075
   CNIOAtomics: 8edf08644e5e6fa0f021c239be9e8beb1cd9ef18
   CNIOBoringSSL: 2c9c96c2e95f15e83fb8d26b9738d939cc39ae33
   CNIOBoringSSLShims: c5c9346e7bbd1040f4f8793a35441dda7487539a
@@ -777,7 +790,7 @@ SPEC CHECKSUMS:
   FBReactNativeSpec: 0e0d384ef17a33b385f13f0c7f97702c7cd17858
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
   glog: 476ee3e89abb49e07f822b48323c51c57124b572
-  gRPC-Swift: 75a7a8d7cd08177165ef971159afb84e5130cfc9
+  gRPC-Swift: 8426019a9c56401ee1b9ef00f15fb5530eb8cdd2
   InputMask: 71d291dc54d2deaeac6512afb6ec2304228c0bb7
   Logging: beeb016c9c80cf77042d62e83495816847ef108b
   lottie-ios: 8f97d3271e155c2d688875c29cd3c74908aef5f8
@@ -839,6 +852,7 @@ SPEC CHECKSUMS:
   SwiftNIOConcurrencyHelpers: 697370136789b1074e4535eaae75cbd7f900370e
   SwiftNIOCore: 473fdfe746534d7aa25766916459eeaf6f92ef49
   SwiftNIOEmbedded: ffcb5147db67d9686c8366b7f8427b36132f2c8a
+  SwiftNIOExtras: 481f74d6bf0b0ef699905ed66439cb019c4975c9
   SwiftNIOFoundationCompat: b9cdbea4806e4a12e9f66d9696fa3b98c4c3232b
   SwiftNIOHPACK: e7d3ff5bd671528adfb11cd4e0c84ddfdc3c4453
   SwiftNIOHTTP1: ef56706550a1dc135ea69d65215b9941e643c23b
@@ -847,11 +861,11 @@ SPEC CHECKSUMS:
   SwiftNIOSSL: d153c5a6fc5b2301b0519b4c4d037a9414212da6
   SwiftNIOTLS: 598af547490133e9aac52aed0c23c4a90c31dcfc
   SwiftNIOTransportServices: 0b2b407819d82eb63af558c5396e33c945759503
-  SwiftProtobuf: b02b5075dcf60c9f5f403000b3b0c202a11b6ae1
+  SwiftProtobuf: afced68785854575756db965e9da52bbf3dc45e7
   TcpSockets: 4ef55305239923b343ed0a378b1fac188b1373b0
   Yoga: c4d61225a466f250c35c1ee78d2d0b3d41fe661c
-  ZcashLightClientKit: d5a681033b3f59c59c93837232ed7890d3e07918
+  ZcashLightClientKit: 4e4273f2e841e982fedad461a9008cca19089f5c
 
-PODFILE CHECKSUM: cac9c8c8bf69eea5d96a815eb63c90658fd745be
+PODFILE CHECKSUM: 2ea7addfb99cd8f4e5f9742ed28cac88e62bc28c
 
 COCOAPODS: 1.11.3

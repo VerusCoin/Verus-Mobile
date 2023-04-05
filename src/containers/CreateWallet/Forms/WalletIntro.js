@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {View, Dimensions} from 'react-native';
 import {Text, Paragraph, Button} from 'react-native-paper';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
+import TallButton from '../../../components/LargerButton';
 import Colors from '../../../globals/colors';
 import { MyWallet } from '../../../images/customIcons';
 import { getKey } from '../../../utils/keyGenerator/keyGenerator';
@@ -68,19 +69,19 @@ export default function WalletIntro({ navigation, setNewSeed }) {
           {"Create a wallet, or import a seed or private key you already control."}
         </Paragraph>
       </View>
-      <Button
+      <TallButton
         onPress={() => createNewWalletSync()}
         mode="contained"
         labelStyle={{fontWeight: "bold"}}
         disabled={loading}
         style={{
           position: "absolute",
-          bottom: 80,
+          bottom: 96,
           width: 280
         }}>
         {"New Wallet"}
-      </Button>
-      <Button
+      </TallButton>
+      <TallButton
         onPress={() => navigation.navigate("ImportWallet")}
         mode="text"
         labelStyle={{fontWeight: "bold", color: Colors.primaryColor}}
@@ -91,7 +92,7 @@ export default function WalletIntro({ navigation, setNewSeed }) {
           width: 280
         }}>
         {"Import Wallet"}
-      </Button>
+      </TallButton>
     </View>
   );
 }

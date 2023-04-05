@@ -1,8 +1,9 @@
 import React from 'react';
 import {View, Dimensions, TouchableWithoutFeedback, Keyboard} from 'react-native';
-import {Text, Paragraph, Button, TextInput} from 'react-native-paper';
+import {Text, Paragraph, TextInput} from 'react-native-paper';
 import { useSelector } from 'react-redux';
 import { createAlert } from '../../../../actions/actions/alert/dispatchers/alert';
+import TallButton from '../../../../components/LargerButton';
 import Colors from '../../../../globals/colors';
 
 export default function ChooseName({ profileName, setProfileName, navigation }) {
@@ -102,7 +103,7 @@ export default function ChooseName({ profileName, setProfileName, navigation }) 
             onChangeText={(text) => setProfileName(text)}
           />
         </View>
-        {!isKeyboardActive && <Button
+        {!isKeyboardActive && <TallButton
           onPress={next}
           mode="contained"
           labelStyle={{fontWeight: "bold"}}
@@ -113,7 +114,7 @@ export default function ChooseName({ profileName, setProfileName, navigation }) 
             width: 280
           }}>
           {"Next"}
-        </Button>}
+        </TallButton>}
       </View>
     </TouchableWithoutFeedback>
   );
