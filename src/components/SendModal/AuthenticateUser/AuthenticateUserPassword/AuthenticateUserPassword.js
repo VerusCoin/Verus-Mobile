@@ -77,66 +77,66 @@ const AuthenticateUserPassword = props => {
   }, []);
 
   goBack = () => {
+    Keyboard.dismiss();
+    
     props.navigation.navigate(SEND_MODAL_FORM_STEP_FORM);
     props.updateSendFormData(SEND_MODAL_USER_TO_AUTHENTICATE, null);
   }
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <ScrollView
+    <View
+      style={{
+        ...styles.flexBackground,
+        ...styles.fullWidth,
+        ...styles.centerContainer,
+        justifyContent: 'flex-start',
+      }}
+      contentContainerStyle={{
+      }}>
+      <View style={styles.wideBlock}>
+        <TextInput
+          returnKeyType="done"
+          label={`Enter password for ${account != null ? account.id : ""}`}
+          value={password}
+          mode="outlined"
+          onChangeText={text => setPassword(text)}
+          autoCapitalize={'none'}
+          autoCorrect={false}
+          secureTextEntry={true}
+        />
+      </View>
+      <View style={styles.wideBlock}>
+        <Checkbox.Item
+          color={Colors.primaryColor}
+          label={'Make default'}
+          status={makeDefaultAccount ? 'checked' : 'unchecked'}
+          onPress={() => setMakeDefaultAccount(!makeDefaultAccount)}
+          mode="android"
+        />
+      </View>
+      <View
         style={{
-          ...styles.flexBackground,
-          ...styles.fullWidth,
-        }}
-        contentContainerStyle={{
-          ...styles.centerContainer,
-          justifyContent: 'flex-start',
+          ...styles.fullWidthBlock,
+          paddingHorizontal: 16,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          display: 'flex',
         }}>
-        <View style={styles.wideBlock}>
-          <TextInput
-            returnKeyType="done"
-            label={`Enter password for ${account != null ? account.id : ""}`}
-            value={password}
-            mode="outlined"
-            onChangeText={text => setPassword(text)}
-            autoCapitalize={'none'}
-            autoCorrect={false}
-            secureTextEntry={true}
-          />
-        </View>
-        <View style={styles.wideBlock}>
-          <Checkbox.Item
-            color={Colors.primaryColor}
-            label={'Make default'}
-            status={makeDefaultAccount ? 'checked' : 'unchecked'}
-            onPress={() => setMakeDefaultAccount(!makeDefaultAccount)}
-            mode="android"
-          />
-        </View>
-        <View
-          style={{
-            ...styles.fullWidthBlock,
-            paddingHorizontal: 16,
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            display: 'flex',
-          }}>
-          <Button
-            color={Colors.warningButtonColor}
-            style={{width: 148}}
-            onPress={() => goBack()}>
-            Back
-          </Button>
-          <Button
-            color={Colors.verusGreenColor}
-            style={{width: 148}}
-            disabled={password.length == 0}
-            onPress={() => tryUnlockAccount(password)}>
-            Unlock
-          </Button>
-        </View>
-      </ScrollView>
-    </TouchableWithoutFeedback>
+        <Button
+          color={Colors.warningButtonColor}
+          style={{width: 148}}
+          onPress={() => goBack()}>
+          Back
+        </Button>
+        <Button
+          color={Colors.verusGreenColor}
+          style={{width: 148}}
+          disabled={password.length == 0}
+          onPress={() => tryUnlockAccount(password)}>
+          Unlock
+        </Button>
+      </View>
+    </View>
   );
 };
 
