@@ -1,4 +1,4 @@
-package com.verusmobile;
+package org.autonomoussoftwarefoundation.verusmobile.android;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;

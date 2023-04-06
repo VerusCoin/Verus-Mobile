@@ -1,4 +1,4 @@
-package com.verusmobile;
+package org.autonomoussoftwarefoundation.verusmobile.android;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
