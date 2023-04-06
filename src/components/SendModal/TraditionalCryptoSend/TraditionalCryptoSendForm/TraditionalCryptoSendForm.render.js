@@ -27,12 +27,13 @@ export const TraditionalCryptoSendFormRender = function () {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <ScrollView
         style={{
-          ...Styles.flexBackground,
+          backgroundColor: Colors.secondaryColor,
           ...Styles.fullWidth,
         }}
         contentContainerStyle={{
-          ...Styles.centerContainer,
           justifyContent: "flex-start",
+          alignItems: "center",
+          backgroundColor: Colors.secondaryColor
         }}
       >
         <View style={Styles.wideBlock}>
