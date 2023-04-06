@@ -770,7 +770,7 @@ EXTERNAL SOURCES:
 
 CHECKOUT OPTIONS:
   ZcashLightClientKit:
-    :commit: 607ae6be94deeb7310a6b7ab241a428356c9c44b
+    :commit: 998281cdc402f4dedf8dd1a2136339a6cdb4f6e8
     :git: https://github.com/michaeltout/ZcashLightClientKit.git
 
 SPEC CHECKSUMS:
