@@ -18,7 +18,7 @@
     "@babel/plugin-transform-shorthand-properties": "7.18.6",
     "@babel/plugin-transform-template-literals": "7.18.9",
     "@babel/preset-typescript": "7.18.6",
-    "@bitgo/utxo-lib": "git+https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337",
+    "@bitgo/utxo-lib": "git+https://github.com/VerusCoin/BitGoJS.git#d8358f06f243e622b7700382b4b93c1b46014126",
     "@ethersproject/signing-key": "5.0.5",
     "@react-native-async-storage/async-storage": "1.17.10",
     "@react-native-camera-roll/camera-roll": "5.0.4",
