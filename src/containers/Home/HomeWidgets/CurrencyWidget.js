@@ -10,6 +10,7 @@ import { truncateDecimal } from '../../../utils/math';
 import { formatCurrency } from "react-native-format-currency";
 import SubWalletsLogo from '../../../images/customIcons/SubWallets.svg'
 import { extractDisplaySubWallets } from '../../../utils/subwallet/extractSubWallets';
+import { normalizeNum } from '../../../utils/normalizeNum';
 
 const CurrencyWidget = props => {
   const { currencyBalance, coinObj } = props;
@@ -39,7 +40,7 @@ const CurrencyWidget = props => {
     if (uniRate != null && currencyBalance != null && displayCurrency != null) {
       const price = BigNumber(uniRate);
 
-      const displayValueRaw = Number((BigNumber(currencyBalance).multipliedBy(price)).toFixed(2));
+      const displayValueRaw = normalizeNum(Number((BigNumber(currencyBalance).multipliedBy(price))), 2)[3]
 
       const [valueFormattedWithSymbol, valueFormattedWithoutSymbol, symbol] =
         formatCurrency({amount: displayValueRaw, code: displayCurrency});
@@ -116,13 +117,13 @@ const CurrencyWidget = props => {
           </View>
         </View>
         <Paragraph style={{ fontSize: 16, paddingTop: 8, fontWeight: "500" }}>
-          {uniValueDisplay === '-' ? `${currencyBalance == null ? '-' : truncateDecimal(currencyBalance, 8)} ${
+          {uniValueDisplay === '-' ? `${currencyBalance == null ? '-' : normalizeNum(Number(currencyBalance), 8)[3]} ${
               coinObj.display_ticker
             }` : uniValueDisplay}
         </Paragraph>
         <Paragraph style={{ fontSize: 12 }}>
           {
-            uniValueDisplay === '-' ? uniValueDisplay : `${currencyBalance == null ? '-' : truncateDecimal(currencyBalance, 8)} ${
+            uniValueDisplay === '-' ? uniValueDisplay : `${currencyBalance == null ? '-' : normalizeNum(Number(currencyBalance), 8)[3]} ${
               coinObj.display_ticker
             }`
           }
