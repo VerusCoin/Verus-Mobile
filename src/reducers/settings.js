@@ -14,6 +14,7 @@ import {
 } from '../utils/constants/storeType'
 import { DLIGHT_PRIVATE } from '../utils/constants/intervalConstants'
 import { USD } from '../utils/constants/currencies'
+import { Platform } from 'react-native'
 
 export const settings = (state = {
   btcFeesAdvanced: false,
@@ -24,7 +25,8 @@ export const settings = (state = {
   generalWalletSettings: {
     maxTxCount: 10,
     displayCurrency: USD,
-    defaultAccount: null
+    defaultAccount: null,
+    homeCardDragDetection: Platform.OS === 'ios' ? true : false
   },
   buySellSettings: {}, //e.g. {user1': {buySellEnabled: true, wyreData: {}}, 'user2: {buySellEnabled: false, wyreData: {}}}
   coinSettings: {}, //e.g. {VRSC: {verificationLvl: 2, verificationLock: false, channels: ['dlight', 'electrum', 'general'], privateAddrs: 100}}

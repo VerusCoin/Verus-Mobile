@@ -4,15 +4,14 @@ import { FAB, Portal } from 'react-native-paper';
 import Colors from '../../../globals/colors';
 
 const HomeFAB = (props) => {
-  const { handleAddCoin, handleVerusPay, handleEditCards } = props
+  const { handleAddCoin, handleVerusPay, handleEditCards, showConfigureHomeCards } = props
   const [state, setState] = React.useState({ open: false });
 
   const onStateChange = ({ open }) => setState({ open });
 
   const { open } = state;
 
-  const actions =
-    Platform.OS === 'ios'
+  const actions = !showConfigureHomeCards
       ? [
           {
             icon: 'qrcode-scan',
