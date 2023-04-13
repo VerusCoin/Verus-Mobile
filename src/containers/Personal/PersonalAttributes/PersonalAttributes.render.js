@@ -54,8 +54,10 @@ export const PersonalAttributesRender = function () {
                       this.state.attributes.birthday.year
                     )
               }
-              onSelect={() => {}}
-              cancel={(date) => this.setBirthday(date)}
+              onSelect={(date) => this.setBirthday(date)}
+              onCancel={() => this.setState({
+                birthdaySelectorModalOpen: false
+              })}
             />
           )}
         </Portal>
