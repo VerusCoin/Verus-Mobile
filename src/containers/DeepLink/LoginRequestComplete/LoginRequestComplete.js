@@ -1,30 +1,26 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {ScrollView, View, TouchableOpacity} from 'react-native';
 import Styles from '../../../styles/index';
-import {
-  primitives,
-} from "verusid-ts-client";
+import {primitives} from 'verusid-ts-client';
 import {createAlert} from '../../../actions/actions/alert/dispatchers/alert';
 import {Button, Text} from 'react-native-paper';
 import {handleRedirect} from '../../../utils/deeplink/handleRedirect';
 import AnimatedSuccessCheckmark from '../../../components/AnimatedSuccessCheckmark';
-import { copyToClipboard } from '../../../utils/clipboard/clipboard';
-import { CommonActions } from '@react-navigation/native';
+import {copyToClipboard} from '../../../utils/clipboard/clipboard';
+import {CommonActions} from '@react-navigation/native';
 import Colors from '../../../globals/colors';
+import {URL} from 'react-native-url-polyfill';
+import AnimatedActivityIndicator from '../../../components/AnimatedActivityIndicator';
 
 const LoginRequestComplete = props => {
   const {signedResponse} = props.route.params;
   const res = new primitives.LoginConsentResponse(signedResponse);
-  const redirects = res.decision.request.challenge.redirect_uris;
-  const redirectinfo = redirects ? redirects[0] : null;
-
-  const tryRedirect = async () => {
-    try {
-      return handleRedirect(signedResponse, redirectinfo);
-    } catch (e) {
-      createAlert('Error', e.message);
-    }
-  };
+  const redirects = res.decision.request.challenge.redirect_uris
+    ? res.decision.request.challenge.redirect_uris
+    : [];
+  let url;
+  let urlDisplayString = '';
+  const [loading, setLoading] = useState(false);
 
   const cancel = () => {
     props.navigation.dispatch(
@@ -35,14 +31,47 @@ const LoginRequestComplete = props => {
     );
   };
 
-  const completeDeeplink = async () => {
-    if (redirectinfo && redirectinfo.uri) {
-      await tryRedirect()
-      cancel()
+  redirects.sort(a => {
+    if (a.vdxfkey === primitives.LOGIN_CONSENT_REDIRECT_VDXF_KEY.vdxfid) {
+      return -1;
     } else {
-      cancel()
+      return 1;
+    }
+  });
+
+  const redirectinfo = redirects ? redirects[0] : null;
+
+  const isWebhook =
+    redirectinfo.vdxfkey === primitives.LOGIN_CONSENT_WEBHOOK_VDXF_KEY.vdxfid;
+
+  if (!isWebhook) {
+    try {
+      url = new URL(redirectinfo.uri);
+      urlDisplayString = `${url.protocol}//${url.host}`;
+    } catch(e) {
+      createAlert('Error', e.message);
+      cancel();
     }
   }
+
+  const tryRedirect = async () => {
+    try {
+      setLoading(true);
+      return await handleRedirect(signedResponse, redirectinfo);
+    } catch (e) {
+      setLoading(false);
+      createAlert('Error', e.message);
+    }
+  };
+
+  const completeDeeplink = async () => {
+    if (redirectinfo && redirectinfo.uri) {
+      await tryRedirect();
+      cancel();
+    } else {
+      cancel();
+    }
+  };
 
   return (
     <ScrollView
@@ -59,14 +88,22 @@ const LoginRequestComplete = props => {
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {'Success!'}
+          {loading ? "Loading..." : 'Success!'}
         </Text>
         <View style={{paddingVertical: 16}}>
-          <AnimatedSuccessCheckmark
-            style={{
-              width: 128,
-            }}
-          />
+          {loading ? (
+            <AnimatedActivityIndicator
+              style={{
+                width: 128,
+              }}
+            />
+          ) : (
+            <AnimatedSuccessCheckmark
+              style={{
+                width: 128,
+              }}
+            />
+          )}
         </View>
         {redirectinfo != null && (
           <TouchableOpacity
@@ -85,10 +122,12 @@ const LoginRequestComplete = props => {
                 fontSize: 20,
                 color: Colors.verusDarkGray,
               }}>
-              {`Press done to complete login and return to\n`}
+              {`Press done to complete login${
+                isWebhook ? '' : ' and return to\n'
+              }`}
               <Text
                 style={{color: Colors.basicButtonColor, textAlign: 'center'}}>
-                {redirectinfo.uri}
+                {urlDisplayString}
               </Text>
             </Text>
           </TouchableOpacity>
@@ -98,11 +137,13 @@ const LoginRequestComplete = props => {
             width: '90%',
             flexDirection: 'row',
             justifyContent: 'space-evenly',
+            paddingTop: 16,
           }}>
           <Button
             color={Colors.warningButtonColor}
             style={{width: 148}}
             labelStyle={{fontSize: 18}}
+            disabled={loading}
             onPress={() => cancel()}>
             Cancel
           </Button>
@@ -110,6 +151,7 @@ const LoginRequestComplete = props => {
             color={Colors.verusGreenColor}
             style={{width: 148}}
             labelStyle={{fontSize: 18}}
+            disabled={loading}
             onPress={() => completeDeeplink()}>
             Done
           </Button>
