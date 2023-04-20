@@ -27,6 +27,8 @@ import {
 import VerusIdWidget from './HomeWidgets/VerusIdWidget';
 
 export const HomeRender = function () {
+  const dragDetection = this.dragDetectionEnabled()
+
   return (
     <Portal.Host>
       <Portal>
@@ -51,6 +53,7 @@ export const HomeRender = function () {
         handleAddCoin={() => this._addCoin()}
         handleVerusPay={() => this._verusPay()}
         handleEditCards={() => this.setEditingCards(!this.state.editingCards)}
+        showConfigureHomeCards={!dragDetection}
       />
       <Banner
         visible={this.state.editingCards}
@@ -109,6 +112,7 @@ export const HomeRenderWidget = function (widgetId) {
 
 export const HomeRenderCoinsList = function () {
   const {widgets} = this.state;
+  const dragDetection = this.dragDetectionEnabled()
 
   return widgets.length == 0 ? (
     <View />
@@ -122,8 +126,8 @@ export const HomeRenderCoinsList = function () {
       }}>
       <SortableContainer customconfig={{}}>
         <SortableGrid
-          minDist={Platform.OS === 'ios' ? 60 : 0}
-          animate={Platform.OS === 'ios' ? true : this.state.editingCards}
+          minDist={dragDetection ? 60 : 0}
+          animate={dragDetection ? true : this.state.editingCards}
           refreshControl={
             <RefreshControl
               refreshing={this.state.loading}
@@ -131,7 +135,7 @@ export const HomeRenderCoinsList = function () {
             />
           }
           onPressDetected={
-            Platform.OS === 'ios' || !this.state.editingCards
+            !this.state.editingCards
               ? id => this.handleWidgetPress(id)
               : () => {}
           }

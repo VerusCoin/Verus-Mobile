@@ -234,8 +234,7 @@ export const PersonalPaymentMethodsEditBankAccountRender = function () {
                       )
                     )
               }
-              onSelect={() => {}}
-              cancel={(date) => {
+              onSelect={(date) => {
                 this.setState(
                   {
                     bankAccount: {
@@ -246,6 +245,7 @@ export const PersonalPaymentMethodsEditBankAccountRender = function () {
                   () => this.closeModal()
                 );
               }}
+              onCancel={() => this.closeModal()}
             />
           )}
           {this.state.currentPhoneNumberModal != null && (
