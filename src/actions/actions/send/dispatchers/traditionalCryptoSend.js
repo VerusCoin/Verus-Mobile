@@ -1,9 +1,8 @@
 import BigNumber from "bignumber.js";
 import { MID_VERIFICATION, NO_VERIFICATION } from "../../../../utils/constants/constants";
-import { isNumber, satsToCoins, truncateDecimal } from "../../../../utils/math";
-import { networks } from 'bitgo-utxo-lib';
+import { isNumber, satsToCoins } from "../../../../utils/math";
+import { networks } from '@bitgo/utxo-lib';
 import { extractIdentityAddress } from "../../../../utils/api/channels/verusid/callCreators";
-import { createAlert } from "../../alert/dispatchers/alert";
 import { send } from "../../../../utils/api/routers/send";
 import { preflightSend } from "../../../../utils/api/routers/preflightSend";
 import store from "../../../../store";
@@ -34,9 +33,9 @@ export const traditionalCryptoSend = async (
   const activeUser = state.authentication.activeAccount;
   const coinSettings = state.settings.coinSettings;
 
-  const network = networks[coinObj.id.toLowerCase()]
-    ? networks[coinObj.id.toLowerCase()]
-    : networks["default"];
+  const network = networks[coinObj.bitgojs_network_key]
+    ? networks[coinObj.bitgojs_network_key]
+    : networks["verus"];
 
   let verifyMerkle, verifyTxid;
 

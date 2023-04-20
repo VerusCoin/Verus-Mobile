@@ -27,7 +27,7 @@ SOFTWARE.
 import BigNumber from 'bignumber.js';
 import { satsToCoins } from '../math';
 
-var bitcoin = require('bitgo-utxo-lib');
+var bitcoin = require("@bitgo/utxo-lib");
 // zcash fallback
 const Buffer = require('safe-buffer').Buffer;
 const {

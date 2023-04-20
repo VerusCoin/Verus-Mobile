@@ -1,13 +1,9 @@
 const bs58check = require('bs58check');
-
-import { isKomodoCoin } from 'agama-wallet-lib/src/coin-helpers';
-import electrumJSNetworks from 'agama-wallet-lib/src/bitcoinjs-networks';
-
 import {
   wifToWif,
   seedToWif,
   seedToPriv
-} from 'agama-wallet-lib/src/keys';
+} from './agama-wallet-lib/keys';
 import { ETH, ERC20, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from './constants/intervalConstants';
 import ethers from 'ethers';
 import VerusLightClient from 'react-native-verus-light-client'
@@ -15,6 +11,7 @@ import {
   KEY_DERIVATION_VERSION,
 } from "../../env/index";
 import { validateMnemonic } from "bip39"
+import { networks } from "@bitgo/utxo-lib"
 
 const deriveLightwalletdKeyPair = async (seed) => {
   const spendingKey = await parseDlightSeed(seed);
@@ -27,7 +24,7 @@ const deriveLightwalletdKeyPair = async (seed) => {
   };
 };
 
-const deriveElectrumKeypair = async (seed, coinID) => {
+const deriveElectrumKeypair = async (seed, coinObj) => {
   let privKey
   let isWif = false;
   let _seedToWif;
@@ -42,16 +39,12 @@ const deriveElectrumKeypair = async (seed, coinID) => {
   if (isWif) {
     _seedToWif = wifToWif(
       privKey,
-      isKomodoCoin(coinID)
-        ? electrumJSNetworks.kmd
-        : electrumJSNetworks[coinID.toLowerCase()]
+      networks[coinObj.bitgojs_network_key]
     );
   } else {
     _seedToWif = seedToWif(
       seed,
-      isKomodoCoin(coinID)
-        ? electrumJSNetworks.kmd
-        : electrumJSNetworks[coinID.toLowerCase()],
+      networks[coinObj.bitgojs_network_key],
       true
     );
   }
@@ -65,8 +58,8 @@ const deriveElectrumKeypair = async (seed, coinID) => {
   return keyObj;
 };
 
-const deriveWeb3Keypair = async (seed, coinID) => {
-  const electrumKeys = await deriveElectrumKeypair(seed, coinID);
+const deriveWeb3Keypair = async (seed, coinObj) => {
+  const electrumKeys = await deriveElectrumKeypair(seed, coinObj.id);
   let seedIsEthPrivkey = false
 
   try {
@@ -101,14 +94,14 @@ const CHANNEL_DERIVATIONS = {
   [WYRE_SERVICE]: deriveWyreKeypair
 }
 
-export const deriveKeyPairV1 = async (seed, coinID, channel) => {
+export const deriveKeyPairV1 = async (seed, coinObj, channel) => {
   if (CHANNEL_DERIVATIONS[channel]) {
-    return await CHANNEL_DERIVATIONS[channel](seed, coinID)
-  } else return await deriveElectrumKeypair(seed, coinID)
+    return await CHANNEL_DERIVATIONS[channel](seed, coinObj)
+  } else return await deriveElectrumKeypair(seed, coinObj)
 }
 
 // This is purely for backwards compatibility, DO NOT USE
-export const deriveKeypairV0 = async (seed, coinID, channel) => {
+export const deriveKeypairV0 = async (seed, coinObj, channel) => {
   if (channel === DLIGHT_PRIVATE) {
     const spendingKey = await parseDlightSeed(seed)
 
@@ -129,9 +122,9 @@ export const deriveKeypairV0 = async (seed, coinID, channel) => {
     } catch (e) {}
   
     if (isWif) {
-      _seedToWif = wifToWif(seed, isKomodoCoin(coinID) ? electrumJSNetworks.kmd : electrumJSNetworks[coinID.toLowerCase()]);
+      _seedToWif = wifToWif(seed, networks[coinObj.bitgojs_network_key]);
     } else {
-      _seedToWif = seedToWif(seed, isKomodoCoin(coinID) ? electrumJSNetworks.kmd : electrumJSNetworks[coinID.toLowerCase()], true);
+      _seedToWif = seedToWif(seed, networks[coinObj.bitgojs_network_key], true);
     }
   
     keyObj = {
@@ -153,10 +146,10 @@ export const DERIVATION_VERSIONS = {
   [1]: deriveKeyPairV1
 }
 
-export const deriveKeyPair = async (seed, coinID, channel, version = KEY_DERIVATION_VERSION) => {
+export const deriveKeyPair = async (seed, coinObj, channel, version = KEY_DERIVATION_VERSION) => {
   if (DERIVATION_VERSIONS[version] == null) throw new Error("Cannot derive keypair for version " + version)
   else {
-    return await DERIVATION_VERSIONS[version](seed, coinID, channel)
+    return await DERIVATION_VERSIONS[version](seed, coinObj, channel)
   }
 }
 

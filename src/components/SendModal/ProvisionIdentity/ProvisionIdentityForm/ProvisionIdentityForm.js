@@ -1,4 +1,4 @@
-import { fromBase58Check } from "bitgo-utxo-lib/src/address";
+import { fromBase58Check } from "@bitgo/utxo-lib/dist/src/address";
 import { Component } from "react"
 import { Alert } from "react-native";
 import { connect } from 'react-redux'
@@ -167,12 +167,12 @@ class ProvisionIdentityForm extends Component {
     return false;
   };
 
-  getPotentialPrimaryAddresses = async (chainTicker, channel) => {
+  getPotentialPrimaryAddresses = async (coinObj, channel) => {
     const seeds = await requestSeeds();
 
     const seed = seeds[channel];
 
-    const keyObj = await deriveKeyPair(seed, chainTicker, channel);
+    const keyObj = await deriveKeyPair(seed, coinObj, channel);
     const {addresses} = keyObj;
 
     return addresses;
@@ -201,7 +201,7 @@ class ProvisionIdentityForm extends Component {
       }
 
       const addrs = await this.getPotentialPrimaryAddresses(
-        coinObj.id,
+        coinObj,
         ELECTRUM,
       );
 

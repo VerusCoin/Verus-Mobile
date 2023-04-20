@@ -1,8 +1,8 @@
+import { reverse } from '../buffer';
+
 const crypto = require('react-native-crypto');
 const Buffer = require('safe-buffer').Buffer;
-const bitcoin = require('bitgo-utxo-lib')
-
-import reverse from 'buffer-reverse';
+const bitcoin = require("@bitgo/utxo-lib")
 
 //Data must be a buffer, returns hash of buffer
 export const sha256 = (data) => {

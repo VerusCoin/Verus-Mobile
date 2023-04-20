@@ -51,7 +51,7 @@ export default function CreateProfileStackScreens(props) {
         for (const startCoin of START_COINS) {
           await deriveKeyPair(
             seed,
-            startCoin,
+            findCoinObj(startCoin),
             ELECTRUM,
             KEY_DERIVATION_VERSION,
           );

@@ -4,7 +4,7 @@ import { TxDecoder } from '../../../../crypto/txDecoder'
 import { hashRawTx, hexHashToDecimal } from '../../../../crypto/hash'
 import { arraysEqual } from '../../../../objectManip'
 import { resolveSequentially } from '../../../../promises'
-import { networks } from 'bitgo-utxo-lib'
+import { networks } from '@bitgo/utxo-lib'
 import { coinsToSats, satsToCoins, kmdCalcInterest, truncateDecimal } from '../../../../math'
 import { ELECTRUM } from '../../../../constants/intervalConstants'
 import BigNumber from 'bignumber.js'
@@ -12,7 +12,6 @@ import BigNumber from 'bignumber.js'
 export const getUnspent = (coinObj, activeUser) => {
   const callType = 'listunspent'
   let params = {}
-  const coinID = coinObj.id
 
   if (
     activeUser.keys[coinObj.id] != null &&
@@ -31,7 +30,7 @@ export const getUnspent = (coinObj, activeUser) => {
   }
 
   return new Promise((resolve, reject) => {
-    electrumRequest(coinObj.electrum_endpoints, callType, params, coinID)
+    electrumRequest(coinObj, callType, params)
     .then((response) => {
       if(response != false) {
         response.result.address = params.address
@@ -61,7 +60,7 @@ export const getUnspent = (coinObj, activeUser) => {
  * on utxos to calculate locktime. (WILL RESULT IN LOSS OF INTEREST IF KMD TRANSACTION IS SENT WITH THIS ENABLED)
  */
 export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, verifyTxid = false, overrideKmdInterest = false) => {
-  const network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
+  const network = networks[coinObj.bitgojs_network_key] ? networks[coinObj.bitgojs_network_key] : networks['verus']
   
   let formattedUtxos = []
   let firstServer

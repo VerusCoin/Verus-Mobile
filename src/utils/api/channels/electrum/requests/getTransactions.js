@@ -1,13 +1,12 @@
 import { electrumRequest, getBlockInfo, getOneTransaction } from '../callCreators'
 import { TxDecoder, formatTx } from '../../../../crypto/txDecoder';
 import NULL_TX from '../../../../crypto/nullTx'
-import { networks } from 'bitgo-utxo-lib';
+import { networks } from '@bitgo/utxo-lib';
 const Buffer = require('safe-buffer').Buffer;
 
 export const getOneTransactionList = (coinObj, activeUser, maxlength = 10) => {
   const callType = 'listtransactions'
   let params = { raw: true, maxlength: maxlength }
-  const coinID = coinObj.id
 
   if (
     activeUser.keys[coinObj.id] != null &&
@@ -26,7 +25,7 @@ export const getOneTransactionList = (coinObj, activeUser, maxlength = 10) => {
   }
 
   return new Promise((resolve, reject) => {
-    electrumRequest(coinObj.electrum_endpoints, callType, params, coinID)
+    electrumRequest(coinObj, callType, params)
     .then((response) => {
       resolve(response)
     })
@@ -36,7 +35,7 @@ export const getOneTransactionList = (coinObj, activeUser, maxlength = 10) => {
 
 // TODO: Add getTransaction request headers to header
 export const getParsedTransactionList = (coinObj, activeUser, maxlength) => {
-  let network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
+  let network = networks[coinObj.bitgojs_network_key] ? networks[coinObj.bitgojs_network_key] : networks['verus']
   let header = {}
 
   return new Promise((resolve, reject) => {
@@ -115,7 +114,7 @@ export const getParsedTransactionList = (coinObj, activeUser, maxlength) => {
       let consolidatedTxs = gottenBlocksInfo.pop()
       let _parsedTxList = []
       let error = false
-      let network = networks[coinObj.id.toLowerCase()] ? networks[coinObj.id.toLowerCase()] : networks['default']
+      let network = networks[coinObj.bitgojs_network_key] ? networks[coinObj.bitgojs_network_key] : networks['verus']
 
       for (let i = 0; i < gottenBlocksInfo.length; i++) {
         if (i < consolidatedTxs.transactions.length) {

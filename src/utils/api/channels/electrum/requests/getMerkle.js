@@ -4,10 +4,9 @@ import { calculateMerkleRoot } from '../../../../crypto/verifyMerkle'
 export const getMerkleHashes = (coinObj, txid, height, toSkip) => {
   const callType = 'getmerkle'
   let params = { txid: txid, height: height }
-  const coinID = coinObj.id
 
   return new Promise((resolve, reject) => {
-    electrumRequest(coinObj.electrum_endpoints, callType, params, coinID, toSkip)
+    electrumRequest(coinObj, callType, params, toSkip)
     .then((response) => {
       resolve(response)
     })

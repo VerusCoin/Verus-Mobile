@@ -211,7 +211,7 @@ export const authenticateAccount = async (account, password) => {
 
                   const keyObj = await deriveKeyPair(
                     decryptkey(password, seeds[seedChannel]),
-                    activeCoins[i].id,
+                    activeCoins[i],
                     channel,
                     account.keyDerivationVersion == null
                       ? 0
@@ -305,7 +305,7 @@ export const addKeypairs = async (
     ) {
       const keyObj = await deriveKeyPair(
         seed,
-        coinID,
+        coinObj,
         seedType,
         derivationVersion
       );
