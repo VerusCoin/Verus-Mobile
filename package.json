@@ -1,6 +1,6 @@
 {
   "name": "verusmobile",
-  "version": "0.3.0",
+  "version": "0.9.0",
   "private": true,
   "scripts": {
     "postinstall": "./node_modules/.bin/rn-nodeify --hack --install --yarn && npx jetify",
