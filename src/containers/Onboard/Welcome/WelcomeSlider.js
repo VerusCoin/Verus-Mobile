@@ -104,7 +104,7 @@ export default function WelcomeSlider(props) {
             key: 1,
             graphic: EncryptLocally,
             title: 'Encrypt Locally',
-            text: 'Your personal profile with store and encrypt your wallet addresses locally.',
+            text: 'Your profile stores and encrypts your wallet addresses locally.',
           },
           {
             key: 2,

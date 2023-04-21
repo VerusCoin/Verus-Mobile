@@ -1829,9 +1829,9 @@
     "@bitgo/blake2b-wasm" "^3.0.1"
     nanoassert "^2.0.0"
 
-"@bitgo/utxo-lib@git+https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337":
+"@bitgo/utxo-lib@git+https://github.com/VerusCoin/BitGoJS.git#d8358f06f243e622b7700382b4b93c1b46014126":
   version "1.9.6"
-  resolved "git+https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337"
+  resolved "git+https://github.com/VerusCoin/BitGoJS.git#d8358f06f243e622b7700382b4b93c1b46014126"
   dependencies:
     "@bitgo/blake2b" "3.0.1"
     bech32 "0.0.3"
@@ -1854,10 +1854,10 @@
   optionalDependencies:
     secp256k1 "3.5.2"
 
-"@bitgo/utxo-lib@https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337":
+"@bitgo/utxo-lib@https://github.com/VerusCoin/BitGoJS.git#d8358f06f243e622b7700382b4b93c1b46014126":
   version "1.9.6"
-  uid f8723bcc2bf4052de171ca8654de23fc06a03337
-  resolved "https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337"
+  uid d8358f06f243e622b7700382b4b93c1b46014126
+  resolved "https://github.com/VerusCoin/BitGoJS.git#d8358f06f243e622b7700382b4b93c1b46014126"
   dependencies:
     "@bitgo/blake2b" "3.0.1"
     bech32 "0.0.3"
@@ -2933,10 +2933,10 @@
   resolved "https://registry.yarnpkg.com/@react-native-community/clipboard/-/clipboard-1.5.1.tgz#32abb3ea2eb91ee3f9c5fb1d32d5783253c9fabe"
   integrity sha512-AHAmrkLEH5UtPaDiRqoULERHh3oNv7Dgs0bTC0hO5Z2GdNokAMPT5w8ci8aMcRemcwbtdHjxChgtjbeA38GBdA==
 
-"@react-native-community/datetimepicker@3.5.2":
-  version "3.5.2"
-  resolved "https://registry.yarnpkg.com/@react-native-community/datetimepicker/-/datetimepicker-3.5.2.tgz#8e6feb30f2620e5abdf565d5fe74c0c04edcf6ae"
-  integrity sha512-TWRuAtr/DnrEcRewqvXMLea2oB+YF+SbtuYLHguALLxNJQLl/RFB7aTNZeF+OoH75zKFqtXECXV1/uxQUpA+sg==
+"@react-native-community/datetimepicker@7.0.1":
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/@react-native-community/datetimepicker/-/datetimepicker-7.0.1.tgz#a8245ec61faa2761954f284c01d9abce32199bf8"
+  integrity sha512-EllGpk6kbEUCvBDDTnHNLJhfkPOI2Yy+KWj3ImOeM9lAA6CkmFlj/mXGCEbfD/Ddu1U7egO/AwqOmG/Bx3IcEQ==
   dependencies:
     invariant "^2.2.4"
 
@@ -4452,7 +4452,7 @@ bitcoinjs-message@^2.0.0:
 
 "bitgo-utxo-lib@git+https://github.com/VerusCoin/bitgo-utxo-lib.git#react-native":
   version "1.2.1"
-  resolved "git+https://github.com/VerusCoin/bitgo-utxo-lib.git#aff0871d4523ab98f2f9d12b749ac5c30dba1ba8"
+  resolved "git+https://github.com/VerusCoin/bitgo-utxo-lib.git#5765ef99b05b345d6e7db6d9b8cd5a7de0f56d18"
   dependencies:
     bech32 "0.0.3"
     bigi "^1.4.0"
@@ -11348,6 +11348,13 @@ react-native-loading-spinner-overlay@1.0.1:
   dependencies:
     prop-types "^15.6.2"
 
+react-native-modal-datetime-picker@15.0.0:
+  version "15.0.0"
+  resolved "https://registry.yarnpkg.com/react-native-modal-datetime-picker/-/react-native-modal-datetime-picker-15.0.0.tgz#3c2b0a63467a3391dbc202871aa2807bc1a0d8d0"
+  integrity sha512-cHeFEYHUhyIk+Mt9C6RVseg/VMGR4XcxdU9SibF5RMCXiXhrwMkFy7203xg1S331pzCF/Oqhvi4Jh0pYMrTFtQ==
+  dependencies:
+    prop-types "^15.7.2"
+
 react-native-modal@^9.0.0:
   version "9.0.0"
   resolved "https://registry.yarnpkg.com/react-native-modal/-/react-native-modal-9.0.0.tgz#0bfd0770361a2e5c6e0072bfdb0f1277f9662dba"
@@ -13653,7 +13660,7 @@ version_compare@0.0.3:
   version "0.1.0"
   resolved "git+https://github.com/VerusCoin/verusid-ts-client.git#9b622f064ba152edd35e45b6c03cf65ea0be4a39"
   dependencies:
-    "@bitgo/utxo-lib" "https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337"
+    "@bitgo/utxo-lib" "https://github.com/VerusCoin/BitGoJS.git#d8358f06f243e622b7700382b4b93c1b46014126"
     axios "0.27.2"
     bignumber.js "9.1.0"
     verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git"

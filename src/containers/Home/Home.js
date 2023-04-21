@@ -19,7 +19,7 @@ import {
   saveGeneralSettings,
 } from '../../actions/actionCreators';
 import {connect} from 'react-redux';
-import {Animated} from 'react-native';
+import {Animated, Platform} from 'react-native';
 import {CommonActions} from '@react-navigation/native';
 import {
   API_GET_FIATPRICE,
@@ -51,6 +51,7 @@ import {
 } from '../../utils/constants/widgets';
 import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
 import {VERUSID_SERVICE_ID} from '../../utils/constants/services';
+import { dragDetectionEnabled } from '../../utils/dragDetection';
 
 class Home extends Component {
   constructor(props) {
@@ -80,6 +81,12 @@ class Home extends Component {
     });
 
     await this.getWidgets();
+  }
+
+  dragDetectionEnabled() {
+    const {homeCardDragDetection} = this.props 
+
+    return dragDetectionEnabled(homeCardDragDetection)
   }
 
   setEditingCards(editing) {
@@ -510,6 +517,7 @@ const mapStateToProps = state => {
     allSubWallets: extractDisplaySubWallets(state),
     activeSubWallets: state.coinMenus.activeSubWallets,
     widgetOrder: state.widgets.order,
+    homeCardDragDetection: state.settings.generalWalletSettings.homeCardDragDetection
   };
 };
 

@@ -38,7 +38,7 @@ class LinkIdentityConfirm extends Component {
       await linkVerusId(
         identityaddress,
         convertFqnToDisplayFormat(this.state.verusId.fullyqualifiedname),
-        coinObj.display_ticker,
+        coinObj.id,
       );
 
       await updateVerusIdWallet();
