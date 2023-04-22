@@ -12,6 +12,9 @@ import ServiceLogos from '../../../../../images/servicelogo/index'
 import { VERUSID_SERVICE_ID } from "../../../../../utils/constants/services";
 import Colors from "../../../../../globals/colors";
 import { findCoinObj } from "../../../../../utils/CoinData/CoinData";
+import { openUrl } from "../../../../../utils/linking";
+
+const VERUS_ID_URL = "https://docs.verus.io/verusid/"
 
 class VerusIdServiceIntroSlider extends Component {
   constructor() {
@@ -40,6 +43,14 @@ class VerusIdServiceIntroSlider extends Component {
             "Linking your wallet with VerusID allows you to use your VerusID to sign into services and hold funds."
           }
         </Text>
+        <Button
+          style={{ marginTop: 16 }}
+          mode="text"
+          color={Colors.secondaryColor}
+          onPress={() => openUrl(VERUS_ID_URL)}
+        >
+          {"Learn More"}
+        </Button>
       </View>
     );
   };

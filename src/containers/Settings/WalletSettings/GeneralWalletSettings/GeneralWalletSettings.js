@@ -4,335 +4,314 @@
   display size.
 */
 
-import React, { Component } from "react";
-import { 
-  View, 
-  ScrollView, 
+import React, {useState, useEffect, useRef} from 'react';
+import {
+  View,
+  ScrollView,
   Keyboard,
   ActivityIndicator,
-  TouchableOpacity
-} from "react-native";
-import { NavigationActions } from '@react-navigation/compat';
-import { saveGeneralSettings } from '../../../../actions/actionCreators';
-import { connect } from 'react-redux';
-import Styles from '../../../../styles/index'
-import Colors from '../../../../globals/colors'
-import { CURRENCY_NAMES, SUPPORTED_UNIVERSAL_DISPLAY_CURRENCIES, USD } from '../../../../utils/constants/currencies'
-import NumberPadModal from "../../../../components/NumberPadModal/NumberPadModal";
-import { Divider, List, Portal, Text, Button, Checkbox } from "react-native-paper";
-import ListSelectionModal from "../../../../components/ListSelectionModal/ListSelectionModal";
-import { createAlert, resolveAlert } from "../../../../actions/actions/alert/dispatchers/alert";
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
+import {useSelector, useDispatch} from 'react-redux';
+import Styles from '../../../../styles/index';
+import Colors from '../../../../globals/colors';
+import {
+  CURRENCY_NAMES,
+  SUPPORTED_UNIVERSAL_DISPLAY_CURRENCIES,
+} from '../../../../utils/constants/currencies';
+import NumberPadModal from '../../../../components/NumberPadModal/NumberPadModal';
+import {Divider, List, Portal, Text, Button, Switch} from 'react-native-paper';
+import ListSelectionModal from '../../../../components/ListSelectionModal/ListSelectionModal';
+import {saveGeneralSettings} from '../../../../actions/actionCreators';
+import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
+import {NavigationActions} from '@react-navigation/compat';
 
-const NO_DEFAULT = "None"
+const NO_DEFAULT = 'None';
 
-class WalletSettings extends Component {
-  constructor(props) {
-    super(props);
-    const { generalWalletSettings } = props
+const WalletSettings = props => {
+  const isMounted = useRef(false);
+  const generalWalletSettings = useSelector(
+    state => state.settings.generalWalletSettings,
+  );
+  const accounts = useSelector(state => state.authentication.accounts);
+  const activeAccount = useSelector(
+    state => state.authentication.activeAccount,
+  );
+  const dispatch = useDispatch();
 
-    this.state = {
-      ...generalWalletSettings,
-      maxTxCount:
-        generalWalletSettings.maxTxCount != null
-          ? generalWalletSettings.maxTxCount
-          : "10",
-      displayCurrency:
-        generalWalletSettings.displayCurrency != null
-          ? generalWalletSettings.displayCurrency
-          : USD,
-      defaultAccount: generalWalletSettings.defaultAccount,
-      errors: { maxTxCount: false, displayCurrency: false },
-      loading: false,
-      currentNumberInputModal: null,
-      displayCurrencyModalOpen: false,
-      defaultProfileModalOpen: false,
-    };
-  }
+  const [settings, setSettings] = useState({...generalWalletSettings});
+  const [homeCardDragDetection, setHomeCardDragDetection] = useState(
+    generalWalletSettings.homeCardDragDetection != null
+      ? generalWalletSettings.homeCardDragDetection
+      : Platform.OS === 'ios'
+      ? true
+      : false,
+  );
 
-  openNumberInputModal(inputKey) {
-    this.setState({
-      currentNumberInputModal: inputKey
-    })
-  }
+  const [errors, setErrors] = useState({
+    maxTxCount: false,
+    displayCurrency: false,
+  });
+  const [loading, setLoading] = useState(false);
+  const [currentNumberInputModal, setCurrentNumberInputModal] = useState(null);
+  const [displayCurrencyModalOpen, setDisplayCurrencyModalOpen] =
+    useState(false);
+  const [defaultProfileModalOpen, setDefaultProfileModalOpen] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
-  closeNumberInputModal() {
-    this.setState({
-      currentNumberInputModal: null
-    })
-  }
+  const openNumberInputModal = inputKey => setCurrentNumberInputModal(inputKey);
+  const closeNumberInputModal = () => setCurrentNumberInputModal(null);
+  const openDisplayCurrencyModal = () => setDisplayCurrencyModalOpen(true);
+  const closeDisplayCurrencyModal = () => setDisplayCurrencyModalOpen(false);
+  const openDefaultProfileModal = () => setDefaultProfileModalOpen(true);
+  const closeDefaultProfileModal = () => setDefaultProfileModalOpen(false);
 
-  openDisplayCurrencyModal() {
-    this.setState({
-      displayCurrencyModalOpen: true
-    })
-  }
-
-  closeDisplayCurrencyModal() {
-    this.setState({
-      displayCurrencyModalOpen: false
-    })
-  }
-
-  openDefaultProfileModal() {
-    this.setState({
-      defaultProfileModalOpen: true
-    })
-  }
-
-  closeDefaultProfileModal() {
-    this.setState({
-      defaultProfileModalOpen: false
-    })
-  }
-
-  _handleSubmit = () => {
+  const handleSubmit = () => {
     Keyboard.dismiss();
-    this.validateFormData()
-  }
+    validateFormData();
+  };
 
-  saveSettings = () => {
-    this.setState({ loading: true }, () => {
+  useEffect(() => {
+    if (isMounted.current) {
+      setSettings({
+        ...settings,
+        homeCardDragDetection,
+      });
+      setHasChanges(true);
+    } else {
+      isMounted.current = true;
+    }
+  }, [homeCardDragDetection]);
+
+  const saveSettings = async () => {
+    setLoading(true);
+    try {
       const stateToSave = {
-        maxTxCount: Number(this.state.maxTxCount),
-        displayCurrency: this.state.displayCurrency,
+        maxTxCount: Number(settings.maxTxCount),
+        displayCurrency: settings.displayCurrency,
         defaultAccount:
-          this.state.defaultAccount === NO_DEFAULT
+          settings.defaultAccount === NO_DEFAULT
             ? null
-            : this.state.defaultAccount,
+            : settings.defaultAccount,
+        homeCardDragDetection
       };
+      const res = await saveGeneralSettings(stateToSave);
+      dispatch(res);
+      createAlert('Success', 'General wallet settings saved.');
+      setSettings({...generalWalletSettings});
+      setLoading(false);
+    } catch (err) {
+      createAlert('Error', err.message);
+      console.warn(err.message);
+      setLoading(false);
+    }
+  };
 
-      saveGeneralSettings(stateToSave)
-      .then(res => {
-        this.props.dispatch(res)
-        createAlert("Success", "General wallet settings saved.")
-        this.setState({...this.props.generalWalletSettings, loading: false})
-      })
-      .catch(err => {
-        createAlert("Error", err.message)
-        console.warn(err.message)
-        this.setState({ loading: false })
-      })
-    })
-  }
+  const handleError = (error, field) => {
+    setErrors({...errors, [field]: error});
+  };
 
-  handleError = (error, field) => {
-    let _errors = this.state.errors
-    _errors[field] = error
+  const back = () => {
+    props.navigation.dispatch(NavigationActions.back());
+  };
 
-    this.setState({errors: _errors})
-  }
+  const validateFormData = () => {
+    setErrors({maxTxCount: null, displayCurrency: null});
+    let _errors = false;
+    const _maxTxCount = settings.maxTxCount;
 
-  back = () => {
-    this.props.navigation.dispatch(NavigationActions.back())
-  }
+    if (
+      !_maxTxCount ||
+      _maxTxCount.length === 0 ||
+      isNaN(_maxTxCount) ||
+      Number(_maxTxCount) < 10 ||
+      Number(_maxTxCount) > 100
+    ) {
+      handleError('Please enter a valid number from 10 to 100', 'maxTxCount');
+      _errors = true;
+    }
 
-  validateFormData = () => {
-    this.setState({
-      errors: { maxTxCount: null, displayCurrency: null }
-    }, () => {
-      let _errors = false
-      const _maxTxCount = this.state.maxTxCount
+    if (!_errors) {
+      saveSettings();
+    }
+  };
 
-      if (
-        !_maxTxCount ||
-        _maxTxCount.length === 0 ||
-        isNaN(_maxTxCount) ||
-        Number(_maxTxCount) < 10 ||
-        Number(_maxTxCount) > 100
-      ) {
-        this.handleError(
-          "Please enter a valid number from 10 to 100",
-          "maxTxCount"
-        );
-        _errors = true;
-      }
+  const defaultAccount =
+    settings.defaultAccount == null
+      ? null
+      : accounts.find(item => item.accountHash === settings.defaultAccount);
+  const defaultAccountName = defaultAccount == null ? null : defaultAccount.id;
 
-      if (!_errors) {
-        this.saveSettings()
-      } 
-    });
-  }
-
-  render() {
-    const { currentNumberInputModal, displayCurrencyModalOpen, defaultProfileModalOpen } = this.state
-    const defaultAccount = this.state.defaultAccount == null ? null : this.props.accounts.find(
-      (item) => item.accountHash === this.state.defaultAccount
-    )
-    const defaultAccountName = defaultAccount == null ? null : defaultAccount.id
-
-    return (
-      <View style={Styles.defaultRoot}>
-        <Portal>
-          {currentNumberInputModal != null && (
-            <NumberPadModal
-              value={Number(this.state[currentNumberInputModal])}
-              visible={currentNumberInputModal != null}
-              onChange={(number) =>
-                this.setState({
-                  [currentNumberInputModal]: number.toString(),
-                })
-              }
-              cancel={() => this.closeNumberInputModal()}
-              decimals={0}
-            />
-          )}
-          {displayCurrencyModalOpen && (
-            <ListSelectionModal
-              title="Currencies"
-              selectedKey={this.state.displayCurrency}
-              visible={displayCurrencyModalOpen}
-              onSelect={(item) =>
-                this.setState({
-                  displayCurrency: item.key,
-                })
-              }
-              data={SUPPORTED_UNIVERSAL_DISPLAY_CURRENCIES.map((key) => {
-                return {
-                  key,
-                  title: key,
-                  description: CURRENCY_NAMES[key],
-                };
-              })}
-              cancel={() => this.closeDisplayCurrencyModal()}
-            />
-          )}
-          {defaultProfileModalOpen && (
-            <ListSelectionModal
-              title="Profiles"
-              selectedKey={this.state.defaultAccount}
-              visible={defaultProfileModalOpen}
-              onSelect={(item) =>
-                this.setState({
-                  defaultAccount: item.key,
-                })
-              }
-              data={[
-                {
-                  key: NO_DEFAULT,
-                  title: "None",
-                  description: "Manually select profile on app start",
-                },
-                ...this.props.accounts.map((item) => {
-                  return {
-                    key: item.accountHash,
-                    title: item.id,
-                    description:
-                      item.id === this.props.activeAccount.id
-                        ? "Currently logged in"
-                        : null,
-                  };
-                }),
-              ]}
-              cancel={() => this.closeDefaultProfileModal()}
-            />
-          )}
-        </Portal>
-        <ScrollView style={Styles.fullWidth}>
-          <List.Subheader>{"Display Settings"}</List.Subheader>
-          <TouchableOpacity
-            onPress={() => this.openNumberInputModal("maxTxCount")}
-            style={{ ...Styles.flex }}
-          >
-            <Divider />
-            <List.Item
-              title={"Max. Display TXs"}
-              description="Max. displayed Electrum transactions"
-              right={() => (
-                <Text style={Styles.listItemTableCell}>
-                  {this.state.maxTxCount}
-                </Text>
-              )}
-            />
-            <Divider />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => this.openDisplayCurrencyModal()}
-            style={{ ...Styles.flex }}
-          >
-            <Divider />
-            <List.Item
-              title={"Universal Display Currency"}
-              description="The currency used to display value"
-              right={() => (
-                <Text style={Styles.listItemTableCell}>
-                  {this.state.displayCurrency}
-                </Text>
-              )}
-            />
-            <Divider />
-          </TouchableOpacity>
-          {/* <List.Subheader>{"VerusID Settings"}</List.Subheader>
-          <TouchableOpacity
-            style={{ ...Styles.flex }}
-          >
-            <Divider />
-            <Checkbox.Item
-              color={Colors.primaryColor}
-              label={"Enable VerusID Shortcuts"}
-              status={
-                this.state.verusIdShortcutsEnabled
-                  ? "checked"
-                  : "unchecked"
-              }
-              onPress={() => this.toggleVerusIdShortcuts()}
-              mode="android"
-            />
-            <Divider />
-          </TouchableOpacity> */}
-          <List.Subheader>{"Start Settings"}</List.Subheader>
-          <TouchableOpacity
-            onPress={() => this.openDefaultProfileModal()}
-            style={{ ...Styles.flex }}
-          >
-            <Divider />
-            <List.Item
-              title={"Default Profile"}
-              description="Automatically selected profile on app start"
-              right={() => (
-                <Text style={Styles.listItemTableCell}>
-                  {defaultAccountName == null
-                    ? NO_DEFAULT
-                    : defaultAccountName}
-                </Text>
-              )}
-            />
-            <Divider />
-          </TouchableOpacity>
-        </ScrollView>
-        <View style={Styles.highFooterContainer}>
-          {this.state.loading ? (
-            <ActivityIndicator
-              animating={this.state.loading}
-              style={{
-                paddingTop: 32
-              }}
-              size="large"
-            />
-          ) : (
-            <View style={Styles.standardWidthSpaceBetweenBlock}>
-              <Button color={Colors.warningButtonColor} onPress={this.back}>
-                {"Back"}
-              </Button>
-              <Button
-                color={Colors.primaryColor}
-                onPress={this._handleSubmit}
+  return (
+    <View style={Styles.defaultRoot}>
+      <Portal>
+        {currentNumberInputModal != null && (
+          <NumberPadModal
+            value={Number(settings[currentNumberInputModal])}
+            visible={currentNumberInputModal != null}
+            onChange={(number) => {
+              setSettings({
+                ...settings,
+                [currentNumberInputModal]: number.toString(),
+              });
+              setHasChanges(true);
+            }}
+            cancel={() => closeNumberInputModal()}
+            decimals={0}
+          />
+        )}
+        {displayCurrencyModalOpen && (
+          <ListSelectionModal
+            title="Currencies"
+            selectedKey={settings.displayCurrency}
+            visible={displayCurrencyModalOpen}
+            onSelect={(item) => {
+              setSettings({
+                ...settings,
+                displayCurrency: item.key,
+              });
+              setHasChanges(true);
+            }}
+            data={SUPPORTED_UNIVERSAL_DISPLAY_CURRENCIES.map(key => ({
+              key,
+              title: key,
+              description: CURRENCY_NAMES[key],
+            }))}
+            cancel={() => closeDisplayCurrencyModal()}
+          />
+        )}
+        {defaultProfileModalOpen && (
+          <ListSelectionModal
+            title="Profiles"
+            selectedKey={settings.defaultAccount}
+            visible={defaultProfileModalOpen}
+            onSelect={(item) => {
+              setSettings({
+                ...settings,
+                defaultAccount: item.key,
+              });
+              setHasChanges(true);
+            }}
+            data={[
+              {
+                key: NO_DEFAULT,
+                title: 'None',
+                description: 'Manually select profile on app start',
+              },
+              ...accounts.map(item => ({
+                key: item.accountHash,
+                title: item.id,
+                description:
+                  item.id === activeAccount.id ? 'Currently logged in' : null,
+              })),
+            ]}
+            cancel={() => closeDefaultProfileModal()}
+          />
+        )}
+      </Portal>
+      <ScrollView style={Styles.fullWidth}>
+        <List.Subheader>{'Display Settings'}</List.Subheader>
+        <TouchableOpacity
+          onPress={() => openNumberInputModal('maxTxCount')}
+          style={{...Styles.flex}}>
+          <Divider />
+          <List.Item
+            title={'Max. Display TXs'}
+            description="Max. displayed Electrum transactions"
+            right={() => (
+              <Text style={Styles.listItemTableCell}>
+                {settings.maxTxCount}
+              </Text>
+            )}
+          />
+          <Divider />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => openDisplayCurrencyModal()}
+          style={{...Styles.flex}}>
+          <List.Item
+            title={'Universal Display Currency'}
+            description="The currency used to display value"
+            right={() => (
+              <Text style={Styles.listItemTableCell}>
+                {settings.displayCurrency}
+              </Text>
+            )}
+          />
+          <Divider />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            setHomeCardDragDetection(!homeCardDragDetection);
+          }}
+        >
+          <List.Item
+            title="Automatic Drag Detection"
+            description="Move home screen cards when dragged"
+            right={() => (
+              <View
+                style={{
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'flex-end',
+                }}
               >
-                {"Confirm"}
-              </Button>
-            </View>
-          )}
-        </View>
+                <Switch
+                  value={homeCardDragDetection}
+                  onValueChange={() => {
+                    setHomeCardDragDetection(!homeCardDragDetection);
+                  }}
+                  color={Colors.primaryColor}
+                />
+              </View>
+            )}
+          />
+          <Divider />
+        </TouchableOpacity>
+        <List.Subheader>{'Start Settings'}</List.Subheader>
+        <TouchableOpacity
+          onPress={() => openDefaultProfileModal()}
+          style={{...Styles.flex}}>
+          <Divider />
+          <List.Item
+            title={'Default Profile'}
+            description="Automatically selected profile on app start"
+            right={() => (
+              <Text style={Styles.listItemTableCell}>
+                {defaultAccountName == null ? NO_DEFAULT : defaultAccountName}
+              </Text>
+            )}
+          />
+          <Divider />
+        </TouchableOpacity>
+      </ScrollView>
+      <View style={Styles.highFooterContainer}>
+        {loading ? (
+          <ActivityIndicator
+            animating={loading}
+            style={{
+              paddingTop: 32
+            }}
+            size="large"
+          />
+        ) : (
+          <View style={Styles.standardWidthSpaceBetweenBlock}>
+            <Button color={Colors.warningButtonColor} onPress={back}>
+              {"Back"}
+            </Button>
+            <Button
+              color={Colors.primaryColor}
+              onPress={handleSubmit}
+              disabled={!hasChanges}
+            >
+              {"Confirm"}
+            </Button>
+          </View>
+        )}
       </View>
-    );
-  }
-}
-
-const mapStateToProps = (state) => {
-  return {
-    generalWalletSettings: state.settings.generalWalletSettings,
-    accounts: state.authentication.accounts,
-    activeAccount: state.authentication.activeAccount
-  }
+    </View>
+  );
 };
 
-export default connect(mapStateToProps)(WalletSettings);
+export default WalletSettings;

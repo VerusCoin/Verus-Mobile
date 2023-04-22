@@ -28,7 +28,7 @@ const slides = [
   {
     key: 2,
     title: 'Privacy',
-    text: 'Unlike your private keys, which are stored fully encrypted, your personal profile is stored locally, and images are unencrypted.\n\nVerus Mobile will not share any of your personal profile data without your explicit consent, but your phone may automatically backup your stored data or grant access to other applications if you have it configured to do so.',
+    text: 'Unlike your private keys, which are stored locally and fully encrypted, your personal profile is stored locally, and images are unencrypted.\n\nVerus Mobile will not share any of your personal profile data without your explicit consent, but your phone may automatically backup your stored data or grant access to other applications if you have it configured to do so.',
     backgroundColor: Colors.quaternaryColor,
     icon: 'shield-account',
   },
