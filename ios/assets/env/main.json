@@ -39,5 +39,5 @@
   "PERSONAL_DATA_STORAGE_INTERNAL_KEY": "personal",
   "SERVICE_STORAGE_INTERNAL_KEY": "serviceStoredData",
 
-  "WYRE_ACCESSIBLE": true
+  "WYRE_ACCESSIBLE": false
 }
