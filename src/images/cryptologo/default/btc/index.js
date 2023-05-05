@@ -8,6 +8,7 @@ import KMD_LIGHT from './kmd/kmd_light.svg'
 import LTC_LIGHT from './ltc/ltc_light.svg'
 import OOT_LIGHT from './oot/oot_light.svg'
 import VRSC_LIGHT from './vrsc/vrsc_light.svg'
+import VRSCTEST_LIGHT from './vrsctest/vrsctest_light.svg'
 import ZEC_LIGHT from './zec/zec_light.svg'
 import ZECTEST_LIGHT from './zectest/zectest_light.svg'
 import ZILLA_LIGHT from './zilla/zilla_light.svg'
@@ -21,6 +22,7 @@ import KMD_DARK from './kmd/kmd_dark.svg'
 import LTC_DARK from './ltc/ltc_dark.svg'
 import OOT_DARK from './oot/oot_dark.svg'
 import VRSC_DARK from './vrsc/vrsc_dark.svg'
+import VRSCTEST_DARK from './vrsctest/vrsctest_dark.svg'
 import ZEC_DARK from './zec/zec_dark.svg'
 import ZECTEST_DARK from './zectest/zectest_dark.svg'
 import ZILLA_DARK from './zilla/zilla_dark.svg'
@@ -36,6 +38,7 @@ export default {
   LTC: { light: LTC_LIGHT, dark: LTC_DARK },
   OOT: { light: OOT_LIGHT, dark: OOT_DARK },
   VRSC: { light: VRSC_LIGHT, dark: VRSC_DARK },
+  VRSCTEST: { light: VRSCTEST_LIGHT, dark: VRSCTEST_DARK },
   ZEC: { light: ZEC_LIGHT, dark: ZEC_DARK },
   ZECTEST: { light: ZECTEST_LIGHT, dark: ZECTEST_DARK },
   ZILLA: { light: ZILLA_LIGHT, dark: ZILLA_DARK },

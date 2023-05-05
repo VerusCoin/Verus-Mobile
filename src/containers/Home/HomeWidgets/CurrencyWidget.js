@@ -111,18 +111,18 @@ const CurrencyWidget = props => {
             <Paragraph style={{fontSize: 12}}>
               {allSubwallets[coinObj.display_ticker]
                 ? allSubwallets[coinObj.display_ticker].length
-                : 0}
+                : 1}
             </Paragraph>
             <SubWalletsLogo />
           </View>
         </View>
-        <Paragraph style={{ fontSize: 16, paddingTop: 8, fontWeight: "500" }}>
-          {uniValueDisplay === '-' ? `${currencyBalance == null ? '-' : normalizeNum(Number(currencyBalance), 8)[3]} ${
+        <Paragraph numberOfLines={1} style={{ fontSize: 16, paddingTop: 8, fontWeight: "500"}}>
+          {coinObj.testnet || uniValueDisplay === '-' ? `${currencyBalance == null ? '-' : normalizeNum(Number(currencyBalance), 8)[3]} ${
               coinObj.display_ticker
             }` : uniValueDisplay}
         </Paragraph>
         <Paragraph style={{ fontSize: 12 }}>
-          {
+          {coinObj.testnet ? "Testnet Currency" :
             uniValueDisplay === '-' ? uniValueDisplay : `${currencyBalance == null ? '-' : normalizeNum(Number(currencyBalance), 8)[3]} ${
               coinObj.display_ticker
             }`

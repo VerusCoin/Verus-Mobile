@@ -42,6 +42,7 @@ import SetupSeedModal from "../../../components/SetupSeedModal/SetupSeedModal";
 import { DLIGHT_PRIVATE } from "../../../utils/constants/intervalConstants";
 import ListSelectionModal from "../../../components/ListSelectionModal/ListSelectionModal";
 import { WYRE_SERVICE_ID } from "../../../utils/constants/services";
+import Colors from "../../../globals/colors";
 
 const RESET_PWD = "ResetPwd"
 const REMOVE_PROFILE = "DeleteProfile"
@@ -388,6 +389,18 @@ class ProfileSettings extends Component {
           left={(props) => <List.Icon {...props} icon={"account"} />}
         />
         <Divider />
+        {
+          this.props.testAccount && (
+            <React.Fragment>
+              <List.Item
+                title={"Test Profile"}
+                description={'All testnet coins/currencies have no value and will disappear whenever their testnet is reset.'}
+                left={props => <List.Icon {...props} icon={'alert'} color={Colors.infoButtonColor}/>}
+              />
+              <Divider />
+            </React.Fragment>
+          )
+        }
         <List.Subheader>{"Security Settings"}</List.Subheader>
         <TouchableOpacity
           onPress={async () => {
@@ -463,7 +476,7 @@ class ProfileSettings extends Component {
           allowBiometry={true}
         />
         <List.Subheader>{"Profile Actions"}</List.Subheader>
-        {ENABLE_DLIGHT && (
+        {ENABLE_DLIGHT && !this.props.testAccount && (
           <TouchableOpacity
             onPress={() => {
               this.setState({ privateSeedModalOpen: true });
@@ -488,7 +501,7 @@ class ProfileSettings extends Component {
           </TouchableOpacity>
         )}
         {
-          WYRE_ACCESSIBLE && (
+          WYRE_ACCESSIBLE && !this.props.testAccount && (
             <TouchableOpacity onPress={() => this.toggleWyreEnabled()}>
               <Divider />
               <List.Item
@@ -528,6 +541,7 @@ class ProfileSettings extends Component {
 
 const mapStateToProps = state => {
   return {
+    testAccount: Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0,
     activeAccount: state.authentication.activeAccount,
     wyreEnabled:
       state.authentication.activeAccount != null &&

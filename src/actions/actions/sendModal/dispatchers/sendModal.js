@@ -18,6 +18,7 @@ import {
   AUTHENTICATE_USER_SEND_MODAL,
   PROVISION_IDENTITY_SEND_MODAL,
   SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
+  SEND_MODAL_USER_ALLOWLIST,
 } from '../../../../utils/constants/sendModal';
 import {
   CLOSE_SEND_COIN_MODAL,
@@ -103,6 +104,7 @@ export const openAuthenticateUserModal = (data, initialRouteName) => {
     data == null
       ? {
           [SEND_MODAL_USER_TO_AUTHENTICATE]: null,
+          [SEND_MODAL_USER_ALLOWLIST]: null
         }
       : data,
     AUTHENTICATE_USER_SEND_MODAL,

@@ -23,7 +23,7 @@
   "ENABLE_VRPC": true,
   "ENABLE_VERUSID": true,
 
-  "ETH_NETWORK": "homestead",
+  "ETH_HOMESTEAD": "homestead",
 
   "BIOMETRIC_SECURITY_THRESHOLD": "SECURE_HARDWARE",
 

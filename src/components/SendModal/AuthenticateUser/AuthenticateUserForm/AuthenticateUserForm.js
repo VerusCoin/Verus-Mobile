@@ -4,10 +4,11 @@ import { FlatList, TouchableOpacity } from "react-native";
 import { List } from "react-native-paper";
 import { useSelector } from 'react-redux'
 import styles from "../../../../styles";
-import { SEND_MODAL_FORM_STEP_CONFIRM, SEND_MODAL_USER_TO_AUTHENTICATE } from "../../../../utils/constants/sendModal";
+import { SEND_MODAL_FORM_STEP_CONFIRM, SEND_MODAL_USER_ALLOWLIST } from "../../../../utils/constants/sendModal";
 
 const AuthenticateUserForm = props => {
   const accounts = useSelector(state => state.authentication.accounts)
+  const data = useSelector(state => state.sendModal.data)
   const [accountList, setAccountList] = useState([])
 
   const selectAccount = (account) => {
@@ -17,7 +18,11 @@ const AuthenticateUserForm = props => {
   }
 
   useEffect(() => {
-    const _accountList = accounts.map(item => {
+    const _accounts = data[SEND_MODAL_USER_ALLOWLIST]
+      ? data[SEND_MODAL_USER_ALLOWLIST]
+      : accounts;
+
+    const _accountList = _accounts.map(item => {
       return {
         key: item.accountHash,
         title: item.id,

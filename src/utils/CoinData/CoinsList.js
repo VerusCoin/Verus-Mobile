@@ -27,6 +27,35 @@ import {
 } from '../constants/apps';
 import Colors from "../../globals/colors";
 
+const VERUS_APPS = {
+  wallet: {
+    title: 'Verus Coin Wallet',
+    data: [
+      {
+        screen: 'Overview',
+        icon: 'format-list-bulleted',
+        name: 'Overview',
+        key: WALLET_APP_OVERVIEW,
+        color: Colors.primaryColor,
+      },
+      {
+        screen: 'SendCoin',
+        icon: 'arrow-up',
+        name: 'Send',
+        key: WALLET_APP_SEND,
+        color: Colors.infoButtonColor,
+      },
+      {
+        screen: 'ReceiveCoin',
+        icon: 'arrow-down',
+        name: 'Receive',
+        key: WALLET_APP_RECEIVE,
+        color: Colors.verusGreenColor,
+      },
+    ],
+  },
+}
+
 export const coinsList = {
   vrsc: {
     id: 'VRSC',
@@ -46,37 +75,31 @@ export const coinsList = {
     dlight_endpoints: dlightServers.vrsc,
     vrpc_endpoints: ['https://api.verus.services'],
     decimals: DEFAULT_DECIMALS,
-    start_time: 1526886961,
     seconds_per_block: 60,
     default_app: 'wallet',
-    apps: {
-      wallet: {
-        title: 'Verus Coin Wallet',
-        data: [
-          {
-            screen: 'Overview',
-            icon: 'format-list-bulleted',
-            name: 'Overview',
-            key: WALLET_APP_OVERVIEW,
-            color: Colors.primaryColor,
-          },
-          {
-            screen: 'SendCoin',
-            icon: 'arrow-up',
-            name: 'Send',
-            key: WALLET_APP_SEND,
-            color: Colors.infoButtonColor,
-          },
-          {
-            screen: 'ReceiveCoin',
-            icon: 'arrow-down',
-            name: 'Receive',
-            key: WALLET_APP_RECEIVE,
-            color: Colors.verusGreenColor,
-          },
-        ],
-      },
-    },
+    apps: VERUS_APPS
+  },
+  vrsctest: {
+    testnet: true,
+    mainnet_id: 'VRSC',
+    id: 'VRSCTEST',
+    currency_id: 'VRSCTEST',
+    system_id: 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq',
+    bitgojs_network_key: 'verustest',
+    display_ticker: 'VRSCTEST',
+    display_name: 'Verus Testnet',
+    alt_names: ['verustest'],
+    theme_color: '#232323',
+    website: 'https://verus.io',
+    fee: 10000,
+    compatible_channels: [VERUSID, VRPC],
+    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT],
+    proto: 'vrsc',
+    vrpc_endpoints: ['https://api.verustest.net'],
+    decimals: DEFAULT_DECIMALS,
+    seconds_per_block: 60,
+    default_app: 'wallet',
+    apps: VERUS_APPS
   },
   kmd: {
     id: 'KMD',
@@ -123,6 +146,7 @@ export const coinsList = {
     tags: [],
     proto: 'eth',
     decimals: ETHERS,
+    network: "homestead"
   },
   bat: {
     id: 'BAT',

@@ -113,6 +113,7 @@ const explorerList = {
   NINJA: 'https://ninja.kmdexplorer.io',
   DSEC: 'https://dsec.kmdexplorer.io',
   VRSC: 'https://explorer.veruscoin.io',
+  VRSCTEST: 'https://testex.verus.io',
   DION: 'https://explorer.dionpay.com',
   KMDICE: 'http://kmdice.explorer.dexstats.info',
   PTX: 'http://explorer1.patenttx.com',

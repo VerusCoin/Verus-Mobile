@@ -162,6 +162,9 @@ export const DEVICE_WINDOW_HEIGHT = Dimensions.get('window').height;
 
 // Init
 export const START_COINS = ["VRSC", "BTC", "ETH"]
+export const TEST_PROFILE_OVERRIDES = {
+  ['VRSC']: 'VRSCTEST'
+};
 
 // Account data initialization steps
 export const VALIDATING_ACCOUNT = 'validating'

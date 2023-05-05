@@ -7,10 +7,11 @@ const CreateWalletStack = createStackNavigator();
 
 export default function CreateWalletStackScreens({ navigation, createProfile }) {
   const [newSeed, setNewSeed] = useState(null)
+  const [testProfile, setTestProfile] = useState(false)
   const [importedSeed, setImportedSeed] = useState(null)
 
   const completeSeedSetup = (asNew) => {
-    createProfile(asNew ? newSeed : importedSeed)
+    createProfile(asNew ? newSeed : importedSeed, testProfile)
   }
 
   return (
@@ -25,6 +26,8 @@ export default function CreateWalletStackScreens({ navigation, createProfile }) 
             navigation={navigation}
             newSeed={newSeed}
             setNewSeed={setNewSeed}
+            setTestProfile={setTestProfile}
+            testProfile={testProfile}
           />
         )}
       </CreateWalletStack.Screen>

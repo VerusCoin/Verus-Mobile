@@ -1,7 +1,7 @@
 import { CommonActions } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
 import { View } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import AnimatedActivityIndicatorBox from '../../components/AnimatedActivityIndicatorBox';
 import Styles from '../../styles/index';
 import { primitives } from "verusid-ts-client"
@@ -15,6 +15,7 @@ import { LOGIN_CONSENT_INFO } from '../../utils/constants/deeplink';
 import LoginRequestInfo from './LoginRequestInfo/LoginRequestInfo';
 import { getIdentity } from '../../utils/api/channels/verusid/callCreators';
 import { convertFqnToDisplayFormat } from '../../utils/fullyqualifiedname';
+import { resetDeeplinkData } from '../../actions/actionCreators';
 
 const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
@@ -23,6 +24,7 @@ const DeepLink = (props) => {
   const [displayKey, setDisplayKey] = useState(null)
   const [loading, setLoading] = useState(false)
   const [displayProps, setDisplayProps] = useState({})
+  const dispatch = useDispatch()
 
   const cancel = () => {
     let resetAction
@@ -39,7 +41,7 @@ const DeepLink = (props) => {
       });
     }
 
-    //dispatch(resetDeeplinkData())
+    dispatch(resetDeeplinkData())
     props.navigation.dispatch(resetAction);
   }
 

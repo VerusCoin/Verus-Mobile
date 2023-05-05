@@ -27,7 +27,8 @@
     "verusid_service": false
   },
 
-  "ETH_NETWORK": "homestead",
+  "ETH_HOMESTEAD": "homestead",
+  "VERUSID_NETWORK_DEFAULT": "VRSC",
 
   "BIOMETRIC_SECURITY_THRESHOLD": "SECURE_HARDWARE",
 

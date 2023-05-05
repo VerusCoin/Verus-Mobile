@@ -1,7 +1,7 @@
 import {
   setAccounts,
   updateAccountKeys,
-  authenticateUser
+  authenticateUser,
 } from '../actionCreators';
 import {
   storeUser,
@@ -15,26 +15,40 @@ import {
   setUsers,
   setUserKeyDerivationVersion,
   setUserDisabledServices,
-} from "../../utils/asyncStore/asyncStore";
+  setUserTestnetOverrides,
+} from '../../utils/asyncStore/asyncStore';
+import {deriveKeyPair} from '../../utils/keys';
+import {decryptkey, encryptkey} from '../../utils/seedCrypt';
+import {hashAccountId} from '../../utils/crypto/hash';
 import {
-  deriveKeyPair
-} from '../../utils/keys'
-import {
-  decryptkey, encryptkey,
-} from '../../utils/seedCrypt'
-import { hashAccountId } from '../../utils/crypto/hash';
-import { CHANNELS, ELECTRUM, ERC20, ETH, DLIGHT_PRIVATE, VRPC, WYRE_SERVICE } from '../../utils/constants/intervalConstants';
+  CHANNELS,
+  ELECTRUM,
+  ERC20,
+  ETH,
+  DLIGHT_PRIVATE,
+  VRPC,
+  WYRE_SERVICE,
+} from '../../utils/constants/intervalConstants';
 import {
   KEY_DERIVATION_VERSION,
-  SERVICES_DISABLED_DEFAULT
-} from "../../../env/index";
-import { BIOMETRIC_AUTH, SET_ACCOUNTS, UPDATE_ACCOUNT_DISABLED_SERVICES } from '../../utils/constants/storeType';
-import { removeExistingCoin } from './coins/Coins';
-import { initSession, requestPassword, requestSeeds } from '../../utils/auth/authBox';
-import { clearEncryptedPersonalDataForUser } from './personal/dispatchers/personal';
-import { clearEncryptedServiceStoredDataForUser } from './services/dispatchers/services';
-import { clearActiveAccountLifecycles } from './account/dispatchers/account';
-import { WYRE_SERVICE_ID } from '../../utils/constants/services';
+  SERVICES_DISABLED_DEFAULT,
+} from '../../../env/index';
+import {
+  BIOMETRIC_AUTH,
+  SET_ACCOUNTS,
+  UPDATE_ACCOUNT_DISABLED_SERVICES,
+  UPDATE_ACCOUNT_TESTNET_OVERRIDES,
+} from '../../utils/constants/storeType';
+import {removeExistingCoin} from './coins/Coins';
+import {
+  initSession,
+  requestPassword,
+  requestSeeds,
+} from '../../utils/auth/authBox';
+import {clearEncryptedPersonalDataForUser} from './personal/dispatchers/personal';
+import {clearEncryptedServiceStoredDataForUser} from './services/dispatchers/services';
+import {clearActiveAccountLifecycles} from './account/dispatchers/account';
+import {WYRE_SERVICE_ID} from '../../utils/constants/services';
 
 export const addUser = (
   userName,
@@ -43,17 +57,26 @@ export const addUser = (
   users,
   biometry = false,
   keyDerivationVersion = KEY_DERIVATION_VERSION,
-  disabledServices = SERVICES_DISABLED_DEFAULT
+  disabledServices = SERVICES_DISABLED_DEFAULT,
+  testnetOverrides = {},
 ) => {
   return new Promise((resolve, reject) => {
     storeUser(
-      { seeds, password, userName, biometry, keyDerivationVersion, disabledServices },
-      users
+      {
+        seeds,
+        password,
+        userName,
+        biometry,
+        keyDerivationVersion,
+        disabledServices,
+        testnetOverrides,
+      },
+      users,
     )
-      .then((res) => {
+      .then(res => {
         resolve(setAccounts(res));
       })
-      .catch((err) => reject(err));
+      .catch(err => reject(err));
   });
 };
 
@@ -62,64 +85,77 @@ export const resetPwd = (userID, newPwd, oldPwd) => {
     resetUserPwd(userID, newPwd, oldPwd)
       .then(res => {
         if (res) {
-          resolve(setAccounts(res))
+          resolve(setAccounts(res));
         } else {
-          resolve(false)
+          resolve(false);
         }
       })
       .catch(err => reject(err));
   });
-}
+};
 
 export const addEncryptedKey = (accountHash, channel, seed, password) => {
   return new Promise((resolve, reject) => {
     addEncryptedKeyToUser(accountHash, channel, seed, password)
       .then(res => {
         if (res) {
-          resolve(setAccounts(res))
+          resolve(setAccounts(res));
         } else {
-          resolve(false)
+          resolve(false);
         }
       })
       .catch(err => reject(err));
   });
-}
+};
 
 export const setBiometry = (userID, biometry) => {
   return new Promise((resolve, reject) => {
     setUserBiometry(userID, biometry)
-      .then((accounts) => {
+      .then(accounts => {
         resolve({
           type: BIOMETRIC_AUTH,
-          payload: { biometry, userID, accounts }
-        })
+          payload: {biometry, userID, accounts},
+        });
       })
       .catch(err => reject(err));
   });
-}
+};
 
 // Requires user to logout and log back in
 export const setKeyDerivationVersion = async (userID, keyDerivationVersion) => {
   return new Promise((resolve, reject) => {
     setUserKeyDerivationVersion(userID, keyDerivationVersion)
-      .then((accounts) => {
+      .then(accounts => {
         resolve({
           type: SET_ACCOUNTS,
-          payload: { accounts }
-        })
+          payload: {accounts},
+        });
       })
       .catch(err => reject(err));
   });
-}
+};
 
 export const setDisabledServices = async (userID, disabledServices) => {
   return new Promise((resolve, reject) => {
     setUserDisabledServices(userID, disabledServices)
-      .then((accounts) => {
+      .then(accounts => {
         resolve({
           type: UPDATE_ACCOUNT_DISABLED_SERVICES,
-          payload: { disabledServices, accounts }
-        })
+          payload: {disabledServices, accounts},
+        });
+      })
+      .catch(err => reject(err));
+  });
+};
+
+export const setTestnetOverrides = async (userID, testnetOverrides) => {
+  return new Promise((resolve, reject) => {
+    setUserTestnetOverrides(userID, testnetOverrides)
+      .then(accounts => {
+        resolve({
+          type: UPDATE_ACCOUNT_TESTNET_OVERRIDES,
+          payload: {testnetOverrides, accounts},
+        });
       })
       .catch(err => reject(err));
   });
@@ -127,31 +163,32 @@ export const setDisabledServices = async (userID, disabledServices) => {
 
 export const deleteProfile = async (account, dispatch) => {
   // Clear existing account lifecycles
-  await clearActiveAccountLifecycles()
-  
+  await clearActiveAccountLifecycles();
+
   // Remove active coins
-  await removeExistingCoin(null, account.id, dispatch, true)
+  await removeExistingCoin(null, account.id, dispatch, true);
 
   // Clear encrypted personal data
-  clearEncryptedPersonalDataForUser(account.accountHash)
+  clearEncryptedPersonalDataForUser(account.accountHash);
 
   // Clear service stored data
-  clearEncryptedServiceStoredDataForUser(account.accountHash)
+  clearEncryptedServiceStoredDataForUser(account.accountHash);
 
   // Delete user from accounts
-  dispatch(setAccounts(await deleteUser(account.accountHash)))
+  dispatch(setAccounts(await deleteUser(account.accountHash)));
 
-  return
-}
+  return;
+};
 
 export const fetchUsers = () => {
   return new Promise((resolve, reject) => {
     getUsers()
-      .then(async (users) => {
-
+      .then(async users => {
         // Update for new user representation post v0.2.0
-        if (users.some((value) => (value.encryptedKeys == null && value.encryptedKey))) {
-          console.warn("Updating users to key structure post v0.2.0")
+        if (
+          users.some(value => value.encryptedKeys == null && value.encryptedKey)
+        ) {
+          console.warn('Updating users to key structure post v0.2.0');
 
           users = users.map(user => {
             if (user.encryptedKeys == null && user.encryptedKey) {
@@ -166,34 +203,35 @@ export const fetchUsers = () => {
                   user.keyDerivationVersion == null
                     ? 0
                     : user.keyDerivationVersion,
-                disabledServices: 
-                  user.disabledServices == null ? 
-                    {} 
-                    : user.disabledServices
+                disabledServices:
+                  user.disabledServices == null ? {} : user.disabledServices,
+                testnetOverrides: user.testnetOverrides == null ? {} : user.testnetOverrides,
               };
-            } else return user
-          })
+            } else {
+              return user;
+            }
+          });
 
-          await setUsers(users)
+          await setUsers(users);
         }
 
-        resolve(setAccounts(users))
+        resolve(setAccounts(users));
       })
       .catch(err => reject(err));
   });
-}
+};
 
 export const authenticateAccount = async (account, password) => {
   let _keys = {};
 
-  let seeds = account.encryptedKeys
+  let seeds = account.encryptedKeys;
 
   return new Promise((resolve, reject) => {
     getActiveCoinList()
       .then(async activeCoins => {
         for (let i = 0; i < activeCoins.length; i++) {
           if (activeCoins[i].users.includes(account.id)) {
-            _keys[activeCoins[i].id] = {}
+            _keys[activeCoins[i].id] = {};
 
             for (const channel of CHANNELS) {
               if (
@@ -256,18 +294,21 @@ export const authenticateAccount = async (account, password) => {
                 account.keyDerivationVersion == null
                   ? 0
                   : account.keyDerivationVersion,
-              disabledServices: 
-                account.disabledServices == null 
-                  ? account.encryptedKeys && account.encryptedKeys[WYRE_SERVICE] ? {} : { [WYRE_SERVICE_ID]: true } 
-                  : account.disabledServices
+              disabledServices:
+                account.disabledServices == null
+                  ? account.encryptedKeys && account.encryptedKeys[WYRE_SERVICE]
+                    ? {}
+                    : {[WYRE_SERVICE_ID]: true}
+                  : account.disabledServices,
+              testnetOverrides: account.testnetOverrides == null ? {} : account.testnetOverrides,
             },
-            await initSession(password)
-          )
+            await initSession(password),
+          ),
         );
       })
       .catch(err => reject(err));
   });
-}
+};
 
 export const validateLogin = (account, password) => {
   return new Promise((resolve, reject) => {
@@ -279,21 +320,21 @@ export const validateLogin = (account, password) => {
         resolve(loginData);
       })
       .catch(err => {
-        reject(err)
+        reject(err);
         console.warn(err);
       });
   });
-}
+};
 
 export const addKeypairs = async (
   coinObj,
   keys,
-  derivationVersion = KEY_DERIVATION_VERSION
+  derivationVersion = KEY_DERIVATION_VERSION,
 ) => {
   let keypairs = {};
   const coinID = coinObj.id;
-  const accountPass = await requestPassword()
-  const accountSeeds = await requestSeeds()
+  const accountPass = await requestPassword();
+  const accountSeeds = await requestSeeds();
 
   for (seedType of CHANNELS) {
     const seed = accountSeeds[seedType]
@@ -307,7 +348,7 @@ export const addKeypairs = async (
         seed,
         coinObj,
         seedType,
-        derivationVersion
+        derivationVersion,
       );
 
       keypairs[seedType] = {
@@ -322,5 +363,5 @@ export const addKeypairs = async (
     }
   }
 
-  return updateAccountKeys({ ...keys, [coinID]: keypairs });
+  return updateAccountKeys({...keys, [coinID]: keypairs});
 };

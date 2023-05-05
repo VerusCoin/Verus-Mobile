@@ -105,7 +105,8 @@ const identityApp = {
 export const explorers = {
   KMD: 'https://kmdexplorer.io',
   OOT: 'https://explorer.utrum.io',
-  VRSC: 'https://explorer.veruscoin.io',
+  VRSC: 'https://insight.verus.io/',
+  VRSCTEST: 'https://testex.verus.io',
   ETH: 'https://etherscan.io',
   RFOX: 'https://etherscan.io',
   BAT: 'https://etherscan.io',
@@ -129,6 +130,7 @@ export const CoinLogos = {
   // btc protocol
   bch: CoinLogoIcons.btc.BCH,
   vrsc: CoinLogoIcons.btc.VRSC,
+  vrsctest: CoinLogoIcons.btc.VRSCTEST,
   dash: CoinLogoIcons.btc.DASH,
   oot: CoinLogoIcons.btc.OOT,
   btc: CoinLogoIcons.btc.BTC,
@@ -205,7 +207,13 @@ export const fullCoinList = Object.values(coinsList).map(function(coin) {
   return coin.id;
 });
 
-export const supportedCoinList = fullCoinList.filter(x => x !== 'OOT' && x !== 'ZILLA' && x !== 'RFOX');
+export const testCoinList = fullCoinList.filter(x => {
+  return coinsList[x.toLowerCase()].testnet;
+})
+
+export const supportedCoinList = fullCoinList.filter(x => {
+  return !coinsList[x.toLowerCase()].testnet && x !== 'OOT' && x !== 'ZILLA' && x !== 'RFOX'
+});
 
 export const disabledNameList = supportedCoinList.filter(x => {
   return coinsList[x.toLowerCase()].compatible_channels.includes(WYRE_SERVICE);
@@ -263,6 +271,8 @@ export const getCoinIdFromSystemId = (systemId) => {
   switch (systemId) {
     case "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV":
       return "VRSC"
+    case "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq":
+      return "VRSCTEST"
     default:
       throw new Error("Could not find coin for system id " + systemId)
   }
@@ -285,11 +295,17 @@ export const findCoinObj = (key, userName, useSystemId = false) => {
     if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
       const DEFAULT_APPS = getDefaultApps(coinObj)
       
-      if (ENABLE_VERUS_IDENTITIES && (coinObj.id === 'VRSC' || coinObj.id === 'ZECTEST')) {
+      if (
+        ENABLE_VERUS_IDENTITIES &&
+        (coinObj.id === 'VRSC' ||
+          coinObj.id === 'VRSCTEST' ||
+          coinObj.id === 'ZECTEST')
+      ) {
         coinObj.apps = {...identityApp, ...DEFAULT_APPS.apps};
       } else {
         coinObj.apps = DEFAULT_APPS.apps;
       }
+
       if (!coinObj.default_app) coinObj.default_app = DEFAULT_APPS.default_app
     } else if (!coinObj.default_app) {
       coinObj.default_app = Object.keys(coinObj.apps)[0]
