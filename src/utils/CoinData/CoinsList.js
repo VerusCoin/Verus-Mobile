@@ -13,7 +13,7 @@ import {
   VRPC,
   VERUSID
 } from "../constants/intervalConstants";
-import { dlightServers } from 'agama-wallet-lib/src/dlight-servers';
+import { dlightServers } from '../agama-wallet-lib/dlight-servers';
 import {
   DEFAULT_DECIMALS,
   ETHERS,
@@ -27,11 +27,41 @@ import {
 } from '../constants/apps';
 import Colors from "../../globals/colors";
 
+const VERUS_APPS = {
+  wallet: {
+    title: 'Verus Coin Wallet',
+    data: [
+      {
+        screen: 'Overview',
+        icon: 'format-list-bulleted',
+        name: 'Overview',
+        key: WALLET_APP_OVERVIEW,
+        color: Colors.primaryColor,
+      },
+      {
+        screen: 'SendCoin',
+        icon: 'arrow-up',
+        name: 'Send',
+        key: WALLET_APP_SEND,
+        color: Colors.infoButtonColor,
+      },
+      {
+        screen: 'ReceiveCoin',
+        icon: 'arrow-down',
+        name: 'Receive',
+        key: WALLET_APP_RECEIVE,
+        color: Colors.verusGreenColor,
+      },
+    ],
+  },
+}
+
 export const coinsList = {
   vrsc: {
     id: 'VRSC',
     currency_id: 'VRSC',
     system_id: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
+    bitgojs_network_key: 'verus',
     display_ticker: 'VRSC',
     display_name: 'Verus',
     rate_url_params: {coin_paprika: 'vrsc-verus-coin'},
@@ -45,37 +75,31 @@ export const coinsList = {
     dlight_endpoints: dlightServers.vrsc,
     vrpc_endpoints: ['https://api.verus.services'],
     decimals: DEFAULT_DECIMALS,
-    start_time: 1526886961,
     seconds_per_block: 60,
     default_app: 'wallet',
-    apps: {
-      wallet: {
-        title: 'Verus Coin Wallet',
-        data: [
-          {
-            screen: 'Overview',
-            icon: 'format-list-bulleted',
-            name: 'Overview',
-            key: WALLET_APP_OVERVIEW,
-            color: Colors.primaryColor,
-          },
-          {
-            screen: 'SendCoin',
-            icon: 'arrow-up',
-            name: 'Send',
-            key: WALLET_APP_SEND,
-            color: Colors.infoButtonColor,
-          },
-          {
-            screen: 'ReceiveCoin',
-            icon: 'arrow-down',
-            name: 'Receive',
-            key: WALLET_APP_RECEIVE,
-            color: Colors.verusGreenColor,
-          },
-        ],
-      },
-    },
+    apps: VERUS_APPS
+  },
+  vrsctest: {
+    testnet: true,
+    mainnet_id: 'VRSC',
+    id: 'VRSCTEST',
+    currency_id: 'VRSCTEST',
+    system_id: 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq',
+    bitgojs_network_key: 'verustest',
+    display_ticker: 'VRSCTEST',
+    display_name: 'Verus Testnet',
+    alt_names: ['verustest'],
+    theme_color: '#232323',
+    website: 'https://verus.io',
+    fee: 10000,
+    compatible_channels: [VERUSID, VRPC],
+    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT],
+    proto: 'vrsc',
+    vrpc_endpoints: ['https://api.verustest.net'],
+    decimals: DEFAULT_DECIMALS,
+    seconds_per_block: 60,
+    default_app: 'wallet',
+    apps: VERUS_APPS
   },
   kmd: {
     id: 'KMD',
@@ -83,6 +107,7 @@ export const coinsList = {
     alt_names: [],
     currency_id: '',
     system_id: '.kmd',
+    bitgojs_network_key: 'kmd',
     display_ticker: 'KMD',
     theme_color: '#2B6680',
     website: 'https://komodoplatform.com/en/',
@@ -96,6 +121,7 @@ export const coinsList = {
     id: 'BTC',
     currency_id: '',
     system_id: '.btc',
+    bitgojs_network_key: 'bitcoin',
     display_ticker: 'BTC',
     display_name: 'Bitcoin',
     alt_names: [],
@@ -120,6 +146,7 @@ export const coinsList = {
     tags: [],
     proto: 'eth',
     decimals: ETHERS,
+    network: "homestead"
   },
   bat: {
     id: 'BAT',
@@ -322,6 +349,7 @@ export const coinsList = {
     id: 'OOT',
     currency_id: 'oot',
     system_id: '.kmd',
+    bitgojs_network_key: 'kmd',
     display_ticker: 'OOT',
     display_name: 'Utrum',
     alt_names: [],
@@ -337,6 +365,7 @@ export const coinsList = {
     id: 'CCL',
     currency_id: 'ccl',
     system_id: '.kmd',
+    bitgojs_network_key: 'kmd',
     display_ticker: 'CCL',
     display_name: 'CoinCollect',
     alt_names: [],
@@ -352,6 +381,7 @@ export const coinsList = {
     id: 'DOGE',
     currency_id: '',
     system_id: '.doge',
+    bitgojs_network_key: 'doge',
     display_ticker: 'DOGE',
     display_name: 'Dogecoin',
     alt_names: [],
@@ -368,6 +398,7 @@ export const coinsList = {
     id: 'DGB',
     currency_id: '',
     system_id: '.dgb',
+    bitgojs_network_key: 'digibyte',
     display_ticker: 'DGB',
     display_name: 'Digibyte',
     alt_names: [],
@@ -383,6 +414,7 @@ export const coinsList = {
     id: 'BCH',
     currency_id: '',
     system_id: '.bch',
+    bitgojs_network_key: 'bitcoincash',
     display_ticker: 'BCH',
     display_name: 'Bitcoin Cash',
     alt_names: [],
@@ -398,6 +430,7 @@ export const coinsList = {
     id: 'ZEC',
     currency_id: '',
     system_id: '.zec',
+    bitgojs_network_key: 'zcash',
     display_ticker: 'ZEC',
     display_name: 'Zcash',
     alt_names: [],
@@ -414,6 +447,7 @@ export const coinsList = {
     id: 'DASH',
     currency_id: '',
     system_id: '.dash',
+    bitgojs_network_key: 'dash',
     display_ticker: 'DASH',
     theme_color: '#0D8DE4',
     display_name: 'Dash',
@@ -429,6 +463,7 @@ export const coinsList = {
     id: 'LTC',
     currency_id: '',
     system_id: '.ltc',
+    bitgojs_network_key: 'litecoin',
     display_ticker: 'LTC',
     display_name: 'Litecoin',
     alt_names: [],
@@ -444,6 +479,7 @@ export const coinsList = {
     id: 'ZILLA',
     currency_id: 'zilla',
     system_id: '.kmd',
+    bitgojs_network_key: 'kmd',
     display_ticker: 'ZILLA',
     display_name: 'ChainZilla',
     alt_names: [],

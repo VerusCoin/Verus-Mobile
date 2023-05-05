@@ -16,7 +16,8 @@ import {
   SIGN_OUT_COMPLETE,
   SIGN_OUT,
   OPEN_SEND_COIN_MODAL,
-  UPDATE_ACCOUNT_DISABLED_SERVICES
+  UPDATE_ACCOUNT_DISABLED_SERVICES,
+  UPDATE_ACCOUNT_TESTNET_OVERRIDES_COMPLETE
 } from "../utils/constants/storeType";
 import {
   SERVICES_DISABLED_DEFAULT
@@ -34,7 +35,8 @@ export const authentication = (
       paymentMethods: {},
       biometry: false,
       keyDerivationVersion: 1,
-      disabledServices: SERVICES_DISABLED_DEFAULT
+      disabledServices: SERVICES_DISABLED_DEFAULT,
+      testnetOverrides: {}
     },
     signedIn: false,
     selectDefaultAccount: true,
@@ -125,6 +127,12 @@ export const authentication = (
       return {
         ...state,
         activeAccount: { ...state.activeAccount, disabledServices: action.payload.disabledServices },
+        accounts: action.payload.accounts
+      };
+    case UPDATE_ACCOUNT_TESTNET_OVERRIDES_COMPLETE:
+      return {
+        ...state,
+        activeAccount: { ...state.activeAccount, testnetOverrides: action.payload.testnetOverrides },
         accounts: action.payload.accounts
       };
     default:

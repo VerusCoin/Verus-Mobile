@@ -10,9 +10,10 @@ import { useSelector } from 'react-redux';
 import Colors from '../../../globals/colors';
 import { VerusIdLogo } from '../../../images/customIcons';
 import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
-import { AUTHENTICATE_USER_SEND_MODAL } from '../../../utils/constants/sendModal';
+import { AUTHENTICATE_USER_SEND_MODAL, SEND_MODAL_USER_ALLOWLIST } from '../../../utils/constants/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
-import { getCoinIdFromSystemId } from '../../../utils/CoinData/CoinData';
+import { findCoinObj, getCoinIdFromSystemId } from '../../../utils/CoinData/CoinData';
+import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 
 const LoginRequestInfo = props => {
   const { deeplinkData, sigtime, cancel, signerFqn } = props
@@ -21,6 +22,7 @@ const LoginRequestInfo = props => {
   const [verusIdDetailsModalProps, setVerusIdDetailsModalProps] = useState(null)
   const [sigDateString, setSigDateString] = useState(unixToDate(sigtime))
   const [waitingForSignin, setWaitingForSignin] = useState(false)
+  const accounts = useSelector(state => state.authentication.accounts)
   const signedIn = useSelector(state => state.authentication.signedIn)
   const sendModalType = useSelector(state => state.sendModal.type)
 
@@ -46,7 +48,10 @@ const LoginRequestInfo = props => {
     
           return getFriendlyNameMap({id: chain}, identityObj);
         } catch (e) {
-          return {['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC'};
+          return {
+            ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',
+            ['iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq']: 'VRSCTEST',
+          };
         }
       },
       iAddress,
@@ -78,14 +83,50 @@ const LoginRequestInfo = props => {
 
   handleContinue = () => {
     if (signedIn) {
-      props.navigation.navigate("LoginRequestIdentity", {
-        deeplinkData
-      })
+      props.navigation.navigate('LoginRequestIdentity', {
+        deeplinkData,
+      });
     } else {
-      setWaitingForSignin(true)
-      openAuthenticateUserModal()
+      setWaitingForSignin(true);
+      const coinObj = findCoinObj(chain_id);
+      const allowList = coinObj.testnet ? accounts.filter(x => {
+        if (
+          x.testnetOverrides &&
+          x.testnetOverrides[coinObj.mainnet_id] === coinObj.id
+        ) {
+          return true;
+        } else {
+          return false;
+        }
+      }) : accounts.filter(x => {
+        if (
+          x.testnetOverrides &&
+          x.testnetOverrides[coinObj.mainnet_id] != null
+        ) {
+          return false;
+        } else {
+          return true;
+        }
+      })
+
+      if (allowList.length > 0) {
+        const data = {
+          [SEND_MODAL_USER_ALLOWLIST]: allowList
+        }
+  
+        openAuthenticateUserModal(data);
+      } else {
+        createAlert(
+          "Cannot continue",
+          `No ${
+            coinObj.testnet ? 'testnet' : 'mainnet'
+          } profiles found, cannot respond to ${
+            coinObj.testnet ? 'testnet' : 'mainnet'
+          } login request.`,
+        );
+      }
     }
-  }
+  };
 
   return loading ? (
     <AnimatedActivityIndicatorBox />

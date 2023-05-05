@@ -10,15 +10,13 @@ export * from './requests/getServerVersion';
 
 import { proxyServers, httpsEnabled } from './proxyServers';
 import { getGoodServer, testProxy, testElectrum } from './serverTester';
-import { timeout } from '../../../promises';
 import { getServerVersion } from './requests/getServerVersion';
 import { updateParamObj } from '../../../electrumUpdates';
-import { networks } from 'bitgo-utxo-lib';
+import { networks } from '@bitgo/utxo-lib';
 import { isJson } from '../../../objectManip'
 import ApiException from '../../errors/apiError';
 import { ELECTRUM } from '../../../constants/intervalConstants'
 
-import { REQUEST_TIMEOUT_MS } from '../../../../../env/index'
 import axios from 'axios';
 
 // This purpose of this method is to take in a list of electrum servers,
@@ -27,7 +25,10 @@ import axios from 'axios';
 // servers are working by attempting to call getBlockHeight on each of them.
 // It then calls the specified command with the specified params (passed in as an object)
 // on that electrum server with an HTTP get
-export const getElectrum = async (serverList, callType, params, toSkip, coinID) => {
+export const getElectrum = async (coinObj, callType, params, toSkip) => {
+  const serverList = coinObj.electrum_endpoints
+  const coinID = coinObj.id
+
   const proxyServer = (await getGoodServer(testProxy, proxyServers)).goodServer
   let goodServerRes = null
 
@@ -70,7 +71,7 @@ export const getElectrum = async (serverList, callType, params, toSkip, coinID) 
 
   updateParamObj(
     params,
-    networks[coinID.toLowerCase()] ? networks[coinID.toLowerCase()] : networks['default'],
+    networks[coinObj.bitgojs_network_key] ? networks[coinObj.bitgojs_network_key] : networks['verus'],
     resultObj.electrumVersion)
 
   for (let key in params) {
@@ -92,53 +93,18 @@ export const getElectrum = async (serverList, callType, params, toSkip, coinID) 
 }
 
 //Function to update only if values have changed
-export const updateValues = (oldResponse, serverList, callType, params, coinID, toSkip) => {
-  return new Promise((resolve, reject) => {
-    getElectrum(serverList, callType, params, toSkip, coinID)
-    .then((response) => {
-      if(response === oldResponse) {
-        resolve({
-          coin: coinID,
-          result: oldResponse,
-          new: false,
-          blockHeight: response.blockHeight,
-          electrumUsed: response.electrumUsed,
-          electrumVersion: response.electrumVersion,
-          error: false
-        })
-      } else if (response === false) {
-        resolve(false)
-      } else {
-        resolve({
-          coin: coinID,
-          result: response,
-          new: true,
-          blockHeight: response.blockHeight,
-          electrumUsed: response.electrumUsed,
-          electrumVersion: response.electrumVersion,
-          error: false
-        })
-      }
-    })
-    .catch((err) => {
-      reject(err)
-    })
-  });
-}
-
-//Function to update only if values have changed
-export const electrumRequest = async (serverList, callType, params, coinID, toSkip) => {
+export const electrumRequest = async (coinObj, callType, params, toSkip) => {
   try {
-    const response = await getElectrum(serverList, callType, params, toSkip, coinID)
+    const response = await getElectrum(coinObj, callType, params, toSkip)
 
-    return !response ? false : {coin: coinID, ...response}
+    return !response ? false : {coin: coinObj.id, ...response}
   } catch(err) {
     console.warn(err)
       
     throw new ApiException(
       err.name,
       err.message,
-      coinID,
+      coinObj.id,
       ELECTRUM,
       err.code
     )

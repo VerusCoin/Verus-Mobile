@@ -12,7 +12,7 @@ import {List} from 'react-native-paper';
 import {Searchbar, Portal} from 'react-native-paper';
 import {connect} from 'react-redux';
 import Styles from '../../styles/index';
-import {findCoinObj, supportedCoinList, enabledNameList} from '../../utils/CoinData/CoinData';
+import {findCoinObj, supportedCoinList, enabledNameList, testCoinList} from '../../utils/CoinData/CoinData';
 import {RenderSquareCoinLogo} from '../../utils/CoinData/Graphics';
 import CoinDetailsModal from '../../components/CoinDetailsModal/CoinDetailsModal';
 import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
@@ -71,10 +71,11 @@ class AddCoin extends Component {
 
   getCoinList = () => {
     const {query} = this.state;
-    const displayedCoinList = this.props.activeAccount.disabledServices[WYRE_SERVICE]
+    const displayedCoinList = this.props.testAccount
+      ? testCoinList
+      : this.props.activeAccount.disabledServices[WYRE_SERVICE]
       ? enabledNameList
       : supportedCoinList;
-
 
     return displayedCoinList
       .filter(coinId => {
@@ -88,9 +89,9 @@ class AddCoin extends Component {
         );
       })
       .sort((a, b) => {
-        if (b === 'VRSC' || b === 'BTC') {
+        if (b === 'VRSC' || b === 'BTC' || b === 'VRSCTEST') {
           return 1;
-        } else if (a === 'VRSC' || a === 'BTC') {
+        } else if (a === 'VRSC' || a === 'BTC' || b === 'VRSCTEST') {
           return -1;
         } else {
           return a <= b ? -1 : 1;
@@ -172,6 +173,7 @@ class AddCoin extends Component {
 
 const mapStateToProps = state => {
   return {
+    testAccount: Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0,
     activeAccount: state.authentication.activeAccount,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,

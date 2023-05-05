@@ -1,5 +1,14 @@
-import { pubToElectrumScriptHashHex } from 'agama-wallet-lib/src/keys';
 import { ELECTRUM_PROTOCOL_CHANGE } from './constants/constants'
+import bitcoin from '@bitgo/utxo-lib'
+
+export const pubToElectrumScriptHashHex = (address, network) => {
+  let script = bitcoin.address.toOutputScript(address, network);
+  
+  const hash = bitcoin.crypto.sha256(script);
+  const reversedHash = Buffer.from(hash.reverse());
+
+  return reversedHash.toString('hex');
+};
 
 //If params contain an address, and electrum server version is 1.4, convert the address to
 //scripthash

@@ -2,7 +2,11 @@ import { convertFqnToDisplayFormat } from "../../../../fullyqualifiedname";
 import { getIdentity } from "./getIdentity";
 
 export const getFriendlyNameMap = async (coinObj, identityObj) => {
-  let names = { ["i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV"]: "VRSC" };
+  let names = {
+    ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',
+    ['iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq']: 'VRSCTEST',
+  };
+
   let iAddresses = [];
   const iAddress = identityObj.identity.identityaddress
 
