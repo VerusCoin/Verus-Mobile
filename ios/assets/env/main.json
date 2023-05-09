@@ -1,5 +1,5 @@
 {
-  "APP_VERSION": "0.9.0",
+  "APP_VERSION": "0.9.0-1",
   "ELECTRUM_PROTOCOL_CHANGE": 1.4,
 
   "KEY_DERIVATION_VERSION": 1,
@@ -11,7 +11,6 @@
   "ETH_TRANSACTION_RECEIPT_CAP": 100,
   "MIN_ETH_TX_CONFS": 100,
 
-  "ENABLE_FIAT_GATEWAY": false,
   "ENABLE_VERUS_IDENTITIES": false,
   "DISABLED_CHANNELS": [],
   "ENABLE_DLIGHT": true,
@@ -23,7 +22,13 @@
   "ENABLE_VRPC": true,
   "ENABLE_VERUSID": true,
 
+  "SERVICES_DISABLED_DEFAULT": {
+    "wyre_service": true,
+    "verusid_service": false
+  },
+
   "ETH_HOMESTEAD": "homestead",
+  "VERUSID_NETWORK_DEFAULT": "VRSC",
 
   "BIOMETRIC_SECURITY_THRESHOLD": "SECURE_HARDWARE",
 
@@ -38,6 +43,8 @@
   "BLOCK_HEIGHT_STORAGE_INTERNAL_KEY": "blockHeight",
   "PERSONAL_DATA_STORAGE_INTERNAL_KEY": "personal",
   "SERVICE_STORAGE_INTERNAL_KEY": "serviceStoredData",
+  "NOTIFICATIONS_STORAGE_INTERNAL_KEY": "notifications",
+  "WIDGET_STORAGE_INTERNAL_KEY": "widgets",
 
   "WYRE_ACCESSIBLE": true
 }
