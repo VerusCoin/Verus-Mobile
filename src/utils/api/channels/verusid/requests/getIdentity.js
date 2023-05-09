@@ -13,7 +13,11 @@ export const extractIdentityAddress = async (
   identityAddressString,
   coinId = 'VRSC',
 ) => {
-  if (coinId !== 'VRSC') throw new Error("VerusIDs are currently only supported for VRSC")
+  if (coinId !== 'VRSC' && coinId !== 'VRSCTEST') {
+    throw new Error(
+      'VerusIDs are currently only supported for VRSC and VRSCTEST',
+    );
+  }
 
   let identityArray = identityAddressString.split('@');
 

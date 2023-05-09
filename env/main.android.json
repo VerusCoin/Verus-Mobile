@@ -1,5 +1,5 @@
 {
-  "APP_VERSION": "0.9.0",
+  "APP_VERSION": "0.9.0-1",
   "ELECTRUM_PROTOCOL_CHANGE": 1.4,
 
   "KEY_DERIVATION_VERSION": 1,
@@ -27,7 +27,8 @@
     "verusid_service": false
   },
 
-  "ETH_NETWORK": "homestead",
+  "ETH_HOMESTEAD": "homestead",
+  "VERUSID_NETWORK_DEFAULT": "VRSC",
 
   "BIOMETRIC_SECURITY_THRESHOLD": "SECURE_HARDWARE",
 

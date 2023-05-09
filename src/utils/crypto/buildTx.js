@@ -1,4 +1,4 @@
-import bitcoin from 'bitgo-utxo-lib';
+import bitcoin from "@bitgo/utxo-lib";
 
 export const buildSignedTx = (
   sendTo,
@@ -65,9 +65,6 @@ export const buildSignedTx = (
   }
 
   const rawtx = tx.build().toHex();
-
-  //shepherd.log('buildSignedTx signed tx hex', true);
-  //shepherd.log(rawtx, true);
 
   return rawtx;
 };
