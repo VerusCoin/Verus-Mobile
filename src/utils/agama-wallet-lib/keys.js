@@ -2,6 +2,7 @@ const bigi = require('bigi');
 const bitcoin = require("@bitgo/utxo-lib");
 const bs58check = require('bs58check');
 const ethUtil = require('ethereumjs-util');
+const ethersWallet = require('ethers')
 const wif = require('wif');
 const { sha256 } = require('../crypto/hash');
 
@@ -113,11 +114,21 @@ const ethToBtcWif = (priv, network) => {
   .toWIF();
 };
 
+const btcToEthPriv = (_wif) => {
+  const decodedWif = wif.decode(_wif);
+  const ethWallet = new ethersWallet.Wallet(ethUtil.bufferToHex(decodedWif.privateKey));
+
+  return ethWallet.privateKey;
+};
+
 const seedToPriv = (string, dest) => {
+  let bs58 = false
   try {
     bs58check.decode(string);
-    return dest === 'btc' ? string : btcToEthPriv(string);
+    bs58 = true;
   } catch (e) {}
+
+  if (bs58) return dest === 'btc' ? string : btcToEthPriv(string);
 
   if (ethUtil.isValidPrivate(ethUtil.toBuffer(string))) {
     return dest === 'eth' ? string : ethToBtcWif(string);
