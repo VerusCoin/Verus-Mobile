@@ -75,14 +75,10 @@ export const updateActiveCoinList = () => {
         coinList = coinList.map((coin) => {
           try {
             const newCoinObj = findCoinObj(coin.id, "")
-          
-            if (coin.id !== 'K64') {
-              newCoinList.push({...newCoinObj, users: coin.users})
-            }
+            newCoinList.push({...newCoinObj, users: coin.users})
           } catch(e) {
             console.warn(e)
           }
-          
         })
 
         return storeCoins(newCoinList)

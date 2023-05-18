@@ -66,7 +66,6 @@ export const IS_PBAAS = "is_pbaas"
 export const IS_ZCASH = "is_zcash"
 export const IS_PBAAS_ROOT = "is_pbaas_root"
 export const IS_FIAT = 'is_fiat'
-export const IS_PBAAS_TOKEN = "is_pbaas_token"
 
 // API channel types
 export const DLIGHT_PRIVATE = 'dlight_private'

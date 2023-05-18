@@ -15,7 +15,7 @@ import {
   WALLET_APP_MANAGE
 } from "../constants/apps";
 
-const getDefaultApps = (coinObj) => {
+export const getDefaultApps = (coinObj) => {
   const coinName = coinObj.display_name
   let subwallets = getDefaultSubWallets(coinObj)
 
@@ -245,7 +245,7 @@ export const getCoinFromActiveCoins = (coinTicker, activeCoinsForUser) => {
     index++;
   }
 
-  if (index < fullCoinList.length) {
+  if (index < activeCoinsForUser.length) {
     return activeCoinsForUser[index];
   } else {
     return false;

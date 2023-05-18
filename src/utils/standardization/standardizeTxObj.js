@@ -1,9 +1,7 @@
 import BigNumber from "bignumber.js";
-import { ethers } from "ethers";
 import { ETHERS } from "../constants/web3Constants";
-import { satsToCoins } from "../math";
+import { unitsToCoins, weiToCoins } from "../math";
 import { decodeMemo } from "../memoUtils";
-const { formatEther, formatUnits } = ethers.utils
 
 // Makes transaction objects from lightwalletd client resemble those from electrum,
 // for predictable, standard behaviour
@@ -49,32 +47,31 @@ export const standardizeEthTxObj = (transactions, address, decimals = ETHERS) =>
         address: transactions[i].to,
         amount:
           transactions[i].value != null
-            ? formatUnits(transactions[i].value, decimals)
+            ? unitsToCoins(BigNumber(transactions[i].value), decimals).toString()
             : null,
         gas:
           transactions[i].gas != null
-            ? formatEther(transactions[i].gas)
+            ? weiToCoins(BigNumber(transactions[i].gas)).toString()
             : null,
         gasPrice:
           transactions[i].gasPrice != null
-            ? formatEther(transactions[i].gasPrice)
+            ? weiToCoins(BigNumber(transactions[i].gasPrice)).toString()
             : null,
         cumulativeGasUsed:
           transactions[i].cumulativeGasUsed != null
-            ? formatEther(transactions[i].cumulativeGasUsed)
+            ? weiToCoins(BigNumber(transactions[i].cumulativeGasUsed)).toString()
             : null,
         gasUsed:
           transactions[i].gasUsed != null
-            ? formatEther(transactions[i].gasUsed)
+            ? weiToCoins(BigNumber(transactions[i].gasUsed)).toString()
             : null,
         fee:
           transactions[i].gasPrice != null &&
           transactions[i].gasUsed != null
-            ? formatEther(
+            ? weiToCoins(
                 BigNumber(transactions[i].gasPrice)
                   .multipliedBy(BigNumber(transactions[i].gasUsed))
-                  .toString()
-              )
+              ).toString()
             : null,
         input: transactions[i].input,
         contractAddress: transactions[i].contractAddress,

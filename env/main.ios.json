@@ -45,6 +45,7 @@
   "SERVICE_STORAGE_INTERNAL_KEY": "serviceStoredData",
   "NOTIFICATIONS_STORAGE_INTERNAL_KEY": "notifications",
   "WIDGET_STORAGE_INTERNAL_KEY": "widgets",
+  "CURRENCY_DEFINITION_STORAGE_INTERNAL_KEY": "currencyDefinitions",
 
   "WYRE_ACCESSIBLE": true
 }

@@ -6,7 +6,7 @@ export const MOCK_USER_OBJ = {
   accountHash: '0d09a83e8659dd37b875e43498823459b3e27b42299d80960557d443f6bf98e0',
   seeds: {
     electrum: 'hunter2',
-    dlight: "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol."
+    dlight_private: "a seed that is at least 32 bytes long so that it will work with the ZIP 32 protocol."
   },
   keys: {
     VRSC: {
@@ -41,7 +41,7 @@ export const MOCK_USER_OBJ_BALANCE_LARGE_VRSC = {
   id: 'VRSC Richlist #2 Address at https://dexstats.info/richlist.php?asset=VRSC as of July 31st, 2019',
   seeds: {
     electrum: '',
-    dlight: ''
+    dlight_private: ''
   },
   keys: {
     VRSC: {
@@ -66,7 +66,7 @@ export const MOCK_USER_OBJ_BALANCE_SMALL_VRSC = {
   id: 'Random address with balance of ~3000 VRSC taken from https://dexstats.info/richlist.php?asset=VRSC on July 31st, 2019',
   seeds: {
     electrum: '',
-    dlight: ''
+    dlight_private: ''
   },
   keys: {
     VRSC: {
@@ -90,7 +90,7 @@ export const MOCK_USER_OBJ_BALANCE_SMALL_KMD = {
   id: 'KMD Richlist #1000 Address at https://dexstats.info/richlist.php?asset=KMD as of July 31st, 2019',
   seeds: {
     electrum: '',
-    dlight: ''
+    dlight_private: ''
   },
   keys: {
     VRSC: {
@@ -126,7 +126,7 @@ export const getTempActiveCoin = (coinID, callsSucceed, code, params, errorMsg =
   name: "Test Coin", 
   description: "Coin for testing", 
   fee: 10000,
-  compatible_channels: [ 'dlight', 'electrum', 'general' ],
+  compatible_channels: [ 'dlight_private', 'electrum', 'general' ],
   tags: [ 'is_verus', 'is_zcash', 'is_pbaas', 'is_pbaas_root' ],
   users: [
   'AzureDiamond',

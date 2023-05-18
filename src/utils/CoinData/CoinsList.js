@@ -11,8 +11,7 @@ import {
   WYRE_SERVICE,
   IS_FIAT,
   VRPC,
-  VERUSID,
-  IS_PBAAS_TOKEN
+  VERUSID
 } from "../constants/intervalConstants";
 import { dlightServers } from '../agama-wallet-lib/dlight-servers';
 import {
@@ -28,7 +27,7 @@ import {
 } from '../constants/apps';
 import Colors from "../../globals/colors";
 
-const VERUS_APPS = {
+export const VERUS_APPS = {
   wallet: {
     title: 'Verus Coin Wallet',
     data: [
@@ -95,67 +94,6 @@ export const coinsList = {
     fee: 10000,
     compatible_channels: [VERUSID, VRPC],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT],
-    proto: 'vrsc',
-    vrpc_endpoints: ['https://api.verustest.net'],
-    decimals: DEFAULT_DECIMALS,
-    seconds_per_block: 60,
-    default_app: 'wallet',
-    apps: VERUS_APPS
-  },
-  iNC9NG5Jqk2tqVtqfjfiSpaqxrXaFU6RDu: {
-    testnet: true,
-    id: 'iNC9NG5Jqk2tqVtqfjfiSpaqxrXaFU6RDu',
-    currency_id: 'iNC9NG5Jqk2tqVtqfjfiSpaqxrXaFU6RDu',
-    system_id: 'iNC9NG5Jqk2tqVtqfjfiSpaqxrXaFU6RDu',
-    bitgojs_network_key: 'verustest',
-    display_ticker: 'ANDROMEDA',
-    display_name: 'Andromeda',
-    alt_names: [],
-    theme_color: '#232323',
-    compatible_channels: [VERUSID, VRPC],
-    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT],
-    proto: 'vrsc',
-    vrpc_endpoints: ['http://192.168.2.5:8000'],
-    decimals: DEFAULT_DECIMALS,
-    seconds_per_block: 60,
-    default_app: 'wallet',
-    apps: VERUS_APPS
-  },
-  iFZC7A1HnnJGwBmoPjX3mG37RKbjZZLPhm: {
-    testnet: true,
-    mainnet_id: 'VRSC',
-    id: 'iFZC7A1HnnJGwBmoPjX3mG37RKbjZZLPhm',
-    currency_id: 'iFZC7A1HnnJGwBmoPjX3mG37RKbjZZLPhm',
-    system_id: 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq',
-    bitgojs_network_key: 'verustest',
-    display_ticker: 'SERVICE',
-    display_name: 'Service',
-    alt_names: [],
-    theme_color: '#232323',
-    website: 'https://verus.io',
-    compatible_channels: [VERUSID, VRPC],
-    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_TOKEN],
-    proto: 'vrsc',
-    vrpc_endpoints: ['https://api.verustest.net'],
-    decimals: DEFAULT_DECIMALS,
-    seconds_per_block: 60,
-    default_app: 'wallet',
-    apps: VERUS_APPS
-  },
-  iEqnGLKw1ZnoYDh1jQUNojdZGQtt8P1Pwt: {
-    testnet: true,
-    mainnet_id: 'ROOMFUL',
-    id: 'iEqnGLKw1ZnoYDh1jQUNojdZGQtt8P1Pwt',
-    currency_id: 'iEqnGLKw1ZnoYDh1jQUNojdZGQtt8P1Pwt',
-    system_id: 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq',
-    bitgojs_network_key: 'verustest',
-    display_ticker: 'ROOMFUL',
-    display_name: 'roomful',
-    alt_names: [],
-    theme_color: '#232323',
-    website: 'https://verus.io',
-    compatible_channels: [VERUSID, VRPC],
-    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_TOKEN],
     proto: 'vrsc',
     vrpc_endpoints: ['https://api.verustest.net'],
     decimals: DEFAULT_DECIMALS,

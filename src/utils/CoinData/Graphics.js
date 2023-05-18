@@ -1,6 +1,6 @@
 import React from "react";
 import { Card } from "react-native-paper";
-import { CoinLogos, getCoinLogo } from "./CoinData";
+import { CoinLogos, findCoinObj, getCoinLogo } from "./CoinData";
 import { coinsList } from "./CoinsList";
 
 export const RenderSquareLogo = (LogoComponent, color, width = 40, height = 40) => {
@@ -24,6 +24,7 @@ export const RenderSquareLogo = (LogoComponent, color, width = 40, height = 40) 
 
 export const RenderSquareCoinLogo = (chainTicker, style = {}, width = 40, height = 40) => {
   const Logo = getCoinLogo(chainTicker);
+  const coinObj = findCoinObj(chainTicker)
 
   return RenderSquareLogo(
     <Logo
@@ -34,7 +35,7 @@ export const RenderSquareCoinLogo = (chainTicker, style = {}, width = 40, height
         ...style
       }}
     />,
-    coinsList[chainTicker].theme_color,
+    coinObj.theme_color,
     width,
     height
   );

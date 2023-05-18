@@ -3,12 +3,28 @@ import { ETHERS } from "./constants/web3Constants"
 import BigNumber from "bignumber.js";
 
 //Math done to eliminate JS rounding errors when moving from statoshis to coin denominations
+export const coinsToUnits = (coin, decimals) => {
+  return coin.multipliedBy(BigNumber(10).pow(BigNumber(decimals)))
+}
+
+export const unitsToCoins = (units, decimals) => {
+  return units.dividedBy(BigNumber(10).pow(BigNumber(decimals)))
+}
+
 export const coinsToSats = (coins) => {
-  return coins.multipliedBy(BigNumber(100000000))
+  return coinsToUnits(coins, 8)
 }
 
 export const satsToCoins = (satoshis) => {
-  return satoshis.dividedBy(BigNumber(100000000))
+  return unitsToCoins(satoshis, 8)
+}
+
+export const coinsToWei = (coins) => {
+  return coinsToUnits(coins, ETHERS)
+}
+
+export const weiToCoins = (satoshis) => {
+  return unitsToCoins(satoshis, ETHERS)
 }
 
 export const toFixedWithoutRounding = (num, decimals) => {
