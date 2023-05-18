@@ -1,7 +1,5 @@
 import BigNumber from "bignumber.js";
 import { ethers } from "ethers";
-import { estimateBlocktimeAtHeight } from "../block";
-import { getCoinIdFromSystemId } from "../CoinData/CoinData";
 import { ETHERS } from "../constants/web3Constants";
 import { satsToCoins } from "../math";
 import { decodeMemo } from "../memoUtils";
@@ -125,7 +123,8 @@ export const standardizeWyreTxObj = (transaction, accountAddress, coinObj) => {
 };
 
 export const standardizeVrpcTxObj = (transaction, coinObj, currHeight) => {
-  const {satoshis, txid, height, address, blocktime, sent, mempool} = transaction;
+  const {amount, txid, height, address, blocktime, sent, mempool} = transaction;
+  const amountBn = BigNumber(amount)
   let timeEstimate;
 
   if (!blocktime && currHeight && height) {
@@ -153,8 +152,8 @@ export const standardizeVrpcTxObj = (transaction, coinObj, currHeight) => {
       if (b !== address) return 1;
       else return -1;
     }).join(' & '),
-    amount: satsToCoins(BigNumber(satoshis).abs()).toString(),
-    type: satoshis >= 0 ? 'received' : 'sent',
+    amount: amountBn.abs().toString(),
+    type: amountBn.isGreaterThan(0) ? 'received' : 'sent',
     confirmed: mempool ? false : true,
     height,
     timestamp: blocktime ? blocktime : timeEstimate,

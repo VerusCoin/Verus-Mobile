@@ -1,7 +1,7 @@
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 
-export const getAddressUtxos = (coinObj, addresses, includeFriendlyNames) => {
-  return VrpcProvider.getEndpoint(coinObj.id).getAddressUtxos({
+export const getAddressUtxos = (systemId, addresses, includeFriendlyNames) => {
+  return VrpcProvider.getEndpoint(systemId).getAddressUtxos({
     addresses,
     friendlynames: includeFriendlyNames,
   });

@@ -59,8 +59,6 @@ const getMainSubwallet = (dominantChannel = ELECTRUM) => {
 };
 
 const getDynamicVrpcSubwallet = (channelId, name) => {
-  const addr = channelId.split('.')[1];
-
   return {
     channel: channelId,
     api_channels: {
@@ -76,7 +74,7 @@ const getDynamicVrpcSubwallet = (channelId, name) => {
     modals: {
       [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL,
     },
-    id: `VERUSID_WALLET_${addr}`,
+    id: `SUBWALLET_${channelId}`,
     params: {},
     color: Colors.primaryColor,
     address_info: [{label: 'Address'}],

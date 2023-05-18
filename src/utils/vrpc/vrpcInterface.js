@@ -9,35 +9,35 @@ import {
 import { hashAccountId } from '../crypto/hash';
 
 class VrpcInterface {
-  chainEndpointIds = {};
+  systemEndpointIds = {};
   endpointConnections = {};
 
-  static getEndpointId(chain, endpoint) {
-    return hashAccountId(`${chain}:${endpoint}`).toString('hex');
+  static getEndpointId(systemId, endpoint) {
+    return hashAccountId(`${systemId}:${endpoint}`).toString('hex');
   }
 
-  removeChainEndpoint(chain, endpoint) {
-    if (this.chainEndpointIds[chain] == null) this.chainEndpointIds[chain] = [];
-    const id = VrpcInterface.getEndpointId(chain, endpoint);
+  removeChainEndpoint(systemId, endpoint) {
+    if (this.systemEndpointIds[systemId] == null) this.systemEndpointIds[systemId] = [];
+    const id = VrpcInterface.getEndpointId(systemId, endpoint);
 
-    this.chainEndpointIds[chain] = this.chainEndpointIds[chain].filter(
+    this.systemEndpointIds[systemId] = this.systemEndpointIds[systemId].filter(
       x => x !== id,
     );
   }
 
-  saveChainEndpoint(chain, endpoint) {
-    if (this.chainEndpointIds[chain] == null) this.chainEndpointIds[chain] = [];
+  saveChainEndpoint(systemId, endpoint) {
+    if (this.systemEndpointIds[systemId] == null) this.systemEndpointIds[systemId] = [];
 
-    this.chainEndpointIds[chain].push(
-      VrpcInterface.getEndpointId(chain, endpoint),
+    this.systemEndpointIds[systemId].push(
+      VrpcInterface.getEndpointId(systemId, endpoint),
     );
   }
 
-  getEndpointAddressForChain(chain) {
-    if (this.chainEndpointIds[chain] == null) this.chainEndpointIds[chain] = [];
+  getEndpointAddressForChain(systemId) {
+    if (this.systemEndpointIds[systemId] == null) this.systemEndpointIds[systemId] = [];
     const randomId =
-      this.chainEndpointIds[chain][
-        Math.floor(Math.random() * this.chainEndpointIds[chain].length)
+      this.systemEndpointIds[systemId][
+        Math.floor(Math.random() * this.systemEndpointIds[systemId].length)
       ];
 
     return Store.getState().channelStore_vrpc.vrpcEndpoints[randomId][1];
@@ -53,21 +53,21 @@ class VrpcInterface {
     else this.endpointConnections[id] = 0;
   }
 
-  initEndpoint = async (chain, endpoint) => {
+  initEndpoint = async (systemId, endpoint) => {
     const endpoints = Store.getState().channelStore_vrpc.vrpcEndpoints;
-    const id = VrpcInterface.getEndpointId(chain, endpoint);
+    const id = VrpcInterface.getEndpointId(systemId, endpoint);
 
     try {
       this.recordEndpointConnection(id);
       if (endpoints[id]) return;
 
-      this.saveChainEndpoint(chain, endpoint);
+      this.saveChainEndpoint(systemId, endpoint);
 
       Store.dispatch({
         type: ADD_VRPC_ENDPOINT,
         payload: {
           endpointId: id,
-          endpoint: [chain, endpoint],
+          endpoint: [systemId, endpoint],
         },
       });
     } catch (e) {
@@ -76,23 +76,23 @@ class VrpcInterface {
     }
   };
 
-  deleteEndpoint = (chain, endpoint) => {
+  deleteEndpoint = (systemId, endpoint) => {
     const endpoints = Store.getState().channelStore_vrpc.vrpcEndpoints;
-    const id = VrpcInterface.getEndpointId(chain, endpoint);
+    const id = VrpcInterface.getEndpointId(systemId, endpoint);
 
     try {
       if (!endpoints[id])
         throw new Error(
           'Cannot delete uninitialized endpoint ' +
             endpoint +
-            ' for chain ' +
-            chain,
+            ' for systemId ' +
+            systemId,
         );
 
       this.endEndpointConnection(id);
 
       if (this.endpointConnections[id] == 0) {
-        this.removeChainEndpoint(chain, endpoint);
+        this.removeChainEndpoint(systemId, endpoint);
 
         Store.dispatch({
           type: REMOVE_VRPC_ENDPOINT,
@@ -109,33 +109,33 @@ class VrpcInterface {
 
   deleteAllEndpoints = () => {
     Store.dispatch({type: CLEAR_VRPC_ENDPOINTS});
-    this.chainEndpointIds = {};
+    this.systemEndpointIds = {};
   };
 
-  getEndpoint = chain => {
-    const endpoint = this.getEndpointAddressForChain(chain);
+  getEndpoint = systemId => {
+    const endpoint = this.getEndpointAddressForChain(systemId);
     const endpoints = Store.getState().channelStore_vrpc.vrpcEndpoints;
-    const id = VrpcInterface.getEndpointId(chain, endpoint);
+    const id = VrpcInterface.getEndpointId(systemId, endpoint);
     const params = endpoints[id];
 
     if (!params)
       throw new Error(
-        `Verus RPC endpoint ${endpoint} not initialized for chain ${chain}`,
+        `Verus RPC endpoint ${endpoint} not initialized for systemId ${systemId}`,
       );
-    return new VerusdRpcInterface(chain, endpoint);
+    return new VerusdRpcInterface(systemId, endpoint);
   };
 
-  getVerusIdInterface = chain => {
-    const endpoint = this.getEndpointAddressForChain(chain);
+  getVerusIdInterface = systemId => {
+    const endpoint = this.getEndpointAddressForChain(systemId);
     const endpoints = Store.getState().channelStore_vrpc.vrpcEndpoints;
-    const id = VrpcInterface.getEndpointId(chain, endpoint);
+    const id = VrpcInterface.getEndpointId(systemId, endpoint);
     const params = endpoints[id];
 
     if (!params)
       throw new Error(
-        `Verus RPC endpoint ${endpoint} not initialized for chain ${chain}`,
+        `Verus RPC endpoint ${endpoint} not initialized for systemId ${systemId}`,
       );
-    return new VerusIdInterface(chain, endpoint)
+    return new VerusIdInterface(systemId, endpoint)
   }
 }
 

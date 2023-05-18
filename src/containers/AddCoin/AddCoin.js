@@ -144,7 +144,7 @@ class AddCoin extends Component {
           onEndReachedThreshold={50}
           renderItem={({item}) => {
             const added = activeCoinIds.includes(item);
-            const coinInfo = coinsList[item.toLowerCase()];
+            const coinInfo = coinsList[item];
             const {display_name, display_ticker} = coinInfo;
 
             return (

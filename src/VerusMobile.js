@@ -142,7 +142,7 @@ class VerusMobile extends React.Component {
   }
 
   render() {    
-    const VrscLogo = CoinLogos.vrsc.light
+    const VrscLogo = CoinLogos.VRSC.light
 
     return (
       <View style={{ flex: 1 }}>

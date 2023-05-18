@@ -62,7 +62,7 @@ export const initializeAccountData = async (
         }),
       );
 
-      activateChainLifecycle(coinObj);
+      activateChainLifecycle(coinObj, activeCoinsForUser);
     }
 
     store.dispatch(setUserCoinsAction);

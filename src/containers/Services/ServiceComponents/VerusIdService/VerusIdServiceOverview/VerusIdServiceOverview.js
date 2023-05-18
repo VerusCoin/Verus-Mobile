@@ -99,10 +99,13 @@ class VerusIdServiceOverview extends Component {
       await unlinkVerusId(iAddress, coinObj.id);
       await updateVerusIdWallet();
       clearChainLifecycle(coinObj.id);
-      this.props.dispatch(
-        setUserCoins(this.props.activeCoinList, this.props.activeAccount.id),
-      );
-      activateChainLifecycle(coinObj);
+      
+      const setUserCoinsAction = setUserCoins(this.props.activeCoinList, this.props.activeAccount.id);
+
+      this.props.dispatch(setUserCoinsAction);
+
+      activateChainLifecycle(coinObj, setUserCoinsAction.payload.activeCoinsForUser);
+
       this.props.dispatch(setServiceLoading(false, VERUSID_SERVICE_ID));
     } catch (e) {
       createAlert('Error', e.message);

@@ -4,7 +4,8 @@ import {
   SYNCING,
   POST_SYNC,
   API_GET_INFO,
-  DLIGHT_PRIVATE
+  DLIGHT_PRIVATE,
+  IS_PBAAS
 } from "../../../../utils/constants/intervalConstants";
 import { setCoinStatus } from '../../../actionCreators'
 import { getCoinObj } from '../../../../utils/CoinData/CoinData';
@@ -13,9 +14,23 @@ import {
   clearAllServiceIntervals,
   refreshServiceIntervals,
 } from "./IntervalCreator";
+import { DEFAULT_COIN_UPDATE_PARAMS } from '../../../../utils/constants/defaultUpdateParams';
 
-export const activateChainLifecycle = (coinObj) => {  
-  refreshCoinIntervals(coinObj, {[API_GET_INFO]: {update_expired_oncomplete: getInfoOnComplete}})
+export const activateChainLifecycle = (coinObj, activeCoinsForUser) => {
+  const nonNativeSystems = [];
+
+  if (coinObj.tags.includes(IS_PBAAS) && activeCoinsForUser != null) {
+    for (const coin of activeCoinsForUser) {
+      if (coin.tags.includes(IS_PBAAS) && 
+          !nonNativeSystems.includes(coin.system_id) &&
+          coin.system_id !== coinObj.system_id && 
+          coin.testnet === coinObj.testnet) {
+        nonNativeSystems.push(coin.system_id);
+      }
+    }
+  }
+
+  refreshCoinIntervals(coinObj, {[API_GET_INFO]: {update_expired_oncomplete: getInfoOnComplete}}, DEFAULT_COIN_UPDATE_PARAMS, nonNativeSystems)
 }
 
 export const clearChainLifecycle = (chainTicker) => {

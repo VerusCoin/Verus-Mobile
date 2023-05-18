@@ -12,7 +12,7 @@ import { VerusIdLogo } from '../../../images/customIcons';
 import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import { AUTHENTICATE_USER_SEND_MODAL, SEND_MODAL_USER_ALLOWLIST } from '../../../utils/constants/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
-import { findCoinObj, getCoinIdFromSystemId } from '../../../utils/CoinData/CoinData';
+import { findCoinObj, getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 
 const LoginRequestInfo = props => {
@@ -27,7 +27,7 @@ const LoginRequestInfo = props => {
   const sendModalType = useSelector(state => state.sendModal.type)
 
   const { system_id, signing_id, challenge } = req
-  const chain_id = getCoinIdFromSystemId(system_id)
+  const chain_id = getSystemNameFromSystemId(system_id)
 
   const getVerusId = async (chain, iAddrOrName) => {
     const identity = await getIdentity({id: chain}, iAddrOrName);

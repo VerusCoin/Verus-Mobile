@@ -38,7 +38,7 @@ export const preflight = async (coinObj, activeUser, address, amount, params, ch
   }
 
   try {
-    const balance = await getAddressBalances(coinObj, [source]);
+    const balance = await getAddressBalances(coinObj.system_id, [source]);
 
     if (balance.error) {
       return {

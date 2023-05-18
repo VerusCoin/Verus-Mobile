@@ -43,13 +43,14 @@ class LinkIdentityConfirm extends Component {
 
       await updateVerusIdWallet();
       clearChainLifecycle(coinObj.id);
-      this.props.dispatch(
-        setUserCoins(
-          this.props.activeCoinList,
-          this.props.activeAccount.id
-        )
-      );
-      activateChainLifecycle(coinObj);
+      const setUserCoinsAction = setUserCoins(
+        this.props.activeCoinList,
+        this.props.activeAccount.id
+      )
+      this.props.dispatch(setUserCoinsAction);
+
+      activateChainLifecycle(coinObj, setUserCoinsAction.payload.activeCoinsForUser);
+      
       this.props.navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, {
         verusId: this.state.verusId,
         friendlyNames: this.state.friendlyNames,

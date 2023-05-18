@@ -119,13 +119,13 @@ class ProvisionIdentityConfirm extends Component {
         await linkVerusId(address, `${fqn}@`, coinObj.id);
         await updateVerusIdWallet();
         clearChainLifecycle(coinObj.id);
-        this.props.dispatch(
-          setUserCoins(
-            this.props.activeCoinList,
-            this.props.activeAccount.id
-          )
-        );
-        activateChainLifecycle(coinObj);
+        const setUserCoinsAction = setUserCoins(
+          this.props.activeCoinList,
+          this.props.activeAccount.id
+        )
+        this.props.dispatch(setUserCoinsAction);
+  
+        activateChainLifecycle(coinObj, setUserCoinsAction.payload.activeCoinsForUser);  
       })
       submissionSuccess(res)
     } catch (e) {

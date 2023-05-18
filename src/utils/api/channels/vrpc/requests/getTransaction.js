@@ -1,7 +1,7 @@
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 
-export const getTransaction = (coinObj, txid, verbosity = 1) => {
-  return VrpcProvider.getEndpoint(coinObj.id).getRawTransaction(txid, verbosity);
+export const getTransaction = (systemId, txid, verbosity = 1) => {
+  return VrpcProvider.getEndpoint(systemId).getRawTransaction(txid, verbosity);
 }
 
 export const waitForTransactionConfirm = (
@@ -18,7 +18,7 @@ export const waitForTransactionConfirm = (
         triesLeft--;
 
         if (tries > 0) {
-          const tx = await getTransaction(coinObj, txid, 1);
+          const tx = await getTransaction(coinObj.system_id, txid, 1);
 
           if (tx.error != null) {
             clearInterval(wait_interval);

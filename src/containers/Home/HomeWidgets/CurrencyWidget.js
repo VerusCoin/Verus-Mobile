@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Dimensions } from 'react-native';
 import { Avatar, Card, Paragraph } from 'react-native-paper';
 import { useSelector } from 'react-redux';
-import { CoinLogos } from '../../../utils/CoinData/CoinData';
+import { CoinLogos, getCoinLogo } from '../../../utils/CoinData/CoinData';
 import { USD } from '../../../utils/constants/currencies';
 import { GENERAL } from '../../../utils/constants/intervalConstants';
 import { truncateDecimal } from '../../../utils/math';
@@ -16,8 +16,7 @@ const CurrencyWidget = props => {
   const { currencyBalance, coinObj } = props;
   const { width } = Dimensions.get('window');
 
-  const coinIdLc = coinObj.id.toLowerCase();
-  const Logo = CoinLogos[coinIdLc] ? CoinLogos[coinIdLc].light : null;
+  const Logo = getCoinLogo(coinObj.id)
   const themeColor = coinObj.theme_color ? coinObj.theme_color : '#1C1C1C'
   
   const allSubwallets = useSelector(state => extractDisplaySubWallets(state))

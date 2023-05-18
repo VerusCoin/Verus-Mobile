@@ -72,8 +72,8 @@ export const buildTx = async (
       truncateDecimal(coinsToSats(BigNumber(defaultFee)), coinObj.decimals),
     );
 
-    const utxoRes = await getAddressUtxos(coinObj, [fromAddress]);
-    const infoRes = await getInfo(coinObj);
+    const utxoRes = await getAddressUtxos(coinObj.system_id, [fromAddress]);
+    const infoRes = await getInfo(coinObj.system_id);
 
     if (infoRes.error) {
       throw new Error(infoRes.error.message);
@@ -251,7 +251,7 @@ export const send = async (
       params,
       channelId,
     );
-    const sendRes = await sendRawTransaction(coinObj, txHex);
+    const sendRes = await sendRawTransaction(coinObj.system_id, txHex);
 
     if (sendRes.error) {
       throw new Error(sendRes.error.message);

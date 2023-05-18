@@ -58,7 +58,7 @@ const DeepLink = (props) => {
           }
 
           const coinObj = findCoinObj(request.system_id, null, true)
-          VrpcProvider.initEndpoint(coinObj.id, coinObj.vrpc_endpoints[0])
+          VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0])
 
           if (await verifyLoginConsentRequest(coinObj, request)) {
             for (const requestedPermission of request.challenge
@@ -81,7 +81,7 @@ const DeepLink = (props) => {
 
             const sig = await extractLoginConsentSig(coinObj, request)
 
-            const sigblock = await getBlock(coinObj, sig.height)
+            const sigblock = await getBlock(coinObj.system_id, sig.height)
            
             if (sigblock.error) throw new Error(sigblock.error.message)
 
