@@ -59,6 +59,8 @@ const getMainSubwallet = (dominantChannel = ELECTRUM) => {
 };
 
 const getDynamicVrpcSubwallet = (channelId, name) => {
+  const [vrpc, addr, network] = channelId.split('.')
+
   return {
     channel: channelId,
     api_channels: {
@@ -78,7 +80,8 @@ const getDynamicVrpcSubwallet = (channelId, name) => {
     params: {},
     color: Colors.primaryColor,
     address_info: [{label: 'Address'}],
-    name
+    name,
+    network
   };
 };
 

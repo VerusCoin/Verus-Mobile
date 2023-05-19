@@ -19,6 +19,19 @@ class _CoinDirectory {
     this.updateCoinLists();
   }
 
+  getBasicCoinObj(id) {
+    let searchId = id
+
+    // Hack for backwards compat with VRSCTEST and VRSC coin IDs being names
+    if (id === 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq') searchId = 'VRSCTEST'
+    else if (id === 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV') searchId = 'VRSC'
+
+    if (this.coinExistsInDirectory(searchId)) return this.coins[searchId]
+    else {
+      throw new Error(searchId + " not found in coin list!")
+    }
+  }
+
   updateCoinLists() {
     this.fullCoinList = Object.values(this.coins).map(function(coin) {
       return coin.id;

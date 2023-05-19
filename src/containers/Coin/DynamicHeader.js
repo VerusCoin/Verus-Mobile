@@ -24,6 +24,7 @@ import {
 import {CONNECTION_ERROR} from '../../utils/api/errors/errorMessages';
 import {truncateDecimal} from '../../utils/math';
 import {USD} from '../../utils/constants/currencies';
+import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 
 class DynamicHeader extends Component {
   constructor(props) {
@@ -117,6 +118,14 @@ class DynamicHeader extends Component {
     }
   };
 
+  getNetworkName(item) {
+    try {
+      return item.network ? CoinDirectory.getBasicCoinObj(item.network).display_ticker : null;
+    } catch(e) {
+      return null
+    }
+  }
+
   _renderCarouselItem({item, index, alone}) {
     const displayBalance =
       this.props.balances[item.id] != null
@@ -159,6 +168,8 @@ class DynamicHeader extends Component {
             minWidth: alone ? 236 : 150,
             borderRadius: 10,
             marginLeft: alone ? 0 : 30,
+            position: 'relative',
+            overflow: "hidden"
           }}
           onPress={() => this._handleItemPress(item, index)}>
           <Card.Content>
@@ -166,7 +177,7 @@ class DynamicHeader extends Component {
               style={{
                 display: 'flex',
                 flexDirection: 'row',
-                alignItems: 'center',
+                alignItems: 'center'
               }}>
               <Avatar.Icon
                 icon="wallet"
@@ -176,7 +187,7 @@ class DynamicHeader extends Component {
               />
               <Text style={{fontSize: 16, marginLeft: 8}}>{item.name}</Text>
             </View>
-            <Paragraph style={{fontSize: 16, paddingTop: 8}}>
+            <Paragraph style={{fontSize: 16}}>
               {this.props.balanceErrors[item.id]
                 ? CONNECTION_ERROR
                 : `${
@@ -193,13 +204,39 @@ class DynamicHeader extends Component {
                   } ${this.props.displayTicker}`}
             </Paragraph>
             <Paragraph
-              style={{...Styles.listItemSubtitleDefault, fontSize: 12}}>
+              style={{...Styles.listItemSubtitleDefault, fontSize: 12, marginBottom: 10, opacity: fiatBalance == null ? 0 : undefined}}>
               {syncProgress != 100 && syncProgress != -1
                 ? `Syncing - ${syncProgress.toFixed(2)}%`
                 : `${fiatBalance == null ? '-' : fiatBalance} ${
                     this.props.displayCurrency
                   }`}
             </Paragraph>
+            {
+              item.network && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    backgroundColor: 'green',
+                    borderRadius: 10,
+                    padding: 5,
+                    paddingLeft: 8,
+                    paddingRight: 16,
+                    paddingBottom: 11,
+                    marginBottom: -10,
+                    marginRight: -10,
+                  }}>
+                  <Paragraph
+                    numberOfLines={1}
+                    style={{
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: 14,
+                    }}>{`${this.getNetworkName(item)} Network`}</Paragraph>
+                </View>
+              )
+            }
           </Card.Content>
         </Card>
       </Animated.View>

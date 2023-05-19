@@ -14,6 +14,7 @@ import { setCoinSubWallet } from "../../actions/actionCreators";
 import { USD } from "../../utils/constants/currencies";
 import BigNumber from "bignumber.js";
 import Colors from "../../globals/colors";
+import { CoinDirectory } from "../../utils/CoinData/CoinDirectory";
 
 class SubWalletSelectorModal extends Component {
   constructor(props) {
@@ -101,6 +102,14 @@ class SubWalletSelectorModal extends Component {
     this.props.dispatch(setCoinSubWallet(this.props.chainTicker, subWallet))
   }
 
+  getNetworkName(wallet) {
+    try {
+      return wallet.network ? CoinDirectory.getBasicCoinObj(wallet.network).display_ticker : null;
+    } catch(e) {
+      return null
+    }
+  }
+
   render() {
     const { props, state, cancelHandler } = this
     const {
@@ -141,7 +150,7 @@ class SubWalletSelectorModal extends Component {
                       color: Colors.secondaryColor,
                       fontWeight: '500',
                     }}
-                    description={`${
+                    description={wallet.network ? `${this.getNetworkName(wallet)} Network` : `${
                       fiatBalances[wallet.id] != null
                         ? fiatBalances[wallet.id].toFixed(2)
                         : '-'
