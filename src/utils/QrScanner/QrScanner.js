@@ -8,6 +8,7 @@ import { ProcessedPaymentRequest } from "./ProcessedQr";
 import VerusPayParser from '../verusPay/index'
 import { coinsList } from "../CoinData/CoinsList";
 import { removeSpaces } from "../stringUtils";
+import { CoinDirectory } from "../CoinData/CoinDirectory";
 
 class QrScanner {
   constructor() {}
@@ -80,7 +81,7 @@ class QrScanner {
     const state = store.getState();
 
     if (coinTicker != null && address != null) {
-      if (coinExistsInWallet(coinTicker)) {
+      if (CoinDirectory.coinExistsInDirectory(coinTicker)) {
         let requestedCoin = getCoinFromActiveCoins(coinTicker, state.coins.activeCoinsForUser);
 
         if (requestedCoin) {

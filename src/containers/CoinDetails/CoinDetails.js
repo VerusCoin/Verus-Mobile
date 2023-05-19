@@ -90,7 +90,7 @@ class CoinDetails extends Component {
         )
         this.props.dispatch(setUserCoinsAction);
 
-        activateChainLifecycle(setUserCoinsAction.payload.activeCoinsForUser);
+        activateChainLifecycle(this.state.fullCoinData, setUserCoinsAction.payload.activeCoinsForUser);
 
         this.setState({ isActive: true, loading: false });
       } else {

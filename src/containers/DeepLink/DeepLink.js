@@ -8,7 +8,6 @@ import { primitives } from "verusid-ts-client"
 import { verifyLoginConsentRequest } from '../../utils/api/channels/vrpc/requests/verifyLoginConsentRequest';
 import { createAlert } from '../../actions/actions/alert/dispatchers/alert';
 import VrpcProvider from '../../utils/vrpc/vrpcInterface';
-import { findCoinObj } from '../../utils/CoinData/CoinData';
 import { extractLoginConsentSig } from '../../utils/api/channels/vrpc/requests/extractLoginConsentSig';
 import { getBlock } from '../../utils/api/channels/vrpc/callCreators';
 import { LOGIN_CONSENT_INFO } from '../../utils/constants/deeplink';
@@ -16,6 +15,7 @@ import LoginRequestInfo from './LoginRequestInfo/LoginRequestInfo';
 import { getIdentity } from '../../utils/api/channels/verusid/callCreators';
 import { convertFqnToDisplayFormat } from '../../utils/fullyqualifiedname';
 import { resetDeeplinkData } from '../../actions/actionCreators';
+import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 
 const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
@@ -57,7 +57,7 @@ const DeepLink = (props) => {
             }
           }
 
-          const coinObj = findCoinObj(request.system_id, null, true)
+          const coinObj = CoinDirectory.findCoinObj(request.system_id, null, true)
           VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0])
 
           if (await verifyLoginConsentRequest(coinObj, request)) {

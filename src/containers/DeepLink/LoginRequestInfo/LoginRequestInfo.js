@@ -12,8 +12,9 @@ import { VerusIdLogo } from '../../../images/customIcons';
 import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import { AUTHENTICATE_USER_SEND_MODAL, SEND_MODAL_USER_ALLOWLIST } from '../../../utils/constants/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
-import { findCoinObj, getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
+import { getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
+import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 
 const LoginRequestInfo = props => {
   const { deeplinkData, sigtime, cancel, signerFqn } = props
@@ -88,7 +89,7 @@ const LoginRequestInfo = props => {
       });
     } else {
       setWaitingForSignin(true);
-      const coinObj = findCoinObj(chain_id);
+      const coinObj = CoinDirectory.findCoinObj(chain_id);
       const allowList = coinObj.testnet ? accounts.filter(x => {
         if (
           x.testnetOverrides &&

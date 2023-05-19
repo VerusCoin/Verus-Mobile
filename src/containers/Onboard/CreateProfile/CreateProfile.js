@@ -11,7 +11,6 @@ import ChooseName from './Forms/ChooseName';
 import CreatePassword from './Forms/CreatePassword';
 import UseBiometrics from './Forms/UseBiometrics';
 import {KEY_DERIVATION_VERSION, SERVICES_DISABLED_DEFAULT} from '../../../../env/index';
-import {findCoinObj} from '../../../utils/CoinData/CoinData';
 import {START_COINS, TEST_PROFILE_OVERRIDES} from '../../../utils/constants/constants';
 import {useDispatch, useSelector} from 'react-redux';
 import {
@@ -20,6 +19,7 @@ import {
   openLoadingModal,
 } from '../../../actions/actionDispatchers';
 import { deriveKeyPair } from '../../../utils/keys';
+import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 
 const CreateProfileStack = createStackNavigator();
 
@@ -41,7 +41,7 @@ export default function CreateProfileStackScreens(props) {
 
       const coinKey = testnetOverrides[coinId] ? testnetOverrides[coinId] : coinId;
 
-      const fullCoinData = findCoinObj(coinKey, accountId);
+      const fullCoinData = CoinDirectory.findCoinObj(coinKey, accountId);
 
       dispatch(await addCoin(fullCoinData, activeCoinList, accountId, []));
     }
@@ -59,7 +59,7 @@ export default function CreateProfileStackScreens(props) {
         for (const startCoin of START_COINS) {
           await deriveKeyPair(
             seed,
-            findCoinObj(startCoin),
+            CoinDirectory.findCoinObj(startCoin),
             ELECTRUM,
             KEY_DERIVATION_VERSION,
           );

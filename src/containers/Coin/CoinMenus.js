@@ -193,6 +193,7 @@ class CoinMenus extends Component {
               animationType="slide"
               subWallets={filteredSubWallets == null ? subWallets : filteredSubWallets}
               chainTicker={activeCoin.id}
+              displayTicker={activeCoin.display_ticker}
             />
           )}
           {selectedSubWallet != null && <DynamicHeader />}

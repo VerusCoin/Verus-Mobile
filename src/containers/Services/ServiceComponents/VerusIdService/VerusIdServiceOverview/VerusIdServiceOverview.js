@@ -4,13 +4,12 @@ import { setServiceLoading, setUserCoins } from "../../../../../actions/actionCr
 import { createAlert, resolveAlert } from "../../../../../actions/actions/alert/dispatchers/alert";
 import { updateVerusIdWallet } from "../../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager";
 import { activateChainLifecycle, clearChainLifecycle } from "../../../../../actions/actions/intervals/dispatchers/lifecycleManager";
-import { openLinkIdentityModal, openSendModal } from "../../../../../actions/actions/sendModal/dispatchers/sendModal";
+import { openLinkIdentityModal } from "../../../../../actions/actions/sendModal/dispatchers/sendModal";
 import { unlinkVerusId } from "../../../../../actions/actions/services/dispatchers/verusid/verusid";
 import { getFriendlyNameMap, getIdentity } from "../../../../../utils/api/channels/verusid/callCreators";
-import { findCoinObj } from "../../../../../utils/CoinData/CoinData";
-import { VERUSID } from "../../../../../utils/constants/intervalConstants";
 import { VERUSID_SERVICE_ID } from "../../../../../utils/constants/services";
 import { VerusIdServiceOverviewRender } from "./VerusIdServiceOverview.render";
+import { CoinDirectory } from "../../../../../utils/CoinData/CoinDirectory";
 
 class VerusIdServiceOverview extends Component {
   constructor(props) {
@@ -35,7 +34,7 @@ class VerusIdServiceOverview extends Component {
   }
 
   openLinkIdentityModalFromChain(chain) {
-    return openLinkIdentityModal(findCoinObj(chain));
+    return openLinkIdentityModal(CoinDirectory.findCoinObj(chain));
   }
 
   async getVerusId(chain, iAddrOrName) {
@@ -95,7 +94,7 @@ class VerusIdServiceOverview extends Component {
     this.props.dispatch(setServiceLoading(true, VERUSID_SERVICE_ID));
 
     try {
-      const coinObj = findCoinObj(chain)
+      const coinObj = CoinDirectory.findCoinObj(chain)
       await unlinkVerusId(iAddress, coinObj.id);
       await updateVerusIdWallet();
       clearChainLifecycle(coinObj.id);

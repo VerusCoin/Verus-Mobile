@@ -1,14 +1,44 @@
-import { DLIGHT_PRIVATE, ELECTRUM, IS_PBAAS, IS_VERUS, IS_ZCASH, VERUSID, VRPC } from "../constants/intervalConstants";
+import { DLIGHT_PRIVATE, ELECTRUM, IS_PBAAS, IS_VERUS, IS_ZCASH, VERUSID, VRPC, WYRE_SERVICE } from "../constants/intervalConstants";
 import { getDefaultApps, getSystemNameFromSystemId } from "./CoinData";
 import { electrumServers } from './electrum/servers';
 import { ENABLE_VERUS_IDENTITIES } from '../../../env/index'
 import { VerusdRpcInterface } from "verusd-rpc-ts-client";
 import { VERUS_APPS, coinsList } from "./CoinsList";
 import { DEFAULT_DECIMALS } from "../constants/web3Constants";
+import { getStoredCurrencyDefinitions, storeCurrencyDefinitionForCurrencyId } from "../asyncStore/currencyDefinitionStorage";
 
 class _CoinDirectory {
+  fullCoinList = [];
+  testCoinList = [];
+  supportedCoinList = [];
+  disabledNameList = [];
+  enabledNameList = [];
+
   constructor(coins = {}) {
     this.coins = coins;
+    this.updateCoinLists();
+  }
+
+  updateCoinLists() {
+    this.fullCoinList = Object.values(this.coins).map(function(coin) {
+      return coin.id;
+    });
+    
+    this.testCoinList = this.fullCoinList.filter(x => {
+      return this.coins[x].testnet;
+    })
+    
+    this.supportedCoinList = this.fullCoinList.filter(x => {
+      return !this.coins[x].testnet && x !== 'OOT' && x !== 'ZILLA' && x !== 'RFOX'
+    });
+    
+    this.disabledNameList = this.supportedCoinList.filter(x => {
+      return this.coins[x].compatible_channels.includes(WYRE_SERVICE);
+    });
+    
+    this.enabledNameList = this.supportedCoinList.filter(
+      x => !this.disabledNameList.includes(x),
+    );
   }
 
   // Function to check if a coin with a specific ID exists in the directory
@@ -19,7 +49,7 @@ class _CoinDirectory {
   // Function to find a coin object by coinId.
   findCoinObj(key, userName, useSystemId) {
     const id = useSystemId ? getSystemNameFromSystemId(key) : key;
-    let coinObj = coinsList[id]
+    let coinObj = this.coins[id]
   
     if (coinObj) {
       coinObj.electrum_endpoints = coinObj.compatible_channels.includes(ELECTRUM) ? electrumServers[id.toLowerCase()].serverList : []
@@ -49,16 +79,31 @@ class _CoinDirectory {
       } else if (!coinObj.default_app) {
         coinObj.default_app = Object.keys(coinObj.apps)[0]
       }
-    }
-    else {
+    } else {
       throw new Error(id + " not found in coin list!")
     }
   
     return coinObj;
   }
 
+  findSystemCoinObj(id) {
+    const coinObj = this.findCoinObj(id)
+    const system = coinObj.system_id
+
+    try {
+      const systemObj = this.findCoinObj(system, null, true);
+      return systemObj;
+    } catch(e) {
+      if (this.coinExistsInDirectory(system)) {
+        return this.findCoinObj(system);
+      } else {
+        throw new Error("Cannot find system " + system)
+      }
+    }
+  }
+
   // Function to add PBaaS currency. This function is not implemented.
-  async addPbaasCurrency(currencyDefinition, isTestnet = false, checkEndpoint = true) {
+  async addPbaasCurrency(currencyDefinition, isTestnet = false, checkEndpoint = true, trySystemFallback = true, storeResults = true) {
     const id = currencyDefinition.currencyid
     const system = currencyDefinition.systemid
 
@@ -107,9 +152,29 @@ class _CoinDirectory {
             endpoints = [endpoint]
           } else throw new Error("Failed to connect to " + endpoint + " for " + system)
         } else endpoints = [endpoint]
-      } else {
-        throw new Error("Cannot deduce vrpc endpoints for " + system)
-      }
+      } else if (trySystemFallback) {
+        // Fallback to trying to see currency system from VRSC/VRSCTEST and get nodes from there
+        const currencyInterface = new VerusdRpcInterface(
+          isTestnet ? coinsList.VRSCTEST.currency_id : coinsList.VRSC.currency_id,
+          isTestnet
+            ? coinsList.VRSCTEST.vrpc_endpoints[0]
+            : coinsList.VRSC.vrpc_endpoints[0],
+        );
+
+        const systemDefinition = await currencyInterface.getCurrency(system)
+
+        if (
+          systemDefinition.result &&
+          systemDefinition.result.currencyid &&
+          systemDefinition.result.nodes
+        ) {
+          await this.addPbaasCurrency(systemDefinition.result, isTestnet, checkEndpoint);
+          endpoints = this.coins[systemDefinition.result.currencyid].vrpc_endpoints;
+          secondsPerBlock = this.coins[systemDefinition.result.currencyid].seconds_per_block;
+        } else {
+          throw new Error('Failed to connect to find ' + system);
+        }
+      } else { throw new Error("Cannot deduce vrpc endpoints for " + system) }
     }
 
     const currencyCoinObj = {
@@ -119,7 +184,7 @@ class _CoinDirectory {
       currency_id: currencyDefinition.currencyid,
       system_id: currencyDefinition.systemid,
       bitgojs_network_key: isTestnet ? 'verustest' : 'verus',
-      display_ticker: currencyDefinition.name,
+      display_ticker: currencyDefinition.fullyqualifiedname,
       display_name: currencyDefinition.fullyqualifiedname,
       alt_names: [],
       theme_color: '#232323',
@@ -133,8 +198,51 @@ class _CoinDirectory {
       apps: VERUS_APPS
     }
 
-    Object.assign(this.coins, { [currencyCoinObj.id]: currencyCoinObj })
+    if (storeResults) {
+      await storeCurrencyDefinitionForCurrencyId(
+        isTestnet ? coinsList.VRSCTEST.currency_id : coinsList.VRSC.currency_id,
+        currencyDefinition.currencyid,
+        currencyDefinition,
+      );
+    }
+    
+    Object.assign(this.coins, { [currencyCoinObj.id]: currencyCoinObj });
+    this.updateCoinLists();
+  }
+
+  async populateCurrencyDefinitionsFromStorage() {
+    const storedDefinitions = await getStoredCurrencyDefinitions()
+    const mainnetCurrencies = storedDefinitions[coinsList.VRSC.currency_id]
+      ? storedDefinitions[coinsList.VRSC.currency_id]
+      : {};
+    const testnetCurrencies = storedDefinitions[coinsList.VRSCTEST.currency_id]
+      ? storedDefinitions[coinsList.VRSCTEST.currency_id]
+      : {};
+
+    for (const key in mainnetCurrencies) {
+      if (this.coinExistsInDirectory(key)) continue;
+
+      await this.addPbaasCurrency(
+        mainnetCurrencies[key], 
+        false, 
+        false,
+        false,
+        false
+      )
+    }
+
+    for (const key in testnetCurrencies) {
+      if (this.coinExistsInDirectory(key)) continue;
+
+      await this.addPbaasCurrency(
+        testnetCurrencies[key], 
+        true, 
+        false,
+        false,
+        false
+      )
+    }
   }
 }
 
-export const CoinDirectory = new _CoinDirectory(coinsList);
+export const CoinDirectory = new _CoinDirectory(JSON.parse(JSON.stringify(coinsList)));

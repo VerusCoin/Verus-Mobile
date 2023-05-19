@@ -47,6 +47,7 @@ class VerusPay extends Component {
       note: null,
       subWalletSelectorOpen: false,
       subWalletSelectorCoin: null,
+      subWalletSelectorDisplayTicker: null
     };
   }
 
@@ -300,6 +301,7 @@ class VerusPay extends Component {
       this.setState(
         {
           subWalletSelectorCoin: this.state.coinObj.id,
+          subWalletSelectorDisplayTicker: this.state.coinObj.display_ticker
         },
         () => {
           const subWallets =
@@ -386,6 +388,7 @@ class VerusPay extends Component {
                   : this.props.allSubWallets[this.state.subWalletSelectorCoin]
               }
               onSelect={wallet => this.openSendModal(wallet)}
+              displayTicker={this.state.subWalletSelectorDisplayTicker}
             />
           )}
         </Portal>

@@ -12,12 +12,11 @@ import {List} from 'react-native-paper';
 import {Searchbar, Portal} from 'react-native-paper';
 import {connect} from 'react-redux';
 import Styles from '../../styles/index';
-import {findCoinObj, supportedCoinList, enabledNameList, testCoinList} from '../../utils/CoinData/CoinData';
 import {RenderSquareCoinLogo} from '../../utils/CoinData/Graphics';
 import CoinDetailsModal from '../../components/CoinDetailsModal/CoinDetailsModal';
 import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
-import {coinsList} from '../../utils/CoinData/CoinsList';
 import {WYRE_SERVICE} from '../../utils/constants/intervalConstants';
+import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 
 class AddCoin extends Component {
   constructor(props) {
@@ -61,7 +60,7 @@ class AddCoin extends Component {
     let coinData = null;
 
     try {
-      coinData = findCoinObj(item, this.props.activeAccount.id);
+      coinData = CoinDirectory.findCoinObj(item, this.props.activeAccount.id);
 
       this.setState({fullCoinDetails: coinData});
     } catch (e) {
@@ -72,10 +71,10 @@ class AddCoin extends Component {
   getCoinList = () => {
     const {query} = this.state;
     const displayedCoinList = this.props.testAccount
-      ? testCoinList
+      ? CoinDirectory.testCoinList
       : this.props.activeAccount.disabledServices[WYRE_SERVICE]
-      ? enabledNameList
-      : supportedCoinList;
+      ? CoinDirectory.enabledNameList
+      : CoinDirectory.supportedCoinList;
 
     return displayedCoinList
       .filter(coinId => {
@@ -144,7 +143,7 @@ class AddCoin extends Component {
           onEndReachedThreshold={50}
           renderItem={({item}) => {
             const added = activeCoinIds.includes(item);
-            const coinInfo = coinsList[item];
+            const coinInfo = CoinDirectory.findCoinObj(item);
             const {display_name, display_ticker} = coinInfo;
 
             return (

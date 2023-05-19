@@ -23,7 +23,8 @@ import {
   initCache,
   clearCachedVersions,
   updateActiveCoinList,
-  checkAndSetVersion
+  checkAndSetVersion,
+  purgeUnusedCoins
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 import { ENABLE_VERUS_IDENTITIES } from '../env/index'
@@ -35,6 +36,8 @@ import { Portal } from 'react-native-paper';
 import SendModal from "./components/SendModal/SendModal";
 import { NavigationContainer } from "@react-navigation/native";
 import LoadingModal from "./components/LoadingModal/LoadingModal";
+import { CoinDirectory } from "./utils/CoinData/CoinDirectory";
+import { removeInactiveCurrencyDefinitions } from "./utils/asyncStore/currencyDefinitionStorage";
 
 class VerusMobile extends React.Component {
   constructor(props) {
@@ -80,7 +83,7 @@ class VerusMobile extends React.Component {
     })
   }
   
-  componentDidMount() {    
+  componentDidMount() {
     activateKeyboardListener()
 
     AppState.addEventListener("change", (nextAppState) => this._handleAppStateChange(nextAppState));
@@ -101,7 +104,10 @@ class VerusMobile extends React.Component {
     //versions. (The action that triggers it should indicate a server upgraded it's 
     //version)
     clearCachedVersions()
-    .then(() => {
+    .then(async () => {
+      await removeInactiveCurrencyDefinitions(await purgeUnusedCoins())
+      await CoinDirectory.populateCurrencyDefinitionsFromStorage()
+
       return initCache()
     })
     .then(() => {
@@ -133,6 +139,8 @@ class VerusMobile extends React.Component {
       this.setState({ loading: false })
     })
     .catch((err) => {
+      console.error(err)
+
       Alert.alert("Error", err.message)
     })
 

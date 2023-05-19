@@ -1,14 +1,15 @@
-import { findCoinObj, fullCoinList } from '../../CoinData/CoinData';
+import { fullCoinList } from '../../CoinData/CoinData';
 import { REQUEST_TIMEOUT_MS } from '../../../../env/index';
 import { timeout } from '../../promises';
 import { isJson } from '../../objectManip';
+import { CoinDirectory } from '../../CoinData/CoinDirectory';
 
 describe('coinpaprika API is online and works as expected', () => {
   const testCoinID = (coinID) => {
     const _coinID = coinID
 
     return it(`basic fetch from coinpaprika API for ${coinID}`, () => {  
-      let coinObj = findCoinObj(_coinID, "")
+      let coinObj = CoinDirectory.findCoinObj(_coinID, "")
       let coinID = coinObj.id
       let coinName = coinObj.display_name
       let param = (coinID.toLowerCase()) + '-' + (coinName.replace(/ /g,"-")).toLowerCase()
@@ -40,7 +41,7 @@ describe('coinpaprika API is online and works as expected', () => {
     })
   }
 
-  for (const name of fullCoinList) {
+  for (const name of CoinDirectory.fullCoinList) {
     testCoinID(name)
   }
 })

@@ -1,49 +1,72 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CURRENCY_DEFINITION_STORAGE_INTERNAL_KEY } from '../../../env/index'
 
-export const storeCurrencyDefinitions = (currencyDefinitions) => {
-  return AsyncStorage.setItem(CURRENCY_DEFINITION_STORAGE_INTERNAL_KEY, JSON.stringify(currencyDefinitions))
+export const storeCurrencyDefinitions = async (currencyDefinitions) => {
+  return await AsyncStorage.setItem(CURRENCY_DEFINITION_STORAGE_INTERNAL_KEY, JSON.stringify(currencyDefinitions))
 };
 
 export const getStoredCurrencyDefinitions = async () => {
-  const res = AsyncStorage.getItem(CURRENCY_DEFINITION_STORAGE_INTERNAL_KEY)
+  const res = await AsyncStorage.getItem(CURRENCY_DEFINITION_STORAGE_INTERNAL_KEY);
 
   if (!res) return {};
   else return JSON.parse(res);
 };
 
-// Gets currency definitions, sets currencyDefinitions[systemId] to data, and stores the new currencyDefinitions
-export const storeCurrencyDefinitionForSystemId = async (systemId, definitions) => {
+// Gets currency definitions, sets currencyDefinitions[rootSystemId] to data, and stores the new currencyDefinitions
+export const storeCurrencyDefinitionsForSystemId = async (rootSystemId, definitions) => {
   const currencyDefinitions = await getStoredCurrencyDefinitions();
-  currencyDefinitions[systemId] = definitions;
+  currencyDefinitions[rootSystemId] = definitions;
   await storeCurrencyDefinitions(currencyDefinitions);
 }
 
-// Gets currency definitions, sets currencyDefinitions[systemId][currencyId] to definition, and stores the new currencyDefinitions
-export const storeCurrencyDefinitionForCurrencyId = async (systemId, currencyId, definition) => {
+// Gets currency definitions, sets currencyDefinitions[rootSystemId][currencyId] to definition, and stores the new currencyDefinitions
+export const storeCurrencyDefinitionForCurrencyId = async (rootSystemId, currencyId, definition) => {
   const currencyDefinitions = await getStoredCurrencyDefinitions();
 
-  if (!currencyDefinitions[systemId]) currencyDefinitions[systemId] = {}
+  if (!currencyDefinitions[rootSystemId]) currencyDefinitions[rootSystemId] = {}
 
-  currencyDefinitions[systemId][currencyId] = definition;
+  currencyDefinitions[rootSystemId][currencyId] = definition;
   await storeCurrencyDefinitions(currencyDefinitions);
 }
 
-// Gets currency definitions for systemId
-export const getStoredCurrencyDefinitionsForSystemId = async (systemId) => {
+// Gets currency definitions for rootSystemId
+export const getStoredCurrencyDefinitionsForSystemId = async (rootSystemId) => {
   const currencyDefinitions = await getStoredCurrencyDefinitions();
-  return currencyDefinitions[systemId] ? currencyDefinitions[systemId] : {};
+  return currencyDefinitions[rootSystemId] ? currencyDefinitions[rootSystemId] : {};
 }
 
-// Gets currency definition given systemId and currencyId
+export const removeInactiveCurrencyDefinitions = async (activeCoinList) => {
+  let storedDefinitions = await getStoredCurrencyDefinitions();
+
+  const activeCoinIds = {}
+  const activeSystems = {}
+  activeCoinList.map(coin => {
+    activeCoinIds[coin.id] = true
+    activeSystems[coin.system_id] = true
+  })
+  
+  for (const rootSystem in storedDefinitions) {
+    const currencies = Object.keys(storedDefinitions[rootSystem])
+
+    for (const currencyId of currencies) {
+      if (!activeCoinIds[currencyId] && !activeSystems[currencyId]) {
+        delete storedDefinitions[rootSystem][currencyId]
+      }
+    }
+  }
+
+  await storeCurrencyDefinitions(storedDefinitions)
+}
+
+// Gets currency definition given rootSystemId and currencyId
 export const getStoredCurrencyDefinitionForCurrencyId = async (
-  systemId,
+  rootSystemId,
   currencyId,
 ) => {
   const currencyDefinitions = await getStoredCurrencyDefinitions();
-  return currencyDefinitions[systemId]
-    ? currencyDefinitions[systemId][currencyId]
-      ? currencyDefinitions[systemId][currencyId]
+  return currencyDefinitions[rootSystemId]
+    ? currencyDefinitions[rootSystemId][currencyId]
+      ? currencyDefinitions[rootSystemId][currencyId]
       : null
     : {};
 };

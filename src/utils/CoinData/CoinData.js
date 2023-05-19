@@ -200,41 +200,6 @@ export const CoinLogos = {
   BRL: CoinLogoIcons.fiat.BRL,
 };
 
-//To make flatlist render faster we make these lists here, once
-export const fullCoinList = Object.values(coinsList).map(function(coin) {
-  return coin.id;
-});
-
-export const testCoinList = fullCoinList.filter(x => {
-  return coinsList[x].testnet;
-})
-
-export const supportedCoinList = fullCoinList.filter(x => {
-  return !coinsList[x].testnet && x !== 'OOT' && x !== 'ZILLA' && x !== 'RFOX'
-});
-
-export const disabledNameList = supportedCoinList.filter(x => {
-  return coinsList[x].compatible_channels.includes(WYRE_SERVICE);
-});
-
-export const enabledNameList = supportedCoinList.filter(
-  x => !disabledNameList.includes(x),
-);
-
-export const coinExistsInWallet = (coinTicker) => {
-  let index = 0;
-
-  while (index < fullCoinList.length && fullCoinList[index] !== coinTicker) {
-    index++;
-  }
-
-  if (index < fullCoinList.length) {
-    return true;
-  } else {
-    return false;
-  }
-};
-
 export const getCoinFromActiveCoins = (coinTicker, activeCoinsForUser) => {
   let index = 0;
 

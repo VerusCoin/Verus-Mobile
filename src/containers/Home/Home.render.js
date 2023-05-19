@@ -1,6 +1,5 @@
 import React from 'react';
-import {findCoinObj} from '../../utils/CoinData/CoinData';
-import {View, RefreshControl, Platform} from 'react-native';
+import {View, RefreshControl} from 'react-native';
 import {Text, Provider, Portal, Banner} from 'react-native-paper';
 import {truncateDecimal} from '../../utils/math';
 import BigNumber from 'bignumber.js';
@@ -25,6 +24,7 @@ import {
   SUPPORTED_UNIVERSAL_DISPLAY_CURRENCIES,
 } from '../../utils/constants/currencies';
 import VerusIdWidget from './HomeWidgets/VerusIdWidget';
+import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 
 export const HomeRender = function () {
   const dragDetection = this.dragDetectionEnabled()
@@ -78,7 +78,7 @@ export const HomeRenderWidget = function (widgetId) {
   const renderers = {
     [CURRENCY_WIDGET_TYPE]: () => {
       const coinId = widgetSplit[1];
-      const coinObj = findCoinObj(coinId);
+      const coinObj = CoinDirectory.findCoinObj(coinId);
 
       const balance =
         this.state.totalCryptoBalances[coinObj.id] == null

@@ -37,7 +37,7 @@ class SubWalletSelectorModal extends Component {
       rates,
       chainTicker,
       displayCurrency,
-      subWallets,
+      subWallets
     } = this.props;
     const walletColorMap = {}
     let pieSections = []
@@ -106,7 +106,7 @@ class SubWalletSelectorModal extends Component {
     const {
       animationType,
       visible,
-      chainTicker,
+      displayTicker,
       displayCurrency,
       subWallets,
       onSelect
@@ -162,7 +162,7 @@ class SubWalletSelectorModal extends Component {
                         cryptoBalances[wallet.id] != null
                           ? truncateDecimal(cryptoBalances[wallet.id], 4)
                           : '-'
-                      } ${chainTicker}`}</Text>
+                      } ${displayTicker}`}</Text>
                     )}
                   />
                 </Card>
