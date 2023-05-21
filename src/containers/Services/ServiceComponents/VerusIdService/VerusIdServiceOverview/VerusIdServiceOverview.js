@@ -3,7 +3,7 @@ import { connect } from 'react-redux'
 import { setServiceLoading, setUserCoins } from "../../../../../actions/actionCreators";
 import { createAlert, resolveAlert } from "../../../../../actions/actions/alert/dispatchers/alert";
 import { updateVerusIdWallet } from "../../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager";
-import { activateChainLifecycle, clearChainLifecycle } from "../../../../../actions/actions/intervals/dispatchers/lifecycleManager";
+import { clearChainLifecycle, refreshActiveChainLifecycles } from "../../../../../actions/actions/intervals/dispatchers/lifecycleManager";
 import { openLinkIdentityModal } from "../../../../../actions/actions/sendModal/dispatchers/sendModal";
 import { unlinkVerusId } from "../../../../../actions/actions/services/dispatchers/verusid/verusid";
 import { getFriendlyNameMap, getIdentity } from "../../../../../utils/api/channels/verusid/callCreators";
@@ -24,7 +24,7 @@ class VerusIdServiceOverview extends Component {
     try {
       const identityObj = await this.getVerusId(chain, iAddress);
 
-      return getFriendlyNameMap({id: chain}, identityObj);
+      return getFriendlyNameMap(CoinDirectory.getBasicCoinObj(chain), identityObj);
     } catch (e) {
       return {
         ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',
@@ -38,7 +38,7 @@ class VerusIdServiceOverview extends Component {
   }
 
   async getVerusId(chain, iAddrOrName) {
-    const identity = await getIdentity({id: chain}, iAddrOrName);
+    const identity = await getIdentity(CoinDirectory.getBasicCoinObj(chain), iAddrOrName);
 
     if (identity.error) throw new Error(identity.error.message);
     else return identity.result;
@@ -103,7 +103,7 @@ class VerusIdServiceOverview extends Component {
 
       this.props.dispatch(setUserCoinsAction);
 
-      activateChainLifecycle(coinObj, setUserCoinsAction.payload.activeCoinsForUser);
+      refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);
 
       this.props.dispatch(setServiceLoading(false, VERUSID_SERVICE_ID));
     } catch (e) {

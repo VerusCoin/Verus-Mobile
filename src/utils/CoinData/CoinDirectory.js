@@ -163,7 +163,7 @@ class _CoinDirectory {
 
           if (testResult.result && testResult.result.chainid === system) {
             endpoints = [endpoint]
-          } else throw new Error("Failed to connect to " + endpoint + " for " + system)
+          } else throw new Error("Failed to connect to " + endpoint + " for " + currencyDefinition.fullyqualifiedname)
         } else endpoints = [endpoint]
       } else if (trySystemFallback) {
         // Fallback to trying to see currency system from VRSC/VRSCTEST and get nodes from there

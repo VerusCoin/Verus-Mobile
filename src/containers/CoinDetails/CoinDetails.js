@@ -23,7 +23,7 @@ import {
  } from '../../actions/actionCreators';
 import { NavigationActions } from '@react-navigation/compat'
 import Styles from '../../styles/index'
-import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
+import { refreshActiveChainLifecycles } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import Colors from "../../globals/colors";
 import { CoinLogos, getCoinLogo } from "../../utils/CoinData/CoinData";
 
@@ -90,7 +90,7 @@ class CoinDetails extends Component {
         )
         this.props.dispatch(setUserCoinsAction);
 
-        activateChainLifecycle(this.state.fullCoinData, setUserCoinsAction.payload.activeCoinsForUser);
+        refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);
 
         this.setState({ isActive: true, loading: false });
       } else {

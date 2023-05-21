@@ -93,7 +93,7 @@ const CurrencyWidget = props => {
               />
             )}
             <Paragraph
-              style={{fontSize: 16, marginLeft: 8, fontWeight: 'bold', maxWidth: 100}}
+              style={{fontSize: 16, marginLeft: 8, fontWeight: 'bold', maxWidth: 90}}
               numberOfLines={1}>
               {displayedName}
             </Paragraph>
@@ -121,7 +121,7 @@ const CurrencyWidget = props => {
             }` : uniValueDisplay}
         </Paragraph>
         <Paragraph style={{ fontSize: 12 }}>
-          {coinObj.testnet ? "Testnet Currency" :
+          {coinObj.testnet ? "Testnet Currency" : coinObj.pbaas_options ? "PBaaS Currency" : 
             uniValueDisplay === '-' ? uniValueDisplay : `${currencyBalance == null ? '-' : normalizeNum(Number(currencyBalance), 8)[3]} ${
               coinObj.display_ticker
             }`

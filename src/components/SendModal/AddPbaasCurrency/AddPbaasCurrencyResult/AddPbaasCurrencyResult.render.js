@@ -7,7 +7,7 @@ import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
 import AnimatedSuccessCheckmark from '../../../AnimatedSuccessCheckmark';
 import { useSelector } from 'react-redux';
 
-export const LinkIdentityResultRender = ({verusId, finishSend}) => {
+export const AddPbaasCurrencyResultRender = ({currency, finishSend}) => {
   const coinObj = useSelector(state => state.sendModal.coinObj);
 
   return (
@@ -19,9 +19,9 @@ export const LinkIdentityResultRender = ({verusId, finishSend}) => {
       }}>
       <TouchableOpacity
         onPress={() =>
-          copyToClipboard(verusId.identity.identityaddress, {
-            title: 'Address copied',
-            message: `${verusId.identity.identityaddress} copied to clipboard.`,
+          copyToClipboard(currency.fullyqualifiedname, {
+            title: 'Currency copied',
+            message: `${currency.fullyqualifiedname} copied to clipboard.`,
           })
         }
         style={{
@@ -35,7 +35,7 @@ export const LinkIdentityResultRender = ({verusId, finishSend}) => {
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {`${verusId.identity.name}@ linked`}
+          {`${currency.fullyqualifiedname} added`}
         </Text>
       </TouchableOpacity>
       <View style={{paddingVertical: 16}}>
@@ -52,7 +52,7 @@ export const LinkIdentityResultRender = ({verusId, finishSend}) => {
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {`Your VerusID will now appear as a card in your ${coinObj.display_ticker} wallet.`}
+          {`${currency.fullyqualifiedname} will now show on your wallet home page.`}
         </Text>
       </View>
       <View

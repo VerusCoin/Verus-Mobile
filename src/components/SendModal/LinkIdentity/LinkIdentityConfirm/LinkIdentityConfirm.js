@@ -1,79 +1,87 @@
-import {Component} from 'react';
+import React, {useState, useCallback} from 'react';
+import {useDispatch, useSelector} from 'react-redux';
 import {Alert} from 'react-native';
-import {connect} from 'react-redux';
-import { setUserCoins } from '../../../../actions/actionCreators';
+import {setUserCoins} from '../../../../actions/actionCreators';
 import {updateVerusIdWallet} from '../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager';
 import {
-  activateChainLifecycle,
   clearChainLifecycle,
+  refreshActiveChainLifecycles,
 } from '../../../../actions/actions/intervals/dispatchers/lifecycleManager';
 import {linkVerusId} from '../../../../actions/actions/services/dispatchers/verusid/verusid';
-import {SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT} from '../../../../utils/constants/sendModal';
-import { convertFqnToDisplayFormat } from '../../../../utils/fullyqualifiedname';
+import {
+  SEND_MODAL_FORM_STEP_FORM,
+  SEND_MODAL_FORM_STEP_RESULT,
+} from '../../../../utils/constants/sendModal';
+import {convertFqnToDisplayFormat} from '../../../../utils/fullyqualifiedname';
 import {LinkIdentityConfirmRender} from './LinkIdentityConfirm.render';
 
-class LinkIdentityConfirm extends Component {
-  constructor(props) {
-    super(props);
+const LinkIdentityConfirm = props => {
+  const [verusId, setVerusId] = useState(props.route.params.verusId);
+  const [friendlyNames, setFriendlyNames] = useState(
+    props.route.params.friendlyNames,
+  );
 
-    this.state = {
-      verusId: props.route.params.verusId,
-      friendlyNames: props.route.params.friendlyNames,
-    };
-  }
+  const dispatch = useDispatch();
+  const sendModal = useSelector(state => state.sendModal);
+  const activeAccount = useSelector(
+    state => state.authentication.activeAccount,
+  );
+  const activeCoinList = useSelector(state => state.coins.activeCoinList);
 
-  goBack() {
-    this.props.setModalHeight();
-    this.props.navigation.navigate(SEND_MODAL_FORM_STEP_FORM);
-  }
+  const goBack = useCallback(() => {
+    props.setModalHeight();
+    props.navigation.navigate(SEND_MODAL_FORM_STEP_FORM);
+  }, [props]);
 
-  submitData = async () => {
-    await this.props.setLoading(true);
-    await this.props.setPreventExit(true);
+  const submitData = useCallback(async () => {
+    await props.setLoading(true);
+    await props.setPreventExit(true);
 
     try {
-      const {identityaddress} = this.state.verusId.identity;
-      const {coinObj} = this.props.sendModal;
+      const {identityaddress} = verusId.identity;
+      const {coinObj} = sendModal;
 
       await linkVerusId(
         identityaddress,
-        convertFqnToDisplayFormat(this.state.verusId.fullyqualifiedname),
+        convertFqnToDisplayFormat(verusId.fullyqualifiedname),
         coinObj.id,
       );
 
       await updateVerusIdWallet();
       clearChainLifecycle(coinObj.id);
-      const setUserCoinsAction = setUserCoins(
-        this.props.activeCoinList,
-        this.props.activeAccount.id
-      )
-      this.props.dispatch(setUserCoinsAction);
+      const setUserCoinsAction = setUserCoins(activeCoinList, activeAccount.id);
+      dispatch(setUserCoinsAction);
 
-      activateChainLifecycle(coinObj, setUserCoinsAction.payload.activeCoinsForUser);
-      
-      this.props.navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, {
-        verusId: this.state.verusId,
-        friendlyNames: this.state.friendlyNames,
+      refreshActiveChainLifecycles(
+        setUserCoinsAction.payload.activeCoinsForUser,
+      );
+
+      props.navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, {
+        verusId,
+        friendlyNames,
       });
     } catch (e) {
       Alert.alert('Error', e.message);
     }
 
-    this.props.setPreventExit(false);
-    this.props.setLoading(false);
-  };
+    props.setPreventExit(false);
+    props.setLoading(false);
+  }, [
+    verusId,
+    friendlyNames,
+    sendModal,
+    activeAccount,
+    activeCoinList,
+    dispatch,
+    props,
+  ]);
 
-  render() {
-    return LinkIdentityConfirmRender.call(this);
-  }
-}
-
-const mapStateToProps = (state, ownProps) => {
-  return {
-    sendModal: state.sendModal,
-    activeAccount: state.authentication.activeAccount,
-    activeCoinList: state.coins.activeCoinList,
-  };
+  return LinkIdentityConfirmRender({
+    verusId,
+    friendlyNames,
+    goBack,
+    submitData,
+  });
 };
 
-export default connect(mapStateToProps)(LinkIdentityConfirm);
+export default LinkIdentityConfirm;

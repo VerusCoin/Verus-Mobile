@@ -4,46 +4,33 @@ import {fromBase58Check} from '@bitgo/utxo-lib/dist/src/address';
 import {Alert} from 'react-native';
 import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
 import {
-  getFriendlyNameMap,
-  getIdentity,
+  getCurrency,
+  getCurrencyNameMap
 } from '../../../../utils/api/channels/verusid/callCreators';
 import {requestSeeds} from '../../../../utils/auth/authBox';
-import {ELECTRUM} from '../../../../utils/constants/intervalConstants';
 import {
   SEND_MODAL_FORM_STEP_CONFIRM,
-  SEND_MODAL_IDENTITY_TO_LINK_FIELD,
+  SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD,
 } from '../../../../utils/constants/sendModal';
 import {deriveKeyPair} from '../../../../utils/keys';
-import {LinkIdentityFormRender} from './LinkIdentityForm.render';
+import {AddPbaasCurrencyFormRender} from './AddPbaasCurrencyForm.render';
 
-const LinkIdentityForm = (props) => {
+const AddPbaasCurrencyForm = (props) => {
   const dispatch = useDispatch();
   const sendModal = useSelector(state => state.sendModal);
+  const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser);
 
   const formHasError = useCallback(() => {
     const {data} = sendModal;
 
-    const identity =
-      data[SEND_MODAL_IDENTITY_TO_LINK_FIELD] != null
-        ? data[SEND_MODAL_IDENTITY_TO_LINK_FIELD].trim()
+    const currency =
+      data[SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD] != null
+        ? data[SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD].trim()
         : '';
 
-    if (!identity || identity.length < 1) {
-      createAlert('Required Field', 'Identity is a required field.');
+    if (!currency || currency.length < 1) {
+      createAlert('Required Field', 'Currency is a required field.');
       return true;
-    }
-
-    try {
-      fromBase58Check(identity);
-    } catch (e) {
-      if (!identity.endsWith('@')) {
-        createAlert(
-          'Invalid Identity',
-          'Identity not a valid identity handle or iAddress.',
-        )
-
-        return true;
-      }
     }
 
     return false;
@@ -69,37 +56,31 @@ const LinkIdentityForm = (props) => {
 
     const {coinObj, data} = sendModal;
 
-    const identity = data[SEND_MODAL_IDENTITY_TO_LINK_FIELD];
+    const currency = data[SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD];
 
     try {
-      const res = await getIdentity(coinObj, identity);
+      const res = await getCurrency(coinObj, currency);
 
       if (res.error) {
         throw new Error(res.error.message);
       }
 
-      const addrs = await getPotentialPrimaryAddresses(coinObj, ELECTRUM);
-
-      let isInWallet = false;
-
-      for (const address of res.result.identity.primaryaddresses) {
-        if (addrs.includes(address)) {
-          isInWallet = true;
-          break;
-        }
+      if (activeCoinsForUser.some(x => x.id === res.result.currencyid)) {
+        throw new Error(`${res.result.fullyqualifiedname} has already been added to your wallet.`)
       }
 
-      if (!isInWallet) {
-        throw new Error(
-          'Ensure that your wallet address for this account matches a primary address of the VerusID you are trying to add.',
-        );
+      const launchRes = await getCurrency(coinObj, res.result.launchsystemid);
+
+      if (launchRes.error) {
+        throw new Error(launchRes.error.message);
       }
 
-      const friendlyNames = await getFriendlyNameMap(coinObj, res.result);
+      const friendlyNames = await getCurrencyNameMap(coinObj, res.result);
       props.setModalHeight(696)
 
       props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
-        verusId: res.result,
+        currency: res.result,
+        launchSystem: launchRes.result,
         friendlyNames,
       })
     } catch (e) {
@@ -109,11 +90,11 @@ const LinkIdentityForm = (props) => {
     props.setLoading(false)
   }, [formHasError, getPotentialPrimaryAddresses, sendModal, dispatch, props]);
 
-  return LinkIdentityFormRender({
+  return AddPbaasCurrencyFormRender({
     submitData,
     updateSendFormData: props.updateSendFormData,
-    formDataValue: sendModal.data[SEND_MODAL_IDENTITY_TO_LINK_FIELD]
+    formDataValue: sendModal.data[SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD]
   });
 };
 
-export default LinkIdentityForm;
+export default AddPbaasCurrencyForm;

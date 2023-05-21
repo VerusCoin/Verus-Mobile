@@ -31,7 +31,7 @@ const LoginRequestInfo = props => {
   const chain_id = getSystemNameFromSystemId(system_id)
 
   const getVerusId = async (chain, iAddrOrName) => {
-    const identity = await getIdentity({id: chain}, iAddrOrName);
+    const identity = await getIdentity(CoinDirectory.getBasicCoinObj(chain), iAddrOrName);
 
     if (identity.error) throw new Error(identity.error.message);
     else return identity.result;
@@ -47,7 +47,7 @@ const LoginRequestInfo = props => {
         try {
           const identityObj = await getVerusId(chain, iAddress);
     
-          return getFriendlyNameMap({id: chain}, identityObj);
+          return getFriendlyNameMap(CoinDirectory.getBasicCoinObj(chain), identityObj);
         } catch (e) {
           return {
             ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',

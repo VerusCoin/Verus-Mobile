@@ -3,6 +3,7 @@ import { Platform, SafeAreaView } from "react-native";
 import { Text, Portal, Button } from "react-native-paper";
 import { Colors } from "react-native/Libraries/NewAppScreen";
 import {
+  ADD_PBAAS_CURRENCY_MODAL,
   AUTHENTICATE_USER_SEND_MODAL,
   CONVERSION_SEND_MODAL,
   DEPOSIT_SEND_MODAL,
@@ -40,6 +41,9 @@ import AuthenticateUserResult from "./AuthenticateUser/AuthenticateUserResult/Au
 import ProvisionIdentityForm from "./ProvisionIdentity/ProvisionIdentityForm/ProvisionIdentityForm";
 import ProvisionIdentityConfirm from "./ProvisionIdentity/ProvisionIdentityConfirm/ProvisionIdentityConfirm";
 import ProvisionIdentityResult from "./ProvisionIdentity/ProvisionIdentityResult/ProvisionIdentityResult";
+import AddPbaasCurrencyForm from "./AddPbaasCurrency/AddPbaasCurrencyForm/AddPbaasCurrencyForm";
+import AddPbaasCurrencyConfirm from "./AddPbaasCurrency/AddPbaasCurrencyConfirm/AddPbaasCurrencyConfirm";
+import AddPbaasCurrencyResult from "./AddPbaasCurrency/AddPbaasCurrencyResult/AddPbaasCurrencyResult";
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
@@ -51,7 +55,8 @@ const SEND_FORMS = {
   [DEPOSIT_SEND_MODAL]: DepositSendForm,
   [LINK_IDENTITY_SEND_MODAL]: LinkIdentityForm,
   [PROVISION_IDENTITY_SEND_MODAL]: ProvisionIdentityForm,
-  [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserForm
+  [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserForm,
+  [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyForm
 };
 
 const SEND_CONFIRMATION = {
@@ -61,7 +66,8 @@ const SEND_CONFIRMATION = {
   [DEPOSIT_SEND_MODAL]: DepositSendConfirm,
   [LINK_IDENTITY_SEND_MODAL]: LinkIdentityConfirm,
   [PROVISION_IDENTITY_SEND_MODAL]: ProvisionIdentityConfirm,
-  [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserPassword
+  [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserPassword,
+  [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyConfirm
 };
 
 const SEND_RESULTS = {
@@ -71,7 +77,8 @@ const SEND_RESULTS = {
   [DEPOSIT_SEND_MODAL]: DepositSendResult,
   [LINK_IDENTITY_SEND_MODAL]: LinkIdentityResult,
   [PROVISION_IDENTITY_SEND_MODAL]: ProvisionIdentityResult,
-  [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserResult
+  [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserResult,
+  [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyResult
 };
 
 export const SendModalRender = function () {

@@ -18,7 +18,7 @@ import { Button, Text } from "react-native-paper"
 import SemiModal from "../SemiModal";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import { addCoin, addKeypairs, removeExistingCoin, setUserCoins } from "../../actions/actionCreators";
-import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
+import { refreshActiveChainLifecycles } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import { connect } from 'react-redux';
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { CommonActions } from '@react-navigation/native';
@@ -123,7 +123,7 @@ class CoinDetailsModal extends Component {
         )
         this.props.dispatch(setUserCoinsAction);
 
-        activateChainLifecycle(this.props.data, setUserCoinsAction.payload.activeCoinsForUser);
+        refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser)
 
         this.setState({ loading: false });
         this.props.cancel()

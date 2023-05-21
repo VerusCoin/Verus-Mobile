@@ -6,8 +6,8 @@ import { primitives } from 'verusid-ts-client';
 import { setUserCoins } from '../../../../actions/actionCreators';
 import {updateVerusIdWallet} from '../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager';
 import {
-  activateChainLifecycle,
   clearChainLifecycle,
+  refreshActiveChainLifecycles,
 } from '../../../../actions/actions/intervals/dispatchers/lifecycleManager';
 import {linkVerusId} from '../../../../actions/actions/services/dispatchers/verusid/verusid';
 import { getIdentity } from '../../../../utils/api/channels/verusid/callCreators';
@@ -125,7 +125,7 @@ class ProvisionIdentityConfirm extends Component {
         )
         this.props.dispatch(setUserCoinsAction);
   
-        activateChainLifecycle(coinObj, setUserCoinsAction.payload.activeCoinsForUser);  
+        refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);  
       })
       submissionSuccess(res)
     } catch (e) {

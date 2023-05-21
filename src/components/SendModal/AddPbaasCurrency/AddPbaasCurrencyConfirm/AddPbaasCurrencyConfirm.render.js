@@ -1,16 +1,24 @@
 import React from 'react';
-import { ScrollView, View, SafeAreaView } from 'react-native';
+import { View, SafeAreaView } from 'react-native';
 import { Button } from 'react-native-paper';
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
-import VerusIdObjectData from '../../../VerusIdObjectData';
+import CurrencyObjectData from '../../../CurrencyObjectData';
 
-export const LinkIdentityConfirmRender = ({ verusId, friendlyNames, goBack, submitData }) => {
+export const AddPbaasCurrencyConfirmRender = ({ 
+  currency, 
+  friendlyNames, 
+  goBack, 
+  submitData, 
+  spotterSystem,
+  longestChainOnLaunchSystem }) => {
   return (
     <SafeAreaView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }}>
-      <VerusIdObjectData
-        verusId={verusId}
+      <CurrencyObjectData
+        currency={currency}
         friendlyNames={friendlyNames}
+        longestChainOnLaunchSystem={longestChainOnLaunchSystem}
+        spotterSystem={spotterSystem}
         StickyFooterComponent={
           <View
             style={{
@@ -32,7 +40,7 @@ export const LinkIdentityConfirmRender = ({ verusId, friendlyNames, goBack, subm
               color={Colors.verusGreenColor}
               style={{ width: 148 }}
               onPress={submitData}>
-              Link
+              Add
             </Button>
           </View>
         }

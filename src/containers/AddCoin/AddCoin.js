@@ -8,7 +8,7 @@
 import React, {Component} from 'react';
 import {SearchBar} from 'react-native-elements';
 import {FlatList, TouchableOpacity, View} from 'react-native';
-import {List} from 'react-native-paper';
+import {List, FAB} from 'react-native-paper';
 import {Searchbar, Portal} from 'react-native-paper';
 import {connect} from 'react-redux';
 import Styles from '../../styles/index';
@@ -17,6 +17,7 @@ import CoinDetailsModal from '../../components/CoinDetailsModal/CoinDetailsModal
 import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
 import {WYRE_SERVICE} from '../../utils/constants/intervalConstants';
 import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
+import Colors from '../../globals/colors';
 
 class AddCoin extends Component {
   constructor(props) {

@@ -16,10 +16,10 @@ import {
   expireCoinData,
   setCoinSubWallet,
   expireServiceData,
-  saveGeneralSettings,
+  saveGeneralSettings
 } from '../../actions/actionCreators';
 import {connect} from 'react-redux';
-import {Animated, Platform} from 'react-native';
+import {Animated} from 'react-native';
 import {CommonActions} from '@react-navigation/native';
 import {
   API_GET_FIATPRICE,
@@ -52,6 +52,8 @@ import {
 import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
 import {VERUSID_SERVICE_ID} from '../../utils/constants/services';
 import { dragDetectionEnabled } from '../../utils/dragDetection';
+import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
+import { openAddPbaasCurrencyModal } from '../../actions/actions/sendModal/dispatchers/sendModal';
 
 class Home extends Component {
   constructor(props) {
@@ -498,6 +500,16 @@ class Home extends Component {
     this.props.navigation.navigate('ScanBadge');
   };
 
+  _addPbaasCurrency = async () => {
+    openAddPbaasCurrencyModal(
+      CoinDirectory.findCoinObj(
+        this.props.testnetOverrides.VRSC
+          ? this.props.testnetOverrides.VRSC
+          : 'VRSC',
+      ),
+    );
+  };
+
   render() {
     return HomeRender.call(this);
   }
@@ -508,6 +520,7 @@ const mapStateToProps = state => {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
     activeAccount: state.authentication.activeAccount,
+    testnetOverrides: state.authentication.activeAccount.testnetOverrides,
     balances: extractLedgerData(state, 'balances', API_GET_BALANCES),
     balanceErrors: extractErrorData(state, API_GET_BALANCES),
     info: extractLedgerData(state, 'info', API_GET_INFO),

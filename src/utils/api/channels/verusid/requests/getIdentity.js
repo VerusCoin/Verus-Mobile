@@ -1,3 +1,4 @@
+import { CoinDirectory } from "../../../../CoinData/CoinDirectory";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 
 export const getIdentity = (coinObj, iAddressOrName, height, txproof, txproofheight) => {
@@ -26,7 +27,7 @@ export const extractIdentityAddress = async (
   if (identityArray[1] === ':private' || identityArray[1] === '') {
     try {
       let status, identity;
-      const idRes = await getIdentity({id: coinId}, `${identityArray[0]}@`);
+      const idRes = await getIdentity(CoinDirectory.getBasicCoinObj(coinId), `${identityArray[0]}@`);
 
       if (idRes.error) throw new Error(idRes.error.message)
       else {

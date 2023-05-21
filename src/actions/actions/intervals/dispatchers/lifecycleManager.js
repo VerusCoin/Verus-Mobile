@@ -33,6 +33,14 @@ export const activateChainLifecycle = (coinObj, activeCoinsForUser) => {
   refreshCoinIntervals(coinObj, {[API_GET_INFO]: {update_expired_oncomplete: getInfoOnComplete}}, DEFAULT_COIN_UPDATE_PARAMS, nonNativeSystems)
 }
 
+export const refreshActiveChainLifecycles = (activeCoinsForUser) => {
+  for (let i = 0; i < activeCoinsForUser.length; i++) {
+    const coinObj = activeCoinsForUser[i];
+
+    activateChainLifecycle(coinObj, activeCoinsForUser);
+  }
+}
+
 export const clearChainLifecycle = (chainTicker) => {
   clearAllCoinIntervals(chainTicker)
 }

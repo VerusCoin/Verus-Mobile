@@ -19,6 +19,8 @@ import {
   PROVISION_IDENTITY_SEND_MODAL,
   SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
   SEND_MODAL_USER_ALLOWLIST,
+  SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD,
+  ADD_PBAAS_CURRENCY_MODAL,
 } from '../../../../utils/constants/sendModal';
 import {
   CLOSE_SEND_COIN_MODAL,
@@ -79,6 +81,21 @@ export const openLinkIdentityModal = (coinObj, data) => {
       : data,
     LINK_IDENTITY_SEND_MODAL,
     'To link a VerusID with your wallet, enter the handle or i-Address of a VerusID with a primary address that you have in your wallet.',
+  );
+};
+
+export const openAddPbaasCurrencyModal = (coinObj, data) => {
+  openSendModal(
+    `Add Currency`,
+    coinObj,
+    null,
+    data == null
+      ? {
+          [SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD]: '',
+        }
+      : data,
+    ADD_PBAAS_CURRENCY_MODAL,
+    'To add a Public Blockchains as a Service (PBaaS) currency to your wallet, enter its name or i-Address here and press continue.',
   );
 };
 
