@@ -21,6 +21,11 @@ import {
   SEND_MODAL_USER_ALLOWLIST,
   SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD,
   ADD_PBAAS_CURRENCY_MODAL,
+  CONVERT_OR_CROSS_CHAIN_SEND_MODAL,
+  SEND_MODAL_CONVERTTO_FIELD,
+  SEND_MODAL_EXPORTTO_FIELD,
+  SEND_MODAL_VIA_FIELD,
+  SEND_MODAL_IS_PRECONVERT,
 } from '../../../../utils/constants/sendModal';
 import {
   CLOSE_SEND_COIN_MODAL,
@@ -65,6 +70,27 @@ export const openTraditionalCryptoSendModal = (coinObj, subWallet, data) => {
         }
       : data,
     TRADITIONAL_CRYPTO_SEND_MODAL,
+    'To send cryptocurrency, enter a recipients address in the address field, enter an amount to send, and press "send". You will be shown your transaction details before they are sent so you can confirm them.',
+  );
+};
+
+export const openConvertOrCrossChainSendModal = (coinObj, subWallet, data) => {
+  openSendModal(
+    `Send ${coinObj.display_ticker}`,
+    coinObj,
+    subWallet,
+    data == null
+      ? {
+          [SEND_MODAL_TO_ADDRESS_FIELD]: '',
+          [SEND_MODAL_AMOUNT_FIELD]: '',
+          [SEND_MODAL_MEMO_FIELD]: '',
+          [SEND_MODAL_CONVERTTO_FIELD]: '',
+          [SEND_MODAL_EXPORTTO_FIELD]: '',
+          [SEND_MODAL_VIA_FIELD]: '',
+          [SEND_MODAL_IS_PRECONVERT]: false
+        }
+      : data,
+    CONVERT_OR_CROSS_CHAIN_SEND_MODAL,
     'To send cryptocurrency, enter a recipients address in the address field, enter an amount to send, and press "send". You will be shown your transaction details before they are sent so you can confirm them.',
   );
 };

@@ -405,7 +405,7 @@ class VerusPay extends Component {
             <BarcodeReader
               prompt={
                 this.props.acceptAddressOnly
-                  ? "Scan a recipient's QR invoice or address"
+                  ? "Scan an invoice or address"
                   : 'Scan a QR code'
               }
               onScan={e => this.onSuccess(e)}

@@ -6,6 +6,7 @@ import {
   ADD_PBAAS_CURRENCY_MODAL,
   AUTHENTICATE_USER_SEND_MODAL,
   CONVERSION_SEND_MODAL,
+  CONVERT_OR_CROSS_CHAIN_SEND_MODAL,
   DEPOSIT_SEND_MODAL,
   LINK_IDENTITY_SEND_MODAL,
   PROVISION_IDENTITY_SEND_MODAL,
@@ -44,6 +45,9 @@ import ProvisionIdentityResult from "./ProvisionIdentity/ProvisionIdentityResult
 import AddPbaasCurrencyForm from "./AddPbaasCurrency/AddPbaasCurrencyForm/AddPbaasCurrencyForm";
 import AddPbaasCurrencyConfirm from "./AddPbaasCurrency/AddPbaasCurrencyConfirm/AddPbaasCurrencyConfirm";
 import AddPbaasCurrencyResult from "./AddPbaasCurrency/AddPbaasCurrencyResult/AddPbaasCurrencyResult";
+import ConvertOrCrossChainSendForm from "./ConvertOrCrossChainSend/ConvertOrCrossChainSendForm/ConvertOrCrossChainSendForm";
+import ConvertOrCrossChainSendConfirm from "./ConvertOrCrossChainSend/ConvertOrCrossChainSendConfirm/ConvertOrCrossChainSendConfirm";
+import ConvertOrCrossChainSendResult from "./ConvertOrCrossChainSend/ConvertOrCrossChainSendResult/ConvertOrCrossChainSendResult";
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
@@ -56,7 +60,8 @@ const SEND_FORMS = {
   [LINK_IDENTITY_SEND_MODAL]: LinkIdentityForm,
   [PROVISION_IDENTITY_SEND_MODAL]: ProvisionIdentityForm,
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserForm,
-  [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyForm
+  [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyForm,
+  [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendForm
 };
 
 const SEND_CONFIRMATION = {
@@ -67,7 +72,8 @@ const SEND_CONFIRMATION = {
   [LINK_IDENTITY_SEND_MODAL]: LinkIdentityConfirm,
   [PROVISION_IDENTITY_SEND_MODAL]: ProvisionIdentityConfirm,
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserPassword,
-  [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyConfirm
+  [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyConfirm,
+  [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendConfirm
 };
 
 const SEND_RESULTS = {
@@ -78,7 +84,8 @@ const SEND_RESULTS = {
   [LINK_IDENTITY_SEND_MODAL]: LinkIdentityResult,
   [PROVISION_IDENTITY_SEND_MODAL]: ProvisionIdentityResult,
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserResult,
-  [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyResult
+  [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyResult,
+  [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendResult
 };
 
 export const SendModalRender = function () {

@@ -17,7 +17,8 @@ import Styles from '../../../styles/index'
 import { Button } from "react-native-paper"
 import VerusPay from "../../VerusPay/VerusPay";
 import Colors from "../../../globals/colors";
-import { openSubwalletSendModal } from "../../../actions/actions/sendModal/dispatchers/sendModal";
+import { openConvertOrCrossChainSendModal, openSubwalletSendModal } from "../../../actions/actions/sendModal/dispatchers/sendModal";
+import { IS_PBAAS, VRPC } from "../../../utils/constants/intervalConstants";
 
 class SendCoin extends Component {
   constructor(props) {
@@ -25,6 +26,9 @@ class SendCoin extends Component {
   }
 
   render() {
+    const channel = this.props.subWallet.channel.split('.')[0]
+    const allowConvertOrOffchain = this.props.activeCoin.tags.includes(IS_PBAAS) && channel === VRPC
+
     return (
       <View style={Styles.defaultRoot}>
         <VerusPay
@@ -41,21 +45,38 @@ class SendCoin extends Component {
             width: 150,
           }}
           button={() => (
-            <Button
-              color={Colors.secondaryColor}
-              mode={"contained"}
-              onPress={() =>
-                openSubwalletSendModal(
-                  this.props.activeCoin,
-                  this.props.subWallet
+            <View>
+              <Button
+                color={Colors.secondaryColor}
+                mode={"contained"}
+                onPress={() =>
+                  openSubwalletSendModal(
+                    this.props.activeCoin,
+                    this.props.subWallet
+                  )
+                }
+                style={{
+                  marginBottom: allowConvertOrOffchain ? 8 : 24,
+                }}
+              >
+                {"Enter manually"}
+              </Button>
+              {
+                allowConvertOrOffchain && (
+                  <Button
+                    color={Colors.secondaryColor}
+                    mode={'text'}
+                    onPress={() =>
+                      openConvertOrCrossChainSendModal(this.props.activeCoin, this.props.subWallet)
+                    }
+                    style={{
+                      marginBottom: 8,
+                    }}>
+                    {'Convert or cross-chain'}
+                  </Button>
                 )
               }
-              style={{
-                marginBottom: 24,
-              }}
-            >
-              {"Enter manually"}
-            </Button>
+            </View>
           )}
         />
       </View>

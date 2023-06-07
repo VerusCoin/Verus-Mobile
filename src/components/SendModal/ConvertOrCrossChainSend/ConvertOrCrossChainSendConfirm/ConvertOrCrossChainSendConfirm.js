@@ -13,7 +13,7 @@ import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import BigNumber from "bignumber.js";
 
-function TraditionalCryptoSendConfirm({ navigation, route, setLoading, setModalHeight, setPreventExit }) {
+function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModalHeight, setPreventExit }) {
   const [params, setParams] = useState(route.params.txConfirmation);
   const [confirmationFields, setConfirmationFields] = useState([]);
   const dispatch = useDispatch();
@@ -266,4 +266,4 @@ function TraditionalCryptoSendConfirm({ navigation, route, setLoading, setModalH
   );
 }
 
-export default TraditionalCryptoSendConfirm;
+export default ConvertOrCrossChainSendConfirm;

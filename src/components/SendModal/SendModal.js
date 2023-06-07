@@ -16,6 +16,7 @@ import {
   AUTHENTICATE_USER_SEND_MODAL,
   PROVISION_IDENTITY_SEND_MODAL,
   ADD_PBAAS_CURRENCY_MODAL,
+  CONVERT_OR_CROSS_CHAIN_SEND_MODAL,
 } from "../../utils/constants/sendModal";
 import { SendModalRender } from "./SendModal.render"
 
@@ -31,7 +32,8 @@ class SendModal extends Component {
       [LINK_IDENTITY_SEND_MODAL]: 442,
       [PROVISION_IDENTITY_SEND_MODAL]: 442,
       [AUTHENTICATE_USER_SEND_MODAL]: 442,
-      [ADD_PBAAS_CURRENCY_MODAL]: 442
+      [ADD_PBAAS_CURRENCY_MODAL]: 442,
+      [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: 696
     };
 
     this.state = {

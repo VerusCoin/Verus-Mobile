@@ -1,19 +1,29 @@
-import React from "react";
+import React, { useState } from "react";
+import { closeSendModal } from "../../../../actions/actions/sendModal/dispatchers/sendModal";
+import { explorers } from "../../../../utils/CoinData/CoinData";
+import { openUrl } from "../../../../utils/linking";
 import { ScrollView, View, TouchableOpacity } from "react-native";
-import { Button, List, Divider, Text } from "react-native-paper";
+import { Button, Text } from "react-native-paper";
 import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import { copyToClipboard } from "../../../../utils/clipboard/clipboard";
-import { explorers } from "../../../../utils/CoinData/CoinData";
 import AnimatedSuccessCheckmark from "../../../AnimatedSuccessCheckmark";
 
-export const TraditionalCryptoSendResultRender = function () {
-  return TraditionalCryptoSendSuccessRender.call(this)
-};
+const ConvertOrCrossChainSendResult = (props) => {
+  const [params, setParams] = useState(props.route.params == null ? {} : props.route.params.txResult);
 
-export const TraditionalCryptoSendSuccessRender = function () {
-  const { txid, toAddress, finalTxAmount } = this.state.params;
-  const coinObj = this.state.params.coinObj == null ? {} : this.state.params.coinObj;
+  const finishSend = () => {
+    closeSendModal();
+  }
+
+  const openExplorer = () => {
+    const url = `${explorers[params.coinObj.id]}/tx/${params.txid}`;
+
+    openUrl(url)
+  };
+
+  const { txid, toAddress, finalTxAmount } = params;
+  const coinObj = params.coinObj == null ? {} : params.coinObj;
 
   return (
     <ScrollView
@@ -21,7 +31,8 @@ export const TraditionalCryptoSendSuccessRender = function () {
       contentContainerStyle={{
         ...Styles.focalCenter,
         justifyContent: 'space-between'
-      }}>
+      }}
+    >
       <TouchableOpacity
         onPress={() =>
           copyToClipboard(finalTxAmount, {
@@ -99,7 +110,7 @@ export const TraditionalCryptoSendSuccessRender = function () {
             color={Colors.primaryColor}
             style={{width: 148}}
             labelStyle={{fontSize: 18}}
-            onPress={() => this.openExplorer()}>
+            onPress={() => openExplorer()}>
             Details
           </Button>
         )}
@@ -107,7 +118,7 @@ export const TraditionalCryptoSendSuccessRender = function () {
           color={Colors.verusGreenColor}
           style={{width: 148}}
           labelStyle={{fontSize: 18}}
-          onPress={() => this.finishSend()}>
+          onPress={() => finishSend()}>
           Done
         </Button>
       </View>
@@ -133,4 +144,6 @@ export const TraditionalCryptoSendSuccessRender = function () {
       </TouchableOpacity>
     </ScrollView>
   );
-};
+}
+
+export default ConvertOrCrossChainSendResult;
