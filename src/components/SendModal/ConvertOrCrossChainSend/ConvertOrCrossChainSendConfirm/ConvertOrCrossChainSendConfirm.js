@@ -8,75 +8,139 @@ import { copyToClipboard } from "../../../../utils/clipboard/clipboard";
 import { USD } from "../../../../utils/constants/currencies";
 import { API_GET_BALANCES, API_GET_FIATPRICE, API_GET_TRANSACTIONS } from "../../../../utils/constants/intervalConstants";
 import { SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT } from "../../../../utils/constants/sendModal";
-import { truncateDecimal } from "../../../../utils/math";
+import { coinsToSats, satsToCoins, truncateDecimal } from "../../../../utils/math";
 import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import BigNumber from "bignumber.js";
+import { TransferDestination } from "verus-typescript-primitives";
 
 function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModalHeight, setPreventExit }) {
-  const [params, setParams] = useState(route.params.txConfirmation);
+  const [params, setParams] = useState(route.params.preflight);
   const [confirmationFields, setConfirmationFields] = useState([]);
+  const [closedAccordions, setClosedAccordions] = useState({});
   const dispatch = useDispatch();
+  const balances = route.params.balances;
 
-  const balance_channel = useSelector(state => state.sendModal.subWallet.api_channels[API_GET_BALANCES]);
-  const rates_channel = useSelector(state => state.sendModal.subWallet.api_channels[API_GET_FIATPRICE]);
-  const chainTicker = params.coinObj.id
-
-  const balances = {
-    results: useSelector(state => state.ledger.balances[balance_channel]
-      ? state.ledger.balances[balance_channel][chainTicker]
-      : null),
-    errors: useSelector(state => state.errors[API_GET_BALANCES][balance_channel][chainTicker]),
-  };
-
-  const rates = useSelector(state => state.ledger.rates[rates_channel]);
-
-  const displayCurrency = useSelector(state => state.settings.generalWalletSettings.displayCurrency || USD);
 
   useEffect(() => {
     setLoading(true);
 
     // Destructuring params
     const {
-      toAddress,
-      fromAddress,
-      identity,
-      amountSubmitted,
-      coinObj,
-      fees,
-      finalTxAmount,
-      balanceDelta,
-      memo,
+      output,
+      validation,
+      hex,
+      names,
+      deltas,
+      source
     } = params;
 
-    const balance = balances.results.total;
-    const fee = fees[0];
-    const remainingBalance = BigNumber(balanceDelta).plus(BigNumber(balance));
-    const deductedAmount = BigNumber(balanceDelta).absoluteValue()
+    /**
+     * @type {Map}
+     */
+    const deltaMap = deltas;
 
-    const validFiatMultiplier =
-      rates[coinObj.id] != null &&
-      rates[coinObj.id][displayCurrency] != null;
-    const fiatMultiplier = validFiatMultiplier
-      ? BigNumber(rates[coinObj.id][displayCurrency])
-      : null;
+    /**
+     * @type {Map}
+     */
+    const nameMap = names;
 
-    const validFeeFiatMultiplier =
-      fee.currency == coinObj.id
-        ? validFiatMultiplier
-        : rates[fee.currency] != null &&
-          rates[fee.currency][displayCurrency] != null;
-    const feeFiatMultiplier =
-      fee.currency == coinObj.id
-        ? fiatMultiplier
-        : validFeeFiatMultiplier
-        ? BigNumber(rates[fee.currency][displayCurrency])
-        : null;
+    /**
+     * @type {string}
+     */
+    const txHex = hex;
+
+    const {
+      change,
+      fees,
+      sent
+    } = validation;
+
+    // const validation = {
+    //   change: {iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq: '399690000'},
+    //   fees: {iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq: '0'},
+    //   in: {iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq: '2399990000'},
+    //   out: {iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq: '2399990000'},
+    //   sent: {iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq: '2000300000'},
+    //   valid: true,
+    // };
+
+    const {
+      currency,
+      satoshis,
+      address,
+      convertto,
+      exportto,
+      feecurrency,
+      via,
+      feesatoshis,
+      refundto,
+      preconvert,
+      burn,
+      burnweight,
+      mintnew,
+    } = output;
+
+    /**
+     * @type {TransferDestination}
+     */
+    const destination = address;
+
+    const remainingBalances = {};
+
+    deltaMap.forEach((value, key) => {
+      if (balances.hasOwnProperty(key)) {
+        const satBalance = coinsToSats(BigNumber(balances[key]));
+
+        remainingBalances[key] = (satBalance.plus(value)).toString();
+      }
+    })
+
+    const destAddrString = destination.getAddressString();
+    const toAddress = nameMap.has(destAddrString) ? nameMap.get(destAddrString) : destAddrString;
+
+    const createAccordion = (label, description, left, currencies) => {
+      const fields = []
+
+      for (const key in currencies) {
+        const value = currencies[key]
+        const currencyName = nameMap.has(key) ? nameMap.get(key) : key;
+        const readableValue = satsToCoins(BigNumber(value)).toString()
+
+        fields.push({
+          data: `${readableValue} ${currencyName}`,
+          numLines: 100,
+          onPress: () =>
+            copyToClipboard(readableValue, {
+              title: 'Amount copied',
+              message: `${readableValue} copied to clipboard.`,
+            }),
+        });
+      }
+
+      return {
+        accordion: true,
+        label,
+        description,
+        left,
+        fields
+      }
+    }
 
     setConfirmationFields([
       {
+        key: 'Source',
+        data: source,
+        numLines: 100,
+        onPress: () =>
+          copyToClipboard(source, {
+            title: 'Address copied',
+            message: `${source} copied to clipboard.`,
+          })
+      },
+      {
         key: 'Destination',
-        data: identity == null ? toAddress : `${identity} (${toAddress})`,
+        data: toAddress,
         numLines: 100,
         onPress: () =>
           copyToClipboard(toAddress, {
@@ -84,84 +148,35 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
             message: `${toAddress} copied to clipboard.`,
           }),
       },
-      {
-        key: 'Source',
-        data: fromAddress,
-        numLines: 100,
-        onPress: () =>
-          copyToClipboard(fromAddress, {
-            title: 'Address copied',
-            message: `${fromAddress} copied to clipboard.`,
-          }),
-        condition: fromAddress != null,
-      },
-      {
-        key: 'Amount Requested',
-        data:
-          truncateDecimal(amountSubmitted, coinObj.decimals || 8) +
-          ' ' +
-          coinObj.display_ticker,
-        right: validFiatMultiplier
-          ? `${fiatMultiplier.multipliedBy(amountSubmitted).toFixed(2)} ${
-              displayCurrency
-            }`
-          : null,
-        condition: amountSubmitted !== '0' && amountSubmitted !== finalTxAmount,
-      },
-      {
-        key: 'Amount Sent',
-        data:
-          truncateDecimal(finalTxAmount, coinObj.decimals || 8) +
-          ' ' +
-          coinObj.display_ticker,
-        right: validFiatMultiplier
-          ? `${fiatMultiplier.multipliedBy(finalTxAmount).toFixed(2)} ${
-              displayCurrency
-            }`
-          : null,
-      },
-      {
-        key: 'Fee',
-        data: fee.amount + ' ' + fee.currency,
-        right: validFeeFiatMultiplier
-          ? `${feeFiatMultiplier.multipliedBy(fee.amount).toFixed(2)} ${
-              displayCurrency
-            }`
-          : null,
-      },
-      {
-        key: 'Amount Deducted',
-        data:
-          truncateDecimal(deductedAmount, coinObj.decimals || 8) +
-          ' ' +
-          coinObj.display_ticker,
-        right: validFiatMultiplier
-          ? `${fiatMultiplier.multipliedBy(deductedAmount).toFixed(2)} ${
-              displayCurrency
-            }`
-          : null,
-      },
-      {
-        key: 'Remaining Balance',
-        data: remainingBalance + ' ' + coinObj.display_ticker,
-        condition: remainingBalance !== 0,
-        right: validFiatMultiplier
-          ? `${fiatMultiplier.multipliedBy(remainingBalance).toFixed(2)} ${
-              displayCurrency
-            }`
-          : null,
-      },
-      {
-        key: 'Message',
-        numLines: 100,
-        data: memo,
-        condition: memo != null && memo.length > 0,
-      },
+      createAccordion(
+        'Currency sent',
+        'The currencies that are being sent as part of this transaction',
+        props => <List.Icon {...props} icon="folder" />,
+        sent
+      ),
+      createAccordion(
+        'Fees',
+        'Fees deducted from your wallet to pay for this transaction',
+        props => <List.Icon {...props} icon="folder" />,
+        fees
+      ),
+      createAccordion(
+        'Remaining balances',
+        'Your currency remaining in the address you\'re sending from after subtracting currency sent and fees (only affected balances shown)',
+        props => <List.Icon {...props} icon="folder" />,
+        remainingBalances
+      ),
     ]);
-
 
     setLoading(false);
   }, []);
+
+  const toggleAccordion = (key) => {    
+    setClosedAccordions({
+      ...closedAccordions,
+      [key]: !(closedAccordions[key])
+    })
+  }
 
   const goBack = () => {
     setModalHeight()
@@ -172,71 +187,95 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
     await setLoading(true)
     await setPreventExit(true)
 
-    const {
-      toAddress,
-      tradSendFee,
-      coinObj,
-      finalTxAmount,
-      memo,
-      channel,
-      fullResult
-    } = params;
+    // const {
+    //   toAddress,
+    //   tradSendFee,
+    //   coinObj,
+    //   finalTxAmount,
+    //   memo,
+    //   channel,
+    //   fullResult
+    // } = params;
 
-    try {
-      const res = await traditionalCryptoSend(coinObj, channel, toAddress, BigNumber(
-        truncateDecimal(
-          finalTxAmount,
-          coinObj.decimals
-        )
-      ), memo, tradSendFee, false, fullResult)
+    // try {
+    //   const res = await traditionalCryptoSend(coinObj, channel, toAddress, BigNumber(
+    //     truncateDecimal(
+    //       finalTxAmount,
+    //       coinObj.decimals
+    //     )
+    //   ), memo, tradSendFee, false, fullResult)
 
-      if (res.txid == null) throw new Error("Transaction failed.")
+    //   if (res.txid == null) throw new Error("Transaction failed.")
   
-      navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, { txResult: res });
-    } catch(e) {
-      Alert.alert("Error", e.message)
-    }
+    //   navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, { txResult: res });
+    // } catch(e) {
+    //   Alert.alert("Error", e.message)
+    // }
 
-    dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE));
-    dispatch(expireCoinData(coinObj.id, API_GET_TRANSACTIONS));
-    dispatch(expireCoinData(coinObj.id, API_GET_BALANCES));
+    // dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE));
+    // dispatch(expireCoinData(coinObj.id, API_GET_TRANSACTIONS));
+    // dispatch(expireCoinData(coinObj.id, API_GET_BALANCES));
 
     setPreventExit(false)
     setLoading(false)
   };
 
+  const renderItem = (item, index, divide = true) => {
+    return (
+      <React.Fragment key={index}>
+        <TouchableOpacity disabled={item.onPress == null} onPress={() => item.onPress()}>
+          <List.Item
+            title={item.data}
+            description={item.key}
+            titleNumberOfLines={item.numLines || 1}
+            right={(props) =>
+              item.right ? (
+                <Text
+                  {...props}
+                  style={{
+                    fontSize: 16,
+                    alignSelf: "center",
+                    color: Colors.verusDarkGray,
+                    fontWeight: "300",
+                    marginRight: 8,
+                  }}
+                >
+                  {item.right}
+                </Text>
+              ) : null
+            }
+          />
+          {divide && <Divider />}
+        </TouchableOpacity>
+      </React.Fragment>
+    );
+  }
+
   return (
     <ScrollView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }}>
       {confirmationFields.map((item, index) => {
-        if (item.data != null && (item.condition == null || item.condition === true))
-          return (
-            <React.Fragment key={index}>
-              <TouchableOpacity disabled={item.onPress == null} onPress={() => item.onPress()}>
-                <List.Item
-                  title={item.data}
-                  description={item.key}
-                  titleNumberOfLines={item.numLines || 1}
-                  right={(props) =>
-                    item.right ? (
-                      <Text
-                        {...props}
-                        style={{
-                          fontSize: 16,
-                          alignSelf: "center",
-                          color: Colors.verusDarkGray,
-                          fontWeight: "300",
-                          marginRight: 8,
-                        }}
-                      >
-                        {item.right}
-                      </Text>
-                    ) : null
-                  }
-                />
+        if ((item.accordion || item.data != null) && (item.condition == null || item.condition === true))
+          if (item.accordion) {
+            const key = index.toString();
+
+            return (
+              <React.Fragment>
+                <List.Accordion
+                  title={item.label}
+                  onPress={() => toggleAccordion(key)}
+                  expanded={!closedAccordions[key]}>
+                  {item.fields.map((x, i) => {
+                    return renderItem(x, i, false);
+                  })}
+                </List.Accordion>
                 <Divider />
-              </TouchableOpacity>
-            </React.Fragment>
-          );
+              </React.Fragment>
+            );
+          } else {
+            return (
+              renderItem(item, index)
+            );
+          }
         else return null;
       })}
       <View

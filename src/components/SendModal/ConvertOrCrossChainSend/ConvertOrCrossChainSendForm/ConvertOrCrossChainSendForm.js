@@ -7,43 +7,52 @@ import { useSelector } from 'react-redux';
 import { traditionalCryptoSend, ConvertOrCrossChainSendFee } from "../../../../actions/actionDispatchers";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import { getRecommendedBTCFees } from "../../../../utils/api/channels/general/callCreators";
-import { USD } from "../../../../utils/constants/currencies";
-import { API_GET_BALANCES, API_GET_FIATPRICE, API_SEND, DLIGHT_PRIVATE, ELECTRUM } from "../../../../utils/constants/intervalConstants";
-import { SEND_MODAL_AMOUNT_FIELD, SEND_MODAL_CONVERTTO_FIELD, SEND_MODAL_EXPORTTO_FIELD, SEND_MODAL_FORM_STEP_CONFIRM, SEND_MODAL_IS_PRECONVERT, SEND_MODAL_MEMO_FIELD, SEND_MODAL_PRICE_ESTIMATE, SEND_MODAL_SHOW_CONVERTTO_FIELD, SEND_MODAL_SHOW_EXPORTTO_FIELD, SEND_MODAL_SHOW_VIA_FIELD, SEND_MODAL_TO_ADDRESS_FIELD, SEND_MODAL_VIA_FIELD } from "../../../../utils/constants/sendModal";
-import { isNumber, truncateDecimal } from "../../../../utils/math";
+import { API_GET_BALANCES, API_SEND, DLIGHT_PRIVATE, ELECTRUM } from "../../../../utils/constants/intervalConstants";
+import {
+  SEND_MODAL_AMOUNT_FIELD,
+  SEND_MODAL_CONVERTTO_FIELD,
+  SEND_MODAL_EXPORTTO_FIELD,
+  SEND_MODAL_FORM_STEP_CONFIRM,
+  SEND_MODAL_IS_PRECONVERT,
+  SEND_MODAL_MEMO_FIELD,
+  SEND_MODAL_PRICE_ESTIMATE,
+  SEND_MODAL_SHOW_CONVERTTO_FIELD,
+  SEND_MODAL_SHOW_EXPORTTO_FIELD,
+  SEND_MODAL_SHOW_VIA_FIELD,
+  SEND_MODAL_TO_ADDRESS_FIELD,
+  SEND_MODAL_VIA_FIELD,
+} from '../../../../utils/constants/sendModal';
+import { coinsToSats, isNumber, truncateDecimal } from "../../../../utils/math";
 import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import { useEffect } from "react";
 import { getConversionPaths } from "../../../../utils/api/routers/getConversionPaths";
 import AnimatedActivityIndicatorBox from "../../../AnimatedActivityIndicatorBox";
-import { RenderSquareCoinLogo } from "../../../../utils/CoinData/Graphics";
 import { getCoinLogo } from "../../../../utils/CoinData/CoinData";
-import { getCurrency } from "../../../../utils/api/channels/verusid/callCreators";
+import { getCurrency, getIdentity } from "../../../../utils/api/channels/verusid/callCreators";
+import selectAddresses from "../../../../selectors/address";
+import MissingInfoRedirect from "../../../MissingInfoRedirect/MissingInfoRedirect";
+import { getAddressBalances, preflightConvertOrCrossChain } from "../../../../utils/api/channels/vrpc/callCreators";
+import { DEST_ID, DEST_PKH, TransferDestination, fromBase58Check } from "verus-typescript-primitives";
 
 const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
+  const sendModal = useSelector(state => state.sendModal);
+  const addresses = useSelector(state => selectAddresses(state));
+  const activeAccount = useSelector(state => state.authentication.activeAccount);
+  
   const FIELD_TITLES = {
     [SEND_MODAL_EXPORTTO_FIELD]: "Destination network",
     [SEND_MODAL_VIA_FIELD]: "Convert via",
     [SEND_MODAL_CONVERTTO_FIELD]: "Convert to"
   }
 
-  const sendModal = useSelector(state => state.sendModal);
-  const balances = useSelector(state => {
-    const chainTicker = state.sendModal.coinObj.id;
-    const balance_channel = state.sendModal.subWallet.api_channels[API_GET_BALANCES];
-    return {
-      results: state.ledger.balances[balance_channel]
-        ? state.ledger.balances[balance_channel][chainTicker]
-        : null,
-      errors: state.errors[API_GET_BALANCES][balance_channel][chainTicker],
-    };
-  });
   const [searchMode, setSearchMode] = useState(false);
   const [selectedField, setSelectedField] = useState("");
 
   const [processedAmount, setProcessedAmount] = useState(null);
 
   const [localNetworkDefinition, setLocalNetworkDefinition] = useState(null);
+  const [localBalances, setLocalBalances] = useState(null);
 
   const [suggestions, setSuggestions] = useState([]);
   const [suggestionBase, setSuggestionBase] = useState([]);
@@ -133,6 +142,29 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     })
   }
 
+  const getFieldPlaceholder = (field) => {
+    const FIELD_PLACEHOLDERS = {
+      [SEND_MODAL_CONVERTTO_FIELD]: `Could not find any currencies to convert to from ${
+        sendModal.coinObj.display_ticker
+      }, enter a currency manually or leave this field blank.`,
+      [SEND_MODAL_VIA_FIELD]: isConversion ? (`Could not find any currencies to convert via when converting from ${
+        sendModal.coinObj.display_ticker
+      } to ${
+        sendModal.data[SEND_MODAL_CONVERTTO_FIELD]
+      }. Try entering a currency manually or leave blank to convert directly.`) 
+      : 
+      (`Could not find any currencies to convert via when converting from ${
+        sendModal.coinObj.display_ticker
+      }.`),
+      [SEND_MODAL_EXPORTTO_FIELD]: `Could not find any networks to send ${
+        sendModal.coinObj.display_ticker
+      } to, enter a network manually or leave this field blank.`
+    }
+
+    if (FIELD_PLACEHOLDERS[field]) return FIELD_PLACEHOLDERS[field]
+    else return ""
+  }
+
   const fetchSuggestionsBase = async (field) => {
     if (loadingSuggestions) return;
     let newSuggestionsBase = []
@@ -170,12 +202,13 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
       switch (field) {
         case SEND_MODAL_CONVERTTO_FIELD:
-          newSuggestionsBase = flatPaths.map(path => {
+          newSuggestionsBase = flatPaths.map((path, index) => {
             const priceFixed = Number(path.price.toFixed(2))
     
             return {
               title: path.destination.fullyqualifiedname,
-              id: path.destination.currencyid,
+              logoid: path.destination.currencyid,
+              key: index.toString(),
               description: path.via
                 ? `${
                     path.exportto
@@ -221,12 +254,13 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                     x.destination.fullyqualifiedname.toLowerCase())
               );
             } else return x.via != null;
-          }).map(path => {
+          }).map((path, index) => {
             const priceFixed = Number(path.price.toFixed(2))
     
             return {
               title: path.via.fullyqualifiedname,
-              id: path.via.currencyid,
+              logoid: path.via.currencyid,
+              key: index.toString(),
               description: `${
                     path.exportto
                       ? path.gateway
@@ -266,10 +300,11 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
               seenSystems[x.exportto.currencyid] = true;
               return true
             } else return false;
-          }).map(path => {    
+          }).map((path, index) => {    
             return {
               title: path.exportto.fullyqualifiedname,
-              id: path.exportto.currencyid,
+              logoid: path.exportto.currencyid,
+              key: index.toString(),
               description: path.exportto.currencyid,
               values: {
                 [SEND_MODAL_EXPORTTO_FIELD]: path.exportto.fullyqualifiedname,
@@ -329,12 +364,20 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   };
 
   const fetchLocalNetworkDefinition = async () => {
-    const [channelName, iAddress, systemId] = sendModal.subWallet.api_channels[API_SEND].split('.');
+    const [channelName, address, systemId] = sendModal.subWallet.api_channels[API_SEND].split('.');
 
-    const response = await getCurrency(sendModal.coinObj, systemId)
+    const response = await getCurrency(sendModal.coinObj, systemId);
 
-    if (response.error) createAlert("Error", "Error fetching current network.")
-    else setLocalNetworkDefinition(response.result)
+    if (response.error) createAlert("Error", "Error fetching current network.");
+    else {
+      setLocalNetworkDefinition(response.result);
+      
+      const balanceRes = await getAddressBalances(response.result.currencyid, [address]);
+
+      if (balanceRes.error) createAlert("Error", "Error fetching balances.");
+
+      setLocalBalances(balanceRes.result.currencybalance);
+    }
   }
 
   useEffect(() => {
@@ -372,21 +415,6 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
       sendModal.data[SEND_MODAL_EXPORTTO_FIELD].length)
   }, [sendModal.data[SEND_MODAL_EXPORTTO_FIELD]])
 
-  const FEE_CALCULATORS = {
-    ["BTC"]: {
-      [ELECTRUM]: {
-        calculator: getRecommendedBTCFees,
-        isPerByte: true,
-      },
-    },
-    ["TESTNET"]: {
-      [ELECTRUM]: {
-        calculator: () => getRecommendedBTCFees(true),
-        isPerByte: true,
-      },
-    },
-  };
-
   const fillAmount = (amount) => {
     let displayAmount = BigNumber(amount);
     if (displayAmount.isLessThan(BigNumber(0))) {
@@ -422,7 +450,12 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     const { subWallet, coinObj, data } = sendModal;
     const channel = subWallet.api_channels[API_SEND];
 
-    const spendableBalance = balances.results.confirmed;
+    if (!localBalances) {
+      createAlert("Balances Not Loaded", "Have not loaded local balances yet, cannot send transaction.");
+      return true;
+    }
+
+    const spendableBalance = localBalances.hasOwnProperty(coinObj.currency_id) ? localBalances[coinObj.currency_id] : null;
 
     const toAddress =
       data[SEND_MODAL_TO_ADDRESS_FIELD] != null ? data[SEND_MODAL_TO_ADDRESS_FIELD].trim() : "";
@@ -438,18 +471,20 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
       createAlert("Invalid Amount", "Please enter a valid number amount.");
       return true;
     } else {
-      if (Number(amount) > Number(spendableBalance)) {
+      if (spendableBalance == null || Number(amount) > Number(spendableBalance)) {
         const message =
-          "Insufficient funds, " +
-          (spendableBalance < 0
-            ? "available amount is less than fee"
+          'Insufficient funds, ' +
+          (spendableBalance == null
+            ? `no ${coinObj.display_ticker} in wallet.`
+            : spendableBalance < 0
+            ? 'available amount is less than fee'
             : spendableBalance +
-              " confirmed " +
+              ' confirmed ' +
               coinObj.display_ticker +
-              " available." +
+              ' available.' +
               (channel === DLIGHT_PRIVATE
-                ? "\n\nFunds from private transactions require 10 confirmations (~10 minutes) before they can be spent."
-                : ""));
+                ? '\n\nFunds from private transactions require 10 confirmations (~10 minutes) before they can be spent.'
+                : ''));
 
         createAlert("Insufficient Funds", message);
         return true;
@@ -464,41 +499,54 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
     setLoading(true);
 
-    const { subWallet, coinObj, data } = sendModal;
-    const channel = subWallet.api_channels[API_SEND];
-    const address = data[SEND_MODAL_TO_ADDRESS_FIELD];
-    const amount = getProcessedAmount()
-    const memo = data[SEND_MODAL_MEMO_FIELD];
-
-    let tradCryptoFees;
-
-    if (FEE_CALCULATORS[coinObj.id] && FEE_CALCULATORS[coinObj.id][channel]) {
-      const feeData = FEE_CALCULATORS[coinObj.id][channel];
-
-      tradCryptoFees = new ConvertOrCrossChainSendFee(
-        (await feeData.calculator()).average,
-        feeData.isPerByte
-      );
-    }
+    const { coinObj, data } = sendModal;
 
     try {
-      const res = await traditionalCryptoSend(
-        coinObj,
-        channel,
-        address,
-        BigNumber(truncateDecimal(amount, coinObj.decimals)),
-        memo,
-        tradCryptoFees,
-        true
-      );
+      const selectData = (data) => data == null || data.length == 0 ? undefined : data;
+      const channel = sendModal.subWallet.api_channels[API_SEND];
+
+      const selectAddress = async (addr) => {
+        let keyhash;
+
+        if (addr.endsWith("@")) {
+          const identityRes = await getIdentity(coinObj, addr);
+
+          if (identityRes.error) throw new Error("Failed to fetch " + addr);
+
+          keyhash = identityRes.result.identity.identityaddress;
+        } else keyhash = addr;
+
+        const { hash, version } = fromBase58Check(keyhash);
+
+        return new TransferDestination({
+          destination_bytes: hash,
+          type: version === 60 ? DEST_PKH : DEST_ID
+        })
+      }
+
+      let output = {
+        currency: coinObj.currency_id,
+        convertto: selectData(data[SEND_MODAL_CONVERTTO_FIELD]),
+        exportto: selectData(data[SEND_MODAL_EXPORTTO_FIELD]),
+        via: selectData(data[SEND_MODAL_VIA_FIELD]),
+        address: await selectAddress(data[SEND_MODAL_TO_ADDRESS_FIELD]),
+        satoshis: coinsToSats(BigNumber(data[SEND_MODAL_AMOUNT_FIELD])).toString(),
+        preconvert: selectData(data[SEND_MODAL_IS_PRECONVERT]),
+      }
+
+      for (const key in output) {
+        if (output[key] == null) delete output[key]
+      }
+
+      const res = await preflightConvertOrCrossChain(coinObj, channel, activeAccount, output)
 
       setModalHeight(696);
 
-      if (res.feeTakenMessage != null) {
-        Alert.alert("Amount changed", res.feeTakenMessage)
+      if (res.err) {
+        throw new Error(res.result);
       }
 
-      navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, { txConfirmation: res });
+      navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, { preflight: res.result, balances: localBalances });
     } catch (e) {
       Alert.alert("Error", e.message);
     }
@@ -507,7 +555,20 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   };
 
   const maxAmount = () => {
-    fillAmount(BigNumber(balances.results.confirmed));
+    const { coinObj } = sendModal;
+
+    const spendableBalance = localBalances.hasOwnProperty(coinObj.currency_id) ? localBalances[coinObj.currency_id] : 0;
+
+    fillAmount(BigNumber(spendableBalance));
+  };
+
+  const setAddressSelf = () => {
+    const addr = addresses.results[0]
+
+    updateSendFormData(
+      SEND_MODAL_TO_ADDRESS_FIELD,
+      addr
+    );
   };
 
   return (
@@ -547,46 +608,65 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                   </Button>
                 </View>
               </View>
-            {
-              loadingSuggestions ? (
-                <AnimatedActivityIndicatorBox />
-              ) : (
-                <FlatList
-                  data={suggestions}
-                  keyExtractor={(item, index) => index.toString()}
-                  style={{
-                    width: '100%',
-                  }}
-                  ListHeaderComponent={<List.Item
-                    title={<Text style={{...Styles.listItemTableCell, fontWeight: "bold"}}>{"Name"}</Text>}
-                    right={() => (
-                      <Text style={{...Styles.listItemTableCell, fontWeight: "bold"}}>{sendModal.coinObj.display_ticker + " price estimate"}</Text>
-                    )}
-                  />}
-                  renderItem={({item}) => (
-                    <List.Item
-                      title={item.title}
-                      description={item.description}
-                      onPress={() => selectSuggestion(item)}
-                      right={() => (
-                        <Text style={Styles.listItemTableCell}>{item.right}</Text>
-                      )}
-                      left={props => {
-                        const Logo = getCoinLogo(item.id)
+              {
+                loadingSuggestions ? (
+                  <AnimatedActivityIndicatorBox />
+                ) : suggestions.length == 0 ? (
+                  <MissingInfoRedirect
+                    icon={'alert-circle-outline'}
+                    label={getFieldPlaceholder(selectedField)}
+                  />
+                ) : (
+                  <FlatList
+                    data={suggestions}
+                    style={{
+                      width: '100%',
+                    }}
+                    ListHeaderComponent={
+                      <List.Item
+                        title={
+                          <Text style={{...Styles.listItemTableCell, fontWeight: 'bold'}}>
+                            {'Name'}
+                          </Text>
+                        }
+                        right={() =>
+                          selectedField !== SEND_MODAL_EXPORTTO_FIELD ? (
+                            <Text style={{...Styles.listItemTableCell, fontWeight: 'bold'}}>
+                              {sendModal.coinObj.display_ticker + ' price estimate'}
+                            </Text>
+                          ) : null
+                        }
+                      />
+                    }
+                    renderItem={({item, index}) => (
+                      <List.Item
+                        title={item.title}
+                        key={index.toString()}
+                        description={item.description}
+                        onPress={() => selectSuggestion(item)}
+                        right={() => (
+                          <Text style={Styles.listItemTableCell}>{item.right}</Text>
+                        )}
+                        left={props => {
+                          const Logo = getCoinLogo(item.logoid);
 
-                        return <View style={{justifyContent: "center", paddingLeft: 8}}><Logo
-                          width={36}
-                          height={36}
-                          style={{
-                            alignSelf: "center"
-                          }}
-                        /></View>
-                      }}
-                    />
-                  )}
-                />
-              )
-            }
+                          return (
+                            <View style={{justifyContent: 'center', paddingLeft: 8}}>
+                              <Logo
+                                width={36}
+                                height={36}
+                                style={{
+                                  alignSelf: 'center',
+                                }}
+                              />
+                            </View>
+                          );
+                        }}
+                      />
+                    )}
+                  />
+                )
+              }
           </Animated.View>
         ) : (
           <Animated.View style={{ flex: 1, opacity: fadeNormalForm }}>
@@ -615,17 +695,34 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                 />
               </View>
               <View style={{...Styles.wideBlockDense, paddingTop: 0, paddingBottom: 2}}>
-                <TextInput
-                  returnKeyType="done"
-                  label="Recipient address"
-                  value={sendModal.data[SEND_MODAL_TO_ADDRESS_FIELD]}
-                  mode="outlined"
-                  onChangeText={text =>
-                    updateSendFormData(SEND_MODAL_TO_ADDRESS_FIELD, text)
-                  }
-                  autoCapitalize={'none'}
-                  autoCorrect={false}
-                />
+                <View style={Styles.flexRow}>
+                  <TextInput
+                    returnKeyType="done"
+                    label="Recipient address"
+                    value={sendModal.data[SEND_MODAL_TO_ADDRESS_FIELD]}
+                    mode="outlined"
+                    multiline={true}
+                    onChangeText={text =>
+                      updateSendFormData(SEND_MODAL_TO_ADDRESS_FIELD, text)
+                    }
+                    autoCapitalize={'none'}
+                    autoCorrect={false}
+                    style={{
+                      flex: 1,
+                    }}
+                  />
+                  <Button
+                    onPress={() => setAddressSelf()}
+                    color={Colors.primaryColor}
+                    style={{
+                      alignSelf: 'center',
+                      marginTop: 6,
+                      width: 64
+                    }}
+                    compact>
+                    {'Self'}
+                  </Button>
+                </View>
               </View>
               <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
                 <View style={Styles.flexRow}>
@@ -650,8 +747,9 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                     style={{
                       alignSelf: 'center',
                       marginTop: 6,
+                      width: 64
                     }}
-                    disabled={balances.results == null}
+                    disabled={localBalances == null}
                     compact>
                     {'Max'}
                   </Button>
@@ -779,28 +877,30 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                   </React.Fragment>
                 )
               }
-              <View style={{...Styles.wideBlockDense}}>
-                <Divider />
-              </View>
               {
                 sendModal.data[SEND_MODAL_IS_PRECONVERT] && (
-                  <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
-                    <Checkbox.Item
-                      color={Colors.primaryColor}
-                      disabled={true}
-                      label={'Send as preconvert'}
-                      status={
-                        sendModal.data[SEND_MODAL_IS_PRECONVERT] ? 'checked' : 'unchecked'
-                      }
-                      onPress={() =>
-                        updateSendFormData(
-                          SEND_MODAL_IS_PRECONVERT,
-                          !sendModal.data[SEND_MODAL_IS_PRECONVERT],
-                        )
-                      }
-                      mode="android"
-                    />
-                  </View>
+                  <React.Fragment>
+                    <View style={{...Styles.wideBlockDense}}>
+                      <Divider />
+                    </View>
+                    <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
+                      <Checkbox.Item
+                        color={Colors.primaryColor}
+                        disabled={true}
+                        label={'Send as preconvert'}
+                        status={
+                          sendModal.data[SEND_MODAL_IS_PRECONVERT] ? 'checked' : 'unchecked'
+                        }
+                        // onPress={() =>
+                        //   updateSendFormData(
+                        //     SEND_MODAL_IS_PRECONVERT,
+                        //     !sendModal.data[SEND_MODAL_IS_PRECONVERT],
+                        //   )
+                        // }
+                        mode="android"
+                      />
+                    </View>
+                  </React.Fragment>
                 )
               }
             </KeyboardAwareScrollView>
@@ -810,7 +910,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
           onPress={searchMode ? handleDoneSearching : submitData}
           mode="contained"
           loading={loadingSuggestions}
-          disabled={loadingSuggestions}
+          disabled={loadingSuggestions || (!searchMode && localBalances == null)}
           style={{width: 100, alignSelf: 'center'}}>
           {searchMode ? 'Done' : 'Send'}
         </Button>

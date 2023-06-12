@@ -20,6 +20,7 @@ class MissingInfoRedirect extends Component {
             ...Styles.standardWidthCenterBlock,
             color: Colors.lightGrey,
             fontSize: 20,
+            maxWidth: 300
           }}
         >
           {this.props.label}

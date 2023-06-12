@@ -95,7 +95,7 @@ export const coinsList = {
     compatible_channels: [VERUSID, VRPC],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT],
     proto: 'vrsc',
-    vrpc_endpoints: ['https://api.verustest.net'],
+    vrpc_endpoints: ['https://rustapi.verustest.net/'],
     decimals: DEFAULT_DECIMALS,
     seconds_per_block: 60,
     default_app: 'wallet',

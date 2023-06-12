@@ -846,9 +846,9 @@
     "@bitgo/blake2b-wasm" "^3.0.1"
     nanoassert "^2.0.0"
 
-"@bitgo/utxo-lib@git+https://github.com/VerusCoin/BitGoJS.git#dbffba2c95849e346577cc10f40b0da44e4a3e61":
+"@bitgo/utxo-lib@git+https://github.com/VerusCoin/BitGoJS.git#ab427a894f9bb919c64fbff5d59faebc3f4b48b6":
   version "1.9.6"
-  resolved "git+https://github.com/VerusCoin/BitGoJS.git#dbffba2c95849e346577cc10f40b0da44e4a3e61"
+  resolved "git+https://github.com/VerusCoin/BitGoJS.git#ab427a894f9bb919c64fbff5d59faebc3f4b48b6"
   dependencies:
     "@bitgo/blake2b" "3.0.1"
     bech32 "0.0.3"
@@ -11443,7 +11443,7 @@ version_compare@0.0.3:
 
 "verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git":
   version "1.0.0"
-  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#310c93b62105d18a13e0f7980f5044dd1f178d48"
+  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#45b5ca143d12aaac5df31f7ea484d3248a4038ac"
   dependencies:
     base64url "3.0.1"
     bn.js "5.2.1"
