@@ -10,20 +10,20 @@ import { copyToClipboard } from "../../../../utils/clipboard/clipboard";
 import AnimatedSuccessCheckmark from "../../../AnimatedSuccessCheckmark";
 
 const ConvertOrCrossChainSendResult = (props) => {
-  const [params, setParams] = useState(props.route.params == null ? {} : props.route.params.txResult);
+  const coinObj = useSelector(state => state.sendModal.coinObj);
+  const [params, setParams] = useState(props.route.params == null ? {} : props.route.params);
 
   const finishSend = () => {
     closeSendModal();
   }
 
   const openExplorer = () => {
-    const url = `${explorers[params.coinObj.id]}/tx/${params.txid}`;
+    const url = `${explorers[coinObj.id]}/tx/${params.txid}`;
 
-    openUrl(url)
+    openUrl(url);
   };
 
-  const { txid, toAddress, finalTxAmount } = params;
-  const coinObj = params.coinObj == null ? {} : params.coinObj;
+  const { txid, output, destination } = params;
 
   return (
     <ScrollView
@@ -34,12 +34,6 @@ const ConvertOrCrossChainSendResult = (props) => {
       }}
     >
       <TouchableOpacity
-        onPress={() =>
-          copyToClipboard(finalTxAmount, {
-            title: 'Amount copied',
-            message: `${finalTxAmount} copied to clipboard.`,
-          })
-        }
         style={{
           width: '75%',
           marginTop: 16,
@@ -51,12 +45,7 @@ const ConvertOrCrossChainSendResult = (props) => {
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          <Text
-            style={{
-              color: Colors.basicButtonColor,
-              textAlign: 'center',
-            }}>{`${finalTxAmount} ${coinObj.display_ticker}`}</Text>
-          {' sent'}
+          {output.convertto ? "Conversion initiated" : output.exportto ? "Off-chain send initiated" : "Send initiated"}
         </Text>
       </TouchableOpacity>
       <View style={{paddingVertical: 16}}>
@@ -68,9 +57,9 @@ const ConvertOrCrossChainSendResult = (props) => {
       </View>
       <TouchableOpacity
         onPress={() =>
-          copyToClipboard(toAddress, {
-            title: 'Address copied',
-            message: `${toAddress} copied to clipboard.`,
+          copyToClipboard(destination, {
+            title: 'Destination copied',
+            message: `${destination} copied to clipboard.`,
           })
         }
         style={{
@@ -85,7 +74,7 @@ const ConvertOrCrossChainSendResult = (props) => {
           }}>
           {'to '}
           <Text style={{color: Colors.basicButtonColor, textAlign: 'center'}}>
-            {toAddress}
+            {destination}
           </Text>
         </Text>
       </TouchableOpacity>
@@ -96,7 +85,7 @@ const ConvertOrCrossChainSendResult = (props) => {
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {'The transaction may take a few minutes to appear in your wallet.'}
+          {'Track its status under the Overview tab.'}
         </Text>
       </View>
       <View

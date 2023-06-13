@@ -13,8 +13,10 @@ import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import BigNumber from "bignumber.js";
 import { TransferDestination } from "verus-typescript-primitives";
+import { sendConvertOrCrossChain } from "../../../../utils/api/channels/vrpc/callCreators";
 
 function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModalHeight, setPreventExit }) {
+  const sendModal = useSelector(state => state.sendModal);
   const [params, setParams] = useState(route.params.preflight);
   const [confirmationFields, setConfirmationFields] = useState([]);
   const [closedAccordions, setClosedAccordions] = useState({});
@@ -32,7 +34,8 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
       hex,
       names,
       deltas,
-      source
+      source,
+      inputs
     } = params;
 
     /**
@@ -127,6 +130,10 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
       }
     }
 
+    const tryRenderFriendlyName = (address) => {
+      return nameMap.has(address) ? nameMap.get(address) : address
+    }
+
     setConfirmationFields([
       {
         key: 'Source',
@@ -147,6 +154,31 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
             title: 'Address copied',
             message: `${toAddress} copied to clipboard.`,
           }),
+      },
+      {
+        key: 'Converting To',
+        data: via != null && via.length > 0 ?
+         `${tryRenderFriendlyName(convertto)} via ${tryRenderFriendlyName(via)}` 
+         : 
+         tryRenderFriendlyName(convertto),
+        numLines: 100,
+        onPress: () =>
+          copyToClipboard(tryRenderFriendlyName(convertto), {
+            title: 'Currency copied',
+            message: `${tryRenderFriendlyName(convertto)} copied to clipboard.`,
+          }),
+        condition: convertto != null && convertto.length > 0
+      },
+      {
+        key: 'To Network',
+        data: tryRenderFriendlyName(exportto),
+        numLines: 100,
+        onPress: () =>
+          copyToClipboard(tryRenderFriendlyName(exportto), {
+            title: 'Currency copied',
+            message: `${tryRenderFriendlyName(exportto)} copied to clipboard.`,
+          }),
+        condition: exportto != null && exportto.length > 0
       },
       createAccordion(
         'Currency sent',
@@ -187,34 +219,32 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
     await setLoading(true)
     await setPreventExit(true)
 
-    // const {
-    //   toAddress,
-    //   tradSendFee,
-    //   coinObj,
-    //   finalTxAmount,
-    //   memo,
-    //   channel,
-    //   fullResult
-    // } = params;
+    const {
+      output,
+      validation,
+      hex,
+      names,
+      deltas,
+      source,
+      inputs
+    } = params;
+    
 
-    // try {
-    //   const res = await traditionalCryptoSend(coinObj, channel, toAddress, BigNumber(
-    //     truncateDecimal(
-    //       finalTxAmount,
-    //       coinObj.decimals
-    //     )
-    //   ), memo, tradSendFee, false, fullResult)
+    try {
+      const destAddrString = output.destination.getAddressString();
+      const toAddress = names.hasOwnProperty(destAddrString) ? names[destAddrString] : destAddrString;
 
-    //   if (res.txid == null) throw new Error("Transaction failed.")
-  
-    //   navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, { txResult: res });
-    // } catch(e) {
-    //   Alert.alert("Error", e.message)
-    // }
+      const res = await sendConvertOrCrossChain(sendModal.coinObj, hex, inputs);
 
-    // dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE));
-    // dispatch(expireCoinData(coinObj.id, API_GET_TRANSACTIONS));
-    // dispatch(expireCoinData(coinObj.id, API_GET_BALANCES));
+      if (res.err) throw new Error(res.result);
+      else navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, { ...res, output, destination: toAddress });
+    } catch(e) {
+      Alert.alert("Error", e.message)
+    }
+
+    dispatch(expireCoinData(sendModal.coinObj.id, API_GET_FIATPRICE));
+    dispatch(expireCoinData(sendModal.coinObj.id, API_GET_TRANSACTIONS));
+    dispatch(expireCoinData(sendModal.coinObj.id, API_GET_BALANCES));
 
     setPreventExit(false)
     setLoading(false)

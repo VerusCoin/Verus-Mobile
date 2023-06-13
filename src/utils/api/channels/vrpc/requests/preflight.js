@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js";
 import { getAddressBalances } from "./getAddressBalances";
 import { satsToCoins } from "../../../../math";
 import { TransferDestination } from "verus-typescript-primitives";
-import { networks, smarttxs } from "@bitgo/utxo-lib";
+import { Transaction, networks, smarttxs } from "@bitgo/utxo-lib";
 import { calculateCurrencyTransferFee } from "./calculateCurrencyTransferFee";
 import { getInfo } from "./getInfo";
 import { fundRawTransaction } from "./fundRawTransaction";
@@ -298,6 +298,24 @@ export const preflightConvertOrCrossChain = async (coinObj, channelId, activeUse
       } 
     })
 
+    const preflightTx = Transaction.fromHex(fundRes.result.hex, networks.verus);
+
+    const inputs = []
+
+    preflightTx.ins.forEach((input) => {
+      const inHash = input.hash.reverse().toString('hex')
+      const prevoutIndex = utxosRes.result.findIndex(
+        x =>
+          x.txid === inHash &&
+          x.outputIndex === input.index,
+      );
+
+      if (prevoutIndex < 0) throw new Error("Cannot find input " + inHash)
+      else {
+        inputs.push(utxosRes.result[prevoutIndex])
+      }
+    })
+
     return {
       err: false,
       result: {
@@ -306,7 +324,8 @@ export const preflightConvertOrCrossChain = async (coinObj, channelId, activeUse
         hex: fundRes.result.hex,
         names: friendlyNames,
         deltas,
-        source
+        source,
+        inputs
       },
     }
   } catch (e) {

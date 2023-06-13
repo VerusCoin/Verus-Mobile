@@ -12,6 +12,7 @@ import {
   Transaction,
   address as addressUtils,
   ECPair,
+  smarttxs
 } from '@bitgo/utxo-lib';
 import {getInfo} from './getInfo';
 import coinSelect from 'coinselect';
@@ -19,6 +20,7 @@ import {VRPC} from '../../../../constants/intervalConstants';
 import {sendRawTransaction} from './sendRawTransaction';
 import {IADDRESS_VERSION} from '../../../../constants/constants';
 import {generateOutputScript} from '../../../../crypto/script';
+const { getFundedTxBuilder } = smarttxs;
 
 export const buildTx = async (
   coinObj,
@@ -252,6 +254,58 @@ export const send = async (
       channelId,
     );
     const sendRes = await sendRawTransaction(coinObj.system_id, txHex);
+
+    if (sendRes.error) {
+      throw new Error(sendRes.error.message);
+    } else {
+      return {
+        err: false,
+        result: {
+          txid: sendRes.result,
+        },
+      };
+    }
+  } catch (e) {
+    return {
+      err: true,
+      result: e.message,
+    };
+  }
+};
+
+export const sendConvertOrCrossChain = async (
+  coinObj,
+  txHex,
+  inputs
+) => {
+  try {
+    const network = networks.verus;
+    let keyPair;
+
+    try {
+      const spendingKey = await requestPrivKey(coinObj.id, VRPC);
+      keyPair = ECPair.fromWIF(spendingKey, network);
+    } catch (e) {
+      throw new Error(
+        'Cannot spend transaction because user priv keys failed to decrypt.',
+      );
+    }
+
+    const txb = getFundedTxBuilder(txHex, network, inputs.map(x => Buffer.from(x.script, 'hex')));
+
+    for (let i = 0; i < txb.inputs.length; i++) {
+      txb.sign(
+        i,
+        keyPair,
+        null,
+        Transaction.SIGHASH_ALL,
+        inputs[i].satoshis,
+      );
+    }
+
+    const signedTxHex = txb.build().toHex();
+    
+    const sendRes = await sendRawTransaction(coinObj.system_id, signedTxHex);
 
     if (sendRes.error) {
       throw new Error(sendRes.error.message);
