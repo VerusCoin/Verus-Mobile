@@ -35,7 +35,8 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
       names,
       deltas,
       source,
-      inputs
+      inputs,
+      converterdef
     } = params;
 
     /**
@@ -200,6 +201,11 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
       ),
     ]);
 
+    if (converterdef != null && converterdef.proofprotocol === 2) {
+      Alert.alert("Centralized currency", `You are converting to ${
+        converterdef.fullyqualifiedname
+      }, a centralized currency. The controller, ${converterdef.fullyqualifiedname}@, has the ability to mint new supply.`)
+    }
     setLoading(false);
   }, []);
 
@@ -228,7 +234,6 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
       source,
       inputs
     } = params;
-    
 
     try {
       const destAddrString = output.destination.getAddressString();

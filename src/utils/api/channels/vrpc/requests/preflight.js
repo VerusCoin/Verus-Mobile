@@ -194,6 +194,7 @@ export const preflightConvertOrCrossChain = async (coinObj, channelId, activeUse
     } = output;
 
     const friendlyNames = new Map();
+    const currencyDefs = new Map();
 
     const saveFriendlyName = async (iaddrOrName) => {
       if (!iaddrOrName) return;
@@ -203,6 +204,7 @@ export const preflightConvertOrCrossChain = async (coinObj, channelId, activeUse
       if (currRes.error) throw new Error("Couldn't get identity " + iaddrOrName);
       else {
         friendlyNames.set(currRes.result.currencyid, currRes.result.fullyqualifiedname);
+        currencyDefs.set(currRes.result.currencyid, currRes.result);
         return currRes.result.currencyid;
       }
     }
@@ -222,7 +224,6 @@ export const preflightConvertOrCrossChain = async (coinObj, channelId, activeUse
       throw new Error(
         'Providing a non-default fee currency requires also providing a fee amount.',
       );
-
 
     if (_feeamount == null && isConversionOrExport) {
       _feeamount = await calculateCurrencyTransferFee(coinObj, currency, exportto, convertto, _feecurrency, via)
@@ -325,7 +326,8 @@ export const preflightConvertOrCrossChain = async (coinObj, channelId, activeUse
         names: friendlyNames,
         deltas,
         source,
-        inputs
+        inputs,
+        converterdef: output.convertto ? currencyDefs.get(output.convertto) : output.convertto
       },
     }
   } catch (e) {
