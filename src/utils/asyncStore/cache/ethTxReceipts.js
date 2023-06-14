@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const ETH_TX_CACHE_CAP = 1000
 
-let ethTxReceiptCache = new Cache({
+const ethTxReceiptCache = new Cache({
   namespace: "eth_tx_receipts",
   policy: {
       maxEntries: ETH_TX_CACHE_CAP

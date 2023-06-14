@@ -5,7 +5,7 @@ import { Cache } from "react-native-cache"
 
 const ELECTRUM_SERVER_CACHE_CAP = 19
 
-let versionCache = new Cache({
+const versionCache = new Cache({
   namespace: "server_version",
   policy: {
       maxEntries: ELECTRUM_SERVER_CACHE_CAP

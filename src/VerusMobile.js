@@ -24,7 +24,8 @@ import {
   clearCachedVersions,
   updateActiveCoinList,
   checkAndSetVersion,
-  purgeUnusedCoins
+  purgeUnusedCoins,
+  clearCachedVrpcResponses
 } from './utils/asyncStore/asyncStore'
 import { connect } from 'react-redux';
 import { ENABLE_VERUS_IDENTITIES } from '../env/index'
@@ -105,6 +106,7 @@ class VerusMobile extends React.Component {
     //version)
     clearCachedVersions()
     .then(async () => {
+      await clearCachedVrpcResponses()
       await removeInactiveCurrencyDefinitions(await purgeUnusedCoins())
       await CoinDirectory.populateCurrencyDefinitionsFromStorage()
 
