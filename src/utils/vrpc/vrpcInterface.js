@@ -17,15 +17,17 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
     'getaddressmempool',
     'getcurrency',
     'listcurrencies',
+    'getidentity',
+    'getinfo'
   ];
 
   static DEFAULT_MS_BEFORE_UPDATE = 60000;
   static MS_BEFORE_UPDATE = {
-    getaddressbalance: 5000,
-    getaddressdeltas: 5000,
-    getaddressmempool: 5000,
+    getaddressbalance: 20000,
+    getaddressdeltas: 20000,
+    getaddressmempool: 20000,
     listcurrencies: 600000,
-    getaddressmempool: 10000
+    getinfo: 1000
   };
 
   static CALL_DELAY_MS = 500;
@@ -37,8 +39,8 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
   /**
    * @param {string} systemId 
    * @param {string} endpoint
-   * @param {(time: number) => void} setLastTime 
-   * @param {() => number} getLastTime 
+   * @param {(id: string, time: number) => void} setLastTime 
+   * @param {(id: string) => number} getLastTime 
    */
   constructor(systemId, endpoint, setLastTime, getLastTime) {
     super(systemId, endpoint)
@@ -83,12 +85,12 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
     return new Promise((resolve, reject) => {
       setTimeout(async () => {
         try {
-          const lasttime = this.getLastTime()
-          this.setLastTime(Date.now())
+          const lasttime = this.getLastTime(cacheId)
+          this.setLastTime(cacheId, Date.now())
       
           const cmd = req.cmd;
           const saveToCache = CachedVerusdRpcInterface.CACHED_REQUESTS.includes(cmd);
-          const elapsed = this.getLastTime() - lasttime;
+          const elapsed = this.getLastTime(cacheId) - lasttime;
           const getFromCache =
             saveToCache &&
             elapsed <
@@ -140,18 +142,28 @@ class VrpcInterface {
 
   cacheInterfaces = {};
 
-  lasttime = 0;
+  lastRequestTimes = new Map();
 
   static getEndpointId(systemId, endpoint) {
     return hashAccountId(`${systemId}:${endpoint}`).toString('hex');
   }
 
-  setLastTime(time) {
-    this.lasttime = time;
+  /**
+   * Sets the last called time for a specified call id
+   * @param {string} id 
+   * @param {number} time 
+   */
+  setLastTime(id, time) {
+    this.lastRequestTimes.set(id, time)
   }
 
-  getLastTIme() {
-    return this.lasttime
+  /**
+   * Gets the last called time for a specified call id
+   * @param {string} id 
+   * @returns number
+   */
+  getLastTIme(id) {
+    return this.lastRequestTimes.has(id) ? this.lastRequestTimes.get(id) : 0
   }
 
   removeChainEndpoint(systemId, endpoint) {
@@ -173,8 +185,8 @@ class VrpcInterface {
     if (!this.cacheInterfaces[id]) this.cacheInterfaces[id] = new CachedVerusdRpcInterface(
       systemId,
       endpoint,
-      this.setLastTime,
-      this.getLastTIme
+      (...params) => this.setLastTime(...params),
+      (...params) => this.getLastTIme(...params)
     )
     
     this.systemEndpointIds[systemId].push(id);

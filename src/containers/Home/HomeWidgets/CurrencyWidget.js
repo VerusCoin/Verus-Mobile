@@ -48,8 +48,7 @@ const CurrencyWidget = props => {
     }
   }, [currencyBalance, uniRate, displayCurrency]);
 
-  const displayedName = coinObj.display_name.length > 8 ? coinObj.display_ticker : coinObj.display_name
-
+  const displayedName = coinObj.display_name.length > 8 ? coinObj.display_ticker : coinObj.display_name;
   return (
     <Card
       style={{
@@ -108,8 +107,8 @@ const CurrencyWidget = props => {
               marginTop: -12
             }}>
             <Paragraph style={{fontSize: 12}}>
-              {allSubwallets[coinObj.display_ticker]
-                ? allSubwallets[coinObj.display_ticker].length
+              {allSubwallets[coinObj.id]
+                ? allSubwallets[coinObj.id].length
                 : 1}
             </Paragraph>
             <SubWalletsLogo />

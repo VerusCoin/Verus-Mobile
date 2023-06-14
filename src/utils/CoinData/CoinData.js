@@ -241,6 +241,10 @@ export const getSystemNameFromSystemId = (systemId) => {
   }
 }
 
+export const getVerusIdCurrency = (coinObj) => {
+  return coinObj.testnet ? "VRSCTEST" : "VRSC";
+}
+
 export const findCoinObj = (key, userName, useSystemId = false) => {
   const id = useSystemId ? getSystemNameFromSystemId(key) : key;
   let coinObj = coinsList[id]

@@ -23,6 +23,7 @@ import Store from '../../../../store/index'
 import { clearServiceUpdateExpiredIntervalId, setServiceUpdateExpiredIntervalId } from '../../updateManager';
 import { conditionallyUpdateService } from '../../services/dispatchers/updates';
 import { SET_ADDRESSES } from '../../../../utils/constants/storeType';
+import { getSystemNameFromSystemId, getVerusIdCurrency } from '../../../../utils/CoinData/CoinData';
 //TODO: If app is ever used in any server side rendering scenario, switch store
 //to a function parameter on all of these functions rather than an import
 
@@ -186,8 +187,9 @@ export const refreshCoinIntervals = (coinObj, onCompletes, updateParams, nonNati
     }).flat()
   }
 
+  const verusIdCurrency = getVerusIdCurrency(coinObj);
   const verusIdChannels = vrpcSupported && 
-    watchedVerusIds[chainTicker] ? setVrpcChannels(Object.keys(watchedVerusIds[chainTicker])) : [];
+    watchedVerusIds[verusIdCurrency] ? setVrpcChannels(Object.keys(watchedVerusIds[verusIdCurrency])) : [];
 
   const vrpcChannels = vrpcSupported && 
     watchedAddresses[chainTicker] ? setVrpcChannels(Object.keys(watchedAddresses[chainTicker])) : [];

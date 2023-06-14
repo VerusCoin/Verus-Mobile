@@ -177,7 +177,8 @@ class DynamicHeader extends Component {
               style={{
                 display: 'flex',
                 flexDirection: 'row',
-                alignItems: 'center'
+                alignItems: 'center',
+                paddingRight: 16
               }}>
               <Avatar.Icon
                 icon="wallet"
@@ -185,7 +186,7 @@ class DynamicHeader extends Component {
                 style={{backgroundColor: 'white'}}
                 size={30}
               />
-              <Text style={{fontSize: 16, marginLeft: 8}}>{item.name}</Text>
+              <Text numberOfLines={1} style={{fontSize: 16, marginLeft: 8}}>{item.name}</Text>
             </View>
             <Paragraph style={{fontSize: 16}}>
               {this.props.balanceErrors[item.id]
