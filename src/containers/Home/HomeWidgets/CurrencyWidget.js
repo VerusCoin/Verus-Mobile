@@ -88,8 +88,8 @@ const CurrencyWidget = props => {
                 style={{
                   alignSelf: 'center',
                 }}
-                width={26}
-                height={26}
+                width={24}
+                height={24}
               />
             )}
             <Paragraph

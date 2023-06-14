@@ -20,7 +20,7 @@ const vrpcResponseCache = new Cache({
  * @param {ApiRequest} request 
  * @returns {string}
  */
-const getCacheKey = (systemId, endpoint, request) => {
+export const getVrpcResponseCacheKey = (systemId, endpoint, request) => {
   return crypto.createHash('sha256')
                 .update(fromBase58Check(systemId).hash)
                 .update(Buffer.from(endpoint, 'utf8'))
@@ -43,7 +43,7 @@ export const initVrpcResponseCache = () => {
  * @returns 
  */
 export const getCachedVrpcResponse = async (systemId, endpoint, request) => {
-  const key = getCacheKey(systemId, endpoint, request);
+  const key = getVrpcResponseCacheKey(systemId, endpoint, request);
 
   const response = await vrpcResponseCache.getItem(key);
 
@@ -52,7 +52,7 @@ export const getCachedVrpcResponse = async (systemId, endpoint, request) => {
 }
 
 export const setCachedVrpcResponse = (systemId, endpoint, request, response) => {
-  const key = getCacheKey(systemId, endpoint, request);
+  const key = getVrpcResponseCacheKey(systemId, endpoint, request);
 
   return vrpcResponseCache.setItem(key, JSON.stringify(response)).catch(e => {
     console.log("Error while setting vrpc cache")

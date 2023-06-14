@@ -7,7 +7,7 @@ import {
   REMOVE_VRPC_ENDPOINT,
 } from "../constants/storeType";
 import { hashAccountId } from '../crypto/hash';
-import { getCachedVrpcResponse, setCachedVrpcResponse } from '../asyncStore/asyncStore';
+import { getCachedVrpcResponse, getVrpcResponseCacheKey, setCachedVrpcResponse } from '../asyncStore/asyncStore';
 import { ApiRequest } from 'verus-typescript-primitives';
 
 class CachedVerusdRpcInterface extends VerusdRpcInterface {
@@ -28,7 +28,11 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
     getaddressmempool: 10000
   };
 
+  static CALL_DELAY_MS = 500;
+
   endpoint;
+  
+  callswaiting = {};
 
   /**
    * @param {string} systemId 
@@ -45,51 +49,88 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
     this.getLastTime = getLastTime;
   }
 
+  registerCallStart(cacheId) {
+    const waitingFor = this.callswaiting[cacheId];
+    
+    this.callswaiting[cacheId] = waitingFor != null ? waitingFor + 1 : 1;
+
+    const callDelayMultiplier = waitingFor == null ? 0 : waitingFor;
+    const callDelay = CachedVerusdRpcInterface.CALL_DELAY_MS * callDelayMultiplier;
+
+    return callDelay;
+  }
+
+  registerCallComplete(cacheId) {
+    this.callswaiting[cacheId] = this.callswaiting[cacheId] - 1;
+    if (this.callswaiting[cacheId] == 0) delete this.callswaiting[cacheId];
+  }
+
   /**
+   * This is a hack implemented when multicurrency was added to 
+   * ensure that multiple simultaneous calls to getwalletinfo or getaddressdeltas
+   * or any other API request that returns information about multiple wallet currencies
+   * with one set of parameters doesn't needlessly get called multiple times when the wallet
+   * updates multiple currencies at the same time. A much better way to implement this would be 
+   * to refactor the way update polling/intervals work so that multiple PBaaS currencies can 
+   * fetch info from one interval as long as they exist on the same system (TODO)
    * @param {ApiRequest} req 
    * @returns 
    */
   async request(req) {
-    try {
-      const lasttime = this.getLastTime()
-      this.setLastTime(Date.now())
-  
-      const cmd = req.cmd;
-      const saveToCache = CachedVerusdRpcInterface.CACHED_REQUESTS.includes(cmd);
-      const elapsed = this.getLastTime() - lasttime;
-      const getFromCache =
-        saveToCache &&
-        elapsed <
-          (CachedVerusdRpcInterface.MS_BEFORE_UPDATE[cmd]
-            ? CachedVerusdRpcInterface.MS_BEFORE_UPDATE[cmd]
-            : CachedVerusdRpcInterface.DEFAULT_MS_BEFORE_UPDATE);
+    const cacheId = getVrpcResponseCacheKey(this.chain, this.endpoint, req);
+    const callDelay = this.registerCallStart(cacheId);
 
-      if (getFromCache) {
+    return new Promise((resolve, reject) => {
+      setTimeout(async () => {
         try {
-          const cachedRes = await getCachedVrpcResponse(this.chain, this.endpoint, req);
-    
-          if (cachedRes != null) return cachedRes;
-        } catch(e) {
-          console.log("Failed to get cached request:")
-          console.log(e.message)
-        }
-      }
+          const lasttime = this.getLastTime()
+          this.setLastTime(Date.now())
       
-      const res = await super.request(req);
-  
-      if (saveToCache && res.error == null) {
-        try {
-          await setCachedVrpcResponse(this.chain, this.endpoint, req, res);
+          const cmd = req.cmd;
+          const saveToCache = CachedVerusdRpcInterface.CACHED_REQUESTS.includes(cmd);
+          const elapsed = this.getLastTime() - lasttime;
+          const getFromCache =
+            saveToCache &&
+            elapsed <
+              (CachedVerusdRpcInterface.MS_BEFORE_UPDATE[cmd]
+                ? CachedVerusdRpcInterface.MS_BEFORE_UPDATE[cmd]
+                : CachedVerusdRpcInterface.DEFAULT_MS_BEFORE_UPDATE);
+    
+          if (getFromCache) {
+            try {
+              const cachedRes = await getCachedVrpcResponse(this.chain, this.endpoint, req);
+        
+              if (cachedRes != null) {
+                this.registerCallComplete(cacheId);
+                resolve(cachedRes);
+                return;
+              }
+            } catch(e) {
+              console.log("Failed to get cached request:")
+              console.log(e.message)
+            }
+          }
+          
+          const res = await super.request(req);
+      
+          if (saveToCache && res.error == null) {
+            try {
+              await setCachedVrpcResponse(this.chain, this.endpoint, req, res);
+            } catch(e) {
+              console.log("Failed to save cached response:")
+              console.log(e.message)
+            }
+          }
+      
+          this.registerCallComplete(cacheId);
+          resolve(res);
         } catch(e) {
-          console.log("Failed to save cached response:")
-          console.log(e.message)
+          console.error(e)
+          this.registerCallComplete(cacheId);
+          reject(e)
         }
-      }
-  
-      return res;
-    } catch(e) {
-      console.error(e)
-    }
+      }, callDelay)
+    })
   }
 }
 

@@ -77,8 +77,8 @@ export const ConvertCoinRender = function () {
                               marginLeft: 8,
                               marginRight: 8,
                             }}
-                            width={25}
-                            height={25}
+                            width={24}
+                            height={24}
                           />
                           <View
                             {...props}

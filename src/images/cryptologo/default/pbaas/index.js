@@ -47,10 +47,9 @@ const RenderPbaasCurrencyLogo = (iAddr) => {
           return (
             <View
               style={{
-                width: (size / 4) + 2,
-                height: (size / 4) + 2,
-                backgroundColor: interiorColor,
-                margin: -1
+                width: (size / 4),
+                height: (size / 4),
+                backgroundColor: interiorColor
               }}
             />
           );

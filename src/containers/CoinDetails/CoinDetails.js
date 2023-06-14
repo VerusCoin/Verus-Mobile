@@ -115,7 +115,7 @@ class CoinDetails extends Component {
         <View style={Styles.centralRow}>
           <View style={Styles.fullWidthFlexCenterBlock}>
             {Logo != null && (
-              <Logo height={75} width={75} />
+              <Logo height={72} width={72} />
             )}
           </View>
         </View>

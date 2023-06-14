@@ -217,7 +217,7 @@ class CoinDetailsModal extends Component {
                     : () => this._handleAddCoin()
                 }
               >
-                <Logo width={75} height={75} />
+                <Logo width={72} height={72} />
                 <Button
                   disabled={this.state.loading}
                   color={Colors.secondaryColor}
