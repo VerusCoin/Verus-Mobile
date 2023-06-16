@@ -59,7 +59,7 @@ const AddPbaasCurrencyForm = (props) => {
     const currency = data[SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD];
 
     try {
-      const res = await getCurrency(coinObj, currency);
+      const res = await getCurrency(coinObj.system_id, currency);
 
       if (res.error) {
         throw new Error(res.error.message);
@@ -69,7 +69,7 @@ const AddPbaasCurrencyForm = (props) => {
         throw new Error(`${res.result.fullyqualifiedname} has already been added to your wallet.`)
       }
 
-      const launchRes = await getCurrency(coinObj, res.result.launchsystemid);
+      const launchRes = await getCurrency(coinObj.system_id, res.result.launchsystemid);
 
       if (launchRes.error) {
         throw new Error(launchRes.error.message);

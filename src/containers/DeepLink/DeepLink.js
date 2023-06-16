@@ -87,7 +87,7 @@ const DeepLink = (props) => {
 
             const sigtime = sigblock.result.time
 
-            const signedBy = await getIdentity(coinObj, request.signing_id)
+            const signedBy = await getIdentity(coinObj.system_id, request.signing_id)
 
             if (signedBy.error) throw new Error(signedBy.error.message)
 

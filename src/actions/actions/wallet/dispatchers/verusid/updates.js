@@ -7,7 +7,7 @@ export const updateLinkedVerusIds = async coinObj => {
 
   for (const iAddress of Object.keys(watchedIds)) {    
     try {
-      const res = await getIdentity(coinObj, iAddress);
+      const res = await getIdentity(coinObj.system_id, iAddress);
 
       if (res.error != null) continue;
       else linkedIds[iAddress] = res.result;

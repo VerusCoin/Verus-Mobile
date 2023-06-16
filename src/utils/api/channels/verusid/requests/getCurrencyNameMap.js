@@ -15,7 +15,7 @@ export const getCurrencyNameMap = async (coinObj, currencyDefinition) => {
   for (const addr of iAddresses) {
     try {
       if (!names[addr]) {
-        const curr = await getCurrency(coinObj, addr);
+        const curr = await getCurrency(coinObj.system_id, addr);
 
         names[addr] = curr.result.fullyqualifiedname;
       }

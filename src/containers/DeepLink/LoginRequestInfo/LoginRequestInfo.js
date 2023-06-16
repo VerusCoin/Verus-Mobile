@@ -31,7 +31,7 @@ const LoginRequestInfo = props => {
   const chain_id = getSystemNameFromSystemId(system_id)
 
   const getVerusId = async (chain, iAddrOrName) => {
-    const identity = await getIdentity(CoinDirectory.getBasicCoinObj(chain), iAddrOrName);
+    const identity = await getIdentity(CoinDirectory.getBasicCoinObj(chain).system_id, iAddrOrName);
 
     if (identity.error) throw new Error(identity.error.message);
     else return identity.result;

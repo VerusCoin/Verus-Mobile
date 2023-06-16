@@ -6,14 +6,14 @@ import { expireCoinData } from "../../../../actions/actionCreators";
 import { traditionalCryptoSend } from "../../../../actions/actionDispatchers";
 import { copyToClipboard } from "../../../../utils/clipboard/clipboard";
 import { USD } from "../../../../utils/constants/currencies";
-import { API_GET_BALANCES, API_GET_FIATPRICE, API_GET_TRANSACTIONS } from "../../../../utils/constants/intervalConstants";
+import { API_GET_BALANCES, API_GET_FIATPRICE, API_GET_TRANSACTIONS, API_SEND } from "../../../../utils/constants/intervalConstants";
 import { SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT } from "../../../../utils/constants/sendModal";
 import { coinsToSats, satsToCoins, truncateDecimal } from "../../../../utils/math";
 import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import BigNumber from "bignumber.js";
 import { TransferDestination } from "verus-typescript-primitives";
-import { sendConvertOrCrossChain } from "../../../../utils/api/channels/vrpc/callCreators";
+import { sendCurrencyTransfer } from "../../../../utils/api/channels/vrpc/callCreators";
 
 function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModalHeight, setPreventExit }) {
   const sendModal = useSelector(state => state.sendModal);
@@ -103,23 +103,27 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
     const destAddrString = destination.getAddressString();
     const toAddress = nameMap.has(destAddrString) ? nameMap.get(destAddrString) : destAddrString;
 
-    const createAccordion = (label, description, left, currencies) => {
+    const createAccordion = (label, description, left, currencies, showZeroValues = false) => {
       const fields = []
 
       for (const key in currencies) {
         const value = currencies[key]
         const currencyName = nameMap.has(key) ? nameMap.get(key) : key;
-        const readableValue = satsToCoins(BigNumber(value)).toString()
+        const valueBn = satsToCoins(BigNumber(value))
 
-        fields.push({
-          data: `${readableValue} ${currencyName}`,
-          numLines: 100,
-          onPress: () =>
-            copyToClipboard(readableValue, {
-              title: 'Amount copied',
-              message: `${readableValue} copied to clipboard.`,
-            }),
-        });
+        if (showZeroValues || !valueBn.isEqualTo(BigNumber(0))) {
+          const readableValue = valueBn.toString();
+
+          fields.push({
+            data: `${readableValue} ${currencyName}`,
+            numLines: 100,
+            onPress: () =>
+              copyToClipboard(readableValue, {
+                title: 'Amount copied',
+                message: `${readableValue} copied to clipboard.`,
+              }),
+          });
+        }
       }
 
       return {
@@ -197,7 +201,8 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
         'Remaining balances',
         'Your currency remaining in the address you\'re sending from after subtracting currency sent and fees (only affected balances shown)',
         props => <List.Icon {...props} icon="folder" />,
-        remainingBalances
+        remainingBalances,
+        true
       ),
     ]);
 
@@ -236,10 +241,10 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
     } = params;
 
     try {
-      const destAddrString = output.destination.getAddressString();
+      const destAddrString = output.address.getAddressString();
       const toAddress = names.hasOwnProperty(destAddrString) ? names[destAddrString] : destAddrString;
 
-      const res = await sendConvertOrCrossChain(sendModal.coinObj, hex, inputs);
+      const res = await sendCurrencyTransfer(sendModal.coinObj, sendModal.subWallet.api_channels[API_SEND], hex, inputs);
 
       if (res.err) throw new Error(res.result);
       else navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, { ...res, output, destination: toAddress });

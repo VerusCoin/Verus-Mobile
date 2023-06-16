@@ -1,96 +1,108 @@
 import BigNumber from "bignumber.js";
 import { getAddressBalances } from "./getAddressBalances";
-import { satsToCoins } from "../../../../math";
-import { TransferDestination } from "verus-typescript-primitives";
+import { coinsToSats, satsToCoins } from "../../../../math";
+import { DEST_ID, DEST_PKH, TransferDestination, fromBase58Check } from "verus-typescript-primitives";
 import { Transaction, networks, smarttxs } from "@bitgo/utxo-lib";
 import { calculateCurrencyTransferFee } from "./calculateCurrencyTransferFee";
 import { getInfo } from "./getInfo";
 import { fundRawTransaction } from "./fundRawTransaction";
 import { getAddressUtxos } from "./getAddressUtxos";
-import { getCurrency } from "../../verusid/callCreators";
+import { getCurrency, getIdentity } from "../../verusid/callCreators";
+import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData";
 const { createUnfundedCurrencyTransfer, validateFundedCurrencyTransfer } = smarttxs
 
 //TODO: Calculate fee for each coin seperately
 export const preflight = async (coinObj, activeUser, address, amount, params, channelId) => {
-  const defaultFee = BigNumber(0.0001)
-  let spendableBalance = BigNumber(0)
-  let feeTakenFromAmount = false
-  let amountToSend = BigNumber(amount)
-  let source;
-  
-  if (
-    activeUser.keys[coinObj.id] != null &&
-    activeUser.keys[coinObj.id][channelId] != null &&
-    activeUser.keys[coinObj.id][channelId].addresses.length > 0
-  ) {
-    source = activeUser.keys[coinObj.id][channelId].addresses[0];
-  } else {
-    return {
-      err: true,
-      result:
-        'Error, ' +
-        activeUser.id +
-        ' user keys for active coin ' +
-        coinObj.display_ticker +
-        ' not found!',
-    };
-  }
-
-  const transparentAddressTest = new RegExp('^[a-zA-Z0-9]{20,50}$')
-
-  if (!transparentAddressTest.test(address)) {
-    return {
-      err: true,
-      result: `"${address}" is not a valid destination.`
-    }
-  }
-
   try {
-    const balance = await getAddressBalances(coinObj.system_id, [source]);
+    const [channelName, iAddress, systemId] = channelId.split('.')
+    
+    const selectAddress = async (addr) => {
+      let keyhash;
 
-    if (balance.error) {
-      return {
-        err: true,
-        result: 'Cannot fetch balance.',
-      };
-    } else {
-      spendableBalance = satsToCoins(BigNumber(balance.result.balance));
+      if (addr.endsWith("@")) {
+        const identityRes = await getIdentity(systemId, addr);
+
+        if (identityRes.error) throw new Error("Failed to fetch " + addr);
+
+        keyhash = identityRes.result.identity.identityaddress;
+      } else keyhash = addr;
+
+      const { hash, version } = fromBase58Check(keyhash);
+
+      return new TransferDestination({
+        destination_bytes: hash,
+        type: version === 60 ? DEST_PKH : DEST_ID
+      })
     }
-  } catch (e) {
-    return {
-      err: true,
-      result: 'Cannot fetch balance.',
-    };
-  }
 
-  const deductedAmount = amountToSend.plus(defaultFee)
+    const preflightRes = await preflightCurrencyTransfer(coinObj, channelId, activeUser, {
+      currency: coinObj.currency_id,
+      address: await selectAddress(address),
+      satoshis: coinsToSats(BigNumber(amount)).toString()
+    })
 
-  if (deductedAmount.isEqualTo(spendableBalance.plus(defaultFee))) {
-    amountToSend = amountToSend.minus(defaultFee)
-    feeTakenFromAmount = true
-  } else if (deductedAmount.isGreaterThan(spendableBalance)) {
-    return {
-      err: true,
-      result: `Insufficient confirmed funds.`
+    if (preflightRes.err) return preflightRes;
+
+    const { validation, source } = preflightRes.result;
+    const { sent, fees } = validation;
+    let valueBn = BigNumber(0);
+    let feeBn = BigNumber(0);
+
+    for (const currencyid in sent) {
+      const amountSent = BigNumber(sent[currencyid])
+
+      if (currencyid === coinObj.currency_id) {
+        valueBn = amountSent;
+      } else if (amountSent.isGreaterThan(BigNumber(0))) {
+        throw new Error("Cannot send " + currencyid + " in tx meant to be sending " + coinObj.display_ticker);
+      }
     }
-  }
 
-  return {
-    err: false,
-    result: {
-      fee: defaultFee.toString(),
-      value: amountToSend.toString(),
-      toAddress: address,
-      fromAddress: source,
-      amountSubmitted: amount.toString(),
-      params: {
-        feeTakenFromAmount,
+    for (const currencyid in fees) {
+      const feePaid = BigNumber(fees[currencyid]);
+
+      if (currencyid === systemId) {
+        feeBn = feePaid;
+      } else if (feePaid.isGreaterThan(BigNumber(0))) {
+        throw new Error(
+          'Cannot pay fee in ' +
+            currencyid +
+            ' in tx meant to be paying fee in system currency ' +
+            systemId,
+        );
+      }
+    }
+
+    return {
+      err: false,
+      result: {
+        fee: satsToCoins(feeBn).toString(),
+        feeCurr:
+          systemId === 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV' ||
+          systemId === 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq'
+              ? getSystemNameFromSystemId(systemId)
+              : systemId,
+        value: satsToCoins(valueBn).toString(),
+        toAddress: address,
+        fromAddress: source,
+        amountSubmitted: amount.toString(),
+        names: preflightRes.result.names,
+        hex: preflightRes.result.hex,
+        inputs: preflightRes.result.inputs,
+        params: {
+          feeTakenFromAmount: false,
+        },
       },
-    },
+    };
+  } catch(e) {
+    return {
+      err: true,
+      result: e.message
+    }
   }
 }
 
-export const validateSendOrCrossChainOutputParams = obj => {
+export const validateCurrencyTransferOutputParams = obj => {
   if (typeof obj !== 'object' || obj === null) {
     throw new Error('Input must be an object');
   }
@@ -161,8 +173,9 @@ export const validateSendOrCrossChainOutputParams = obj => {
 };
 
 
-export const preflightConvertOrCrossChain = async (coinObj, channelId, activeUser, output) => {
+export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, output) => {
   let source;
+  const [channelName, iAddress, systemId] = channelId.split('.');
   
   if (
     activeUser.keys[coinObj.id] != null &&
@@ -183,7 +196,7 @@ export const preflightConvertOrCrossChain = async (coinObj, channelId, activeUse
   }
 
   try {
-    validateSendOrCrossChainOutputParams(output)
+    validateCurrencyTransferOutputParams(output)
     const {
       currency,
       convertto,
@@ -199,7 +212,7 @@ export const preflightConvertOrCrossChain = async (coinObj, channelId, activeUse
     const saveFriendlyName = async (iaddrOrName) => {
       if (!iaddrOrName) return;
       
-      const currRes = await getCurrency(coinObj, iaddrOrName);
+      const currRes = await getCurrency(systemId, iaddrOrName);
 
       if (currRes.error) throw new Error("Couldn't get identity " + iaddrOrName);
       else {
@@ -216,8 +229,7 @@ export const preflightConvertOrCrossChain = async (coinObj, channelId, activeUse
     output.via = await saveFriendlyName(via);
 
     const isConversionOrExport = exportto != null || convertto != null
-    const { system_id } = coinObj
-    const _feecurrency = feecurrency == null && isConversionOrExport ? system_id : feecurrency;
+    const _feecurrency = feecurrency == null && isConversionOrExport ? systemId : feecurrency;
     let _feeamount = feesatoshis;
 
     if (feecurrency != null && _feeamount == null)
@@ -226,15 +238,15 @@ export const preflightConvertOrCrossChain = async (coinObj, channelId, activeUse
       );
 
     if (_feeamount == null && isConversionOrExport) {
-      _feeamount = await calculateCurrencyTransferFee(coinObj, currency, exportto, convertto, _feecurrency, via)
+      _feeamount = await calculateCurrencyTransferFee(systemId, currency, exportto, convertto, _feecurrency, via)
     }
 
-    const infoRes = await getInfo(coinObj.system_id);
+    const infoRes = await getInfo(systemId);
 
     if (infoRes.error) throw new Error(infoRes.error.message)
 
     const unfundedTxHex = createUnfundedCurrencyTransfer(
-      system_id,
+      systemId,
       [
         {
           ...output,
@@ -250,12 +262,12 @@ export const preflightConvertOrCrossChain = async (coinObj, channelId, activeUse
       0x892f2085,
     );
 
-    const utxosRes = await getAddressUtxos(coinObj.system_id, [source]);
+    const utxosRes = await getAddressUtxos(systemId, [source]);
 
     if (utxosRes.error) throw new Error(utxosRes.error.message);
 
     const fundRes = await fundRawTransaction(
-      coinObj.system_id,
+      systemId,
       unfundedTxHex,
       utxosRes.result.filter(x => x.isspendable).map(utxo => {
         return {
@@ -270,7 +282,7 @@ export const preflightConvertOrCrossChain = async (coinObj, channelId, activeUse
     if (fundRes.error) throw new Error(fundRes.error.message);
 
     const validation = validateFundedCurrencyTransfer(
-      coinObj.system_id,
+      systemId,
       fundRes.result.hex,
       unfundedTxHex,
       source,
@@ -280,7 +292,7 @@ export const preflightConvertOrCrossChain = async (coinObj, channelId, activeUse
 
     const deltas = new Map()
 
-    if (!validation.valid) throw new Error("Failed to validate funded transaction.");
+    if (!validation.valid) throw new Error(validation.message);
     else {
       for (const key in validation.sent) {
         if (deltas.has(key)) deltas.set(key, deltas.get(key).minus(BigNumber(validation.sent[key])))

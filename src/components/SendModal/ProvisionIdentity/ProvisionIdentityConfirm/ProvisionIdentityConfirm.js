@@ -88,7 +88,7 @@ class ProvisionIdentityConfirm extends Component {
       }
 
       if (isIAddress) {
-        const identityObj = await getIdentity(coinObj, identity)
+        const identityObj = await getIdentity(coinObj.system_id, identity)
         
         if (identityObj.error) throw new Error(identityObj.error.message)
   

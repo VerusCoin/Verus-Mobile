@@ -72,7 +72,7 @@ const LinkIdentityForm = (props) => {
     const identity = data[SEND_MODAL_IDENTITY_TO_LINK_FIELD];
 
     try {
-      const res = await getIdentity(coinObj, identity);
+      const res = await getIdentity(coinObj.system_id, identity);
 
       if (res.error) {
         throw new Error(res.error.message);

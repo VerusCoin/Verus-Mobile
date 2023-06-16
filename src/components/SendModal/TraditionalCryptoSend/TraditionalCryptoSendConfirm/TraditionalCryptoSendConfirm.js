@@ -47,7 +47,12 @@ function TraditionalCryptoSendConfirm({ navigation, route, setLoading, setModalH
       finalTxAmount,
       balanceDelta,
       memo,
+      names
     } = params;
+
+    const renderCurrencyName = (id) => {
+      return names != null && names.hasOwnProperty(id) ? names[id] : id;
+    }
 
     const balance = balances.results.total;
     const fee = fees[0];
@@ -122,7 +127,7 @@ function TraditionalCryptoSendConfirm({ navigation, route, setLoading, setModalH
       },
       {
         key: 'Fee',
-        data: fee.amount + ' ' + fee.currency,
+        data: fee.amount + ' ' + renderCurrencyName(fee.currency),
         right: validFeeFiatMultiplier
           ? `${feeFiatMultiplier.multipliedBy(fee.amount).toFixed(2)} ${
               displayCurrency

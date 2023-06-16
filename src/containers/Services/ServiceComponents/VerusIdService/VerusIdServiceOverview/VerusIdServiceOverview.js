@@ -38,7 +38,7 @@ class VerusIdServiceOverview extends Component {
   }
 
   async getVerusId(chain, iAddrOrName) {
-    const identity = await getIdentity(CoinDirectory.getBasicCoinObj(chain), iAddrOrName);
+    const identity = await getIdentity(CoinDirectory.getBasicCoinObj(chain).system_id, iAddrOrName);
 
     if (identity.error) throw new Error(identity.error.message);
     else return identity.result;

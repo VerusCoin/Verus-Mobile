@@ -32,7 +32,7 @@ import { getCoinLogo } from "../../../../utils/CoinData/CoinData";
 import { getCurrency, getIdentity } from "../../../../utils/api/channels/verusid/callCreators";
 import selectAddresses from "../../../../selectors/address";
 import MissingInfoRedirect from "../../../MissingInfoRedirect/MissingInfoRedirect";
-import { getAddressBalances, preflightConvertOrCrossChain } from "../../../../utils/api/channels/vrpc/callCreators";
+import { getAddressBalances, preflightCurrencyTransfer } from "../../../../utils/api/channels/vrpc/callCreators";
 import { DEST_ID, DEST_PKH, TransferDestination, fromBase58Check } from "verus-typescript-primitives";
 
 const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
@@ -366,7 +366,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   const fetchLocalNetworkDefinition = async () => {
     const [channelName, address, systemId] = sendModal.subWallet.api_channels[API_SEND].split('.');
 
-    const response = await getCurrency(sendModal.coinObj, systemId);
+    const response = await getCurrency(sendModal.coinObj.system_id, systemId);
 
     if (response.error) createAlert("Error", "Error fetching current network.");
     else {
@@ -509,7 +509,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         let keyhash;
 
         if (addr.endsWith("@")) {
-          const identityRes = await getIdentity(coinObj, addr);
+          const identityRes = await getIdentity(coinObj.system_id, addr);
 
           if (identityRes.error) throw new Error("Failed to fetch " + addr);
 
@@ -538,7 +538,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         if (output[key] == null) delete output[key]
       }
 
-      const res = await preflightConvertOrCrossChain(coinObj, channel, activeAccount, output)
+      const res = await preflightCurrencyTransfer(coinObj, channel, activeAccount, output)
 
       setModalHeight(696);
 

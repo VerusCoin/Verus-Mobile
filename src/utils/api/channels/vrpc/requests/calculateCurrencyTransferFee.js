@@ -3,15 +3,13 @@ import VrpcProvider from "../../../../vrpc/vrpcInterface"
 import { getCurrency } from "../../verusid/callCreators";
 import { coinsToSats } from "../../../../math";
 
-export const calculateCurrencyTransferFee = async (coinObj, currency, exportto, convertto, feecurrency, via) => {
-  const systemId = coinObj.system_id;
-
+export const calculateCurrencyTransferFee = async (systemId, currency, exportto, convertto, feecurrency, via) => {
   if (feecurrency !== systemId) throw new Error("Fee currencies different from system not yet supported.");
 
   if (exportto == null) {
     return "25000";
   } else {
-    const { error, result: destinationSystem } = await getCurrency(coinObj, exportto);
+    const { error, result: destinationSystem } = await getCurrency(systemId, exportto);
 
     if (error) throw new Error(error.message);
 
