@@ -90,7 +90,7 @@ export const preflight = async (coinObj, activeUser, address, amount, params, ch
         hex: preflightRes.result.hex,
         inputs: preflightRes.result.inputs,
         params: {
-          feeTakenFromAmount: false,
+          feeTakenFromAmount: preflightRes.result.submittedsats !== preflightRes.result.output.satoshis,
         },
       },
     };
@@ -175,6 +175,8 @@ export const validateCurrencyTransferOutputParams = obj => {
 
 export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, output) => {
   let source;
+  const submittedAmount = output.satoshis;
+
   const [channelName, iAddress, systemId] = channelId.split('.');
   
   if (
@@ -228,9 +230,12 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     output.feecurrency = await saveFriendlyName(feecurrency);
     output.via = await saveFriendlyName(via);
 
-    const isConversionOrExport = exportto != null || convertto != null
+    const isConversionOrExport = exportto != null || convertto != null;
+    const isBasicNativeSend = !isConversionOrExport && currency === systemId;
     const _feecurrency = feecurrency == null && isConversionOrExport ? systemId : feecurrency;
+    const parentTransactionFee = isConversionOrExport || isBasicNativeSend ? 0.0001 : 0.0002;
     let _feeamount = feesatoshis;
+    let nativeFeesPaid = coinsToSats(BigNumber(parentTransactionFee));
 
     if (feecurrency != null && _feeamount == null)
       throw new Error(
@@ -238,7 +243,28 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       );
 
     if (_feeamount == null && isConversionOrExport) {
-      _feeamount = await calculateCurrencyTransferFee(systemId, currency, exportto, convertto, _feecurrency, via)
+      _feeamount = await calculateCurrencyTransferFee(systemId, currency, exportto, convertto, _feecurrency, via);
+    }
+
+    if (_feeamount != null && (feecurrency == null || feecurrency === systemId)) {
+      nativeFeesPaid = nativeFeesPaid.plus(BigNumber(_feeamount));
+    }
+
+    const balanceRes = await getAddressBalances(systemId, [source]);
+    if (balanceRes.error) throw new Error(balanceRes.error.message);
+
+    const balanceBn = balanceRes.result.currencybalance[systemId]
+      ? coinsToSats(BigNumber(balanceRes.result.currencybalance[systemId]))
+      : BigNumber(0);
+    const txSatsBn = BigNumber(output.satoshis);
+
+    if ((txSatsBn.plus(nativeFeesPaid)).isGreaterThan(balanceBn)) {
+      output.satoshis = txSatsBn.minus(nativeFeesPaid).toString();
+      const newTxSatsBn = BigNumber(output.satoshis)
+
+      if ((newTxSatsBn.plus(nativeFeesPaid)).isGreaterThan(balanceBn)) {
+        throw new Error("Insufficient funds.")
+      }
     }
 
     const infoRes = await getInfo(systemId);
@@ -276,7 +302,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         };
       }),
       source,
-      0.0001,
+      parentTransactionFee,
     );
 
     if (fundRes.error) throw new Error(fundRes.error.message);
@@ -290,7 +316,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       utxosRes.result,
     );
 
-    const deltas = new Map()
+    const deltas = new Map();
 
     if (!validation.valid) throw new Error(validation.message);
     else {
@@ -339,7 +365,8 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         deltas,
         source,
         inputs,
-        converterdef: output.convertto ? currencyDefs.get(output.convertto) : output.convertto
+        converterdef: output.convertto ? currencyDefs.get(output.convertto) : output.convertto,
+        submittedsats: submittedAmount
       },
     }
   } catch (e) {

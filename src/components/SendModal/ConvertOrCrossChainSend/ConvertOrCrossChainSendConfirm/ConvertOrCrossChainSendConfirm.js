@@ -23,7 +23,6 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
   const dispatch = useDispatch();
   const balances = route.params.balances;
 
-
   useEffect(() => {
     setLoading(true);
 
@@ -36,7 +35,8 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
       deltas,
       source,
       inputs,
-      converterdef
+      converterdef,
+      submittedsats
     } = params;
 
     /**
@@ -211,6 +211,19 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
         converterdef.fullyqualifiedname
       }, a centralized currency. The controller, ${converterdef.fullyqualifiedname}@, has the ability to mint new supply.`)
     }
+
+    if (submittedsats !== satoshis) {
+      const sendCurrencyName = tryRenderFriendlyName(currency)
+      Alert.alert(
+        'Amount changed',
+        `You have insufficient funds to send your submitted amount of ${satsToCoins(
+          BigNumber(submittedsats),
+        ).toString()} ${sendCurrencyName} with the transaction fee, so the transaction amount has been changed to the maximum sendable value of ${satsToCoins(
+          BigNumber(satoshis),
+        ).toString()} ${sendCurrencyName}.`,
+      );
+    }
+
     setLoading(false);
   }, []);
 
