@@ -5,11 +5,8 @@ import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
 import AnimatedSuccessCheckmark from '../../../AnimatedSuccessCheckmark';
-import { useSelector } from 'react-redux';
 
 export const AddPbaasCurrencyResultRender = ({currency, finishSend}) => {
-  const coinObj = useSelector(state => state.sendModal.coinObj);
-
   return (
     <ScrollView
       style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}

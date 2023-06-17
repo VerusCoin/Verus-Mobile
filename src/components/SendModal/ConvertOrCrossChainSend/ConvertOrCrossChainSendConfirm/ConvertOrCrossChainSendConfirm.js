@@ -282,7 +282,7 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
       const res = await sendCurrencyTransfer(sendModal.coinObj, sendModal.subWallet.api_channels[API_SEND], hex, inputs);
 
       if (res.err) throw new Error(res.result);
-      else navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, { ...res, output, destination: toAddress });
+      else navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, { ...res.result, output, destination: toAddress });
     } catch(e) {
       Alert.alert("Error", e.message)
     }

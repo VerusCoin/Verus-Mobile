@@ -10,6 +10,7 @@ import { getAddressUtxos } from "./getAddressUtxos";
 import { getCurrency, getIdentity } from "../../verusid/callCreators";
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData";
 import { estimateConversion } from "./estimateConversion";
+import { IS_FRACTIONAL_FLAG } from "../../../../constants/currencies";
 const { createUnfundedCurrencyTransfer, validateFundedCurrencyTransfer } = smarttxs
 
 //TODO: Calculate fee for each coin seperately
@@ -238,6 +239,13 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     const parentTransactionFee = isConversionOrExport || isBasicNativeSend ? 0.0001 : 0.0002;
     let _feeamount = feesatoshis;
     let nativeFeesPaid = coinsToSats(BigNumber(parentTransactionFee));
+    let importToSource = false;
+    
+    const sourceDefinition = currencyDefs.get(currency);
+
+    if ((sourceDefinition.options & IS_FRACTIONAL_FLAG) == IS_FRACTIONAL_FLAG) {
+      importToSource = convertto != null && sourceDefinition.currencies.includes(convertto);
+    }
 
     if (feecurrency != null && _feeamount == null)
       throw new Error(
@@ -280,6 +288,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
           ...output,
           feesatoshis: _feeamount,
           feecurrency: _feecurrency,
+          importtosource: importToSource
         },
       ],
       networks.verus,
