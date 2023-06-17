@@ -36,7 +36,8 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
       source,
       inputs,
       converterdef,
-      submittedsats
+      submittedsats,
+      estimate
     } = params;
 
     /**
@@ -175,6 +176,17 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
         condition: convertto != null && convertto.length > 0
       },
       {
+        key: 'Estimated To Receive',
+        data: estimate != null ? `${estimate.estimatedcurrencyout} ${tryRenderFriendlyName(convertto)}` : "",
+        numLines: 100,
+        onPress: () =>
+          copyToClipboard(tryRenderFriendlyName(convertto), {
+            title: 'Amount copied',
+            message: `${estimate.estimatedcurrencyout} copied to clipboard.`,
+          }),
+        condition: estimate != null && convertto != null && convertto.length > 0
+      },
+      {
         key: 'To Network',
         data: tryRenderFriendlyName(exportto),
         numLines: 100,
@@ -205,6 +217,10 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
         true
       ),
     ]);
+
+    if (convertto != null && estimate == null) {
+      Alert.alert("Could not estimate conversion result", 'Failed to calculate an estimated result for this conversion.')
+    }
 
     if (converterdef != null && converterdef.proofprotocol === 2) {
       Alert.alert("Centralized currency", `You are converting to ${

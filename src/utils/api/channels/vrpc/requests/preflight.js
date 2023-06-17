@@ -9,6 +9,7 @@ import { fundRawTransaction } from "./fundRawTransaction";
 import { getAddressUtxos } from "./getAddressUtxos";
 import { getCurrency, getIdentity } from "../../verusid/callCreators";
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData";
+import { estimateConversion } from "./estimateConversion";
 const { createUnfundedCurrencyTransfer, validateFundedCurrencyTransfer } = smarttxs
 
 //TODO: Calculate fee for each coin seperately
@@ -199,15 +200,6 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
 
   try {
     validateCurrencyTransferOutputParams(output)
-    const {
-      currency,
-      convertto,
-      exportto,
-      feecurrency,
-      via,
-      feesatoshis
-    } = output;
-
     const friendlyNames = new Map();
     const currencyDefs = new Map();
 
@@ -224,11 +216,21 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       }
     }
 
-    output.exportto = await saveFriendlyName(exportto);
-    output.convertto = await saveFriendlyName(convertto);
-    output.currency = await saveFriendlyName(currency);
-    output.feecurrency = await saveFriendlyName(feecurrency);
-    output.via = await saveFriendlyName(via);
+    output.exportto = await saveFriendlyName(output.exportto);
+    output.convertto = await saveFriendlyName(output.convertto);
+    output.currency = await saveFriendlyName(output.currency);
+    output.feecurrency = await saveFriendlyName(output.feecurrency);
+    output.via = await saveFriendlyName(output.via);
+
+    const {
+      currency,
+      convertto,
+      exportto,
+      feecurrency,
+      via,
+      feesatoshis,
+      preconvert
+    } = output;
 
     const isConversionOrExport = exportto != null || convertto != null;
     const isBasicNativeSend = !isConversionOrExport && currency === systemId;
@@ -355,6 +357,26 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       }
     })
 
+    let conversionEstimate;
+
+    if (convertto) {
+      const estimateRes = await estimateConversion(
+        systemId,
+        currency,
+        convertto,
+        satsToCoins(BigNumber(output.satoshis)).toNumber(),
+        via,
+        preconvert,
+      );
+
+      if (
+        estimateRes.error == null &&
+        estimateRes.result.outputcurrencyid === convertto
+      ) {
+        conversionEstimate = estimateRes.result;
+      }
+    }
+
     return {
       err: false,
       result: {
@@ -366,7 +388,8 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         source,
         inputs,
         converterdef: output.convertto ? currencyDefs.get(output.convertto) : output.convertto,
-        submittedsats: submittedAmount
+        submittedsats: submittedAmount,
+        estimate: conversionEstimate
       },
     }
   } catch (e) {
