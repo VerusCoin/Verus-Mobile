@@ -187,6 +187,12 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
         condition: estimate != null && convertto != null && convertto.length > 0
       },
       {
+        key: 'Preconvert',
+        data: tryRenderFriendlyName(convertto) + " hasn't launched yet. You will receive your converted funds or have your transaction refunded once the currency launches or fails to launch.",
+        numLines: 100,
+        condition: preconvert != null && preconvert
+      },
+      {
         key: 'To Network',
         data: tryRenderFriendlyName(exportto),
         numLines: 100,
@@ -321,32 +327,34 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
   }
 
   return (
-    <ScrollView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }}>
-      {confirmationFields.map((item, index) => {
-        if ((item.accordion || item.data != null) && (item.condition == null || item.condition === true))
-          if (item.accordion) {
-            const key = index.toString();
+    <View style={{flex: 1, backgroundColor: Colors.secondaryColor}}>
+      <ScrollView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }}>
+        {confirmationFields.map((item, index) => {
+          if ((item.accordion || item.data != null) && (item.condition == null || item.condition === true))
+            if (item.accordion) {
+              const key = index.toString();
 
-            return (
-              <React.Fragment>
-                <List.Accordion
-                  title={item.label}
-                  onPress={() => toggleAccordion(key)}
-                  expanded={!closedAccordions[key]}>
-                  {item.fields.map((x, i) => {
-                    return renderItem(x, i, false);
-                  })}
-                </List.Accordion>
-                <Divider />
-              </React.Fragment>
-            );
-          } else {
-            return (
-              renderItem(item, index)
-            );
-          }
-        else return null;
-      })}
+              return (
+                <React.Fragment>
+                  <List.Accordion
+                    title={item.label}
+                    onPress={() => toggleAccordion(key)}
+                    expanded={!closedAccordions[key]}>
+                    {item.fields.map((x, i) => {
+                      return renderItem(x, i, false);
+                    })}
+                  </List.Accordion>
+                  <Divider />
+                </React.Fragment>
+              );
+            } else {
+              return (
+                renderItem(item, index)
+              );
+            }
+          else return null;
+        })}
+      </ScrollView>
       <View
         style={{
           ...Styles.fullWidthBlock,
@@ -370,7 +378,7 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
           Send
         </Button>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
