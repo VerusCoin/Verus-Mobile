@@ -1,13 +1,43 @@
+import { toIAddress } from "verus-typescript-primitives";
 import { CoinDirectory } from "../../../../CoinData/CoinDirectory";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 
-export const getIdentity = (systemId, iAddressOrName, height, txproof, txproofheight) => {
-  return VrpcProvider.getEndpoint(systemId).getIdentity(
+export const getIdentity = async (systemId, iAddressOrName, height, txproof, txproofheight) => {
+  const res = await VrpcProvider.getEndpoint(systemId).getIdentity(
     iAddressOrName,
     height,
     txproof,
     txproofheight,
   );
+
+  if (res.error) return res;
+  else {
+    try {
+      const identityDefinition = res.result.identity;
+      const identityFqn = res.result.fullyqualifiedname;
+      const calculatedIAddr = toIAddress(identityFqn);
+    
+      if (calculatedIAddr !== identityDefinition.identityaddress) {
+        return {
+          id: 0,
+          error: {
+            message: "Unable to parse response identityaddress.",
+            code: -1
+          }
+        }
+      }
+    } catch(e) {
+      return {
+        id: 0,
+        error: {
+          message: e.message,
+          code: -1
+        }
+      }
+    }
+
+    return res;
+  }
 }
 
 export const extractIdentityAddress = async (

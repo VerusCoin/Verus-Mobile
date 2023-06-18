@@ -11443,7 +11443,7 @@ version_compare@0.0.3:
 
 "verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git":
   version "1.0.0"
-  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#12346e30428dea986b5fcb3d98722614b2a9f751"
+  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#7a98b64d058ba340c748280323886a5fc3c2fe30"
   dependencies:
     base64url "3.0.1"
     bn.js "5.2.1"
