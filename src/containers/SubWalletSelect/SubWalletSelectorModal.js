@@ -132,7 +132,7 @@ class SubWalletSelectorModal extends Component {
         visible={visible}
         onRequestClose={cancelHandler}>
         <SafeAreaView style={{...Styles.flexBackground}}>
-          <Text style={Styles.centralHeader}>{'Select a Card'}</Text>
+          <Text style={{...Styles.centralHeader, marginTop: 16}}>{'Select a Card'}</Text>
           <ScrollView>
             {subWallets.map((wallet, index) => (
               <View style={{margin: 8}} key={index}>

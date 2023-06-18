@@ -14,6 +14,7 @@ import {
   WALLET_APP_SEND,
   WALLET_APP_MANAGE
 } from "../constants/apps";
+import { CoinDirectory } from './CoinDirectory';
 
 export const getDefaultApps = (coinObj) => {
   const coinName = coinObj.display_name
@@ -218,16 +219,7 @@ export const getCoinFromActiveCoins = (coinTicker, activeCoinsForUser) => {
 };
 
 export const findCurrencyByImportId = (importObj) => {
-  const allCoins = Object.values(coinsList)
-
-  const coinObj = allCoins.find(coin => {
-    return (
-      coin.system_id === importObj.system_id &&
-      coin.currency_id === importObj.currency_id
-    );
-  })
-
-  return coinObj
+  return CoinDirectory.findCoinObj(importObj.currency_id);
 }
 
 export const getSystemNameFromSystemId = (systemId) => {

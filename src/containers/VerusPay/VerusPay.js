@@ -9,6 +9,7 @@
 import React, { Component } from "react";
 import {
   View,
+  Alert
 } from "react-native";
 import { arrayToObject } from '../../utils/objectManip'
 import { connect } from 'react-redux';
@@ -21,10 +22,10 @@ import {
   ONLY_ADDRESS,
   SUPPORTED_DLS,
 } from '../../utils/constants/constants'
-import { API_GET_BALANCES, API_GET_FIATPRICE, API_GET_INFO, API_SEND } from "../../utils/constants/intervalConstants";
+import { API_GET_BALANCES, API_GET_FIATPRICE, API_GET_INFO, API_SEND, IS_PBAAS } from "../../utils/constants/intervalConstants";
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 import store from "../../store";
-import { Portal } from "react-native-paper";
+import { Button, Portal } from "react-native-paper";
 import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
 import { createAlert, resolveAlert } from "../../actions/actions/alert/dispatchers/alert";
 import QrScanner from "../../utils/QrScanner/QrScanner";
@@ -34,6 +35,7 @@ import AnimatedActivityIndicator from "../../components/AnimatedActivityIndicato
 import { openSubwalletSendModal } from "../../actions/actions/sendModal/dispatchers/sendModal";
 import { SEND_MODAL_AMOUNT_FIELD, SEND_MODAL_MEMO_FIELD, SEND_MODAL_TO_ADDRESS_FIELD } from "../../utils/constants/sendModal";
 import { SET_DEEPLINK_DATA } from "../../utils/constants/storeType";
+import { getCurrency } from "../../utils/api/channels/verusid/callCreators";
 
 class VerusPay extends Component {
   constructor(props) {
@@ -120,7 +122,7 @@ class VerusPay extends Component {
       }
 
       const paymentRequest = QrScanner.processGenericPaymentRequest(result);
-      const {coinObj, address, note, amount} = paymentRequest;
+      const {coinObj, address, note, amount, system} = paymentRequest;
 
       if (coinObj == null) {
         this.addressOnly(address);
@@ -129,7 +131,7 @@ class VerusPay extends Component {
         this.props.activeCoin.id === coinObj.id
       ) {
         if (amount === null) {
-          this.handleMissingAmount(coinObj, address, note);
+          this.handleMissingAmount(coinObj, address, note, system);
         } else {
           this.preConfirm(
             coinObj,
@@ -137,13 +139,15 @@ class VerusPay extends Component {
             address,
             amount,
             note,
+            false,
+            system
           );
         }
       } else {
-        this.canExitWallet(this.props.activeCoin.id, coinObj.id).then(res => {
+        this.canExitWallet(this.props.activeCoin.display_ticker, coinObj.display_ticker).then(res => {
           if (res) {
             if (amount === null) {
-              this.handleMissingAmount(coinObj, address, note);
+              this.handleMissingAmount(coinObj, address, note, system);
             } else {
               this.preConfirm(
                 coinObj,
@@ -152,6 +156,7 @@ class VerusPay extends Component {
                 amount,
                 note,
                 true,
+                system
               );
             }
           } else {
@@ -177,7 +182,7 @@ class VerusPay extends Component {
     });
   };
 
-  handleMissingAmount = (coinObj, address, note) => {
+  handleMissingAmount = (coinObj, address, note, system) => {
     if (coinObj.apps.hasOwnProperty('wallet')) {
       this.preConfirm(
         coinObj,
@@ -186,22 +191,40 @@ class VerusPay extends Component {
         '',
         note,
         false,
+        system
       );
     } else {
       this.errorHandler(INCOMPATIBLE_APP);
     }
   };
 
-  preConfirm = (
+  preConfirm = async (
     coinObj,
     activeUser,
     address,
     amount,
     note,
     sourceSwitch = false,
+    system
   ) => {
     const subWallet =
-      this.props.channel && !sourceSwitch ? this.props.channel : null;
+    this.props.channel && !sourceSwitch ? this.props.channel : null;
+
+    if (coinObj.tags.includes(IS_PBAAS) && system != null) {
+      const getCurrencyRes = await getCurrency(coinObj.system_id, system);
+      if (getCurrencyRes.error)
+        Alert.alert(
+          'Network Warning',
+          `This invoice was created using the network with ID ${system}. Ensure that you send ${coinObj.display_ticker} on that network. You can send across networks through the convert or cross-chain modal under the send tab.`,
+        );
+      else {
+        const name = getCurrencyRes.result.fullyqualifiedname;
+        Alert.alert(
+          'Network Warning',
+          `This invoice was created using the ${name} network. Ensure that you send ${coinObj.display_ticker} on the ${name} network. You can send across networks through the convert or cross-chain modal under the send tab.`,
+        );
+      }
+    }
 
     this.setState(
       {

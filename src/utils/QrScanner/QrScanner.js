@@ -52,6 +52,7 @@ class QrScanner {
             address: request.destination,
             amount: BigNumber(request.amount),
             note: request.note,
+            systemId: request.system_id
           },
           raw
         );
@@ -65,7 +66,7 @@ class QrScanner {
           // Assume QR is simply an address QR and return an address
           return new ProcessedPaymentRequest(raw, null, raw, null, null);
         } else {
-          throw new Error(FORMAT_UNKNOWN);
+          throw new Error(e.message);
         }
       }
     } else {
@@ -78,6 +79,7 @@ class QrScanner {
     const address = verusQR.address;
     const amount = verusQR.hasOwnProperty("amount") ? verusQR.amount : null;
     const note = verusQR.note;
+    const systemId = verusQR.systemId;
     const state = store.getState();
 
     if (coinTicker != null && address != null) {
@@ -90,11 +92,12 @@ class QrScanner {
             requestedCoin,
             address,
             amount == null || amount.isLessThanOrEqualTo(0) ? null : amount,
-            note
+            note,
+            systemId
           );
         } else {
           throw new Error(
-            `This invoice is requesting funds in ${coinTicker}. Activate ${coinTicker} and rescan to continue.`
+            `This invoice is requesting funds in ${coinTicker}. Activate ${coinTicker} and re-scan to continue.`
           );
         }
       } else {
