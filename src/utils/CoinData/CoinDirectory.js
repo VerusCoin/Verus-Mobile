@@ -6,6 +6,7 @@ import { VerusdRpcInterface } from "verusd-rpc-ts-client";
 import { VERUS_APPS, coinsList } from "./CoinsList";
 import { DEFAULT_DECIMALS } from "../constants/web3Constants";
 import { getStoredCurrencyDefinitions, storeCurrencyDefinitionForCurrencyId } from "../asyncStore/currencyDefinitionStorage";
+import { timeout } from "../promises";
 
 class _CoinDirectory {
   fullCoinList = [];
@@ -152,18 +153,21 @@ class _CoinDirectory {
 
         if (isNaN(firstNodePort)) throw new Error("Cannot deduce vrpc endpoint with port" + firstNodePort + " for " + system)
 
-        firstNodeSplit[firstNodeSplit.length - 1] = (Number(firstNodePort) + 1).toString()
-
-        const endpoint = firstNodeSplit.join(':')
+        const baseServer = isTestnet ? coinsList.VRSCTEST.vrpc_endpoints[0] : coinsList.VRSC.vrpc_endpoints[0]
+        const endpoint = `${baseServer}:${(Number(firstNodePort) + 1).toString()}`
 
         if (checkEndpoint) {
-          const testInterface = new VerusdRpcInterface(system, endpoint);
+          try {
+            const testInterface = new VerusdRpcInterface(system, endpoint);
 
-          const testResult = await testInterface.getInfo()
-
-          if (testResult.result && testResult.result.chainid === system) {
-            endpoints = [endpoint]
-          } else throw new Error("Failed to connect to " + endpoint + " for " + currencyDefinition.fullyqualifiedname)
+            const testResult = await timeout(10000, testInterface.getInfo());
+  
+            if (testResult.result && testResult.result.chainid === system) {
+              endpoints = [endpoint]
+            } else throw new Error("Failed to connect to " + endpoint + " for " + currencyDefinition.fullyqualifiedname);
+          } catch(e) {
+            throw new Error(`${e.message}. Most likely, ${currencyDefinition.fullyqualifiedname} is not yet supported in lite mode.`)
+          }
         } else endpoints = [endpoint]
       } else if (trySystemFallback) {
         // Fallback to trying to see currency system from VRSC/VRSCTEST and get nodes from there

@@ -99,7 +99,7 @@ export default function CurrencyObjectData(props) {
       if (currency.preallocations && currency.preallocations.length > 0) {
         data.push({
           key: 'Preallocated?',
-          data: `Yes, a part of this currency's supply was allocated to a few addresses before launch.`,
+          data: `Yes, a part of this currency's supply was allocated to preselected addresses before launch.`,
           numLines: 100
         });
       }

@@ -39,13 +39,13 @@ const AddPbaasCurrencyConfirm = props => {
     await props.setPreventExit(true);
 
     try {
-      const isToken = (currency.options & IS_TOKEN_FLAG) == IS_TOKEN_FLAG;
+      // const isToken = (currency.options & IS_TOKEN_FLAG) == IS_TOKEN_FLAG;
 
-      if (!isToken) {
-        throw new Error(`Currently, only adding on-chain currencies is supported in Verus Mobile. ${
-          currency.fullyqualifiedname
-        } is an independant blockchain and can be accessed in native mode through Verus Desktop or the Verus CLI.`);
-      }
+      // if (!isToken) {
+      //   throw new Error(`Currently, only adding on-chain currencies is supported in Verus Mobile. ${
+      //     currency.fullyqualifiedname
+      //   } is an independant blockchain and can be accessed in native mode through Verus Desktop or the Verus CLI.`);
+      // }
 
       await CoinDirectory.addPbaasCurrency(currency, Object.keys(activeAccount.testnetOverrides).length > 0, true)
       const fullCoinData = CoinDirectory.findCoinObj(currency.currencyid)
