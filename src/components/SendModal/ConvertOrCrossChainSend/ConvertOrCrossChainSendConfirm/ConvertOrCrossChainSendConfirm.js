@@ -224,28 +224,6 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
       ),
     ]);
 
-    if (convertto != null && estimate == null) {
-      Alert.alert("Could not estimate conversion result", 'Failed to calculate an estimated result for this conversion.')
-    }
-
-    if (converterdef != null && converterdef.proofprotocol === 2) {
-      Alert.alert("Centralized currency", `You are converting to ${
-        converterdef.fullyqualifiedname
-      }, a centralized currency. The controller, ${converterdef.fullyqualifiedname}@, has the ability to mint new supply.`)
-    }
-
-    if (submittedsats !== satoshis) {
-      const sendCurrencyName = tryRenderFriendlyName(currency)
-      Alert.alert(
-        'Amount changed',
-        `You have insufficient funds to send your submitted amount of ${satsToCoins(
-          BigNumber(submittedsats),
-        ).toString()} ${sendCurrencyName} with the transaction fee, so the transaction amount has been changed to the maximum sendable value of ${satsToCoins(
-          BigNumber(satoshis),
-        ).toString()} ${sendCurrencyName}.`,
-      );
-    }
-
     setLoading(false);
   }, []);
 

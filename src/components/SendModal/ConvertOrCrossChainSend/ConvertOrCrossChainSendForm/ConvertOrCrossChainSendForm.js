@@ -22,7 +22,7 @@ import {
   SEND_MODAL_TO_ADDRESS_FIELD,
   SEND_MODAL_VIA_FIELD,
 } from '../../../../utils/constants/sendModal';
-import { coinsToSats, isNumber, truncateDecimal } from "../../../../utils/math";
+import { coinsToSats, isNumber, satsToCoins, truncateDecimal } from "../../../../utils/math";
 import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import { useEffect } from "react";
@@ -544,6 +544,33 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
       if (res.err) {
         throw new Error(res.result);
+      }
+
+      const {
+        converterdef,
+        submittedsats,
+        estimate
+      } = res.result;
+
+      if (output.convertto != null && estimate == null) {
+        Alert.alert("Could not estimate conversion result", 'Failed to calculate an estimated result for this conversion.')
+      }
+  
+      if (converterdef != null && converterdef.proofprotocol === 2) {
+        Alert.alert("Centralized currency", `You are converting to ${
+          converterdef.fullyqualifiedname
+        }, a centralized currency. The controller, ${converterdef.fullyqualifiedname}@, has the ability to mint new supply.`)
+      }
+  
+      if (submittedsats !== output.satoshis) {
+        Alert.alert(
+          'Amount changed',
+          `You have insufficient funds to send your submitted amount of ${satsToCoins(
+            BigNumber(submittedsats),
+          ).toString()} ${coinObj.display_ticker} with the transaction fee, so the transaction amount has been changed to the maximum sendable value of ${satsToCoins(
+            BigNumber(output.satoshis),
+          ).toString()} ${coinObj.display_ticker}.`,
+        );
       }
 
       navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, { preflight: res.result, balances: localBalances });
