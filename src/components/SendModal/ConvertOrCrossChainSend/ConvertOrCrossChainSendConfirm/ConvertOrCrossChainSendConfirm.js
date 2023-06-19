@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, View, TouchableOpacity, Alert } from "react-native";
 import { Button, List, Divider, Text } from "react-native-paper";
 import { useDispatch, useSelector } from 'react-redux'
@@ -22,6 +22,7 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
   const [closedAccordions, setClosedAccordions] = useState({});
   const dispatch = useDispatch();
   const balances = route.params.balances;
+  const scrollRef = useRef();
 
   useEffect(() => {
     setLoading(true);
@@ -187,6 +188,11 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
         condition: estimate != null && convertto != null && convertto.length > 0
       },
       {
+        key: 'Estimated Time Until Arrival',
+        data: exportto != null ? "20-30 minutes" : convertto != null ? "2-10 minutes" : "1-5 minutes",
+        numLines: 100,
+      },
+      {
         key: 'Preconvert',
         data: tryRenderFriendlyName(convertto) + " hasn't launched yet. You will receive your converted funds or have your transaction refunded once the currency launches or fails to launch.",
         numLines: 100,
@@ -225,6 +231,9 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
     ]);
 
     setLoading(false);
+    setTimeout(() => {
+      scrollRef.current.flashScrollIndicators();
+    }, 500)
   }, []);
 
   const toggleAccordion = (key) => {    
@@ -306,7 +315,12 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
 
   return (
     <View style={{flex: 1, backgroundColor: Colors.secondaryColor}}>
-      <ScrollView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }}>
+      <ScrollView 
+        style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }} 
+        persistentScrollbar={true}
+        showsVerticalScrollIndicator={true}
+        ref={scrollRef}
+      >
         {confirmationFields.map((item, index) => {
           if ((item.accordion || item.data != null) && (item.condition == null || item.condition === true))
             if (item.accordion) {
