@@ -116,6 +116,7 @@ const SendCoin = ({ navigation }) => {
       <VerusPay
         coinObj={activeCoin}
         channel={subWallet}
+        showSpinner={convertOrCrossChainOptionsModalOpen}
         acceptAddressOnly={true}
         containerStyle={{
           backgroundColor: Colors.primaryColor,

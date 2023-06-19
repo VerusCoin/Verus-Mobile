@@ -94,7 +94,7 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
     const remainingBalances = {};
 
     deltaMap.forEach((value, key) => {
-      if (balances.hasOwnProperty(key)) {
+      if (balances.hasOwnProperty(key) && !value.isEqualTo(BigNumber(0))) {
         const satBalance = coinsToSats(BigNumber(balances[key]));
 
         remainingBalances[key] = (satBalance.plus(value)).toString();

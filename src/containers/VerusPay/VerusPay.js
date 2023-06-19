@@ -389,7 +389,8 @@ class VerusPay extends Component {
       this.state.loading ||
       this.state.addingCoin ||
       this.props.activeAlert != null ||
-      this.props.sendModal.visible;
+      this.props.sendModal.visible || 
+      this.props.showSpinner;
 
     return (
       <View style={{...styles.blackRoot, ...containerStyle}}>

@@ -23,9 +23,9 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
 
   static DEFAULT_MS_BEFORE_UPDATE = 60000;
   static MS_BEFORE_UPDATE = {
-    getaddressbalance: 20000,
-    getaddressdeltas: 20000,
-    getaddressmempool: 20000,
+    getaddressbalance: 5000,
+    getaddressdeltas: 10000,
+    getaddressmempool: 10000,
     listcurrencies: 600000,
     getinfo: 1000
   };

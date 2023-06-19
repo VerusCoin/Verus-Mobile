@@ -113,22 +113,22 @@ const BarcodeReader = props => {
   ) : (
     <ScrollView
       style={styles.flexBackground}
-      contentContainerStyle={styles.centerContainer}>
+      contentContainerStyle={{...styles.centerContainer, backgroundColor: Colors.primaryColor}}>
       <MaterialCommunityIcons
         name={'camera-off'}
-        color={Colors.lightGrey}
+        color={Colors.secondaryColor}
         size={104}
       />
       <Text
         style={{
           ...styles.centeredText,
           ...styles.standardWidthCenterBlock,
-          color: Colors.lightGrey,
+          color: Colors.secondaryColor,
           fontSize: 20,
         }}>
         {'Allow Verus Mobile to use your camera to scan QR codes.'}
       </Text>
-      <Button onPress={openSettings} color={Colors.primaryColor} style={{ marginBottom: 8 }}>
+      <Button onPress={openSettings} color={Colors.secondaryColor} style={{ marginBottom: 8 }}>
         {needToGoToSettings ? 'Configure in settings' : 'Allow'}
       </Button>
       {button ? button() : null}

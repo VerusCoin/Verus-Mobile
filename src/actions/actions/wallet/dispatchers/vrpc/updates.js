@@ -33,7 +33,7 @@ export const updateVrpcBalances = async (coinObj, channelId) => {
 
 export const updateVrpcTransactions = async (coinObj, channelId) => {
   const [channelName, iAddress, systemId] = channelId.split('.')
-  
+
   const deltasRes = await getAddressDeltas(systemId, [iAddress], true, 1)
   const infoRes = await getInfo(systemId)
   const currencyId = coinObj.currency_id
@@ -62,7 +62,7 @@ export const updateVrpcTransactions = async (coinObj, channelId) => {
 
   // Format address deltas to account for change
   for (let i = 0; i < txs.length; i++) {
-    const deltaValue = BigNumber(0)
+    let deltaValue = BigNumber(0)
 
     const {currencyvalues, satoshis, txid} = txs[i];
 
