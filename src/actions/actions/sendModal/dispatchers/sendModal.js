@@ -99,7 +99,7 @@ export const openConvertOrCrossChainSendModal = (coinObj, subWallet, data) => {
         }
       : data,
     CONVERT_OR_CROSS_CHAIN_SEND_MODAL,
-    'To send cryptocurrency, enter a recipients address in the address field, enter an amount to send, and press "send". You will be shown your transaction details before they are sent so you can confirm them.',
+    'To convert your funds to a different currency, or send them to a different network, fill in the corresponding fields. Conversions and cross-chain transactions may take a few minutes to complete, even once your funds are confirmed as sent.',
   );
 };
 

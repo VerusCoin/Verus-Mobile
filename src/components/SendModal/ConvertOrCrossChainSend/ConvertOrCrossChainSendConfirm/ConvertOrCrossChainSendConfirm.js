@@ -204,7 +204,7 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
         condition: exportto != null && exportto.length > 0
       },
       createAccordion(
-        'Currency sent',
+        'Currency to send',
         'The currencies that are being sent as part of this transaction',
         props => <List.Icon {...props} icon="folder" />,
         sent
