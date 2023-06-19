@@ -245,7 +245,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     const sourceDefinition = currencyDefs.get(currency);
 
     if ((sourceDefinition.options & IS_FRACTIONAL_FLAG) == IS_FRACTIONAL_FLAG) {
-      importToSource = convertto != null && sourceDefinition.currencies.includes(convertto);
+      importToSource = convertto != null && via == null && sourceDefinition.currencies.includes(convertto);
     }
 
     if (feecurrency != null && _feeamount == null)
