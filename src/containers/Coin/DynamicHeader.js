@@ -32,6 +32,7 @@ class DynamicHeader extends Component {
     this.state = {
       carouselItems: [],
       currentIndex: 0,
+      loadingCarouselItems: true
     };
 
     this.fadeAnimation = new Animated.Value(0);
@@ -42,10 +43,18 @@ class DynamicHeader extends Component {
     this.fadeIn();
 
     this.setState({
-      carouselItems: this.prepareCarouselItems(
-        this.props.allSubWallets,
-        this.props.selectedSubWallet,
-      )
+      loadingCarouselItems: true
+    }, () => {
+      this.setState({
+        carouselItems: this.prepareCarouselItems(
+          this.props.allSubWallets,
+          this.props.selectedSubWallet,
+        )
+      }, () => {
+        this.setState({
+          loadingCarouselItems: false
+        })
+      })
     })
   }
 
@@ -88,9 +97,16 @@ class DynamicHeader extends Component {
   }
 
   setSubWallet = wallet => {
+    const index =
+      wallet == null
+        ? 0
+        : wallet.index != null
+        ? wallet.index
+        : this.props.allSubWallets.findIndex(x => x.id === wallet.id);
+
     this.setState(
       {
-        currentIndex: wallet == null ? 0 : wallet.index,
+        currentIndex: index < 0 ? 0 : index
       },
       () => {
         this.props.dispatch(setCoinSubWallet(this.props.chainTicker, wallet));
@@ -309,7 +325,7 @@ class DynamicHeader extends Component {
             paddingBottom: 16,
             backgroundColor: Colors.primaryColor,
           }}>
-          {this.state.carouselItems.length == 1 ? (
+          {this.state.loadingCarouselItems ? null : this.state.carouselItems.length == 1 ? (
             this._renderCarouselItem({
               item: this.state.carouselItems[0],
               index: 0,
@@ -321,9 +337,9 @@ class DynamicHeader extends Component {
               sliderWidth={DEVICE_WINDOW_WIDTH / 2}
               items={this.state.carouselItems}
               renderItem={props => this._renderCarouselItem(props)}
-              onSnapToItem={index =>
-                this.setSubWallet(this.state.carouselItems[index])
-              }
+              onSnapToItem={index => {
+                return this.setSubWallet(this.state.carouselItems[index]);
+              }}
               carouselProps={{
                 loop: true,
                 ref: ref => (this.carousel = ref),
