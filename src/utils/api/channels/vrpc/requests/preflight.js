@@ -234,6 +234,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     } = output;
 
     const isConversionOrExport = exportto != null || convertto != null;
+    const isNativeSend = currency === systemId;
     const isBasicNativeSend = !isConversionOrExport && currency === systemId;
     const _feecurrency = feecurrency == null && isConversionOrExport ? systemId : feecurrency;
     const parentTransactionFee = isConversionOrExport || isBasicNativeSend ? 0.0001 : 0.0002;
@@ -268,7 +269,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       : BigNumber(0);
     const txSatsBn = BigNumber(output.satoshis);
 
-    if ((txSatsBn.plus(nativeFeesPaid)).isGreaterThan(balanceBn)) {
+    if (isNativeSend && (txSatsBn.plus(nativeFeesPaid)).isGreaterThan(balanceBn)) {
       output.satoshis = txSatsBn.minus(nativeFeesPaid).toString();
       const newTxSatsBn = BigNumber(output.satoshis)
 

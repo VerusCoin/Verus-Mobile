@@ -321,7 +321,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
           break;
       }
     } catch(e) {
-      createAlert("Failed to fetch conversion paths, enter your currency manually", e.message)
+      Alert.alert("Failed to fetch conversion paths, enter your currency manually", e.message)
     }
 
     setLoadingSuggestions(false);
