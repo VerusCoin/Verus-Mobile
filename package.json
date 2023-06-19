@@ -14,10 +14,6 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@babel/plugin-transform-arrow-functions": "7.18.6",
-    "@babel/plugin-transform-shorthand-properties": "7.18.6",
-    "@babel/plugin-transform-template-literals": "7.18.9",
-    "@babel/preset-typescript": "7.18.6",
     "@bitgo/utxo-lib": "git+https://github.com/VerusCoin/BitGoJS.git#83d38d9748055aaa4b1fe9377c186e4b02a9befd",
     "@ethersproject/signing-key": "5.0.5",
     "@react-native-async-storage/async-storage": "1.17.10",
@@ -146,7 +142,13 @@
     "node-fetch": "2.6.7",
     "react-test-renderer": "17.0.1",
     "rn-nodeify": "github:tradle/rn-nodeify",
-    "snyk": "1.996.0"
+    "snyk": "1.996.0",
+    "@babel/plugin-proposal-optional-chaining": "7.18.6",
+    "@babel/plugin-transform-arrow-functions": "7.18.6",
+    "@babel/plugin-transform-shorthand-properties": "7.18.6",
+    "@babel/plugin-transform-template-literals": "7.18.9",
+    "@babel/preset-typescript": "7.18.6",
+    "@babel/plugin-proposal-nullish-coalescing-operator": "7.18.6"
   },
   "resolutions": {
     "typeforce": "git+https://github.com/michaeltout/typeforce.git",
