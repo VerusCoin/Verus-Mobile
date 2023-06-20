@@ -11,6 +11,7 @@ import { getCurrency, getIdentity } from "../../verusid/callCreators";
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData";
 import { estimateConversion } from "./estimateConversion";
 import { IS_FRACTIONAL_FLAG } from "../../../../constants/currencies";
+import { unpackOutput } from "@bitgo/utxo-lib/dist/src/smart_transactions";
 const { createUnfundedCurrencyTransfer, validateFundedCurrencyTransfer } = smarttxs
 
 //TODO: Calculate fee for each coin seperately
@@ -304,10 +305,26 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
 
     if (utxosRes.error) throw new Error(utxosRes.error.message);
 
+    const utxoList = []
+
+    utxosRes.result.forEach((inputUtxo) => {
+      if (inputUtxo.isspendable) {
+        const _script = Buffer.from(inputUtxo.script, 'hex')
+        const _value = inputUtxo.satoshis
+  
+        try {
+          unpackOutput({ value: _value, script: _script }, systemId, true)
+          utxoList.push(inputUtxo)
+        } catch(e) {
+          console.warn(e.message)
+        }
+      }
+    })
+
     const fundRes = await fundRawTransaction(
       systemId,
       unfundedTxHex,
-      utxosRes.result.filter(x => x.isspendable).map(utxo => {
+      utxoList.map(utxo => {
         return {
           voutnum: utxo.outputIndex,
           txid: utxo.txid,
@@ -325,7 +342,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       unfundedTxHex,
       source,
       networks.verus,
-      utxosRes.result,
+      utxoList,
     );
 
     const deltas = new Map();
@@ -355,7 +372,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
 
     preflightTx.ins.forEach((input) => {
       const inHash = input.hash.reverse().toString('hex')
-      const prevoutIndex = utxosRes.result.findIndex(
+      const prevoutIndex = utxoList.findIndex(
         x =>
           x.txid === inHash &&
           x.outputIndex === input.index,
@@ -363,7 +380,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
 
       if (prevoutIndex < 0) throw new Error("Cannot find input " + inHash)
       else {
-        inputs.push(utxosRes.result[prevoutIndex])
+        inputs.push(utxoList[prevoutIndex])
       }
     })
 
