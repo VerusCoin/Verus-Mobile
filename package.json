@@ -14,7 +14,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@bitgo/utxo-lib": "git+https://github.com/VerusCoin/BitGoJS.git#83d38d9748055aaa4b1fe9377c186e4b02a9befd",
+    "@bitgo/utxo-lib": "git+https://github.com/VerusCoin/BitGoJS.git#f2c40fc5be2529a87ec03e617b314f2b1986498f",
     "@ethersproject/signing-key": "5.0.5",
     "@react-native-async-storage/async-storage": "1.17.10",
     "@react-native-camera-roll/camera-roll": "5.0.4",

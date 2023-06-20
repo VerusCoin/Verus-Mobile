@@ -9,6 +9,7 @@ import { openConvertOrCrossChainSendModal, openSubwalletSendModal } from "../../
 import { IS_PBAAS, VRPC } from "../../../utils/constants/intervalConstants";
 import ListSelectionModal from "../../../components/ListSelectionModal/ListSelectionModal";
 import {
+  SEND_MODAL_ADVANCED_FORM,
   SEND_MODAL_AMOUNT_FIELD,
   SEND_MODAL_CONVERTTO_FIELD,
   SEND_MODAL_EXPORTTO_FIELD,
@@ -46,6 +47,7 @@ const SendCoin = ({ navigation }) => {
         [SEND_MODAL_SHOW_CONVERTTO_FIELD]: true,
         [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
         [SEND_MODAL_SHOW_VIA_FIELD]: true,
+        [SEND_MODAL_ADVANCED_FORM]: false
       },
     },
     {
@@ -64,6 +66,7 @@ const SendCoin = ({ navigation }) => {
         [SEND_MODAL_SHOW_CONVERTTO_FIELD]: false,
         [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
         [SEND_MODAL_SHOW_VIA_FIELD]: false,
+        [SEND_MODAL_ADVANCED_FORM]: false
       },
     },
     {
@@ -82,6 +85,26 @@ const SendCoin = ({ navigation }) => {
         [SEND_MODAL_SHOW_CONVERTTO_FIELD]: true,
         [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
         [SEND_MODAL_SHOW_VIA_FIELD]: true,
+        [SEND_MODAL_ADVANCED_FORM]: false
+      },
+    },
+    {
+      key: 'advanced',
+      title: 'Advanced',
+      description: 'Send off-chain, convert, or pre-convert using an unguided form',
+      data: {
+        [SEND_MODAL_TO_ADDRESS_FIELD]: '',
+        [SEND_MODAL_AMOUNT_FIELD]: '',
+        [SEND_MODAL_MEMO_FIELD]: '',
+        [SEND_MODAL_CONVERTTO_FIELD]: '',
+        [SEND_MODAL_EXPORTTO_FIELD]: '',
+        [SEND_MODAL_VIA_FIELD]: '',
+        [SEND_MODAL_PRICE_ESTIMATE]: null,
+        [SEND_MODAL_IS_PRECONVERT]: false,
+        [SEND_MODAL_SHOW_CONVERTTO_FIELD]: true,
+        [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
+        [SEND_MODAL_SHOW_VIA_FIELD]: true,
+        [SEND_MODAL_ADVANCED_FORM]: true
       },
     },
   ];

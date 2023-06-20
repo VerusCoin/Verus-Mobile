@@ -30,6 +30,7 @@ import {
   SEND_MODAL_SHOW_EXPORTTO_FIELD,
   SEND_MODAL_SHOW_VIA_FIELD,
   SEND_MODAL_PRICE_ESTIMATE,
+  SEND_MODAL_ADVANCED_FORM
 } from '../../../../utils/constants/sendModal';
 import {
   CLOSE_SEND_COIN_MODAL,
@@ -95,7 +96,8 @@ export const openConvertOrCrossChainSendModal = (coinObj, subWallet, data) => {
           [SEND_MODAL_IS_PRECONVERT]: false,
           [SEND_MODAL_SHOW_CONVERTTO_FIELD]: true,
           [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
-          [SEND_MODAL_SHOW_VIA_FIELD]: true
+          [SEND_MODAL_SHOW_VIA_FIELD]: true,
+          [SEND_MODAL_ADVANCED_FORM]: false
         }
       : data,
     CONVERT_OR_CROSS_CHAIN_SEND_MODAL,

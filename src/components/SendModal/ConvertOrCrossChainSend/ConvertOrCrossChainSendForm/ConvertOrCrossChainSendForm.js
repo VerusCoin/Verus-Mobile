@@ -4,17 +4,15 @@ import { Alert, View, TouchableWithoutFeedback, Keyboard, FlatList, Animated, To
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { TextInput, Button, Divider, Checkbox, List, Text, IconButton } from "react-native-paper";
 import { useSelector } from 'react-redux';
-import { traditionalCryptoSend, ConvertOrCrossChainSendFee } from "../../../../actions/actionDispatchers";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
-import { getRecommendedBTCFees } from "../../../../utils/api/channels/general/callCreators";
-import { API_GET_BALANCES, API_SEND, DLIGHT_PRIVATE, ELECTRUM } from "../../../../utils/constants/intervalConstants";
+import { API_SEND, DLIGHT_PRIVATE } from "../../../../utils/constants/intervalConstants";
 import {
+  SEND_MODAL_ADVANCED_FORM,
   SEND_MODAL_AMOUNT_FIELD,
   SEND_MODAL_CONVERTTO_FIELD,
   SEND_MODAL_EXPORTTO_FIELD,
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_IS_PRECONVERT,
-  SEND_MODAL_MEMO_FIELD,
   SEND_MODAL_PRICE_ESTIMATE,
   SEND_MODAL_SHOW_CONVERTTO_FIELD,
   SEND_MODAL_SHOW_EXPORTTO_FIELD,
@@ -22,7 +20,7 @@ import {
   SEND_MODAL_TO_ADDRESS_FIELD,
   SEND_MODAL_VIA_FIELD,
 } from '../../../../utils/constants/sendModal';
-import { coinsToSats, isNumber, satsToCoins, truncateDecimal } from "../../../../utils/math";
+import { coinsToSats, isNumber, satsToCoins } from "../../../../utils/math";
 import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import { useEffect } from "react";
@@ -799,10 +797,10 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                       showConversionField && (
                         <View style={{...Styles.wideBlockDense}}>
                         {
-                          sendModal.data[SEND_MODAL_IS_PRECONVERT] ? (
+                          (sendModal.data[SEND_MODAL_IS_PRECONVERT] || sendModal.data[SEND_MODAL_ADVANCED_FORM]) ? (
                             <TextInput
                               returnKeyType="done"
-                              label='Currency to preconvert to'
+                              label='Currency to convert to'
                               value={sendModal.data[SEND_MODAL_CONVERTTO_FIELD]}
                               mode="outlined"
                               multiline={true}
@@ -848,10 +846,10 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                       showViaField && (
                         <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
                           {
-                            sendModal.data[SEND_MODAL_IS_PRECONVERT] ? (
+                            (sendModal.data[SEND_MODAL_IS_PRECONVERT] || sendModal.data[SEND_MODAL_ADVANCED_FORM]) ? (
                               <TextInput
                                 returnKeyType="done"
-                                label="Currency to preconvert via (optional)"
+                                label="Currency to convert via (optional)"
                                 value={sendModal.data[SEND_MODAL_VIA_FIELD]}
                                 mode="outlined"
                                 multiline={true}
@@ -907,10 +905,10 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                     </View>
                     <View style={{...Styles.wideBlockDense}}>
                       {
-                        sendModal.data[SEND_MODAL_IS_PRECONVERT] ? (
+                        (sendModal.data[SEND_MODAL_IS_PRECONVERT] || sendModal.data[SEND_MODAL_ADVANCED_FORM]) ? (
                           <TextInput
                             returnKeyType="done"
-                            label="System to preconvert to (optional)"
+                            label="System to send to (optional)"
                             value={sendModal.data[SEND_MODAL_EXPORTTO_FIELD]}
                             mode="outlined"
                             multiline={true}
@@ -961,7 +959,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                 )
               }
               {
-                sendModal.data[SEND_MODAL_IS_PRECONVERT] && (
+                (sendModal.data[SEND_MODAL_IS_PRECONVERT] || sendModal.data[SEND_MODAL_ADVANCED_FORM]) && (
                   <React.Fragment>
                     <View style={{...Styles.wideBlockDense}}>
                       <Divider />
@@ -969,17 +967,17 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                     <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
                       <Checkbox.Item
                         color={Colors.primaryColor}
-                        disabled={true}
+                        disabled={sendModal.data[SEND_MODAL_ADVANCED_FORM] ? false : true}
                         label={'Send as preconvert'}
                         status={
                           sendModal.data[SEND_MODAL_IS_PRECONVERT] ? 'checked' : 'unchecked'
                         }
-                        // onPress={() =>
-                        //   updateSendFormData(
-                        //     SEND_MODAL_IS_PRECONVERT,
-                        //     !sendModal.data[SEND_MODAL_IS_PRECONVERT],
-                        //   )
-                        // }
+                        onPress={sendModal.data[SEND_MODAL_ADVANCED_FORM] ? () =>
+                          updateSendFormData(
+                            SEND_MODAL_IS_PRECONVERT,
+                            !sendModal.data[SEND_MODAL_IS_PRECONVERT],
+                          ) : undefined
+                        }
                         mode="android"
                       />
                     </View>
