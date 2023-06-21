@@ -23,6 +23,11 @@ const HomeFAB = (props) => {
             label: 'Manage Coins',
             onPress: handleAddCoin,
           },
+          {
+            icon: 'rocket-launch',
+            label: 'Add PBaaS Currency',
+            onPress: handleAddPbaasCurrency,
+          }
         ]
       : [
           {

@@ -26,7 +26,7 @@ export const settings = (state = {
     maxTxCount: 10,
     displayCurrency: USD,
     defaultAccount: null,
-    homeCardDragDetection: Platform.OS === 'ios' ? true : false
+    homeCardDragDetection: false
   },
   buySellSettings: {}, //e.g. {user1': {buySellEnabled: true, wyreData: {}}, 'user2: {buySellEnabled: false, wyreData: {}}}
   coinSettings: {}, //e.g. {VRSC: {verificationLvl: 2, verificationLock: false, channels: ['dlight', 'electrum', 'general'], privateAddrs: 100}}
