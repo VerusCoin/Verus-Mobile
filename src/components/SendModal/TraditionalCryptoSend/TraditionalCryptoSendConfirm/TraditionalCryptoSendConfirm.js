@@ -256,13 +256,16 @@ function TraditionalCryptoSendConfirm({ navigation, route, setLoading, setModalH
           color={Colors.warningButtonColor}
           style={{ width: 148 }}
           onPress={goBack}
+          mode="contained"
         >
           Back
         </Button>
         <Button
           color={Colors.verusGreenColor}
           style={{ width: 148 }}
+          labelStyle={{ color: Colors.secondaryColor }}
           onPress={submitData}
+          mode="contained"
         >
           Send
         </Button>

@@ -290,19 +290,22 @@ const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormD
                 flex: 1,
               }}
             />
-            <Button
-              onPress={() =>
-                setAmountFiat(!amountFiat)
-              }
-              color={Colors.primaryColor}
-              disabled={!(rates[sendModal.coinObj.id] && rates[sendModal.coinObj.id][displayCurrency] != null) || balances.results == null}
-              style={{
-                alignSelf: 'center',
-                marginTop: 6,
-              }}
-              compact>
-              {amountFiat ? displayCurrency : sendModal.coinObj.display_ticker}
-            </Button>
+            {
+              rates[sendModal.coinObj.id] &&
+                rates[sendModal.coinObj.id][displayCurrency] != null &&
+                balances.results != null && (
+                  <Button
+                    onPress={() => setAmountFiat(!amountFiat)}
+                    color={Colors.primaryColor}
+                    style={{
+                      alignSelf: 'center',
+                      marginTop: 6,
+                    }}
+                    compact>
+                    {amountFiat ? displayCurrency : sendModal.coinObj.display_ticker}
+                  </Button>
+                )
+            }
             <Button
               onPress={() => maxAmount()}
               color={Colors.primaryColor}

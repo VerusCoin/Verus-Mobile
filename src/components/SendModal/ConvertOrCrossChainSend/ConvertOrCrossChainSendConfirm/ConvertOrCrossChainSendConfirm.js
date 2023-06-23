@@ -359,13 +359,16 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
           color={Colors.warningButtonColor}
           style={{ width: 148 }}
           onPress={goBack}
+          mode="contained"
         >
           Back
         </Button>
         <Button
           color={Colors.verusGreenColor}
+          labelStyle={{ color: Colors.secondaryColor }}
           style={{ width: 148 }}
           onPress={submitData}
+          mode="contained"
         >
           Send
         </Button>
