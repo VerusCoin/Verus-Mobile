@@ -122,7 +122,8 @@
     "verusd-rpc-ts-client": "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git",
     "verusid-ts-client": "git+https://github.com/VerusCoin/verusid-ts-client.git",
     "vm-browserify": "0.0.4",
-    "wif": "2.0.6"
+    "wif": "2.0.6",
+    "bitgo-utxo-lib": "https://github.com/VerusCoin/bitgo-utxo-lib.git#react-native"
   },
   "devDependencies": {
     "@babel/core": "7.12.9",
@@ -218,7 +219,8 @@
     "decode-uri-component": "0.2.2",
     "@sideway/formula": "3.0.1",
     "@babel/traverse": "7.21.3",
-    "@babel/core": "7.21.3"
+    "@babel/core": "7.21.3",
+    "blake2b-wasm": "https://github.com/michaeltout/blake2b-wasm/"
   },
   "jest": {
     "preset": "react-native",

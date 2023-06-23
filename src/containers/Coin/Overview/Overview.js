@@ -26,7 +26,8 @@ import {
   API_GET_SERVICE_PAYMENT_METHODS,
   API_GET_SERVICE_TRANSFERS,
   API_GET_SERVICE_RATES,
-  IS_PBAAS_ROOT
+  IS_PBAAS_ROOT,
+  IS_PBAAS
 } from "../../../utils/constants/intervalConstants";
 import { selectTransactions } from '../../../selectors/transactions';
 import { DEFAULT_DECIMALS, ETHERS } from "../../../utils/constants/web3Constants";
@@ -234,7 +235,7 @@ class Overview extends Component {
     let explorerId;
 
     try {
-      explorerId = this.props.activeCoin.system_id &&
+      explorerId = this.props.activeCoin.system_id && this.props.activeCoin.tags.includes(IS_PBAAS) && 
       !this.props.activeCoin.tags.includes(IS_PBAAS_ROOT)
         ? CoinDirectory.findSystemCoinObj(this.props.activeCoin.id).id
         : this.props.activeCoin.id;

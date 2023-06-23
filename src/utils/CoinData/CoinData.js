@@ -287,3 +287,27 @@ export const getCoinLogo = (id, theme = 'light') => {
   if (CoinLogos[id]) return CoinLogos[id][theme]
   else return CoinLogoIcons.pbaas.RenderPbaasCurrencyLogo(id)[theme]
 }
+
+export const getNetworkTxVersion = (networkId) => {
+  const versions = {
+    "DEFAULT": 4,
+    "DASH": 1,
+    "DASHTEST": 1,
+    "BCH": 1,
+    "BITCOINCASHTESTNET": 1,
+    "ZEC": 4,
+    "ZCASHTEST": 4,
+    "VRSC": 4,
+    "BTG": 1,
+    "BTC": 1,
+    "TESTNET": 1,
+    "LTC": 1,
+    "KMD": 4,
+    "OOT": 2,
+    "ZILLA": 2
+  }
+
+  if (versions.hasOwnProperty(networkId)) {
+    return versions[networkId]
+  } else return 1;
+}

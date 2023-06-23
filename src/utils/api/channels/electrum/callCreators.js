@@ -12,11 +12,10 @@ import { proxyServers, httpsEnabled } from './proxyServers';
 import { getGoodServer, testProxy, testElectrum } from './serverTester';
 import { getServerVersion } from './requests/getServerVersion';
 import { updateParamObj } from '../../../electrumUpdates';
-import { networks } from '@bitgo/utxo-lib';
+import { networks } from 'bitgo-utxo-lib';
 import { isJson } from '../../../objectManip'
 import ApiException from '../../errors/apiError';
 import { ELECTRUM } from '../../../constants/intervalConstants'
-
 import axios from 'axios';
 
 // This purpose of this method is to take in a list of electrum servers,
@@ -71,7 +70,7 @@ export const getElectrum = async (coinObj, callType, params, toSkip) => {
 
   updateParamObj(
     params,
-    networks[coinObj.bitgojs_network_key] ? networks[coinObj.bitgojs_network_key] : networks['verus'],
+    networks[coinID.toLowerCase()] ? networks[coinID.toLowerCase()] : networks['default'],
     resultObj.electrumVersion)
 
   for (let key in params) {
