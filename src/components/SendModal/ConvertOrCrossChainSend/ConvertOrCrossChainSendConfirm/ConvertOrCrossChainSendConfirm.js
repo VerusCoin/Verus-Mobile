@@ -14,9 +14,21 @@ import Styles from "../../../../styles";
 import BigNumber from "bignumber.js";
 import { TransferDestination } from "verus-typescript-primitives";
 import { sendCurrencyTransfer } from "../../../../utils/api/channels/vrpc/callCreators";
+import { CoinDirectory } from "../../../../utils/CoinData/CoinDirectory";
 
 function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModalHeight, setPreventExit }) {
   const sendModal = useSelector(state => state.sendModal);
+  const networkName = useSelector(state => {
+    try {
+      const subwallet = state.sendModal.subWallet;
+
+      return subwallet.network ? CoinDirectory.getBasicCoinObj(subwallet.network).display_ticker : null;
+    } catch(e) {
+      console.error(e);
+      return null;
+    }
+  });
+
   const [params, setParams] = useState(route.params.preflight);
   const [confirmationFields, setConfirmationFields] = useState([]);
   const [closedAccordions, setClosedAccordions] = useState({});
@@ -199,6 +211,17 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
         condition: preconvert != null && preconvert
       },
       {
+        key: 'From Network',
+        data: networkName,
+        numLines: 100,
+        onPress: () =>
+          copyToClipboard(networkName, {
+            title: 'Currency copied',
+            message: `${networkName} copied to clipboard.`,
+          }),
+        condition: networkName != null && exportto != null && exportto.length > 0
+      },
+      {
         key: 'To Network',
         data: tryRenderFriendlyName(exportto),
         numLines: 100,
@@ -216,7 +239,7 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
         sent
       ),
       createAccordion(
-        'Fees',
+        'Transaction Fees',
         'Fees deducted from your wallet to pay for this transaction',
         props => <List.Icon {...props} icon="folder" />,
         fees

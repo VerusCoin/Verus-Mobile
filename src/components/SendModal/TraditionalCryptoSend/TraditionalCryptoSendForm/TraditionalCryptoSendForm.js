@@ -7,17 +7,16 @@ import { traditionalCryptoSend, TraditionalCryptoSendFee } from "../../../../act
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import { getRecommendedBTCFees } from "../../../../utils/api/channels/general/callCreators";
 import { USD } from "../../../../utils/constants/currencies";
-import { API_GET_BALANCES, API_GET_FIATPRICE, API_SEND, DLIGHT_PRIVATE, ELECTRUM, VRPC } from "../../../../utils/constants/intervalConstants";
+import { API_GET_BALANCES, API_GET_FIATPRICE, API_SEND, DLIGHT_PRIVATE, ELECTRUM } from "../../../../utils/constants/intervalConstants";
 import { SEND_MODAL_AMOUNT_FIELD, SEND_MODAL_FORM_STEP_CONFIRM, SEND_MODAL_MEMO_FIELD, SEND_MODAL_TO_ADDRESS_FIELD } from "../../../../utils/constants/sendModal";
 import { isNumber, truncateDecimal } from "../../../../utils/math";
 import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import { useEffect } from "react";
-import { getCurrency } from "../../../../utils/api/channels/verusid/callCreators";
+import { CoinDirectory } from "../../../../utils/CoinData/CoinDirectory";
 
 const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
   const [amountFiat, setAmountFiat] = useState(false);
-  const [networkName, setNetworkName] = useState(null)
   const sendModal = useSelector(state => state.sendModal);
   const balances = useSelector(state => {
     const chainTicker = state.sendModal.coinObj.id;
@@ -32,27 +31,20 @@ const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormD
   const rates = useSelector(state => state.ledger.rates[state.sendModal.subWallet.api_channels[API_GET_FIATPRICE]]);
   const displayCurrency = useSelector(state => state.settings.generalWalletSettings.displayCurrency || USD);
   const [price, setPrice] = useState(0);
+  const networkName = useSelector(state => {
+    try {
+      const subwallet = state.sendModal.subWallet;
 
-  useEffect(() => {
-    loadNetworkName();
-  }, [])
+      return subwallet.network ? CoinDirectory.getBasicCoinObj(subwallet.network).display_ticker : null;
+    } catch(e) {
+      console.error(e);
+      return null;
+    }
+  });
 
   useEffect(() => {
     setPrice(getPrice());
   }, [rates[sendModal.coinObj.id], sendModal.data[SEND_MODAL_AMOUNT_FIELD]]);
-
-  const loadNetworkName = async () => {
-    const channel = sendModal.subWallet.api_channels[API_SEND];
-    const [channelName, address, systemId] = channel.split('.');
-
-    if (channelName === VRPC) {
-      const getCurrencyRes = await getCurrency(sendModal.coinObj.system_id, systemId);
-
-      if (!getCurrencyRes.error) {
-        setNetworkName(getCurrencyRes.result.fullyqualifiedname);
-      }
-    }
-  }
 
   const FEE_CALCULATORS = {
     ["BTC"]: {

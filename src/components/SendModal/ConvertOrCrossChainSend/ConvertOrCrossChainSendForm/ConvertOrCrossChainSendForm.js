@@ -32,11 +32,22 @@ import selectAddresses from "../../../../selectors/address";
 import MissingInfoRedirect from "../../../MissingInfoRedirect/MissingInfoRedirect";
 import { getAddressBalances, preflightCurrencyTransfer } from "../../../../utils/api/channels/vrpc/callCreators";
 import { DEST_ID, DEST_PKH, TransferDestination, fromBase58Check } from "verus-typescript-primitives";
+import { CoinDirectory } from "../../../../utils/CoinData/CoinDirectory";
 
 const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
   const sendModal = useSelector(state => state.sendModal);
   const addresses = useSelector(state => selectAddresses(state));
   const activeAccount = useSelector(state => state.authentication.activeAccount);
+  const networkName = useSelector(state => {
+    try {
+      const subwallet = state.sendModal.subWallet;
+
+      return subwallet.network ? CoinDirectory.getBasicCoinObj(subwallet.network).display_ticker : null;
+    } catch(e) {
+      console.error(e);
+      return null;
+    }
+  });
   
   const FIELD_TITLES = {
     [SEND_MODAL_EXPORTTO_FIELD]: "Destination network",
@@ -720,6 +731,13 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                   mode="outlined"
                   disabled={true}
                 />
+                {
+                  networkName != null ? (
+                    <Text style={{marginTop: 8, fontSize: 14, color: Colors.verusDarkGray}}>
+                      {`on ${networkName} network`}
+                    </Text>
+                  ) : null
+                }
               </View>
               <View style={{...Styles.wideBlockDense, paddingTop: 0, paddingBottom: 2}}>
                 <View style={Styles.flexRow}>
