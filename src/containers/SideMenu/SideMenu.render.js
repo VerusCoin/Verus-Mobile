@@ -66,7 +66,6 @@ export const renderChildDrawerComponents = function() {
             onPress={() => {
               this._removeCoin(
                 this.props.activeCoinsForUser[this.state.currentCoinIndex]
-                  .id
               );
             }}
           />
