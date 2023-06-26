@@ -14,10 +14,8 @@ import {connect} from 'react-redux';
 import Styles from '../../styles/index';
 import {RenderSquareCoinLogo} from '../../utils/CoinData/Graphics';
 import CoinDetailsModal from '../../components/CoinDetailsModal/CoinDetailsModal';
-import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
 import {WYRE_SERVICE} from '../../utils/constants/intervalConstants';
 import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
-import Colors from '../../globals/colors';
 
 class AddCoin extends Component {
   constructor(props) {
@@ -28,6 +26,7 @@ class AddCoin extends Component {
       query: '',
       coinList: [],
       fullCoinDetails: null,
+      activeCoinIds: []
     };
   }
 
@@ -36,8 +35,10 @@ class AddCoin extends Component {
   }
 
   componentDidUpdate(lastProps, lastState) {
-    if (lastState.query !== this.state.query) {
-      this.setState({coinList: this.getCoinList()});
+    if (lastState.query !== this.state.query || this.props.activeCoinsForUser !== lastProps.activeCoinsForUser) {
+      this.setState({coinList: this.getCoinList(), activeCoinIds: this.props.activeCoinsForUser.map(
+        coinObj => coinObj.id,
+      )});
     }
   }
 
@@ -58,15 +59,7 @@ class AddCoin extends Component {
   };
 
   _openDetails = item => {
-    let coinData = null;
-
-    try {
-      coinData = CoinDirectory.findCoinObj(item, this.props.activeAccount.id);
-
-      this.setState({fullCoinDetails: coinData});
-    } catch (e) {
-      createAlert('Error', e.message || 'Unknown error');
-    }
+    this.setState({fullCoinDetails: item.coinObj});
   };
 
   getCoinList = () => {
@@ -76,25 +69,49 @@ class AddCoin extends Component {
       : this.props.activeAccount.disabledServices[WYRE_SERVICE]
       ? CoinDirectory.enabledNameList
       : CoinDirectory.supportedCoinList;
+    const activeCoinIds = this.props.activeCoinsForUser.map(
+      coinObj => coinObj.id,
+    );
 
     return displayedCoinList
-      .filter(coinId => {
+      .map(x => {
+        return {
+          added: activeCoinIds.includes(x),
+          coinObj: CoinDirectory.findCoinObj(x),
+        };
+      })
+      .filter(item => {
+        const { coinObj } = item;
         const queryLc = query.toLowerCase();
-        const coinIdLc = coinId.toLowerCase();
+        const coinIdLc = coinObj.id.toLowerCase();
+        const coinNameLc = coinObj.display_name.toLowerCase();
+        const coinTickerLc = coinObj.display_ticker.toLowerCase();
 
         return (
           query.length == 0 ||
-          queryLc.includes(coinIdLc) ||
-          coinIdLc.includes(queryLc)
+          coinIdLc.includes(queryLc) ||
+          coinNameLc.includes(queryLc) ||
+          coinTickerLc.includes(queryLc)
         );
       })
       .sort((a, b) => {
-        if (b === 'VRSC' || b === 'BTC' || b === 'VRSCTEST') {
+        const {coinObj: currencyA} = a;
+        const {coinObj: currencyB} = b;
+
+        if (
+          currencyB.id === 'VRSC' ||
+          currencyB.id === 'BTC' ||
+          currencyB.id === 'VRSCTEST'
+        ) {
           return 1;
-        } else if (a === 'VRSC' || a === 'BTC' || b === 'VRSCTEST') {
+        } else if (
+          currencyA.id === 'VRSC' ||
+          currencyA.id === 'BTC' ||
+          currencyA.id === 'VRSCTEST'
+        ) {
           return -1;
         } else {
-          return a <= b ? -1 : 1;
+          return currencyA.display_ticker <= currencyB.display_ticker ? -1 : 1;
         }
       });
   };
@@ -104,9 +121,7 @@ class AddCoin extends Component {
   };
 
   render() {
-    const activeCoinIds = this.props.activeCoinsForUser.map(
-      coinObj => coinObj.id,
-    );
+    const activeCoinIds = this.state.activeCoinIds
 
     return (
       <View styles={Styles.root}>
@@ -143,15 +158,14 @@ class AddCoin extends Component {
           onEndReached={this.onEndReached}
           onEndReachedThreshold={50}
           renderItem={({item}) => {
-            const added = activeCoinIds.includes(item);
-            const coinInfo = CoinDirectory.findCoinObj(item);
-            const {display_name, display_ticker} = coinInfo;
+            const { added, coinObj } = item
+            const {display_name, display_ticker} = coinObj;
 
             return (
               <TouchableOpacity onPress={() => this._openDetails(item)}>
                 <List.Item
                   title={`${display_name} (${display_ticker})`}
-                  left={props => RenderSquareCoinLogo(item)}
+                  left={props => RenderSquareCoinLogo(coinObj.id)}
                   right={props => {
                     return added ? (
                       <List.Icon {...props} icon={'check'} size={20} />
@@ -164,7 +178,7 @@ class AddCoin extends Component {
               </TouchableOpacity>
             );
           }}
-          keyExtractor={item => item}
+          keyExtractor={item => item.coinObj.id}
         />
       </View>
     );

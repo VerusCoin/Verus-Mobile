@@ -9,6 +9,8 @@ import {
 import { hashAccountId } from '../crypto/hash';
 import { getCachedVrpcResponse, getVrpcResponseCacheKey, setCachedVrpcResponse } from '../asyncStore/asyncStore';
 import { ApiRequest } from 'verus-typescript-primitives';
+import { coinsList } from '../CoinData/CoinsList';
+import { Alert } from 'react-native';
 
 class CachedVerusdRpcInterface extends VerusdRpcInterface {
   static CACHED_REQUESTS = [
@@ -212,7 +214,7 @@ class VrpcInterface {
     else this.endpointConnections[id] = 0;
   }
 
-  initEndpoint = async (systemId, endpoint) => {
+  initEndpoint = (systemId, endpoint) => {
     const endpoints = Store.getState().channelStore_vrpc.vrpcEndpoints;
     const id = VrpcInterface.getEndpointId(systemId, endpoint);
 
@@ -299,4 +301,17 @@ class VrpcInterface {
   }
 }
 
-export default new VrpcInterface()
+const VerusMobileVrpcInterface = new VrpcInterface();
+
+setImmediate(() => {
+  try {
+    // Initialize VRSC and VRSCTEST endpoints to support App functions
+    // that make calls to vrpc even if VRSC/VRSCTEST isn't added as a coin
+    VerusMobileVrpcInterface.initEndpoint(coinsList.VRSC.system_id, coinsList.VRSC.vrpc_endpoints[0]);
+    VerusMobileVrpcInterface.initEndpoint(coinsList.VRSCTEST.system_id, coinsList.VRSCTEST.vrpc_endpoints[0]); 
+  } catch(e) {
+    Alert.alert("Error initializing Verus lite mode", e.message)
+  }  
+})
+
+export default VerusMobileVrpcInterface;

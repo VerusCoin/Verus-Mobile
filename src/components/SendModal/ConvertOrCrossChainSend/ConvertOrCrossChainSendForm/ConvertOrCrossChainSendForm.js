@@ -374,7 +374,9 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
       if (balanceRes.error) createAlert("Error", "Error fetching balances.");
 
-      setLocalBalances(balanceRes.result.currencybalance);
+      setLocalBalances(
+        balanceRes.result.currencybalance ? balanceRes.result.currencybalance : {},
+      );
     }
   }
 
