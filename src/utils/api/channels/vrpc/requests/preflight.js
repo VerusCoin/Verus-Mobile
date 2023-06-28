@@ -224,6 +224,10 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     output.feecurrency = await saveFriendlyName(output.feecurrency);
     output.via = await saveFriendlyName(output.via);
 
+    if (!friendlyNames.has(coinObj.system_id)) {
+      await saveFriendlyName(coinObj.system_id)
+    }
+
     const {
       currency,
       convertto,

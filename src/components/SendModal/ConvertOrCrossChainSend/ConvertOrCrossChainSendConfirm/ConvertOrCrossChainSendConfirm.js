@@ -112,7 +112,17 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
 
         remainingBalances[key] = (satBalance.plus(value)).toString();
       }
-    })
+    });
+
+    let conversionFeeMultiplier = BigNumber(0);
+    
+    if (convertto != null && via != null) {
+      conversionFeeMultiplier = BigNumber(0.05);
+    } else if (convertto != null) {
+      conversionFeeMultiplier = BigNumber(0.025);
+    }
+
+    const conversionFee = satsToCoins(BigNumber(satoshis)).multipliedBy(conversionFeeMultiplier);
 
     const destAddrString = destination.getAddressString();
     const toAddress = nameMap.has(destAddrString) ? nameMap.get(destAddrString) : destAddrString;
@@ -244,8 +254,19 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
         props => <List.Icon {...props} icon="folder" />,
         fees
       ),
+      {
+        key: 'Conversion Fee (taken from amount)',
+        data: `${conversionFee.toString()} ${tryRenderFriendlyName(currency)}`,
+        numLines: 100,
+        onPress: () =>
+          copyToClipboard(conversionFee.toString(), {
+            title: 'Fee copied',
+            message: `${conversionFee.toString()} copied to clipboard.`,
+          }),
+        condition: !conversionFee.isEqualTo(BigNumber(0))
+      },
       createAccordion(
-        'Remaining balances',
+        'Remaining Balances',
         'Your currency remaining in the address you\'re sending from after subtracting currency sent and fees (only affected balances shown)',
         props => <List.Icon {...props} icon="folder" />,
         remainingBalances,
