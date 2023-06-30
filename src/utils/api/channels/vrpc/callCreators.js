@@ -14,3 +14,4 @@ export * from './requests/getCurrencyConversionPaths';
 export * from './requests/fundRawTransaction';
 export * from './requests/calculateCurrencyTransferFee';
 export * from './requests/estimateConversion';
+export * from './requests/getSendCurrencyTransaction';

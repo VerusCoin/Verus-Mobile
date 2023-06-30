@@ -86,7 +86,7 @@ const ConvertOrCrossChainSendResult = (props) => {
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {'Track its status under the Overview tab. It may take a few minutes to arrive even after it is confirmed as sent.'}
+          {'Track its status under the Overview tab. It may take a time to arrive even after it is confirmed as sent.'}
         </Text>
       </View>
       <View

@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import { getAddressBalances } from "./getAddressBalances";
 import { coinsToSats, satsToCoins } from "../../../../math";
-import { DEST_ID, DEST_PKH, TransferDestination, fromBase58Check } from "verus-typescript-primitives";
+import { DEST_ID, DEST_PKH, ReserveTransfer, TransferDestination, fromBase58Check } from "verus-typescript-primitives";
 import { Transaction, networks, smarttxs } from "@bitgo/utxo-lib";
 import { calculateCurrencyTransferFee } from "./calculateCurrencyTransferFee";
 import { getInfo } from "./getInfo";
@@ -12,6 +12,8 @@ import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData";
 import { estimateConversion } from "./estimateConversion";
 import { IS_FRACTIONAL_FLAG } from "../../../../constants/currencies";
 import { unpackOutput } from "@bitgo/utxo-lib/dist/src/smart_transactions";
+import { coinsList } from "../../../../CoinData/CoinsList";
+import { getSendCurrencyTransaction } from "./getSendCurrencyTransaction";
 const { createUnfundedCurrencyTransfer, validateFundedCurrencyTransfer } = smarttxs
 
 //TODO: Calculate fee for each coin seperately
@@ -235,7 +237,8 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       feecurrency,
       via,
       feesatoshis,
-      preconvert
+      preconvert,
+      address
     } = output;
 
     const isConversionOrExport = exportto != null || convertto != null;
@@ -243,6 +246,12 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     const isBasicNativeSend = !isConversionOrExport && currency === systemId;
     const _feecurrency = feecurrency == null && isConversionOrExport ? systemId : feecurrency;
     const parentTransactionFee = isConversionOrExport || isBasicNativeSend ? 0.0001 : 0.0002;
+
+    const useSendCurrencyOutput =
+      isConversionOrExport &&
+      (exportto === coinsList.VRSC.system_id ||
+        exportto === coinsList.VRSCTEST.system_id);
+
     let _feeamount = feesatoshis;
     let nativeFeesPaid = coinsToSats(BigNumber(parentTransactionFee));
     let importToSource = false;
@@ -259,7 +268,15 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       );
 
     if (_feeamount == null && isConversionOrExport) {
-      _feeamount = await calculateCurrencyTransferFee(systemId, currency, exportto, convertto, _feecurrency, via);
+      _feeamount = await calculateCurrencyTransferFee(
+        systemId,
+        currency,
+        exportto,
+        convertto,
+        _feecurrency,
+        via,
+        source,
+      );
     }
 
     if (_feeamount != null && (feecurrency == null || feecurrency === systemId)) {
@@ -287,23 +304,76 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
 
     if (infoRes.error) throw new Error(infoRes.error.message)
 
-    const unfundedTxHex = createUnfundedCurrencyTransfer(
-      systemId,
-      [
-        {
-          ...output,
-          feesatoshis: _feeamount,
-          feecurrency: _feecurrency,
-          importtosource: importToSource
-        },
-      ],
-      networks.verus,
-      Number(
-        BigNumber(infoRes.result.longestchain).plus(BigNumber(100)).toString(),
-      ),
-      4,
-      0x892f2085,
-    );
+    let bridgeid;
+
+    if (currencyDefs.has(exportto)) {
+      const exportDefinition = currencyDefs.get(exportto);
+
+      if (exportDefinition.gatewayconverterid) {
+        bridgeid = currencyDefs.get(exportto).gatewayconverterid;
+      }
+    }
+
+    let unfundedTxHex;
+
+    if (
+      useSendCurrencyOutput
+    ) {
+      const addrDest = address.getAddressString();
+
+      const sendCurrencyRes = await getSendCurrencyTransaction(
+        systemId,
+        currency,
+        satsToCoins(txSatsBn).toNumber(),
+        addrDest,
+        exportto,
+        convertto,
+        _feecurrency,
+        via,
+      );
+
+      if (sendCurrencyRes.error) throw new Error(sendCurrencyRes.error.message);
+
+      const sendCurrencyHex = sendCurrencyRes.result.hextx;
+      
+      const unfundedTxObj = Transaction.fromHex(sendCurrencyHex, networks.verus);
+      const outputInfo = unpackOutput(unfundedTxObj.outs[0], systemId);
+
+      /**
+       * @type {ReserveTransfer}
+       */
+      const transDest = outputInfo.params[0].data;
+
+      if (!transDest.transfer_destination.isGateway()) throw new Error("Expected gateway output");
+      if (!transDest.transfer_destination.hasAuxDests()) throw new Error("Expected output with aux dests");
+      if (transDest.transfer_destination.getAddressString() !== addrDest) throw new Error("Expected output to match destination address");
+      if (transDest.transfer_destination.gateway_id !== exportto) throw new Error("Expected gateway_id to match exportto");
+      if (transDest.transfer_destination.gateway_code !== "i3UXS5QPRQGNRDDqVnyWTnmFCTHDbzmsYk") throw new Error("Expected null gateway_code");
+
+      if (transDest.transfer_destination.aux_dests[0].isGateway()) throw new Error("Expected non gateway output in aux dest");
+      if (transDest.transfer_destination.aux_dests[0].getAddressString() !== addrDest) throw new Error("Expected aux dest to match destination address");
+
+      unfundedTxHex = sendCurrencyRes.result.hextx;
+    } else {
+      unfundedTxHex = createUnfundedCurrencyTransfer(
+        systemId,
+        [
+          {
+            ...output,
+            feesatoshis: _feeamount,
+            feecurrency: _feecurrency,
+            importtosource: importToSource,
+            bridgeid,
+          },
+        ],
+        networks.verus,
+        Number(
+          BigNumber(infoRes.result.longestchain).plus(BigNumber(100)).toString(),
+        ),
+        4,
+        0x892f2085,
+      );
+    }
 
     const utxosRes = await getAddressUtxos(systemId, [source]);
 

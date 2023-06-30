@@ -255,7 +255,7 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
         fees
       ),
       {
-        key: 'Conversion Fee (taken from amount)',
+        key: 'Conversion Fee (taken from send amount)',
         data: `${conversionFee.toString()} ${tryRenderFriendlyName(currency)}`,
         numLines: 100,
         onPress: () =>
