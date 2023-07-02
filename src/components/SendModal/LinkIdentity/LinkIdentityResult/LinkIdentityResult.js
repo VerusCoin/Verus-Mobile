@@ -1,32 +1,21 @@
-import {Component} from 'react';
-import {connect} from 'react-redux';
+import {useEffect, useState} from 'react';
+import {useDispatch, useSelector} from 'react-redux';
 import {closeSendModal} from '../../../../actions/actions/sendModal/dispatchers/sendModal';
 import {LinkIdentityResultRender} from './LinkIdentityResult.render';
 
-class LinkIdentityResult extends Component {
-  constructor(props) {
-    super(props);
+const LinkIdentityResult = (props) => {
+  const [verusId, setVerusId] = useState(props.route.params == null ? {} : props.route.params.verusId);
+  const [friendlyNames, setFriendlyNames] = useState(props.route.params == null ? {} : props.route.params.friendlyNames);
 
-    this.state = {
-      verusId: props.route.params == null ? {} : props.route.params.verusId,
-      friendlyNames:
-        props.route.params == null ? {} : props.route.params.friendlyNames,
-    };
-  }
-
-  finishSend() {
-    closeSendModal();
-  }
-
-  render() {
-    return LinkIdentityResultRender.call(this);
-  }
-}
-
-const mapStateToProps = state => {
-  return {
-    sendModal: state.sendModal,
+  const finishSend = () => {
+    closeSendModal()
   };
+
+  return LinkIdentityResultRender({
+    verusId,
+    friendlyNames,
+    finishSend
+  });
 };
 
-export default connect(mapStateToProps)(LinkIdentityResult);
+export default LinkIdentityResult;

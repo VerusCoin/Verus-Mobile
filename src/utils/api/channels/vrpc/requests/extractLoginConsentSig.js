@@ -5,7 +5,7 @@ export const extractLoginConsentSig = (coinObj, request) => {
   const loginConsentRequest = new primitives.LoginConsentRequest(request);
 
   return getSignatureInfo(
-    coinObj,
+    coinObj.system_id,
     loginConsentRequest.signing_id,
     loginConsentRequest.signature.signature
   );

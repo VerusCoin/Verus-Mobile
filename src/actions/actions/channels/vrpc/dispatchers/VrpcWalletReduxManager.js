@@ -24,6 +24,7 @@ export const initVrpcWallet = async coinObj => {
     type: INIT_VRPC_CHANNEL_START,
     payload: {
       chainTicker: coinObj.id,
+      systemId: coinObj.system_id,
       endpointAddress: coinObj.vrpc_endpoints[0],
       watchedAddresses: addressMap,
     },
@@ -35,7 +36,7 @@ export const initVrpcWallet = async coinObj => {
 export const closeVrpcWallet = async (coinObj) => {
   Store.dispatch({
     type: CLOSE_VRPC_CHANNEL,
-    payload: { chainTicker: coinObj.id, endpointAddress: coinObj.vrpc_endpoints[0] }
+    payload: { chainTicker: coinObj.id, systemId: coinObj.system_id, endpointAddress: coinObj.vrpc_endpoints[0] }
   })
 
   return

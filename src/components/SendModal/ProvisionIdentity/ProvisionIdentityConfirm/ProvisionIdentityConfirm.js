@@ -6,8 +6,8 @@ import { primitives } from 'verusid-ts-client';
 import { setUserCoins } from '../../../../actions/actionCreators';
 import {updateVerusIdWallet} from '../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager';
 import {
-  activateChainLifecycle,
   clearChainLifecycle,
+  refreshActiveChainLifecycles,
 } from '../../../../actions/actions/intervals/dispatchers/lifecycleManager';
 import {linkVerusId} from '../../../../actions/actions/services/dispatchers/verusid/verusid';
 import { getIdentity } from '../../../../utils/api/channels/verusid/callCreators';
@@ -88,7 +88,7 @@ class ProvisionIdentityConfirm extends Component {
       }
 
       if (isIAddress) {
-        const identityObj = await getIdentity(coinObj, identity)
+        const identityObj = await getIdentity(coinObj.system_id, identity)
         
         if (identityObj.error) throw new Error(identityObj.error.message)
   
@@ -119,13 +119,13 @@ class ProvisionIdentityConfirm extends Component {
         await linkVerusId(address, `${fqn}@`, coinObj.id);
         await updateVerusIdWallet();
         clearChainLifecycle(coinObj.id);
-        this.props.dispatch(
-          setUserCoins(
-            this.props.activeCoinList,
-            this.props.activeAccount.id
-          )
-        );
-        activateChainLifecycle(coinObj);
+        const setUserCoinsAction = setUserCoins(
+          this.props.activeCoinList,
+          this.props.activeAccount.id
+        )
+        this.props.dispatch(setUserCoinsAction);
+  
+        refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);  
       })
       submissionSuccess(res)
     } catch (e) {

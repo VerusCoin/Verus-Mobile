@@ -4,12 +4,21 @@ import { satsToCoins } from "../../../../../utils/math";
 import { standardizeVrpcTxObj } from "../../../../../utils/standardization/standardizeTxObj";
 
 export const updateVrpcBalances = async (coinObj, channelId) => {
-  const iAddress = channelId.split('.')[1]
-  const res = await getAddressBalances(coinObj, [iAddress])
+  const [channelName, iAddress, systemId] = channelId.split('.')
+
+  const currencyId = coinObj.currency_id
+  const isNative = currencyId === systemId
+  
+  const res = await getAddressBalances(systemId, [iAddress])
 
   if (res.error) throw new Error(res.error.message)
 
-  const totalBalance = satsToCoins(BigNumber(res.result.balance)).toString()
+  let totalBalance = '0';
+
+  if (isNative) totalBalance = satsToCoins(BigNumber(res.result.balance)).toString()
+  else if (res.result.currencybalance && res.result.currencybalance[currencyId]) {
+    totalBalance = BigNumber(res.result.currencybalance[currencyId]).toString()
+  }
 
   return {
     chainTicker: coinObj.id,
@@ -23,16 +32,19 @@ export const updateVrpcBalances = async (coinObj, channelId) => {
 }
 
 export const updateVrpcTransactions = async (coinObj, channelId) => {
-  const iAddress = channelId.split('.')[1]
-  const deltasRes = await getAddressDeltas(coinObj, [iAddress], true, 1)
-  const infoRes = await getInfo(coinObj)
+  const [channelName, iAddress, systemId] = channelId.split('.')
+
+  const deltasRes = await getAddressDeltas(systemId, [iAddress], true, 1)
+  const infoRes = await getInfo(systemId)
+  const currencyId = coinObj.currency_id
+  const isNative = currencyId === systemId
 
   if (deltasRes.error) throw new Error(deltasRes.error.message)
 
   let txs = deltasRes.result
 
   try {
-    const mempoolRes = await getAddressMempool(coinObj, [iAddress], true, 1)
+    const mempoolRes = await getAddressMempool(systemId, [iAddress], true, 1)
 
     if (mempoolRes.error) throw new Error(mempoolRes.error.message)
 
@@ -50,8 +62,14 @@ export const updateVrpcTransactions = async (coinObj, channelId) => {
 
   // Format address deltas to account for change
   for (let i = 0; i < txs.length; i++) {
-    const {satoshis, txid} = txs[i];
-    let totalSats = BigNumber(satoshis);
+    let deltaValue = BigNumber(0)
+
+    const {currencyvalues, satoshis, txid} = txs[i];
+
+    if (isNative) deltaValue = satsToCoins(BigNumber(satoshis))
+    else if (currencyvalues && currencyvalues[currencyId]) {
+      deltaValue = BigNumber(currencyvalues[currencyId])
+    }
 
     // Deltas are returned in array where those that share txids are next to
     // eachother
@@ -61,19 +79,25 @@ export const updateVrpcTransactions = async (coinObj, channelId) => {
       j++
     ) {
       i++;
-      totalSats = totalSats.plus(BigNumber(txs[j].satoshis));
+
+      if (isNative) deltaValue = deltaValue.plus(satsToCoins(BigNumber(txs[j].satoshis)))
+      else if (txs[j].currencyvalues && txs[j].currencyvalues[currencyId]) {
+        deltaValue = deltaValue.plus(txs[j].currencyvalues[currencyId])
+      }
     }
 
-    formattedDeltas.push(
-      standardizeVrpcTxObj(
-        {
-          ...txs[i],
-          satoshis: totalSats.toNumber(),
-        },
-        coinObj,
-        infoRes.result ? infoRes.result.longestchain : null,
-      ),
-    );
+    if (!deltaValue.isEqualTo(0)) {
+      formattedDeltas.push(
+        standardizeVrpcTxObj(
+          {
+            ...txs[i],
+            amount: deltaValue.toString(),
+          },
+          coinObj,
+          infoRes.result ? infoRes.result.longestchain : null,
+        ),
+      );
+    }
   }
 
   return {

@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const BLOCK_HEADER_CACHE_CAP = 1000
 
-let headerCache = new Cache({
+const headerCache = new Cache({
   namespace: "block_header",
   policy: {
       maxEntries: BLOCK_HEADER_CACHE_CAP

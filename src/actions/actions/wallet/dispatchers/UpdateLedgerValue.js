@@ -42,7 +42,7 @@ export const updateLedgerValue = async (
         });
         channelsPassed.push(channelId);
       } catch (error) {
-        dispatch({ type: errorType, payload: { error, chainTicker, channel: channelId } });
+        dispatch({ type: errorType, payload: { error: error.message, chainTicker, channel: channelId } });
       }
     })
   );

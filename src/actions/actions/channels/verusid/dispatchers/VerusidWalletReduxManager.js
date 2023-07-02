@@ -14,6 +14,7 @@ export const initVerusIdWallet = async (coinObj) => {
     type: INIT_VERUSID_CHANNEL_START,
     payload: {
       chainTicker: coinObj.id,
+      systemId: coinObj.system_id,
       endpointAddress: coinObj.vrpc_endpoints[0],
       watchedVerusIds: verusidServiceData.linked_ids
         ? verusidServiceData.linked_ids
@@ -42,7 +43,7 @@ export const updateVerusIdWallet = async () => {
 export const closeVerusIdWallet = async (coinObj) => {
   Store.dispatch({
     type: CLOSE_VERUSID_CHANNEL,
-    payload: { chainTicker: coinObj.id, endpointAddress: coinObj.vrpc_endpoints[0] }
+    payload: { chainTicker: coinObj.id, systemId: coinObj.system_id, endpointAddress: coinObj.vrpc_endpoints[0] }
   })
 
   return

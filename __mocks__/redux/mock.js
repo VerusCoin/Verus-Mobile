@@ -20,7 +20,8 @@ function mockRedux() {
           store.dispatch(action)
         }
       }
-    }
+    },
+    compose: () => {}
   } 
 }
 

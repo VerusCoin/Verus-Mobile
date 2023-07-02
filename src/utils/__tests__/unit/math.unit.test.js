@@ -19,14 +19,15 @@ import {
   MOCK_FEE,
   MOCK_MAX_SPEND
 } from '../../../tests/helpers/MockNumbers'
+import BigNumber from 'bignumber.js'
 
 describe("Number processing operations", () => {
   it('can convert a satoshi value to a coins value', () => {
-    expect(satsToCoins(MOCK_SATS)).toBe(MOCK_COINS)
+    expect(satsToCoins(BigNumber(MOCK_SATS)).toString()).toBe(MOCK_COINS)
   })
 
   it('can convert a coins value to a satoshi value', () => {
-    expect(coinsToSats(MOCK_COINS)).toBe(MOCK_SATS)
+    expect(coinsToSats(BigNumber(MOCK_COINS)).toString()).toBe(MOCK_SATS)
   })
 
   it('can truncate a decimal without rounding', () => {
@@ -38,7 +39,7 @@ describe("Number processing operations", () => {
   })
 
   it('can convert a unix value to a date string', () => {
-    expect(unixToDate(0)).toBe("Thu, 01 Jan 1970 00:00:00 GMT")
+    expect(unixToDate(0)).toBe("1/1/1970, 1:00:00 AM")
   })
 
   it('can calculate KMD interest from locktime and utxo value', () => {
@@ -46,7 +47,7 @@ describe("Number processing operations", () => {
   })
 
   it('can calculate max spend balance', () => {
-    expect(maxSpendBalance(MOCK_UTXO_LIST, MOCK_FEE)).toBe(MOCK_MAX_SPEND)
+    expect(maxSpendBalance(MOCK_UTXO_LIST, MOCK_FEE).toString()).toBe(MOCK_MAX_SPEND)
   })
 
   it('can identify number', () => {

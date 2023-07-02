@@ -21,10 +21,10 @@ import { hashAccountId } from "../../utils/crypto/hash"
 import { START_COINS } from "../../utils/constants/constants"
 import { SignUpRender } from "./SignUp.render"
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert"
-import { findCoinObj } from "../../utils/CoinData/CoinData"
 import {
   KEY_DERIVATION_VERSION,
 } from "../../../env/index";
+import { CoinDirectory } from "../../utils/CoinData/CoinDirectory"
 
 class SignUp extends Component {
   constructor() {
@@ -266,7 +266,7 @@ class SignUp extends Component {
 
   async addStartingCoins(accountId) {
     for (const coinId of START_COINS) {
-      const fullCoinData = findCoinObj(coinId, accountId)
+      const fullCoinData = CoinDirectory.findCoinObj(coinId, accountId)
 
       this.props.dispatch(await addCoin(
         fullCoinData,

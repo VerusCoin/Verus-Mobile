@@ -33,7 +33,7 @@ class TxDetailsModal extends Component {
   }
 
   openExplorer = () => {
-    let url = `${explorers[this.props.activeCoinID]}/tx/${
+    let url = `${explorers[this.props.activeCoinExplorerId]}/tx/${
       this.props.txData.txid != null
         ? this.decodeTxid(this.props.txData.txid)
         : this.props.txData.txid
@@ -118,7 +118,8 @@ class TxDetailsModal extends Component {
       visible,
       cancel,
       displayAmount,
-      activeCoinID
+      activeCoinDisplayTicker,
+      activeCoinExplorerId
     } = this.props;
     
     return (
@@ -146,7 +147,7 @@ class TxDetailsModal extends Component {
               <Button
                 onPress={() => this.openExplorer()}
                 color={Colors.primaryColor}
-                disabled={!explorers[activeCoinID]}
+                disabled={!explorers[activeCoinExplorerId]}
               >
                 {"Details"}
               </Button>
@@ -204,13 +205,13 @@ class TxDetailsModal extends Component {
                 data: `${
                   displayAmount != null ? truncateDecimal(displayAmount, this.props.decimals) : "??"
                 } ${
-                  txData.feeCurr != null && txData.type === "self" ? txData.feeCurr : activeCoinID
+                  txData.feeCurr != null && txData.type === "self" ? txData.feeCurr : activeCoinDisplayTicker
                 }`,
                 numLines: 100,
               },
               {
                 key: "Fee",
-                data: txData.fee + " " + (txData.feeCurr != null ? txData.feeCurr : activeCoinID),
+                data: txData.fee + " " + (txData.feeCurr != null ? txData.feeCurr : activeCoinDisplayTicker),
                 condition: txData.fee != null,
                 numLines: 100,
               },

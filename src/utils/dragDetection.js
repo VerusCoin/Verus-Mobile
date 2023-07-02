@@ -1,8 +1,6 @@
 import { Platform } from "react-native";
 
-export const dragDetectionEnabled = (homeCardDragDetection) => {
-  if (homeCardDragDetection === false) return false;
-  else if (homeCardDragDetection === true) return true;
-  else if (Platform.OS === 'ios') return true;
+export const dragDetectionEnabled = (homeCardDragDetection = false) => {
+  if (homeCardDragDetection != null) return homeCardDragDetection;
   else return false;
 }

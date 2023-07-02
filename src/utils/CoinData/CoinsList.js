@@ -27,7 +27,7 @@ import {
 } from '../constants/apps';
 import Colors from "../../globals/colors";
 
-const VERUS_APPS = {
+export const VERUS_APPS = {
   wallet: {
     title: 'Verus Coin Wallet',
     data: [
@@ -57,9 +57,9 @@ const VERUS_APPS = {
 }
 
 export const coinsList = {
-  vrsc: {
+  VRSC: {
     id: 'VRSC',
-    currency_id: 'VRSC',
+    currency_id: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
     system_id: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
     bitgojs_network_key: 'verus',
     display_ticker: 'VRSC',
@@ -79,11 +79,11 @@ export const coinsList = {
     default_app: 'wallet',
     apps: VERUS_APPS
   },
-  vrsctest: {
+  VRSCTEST: {
     testnet: true,
     mainnet_id: 'VRSC',
     id: 'VRSCTEST',
-    currency_id: 'VRSCTEST',
+    currency_id: 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq',
     system_id: 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq',
     bitgojs_network_key: 'verustest',
     display_ticker: 'VRSCTEST',
@@ -101,7 +101,7 @@ export const coinsList = {
     default_app: 'wallet',
     apps: VERUS_APPS
   },
-  kmd: {
+  KMD: {
     id: 'KMD',
     display_name: 'Komodo',
     alt_names: [],
@@ -117,7 +117,7 @@ export const coinsList = {
     proto: 'btc',
     decimals: DEFAULT_DECIMALS,
   },
-  btc: {
+  BTC: {
     id: 'BTC',
     currency_id: '',
     system_id: '.btc',
@@ -132,7 +132,7 @@ export const coinsList = {
     proto: 'btc',
     decimals: DEFAULT_DECIMALS,
   },
-  eth: {
+  ETH: {
     id: 'ETH',
     currency_id: '',
     system_id: '.eth',
@@ -148,7 +148,7 @@ export const coinsList = {
     decimals: ETHERS,
     network: "homestead"
   },
-  bat: {
+  BAT: {
     id: 'BAT',
     currency_id: '0x0d8775f648430679a709e98d2b0cb6250d2887ef',
     system_id: '.eth',
@@ -163,7 +163,7 @@ export const coinsList = {
     tags: [],
     proto: 'erc20',
   },
-  yfi: {
+  YFI: {
     id: 'YFI',
     currency_id: '0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e',
     system_id: '.eth',
@@ -178,7 +178,7 @@ export const coinsList = {
     tags: [],
     proto: 'erc20',
   },
-  link: {
+  LINK: {
     id: 'LINK',
     currency_id: '0x514910771af9ca656af840dff83e8264ecf986ca',
     system_id: '.eth',
@@ -193,7 +193,7 @@ export const coinsList = {
     tags: [],
     proto: 'erc20',
   },
-  uni: {
+  UNI: {
     id: 'UNI',
     currency_id: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
     system_id: '.eth',
@@ -208,7 +208,7 @@ export const coinsList = {
     tags: [],
     proto: 'erc20',
   },
-  ven: {
+  VEN: {
     id: 'VEN',
     currency_id: '0xd850942ef8811f2a866692a623011bde52a462c1',
     system_id: '.eth',
@@ -223,7 +223,7 @@ export const coinsList = {
     tags: [],
     proto: 'erc20',
   },
-  bnt: {
+  BNT: {
     id: 'BNT',
     currency_id: '0x1f573d6fb3f13d689ff844b4ce37794d79a7ff1c',
     system_id: '.eth',
@@ -238,7 +238,7 @@ export const coinsList = {
     tags: [],
     proto: 'erc20',
   },
-  rfox: {
+  RFOX: {
     id: 'RFOX',
     currency_id: '0xa1d6Df714F91DeBF4e0802A542E13067f31b8262',
     system_id: '.eth',
@@ -253,7 +253,7 @@ export const coinsList = {
     tags: [],
     proto: 'erc20',
   },
-  bal: {
+  BAL: {
     id: 'BAL',
     currency_id: '0xba100000625a3754423978a60c9317c58a424e3d',
     system_id: '.eth',
@@ -268,7 +268,7 @@ export const coinsList = {
     tags: [],
     proto: 'erc20',
   },
-  zrx: {
+  ZRX: {
     id: 'ZRX',
     currency_id: '0xe41d2489571d322189246dafa5ebde1f4699f498',
     system_id: '.eth',
@@ -283,7 +283,7 @@ export const coinsList = {
     tags: [],
     proto: 'erc20',
   },
-  hot: {
+  HOT: {
     id: 'HOT',
     currency_id: '0x6c6ee5e31d828de241282b9606c8e98ea48526e2',
     system_id: '.eth',
@@ -298,7 +298,7 @@ export const coinsList = {
     tags: [],
     proto: 'erc20',
   },
-  nexo: {
+  NEXO: {
     id: 'NEXO',
     currency_id: '0xb62132e35a6c13ee1ee0f84dc5d40bad8d815206',
     system_id: '.eth',
@@ -313,7 +313,7 @@ export const coinsList = {
     tags: [],
     proto: 'erc20',
   },
-  dai: {
+  DAI: {
     id: 'DAI',
     currency_id: '0x6b175474e89094c44da98b954eedeac495271d0f',
     system_id: '.eth',
@@ -329,7 +329,7 @@ export const coinsList = {
     proto: 'erc20',
     rate_url_params: {coin_paprika: 'dai-dai-coin'},
   },
-  daiwyre: {
+  DAIWYRE: {
     id: 'DAIWYRE',
     currency_id: 'DAI',
     system_id: '.wyre',
@@ -345,7 +345,7 @@ export const coinsList = {
     proto: 'erc20',
     rate_url_params: {coin_paprika: 'dai-dai-coin'},
   },
-  oot: {
+  OOT: {
     id: 'OOT',
     currency_id: 'oot',
     system_id: '.kmd',
@@ -361,7 +361,7 @@ export const coinsList = {
     proto: 'btc',
     decimals: DEFAULT_DECIMALS,
   },
-  ccl: {
+  CCL: {
     id: 'CCL',
     currency_id: 'ccl',
     system_id: '.kmd',
@@ -377,7 +377,7 @@ export const coinsList = {
     proto: 'btc',
     decimals: DEFAULT_DECIMALS,
   },
-  doge: {
+  DOGE: {
     id: 'DOGE',
     currency_id: '',
     system_id: '.doge',
@@ -394,7 +394,7 @@ export const coinsList = {
     decimals: DEFAULT_DECIMALS,
     max_fee_rate_per_byte: 1000000,
   },
-  dgb: {
+  DGB: {
     id: 'DGB',
     currency_id: '',
     system_id: '.dgb',
@@ -410,7 +410,7 @@ export const coinsList = {
     proto: 'btc',
     decimals: DEFAULT_DECIMALS,
   },
-  bch: {
+  BCH: {
     id: 'BCH',
     currency_id: '',
     system_id: '.bch',
@@ -426,7 +426,7 @@ export const coinsList = {
     proto: 'btc',
     decimals: DEFAULT_DECIMALS,
   },
-  zec: {
+  ZEC: {
     id: 'ZEC',
     currency_id: '',
     system_id: '.zec',
@@ -443,7 +443,7 @@ export const coinsList = {
     dlight_endpoints: dlightServers.zec,
     decimals: DEFAULT_DECIMALS,
   },
-  dash: {
+  DASH: {
     id: 'DASH',
     currency_id: '',
     system_id: '.dash',
@@ -459,7 +459,7 @@ export const coinsList = {
     proto: 'btc',
     decimals: DEFAULT_DECIMALS,
   },
-  ltc: {
+  LTC: {
     id: 'LTC',
     currency_id: '',
     system_id: '.ltc',
@@ -475,7 +475,7 @@ export const coinsList = {
     proto: 'btc',
     decimals: DEFAULT_DECIMALS,
   },
-  zilla: {
+  ZILLA: {
     id: 'ZILLA',
     currency_id: 'zilla',
     system_id: '.kmd',
@@ -491,7 +491,7 @@ export const coinsList = {
     proto: 'btc',
     decimals: DEFAULT_DECIMALS,
   },
-  usdt: {
+  USDT: {
     id: 'USDT',
     currency_id: '0xdac17f958d2ee523a2206206994597c13d831ec7',
     system_id: '.eth',
@@ -507,7 +507,7 @@ export const coinsList = {
     proto: 'erc20',
     rate_url_params: {coin_paprika: 'usdt-tether-coin'},
   },
-  usdtwyre: {
+  USDTWYRE: {
     id: 'USDTWYRE',
     currency_id: 'USDT',
     system_id: '.wyre',
@@ -523,7 +523,7 @@ export const coinsList = {
     proto: 'erc20',
     rate_url_params: {coin_paprika: 'usdt-tether-coin'},
   },
-  usdc: {
+  USDC: {
     id: 'USDC',
     currency_id: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
     system_id: '.eth',
@@ -539,7 +539,7 @@ export const coinsList = {
     proto: 'erc20',
     rate_url_params: {coin_paprika: 'usdc-usd-coin'},
   },
-  usdcwyre: {
+  USDCWYRE: {
     id: 'USDCWYRE',
     currency_id: 'USDC',
     system_id: '.wyre',
@@ -555,7 +555,7 @@ export const coinsList = {
     proto: 'erc20',
     rate_url_params: {coin_paprika: 'usdc-usd-coin'},
   },
-  aave: {
+  AAVE: {
     id: 'AAVE',
     currency_id: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
     system_id: '.eth',
@@ -571,7 +571,7 @@ export const coinsList = {
     proto: 'erc20',
     rate_url_params: {coin_paprika: 'aave-new'},
   },
-  crv: {
+  CRV: {
     id: 'CRV',
     currency_id: '0xD533a949740bb3306d119CC777fa900bA034cd52',
     system_id: '.eth',
@@ -587,7 +587,7 @@ export const coinsList = {
     proto: 'erc20',
     rate_url_params: {coin_paprika: 'crv-curve-dao-token'},
   },
-  sushi: {
+  SUSHI: {
     id: 'SUSHI',
     currency_id: '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2',
     system_id: '.eth',
@@ -603,7 +603,7 @@ export const coinsList = {
     proto: 'erc20',
     rate_url_params: {coin_paprika: 'sushi-sushi'},
   },
-  mkr: {
+  MKR: {
     id: 'MKR',
     currency_id: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2',
     system_id: '.eth',
@@ -618,7 +618,7 @@ export const coinsList = {
     tags: [],
     proto: 'erc20',
   },
-  wbtc: {
+  WBTC: {
     id: 'WBTC',
     currency_id: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
     system_id: '.eth',
@@ -634,7 +634,7 @@ export const coinsList = {
     proto: 'erc20',
     rate_url_params: {coin_paprika: 'wbtc-wrapped-bitcoin'},
   },
-  usd: {
+  USD: {
     id: 'USD',
     currency_id: 'USD',
     system_id: '.fiat',
@@ -648,7 +648,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  aud: {
+  AUD: {
     id: 'AUD',
     currency_id: 'AUD',
     system_id: '.fiat',
@@ -662,7 +662,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  eur: {
+  EUR: {
     id: 'EUR',
     currency_id: 'EUR',
     system_id: '.fiat',
@@ -676,7 +676,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  chf: {
+  CHF: {
     id: 'CHF',
     currency_id: 'CHF',
     system_id: '.fiat',
@@ -690,7 +690,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  mxn: {
+  MXN: {
     id: 'MXN',
     currency_id: 'MXN',
     system_id: '.fiat',
@@ -704,7 +704,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  clp: {
+  CLP: {
     id: 'CLP',
     currency_id: 'CLP',
     system_id: '.fiat',
@@ -718,7 +718,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  zar: {
+  ZAR: {
     id: 'ZAR',
     currency_id: 'ZAR',
     system_id: '.fiat',
@@ -732,7 +732,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  vnd: {
+  VND: {
     id: 'VND',
     currency_id: 'VND',
     system_id: '.fiat',
@@ -746,7 +746,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  ils: {
+  ILS: {
     id: 'ILS',
     currency_id: 'ILS',
     system_id: '.fiat',
@@ -760,7 +760,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  hkd: {
+  HKD: {
     id: 'HKD',
     currency_id: 'HKD',
     system_id: '.fiat',
@@ -774,7 +774,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  dkk: {
+  DKK: {
     id: 'DKK',
     currency_id: 'DKK',
     system_id: '.fiat',
@@ -788,7 +788,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  cad: {
+  CAD: {
     id: 'CAD',
     currency_id: 'CAD',
     system_id: '.fiat',
@@ -802,7 +802,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  myr: {
+  MYR: {
     id: 'MYR',
     currency_id: 'MYR',
     system_id: '.fiat',
@@ -816,7 +816,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  nok: {
+  NOK: {
     id: 'NOK',
     currency_id: 'NOK',
     system_id: '.fiat',
@@ -830,7 +830,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  czk: {
+  CZK: {
     id: 'CZK',
     currency_id: 'CZK',
     system_id: '.fiat',
@@ -844,7 +844,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  sek: {
+  SEK: {
     id: 'SEK',
     currency_id: 'SEK',
     system_id: '.fiat',
@@ -858,7 +858,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  ars: {
+  ARS: {
     id: 'ARS',
     currency_id: 'ARS',
     system_id: '.fiat',
@@ -872,7 +872,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  inr: {
+  INR: {
     id: 'INR',
     currency_id: 'INR',
     system_id: '.fiat',
@@ -886,7 +886,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  thb: {
+  THB: {
     id: 'THB',
     currency_id: 'THB',
     system_id: '.fiat',
@@ -900,7 +900,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  krw: {
+  KRW: {
     id: 'KRW',
     currency_id: 'KRW',
     system_id: '.fiat',
@@ -914,7 +914,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  jpy: {
+  JPY: {
     id: 'JPY',
     currency_id: 'JPY',
     system_id: '.fiat',
@@ -928,7 +928,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  pln: {
+  PLN: {
     id: 'PLN',
     currency_id: 'PLN',
     system_id: '.fiat',
@@ -942,7 +942,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  gbp: {
+  GBP: {
     id: 'GBP',
     currency_id: 'GBP',
     system_id: '.fiat',
@@ -956,7 +956,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  php: {
+  PHP: {
     id: 'PHP',
     currency_id: 'PHP',
     system_id: '.fiat',
@@ -970,7 +970,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  isk: {
+  ISK: {
     id: 'ISK',
     currency_id: 'ISK',
     system_id: '.fiat',
@@ -984,7 +984,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  cop: {
+  COP: {
     id: 'COP',
     currency_id: 'COP',
     system_id: '.fiat',
@@ -998,7 +998,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  sgd: {
+  SGD: {
     id: 'SGD',
     currency_id: 'SGD',
     system_id: '.fiat',
@@ -1012,7 +1012,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  nzd: {
+  NZD: {
     id: 'NZD',
     currency_id: 'NZD',
     system_id: '.fiat',
@@ -1026,7 +1026,7 @@ export const coinsList = {
     proto: 'fiat',
     decimals: FIAT_DECIMALS,
   },
-  brl: {
+  BRL: {
     id: 'BRL',
     currency_id: 'BRL',
     system_id: '.fiat',

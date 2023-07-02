@@ -1,34 +1,42 @@
-import BigNumber from "bignumber.js";
-import { Component } from "react"
-import { Alert } from "react-native";
-import { connect } from 'react-redux'
+import React, { useEffect, useState } from "react";
+import { ScrollView, View, TouchableOpacity, Alert } from "react-native";
+import { Button, List, Divider, Text } from "react-native-paper";
+import { useDispatch, useSelector } from 'react-redux'
 import { expireCoinData } from "../../../../actions/actionCreators";
 import { traditionalCryptoSend } from "../../../../actions/actionDispatchers";
 import { copyToClipboard } from "../../../../utils/clipboard/clipboard";
 import { USD } from "../../../../utils/constants/currencies";
-import { API_GET_BALANCES, API_GET_FIATPRICE, API_GET_TRANSACTIONS, DLIGHT_PRIVATE, GENERAL } from "../../../../utils/constants/intervalConstants";
-import { SEND_MODAL_AMOUNT_FIELD, SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT, SEND_MODAL_MEMO_FIELD, SEND_MODAL_TO_ADDRESS_FIELD } from "../../../../utils/constants/sendModal";
-import { isNumber, truncateDecimal } from "../../../../utils/math";
-import { TraditionalCryptoSendConfirmRender } from "./TraditionalCryptoSendConfirm.render"
+import { API_GET_BALANCES, API_GET_FIATPRICE, API_GET_TRANSACTIONS } from "../../../../utils/constants/intervalConstants";
+import { SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT } from "../../../../utils/constants/sendModal";
+import { truncateDecimal } from "../../../../utils/math";
+import Colors from "../../../../globals/colors";
+import Styles from "../../../../styles";
+import BigNumber from "bignumber.js";
 
-class TraditionalCryptoSendConfirm extends Component {
-  constructor(props) {
-    super(props);
+function TraditionalCryptoSendConfirm({ navigation, route, setLoading, setModalHeight, setPreventExit }) {
+  const [params, setParams] = useState(route.params.txConfirmation);
+  const [confirmationFields, setConfirmationFields] = useState([]);
+  const dispatch = useDispatch();
 
-    this.state = {
-      params: props.route.params.txConfirmation,
-      confirmationFields: []
-    };
-  }
+  const balance_channel = useSelector(state => state.sendModal.subWallet.api_channels[API_GET_BALANCES]);
+  const rates_channel = useSelector(state => state.sendModal.subWallet.api_channels[API_GET_FIATPRICE]);
+  const chainTicker = params.coinObj.id
 
-  goBack() {
-    this.props.setModalHeight()
-    this.props.navigation.navigate(SEND_MODAL_FORM_STEP_FORM)
-  }
+  const balances = {
+    results: useSelector(state => state.ledger.balances[balance_channel]
+      ? state.ledger.balances[balance_channel][chainTicker]
+      : null),
+    errors: useSelector(state => state.errors[API_GET_BALANCES][balance_channel][chainTicker]),
+  };
 
-  componentDidMount() {
-    this.props.setLoading(true);
+  const rates = useSelector(state => state.ledger.rates[rates_channel]);
 
+  const displayCurrency = useSelector(state => state.settings.generalWalletSettings.displayCurrency || USD);
+
+  useEffect(() => {
+    setLoading(true);
+
+    // Destructuring params
     const {
       toAddress,
       fromAddress,
@@ -39,127 +47,135 @@ class TraditionalCryptoSendConfirm extends Component {
       finalTxAmount,
       balanceDelta,
       memo,
-    } = this.state.params;
-    
-    const balance = this.props.balances.results.total;
+      names
+    } = params;
+
+    const renderCurrencyName = (id) => {
+      return names != null && names.hasOwnProperty(id) ? names[id] : id;
+    }
+
+    const balance = balances.results.total;
     const fee = fees[0];
     const remainingBalance = BigNumber(balanceDelta).plus(BigNumber(balance));
     const deductedAmount = BigNumber(balanceDelta).absoluteValue()
 
     const validFiatMultiplier =
-      this.props.rates[coinObj.id] != null &&
-      this.props.rates[coinObj.id][this.props.displayCurrency] != null;
+      rates[coinObj.id] != null &&
+      rates[coinObj.id][displayCurrency] != null;
     const fiatMultiplier = validFiatMultiplier
-      ? BigNumber(this.props.rates[coinObj.id][this.props.displayCurrency])
+      ? BigNumber(rates[coinObj.id][displayCurrency])
       : null;
 
     const validFeeFiatMultiplier =
       fee.currency == coinObj.id
         ? validFiatMultiplier
-        : this.props.rates[fee.currency] != null &&
-          this.props.rates[fee.currency][this.props.displayCurrency] != null;
+        : rates[fee.currency] != null &&
+          rates[fee.currency][displayCurrency] != null;
     const feeFiatMultiplier =
       fee.currency == coinObj.id
         ? fiatMultiplier
         : validFeeFiatMultiplier
-        ? BigNumber(this.props.rates[fee.currency][this.props.displayCurrency])
+        ? BigNumber(rates[fee.currency][displayCurrency])
         : null;
 
-    this.setState({
-      confirmationFields: [
-        {
-          key: 'Destination',
-          data: identity == null ? toAddress : `${identity} (${toAddress})`,
-          numLines: 100,
-          onPress: () =>
-            copyToClipboard(toAddress, {
-              title: 'Address copied',
-              message: `${toAddress} copied to clipboard.`,
-            }),
-        },
-        {
-          key: 'Source',
-          data: fromAddress,
-          numLines: 100,
-          onPress: () =>
-            copyToClipboard(fromAddress, {
-              title: 'Address copied',
-              message: `${fromAddress} copied to clipboard.`,
-            }),
-          condition: fromAddress != null,
-        },
-        {
-          key: 'Amount Requested',
-          data:
-            truncateDecimal(amountSubmitted, coinObj.decimals || 8) +
-            ' ' +
-            coinObj.display_ticker,
-          right: validFiatMultiplier
-            ? `${fiatMultiplier.multipliedBy(amountSubmitted).toFixed(2)} ${
-                this.props.displayCurrency
-              }`
-            : null,
-          condition:
-            amountSubmitted !== '0' && amountSubmitted !== finalTxAmount,
-        },
-        {
-          key: 'Amount Sent',
-          data:
-            truncateDecimal(finalTxAmount, coinObj.decimals || 8) +
-            ' ' +
-            coinObj.display_ticker,
-          right: validFiatMultiplier
-            ? `${fiatMultiplier.multipliedBy(finalTxAmount).toFixed(2)} ${
-                this.props.displayCurrency
-              }`
-            : null,
-        },
-        {
-          key: 'Fee',
-          data: fee.amount + ' ' + fee.currency,
-          right: validFeeFiatMultiplier
-            ? `${feeFiatMultiplier.multipliedBy(fee.amount).toFixed(2)} ${
-                this.props.displayCurrency
-              }`
-            : null,
-        },
-        {
-          key: 'Amount Deducted',
-          data:
-            truncateDecimal(deductedAmount, coinObj.decimals || 8) +
-            ' ' +
-            coinObj.display_ticker,
-          right: validFiatMultiplier
-            ? `${fiatMultiplier.multipliedBy(deductedAmount).toFixed(2)} ${
-                this.props.displayCurrency
-              }`
-            : null,
-        },
-        {
-          key: 'Remaining Balance',
-          data: remainingBalance + ' ' + coinObj.display_ticker,
-          condition: remainingBalance !== 0,
-          right: validFiatMultiplier
-            ? `${fiatMultiplier.multipliedBy(remainingBalance).toFixed(2)} ${
-                this.props.displayCurrency
-              }`
-            : null,
-        },
-        {
-          key: 'Message',
-          numLines: 100,
-          data: memo,
-          condition: memo != null && memo.length > 0,
-        },
-      ],
-    });
+    setConfirmationFields([
+      {
+        key: 'Destination',
+        data: identity == null ? toAddress : `${identity} (${toAddress})`,
+        numLines: 100,
+        onPress: () =>
+          copyToClipboard(toAddress, {
+            title: 'Address copied',
+            message: `${toAddress} copied to clipboard.`,
+          }),
+      },
+      {
+        key: 'Source',
+        data: fromAddress,
+        numLines: 100,
+        onPress: () =>
+          copyToClipboard(fromAddress, {
+            title: 'Address copied',
+            message: `${fromAddress} copied to clipboard.`,
+          }),
+        condition: fromAddress != null,
+      },
+      {
+        key: 'Amount Requested',
+        data:
+          truncateDecimal(amountSubmitted, coinObj.decimals || 8) +
+          ' ' +
+          coinObj.display_ticker,
+        right: validFiatMultiplier
+          ? `${fiatMultiplier.multipliedBy(amountSubmitted).toFixed(2)} ${
+              displayCurrency
+            }`
+          : null,
+        condition: amountSubmitted !== '0' && amountSubmitted !== finalTxAmount,
+      },
+      {
+        key: 'Amount Sent',
+        data:
+          truncateDecimal(finalTxAmount, coinObj.decimals || 8) +
+          ' ' +
+          coinObj.display_ticker,
+        right: validFiatMultiplier
+          ? `${fiatMultiplier.multipliedBy(finalTxAmount).toFixed(2)} ${
+              displayCurrency
+            }`
+          : null,
+      },
+      {
+        key: 'Fee',
+        data: fee.amount + ' ' + renderCurrencyName(fee.currency),
+        right: validFeeFiatMultiplier
+          ? `${feeFiatMultiplier.multipliedBy(fee.amount).toFixed(2)} ${
+              displayCurrency
+            }`
+          : null,
+      },
+      {
+        key: 'Amount Deducted',
+        data:
+          truncateDecimal(deductedAmount, coinObj.decimals || 8) +
+          ' ' +
+          coinObj.display_ticker,
+        right: validFiatMultiplier
+          ? `${fiatMultiplier.multipliedBy(deductedAmount).toFixed(2)} ${
+              displayCurrency
+            }`
+          : null,
+      },
+      {
+        key: 'Remaining Balance',
+        data: remainingBalance + ' ' + coinObj.display_ticker,
+        condition: remainingBalance !== 0,
+        right: validFiatMultiplier
+          ? `${fiatMultiplier.multipliedBy(remainingBalance).toFixed(2)} ${
+              displayCurrency
+            }`
+          : null,
+      },
+      {
+        key: 'Message',
+        numLines: 100,
+        data: memo,
+        condition: memo != null && memo.length > 0,
+      },
+    ]);
 
-    this.props.setLoading(false)
+
+    setLoading(false);
+  }, []);
+
+  const goBack = () => {
+    setModalHeight()
+    navigation.navigate(SEND_MODAL_FORM_STEP_FORM)
   }
 
-  submitData = async () => {
-    await this.props.setLoading(true)
-    await this.props.setPreventExit(true)
+  const submitData = async () => {
+    await setLoading(true)
+    await setPreventExit(true)
 
     const {
       toAddress,
@@ -169,7 +185,7 @@ class TraditionalCryptoSendConfirm extends Component {
       memo,
       channel,
       fullResult
-    } = this.state.params;
+    } = params;
 
     try {
       const res = await traditionalCryptoSend(coinObj, channel, toAddress, BigNumber(
@@ -181,40 +197,81 @@ class TraditionalCryptoSendConfirm extends Component {
 
       if (res.txid == null) throw new Error("Transaction failed.")
   
-      this.props.navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, { txResult: res });
+      navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, { txResult: res });
     } catch(e) {
       Alert.alert("Error", e.message)
     }
 
-    this.props.dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE));
-    this.props.dispatch(expireCoinData(coinObj.id, API_GET_TRANSACTIONS));
-    this.props.dispatch(expireCoinData(coinObj.id, API_GET_BALANCES));
+    dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE));
+    dispatch(expireCoinData(coinObj.id, API_GET_TRANSACTIONS));
+    dispatch(expireCoinData(coinObj.id, API_GET_BALANCES));
 
-    this.props.setPreventExit(false)
-    this.props.setLoading(false)
+    setPreventExit(false)
+    setLoading(false)
   };
 
-  render() {
-    return TraditionalCryptoSendConfirmRender.call(this);
-  }
+  return (
+    <ScrollView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }}>
+      {confirmationFields.map((item, index) => {
+        if (item.data != null && (item.condition == null || item.condition === true))
+          return (
+            <React.Fragment key={index}>
+              <TouchableOpacity disabled={item.onPress == null} onPress={() => item.onPress()}>
+                <List.Item
+                  title={item.data}
+                  description={item.key}
+                  titleNumberOfLines={item.numLines || 1}
+                  right={(props) =>
+                    item.right ? (
+                      <Text
+                        {...props}
+                        style={{
+                          fontSize: 16,
+                          alignSelf: "center",
+                          color: Colors.verusDarkGray,
+                          fontWeight: "300",
+                          marginRight: 8,
+                        }}
+                      >
+                        {item.right}
+                      </Text>
+                    ) : null
+                  }
+                />
+                <Divider />
+              </TouchableOpacity>
+            </React.Fragment>
+          );
+        else return null;
+      })}
+      <View
+        style={{
+          ...Styles.fullWidthBlock,
+          paddingHorizontal: 16,
+          flexDirection: "row",
+          justifyContent: "space-between"
+        }}
+      >
+        <Button
+          color={Colors.warningButtonColor}
+          style={{ width: 148 }}
+          onPress={goBack}
+          mode="contained"
+        >
+          Back
+        </Button>
+        <Button
+          color={Colors.verusGreenColor}
+          style={{ width: 148 }}
+          labelStyle={{ color: Colors.secondaryColor }}
+          onPress={submitData}
+          mode="contained"
+        >
+          Send
+        </Button>
+      </View>
+    </ScrollView>
+  );
 }
 
-const mapStateToProps = (state, ownProps) => { 
-  const balance_channel = state.sendModal.subWallet.api_channels[API_GET_BALANCES];
-  const rates_channel = state.sendModal.subWallet.api_channels[API_GET_FIATPRICE];
-  const chainTicker = ownProps.route.params.txConfirmation.coinObj.id
-
-  return {
-    balances: {
-      results: state.ledger.balances[balance_channel]
-        ? state.ledger.balances[balance_channel][chainTicker]
-        : null,
-      errors: state.errors[API_GET_BALANCES][balance_channel][chainTicker],
-    },
-    rates: state.ledger.rates[rates_channel],
-    displayCurrency:
-      state.settings.generalWalletSettings.displayCurrency || USD,
-  };
-};
-
-export default connect(mapStateToProps)(TraditionalCryptoSendConfirm);
+export default TraditionalCryptoSendConfirm;

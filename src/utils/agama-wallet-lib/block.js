@@ -1,7 +1,7 @@
-const bitcoin = require('@bitgo/utxo-lib');
+const bitcoin = require('bitgo-utxo-lib');
 
-const parseBlock = (hex, network) => {
-  const block = bitcoin.Block.fromBuffer(new Buffer.from(hex, 'hex'), network);
+const parseBlockHeader = (hex, network) => {
+  const block = bitcoin.Block.fromBuffer(new Buffer.from(hex, 'hex'), network, true);
   return block;
 };
 
@@ -14,6 +14,6 @@ const electrumMerkleRoot = (parsedBlock) => {
 };
 
 module.exports = {
-  parseBlock,
+  parseBlockHeader,
   electrumMerkleRoot,
 };

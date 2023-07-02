@@ -44,8 +44,6 @@ const WalletSettings = props => {
   const [homeCardDragDetection, setHomeCardDragDetection] = useState(
     generalWalletSettings.homeCardDragDetection != null
       ? generalWalletSettings.homeCardDragDetection
-      : Platform.OS === 'ios'
-      ? true
       : false,
   );
 

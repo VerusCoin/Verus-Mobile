@@ -5,7 +5,7 @@ import {
   setActiveSectionBuySellCrypto,
  } from '../../actions/actionCreators'
 import Styles from '../../styles/index'
-import { CoinLogos } from "../../utils/CoinData/CoinData";
+import { CoinLogos, getCoinLogo } from "../../utils/CoinData/CoinData";
 import { RenderSquareCoinLogo } from "../../utils/CoinData/Graphics";
 import { List } from "react-native-paper";
 
@@ -66,7 +66,6 @@ export const renderChildDrawerComponents = function() {
             onPress={() => {
               this._removeCoin(
                 this.props.activeCoinsForUser[this.state.currentCoinIndex]
-                  .id
               );
             }}
           />
@@ -137,7 +136,7 @@ export const renderMainDrawerComponents = function() {
       data={this.props.activeCoinsForUser}
       style={Styles.underflow}
       renderItem={({ item, index }) => {
-        const Logo = CoinLogos[item.id.toLowerCase()].dark
+        const Logo = getCoinLogo(item.id, 'dark');
 
         return (
           <List.Item

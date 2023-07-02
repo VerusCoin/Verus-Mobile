@@ -25,7 +25,9 @@ import {
   API_GET_SERVICE_ACCOUNT,
   API_GET_SERVICE_PAYMENT_METHODS,
   API_GET_SERVICE_TRANSFERS,
-  API_GET_SERVICE_RATES
+  API_GET_SERVICE_RATES,
+  IS_PBAAS_ROOT,
+  IS_PBAAS
 } from "../../../utils/constants/intervalConstants";
 import { selectTransactions } from '../../../selectors/transactions';
 import { DEFAULT_DECIMALS, ETHERS } from "../../../utils/constants/web3Constants";
@@ -33,6 +35,7 @@ import { Portal, List, Text, Badge } from "react-native-paper";
 import BigNumber from "bignumber.js";
 import { TransactionLogos } from '../../../images/customIcons/index'
 import Colors from "../../../globals/colors";
+import { CoinDirectory } from "../../../utils/CoinData/CoinDirectory";
 
 const TX_LOGOS = {
   self: TransactionLogos.SelfArrow,
@@ -58,6 +61,8 @@ class Overview extends Component {
         parsedAmount: "0",
         txData: {},
         activeCoinID: null,
+        activeCoinExplorerId: null,
+        activeCoinDisplayTicker: null,
         TxLogo: TX_LOGOS.unknown
       }
     };
@@ -227,6 +232,15 @@ class Overview extends Component {
     }
     catch(e) { console.error(e) }
 
+    let explorerId;
+
+    try {
+      explorerId = this.props.activeCoin.system_id && this.props.activeCoin.tags.includes(IS_PBAAS) && 
+      !this.props.activeCoin.tags.includes(IS_PBAAS_ROOT)
+        ? CoinDirectory.findSystemCoinObj(this.props.activeCoin.id).id
+        : this.props.activeCoin.id;
+    } catch(e) { console.warn(e) }
+    
     return (
       <TouchableOpacity
         onPress={() =>
@@ -235,6 +249,8 @@ class Overview extends Component {
               displayAmount: displayAmount,
               txData: item,
               activeCoinID: this.props.activeCoin.id,
+              activeCoinDisplayTicker: this.props.activeCoin.display_ticker,
+              activeCoinExplorerId: explorerId,
               TxLogo: AvatarImg,
               decimals: decimals,
             },
@@ -253,7 +269,7 @@ class Overview extends Component {
           } ${
             item.feeCurr != null && item.type === "self"
               ? item.feeCurr
-              : this.props.activeCoin.id
+              : this.props.activeCoin.display_ticker
           }`}
           description={subtitle}
           descriptionNumberOfLines={1}
@@ -341,6 +357,8 @@ class Overview extends Component {
                     parsedAmount: "0",
                     txData: {},
                     activeCoinID: null,
+                    activeCoinDisplayTicker: null,
+                    activeCoinExplorerId: null,
                     TxLogo: TX_LOGOS.unknown,
                     decimals:
                       this.props.activeCoin.decimals != null

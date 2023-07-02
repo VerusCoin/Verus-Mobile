@@ -61,7 +61,7 @@ export const handleProvisioningResponse = async (
       // Wait for update or registration txid confirm
       await waitForTransactionConfirm(coinObj, completeTxid.data)
 
-      const getIdRes = await getIdentity(coinObj, identity_address)
+      const getIdRes = await getIdentity(coinObj.system_id, identity_address)
 
       if (getIdRes.error) throw new Error(getIdRes.error.message)
       else if (getIdRes.result) {

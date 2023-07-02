@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Dimensions } from 'react-native';
 import { Avatar, Card, Paragraph } from 'react-native-paper';
 import { useSelector } from 'react-redux';
-import { CoinLogos } from '../../../utils/CoinData/CoinData';
+import { CoinLogos, getCoinLogo } from '../../../utils/CoinData/CoinData';
 import { USD } from '../../../utils/constants/currencies';
 import { GENERAL } from '../../../utils/constants/intervalConstants';
 import { truncateDecimal } from '../../../utils/math';
@@ -16,8 +16,7 @@ const CurrencyWidget = props => {
   const { currencyBalance, coinObj } = props;
   const { width } = Dimensions.get('window');
 
-  const coinIdLc = coinObj.id.toLowerCase();
-  const Logo = CoinLogos[coinIdLc] ? CoinLogos[coinIdLc].light : null;
+  const Logo = getCoinLogo(coinObj.id)
   const themeColor = coinObj.theme_color ? coinObj.theme_color : '#1C1C1C'
   
   const allSubwallets = useSelector(state => extractDisplaySubWallets(state))
@@ -49,8 +48,7 @@ const CurrencyWidget = props => {
     }
   }, [currencyBalance, uniRate, displayCurrency]);
 
-  const displayedName = coinObj.display_name.length > 8 ? coinObj.display_ticker : coinObj.display_name
-
+  const displayedName = coinObj.display_name.length > 8 ? coinObj.display_ticker : coinObj.display_name;
   return (
     <Card
       style={{
@@ -89,12 +87,12 @@ const CurrencyWidget = props => {
                 style={{
                   alignSelf: 'center',
                 }}
-                width={26}
-                height={26}
+                width={24}
+                height={24}
               />
             )}
             <Paragraph
-              style={{fontSize: 16, marginLeft: 8, fontWeight: 'bold', maxWidth: 100}}
+              style={{fontSize: 16, marginLeft: 8, fontWeight: 'bold', maxWidth: 90}}
               numberOfLines={1}>
               {displayedName}
             </Paragraph>
@@ -109,8 +107,8 @@ const CurrencyWidget = props => {
               marginTop: -12
             }}>
             <Paragraph style={{fontSize: 12}}>
-              {allSubwallets[coinObj.display_ticker]
-                ? allSubwallets[coinObj.display_ticker].length
+              {allSubwallets[coinObj.id]
+                ? allSubwallets[coinObj.id].length
                 : 1}
             </Paragraph>
             <SubWalletsLogo />
@@ -122,7 +120,7 @@ const CurrencyWidget = props => {
             }` : uniValueDisplay}
         </Paragraph>
         <Paragraph style={{ fontSize: 12 }}>
-          {coinObj.testnet ? "Testnet Currency" :
+          {coinObj.testnet ? "Testnet Currency" : coinObj.pbaas_options ? "PBaaS Currency" : 
             uniValueDisplay === '-' ? uniValueDisplay : `${currencyBalance == null ? '-' : normalizeNum(Number(currencyBalance), 8)[3]} ${
               coinObj.display_ticker
             }`
