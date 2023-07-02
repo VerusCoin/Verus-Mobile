@@ -1,7 +1,8 @@
 import React from "react";
 import { Card } from "react-native-paper";
-import { CoinLogos } from "./CoinData";
-import { coinsList } from "./CoinsList";
+import { View } from "react-native";
+import { getCoinLogo } from "./CoinData";
+import { CoinDirectory } from "./CoinDirectory";
 
 export const RenderSquareLogo = (LogoComponent, color, width = 40, height = 40) => {
   return (
@@ -13,29 +14,31 @@ export const RenderSquareLogo = (LogoComponent, color, width = 40, height = 40) 
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        flexDirection: "row",
+        flexDirection: "row"
       }}
       elevation={0}
     >
-      {LogoComponent}
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        {LogoComponent}
+      </View>
     </Card>
   );
 };
 
 export const RenderSquareCoinLogo = (chainTicker, style = {}, width = 40, height = 40) => {
-  const tickerLc = chainTicker.toLowerCase()
-  const Logo = CoinLogos[tickerLc].light
+  const Logo = getCoinLogo(chainTicker);
+  const coinObj = CoinDirectory.findCoinObj(chainTicker)
 
   return RenderSquareLogo(
     <Logo
-      width={width - 15}
-      height={height - 15}
+      width={width - 16}
+      height={height - 16}
       style={{
         alignSelf: "center",
         ...style
       }}
     />,
-    coinsList[tickerLc].theme_color,
+    coinObj.theme_color,
     width,
     height
   );

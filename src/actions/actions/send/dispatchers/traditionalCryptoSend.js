@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import { MID_VERIFICATION, NO_VERIFICATION } from "../../../../utils/constants/constants";
 import { isNumber, satsToCoins } from "../../../../utils/math";
-import { networks } from '@bitgo/utxo-lib';
+import { networks } from 'bitgo-utxo-lib';
 import { extractIdentityAddress } from "../../../../utils/api/channels/verusid/callCreators";
 import { send } from "../../../../utils/api/routers/send";
 import { preflightSend } from "../../../../utils/api/routers/preflightSend";
@@ -33,9 +33,9 @@ export const traditionalCryptoSend = async (
   const activeUser = state.authentication.activeAccount;
   const coinSettings = state.settings.coinSettings;
 
-  const network = networks[coinObj.bitgojs_network_key]
-    ? networks[coinObj.bitgojs_network_key]
-    : networks["verus"];
+  const network = networks[coinObj.id.toLowerCase()]
+    ? networks[coinObj.id.toLowerCase()]
+    : networks["default"];
 
   let verifyMerkle, verifyTxid;
 
@@ -109,7 +109,8 @@ export const traditionalCryptoSend = async (
           finalTxAmount: res.result.value != null ? res.result.value : amount.toString(),
           fromAddress: res.result.fromAddress,
           txid: res.result.txid,
-          fullResult: res.result
+          fullResult: res.result,
+          names: res.names
         };
       } else {
         const feeTakenFromAmount = res.result.params.feeTakenFromAmount;
@@ -191,7 +192,8 @@ export const traditionalCryptoSend = async (
           tradSendFee,
           txid: res.result.txid,
           feeTakenMessage,
-          fullResult: res.result
+          fullResult: res.result,
+          names: res.names
         };
       }
     }

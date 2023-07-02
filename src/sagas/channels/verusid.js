@@ -19,7 +19,7 @@ export default function* verusidSaga() {
 function* handleVerusidChannelInit(action) {
   yield call(
     VrpcProvider.initEndpoint,
-    action.payload.chainTicker,
+    action.payload.systemId,
     action.payload.endpointAddress,
   );
   yield call(handleFinishVerusidInit, action);
@@ -27,7 +27,7 @@ function* handleVerusidChannelInit(action) {
 
 function* handleVerusidChannelClose(action) {
   VrpcProvider.deleteEndpoint(
-    action.payload.chainTicker,
+    action.payload.systemId,
     action.payload.endpointAddress,
   );
 }

@@ -87,7 +87,7 @@ const ProvisionIdentityForm = (props) => {
     
           for (const idKey of identitykeys) {
             if (idKey != null) {
-              const identity = await getIdentity(sendModal.coinObj, idKey.data);
+              const identity = await getIdentity(sendModal.coinObj.system_id, idKey.data);
     
               if (identity.result) {
                 friendlyNameMap[identity.result.identity.identityaddress] =
@@ -146,7 +146,7 @@ const ProvisionIdentityForm = (props) => {
     const identity = data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD];
   
     try {
-      const res = await getIdentity(coinObj, identity);
+      const res = await getIdentity(coinObj.system_id, identity);
   
       if (res.error && res.error.code !== -5) {
         throw new Error(res.error.message);

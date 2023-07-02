@@ -1,9 +1,9 @@
 import { electrumRequest } from '../callCreators'
 import {
-  parseBlock,
+  parseBlockHeader,
   electrumMerkleRoot,
 } from '../../../../agama-wallet-lib/block'
-import { networks } from '@bitgo/utxo-lib';
+import { networks } from 'bitgo-utxo-lib';
 import store from '../../../../../store/index';
 import { saveBlockHeader } from '../../../../../actions/actionCreators';
 import { ELECTRUM_PROTOCOL_CHANGE } from '../../../../constants/constants';
@@ -25,9 +25,9 @@ export const getBlockInfo = (coinObj, blockheight) => {
       if (res !== false && res.electrumVersion >= ELECTRUM_PROTOCOL_CHANGE) {
         let blockInfo = res
 
-        let parsedBlock = parseBlock(
+        let parsedBlock = parseBlockHeader(
           res.result,
-          networks[coinObj.bitgojs_network_key] || networks['verus']
+          networks[coinObj.id.toLowerCase()] || networks.default
         );
         if (parsedBlock.merkleRoot) {
           parsedBlock.merkle_root = electrumMerkleRoot(parsedBlock);

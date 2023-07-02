@@ -7,8 +7,6 @@ import {
 import { storeUser, getUsers, checkPinForUser, resetUserPwd, deleteUser } from '../../asyncStore/asyncStore'
 import { decryptkey } from '../../seedCrypt'
 
-jest.mock('agama-wallet-lib/src/electrum-servers')
-
 describe('Authentication data storage and retrieval', () => {
   it('can store user with both dlight and electrum seeds', () => {
     const { seeds, id } = MOCK_USER_OBJ
@@ -20,11 +18,11 @@ describe('Authentication data storage and retrieval', () => {
     }, [])
     .then(usersArray => {
       const userObj = usersArray[0]
-      const { dlight, electrum } = userObj.encryptedKeys
+      const { dlight_private, electrum } = userObj.encryptedKeys
 
       expect(userObj.id).toBe(MOCK_USER_OBJ.id)
       expect(decryptkey(MOCK_PIN, electrum)).toBe(seeds.electrum)
-      expect(decryptkey(MOCK_PIN, dlight)).toBe(seeds.dlight_private)
+      expect(decryptkey(MOCK_PIN, dlight_private)).toBe(seeds.dlight_private)
     })
   })
 
@@ -38,13 +36,13 @@ describe('Authentication data storage and retrieval', () => {
 
   it('can check correct password for user', () => {
     const { seeds, id } = MOCK_USER_OBJ
-    const { electrum, dlight } = seeds
+    const { electrum, dlight_private } = seeds
 
     return checkPinForUser(MOCK_PIN, id)
     .then(res => {
-      expect(Object.keys(res).length).toBe(2)
+      expect(Object.keys(res).length).toBe(3)
       expect(res.electrum).toBe(electrum)
-      expect(res.dlight).toBe(dlight)
+      expect(res.dlight_private).toBe(dlight_private)
     })
   })
 
@@ -63,26 +61,28 @@ describe('Authentication data storage and retrieval', () => {
     const { electrum, dlight } = seeds
 
     return resetUserPwd(id, MOCK_PIN_TWO, MOCK_PIN)
-    .then(res => {
+    .then(async res => {
       expect(res.length).toBe(1)
       expect(res[0].id).toBe(id)
 
-      return checkPinForUser(MOCK_PIN, id)
-    })
-    .then(res => {
-      expect(res).toBe(false)
+      try {
+        await checkPinForUser(MOCK_PIN, id)
+        throw new Error("Should not have verified incorrect password")
+      } catch(e) {
+        expect(e.message).toBe("Incorrect password")
+      }
 
       return checkPinForUser(MOCK_PIN_TWO, id)
     })
     .then(res => {
-      expect(Object.keys(res).length).toBe(2)
+      expect(Object.keys(res).length).toBe(3)
       expect(res.electrum).toBe(electrum)
       expect(res.dlight).toBe(dlight)
     })
   })
 
   it('can delete user', () => {
-    return deleteUser(MOCK_USER_OBJ.id)
+    return deleteUser(MOCK_USER_OBJ.accountHash)
     .then(res => {
       expect(res.length).toBe(0)
 

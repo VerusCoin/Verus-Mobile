@@ -1,16 +1,16 @@
 import React from 'react';
-import {ScrollView, View, SafeAreaView} from 'react-native';
-import {Button} from 'react-native-paper';
+import { ScrollView, View, SafeAreaView } from 'react-native';
+import { Button } from 'react-native-paper';
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import VerusIdObjectData from '../../../VerusIdObjectData';
 
-export const LinkIdentityConfirmRender = function () {
+export const LinkIdentityConfirmRender = ({ verusId, friendlyNames, goBack, submitData }) => {
   return (
-    <SafeAreaView style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}>
+    <SafeAreaView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }}>
       <VerusIdObjectData
-        verusId={this.state.verusId}
-        friendlyNames={this.state.friendlyNames}
+        verusId={verusId}
+        friendlyNames={friendlyNames}
         StickyFooterComponent={
           <View
             style={{
@@ -24,14 +24,14 @@ export const LinkIdentityConfirmRender = function () {
             }}>
             <Button
               color={Colors.warningButtonColor}
-              style={{width: 148}}
-              onPress={() => this.goBack()}>
+              style={{ width: 148 }}
+              onPress={goBack}>
               Back
             </Button>
             <Button
               color={Colors.verusGreenColor}
-              style={{width: 148}}
-              onPress={() => this.submitData()}>
+              style={{ width: 148 }}
+              onPress={submitData}>
               Link
             </Button>
           </View>

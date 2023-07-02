@@ -13,6 +13,7 @@ import { Divider, List } from 'react-native-paper';
 import { signLoginConsentResponse } from '../../../utils/api/channels/vrpc/requests/signLoginConsentResponse';
 import BigNumber from 'bignumber.js';
 import { VERUSID_NETWORK_DEFAULT } from "../../../../env/index";
+import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 
 const LoginRequestIdentity = props => {
   const { deeplinkData } = props.route.params
@@ -85,17 +86,17 @@ const LoginRequestIdentity = props => {
   }, [linkedIds])
 
   const openLinkIdentityModalFromChain = () => {
-    return openLinkIdentityModal(findCoinObj(system_id, null, true));
+    return openLinkIdentityModal(CoinDirectory.findCoinObj(system_id, null, true));
   }
 
   const openProvisionIdentityModalFromChain = () => {
-    openProvisionIdentityModal(findCoinObj(system_id, null, true), req)
+    openProvisionIdentityModal(CoinDirectory.findCoinObj(system_id, null, true), req)
   }
 
   const selectIdentity = async (iAddress) => {
     try {
       const signedResponse = await signLoginConsentResponse(
-        findCoinObj(system_id, null, true),
+        CoinDirectory.findCoinObj(system_id, null, true),
         {
           system_id: system_id,
           signing_id: iAddress,

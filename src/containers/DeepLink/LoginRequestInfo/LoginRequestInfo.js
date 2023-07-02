@@ -12,8 +12,9 @@ import { VerusIdLogo } from '../../../images/customIcons';
 import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import { AUTHENTICATE_USER_SEND_MODAL, SEND_MODAL_USER_ALLOWLIST } from '../../../utils/constants/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
-import { findCoinObj, getCoinIdFromSystemId } from '../../../utils/CoinData/CoinData';
+import { getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
+import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 
 const LoginRequestInfo = props => {
   const { deeplinkData, sigtime, cancel, signerFqn } = props
@@ -27,10 +28,10 @@ const LoginRequestInfo = props => {
   const sendModalType = useSelector(state => state.sendModal.type)
 
   const { system_id, signing_id, challenge } = req
-  const chain_id = getCoinIdFromSystemId(system_id)
+  const chain_id = getSystemNameFromSystemId(system_id)
 
   const getVerusId = async (chain, iAddrOrName) => {
-    const identity = await getIdentity({id: chain}, iAddrOrName);
+    const identity = await getIdentity(CoinDirectory.getBasicCoinObj(chain).system_id, iAddrOrName);
 
     if (identity.error) throw new Error(identity.error.message);
     else return identity.result;
@@ -46,7 +47,7 @@ const LoginRequestInfo = props => {
         try {
           const identityObj = await getVerusId(chain, iAddress);
     
-          return getFriendlyNameMap({id: chain}, identityObj);
+          return getFriendlyNameMap(CoinDirectory.getBasicCoinObj(chain), identityObj);
         } catch (e) {
           return {
             ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',
@@ -88,7 +89,7 @@ const LoginRequestInfo = props => {
       });
     } else {
       setWaitingForSignin(true);
-      const coinObj = findCoinObj(chain_id);
+      const coinObj = CoinDirectory.findCoinObj(chain_id);
       const allowList = coinObj.testnet ? accounts.filter(x => {
         if (
           x.testnetOverrides &&

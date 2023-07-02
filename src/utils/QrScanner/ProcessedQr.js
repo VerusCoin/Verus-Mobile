@@ -8,12 +8,13 @@ export class ProcessedQr {
 }
 
 export class ProcessedPaymentRequest extends ProcessedQr {
-  constructor (raw, coinObj, address, amount, note) {
+  constructor (raw, coinObj, address, amount, note, system) {
     super(raw, PROCESSED_PAYMENT_REQUEST)
     this.coinObj = coinObj
     this.address = address
     this.amount = amount
     this.note = note
+    this.system = system
   }
 
   toJson() {
@@ -21,7 +22,8 @@ export class ProcessedPaymentRequest extends ProcessedQr {
       coinObj: this.coinObj,
       address: this.address,
       amount: this.amount,
-      note: this.note
+      note: this.note,
+      system: this.system
     }
   }
 }

@@ -59,7 +59,7 @@ const getMainSubwallet = (dominantChannel = ELECTRUM) => {
 };
 
 const getDynamicVrpcSubwallet = (channelId, name) => {
-  const addr = channelId.split('.')[1];
+  const [vrpc, addr, network] = channelId.split('.')
 
   return {
     channel: channelId,
@@ -76,11 +76,12 @@ const getDynamicVrpcSubwallet = (channelId, name) => {
     modals: {
       [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL,
     },
-    id: `VERUSID_WALLET_${addr}`,
+    id: `SUBWALLET_${channelId}`,
     params: {},
     color: Colors.primaryColor,
     address_info: [{label: 'Address'}],
-    name
+    name,
+    network
   };
 };
 
@@ -125,26 +126,29 @@ const getWyreSubwallet = (protocol) => {
   };
 };
 
-const PRIVATE_SUBWALLET = {
-  channel: DLIGHT_PRIVATE,
-  api_channels: {
-    [API_GET_BALANCES]: DLIGHT_PRIVATE,
-    [API_GET_INFO]: DLIGHT_PRIVATE,
-    [API_GET_ADDRESSES]: DLIGHT_PRIVATE,
-    [API_GET_TRANSACTIONS]: DLIGHT_PRIVATE,
-    [API_GET_FIATPRICE]: GENERAL,
-    [API_SEND]: DLIGHT_PRIVATE,
-    [API_GET_KEYS]: DLIGHT_PRIVATE
-  },
-  compatible_apps: [WALLET_APP_OVERVIEW, WALLET_APP_SEND, WALLET_APP_RECEIVE],
-  modals: {
-    [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL
-  },
-  id: "PRIVATE_WALLET",
-  params: {},
-  color: Colors.quinaryColor,
-  address_info: [{ label: "Address" }],
-  name: SUBWALLET_NAMES['PRIVATE_WALLET']
+const getPrivateSubwallet = (coinObj) => {
+  return {
+    channel: DLIGHT_PRIVATE,
+    api_channels: {
+      [API_GET_BALANCES]: DLIGHT_PRIVATE,
+      [API_GET_INFO]: DLIGHT_PRIVATE,
+      [API_GET_ADDRESSES]: DLIGHT_PRIVATE,
+      [API_GET_TRANSACTIONS]: DLIGHT_PRIVATE,
+      [API_GET_FIATPRICE]: GENERAL,
+      [API_SEND]: DLIGHT_PRIVATE,
+      [API_GET_KEYS]: DLIGHT_PRIVATE
+    },
+    compatible_apps: [WALLET_APP_OVERVIEW, WALLET_APP_SEND, WALLET_APP_RECEIVE],
+    modals: {
+      [SEND_MODAL]: TRADITIONAL_CRYPTO_SEND_MODAL
+    },
+    id: "PRIVATE_WALLET",
+    params: {},
+    color: Colors.quinaryColor,
+    address_info: [{ label: "Address" }],
+    name: SUBWALLET_NAMES['PRIVATE_WALLET'],
+    network: coinObj.system_id
+  }
 }
 
 export const getDefaultSubWallets = (coinObj, dynamicChannels = [], dynamicChannelNames = {}) => {
@@ -162,7 +166,7 @@ export const getDefaultSubWallets = (coinObj, dynamicChannels = [], dynamicChann
     {
       met: () =>
         coinObj.compatible_channels.includes(DLIGHT_PRIVATE) && dlightEnabled(),
-      subwallets: [PRIVATE_SUBWALLET],
+      subwallets: [getPrivateSubwallet(coinObj)],
     },
     {
       met: () =>

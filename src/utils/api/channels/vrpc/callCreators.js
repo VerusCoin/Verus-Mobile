@@ -10,3 +10,8 @@ export * from './requests/verifyMessage';
 export * from './requests/signMessage';
 export * from './requests/getBlock';
 export * from './requests/getTransaction';
+export * from './requests/getCurrencyConversionPaths';
+export * from './requests/fundRawTransaction';
+export * from './requests/calculateCurrencyTransferFee';
+export * from './requests/estimateConversion';
+export * from './requests/getSendCurrencyTransaction';

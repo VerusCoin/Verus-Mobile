@@ -83,13 +83,13 @@ class SideMenu extends Component {
     this.resetToScreen("CoinMenus", screen)
   }
 
-  _removeCoin = (coinID) => {
-    this.canRemoveCoin(coinID)
+  _removeCoin = (coinObj) => {
+    this.canRemoveCoin(coinObj)
     .then(answer => {
       let data = {
         task: this._removeUserFromCoin,
-        message: "Removing " + coinID + " from user " + this.props.activeAccount.id + ", please do not close Verus Mobile.",
-        input: [coinID, answer === this.REMOVE_DELETE],
+        message: "Removing " + coinObj.display_ticker + " from user " + this.props.activeAccount.id + ", please do not close Verus Mobile.",
+        input: [coinObj.id, answer === this.REMOVE_DELETE],
         route: "Home",
         dispatchResult: true
       }
@@ -160,11 +160,11 @@ class SideMenu extends Component {
     return sections
   }
 
-  canRemoveCoin = (coinID) => {
-    if (this.props.dlightSockets[coinID]) {
+  canRemoveCoin = coinObj => {
+    if (this.props.dlightSockets[coinObj.id]) {
       return createAlert(
         'Confirm',
-        `You have chosen to remove ${coinID}. Would you also like to delete local ${coinID} blockchain data?`,
+        `You have chosen to remove ${coinObj.display_ticker}. Would you also like to delete local ${coinObj.display_ticker} blockchain data?`,
         [
           {
             text: 'Cancel',
@@ -177,11 +177,11 @@ class SideMenu extends Component {
         {
           cancelable: false,
         },
-      )
+      );
     } else {
       return createAlert(
         'Confirm',
-        "Are you sure you would like to remove " + coinID + "?",
+        'Are you sure you would like to remove ' + coinObj.display_ticker + '?',
         [
           {
             text: 'No',
@@ -193,10 +193,9 @@ class SideMenu extends Component {
         {
           cancelable: false,
         },
-      )
+      );
     }
-    
-  }
+  };
 
   handleLogout = () => {
     this.resetToScreen("SecureLoading", null, {

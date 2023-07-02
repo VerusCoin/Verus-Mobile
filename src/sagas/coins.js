@@ -1,7 +1,7 @@
 import {all, takeEvery, put, call} from 'redux-saga/effects';
 import store from '../store';
 import { requestServiceStoredData } from '../utils/auth/authBox';
-import { PRE_DATA, VRPC } from '../utils/constants/intervalConstants';
+import { IS_PBAAS, PRE_DATA, VRPC } from '../utils/constants/intervalConstants';
 import { VERUSID_SERVICE_ID } from '../utils/constants/services';
 import {
   LOG_NEW_CHANNELS,
@@ -9,6 +9,7 @@ import {
   SET_USER_COINS_COMPLETE,
 } from '../utils/constants/storeType';
 import { getDefaultSubWallets } from '../utils/defaultSubWallets';
+import { getVerusIdCurrency } from '../utils/CoinData/CoinData';
 
 export default function* setUserCoinsSaga() {
   yield all([takeEvery(SET_USER_COINS, handleFinishSetUserCoins)]);
@@ -30,23 +31,42 @@ function* handleFinishSetUserCoins(action) {
     const { watchedAddresses } = state.channelStore_vrpc
 
     action.payload.activeCoinsForUser.map(coinObj => {
-      const dynamicChannelNames = {}
-
-      const verusIdChannels = linkedIds[coinObj.id]
-        ? Object.keys(linkedIds[coinObj.id]).map(iAddr => {
-            const channelId = `${VRPC}.${iAddr}`;
-            dynamicChannelNames[channelId] = linkedIds[coinObj.id][iAddr];
+      const dynamicChannelNames = {};
+      const verusIdCurrency = getVerusIdCurrency(coinObj);
+      
+      function setVrpcChannels(addresses, isVerusId) {
+        const nonNativeSystems = [];
+  
+        if (coinObj.tags.includes(IS_PBAAS)) {
+          for (const coin of action.payload.activeCoinsForUser) {
+            if (coin.tags.includes(IS_PBAAS) && 
+                !nonNativeSystems.includes(coin.system_id) &&
+                coin.system_id !== coinObj.system_id && 
+                coin.testnet === coinObj.testnet) {
+              nonNativeSystems.push(coin.system_id);
+            }
+          }
+        }
+  
+        return addresses.map((addr, index) => {
+          const systems = [coinObj.system_id, ...nonNativeSystems]
+  
+          return systems.map(system => {
+            const channelId = `${VRPC}.${addr}.${system}`;
+            dynamicChannelNames[channelId] = isVerusId ? 
+              linkedIds[verusIdCurrency][addr] : (addr.substring(0, 5) + "..." + addr.substring(addr.length - 5))
+      
             return channelId;
           })
+        }).flat()
+      }
+
+      const verusIdChannels = linkedIds[verusIdCurrency]
+        ? setVrpcChannels(Object.keys(linkedIds[verusIdCurrency]), true)
         : [];
       
       const vrpcChannels = watchedAddresses[coinObj.id]
-        ? Object.keys(watchedAddresses[coinObj.id]).map((addr, index) => {
-            const channelId = `${VRPC}.${addr}`;
-            dynamicChannelNames[channelId] =
-              index === 0 ? 'Main' : `Wallet ${index + 1}`;
-            return channelId;
-          })
+        ? setVrpcChannels(Object.keys(watchedAddresses[coinObj.id]), false)
         : [];
       
       allNewChannels = [...(new Set([...verusIdChannels, ...vrpcChannels]))];

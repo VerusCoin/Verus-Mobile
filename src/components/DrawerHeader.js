@@ -6,9 +6,9 @@ import {
 } from 'react-native';
 import { Text } from 'react-native-paper';
 import Colors from '../globals/colors';
-import { CoinLogos } from '../utils/CoinData/CoinData';
+import { CoinLogos, getCoinLogo } from '../utils/CoinData/CoinData';
 
-const VrscLogo = CoinLogos.vrsc.light
+const VrscLogo = getCoinLogo("VRSC");
 
 const DrawerHeader = ({ navigateToScreen }) => (
   <TouchableOpacity onPress={() => navigateToScreen("Home")}>

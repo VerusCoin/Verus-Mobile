@@ -20,7 +20,7 @@ export const getFriendlyNameMap = async (coinObj, identityObj) => {
 
   for (const addr of iAddresses) {
     try {
-      const id = await getIdentity(coinObj, addr);
+      const id = await getIdentity(coinObj.system_id, addr);
 
       names[addr] = convertFqnToDisplayFormat(id.result.fullyqualifiedname);
     } catch (e) {

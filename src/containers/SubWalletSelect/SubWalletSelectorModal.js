@@ -14,6 +14,7 @@ import { setCoinSubWallet } from "../../actions/actionCreators";
 import { USD } from "../../utils/constants/currencies";
 import BigNumber from "bignumber.js";
 import Colors from "../../globals/colors";
+import { CoinDirectory } from "../../utils/CoinData/CoinDirectory";
 
 class SubWalletSelectorModal extends Component {
   constructor(props) {
@@ -37,7 +38,7 @@ class SubWalletSelectorModal extends Component {
       rates,
       chainTicker,
       displayCurrency,
-      subWallets,
+      subWallets
     } = this.props;
     const walletColorMap = {}
     let pieSections = []
@@ -101,12 +102,20 @@ class SubWalletSelectorModal extends Component {
     this.props.dispatch(setCoinSubWallet(this.props.chainTicker, subWallet))
   }
 
+  getNetworkName(wallet) {
+    try {
+      return wallet.network ? CoinDirectory.getBasicCoinObj(wallet.network).display_ticker : null;
+    } catch(e) {
+      return null
+    }
+  }
+
   render() {
     const { props, state, cancelHandler } = this
     const {
       animationType,
       visible,
-      chainTicker,
+      displayTicker,
       displayCurrency,
       subWallets,
       onSelect
@@ -123,7 +132,7 @@ class SubWalletSelectorModal extends Component {
         visible={visible}
         onRequestClose={cancelHandler}>
         <SafeAreaView style={{...Styles.flexBackground}}>
-          <Text style={Styles.centralHeader}>{'Select a Card'}</Text>
+          <Text style={{...Styles.centralHeader, marginTop: 16}}>{'Select a Card'}</Text>
           <ScrollView>
             {subWallets.map((wallet, index) => (
               <View style={{margin: 8}} key={index}>
@@ -141,7 +150,7 @@ class SubWalletSelectorModal extends Component {
                       color: Colors.secondaryColor,
                       fontWeight: '500',
                     }}
-                    description={`${
+                    description={wallet.network ? `${this.getNetworkName(wallet)} Network` : `${
                       fiatBalances[wallet.id] != null
                         ? fiatBalances[wallet.id].toFixed(2)
                         : '-'
@@ -162,7 +171,7 @@ class SubWalletSelectorModal extends Component {
                         cryptoBalances[wallet.id] != null
                           ? truncateDecimal(cryptoBalances[wallet.id], 4)
                           : '-'
-                      } ${chainTicker}`}</Text>
+                      } ${displayTicker}`}</Text>
                     )}
                   />
                 </Card>

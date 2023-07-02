@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { findCoinObj } from '../CoinData/CoinData';
 import { COIN_STORAGE_INTERNAL_KEY } from '../../../env/index'
+import { CoinDirectory } from '../CoinData/CoinDirectory';
 // react-native's version of local storage
 
 //Clear user from coin, or delete user from all if no coin specified
@@ -28,6 +28,14 @@ export const deleteUserFromCoin = (userID, coinID) => {
       reject(err)
     })
   });
+}
+
+export const purgeUnusedCoins = async () => {
+  const coins = await getActiveCoinList();
+  const coinsUsed = coins.filter(x => x.users.length > 0);
+
+  await storeCoins(coinsUsed);
+  return coinsUsed;
 }
 
 //Set storage to hold list of activated coins
@@ -74,15 +82,11 @@ export const updateActiveCoinList = () => {
         
         coinList = coinList.map((coin) => {
           try {
-            const newCoinObj = findCoinObj(coin.id, "")
-          
-            if (coin.id !== 'K64') {
-              newCoinList.push({...newCoinObj, users: coin.users})
-            }
+            const newCoinObj = CoinDirectory.findCoinObj(coin.id, "")
+            newCoinList.push({...newCoinObj, users: coin.users})
           } catch(e) {
             console.warn(e)
           }
-          
         })
 
         return storeCoins(newCoinList)

@@ -1,74 +1,96 @@
+import React, { useState } from "react";
 import BigNumber from "bignumber.js";
-import { Component } from "react"
-import { Alert } from "react-native";
-import { connect } from 'react-redux'
+import { Alert, ScrollView, View, TouchableWithoutFeedback, Keyboard } from "react-native";
+import { TextInput, Button, Text } from "react-native-paper";
+import { useSelector } from 'react-redux';
 import { traditionalCryptoSend, TraditionalCryptoSendFee } from "../../../../actions/actionDispatchers";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import { getRecommendedBTCFees } from "../../../../utils/api/channels/general/callCreators";
 import { USD } from "../../../../utils/constants/currencies";
-import { API_GET_BALANCES, API_GET_FIATPRICE, API_SEND, DLIGHT_PRIVATE, ELECTRUM, GENERAL } from "../../../../utils/constants/intervalConstants";
+import { API_GET_BALANCES, API_GET_FIATPRICE, API_SEND, DLIGHT_PRIVATE, ELECTRUM } from "../../../../utils/constants/intervalConstants";
 import { SEND_MODAL_AMOUNT_FIELD, SEND_MODAL_FORM_STEP_CONFIRM, SEND_MODAL_MEMO_FIELD, SEND_MODAL_TO_ADDRESS_FIELD } from "../../../../utils/constants/sendModal";
 import { isNumber, truncateDecimal } from "../../../../utils/math";
-import { TraditionalCryptoSendFormRender } from "./TraditionalCryptoSendForm.render"
+import Colors from "../../../../globals/colors";
+import Styles from "../../../../styles";
+import { useEffect } from "react";
+import { CoinDirectory } from "../../../../utils/CoinData/CoinDirectory";
 
-class TraditionalCryptoSendForm extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      amountFiat: false,
-      transactionData: {},
+const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
+  const [amountFiat, setAmountFiat] = useState(false);
+  const sendModal = useSelector(state => state.sendModal);
+  const balances = useSelector(state => {
+    const chainTicker = state.sendModal.coinObj.id;
+    const balance_channel = state.sendModal.subWallet.api_channels[API_GET_BALANCES];
+    return {
+      results: state.ledger.balances[balance_channel]
+        ? state.ledger.balances[balance_channel][chainTicker]
+        : null,
+      errors: state.errors[API_GET_BALANCES][balance_channel][chainTicker],
     };
+  });
+  const rates = useSelector(state => state.ledger.rates[state.sendModal.subWallet.api_channels[API_GET_FIATPRICE]]);
+  const displayCurrency = useSelector(state => state.settings.generalWalletSettings.displayCurrency || USD);
+  const [price, setPrice] = useState(0);
+  const networkName = useSelector(state => {
+    try {
+      const subwallet = state.sendModal.subWallet;
 
-    this.FEE_CALCULATORS = {
-      ["BTC"]: {
-        [ELECTRUM]: {
-          calculator: getRecommendedBTCFees,
-          isPerByte: true,
-        },
-      },
-      ["TESTNET"]: {
-        [ELECTRUM]: {
-          calculator: () => getRecommendedBTCFees(true),
-          isPerByte: true,
-        },
-      },
-    };
-  }
+      return subwallet.network ? CoinDirectory.getBasicCoinObj(subwallet.network).display_ticker : null;
+    } catch(e) {
+      console.error(e);
+      return null;
+    }
+  });
 
-  translateAmount = (amount, fromFiat = false) => {
+  useEffect(() => {
+    setPrice(getPrice());
+  }, [rates[sendModal.coinObj.id], sendModal.data[SEND_MODAL_AMOUNT_FIELD]]);
+
+  const FEE_CALCULATORS = {
+    ["BTC"]: {
+      [ELECTRUM]: {
+        calculator: getRecommendedBTCFees,
+        isPerByte: true,
+      },
+    },
+    ["TESTNET"]: {
+      [ELECTRUM]: {
+        calculator: () => getRecommendedBTCFees(true),
+        isPerByte: true,
+      },
+    },
+  };
+
+  const translateAmount = (amount, fromFiat = false) => {
     let _price =
-      this.props.rates[this.props.sendModal.coinObj.id] != null
-        ? this.props.rates[this.props.sendModal.coinObj.id][this.props.displayCurrency]
+      rates[sendModal.coinObj.id] != null
+        ? rates[sendModal.coinObj.id][displayCurrency]
         : null;
 
     return _price == null
       ? fromFiat
         ? "0"
         : amount
-      : this.state.amountFiat
+      : amountFiat
       ? fromFiat
         ? BigNumber(amount).dividedBy(BigNumber(_price)).toString()
         : BigNumber(amount).multipliedBy(BigNumber(_price)).toString()
       : amount;
   };
 
-  fillAmount = (amount) => {
-    let displayAmount = BigNumber(this.translateAmount(amount));
+  const fillAmount = (amount) => {
+    let displayAmount = BigNumber(translateAmount(amount));
     if (displayAmount.isLessThan(BigNumber(0))) {
       displayAmount = BigNumber(0);
     }
 
-    this.props.updateSendFormData(
+    updateSendFormData(
       SEND_MODAL_AMOUNT_FIELD,
-      this.state.amountFiat ? truncateDecimal(displayAmount, 2) : displayAmount.toString()
+      amountFiat ? truncateDecimal(displayAmount, 2) : displayAmount.toString()
     );
   };
 
-  getPrice = () => {
-    const { state, props } = this;
-    const { amountFiat } = state;
-    const { rates, displayCurrency, sendModal } = props;
+  const getPrice = () => {
     const { coinObj } = sendModal
 
     const amount = Number(sendModal.data[SEND_MODAL_AMOUNT_FIELD]);
@@ -86,8 +108,8 @@ class TraditionalCryptoSendForm extends Component {
     }
   };
 
-  getProcessedAmount() {
-    const { data } = this.props.sendModal;
+  const getProcessedAmount = () => {
+    const { data } = sendModal;
 
     const amount =
       (data[SEND_MODAL_AMOUNT_FIELD].includes(".") &&
@@ -101,20 +123,20 @@ class TraditionalCryptoSendForm extends Component {
     } else if (!isNumber(Number(amount))) {
       return null;
     } else {
-      return this.translateAmount(amount, this.state.amountFiat);
+      return translateAmount(amount, amountFiat);
     }
   }
 
-  formHasError = () => {
-    const { subWallet, coinObj, data } = this.props.sendModal;
+  const formHasError = () => {
+    const { subWallet, coinObj, data } = sendModal;
     const channel = subWallet.api_channels[API_SEND]
 
-    const spendableBalance = this.props.balances.results.confirmed;
+    const spendableBalance = balances.results.confirmed;
 
     const toAddress =
       data[SEND_MODAL_TO_ADDRESS_FIELD] != null ? data[SEND_MODAL_TO_ADDRESS_FIELD].trim() : "";
 
-    const amount = this.getProcessedAmount()
+    const amount = getProcessedAmount()
 
     if (!toAddress || toAddress.length < 1) {
       createAlert("Required Field", "Address is a required field.");
@@ -146,21 +168,21 @@ class TraditionalCryptoSendForm extends Component {
     return false;
   };
 
-  submitData = async () => {
-    if (this.formHasError()) return;
+  const submitData = async () => {
+    if (formHasError()) return;
 
-    this.props.setLoading(true);
+    setLoading(true);
 
-    const { subWallet, coinObj, data } = this.props.sendModal;
+    const { subWallet, coinObj, data } = sendModal;
     const channel = subWallet.api_channels[API_SEND]
     const address = data[SEND_MODAL_TO_ADDRESS_FIELD];
-    const amount = this.getProcessedAmount()
+    const amount = getProcessedAmount()
     const memo = data[SEND_MODAL_MEMO_FIELD];
 
     let tradCryptoFees;
 
-    if (this.FEE_CALCULATORS[coinObj.id] && this.FEE_CALCULATORS[coinObj.id][channel]) {
-      const feeData = this.FEE_CALCULATORS[coinObj.id][channel];
+    if (FEE_CALCULATORS[coinObj.id] && FEE_CALCULATORS[coinObj.id][channel]) {
+      const feeData = FEE_CALCULATORS[coinObj.id][channel];
 
       tradCryptoFees = new TraditionalCryptoSendFee(
         (await feeData.calculator()).average,
@@ -179,49 +201,141 @@ class TraditionalCryptoSendForm extends Component {
         true
       );
 
-      this.props.setModalHeight(696);
+      setModalHeight(696);
 
       if (res.feeTakenMessage != null) {
         Alert.alert("Amount changed", res.feeTakenMessage)
       }
 
-      this.props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, { txConfirmation: res });
+      navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, { txConfirmation: res });
     } catch (e) {
       Alert.alert("Error", e.message);
     }
 
-    this.props.setLoading(false);
+    setLoading(false);
   };
 
-  maxAmount = () => {
-    const { balances } = this.props;
-
-    this.fillAmount(BigNumber(balances.results.confirmed));
+  const maxAmount = () => {
+    fillAmount(BigNumber(balances.results.confirmed));
   };
 
-  render() {
-    return TraditionalCryptoSendFormRender.call(this);
-  }
-}
-
-const mapStateToProps = (state) => {
-  const chainTicker = state.sendModal.coinObj.id
-  const balance_channel = state.sendModal.subWallet.api_channels[API_GET_BALANCES];
-  const rates_channel = state.sendModal.subWallet.api_channels[API_GET_FIATPRICE];
- 
-  return {
-    sendModal: state.sendModal,
-    balances: {
-      results: state.ledger.balances[balance_channel]
-        ? state.ledger.balances[balance_channel][chainTicker]
-        : null,
-      errors: state.errors[API_GET_BALANCES][balance_channel][chainTicker],
-    },
-    activeAccount: state.authentication.activeAccount,
-    rates: state.ledger.rates[rates_channel],
-    displayCurrency:
-      state.settings.generalWalletSettings.displayCurrency || USD,
-  };
+  return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <ScrollView
+        style={{
+          backgroundColor: Colors.secondaryColor,
+          ...Styles.fullWidth,
+        }}
+        contentContainerStyle={{
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+          backgroundColor: Colors.secondaryColor,
+        }}>
+        <View style={Styles.wideBlock}>
+          <TextInput
+            label="Sending from"
+            value={sendModal.subWallet.name}
+            mode="outlined"
+            disabled={true}
+          />
+          {
+            networkName != null ? (
+              <Text style={{marginTop: 8, fontSize: 14, color: Colors.verusDarkGray}}>
+                {`on ${networkName} network`}
+              </Text>
+            ) : null
+          }
+        </View>
+        <View style={{...Styles.wideBlock, paddingTop: 0}}>
+          <TextInput
+            returnKeyType="done"
+            label="Recipient address"
+            value={sendModal.data[SEND_MODAL_TO_ADDRESS_FIELD]}
+            mode="outlined"
+            onChangeText={text =>
+              updateSendFormData(SEND_MODAL_TO_ADDRESS_FIELD, text)
+            }
+            autoCapitalize={'none'}
+            autoCorrect={false}
+          />
+        </View>
+        <View style={{...Styles.wideBlock, paddingTop: 0}}>
+          <View style={Styles.flexRow}>
+            <TextInput
+              returnKeyType="done"
+              label={`Amount${
+                rates[sendModal.coinObj.id] && rates[sendModal.coinObj.id][displayCurrency] != null && price != 0
+                  ? ` (~${price} ${
+                      amountFiat ? sendModal.coinObj.display_ticker : displayCurrency
+                    })`
+                  : ''
+              }`}
+              keyboardType={'decimal-pad'}
+              autoCapitalize={'none'}
+              autoCorrect={false}
+              value={sendModal.data[SEND_MODAL_AMOUNT_FIELD]}
+              mode="outlined"
+              onChangeText={text =>
+                updateSendFormData(SEND_MODAL_AMOUNT_FIELD, text)
+              }
+              style={{
+                flex: 1,
+              }}
+            />
+            {
+              rates[sendModal.coinObj.id] &&
+                rates[sendModal.coinObj.id][displayCurrency] != null &&
+                balances.results != null && (
+                  <Button
+                    onPress={() => setAmountFiat(!amountFiat)}
+                    color={Colors.primaryColor}
+                    style={{
+                      alignSelf: 'center',
+                      marginTop: 6,
+                    }}
+                    compact>
+                    {amountFiat ? displayCurrency : sendModal.coinObj.display_ticker}
+                  </Button>
+                )
+            }
+            <Button
+              onPress={() => maxAmount()}
+              color={Colors.primaryColor}
+              style={{
+                alignSelf: 'center',
+                marginTop: 6,
+              }}
+              disabled={balances.results == null}
+              compact>
+              {'Max'}
+            </Button>
+          </View>
+        </View>
+        {sendModal.subWallet.api_channels[API_SEND] === DLIGHT_PRIVATE &&
+          sendModal.data[SEND_MODAL_TO_ADDRESS_FIELD] != null &&
+          (sendModal.data[SEND_MODAL_TO_ADDRESS_FIELD].includes(':private') ||
+            (sendModal.data[SEND_MODAL_TO_ADDRESS_FIELD][0] === 'z' &&
+              !sendModal.data[SEND_MODAL_TO_ADDRESS_FIELD].includes('@'))) && (
+            <View style={{...Styles.wideBlock, paddingTop: 0}}>
+              <TextInput
+                returnKeyType="done"
+                label="Memo"
+                value={sendModal.data[SEND_MODAL_MEMO_FIELD]}
+                mode="outlined"
+                onChangeText={text =>
+                  updateSendFormData(SEND_MODAL_MEMO_FIELD, text)
+                }
+              />
+            </View>
+          )}
+        <View style={{...Styles.wideBlock, paddingTop: 0}}>
+          <Button mode="contained" onPress={() => submitData()}>
+            Send
+          </Button>
+        </View>
+      </ScrollView>
+    </TouchableWithoutFeedback>
+  );
 };
 
-export default connect(mapStateToProps)(TraditionalCryptoSendForm);
+export default TraditionalCryptoSendForm;

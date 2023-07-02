@@ -24,6 +24,7 @@ import {
 import {CONNECTION_ERROR} from '../../utils/api/errors/errorMessages';
 import {truncateDecimal} from '../../utils/math';
 import {USD} from '../../utils/constants/currencies';
+import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 
 class DynamicHeader extends Component {
   constructor(props) {
@@ -31,6 +32,7 @@ class DynamicHeader extends Component {
     this.state = {
       carouselItems: [],
       currentIndex: 0,
+      loadingCarouselItems: true
     };
 
     this.fadeAnimation = new Animated.Value(0);
@@ -41,10 +43,18 @@ class DynamicHeader extends Component {
     this.fadeIn();
 
     this.setState({
-      carouselItems: this.prepareCarouselItems(
-        this.props.allSubWallets,
-        this.props.selectedSubWallet,
-      )
+      loadingCarouselItems: true
+    }, () => {
+      this.setState({
+        carouselItems: this.prepareCarouselItems(
+          this.props.allSubWallets,
+          this.props.selectedSubWallet,
+        )
+      }, () => {
+        this.setState({
+          loadingCarouselItems: false
+        })
+      })
     })
   }
 
@@ -87,9 +97,16 @@ class DynamicHeader extends Component {
   }
 
   setSubWallet = wallet => {
+    const index =
+      wallet == null
+        ? 0
+        : wallet.index != null
+        ? wallet.index
+        : this.props.allSubWallets.findIndex(x => x.id === wallet.id);
+
     this.setState(
       {
-        currentIndex: wallet == null ? 0 : wallet.index,
+        currentIndex: index < 0 ? 0 : index
       },
       () => {
         this.props.dispatch(setCoinSubWallet(this.props.chainTicker, wallet));
@@ -116,6 +133,14 @@ class DynamicHeader extends Component {
       }
     }
   };
+
+  getNetworkName(item) {
+    try {
+      return item.network ? CoinDirectory.getBasicCoinObj(item.network).display_ticker : null;
+    } catch(e) {
+      return null
+    }
+  }
 
   _renderCarouselItem({item, index, alone}) {
     const displayBalance =
@@ -159,6 +184,8 @@ class DynamicHeader extends Component {
             minWidth: alone ? 236 : 150,
             borderRadius: 10,
             marginLeft: alone ? 0 : 30,
+            position: 'relative',
+            overflow: "hidden"
           }}
           onPress={() => this._handleItemPress(item, index)}>
           <Card.Content>
@@ -167,6 +194,7 @@ class DynamicHeader extends Component {
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
+                paddingRight: 16
               }}>
               <Avatar.Icon
                 icon="wallet"
@@ -174,9 +202,9 @@ class DynamicHeader extends Component {
                 style={{backgroundColor: 'white'}}
                 size={30}
               />
-              <Text style={{fontSize: 16, marginLeft: 8}}>{item.name}</Text>
+              <Text numberOfLines={1} style={{fontSize: 16, marginLeft: 8}}>{item.name}</Text>
             </View>
-            <Paragraph style={{fontSize: 16, paddingTop: 8}}>
+            <Paragraph style={{fontSize: 16}}>
               {this.props.balanceErrors[item.id]
                 ? CONNECTION_ERROR
                 : `${
@@ -193,13 +221,39 @@ class DynamicHeader extends Component {
                   } ${this.props.displayTicker}`}
             </Paragraph>
             <Paragraph
-              style={{...Styles.listItemSubtitleDefault, fontSize: 12}}>
+              style={{...Styles.listItemSubtitleDefault, fontSize: 12, marginBottom: 10, opacity: fiatBalance == null ? 0 : undefined}}>
               {syncProgress != 100 && syncProgress != -1
                 ? `Syncing - ${syncProgress.toFixed(2)}%`
                 : `${fiatBalance == null ? '-' : fiatBalance} ${
                     this.props.displayCurrency
                   }`}
             </Paragraph>
+            {
+              item.network && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    backgroundColor: 'green',
+                    borderRadius: 10,
+                    padding: 5,
+                    paddingLeft: 8,
+                    paddingRight: 16,
+                    paddingBottom: 11,
+                    marginBottom: -10,
+                    marginRight: -10,
+                  }}>
+                  <Paragraph
+                    numberOfLines={1}
+                    style={{
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: 14,
+                    }}>{`${this.getNetworkName(item)} Network`}</Paragraph>
+                </View>
+              )
+            }
           </Card.Content>
         </Card>
       </Animated.View>
@@ -271,7 +325,7 @@ class DynamicHeader extends Component {
             paddingBottom: 16,
             backgroundColor: Colors.primaryColor,
           }}>
-          {this.state.carouselItems.length == 1 ? (
+          {this.state.loadingCarouselItems ? null : this.state.carouselItems.length == 1 ? (
             this._renderCarouselItem({
               item: this.state.carouselItems[0],
               index: 0,
@@ -283,9 +337,9 @@ class DynamicHeader extends Component {
               sliderWidth={DEVICE_WINDOW_WIDTH / 2}
               items={this.state.carouselItems}
               renderItem={props => this._renderCarouselItem(props)}
-              onSnapToItem={index =>
-                this.setSubWallet(this.state.carouselItems[index])
-              }
+              onSnapToItem={index => {
+                return this.setSubWallet(this.state.carouselItems[index]);
+              }}
               carouselProps={{
                 loop: true,
                 ref: ref => (this.carousel = ref),

@@ -5,74 +5,70 @@ import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
 import AnimatedSuccessCheckmark from '../../../AnimatedSuccessCheckmark';
+import { useSelector } from 'react-redux';
 
-export const LinkIdentityResultRender = function () {
-  return LinkIdentitySuccessRender.call(this);
-};
-
-export const LinkIdentitySuccessRender = function () {
-  const {verusId} = this.state;
-  const coinObj = this.props.sendModal.coinObj;
+export const LinkIdentityResultRender = ({verusId, finishSend}) => {
+  const coinObj = useSelector(state => state.sendModal.coinObj);
 
   return (
     <ScrollView
       style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}
       contentContainerStyle={{
         ...Styles.focalCenter,
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
       }}>
-        <TouchableOpacity
-          onPress={() =>
-            copyToClipboard(verusId.identity.identityaddress, {
-              title: 'Address copied',
-              message: `${verusId.identity.identityaddress} copied to clipboard.`,
-            })
-          }
+      <TouchableOpacity
+        onPress={() =>
+          copyToClipboard(verusId.identity.identityaddress, {
+            title: 'Address copied',
+            message: `${verusId.identity.identityaddress} copied to clipboard.`,
+          })
+        }
+        style={{
+          width: '75%',
+          marginTop: 16,
+        }}>
+        <Text
+          numberOfLines={1}
           style={{
-            width: '75%',
-            marginTop: 16,
+            textAlign: 'center',
+            fontSize: 20,
+            color: Colors.verusDarkGray,
           }}>
-          <Text
-            numberOfLines={1}
-            style={{
-              textAlign: 'center',
-              fontSize: 20,
-              color: Colors.verusDarkGray,
-            }}>
-            {`${verusId.identity.name}@ linked`}
-          </Text>
-        </TouchableOpacity>
-        <View style={{paddingVertical: 16}}>
-          <AnimatedSuccessCheckmark
-            style={{
-              width: 128,
-            }}
-          />
-        </View>
-        <View style={{paddingVertical: 16, width: '75%'}}>
-          <Text
-            style={{
-              textAlign: 'center',
-              fontSize: 20,
-              color: Colors.verusDarkGray,
-            }}>
-            {`Your VerusID will now appear as a card in your ${coinObj.display_ticker} wallet.`}
-          </Text>
-        </View>
-        <View
+          {`${verusId.identity.name}@ linked`}
+        </Text>
+      </TouchableOpacity>
+      <View style={{paddingVertical: 16}}>
+        <AnimatedSuccessCheckmark
           style={{
-            width: '90%',
-            flexDirection: 'row',
-            justifyContent: 'space-evenly',
+            width: 128,
+          }}
+        />
+      </View>
+      <View style={{paddingVertical: 16, width: '75%'}}>
+        <Text
+          style={{
+            textAlign: 'center',
+            fontSize: 20,
+            color: Colors.verusDarkGray,
           }}>
-          <Button
-            color={Colors.verusGreenColor}
-            style={{width: 148}}
-            labelStyle={{fontSize: 18}}
-            onPress={() => this.finishSend()}>
-            Done
-          </Button>
-        </View>
+          {`Your VerusID will now appear as a card in your ${coinObj.display_ticker} wallet.`}
+        </Text>
+      </View>
+      <View
+        style={{
+          width: '90%',
+          flexDirection: 'row',
+          justifyContent: 'space-evenly',
+        }}>
+        <Button
+          color={Colors.verusGreenColor}
+          style={{width: 148}}
+          labelStyle={{fontSize: 18}}
+          onPress={finishSend}>
+          Done
+        </Button>
+      </View>
     </ScrollView>
   );
 };
