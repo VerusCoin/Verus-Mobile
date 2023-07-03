@@ -230,6 +230,10 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       await saveFriendlyName(coinObj.system_id)
     }
 
+    if (!friendlyNames.has(systemId)) {
+      await saveFriendlyName(systemId)
+    }
+
     const {
       currency,
       convertto,
@@ -293,7 +297,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
 
     if (isNativeSend && (txSatsBn.plus(nativeFeesPaid)).isGreaterThan(balanceBn)) {
       output.satoshis = txSatsBn.minus(nativeFeesPaid).toString();
-      const newTxSatsBn = BigNumber(output.satoshis)
+      const newTxSatsBn = BigNumber(output.satoshis);
 
       if ((newTxSatsBn.plus(nativeFeesPaid)).isGreaterThan(balanceBn)) {
         throw new Error("Insufficient funds.")
@@ -324,7 +328,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       const sendCurrencyRes = await getSendCurrencyTransaction(
         systemId,
         currency,
-        satsToCoins(txSatsBn).toNumber(),
+        satsToCoins(BigNumber(output.satoshis)).toNumber(),
         addrDest,
         exportto,
         convertto,
