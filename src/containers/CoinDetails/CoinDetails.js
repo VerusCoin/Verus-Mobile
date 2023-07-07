@@ -23,9 +23,9 @@ import {
  } from '../../actions/actionCreators';
 import { NavigationActions } from '@react-navigation/compat'
 import Styles from '../../styles/index'
-import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
+import { refreshActiveChainLifecycles } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import Colors from "../../globals/colors";
-import { CoinLogos } from "../../utils/CoinData/CoinData";
+import { CoinLogos, getCoinLogo } from "../../utils/CoinData/CoinData";
 
 class CoinDetails extends Component {
   constructor(props) {
@@ -82,16 +82,15 @@ class CoinDetails extends Component {
       )
 
       if (addCoinAction) {
-        const chainId = this.state.fullCoinData.id;
         this.props.dispatch(addCoinAction);
-        this.props.dispatch(
-          setUserCoins(
-            this.props.activeCoinList,
-            this.props.activeAccount.id
-          )
-        );
 
-        activateChainLifecycle(this.state.fullCoinData);
+        const setUserCoinsAction = setUserCoins(
+          this.props.activeCoinList,
+          this.props.activeAccount.id
+        )
+        this.props.dispatch(setUserCoinsAction);
+
+        refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);
 
         this.setState({ isActive: true, loading: false });
       } else {
@@ -109,15 +108,14 @@ class CoinDetails extends Component {
   }
   
   render() {
-    const tickerLc = this.state.fullCoinData.id.toLowerCase()
-    const Logo = CoinLogos[tickerLc] ? CoinLogos[tickerLc].dark : null
+    const Logo = getCoinLogo(this.state.fullCoinData.id, 'dark')
 
     return (
       <View style={Styles.defaultRoot}>
         <View style={Styles.centralRow}>
           <View style={Styles.fullWidthFlexCenterBlock}>
             {Logo != null && (
-              <Logo height={75} width={75} />
+              <Logo height={72} width={72} />
             )}
           </View>
         </View>

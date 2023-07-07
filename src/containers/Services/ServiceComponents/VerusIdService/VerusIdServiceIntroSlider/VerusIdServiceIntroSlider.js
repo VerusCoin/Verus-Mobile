@@ -11,8 +11,9 @@ import { openLinkIdentityModal } from "../../../../../actions/actions/sendModal/
 import ServiceLogos from '../../../../../images/servicelogo/index'
 import { VERUSID_SERVICE_ID } from "../../../../../utils/constants/services";
 import Colors from "../../../../../globals/colors";
-import { findCoinObj } from "../../../../../utils/CoinData/CoinData";
 import { openUrl } from "../../../../../utils/linking";
+import { VERUSID_NETWORK_DEFAULT } from "../../../../../../env/index";
+import { CoinDirectory } from "../../../../../utils/CoinData/CoinDirectory";
 
 const VERUS_ID_URL = "https://docs.verus.io/verusid/"
 
@@ -56,6 +57,10 @@ class VerusIdServiceIntroSlider extends Component {
   };
 
   renderActionSlide = (key) => {
+    const identityNetwork = this.props.testnetOverrides[VERUSID_NETWORK_DEFAULT]
+      ? this.props.testnetOverrides[VERUSID_NETWORK_DEFAULT]
+      : VERUSID_NETWORK_DEFAULT;
+
     return (
       <View
         style={{
@@ -75,7 +80,7 @@ class VerusIdServiceIntroSlider extends Component {
           style={{ marginTop: 16 }}
           mode="contained"
           color={Colors.secondaryColor}
-          onPress={() => openLinkIdentityModal(findCoinObj("VRSC"))}
+          onPress={() => openLinkIdentityModal(CoinDirectory.findCoinObj(identityNetwork))}
         >
           {"Link VerusID"}
         </Button>
@@ -108,7 +113,9 @@ class VerusIdServiceIntroSlider extends Component {
 }
 
 const mapStateToProps = (state) => {
-  return {}
+  return {
+    testnetOverrides: state.authentication.activeAccount.testnetOverrides
+  }
 };
 
 export default connect(mapStateToProps)(VerusIdServiceIntroSlider);

@@ -1,22 +1,27 @@
-import { fromBase58Check } from "bitgo-utxo-lib/src/address";
-import { Component } from "react"
-import { Alert } from "react-native";
-import { connect } from 'react-redux'
-import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
-import { getFriendlyNameMap, getIdentity } from "../../../../utils/api/channels/verusid/callCreators";
-import { requestSeeds } from "../../../../utils/auth/authBox";
-import { ELECTRUM } from "../../../../utils/constants/intervalConstants";
-import { SEND_MODAL_FORM_STEP_CONFIRM, SEND_MODAL_IDENTITY_TO_LINK_FIELD } from "../../../../utils/constants/sendModal";
-import { deriveKeyPair } from "../../../../utils/keys";
-import { LinkIdentityFormRender } from "./LinkIdentityForm.render"
+import {useCallback} from 'react';
+import {useSelector, useDispatch} from 'react-redux';
+import {fromBase58Check} from '@bitgo/utxo-lib/dist/src/address';
+import {Alert} from 'react-native';
+import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
+import {
+  getFriendlyNameMap,
+  getIdentity,
+} from '../../../../utils/api/channels/verusid/callCreators';
+import {requestSeeds} from '../../../../utils/auth/authBox';
+import {ELECTRUM} from '../../../../utils/constants/intervalConstants';
+import {
+  SEND_MODAL_FORM_STEP_CONFIRM,
+  SEND_MODAL_IDENTITY_TO_LINK_FIELD,
+} from '../../../../utils/constants/sendModal';
+import {deriveKeyPair} from '../../../../utils/keys';
+import {LinkIdentityFormRender} from './LinkIdentityForm.render';
 
-class LinkIdentityForm extends Component {
-  constructor(props) {
-    super(props);
-  }
+const LinkIdentityForm = (props) => {
+  const dispatch = useDispatch();
+  const sendModal = useSelector(state => state.sendModal);
 
-  formHasError = () => {
-    const {data} = this.props.sendModal;
+  const formHasError = useCallback(() => {
+    const {data} = sendModal;
 
     const identity =
       data[SEND_MODAL_IDENTITY_TO_LINK_FIELD] != null
@@ -35,45 +40,45 @@ class LinkIdentityForm extends Component {
         createAlert(
           'Invalid Identity',
           'Identity not a valid identity handle or iAddress.',
-        );
+        )
+
         return true;
       }
     }
 
     return false;
-  };
+  }, [sendModal, dispatch]);
 
-  getPotentialPrimaryAddresses = async (chainTicker, channel) => {
+  const getPotentialPrimaryAddresses = useCallback(async (coinObj, channel) => {
     const seeds = await requestSeeds();
 
     const seed = seeds[channel];
 
-    const keyObj = await deriveKeyPair(seed, chainTicker, channel);
+    const keyObj = await deriveKeyPair(seed, coinObj, channel);
     const {addresses} = keyObj;
 
     return addresses;
-  };
+  }, []);
 
-  submitData = async () => {
-    if (this.formHasError()) return;
+  const submitData = useCallback(async () => {
+    if (formHasError()) {
+      return;
+    }
 
-    this.props.setLoading(true);
+    props.setLoading(true)
 
-    const {coinObj, data} = this.props.sendModal;
+    const {coinObj, data} = sendModal;
 
     const identity = data[SEND_MODAL_IDENTITY_TO_LINK_FIELD];
 
     try {
-      const res = await getIdentity(coinObj, identity);
+      const res = await getIdentity(coinObj.system_id, identity);
 
       if (res.error) {
         throw new Error(res.error.message);
       }
 
-      const addrs = await this.getPotentialPrimaryAddresses(
-        coinObj.id,
-        ELECTRUM,
-      );
+      const addrs = await getPotentialPrimaryAddresses(coinObj, ELECTRUM);
 
       let isInWallet = false;
 
@@ -91,32 +96,24 @@ class LinkIdentityForm extends Component {
       }
 
       const friendlyNames = await getFriendlyNameMap(coinObj, res.result);
+      props.setModalHeight(696)
 
-      this.props.setModalHeight(696);
-
-      this.props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
+      props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
         verusId: res.result,
         friendlyNames,
-      });
+      })
     } catch (e) {
       Alert.alert('Error', e.message);
     }
 
-    this.props.setLoading(false);
-  };
+    props.setLoading(false)
+  }, [formHasError, getPotentialPrimaryAddresses, sendModal, dispatch, props]);
 
-  render() {
-    return LinkIdentityFormRender.call(this);
-  }
-}
-
-const mapStateToProps = (state) => {
-  const chainTicker = state.sendModal.coinObj.id
- 
-  return {
-    sendModal: state.sendModal,
-    addresses: state.authentication.activeAccount.keys[chainTicker]
-  };
+  return LinkIdentityFormRender({
+    submitData,
+    updateSendFormData: props.updateSendFormData,
+    formDataValue: sendModal.data[SEND_MODAL_IDENTITY_TO_LINK_FIELD]
+  });
 };
 
-export default connect(mapStateToProps)(LinkIdentityForm);
+export default LinkIdentityForm;

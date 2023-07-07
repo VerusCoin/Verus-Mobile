@@ -44,7 +44,7 @@ export const getCurrencyConversionPaths = async (coinObj) => {
       let processedConversions = {}
 
       for (const chainTicker of WYRE_CONVERTABLES) {
-        const destination = coinsList[chainTicker.toLowerCase()]
+        const destination = coinsList[chainTicker]
 
         if (chainTicker !== coinObj.id && destination != null && rates[destination.currency_id] != null) {
           processedConversions[chainTicker] = {

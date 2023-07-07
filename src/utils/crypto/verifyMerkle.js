@@ -1,5 +1,5 @@
 const Buffer = require('safe-buffer').Buffer;
-import reverse from 'buffer-reverse';
+import { reverse } from '../buffer';
 import { sha256 } from './hash';
 
 export const calculateMerkleRoot = (txid, proof, pos, txBlockHeight) => {

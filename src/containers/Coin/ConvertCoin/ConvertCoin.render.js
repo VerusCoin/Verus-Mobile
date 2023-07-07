@@ -9,7 +9,7 @@ import {
 import { openConversionSendModal } from "../../../actions/actions/sendModal/dispatchers/sendModal";
 import Styles from '../../../styles/index'
 import { List, Text, Card, IconButton, Provider, Portal, TouchableRipple } from 'react-native-paper';
-import { CoinLogos } from "../../../utils/CoinData/CoinData";
+import { CoinLogos, getCoinLogo } from "../../../utils/CoinData/CoinData";
 import Colors from "../../../globals/colors";
 import {
   SEND_MODAL_AMOUNT_FIELD,
@@ -31,9 +31,7 @@ export const ConvertCoinRender = function () {
           .sort((a, b) => a.destination.id.localeCompare(b.destination.id))
           .map((conversion, index) => {
             const { destination, price } = conversion;
-            const Logo = CoinLogos[destination.id.toLowerCase()]
-              ? CoinLogos[destination.id.toLowerCase()].light
-              : null;
+            const Logo = getCoinLogo(destination.id)
 
             return (
               <View
@@ -79,8 +77,8 @@ export const ConvertCoinRender = function () {
                               marginLeft: 8,
                               marginRight: 8,
                             }}
-                            width={25}
-                            height={25}
+                            width={24}
+                            height={24}
                           />
                           <View
                             {...props}

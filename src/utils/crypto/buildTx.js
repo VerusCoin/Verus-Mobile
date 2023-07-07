@@ -1,5 +1,6 @@
 import bitcoin from 'bitgo-utxo-lib';
 
+/** This is for legacy electrum networks ONLY */
 export const buildSignedTx = (
   sendTo,
   changeAddress,
@@ -22,18 +23,6 @@ export const buildSignedTx = (
   if (changeValue > 0) {
     tx.addOutput(changeAddress, Number(changeValue));
   }
-
-  //Fix this
-  /*
-  if (opreturn) {
-    console.log('Opreturn detected, adding to outputs:')
-    console.log(opreturn)
-    const data = Buffer.from(opreturn, 'utf8');
-    const dataScript = bitcoin.script.nullData.output.encode(data);
-    tx.addOutput(dataScript, 1000);
-    shepherd.log(`opreturn ${opreturn}`, true);
-  }
-  */
 
   if (network.coin === "kmd") {
     const _locktime = Math.floor(Date.now() / 1000) - 777;
@@ -65,9 +54,6 @@ export const buildSignedTx = (
   }
 
   const rawtx = tx.build().toHex();
-
-  //shepherd.log('buildSignedTx signed tx hex', true);
-  //shepherd.log(rawtx, true);
 
   return rawtx;
 };

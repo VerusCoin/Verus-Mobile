@@ -10,9 +10,8 @@ import CreateWalletStackScreens from '../../CreateWallet/CreateWallet';
 import ChooseName from './Forms/ChooseName';
 import CreatePassword from './Forms/CreatePassword';
 import UseBiometrics from './Forms/UseBiometrics';
-import {KEY_DERIVATION_VERSION} from '../../../../env/index';
-import {findCoinObj} from '../../../utils/CoinData/CoinData';
-import {START_COINS} from '../../../utils/constants/constants';
+import {KEY_DERIVATION_VERSION, SERVICES_DISABLED_DEFAULT} from '../../../../env/index';
+import {START_COINS, TEST_PROFILE_OVERRIDES} from '../../../utils/constants/constants';
 import {useDispatch, useSelector} from 'react-redux';
 import {
   closeLoadingModal,
@@ -20,6 +19,7 @@ import {
   openLoadingModal,
 } from '../../../actions/actionDispatchers';
 import { deriveKeyPair } from '../../../utils/keys';
+import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 
 const CreateProfileStack = createStackNavigator();
 
@@ -31,15 +31,23 @@ export default function CreateProfileStackScreens(props) {
   const accounts = useSelector(state => state.authentication.accounts);
   const activeCoinList = useSelector(state => state.coins.activeCoinList);
 
-  const addStartingCoins = async accountId => {
+  const addStartingCoins = async (accountId, testnetOverrides = {}) => {
+    const testAccount = Object.keys(testnetOverrides).length > 0;
+
     for (const coinId of START_COINS) {
-      const fullCoinData = findCoinObj(coinId, accountId);
+      if (testAccount && testnetOverrides[coinId] == null) {
+        continue;
+      }
+
+      const coinKey = testnetOverrides[coinId] ? testnetOverrides[coinId] : coinId;
+
+      const fullCoinData = CoinDirectory.findCoinObj(coinKey, accountId);
 
       dispatch(await addCoin(fullCoinData, activeCoinList, accountId, []));
     }
   };
 
-  const createProfile = async (seed) => {
+  const createProfile = async (seed, testProfile) => {
     openLoadingModal('Setting up your new profile...');
 
     try {
@@ -51,7 +59,7 @@ export default function CreateProfileStackScreens(props) {
         for (const startCoin of START_COINS) {
           await deriveKeyPair(
             seed,
-            startCoin,
+            CoinDirectory.findCoinObj(startCoin),
             ELECTRUM,
             KEY_DERIVATION_VERSION,
           );
@@ -80,6 +88,8 @@ export default function CreateProfileStackScreens(props) {
         }
       }
 
+      const overrides = testProfile ? TEST_PROFILE_OVERRIDES : undefined
+
       const action = await addUser(
         _userName,
         arrayToObject(CHANNELS, (acc, channel) => _seeds[channel], true),
@@ -87,10 +97,12 @@ export default function CreateProfileStackScreens(props) {
         accounts,
         biometry,
         KEY_DERIVATION_VERSION,
+        SERVICES_DISABLED_DEFAULT,
+        overrides
       );
 
       dispatch(action);
-      await addStartingCoins(_userName);
+      await addStartingCoins(_userName, overrides);
 
       const newAccount = action.payload.accounts.find(
         x => x.accountHash === accountHash,

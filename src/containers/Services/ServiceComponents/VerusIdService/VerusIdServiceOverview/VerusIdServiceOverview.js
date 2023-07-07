@@ -3,14 +3,13 @@ import { connect } from 'react-redux'
 import { setServiceLoading, setUserCoins } from "../../../../../actions/actionCreators";
 import { createAlert, resolveAlert } from "../../../../../actions/actions/alert/dispatchers/alert";
 import { updateVerusIdWallet } from "../../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager";
-import { activateChainLifecycle, clearChainLifecycle } from "../../../../../actions/actions/intervals/dispatchers/lifecycleManager";
-import { openLinkIdentityModal, openSendModal } from "../../../../../actions/actions/sendModal/dispatchers/sendModal";
+import { clearChainLifecycle, refreshActiveChainLifecycles } from "../../../../../actions/actions/intervals/dispatchers/lifecycleManager";
+import { openLinkIdentityModal } from "../../../../../actions/actions/sendModal/dispatchers/sendModal";
 import { unlinkVerusId } from "../../../../../actions/actions/services/dispatchers/verusid/verusid";
 import { getFriendlyNameMap, getIdentity } from "../../../../../utils/api/channels/verusid/callCreators";
-import { findCoinObj } from "../../../../../utils/CoinData/CoinData";
-import { VERUSID } from "../../../../../utils/constants/intervalConstants";
 import { VERUSID_SERVICE_ID } from "../../../../../utils/constants/services";
 import { VerusIdServiceOverviewRender } from "./VerusIdServiceOverview.render";
+import { CoinDirectory } from "../../../../../utils/CoinData/CoinDirectory";
 
 class VerusIdServiceOverview extends Component {
   constructor(props) {
@@ -25,18 +24,21 @@ class VerusIdServiceOverview extends Component {
     try {
       const identityObj = await this.getVerusId(chain, iAddress);
 
-      return getFriendlyNameMap({id: chain}, identityObj);
+      return getFriendlyNameMap(CoinDirectory.getBasicCoinObj(chain), identityObj);
     } catch (e) {
-      return {['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC'};
+      return {
+        ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',
+        ['iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq']: 'VRSCTEST',
+      };
     }
   }
 
   openLinkIdentityModalFromChain(chain) {
-    return openLinkIdentityModal(findCoinObj(chain));
+    return openLinkIdentityModal(CoinDirectory.findCoinObj(chain));
   }
 
   async getVerusId(chain, iAddrOrName) {
-    const identity = await getIdentity({id: chain}, iAddrOrName);
+    const identity = await getIdentity(CoinDirectory.getBasicCoinObj(chain).system_id, iAddrOrName);
 
     if (identity.error) throw new Error(identity.error.message);
     else return identity.result;
@@ -92,14 +94,17 @@ class VerusIdServiceOverview extends Component {
     this.props.dispatch(setServiceLoading(true, VERUSID_SERVICE_ID));
 
     try {
-      const coinObj = findCoinObj(chain)
+      const coinObj = CoinDirectory.findCoinObj(chain)
       await unlinkVerusId(iAddress, coinObj.id);
       await updateVerusIdWallet();
       clearChainLifecycle(coinObj.id);
-      this.props.dispatch(
-        setUserCoins(this.props.activeCoinList, this.props.activeAccount.id),
-      );
-      activateChainLifecycle(coinObj);
+      
+      const setUserCoinsAction = setUserCoins(this.props.activeCoinList, this.props.activeAccount.id);
+
+      this.props.dispatch(setUserCoinsAction);
+
+      refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);
+
       this.props.dispatch(setServiceLoading(false, VERUSID_SERVICE_ID));
     } catch (e) {
       createAlert('Error', e.message);

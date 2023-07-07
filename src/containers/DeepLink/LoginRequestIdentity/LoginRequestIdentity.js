@@ -12,6 +12,8 @@ import { findCoinObj } from '../../../utils/CoinData/CoinData';
 import { Divider, List } from 'react-native-paper';
 import { signLoginConsentResponse } from '../../../utils/api/channels/vrpc/requests/signLoginConsentResponse';
 import BigNumber from 'bignumber.js';
+import { VERUSID_NETWORK_DEFAULT } from "../../../../env/index";
+import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 
 const LoginRequestIdentity = props => {
   const { deeplinkData } = props.route.params
@@ -30,6 +32,10 @@ const LoginRequestIdentity = props => {
   })
 
   const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser)
+  const testnetOverrides = useSelector(state => state.authentication.activeAccount.testnetOverrides)
+  const identityNetwork = testnetOverrides[VERUSID_NETWORK_DEFAULT]
+    ? testnetOverrides[VERUSID_NETWORK_DEFAULT]
+    : VERUSID_NETWORK_DEFAULT;
 
   const activeCoinIds = activeCoinsForUser.map(coinObj => coinObj.id)
 
@@ -80,17 +86,17 @@ const LoginRequestIdentity = props => {
   }, [linkedIds])
 
   const openLinkIdentityModalFromChain = () => {
-    return openLinkIdentityModal(findCoinObj(system_id, null, true));
+    return openLinkIdentityModal(CoinDirectory.findCoinObj(system_id, null, true));
   }
 
   const openProvisionIdentityModalFromChain = () => {
-    openProvisionIdentityModal(findCoinObj(system_id, null, true), req)
+    openProvisionIdentityModal(CoinDirectory.findCoinObj(system_id, null, true), req)
   }
 
   const selectIdentity = async (iAddress) => {
     try {
       const signedResponse = await signLoginConsentResponse(
-        findCoinObj(system_id, null, true),
+        CoinDirectory.findCoinObj(system_id, null, true),
         {
           system_id: system_id,
           signing_id: iAddress,
@@ -117,7 +123,7 @@ const LoginRequestIdentity = props => {
     <AnimatedActivityIndicatorBox />
   ) : (
     <ScrollView style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}>
-      {Object.keys(sortedIds).filter(x => x === "VRSC").map(chainId => {
+      {Object.keys(sortedIds).filter(x => x === identityNetwork).map(chainId => {
         return (
           <React.Fragment key={chainId}>
             {sortedIds[chainId].length > 0 && (

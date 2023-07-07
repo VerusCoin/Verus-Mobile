@@ -182,7 +182,7 @@ export const RenderReceiveCoin = function() {
             </Button>
           </View>
         </View>
-        <View style={Styles.wideBlock}>
+        {/* <View style={Styles.wideBlock}>
           <View style={Styles.flexRow}>
             <TouchableOpacity
               onPress={() => this.openTextInputModal('memo')}
@@ -201,7 +201,7 @@ export const RenderReceiveCoin = function() {
               />
             </TouchableOpacity>
           </View>
-        </View>
+        </View> */}
         <View style={Styles.fullWidthFlexCenterBlock}>
           <Button
             color={Colors.primaryColor}

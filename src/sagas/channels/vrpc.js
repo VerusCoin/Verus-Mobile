@@ -17,13 +17,13 @@ export default function * vrpcSaga() {
 }
 
 function * handleVrpcChannelInit(action) {
-  yield call(VrpcProvider.initEndpoint, action.payload.chainTicker, action.payload.endpointAddress)
+  yield call(VrpcProvider.initEndpoint, action.payload.systemId, action.payload.endpointAddress)
   yield call(handleFinishVrpcInit, action)
 }
 
 function* handleVrpcChannelClose(action) {
   VrpcProvider.deleteEndpoint(
-    action.payload.chainTicker,
+    action.payload.systemId,
     action.payload.endpointAddress,
   );
 }

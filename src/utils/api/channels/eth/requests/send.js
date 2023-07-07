@@ -2,7 +2,7 @@ import { ethers } from "ethers"
 import Web3Provider from '../../../../web3/provider'
 import { ETH } from "../../../../constants/intervalConstants"
 import { ETH_NETWORK_IDS } from "../../../../constants/constants"
-import { ETH_NETWORK } from '../../../../../../env/index'
+import { ETH_HOMESTEAD } from '../../../../../../env/index'
 import { scientificToDecimal } from "../../../../math"
 import { requestPrivKey } from "../../../../auth/authBox"
 
@@ -19,7 +19,7 @@ export const send = async (coinObj, activeUser, address, amount, params) => {
     let transaction = await voidSigner.populateTransaction({
       to: address,
       value: ethers.utils.parseUnits(scientificToDecimal(amount.toString())),
-      chainId: ETH_NETWORK_IDS[ETH_NETWORK],
+      chainId: ETH_NETWORK_IDS[coinObj.network ? coinObj.network : ETH_HOMESTEAD],
       gasLimit: ethers.BigNumber.from(42000)
     })
 

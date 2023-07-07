@@ -26,7 +26,7 @@ export const getOneTransactionList = (coinObj, activeUser, maxlength = 10) => {
   }
 
   return new Promise((resolve, reject) => {
-    electrumRequest(coinObj.electrum_endpoints, callType, params, coinID)
+    electrumRequest(coinObj, callType, params, coinID)
     .then((response) => {
       resolve(response)
     })

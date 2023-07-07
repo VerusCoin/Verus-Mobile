@@ -8,7 +8,7 @@
 
 import React, { Component } from "react";
 import { connect } from 'react-redux';
-import { networks } from 'bitgo-utxo-lib';
+import { networks } from '@bitgo/utxo-lib';
 import { Keyboard, Clipboard, Linking } from "react-native";
 import { isNumber, satsToCoins, truncateDecimal } from '../../utils/math';
 import { NavigationActions } from '@react-navigation/compat';
@@ -117,9 +117,9 @@ class ConfirmSend extends Component {
         : isNumber(this.props.route.params.data.coinObj.fee)
         ? BigNumber(this.props.route.params.data.coinObj.fee)
         : null;
-    const network = networks[coinObj.id.toLowerCase()]
-      ? networks[coinObj.id.toLowerCase()]
-      : networks["default"];
+    const network = networks[coinObj.bitgojs_network_key]
+      ? networks[coinObj.bitgojs_network_key]
+      : networks["verus"];
     const balance = BigNumber(this.props.route.params.data.balance);
     const note = this.props.route.params.data.note;
     const memo = this.props.route.params.data.memo;

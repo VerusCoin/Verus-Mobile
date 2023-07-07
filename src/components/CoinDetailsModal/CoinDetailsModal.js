@@ -11,14 +11,14 @@ import {
   TouchableOpacity,
   ActivityIndicator
 } from "react-native";
-import { CoinLogos } from '../../utils/CoinData/CoinData';
+import { CoinLogos, getCoinLogo } from '../../utils/CoinData/CoinData';
 import Styles from '../../styles/index'
 import Colors from '../../globals/colors';
 import { Button, Text } from "react-native-paper"
 import SemiModal from "../SemiModal";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import { addCoin, addKeypairs, removeExistingCoin, setUserCoins } from "../../actions/actionCreators";
-import { activateChainLifecycle } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
+import { refreshActiveChainLifecycles } from "../../actions/actions/intervals/dispatchers/lifecycleManager";
 import { connect } from 'react-redux';
 import { clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { CommonActions } from '@react-navigation/native';
@@ -117,14 +117,13 @@ class CoinDetailsModal extends Component {
 
       if (addCoinAction) {
         this.props.dispatch(addCoinAction);
-        this.props.dispatch(
-          setUserCoins(
-            this.props.activeCoinList,
-            this.props.activeAccount.id
-          )
-        );
+        const setUserCoinsAction = setUserCoins(
+          this.props.activeCoinList,
+          this.props.activeAccount.id
+        )
+        this.props.dispatch(setUserCoinsAction);
 
-        activateChainLifecycle(this.props.data);
+        refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser)
 
         this.setState({ loading: false });
         this.props.cancel()
@@ -153,8 +152,8 @@ class CoinDetailsModal extends Component {
       id,
       website
     } = data
-    const tickerLc = id == null ? 'vrsc' : id.toLowerCase()
-    const Logo = CoinLogos[tickerLc] ? CoinLogos[tickerLc].light : null
+    const ticker = id == null ? 'VRSC' : id
+    const Logo = getCoinLogo(ticker)
     
     return (
       <SemiModal
@@ -218,7 +217,7 @@ class CoinDetailsModal extends Component {
                     : () => this._handleAddCoin()
                 }
               >
-                <Logo width={75} height={75} />
+                <Logo width={72} height={72} />
                 <Button
                   disabled={this.state.loading}
                   color={Colors.secondaryColor}

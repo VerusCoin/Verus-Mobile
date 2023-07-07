@@ -44,6 +44,7 @@ export const storeUser = (authData, users) => {
             ? {}
             : {[WYRE_SERVICE_ID]: true}
           : authData.disabledServices,
+      testnetOverrides: authData.testnetOverrides
     };
 
     let _users = users ? users.slice() : [];
@@ -231,6 +232,10 @@ export const setUserKeyDerivationVersion = (userID, keyDerivationVersion) => {
 export const setUserDisabledServices = (userID, disabledServices) => {
   return setUserSetting(userID, "disabledServices", disabledServices)
 };
+
+export const setUserTestnetOverrides = (userID, testnetOverrides) => {
+  return setUserSetting(userID, "testnetOverrides", testnetOverrides)
+}
 
 //TODO: Stop using wifKey to encrypt payment methods before using them in production
 export const putUserPaymentMethods = async (user, paymentMethods) => {

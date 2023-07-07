@@ -1,20 +1,21 @@
 import { CommonActions } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
 import { View } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import AnimatedActivityIndicatorBox from '../../components/AnimatedActivityIndicatorBox';
 import Styles from '../../styles/index';
 import { primitives } from "verusid-ts-client"
 import { verifyLoginConsentRequest } from '../../utils/api/channels/vrpc/requests/verifyLoginConsentRequest';
 import { createAlert } from '../../actions/actions/alert/dispatchers/alert';
 import VrpcProvider from '../../utils/vrpc/vrpcInterface';
-import { findCoinObj } from '../../utils/CoinData/CoinData';
 import { extractLoginConsentSig } from '../../utils/api/channels/vrpc/requests/extractLoginConsentSig';
 import { getBlock } from '../../utils/api/channels/vrpc/callCreators';
 import { LOGIN_CONSENT_INFO } from '../../utils/constants/deeplink';
 import LoginRequestInfo from './LoginRequestInfo/LoginRequestInfo';
 import { getIdentity } from '../../utils/api/channels/verusid/callCreators';
 import { convertFqnToDisplayFormat } from '../../utils/fullyqualifiedname';
+import { resetDeeplinkData } from '../../actions/actionCreators';
+import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 
 const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
@@ -23,6 +24,7 @@ const DeepLink = (props) => {
   const [displayKey, setDisplayKey] = useState(null)
   const [loading, setLoading] = useState(false)
   const [displayProps, setDisplayProps] = useState({})
+  const dispatch = useDispatch()
 
   const cancel = () => {
     let resetAction
@@ -39,7 +41,7 @@ const DeepLink = (props) => {
       });
     }
 
-    //dispatch(resetDeeplinkData())
+    dispatch(resetDeeplinkData())
     props.navigation.dispatch(resetAction);
   }
 
@@ -55,8 +57,8 @@ const DeepLink = (props) => {
             }
           }
 
-          const coinObj = findCoinObj(request.system_id, null, true)
-          VrpcProvider.initEndpoint(coinObj.id, coinObj.vrpc_endpoints[0])
+          const coinObj = CoinDirectory.findCoinObj(request.system_id, null, true)
+          VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0])
 
           if (await verifyLoginConsentRequest(coinObj, request)) {
             for (const requestedPermission of request.challenge
@@ -79,13 +81,13 @@ const DeepLink = (props) => {
 
             const sig = await extractLoginConsentSig(coinObj, request)
 
-            const sigblock = await getBlock(coinObj, sig.height)
+            const sigblock = await getBlock(coinObj.system_id, sig.height)
            
             if (sigblock.error) throw new Error(sigblock.error.message)
 
             const sigtime = sigblock.result.time
 
-            const signedBy = await getIdentity(coinObj, request.signing_id)
+            const signedBy = await getIdentity(coinObj.system_id, request.signing_id)
 
             if (signedBy.error) throw new Error(signedBy.error.message)
 

@@ -23,6 +23,7 @@ import Store from '../../../../store/index'
 import { clearServiceUpdateExpiredIntervalId, setServiceUpdateExpiredIntervalId } from '../../updateManager';
 import { conditionallyUpdateService } from '../../services/dispatchers/updates';
 import { SET_ADDRESSES } from '../../../../utils/constants/storeType';
+import { getSystemNameFromSystemId, getVerusIdCurrency } from '../../../../utils/CoinData/CoinData';
 //TODO: If app is ever used in any server side rendering scenario, switch store
 //to a function parameter on all of these functions rather than an import
 
@@ -158,41 +159,40 @@ export const clearAllCoinIntervals = (chainTicker) => {
  * @param {Object} coinObj Coin object of chain that data is for
  * @param {Function{}} onCompletes Object with optional onCompletes to each updateInterval to be called with state and dispatch function.
  * e.g. {get_info: {update_expired_oncomplete: increaseGetInfoInterval}}
+ * @param {Object} updateParams Object that describes how to update intervals
+ * @param {Array<string>} nonNativeSystems Array of systemids (i-addresses) that this currency will also exist on in the user's wallet
  */
-export const refreshCoinIntervals = (coinObj, onCompletes, updateParams) => {
+export const refreshCoinIntervals = (coinObj, onCompletes, updateParams, nonNativeSystems = []) => {
   const state = Store.getState()
   const chainTicker = coinObj.id
+  const vrpcSupported = coinObj.compatible_channels.includes(VRPC)
 
   // TODO: Channel manual enabling/disabling
-  // const channels = state.settings.coinSettings[chainTicker].channels
   const { watchedVerusIds } = state.channelStore_verusid
   const { watchedAddresses } = state.channelStore_vrpc
 
-  const verusIdChannels = watchedVerusIds[chainTicker]
-    ? Object.keys(watchedVerusIds[chainTicker]).map(iAddr => {
-        const channelId = `${VRPC}.${iAddr}`;
+  function setVrpcChannels(addresses) {
+    return addresses.map(addr => {
+      const systems = [coinObj.system_id, ...nonNativeSystems]
 
-        Store.dispatch({
-          type: SET_ADDRESSES,
-          payload: {chainTicker, channel: channelId, addresses: [iAddr]},
-        });
-
-        return channelId;
-      })
-    : [];
-
-  const vrpcChannels = watchedAddresses[chainTicker]
-    ? Object.keys(watchedAddresses[chainTicker]).map(addr => {
-        const channelId = `${VRPC}.${addr}`;
-
+      return systems.map(system => {
+        const channelId = `${VRPC}.${addr}.${system}`;
         Store.dispatch({
           type: SET_ADDRESSES,
           payload: {chainTicker, channel: channelId, addresses: [addr]},
         });
-
+  
         return channelId;
       })
-    : [];
+    }).flat()
+  }
+
+  const verusIdCurrency = getVerusIdCurrency(coinObj);
+  const verusIdChannels = vrpcSupported && 
+    watchedVerusIds[verusIdCurrency] ? setVrpcChannels(Object.keys(watchedVerusIds[verusIdCurrency])) : [];
+
+  const vrpcChannels = vrpcSupported && 
+    watchedAddresses[chainTicker] ? setVrpcChannels(Object.keys(watchedAddresses[chainTicker])) : [];
 
   if (!coinObj) throw new Error(`${chainTicker} is not added for current user. Coins must be added to be used.`)
   

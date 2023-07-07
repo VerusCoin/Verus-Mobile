@@ -16,7 +16,7 @@ export const signLoginConsentResponse = async (coinObj, response) => {
     throw new Error("Could not verify included login consent request");
   }
 
-  return VrpcProvider.getVerusIdInterface(coinObj.id).signLoginConsentResponse(
+  return VrpcProvider.getVerusIdInterface(coinObj.system_id).signLoginConsentResponse(
     loginResponse,
     await requestPrivKey(coinObj.id, VRPC)
   );

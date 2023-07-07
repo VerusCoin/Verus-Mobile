@@ -18,6 +18,19 @@ import {
   AUTHENTICATE_USER_SEND_MODAL,
   PROVISION_IDENTITY_SEND_MODAL,
   SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
+  SEND_MODAL_USER_ALLOWLIST,
+  SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD,
+  ADD_PBAAS_CURRENCY_MODAL,
+  CONVERT_OR_CROSS_CHAIN_SEND_MODAL,
+  SEND_MODAL_CONVERTTO_FIELD,
+  SEND_MODAL_EXPORTTO_FIELD,
+  SEND_MODAL_VIA_FIELD,
+  SEND_MODAL_IS_PRECONVERT,
+  SEND_MODAL_SHOW_CONVERTTO_FIELD,
+  SEND_MODAL_SHOW_EXPORTTO_FIELD,
+  SEND_MODAL_SHOW_VIA_FIELD,
+  SEND_MODAL_PRICE_ESTIMATE,
+  SEND_MODAL_ADVANCED_FORM
 } from '../../../../utils/constants/sendModal';
 import {
   CLOSE_SEND_COIN_MODAL,
@@ -66,6 +79,32 @@ export const openTraditionalCryptoSendModal = (coinObj, subWallet, data) => {
   );
 };
 
+export const openConvertOrCrossChainSendModal = (coinObj, subWallet, data) => {
+  openSendModal(
+    `Send ${coinObj.display_ticker}`,
+    coinObj,
+    subWallet,
+    data == null
+      ? {
+          [SEND_MODAL_TO_ADDRESS_FIELD]: '',
+          [SEND_MODAL_AMOUNT_FIELD]: '',
+          [SEND_MODAL_MEMO_FIELD]: '',
+          [SEND_MODAL_CONVERTTO_FIELD]: '',
+          [SEND_MODAL_EXPORTTO_FIELD]: '',
+          [SEND_MODAL_VIA_FIELD]: '',
+          [SEND_MODAL_PRICE_ESTIMATE]: null,
+          [SEND_MODAL_IS_PRECONVERT]: false,
+          [SEND_MODAL_SHOW_CONVERTTO_FIELD]: true,
+          [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
+          [SEND_MODAL_SHOW_VIA_FIELD]: true,
+          [SEND_MODAL_ADVANCED_FORM]: false
+        }
+      : data,
+    CONVERT_OR_CROSS_CHAIN_SEND_MODAL,
+    'To convert your funds to a different currency, or send them to a different network, fill in the corresponding fields. Conversions and cross-chain transactions may take a few minutes to complete, even once your funds are confirmed as sent.',
+  );
+};
+
 export const openLinkIdentityModal = (coinObj, data) => {
   openSendModal(
     `Link VerusID`,
@@ -78,6 +117,21 @@ export const openLinkIdentityModal = (coinObj, data) => {
       : data,
     LINK_IDENTITY_SEND_MODAL,
     'To link a VerusID with your wallet, enter the handle or i-Address of a VerusID with a primary address that you have in your wallet.',
+  );
+};
+
+export const openAddPbaasCurrencyModal = (coinObj, data) => {
+  openSendModal(
+    `Add Currency`,
+    coinObj,
+    null,
+    data == null
+      ? {
+          [SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD]: '',
+        }
+      : data,
+    ADD_PBAAS_CURRENCY_MODAL,
+    'To add a Public Blockchains as a Service (PBaaS) currency to your wallet, enter its name or i-Address here and press continue.',
   );
 };
 
@@ -103,6 +157,7 @@ export const openAuthenticateUserModal = (data, initialRouteName) => {
     data == null
       ? {
           [SEND_MODAL_USER_TO_AUTHENTICATE]: null,
+          [SEND_MODAL_USER_ALLOWLIST]: null
         }
       : data,
     AUTHENTICATE_USER_SEND_MODAL,

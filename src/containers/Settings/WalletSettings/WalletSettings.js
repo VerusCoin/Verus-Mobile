@@ -144,7 +144,7 @@ class WalletSettings extends Component {
                 title={`${coin.display_name} Settings`}
                 left={(props) => (
                   <View {...props}>
-                    {RenderSquareCoinLogo(coin.id.toLowerCase())}
+                    {RenderSquareCoinLogo(coin.id)}
                   </View>
                 )}
                 right={(props) => (

@@ -31,7 +31,7 @@ export const getUnspent = (coinObj, activeUser) => {
   }
 
   return new Promise((resolve, reject) => {
-    electrumRequest(coinObj.electrum_endpoints, callType, params, coinID)
+    electrumRequest(coinObj, callType, params, coinID)
     .then((response) => {
       if(response != false) {
         response.result.address = params.address

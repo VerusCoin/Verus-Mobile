@@ -1,11 +1,7 @@
 import BigNumber from "bignumber.js";
-import { ethers } from "ethers";
-import { estimateBlocktimeAtHeight } from "../block";
-import { getCoinIdFromSystemId } from "../CoinData/CoinData";
 import { ETHERS } from "../constants/web3Constants";
-import { satsToCoins } from "../math";
+import { unitsToCoins, weiToCoins } from "../math";
 import { decodeMemo } from "../memoUtils";
-const { formatEther, formatUnits } = ethers.utils
 
 // Makes transaction objects from lightwalletd client resemble those from electrum,
 // for predictable, standard behaviour
@@ -51,32 +47,31 @@ export const standardizeEthTxObj = (transactions, address, decimals = ETHERS) =>
         address: transactions[i].to,
         amount:
           transactions[i].value != null
-            ? formatUnits(transactions[i].value, decimals)
+            ? unitsToCoins(BigNumber(transactions[i].value), decimals).toString()
             : null,
         gas:
           transactions[i].gas != null
-            ? formatEther(transactions[i].gas)
+            ? weiToCoins(BigNumber(transactions[i].gas)).toString()
             : null,
         gasPrice:
           transactions[i].gasPrice != null
-            ? formatEther(transactions[i].gasPrice)
+            ? weiToCoins(BigNumber(transactions[i].gasPrice)).toString()
             : null,
         cumulativeGasUsed:
           transactions[i].cumulativeGasUsed != null
-            ? formatEther(transactions[i].cumulativeGasUsed)
+            ? weiToCoins(BigNumber(transactions[i].cumulativeGasUsed)).toString()
             : null,
         gasUsed:
           transactions[i].gasUsed != null
-            ? formatEther(transactions[i].gasUsed)
+            ? weiToCoins(BigNumber(transactions[i].gasUsed)).toString()
             : null,
         fee:
           transactions[i].gasPrice != null &&
           transactions[i].gasUsed != null
-            ? formatEther(
+            ? weiToCoins(
                 BigNumber(transactions[i].gasPrice)
                   .multipliedBy(BigNumber(transactions[i].gasUsed))
-                  .toString()
-              )
+              ).toString()
             : null,
         input: transactions[i].input,
         contractAddress: transactions[i].contractAddress,
@@ -125,7 +120,8 @@ export const standardizeWyreTxObj = (transaction, accountAddress, coinObj) => {
 };
 
 export const standardizeVrpcTxObj = (transaction, coinObj, currHeight) => {
-  const {satoshis, txid, height, address, blocktime, sent, mempool} = transaction;
+  const {amount, txid, height, address, blocktime, sent, mempool} = transaction;
+  const amountBn = BigNumber(amount)
   let timeEstimate;
 
   if (!blocktime && currHeight && height) {
@@ -153,8 +149,8 @@ export const standardizeVrpcTxObj = (transaction, coinObj, currHeight) => {
       if (b !== address) return 1;
       else return -1;
     }).join(' & '),
-    amount: satsToCoins(BigNumber(satoshis).abs()).toString(),
-    type: satoshis >= 0 ? 'received' : 'sent',
+    amount: amountBn.abs().toString(),
+    type: amountBn.isGreaterThan(0) ? 'received' : 'sent',
     confirmed: mempool ? false : true,
     height,
     timestamp: blocktime ? blocktime : timeEstimate,

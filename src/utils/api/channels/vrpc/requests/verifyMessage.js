@@ -1,7 +1,7 @@
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 
-export const verifyMessage = (coinObj, iAddrOrIdentity, base64Sig, message) => {
-  return VrpcProvider.getVerusIdInterface(coinObj.id).verifyMessage(
+export const verifyMessage = (systemId, iAddrOrIdentity, base64Sig, message) => {
+  return VrpcProvider.getVerusIdInterface(systemId).verifyMessage(
     iAddrOrIdentity,
     base64Sig,
     message,
