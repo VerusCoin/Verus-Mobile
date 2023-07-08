@@ -134,7 +134,8 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
             ) {
               interest = kmdCalcInterest(
                 decodedTx.format.locktime,
-                formattedUtxo.amountSats
+                formattedUtxo.amountSats,
+                formattedUtxo.blockHeight
               );
               formattedUtxos[index].interestSats = coinsToSats(
                 BigNumber(truncateDecimal(interest, 8))
