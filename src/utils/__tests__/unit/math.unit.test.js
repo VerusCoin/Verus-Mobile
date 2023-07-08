@@ -43,7 +43,7 @@ describe("Number processing operations", () => {
   })
 
   it('can calculate KMD interest from locktime and utxo value', () => {
-    expect(kmdCalcInterest(MOCK_LOCKTIME, MOCK_COINS)).toBe(0)
+    expect(kmdCalcInterest(MOCK_LOCKTIME, MOCK_COINS, 3484959)).toBe(0)
   })
 
   it('can calculate max spend balance', () => {

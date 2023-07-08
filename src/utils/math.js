@@ -2,6 +2,7 @@ import { ethers } from "ethers"
 import { ETHERS } from "./constants/web3Constants"
 import BigNumber from "bignumber.js";
 import { translate } from "./translate";
+import { KOMODO_DIVISOR, KOMODO_ENDOFERA, KOMODO_LOCKTIME_THRESHOLD, KOMODO_MIN_SATOSHIS, KOMODO_N_S7_HARDFORK_HEIGHT, KOMODO_ONE_MONTH_CAP_HARDFORK, ONE_HOUR, ONE_MONTH, ONE_YEAR } from "./constants/constants";
 
 //Math done to eliminate JS rounding errors when moving from statoshis to coin denominations
 export const coinsToUnits = (coin, decimals) => {
@@ -66,29 +67,6 @@ export const findNumDecimals = (value) => {
 
 export const unixToDate = (unixTime) => {
   return (new Date(unixTime*1000)).toLocaleString();
-}
-
-export const kmdCalcInterest = (locktime, value) => {
-  if (satsToCoins(BigNumber(value)).toNumber() < 10 || locktime <= 0) return 0
-
-  const timestampDiff = Math.floor(Date.now() / 1000) - locktime - 777;
-  let timestampDiffMinutes = timestampDiff / 60;
-  let interest = 0;
-
-  // calc interest
-  if (timestampDiffMinutes >= 60) {
-    //if (timestampDiffMinutes > 365 * 24 * 60) {
-    //  timestampDiffMinutes = 365 * 24 * 60;
-    //}
-    if (timestampDiffMinutes > 31 * 24 * 59) {
-      timestampDiffMinutes = 31 * 24 * 59;
-    }
-    timestampDiffMinutes -= 59;
-
-    interest = (satsToCoins(BigNumber(value)).toNumber() / 10512000) * timestampDiffMinutes;
-  }
-
-  return interest;
 }
 
 export const maxSpendBalance = (utxoList, fee) => {
@@ -203,3 +181,72 @@ export const blocksToTime = (blocks) => {
       Math.floor(minutes) + ' ' + checkForPlural('MINUTE', minutes));
   }
 };
+
+/*
+The following license applies to the kmdCalcInterest function below:
+
+MIT License
+
+Copyright (c) 2018 - 2019 Atomic Labs, Luke Childs
+Copyright (c) 2019 - 2022 Komodo Platform
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+export const kmdCalcInterest = (locktime, satoshis, height = 0) => {
+  const tiptime = Math.floor(Date.now() / 1000) - 777;
+
+	// Calculate coinage
+	const coinage = Math.floor((tiptime - locktime) / ONE_HOUR);
+
+	// Return early if UTXO is not eligible for rewards
+	if (
+		(height >= KOMODO_ENDOFERA) ||
+		(locktime < KOMODO_LOCKTIME_THRESHOLD) ||
+		(satoshis < KOMODO_MIN_SATOSHIS) ||
+		(coinage < ONE_HOUR) ||
+		(!height)
+	) {
+		return 0;
+	}
+
+	// Cap reward periods
+	const limit = (height >= KOMODO_ONE_MONTH_CAP_HARDFORK) ? ONE_MONTH : ONE_YEAR;
+	let rewardPeriod = Math.min(coinage, limit);
+
+	// The first hour of coinage should not accrue rewards
+	rewardPeriod -= 59;
+
+	// Calculate rewards
+	let rewards = Math.floor(satoshis / KOMODO_DIVISOR) * rewardPeriod;
+
+	// Vote-KIP0001 resulted in a reduction of the AUR from 5% to 0.01%
+	// https://github.com/KomodoPlatform/kips/blob/main/kip-0001.mediawiki
+	// https://github.com/KomodoPlatform/komodo/pull/584
+	if (height >= KOMODO_N_S7_HARDFORK_HEIGHT) {
+		rewards = Math.floor(rewards / 500);
+	}
+
+	// Ensure reward value is never negative
+	if (rewards < 0) {
+		throw new Error('Reward should never be negative');
+	}
+
+	return satsToCoins(BigNumber(rewards)).toNumber()
+}
