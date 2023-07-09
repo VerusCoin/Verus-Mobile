@@ -55,8 +55,10 @@ export const traditionalCryptoSend = async (
     let destinationAddress;
 
     if (address.includes("@")) {
-      destinationAddress = await extractIdentityAddress(address, coinObj.id);
-      identity = address;
+      const { address: extractedAddress, label } = await extractIdentityAddress(address, coinObj, channel);
+
+      destinationAddress = extractedAddress;
+      identity = label;
     } else {
       destinationAddress = address;
     }

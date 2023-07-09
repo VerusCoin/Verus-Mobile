@@ -202,17 +202,19 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     };
   }
 
+  const friendlyNames = new Map();
+  const currencyDefs = new Map();
+  let nativeFeesPaid = BigNumber(0);
+
   try {
     validateCurrencyTransferOutputParams(output)
-    const friendlyNames = new Map();
-    const currencyDefs = new Map();
 
     const saveFriendlyName = async (iaddrOrName) => {
       if (!iaddrOrName) return;
       
       const currRes = await getCurrency(systemId, iaddrOrName);
 
-      if (currRes.error) throw new Error("Couldn't get identity " + iaddrOrName);
+      if (currRes.error) throw new Error("Couldn't get currency " + iaddrOrName);
       else {
         friendlyNames.set(currRes.result.currencyid, currRes.result.fullyqualifiedname);
         currencyDefs.set(currRes.result.currencyid, currRes.result);
@@ -257,7 +259,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         exportto === coinsList.VRSCTEST.system_id);
 
     let _feeamount = feesatoshis;
-    let nativeFeesPaid = coinsToSats(BigNumber(parentTransactionFee));
+    nativeFeesPaid = coinsToSats(BigNumber(parentTransactionFee));
     let importToSource = false;
     
     const sourceDefinition = currencyDefs.get(currency);
@@ -500,9 +502,25 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
   } catch (e) {
     console.error(e)
 
+    let message = e.message;
+
+    if (message != null && typeof message === 'string' && message.includes('Insufficient funds')) {
+      const systemName = friendlyNames.has(systemId)
+        ? friendlyNames.get(systemId)
+        : systemId
+      const feeCurrencyName = output.feecurrency
+        ? friendlyNames.has(output.feecurrency)
+          ? friendlyNames.get(output.feecurrency)
+          : output.feecurrency
+        : systemName;
+      const nativeFeeAmount = satsToCoins(nativeFeesPaid).toString();
+
+      message = `Insufficient funds. Ensure you have at least ${nativeFeeAmount} ${feeCurrencyName} on the ${systemName} network to fund the fee for transaction.`;
+    }
+
     return {
       err: true,
-      result: e.message
+      result: message
     };
   }
 }
