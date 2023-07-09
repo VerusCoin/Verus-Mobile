@@ -2,6 +2,7 @@ import BigNumber from "bignumber.js";
 import { ETHERS } from "../constants/web3Constants";
 import { unitsToCoins, weiToCoins } from "../math";
 import { decodeMemo } from "../memoUtils";
+import { RESERVE_TRANSFER_DESTINATION } from "verus-typescript-primitives";
 
 // Makes transaction objects from lightwalletd client resemble those from electrum,
 // for predictable, standard behaviour
@@ -143,6 +144,12 @@ export const standardizeVrpcTxObj = (transaction, coinObj, currHeight) => {
         addresses.push(out.addresses);
     }
   } else addresses = [address];
+
+  // Filter out the reserve transfer address
+  const reserveTransferAddress = RESERVE_TRANSFER_DESTINATION.getAddressString()
+  addresses = addresses.filter(x => {
+    return x !== reserveTransferAddress
+  })
 
   return {
     address: addresses.length === 0 ? null : addresses.sort((a, b) => {
