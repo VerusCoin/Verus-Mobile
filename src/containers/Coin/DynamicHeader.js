@@ -204,7 +204,7 @@ class DynamicHeader extends Component {
               />
               <Text numberOfLines={1} style={{fontSize: 16, marginLeft: 8}}>{item.name}</Text>
             </View>
-            <Paragraph style={{fontSize: 16}}>
+            <Paragraph style={{fontSize: 16}} numberOfLines={1}>
               {this.props.balanceErrors[item.id]
                 ? CONNECTION_ERROR
                 : `${
