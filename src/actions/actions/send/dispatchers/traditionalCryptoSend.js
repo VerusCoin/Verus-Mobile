@@ -139,34 +139,34 @@ export const traditionalCryptoSend = async (
               "Your transaction amount has been changed to " +
               finalTxAmount +
               " " +
-              coinObj.id +
+              coinObj.display_ticker +
               " as you do not have sufficient funds to cover your submitted amount of " +
               res.result.amountSubmitted +
               " " +
-              coinObj.id +
+              coinObj.display_ticker +
               " + a fee of " +
               res.result.fee +
               " " +
-              coinObj.id +
+              coinObj.display_ticker +
               ".";
           } else if (res.result.unshieldedFunds != null) {
             feeTakenMessage =
               "Your transaction amount has been changed to " +
               finalTxAmount +
               " " +
-              coinObj.id +
+              coinObj.display_ticker +
               " as you do not have sufficient funds to cover your submitted amount of " +
               res.result.amountSubmitted +
               " " +
-              coinObj.id +
+              coinObj.display_ticker +
               " + a fee of " +
               res.result.fee +
               " " +
-              coinObj.id +
+              coinObj.display_ticker +
               ". This could be due to the " +
               satsToCoins(res.result.unshieldedFunds).toString() +
               " in unshielded " +
-              coinObj.id +
+              coinObj.display_ticker +
               " your " +
               "wallet contains. Log into a native client and shield your mined funds to be able to use them.";
           }
@@ -195,7 +195,7 @@ export const traditionalCryptoSend = async (
           txid: res.result.txid,
           feeTakenMessage,
           fullResult: res.result,
-          names: res.names
+          names: res.result.names
         };
       }
     }
