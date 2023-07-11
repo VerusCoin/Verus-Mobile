@@ -17,12 +17,10 @@ export const getIdentity = async (systemId, iAddressOrName, height, txproof, txp
       const identityDefinition = res.result.identity;
       const identityFqn = res.result.fullyqualifiedname;
       
-      const calculatedIAddrMain = toIAddress(identityFqn, "VRSC");
-      const calculatedIAddrTest = toIAddress(identityFqn, "VRSCTEST");
+      const calculatedIAddr = toIAddress(identityFqn);
     
       if (
-        calculatedIAddrMain !== identityDefinition.identityaddress &&
-        calculatedIAddrTest !== identityDefinition.identityaddress
+        calculatedIAddr !== identityDefinition.identityaddress
       ) {
         return {
           id: 0,
