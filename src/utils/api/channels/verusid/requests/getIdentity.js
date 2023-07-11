@@ -16,16 +16,21 @@ export const getIdentity = async (systemId, iAddressOrName, height, txproof, txp
     try {
       const identityDefinition = res.result.identity;
       const identityFqn = res.result.fullyqualifiedname;
-      const calculatedIAddr = toIAddress(identityFqn);
+      
+      const calculatedIAddrMain = toIAddress(identityFqn, "VRSC");
+      const calculatedIAddrTest = toIAddress(identityFqn, "VRSCTEST");
     
-      if (calculatedIAddr !== identityDefinition.identityaddress) {
+      if (
+        calculatedIAddrMain !== identityDefinition.identityaddress &&
+        calculatedIAddrTest !== identityDefinition.identityaddress
+      ) {
         return {
           id: 0,
           error: {
-            message: "Unable to parse response identityaddress.",
-            code: -1
-          }
-        }
+            message: 'Unable to parse response identityaddress.',
+            code: -1,
+          },
+        };
       }
     } catch(e) {
       return {

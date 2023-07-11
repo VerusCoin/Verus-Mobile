@@ -139,11 +139,11 @@ const SendCoin = ({ navigation }) => {
 
 1. The Verus Protocol and The Verus Mobile Wallet are open-source projects under the MIT license, offered "as is" without warranties.
         
-2. The wallet facilitates currency conversion, but its creators, developers, and maintainers do not endorse any specific network currency.
+2. The wallet facilitates interaction with a peer-to-peer protocol that allows for currency conversion. The Verus Mobile Wallet's creators, developers, and maintainers are not intermediaries in any Verus Public Blockchains as a Service (PBaaS) transaction, and do not endorse or recommend any specific network currency whatsoever.
         
 3. You bear sole responsibility for understanding the risks and mechanics involved in currency conversion.
         
-4. The wallet's creators, developers, and maintainers are not liable for any outcomes resulting from currency conversion.
+4. You agree that the wallet's creators, developers, and maintainers are not liable for any loss or other outcomes that may result from your use of these protocols.
         
 By proceeding, you confirm that you've read, understood, and agreed to this. Ensure you fully understand the currencies you choose to convert.`,
         [
