@@ -125,7 +125,7 @@ function ConvertOrCrossChainSendConfirm({ navigation, route, setLoading, setModa
     const conversionFee = satsToCoins(BigNumber(satoshis)).multipliedBy(conversionFeeMultiplier);
 
     const destAddrString = destination.getAddressString();
-    const toAddress = nameMap.has(destAddrString) ? nameMap.get(destAddrString) : destAddrString;
+    const toAddress = nameMap.has(destAddrString) ? `${nameMap.get(destAddrString)}@ (${destAddrString})` : destAddrString;
 
     const createAccordion = (label, description, left, currencies, showZeroValues = false) => {
       const fields = []

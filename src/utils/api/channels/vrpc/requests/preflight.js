@@ -222,6 +222,21 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       }
     }
 
+    const saveVerusIdName = async (iaddrOrName) => {
+      if (!iaddrOrName) return;
+      
+      const idRes = await getIdentity(systemId, iaddrOrName);
+
+      if (idRes.error) throw new Error("Couldn't get identity " + iaddrOrName);
+      else {
+        friendlyNames.set(
+          idRes.result.identity.identityaddress,
+          idRes.result.fullyqualifiedname.replace('@', ''),
+        );
+        return idRes.result.identity.identityaddress;
+      }
+    }
+
     output.exportto = await saveFriendlyName(output.exportto);
     output.convertto = await saveFriendlyName(output.convertto);
     output.currency = await saveFriendlyName(output.currency);
@@ -246,6 +261,12 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       preconvert,
       address
     } = output;
+
+    if (address.type === DEST_ID) {
+      try {
+        await saveVerusIdName(address.getAddressString());
+      } catch(e) {}
+    }
 
     const isConversionOrExport = exportto != null || convertto != null;
     const isNativeSend = currency === systemId;
