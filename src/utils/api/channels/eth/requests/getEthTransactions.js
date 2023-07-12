@@ -12,7 +12,8 @@ export const getEthTransactions = async (address) => {
 export const getStandardEthTransactions = async (address) => {
   let processedTxs = standardizeEthTxObj(
     await getEthTransactions(address),
-    address);
+    address
+  );
 
   for (let i = 0; i < processedTxs.length; i++) {
     let tx = processedTxs[i]

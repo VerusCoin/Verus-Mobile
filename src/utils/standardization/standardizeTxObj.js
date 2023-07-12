@@ -47,31 +47,31 @@ export const standardizeEthTxObj = (transactions, address, decimals = ETHERS) =>
         src: transactions[i].from,
         address: transactions[i].to,
         amount:
-          transactions[i].value != null
-            ? unitsToCoins(BigNumber(transactions[i].value), decimals).toString()
+          transactions[i].value != null && BigNumber.isBigNumber(transactions[i].value)
+            ? unitsToCoins(BigNumber(transactions[i].value.toString()), decimals).toString()
             : null,
         gas:
-          transactions[i].gas != null
-            ? weiToCoins(BigNumber(transactions[i].gas)).toString()
+          transactions[i].gas != null && BigNumber.isBigNumber(transactions[i].gas)
+            ? weiToCoins(BigNumber(transactions[i].gas.toString())).toString()
             : null,
         gasPrice:
-          transactions[i].gasPrice != null
-            ? weiToCoins(BigNumber(transactions[i].gasPrice)).toString()
+          transactions[i].gasPrice != null && BigNumber.isBigNumber(transactions[i].gasPrice)
+            ? weiToCoins(BigNumber(transactions[i].gasPrice.toString())).toString()
             : null,
         cumulativeGasUsed:
-          transactions[i].cumulativeGasUsed != null
-            ? weiToCoins(BigNumber(transactions[i].cumulativeGasUsed)).toString()
+          transactions[i].cumulativeGasUsed != null && BigNumber.isBigNumber(transactions[i].cumulativeGasUsed)
+            ? weiToCoins(BigNumber(transactions[i].cumulativeGasUsed.toString())).toString()
             : null,
         gasUsed:
-          transactions[i].gasUsed != null
-            ? weiToCoins(BigNumber(transactions[i].gasUsed)).toString()
+          transactions[i].gasUsed != null && BigNumber.isBigNumber(transactions[i].gasUsed)
+            ? weiToCoins(BigNumber(transactions[i].gasUsed.toString())).toString()
             : null,
         fee:
-          transactions[i].gasPrice != null &&
-          transactions[i].gasUsed != null
+          transactions[i].gasPrice != null && BigNumber.isBigNumber(transactions[i].gasPrice) &&
+          transactions[i].gasUsed != null && BigNumber.isBigNumber(transactions[i].gasUsed)
             ? weiToCoins(
-                BigNumber(transactions[i].gasPrice)
-                  .multipliedBy(BigNumber(transactions[i].gasUsed))
+                BigNumber(transactions[i].gasPrice.toString())
+                  .multipliedBy(BigNumber(transactions[i].gasUsed.toString()))
               ).toString()
             : null,
         input: transactions[i].input,
