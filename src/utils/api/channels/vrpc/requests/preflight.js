@@ -262,7 +262,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       address
     } = output;
 
-    if (address.type === DEST_ID) {
+    if (address.isIAddr()) {
       try {
         await saveVerusIdName(address.getAddressString());
       } catch(e) {}
@@ -277,7 +277,9 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     const useSendCurrencyOutput =
       isConversionOrExport &&
       (exportto === coinsList.VRSC.system_id ||
-        exportto === coinsList.VRSCTEST.system_id);
+        exportto === coinsList.VRSCTEST.system_id || 
+        exportto === "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X" || // vETH i-addr on VRSC
+        exportto === "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm");  // vETH i-addr on VRSCTEST
 
     let _feeamount = feesatoshis;
     nativeFeesPaid = coinsToSats(BigNumber(parentTransactionFee));
@@ -303,6 +305,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         _feecurrency,
         via,
         source,
+        address.getAddressString(),
       );
     }
 
@@ -357,6 +360,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         convertto,
         _feecurrency,
         via,
+        source
       );
 
       if (sendCurrencyRes.error) throw new Error(sendCurrencyRes.error.message);
@@ -377,8 +381,16 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       if (transDest.transfer_destination.gateway_id !== exportto) throw new Error("Expected gateway_id to match exportto");
       if (transDest.transfer_destination.gateway_code !== "i3UXS5QPRQGNRDDqVnyWTnmFCTHDbzmsYk") throw new Error("Expected null gateway_code");
 
-      if (transDest.transfer_destination.aux_dests[0].isGateway()) throw new Error("Expected non gateway output in aux dest");
-      if (transDest.transfer_destination.aux_dests[0].getAddressString() !== addrDest) throw new Error("Expected aux dest to match destination address");
+      for (const aux_dest of transDest.transfer_destination.aux_dests) {
+        if (aux_dest.hasAuxDests()) {
+          throw new Error("Nested aux destinations not supported");
+        }
+
+        if (aux_dest.isGateway()) throw new Error("Expected non gateway output in aux dest");
+
+        const addrString =aux_dest.getAddressString();
+        if (addrString !== addrDest && addrString !== source) throw new Error(`Aux dest ${addrString} does not match source or destination`);
+      }
 
       unfundedTxHex = sendCurrencyRes.result.hextx;
     } else {
