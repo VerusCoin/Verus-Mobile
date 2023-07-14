@@ -168,12 +168,9 @@ let _electrumServers = {
     'electrumx2.monacoin.ninja:50001:tcp',
   ],
   ltc: [
-    'electrum-ltc.bysh.me:50001:tcp',
+    'electrum1.cipig.net:20063:tcp',
     'node.ispol.sk:50003:tcp',
-    'ltc01.knas.systems:50003:tcp',
-    'ltc.rentonisk.com:50002:ssl',
-    'electrum.ltc.xurious.com:50001:tcp',
-    'backup.electrum-ltc.org:50001:tcp',
+    'electrum3.cipig.net:20063:tcp'
   ],
   fair: [
     'electrum1.cipig.net:10063:tcp',
