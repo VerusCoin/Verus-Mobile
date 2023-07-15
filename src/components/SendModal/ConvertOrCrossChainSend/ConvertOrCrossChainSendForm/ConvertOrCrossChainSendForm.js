@@ -31,8 +31,9 @@ import { getCurrency, getIdentity } from "../../../../utils/api/channels/verusid
 import selectAddresses from "../../../../selectors/address";
 import MissingInfoRedirect from "../../../MissingInfoRedirect/MissingInfoRedirect";
 import { getAddressBalances, preflightCurrencyTransfer } from "../../../../utils/api/channels/vrpc/callCreators";
-import { DEST_ID, DEST_PKH, TransferDestination, fromBase58Check } from "verus-typescript-primitives";
+import { DEST_ETH, DEST_ID, DEST_PKH, TransferDestination, fromBase58Check } from "verus-typescript-primitives";
 import { CoinDirectory } from "../../../../utils/CoinData/CoinDirectory";
+import { ethers } from "ethers";
 
 const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
   const sendModal = useSelector(state => state.sendModal);
@@ -364,6 +365,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
   const selectSuggestion = (suggestion) => {
     const { values } = suggestion
+    updateSendFormData(SEND_MODAL_PRICE_ESTIMATE, null)
     
     for (const key in values) {
       updateSendFormData(key, values[key]);
@@ -527,12 +529,27 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
           keyhash = identityRes.result.identity.identityaddress;
         } else keyhash = addr;
 
-        const { hash, version } = fromBase58Check(keyhash);
+        const keyhashIsEth = () => {
+          try {
+            return ethers.utils.isAddress(keyhash);
+          } catch(e) {
+            return false;
+          }
+        }
 
-        return new TransferDestination({
-          destination_bytes: hash,
-          type: version === 60 ? DEST_PKH : DEST_ID
-        })
+        if (keyhashIsEth()) {
+          return new TransferDestination({
+            destination_bytes: Buffer.from(keyhash.substring(2), 'hex'),
+            type: DEST_ETH
+          })
+        } else {
+          const { hash, version } = fromBase58Check(keyhash);
+
+          return new TransferDestination({
+            destination_bytes: hash,
+            type: version === 60 ? DEST_PKH : DEST_ID
+          })
+        }        
       }
 
       let output = {

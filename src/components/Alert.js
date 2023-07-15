@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { SafeAreaView, ScrollView } from 'react-native';
 import { Button, Dialog, Portal, Text } from 'react-native-paper';
 import { connect } from 'react-redux';
 import Colors from '../globals/colors';
@@ -33,10 +34,13 @@ const AlertModal = (props) => {
         dismissable={(!disabled && cancelable) === true}
         visible={modalShown}
         onDismiss={cancelable ? cancel : () => {}}
+        style={{maxHeight: "100%", marginBottom: 36}}
       >
         <Dialog.Title>{title}</Dialog.Title>
-        <Dialog.Content>
-          <Text>{description}</Text>
+        <Dialog.Content style={{maxHeight: "80%"}}>
+          <ScrollView>
+            <Text>{description}</Text>
+          </ScrollView>
         </Dialog.Content>
         <Dialog.Actions>
           {buttons != null

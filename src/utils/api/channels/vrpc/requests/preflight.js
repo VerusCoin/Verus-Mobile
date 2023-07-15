@@ -202,21 +202,38 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     };
   }
 
+  const friendlyNames = new Map();
+  const currencyDefs = new Map();
+  let nativeFeesPaid = BigNumber(0);
+
   try {
     validateCurrencyTransferOutputParams(output)
-    const friendlyNames = new Map();
-    const currencyDefs = new Map();
 
     const saveFriendlyName = async (iaddrOrName) => {
       if (!iaddrOrName) return;
       
       const currRes = await getCurrency(systemId, iaddrOrName);
 
-      if (currRes.error) throw new Error("Couldn't get identity " + iaddrOrName);
+      if (currRes.error) throw new Error("Couldn't get currency " + iaddrOrName);
       else {
         friendlyNames.set(currRes.result.currencyid, currRes.result.fullyqualifiedname);
         currencyDefs.set(currRes.result.currencyid, currRes.result);
         return currRes.result.currencyid;
+      }
+    }
+
+    const saveVerusIdName = async (iaddrOrName) => {
+      if (!iaddrOrName) return;
+      
+      const idRes = await getIdentity(systemId, iaddrOrName);
+
+      if (idRes.error) throw new Error("Couldn't get identity " + iaddrOrName);
+      else {
+        friendlyNames.set(
+          idRes.result.identity.identityaddress,
+          idRes.result.fullyqualifiedname.replace('@', ''),
+        );
+        return idRes.result.identity.identityaddress;
       }
     }
 
@@ -245,6 +262,12 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       address
     } = output;
 
+    if (address.isIAddr()) {
+      try {
+        await saveVerusIdName(address.getAddressString());
+      } catch(e) {}
+    }
+
     const isConversionOrExport = exportto != null || convertto != null;
     const isNativeSend = currency === systemId;
     const isBasicNativeSend = !isConversionOrExport && currency === systemId;
@@ -254,10 +277,12 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     const useSendCurrencyOutput =
       isConversionOrExport &&
       (exportto === coinsList.VRSC.system_id ||
-        exportto === coinsList.VRSCTEST.system_id);
+        exportto === coinsList.VRSCTEST.system_id || 
+        exportto === "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X" || // vETH i-addr on VRSC
+        exportto === "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm");  // vETH i-addr on VRSCTEST
 
     let _feeamount = feesatoshis;
-    let nativeFeesPaid = coinsToSats(BigNumber(parentTransactionFee));
+    nativeFeesPaid = coinsToSats(BigNumber(parentTransactionFee));
     let importToSource = false;
     
     const sourceDefinition = currencyDefs.get(currency);
@@ -280,6 +305,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         _feecurrency,
         via,
         source,
+        address.getAddressString(),
       );
     }
 
@@ -334,6 +360,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         convertto,
         _feecurrency,
         via,
+        source
       );
 
       if (sendCurrencyRes.error) throw new Error(sendCurrencyRes.error.message);
@@ -354,8 +381,16 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       if (transDest.transfer_destination.gateway_id !== exportto) throw new Error("Expected gateway_id to match exportto");
       if (transDest.transfer_destination.gateway_code !== "i3UXS5QPRQGNRDDqVnyWTnmFCTHDbzmsYk") throw new Error("Expected null gateway_code");
 
-      if (transDest.transfer_destination.aux_dests[0].isGateway()) throw new Error("Expected non gateway output in aux dest");
-      if (transDest.transfer_destination.aux_dests[0].getAddressString() !== addrDest) throw new Error("Expected aux dest to match destination address");
+      for (const aux_dest of transDest.transfer_destination.aux_dests) {
+        if (aux_dest.hasAuxDests()) {
+          throw new Error("Nested aux destinations not supported");
+        }
+
+        if (aux_dest.isGateway()) throw new Error("Expected non gateway output in aux dest");
+
+        const addrString =aux_dest.getAddressString();
+        if (addrString !== addrDest && addrString !== source) throw new Error(`Aux dest ${addrString} does not match source or destination`);
+      }
 
       unfundedTxHex = sendCurrencyRes.result.hextx;
     } else {
@@ -500,9 +535,25 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
   } catch (e) {
     console.error(e)
 
+    let message = e.message;
+
+    if (message != null && typeof message === 'string' && message.includes('Insufficient funds')) {
+      const systemName = friendlyNames.has(systemId)
+        ? friendlyNames.get(systemId)
+        : systemId
+      const feeCurrencyName = output.feecurrency
+        ? friendlyNames.has(output.feecurrency)
+          ? friendlyNames.get(output.feecurrency)
+          : output.feecurrency
+        : systemName;
+      const nativeFeeAmount = satsToCoins(nativeFeesPaid).toString();
+
+      message = `Insufficient funds. Ensure you have at least ${nativeFeeAmount} ${feeCurrencyName} on the ${systemName} network to fund the fee for transaction.`;
+    }
+
     return {
       err: true,
-      result: e.message
+      result: message
     };
   }
 }
