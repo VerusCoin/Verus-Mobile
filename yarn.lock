@@ -881,9 +881,9 @@
     "@bitgo/blake2b-wasm" "^3.0.1"
     nanoassert "^2.0.0"
 
-"@bitgo/utxo-lib@git+https://github.com/VerusCoin/BitGoJS.git#50702ca84a848020af601081904e6db75c978b78":
+"@bitgo/utxo-lib@git+https://github.com/VerusCoin/BitGoJS.git#7c754d4a5920198d9fe6827d3e23bd5cf431f264":
   version "1.9.6"
-  resolved "git+https://github.com/VerusCoin/BitGoJS.git#50702ca84a848020af601081904e6db75c978b78"
+  resolved "git+https://github.com/VerusCoin/BitGoJS.git#7c754d4a5920198d9fe6827d3e23bd5cf431f264"
   dependencies:
     "@bitgo/blake2b" "3.0.1"
     bech32 "0.0.3"
@@ -11526,7 +11526,7 @@ version_compare@0.0.3:
 
 "verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git":
   version "1.0.0"
-  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#7a98b64d058ba340c748280323886a5fc3c2fe30"
+  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#17f64fa1d152f5b23e3e8ec12b7f8206d382d0c1"
   dependencies:
     base64url "3.0.1"
     bn.js "5.2.1"
@@ -11543,7 +11543,7 @@ version_compare@0.0.3:
 
 "verusd-rpc-ts-client@git+https://github.com/VerusCoin/verusd-rpc-ts-client.git":
   version "0.1.0"
-  resolved "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git#c56150ba1ff6fb3d49ca1c5901acbd4f082649b1"
+  resolved "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git#6886b2b9135fac65afa4bcb80099f4c72d5bc784"
   dependencies:
     axios "0.27.2"
     verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git"

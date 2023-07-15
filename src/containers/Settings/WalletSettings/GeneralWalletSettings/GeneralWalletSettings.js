@@ -92,7 +92,8 @@ const WalletSettings = props => {
           settings.defaultAccount === NO_DEFAULT
             ? null
             : settings.defaultAccount,
-        homeCardDragDetection
+        homeCardDragDetection,
+        ackedCurrencyDisclaimer: settings.ackedCurrencyDisclaimer
       };
       const res = await saveGeneralSettings(stateToSave);
       dispatch(res);

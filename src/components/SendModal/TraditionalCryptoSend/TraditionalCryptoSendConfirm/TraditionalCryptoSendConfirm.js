@@ -51,7 +51,7 @@ function TraditionalCryptoSendConfirm({ navigation, route, setLoading, setModalH
     } = params;
 
     const renderCurrencyName = (id) => {
-      return names != null && names.hasOwnProperty(id) ? names[id] : id;
+      return names != null && names.has(id) ? names.get(id) : id;
     }
 
     const balance = balances.results.total;

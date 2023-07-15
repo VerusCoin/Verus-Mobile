@@ -196,15 +196,9 @@ class DynamicHeader extends Component {
                 alignItems: 'center',
                 paddingRight: 16
               }}>
-              <Avatar.Icon
-                icon="wallet"
-                color={item.color}
-                style={{backgroundColor: 'white'}}
-                size={30}
-              />
-              <Text numberOfLines={1} style={{fontSize: 16, marginLeft: 8}}>{item.name}</Text>
+              <Text numberOfLines={1} style={{fontSize: 16, fontWeight: "bold"}}>{item.name}</Text>
             </View>
-            <Paragraph style={{fontSize: 16}}>
+            <Paragraph style={{fontSize: 16}} numberOfLines={1}>
               {this.props.balanceErrors[item.id]
                 ? CONNECTION_ERROR
                 : `${
@@ -241,14 +235,13 @@ class DynamicHeader extends Component {
                     paddingLeft: 8,
                     paddingRight: 16,
                     paddingBottom: 11,
-                    marginBottom: -10,
+                    marginBottom: -20,
                     marginRight: -10,
                   }}>
                   <Paragraph
                     numberOfLines={1}
                     style={{
                       color: 'white',
-                      fontWeight: 'bold',
                       fontSize: 14,
                     }}>{`${this.getNetworkName(item)} Network`}</Paragraph>
                 </View>

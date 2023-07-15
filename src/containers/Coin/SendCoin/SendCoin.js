@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Styles from "../../../styles/index";
 import { Button, Portal } from "react-native-paper";
 import VerusPay from "../../VerusPay/VerusPay";
@@ -22,6 +22,9 @@ import {
   SEND_MODAL_TO_ADDRESS_FIELD,
   SEND_MODAL_VIA_FIELD,
 } from '../../../utils/constants/sendModal';
+import { saveGeneralSettings } from "../../../actions/actionCreators";
+import { openUrl } from "../../../utils/linking";
+import { createAlert, resolveAlert } from "../../../actions/actions/alert/dispatchers/alert";
 
 const SendCoin = ({ navigation }) => {
   const activeCoin = useSelector(state => state.coins.activeCoin);
@@ -29,6 +32,10 @@ const SendCoin = ({ navigation }) => {
     const chainTicker = state.coins.activeCoin.id;
     return state.coinMenus.activeSubWallets[chainTicker];
   });
+  const generalWalletSettings = useSelector(
+    state => state.settings.generalWalletSettings,
+  );
+  const dispatch = useDispatch()
 
   const CONVERT_OR_CROSS_CHAIN_OPTIONS = [
     {
@@ -122,6 +129,43 @@ const SendCoin = ({ navigation }) => {
     openConvertOrCrossChainSendModal(activeCoin, subWallet, option.data)
   }
 
+  const openConvertOrCrossChainModal = () => {
+    const { ackedCurrencyDisclaimer } = generalWalletSettings;
+
+    if (!!!ackedCurrencyDisclaimer) {
+      createAlert(
+        'Disclaimer',
+        `Please read and acknowledge the following before proceeding:
+
+1. The Verus Protocol and The Verus Mobile Wallet are open-source projects under the MIT license, offered "as is" without warranties.
+        
+2. The wallet facilitates interaction with a peer-to-peer protocol that allows for currency conversion. The Verus Mobile Wallet's creators, developers, and maintainers are not intermediaries in any Verus Public Blockchains as a Service (PBaaS) transaction, and do not endorse or recommend any specific network currency whatsoever.
+        
+3. You bear sole responsibility for understanding the risks and mechanics involved in currency conversion.
+        
+4. You agree that the wallet's creators, developers, and maintainers are not liable for any loss or other outcomes that may result from your use of these protocols.
+        
+By proceeding, you confirm that you've read, understood, and agreed to this. Ensure you fully understand the currencies you choose to convert.`,
+        [
+          {
+            text: 'Cancel',
+            onPress: () => resolveAlert(false),
+            style: 'cancel',
+          },
+          {text: 'Learn', onPress: () => {
+            openUrl("https://docs.verus.io/sendcurrency/");
+            resolveAlert(false);
+          }},
+          {text: 'Continue', onPress: async () => {
+            setConvertOrCrossChainOptionsModalOpen(true);
+            dispatch(await saveGeneralSettings({ ackedCurrencyDisclaimer: true }));
+            resolveAlert(true);
+          }},
+        ],
+      );
+    } else setConvertOrCrossChainOptionsModalOpen(true);
+  }
+
   return (
     <View style={Styles.defaultRoot}>
       <Portal>
@@ -169,7 +213,7 @@ const SendCoin = ({ navigation }) => {
                 color={Colors.secondaryColor}
                 mode={"text"}
                 onPress={() =>
-                  setConvertOrCrossChainOptionsModalOpen(true)
+                  openConvertOrCrossChainModal()
                 }
                 style={{
                   marginBottom: 8,

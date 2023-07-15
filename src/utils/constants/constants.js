@@ -176,3 +176,14 @@ export const IADDRESS_VERSION = 102
 // Deep links
 export const CALLBACK_HOST = 'x-callback-url'
 export const SUPPORTED_DLS = [primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid]
+
+// Komodo
+export const KOMODO_ENDOFERA = 7777777;
+export const KOMODO_LOCKTIME_THRESHOLD = 500000000;
+export const KOMODO_MIN_SATOSHIS = 1000000000;
+export const KOMODO_ONE_MONTH_CAP_HARDFORK = 1000000;
+export const ONE_HOUR = 60;
+export const ONE_MONTH = 31 * 24 * 60;
+export const ONE_YEAR = 365 * 24 * 60;
+export const KOMODO_DIVISOR = 10512000;
+export const KOMODO_N_S7_HARDFORK_HEIGHT = 3484958;
