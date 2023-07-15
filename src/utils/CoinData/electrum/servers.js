@@ -168,9 +168,8 @@ let _electrumServers = {
     'electrumx2.monacoin.ninja:50001:tcp',
   ],
   ltc: [
-    'electrum1.cipig.net:20063:tcp',
-    'node.ispol.sk:50003:tcp',
-    'electrum3.cipig.net:20063:tcp'
+    'electrum1.cipig.net:20063:ssl',
+    'electrum3.cipig.net:20063:ssl'
   ],
   fair: [
     'electrum1.cipig.net:10063:tcp',
