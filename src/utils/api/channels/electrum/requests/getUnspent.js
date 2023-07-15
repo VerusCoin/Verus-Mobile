@@ -116,7 +116,7 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
           if (!arraysEqual(hashRawTx(getTxsRes[index].result, network), hexHashToDecimal(formattedUtxo.txid))) {
             throw new Error(
               'Mismatch error! At least one transaction ID provided by server ' + JSON.stringify(firstServer) + 
-              ' does not match the values of the transaction that it represents! This could indicate that the server is malicious, and this transaction has been canceled.')
+              ' does not appear to match the values of the transaction that it represents.')
           } 
           formattedUtxos[index].verifiedTxid = true
 

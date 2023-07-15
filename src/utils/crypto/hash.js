@@ -44,9 +44,9 @@ export const decodeBitcoinTxID = (rawTxString, network) => {
 export const hexHashToDecimal = (hexHash) => {
   let hexHashArray = hexHash.match(/.{1,2}/g)
 
-  return hexHashArray.map((byte, index) => {
+  return Buffer.from(hexHashArray.map((byte, index) => {
     return parseInt(byte, 16)
-  })
+  }))
 }
 
 // Converts a hex string to a byte array
