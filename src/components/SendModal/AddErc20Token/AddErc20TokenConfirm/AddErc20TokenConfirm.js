@@ -9,17 +9,12 @@ import {
   SEND_MODAL_FORM_STEP_FORM,
   SEND_MODAL_FORM_STEP_RESULT,
 } from '../../../../utils/constants/sendModal';
-import {AddPbaasCurrencyConfirmRender} from './AddPbaasCurrencyConfirm.render';
+import {AddErc20TokenConfirmRender} from './AddErc20TokenConfirm.render';
 import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
+import { coinsList } from '../../../../utils/CoinData/CoinsList';
 
-const AddPbaasCurrencyConfirm = props => {
-  const [currency, setCurrency] = useState(props.route.params.currency);
-  const [friendlyNames, setFriendlyNames] = useState(
-    props.route.params.friendlyNames,
-  );
-  const [launchSystem, setLaunchSystem] = useState(
-    props.route.params.launchSystem
-  );
+const AddErc20TokenConfirm = props => {
+  const [contract, setCurrency] = useState(props.route.params.contract);
 
   const dispatch = useDispatch();
   const sendModal = useSelector(state => state.sendModal);
@@ -38,8 +33,10 @@ const AddPbaasCurrencyConfirm = props => {
     await props.setPreventExit(true);
 
     try {
-      await CoinDirectory.addPbaasCurrency(currency, Object.keys(activeAccount.testnetOverrides).length > 0, true)
-      const fullCoinData = CoinDirectory.findCoinObj(currency.currencyid)
+      const {coinObj} = sendModal;
+
+      await CoinDirectory.addErc20Token(contract, coinObj.network);
+      const fullCoinData = CoinDirectory.findCoinObj(contract.address)
   
       dispatch(
         await addKeypairs(
@@ -73,8 +70,7 @@ const AddPbaasCurrencyConfirm = props => {
       }
 
       props.navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, {
-        currency,
-        friendlyNames,
+        contract
       });
     } catch (e) {
       Alert.alert('Could not add currency', e.message);
@@ -83,8 +79,7 @@ const AddPbaasCurrencyConfirm = props => {
     props.setPreventExit(false);
     props.setLoading(false);
   }, [
-    currency,
-    friendlyNames,
+    contract,
     sendModal,
     activeAccount,
     activeCoinList,
@@ -92,14 +87,11 @@ const AddPbaasCurrencyConfirm = props => {
     props,
   ]);
 
-  return AddPbaasCurrencyConfirmRender({
-    currency,
-    friendlyNames,
+  return AddErc20TokenConfirmRender({
+    contract,
     goBack,
-    submitData,
-    spotterSystem: sendModal.coinObj.system_id,
-    longestChainOnLaunchSystem: launchSystem.bestheight
+    submitData
   });
 };
 
-export default AddPbaasCurrencyConfirm;
+export default AddErc20TokenConfirm;

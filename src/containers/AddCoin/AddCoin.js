@@ -25,8 +25,7 @@ class AddCoin extends Component {
       error: null,
       query: '',
       coinList: [],
-      fullCoinDetails: null,
-      activeCoinIds: []
+      fullCoinDetails: null
     };
   }
 
@@ -36,9 +35,7 @@ class AddCoin extends Component {
 
   componentDidUpdate(lastProps, lastState) {
     if (lastState.query !== this.state.query || this.props.activeCoinsForUser !== lastProps.activeCoinsForUser) {
-      this.setState({coinList: this.getCoinList(), activeCoinIds: this.props.activeCoinsForUser.map(
-        coinObj => coinObj.id,
-      )});
+      this.setState({coinList: this.getCoinList()});
     }
   }
 
@@ -121,7 +118,9 @@ class AddCoin extends Component {
   };
 
   render() {
-    const activeCoinIds = this.state.activeCoinIds
+    const activeCoinIds = this.props.activeCoinsForUser.map(
+      coinObj => coinObj.id,
+    );
 
     return (
       <View styles={Styles.root}>

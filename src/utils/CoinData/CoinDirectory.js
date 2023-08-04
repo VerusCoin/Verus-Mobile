@@ -1,4 +1,4 @@
-import { DLIGHT_PRIVATE, ELECTRUM, IS_PBAAS, IS_VERUS, IS_ZCASH, VERUSID, VRPC, WYRE_SERVICE } from "../constants/intervalConstants";
+import { DLIGHT_PRIVATE, ELECTRUM, ERC20, GENERAL, IS_PBAAS, IS_VERUS, IS_ZCASH, VERUSID, VRPC, WYRE_SERVICE } from "../constants/intervalConstants";
 import { getDefaultApps, getSystemNameFromSystemId } from "./CoinData";
 import { electrumServers } from './electrum/servers';
 import { ENABLE_VERUS_IDENTITIES } from '../../../env/index'
@@ -7,6 +7,7 @@ import { VERUS_APPS, coinsList } from "./CoinsList";
 import { DEFAULT_DECIMALS } from "../constants/web3Constants";
 import { getStoredCurrencyDefinitions, storeCurrencyDefinitionForCurrencyId } from "../asyncStore/currencyDefinitionStorage";
 import { timeout } from "../promises";
+import { getStoredContractDefinitions, storeContractDefinitionForNetwork } from "../asyncStore/contractDefinitionStorage";
 
 class _CoinDirectory {
   fullCoinList = [];
@@ -116,7 +117,7 @@ class _CoinDirectory {
     }
   }
 
-  // Function to add PBaaS currency. This function is not implemented.
+  // Function to add PBaaS currency
   async addPbaasCurrency(currencyDefinition, isTestnet = false, checkEndpoint = true, trySystemFallback = true, storeResults = true) {
     const id = currencyDefinition.currencyid
     const system = currencyDefinition.systemid
@@ -227,7 +228,58 @@ class _CoinDirectory {
     this.updateCoinLists();
   }
 
-  async populateCurrencyDefinitionsFromStorage() {
+  /**
+   * Adds a custom ERC20 token
+   * @param {{ address: string, symbol: string, name: string, decimals: number }} contractDefinition 
+   * @param {string} network 
+   * @param {boolean} storeResults 
+   * @returns 
+   */
+  async addErc20Token(contractDefinition, network = 'homestead', storeResults = true) {
+    const id = contractDefinition.address;
+
+    if (this.coinExistsInDirectory(id)) {
+      if (this.coins[id].network === network) {
+        return;
+      } else {
+        throw new Error(
+          'Currency already exists in directory on ' +
+            + this.coins[id].network +
+            ' network',
+        );
+      }
+    }
+
+    const tokenCoinObj = {
+      id: contractDefinition.address,
+      currency_id: contractDefinition.address,
+      system_id: '.eth',
+      display_ticker: contractDefinition.symbol,
+      display_name: contractDefinition.name,
+      alt_names: [],
+      theme_color: '#141C30',
+      compatible_channels: [ERC20],
+      dominant_channel: ERC20,
+      decimals: contractDefinition.decimals,
+      tags: [],
+      proto: 'erc20',
+      network,
+      testnet: network !== 'homestead'
+    }
+
+    if (storeResults) {
+      await storeContractDefinitionForNetwork(
+        network,
+        contractDefinition.address,
+        contractDefinition,
+      );
+    }
+    
+    Object.assign(this.coins, { [tokenCoinObj.id]: tokenCoinObj });
+    this.updateCoinLists();
+  }
+
+  async populatePbaasCurrencyDefinitionsFromStorage() {
     const storedDefinitions = await getStoredCurrencyDefinitions()
     const mainnetCurrencies = storedDefinitions[coinsList.VRSC.currency_id]
       ? storedDefinitions[coinsList.VRSC.currency_id]
@@ -256,6 +308,36 @@ class _CoinDirectory {
         true, 
         false,
         false,
+        false
+      )
+    }
+  }
+
+  async populateEthereumContractDefinitionsFromStorage() {
+    const storedDefinitions = await getStoredContractDefinitions()
+    const mainnetTokens = storedDefinitions[coinsList.ETH.network]
+      ? storedDefinitions[coinsList.ETH.network]
+      : {};
+    const testnetTokens = storedDefinitions[coinsList.GETH.network]
+      ? storedDefinitions[coinsList.GETH.network]
+      : {};
+
+    for (const key in mainnetTokens) {
+      if (this.coinExistsInDirectory(key)) continue;
+
+      await this.addErc20Token(
+        mainnetTokens[key],
+        coinsList.ETH.network,
+        false
+      )
+    }
+
+    for (const key in testnetTokens) {
+      if (this.coinExistsInDirectory(key)) continue;
+
+      await this.addErc20Token(
+        testnetTokens[key],
+        coinsList.GETH.network,
         false
       )
     }

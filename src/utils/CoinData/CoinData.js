@@ -107,6 +107,7 @@ export const explorers = {
   VRSC: 'https://insight.verus.io/',
   VRSCTEST: 'https://testex.verus.io',
   ETH: 'https://etherscan.io',
+  GETH: 'https://goerli.etherscan.io/',
   RFOX: 'https://etherscan.io',
   BAT: 'https://etherscan.io',
   DAI: 'https://etherscan.io',
@@ -149,6 +150,7 @@ export const CoinLogos = {
   DAI: CoinLogoIcons.web3.DAI,
   DAIWYRE: CoinLogoIcons.web3.DAI,
   ETH: CoinLogoIcons.web3.ETH,
+  GETH: CoinLogoIcons.web3.ETH,
   BAL: CoinLogoIcons.web3.BAL,
   BNT: CoinLogoIcons.web3.BNT,
   HOT: CoinLogoIcons.web3.HOT,
@@ -283,8 +285,9 @@ export const getCoinObj = (coinList, coinId) => {
   })
 }
 
-export const getCoinLogo = (id, theme = 'light') => {  
+export const getCoinLogo = (id, proto, theme = 'light') => {  
   if (CoinLogos[id]) return CoinLogos[id][theme]
+  else if (proto === 'erc20') return CoinLogos.ETH[theme]
   else return CoinLogoIcons.pbaas.RenderPbaasCurrencyLogo(id)[theme]
 }
 

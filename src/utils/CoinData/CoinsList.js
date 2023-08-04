@@ -148,6 +148,23 @@ export const coinsList = {
     decimals: ETHERS,
     network: "homestead"
   },
+  GETH: {
+    id: 'GETH',
+    currency_id: '',
+    system_id: '.eth',
+    display_ticker: 'gETH',
+    display_name: 'Goerli Ethereum',
+    alt_names: [],
+    theme_color: '#141C30',
+    website: 'https://ethereum.org/en/',
+    compatible_channels: [ETH],
+    dominant_channel: ETH,
+    tags: [],
+    proto: 'eth',
+    decimals: ETHERS,
+    network: "goerli",
+    testnet: true
+  },
   BAT: {
     id: 'BAT',
     currency_id: '0x0d8775f648430679a709e98d2b0cb6250d2887ef',

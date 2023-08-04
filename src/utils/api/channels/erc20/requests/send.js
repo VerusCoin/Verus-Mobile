@@ -1,5 +1,5 @@
 import { ethers } from "ethers"
-import Web3Provider from '../../../../web3/provider'
+import { getWeb3ProviderForNetwork } from '../../../../web3/provider'
 import { ERC20, ETH } from "../../../../constants/intervalConstants"
 import { scientificToDecimal } from "../../../../math"
 import { requestPrivKey } from "../../../../auth/authBox"
@@ -7,6 +7,8 @@ import { ETHERS } from "../../../../constants/web3Constants"
 
 export const send = async (coinObj, activeUser, address, amount, params) => {
   try {
+    const Web3Provider = getWeb3ProviderForNetwork(coinObj.network)
+    
     const privKey = await requestPrivKey(coinObj.id, ERC20)
     const contract = Web3Provider.getContract(coinObj.currency_id)
     const gasPrice = await Web3Provider.DefaultProvider.getGasPrice()

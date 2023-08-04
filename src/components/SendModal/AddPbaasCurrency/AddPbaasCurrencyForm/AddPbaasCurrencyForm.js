@@ -36,17 +36,6 @@ const AddPbaasCurrencyForm = (props) => {
     return false;
   }, [sendModal, dispatch]);
 
-  const getPotentialPrimaryAddresses = useCallback(async (coinObj, channel) => {
-    const seeds = await requestSeeds();
-
-    const seed = seeds[channel];
-
-    const keyObj = await deriveKeyPair(seed, coinObj, channel);
-    const {addresses} = keyObj;
-
-    return addresses;
-  }, []);
-
   const submitData = useCallback(async () => {
     if (formHasError()) {
       return;
@@ -88,7 +77,7 @@ const AddPbaasCurrencyForm = (props) => {
     }
 
     props.setLoading(false)
-  }, [formHasError, getPotentialPrimaryAddresses, sendModal, dispatch, props]);
+  }, [formHasError, sendModal, dispatch, props]);
 
   return AddPbaasCurrencyFormRender({
     submitData,

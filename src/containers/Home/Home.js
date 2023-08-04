@@ -53,7 +53,7 @@ import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
 import {VERUSID_SERVICE_ID} from '../../utils/constants/services';
 import { dragDetectionEnabled } from '../../utils/dragDetection';
 import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
-import { openAddPbaasCurrencyModal } from '../../actions/actions/sendModal/dispatchers/sendModal';
+import { openAddErc20TokenModal, openAddPbaasCurrencyModal } from '../../actions/actions/sendModal/dispatchers/sendModal';
 
 class Home extends Component {
   constructor(props) {
@@ -506,6 +506,14 @@ class Home extends Component {
         this.props.testnetOverrides.VRSC
           ? this.props.testnetOverrides.VRSC
           : 'VRSC',
+      ),
+    );
+  };
+
+  _addErc20Token = () => {
+    openAddErc20TokenModal(
+      CoinDirectory.findCoinObj(
+        this.props.testnetOverrides.ETH ? this.props.testnetOverrides.ETH : 'ETH',
       ),
     );
   };

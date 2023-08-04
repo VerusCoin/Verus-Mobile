@@ -1,5 +1,5 @@
 import { ethers } from "ethers"
-import Web3Provider from '../../../../web3/provider'
+import { getWeb3ProviderForNetwork } from '../../../../web3/provider'
 import { ETH } from "../../../../constants/intervalConstants"
 import { ETH_NETWORK_IDS } from "../../../../constants/constants"
 import { ETH_HOMESTEAD } from '../../../../../../env/index'
@@ -8,6 +8,8 @@ import { requestPrivKey } from "../../../../auth/authBox"
 
 export const send = async (coinObj, activeUser, address, amount, params) => {
   try {
+    const Web3Provider = getWeb3ProviderForNetwork(coinObj.network)
+
     const fromAddress = activeUser.keys[coinObj.id][ETH].addresses[0]
     const privKey = await requestPrivKey(coinObj.id, ETH)
     const voidSigner = new ethers.VoidSigner(fromAddress, Web3Provider.DefaultProvider)

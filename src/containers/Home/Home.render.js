@@ -54,6 +54,7 @@ export const HomeRender = function () {
         handleVerusPay={() => this._verusPay()}
         handleEditCards={() => this.setEditingCards(!this.state.editingCards)}
         handleAddPbaasCurrency={() => this._addPbaasCurrency()}
+        handleAddErc20Token={() => this._addErc20Token()}
         showConfigureHomeCards={!dragDetection}
       />
       <Banner

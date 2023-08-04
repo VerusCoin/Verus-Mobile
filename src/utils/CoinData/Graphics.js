@@ -26,8 +26,9 @@ export const RenderSquareLogo = (LogoComponent, color, width = 40, height = 40) 
 };
 
 export const RenderSquareCoinLogo = (chainTicker, style = {}, width = 40, height = 40) => {
-  const Logo = getCoinLogo(chainTicker);
   const coinObj = CoinDirectory.findCoinObj(chainTicker)
+
+  const Logo = getCoinLogo(chainTicker, coinObj.proto);
 
   return RenderSquareLogo(
     <Logo
