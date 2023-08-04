@@ -580,7 +580,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         estimate
       } = res.result;
 
-      if (output.convertto != null && estimate == null) {
+      if (output.convertto != null && estimate == null && sendModal.data[SEND_MODAL_PRICE_ESTIMATE] == null) {
         Alert.alert("Could not estimate conversion result", 'Failed to calculate an estimated result for this conversion.')
       }
   
