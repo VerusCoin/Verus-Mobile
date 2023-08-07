@@ -3,9 +3,7 @@ import {ScrollView, View, TouchableOpacity, Alert} from 'react-native';
 import {Button, List, Divider, Text} from 'react-native-paper';
 import {useDispatch, useSelector} from 'react-redux';
 import {expireCoinData} from '../../../../actions/actionCreators';
-import {traditionalCryptoSend} from '../../../../actions/actionDispatchers';
 import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
-import {USD} from '../../../../utils/constants/currencies';
 import {
   API_GET_BALANCES,
   API_GET_FIATPRICE,
@@ -19,8 +17,7 @@ import {
 } from '../../../../utils/constants/sendModal';
 import {
   coinsToSats,
-  satsToCoins,
-  truncateDecimal,
+  satsToCoins
 } from '../../../../utils/math';
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';

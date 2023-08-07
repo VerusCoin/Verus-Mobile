@@ -34,6 +34,9 @@ import { getAddressBalances, preflightCurrencyTransfer } from "../../../../utils
 import { DEST_ETH, DEST_ID, DEST_PKH, TransferDestination, fromBase58Check } from "verus-typescript-primitives";
 import { CoinDirectory } from "../../../../utils/CoinData/CoinDirectory";
 import { ethers } from "ethers";
+import CoreSendFormModule from "../../../FormModules/CoreSendFormModule";
+import ConvertFormModule from "../../../FormModules/ConvertFormModule";
+import ExportFormModule from "../../../FormModules/ExportFormModule";
 
 const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
   const sendModal = useSelector(state => state.sendModal);
@@ -71,16 +74,16 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   const [conversionPaths, setConversionPaths] = useState(null);
 
   const [isConversion, setIsConversion] = useState(
-    sendModal.data[SEND_MODAL_CONVERTTO_FIELD] &&
-      sendModal.data[SEND_MODAL_CONVERTTO_FIELD].length,
+   !!(sendModal.data[SEND_MODAL_CONVERTTO_FIELD] != null &&
+      sendModal.data[SEND_MODAL_CONVERTTO_FIELD].length > 0)
   );
   const [isVia, setIsVia] = useState(
-    sendModal.data[SEND_MODAL_VIA_FIELD] &&
-      sendModal.data[SEND_MODAL_VIA_FIELD].length,
+    !!(sendModal.data[SEND_MODAL_VIA_FIELD] != null &&
+      sendModal.data[SEND_MODAL_VIA_FIELD].length > 0)
   );
   const [isExport, setIsExport] = useState(
-    sendModal.data[SEND_MODAL_EXPORTTO_FIELD] &&
-      sendModal.data[SEND_MODAL_EXPORTTO_FIELD].length,
+    !!(sendModal.data[SEND_MODAL_EXPORTTO_FIELD] != null &&
+      sendModal.data[SEND_MODAL_EXPORTTO_FIELD].length > 0)
   );
 
   const [showConversionField, setShowConversionField] = useState(
@@ -414,18 +417,18 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   }, [sendModal.subWallet.api_channels[API_SEND]])
 
   useEffect(() => {
-    setIsConversion(sendModal.data[SEND_MODAL_CONVERTTO_FIELD] &&
-      sendModal.data[SEND_MODAL_CONVERTTO_FIELD].length)
+    setIsConversion(!!(sendModal.data[SEND_MODAL_CONVERTTO_FIELD] != null &&
+      sendModal.data[SEND_MODAL_CONVERTTO_FIELD].length > 0))
   }, [sendModal.data[SEND_MODAL_CONVERTTO_FIELD]])
 
   useEffect(() => {
-    setIsVia(sendModal.data[SEND_MODAL_VIA_FIELD] &&
-      sendModal.data[SEND_MODAL_VIA_FIELD].length)
+    setIsVia(!!(sendModal.data[SEND_MODAL_VIA_FIELD] != null &&
+      sendModal.data[SEND_MODAL_VIA_FIELD].length > 0))
   }, [sendModal.data[SEND_MODAL_VIA_FIELD]])
 
   useEffect(() => {
-    setIsExport(sendModal.data[SEND_MODAL_EXPORTTO_FIELD] &&
-      sendModal.data[SEND_MODAL_EXPORTTO_FIELD].length)
+    setIsExport(!!(sendModal.data[SEND_MODAL_EXPORTTO_FIELD] != null &&
+      sendModal.data[SEND_MODAL_EXPORTTO_FIELD].length > 0))
   }, [sendModal.data[SEND_MODAL_EXPORTTO_FIELD]])
 
   const fillAmount = (amount) => {
@@ -741,258 +744,60 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
               enableOnAndroid={true}
               extraScrollHeight={150}
               keyboardShouldPersistTaps="handled">
-              <View style={{...Styles.wideBlockDense, paddingBottom: 2}}>
-                <TextInput
-                  label="Sending from"
-                  value={sendModal.subWallet.name}
-                  mode="outlined"
-                  disabled={true}
+                <CoreSendFormModule
+                  sendingFromValue={sendModal.subWallet.name}
+                  recipientAddressValue={sendModal.data[SEND_MODAL_TO_ADDRESS_FIELD]}
+                  onRecipientAddressChange={text =>
+                    updateSendFormData(SEND_MODAL_TO_ADDRESS_FIELD, text)
+                  }
+                  onSelfPress={() => setAddressSelf()}
+                  amountValue={sendModal.data[SEND_MODAL_AMOUNT_FIELD]}
+                  onAmountChange={text => updateSendFormData(SEND_MODAL_AMOUNT_FIELD, text)}
+                  onMaxPress={() => maxAmount()}
+                  maxButtonDisabled={localBalances == null}
+                  networkName={networkName}
+                  estimatedResultSubtitle={
+                    isConversion &&
+                    sendModal.data[SEND_MODAL_PRICE_ESTIMATE] != null &&
+                    processedAmount != null
+                      ? `≈ ${Number(
+                          (processedAmount * sendModal.data[SEND_MODAL_PRICE_ESTIMATE]).toFixed(
+                            8,
+                          ),
+                        )} ${sendModal.data[SEND_MODAL_CONVERTTO_FIELD]}`
+                      : null
+                  }
                 />
-                {
-                  networkName != null ? (
-                    <Text style={{marginTop: 8, fontSize: 14, color: Colors.verusDarkGray}}>
-                      {`on ${networkName} network`}
-                    </Text>
-                  ) : null
-                }
-              </View>
-              <View style={{...Styles.wideBlockDense, paddingTop: 0, paddingBottom: 2}}>
-                <View style={Styles.flexRow}>
-                  <TextInput
-                    returnKeyType="done"
-                    label="Recipient address"
-                    value={sendModal.data[SEND_MODAL_TO_ADDRESS_FIELD]}
-                    mode="outlined"
-                    multiline={true}
-                    onChangeText={text =>
-                      updateSendFormData(SEND_MODAL_TO_ADDRESS_FIELD, text)
-                    }
-                    autoCapitalize={'none'}
-                    autoCorrect={false}
-                    style={{
-                      flex: 1,
-                    }}
-                  />
-                  <Button
-                    onPress={() => setAddressSelf()}
-                    color={Colors.primaryColor}
-                    style={{
-                      alignSelf: 'center',
-                      marginTop: 6,
-                      width: 64
-                    }}
-                    compact>
-                    {'Self'}
-                  </Button>
-                </View>
-              </View>
-              <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
-                <View style={Styles.flexRow}>
-                  <TextInput
-                    returnKeyType="done"
-                    label={'Amount'}
-                    keyboardType={'decimal-pad'}
-                    autoCapitalize={'none'}
-                    autoCorrect={false}
-                    value={sendModal.data[SEND_MODAL_AMOUNT_FIELD]}
-                    mode="outlined"
-                    onChangeText={text =>
-                      updateSendFormData(SEND_MODAL_AMOUNT_FIELD, text)
-                    }
-                    style={{
-                      flex: 1,
-                    }}
-                  />
-                  <Button
-                    onPress={() => maxAmount()}
-                    color={Colors.primaryColor}
-                    style={{
-                      alignSelf: 'center',
-                      marginTop: 6,
-                      width: 64
-                    }}
-                    disabled={localBalances == null}
-                    compact>
-                    {'Max'}
-                  </Button>
-                </View>
-                {
-                  isConversion && sendModal.data[SEND_MODAL_PRICE_ESTIMATE] != null && processedAmount != null ? (
-                    <Text style={{marginTop: 8, fontSize: 14, color: Colors.verusDarkGray}}>
-                      {`≈ ${Number((processedAmount*sendModal.data[SEND_MODAL_PRICE_ESTIMATE]).toFixed(8))} ${sendModal.data[SEND_MODAL_CONVERTTO_FIELD]}`}
-                    </Text>
-                  ) : null
-                }
-              </View>
               {
-                showConversionField || showViaField ? (
-                  <React.Fragment>
-                    <View style={{...Styles.wideBlockDense}}>
-                      <Divider />
-                    </View>
-                    {
-                      showConversionField && (
-                        <View style={{...Styles.wideBlockDense}}>
-                        {
-                          (sendModal.data[SEND_MODAL_IS_PRECONVERT] || sendModal.data[SEND_MODAL_ADVANCED_FORM]) ? (
-                            <TextInput
-                              returnKeyType="done"
-                              label='Currency to convert to'
-                              value={sendModal.data[SEND_MODAL_CONVERTTO_FIELD]}
-                              mode="outlined"
-                              multiline={true}
-                              onChangeText={text =>
-                                updateSendFormData(SEND_MODAL_CONVERTTO_FIELD, text)
-                              }
-                              autoCapitalize={'none'}
-                              autoCorrect={false}
-                              style={{
-                                flex: 1,
-                              }}
-                            />
-                          ) : (
-                            <TouchableOpacity
-                              onPress={() => handleFieldFocus(SEND_MODAL_CONVERTTO_FIELD)}
-                              style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                paddingHorizontal: 16,
-                                paddingVertical: 10,
-                                borderWidth: 1,
-                                borderColor: Colors.verusDarkGray,
-                                borderRadius: 4,
-                              }}>
-                              <Text
-                                style={{
-                                  fontSize: 16,
-                                  color: isConversion ? Colors.quaternaryColor : Colors.verusDarkGray,
-                                }}>
-                                {isConversion
-                                  ? `Convert to: ${sendModal.data[SEND_MODAL_CONVERTTO_FIELD]}`
-                                  : 'Select currency to convert to'}
-                              </Text>
-                              <IconButton icon="magnify" size={16} color={Colors.verusDarkGray} />
-                            </TouchableOpacity>
-                          )
-                        }
-                        </View>
-                      )
-                    }
-                    {
-                      showViaField && (
-                        <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
-                          {
-                            (sendModal.data[SEND_MODAL_IS_PRECONVERT] || sendModal.data[SEND_MODAL_ADVANCED_FORM]) ? (
-                              <TextInput
-                                returnKeyType="done"
-                                label="Currency to convert via (optional)"
-                                value={sendModal.data[SEND_MODAL_VIA_FIELD]}
-                                mode="outlined"
-                                multiline={true}
-                                onChangeText={text => updateSendFormData(SEND_MODAL_VIA_FIELD, text)}
-                                autoCapitalize={'none'}
-                                autoCorrect={false}
-                                style={{
-                                  flex: 1,
-                                }}
-                              />
-                            ) : (
-                              <TouchableOpacity
-                                onPress={() => handleFieldFocus(SEND_MODAL_VIA_FIELD)}
-                                style={{
-                                  flexDirection: 'row',
-                                  alignItems: 'center',
-                                  justifyContent: 'space-between',
-                                  paddingHorizontal: 16,
-                                  paddingVertical: 10,
-                                  borderWidth: 1,
-                                  borderColor: Colors.verusDarkGray,
-                                  borderRadius: 4,
-                                }}>
-                                <Text
-                                  style={{
-                                    fontSize: 16,
-                                    color:
-                                      isVia || isConversion
-                                        ? Colors.quaternaryColor
-                                        : Colors.verusDarkGray,
-                                  }}>
-                                  {isVia
-                                    ? `Convert via: ${sendModal.data[SEND_MODAL_VIA_FIELD]}`
-                                    : isConversion
-                                    ? 'Direct conversion'
-                                    : 'Select currency to convert via'}
-                                </Text>
-                                <IconButton icon="magnify" size={16} color={Colors.verusDarkGray} />
-                              </TouchableOpacity>
-                            )
-                          }
-                        </View>
-                      )
-                    }
-                  </React.Fragment>
+                (showConversionField || showViaField) ? (
+                  <ConvertFormModule
+                    isConversion={isConversion}
+                    isPreconvert={sendModal.data[SEND_MODAL_IS_PRECONVERT]}
+                    advancedForm={sendModal.data[SEND_MODAL_ADVANCED_FORM]}
+                    convertToField={sendModal.data[SEND_MODAL_CONVERTTO_FIELD]}
+                    viaField={sendModal.data[SEND_MODAL_VIA_FIELD]}
+                    handleFieldFocusVia={() => handleFieldFocus(SEND_MODAL_VIA_FIELD)}
+                    handleFieldFocusConvertTo={() => handleFieldFocus(SEND_MODAL_CONVERTTO_FIELD)}
+                    onViaChange={(text) => updateSendFormData(SEND_MODAL_VIA_FIELD, text)}
+                    onConvertToChange={(text) => updateSendFormData(SEND_MODAL_CONVERTTO_FIELD, text)}
+                    isVia={isVia}
+                    showConversionField={showConversionField}
+                    showViaField={showViaField}
+                  />
                 ) : null
               }
               {
                 showExportField && (
-                  <React.Fragment>
-                    <View style={{...Styles.wideBlockDense}}>
-                      <Divider />
-                    </View>
-                    <View style={{...Styles.wideBlockDense}}>
-                      {
-                        (sendModal.data[SEND_MODAL_IS_PRECONVERT] || sendModal.data[SEND_MODAL_ADVANCED_FORM]) ? (
-                          <TextInput
-                            returnKeyType="done"
-                            label="System to send to (optional)"
-                            value={sendModal.data[SEND_MODAL_EXPORTTO_FIELD]}
-                            mode="outlined"
-                            multiline={true}
-                            onChangeText={text => updateSendFormData(SEND_MODAL_EXPORTTO_FIELD, text)}
-                            autoCapitalize={'none'}
-                            autoCorrect={false}
-                            style={{
-                              flex: 1,
-                            }}
-                          />
-                        ) : (
-                          <TouchableOpacity
-                            onPress={() => handleFieldFocus(SEND_MODAL_EXPORTTO_FIELD)}
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              paddingHorizontal: 16,
-                              paddingVertical: 10,
-                              borderWidth: 1,
-                              borderColor: Colors.verusDarkGray,
-                              borderRadius: 4,
-                            }}>
-                            <Text
-                              style={{
-                                fontSize: 16,
-                                color:
-                                  isExport || isConversion
-                                    ? Colors.quaternaryColor
-                                    : Colors.verusDarkGray,
-                              }}>
-                              {isExport
-                                ? `To network: ${sendModal.data[SEND_MODAL_EXPORTTO_FIELD]}`
-                                : isConversion
-                                ? `On ${
-                                    localNetworkDefinition
-                                      ? localNetworkDefinition.fullyqualifiedname
-                                      : 'current'
-                                  } network`
-                                : 'Select network to send to'}
-                            </Text>
-                            <IconButton icon="magnify" size={16} color={Colors.verusDarkGray} />
-                          </TouchableOpacity>
-                        )
-                      }
-                    </View>
-                  </React.Fragment>
+                  <ExportFormModule
+                    isExport={isExport}
+                    isConversion={isConversion}
+                    exportToField={sendModal.data[SEND_MODAL_EXPORTTO_FIELD]}
+                    handleNetworkFieldFocus={() => handleFieldFocus(SEND_MODAL_EXPORTTO_FIELD)}
+                    onSystemChange={(text) => updateSendFormData(SEND_MODAL_EXPORTTO_FIELD, text)}
+                    localNetworkDefinition={localNetworkDefinition}
+                    advancedForm={sendModal.data[SEND_MODAL_ADVANCED_FORM]}
+                    isPreconvert={sendModal.data[SEND_MODAL_IS_PRECONVERT]}
+                  />
                 )
               }
               {
