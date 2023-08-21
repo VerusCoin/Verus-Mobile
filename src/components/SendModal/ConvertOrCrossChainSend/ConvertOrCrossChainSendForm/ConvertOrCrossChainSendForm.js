@@ -5,7 +5,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { TextInput, Button, Divider, Checkbox, List, Text, IconButton } from "react-native-paper";
 import { useSelector } from 'react-redux';
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
-import { API_SEND, DLIGHT_PRIVATE } from "../../../../utils/constants/intervalConstants";
+import { API_SEND, DLIGHT_PRIVATE, ETH } from "../../../../utils/constants/intervalConstants";
 import {
   SEND_MODAL_ADVANCED_FORM,
   SEND_MODAL_AMOUNT_FIELD,
@@ -13,9 +13,11 @@ import {
   SEND_MODAL_EXPORTTO_FIELD,
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_IS_PRECONVERT,
+  SEND_MODAL_MAPPING_FIELD,
   SEND_MODAL_PRICE_ESTIMATE,
   SEND_MODAL_SHOW_CONVERTTO_FIELD,
   SEND_MODAL_SHOW_EXPORTTO_FIELD,
+  SEND_MODAL_SHOW_MAPPING_FIELD,
   SEND_MODAL_SHOW_VIA_FIELD,
   SEND_MODAL_TO_ADDRESS_FIELD,
   SEND_MODAL_VIA_FIELD,
@@ -30,16 +32,20 @@ import { getCoinLogo } from "../../../../utils/CoinData/CoinData";
 import { getCurrency, getIdentity } from "../../../../utils/api/channels/verusid/callCreators";
 import selectAddresses from "../../../../selectors/address";
 import MissingInfoRedirect from "../../../MissingInfoRedirect/MissingInfoRedirect";
-import { getAddressBalances, preflightCurrencyTransfer } from "../../../../utils/api/channels/vrpc/callCreators";
+import { preflightCurrencyTransfer } from "../../../../utils/api/channels/vrpc/callCreators";
 import { DEST_ETH, DEST_ID, DEST_PKH, TransferDestination, fromBase58Check } from "verus-typescript-primitives";
 import { CoinDirectory } from "../../../../utils/CoinData/CoinDirectory";
 import { ethers } from "ethers";
 import CoreSendFormModule from "../../../FormModules/CoreSendFormModule";
 import ConvertFormModule from "../../../FormModules/ConvertFormModule";
 import ExportFormModule from "../../../FormModules/ExportFormModule";
+import { getAddressBalances } from "../../../../utils/api/routers/getAddressBalance";
+import { coinsList } from "../../../../utils/CoinData/CoinsList";
+import { ETH_CONTRACT_ADDRESS } from "../../../../utils/constants/web3Constants";
 
 const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
   const sendModal = useSelector(state => state.sendModal);
+  const activeUser = useSelector(state => state.authentication.activeAccount);
   const addresses = useSelector(state => selectAddresses(state));
   const activeAccount = useSelector(state => state.authentication.activeAccount);
   const networkName = useSelector(state => {
@@ -64,7 +70,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
   const [processedAmount, setProcessedAmount] = useState(null);
 
-  const [localNetworkDefinition, setLocalNetworkDefinition] = useState(null);
+  const [localNetworkName, setLocalNetworkName] = useState(null);
   const [localBalances, setLocalBalances] = useState(null);
 
   const [suggestions, setSuggestions] = useState([]);
@@ -178,6 +184,185 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     else return ""
   }
 
+  const processConverttoSuggestionPaths = async (flatPaths, coinObj) => {
+    switch (coinObj.proto) {
+      case 'vrsc':
+        return flatPaths.map((path, index) => {
+          const priceFixed = Number(path.price.toFixed(2))
+    
+          return {
+            title: path.destination.fullyqualifiedname,
+            logoid: path.destination.currencyid,
+            key: index.toString(),
+            description: path.via
+              ? `${
+                  path.exportto
+                    ? path.gateway
+                      ? `off-system to ${path.exportto.fullyqualifiedname} network `
+                      : `off-chain to ${path.exportto.fullyqualifiedname} network `
+                    : ''
+                }via ${path.via.fullyqualifiedname}`
+              : path.exportto
+              ? path.gateway && path.exportto
+                ? `off-system to ${path.exportto.fullyqualifiedname} network`
+                : `off-chain to ${path.exportto.fullyqualifiedname} network`
+              : 'direct',
+            values: {
+              [SEND_MODAL_VIA_FIELD]: path.via ? path.via.fullyqualifiedname : '',
+              [SEND_MODAL_CONVERTTO_FIELD]: path.destination.fullyqualifiedname,
+              [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
+                ? path.exportto.fullyqualifiedname
+                : '',
+              [SEND_MODAL_PRICE_ESTIMATE]: path.price
+            },
+            right: `${
+              priceFixed === 0
+                ? '<0.01'
+                : priceFixed === path.price
+                ? priceFixed
+                : `~${priceFixed}`
+            }`,
+            keywords: [path.destination.currencyid, path.destination.fullyqualifiedname]
+          };
+        });
+      case 'eth':
+      case 'erc20':
+        return flatPaths.filter(x => {
+          return !x.mapping
+        }).map((path, index) => {
+          const priceFixed = Number(path.price.toFixed(2))
+          const addr = path.ethdest ? path.destination.address : null;
+          
+          const name = path.ethdest
+            ? path.destination.address === ETH_CONTRACT_ADDRESS ? path.destination.name : `${path.destination.name} (${
+                addr.substring(0, 8) + '...' + addr.substring(addr.length - 8)
+              })`
+            : path.destination.fullyqualifiedname;
+
+          return {
+            title: name,
+            logoid: path.ethdest ? path.destination.address : path.destination.currencyid,
+            logoproto: path.ethdest ? "erc20" : null,
+            key: index.toString(),
+            description: path.via
+              ? `${
+                  path.exportto
+                    ? path.gateway
+                      ? `off-system to ${path.exportto.fullyqualifiedname} network `
+                      : `off-chain to ${path.exportto.fullyqualifiedname} network `
+                    : ''
+                }via ${path.via.fullyqualifiedname}`
+              : path.exportto
+              ? path.gateway && path.exportto
+                ? `off-system to ${path.exportto.fullyqualifiedname} network`
+                : `off-chain to ${path.exportto.fullyqualifiedname} network`
+              : 'direct',
+            values: {
+              [SEND_MODAL_VIA_FIELD]: path.via ? path.via.fullyqualifiedname : '',
+              [SEND_MODAL_CONVERTTO_FIELD]: path.ethdest ? path.destination.address : path.destination.fullyqualifiedname,
+              [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
+                ? path.exportto.fullyqualifiedname
+                : '',
+              [SEND_MODAL_PRICE_ESTIMATE]: path.price
+            },
+            right: `${
+              priceFixed === 0
+                ? '<0.01'
+                : priceFixed === path.price
+                ? priceFixed
+                : `~${priceFixed}`
+            }`,
+            keywords: path.ethdest
+              ? [path.destination.address, path.destination.symbol, path.destination.name]
+              : [path.destination.currencyid, path.destination.fullyqualifiedname]
+          };
+        });
+      default:
+        return []
+    }
+  }
+
+  const processViaSuggestionPaths = async (flatPaths, coinObj) => {
+    switch (coinObj.proto) {
+      case 'vrsc':
+        return flatPaths.filter(x => {
+          if (isConversion) {
+            const destinationCurrency = sendModal.data[SEND_MODAL_CONVERTTO_FIELD];
+            return (
+              x.via != null &&
+              (x.destination.currencyid === destinationCurrency ||
+                destinationCurrency.toLowerCase() ===
+                  x.destination.fullyqualifiedname.toLowerCase())
+            );
+          } else return x.via != null;
+        }).map((path, index) => {
+          const priceFixed = Number(path.price.toFixed(2))
+    
+          return {
+            title: path.via.fullyqualifiedname,
+            logoid: path.via.currencyid,
+            key: index.toString(),
+            description: `${
+                  path.exportto
+                    ? path.gateway
+                      ? `off-system to ${path.exportto.fullyqualifiedname} network `
+                      : `off-chain to ${path.exportto.fullyqualifiedname} network `
+                    : ''
+                }to ${path.destination.fullyqualifiedname}`,
+            values: {
+              [SEND_MODAL_VIA_FIELD]: path.via.fullyqualifiedname,
+              [SEND_MODAL_CONVERTTO_FIELD]: path.destination.fullyqualifiedname,
+              [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
+                ? path.exportto.fullyqualifiedname
+                : '',
+              [SEND_MODAL_PRICE_ESTIMATE]: path.price
+            },
+            right: `${
+              priceFixed === 0
+                ? '<0.01'
+                : priceFixed === path.price
+                ? priceFixed
+                : `~${priceFixed}`
+            }`,
+            keywords: [path.via.currencyid, path.via.fullyqualifiedname]
+          };
+        })
+      default:
+        return []
+    }
+  }
+
+  const processExporttoSuggestionPaths = async (flatPaths, coinObj) => {
+    switch (coinObj.proto) {
+      case 'vrsc':
+        const seenSystems = {}
+        return flatPaths.filter(x => {
+          if (x.exportto == null) return false;
+
+          const seen = seenSystems[x.exportto.currencyid] != null;
+
+          if (!seen) {
+            seenSystems[x.exportto.currencyid] = true;
+            return true
+          } else return false;
+        }).map((path, index) => {    
+          return {
+            title: path.exportto.fullyqualifiedname,
+            logoid: path.exportto.currencyid,
+            key: index.toString(),
+            description: path.exportto.currencyid,
+            values: {
+              [SEND_MODAL_EXPORTTO_FIELD]: path.exportto.fullyqualifiedname,
+            },
+            right: "",
+            keywords: [path.exportto.currencyid, path.exportto.fullyqualifiedname]
+          };
+        });
+      default:
+        return []
+    }
+  }
+
   const fetchSuggestionsBase = async (field) => {
     if (loadingSuggestions) return;
     let newSuggestionsBase = []
@@ -188,11 +373,13 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
       // {[destinationid: string]: Array<{
       //   via?: CurrencyDefinition;
       //   destination: CurrencyDefinition;
-      //   exportto?: CurrencyDefinition;
+      //   exportto?: string;
       //   price: number;
       //   viapriceinroot?: number;
       //   destpriceinvia?: number;
       //   gateway: boolean;
+      //   mapping: boolean;
+      //   bounceback: boolean;
       // }>}
       
       const paths = conversionPaths
@@ -215,118 +402,15 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
       switch (field) {
         case SEND_MODAL_CONVERTTO_FIELD:
-          newSuggestionsBase = flatPaths.map((path, index) => {
-            const priceFixed = Number(path.price.toFixed(2))
-    
-            return {
-              title: path.destination.fullyqualifiedname,
-              logoid: path.destination.currencyid,
-              key: index.toString(),
-              description: path.via
-                ? `${
-                    path.exportto
-                      ? path.gateway
-                        ? `off-system to ${path.exportto.fullyqualifiedname} network `
-                        : `off-chain to ${path.exportto.fullyqualifiedname} network `
-                      : ''
-                  }via ${path.via.fullyqualifiedname}`
-                : path.exportto
-                ? path.gateway && path.exportto
-                  ? `off-system to ${path.exportto.fullyqualifiedname} network`
-                  : `off-chain to ${path.exportto.fullyqualifiedname} network`
-                : 'direct',
-              values: {
-                [SEND_MODAL_VIA_FIELD]: path.via ? path.via.fullyqualifiedname : '',
-                [SEND_MODAL_CONVERTTO_FIELD]: path.destination.fullyqualifiedname,
-                [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
-                  ? path.exportto.fullyqualifiedname
-                  : '',
-                [SEND_MODAL_PRICE_ESTIMATE]: path.price
-              },
-              right: `${
-                priceFixed === 0
-                  ? '<0.01'
-                  : priceFixed === path.price
-                  ? priceFixed
-                  : `~${priceFixed}`
-              }`,
-              keywords: [path.destination.currencyid, path.destination.fullyqualifiedname]
-            };
-          });
-
+          newSuggestionsBase = await processConverttoSuggestionPaths(flatPaths, sendModal.coinObj);
           setSuggestionBase(newSuggestionsBase);
           break;
         case SEND_MODAL_VIA_FIELD:
-          newSuggestionsBase = flatPaths.filter(x => {
-            if (isConversion) {
-              const destinationCurrency = sendModal.data[SEND_MODAL_CONVERTTO_FIELD];
-              return (
-                x.via != null &&
-                (x.destination.currencyid === destinationCurrency ||
-                  destinationCurrency.toLowerCase() ===
-                    x.destination.fullyqualifiedname.toLowerCase())
-              );
-            } else return x.via != null;
-          }).map((path, index) => {
-            const priceFixed = Number(path.price.toFixed(2))
-    
-            return {
-              title: path.via.fullyqualifiedname,
-              logoid: path.via.currencyid,
-              key: index.toString(),
-              description: `${
-                    path.exportto
-                      ? path.gateway
-                        ? `off-system to ${path.exportto.fullyqualifiedname} network `
-                        : `off-chain to ${path.exportto.fullyqualifiedname} network `
-                      : ''
-                  }to ${path.destination.fullyqualifiedname}`,
-              values: {
-                [SEND_MODAL_VIA_FIELD]: path.via.fullyqualifiedname,
-                [SEND_MODAL_CONVERTTO_FIELD]: path.destination.fullyqualifiedname,
-                [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
-                  ? path.exportto.fullyqualifiedname
-                  : '',
-                [SEND_MODAL_PRICE_ESTIMATE]: path.price
-              },
-              right: `${
-                priceFixed === 0
-                  ? '<0.01'
-                  : priceFixed === path.price
-                  ? priceFixed
-                  : `~${priceFixed}`
-              }`,
-              keywords: [path.via.currencyid, path.via.fullyqualifiedname]
-            };
-          })
-
+          newSuggestionsBase = await processViaSuggestionPaths(flatPaths, sendModal.coinObj);
           setSuggestionBase(newSuggestionsBase);
           break;
         case SEND_MODAL_EXPORTTO_FIELD:
-          const seenSystems = {}
-          newSuggestionsBase = flatPaths.filter(x => {
-            if (x.exportto == null) return false;
-
-            const seen = seenSystems[x.exportto.currencyid] != null;
-
-            if (!seen) {
-              seenSystems[x.exportto.currencyid] = true;
-              return true
-            } else return false;
-          }).map((path, index) => {    
-            return {
-              title: path.exportto.fullyqualifiedname,
-              logoid: path.exportto.currencyid,
-              key: index.toString(),
-              description: path.exportto.currencyid,
-              values: {
-                [SEND_MODAL_EXPORTTO_FIELD]: path.exportto.fullyqualifiedname,
-              },
-              right: "",
-              keywords: [path.exportto.currencyid, path.exportto.fullyqualifiedname]
-            };
-          });
-
+          newSuggestionsBase = await processExporttoSuggestionPaths(flatPaths, sendModal.coinObj)
           setSuggestionBase(newSuggestionsBase);
           break;
         default:
@@ -377,22 +461,37 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     leaveSearchMode();
   };
 
-  const fetchLocalNetworkDefinition = async () => {
-    const [channelName, address, systemId] = sendModal.subWallet.api_channels[API_SEND].split('.');
+  const fetchLocalNetworkInfo = async () => {
+    let address;
 
-    const response = await getCurrency(sendModal.coinObj.system_id, systemId);
+    if (sendModal.coinObj.proto === 'erc20' || sendModal.coinObj.proto === 'eth') {
+      address = activeUser.keys[sendModal.coinObj.id][ETH].addresses[0];
 
-    if (response.error) createAlert("Error", "Error fetching current network.");
-    else {
-      setLocalNetworkDefinition(response.result);
-      
-      const balanceRes = await getAddressBalances(response.result.currencyid, [address]);
+      setLocalNetworkName(coinsList.ETH.display_ticker);
+    } else {
+      const [channelName, channelAddress, systemId] = sendModal.subWallet.api_channels[API_SEND].split('.');
 
-      if (balanceRes.error) createAlert("Error", "Error fetching balances.");
+      address = channelAddress;
 
-      setLocalBalances(
-        balanceRes.result.currencybalance ? balanceRes.result.currencybalance : {},
+      const response = await getCurrency(sendModal.coinObj.system_id, systemId);
+
+      if (response.error) createAlert("Error", "Error fetching current network.");
+      else {
+        setLocalNetworkName(response.result.fullyqualifiedname);
+      }
+    }
+
+    try {
+      const balances = await getAddressBalances(
+        sendModal.coinObj,
+        sendModal.subWallet.api_channels[API_SEND],
+        {address},
       );
+
+      setLocalBalances(balances);
+    } catch(e) {
+      console.error(e)
+      Alert.alert("Error fetching balances", e.message);
     }
   }
 
@@ -413,7 +512,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   }, [sendModal.data[SEND_MODAL_AMOUNT_FIELD]])
 
   useEffect(() => {
-    fetchLocalNetworkDefinition()
+    fetchLocalNetworkInfo()
   }, [sendModal.subWallet.api_channels[API_SEND]])
 
   useEffect(() => {
@@ -706,7 +805,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                           <Text style={Styles.listItemTableCell}>{item.right}</Text>
                         )}
                         left={props => {
-                          const Logo = getCoinLogo(item.logoid);
+                          const Logo = getCoinLogo(item.logoid, item.logoproto);
 
                           return (
                             <View style={{justifyContent: 'center', paddingLeft: 8}}>
@@ -794,9 +893,13 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                     exportToField={sendModal.data[SEND_MODAL_EXPORTTO_FIELD]}
                     handleNetworkFieldFocus={() => handleFieldFocus(SEND_MODAL_EXPORTTO_FIELD)}
                     onSystemChange={(text) => updateSendFormData(SEND_MODAL_EXPORTTO_FIELD, text)}
-                    localNetworkDefinition={localNetworkDefinition}
+                    localNetworkName={localNetworkName}
                     advancedForm={sendModal.data[SEND_MODAL_ADVANCED_FORM]}
                     isPreconvert={sendModal.data[SEND_MODAL_IS_PRECONVERT]}
+                    showMappingField={sendModal.data[SEND_MODAL_SHOW_MAPPING_FIELD]}
+                    mappingField={sendModal.data[SEND_MODAL_MAPPING_FIELD]}
+                    handleMappingFieldFocus={() => handleFieldFocus(SEND_MODAL_MAPPING_FIELD)}
+                    onMappingChange={(text) => updateSendFormData(SEND_MODAL_MAPPING_FIELD, text)}
                   />
                 )
               }

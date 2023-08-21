@@ -10,9 +10,13 @@ const ExportFormModule = ({
   isPreconvert,
   exportToField,
   handleNetworkFieldFocus,
+  handleMappingFieldFocus,
   onSystemChange,
+  onMappingChange,
   localNetworkDefinition,
-  advancedForm
+  advancedForm,
+  showMappingField,
+  mappingField
 }) => {
   return (
     <React.Fragment>
@@ -69,6 +73,51 @@ const ExportFormModule = ({
           )
         }
       </View>
+      {
+        showMappingField && (
+          <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
+            {isPreconvert || advancedForm ? (
+              <TextInput
+                returnKeyType="done"
+                label="System to send to (optional)"
+                value={mappingField}
+                mode="outlined"
+                multiline={true}
+                onChangeText={text => onMappingChange(text)}
+                autoCapitalize={'none'}
+                autoCorrect={false}
+                style={{flex: 1}}
+              />
+            ) : (
+              <TouchableOpacity
+                onPress={() => handleMappingFieldFocus()}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderWidth: 1,
+                  borderColor: Colors.verusDarkGray,
+                  borderRadius: 4,
+                }}>
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: mappingField != null && mappingField.length > 0
+                        ? Colors.quaternaryColor
+                        : Colors.verusDarkGray,
+                  }}>
+                  {mappingField != null && mappingField.length > 0
+                    ? `Receive as: ${mappingField}`
+                    : 'Select currency to receive as'}
+                </Text>
+                <IconButton icon="magnify" size={16} color={Colors.verusDarkGray} />
+              </TouchableOpacity>
+            )}
+          </View>
+        )
+      }
     </React.Fragment>
   );
 };

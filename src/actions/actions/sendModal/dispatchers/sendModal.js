@@ -32,7 +32,8 @@ import {
   SEND_MODAL_PRICE_ESTIMATE,
   SEND_MODAL_ADVANCED_FORM,
   SEND_MODAL_CONTRACT_ADDRESS_FIELD,
-  ADD_ERC20_TOKEN_MODAL
+  ADD_ERC20_TOKEN_MODAL,
+  SEND_MODAL_SHOW_MAPPING_FIELD
 } from '../../../../utils/constants/sendModal';
 import {
   CLOSE_SEND_COIN_MODAL,
@@ -99,6 +100,7 @@ export const openConvertOrCrossChainSendModal = (coinObj, subWallet, data) => {
           [SEND_MODAL_SHOW_CONVERTTO_FIELD]: true,
           [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
           [SEND_MODAL_SHOW_VIA_FIELD]: true,
+          [SEND_MODAL_SHOW_MAPPING_FIELD]: (coinObj.proto === 'erc20' || coinObj.proto === 'eth'),
           [SEND_MODAL_ADVANCED_FORM]: false
         }
       : data,
