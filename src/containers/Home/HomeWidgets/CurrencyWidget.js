@@ -138,7 +138,7 @@ const CurrencyWidget = props => {
             ? 'Testnet ERC20 Token'
             : coinObj.testnet
             ? 'Testnet Currency'
-            : coinObj.pbaas_options
+            : (coinObj.pbaas_options && !coinObj.compatible_channels.includes(GENERAL))
             ? 'PBaaS Currency'
             : uniValueDisplay === '-'
             ? coinObj.proto === 'erc20'

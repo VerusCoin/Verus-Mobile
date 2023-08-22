@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 import { getCurrenciesMappedToEth } from "./getCurrenciesMappedToEth";
-import { ETH_BRIDGE_NAME, ETH_CONTRACT_ADDRESS } from "../../../../constants/web3Constants";
+import { ETH_BRIDGE_NAME, ETH_CONTRACT_ADDRESS, VETH } from "../../../../constants/web3Constants";
 import { DEST_ETH } from "verus-typescript-primitives";
 import { getWeb3ProviderForNetwork } from "../../../../web3/provider";
 
@@ -81,6 +81,8 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
 
               // Or bounce back to ETH through any currency mapped to your destination
               for (const contractAddress of erc20sMappedToCurrency) {
+                paths[contractAddress] = []
+
                 try {
                   if (contractAddress !== ETH_CONTRACT_ADDRESS) {
                     const contract = getWeb3ProviderForNetwork(ethNetwork).getUnitializedContractInstance(contractAddress);
@@ -88,7 +90,7 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
                     const symbol = await contract.symbol();
                     const decimals = await contract.decimals();
   
-                    paths[convertableCurrencyId].push({
+                    paths[contractAddress].push({
                       via: convertableCurrencyDefinition,
                       destination: {
                         address: contractAddress,
@@ -102,7 +104,7 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
                       ethdest: true
                     });
                   } else {
-                    paths[convertableCurrencyId].push({
+                    paths[ETH_CONTRACT_ADDRESS].push({
                       via: convertableCurrencyDefinition,
                       destination: {
                         address: ETH_CONTRACT_ADDRESS,
@@ -142,6 +144,8 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
 
               // Or bounce back to ETH through any currency mapped to your destination
               for (const contractAddress of erc20sMappedToCurrency) {
+                paths[contractAddress] = []
+
                 try {
                   if (contractAddress !== ETH_CONTRACT_ADDRESS) {
                     const contract = getWeb3ProviderForNetwork(ethNetwork).getUnitializedContractInstance(contractAddress);
@@ -149,7 +153,7 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
                     const symbol = await contract.symbol();
                     const decimals = await contract.decimals();
 
-                    paths[convertableCurrencyId].push({
+                    paths[contractAddress].push({
                       via: bridgeCurrencyDefinition,
                       destination: {
                         address: contractAddress,
@@ -163,7 +167,7 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
                       ethdest: true
                     });
                   } else {
-                    paths[convertableCurrencyId].push({
+                    paths[ETH_CONTRACT_ADDRESS].push({
                       via: bridgeCurrencyDefinition,
                       destination: {
                         address: ETH_CONTRACT_ADDRESS,
@@ -222,6 +226,55 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
         
         return !(offSystem && x.exportto == null);
       });
+    }
+
+    const mappedCurrenciesResponse = await getCurrenciesMappedToEth(systemId, ethNetwork);
+    if (mappedCurrenciesResponse.error) throw new Error(sourceResponse.error.message);
+    const {currencyIdToContractAddressMap} = mappedCurrenciesResponse.result;
+
+    if (currencyIdToContractAddressMap.has(sourceDefinition.currencyid)) {
+      const mappedEthCurrencies = currencyIdToContractAddressMap.get(sourceDefinition.currencyid);
+
+      for (const contractAddress of mappedEthCurrencies) {
+        paths[contractAddress] = []
+
+        const vEthCurrencyResponse = await endpoint.getCurrency(VETH);
+        if (vEthCurrencyResponse.error) throw new Error(vEthCurrencyResponse.error.message);
+        const vEthCurrencyDefinition = vEthCurrencyResponse.result;
+
+        if (contractAddress === ETH_CONTRACT_ADDRESS) {
+          paths[contractAddress].push({
+            destination: {
+              address: ETH_CONTRACT_ADDRESS,
+              symbol: "ETH",
+              decimals: 18,
+              name: "Ethereum",
+            },
+            exportto: vEthCurrencyDefinition,
+            price: 1,
+            gateway: true,
+            mapping: true
+          })
+        } else {
+          const contract = getWeb3ProviderForNetwork(ethNetwork).getUnitializedContractInstance(contractAddress);
+          const name = await contract.name();
+          const symbol = await contract.symbol();
+          const decimals = await contract.decimals();
+  
+          paths[contractAddress].push({
+            destination: {
+              address: contractAddress,
+              symbol,
+              decimals,
+              name,
+            },
+            exportto: vEthCurrencyDefinition,
+            price: 1,
+            gateway: true,
+            mapping: true
+          })
+        }
+      }
     }
   
     return paths;

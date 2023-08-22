@@ -100,7 +100,7 @@ export const openConvertOrCrossChainSendModal = (coinObj, subWallet, data) => {
           [SEND_MODAL_SHOW_CONVERTTO_FIELD]: true,
           [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
           [SEND_MODAL_SHOW_VIA_FIELD]: true,
-          [SEND_MODAL_SHOW_MAPPING_FIELD]: (coinObj.proto === 'erc20' || coinObj.proto === 'eth'),
+          [SEND_MODAL_SHOW_MAPPING_FIELD]: true,
           [SEND_MODAL_ADVANCED_FORM]: false
         }
       : data,

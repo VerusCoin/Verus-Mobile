@@ -62,7 +62,8 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   const FIELD_TITLES = {
     [SEND_MODAL_EXPORTTO_FIELD]: "Destination network",
     [SEND_MODAL_VIA_FIELD]: "Convert via",
-    [SEND_MODAL_CONVERTTO_FIELD]: "Convert to"
+    [SEND_MODAL_CONVERTTO_FIELD]: "Convert to",
+    [SEND_MODAL_MAPPING_FIELD]: "Receive as"
   }
 
   const [searchMode, setSearchMode] = useState(false);
@@ -91,6 +92,10 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     !!(sendModal.data[SEND_MODAL_EXPORTTO_FIELD] != null &&
       sendModal.data[SEND_MODAL_EXPORTTO_FIELD].length > 0)
   );
+  const [isMapping, setIsMapping] = useState(
+    !!(sendModal.data[SEND_MODAL_MAPPING_FIELD] != null &&
+      sendModal.data[SEND_MODAL_MAPPING_FIELD].length > 0)
+  );
 
   const [showConversionField, setShowConversionField] = useState(
     sendModal.data[SEND_MODAL_SHOW_CONVERTTO_FIELD] || 
@@ -105,6 +110,11 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   const [showExportField, setShowExportField] = useState(
     sendModal.data[SEND_MODAL_SHOW_EXPORTTO_FIELD] || 
     isExport
+  )
+
+  const [showMappingField, setShowMappingField] = useState(
+    sendModal.data[SEND_MODAL_MAPPING_FIELD] || 
+    isMapping
   )
 
   const fadeSearchMode = useRef(new Animated.Value(0)).current;
@@ -187,7 +197,9 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   const processConverttoSuggestionPaths = async (flatPaths, coinObj) => {
     switch (coinObj.proto) {
       case 'vrsc':
-        return flatPaths.map((path, index) => {
+        return flatPaths.filter(x => {
+          return !x.mapping
+        }).map((path, index) => {
           const priceFixed = Number(path.price.toFixed(2))
     
           return {
@@ -327,6 +339,60 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
             keywords: [path.via.currencyid, path.via.fullyqualifiedname]
           };
         })
+      case 'eth':
+      case 'erc20':
+        return flatPaths.filter(x => {
+          if (isConversion) {
+            const destinationCurrency = sendModal.data[SEND_MODAL_CONVERTTO_FIELD];
+            const destinationCurrencyMatch = !path.ethdest && (x.destination.currencyid === destinationCurrency ||
+              destinationCurrency.toLowerCase() ===
+                x.destination.fullyqualifiedname.toLowerCase())
+            const destinationTokenMatch = path.ethdest && (x.destination.address === destinationCurrency ||
+              destinationCurrency.toLowerCase() ===
+                x.destination.address.toLowerCase())
+            
+            return (
+              x.via != null &&
+              (destinationCurrencyMatch || destinationTokenMatch)
+            );
+          } else return x.via != null;
+        }).map((path, index) => {
+          const priceFixed = Number(path.price.toFixed(2))
+          const destname = path.ethdest
+            ? path.destination.address === ETH_CONTRACT_ADDRESS ? path.destination.name : `${path.destination.name} (${
+                path.destination.address.substring(0, 8) + '...' + path.destination.address.substring(path.destination.address.length - 8)
+              })`
+            : path.destination.fullyqualifiedname;
+    
+          return {
+            title: path.via.fullyqualifiedname,
+            logoid: path.via.currencyid,
+            key: index.toString(),
+            description: `${
+                  path.exportto
+                    ? path.gateway
+                      ? `off-system to ${path.exportto.fullyqualifiedname} network `
+                      : `off-chain to ${path.exportto.fullyqualifiedname} network `
+                    : ''
+                }to ${destname}`,
+            values: {
+              [SEND_MODAL_VIA_FIELD]: path.via.fullyqualifiedname,
+              [SEND_MODAL_CONVERTTO_FIELD]: path.ethdest ? path.destination.address : path.destination.fullyqualifiedname,
+              [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
+                ? path.exportto.fullyqualifiedname
+                : '',
+              [SEND_MODAL_PRICE_ESTIMATE]: path.price
+            },
+            right: `${
+              priceFixed === 0
+                ? '<0.01'
+                : priceFixed === path.price
+                ? priceFixed
+                : `~${priceFixed}`
+            }`,
+            keywords: [path.via.currencyid, path.via.fullyqualifiedname]
+          };
+        })
       default:
         return []
     }
@@ -338,6 +404,16 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         const seenSystems = {}
         return flatPaths.filter(x => {
           if (x.exportto == null) return false;
+          if (
+            !x.mapping && flatPaths.find(
+              y =>
+                y.mapping &&
+                y.exportto != null &&
+                y.exportto.currencyid === x.exportto.currencyid,
+            ) != null
+          )
+            return false;
+
 
           const seen = seenSystems[x.exportto.currencyid] != null;
 
@@ -345,7 +421,8 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
             seenSystems[x.exportto.currencyid] = true;
             return true
           } else return false;
-        }).map((path, index) => {    
+        }).map((path, index) => {
+
           return {
             title: path.exportto.fullyqualifiedname,
             logoid: path.exportto.currencyid,
@@ -353,6 +430,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
             description: path.exportto.currencyid,
             values: {
               [SEND_MODAL_EXPORTTO_FIELD]: path.exportto.fullyqualifiedname,
+              [SEND_MODAL_MAPPING_FIELD]: path.mapping ? path.destination.symbol : coinObj.display_ticker
             },
             right: "",
             keywords: [path.exportto.currencyid, path.exportto.fullyqualifiedname]
@@ -362,6 +440,72 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         return []
     }
   }
+
+  const processMappingSuggestionPaths = async (flatPaths, coinObj) => {
+    switch (coinObj.proto) {
+      case 'vrsc':
+        return flatPaths
+          .filter(x => {
+            return x.mapping;
+          })
+          .map((path, index) => {
+            const name =
+              path.destination.address === ETH_CONTRACT_ADDRESS
+                ? path.destination.name
+                : `${path.destination.name} (${
+                    path.destination.address.substring(0, 8) +
+                    '...' +
+                    path.destination.address.substring(path.destination.address.length - 8)
+                  })`;
+
+            return {
+              title: name,
+              logoid: path.destination.address,
+              logoproto: 'erc20',
+              key: index.toString(),
+              description: path.destination.address === ETH_CONTRACT_ADDRESS ? "receive as Ethereum" : `receive as the ${path.destination.symbol} ERC20 token`,
+              values: {
+                [SEND_MODAL_VIA_FIELD]: '',
+                [SEND_MODAL_MAPPING_FIELD]: path.destination.symbol,
+                [SEND_MODAL_EXPORTTO_FIELD]: path.exportto.fullyqualifiedname,
+                [SEND_MODAL_PRICE_ESTIMATE]: path.price,
+              },
+              right: "",
+              keywords: [
+                path.destination.symbol,
+                path.destination.name,
+              ],
+            };
+          });
+      case 'eth':
+      case 'erc20':
+        return flatPaths
+          .filter(x => {
+            return x.mapping;
+          })
+          .map((path, index) => {
+            return {
+              title: path.destination.fullyqualifiedname,
+              logoid: path.destination.currencyid,
+              key: index.toString(),
+              description: `receive on ${path.exportto.fullyqualifiedname} network`,
+              values: {
+                [SEND_MODAL_VIA_FIELD]: '',
+                [SEND_MODAL_MAPPING_FIELD]: path.destination.fullyqualifiedname,
+                [SEND_MODAL_EXPORTTO_FIELD]: path.exportto.fullyqualifiedname,
+                [SEND_MODAL_PRICE_ESTIMATE]: path.price,
+              },
+              right: "",
+              keywords: [
+                path.destination.currencyid,
+                path.destination.fullyqualifiedname,
+              ],
+            };
+          });
+      default:
+        return [];
+    }
+  };
 
   const fetchSuggestionsBase = async (field) => {
     if (loadingSuggestions) return;
@@ -410,9 +554,12 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
           setSuggestionBase(newSuggestionsBase);
           break;
         case SEND_MODAL_EXPORTTO_FIELD:
-          newSuggestionsBase = await processExporttoSuggestionPaths(flatPaths, sendModal.coinObj)
+          newSuggestionsBase = await processExporttoSuggestionPaths(flatPaths, sendModal.coinObj);
           setSuggestionBase(newSuggestionsBase);
           break;
+        case SEND_MODAL_MAPPING_FIELD:
+          newSuggestionsBase = await processMappingSuggestionPaths(flatPaths, sendModal.coinObj);
+          setSuggestionBase(newSuggestionsBase);
         default:
           setSuggestionBase(newSuggestionsBase);
           break;
@@ -473,9 +620,9 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
       address = channelAddress;
 
-      const response = await getCurrency(sendModal.coinObj.system_id, systemId);
+      const response = await getCurrency(systemId, sendModal.coinObj.system_id);
 
-      if (response.error) createAlert("Error", "Error fetching current network.");
+      if (response.error) Alert.alert("Error fetching current network", response.error.message);
       else {
         setLocalNetworkName(response.result.fullyqualifiedname);
       }
@@ -508,6 +655,10 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   }, [sendModal.data[SEND_MODAL_SHOW_EXPORTTO_FIELD], isExport])
 
   useEffect(() => {
+    setShowMappingField(sendModal.data[SEND_MODAL_SHOW_MAPPING_FIELD] || isMapping)
+  }, [sendModal.data[SEND_MODAL_SHOW_MAPPING_FIELD], isMapping])
+
+  useEffect(() => {
     setProcessedAmount(getProcessedAmount())
   }, [sendModal.data[SEND_MODAL_AMOUNT_FIELD]])
 
@@ -529,6 +680,11 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     setIsExport(!!(sendModal.data[SEND_MODAL_EXPORTTO_FIELD] != null &&
       sendModal.data[SEND_MODAL_EXPORTTO_FIELD].length > 0))
   }, [sendModal.data[SEND_MODAL_EXPORTTO_FIELD]])
+
+  useEffect(() => {
+    setIsMapping(!!(sendModal.data[SEND_MODAL_MAPPING_FIELD] != null &&
+      sendModal.data[SEND_MODAL_MAPPING_FIELD].length > 0))
+  }, [sendModal.data[SEND_MODAL_MAPPING_FIELD]])
 
   const fillAmount = (amount) => {
     let displayAmount = BigNumber(amount);
@@ -787,7 +943,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                           </Text>
                         }
                         right={() =>
-                          selectedField !== SEND_MODAL_EXPORTTO_FIELD ? (
+                          selectedField !== SEND_MODAL_EXPORTTO_FIELD && selectedField !== SEND_MODAL_MAPPING_FIELD ? (
                             <Text style={{...Styles.listItemTableCell, fontWeight: 'bold'}}>
                               {sendModal.coinObj.display_ticker + ' price estimate'}
                             </Text>

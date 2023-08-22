@@ -136,18 +136,22 @@ class _CoinDirectory {
 
     let endpoints = [];
     let secondsPerBlock = 60;
+    let systemOptions;
 
     try {
       const systemObj = this.findCoinObj(system, null, true);
       endpoints = systemObj.vrpc_endpoints;
       secondsPerBlock = systemObj.seconds_per_block;
+      systemOptions = systemObj.pbaas_options;
     } catch(e) {
       if (this.coinExistsInDirectory(system)) {
         endpoints = this.coins[system].vrpc_endpoints;
         secondsPerBlock = this.coins[system].seconds_per_block;
+        systemOptions = this.coins[system].pbaas_options;
       } else if (currencyDefinition.nodes) {
-        const firstNode = currencyDefinition.nodes[0].networkaddress
-        secondsPerBlock = currencyDefinition.blocktime
+        const firstNode = currencyDefinition.nodes[0].networkaddress;
+        secondsPerBlock = currencyDefinition.blocktime;
+        systemOptions = currencyDefinition.options;
 
         const firstNodeSplit = firstNode.split(':')
         const firstNodePort = firstNodeSplit[firstNodeSplit.length - 1]
@@ -189,6 +193,7 @@ class _CoinDirectory {
           await this.addPbaasCurrency(systemDefinition.result, isTestnet, checkEndpoint);
           endpoints = this.coins[systemDefinition.result.currencyid].vrpc_endpoints;
           secondsPerBlock = this.coins[systemDefinition.result.currencyid].seconds_per_block;
+          systemOptions = this.coins[systemDefinition.result.currencyid].pbaas_options;
         } else {
           throw new Error('Failed to connect to find ' + system);
         }
@@ -198,6 +203,7 @@ class _CoinDirectory {
     const currencyCoinObj = {
       testnet: isTestnet,
       pbaas_options: currencyDefinition.options,
+      system_options: systemOptions,
       id: currencyDefinition.currencyid,
       currency_id: currencyDefinition.currencyid,
       system_id: currencyDefinition.systemid,

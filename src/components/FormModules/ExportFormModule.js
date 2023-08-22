@@ -3,6 +3,7 @@ import { View, TouchableOpacity } from 'react-native';
 import { IconButton, Divider, Text, TextInput } from 'react-native-paper';
 import Colors from '../../globals/colors';
 import Styles from '../../styles';
+import { VETH } from '../../utils/constants/web3Constants';
 
 const ExportFormModule = ({
   isExport,
@@ -58,15 +59,19 @@ const ExportFormModule = ({
                       ? Colors.quaternaryColor
                       : Colors.verusDarkGray,
                 }}>
-                {isExport
-                  ? `To network: ${exportToField}`
-                  : isConversion
-                  ? `On ${
-                      localNetworkDefinition
-                        ? localNetworkDefinition.fullyqualifiedname
-                        : 'current'
-                    } network`
-                  : 'Select network to send to'}
+                {
+                  isExport
+                    ? exportToField.toLowerCase() === VETH.toLowerCase()
+                      ? 'To Ethereum network'
+                      : `To network: ${exportToField}`
+                    : isConversion
+                    ? `On ${
+                        localNetworkDefinition
+                          ? localNetworkDefinition.fullyqualifiedname
+                          : 'current'
+                      } network`
+                    : 'Select network to send to'
+                }
               </Text>
               <IconButton icon="magnify" size={16} color={Colors.verusDarkGray} />
             </TouchableOpacity>
@@ -74,12 +79,12 @@ const ExportFormModule = ({
         }
       </View>
       {
-        showMappingField && (
+        showMappingField && !isConversion && (
           <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
             {isPreconvert || advancedForm ? (
               <TextInput
                 returnKeyType="done"
-                label="System to send to (optional)"
+                label={exportToField != null && exportToField.length > 0 ? "Currency to receive as (required)" : "Currency to receive as (optional)"}
                 value={mappingField}
                 mode="outlined"
                 multiline={true}

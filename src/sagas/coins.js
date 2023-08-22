@@ -10,6 +10,7 @@ import {
 } from '../utils/constants/storeType';
 import { getDefaultSubWallets } from '../utils/defaultSubWallets';
 import { getVerusIdCurrency } from '../utils/CoinData/CoinData';
+import { IS_PBAAS_CHAIN } from '../utils/constants/currencies';
 
 export default function* setUserCoinsSaga() {
   yield all([takeEvery(SET_USER_COINS, handleFinishSetUserCoins)]);
@@ -42,6 +43,8 @@ function* handleFinishSetUserCoins(action) {
             if (coin.tags.includes(IS_PBAAS) && 
                 !nonNativeSystems.includes(coin.system_id) &&
                 coin.system_id !== coinObj.system_id && 
+                coin.system_options != null && 
+                (coin.system_options & IS_PBAAS_CHAIN) === IS_PBAAS_CHAIN &&
                 coin.testnet === coinObj.testnet) {
               nonNativeSystems.push(coin.system_id);
             }
@@ -49,7 +52,8 @@ function* handleFinishSetUserCoins(action) {
         }
   
         return addresses.map((addr, index) => {
-          const systems = [coinObj.system_id, ...nonNativeSystems]
+          const nonChainSystem = coinObj.system_options != null && (coinObj.system_options & IS_PBAAS_CHAIN) !== IS_PBAAS_CHAIN
+          const systems = nonChainSystem ? nonNativeSystems : [coinObj.system_id, ...nonNativeSystems]
   
           return systems.map(system => {
             const channelId = `${VRPC}.${addr}.${system}`;

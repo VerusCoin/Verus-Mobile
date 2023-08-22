@@ -77,7 +77,7 @@ const SendCoin = ({ navigation }) => {
         [SEND_MODAL_IS_PRECONVERT]: false,
         [SEND_MODAL_SHOW_CONVERTTO_FIELD]: false,
         [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
-        [SEND_MODAL_SHOW_MAPPING_FIELD]: (activeCoin.proto === 'erc20' || activeCoin.proto === 'eth'),
+        [SEND_MODAL_SHOW_MAPPING_FIELD]: true,
         [SEND_MODAL_SHOW_VIA_FIELD]: false,
         [SEND_MODAL_ADVANCED_FORM]: false
       },
@@ -125,6 +125,10 @@ const SendCoin = ({ navigation }) => {
       },
     },
   ];
+
+  if (activeCoin.proto === 'eth' || activeCoin.proto === 'erc20') {
+    CONVERT_OR_CROSS_CHAIN_OPTIONS.splice(2, 1);
+  }
 
   const [
     convertOrCrossChainOptionsModalOpen,
