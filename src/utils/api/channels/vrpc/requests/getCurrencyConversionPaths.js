@@ -2,7 +2,6 @@ import { ethers } from "ethers";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 import { getCurrenciesMappedToEth } from "./getCurrenciesMappedToEth";
 import { ETH_BRIDGE_NAME, ETH_CONTRACT_ADDRESS, VETH } from "../../../../constants/web3Constants";
-import { DEST_ETH } from "verus-typescript-primitives";
 import { getWeb3ProviderForNetwork } from "../../../../web3/provider";
 
 export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
@@ -97,6 +96,7 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
                         symbol,
                         decimals,
                         name,
+                        mapto: convertableCurrencyDefinition
                       },
                       price: priceData.lastconversionprice,
                       gateway: true,
@@ -111,6 +111,7 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
                         symbol: "ETH",
                         decimals: 18,
                         name: "Ethereum",
+                        mapto: convertableCurrencyDefinition
                       },
                       price: priceData.lastconversionprice,
                       gateway: true,
@@ -126,11 +127,12 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
             } else if (convertableCurrencyId !== currencyid) {
               // If you're convertable and not the bridge, you can convert to either the bridge (above)
               // or any of the bridge reserve currencies except for yourself via the bridge
-              const priceData = convertableCurrencyStates[convertableCurrencyId];
+              const destPriceData = convertableCurrencyStates[convertableCurrencyId];
+              const rootPriceData = convertableCurrencyStates[currencyid];
 
-              const viapriceinroot = 1 / priceData.lastconversionprice;
-              const destpriceinvia = priceData.lastconversionprice;
-              const price = 1 / (viapriceinroot/destpriceinvia);
+              const viapriceinroot = 1 / rootPriceData.lastconversionprice;
+              const destpriceinvia = destPriceData.lastconversionprice;
+              const price = viapriceinroot*destpriceinvia;
 
               paths[convertableCurrencyId].push({
                 destination: convertableCurrencyDefinition,
@@ -160,6 +162,7 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
                         symbol,
                         decimals,
                         name,
+                        mapto: convertableCurrencyDefinition
                       },
                       price,
                       gateway: true,
@@ -174,6 +177,7 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
                         symbol: "ETH",
                         decimals: 18,
                         name: "Ethereum",
+                        mapto: convertableCurrencyDefinition
                       },
                       price,
                       gateway: true,
@@ -248,7 +252,7 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
               address: ETH_CONTRACT_ADDRESS,
               symbol: "ETH",
               decimals: 18,
-              name: "Ethereum",
+              name: "Ethereum"
             },
             exportto: vEthCurrencyDefinition,
             price: 1,
@@ -266,7 +270,7 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
               address: contractAddress,
               symbol,
               decimals,
-              name,
+              name
             },
             exportto: vEthCurrencyDefinition,
             price: 1,

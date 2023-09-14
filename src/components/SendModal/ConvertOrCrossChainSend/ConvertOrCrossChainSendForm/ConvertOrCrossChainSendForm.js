@@ -5,7 +5,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { TextInput, Button, Divider, Checkbox, List, Text, IconButton } from "react-native-paper";
 import { useSelector } from 'react-redux';
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
-import { API_SEND, DLIGHT_PRIVATE, ETH } from "../../../../utils/constants/intervalConstants";
+import { API_SEND, DLIGHT_PRIVATE, ERC20, ETH } from "../../../../utils/constants/intervalConstants";
 import {
   SEND_MODAL_ADVANCED_FORM,
   SEND_MODAL_AMOUNT_FIELD,
@@ -29,7 +29,7 @@ import { useEffect } from "react";
 import { getConversionPaths } from "../../../../utils/api/routers/getConversionPaths";
 import AnimatedActivityIndicatorBox from "../../../AnimatedActivityIndicatorBox";
 import { getCoinLogo } from "../../../../utils/CoinData/CoinData";
-import { getCurrency, getIdentity } from "../../../../utils/api/channels/verusid/callCreators";
+import { getCurrency } from "../../../../utils/api/channels/verusid/callCreators";
 import selectAddresses from "../../../../selectors/address";
 import MissingInfoRedirect from "../../../MissingInfoRedirect/MissingInfoRedirect";
 import { preflightCurrencyTransfer } from "../../../../utils/api/channels/vrpc/callCreators";
@@ -42,6 +42,8 @@ import ExportFormModule from "../../../FormModules/ExportFormModule";
 import { getAddressBalances } from "../../../../utils/api/routers/getAddressBalance";
 import { coinsList } from "../../../../utils/CoinData/CoinsList";
 import { ETH_CONTRACT_ADDRESS } from "../../../../utils/constants/web3Constants";
+import { preflightConvertOrCrossChain } from "../../../../utils/api/routers/preflightConvertOrCrossChain";
+import { getIdentity } from "../../../../utils/api/routers/getIdentity";
 
 const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
   const sendModal = useSelector(state => state.sendModal);
@@ -225,7 +227,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
               [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
                 ? path.exportto.fullyqualifiedname
                 : '',
-              [SEND_MODAL_PRICE_ESTIMATE]: path.price
+              [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: path.destination.fullyqualifiedname }
             },
             right: `${
               priceFixed === 0
@@ -271,11 +273,11 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
               : 'direct',
             values: {
               [SEND_MODAL_VIA_FIELD]: path.via ? path.via.fullyqualifiedname : '',
-              [SEND_MODAL_CONVERTTO_FIELD]: path.ethdest ? path.destination.address : path.destination.fullyqualifiedname,
+              [SEND_MODAL_CONVERTTO_FIELD]: path.ethdest ? path.destination.mapto.fullyqualifiedname : path.destination.fullyqualifiedname,
               [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
                 ? path.exportto.fullyqualifiedname
                 : '',
-              [SEND_MODAL_PRICE_ESTIMATE]: path.price
+              [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: name }
             },
             right: `${
               priceFixed === 0
@@ -327,7 +329,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
               [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
                 ? path.exportto.fullyqualifiedname
                 : '',
-              [SEND_MODAL_PRICE_ESTIMATE]: path.price
+              [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: path.destination.fullyqualifiedname }
             },
             right: `${
               priceFixed === 0
@@ -377,11 +379,11 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                 }to ${destname}`,
             values: {
               [SEND_MODAL_VIA_FIELD]: path.via.fullyqualifiedname,
-              [SEND_MODAL_CONVERTTO_FIELD]: path.ethdest ? path.destination.address : path.destination.fullyqualifiedname,
+              [SEND_MODAL_CONVERTTO_FIELD]: path.ethdest ? path.destination.mapto.fullyqualifiedname : path.destination.fullyqualifiedname,
               [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
                 ? path.exportto.fullyqualifiedname
                 : '',
-              [SEND_MODAL_PRICE_ESTIMATE]: path.price
+              [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: destname }
             },
             right: `${
               priceFixed === 0
@@ -436,6 +438,29 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
             keywords: [path.exportto.currencyid, path.exportto.fullyqualifiedname]
           };
         });
+      case 'eth':
+      case 'erc20':
+        return [
+          {
+            title: coinObj.testnet
+              ? coinsList.VRSCTEST.display_name
+              : coinsList.VRSC.display_name,
+            logoid: coinObj.testnet ? coinsList.VRSCTEST.id : coinsList.VRSC.id,
+            key: 0,
+            description: coinObj.testnet
+              ? 'Send to the Verus testnet'
+              : 'Send to the Verus network',
+            values: {
+              [SEND_MODAL_EXPORTTO_FIELD]: coinObj.testnet
+                ? coinsList.VRSCTEST.display_ticker
+                : coinsList.VRSC.display_ticker,
+            },
+            right: '',
+            keywords: coinObj.testnet
+              ? [coinsList.VRSCTEST.display_name, coinsList.VRSCTEST.id]
+              : [coinsList.VRSC.display_name, coinsList.VRSCTEST.id],
+          },
+        ];
       default:
         return []
     }
@@ -468,7 +493,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                 [SEND_MODAL_VIA_FIELD]: '',
                 [SEND_MODAL_MAPPING_FIELD]: path.destination.symbol,
                 [SEND_MODAL_EXPORTTO_FIELD]: path.exportto.fullyqualifiedname,
-                [SEND_MODAL_PRICE_ESTIMATE]: path.price,
+                [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: name },
               },
               right: "",
               keywords: [
@@ -493,7 +518,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                 [SEND_MODAL_VIA_FIELD]: '',
                 [SEND_MODAL_MAPPING_FIELD]: path.destination.fullyqualifiedname,
                 [SEND_MODAL_EXPORTTO_FIELD]: path.exportto.fullyqualifiedname,
-                [SEND_MODAL_PRICE_ESTIMATE]: path.price,
+                [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: path.destination.fullyqualifiedname },
               },
               right: "",
               keywords: [
@@ -612,7 +637,10 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     let address;
 
     if (sendModal.coinObj.proto === 'erc20' || sendModal.coinObj.proto === 'eth') {
-      address = activeUser.keys[sendModal.coinObj.id][ETH].addresses[0];
+      address =
+        sendModal.coinObj.proto === 'erc20'
+          ? activeUser.keys[sendModal.coinObj.id][ERC20].addresses[0]
+          : activeUser.keys[sendModal.coinObj.id][ETH].addresses[0];
 
       setLocalNetworkName(coinsList.ETH.display_ticker);
     } else {
@@ -780,7 +808,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         let keyhash;
 
         if (addr.endsWith("@")) {
-          const identityRes = await getIdentity(coinObj.system_id, addr);
+          const identityRes = await getIdentity(coinObj, activeAccount, channel, addr);
 
           if (identityRes.error) throw new Error("Failed to fetch " + addr);
 
@@ -812,6 +840,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
       let output = {
         currency: coinObj.currency_id,
+        mapto: selectData(data[SEND_MODAL_MAPPING_FIELD]),
         convertto: selectData(data[SEND_MODAL_CONVERTTO_FIELD]),
         exportto: selectData(data[SEND_MODAL_EXPORTTO_FIELD]),
         via: selectData(data[SEND_MODAL_VIA_FIELD]),
@@ -824,7 +853,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         if (output[key] == null) delete output[key]
       }
 
-      const res = await preflightCurrencyTransfer(coinObj, channel, activeAccount, output)
+      const res = await preflightConvertOrCrossChain(coinObj, activeAccount, channel, output)
 
       setModalHeight(696);
 
@@ -835,10 +864,11 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
       const {
         converterdef,
         submittedsats,
-        estimate
+        estimate,
+        output: resout
       } = res.result;
 
-      if (output.convertto != null && estimate == null && sendModal.data[SEND_MODAL_PRICE_ESTIMATE] == null) {
+      if (resout.convertto != null && estimate == null && sendModal.data[SEND_MODAL_PRICE_ESTIMATE] == null) {
         Alert.alert("Could not estimate conversion result", 'Failed to calculate an estimated result for this conversion.')
       }
   
@@ -848,13 +878,13 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         }, a centralized currency. The controller, ${converterdef.fullyqualifiedname}@, has the ability to mint new supply.`)
       }
   
-      if (submittedsats !== output.satoshis) {
+      if (submittedsats !== resout.satoshis) {
         Alert.alert(
           'Amount changed',
           `You have insufficient funds to send your submitted amount of ${satsToCoins(
             BigNumber(submittedsats),
           ).toString()} ${coinObj.display_ticker} with the transaction fee, so the transaction amount has been changed to the maximum sendable value of ${satsToCoins(
-            BigNumber(output.satoshis),
+            BigNumber(resout.satoshis),
           ).toString()} ${coinObj.display_ticker}.`,
         );
       }
@@ -961,7 +991,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                           <Text style={Styles.listItemTableCell}>{item.right}</Text>
                         )}
                         left={props => {
-                          const Logo = getCoinLogo(item.logoid, item.logoproto);
+                          const Logo = getCoinLogo(item.logoid, item.logoproto, 'dark');
 
                           return (
                             <View style={{justifyContent: 'center', paddingLeft: 8}}>
@@ -1016,10 +1046,10 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                     sendModal.data[SEND_MODAL_PRICE_ESTIMATE] != null &&
                     processedAmount != null
                       ? `≈ ${Number(
-                          (processedAmount * sendModal.data[SEND_MODAL_PRICE_ESTIMATE]).toFixed(
+                          (processedAmount * sendModal.data[SEND_MODAL_PRICE_ESTIMATE].price).toFixed(
                             8,
                           ),
-                        )} ${sendModal.data[SEND_MODAL_CONVERTTO_FIELD]}`
+                        )} ${sendModal.data[SEND_MODAL_PRICE_ESTIMATE].name}`
                       : null
                   }
                 />

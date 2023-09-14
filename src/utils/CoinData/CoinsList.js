@@ -152,7 +152,7 @@ export const coinsList = {
   },
   GETH: {
     id: 'GETH',
-    currency_id: '',
+    currency_id: '0x0000000000000000000000000000000000000000',
     system_id: '.eth',
     display_ticker: 'gETH',
     display_name: 'Testnet Ethereum',

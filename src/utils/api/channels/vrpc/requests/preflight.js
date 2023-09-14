@@ -124,6 +124,7 @@ export const validateCurrencyTransferOutputParams = obj => {
     'burn',
     'burnweight',
     'mintnew',
+    'mapto'
   ];
   const allKeys = [...requiredKeys, ...optionalKeys];
 

@@ -25,6 +25,7 @@ import BigNumber from 'bignumber.js';
 import {TransferDestination} from 'verus-typescript-primitives';
 import {sendCurrencyTransfer} from '../../../../utils/api/channels/vrpc/callCreators';
 import {CoinDirectory} from '../../../../utils/CoinData/CoinDirectory';
+import { sendConvertOrCrossChain } from '../../../../utils/api/routers/sendConvertOrCrossChain';
 
 function ConvertOrCrossChainSendConfirm({
   navigation,
@@ -34,6 +35,7 @@ function ConvertOrCrossChainSendConfirm({
   setPreventExit,
 }) {
   const sendModal = useSelector(state => state.sendModal);
+  const activeAccount = useSelector(state => state.authentication.activeAccount);
   const networkName = useSelector(state => {
     try {
       const subwallet = state.sendModal.subWallet;
@@ -80,11 +82,6 @@ function ConvertOrCrossChainSendConfirm({
      * @type {Map}
      */
     const nameMap = names;
-
-    /**
-     * @type {string}
-     */
-    const txHex = hex;
 
     const {change, fees, sent} = validation;
 
@@ -236,7 +233,7 @@ function ConvertOrCrossChainSendConfirm({
               )}`
             : !!(sendModal.data[SEND_MODAL_PRICE_ESTIMATE]) ? `${Number(
                 (
-                  primaryCurrencyAmount * sendModal.data[SEND_MODAL_PRICE_ESTIMATE]
+                  primaryCurrencyAmount * sendModal.data[SEND_MODAL_PRICE_ESTIMATE].price
                 ).toFixed(8),
               )} ${tryRenderFriendlyName(convertto)}` : "",
         numLines: 100,
@@ -351,11 +348,11 @@ function ConvertOrCrossChainSendConfirm({
         ? names[destAddrString]
         : destAddrString;
 
-      const res = await sendCurrencyTransfer(
+      const res = await sendConvertOrCrossChain(
         sendModal.coinObj,
+        activeAccount,
         sendModal.subWallet.api_channels[API_SEND],
-        hex,
-        inputs,
+        params
       );
 
       if (res.err) throw new Error(res.result);
