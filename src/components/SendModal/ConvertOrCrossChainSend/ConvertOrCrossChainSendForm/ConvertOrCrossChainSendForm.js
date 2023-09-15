@@ -346,10 +346,10 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         return flatPaths.filter(x => {
           if (isConversion) {
             const destinationCurrency = sendModal.data[SEND_MODAL_CONVERTTO_FIELD];
-            const destinationCurrencyMatch = !path.ethdest && (x.destination.currencyid === destinationCurrency ||
+            const destinationCurrencyMatch = !x.ethdest && (x.destination.currencyid === destinationCurrency ||
               destinationCurrency.toLowerCase() ===
                 x.destination.fullyqualifiedname.toLowerCase())
-            const destinationTokenMatch = path.ethdest && (x.destination.address === destinationCurrency ||
+            const destinationTokenMatch = x.ethdest && (x.destination.address === destinationCurrency ||
               destinationCurrency.toLowerCase() ===
                 x.destination.address.toLowerCase())
             
