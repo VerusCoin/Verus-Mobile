@@ -59,6 +59,7 @@ export const VERUS_APPS = {
 export const coinsList = {
   VRSC: {
     id: 'VRSC',
+    system_options: 264,
     currency_id: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
     system_id: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
     bitgojs_network_key: 'verus',
@@ -82,6 +83,7 @@ export const coinsList = {
   },
   VRSCTEST: {
     testnet: true,
+    system_options: 264,
     mainnet_id: 'VRSC',
     id: 'VRSCTEST',
     pbaas_options: 264,
