@@ -41,6 +41,10 @@ export const removeInactiveContractDefinitions = async (activeCoinList) => {
   const activeCoinIds = {}
   activeCoinList.map(coin => {
     activeCoinIds[coin.id] = true
+
+    if (coin.mapped_to != null) {
+      activeCoinIds[coin.mapped_to] = true
+    }
   })
   
   for (const network in storedDefinitions) {

@@ -113,8 +113,8 @@ class VerusMobile extends React.Component {
       await removeInactiveCurrencyDefinitions(usedCoins)
       await removeInactiveContractDefinitions(usedCoins)
 
-      await CoinDirectory.populatePbaasCurrencyDefinitionsFromStorage()
       await CoinDirectory.populateEthereumContractDefinitionsFromStorage()
+      await CoinDirectory.populatePbaasCurrencyDefinitionsFromStorage()
 
       return initCache()
     })

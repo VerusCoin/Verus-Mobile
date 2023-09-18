@@ -4,10 +4,13 @@ import { electrumServers } from './electrum/servers';
 import { ENABLE_VERUS_IDENTITIES } from '../../../env/index'
 import { VerusdRpcInterface } from "verusd-rpc-ts-client";
 import { VERUS_APPS, coinsList } from "./CoinsList";
-import { DEFAULT_DECIMALS } from "../constants/web3Constants";
+import { DEFAULT_DECIMALS, VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT } from "../constants/web3Constants";
 import { getStoredCurrencyDefinitions, storeCurrencyDefinitionForCurrencyId } from "../asyncStore/currencyDefinitionStorage";
 import { timeout } from "../promises";
 import { getStoredContractDefinitions, storeContractDefinitionForNetwork } from "../asyncStore/contractDefinitionStorage";
+import { DEST_ETH, FLAG_MASK } from "verus-typescript-primitives";
+import { BN } from "bn.js";
+import { getWeb3ProviderForNetwork } from "../web3/provider";
 
 class _CoinDirectory {
   fullCoinList = [];
@@ -138,6 +141,47 @@ class _CoinDirectory {
     let secondsPerBlock = 60;
     let systemOptions;
 
+    const isMapped =
+      currencyDefinition.proofprotocol === 3 &&
+      currencyDefinition.nativecurrencyid != null;
+    let mappedCurrencyId = null;
+    const delegatorContractAddr = isTestnet ? VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT : null;
+
+    try {
+      if (isMapped) {
+        const nativeCurrencyIdTypeNoFlags = new BN(
+          currencyDefinition.nativecurrencyid.type,
+        ).and(FLAG_MASK.notn(FLAG_MASK.bitLength()));
+  
+        if (nativeCurrencyIdTypeNoFlags.eq(DEST_ETH) && delegatorContractAddr != null) {
+          const contractAddress = currencyDefinition.nativecurrencyid.address;
+  
+          if (contractAddress === delegatorContractAddr) {
+            mappedCurrencyId = isTestnet ? coinsList.GETH.id : coinsList.ETH.id;
+          } else {
+            const mappedCoin = Object.values(this.coins).find(x => x.currency_id === contractAddress);
+            if (mappedCoin != null) {
+              mappedCurrencyId = mappedCoin.id;
+            } else {
+              const network = isTestnet ? 'goerli' : 'homestead'
+              const contract = getWeb3ProviderForNetwork(
+                network,
+              ).getUnitializedContractInstance(contractAddress);
+        
+              const name = await contract.name();
+              const symbol = await contract.symbol();
+              const decimals = await contract.decimals();
+  
+              this.addErc20Token({ address: contractAddress, symbol, name, decimals }, network, true);
+              mappedCurrencyId = contractAddress;
+            }
+          }
+        }
+      }
+    } catch(e) {
+      console.warn(e)
+    }
+
     try {
       const systemObj = this.findCoinObj(system, null, true);
       endpoints = systemObj.vrpc_endpoints;
@@ -219,7 +263,8 @@ class _CoinDirectory {
       decimals: DEFAULT_DECIMALS,
       seconds_per_block: secondsPerBlock,
       default_app: 'wallet',
-      apps: VERUS_APPS
+      apps: VERUS_APPS,
+      mapped_to: mappedCurrencyId
     }
 
     if (storeResults) {

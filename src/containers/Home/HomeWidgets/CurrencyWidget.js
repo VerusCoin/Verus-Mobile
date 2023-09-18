@@ -10,6 +10,8 @@ import {formatCurrency} from 'react-native-format-currency';
 import SubWalletsLogo from '../../../images/customIcons/SubWallets.svg';
 import {extractDisplaySubWallets} from '../../../utils/subwallet/extractSubWallets';
 import {normalizeNum} from '../../../utils/normalizeNum';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Colors from '../../../globals/colors';
 
 const CurrencyWidget = props => {
   const {currencyBalance, coinObj} = props;
@@ -101,7 +103,7 @@ const CurrencyWidget = props => {
                 fontSize: 16,
                 marginLeft: 8,
                 fontWeight: 'bold',
-                maxWidth: 90,
+                maxWidth: 80,
               }}
               numberOfLines={1}>
               {displayedName}
@@ -120,6 +122,15 @@ const CurrencyWidget = props => {
               {allSubwallets[coinObj.id] ? allSubwallets[coinObj.id].length : 1}
             </Paragraph>
             <SubWalletsLogo />
+            {
+              coinObj.mapped_to != null && (
+                <MaterialCommunityIcons
+                  name={'link'}
+                  color={Colors.secondaryColor}
+                  size={16}
+                />
+              )
+            }
           </View>
         </View>
         <Paragraph
