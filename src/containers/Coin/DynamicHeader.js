@@ -333,8 +333,20 @@ class DynamicHeader extends Component {
                   }}>
                   <Text style={{color: Colors.secondaryColor}}>
                   {
-                    ` mapped to ${this.state.mappedCoinObj.display_ticker}${
-                      this.state.mappedCoinObj.proto === ERC20 ? ' (ERC20)' : ''
+                    ` mapped to ${
+                      this.state.mappedCoinObj.display_ticker.length > 15
+                        ? this.state.mappedCoinObj.display_ticker.substring(0, 15) + '...'
+                        : this.state.mappedCoinObj.display_ticker
+                    }${
+                      this.state.mappedCoinObj.proto === ERC20
+                        ? ` (${
+                            this.state.mappedCoinObj.currency_id.substring(0, 5) +
+                            '...' +
+                            this.state.mappedCoinObj.currency_id.substring(
+                              this.state.mappedCoinObj.currency_id.length - 5,
+                            )
+                          })`
+                        : ''
                     }`
                   }
                   </Text>

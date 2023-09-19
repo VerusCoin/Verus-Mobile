@@ -16,6 +16,8 @@ import {
   INITIAL_GAS_LIMIT,
   ERC20_BRIDGE_TRANSFER_GAS_LIMIT,
   FALLBACK_GAS_BRIDGE_TRANSFER,
+  NULL_ETH_ADDRESS,
+  ETH_VERUS_BRIDGE_CONTRACT_PRELAUNCH_RESERVE_TRANSFER_FEE,
 } from '../../../../constants/web3Constants';
 import { getCurrency, getIdentity } from "../../verusid/callCreators"
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData"
@@ -95,7 +97,6 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
   try {
     const Web3Provider = getWeb3ProviderForNetwork(coinObj.network);
     const fromAddress = activeUser.keys[coinObj.id][coinObj.proto === 'erc20' ? ERC20 : ETH].addresses[0];
-    const refundAddress = activeUser.keys[coinObj.id][VRPC].addresses[0];
     const submittedAmount = amountSubmitted == null ? output.satoshis : amountSubmitted;
 
     const signer = new ethers.VoidSigner(fromAddress, Web3Provider.DefaultProvider);
@@ -104,6 +105,8 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
     const systemId = Web3Provider.getVrscSystem();
     const systemName = getSystemNameFromSystemId(systemId);
     const tokenContract = coinObj.currency_id;
+
+    const pastPrelaunch = await delegatorContract.callStatic.bridgeConverterActive();
 
     const {
       currency,
@@ -140,6 +143,10 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
         mappedCurrencyIAddress = mappedCurrencyRes.result.currencyid;
       }
     } else if (isConversion) {
+      if (!pastPrelaunch) {
+        throw new Error("Cannot make conversions while bridge is in pre-launch phase.")
+      }
+
       // If mapto is undefined, assume conversion and look for which convertable
       // currency is mapped to the current erc20 address
       const convertableCurrencies = [
@@ -148,9 +155,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
         vEthIAddress,
         toIAddress(DAI_VETH, systemName)
       ];
-      const tokenList = await getWeb3ProviderForNetwork(coinObj.network)
-        .getVerusBridgeDelegatorContract()
-        .callStatic.getTokenList(0, 0);
+      const tokenList = await delegatorContract.callStatic.getTokenList(0, 0);
       
       for (const tokenInfo of tokenList) {
         const [iAddrBytesHex, contractAddr, nftTokenId, flags] = tokenInfo;
@@ -192,6 +197,10 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
     let destinationcurrency;
     let converterDefinition;
 
+    // Get the vETH hex address for the fee currency
+    const vEthHexAddress = toEthAddress(vEthIAddress);
+    const vrscHexAddress = toEthAddress(systemId);
+
     if (isConversion) {
       flagsBN = flagsBN.xor(RESERVE_TRANSFER_CONVERT);
 
@@ -224,10 +233,11 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
           destinationcurrency = toEthAddress(bridgeIAddress);
         }
       }
+    } else if (!pastPrelaunch) {
+      destinationcurrency = vrscHexAddress;
+      secondreserveid = NULL_ETH_ADDRESS;
     }
 
-    // Get the vETH hex address for the fee currency
-    const vEthHexAddress = toEthAddress(vEthIAddress);
     let destinationtype, destinationaddress;
 
     const baseGasPrice = await Web3Provider.DefaultProvider.getGasPrice();
@@ -249,6 +259,8 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
     let approvalGasFee = ethers.BigNumber.from("0");
 
     if (address.isETHAccount()) {
+      const refundAddress = activeUser.keys[coinObj.id][VRPC].addresses[0];
+
       // Manually construct a CTransferDestination (remove when switching to serialized method from JSON)
       const destAddrBytes = address.destination_bytes;
 
@@ -256,7 +268,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
         type: DEST_ETH.xor(FLAG_DEST_GATEWAY).xor(FLAG_DEST_AUX),
         destination_bytes: destAddrBytes,
         gateway_id: vEthIAddress,
-        gateway_code: toBase58Check(Buffer.from('0x0000000000000000000000000000000000000000', 'hex'), 102),
+        gateway_code: toBase58Check(Buffer.from(NULL_ETH_ADDRESS, 'hex'), 102),
         fees: new BN(gasFeeSatsString),
         aux_dests: [
           new TransferDestination({
@@ -278,8 +290,8 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
       version: 1,
       currencyvalue: { currency: mappedCurrencyHexIAddress, amount: satoshis },
       flags: flagsBN.toNumber(),
-      feecurrencyid: vEthHexAddress,
-      fees: ETH_VERUS_BRIDGE_CONTRACT_RESERVE_TRANSFER_FEE,
+      feecurrencyid: pastPrelaunch ? vEthHexAddress : vrscHexAddress,
+      fees: pastPrelaunch ? ETH_VERUS_BRIDGE_CONTRACT_RESERVE_TRANSFER_FEE : ETH_VERUS_BRIDGE_CONTRACT_PRELAUNCH_RESERVE_TRANSFER_FEE,
       destcurrencyid: destinationcurrency,
       secondreserveid,
       destsystemid: ETH_VERUS_BRIDGE_DEST_SYSTEM_ID,
@@ -338,7 +350,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
     const ethBalance = coinsToSats(await getStandardEthBalance(fromAddress, Web3Provider.network));
 
     const maxTotalFeeSatoshis = coinsToSats(BigNumber(ethers.utils.formatEther(maxTotalFee)));
-    const satoshisBn = BigNumber(satoshis);
+    const satoshisBn = coinObj.currency_id === ETH_CONTRACT_ADDRESS ? BigNumber(satoshis) : BigNumber(0);
 
     if (maxTotalFeeSatoshis.plus(satoshisBn).isGreaterThan(ethBalance)) {
       if (coinObj.currency_id === ETH_CONTRACT_ADDRESS && satoshisBn.isGreaterThan(0) && fallbackSubtractBalance) {
