@@ -1,4 +1,4 @@
-import {useCallback} from 'react';
+import {useCallback, useState} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {Alert} from 'react-native';
 import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
@@ -8,10 +8,13 @@ import {
 } from '../../../../utils/constants/sendModal';
 import {getWeb3ProviderForNetwork} from '../../../../utils/web3/provider';
 import {AddErc20TokenFormRender} from './AddErc20TokenForm.render';
+import { getCurrency } from '../../../../utils/api/channels/verusid/callCreators';
 
 const AddErc20TokenForm = props => {
   const dispatch = useDispatch();
   const sendModal = useSelector(state => state.sendModal);
+
+  const [useMappedCurrency, setUseMappedCurrency] = useState(false);
 
   const formHasError = useCallback(() => {
     const {data} = sendModal;
@@ -38,12 +41,36 @@ const AddErc20TokenForm = props => {
 
     const {coinObj, data} = sendModal;
 
-    const contractAddress = data[SEND_MODAL_CONTRACT_ADDRESS_FIELD];
+    const contractAddressField = data[SEND_MODAL_CONTRACT_ADDRESS_FIELD];
 
     try {
-      const contract = getWeb3ProviderForNetwork(
+      const provider = getWeb3ProviderForNetwork(
         coinObj.network,
-      ).getUnitializedContractInstance(contractAddress);
+      )
+
+      let contractAddress;
+
+      if (useMappedCurrency) {
+        const getCurrencyRes = await getCurrency(provider.getVrscSystem(), contractAddressField);
+
+        if (getCurrencyRes.error) {
+          throw new Error(getCurrencyRes.error.message);
+        }
+
+        const currencyDef = getCurrencyRes.result;
+
+        const isMapped = currencyDef.proofprotocol === 3 && currencyDef.nativecurrencyid != null;
+
+        if (!isMapped) {
+          throw new Error("Cannot get ERC20 contract from non-mapped PBaaS currency.")
+        }
+
+        contractAddress = currencyDef.nativecurrencyid.address;
+      } else {
+        contractAddress = contractAddressField;
+      }
+
+      const contract = provider.getUnitializedContractInstance(contractAddress);
 
       const name = await contract.name();
       const symbol = await contract.symbol();
@@ -67,12 +94,14 @@ const AddErc20TokenForm = props => {
     }
 
     props.setLoading(false);
-  }, [formHasError, sendModal, dispatch, props]);
+  }, [formHasError, sendModal, dispatch, props, useMappedCurrency]);
 
   return AddErc20TokenFormRender({
     submitData,
     updateSendFormData: props.updateSendFormData,
     formDataValue: sendModal.data[SEND_MODAL_CONTRACT_ADDRESS_FIELD],
+    useMappedCurrency,
+    setUseMappedCurrency
   });
 };
 
