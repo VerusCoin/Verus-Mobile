@@ -44,12 +44,15 @@ import { coinsList } from "../../../../utils/CoinData/CoinsList";
 import { ETH_CONTRACT_ADDRESS } from "../../../../utils/constants/web3Constants";
 import { preflightConvertOrCrossChain } from "../../../../utils/api/routers/preflightConvertOrCrossChain";
 import { getIdentity } from "../../../../utils/api/routers/getIdentity";
+import { addressIsBlocked } from "../../../../utils/addressBlocklist";
+import selectAddressBlocklist from "../../../../selectors/settings";
 
 const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
   const sendModal = useSelector(state => state.sendModal);
   const activeUser = useSelector(state => state.authentication.activeAccount);
   const addresses = useSelector(state => selectAddresses(state));
   const activeAccount = useSelector(state => state.authentication.activeAccount);
+  const addressBlocklist = useSelector(selectAddressBlocklist);
   const networkName = useSelector(state => {
     try {
       const subwallet = state.sendModal.subWallet;
@@ -763,6 +766,9 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
     if (!toAddress || toAddress.length < 1) {
       createAlert("Required Field", "Address is a required field.");
+      return true;
+    } else if (addressIsBlocked(toAddress, addressBlocklist)) {
+      createAlert("Blocked Address", "The address you are trying to send to is included in your address blocklist.");
       return true;
     }
 

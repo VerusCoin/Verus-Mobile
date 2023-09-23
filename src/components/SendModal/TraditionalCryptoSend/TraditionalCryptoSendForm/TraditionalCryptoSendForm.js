@@ -14,10 +14,13 @@ import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import { useEffect } from "react";
 import { CoinDirectory } from "../../../../utils/CoinData/CoinDirectory";
+import selectAddressBlocklist from "../../../../selectors/settings";
+import { addressIsBlocked } from "../../../../utils/addressBlocklist";
 
 const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
   const [amountFiat, setAmountFiat] = useState(false);
   const sendModal = useSelector(state => state.sendModal);
+  const addressBlocklist = useSelector(selectAddressBlocklist);
   const balances = useSelector(state => {
     const chainTicker = state.sendModal.coinObj.id;
     const balance_channel = state.sendModal.subWallet.api_channels[API_GET_BALANCES];
@@ -136,10 +139,13 @@ const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormD
     const toAddress =
       data[SEND_MODAL_TO_ADDRESS_FIELD] != null ? data[SEND_MODAL_TO_ADDRESS_FIELD].trim() : "";
 
-    const amount = getProcessedAmount()
+    const amount = getProcessedAmount();
 
     if (!toAddress || toAddress.length < 1) {
       createAlert("Required Field", "Address is a required field.");
+      return true;
+    } else if (addressIsBlocked(toAddress, addressBlocklist)) {
+      createAlert("Blocked Address", "The address you are trying to send to is included in your address blocklist.");
       return true;
     }
 

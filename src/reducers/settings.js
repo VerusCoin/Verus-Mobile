@@ -3,7 +3,7 @@
   user-decided app settings.
 */
 
-import { MAX_VERIFICATION, DEFAULT_PRIVATE_ADDRS } from '../utils/constants/constants'
+import { MAX_VERIFICATION, DEFAULT_PRIVATE_ADDRS, ADDRESS_BLOCKLIST_MANUAL } from '../utils/constants/constants'
 import {
   SET_COIN_LIST,
   SET_ALL_SETTINGS,
@@ -14,7 +14,6 @@ import {
 } from '../utils/constants/storeType'
 import { DLIGHT_PRIVATE } from '../utils/constants/intervalConstants'
 import { USD } from '../utils/constants/currencies'
-import { Platform } from 'react-native'
 
 export const settings = (state = {
   btcFeesAdvanced: false,
@@ -27,7 +26,12 @@ export const settings = (state = {
     displayCurrency: USD,
     defaultAccount: null,
     homeCardDragDetection: false,
-    ackedCurrencyDisclaimer: false
+    ackedCurrencyDisclaimer: false,
+    addressBlocklistDefinition: {
+      type: ADDRESS_BLOCKLIST_MANUAL,
+      data: null
+    },
+    addressBlocklist: []
   },
   buySellSettings: {}, //e.g. {user1': {buySellEnabled: true, wyreData: {}}, 'user2: {buySellEnabled: false, wyreData: {}}}
   coinSettings: {}, //e.g. {VRSC: {verificationLvl: 2, verificationLock: false, channels: ['dlight', 'electrum', 'general'], privateAddrs: 100}}
