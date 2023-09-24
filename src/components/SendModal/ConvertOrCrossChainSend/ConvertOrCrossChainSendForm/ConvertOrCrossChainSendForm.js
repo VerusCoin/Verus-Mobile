@@ -850,6 +850,8 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         }        
       }
 
+      const amount = getProcessedAmount();
+
       let output = {
         currency: coinObj.currency_id,
         mapto: selectData(data[SEND_MODAL_MAPPING_FIELD]),
@@ -857,7 +859,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         exportto: selectData(data[SEND_MODAL_EXPORTTO_FIELD]),
         via: selectData(data[SEND_MODAL_VIA_FIELD]),
         address: await selectAddress(data[SEND_MODAL_TO_ADDRESS_FIELD]),
-        satoshis: coinsToSats(BigNumber(data[SEND_MODAL_AMOUNT_FIELD])).toString(),
+        satoshis: coinsToSats(BigNumber(amount)).toString(),
         preconvert: selectData(data[SEND_MODAL_IS_PRECONVERT]),
       }
 
