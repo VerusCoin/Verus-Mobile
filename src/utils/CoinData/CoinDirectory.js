@@ -4,7 +4,7 @@ import { electrumServers } from './electrum/servers';
 import { ENABLE_VERUS_IDENTITIES } from '../../../env/index'
 import { VerusdRpcInterface } from "verusd-rpc-ts-client";
 import { VERUS_APPS, coinsList } from "./CoinsList";
-import { DEFAULT_DECIMALS, VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT } from "../constants/web3Constants";
+import { DEFAULT_DECIMALS, VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT, VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT } from "../constants/web3Constants";
 import { getStoredCurrencyDefinitions, storeCurrencyDefinitionForCurrencyId } from "../asyncStore/currencyDefinitionStorage";
 import { timeout } from "../promises";
 import { getStoredContractDefinitions, storeContractDefinitionForNetwork } from "../asyncStore/contractDefinitionStorage";
@@ -145,7 +145,9 @@ class _CoinDirectory {
       currencyDefinition.proofprotocol === 3 &&
       currencyDefinition.nativecurrencyid != null;
     let mappedCurrencyId = null;
-    const delegatorContractAddr = isTestnet ? VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT : null;
+    const delegatorContractAddr = isTestnet
+      ? VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT
+      : VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT;
 
     try {
       if (isMapped) {
