@@ -46,6 +46,7 @@ import { preflightConvertOrCrossChain } from "../../../../utils/api/routers/pref
 import { getIdentity } from "../../../../utils/api/routers/getIdentity";
 import { addressIsBlocked } from "../../../../utils/addressBlocklist";
 import selectAddressBlocklist from "../../../../selectors/settings";
+import { I_ADDRESS_VERSION, R_ADDRESS_VERSION } from "../../../../utils/constants/constants";
 
 const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
   const sendModal = useSelector(state => state.sendModal);
@@ -836,10 +837,15 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
           })
         } else {
           const { hash, version } = fromBase58Check(keyhash);
+          let type;
+
+          if (version === R_ADDRESS_VERSION) type = DEST_PKH;
+          else if (version === I_ADDRESS_VERSION) type = DEST_ID;
+          else throw new Error("Incompatible address type.");
 
           return new TransferDestination({
             destination_bytes: hash,
-            type: version === 60 ? DEST_PKH : DEST_ID
+            type
           })
         }        
       }

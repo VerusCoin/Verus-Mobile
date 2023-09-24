@@ -14,6 +14,7 @@ import { IS_FRACTIONAL_FLAG } from "../../../../constants/currencies";
 import { unpackOutput } from "@bitgo/utxo-lib/dist/src/smart_transactions";
 import { coinsList } from "../../../../CoinData/CoinsList";
 import { getSendCurrencyTransaction } from "./getSendCurrencyTransaction";
+import { I_ADDRESS_VERSION, R_ADDRESS_VERSION } from "../../../../constants/constants";
 const { createUnfundedCurrencyTransfer, validateFundedCurrencyTransfer } = smarttxs
 
 //TODO: Calculate fee for each coin seperately
@@ -33,10 +34,15 @@ export const preflight = async (coinObj, activeUser, address, amount, params, ch
       } else keyhash = addr;
 
       const { hash, version } = fromBase58Check(keyhash);
+      let type;
+
+      if (version === R_ADDRESS_VERSION) type = DEST_PKH;
+      else if (version === I_ADDRESS_VERSION) type = DEST_ID;
+      else throw new Error("Incompatible address type.");
 
       return new TransferDestination({
         destination_bytes: hash,
-        type: version === 60 ? DEST_PKH : DEST_ID
+        type
       })
     }
 
