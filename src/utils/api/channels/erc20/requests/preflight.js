@@ -42,6 +42,7 @@ import { requestPrivKey } from "../../../../auth/authBox";
 import { BufferWriter } from "@bitgo/utxo-lib/dist/src/bufferutils";
 import { BN } from "bn.js";
 import { getStandardEthBalance } from "../../eth/callCreator";
+import { ECPair, networks } from "@bitgo/utxo-lib";
 
 // TODO: Add balance recalculation with eth gas
 export const txPreflight = async (coinObj, activeUser, address, amount, params) => {
@@ -96,7 +97,8 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
 export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, output, fallbackSubtractBalance = true, amountSubmitted = null) => {
   try {
     const Web3Provider = getWeb3ProviderForNetwork(coinObj.network);
-    const fromAddress = activeUser.keys[coinObj.id][coinObj.proto === 'erc20' ? ERC20 : ETH].addresses[0];
+    const activeUserKeys = activeUser.keys[coinObj.id][coinObj.proto === 'erc20' ? ERC20 : ETH]
+    const fromAddress = activeUserKeys.addresses[0];
     const submittedAmount = amountSubmitted == null ? output.satoshis : amountSubmitted;
 
     const signer = new ethers.VoidSigner(fromAddress, Web3Provider.DefaultProvider);
@@ -163,7 +165,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
         const iAddrBytes = Buffer.from(iAddrBytesHex.substring(2), 'hex');
         const iAddr = toBase58Check(iAddrBytes, 102);
 
-        if (contractAddr === tokenContract && convertableCurrencies.includes(iAddr)) {
+        if (contractAddr.toLowerCase() === tokenContract.toLowerCase() && convertableCurrencies.includes(iAddr)) {
           if (bridgeIAddress === iAddr) {
             isBridge = true;
           }
@@ -259,7 +261,10 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
     let approvalGasFee = ethers.BigNumber.from("0");
 
     if (address.isETHAccount()) {
-      const refundAddress = activeUser.keys[coinObj.id][VRPC].addresses[0];
+      const refundAddress = ECPair.fromPublicKeyBuffer(
+        Buffer.from(activeUserKeys.pubKey, 'hex'),
+        networks.verus,
+      ).getAddress();
 
       // Manually construct a CTransferDestination (remove when switching to serialized method from JSON)
       const destAddrBytes = address.destination_bytes;
