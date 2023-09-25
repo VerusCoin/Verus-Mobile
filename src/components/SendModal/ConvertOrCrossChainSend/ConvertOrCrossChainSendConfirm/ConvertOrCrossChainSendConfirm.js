@@ -9,6 +9,8 @@ import {
   API_GET_FIATPRICE,
   API_GET_TRANSACTIONS,
   API_SEND,
+  ERC20,
+  ETH,
 } from '../../../../utils/constants/intervalConstants';
 import {
   SEND_MODAL_FORM_STEP_FORM,
@@ -248,11 +250,11 @@ function ConvertOrCrossChainSendConfirm({
       {
         key: 'Estimated Time Until Arrival',
         data:
-          exportto != null
+          exportto != null || ((sendModal.coinObj.proto === ETH || sendModal.coinObj.proto === ERC20) && convertto != null)
             ? '20-30 minutes'
             : convertto != null
-            ? '2-10 minutes'
-            : '1-5 minutes',
+              ? '2-10 minutes'
+              : '1-5 minutes',
         numLines: 100,
       },
       {
