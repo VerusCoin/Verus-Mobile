@@ -18,6 +18,7 @@ import {
   FALLBACK_GAS_BRIDGE_TRANSFER,
   NULL_ETH_ADDRESS,
   ETH_VERUS_BRIDGE_CONTRACT_PRELAUNCH_RESERVE_TRANSFER_FEE,
+  MKR_VETH,
 } from '../../../../constants/web3Constants';
 import { getCurrency, getIdentity } from "../../verusid/callCreators"
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData"
@@ -155,7 +156,8 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
         systemId,
         bridgeIAddress,
         vEthIAddress,
-        toIAddress(DAI_VETH, systemName)
+        toIAddress(DAI_VETH, systemName),
+        toIAddress(MKR_VETH, systemName)
       ];
       const tokenList = await delegatorContract.callStatic.getTokenList(0, 0);
       
