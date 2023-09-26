@@ -197,3 +197,6 @@ export const ADDRESS_BLOCKLIST_MANUAL = 'ADDRESS_BLOCKLIST_MANUAL';
 // Address byte versions
 export const R_ADDRESS_VERSION = 60;
 export const I_ADDRESS_VERSION = 102;
+
+// Address blocklist
+export const DEFAULT_ADDRESS_BLOCKLIST_WEBSERVER = 'https://rtethtest.verus.services/exclude.json'

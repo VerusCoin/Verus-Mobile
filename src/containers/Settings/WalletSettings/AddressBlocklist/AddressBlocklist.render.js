@@ -5,7 +5,7 @@ import ListSelectionModal from "../../../../components/ListSelectionModal/ListSe
 import TextInputModal from "../../../../components/TextInputModal/TextInputModal";
 import Styles from "../../../../styles";
 import { unixToDate } from "../../../../utils/math";
-import { ADDRESS_BLOCKLIST_MANUAL } from "../../../../utils/constants/constants";
+import { ADDRESS_BLOCKLIST_MANUAL, DEFAULT_ADDRESS_BLOCKLIST_WEBSERVER } from "../../../../utils/constants/constants";
 
 export const AddressBlocklistRender = function () {
   const blocklistType = this.state.addressBlocklistSettings.addressBlocklistDefinition.type;
@@ -84,7 +84,7 @@ export const AddressBlocklistRender = function () {
                   this.state.addressBlocklistSettings.addressBlocklistDefinition.data
                     ? this.state.addressBlocklistSettings.addressBlocklistDefinition
                         .data
-                    : 'Default server'
+                    : DEFAULT_ADDRESS_BLOCKLIST_WEBSERVER
                 }
                 description={'Address blocklist source'}
                 onPress={() => this.openEditBlockDefinitionDataModal()}
@@ -94,6 +94,12 @@ export const AddressBlocklistRender = function () {
           )
         }
         <List.Subheader>{"Blocked Addresses"}</List.Subheader>
+        <Divider />
+        <List.Item
+          title={"Add blocked address"}
+          right={(props) => <List.Icon {...props} icon={"plus"} size={20} />}
+          onPress={() => this.openAddBlockedAddressModal()}
+        />
         <Divider />
         {this.state.addressBlocklistSettings.addressBlocklist.map((blockedAddress, index) => {
             return (
@@ -117,12 +123,6 @@ export const AddressBlocklistRender = function () {
             );
           }) 
         }
-        <List.Item
-          title={"Add blocked address"}
-          right={(props) => <List.Icon {...props} icon={"plus"} size={20} />}
-          onPress={() => this.openAddBlockedAddressModal()}
-        />
-        <Divider />
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,12 +1,12 @@
 import { createSelector } from 'reselect';
 
-const getAddressBlocklist = state =>
+const getAddressBlocklistFromServer = state =>
   state.settings.generalWalletSettings.addressBlocklist
     ? state.settings.generalWalletSettings.addressBlocklist
     : [];
 
 export const selectAddressBlocklist = createSelector(
-  [getAddressBlocklist],
+  [getAddressBlocklistFromServer],
   (addressBlocklist) => {
     return addressBlocklist
   }

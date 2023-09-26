@@ -61,7 +61,7 @@ class AddressBlocklist extends Component {
     this.ADDRESS_BLOCKLIST_TYPE_DESCRIPTORS = {
       [ADDRESS_BLOCKLIST_FROM_WEBSERVER]: {
         title: 'Server',
-        description: 'On app launch, your blocklist will be fetched from the internet'
+        description: 'On login, your blocklist will be fetched from the internet'
       },
       [ADDRESS_BLOCKLIST_MANUAL]: {
         title: 'Manual',
