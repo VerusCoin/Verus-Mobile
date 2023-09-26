@@ -5,8 +5,12 @@ import ListSelectionModal from "../../../../components/ListSelectionModal/ListSe
 import TextInputModal from "../../../../components/TextInputModal/TextInputModal";
 import Styles from "../../../../styles";
 import { unixToDate } from "../../../../utils/math";
+import { ADDRESS_BLOCKLIST_MANUAL } from "../../../../utils/constants/constants";
 
 export const AddressBlocklistRender = function () {
+  const blocklistType = this.state.addressBlocklistSettings.addressBlocklistDefinition.type;
+  const { title: blocklistTypeTitle, description: blocklistTypeDescription } = this.ADDRESS_BLOCKLIST_TYPE_DESCRIPTORS[blocklistType];
+  
   return (
     <SafeAreaView style={Styles.defaultRoot}>
       <ScrollView style={Styles.fullWidth}>
@@ -25,6 +29,19 @@ export const AddressBlocklistRender = function () {
               }
             />
           )}
+          {this.state.editBlockDefinitionDataModal.open && (
+            <TextInputModal
+              visible={
+                this.state.editBlockDefinitionDataModal.open
+              }
+              onChange={() => {}}
+              cancel={(text) =>
+                this.finishEditBlockDefinitionData(
+                  text
+                )
+              }
+            />
+          )}
           {this.state.editPropertyModal.open && (
             <ListSelectionModal
               title={this.state.editPropertyModal.label}
@@ -35,7 +52,47 @@ export const AddressBlocklistRender = function () {
               cancel={() => this.closeEditPropertyModal()}
             />
           )}
+          {this.state.selectBlockTypeModal.open && (
+            <ListSelectionModal
+              title={this.state.selectBlockTypeModal.label}
+              flexHeight={0.5}
+              visible={this.state.selectBlockTypeModal.open}
+              onSelect={(item) => this.selectBlockTypeButton(item.key)}
+              data={this.BLOCKLIST_TYPE_BUTTONS}
+              cancel={() => this.closeSelectBlockTypeModal()}
+            />
+          )}
         </Portal>
+        <Divider />
+        <List.Subheader>{"Address Blocklist Details"}</List.Subheader>
+        <Divider />
+        <List.Item
+          title={blocklistTypeTitle}
+          description={blocklistTypeDescription}
+          onPress={() =>
+            this.openSelectBlockTypeModal(
+              `Blocklist Type`
+            )
+          }
+        />
+        <Divider />
+        {
+          blocklistType !== ADDRESS_BLOCKLIST_MANUAL && (
+            <React.Fragment>
+              <List.Item
+                title={
+                  this.state.addressBlocklistSettings.addressBlocklistDefinition.data
+                    ? this.state.addressBlocklistSettings.addressBlocklistDefinition
+                        .data
+                    : 'Default server'
+                }
+                description={'Address blocklist source'}
+                onPress={() => this.openEditBlockDefinitionDataModal()}
+              />
+              <Divider />
+            </React.Fragment>
+          )
+        }
         <List.Subheader>{"Blocked Addresses"}</List.Subheader>
         <Divider />
         {this.state.addressBlocklistSettings.addressBlocklist.map((blockedAddress, index) => {

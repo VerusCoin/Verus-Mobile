@@ -3,7 +3,7 @@
   user-decided app settings.
 */
 
-import { MAX_VERIFICATION, DEFAULT_PRIVATE_ADDRS, ADDRESS_BLOCKLIST_MANUAL } from '../utils/constants/constants'
+import { MAX_VERIFICATION, DEFAULT_PRIVATE_ADDRS, ADDRESS_BLOCKLIST_FROM_WEBSERVER } from '../utils/constants/constants'
 import {
   SET_COIN_LIST,
   SET_ALL_SETTINGS,
@@ -28,7 +28,7 @@ export const settings = (state = {
     homeCardDragDetection: false,
     ackedCurrencyDisclaimer: false,
     addressBlocklistDefinition: {
-      type: ADDRESS_BLOCKLIST_MANUAL,
+      type: ADDRESS_BLOCKLIST_FROM_WEBSERVER,
       data: null
     },
     addressBlocklist: []

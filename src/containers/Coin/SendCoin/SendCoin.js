@@ -84,8 +84,8 @@ const SendCoin = ({ navigation }) => {
     },
     {
       key: 'preconvert',
-      title: 'Pre-convert',
-      description: `Participate in a currency pre-convert that accepts ${activeCoin.display_ticker}`,
+      title: 'Preconvert',
+      description: `Participate in a currency preconvert that accepts ${activeCoin.display_ticker}`,
       data: {
         [SEND_MODAL_TO_ADDRESS_FIELD]: '',
         [SEND_MODAL_AMOUNT_FIELD]: '',
@@ -106,7 +106,7 @@ const SendCoin = ({ navigation }) => {
     {
       key: 'advanced',
       title: 'Advanced',
-      description: 'Send off-chain, convert, or pre-convert using an unguided form',
+      description: 'Send off-chain, convert, or preconvert using an unguided form',
       data: {
         [SEND_MODAL_TO_ADDRESS_FIELD]: '',
         [SEND_MODAL_AMOUNT_FIELD]: '',

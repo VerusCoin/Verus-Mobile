@@ -1,7 +1,7 @@
 import { Component } from "react"
 import { connect } from 'react-redux'
 import { AddressBlocklistRender } from "./AddressBlocklist.render"
-import { ADDRESS_BLOCKLIST_MANUAL } from "../../../../utils/constants/constants";
+import { ADDRESS_BLOCKLIST_FROM_VERUSID, ADDRESS_BLOCKLIST_FROM_WEBSERVER, ADDRESS_BLOCKLIST_MANUAL } from "../../../../utils/constants/constants";
 import { Alert } from "react-native";
 import { saveGeneralSettings } from "../../../../actions/actionCreators";
 
@@ -15,7 +15,7 @@ class AddressBlocklist extends Component {
       addressBlocklistSettings: {
         addressBlocklist: [],
         addressBlocklistDefinition: {
-          type: ADDRESS_BLOCKLIST_MANUAL,
+          type: ADDRESS_BLOCKLIST_FROM_WEBSERVER,
           data: null
         }
       },
@@ -25,6 +25,16 @@ class AddressBlocklist extends Component {
         index: null
       },
       editPropertyModal: {
+        open: false,
+        label: "",
+        index: null
+      },
+      selectBlockTypeModal: {
+        open: false,
+        label: "",
+        index: null
+      },
+      editBlockDefinitionDataModal: {
         open: false,
         label: "",
         index: null
@@ -39,6 +49,29 @@ class AddressBlocklist extends Component {
       key: REMOVE,
       title: "Remove"
     }]
+
+    this.BLOCKLIST_TYPE_BUTTONS = [{
+      key: ADDRESS_BLOCKLIST_FROM_WEBSERVER,
+      title: "Fetch blocklist from web server"
+    }, {
+      key: ADDRESS_BLOCKLIST_MANUAL,
+      title: "Manage blocklist manually"
+    }]
+
+    this.ADDRESS_BLOCKLIST_TYPE_DESCRIPTORS = {
+      [ADDRESS_BLOCKLIST_FROM_WEBSERVER]: {
+        title: 'Server',
+        description: 'On app launch, your blocklist will be fetched from the internet'
+      },
+      [ADDRESS_BLOCKLIST_MANUAL]: {
+        title: 'Manual',
+        description: 'You set your address blocklist manually'
+      },
+      [ADDRESS_BLOCKLIST_FROM_VERUSID]: {
+        title: 'VerusID',
+        description: ''
+      }
+    }
   }
 
   componentDidMount() {
@@ -48,6 +81,16 @@ class AddressBlocklist extends Component {
   closeAddBlockedAddressModal() {
     this.setState({
       addBlockedAddressModal: {
+        open: false,
+        label: "",
+        index: null
+      }
+    })
+  }
+
+  closeEditBlockDefinitionDataModal() {
+    this.setState({
+      editBlockDefinitionDataModal: {
         open: false,
         label: "",
         index: null
@@ -75,6 +118,25 @@ class AddressBlocklist extends Component {
     })
   }
 
+  closeSelectBlockTypeModal() {
+    this.setState({
+      selectBlockTypeModal: {
+        open: false,
+        label: "",
+        index: null
+      }
+    })
+  }
+
+  openSelectBlockTypeModal(label) {
+    this.setState({
+      selectBlockTypeModal: {
+        open: true,
+        label
+      }
+    })
+  }
+
   selectEditPropertyButton(button) {
     switch (button) {
       case EDIT:
@@ -92,6 +154,13 @@ class AddressBlocklist extends Component {
       default:
         break;
     }
+  }
+
+  selectBlockTypeButton(button) {
+    this.updateBlockedAddressListDefinition({
+      type: button,
+      data: null
+    })
   }
 
   componentDidUpdate(lastProps) {
@@ -137,9 +206,47 @@ class AddressBlocklist extends Component {
     })
   }
 
+  openEditBlockDefinitionDataModal() {
+    this.setState({
+      editBlockDefinitionDataModal: {
+        open: true,
+        label: "Edit Blocklist Details",
+        index: null
+      }
+    })
+  }
+
   updateBlockedAddressList(list) {
     this.setState(
       { addressBlocklistSettings: { ...this.state.addressBlocklistSettings, addressBlocklist: list }, loading: true },
+      async () => {
+        try {
+          await this.saveSettings()
+        } catch(e) {
+          Alert.alert('Error', e.message)
+        }
+
+        this.setState({ loading: false });
+      }
+    );
+  }
+
+  finishEditBlockDefinitionData(data) {
+    this.setState({
+      editBlockDefinitionDataModal: {
+        open: false,
+        label: "",
+        index: null
+      }
+    }, () => this.updateBlockedAddressListDefinition({
+      type: this.state.addressBlocklistSettings.addressBlocklistDefinition.type,
+      data: data.length === 0 ? null : data
+    }, this.state.addressBlocklistSettings.addressBlocklist))
+  }
+
+  updateBlockedAddressListDefinition(definition, blocklist = []) {
+    this.setState(
+      { addressBlocklistSettings: { addressBlocklist: blocklist, addressBlocklistDefinition: definition }, loading: true },
       async () => {
         try {
           await this.saveSettings()
@@ -167,7 +274,7 @@ class AddressBlocklist extends Component {
       addressBlocklistSettings: {
         addressBlocklist: this.props.settings.addressBlocklist == null ? [] : this.props.settings.addressBlocklist,
         addressBlocklistDefinition: this.props.settings.addressBlocklistDefinition == null ? {
-          type: ADDRESS_BLOCKLIST_MANUAL,
+          type: ADDRESS_BLOCKLIST_FROM_WEBSERVER,
           data: null
         } : this.props.settings.addressBlocklistDefinition
       }

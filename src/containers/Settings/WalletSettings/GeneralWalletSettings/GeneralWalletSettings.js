@@ -26,7 +26,7 @@ import ListSelectionModal from '../../../../components/ListSelectionModal/ListSe
 import {saveGeneralSettings} from '../../../../actions/actionCreators';
 import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
 import {NavigationActions} from '@react-navigation/compat';
-import { ADDRESS_BLOCKLIST_MANUAL } from '../../../../utils/constants/constants';
+import { ADDRESS_BLOCKLIST_FROM_WEBSERVER } from '../../../../utils/constants/constants';
 
 const NO_DEFAULT = 'None';
 
@@ -96,7 +96,7 @@ const WalletSettings = props => {
         addressBlocklistDefinition:
           settings.addressBlocklistDefinition == null
             ? {
-                type: ADDRESS_BLOCKLIST_MANUAL,
+                type: ADDRESS_BLOCKLIST_FROM_WEBSERVER,
                 data: null,
               }
             : settings.addressBlocklistDefinition,
