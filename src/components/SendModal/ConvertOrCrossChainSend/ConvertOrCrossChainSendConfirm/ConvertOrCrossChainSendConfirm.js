@@ -295,7 +295,7 @@ function ConvertOrCrossChainSendConfirm({
         sent,
       ),
       createAccordion(
-        'Transaction Fees',
+        (sendModal.coinObj.proto === ETH || sendModal.coinObj.proto === ERC20) ? 'Maximum Transaction Fees' : 'Transaction Fees',
         'Fees deducted from your wallet to pay for this transaction',
         props => <List.Icon {...props} icon="folder" />,
         fees,
