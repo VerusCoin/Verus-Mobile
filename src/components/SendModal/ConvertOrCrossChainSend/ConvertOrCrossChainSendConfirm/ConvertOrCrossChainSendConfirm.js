@@ -250,11 +250,14 @@ function ConvertOrCrossChainSendConfirm({
       {
         key: 'Estimated Time Until Arrival',
         data:
-          exportto != null || ((sendModal.coinObj.proto === ETH || sendModal.coinObj.proto === ERC20) && convertto != null)
-            ? '20-30 minutes'
-            : convertto != null
-              ? '2-10 minutes'
-              : '1-5 minutes',
+          ((sendModal.coinObj.proto === ETH ||
+            sendModal.coinObj.proto === ERC20) && convertto != null && exportto == null) ?
+            '40-60 minutes' :
+            exportto != null
+              ? '20-30 minutes'
+              : convertto != null
+                ? '2-10 minutes'
+                : '1-5 minutes',
         numLines: 100,
       },
       {
