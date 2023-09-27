@@ -19,6 +19,7 @@ import {
   NULL_ETH_ADDRESS,
   ETH_VERUS_BRIDGE_CONTRACT_PRELAUNCH_RESERVE_TRANSFER_FEE,
   MKR_VETH,
+  MINIMUM_GAS_PRICE_WEI_DELEGATOR_CONTRACT_BOUNCEBACK,
 } from '../../../../constants/web3Constants';
 import { getCurrency, getIdentity } from "../../verusid/callCreators"
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData"
@@ -126,6 +127,12 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
 
     const isConversion = convertto != null;
 
+    if (address.isETHAccount() && !isConversion) {
+      throw new Error("Cannot send to ETH address across bridge without converting. Maybe you meant to use a Verus address?")
+    } else if (address.isETHAccount() && exportto != null) {
+      throw new Error("Cannot send to ETH address across bridge to non-eth network. Maybe you meant to use a Verus address?")
+    }
+
     let mappedCurrencyIAddress;
     let isBridge = false;
     const vEthIAddress = toIAddress(VETH, systemName);
@@ -204,6 +211,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
     // Get the vETH hex address for the fee currency
     const vEthHexAddress = toEthAddress(vEthIAddress);
     const vrscHexAddress = toEthAddress(systemId);
+    const bridgeHexAddress = toEthAddress(bridgeIAddress);
 
     if (isConversion) {
       flagsBN = flagsBN.xor(RESERVE_TRANSFER_CONVERT);
@@ -234,18 +242,25 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
         if (importToSource) {
           destinationcurrency = finalDestinationCurrencyAddress;
         } else {
-          destinationcurrency = toEthAddress(bridgeIAddress);
+          destinationcurrency = bridgeHexAddress;
         }
       }
     } else if (!pastPrelaunch) {
       destinationcurrency = vrscHexAddress;
+      secondreserveid = NULL_ETH_ADDRESS;
+    } else {
+      destinationcurrency = bridgeHexAddress;
       secondreserveid = NULL_ETH_ADDRESS;
     }
 
     let destinationtype, destinationaddress;
 
     const baseGasPrice = await Web3Provider.DefaultProvider.getGasPrice();
-    const minGasPrice = ethers.BigNumber.from(MINIMUM_GAS_PRICE_WEI_DELEGATOR_CONTRACT);
+    const minGasPrice = ethers.BigNumber.from(
+      address.isETHAccount()
+        ? MINIMUM_GAS_PRICE_WEI_DELEGATOR_CONTRACT_BOUNCEBACK
+        : MINIMUM_GAS_PRICE_WEI_DELEGATOR_CONTRACT,
+    );
     const gasPriceModifier = ethers.BigNumber.from("5");
     const modifiedGasPrice = baseGasPrice.add(baseGasPrice.div(gasPriceModifier));
     let gasPrice;
