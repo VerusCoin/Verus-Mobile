@@ -84,10 +84,7 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
 
                 try {
                   if (contractAddress !== ETH_CONTRACT_ADDRESS) {
-                    const contract = getWeb3ProviderForNetwork(ethNetwork).getUnitializedContractInstance(contractAddress);
-                    const name = await contract.name();
-                    const symbol = await contract.symbol();
-                    const decimals = await contract.decimals();
+                    const { name, symbol, decimals } = await getWeb3ProviderForNetwork(ethNetwork).getContractInfo(contractAddress);
   
                     paths[contractAddress].push({
                       via: convertableCurrencyDefinition,
@@ -150,10 +147,7 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
 
                 try {
                   if (contractAddress !== ETH_CONTRACT_ADDRESS) {
-                    const contract = getWeb3ProviderForNetwork(ethNetwork).getUnitializedContractInstance(contractAddress);
-                    const name = await contract.name();
-                    const symbol = await contract.symbol();
-                    const decimals = await contract.decimals();
+                    const { name, symbol, decimals } = await getWeb3ProviderForNetwork(ethNetwork).getContractInfo(contractAddress);
 
                     paths[contractAddress].push({
                       via: bridgeCurrencyDefinition,
@@ -269,10 +263,7 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
               mapping: true
             })
           } else {
-            const contract = getWeb3ProviderForNetwork(ethNetwork).getUnitializedContractInstance(contractAddress);
-            const name = await contract.name();
-            const symbol = await contract.symbol();
-            const decimals = await contract.decimals();
+            const { name, symbol, decimals } = await getWeb3ProviderForNetwork(ethNetwork).getContractInfo(contractAddress);
     
             paths[contractAddress].push({
               destination: {

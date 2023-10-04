@@ -12,6 +12,7 @@ import {
 import {AddErc20TokenConfirmRender} from './AddErc20TokenConfirm.render';
 import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
 import { coinsList } from '../../../../utils/CoinData/CoinsList';
+import { ERC20 } from '../../../../utils/constants/intervalConstants';
 
 const AddErc20TokenConfirm = props => {
   const [contract, setCurrency] = useState(props.route.params.contract);
@@ -22,6 +23,8 @@ const AddErc20TokenConfirm = props => {
     state => state.authentication.activeAccount,
   );
   const activeCoinList = useSelector(state => state.coins.activeCoinList);
+  const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser);
+  const testAccount = useSelector(state => (Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0))
 
   const goBack = useCallback(() => {
     props.setModalHeight();
@@ -34,9 +37,28 @@ const AddErc20TokenConfirm = props => {
 
     try {
       const {coinObj} = sendModal;
+      let fullCoinData;
 
-      await CoinDirectory.addErc20Token(contract, coinObj.network);
-      const fullCoinData = CoinDirectory.findCoinObj(contract.address)
+      for (const key in coinsList) {
+        if (
+          coinsList[key].proto === ERC20 &&
+          ((coinsList[key].testnet && testAccount) ||
+            (!coinsList[key].testnet && !testAccount)) &&
+          coinsList[key].currency_id.toLowerCase() === contract.address.toLowerCase()
+        ) {
+          fullCoinData = CoinDirectory.findCoinObj(key);
+        }
+      }
+
+      if (fullCoinData == null) {
+        await CoinDirectory.addErc20Token(contract, coinObj.network);
+        fullCoinData = CoinDirectory.findCoinObj(contract.address);
+      }
+
+      const activeCoinIndex = activeCoinsForUser.findIndex(coin => {
+        return coin.id === fullCoinData.id
+      });
+      if (activeCoinIndex > -1) throw new Error(`${fullCoinData.display_ticker} already added.`)
   
       dispatch(
         await addKeypairs(

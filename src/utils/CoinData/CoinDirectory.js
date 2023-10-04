@@ -166,13 +166,7 @@ class _CoinDirectory {
               mappedCurrencyId = mappedCoin.id;
             } else {
               const network = isTestnet ? 'goerli' : 'homestead'
-              const contract = getWeb3ProviderForNetwork(
-                network,
-              ).getUnitializedContractInstance(contractAddress);
-        
-              const name = await contract.name();
-              const symbol = await contract.symbol();
-              const decimals = await contract.decimals();
+              const { name, symbol, decimals } = await getWeb3ProviderForNetwork(network).getContractInfo(contractAddress);
   
               this.addErc20Token({ address: contractAddress, symbol, name, decimals }, network, true);
               mappedCurrencyId = contractAddress;

@@ -70,11 +70,7 @@ const AddErc20TokenForm = props => {
         contractAddress = contractAddressField;
       }
 
-      const contract = provider.getUnitializedContractInstance(contractAddress);
-
-      const name = await contract.name();
-      const symbol = await contract.symbol();
-      const decimals = await contract.decimals();
+      const { name, symbol, decimals } = await provider.getContractInfo(contractAddress);
 
       Alert.alert(
         'Warning',
