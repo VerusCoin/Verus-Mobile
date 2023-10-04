@@ -199,4 +199,4 @@ export const R_ADDRESS_VERSION = 60;
 export const I_ADDRESS_VERSION = 102;
 
 // Address blocklist
-export const DEFAULT_ADDRESS_BLOCKLIST_WEBSERVER = 'https://rtethtest.verus.services/exclude.json'
+export const DEFAULT_ADDRESS_BLOCKLIST_WEBSERVER = 'https://eth.verusbridge.io/exclude.json'

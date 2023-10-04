@@ -6,6 +6,7 @@ import {
   PERSONAL_IMAGE_TYPE_SCHEMA,
   PERSONAL_IMAGE_SUBTYPE_SCHEMA,
 } from "../constants/personal";
+import { Platform } from 'react-native';
 var RNFS = require('react-native-fs');
 
 export const renderPersonalFullName = (name) => {
@@ -41,11 +42,17 @@ export const renderPersonalBirthday = (birthday) => {
 };
 
 export const getPersonalImageDisplayUri = uri => {
-  return uri && uri.includes('file://')
-    ? uri
-    : uri != null
-    ? RNFS.DocumentDirectoryPath + `/${uri}`
-    : '';
+  if (uri && uri.startsWith('file://')) {
+    return uri;
+  } else if (uri != null) {
+    const reconstructedUri = RNFS.DocumentDirectoryPath + `/${uri}`;
+
+    if (reconstructedUri.startsWith('file://')) return reconstructedUri;
+    else if (Platform.OS === 'android') return `file://${reconstructedUri}`;
+    else return reconstructedUri;
+  } else {
+    return '';
+  }
 };
 
 export const renderPersonalDocument = (document) => {
@@ -58,7 +65,7 @@ export const renderPersonalDocument = (document) => {
           {...props}
           size={96}
           source={{
-            uri: path.includes("file://"),
+            uri: path,
           }}
         />
       );
