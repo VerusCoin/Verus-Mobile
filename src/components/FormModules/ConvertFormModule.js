@@ -25,7 +25,7 @@ const ConvertFormModule = ({
       </View>
       {
         showConversionField ? (
-          <View style={{...Styles.wideBlockDense}}>
+          <View style={{...Styles.wideBlockDense, paddingTop: (isPreconvert || advancedForm) ? 2 : 8}}>
             {
               (isPreconvert || advancedForm) ? (
                 <TextInput

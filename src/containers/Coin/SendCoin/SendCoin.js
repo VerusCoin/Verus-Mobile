@@ -99,7 +99,7 @@ const SendCoin = ({ navigation }) => {
         [SEND_MODAL_SHOW_CONVERTTO_FIELD]: true,
         [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
         [SEND_MODAL_SHOW_MAPPING_FIELD]: false,
-        [SEND_MODAL_SHOW_VIA_FIELD]: true,
+        [SEND_MODAL_SHOW_VIA_FIELD]: false,
         [SEND_MODAL_ADVANCED_FORM]: false
       },
     },

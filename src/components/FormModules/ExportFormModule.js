@@ -24,7 +24,7 @@ const ExportFormModule = ({
       <View style={{...Styles.wideBlockDense}}>
         <Divider />
       </View>
-      <View style={{...Styles.wideBlockDense}}>
+      <View style={{...Styles.wideBlockDense, paddingTop: (isPreconvert || advancedForm) ? 2 : 8}}>
         {
           (isPreconvert || advancedForm) ? (
             <TextInput
