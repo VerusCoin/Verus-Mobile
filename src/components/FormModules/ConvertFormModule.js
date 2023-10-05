@@ -6,7 +6,6 @@ import Styles from '../../styles';
 
 const ConvertFormModule = ({
   isConversion,
-  isPreconvert,
   advancedForm,
   convertToField,
   viaField,
@@ -25,9 +24,9 @@ const ConvertFormModule = ({
       </View>
       {
         showConversionField ? (
-          <View style={{...Styles.wideBlockDense, paddingTop: (isPreconvert || advancedForm) ? 2 : 8}}>
+          <View style={{...Styles.wideBlockDense, paddingTop: advancedForm ? 2 : 8}}>
             {
-              (isPreconvert || advancedForm) ? (
+              advancedForm ? (
                 <TextInput
                   returnKeyType="done"
                   label='Currency to convert to'
@@ -73,7 +72,7 @@ const ConvertFormModule = ({
         showViaField ? (
           <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
             {
-              (isPreconvert || advancedForm) ? (
+              advancedForm ? (
                 <TextInput
                   returnKeyType="done"
                   label="Currency to convert via (optional)"

@@ -8,7 +8,6 @@ import { VETH } from '../../utils/constants/web3Constants';
 const ExportFormModule = ({
   isExport,
   isConversion,
-  isPreconvert,
   exportToField,
   handleNetworkFieldFocus,
   handleMappingFieldFocus,
@@ -24,9 +23,9 @@ const ExportFormModule = ({
       <View style={{...Styles.wideBlockDense}}>
         <Divider />
       </View>
-      <View style={{...Styles.wideBlockDense, paddingTop: (isPreconvert || advancedForm) ? 2 : 8}}>
+      <View style={{...Styles.wideBlockDense, paddingTop: advancedForm ? 2 : 8}}>
         {
-          (isPreconvert || advancedForm) ? (
+          advancedForm ? (
             <TextInput
               returnKeyType="done"
               label="System to send to (optional)"
@@ -81,7 +80,7 @@ const ExportFormModule = ({
       {
         showMappingField && !isConversion && (
           <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
-            {isPreconvert || advancedForm ? (
+            {advancedForm ? (
               <TextInput
                 returnKeyType="done"
                 label={exportToField != null && exportToField.length > 0 ? "Currency to receive as (required)" : "Currency to receive as (optional)"}

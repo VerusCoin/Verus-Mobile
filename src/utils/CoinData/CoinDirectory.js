@@ -247,6 +247,7 @@ class _CoinDirectory {
       id: currencyDefinition.currencyid,
       currency_id: currencyDefinition.currencyid,
       system_id: currencyDefinition.systemid,
+      launch_system_id: currencyDefinition.launchsystemid,
       bitgojs_network_key: isTestnet ? 'verustest' : 'verus',
       display_ticker: currencyDefinition.fullyqualifiedname,
       display_name: currencyDefinition.fullyqualifiedname,

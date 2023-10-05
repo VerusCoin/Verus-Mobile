@@ -217,12 +217,24 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
     // }
   
     const paths = await endpoint.getCurrencyConversionPaths(sourceDefinition, destDefinition);
+
+    const prelaunchCurrenciesRes = await endpoint.listCurrencies({ launchstate: "prelaunch" });
+    const prelaunchCurrencyIds = prelaunchCurrenciesRes.result
+      ? prelaunchCurrenciesRes.result.map(x => x.currencydefinition.currencyid)
+      : null;
   
     for (const destinationid in paths) {
       paths[destinationid] = paths[destinationid].filter(x => {
         const offSystem = (x.destination.systemid != systemId) || (x.via != null && x.via.systemid != systemId);
         
         return !(offSystem && x.exportto == null);
+      }).map(x => {
+        if (prelaunchCurrencyIds != null && prelaunchCurrencyIds.includes(x.destination.currencyid)) {
+          return {
+            ...x,
+            prelaunch: true
+          }
+        } else return x;
       });
     }
 

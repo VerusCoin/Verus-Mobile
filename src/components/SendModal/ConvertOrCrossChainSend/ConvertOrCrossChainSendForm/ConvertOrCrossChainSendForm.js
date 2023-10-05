@@ -32,7 +32,7 @@ import { getCoinLogo } from "../../../../utils/CoinData/CoinData";
 import { getCurrency } from "../../../../utils/api/channels/verusid/callCreators";
 import selectAddresses from "../../../../selectors/address";
 import MissingInfoRedirect from "../../../MissingInfoRedirect/MissingInfoRedirect";
-import { preflightCurrencyTransfer } from "../../../../utils/api/channels/vrpc/callCreators";
+import { getInfo, preflightCurrencyTransfer } from "../../../../utils/api/channels/vrpc/callCreators";
 import { DEST_ETH, DEST_ID, DEST_PKH, TransferDestination, fromBase58Check } from "verus-typescript-primitives";
 import { CoinDirectory } from "../../../../utils/CoinData/CoinDirectory";
 import { ethers } from "ethers";
@@ -202,9 +202,11 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
   const processConverttoSuggestionPaths = async (flatPaths, coinObj) => {
     switch (coinObj.proto) {
-      case 'vrsc':
+      case 'vrsc':        
         return flatPaths.filter(x => {
-          return !x.mapping
+          if (sendModal.data[SEND_MODAL_IS_PRECONVERT]) {
+            return !x.mapping && x.prelaunch
+          } else return !x.mapping && !x.prelaunch
         }).map((path, index) => {
           const priceFixed = Number(path.price.toFixed(2))
     
@@ -410,16 +412,28 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         const seenSystems = {}
         return flatPaths.filter(x => {
           if (x.exportto == null) return false;
-          if (
-            !x.mapping && flatPaths.find(
-              y =>
-                y.mapping &&
-                y.exportto != null &&
-                y.exportto.currencyid === x.exportto.currencyid,
-            ) != null
-          )
-            return false;
 
+          if (sendModal.data[SEND_MODAL_IS_PRECONVERT]) {
+            if (
+              !x.prelaunch || (!x.mapping && flatPaths.find(
+                y =>
+                  y.mapping &&
+                  y.exportto != null &&
+                  y.exportto.currencyid === x.exportto.currencyid,
+              ) != null)
+            )
+              return false;
+          } else {
+            if (
+              x.prelaunch || (!x.mapping && flatPaths.find(
+                y =>
+                  y.mapping &&
+                  y.exportto != null &&
+                  y.exportto.currencyid === x.exportto.currencyid,
+              ) != null)
+            )
+              return false;
+          }
 
           const seen = seenSystems[x.exportto.currencyid] != null;
 
