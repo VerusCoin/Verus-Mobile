@@ -159,7 +159,12 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
 
       // If mapto is undefined, assume conversion and look for which convertable
       // currency is mapped to the current erc20 address
-      const convertableCurrencies = [
+      const convertableCurrencies = coinObj.testnet ? [
+        systemId,
+        bridgeIAddress,
+        vEthIAddress,
+        toIAddress(DAI_VETH, systemName)
+      ] : [
         systemId,
         bridgeIAddress,
         vEthIAddress,
