@@ -1,6 +1,6 @@
 import ethers from 'ethers';
 import { DEFAULT_ERC20_ABI } from '../constants/abi';
-import { VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT } from '../constants/web3Constants';
+import { ETHERS, VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT } from '../constants/web3Constants';
 import { VERUS_BRIDGE_DELEGATOR_GOERLI_ABI } from '../constants/abis/verusBridgeDelegatorAbi';
 import { coinsList } from '../CoinData/CoinsList';
 import { ERC20 } from '../constants/intervalConstants';
@@ -121,7 +121,7 @@ class Web3Interface {
 
       if (typeof decimals !== 'number') throw new Error("Decimals is not number");
     } catch(e) {
-      decimals = 0;
+      decimals = ETHERS;
     }
 
     return {
