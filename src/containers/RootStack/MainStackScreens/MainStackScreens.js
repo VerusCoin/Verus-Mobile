@@ -15,6 +15,7 @@ import CoinSettings from '../../Settings/WalletSettings/CoinSettings/CoinSetting
 import DeleteProfile from '../../Settings/ProfileSettings/DeleteProfile/DeleteProfile'
 import SecureLoading from '../../SecureLoading/SecureLoading'
 import HomeTabScreens from '../HomeTabScreens/HomeTabScreens';
+import AddressBlocklist from '../../Settings/WalletSettings/AddressBlocklist/AddressBlocklist';
 
 const MainStack = createStackNavigator();
 
@@ -87,6 +88,14 @@ const MainStackScreens = props => {
         component={GeneralWalletSettings}
         options={{
           title: "General",
+        }}
+      />
+
+      <MainStack.Screen
+        name="AddressBlocklist"
+        component={AddressBlocklist}
+        options={{
+          title: "Blocked Addresses",
         }}
       />
 

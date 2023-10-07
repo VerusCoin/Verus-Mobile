@@ -166,6 +166,10 @@ export const parseDlightSeed = async (seed) => {
   } catch(e) { throw e }
 }
 
+export const dlightSeedToBytes = (seed) => {
+  return VerusLightClient.deterministicSeedBytes(seed)
+}
+
 export const isSeedPhrase = (seed, minWordLength = 12) => {
   return (
     seed.split(/\s+/g).length >= minWordLength && validateMnemonic(seed)

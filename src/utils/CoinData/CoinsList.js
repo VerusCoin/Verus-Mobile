@@ -59,11 +59,13 @@ export const VERUS_APPS = {
 export const coinsList = {
   VRSC: {
     id: 'VRSC',
+    system_options: 264,
     currency_id: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
     system_id: 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV',
     bitgojs_network_key: 'verus',
     display_ticker: 'VRSC',
     display_name: 'Verus',
+    pbaas_options: 264,
     rate_url_params: {coin_paprika: 'vrsc-verus-coin'},
     alt_names: ['verus'],
     theme_color: '#3165D4',
@@ -81,8 +83,10 @@ export const coinsList = {
   },
   VRSCTEST: {
     testnet: true,
+    system_options: 264,
     mainnet_id: 'VRSC',
     id: 'VRSCTEST',
+    pbaas_options: 264,
     currency_id: 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq',
     system_id: 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq',
     bitgojs_network_key: 'verustest',
@@ -134,7 +138,7 @@ export const coinsList = {
   },
   ETH: {
     id: 'ETH',
-    currency_id: '',
+    currency_id: '0x0000000000000000000000000000000000000000',
     system_id: '.eth',
     display_ticker: 'ETH',
     display_name: 'Ethereum',
@@ -147,6 +151,23 @@ export const coinsList = {
     proto: 'eth',
     decimals: ETHERS,
     network: "homestead"
+  },
+  GETH: {
+    id: 'GETH',
+    currency_id: '0x0000000000000000000000000000000000000000',
+    system_id: '.eth',
+    display_ticker: 'gETH',
+    display_name: 'Testnet Ethereum',
+    alt_names: [],
+    theme_color: '#141C30',
+    website: 'https://ethereum.org/en/',
+    compatible_channels: [ETH],
+    dominant_channel: ETH,
+    tags: [],
+    proto: 'eth',
+    decimals: ETHERS,
+    network: "goerli",
+    testnet: true
   },
   BAT: {
     id: 'BAT',

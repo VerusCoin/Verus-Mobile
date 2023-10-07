@@ -9380,10 +9380,10 @@ react-native-fs@2.18.0:
     base-64 "^0.1.0"
     utf8 "^3.0.0"
 
-react-native-gesture-handler@2.8.0:
-  version "2.8.0"
-  resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-2.8.0.tgz#ef9857871c10663c95a51546225b6e00cd4740cf"
-  integrity sha512-poOSfz/w0IyD6Qwq7aaIRRfEaVTl1ecQFoyiIbpOpfNTjm2B1niY2FLrdVQIOtIOe+K9nH55Qal04nr4jGkHdQ==
+react-native-gesture-handler@2.9.0:
+  version "2.9.0"
+  resolved "https://registry.yarnpkg.com/react-native-gesture-handler/-/react-native-gesture-handler-2.9.0.tgz#2f63812e523c646f25b9ad660fc6f75948e51241"
+  integrity sha512-a0BcH3Qb1tgVqUutc6d3VuWQkI1AM3+fJx8dkxzZs9t06qA27QgURYFoklpabuWpsUTzuKRpxleykp25E8m7tg==
   dependencies:
     "@egjs/hammerjs" "^2.0.17"
     hoist-non-react-statics "^3.3.0"
@@ -9401,10 +9401,10 @@ react-native-haptic-feedback@1.11.0:
   resolved "https://registry.yarnpkg.com/react-native-haptic-feedback/-/react-native-haptic-feedback-1.11.0.tgz#adfd841f3b67046532f912c6ec827aea0037d8ad"
   integrity sha512-KTIy7lExwMtB6pOpCARyUzFj5EzYTh+A1GN/FB5Eb0LrW5C6hbb1kdj9K2/RHyZC+wyAJD1M823ZaDCU6n6cLA==
 
-react-native-image-picker@4.0.6:
-  version "4.0.6"
-  resolved "https://registry.yarnpkg.com/react-native-image-picker/-/react-native-image-picker-4.0.6.tgz#0dfa5bb83bcf6ff58635ebb9201a185c2271e8cc"
-  integrity sha512-Pp3UWKUADuMG1mz12m6dSO/R2KnvXVEd77bldrfTMFpz4PFc4iVKo+bHeS79It0mUBezfzDMgfesg/OPLSugvQ==
+react-native-image-picker@5.7.0:
+  version "5.7.0"
+  resolved "https://registry.yarnpkg.com/react-native-image-picker/-/react-native-image-picker-5.7.0.tgz#3c146550bc89daddfca2fe123aaa0c753b58a5e2"
+  integrity sha512-LGBrFQzKEAt/u4z+IcY7COZA7N6lCeLQ2dMu1PubK10+d9YBRS8n/ABNj48CJhEpUhcRPt7H3iWbwIuOlcZrDA==
 
 react-native-iphone-x-helper@^1.0.3, react-native-iphone-x-helper@^1.3.1:
   version "1.3.1"
@@ -9622,7 +9622,7 @@ react-native-url-polyfill@1.3.0:
 
 "react-native-verus-light-client@git+https://github.com/VerusCoin/react-native-verus-light-client.git":
   version "1.0.0"
-  resolved "git+https://github.com/VerusCoin/react-native-verus-light-client.git#9ee102f3cf00a8ca08911d52289cb9a3612d06a0"
+  resolved "git+https://github.com/VerusCoin/react-native-verus-light-client.git#e73aeb774b4a7da5f08eb85e15c0c92af24c5955"
   dependencies:
     react "17.0.1"
     react-native "0.64.0"
@@ -11543,7 +11543,7 @@ version_compare@0.0.3:
 
 "verusd-rpc-ts-client@git+https://github.com/VerusCoin/verusd-rpc-ts-client.git":
   version "0.1.0"
-  resolved "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git#6886b2b9135fac65afa4bcb80099f4c72d5bc784"
+  resolved "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git#eecc109266b9c6bc96c959d648654b44f974a4c6"
   dependencies:
     axios "0.27.2"
     verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git"

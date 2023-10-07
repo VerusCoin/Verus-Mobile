@@ -7,7 +7,7 @@ import {
 export const initErc20Wallet = async (coinObj) => {
   Store.dispatch({
     type: INIT_ERC20_CHANNEL_START,
-    payload: { chainTicker: coinObj.id, contractAddress: coinObj.currency_id }
+    payload: { chainTicker: coinObj.id, contractAddress: coinObj.currency_id, network: coinObj.network }
   })
 
   return
@@ -16,7 +16,7 @@ export const initErc20Wallet = async (coinObj) => {
 export const closeErc20Wallet = async (coinObj) => {
   Store.dispatch({
     type: CLOSE_ERC20_CHANNEL,
-    payload: { chainTicker: coinObj.id, contractAddress: coinObj.currency_id }
+    payload: { chainTicker: coinObj.id, contractAddress: coinObj.currency_id, network: coinObj.network }
   })
 
   return

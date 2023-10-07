@@ -163,7 +163,8 @@ export const DEVICE_WINDOW_HEIGHT = Dimensions.get('window').height;
 // Init
 export const START_COINS = ["VRSC", "BTC", "ETH"]
 export const TEST_PROFILE_OVERRIDES = {
-  ['VRSC']: 'VRSCTEST'
+  ['VRSC']: 'VRSCTEST',
+  ['ETH']: 'GETH'
 };
 
 // Account data initialization steps
@@ -187,3 +188,15 @@ export const ONE_MONTH = 31 * 24 * 60;
 export const ONE_YEAR = 365 * 24 * 60;
 export const KOMODO_DIVISOR = 10512000;
 export const KOMODO_N_S7_HARDFORK_HEIGHT = 3484958;
+
+// Address block list
+export const ADDRESS_BLOCKLIST_FROM_WEBSERVER = 'ADDRESS_BLOCKLIST_FROM_WEBSERVER';
+export const ADDRESS_BLOCKLIST_FROM_VERUSID = 'ADDRESS_BLOCKLIST_FROM_VERUSID';
+export const ADDRESS_BLOCKLIST_MANUAL = 'ADDRESS_BLOCKLIST_MANUAL';
+
+// Address byte versions
+export const R_ADDRESS_VERSION = 60;
+export const I_ADDRESS_VERSION = 102;
+
+// Address blocklist
+export const DEFAULT_ADDRESS_BLOCKLIST_WEBSERVER = 'https://eth.verusbridge.io/exclude.json'

@@ -4,7 +4,15 @@ import { FAB, Portal } from 'react-native-paper';
 import Colors from '../../../globals/colors';
 
 const HomeFAB = (props) => {
-  const { handleAddCoin, handleVerusPay, handleEditCards, showConfigureHomeCards, handleAddPbaasCurrency } = props
+  const {
+    handleAddCoin,
+    handleVerusPay,
+    handleEditCards,
+    showConfigureHomeCards,
+    handleAddPbaasCurrency,
+    handleAddErc20Token,
+  } = props;
+
   const [state, setState] = React.useState({ open: false });
 
   const onStateChange = ({ open }) => setState({ open });
@@ -22,6 +30,11 @@ const HomeFAB = (props) => {
             icon: 'format-list-bulleted',
             label: 'Manage Coins',
             onPress: handleAddCoin,
+          },
+          {
+            icon: 'rocket-launch',
+            label: 'Add ERC20 Token',
+            onPress: handleAddErc20Token,
           },
           {
             icon: 'rocket-launch',
@@ -44,6 +57,11 @@ const HomeFAB = (props) => {
             icon: 'format-list-bulleted',
             label: 'Manage Coins',
             onPress: handleAddCoin,
+          },
+          {
+            icon: 'ethereum',
+            label: 'Add ERC20 Token',
+            onPress: handleAddErc20Token,
           },
           {
             icon: 'rocket-launch',

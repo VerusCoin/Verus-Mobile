@@ -3,6 +3,7 @@ import { Platform, SafeAreaView } from "react-native";
 import { Text, Portal, Button } from "react-native-paper";
 import { Colors } from "react-native/Libraries/NewAppScreen";
 import {
+  ADD_ERC20_TOKEN_MODAL,
   ADD_PBAAS_CURRENCY_MODAL,
   AUTHENTICATE_USER_SEND_MODAL,
   CONVERSION_SEND_MODAL,
@@ -48,6 +49,9 @@ import AddPbaasCurrencyResult from "./AddPbaasCurrency/AddPbaasCurrencyResult/Ad
 import ConvertOrCrossChainSendForm from "./ConvertOrCrossChainSend/ConvertOrCrossChainSendForm/ConvertOrCrossChainSendForm";
 import ConvertOrCrossChainSendConfirm from "./ConvertOrCrossChainSend/ConvertOrCrossChainSendConfirm/ConvertOrCrossChainSendConfirm";
 import ConvertOrCrossChainSendResult from "./ConvertOrCrossChainSend/ConvertOrCrossChainSendResult/ConvertOrCrossChainSendResult";
+import AddErc20TokenForm from "./AddErc20Token/AddErc20TokenForm/AddErc20TokenForm";
+import AddErc20TokenConfirm from "./AddErc20Token/AddErc20TokenConfirm/AddErc20TokenConfirm";
+import AddErc20TokenResult from "./AddErc20Token/AddErc20TokenResult/AddErc20TokenResult";
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
@@ -61,7 +65,8 @@ const SEND_FORMS = {
   [PROVISION_IDENTITY_SEND_MODAL]: ProvisionIdentityForm,
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserForm,
   [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyForm,
-  [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendForm
+  [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendForm,
+  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenForm
 };
 
 const SEND_CONFIRMATION = {
@@ -73,7 +78,8 @@ const SEND_CONFIRMATION = {
   [PROVISION_IDENTITY_SEND_MODAL]: ProvisionIdentityConfirm,
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserPassword,
   [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyConfirm,
-  [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendConfirm
+  [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendConfirm,
+  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenConfirm
 };
 
 const SEND_RESULTS = {
@@ -85,7 +91,8 @@ const SEND_RESULTS = {
   [PROVISION_IDENTITY_SEND_MODAL]: ProvisionIdentityResult,
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserResult,
   [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyResult,
-  [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendResult
+  [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendResult,
+  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenResult
 };
 
 export const SendModalRender = function () {

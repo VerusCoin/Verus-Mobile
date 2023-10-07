@@ -27,10 +27,11 @@ import {
   API_GET_SERVICE_TRANSFERS,
   API_GET_SERVICE_RATES,
   IS_PBAAS_ROOT,
-  IS_PBAAS
+  IS_PBAAS,
+  ERC20
 } from "../../../utils/constants/intervalConstants";
 import { selectTransactions } from '../../../selectors/transactions';
-import { DEFAULT_DECIMALS, ETHERS } from "../../../utils/constants/web3Constants";
+import { DEFAULT_DECIMALS, ETHERS, VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT, VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT } from "../../../utils/constants/web3Constants";
 import { Portal, List, Text, Badge } from "react-native-paper";
 import BigNumber from "bignumber.js";
 import { TransactionLogos } from '../../../images/customIcons/index'
@@ -202,6 +203,22 @@ class Overview extends Component {
       } else if (item.type === "sent") {
         AvatarImg = TX_LOGOS.out;
         subtitle = item.address == null ? "??" : item.address;
+
+        if (
+          this.props.activeCoin.proto === ETH ||
+          this.props.activeCoin.proto === ERC20
+        ) {
+          if (
+            (this.props.activeCoin.testnet &&
+              VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT != null &&
+              subtitle.toLowerCase() === VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT.toLowerCase()) ||
+            (!this.props.activeCoin.testnet &&
+              VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT != null &&
+              subtitle.toLowerCase() === VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT.toLowerCase())
+          ) {
+            subtitle = 'Verus-Ethereum Bridge Contract';
+          }
+        }
       } else if (item.type === "self") {
         if (item.amount !== "??" && amount.isLessThan(0)) {
           subtitle = "me";

@@ -29,7 +29,11 @@ function* handleVrpcChannelClose(action) {
 }
 
 function * handleSignOut() {
-  VrpcProvider.deleteAllEndpoints()
+  VrpcProvider.deleteAllEndpoints();
+  
+  setImmediate(() => {
+    VrpcProvider.addDefaultEndpoints();
+  })
 }
 
 function * handleFinishVrpcInit(action) {

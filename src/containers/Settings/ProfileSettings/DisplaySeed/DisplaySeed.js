@@ -15,8 +15,11 @@ import QRCode from 'react-native-qrcode-svg';
 import Styles from '../../../../styles/index'
 import Colors from "../../../../globals/colors";
 import { CommonActions } from '@react-navigation/native';
-import { DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
+import { DLIGHT_PRIVATE, ELECTRUM, ETH, WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
 import { Card, Paragraph, Title, Button } from 'react-native-paper'
+import { deriveKeyPair, dlightSeedToBytes, isSeedPhrase } from "../../../../utils/keys";
+import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
+import { coinsList } from "../../../../utils/CoinData/CoinsList";
 
 class DisplaySeed extends Component {
   constructor() {
@@ -26,12 +29,16 @@ class DisplaySeed extends Component {
       fromDeleteAccount: false,
       selectedSeedType: ELECTRUM,
       dualSameSeed: false,
+      derivedKeys: {},
+      toggleDerivedKey: {},
+      fetchingDerivedKey: {}
     };
 
     this.SEED_NAMES = {
-      [DLIGHT_PRIVATE]: "Secondary (Z-Address) Seed",
-      [ELECTRUM]: "Primary Seed",
-      [WYRE_SERVICE]: "Wyre Account Seed"
+      [DLIGHT_PRIVATE]: "Secondary (Z-Address)",
+      [ELECTRUM]: "Primary",
+      [ETH]: "Ethereum/ERC20",
+      [WYRE_SERVICE]: "Wyre Account"
     }
   }
 
@@ -44,7 +51,7 @@ class DisplaySeed extends Component {
       const seedsArray = Object.values(data.seeds)
 
       this.setState({ 
-        seeds: data.seeds,
+        seeds: {...data.seeds, [ETH]: data.seeds[ELECTRUM]},
         dualSameSeed: seedsArray.every(s => seedsArray.length > 1 && s === seedsArray[0])
       });
     }
@@ -83,8 +90,49 @@ class DisplaySeed extends Component {
     this.props.navigation.dispatch(NavigationActions.back());
   };
 
+  toggleDerived = async (key) => {
+    if (!this.state.derivedKeys[key]) {
+      try {
+        this.setState({ fetchingDerivedKey: { ...this.state.fetchingDerivedKey, [key]: true } });
+        const derivedKey = await this.deriveKeyFromSeed(this.state.seeds[key], key);
+        this.setState({ 
+          derivedKeys: { ...this.state.derivedKeys, [key]: derivedKey }, 
+          fetchingDerivedKey: { ...this.state.fetchingDerivedKey, [key]: false },
+          toggleDerivedKey: { ...this.state.toggleDerivedKey, [key]: true } 
+        });
+      } catch(e) {
+        createAlert("Failed to fetch derived key", e.message);
+        this.setState({ fetchingDerivedKey: { ...this.state.fetchingDerivedKey, [key]: false } });
+      }
+    } else {
+      this.setState(prevState => ({
+        toggleDerivedKey: {
+          ...prevState.toggleDerivedKey,
+          [key]: !prevState.toggleDerivedKey[key]
+        }
+      }));
+    }
+  }
+
+  // Method to derive the key from seed. Replace this with your actual implementation
+  deriveKeyFromSeed = async (seed, key) => {
+    switch (key) {
+      case DLIGHT_PRIVATE:
+        return Buffer.from(await dlightSeedToBytes(seed)).toString('hex');
+      case ETH:
+        return (await deriveKeyPair(
+          seed,
+          coinsList.ETH,
+          key,
+          this.props.activeAccount.keyDerivationVersion,
+        )).privKey;
+      default:
+        return seed
+    }
+  }
+
   render() {
-    const { seeds } = this.state;
+    const { seeds, toggleDerivedKey, fetchingDerivedKey, derivedKeys } = this.state;
 
     return (
       <View style={Styles.defaultRoot}>
@@ -95,21 +143,30 @@ class DisplaySeed extends Component {
           }}
         >
           <View style={Styles.fullWidthFlexCenterBlock}>
-            {Object.keys(seeds).map((key, index) => {
-              return seeds[key] == null ? null : (
-                <View style={Styles.wideBlock} key={index}>
-                  <Card elevation={2}>
-                    <Card.Content>
-                      <Title>{this.SEED_NAMES[key]}</Title>
-                      <Paragraph>{seeds[key]}</Paragraph>
-                      <View style={Styles.fullWidthFlexCenterBlock}>
-                        <QRCode value={seeds[key]} size={250} />
-                      </View>
-                    </Card.Content>
-                  </Card>
-                </View>
-              );
-            })}
+          {Object.keys(seeds).map((key, index) => {
+            const isToggleOn = toggleDerivedKey[key];
+            const displayedValue = isToggleOn ? derivedKeys[key] : seeds[key];
+
+            return seeds[key] == null ? null : (
+              <View style={Styles.wideBlock} key={index}>
+                <Card elevation={2}>
+                  <Card.Content>
+                    <Title>{this.SEED_NAMES[key]}</Title>
+                    <Paragraph>{displayedValue}</Paragraph>
+                    <View style={Styles.fullWidthFlexCenterBlock}>
+                      <QRCode value={displayedValue} size={250} />
+                    </View>
+
+                    {((key === DLIGHT_PRIVATE && isSeedPhrase(seeds[key])) || key === ETH) && (
+                      <Button onPress={() => this.toggleDerived(key)}>
+                        {fetchingDerivedKey[key] ? "Fetching..." : (isToggleOn ? "Show Seed" : "Show Derived Key")}
+                      </Button>
+                    )}
+                  </Card.Content>
+                </Card>
+              </View>
+            );
+          })}
           </View>
         </ScrollView>
         <View style={Styles.highFooterContainer}>

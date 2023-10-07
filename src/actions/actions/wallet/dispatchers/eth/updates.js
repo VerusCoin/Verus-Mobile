@@ -8,7 +8,7 @@ export const updateEthBalances = async (activeUser, coinObj) => {
     activeUser.keys[coinObj.id][ETH].addresses.length > 0
   ) {
     const balance = (
-      await getStandardEthBalance(activeUser.keys[coinObj.id][ETH].addresses[0])
+      await getStandardEthBalance(activeUser.keys[coinObj.id][ETH].addresses[0], coinObj.network)
     ).toString();
 
     return {
@@ -44,6 +44,7 @@ export const updateEthTransactions = async (activeUser, coinObj) => {
       header: {},
       body: await getStandardEthTransactions(
         activeUser.keys[coinObj.id][ETH].addresses[0],
+        coinObj.network
       ),
     };
   } else {

@@ -108,7 +108,7 @@ class CoinDetails extends Component {
   }
   
   render() {
-    const Logo = getCoinLogo(this.state.fullCoinData.id, 'dark')
+    const Logo = getCoinLogo(this.state.fullCoinData.id, this.state.fullCoinData.proto, 'dark')
 
     return (
       <View style={Styles.defaultRoot}>

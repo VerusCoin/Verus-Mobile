@@ -39,6 +39,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import LoadingModal from "./components/LoadingModal/LoadingModal";
 import { CoinDirectory } from "./utils/CoinData/CoinDirectory";
 import { removeInactiveCurrencyDefinitions } from "./utils/asyncStore/currencyDefinitionStorage";
+import { removeInactiveContractDefinitions } from "./utils/asyncStore/contractDefinitionStorage";
 
 class VerusMobile extends React.Component {
   constructor(props) {
@@ -107,8 +108,13 @@ class VerusMobile extends React.Component {
     clearCachedVersions()
     .then(async () => {
       await clearCachedVrpcResponses()
-      await removeInactiveCurrencyDefinitions(await purgeUnusedCoins())
-      await CoinDirectory.populateCurrencyDefinitionsFromStorage()
+
+      const usedCoins = await purgeUnusedCoins()
+      await removeInactiveCurrencyDefinitions(usedCoins)
+      await removeInactiveContractDefinitions(usedCoins)
+
+      await CoinDirectory.populateEthereumContractDefinitionsFromStorage()
+      await CoinDirectory.populatePbaasCurrencyDefinitionsFromStorage()
 
       return initCache()
     })

@@ -5,7 +5,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { TextInput, Button, Divider, Checkbox, List, Text, IconButton } from "react-native-paper";
 import { useSelector } from 'react-redux';
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
-import { API_SEND, DLIGHT_PRIVATE } from "../../../../utils/constants/intervalConstants";
+import { API_SEND, DLIGHT_PRIVATE, ERC20, ETH } from "../../../../utils/constants/intervalConstants";
 import {
   SEND_MODAL_ADVANCED_FORM,
   SEND_MODAL_AMOUNT_FIELD,
@@ -13,9 +13,11 @@ import {
   SEND_MODAL_EXPORTTO_FIELD,
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_IS_PRECONVERT,
+  SEND_MODAL_MAPPING_FIELD,
   SEND_MODAL_PRICE_ESTIMATE,
   SEND_MODAL_SHOW_CONVERTTO_FIELD,
   SEND_MODAL_SHOW_EXPORTTO_FIELD,
+  SEND_MODAL_SHOW_MAPPING_FIELD,
   SEND_MODAL_SHOW_VIA_FIELD,
   SEND_MODAL_TO_ADDRESS_FIELD,
   SEND_MODAL_VIA_FIELD,
@@ -27,18 +29,31 @@ import { useEffect } from "react";
 import { getConversionPaths } from "../../../../utils/api/routers/getConversionPaths";
 import AnimatedActivityIndicatorBox from "../../../AnimatedActivityIndicatorBox";
 import { getCoinLogo } from "../../../../utils/CoinData/CoinData";
-import { getCurrency, getIdentity } from "../../../../utils/api/channels/verusid/callCreators";
+import { getCurrency } from "../../../../utils/api/channels/verusid/callCreators";
 import selectAddresses from "../../../../selectors/address";
 import MissingInfoRedirect from "../../../MissingInfoRedirect/MissingInfoRedirect";
-import { getAddressBalances, preflightCurrencyTransfer } from "../../../../utils/api/channels/vrpc/callCreators";
+import { getInfo, preflightCurrencyTransfer } from "../../../../utils/api/channels/vrpc/callCreators";
 import { DEST_ETH, DEST_ID, DEST_PKH, TransferDestination, fromBase58Check } from "verus-typescript-primitives";
 import { CoinDirectory } from "../../../../utils/CoinData/CoinDirectory";
 import { ethers } from "ethers";
+import CoreSendFormModule from "../../../FormModules/CoreSendFormModule";
+import ConvertFormModule from "../../../FormModules/ConvertFormModule";
+import ExportFormModule from "../../../FormModules/ExportFormModule";
+import { getAddressBalances } from "../../../../utils/api/routers/getAddressBalance";
+import { coinsList } from "../../../../utils/CoinData/CoinsList";
+import { ETH_CONTRACT_ADDRESS } from "../../../../utils/constants/web3Constants";
+import { preflightConvertOrCrossChain } from "../../../../utils/api/routers/preflightConvertOrCrossChain";
+import { getIdentity } from "../../../../utils/api/routers/getIdentity";
+import { addressIsBlocked } from "../../../../utils/addressBlocklist";
+import selectAddressBlocklist from "../../../../selectors/settings";
+import { I_ADDRESS_VERSION, R_ADDRESS_VERSION } from "../../../../utils/constants/constants";
 
 const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
   const sendModal = useSelector(state => state.sendModal);
+  const activeUser = useSelector(state => state.authentication.activeAccount);
   const addresses = useSelector(state => selectAddresses(state));
   const activeAccount = useSelector(state => state.authentication.activeAccount);
+  const addressBlocklist = useSelector(selectAddressBlocklist);
   const networkName = useSelector(state => {
     try {
       const subwallet = state.sendModal.subWallet;
@@ -53,7 +68,8 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   const FIELD_TITLES = {
     [SEND_MODAL_EXPORTTO_FIELD]: "Destination network",
     [SEND_MODAL_VIA_FIELD]: "Convert via",
-    [SEND_MODAL_CONVERTTO_FIELD]: "Convert to"
+    [SEND_MODAL_CONVERTTO_FIELD]: "Convert to",
+    [SEND_MODAL_MAPPING_FIELD]: "Receive as"
   }
 
   const [searchMode, setSearchMode] = useState(false);
@@ -61,7 +77,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
   const [processedAmount, setProcessedAmount] = useState(null);
 
-  const [localNetworkDefinition, setLocalNetworkDefinition] = useState(null);
+  const [localNetworkName, setLocalNetworkName] = useState(null);
   const [localBalances, setLocalBalances] = useState(null);
 
   const [suggestions, setSuggestions] = useState([]);
@@ -71,16 +87,20 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   const [conversionPaths, setConversionPaths] = useState(null);
 
   const [isConversion, setIsConversion] = useState(
-    sendModal.data[SEND_MODAL_CONVERTTO_FIELD] &&
-      sendModal.data[SEND_MODAL_CONVERTTO_FIELD].length,
+   !!(sendModal.data[SEND_MODAL_CONVERTTO_FIELD] != null &&
+      sendModal.data[SEND_MODAL_CONVERTTO_FIELD].length > 0)
   );
   const [isVia, setIsVia] = useState(
-    sendModal.data[SEND_MODAL_VIA_FIELD] &&
-      sendModal.data[SEND_MODAL_VIA_FIELD].length,
+    !!(sendModal.data[SEND_MODAL_VIA_FIELD] != null &&
+      sendModal.data[SEND_MODAL_VIA_FIELD].length > 0)
   );
   const [isExport, setIsExport] = useState(
-    sendModal.data[SEND_MODAL_EXPORTTO_FIELD] &&
-      sendModal.data[SEND_MODAL_EXPORTTO_FIELD].length,
+    !!(sendModal.data[SEND_MODAL_EXPORTTO_FIELD] != null &&
+      sendModal.data[SEND_MODAL_EXPORTTO_FIELD].length > 0)
+  );
+  const [isMapping, setIsMapping] = useState(
+    !!(sendModal.data[SEND_MODAL_MAPPING_FIELD] != null &&
+      sendModal.data[SEND_MODAL_MAPPING_FIELD].length > 0)
   );
 
   const [showConversionField, setShowConversionField] = useState(
@@ -96,6 +116,11 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   const [showExportField, setShowExportField] = useState(
     sendModal.data[SEND_MODAL_SHOW_EXPORTTO_FIELD] || 
     isExport
+  )
+
+  const [showMappingField, setShowMappingField] = useState(
+    sendModal.data[SEND_MODAL_MAPPING_FIELD] || 
+    isMapping
   )
 
   const fadeSearchMode = useRef(new Animated.Value(0)).current;
@@ -175,6 +200,356 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     else return ""
   }
 
+  const processConverttoSuggestionPaths = async (flatPaths, coinObj) => {
+    switch (coinObj.proto) {
+      case 'vrsc':        
+        return flatPaths.filter(x => {
+          if (sendModal.data[SEND_MODAL_IS_PRECONVERT]) {
+            return !x.mapping && x.prelaunch
+          } else return !x.mapping && !x.prelaunch
+        }).map((path, index) => {
+          const priceFixed = Number(path.price.toFixed(2))
+    
+          return {
+            title: path.destination.fullyqualifiedname,
+            logoid: path.destination.currencyid,
+            key: index.toString(),
+            description: path.via
+              ? `${
+                  path.exportto
+                    ? path.gateway
+                      ? `off-system to ${path.exportto.fullyqualifiedname} network `
+                      : `off-chain to ${path.exportto.fullyqualifiedname} network `
+                    : ''
+                }via ${path.via.fullyqualifiedname}`
+              : path.exportto
+              ? path.gateway && path.exportto
+                ? `off-system to ${path.exportto.fullyqualifiedname} network`
+                : `off-chain to ${path.exportto.fullyqualifiedname} network`
+              : 'direct',
+            values: {
+              [SEND_MODAL_VIA_FIELD]: path.via ? path.via.fullyqualifiedname : '',
+              [SEND_MODAL_CONVERTTO_FIELD]: path.destination.fullyqualifiedname,
+              [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
+                ? path.exportto.fullyqualifiedname
+                : '',
+              [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: path.destination.fullyqualifiedname }
+            },
+            right: `${
+              priceFixed === 0
+                ? '<0.01'
+                : priceFixed === path.price
+                ? priceFixed
+                : `~${priceFixed}`
+            }`,
+            keywords: [path.destination.currencyid, path.destination.fullyqualifiedname]
+          };
+        });
+      case 'eth':
+      case 'erc20':
+        return flatPaths.filter(x => {
+          return !x.mapping
+        }).map((path, index) => {
+          const priceFixed = Number(path.price.toFixed(2))
+          const addr = path.ethdest ? path.destination.address : null;
+          
+          const name = path.ethdest
+            ? path.destination.address === ETH_CONTRACT_ADDRESS ? path.destination.name : `${path.destination.name} (${
+                addr.substring(0, 8) + '...' + addr.substring(addr.length - 8)
+              })`
+            : path.destination.fullyqualifiedname;
+
+          return {
+            title: name,
+            logoid: path.ethdest ? path.destination.address : path.destination.currencyid,
+            logoproto: path.ethdest ? "erc20" : null,
+            key: index.toString(),
+            description: path.via
+              ? `${
+                  path.exportto
+                    ? path.gateway
+                      ? `off-system to ${path.exportto.fullyqualifiedname} network `
+                      : `off-chain to ${path.exportto.fullyqualifiedname} network `
+                    : ''
+                }via ${path.via.fullyqualifiedname}`
+              : path.exportto
+              ? path.gateway && path.exportto
+                ? `off-system to ${path.exportto.fullyqualifiedname} network`
+                : `off-chain to ${path.exportto.fullyqualifiedname} network`
+              : 'direct',
+            values: {
+              [SEND_MODAL_VIA_FIELD]: path.via ? path.via.fullyqualifiedname : '',
+              [SEND_MODAL_CONVERTTO_FIELD]: path.ethdest ? path.destination.mapto.fullyqualifiedname : path.destination.fullyqualifiedname,
+              [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
+                ? path.exportto.fullyqualifiedname
+                : '',
+              [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: name }
+            },
+            right: `${
+              priceFixed === 0
+                ? '<0.01'
+                : priceFixed === path.price
+                ? priceFixed
+                : `~${priceFixed}`
+            }`,
+            keywords: path.ethdest
+              ? [path.destination.address, path.destination.symbol, path.destination.name]
+              : [path.destination.currencyid, path.destination.fullyqualifiedname]
+          };
+        });
+      default:
+        return []
+    }
+  }
+
+  const processViaSuggestionPaths = async (flatPaths, coinObj) => {
+    switch (coinObj.proto) {
+      case 'vrsc':
+        return flatPaths.filter(x => {
+          if (isConversion) {
+            const destinationCurrency = sendModal.data[SEND_MODAL_CONVERTTO_FIELD];
+            return (
+              x.via != null &&
+              (x.destination.currencyid === destinationCurrency ||
+                destinationCurrency.toLowerCase() ===
+                  x.destination.fullyqualifiedname.toLowerCase())
+            );
+          } else return x.via != null;
+        }).map((path, index) => {
+          const priceFixed = Number(path.price.toFixed(2))
+    
+          return {
+            title: path.via.fullyqualifiedname,
+            logoid: path.via.currencyid,
+            key: index.toString(),
+            description: `${
+                  path.exportto
+                    ? path.gateway
+                      ? `off-system to ${path.exportto.fullyqualifiedname} network `
+                      : `off-chain to ${path.exportto.fullyqualifiedname} network `
+                    : ''
+                }to ${path.destination.fullyqualifiedname}`,
+            values: {
+              [SEND_MODAL_VIA_FIELD]: path.via.fullyqualifiedname,
+              [SEND_MODAL_CONVERTTO_FIELD]: path.destination.fullyqualifiedname,
+              [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
+                ? path.exportto.fullyqualifiedname
+                : '',
+              [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: path.destination.fullyqualifiedname }
+            },
+            right: `${
+              priceFixed === 0
+                ? '<0.01'
+                : priceFixed === path.price
+                ? priceFixed
+                : `~${priceFixed}`
+            }`,
+            keywords: [path.via.currencyid, path.via.fullyqualifiedname]
+          };
+        })
+      case 'eth':
+      case 'erc20':
+        return flatPaths.filter(x => {
+          if (isConversion) {
+            const destinationCurrency = sendModal.data[SEND_MODAL_CONVERTTO_FIELD];
+            const destinationCurrencyMatch = !x.ethdest && (x.destination.currencyid === destinationCurrency ||
+              destinationCurrency.toLowerCase() ===
+                x.destination.fullyqualifiedname.toLowerCase())
+            const destinationTokenMatch = x.ethdest && (x.destination.address === destinationCurrency ||
+              destinationCurrency.toLowerCase() ===
+                x.destination.address.toLowerCase())
+            
+            return (
+              x.via != null &&
+              (destinationCurrencyMatch || destinationTokenMatch)
+            );
+          } else return x.via != null;
+        }).map((path, index) => {
+          const priceFixed = Number(path.price.toFixed(2))
+          const destname = path.ethdest
+            ? path.destination.address === ETH_CONTRACT_ADDRESS ? path.destination.name : `${path.destination.name} (${
+                path.destination.address.substring(0, 8) + '...' + path.destination.address.substring(path.destination.address.length - 8)
+              })`
+            : path.destination.fullyqualifiedname;
+    
+          return {
+            title: path.via.fullyqualifiedname,
+            logoid: path.via.currencyid,
+            key: index.toString(),
+            description: `${
+                  path.exportto
+                    ? path.gateway
+                      ? `off-system to ${path.exportto.fullyqualifiedname} network `
+                      : `off-chain to ${path.exportto.fullyqualifiedname} network `
+                    : ''
+                }to ${destname}`,
+            values: {
+              [SEND_MODAL_VIA_FIELD]: path.via.fullyqualifiedname,
+              [SEND_MODAL_CONVERTTO_FIELD]: path.ethdest ? path.destination.mapto.fullyqualifiedname : path.destination.fullyqualifiedname,
+              [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
+                ? path.exportto.fullyqualifiedname
+                : '',
+              [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: destname }
+            },
+            right: `${
+              priceFixed === 0
+                ? '<0.01'
+                : priceFixed === path.price
+                ? priceFixed
+                : `~${priceFixed}`
+            }`,
+            keywords: [path.via.currencyid, path.via.fullyqualifiedname]
+          };
+        })
+      default:
+        return []
+    }
+  }
+
+  const processExporttoSuggestionPaths = async (flatPaths, coinObj) => {
+    switch (coinObj.proto) {
+      case 'vrsc':
+        const seenSystems = {}
+        return flatPaths.filter(x => {
+          if (x.exportto == null) return false;
+
+          if (sendModal.data[SEND_MODAL_IS_PRECONVERT]) {
+            if (
+              !x.prelaunch || (!x.mapping && flatPaths.find(
+                y =>
+                  y.mapping &&
+                  y.exportto != null &&
+                  y.exportto.currencyid === x.exportto.currencyid,
+              ) != null)
+            )
+              return false;
+          } else {
+            if (
+              x.prelaunch || (!x.mapping && flatPaths.find(
+                y =>
+                  y.mapping &&
+                  y.exportto != null &&
+                  y.exportto.currencyid === x.exportto.currencyid,
+              ) != null)
+            )
+              return false;
+          }
+
+          const seen = seenSystems[x.exportto.currencyid] != null;
+
+          if (!seen) {
+            seenSystems[x.exportto.currencyid] = true;
+            return true
+          } else return false;
+        }).map((path, index) => {
+
+          return {
+            title: path.exportto.fullyqualifiedname,
+            logoid: path.exportto.currencyid,
+            key: index.toString(),
+            description: path.exportto.currencyid,
+            values: {
+              [SEND_MODAL_EXPORTTO_FIELD]: path.exportto.fullyqualifiedname,
+              [SEND_MODAL_MAPPING_FIELD]: path.mapping ? path.destination.symbol : coinObj.display_ticker
+            },
+            right: "",
+            keywords: [path.exportto.currencyid, path.exportto.fullyqualifiedname]
+          };
+        });
+      case 'eth':
+      case 'erc20':
+        return [
+          {
+            title: coinObj.testnet
+              ? coinsList.VRSCTEST.display_name
+              : coinsList.VRSC.display_name,
+            logoid: coinObj.testnet ? coinsList.VRSCTEST.id : coinsList.VRSC.id,
+            key: 0,
+            description: coinObj.testnet
+              ? 'Send to the Verus testnet'
+              : 'Send to the Verus network',
+            values: {
+              [SEND_MODAL_EXPORTTO_FIELD]: coinObj.testnet
+                ? coinsList.VRSCTEST.display_ticker
+                : coinsList.VRSC.display_ticker,
+            },
+            right: '',
+            keywords: coinObj.testnet
+              ? [coinsList.VRSCTEST.display_name, coinsList.VRSCTEST.id]
+              : [coinsList.VRSC.display_name, coinsList.VRSCTEST.id],
+          },
+        ];
+      default:
+        return []
+    }
+  }
+
+  const processMappingSuggestionPaths = async (flatPaths, coinObj) => {
+    switch (coinObj.proto) {
+      case 'vrsc':
+        return flatPaths
+          .filter(x => {
+            return x.mapping;
+          })
+          .map((path, index) => {
+            const name =
+              path.destination.address === ETH_CONTRACT_ADDRESS
+                ? path.destination.name
+                : `${path.destination.name} (${
+                    path.destination.address.substring(0, 8) +
+                    '...' +
+                    path.destination.address.substring(path.destination.address.length - 8)
+                  })`;
+
+            return {
+              title: name,
+              logoid: path.destination.address,
+              logoproto: 'erc20',
+              key: index.toString(),
+              description: path.destination.address === ETH_CONTRACT_ADDRESS ? "receive as Ethereum" : `receive as the ${path.destination.symbol} ERC20 token`,
+              values: {
+                [SEND_MODAL_VIA_FIELD]: '',
+                [SEND_MODAL_MAPPING_FIELD]: path.destination.symbol,
+                [SEND_MODAL_EXPORTTO_FIELD]: path.exportto.fullyqualifiedname,
+                [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: name },
+              },
+              right: "",
+              keywords: [
+                path.destination.symbol,
+                path.destination.name,
+              ],
+            };
+          });
+      case 'eth':
+      case 'erc20':
+        return flatPaths
+          .filter(x => {
+            return x.mapping;
+          })
+          .map((path, index) => {
+            return {
+              title: path.destination.fullyqualifiedname,
+              logoid: path.destination.currencyid,
+              key: index.toString(),
+              description: `receive on ${path.exportto.fullyqualifiedname} network`,
+              values: {
+                [SEND_MODAL_VIA_FIELD]: '',
+                [SEND_MODAL_MAPPING_FIELD]: path.destination.fullyqualifiedname,
+                [SEND_MODAL_EXPORTTO_FIELD]: path.exportto.fullyqualifiedname,
+                [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: path.destination.fullyqualifiedname },
+              },
+              right: "",
+              keywords: [
+                path.destination.currencyid,
+                path.destination.fullyqualifiedname,
+              ],
+            };
+          });
+      default:
+        return [];
+    }
+  };
+
   const fetchSuggestionsBase = async (field) => {
     if (loadingSuggestions) return;
     let newSuggestionsBase = []
@@ -185,11 +560,13 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
       // {[destinationid: string]: Array<{
       //   via?: CurrencyDefinition;
       //   destination: CurrencyDefinition;
-      //   exportto?: CurrencyDefinition;
+      //   exportto?: string;
       //   price: number;
       //   viapriceinroot?: number;
       //   destpriceinvia?: number;
       //   gateway: boolean;
+      //   mapping: boolean;
+      //   bounceback: boolean;
       // }>}
       
       const paths = conversionPaths
@@ -212,120 +589,20 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
       switch (field) {
         case SEND_MODAL_CONVERTTO_FIELD:
-          newSuggestionsBase = flatPaths.map((path, index) => {
-            const priceFixed = Number(path.price.toFixed(2))
-    
-            return {
-              title: path.destination.fullyqualifiedname,
-              logoid: path.destination.currencyid,
-              key: index.toString(),
-              description: path.via
-                ? `${
-                    path.exportto
-                      ? path.gateway
-                        ? `off-system to ${path.exportto.fullyqualifiedname} network `
-                        : `off-chain to ${path.exportto.fullyqualifiedname} network `
-                      : ''
-                  }via ${path.via.fullyqualifiedname}`
-                : path.exportto
-                ? path.gateway && path.exportto
-                  ? `off-system to ${path.exportto.fullyqualifiedname} network`
-                  : `off-chain to ${path.exportto.fullyqualifiedname} network`
-                : 'direct',
-              values: {
-                [SEND_MODAL_VIA_FIELD]: path.via ? path.via.fullyqualifiedname : '',
-                [SEND_MODAL_CONVERTTO_FIELD]: path.destination.fullyqualifiedname,
-                [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
-                  ? path.exportto.fullyqualifiedname
-                  : '',
-                [SEND_MODAL_PRICE_ESTIMATE]: path.price
-              },
-              right: `${
-                priceFixed === 0
-                  ? '<0.01'
-                  : priceFixed === path.price
-                  ? priceFixed
-                  : `~${priceFixed}`
-              }`,
-              keywords: [path.destination.currencyid, path.destination.fullyqualifiedname]
-            };
-          });
-
+          newSuggestionsBase = await processConverttoSuggestionPaths(flatPaths, sendModal.coinObj);
           setSuggestionBase(newSuggestionsBase);
           break;
         case SEND_MODAL_VIA_FIELD:
-          newSuggestionsBase = flatPaths.filter(x => {
-            if (isConversion) {
-              const destinationCurrency = sendModal.data[SEND_MODAL_CONVERTTO_FIELD];
-              return (
-                x.via != null &&
-                (x.destination.currencyid === destinationCurrency ||
-                  destinationCurrency.toLowerCase() ===
-                    x.destination.fullyqualifiedname.toLowerCase())
-              );
-            } else return x.via != null;
-          }).map((path, index) => {
-            const priceFixed = Number(path.price.toFixed(2))
-    
-            return {
-              title: path.via.fullyqualifiedname,
-              logoid: path.via.currencyid,
-              key: index.toString(),
-              description: `${
-                    path.exportto
-                      ? path.gateway
-                        ? `off-system to ${path.exportto.fullyqualifiedname} network `
-                        : `off-chain to ${path.exportto.fullyqualifiedname} network `
-                      : ''
-                  }to ${path.destination.fullyqualifiedname}`,
-              values: {
-                [SEND_MODAL_VIA_FIELD]: path.via.fullyqualifiedname,
-                [SEND_MODAL_CONVERTTO_FIELD]: path.destination.fullyqualifiedname,
-                [SEND_MODAL_EXPORTTO_FIELD]: path.exportto
-                  ? path.exportto.fullyqualifiedname
-                  : '',
-                [SEND_MODAL_PRICE_ESTIMATE]: path.price
-              },
-              right: `${
-                priceFixed === 0
-                  ? '<0.01'
-                  : priceFixed === path.price
-                  ? priceFixed
-                  : `~${priceFixed}`
-              }`,
-              keywords: [path.via.currencyid, path.via.fullyqualifiedname]
-            };
-          })
-
+          newSuggestionsBase = await processViaSuggestionPaths(flatPaths, sendModal.coinObj);
           setSuggestionBase(newSuggestionsBase);
           break;
         case SEND_MODAL_EXPORTTO_FIELD:
-          const seenSystems = {}
-          newSuggestionsBase = flatPaths.filter(x => {
-            if (x.exportto == null) return false;
-
-            const seen = seenSystems[x.exportto.currencyid] != null;
-
-            if (!seen) {
-              seenSystems[x.exportto.currencyid] = true;
-              return true
-            } else return false;
-          }).map((path, index) => {    
-            return {
-              title: path.exportto.fullyqualifiedname,
-              logoid: path.exportto.currencyid,
-              key: index.toString(),
-              description: path.exportto.currencyid,
-              values: {
-                [SEND_MODAL_EXPORTTO_FIELD]: path.exportto.fullyqualifiedname,
-              },
-              right: "",
-              keywords: [path.exportto.currencyid, path.exportto.fullyqualifiedname]
-            };
-          });
-
+          newSuggestionsBase = await processExporttoSuggestionPaths(flatPaths, sendModal.coinObj);
           setSuggestionBase(newSuggestionsBase);
           break;
+        case SEND_MODAL_MAPPING_FIELD:
+          newSuggestionsBase = await processMappingSuggestionPaths(flatPaths, sendModal.coinObj);
+          setSuggestionBase(newSuggestionsBase);
         default:
           setSuggestionBase(newSuggestionsBase);
           break;
@@ -374,22 +651,40 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     leaveSearchMode();
   };
 
-  const fetchLocalNetworkDefinition = async () => {
-    const [channelName, address, systemId] = sendModal.subWallet.api_channels[API_SEND].split('.');
+  const fetchLocalNetworkInfo = async () => {
+    let address;
 
-    const response = await getCurrency(sendModal.coinObj.system_id, systemId);
+    if (sendModal.coinObj.proto === 'erc20' || sendModal.coinObj.proto === 'eth') {
+      address =
+        sendModal.coinObj.proto === 'erc20'
+          ? activeUser.keys[sendModal.coinObj.id][ERC20].addresses[0]
+          : activeUser.keys[sendModal.coinObj.id][ETH].addresses[0];
 
-    if (response.error) createAlert("Error", "Error fetching current network.");
-    else {
-      setLocalNetworkDefinition(response.result);
-      
-      const balanceRes = await getAddressBalances(response.result.currencyid, [address]);
+      setLocalNetworkName(coinsList.ETH.display_ticker);
+    } else {
+      const [channelName, channelAddress, systemId] = sendModal.subWallet.api_channels[API_SEND].split('.');
 
-      if (balanceRes.error) createAlert("Error", "Error fetching balances.");
+      address = channelAddress;
 
-      setLocalBalances(
-        balanceRes.result.currencybalance ? balanceRes.result.currencybalance : {},
+      const response = await getCurrency(systemId, sendModal.coinObj.system_id);
+
+      if (response.error) Alert.alert("Error fetching current network", response.error.message);
+      else {
+        setLocalNetworkName(response.result.fullyqualifiedname);
+      }
+    }
+
+    try {
+      const balances = await getAddressBalances(
+        sendModal.coinObj,
+        sendModal.subWallet.api_channels[API_SEND],
+        {address},
       );
+
+      setLocalBalances(balances);
+    } catch(e) {
+      console.error(e)
+      Alert.alert("Error fetching balances", e.message);
     }
   }
 
@@ -406,27 +701,36 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   }, [sendModal.data[SEND_MODAL_SHOW_EXPORTTO_FIELD], isExport])
 
   useEffect(() => {
+    setShowMappingField(sendModal.data[SEND_MODAL_SHOW_MAPPING_FIELD] || isMapping)
+  }, [sendModal.data[SEND_MODAL_SHOW_MAPPING_FIELD], isMapping])
+
+  useEffect(() => {
     setProcessedAmount(getProcessedAmount())
   }, [sendModal.data[SEND_MODAL_AMOUNT_FIELD]])
 
   useEffect(() => {
-    fetchLocalNetworkDefinition()
+    fetchLocalNetworkInfo()
   }, [sendModal.subWallet.api_channels[API_SEND]])
 
   useEffect(() => {
-    setIsConversion(sendModal.data[SEND_MODAL_CONVERTTO_FIELD] &&
-      sendModal.data[SEND_MODAL_CONVERTTO_FIELD].length)
+    setIsConversion(!!(sendModal.data[SEND_MODAL_CONVERTTO_FIELD] != null &&
+      sendModal.data[SEND_MODAL_CONVERTTO_FIELD].length > 0))
   }, [sendModal.data[SEND_MODAL_CONVERTTO_FIELD]])
 
   useEffect(() => {
-    setIsVia(sendModal.data[SEND_MODAL_VIA_FIELD] &&
-      sendModal.data[SEND_MODAL_VIA_FIELD].length)
+    setIsVia(!!(sendModal.data[SEND_MODAL_VIA_FIELD] != null &&
+      sendModal.data[SEND_MODAL_VIA_FIELD].length > 0))
   }, [sendModal.data[SEND_MODAL_VIA_FIELD]])
 
   useEffect(() => {
-    setIsExport(sendModal.data[SEND_MODAL_EXPORTTO_FIELD] &&
-      sendModal.data[SEND_MODAL_EXPORTTO_FIELD].length)
+    setIsExport(!!(sendModal.data[SEND_MODAL_EXPORTTO_FIELD] != null &&
+      sendModal.data[SEND_MODAL_EXPORTTO_FIELD].length > 0))
   }, [sendModal.data[SEND_MODAL_EXPORTTO_FIELD]])
+
+  useEffect(() => {
+    setIsMapping(!!(sendModal.data[SEND_MODAL_MAPPING_FIELD] != null &&
+      sendModal.data[SEND_MODAL_MAPPING_FIELD].length > 0))
+  }, [sendModal.data[SEND_MODAL_MAPPING_FIELD]])
 
   const fillAmount = (amount) => {
     let displayAmount = BigNumber(amount);
@@ -478,6 +782,9 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     if (!toAddress || toAddress.length < 1) {
       createAlert("Required Field", "Address is a required field.");
       return true;
+    } else if (addressIsBlocked(toAddress, addressBlocklist)) {
+      createAlert("Blocked Address", "The address you are trying to send to is included in your address blocklist.");
+      return true;
     }
 
     if (amount == null) {
@@ -522,7 +829,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         let keyhash;
 
         if (addr.endsWith("@")) {
-          const identityRes = await getIdentity(coinObj.system_id, addr);
+          const identityRes = await getIdentity(coinObj, activeAccount, channel, addr);
 
           if (identityRes.error) throw new Error("Failed to fetch " + addr);
 
@@ -544,21 +851,29 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
           })
         } else {
           const { hash, version } = fromBase58Check(keyhash);
+          let type;
+
+          if (version === R_ADDRESS_VERSION) type = DEST_PKH;
+          else if (version === I_ADDRESS_VERSION) type = DEST_ID;
+          else throw new Error("Incompatible address type.");
 
           return new TransferDestination({
             destination_bytes: hash,
-            type: version === 60 ? DEST_PKH : DEST_ID
+            type
           })
         }        
       }
 
+      const amount = getProcessedAmount();
+
       let output = {
         currency: coinObj.currency_id,
+        mapto: selectData(data[SEND_MODAL_MAPPING_FIELD]),
         convertto: selectData(data[SEND_MODAL_CONVERTTO_FIELD]),
         exportto: selectData(data[SEND_MODAL_EXPORTTO_FIELD]),
         via: selectData(data[SEND_MODAL_VIA_FIELD]),
         address: await selectAddress(data[SEND_MODAL_TO_ADDRESS_FIELD]),
-        satoshis: coinsToSats(BigNumber(data[SEND_MODAL_AMOUNT_FIELD])).toString(),
+        satoshis: coinsToSats(BigNumber(amount)).toString(),
         preconvert: selectData(data[SEND_MODAL_IS_PRECONVERT]),
       }
 
@@ -566,7 +881,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         if (output[key] == null) delete output[key]
       }
 
-      const res = await preflightCurrencyTransfer(coinObj, channel, activeAccount, output)
+      const res = await preflightConvertOrCrossChain(coinObj, activeAccount, channel, output)
 
       setModalHeight(696);
 
@@ -577,10 +892,11 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
       const {
         converterdef,
         submittedsats,
-        estimate
+        estimate,
+        output: resout
       } = res.result;
 
-      if (output.convertto != null && estimate == null) {
+      if (resout.convertto != null && estimate == null && sendModal.data[SEND_MODAL_PRICE_ESTIMATE] == null) {
         Alert.alert("Could not estimate conversion result", 'Failed to calculate an estimated result for this conversion.')
       }
   
@@ -590,13 +906,13 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         }, a centralized currency. The controller, ${converterdef.fullyqualifiedname}@, has the ability to mint new supply.`)
       }
   
-      if (submittedsats !== output.satoshis) {
+      if (submittedsats !== resout.satoshis) {
         Alert.alert(
           'Amount changed',
           `You have insufficient funds to send your submitted amount of ${satsToCoins(
             BigNumber(submittedsats),
           ).toString()} ${coinObj.display_ticker} with the transaction fee, so the transaction amount has been changed to the maximum sendable value of ${satsToCoins(
-            BigNumber(output.satoshis),
+            BigNumber(resout.satoshis),
           ).toString()} ${coinObj.display_ticker}.`,
         );
       }
@@ -685,7 +1001,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                           </Text>
                         }
                         right={() =>
-                          selectedField !== SEND_MODAL_EXPORTTO_FIELD ? (
+                          selectedField !== SEND_MODAL_EXPORTTO_FIELD && selectedField !== SEND_MODAL_MAPPING_FIELD ? (
                             <Text style={{...Styles.listItemTableCell, fontWeight: 'bold'}}>
                               {sendModal.coinObj.display_ticker + ' price estimate'}
                             </Text>
@@ -703,7 +1019,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                           <Text style={Styles.listItemTableCell}>{item.right}</Text>
                         )}
                         left={props => {
-                          const Logo = getCoinLogo(item.logoid);
+                          const Logo = getCoinLogo(item.logoid, item.logoproto, 'dark');
 
                           return (
                             <View style={{justifyContent: 'center', paddingLeft: 8}}>
@@ -741,258 +1057,64 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
               enableOnAndroid={true}
               extraScrollHeight={150}
               keyboardShouldPersistTaps="handled">
-              <View style={{...Styles.wideBlockDense, paddingBottom: 2}}>
-                <TextInput
-                  label="Sending from"
-                  value={sendModal.subWallet.name}
-                  mode="outlined"
-                  disabled={true}
+                <CoreSendFormModule
+                  sendingFromValue={sendModal.subWallet.name}
+                  recipientAddressValue={sendModal.data[SEND_MODAL_TO_ADDRESS_FIELD]}
+                  onRecipientAddressChange={text =>
+                    updateSendFormData(SEND_MODAL_TO_ADDRESS_FIELD, text)
+                  }
+                  onSelfPress={() => setAddressSelf()}
+                  amountValue={sendModal.data[SEND_MODAL_AMOUNT_FIELD]}
+                  onAmountChange={text => updateSendFormData(SEND_MODAL_AMOUNT_FIELD, text)}
+                  onMaxPress={() => maxAmount()}
+                  maxButtonDisabled={localBalances == null}
+                  networkName={networkName}
+                  estimatedResultSubtitle={
+                    isConversion &&
+                    sendModal.data[SEND_MODAL_PRICE_ESTIMATE] != null &&
+                    processedAmount != null
+                      ? `≈ ${Number(
+                          (processedAmount * sendModal.data[SEND_MODAL_PRICE_ESTIMATE].price).toFixed(
+                            8,
+                          ),
+                        )} ${sendModal.data[SEND_MODAL_PRICE_ESTIMATE].name}`
+                      : null
+                  }
                 />
-                {
-                  networkName != null ? (
-                    <Text style={{marginTop: 8, fontSize: 14, color: Colors.verusDarkGray}}>
-                      {`on ${networkName} network`}
-                    </Text>
-                  ) : null
-                }
-              </View>
-              <View style={{...Styles.wideBlockDense, paddingTop: 0, paddingBottom: 2}}>
-                <View style={Styles.flexRow}>
-                  <TextInput
-                    returnKeyType="done"
-                    label="Recipient address"
-                    value={sendModal.data[SEND_MODAL_TO_ADDRESS_FIELD]}
-                    mode="outlined"
-                    multiline={true}
-                    onChangeText={text =>
-                      updateSendFormData(SEND_MODAL_TO_ADDRESS_FIELD, text)
-                    }
-                    autoCapitalize={'none'}
-                    autoCorrect={false}
-                    style={{
-                      flex: 1,
-                    }}
-                  />
-                  <Button
-                    onPress={() => setAddressSelf()}
-                    color={Colors.primaryColor}
-                    style={{
-                      alignSelf: 'center',
-                      marginTop: 6,
-                      width: 64
-                    }}
-                    compact>
-                    {'Self'}
-                  </Button>
-                </View>
-              </View>
-              <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
-                <View style={Styles.flexRow}>
-                  <TextInput
-                    returnKeyType="done"
-                    label={'Amount'}
-                    keyboardType={'decimal-pad'}
-                    autoCapitalize={'none'}
-                    autoCorrect={false}
-                    value={sendModal.data[SEND_MODAL_AMOUNT_FIELD]}
-                    mode="outlined"
-                    onChangeText={text =>
-                      updateSendFormData(SEND_MODAL_AMOUNT_FIELD, text)
-                    }
-                    style={{
-                      flex: 1,
-                    }}
-                  />
-                  <Button
-                    onPress={() => maxAmount()}
-                    color={Colors.primaryColor}
-                    style={{
-                      alignSelf: 'center',
-                      marginTop: 6,
-                      width: 64
-                    }}
-                    disabled={localBalances == null}
-                    compact>
-                    {'Max'}
-                  </Button>
-                </View>
-                {
-                  isConversion && sendModal.data[SEND_MODAL_PRICE_ESTIMATE] != null && processedAmount != null ? (
-                    <Text style={{marginTop: 8, fontSize: 14, color: Colors.verusDarkGray}}>
-                      {`≈ ${Number((processedAmount*sendModal.data[SEND_MODAL_PRICE_ESTIMATE]).toFixed(8))} ${sendModal.data[SEND_MODAL_CONVERTTO_FIELD]}`}
-                    </Text>
-                  ) : null
-                }
-              </View>
               {
-                showConversionField || showViaField ? (
-                  <React.Fragment>
-                    <View style={{...Styles.wideBlockDense}}>
-                      <Divider />
-                    </View>
-                    {
-                      showConversionField && (
-                        <View style={{...Styles.wideBlockDense}}>
-                        {
-                          (sendModal.data[SEND_MODAL_IS_PRECONVERT] || sendModal.data[SEND_MODAL_ADVANCED_FORM]) ? (
-                            <TextInput
-                              returnKeyType="done"
-                              label='Currency to convert to'
-                              value={sendModal.data[SEND_MODAL_CONVERTTO_FIELD]}
-                              mode="outlined"
-                              multiline={true}
-                              onChangeText={text =>
-                                updateSendFormData(SEND_MODAL_CONVERTTO_FIELD, text)
-                              }
-                              autoCapitalize={'none'}
-                              autoCorrect={false}
-                              style={{
-                                flex: 1,
-                              }}
-                            />
-                          ) : (
-                            <TouchableOpacity
-                              onPress={() => handleFieldFocus(SEND_MODAL_CONVERTTO_FIELD)}
-                              style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                paddingHorizontal: 16,
-                                paddingVertical: 10,
-                                borderWidth: 1,
-                                borderColor: Colors.verusDarkGray,
-                                borderRadius: 4,
-                              }}>
-                              <Text
-                                style={{
-                                  fontSize: 16,
-                                  color: isConversion ? Colors.quaternaryColor : Colors.verusDarkGray,
-                                }}>
-                                {isConversion
-                                  ? `Convert to: ${sendModal.data[SEND_MODAL_CONVERTTO_FIELD]}`
-                                  : 'Select currency to convert to'}
-                              </Text>
-                              <IconButton icon="magnify" size={16} color={Colors.verusDarkGray} />
-                            </TouchableOpacity>
-                          )
-                        }
-                        </View>
-                      )
-                    }
-                    {
-                      showViaField && (
-                        <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
-                          {
-                            (sendModal.data[SEND_MODAL_IS_PRECONVERT] || sendModal.data[SEND_MODAL_ADVANCED_FORM]) ? (
-                              <TextInput
-                                returnKeyType="done"
-                                label="Currency to convert via (optional)"
-                                value={sendModal.data[SEND_MODAL_VIA_FIELD]}
-                                mode="outlined"
-                                multiline={true}
-                                onChangeText={text => updateSendFormData(SEND_MODAL_VIA_FIELD, text)}
-                                autoCapitalize={'none'}
-                                autoCorrect={false}
-                                style={{
-                                  flex: 1,
-                                }}
-                              />
-                            ) : (
-                              <TouchableOpacity
-                                onPress={() => handleFieldFocus(SEND_MODAL_VIA_FIELD)}
-                                style={{
-                                  flexDirection: 'row',
-                                  alignItems: 'center',
-                                  justifyContent: 'space-between',
-                                  paddingHorizontal: 16,
-                                  paddingVertical: 10,
-                                  borderWidth: 1,
-                                  borderColor: Colors.verusDarkGray,
-                                  borderRadius: 4,
-                                }}>
-                                <Text
-                                  style={{
-                                    fontSize: 16,
-                                    color:
-                                      isVia || isConversion
-                                        ? Colors.quaternaryColor
-                                        : Colors.verusDarkGray,
-                                  }}>
-                                  {isVia
-                                    ? `Convert via: ${sendModal.data[SEND_MODAL_VIA_FIELD]}`
-                                    : isConversion
-                                    ? 'Direct conversion'
-                                    : 'Select currency to convert via'}
-                                </Text>
-                                <IconButton icon="magnify" size={16} color={Colors.verusDarkGray} />
-                              </TouchableOpacity>
-                            )
-                          }
-                        </View>
-                      )
-                    }
-                  </React.Fragment>
+                (showConversionField || showViaField) ? (
+                  <ConvertFormModule
+                    isConversion={isConversion}
+                    isPreconvert={sendModal.data[SEND_MODAL_IS_PRECONVERT]}
+                    advancedForm={sendModal.data[SEND_MODAL_ADVANCED_FORM]}
+                    convertToField={sendModal.data[SEND_MODAL_CONVERTTO_FIELD]}
+                    viaField={sendModal.data[SEND_MODAL_VIA_FIELD]}
+                    handleFieldFocusVia={() => handleFieldFocus(SEND_MODAL_VIA_FIELD)}
+                    handleFieldFocusConvertTo={() => handleFieldFocus(SEND_MODAL_CONVERTTO_FIELD)}
+                    onViaChange={(text) => updateSendFormData(SEND_MODAL_VIA_FIELD, text)}
+                    onConvertToChange={(text) => updateSendFormData(SEND_MODAL_CONVERTTO_FIELD, text)}
+                    isVia={isVia}
+                    showConversionField={showConversionField}
+                    showViaField={showViaField}
+                  />
                 ) : null
               }
               {
                 showExportField && (
-                  <React.Fragment>
-                    <View style={{...Styles.wideBlockDense}}>
-                      <Divider />
-                    </View>
-                    <View style={{...Styles.wideBlockDense}}>
-                      {
-                        (sendModal.data[SEND_MODAL_IS_PRECONVERT] || sendModal.data[SEND_MODAL_ADVANCED_FORM]) ? (
-                          <TextInput
-                            returnKeyType="done"
-                            label="System to send to (optional)"
-                            value={sendModal.data[SEND_MODAL_EXPORTTO_FIELD]}
-                            mode="outlined"
-                            multiline={true}
-                            onChangeText={text => updateSendFormData(SEND_MODAL_EXPORTTO_FIELD, text)}
-                            autoCapitalize={'none'}
-                            autoCorrect={false}
-                            style={{
-                              flex: 1,
-                            }}
-                          />
-                        ) : (
-                          <TouchableOpacity
-                            onPress={() => handleFieldFocus(SEND_MODAL_EXPORTTO_FIELD)}
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              paddingHorizontal: 16,
-                              paddingVertical: 10,
-                              borderWidth: 1,
-                              borderColor: Colors.verusDarkGray,
-                              borderRadius: 4,
-                            }}>
-                            <Text
-                              style={{
-                                fontSize: 16,
-                                color:
-                                  isExport || isConversion
-                                    ? Colors.quaternaryColor
-                                    : Colors.verusDarkGray,
-                              }}>
-                              {isExport
-                                ? `To network: ${sendModal.data[SEND_MODAL_EXPORTTO_FIELD]}`
-                                : isConversion
-                                ? `On ${
-                                    localNetworkDefinition
-                                      ? localNetworkDefinition.fullyqualifiedname
-                                      : 'current'
-                                  } network`
-                                : 'Select network to send to'}
-                            </Text>
-                            <IconButton icon="magnify" size={16} color={Colors.verusDarkGray} />
-                          </TouchableOpacity>
-                        )
-                      }
-                    </View>
-                  </React.Fragment>
+                  <ExportFormModule
+                    isExport={isExport}
+                    isConversion={isConversion}
+                    exportToField={sendModal.data[SEND_MODAL_EXPORTTO_FIELD]}
+                    handleNetworkFieldFocus={() => handleFieldFocus(SEND_MODAL_EXPORTTO_FIELD)}
+                    onSystemChange={(text) => updateSendFormData(SEND_MODAL_EXPORTTO_FIELD, text)}
+                    localNetworkName={localNetworkName}
+                    advancedForm={sendModal.data[SEND_MODAL_ADVANCED_FORM]}
+                    isPreconvert={sendModal.data[SEND_MODAL_IS_PRECONVERT]}
+                    showMappingField={sendModal.data[SEND_MODAL_SHOW_MAPPING_FIELD]}
+                    mappingField={sendModal.data[SEND_MODAL_MAPPING_FIELD]}
+                    handleMappingFieldFocus={() => handleFieldFocus(SEND_MODAL_MAPPING_FIELD)}
+                    onMappingChange={(text) => updateSendFormData(SEND_MODAL_MAPPING_FIELD, text)}
+                  />
                 )
               }
               {

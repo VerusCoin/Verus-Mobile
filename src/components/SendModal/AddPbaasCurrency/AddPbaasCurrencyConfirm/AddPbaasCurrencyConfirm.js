@@ -11,7 +11,6 @@ import {
 } from '../../../../utils/constants/sendModal';
 import {AddPbaasCurrencyConfirmRender} from './AddPbaasCurrencyConfirm.render';
 import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
-import { IS_TOKEN_FLAG } from '../../../../utils/constants/currencies';
 
 const AddPbaasCurrencyConfirm = props => {
   const [currency, setCurrency] = useState(props.route.params.currency);
@@ -39,14 +38,6 @@ const AddPbaasCurrencyConfirm = props => {
     await props.setPreventExit(true);
 
     try {
-      // const isToken = (currency.options & IS_TOKEN_FLAG) == IS_TOKEN_FLAG;
-
-      // if (!isToken) {
-      //   throw new Error(`Currently, only adding on-chain currencies is supported in Verus Mobile. ${
-      //     currency.fullyqualifiedname
-      //   } is an independant blockchain and can be accessed in native mode through Verus Desktop or the Verus CLI.`);
-      // }
-
       await CoinDirectory.addPbaasCurrency(currency, Object.keys(activeAccount.testnetOverrides).length > 0, true)
       const fullCoinData = CoinDirectory.findCoinObj(currency.currencyid)
   

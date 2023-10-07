@@ -1,9 +1,9 @@
 import store from '../../../../../store/index';
 import { saveEthTxReceipt } from '../../../../../actions/actionCreators';
 import { MIN_ETH_TX_CONFS } from '../../../../../../env/index'
-import Web3Provider from '../../../../web3/provider'
+import { getWeb3ProviderForNetwork } from '../../../../web3/provider'
 
-export const getTxReceipt = async (txid) => {
+export const getTxReceipt = async (txid, network) => {
   let cachedReceipts = store.getState().ethtxreceipts.txReceipts;
 
   //If already loaded into redux store (from cache), get data from there and avoid call
@@ -11,7 +11,7 @@ export const getTxReceipt = async (txid) => {
     return cachedReceipts[txid]
   } 
 
-  const txReceipt = await Web3Provider.DefaultProvider.getTransactionReceipt(txid)
+  const txReceipt = await getWeb3ProviderForNetwork(network).DefaultProvider.getTransactionReceipt(txid)
 
   if (txReceipt.confirmations >= MIN_ETH_TX_CONFS) await saveEthTxReceipt(txReceipt, txid, store)
 
