@@ -1,7 +1,7 @@
 import ethers from 'ethers';
 import { DEFAULT_ERC20_ABI } from '../constants/abi';
-import { ETHERS, VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT } from '../constants/web3Constants';
-import { VERUS_BRIDGE_DELEGATOR_GOERLI_ABI } from '../constants/abis/verusBridgeDelegatorAbi';
+import { ETHERS, VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT, VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT } from '../constants/web3Constants';
+import { VERUS_BRIDGE_DELEGATOR_ABI } from '../constants/abis/verusBridgeDelegatorAbi';
 import { coinsList } from '../CoinData/CoinsList';
 import { ERC20 } from '../constants/intervalConstants';
 
@@ -82,6 +82,8 @@ class Web3Interface {
   };
 
   getContractInfo = async (contractAddress) => {
+    if (!ethers.utils.isAddress(contractAddress)) throw new Error("Invalid contract address '" + contractAddress + "'")
+
     const contract = this.getUnitializedContractInstance(contractAddress);
     let name, symbol, decimals;
 
@@ -136,12 +138,25 @@ class Web3Interface {
       case 'goerli':
         return new ethers.Contract(
           VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT,
-          VERUS_BRIDGE_DELEGATOR_GOERLI_ABI,
+          VERUS_BRIDGE_DELEGATOR_ABI,
+          this.DefaultProvider
+        );
+      case 'homestead':
+        return new ethers.Contract(
+          VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT,
+          VERUS_BRIDGE_DELEGATOR_ABI,
           this.DefaultProvider
         );
       default:
         throw new Error("No Verus bridge delegator for network " + this.network)
     }
+  }
+
+  isVerusBridgeDelegatorActive = () => {
+    const delegatorContract = this.getVerusBridgeDelegatorContract();
+    const signer = new ethers.VoidSigner(delegatorContract.address, this.DefaultProvider);
+    
+    return delegatorContract.connect(signer).callStatic.bridgeConverterActive();
   }
 
   getVrscSystem = () => {

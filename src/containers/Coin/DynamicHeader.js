@@ -27,6 +27,7 @@ import {truncateDecimal} from '../../utils/math';
 import {USD} from '../../utils/constants/currencies';
 import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT, VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT } from '../../utils/constants/web3Constants';
 
 class DynamicHeader extends Component {
   constructor(props) {
@@ -265,6 +266,14 @@ class DynamicHeader extends Component {
   }
 
   render() {
+    const mappedToEth =
+      this.props.activeCoin.mapped_to != null &&
+      this.state.mappedCoinObj != null &&
+      (this.state.mappedCoinObj.currency_id.toLowerCase() ===
+        VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT.toLowerCase() ||
+        this.state.mappedCoinObj.currency_id.toLowerCase() ===
+          VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT.toLowerCase());
+
     return (
       <View
         style={{
@@ -334,11 +343,13 @@ class DynamicHeader extends Component {
                   <Text style={{color: Colors.secondaryColor}}>
                   {
                     ` mapped to ${
-                      this.state.mappedCoinObj.display_ticker.length > 15
+                      (mappedToEth)
+                        ? 'Ethereum'
+                        : this.state.mappedCoinObj.display_ticker.length > 15
                         ? this.state.mappedCoinObj.display_ticker.substring(0, 15) + '...'
                         : this.state.mappedCoinObj.display_ticker
                     }${
-                      this.state.mappedCoinObj.proto === ERC20
+                      !mappedToEth && this.state.mappedCoinObj.proto === ERC20
                         ? ` (${
                             this.state.mappedCoinObj.currency_id.substring(0, 5) +
                             '...' +

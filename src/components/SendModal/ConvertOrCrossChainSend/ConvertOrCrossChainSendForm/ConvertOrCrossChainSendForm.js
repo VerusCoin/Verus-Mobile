@@ -28,12 +28,12 @@ import Styles from "../../../../styles";
 import { useEffect } from "react";
 import { getConversionPaths } from "../../../../utils/api/routers/getConversionPaths";
 import AnimatedActivityIndicatorBox from "../../../AnimatedActivityIndicatorBox";
-import { getCoinLogo } from "../../../../utils/CoinData/CoinData";
+import { getCoinLogo, getSystemNameFromSystemId } from "../../../../utils/CoinData/CoinData";
 import { getCurrency } from "../../../../utils/api/channels/verusid/callCreators";
 import selectAddresses from "../../../../selectors/address";
 import MissingInfoRedirect from "../../../MissingInfoRedirect/MissingInfoRedirect";
 import { getInfo, preflightCurrencyTransfer } from "../../../../utils/api/channels/vrpc/callCreators";
-import { DEST_ETH, DEST_ID, DEST_PKH, TransferDestination, fromBase58Check } from "verus-typescript-primitives";
+import { DEST_ETH, DEST_ID, DEST_PKH, TransferDestination, fromBase58Check, toIAddress } from "verus-typescript-primitives";
 import { CoinDirectory } from "../../../../utils/CoinData/CoinDirectory";
 import { ethers } from "ethers";
 import CoreSendFormModule from "../../../FormModules/CoreSendFormModule";
@@ -41,12 +41,13 @@ import ConvertFormModule from "../../../FormModules/ConvertFormModule";
 import ExportFormModule from "../../../FormModules/ExportFormModule";
 import { getAddressBalances } from "../../../../utils/api/routers/getAddressBalance";
 import { coinsList } from "../../../../utils/CoinData/CoinsList";
-import { ETH_CONTRACT_ADDRESS } from "../../../../utils/constants/web3Constants";
+import { ETH_CONTRACT_ADDRESS, VETH } from "../../../../utils/constants/web3Constants";
 import { preflightConvertOrCrossChain } from "../../../../utils/api/routers/preflightConvertOrCrossChain";
 import { getIdentity } from "../../../../utils/api/routers/getIdentity";
 import { addressIsBlocked } from "../../../../utils/addressBlocklist";
 import selectAddressBlocklist from "../../../../selectors/settings";
 import { I_ADDRESS_VERSION, R_ADDRESS_VERSION } from "../../../../utils/constants/constants";
+import { getWeb3ProviderForNetwork } from "../../../../utils/web3/provider";
 
 const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
   const sendModal = useSelector(state => state.sendModal);
@@ -68,7 +69,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   const FIELD_TITLES = {
     [SEND_MODAL_EXPORTTO_FIELD]: "Destination network",
     [SEND_MODAL_VIA_FIELD]: "Convert via",
-    [SEND_MODAL_CONVERTTO_FIELD]: "Convert to",
+    [SEND_MODAL_CONVERTTO_FIELD]: sendModal.data[SEND_MODAL_IS_PRECONVERT] ? "Preconvert to" : "Convert to",
     [SEND_MODAL_MAPPING_FIELD]: "Receive as"
   }
 
@@ -874,7 +875,31 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         via: selectData(data[SEND_MODAL_VIA_FIELD]),
         address: await selectAddress(data[SEND_MODAL_TO_ADDRESS_FIELD]),
         satoshis: coinsToSats(BigNumber(amount)).toString(),
-        preconvert: selectData(data[SEND_MODAL_IS_PRECONVERT]),
+        preconvert: selectData(data[SEND_MODAL_IS_PRECONVERT])
+      }
+
+      if (
+        (coinObj.proto === 'vrsc' &&
+          output.exportto != null &&
+          output.exportto.toLowerCase() ===
+            toIAddress(VETH, coinObj.testnet ? 'VRSCTEST' : 'VRSC').toLowerCase()) ||
+        output.exportto.toLowerCase() === 'veth'
+      ) {
+        try {
+          const provider = getWeb3ProviderForNetwork(
+            coinObj.testnet ? 'goerli' : 'homestead',
+          );
+
+          if (!(await provider.isVerusBridgeDelegatorActive())) {
+            output.feecurrency = toIAddress(
+              VETH,
+              coinObj.testnet ? 'VRSCTEST' : 'VRSC',
+            );
+            output.bridgeprelaunch = true;
+          }
+        } catch (e) {
+          console.warn(e);
+        }
       }
 
       for (const key in output) {

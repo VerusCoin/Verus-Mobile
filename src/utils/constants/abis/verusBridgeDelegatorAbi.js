@@ -1,4 +1,4 @@
-export const VERUS_BRIDGE_DELEGATOR_GOERLI_ABI = [
+export const VERUS_BRIDGE_DELEGATOR_ABI = [
   {
     "inputs": [
       {

@@ -6,7 +6,7 @@ import { getWeb3ProviderForNetwork } from "../../../../web3/provider";
  * Returns a map of key: contract address and values: array of currencydefinitions
  * @param {string} systemId 
  * @param {string} ethNetwork
- * @returns {Promise<{result?: Map, error?: string}>}
+ * @returns {Promise<{result?: {contractAddressToCurrencyDefinitionMap: Map, currencyIdToContractAddressMap: Map}, error?: string}>}
  */
 export const getCurrenciesMappedToEth = async (systemId, ethNetwork) => {
   // TODO: Switch to using subset getter when support is added

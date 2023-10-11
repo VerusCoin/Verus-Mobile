@@ -6,6 +6,7 @@ import Styles from '../../styles';
 
 const ConvertFormModule = ({
   isConversion,
+  isPreconvert,
   advancedForm,
   convertToField,
   viaField,
@@ -29,7 +30,7 @@ const ConvertFormModule = ({
               advancedForm ? (
                 <TextInput
                   returnKeyType="done"
-                  label='Currency to convert to'
+                  label={isPreconvert ? 'Currency to preconvert to' : 'Currency to convert to'}
                   value={convertToField}
                   mode="outlined"
                   multiline={true}
@@ -58,8 +59,8 @@ const ConvertFormModule = ({
                         isVia || isConversion ? Colors.quaternaryColor : Colors.verusDarkGray,
                     }}>
                     {isConversion
-                      ? `Convert to: ${convertToField}`
-                      : 'Select currency to convert to'}
+                      ? isPreconvert ? `Preconvert to: ${convertToField}` : `Convert to: ${convertToField}`
+                      : isPreconvert ? 'Select currency to preconvert to' : 'Select currency to convert to'}
                   </Text>
                   <IconButton icon="magnify" size={16} color={Colors.verusDarkGray} />
                 </TouchableOpacity>
