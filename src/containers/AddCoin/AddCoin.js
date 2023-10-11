@@ -83,13 +83,29 @@ const AddCoin = props => {
         if (
           currencyB.id === 'VRSC' ||
           currencyB.id === 'BTC' ||
-          currencyB.id === 'VRSCTEST'
+          currencyB.id === 'VRSCTEST' ||
+          currencyB.id === "iGBs4DWztRNvNEJBt4mqHszLxfKTNHTkhM" ||
+          currencyB.id === "iCkKJuJScy4Z6NSDK7Mt42ZAB2NEnAE1o4" ||
+          currencyB.id === "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X" ||
+          currencyB.id === "i3f7tSctFkiPpiedY8QR5Tep9p4qDVebDx" ||
+          currencyB.id === '0xBc2738BA63882891094C99E59a02141Ca1A1C36a' ||
+          currencyB.id === '0xE6052Dcc60573561ECef2D9A4C0FEA6d3aC5B9A2' ||
+          currencyB.id === 'MKR' ||
+          currencyB.id === 'DAI'
         ) {
           return 1;
         } else if (
           currencyA.id === 'VRSC' ||
           currencyA.id === 'BTC' ||
-          currencyA.id === 'VRSCTEST'
+          currencyA.id === 'VRSCTEST' ||
+          currencyA.id === "iGBs4DWztRNvNEJBt4mqHszLxfKTNHTkhM" ||
+          currencyA.id === "iCkKJuJScy4Z6NSDK7Mt42ZAB2NEnAE1o4" ||
+          currencyA.id === "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X" ||
+          currencyA.id === "i3f7tSctFkiPpiedY8QR5Tep9p4qDVebDx" ||
+          currencyA.id === '0xBc2738BA63882891094C99E59a02141Ca1A1C36a' ||
+          currencyA.id === '0xE6052Dcc60573561ECef2D9A4C0FEA6d3aC5B9A2' ||
+          currencyA.id === 'MKR' ||
+          currencyA.id === 'DAI'
         ) {
           return -1;
         } else {
