@@ -9,6 +9,7 @@ import {
 import {getWeb3ProviderForNetwork} from '../../../../utils/web3/provider';
 import {AddErc20TokenFormRender} from './AddErc20TokenForm.render';
 import { getCurrency } from '../../../../utils/api/channels/verusid/callCreators';
+import { getCurrenciesMappedToEth } from '../../../../utils/api/channels/vrpc/requests/getCurrenciesMappedToEth';
 
 const AddErc20TokenForm = props => {
   const dispatch = useDispatch();
@@ -59,13 +60,25 @@ const AddErc20TokenForm = props => {
 
         const currencyDef = getCurrencyRes.result;
 
-        const isMapped = currencyDef.proofprotocol === 3 && currencyDef.nativecurrencyid != null;
+        const mappedCurrenciesRes = await getCurrenciesMappedToEth(provider.getVrscSystem(), provider.network);
+        
+        if (mappedCurrenciesRes.error) {
+          throw new Error(mappedCurrenciesRes.error.message);
+        }
+
+        const mappedCurrenciesResult = mappedCurrenciesRes.result;
+
+        const isMapped = mappedCurrenciesResult.currencyIdToContractAddressMap.has(currencyDef.currencyid);
 
         if (!isMapped) {
           throw new Error("Cannot get ERC20 contract from non-mapped PBaaS currency.")
         }
 
-        contractAddress = currencyDef.nativecurrencyid.address;
+        contractAddress = mappedCurrenciesResult.currencyIdToContractAddressMap
+          .get(currencyDef.currencyid)
+          .values()
+          .next().value;
+
       } else {
         contractAddress = contractAddressField;
       }
