@@ -4,7 +4,7 @@ import { getCurrency } from "../../verusid/callCreators";
 import { coinsToSats } from "../../../../math";
 
 export const calculateCurrencyTransferFee = async (systemId, currency, exportto, convertto, feecurrency, via, source, address) => {
-  if (feecurrency !== systemId && exportto == null) {
+  if (feecurrency === systemId && exportto == null) {
     return "25000";
   } else {
     const { error, result: destinationSystem } = await getCurrency(systemId, exportto);
