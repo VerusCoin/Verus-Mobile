@@ -879,11 +879,9 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
       }
 
       if (
-        (coinObj.proto === 'vrsc' &&
+        coinObj.proto === 'vrsc' &&
           output.exportto != null &&
-          output.exportto.toLowerCase() ===
-            toIAddress(VETH, coinObj.testnet ? 'VRSCTEST' : 'VRSC').toLowerCase()) ||
-        output.exportto.toLowerCase() === 'veth'
+          (output.exportto.toLowerCase() === toIAddress(VETH, coinObj.testnet ? 'VRSCTEST' : 'VRSC').toLowerCase() || output.exportto.toLowerCase() === 'veth')
       ) {
         try {
           const provider = getWeb3ProviderForNetwork(

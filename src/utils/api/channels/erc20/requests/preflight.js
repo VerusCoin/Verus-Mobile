@@ -191,7 +191,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
         throw new Error("Failed to find a currency mapped to sending erc20 token that can be converted");
       }
     } else {
-      throw new Error("Cannot send to Verus network without a mapped currency");
+      throw new Error("Cannot send to Verus network without a mapped currency, please select a currency to receive as");
     }
 
     const toEthAddress = (iAddr) => {
