@@ -5,7 +5,7 @@ import {
   SIGN_OUT_COMPLETE,
   INIT_ERC20_CHANNEL_FINISH,
 } from "../../utils/constants/storeType";
-import Web3Provider from '../../utils/web3/provider';
+import { getWeb3ProviderForNetwork, deleteAllWeb3Contracts } from '../../utils/web3/provider';
 
 export default function * erc20Saga() {
   yield all([
@@ -16,16 +16,16 @@ export default function * erc20Saga() {
 }
 
 function * handleErc20ChannelInit(action) {
-  yield call(Web3Provider.initContract, action.payload.contractAddress)
+  yield call(getWeb3ProviderForNetwork(action.payload.network).initContract, action.payload.contractAddress)
   yield call(handleFinishErc20Init, action)
 }
 
 function * handleErc20ChannelClose(action) {
-  Web3Provider.deleteContract(action.payload.contractAddress)
+  getWeb3ProviderForNetwork(action.payload.network).deleteContract(action.payload.contractAddress)
 }
 
 function * handleSignOut() {
-  Web3Provider.deleteAllContracts()
+  deleteAllWeb3Contracts()
 }
 
 function * handleFinishErc20Init(action) {

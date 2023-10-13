@@ -5,73 +5,55 @@
   qr.
 */
 
-import React, {Component} from 'react';
-import {SearchBar} from 'react-native-elements';
+import React, {useState, useEffect} from 'react';
 import {FlatList, TouchableOpacity, View} from 'react-native';
-import {List, FAB} from 'react-native-paper';
-import {Searchbar, Portal} from 'react-native-paper';
-import {connect} from 'react-redux';
+import {List, Portal, Searchbar} from 'react-native-paper';
+import {useSelector} from 'react-redux';
 import Styles from '../../styles/index';
 import {RenderSquareCoinLogo} from '../../utils/CoinData/Graphics';
 import CoinDetailsModal from '../../components/CoinDetailsModal/CoinDetailsModal';
 import {WYRE_SERVICE} from '../../utils/constants/intervalConstants';
-import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
+import {CoinDirectory} from '../../utils/CoinData/CoinDirectory';
 
-class AddCoin extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      loading: true,
-      error: null,
-      query: '',
-      coinList: [],
-      fullCoinDetails: null,
-      activeCoinIds: []
+const AddCoin = props => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [query, setQuery] = useState('');
+  const [coinList, setCoinList] = useState([]);
+  const [fullCoinDetails, setFullCoinDetails] = useState(null);
+
+  const testAccount = useSelector(
+    state =>
+      Object.keys(state.authentication.activeAccount.testnetOverrides).length >
+      0,
+  );
+  const activeAccount = useSelector(
+    state => state.authentication.activeAccount,
+  );
+  const activeCoinsForUser = useSelector(
+    state => state.coins.activeCoinsForUser,
+  );
+  const activeCoinList = useSelector(state => state.coins.activeCoinList);
+
+  useEffect(() => {
+    setCoinList(getCoinList());
+  }, [query, activeCoinsForUser]);
+
+  useEffect(() => {
+    return () => {
+      if (props.route.params && props.route.params.refresh) {
+        props.route.params.refresh();
+      }
     };
-  }
+  }, []);
 
-  componentDidMount() {
-    this.setState({coinList: this.getCoinList()});
-  }
-
-  componentDidUpdate(lastProps, lastState) {
-    if (lastState.query !== this.state.query || this.props.activeCoinsForUser !== lastProps.activeCoinsForUser) {
-      this.setState({coinList: this.getCoinList(), activeCoinIds: this.props.activeCoinsForUser.map(
-        coinObj => coinObj.id,
-      )});
-    }
-  }
-
-  componentWillUnmount() {
-    if (this.props.route.params && this.props.route.params.refresh) {
-      this.props.route.params.refresh();
-    }
-  }
-
-  renderHeader = () => {
-    return (
-      <SearchBar
-        placeholder="Type Here..."
-        onChangeText={text => this.searchFilterFunction(text)}
-        autoCorrect={false}
-      />
-    );
-  };
-
-  _openDetails = item => {
-    this.setState({fullCoinDetails: item.coinObj});
-  };
-
-  getCoinList = () => {
-    const {query} = this.state;
-    const displayedCoinList = this.props.testAccount
+  const getCoinList = () => {
+    const displayedCoinList = testAccount
       ? CoinDirectory.testCoinList
-      : this.props.activeAccount.disabledServices[WYRE_SERVICE]
+      : activeAccount.disabledServices[WYRE_SERVICE]
       ? CoinDirectory.enabledNameList
       : CoinDirectory.supportedCoinList;
-    const activeCoinIds = this.props.activeCoinsForUser.map(
-      coinObj => coinObj.id,
-    );
+    const activeCoinIds = activeCoinsForUser.map(coinObj => coinObj.id);
 
     return displayedCoinList
       .map(x => {
@@ -81,7 +63,7 @@ class AddCoin extends Component {
         };
       })
       .filter(item => {
-        const { coinObj } = item;
+        const {coinObj} = item;
         const queryLc = query.toLowerCase();
         const coinIdLc = coinObj.id.toLowerCase();
         const coinNameLc = coinObj.display_name.toLowerCase();
@@ -101,13 +83,29 @@ class AddCoin extends Component {
         if (
           currencyB.id === 'VRSC' ||
           currencyB.id === 'BTC' ||
-          currencyB.id === 'VRSCTEST'
+          currencyB.id === 'VRSCTEST' ||
+          currencyB.id === "iGBs4DWztRNvNEJBt4mqHszLxfKTNHTkhM" ||
+          currencyB.id === "iCkKJuJScy4Z6NSDK7Mt42ZAB2NEnAE1o4" ||
+          currencyB.id === "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X" ||
+          currencyB.id === "i3f7tSctFkiPpiedY8QR5Tep9p4qDVebDx" ||
+          currencyB.id === '0xBc2738BA63882891094C99E59a02141Ca1A1C36a' ||
+          currencyB.id === '0xE6052Dcc60573561ECef2D9A4C0FEA6d3aC5B9A2' ||
+          currencyB.id === 'MKR' ||
+          currencyB.id === 'DAI'
         ) {
           return 1;
         } else if (
           currencyA.id === 'VRSC' ||
           currencyA.id === 'BTC' ||
-          currencyA.id === 'VRSCTEST'
+          currencyA.id === 'VRSCTEST' ||
+          currencyA.id === "iGBs4DWztRNvNEJBt4mqHszLxfKTNHTkhM" ||
+          currencyA.id === "iCkKJuJScy4Z6NSDK7Mt42ZAB2NEnAE1o4" ||
+          currencyA.id === "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X" ||
+          currencyA.id === "i3f7tSctFkiPpiedY8QR5Tep9p4qDVebDx" ||
+          currencyA.id === '0xBc2738BA63882891094C99E59a02141Ca1A1C36a' ||
+          currencyA.id === '0xE6052Dcc60573561ECef2D9A4C0FEA6d3aC5B9A2' ||
+          currencyA.id === 'MKR' ||
+          currencyA.id === 'DAI'
         ) {
           return -1;
         } else {
@@ -116,82 +114,67 @@ class AddCoin extends Component {
       });
   };
 
-  onEndReached = () => {
-    this.setState({loading: false});
+  const onEndReached = () => {
+    setLoading(false);
   };
 
-  render() {
-    const activeCoinIds = this.state.activeCoinIds
+  const activeCoinIds = activeCoinsForUser.map(coinObj => coinObj.id);
 
-    return (
-      <View styles={Styles.root}>
-        <Portal>
-          <CoinDetailsModal
-            navigation={this.props.navigation}
-            data={this.state.fullCoinDetails || {}}
-            added={
-              this.state.fullCoinDetails != null &&
-              activeCoinIds.includes(this.state.fullCoinDetails.id)
-            }
-            activeAccount={this.props.activeAccount}
-            activeCoinList={this.props.activeCoinList}
-            cancel={() =>
-              this.setState({
-                fullCoinDetails: null,
-              })
-            }
-            visible={this.state.fullCoinDetails != null}
-            animationType="slide"
-          />
-        </Portal>
-        <FlatList
-          ListHeaderComponent={
-            <Searchbar
-              placeholder="Search"
-              onChangeText={query => this.setState({query})}
-              value={this.state.query}
-              autoCorrect={false}
-            />
+  return (
+    <View style={{...Styles.root, padding: 0}}>
+      <Portal>
+        <CoinDetailsModal
+          navigation={props.navigation}
+          data={fullCoinDetails || {}}
+          added={
+            fullCoinDetails != null &&
+            activeCoinIds.includes(fullCoinDetails.id)
           }
-          style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}
-          data={this.state.coinList}
-          onEndReached={this.onEndReached}
-          onEndReachedThreshold={50}
-          renderItem={({item}) => {
-            const { added, coinObj } = item
-            const {display_name, display_ticker} = coinObj;
-
-            return (
-              <TouchableOpacity onPress={() => this._openDetails(item)}>
-                <List.Item
-                  title={`${display_name} (${display_ticker})`}
-                  left={props => RenderSquareCoinLogo(coinObj.id)}
-                  right={props => {
-                    return added ? (
-                      <List.Icon {...props} icon={'check'} size={20} />
-                    ) : null;
-                  }}
-                  style={{
-                    backgroundColor: 'white',
-                  }}
-                />
-              </TouchableOpacity>
-            );
-          }}
-          keyExtractor={item => item.coinObj.id}
+          activeAccount={activeAccount}
+          activeCoinList={activeCoinList}
+          cancel={() => setFullCoinDetails(null)}
+          visible={fullCoinDetails != null}
+          animationType="slide"
         />
-      </View>
-    );
-  }
-}
+      </Portal>
+      <FlatList
+        ListHeaderComponent={
+          <Searchbar
+            placeholder="Search"
+            onChangeText={text => setQuery(text)}
+            value={query}
+            autoCorrect={false}
+          />
+        }
+        style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}
+        data={coinList}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={50}
+        renderItem={({item}) => {
+          const {added, coinObj} = item;
+          const {display_name, display_ticker} = coinObj;
 
-const mapStateToProps = state => {
-  return {
-    testAccount: Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0,
-    activeAccount: state.authentication.activeAccount,
-    activeCoinsForUser: state.coins.activeCoinsForUser,
-    activeCoinList: state.coins.activeCoinList,
-  };
+          return (
+            <TouchableOpacity onPress={() => setFullCoinDetails(item.coinObj)}>
+              <List.Item
+                title={`${display_name} (${display_ticker})`}
+                left={props => RenderSquareCoinLogo(coinObj.id)}
+                right={props => {
+                  return added ? (
+                    <List.Icon {...props} icon={'check'} size={20} />
+                  ) : null;
+                }}
+                style={{
+                  backgroundColor: 'white',
+                }}
+              />
+            </TouchableOpacity>
+          );
+        }}
+        keyExtractor={item => item.coinObj.id}
+      />
+    </View>
+  );
 };
 
-export default connect(mapStateToProps)(AddCoin);
+export default AddCoin;

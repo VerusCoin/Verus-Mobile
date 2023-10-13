@@ -259,7 +259,7 @@ PODS:
     - React
   - react-native-cameraroll (5.0.4):
     - React-Core
-  - react-native-image-picker (4.0.6):
+  - react-native-image-picker (5.7.0):
     - React-Core
   - react-native-netinfo (6.0.2):
     - React-Core
@@ -354,7 +354,7 @@ PODS:
     - React-Core
   - RNFS (2.18.0):
     - React
-  - RNGestureHandler (2.8.0):
+  - RNGestureHandler (2.9.0):
     - React-Core
   - RNKeychain (6.2.0):
     - React
@@ -813,7 +813,7 @@ SPEC CHECKSUMS:
   React-logger: 98f663b292a60967ebbc6d803ae96c1381183b6d
   react-native-camera: a49f960eb362b9fbff87667c0ce639eef1161530
   react-native-cameraroll: 38b40d9033e4077b6c603f92f95c6d05fa7907df
-  react-native-image-picker: a6e56460d34905c849ada551db30897dc7f3d535
+  react-native-image-picker: 3269f75c251cdcd61ab51b911dd30d6fff8c6169
   react-native-netinfo: 92e6e4476eb8bf6fc2d7c0a6ca0a1406f663d73a
   react-native-randombytes: 421f1c7d48c0af8dbcd471b0324393ebf8fe7846
   react-native-safe-area-context: f0906bf8bc9835ac9a9d3f97e8bde2a997d8da79
@@ -837,7 +837,7 @@ SPEC CHECKSUMS:
   RNCMaskedView: 5a8ec07677aa885546a0d98da336457e2bea557f
   RNDateTimePicker: e073697ac3e8a378968d68ab0581fef542b8af8a
   RNFS: 3ab21fa6c56d65566d1fb26c2228e2b6132e5e32
-  RNGestureHandler: 62232ba8f562f7dea5ba1b3383494eb5bf97a4d3
+  RNGestureHandler: 071d7a9ad81e8b83fe7663b303d132406a7d8f39
   RNKeychain: b8e0711b959a19c5b057d1e970d3c83d159b6da5
   RNOS: 728cdea6d232de48cfede274443dbe3f669b86e9
   RNPermissions: 4b54095940aea8c03fa3e6c92d4ac3647b31ed4e
@@ -866,6 +866,6 @@ SPEC CHECKSUMS:
   Yoga: c4d61225a466f250c35c1ee78d2d0b3d41fe661c
   ZcashLightClientKit: 4e4273f2e841e982fedad461a9008cca19089f5c
 
-PODFILE CHECKSUM: 2ea7addfb99cd8f4e5f9742ed28cac88e62bc28c
+PODFILE CHECKSUM: 2dd5cff0057e34322095c85f7a7d5ca86846e0e1
 
-COCOAPODS: 1.11.3
+COCOAPODS: 1.13.0

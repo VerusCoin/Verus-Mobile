@@ -1,5 +1,5 @@
 import { RFOX_UTILITY_CONTRACT } from "../../../../../../constants/web3Constants"
-import Web3Provider from "../../../../../../web3/provider"
+import { getWeb3ProviderForNetwork } from "../../../../../../web3/provider"
 import { computePublicKey } from '@ethersproject/signing-key'
 
 /**
@@ -7,6 +7,8 @@ import { computePublicKey } from '@ethersproject/signing-key'
  * @param {String} pubKey The public key that is stored in the accountObj of the user 
  */
 export const getRfoxAccountBalances = async (pubKey) => {
+  const Web3Provider = getWeb3ProviderForNetwork('homestead')
+
   let contract = null 
   
   try {

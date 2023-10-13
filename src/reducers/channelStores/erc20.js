@@ -5,10 +5,7 @@
 import {
   INIT_ERC20_CHANNEL_FINISH,
   CLOSE_ERC20_CHANNEL,
-  SIGN_OUT_COMPLETE,
-  ADD_WEB3_CONTRACT,
-  REMOVE_WEB3_CONTRACT,
-  CLEAR_WEB3_CONTRACTS
+  SIGN_OUT_COMPLETE
 } from '../../utils/constants/storeType'
 
 export const channelStore_erc20 = (state = {
@@ -23,27 +20,6 @@ export const channelStore_erc20 = (state = {
           ...state.openCoinChannels,
           [action.payload.chainTicker]: true
         },
-      }
-    case ADD_WEB3_CONTRACT:
-      return {
-        ...state,
-        web3Contracts: {
-          ...state.web3Contracts,
-          [action.payload.contract[0]]: action.payload.contract
-        },
-      }
-    case REMOVE_WEB3_CONTRACT:
-      return {
-        ...state,
-        web3Contracts: {
-          ...state.web3Contracts,
-          [action.payload.contractAddress]: null
-        },
-      }
-    case CLEAR_WEB3_CONTRACTS:
-      return {
-        ...state,
-        web3Contracts: {},
       }
     case CLOSE_ERC20_CHANNEL:
       return {

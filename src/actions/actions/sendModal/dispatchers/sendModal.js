@@ -30,7 +30,10 @@ import {
   SEND_MODAL_SHOW_EXPORTTO_FIELD,
   SEND_MODAL_SHOW_VIA_FIELD,
   SEND_MODAL_PRICE_ESTIMATE,
-  SEND_MODAL_ADVANCED_FORM
+  SEND_MODAL_ADVANCED_FORM,
+  SEND_MODAL_CONTRACT_ADDRESS_FIELD,
+  ADD_ERC20_TOKEN_MODAL,
+  SEND_MODAL_SHOW_MAPPING_FIELD
 } from '../../../../utils/constants/sendModal';
 import {
   CLOSE_SEND_COIN_MODAL,
@@ -97,6 +100,7 @@ export const openConvertOrCrossChainSendModal = (coinObj, subWallet, data) => {
           [SEND_MODAL_SHOW_CONVERTTO_FIELD]: true,
           [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
           [SEND_MODAL_SHOW_VIA_FIELD]: true,
+          [SEND_MODAL_SHOW_MAPPING_FIELD]: true,
           [SEND_MODAL_ADVANCED_FORM]: false
         }
       : data,
@@ -132,6 +136,21 @@ export const openAddPbaasCurrencyModal = (coinObj, data) => {
       : data,
     ADD_PBAAS_CURRENCY_MODAL,
     'To add a Public Blockchains as a Service (PBaaS) currency to your wallet, enter its name or i-Address here and press continue.',
+  );
+};
+
+export const openAddErc20TokenModal = (coinObj, data) => {
+  openSendModal(
+    `Add ERC20 Token`,
+    coinObj,
+    null,
+    data == null
+      ? {
+          [SEND_MODAL_CONTRACT_ADDRESS_FIELD]: '',
+        }
+      : data,
+    ADD_ERC20_TOKEN_MODAL,
+    'To add an ERC20 token to your wallet, enter its contract address here and press continue.',
   );
 };
 

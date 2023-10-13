@@ -14,10 +14,12 @@ import {
   SEND_MODAL_CONVERTTO_FIELD,
   SEND_MODAL_EXPORTTO_FIELD,
   SEND_MODAL_IS_PRECONVERT,
+  SEND_MODAL_MAPPING_FIELD,
   SEND_MODAL_MEMO_FIELD,
   SEND_MODAL_PRICE_ESTIMATE,
   SEND_MODAL_SHOW_CONVERTTO_FIELD,
   SEND_MODAL_SHOW_EXPORTTO_FIELD,
+  SEND_MODAL_SHOW_MAPPING_FIELD,
   SEND_MODAL_SHOW_VIA_FIELD,
   SEND_MODAL_TO_ADDRESS_FIELD,
   SEND_MODAL_VIA_FIELD,
@@ -49,10 +51,12 @@ const SendCoin = ({ navigation }) => {
         [SEND_MODAL_CONVERTTO_FIELD]: '',
         [SEND_MODAL_EXPORTTO_FIELD]: '',
         [SEND_MODAL_VIA_FIELD]: '',
+        [SEND_MODAL_MAPPING_FIELD]: '',
         [SEND_MODAL_PRICE_ESTIMATE]: null,
         [SEND_MODAL_IS_PRECONVERT]: false,
         [SEND_MODAL_SHOW_CONVERTTO_FIELD]: true,
         [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
+        [SEND_MODAL_SHOW_MAPPING_FIELD]: false,
         [SEND_MODAL_SHOW_VIA_FIELD]: true,
         [SEND_MODAL_ADVANCED_FORM]: false
       },
@@ -68,18 +72,20 @@ const SendCoin = ({ navigation }) => {
         [SEND_MODAL_CONVERTTO_FIELD]: '',
         [SEND_MODAL_EXPORTTO_FIELD]: '',
         [SEND_MODAL_VIA_FIELD]: '',
+        [SEND_MODAL_MAPPING_FIELD]: '',
         [SEND_MODAL_PRICE_ESTIMATE]: null,
         [SEND_MODAL_IS_PRECONVERT]: false,
         [SEND_MODAL_SHOW_CONVERTTO_FIELD]: false,
         [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
+        [SEND_MODAL_SHOW_MAPPING_FIELD]: true,
         [SEND_MODAL_SHOW_VIA_FIELD]: false,
         [SEND_MODAL_ADVANCED_FORM]: false
       },
     },
     {
       key: 'preconvert',
-      title: 'Pre-convert',
-      description: `Participate in a currency pre-convert that accepts ${activeCoin.display_ticker}`,
+      title: 'Preconvert',
+      description: `Participate in a currency preconvert that accepts ${activeCoin.display_ticker}`,
       data: {
         [SEND_MODAL_TO_ADDRESS_FIELD]: '',
         [SEND_MODAL_AMOUNT_FIELD]: '',
@@ -87,18 +93,20 @@ const SendCoin = ({ navigation }) => {
         [SEND_MODAL_CONVERTTO_FIELD]: '',
         [SEND_MODAL_EXPORTTO_FIELD]: '',
         [SEND_MODAL_VIA_FIELD]: '',
+        [SEND_MODAL_MAPPING_FIELD]: '',
         [SEND_MODAL_PRICE_ESTIMATE]: null,
         [SEND_MODAL_IS_PRECONVERT]: true,
         [SEND_MODAL_SHOW_CONVERTTO_FIELD]: true,
         [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
-        [SEND_MODAL_SHOW_VIA_FIELD]: true,
+        [SEND_MODAL_SHOW_MAPPING_FIELD]: false,
+        [SEND_MODAL_SHOW_VIA_FIELD]: false,
         [SEND_MODAL_ADVANCED_FORM]: false
       },
     },
     {
       key: 'advanced',
       title: 'Advanced',
-      description: 'Send off-chain, convert, or pre-convert using an unguided form',
+      description: 'Send off-chain, convert, or preconvert using an unguided form',
       data: {
         [SEND_MODAL_TO_ADDRESS_FIELD]: '',
         [SEND_MODAL_AMOUNT_FIELD]: '',
@@ -106,15 +114,21 @@ const SendCoin = ({ navigation }) => {
         [SEND_MODAL_CONVERTTO_FIELD]: '',
         [SEND_MODAL_EXPORTTO_FIELD]: '',
         [SEND_MODAL_VIA_FIELD]: '',
+        [SEND_MODAL_MAPPING_FIELD]: '',
         [SEND_MODAL_PRICE_ESTIMATE]: null,
         [SEND_MODAL_IS_PRECONVERT]: false,
         [SEND_MODAL_SHOW_CONVERTTO_FIELD]: true,
         [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
+        [SEND_MODAL_SHOW_MAPPING_FIELD]: (activeCoin.proto === 'erc20' || activeCoin.proto === 'eth'),
         [SEND_MODAL_SHOW_VIA_FIELD]: true,
         [SEND_MODAL_ADVANCED_FORM]: true
       },
     },
   ];
+
+  if (activeCoin.proto === 'eth' || activeCoin.proto === 'erc20') {
+    CONVERT_OR_CROSS_CHAIN_OPTIONS.splice(2, 1);
+  }
 
   const [
     convertOrCrossChainOptionsModalOpen,
@@ -122,7 +136,10 @@ const SendCoin = ({ navigation }) => {
   ] = useState(false);
 
   const channel = subWallet.channel.split(".")[0];
-  const allowConvertOrOffchain = activeCoin.tags.includes(IS_PBAAS) && channel === VRPC;
+  const allowConvertOrOffchain =
+    (activeCoin.tags.includes(IS_PBAAS) && channel === VRPC) ||
+    activeCoin.proto === 'erc20' ||
+    activeCoin.proto === 'eth';
 
   const selectConvertOrCrossChainOption = (option) => {
     setConvertOrCrossChainOptionsModalOpen(false)

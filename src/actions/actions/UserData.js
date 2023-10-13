@@ -159,7 +159,7 @@ export const setTestnetOverrides = async (userID, testnetOverrides) => {
       })
       .catch(err => reject(err));
   });
-}
+};
 
 export const deleteProfile = async (account, dispatch) => {
   // Clear existing account lifecycles
@@ -205,7 +205,37 @@ export const fetchUsers = () => {
                     : user.keyDerivationVersion,
                 disabledServices:
                   user.disabledServices == null ? {} : user.disabledServices,
-                testnetOverrides: user.testnetOverrides == null ? {} : user.testnetOverrides,
+                testnetOverrides:
+                  user.testnetOverrides == null ? {} : user.testnetOverrides,
+              };
+            } else {
+              return user;
+            }
+          });
+
+          await setUsers(users);
+        }
+
+        // Update testnet overrides to include ETH
+        if (
+          users.some(
+            value =>
+              value.testnetOverrides != null &&
+              value.testnetOverrides.hasOwnProperty('VRSC') &&
+              !value.testnetOverrides.hasOwnProperty('ETH'),
+          )
+        ) {
+          console.warn('Updating testnet profile to account for goerli ETH');
+
+          users = users.map(user => {
+            if (
+              user.testnetOverrides != null &&
+              user.testnetOverrides.hasOwnProperty('VRSC') &&
+              !user.testnetOverrides.hasOwnProperty('ETH')
+            ) {
+              return {
+                ...user,
+                testnetOverrides: {...user.testnetOverrides, ETH: 'GETH'},
               };
             } else {
               return user;
@@ -300,7 +330,10 @@ export const authenticateAccount = async (account, password) => {
                     ? {}
                     : {[WYRE_SERVICE_ID]: true}
                   : account.disabledServices,
-              testnetOverrides: account.testnetOverrides == null ? {} : account.testnetOverrides,
+              testnetOverrides:
+                account.testnetOverrides == null
+                  ? {}
+                  : account.testnetOverrides,
             },
             await initSession(password),
           ),

@@ -1,4 +1,4 @@
-import { LOADING_ACCOUNT, VALIDATING_ACCOUNT } from "../../../../utils/constants/constants";
+import { ADDRESS_BLOCKLIST_FROM_WEBSERVER, LOADING_ACCOUNT, VALIDATING_ACCOUNT } from "../../../../utils/constants/constants";
 import { signIntoAuthenticatedAccount } from "../../../actionCreators";
 import { COIN_MANAGER_MAP, fetchActiveCoins, setUserCoins } from "../../coins/Coins";
 import {
@@ -13,6 +13,7 @@ import { fetchUsers, validateLogin } from "../../UserData";
 import { initSettings, saveGeneralSettings } from "../../WalletSettings";
 import { DISABLED_CHANNELS } from '../../../../../env/index'
 import store from "../../../../store";
+import { getAddressBlocklistFromServer } from "../../../../utils/api/channels/general/addressBlocklist/getAddressBlocklist";
 
 export const initializeAccountData = async (
   account,
@@ -40,7 +41,37 @@ export const initializeAccountData = async (
     );
     const {activeCoinsForUser} = setUserCoinsAction.payload;
 
-    store.dispatch(await initSettings());
+    const settingsAction = await initSettings()
+    store.dispatch(settingsAction);
+
+    try {
+      const { addressBlocklistDefinition, addressBlocklist } = store.getState().settings.generalWalletSettings;
+
+      if (addressBlocklistDefinition.type === ADDRESS_BLOCKLIST_FROM_WEBSERVER) {
+        const fetchedBlocklist = await getAddressBlocklistFromServer();
+        const currentBlocklist = [...addressBlocklist];
+
+        for (const address of fetchedBlocklist) {
+          if (currentBlocklist.find(x => x.address === address) == null) {
+            currentBlocklist.unshift({ 
+              address, 
+              details: '', 
+              lastModified: Math.floor(Date.now() / 1000) 
+            });
+          }
+        }
+
+        const saveGeneralSettingsAction = await saveGeneralSettings({
+          addressBlocklist: currentBlocklist
+        });
+
+        store.dispatch(saveGeneralSettingsAction);
+      }
+    } catch(e) {
+      console.warn("Failed to fetch address blocklist");
+      console.warn(e);
+    }
+
     store.dispatch(accountAuthenticator);
     store.dispatch(coinList);
 

@@ -24,6 +24,7 @@ import { RenderSquareCoinLogo } from "../../../utils/CoinData/Graphics";
 
 const GENERAL_WALLET_SETTINGS = "GeneralWalletSettings"
 const COIN_SETTINGS = "CoinSettings"
+const ADDRESS_BLOCKLIST = "AddressBlocklist"
 
 class WalletSettings extends Component {
   constructor(props) {
@@ -104,6 +105,20 @@ class WalletSettings extends Component {
               title={"General Settings"}
               left={(props) => (
                 <List.Icon {...props} icon={"card-bulleted-settings"} />
+              )}
+              right={(props) => (
+                <List.Icon {...props} icon={"chevron-right"} />
+              )}
+            />
+          <Divider />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => this._openSettings(ADDRESS_BLOCKLIST)}
+        >
+            <List.Item
+              title={"Address Blocklist"}
+              left={(props) => (
+                <List.Icon {...props} icon={"block-helper"} />
               )}
               right={(props) => (
                 <List.Icon {...props} icon={"chevron-right"} />

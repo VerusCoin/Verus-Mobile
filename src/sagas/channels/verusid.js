@@ -34,6 +34,10 @@ function* handleVerusidChannelClose(action) {
 
 function* handleSignOut() {
   VrpcProvider.deleteAllEndpoints();
+  
+  setImmediate(() => {
+    VrpcProvider.addDefaultEndpoints();
+  })
 }
 
 function* handleFinishVerusidInit(action) { 

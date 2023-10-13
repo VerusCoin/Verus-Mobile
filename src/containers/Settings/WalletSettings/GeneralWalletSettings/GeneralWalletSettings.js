@@ -26,6 +26,7 @@ import ListSelectionModal from '../../../../components/ListSelectionModal/ListSe
 import {saveGeneralSettings} from '../../../../actions/actionCreators';
 import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
 import {NavigationActions} from '@react-navigation/compat';
+import { ADDRESS_BLOCKLIST_FROM_WEBSERVER } from '../../../../utils/constants/constants';
 
 const NO_DEFAULT = 'None';
 
@@ -89,11 +90,18 @@ const WalletSettings = props => {
         maxTxCount: Number(settings.maxTxCount),
         displayCurrency: settings.displayCurrency,
         defaultAccount:
-          settings.defaultAccount === NO_DEFAULT
-            ? null
-            : settings.defaultAccount,
+          settings.defaultAccount === NO_DEFAULT ? null : settings.defaultAccount,
         homeCardDragDetection,
-        ackedCurrencyDisclaimer: settings.ackedCurrencyDisclaimer
+        ackedCurrencyDisclaimer: settings.ackedCurrencyDisclaimer,
+        addressBlocklistDefinition:
+          settings.addressBlocklistDefinition == null
+            ? {
+                type: ADDRESS_BLOCKLIST_FROM_WEBSERVER,
+                data: null,
+              }
+            : settings.addressBlocklistDefinition,
+        addressBlocklist:
+          settings.addressBlocklist == null ? [] : settings.addressBlocklist,
       };
       const res = await saveGeneralSettings(stateToSave);
       dispatch(res);

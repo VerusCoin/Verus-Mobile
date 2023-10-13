@@ -5,10 +5,10 @@ const readVerusPay = (data) => {
 } 
 
 const writeVerusPayQR = (coinObj, amount, address, note) => {  
-  const { currency_id, system_id, display_name, display_ticker } = coinObj;
+  const { id, system_id, display_name, display_ticker } = coinObj;
 
   return writeRequest(
-    currency_id,
+    id,
     system_id,
     display_name,
     display_ticker,
