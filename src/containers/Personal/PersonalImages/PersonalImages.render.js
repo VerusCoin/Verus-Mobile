@@ -24,17 +24,6 @@ export const PersonalImagesRender = function () {
                 <React.Fragment key={index}>
                   <List.Item
                     key={index}
-                    left={(props) => {
-                      return image.uris.length == 0 ? null : (
-                        <Avatar.Image
-                          {...props}
-                          size={96}
-                          source={{
-                            uri: image.uris[0],
-                          }}
-                        />
-                      );
-                    }}
                     title={documentRender.title}
                     description={documentRender.description}
                     right={(props) => (

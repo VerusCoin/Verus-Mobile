@@ -1,17 +1,17 @@
-import Web3Provider from '../../../../web3/provider'
+import { getWeb3ProviderForNetwork } from '../../../../web3/provider'
 import { ethers } from 'ethers'
 import { getTxReceipt } from './getTxReceipt'
 import BigNumber from 'bignumber.js'
 import { standardizeEthTxObj } from '../../../../standardization/standardizeTxObj'
 
 // Gets the Ethereum transaction history of an address or name
-export const getEthTransactions = async (address) => {
-  return await Web3Provider.EtherscanProvider.getHistory(address)
+export const getEthTransactions = async (address, network = 'homestead') => {
+  return await getWeb3ProviderForNetwork(network).EtherscanProvider.getHistory(address)
 }
 
-export const getStandardEthTransactions = async (address) => {
+export const getStandardEthTransactions = async (address, network) => {
   let processedTxs = standardizeEthTxObj(
-    await getEthTransactions(address),
+    await getEthTransactions(address, network),
     address
   );
 
@@ -19,7 +19,7 @@ export const getStandardEthTransactions = async (address) => {
     let tx = processedTxs[i]
 
     if (tx.type === 'self') {
-      const txReceipt = await getTxReceipt(tx.txid)
+      const txReceipt = await getTxReceipt(tx.txid, network)
       const fee = ethers.utils.formatEther(txReceipt.gasUsed.mul(ethers.utils.parseEther(tx.gasPrice))).toString()
 
       processedTxs[i] = { ...tx, ...txReceipt, amount: fee, fee }

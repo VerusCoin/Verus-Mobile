@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import { getAddressBalances } from "./getAddressBalances";
 import { coinsToSats, satsToCoins } from "../../../../math";
-import { DEST_ID, DEST_PKH, ReserveTransfer, TransferDestination, fromBase58Check } from "verus-typescript-primitives";
+import { DEST_ID, DEST_PKH, ReserveTransfer, TransferDestination, fromBase58Check, toIAddress } from "verus-typescript-primitives";
 import { Transaction, networks, smarttxs } from "@bitgo/utxo-lib";
 import { calculateCurrencyTransferFee } from "./calculateCurrencyTransferFee";
 import { getInfo } from "./getInfo";
@@ -14,6 +14,8 @@ import { IS_FRACTIONAL_FLAG } from "../../../../constants/currencies";
 import { unpackOutput } from "@bitgo/utxo-lib/dist/src/smart_transactions";
 import { coinsList } from "../../../../CoinData/CoinsList";
 import { getSendCurrencyTransaction } from "./getSendCurrencyTransaction";
+import { I_ADDRESS_VERSION, R_ADDRESS_VERSION } from "../../../../constants/constants";
+import { VETH } from "../../../../constants/web3Constants";
 const { createUnfundedCurrencyTransfer, validateFundedCurrencyTransfer } = smarttxs
 
 //TODO: Calculate fee for each coin seperately
@@ -33,10 +35,15 @@ export const preflight = async (coinObj, activeUser, address, amount, params, ch
       } else keyhash = addr;
 
       const { hash, version } = fromBase58Check(keyhash);
+      let type;
+
+      if (version === R_ADDRESS_VERSION) type = DEST_PKH;
+      else if (version === I_ADDRESS_VERSION) type = DEST_ID;
+      else throw new Error("Incompatible address type.");
 
       return new TransferDestination({
         destination_bytes: hash,
-        type: version === 60 ? DEST_PKH : DEST_ID
+        type
       })
     }
 
@@ -124,6 +131,7 @@ export const validateCurrencyTransferOutputParams = obj => {
     'burn',
     'burnweight',
     'mintnew',
+    'mapto'
   ];
   const allKeys = [...requiredKeys, ...optionalKeys];
 
@@ -205,6 +213,9 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
   const friendlyNames = new Map();
   const currencyDefs = new Map();
   let nativeFeesPaid = BigNumber(0);
+  let _feeamount;
+  const ethBridgeDelegatorActive = !(!!(output.bridgeprelaunch));
+  delete output.bridgeprelaunch
 
   try {
     validateCurrencyTransferOutputParams(output)
@@ -281,7 +292,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         exportto === "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X" || // vETH i-addr on VRSC
         exportto === "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm");  // vETH i-addr on VRSCTEST
 
-    let _feeamount = feesatoshis;
+    _feeamount = feesatoshis;
     nativeFeesPaid = coinsToSats(BigNumber(parentTransactionFee));
     let importToSource = false;
     
@@ -290,11 +301,6 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     if ((sourceDefinition.options & IS_FRACTIONAL_FLAG) == IS_FRACTIONAL_FLAG) {
       importToSource = convertto != null && via == null && sourceDefinition.currencies.includes(convertto);
     }
-
-    if (feecurrency != null && _feeamount == null)
-      throw new Error(
-        'Providing a non-default fee currency requires also providing a fee amount.',
-      );
 
     if (_feeamount == null && isConversionOrExport) {
       _feeamount = await calculateCurrencyTransferFee(
@@ -325,8 +331,11 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       output.satoshis = txSatsBn.minus(nativeFeesPaid).toString();
       const newTxSatsBn = BigNumber(output.satoshis);
 
-      if ((newTxSatsBn.plus(nativeFeesPaid)).isGreaterThan(balanceBn)) {
-        throw new Error("Insufficient funds.")
+      if (
+        newTxSatsBn.plus(nativeFeesPaid).isGreaterThan(balanceBn) ||
+        newTxSatsBn.isLessThanOrEqualTo(BigNumber(0))
+      ) {
+        throw new Error('Insufficient funds.');
       }
     }
 
@@ -375,22 +384,24 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
        */
       const transDest = outputInfo.params[0].data;
 
-      if (!transDest.transfer_destination.isGateway()) throw new Error("Expected gateway output");
-      if (!transDest.transfer_destination.hasAuxDests()) throw new Error("Expected output with aux dests");
-      if (transDest.transfer_destination.getAddressString() !== addrDest) throw new Error("Expected output to match destination address");
-      if (transDest.transfer_destination.gateway_id !== exportto) throw new Error("Expected gateway_id to match exportto");
-      if (transDest.transfer_destination.gateway_code !== "i3UXS5QPRQGNRDDqVnyWTnmFCTHDbzmsYk") throw new Error("Expected null gateway_code");
-
-      for (const aux_dest of transDest.transfer_destination.aux_dests) {
-        if (aux_dest.hasAuxDests()) {
-          throw new Error("Nested aux destinations not supported");
+      if (ethBridgeDelegatorActive) {
+        if (!transDest.transfer_destination.isGateway()) throw new Error("Expected gateway output");
+        if (transDest.transfer_destination.gateway_id !== exportto) throw new Error("Expected gateway_id to match exportto");
+        if (transDest.transfer_destination.gateway_code !== "i3UXS5QPRQGNRDDqVnyWTnmFCTHDbzmsYk") throw new Error("Expected null gateway_code");
+        if (!transDest.transfer_destination.hasAuxDests()) throw new Error("Expected output with aux dests");
+        for (const aux_dest of transDest.transfer_destination.aux_dests) {
+          if (aux_dest.hasAuxDests()) {
+            throw new Error("Nested aux destinations not supported");
+          }
+  
+          if (aux_dest.isGateway()) throw new Error("Expected non gateway output in aux dest");
+  
+          const addrString =aux_dest.getAddressString();
+          if (addrString !== addrDest && addrString !== source) throw new Error(`Aux dest ${addrString} does not match source or destination`);
         }
-
-        if (aux_dest.isGateway()) throw new Error("Expected non gateway output in aux dest");
-
-        const addrString =aux_dest.getAddressString();
-        if (addrString !== addrDest && addrString !== source) throw new Error(`Aux dest ${addrString} does not match source or destination`);
       }
+      
+      if (transDest.transfer_destination.getAddressString() !== addrDest) throw new Error("Expected output to match destination address");
 
       unfundedTxHex = sendCurrencyRes.result.hextx;
     } else {
@@ -548,7 +559,11 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         : systemName;
       const nativeFeeAmount = satsToCoins(nativeFeesPaid).toString();
 
-      message = `Insufficient funds. Ensure you have at least ${nativeFeeAmount} ${feeCurrencyName} on the ${systemName} network to fund the fee for transaction.`;
+      message = `Insufficient funds. Ensure you have at least ${
+        output.feecurrency === systemId
+          ? nativeFeeAmount
+            : satsToCoins(BigNumber(_feeamount)).toString()
+            } ${feeCurrencyName} on the ${systemName} network to fund the fee for transaction.`;
     }
 
     return {

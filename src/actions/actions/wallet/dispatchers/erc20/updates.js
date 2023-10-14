@@ -12,6 +12,7 @@ export const updateErc20Balances = async (activeUser, coinObj) => {
         activeUser.keys[coinObj.id][ERC20].addresses[0],
         coinObj.currency_id,
         coinObj.decimals,
+        coinObj.network
       )
     ).toString();
 
@@ -50,6 +51,7 @@ export const updateErc20Transactions = async (activeUser, coinObj) => {
         activeUser.keys[coinObj.id][ERC20].addresses[0],
         coinObj.currency_id,
         coinObj.decimals,
+        coinObj.network
       ),
     };
   } else {

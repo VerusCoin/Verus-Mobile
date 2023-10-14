@@ -1,5 +1,5 @@
 import { RFOX_UTILITY_CONTRACT } from "../../../../../../constants/web3Constants"
-import Web3Provider from "../../../../../../web3/provider"
+import { getWeb3ProviderForNetwork } from "../../../../../../web3/provider"
 import { computePublicKey } from '@ethersproject/signing-key'
 import { ethers } from "ethers"
 
@@ -8,6 +8,8 @@ import { ethers } from "ethers"
  * @param {String} pubKey The public key that is stored in the accountObj of the user 
  */
 export const estimateGasClaimRFoxAccountBalances = async (pubKey, fromAddress) => {
+  const Web3Provider = getWeb3ProviderForNetwork('homestead')
+
   let contract = null
   const signer = new ethers.VoidSigner(fromAddress, Web3Provider.DefaultProvider)
   
@@ -32,6 +34,8 @@ export const estimateGasClaimRFoxAccountBalances = async (pubKey, fromAddress) =
  * @param {String} pubKey The public key that is stored in the accountObj of the user 
  */
 export const claimRFoxAccountBalances = async (privKey, pubKey) => {
+  const Web3Provider = getWeb3ProviderForNetwork('homestead')
+  
   let contract = null
   
   try {

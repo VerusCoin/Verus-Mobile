@@ -1,6 +1,7 @@
 import { DLIGHT_PRIVATE } from '../../../../utils/constants/intervalConstants'
 import { getCoinObj } from '../../../../utils/CoinData/CoinData'
 import { dlightEnabled } from '../../../../utils/enabledChannels';
+import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
 
 /**
  * Fetches the appropriate data from the store for the specified channel's type
@@ -24,7 +25,7 @@ export const updateLedgerValue = async (
   fetchChannels
 ) => {
   const activeUser = state.authentication.activeAccount;
-  const coinObj = getCoinObj(state.coins.activeCoinsForUser, chainTicker);
+  const coinObj = CoinDirectory.findCoinObj(chainTicker, activeUser.id);
   let channelsPassed = [];
   const channelMap = fetchChannels(activeUser)
 

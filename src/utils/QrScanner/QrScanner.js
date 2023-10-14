@@ -129,7 +129,7 @@ class QrScanner {
         if (coinName && address && amount) {
           //Find coin ticker from coin data here, URL uses full name
 
-          for (key in coinsList) {
+          for (const key in coinsList) {
             if (
               coinsList[key] &&
               (removeSpaces(coinsList[key].display_name).toLowerCase() === coinName.toLowerCase() ||
@@ -154,7 +154,7 @@ class QrScanner {
           let coinName = secondTry[0].substring(0, secondTry[0].indexOf(":"));
           let address = secondTry[0].substring(secondTry[0].indexOf(":") + 1);
 
-          for (key in coinsList) {
+          for (const key in coinsList) {
             const coinObj = coinsList[key];
 
             if (

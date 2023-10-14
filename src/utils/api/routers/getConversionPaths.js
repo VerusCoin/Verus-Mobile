@@ -1,16 +1,38 @@
 import {
+  ERC20,
+  ETH,
   VRPC,
   WYRE_SERVICE,
 } from "../../constants/intervalConstants";
 import * as wyre from "../channels/wyre/callCreators";
 import * as vrpc from "../channels/vrpc/callCreators";
+import { getWeb3ProviderForNetwork } from "../../web3/provider";
+import { ETH_CONTRACT_ADDRESS } from "../../constants/web3Constants";
+import {
+  ETH_HOMESTEAD,
+  ETH_GOERLI
+} from "../../../../env/index";
 
 const CONVERSION_PATH_FUNCTION_MAP = {
   [WYRE_SERVICE]: wyre.getCurrencyConversionPaths,
   [VRPC]: (coinObj, channel, params) => {
     const [channelName, iAddress, systemId] = channel.split('.')
 
-    return vrpc.getCurrencyConversionPaths(systemId, params.src, params.dest)
+    return vrpc.getCurrencyConversionPaths(systemId, params.src, coinObj.testnet ? ETH_GOERLI : ETH_HOMESTEAD);
+  },
+  [ERC20]: (coinObj, channel, params) => {
+    return vrpc.getCurrencyConversionPaths(
+      getWeb3ProviderForNetwork(coinObj.network).getVrscSystem(),
+      params.src,
+      coinObj.network,
+    );
+  },
+  [ETH]: (coinObj, channel, params) => {
+    return vrpc.getCurrencyConversionPaths(
+      getWeb3ProviderForNetwork(coinObj.network).getVrscSystem(),
+      ETH_CONTRACT_ADDRESS,
+      coinObj.network,
+    );
   }
 };
 

@@ -11,20 +11,21 @@ export const getSendCurrencyTransaction = async (
   via,
   source = '*',
 ) => {
-  if (feecurrency !== systemId)
-    throw new Error('Fee currencies different from system not yet supported.');
+  const params = {
+    currency,
+    amount,
+    exportto,
+    convertto,
+    via,
+    address,
+  };
+
+  if (feecurrency != null) params.feecurrency = feecurrency;
 
   return await VrpcProvider.getEndpoint(systemId).sendCurrency(
     source,
     [
-      {
-        currency,
-        amount,
-        exportto,
-        convertto,
-        via,
-        address,
-      },
+      params
     ],
     1,
     0.0001,

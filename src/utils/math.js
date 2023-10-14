@@ -14,7 +14,7 @@ export const unitsToCoins = (units, decimals) => {
 }
 
 export const coinsToSats = (coins) => {
-  return coinsToUnits(coins, 8)
+  return BigNumber(coinsToUnits(coins, 8).toFixed(0))
 }
 
 export const satsToCoins = (satoshis) => {

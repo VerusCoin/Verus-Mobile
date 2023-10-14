@@ -12,7 +12,8 @@ import SnapCarousel from '../../components/SnapCarousel';
 import {
   API_GET_BALANCES,
   API_GET_FIATPRICE,
-  API_GET_INFO
+  API_GET_INFO,
+  ERC20
 } from '../../utils/constants/intervalConstants';
 import Colors from '../../globals/colors';
 import {Card, Avatar, Paragraph, Text} from 'react-native-paper';
@@ -25,6 +26,8 @@ import {CONNECTION_ERROR} from '../../utils/api/errors/errorMessages';
 import {truncateDecimal} from '../../utils/math';
 import {USD} from '../../utils/constants/currencies';
 import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT, VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT } from '../../utils/constants/web3Constants';
 
 class DynamicHeader extends Component {
   constructor(props) {
@@ -32,7 +35,8 @@ class DynamicHeader extends Component {
     this.state = {
       carouselItems: [],
       currentIndex: 0,
-      loadingCarouselItems: true
+      loadingCarouselItems: true,
+      mappedCoinObj: null
     };
 
     this.fadeAnimation = new Animated.Value(0);
@@ -41,9 +45,17 @@ class DynamicHeader extends Component {
 
   componentDidMount() {
     this.fadeIn();
+    let mappedCoinObj;
+
+    if (this.props.activeCoin.mapped_to != null) {
+      try {
+        mappedCoinObj = CoinDirectory.getBasicCoinObj(this.props.activeCoin.mapped_to)
+      } catch(e) {}
+    }
 
     this.setState({
-      loadingCarouselItems: true
+      loadingCarouselItems: true,
+      mappedCoinObj
     }, () => {
       this.setState({
         carouselItems: this.prepareCarouselItems(
@@ -254,6 +266,14 @@ class DynamicHeader extends Component {
   }
 
   render() {
+    const mappedToEth =
+      this.props.activeCoin.mapped_to != null &&
+      this.state.mappedCoinObj != null &&
+      (this.state.mappedCoinObj.currency_id.toLowerCase() ===
+        VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT.toLowerCase() ||
+        this.state.mappedCoinObj.currency_id.toLowerCase() ===
+          VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT.toLowerCase());
+
     return (
       <View
         style={{
@@ -309,6 +329,41 @@ class DynamicHeader extends Component {
               </Text>
             )
           }
+          {
+            this.props.pendingBalance.isEqualTo(0) &&
+              this.props.activeCoin.mapped_to != null &&
+              this.state.mappedCoinObj != null && (
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: '300',
+                    color: Colors.secondaryColor,
+                    paddingTop: 4,
+                  }}>
+                  <Text style={{color: Colors.secondaryColor}}>
+                  {
+                    ` mapped to ${
+                      (mappedToEth)
+                        ? 'Ethereum'
+                        : this.state.mappedCoinObj.display_ticker.length > 15
+                        ? this.state.mappedCoinObj.display_ticker.substring(0, 15) + '...'
+                        : this.state.mappedCoinObj.display_ticker
+                    }${
+                      !mappedToEth && this.state.mappedCoinObj.proto === ERC20
+                        ? ` (${
+                            this.state.mappedCoinObj.currency_id.substring(0, 5) +
+                            '...' +
+                            this.state.mappedCoinObj.currency_id.substring(
+                              this.state.mappedCoinObj.currency_id.length - 5,
+                            )
+                          })`
+                        : ''
+                    }`
+                  }
+                  </Text>
+                </Text>
+              )
+          }
         </View>
         <View
           style={{
@@ -357,6 +412,7 @@ const mapStateToProps = state => {
   return {
     chainTicker,
     displayTicker: state.coins.activeCoin.display_ticker,
+    activeCoin: state.coins.activeCoin,
     selectedSubWallet: state.coinMenus.activeSubWallets[chainTicker],
     allSubWallets: state.coinMenus.allSubWallets[chainTicker],
     balances: extractLedgerData(

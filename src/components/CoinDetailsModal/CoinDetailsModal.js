@@ -150,10 +150,11 @@ class CoinDetailsModal extends Component {
       theme_color,
       display_name,
       id,
+      proto,
       website
     } = data
     const ticker = id == null ? 'VRSC' : id
-    const Logo = getCoinLogo(ticker)
+    const Logo = getCoinLogo(ticker, proto)
     
     return (
       <SemiModal

@@ -136,7 +136,7 @@ export const renderMainDrawerComponents = function() {
       data={this.props.activeCoinsForUser}
       style={Styles.underflow}
       renderItem={({ item, index }) => {
-        const Logo = getCoinLogo(item.id, 'dark');
+        const Logo = getCoinLogo(item.id, item.proto, 'dark');
 
         return (
           <List.Item
