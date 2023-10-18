@@ -133,9 +133,9 @@ function ConvertOrCrossChainSendConfirm({
     let conversionFeeMultiplier = BigNumber(0);
 
     if (convertto != null && via != null) {
-      conversionFeeMultiplier = BigNumber(0.05);
+      conversionFeeMultiplier = BigNumber(0.0005);
     } else if (convertto != null) {
-      conversionFeeMultiplier = BigNumber(0.025);
+      conversionFeeMultiplier = BigNumber(0.00025);
     }
 
     const conversionFee = satsToCoins(BigNumber(satoshis)).multipliedBy(
