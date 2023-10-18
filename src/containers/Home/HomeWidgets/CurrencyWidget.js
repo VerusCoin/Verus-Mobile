@@ -153,7 +153,7 @@ const CurrencyWidget = props => {
             ? 'PBaaS Currency'
             : uniValueDisplay === '-'
             ? coinObj.proto === 'erc20'
-              ? 'ERC20 Token'
+              ? coinObj.unlisted ? 'Unlisted Token' : 'ERC20 Token'
               : uniValueDisplay
             : `${
                 currencyBalance == null

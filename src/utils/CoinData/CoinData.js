@@ -170,6 +170,7 @@ export const CoinLogos = {
   SUSHI: CoinLogoIcons.web3.SUSHI,
   MKR: CoinLogoIcons.web3.MKR,
   WBTC: CoinLogoIcons.web3.WBTC,
+  ["0xBc2738BA63882891094C99E59a02141Ca1A1C36a"]: CoinLogoIcons.btc.VRSC, // VRSC on Ethereum
 
   // fiat "protocol"
   USD: CoinLogoIcons.fiat.USD,
