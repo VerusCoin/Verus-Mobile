@@ -5,7 +5,7 @@
 
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import {View, Animated} from 'react-native';
+import {View, Animated, TouchableOpacity} from 'react-native';
 import {DEVICE_WINDOW_WIDTH} from '../../utils/constants/constants';
 import {setCoinSubWallet} from '../../actions/actionCreators';
 import SnapCarousel from '../../components/SnapCarousel';
@@ -26,8 +26,9 @@ import {CONNECTION_ERROR} from '../../utils/api/errors/errorMessages';
 import {truncateDecimal} from '../../utils/math';
 import {USD} from '../../utils/constants/currencies';
 import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT, VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT } from '../../utils/constants/web3Constants';
+import { createAlert, resolveAlert } from '../../actions/actions/alert/dispatchers/alert';
+import { openUrl } from '../../utils/linking';
 
 class DynamicHeader extends Component {
   constructor(props) {
@@ -50,7 +51,9 @@ class DynamicHeader extends Component {
     if (this.props.activeCoin.mapped_to != null) {
       try {
         mappedCoinObj = CoinDirectory.getBasicCoinObj(this.props.activeCoin.mapped_to)
-      } catch(e) {}
+      } catch(e) {
+        console.warn(e)
+      }
     }
 
     this.setState({
@@ -69,6 +72,30 @@ class DynamicHeader extends Component {
       })
     })
   }
+
+  openTokenAddressExplorer = (address, testnet) => {
+    const baseUrl = testnet ? 'https://goerli.etherscan.io/token/' : 'https://etherscan.io/token/';
+
+    return createAlert(
+      'Go to explorer?',
+      `Would you like to go to ${baseUrl} to see more information about ${address}?`,
+      [
+        {
+          text: 'No',
+          onPress: async () => {
+            resolveAlert(false);
+          },
+        },
+        {
+          text: 'Yes',
+          onPress: () => {
+            openUrl(baseUrl + "/" + address);
+            resolveAlert(false);
+          },
+        },
+      ],
+    );
+  };
 
   fadeIn = () => {
     Animated.timing(this.fadeAnimation, {
@@ -333,35 +360,72 @@ class DynamicHeader extends Component {
             this.props.pendingBalance.isEqualTo(0) &&
               this.props.activeCoin.mapped_to != null &&
               this.state.mappedCoinObj != null && (
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: '300',
-                    color: Colors.secondaryColor,
-                    paddingTop: 4,
-                  }}>
-                  <Text style={{color: Colors.secondaryColor}}>
-                  {
-                    ` mapped to ${
-                      (mappedToEth)
-                        ? 'Ethereum'
-                        : this.state.mappedCoinObj.display_ticker.length > 15
-                        ? this.state.mappedCoinObj.display_ticker.substring(0, 15) + '...'
-                        : this.state.mappedCoinObj.display_ticker
-                    }${
-                      !mappedToEth && this.state.mappedCoinObj.proto === ERC20
-                        ? ` (${
-                            this.state.mappedCoinObj.currency_id.substring(0, 5) +
-                            '...' +
-                            this.state.mappedCoinObj.currency_id.substring(
-                              this.state.mappedCoinObj.currency_id.length - 5,
-                            )
-                          })`
-                        : ''
-                    }`
-                  }
+                <TouchableOpacity
+                  disabled={this.state.mappedCoinObj.proto !== ERC20}
+                  onPress={() =>
+                    this.openTokenAddressExplorer(
+                      this.state.mappedCoinObj.currency_id,
+                      this.state.mappedCoinObj.testnet,
+                    )
+                  }>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '300',
+                      color: Colors.secondaryColor,
+                      paddingTop: 4,
+                    }}>
+                    <Text style={{color: Colors.secondaryColor}}>
+                      {`mapped to ${
+                        mappedToEth
+                          ? 'Ethereum'
+                          : this.state.mappedCoinObj.display_ticker.length > 15
+                          ? this.state.mappedCoinObj.display_ticker.substring(0, 15) + '...'
+                          : this.state.mappedCoinObj.display_ticker
+                      }${
+                        !mappedToEth && this.state.mappedCoinObj.proto === ERC20
+                          ? ` (ERC20 ${
+                              this.state.mappedCoinObj.currency_id.substring(0, 5) +
+                              '...' +
+                              this.state.mappedCoinObj.currency_id.substring(
+                                this.state.mappedCoinObj.currency_id.length - 3,
+                              )
+                            })`
+                          : ''
+                      }`}
+                    </Text>
                   </Text>
-                </Text>
+                </TouchableOpacity>
+              )
+          }
+          {
+            this.props.pendingBalance.isEqualTo(0) &&
+              this.props.activeCoin.proto === ERC20 && (
+                <TouchableOpacity
+                  onPress={() =>
+                    this.openTokenAddressExplorer(
+                      this.props.activeCoin.currency_id,
+                      this.props.activeCoin.testnet,
+                    )
+                  }>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '300',
+                      color: Colors.secondaryColor,
+                      paddingTop: 4,
+                    }}>
+                    <Text style={{color: Colors.secondaryColor}}>
+                      {`${this.props.activeCoin.unlisted ? "unlisted " : ""}ERC20 token (${
+                        this.props.activeCoin.currency_id.substring(0, 5) +
+                        '...' +
+                        this.props.activeCoin.currency_id.substring(
+                          this.props.activeCoin.currency_id.length - 4,
+                        )
+                      })`}
+                    </Text>
+                  </Text>
+                </TouchableOpacity>
               )
           }
         </View>
