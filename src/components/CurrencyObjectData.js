@@ -49,6 +49,7 @@ export default function CurrencyObjectData(props) {
             currency.conversions.length > 0));
       const status = isFailed ? "failed" : isPending ? "pending" : "active";
       const preConvert = spendableTo && age < 0;
+      const isMapped = currency.proofprotocol === 3 && currency.nativecurrencyid != null;
 
       const data = [
         {
@@ -68,7 +69,7 @@ export default function CurrencyObjectData(props) {
                 } blocks (~${blocksToTime(-1 * age)}) until start`
               : status === 'failed'
               ? 'Failed to Launch'
-              : `Active (~${blocksToTime(Math.abs(age))} old)`,
+              : (currency.startblock != 0 ? `Active (~${blocksToTime(Math.abs(age))} old)` : 'Active'),
         },
         {
           key: 'Type',
@@ -112,7 +113,7 @@ export default function CurrencyObjectData(props) {
         });
       }
 
-      if (currency.bestcurrencystate) {
+      if (!isMapped && currency.bestcurrencystate) {
         data.push({
           key: 'Current Supply',
           data: `${currency.bestcurrencystate.supply} ${currency.fullyqualifiedname}`,

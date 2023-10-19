@@ -112,7 +112,7 @@ const NonAnimatedList = ({
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: "space-between",
-        paddingHorizontal: 6,
+        paddingHorizontal: Platform.OS === "ios" ? 6 : 4,
         paddingTop: 10
       }}>
       {children.map(child => {
