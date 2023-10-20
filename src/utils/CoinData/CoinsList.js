@@ -117,7 +117,7 @@ export const coinsList = {
     display_name: "DAI on Verus",
     alt_names: [],
     theme_color: "#232323",
-    compatible_channels: [VERUSID, VRPC],
+    compatible_channels: [VERUSID, VRPC, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
     proto: "vrsc",
     vrpc_endpoints: ["https://api.verus.services"],
@@ -125,8 +125,9 @@ export const coinsList = {
     seconds_per_block: 60,
     default_app: "wallet",
     apps: VERUS_APPS,
-    rate_url_params: {coin_paprika: 'dai-dai-coin'},
-    website: 'https://verus.io'
+    rate_url_params: {coin_paprika: 'dai-dai'},
+    website: 'https://verus.io',
+    mapped_to: 'DAI'
   },
   ["iCkKJuJScy4Z6NSDK7Mt42ZAB2NEnAE1o4"]: {
     pbaas_options: 32,
@@ -140,7 +141,7 @@ export const coinsList = {
     display_name: "Maker on Verus",
     alt_names: [],
     theme_color: "#232323",
-    compatible_channels: [VERUSID, VRPC],
+    compatible_channels: [VERUSID, VRPC, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
     proto: "vrsc",
     vrpc_endpoints: ["https://api.verus.services"],
@@ -149,7 +150,8 @@ export const coinsList = {
     default_app: "wallet",
     apps: VERUS_APPS,
     rate_url_params: {coin_paprika: 'mkr-maker'},
-    website: 'https://verus.io'
+    website: 'https://verus.io',
+    mapped_to: 'MKR'
   },
   ["i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X"]: {
     pbaas_options: 128,
@@ -163,7 +165,7 @@ export const coinsList = {
     display_name: "Ethereum on Verus",
     alt_names: [],
     theme_color: "#232323",
-    compatible_channels: [VERUSID, VRPC],
+    compatible_channels: [VERUSID, VRPC, GENERAL],
     tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
     proto: "vrsc",
     vrpc_endpoints: ["https://api.verus.services"],
@@ -172,7 +174,8 @@ export const coinsList = {
     default_app: "wallet",
     apps: VERUS_APPS,
     rate_url_params: {coin_paprika: 'eth-ethereum'},
-    website: 'https://verus.io'
+    website: 'https://verus.io',
+    mapped_to: 'ETH'
   },
   ["i3f7tSctFkiPpiedY8QR5Tep9p4qDVebDx"]: {
     pbaas_options: 545,
@@ -194,7 +197,8 @@ export const coinsList = {
     seconds_per_block: 60,
     default_app: "wallet",
     apps: VERUS_APPS,
-    website: 'https://verus.io'
+    website: 'https://verus.io',
+    mapped_to: '0xE6052Dcc60573561ECef2D9A4C0FEA6d3aC5B9A2'
   },
   KMD: {
     id: 'KMD',
@@ -439,7 +443,7 @@ export const coinsList = {
     decimals: ETHERS,
     tags: [],
     proto: 'erc20',
-    rate_url_params: {coin_paprika: 'dai-dai-coin'},
+    rate_url_params: {coin_paprika: 'dai-dai'},
   },
   DAIWYRE: {
     id: 'DAIWYRE',
@@ -719,7 +723,7 @@ export const coinsList = {
     id: '0xBc2738BA63882891094C99E59a02141Ca1A1C36a',
     currency_id: '0xBc2738BA63882891094C99E59a02141Ca1A1C36a',
     system_id: '.eth',
-    display_ticker: 'VRSC',
+    display_ticker: 'VRSC [ERC20]',
     display_name: 'Verus on Ethereum',
     alt_names: [],
     website: 'https://verus.io/',

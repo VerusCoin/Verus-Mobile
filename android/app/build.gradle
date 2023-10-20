@@ -4,7 +4,7 @@ import com.android.build.OutputFile
 
 def versionMajor = 1
 def versionMinor = 0
-def versionRevision = 1
+def versionRevision = 2
 def versionBuild = 0
 
 def keystorePropertiesFile = rootProject.file("keystore.properties");
@@ -311,11 +311,11 @@ dependencies {
         implementation jscFlavor
     }
 
-    implementation('junit:junit:4.13.1') {
+    testImplementation('junit:junit:4.13.1') {
         force = true
     }
 
-    implementation('org.robolectric:robolectric:4.4') {
+    testImplementation('org.robolectric:robolectric:4.4') {
         force = true
     }
 
@@ -323,15 +323,15 @@ dependencies {
         force = true
     }
 
-    implementation('org.bouncycastle:bcprov-jdk15on:1.69') {
+    testImplementation('org.bouncycastle:bcprov-jdk15on:1.69') {
         force = true
     }
 
-    implementation('org.powermock:powermock-classloading-xstream:2.0.0') {
+    testImplementation('org.powermock:powermock-classloading-xstream:2.0.0') {
         force = true
     }
 
-    implementation('org.objenesis:objenesis:2.6') {
+    testImplementation('org.objenesis:objenesis:2.6') {
         force = true
     }
 }

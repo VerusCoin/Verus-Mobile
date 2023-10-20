@@ -312,7 +312,8 @@ class _CoinDirectory {
       tags: [],
       proto: 'erc20',
       network,
-      testnet: network !== 'homestead'
+      testnet: network !== 'homestead',
+      unlisted: true
     }
 
     if (storeResults) {
