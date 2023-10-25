@@ -15,7 +15,7 @@ import BigNumber from 'bignumber.js';
 import Colors from './src/globals/colors';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
-BigNumber.set({EXPONENTIAL_AT: 1000000});
+BigNumber.set({ EXPONENTIAL_AT: 1000000, ROUNDING_MODE: BigNumber.ROUND_FLOOR });
 
 const fontConfig = {
   default: {

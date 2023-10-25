@@ -209,8 +209,6 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
             return !x.mapping && x.prelaunch
           } else return !x.mapping && !x.prelaunch
         }).map((path, index) => {
-          const priceFixed = Number(path.price.toFixed(2))
-    
           return {
             title: path.destination.fullyqualifiedname,
             logoid: path.destination.currencyid,
@@ -236,13 +234,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                 : '',
               [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: path.destination.fullyqualifiedname }
             },
-            right: `${
-              priceFixed === 0
-                ? '<0.01'
-                : priceFixed === path.price
-                ? priceFixed
-                : `~${priceFixed}`
-            }`,
+            right: `${Number(BigNumber(1).dividedBy(BigNumber(path.price)).toFixed(8))}`,
             keywords: [path.destination.currencyid, path.destination.fullyqualifiedname]
           };
         });
@@ -251,7 +243,6 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         return flatPaths.filter(x => {
           return !x.mapping
         }).map((path, index) => {
-          const priceFixed = Number(path.price.toFixed(2))
           const addr = path.ethdest ? path.destination.address : null;
           
           const name = path.ethdest
@@ -286,13 +277,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                 : '',
               [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: name }
             },
-            right: `${
-              priceFixed === 0
-                ? '<0.01'
-                : priceFixed === path.price
-                ? priceFixed
-                : `~${priceFixed}`
-            }`,
+            right: `${Number(BigNumber(1).dividedBy(BigNumber(path.price)).toFixed(8))}`,
             keywords: path.ethdest
               ? [path.destination.address, path.destination.symbol, path.destination.name]
               : [path.destination.currencyid, path.destination.fullyqualifiedname]
@@ -317,8 +302,6 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
             );
           } else return x.via != null;
         }).map((path, index) => {
-          const priceFixed = Number(path.price.toFixed(2))
-    
           return {
             title: path.via.fullyqualifiedname,
             logoid: path.via.currencyid,
@@ -338,13 +321,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                 : '',
               [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: path.destination.fullyqualifiedname }
             },
-            right: `${
-              priceFixed === 0
-                ? '<0.01'
-                : priceFixed === path.price
-                ? priceFixed
-                : `~${priceFixed}`
-            }`,
+            right: `${Number(BigNumber(1).dividedBy(BigNumber(path.price)).toFixed(8))}`,
             keywords: [path.via.currencyid, path.via.fullyqualifiedname]
           };
         })
@@ -392,13 +369,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                 : '',
               [SEND_MODAL_PRICE_ESTIMATE]: { price: path.price, name: destname }
             },
-            right: `${
-              priceFixed === 0
-                ? '<0.01'
-                : priceFixed === path.price
-                ? priceFixed
-                : `~${priceFixed}`
-            }`,
+            right: `${Number(BigNumber(1).dividedBy(BigNumber(path.price)).toFixed(8))}`,
             keywords: [path.via.currencyid, path.via.fullyqualifiedname]
           };
         })
@@ -1026,7 +997,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                         right={() =>
                           selectedField !== SEND_MODAL_EXPORTTO_FIELD && selectedField !== SEND_MODAL_MAPPING_FIELD ? (
                             <Text style={{...Styles.listItemTableCell, fontWeight: 'bold'}}>
-                              {sendModal.coinObj.display_ticker + ' price estimate'}
+                              {'est. price in ' + sendModal.coinObj.display_ticker}
                             </Text>
                           ) : null
                         }
