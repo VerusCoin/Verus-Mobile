@@ -8,6 +8,7 @@ import { requestPassword } from "../../../../utils/auth/authBox";
 import {
   CONNECTED_SERVICES,
   WYRE_SERVICE_ID,
+  VALU_SERVICE_ID,
 } from "../../../../utils/constants/services";
 import { encryptkey } from "../../../../utils/seedCrypt";
 import WyreProvider from "../../../../utils/services/WyreProvider";
@@ -58,7 +59,8 @@ export const initServiceStoredDataForUser = async (accountHash) => {
 
 export const resetServices = async () => {
   const CONNECTED_SERVICE_PROVIDERS = {
-    [WYRE_SERVICE_ID]: WyreProvider
+    [WYRE_SERVICE_ID]: WyreProvider,
+    [VALU_SERVICE_ID]: PrimeTrustProvider
   }
 
   for (const connectedService of CONNECTED_SERVICES) {    

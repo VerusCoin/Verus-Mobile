@@ -3,7 +3,7 @@
 */  
 
 import React, { Component } from "react"
-import { PBAAS_PRECONVERT_SERVICE_ID, VERUSID_SERVICE_ID, WYRE_SERVICE_ID } from "../../../utils/constants/services";
+import { PBAAS_PRECONVERT_SERVICE_ID, VERUSID_SERVICE_ID, WYRE_SERVICE_ID, VALU_SERVICE_ID } from "../../../utils/constants/services";
 import VerusIdService from "../ServiceComponents/VerusIdService/VerusIdService";
 import WyreService from "../ServiceComponents/WyreService/WyreService";
 import PbaasPreconvertService from "../ServiceComponents/PbaasPreconvertService/PbaasPreconvertService";
@@ -18,7 +18,8 @@ class Service extends Component {
     this.SERVICE_COMPONENTS = {
       [WYRE_SERVICE_ID]: <WyreService navigation={props.navigation}/>,
       [VERUSID_SERVICE_ID]: <VerusIdService navigation={props.navigation}/>,
-      [PBAAS_PRECONVERT_SERVICE_ID]: <PbaasPreconvertService navigation={props.navigation}/>
+      [PBAAS_PRECONVERT_SERVICE_ID]: <PbaasPreconvertService navigation={props.navigation}/>,
+      [VALU_SERVICE_ID]: <ValuService navigation={props.navigation}/>,
     }
   }
 
