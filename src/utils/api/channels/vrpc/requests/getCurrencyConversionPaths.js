@@ -224,11 +224,7 @@ export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
       : null;
   
     for (const destinationid in paths) {
-      paths[destinationid] = paths[destinationid].filter(x => {
-        const offSystem = (x.destination.systemid != systemId) || (x.via != null && x.via.systemid != systemId);
-        
-        return !(offSystem && x.exportto == null);
-      }).map(x => {
+      paths[destinationid] = paths[destinationid].map(x => {
         if (prelaunchCurrencyIds != null && prelaunchCurrencyIds.includes(x.destination.currencyid)) {
           return {
             ...x,
