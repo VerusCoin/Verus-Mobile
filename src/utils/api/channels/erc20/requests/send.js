@@ -5,31 +5,42 @@ import { scientificToDecimal } from "../../../../math"
 import { requestPrivKey } from "../../../../auth/authBox"
 import { ETHERS, ETH_CONTRACT_ADDRESS } from "../../../../constants/web3Constants"
 
-export const send = async (coinObj, activeUser, address, amount, params) => {
+export const send = async (coinObj, activeUser, address, amount, passthrough) => {
   try {
+    const gasPrice = passthrough.params.gasPrice
+    const gasLimit = passthrough.params.gasLimit
+    const maxFeeAllowed = gasPrice.mul(gasLimit);
+
     const Web3Provider = getWeb3ProviderForNetwork(coinObj.network)
     
     const privKey = await requestPrivKey(coinObj.id, ERC20);
     const contract = Web3Provider.getContract(coinObj.currency_id)
-    const gasPrice = await Web3Provider.DefaultProvider.getGasPrice()
+    const currentGasPrice = await Web3Provider.DefaultProvider.getGasPrice()
+
     const amountBn = ethers.utils.parseUnits(scientificToDecimal(amount.toString()), coinObj.decimals)
     const signableContract = contract.connect(
       new ethers.Wallet(ethers.utils.hexlify(privKey), Web3Provider.DefaultProvider)
     );
     const gasEst = await signableContract.estimateGas.transfer(address, amountBn)
+    
+    const estFee = gasEst.mul(currentGasPrice);
+
+    if (estFee.gt(maxFeeAllowed)) {
+      throw new Error("Estimated fee exceeds maximum fee calculated in confirm step. Try sending again to recalculate fee.")
+    }
+
     const response = await signableContract.transfer(
       address,
-      amountBn
+      amountBn,
+      { gasLimit: gasLimit.toNumber(), gasPrice: ethers.utils.parseUnits(gasPrice.toString(), 'gwei') }
     );
-
-    const maxFee = gasEst.mul(gasPrice)
     
     return {
       err: false,
       result: {
         fee: Number(
           ethers.utils.formatUnits(
-            maxFee,
+            maxFeeAllowed,
             ETHERS
           )
         ),
