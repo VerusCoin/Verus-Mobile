@@ -252,9 +252,9 @@ function ConvertOrCrossChainSendConfirm({
         data:
           ((sendModal.coinObj.proto === ETH ||
             sendModal.coinObj.proto === ERC20) && convertto != null && exportto == null) ?
-            '40-60 minutes' :
+            '40-90 minutes' :
             exportto != null
-              ? '20-30 minutes'
+              ? '20-90 minutes'
               : convertto != null
                 ? '2-10 minutes'
                 : '1-5 minutes',
