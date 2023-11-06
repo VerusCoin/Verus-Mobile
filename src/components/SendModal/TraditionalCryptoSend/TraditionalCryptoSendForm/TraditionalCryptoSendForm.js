@@ -187,16 +187,20 @@ const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormD
 
     let tradCryptoFees;
 
-    if (FEE_CALCULATORS[coinObj.id] && FEE_CALCULATORS[coinObj.id][channel]) {
-      const feeData = FEE_CALCULATORS[coinObj.id][channel];
-
-      tradCryptoFees = new TraditionalCryptoSendFee(
-        (await feeData.calculator()).average,
-        feeData.isPerByte
-      );
-    }
-
     try {
+      if (FEE_CALCULATORS[coinObj.id] && FEE_CALCULATORS[coinObj.id][channel]) {
+        const feeData = FEE_CALCULATORS[coinObj.id][channel];
+
+        const feeResult = await feeData.calculator();
+
+        if (!feeResult) throw new Error("Failed to calculate fees");
+  
+        tradCryptoFees = new TraditionalCryptoSendFee(
+          feeResult.average,
+          feeData.isPerByte
+        );
+      }
+
       const res = await traditionalCryptoSend(
         coinObj,
         channel,
