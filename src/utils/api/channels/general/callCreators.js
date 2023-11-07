@@ -1,5 +1,6 @@
 import { getCoinPaprikaRate } from './ratesAPIs/coinPaprika';
 import { getAtomicExplorerBTCFees } from './btcFeesAPIs/atomicExplorer';
+import { getBlockchainComBTCFees } from'./btcFeesAPIs/blockchainCom';
 import { getFiatExchangeRates } from './ratesAPIs/fiatExchangeRates'
 import ApiException from '../../errors/apiError';
 import { GENERAL } from '../../../constants/intervalConstants';
@@ -22,7 +23,7 @@ export const getRecommendedBTCFees = (testnet = false) => {
   //Fees are measured in satoshis per byte, slowest should 
   //take around an hour, average should take around 30 minutes, 
   //and fastest should take around 20 to 30 minutes
-  let feeFunctions = [getAtomicExplorerBTCFees()]
+  let feeFunctions = [getBlockchainComBTCFees()]
 
   return new Promise((resolve, reject) => {
     Promise.all(feeFunctions)
