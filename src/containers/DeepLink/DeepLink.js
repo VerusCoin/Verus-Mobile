@@ -15,12 +15,16 @@ import LoginRequestInfo from './LoginRequestInfo/LoginRequestInfo';
 import { getIdentity } from '../../utils/api/channels/verusid/callCreators';
 import { convertFqnToDisplayFormat } from '../../utils/fullyqualifiedname';
 import { resetDeeplinkData } from '../../actions/actionCreators';
+import { NavigationActions } from '@react-navigation/compat';
+
+const authorizedPermissions = [primitives.IDENTITY_VIEW.vdxfid, primitives.IDENTITY_AGREEMENT.vdxfid,/* primitives.ATTESTATION_READ_REQUEST.vdxfid */]
 import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 
 const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
   const deeplinkData = useSelector((state) => state.deeplink.data)
   const signedIn = useSelector((state) => state.authentication.signedIn)
+  const reDirect = useSelector((state) => state.deeplink.redirect)
   const [displayKey, setDisplayKey] = useState(null)
   const [loading, setLoading] = useState(false)
   const [displayProps, setDisplayProps] = useState({})
@@ -29,7 +33,10 @@ const DeepLink = (props) => {
   const cancel = () => {
     let resetAction
 
-    if (signedIn) {
+    if (signedIn && reDirect) {
+      resetAction = NavigationActions.back();
+    } 
+    else if (signedIn) {
       resetAction = CommonActions.reset({
         index: 0,
         routes: [{name: 'SignedInStack'}],
@@ -64,7 +71,7 @@ const DeepLink = (props) => {
             for (const requestedPermission of request.challenge
               .requested_access) {
               if (
-                requestedPermission.vdxfkey !== primitives.IDENTITY_VIEW.vdxfid
+                !authorizedPermissions.includes(requestedPermission.vdxfkey)
               ) {
                 throw new Error(
                   'Unrecognized requested permission ' +

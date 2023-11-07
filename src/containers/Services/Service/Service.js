@@ -7,6 +7,7 @@ import { PBAAS_PRECONVERT_SERVICE_ID, VERUSID_SERVICE_ID, WYRE_SERVICE_ID, VALU_
 import VerusIdService from "../ServiceComponents/VerusIdService/VerusIdService";
 import WyreService from "../ServiceComponents/WyreService/WyreService";
 import PbaasPreconvertService from "../ServiceComponents/PbaasPreconvertService/PbaasPreconvertService";
+import ValuService from "../ServiceComponents/ValuService/ValuService";
 
 class Service extends Component {
   constructor(props) {

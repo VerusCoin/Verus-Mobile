@@ -28,9 +28,9 @@ export const ValuServiceRender = function () {
         </View>
       )}
       {this.props.encryptedSeeds[VALU_SERVICE] != null ? (
-    {/*    <ValuServiceAccount
+       <ValuServiceAccount
         navigation={this.props.navigation}
-        />*/} 
+        />
       ) : (
         <ValuServiceIntroSlider
         navigation={this.props.navigation}

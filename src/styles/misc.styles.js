@@ -67,4 +67,16 @@ export default misc = {
   noVerticalPadding: {
     paddingVertical: 0,
   },
+  valuSplashLogo: {
+    width: '60%',
+    height: '20%',
+    resizeMode: 'contain',
+  },
+  valuName: {
+    fontSize: 15, 
+    color: Colors.primaryColor, 
+    textAlign: 'center',
+    fontFamily: 'Avenir-Medium',
+    paddingTop: 50,
+  }
 };

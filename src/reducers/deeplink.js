@@ -7,7 +7,8 @@ import {
     state = {
       url: null,
       data: {},
-      id: null
+      id: null,
+      redirect: null
     },
     action
   ) => {
@@ -21,7 +22,8 @@ import {
         return {
           ...state,
           id: action.payload.id,
-          data: action.payload.data
+          data: action.payload.data,
+          redirect: action.payload.redirect || null
         }
       default:
         return state;

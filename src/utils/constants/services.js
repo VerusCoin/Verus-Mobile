@@ -98,7 +98,7 @@ export const WYRE_PERSONAL_BANK_BENEFICIARY_TYPE_INDIVIDUAL = 'INDIVIDUAL'
 export const WYRE_PERSONAL_BANK_ACCOUNT_TYPE_CHECKING_BR = 'corrente'
 export const WYRE_PERSONAL_BANK_ACCOUNT_TYPE_SAVINGS_BR = 'poupança'
 
-// Primetrust specific constants
+// Valu specific constants
 export const VALU_INDIVIDUAL_NAME = 'individualLegalName'
 export const VALU_INDIVIDUAL_CELL = 'individualCellphoneNumber'
 export const VALU_INDIVIDUAL_EMAIL = 'individualEmail'
@@ -126,7 +126,7 @@ export const VALU_PAYMENT_METHOD_TYPE_INTERNATIONAL_TRANSFER = "INTERNATIONAL_TR
 export const VALU_PAYMENT_TYPE_LOCAL_BANK_WIRE = "LOCAL_BANK_WIRE"
 export const VALU_PAYMENT_TYPE_LOCAL_BANK_TRANSFER = 'LOCAL_BANK_TRANSFER'
 
-// Primetrust specific bank info
+// Valu specific bank info
 export const VALU_PERSONAL_BANK_COUNTRY = 'country'
 export const VALU_PERSONAL_BANK_PRIMARY_CURRENCY = 'currency'
 export const VALU_PERSONAL_BANK_BENEFICIARY_TYPE = 'beneficiaryType'

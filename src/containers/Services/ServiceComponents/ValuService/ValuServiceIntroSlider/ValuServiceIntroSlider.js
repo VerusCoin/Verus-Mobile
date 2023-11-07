@@ -19,10 +19,10 @@ import { ELECTRUM, VALU_SERVICE } from "../../../../../utils/constants/intervalC
 import { isSeedPhrase } from "../../../../../utils/keys";
 import { ValuLogo } from "../../../../../images/customIcons";
 import { VERUSID_SERVICE_ID, VALU_SERVICE_ID } from "../../../../../utils/constants/services";
-
+import Styles from '../../../../../styles/index'
 import { refreshAccountData } from "../../../../../actions/actionDispatchers";
 import PasswordCheck from "../../../../../components/PasswordCheck";
-import { storeIdChoice } from '../../../../../actions/actions/services/dispatchers/primetrust/updates';
+//import { storeIdChoice } from '../../../../../actions/actions/services/dispatchers/valu/updates';
 
 class ValuServiceIntroSlider extends Component {
   constructor() {
@@ -30,46 +30,17 @@ class ValuServiceIntroSlider extends Component {
     this.state = {
       currentSlide: 0,
       hasElectrum24WordSeed: false,
-      setupWyreSeedModalOpen: false,
       passwordDialogOpen: false,
       passwordDialogTitle: "",
-      onPasswordCorrect: () => {},
-      idRequested: false,
-      idName: null,
-      linkedIds: null,
-      addressSelectModalOpen: false
+      onPasswordCorrect: () => {}
     };
     this.VALU_PRIVACY_POLICY = "https://valu.com/privacy-policy/"
     this.VALU_USER_AGREEMENT = "https://valu.com/user-agreement/"
     this.BANKING_USER_AGREEMENT = "https://banking.com/user-agreement/"
 
   }
-  async getLinkedIds() {
-
-    this.props.dispatch(setServiceLoading(true, VERUSID_SERVICE_ID));
-
-    try {
-      const verusIdServiceData = await requestServiceStoredData(
-        VERUSID_SERVICE_ID,
-      );
-      if (verusIdServiceData.linked_ids) {
-        this.setState({
-          linkedIds: verusIdServiceData.linked_ids,
-        });
-      } else {
-        this.setState({
-          linkedIds: {},
-        });
-      }
-    } catch (e) {
-      createAlert('Error Loading Linked VerusIDs', e.message);
-    }
-    this.props.dispatch(setServiceLoading(false, VERUSID_SERVICE_ID));
-  }
-
   
   componentDidMount() {
-    this.getLinkedIds();
     this.initValuSeedStatus();
   }
   
@@ -158,16 +129,10 @@ class ValuServiceIntroSlider extends Component {
     this.props.navigation.dispatch(resetAction)
   }
 
-  validateFormData = (key) => {
-    console.log("selected ID:" + key)
 
-    this.setState({addressSelectModalOpen: false, idRequested: false, idName: key}, 
-                  async () => {this.linkCurrentSeed()})
-  }
 
   linkValu = (seed, channel) => {
     this.openPasswordCheck((result) => {
-      console.log("out off password", result)
       if (result.valid) {
         this.closePasswordDialog(async () => {
           try {
@@ -177,7 +142,7 @@ class ValuServiceIntroSlider extends Component {
               {
                 task: async () => {
                   await this.addValuSeed(seed, channel, result.password);
-                  await storeIdChoice({idName: this.state.idName, idRequested: this.state.idRequested})
+                  this.props.dispatch(setValuAccount({acountId: null, KYCState: 0}));
                   createAlert(
                     "Success",
                     'The Valu service has been linked! Login to continue the signup process'
@@ -226,7 +191,7 @@ class ValuServiceIntroSlider extends Component {
        <Image source={ValuLogo} style={Styles.valuSplashLogo} />
         <Text style={{ textAlign: "center", width: "75%", color: Colors.primaryColor}}>
           {
-            "Registering with Valu allows you to connect your bank accounts and move from fiat to crypto. Also you can get a KYC Attestation and a valuable VerusID"
+            "Registering with Valu allows you to connect your bank accounts and move from fiat to crypto. Also you can get a KYC Attestation and a valuable VerusID."
           }
         </Text>
         <Text
@@ -287,19 +252,12 @@ class ValuServiceIntroSlider extends Component {
             fontSize: 13
           }}
         >
-           <Text
-            style={{ color: Colors.primaryColor, fontWeight: "800" }}
-          >{ `US Patriot Act:`}</Text>
-          {
-            `${"\n\n"}To help the government fight the funding of terrorism and money laundering activities, federal law requires all financial institutions to obtain, verify, and record information that identifies each person who opens an account. What this means for you: When you open an account, we will ask for your name, address, date of birth, and other information that will allow us to identify you. We may also ask to see your driver's license or other identifying documents`
-          }
         </Text>
       </View>
     );
   };
 
   renderActionSlide = (key) => {
-   const { addressSelectModalOpen} = this.state;
     return (
       <View
         style={{

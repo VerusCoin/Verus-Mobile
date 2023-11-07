@@ -12,6 +12,7 @@ import {
 } from "../../../../utils/constants/services";
 import { encryptkey } from "../../../../utils/seedCrypt";
 import WyreProvider from "../../../../utils/services/WyreProvider";
+import ValuProvider from "../../../../utils/services/ValuProvider";
 import { setServiceStored } from "../creators/services";
 
 export const saveEncryptedServiceStoredDataForUser = async (
@@ -60,7 +61,7 @@ export const initServiceStoredDataForUser = async (accountHash) => {
 export const resetServices = async () => {
   const CONNECTED_SERVICE_PROVIDERS = {
     [WYRE_SERVICE_ID]: WyreProvider,
-    [VALU_SERVICE_ID]: PrimeTrustProvider
+    [VALU_SERVICE_ID]: ValuProvider
   }
 
   for (const connectedService of CONNECTED_SERVICES) {    
