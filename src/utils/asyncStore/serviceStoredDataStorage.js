@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SERVICE_STORAGE_INTERNAL_KEY } from "../../../env/index";
-import { VERUSID_SERVICE_ID, WYRE_SERVICE_ID } from "../constants/services";
+import { VERUSID_SERVICE_ID, WYRE_SERVICE_ID, VALU_SERVICE_ID } from "../constants/services";
 
 export const storeServiceStoredData = (data) => {
   if (typeof data !== "object")
@@ -61,6 +61,6 @@ export const loadServiceStoredDataForUser = async (accountHash) => {
   const allStoredData = await loadServiceStoredData();
 
   if (allStoredData[accountHash] == null)
-    return {[WYRE_SERVICE_ID]: null, [VERUSID_SERVICE_ID]: null};
+    return {[WYRE_SERVICE_ID]: null, [VERUSID_SERVICE_ID]: null, [VALU_SERVICE_ID]: null};
   else return allStoredData[accountHash];
 };
