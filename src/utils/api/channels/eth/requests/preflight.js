@@ -35,7 +35,7 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
 
       if (adjustedValue.lt(ethers.BigNumber.from(0)))
         throw new Error(
-          `Insufficient funds, cannot cover fee costs of at least ${maxFee} ETH.`
+          `Insufficient funds, cannot cover fee costs of at least ${ethers.utils.formatUnits(maxFee)} ETH.`
         );
       else
         return await txPreflight(
