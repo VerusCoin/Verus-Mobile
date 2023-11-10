@@ -32,7 +32,7 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
     const response = await signableContract.transfer(
       address,
       amountBn,
-      { gasLimit: gasLimit.toNumber(), gasPrice: ethers.utils.parseUnits(gasPrice.toString(), 'gwei') }
+      { gasLimit: gasLimit.toNumber(), gasPrice: gasPrice }
     );
     
     return {
