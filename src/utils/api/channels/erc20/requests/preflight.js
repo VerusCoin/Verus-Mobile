@@ -379,7 +379,9 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
 
     const gasLimit = gasEst;
 
-    const maxTotalFee = (gasLimit.mul(gasPrice)).add(gasFeeWei).add(baseFee);
+    const maxTotalFee = isGateway
+      ? gasLimit.mul(gasPrice).add(gasFeeWei).add(baseFee)
+      : gasLimit.mul(gasPrice).add(baseFee);
 
     const ethBalance = coinsToSats(await getStandardEthBalance(fromAddress, Web3Provider.network));
 
