@@ -15,3 +15,7 @@ export * from './requests/fundRawTransaction';
 export * from './requests/calculateCurrencyTransferFee';
 export * from './requests/estimateConversion';
 export * from './requests/getSendCurrencyTransaction';
+export * from './requests/verifyVerusPayInvoice';
+export * from './requests/verifyLoginConsentRequest';
+export * from './requests/extractVerusPayInvoiceSig';
+export * from './requests/extractLoginConsentSig';
