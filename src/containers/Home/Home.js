@@ -66,7 +66,6 @@ class Home extends Component {
       widgets: [],
       displayCurrencyModalOpen: false,
       editingCards: false,
-
       //TODO: MOVE TO REDUX
       expandedListItems: {},
     };

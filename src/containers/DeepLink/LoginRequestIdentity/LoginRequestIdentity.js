@@ -14,6 +14,7 @@ import { signLoginConsentResponse } from '../../../utils/api/channels/vrpc/reque
 import BigNumber from 'bignumber.js';
 import { VERUSID_NETWORK_DEFAULT } from "../../../../env/index";
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
+import { CommonActions } from '@react-navigation/native';
 
 const LoginRequestIdentity = props => {
   const { deeplinkData } = props.route.params
@@ -53,6 +54,17 @@ const LoginRequestIdentity = props => {
         setLinkedIds(verusIdServiceData.linked_ids)
       } else {
         setLinkedIds({})
+      }
+
+      if (verusIdServiceData.pending_ids && canProvision && false) {
+        props.navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{name: 'SignedInStack'}],
+          }),
+        );
+        createAlert('Your ID is being created', "Please check the notifications for the status of your request.");
+
       }
     } catch (e) {
       createAlert('Error Loading Linked VerusIDs', e.message);

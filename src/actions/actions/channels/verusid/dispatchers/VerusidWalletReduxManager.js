@@ -5,11 +5,11 @@ import {
   INIT_VERUSID_CHANNEL_START,
   CLOSE_VERUSID_CHANNEL,
   SET_WATCHED_VERUSIDS,
+  SET_VERUSID_NOTIFICATIONS,
 } from "../../../../../utils/constants/storeType";
 
 export const initVerusIdWallet = async (coinObj) => {
   const verusidServiceData = await requestServiceStoredData(VERUSID_SERVICE_ID)
-
   Store.dispatch({
     type: INIT_VERUSID_CHANNEL_START,
     payload: {
@@ -18,6 +18,9 @@ export const initVerusIdWallet = async (coinObj) => {
       endpointAddress: coinObj.vrpc_endpoints[0],
       watchedVerusIds: verusidServiceData.linked_ids
         ? verusidServiceData.linked_ids
+        : {},
+      pendingIds: verusidServiceData.pending_ids
+        ? verusidServiceData.pending_ids
         : {},
     },
   });
@@ -33,7 +36,7 @@ export const updateVerusIdWallet = async () => {
     payload: {
       watchedVerusIds: verusidServiceData.linked_ids
         ? verusidServiceData.linked_ids
-        : {},
+        : {},    
     },
   });
 
@@ -48,3 +51,17 @@ export const closeVerusIdWallet = async (coinObj) => {
 
   return
 }
+
+export const updateVerusIdNotifications = async () => {
+  const verusidServiceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+  Store.dispatch({
+    type: SET_VERUSID_NOTIFICATIONS,
+    payload: {
+      pendingIds: verusidServiceData.pending_ids
+        ? verusidServiceData.pending_ids
+        : {},
+    },
+  });
+
+  return;
+};

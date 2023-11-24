@@ -14,6 +14,7 @@ import {
   View,
   TouchableWithoutFeedback,
   Keyboard,
+  Text
 } from "react-native";
 import { TextInput, Button } from "react-native-paper";
 import Styles from "../../../../styles";
@@ -43,6 +44,7 @@ const ProvisionIdentityForm = (props) => {
     provWebhook: null,
     assignedIdentity: null,
     loading: false,
+    parentname: ''
   });
 
   useEffect(() => {
@@ -69,7 +71,6 @@ const ProvisionIdentityForm = (props) => {
         provWebhook,
       }));
     };
-  
     const initializeState = async () => {
       await updateProvisioningInfoProcessedData();
     
@@ -77,14 +78,14 @@ const ProvisionIdentityForm = (props) => {
         const provIdKey = currentState.provAddress || currentState.provFqn || null;
     
         const identitykeys = provIdKey == null ? [] : [provIdKey];
-    
         if (currentState.provParent) identitykeys.push(currentState.provParent);
         if (currentState.provSystemId) identitykeys.push(currentState.provSystemId);
     
         const fetchIdentities = async () => {
           let friendlyNameMap = currentState.friendlyNameMap;
           let assignedIdentity = null;
-    
+          let parentname = '';
+
           for (const idKey of identitykeys) {
             if (idKey != null) {
               const identity = await getIdentity(sendModal.coinObj.system_id, idKey.data);
@@ -96,15 +97,22 @@ const ProvisionIdentityForm = (props) => {
                 if (provIdKey != null && idKey.data === provIdKey.data) {
                   assignedIdentity = identity.result.identity.identityaddress;
                 }
+                if (idKey.vdxfkey == primitives.ID_PARENT_VDXF_KEY.vdxfid &&
+                  idKey.data != sendModal.coinObj.system_id) {
+                   parentname = `.${identity.result.identity.name}.${sendModal.coinObj.display_ticker}@`
+                } else if (idKey.vdxfkey == primitives.ID_PARENT_VDXF_KEY.vdxfid &&
+                 idKey.data === sendModal.coinObj.system_id) {
+                   parentname = `.${sendModal.coinObj.display_ticker}@`
+                }
               }
             }
           }
     
-          return { friendlyNameMap, assignedIdentity };
+          return { friendlyNameMap, assignedIdentity, parentname };
         };
     
-        fetchIdentities().then(({ friendlyNameMap, assignedIdentity }) => {
-          setState({ ...currentState, friendlyNameMap, assignedIdentity, loading: false });
+        fetchIdentities().then(({ parentname, friendlyNameMap, assignedIdentity }) => {
+          setState({ ...currentState, friendlyNameMap, assignedIdentity, loading: false, parentname });
         });
     
         return { ...currentState, loading: true };
@@ -125,7 +133,8 @@ const ProvisionIdentityForm = (props) => {
     try {
       fromBase58Check(identity);
     } catch (e) {
-      if (!identity.endsWith('@')) {
+      const formattedId = state.parentname ? `${identity}${state.parentname}` : identity;
+      if (!formattedId.endsWith('@')) {
         createAlert(
           'Invalid Identity',
           'Identity not a valid identity handle or iAddress.',
@@ -145,8 +154,11 @@ const ProvisionIdentityForm = (props) => {
     const { coinObj, data } = sendModal;
     const identity = data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD];
   
+
+    const formattedId = state.parentname ? `${identity}${state.parentname}` : identity;
+
     try {
-      const res = await getIdentity(coinObj.system_id, identity);
+      const res = await getIdentity(coinObj.system_id, formattedId);
   
       if (res.error && res.error.code !== -5) {
         throw new Error(res.error.message);
@@ -155,6 +167,10 @@ const ProvisionIdentityForm = (props) => {
       }
   
       props.setModalHeight(496);
+      props.updateSendFormData(
+        SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
+        formattedId,
+      );
   
       props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
         primaryAddress: addresses[0],
@@ -206,6 +222,15 @@ const ProvisionIdentityForm = (props) => {
           autoCapitalize="none"
           autoCorrect={false}
         />
+         <Text>{"Your Fully qualified name will be: \n\n"}{
+            state.assignedIdentity
+              ? state.friendlyNameMap[state.assignedIdentity]
+                ? `${
+                    state.friendlyNameMap[state.assignedIdentity]
+                  }@`
+                : state.assignedIdentity
+              : sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]
+          }{state.parentname}</Text> 
         </View>
         <View style={{ ...Styles.wideBlock, paddingTop: 0 }}>
           <Button mode="contained" onPress={() => submitData()} disabled={state.loading}>

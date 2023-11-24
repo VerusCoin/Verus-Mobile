@@ -41,11 +41,9 @@ export const handleProvisioningResponse = async (
       state ===
         primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_PENDINGAPPROVAL.vdxfid
     )
-      throw new Error('Expected failiure or success, got pending');
-    else {
-      _pendingsLeft--
+    {  throw new Error('Expected failiure or success, got pending');
+    
     }
-
     // Find transfer or registration txid
     const completeTxid =
       provisioning_txids != null
@@ -69,61 +67,6 @@ export const handleProvisioningResponse = async (
       }
 
       return
-    } else if (info_uri != null) {
-      // If no transfer or registration txid, find info web socket
-      const url = new URL(info_uri);
-      
-      if (url.protocol === "ws:" || url.protocol === "wss:") {
-        return new Promise((resolve, reject) => {
-          try {
-            const ws = new WebSocket(url.toString());
-
-            const timeout = setTimeout(() => {
-              reject(new Error("Timeout while waiting for websocket connection"))
-              ws.close()
-            }, 600000)
-
-            ws.onmessage = async (message) => {
-              try {
-                const messageBuffer = base64url.toBuffer(message.data)
-                
-                // Make sure data is a valid provisioning response
-                const newResponse = new primitives.LoginConsentProvisioningResponse();
-                newResponse.fromBuffer(messageBuffer)
-
-                clearTimeout(timeout)
-
-                try {
-                  resolve(
-                    await handleProvisioningResponse(
-                      coinObj,
-                      newResponse,
-                      _pendingsLeft,
-                      saveIdentity,
-                    ),
-                  );
-                } catch(error) {
-                  ws.close()
-                  reject(error)
-                }
-              } catch(_e) {
-                ws.close()
-                reject(_e)
-              }
-            };
-
-            ws.onerror = (e) => {              
-              clearTimeout(timeout)
-              reject(e)
-              ws.close()
-            };
-          } catch(e) {
-            reject(e)
-          }
-        })
-      } else {
-        throw new Error('Non-websocket status protocols currently unsupported')
-      }
     } else {
       throw new Error('Not enough information to determine provisioning status');
     }

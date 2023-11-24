@@ -56,3 +56,57 @@ export const unlinkVerusId = async (iAddress, chain) => {
     state.authentication.activeAccount.accountHash,
   );
 };
+
+export const setRequestedVerusId = async (iAddress, provisioningDetails, chain) => {
+  const state = store.getState();
+
+  if (state.authentication.activeAccount == null) {
+    throw new Error('You must be signed in for ID provisioning');
+  }
+
+  const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+  const currentPendingIdentities =
+    serviceData.pending_ids == null ? {} : serviceData.pending_ids;
+
+  return await modifyServiceStoredDataForUser(
+    {
+      ...serviceData,
+      pending_ids: {
+        ...currentPendingIdentities,
+        [chain]: currentPendingIdentities[chain]
+          ? {
+              ...currentPendingIdentities[chain],
+              [iAddress]: provisioningDetails,
+            }
+          : {[iAddress]: provisioningDetails},
+      },
+    },
+    VERUSID_SERVICE_ID,
+    state.authentication.activeAccount.accountHash,
+  );
+};
+
+export const deleteProvisionedIds = async (iAddress, chain) => {
+  const state = store.getState();
+
+  if (state.authentication.activeAccount == null) {
+    throw new Error('You must be signed in for ID provisioning');
+  }
+
+  const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+  const currentPendingIdentities =
+    serviceData.pending_ids == null ? {} : serviceData.pending_ids;
+
+  if (currentPendingIdentities[chain]) {
+    delete currentPendingIdentities[chain]; // [iAddress]
+  }
+
+  return await modifyServiceStoredDataForUser(
+    {
+      ...serviceData,
+      pending_ids: currentPendingIdentities,
+    },
+    VERUSID_SERVICE_ID,
+    state.authentication.activeAccount.accountHash,
+  );
+};

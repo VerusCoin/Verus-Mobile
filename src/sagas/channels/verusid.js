@@ -5,6 +5,7 @@ import {
   SIGN_OUT_COMPLETE,
   INIT_VERUSID_CHANNEL_FINISH,
   SET_WATCHED_VERUSIDS,
+  SET_VERUSID_NOTIFICATIONS,
 } from '../../utils/constants/storeType';
 import VrpcProvider from '../../utils/vrpc/vrpcInterface';
 
@@ -42,5 +43,6 @@ function* handleSignOut() {
 
 function* handleFinishVerusidInit(action) { 
   yield put({type: SET_WATCHED_VERUSIDS, payload: action.payload});
+  yield put({type: SET_VERUSID_NOTIFICATIONS, payload: action.payload});
   yield put({type: INIT_VERUSID_CHANNEL_FINISH, payload: action.payload});
 }

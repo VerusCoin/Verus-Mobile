@@ -25,6 +25,7 @@ import {
 } from '../../utils/constants/currencies';
 import VerusIdWidget from './HomeWidgets/VerusIdWidget';
 import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
+import NotificationWidget from './HomeWidgets/NotificationWidget';
 
 export const HomeRender = function () {
   const dragDetection = this.dragDetectionEnabled()
@@ -126,6 +127,7 @@ export const HomeRenderCoinsList = function () {
         width: '100%',
         overflow: 'visible'
       }}>
+      <NotificationWidget />
       <SortableContainer customconfig={{}}>
         <SortableGrid
           minDist={dragDetection ? 60 : 0}

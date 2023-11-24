@@ -67,9 +67,9 @@ const LoginRequestComplete = props => {
 
   const completeDeeplink = async () => {
     if (redirectinfo && redirectinfo.uri) {
-      const returneddata = await tryRedirect();
+      const returnedData = await tryRedirect();
       if (reDirect) {
-        props.navigation.navigate(reDirect, { data: returneddata?.data });
+        props.navigation.navigate(reDirect, { data: returnedData?.data });
       } else {
         cancel();
       }

@@ -5,13 +5,16 @@ import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
 import AnimatedSuccessCheckmark from '../../../AnimatedSuccessCheckmark';
+import { useSelector } from 'react-redux';
 
 export const ProvisionIdentityResultRender = function () {
   return ProvisionIdentitySuccessRender.call(this);
 };
 
 export const ProvisionIdentitySuccessRender = function () {
-  const {verusId} = this.state;
+  const {response} = this.state;
+  const {decision} = response;
+  const {result} = decision;
   const coinObj = this.props.sendModal.coinObj;
 
   return (
@@ -21,17 +24,6 @@ export const ProvisionIdentitySuccessRender = function () {
         ...Styles.focalCenter,
         justifyContent: 'space-between'
       }}>
-        {/* <TouchableOpacity
-          onPress={() =>
-            copyToClipboard(verusId.identity.identityaddress, {
-              title: 'Address copied',
-              message: `${verusId.identity.identityaddress} copied to clipboard.`,
-            })
-          }
-          style={{
-            width: '75%',
-            marginTop: 16,
-          }}>
           <Text
             numberOfLines={1}
             style={{
@@ -39,9 +31,9 @@ export const ProvisionIdentitySuccessRender = function () {
               fontSize: 20,
               color: Colors.verusDarkGray,
             }}>
-            {`${verusId.identity.name}@ linked`}
+            {`Processing ${result.fully_qualified_name}`}
           </Text>
-        </TouchableOpacity>
+
         <View style={{paddingVertical: 16}}>
           <AnimatedSuccessCheckmark
             style={{
@@ -56,9 +48,9 @@ export const ProvisionIdentitySuccessRender = function () {
               fontSize: 20,
               color: Colors.verusDarkGray,
             }}>
-            {`Your VerusID will now appear as a card in your ${coinObj.display_ticker} wallet.`}
+            {`Your VerusID is now being created for your ${coinObj.display_ticker} wallet.`}
           </Text>
-        </View> */}
+        </View> 
         <View
           style={{
             width: '90%',

@@ -3282,7 +3282,7 @@ bl@^4.1.0:
     inherits "^2.0.4"
     readable-stream "^3.4.0"
 
-"blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b", "blake2b-wasm@https://github.com/michaeltout/blake2b-wasm/":
+blake2b-wasm@^2.4.0, "blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b", "blake2b-wasm@https://github.com/michaeltout/blake2b-wasm/":
   version "2.0.0"
   resolved "https://github.com/michaeltout/blake2b-wasm/#a16070b30bb8d8aee670f0c69b642913eca79998"
   dependencies:
@@ -3294,6 +3294,13 @@ bl@^4.1.0:
   dependencies:
     blake2b-wasm "https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b"
     nanoassert "^1.0.0"
+
+"blake2b@https://github.com/VerusCoin/blake2b":
+  version "2.1.4"
+  resolved "https://github.com/VerusCoin/blake2b#578dc12b7b68a3ce76d1e1add1402b28a5890a6b"
+  dependencies:
+    blake2b-wasm "^2.4.0"
+    nanoassert "^2.0.0"
 
 bn.js@5.2.1, bn.js@^5.0.0, bn.js@^5.2.0, bn.js@^5.2.1:
   version "5.2.1"
@@ -11547,6 +11554,7 @@ verus-typescript-primitives@../verus-typescript-primitives, "verus-typescript-pr
   dependencies:
     base64url "3.0.1"
     bech32 "^1.1.3"
+    blake2b "https://github.com/VerusCoin/blake2b"
     bn.js "5.2.1"
     bs58check "https://github.com/bitcoinjs/bs58check"
     create-hash "1.2.0"
@@ -11560,7 +11568,7 @@ verus-typescript-primitives@../verus-typescript-primitives, "verus-typescript-pr
   version "1.0.0"
   resolved "https://github.com/michaeltout/verus-zkedid-utils#f9a97d448a0b460794132bea9789e278a0084a62"
 
-verusd-rpc-ts-client@../verusd-rpc-ts-client, "verusd-rpc-ts-client@file:../verusd-rpc-ts-client", "verusd-rpc-ts-client@https://github.com/VerusCoin/verusd-rpc-ts-client.git":
+"verusd-rpc-ts-client@file:../verusd-rpc-ts-client", "verusd-rpc-ts-client@https://github.com/VerusCoin/verusd-rpc-ts-client.git":
   version "0.1.0"
   dependencies:
     axios "0.27.2"
@@ -11579,8 +11587,8 @@ verusd-rpc-ts-client@../verusd-rpc-ts-client, "verusd-rpc-ts-client@file:../veru
     "@bitgo/utxo-lib" "https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337"
     axios "0.27.2"
     bignumber.js "9.1.0"
-    verus-typescript-primitives "file:C:/Users/CStai/AppData/Local/Yarn/Cache/v6/npm-verusid-ts-client-0.1.0-887b2dc3-d2c8-4255-b6ca-88f9ac09fe4d-1699540308338/node_modules/verus-typescript-primitives"
-    verusd-rpc-ts-client "../verusd-rpc-ts-client"
+    verus-typescript-primitives "file:../verus-typescript-primitives"
+    verusd-rpc-ts-client "file:../verusd-rpc-ts-client"
 
 "verusid-ts-client@git+https://github.com/VerusCoin/verusid-ts-client.git":
   version "0.1.0"
