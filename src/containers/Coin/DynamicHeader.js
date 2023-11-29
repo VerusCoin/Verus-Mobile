@@ -16,7 +16,7 @@ import {
   ERC20
 } from '../../utils/constants/intervalConstants';
 import Colors from '../../globals/colors';
-import {Card, Avatar, Paragraph, Text} from 'react-native-paper';
+import {Card, Avatar, Paragraph, Text, Button} from 'react-native-paper';
 import BigNumber from 'bignumber.js';
 import {
   extractErrorData,
@@ -37,7 +37,7 @@ class DynamicHeader extends Component {
       carouselItems: [],
       currentIndex: 0,
       loadingCarouselItems: true,
-      mappedCoinObj: null
+      mappedCoinObj: null,
     };
 
     this.fadeAnimation = new Animated.Value(0);
@@ -217,6 +217,7 @@ class DynamicHeader extends Component {
         style={{
           opacity: this.fadeAnimation,
         }}>
+          
         <Card
           style={{
             height: 120,
@@ -228,6 +229,7 @@ class DynamicHeader extends Component {
           }}
           onPress={() => this._handleItemPress(item, index)}>
           <Card.Content>
+            
             <View
               style={{
                 display: 'flex',
@@ -237,7 +239,12 @@ class DynamicHeader extends Component {
               }}>
               <Text numberOfLines={1} style={{fontSize: 16, fontWeight: "bold"}}>{item.name}</Text>
             </View>
-            <Paragraph style={{fontSize: 16}} numberOfLines={1}>
+            {!this.props.showBalance ? <Paragraph
+            style={{fontSize: 18, marginBottom: 34}}
+            numberOfLines={2}
+            >*********</Paragraph>:(
+              <>
+              <Paragraph style={{fontSize: 16}} numberOfLines={1}>
               {this.props.balanceErrors[item.id]
                 ? CONNECTION_ERROR
                 : `${
@@ -261,6 +268,8 @@ class DynamicHeader extends Component {
                     this.props.displayCurrency
                   }`}
             </Paragraph>
+              </>
+            )}
             {
               item.network && (
                 <View
@@ -327,14 +336,20 @@ class DynamicHeader extends Component {
             }}>
             {'Confirmed Balance'}
           </Text>
-          <Text
+          {this.props.showBalance ? <Text
             style={{
               color: Colors.secondaryColor,
               fontWeight: '500',
               fontSize: 18,
             }}>{`${truncateDecimal(this.props.confirmedBalance, 8)} ${
             this.props.displayTicker
-          }`}</Text>
+          }`}</Text>:<Text
+          style={{
+            color: Colors.secondaryColor,
+            fontWeight: '500',
+            fontSize: 18,
+          }}
+          >******</Text>}
           {
             !this.props.pendingBalance.isEqualTo(0) && (
               <Text
@@ -398,7 +413,7 @@ class DynamicHeader extends Component {
                 </TouchableOpacity>
               )
           }
-          {
+           {
             this.props.pendingBalance.isEqualTo(0) &&
               this.props.activeCoin.proto === ERC20 && (
                 <TouchableOpacity
@@ -431,7 +446,7 @@ class DynamicHeader extends Component {
         </View>
         <View
           style={{
-            flexDirection: 'row',
+            flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'flex-end',
             paddingBottom: 16,
@@ -445,7 +460,7 @@ class DynamicHeader extends Component {
             })
           ) : (
             <SnapCarousel
-              itemWidth={256}
+              itemWidth={156}
               sliderWidth={DEVICE_WINDOW_WIDTH / 2}
               items={this.state.carouselItems}
               renderItem={props => this._renderCarouselItem(props)}
@@ -466,6 +481,7 @@ class DynamicHeader extends Component {
 
 const mapStateToProps = state => {
   const chainTicker = state.coins.activeCoin.id;
+  const showBalance = state.coins.showBalance;
   const balances = extractLedgerData(
     state,
     'balances',
@@ -475,6 +491,7 @@ const mapStateToProps = state => {
 
   return {
     chainTicker,
+    showBalance,
     displayTicker: state.coins.activeCoin.display_ticker,
     activeCoin: state.coins.activeCoin,
     selectedSubWallet: state.coinMenus.activeSubWallets[chainTicker],

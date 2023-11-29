@@ -26,8 +26,10 @@ import {
 import VerusIdWidget from './HomeWidgets/VerusIdWidget';
 import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 
+
+
 export const HomeRender = function () {
-  const dragDetection = this.dragDetectionEnabled()
+  const dragDetection = this.dragDetectionEnabled() 
 
   return (
     <Portal.Host>
@@ -76,6 +78,7 @@ export const HomeRender = function () {
 export const HomeRenderWidget = function (widgetId) {
   const widgetSplit = widgetId.split(':');
   const widgetType = widgetSplit[0];
+
 
   const renderers = {
     [CURRENCY_WIDGET_TYPE]: () => {

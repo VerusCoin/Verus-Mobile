@@ -527,6 +527,7 @@ const mapStateToProps = state => {
   return {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
+
     activeAccount: state.authentication.activeAccount,
     testnetOverrides: state.authentication.activeAccount.testnetOverrides,
     balances: extractLedgerData(state, 'balances', API_GET_BALANCES),

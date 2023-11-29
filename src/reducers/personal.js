@@ -4,7 +4,7 @@
 
 import {
   SIGN_OUT, 
-  SET_PERSONAL_DATA
+  SET_PERSONAL_DATA,
 } from "../utils/constants/storeType";
 
 // payment_methods:

@@ -19,6 +19,7 @@ const CurrencyWidget = props => {
 
   const Logo = getCoinLogo(coinObj.id, coinObj.proto);
   const themeColor = coinObj.theme_color ? coinObj.theme_color : '#1C1C1C';
+  const showBalance = useSelector(state => state.coins.showBalance);
 
   const allSubwallets = useSelector(state => extractDisplaySubWallets(state));
   const displayCurrency = useSelector(state =>
@@ -133,7 +134,13 @@ const CurrencyWidget = props => {
             }
           </View>
         </View>
-        <Paragraph
+        
+        {
+          !showBalance?<Paragraph>
+            ********
+          </Paragraph>:
+          <View>
+            <Paragraph
           numberOfLines={1}
           style={{fontSize: 16, paddingTop: 8, fontWeight: '500'}}>
           {coinObj.testnet || uniValueDisplay === '-'
@@ -161,6 +168,11 @@ const CurrencyWidget = props => {
                   : normalizeNum(Number(currencyBalance), 8)[3]
               } ${coinObj.display_ticker}`}
         </Paragraph>
+          </View>
+          
+        }
+        
+        
       </Card.Content>
     </Card>
   );
