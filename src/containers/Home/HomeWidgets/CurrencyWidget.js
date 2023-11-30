@@ -135,12 +135,13 @@ const CurrencyWidget = props => {
 
         {!showBalance ? (
           <View>
-            <Paragraph>********</Paragraph>
+            <Paragraph
+             numberOfLines={1}
+             style={{fontSize: 16, paddingTop: 8, fontWeight: '500',borderWidth:1}}
+            >********</Paragraph>
 
             <Text
-            style={{
-              marginTop:5
-            }}
+            style={{color:Colors.secondaryColor,fontSize: 12}}
             >
               {coinObj.testnet && coinObj.proto === 'erc20'
                 ? 'Testnet ERC20 Token'
