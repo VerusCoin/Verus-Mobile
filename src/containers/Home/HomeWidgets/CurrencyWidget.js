@@ -135,7 +135,13 @@ const CurrencyWidget = props => {
 
         {!showBalance ? (
           <View>
-            <Text>
+            <Paragraph>********</Paragraph>
+
+            <Text
+            style={{
+              marginTop:5
+            }}
+            >
               {coinObj.testnet && coinObj.proto === 'erc20'
                 ? 'Testnet ERC20 Token'
                 : coinObj.testnet
@@ -151,7 +157,6 @@ const CurrencyWidget = props => {
                   : uniValueDisplay
                 : <Text>{` `}</Text>}
             </Text>
-            <Paragraph>********</Paragraph>
           </View>
         ) : (
           <View>

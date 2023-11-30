@@ -1,97 +1,80 @@
-import { DrawerActions } from '@react-navigation/compat';
+import {DrawerActions} from '@react-navigation/compat';
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
-import { Icon } from 'react-native-elements';
+import {Text, TouchableOpacity, View} from 'react-native';
+import {Icon} from 'react-native-elements';
 import Colors from '../../globals/colors';
 import styles from '../../styles';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
-import { useDispatch, useSelector } from 'react-redux';
-
-
+import {useNavigation} from '@react-navigation/native';
+import {useDispatch, useSelector} from 'react-redux';
 
 const Header = () => {
   const navigation = useNavigation(); // Use the hook here
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const showBalance = useSelector(state => state.coins.showBalance);
 
-  const handleBalanceShow=(event)=>{
+  const handleBalanceShow = event => {
     event.preventDefault();
     event.stopPropagation();
-    dispatch({type:'SET_BALANCE_SHOW'})
-  }
+    dispatch({type: 'SET_BALANCE_SHOW'});
+  };
 
-  
   return (
-    <TouchableOpacity
-      
-      style={{ paddingRight: 8 }}>
-      
+    <TouchableOpacity style={{paddingRight: 8}}>
       <View
-      style={{
-        flexDirection:'row',
-      }}
-      >
-        {
-        showBalance? 
+        style={{
+          flexDirection: 'row',
+        }}>
+        {showBalance ? (
+          <TouchableOpacity
+            onPress={handleBalanceShow}
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <MaterialCommunityIcons
+              name="eye-off"
+              size={25}
+              color={Colors.secondaryColor}
+              style={{
+                marginLeft: 5,
+                marginRight: 5,
+              }}
+            />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={handleBalanceShow}
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <MaterialCommunityIcons
+              name="eye"
+              size={25}
+              color={Colors.secondaryColor}
+              style={{
+                marginLeft: 5,
+                marginRight: 5,
+              }}
+            />
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
-      onPress={handleBalanceShow}
-      style={{
-        flexDirection:'row',
-        justifyContent:'center',
-        alignItems:'center'
-      }}
-      >
-      <MaterialCommunityIcons 
-      name="eye-off" 
-      size={25}
-       
-      color={Colors.secondaryColor}
-      style={{
-        marginLeft:5,
-        marginRight:5
-      }}
-      />
-      </TouchableOpacity>:
-      <TouchableOpacity
-      onPress={handleBalanceShow}
-      style={{
-        flexDirection:'row',
-        justifyContent:'center',
-        alignItems:'center'
-      }}
-      >
-      <MaterialCommunityIcons 
-      name="eye" 
-      size={25}
-       
-      color={Colors.secondaryColor}
-      style={{
-        marginLeft:5,
-        marginRight:5
-      }}
-      />
-      </TouchableOpacity>
-        }
-      
-      <TouchableOpacity
-      onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
-      >
-      <Icon name="menu" 
-      
-      size={35} color={Colors.secondaryColor} />
-      </TouchableOpacity>
-      
+          onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}>
+          <Icon name="menu" size={35} color={Colors.secondaryColor} />
+        </TouchableOpacity>
       </View>
-      
     </TouchableOpacity>
   );
 };
 
-
 export const defaultHeaderOptions = ({navigation, params, route}) => ({
   headerShown: true,
-  headerMode: "screen",
+  headerMode: 'screen',
   headerStyle: {
     backgroundColor: Colors.primaryColor,
   },
@@ -101,6 +84,6 @@ export const defaultHeaderOptions = ({navigation, params, route}) => ({
     fontSize: 22,
     color: Colors.secondaryColor,
   },
-  headerRight: () => <Header/>,
+  headerRight: () => <Header />,
   headerTintColor: Colors.secondaryColor,
 });
