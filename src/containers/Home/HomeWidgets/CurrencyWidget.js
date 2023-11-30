@@ -137,7 +137,7 @@ const CurrencyWidget = props => {
           <View>
             <Paragraph
              numberOfLines={1}
-             style={{fontSize: 16, paddingTop: 8, fontWeight: '500',borderWidth:1}}
+             style={{fontSize: 16, paddingTop: 8, fontWeight: '500'}}
             >********</Paragraph>
 
             <Text
