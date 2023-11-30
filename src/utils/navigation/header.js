@@ -19,7 +19,6 @@ const Header = () => {
     event.preventDefault();
     event.stopPropagation();
     dispatch({type:'SET_BALANCE_SHOW'})
-    console.log(showBalance)
   }
 
   
@@ -43,11 +42,6 @@ const Header = () => {
         alignItems:'center'
       }}
       >
-      <Text
-      style={{
-        color:Colors.secondaryColor
-      }}
-      >Hide balances</Text>
       <MaterialCommunityIcons 
       name="eye-off" 
       size={25}
@@ -67,11 +61,6 @@ const Header = () => {
         alignItems:'center'
       }}
       >
-      <Text
-      style={{
-        color:Colors.secondaryColor
-      }}
-      >Show balances</Text>
       <MaterialCommunityIcons 
       name="eye" 
       size={25}
@@ -85,10 +74,14 @@ const Header = () => {
       </TouchableOpacity>
         }
       
-      
-      <Icon name="menu" 
+      <TouchableOpacity
       onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
+      >
+      <Icon name="menu" 
+      
       size={35} color={Colors.secondaryColor} />
+      </TouchableOpacity>
+      
       </View>
       
     </TouchableOpacity>

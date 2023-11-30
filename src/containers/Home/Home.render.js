@@ -24,12 +24,10 @@ import {
   SUPPORTED_UNIVERSAL_DISPLAY_CURRENCIES,
 } from '../../utils/constants/currencies';
 import VerusIdWidget from './HomeWidgets/VerusIdWidget';
-import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
-
-
+import {CoinDirectory} from '../../utils/CoinData/CoinDirectory';
 
 export const HomeRender = function () {
-  const dragDetection = this.dragDetectionEnabled() 
+  const dragDetection = this.dragDetectionEnabled();
 
   return (
     <Portal.Host>
@@ -79,7 +77,6 @@ export const HomeRenderWidget = function (widgetId) {
   const widgetSplit = widgetId.split(':');
   const widgetType = widgetSplit[0];
 
-
   const renderers = {
     [CURRENCY_WIDGET_TYPE]: () => {
       const coinId = widgetSplit[1];
@@ -109,7 +106,7 @@ export const HomeRenderWidget = function (widgetId) {
           <VerusIdWidget />
         </Provider>
       );
-    }
+    },
   };
 
   return renderers[widgetType] ? renderers[widgetType]() : <View />;
@@ -117,7 +114,7 @@ export const HomeRenderWidget = function (widgetId) {
 
 export const HomeRenderCoinsList = function () {
   const {widgets} = this.state;
-  const dragDetection = this.dragDetectionEnabled()
+  const dragDetection = this.dragDetectionEnabled();
 
   return widgets.length == 0 ? (
     <View />
@@ -127,7 +124,7 @@ export const HomeRenderCoinsList = function () {
         height: '100%',
         backgroundColor: 'white',
         width: '100%',
-        overflow: 'visible'
+        overflow: 'visible',
       }}>
       <SortableContainer customconfig={{}}>
         <SortableGrid
@@ -159,7 +156,7 @@ export const HomeRenderCoinsList = function () {
                 style={{
                   justifyContent: 'center',
                   alignItems: 'center',
-                  overflow: 'visible'
+                  overflow: 'visible',
                 }}>
                 {HomeRenderWidget.call(this, widgetId)}
               </View>

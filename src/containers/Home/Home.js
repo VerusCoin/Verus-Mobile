@@ -16,7 +16,7 @@ import {
   expireCoinData,
   setCoinSubWallet,
   expireServiceData,
-  saveGeneralSettings
+  saveGeneralSettings,
 } from '../../actions/actionCreators';
 import {connect} from 'react-redux';
 import {Animated} from 'react-native';
@@ -51,9 +51,12 @@ import {
 } from '../../utils/constants/widgets';
 import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
 import {VERUSID_SERVICE_ID} from '../../utils/constants/services';
-import { dragDetectionEnabled } from '../../utils/dragDetection';
-import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
-import { openAddErc20TokenModal, openAddPbaasCurrencyModal } from '../../actions/actions/sendModal/dispatchers/sendModal';
+import {dragDetectionEnabled} from '../../utils/dragDetection';
+import {CoinDirectory} from '../../utils/CoinData/CoinDirectory';
+import {
+  openAddErc20TokenModal,
+  openAddPbaasCurrencyModal,
+} from '../../actions/actions/sendModal/dispatchers/sendModal';
 
 class Home extends Component {
   constructor(props) {
@@ -86,9 +89,9 @@ class Home extends Component {
   }
 
   dragDetectionEnabled() {
-    const {homeCardDragDetection} = this.props 
+    const {homeCardDragDetection} = this.props;
 
-    return dragDetectionEnabled(homeCardDragDetection)
+    return dragDetectionEnabled(homeCardDragDetection);
   }
 
   setEditingCards(editing) {
@@ -513,7 +516,9 @@ class Home extends Component {
   _addErc20Token = () => {
     openAddErc20TokenModal(
       CoinDirectory.findCoinObj(
-        this.props.testnetOverrides.ETH ? this.props.testnetOverrides.ETH : 'ETH',
+        this.props.testnetOverrides.ETH
+          ? this.props.testnetOverrides.ETH
+          : 'ETH',
       ),
     );
   };
@@ -539,7 +544,8 @@ const mapStateToProps = state => {
     allSubWallets: extractDisplaySubWallets(state),
     activeSubWallets: state.coinMenus.activeSubWallets,
     widgetOrder: state.widgets.order,
-    homeCardDragDetection: state.settings.generalWalletSettings.homeCardDragDetection
+    homeCardDragDetection:
+      state.settings.generalWalletSettings.homeCardDragDetection,
   };
 };
 

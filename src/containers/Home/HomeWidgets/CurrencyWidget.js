@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import React, {useState, useEffect} from 'react';
-import {View, Dimensions} from 'react-native';
+import {View, Dimensions, Text} from 'react-native';
 import {Avatar, Card, Paragraph} from 'react-native-paper';
 import {useSelector} from 'react-redux';
 import {getCoinLogo} from '../../../utils/CoinData/CoinData';
@@ -123,56 +123,71 @@ const CurrencyWidget = props => {
               {allSubwallets[coinObj.id] ? allSubwallets[coinObj.id].length : 1}
             </Paragraph>
             <SubWalletsLogo />
-            {
-              coinObj.mapped_to != null && (
-                <MaterialCommunityIcons
-                  name={'link'}
-                  color={Colors.secondaryColor}
-                  size={16}
-                />
-              )
-            }
+            {coinObj.mapped_to != null && (
+              <MaterialCommunityIcons
+                name={'link'}
+                color={Colors.secondaryColor}
+                size={16}
+              />
+            )}
           </View>
         </View>
-        
-        {
-          !showBalance?<Paragraph>
-            ********
-          </Paragraph>:
+
+        {!showBalance ? (
+          <View>
+            <Text>
+              {coinObj.testnet && coinObj.proto === 'erc20'
+                ? 'Testnet ERC20 Token'
+                : coinObj.testnet
+                ? 'Testnet Currency'
+                : coinObj.pbaas_options &&
+                  !coinObj.compatible_channels.includes(GENERAL)
+                ? 'PBaaS Currency'
+                : uniValueDisplay === '-'
+                ? coinObj.proto === 'erc20'
+                  ? coinObj.unlisted
+                    ? 'Unlisted Token'
+                    : 'ERC20 Token'
+                  : uniValueDisplay
+                : <Text>{` `}</Text>}
+            </Text>
+            <Paragraph>********</Paragraph>
+          </View>
+        ) : (
           <View>
             <Paragraph
-          numberOfLines={1}
-          style={{fontSize: 16, paddingTop: 8, fontWeight: '500'}}>
-          {coinObj.testnet || uniValueDisplay === '-'
-            ? `${
-                currencyBalance == null
-                  ? '-'
-                  : normalizeNum(Number(currencyBalance), 8)[3]
-              } ${coinObj.display_ticker}`
-            : uniValueDisplay}
-        </Paragraph>
-        <Paragraph style={{fontSize: 12}}>
-          {coinObj.testnet && coinObj.proto === 'erc20'
-            ? 'Testnet ERC20 Token'
-            : coinObj.testnet
-            ? 'Testnet Currency'
-            : (coinObj.pbaas_options && !coinObj.compatible_channels.includes(GENERAL))
-            ? 'PBaaS Currency'
-            : uniValueDisplay === '-'
-            ? coinObj.proto === 'erc20'
-              ? coinObj.unlisted ? 'Unlisted Token' : 'ERC20 Token'
-              : uniValueDisplay
-            : `${
-                currencyBalance == null
-                  ? '-'
-                  : normalizeNum(Number(currencyBalance), 8)[3]
-              } ${coinObj.display_ticker}`}
-        </Paragraph>
+              numberOfLines={1}
+              style={{fontSize: 16, paddingTop: 8, fontWeight: '500'}}>
+              {coinObj.testnet || uniValueDisplay === '-'
+                ? `${
+                    currencyBalance == null
+                      ? '-'
+                      : normalizeNum(Number(currencyBalance), 8)[3]
+                  } ${coinObj.display_ticker}`
+                : uniValueDisplay}
+            </Paragraph>
+            <Paragraph style={{fontSize: 12}}>
+              {coinObj.testnet && coinObj.proto === 'erc20'
+                ? 'Testnet ERC20 Token'
+                : coinObj.testnet
+                ? 'Testnet Currency'
+                : coinObj.pbaas_options &&
+                  !coinObj.compatible_channels.includes(GENERAL)
+                ? 'PBaaS Currency'
+                : uniValueDisplay === '-'
+                ? coinObj.proto === 'erc20'
+                  ? coinObj.unlisted
+                    ? 'Unlisted Token'
+                    : 'ERC20 Token'
+                  : uniValueDisplay
+                : `${
+                    currencyBalance == null
+                      ? '-'
+                      : normalizeNum(Number(currencyBalance), 8)[3]
+                  } ${coinObj.display_ticker}`}
+            </Paragraph>
           </View>
-          
-        }
-        
-        
+        )}
       </Card.Content>
     </Card>
   );
