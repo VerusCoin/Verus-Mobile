@@ -20,6 +20,7 @@ import {
   ADD_ERC20_TOKEN_MODAL,
 } from "../../utils/constants/sendModal";
 import { SendModalRender } from "./SendModal.render"
+import { DEVICE_WINDOW_HEIGHT } from "../../utils/constants/constants";
 
 class SendModal extends Component {
   constructor(props) {
@@ -37,6 +38,12 @@ class SendModal extends Component {
       [ADD_ERC20_TOKEN_MODAL]: 442,
       [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: 696
     };
+
+    for (const key in this.DEFAULT_MODAL_HEIGHTS) {
+      if (this.DEFAULT_MODAL_HEIGHTS[key] > DEVICE_WINDOW_HEIGHT - 24) {
+        this.DEFAULT_MODAL_HEIGHTS[key] = DEVICE_WINDOW_HEIGHT - 24
+      }
+    }
 
     this.state = {
       persistFormDataOnClose: false,
