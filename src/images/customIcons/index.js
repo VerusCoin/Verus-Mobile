@@ -33,6 +33,8 @@ import MnemonicSeed from './MnemonicSeed.svg'
 import TwentyFourWordIcon from './TwentyFourWordIcon'
 import EnterKeyIcon from './EnterKeyIcon'
 import ScanQrIcon from './ScanQrIcon'
+import ReceivedIcon from './received-icon.svg'
+import VerusIdAtIcon from './verusid-at-icon.svg'
 
 export {
   Open,
@@ -66,7 +68,9 @@ export {
   TwentyFourWordIcon,
   EnterKeyIcon,
   ScanQrIcon,
-  ValuLogo
+  ValuLogo,
+  ReceivedIcon,
+  VerusIdAtIcon
 };
 
 export default Open;

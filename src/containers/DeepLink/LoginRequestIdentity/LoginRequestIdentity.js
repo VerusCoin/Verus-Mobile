@@ -20,9 +20,12 @@ const LoginRequestIdentity = props => {
   const { deeplinkData } = props.route.params
   const [loading, setLoading] = useState(false)
   const [linkedIds, setLinkedIds] = useState({})
-  const [sortedIds, setSortedIds] = useState({})
+  const [sortedIds, setSortedIds] = useState({});
+  const [idProvisionSuccess, setIdProvisionSuccess] = useState(false)
   const req = new primitives.LoginConsentRequest(deeplinkData)
   const encryptedIds = useSelector(state => state.services.stored[VERUSID_SERVICE_ID])
+  const sendModal = useSelector((state) => state.sendModal);
+  const reDirect = useSelector((state) => state.deeplink.redirect);
 
   const canProvision = req.challenge.provisioning_info && req.challenge.provisioning_info.some(x => {
     return (
@@ -78,6 +81,21 @@ const LoginRequestIdentity = props => {
   }, [encryptedIds])
 
   useEffect(() => {
+    if (!idProvisionSuccess && sendModal.data?.success){
+      setIdProvisionSuccess(true);
+    }
+
+    if (idProvisionSuccess && !sendModal.visible) {
+      props.navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{name: 'SignedInStack'}],
+        }),
+      );
+    }
+  }, [sendModal])
+
+  useEffect(() => {
     const sortedIdKeysPerChain = {}
 
     for (const chainId of activeCoinIds) {
@@ -102,7 +120,7 @@ const LoginRequestIdentity = props => {
   }
 
   const openProvisionIdentityModalFromChain = () => {
-    openProvisionIdentityModal(CoinDirectory.findCoinObj(system_id, null, true), req)
+    openProvisionIdentityModal(CoinDirectory.findCoinObj(system_id, null, true), req, reDirect)
   }
 
   const selectIdentity = async (iAddress) => {

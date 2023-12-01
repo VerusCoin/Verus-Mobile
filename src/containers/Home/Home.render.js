@@ -127,7 +127,7 @@ export const HomeRenderCoinsList = function () {
         width: '100%',
         overflow: 'visible'
       }}>
-      <NotificationWidget />
+      <NotificationWidget props={this.props}/>
       <SortableContainer customconfig={{}}>
         <SortableGrid
           minDist={dragDetection ? 60 : 0}

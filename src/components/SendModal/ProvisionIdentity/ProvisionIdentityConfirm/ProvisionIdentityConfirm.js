@@ -17,7 +17,8 @@ import {ProvisionIdentityConfirmRender} from './ProvisionIdentityConfirm.render'
 import axios from "axios";
 import { handleProvisioningResponse } from '../../../../utils/api/channels/vrpc/requests/handleProvisioningResponse';
 import { verifyIdProvisioningResponse } from "../../../../utils/api/channels/vrpc/requests/verifyIdProvisioningResponse";
-import {NOTIFICATION_TYPE_PENDING} from '../../../../utils/constants/notifications';
+import {NOTIFICATION_TYPE_VERUSID_PENDING} from '../../../../utils/constants/notifications';
+import { updateVerusIdNotifications } from "../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager"
 
 class ProvisionIdentityConfirm extends Component {
   constructor(props) {
@@ -47,7 +48,8 @@ class ProvisionIdentityConfirm extends Component {
       this.props.setPreventExit(false);
       this.props.setLoading(false);
       this.props.navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, {
-        response: response
+        response: response,
+        success: true
       });
     }
 
@@ -128,13 +130,21 @@ class ProvisionIdentityConfirm extends Component {
       
       const verified = await verifyIdProvisioningResponse(coinObj, res.data);
       if (!verified) throw new Error('Failed to verify response from service');
-
+      
       const confirmedProvisionedID = new primitives.LoginConsentProvisioningResponse(res.data)
-      console.log("verified ",res.data);
-      res.data.status = NOTIFICATION_TYPE_PENDING;
+     
+      if (confirmedProvisionedID.decision.result.fully_qualified_name.split('.')[0].toLowerCase() !== identityName.split('.')[0].toLowerCase()
+            || confirmedProvisionedID.decision.result.parent !== parent) throw new Error('Response does not match the expected ID request');
 
-      await setRequestedVerusId(confirmedProvisionedID.decision.result.identity_address, res.data, coinObj.id);
+      const notification = {
+        status: NOTIFICATION_TYPE_VERUSID_PENDING,
+        fqn: confirmedProvisionedID.decision.result.fully_qualified_name,
+        loginRequest: loginRequest.toBuffer().toString('base64'),
+        redirect: this.props.sendModal.data.redirect
+      }
 
+      await setRequestedVerusId(confirmedProvisionedID.decision.result.identity_address, notification, coinObj.id);
+      await updateVerusIdNotifications();
    
       clearChainLifecycle(coinObj.id);
       const setUserCoinsAction = setUserCoins(
@@ -143,7 +153,6 @@ class ProvisionIdentityConfirm extends Component {
       )
         
       this.props.dispatch(setUserCoinsAction);
-     // this.props.dispatch(setProvisioningNotification(confirmedProvisionedID.decision.result.identity_address, res.data, coinObj.id));
       refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);  
       
       submissionSuccess(res.data)

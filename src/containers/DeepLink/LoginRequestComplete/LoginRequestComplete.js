@@ -16,7 +16,7 @@ import { useSelector } from 'react-redux';
 
 const LoginRequestComplete = props => {
   const {signedResponse} = props.route.params;
-  const reDirect = useSelector((state) => state.deeplink.redirect)
+  const reDirect = useSelector((state) => state.deeplink.redirect);
   const res = new primitives.LoginConsentResponse(signedResponse);
   const redirects = res.decision.request.challenge.redirect_uris
     ? res.decision.request.challenge.redirect_uris
@@ -69,7 +69,8 @@ const LoginRequestComplete = props => {
     if (redirectinfo && redirectinfo.uri) {
       const returnedData = await tryRedirect();
       if (reDirect) {
-        props.navigation.navigate(reDirect, { data: returnedData?.data });
+        // Only return to services, default is main home screen.
+        props.navigation.navigate("ServicesHome", { screen: reDirect, params: { data: returnedData.data }});
       } else {
         cancel();
       }

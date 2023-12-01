@@ -31,7 +31,7 @@ export const ProvisionIdentitySuccessRender = function () {
               fontSize: 20,
               color: Colors.verusDarkGray,
             }}>
-            {`Processing ${result.fully_qualified_name}`}
+            {`Creating ${result.fully_qualified_name}`}
           </Text>
 
         <View style={{paddingVertical: 16}}>
@@ -48,7 +48,7 @@ export const ProvisionIdentitySuccessRender = function () {
               fontSize: 20,
               color: Colors.verusDarkGray,
             }}>
-            {`Your VerusID is now being created for your ${coinObj.display_ticker} wallet.`}
+            {`You will recieve a notification when your ${coinObj.display_ticker} ID is ready to use.`}
           </Text>
         </View> 
         <View

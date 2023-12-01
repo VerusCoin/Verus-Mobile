@@ -13,7 +13,11 @@ class ProvisionIdentityResult extends Component {
     };
   }
 
-  finishSend() {
+  async finishSend() {
+    await this.props.updateSendFormData(
+      "success",
+      true,
+    );
     closeSendModal();
   }
 

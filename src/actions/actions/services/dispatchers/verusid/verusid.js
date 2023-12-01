@@ -1,7 +1,14 @@
 import store from '../../../../../store';
-import {requestServiceStoredData} from '../../../../../utils/auth/authBox';
-import {VERUSID_SERVICE_ID} from '../../../../../utils/constants/services';
-import {modifyServiceStoredDataForUser} from '../services';
+import { requestServiceStoredData } from '../../../../../utils/auth/authBox';
+import { VERUSID_SERVICE_ID } from '../../../../../utils/constants/services';
+import { modifyServiceStoredDataForUser } from '../services';
+import { coinsList } from '../../../../../utils/CoinData/CoinsList';
+import { getTransaction } from "../../../../../utils/api/channels/vrpc/requests/getTransaction";
+import { getInfo } from "../../../../../utils/api/channels/vrpc/requests/getInfo";
+import { getIdentity } from "../../../../../utils/api/channels/verusid/callCreators";
+import { primitives } from 'verusid-ts-client';
+import { NOTIFICATION_TYPE_VERUSID_READY } from '../../../../../utils/constants/notifications';
+import { updateVerusIdNotifications } from "../../../channels/verusid/dispatchers/VerusidWalletReduxManager"
 
 export const linkVerusId = async (iAddress, fqn, chain) => {
   const state = store.getState();
@@ -21,10 +28,10 @@ export const linkVerusId = async (iAddress, fqn, chain) => {
         ...currentLinkedIdentities,
         [chain]: currentLinkedIdentities[chain]
           ? {
-              ...currentLinkedIdentities[chain],
-              [iAddress]: fqn,
-            }
-          : {[iAddress]: fqn},
+            ...currentLinkedIdentities[chain],
+            [iAddress]: fqn,
+          }
+          : { [iAddress]: fqn },
       },
     },
     VERUSID_SERVICE_ID,
@@ -46,7 +53,7 @@ export const unlinkVerusId = async (iAddress, chain) => {
   if (currentLinkedIdentities[chain]) {
     delete currentLinkedIdentities[chain][iAddress];
   }
-  
+
   return await modifyServiceStoredDataForUser(
     {
       ...serviceData,
@@ -75,10 +82,10 @@ export const setRequestedVerusId = async (iAddress, provisioningDetails, chain) 
         ...currentPendingIdentities,
         [chain]: currentPendingIdentities[chain]
           ? {
-              ...currentPendingIdentities[chain],
-              [iAddress]: provisioningDetails,
-            }
-          : {[iAddress]: provisioningDetails},
+            ...currentPendingIdentities[chain],
+            [iAddress]: provisioningDetails,
+          }
+          : { [iAddress]: provisioningDetails },
       },
     },
     VERUSID_SERVICE_ID,
@@ -98,7 +105,7 @@ export const deleteProvisionedIds = async (iAddress, chain) => {
     serviceData.pending_ids == null ? {} : serviceData.pending_ids;
 
   if (currentPendingIdentities[chain]) {
-    delete currentPendingIdentities[chain]; // [iAddress]
+    delete currentPendingIdentities[chain][iAddress];
   }
 
   return await modifyServiceStoredDataForUser(
@@ -109,4 +116,61 @@ export const deleteProvisionedIds = async (iAddress, chain) => {
     VERUSID_SERVICE_ID,
     state.authentication.activeAccount.accountHash,
   );
+};
+
+export const deleteAllProvisionedIds = async () => {
+  const state = store.getState();
+
+  if (state.authentication.activeAccount == null) {
+    throw new Error('You must be signed in for ID provisioning');
+  }
+
+  const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+
+  return await modifyServiceStoredDataForUser(
+    {
+      ...serviceData,
+      pending_ids: {},
+    },
+    VERUSID_SERVICE_ID,
+    state.authentication.activeAccount.accountHash,
+  );
+};
+
+export const checkVerusIdNotificationsForUpdates = async () => {
+  const state = store.getState();
+
+  if (state.authentication.activeAccount == null) {
+    throw new Error('You must be signed in for ID provisioning functions');
+  }
+  const isTestnet = Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0;
+
+  const system = isTestnet ? coinsList.VRSCTEST : coinsList.VRSC;
+  const ticker = system.id;
+
+  // Itterate through all pending IDs and check for updates
+  const pendingIds = state.channelStore_verusid.pendingIds
+
+  if (pendingIds[ticker] !== null) {
+
+    const details = Object.keys(pendingIds[ticker]);
+    for (const iaddress of details) {
+
+      if(pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_READY) continue;
+      const identity = await getIdentity(system.system_id, iaddress);
+
+      if (identity.result &&
+        identity.result.identity.primaryaddresses
+          .indexOf(state.authentication.activeAccount.keys[ticker].vrpc.addresses[0]) > -1) {
+
+        pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_READY;
+
+        await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
+        await linkVerusId(iaddress, identity.result.fullyqualifiedname, ticker);
+        await updateVerusIdNotifications();
+      }
+    }
+  }
+
+
 };

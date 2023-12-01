@@ -7,6 +7,7 @@ import WyreServiceAccountData from '../../Services/ServiceComponents/WyreService
 import WyreServiceAddPaymentMethod from '../../Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceAddPaymentMethod/WyreServiceAddPaymentMethod';
 import WyreServiceEditPaymentMethod from '../../Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceEditPaymentMethod/WyreServiceEditPaymentMethod';
 import ValuServiceAccount from '../../Services/ServiceComponents/ValuService/ValuServiceAccount/ValuServiceAccount';
+import ValuAccountCreator from '../../Services/ServiceComponents/ValuService/ValuServiceAccount/ValuServiceAccountCreator/ValuAccountCreator';
 const ServicesStack = createStackNavigator();
 
 const ServicesStackScreens = props => {
@@ -45,7 +46,7 @@ const ServicesStackScreens = props => {
       />
       <ServicesStack.Screen
         name="ValuServiceAccount"
-        component={ValuServiceAccount}
+        component={ValuAccountCreator}
         options={{
           title: "Valu",
         }}

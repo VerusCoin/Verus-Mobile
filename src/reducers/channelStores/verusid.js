@@ -9,7 +9,8 @@ import {
 export const channelStore_verusid = (state = {
   openCoinChannels: {},
   watchedVerusIds: {},
-  pendingIds: {}
+  pendingIds: {},
+  serviceChannelOpen: true,
 }, action) => {
   switch (action.type) {
     case INIT_VERUSID_CHANNEL_FINISH:

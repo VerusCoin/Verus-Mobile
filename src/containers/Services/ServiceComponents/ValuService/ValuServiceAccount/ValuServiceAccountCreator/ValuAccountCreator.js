@@ -40,10 +40,14 @@ import Spinner from 'react-native-loading-spinner-overlay';
 class ValuAccountCreator extends Component {
   constructor(props) {
     super(props);
+    const { route } = props;
+    const { params } = route || {};
+    const { data, url } = params || {};
     this.state = {
       email: "",
       userName: "",
-      loginReply: props.route?.params ? props.route?.params : null,
+      loginReply: data || null,
+      startLogin: url || null,
       loading: false,
       errors: {
         email: null,
@@ -53,7 +57,9 @@ class ValuAccountCreator extends Component {
   }
 
   componentDidMount() {
-    console.log("this.state.loginReply: ", this.state.loginReply)
+    if(this.state.startLogin) {
+      this.selectID(this.state.startLogin)
+    }
   }
 
   async accountSubmission() {
@@ -161,12 +167,14 @@ class ValuAccountCreator extends Component {
       this.resetAndCreateAccount(userName, email.trim())
   }
 
-  async selectID() {
+  async selectID(loginResponse = null) {
 
     this.setState({ loading: true }, async () => {
       try {
-        const loginResponse = await ValuProvider.loginSignup();
-        console.log("RETRUNED FROM SERVER", loginResponse)
+        if (!loginResponse) {
+          loginResponse = await ValuProvider.loginSignup();
+        }
+
         this.tryProcessDeeplink(loginResponse.data);
         this.setState({ loading: false })
       } catch (e) {
