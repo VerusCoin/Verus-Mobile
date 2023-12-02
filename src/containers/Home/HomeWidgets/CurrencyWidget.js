@@ -138,10 +138,18 @@ const CurrencyWidget = props => {
             <Paragraph
              numberOfLines={1}
              style={{fontSize: 16, paddingTop: 8, fontWeight: '500'}}
-            >********</Paragraph>
-
-            <Text
-            style={{color:Colors.secondaryColor,fontSize: 12}}
+            >
+              {coinObj.testnet || uniValueDisplay === '-'
+                ? `${
+                    currencyBalance == null
+                      ? '-'
+                      : '***'
+                  } ${coinObj.display_ticker}`
+                : '*****'}
+            </Paragraph>
+            {/* <P></P> */}
+            <Paragraph
+            style={{fontSize: 12}}
             >
               {coinObj.testnet && coinObj.proto === 'erc20'
                 ? 'Testnet ERC20 Token'
@@ -156,8 +164,10 @@ const CurrencyWidget = props => {
                     ? 'Unlisted Token'
                     : 'ERC20 Token'
                   : uniValueDisplay
-                : <Text>{` `}</Text>}
-            </Text>
+                : `${
+                  `***`
+                } ${coinObj.display_ticker}`}
+            </Paragraph>
           </View>
         ) : (
           <View>
