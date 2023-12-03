@@ -32,6 +32,7 @@ import {
   SET_COIN_LIST,
   SET_USER_COINS,
   SET_BALANCES,
+  SET_BALANCE_SHOW,
   SET_ONE_BALANCE,
   SET_TRANSACTIONS,
   //SET_INTERVAL_ID,
@@ -243,6 +244,14 @@ export const setBalances = (balances) => {
   return {
     type: SET_BALANCES,
     balances: balances
+  }
+}
+
+
+//Reducer name: coins
+export const setBalanceShow = () => {
+  return {
+    type: SET_BALANCE_SHOW
   }
 }
 
