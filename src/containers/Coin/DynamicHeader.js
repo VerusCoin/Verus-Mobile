@@ -13,10 +13,10 @@ import {
   API_GET_BALANCES,
   API_GET_FIATPRICE,
   API_GET_INFO,
-  ERC20
+  ERC20,
 } from '../../utils/constants/intervalConstants';
 import Colors from '../../globals/colors';
-import {Card, Avatar, Paragraph, Text} from 'react-native-paper';
+import {Card, Avatar, Paragraph, Text, Button} from 'react-native-paper';
 import BigNumber from 'bignumber.js';
 import {
   extractErrorData,
@@ -25,10 +25,16 @@ import {
 import {CONNECTION_ERROR} from '../../utils/api/errors/errorMessages';
 import {truncateDecimal} from '../../utils/math';
 import {USD} from '../../utils/constants/currencies';
-import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
-import { VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT, VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT } from '../../utils/constants/web3Constants';
-import { createAlert, resolveAlert } from '../../actions/actions/alert/dispatchers/alert';
-import { openUrl } from '../../utils/linking';
+import {CoinDirectory} from '../../utils/CoinData/CoinDirectory';
+import {
+  VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT,
+  VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT,
+} from '../../utils/constants/web3Constants';
+import {
+  createAlert,
+  resolveAlert,
+} from '../../actions/actions/alert/dispatchers/alert';
+import {openUrl} from '../../utils/linking';
 
 class DynamicHeader extends Component {
   constructor(props) {
@@ -39,7 +45,6 @@ class DynamicHeader extends Component {
       loadingCarouselItems: true,
       mappedCoinObj: null
     };
-
     this.fadeAnimation = new Animated.Value(0);
     this.carousel = null;
   }
@@ -50,31 +55,41 @@ class DynamicHeader extends Component {
 
     if (this.props.activeCoin.mapped_to != null) {
       try {
-        mappedCoinObj = CoinDirectory.getBasicCoinObj(this.props.activeCoin.mapped_to)
-      } catch(e) {
-        console.warn(e)
+        mappedCoinObj = CoinDirectory.getBasicCoinObj(
+          this.props.activeCoin.mapped_to,
+        );
+      } catch (e) {
+        console.warn(e);
       }
     }
 
-    this.setState({
-      loadingCarouselItems: true,
-      mappedCoinObj
-    }, () => {
-      this.setState({
-        carouselItems: this.prepareCarouselItems(
-          this.props.allSubWallets,
-          this.props.selectedSubWallet,
-        )
-      }, () => {
-        this.setState({
-          loadingCarouselItems: false
-        })
-      })
-    })
+    this.setState(
+      {
+        loadingCarouselItems: true,
+        mappedCoinObj,
+      },
+      () => {
+        this.setState(
+          {
+            carouselItems: this.prepareCarouselItems(
+              this.props.allSubWallets,
+              this.props.selectedSubWallet,
+            ),
+          },
+          () => {
+            this.setState({
+              loadingCarouselItems: false,
+            });
+          },
+        );
+      },
+    );
   }
 
   openTokenAddressExplorer = (address, testnet) => {
-    const baseUrl = testnet ? 'https://goerli.etherscan.io/token/' : 'https://etherscan.io/token/';
+    const baseUrl = testnet
+      ? 'https://goerli.etherscan.io/token/'
+      : 'https://etherscan.io/token/';
 
     return createAlert(
       'Go to explorer?',
@@ -89,7 +104,7 @@ class DynamicHeader extends Component {
         {
           text: 'Yes',
           onPress: () => {
-            openUrl(baseUrl + "/" + address);
+            openUrl(baseUrl + '/' + address);
             resolveAlert(false);
           },
         },
@@ -117,9 +132,7 @@ class DynamicHeader extends Component {
     } else {
       let newSubWallets = [...allSubWallets];
 
-      while (
-        newSubWallets[0].id !== selectedSubWallet.id
-      ) {
+      while (newSubWallets[0].id !== selectedSubWallet.id) {
         newSubWallets.push(newSubWallets.shift());
       }
 
@@ -145,7 +158,7 @@ class DynamicHeader extends Component {
 
     this.setState(
       {
-        currentIndex: index < 0 ? 0 : index
+        currentIndex: index < 0 ? 0 : index,
       },
       () => {
         this.props.dispatch(setCoinSubWallet(this.props.chainTicker, wallet));
@@ -175,9 +188,11 @@ class DynamicHeader extends Component {
 
   getNetworkName(item) {
     try {
-      return item.network ? CoinDirectory.getBasicCoinObj(item.network).display_ticker : null;
-    } catch(e) {
-      return null
+      return item.network
+        ? CoinDirectory.getBasicCoinObj(item.network).display_ticker
+        : null;
+    } catch (e) {
+      return null;
     }
   }
 
@@ -224,7 +239,7 @@ class DynamicHeader extends Component {
             borderRadius: 10,
             marginLeft: alone ? 0 : 30,
             position: 'relative',
-            overflow: "hidden"
+            overflow: 'hidden',
           }}
           onPress={() => this._handleItemPress(item, index)}>
           <Card.Content>
@@ -233,59 +248,78 @@ class DynamicHeader extends Component {
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
-                paddingRight: 16
+                paddingRight: 16,
               }}>
-              <Text numberOfLines={1} style={{fontSize: 16, fontWeight: "bold"}}>{item.name}</Text>
+              <Text
+                numberOfLines={1}
+                style={{fontSize: 16, fontWeight: 'bold'}}>
+                {item.name}
+              </Text>
             </View>
-            <Paragraph style={{fontSize: 16}} numberOfLines={1}>
-              {this.props.balanceErrors[item.id]
-                ? CONNECTION_ERROR
-                : `${
-                    displayBalance == null
-                      ? '-'
-                      : truncateDecimal(displayBalance, 8)
-                  }${
-                    pendingBalance != null &&
-                    !BigNumber(pendingBalance).isEqualTo(0)
-                      ? ` (${
-                          BigNumber(pendingBalance).isGreaterThan(0) ? '+' : ''
-                        }${truncateDecimal(pendingBalance, 4)})`
-                      : ''
-                  } ${this.props.displayTicker}`}
-            </Paragraph>
-            <Paragraph
-              style={{...Styles.listItemSubtitleDefault, fontSize: 12, marginBottom: 10, opacity: fiatBalance == null ? 0 : undefined}}>
-              {syncProgress != 100 && syncProgress != -1
-                ? `Syncing - ${syncProgress.toFixed(2)}%`
-                : `${fiatBalance == null ? '-' : fiatBalance} ${
-                    this.props.displayCurrency
-                  }`}
-            </Paragraph>
-            {
-              item.network && (
-                <View
+            {!this.props.showBalance ? (
+              <Paragraph
+                style={{fontSize: 18, marginBottom: 34}}
+                numberOfLines={2}>
+                *********
+              </Paragraph>
+            ) : (
+              <>
+                <Paragraph style={{fontSize: 16}} numberOfLines={1}>
+                  {this.props.balanceErrors[item.id]
+                    ? CONNECTION_ERROR
+                    : `${
+                        displayBalance == null
+                          ? '-'
+                          : truncateDecimal(displayBalance, 8)
+                      }${
+                        pendingBalance != null &&
+                        !BigNumber(pendingBalance).isEqualTo(0)
+                          ? ` (${
+                              BigNumber(pendingBalance).isGreaterThan(0)
+                                ? '+'
+                                : ''
+                            }${truncateDecimal(pendingBalance, 4)})`
+                          : ''
+                      } ${this.props.displayTicker}`}
+                </Paragraph>
+                <Paragraph
                   style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    right: 0,
-                    backgroundColor: 'green',
-                    borderRadius: 10,
-                    padding: 5,
-                    paddingLeft: 8,
-                    paddingRight: 16,
-                    paddingBottom: 11,
-                    marginBottom: -20,
-                    marginRight: -10,
+                    ...Styles.listItemSubtitleDefault,
+                    fontSize: 12,
+                    marginBottom: 10,
+                    opacity: fiatBalance == null ? 0 : undefined,
                   }}>
-                  <Paragraph
-                    numberOfLines={1}
-                    style={{
-                      color: 'white',
-                      fontSize: 14,
-                    }}>{`${this.getNetworkName(item)} Network`}</Paragraph>
-                </View>
-              )
-            }
+                  {syncProgress != 100 && syncProgress != -1
+                    ? `Syncing - ${syncProgress.toFixed(2)}%`
+                    : `${fiatBalance == null ? '-' : fiatBalance} ${
+                        this.props.displayCurrency
+                      }`}
+                </Paragraph>
+              </>
+            )}
+            {item.network && (
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  backgroundColor: 'green',
+                  borderRadius: 10,
+                  padding: 5,
+                  paddingLeft: 8,
+                  paddingRight: 16,
+                  paddingBottom: 11,
+                  marginBottom: -20,
+                  marginRight: -10,
+                }}>
+                <Paragraph
+                  numberOfLines={1}
+                  style={{
+                    color: 'white',
+                    fontSize: 14,
+                  }}>{`${this.getNetworkName(item)} Network`}</Paragraph>
+              </View>
+            )}
           </Card.Content>
         </Card>
       </Animated.View>
@@ -327,117 +361,131 @@ class DynamicHeader extends Component {
             }}>
             {'Confirmed Balance'}
           </Text>
-          <Text
-            style={{
-              color: Colors.secondaryColor,
-              fontWeight: '500',
-              fontSize: 18,
-            }}>{`${truncateDecimal(this.props.confirmedBalance, 8)} ${
-            this.props.displayTicker
-          }`}</Text>
-          {
-            !this.props.pendingBalance.isEqualTo(0) && (
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontWeight: '300',
-                  color: Colors.secondaryColor,
-                  paddingTop: 4,
-                }}>
-                <Text style={{color: Colors.secondaryColor}}>
-                  {this.props.pendingBalance.isGreaterThan(0) ? '+' : ''}
-                </Text>
-                <Text style={{fontWeight: '500', color: Colors.secondaryColor}}>
-                  {truncateDecimal(this.props.pendingBalance, 8)}
-                </Text>
-                <Text style={{color: Colors.secondaryColor}}>
-                  {' change pending'}
-                </Text>
+          {this.props.showBalance ? (
+            <Text
+              style={{
+                color: Colors.secondaryColor,
+                fontWeight: '500',
+                fontSize: 18,
+              }}>{`${truncateDecimal(this.props.confirmedBalance, 8)} ${
+              this.props.displayTicker
+            }`}</Text>
+          ) : (
+            <Text
+              style={{
+                color: Colors.secondaryColor,
+                fontWeight: '500',
+                fontSize: 18,
+              }}>
+              ******
+            </Text>
+          )}
+          {!this.props.pendingBalance.isEqualTo(0) && (
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '300',
+                color: Colors.secondaryColor,
+                paddingTop: 4,
+              }}>
+              <Text style={{color: Colors.secondaryColor}}>
+                {this.props.pendingBalance.isGreaterThan(0) ? '+' : ''}
               </Text>
-            )
-          }
-          {
-            this.props.pendingBalance.isEqualTo(0) &&
-              this.props.activeCoin.mapped_to != null &&
-              this.state.mappedCoinObj != null && (
-                <TouchableOpacity
-                  disabled={this.state.mappedCoinObj.proto !== ERC20}
-                  onPress={() =>
-                    this.openTokenAddressExplorer(
-                      this.state.mappedCoinObj.currency_id,
-                      this.state.mappedCoinObj.testnet,
-                    )
-                  }>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '300',
-                      color: Colors.secondaryColor,
-                      paddingTop: 4,
-                    }}>
-                    <Text style={{color: Colors.secondaryColor}}>
-                      {`mapped to ${
-                        mappedToEth
-                          ? 'Ethereum'
-                          : this.state.mappedCoinObj.display_ticker.length > 15
-                          ? this.state.mappedCoinObj.display_ticker.substring(0, 15) + '...'
-                          : this.state.mappedCoinObj.display_ticker
-                      }${
-                        !mappedToEth && this.state.mappedCoinObj.proto === ERC20
-                          ? ` (ERC20 ${
-                              this.state.mappedCoinObj.currency_id.substring(0, 5) +
-                              '...' +
-                              this.state.mappedCoinObj.currency_id.substring(
-                                this.state.mappedCoinObj.currency_id.length - 3,
-                              )
-                            })`
-                          : ''
-                      }`}
-                    </Text>
+              <Text style={{fontWeight: '500', color: Colors.secondaryColor}}>
+                {truncateDecimal(this.props.pendingBalance, 8)}
+              </Text>
+              <Text style={{color: Colors.secondaryColor}}>
+                {' change pending'}
+              </Text>
+            </Text>
+          )}
+          {this.props.pendingBalance.isEqualTo(0) &&
+            this.props.activeCoin.mapped_to != null &&
+            this.state.mappedCoinObj != null && (
+              <TouchableOpacity
+                disabled={this.state.mappedCoinObj.proto !== ERC20}
+                onPress={() =>
+                  this.openTokenAddressExplorer(
+                    this.state.mappedCoinObj.currency_id,
+                    this.state.mappedCoinObj.testnet,
+                  )
+                }>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: '300',
+                    color: Colors.secondaryColor,
+                    paddingTop: 4,
+                  }}>
+                  <Text style={{color: Colors.secondaryColor}}>
+                    {`mapped to ${
+                      mappedToEth
+                        ? 'Ethereum'
+                        : this.state.mappedCoinObj.display_ticker.length > 15
+                        ? this.state.mappedCoinObj.display_ticker.substring(
+                            0,
+                            15,
+                          ) + '...'
+                        : this.state.mappedCoinObj.display_ticker
+                    }${
+                      !mappedToEth && this.state.mappedCoinObj.proto === ERC20
+                        ? ` (ERC20 ${
+                            this.state.mappedCoinObj.currency_id.substring(
+                              0,
+                              5,
+                            ) +
+                            '...' +
+                            this.state.mappedCoinObj.currency_id.substring(
+                              this.state.mappedCoinObj.currency_id.length - 3,
+                            )
+                          })`
+                        : ''
+                    }`}
                   </Text>
-                </TouchableOpacity>
-              )
-          }
-          {
-            this.props.pendingBalance.isEqualTo(0) &&
-              this.props.activeCoin.proto === ERC20 && (
-                <TouchableOpacity
-                  onPress={() =>
-                    this.openTokenAddressExplorer(
-                      this.props.activeCoin.currency_id,
-                      this.props.activeCoin.testnet,
-                    )
-                  }>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '300',
-                      color: Colors.secondaryColor,
-                      paddingTop: 4,
-                    }}>
-                    <Text style={{color: Colors.secondaryColor}}>
-                      {`${this.props.activeCoin.unlisted ? "unlisted " : ""}ERC20 token (${
-                        this.props.activeCoin.currency_id.substring(0, 5) +
-                        '...' +
-                        this.props.activeCoin.currency_id.substring(
-                          this.props.activeCoin.currency_id.length - 4,
-                        )
-                      })`}
-                    </Text>
+                </Text>
+              </TouchableOpacity>
+            )}
+          {this.props.pendingBalance.isEqualTo(0) &&
+            this.props.activeCoin.proto === ERC20 && (
+              <TouchableOpacity
+                onPress={() =>
+                  this.openTokenAddressExplorer(
+                    this.props.activeCoin.currency_id,
+                    this.props.activeCoin.testnet,
+                  )
+                }>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: '300',
+                    color: Colors.secondaryColor,
+                    paddingTop: 4,
+                  }}>
+                  <Text style={{color: Colors.secondaryColor}}>
+                    {`${
+                      this.props.activeCoin.unlisted ? 'unlisted ' : ''
+                    }ERC20 token (${
+                      this.props.activeCoin.currency_id.substring(0, 5) +
+                      '...' +
+                      this.props.activeCoin.currency_id.substring(
+                        this.props.activeCoin.currency_id.length - 4,
+                      )
+                    })`}
                   </Text>
-                </TouchableOpacity>
-              )
-          }
+                </Text>
+              </TouchableOpacity>
+            )}
         </View>
         <View
           style={{
-            flexDirection: 'row',
+            flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'flex-end',
             paddingBottom: 16,
             backgroundColor: Colors.primaryColor,
           }}>
-          {this.state.loadingCarouselItems ? null : this.state.carouselItems.length == 1 ? (
+          {this.state.loadingCarouselItems ? null : this.state.carouselItems
+              .length == 1 ? (
             this._renderCarouselItem({
               item: this.state.carouselItems[0],
               index: 0,
@@ -466,6 +514,7 @@ class DynamicHeader extends Component {
 
 const mapStateToProps = state => {
   const chainTicker = state.coins.activeCoin.id;
+  const showBalance = state.coins.showBalance;
   const balances = extractLedgerData(
     state,
     'balances',
@@ -475,6 +524,7 @@ const mapStateToProps = state => {
 
   return {
     chainTicker,
+    showBalance,
     displayTicker: state.coins.activeCoin.display_ticker,
     activeCoin: state.coins.activeCoin,
     selectedSubWallet: state.coinMenus.activeSubWallets[chainTicker],
