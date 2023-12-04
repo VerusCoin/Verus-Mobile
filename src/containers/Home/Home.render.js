@@ -28,7 +28,7 @@ import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 import NotificationWidget from './HomeWidgets/NotificationWidget';
 
 export const HomeRender = function () {
-  const dragDetection = this.dragDetectionEnabled()
+  const dragDetection = this.dragDetectionEnabled();
 
   return (
     <Portal.Host>
@@ -107,7 +107,7 @@ export const HomeRenderWidget = function (widgetId) {
           <VerusIdWidget />
         </Provider>
       );
-    }
+    },
   };
 
   return renderers[widgetType] ? renderers[widgetType]() : <View />;
@@ -115,7 +115,7 @@ export const HomeRenderWidget = function (widgetId) {
 
 export const HomeRenderCoinsList = function () {
   const {widgets} = this.state;
-  const dragDetection = this.dragDetectionEnabled()
+  const dragDetection = this.dragDetectionEnabled();
 
   return widgets.length == 0 ? (
     <View />
@@ -125,7 +125,7 @@ export const HomeRenderCoinsList = function () {
         height: '100%',
         backgroundColor: 'white',
         width: '100%',
-        overflow: 'visible'
+        overflow: 'visible',
       }}>
       <NotificationWidget props={this.props}/>
       <SortableContainer customconfig={{}}>
@@ -158,7 +158,7 @@ export const HomeRenderCoinsList = function () {
                 style={{
                   justifyContent: 'center',
                   alignItems: 'center',
-                  overflow: 'visible'
+                  overflow: 'visible',
                 }}>
                 {HomeRenderWidget.call(this, widgetId)}
               </View>
