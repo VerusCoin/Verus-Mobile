@@ -157,6 +157,30 @@ export const checkVerusIdNotificationsForUpdates = async () => {
     for (const iaddress of details) {
 
       if(pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_READY) continue;
+
+      if ((pendingIds[ticker][iaddress].created_at + 600) < Math.floor(Date.now() / 1000)) {
+        // If the request is older than 10 minutes, check info endpoint to see if it was accepted or rejected
+        try {
+          if (pendingIds[ticker][iaddress].info_uri) {
+            const account = await fetch(`${pendingIds[ticker][iaddress].info_uri}/${pendingIds[ticker][iaddress].decision_id}`)
+            const data = await account.json();
+           if (data.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
+              pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_ERROR;
+              pendingIds[ticker][iaddress].error_desc = data.result.error_desc;
+              await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
+              await updateVerusIdNotifications();
+            }
+          }
+        } catch (e) {
+              pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_ERROR;
+              pendingIds[ticker][iaddress].error_desc = "Server not responding, please try again later"
+              await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
+              await updateVerusIdNotifications();
+        } finally {
+          continue;
+        }
+      }
+
       const identity = await getIdentity(system.system_id, iaddress);
 
       if (identity.result &&

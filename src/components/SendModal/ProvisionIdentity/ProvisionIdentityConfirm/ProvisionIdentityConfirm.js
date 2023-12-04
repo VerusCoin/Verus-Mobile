@@ -140,7 +140,10 @@ class ProvisionIdentityConfirm extends Component {
         status: NOTIFICATION_TYPE_VERUSID_PENDING,
         fqn: confirmedProvisionedID.decision.result.fully_qualified_name,
         loginRequest: loginRequest.toBuffer().toString('base64'),
-        redirect: this.props.sendModal.data.redirect
+        redirect: this.props.sendModal.data.redirect,
+        createdAt: Number((Date.now() / 1000).toFixed(0)),
+        info_uri: confirmedProvisionedID.decision.result.info_uri,
+        decision_id: confirmedProvisionedID.decision.decision_id
       }
 
       await setRequestedVerusId(confirmedProvisionedID.decision.result.identity_address, notification, coinObj.id);
