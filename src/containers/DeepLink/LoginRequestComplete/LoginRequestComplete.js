@@ -11,7 +11,6 @@ import {CommonActions} from '@react-navigation/native';
 import Colors from '../../../globals/colors';
 import {URL} from 'react-native-url-polyfill';
 import AnimatedActivityIndicator from '../../../components/AnimatedActivityIndicator';
-import { VALU_SERVICE_ID } from "../../../utils/constants/services";
 import { useSelector } from 'react-redux';
 
 const LoginRequestComplete = props => {
