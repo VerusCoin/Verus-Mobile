@@ -222,7 +222,6 @@ android {
         all {
             exclude group: 'org.json', module: 'json'
             exclude group: 'org.powermock', module: 'powermock-classloading-xstream'
-           // exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
         }
     }
 
@@ -291,7 +290,6 @@ android {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     //noinspection GradleDynamicVersion
-  //  implementation project(':react-native-plaid-link-sdk') 
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
     implementation "com.facebook.react:react-native:+"  // From node_modules
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {

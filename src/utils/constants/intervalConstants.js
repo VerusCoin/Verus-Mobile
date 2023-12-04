@@ -71,7 +71,6 @@ export const IS_FIAT = 'is_fiat'
 // API channel types
 export const DLIGHT_PRIVATE = 'dlight_private'
 export const WYRE_SERVICE = 'wyre_service'
-export const VALU_SERVICE = 'valu_service'
 export const ELECTRUM = 'electrum'
 export const GENERAL = 'general'
 export const ETH = 'eth'
@@ -87,7 +86,6 @@ export const CHANNELS = [
   WYRE_SERVICE,
   VERUSID,
   VRPC,
-  VALU_SERVICE,
 ];
 export const DEFAULT_INTERVAL_CHANNELS = [
   DLIGHT_PRIVATE,
@@ -97,7 +95,6 @@ export const DEFAULT_INTERVAL_CHANNELS = [
   ERC20,
   WYRE_SERVICE,
   VERUSID,
-  VALU_SERVICE,
 ];
 export const CHANNELS_OBJECT_TEMPLATE = Object.freeze(arrayToObject(CHANNELS, {}))
 export const CHANNELS_NULL_TEMPLATE = Object.freeze(arrayToObject(CHANNELS, null))

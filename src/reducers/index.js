@@ -24,7 +24,6 @@ import { channelStore_verusid } from './channelStores/verusid';
 import { channelStore_electrum } from './channelStores/electrum';
 import { channelStore_general } from './channelStores/general';
 import { channelStore_wyre_service } from './channelStores/wyre';
-import { channelStore_valu_service } from './channelStores/valu';
 import { alert } from './alert'
 import { modal } from './modal'
 import { notifications } from './notifications'
@@ -60,7 +59,6 @@ export default combineReducers({
   channelStore_general,
   channelStore_wyre_service,
   channelStore_verusid,
-  channelStore_valu_service,
   ethtxreceipts,
   coinMenus,
   alert,

@@ -15,7 +15,6 @@ import Sell from './sell.png';
 import Calendar from './calendar.png';
 import Verus from './Verus.png';
 import BankBuildingBlack from './bankBuildingBlack.png';
-import ValuLogo from './ValuBrand.png'
 
 import TransactionLogos from './transactions/index'
 
@@ -68,7 +67,6 @@ export {
   TwentyFourWordIcon,
   EnterKeyIcon,
   ScanQrIcon,
-  ValuLogo,
   ReceivedIcon,
   VerusIdAtIcon
 };

@@ -7,12 +7,12 @@ import {
 } from '../seedCrypt'
 
 import { hashAccountId } from "../crypto/hash";
-import { CHANNELS_NULL_TEMPLATE, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE, VALU_SERVICE } from "../constants/intervalConstants";
+import { CHANNELS_NULL_TEMPLATE, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from "../constants/intervalConstants";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import store from '../../store';
 import { setAccounts } from '../../actions/actionCreators';
 import { USER_DATA_STORAGE_INTERNAL_KEY } from '../../../env/index';
-import { WYRE_SERVICE_ID, VALU_SERVICE_ID } from '../constants/services';
+import { WYRE_SERVICE_ID } from '../constants/services';
 
 //Set storage to hold encrypted user data
 export const storeUser = (authData, users) => {
@@ -146,24 +146,21 @@ export const resetUserPwd = (userID, newPwd, oldPwd) => {
 
           if (userIndex > -1) {
             const _oldEncryptedKeys = _users[userIndex].encryptedKeys
-            const { dlight_private, electrum, wyre_service, valu_service } = _oldEncryptedKeys
+            const { dlight_private, electrum, wyre_service } = _oldEncryptedKeys
 
             const _decryptedElectrum = electrum != null ? decryptkey(oldPwd, _oldEncryptedKeys.electrum) : null
             const _decryptedDlight = dlight_private != null ? decryptkey(oldPwd, _oldEncryptedKeys.dlight_private) : null
             const _decryptedWyre = wyre_service != null ? decryptkey(oldPwd, _oldEncryptedKeys.wyre_service) : null
-            const _decryptedValu = valu_service != null ? decryptkey(oldPwd, _oldEncryptedKeys.valu_service) : null
 
             if ((electrum == null || _decryptedElectrum) && (dlight_private == null || _decryptedDlight)) {
               const _newElectrumKey = electrum ? await encryptkey(newPwd, _decryptedElectrum) : null
               const _newDlightKey = dlight_private ? await encryptkey(newPwd, _decryptedDlight) : null
               const _newWyreKey = wyre_service ? await encryptkey(newPwd, _decryptedWyre) : null
-              const _newValuKey = valu_service ? await encryptkey(newPwd, _decryptedValu) : null
 
               _users[userIndex].encryptedKeys = {
                 [ELECTRUM]: _newElectrumKey,
                 [DLIGHT_PRIVATE]: _newDlightKey,
-                [WYRE_SERVICE]: _newWyreKey,
-                [VALU_SERVICE]: _newValuKey,
+                [WYRE_SERVICE]: _newWyreKey
               }
               
               let _toStore = {users: _users}
@@ -307,19 +304,17 @@ export const checkPinForUser = (pin, userName, alertOnFail = true) => {
           let user = users.users.find(n => n.id === userName);
 
           if (user) {
-            const { electrum, dlight_private, wyre_service, valu_service } = user.encryptedKeys
+            const { electrum, dlight_private, wyre_service } = user.encryptedKeys
             const _decryptedSeeds = {
               [ELECTRUM]: electrum != null ? decryptkey(pin, electrum) : null,
               [DLIGHT_PRIVATE]: dlight_private != null ? decryptkey(pin, dlight_private) : null,
               [WYRE_SERVICE]: wyre_service != null ? decryptkey(pin, wyre_service) : null,
-              [VALU_SERVICE]: valu_service != null ? decryptkey(pin, valu_service) : null,
             }
 
             if (
               (electrum == null || _decryptedSeeds.electrum) &&
               (dlight_private == null || _decryptedSeeds.dlight_private) &&
-              (wyre_service == null || _decryptedSeeds.wyre_service) &&
-              (valu_service == null || _decryptedSeeds.valu_service)
+              (wyre_service == null || _decryptedSeeds.wyre_service)
             ) {
               for (const channel in _decryptedSeeds) {
                 if (_decryptedSeeds[channel]) {

@@ -3282,7 +3282,7 @@ bl@^4.1.0:
     inherits "^2.0.4"
     readable-stream "^3.4.0"
 
-blake2b-wasm@^2.4.0, "blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b", "blake2b-wasm@https://github.com/michaeltout/blake2b-wasm/":
+"blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b", "blake2b-wasm@https://github.com/michaeltout/blake2b-wasm/":
   version "2.0.0"
   resolved "https://github.com/michaeltout/blake2b-wasm/#a16070b30bb8d8aee670f0c69b642913eca79998"
   dependencies:
@@ -3294,13 +3294,6 @@ blake2b-wasm@^2.4.0, "blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb7
   dependencies:
     blake2b-wasm "https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b"
     nanoassert "^1.0.0"
-
-"blake2b@https://github.com/VerusCoin/blake2b":
-  version "2.1.4"
-  resolved "https://github.com/VerusCoin/blake2b#578dc12b7b68a3ce76d1e1add1402b28a5890a6b"
-  dependencies:
-    blake2b-wasm "^2.4.0"
-    nanoassert "^2.0.0"
 
 bn.js@5.2.1, bn.js@^5.0.0, bn.js@^5.2.0, bn.js@^5.2.1:
   version "5.2.1"
@@ -9672,14 +9665,6 @@ react-native@0.64.0, react-native@0.68.5:
     whatwg-fetch "^3.0.0"
     ws "^6.1.4"
 
-react-plaid-link@^3.5.1:
-  version "3.5.1"
-  resolved "https://registry.yarnpkg.com/react-plaid-link/-/react-plaid-link-3.5.1.tgz#3807fb53cde67c7e0ecc62640c6716ea951e9685"
-  integrity sha512-OSbPVEIQY3RDroDGyimRh9vUpZfSVzKVCwrbGOSIjcmluHnPKTkvJ1BnYbvE7kH+v8urJXMHloV43uMTNY3SLg==
-  dependencies:
-    prop-types "^15.7.2"
-    react-script-hook "^1.6.0"
-
 react-redux@8.0.2:
   version "8.0.2"
   resolved "https://registry.yarnpkg.com/react-redux/-/react-redux-8.0.2.tgz#bc2a304bb21e79c6808e3e47c50fe1caf62f7aad"
@@ -9696,11 +9681,6 @@ react-refresh@^0.4.0:
   version "0.4.3"
   resolved "https://registry.yarnpkg.com/react-refresh/-/react-refresh-0.4.3.tgz#966f1750c191672e76e16c2efa569150cc73ab53"
   integrity sha512-Hwln1VNuGl/6bVwnd0Xdn1e84gT/8T9aYNL+HAKDArLCS7LWjwr7StE30IEYbIkx0Vi3vs+coQxe+SQDbGbbpA==
-
-react-script-hook@^1.6.0:
-  version "1.7.2"
-  resolved "https://registry.yarnpkg.com/react-script-hook/-/react-script-hook-1.7.2.tgz#ec130d67f9a25fcde57fbfd1faa87e5b97521948"
-  integrity sha512-fhyCEfXb94fag34UPRF0zry1XGwmVY+79iibWwTqAoOiCzYJQOYTiWJ7CnqglA9tMSV8g45cQpHCMcBwr7dwhA==
 
 react-shallow-renderer@16.14.1:
   version "16.14.1"
@@ -10282,11 +10262,6 @@ secp256k1@^3.0.1:
     elliptic "^6.5.2"
     nan "^2.14.0"
     safe-buffer "^5.1.2"
-
-semaphore-async-await@^1.5.1:
-  version "1.5.1"
-  resolved "https://registry.yarnpkg.com/semaphore-async-await/-/semaphore-async-await-1.5.1.tgz#857bef5e3644601ca4b9570b87e9df5ca12974fa"
-  integrity sha512-b/ptP11hETwYWpeilHXXQiV5UJNJl7ZWWooKRE5eBIYWoom6dZ0SluCIdCtKycsMtZgKWE01/qAw6jblw1YVhg==
 
 "semver@2 || 3 || 4 || 5", semver@6.3.0, semver@^5.0.1, semver@^5.4.1, semver@^5.5.0, semver@^5.6.0, semver@^6.0.0, semver@^6.1.1, semver@^6.1.2, semver@^6.3.0, semver@^7.1.1, semver@^7.2.1, semver@^7.3.2, semver@^7.3.4, semver@^7.3.5:
   version "6.3.0"
@@ -11549,16 +11524,14 @@ version_compare@0.0.3:
     bignumber.js "^9.0.0"
     verus-zkedid-utils "https://github.com/michaeltout/verus-zkedid-utils#dev"
 
-verus-typescript-primitives@../verus-typescript-primitives, "verus-typescript-primitives@file:../verus-typescript-primitives", "verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git":
+"verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git":
   version "1.0.0"
+  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#17f64fa1d152f5b23e3e8ec12b7f8206d382d0c1"
   dependencies:
     base64url "3.0.1"
-    bech32 "^1.1.3"
-    blake2b "https://github.com/VerusCoin/blake2b"
     bn.js "5.2.1"
     bs58check "https://github.com/bitcoinjs/bs58check"
     create-hash "1.2.0"
-    semaphore-async-await "^1.5.1"
 
 "verus-zkedid-utils@git+https://github.com/michaeltout/verus-zkedid-utils.git":
   version "1.0.0"
@@ -11568,12 +11541,6 @@ verus-typescript-primitives@../verus-typescript-primitives, "verus-typescript-pr
   version "1.0.0"
   resolved "https://github.com/michaeltout/verus-zkedid-utils#f9a97d448a0b460794132bea9789e278a0084a62"
 
-"verusd-rpc-ts-client@file:../verusd-rpc-ts-client", "verusd-rpc-ts-client@https://github.com/VerusCoin/verusd-rpc-ts-client.git":
-  version "0.1.0"
-  dependencies:
-    axios "0.27.2"
-    verus-typescript-primitives "../verus-typescript-primitives"
-
 "verusd-rpc-ts-client@git+https://github.com/VerusCoin/verusd-rpc-ts-client.git":
   version "0.1.0"
   resolved "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git#615002f1b39e7c989e40188d4483ef0cce4e7bfe"
@@ -11581,14 +11548,12 @@ verus-typescript-primitives@../verus-typescript-primitives, "verus-typescript-pr
     axios "0.27.2"
     verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git"
 
-"verusid-ts-client@file:../verusid-ts-client":
+"verusd-rpc-ts-client@https://github.com/VerusCoin/verusd-rpc-ts-client.git":
   version "0.1.0"
+  resolved "https://github.com/VerusCoin/verusd-rpc-ts-client.git#f7fa9b3d8c8a51175a9395d82b11ca375db3f9c4"
   dependencies:
-    "@bitgo/utxo-lib" "https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337"
     axios "0.27.2"
-    bignumber.js "9.1.0"
-    verus-typescript-primitives "file:../verus-typescript-primitives"
-    verusd-rpc-ts-client "file:../verusd-rpc-ts-client"
+    verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git"
 
 "verusid-ts-client@git+https://github.com/VerusCoin/verusid-ts-client.git":
   version "0.1.0"
