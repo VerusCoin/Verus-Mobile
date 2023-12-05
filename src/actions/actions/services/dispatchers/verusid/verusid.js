@@ -8,7 +8,7 @@ import { getInfo } from "../../../../../utils/api/channels/vrpc/requests/getInfo
 import { getIdentity } from "../../../../../utils/api/channels/verusid/callCreators";
 import { primitives } from 'verusid-ts-client';
 import { NOTIFICATION_TYPE_VERUSID_READY } from '../../../../../utils/constants/notifications';
-import { updateVerusIdNotifications } from "../../../channels/verusid/dispatchers/VerusidWalletReduxManager"
+import { updatePendingVerusIds } from "../../../channels/verusid/dispatchers/VerusidWalletReduxManager"
 
 export const linkVerusId = async (iAddress, fqn, chain) => {
   const state = store.getState();
@@ -168,14 +168,14 @@ export const checkVerusIdNotificationsForUpdates = async () => {
               pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_ERROR;
               pendingIds[ticker][iaddress].error_desc = data.result.error_desc;
               await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
-              await updateVerusIdNotifications();
+              await updatePendingVerusIds();
             }
           }
         } catch (e) {
               pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_ERROR;
               pendingIds[ticker][iaddress].error_desc = "Server not responding, please try again later"
               await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
-              await updateVerusIdNotifications();
+              await updatePendingVerusIds();
         } finally {
           continue;
         }
@@ -191,7 +191,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
 
         await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
         await linkVerusId(iaddress, identity.result.fullyqualifiedname, ticker);
-        await updateVerusIdNotifications();
+        await updatePendingVerusIds();
       }
     }
   }

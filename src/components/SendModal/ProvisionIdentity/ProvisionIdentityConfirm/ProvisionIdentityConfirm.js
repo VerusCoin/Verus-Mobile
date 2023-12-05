@@ -18,7 +18,7 @@ import axios from "axios";
 import { handleProvisioningResponse } from '../../../../utils/api/channels/vrpc/requests/handleProvisioningResponse';
 import { verifyIdProvisioningResponse } from "../../../../utils/api/channels/vrpc/requests/verifyIdProvisioningResponse";
 import {NOTIFICATION_TYPE_VERUSID_PENDING} from '../../../../utils/constants/notifications';
-import { updateVerusIdNotifications } from "../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager"
+import { updatePendingVerusIds } from "../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager"
 
 class ProvisionIdentityConfirm extends Component {
   constructor(props) {
@@ -147,7 +147,7 @@ class ProvisionIdentityConfirm extends Component {
       }
 
       await setRequestedVerusId(confirmedProvisionedID.decision.result.identity_address, notification, coinObj.id);
-      await updateVerusIdNotifications();
+      await updatePendingVerusIds();
    
       clearChainLifecycle(coinObj.id);
       const setUserCoinsAction = setUserCoins(

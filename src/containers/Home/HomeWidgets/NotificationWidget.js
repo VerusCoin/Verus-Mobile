@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import Colors from '../../../globals/colors';
 import { NOTIFICATION_TYPE_VERUSID_READY, NOTIFICATION_MESSAGES } from '../../../utils/constants/notifications';
 import { deleteProvisionedIds, deleteAllProvisionedIds } from '../../../actions/actions/services/dispatchers/verusid/verusid';
-import { updateVerusIdNotifications } from "../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager"
+import { updatePendingVerusIds } from "../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager"
 import { VerusIdAtIcon, ReceivedIcon } from "../../../images/customIcons";
 import { tryProcessVerusIdSignIn } from '../../Services/ServiceComponents/VerusIdService/VerusIdLogin';
 
@@ -127,7 +127,7 @@ const NotificationWidget = ( { props } = props) => {
         for (const coinId of Object.keys(pendingIds)) {
             if (pendingIds[coinId][iaddress]) {
                 await deleteProvisionedIds(iaddress, coinId);
-                await updateVerusIdNotifications();
+                await updatePendingVerusIds();
                 break;
             }
         }
@@ -135,7 +135,7 @@ const NotificationWidget = ( { props } = props) => {
 
     const removeAllNotification = async () => {
         await deleteAllProvisionedIds();
-        await updateVerusIdNotifications();
+        await updatePendingVerusIds();
         setCollapsed(false);
     }
 

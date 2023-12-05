@@ -3,7 +3,7 @@ import {
   SIGN_OUT_COMPLETE,
   SET_WATCHED_VERUSIDS,
   INIT_VERUSID_CHANNEL_FINISH,
-  SET_VERUSID_NOTIFICATIONS
+  SET_PENDING_VERUSIDS
 } from '../../utils/constants/storeType'
 
 export const channelStore_verusid = (state = {
@@ -40,7 +40,7 @@ export const channelStore_verusid = (state = {
         ...state,
         watchedVerusIds: action.payload.watchedVerusIds
       }
-    case SET_VERUSID_NOTIFICATIONS:
+    case SET_PENDING_VERUSIDS:
       return {
         ...state,
         pendingIds: action.payload.pendingIds

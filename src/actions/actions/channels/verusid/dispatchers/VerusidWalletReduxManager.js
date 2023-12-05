@@ -5,7 +5,7 @@ import {
   INIT_VERUSID_CHANNEL_START,
   CLOSE_VERUSID_CHANNEL,
   SET_WATCHED_VERUSIDS,
-  SET_VERUSID_NOTIFICATIONS,
+  SET_PENDING_VERUSIDS,
 } from "../../../../../utils/constants/storeType";
 
 export const initVerusIdWallet = async (coinObj) => {
@@ -52,10 +52,10 @@ export const closeVerusIdWallet = async (coinObj) => {
   return
 }
 
-export const updateVerusIdNotifications = async () => {
+export const updatePendingVerusIds = async () => {
   const verusidServiceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
   Store.dispatch({
-    type: SET_VERUSID_NOTIFICATIONS,
+    type: SET_PENDING_VERUSIDS,
     payload: {
       pendingIds: verusidServiceData.pending_ids
         ? verusidServiceData.pending_ids
