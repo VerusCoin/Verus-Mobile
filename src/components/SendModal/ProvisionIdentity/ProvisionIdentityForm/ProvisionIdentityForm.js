@@ -97,13 +97,9 @@ const ProvisionIdentityForm = (props) => {
                 if (provIdKey != null && idKey.data === provIdKey.data) {
                   assignedIdentity = identity.result.identity.identityaddress;
                 }
-                if (idKey.vdxfkey == primitives.ID_PARENT_VDXF_KEY.vdxfid &&
-                  idKey.data != sendModal.coinObj.system_id) {
-                   parentname = `.${identity.result.identity.name}.${sendModal.coinObj.display_ticker}@`
-                } else if (idKey.vdxfkey == primitives.ID_PARENT_VDXF_KEY.vdxfid &&
-                 idKey.data === sendModal.coinObj.system_id) {
-                   parentname = `.${sendModal.coinObj.display_ticker}@`
-                }
+                if (idKey.vdxfkey == primitives.ID_PARENT_VDXF_KEY.vdxfid) {
+                   parentname = `.${identity.result.identity.fullyqualifiedname}@`
+                } 
               }
             }
           }

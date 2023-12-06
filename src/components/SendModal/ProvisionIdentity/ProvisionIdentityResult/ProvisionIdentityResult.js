@@ -14,10 +14,13 @@ class ProvisionIdentityResult extends Component {
   }
 
   async finishSend() {
-    await this.props.updateSendFormData(
-      "success",
-      true,
-    );
+    //if the ID is pending approval, we don't want to close the modal
+    if (this.state.response.decision.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_PENDINGAPPROVAL.vdxfid) {
+      await this.props.updateSendFormData(
+        "success",
+        true,
+      );
+    }
     closeSendModal();
   }
 

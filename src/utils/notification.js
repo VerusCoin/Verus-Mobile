@@ -14,6 +14,7 @@ export class Notification {
     this.type = type;
     this.uid = uid == null ? getUid() : uid
     this.acchash = acchash
+    this.icon = null
   }
 
   static fromJson(json) {
@@ -86,6 +87,16 @@ export class DeeplinkNotification extends Notification {
   }
 
   onAction() {
-    return this.reopen()
+    return this.reopen(this.uri)
+  }
+
+  toJson() {
+    return {
+      body: this.body,
+      title: this.title,
+      type: this.type,
+      uid: this.uid,
+      uri: this.uri
+    };
   }
 }

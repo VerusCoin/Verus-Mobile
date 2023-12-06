@@ -25,7 +25,7 @@ const LoginRequestIdentity = props => {
   const req = new primitives.LoginConsentRequest(deeplinkData)
   const encryptedIds = useSelector(state => state.services.stored[VERUSID_SERVICE_ID])
   const sendModal = useSelector((state) => state.sendModal);
-  const reDirect = useSelector((state) => state.deeplink.redirect);
+  const fromService = useSelector((state) => state.deeplink.fromService);
 
   const canProvision = req.challenge.provisioning_info && req.challenge.provisioning_info.some(x => {
     return (
@@ -120,7 +120,7 @@ const LoginRequestIdentity = props => {
   }
 
   const openProvisionIdentityModalFromChain = () => {
-    openProvisionIdentityModal(CoinDirectory.findCoinObj(system_id, null, true), req, reDirect)
+    openProvisionIdentityModal(CoinDirectory.findCoinObj(system_id, null, true), req, fromService)
   }
 
   const selectIdentity = async (iAddress) => {

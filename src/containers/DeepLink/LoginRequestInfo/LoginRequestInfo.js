@@ -35,7 +35,7 @@ const LoginRequestInfo = props => {
   const { system_id, signing_id, challenge } = req
   const chain_id = getSystemNameFromSystemId(system_id)
 
-  const loginType = ["Login", "accept an agreement", "reveal identity information", "accept an agreement and reveal identity information"];
+  const loginType = ["Login", "Login and accept an agreement", "Login and reveal identity information", "Login, accept an agreement and reveal identity information"];
 
   const getVerusId = async (chain, iAddrOrName) => {
     const identity = await getIdentity(CoinDirectory.getBasicCoinObj(chain).system_id, iAddrOrName);
@@ -127,15 +127,7 @@ const LoginRequestInfo = props => {
             tempMethod = tempMethod | 1;
             tempdata = { data: req.challenge.requested_access[i].toJson().data, title: "Agreement to accept" }
           }
-          // if (req.challenge.requested_access[i].vdxfkey === primitives.ATTESTATION_READ_REQUEST.vdxfid) {
-          //   tempMethod = tempMethod | 2;
-          //   var prefix = "Agree to share your: \n";
-          //   for (const items of req.challenge.requested_access[i].toJson().data.attestation_keys) {
-          //     if (ATTESTATION_IDENTITYDATA[items] !== undefined)
-          //       prefix = prefix + ATTESTATION_IDENTITYDATA[items].detail + "\n"
-          //   }
-          //   tempdata = { data: prefix, title: "Identity Data Request" }
-          // }
+          // TODO: Add support for identity data
           loginTemp.push({ vdxfkey: req.challenge.requested_access[i].vdxfkey, ...tempdata, agreed: false })
 
         }

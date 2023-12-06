@@ -8,7 +8,7 @@ import {
       url: null,
       data: {},
       id: null,
-      redirect: null
+      fromService: null
     },
     action
   ) => {
@@ -23,7 +23,7 @@ import {
           ...state,
           id: action.payload.id,
           data: action.payload.data,
-          redirect: action.payload.redirect || null
+          fromService: action.payload.fromService || null
         }
       default:
         return state;

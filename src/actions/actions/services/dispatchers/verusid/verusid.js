@@ -1,4 +1,5 @@
 import store from '../../../../../store';
+import axios from "axios";
 import { requestServiceStoredData } from '../../../../../utils/auth/authBox';
 import { VERUSID_SERVICE_ID } from '../../../../../utils/constants/services';
 import { modifyServiceStoredDataForUser } from '../services';
@@ -9,6 +10,8 @@ import { getIdentity } from "../../../../../utils/api/channels/verusid/callCreat
 import { primitives } from 'verusid-ts-client';
 import { NOTIFICATION_TYPE_VERUSID_READY } from '../../../../../utils/constants/notifications';
 import { updatePendingVerusIds } from "../../../channels/verusid/dispatchers/VerusidWalletReduxManager"
+import { dispatchAddNotification } from '../../../notifications/dispatchers/notifications';
+import { DeeplinkNotification, BasicNotification } from '../../../../../utils/notification';
 
 export const linkVerusId = async (iAddress, fqn, chain) => {
   const state = store.getState();
@@ -162,9 +165,8 @@ export const checkVerusIdNotificationsForUpdates = async () => {
         // If the request is older than 10 minutes, check info endpoint to see if it was accepted or rejected
         try {
           if (pendingIds[ticker][iaddress].info_uri) {
-            const account = await fetch(`${pendingIds[ticker][iaddress].info_uri}/${pendingIds[ticker][iaddress].decision_id}`)
-            const data = await account.json();
-           if (data.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
+            const response = await axios.get(pendingIds[ticker][iaddress].info_uri);
+           if (response.data.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
               pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_ERROR;
               pendingIds[ticker][iaddress].error_desc = data.result.error_desc;
               await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
@@ -177,6 +179,13 @@ export const checkVerusIdNotificationsForUpdates = async () => {
               await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
               await updatePendingVerusIds();
         } finally {
+          const newDeepLinkNotification = new BasicNotification (
+            pendingIds[ticker][iaddress].error_desc,
+            "Error",
+            null,
+            state.authentication.activeAccount.accountHash
+          );   
+          await dispatchAddNotification(newDeepLinkNotification);
           continue;
         }
       }
@@ -192,6 +201,17 @@ export const checkVerusIdNotificationsForUpdates = async () => {
         await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
         await linkVerusId(iaddress, identity.result.fullyqualifiedname, ticker);
         await updatePendingVerusIds();
+
+        const newDeepLinkNotification = new DeeplinkNotification (
+          "login",
+          [`${identity.result.fullyqualifiedname.split(".")[0]}@`, ` is ready`],
+          null,
+          null,
+          pendingIds[ticker][iaddress].loginRequest,
+          state.authentication.activeAccount.accountHash
+        ); 
+
+        await dispatchAddNotification(newDeepLinkNotification);
       }
     }
   }

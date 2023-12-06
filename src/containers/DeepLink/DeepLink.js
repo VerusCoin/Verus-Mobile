@@ -24,7 +24,7 @@ const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
   const deeplinkData = useSelector((state) => state.deeplink.data)
   const signedIn = useSelector((state) => state.authentication.signedIn)
-  const reDirect = useSelector((state) => state.deeplink.redirect)
+  const fromService = useSelector((state) => state.deeplink.fromService)
   const [displayKey, setDisplayKey] = useState(null)
   const [loading, setLoading] = useState(false)
   const [displayProps, setDisplayProps] = useState({})
@@ -33,7 +33,7 @@ const DeepLink = (props) => {
   const cancel = () => {
     let resetAction
 
-    if (signedIn && reDirect) {
+    if (signedIn && fromService) {
       resetAction = NavigationActions.back();
     } 
     else if (signedIn) {

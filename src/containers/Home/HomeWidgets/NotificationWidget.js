@@ -3,12 +3,16 @@ import { View, Dimensions, TouchableOpacity, Alert, Text } from 'react-native';
 import { Card, Paragraph, Button, IconButton } from 'react-native-paper';
 import { useSelector } from 'react-redux';
 import Colors from '../../../globals/colors';
-import { NOTIFICATION_TYPE_VERUSID_READY, NOTIFICATION_MESSAGES } from '../../../utils/constants/notifications';
-import { deleteProvisionedIds, deleteAllProvisionedIds } from '../../../actions/actions/services/dispatchers/verusid/verusid';
-import { updatePendingVerusIds } from "../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager"
+import {
+    NOTIFICATION_TYPE_BASIC,
+    NOTIFICATION_TYPE_DEEPLINK,
+    NOTIFICATION_TYPE_LOADING,
+    NOTIFICATION_TYPE_NAVIGATION,
+  } from '../../../utils/constants/notifications';
 import { VerusIdAtIcon, ReceivedIcon } from "../../../images/customIcons";
-import { tryProcessVerusIdSignIn } from '../../Services/ServiceComponents/VerusIdService/VerusIdLogin';
-
+import { DeeplinkNotification, BasicNotification } from '../../../utils/notification';
+import { tryProcessVerusIdSignIn } from '../../../containers/Services/ServiceComponents/VerusIdService/VerusIdLogin';
+import { dispatchRemoveNotification, dispatchClearNotifications } from '../../../actions/actions/notifications/dispatchers/notifications';
 // has the state changed hook
 const useCompare = (val) => {
     const prevVal = usePrevious(val)
@@ -24,7 +28,7 @@ const usePrevious = (value) => {
     return ref.current;
 }
 
-const createNotificationText = (verusIdName, type) => {
+const createNotificationText = (text) => {
 
     return (
         <View
@@ -41,69 +45,30 @@ const createNotificationText = (verusIdName, type) => {
                     alignSelf: 'center',
                 }} />
             <Paragraph style={{ fontSize: 12, color: Colors.primaryColor, fontWeight: 'bold', marginLeft: 10, marginVertical: 5, borderRadius: 1, }}>
-                {`${verusIdName.split('.')[0]}@ `}
+                {typeof(text) === 'object' ? text[0]: ''}
             </Paragraph>
             <Paragraph style={{ fontSize: 12, color: "black", marginVertical: 5, borderRadius: 1, }}>
-                {NOTIFICATION_MESSAGES[type]}
+                {typeof(text) === 'object' ? text[1]: text}
             </Paragraph>
         </View>
     )
 }
 
-const actionType = (type, props, data) => {
-    try {
-        switch (type) {
-            case NOTIFICATION_TYPE_VERUSID_READY:
-                tryProcessVerusIdSignIn(props, data.loginRequest, data.redirect);
-                break;
-            case NOTIFICATION_TYPE_RECEIVED:
-            default:
-                break;
-        }
-    } catch (e) {
-        Alert.alert("Error", e.message);    
-    }
-}
-
-const getVerusIdNotifications = (pendingIds, props) => {
-
-    let tempNotificaions = [];
-    const idKeys = Object.keys(pendingIds);
-    idKeys.forEach((coinId) => {
-
-        const keys = Object.keys(pendingIds[coinId]);
-        for (const key of keys) {
-            if (pendingIds[coinId][key].status === NOTIFICATION_TYPE_VERUSID_READY)
-                   tempNotificaions.push({
-                    title: createNotificationText(pendingIds[coinId][key].fqn, NOTIFICATION_TYPE_VERUSID_READY),
-                    iaddress: key,
-                    coinId: coinId,
-                    actionName: "log in",
-                    action: () => actionType(NOTIFICATION_TYPE_VERUSID_READY, props, pendingIds[coinId][key]),
-                    type: NOTIFICATION_TYPE_VERUSID_READY,
-                });
-        }
-    })
-    return tempNotificaions;
-}
-
 const getCollapedIcon = (type, index) => {
 
     switch (type) {
-        case NOTIFICATION_TYPE_VERUSID_READY:
+        case NOTIFICATION_TYPE_DEEPLINK:
             return (<VerusIdAtIcon
-                key={index}
+                index={index}
                 width={20}
                 height={20}
                 marginLeft={7}
                 style={{
                     alignSelf: 'center',
                 }} />);
-
-        case NOTIFICATION_TYPE_RECEIVED:
         default:
             return (<ReceivedIcon
-                key={index}
+                index={index}
                 width={20}
                 height={20}
                 marginLeft={7}
@@ -111,44 +76,42 @@ const getCollapedIcon = (type, index) => {
                     alignSelf: 'center',
                 }} />);
     }
+}
+
+const getNotifications = (directories) => {
+
+    let tempNotificaions = [];
+    const keys = Object.keys(directories);
+    keys.forEach((uid, index) => {
+
+        if (directories[uid].type === NOTIFICATION_TYPE_DEEPLINK) {
+            const tempDeepLinkNotification = DeeplinkNotification.fromJson(directories[uid], tryProcessVerusIdSignIn);
+            tempDeepLinkNotification.icon = getCollapedIcon(tempDeepLinkNotification.type, index);
+            tempNotificaions.push(tempDeepLinkNotification);
+        }
+    });
+    return tempNotificaions;
 }
 
 const NotificationWidget = ( { props } = props) => {
     const { width } = Dimensions.get('window');
-    const [notifications, setnotifications] = useState([]);
     const [collapsed, setCollapsed] = useState(false);
-    const pendingIds = useSelector(state =>
-        state.channelStore_verusid.pendingIds
+    const [traynotifications, setTrayNotifications] = useState([]);
+    const notifications = useSelector(state =>
+        state.notifications
     );
 
-    const hasItemIdChanged = useCompare(pendingIds);
-
-    const removeNotification = async (iaddress) => {
-        for (const coinId of Object.keys(pendingIds)) {
-            if (pendingIds[coinId][iaddress]) {
-                await deleteProvisionedIds(iaddress, coinId);
-                await updatePendingVerusIds();
-                break;
-            }
-        }
-    }
-
-    const removeAllNotification = async () => {
-        await deleteAllProvisionedIds();
-        await updatePendingVerusIds();
-        setCollapsed(false);
-    }
-
-    // Add more notification types here TODO: Recieved payment notifications.
+    const hasItemIdChanged = useCompare(notifications);
+  
     useEffect(() => {
-        if (pendingIds !== null) {
-            setnotifications(getVerusIdNotifications(pendingIds, props));
+        if (notifications.directory) {
+            setTrayNotifications(getNotifications(notifications.directory, props));
         }
 
     }, [hasItemIdChanged])
 
 
-    if (notifications.length === 0) {
+    if (Object.keys(notifications.directory).length === 0) {
         return (<View />);
     }
 
@@ -203,12 +166,12 @@ const NotificationWidget = ( { props } = props) => {
                                 />
                                 <View style={{ justifyContent: 'center', alignItems: 'center', borderColor: 'white', borderWidth: 1, borderRadius: 15, width: 16, height: 16 }}>
                                     <Text style={{ color: "white", textAlign: 'center', fontSize: 10 }}>
-                                        {notifications.length}
+                                        {traynotifications.length}
                                     </Text>
                                 </View>
                             </View>
-                            {collapsed && notifications.map((notification, index) =>
-                                getCollapedIcon(notification.type, index))}
+                            {collapsed && traynotifications.map((notification) =>
+                                notification.icon)}
                         </View>
                         <View style={{
                             display: 'flex',
@@ -216,7 +179,7 @@ const NotificationWidget = ( { props } = props) => {
 
                         }}>
                             <TouchableOpacity
-                                onPress={() => { removeAllNotification(); }}>
+                                onPress={() => { dispatchClearNotifications(); }}>
                                 {!collapsed && <Paragraph style={{ fontSize: 12, textDecorationLine: 'underline', marginVertical: 17 }}>
                                     clear all
                                 </Paragraph>}
@@ -232,7 +195,7 @@ const NotificationWidget = ( { props } = props) => {
                             </TouchableOpacity>
                         </View>
                     </View>
-                    {!collapsed && notifications.map((notification, index) => {
+                    {!collapsed && traynotifications.map((notification, index) => {
                         return (
                             <View
                                 key={index}
@@ -250,19 +213,19 @@ const NotificationWidget = ( { props } = props) => {
                                         width: width - 30,
                                         alignItems: 'center',
                                     }}>
-                                    {notification.title}
+                                    {createNotificationText(notification.title)}
                                     <View
                                         style={{
                                             display: 'flex',
                                             flexDirection: 'row',
                                             alignItems: 'center',
                                         }}>
-                                        <TouchableOpacity onPress={() => notification.action()}>
+                                        <TouchableOpacity onPress={() => notification.onAction()}>
                                             <Paragraph style={{ fontSize: 12, color: "black", textDecorationLine: 'underline' }}>
-                                                {notification.actionName}
+                                                {notification.body}
                                             </Paragraph>
                                         </TouchableOpacity>
-                                        <TouchableOpacity onPress={() => removeNotification(notification.iaddress)}>
+                                        <TouchableOpacity onPress={() => dispatchRemoveNotification(notification.uid)}>
                                             <IconButton
                                                 icon="close"
                                                 color="grey"

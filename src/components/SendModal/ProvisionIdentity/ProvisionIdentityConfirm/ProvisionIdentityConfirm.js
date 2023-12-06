@@ -19,6 +19,8 @@ import { handleProvisioningResponse } from '../../../../utils/api/channels/vrpc/
 import { verifyIdProvisioningResponse } from "../../../../utils/api/channels/vrpc/requests/verifyIdProvisioningResponse";
 import {NOTIFICATION_TYPE_VERUSID_PENDING} from '../../../../utils/constants/notifications';
 import { updatePendingVerusIds } from "../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager"
+import { dispatchAddNotification } from '../../../../actions/actions/notifications/dispatchers/notifications';
+import { LoadingNotification } from '../../../../utils/notification';
 
 class ProvisionIdentityConfirm extends Component {
   constructor(props) {
@@ -126,38 +128,19 @@ class ProvisionIdentityConfirm extends Component {
         signedRequest
       );
 
-      // store the provisioning request in encrypted memory
-      
-      const verified = await verifyIdProvisioningResponse(coinObj, res.data);
-      if (!verified) throw new Error('Failed to verify response from service');
-      
-      const confirmedProvisionedID = new primitives.LoginConsentProvisioningResponse(res.data)
-     
-      if (confirmedProvisionedID.decision.result.fully_qualified_name.split('.')[0].toLowerCase() !== identityName.split('.')[0].toLowerCase()
-            || confirmedProvisionedID.decision.result.parent !== parent) throw new Error('Response does not match the expected ID request');
-
-      const notification = {
-        status: NOTIFICATION_TYPE_VERUSID_PENDING,
-        fqn: confirmedProvisionedID.decision.result.fully_qualified_name,
-        loginRequest: loginRequest.toBuffer().toString('base64'),
-        redirect: this.props.sendModal.data.redirect,
-        createdAt: Number((Date.now() / 1000).toFixed(0)),
-        info_uri: confirmedProvisionedID.decision.result.info_uri,
-        decision_id: confirmedProvisionedID.decision.decision_id
-      }
-
-      await setRequestedVerusId(confirmedProvisionedID.decision.result.identity_address, notification, coinObj.id);
-      await updatePendingVerusIds();
-   
-      clearChainLifecycle(coinObj.id);
-      const setUserCoinsAction = setUserCoins(
-        this.props.activeCoinList,
-        this.props.activeAccount.id
-      )
-        
-      this.props.dispatch(setUserCoinsAction);
-      refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);  
-      
+      await handleProvisioningResponse(coinObj, res.data, loginRequest.toBuffer().toString('base64'), 
+        this.props.sendModal.data.fromService, async (address, fqn) => {
+          await linkVerusId(address, `${fqn}@`, coinObj.id);
+          await updateVerusIdWallet();
+          clearChainLifecycle(coinObj.id);
+          const setUserCoinsAction = setUserCoins(
+            this.props.activeCoinList,
+            this.props.activeAccount.id
+          )
+          this.props.dispatch(setUserCoinsAction);
+    
+          refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);  
+        })     
       submissionSuccess(res.data)
     } catch (e) {
       submissionError(e.message)
