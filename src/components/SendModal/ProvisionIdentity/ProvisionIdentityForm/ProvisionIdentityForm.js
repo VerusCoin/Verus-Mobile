@@ -98,7 +98,7 @@ const ProvisionIdentityForm = (props) => {
                   assignedIdentity = identity.result.identity.identityaddress;
                 }
                 if (idKey.vdxfkey == primitives.ID_PARENT_VDXF_KEY.vdxfid) {
-                   parentname = `.${identity.result.identity.fullyqualifiedname}@`
+                   parentname = `.${identity.result.fullyqualifiedname}`
                 } 
               }
             }
