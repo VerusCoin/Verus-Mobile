@@ -105,7 +105,7 @@ const NotificationWidget = ( { props } = props) => {
   
     useEffect(() => {
         if (notifications.directory) {
-            setTrayNotifications(getNotifications(notifications.directory, props));
+            setTrayNotifications(getNotifications(notifications.directory));
         }
 
     }, [hasItemIdChanged])
@@ -220,7 +220,7 @@ const NotificationWidget = ( { props } = props) => {
                                             flexDirection: 'row',
                                             alignItems: 'center',
                                         }}>
-                                        <TouchableOpacity onPress={() => notification.onAction()}>
+                                        <TouchableOpacity onPress={() => notification.onAction(props)}>
                                             <Paragraph style={{ fontSize: 12, color: "black", textDecorationLine: 'underline' }}>
                                                 {notification.body}
                                             </Paragraph>
