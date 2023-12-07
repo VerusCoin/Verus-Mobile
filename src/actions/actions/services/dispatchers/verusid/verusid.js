@@ -4,11 +4,10 @@ import { requestServiceStoredData } from '../../../../../utils/auth/authBox';
 import { VERUSID_SERVICE_ID } from '../../../../../utils/constants/services';
 import { modifyServiceStoredDataForUser } from '../services';
 import { coinsList } from '../../../../../utils/CoinData/CoinsList';
-import { getTransaction } from "../../../../../utils/api/channels/vrpc/requests/getTransaction";
-import { getInfo } from "../../../../../utils/api/channels/vrpc/requests/getInfo";
 import { getIdentity } from "../../../../../utils/api/channels/verusid/callCreators";
 import { primitives } from 'verusid-ts-client';
-import { NOTIFICATION_TYPE_VERUSID_READY, NOTIFICATION_TYPE_ERROR } from '../../../../../utils/constants/services';
+import { NOTIFICATION_TYPE_VERUSID_READY } from '../../../../../utils/constants/services';
+import { NOTIFICATION_TYPE_ERROR, NOTIFICATION_ICON_ERROR, NOTIFICATION_ICON_VERUSID } from '../../../../../utils/constants/notifications';
 import { updatePendingVerusIds } from "../../../channels/verusid/dispatchers/VerusidWalletReduxManager"
 import { dispatchAddNotification } from '../../../notifications/dispatchers/notifications';
 import { DeeplinkNotification, BasicNotification } from '../../../../../utils/notification';
@@ -152,14 +151,23 @@ export const checkVerusIdNotificationsForUpdates = async () => {
   const ticker = system.id;
 
   // Itterate through all pending IDs and check for updates
-  const pendingIds = state.channelStore_verusid.pendingIds
+  const pendingIds = state.channelStore_verusid.pendingIds;
+
+  const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+  const currentLinkedIdentities = Object.keys(serviceData?.linked_ids[ticker] || []);
+
 
   if (pendingIds[ticker] !== null) {
 
     const details = Object.keys(pendingIds[ticker]);
     for (const iaddress of details) {
 
-      if(pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_READY) continue;
+      // once an ID is linked, remove it from pending IDs
+      if(pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_READY && 
+         currentLinkedIdentities.indexOf(iaddress) > -1) {
+          await deleteProvisionedIds(iaddress, ticker);
+          continue;
+      }
 
       if ((pendingIds[ticker][iaddress].created_at + 600) < Math.floor(Date.now() / 1000)) {
         // If the request is older than 10 minutes, check info endpoint to see if it was accepted or rejected
@@ -190,6 +198,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
             null,
             state.authentication.activeAccount.accountHash
           );  
+          newDeepLinkNotification.icon = NOTIFICATION_ICON_ERROR;
 
           await dispatchAddNotification(newDeepLinkNotification);
         }
@@ -217,6 +226,8 @@ export const checkVerusIdNotificationsForUpdates = async () => {
           pendingIds[ticker][iaddress].loginRequest,
           state.authentication.activeAccount.accountHash
         ); 
+
+        newDeepLinkNotification.icon = NOTIFICATION_ICON_VERUSID;
 
         await dispatchAddNotification(newDeepLinkNotification);
       }

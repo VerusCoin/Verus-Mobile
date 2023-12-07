@@ -1,6 +1,4 @@
 import { primitives } from "verusid-ts-client"
-import { getIdentity } from "../../verusid/callCreators";
-import { waitForTransactionConfirm } from "./getTransaction";
 import { verifyIdProvisioningResponse } from "./verifyIdProvisioningResponse";
 import { NOTIFICATION_TYPE_VERUSID_PENDING } from '../../../../constants/services';
 import { updatePendingVerusIds } from "../../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager"
@@ -10,7 +8,8 @@ export const handleProvisioningResponse = async (
   coinObj,
   responseJson,
   loginRequestBase64,
-  fromService
+  fromService,
+  setNotification = (fqn, accountHash) => { }
 ) => {
 
   // Verify response signature
@@ -43,9 +42,9 @@ export const handleProvisioningResponse = async (
       createdAt: Number((Date.now() / 1000).toFixed(0)),
       infoUri: result.info_uri
     }
-
     await setRequestedVerusId(result.identity_address, verusIdState, coinObj.id);
     await updatePendingVerusIds();
+    await setNotification(result.fully_qualified_name);
 
   } else {
     throw new Error('Unsupported provisioning response state');

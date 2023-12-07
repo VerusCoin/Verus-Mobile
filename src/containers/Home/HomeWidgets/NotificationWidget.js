@@ -7,10 +7,12 @@ import {
     NOTIFICATION_TYPE_BASIC,
     NOTIFICATION_TYPE_DEEPLINK,
     NOTIFICATION_TYPE_LOADING,
-    NOTIFICATION_TYPE_NAVIGATION,
+    NOTIFICATION_ICON_TX,
+    NOTIFICATION_ICON_VERUSID,
+    NOTIFICATION_ICON_ERROR
   } from '../../../utils/constants/notifications';
 import { VerusIdAtIcon, ReceivedIcon } from "../../../images/customIcons";
-import { DeeplinkNotification, BasicNotification } from '../../../utils/notification';
+import { DeeplinkNotification, BasicNotification, LoadingNotification } from '../../../utils/notification';
 import { tryProcessVerusIdSignIn } from '../../../containers/Services/ServiceComponents/VerusIdService/VerusIdLogin';
 import { dispatchRemoveNotification, dispatchClearNotifications } from '../../../actions/actions/notifications/dispatchers/notifications';
 // has the state changed hook
@@ -28,7 +30,7 @@ const usePrevious = (value) => {
     return ref.current;
 }
 
-const createNotificationText = (text, type, index) => {
+const createNotificationText = (text, icon, index) => {
 
     return (
         <View
@@ -38,7 +40,7 @@ const createNotificationText = (text, type, index) => {
                 width: "60%",
                 alignItems: 'center',
             }}>
-            {getIcon(type, index)}
+            {icon}
             <Paragraph style={{ fontSize: 12, color: Colors.primaryColor, fontWeight: 'bold', marginLeft: 10, marginVertical: 5, borderRadius: 1, }}>
                 {typeof(text) === 'object' ? text[0]: ''}
             </Paragraph>
@@ -52,7 +54,7 @@ const createNotificationText = (text, type, index) => {
 const getIcon = (type, index) => {
 
     switch (type) {
-        case NOTIFICATION_TYPE_DEEPLINK:
+        case NOTIFICATION_ICON_VERUSID:
             return (<VerusIdAtIcon
                 index={index}
                 width={20}
@@ -61,7 +63,7 @@ const getIcon = (type, index) => {
                 style={{
                     alignSelf: 'center',
                 }} />);
-        case NOTIFICATION_TYPE_BASIC:
+        case NOTIFICATION_ICON_TX:
             return (<IconButton
                 icon="alert-circle"
                 color="red"
@@ -70,6 +72,7 @@ const getIcon = (type, index) => {
                 style={{
                     alignSelf: 'center',
                 }} />);
+        case NOTIFICATION_ICON_ERROR:
         default:
             return (<ReceivedIcon
                 index={index}
@@ -86,16 +89,21 @@ const getNotifications = (directories) => {
 
     let tempNotificaions = [];
     const keys = Object.keys(directories);
+    console.log("directores", JSON.stringify(directories, null, 2))
     keys.forEach((uid, index) => {
 
         if (directories[uid].type === NOTIFICATION_TYPE_DEEPLINK) {
             const tempDeepLinkNotification = DeeplinkNotification.fromJson(directories[uid], tryProcessVerusIdSignIn);
-            tempDeepLinkNotification.icon = getIcon(tempDeepLinkNotification.type, index);
+            tempDeepLinkNotification.icon = getIcon(directories[uid].icon, index);
             tempNotificaions.push(tempDeepLinkNotification);
         } else if (directories[uid].type === NOTIFICATION_TYPE_BASIC) {
             const tempBasicNotification = BasicNotification.fromJson(directories[uid]);
-            tempBasicNotification.icon = getIcon(tempBasicNotification.type, index);
+            tempBasicNotification.icon = getIcon(directories[uid].icon, index);
             tempNotificaions.push(tempBasicNotification);
+        } else if (directories[uid].type === NOTIFICATION_TYPE_LOADING) {
+            const tempLoadingNotification = LoadingNotification.fromJson(directories[uid]);
+            tempLoadingNotification.icon = getIcon(directories[uid].icon, index);
+            tempNotificaions.push(tempLoadingNotification);
         }
     });
     return tempNotificaions;
@@ -117,7 +125,6 @@ const NotificationWidget = ( { props } = props) => {
         }
 
     }, [hasItemIdChanged])
-
 
     if (Object.keys(notifications.directory).length === 0) {
         return (<View />);
@@ -221,7 +228,7 @@ const NotificationWidget = ( { props } = props) => {
                                         width: width - 30,
                                         alignItems: 'center',
                                     }}>
-                                    {createNotificationText(notification.title, notification.type, index)}
+                                    {createNotificationText(notification.title, notification.icon, index)}
                                     <View
                                         style={{
                                             display: 'flex',

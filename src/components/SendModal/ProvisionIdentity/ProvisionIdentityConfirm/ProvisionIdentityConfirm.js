@@ -3,20 +3,15 @@ import {Component} from 'react';
 import {Alert} from 'react-native';
 import {connect} from 'react-redux';
 import { primitives } from 'verusid-ts-client';
-import { setUserCoins, setProvisioningNotification } from '../../../../actions/actionCreators';
-import {updateVerusIdWallet } from '../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager';
-import {
-  clearChainLifecycle,
-  refreshActiveChainLifecycles,
-} from '../../../../actions/actions/intervals/dispatchers/lifecycleManager';
-import {setRequestedVerusId, deleteProvisionedIds} from '../../../../actions/actions/services/dispatchers/verusid/verusid';
 import { getIdentity  } from '../../../../utils/api/channels/verusid/callCreators';
 import { signIdProvisioningRequest } from '../../../../utils/api/channels/vrpc/requests/signIdProvisioningRequest';
 import {SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT, SEND_MODAL_IDENTITY_TO_PROVISION_FIELD} from '../../../../utils/constants/sendModal';
 import {ProvisionIdentityConfirmRender} from './ProvisionIdentityConfirm.render';
 import axios from "axios";
 import { handleProvisioningResponse } from '../../../../utils/api/channels/vrpc/requests/handleProvisioningResponse';
-
+import { LoadingNotification } from '../../../../utils/notification';
+import { dispatchAddNotification } from '../../../../actions/actions/notifications/dispatchers/notifications';
+import { NOTIFICATION_ICON_VERUSID } from '../../../../utils/constants/notifications';
 
 class ProvisionIdentityConfirm extends Component {
   constructor(props) {
@@ -125,8 +120,19 @@ class ProvisionIdentityConfirm extends Component {
       );
 
       await handleProvisioningResponse(coinObj, res.data, loginRequest.toBuffer().toString('base64'), 
-        this.props.sendModal.data.fromService);
-            
+        this.props.sendModal.data.fromService, async (fqn) => {
+
+          const newLoadingNotification = new LoadingNotification (
+            "",
+            [`${fqn.split(".")[0]}@`, ` is being provisioned`],
+            null,
+            this.props.activeAccount.accountHash
+          );  
+          newLoadingNotification.icon = NOTIFICATION_ICON_VERUSID;
+
+          await dispatchAddNotification(newLoadingNotification);
+        });
+
       submissionSuccess(res.data)
     } catch (e) {
       submissionError(e.message)
