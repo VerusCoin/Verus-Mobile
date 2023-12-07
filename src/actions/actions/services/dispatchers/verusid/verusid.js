@@ -177,7 +177,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
             const response = await axios.get(pendingIds[ticker][iaddress].infoUri);
            if (response.data.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
               pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_ERROR;
-              pendingIds[ticker][iaddress].error_desc = data.result.error_desc;
+              pendingIds[ticker][iaddress].error_desc = response.data.result.error_desc;
               await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
               await updatePendingVerusIds();
               errorFound = true;
@@ -193,8 +193,8 @@ export const checkVerusIdNotificationsForUpdates = async () => {
 
         if (errorFound) {
           const newDeepLinkNotification = new BasicNotification (
+            "",
             pendingIds[ticker][iaddress].error_desc,
-            "Error",
             null,
             state.authentication.activeAccount.accountHash
           );  
