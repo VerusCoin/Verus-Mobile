@@ -16,11 +16,7 @@ import {SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT, SEND_MODAL_IDENT
 import {ProvisionIdentityConfirmRender} from './ProvisionIdentityConfirm.render';
 import axios from "axios";
 import { handleProvisioningResponse } from '../../../../utils/api/channels/vrpc/requests/handleProvisioningResponse';
-import { verifyIdProvisioningResponse } from "../../../../utils/api/channels/vrpc/requests/verifyIdProvisioningResponse";
-import {NOTIFICATION_TYPE_VERUSID_PENDING} from '../../../../utils/constants/notifications';
-import { updatePendingVerusIds } from "../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager"
-import { dispatchAddNotification } from '../../../../actions/actions/notifications/dispatchers/notifications';
-import { LoadingNotification } from '../../../../utils/notification';
+
 
 class ProvisionIdentityConfirm extends Component {
   constructor(props) {
@@ -129,18 +125,8 @@ class ProvisionIdentityConfirm extends Component {
       );
 
       await handleProvisioningResponse(coinObj, res.data, loginRequest.toBuffer().toString('base64'), 
-        this.props.sendModal.data.fromService, async (address, fqn) => {
-          await linkVerusId(address, `${fqn}@`, coinObj.id);
-          await updateVerusIdWallet();
-          clearChainLifecycle(coinObj.id);
-          const setUserCoinsAction = setUserCoins(
-            this.props.activeCoinList,
-            this.props.activeAccount.id
-          )
-          this.props.dispatch(setUserCoinsAction);
-    
-          refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);  
-        })     
+        this.props.sendModal.data.fromService);
+            
       submissionSuccess(res.data)
     } catch (e) {
       submissionError(e.message)

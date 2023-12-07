@@ -28,7 +28,7 @@ const usePrevious = (value) => {
     return ref.current;
 }
 
-const createNotificationText = (text) => {
+const createNotificationText = (text, type, index) => {
 
     return (
         <View
@@ -38,12 +38,7 @@ const createNotificationText = (text) => {
                 width: "60%",
                 alignItems: 'center',
             }}>
-            <VerusIdAtIcon
-                width={20}
-                height={20}
-                style={{
-                    alignSelf: 'center',
-                }} />
+            {getIcon(type, index)}
             <Paragraph style={{ fontSize: 12, color: Colors.primaryColor, fontWeight: 'bold', marginLeft: 10, marginVertical: 5, borderRadius: 1, }}>
                 {typeof(text) === 'object' ? text[0]: ''}
             </Paragraph>
@@ -54,7 +49,7 @@ const createNotificationText = (text) => {
     )
 }
 
-const getCollapedIcon = (type, index) => {
+const getIcon = (type, index) => {
 
     switch (type) {
         case NOTIFICATION_TYPE_DEEPLINK:
@@ -63,6 +58,15 @@ const getCollapedIcon = (type, index) => {
                 width={20}
                 height={20}
                 marginLeft={7}
+                style={{
+                    alignSelf: 'center',
+                }} />);
+        case NOTIFICATION_TYPE_BASIC:
+            return (<IconButton
+                icon="alert-circle"
+                color="red"
+                width={20}
+                height={20}
                 style={{
                     alignSelf: 'center',
                 }} />);
@@ -86,8 +90,12 @@ const getNotifications = (directories) => {
 
         if (directories[uid].type === NOTIFICATION_TYPE_DEEPLINK) {
             const tempDeepLinkNotification = DeeplinkNotification.fromJson(directories[uid], tryProcessVerusIdSignIn);
-            tempDeepLinkNotification.icon = getCollapedIcon(tempDeepLinkNotification.type, index);
+            tempDeepLinkNotification.icon = getIcon(tempDeepLinkNotification.type, index);
             tempNotificaions.push(tempDeepLinkNotification);
+        } else if (directories[uid].type === NOTIFICATION_TYPE_BASIC) {
+            const tempBasicNotification = BasicNotification.fromJson(directories[uid]);
+            tempBasicNotification.icon = getIcon(tempBasicNotification.type, index);
+            tempNotificaions.push(tempBasicNotification);
         }
     });
     return tempNotificaions;
@@ -213,7 +221,7 @@ const NotificationWidget = ( { props } = props) => {
                                         width: width - 30,
                                         alignItems: 'center',
                                     }}>
-                                    {createNotificationText(notification.title)}
+                                    {createNotificationText(notification.title, notification.type, index)}
                                     <View
                                         style={{
                                             display: 'flex',

@@ -8,7 +8,7 @@ import { getTransaction } from "../../../../../utils/api/channels/vrpc/requests/
 import { getInfo } from "../../../../../utils/api/channels/vrpc/requests/getInfo";
 import { getIdentity } from "../../../../../utils/api/channels/verusid/callCreators";
 import { primitives } from 'verusid-ts-client';
-import { NOTIFICATION_TYPE_VERUSID_READY } from '../../../../../utils/constants/notifications';
+import { NOTIFICATION_TYPE_VERUSID_READY, NOTIFICATION_TYPE_ERROR } from '../../../../../utils/constants/services';
 import { updatePendingVerusIds } from "../../../channels/verusid/dispatchers/VerusidWalletReduxManager"
 import { dispatchAddNotification } from '../../../notifications/dispatchers/notifications';
 import { DeeplinkNotification, BasicNotification } from '../../../../../utils/notification';
@@ -163,14 +163,16 @@ export const checkVerusIdNotificationsForUpdates = async () => {
 
       if ((pendingIds[ticker][iaddress].created_at + 600) < Math.floor(Date.now() / 1000)) {
         // If the request is older than 10 minutes, check info endpoint to see if it was accepted or rejected
+        errorFound = false;
         try {
-          if (pendingIds[ticker][iaddress].info_uri) {
-            const response = await axios.get(pendingIds[ticker][iaddress].info_uri);
+          if (pendingIds[ticker][iaddress].infoUri) {
+            const response = await axios.get(pendingIds[ticker][iaddress].infoUri);
            if (response.data.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
               pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_ERROR;
               pendingIds[ticker][iaddress].error_desc = data.result.error_desc;
               await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
               await updatePendingVerusIds();
+              errorFound = true;
             }
           }
         } catch (e) {
@@ -178,16 +180,21 @@ export const checkVerusIdNotificationsForUpdates = async () => {
               pendingIds[ticker][iaddress].error_desc = "Server not responding, please try again later"
               await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
               await updatePendingVerusIds();
-        } finally {
+              errorFound = true;
+        } 
+
+        if (errorFound) {
           const newDeepLinkNotification = new BasicNotification (
             pendingIds[ticker][iaddress].error_desc,
             "Error",
             null,
             state.authentication.activeAccount.accountHash
-          );   
+          );  
+
           await dispatchAddNotification(newDeepLinkNotification);
-          continue;
         }
+        continue;
+        
       }
 
       const identity = await getIdentity(system.system_id, iaddress);
