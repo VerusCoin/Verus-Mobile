@@ -11,7 +11,7 @@ import {
     NOTIFICATION_ICON_VERUSID,
     NOTIFICATION_ICON_ERROR
 } from '../../../utils/constants/notifications';
-import { VerusIdAtIcon, ReceivedIcon } from "../../../images/customIcons";
+import { VerusIdAtIcon, ReceivedIcon, VerusIdErrorIcon } from "../../../images/customIcons";
 import { DeeplinkNotification, BasicNotification, LoadingNotification } from '../../../utils/notification';
 import { tryProcessVerusIdSignIn } from '../../../containers/Services/ServiceComponents/VerusIdService/VerusIdLogin';
 import { dispatchRemoveNotification, dispatchClearNotifications } from '../../../actions/actions/notifications/dispatchers/notifications';
@@ -37,16 +37,24 @@ const createNotificationText = (text, icon, index) => {
             style={{
                 display: 'flex',
                 flexDirection: 'row',
-                width: "60%",
+                width: "70%",
                 alignItems: 'center',
             }}>
             {icon}
-            <Paragraph style={{ fontSize: 12, color: Colors.primaryColor, fontWeight: 'bold', marginLeft: 10, marginVertical: 5, borderRadius: 1, }}>
-                {typeof (text) === 'object' ? text[0] : ''}
-            </Paragraph>
-            <Paragraph style={{ fontSize: 12, color: "black", marginVertical: 5, borderRadius: 1, }}>
-                {typeof (text) === 'object' ? text[1] : text}
-            </Paragraph>
+            <Text style={{ flexShrink: 1, marginLeft: 7 }}>
+                <Text style={{ fontSize: 12, color: Colors.primaryColor, fontWeight: 'bold', marginVertical: 5,  }}>
+                    {typeof (text) === 'object' ? text[0] : ''}
+                </Text>
+                <Text style={{ fontSize: 12, color: "black", marginVertical: 5 }}>
+                    {typeof (text) === 'object' ? text[1] : text}
+                </Text>
+                <Text style={{ fontSize: 12, color: Colors.primaryColor, fontWeight: 'bold',  marginVertical: 5,  }}>
+                    {typeof (text) === 'object' ? text[2] : ''}
+                </Text>
+                <Text style={{ fontSize: 12, color: "black", marginVertical: 5 }}>
+                    {typeof (text) === 'object' ? text[3] : ''}
+                </Text>
+            </Text>
         </View>
     )
 }
@@ -63,19 +71,15 @@ const getIcon = (type, index) => {
                 style={{
                     alignSelf: 'center',
                 }} />);
-        case NOTIFICATION_ICON_ERROR:
-            return (<View
+        case NOTIFICATION_ICON_ERROR: 
+            return (<VerusIdErrorIcon
+                index={index}
+                width={23}
+                height={20}
+                marginLeft={6}
                 style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: '#FF0000',
-                    borderRadius: 20,
-                    height: 20,
-                    width: 20,
-                    marginLeft: 7,
-                }}><Text style={{ color: "white", textAlign: 'center', fontSize: 13, justifyContent: "center" }}>!</Text></View>);
+                    alignSelf: 'center',
+                }} />);
         case NOTIFICATION_ICON_TX:
         default:
             return (<ReceivedIcon

@@ -119,15 +119,15 @@ class ProvisionIdentityConfirm extends Component {
         signedRequest
       );
 
-      await handleProvisioningResponse(coinObj, res.data, loginRequest.toBuffer().toString('base64'), 
-        this.props.sendModal.data.fromService, async (fqn) => {
+      const provisioningName = (await getIdentity(coinObj.system_id, loginRequest.signing_id)).result.identity.name;
+      const newLoadingNotification = new LoadingNotification();
 
-          const newLoadingNotification = new LoadingNotification (
-            "",
-            [`${fqn.split(".")[0]}@`, ` is being provisioned`],
-            null,
-            this.props.activeAccount.accountHash
-          );  
+      await handleProvisioningResponse(coinObj, res.data, loginRequest.toBuffer().toString('base64'), 
+        this.props.sendModal.data.fromService, provisioningName, newLoadingNotification.uid, async (fqn) => {
+          
+          newLoadingNotification.body = "";
+          newLoadingNotification.title =  [`${fqn.split(".")[0]}@`, ` is being provisioned by `, `${provisioningName}@`]
+          newLoadingNotification.acchash = this.props.activeAccount.accountHash;
           newLoadingNotification.icon = NOTIFICATION_ICON_VERUSID;
 
           await dispatchAddNotification(newLoadingNotification);

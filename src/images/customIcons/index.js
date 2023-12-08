@@ -34,6 +34,7 @@ import EnterKeyIcon from './EnterKeyIcon'
 import ScanQrIcon from './ScanQrIcon'
 import ReceivedIcon from './received-icon.svg'
 import VerusIdAtIcon from './verusid-at-icon.svg'
+import VerusIdErrorIcon from './verusid-error-icon.svg'
 
 export {
   Open,
@@ -68,7 +69,8 @@ export {
   EnterKeyIcon,
   ScanQrIcon,
   ReceivedIcon,
-  VerusIdAtIcon
+  VerusIdAtIcon,
+  VerusIdErrorIcon
 };
 
 export default Open;

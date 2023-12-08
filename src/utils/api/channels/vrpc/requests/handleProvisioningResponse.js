@@ -3,12 +3,15 @@ import { verifyIdProvisioningResponse } from "./verifyIdProvisioningResponse";
 import { NOTIFICATION_TYPE_VERUSID_PENDING } from '../../../../constants/services';
 import { updatePendingVerusIds } from "../../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager"
 import { setRequestedVerusId } from '../../../../../actions/actions/services/dispatchers/verusid/verusid';
+import { getIdentity } from "../../verusid/callCreators";
 
 export const handleProvisioningResponse = async (
   coinObj,
   responseJson,
   loginRequestBase64,
   fromService,
+  provisioningName,
+  notificationUid,
   setNotification = (fqn, accountHash) => { }
 ) => {
 
@@ -40,7 +43,9 @@ export const handleProvisioningResponse = async (
       loginRequest: loginRequestBase64,
       fromService: fromService,
       createdAt: Number((Date.now() / 1000).toFixed(0)),
-      infoUri: result.info_uri
+      infoUri: result.info_uri,
+      provisioningName: provisioningName,
+      notificationUid: notificationUid
     }
     await setRequestedVerusId(result.identity_address, verusIdState, coinObj.id);
     await updatePendingVerusIds();

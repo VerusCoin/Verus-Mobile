@@ -179,7 +179,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
 
             if (response.data.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
               pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_FAILED;
-              pendingIds[ticker][iaddress].error_desc = response.data.result.error_desc;
+              pendingIds[ticker][iaddress].error_desc = [`${fqn.split(".")[0]}@`, ` failed to provision from `, `${pendingIds[ticker][iaddress].provisioningName}@`];
               await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
               await updatePendingVerusIds();
               errorFound = true;
@@ -191,7 +191,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
                 pendingIds[ticker][iaddress].status !== NOTIFICATION_TYPE_VERUSID_ERROR) {
 
             pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_ERROR;
-            pendingIds[ticker][iaddress].error_desc = "ID Server connection error."
+            pendingIds[ticker][iaddress].error_desc = [`${pendingIds[ticker][iaddress].provisioningName}@`, `server connection error.`]
             pendingIds[ticker][iaddress].createdAt = Math.floor(Date.now() / 1000) + 1200;
             await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
             await updatePendingVerusIds();
@@ -207,7 +207,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
             state.authentication.activeAccount.accountHash
           );  
           newDeepLinkNotification.icon = NOTIFICATION_ICON_ERROR;
-
+          newDeepLinkNotification.uid = pendingIds[ticker][iaddress].notificationUid;
           await dispatchAddNotification(newDeepLinkNotification);
           continue;
         }
@@ -236,6 +236,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
         ); 
 
         newDeepLinkNotification.icon = NOTIFICATION_ICON_VERUSID;
+        newDeepLinkNotification.uid = pendingIds[ticker][iaddress].notificationUid;
 
         await dispatchAddNotification(newDeepLinkNotification);
       }
