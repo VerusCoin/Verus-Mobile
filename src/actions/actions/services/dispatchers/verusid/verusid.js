@@ -209,8 +209,8 @@ export const checkVerusIdNotificationsForUpdates = async () => {
           newDeepLinkNotification.icon = NOTIFICATION_ICON_ERROR;
 
           await dispatchAddNotification(newDeepLinkNotification);
+          continue;
         }
-        continue;
         
       }
 
