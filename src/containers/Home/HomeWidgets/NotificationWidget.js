@@ -10,7 +10,7 @@ import {
     NOTIFICATION_ICON_TX,
     NOTIFICATION_ICON_VERUSID,
     NOTIFICATION_ICON_ERROR
-  } from '../../../utils/constants/notifications';
+} from '../../../utils/constants/notifications';
 import { VerusIdAtIcon, ReceivedIcon } from "../../../images/customIcons";
 import { DeeplinkNotification, BasicNotification, LoadingNotification } from '../../../utils/notification';
 import { tryProcessVerusIdSignIn } from '../../../containers/Services/ServiceComponents/VerusIdService/VerusIdLogin';
@@ -42,10 +42,10 @@ const createNotificationText = (text, icon, index) => {
             }}>
             {icon}
             <Paragraph style={{ fontSize: 12, color: Colors.primaryColor, fontWeight: 'bold', marginLeft: 10, marginVertical: 5, borderRadius: 1, }}>
-                {typeof(text) === 'object' ? text[0]: ''}
+                {typeof (text) === 'object' ? text[0] : ''}
             </Paragraph>
             <Paragraph style={{ fontSize: 12, color: "black", marginVertical: 5, borderRadius: 1, }}>
-                {typeof(text) === 'object' ? text[1]: text}
+                {typeof (text) === 'object' ? text[1] : text}
             </Paragraph>
         </View>
     )
@@ -63,16 +63,20 @@ const getIcon = (type, index) => {
                 style={{
                     alignSelf: 'center',
                 }} />);
-        case NOTIFICATION_ICON_TX:
-            return (<IconButton
-                icon="alert-circle"
-                color="red"
-                width={20}
-                height={20}
-                style={{
-                    alignSelf: 'center',
-                }} />);
         case NOTIFICATION_ICON_ERROR:
+            return (<View
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#FF0000',
+                    borderRadius: 20,
+                    height: 20,
+                    width: 20,
+                    marginLeft: 7,
+                }}><Text style={{ color: "white", textAlign: 'center', fontSize: 13, justifyContent: "center" }}>!</Text></View>);
+        case NOTIFICATION_ICON_TX:
         default:
             return (<ReceivedIcon
                 index={index}
@@ -89,7 +93,7 @@ const getNotifications = (directories) => {
 
     let tempNotificaions = [];
     const keys = Object.keys(directories);
-    console.log("directores", JSON.stringify(directories, null, 2))
+
     keys.forEach((uid, index) => {
 
         if (directories[uid].type === NOTIFICATION_TYPE_DEEPLINK) {
@@ -109,7 +113,7 @@ const getNotifications = (directories) => {
     return tempNotificaions;
 }
 
-const NotificationWidget = ( { props } = props) => {
+const NotificationWidget = ({ props } = props) => {
     const { width } = Dimensions.get('window');
     const [collapsed, setCollapsed] = useState(false);
     const [traynotifications, setTrayNotifications] = useState([]);
@@ -118,7 +122,7 @@ const NotificationWidget = ( { props } = props) => {
     );
 
     const hasItemIdChanged = useCompare(notifications);
-  
+
     useEffect(() => {
         if (notifications.directory) {
             setTrayNotifications(getNotifications(notifications.directory));

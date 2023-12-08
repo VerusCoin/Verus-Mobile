@@ -6,8 +6,8 @@ import { modifyServiceStoredDataForUser } from '../services';
 import { coinsList } from '../../../../../utils/CoinData/CoinsList';
 import { getIdentity } from "../../../../../utils/api/channels/verusid/callCreators";
 import { primitives } from 'verusid-ts-client';
-import { NOTIFICATION_TYPE_VERUSID_READY } from '../../../../../utils/constants/services';
-import { NOTIFICATION_TYPE_ERROR, NOTIFICATION_ICON_ERROR, NOTIFICATION_ICON_VERUSID } from '../../../../../utils/constants/notifications';
+import { NOTIFICATION_TYPE_VERUSID_READY, NOTIFICATION_TYPE_VERUSID_ERROR, NOTIFICATION_TYPE_VERUSID_FAILED } from '../../../../../utils/constants/services';
+import { NOTIFICATION_ICON_ERROR, NOTIFICATION_ICON_VERUSID } from '../../../../../utils/constants/notifications';
 import { updatePendingVerusIds } from "../../../channels/verusid/dispatchers/VerusidWalletReduxManager"
 import { dispatchAddNotification } from '../../../notifications/dispatchers/notifications';
 import { DeeplinkNotification, BasicNotification } from '../../../../../utils/notification';
@@ -162,33 +162,41 @@ export const checkVerusIdNotificationsForUpdates = async () => {
     const details = Object.keys(pendingIds[ticker]);
     for (const iaddress of details) {
 
-      // once an ID is linked, remove it from pending IDs
-      if(pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_READY && 
-         currentLinkedIdentities.indexOf(iaddress) > -1) {
+      // once an ID is linked, remove it from pending IDs, or if the server has rejected it delete.
+      if((pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_READY && 
+         currentLinkedIdentities.indexOf(iaddress) > -1) ||(pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_FAILED)  ) {
           await deleteProvisionedIds(iaddress, ticker);
+          await updatePendingVerusIds();
           continue;
-      }
+      } 
 
-      if ((pendingIds[ticker][iaddress].created_at + 600) < Math.floor(Date.now() / 1000)) {
+      if ((pendingIds[ticker][iaddress].createdAt + 600) < Math.floor(Date.now() / 1000)) {
         // If the request is older than 10 minutes, check info endpoint to see if it was accepted or rejected
-        errorFound = false;
+        let errorFound = false;
         try {
           if (pendingIds[ticker][iaddress].infoUri) {
-            const response = await axios.get(pendingIds[ticker][iaddress].infoUri);
-           if (response.data.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
-              pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_ERROR;
+            const response = await axios.post(pendingIds[ticker][iaddress].infoUri);
+
+            if (response.data.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
+              pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_FAILED;
               pendingIds[ticker][iaddress].error_desc = response.data.result.error_desc;
               await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
               await updatePendingVerusIds();
               errorFound = true;
             }
-          }
+          } 
         } catch (e) {
-              pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_ERROR;
-              pendingIds[ticker][iaddress].error_desc = "Server not responding, please try again later"
-              await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
-              await updatePendingVerusIds();
-              errorFound = true;
+
+          if ((pendingIds[ticker][iaddress].createdAt + 1200) < Math.floor(Date.now() / 1000) &&
+                pendingIds[ticker][iaddress].status !== NOTIFICATION_TYPE_VERUSID_ERROR) {
+
+            pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_ERROR;
+            pendingIds[ticker][iaddress].error_desc = "ID Server connection error."
+            pendingIds[ticker][iaddress].createdAt = Math.floor(Date.now() / 1000) + 1200;
+            await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
+            await updatePendingVerusIds();
+            errorFound = true;
+          }
         } 
 
         if (errorFound) {
