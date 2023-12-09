@@ -2,10 +2,7 @@
   The personal reducer stores the user's personal profile
 */
 
-import {
-  SIGN_OUT, 
-  SET_PERSONAL_DATA
-} from "../utils/constants/storeType";
+import {SIGN_OUT, SET_PERSONAL_DATA} from '../utils/constants/storeType';
 
 // payment_methods:
 // {
@@ -47,21 +44,21 @@ export const personal = (
     contact: null,
     locations: null,
     payment_methods: null,
-    images: null
+    images: null,
   },
-  action
+  action,
 ) => {
   switch (action.type) {
     case SET_PERSONAL_DATA:
-      return action.data
+      return action.data;
     case SIGN_OUT:
       return {
         attributes: null,
         contact: null,
         locations: null,
         payment_methods: null,
-        images: null
-      }
+        images: null,
+      };
     default:
       return state;
   }
