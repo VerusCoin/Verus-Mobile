@@ -32,7 +32,7 @@ const InvoicePaymentConfiguration = props => {
   } = props.route.params;
   const [loading, setLoading] = useState(false);
   const [linkedIds, setLinkedIds] = useState({});
-  const inv = new primitives.VerusPayInvoice(deeplinkData);
+  const inv = primitives.VerusPayInvoice.fromJson(deeplinkData);
 
   const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser);
   const testnetOverrides = useSelector(state => state.authentication.activeAccount.testnetOverrides);

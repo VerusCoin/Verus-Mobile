@@ -11531,7 +11531,7 @@ version_compare@0.0.3:
 
 "verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git":
   version "1.0.0"
-  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#144f7510ac3b7fc3a7ab2c6cf2cfcec25db525f7"
+  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#3eafcef030fcb8ed3639b38880c3fd7bb08cf190"
   dependencies:
     base64url "3.0.1"
     bn.js "5.2.1"
@@ -11563,7 +11563,7 @@ version_compare@0.0.3:
 
 "verusid-ts-client@git+https://github.com/VerusCoin/verusid-ts-client.git":
   version "0.1.0"
-  resolved "git+https://github.com/VerusCoin/verusid-ts-client.git#e2e0a71259317a1dcbfc4224754167d0334a5a60"
+  resolved "git+https://github.com/VerusCoin/verusid-ts-client.git#3bd7f710b0a2d31ea2d8211741a4590b454b3a0a"
   dependencies:
     "@bitgo/utxo-lib" "https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337"
     axios "0.27.2"

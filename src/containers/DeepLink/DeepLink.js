@@ -22,13 +22,18 @@ import { convertFqnToDisplayFormat } from '../../utils/fullyqualifiedname';
 import { resetDeeplinkData } from '../../actions/actionCreators';
 import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 import BigNumber from 'bignumber.js';
-import { satsToCoins } from '../../utils/math';
+import { blocksToTime, satsToCoins } from '../../utils/math';
 import InvoiceInfo from './InvoiceInfo/InvoiceInfo';
 
 const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
   const deeplinkData = useSelector((state) => state.deeplink.data)
-  const testAccount = useSelector(state => (Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0))
+  const testAccount = useSelector(
+    state =>
+      state.authentication.activeAccount != null &&
+      Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0,
+  );
+
   const signedIn = useSelector((state) => state.authentication.signedIn)
   const [displayKey, setDisplayKey] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -60,7 +65,7 @@ const DeepLink = (props) => {
 
       switch (deeplinkId) {
         case primitives.VERUSPAY_INVOICE_VDXF_KEY.vdxfid:
-          const invoice = new primitives.VerusPayInvoice(deeplinkData)
+          const invoice = primitives.VerusPayInvoice.fromJson(deeplinkData)
 
           coinObj = CoinDirectory.getBasicCoinObj(testAccount ? 'VRSCTEST' : 'VRSC')
           VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0])
@@ -77,7 +82,7 @@ const DeepLink = (props) => {
               if (destinationId.error) throw new Error(destinationId.error.message)
 
               destinationDisplay = convertFqnToDisplayFormat(destinationId.result.fullyqualifiedname)
-            } else destinationDisplay = 'any destination'
+            } else destinationDisplay = invoice.details.destination.getAddressString()
 
             return destinationDisplay
           }
@@ -108,6 +113,17 @@ const DeepLink = (props) => {
             } else return null;
           }
 
+          const validateExpiry = async () => {
+            if (invoice.details.expires() && invoice.details.expiryheight.toNumber() - chainInfo.result.longestchain < 0) {
+              const age = (invoice.details.expiryheight.toNumber() - chainInfo.result.longestchain) * -1
+              createAlert(
+                'Expired invoice',
+                `This invoice is expired (expired for approx. ${blocksToTime(age)}).`,
+              );
+              cancel();
+            }
+          }
+
           if (invoice.isSigned()) {
             if (await verifyVerusPayInvoice(coinObj, invoice)) {
               const sig = await extractVerusPayInvoiceSig(coinObj, invoice)
@@ -124,6 +140,7 @@ const DeepLink = (props) => {
               const requestedCurrency = await getCurrency(coinObj.system_id, invoice.details.requestedcurrencyid)
               if (requestedCurrency.error) throw new Error(requestedCurrency.error.message)
   
+              await validateExpiry()
               setDisplayProps({
                 deeplinkData,
                 sigtime,
@@ -133,7 +150,7 @@ const DeepLink = (props) => {
                 destinationDisplay: await getDestinationDisplay(),
                 acceptedSystemsDefinitions: await getAcceptedSystemsDefinitions(),
                 coinObj,
-                chainInfo
+                chainInfo: chainInfo.result
               })
               setDisplayKey(VERUSPAY_INVOICE_INFO)
             } else {
@@ -147,6 +164,7 @@ const DeepLink = (props) => {
             const requestedCurrency = await getCurrency(coinObj.system_id, invoice.details.requestedcurrencyid)
             if (requestedCurrency.error) throw new Error(requestedCurrency.error.message)
 
+            await validateExpiry()
             setDisplayProps({
               deeplinkData,
               currencyDefinition: requestedCurrency.result,
@@ -154,10 +172,12 @@ const DeepLink = (props) => {
               destinationDisplay: await getDestinationDisplay(),
               acceptedSystemsDefinitions: await getAcceptedSystemsDefinitions(),
               coinObj,
-              chainInfo
+              chainInfo: chainInfo.result
             })
             setDisplayKey(VERUSPAY_INVOICE_INFO)
           }
+          
+          break;
         case primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid:
           const request = new primitives.LoginConsentRequest(deeplinkData)
 
@@ -221,6 +241,8 @@ const DeepLink = (props) => {
           break;
       }
     } catch (e) {
+      console.error(e)
+
       createAlert('Error', e.message);
       cancel();
     }
