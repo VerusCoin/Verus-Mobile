@@ -43,7 +43,7 @@ class DynamicHeader extends Component {
       carouselItems: [],
       currentIndex: 0,
       loadingCarouselItems: true,
-      mappedCoinObj: null
+      mappedCoinObj: null,
     };
     this.fadeAnimation = new Animated.Value(0);
     this.carousel = null;
@@ -515,6 +515,7 @@ class DynamicHeader extends Component {
 const mapStateToProps = state => {
   const chainTicker = state.coins.activeCoin.id;
   const showBalance = state.coins.showBalance;
+  const darkMode = state.settings.darkMode;
   const balances = extractLedgerData(
     state,
     'balances',
@@ -525,6 +526,7 @@ const mapStateToProps = state => {
   return {
     chainTicker,
     showBalance,
+    darkMode,
     displayTicker: state.coins.activeCoin.display_ticker,
     activeCoin: state.coins.activeCoin,
     selectedSubWallet: state.coinMenus.activeSubWallets[chainTicker],

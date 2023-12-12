@@ -3,25 +3,33 @@
   all the different apps a specific coin has in the coinData file. 
 */
 
-import React, { Component } from "react";
+import React, {Component} from 'react';
+import {View} from 'react-native';
+import {connect} from 'react-redux';
+import Overview from './Overview/Overview';
+import SendCoin from './SendCoin/SendCoin';
+import ReceiveCoin from './ReceiveCoin/ReceiveCoin';
+import ConvertCoin from './ConvertCoin/ConvertCoin';
+import ManageCoin from './ManageCoin/ManageCoin';
 import {
-  View,
-} from "react-native";
-import { connect } from 'react-redux';
-import Overview from './Overview/Overview'
-import SendCoin from './SendCoin/SendCoin'
-import ReceiveCoin from './ReceiveCoin/ReceiveCoin'
-import ConvertCoin from "./ConvertCoin/ConvertCoin";
-import ManageCoin from "./ManageCoin/ManageCoin";
-import { setActiveSection, setCoinSubWallet, setIsCoinMenuFocused } from "../../actions/actionCreators";
-import { NavigationActions, withNavigationFocus } from '@react-navigation/compat';
-import SubWalletSelectorModal from "../SubWalletSelect/SubWalletSelectorModal";
-import DynamicHeader from "./DynamicHeader";
-import { Portal, BottomNavigation } from "react-native-paper";
-import { subWalletActivity } from "../../utils/subwallet/subWalletStatus";
-import MissingInfoRedirect from "../../components/MissingInfoRedirect/MissingInfoRedirect";
-import { WALLET_APP_CONVERT, WALLET_APP_MANAGE, WALLET_APP_OVERVIEW, WALLET_APP_RECEIVE, WALLET_APP_SEND } from "../../utils/constants/apps";
-import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
+  setActiveSection,
+  setCoinSubWallet,
+  setIsCoinMenuFocused,
+} from '../../actions/actionCreators';
+import {NavigationActions, withNavigationFocus} from '@react-navigation/compat';
+import SubWalletSelectorModal from '../SubWalletSelect/SubWalletSelectorModal';
+import DynamicHeader from './DynamicHeader';
+import {Portal, BottomNavigation} from 'react-native-paper';
+import {subWalletActivity} from '../../utils/subwallet/subWalletStatus';
+import MissingInfoRedirect from '../../components/MissingInfoRedirect/MissingInfoRedirect';
+import {
+  WALLET_APP_CONVERT,
+  WALLET_APP_MANAGE,
+  WALLET_APP_OVERVIEW,
+  WALLET_APP_RECEIVE,
+  WALLET_APP_SEND,
+} from '../../utils/constants/apps';
+import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
 
 class CoinMenus extends Component {
   constructor(props) {
@@ -31,7 +39,9 @@ class CoinMenus extends Component {
 
     //CoinMenus can be passed data, which will be passed to
     //the app section components as props
-    this.passthrough = this.props.route.params ? this.props.route.params.data : null;
+    this.passthrough = this.props.route.params
+      ? this.props.route.params.data
+      : null;
 
     this.state = {
       tabs: stateObj.tabs,
@@ -49,7 +59,7 @@ class CoinMenus extends Component {
       [WALLET_APP_SEND]: SendCoin,
       [WALLET_APP_RECEIVE]: ReceiveCoin,
       [WALLET_APP_CONVERT]: ConvertCoin,
-      [WALLET_APP_MANAGE]: ManageCoin
+      [WALLET_APP_MANAGE]: ManageCoin,
     };
   }
 
@@ -97,10 +107,12 @@ class CoinMenus extends Component {
     }
 
     if (!activeTab) {
-      throw new Error("Tab not found for active section " + this.props.activeSection.key);
+      throw new Error(
+        'Tab not found for active section ' + this.props.activeSection.key,
+      );
     }
 
-    this.props.navigation.setOptions({ title: activeTab.title });
+    this.props.navigation.setOptions({title: activeTab.title});
 
     return {
       tabs: tabArray,
@@ -110,21 +122,29 @@ class CoinMenus extends Component {
   };
 
   goToServices() {
-    this.props.navigation.navigate("Home", {
-      screen: "ServicesHome",
+    this.props.navigation.navigate('Home', {
+      screen: 'ServicesHome',
       initial: false,
     });
   }
 
-  renderScene = ({ route, jumpTo }) => {
+  renderScene = ({route, jumpTo}) => {
     if (this.Routes[route.key] == null) return null;
     else {
       const Route = this.Routes[route.key];
-      const { placeholder, active } = subWalletActivity(this.props.selectedSubWallet.id);
+      const {placeholder, active} = subWalletActivity(
+        this.props.selectedSubWallet.id,
+      );
 
-      return this.props.selectedSubWallet.compatible_apps.includes(route.key) ? (
+      return this.props.selectedSubWallet.compatible_apps.includes(
+        route.key,
+      ) ? (
         active(this.props.services) ? (
-          <Route navigation={this.props.navigation} data={this.passthrough} jumpTo={jumpTo} />
+          <Route
+            navigation={this.props.navigation}
+            data={this.passthrough}
+            jumpTo={jumpTo}
+          />
         ) : (
           <MissingInfoRedirect
             icon={placeholder.icon}
@@ -135,10 +155,8 @@ class CoinMenus extends Component {
         )
       ) : (
         <MissingInfoRedirect
-          icon={"power-plug-off"}
-          label={`This tab isn't accesible from the ${
-            this.props.selectedSubWallet.name
-          } card.`}
+          icon={'power-plug-off'}
+          label={`This tab isn't accesible from the ${this.props.selectedSubWallet.name} card.`}
           buttonLabel="Switch cards"
           onPress={() => this.findCompatibleSubwallet(route.key)}
         />
@@ -146,9 +164,9 @@ class CoinMenus extends Component {
     }
   };
 
-  findCompatibleSubwallet = (tabKey) => {
-    const subwalletsForTab = this.state.subWallets.filter((wallet) =>
-      wallet.compatible_apps.includes(tabKey)
+  findCompatibleSubwallet = tabKey => {
+    const subwalletsForTab = this.state.subWallets.filter(wallet =>
+      wallet.compatible_apps.includes(tabKey),
     );
 
     if (subwalletsForTab.length > 0) {
@@ -156,19 +174,20 @@ class CoinMenus extends Component {
         {
           filteredSubWallets: subwalletsForTab,
         },
-        () => this.props.dispatch(setCoinSubWallet(this.props.activeCoin.id, null))
+        () =>
+          this.props.dispatch(setCoinSubWallet(this.props.activeCoin.id, null)),
       );
     } else {
-      createAlert("Error", "No compatible cards found.");
+      createAlert('Error', 'No compatible cards found.');
     }
   };
 
-  switchTab = (index) => {
+  switchTab = index => {
     const newTab = this.state.tabs[index];
 
-    this.props.navigation.setOptions({ title: newTab.title });
+    this.props.navigation.setOptions({title: newTab.title});
     this.props.dispatch(setActiveSection(newTab.activeSection));
-    this.setState({ activeTab: newTab, activeTabIndex: index });
+    this.setState({activeTab: newTab, activeTabIndex: index});
   };
 
   goBack = () => {
@@ -180,18 +199,20 @@ class CoinMenus extends Component {
   //"Cannot Add a child that doesn't have a YogaNode to a parent with out a measure function"
   //bug comes up and it seems like a bug in rn
   render() {
-    const { selectedSubWallet, activeCoin } = this.props;
-    const { subWallets, filteredSubWallets } = this.state;
+    const {selectedSubWallet, activeCoin} = this.props;
+    const {subWallets, filteredSubWallets} = this.state;
 
     return (
       <Portal.Host>
-        <View style={{ flex: 1, display: "flex" }}>
+        <View style={{flex: 1, display: 'flex'}}>
           {selectedSubWallet == null && (
             <SubWalletSelectorModal
               visible={selectedSubWallet == null}
               cancel={this.goBack}
               animationType="slide"
-              subWallets={filteredSubWallets == null ? subWallets : filteredSubWallets}
+              subWallets={
+                filteredSubWallets == null ? subWallets : filteredSubWallets
+              }
               chainTicker={activeCoin.id}
               displayTicker={activeCoin.display_ticker}
             />
@@ -214,7 +235,7 @@ class CoinMenus extends Component {
   }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     activeCoin: state.coins.activeCoin,
     activeApp: state.coins.activeApp,
@@ -223,9 +244,8 @@ const mapStateToProps = (state) => {
     selectedSubWallet:
       state.coinMenus.activeSubWallets[state.coins.activeCoin.id],
     allSubWallets: state.coinMenus.allSubWallets[state.coins.activeCoin.id],
-    services: state.services
+    services: state.services,
   };
 };
 
 export default connect(mapStateToProps)(withNavigationFocus(CoinMenus));
-

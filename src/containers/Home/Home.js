@@ -546,6 +546,7 @@ const mapStateToProps = state => {
     widgetOrder: state.widgets.order,
     homeCardDragDetection:
       state.settings.generalWalletSettings.homeCardDragDetection,
+    darkMode:state.settings.darkMode
   };
 };
 

@@ -251,6 +251,7 @@ export default containers = {
   },
   underflow: {
     zIndex: -1,
+    
   },
   greyStripeContainer: {
     backgroundColor: Colors.tertiaryColor,

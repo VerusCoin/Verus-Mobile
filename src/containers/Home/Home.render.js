@@ -25,6 +25,7 @@ import {
 } from '../../utils/constants/currencies';
 import VerusIdWidget from './HomeWidgets/VerusIdWidget';
 import {CoinDirectory} from '../../utils/CoinData/CoinDirectory';
+import Colors from '../../globals/colors';
 
 export const HomeRender = function () {
   const dragDetection = this.dragDetectionEnabled();
@@ -122,7 +123,7 @@ export const HomeRenderCoinsList = function () {
     <View
       style={{
         height: '100%',
-        backgroundColor: 'white',
+        backgroundColor: this.props.darkMode ? Colors.darkModeColor : 'white',
         width: '100%',
         overflow: 'visible',
       }}>

@@ -65,7 +65,8 @@ class Overview extends Component {
         activeCoinExplorerId: null,
         activeCoinDisplayTicker: null,
         TxLogo: TX_LOGOS.unknown
-      }
+      },
+
     };
     //this.updateProps = this.updateProps.bind(this);
     this.refresh = this.refresh.bind(this);
@@ -276,6 +277,8 @@ class Overview extends Component {
         }
       >
         <List.Item
+          titleStyle={{color:this.props.darkMode?Colors.secondaryColor:""}}
+          descriptionStyle={{color:this.props.darkMode?Colors.secondaryColor:""}}
           title={`${
             displayAmount != null
               ? displayAmount.isLessThan(BigNumber(0.0001)) &&
@@ -304,7 +307,9 @@ class Overview extends Component {
           right={(props) => (
             <React.Fragment>
               {item.memo != null && <List.Icon {...props} icon={"email"} size={20} />}
-              <List.Icon {...props} icon={"chevron-right"} size={20} />
+              <List.Icon {...props} icon={"chevron-right"} size={20} 
+              color={this.props.darkMode?Colors.secondaryColor:""}
+              />
             </React.Fragment>
           )}
         />
@@ -334,15 +339,15 @@ class Overview extends Component {
   renderTransactionList = () => {
     return (
       <FlatList
-        style={Styles.fullWidth}
+        style={[Styles.fullWidth, {backgroundColor: this.props.darkMode?Colors.darkModeColor:''}]}
         contentContainerStyle={{ flexGrow: 1 }}
         data={this.parseTransactionLists()}
         scrollEnabled={true}
         ListEmptyComponent={
           <View
-            style={Styles.focalCenter}
+            style={{...Styles.focalCenter,backgroundColor: this.props.darkMode?Colors.darkModeColor:''}}
           >
-            <Text style={{...Styles.centeredText, fontSize: 16, color: Colors.verusDarkGray}}>
+            <Text style={{...Styles.centeredText, fontSize: 16, color: this.props.darkMode?Colors.secondaryColor : Colors.verusDarkGray}}>
               {"No transactions found..."}
             </Text>
           </View>
@@ -403,6 +408,7 @@ const mapStateToProps = (state) => {
     activeAccount: state.authentication.activeAccount,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     generalWalletSettings: state.settings.generalWalletSettings,
+    darkMode:state.settings.darkMode
   }
 };
 
