@@ -178,11 +178,21 @@ export const checkVerusIdNotificationsForUpdates = async () => {
             const response = await axios.post(pendingIds[ticker][iaddress].infoUri);
 
             if (response.data.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
-              pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_FAILED;
-              pendingIds[ticker][iaddress].error_desc = [`${fqn.split(".")[0]}@`, ` failed to provision from `, `${pendingIds[ticker][iaddress].provisioningName}@`];
-              await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
+
+              const newDeepLinkNotification = new DeeplinkNotification (
+                "Retry",
+                [`${pendingIds[ticker][iaddress].provisioningName.split(".")[0]}@`, ` failed to provision.`],
+                null,
+                null,
+                pendingIds[ticker][iaddress].loginRequest,
+                state.authentication.activeAccount.accountHash
+              ); 
+              await deleteProvisionedIds(iaddress, ticker);
               await updatePendingVerusIds();
-              errorFound = true;
+              newDeepLinkNotification.icon = NOTIFICATION_ICON_ERROR;
+              newDeepLinkNotification.uid = pendingIds[ticker][iaddress].notificationUid;
+              await dispatchAddNotification(newDeepLinkNotification);
+              continue;
             }
           } 
         } catch (e) {

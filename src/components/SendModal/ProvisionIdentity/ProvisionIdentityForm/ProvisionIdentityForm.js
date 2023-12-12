@@ -96,8 +96,13 @@ const ProvisionIdentityForm = (props) => {
     
                 if (provIdKey != null && idKey.data === provIdKey.data) {
                   assignedIdentity = identity.result.identity.identityaddress;
+                  props.updateSendFormData(
+                    SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
+                    identity.result.identity.name
+                  );
+
                 }
-                if (idKey.vdxfkey == primitives.ID_PARENT_VDXF_KEY.vdxfid) {
+                if (idKey.vdxfkey === primitives.ID_PARENT_VDXF_KEY.vdxfid) {
                    parentname = `.${identity.result.fullyqualifiedname}`
                 } 
               }
@@ -202,7 +207,7 @@ const ProvisionIdentityForm = (props) => {
           label="i-Address or VerusID handle"
           value={state.assignedIdentity
             ? state.friendlyNameMap[state.assignedIdentity]
-              ? `${state.friendlyNameMap[state.assignedIdentity]}@`
+              ? `${state.friendlyNameMap[state.assignedIdentity]}`
               : state.assignedIdentity
             : sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]}
           mode="outlined"
@@ -223,7 +228,7 @@ const ProvisionIdentityForm = (props) => {
               ? state.friendlyNameMap[state.assignedIdentity]
                 ? `${
                     state.friendlyNameMap[state.assignedIdentity]
-                  }@`
+                  }`
                 : state.assignedIdentity
               : sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]
           }{state.parentname}</Text> 
