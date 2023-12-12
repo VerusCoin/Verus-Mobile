@@ -181,7 +181,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
 
               const newDeepLinkNotification = new DeeplinkNotification (
                 "Retry",
-                [`${pendingIds[ticker][iaddress].provisioningName.split(".")[0]}@`, ` failed to provision.`],
+                [`${pendingIds[ticker][iaddress].provisioningName.split(".")[0]}@`, ` failed to create identity.`],
                 null,
                 null,
                 pendingIds[ticker][iaddress].loginRequest,
