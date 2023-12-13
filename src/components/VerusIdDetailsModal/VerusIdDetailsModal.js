@@ -27,6 +27,16 @@ export default function VerusIdDetailsModal(props) {
   const [failedToLoad, setFailedToLoad] = useState(false);
   const [failedMessage, setFailedMessage] = useState(DEFAULT_FAIL_MESSAGE);
 
+  function getVerusIdTitle() {
+    if (verusId) {
+      const fullTitle = convertFqnToDisplayFormat(verusId.fullyqualifiedname);
+
+      return fullTitle.length < 12 ? fullTitle : "VerusID"
+    } else return ""
+  }
+
+  const [verusIdTitle, setVerusIdTitle] = useState(getVerusIdTitle());
+
   async function onVisibleUpdate() {
     if (visible) {
       try {
@@ -52,6 +62,12 @@ export default function VerusIdDetailsModal(props) {
     onVisibleUpdate();
   }, [visible]);
 
+  useEffect(() => {
+    if (verusId) {
+      setVerusIdTitle(getVerusIdTitle());
+    }
+  }, [verusId])
+
   return (
     <SemiModal
       animationType={animationType}
@@ -73,7 +89,7 @@ export default function VerusIdDetailsModal(props) {
                   ...Styles.centralHeader,
                   ...Styles.smallMediumFont,
                 }}>
-                {failedToLoad ? "Error" : convertFqnToDisplayFormat(verusId.fullyqualifiedname)}
+                {failedToLoad ? "Error" : verusIdTitle}
               </Text>
               <Button
                 onPresscolor={Colors.primaryColor}
