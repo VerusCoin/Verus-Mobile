@@ -478,7 +478,7 @@ class DynamicHeader extends Component {
         </View>
         <View
           style={{
-            flexDirection: 'column',
+            flexDirection: 'row',
             justifyContent: 'center',
             alignItems: 'flex-end',
             paddingBottom: 16,
