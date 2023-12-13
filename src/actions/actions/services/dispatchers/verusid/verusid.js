@@ -11,6 +11,9 @@ import { NOTIFICATION_ICON_ERROR, NOTIFICATION_ICON_VERUSID } from '../../../../
 import { updatePendingVerusIds } from "../../../channels/verusid/dispatchers/VerusidWalletReduxManager"
 import { dispatchAddNotification } from '../../../notifications/dispatchers/notifications';
 import { DeeplinkNotification, BasicNotification } from '../../../../../utils/notification';
+import {requestSeeds} from '../../../../../utils/auth/authBox';
+import {deriveKeyPair} from '../../../../../utils/keys';
+import {ELECTRUM} from '../../../../../utils/constants/intervalConstants';
 
 export const linkVerusId = async (iAddress, fqn, chain) => {
   const state = store.getState();
@@ -142,6 +145,17 @@ export const deleteAllProvisionedIds = async () => {
 export const checkVerusIdNotificationsForUpdates = async () => {
   const state = store.getState();
 
+  const getPotentialPrimaryAddresses = async (coinObj, channel) => {
+    const seeds = await requestSeeds();
+
+    const seed = seeds[channel];
+
+    const keyObj = await deriveKeyPair(seed, coinObj, channel);
+    const {addresses} = keyObj;
+
+    return addresses;
+  };
+
   if (state.authentication.activeAccount == null) {
     throw new Error('You must be signed in for ID provisioning functions');
   }
@@ -154,11 +168,9 @@ export const checkVerusIdNotificationsForUpdates = async () => {
   const pendingIds = state.channelStore_verusid.pendingIds;
 
   const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
-  const currentLinkedIdentities = Object.keys(serviceData?.linked_ids[ticker] || []);
+  const currentLinkedIdentities =  Object.keys(serviceData.linked_ids && serviceData.linked_ids[ticker] || {});
 
-
-  if (pendingIds[ticker] !== null) {
-
+  if (pendingIds[ticker]) {
     const details = Object.keys(pendingIds[ticker]);
     for (const iaddress of details) {
 
@@ -225,10 +237,19 @@ export const checkVerusIdNotificationsForUpdates = async () => {
       }
 
       const identity = await getIdentity(system.system_id, iaddress);
+      const addrs = await getPotentialPrimaryAddresses(system, ELECTRUM);
+      let isInWallet = false;
 
-      if (identity.result &&
-        identity.result.identity.primaryaddresses
-          .indexOf(state.authentication.activeAccount.keys[ticker].vrpc.addresses[0]) > -1) {
+      if (identity.result) {
+        for (const address of identity.result.identity.primaryaddresses) {
+          if (addrs.includes(address)) {
+            isInWallet = true;
+            break;
+          }
+        }
+      }
+
+      if (isInWallet) {
 
         pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_READY;
 
