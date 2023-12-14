@@ -90,11 +90,11 @@ class DisplaySeed extends Component {
     this.props.navigation.dispatch(NavigationActions.back());
   };
 
-  toggleDerived = async (key) => {
-    if (!this.state.derivedKeys[key]) {
+  toggleDerived = async (key, coinObj) => {
+    if (!this.state.toggleDerivedKey[key]) {
       try {
         this.setState({ fetchingDerivedKey: { ...this.state.fetchingDerivedKey, [key]: true } });
-        const derivedKey = await this.deriveKeyFromSeed(this.state.seeds[key], key);
+        const derivedKey = await this.deriveKeyFromSeed(this.state.seeds[key], key, coinObj);
         this.setState({ 
           derivedKeys: { ...this.state.derivedKeys, [key]: derivedKey }, 
           fetchingDerivedKey: { ...this.state.fetchingDerivedKey, [key]: false },
@@ -115,7 +115,7 @@ class DisplaySeed extends Component {
   }
 
   // Method to derive the key from seed. Replace this with your actual implementation
-  deriveKeyFromSeed = async (seed, key) => {
+  deriveKeyFromSeed = async (seed, key, coinObj) => {
     switch (key) {
       case DLIGHT_PRIVATE:
         return Buffer.from(await dlightSeedToBytes(seed)).toString('hex');
@@ -123,6 +123,13 @@ class DisplaySeed extends Component {
         return (await deriveKeyPair(
           seed,
           coinsList.ETH,
+          key,
+          this.props.activeAccount.keyDerivationVersion,
+        )).privKey;
+      case ELECTRUM:
+        return (await deriveKeyPair(
+          seed,
+          coinObj,
           key,
           this.props.activeAccount.keyDerivationVersion,
         )).privKey;
@@ -156,12 +163,28 @@ class DisplaySeed extends Component {
                     <View style={Styles.fullWidthFlexCenterBlock}>
                       <QRCode value={displayedValue} size={250} />
                     </View>
-
-                    {((key === DLIGHT_PRIVATE && isSeedPhrase(seeds[key])) || key === ETH) && (
-                      <Button onPress={() => this.toggleDerived(key)}>
-                        {fetchingDerivedKey[key] ? "Fetching..." : (isToggleOn ? "Show Seed" : "Show Derived Key")}
-                      </Button>
-                    )}
+                    {
+                      ((key === DLIGHT_PRIVATE && isSeedPhrase(seeds[key])) ||
+                        key === ETH ||
+                        key === ELECTRUM) && (
+                        <Button onPress={() => this.toggleDerived(key, coinsList.VRSC)}>
+                          {fetchingDerivedKey[key]
+                            ? 'Fetching...'
+                            : isToggleOn
+                            ? 'Show Seed'
+                            : key === ELECTRUM
+                            ? 'Show Derived Key (VRSC)'
+                            : 'Show Derived Key'}
+                        </Button>
+                      )
+                    }
+                    {
+                      !isToggleOn && !fetchingDerivedKey[key] && key === ELECTRUM && (
+                        <Button onPress={() => this.toggleDerived(key, coinsList.BTC)}>
+                          {'Show Derived Key (BTC)'}
+                        </Button>
+                      )
+                    }
                   </Card.Content>
                 </Card>
               </View>

@@ -11,6 +11,7 @@ import {
   SET_COIN_STATUS,
   SET_COINMENU_FOCUS,
   SET_USER_COINS_COMPLETE,
+  SET_BALANCE_SHOW
 } from '../utils/constants/storeType'
 import {
   PRE_DATA,
@@ -24,6 +25,7 @@ export const coins = (state = {
   activeSection: null,
   status: {},
   coinMenuFocused: false,
+  showBalance:true
 }, action) => {
   //TODO: Change coin lists to objects not arrays
   switch (action.type) {
@@ -65,6 +67,11 @@ export const coins = (state = {
           ...state.status,
           [action.chainTicker]: action.status
         }
+      }
+    case SET_BALANCE_SHOW:
+      return {
+        ...state,
+        showBalance:!state.showBalance
       }
     default:
       return state;
