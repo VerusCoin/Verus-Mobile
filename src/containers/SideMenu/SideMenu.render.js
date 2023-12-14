@@ -126,13 +126,18 @@ export const renderSettingsComponents = function () {
       style={Styles.fullWidth}
       renderItem={({item}) => (
         <List.Item
-          left={() => <List.Icon icon={item.icon} />}
+          titleStyle={{color: this.props.darkMode ? Colors.secondaryColor : 'black'}}
+          left={() => <List.Icon 
+            color={this.props.darkMode ? Colors.secondaryColor : 'black'}
+            icon={item.icon} />}
           title={item.title}
           onPress={() => this._openSettings(item)}
         />
       )}
       renderSectionHeader={({section: {title}}) => (
-        <List.Subheader>{title}</List.Subheader>
+        <List.Subheader
+        style={{color: this.props.darkMode ? Colors.secondaryColor : 'black'}}
+        >{title}</List.Subheader>
       )}
       sections={[
         {

@@ -64,7 +64,8 @@ class Modal extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    modalStack: state.modal.stack
+    modalStack: state.modal.stack,
+    darkMode:state.settings.darkMode
   }
 };
 

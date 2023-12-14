@@ -6,7 +6,7 @@
 */
 
 import React, {useState, useEffect} from 'react';
-import {FlatList, TouchableOpacity, View} from 'react-native';
+import {FlatList, TouchableOpacity, TouchableWithoutFeedback, View} from 'react-native';
 import {List, Portal, Searchbar} from 'react-native-paper';
 import {useSelector} from 'react-redux';
 import Styles from '../../styles/index';
@@ -14,6 +14,7 @@ import {RenderSquareCoinLogo} from '../../utils/CoinData/Graphics';
 import CoinDetailsModal from '../../components/CoinDetailsModal/CoinDetailsModal';
 import {WYRE_SERVICE} from '../../utils/constants/intervalConstants';
 import {CoinDirectory} from '../../utils/CoinData/CoinDirectory';
+import Colors from '../../globals/colors';
 
 const AddCoin = props => {
   const [loading, setLoading] = useState(true);
@@ -34,6 +35,7 @@ const AddCoin = props => {
     state => state.coins.activeCoinsForUser,
   );
   const activeCoinList = useSelector(state => state.coins.activeCoinList);
+  const darkMode = useSelector(state => state.settings.darkMode);
 
   useEffect(() => {
     setCoinList(getCoinList());
@@ -135,18 +137,22 @@ const AddCoin = props => {
           cancel={() => setFullCoinDetails(null)}
           visible={fullCoinDetails != null}
           animationType="slide"
+          
         />
       </Portal>
       <FlatList
         ListHeaderComponent={
           <Searchbar
+            iconColor={darkMode ? Colors.secondaryColor : Colors.verusDarkGray}
             placeholder="Search"
+            placeholderTextColor={darkMode ? Colors.secondaryColor : Colors.verusDarkGray}
             onChangeText={text => setQuery(text)}
             value={query}
             autoCorrect={false}
+            style={{backgroundColor:darkMode ? Colors.darkModeColor : Colors.secondaryColor}}
           />
         }
-        style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}
+        style={{...Styles.fullWidth, backgroundColor:darkMode?Colors.darkModeColor:'white'}}
         data={coinList}
         onEndReached={onEndReached}
         onEndReachedThreshold={50}
@@ -155,17 +161,23 @@ const AddCoin = props => {
           const {display_name, display_ticker} = coinObj;
 
           return (
-            <TouchableOpacity onPress={() => setFullCoinDetails(item.coinObj)}>
+            <TouchableOpacity 
+            onPress={() => setFullCoinDetails(item.coinObj)}>
               <List.Item
+                titleStyle={{color:darkMode ? Colors.secondaryColor : 'black'}}
                 title={`${display_name} (${display_ticker})`}
                 left={props => RenderSquareCoinLogo(coinObj.id)}
                 right={props => {
                   return added ? (
-                    <List.Icon {...props} icon={'check'} size={20} />
+                    <List.Icon 
+                    {...props}
+                    color={darkMode ? Colors.secondaryColor : 'black'} 
+                    icon={'check'} 
+                    size={20} />
                   ) : null;
                 }}
                 style={{
-                  backgroundColor: 'white',
+                  backgroundColor:darkMode ? Colors.darkModeColor : Colors.secondaryColor
                 }}
               />
             </TouchableOpacity>

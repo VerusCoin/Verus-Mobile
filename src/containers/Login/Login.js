@@ -33,7 +33,8 @@ const Login = props => {
     state => state.authentication.authModalUsed,
   );
   const accounts = useSelector(state => state.authentication.accounts);
-
+  const darkMode = useSelector(state => state.settings.darkMode);
+ 
   openAuthModal = ignoreDefault => {
     if (ignoreDefault) {
       openAuthenticateUserModal();
@@ -70,7 +71,7 @@ const Login = props => {
   return (
     <SafeAreaView
       style={{
-        backgroundColor: Colors.secondaryColor,
+        backgroundColor: darkMode? Colors.darkModeColor : Colors.secondaryColor,
         ...Styles.focalCenter,
       }}>
       <VerusLogo
