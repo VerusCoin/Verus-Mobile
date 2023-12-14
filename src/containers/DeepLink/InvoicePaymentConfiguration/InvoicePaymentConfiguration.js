@@ -1,21 +1,25 @@
 import React, {useState, useEffect} from 'react';
-import {ScrollView, View} from 'react-native';
+import {ScrollView, View, SafeAreaView, Alert} from 'react-native';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import { useSelector } from 'react-redux';
-import { openLinkIdentityModal, openProvisionIdentityModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
+import { openAddPbaasCurrencyModal, openConvertOrCrossChainSendModal, openLinkIdentityModal, openProvisionIdentityModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import { requestServiceStoredData } from '../../../utils/auth/authBox';
 import { VERUSID_SERVICE_ID } from '../../../utils/constants/services';
 import { findCoinObj } from '../../../utils/CoinData/CoinData';
-import { Button, Divider, List } from 'react-native-paper';
+import { Button, Divider, List, Portal } from 'react-native-paper';
 import { signLoginConsentResponse } from '../../../utils/api/channels/vrpc/requests/signLoginConsentResponse';
 import BigNumber from 'bignumber.js';
 import { VERUSID_NETWORK_DEFAULT } from "../../../../env/index";
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import Colors from '../../../globals/colors';
 import { NavigationActions } from '@react-navigation/compat';
+import ListSelectionModal from '../../../components/ListSelectionModal/ListSelectionModal';
+import SubWalletSelectorModal from '../../SubWalletSelect/SubWalletSelectorModal';
+import { SEND_MODAL_ADVANCED_FORM, SEND_MODAL_PBAAS_CURRENCY_PASSTHROUGH, SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD, SEND_MODAL_SHOW_EXPORTTO_FIELD, SEND_MODAL_SHOW_VIA_FIELD } from '../../../utils/constants/sendModal';
+import { VRPC } from '../../../utils/constants/intervalConstants';
 
 const InvoicePaymentConfiguration = props => {
   const {
@@ -30,95 +34,289 @@ const InvoicePaymentConfiguration = props => {
     chainInfo,
     acceptedSystemsDefinitions
   } = props.route.params;
+  const [isListSelectionModalVisible, setIsListSelectionModalVisible] = useState(false);
+  const [isSubWalletSelectorModalVisible, setIsSubWalletSelectorModalVisible] = useState(false);
+  const [listData, setListData] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const [linkedIds, setLinkedIds] = useState({});
+  const [selectedSubWallet, setSelectedSubWallet] = useState(null);
   const inv = primitives.VerusPayInvoice.fromJson(deeplinkData);
 
+  const [activeCoin, setActiveCoin] = useState(null);
+  const [activeCoinCurrencyIds, setActiveCoinCurrencyIds] = useState([]);
+
+  const [subWalletOptions, setSubWalletOptions] = useState([]);
+
   const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser);
+  
   const testnetOverrides = useSelector(state => state.authentication.activeAccount.testnetOverrides);
+  const allSubWallets = useSelector(state => state.coinMenus.allSubWallets)
 
   const [sendCurrencyDefinition, setSendCurrencyDefinition] = useState(
     inv.details.acceptsConversion() ? null : currencyDefinition,
   );
-  const [networkDefinition, setNetworkDefinition] = useState(null);
-
-  const activeCoinIds = activeCoinsForUser.map(coinObj => coinObj.id);
+  const [networkDefinition, setNetworkDefinition] = useState(
+    inv.details.acceptsNonVerusSystems()
+      ? acceptedSystemsDefinitions.definitions[coinObj.currency_id]
+      : null,
+  );
 
   const { system_id } = inv;
+
+  const openListSelectionModal = () => {
+    setIsListSelectionModalVisible(true);
+  };
+  
+  const handleNetworkSelect = (item) => {
+    setNetworkDefinition(acceptedSystemsDefinitions.definitions[item.key]);
+
+    setIsListSelectionModalVisible(false);
+  };
+
+  useEffect(() => {
+    if (acceptedSystemsDefinitions) {
+      const dataList = Object.values(acceptedSystemsDefinitions.definitions).map(def => ({
+        title: def.fullyqualifiedname,
+        description: def.currencyid,
+        key: def.currencyid
+      }));
+      setListData(dataList);
+    }
+  }, [acceptedSystemsDefinitions]);
+
+  useEffect(() => {
+    if (activeCoinsForUser) {
+      setActiveCoinCurrencyIds(activeCoinsForUser.map(coinObj => coinObj.currency_id));
+    }
+  }, [activeCoinsForUser]);
+
+  useEffect(() => {
+    if (activeCoinsForUser && sendCurrencyDefinition) {
+      setActiveCoin(activeCoinsForUser.find(x => x.currency_id === sendCurrencyDefinition.currencyid));
+    }
+  }, [activeCoinsForUser, sendCurrencyDefinition]);
+
+  useEffect(() => {
+    if (allSubWallets && activeCoin && allSubWallets[activeCoin.id]) {
+      setSubWalletOptions(allSubWallets[activeCoin.id].filter(x => {
+        const channelSplit = x.channel.split('.');
+        if (channelSplit.length < 3) return false;
+
+        const [channelName, iAddress, systemId] = channelSplit;
+
+        if (channelName === VRPC) {
+          if (inv.details.acceptsNonVerusSystems()) {
+            return systemId === coinObj.currency_id || inv.details.acceptedsystems.includes(systemId);
+          } else {
+            return systemId === coinObj.currency_id;
+          }
+        }
+      }))
+    } else {
+      setSubWalletOptions([])
+    }
+  }, [allSubWallets, activeCoin]);
+  
+  const openAddCoinModal = () => {
+    Alert.alert(
+      'Add Currency',
+      'In order to proceed in paying this invoice, you will need to add the ' +
+        coinObj.display_ticker +
+        ' currency to your wallet.',
+    );
+
+    openAddPbaasCurrencyModal(coinObj, {
+      [SEND_MODAL_PBAAS_CURRENCY_PASSTHROUGH]: true,
+      [SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD]: sendCurrencyDefinition.currencyid,
+    })
+  }
+
+  const selectCurrencyAlert = () => {
+    return createAlert("Select a Currency", "Please select a currency to pay in.")
+  }
+
+  const handleSelectSource = () => {
+    if (sendCurrencyDefinition == null) selectCurrencyAlert()
+    else if (activeCoin == null) openAddCoinModal()
+    else {
+      setIsSubWalletSelectorModalVisible(true)
+    }
+  }
+
+  const onSelectSubwallet = (subWallet) => {
+    setIsSubWalletSelectorModalVisible(false)
+    setSelectedSubWallet(subWallet)
+  }
+
+  const handleContinue = () => {
+    openConvertOrCrossChainSendModal(activeCoin, selectedSubWallet, {
+      [SEND_MODAL_TO_ADDRESS_FIELD]: '',
+      [SEND_MODAL_AMOUNT_FIELD]: '',
+      [SEND_MODAL_MEMO_FIELD]: '',
+      [SEND_MODAL_CONVERTTO_FIELD]: '',
+      [SEND_MODAL_EXPORTTO_FIELD]: '',
+      [SEND_MODAL_VIA_FIELD]: '',
+      [SEND_MODAL_PRICE_ESTIMATE]: null,
+      [SEND_MODAL_IS_PRECONVERT]: false,
+      [SEND_MODAL_SHOW_CONVERTTO_FIELD]: true,
+      [SEND_MODAL_SHOW_EXPORTTO_FIELD]: false,
+      [SEND_MODAL_SHOW_VIA_FIELD]: false,
+      [SEND_MODAL_ADVANCED_FORM]: true
+    })
+  };
 
   return loading ? (
     <AnimatedActivityIndicatorBox />
   ) : (
-    <ScrollView style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}>
-      <Divider />
-      <List.Item
-        title={sendCurrencyDefinition != null ? sendCurrencyDefinition.fullyqualifiedname : "Select a currency"}
-        description={"Currency to pay invoice in"}
-        left={props => <List.Icon
-          {...props}
-          color={sendCurrencyDefinition ? Colors.verusGreenColor : Colors.warningButtonColor}
-          icon={sendCurrencyDefinition != null ? "check" : "asterisk"}
-          size={20}
-        />}
-      />
-      <Divider />
-      {inv.details.acceptsConversion() && <React.Fragment>
-        <List.Item
-          title={""}
-          description={"Amount required to pay invoice"}
-        />
-        <Divider />
-      </React.Fragment>}
-      <List.Item
-        title={
-          inv.details.acceptsNonVerusSystems()
-            ? networkDefinition == null
-              ? 'Select a network'
-              : networkDefinition
-            : coinObj.display_name
+    <SafeAreaView style={Styles.defaultRoot}>
+      <Portal>
+        {
+          isSubWalletSelectorModalVisible && (
+            <SubWalletSelectorModal
+              visible={isSubWalletSelectorModalVisible}
+              cancel={() => setIsSubWalletSelectorModalVisible(false)}
+              animationType="slide"
+              subWallets={subWalletOptions}
+              chainTicker={activeCoin != null ? activeCoin.id : ""}
+              displayTicker={activeCoin != null ? activeCoin.display_ticker : ""}
+              onSelect={onSelectSubwallet}
+            />
+          )
         }
-        description={'Network to pay invoice on'}
-        left={props => (
-          <List.Icon
-            {...props}
-            color={
-              inv.details.acceptsNonVerusSystems() && networkDefinition == null
-                ? Colors.warningButtonColor
-                : Colors.verusGreenColor
-            }
-            icon={
-              inv.details.acceptsNonVerusSystems() && networkDefinition == null
-                ? 'asterisk'
-                : 'check'
-            }
-            size={20}
+        {
+          isListSelectionModalVisible && (
+            <ListSelectionModal
+              visible={isListSelectionModalVisible}
+              data={listData}
+              onSelect={handleNetworkSelect}
+              cancel={() => setIsListSelectionModalVisible(false)}
+              title="Supported Payment Networks"
+              flexHeight={1}
+            />
+          )
+        }
+      </Portal>
+      <View style={{flex: 1, width: '100%'}}>
+        <ScrollView style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}>
+          <Divider />
+          <List.Item
+            title={inv.details.acceptsAnyAmount() || !inv.details.acceptsConversion() ? amountDisplay : ''}
+            description={'Amount to pay'}
+            left={props => (
+              <List.Icon
+                {...props}
+                color={
+                  sendCurrencyDefinition
+                    ? Colors.verusGreenColor
+                    : Colors.infoButtonColor
+                }
+                icon={sendCurrencyDefinition != null ? 'check' : 'circle-edit-outline'}
+                size={20}
+              />
+            )}
           />
-        )}
-      />
-      <Divider />
-      <View
-        style={{
-          ...Styles.fullWidthBlock,
-          paddingHorizontal: 16,
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          display: 'flex',
-        }}>
-        <Button
-          color={Colors.warningButtonColor}
-          style={{width: 148}}
-          onPress={() => props.navigation.dispatch(NavigationActions.back())}>
-          Cancel
-        </Button>
-        <Button
-          color={Colors.verusGreenColor}
-          style={{width: 148}}
-          //onPress={() => handleContinue()}
-        >
-          Continue
-        </Button>
+          <Divider />
+          <List.Item
+            title={
+              sendCurrencyDefinition != null
+                ? sendCurrencyDefinition.fullyqualifiedname
+                : 'Select a currency'
+            }
+            description={'Currency to pay in'}
+            left={props => (
+              <List.Icon
+                {...props}
+                color={
+                  sendCurrencyDefinition
+                    ? Colors.verusGreenColor
+                    : Colors.infoButtonColor
+                }
+                icon={sendCurrencyDefinition != null ? 'check' : 'circle-edit-outline'}
+                size={20}
+              />
+            )}
+          />
+          <Divider />
+          <List.Item
+            onPress={handleSelectSource}
+            title={
+              selectedSubWallet != null
+                ? `${selectedSubWallet.name} (${
+                    acceptedSystemsDefinitions &&
+                    acceptedSystemsDefinitions.definitions[selectedSubWallet.network]
+                      ? acceptedSystemsDefinitions.definitions[selectedSubWallet.network]
+                          .fullyqualifiedname
+                      : '??'
+                  } network)`
+                : 'Select a source'
+            }
+            description={'Source of funds to pay invoice from'}
+            left={props => (
+              <List.Icon
+                {...props}
+                color={
+                  selectedSubWallet ? Colors.verusGreenColor : Colors.infoButtonColor
+                }
+                icon={selectedSubWallet != null ? 'check' : 'circle-edit-outline'}
+                size={20}
+              />
+            )}
+          />
+          <Divider />
+          <List.Item
+            title={
+              inv.details.acceptsNonVerusSystems()
+                ? networkDefinition == null
+                  ? 'Select a network'
+                  : networkDefinition.fullyqualifiedname
+                : coinObj.display_name
+            }
+            description={'Network to pay on'}
+            onPress={inv.details.acceptsNonVerusSystems() ? openListSelectionModal : undefined}
+            left={props => (
+              <List.Icon
+                {...props}
+                color={
+                  inv.details.acceptsNonVerusSystems() && networkDefinition == null
+                    ? Colors.infoButtonColor
+                    : Colors.verusGreenColor
+                }
+                icon={
+                  inv.details.acceptsNonVerusSystems() && networkDefinition == null
+                    ? 'circle-edit-outline'
+                    : 'check'
+                }
+                size={20}
+              />
+            )}
+          />
+          <Divider />
+        </ScrollView>
+        <View
+          style={{
+            paddingHorizontal: 16,
+            paddingBottom: 16,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            backgroundColor: '#fff', // or any other background color
+          }}>
+          <Button
+            color={Colors.warningButtonColor}
+            style={{width: 148}}
+            onPress={() => cancel()}>
+            Cancel
+          </Button>
+          <Button
+            color={Colors.verusGreenColor}
+            style={{width: 148}}
+            disabled={activeCoin == null || selectedSubWallet == null || networkDefinition == null || sendCurrencyDefinition == null}
+            onPress={() => handleContinue()}>
+            Continue
+          </Button>
+        </View>
       </View>
-    </ScrollView>
+    </SafeAreaView>
   );
 };
 

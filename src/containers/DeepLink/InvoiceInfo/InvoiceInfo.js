@@ -93,7 +93,7 @@ const InvoiceInfo = props => {
     });
   }
 
-  const [isListSelectionModalVisible, setisListSelectionModalVisible] = useState(false);
+  const [isListSelectionModalVisible, setIsListSelectionModalVisible] = useState(false);
   const [listData, setListData] = useState([]);
   const [mainHeading, setMainHeading] = useState(getMainHeading());
   const [expiryLabel, setExpiryLabel] = useState(getExpiryLabel());
@@ -111,69 +111,55 @@ const InvoiceInfo = props => {
   const [coinDetailsModalProps, setCoinDetailsModalProps] = useState(null);
 
   handleContinue = () => {
-    // if (signedIn) {
-    //   if (!inv.details.acceptsConversion() && !inv.details.acceptsNonVerusSystems()) {
-    //     props.navigation.navigate('InvoicePaymentConfiguration', {
-    //       deeplinkData, 
-    //       sigtime, 
-    //       cancel, 
-    //       signerFqn, 
-    //       currencyDefinition, 
-    //       amountDisplay, 
-    //       destinationDisplay,
-    //       coinObj,
-    //       chainInfo,
-    //       acceptedSystemsDefinitions
-    //     });
-    //   }
-    // } else {
-    //   setWaitingForSignin(true);
-    //   const coinObj = CoinDirectory.findCoinObj(chain_id);
-    //   const allowList = coinObj.testnet ? accounts.filter(x => {
-    //     if (
-    //       x.testnetOverrides &&
-    //       x.testnetOverrides[coinObj.mainnet_id] === coinObj.id
-    //     ) {
-    //       return true;
-    //     } else {
-    //       return false;
-    //     }
-    //   }) : accounts.filter(x => {
-    //     if (
-    //       x.testnetOverrides &&
-    //       x.testnetOverrides[coinObj.mainnet_id] != null
-    //     ) {
-    //       return false;
-    //     } else {
-    //       return true;
-    //     }
-    //   })
+    if (signedIn) {
+      props.navigation.navigate('InvoicePaymentConfiguration', props);
+    } else {
+      setWaitingForSignin(true);
+      const allowList = coinObj.testnet ? accounts.filter(x => {
+        if (
+          x.testnetOverrides &&
+          x.testnetOverrides[coinObj.mainnet_id] === coinObj.id
+        ) {
+          return true;
+        } else {
+          return false;
+        }
+      }) : accounts.filter(x => {
+        if (
+          x.testnetOverrides &&
+          x.testnetOverrides[coinObj.mainnet_id] != null
+        ) {
+          return false;
+        } else {
+          return true;
+        }
+      })
 
-    //   if (allowList.length > 0) {
-    //     const data = {
-    //       [SEND_MODAL_USER_ALLOWLIST]: allowList
-    //     }
+      if (allowList.length > 0) {
+        const data = {
+          [SEND_MODAL_USER_ALLOWLIST]: allowList
+        }
   
-    //     openAuthenticateUserModal(data);
-    //   } else {
-    //     createAlert(
-    //       "Cannot continue",
-    //       `No ${
-    //         coinObj.testnet ? 'testnet' : 'mainnet'
-    //       } profiles found, cannot respond to ${
-    //         coinObj.testnet ? 'testnet' : 'mainnet'
-    //       } login request.`,
-    //     );
-    //   }
-    // }
+        openAuthenticateUserModal(data);
+      } else {
+        createAlert(
+          "Cannot continue",
+          `No ${
+            coinObj.testnet ? 'testnet' : 'mainnet'
+          } profiles found, cannot respond to ${
+            coinObj.testnet ? 'testnet' : 'mainnet'
+          } login request.`,
+        );
+      }
+    }
   };
 
   const openListSelectionModal = () => {
-    setisListSelectionModalVisible(true);
+    setIsListSelectionModalVisible(true);
   };
   
   const handleSupportedNetworkSelect = (item) => {
-    setisListSelectionModalVisible(false);
+    setIsListSelectionModalVisible(false);
   };
 
   useEffect(() => {
@@ -232,7 +218,7 @@ const InvoiceInfo = props => {
           visible={isListSelectionModalVisible}
           data={listData}
           onSelect={handleSupportedNetworkSelect}
-          cancel={() => setisListSelectionModalVisible(false)}
+          cancel={() => setIsListSelectionModalVisible(false)}
           title="Supported Payment Networks"
           flexHeight={1}
         />}

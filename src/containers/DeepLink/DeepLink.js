@@ -96,7 +96,11 @@ const DeepLink = (props) => {
 
               let i = 0;
 
-              for (; i < 3 && i < invoice.details.acceptedsystems.length; i++) {
+              const rootSystemRes = await getCurrency(coinObj.system_id, coinObj.currency_id)
+              if (rootSystemRes.error) throw new Error(rootSystemRes.error.message)
+              acceptedSystems.definitions[rootSystemRes.result.currencyid] = rootSystemRes.result;
+
+              for (; i < 10 && i < invoice.details.acceptedsystems.length; i++) {
                 const systemId = invoice.details.acceptedsystems[i];
 
                 const systemDefinitionRes = await getCurrency(coinObj.system_id, systemId)

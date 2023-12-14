@@ -33,7 +33,8 @@ import {
   SEND_MODAL_ADVANCED_FORM,
   SEND_MODAL_CONTRACT_ADDRESS_FIELD,
   ADD_ERC20_TOKEN_MODAL,
-  SEND_MODAL_SHOW_MAPPING_FIELD
+  SEND_MODAL_SHOW_MAPPING_FIELD,
+  SEND_MODAL_PBAAS_CURRENCY_PASSTHROUGH
 } from '../../../../utils/constants/sendModal';
 import {
   CLOSE_SEND_COIN_MODAL,
@@ -132,6 +133,7 @@ export const openAddPbaasCurrencyModal = (coinObj, data) => {
     data == null
       ? {
           [SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD]: '',
+          [SEND_MODAL_PBAAS_CURRENCY_PASSTHROUGH]: false
         }
       : data,
     ADD_PBAAS_CURRENCY_MODAL,
