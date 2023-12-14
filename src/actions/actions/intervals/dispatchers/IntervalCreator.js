@@ -160,9 +160,9 @@ export const clearAllCoinIntervals = (chainTicker) => {
  * @param {Function{}} onCompletes Object with optional onCompletes to each updateInterval to be called with state and dispatch function.
  * e.g. {get_info: {update_expired_oncomplete: increaseGetInfoInterval}}
  * @param {Object} updateParams Object that describes how to update intervals
- * @param {Array<string>} nonNativeSystems Array of systemids (i-addresses) that this currency will also exist on in the user's wallet
+ * @param {Array<string>} allSeenSystems Array of systemids (i-addresses) that this currency will also exist on in the user's wallet
  */
-export const refreshCoinIntervals = (coinObj, onCompletes, updateParams, nonNativeSystems = []) => {
+export const refreshCoinIntervals = (coinObj, onCompletes, updateParams, allSeenSystems = []) => {
   const state = Store.getState()
   const chainTicker = coinObj.id
   const vrpcSupported = coinObj.compatible_channels.includes(VRPC)
@@ -173,9 +173,7 @@ export const refreshCoinIntervals = (coinObj, onCompletes, updateParams, nonNati
 
   function setVrpcChannels(addresses) {
     return addresses.map(addr => {
-      const systems = [coinObj.system_id, ...nonNativeSystems]
-
-      return systems.map(system => {
+      return allSeenSystems.map(system => {
         const channelId = `${VRPC}.${addr}.${system}`;
         Store.dispatch({
           type: SET_ADDRESSES,
