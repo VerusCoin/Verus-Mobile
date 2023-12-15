@@ -133,6 +133,13 @@ const ProvisionIdentityForm = (props) => {
   
     try {
       fromBase58Check(identity);
+      if (state.parentname) {
+        createAlert(
+          'Invalid Identity',
+          'i-Address cannot have a parent name.',
+        );
+        return true;
+      }
     } catch (e) {
       const formattedId = state.parentname ? `${identity}${state.parentname}` : identity;
       if (!formattedId.endsWith('@')) {
@@ -154,8 +161,6 @@ const ProvisionIdentityForm = (props) => {
   
     const { coinObj, data } = sendModal;
     const identity = data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD];
-  
-
     const formattedId = state.parentname ? `${identity}${state.parentname}` : identity;
 
     try {
@@ -204,7 +209,7 @@ const ProvisionIdentityForm = (props) => {
         <View style={Styles.wideBlock}>
         <TextInput
           returnKeyType="done"
-          label="i-Address or VerusID handle"
+          label={state.parentname ? "VerusID handle" : "i-Address or VerusID handle"}
           value={state.assignedIdentity
             ? state.friendlyNameMap[state.assignedIdentity]
               ? `${state.friendlyNameMap[state.assignedIdentity]}`

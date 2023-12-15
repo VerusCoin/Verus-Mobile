@@ -46,7 +46,9 @@ import {
   SET_PENDING_DEPOSITS,
   ERROR_PENDING_DEPOSITS,
   SET_LINKED_IDENTITIES,
-  ERROR_LINKED_IDENTITIES
+  ERROR_LINKED_IDENTITIES,
+  SET_SERVICE_NOTIFICATIONS,
+  ERROR_SERVICE_NOTIFICATIONS,
 } from "../utils/constants/storeType";
 import {
   API_GET_BALANCES,
@@ -62,6 +64,7 @@ import {
   API_GET_DEPOSIT_SOURCES,
   API_GET_PENDING_DEPOSITS,
   API_GET_LINKED_IDENTITIES,
+  API_GET_NOTIFICATIONS
 } from "../utils/constants/intervalConstants";
 
 export const updates = (state = {
@@ -463,6 +466,25 @@ export const updates = (state = {
           }
         },
       };
+      case SET_SERVICE_NOTIFICATIONS:
+      case ERROR_SERVICE_NOTIFICATIONS:
+          return {
+            ...state,
+            serviceUpdateTracker: {
+              ...state.serviceUpdateTracker,
+              [API_GET_NOTIFICATIONS]: {
+                ...state.serviceUpdateTracker[
+                  API_GET_NOTIFICATIONS
+                ],
+                busy: {
+                  ...state.serviceUpdateTracker[
+                    API_GET_NOTIFICATIONS
+                  ].busy,
+                  [channel]: false,
+                },
+              }
+            },
+          };
     case OCCUPY_COIN_API_CALL: 
       return {
         ...state,

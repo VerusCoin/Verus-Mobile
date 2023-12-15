@@ -126,11 +126,16 @@ class ProvisionIdentityConfirm extends Component {
         this.props.sendModal.data.fromService, provisioningName, newLoadingNotification.uid, async (fqn) => {
           
           newLoadingNotification.body = "";
-          newLoadingNotification.title =  [`${fqn.split(".")[0]}@`, ` is being provisioned by `, `${provisioningName}@`]
+          let formattedName = ''
+          const lastDotIndex = fqn.lastIndexOf('.');
+          if (lastDotIndex === -1) formattedName = fqn; // return the original string if there's no dot
+          else formattedName = fqn.substring(0, lastDotIndex);
+
+          newLoadingNotification.title =  [`${formattedName}@`, ` is being provisioned by `, `${provisioningName}@`]
           newLoadingNotification.acchash = this.props.activeAccount.accountHash;
           newLoadingNotification.icon = NOTIFICATION_ICON_VERUSID;
 
-          await dispatchAddNotification(newLoadingNotification);
+          dispatchAddNotification(newLoadingNotification);
         });
 
       submissionSuccess(res.data)

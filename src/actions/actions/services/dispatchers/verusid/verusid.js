@@ -14,6 +14,7 @@ import { DeeplinkNotification, BasicNotification } from '../../../../../utils/no
 import {requestSeeds} from '../../../../../utils/auth/authBox';
 import {deriveKeyPair} from '../../../../../utils/keys';
 import {ELECTRUM} from '../../../../../utils/constants/intervalConstants';
+import { Alert } from 'react-native';
 
 export const linkVerusId = async (iAddress, fqn, chain) => {
   const state = store.getState();
@@ -187,9 +188,10 @@ export const checkVerusIdNotificationsForUpdates = async () => {
         let errorFound = false;
         try {
           if (pendingIds[ticker][iaddress].infoUri) {
-            const response = await axios.post(pendingIds[ticker][iaddress].infoUri);
-
-            if (response.data.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
+            const response = await axios.get(pendingIds[ticker][iaddress].infoUri);
+            const responseData = new primitives.LoginConsentProvisioningResponse(response.data);
+            
+            if (responseData.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
 
               const newDeepLinkNotification = new DeeplinkNotification (
                 "Retry",
@@ -203,7 +205,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
               await updatePendingVerusIds();
               newDeepLinkNotification.icon = NOTIFICATION_ICON_ERROR;
               newDeepLinkNotification.uid = pendingIds[ticker][iaddress].notificationUid;
-              await dispatchAddNotification(newDeepLinkNotification);
+              dispatchAddNotification(newDeepLinkNotification);
               continue;
             }
           } 
@@ -230,7 +232,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
           );  
           newDeepLinkNotification.icon = NOTIFICATION_ICON_ERROR;
           newDeepLinkNotification.uid = pendingIds[ticker][iaddress].notificationUid;
-          await dispatchAddNotification(newDeepLinkNotification);
+          dispatchAddNotification(newDeepLinkNotification);
           continue;
         }
         
@@ -251,25 +253,40 @@ export const checkVerusIdNotificationsForUpdates = async () => {
 
       if (isInWallet) {
 
-        pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_READY;
+        const commit = async () => {
 
-        await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
-        await linkVerusId(iaddress, identity.result.fullyqualifiedname, ticker);
-        await updatePendingVerusIds();
+          pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_READY;
+  
+          await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
+          await linkVerusId(iaddress, identity.result.fullyqualifiedname, ticker);
+          await updatePendingVerusIds();
+  
+          const newDeepLinkNotification = new DeeplinkNotification (
+            "login",
+            [`${identity.result.fullyqualifiedname.split(".")[0]}@`, ` is ready`],
+            null,
+            null,
+            pendingIds[ticker][iaddress].loginRequest,
+            state.authentication.activeAccount.accountHash
+          ); 
+  
+          newDeepLinkNotification.icon = NOTIFICATION_ICON_VERUSID;
+          newDeepLinkNotification.uid = pendingIds[ticker][iaddress].notificationUid;
+  
+          dispatchAddNotification(newDeepLinkNotification);
+        }
 
-        const newDeepLinkNotification = new DeeplinkNotification (
-          "login",
-          [`${identity.result.fullyqualifiedname.split(".")[0]}@`, ` is ready`],
-          null,
-          null,
-          pendingIds[ticker][iaddress].loginRequest,
-          state.authentication.activeAccount.accountHash
-        ); 
-
-        newDeepLinkNotification.icon = NOTIFICATION_ICON_VERUSID;
-        newDeepLinkNotification.uid = pendingIds[ticker][iaddress].notificationUid;
-
-        await dispatchAddNotification(newDeepLinkNotification);
+        if (identity.result.identity.primaryaddresses.length > 1) { 
+          Alert.alert(
+            'Warning - new VerusID detected',
+            'VerusID provisioned has multiple R-addresses associated with it. This may mean a third party has the ablility to spend from this address. Please understand the risks.',
+            [
+              {text: 'OK', onPress: async () => await commit()},
+            ],
+          )
+        } else {
+          await commit();
+        }
       }
     }
   }

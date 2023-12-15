@@ -202,7 +202,9 @@ const NotificationWidget = ({ props } = props) => {
 
                         }}>
                             <TouchableOpacity
-                                onPress={() => { dispatchClearNotifications(); }}>
+                                onPress={() => { Alert.alert("Clear Notifications", "Are you sure you want to clear all notifications?", 
+                                    [{ text: "Cancel", onPress: () => { } }, { text: "OK", onPress: () => { dispatchClearNotifications(); } }]) }} 
+                                >
                                 {!collapsed && <Paragraph style={{ fontSize: 12, textDecorationLine: 'underline', marginVertical: 17 }}>
                                     clear all
                                 </Paragraph>}
