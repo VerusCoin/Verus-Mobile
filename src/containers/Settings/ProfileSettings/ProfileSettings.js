@@ -657,7 +657,7 @@ const mapStateToProps = state => {
     wyreEnabled:
       state.authentication.activeAccount != null &&
       state.authentication.activeAccount.disabledServices[WYRE_SERVICE_ID] != true,
-    darkMode:state.settings.darkMode
+    darkMode:state.settings.darkModeState
   };
 };
 

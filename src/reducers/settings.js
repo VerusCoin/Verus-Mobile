@@ -11,10 +11,16 @@ import {
   SET_GENERAL_WALLET_SETTINGS_STATE,
   SET_COIN_SETTINGS_STATE,
   SET_BUY_SELL_SETTINGS_STATE,
-  SET_DARK_MODE
+  DARK_MODE_STATE,
 } from '../utils/constants/storeType'
 import { DLIGHT_PRIVATE } from '../utils/constants/intervalConstants'
 import { USD } from '../utils/constants/currencies'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
+
+
+console.log('darkmodestate',AsyncStorage.getItem('darkModeKey'))
 
 export const settings = (state = {
   btcFeesAdvanced: false,
@@ -34,7 +40,7 @@ export const settings = (state = {
     },
     addressBlocklist: [],
   },
-  darkMode:false,
+  darkModeState:null,
   buySellSettings: {}, //e.g. {user1': {buySellEnabled: true, wyreData: {}}, 'user2: {buySellEnabled: false, wyreData: {}}}
   coinSettings: {}, //e.g. {VRSC: {verificationLvl: 2, verificationLock: false, channels: ['dlight', 'electrum', 'general'], privateAddrs: 100}}
 }, action) => {
@@ -101,10 +107,10 @@ export const settings = (state = {
         ...state,
         wyreSettings: action.wyreSettings
       }
-    case SET_DARK_MODE:
+    case DARK_MODE_STATE:
       return {
         ...state,
-        darkMode:!state.darkMode  
+        darkModeState:action.payload  
       }
     default:
       return state;

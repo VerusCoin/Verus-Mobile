@@ -15,7 +15,7 @@ import {
   removeExistingCoin,
   setUserCoins,
   setActiveSectionCustomCoins,
-  setDarkMode,
+  setDarkModeState,
 } from '../../actions/actionCreators';
 import {getKeyByValue} from '../../utils/objectManip';
 import {CommonActions} from '@react-navigation/native';
@@ -29,6 +29,8 @@ import {
   resolveAlert,
 } from '../../actions/actions/alert/dispatchers/alert';
 import {bindActionCreators} from 'redux';
+import { SET_DARK_MODE } from '../../utils/constants/storeType';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 class SideMenu extends Component {
   constructor(props) {
@@ -37,6 +39,7 @@ class SideMenu extends Component {
       error: null,
       mainDrawer: true,
       currentCoinIndex: null,
+      darkMode:false
     };
 
     this.APP_INFO = 'App Info';
@@ -48,7 +51,6 @@ class SideMenu extends Component {
     this.REMOVE_DELETE = 2;
   }
 
-  // const {actions: {setDarkMode}} = props;
 
   navigateToScreen = route => {
     let navigation = this.props.navigation;
@@ -257,6 +259,49 @@ class SideMenu extends Component {
   toggleMainDrawer = () =>
     this.setState(prevState => ({mainDrawer: !prevState.mainDrawer}));
 
+    getDarkModeState = async () => {
+      try {
+        const value = await AsyncStorage.getItem('darkModeKey');
+        if (value !== null) {
+          const parsedValue = JSON.parse(value);
+          return parsedValue;
+        } else {
+          return null;
+        }
+      } catch (error) {
+        console.error('Error retrieving state: ', error);
+        return null;
+      }
+    };
+
+  _handleDarkModeToggle =async() => {
+      if (!this.props.darkMode) {
+        try {
+          await this.setState(prevState => ({darkMode: !prevState.darkMode}));
+          await AsyncStorage.setItem('darkModeKey', JSON.stringify(this.state.darkMode));
+          this.getDarkModeState().then((darkModeValue)=>{
+            this.props.dispatch(setDarkModeState(darkModeValue))
+          }).catch((err)=>console.error(err))
+        } catch (error) {
+          console.error('Error saving data:', error);
+        }
+      } else {
+        try {
+          await this.setState(prevState => ({darkMode: !prevState.darkMode}));
+          // Remove data from AsyncStorage
+          await AsyncStorage.removeItem('darkModeKey');          
+          this.props.dispatch(setDarkModeState(null)) 
+        } catch (error) {
+          console.error('Error removing data:', error);
+        }
+      }
+    };
+
+ 
+  
+
+
+
   render() {
     return renderSideMenu.call(this);
   }
@@ -272,7 +317,7 @@ const mapStateToProps = state => {
     activeCoinList: state.coins.activeCoinList,
     activeAccount: state.authentication.activeAccount,
     dlightSockets: state.channelStore_dlight_private.dlightSockets,
-    darkMode: state.settings.darkMode,
+    darkMode: state.settings.darkModeState,
   };
 };
 

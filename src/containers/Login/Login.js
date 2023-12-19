@@ -20,8 +20,10 @@ import {
   SEND_MODAL_FORM_STEP_FORM,
   SEND_MODAL_USER_TO_AUTHENTICATE,
 } from '../../utils/constants/sendModal';
-import {useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import TallButton from '../../components/LargerButton';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setDarkModeState } from '../../actions/actionCreators';
 
 const {height} = Dimensions.get('window');
 
@@ -33,8 +35,9 @@ const Login = props => {
     state => state.authentication.authModalUsed,
   );
   const accounts = useSelector(state => state.authentication.accounts);
-  const darkMode = useSelector(state => state.settings.darkMode);
- 
+  const darkMode = useSelector(state => state.settings.darkModeState);
+  const dispatch = useDispatch()
+
   openAuthModal = ignoreDefault => {
     if (ignoreDefault) {
       openAuthenticateUserModal();
@@ -52,7 +55,21 @@ const Login = props => {
     }
   };
 
+  async function initializeDarkModeState() {
+    try {
+      const darkModeValue = await AsyncStorage.getItem('darkModeKey');
+      if (darkModeValue !== null) {
+        dispatch(setDarkModeState(JSON.parse(darkModeValue)));
+      } else {
+        dispatch(setDarkModeState(null));
+      }
+    } catch (error) {
+      console.error('Error retrieving Dark Mode state: ', error);
+    }
+  }
+
   useEffect(() => {
+    initializeDarkModeState()
     if (
       !authModalUsed &&
       defaultAccount != null &&
@@ -64,16 +81,22 @@ const Login = props => {
     }
   }, []);
 
+  
+
   handleAddUser = () => {
     props.navigation.navigate('CreateProfile');
   };
 
   return (
     <SafeAreaView
-      style={{
-        backgroundColor: darkMode? Colors.darkModeColor : Colors.secondaryColor,
-        ...Styles.focalCenter,
-      }}>
+      style={[
+        Styles.focalCenter,
+        {
+          backgroundColor: darkMode
+            ? Colors.darkModeColor
+            : Colors.secondaryColor,
+        },
+      ]}>
       <VerusLogo
         width={180}
         height={'15%'}
@@ -106,18 +129,21 @@ const Login = props => {
       <TallButton
         onPress={() => openAuthModal()}
         mode="contained"
-        labelStyle={{fontWeight: 'bold'}}
+        labelStyle={{fontWeight: 'bold', color: Colors.secondaryColor}}
         style={{
           position: 'absolute',
           bottom: 86, // Adjusted position
           width: 280,
+          backgroundColor: darkMode
+            ? Colors.verusDarkBlue
+            : Colors.primaryColor,
         }}>
         {'Login'}
       </TallButton>
       <TallButton
         onPress={() => handleAddUser()}
         mode="text"
-        labelStyle={{fontWeight: 'bold'}}
+        labelStyle={{fontWeight: 'bold', color: Colors.secondaryColor}}
         style={{
           position: 'absolute',
           bottom: 30, // Adjusted position

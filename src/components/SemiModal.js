@@ -93,7 +93,7 @@ class SemiModal extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    darkMode:state.settings.darkMode
+    darkMode:state.settings.darkModeState
   }
 };
 

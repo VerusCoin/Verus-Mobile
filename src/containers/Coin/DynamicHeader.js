@@ -515,7 +515,7 @@ class DynamicHeader extends Component {
 const mapStateToProps = state => {
   const chainTicker = state.coins.activeCoin.id;
   const showBalance = state.coins.showBalance;
-  const darkMode = state.settings.darkMode;
+  const darkMode = state.settings.darkModeState;
   const balances = extractLedgerData(
     state,
     'balances',

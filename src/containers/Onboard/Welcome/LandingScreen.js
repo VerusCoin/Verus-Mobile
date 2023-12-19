@@ -9,7 +9,7 @@ import { useSelector } from 'react-redux';
 
 export default function LandingScreen(props) {
   const { height } = Dimensions.get('window');
-  const darkMode = useSelector(state => state.settings.darkMode);
+  const darkMode = useSelector(state => state.settings.darkModeState);
 
   return (
     <View

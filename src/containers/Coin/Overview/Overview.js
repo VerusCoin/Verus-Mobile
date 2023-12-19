@@ -408,7 +408,7 @@ const mapStateToProps = (state) => {
     activeAccount: state.authentication.activeAccount,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     generalWalletSettings: state.settings.generalWalletSettings,
-    darkMode:state.settings.darkMode
+    darkMode:state.settings.darkModeState
   }
 };
 

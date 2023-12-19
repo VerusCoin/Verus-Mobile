@@ -1,21 +1,21 @@
-import React from "react";
-import { Component } from "react"
-import { connect } from 'react-redux'
+import React from 'react';
+import {Component} from 'react';
+import {connect, useSelector} from 'react-redux';
 import AppIntroSlider from 'react-native-app-intro-slider';
 import {
   View,
   Keyboard,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
-  Platform
-} from "react-native";
-import { Text, TextInput } from 'react-native-paper'
+  Platform,
+} from 'react-native';
+import {Text, TextInput} from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Colors from "../../../globals/colors";
-import { useEffect } from "react";
-import { modifyPersonalDataForUser } from "../../../actions/actionDispatchers";
-import { PERSONAL_ATTRIBUTES } from "../../../utils/constants/personal";
-import { createAlert } from "../../../actions/actions/alert/dispatchers/alert";
+import Colors from '../../../globals/colors';
+import {useEffect} from 'react';
+import {modifyPersonalDataForUser} from '../../../actions/actionDispatchers';
+import {PERSONAL_ATTRIBUTES} from '../../../utils/constants/personal';
+import {createAlert} from '../../../actions/actions/alert/dispatchers/alert';
 
 const slides = [
   {
@@ -41,58 +41,97 @@ const slides = [
   },
 ];
 
-const NameForm = (props) => {
+const NameForm = props => {
   const onChange = props.onChange != null ? props.onChange : () => {};
   const [first, setFirst] = React.useState('');
   const [middle, setMiddle] = React.useState('');
   const [last, setLast] = React.useState('');
+  const darkMode = useSelector(state => state.settings.darkModeState);
 
   useEffect(() => {
-    onChange({ first: first.trim(), middle: middle.trim(), last: last.trim() });
+    onChange({first: first.trim(), middle: middle.trim(), last: last.trim()});
   }, [first, middle, last]);
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View
         style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "stretch",
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'stretch',
           height: 168,
-          width: "75%",
+          width: '75%',
           marginVertical: 40,
-        }}
-      >
+        }}>
         <TextInput
           returnKeyType="done"
           label="First"
           value={first}
-          mode={"outlined"}
+          mode={'outlined'}
           placeholder="required"
+          style={{
+            backgroundColor: darkMode
+              ? Colors.verusDarkModeForm
+              : Colors.tertiaryColor,
+          }}
           disabled={props.loading}
+          theme={{
+            colors: {
+              text: darkMode ? Colors.secondaryColor : Colors.ultraLightGrey,
+              placeholder: darkMode
+                ? Colors.verusDarkGray
+                : Colors.verusDarkGray,
+            },
+          }}
           dense={true}
-          onChangeText={(text) => setFirst(text)}
+          onChangeText={text => setFirst(text)}
         />
         <TextInput
           returnKeyType="done"
           label="Middle"
           value={middle}
-          mode={"outlined"}
+          mode={'outlined'}
           placeholder="optional"
           disabled={props.loading}
           dense={true}
-          onChangeText={(text) => setMiddle(text)}
-          style={{ marginVertical: 8 }}
+          onChangeText={text => setMiddle(text)}
+          style={{
+            marginVertical: 8,
+            backgroundColor: darkMode
+              ? Colors.verusDarkModeForm
+              : Colors.tertiaryColor,
+          }}
+          theme={{
+            colors: {
+              text: darkMode ? Colors.secondaryColor : Colors.ultraLightGrey,
+              placeholder: darkMode
+                ? Colors.verusDarkGray
+                : Colors.verusDarkGray,
+            },
+          }}
         />
         <TextInput
           returnKeyType="done"
           label="Last"
           value={last}
-          mode={"outlined"}
+          mode={'outlined'}
           placeholder="required"
           disabled={props.loading}
           dense={true}
-          onChangeText={(text) => setLast(text)}
+          onChangeText={text => setLast(text)}
+          theme={{
+            colors: {
+              text: darkMode ? Colors.secondaryColor : Colors.ultraLightGrey,
+              placeholder: darkMode
+                ? Colors.verusDarkGray
+                : Colors.verusDarkGray,
+            },
+          }}
+          style={{
+            backgroundColor: darkMode
+              ? Colors.verusDarkModeForm
+              : Colors.tertiaryColor,
+          }}
         />
       </View>
     </TouchableWithoutFeedback>
@@ -106,94 +145,105 @@ class PersonalIntroSlider extends Component {
       name: {
         first: '',
         middle: '',
-        last: ''
+        last: '',
       },
       loading: false,
-      currentSlide: 0
+      currentSlide: 0,
     };
   }
 
-  renderInfoItem = (item) => {
+  renderInfoItem = item => {
     return (
       <View
         style={{
           backgroundColor: item.backgroundColor,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
           flex: 1,
-          alignItems: "center",
-        }}
-      >
-        <MaterialCommunityIcons name={item.icon} color={"white"} size={104} />
+          alignItems: 'center',
+        }}>
+        <MaterialCommunityIcons name={item.icon} color={'white'} size={104} />
         <Text
           style={{
             fontSize: 32,
-            fontWeight: "bold",
-            textAlign: "center",
-            color: "white",
-            marginVertical: 40
-          }}
-        >
+            fontWeight: 'bold',
+            textAlign: 'center',
+            color: 'white',
+            marginVertical: 40,
+          }}>
           {item.title}
         </Text>
-        <Text style={{ textAlign: "center", width: "75%", color: "white" }}>
+        <Text style={{textAlign: 'center', width: '75%', color: 'white'}}>
           {item.text}
         </Text>
       </View>
     );
-  }
+  };
 
-  renderFormItem = (item) => {
+  renderFormItem = item => {
     return (
       <View
         style={{
-          backgroundColor: item.backgroundColor,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
+          backgroundColor: this.props.darkMode
+            ? Colors.darkModeColor
+            : Colors.secondaryColor,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
           flex: 1,
-          alignItems: "center",
-        }}
-      >
+          alignItems: 'center',
+        }}>
         <Text
           style={{
             fontSize: 32,
-            fontWeight: "bold",
-            textAlign: "center"
-          }}
-        >
+            fontWeight: 'bold',
+            textAlign: 'center',
+            color: this.props.darkMode
+              ? Colors.secondaryColor
+              : Colors.quinaryColor,
+          }}>
           {item.title}
         </Text>
-        <Text style={{ textAlign: "center", width: "75%", marginTop: 20 }}>{item.text}</Text>
-        <NameForm onChange={(name) => this.setState({ name })} />
+        <Text
+          style={{
+            textAlign: 'center',
+            width: '75%',
+            marginTop: 20,
+            color: this.props.darkMode
+              ? Colors.secondaryColor
+              : Colors.quinaryColor,
+          }}>
+          {item.text}
+        </Text>
+        <NameForm onChange={name => this.setState({name})} />
       </View>
     );
-  }
+  };
 
-  _renderItem = ({ item }) => {
-    if (item.form) return this.renderFormItem(item)
-    else return this.renderInfoItem(item)
-  }
+  _renderItem = ({item}) => {
+    if (item.form) return this.renderFormItem(item);
+    else return this.renderInfoItem(item);
+  };
 
   _onDone = () => {
     this.setState({loading: true}, async () => {
       await modifyPersonalDataForUser(
-        { name: this.state.name }, 
-        PERSONAL_ATTRIBUTES, 
-        this.props.activeAccount.accountHash
-      )
+        {name: this.state.name},
+        PERSONAL_ATTRIBUTES,
+        this.props.activeAccount.accountHash,
+      );
 
       createAlert(
-        "Success!",
-        "You've created your own personal profile! Your name has been encrypted and stored on your device (and nowhere else). If you'd like, you can continue add to it through your personal profile tab."
+        'Success!',
+        "You've created your own personal profile! Your name has been encrypted and stored on your device (and nowhere else). If you'd like, you can continue add to it through your personal profile tab.",
       );
-    })
-  }
+    });
+  };
 
   render() {
     return (
-      <KeyboardAvoidingView style={{flex: 1}} behavior={"height"}>
+      <KeyboardAvoidingView style={{flex: 1}} behavior={'height'}>
         <AppIntroSlider
           showSkipButton={true}
           renderItem={this._renderItem}
@@ -205,10 +255,9 @@ class PersonalIntroSlider extends Component {
                 color: Colors.primaryColor,
                 fontSize: 18,
                 marginTop: 12,
-                marginRight: 6
-              }}
-            >
-              {"Done"}
+                marginRight: 6,
+              }}>
+              {'Done'}
             </Text>
           )}
         />
@@ -217,10 +266,11 @@ class PersonalIntroSlider extends Component {
   }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     activeAccount: state.authentication.activeAccount,
-  }
+    darkMode: state.settings.darkModeState,
+  };
 };
 
 export default connect(mapStateToProps)(PersonalIntroSlider);

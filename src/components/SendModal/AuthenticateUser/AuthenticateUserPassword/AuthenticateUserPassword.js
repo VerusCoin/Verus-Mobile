@@ -11,44 +11,49 @@ import { SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT, SEND_MODAL_USER
 import { getBiometricPassword, getSupportedBiometryType } from '../../../../utils/keychain/keychain';
 
 const AuthenticateUserPassword = props => {
-  const [password, setPassword] = useState("")
+  const [password, setPassword] = useState('');
   const defaultAccount = useSelector(
     state => state.settings.generalWalletSettings.defaultAccount,
   );
-  const accounts = useSelector(state => state.authentication.accounts)
-  const activeAccount = useSelector(state => state.authentication.activeAccount)
-  const data = useSelector(state => state.sendModal.data)
+  const accounts = useSelector(state => state.authentication.accounts);
+  const activeAccount = useSelector(
+    state => state.authentication.activeAccount,
+  );
+  const data = useSelector(state => state.sendModal.data);
+  const darkMode = useSelector(state => state.settings.darkModeState);
   const account =
     props.route.params == null || props.route.params.account == null
       ? accounts.find(
           x => x.accountHash === data[SEND_MODAL_USER_TO_AUTHENTICATE],
         )
       : props.route.params.account;
-  const defaultAccountSelected = account != null && defaultAccount === account.accountHash
-  const [makeDefaultAccount, setMakeDefaultAccount] = useState(defaultAccountSelected)
+  const defaultAccountSelected =
+    account != null && defaultAccount === account.accountHash;
+  const [makeDefaultAccount, setMakeDefaultAccount] = useState(
+    defaultAccountSelected,
+  );
 
   const tryUnlockAccount = async key => {
     await props.setLoading(true);
-    await props.setPreventExit(true)
-    props.updateSendFormData(SEND_MODAL_USER_TO_AUTHENTICATE, account.accountHash)
+    await props.setPreventExit(true);
+    props.updateSendFormData(
+      SEND_MODAL_USER_TO_AUTHENTICATE,
+      account.accountHash,
+    );
     Keyboard.dismiss();
 
     try {
-      await initializeAccountData(
-        account,
-        key,
-        makeDefaultAccount
-      );
+      await initializeAccountData(account, key, makeDefaultAccount);
 
       await props.setLoading(false);
       await props.setPreventExit(false);
       props.navigation.navigate(SEND_MODAL_FORM_STEP_RESULT);
-    } catch(e) {
+    } catch (e) {
       await props.setLoading(false);
       await props.setPreventExit(false);
-      console.warn(e)
+      console.warn(e);
     }
-  }
+  };
 
   async function onMount() {
     if (
@@ -78,10 +83,10 @@ const AuthenticateUserPassword = props => {
 
   goBack = () => {
     Keyboard.dismiss();
-    
+
     props.navigation.navigate(SEND_MODAL_FORM_STEP_FORM);
     props.updateSendFormData(SEND_MODAL_USER_TO_AUTHENTICATE, null);
-  }
+  };
 
   return (
     <View
@@ -90,13 +95,28 @@ const AuthenticateUserPassword = props => {
         ...styles.fullWidth,
         ...styles.centerContainer,
         justifyContent: 'flex-start',
+        backgroundColor: darkMode
+          ? Colors.darkModeColor
+          : Colors.secondaryColor,
       }}
-      contentContainerStyle={{
-      }}>
+      contentContainerStyle={{}}>
       <View style={styles.wideBlock}>
         <TextInput
+          style={{
+            backgroundColor: darkMode
+              ? Colors.verusDarkModeForm
+              : Colors.tertiaryColor,
+          }}
+          theme={{
+            colors: {
+              text: darkMode ? Colors.secondaryColor : Colors.quaternaryColor,
+              placeholder: darkMode
+                ? Colors.verusDarkGray
+                : Colors.verusDarkGray,
+            },
+          }}
           returnKeyType="done"
-          label={`Enter password for ${account != null ? account.id : ""}`}
+          label={`Enter password for ${account != null ? account.id : ''}`}
           value={password}
           mode="outlined"
           onChangeText={text => setPassword(text)}
@@ -108,10 +128,16 @@ const AuthenticateUserPassword = props => {
       <View style={styles.wideBlock}>
         <Checkbox.Item
           color={Colors.primaryColor}
+          labelStyle={{
+            color: darkMode ? Colors.secondaryColor : Colors.quinaryColor,
+          }}
           label={'Make default'}
           status={makeDefaultAccount ? 'checked' : 'unchecked'}
           onPress={() => setMakeDefaultAccount(!makeDefaultAccount)}
           mode="android"
+          uncheckedColor={
+            darkMode ? Colors.secondaryColor : Colors.quinaryColor
+          }
         />
       </View>
       <View
@@ -129,7 +155,7 @@ const AuthenticateUserPassword = props => {
           Back
         </Button>
         <Button
-          color={Colors.verusGreenColor}
+          color={darkMode ? Colors.secondaryColor : Colors.verusGreenColor}
           style={{width: 148}}
           disabled={password.length == 0}
           onPress={() => tryUnlockAccount(password)}>
@@ -140,4 +166,4 @@ const AuthenticateUserPassword = props => {
   );
 };
 
-export default AuthenticateUserPassword
+export default AuthenticateUserPassword;

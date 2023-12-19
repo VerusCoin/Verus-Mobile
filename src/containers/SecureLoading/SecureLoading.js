@@ -13,21 +13,22 @@
   user cannot go back.
 */
 
-import React, { Component } from "react";
-import { 
-  View, 
-  Text, 
-  Alert
-} from "react-native";
-import { CommonActions } from '@react-navigation/native';
-import { connect } from 'react-redux';
-import { clearSecureLoadingData, setSecureLoadingData, signOut } from '../../actions/actionCreators';
-import { Icon } from "react-native-elements";
-import styles from './SecureLoading.styles'
-import AnimatedActivityIndicator from "../../components/AnimatedActivityIndicator";
+import React, {Component} from 'react';
+import {View, Text, Alert} from 'react-native';
+import {CommonActions} from '@react-navigation/native';
+import {connect} from 'react-redux';
+import {
+  clearSecureLoadingData,
+  setSecureLoadingData,
+  signOut,
+} from '../../actions/actionCreators';
+import {Icon} from 'react-native-elements';
+import styles from './SecureLoading.styles';
+import AnimatedActivityIndicator from '../../components/AnimatedActivityIndicator';
+import Colors from '../../globals/colors';
 
-const DEFAULT_TIMEOUT = 30000
-const DEFAULT_MESSAGE = "Loading..."
+const DEFAULT_TIMEOUT = 30000;
+const DEFAULT_MESSAGE = 'Loading...';
 
 class SecureLoading extends Component {
   constructor() {
@@ -43,17 +44,17 @@ class SecureLoading extends Component {
       onError: null,
       successMsg: null,
       errorMsg: null,
-      status: 'loading'
+      status: 'loading',
     };
   }
 
   componentDidMount() {
-    const { route } = this.props
-    const data = route.params ? route.params.data : null
+    const {route} = this.props;
+    const data = route.params ? route.params.data : null;
 
     this.timeoutTimer = setTimeout(() => {
-      this.setState({status: 'timeout'})
-    }, DEFAULT_TIMEOUT)
+      this.setState({status: 'timeout'});
+    }, DEFAULT_TIMEOUT);
 
     if (data) {
       this.setState(
@@ -72,39 +73,44 @@ class SecureLoading extends Component {
           errorData: data.errorData ? data.errorData : {},
         },
         () => {
-          if (typeof this.state.task === "function") {
+          if (typeof this.state.task === 'function') {
             this.state
               .task(...this.state.input)
-              .then((res) => {
+              .then(res => {
                 clearTimeout(this.timeoutTimer);
-                if (this.state.status !== "timeout") {
-                  this.setState({ status: "success" }, () => {
+                if (this.state.status !== 'timeout') {
+                  this.setState({status: 'success'}, () => {
                     if (this.state.dispatchResult) this.props.dispatch(res);
 
                     if (this.state.route) {
-                      this.props.dispatch(clearSecureLoadingData())
-                      this.props.dispatch(setSecureLoadingData(this.state.successData, true))
-                      
-                      this.resetToScreen(
-                        this.state.route,
-                        this.state.screen
+                      this.props.dispatch(clearSecureLoadingData());
+                      this.props.dispatch(
+                        setSecureLoadingData(this.state.successData, true),
                       );
+
+                      this.resetToScreen(this.state.route, this.state.screen);
                     } else {
                       this.props.dispatch(signOut());
                     }
                   });
                 }
               })
-              .catch((e) => {
+              .catch(e => {
                 clearTimeout(this.timeoutTimer);
-                if (this.state.status !== "timeout") {
-                  this.setState({ status: "error" }, () => {
+                if (this.state.status !== 'timeout') {
+                  this.setState({status: 'error'}, () => {
                     if (this.state.dispatchResult) this.props.dispatch(res);
 
                     if (this.state.route) {
-                      this.props.dispatch(clearSecureLoadingData())
-                      this.props.dispatch(setSecureLoadingData(this.state.errorData, false))
-                      this.resetToScreen(this.state.route, this.state.screen, this.state.errorData);
+                      this.props.dispatch(clearSecureLoadingData());
+                      this.props.dispatch(
+                        setSecureLoadingData(this.state.errorData, false),
+                      );
+                      this.resetToScreen(
+                        this.state.route,
+                        this.state.screen,
+                        this.state.errorData,
+                      );
                     } else {
                       this.props.dispatch(signOut());
                     }
@@ -114,18 +120,20 @@ class SecureLoading extends Component {
           } else {
             if (this.state.onError) this.state.onError();
             clearTimeout(this.timeoutTimer);
-            this.setState({ status: "error" });
+            this.setState({status: 'error'});
 
             throw new Error(
-              "Error, task given to loading screen is " +
+              'Error, task given to loading screen is ' +
                 typeof this.state.task +
-                ", expected function"
+                ', expected function',
             );
           }
-        }
+        },
       );
     } else {
-      throw new Error("Error, no task given to loading screen, expected Promise")
+      throw new Error(
+        'Error, no task given to loading screen, expected Promise',
+      );
     }
   }
 
@@ -141,40 +149,57 @@ class SecureLoading extends Component {
                 initial: false,
               },
             }
-          : { name: route },
+          : {name: route},
       ],
     });
 
     this.props.navigation.closeDrawer();
-    this.props.navigation.dispatch(resetAction)
-  }
+    this.props.navigation.dispatch(resetAction);
+  };
 
   fatalErrorHandler = () => {
     clearTimeout(this.timeoutTimer);
     Alert.alert(
-      "Error", 
-      "Verus Mobile timed out while trying to complete a secure task, please close and " + 
-      "restart the app.");
-  }
+      'Error',
+      'Verus Mobile timed out while trying to complete a secure task, please close and ' +
+        'restart the app.',
+    );
+  };
 
   render() {
     return (
-      <View style={styles.loadingRoot}>
-        {(this.state.status === "loading" ||
-          (this.state.status === "success" && !this.state.successMsg) ||
-          (this.state.status !== "error" && !this.state.errorMsg)) && (
-          <AnimatedActivityIndicator style={{ width: 128 }} />
+      <View
+        style={[
+          styles.loadingRoot,
+          {
+            backgroundColor: this.props.darkMode
+              ? Colors.darkModeColor
+              : Colors.secondaryColor,
+          },
+        ]}>
+        {(this.state.status === 'loading' ||
+          (this.state.status === 'success' && !this.state.successMsg) ||
+          (this.state.status !== 'error' && !this.state.errorMsg)) && (
+          <AnimatedActivityIndicator style={{width: 128}} />
         )}
-        {this.state.status === "success" && this.state.successMsg && (
+        {this.state.status === 'success' && this.state.successMsg && (
           <Icon name="check" color="#50C3A5" size={45} />
         )}
-        {this.state.status === "error" && this.state.errorMsg && (
+        {this.state.status === 'error' && this.state.errorMsg && (
           <Icon name="close" color="rgba(206,68,70,1)" size={45} />
         )}
-        <Text style={styles.loadingLabel}>
-          {this.state.status === "success" && this.state.successMsg
+        <Text
+          style={[
+            styles.loadingLabel,
+            {
+              color: this.props.darkMode
+                ? Colors.secondaryColor
+                : Colors.quaternaryColor,
+            },
+          ]}>
+          {this.state.status === 'success' && this.state.successMsg
             ? this.state.successMsg
-            : this.state.status === "error" && this.state.errorMsg
+            : this.state.status === 'error' && this.state.errorMsg
             ? this.state.errorMsg
             : this.state.message}
         </Text>
@@ -183,4 +208,10 @@ class SecureLoading extends Component {
   }
 }
 
-export default connect()(SecureLoading);
+const mapStateToProps = state => {
+  return {
+    darkMode: state.settings.darkModeState,
+  };
+};
+
+export default connect(mapStateToProps)(SecureLoading);

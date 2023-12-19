@@ -14,7 +14,9 @@ const Colors = {
     lightGrey:'#b5b5b5',
     ultraLightGrey:'#d6cccb',
     ultraUltraLightGrey: "#FBFBFB",
-    darkModeColor:'#121212'
+    darkModeColor:'#121212',
+    verusDarkBlue:'#08328C',
+    verusDarkModeForm:'#202020'
 }
 
 export default Colors

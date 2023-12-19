@@ -35,7 +35,7 @@ const AddCoin = props => {
     state => state.coins.activeCoinsForUser,
   );
   const activeCoinList = useSelector(state => state.coins.activeCoinList);
-  const darkMode = useSelector(state => state.settings.darkMode);
+  const darkMode = useSelector(state => state.settings.darkModeState);
 
   useEffect(() => {
     setCoinList(getCoinList());

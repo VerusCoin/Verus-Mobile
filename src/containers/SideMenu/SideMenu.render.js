@@ -1,19 +1,17 @@
 import React from 'react';
 import {View, FlatList, SectionList, Switch, Text} from 'react-native';
 import DrawerHeader from '../../components/DrawerHeader';
-import {
-  setActiveSectionBuySellCrypto,
-  setDarkMode,
-} from '../../actions/actionCreators';
+import {setActiveSectionBuySellCrypto} from '../../actions/actionCreators';
 import Styles from '../../styles/index';
 import {CoinLogos, getCoinLogo} from '../../utils/CoinData/CoinData';
 import {RenderSquareCoinLogo} from '../../utils/CoinData/Graphics';
-import {List} from 'react-native-paper';
+import {Button, List} from 'react-native-paper';
 import Colors from '../../globals/colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export const renderSideMenu = function () {
-  console.log(this.props.darkMode);
-
   if (this.state.mainDrawer) {
     return (
       <View
@@ -126,18 +124,26 @@ export const renderSettingsComponents = function () {
       style={Styles.fullWidth}
       renderItem={({item}) => (
         <List.Item
-          titleStyle={{color: this.props.darkMode ? Colors.secondaryColor : 'black'}}
-          left={() => <List.Icon 
-            color={this.props.darkMode ? Colors.secondaryColor : 'black'}
-            icon={item.icon} />}
+          titleStyle={{
+            color: this.props.darkMode ? Colors.secondaryColor : 'black',
+          }}
+          left={() => (
+            <List.Icon
+              color={this.props.darkMode ? Colors.secondaryColor : 'black'}
+              icon={item.icon}
+            />
+          )}
           title={item.title}
           onPress={() => this._openSettings(item)}
         />
       )}
       renderSectionHeader={({section: {title}}) => (
         <List.Subheader
-        style={{color: this.props.darkMode ? Colors.secondaryColor : 'black'}}
-        >{title}</List.Subheader>
+          style={{
+            color: this.props.darkMode ? Colors.secondaryColor : 'black',
+          }}>
+          {title}
+        </List.Subheader>
       )}
       sections={[
         {
@@ -282,24 +288,48 @@ export const renderMainDrawerComponents = function () {
           alignItems: 'center',
           paddingBottom: 10,
         }}>
-        <Switch
-          trackColor={{false: Colors.verusDarkGray, true: Colors.lightGrey}}
-          thumbColor={this.props.darkMode ? 'white' : Colors.lightGrey}
-          ios_backgroundColor=""
-          style={{
-            paddingLeft: 8,
-            marginRight: 10,
-          }}
-          onValueChange={() => this.props.dispatch(setDarkMode())}
-          value={this.props.darkMode}
-        />
-        <Text
-          style={{
-            color: this.props.darkMode ? Colors.secondaryColor : 'black',
-            fontSize: 15,
-          }}>
-          Dark Mode
-        </Text>
+        {this.props.darkMode ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Button
+              onPress={this._handleDarkModeToggle}
+              // style={{:'white'}}
+            >
+              <Icon2 name="white-balance-sunny" size={24} color="white" />
+            </Button>
+
+            <Text
+              style={{
+                color: this.props.darkMode ? Colors.secondaryColor : 'black',
+                fontSize: 15,
+              }}>
+              Light Mode
+            </Text>
+          </View>
+        ) : (
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Button onPress={this._handleDarkModeToggle}>
+              <Icon name="moon-o" size={24} color="black" />
+            </Button>
+
+            <Text
+              style={{
+                color: this.props.darkMode ? Colors.secondaryColor : 'black',
+                fontSize: 15,
+              }}>
+              Dark Mode
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );
