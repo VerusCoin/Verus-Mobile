@@ -15,6 +15,7 @@ import BigNumber from 'bignumber.js';
 import { VERUSID_NETWORK_DEFAULT } from "../../../../env/index";
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import { CommonActions } from '@react-navigation/native';
+import { SEND_MODAL_IDENTITY_TO_LINK_FIELD } from '../../../utils/constants/sendModal';
 
 const LoginRequestIdentity = props => {
   const { deeplinkData } = props.route.params
@@ -26,6 +27,7 @@ const LoginRequestIdentity = props => {
   const encryptedIds = useSelector(state => state.services.stored[VERUSID_SERVICE_ID])
   const sendModal = useSelector((state) => state.sendModal);
   const fromService = useSelector((state) => state.deeplink.fromService);
+  const extraParams = useSelector((state) => state.deeplink.extraParams);
 
   const canProvision = req.challenge.provisioning_info && req.challenge.provisioning_info.some(x => {
     return (
@@ -59,22 +61,19 @@ const LoginRequestIdentity = props => {
         setLinkedIds({})
       }
 
-      if (verusIdServiceData.pending_ids && canProvision && false) {
-        props.navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{name: 'SignedInStack'}],
-          }),
-        );
-        createAlert('Your ID is being created', "Please check the notifications for the status of your request.");
-
-      }
     } catch (e) {
       createAlert('Error Loading Linked VerusIDs', e.message);
     }
 
     setLoading(false)
-  }
+  } 
+
+  useEffect(() => {
+    if(extraParams && extraParams.fqn){
+      const data = {[SEND_MODAL_IDENTITY_TO_LINK_FIELD]: extraParams.fqn};
+      openLinkIdentityModal(CoinDirectory.findCoinObj(system_id, null, true), data);
+    }
+  }, [])
 
   useEffect(() => {
     onEncryptedIdsUpdate()

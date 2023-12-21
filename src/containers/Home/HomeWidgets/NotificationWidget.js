@@ -13,7 +13,7 @@ import {
 } from '../../../utils/constants/notifications';
 import { VerusIdAtIcon, ReceivedIcon, VerusIdErrorIcon } from "../../../images/customIcons";
 import { DeeplinkNotification, BasicNotification, LoadingNotification } from '../../../utils/notification';
-import { tryProcessVerusIdSignIn } from '../../../containers/Services/ServiceComponents/VerusIdService/VerusIdLogin';
+import { processVerusId } from '../../../containers/Services/ServiceComponents/VerusIdService/VerusIdLogin';
 import { dispatchRemoveNotification, dispatchClearNotifications } from '../../../actions/actions/notifications/dispatchers/notifications';
 // has the state changed hook
 const useCompare = (val) => {
@@ -101,7 +101,7 @@ const getNotifications = (directories) => {
     keys.forEach((uid, index) => {
 
         if (directories[uid].type === NOTIFICATION_TYPE_DEEPLINK) {
-            const tempDeepLinkNotification = DeeplinkNotification.fromJson(directories[uid], tryProcessVerusIdSignIn);
+            const tempDeepLinkNotification = DeeplinkNotification.fromJson(directories[uid], processVerusId);
             tempDeepLinkNotification.icon = getIcon(directories[uid].icon, index);
             tempNotificaions.push(tempDeepLinkNotification);
         } else if (directories[uid].type === NOTIFICATION_TYPE_BASIC) {

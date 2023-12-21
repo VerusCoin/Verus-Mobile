@@ -14,7 +14,7 @@ import { DeeplinkNotification, BasicNotification } from '../../../../../utils/no
 import {requestSeeds} from '../../../../../utils/auth/authBox';
 import {deriveKeyPair} from '../../../../../utils/keys';
 import {ELECTRUM} from '../../../../../utils/constants/intervalConstants';
-import { Alert } from 'react-native';
+import { dispatchRemoveNotification } from '../../../../actions/notifications/dispatchers/notifications';
 
 export const linkVerusId = async (iAddress, fqn, chain) => {
   const state = store.getState();
@@ -176,15 +176,18 @@ export const checkVerusIdNotificationsForUpdates = async () => {
     for (const iaddress of details) {
 
       // once an ID is linked, remove it from pending IDs, or if the server has rejected it delete.
-      if((pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_READY && 
-         currentLinkedIdentities.indexOf(iaddress) > -1) ||(pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_FAILED)  ) {
+      if (pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_READY) {
+        if (currentLinkedIdentities.indexOf(iaddress) > -1 || pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_FAILED) {
           await deleteProvisionedIds(iaddress, ticker);
           await updatePendingVerusIds();
-          continue;
+          await dispatchRemoveNotification(pendingIds[ticker][iaddress].notificationUid);
+        }
+        continue;
       } 
-
-      if ((pendingIds[ticker][iaddress].createdAt + 600) < Math.floor(Date.now() / 1000)) {
-        // If the request is older than 10 minutes, check info endpoint to see if it was accepted or rejected
+        
+        if ((pendingIds[ticker][iaddress].createdAt + 600) < Math.floor(Date.now() / 1000) &&
+              pendingIds[ticker][iaddress].status !== NOTIFICATION_TYPE_VERUSID_READY) {
+          // If the request is older than 10 minutes, check info endpoint to see if it was accepted or rejected
         let errorFound = false;
         try {
           if (pendingIds[ticker][iaddress].infoUri) {
@@ -253,43 +256,25 @@ export const checkVerusIdNotificationsForUpdates = async () => {
 
       if (isInWallet) {
 
-        const commit = async () => {
+        pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_READY;
 
-          pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_READY;
-  
-          await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
-          await linkVerusId(iaddress, identity.result.fullyqualifiedname, ticker);
-          await updatePendingVerusIds();
-  
-          const newDeepLinkNotification = new DeeplinkNotification (
-            "login",
-            [`${identity.result.fullyqualifiedname.split(".")[0]}@`, ` is ready`],
-            null,
-            null,
-            pendingIds[ticker][iaddress].loginRequest,
-            state.authentication.activeAccount.accountHash
-          ); 
-  
-          newDeepLinkNotification.icon = NOTIFICATION_ICON_VERUSID;
-          newDeepLinkNotification.uid = pendingIds[ticker][iaddress].notificationUid;
-  
-          dispatchAddNotification(newDeepLinkNotification);
-        }
+        await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
+        await updatePendingVerusIds();
 
-        if (identity.result.identity.primaryaddresses.length > 1) { 
-          Alert.alert(
-            'Warning - new VerusID detected',
-            'VerusID provisioned has multiple R-addresses associated with it. This may mean a third party has the ablility to spend from this address. Please understand the risks.',
-            [
-              {text: 'OK', onPress: async () => await commit()},
-            ],
-          )
-        } else {
-          await commit();
-        }
+        const newDeepLinkNotification = new DeeplinkNotification (
+          "link and login",
+          [`${identity.result.fullyqualifiedname.substring(0, identity.result.fullyqualifiedname.lastIndexOf('.'))}@`, ` is ready`],
+          null,
+          null,
+          pendingIds[ticker][iaddress].loginRequest,
+          state.authentication.activeAccount.accountHash
+        ); 
+
+        newDeepLinkNotification.icon = NOTIFICATION_ICON_VERUSID;
+        newDeepLinkNotification.uid = pendingIds[ticker][iaddress].notificationUid;
+        newDeepLinkNotification.extraParams = { iAddress: iaddress, fqn: identity.result.fullyqualifiedname, chain: ticker, fromService: null };
+        dispatchAddNotification(newDeepLinkNotification);
       }
     }
   }
-
-
 };

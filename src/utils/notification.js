@@ -75,20 +75,20 @@ export class LoadingNotification extends Notification {
 }
 
 export class DeeplinkNotification extends Notification {
-  constructor(body, title, reopen = () => {}, uid, uri, acchash, fromService = null) {
+  constructor(body, title, reopen = () => {}, uid, uri, acchash, extraParams = null) {
     super(body, title, NOTIFICATION_TYPE_DEEPLINK, uid, acchash)
     this.uri = uri
     this.reopen = reopen
-    this.fromService = fromService
+    this.extraParams = extraParams
   }
 
   static fromJson(json, reopen) {
-    const {body, title, uid, uri} = json;
-    return new DeeplinkNotification(body, title, reopen, uid, uri);
+    const {body, title, uid, uri, extraParams} = json;
+    return new DeeplinkNotification(body, title, reopen, uid, uri, null , extraParams);
   }
 
   onAction(props = null) {
-    return this.reopen(props, this.uri, this.fromService)
+    return this.reopen(props, this.uri, this.extraParams)
   }
 
   toJson() {
@@ -98,7 +98,7 @@ export class DeeplinkNotification extends Notification {
       type: this.type,
       uid: this.uid,
       uri: this.uri,
-      fromService: this.fromService
+      extraParams: this.extraParams
     };
   }
 }

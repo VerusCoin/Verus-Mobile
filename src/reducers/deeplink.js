@@ -8,7 +8,8 @@ import {
       url: null,
       data: {},
       id: null,
-      fromService: null
+      fromService: null,
+      extraParams: null
     },
     action
   ) => {
@@ -23,7 +24,8 @@ import {
           ...state,
           id: action.payload.id,
           data: action.payload.data,
-          fromService: action.payload.fromService || null
+          fromService: action.payload.fromService,
+          extraParams: action.payload.extraParams
         }
       default:
         return state;
