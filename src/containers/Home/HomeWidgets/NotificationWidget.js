@@ -35,20 +35,22 @@ const createNotificationText = (text, icon, index) => {
     return (
         <View
             style={{
-                display: 'flex',
+                flex:1,
                 flexDirection: 'row',
                 width: "70%",
                 alignItems: 'center',
+                justifyContent: 'flex-start',
+                marginRight:20
             }}>
             {icon}
             <Text style={{ flexShrink: 1, marginLeft: 7 }}>
-                <Text style={{ fontSize: 12, color: Colors.primaryColor, fontWeight: 'bold', marginVertical: 5,  }}>
+                <Text style={{ fontSize: 12, color: Colors.primaryColor, fontWeight: 'bold', marginVertical: 5, }}>
                     {typeof (text) === 'object' ? text[0] : ''}
                 </Text>
                 <Text style={{ fontSize: 12, color: "black", marginVertical: 5 }}>
                     {typeof (text) === 'object' ? text[1] : text}
                 </Text>
-                <Text style={{ fontSize: 12, color: Colors.primaryColor, fontWeight: 'bold',  marginVertical: 5,  }}>
+                <Text style={{ fontSize: 12, color: Colors.primaryColor, fontWeight: 'bold', marginVertical: 5, }}>
                     {typeof (text) === 'object' ? text[2] : ''}
                 </Text>
                 <Text style={{ fontSize: 12, color: "black", marginVertical: 5 }}>
@@ -71,7 +73,7 @@ const getIcon = (type, index) => {
                 style={{
                     alignSelf: 'center',
                 }} />);
-        case NOTIFICATION_ICON_ERROR: 
+        case NOTIFICATION_ICON_ERROR:
             return (<VerusIdErrorIcon
                 index={index}
                 width={23}
@@ -202,9 +204,11 @@ const NotificationWidget = ({ props } = props) => {
 
                         }}>
                             <TouchableOpacity
-                                onPress={() => { Alert.alert("Clear Notifications", "Are you sure you want to clear all notifications?", 
-                                    [{ text: "Cancel", onPress: () => { } }, { text: "OK", onPress: () => { dispatchClearNotifications(); } }]) }} 
-                                >
+                                onPress={() => {
+                                    Alert.alert("Clear Notifications", "Are you sure you want to clear all notifications?",
+                                        [{ text: "Cancel", onPress: () => { } }, { text: "OK", onPress: () => { dispatchClearNotifications(); } }])
+                                }}
+                            >
                                 {!collapsed && <Paragraph style={{ fontSize: 12, textDecorationLine: 'underline', marginVertical: 17 }}>
                                     clear all
                                 </Paragraph>}
@@ -226,41 +230,36 @@ const NotificationWidget = ({ props } = props) => {
                                 key={index}
                                 style={{
                                     display: 'flex',
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
                                     width: width - 30,
-                                    height: 25,
-                                    marginBottom: 5,
+                                    alignItems: 'center',
                                 }}>
+                                {createNotificationText(notification.title, notification.icon, index)}
                                 <View
                                     style={{
                                         display: 'flex',
                                         flexDirection: 'row',
-                                        justifyContent: 'space-between',
-                                        width: width - 30,
                                         alignItems: 'center',
+                                        justifyContent: 'flex-end',
+
                                     }}>
-                                    {createNotificationText(notification.title, notification.icon, index)}
-                                    <View
-                                        style={{
-                                            display: 'flex',
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                        }}>
-                                        <TouchableOpacity onPress={() => notification.onAction(props)}>
-                                            <Paragraph style={{ fontSize: 12, color: "black", textDecorationLine: 'underline' }}>
-                                                {notification.body}
-                                            </Paragraph>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity onPress={() => dispatchRemoveNotification(notification.uid)}>
-                                            <IconButton
-                                                icon="close"
-                                                color="grey"
-                                                size={20}
-                                                style={{ marginRight: 16, marginLeft: 12 }}
-                                            />
-                                        </TouchableOpacity>
-                                    </View>
+                                    <TouchableOpacity onPress={() => notification.onAction(props)}>
+                                        <Paragraph style={{ fontSize: 12, color: "black", textDecorationLine: 'underline' }}>
+                                            {notification.body}
+                                        </Paragraph>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => dispatchRemoveNotification(notification.uid)}>
+                                        <IconButton
+                                            icon="close"
+                                            color="grey"
+                                            size={20}
+                                            style={{ marginRight: 16, marginLeft: 12 }}
+                                        />
+                                    </TouchableOpacity>
                                 </View>
                             </View>
+
                         )
                     })}
                 </Card.Content>
