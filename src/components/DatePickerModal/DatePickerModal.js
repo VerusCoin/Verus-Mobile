@@ -17,6 +17,7 @@ class DatePickerModal extends Component {
 
     return (
       <DateTimePickerModal
+        
         isVisible={visible}
         onConfirm={date => {
           const newMoment = moment(date).toObject();

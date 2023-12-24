@@ -147,7 +147,8 @@ class PersonalLocations extends Component {
 const mapStateToProps = (state) => {
   return {
     activeAccount: state.authentication.activeAccount,
-    encryptedLocations: state.personal.locations
+    encryptedLocations: state.personal.locations,
+    darkMode:state.settings.darkModeState
   }
 };
 

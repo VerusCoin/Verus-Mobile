@@ -7,7 +7,10 @@ import Colors from "../../../../globals/colors";
 
 export const PersonalAttributesEditNameRender = function () {
   return (
-    <SafeAreaView style={Styles.defaultRoot}>
+    <SafeAreaView style={[
+      Styles.defaultRoot,
+      {backgroundColor:this.props.darkMode ? Colors.darkModeColor:Colors.secondaryColor}    
+      ]}>
       <ScrollView style={Styles.fullWidth}>
         <Portal>
           {this.state.currentTextInputModal != null && (
@@ -27,8 +30,16 @@ export const PersonalAttributesEditNameRender = function () {
             />
           )}
         </Portal>
-        <List.Subheader>{"First"}</List.Subheader>
-        <Divider />
+        <List.Subheader
+        style={{
+          color:this.props.darkMode?Colors.lightGrey:Colors.verusDarkGray
+        }}
+        >{"First"}</List.Subheader>
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
+        />
         <List.Item
           title={
             this.state.name.first == null || this.state.name.first.length == 0
@@ -39,16 +50,31 @@ export const PersonalAttributesEditNameRender = function () {
             color:
               this.state.name.first == null || this.state.name.first.length == 0
                 ? Colors.verusDarkGray
-                : Colors.basicButtonColor,
+                : this.props.darkMode?Colors.ultraLightGrey:Colors.basicButtonColor,
           }}
-          right={(props) => <List.Icon {...props} icon={"account-edit"} size={20} />}
+          right={(props) => <List.Icon 
+            {...props} 
+            color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+            icon={"account-edit"} size={20} />}
           onPress={
             this.state.loading ? () => {} : () => this.setState({ currentTextInputModal: "first" })
           }
         />
-        <Divider />
-        <List.Subheader>{"Middle"}</List.Subheader>
-        <Divider />
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
+        />
+        <List.Subheader
+        style={{
+          color:this.props.darkMode?Colors.lightGrey:Colors.verusDarkGray
+        }}
+        >{"Middle"}</List.Subheader>
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
+        />
         <List.Item
           title={
             this.state.name.middle == null || this.state.name.middle.length == 0
@@ -59,16 +85,31 @@ export const PersonalAttributesEditNameRender = function () {
             color:
               this.state.name.middle == null || this.state.name.middle.length == 0
                 ? Colors.verusDarkGray
-                : Colors.basicButtonColor,
+                : this.props.darkMode?Colors.ultraLightGrey:Colors.basicButtonColor,
           }}
-          right={(props) => <List.Icon {...props} icon={"account-edit"} size={20} />}
+          right={(props) => <List.Icon 
+            {...props} 
+            color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+            icon={"account-edit"} size={20} />}
           onPress={
             this.state.loading ? () => {} : () => this.setState({ currentTextInputModal: "middle" })
           }
         />
-        <Divider />
-        <List.Subheader>{"Last"}</List.Subheader>
-        <Divider />
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
+        />
+        <List.Subheader
+        style={{
+          color:this.props.darkMode?Colors.lightGrey:Colors.verusDarkGray
+        }}
+        >{"Last"}</List.Subheader>
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
+        />
         <List.Item
           title={
             this.state.name.last == null || this.state.name.last.length == 0
@@ -79,14 +120,21 @@ export const PersonalAttributesEditNameRender = function () {
             color:
               this.state.name.last == null || this.state.name.last.length == 0
                 ? Colors.verusDarkGray
-                : Colors.basicButtonColor,
+                : this.props.darkMode?Colors.ultraLightGrey:Colors.basicButtonColor,
           }}
-          right={(props) => <List.Icon {...props} icon={"account-edit"} size={20} />}
+          right={(props) => <List.Icon 
+            {...props} 
+            color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+            icon={"account-edit"} size={20} />}
           onPress={
             this.state.loading ? () => {} : () => this.setState({ currentTextInputModal: "last" })
           }
         />
-        <Divider />
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
+        />
       </ScrollView>
     </SafeAreaView>
   );

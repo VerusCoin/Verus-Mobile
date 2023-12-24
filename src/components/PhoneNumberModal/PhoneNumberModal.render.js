@@ -9,6 +9,7 @@ import {
   PERSONAL_PHONE_TYPE_HOME,
   PERSONAL_PHONE_TYPE_WORK,
 } from "../../utils/constants/personal";
+import Colors from "../../globals/colors";
 
 export const PhoneNumberModalRender = function () {
   const { visible, cancel, title } = this.props
@@ -20,21 +21,25 @@ export const PhoneNumberModalRender = function () {
       visible={visible}
       onRequestClose={() => cancel(this.state.phone)}
       flexHeight={4}
-      contentContainerStyle={{ backgroundColor: "white" }}
+      contentContainerStyle={{ backgroundColor:this.props.darkMode?Colors.darkModeColor:"white" }}
     >
-      <View style={Styles.centerContainer}>
+      <View style={[Styles.centerContainer,
+      {backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor}
+      ]}>
         <View
           style={{
             ...Styles.headerContainerSafeArea,
             minHeight: 36,
             maxHeight: 36,
             paddingBottom: 8,
+            backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
           }}
         >
           <Text
             style={{
               ...Styles.centralHeader,
-              ...Styles.smallMediumFont,
+              ...Styles.smallMediumFont,  
+              color:this.props.darkMode?Colors.secondaryColor:'black'
             }}
           >
             {title}
@@ -48,6 +53,7 @@ export const PhoneNumberModalRender = function () {
           contentContainerStyle={{
             ...Styles.centerContainer,
             justifyContent: "flex-start",
+            backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
           }}
         >
           <View
@@ -56,10 +62,23 @@ export const PhoneNumberModalRender = function () {
               flexDirection: "row",
               width: "90%",
               marginTop: 16,
+              backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
             }}
           >
             <TextInput
-              style={{ flex: 1 }}
+              style={{ flex: 1,
+                backgroundColor:this.props.darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey
+              }}
+              theme={{
+                colors: {
+                  text: this.props.darkMode
+                    ? Colors.secondaryColor
+                    : Colors.ultraLightGrey,
+                  placeholder: this.props.darkMode
+                    ? Colors.primaryColor
+                    : Colors.verusDarkGray,
+                },
+              }}
               label="Ext."
               mode="outlined"
               returnKeyType="done"
@@ -77,7 +96,19 @@ export const PhoneNumberModalRender = function () {
               )}
             />
             <TextInput
-              style={{ flex: 2 }}
+              style={{ flex: 2,
+                backgroundColor:this.props.darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey
+              }}
+              theme={{
+                colors: {
+                  text: this.props.darkMode
+                    ? Colors.secondaryColor
+                    : Colors.ultraLightGrey,
+                  placeholder: this.props.darkMode
+                    ? Colors.primaryColor
+                    : Colors.verusDarkGray,
+                },
+              }}
               label="Phone"
               mode="outlined"
               returnKeyType="done"
@@ -95,8 +126,19 @@ export const PhoneNumberModalRender = function () {
             />
           </View>
           <View style={{ ...Styles.fullWidth, marginTop: 16 }}>
-            <Divider />
-            <List.Subheader style={Styles.wide}>{"Phone Type"}</List.Subheader>
+            <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraUltraLightGrey
+            }}
+            />
+            <List.Subheader style={[
+              Styles.wide,
+              {
+                color:this.props.darkMode?Colors.lightGrey:Colors.defaultGrayColor
+              }
+            ]}
+            
+            >{"Phone Type"}</List.Subheader>
             <Divider />
           </View>
           <View style={Styles.fullWidth}>
@@ -105,6 +147,9 @@ export const PhoneNumberModalRender = function () {
               value={this.state.phone.type}
             >
               <RadioButton.Item
+              labelStyle={{
+                color:this.props.darkMode?Colors.secondaryColor:'black'
+              }}
                 label="Mobile"
                 onPress={() =>
                   this.editPhone("type", PERSONAL_PHONE_TYPE_MOBILE)
@@ -112,11 +157,17 @@ export const PhoneNumberModalRender = function () {
                 value={PERSONAL_PHONE_TYPE_MOBILE}
               />
               <RadioButton.Item
+                labelStyle={{
+                  color:this.props.darkMode?Colors.secondaryColor:'black'
+                }}
                 label="Home"
                 onPress={() => this.editPhone("type", PERSONAL_PHONE_TYPE_HOME)}
                 value={PERSONAL_PHONE_TYPE_HOME}
               />
               <RadioButton.Item
+                labelStyle={{
+                  color:this.props.darkMode?Colors.secondaryColor:'black'
+                }}
                 label="Work"
                 onPress={() => this.editPhone("type", PERSONAL_PHONE_TYPE_WORK)}
                 value={PERSONAL_PHONE_TYPE_WORK}

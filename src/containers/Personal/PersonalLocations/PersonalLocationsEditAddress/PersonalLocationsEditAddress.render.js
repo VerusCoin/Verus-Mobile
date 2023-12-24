@@ -9,7 +9,11 @@ import Colors from "../../../../globals/colors";
 
 export const PersonalLocationsEditAddressRender = function () {
   return (
-    <SafeAreaView style={Styles.defaultRoot}>
+    <SafeAreaView style={[Styles.defaultRoot,
+    {
+      backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
+    }
+    ]}>
       <ScrollView style={Styles.fullWidth}>
         <Portal>
           {this.state.currentTextInputModal != null && (
@@ -51,9 +55,18 @@ export const PersonalLocationsEditAddressRender = function () {
 
           return (
             <React.Fragment key={index}>
-              <List.Subheader>{input.title}</List.Subheader>
-              <Divider />
+              <List.Subheader
+              style={{
+                color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+              }}
+              >{input.title}</List.Subheader>
+              <Divider 
+              style={{
+                backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+              }}
+              />
               <List.Item
+                
                 title={
                   this.state.address[key].length > 0
                     ? this.state.address[key]
@@ -62,11 +75,13 @@ export const PersonalLocationsEditAddressRender = function () {
                 titleStyle={{
                   color:
                     this.state.address[key].length > 0
-                      ? Colors.quaternaryColor
-                      : Colors.verusDarkGray,
+                      ? this.props.darkMode?Colors.verusDarkGray:Colors.quaternaryColor
+                      : this.props.darkMode?Colors.quaternaryColor:Colors.verusDarkGray,
                 }}
                 right={(props) => (
-                  <List.Icon {...props} icon={"account-edit"} size={20} />
+                  <List.Icon {...props} 
+                  color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+                  icon={"account-edit"} size={20} />
                 )}
                 onPress={
                   this.state.loading
@@ -74,13 +89,28 @@ export const PersonalLocationsEditAddressRender = function () {
                     : () => this.setState({ currentTextInputModal: key })
                 }
                 description={input.description}
+                descriptionStyle={{
+                  color:this.props.darkMode?Colors.ultraLightGrey:Colors.defaultGrayColor  
+                }}
               />
-              <Divider />
+              <Divider 
+              style={{
+                backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+              }}
+              />
             </React.Fragment>
           );
         })}
-        <List.Subheader>{"Country"}</List.Subheader>
-        <Divider />
+        <List.Subheader
+        style={{
+          color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+        }}
+        >{"Country"}</List.Subheader>
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
+        />
         <List.Item
           title={
             ISO_3166_COUNTRIES[this.state.address.country] == null
@@ -92,11 +122,13 @@ export const PersonalLocationsEditAddressRender = function () {
           titleStyle={{
             color:
               ISO_3166_COUNTRIES[this.state.address.country] == null
-                ? Colors.verusDarkGray
-                : Colors.quaternaryColor,
+                ? this.props.darkMode?Colors.quaternaryColor:Colors.verusDarkGray
+                : this.props.darkMode?Colors.verusDarkGray:Colors.quaternaryColor,
           }}
           right={(props) => (
-            <List.Icon {...props} icon={"account-edit"} size={20} />
+            <List.Icon {...props} 
+            color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+            icon={"account-edit"} size={20} />
           )}
           onPress={
             this.state.loading
@@ -104,16 +136,31 @@ export const PersonalLocationsEditAddressRender = function () {
               : () => this.setState({ countryModalOpen: true })
           }
         />
-        <Divider />
-        <List.Subheader>{"Address Options"}</List.Subheader>
-        <Divider />
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
+        />
+        <List.Subheader
+        style={{
+          color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+        }}
+        >{"Address Options"}</List.Subheader>
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
+        />
         <List.Item
           title={"Delete address"}
           titleStyle={{
             color: Colors.warningButtonColor,
           }}
           right={(props) => (
-            <List.Icon {...props} icon={"close"} size={20} />
+            <List.Icon 
+            {...props} 
+            color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+            icon={"close"} size={20} />
           )}
           onPress={
             this.state.loading
@@ -121,7 +168,11 @@ export const PersonalLocationsEditAddressRender = function () {
               : () => this.tryDeleteAddress()
           }
         />
-        <Divider />
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
+        />
       </ScrollView>
     </SafeAreaView>
   );

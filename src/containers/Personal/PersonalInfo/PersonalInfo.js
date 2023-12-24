@@ -72,7 +72,8 @@ class PersonalInfo extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    encryptedAttributes: state.personal.attributes
+    encryptedAttributes: state.personal.attributes,
+    darkMode: state.settings.darkModeState
   }
 };
 

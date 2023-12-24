@@ -388,7 +388,8 @@ class PersonalPaymentMethodsEditBankAccount extends Component {
 const mapStateToProps = (state) => {
   return {
     activeAccount: state.authentication.activeAccount,
-    encryptedPaymentMethods: state.personal.payment_methods
+    encryptedPaymentMethods: state.personal.payment_methods,
+    darkMode: state.settings.darkModeState
   }
 };
 
