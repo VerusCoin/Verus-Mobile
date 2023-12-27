@@ -25,7 +25,7 @@ export const PersonalImagesRender = function () {
         >{"Documents"}</List.Subheader>
         <Divider 
         style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+          backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
         }}
         />
         {this.state.images.documents == null
@@ -70,7 +70,11 @@ export const PersonalImagesRender = function () {
           icon={"chevron-right"} size={20} />}
           onPress={() => this.openEditImage(PERSONAL_IMAGES_DOCUMENTS)}
         />
-        <Divider />
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+        }}
+        />
       </ScrollView>
     </SafeAreaView>
   );

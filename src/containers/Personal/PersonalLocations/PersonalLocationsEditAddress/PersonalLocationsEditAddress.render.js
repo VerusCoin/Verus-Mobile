@@ -107,10 +107,10 @@ export const PersonalLocationsEditAddressRender = function () {
         }}
         >{"Country"}</List.Subheader>
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
           title={
             ISO_3166_COUNTRIES[this.state.address.country] == null
@@ -137,20 +137,20 @@ export const PersonalLocationsEditAddressRender = function () {
           }
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Subheader
         style={{
           color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
         }}
         >{"Address Options"}</List.Subheader>
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
           title={"Delete address"}
           titleStyle={{
@@ -169,10 +169,10 @@ export const PersonalLocationsEditAddressRender = function () {
           }
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
       </ScrollView>
     </SafeAreaView>
   );

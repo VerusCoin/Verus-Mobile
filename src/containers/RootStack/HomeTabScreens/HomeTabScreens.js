@@ -6,13 +6,16 @@ import WalletStackScreens from '../WalletStackScreens/WalletStackScreens';
 import ProfileStackScreens from '../ProfileStackScreens/ProfileStackScreens';
 import ServicesStackScreens from '../ServicesStackScreens/ServicesStackScreens';
 import VerusPay from '../../VerusPay/VerusPay';
+import { useSelector } from 'react-redux';
 
 const HomeTabs = createMaterialBottomTabNavigator()
 
 const HomeTabScreens = props => {
+  const darkMode = useSelector((state)=>state.settings.darkModeState)
   return (
     <HomeTabs.Navigator
-      barStyle={{ backgroundColor: Colors.primaryColor }}
+      
+      barStyle={{ backgroundColor: darkMode?Colors.verusDarkBlue:Colors.primaryColor }}
       shifting={false}
     >
       <HomeTabs.Screen

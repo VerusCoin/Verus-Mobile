@@ -38,10 +38,10 @@ export const PersonalInfoRender = function () {
           </Title>
         </View>
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
           titleStyle={{
             color: this.props.darkMode ? Colors.secondaryColor : 'black',
@@ -74,10 +74,10 @@ export const PersonalInfoRender = function () {
             icon={"chevron-right"} size={20} />}
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
            titleStyle={{
             color: this.props.darkMode ? Colors.secondaryColor : 'black',
@@ -92,10 +92,10 @@ export const PersonalInfoRender = function () {
           icon={"chevron-right"} size={20} />}
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
           titleStyle={{
             color: this.props.darkMode ? Colors.secondaryColor : 'black',
@@ -110,10 +110,10 @@ export const PersonalInfoRender = function () {
           icon={"chevron-right"} size={20} />}
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
           title={"Documents & Images"}
           titleStyle={{
@@ -128,10 +128,10 @@ export const PersonalInfoRender = function () {
             icon={"chevron-right"} size={20} />}
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
       </ScrollView>
     </SafeAreaView>
   );

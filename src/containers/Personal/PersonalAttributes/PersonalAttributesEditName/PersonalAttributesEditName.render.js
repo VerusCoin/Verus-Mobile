@@ -36,10 +36,10 @@ export const PersonalAttributesEditNameRender = function () {
         }}
         >{"First"}</List.Subheader>
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
           title={
             this.state.name.first == null || this.state.name.first.length == 0
@@ -61,20 +61,20 @@ export const PersonalAttributesEditNameRender = function () {
           }
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Subheader
         style={{
           color:this.props.darkMode?Colors.lightGrey:Colors.verusDarkGray
         }}
         >{"Middle"}</List.Subheader>
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
           title={
             this.state.name.middle == null || this.state.name.middle.length == 0
@@ -96,20 +96,20 @@ export const PersonalAttributesEditNameRender = function () {
           }
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Subheader
         style={{
           color:this.props.darkMode?Colors.lightGrey:Colors.verusDarkGray
         }}
         >{"Last"}</List.Subheader>
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
           title={
             this.state.name.last == null || this.state.name.last.length == 0
@@ -131,10 +131,10 @@ export const PersonalAttributesEditNameRender = function () {
           }
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
       </ScrollView>
     </SafeAreaView>
   );

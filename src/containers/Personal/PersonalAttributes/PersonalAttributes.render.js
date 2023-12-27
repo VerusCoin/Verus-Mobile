@@ -73,10 +73,10 @@ export const PersonalAttributesRender = function () {
         }}
         >{"Name"}</List.Subheader>
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
           titleStyle={{
             color: this.props.darkMode ? Colors.secondaryColor : 'black',
@@ -94,10 +94,10 @@ export const PersonalAttributesRender = function () {
           onPress={() => this.openEditNameScreen()}
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Subheader
         style={{
           color:this.props.darkMode?Colors.lightGrey:Colors.verusDarkGray
@@ -132,20 +132,20 @@ export const PersonalAttributesRender = function () {
           />
         )}
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Subheader
         style={{
           color:this.props.darkMode?Colors.lightGrey:Colors.verusDarkGray
         }}
         >{"Nationalities"}</List.Subheader>
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         {this.state.attributes.nationalities == null
           ? null
           : this.state.attributes.nationalities.map((code, index) => {
@@ -194,10 +194,10 @@ export const PersonalAttributesRender = function () {
           onPress={() => this.setState({ nationalityModalOpen: true })}
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
       </ScrollView>
     </SafeAreaView>
   );

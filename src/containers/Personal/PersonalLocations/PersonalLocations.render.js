@@ -31,10 +31,10 @@ export const PersonalLocationsRender = function () {
         }}
         >{"Tax countries & IDs"}</List.Subheader>
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         {this.state.locations.tax_countries == null
           ? null
           : this.state.locations.tax_countries.map((taxCountry, index) => {
@@ -82,20 +82,20 @@ export const PersonalLocationsRender = function () {
           onPress={() => this.openEditTaxCountry()}
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Subheader
         style={{
           color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
         }}
         >{"Addresses"}</List.Subheader>
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         {this.state.locations.physical_addresses == null
           ? null
           : this.state.locations.physical_addresses.map((address, index) => {
@@ -158,10 +158,10 @@ export const PersonalLocationsRender = function () {
           onPress={() => this.openEditAddress()}
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
       </ScrollView>
     </SafeAreaView>
   );

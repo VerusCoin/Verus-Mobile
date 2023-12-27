@@ -60,10 +60,10 @@ export const PersonalLocationsEditTaxCountryRender = function () {
         }}
         >{"Country"}</List.Subheader>
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
           title={
             ISO_3166_COUNTRIES[this.state.taxCountry.country] == null
@@ -90,10 +90,10 @@ export const PersonalLocationsEditTaxCountryRender = function () {
           }
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         {Object.keys(this.textInputLabels).map((key, index) => {
           const input = this.textInputLabels[key];
 
@@ -172,10 +172,10 @@ export const PersonalLocationsEditTaxCountryRender = function () {
           }
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
       </ScrollView>
     </SafeAreaView>
   );

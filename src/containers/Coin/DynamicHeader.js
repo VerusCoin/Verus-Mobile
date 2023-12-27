@@ -343,7 +343,7 @@ class DynamicHeader extends Component {
           flexDirection: 'column',
           justifyContent: 'flex-end',
           alignItems: 'center',
-          backgroundColor: Colors.primaryColor,
+          backgroundColor: this.props.darkMode?Colors.verusDarkBlue:Colors.primaryColor,
         }}>
         <View
           style={{
@@ -352,6 +352,7 @@ class DynamicHeader extends Component {
             alignItems: 'center',
             justifyContent: 'center',
             flex: 1,
+            
           }}>
           <Text
             style={{
@@ -482,7 +483,7 @@ class DynamicHeader extends Component {
             justifyContent: 'center',
             alignItems: 'flex-end',
             paddingBottom: 16,
-            backgroundColor: Colors.primaryColor,
+            backgroundColor: this.props.darkMode?Colors.verusDarkBlue:Colors.primaryColor,
           }}>
           {this.state.loadingCarouselItems ? null : this.state.carouselItems
               .length == 1 ? (

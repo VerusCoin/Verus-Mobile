@@ -79,10 +79,10 @@ export const PersonalContactRender = function () {
         }}
         >{"Email addresses"}</List.Subheader>
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         {this.state.contact.emails == null
           ? null
           : this.state.contact.emails.map((email, index) => {
@@ -128,20 +128,20 @@ export const PersonalContactRender = function () {
           onPress={() => this.openAddEmailModal()}
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Subheader
         style={{
           color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
         }}
         >{"Phone numbers"}</List.Subheader>
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         {this.state.contact.phone_numbers == null
           ? null
           : this.state.contact.phone_numbers.map((phone, index) => {
@@ -194,10 +194,10 @@ export const PersonalContactRender = function () {
           onPress={() => this.openAddPhoneModal()}
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
       </ScrollView>
     </SafeAreaView>
   );

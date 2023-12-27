@@ -16,13 +16,15 @@ import DeleteProfile from '../../Settings/ProfileSettings/DeleteProfile/DeletePr
 import SecureLoading from '../../SecureLoading/SecureLoading'
 import HomeTabScreens from '../HomeTabScreens/HomeTabScreens';
 import AddressBlocklist from '../../Settings/WalletSettings/AddressBlocklist/AddressBlocklist';
+import { useSelector } from 'react-redux';
 
 const MainStack = createStackNavigator();
 
 const MainStackScreens = props => {
+  const darkMode = useSelector(state=>state.settings.darkModeState)
   return (
     <MainStack.Navigator
-      screenOptions={defaultHeaderOptions}
+      screenOptions={defaultHeaderOptions({darkMode})}
     >
       <MainStack.Screen
         name="Home"

@@ -3,13 +3,15 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { defaultHeaderOptions } from '../../../utils/navigation/header';
 import Home from '../../Home/Home';
 import Service from '../../Services/Service/Service';
+import { useSelector } from 'react-redux';
 
 const WalletStack = createStackNavigator();
 
 const WalletStackScreens = props => {
+  const darkMode = useSelector(state=>state.settings.darkModeState)
   return (
     <WalletStack.Navigator
-      screenOptions={defaultHeaderOptions}
+      screenOptions={ defaultHeaderOptions({darkMode})}
     >
       <WalletStack.Screen
         name="Wallets"

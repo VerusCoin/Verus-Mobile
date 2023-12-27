@@ -6,6 +6,7 @@ import {
   CONNECTED_SERVICE_DISPLAY_INFO,
   CONNECTED_SERVICES,
 } from '../../../utils/constants/services';
+import Colors from '../../../globals/colors';
 
 export const ServicesOverviewRender = function () {
   const centralized = [];
@@ -20,14 +21,26 @@ export const ServicesOverviewRender = function () {
     const comp = (
       <React.Fragment key={index}>
         <List.Item
+          titleStyle={{
+            color:this.props.darkMode?Colors.secondaryColor:'black'
+          }}
           title={CONNECTED_SERVICE_DISPLAY_INFO[service].title}
           description={CONNECTED_SERVICE_DISPLAY_INFO[service].description}
+          descriptionStyle={{
+            color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+          }}
           onPress={() => this.openService(service)}
           right={props => (
-            <List.Icon {...props} icon={'chevron-right'} size={20} />
+            <List.Icon {...props} 
+            color={this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}
+            icon={'chevron-right'} size={20} />
           )}
         />
-        <Divider />
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+        }}
+        />
       </React.Fragment>
     );
 
@@ -39,20 +52,45 @@ export const ServicesOverviewRender = function () {
   });
 
   return (
-    <SafeAreaView style={Styles.defaultRoot}>
+    <SafeAreaView style={[
+      Styles.defaultRoot,
+      {
+        backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
+      }
+    ]}>
       <ScrollView style={Styles.fullWidth}>
-        <Divider />
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+        }}
+        />
         {decentralized.length > 0 && (
           <React.Fragment>
-            <List.Subheader>{'Decentralized'}</List.Subheader>
-            <Divider />
+            <List.Subheader
+            style={{
+              color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+            }}
+            >{'Decentralized'}</List.Subheader>
+            <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+            }}
+            />
           </React.Fragment>
         )}
         {decentralized}
         {centralized.length > 0 && (
           <React.Fragment>
-            <List.Subheader>{'Centralized'}</List.Subheader>
-            <Divider />
+            <List.Subheader
+            style={{
+              color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+            }}
+            >{'Centralized'}</List.Subheader>
+            <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+            }}
+            />
           </React.Fragment>
         )}
         {centralized}

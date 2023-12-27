@@ -385,10 +385,10 @@ class ProfileSettings extends Component {
         style={{color:this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}}
         >{"Current Profile"}</List.Subheader>
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
           titleStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor}}
           descriptionStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}}

@@ -7,20 +7,23 @@ import {
 import { Text } from 'react-native-paper';
 import Colors from '../globals/colors';
 import { CoinLogos, getCoinLogo } from '../utils/CoinData/CoinData';
+import { useSelector } from 'react-redux';
 
 const VrscLogo = getCoinLogo("VRSC");
 
-const DrawerHeader = ({ navigateToScreen }) => (
+const DrawerHeader = ({ navigateToScreen }) => {
+  const darkMode = useSelector(state=>state.settings.darkModeState)
+  return(
   <TouchableOpacity onPress={() => navigateToScreen("Home")}>
     <SafeAreaView
       style={{
-        backgroundColor: Colors.primaryColor,
+        backgroundColor: darkMode?Colors.verusDarkBlue:Colors.primaryColor,
       }}
     >
       <View
         style={{
           flexDirection: "row",
-          backgroundColor: Colors.primaryColor,
+          backgroundColor: darkMode?Colors.verusDarkBlue:Colors.primaryColor,
           paddingLeft: 20,
 					paddingBottom: 24,
           paddingTop: 24,
@@ -43,7 +46,7 @@ const DrawerHeader = ({ navigateToScreen }) => (
         </Text>
       </View>
     </SafeAreaView>
-  </TouchableOpacity>
-);
+  </TouchableOpacity>)
+};
 
 export default DrawerHeader;

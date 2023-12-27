@@ -271,7 +271,8 @@ const mapStateToProps = (state) => {
     rates: results ? results : {},
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
     addresses: selectAddresses(state),
-    subWallet: state.coinMenus.activeSubWallets[chainTicker]
+    subWallet: state.coinMenus.activeSubWallets[chainTicker],
+    darkMode:state.settings.darkModeState
   }
 };
 

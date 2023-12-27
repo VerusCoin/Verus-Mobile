@@ -132,7 +132,7 @@ export const PersonalImagesEditImageRender = function () {
               />
               <Divider 
               style={{
-                backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+                backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
               }}
               />
             </React.Fragment>
@@ -172,7 +172,7 @@ export const PersonalImagesEditImageRender = function () {
               />
               <Divider
               style={{
-                backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+                backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
               }}
               />
             </React.Fragment>
@@ -214,7 +214,7 @@ export const PersonalImagesEditImageRender = function () {
                   />
                   <Divider
                   style={{
-                    backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+                    backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
                   }}
                   />
                 </React.Fragment>
@@ -229,7 +229,7 @@ export const PersonalImagesEditImageRender = function () {
         >{"Images"}</List.Subheader>
         <Divider 
          style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+          backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
         }}
         />
         {(this.state.loadingImage ||
@@ -312,7 +312,7 @@ export const PersonalImagesEditImageRender = function () {
         })}
         <Divider 
         style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+          backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
         }}
         />
         <List.Subheader
@@ -322,7 +322,7 @@ export const PersonalImagesEditImageRender = function () {
         >{"Options"}</List.Subheader>
         <Divider 
         style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+          backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
         }}
         />
         <List.Item
@@ -338,7 +338,7 @@ export const PersonalImagesEditImageRender = function () {
         />
         <Divider 
         style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+          backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
         }}
         />
       </ScrollView>

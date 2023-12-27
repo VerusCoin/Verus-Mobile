@@ -336,10 +336,10 @@ export const PersonalPaymentMethodsEditBankAccountRender = function () {
         ]}
         >{"Bank account options"}</List.Subheader>
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
           title={"Delete bank account"}
           titleStyle={{
@@ -351,10 +351,10 @@ export const PersonalPaymentMethodsEditBankAccountRender = function () {
           }
         />
         <Divider 
-        style={{
-          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
-        }}
-        />
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
       </ScrollView>
     </SafeAreaView>
   );

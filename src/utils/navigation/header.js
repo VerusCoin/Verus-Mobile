@@ -12,6 +12,7 @@ const Header = () => {
   const navigation = useNavigation(); // Use the hook here
   const dispatch = useDispatch();
   const showBalance = useSelector(state => state.coins.showBalance);
+  const darkMode = useSelector(state=>state.settings.darkModeState)
 
   const handleBalanceShow = event => {
     event.preventDefault();
@@ -72,11 +73,11 @@ const Header = () => {
   );
 };
 
-export const defaultHeaderOptions = ({navigation, params, route}) => ({
+export const defaultHeaderOptions = ({navigation, params, route,darkMode}) => ({
   headerShown: true,
   headerMode: 'screen',
   headerStyle: {
-    backgroundColor: Colors.primaryColor,
+    backgroundColor: darkMode?Colors.verusDarkBlue:Colors.primaryColor,
   },
   headerTitleStyle: {
     fontFamily: 'Avenir-Black',

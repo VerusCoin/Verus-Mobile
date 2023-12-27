@@ -13,8 +13,10 @@ import { Portal, Button, TextInput } from "react-native-paper"
 import TextInputModal from "../../../components/TextInputModal/TextInputModal"
 import NumberPadModal from "../../../components/NumberPadModal/NumberPadModal"
 import ListSelectionModal from "../../../components/ListSelectionModal/ListSelectionModal";
+import { useSelector } from "react-redux";
 
 export const RenderReceiveCoin = function() {
+ 
   const _price = this.getPrice();
   const {
     state,
@@ -38,7 +40,11 @@ export const RenderReceiveCoin = function() {
   const fiatEnabled = rates[displayCurrency] != null;
 
   return (
-    <View style={Styles.defaultRoot}>
+    <View style={[Styles.defaultRoot,
+    {
+      backgroundColor: this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor,
+    }
+    ]}>
       <ScrollView
         style={Styles.fullWidth}
         contentContainerStyle={Styles.horizontalCenterContainer}
