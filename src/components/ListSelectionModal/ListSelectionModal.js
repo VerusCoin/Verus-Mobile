@@ -70,14 +70,24 @@ class ListSelectionModal extends Component {
                     description={item.description}
                     right={
                       item.key === selectedKey
-                        ? props => <List.Icon {...props} icon={'check'} />
+                        ? props => (
+                            <List.Icon
+                              {...props}
+                              color={
+                                this.props.darkMode
+                                  ? Colors.secondaryColor
+                                  : Colors.defaultGrayColor
+                              }
+                              icon={'check'}
+                            />
+                          )
                         : props => (
                             <List.Icon
                               {...props}
                               color={
-                                darkMode
-                                  ? Colors.secondaryColor
-                                  : Colors.lightGrey
+                                this.props.darkMode
+                                  ? Colors.darkModeColor
+                                  : Colors.secondaryColor
                               }
                               icon={'check'}
                             />
