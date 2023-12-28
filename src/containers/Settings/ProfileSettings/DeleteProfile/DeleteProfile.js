@@ -142,6 +142,21 @@ class DeleteProfile extends Component {
         onChangeText={(text) => this.setState({ pwd: text })}
         label="Profile Password"
         underlineColor={Colors.primaryColor}
+        theme={{
+          colors: {
+            text: this.props.darkMode
+              ? Colors.secondaryColor
+              : Colors.ultraLightGrey,
+            placeholder: this.props.darkMode
+              ? Colors.primaryColor
+              : Colors.verusDarkGray,
+          },
+        }}
+        style={{
+          backgroundColor:this.props.darkMode
+                      ? Colors.verusDarkModeForm
+                      : Colors.tertiaryColor,
+        }}
         selectionColor={Colors.primaryColor}
         render={(props) => (
           <NativeTextInput
@@ -170,7 +185,11 @@ class DeleteProfile extends Component {
 
   render() {
     return (
-      <View style={Styles.defaultRoot}>
+      <View style={[Styles.defaultRoot,
+      {
+        backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
+      }
+      ]}>
         <ScrollView style={Styles.fullWidth}
           contentContainerStyle={{...Styles.innerHeaderFooterContainerCentered, ...Styles.fullHeight}}>
           <View style={Styles.wideBlock}>
@@ -178,6 +197,13 @@ class DeleteProfile extends Component {
           </View>
             <View style={Styles.wideBlock}>
               <Checkbox.Item
+                uncheckedColor={
+                  this.props.darkMode ? Colors.secondaryColor : Colors.quinaryColor
+                }
+                labelStyle={{
+                  fontSize: 14,
+                  color:this.props.darkMode?Colors.secondaryColor:'black'
+                }}
                 color={Colors.primaryColor}
                 label={"I confirm that I would like to delete my profile, and acknowledge that this action cannot be reversed."}
                 status={
@@ -190,7 +216,11 @@ class DeleteProfile extends Component {
               />
             </View>
         </ScrollView>
-        <View style={Styles.highFooterContainer}>
+        <View style={[Styles.highFooterContainer,
+        {
+          backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
+        }
+        ]}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
             <Button 
               color={Colors.warningButtonColor}
@@ -210,6 +240,7 @@ class DeleteProfile extends Component {
 const mapStateToProps = (state) => {
   return {
     activeAccount: state.authentication.activeAccount,
+    darkMode:state.settings.darkModeState
   }
 };
 

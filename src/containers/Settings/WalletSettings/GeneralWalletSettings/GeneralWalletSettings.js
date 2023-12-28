@@ -26,7 +26,7 @@ import ListSelectionModal from '../../../../components/ListSelectionModal/ListSe
 import {saveGeneralSettings} from '../../../../actions/actionCreators';
 import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
 import {NavigationActions} from '@react-navigation/compat';
-import { ADDRESS_BLOCKLIST_FROM_WEBSERVER } from '../../../../utils/constants/constants';
+import {ADDRESS_BLOCKLIST_FROM_WEBSERVER} from '../../../../utils/constants/constants';
 
 const NO_DEFAULT = 'None';
 
@@ -39,6 +39,7 @@ const WalletSettings = props => {
   const activeAccount = useSelector(
     state => state.authentication.activeAccount,
   );
+  const darkMode = useSelector(state => state.settings.darkModeState);
   const dispatch = useDispatch();
 
   const [settings, setSettings] = useState({...generalWalletSettings});
@@ -90,7 +91,9 @@ const WalletSettings = props => {
         maxTxCount: Number(settings.maxTxCount),
         displayCurrency: settings.displayCurrency,
         defaultAccount:
-          settings.defaultAccount === NO_DEFAULT ? null : settings.defaultAccount,
+          settings.defaultAccount === NO_DEFAULT
+            ? null
+            : settings.defaultAccount,
         homeCardDragDetection,
         ackedCurrencyDisclaimer: settings.ackedCurrencyDisclaimer,
         addressBlocklistDefinition:
@@ -151,13 +154,21 @@ const WalletSettings = props => {
   const defaultAccountName = defaultAccount == null ? null : defaultAccount.id;
 
   return (
-    <View style={Styles.defaultRoot}>
+    <View
+      style={[
+        Styles.defaultRoot,
+        {
+          backgroundColor: darkMode
+            ? Colors.darkModeColor
+            : Colors.secondaryColor,
+        },
+      ]}>
       <Portal>
         {currentNumberInputModal != null && (
           <NumberPadModal
             value={Number(settings[currentNumberInputModal])}
             visible={currentNumberInputModal != null}
-            onChange={(number) => {
+            onChange={number => {
               setSettings({
                 ...settings,
                 [currentNumberInputModal]: number.toString(),
@@ -173,7 +184,7 @@ const WalletSettings = props => {
             title="Currencies"
             selectedKey={settings.displayCurrency}
             visible={displayCurrencyModalOpen}
-            onSelect={(item) => {
+            onSelect={item => {
               setSettings({
                 ...settings,
                 displayCurrency: item.key,
@@ -193,7 +204,7 @@ const WalletSettings = props => {
             title="Profiles"
             selectedKey={settings.defaultAccount}
             visible={defaultProfileModalOpen}
-            onSelect={(item) => {
+            onSelect={item => {
               setSettings({
                 ...settings,
                 defaultAccount: item.key,
@@ -218,42 +229,98 @@ const WalletSettings = props => {
         )}
       </Portal>
       <ScrollView style={Styles.fullWidth}>
-        <List.Subheader>{'Display Settings'}</List.Subheader>
+        <List.Subheader
+          style={{
+            color: darkMode ? Colors.verusDarkGray : Colors.defaultGrayColor,
+          }}>
+          {'Display Settings'}
+        </List.Subheader>
         <TouchableOpacity
           onPress={() => openNumberInputModal('maxTxCount')}
           style={{...Styles.flex}}>
-          <Divider />
+          <Divider
+            style={{
+              backgroundColor: darkMode
+                ? Colors.verusDarkGray
+                : Colors.ultraLightGrey,
+            }}
+          />
           <List.Item
+            titleStyle={{
+              color: darkMode ? Colors.secondaryColor : 'black',
+            }}
+            descriptionStyle={{
+              color: darkMode ? Colors.verusDarkGray : Colors.defaultGrayColor,
+            }}
             title={'Max. Display TXs'}
             description="Max. displayed Electrum transactions"
             right={() => (
-              <Text style={Styles.listItemTableCell}>
+              <Text
+                style={[
+                  Styles.listItemTableCell,
+                  {
+                    color: darkMode
+                      ? Colors.verusDarkGray
+                      : Colors.defaultGrayColor,
+                  },
+                ]}>
                 {settings.maxTxCount}
               </Text>
             )}
           />
-          <Divider />
+          <Divider
+            style={{
+              backgroundColor: darkMode
+                ? Colors.verusDarkGray
+                : Colors.ultraLightGrey,
+            }}
+          />
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => openDisplayCurrencyModal()}
           style={{...Styles.flex}}>
           <List.Item
+            titleStyle={{
+              color: darkMode ? Colors.secondaryColor : 'black',
+            }}
+            descriptionStyle={{
+              color: darkMode ? Colors.verusDarkGray : Colors.defaultGrayColor,
+            }}
             title={'Universal Display Currency'}
             description="The currency used to display value"
             right={() => (
-              <Text style={Styles.listItemTableCell}>
+              <Text
+                style={[
+                  Styles.listItemTableCell,
+                  {
+                    color: darkMode
+                      ? Colors.verusDarkGray
+                      : Colors.defaultGrayColor,
+                  },
+                ]}>
                 {settings.displayCurrency}
               </Text>
             )}
           />
-          <Divider />
+          <Divider
+            style={{
+              backgroundColor: darkMode
+                ? Colors.verusDarkGray
+                : Colors.ultraLightGrey,
+            }}
+          />
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
             setHomeCardDragDetection(!homeCardDragDetection);
-          }}
-        >
+          }}>
           <List.Item
+            titleStyle={{
+              color: darkMode ? Colors.secondaryColor : 'black',
+            }}
+            descriptionStyle={{
+              color: darkMode ? Colors.verusDarkGray : Colors.defaultGrayColor,
+            }}
             title="Automatic Drag Detection"
             description="Move home screen cards when dragged"
             right={() => (
@@ -262,8 +329,7 @@ const WalletSettings = props => {
                   flexDirection: 'column',
                   justifyContent: 'center',
                   alignItems: 'flex-end',
-                }}
-              >
+                }}>
                 <Switch
                   value={homeCardDragDetection}
                   onValueChange={() => {
@@ -274,45 +340,83 @@ const WalletSettings = props => {
               </View>
             )}
           />
-          <Divider />
+          <Divider
+            style={{
+              backgroundColor: darkMode
+                ? Colors.verusDarkGray
+                : Colors.ultraLightGrey,
+            }}
+          />
         </TouchableOpacity>
-        <List.Subheader>{'Start Settings'}</List.Subheader>
+        <List.Subheader
+          style={{
+            color: darkMode ? Colors.verusDarkGray : Colors.defaultGrayColor,
+          }}>
+          {'Start Settings'}
+        </List.Subheader>
         <TouchableOpacity
           onPress={() => openDefaultProfileModal()}
           style={{...Styles.flex}}>
           <Divider />
           <List.Item
+            titleStyle={{
+              color: darkMode ? Colors.secondaryColor : 'black',
+            }}
+            descriptionStyle={{
+              color: darkMode ? Colors.verusDarkGray : Colors.defaultGrayColor,
+            }}
             title={'Default Profile'}
             description="Automatically selected profile on app start"
             right={() => (
-              <Text style={Styles.listItemTableCell}>
+              <Text
+                style={[
+                  Styles.listItemTableCell,
+                  {
+                    color: darkMode
+                      ? Colors.verusDarkGray
+                      : Colors.defaultGrayColor,
+                  },
+                ]}>
                 {defaultAccountName == null ? NO_DEFAULT : defaultAccountName}
               </Text>
             )}
           />
-          <Divider />
+          <Divider
+            style={{
+              backgroundColor: darkMode
+                ? Colors.verusDarkGray
+                : Colors.ultraLightGrey,
+            }}
+          />
         </TouchableOpacity>
       </ScrollView>
-      <View style={Styles.highFooterContainer}>
+      <View
+        style={[
+          Styles.highFooterContainer,
+          {
+            backgroundColor: darkMode
+              ? Colors.darkModeColor
+              : Colors.secondaryColor,
+          },
+        ]}>
         {loading ? (
           <ActivityIndicator
             animating={loading}
             style={{
-              paddingTop: 32
+              paddingTop: 32,
             }}
             size="large"
           />
         ) : (
           <View style={Styles.standardWidthSpaceBetweenBlock}>
             <Button color={Colors.warningButtonColor} onPress={back}>
-              {"Back"}
+              {'Back'}
             </Button>
             <Button
               color={Colors.primaryColor}
               onPress={handleSubmit}
-              disabled={!hasChanges}
-            >
-              {"Confirm"}
+              disabled={!hasChanges}>
+              {'Confirm'}
             </Button>
           </View>
         )}

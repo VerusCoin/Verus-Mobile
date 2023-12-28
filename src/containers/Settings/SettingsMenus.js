@@ -9,6 +9,7 @@ import AppInfo from './AppInfo/AppInfo'
 import ProfileSettings from './ProfileSettings/ProfileSettings'
 import WalletSettings from './WalletSettings/WalletSettings'
 import { BottomNavigation } from "react-native-paper"
+import Colors from "../../globals/colors";
 
 class SettingsMenus extends Component {
   constructor(props) {
@@ -103,6 +104,7 @@ class SettingsMenus extends Component {
   render() {
     return (
       <BottomNavigation
+      barStyle={{ backgroundColor: this.props.darkMode?Colors.verusDarkBlue:Colors.primaryColor }}
         navigationState={{
           index: this.state.activeTabIndex,
           routes: this.state.tabs,
@@ -117,7 +119,8 @@ class SettingsMenus extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    activeConfigSection: state.settings.activeConfigSection
+    activeConfigSection: state.settings.activeConfigSection,
+    darkMode:state.settings.darkModeState
   }
 };
 

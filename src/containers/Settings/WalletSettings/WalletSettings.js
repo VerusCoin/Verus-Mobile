@@ -121,7 +121,7 @@ class WalletSettings extends Component {
             titleStyle={{
               color: this.props.darkMode
                 ? Colors.secondaryColor
-                : Colors.verusDarkGray,
+                : 'black',
             }}
             left={props => (
               <List.Icon
@@ -160,7 +160,7 @@ class WalletSettings extends Component {
             titleStyle={{
               color: this.props.darkMode
                 ? Colors.secondaryColor
-                : Colors.verusDarkGray,
+                : 'black',
             }}
             left={props => (
               <List.Icon
@@ -214,7 +214,7 @@ class WalletSettings extends Component {
             titleStyle={{
               color: this.props.darkMode
                 ? Colors.secondaryColor
-                : Colors.verusDarkGray,
+                : 'black',
             }}
             left={props => (
               <List.Icon
@@ -267,7 +267,7 @@ class WalletSettings extends Component {
                 titleStyle={{
                   color: this.props.darkMode
                     ? Colors.secondaryColor
-                    : Colors.verusDarkGray,
+                    : 'black',
                 }}
                 left={props => (
                   <View {...props}>{RenderSquareCoinLogo(coin.id)}</View>

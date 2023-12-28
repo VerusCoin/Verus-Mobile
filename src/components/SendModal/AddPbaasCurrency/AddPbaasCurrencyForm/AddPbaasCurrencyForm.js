@@ -19,6 +19,7 @@ const AddPbaasCurrencyForm = (props) => {
   const dispatch = useDispatch();
   const sendModal = useSelector(state => state.sendModal);
   const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser);
+  const darkMode = useSelector((state)=>state.settings.darkModeState)
 
   const formHasError = useCallback(() => {
     const {data} = sendModal;
@@ -82,7 +83,8 @@ const AddPbaasCurrencyForm = (props) => {
   return AddPbaasCurrencyFormRender({
     submitData,
     updateSendFormData: props.updateSendFormData,
-    formDataValue: sendModal.data[SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD]
+    formDataValue: sendModal.data[SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD],
+    darkMode
   });
 };
 

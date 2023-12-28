@@ -23,6 +23,7 @@ import RNFS from "react-native-fs"
 import Share from 'react-native-share';
 import Colors from '../globals/colors';
 import Styles from '../styles/index'
+import { connect } from "react-redux";
 
 const LOGO_DIR = require('../images/customIcons/Verus.png');
 const NOT_REAL_ERROR_MSG = "User did not share"
@@ -129,17 +130,30 @@ class QRModal extends Component {
         onRequestClose={this.cancelHandler}
       >
         <ScrollView
-          style={Styles.flexBackground}
+          style={[Styles.flexBackground,
+          {
+            backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
+          }
+          ]}
           contentContainerStyle={Styles.centerContainer}
         >
-          <View style={Styles.headerContainer}>
-            <Text style={Styles.centralHeader}>{"VerusPay Invoice"}</Text>
+          <View style={[Styles.headerContainer,
+          {
+            backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
+          }
+          ]}>
+            <Text style={[Styles.centralHeader,
+            {
+              color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor
+            }
+            ]}>{"VerusPay Invoice"}</Text>
           </View>
           <View style={Styles.standardWidthFlexGrowCenterBlock}>
             <Text
               style={{
                 ...Styles.defaultDescriptiveText,
                 ...Styles.fullWidthSpaceBetweenCenterBlock,
+                  color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor
               }}
             >
               {"Scan this QR code with VerusPay to automatically create" +
@@ -157,7 +171,11 @@ class QRModal extends Component {
               />
             </View>
           </View>
-          <View style={Styles.footerContainer}>
+          <View style={[Styles.footerContainer,
+          {
+            backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
+          }
+          ]}>
             <View style={Styles.standardWidthSpaceBetweenBlock}>
               <TouchableOpacity
                 onPress={
@@ -173,7 +191,7 @@ class QRModal extends Component {
               >
                 <IconButton
                   icon="content-save"
-                  color={Colors.quinaryColor}
+                  color={this.props.darkMode?Colors.verusDarkGray:Colors.quinaryColor}
                 />
               </TouchableOpacity>
               <Button
@@ -207,4 +225,10 @@ class QRModal extends Component {
   }
 }
 
-export default QRModal;
+const mapStateToProps = (state) => {
+  return {
+    darkMode: state.settings.darkModeState,
+  }
+};
+
+export default connect(mapStateToProps)(QRModal);

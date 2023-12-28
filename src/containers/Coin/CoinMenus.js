@@ -30,6 +30,7 @@ import {
   WALLET_APP_SEND,
 } from '../../utils/constants/apps';
 import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
+import Colors from '../../globals/colors';
 
 class CoinMenus extends Component {
   constructor(props) {
@@ -220,6 +221,9 @@ class CoinMenus extends Component {
           {selectedSubWallet != null && <DynamicHeader />}
           {selectedSubWallet != null && (
             <BottomNavigation
+              barStyle={{
+                backgroundColor:this.props.darkMode?Colors.verusDarkBlue:Colors.secondaryColor
+              }}
               shifting={false}
               navigationState={{
                 index: this.state.activeTabIndex,
@@ -245,6 +249,7 @@ const mapStateToProps = state => {
       state.coinMenus.activeSubWallets[state.coins.activeCoin.id],
     allSubWallets: state.coinMenus.allSubWallets[state.coins.activeCoin.id],
     services: state.services,
+    darkMode:state.settings.darkModeState
   };
 };
 

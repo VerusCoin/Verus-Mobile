@@ -10,7 +10,8 @@ export const AddErc20TokenFormRender = ({
   updateSendFormData, 
   formDataValue, 
   useMappedCurrency,
-  setUseMappedCurrency
+  setUseMappedCurrency,
+  darkMode
 }) => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -18,6 +19,7 @@ export const AddErc20TokenFormRender = ({
         style={{
           ...Styles.flexBackground,
           ...Styles.fullWidth,
+          backgroundColor:darkMode?Colors.darkModeColor:Colors.secondaryColor
         }}
         contentContainerStyle={{
           ...Styles.centerContainer,
@@ -35,10 +37,32 @@ export const AddErc20TokenFormRender = ({
             }
             autoCapitalize={"none"}
             autoCorrect={false}
+            theme={{
+              colors: {
+                text: darkMode
+                  ? Colors.secondaryColor
+                  : Colors.ultraLightGrey,
+                placeholder: darkMode
+                  ? Colors.primaryColor
+                  : Colors.verusDarkGray,
+              },
+            }}
+            style={{
+              backgroundColor:darkMode
+                  ? Colors.verusDarkModeForm
+                  : Colors.tertiaryColor,
+              
+            }}
           />
         </View>
         <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
           <Checkbox.Item
+            labelStyle={{
+              color:darkMode?Colors.secondaryColor:'black'
+            }}
+            uncheckedColor={
+              darkMode ? Colors.secondaryColor : Colors.quinaryColor
+            }
             color={Colors.primaryColor}
             label={'Find using mapped PBaaS currency'}
             status={

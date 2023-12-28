@@ -14,7 +14,6 @@ const HomeTabScreens = props => {
   const darkMode = useSelector((state)=>state.settings.darkModeState)
   return (
     <HomeTabs.Navigator
-      
       barStyle={{ backgroundColor: darkMode?Colors.verusDarkBlue:Colors.primaryColor }}
       shifting={false}
     >

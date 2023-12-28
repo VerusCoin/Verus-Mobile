@@ -17,6 +17,7 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
   const {height} = Dimensions.get('window');
 
   const isKeyboardActive = useSelector(state => state.keyboard.active);
+  const darkMode = useSelector(state=>state.settings.darkModeState);
 
   const [formStep, setFormStep] = useState(0);
   const [seedWords, setSeedWords] = useState(newSeed.split(' '));
@@ -123,7 +124,7 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
           justifyContent: 'center',
           flex: 1,
           alignItems: 'center',
-          backgroundColor: Colors.secondaryColor,
+          backgroundColor: darkMode?Colors.darkModeColor:Colors.secondaryColor,
         }}>
         <View
           style={{
@@ -150,9 +151,24 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
                       flexDirection: 'row',
                     }}>
                     <TextInput
+                    theme={{
+                      colors: {
+                        text: darkMode
+                          ? Colors.secondaryColor
+                          : Colors.ultraLightGrey,
+                        placeholder: darkMode
+                          ? Colors.primaryColor
+                          : Colors.verusDarkGray,
+                      },
+                    }}
+                    
                       returnKeyType="done"
                       dense
-                      style={{width: '100%'}}
+                      style={{width: '100%',
+                    backgroundColor:darkMode
+                      ? Colors.verusDarkModeForm
+                      : Colors.tertiaryColor,y
+                    }}
                       onChangeText={text => {
                         let newGuesses = [...wordGuesses];
 
@@ -205,6 +221,7 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
                           fontSize: 12,
                           paddingTop: 2,
                           paddingRight: 8,
+                          color:darkMode?Colors.secondaryColor:'black'
                         }}>{`Word ${firstIndex + index + 1}:`}</Text>
                       <Text
                         style={{
@@ -229,7 +246,7 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
               bottom: 40,
               width: 280,
             }}>
-            <Text style={{textAlign: 'center', paddingBottom: 8}}>
+            <Text style={{textAlign: 'center', paddingBottom: 8,color:darkMode?Colors.secondaryColor:'black'}}>
               {isAtEnd
                 ? 'Please verify the listed words.'
                 : "When you've written them down, press next."}

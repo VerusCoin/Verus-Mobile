@@ -29,7 +29,6 @@ export const LinkIdentityFormRender = ({submitData, updateSendFormData, formData
               updateSendFormData(SEND_MODAL_IDENTITY_TO_LINK_FIELD, text)
             }
             style={{
-              marginTop: -10,
               backgroundColor:darkMode
                   ? Colors.verusDarkModeForm
                   : Colors.tertiaryColor,

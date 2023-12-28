@@ -48,7 +48,6 @@ class TextInputModal extends Component {
           }}
           mode={mode}
           style={{
-            marginTop: -10,
             backgroundColor: this.props.darkMode
                 ? Colors.verusDarkModeForm
                 : Colors.tertiaryColor,

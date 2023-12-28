@@ -6,12 +6,14 @@ import TallButton from '../../../components/LargerButton';
 import Colors from '../../../globals/colors';
 import { MyWallet } from '../../../images/customIcons';
 import { getKey } from '../../../utils/keyGenerator/keyGenerator';
+import { useSelector } from 'react-redux';
 
 export default function WalletIntro({ navigation, setNewSeed, setTestProfile, testProfile }) {
   const {height} = Dimensions.get('window');
 
   const [loading, setLoading] = useState(false)
   const [iconPressCount, setIconPressCount] = useState(0);
+  const darkMode = useSelector(state=>state.settings.darkModeState)
 
   const canEnableTestmode = () => {
     return createAlert(
@@ -86,7 +88,7 @@ export default function WalletIntro({ navigation, setNewSeed, setTestProfile, te
         justifyContent: 'center',
         flex: 1,
         alignItems: 'center',
-        backgroundColor: Colors.secondaryColor
+        backgroundColor: darkMode?Colors.darkModeColor:Colors.secondaryColor
       }}>
       <TouchableOpacity
         onPress={testProfile ? disableTest : tryEnableTest}
@@ -123,7 +125,8 @@ export default function WalletIntro({ navigation, setNewSeed, setTestProfile, te
           style={{
             textAlign: 'center',
             width: '60%',
-            marginTop: 24
+            marginTop: 24,
+            color:darkMode?Colors.secondaryColor:'black'
           }}>
           {"Create a wallet, or import a seed or private key you already control."}
         </Paragraph>

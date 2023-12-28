@@ -277,8 +277,8 @@ class Overview extends Component {
         }
       >
         <List.Item
-          titleStyle={{color:this.props.darkMode?Colors.secondaryColor:""}}
-          descriptionStyle={{color:this.props.darkMode?Colors.secondaryColor:""}}
+          titleStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}}
+          descriptionStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}}
           title={`${
             displayAmount != null
               ? displayAmount.isLessThan(BigNumber(0.0001)) &&
@@ -308,7 +308,7 @@ class Overview extends Component {
             <React.Fragment>
               {item.memo != null && <List.Icon {...props} icon={"email"} size={20} />}
               <List.Icon {...props} icon={"chevron-right"} size={20} 
-              color={this.props.darkMode?Colors.secondaryColor:""}
+              color={this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}
               />
             </React.Fragment>
           )}
