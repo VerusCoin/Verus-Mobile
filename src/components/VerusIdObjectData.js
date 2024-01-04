@@ -8,9 +8,9 @@ import { openUrl } from "../utils/linking";
 import AnimatedSuccessCheckmark from "./AnimatedSuccessCheckmark";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const checkmark = (<AnimatedSuccessCheckmark style={{ width: 20, marginRight: 5, marginBottom: 1, alignSelf: 'center', }} />);
+const checkmark = (<AnimatedSuccessCheckmark style={{ width: 20, marginRight: 5, marginBottom: 1, alignSelf: 'flex-end', }} />);
 
-const triangle = <MaterialCommunityIcons name={'information'} size={20} color={Colors.warningButtonColor} style={{ width: 20, marginRight: 9, alignSelf: 'center', }} />;
+const triangle = <MaterialCommunityIcons name={'information'} size={20} color={Colors.warningButtonColor} style={{ width: 20, marginRight: 9, alignSelf: 'flex-end', }} />;
 
 export default function VerusIdObjectData(props) {
   const { friendlyNames, verusId, StickyFooterComponent, flex, ownedByUser, ownedAddress } = props;
@@ -53,19 +53,27 @@ export default function VerusIdObjectData(props) {
 
     if (verusId.identity.primaryaddresses.length > 1 || !verusId.identity.primaryaddresses.includes(ownedAddress)) {
       tmpwarningData[0].warning = true;
-      tmpwarningData[0].data = 'Funds can be spent by other addresses';
+      tmpwarningData[0].data = 'Funds can be spent by other addresses, see primary addresses below';
       tmpwarningData[0].status = triangle;
     }
 
     if (verusId.identity.revocationauthority !== verusId.identity.identityaddress) {
+      let tmpRecAddr = `${tryDisplayFriendlyName(verusId.identity.recoveryauthority)} `;
+      if (tmpRecAddr.length > 30) { 
+        tmpRecAddr = "[recovery ID listed below]"
+      } 
       tmpwarningData[1].warning = true;
-      tmpwarningData[1].data = 'Set to another ID';
+      tmpwarningData[1].data = (<Text style={{ color: 'red'}}>{`Set to another VerusID, `}<Text style={{color: Colors.primaryColor}}>{tmpRecAddr}</Text> {`can revoke access to funds and signing`}</Text>)
       tmpwarningData[1].status = triangle;
     }
 
     if (verusId.identity.recoveryauthority !== verusId.identity.identityaddress) {
+      let tmpRevAddr = `${tryDisplayFriendlyName(verusId.identity.revocationauthority)} `;
+      if (tmpRevAddr.length > 30) { 
+        tmpRevAddr = "[revocation ID listed below]"
+      } 
       tmpwarningData[2].warning = true;
-      tmpwarningData[2].data = 'Set to another ID';
+      tmpwarningData[2].data = (<Text style={{ color: 'red'}}>{`Set to another VerusID, `}<Text style={{color: Colors.primaryColor}}>{tmpRevAddr}</Text> {`can change ID ownership`}</Text>)
       tmpwarningData[2].status = triangle;
     }
     return tmpwarningData;
@@ -200,16 +208,16 @@ export default function VerusIdObjectData(props) {
                   <List.Item
                     title={item.data}
                     description={item.key}
-                    titleNumberOfLines={item.numLines || 2}
-                    titleStyle={{ textAlign: 'left', color: item.warning ? 'red' : 'black', width: '90%' }}
+                    titleNumberOfLines={item.numLines || 3}
+                    titleStyle={{ textAlign: 'left', color: item.warning ? 'red' : 'black', width: '100%' }}
                     right={props =>
-                      <View style={{ width: '18%', flexDirection: 'row', alignContent: 'flex-end', justifyContent: 'flex-end', }}>
+                      <View style={{ width: '20%', flexDirection: 'row', alignContent: 'flex-end', justifyContent: 'flex-end', }}>
                         {item.status}
                         <Paragraph style={{
                           fontSize: 12,
                           textDecorationLine: 'underline',
                           marginRight: 8,
-                          alignSelf: 'center',
+                          alignSelf: 'flex-end',
                           color: 'grey'
                         }}>
                           Learn more
