@@ -57,13 +57,13 @@ export default function VerusIdObjectData(props) {
       tmpwarningData[0].status = triangle;
     }
 
-    if (verusId.identity.revocationauthority === verusId.identity.identityaddress) {
+    if (verusId.identity.revocationauthority !== verusId.identity.identityaddress) {
       tmpwarningData[1].warning = true;
       tmpwarningData[1].data = 'Set to another ID';
       tmpwarningData[1].status = triangle;
     }
 
-    if (verusId.identity.recoveryauthority === verusId.identity.identityaddress) {
+    if (verusId.identity.recoveryauthority !== verusId.identity.identityaddress) {
       tmpwarningData[2].warning = true;
       tmpwarningData[2].data = 'Set to another ID';
       tmpwarningData[2].status = triangle;
