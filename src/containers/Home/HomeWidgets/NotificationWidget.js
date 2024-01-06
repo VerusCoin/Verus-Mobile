@@ -35,12 +35,12 @@ const createNotificationText = (text, icon, index) => {
     return (
         <View
             style={{
-                flex:1,
+                flex: 1,
                 flexDirection: 'row',
                 width: "70%",
                 alignItems: 'center',
                 justifyContent: 'flex-start',
-                marginRight:20
+                marginRight: 20
             }}>
             {icon}
             <Text style={{ flexShrink: 1, marginLeft: 7 }}>
@@ -95,25 +95,27 @@ const getIcon = (type, index) => {
     }
 }
 
-const getNotifications = (directories) => {
+const getNotifications = ({ directory } = notifications, acchash) => {
 
     let tempNotificaions = [];
-    const keys = Object.keys(directories);
+    const keys = Object.keys(directory);
 
     keys.forEach((uid, index) => {
 
-        if (directories[uid].type === NOTIFICATION_TYPE_DEEPLINK) {
-            const tempDeepLinkNotification = DeeplinkNotification.fromJson(directories[uid], processVerusId);
-            tempDeepLinkNotification.icon = getIcon(directories[uid].icon, index);
-            tempNotificaions.push(tempDeepLinkNotification);
-        } else if (directories[uid].type === NOTIFICATION_TYPE_BASIC) {
-            const tempBasicNotification = BasicNotification.fromJson(directories[uid]);
-            tempBasicNotification.icon = getIcon(directories[uid].icon, index);
-            tempNotificaions.push(tempBasicNotification);
-        } else if (directories[uid].type === NOTIFICATION_TYPE_LOADING) {
-            const tempLoadingNotification = LoadingNotification.fromJson(directories[uid]);
-            tempLoadingNotification.icon = getIcon(directories[uid].icon, index);
-            tempNotificaions.push(tempLoadingNotification);
+        if (directory[uid].acchash === acchash) {
+            if (directory[uid].type === NOTIFICATION_TYPE_DEEPLINK) {
+                const tempDeepLinkNotification = DeeplinkNotification.fromJson(directory[uid], processVerusId);
+                tempDeepLinkNotification.icon = getIcon(directory[uid].icon, index);
+                tempNotificaions.push(tempDeepLinkNotification);
+            } else if (directory[uid].type === NOTIFICATION_TYPE_BASIC) {
+                const tempBasicNotification = BasicNotification.fromJson(directory[uid]);
+                tempBasicNotification.icon = getIcon(directory[uid].icon, index);
+                tempNotificaions.push(tempBasicNotification);
+            } else if (directory[uid].type === NOTIFICATION_TYPE_LOADING) {
+                const tempLoadingNotification = LoadingNotification.fromJson(directory[uid]);
+                tempLoadingNotification.icon = getIcon(directory[uid].icon, index);
+                tempNotificaions.push(tempLoadingNotification);
+            }
         }
     });
     return tempNotificaions;
@@ -126,17 +128,20 @@ const NotificationWidget = ({ props } = props) => {
     const notifications = useSelector(state =>
         state.notifications
     );
+    const acchash = useSelector(state =>
+        state.authentication.activeAccount
+    ).accountHash;
 
     const hasItemIdChanged = useCompare(notifications);
 
     useEffect(() => {
         if (notifications.directory) {
-            setTrayNotifications(getNotifications(notifications.directory));
+            setTrayNotifications(getNotifications(notifications, acchash));
         }
 
     }, [hasItemIdChanged])
 
-    if (Object.keys(notifications.directory).length === 0) {
+    if (Object.keys(traynotifications).length === 0) {
         return (<View />);
     }
 
@@ -249,7 +254,10 @@ const NotificationWidget = ({ props } = props) => {
                                             {notification.body}
                                         </Paragraph>
                                     </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => dispatchRemoveNotification(notification.uid)}>
+                                    <TouchableOpacity onPress={() => {
+                                        Alert.alert("Clear Notification", "Are you sure you want to clear the notification?",
+                                            [{ text: "Cancel", onPress: () => { } }, { text: "OK", onPress: () => { dispatchRemoveNotification(notification.uid);}}])
+                                    }}>
                                         <IconButton
                                             icon="close"
                                             color="grey"
