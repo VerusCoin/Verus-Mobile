@@ -18,7 +18,7 @@ import Colors from '../../../globals/colors';
 import { NavigationActions } from '@react-navigation/compat';
 import ListSelectionModal from '../../../components/ListSelectionModal/ListSelectionModal';
 import SubWalletSelectorModal from '../../SubWalletSelect/SubWalletSelectorModal';
-import { SEND_MODAL_ADVANCED_FORM, SEND_MODAL_PBAAS_CURRENCY_PASSTHROUGH, SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD, SEND_MODAL_SHOW_EXPORTTO_FIELD, SEND_MODAL_SHOW_VIA_FIELD } from '../../../utils/constants/sendModal';
+import { SEND_MODAL_ADVANCED_FORM, SEND_MODAL_AMOUNT_FIELD, SEND_MODAL_CONVERTTO_FIELD, SEND_MODAL_EXPORTTO_FIELD, SEND_MODAL_IS_PRECONVERT, SEND_MODAL_MEMO_FIELD, SEND_MODAL_PBAAS_CURRENCY_PASSTHROUGH, SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD, SEND_MODAL_PRICE_ESTIMATE, SEND_MODAL_SHOW_CONVERTTO_FIELD, SEND_MODAL_SHOW_EXPORTTO_FIELD, SEND_MODAL_SHOW_VIA_FIELD, SEND_MODAL_TO_ADDRESS_FIELD, SEND_MODAL_VIA_FIELD } from '../../../utils/constants/sendModal';
 import { VRPC } from '../../../utils/constants/intervalConstants';
 
 const InvoicePaymentConfiguration = props => {
@@ -46,6 +46,8 @@ const InvoicePaymentConfiguration = props => {
   const [activeCoin, setActiveCoin] = useState(null);
   const [activeCoinCurrencyIds, setActiveCoinCurrencyIds] = useState([]);
 
+  const [subWalletSetFirstTime, setSubWalletSetFirstTime] = useState(false);
+
   const [subWalletOptions, setSubWalletOptions] = useState([]);
 
   const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser);
@@ -56,22 +58,11 @@ const InvoicePaymentConfiguration = props => {
   const [sendCurrencyDefinition, setSendCurrencyDefinition] = useState(
     inv.details.acceptsConversion() ? null : currencyDefinition,
   );
-  const [networkDefinition, setNetworkDefinition] = useState(
-    inv.details.acceptsNonVerusSystems()
-      ? acceptedSystemsDefinitions.definitions[coinObj.currency_id]
-      : null,
-  );
 
   const { system_id } = inv;
 
   const openListSelectionModal = () => {
     setIsListSelectionModalVisible(true);
-  };
-  
-  const handleNetworkSelect = (item) => {
-    setNetworkDefinition(acceptedSystemsDefinitions.definitions[item.key]);
-
-    setIsListSelectionModalVisible(false);
   };
 
   useEffect(() => {
@@ -99,7 +90,7 @@ const InvoicePaymentConfiguration = props => {
 
   useEffect(() => {
     if (allSubWallets && activeCoin && allSubWallets[activeCoin.id]) {
-      setSubWalletOptions(allSubWallets[activeCoin.id].filter(x => {
+      const validSubWallets = allSubWallets[activeCoin.id].filter(x => {
         const channelSplit = x.channel.split('.');
         if (channelSplit.length < 3) return false;
 
@@ -112,7 +103,14 @@ const InvoicePaymentConfiguration = props => {
             return systemId === coinObj.currency_id;
           }
         }
-      }))
+      })
+
+      if (!subWalletSetFirstTime) {
+        setSubWalletSetFirstTime(true)
+        setSelectedSubWallet(validSubWallets[0])
+      }
+
+      setSubWalletOptions(validSubWallets)
     } else {
       setSubWalletOptions([])
     }
@@ -151,17 +149,17 @@ const InvoicePaymentConfiguration = props => {
 
   const handleContinue = () => {
     openConvertOrCrossChainSendModal(activeCoin, selectedSubWallet, {
-      [SEND_MODAL_TO_ADDRESS_FIELD]: '',
-      [SEND_MODAL_AMOUNT_FIELD]: '',
+      [SEND_MODAL_TO_ADDRESS_FIELD]: inv.details.acceptsAnyDestination() ? '' : inv.details.destination.getAddressString(),
+      [SEND_MODAL_AMOUNT_FIELD]: inv.details.acceptsConversion() || inv.details.acceptsAnyAmount() ? '' : amountDisplay,
       [SEND_MODAL_MEMO_FIELD]: '',
-      [SEND_MODAL_CONVERTTO_FIELD]: '',
+      [SEND_MODAL_CONVERTTO_FIELD]: inv.details.acceptsConversion() ? '' : '',
       [SEND_MODAL_EXPORTTO_FIELD]: '',
-      [SEND_MODAL_VIA_FIELD]: '',
+      [SEND_MODAL_VIA_FIELD]: inv.details.acceptsConversion() ? '' : '',
       [SEND_MODAL_PRICE_ESTIMATE]: null,
       [SEND_MODAL_IS_PRECONVERT]: false,
-      [SEND_MODAL_SHOW_CONVERTTO_FIELD]: true,
-      [SEND_MODAL_SHOW_EXPORTTO_FIELD]: false,
-      [SEND_MODAL_SHOW_VIA_FIELD]: false,
+      [SEND_MODAL_SHOW_CONVERTTO_FIELD]: inv.details.acceptsConversion(),
+      [SEND_MODAL_SHOW_EXPORTTO_FIELD]: !inv.details.acceptsConversion() && !inv.details.expires(),
+      [SEND_MODAL_SHOW_VIA_FIELD]: inv.details.acceptsConversion(),
       [SEND_MODAL_ADVANCED_FORM]: true
     })
   };
@@ -200,23 +198,31 @@ const InvoicePaymentConfiguration = props => {
       <View style={{flex: 1, width: '100%'}}>
         <ScrollView style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}>
           <Divider />
-          <List.Item
-            title={inv.details.acceptsAnyAmount() || !inv.details.acceptsConversion() ? amountDisplay : ''}
-            description={'Amount to pay'}
-            left={props => (
-              <List.Icon
-                {...props}
-                color={
-                  sendCurrencyDefinition
-                    ? Colors.verusGreenColor
-                    : Colors.infoButtonColor
-                }
-                icon={sendCurrencyDefinition != null ? 'check' : 'circle-edit-outline'}
-                size={20}
-              />
-            )}
-          />
-          <Divider />
+          {
+            !inv.details.acceptsAnyAmount() && (
+              <React.Fragment>
+                <List.Item
+                  title={!inv.details.acceptsConversion() ? amountDisplay : ''}
+                  description={'Amount to pay'}
+                  left={props => (
+                    <List.Icon
+                      {...props}
+                      color={
+                        sendCurrencyDefinition
+                          ? Colors.verusGreenColor
+                          : Colors.infoButtonColor
+                      }
+                      icon={
+                        sendCurrencyDefinition != null ? 'check' : 'circle-edit-outline'
+                      }
+                      size={20}
+                    />
+                  )}
+                />
+                <Divider />
+              </React.Fragment>
+            )
+          }
           <List.Item
             title={
               sendCurrencyDefinition != null
@@ -264,34 +270,6 @@ const InvoicePaymentConfiguration = props => {
             )}
           />
           <Divider />
-          <List.Item
-            title={
-              inv.details.acceptsNonVerusSystems()
-                ? networkDefinition == null
-                  ? 'Select a network'
-                  : networkDefinition.fullyqualifiedname
-                : coinObj.display_name
-            }
-            description={'Network to pay on'}
-            onPress={inv.details.acceptsNonVerusSystems() ? openListSelectionModal : undefined}
-            left={props => (
-              <List.Icon
-                {...props}
-                color={
-                  inv.details.acceptsNonVerusSystems() && networkDefinition == null
-                    ? Colors.infoButtonColor
-                    : Colors.verusGreenColor
-                }
-                icon={
-                  inv.details.acceptsNonVerusSystems() && networkDefinition == null
-                    ? 'circle-edit-outline'
-                    : 'check'
-                }
-                size={20}
-              />
-            )}
-          />
-          <Divider />
         </ScrollView>
         <View
           style={{
@@ -310,7 +288,7 @@ const InvoicePaymentConfiguration = props => {
           <Button
             color={Colors.verusGreenColor}
             style={{width: 148}}
-            disabled={activeCoin == null || selectedSubWallet == null || networkDefinition == null || sendCurrencyDefinition == null}
+            disabled={activeCoin == null || selectedSubWallet == null || sendCurrencyDefinition == null}
             onPress={() => handleContinue()}>
             Continue
           </Button>
