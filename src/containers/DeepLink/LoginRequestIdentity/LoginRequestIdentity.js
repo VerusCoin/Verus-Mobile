@@ -1,9 +1,9 @@
-import React, {useState, useEffect} from 'react';
-import {ScrollView} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { ScrollView } from 'react-native';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { openLinkIdentityModal, openProvisionIdentityModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import { requestServiceStoredData } from '../../../utils/auth/authBox';
@@ -16,26 +16,48 @@ import { VERUSID_NETWORK_DEFAULT } from "../../../../env/index";
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import { CommonActions } from '@react-navigation/native';
 import { SEND_MODAL_IDENTITY_TO_LINK_FIELD } from '../../../utils/constants/sendModal';
+import { ELECTRUM } from '../../../utils/constants/intervalConstants';
+import { coinsList } from '../../../utils/CoinData/CoinsList';
+import { requestSeeds } from '../../../utils/auth/authBox';
+import { deriveKeyPair } from '../../../utils/keys';
+import { SET_DEEPLINK_DATA_EXTRAPARAMS } from "../../../utils/constants/storeType";
+import { getIdentity } from "../../../utils/api/channels/verusid/callCreators";
 
 const LoginRequestIdentity = props => {
   const { deeplinkData } = props.route.params
   const [loading, setLoading] = useState(false)
   const [linkedIds, setLinkedIds] = useState({})
   const [sortedIds, setSortedIds] = useState({});
+  const [idsloaded, setIdsloaded] = useState(false);
   const [idProvisionSuccess, setIdProvisionSuccess] = useState(false)
+  const [canProvision, setCanProvision] = useState(false)
   const req = new primitives.LoginConsentRequest(deeplinkData)
   const encryptedIds = useSelector(state => state.services.stored[VERUSID_SERVICE_ID])
   const sendModal = useSelector((state) => state.sendModal);
   const fromService = useSelector((state) => state.deeplink.fromService);
   const extraParams = useSelector((state) => state.deeplink.extraParams);
+  const dispatch = useDispatch()
 
-  const canProvision = req.challenge.provisioning_info && req.challenge.provisioning_info.some(x => {
-    return (
-      x.vdxfkey ===
-      primitives.LOGIN_CONSENT_ID_PROVISIONING_WEBHOOK_VDXF_KEY
-        .vdxfid
-    );
-  })
+  useEffect(() => {
+    let canProvision = req.challenge.provisioning_info && req.challenge.provisioning_info.some(x => {
+      return (
+        x.vdxfkey ===
+        primitives.LOGIN_CONSENT_ID_PROVISIONING_WEBHOOK_VDXF_KEY
+          .vdxfid
+      );
+    })
+
+    if (Object.keys(linkedIds).length > 0) {
+      for (const chainId of Object.keys(linkedIds)) {
+        if (linkedIds[chainId] && 
+           Object.keys(linkedIds[chainId])
+            .includes(req.challenge.subject.find(item => item.vdxfkey === primitives.ID_ADDRESS_VDXF_KEY.vdxfid)?.data)) {
+          canProvision = false;
+        }
+      }
+    }
+    setCanProvision(canProvision)
+  }, [linkedIds])
 
   const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser)
   const testnetOverrides = useSelector(state => state.authentication.activeAccount.testnetOverrides)
@@ -45,7 +67,18 @@ const LoginRequestIdentity = props => {
 
   const activeCoinIds = activeCoinsForUser.map(coinObj => coinObj.id)
 
-  const { system_id } = req
+  const { system_id } = req;
+
+  const getPotentialPrimaryAddresses = async () => {
+
+    const isTestnet = Object.keys(testnetOverrides).length > 0;
+    const system = isTestnet ? coinsList.VRSCTEST : coinsList.VRSC;
+    const seeds = await requestSeeds();
+    const seed = seeds[ELECTRUM];
+    const keyObj = await deriveKeyPair(seed, system, ELECTRUM);
+    const { addresses } = keyObj;
+    return addresses;
+  };
 
   async function onEncryptedIdsUpdate() {
     setLoading(true)
@@ -60,6 +93,7 @@ const LoginRequestIdentity = props => {
       } else {
         setLinkedIds({})
       }
+      setIdsloaded(true);
 
     } catch (e) {
       createAlert('Error Loading Linked VerusIDs', e.message);
@@ -73,7 +107,38 @@ const LoginRequestIdentity = props => {
       const data = {[SEND_MODAL_IDENTITY_TO_LINK_FIELD]: extraParams.fqn};
       openLinkIdentityModal(CoinDirectory.findCoinObj(system_id, null, true), data);
     }
-  }, [])
+  }, [extraParams])
+
+  useEffect(() => {
+
+    if (idsloaded && req.challenge.subject && req.challenge.subject.length > 0 &&
+      req.challenge.subject.some(item => item.vdxfkey === primitives.ID_ADDRESS_VDXF_KEY.vdxfid)) {
+
+        const providionedId = req.challenge.subject.find(item => item.vdxfkey === primitives.ID_ADDRESS_VDXF_KEY.vdxfid).data;
+        for (const chainId of activeCoinIds) { 
+          if (linkedIds[chainId] && Object.keys(linkedIds[chainId]).includes(providionedId)) {
+            return;
+          }
+        }
+      getIdentity(system_id, providionedId).then((provisionedID) => {
+        getPotentialPrimaryAddresses().then((addresses) => {
+          if (provisionedID.result) {
+            for (const address of provisionedID.result.identity.primaryaddresses) {
+              if (addresses.includes(address)) {
+                dispatch({
+                  type: SET_DEEPLINK_DATA_EXTRAPARAMS,
+                  payload: {
+                    extraParams: { fqn: provisionedID.result.fullyqualifiedname }
+                  },
+                });
+                return;
+              }
+            }
+          }
+        })
+      })
+    }
+  }, [idsloaded])
 
   useEffect(() => {
     onEncryptedIdsUpdate()
