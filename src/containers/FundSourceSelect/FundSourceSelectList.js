@@ -41,7 +41,7 @@ const FundSourceSelectList = (props) => {
   }, [sourceOptions, displayedCoinObjs, cryptoBalances, searchTerm]);
 
   const getNetworkSourceOptionKey = (currencyId, subWalletId, viaCurrencyId = '') => {
-    return `${currencyId}.${viaCurrencyId}.${subWalletId}`
+    return `${currencyId}.${viaCurrencyId == null ? '' : viaCurrencyId}.${subWalletId}`
   }
 
   const parseProps = () => {
@@ -92,11 +92,12 @@ const FundSourceSelectList = (props) => {
             for (const sourceOption of rawSourceOptions[network]) {
               if (sourceOption.sourceamounts[coinObj.currency_id]) {
                 const viaCurrencyId = sourceOption.lastnotarization.currencyid;
+                const isDirect = viaCurrencyId === coinObj.currency_id;
 
                 newNetworkSourceOptionMap.set(getNetworkSourceOptionKey(coinObj.currency_id, wallet.id, viaCurrencyId), {
                   amount: sourceOption.sourceamounts[coinObj.currency_id],
-                  via: sourceOption[viaCurrencyId] ? sourceOption[viaCurrencyId].name : viaCurrencyId,
-                  viaCurrencyId: viaCurrencyId,
+                  via: isDirect ? null : sourceOption[viaCurrencyId] ? sourceOption[viaCurrencyId].name : viaCurrencyId,
+                  viaCurrencyId: isDirect ? null : viaCurrencyId,
                   network: network,
                   conversion: true,
                   wallet,
