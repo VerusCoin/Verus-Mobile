@@ -248,7 +248,7 @@ const InvoiceInfo = props => {
             {
               inv.details.acceptsConversion() && (
                 <React.Fragment>
-                  <List.Item title={"This invoice accepts conversion, continue to see which currencies you can pay it with."} />
+                  <List.Item title={"This invoice accepts conversion, continue to see which currencies you can pay it with."} titleNumberOfLines={100}/>
                   <Divider />
                 </React.Fragment>
               )
@@ -268,7 +268,7 @@ const InvoiceInfo = props => {
                     title={acceptedSystemsLabel}
                     onPress={openListSelectionModal}
                     titleNumberOfLines={100}
-                    description={'Supported payment networks'}
+                    description={'Supported systems'}
                   />
                   <Divider />
                 </React.Fragment>

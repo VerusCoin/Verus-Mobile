@@ -17,6 +17,7 @@ import {
   SEND_MODAL_PRICE_ESTIMATE,
   SEND_MODAL_SHOW_CONVERTTO_FIELD,
   SEND_MODAL_SHOW_EXPORTTO_FIELD,
+  SEND_MODAL_SHOW_IS_PRECONVERT,
   SEND_MODAL_SHOW_MAPPING_FIELD,
   SEND_MODAL_SHOW_VIA_FIELD,
   SEND_MODAL_TO_ADDRESS_FIELD,
@@ -1112,7 +1113,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                 )
               }
               {
-                (sendModal.data[SEND_MODAL_IS_PRECONVERT] || sendModal.data[SEND_MODAL_ADVANCED_FORM]) && (
+                ((sendModal.data[SEND_MODAL_IS_PRECONVERT] || sendModal.data[SEND_MODAL_ADVANCED_FORM]) && sendModal.data[SEND_MODAL_SHOW_IS_PRECONVERT]) && (
                   <React.Fragment>
                     <View style={{...Styles.wideBlockDense}}>
                       <Divider />

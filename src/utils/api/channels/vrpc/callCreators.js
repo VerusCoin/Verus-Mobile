@@ -19,3 +19,5 @@ export * from './requests/verifyVerusPayInvoice';
 export * from './requests/verifyLoginConsentRequest';
 export * from './requests/extractVerusPayInvoiceSig';
 export * from './requests/extractLoginConsentSig';
+export * from './requests/getCurrencyConverters';
+export * from './requests/getInvoiceSourceOptions';

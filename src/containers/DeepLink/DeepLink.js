@@ -88,33 +88,33 @@ const DeepLink = (props) => {
           }
 
           const getAcceptedSystemsDefinitions = async () => {
+            const acceptedSystems = {
+              definitions: {},
+              remainingSystems: []
+            };
+
+            let i = 0;
+
+            const rootSystemRes = await getCurrency(coinObj.system_id, coinObj.currency_id)
+            if (rootSystemRes.error) throw new Error(rootSystemRes.error.message)
+            acceptedSystems.definitions[rootSystemRes.result.currencyid] = rootSystemRes.result;
+
             if (invoice.details.acceptsNonVerusSystems()) {
-              const acceptedSystems = {
-                definitions: {},
-                remainingSystems: []
-              };
-
-              let i = 0;
-
-              const rootSystemRes = await getCurrency(coinObj.system_id, coinObj.currency_id)
-              if (rootSystemRes.error) throw new Error(rootSystemRes.error.message)
-              acceptedSystems.definitions[rootSystemRes.result.currencyid] = rootSystemRes.result;
-
               for (; i < 10 && i < invoice.details.acceptedsystems.length; i++) {
                 const systemId = invoice.details.acceptedsystems[i];
-
+  
                 const systemDefinitionRes = await getCurrency(coinObj.system_id, systemId)
                 if (systemDefinitionRes.error) throw new Error(systemDefinitionRes.error.message)
-
+  
                 acceptedSystems.definitions[systemId] = systemDefinitionRes.result;
               }
-
+  
               for (; i < invoice.details.acceptedsystems.length; i++) {
                 acceptedSystems.remainingSystems.push(invoice.details.acceptedsystems[i])
               }
+            }
 
-              return acceptedSystems;
-            } else return null;
+            return acceptedSystems;
           }
 
           const validateExpiry = async () => {
