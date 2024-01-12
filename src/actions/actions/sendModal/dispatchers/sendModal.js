@@ -35,7 +35,8 @@ import {
   ADD_ERC20_TOKEN_MODAL,
   SEND_MODAL_SHOW_MAPPING_FIELD,
   SEND_MODAL_PBAAS_CURRENCY_PASSTHROUGH,
-  SEND_MODAL_SHOW_IS_PRECONVERT
+  SEND_MODAL_SHOW_IS_PRECONVERT,
+  SEND_MODAL_DISABLED_INPUTS
 } from '../../../../utils/constants/sendModal';
 import {
   CLOSE_SEND_COIN_MODAL,
@@ -104,7 +105,8 @@ export const openConvertOrCrossChainSendModal = (coinObj, subWallet, data) => {
           [SEND_MODAL_SHOW_VIA_FIELD]: true,
           [SEND_MODAL_SHOW_MAPPING_FIELD]: true,
           [SEND_MODAL_ADVANCED_FORM]: false,
-          [SEND_MODAL_SHOW_IS_PRECONVERT]: false
+          [SEND_MODAL_SHOW_IS_PRECONVERT]: false,
+          [SEND_MODAL_DISABLED_INPUTS]: {}
         }
       : data,
     CONVERT_OR_CROSS_CHAIN_SEND_MODAL,

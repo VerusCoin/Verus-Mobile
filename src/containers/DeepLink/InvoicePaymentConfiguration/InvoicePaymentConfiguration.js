@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { openConvertOrCrossChainSendModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import BigNumber from 'bignumber.js';
-import { SEND_MODAL_ADVANCED_FORM, SEND_MODAL_AMOUNT_FIELD, SEND_MODAL_CONVERTTO_FIELD, SEND_MODAL_EXPORTTO_FIELD, SEND_MODAL_IS_PRECONVERT, SEND_MODAL_MEMO_FIELD, SEND_MODAL_PBAAS_CURRENCY_PASSTHROUGH, SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD, SEND_MODAL_PRICE_ESTIMATE, SEND_MODAL_SHOW_CONVERTTO_FIELD, SEND_MODAL_SHOW_EXPORTTO_FIELD, SEND_MODAL_SHOW_IS_PRECONVERT, SEND_MODAL_SHOW_VIA_FIELD, SEND_MODAL_TO_ADDRESS_FIELD, SEND_MODAL_VIA_FIELD } from '../../../utils/constants/sendModal';
+import { SEND_MODAL_ADVANCED_FORM, SEND_MODAL_AMOUNT_FIELD, SEND_MODAL_CONTINUE_IMMEDIATELY, SEND_MODAL_CONVERTTO_FIELD, SEND_MODAL_DISABLED_INPUTS, SEND_MODAL_EXPORTTO_FIELD, SEND_MODAL_IS_PRECONVERT, SEND_MODAL_MEMO_FIELD, SEND_MODAL_PBAAS_CURRENCY_PASSTHROUGH, SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD, SEND_MODAL_PRICE_ESTIMATE, SEND_MODAL_SHOW_CONVERTTO_FIELD, SEND_MODAL_SHOW_EXPORTTO_FIELD, SEND_MODAL_SHOW_IS_PRECONVERT, SEND_MODAL_SHOW_VIA_FIELD, SEND_MODAL_STRICT_AMOUNT, SEND_MODAL_TO_ADDRESS_FIELD, SEND_MODAL_VIA_FIELD } from '../../../utils/constants/sendModal';
 import { IS_PBAAS } from '../../../utils/constants/intervalConstants';
 import { getInvoiceSourceOptions } from '../../../utils/api/channels/vrpc/callCreators';
 import { satsToCoins } from '../../../utils/math';
@@ -83,7 +83,15 @@ const InvoicePaymentConfiguration = props => {
       [SEND_MODAL_SHOW_EXPORTTO_FIELD]: !inv.details.acceptsConversion() && !inv.details.expires() && exportTo != null,
       [SEND_MODAL_SHOW_VIA_FIELD]: inv.details.acceptsConversion() && viaCurrencyId != null,
       [SEND_MODAL_ADVANCED_FORM]: true,
-      [SEND_MODAL_SHOW_IS_PRECONVERT]: false
+      [SEND_MODAL_SHOW_IS_PRECONVERT]: false,
+      [SEND_MODAL_DISABLED_INPUTS]: {
+        [SEND_MODAL_CONVERTTO_FIELD]: true,
+        [SEND_MODAL_VIA_FIELD]: true,
+        [SEND_MODAL_AMOUNT_FIELD]: !inv.details.acceptsAnyAmount(),
+        [SEND_MODAL_TO_ADDRESS_FIELD]: !inv.details.acceptsAnyDestination(),
+      },
+      [SEND_MODAL_CONTINUE_IMMEDIATELY]: !inv.details.acceptsAnyAmount() && !inv.details.acceptsAnyDestination(),
+      [SEND_MODAL_STRICT_AMOUNT]: !inv.details.acceptsAnyAmount()
     })
   }
 

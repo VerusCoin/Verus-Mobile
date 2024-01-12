@@ -16,7 +16,9 @@ const ExportFormModule = ({
   localNetworkDefinition,
   advancedForm,
   showMappingField,
-  mappingField
+  mappingField,
+  exporttoDisabled,
+  mappingDisabled
 }) => {
   return (
     <React.Fragment>
@@ -36,10 +38,12 @@ const ExportFormModule = ({
               autoCapitalize={'none'}
               autoCorrect={false}
               style={{ flex: 1 }}
+              disabled={exporttoDisabled}
             />
           ) : (
             <TouchableOpacity
-              onPress={() => handleNetworkFieldFocus()}
+              onPress={() => exporttoDisabled ? {} : handleNetworkFieldFocus()}
+              disabled={exporttoDisabled}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -91,10 +95,12 @@ const ExportFormModule = ({
                 autoCapitalize={'none'}
                 autoCorrect={false}
                 style={{flex: 1}}
+                disabled={mappingDisabled}
               />
             ) : (
               <TouchableOpacity
-                onPress={() => handleMappingFieldFocus()}
+                onPress={() => mappingDisabled ? {} : handleMappingFieldFocus()}
+                disabled={mappingDisabled}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',

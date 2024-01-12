@@ -152,12 +152,13 @@ const FundSourceSelectList = (props) => {
           conversion
         } = sourceOptions[networkId][optionId];
 
-        const balance =
-          cryptoBalances[coinObj.id] && cryptoBalances[coinObj.id][wallet.id]
-            ? truncateDecimal(cryptoBalances[coinObj.id][wallet.id], 4)
-            : '-';
+        const balanceLoaded = cryptoBalances[coinObj.id] && cryptoBalances[coinObj.id][wallet.id];
+        const balance = balanceLoaded ? cryptoBalances[coinObj.id][wallet.id] : BigNumber(0);
+        const balanceDisplay = balanceLoaded ? truncateDecimal(cryptoBalances[coinObj.id][wallet.id], 4) : '-';
 
-        if (coinObj) {
+        const requiredAmount = inv.details.acceptsAnyAmount() ? BigNumber(0) : BigNumber(amount);
+
+        if (coinObj && balance.isGreaterThan(requiredAmount)) {
           cards.push({
             title: `Pay with ${inv.details.acceptsAnyAmount() ? "any amount" : `${amount} ${coinObj.display_ticker}`} from ${wallet.name}${
               via != null ? ` via ${via}` : ''
@@ -166,7 +167,7 @@ const FundSourceSelectList = (props) => {
               displayedCoinObjs[network]
                 ? displayedCoinObjs[network].display_ticker
                 : network
-            }\nBalance: ${balance} ${coinObj.display_ticker}`,
+            }\nBalance: ${balanceDisplay} ${coinObj.display_ticker}`,
             icon: getCoinLogo(coinObj.id, coinObj.proto, 'dark'),
             color: coinObj.theme_color,
             option: sourceOptions[networkId][optionId],
@@ -177,7 +178,6 @@ const FundSourceSelectList = (props) => {
               via != null ? via : ''
             ],
           });
-
         }
       }
     }

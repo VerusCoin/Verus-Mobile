@@ -12,6 +12,7 @@ import {
   SEND_MODAL_ADVANCED_FORM,
   SEND_MODAL_AMOUNT_FIELD,
   SEND_MODAL_CONVERTTO_FIELD,
+  SEND_MODAL_DISABLED_INPUTS,
   SEND_MODAL_EXPORTTO_FIELD,
   SEND_MODAL_IS_PRECONVERT,
   SEND_MODAL_MAPPING_FIELD,
@@ -59,7 +60,8 @@ const SendCoin = ({ navigation }) => {
         [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
         [SEND_MODAL_SHOW_MAPPING_FIELD]: false,
         [SEND_MODAL_SHOW_VIA_FIELD]: true,
-        [SEND_MODAL_ADVANCED_FORM]: false
+        [SEND_MODAL_ADVANCED_FORM]: false,
+        [SEND_MODAL_DISABLED_INPUTS]: {}
       },
     },
     {
@@ -80,7 +82,8 @@ const SendCoin = ({ navigation }) => {
         [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
         [SEND_MODAL_SHOW_MAPPING_FIELD]: true,
         [SEND_MODAL_SHOW_VIA_FIELD]: false,
-        [SEND_MODAL_ADVANCED_FORM]: false
+        [SEND_MODAL_ADVANCED_FORM]: false,
+        [SEND_MODAL_DISABLED_INPUTS]: {}
       },
     },
     {
@@ -101,7 +104,8 @@ const SendCoin = ({ navigation }) => {
         [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
         [SEND_MODAL_SHOW_MAPPING_FIELD]: false,
         [SEND_MODAL_SHOW_VIA_FIELD]: false,
-        [SEND_MODAL_ADVANCED_FORM]: false
+        [SEND_MODAL_ADVANCED_FORM]: false,
+        [SEND_MODAL_DISABLED_INPUTS]: {}
       },
     },
     {
@@ -123,7 +127,8 @@ const SendCoin = ({ navigation }) => {
         [SEND_MODAL_SHOW_MAPPING_FIELD]: (activeCoin.proto === 'erc20' || activeCoin.proto === 'eth'),
         [SEND_MODAL_SHOW_VIA_FIELD]: true,
         [SEND_MODAL_ADVANCED_FORM]: true,
-        [SEND_MODAL_SHOW_IS_PRECONVERT]: true
+        [SEND_MODAL_SHOW_IS_PRECONVERT]: true,
+        [SEND_MODAL_DISABLED_INPUTS]: {}
       },
     },
   ];
