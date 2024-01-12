@@ -13,6 +13,7 @@ import { CoinDirectory } from "../../utils/CoinData/CoinDirectory";
 import { getCoinLogo } from "../../utils/CoinData/CoinData";
 import { VerusPayInvoice } from "verus-typescript-primitives";
 import { coinsList } from "../../utils/CoinData/CoinsList";
+import MissingInfoRedirect from "../../components/MissingInfoRedirect/MissingInfoRedirect";
 
 const FundSourceSelectList = (props) => {
   const { coinObjs, allSubWallets, sourceOptions: rawSourceOptions, invoice } = props;
@@ -25,6 +26,7 @@ const FundSourceSelectList = (props) => {
   const [displayedCoinObjs, setDisplayedCoinObjs] = useState({});
 
   const [displayedCards, setDisplayedCards] = useState([]);
+  const [noValidCards, setNoValidCards] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -182,6 +184,10 @@ const FundSourceSelectList = (props) => {
       }
     }
 
+    if (cards.length == 0) {
+      setNoValidCards(true);
+    } else setNoValidCards(false);
+
     setDisplayedCards(cards.filter(card => {
       const searchTermLc = searchTerm ? searchTerm.toLowerCase() : '';
 
@@ -196,7 +202,14 @@ const FundSourceSelectList = (props) => {
     }))
   }
 
-  return (
+  return noValidCards ? 
+    <View style={{flex: 1, width: "100%"}}>
+      <MissingInfoRedirect
+        icon={'alert-circle-outline'} 
+        label={"No valid sources to pay this invoice from in your wallet."} 
+      />
+    </View>
+    :
     <ScrollView>
       <TextInput
         label={`Search ${displayedCards.length} payment options`}
@@ -231,8 +244,7 @@ const FundSourceSelectList = (props) => {
           </Card>
         </View>
       ))}
-    </ScrollView>
-  );
+    </ScrollView>;
 };
 
 export default FundSourceSelectList;
