@@ -127,7 +127,7 @@ const InvoiceInfo = props => {
       }) : accounts.filter(x => {
         if (
           x.testnetOverrides &&
-          x.testnetOverrides[coinObj.mainnet_id] != null
+          x.testnetOverrides[coinObj.id] != null
         ) {
           return false;
         } else {
