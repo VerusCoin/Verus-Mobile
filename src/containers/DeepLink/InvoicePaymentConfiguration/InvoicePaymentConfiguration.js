@@ -6,11 +6,28 @@ import { useSelector } from 'react-redux';
 import { openConvertOrCrossChainSendModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import BigNumber from 'bignumber.js';
-import { SEND_MODAL_ADVANCED_FORM, SEND_MODAL_AMOUNT_FIELD, SEND_MODAL_CONTINUE_IMMEDIATELY, SEND_MODAL_CONVERTTO_FIELD, SEND_MODAL_DISABLED_INPUTS, SEND_MODAL_EXPORTTO_FIELD, SEND_MODAL_IS_PRECONVERT, SEND_MODAL_MEMO_FIELD, SEND_MODAL_PBAAS_CURRENCY_PASSTHROUGH, SEND_MODAL_PBAAS_CURRENCY_TO_ADD_FIELD, SEND_MODAL_PRICE_ESTIMATE, SEND_MODAL_SHOW_CONVERTTO_FIELD, SEND_MODAL_SHOW_EXPORTTO_FIELD, SEND_MODAL_SHOW_IS_PRECONVERT, SEND_MODAL_SHOW_VIA_FIELD, SEND_MODAL_STRICT_AMOUNT, SEND_MODAL_TO_ADDRESS_FIELD, SEND_MODAL_VIA_FIELD } from '../../../utils/constants/sendModal';
+import {
+  SEND_MODAL_ADVANCED_FORM,
+  SEND_MODAL_AMOUNT_FIELD,
+  SEND_MODAL_CONTINUE_IMMEDIATELY,
+  SEND_MODAL_CONVERTTO_FIELD,
+  SEND_MODAL_DISABLED_INPUTS,
+  SEND_MODAL_EXPORTTO_FIELD,
+  SEND_MODAL_SEND_COMPLETED,
+  SEND_MODAL_MEMO_FIELD,
+  SEND_MODAL_SHOW_CONVERTTO_FIELD,
+  SEND_MODAL_SHOW_EXPORTTO_FIELD,
+  SEND_MODAL_SHOW_IS_PRECONVERT,
+  SEND_MODAL_SHOW_VIA_FIELD,
+  SEND_MODAL_STRICT_AMOUNT,
+  SEND_MODAL_TO_ADDRESS_FIELD,
+  SEND_MODAL_VIA_FIELD,
+} from '../../../utils/constants/sendModal';
 import { IS_PBAAS } from '../../../utils/constants/intervalConstants';
 import { getInvoiceSourceOptions } from '../../../utils/api/channels/vrpc/callCreators';
 import { satsToCoins } from '../../../utils/math';
 import FundSourceSelectList from '../../FundSourceSelect/FundSourceSelectList';
+import { usePrevious } from '../../../hooks/usePrevious';
 
 const InvoicePaymentConfiguration = props => {
   const {
@@ -32,6 +49,9 @@ const InvoicePaymentConfiguration = props => {
   const inv = primitives.VerusPayInvoice.fromJson(deeplinkData);
 
   const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser);
+  
+  const sendModal = useSelector(state => state.sendModal);
+  const prevSendModal = usePrevious(sendModal);
   
   const allSubWallets = useSelector(state => state.coinMenus.allSubWallets)
 
@@ -60,6 +80,18 @@ const InvoicePaymentConfiguration = props => {
       updateConversionOptions();
     }
   }, [acceptedSystemsDefinitions]);
+
+  useEffect(() => {
+    if (
+      sendModal &&
+      prevSendModal &&
+      sendModal.type == null &&
+      prevSendModal.type != null &&
+      prevSendModal.data[SEND_MODAL_SEND_COMPLETED]
+    ) {
+      cancel();
+    }
+  }, [sendModal]);
 
   const onSelectFundSource = (source) => {
     const {

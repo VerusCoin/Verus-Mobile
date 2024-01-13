@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { closeSendModal } from "../../../../actions/actions/sendModal/dispatchers/sendModal";
 import { explorers } from "../../../../utils/CoinData/CoinData";
 import { openUrl } from "../../../../utils/linking";
@@ -9,10 +9,12 @@ import Styles from "../../../../styles";
 import { copyToClipboard } from "../../../../utils/clipboard/clipboard";
 import AnimatedSuccessCheckmark from "../../../AnimatedSuccessCheckmark";
 import { useSelector } from "react-redux";
+import { SEND_MODAL_SEND_COMPLETED } from "../../../../utils/constants/sendModal";
 
 const ConvertOrCrossChainSendResult = (props) => {
   const coinObj = useSelector(state => state.sendModal.coinObj);
   const [params, setParams] = useState(props.route.params == null ? {} : props.route.params);
+  const { updateSendFormData } = props;
 
   const finishSend = () => {
     closeSendModal();
@@ -23,6 +25,10 @@ const ConvertOrCrossChainSendResult = (props) => {
 
     openUrl(url);
   };
+
+  useEffect(() => {
+    updateSendFormData(SEND_MODAL_SEND_COMPLETED, true)
+  }, [])
 
   const { txid, output, destination } = params;
 
