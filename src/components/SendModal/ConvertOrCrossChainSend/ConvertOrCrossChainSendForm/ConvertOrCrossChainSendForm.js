@@ -957,7 +957,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     );
   };
 
-  return (
+  return localBalances == null ? (<AnimatedActivityIndicatorBox />) : (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={{flex: 1, backgroundColor: Colors.secondaryColor}}>
         {searchMode ? (
