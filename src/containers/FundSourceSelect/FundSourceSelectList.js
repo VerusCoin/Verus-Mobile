@@ -60,10 +60,26 @@ const FundSourceSelectList = (props) => {
       for (const wallet of subWallets) {
         
         const network = wallet.network;
+        const rootNetwork = coinObj.testnet ? coinsList.VRSCTEST : coinsList.VRSC;
+        const rootNetworkId = rootNetwork.currency_id
 
-        if (network) {
+        if (network && 
+            ((inv.details.acceptsNonVerusSystems() && inv.details.acceptedsystems.includes(network)) || 
+              (network === rootNetworkId) || 
+              (!inv.details.expires() && !inv.details.acceptsConversion())
+            )
+        ) {
           displayedCoinObjsMap.set(network, CoinDirectory.findCoinObj(network));
           const newNetworkSourceOptionMap = new Map(sourceOptionsMap.get(network));
+          
+          const acceptedNonVerusSystems = inv.details.acceptsNonVerusSystems() ? inv.details.acceptedsystems : [];
+          const exportTo =
+            !inv.details.expires() &&
+            !inv.details.acceptsConversion() &&
+            wallet.network !== rootNetworkId &&
+            !acceptedNonVerusSystems.includes(wallet.network)
+              ? rootNetwork.id
+              : null;
 
           if (coinObj.currency_id === inv.details.requestedcurrencyid) {
             // Accept cross-network sends if no conversion or expiry
@@ -73,7 +89,8 @@ const FundSourceSelectList = (props) => {
                 network: network,
                 conversion: false,
                 wallet,
-                coinObj
+                coinObj,
+                exportTo
               });      
             } else if (
               (coinObj.testnet && network === coinsList.VRSCTEST.system_id) || 
@@ -85,7 +102,8 @@ const FundSourceSelectList = (props) => {
                 network: network,
                 conversion: false,
                 wallet,
-                coinObj
+                coinObj,
+                exportTo
               });
             }
           } else if (rawSourceOptions[network]) {
@@ -101,7 +119,8 @@ const FundSourceSelectList = (props) => {
                   network: network,
                   conversion: true,
                   wallet,
-                  coinObj
+                  coinObj,
+                  exportTo
                 });
               }
             }
@@ -213,7 +232,7 @@ const FundSourceSelectList = (props) => {
     :
     <ScrollView>
       <TextInput
-        label={`Search ${displayedCards.length} payment options`}
+        label={`Search ${displayedCards.length} payment ${displayedCards.length === 1 ? 'option' : 'options'}`}
         value={searchTerm}
         onChangeText={text => setSearchTerm(text)}
         mode="outlined"
