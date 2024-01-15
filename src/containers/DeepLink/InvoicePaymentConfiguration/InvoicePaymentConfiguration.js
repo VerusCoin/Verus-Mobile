@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import { View, SafeAreaView, Alert } from 'react-native';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client";
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { openConvertOrCrossChainSendModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import BigNumber from 'bignumber.js';
@@ -23,11 +23,13 @@ import {
   SEND_MODAL_TO_ADDRESS_FIELD,
   SEND_MODAL_VIA_FIELD,
 } from '../../../utils/constants/sendModal';
-import { IS_PBAAS } from '../../../utils/constants/intervalConstants';
+import { API_GET_BALANCES, IS_PBAAS } from '../../../utils/constants/intervalConstants';
 import { getInvoiceSourceOptions } from '../../../utils/api/channels/vrpc/callCreators';
 import { satsToCoins } from '../../../utils/math';
 import FundSourceSelectList from '../../FundSourceSelect/FundSourceSelectList';
 import { usePrevious } from '../../../hooks/usePrevious';
+import { conditionallyUpdateWallet } from '../../../actions/actionDispatchers';
+import store from '../../../store';
 
 const InvoicePaymentConfiguration = props => {
   const {
@@ -55,6 +57,8 @@ const InvoicePaymentConfiguration = props => {
   
   const allSubWallets = useSelector(state => state.coinMenus.allSubWallets)
 
+  const dispatch = useDispatch()
+
   const updateConversionOptions = async () => {
     try {
       const { definitions, remainingSystems } = acceptedSystemsDefinitions;
@@ -74,6 +78,14 @@ const InvoicePaymentConfiguration = props => {
       Alert.alert("Error fetching conversion options", e.message);
     }
   };
+
+  useEffect(() => {
+    for (const coin of activeCoinsForUser) {
+      if (coin.tags.includes(IS_PBAAS)) {
+        conditionallyUpdateWallet(store.getState(), dispatch, coin.id, API_GET_BALANCES)
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (acceptedSystemsDefinitions && inv.details.acceptsConversion()) {
@@ -101,7 +113,8 @@ const InvoicePaymentConfiguration = props => {
       viaCurrencyId,
       wallet,
       coinObj,
-      exportTo
+      exportTo,
+      via
     } = source.option;
 
     openConvertOrCrossChainSendModal(coinObj, wallet, {
@@ -110,10 +123,10 @@ const InvoicePaymentConfiguration = props => {
       [SEND_MODAL_MEMO_FIELD]: '',
       [SEND_MODAL_CONVERTTO_FIELD]: inv.details.acceptsConversion() && conversion ? currencyDefinition.fullyqualifiedname : '',
       [SEND_MODAL_EXPORTTO_FIELD]: exportTo != null ? exportTo : '',
-      [SEND_MODAL_VIA_FIELD]: inv.details.acceptsConversion() && viaCurrencyId != null ? viaCurrencyId : '',
+      [SEND_MODAL_VIA_FIELD]: inv.details.acceptsConversion() && via != null ? via : '',
       [SEND_MODAL_SHOW_CONVERTTO_FIELD]: inv.details.acceptsConversion() && conversion,
       [SEND_MODAL_SHOW_EXPORTTO_FIELD]: !inv.details.acceptsConversion() && !inv.details.expires() && exportTo != null,
-      [SEND_MODAL_SHOW_VIA_FIELD]: inv.details.acceptsConversion() && viaCurrencyId != null,
+      [SEND_MODAL_SHOW_VIA_FIELD]: inv.details.acceptsConversion() && via != null,
       [SEND_MODAL_ADVANCED_FORM]: true,
       [SEND_MODAL_SHOW_IS_PRECONVERT]: false,
       [SEND_MODAL_DISABLED_INPUTS]: {

@@ -28,11 +28,6 @@ import InvoiceInfo from './InvoiceInfo/InvoiceInfo';
 const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
   const deeplinkData = useSelector((state) => state.deeplink.data)
-  const testAccount = useSelector(
-    state =>
-      state.authentication.activeAccount != null &&
-      Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0,
-  );
 
   const signedIn = useSelector((state) => state.authentication.signedIn)
   const [displayKey, setDisplayKey] = useState(null)
@@ -67,7 +62,11 @@ const DeepLink = (props) => {
         case primitives.VERUSPAY_INVOICE_VDXF_KEY.vdxfid:
           const invoice = primitives.VerusPayInvoice.fromJson(deeplinkData)
 
-          coinObj = CoinDirectory.getBasicCoinObj(testAccount ? 'VRSCTEST' : 'VRSC')
+          if (!invoice.details.acceptsNonVerusSystems() && invoice.details.excludesVerusBlockchain()) {
+            throw new Error("This invoice accepts no systems to pay on, and is therefore unpayable.")
+          }
+
+          coinObj = CoinDirectory.getBasicCoinObj(invoice.details.isTestnet() ? 'VRSCTEST' : 'VRSC')
           VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0])
 
           const chainInfo = await getInfo(coinObj.system_id)
@@ -95,10 +94,12 @@ const DeepLink = (props) => {
 
             let i = 0;
 
-            const rootSystemRes = await getCurrency(coinObj.system_id, coinObj.currency_id)
-            if (rootSystemRes.error) throw new Error(rootSystemRes.error.message)
-            acceptedSystems.definitions[rootSystemRes.result.currencyid] = rootSystemRes.result;
-
+            if (!invoice.details.excludesVerusBlockchain()) {
+              const rootSystemRes = await getCurrency(coinObj.system_id, coinObj.currency_id)
+              if (rootSystemRes.error) throw new Error(rootSystemRes.error.message)
+              acceptedSystems.definitions[rootSystemRes.result.currencyid] = rootSystemRes.result;
+            }
+            
             if (invoice.details.acceptsNonVerusSystems()) {
               for (; i < 10 && i < invoice.details.acceptedsystems.length; i++) {
                 const systemId = invoice.details.acceptedsystems[i];

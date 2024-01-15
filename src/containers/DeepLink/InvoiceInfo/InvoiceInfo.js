@@ -53,7 +53,9 @@ const InvoiceInfo = props => {
   }
 
   const getAcceptedSystemsLabel = () => {
-    if (!inv.details.acceptsNonVerusSystems()) return coinObj.testnet ? 'VRSCTEST' : 'VRSC'
+    if (!inv.details.acceptsNonVerusSystems() && !inv.details.excludesVerusBlockchain()) {
+      return inv.details.isTestnet() ? 'VRSCTEST' : 'VRSC'
+    }
 
     const acceptedNames = Object.values(acceptedSystemsDefinitions.definitions).map(definition => {
       return definition.fullyqualifiedname
@@ -115,7 +117,7 @@ const InvoiceInfo = props => {
       props.navigation.navigate('InvoicePaymentConfiguration', props);
     } else {
       setWaitingForSignin(true);
-      const allowList = coinObj.testnet ? accounts.filter(x => {
+      const allowList = inv.details.isTestnet() ? accounts.filter(x => {
         if (
           x.testnetOverrides &&
           x.testnetOverrides[coinObj.mainnet_id] === coinObj.id
@@ -145,9 +147,9 @@ const InvoiceInfo = props => {
         createAlert(
           "Cannot continue",
           `No ${
-            coinObj.testnet ? 'testnet' : 'mainnet'
+            inv.details.isTestnet() ? 'testnet' : 'mainnet'
           } profiles found, cannot respond to ${
-            coinObj.testnet ? 'testnet' : 'mainnet'
+            inv.details.isTestnet() ? 'testnet' : 'mainnet'
           } login request.`,
         );
       }

@@ -58,14 +58,13 @@ const FundSourceSelectList = (props) => {
       }
       
       for (const wallet of subWallets) {
-        
         const network = wallet.network;
-        const rootNetwork = coinObj.testnet ? coinsList.VRSCTEST : coinsList.VRSC;
+        const rootNetwork = inv.details.isTestnet() ? coinsList.VRSCTEST : coinsList.VRSC;
         const rootNetworkId = rootNetwork.currency_id
 
         if (network && 
             ((inv.details.acceptsNonVerusSystems() && inv.details.acceptedsystems.includes(network)) || 
-              (network === rootNetworkId) || 
+              (network === rootNetworkId && !inv.details.excludesVerusBlockchain()) || 
               (!inv.details.expires() && !inv.details.acceptsConversion())
             )
         ) {
@@ -91,10 +90,10 @@ const FundSourceSelectList = (props) => {
                 wallet,
                 coinObj,
                 exportTo
-              });      
+              });
             } else if (
-              (coinObj.testnet && network === coinsList.VRSCTEST.system_id) || 
-              (!coinObj.testnet && network === coinsList.VRSC.system_id) || 
+              (inv.details.isTestnet() && network === coinsList.VRSCTEST.system_id) || 
+              (!inv.details.isTestnet() && network === coinsList.VRSC.system_id) || 
               (inv.details.acceptsNonVerusSystems() && inv.details.acceptedsystems.includes(network))
             ) {
               newNetworkSourceOptionMap.set(getNetworkSourceOptionKey(coinObj.currency_id, wallet.id), {
@@ -112,16 +111,18 @@ const FundSourceSelectList = (props) => {
                 const viaCurrencyId = sourceOption.lastnotarization.currencyid;
                 const isDirect = viaCurrencyId === coinObj.currency_id;
 
-                newNetworkSourceOptionMap.set(getNetworkSourceOptionKey(coinObj.currency_id, wallet.id, viaCurrencyId), {
-                  amount: sourceOption.sourceamounts[coinObj.currency_id],
-                  via: isDirect ? null : sourceOption[viaCurrencyId] ? sourceOption[viaCurrencyId].name : viaCurrencyId,
-                  viaCurrencyId: isDirect ? null : viaCurrencyId,
-                  network: network,
-                  conversion: true,
-                  wallet,
-                  coinObj,
-                  exportTo
-                });
+                if (sourceOption[viaCurrencyId].systemid === wallet.network) {
+                  newNetworkSourceOptionMap.set(getNetworkSourceOptionKey(coinObj.currency_id, wallet.id, viaCurrencyId), {
+                    amount: sourceOption.sourceamounts[coinObj.currency_id],
+                    via: isDirect ? null : sourceOption.fullyqualifiedname,
+                    viaCurrencyId: isDirect ? null : viaCurrencyId,
+                    network: network,
+                    conversion: true,
+                    wallet,
+                    coinObj,
+                    exportTo
+                  });
+                }
               }
             }
           } 
