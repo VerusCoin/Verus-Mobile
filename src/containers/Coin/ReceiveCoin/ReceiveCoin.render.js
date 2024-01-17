@@ -21,7 +21,7 @@ export const RenderReceiveCoin = function() {
     state,
     props,
   } = this;
-  const { rates, displayCurrency } = props;
+  const { rates, displayCurrency, generalWalletSettings } = props;
   const {
     loading,
     showModal,
@@ -36,7 +36,8 @@ export const RenderReceiveCoin = function() {
     addressSelectModalOpen,
     showingAddress,
     showVerusIconInQr,
-    loadingBox
+    loadingBox,
+    maxSlippage
   } = state;
   const fiatEnabled = rates[displayCurrency] != null;
 
@@ -201,18 +202,52 @@ export const RenderReceiveCoin = function() {
         </View>
         {
           this.state.amount != 0 && this.props.activeCoin.proto === 'vrsc' && this.props.subWallet.id !== "PRIVATE_WALLET" && (
-            <View style={Styles.wideBlock}>
-              <Checkbox.Item
-                color={Colors.primaryColor}
-                label={'Allow payment with conversion from a PBaaS currency'}
-                status={this.state.allowConversion ? 'checked' : 'unchecked'}
-                onPress={() => this.toggleAllowConversion()}
-                mode="android"
-                style={{
-                  width: '100%',
-                }}
-              />
-            </View>
+            <React.Fragment>
+              <View style={Styles.wideBlock}>
+                <Checkbox.Item
+                  color={Colors.primaryColor}
+                  label={'Allow payment with conversion from a PBaaS currency'}
+                  status={this.state.allowConversion ? 'checked' : 'unchecked'}
+                  onPress={() => this.toggleAllowConversion()}
+                  mode="android"
+                  style={{
+                    width: '100%',
+                  }}
+                />
+              </View>
+              {generalWalletSettings.allowSettingVerusPaySlippage && this.state.allowConversion &&
+                <View style={{...Styles.wideBlock, paddingTop: 0}}>
+                  <View style={Styles.flexRow}>
+                    <TouchableOpacity
+                      onPress={() => this.openNumberInputModal('maxSlippage')}
+                      style={{...Styles.flex}}>
+                      <TextInput
+                        returnKeyType="done"
+                        label={'Maximum slippage'}
+                        dense
+                        value={maxSlippage}
+                        editable={false}
+                        pointerEvents="none"
+                        style={{
+                          backgroundColor: Colors.secondaryColor,
+                        }}
+                        error={errors.maxSlippage}
+                      />
+                    </TouchableOpacity>
+                    <Button
+                      color={Colors.primaryColor}
+                      disabled={true}
+                      style={{
+                        alignSelf: 'center',
+                        marginTop: 6,
+                      }}
+                      compact>
+                      {"%"}
+                    </Button>
+                  </View>
+                </View>
+              }
+            </React.Fragment>
           )
         }
         <View style={Styles.fullWidthFlexCenterBlock}>

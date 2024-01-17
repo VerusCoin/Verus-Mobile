@@ -35,10 +35,11 @@ class ReceiveCoin extends Component {
     this.state = {
       selectedCoin: this.props.activeCoin,
       amount: 0,
+      maxSlippage: "3",
       allowConversion: false,
       addresses: [null],
       memo: null,
-      errors: {selectedCoin: null, amount: null, addresses: null, memo: null },
+      errors: {selectedCoin: null, amount: null, addresses: null, memo: null, maxSlippage: null },
       verusQRString: null,
       amountFiat: false,
       loading: false,
@@ -170,7 +171,7 @@ class ReceiveCoin extends Component {
     }) 
   }
 
-  createQRString = (coinObj, amount, address, memo) => {
+  createQRString = (coinObj, amount, address, memo, maxSlippage) => {
     const { displayCurrency } = this.props
     const rates = this.props.rates
 
@@ -184,7 +185,7 @@ class ReceiveCoin extends Component {
           let qrString;
           let showVerusIconInQr = false;
           const wallet = this.props.subWallet;
-          
+
           const amountCrypto = this.state.amountFiat
             ? BigNumber(amount).dividedBy(BigNumber(_price)).toString()
             : amount.toString();
@@ -206,7 +207,9 @@ class ReceiveCoin extends Component {
               coinsToSats(BigNumber(amountCrypto)).toString(),
               10,
             );
-            const amountGtZero = amountBN.gt(new primitives.BigNumber(0))
+            const amountGtZero = amountBN.gt(new primitives.BigNumber(0));
+
+            const acceptsConversion = this.state.allowConversion && this.state.amount != 0;
     
             const invoice = await createVerusPayInvoice(
               coinObj,
@@ -221,15 +224,18 @@ class ReceiveCoin extends Component {
                 }),
                 requestedcurrencyid: coinObj.currency_id,
                 acceptedsystems: nonVerusSystems,
-                maxestimatedslippage: new primitives.BigNumber(
+                maxestimatedslippage: acceptsConversion ? maxSlippage != null ? new primitives.BigNumber(
+                  coinsToSats(BigNumber(maxSlippage).dividedBy(100)).toString(),
+                  10,
+                ) : new primitives.BigNumber(
                   coinsToSats(BigNumber('0.03')).toString(),
                   10,
-                ),
+                ) : undefined,
               }),
             );
     
             invoice.details.setFlags({
-              acceptsConversion: this.state.allowConversion && this.state.amount != 0,
+              acceptsConversion,
               isTestnet: coinObj.testnet,
               acceptsNonVerusSystems: nonVerusSystems.length > 0,
               acceptsAnyAmount: !amountGtZero
@@ -317,16 +323,26 @@ class ReceiveCoin extends Component {
       verusQRString: null,
       showVerusIconInQr: false
     }, async () => {
-      const _selectedCoin = this.state.selectedCoin
-      const _amount =
-        (this.state.amount.toString().includes(".") &&
-          this.state.amount.toString().includes(",")) ||
-        !this.state.amount
-          ? this.state.amount
-          : this.state.amount.toString().replace(/,/g, ".");
-      const _address = this.state.addresses[addressIndex]
-      const _memo = this.state.memo
+      const processNumeric = (numericString) => {
+        return (numericString.toString().includes('.') &&
+          numericString.toString().includes(',')) ||
+          !numericString
+          ? numericString
+          : numericString.toString().replace(/,/g, '.');
+      }
+
+      const _selectedCoin = this.state.selectedCoin;
+      const _amount = processNumeric(this.state.amount);
+      let _maxSlippage = null;
+      const _address = this.state.addresses[addressIndex];
+      const _memo = this.state.memo;
       let _errors = false;
+      const useMaxSlippageForm =
+        this.state.amount != 0 &&
+        this.props.activeCoin.proto === 'vrsc' &&
+        this.props.subWallet.id !== 'PRIVATE_WALLET' &&
+        this.props.generalWalletSettings.allowSettingVerusPaySlippage && 
+        this.state.allowConversion;
 
       if (!_selectedCoin) {
         createAlert("Error", "Please select a coin to receive.")
@@ -345,9 +361,25 @@ class ReceiveCoin extends Component {
         }
       } 
 
+      if (useMaxSlippageForm) {
+        _maxSlippage = processNumeric(this.state.maxSlippage);
+
+        if (!(!(_maxSlippage.toString()) || _maxSlippage.toString().length < 1)) {
+          if (!(isNumber(_maxSlippage))) {
+            this.handleError("Invalid slippage value", "maxSlippage")
+            createAlert("Invalid Slippage", "Please enter a valid slippage value.")
+            _errors = true
+          } else if (Number(_maxSlippage) <= 0 || (Number(_maxSlippage) > 100)) {
+            this.handleError("Enter a slippage value greater than 0", "maxSlippage")
+            createAlert("Invalid Slippage", "Please enter a slippage value greater than 0, and not greater than 100.")
+            _errors = true
+          }
+        }  
+      }
+
       if (!_errors) {
         try {
-          this.createQRString(_selectedCoin, _amount, _address, _memo);
+          this.createQRString(_selectedCoin, _amount, _address, _memo, _maxSlippage);
           return true;
         } catch(e) {
           createAlert("Error", e.message);
@@ -375,7 +407,8 @@ const mapStateToProps = (state) => {
     rates: results ? results : {},
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
     addresses: selectAddresses(state),
-    subWallet: state.coinMenus.activeSubWallets[chainTicker]
+    subWallet: state.coinMenus.activeSubWallets[chainTicker],
+    generalWalletSettings: state.settings.generalWalletSettings
   }
 };
 
