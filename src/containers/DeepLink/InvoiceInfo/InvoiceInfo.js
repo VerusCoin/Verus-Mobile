@@ -5,7 +5,7 @@ import { primitives } from "verusid-ts-client"
 import { Button, Divider, List, Portal, Text } from 'react-native-paper';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import { getIdentity } from '../../../utils/api/channels/verusid/callCreators';
-import { blocksToTime, unixToDate } from '../../../utils/math';
+import { blocksToTime, satsToCoins, unixToDate } from '../../../utils/math';
 import { useSelector } from 'react-redux';
 import Colors from '../../../globals/colors';
 import { VerusIdLogo } from '../../../images/customIcons';
@@ -17,6 +17,7 @@ import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import ListSelectionModal from '../../../components/ListSelectionModal/ListSelectionModal';
 import { copyToClipboard } from '../../../utils/clipboard/clipboard';
+import BigNumber from 'bignumber.js';
 
 const InvoiceInfo = props => {
   const { 
@@ -164,6 +165,16 @@ const InvoiceInfo = props => {
     setIsListSelectionModalVisible(false);
   };
 
+  const describeSlippage = () => {
+    createAlert(
+      "Slippage", 
+      "The maximum estimated deviation percentage defines which currencies you are allowed to convert through." + 
+      " The percentage shown is the maximum allowed difference between the estimated conversion outcome of your chosen " + 
+      "conversion path, and the real outcome. This value is calculated for each currency using factors that determine their" + 
+      " respective volatilites, like the amount of currency in their respective reserves."
+    )
+  }
+
   useEffect(() => {
     if (signedIn && waitingForSignin) {
       handleContinue();
@@ -252,6 +263,14 @@ const InvoiceInfo = props => {
                 <React.Fragment>
                   <List.Item title={"This invoice accepts conversion, continue to see which currencies you can pay it with."} titleNumberOfLines={100}/>
                   <Divider />
+                  <List.Item 
+                    title={`${satsToCoins(BigNumber(inv.details.maxestimatedslippage)).multipliedBy(100).toString()}%`} 
+                    titleNumberOfLines={100}
+                    description={'Max. est. deviation from predicted conversion result'}
+                    right={props => <List.Icon {...props} icon={'information'} size={20} />}
+                    onPress={() => describeSlippage()}
+                  />
+                  <Divider />
                 </React.Fragment>
               )
             }
@@ -271,6 +290,7 @@ const InvoiceInfo = props => {
                     onPress={openListSelectionModal}
                     titleNumberOfLines={100}
                     description={'Supported systems'}
+                    right={props => <List.Icon {...props} icon={'information'} size={20} />}
                   />
                   <Divider />
                 </React.Fragment>
