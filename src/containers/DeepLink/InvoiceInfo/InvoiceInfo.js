@@ -168,7 +168,7 @@ const InvoiceInfo = props => {
   const describeSlippage = () => {
     createAlert(
       "Slippage", 
-      "The maximum estimated deviation percentage defines which currencies you are allowed to convert through." + 
+      "The maximum estimated deviation percentage is used to limit which currencies you are allowed to convert through." + 
       " The percentage shown is the maximum allowed difference between the estimated conversion outcome of your chosen " + 
       "conversion path, and the real outcome. This value is calculated for each currency using factors that determine their" + 
       " respective volatilites, like the amount of currency in their respective reserves."
@@ -289,7 +289,7 @@ const InvoiceInfo = props => {
                     title={acceptedSystemsLabel}
                     onPress={openListSelectionModal}
                     titleNumberOfLines={100}
-                    description={'Supported systems'}
+                    description={'Supported Verus blockchains'}
                     right={props => <List.Icon {...props} icon={'information'} size={20} />}
                   />
                   <Divider />
