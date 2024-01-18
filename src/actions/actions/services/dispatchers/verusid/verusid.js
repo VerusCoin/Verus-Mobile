@@ -192,7 +192,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
         try {
           if (pendingIds[ticker][iaddress].infoUri) {
             const response = await axios.get(pendingIds[ticker][iaddress].infoUri);
-            const responseData = new primitives.LoginConsentProvisioningResponse(response.data);
+            const responseData = new primitives.LoginConsentProvisioningDecision(response.data);
             
             if (responseData.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
 

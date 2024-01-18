@@ -48,7 +48,7 @@ export const ProvisionIdentitySuccessRender = function () {
               fontSize: 20,
               color: Colors.verusDarkGray,
             }}>
-            {`You will recieve a notification when your ${coinObj.display_ticker} ID is ready to use.`}
+            {`You will receive a notification when your ${coinObj.display_ticker} ID is ready to use.`}
           </Text>
         </View> 
         <View
