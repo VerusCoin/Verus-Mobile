@@ -221,6 +221,7 @@
     "@babel/traverse": "7.21.3",
     "@babel/core": "7.21.3",
     "blake2b-wasm": "https://github.com/michaeltout/blake2b-wasm/",
+    "@bitgo/blake2b-wasm": "https://github.com/michaeltout/blake2b-wasm/",
     "browserify-sign": "4.2.2"
   },
   "jest": {
