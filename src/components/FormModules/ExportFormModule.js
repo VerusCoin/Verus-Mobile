@@ -30,7 +30,7 @@ const ExportFormModule = ({
           advancedForm ? (
             <TextInput
               returnKeyType="done"
-              label="System to send to (optional)"
+              label={exporttoDisabled ? "System to send to" : "System to send to (optional)"}
               value={exportToField}
               mode="outlined"
               multiline={true}

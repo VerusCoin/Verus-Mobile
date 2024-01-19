@@ -22,6 +22,7 @@ import {
   SEND_MODAL_STRICT_AMOUNT,
   SEND_MODAL_TO_ADDRESS_FIELD,
   SEND_MODAL_VIA_FIELD,
+  SEND_MODAL_MAPPING_FIELD,
 } from '../../../utils/constants/sendModal';
 import { API_GET_BALANCES, IS_PBAAS } from '../../../utils/constants/intervalConstants';
 import { getInvoiceSourceOptions } from '../../../utils/api/channels/vrpc/callCreators';
@@ -132,6 +133,8 @@ const InvoicePaymentConfiguration = props => {
       [SEND_MODAL_DISABLED_INPUTS]: {
         [SEND_MODAL_CONVERTTO_FIELD]: true,
         [SEND_MODAL_VIA_FIELD]: true,
+        [SEND_MODAL_EXPORTTO_FIELD]: true,
+        [SEND_MODAL_MAPPING_FIELD]: true,
         [SEND_MODAL_AMOUNT_FIELD]: !inv.details.acceptsAnyAmount(),
         [SEND_MODAL_TO_ADDRESS_FIELD]: !inv.details.acceptsAnyDestination(),
       },
