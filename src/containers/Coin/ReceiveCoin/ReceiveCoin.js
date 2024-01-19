@@ -35,7 +35,7 @@ class ReceiveCoin extends Component {
     this.state = {
       selectedCoin: this.props.activeCoin,
       amount: 0,
-      maxSlippage: "3",
+      maxSlippage: "0.5",
       allowConversion: false,
       addresses: [null],
       memo: null,
@@ -228,7 +228,7 @@ class ReceiveCoin extends Component {
                   coinsToSats(BigNumber(maxSlippage).dividedBy(100)).toString(),
                   10,
                 ) : new primitives.BigNumber(
-                  coinsToSats(BigNumber('0.03')).toString(),
+                  coinsToSats(BigNumber('0.005')).toString(),
                   10,
                 ) : undefined,
               }),
