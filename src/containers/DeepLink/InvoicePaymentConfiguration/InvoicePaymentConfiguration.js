@@ -126,7 +126,7 @@ const InvoicePaymentConfiguration = props => {
       [SEND_MODAL_EXPORTTO_FIELD]: exportTo != null ? exportTo : '',
       [SEND_MODAL_VIA_FIELD]: inv.details.acceptsConversion() && via != null ? via : '',
       [SEND_MODAL_SHOW_CONVERTTO_FIELD]: inv.details.acceptsConversion() && conversion,
-      [SEND_MODAL_SHOW_EXPORTTO_FIELD]: !inv.details.acceptsConversion() && !inv.details.expires() && exportTo != null,
+      [SEND_MODAL_SHOW_EXPORTTO_FIELD]: exportTo != null,
       [SEND_MODAL_SHOW_VIA_FIELD]: inv.details.acceptsConversion() && via != null,
       [SEND_MODAL_ADVANCED_FORM]: true,
       [SEND_MODAL_SHOW_IS_PRECONVERT]: false,
