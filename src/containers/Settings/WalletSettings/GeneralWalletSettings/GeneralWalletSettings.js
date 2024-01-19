@@ -90,8 +90,8 @@ const WalletSettings = props => {
   const describeSlippage = () => {
     createAlert(
       "Slippage", 
-      "Before editing maximum slippage on your VerusPay invoices, ensure you are aware of the risks." +
-      "The maximum slippage value defines which currencies others will be allowed to pay your invoice with." + 
+      "Before editing maximum slippage on your VerusPay invoices, ensure you are aware of the risks. " +
+      "The maximum slippage value is used to limit which currencies others will be allowed to pay your invoice with." + 
       " The percentage value you set is the maximum allowed difference between the estimated conversion outcome of the payee's chosen " + 
       "conversion path, and the real outcome. This value is calculated for each currency using factors that determine their" + 
       " respective volatilites, like the amount of currency in their respective reserves. Setting a high slippage value introduces " + 
