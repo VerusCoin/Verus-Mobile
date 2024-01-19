@@ -14,6 +14,7 @@ import { getCoinLogo } from "../../utils/CoinData/CoinData";
 import { VerusPayInvoice } from "verus-typescript-primitives";
 import { coinsList } from "../../utils/CoinData/CoinsList";
 import MissingInfoRedirect from "../../components/MissingInfoRedirect/MissingInfoRedirect";
+import AnimatedActivityIndicatorBox from "../../components/AnimatedActivityIndicatorBox";
 
 const FundSourceSelectList = (props) => {
   const { coinObjs, allSubWallets, sourceOptions: rawSourceOptions, invoice } = props;
@@ -27,10 +28,18 @@ const FundSourceSelectList = (props) => {
 
   const [displayedCards, setDisplayedCards] = useState([]);
   const [noValidCards, setNoValidCards] = useState(false);
+  const [showLoadingInsteadOfError, setShowLoadingInsteadOfError] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState('');
 
   const inv = VerusPayInvoice.fromJson(invoice);
+
+  useEffect(() => {
+    // Times out waiting for balance updates as opposed to flashing error screen
+    setTimeout(() => {
+      setShowLoadingInsteadOfError(false)
+    }, 10000)
+  }, []);
 
   useEffect(() => {
     parseProps();
@@ -224,12 +233,16 @@ const FundSourceSelectList = (props) => {
   }
 
   return noValidCards ? 
-    <View style={{flex: 1, width: "100%"}}>
-      <MissingInfoRedirect
-        icon={'alert-circle-outline'} 
-        label={"No valid sources to pay this invoice from in your wallet."} 
-      />
-    </View>
+    showLoadingInsteadOfError ? (
+      <AnimatedActivityIndicatorBox />
+    ) : (
+      <View style={{flex: 1, width: '100%'}}>
+        <MissingInfoRedirect
+          icon={'alert-circle-outline'}
+          label={'No valid sources to pay this invoice from in your wallet.'}
+        />
+      </View>
+    )
     :
     <ScrollView>
       <TextInput
