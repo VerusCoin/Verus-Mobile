@@ -16,6 +16,7 @@ export const channelStore_verusid = (state = {
     case INIT_VERUSID_CHANNEL_FINISH:
       return {
         ...state,
+        serviceChannelOpen: true,
         openCoinChannels: {
           ...state.openCoinChannels,
           [action.payload.chainTicker]: true

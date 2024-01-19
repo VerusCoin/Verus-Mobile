@@ -30,7 +30,7 @@ import {
   API_GET_SERVICE_ACCOUNT,
   API_GET_SERVICE_PAYMENT_METHODS,
   API_GET_SERVICE_RATES,
-  API_GET_NOTIFICATIONS
+  API_GET_SERVICE_NOTIFICATIONS
 } from '../../utils/constants/intervalConstants';
 import {USD} from '../../utils/constants/currencies';
 import {
@@ -306,7 +306,7 @@ class Home extends Component {
         API_GET_SERVICE_ACCOUNT,
         API_GET_SERVICE_PAYMENT_METHODS,
         API_GET_SERVICE_RATES,
-        API_GET_NOTIFICATIONS,
+        API_GET_SERVICE_NOTIFICATIONS,
       ];
 
       const coinUpdates = [API_GET_FIATPRICE, API_GET_BALANCES, API_GET_INFO];
@@ -366,7 +366,7 @@ class Home extends Component {
     this.props.dispatch(expireServiceData(API_GET_SERVICE_ACCOUNT));
     this.props.dispatch(expireServiceData(API_GET_SERVICE_PAYMENT_METHODS));
     this.props.dispatch(expireServiceData(API_GET_SERVICE_RATES));
-    this.props.dispatch(expireServiceData(API_GET_NOTIFICATIONS));
+    this.props.dispatch(expireServiceData(API_GET_SERVICE_NOTIFICATIONS));
     this.refresh();
   };
 

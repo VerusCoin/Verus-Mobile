@@ -21,7 +21,7 @@ import {
   API_GET_DEPOSIT_SOURCES,
   API_GET_PENDING_DEPOSITS,
   API_GET_LINKED_IDENTITIES,
-  API_GET_NOTIFICATIONS,
+  API_GET_SERVICE_NOTIFICATIONS,
   VERUSID,
   VRPC
 } from './intervalConstants'
@@ -91,7 +91,7 @@ export const DEFAULT_SERVICE_UPDATE_PARAMS = {
       update_expired_interval: 300000
     }
   },
-  [API_GET_NOTIFICATIONS]: {
+  [API_GET_SERVICE_NOTIFICATIONS]: {
     channels: [VERUSID],
     tracking_info: {
       update_locations: null,

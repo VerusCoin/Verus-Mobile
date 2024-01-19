@@ -26,7 +26,7 @@ import {
   API_GET_SERVICE_PAYMENT_METHODS,
   API_GET_SERVICE_TRANSFERS,
   API_GET_SERVICE_RATES,
-  API_GET_NOTIFICATIONS,
+  API_GET_SERVICE_NOTIFICATIONS,
   IS_PBAAS_ROOT,
   IS_PBAAS,
   ERC20
@@ -91,7 +91,7 @@ class Overview extends Component {
           API_GET_SERVICE_PAYMENT_METHODS,
           API_GET_SERVICE_TRANSFERS,
           API_GET_SERVICE_RATES,
-          API_GET_NOTIFICATIONS
+          API_GET_SERVICE_NOTIFICATIONS
         ]
 
         const coinUpdates = [
@@ -137,7 +137,7 @@ class Overview extends Component {
     this.props.dispatch(expireServiceData(API_GET_SERVICE_PAYMENT_METHODS));
     this.props.dispatch(expireServiceData(API_GET_SERVICE_TRANSFERS));
     this.props.dispatch(expireServiceData(API_GET_SERVICE_RATES));
-    this.props.dispatch(expireServiceData(API_GET_NOTIFICATIONS));
+    this.props.dispatch(expireServiceData(API_GET_SERVICE_NOTIFICATIONS));
     
     this.refresh();
   };

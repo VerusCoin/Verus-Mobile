@@ -21,7 +21,7 @@ import {
   API_GET_DEPOSIT_SOURCES,
   API_GET_PENDING_DEPOSITS,
   API_GET_LINKED_IDENTITIES,
-  API_GET_NOTIFICATIONS
+  API_GET_SERVICE_NOTIFICATIONS
 } from "../utils/constants/intervalConstants";
 import {
   ERROR_BALANCES,
@@ -411,16 +411,16 @@ export const errors = (state = {
     case SET_SERVICE_NOTIFICATIONS:
         return {
           ...state,
-          [API_GET_NOTIFICATIONS]: {
-            ...state[API_GET_NOTIFICATIONS],
+          [API_GET_SERVICE_NOTIFICATIONS]: {
+            ...state[API_GET_SERVICE_NOTIFICATIONS],
             [channel]: null,
           },
         };
     case ERROR_SERVICE_NOTIFICATIONS:
       return {
         ...state,
-        [API_GET_NOTIFICATIONS]: {
-          ...state[API_GET_NOTIFICATIONS],
+        [API_GET_SERVICE_NOTIFICATIONS]: {
+          ...state[API_GET_SERVICE_NOTIFICATIONS],
           [channel]: error,
         },
       };
