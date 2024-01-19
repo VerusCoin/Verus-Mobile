@@ -36,6 +36,7 @@ import { openSubwalletSendModal } from "../../actions/actions/sendModal/dispatch
 import { SEND_MODAL_AMOUNT_FIELD, SEND_MODAL_MEMO_FIELD, SEND_MODAL_TO_ADDRESS_FIELD } from "../../utils/constants/sendModal";
 import { SET_DEEPLINK_DATA } from "../../utils/constants/storeType";
 import { getCurrency } from "../../utils/api/channels/verusid/callCreators";
+import { CommonActions } from "@react-navigation/routers";
 
 class VerusPay extends Component {
   constructor(props) {
@@ -113,7 +114,10 @@ class VerusPay extends Component {
         data: dl.toJson(),
       },
     });
-    this.props.navigation.navigate('DeepLink');
+    this.props.navigation.dispatch(CommonActions.reset({
+      index: 0,
+      routes: [{name: 'DeepLink'}],
+    }));
   }
 
   onSuccess(e) {
