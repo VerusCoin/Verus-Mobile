@@ -10,7 +10,6 @@ import {openSettings, RESULTS, PERMISSIONS, request} from 'react-native-permissi
 import BarcodeMask from 'react-native-barcode-mask';
 import AnimatedActivityIndicator from '../AnimatedActivityIndicator';
 import {triggerHapticSuccess} from '../../utils/haptics/haptics';
-import { useNavigation } from '@react-navigation/core';
 
 const BarcodeReader = props => {
   const cameraProps = props.cameraProps == null ? {} : props.cameraProps;
@@ -20,12 +19,9 @@ const BarcodeReader = props => {
   const [needToGoToSettings, setNeedToGoToSettings] = useState(false);
   const [hasCameraPermission, setHasCameraPermission] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [inBackground, setInBackground] = useState(false);
-
-  const navigation = useNavigation()
-
+  
   const {prompt, button, onScan, cameraOn} = props;
-  const cameraOff = (cameraOn != null && !cameraOn) || inBackground;
+  const cameraOff = cameraOn != null && !cameraOn;
 
   const maskHeight =
     props.maskProps == null || props.maskProps.height == null
@@ -74,20 +70,6 @@ const BarcodeReader = props => {
 
   useEffect(() => {
     onMount();
-
-    const unsubscribeBlur = navigation.addListener('blur', () => {
-      setInBackground(true);
-    });
-    const unsubscribeFocus = navigation.addListener('focus', () => {
-      setInBackground(false);
-    });
-
-    const unsubscribe = () => {
-      unsubscribeBlur();
-      unsubscribeFocus();
-    }
-
-    return unsubscribe;
   }, []);
 
   return cameraOff || loading ? (
