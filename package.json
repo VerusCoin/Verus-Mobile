@@ -152,6 +152,7 @@
     "snyk": "1.996.0"
   },
   "resolutions": {
+    "word-wrap": "1.2.4",
     "typeforce": "git+https://github.com/michaeltout/typeforce.git",
     "bs58check": "2.1.2",
     "braces": "3.0.2",
