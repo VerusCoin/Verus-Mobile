@@ -9,10 +9,11 @@ import {
 import Styles from '../../../styles/index'
 import QRModal from '../../../components/QRModal'
 import Colors from '../../../globals/colors';
-import { Portal, Button, TextInput } from "react-native-paper"
+import { Portal, Button, TextInput, Checkbox } from "react-native-paper"
 import TextInputModal from "../../../components/TextInputModal/TextInputModal"
 import NumberPadModal from "../../../components/NumberPadModal/NumberPadModal"
 import ListSelectionModal from "../../../components/ListSelectionModal/ListSelectionModal";
+import AnimatedActivityIndicatorBox from "../../../components/AnimatedActivityIndicatorBox";
 
 export const RenderReceiveCoin = function() {
   const _price = this.getPrice();
@@ -20,7 +21,7 @@ export const RenderReceiveCoin = function() {
     state,
     props,
   } = this;
-  const { rates, displayCurrency } = props;
+  const { rates, displayCurrency, generalWalletSettings } = props;
   const {
     loading,
     showModal,
@@ -32,12 +33,15 @@ export const RenderReceiveCoin = function() {
     currentTextInputModal,
     currentNumberInputModal,
     amount,
-    memo,
-    addressSelectModalOpen
+    addressSelectModalOpen,
+    showingAddress,
+    showVerusIconInQr,
+    loadingBox,
+    maxSlippage
   } = state;
   const fiatEnabled = rates[displayCurrency] != null;
 
-  return (
+  return loadingBox ? <AnimatedActivityIndicatorBox /> : (
     <View style={Styles.defaultRoot}>
       <ScrollView
         style={Styles.fullWidth}
@@ -55,9 +59,13 @@ export const RenderReceiveCoin = function() {
               transparent={false}
               visible={showModal && verusQRString && verusQRString.length > 0}
               qrString={verusQRString}
+              showingAddress={showingAddress}
+              showVerusIconInQr={showVerusIconInQr}
               cancel={() => {
                 this.setState({
                   showModal: false,
+                  showingAddress: false,
+                  showVerusIconInQr: false
                 });
               }}
             />
@@ -128,6 +136,16 @@ export const RenderReceiveCoin = function() {
                   />
                 </TouchableOpacity>
                 <Button
+                  onPress={() => this.showAddressString()}
+                  color={Colors.primaryColor}
+                  style={{
+                    alignSelf: 'center',
+                    marginTop: 6,
+                  }}
+                  compact>
+                  {'QR'}
+                </Button>
+                <Button
                   onPress={() => this.copyAddressToClipboard(address)}
                   color={Colors.primaryColor}
                   style={{
@@ -178,30 +196,60 @@ export const RenderReceiveCoin = function() {
                 marginTop: 6,
               }}
               compact>
-              {amountFiat ? displayCurrency : selectedCoin.display_ticket}
+              {amountFiat ? displayCurrency : selectedCoin.display_ticker}
             </Button>
           </View>
         </View>
-        {/* <View style={Styles.wideBlock}>
-          <View style={Styles.flexRow}>
-            <TouchableOpacity
-              onPress={() => this.openTextInputModal('memo')}
-              style={{...Styles.flex}}>
-              <TextInput
-                returnKeyType="done"
-                label={'Note for receiver (optional)'}
-                dense
-                value={memo}
-                editable={false}
-                pointerEvents="none"
-                style={{
-                  backgroundColor: Colors.secondaryColor,
-                }}
-                error={errors.memo}
-              />
-            </TouchableOpacity>
-          </View>
-        </View> */}
+        {
+          this.state.amount != 0 && this.props.activeCoin.proto === 'vrsc' && this.props.subWallet.id !== "PRIVATE_WALLET" && (
+            <React.Fragment>
+              <View style={Styles.wideBlock}>
+                <Checkbox.Item
+                  color={Colors.primaryColor}
+                  label={'Allow payment with conversion from a PBaaS currency'}
+                  status={this.state.allowConversion ? 'checked' : 'unchecked'}
+                  onPress={() => this.toggleAllowConversion()}
+                  mode="android"
+                  style={{
+                    width: '100%',
+                  }}
+                />
+              </View>
+              {generalWalletSettings.allowSettingVerusPaySlippage && this.state.allowConversion &&
+                <View style={{...Styles.wideBlock, paddingTop: 0}}>
+                  <View style={Styles.flexRow}>
+                    <TouchableOpacity
+                      onPress={() => this.openNumberInputModal('maxSlippage')}
+                      style={{...Styles.flex}}>
+                      <TextInput
+                        returnKeyType="done"
+                        label={'Maximum slippage'}
+                        dense
+                        value={maxSlippage}
+                        editable={false}
+                        pointerEvents="none"
+                        style={{
+                          backgroundColor: Colors.secondaryColor,
+                        }}
+                        error={errors.maxSlippage}
+                      />
+                    </TouchableOpacity>
+                    <Button
+                      color={Colors.primaryColor}
+                      disabled={true}
+                      style={{
+                        alignSelf: 'center',
+                        marginTop: 6,
+                      }}
+                      compact>
+                      {"%"}
+                    </Button>
+                  </View>
+                </View>
+              }
+            </React.Fragment>
+          )
+        }
         <View style={Styles.fullWidthFlexCenterBlock}>
           <Button
             color={Colors.primaryColor}

@@ -866,12 +866,11 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bitgo/blake2b-wasm@^3.0.1":
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/@bitgo/blake2b-wasm/-/blake2b-wasm-3.2.0.tgz#01112efcf4c81582ac9624b58d455007551a699d"
-  integrity sha512-pKqJoPjvhh8fE2mDsxO+kvAJcjm+wKK6fbMvX2n6Twx5zeTUHC4ZVq8unUKXRa9EH17LXbZtyYW5wmErXKkhDg==
+"@bitgo/blake2b-wasm@^3.0.1", "@bitgo/blake2b-wasm@https://github.com/michaeltout/blake2b-wasm/", "blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b", "blake2b-wasm@https://github.com/michaeltout/blake2b-wasm/":
+  version "2.0.0"
+  resolved "https://github.com/michaeltout/blake2b-wasm/#a16070b30bb8d8aee670f0c69b642913eca79998"
   dependencies:
-    nanoassert "^1.0.0"
+    nanoassert "1.0.0"
 
 "@bitgo/blake2b@3.0.1":
   version "3.0.1"
@@ -3281,12 +3280,6 @@ bl@^4.1.0:
     buffer "^5.5.0"
     inherits "^2.0.4"
     readable-stream "^3.4.0"
-
-"blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b", "blake2b-wasm@https://github.com/michaeltout/blake2b-wasm/":
-  version "2.0.0"
-  resolved "https://github.com/michaeltout/blake2b-wasm/#a16070b30bb8d8aee670f0c69b642913eca79998"
-  dependencies:
-    nanoassert "1.0.0"
 
 "blake2b@git+https://github.com/michaeltout/blake2b":
   version "2.1.3"
@@ -8163,7 +8156,12 @@ ms@2.1.3, ms@^2.0.0:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"
   integrity sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==
 
-nan@^2.13.2, nan@^2.14.0, nan@^2.14.1, nan@^2.15.0, nan@^2.2.1:
+nan@^2.13.2, nan@^2.2.1:
+  version "2.18.0"
+  resolved "https://registry.yarnpkg.com/nan/-/nan-2.18.0.tgz#26a6faae7ffbeb293a39660e88a76b82e30b7554"
+  integrity sha512-W7tfG7vMOGtD30sHoZSSc/JVYiyDPEyQVso/Zz+/uQd0B0L46gtC+pHha5FFMRpil6fm/AoEcRWyOVi4+E/f8w==
+
+nan@^2.14.0, nan@^2.14.1, nan@^2.15.0:
   version "2.17.0"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.17.0.tgz#c0150a2368a182f033e9aa5195ec76ea41a199cb"
   integrity sha512-2ZTgtl0nJsO0KQCjEpxcIr5D+Yv90plTitZt9JBfQvVJDS5seMl3FOvsh3+9CoYWXf/1l5OaZzzF6nDm4cagaQ==
@@ -11526,7 +11524,7 @@ version_compare@0.0.3:
 
 "verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git":
   version "1.0.0"
-  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#17f64fa1d152f5b23e3e8ec12b7f8206d382d0c1"
+  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#ca735cf46b0dd4ad4a6d4b37ab451bd2f5af4c3e"
   dependencies:
     base64url "3.0.1"
     bn.js "5.2.1"
@@ -11543,21 +11541,21 @@ version_compare@0.0.3:
 
 "verusd-rpc-ts-client@git+https://github.com/VerusCoin/verusd-rpc-ts-client.git":
   version "0.1.0"
-  resolved "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git#615002f1b39e7c989e40188d4483ef0cce4e7bfe"
+  resolved "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git#34b728951f48612d0384050aafe7f346ce5c5c2f"
   dependencies:
     axios "0.27.2"
     verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git"
 
 "verusd-rpc-ts-client@https://github.com/VerusCoin/verusd-rpc-ts-client.git":
   version "0.1.0"
-  resolved "https://github.com/VerusCoin/verusd-rpc-ts-client.git#f7fa9b3d8c8a51175a9395d82b11ca375db3f9c4"
+  resolved "https://github.com/VerusCoin/verusd-rpc-ts-client.git#34b728951f48612d0384050aafe7f346ce5c5c2f"
   dependencies:
     axios "0.27.2"
     verus-typescript-primitives "https://github.com/VerusCoin/verus-typescript-primitives.git"
 
 "verusid-ts-client@git+https://github.com/VerusCoin/verusid-ts-client.git":
   version "0.1.0"
-  resolved "git+https://github.com/VerusCoin/verusid-ts-client.git#9b48b78c196ead207c7a73a827d4dab2b9d89967"
+  resolved "git+https://github.com/VerusCoin/verusid-ts-client.git#6ab4f54444507e0a419ce4428caded8543511bc5"
   dependencies:
     "@bitgo/utxo-lib" "https://github.com/VerusCoin/BitGoJS.git#f8723bcc2bf4052de171ca8654de23fc06a03337"
     axios "0.27.2"

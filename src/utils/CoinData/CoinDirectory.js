@@ -61,12 +61,23 @@ class _CoinDirectory {
 
   // Function to check if a coin with a specific ID exists in the directory
   coinExistsInDirectory(coinId) {
-    return this.coins.hasOwnProperty(coinId);
+    return (
+      this.coins.hasOwnProperty(coinId) ||
+      coinId === 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq' ||
+      coinId === 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV'
+    );
   }
 
   // Function to find a coin object by coinId.
   findCoinObj(key, userName, useSystemId) {
-    const id = useSystemId ? getSystemNameFromSystemId(key) : key;
+    const id = useSystemId
+      ? getSystemNameFromSystemId(key)
+      : key === 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq'
+      ? 'VRSCTEST'
+      : key === 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV'
+      ? 'VRSC'
+      : key;
+
     let coinObj = this.coins[id]
   
     if (coinObj) {

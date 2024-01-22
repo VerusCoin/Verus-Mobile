@@ -47,6 +47,9 @@ const WalletSettings = props => {
       ? generalWalletSettings.homeCardDragDetection
       : false,
   );
+  const [allowSettingVerusPaySlippage, setAllowSettingVerusPaySlippage] = useState(
+    !!generalWalletSettings.allowSettingVerusPaySlippage
+  );
 
   const [errors, setErrors] = useState({
     maxTxCount: false,
@@ -76,12 +79,33 @@ const WalletSettings = props => {
       setSettings({
         ...settings,
         homeCardDragDetection,
+        allowSettingVerusPaySlippage
       });
       setHasChanges(true);
     } else {
       isMounted.current = true;
     }
-  }, [homeCardDragDetection]);
+  }, [homeCardDragDetection, allowSettingVerusPaySlippage]);
+
+  const describeSlippage = () => {
+    createAlert(
+      "Slippage", 
+      "Before editing maximum slippage on your VerusPay invoices, ensure you are aware of the risks. " +
+      "The maximum slippage value is used to limit which currencies others will be allowed to pay your invoice with." + 
+      " The percentage value you set is the maximum allowed difference between the estimated conversion outcome of the payee's chosen " + 
+      "conversion path, and the real outcome. This value is calculated for each currency using factors that determine their" + 
+      " respective volatilites, like the amount of currency in their respective reserves. Setting a high slippage value introduces " + 
+      " the risk of receiving an amount of currency unexpectedly lower than what you set as the invoice amount."
+    )
+  }
+
+  const toggleAllowSettingVerusPaySlippage = () => {
+    if (!allowSettingVerusPaySlippage) {
+      describeSlippage()
+    }
+
+    setAllowSettingVerusPaySlippage(!allowSettingVerusPaySlippage);
+  }
 
   const saveSettings = async () => {
     setLoading(true);
@@ -92,6 +116,7 @@ const WalletSettings = props => {
         defaultAccount:
           settings.defaultAccount === NO_DEFAULT ? null : settings.defaultAccount,
         homeCardDragDetection,
+        allowSettingVerusPaySlippage,
         ackedCurrencyDisclaimer: settings.ackedCurrencyDisclaimer,
         addressBlocklistDefinition:
           settings.addressBlocklistDefinition == null
@@ -269,6 +294,30 @@ const WalletSettings = props => {
                   onValueChange={() => {
                     setHomeCardDragDetection(!homeCardDragDetection);
                   }}
+                  color={Colors.primaryColor}
+                />
+              </View>
+            )}
+          />
+          <Divider />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={toggleAllowSettingVerusPaySlippage}
+        >
+          <List.Item
+            title="Edit max VerusPay invoice slippage"
+            description="Show the option to edit maximum slippage when creating a VerusPay invoice with conversion"
+            right={() => (
+              <View
+                style={{
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'flex-end',
+                }}
+              >
+                <Switch
+                  value={allowSettingVerusPaySlippage}
+                  onValueChange={toggleAllowSettingVerusPaySlippage}
                   color={Colors.primaryColor}
                 />
               </View>
