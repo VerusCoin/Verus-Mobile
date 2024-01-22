@@ -19,7 +19,8 @@ import {
 } from '../../../../utils/constants/sendModal';
 import {
   coinsToSats,
-  satsToCoins
+  satsToCoins,
+  truncateDecimal
 } from '../../../../utils/math';
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
@@ -138,9 +139,9 @@ function ConvertOrCrossChainSendConfirm({
       conversionFeeMultiplier = BigNumber(0.00025);
     }
 
-    const conversionFee = satsToCoins(BigNumber(satoshis)).multipliedBy(
+    const conversionFee = BigNumber(truncateDecimal(satsToCoins(BigNumber(satoshis)).multipliedBy(
       conversionFeeMultiplier,
-    );
+    ), 8))
 
     const destAddrString = destination.getAddressString();
     const toAddress = nameMap.has(destAddrString)

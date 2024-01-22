@@ -176,7 +176,7 @@ export const IADDRESS_VERSION = 102
 
 // Deep links
 export const CALLBACK_HOST = 'x-callback-url'
-export const SUPPORTED_DLS = [primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid]
+export const SUPPORTED_DLS = [primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid, primitives.VERUSPAY_INVOICE_VDXF_KEY.vdxfid]
 
 // Komodo
 export const KOMODO_ENDOFERA = 7777777;

@@ -7,6 +7,7 @@ import SignedOutNoKeyStackScreens from './SignedOutNoKeyStackScreens/SignedOutNo
 import DeepLinkStackScreens from './DeepLinkStackScreens/DeepLinkStackScreens';
 import {useSelector} from 'react-redux';
 import LoginRequestInfo from '../DeepLink/LoginRequestInfo/LoginRequestInfo';
+import InvoiceInfo from '../DeepLink/InvoiceInfo/InvoiceInfo';
 
 const RootStack = createStackNavigator();
 
@@ -45,6 +46,11 @@ const RootStackScreens = props => {
       <RootStack.Screen
         name="LoginRequestInfo"
         component={LoginRequestInfo}
+        options={{headerShown: false}}
+      />
+      <RootStack.Screen
+        name="InvoiceInfo"
+        component={InvoiceInfo}
         options={{headerShown: false}}
       />
     </RootStack.Navigator>
