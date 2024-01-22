@@ -22,26 +22,39 @@ function* handleDeeplinkUrl(action) {
   
       if (url.host !== CALLBACK_HOST) throw new Error('Unsupported host url.');
   
-      const id = url.pathname.replace(/\//g, '');
+      const id = url.pathname.split('/')[1];
   
       if (!SUPPORTED_DLS.includes(id)) throw new Error('Unsupported url path.');
 
-      const req = new primitives.LoginConsentRequest();
-      req.fromBuffer(
-        base64url.toBuffer(
-          url.searchParams.get(
-            primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid,
+      if (id === primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid) {
+        const req = new primitives.LoginConsentRequest();
+        req.fromBuffer(
+          base64url.toBuffer(
+            url.searchParams.get(
+              primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid,
+            ),
           ),
-        ),
-      );
-  
-      yield call(handleFinishDeeplink, {
-        type: SET_DEEPLINK_DATA,
-        payload: {
-          id,
-          data: req.toJson(),
-        },
-      });
+        );
+    
+        yield call(handleFinishDeeplink, {
+          type: SET_DEEPLINK_DATA,
+          payload: {
+            id,
+            data: req.toJson(),
+          },
+        });
+      } else if (id === primitives.VERUSPAY_INVOICE_VDXF_KEY.vdxfid) {
+        const inv = primitives.VerusPayInvoice.fromWalletDeeplinkUri(urlstring);
+    
+        yield call(handleFinishDeeplink, {
+          type: SET_DEEPLINK_DATA,
+          payload: {
+            id,
+            data: inv.toJson(),
+            uri: urlstring
+          },
+        });
+      }
     } catch (e) {
       console.error(e)
       
