@@ -11,6 +11,8 @@ import {CommonActions} from '@react-navigation/native';
 import Colors from '../../../globals/colors';
 import {URL} from 'react-native-url-polyfill';
 import AnimatedActivityIndicator from '../../../components/AnimatedActivityIndicator';
+import { useDispatch } from 'react-redux';
+import { resetDeeplinkData } from '../../../actions/actionCreators';
 
 const LoginRequestComplete = props => {
   const {signedResponse} = props.route.params;
@@ -21,8 +23,10 @@ const LoginRequestComplete = props => {
   let url;
   let urlDisplayString = '';
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
 
   const cancel = () => {
+    dispatch(resetDeeplinkData());
     props.navigation.dispatch(
       CommonActions.reset({
         index: 0,
