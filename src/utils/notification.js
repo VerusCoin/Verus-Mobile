@@ -3,6 +3,7 @@ import {
   NOTIFICATION_TYPE_DEEPLINK,
   NOTIFICATION_TYPE_LOADING,
   NOTIFICATION_TYPE_NAVIGATION,
+  NOTIFICATION_TYPE_VERUS_ID_PROVISIONING,
 } from './constants/notifications';
 
 import getUid from './uid'
@@ -75,20 +76,20 @@ export class LoadingNotification extends Notification {
 }
 
 export class DeeplinkNotification extends Notification {
-  constructor(body, title, reopen = () => {}, uid, uri, acchash, extraParams = null) {
+  constructor(body, title, reopen = () => {}, uid, uri, acchash, fromService = null) {
     super(body, title, NOTIFICATION_TYPE_DEEPLINK, uid, acchash)
     this.uri = uri
     this.reopen = reopen
-    this.extraParams = extraParams
+    this.fromService = fromService
   }
 
   static fromJson(json, reopen) {
-    const {body, title, uid, uri, extraParams} = json;
-    return new DeeplinkNotification(body, title, reopen, uid, uri, null , extraParams);
+    const {body, title, uid, uri, fromService} = json;
+    return new DeeplinkNotification(body, title, reopen, uid, uri, null , fromService);
   }
 
   onAction(props = null) {
-    return this.reopen(props, this.uri, this.extraParams)
+    return this.reopen(props, this.uri, this.fromService)
   }
 
   toJson() {
@@ -98,7 +99,38 @@ export class DeeplinkNotification extends Notification {
       type: this.type,
       uid: this.uid,
       uri: this.uri,
-      extraParams: this.extraParams
+      fromService: this.fromService
+    };
+  }
+}
+
+export class VerusIdProvisioningNotification extends DeeplinkNotification {
+  constructor(body, title, reopen = () => {}, uid, uri, acchash, fqn, fromService) {
+    super(body, title, reopen, uid, uri, acchash, fromService)
+    this.type = NOTIFICATION_TYPE_VERUS_ID_PROVISIONING
+    this.fqn = fqn
+
+  }
+
+  static fromJson(json, reopen) {
+    const {body, title, uid, uri, fqn, fromService} = json;
+    return new VerusIdProvisioningNotification(body, title, reopen, uid, uri, null, fqn, fromService);
+  }
+
+  onAction(props = null) {
+    return this.reopen(props, this.uri, this.fromService, this.fqn)
+  }
+
+  toJson() {
+    return {
+      body: this.body,
+      title: this.title,
+      type: this.type,
+      uid: this.uid,
+      uri: this.uri,
+      fqn: this.fqn,
+      fromService: this.fromService
+
     };
   }
 }

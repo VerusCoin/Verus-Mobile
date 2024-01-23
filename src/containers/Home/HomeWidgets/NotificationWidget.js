@@ -9,10 +9,11 @@ import {
     NOTIFICATION_TYPE_LOADING,
     NOTIFICATION_ICON_TX,
     NOTIFICATION_ICON_VERUSID,
-    NOTIFICATION_ICON_ERROR
+    NOTIFICATION_ICON_ERROR,
+    NOTIFICATION_TYPE_VERUS_ID_PROVISIONING
 } from '../../../utils/constants/notifications';
 import { VerusIdAtIcon, ReceivedIcon, VerusIdErrorIcon } from "../../../images/customIcons";
-import { DeeplinkNotification, BasicNotification, LoadingNotification } from '../../../utils/notification';
+import { DeeplinkNotification, BasicNotification, LoadingNotification, VerusIdProvisioningNotification } from '../../../utils/notification';
 import { processVerusId } from '../../../containers/Services/ServiceComponents/VerusIdService/VerusIdLogin';
 import { dispatchRemoveNotification, dispatchClearNotifications } from '../../../actions/actions/notifications/dispatchers/notifications';
 // has the state changed hook
@@ -107,6 +108,10 @@ const getNotifications = ({ directory } = notifications, acchash) => {
                 const tempDeepLinkNotification = DeeplinkNotification.fromJson(directory[uid], processVerusId);
                 tempDeepLinkNotification.icon = getIcon(directory[uid].icon, index);
                 tempNotificaions.push(tempDeepLinkNotification);
+            } else if (directory[uid].type === NOTIFICATION_TYPE_VERUS_ID_PROVISIONING) {
+                const tempVerusIdNotification = VerusIdProvisioningNotification.fromJson(directory[uid], processVerusId);
+                tempVerusIdNotification.icon = getIcon(directory[uid].icon, index);
+                tempNotificaions.push(tempVerusIdNotification);
             } else if (directory[uid].type === NOTIFICATION_TYPE_BASIC) {
                 const tempBasicNotification = BasicNotification.fromJson(directory[uid]);
                 tempBasicNotification.icon = getIcon(directory[uid].icon, index);
@@ -249,7 +254,7 @@ const NotificationWidget = ({ props } = props) => {
                                         justifyContent: 'flex-end',
 
                                     }}>
-                                    <TouchableOpacity onPress={() => notification.onAction(props)}>
+                                    <TouchableOpacity onPress={() => notification.isActionable() ? notification.onAction(props) : () =>{}}>
                                         <Paragraph style={{ fontSize: 12, color: "black", textDecorationLine: 'underline' }}>
                                             {notification.body}
                                         </Paragraph>

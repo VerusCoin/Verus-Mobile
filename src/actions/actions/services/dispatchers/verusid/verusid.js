@@ -10,7 +10,7 @@ import { NOTIFICATION_TYPE_VERUSID_READY, NOTIFICATION_TYPE_VERUSID_ERROR, NOTIF
 import { NOTIFICATION_ICON_ERROR, NOTIFICATION_ICON_VERUSID } from '../../../../../utils/constants/notifications';
 import { updatePendingVerusIds } from "../../../channels/verusid/dispatchers/VerusidWalletReduxManager"
 import { dispatchAddNotification } from '../../../notifications/dispatchers/notifications';
-import { DeeplinkNotification, BasicNotification } from '../../../../../utils/notification';
+import { VerusIdProvisioningNotification, BasicNotification } from '../../../../../utils/notification';
 import {requestSeeds} from '../../../../../utils/auth/authBox';
 import {deriveKeyPair} from '../../../../../utils/keys';
 import {ELECTRUM} from '../../../../../utils/constants/intervalConstants';
@@ -196,19 +196,20 @@ export const checkVerusIdNotificationsForUpdates = async () => {
             
             if (responseData.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
 
-              const newDeepLinkNotification = new DeeplinkNotification (
+              const newVerusIdProvisioningNotification = new VerusIdProvisioningNotification (
                 "Retry",
                 [`${pendingIds[ticker][iaddress].provisioningName.split(".")[0]}@`, ` failed to create identity.`],
                 null,
-                null,
+                pendingIds[ticker][iaddress].notificationUid,
                 pendingIds[ticker][iaddress].loginRequest,
-                state.authentication.activeAccount.accountHash
+                state.authentication.activeAccount.accountHash,
+                pendingIds[ticker][iaddress].fqn,
+                null
               ); 
               await deleteProvisionedIds(iaddress, ticker);
               await updatePendingVerusIds();
-              newDeepLinkNotification.icon = NOTIFICATION_ICON_ERROR;
-              newDeepLinkNotification.uid = pendingIds[ticker][iaddress].notificationUid;
-              dispatchAddNotification(newDeepLinkNotification);
+              newVerusIdProvisioningNotification.icon = NOTIFICATION_ICON_ERROR;
+              dispatchAddNotification(newVerusIdProvisioningNotification);
               continue;
             }
           } 
@@ -227,15 +228,15 @@ export const checkVerusIdNotificationsForUpdates = async () => {
         } 
 
         if (errorFound) {
-          const newDeepLinkNotification = new BasicNotification (
+          const newBasicNotification = new BasicNotification (
             "",
             pendingIds[ticker][iaddress].error_desc,
             null,
             state.authentication.activeAccount.accountHash
           );  
-          newDeepLinkNotification.icon = NOTIFICATION_ICON_ERROR;
-          newDeepLinkNotification.uid = pendingIds[ticker][iaddress].notificationUid;
-          dispatchAddNotification(newDeepLinkNotification);
+          newBasicNotification.icon = NOTIFICATION_ICON_ERROR;
+          newBasicNotification.uid = pendingIds[ticker][iaddress].notificationUid;
+          dispatchAddNotification(newBasicNotification);
           continue;
         }
         
@@ -261,19 +262,19 @@ export const checkVerusIdNotificationsForUpdates = async () => {
         await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
         await updatePendingVerusIds();
 
-        const newDeepLinkNotification = new DeeplinkNotification (
+        const newVerusIdProvisioningNotification = new VerusIdProvisioningNotification (
           "link and login",
           [`${identity.result.fullyqualifiedname.substring(0, identity.result.fullyqualifiedname.lastIndexOf('.'))}@`, ` is ready`],
           null,
-          null,
+          pendingIds[ticker][iaddress].notificationUid,
           pendingIds[ticker][iaddress].loginRequest,
-          state.authentication.activeAccount.accountHash
+          state.authentication.activeAccount.accountHash,
+          pendingIds[ticker][iaddress].fqn,
+          null
         ); 
 
-        newDeepLinkNotification.icon = NOTIFICATION_ICON_VERUSID;
-        newDeepLinkNotification.uid = pendingIds[ticker][iaddress].notificationUid;
-        newDeepLinkNotification.extraParams = { iAddress: iaddress, fqn: identity.result.fullyqualifiedname, chain: ticker, fromService: null };
-        dispatchAddNotification(newDeepLinkNotification);
+        newVerusIdProvisioningNotification.icon = NOTIFICATION_ICON_VERUSID;
+        dispatchAddNotification(newVerusIdProvisioningNotification);
       }
     }
   }
