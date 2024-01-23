@@ -13,7 +13,7 @@ import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/di
 import { AUTHENTICATE_USER_SEND_MODAL, SEND_MODAL_USER_ALLOWLIST } from '../../../utils/constants/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import { getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
-import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
+import { createAlert, resolveAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import ListSelectionModal from '../../../components/ListSelectionModal/ListSelectionModal';
 import { copyToClipboard } from '../../../utils/clipboard/clipboard';
@@ -105,9 +105,21 @@ const InvoiceInfo = props => {
   const [verusIdDetailsModalProps, setVerusIdDetailsModalProps] = useState(null);
   const [sigDateString, setSigDateString] = useState(unixToDate(sigtime));
   const [waitingForSignin, setWaitingForSignin] = useState(false);
+
   const accounts = useSelector(state => state.authentication.accounts);
   const signedIn = useSelector(state => state.authentication.signedIn);
   const sendModalType = useSelector(state => state.sendModal.type);
+  const isWrongInvoiceType = useSelector(state => {
+    const isTestAccount =
+      state.authentication.activeAccount &&
+      Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0;
+
+    return (
+      state.authentication.signedIn &&
+      ((isTestAccount && !inv.details.isTestnet()) ||
+      (!isTestAccount && inv.details.isTestnet()))
+    );
+  });
 
   const [sendCurrencyDefinition, setSendCurrencyDefinition] = useState(null);
   const [selectCurrencyModalProps, setSelectCurrencyModalProps] = useState(null);
@@ -174,6 +186,37 @@ const InvoiceInfo = props => {
       " respective volatilites, like the amount of currency in their respective reserves."
     )
   }
+
+  const wrongInvoiceType = isTestInvoice => {
+    createAlert(
+      isTestInvoice ? 'Testnet Invoice' : 'Mainnet Invoice',
+      `This invoice was created for ${
+        isTestInvoice ? 'testnet' : 'mainnet'
+      }, but you are using a ${
+        isTestInvoice ? 'mainnet' : 'testnet'
+      } profile. Please logout, select a ${
+        isTestInvoice ? 'testnet' : 'mainnet'
+      } profile, and retry this invoice to continue.`,
+      [
+        {
+          text: 'Ok',
+          onPress: () => {
+            cancel();
+            resolveAlert(true);
+          },
+        },
+      ],
+      {
+        cancelable: false,
+      },
+    );
+  };
+
+  useEffect(() => {
+    if (isWrongInvoiceType) {
+      wrongInvoiceType(inv.details.isTestnet());
+    }
+  }, [])
 
   useEffect(() => {
     if (signedIn && waitingForSignin) {
@@ -334,6 +377,7 @@ const InvoiceInfo = props => {
           <Button
             color={Colors.verusGreenColor}
             style={{ width: 148 }}
+            disabled={isWrongInvoiceType}
             onPress={() => handleContinue()}>
             Continue
           </Button>
