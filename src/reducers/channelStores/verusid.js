@@ -34,7 +34,8 @@ export const channelStore_verusid = (state = {
       return {
         openCoinChannels: {},
         watchedVerusIds: {},
-        pendingIds: {}
+        pendingIds: {},
+        serviceChannelOpen: false,
       }
     case SET_WATCHED_VERUSIDS:
       return {
