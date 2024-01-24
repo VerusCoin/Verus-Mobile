@@ -15,6 +15,7 @@ import {requestSeeds} from '../../../../../utils/auth/authBox';
 import {deriveKeyPair} from '../../../../../utils/keys';
 import {ELECTRUM} from '../../../../../utils/constants/intervalConstants';
 import { dispatchRemoveNotification } from '../../../../actions/notifications/dispatchers/notifications';
+import { verifyIdProvisioningResponse } from "../../../../../utils/api/channels/vrpc/requests/verifyIdProvisioningResponse";
 
 export const linkVerusId = async (iAddress, fqn, chain) => {
   const state = store.getState();
@@ -174,7 +175,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
   if (pendingIds[ticker]) {
     const details = Object.keys(pendingIds[ticker]);
     for (const iaddress of details) {
-
+      
       // once an ID is linked, remove it from pending IDs, or if the server has rejected it delete.
       if (pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_READY) {
         if (currentLinkedIdentities.indexOf(iaddress) > -1 || pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_FAILED) {
@@ -191,10 +192,18 @@ export const checkVerusIdNotificationsForUpdates = async () => {
         let errorFound = false;
         try {
           if (pendingIds[ticker][iaddress].infoUri) {
-            const response = await axios.get(pendingIds[ticker][iaddress].infoUri);
-            const responseData = new primitives.LoginConsentProvisioningDecision(response.data);
             
-            if (responseData.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
+            const response = await axios.get(pendingIds[ticker][iaddress].infoUri);
+            const responseData = new primitives.LoginConsentProvisioningResponse(response.data);
+            const req = new primitives.LoginConsentRequest();
+            req.fromBuffer(Buffer.from(pendingIds[ticker][iaddress].loginRequest, 'base64'));
+            const verified = await verifyIdProvisioningResponse(system, response.data);
+
+            if (responseData.signing_id !== req.signing_id && !verified) {
+              throw new Error('Failed to verify response from service');
+            }
+            
+            if (responseData.decision.result.state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
 
               const newVerusIdProvisioningNotification = new VerusIdProvisioningNotification (
                 "Retry",
@@ -219,7 +228,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
                 pendingIds[ticker][iaddress].status !== NOTIFICATION_TYPE_VERUSID_ERROR) {
 
             pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_ERROR;
-            pendingIds[ticker][iaddress].error_desc = [`${pendingIds[ticker][iaddress].provisioningName}@`, `server connection error.`]
+            pendingIds[ticker][iaddress].error_desc = [`${pendingIds[ticker][iaddress].provisioningName}@`, ` server connection error.`]
             pendingIds[ticker][iaddress].createdAt = Math.floor(Date.now() / 1000) + 1200;
             await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
             await updatePendingVerusIds();

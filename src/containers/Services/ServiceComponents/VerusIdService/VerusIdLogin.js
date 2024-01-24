@@ -5,7 +5,7 @@ export const processVerusId = async (props, loginConsentRequest, fromService = n
 
     const req = new primitives.LoginConsentRequest();
     req.fromBuffer(Buffer.from(loginConsentRequest, 'base64'));
-  console.log("req", req);
+
     props.dispatch({
       type: SET_DEEPLINK_DATA,
       payload: {
