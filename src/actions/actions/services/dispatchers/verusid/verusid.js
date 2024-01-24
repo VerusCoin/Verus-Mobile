@@ -199,7 +199,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
             req.fromBuffer(Buffer.from(pendingIds[ticker][iaddress].loginRequest, 'base64'));
             const verified = await verifyIdProvisioningResponse(system, response.data);
 
-            if (responseData.signing_id !== req.signing_id && !verified) {
+            if (responseData.signing_id !== req.signing_id || !verified) {
               throw new Error('Failed to verify response from service');
             }
             
@@ -287,4 +287,36 @@ export const checkVerusIdNotificationsForUpdates = async () => {
       }
     }
   }
+};
+
+export const clearOldPendingVerusIds = async () => {
+  const state = store.getState();
+
+  if (state.authentication.activeAccount == null) {
+    throw new Error('You must be signed in for ID provisioning information');
+  }
+
+  const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+  const currentPendingIdentities =
+    serviceData.pending_ids == null ? {} : serviceData.pending_ids;
+
+  const chainObjects = Object.keys(currentPendingIdentities);
+
+  for (const chain of chainObjects) {
+    const ids = Object.keys(currentPendingIdentities[chain] || {});
+    for (const id of ids) {
+      if (currentPendingIdentities[chain][id].createdAt + 604800 < Math.floor(Date.now() / 1000)) {
+        delete currentPendingIdentities[chain][id];
+      }
+    }
+  }
+
+  return await modifyServiceStoredDataForUser(
+    {
+      ...serviceData,
+      pending_ids: currentPendingIdentities,
+    },
+    VERUSID_SERVICE_ID,
+    state.authentication.activeAccount.accountHash,
+  );
 };

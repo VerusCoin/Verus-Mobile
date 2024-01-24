@@ -7,8 +7,10 @@ import {
   SET_WATCHED_VERUSIDS,
   SET_PENDING_VERUSIDS,
 } from "../../../../../utils/constants/storeType";
+import { clearOldPendingVerusIds } from '../../../services/dispatchers/verusid/verusid';
 
 export const initVerusIdWallet = async (coinObj) => {
+  await clearOldPendingVerusIds();
   const verusidServiceData = await requestServiceStoredData(VERUSID_SERVICE_ID)
   Store.dispatch({
     type: INIT_VERUSID_CHANNEL_START,
