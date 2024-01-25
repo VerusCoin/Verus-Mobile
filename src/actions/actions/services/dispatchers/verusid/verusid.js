@@ -212,7 +212,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
                 pendingIds[ticker][iaddress].notificationUid,
                 pendingIds[ticker][iaddress].loginRequest,
                 state.authentication.activeAccount.accountHash,
-                pendingIds[ticker][iaddress].fqn,
+                null,
                 null
               ); 
               await deleteProvisionedIds(iaddress, ticker);
