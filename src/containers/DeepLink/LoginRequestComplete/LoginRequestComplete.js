@@ -30,6 +30,7 @@ const LoginRequestComplete = props => {
   const dispatch = useDispatch();
 
   const cancel = () => {
+    dispatch(resetDeeplinkData());
     props.navigation.dispatch(
       CommonActions.reset({
         index: 0,
