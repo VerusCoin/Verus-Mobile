@@ -20,7 +20,8 @@ import {
   API_GET_WITHDRAW_DESTINATIONS,
   API_GET_DEPOSIT_SOURCES,
   API_GET_PENDING_DEPOSITS,
-  API_GET_LINKED_IDENTITIES
+  API_GET_LINKED_IDENTITIES,
+  API_GET_SERVICE_NOTIFICATIONS
 } from "../utils/constants/intervalConstants";
 import {
   ERROR_BALANCES,
@@ -54,7 +55,9 @@ import {
   ERROR_PENDING_DEPOSITS,
   SET_LINKED_IDENTITIES,
   ERROR_LINKED_IDENTITIES,
-  LOG_NEW_CHANNELS
+  LOG_NEW_CHANNELS,
+  SET_SERVICE_NOTIFICATIONS,
+  ERROR_SERVICE_NOTIFICATIONS
 } from "../utils/constants/storeType";
 
 export const errors = (state = {
@@ -403,6 +406,22 @@ export const errors = (state = {
         [API_GET_SERVICE_RATES]: {
           ...state[API_GET_SERVICE_RATES],
           [channel]: null,
+        },
+      };
+    case SET_SERVICE_NOTIFICATIONS:
+        return {
+          ...state,
+          [API_GET_SERVICE_NOTIFICATIONS]: {
+            ...state[API_GET_SERVICE_NOTIFICATIONS],
+            [channel]: null,
+          },
+        };
+    case ERROR_SERVICE_NOTIFICATIONS:
+      return {
+        ...state,
+        [API_GET_SERVICE_NOTIFICATIONS]: {
+          ...state[API_GET_SERVICE_NOTIFICATIONS],
+          [channel]: error,
         },
       };
     default:

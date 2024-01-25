@@ -20,6 +20,8 @@ import LoginRequestInfo from './LoginRequestInfo/LoginRequestInfo';
 import { getCurrency, getIdentity } from '../../utils/api/channels/verusid/callCreators';
 import { convertFqnToDisplayFormat } from '../../utils/fullyqualifiedname';
 import { resetDeeplinkData } from '../../actions/actionCreators';
+
+const authorizedPermissions = [primitives.IDENTITY_VIEW.vdxfid,/*TODO: primitives.IDENTITY_AGREEMENT.vdxfid, primitives.ATTESTATION_READ_REQUEST.vdxfid */]
 import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 import BigNumber from 'bignumber.js';
 import { blocksToTime, satsToCoins } from '../../utils/math';
@@ -49,7 +51,6 @@ const DeepLink = (props) => {
         routes: [{name: 'SignedOutStack'}],
       });
     }
-
     dispatch(resetDeeplinkData())
     props.navigation.dispatch(resetAction);
   }
@@ -199,7 +200,7 @@ const DeepLink = (props) => {
             for (const requestedPermission of request.challenge
               .requested_access) {
               if (
-                requestedPermission.vdxfkey !== primitives.IDENTITY_VIEW.vdxfid
+                !authorizedPermissions.includes(requestedPermission.vdxfkey)
               ) {
                 throw new Error(
                   'Unrecognized requested permission ' +

@@ -11,17 +11,21 @@ import {CommonActions} from '@react-navigation/native';
 import Colors from '../../../globals/colors';
 import {URL} from 'react-native-url-polyfill';
 import AnimatedActivityIndicator from '../../../components/AnimatedActivityIndicator';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { resetDeeplinkData } from '../../../actions/actionCreators';
+
 
 const LoginRequestComplete = props => {
   const {signedResponse} = props.route.params;
+  const fromService = useSelector((state) => state.deeplink.fromService);
   const res = new primitives.LoginConsentResponse(signedResponse);
   const redirects = res.decision.request.challenge.redirect_uris
     ? res.decision.request.challenge.redirect_uris
     : [];
   let url;
   let urlDisplayString = '';
+  let extraInfo = '';
+  let redirectinfo = null;
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
 
@@ -35,28 +39,24 @@ const LoginRequestComplete = props => {
     );
   };
 
-  redirects.sort(a => {
-    if (a.vdxfkey === primitives.LOGIN_CONSENT_REDIRECT_VDXF_KEY.vdxfid) {
-      return -1;
-    } else {
-      return 1;
-    }
-  });
+  let redirectsObj = {};
+  
+  redirects.forEach(a => {redirectsObj[a.vdxfkey] = a;});
 
-  const redirectinfo = redirects ? redirects[0] : null;
-
-  const isWebhook =
-    redirectinfo.vdxfkey === primitives.LOGIN_CONSENT_WEBHOOK_VDXF_KEY.vdxfid;
-
-  if (!isWebhook) {
+  if (redirectsObj[primitives.LOGIN_CONSENT_REDIRECT_VDXF_KEY.vdxfid]) {
     try {
-      url = new URL(redirectinfo.uri);
+      redirectinfo = redirectsObj[primitives.LOGIN_CONSENT_REDIRECT_VDXF_KEY.vdxfid];
+      url = new URL(redirectsObj[primitives.LOGIN_CONSENT_REDIRECT_VDXF_KEY.vdxfid].uri);
+      extraInfo =  ' and return to\n'
       urlDisplayString = `${url.protocol}//${url.host}`;
     } catch(e) {
       createAlert('Error', e.message);
       cancel();
     }
+  } else {
+    redirectinfo = redirectsObj[primitives.LOGIN_CONSENT_WEBHOOK_VDXF_KEY.vdxfid];
   }
+
 
   const tryRedirect = async () => {
     try {
@@ -70,8 +70,14 @@ const LoginRequestComplete = props => {
 
   const completeDeeplink = async () => {
     if (redirectinfo && redirectinfo.uri) {
-      await tryRedirect();
-      cancel();
+      const returnedData = await tryRedirect();
+      if (fromService) {
+        // Only return to services, default is main home screen.
+        props.navigation.navigate("ServicesHome", { screen: fromService, params: { data: returnedData.data }});
+        dispatch(resetDeeplinkData());
+      } else {
+        cancel();
+      }
     } else {
       cancel();
     }
@@ -126,9 +132,7 @@ const LoginRequestComplete = props => {
                 fontSize: 20,
                 color: Colors.verusDarkGray,
               }}>
-              {`Press done to complete login${
-                isWebhook ? '' : ' and return to\n'
-              }`}
+              {`Press done to complete login${extraInfo}`}
               <Text
                 style={{color: Colors.basicButtonColor, textAlign: 'center'}}>
                 {urlDisplayString}

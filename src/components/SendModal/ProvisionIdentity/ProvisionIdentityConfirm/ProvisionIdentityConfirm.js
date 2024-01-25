@@ -3,19 +3,15 @@ import {Component} from 'react';
 import {Alert} from 'react-native';
 import {connect} from 'react-redux';
 import { primitives } from 'verusid-ts-client';
-import { setUserCoins } from '../../../../actions/actionCreators';
-import {updateVerusIdWallet} from '../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager';
-import {
-  clearChainLifecycle,
-  refreshActiveChainLifecycles,
-} from '../../../../actions/actions/intervals/dispatchers/lifecycleManager';
-import {linkVerusId} from '../../../../actions/actions/services/dispatchers/verusid/verusid';
-import { getIdentity } from '../../../../utils/api/channels/verusid/callCreators';
+import { getIdentity  } from '../../../../utils/api/channels/verusid/callCreators';
 import { signIdProvisioningRequest } from '../../../../utils/api/channels/vrpc/requests/signIdProvisioningRequest';
 import {SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT, SEND_MODAL_IDENTITY_TO_PROVISION_FIELD} from '../../../../utils/constants/sendModal';
 import {ProvisionIdentityConfirmRender} from './ProvisionIdentityConfirm.render';
 import axios from "axios";
 import { handleProvisioningResponse } from '../../../../utils/api/channels/vrpc/requests/handleProvisioningResponse';
+import { LoadingNotification } from '../../../../utils/notification';
+import { dispatchAddNotification } from '../../../../actions/actions/notifications/dispatchers/notifications';
+import { NOTIFICATION_ICON_VERUSID } from '../../../../utils/constants/notifications';
 
 class ProvisionIdentityConfirm extends Component {
   constructor(props) {
@@ -45,7 +41,8 @@ class ProvisionIdentityConfirm extends Component {
       this.props.setPreventExit(false);
       this.props.setLoading(false);
       this.props.navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, {
-        response: response
+        response: response,
+        success: true
       });
     }
 
@@ -79,6 +76,8 @@ class ProvisionIdentityConfirm extends Component {
       
       let identityName;
       let isIAddress;
+      let parent;
+      let systemid
 
       try {
         fromBase58Check(identity);
@@ -93,8 +92,13 @@ class ProvisionIdentityConfirm extends Component {
         if (identityObj.error) throw new Error(identityObj.error.message)
   
         identityName = identityObj.result.identity.name
+        parent = identityObj.result.identity.parent;
+        systemid = identityObj.result.identity.systemid;
+
       } else {
-        identityName = identity.split("@")[0]
+        identityName = identity.split("@")[0];
+        parent = this.state.provParent ? this.state.provParent.data : null;
+        systemid = this.state.provSystemId ? this.state.provSystemId.data : null;
       }
 
       const provisionRequest = new primitives.LoginConsentProvisioningRequest({
@@ -103,31 +107,38 @@ class ProvisionIdentityConfirm extends Component {
           challenge_id: loginRequest.challenge.challenge_id,
           created_at: Number((Date.now() / 1000).toFixed(0)),
           name: identityName,
-          system_id: loginRequest.system_id,
-          parent: loginRequest.parent
+          system_id: systemid,
+          parent: parent
         }),
       });
 
-      const signedRequest = await signIdProvisioningRequest(coinObj, provisionRequest)
+      const signedRequest = await signIdProvisioningRequest(coinObj, provisionRequest);
 
       const res = await axios.post(
         webhookUrl,
         signedRequest
       );
 
-      await handleProvisioningResponse(coinObj, res.data, 5, async (address, fqn) => {
-        await linkVerusId(address, `${fqn}@`, coinObj.id);
-        await updateVerusIdWallet();
-        clearChainLifecycle(coinObj.id);
-        const setUserCoinsAction = setUserCoins(
-          this.props.activeCoinList,
-          this.props.activeAccount.id
-        )
-        this.props.dispatch(setUserCoinsAction);
-  
-        refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);  
-      })
-      submissionSuccess(res)
+      const provisioningName = (await getIdentity(coinObj.system_id, loginRequest.signing_id)).result.identity.name;
+      const newLoadingNotification = new LoadingNotification();
+
+      await handleProvisioningResponse(coinObj, res.data, loginRequest.toBuffer().toString('base64'), 
+        this.props.sendModal.data.fromService, provisioningName, newLoadingNotification.uid, async (fqn) => {
+          
+          newLoadingNotification.body = "";
+          let formattedName = ''
+          const lastDotIndex = fqn.lastIndexOf('.');
+          if (lastDotIndex === -1) formattedName = fqn; // return the original string if there's no dot
+          else formattedName = fqn.substring(0, lastDotIndex);
+
+          newLoadingNotification.title =  [`${formattedName}@`, ` is being provisioned by `, `${provisioningName}@`]
+          newLoadingNotification.acchash = this.props.activeAccount.accountHash;
+          newLoadingNotification.icon = NOTIFICATION_ICON_VERUSID;
+
+          dispatchAddNotification(newLoadingNotification);
+        });
+
+      submissionSuccess(res.data)
     } catch (e) {
       submissionError(e.message)
     }

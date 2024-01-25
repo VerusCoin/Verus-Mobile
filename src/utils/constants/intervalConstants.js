@@ -49,6 +49,7 @@ export const API_GET_PENDING_DEPOSITS = 'get_pending_deposits'
 export const API_GET_TRANSACTIONS = "get_transactions"
 export const API_GET_FIATPRICE = "get_fiatprice"
 export const API_GET_LINKED_IDENTITIES = "get_linked_identities"
+export const API_GET_SERVICE_NOTIFICATIONS = "get_service_notifications"
 
 export const API_SEND = 'send'
 export const API_GET_KEYS = 'get_keys'
