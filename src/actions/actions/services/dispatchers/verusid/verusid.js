@@ -305,7 +305,7 @@ export const clearOldPendingVerusIds = async () => {
   for (const chain of chainObjects) {
     const ids = Object.keys(currentPendingIdentities[chain] || {});
     for (const id of ids) {
-      if (currentPendingIdentities[chain][id].createdAt + 604800 < Math.floor(Date.now() / 1000)) {
+      if ((currentPendingIdentities[chain][id].createdAt + 604800) < Math.floor(Date.now() / 1000)) {
         delete currentPendingIdentities[chain][id];
       }
     }
