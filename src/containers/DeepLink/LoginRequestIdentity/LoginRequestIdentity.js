@@ -64,17 +64,6 @@ const LoginRequestIdentity = props => {
 
   const { system_id } = req;
 
-  const getPotentialPrimaryAddresses = async () => {
-
-    const isTestnet = Object.keys(testnetOverrides).length > 0;
-    const system = isTestnet ? coinsList.VRSCTEST : coinsList.VRSC;
-    const seeds = await requestSeeds();
-    const seed = seeds[ELECTRUM];
-    const keyObj = await deriveKeyPair(seed, system, ELECTRUM);
-    const { addresses } = keyObj;
-    return addresses;
-  };
-
   async function onEncryptedIdsUpdate() {
     setLoading(true)
 

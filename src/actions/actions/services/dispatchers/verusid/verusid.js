@@ -148,12 +148,10 @@ export const checkVerusIdNotificationsForUpdates = async () => {
   const state = store.getState();
 
   const getPotentialPrimaryAddresses = async (coinObj, channel) => {
-    const seeds = await requestSeeds();
 
-    const seed = seeds[channel];
-
-    const keyObj = await deriveKeyPair(seed, coinObj, channel);
-    const {addresses} = keyObj;
+    let addresses = [];
+    try {addresses = state.authentication.activeAccount.keys[coinObj.id].vrpc.addresses;}
+    catch (e) {}
 
     return addresses;
   };
@@ -171,7 +169,6 @@ export const checkVerusIdNotificationsForUpdates = async () => {
 
   const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
   const currentLinkedIdentities =  Object.keys(serviceData.linked_ids && serviceData.linked_ids[ticker] || {});
-
   if (pendingIds[ticker]) {
     const details = Object.keys(pendingIds[ticker]);
     for (const iaddress of details) {
@@ -228,7 +225,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
                 pendingIds[ticker][iaddress].status !== NOTIFICATION_TYPE_VERUSID_ERROR) {
 
             pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_ERROR;
-            pendingIds[ticker][iaddress].error_desc = [`${pendingIds[ticker][iaddress].provisioningName}@`, ` server connection error.`]
+            pendingIds[ticker][iaddress].error_desc = [`${pendingIds[ticker][iaddress].provisioningName}@`, ` connection error. Provisioning status unknown.`]
             pendingIds[ticker][iaddress].createdAt = Math.floor(Date.now() / 1000) + 1200;
             await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
             await updatePendingVerusIds();
@@ -252,7 +249,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
       }
 
       const identity = await getIdentity(system.system_id, iaddress);
-      const addrs = await getPotentialPrimaryAddresses(system, ELECTRUM);
+      const addrs = await getPotentialPrimaryAddresses(system);
       let isInWallet = false;
 
       if (identity.result) {
