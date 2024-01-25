@@ -1,7 +1,7 @@
 import {
   SET_DEEPLINK_DATA,
     SET_DEEPLINK_URL,
-    SET_DEEPLINK_DATA_EXTRAPARAMS
+    SET_DEEPLINK_PASSTHROUGH_DATA
   } from "../utils/constants/storeType";
   
   export const deeplink = (
@@ -10,7 +10,7 @@ import {
       data: {},
       id: null,
       fromService: null,
-      extraParams: null
+      passthrough: null
     },
     action
   ) => {
@@ -26,12 +26,12 @@ import {
           id: action.payload.id,
           data: action.payload.data,
           fromService: action.payload.fromService,
-          extraParams: action.payload.extraParams
+          passthrough: action.payload.passthrough
         }
-      case SET_DEEPLINK_DATA_EXTRAPARAMS:
+      case SET_DEEPLINK_PASSTHROUGH_DATA:
         return {
           ...state,
-          extraParams: action.payload.extraParams
+          passthrough: action.payload.passthrough
         }
       default:
         return state;

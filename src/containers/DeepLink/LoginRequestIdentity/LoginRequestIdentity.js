@@ -8,7 +8,6 @@ import { openLinkIdentityModal, openProvisionIdentityModal } from '../../../acti
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import { requestServiceStoredData } from '../../../utils/auth/authBox';
 import { VERUSID_SERVICE_ID } from '../../../utils/constants/services';
-import { findCoinObj } from '../../../utils/CoinData/CoinData';
 import { Divider, List } from 'react-native-paper';
 import { signLoginConsentResponse } from '../../../utils/api/channels/vrpc/requests/signLoginConsentResponse';
 import BigNumber from 'bignumber.js';
@@ -20,23 +19,19 @@ import { ELECTRUM } from '../../../utils/constants/intervalConstants';
 import { coinsList } from '../../../utils/CoinData/CoinsList';
 import { requestSeeds } from '../../../utils/auth/authBox';
 import { deriveKeyPair } from '../../../utils/keys';
-import { SET_DEEPLINK_DATA_EXTRAPARAMS } from "../../../utils/constants/storeType";
-import { getIdentity } from "../../../utils/api/channels/verusid/callCreators";
 
 const LoginRequestIdentity = props => {
   const { deeplinkData } = props.route.params
   const [loading, setLoading] = useState(false)
   const [linkedIds, setLinkedIds] = useState({})
   const [sortedIds, setSortedIds] = useState({});
-  const [idsloaded, setIdsloaded] = useState(false);
   const [idProvisionSuccess, setIdProvisionSuccess] = useState(false)
   const [canProvision, setCanProvision] = useState(false)
   const req = new primitives.LoginConsentRequest(deeplinkData)
   const encryptedIds = useSelector(state => state.services.stored[VERUSID_SERVICE_ID])
   const sendModal = useSelector((state) => state.sendModal);
   const fromService = useSelector((state) => state.deeplink.fromService);
-  const extraParams = useSelector((state) => state.deeplink.extraParams);
-  const dispatch = useDispatch()
+  const passthrough = useSelector((state) => state.deeplink.passthrough);
 
   useEffect(() => {
     let canProvision = req.challenge.provisioning_info && req.challenge.provisioning_info.some(x => {
@@ -93,7 +88,6 @@ const LoginRequestIdentity = props => {
       } else {
         setLinkedIds({})
       }
-      setIdsloaded(true);
 
     } catch (e) {
       createAlert('Error Loading Linked VerusIDs', e.message);
@@ -103,42 +97,13 @@ const LoginRequestIdentity = props => {
   } 
 
   useEffect(() => {
-    if(extraParams && extraParams.fqn){
-      const data = {[SEND_MODAL_IDENTITY_TO_LINK_FIELD]: extraParams.fqn};
+    if(passthrough && passthrough.fqnToAutoLink){
+      const data = {[SEND_MODAL_IDENTITY_TO_LINK_FIELD]: passthrough.fqnToAutoLink};
       openLinkIdentityModal(CoinDirectory.findCoinObj(system_id, null, true), data);
     }
-  }, [extraParams])
+  }, [passthrough])
 
-  useEffect(() => {
-
-    if (idsloaded && req.challenge.subject && req.challenge.subject.length > 0 &&
-      req.challenge.subject.some(item => item.vdxfkey === primitives.ID_ADDRESS_VDXF_KEY.vdxfid)) {
-
-        const providionedId = req.challenge.subject.find(item => item.vdxfkey === primitives.ID_ADDRESS_VDXF_KEY.vdxfid).data;
-        for (const chainId of activeCoinIds) { 
-          if (linkedIds[chainId] && Object.keys(linkedIds[chainId]).includes(providionedId)) {
-            return;
-          }
-        }
-      getIdentity(system_id, providionedId).then((provisionedID) => {
-        getPotentialPrimaryAddresses().then((addresses) => {
-          if (provisionedID.result) {
-            for (const address of provisionedID.result.identity.primaryaddresses) {
-              if (addresses.includes(address)) {
-                dispatch({
-                  type: SET_DEEPLINK_DATA_EXTRAPARAMS,
-                  payload: {
-                    extraParams: { fqn: provisionedID.result.fullyqualifiedname }
-                  },
-                });
-                return;
-              }
-            }
-          }
-        })
-      })
-    }
-  }, [idsloaded])
+  //TODO: add a check that checks to see if the ID is ready, and relates to the provider.
 
   useEffect(() => {
     onEncryptedIdsUpdate()

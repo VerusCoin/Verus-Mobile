@@ -96,19 +96,16 @@ const getIcon = (type, index) => {
     }
 }
 
-const getNotifications = ({ directory } = notifications, acchash) => {
+const getNotifications = (notifications, acchash) => {
 
+    const { directory } = notifications;
     let tempNotificaions = [];
-    const keys = Object.keys(directory);
+    const keys = Object.keys(directory || {});
 
     keys.forEach((uid, index) => {
 
         if (directory[uid].acchash === acchash) {
-            if (directory[uid].type === NOTIFICATION_TYPE_DEEPLINK) {
-                const tempDeepLinkNotification = DeeplinkNotification.fromJson(directory[uid], processVerusId);
-                tempDeepLinkNotification.icon = getIcon(directory[uid].icon, index);
-                tempNotificaions.push(tempDeepLinkNotification);
-            } else if (directory[uid].type === NOTIFICATION_TYPE_VERUS_ID_PROVISIONING) {
+            if (directory[uid].type === NOTIFICATION_TYPE_VERUS_ID_PROVISIONING) {
                 const tempVerusIdNotification = VerusIdProvisioningNotification.fromJson(directory[uid], processVerusId);
                 tempVerusIdNotification.icon = getIcon(directory[uid].icon, index);
                 tempNotificaions.push(tempVerusIdNotification);
@@ -121,6 +118,7 @@ const getNotifications = ({ directory } = notifications, acchash) => {
                 tempLoadingNotification.icon = getIcon(directory[uid].icon, index);
                 tempNotificaions.push(tempLoadingNotification);
             }
+            //TODO: add deeplink notification type 
         }
     });
     return tempNotificaions;

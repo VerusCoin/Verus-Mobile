@@ -11,7 +11,9 @@ import {CommonActions} from '@react-navigation/native';
 import Colors from '../../../globals/colors';
 import {URL} from 'react-native-url-polyfill';
 import AnimatedActivityIndicator from '../../../components/AnimatedActivityIndicator';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { resetDeeplinkData } from '../../../actions/actionCreators';
+
 
 const LoginRequestComplete = props => {
   const {signedResponse} = props.route.params;
@@ -25,6 +27,7 @@ const LoginRequestComplete = props => {
   let extraInfo = '';
   let redirectinfo = null;
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
 
   const cancel = () => {
     props.navigation.dispatch(
@@ -70,6 +73,7 @@ const LoginRequestComplete = props => {
       if (fromService) {
         // Only return to services, default is main home screen.
         props.navigation.navigate("ServicesHome", { screen: fromService, params: { data: returnedData.data }});
+        dispatch(resetDeeplinkData());
       } else {
         cancel();
       }
