@@ -8,52 +8,64 @@ import DeepLinkStackScreens from './DeepLinkStackScreens/DeepLinkStackScreens';
 import {useSelector} from 'react-redux';
 import LoginRequestInfo from '../DeepLink/LoginRequestInfo/LoginRequestInfo';
 import InvoiceInfo from '../DeepLink/InvoiceInfo/InvoiceInfo';
+import Colors from '../../globals/colors';
+import { SafeAreaView } from 'react-native';
 
 const RootStack = createStackNavigator();
 
 const RootStackScreens = props => {
   return (
-    <RootStack.Navigator
-      screenOptions={{
-        mode: 'modal',
-        headerShown: false,
-      }}>
-      {props.loading ? (
-        <RootStack.Screen name="LoadingStack" component={LoadingStackScreens} />
-      ) : props.hasAccount ? (
-        props.signedIn ? (
-          <RootStack.Screen name="SignedInStack" component={SignedInStackScreens} />
+    <SafeAreaView style={{
+      flex: 1,
+      backgroundColor: !props.loading &&
+        props.signedIn &&
+        props.hasAccount ?
+        Colors.primaryColor
+        :
+        Colors.secondaryColor
+    }}>
+      <RootStack.Navigator
+        screenOptions={{
+          mode: 'modal',
+          headerShown: false,
+        }}>
+        {props.loading ? (
+          <RootStack.Screen name="LoadingStack" component={LoadingStackScreens} />
+        ) : props.hasAccount ? (
+          props.signedIn ? (
+            <RootStack.Screen name="SignedInStack" component={SignedInStackScreens} />
+          ) : (
+            <RootStack.Screen
+              name="SignedOutStack"
+              component={SignedOutStackScreens}
+              options={{
+                headerRight: () => null,
+              }}
+            />
+          )
         ) : (
           <RootStack.Screen
-            name="SignedOutStack"
-            component={SignedOutStackScreens}
-            options={{
-              headerRight: () => null,
-            }}
+            name="SignedOutNoKeyStack"
+            component={SignedOutNoKeyStackScreens}
           />
-        )
-      ) : (
+        )}
         <RootStack.Screen
-          name="SignedOutNoKeyStack"
-          component={SignedOutNoKeyStackScreens}
+          name="DeepLink"
+          component={DeepLinkStackScreens}
+          options={{ headerShown: false }}
         />
-      )}
-      <RootStack.Screen
-        name="DeepLink"
-        component={DeepLinkStackScreens}
-        options={{headerShown: false}}
-      />
-      <RootStack.Screen
-        name="LoginRequestInfo"
-        component={LoginRequestInfo}
-        options={{headerShown: false}}
-      />
-      <RootStack.Screen
-        name="InvoiceInfo"
-        component={InvoiceInfo}
-        options={{headerShown: false}}
-      />
-    </RootStack.Navigator>
+        <RootStack.Screen
+          name="LoginRequestInfo"
+          component={LoginRequestInfo}
+          options={{ headerShown: false }}
+        />
+        <RootStack.Screen
+          name="InvoiceInfo"
+          component={InvoiceInfo}
+          options={{ headerShown: false }}
+        />
+      </RootStack.Navigator>
+    </SafeAreaView>
   );
 };
 
