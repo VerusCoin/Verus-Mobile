@@ -36,6 +36,7 @@ import { openSubwalletSendModal } from "../../actions/actions/sendModal/dispatch
 import { SEND_MODAL_AMOUNT_FIELD, SEND_MODAL_MEMO_FIELD, SEND_MODAL_TO_ADDRESS_FIELD } from "../../utils/constants/sendModal";
 import { SET_DEEPLINK_DATA } from "../../utils/constants/storeType";
 import { getCurrency } from "../../utils/api/channels/verusid/callCreators";
+import { CommonActions } from "@react-navigation/routers";
 
 class VerusPay extends Component {
   constructor(props) {
@@ -86,26 +87,37 @@ class VerusPay extends Component {
     if (url.host !== CALLBACK_HOST)
       throw new Error('Unsupported deeplink host url.');
 
-    const id = url.pathname.replace(/\//g, '');
+    const id = url.pathname.split('/')[1];
 
-    if (!SUPPORTED_DLS.includes(id))
+    if (!SUPPORTED_DLS.includes(id)) {
       throw new Error('Unsupported deeplink url path.');
+    }
+      
 
-    const req = new primitives.LoginConsentRequest();
-    req.fromBuffer(
-      base64url.toBuffer(
-        url.searchParams.get(primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid),
-      ),
-    );
+    let dl;
+
+    if (id === primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid) {
+      dl = new primitives.LoginConsentRequest();
+      dl.fromBuffer(
+        base64url.toBuffer(
+          url.searchParams.get(primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid),
+        ),
+      );
+    } else if (id === primitives.VERUSPAY_INVOICE_VDXF_KEY.vdxfid) {
+      dl = primitives.VerusPayInvoice.fromWalletDeeplinkUri(urlstring);
+    }
 
     this.props.dispatch({
       type: SET_DEEPLINK_DATA,
       payload: {
         id,
-        data: req.toJson(),
+        data: dl.toJson(),
       },
     });
-    this.props.navigation.navigate('DeepLink');
+    this.props.navigation.dispatch(CommonActions.reset({
+      index: 0,
+      routes: [{name: 'DeepLink'}],
+    }));
   }
 
   onSuccess(e) {

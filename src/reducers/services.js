@@ -10,7 +10,8 @@ import {
   SET_SERVICE_STORED_DATA,
   SET_SERVICE_PAYMENT_METHODS,
   SET_SERVICE_TRANSFERS,
-  SET_SERVICE_RATES
+  SET_SERVICE_RATES,
+  SET_SERVICE_NOTIFICATIONS
 } from "../utils/constants/storeType";
 
 export const services = (
@@ -30,6 +31,14 @@ export const services = (
 ) => {
   switch (action.type) {
     case SET_SERVICE_ACCOUNT:
+      return {
+        ...state,
+        accounts: {
+          ...state.accounts,
+          [action.payload.channel]: action.payload.body,
+        },
+      };
+    case SET_SERVICE_NOTIFICATIONS:
       return {
         ...state,
         accounts: {

@@ -15,6 +15,9 @@ import Sell from './sell.png';
 import Calendar from './calendar.png';
 import Verus from './Verus.png';
 import BankBuildingBlack from './bankBuildingBlack.png';
+import Revoke from './revoke-icon.png';
+import Recover from './recover-icon.png';
+import Coins from './coins-icon.png';
 
 import TransactionLogos from './transactions/index'
 
@@ -32,6 +35,10 @@ import MnemonicSeed from './MnemonicSeed.svg'
 import TwentyFourWordIcon from './TwentyFourWordIcon'
 import EnterKeyIcon from './EnterKeyIcon'
 import ScanQrIcon from './ScanQrIcon'
+import ReceivedIcon from './received-icon.svg'
+import VerusIdAtIcon from './verusid-at-icon.svg'
+import VerusIdErrorIcon from './verusid-error-icon.svg'
+import VerusIdWallet from './verusid-wallet-bg-blue.svg'
 
 export {
   Open,
@@ -64,7 +71,14 @@ export {
   MnemonicSeed,
   TwentyFourWordIcon,
   EnterKeyIcon,
-  ScanQrIcon
+  ScanQrIcon,
+  ReceivedIcon,
+  VerusIdAtIcon,
+  VerusIdErrorIcon,
+  VerusIdWallet,
+  Revoke,
+  Recover,
+  Coins
 };
 
 export default Open;

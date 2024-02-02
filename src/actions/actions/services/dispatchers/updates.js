@@ -6,7 +6,8 @@ import {
   API_GET_SERVICE_ACCOUNT,
   API_GET_SERVICE_PAYMENT_METHODS,
   API_GET_SERVICE_TRANSFERS,
-  API_GET_SERVICE_RATES
+  API_GET_SERVICE_RATES,
+  API_GET_SERVICE_NOTIFICATIONS
 } from '../../../../utils/constants/intervalConstants'
 import {
   occupyServiceApiCall,
@@ -17,12 +18,14 @@ import { updateServiceAccount } from './UpdateServiceAccount';
 import { updateServicePaymentMethods } from './UpdateServicePaymentMethods';
 import { updateServiceRates } from './UpdateServiceRates';
 import { updateServiceTransfers } from './UpdateServiceTransfers';
+import { updateServiceNotifications } from './UpdateServiceNotifications';
 
 export const serviceUpdates = {
   [API_GET_SERVICE_ACCOUNT]: updateServiceAccount,
   [API_GET_SERVICE_PAYMENT_METHODS]: updateServicePaymentMethods,
   [API_GET_SERVICE_TRANSFERS]: updateServiceTransfers,
-  [API_GET_SERVICE_RATES]: updateServiceRates
+  [API_GET_SERVICE_RATES]: updateServiceRates,
+  [API_GET_SERVICE_NOTIFICATIONS]: updateServiceNotifications
 }
 
 /**

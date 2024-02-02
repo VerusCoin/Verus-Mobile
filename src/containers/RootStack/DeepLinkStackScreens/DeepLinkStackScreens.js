@@ -4,6 +4,7 @@ import { defaultHeaderOptions } from '../../../utils/navigation/header';
 import DeepLink from '../../DeepLink/DeepLink';
 import LoginRequestIdentity from '../../DeepLink/LoginRequestIdentity/LoginRequestIdentity';
 import LoginRequestComplete from '../../DeepLink/LoginRequestComplete/LoginRequestComplete';
+import InvoicePaymentConfiguration from '../../DeepLink/InvoicePaymentConfiguration/InvoicePaymentConfiguration';
 
 const DeepLinkStack = createStackNavigator();
 
@@ -32,6 +33,14 @@ const DeepLinkStackScreens = props => {
         component={LoginRequestComplete}
         options={{
           headerShown: false
+        }}
+      />
+      <DeepLinkStack.Screen
+        name="InvoicePaymentConfiguration"
+        component={InvoicePaymentConfiguration}
+        options={{
+          headerRight: () => null,
+          title: "Configure Payment"
         }}
       />
     </DeepLinkStack.Navigator>

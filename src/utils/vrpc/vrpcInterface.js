@@ -168,6 +168,10 @@ class VrpcInterface {
     return this.lastRequestTimes.has(id) ? this.lastRequestTimes.get(id) : 0
   }
 
+  isSystemIdActivated(systemId) {
+    return this.systemEndpointIds.hasOwnProperty(systemId);
+  }
+
   removeChainEndpoint(systemId, endpoint) {
     if (this.systemEndpointIds[systemId] == null) this.systemEndpointIds[systemId] = [];
     const id = VrpcInterface.getEndpointId(systemId, endpoint);
