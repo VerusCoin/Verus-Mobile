@@ -8,7 +8,7 @@ import { getIdentity } from '../../../utils/api/channels/verusid/callCreators';
 import { blocksToTime, satsToCoins, unixToDate } from '../../../utils/math';
 import { useSelector } from 'react-redux';
 import Colors from '../../../globals/colors';
-import { VerusIdLogo } from '../../../images/customIcons';
+import { VerusPayTextLogo } from '../../../images/customIcons';
 import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import { AUTHENTICATE_USER_SEND_MODAL, SEND_MODAL_USER_ALLOWLIST } from '../../../utils/constants/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
@@ -283,7 +283,7 @@ const InvoiceInfo = props => {
         <ScrollView
           style={Styles.fullWidth}
           contentContainerStyle={Styles.focalCenter}>
-          <VerusIdLogo width={'55%'} height={'10%'} />
+          <VerusPayTextLogo width={'55%'} height={'10%'} />
           <TouchableOpacity
             disabled={inv.details.acceptsAnyDestination()}
             style={Styles.wideBlock}
