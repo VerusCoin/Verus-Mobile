@@ -211,7 +211,7 @@ const ProvisionIdentityForm = (props) => {
         <View style={Styles.wideBlock}>
         <TextInput
           returnKeyType="done"
-          label={state.parentname ? "VerusID handle" : "i-Address or VerusID handle"}
+          label={state.parentname ? "VerusID name" : "i-Address or VerusID name"}
           value={state.assignedIdentity
             ? state.friendlyNameMap[state.assignedIdentity]
               ? `${state.friendlyNameMap[state.assignedIdentity]}`
@@ -220,7 +220,7 @@ const ProvisionIdentityForm = (props) => {
           mode="outlined"
           disabled={state.assignedIdentity != null || state.loading}
           onChangeText={text => {
-            if (state.assignedIdentity == null) {
+            if (state.assignedIdentity == null && !text.endsWith("@")) {
               props.updateSendFormData(
                 SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
                 text
