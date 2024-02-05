@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { primitives } from "verusid-ts-client";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
-import { getCurrency, getIdentity } from "../../../../utils/api/channels/verusid/callCreators";
+import { getIdentity } from "../../../../utils/api/channels/verusid/callCreators";
 import {
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
@@ -14,9 +14,8 @@ import {
   View,
   TouchableWithoutFeedback,
   Keyboard,
-  Text
 } from "react-native";
-import { TextInput, Button } from "react-native-paper";
+import { TextInput, Button, Paragraph } from "react-native-paper";
 import Styles from "../../../../styles";
 
 const ProvisionIdentityForm = (props) => {
@@ -141,7 +140,11 @@ const ProvisionIdentityForm = (props) => {
         return true;
       }
     } catch (e) {
-      const formattedId = state.parentname ? `${identity}${state.parentname}` : identity;
+      const formattedId = state.parentname ? 
+        identity.endsWith("@") ? 
+        `${identity.substring(0, identity.length - 1)}${state.parentname}`
+        : `${identity}${state.parentname}`
+      : identity;
       if (!formattedId.endsWith('@')) {
         createAlert(
           'Invalid Identity',
@@ -161,7 +164,9 @@ const ProvisionIdentityForm = (props) => {
   
     const { coinObj, data } = sendModal;
     const identity = data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD];
-    const formattedId = state.parentname ? `${identity}${state.parentname}` : identity;
+    const formattedId = state.parentname ?  identity.endsWith("@") 
+      ? `${identity.substring(0, identity.length - 1)}${state.parentname}`
+      : `${identity}${state.parentname}` : identity;
 
     try {
       const res = await getIdentity(coinObj.system_id, formattedId);
@@ -173,10 +178,7 @@ const ProvisionIdentityForm = (props) => {
       }
   
       props.setModalHeight(496);
-      props.updateSendFormData(
-        SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
-        formattedId,
-      );
+
   
       props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
         primaryAddress: addresses[0],
@@ -228,15 +230,19 @@ const ProvisionIdentityForm = (props) => {
           autoCapitalize="none"
           autoCorrect={false}
         />
-         <Text>{"Your Fully qualified name will be: \n\n"}{
+         <Paragraph style={{color: "grey"}}>{"Your Fully qualified name will be: \n\n"}{
             state.assignedIdentity
               ? state.friendlyNameMap[state.assignedIdentity]
                 ? `${
                     state.friendlyNameMap[state.assignedIdentity]
                   }`
                 : state.assignedIdentity
-              : sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]
-          }{state.parentname}</Text> 
+              : (sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD].endsWith("@") && state.parentname) 
+                ? sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]
+                .substring(0, sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD].length - 1)
+                : sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]
+                  
+          }{state.parentname}</Paragraph> 
         </View>
         <View style={{ ...Styles.wideBlock, paddingTop: 0 }}>
           <Button mode="contained" onPress={() => submitData()} disabled={state.loading}>
