@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { primitives } from "verusid-ts-client";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
-import { getCurrency, getIdentity } from "../../../../utils/api/channels/verusid/callCreators";
+import { getIdentity } from "../../../../utils/api/channels/verusid/callCreators";
 import {
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
@@ -14,9 +14,8 @@ import {
   View,
   TouchableWithoutFeedback,
   Keyboard,
-  Text
 } from "react-native";
-import { TextInput, Button } from "react-native-paper";
+import { TextInput, Button, Paragraph } from "react-native-paper";
 import Styles from "../../../../styles";
 
 const ProvisionIdentityForm = (props) => {
@@ -173,10 +172,7 @@ const ProvisionIdentityForm = (props) => {
       }
   
       props.setModalHeight(496);
-      props.updateSendFormData(
-        SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
-        formattedId,
-      );
+
   
       props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
         primaryAddress: addresses[0],
@@ -209,7 +205,7 @@ const ProvisionIdentityForm = (props) => {
         <View style={Styles.wideBlock}>
         <TextInput
           returnKeyType="done"
-          label={state.parentname ? "VerusID handle" : "i-Address or VerusID handle"}
+          label={state.parentname ? "VerusID name" : "i-Address or VerusID name"}
           value={state.assignedIdentity
             ? state.friendlyNameMap[state.assignedIdentity]
               ? `${state.friendlyNameMap[state.assignedIdentity]}`
@@ -218,7 +214,7 @@ const ProvisionIdentityForm = (props) => {
           mode="outlined"
           disabled={state.assignedIdentity != null || state.loading}
           onChangeText={text => {
-            if (state.assignedIdentity == null) {
+            if (state.assignedIdentity == null && !text.endsWith("@")) {
               props.updateSendFormData(
                 SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
                 text
@@ -228,15 +224,15 @@ const ProvisionIdentityForm = (props) => {
           autoCapitalize="none"
           autoCorrect={false}
         />
-         <Text>{"Your Fully qualified name will be: \n\n"}{
+         <Paragraph style={{color: "grey"}}>{"Your Fully qualified name will be: \n\n"}{
             state.assignedIdentity
-              ? state.friendlyNameMap[state.assignedIdentity]
-                ? `${
-                    state.friendlyNameMap[state.assignedIdentity]
-                  }`
-                : state.assignedIdentity
-              : sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]
-          }{state.parentname}</Text> 
+            ? state.friendlyNameMap[state.assignedIdentity]
+              ? `${
+                  state.friendlyNameMap[state.assignedIdentity]
+                }`
+              : state.assignedIdentity
+            : sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]
+          }{state.parentname}</Paragraph> 
         </View>
         <View style={{ ...Styles.wideBlock, paddingTop: 0 }}>
           <Button mode="contained" onPress={() => submitData()} disabled={state.loading}>
