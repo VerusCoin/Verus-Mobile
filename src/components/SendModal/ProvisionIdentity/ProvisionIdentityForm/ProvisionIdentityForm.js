@@ -140,11 +140,7 @@ const ProvisionIdentityForm = (props) => {
         return true;
       }
     } catch (e) {
-      const formattedId = state.parentname ? 
-        identity.endsWith("@") ? 
-        `${identity.substring(0, identity.length - 1)}${state.parentname}`
-        : `${identity}${state.parentname}`
-      : identity;
+      const formattedId = state.parentname ? `${identity}${state.parentname}` : identity;
       if (!formattedId.endsWith('@')) {
         createAlert(
           'Invalid Identity',
@@ -164,9 +160,7 @@ const ProvisionIdentityForm = (props) => {
   
     const { coinObj, data } = sendModal;
     const identity = data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD];
-    const formattedId = state.parentname ?  identity.endsWith("@") 
-      ? `${identity.substring(0, identity.length - 1)}${state.parentname}`
-      : `${identity}${state.parentname}` : identity;
+    const formattedId = state.parentname ? `${identity}${state.parentname}` : identity;
 
     try {
       const res = await getIdentity(coinObj.system_id, formattedId);
@@ -232,16 +226,12 @@ const ProvisionIdentityForm = (props) => {
         />
          <Paragraph style={{color: "grey"}}>{"Your Fully qualified name will be: \n\n"}{
             state.assignedIdentity
-              ? state.friendlyNameMap[state.assignedIdentity]
-                ? `${
-                    state.friendlyNameMap[state.assignedIdentity]
-                  }`
-                : state.assignedIdentity
-              : (sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD].endsWith("@") && state.parentname) 
-                ? sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]
-                .substring(0, sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD].length - 1)
-                : sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]
-                  
+            ? state.friendlyNameMap[state.assignedIdentity]
+              ? `${
+                  state.friendlyNameMap[state.assignedIdentity]
+                }`
+              : state.assignedIdentity
+            : sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]
           }{state.parentname}</Paragraph> 
         </View>
         <View style={{ ...Styles.wideBlock, paddingTop: 0 }}>
