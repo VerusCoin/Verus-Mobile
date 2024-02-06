@@ -282,7 +282,7 @@ android {
     // applicationVariants are e.g. debug, release
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
-            outputFileName = "VerusMobile-${defaultConfig.versionName}.apk"
+            outputFileName = "VerusWallet-${defaultConfig.versionName}.apk"
         }
     }
 }
