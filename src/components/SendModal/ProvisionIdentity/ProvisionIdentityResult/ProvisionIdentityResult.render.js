@@ -16,7 +16,7 @@ export const ProvisionIdentitySuccessRender = function () {
   const {decision} = response;
   const {result} = decision;
   const coinObj = this.props.sendModal.coinObj;
-  const formattedFriendlyName = verusId.fullyqualifiedname.replace(".VRSC@", "@");
+  const formattedFriendlyName = result.fully_qualified_name.replace(".VRSC@", "@");
 
   return (
     <ScrollView
