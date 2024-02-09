@@ -44,6 +44,8 @@ const LoginRequestInfo = props => {
   const activeAccount = useSelector(
     state => state.authentication.activeAccount,
   );
+
+  const isTestnet = activeAccount ? Object.keys(activeAccount.testnetOverrides).length > 0 : false;
   const activeCoinList = useSelector(state => state.coins.activeCoinList);
 
   const getVerusId = async (chain, iAddrOrName) => {
@@ -176,7 +178,16 @@ const LoginRequestInfo = props => {
 
   const handleContinue = () => {
     if (signedIn) {
-      if (!rootSystemAdded) {
+      const coinObj = CoinDirectory.findCoinObj(chain_id);
+      if (coinObj.testnet != isTestnet) {
+        createAlert(
+          "Incorrect profile type",
+          `Please login to a ${
+            coinObj.testnet ? 'testnet' : 'mainnet'
+            } profile to use this login request.`, );
+        return;
+      }
+      else if (!rootSystemAdded) {
         tryAddRootSystem()
       } else {
         props.navigation.navigate('LoginRequestIdentity', {
