@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 
 export const LinkIdentityResultRender = ({verusId, finishSend}) => {
   const coinObj = useSelector(state => state.sendModal.coinObj);
+  const formattedFriendlyName = verusId.fullyqualifiedname.replace(".VRSC@", "@");
 
   return (
     <ScrollView
@@ -29,13 +30,13 @@ export const LinkIdentityResultRender = ({verusId, finishSend}) => {
           marginTop: 16,
         }}>
         <Text
-          numberOfLines={1}
+          numberOfLines={3}
           style={{
             textAlign: 'center',
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {`${verusId.friendlyname} linked`}
+          {`${formattedFriendlyName} linked`}
         </Text>
       </TouchableOpacity>
       <View style={{paddingVertical: 16}}>

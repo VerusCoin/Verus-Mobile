@@ -16,6 +16,7 @@ export const ProvisionIdentitySuccessRender = function () {
   const {decision} = response;
   const {result} = decision;
   const coinObj = this.props.sendModal.coinObj;
+  const formattedFriendlyName = verusId.fullyqualifiedname.replace(".VRSC@", "@");
 
   return (
     <ScrollView
@@ -31,7 +32,7 @@ export const ProvisionIdentitySuccessRender = function () {
               fontSize: 20,
               color: Colors.verusDarkGray,
             }}>
-            {`Creating ${result.fully_qualified_name}`}
+            {`Creating ${formattedFriendlyName}`}
           </Text>
 
         <View style={{paddingVertical: 16}}>
