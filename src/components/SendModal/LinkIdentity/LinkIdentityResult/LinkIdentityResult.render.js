@@ -35,7 +35,7 @@ export const LinkIdentityResultRender = ({verusId, finishSend}) => {
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {`${verusId.identity.name}@ linked`}
+          {`${verusId.friendlyname} linked`}
         </Text>
       </TouchableOpacity>
       <View style={{paddingVertical: 16}}>
