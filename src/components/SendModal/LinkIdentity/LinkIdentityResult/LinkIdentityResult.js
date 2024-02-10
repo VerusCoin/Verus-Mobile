@@ -6,8 +6,16 @@ import {LinkIdentityResultRender} from './LinkIdentityResult.render';
 const LinkIdentityResult = (props) => {
   const [verusId, setVerusId] = useState(props.route.params == null ? {} : props.route.params.verusId);
   const [friendlyNames, setFriendlyNames] = useState(props.route.params == null ? {} : props.route.params.friendlyNames);
+  const sendModal = useSelector(state => state.sendModal);
+  const {data} = sendModal;
 
-  const finishSend = () => {
+  const finishSend = async () => {
+    if (data.noLogin) {
+      await props.updateSendFormData(
+        "success",
+        true,
+      );
+    }
     closeSendModal()
   };
 

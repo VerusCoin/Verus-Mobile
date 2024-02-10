@@ -12,6 +12,7 @@ import { handleProvisioningResponse } from '../../../../utils/api/channels/vrpc/
 import { LoadingNotification } from '../../../../utils/notification';
 import { dispatchAddNotification } from '../../../../actions/actions/notifications/dispatchers/notifications';
 import { NOTIFICATION_ICON_VERUSID } from '../../../../utils/constants/notifications';
+import  { getVdxfId } from '../../../../utils/api/channels/vrpc/requests/getVdxfid';
 
 class ProvisionIdentityConfirm extends Component {
   constructor(props) {
@@ -37,11 +38,12 @@ class ProvisionIdentityConfirm extends Component {
     await this.props.setLoading(true);
     await this.props.setPreventExit(true);
 
-    const submissionSuccess = (response) => {
+    const submissionSuccess = (response, requestedFqn) => {
       this.props.setPreventExit(false);
       this.props.setLoading(false);
       this.props.navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, {
         response: response,
+        fullyQualifiedName: requestedFqn,
         success: true
       });
     }
@@ -77,7 +79,9 @@ class ProvisionIdentityConfirm extends Component {
       let identityName;
       let isIAddress;
       let parent;
-      let systemid
+      let systemid;
+      let nameId;
+      let requestedFqn;
 
       try {
         fromBase58Check(identity);
@@ -94,11 +98,19 @@ class ProvisionIdentityConfirm extends Component {
         identityName = identityObj.result.identity.name
         parent = identityObj.result.identity.parent;
         systemid = identityObj.result.identity.systemid;
-
+        nameId = identity;
+        requestedFqn = identityObj.result.fullyqualifiedname;
+        
       } else {
         identityName = identity.split("@")[0];
         parent = this.state.provParent ? this.state.provParent.data : null;
         systemid = this.state.provSystemId ? this.state.provSystemId.data : null;
+        const parentObj = await getIdentity(coinObj.system_id, parent ? parent : loginRequest.system_id);
+
+        if (parentObj.error) throw new Error(parentObj.error.message)
+
+        requestedFqn = `${identityName.split(".")[0]}.${parentObj.result.fullyqualifiedname}`
+        nameId = (await getVdxfId(coinObj.system_id, requestedFqn)).result.vdxfid;
       }
 
       const provisionRequest = new primitives.LoginConsentProvisioningRequest({
@@ -123,13 +135,13 @@ class ProvisionIdentityConfirm extends Component {
       const newLoadingNotification = new LoadingNotification();
 
       await handleProvisioningResponse(coinObj, res.data, loginRequest.toBuffer().toString('base64'), 
-        this.props.sendModal.data.fromService, provisioningName, newLoadingNotification.uid, async (fqn) => {
+        this.props.sendModal.data.fromService, provisioningName, newLoadingNotification.uid, nameId, requestedFqn, async () => {
           
           newLoadingNotification.body = "";
           let formattedName = ''
-          const lastDotIndex = fqn.lastIndexOf('.');
-          if (lastDotIndex === -1) formattedName = fqn; // return the original string if there's no dot
-          else formattedName = fqn.substring(0, lastDotIndex);
+          const lastDotIndex = requestedFqn.lastIndexOf('.');
+          if (lastDotIndex === -1) formattedName = requestedFqn; // return the original string if there's no dot
+          else formattedName = requestedFqn.substring(0, lastDotIndex);
 
           newLoadingNotification.title =  [`${formattedName}@`, ` is being provisioned by `, `${provisioningName}@`]
           newLoadingNotification.acchash = this.props.activeAccount.accountHash;
@@ -138,7 +150,7 @@ class ProvisionIdentityConfirm extends Component {
           dispatchAddNotification(newLoadingNotification);
         });
 
-      submissionSuccess(res.data)
+      submissionSuccess(res.data, requestedFqn)
     } catch (e) {
       submissionError(e.message)
     }
