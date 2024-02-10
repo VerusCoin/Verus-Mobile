@@ -149,7 +149,7 @@
     "node-fetch": "2.6.7",
     "react-test-renderer": "17.0.1",
     "rn-nodeify": "github:tradle/rn-nodeify",
-    "snyk": "1.996.0"
+    "snyk": "1.1064.0"
   },
   "resolutions": {
     "word-wrap": "1.2.4",
