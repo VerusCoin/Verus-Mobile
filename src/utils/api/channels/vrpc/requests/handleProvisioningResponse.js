@@ -13,7 +13,7 @@ export const handleProvisioningResponse = async (
   notificationUid,
   requestedId,
   requestedFqn,
-  setNotification = (fqn) => { }
+  setNotification = () => { }
 ) => {
 
   // Verify response signature
@@ -40,7 +40,7 @@ export const handleProvisioningResponse = async (
     // If the response is complete, the transaction still has to be awaited so exit out of verusid login.
     const verusIdState = {
       status: NOTIFICATION_TYPE_VERUSID_PENDING,
-      fqn: result.fully_qualified_name,
+      fqn: requestedFqn,
       loginRequest: loginRequestBase64,
       fromService: fromService,
       createdAt: Number((Date.now() / 1000).toFixed(0)),
@@ -61,9 +61,9 @@ export const handleProvisioningResponse = async (
       throw new Error(`Provisioning response fully qualified name [${result.fully_qualified_name.toLowerCase()}] does not match requested fully qualified name[${requestedFqn.toLowerCase()}]`);
     }
 
-    await setRequestedVerusId(result.identity_address, verusIdState, coinObj.id);
+    await setRequestedVerusId(requestedId, verusIdState, coinObj.id);
     await updatePendingVerusIds();
-    await setNotification(result.fully_qualified_name, result.identity_address);
+    await setNotification();
 
   } else {
     throw new Error('Unsupported provisioning response state');
