@@ -52,7 +52,7 @@ export const ProvisionIdentityConfirmRender = function () {
           }>
           <List.Item
             title={identity}
-            description={'Name'}
+            description={'Identity'}
             titleNumberOfLines={100}
           />
           <Divider />
