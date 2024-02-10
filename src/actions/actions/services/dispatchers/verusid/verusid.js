@@ -268,8 +268,11 @@ export const checkVerusIdNotificationsForUpdates = async () => {
         await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
         await updatePendingVerusIds();
 
+        const req = new primitives.LoginConsentRequest();
+        req.fromBuffer(Buffer.from(pendingIds[ticker][iaddress].loginRequest, 'base64'));
+
         const newVerusIdProvisioningNotification = new VerusIdProvisioningNotification (
-          "link and login",
+          (req.challenge.redirect_uris && req.challenge.redirect_uris.length > 0) ? "link and login" : "link VerusID",
           [`${identity.result.fullyqualifiedname.substring(0, identity.result.fullyqualifiedname.lastIndexOf('.'))}@`, ` is ready`],
           null,
           pendingIds[ticker][iaddress].notificationUid,

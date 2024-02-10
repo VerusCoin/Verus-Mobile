@@ -99,7 +99,7 @@ class ProvisionIdentityConfirm extends Component {
         parent = identityObj.result.identity.parent;
         systemid = identityObj.result.identity.systemid;
         nameId = identity;
-        requestedFqn = identityObj.result.fully_qualified_name;
+        requestedFqn = identityObj.result.fullyqualifiedname;
         
       } else {
         identityName = identity.split("@")[0];
