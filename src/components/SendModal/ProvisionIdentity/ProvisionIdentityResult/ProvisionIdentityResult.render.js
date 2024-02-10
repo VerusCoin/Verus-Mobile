@@ -5,18 +5,16 @@ import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
 import AnimatedSuccessCheckmark from '../../../AnimatedSuccessCheckmark';
-import { useSelector } from 'react-redux';
+import { convertFqnToDisplayFormat } from '../../../../utils/fullyqualifiedname';
 
 export const ProvisionIdentityResultRender = function () {
   return ProvisionIdentitySuccessRender.call(this);
 };
 
 export const ProvisionIdentitySuccessRender = function () {
-  const {response} = this.state;
-  const {decision} = response;
-  const {result} = decision;
+  const {fullyQualifiedName} = this.state;
   const coinObj = this.props.sendModal.coinObj;
-  const formattedFriendlyName = result.fully_qualified_name.replace(".VRSC@", "@");
+  const formattedFriendlyName = convertFqnToDisplayFormat(fullyQualifiedName);
 
   return (
     <ScrollView

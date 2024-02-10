@@ -6,10 +6,11 @@ import Styles from '../../../../styles';
 import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
 import AnimatedSuccessCheckmark from '../../../AnimatedSuccessCheckmark';
 import { useSelector } from 'react-redux';
+import { convertFqnToDisplayFormat } from '../../../../utils/fullyqualifiedname';
 
 export const LinkIdentityResultRender = ({verusId, finishSend}) => {
   const coinObj = useSelector(state => state.sendModal.coinObj);
-  const formattedFriendlyName = verusId.fullyqualifiedname.replace(".VRSC@", "@");
+  const formattedFriendlyName = convertFqnToDisplayFormat(verusId.fullyqualifiedname);
 
   return (
     <ScrollView

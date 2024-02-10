@@ -10,7 +10,8 @@ class ProvisionIdentityResult extends Component {
 
     this.state = {
       response: props.route.params == null ? new primitives.LoginConsentProvisioningResponse() : 
-        new primitives.LoginConsentProvisioningResponse(props.route.params.response)
+        new primitives.LoginConsentProvisioningResponse(props.route.params.response),
+        fullyQualifiedName:  props.route.params.fullyQualifiedName
     };
   }
 
