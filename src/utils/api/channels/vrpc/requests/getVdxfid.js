@@ -1,9 +1,8 @@
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 
 export const getVdxfId = async (system_id, vdxfuri, initialdata) => {
-  const verusIdInterface = VrpcProvider.getVerusIdInterface(system_id);
 
-  const vdxfid = await verusIdInterface.interface.getVdxfId(
+  const vdxfid = await VrpcProvider.getEndpoint(system_id).getVdxfId(
     vdxfuri,
     initialdata
   );
