@@ -4,7 +4,7 @@ import com.android.build.OutputFile
 
 def versionMajor = 1
 def versionMinor = 0
-def versionRevision = 7
+def versionRevision = 8
 def versionBuild = 0
 
 def keystorePropertiesFile = rootProject.file("keystore.properties");
@@ -282,7 +282,7 @@ android {
     // applicationVariants are e.g. debug, release
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
-            outputFileName = "VerusMobile-${defaultConfig.versionName}.apk"
+            outputFileName = "VerusWallet-${defaultConfig.versionName}.apk"
         }
     }
 }

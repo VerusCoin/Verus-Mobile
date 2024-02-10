@@ -1,35 +1,58 @@
-import React, {useState, useEffect} from 'react';
-import {ScrollView} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { ScrollView } from 'react-native';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { openLinkIdentityModal, openProvisionIdentityModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import { requestServiceStoredData } from '../../../utils/auth/authBox';
 import { VERUSID_SERVICE_ID } from '../../../utils/constants/services';
-import { findCoinObj } from '../../../utils/CoinData/CoinData';
 import { Divider, List } from 'react-native-paper';
 import { signLoginConsentResponse } from '../../../utils/api/channels/vrpc/requests/signLoginConsentResponse';
 import BigNumber from 'bignumber.js';
 import { VERUSID_NETWORK_DEFAULT } from "../../../../env/index";
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
+import { CommonActions } from '@react-navigation/native';
+import { SEND_MODAL_IDENTITY_TO_LINK_FIELD } from '../../../utils/constants/sendModal';
+import { ELECTRUM } from '../../../utils/constants/intervalConstants';
+import { coinsList } from '../../../utils/CoinData/CoinsList';
+import { requestSeeds } from '../../../utils/auth/authBox';
+import { deriveKeyPair } from '../../../utils/keys';
 
 const LoginRequestIdentity = props => {
   const { deeplinkData } = props.route.params
   const [loading, setLoading] = useState(false)
   const [linkedIds, setLinkedIds] = useState({})
-  const [sortedIds, setSortedIds] = useState({})
+  const [sortedIds, setSortedIds] = useState({});
+  const [idProvisionSuccess, setIdProvisionSuccess] = useState(false)
+  const [canProvision, setCanProvision] = useState(false)
   const req = new primitives.LoginConsentRequest(deeplinkData)
   const encryptedIds = useSelector(state => state.services.stored[VERUSID_SERVICE_ID])
+  const sendModal = useSelector((state) => state.sendModal);
+  const fromService = useSelector((state) => state.deeplink.fromService);
+  const passthrough = useSelector((state) => state.deeplink.passthrough);
 
-  const canProvision = req.challenge.provisioning_info && req.challenge.provisioning_info.some(x => {
-    return (
-      x.vdxfkey ===
-      primitives.LOGIN_CONSENT_ID_PROVISIONING_WEBHOOK_VDXF_KEY
-        .vdxfid
-    );
-  })
+  useEffect(() => {
+    let canProvision = req.challenge.provisioning_info && req.challenge.provisioning_info.some(x => {
+      return (
+        x.vdxfkey ===
+        primitives.LOGIN_CONSENT_ID_PROVISIONING_WEBHOOK_VDXF_KEY
+          .vdxfid
+      );
+    })
+
+    if (Object.keys(linkedIds).length > 0) {
+      for (const chainId of Object.keys(linkedIds)) {
+        if (linkedIds[chainId] && 
+           Object.keys(linkedIds[chainId])
+            .includes(req.challenge.subject.find(item => item.vdxfkey === primitives.ID_ADDRESS_VDXF_KEY.vdxfid)?.data)) {
+          canProvision = false;
+        }
+      }
+    }
+    setCanProvision(canProvision)
+  }, [linkedIds])
 
   const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser)
   const testnetOverrides = useSelector(state => state.authentication.activeAccount.testnetOverrides)
@@ -39,7 +62,7 @@ const LoginRequestIdentity = props => {
 
   const activeCoinIds = activeCoinsForUser.map(coinObj => coinObj.id)
 
-  const { system_id } = req
+  const { system_id } = req;
 
   async function onEncryptedIdsUpdate() {
     setLoading(true)
@@ -54,16 +77,41 @@ const LoginRequestIdentity = props => {
       } else {
         setLinkedIds({})
       }
+
     } catch (e) {
       createAlert('Error Loading Linked VerusIDs', e.message);
     }
 
     setLoading(false)
-  }
+  } 
+
+  useEffect(() => {
+    if(passthrough && passthrough.fqnToAutoLink){
+      const data = {[SEND_MODAL_IDENTITY_TO_LINK_FIELD]: passthrough.fqnToAutoLink};
+      openLinkIdentityModal(CoinDirectory.findCoinObj(system_id, null, true), data);
+    }
+  }, [passthrough])
+
+  //TODO: add a check that checks to see if the ID is ready, and relates to the provider.
 
   useEffect(() => {
     onEncryptedIdsUpdate()
   }, [encryptedIds])
+
+  useEffect(() => {
+    if (!idProvisionSuccess && sendModal.data?.success){
+      setIdProvisionSuccess(true);
+    }
+
+    if (idProvisionSuccess && !sendModal.visible) {
+      props.navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{name: 'SignedInStack'}],
+        }),
+      );
+    }
+  }, [sendModal])
 
   useEffect(() => {
     const sortedIdKeysPerChain = {}
@@ -90,7 +138,7 @@ const LoginRequestIdentity = props => {
   }
 
   const openProvisionIdentityModalFromChain = () => {
-    openProvisionIdentityModal(CoinDirectory.findCoinObj(system_id, null, true), req)
+    openProvisionIdentityModal(CoinDirectory.findCoinObj(system_id, null, true), req, fromService)
   }
 
   const selectIdentity = async (iAddress) => {
@@ -156,7 +204,7 @@ const LoginRequestIdentity = props => {
               onPress={() => openLinkIdentityModalFromChain(chainId)}
             />
             <Divider />
-            {/* {canProvision && (
+            {canProvision && (
               <React.Fragment>
                 <List.Item
                   title={'Request new VerusID'}
@@ -167,7 +215,7 @@ const LoginRequestIdentity = props => {
                 />
                 <Divider />
               </React.Fragment>
-            )} */}
+            )}
           </React.Fragment>
         );
       })}

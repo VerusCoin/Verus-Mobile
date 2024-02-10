@@ -5,11 +5,13 @@ import {
   INIT_VERUSID_CHANNEL_START,
   CLOSE_VERUSID_CHANNEL,
   SET_WATCHED_VERUSIDS,
+  SET_PENDING_VERUSIDS,
 } from "../../../../../utils/constants/storeType";
+import { clearOldPendingVerusIds } from '../../../services/dispatchers/verusid/verusid';
 
 export const initVerusIdWallet = async (coinObj) => {
+  await clearOldPendingVerusIds();
   const verusidServiceData = await requestServiceStoredData(VERUSID_SERVICE_ID)
-
   Store.dispatch({
     type: INIT_VERUSID_CHANNEL_START,
     payload: {
@@ -18,6 +20,9 @@ export const initVerusIdWallet = async (coinObj) => {
       endpointAddress: coinObj.vrpc_endpoints[0],
       watchedVerusIds: verusidServiceData.linked_ids
         ? verusidServiceData.linked_ids
+        : {},
+      pendingIds: verusidServiceData.pending_ids
+        ? verusidServiceData.pending_ids
         : {},
     },
   });
@@ -33,7 +38,7 @@ export const updateVerusIdWallet = async () => {
     payload: {
       watchedVerusIds: verusidServiceData.linked_ids
         ? verusidServiceData.linked_ids
-        : {},
+        : {},    
     },
   });
 
@@ -48,3 +53,17 @@ export const closeVerusIdWallet = async (coinObj) => {
 
   return
 }
+
+export const updatePendingVerusIds = async () => {
+  const verusidServiceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+  Store.dispatch({
+    type: SET_PENDING_VERUSIDS,
+    payload: {
+      pendingIds: verusidServiceData.pending_ids
+        ? verusidServiceData.pending_ids
+        : {},
+    },
+  });
+
+  return;
+};

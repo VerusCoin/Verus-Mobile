@@ -1,17 +1,19 @@
 import { primitives } from "verusid-ts-client"
-import { getIdentity } from "../../verusid/callCreators";
-import { waitForTransactionConfirm } from "./getTransaction";
 import { verifyIdProvisioningResponse } from "./verifyIdProvisioningResponse";
-import { URL } from 'react-native-url-polyfill';
-import base64url from "base64url";
+import { NOTIFICATION_TYPE_VERUSID_PENDING } from '../../../../constants/services';
+import { updatePendingVerusIds } from "../../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager"
+import { setRequestedVerusId } from '../../../../../actions/actions/services/dispatchers/verusid/verusid';
+import { getIdentity } from "../../verusid/callCreators";
 
 export const handleProvisioningResponse = async (
   coinObj,
   responseJson,
-  pendingsLeft = 5,
-  saveIdentity = async (address, fqn) => {}
+  loginRequestBase64,
+  fromService,
+  provisioningName,
+  notificationUid,
+  setNotification = (fqn, accountHash) => { }
 ) => {
-  let _pendingsLeft = 5
 
   // Verify response signature
   const verified = await verifyIdProvisioningResponse(coinObj, responseJson);
@@ -24,109 +26,31 @@ export const handleProvisioningResponse = async (
   const {result} = decision;
   const {
     error_desc,
-    info_uri,
     state,
-    provisioning_txids,
-    identity_address
   } = result;
 
-  if (state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid)
+  if (state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid) {
     throw new Error(error_desc);
-  else if (
-    state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_COMPLETE.vdxfid ||
-    state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_PENDINGAPPROVAL.vdxfid
-  ) {
-    if (
-      pendingsLeft <= 0 &&
-      state ===
-        primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_PENDINGAPPROVAL.vdxfid
-    )
-      throw new Error('Expected failiure or success, got pending');
-    else {
-      _pendingsLeft--
+  } else if (state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_PENDINGAPPROVAL.vdxfid ||
+    state === primitives.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_COMPLETE.vdxfid) { 
+
+    // If the response is pending approval, store the pending verus id and it will be
+    // checked on an interval until it is approved or rejected
+    // If the response is complete, the transaction still has to be awaited so exit out of verusid login.
+    const verusIdState = {
+      status: NOTIFICATION_TYPE_VERUSID_PENDING,
+      fqn: result.fully_qualified_name,
+      loginRequest: loginRequestBase64,
+      fromService: fromService,
+      createdAt: Number((Date.now() / 1000).toFixed(0)),
+      infoUri: result.info_uri,
+      provisioningName: provisioningName,
+      notificationUid: notificationUid
     }
+    await setRequestedVerusId(result.identity_address, verusIdState, coinObj.id);
+    await updatePendingVerusIds();
+    await setNotification(result.fully_qualified_name);
 
-    // Find transfer or registration txid
-    const completeTxid =
-      provisioning_txids != null
-        ? provisioning_txids.find(x => {
-            return (
-              x.vdxfkey === primitives.IDENTITY_REGISTRATION_TXID.vdxfid ||
-              x.vdxfkey === primitives.IDENTITY_UPDATE_TXID.vdxfid
-            );
-          })
-        : null;
-
-    if (completeTxid) { 
-      // Wait for update or registration txid confirm
-      await waitForTransactionConfirm(coinObj, completeTxid.data)
-
-      const getIdRes = await getIdentity(coinObj.system_id, identity_address)
-
-      if (getIdRes.error) throw new Error(getIdRes.error.message)
-      else if (getIdRes.result) {
-        await saveIdentity(getIdRes.result.identity.identityaddress, getIdRes.result.identity.name)
-      }
-
-      return
-    } else if (info_uri != null) {
-      // If no transfer or registration txid, find info web socket
-      const url = new URL(info_uri);
-      
-      if (url.protocol === "ws:" || url.protocol === "wss:") {
-        return new Promise((resolve, reject) => {
-          try {
-            const ws = new WebSocket(url.toString());
-
-            const timeout = setTimeout(() => {
-              reject(new Error("Timeout while waiting for websocket connection"))
-              ws.close()
-            }, 600000)
-
-            ws.onmessage = async (message) => {
-              try {
-                const messageBuffer = base64url.toBuffer(message.data)
-                
-                // Make sure data is a valid provisioning response
-                const newResponse = new primitives.LoginConsentProvisioningResponse();
-                newResponse.fromBuffer(messageBuffer)
-
-                clearTimeout(timeout)
-
-                try {
-                  resolve(
-                    await handleProvisioningResponse(
-                      coinObj,
-                      newResponse,
-                      _pendingsLeft,
-                      saveIdentity,
-                    ),
-                  );
-                } catch(error) {
-                  ws.close()
-                  reject(error)
-                }
-              } catch(_e) {
-                ws.close()
-                reject(_e)
-              }
-            };
-
-            ws.onerror = (e) => {              
-              clearTimeout(timeout)
-              reject(e)
-              ws.close()
-            };
-          } catch(e) {
-            reject(e)
-          }
-        })
-      } else {
-        throw new Error('Non-websocket status protocols currently unsupported')
-      }
-    } else {
-      throw new Error('Not enough information to determine provisioning status');
-    }
   } else {
     throw new Error('Unsupported provisioning response state');
   }

@@ -81,6 +81,8 @@ const LinkIdentityConfirm = props => {
     friendlyNames,
     goBack,
     submitData,
+    ownedByUser: !!props.route.params.ownedByUser,
+    ownedAddress: props.route.params.ownedAddress || '',
   });
 };
 
