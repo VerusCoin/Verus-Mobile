@@ -27,6 +27,7 @@ const LoginRequestInfo = props => {
   const [waitingForSignin, setWaitingForSignin] = useState(false)
   const accounts = useSelector(state => state.authentication.accounts)
   const signedIn = useSelector(state => state.authentication.signedIn)
+  const passthrough = useSelector((state) => state.deeplink.passthrough);
   const sendModalType = useSelector(state => state.sendModal.type)
 
   const dispatch = useDispatch()
@@ -44,7 +45,21 @@ const LoginRequestInfo = props => {
   const activeAccount = useSelector(
     state => state.authentication.activeAccount,
   );
+
+  const isTestnet = activeAccount ? Object.keys(activeAccount.testnetOverrides).length > 0 : false;
   const activeCoinList = useSelector(state => state.coins.activeCoinList);
+
+  let mainLoginMessage = '';
+
+  if (challenge.redirect_uris && challenge.redirect_uris.length > 0) {
+    mainLoginMessage = `${signerFqn} is requesting login with VerusID`
+  } else {
+    if (passthrough?.fqnToAutoLink) {
+      mainLoginMessage = `VerusID from ${signerFqn} now ready to link`
+    } else {
+      mainLoginMessage = `Would you like to request a VerusID from ${signerFqn}?`
+    }
+  }
 
   const getVerusId = async (chain, iAddrOrName) => {
     const identity = await getIdentity(CoinDirectory.getBasicCoinObj(chain).system_id, iAddrOrName);
@@ -176,7 +191,16 @@ const LoginRequestInfo = props => {
 
   const handleContinue = () => {
     if (signedIn) {
-      if (!rootSystemAdded) {
+      const coinObj = CoinDirectory.findCoinObj(chain_id);
+      if (coinObj.testnet != isTestnet) {
+        createAlert(
+          "Incorrect profile type",
+          `Please login to a ${
+            coinObj.testnet ? 'testnet' : 'mainnet'
+            } profile to use this login request.`, );
+        return;
+      }
+      else if (!rootSystemAdded) {
         tryAddRootSystem()
       } else {
         props.navigation.navigate('LoginRequestIdentity', {
@@ -240,7 +264,7 @@ const LoginRequestInfo = props => {
         <VerusIdLogo width={'55%'} height={'10%'} />
         <View style={Styles.wideBlock}>
           <Text style={{fontSize: 20, textAlign: 'center'}}>
-            {`${signerFqn} is requesting login with VerusID`}
+            {mainLoginMessage}
           </Text>
         </View>
         <View style={Styles.fullWidth}>

@@ -6,9 +6,11 @@ import Styles from '../../../../styles';
 import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
 import AnimatedSuccessCheckmark from '../../../AnimatedSuccessCheckmark';
 import { useSelector } from 'react-redux';
+import { convertFqnToDisplayFormat } from '../../../../utils/fullyqualifiedname';
 
 export const LinkIdentityResultRender = ({verusId, finishSend}) => {
   const coinObj = useSelector(state => state.sendModal.coinObj);
+  const formattedFriendlyName = convertFqnToDisplayFormat(verusId.fullyqualifiedname);
 
   return (
     <ScrollView
@@ -29,13 +31,13 @@ export const LinkIdentityResultRender = ({verusId, finishSend}) => {
           marginTop: 16,
         }}>
         <Text
-          numberOfLines={1}
+          numberOfLines={3}
           style={{
             textAlign: 'center',
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {`${verusId.identity.name}@ linked`}
+          {`${formattedFriendlyName} linked`}
         </Text>
       </TouchableOpacity>
       <View style={{paddingVertical: 16}}>
