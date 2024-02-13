@@ -3,7 +3,6 @@ import { verifyIdProvisioningResponse } from "./verifyIdProvisioningResponse";
 import { NOTIFICATION_TYPE_VERUSID_PENDING } from '../../../../constants/services';
 import { updatePendingVerusIds } from "../../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager"
 import { setRequestedVerusId } from '../../../../../actions/actions/services/dispatchers/verusid/verusid';
-import { getIdentity } from "../../verusid/callCreators";
 
 export const handleProvisioningResponse = async (
   coinObj,
@@ -12,7 +11,9 @@ export const handleProvisioningResponse = async (
   fromService,
   provisioningName,
   notificationUid,
-  setNotification = (fqn, accountHash) => { }
+  requestedId,
+  requestedFqn,
+  setNotification = () => { }
 ) => {
 
   // Verify response signature
@@ -39,7 +40,7 @@ export const handleProvisioningResponse = async (
     // If the response is complete, the transaction still has to be awaited so exit out of verusid login.
     const verusIdState = {
       status: NOTIFICATION_TYPE_VERUSID_PENDING,
-      fqn: result.fully_qualified_name,
+      fqn: requestedFqn,
       loginRequest: loginRequestBase64,
       fromService: fromService,
       createdAt: Number((Date.now() / 1000).toFixed(0)),
@@ -47,9 +48,22 @@ export const handleProvisioningResponse = async (
       provisioningName: provisioningName,
       notificationUid: notificationUid
     }
-    await setRequestedVerusId(result.identity_address, verusIdState, coinObj.id);
+
+    if (!result.identity_address && !result.fully_qualified_name) {
+      throw new Error('Provisioning response did not contain an identity or fully qualified name');
+    }
+
+    if (result.identity_address && result.identity_address !== requestedId) { 
+      throw new Error(`Provisioning response identity [${result.identity_address}] address does not match requested identity address[${requestedId}]`);
+    }
+
+    if (result.fully_qualified_name && result.fully_qualified_name.toLowerCase() !== requestedFqn.toLowerCase()) {
+      throw new Error(`Provisioning response fully qualified name [${result.fully_qualified_name.toLowerCase()}] does not match requested fully qualified name[${requestedFqn.toLowerCase()}]`);
+    }
+
+    await setRequestedVerusId(requestedId, verusIdState, coinObj.id);
     await updatePendingVerusIds();
-    await setNotification(result.fully_qualified_name);
+    await setNotification();
 
   } else {
     throw new Error('Unsupported provisioning response state');
