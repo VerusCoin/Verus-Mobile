@@ -192,7 +192,7 @@ const LoginRequestInfo = props => {
   const handleContinue = () => {
     if (signedIn) {
       const coinObj = CoinDirectory.findCoinObj(chain_id);
-      if (coinObj.testnet != isTestnet) {
+      if (!!coinObj.testnet != isTestnet) {
         createAlert(
           "Incorrect profile type",
           `Please login to a ${
