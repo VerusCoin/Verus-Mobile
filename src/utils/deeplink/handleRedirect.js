@@ -12,6 +12,12 @@ const handlers = {
       response
     );
   },
+  [primitives.LOGIN_CONSENT_ATTESTATION_WEBHOOK_VDXF_KEY.vdxfid]: async (uri, response) => {
+    return await axios.post(
+      uri,
+      response
+    );
+  },
   [primitives.LOGIN_CONSENT_REDIRECT_VDXF_KEY.vdxfid]: (uri, response) => {
     const url = new URL(uri)
     const res = new primitives.LoginConsentResponse(response)

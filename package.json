@@ -223,7 +223,10 @@
     "@babel/core": "7.21.3",
     "blake2b-wasm": "https://github.com/michaeltout/blake2b-wasm/",
     "@bitgo/blake2b-wasm": "https://github.com/michaeltout/blake2b-wasm/",
-    "browserify-sign": "4.2.2"
+    "browserify-sign": "4.2.2",
+    "verus-typescript-primitives": "file:d:/dev/verus-typescript-primitives",
+    "verusid-ts-client": "file:d:/dev/verusid-ts-client",
+    "verusd-rpc-ts-client": "file:d:/dev/verusd-rpc-ts-client"
   },
   "jest": {
     "preset": "react-native",
