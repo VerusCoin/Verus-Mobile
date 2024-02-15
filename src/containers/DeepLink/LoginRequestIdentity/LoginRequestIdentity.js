@@ -27,7 +27,6 @@ const LoginRequestIdentity = props => {
   const [sortedIds, setSortedIds] = useState({});
   const [idProvisionSuccess, setIdProvisionSuccess] = useState(false)
   const [canProvision, setCanProvision] = useState(false)
-  const [attestationID, setattestationID] = useState('')
   const req = new primitives.LoginConsentRequest(deeplinkData)
   const encryptedIds = useSelector(state => state.services.stored[VERUSID_SERVICE_ID])
   const sendModal = useSelector((state) => state.sendModal);
@@ -98,44 +97,9 @@ const LoginRequestIdentity = props => {
       const data = {[SEND_MODAL_IDENTITY_TO_LINK_FIELD]: passthrough.fqnToAutoLink, noLogin: noLogin};
       openLinkIdentityModal(CoinDirectory.findCoinObj(system_id, null, true), data);
     }
-  }, [extraParams])
+  }, [passthrough])
 
-  useEffect(() => {
-
-    if (idsloaded && req.challenge.subject && req.challenge.subject.length > 0 &&
-      req.challenge.subject.some(item => item.vdxfkey === primitives.ID_ADDRESS_VDXF_KEY.vdxfid)) {
-
-        const providionedId = req.challenge.subject.find(item => item.vdxfkey === primitives.ID_ADDRESS_VDXF_KEY.vdxfid).data;
-        if(req.challenge.redirect_uris && req.challenge.redirect_uris
-            .some((uriKey) => uriKey.vdxfkey === primitives.LOGIN_CONSENT_ATTESTATION_WEBHOOK_VDXF_KEY.vdxfid)){
-          // if an attestation is provided, set the attestationID so it only shows the attestation the ID is for.   
-          setattestationID(providionedId)
-        }
-
-        for (const chainId of activeCoinIds) { 
-          if (linkedIds[chainId] && Object.keys(linkedIds[chainId]).includes(providionedId)) {
-            return;
-          }
-        }
-      getIdentity(system_id, providionedId).then((provisionedID) => {
-        getPotentialPrimaryAddresses().then((addresses) => {
-          if (provisionedID.result) {
-            for (const address of provisionedID.result.identity.primaryaddresses) {
-              if (addresses.includes(address)) {
-                dispatch({
-                  type: SET_DEEPLINK_DATA_EXTRAPARAMS,
-                  payload: {
-                    extraParams: { fqn: provisionedID.result.fullyqualifiedname }
-                  },
-                });
-                return;
-              }
-            }
-          }
-        })
-      })
-    }
-  }, [idsloaded])
+  //TODO: add a check that checks to see if the ID is ready, and relates to the provider.
 
   useEffect(() => {
     onEncryptedIdsUpdate()
@@ -221,9 +185,6 @@ const LoginRequestIdentity = props => {
               <List.Subheader>{`Linked ${chainId} VerusIDs`}</List.Subheader>
             )}
             {sortedIds[chainId].map(iAddr => {
-              if(attestationID && attestationID !== iAddr) {
-                return null
-              }
               return (
                 <React.Fragment key={iAddr}>
                   <Divider />

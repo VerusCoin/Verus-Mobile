@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {ScrollView, View, TouchableOpacity} from 'react-native';
 import Styles from '../../../styles/index';
 import {primitives} from 'verusid-ts-client';
@@ -14,8 +14,6 @@ import AnimatedActivityIndicator from '../../../components/AnimatedActivityIndic
 import { useDispatch, useSelector } from 'react-redux';
 import { resetDeeplinkData } from '../../../actions/actionCreators';
 
-import { useSelector } from 'react-redux';
-import Attestation from '../../../components/Attestation';
 
 const LoginRequestComplete = props => {
   const {signedResponse} = props.route.params;
@@ -30,8 +28,6 @@ const LoginRequestComplete = props => {
   let redirectinfo = null;
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
-  const [showAttestation, setShowAttestation] = useState(false);
-  const [attestationObj, setAttestationObj] = useState(null);
 
   const cancel = () => {
     dispatch(resetDeeplinkData());
@@ -43,36 +39,9 @@ const LoginRequestComplete = props => {
     );
   };
 
-  const storeAttestation = () => {
-
-  }
-
   let redirectsObj = {};
   
   redirects.forEach(a => {redirectsObj[a.vdxfkey] = a;});
-  const attestationPresent = !!redirectsObj[primitives.LOGIN_CONSENT_ATTESTATION_WEBHOOK_VDXF_KEY.vdxfid];
-
-  useEffect(() => {
-    if (attestationPresent) {
-      try {
-        setLoading(true);
-        handleRedirect(signedResponse, 
-            redirectsObj[primitives.LOGIN_CONSENT_ATTESTATION_WEBHOOK_VDXF_KEY.vdxfid]).then((attestation) => { 
-              if (attestation && attestation.data) {
-                const localAttestaionObj = new primitives.Attestation();
-                localAttestaionObj.fromBuffer(Buffer.from(attestation.data, 'hex'));
-                setAttestationObj(localAttestaionObj);
-                setShowAttestation(true);
-              }
-              setLoading(false); 
-            });
-      } catch(e) {
-        createAlert('Error', e.message);
-        setLoading(false);
-        cancel();
-      }
-    }
-  }, []);
 
   if (redirectsObj[primitives.LOGIN_CONSENT_REDIRECT_VDXF_KEY.vdxfid]) {
     try {
@@ -87,6 +56,7 @@ const LoginRequestComplete = props => {
   } else {
     redirectinfo = redirectsObj[primitives.LOGIN_CONSENT_WEBHOOK_VDXF_KEY.vdxfid];
   }
+
 
   const tryRedirect = async () => {
     try {
@@ -115,19 +85,11 @@ const LoginRequestComplete = props => {
 
   return (
     <ScrollView
-    style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}
-    contentContainerStyle={{
-      ...Styles.focalCenter,
-      justifyContent: 'space-between',
-    }}>
-      {attestationObj && <Attestation
-      visible={showAttestation}
-      loginConsentResponse={res}
-      attestation={attestationObj}
-      buttons={[{text: "CANCEL", onPress: () => setShowAttestation(false)},
-        {disabled: false, onPress: () => {storeAttestation(); setShowAttestation(false);}, text: "save"},]}
-      mainTitle={"Attestation Received"}
-      />}
+      style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}
+      contentContainerStyle={{
+        ...Styles.focalCenter,
+        justifyContent: 'space-between',
+      }}>
       <View style={Styles.focalCenter}>
         <Text
           numberOfLines={1}
@@ -136,7 +98,7 @@ const LoginRequestComplete = props => {
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {loading ? attestationPresent ? "Retrieving Attestation" : "Loading..." : 'Success!'}
+          {loading ? "Loading..." : 'Success!'}
         </Text>
         <View style={{paddingVertical: 16}}>
           {loading ? (
