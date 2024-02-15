@@ -312,6 +312,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         via,
         source,
         address.getAddressString(),
+        preconvert
       );
     }
 
