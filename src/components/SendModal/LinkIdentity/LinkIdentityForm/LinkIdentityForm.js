@@ -71,6 +71,9 @@ const LinkIdentityForm = (props) => {
 
     const identity = data[SEND_MODAL_IDENTITY_TO_LINK_FIELD];
 
+    let ownedAddress = '';
+    let ownedByUser = false;
+
     try {
       const res = await getIdentity(coinObj.system_id, identity);
 
@@ -85,6 +88,8 @@ const LinkIdentityForm = (props) => {
       for (const address of res.result.identity.primaryaddresses) {
         if (addrs.includes(address)) {
           isInWallet = true;
+          ownedAddress = address;
+          ownedByUser = true;
           break;
         }
       }
@@ -101,6 +106,8 @@ const LinkIdentityForm = (props) => {
       props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
         verusId: res.result,
         friendlyNames,
+        ownedAddress,
+        ownedByUser
       })
     } catch (e) {
       Alert.alert('Error', e.message);

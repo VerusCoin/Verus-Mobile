@@ -28,12 +28,12 @@ const AlertModal = (props) => {
   const disabled = props.activeAlert.options != null && props.activeAlert.disabled;
 
   return (
-    <SafeAreaView>
-      <Portal>
+    <Portal>
+      <SafeAreaView style={{ flex: 1 }}>
         <Dialog
           dismissable={(!disabled && cancelable) === true}
           visible={modalShown}
-          onDismiss={cancelable ? cancel : () => {}}
+          onDismiss={cancelable ? cancel : () => { }}
           style={{ maxHeight: '100%', marginBottom: 36 }}
         >
           <Dialog.Title>{title}</Dialog.Title>
@@ -43,24 +43,24 @@ const AlertModal = (props) => {
             </ScrollView>
           </Dialog.Content>
           <Dialog.Actions>
-            <ScrollView horizontal>
+            <ScrollView horizontal style={{ height: 48 }}>
               {buttons != null
                 ? buttons.map((button, index) => (
-                    <Button
-                      disabled={button.disabled || disabled}
-                      onPress={button.onPress}
-                      color={Colors.primaryColor}
-                      key={index}
-                    >
-                      {button.text}
-                    </Button>
-                  ))
+                  <Button
+                    disabled={button.disabled || disabled}
+                    onPress={button.onPress}
+                    color={Colors.primaryColor}
+                    key={index}
+                  >
+                    {button.text}
+                  </Button>
+                ))
                 : null}
             </ScrollView>
           </Dialog.Actions>
         </Dialog>
-      </Portal>
-    </SafeAreaView>
+      </SafeAreaView>
+    </Portal>
   );
 };
 

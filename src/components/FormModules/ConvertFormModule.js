@@ -16,7 +16,9 @@ const ConvertFormModule = ({
   onViaChange,
   isVia,
   showConversionField,
-  showViaField
+  showViaField,
+  convertDisabled,
+  viaDisabled
 }) => {
   return (
     <React.Fragment>
@@ -30,7 +32,7 @@ const ConvertFormModule = ({
               advancedForm ? (
                 <TextInput
                   returnKeyType="done"
-                  label={isPreconvert ? 'Currency to preconvert to' : 'Currency to convert to'}
+                  label={isPreconvert ? 'Preconvert to' : 'Convert to'}
                   value={convertToField}
                   mode="outlined"
                   multiline={true}
@@ -38,10 +40,12 @@ const ConvertFormModule = ({
                   autoCapitalize={'none'}
                   autoCorrect={false}
                   style={{ flex: 1 }}
+                  disabled={convertDisabled}
                 />
               ) : (
                 <TouchableOpacity
-                  onPress={() => handleFieldFocusConvertTo()}
+                  onPress={() => convertDisabled ? {} : handleFieldFocusConvertTo()}
+                  disabled={convertDisabled}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -76,7 +80,7 @@ const ConvertFormModule = ({
               advancedForm ? (
                 <TextInput
                   returnKeyType="done"
-                  label="Currency to convert via (optional)"
+                  label="Convert via (optional)"
                   value={viaField}
                   mode="outlined"
                   multiline={true}
@@ -84,10 +88,12 @@ const ConvertFormModule = ({
                   autoCapitalize={'none'}
                   autoCorrect={false}
                   style={{ flex: 1 }}
+                  disabled={viaDisabled}
                 />
               ) : (
                 <TouchableOpacity
-                  onPress={() => handleFieldFocusVia()}
+                  onPress={() => viaDisabled ? {} : handleFieldFocusVia()}
+                  disabled={viaDisabled}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',

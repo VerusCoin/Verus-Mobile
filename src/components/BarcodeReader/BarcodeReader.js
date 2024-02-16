@@ -19,7 +19,7 @@ const BarcodeReader = props => {
   const [needToGoToSettings, setNeedToGoToSettings] = useState(false);
   const [hasCameraPermission, setHasCameraPermission] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  
   const {prompt, button, onScan, cameraOn} = props;
   const cameraOff = cameraOn != null && !cameraOn;
 

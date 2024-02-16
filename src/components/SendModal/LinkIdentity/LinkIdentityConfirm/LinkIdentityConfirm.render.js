@@ -5,12 +5,14 @@ import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import VerusIdObjectData from '../../../VerusIdObjectData';
 
-export const LinkIdentityConfirmRender = ({ verusId, friendlyNames, goBack, submitData }) => {
+export const LinkIdentityConfirmRender = ({ verusId, friendlyNames, goBack, submitData, ownedByUser, ownedAddress }) => {
   return (
     <SafeAreaView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }}>
       <VerusIdObjectData
         verusId={verusId}
         friendlyNames={friendlyNames}
+        ownedByUser={ownedByUser}
+        ownedAddress={ownedAddress}
         StickyFooterComponent={
           <View
             style={{
