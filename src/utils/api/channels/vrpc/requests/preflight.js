@@ -312,6 +312,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         via,
         source,
         address.getAddressString(),
+        preconvert
       );
     }
 
@@ -447,14 +448,17 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     const utxoList = []
 
     utxosRes.result.forEach((inputUtxo) => {
-      if (inputUtxo.isspendable) {
+      if (inputUtxo.isspendable && 
+        (inputUtxo.satoshis != 0 || 
+          (inputUtxo.currencyvalues != null && Object.keys(inputUtxo.currencyvalues).includes(currency))
+        )) {
         const _script = Buffer.from(inputUtxo.script, 'hex')
         const _value = inputUtxo.satoshis
-  
+
         try {
           unpackOutput({ value: _value, script: _script }, systemId, true)
           utxoList.push(inputUtxo)
-        } catch(e) {
+        } catch (e) {
           console.warn(e.message)
         }
       }
