@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {View, RefreshControl} from 'react-native';
 import {Text, Provider, Portal, Banner} from 'react-native-paper';
 import {truncateDecimal} from '../../utils/math';
@@ -26,6 +26,7 @@ import {
 import VerusIdWidget from './HomeWidgets/VerusIdWidget';
 import {CoinDirectory} from '../../utils/CoinData/CoinDirectory';
 import Colors from '../../globals/colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const HomeRender = function () {
   const dragDetection = this.dragDetectionEnabled();
@@ -116,6 +117,9 @@ export const HomeRenderWidget = function (widgetId) {
 export const HomeRenderCoinsList = function () {
   const {widgets} = this.state;
   const dragDetection = this.dragDetectionEnabled();
+  console.log(this.props.darkMode)
+
+
 
   return widgets.length == 0 ? (
     <View />

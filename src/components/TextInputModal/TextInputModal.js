@@ -40,7 +40,6 @@ class TextInputModal extends Component {
         }}
       >
         <TextInput
-        
           value={value}
           onChangeText={(text) => {
             this.setText(text)
@@ -50,7 +49,7 @@ class TextInputModal extends Component {
           style={{
             backgroundColor: this.props.darkMode
                 ? Colors.verusDarkModeForm
-                : Colors.tertiaryColor,
+                : Colors.ultraUltraLightGrey,
             
           }}
           autoFocus
@@ -58,9 +57,9 @@ class TextInputModal extends Component {
             colors: {
               text: this.props.darkMode
                 ? Colors.secondaryColor
-                : Colors.ultraLightGrey,
+                : 'black',
               placeholder: this.props.darkMode
-                ? Colors.primaryColor
+                ? Colors.verusDarkGray
                 : Colors.verusDarkGray,
             },
           }}

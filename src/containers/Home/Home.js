@@ -57,6 +57,7 @@ import {
   openAddErc20TokenModal,
   openAddPbaasCurrencyModal,
 } from '../../actions/actions/sendModal/dispatchers/sendModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 class Home extends Component {
   constructor(props) {
@@ -527,6 +528,7 @@ class Home extends Component {
     return HomeRender.call(this);
   }
 }
+
 
 const mapStateToProps = state => {
   return {

@@ -412,7 +412,7 @@ function ConvertOrCrossChainSendConfirm({
   };
 
   return (
-    <View style={{flex: 1, backgroundColor: Colors.secondaryColor}}>
+    <View style={{flex: 1, backgroundColor: 'red'}}>
       <ScrollView
         style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}
         persistentScrollbar={true}

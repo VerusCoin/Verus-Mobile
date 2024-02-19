@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Button, TextInput , Text} from 'react-native-paper';
 import Colors from '../../globals/colors';
 import Styles from '../../styles';
+import { useSelector } from 'react-redux';
 
 const CoreSendFormModule = ({
   sendingFromLabel = "Sending from",
@@ -19,46 +20,78 @@ const CoreSendFormModule = ({
   estimatedResultSubtitle = null,
   networkName
 }) => {
+  const darkMode = useSelector((state)=>state.settings.darkModeState);
   return (
     <React.Fragment>
-      <View style={{ ...Styles.wideBlockDense, paddingBottom: 2 }}>
+      <View
+        style={{
+          ...Styles.wideBlockDense,
+          paddingBottom: 2,
+          backgroundColor: darkMode
+            ? Colors.darkModeColor
+            : Colors.secondaryColor,
+        }}>
         <TextInput
+         style={{ flex: 1,
+          backgroundColor:darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey,
+        }}
+         theme={{
+          colors: {
+            text:darkMode
+              ? Colors.secondaryColor
+              : Colors.verusDarkGray,
+            placeholder:darkMode
+            ? Colors.verusDarkGray
+            : Colors.verusDarkGray,
+          }
+        }}
           label={sendingFromLabel}
           value={sendingFromValue}
           mode="outlined"
-          disabled={true}
+          editable={false}
         />
-        {
-          networkName != null ? (
-            <Text style={{marginTop: 8, fontSize: 14, color: Colors.verusDarkGray}}>
-              {`on ${networkName} network`}
-            </Text>
-          ) : null
-        }
+        {networkName != null ? (
+          <Text
+            style={{marginTop: 8, fontSize: 14, color: Colors.verusDarkGray}}>
+            {`on ${networkName} network`}
+          </Text>
+        ) : null}
       </View>
-      <View style={{ ...Styles.wideBlockDense, paddingTop: 0, paddingBottom: 2 }}>
+      <View style={{...Styles.wideBlockDense, paddingTop: 0, paddingBottom: 2}}>
         <View style={Styles.flexRow}>
           <TextInput
             returnKeyType="done"
             label={recipientAddressLabel}
             value={recipientAddressValue}
+            style={{ flex: 1,
+              backgroundColor:darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey,
+            }}
+             theme={{
+              colors: {
+                text:darkMode
+                  ? Colors.secondaryColor
+                  : 'black',
+                placeholder:darkMode
+                ? Colors.verusDarkGray
+                : Colors.verusDarkGray,
+              }
+            }}
             mode="outlined"
             multiline={true}
             onChangeText={onRecipientAddressChange}
             autoCapitalize={'none'}
             autoCorrect={false}
-            style={{ flex: 1 }}
           />
           <Button
             onPress={onSelfPress}
             color={Colors.primaryColor}
-            style={{ alignSelf: 'center', marginTop: 6, width: 64 }}
+            style={{alignSelf: 'center', marginTop: 6, width: 64}}
             compact>
             {'Self'}
           </Button>
         </View>
       </View>
-      <View style={{ ...Styles.wideBlockDense, paddingTop: 0 }}>
+      <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
         <View style={Styles.flexRow}>
           <TextInput
             returnKeyType="done"
@@ -69,24 +102,35 @@ const CoreSendFormModule = ({
             value={amountValue}
             mode="outlined"
             onChangeText={onAmountChange}
-            style={{ flex: 1 }}
+            style={{ flex: 1,
+              backgroundColor:darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey,
+            }}
+             theme={{
+              colors: {
+                text:darkMode
+                  ? Colors.secondaryColor
+                  : 'black',
+                placeholder:darkMode
+                  ? Colors.verusDarkGray
+                  : Colors.verusDarkGray,
+              }
+            }}
           />
           <Button
             onPress={onMaxPress}
             color={Colors.primaryColor}
-            style={{ alignSelf: 'center', marginTop: 6, width: 64 }}
+            style={{alignSelf: 'center', marginTop: 6, width: 64}}
             disabled={maxButtonDisabled}
             compact>
             {'Max'}
           </Button>
         </View>
-        {
-          estimatedResultSubtitle != null ? (
-            <Text style={{marginTop: 8, fontSize: 14, color: Colors.verusDarkGray}}>
-              {estimatedResultSubtitle}
-            </Text>
-          ) : null
-        }
+        {estimatedResultSubtitle != null ? (
+          <Text
+            style={{marginTop: 8, fontSize: 14, color: Colors.verusDarkGray}}>
+            {estimatedResultSubtitle}
+          </Text>
+        ) : null}
       </View>
     </React.Fragment>
   );

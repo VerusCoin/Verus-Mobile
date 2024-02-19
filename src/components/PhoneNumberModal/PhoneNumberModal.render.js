@@ -73,9 +73,9 @@ export const PhoneNumberModalRender = function () {
                 colors: {
                   text: this.props.darkMode
                     ? Colors.secondaryColor
-                    : Colors.ultraLightGrey,
+                    : 'black',
                   placeholder: this.props.darkMode
-                    ? Colors.primaryColor
+                    ? Colors.verusDarkGray
                     : Colors.verusDarkGray,
                 },
               }}
@@ -103,9 +103,9 @@ export const PhoneNumberModalRender = function () {
                 colors: {
                   text: this.props.darkMode
                     ? Colors.secondaryColor
-                    : Colors.ultraLightGrey,
+                    : 'black',
                   placeholder: this.props.darkMode
-                    ? Colors.primaryColor
+                    ? Colors.verusDarkGray
                     : Colors.verusDarkGray,
                 },
               }}

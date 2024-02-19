@@ -102,7 +102,7 @@ export default function CreatePassword({password, setPassword, navigation}) {
               colors: {
                 text: darkMode
                   ? Colors.secondaryColor
-                  : Colors.ultraLightGrey,
+                  : 'black',
                 placeholder: darkMode
                   ? Colors.primaryColor
                   : Colors.verusDarkGray,
@@ -114,7 +114,7 @@ export default function CreatePassword({password, setPassword, navigation}) {
               width: 280,
               backgroundColor:darkMode
               ? Colors.verusDarkModeForm
-              : Colors.tertiaryColor,
+              : Colors.ultraUltraLightGrey,
             }}
             placeholder="Enter password"
             dense={true}
@@ -132,7 +132,7 @@ export default function CreatePassword({password, setPassword, navigation}) {
               colors: {
                 text: darkMode
                   ? Colors.secondaryColor
-                  : Colors.ultraLightGrey,
+                  : 'black',
                 placeholder: darkMode
                   ? Colors.primaryColor
                   : Colors.verusDarkGray,
@@ -144,7 +144,7 @@ export default function CreatePassword({password, setPassword, navigation}) {
               width: 280,
               backgroundColor:darkMode
               ? Colors.verusDarkModeForm
-              : Colors.tertiaryColor,
+              : Colors.ultraUltraLightGrey,
             }}
             placeholder="Enter password"
             dense={true}

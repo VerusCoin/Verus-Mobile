@@ -1,5 +1,5 @@
 import { ADDRESS_BLOCKLIST_FROM_WEBSERVER, LOADING_ACCOUNT, VALIDATING_ACCOUNT } from "../../../../utils/constants/constants";
-import { signIntoAuthenticatedAccount } from "../../../actionCreators";
+import { setDarkModeState, signIntoAuthenticatedAccount } from "../../../actionCreators";
 import { COIN_MANAGER_MAP, fetchActiveCoins, setUserCoins } from "../../coins/Coins";
 import {
   activateChainLifecycle,
@@ -14,6 +14,8 @@ import { initSettings, saveGeneralSettings } from "../../WalletSettings";
 import { DISABLED_CHANNELS } from '../../../../../env/index'
 import store from "../../../../store";
 import { getAddressBlocklistFromServer } from "../../../../utils/api/channels/general/addressBlocklist/getAddressBlocklist";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect } from "react";
 
 export const initializeAccountData = async (
   account,
@@ -24,6 +26,8 @@ export const initializeAccountData = async (
   setInitStep(VALIDATING_ACCOUNT);
   const accountAuthenticator = await validateLogin(account, password);
 
+  const value = await AsyncStorage.getItem('darkModeKey');
+  store.dispatch(setDarkModeState(JSON.parse(value)));
   if (accountAuthenticator) {
     setInitStep(LOADING_ACCOUNT);
     await initServiceStoredDataForUser(account.accountHash);

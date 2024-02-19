@@ -195,6 +195,7 @@ class CoinMenus extends Component {
     this.props.navigation.dispatch(NavigationActions.back());
   };
 
+  
   //The rendering of overview, send and receive is temporary, we want to use
   //this.state.activeTab.screen, but the
   //"Cannot Add a child that doesn't have a YogaNode to a parent with out a measure function"
@@ -202,6 +203,7 @@ class CoinMenus extends Component {
   render() {
     const {selectedSubWallet, activeCoin} = this.props;
     const {subWallets, filteredSubWallets} = this.state;
+    console.log('darkmodestate',this.props.darkMode)
 
     return (
       <Portal.Host>
@@ -222,7 +224,7 @@ class CoinMenus extends Component {
           {selectedSubWallet != null && (
             <BottomNavigation
               barStyle={{
-                backgroundColor:this.props.darkMode?Colors.verusDarkBlue:Colors.secondaryColor
+                backgroundColor:this.props.darkMode?Colors.verusDarkBlue:Colors.primaryColor
               }}
               shifting={false}
               navigationState={{

@@ -17,7 +17,7 @@ const Colors = {
     darkModeColor:'#121212',
     verusDarkBlue:'#08328C',
     verusDarkModeForm:'#202020',
-    defaultGrayColor:'#818589'
+    defaultGrayColor:'#8D8E8D'
 }
 
 export default Colors

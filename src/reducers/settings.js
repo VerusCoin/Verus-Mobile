@@ -19,9 +19,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
-
-console.log('darkmodestate',AsyncStorage.getItem('darkModeKey'))
-
 export const settings = (state = {
   btcFeesAdvanced: false,
   extendedCoinInfo: false,

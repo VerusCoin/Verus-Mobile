@@ -936,207 +936,306 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     );
   };
 
+  console.log('suggestions:',suggestions)
+  console.log(sendModal)
+  console.log('objectid:',sendModal.coinObj);
+
+  const darkMode = useSelector(state => state.settings.darkModeState);
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={{flex: 1, backgroundColor: Colors.secondaryColor}}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: darkMode
+            ? Colors.darkModeColor
+            : Colors.secondaryColor,
+        }}>
         {searchMode ? (
           <Animated.View
             style={{
-              backgroundColor: Colors.secondaryColor,
+              // backgroundColor:darkMode?Colors.darkModeColor:Colors.secondaryColor,
               ...Styles.fullWidth,
               justifyContent: 'flex-start',
               alignItems: 'center',
-              backgroundColor: Colors.secondaryColor,
               flex: 1,
-              opacity: fadeSearchMode
+              opacity: fadeSearchMode,
             }}>
-              <View style={{ width: '92%', paddingTop: 8 }}>
-                <View style={Styles.flexRow}>
-                  <TextInput
-                    label={FIELD_TITLES[selectedField]}
-                    value={sendModal.data[selectedField]}
-                    onChangeText={handleSearch}
-                    mode="outlined"
-                    style={{
-                      flex: 1
-                    }}
-                  />
-                  <Button
-                    onPress={() => handleSearch("")}
-                    color={Colors.primaryColor}
-                    style={{
-                      alignSelf: 'center',
-                      marginTop: 6,
-                    }}
-                    compact>
-                    {'Clear'}
-                  </Button>
-                </View>
+            <View style={{width: '92%', paddingTop: 8}}>
+              <View style={Styles.flexRow}>
+                <TextInput
+                  label={FIELD_TITLES[selectedField]}
+                  value={sendModal.data[selectedField]}
+                  onChangeText={handleSearch}
+                  mode="outlined"
+                  style={{
+                    flex: 1,
+                    backgroundColor: darkMode
+                      ? Colors.verusDarkModeForm
+                      : Colors.ultraUltraLightGrey,
+                  }}
+                  theme={{
+                    colors: {
+                      text: darkMode
+                        ? Colors.secondaryColor
+                        :'black',
+                      placeholder: darkMode
+                        ? Colors.verusDarkGray
+                        : Colors.verusDarkGray,
+                    },
+                  }}
+                />
+                <Button
+                  onPress={() => handleSearch('')}
+                  color={Colors.primaryColor}
+                  style={{
+                    alignSelf: 'center',
+                    marginTop: 6,
+                  }}
+                  compact>
+                  {'Clear'}
+                </Button>
               </View>
-              {
-                loadingSuggestions ? (
-                  <AnimatedActivityIndicatorBox />
-                ) : suggestions.length == 0 ? (
-                  <MissingInfoRedirect
-                    icon={'alert-circle-outline'}
-                    label={getFieldPlaceholder(selectedField)}
-                  />
-                ) : (
-                  <FlatList
-                    data={suggestions}
-                    style={{
-                      width: '100%',
-                    }}
-                    ListHeaderComponent={
-                      <List.Item
-                        title={
-                          <Text style={{...Styles.listItemTableCell, fontWeight: 'bold'}}>
-                            {'Name'}
-                          </Text>
-                        }
-                        right={() =>
-                          selectedField !== SEND_MODAL_EXPORTTO_FIELD && selectedField !== SEND_MODAL_MAPPING_FIELD ? (
-                            <Text style={{...Styles.listItemTableCell, fontWeight: 'bold'}}>
-                              {'est. price in ' + sendModal.coinObj.display_ticker}
-                            </Text>
-                          ) : null
-                        }
-                      />
+            </View>
+            {loadingSuggestions ? (
+              <AnimatedActivityIndicatorBox />
+            ) : suggestions.length == 0 ? (
+              <MissingInfoRedirect
+                icon={'alert-circle-outline'}
+                label={getFieldPlaceholder(selectedField)}
+              />
+            ) : (
+              <FlatList
+                data={suggestions}
+                style={{
+                  width: '100%',
+                }}
+                ListHeaderComponent={
+                  <List.Item
+                    title={
+                      <Text
+                        style={{
+                          ...Styles.listItemTableCell,
+                          fontWeight: 'bold',
+                          color: darkMode ? Colors.secondaryColor : 'black',
+                        }}>
+                        {'Name'}
+                      </Text>
                     }
-                    renderItem={({item, index}) => (
-                      <List.Item
-                        title={item.title}
-                        key={index.toString()}
-                        description={item.description}
-                        onPress={() => selectSuggestion(item)}
-                        right={() => (
-                          <Text style={Styles.listItemTableCell}>{item.right}</Text>
-                        )}
-                        left={props => {
-                          const Logo = getCoinLogo(item.logoid, item.logoproto, 'dark');
-
-                          return (
-                            <View style={{justifyContent: 'center', paddingLeft: 8}}>
-                              <Logo
-                                width={36}
-                                height={36}
-                                style={{
-                                  alignSelf: 'center',
-                                }}
-                              />
-                            </View>
-                          );
-                        }}
-                      />
-                    )}
+                    right={() =>
+                      selectedField !== SEND_MODAL_EXPORTTO_FIELD &&
+                      selectedField !== SEND_MODAL_MAPPING_FIELD ? (
+                        <Text
+                          style={{
+                            ...Styles.listItemTableCell,
+                            fontWeight: 'bold',
+                            color: darkMode ? Colors.secondaryColor : 'black',
+                          }}>
+                          {'est. price in ' + sendModal.coinObj.display_ticker}
+                        </Text>
+                      ) : null
+                    }
                   />
-                )
-              }
+                }
+                renderItem={({item, index}) => (
+                  <List.Item
+                    title={item.title}
+                    key={index.toString()}
+                    titleStyle={{
+                      color: darkMode ? Colors.secondaryColor : 'black',
+                    }}
+                    descriptionStyle={{
+                      color: darkMode
+                        ? Colors.secondaryColor
+                        : Colors.defaultGrayColor,
+                    }}
+                    description={item.description}
+                    onPress={() => selectSuggestion(item)}
+                    right={() => (
+                      <Text
+                        style={
+                          (Styles.listItemTableCell,
+                          {color: darkMode ? Colors.secondaryColor : 'black'})
+                        }>
+                        {item.right}
+                      </Text>
+                    )}
+                    left={props => {
+                      console.log('suggestions:', suggestions);
+                      console.log('item:', item);
+                      let id;
+                      if (item.title.includes('.')) {
+                        const logoId = item?.title?.split('.');
+                        id = logoId[0];
+                      } else {
+                        id = item.logoid;
+                      }
+                      console.log(id);
+                      const Logo = getCoinLogo(id, item.logoproto, 'dark');
+                      return (
+                        <View
+                          style={{justifyContent: 'center', paddingLeft: 8}}>
+                          <Logo
+                            width={36}
+                            height={36}
+                            style={{
+                              alignSelf: 'center',
+                            }}
+                          />
+                        </View>
+                      );
+                    }}
+                  />
+                )}
+              />
+            )}
           </Animated.View>
         ) : (
-          <Animated.View style={{ flex: 1, opacity: fadeNormalForm }}>
+          <Animated.View
+            style={{
+              flex: 1,
+              opacity: fadeNormalForm,
+              backgroundColor: darkMode
+                ? Colors.darkModeColor
+                : Colors.secondaryColor,
+            }}>
             <KeyboardAwareScrollView
               style={{
-                backgroundColor: Colors.secondaryColor,
+                backgroundColor: darkMode
+                  ? Colors.darkModeColor
+                  : Colors.secondaryColor,
                 ...Styles.fullWidth,
-                flex: 1
+                flex: 1,
               }}
               contentContainerStyle={{
                 justifyContent: 'flex-start',
                 alignItems: 'center',
-                backgroundColor: Colors.secondaryColor,
+                backgroundColor: darkMode
+                  ? Colors.darkModeColor
+                  : Colors.secondaryColor,
               }}
               resetScrollToCoords={{x: 0, y: 0}}
               scrollEnabled={true}
               enableOnAndroid={true}
               extraScrollHeight={150}
               keyboardShouldPersistTaps="handled">
-                <CoreSendFormModule
-                  sendingFromValue={sendModal.subWallet.name}
-                  recipientAddressValue={sendModal.data[SEND_MODAL_TO_ADDRESS_FIELD]}
-                  onRecipientAddressChange={text =>
-                    updateSendFormData(SEND_MODAL_TO_ADDRESS_FIELD, text)
+              <CoreSendFormModule
+                sendingFromValue={sendModal.subWallet.name}
+                recipientAddressValue={
+                  sendModal.data[SEND_MODAL_TO_ADDRESS_FIELD]
+                }
+                onRecipientAddressChange={text =>
+                  updateSendFormData(SEND_MODAL_TO_ADDRESS_FIELD, text)
+                }
+                onSelfPress={() => setAddressSelf()}
+                amountValue={sendModal.data[SEND_MODAL_AMOUNT_FIELD]}
+                onAmountChange={text =>
+                  updateSendFormData(SEND_MODAL_AMOUNT_FIELD, text)
+                }
+                onMaxPress={() => maxAmount()}
+                maxButtonDisabled={localBalances == null}
+                networkName={networkName}
+                estimatedResultSubtitle={
+                  isConversion &&
+                  sendModal.data[SEND_MODAL_PRICE_ESTIMATE] != null &&
+                  processedAmount != null
+                    ? `≈ ${Number(
+                        (
+                          processedAmount *
+                          sendModal.data[SEND_MODAL_PRICE_ESTIMATE].price
+                        ).toFixed(8),
+                      )} ${sendModal.data[SEND_MODAL_PRICE_ESTIMATE].name}`
+                    : null
+                }
+              />
+              {showConversionField || showViaField ? (
+                <ConvertFormModule
+                  isConversion={isConversion}
+                  isPreconvert={sendModal.data[SEND_MODAL_IS_PRECONVERT]}
+                  advancedForm={sendModal.data[SEND_MODAL_ADVANCED_FORM]}
+                  convertToField={sendModal.data[SEND_MODAL_CONVERTTO_FIELD]}
+                  viaField={sendModal.data[SEND_MODAL_VIA_FIELD]}
+                  handleFieldFocusVia={() =>
+                    handleFieldFocus(SEND_MODAL_VIA_FIELD)
                   }
-                  onSelfPress={() => setAddressSelf()}
-                  amountValue={sendModal.data[SEND_MODAL_AMOUNT_FIELD]}
-                  onAmountChange={text => updateSendFormData(SEND_MODAL_AMOUNT_FIELD, text)}
-                  onMaxPress={() => maxAmount()}
-                  maxButtonDisabled={localBalances == null}
-                  networkName={networkName}
-                  estimatedResultSubtitle={
-                    isConversion &&
-                    sendModal.data[SEND_MODAL_PRICE_ESTIMATE] != null &&
-                    processedAmount != null
-                      ? `≈ ${Number(
-                          (processedAmount * sendModal.data[SEND_MODAL_PRICE_ESTIMATE].price).toFixed(
-                            8,
-                          ),
-                        )} ${sendModal.data[SEND_MODAL_PRICE_ESTIMATE].name}`
-                      : null
+                  handleFieldFocusConvertTo={() =>
+                    handleFieldFocus(SEND_MODAL_CONVERTTO_FIELD)
+                  }
+                  onViaChange={text =>
+                    updateSendFormData(SEND_MODAL_VIA_FIELD, text)
+                  }
+                  onConvertToChange={text =>
+                    updateSendFormData(SEND_MODAL_CONVERTTO_FIELD, text)
+                  }
+                  isVia={isVia}
+                  showConversionField={showConversionField}
+                  showViaField={showViaField}
+                />
+              ) : null}
+              {showExportField && (
+                <ExportFormModule
+                  isExport={isExport}
+                  isConversion={isConversion}
+                  exportToField={sendModal.data[SEND_MODAL_EXPORTTO_FIELD]}
+                  handleNetworkFieldFocus={() =>
+                    handleFieldFocus(SEND_MODAL_EXPORTTO_FIELD)
+                  }
+                  onSystemChange={text =>
+                    updateSendFormData(SEND_MODAL_EXPORTTO_FIELD, text)
+                  }
+                  localNetworkName={localNetworkName}
+                  advancedForm={sendModal.data[SEND_MODAL_ADVANCED_FORM]}
+                  isPreconvert={sendModal.data[SEND_MODAL_IS_PRECONVERT]}
+                  showMappingField={
+                    sendModal.data[SEND_MODAL_SHOW_MAPPING_FIELD]
+                  }
+                  mappingField={sendModal.data[SEND_MODAL_MAPPING_FIELD]}
+                  handleMappingFieldFocus={() =>
+                    handleFieldFocus(SEND_MODAL_MAPPING_FIELD)
+                  }
+                  onMappingChange={text =>
+                    updateSendFormData(SEND_MODAL_MAPPING_FIELD, text)
                   }
                 />
-              {
-                (showConversionField || showViaField) ? (
-                  <ConvertFormModule
-                    isConversion={isConversion}
-                    isPreconvert={sendModal.data[SEND_MODAL_IS_PRECONVERT]}
-                    advancedForm={sendModal.data[SEND_MODAL_ADVANCED_FORM]}
-                    convertToField={sendModal.data[SEND_MODAL_CONVERTTO_FIELD]}
-                    viaField={sendModal.data[SEND_MODAL_VIA_FIELD]}
-                    handleFieldFocusVia={() => handleFieldFocus(SEND_MODAL_VIA_FIELD)}
-                    handleFieldFocusConvertTo={() => handleFieldFocus(SEND_MODAL_CONVERTTO_FIELD)}
-                    onViaChange={(text) => updateSendFormData(SEND_MODAL_VIA_FIELD, text)}
-                    onConvertToChange={(text) => updateSendFormData(SEND_MODAL_CONVERTTO_FIELD, text)}
-                    isVia={isVia}
-                    showConversionField={showConversionField}
-                    showViaField={showViaField}
-                  />
-                ) : null
-              }
-              {
-                showExportField && (
-                  <ExportFormModule
-                    isExport={isExport}
-                    isConversion={isConversion}
-                    exportToField={sendModal.data[SEND_MODAL_EXPORTTO_FIELD]}
-                    handleNetworkFieldFocus={() => handleFieldFocus(SEND_MODAL_EXPORTTO_FIELD)}
-                    onSystemChange={(text) => updateSendFormData(SEND_MODAL_EXPORTTO_FIELD, text)}
-                    localNetworkName={localNetworkName}
-                    advancedForm={sendModal.data[SEND_MODAL_ADVANCED_FORM]}
-                    isPreconvert={sendModal.data[SEND_MODAL_IS_PRECONVERT]}
-                    showMappingField={sendModal.data[SEND_MODAL_SHOW_MAPPING_FIELD]}
-                    mappingField={sendModal.data[SEND_MODAL_MAPPING_FIELD]}
-                    handleMappingFieldFocus={() => handleFieldFocus(SEND_MODAL_MAPPING_FIELD)}
-                    onMappingChange={(text) => updateSendFormData(SEND_MODAL_MAPPING_FIELD, text)}
-                  />
-                )
-              }
-              {
-                (sendModal.data[SEND_MODAL_IS_PRECONVERT] || sendModal.data[SEND_MODAL_ADVANCED_FORM]) && (
-                  <React.Fragment>
-                    <View style={{...Styles.wideBlockDense}}>
-                      <Divider />
-                    </View>
-                    <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
-                      <Checkbox.Item
-                        color={Colors.primaryColor}
-                        disabled={sendModal.data[SEND_MODAL_ADVANCED_FORM] ? false : true}
-                        label={'Send as preconvert'}
-                        status={
-                          sendModal.data[SEND_MODAL_IS_PRECONVERT] ? 'checked' : 'unchecked'
-                        }
-                        onPress={sendModal.data[SEND_MODAL_ADVANCED_FORM] ? () =>
-                          updateSendFormData(
-                            SEND_MODAL_IS_PRECONVERT,
-                            !sendModal.data[SEND_MODAL_IS_PRECONVERT],
-                          ) : undefined
-                        }
-                        mode="android"
-                      />
-                    </View>
-                  </React.Fragment>
-                )
-              }
+              )}
+              {(sendModal.data[SEND_MODAL_IS_PRECONVERT] ||
+                sendModal.data[SEND_MODAL_ADVANCED_FORM]) && (
+                <React.Fragment>
+                  <View style={{...Styles.wideBlockDense}}>
+                    <Divider />
+                  </View>
+                  <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
+                    <Checkbox.Item
+                      labelStyle={{
+                        color: darkMode ? Colors.secondaryColor : 'black',
+                      }}
+                      uncheckedColor={
+                        darkMode ? Colors.secondaryColor : Colors.quinaryColor
+                      }
+                      color={Colors.primaryColor}
+                      disabled={
+                        sendModal.data[SEND_MODAL_ADVANCED_FORM] ? false : true
+                      }
+                      label={'Send as preconvert'}
+                      status={
+                        sendModal.data[SEND_MODAL_IS_PRECONVERT]
+                          ? 'checked'
+                          : 'unchecked'
+                      }
+                      onPress={
+                        sendModal.data[SEND_MODAL_ADVANCED_FORM]
+                          ? () =>
+                              updateSendFormData(
+                                SEND_MODAL_IS_PRECONVERT,
+                                !sendModal.data[SEND_MODAL_IS_PRECONVERT],
+                              )
+                          : undefined
+                      }
+                      mode="android"
+                    />
+                  </View>
+                </React.Fragment>
+              )}
             </KeyboardAwareScrollView>
           </Animated.View>
         )}
@@ -1144,7 +1243,9 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
           onPress={searchMode ? handleDoneSearching : submitData}
           mode="contained"
           loading={loadingSuggestions}
-          disabled={loadingSuggestions || (!searchMode && localBalances == null)}
+          disabled={
+            loadingSuggestions || (!searchMode && localBalances == null)
+          }
           style={{width: 100, alignSelf: 'center'}}>
           {searchMode ? 'Done' : 'Send'}
         </Button>

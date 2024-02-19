@@ -54,7 +54,6 @@ const Login = props => {
       );
     }
   };
-
   async function initializeDarkModeState() {
     try {
       const darkModeValue = await AsyncStorage.getItem('darkModeKey');
@@ -68,8 +67,11 @@ const Login = props => {
     }
   }
 
-  useEffect(() => {
+  useEffect(()=>{
     initializeDarkModeState()
+  },[])
+
+  useEffect(() => {
     if (
       !authModalUsed &&
       defaultAccount != null &&
@@ -143,7 +145,9 @@ const Login = props => {
       <TallButton
         onPress={() => handleAddUser()}
         mode="text"
-        labelStyle={{fontWeight: 'bold', color: Colors.secondaryColor}}
+        labelStyle={{fontWeight: 'bold', color: darkMode
+        ? Colors.secondaryColor
+        : Colors.primaryColor,}}
         style={{
           position: 'absolute',
           bottom: 30, // Adjusted position

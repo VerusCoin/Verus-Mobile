@@ -62,9 +62,9 @@ class ListSelectionModal extends Component {
                     cancel();
                   }}>
                   <List.Item
-                    titleStyle={{color: darkMode ? Colors.secondaryColor : ''}}
+                    titleStyle={{color: darkMode ? Colors.secondaryColor : 'black'}}
                     descriptionStyle={{
-                      color: darkMode ? Colors.secondaryColor : '',
+                      color: darkMode ? Colors.secondaryColor : Colors.defaultGrayColor,
                     }}
                     title={item.title}
                     description={item.description}

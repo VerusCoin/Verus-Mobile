@@ -185,7 +185,7 @@ class ResetPwd extends Component {
                 colors: {
                   text: this.props.darkMode
                     ? Colors.secondaryColor
-                    : Colors.ultraLightGrey,
+                    : 'black',
                   placeholder: this.props.darkMode
                     ? Colors.verusDarkGray
                     : Colors.verusDarkGray,
@@ -219,7 +219,7 @@ class ResetPwd extends Component {
                 colors: {
                   text: this.props.darkMode
                     ? Colors.secondaryColor
-                    : Colors.ultraLightGrey,
+                    : 'black',
                   placeholder: this.props.darkMode
                     ? Colors.verusDarkGray
                     : Colors.verusDarkGray,
@@ -252,7 +252,7 @@ class ResetPwd extends Component {
                 colors: {
                   text: this.props.darkMode
                     ? Colors.secondaryColor
-                    : Colors.ultraLightGrey,
+                    : 'black',
                   placeholder: this.props.darkMode
                     ? Colors.verusDarkGray
                     : Colors.verusDarkGray,
@@ -279,7 +279,7 @@ class ResetPwd extends Component {
             {
               backgroundColor: this.props.darkMode
                 ? Colors.verusDarkModeForm
-                : Colors.tertiaryColor,
+                : Colors.secondaryColor,
             },
           ]}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>

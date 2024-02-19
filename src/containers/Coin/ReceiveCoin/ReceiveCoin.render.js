@@ -118,8 +118,21 @@ export const RenderReceiveCoin = function() {
               <View style={Styles.flexRow}>
                 <TouchableOpacity
                   onPress={() => this.copyAddressToClipboard(address)}
-                  style={{...Styles.flex}}>
+                  style={{...Styles.flex,backgroundColor:this.props.darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey}}>
                   <TextInput
+                   style={{ flex: 1,
+                    backgroundColor:this.props.darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey
+                  }}
+                  theme={{
+                    colors: {
+                      text:this.props.darkMode
+                        ? Colors.secondaryColor
+                        : 'black',
+                      placeholder:this.props.darkMode
+                        ? Colors.verusDarkGray
+                        : Colors.verusDarkGray,
+                    },
+                  }}
                     returnKeyType="done"
                     label={label}
                     value={address}
@@ -127,9 +140,7 @@ export const RenderReceiveCoin = function() {
                     editable={false}
                     multiline
                     pointerEvents="none"
-                    style={{
-                      backgroundColor: Colors.secondaryColor,
-                    }}
+                    
                     error={errors.memo}
                   />
                 </TouchableOpacity>
@@ -165,8 +176,18 @@ export const RenderReceiveCoin = function() {
                 value={amount}
                 editable={false}
                 pointerEvents="none"
-                style={{
-                  backgroundColor: Colors.secondaryColor,
+                style={{ flex: 1,
+                  backgroundColor:this.props.darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey
+                }}
+                theme={{
+                  colors: {
+                    text:this.props.darkMode
+                      ? Colors.secondaryColor
+                      : 'black',
+                    placeholder:this.props.darkMode
+                      ? Colors.verusDarkGray
+                      : Colors.verusDarkGray,
+                  },
                 }}
                 error={errors.amount}
               />

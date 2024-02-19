@@ -72,12 +72,12 @@ const NameForm = props => {
           style={{
             backgroundColor: darkMode
               ? Colors.verusDarkModeForm
-              : Colors.tertiaryColor,
+              : Colors.ultraUltraLightGrey,
           }}
           disabled={props.loading}
           theme={{
             colors: {
-              text: darkMode ? Colors.secondaryColor : Colors.ultraLightGrey,
+              text: darkMode ? Colors.secondaryColor : 'black',
               placeholder: darkMode
                 ? Colors.verusDarkGray
                 : Colors.verusDarkGray,
@@ -99,11 +99,11 @@ const NameForm = props => {
             marginVertical: 8,
             backgroundColor: darkMode
               ? Colors.verusDarkModeForm
-              : Colors.tertiaryColor,
+              : Colors.ultraUltraLightGrey,
           }}
           theme={{
             colors: {
-              text: darkMode ? Colors.secondaryColor : Colors.ultraLightGrey,
+              text: darkMode ? Colors.secondaryColor : 'black',
               placeholder: darkMode
                 ? Colors.verusDarkGray
                 : Colors.verusDarkGray,
@@ -121,7 +121,7 @@ const NameForm = props => {
           onChangeText={text => setLast(text)}
           theme={{
             colors: {
-              text: darkMode ? Colors.secondaryColor : Colors.ultraLightGrey,
+              text: darkMode ? Colors.secondaryColor : 'black',
               placeholder: darkMode
                 ? Colors.verusDarkGray
                 : Colors.verusDarkGray,
@@ -130,7 +130,7 @@ const NameForm = props => {
           style={{
             backgroundColor: darkMode
               ? Colors.verusDarkModeForm
-              : Colors.tertiaryColor,
+              : Colors.ultraUltraLightGrey,
           }}
         />
       </View>

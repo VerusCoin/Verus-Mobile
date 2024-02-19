@@ -41,7 +41,7 @@ export const AddErc20TokenFormRender = ({
               colors: {
                 text: darkMode
                   ? Colors.secondaryColor
-                  : Colors.ultraLightGrey,
+                  : 'black',
                 placeholder: darkMode
                   ? Colors.primaryColor
                   : Colors.verusDarkGray,

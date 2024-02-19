@@ -29,7 +29,6 @@ import {
   resolveAlert,
 } from '../../actions/actions/alert/dispatchers/alert';
 import {bindActionCreators} from 'redux';
-import { SET_DARK_MODE } from '../../utils/constants/storeType';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 class SideMenu extends Component {
@@ -296,10 +295,6 @@ class SideMenu extends Component {
         }
       }
     };
-
- 
-  
-
 
 
   render() {

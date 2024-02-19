@@ -185,6 +185,7 @@ export const renderAddCoinComponents = function () {
 };
 
 export const renderMainDrawerComponents = function () {
+  console.log('active:', this.props.activeCoinsForUser)
   return (
     <View
       style={{

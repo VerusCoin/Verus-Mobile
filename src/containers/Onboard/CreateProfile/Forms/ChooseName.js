@@ -99,7 +99,7 @@ export default function ChooseName({ profileName, setProfileName, navigation }) 
               colors: {
                 text: darkMode
                   ? Colors.secondaryColor
-                  : Colors.ultraLightGrey,
+                  : 'black',
                 placeholder: darkMode
                   ? Colors.primaryColor
                   : Colors.verusDarkGray,
@@ -111,7 +111,7 @@ export default function ChooseName({ profileName, setProfileName, navigation }) 
               width: 280,
               backgroundColor:darkMode
               ? Colors.verusDarkModeForm
-              : Colors.tertiaryColor,
+              : Colors.ultraUltraLightGrey,
             }}
             placeholder="Enter name"
             dense={true}

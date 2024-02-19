@@ -29,7 +29,7 @@ export const AddPbaasCurrencyFormRender = ({submitData, updateSendFormData, form
               colors: {
                 text: darkMode
                   ? Colors.secondaryColor
-                  : Colors.ultraLightGrey,
+                  : 'black',
                 placeholder: darkMode
                   ? Colors.primaryColor
                   : Colors.verusDarkGray,

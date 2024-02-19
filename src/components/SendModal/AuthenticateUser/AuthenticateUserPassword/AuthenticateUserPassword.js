@@ -2,13 +2,15 @@ import React from 'react';
 import { useEffect, useState } from "react"
 import { Keyboard, ScrollView, TouchableWithoutFeedback, View } from "react-native";
 import { Button, Checkbox, TextInput } from "react-native-paper";
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { initializeAccountData } from "../../../../actions/actionDispatchers";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import Colors from '../../../../globals/colors';
 import styles from "../../../../styles";
 import { SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT, SEND_MODAL_USER_TO_AUTHENTICATE } from "../../../../utils/constants/sendModal";
 import { getBiometricPassword, getSupportedBiometryType } from '../../../../utils/keychain/keychain';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setDarkModeState } from '../../../../actions/actionCreators';
 
 const AuthenticateUserPassword = props => {
   const [password, setPassword] = useState('');
@@ -32,8 +34,11 @@ const AuthenticateUserPassword = props => {
   const [makeDefaultAccount, setMakeDefaultAccount] = useState(
     defaultAccountSelected,
   );
+  const dispatch = useDispatch()
 
   const tryUnlockAccount = async key => {
+    const value = await AsyncStorage.getItem('darkModeKey');
+    dispatch(setDarkModeState(JSON.parse(value)));
     await props.setLoading(true);
     await props.setPreventExit(true);
     props.updateSendFormData(
@@ -41,13 +46,14 @@ const AuthenticateUserPassword = props => {
       account.accountHash,
     );
     Keyboard.dismiss();
-
     try {
       await initializeAccountData(account, key, makeDefaultAccount);
-
       await props.setLoading(false);
       await props.setPreventExit(false);
+    const value = await AsyncStorage.getItem('darkModeKey');
+    dispatch(setDarkModeState(JSON.parse(value)));
       props.navigation.navigate(SEND_MODAL_FORM_STEP_RESULT);
+      dispatch(setDarkModeState(JSON.parse(value)));
     } catch (e) {
       await props.setLoading(false);
       await props.setPreventExit(false);
@@ -105,7 +111,7 @@ const AuthenticateUserPassword = props => {
           style={{
             backgroundColor: darkMode
               ? Colors.verusDarkModeForm
-              : Colors.tertiaryColor,
+              : Colors.ultraUltraLightGrey,
           }}
           theme={{
             colors: {

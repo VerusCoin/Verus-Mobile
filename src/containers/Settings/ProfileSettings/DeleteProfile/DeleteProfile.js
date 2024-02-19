@@ -148,7 +148,7 @@ class DeleteProfile extends Component {
               ? Colors.secondaryColor
               : Colors.ultraLightGrey,
             placeholder: this.props.darkMode
-              ? Colors.primaryColor
+              ? Colors.verusDarkGray
               : Colors.verusDarkGray,
           },
         }}

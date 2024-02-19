@@ -382,7 +382,7 @@ class ProfileSettings extends Component {
             />
           </TouchableOpacity>*/}
         <List.Subheader
-        style={{color:this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}}
+        style={{color:this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}}
         >{"Current Profile"}</List.Subheader>
         <Divider 
             style={{
@@ -397,7 +397,7 @@ class ProfileSettings extends Component {
           left={(props) => <List.Icon 
             {...props} 
             icon={"account"}
-            color={this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}
+            color={this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}
             />}
         />
         <Divider
@@ -427,7 +427,7 @@ class ProfileSettings extends Component {
           )
         }
         <List.Subheader
-        style={{color:this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}}
+        style={{color:this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}}
         >{"Security Settings"}</List.Subheader>
         <TouchableOpacity
           onPress={async () => {
@@ -510,7 +510,7 @@ class ProfileSettings extends Component {
           </TouchableOpacity>
         )}
         <List.Subheader
-        style={{color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor}}>
+        style={{color:this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}}>
           {"Key Settings"}</List.Subheader>
         <TouchableOpacity
           onPress={() => this.openKeyDerivationVersionModal()}
@@ -551,7 +551,7 @@ class ProfileSettings extends Component {
           allowBiometry={true}
         />
         <List.Subheader
-        style={{color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor}}
+        style={{color:this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}}
         >{"Profile Actions"}</List.Subheader>
         {ENABLE_DLIGHT && !this.props.testAccount && (
           <TouchableOpacity

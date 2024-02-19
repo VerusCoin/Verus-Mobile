@@ -167,7 +167,7 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
                       style={{width: '100%',
                     backgroundColor:darkMode
                       ? Colors.verusDarkModeForm
-                      : Colors.tertiaryColor,y
+                      : Colors.tertiaryColor
                     }}
                       onChangeText={text => {
                         let newGuesses = [...wordGuesses];

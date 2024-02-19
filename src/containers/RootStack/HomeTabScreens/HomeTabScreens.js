@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
 import Colors from '../../../globals/colors';
@@ -7,11 +7,21 @@ import ProfileStackScreens from '../ProfileStackScreens/ProfileStackScreens';
 import ServicesStackScreens from '../ServicesStackScreens/ServicesStackScreens';
 import VerusPay from '../../VerusPay/VerusPay';
 import { useSelector } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const HomeTabs = createMaterialBottomTabNavigator()
 
 const HomeTabScreens = props => {
   const darkMode = useSelector((state)=>state.settings.darkModeState)
+
+  useEffect(()=>{
+    getVla()
+  },[])
+
+  const getVla=async()=>{
+  const value = await AsyncStorage.getItem('darkModeKey');
+  console.log('async==',value)
+  }
   return (
     <HomeTabs.Navigator
       barStyle={{ backgroundColor: darkMode?Colors.verusDarkBlue:Colors.primaryColor }}

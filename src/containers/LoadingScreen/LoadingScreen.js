@@ -12,15 +12,38 @@ import {
   View
 } from "react-native";
 import styles from './LoadingScreen.styles';
+import { setDarkModeState } from "../../actions/actionCreators";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { connect } from "react-redux";
 
-export default class LoadingScreen extends Component {
+
+
+class LoadingScreen extends Component {
   constructor(props) {
     super(props)
+  }
+  componentDidMount() {
+    this.initializeDarkModeState();
+  }
+
+  initializeDarkModeState = async () => {
+    try {
+      const darkModeValue = await AsyncStorage.getItem('darkModeKey');
+      if (darkModeValue !== null) {
+        this.props.dispatch(setDarkModeState(JSON.parse(darkModeValue)));
+      } else {
+        this.props.dispatch(setDarkModeState(null));
+      }
+    } catch (error) {
+      console.error('Error retrieving Dark Mode state: ', error);
+    }
   }
 
   render() {
     return (
       <View style={styles.loadingRoot} />
-    );
+    )
   }
 }
+
+export default connect()(LoadingScreen);

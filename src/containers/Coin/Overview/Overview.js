@@ -37,6 +37,7 @@ import BigNumber from "bignumber.js";
 import { TransactionLogos } from '../../../images/customIcons/index'
 import Colors from "../../../globals/colors";
 import { CoinDirectory } from "../../../utils/CoinData/CoinDirectory";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const TX_LOGOS = {
   self: TransactionLogos.SelfArrow,
@@ -258,6 +259,9 @@ class Overview extends Component {
         ? CoinDirectory.findSystemCoinObj(this.props.activeCoin.id).id
         : this.props.activeCoin.id;
     } catch(e) { console.warn(e) }
+
+
+    console.log(this.props.darkMode)
     
     return (
       <TouchableOpacity
@@ -277,7 +281,7 @@ class Overview extends Component {
         }
       >
         <List.Item
-          titleStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}}
+          titleStyle={{color:this.props.darkMode?Colors.secondaryColor:'black'}}
           descriptionStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}}
           title={`${
             displayAmount != null
@@ -345,9 +349,9 @@ class Overview extends Component {
         scrollEnabled={true}
         ListEmptyComponent={
           <View
-            style={{...Styles.focalCenter,backgroundColor: this.props.darkMode?Colors.darkModeColor:''}}
+            style={{...Styles.focalCenter,backgroundColor: this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor}}
           >
-            <Text style={{...Styles.centeredText, fontSize: 16, color: this.props.darkMode?Colors.secondaryColor : Colors.verusDarkGray}}>
+            <Text style={{...Styles.centeredText, fontSize: 16, color: this.props.darkMode?Colors.secondaryColor : 'black'}}>
               {"No transactions found..."}
             </Text>
           </View>
