@@ -203,7 +203,7 @@ class CoinMenus extends Component {
   render() {
     const {selectedSubWallet, activeCoin} = this.props;
     const {subWallets, filteredSubWallets} = this.state;
-    console.log('darkmodestate',this.props.darkMode)
+
 
     return (
       <Portal.Host>

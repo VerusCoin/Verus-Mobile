@@ -118,7 +118,6 @@ export const HomeRenderWidget = function (widgetId) {
 export const HomeRenderCoinsList = function () {
   const {widgets} = this.state;
   const dragDetection = this.dragDetectionEnabled();
-  console.log(this.props.darkMode)
 
 
 

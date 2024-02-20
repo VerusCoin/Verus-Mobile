@@ -957,9 +957,6 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     );
   };
 
-  console.log('suggestions:',suggestions)
-  console.log(sendModal)
-  console.log('objectid:',sendModal.coinObj);
 
   const darkMode = useSelector(state => state.settings.darkModeState);
 
@@ -1088,7 +1085,6 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                       } else {
                         id = item.logoid;
                       }
-                      console.log(id);
                       const Logo = getCoinLogo(id, item.logoproto, 'dark');
 
                       return (

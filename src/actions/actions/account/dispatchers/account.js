@@ -1,5 +1,5 @@
 import { ADDRESS_BLOCKLIST_FROM_WEBSERVER, LOADING_ACCOUNT, VALIDATING_ACCOUNT } from "../../../../utils/constants/constants";
-import { setDarkModeState, signIntoAuthenticatedAccount } from "../../../actionCreators";
+import { signIntoAuthenticatedAccount } from "../../../actionCreators";
 import { COIN_MANAGER_MAP, fetchActiveCoins, setUserCoins } from "../../coins/Coins";
 import {
   activateChainLifecycle,
@@ -27,7 +27,6 @@ export const initializeAccountData = async (
   const accountAuthenticator = await validateLogin(account, password);
 
   const value = await AsyncStorage.getItem('darkModeKey');
-  store.dispatch(setDarkModeState(JSON.parse(value)));
   if (accountAuthenticator) {
     setInitStep(LOADING_ACCOUNT);
     await initServiceStoredDataForUser(account.accountHash);

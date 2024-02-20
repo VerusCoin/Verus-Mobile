@@ -173,10 +173,9 @@ export const setGeneralWalletSettingsState = (state) => {
 }
 
 //Reducer Name:settings
-export const setDarkModeState = (darkModeValue) => {
+export const setDarkModeState = () => {
   return {
-    type: DARK_MODE_STATE,
-    payload:darkModeValue
+    type: DARK_MODE_STATE
   }
 }
 

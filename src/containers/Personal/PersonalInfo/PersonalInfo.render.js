@@ -6,7 +6,7 @@ import { renderPersonalFullName } from "../../../utils/personal/displayUtils";
 import Colors from "../../../globals/colors";
 
 export const PersonalInfoRender = function () {
-  // console.log(this.props.darkMode)
+
   return (
     <SafeAreaView style={[Styles.defaultRoot,
     {

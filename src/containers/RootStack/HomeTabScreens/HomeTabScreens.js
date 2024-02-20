@@ -20,7 +20,6 @@ const HomeTabScreens = props => {
 
   const getVla=async()=>{
   const value = await AsyncStorage.getItem('darkModeKey');
-  console.log('async==',value)
   }
   return (
     <HomeTabs.Navigator

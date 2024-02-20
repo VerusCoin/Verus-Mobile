@@ -38,7 +38,6 @@ class SideMenu extends Component {
       error: null,
       mainDrawer: true,
       currentCoinIndex: null,
-      darkMode:false
     };
 
     this.APP_INFO = 'App Info';
@@ -273,27 +272,8 @@ class SideMenu extends Component {
       }
     };
 
-  _handleDarkModeToggle =async() => {
-      if (!this.props.darkMode) {
-        try {
-          await this.setState(prevState => ({darkMode: !prevState.darkMode}));
-          await AsyncStorage.setItem('darkModeKey', JSON.stringify(this.state.darkMode));
-          this.getDarkModeState().then((darkModeValue)=>{
-            this.props.dispatch(setDarkModeState(darkModeValue))
-          }).catch((err)=>console.error(err))
-        } catch (error) {
-          console.error('Error saving data:', error);
-        }
-      } else {
-        try {
-          await this.setState(prevState => ({darkMode: !prevState.darkMode}));
-          // Remove data from AsyncStorage
-          await AsyncStorage.removeItem('darkModeKey');          
-          this.props.dispatch(setDarkModeState(null)) 
-        } catch (error) {
-          console.error('Error removing data:', error);
-        }
-      }
+    _handleDarkModeToggle =async() => {
+      this.props.dispatch(setDarkModeState());
     };
 
 

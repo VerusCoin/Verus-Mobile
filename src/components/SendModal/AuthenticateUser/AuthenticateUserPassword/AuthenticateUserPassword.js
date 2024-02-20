@@ -10,7 +10,7 @@ import styles from "../../../../styles";
 import { SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT, SEND_MODAL_USER_TO_AUTHENTICATE } from "../../../../utils/constants/sendModal";
 import { getBiometricPassword, getSupportedBiometryType } from '../../../../utils/keychain/keychain';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { setDarkModeState } from '../../../../actions/actionCreators';
+
 
 const AuthenticateUserPassword = props => {
   const [password, setPassword] = useState('');
@@ -37,8 +37,6 @@ const AuthenticateUserPassword = props => {
   const dispatch = useDispatch()
 
   const tryUnlockAccount = async key => {
-    const value = await AsyncStorage.getItem('darkModeKey');
-    dispatch(setDarkModeState(JSON.parse(value)));
     await props.setLoading(true);
     await props.setPreventExit(true);
     props.updateSendFormData(
@@ -51,9 +49,7 @@ const AuthenticateUserPassword = props => {
       await props.setLoading(false);
       await props.setPreventExit(false);
     const value = await AsyncStorage.getItem('darkModeKey');
-    dispatch(setDarkModeState(JSON.parse(value)));
       props.navigation.navigate(SEND_MODAL_FORM_STEP_RESULT);
-      dispatch(setDarkModeState(JSON.parse(value)));
     } catch (e) {
       await props.setLoading(false);
       await props.setPreventExit(false);

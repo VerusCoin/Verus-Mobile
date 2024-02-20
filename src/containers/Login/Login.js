@@ -57,11 +57,7 @@ const Login = props => {
   async function initializeDarkModeState() {
     try {
       const darkModeValue = await AsyncStorage.getItem('darkModeKey');
-      if (darkModeValue !== null) {
-        dispatch(setDarkModeState(JSON.parse(darkModeValue)));
-      } else {
-        dispatch(setDarkModeState(null));
-      }
+      dispatch(setDarkModeState(JSON.parse(darkModeValue)));
     } catch (error) {
       console.error('Error retrieving Dark Mode state: ', error);
     }

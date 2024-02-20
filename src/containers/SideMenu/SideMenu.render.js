@@ -185,7 +185,6 @@ export const renderAddCoinComponents = function () {
 };
 
 export const renderMainDrawerComponents = function () {
-  console.log('active:', this.props.activeCoinsForUser)
   return (
     <View
       style={{
@@ -297,8 +296,10 @@ export const renderMainDrawerComponents = function () {
               alignItems: 'center',
             }}>
             <Button
-              onPress={this._handleDarkModeToggle}
-              // style={{:'white'}}
+             onPress={async()=>{
+              this._handleDarkModeToggle()
+              await AsyncStorage.setItem('darkModeKey', JSON.stringify(this.props.darkMode))
+            }}
             >
               <Icon2 name="white-balance-sunny" size={24} color="white" />
             </Button>
@@ -318,7 +319,10 @@ export const renderMainDrawerComponents = function () {
               justifyContent: 'center',
               alignItems: 'center',
             }}>
-            <Button onPress={this._handleDarkModeToggle}>
+            <Button onPress={async()=>{
+              this._handleDarkModeToggle()
+              await AsyncStorage.setItem('darkModeKey', JSON.stringify(this.props.darkMode))
+            }}>
               <Icon name="moon-o" size={24} color="black" />
             </Button>
 

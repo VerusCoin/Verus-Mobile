@@ -263,8 +263,6 @@ class Overview extends Component {
         : this.props.activeCoin.id;
     } catch(e) { console.warn(e) }
 
-
-    console.log(this.props.darkMode)
     
     return (
       <TouchableOpacity
