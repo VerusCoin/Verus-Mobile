@@ -38,6 +38,23 @@ const Login = props => {
   const darkMode = useSelector(state => state.settings.darkModeState);
   const dispatch = useDispatch()
 
+  async function initializeDarkModeState() {
+    try {
+      const darkModeValue = await AsyncStorage.getItem('darkModeKey');
+      if (darkModeValue !== null) {
+        dispatch(setDarkModeState(JSON.parse(darkModeValue)));
+      } else {
+        dispatch(setDarkModeState(null));
+      }
+    } catch (error) {
+      console.error('Error retrieving Dark Mode state: ', error);
+    }
+  }
+
+  useEffect(()=>{
+    initializeDarkModeState()
+  },[])
+
   openAuthModal = ignoreDefault => {
     if (ignoreDefault) {
       openAuthenticateUserModal();
@@ -54,18 +71,7 @@ const Login = props => {
       );
     }
   };
-  async function initializeDarkModeState() {
-    try {
-      const darkModeValue = await AsyncStorage.getItem('darkModeKey');
-      dispatch(setDarkModeState(JSON.parse(darkModeValue)));
-    } catch (error) {
-      console.error('Error retrieving Dark Mode state: ', error);
-    }
-  }
-
-  useEffect(()=>{
-    initializeDarkModeState()
-  },[])
+  
 
   useEffect(() => {
     if (

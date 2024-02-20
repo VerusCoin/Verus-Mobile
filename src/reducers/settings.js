@@ -38,7 +38,7 @@ export const settings = (state = {
     },
     addressBlocklist: [],
   },
-  darkModeState:false,
+  darkModeState:null,
   buySellSettings: {}, //e.g. {user1': {buySellEnabled: true, wyreData: {}}, 'user2: {buySellEnabled: false, wyreData: {}}}
   coinSettings: {}, //e.g. {VRSC: {verificationLvl: 2, verificationLock: false, channels: ['dlight', 'electrum', 'general'], privateAddrs: 100}}
 }, action) => {
@@ -105,10 +105,10 @@ export const settings = (state = {
         ...state,
         wyreSettings: action.wyreSettings
       }
-      case DARK_MODE_STATE:
-        return {
-          ...state,
-          darkModeState:!state.darkModeState  
+    case DARK_MODE_STATE:
+      return {
+        ...state,
+        darkModeState:action.payload  
       }
     default:
       return state;
