@@ -33,35 +33,38 @@ class ResetPwd extends Component {
       newPwd: null,
       confirmNewPwd: null,
       errors: {oldPwd: null, newPwd: null, confirmNewPwd: null},
-      loading: false
+      loading: false,
     };
   }
 
   _handleSubmit = () => {
     Keyboard.dismiss();
-    this.validateFormData()
-  }
+    this.validateFormData();
+  };
 
   handleError = (error, field) => {
-    let _errors = this.state.errors
-    _errors[field] = error
+    let _errors = this.state.errors;
+    _errors[field] = error;
 
-    this.setState({errors: _errors})
-  }
+    this.setState({errors: _errors});
+  };
 
   cancel = () => {
-    this.props.navigation.dispatch(NavigationActions.back())
-  }
+    this.props.navigation.dispatch(NavigationActions.back());
+  };
 
   onSuccess = () => {
-    createAlert("Success!", "Password for " + this.props.activeAccount.id + " reset successfully.");
-    this.props.navigation.dispatch(NavigationActions.back())
-  }
+    createAlert(
+      'Success!',
+      'Password for ' + this.props.activeAccount.id + ' reset successfully.',
+    );
+    this.props.navigation.dispatch(NavigationActions.back());
+  };
 
   canReset = () => {
     return AlertAsync(
       'Confirm Reset',
-      "Are you sure you would like to attempt to reset your password?",
+      'Are you sure you would like to attempt to reset your password?',
       [
         {
           text: 'No, take me back',
@@ -73,94 +76,126 @@ class ResetPwd extends Component {
       {
         cancelable: false,
       },
-    )
-  }
+    );
+  };
 
   validateFormData = () => {
-    this.setState({
-      errors: {oldPwd: null, newPwd: null, confirmNewPwd: null}
-    }, () => {
-      const _oldPwd = this.state.oldPwd
-      const _newPwd = this.state.newPwd
-      const _confirmNewPwd = this.state.confirmNewPwd
-      let _errors = false;
+    this.setState(
+      {
+        errors: {oldPwd: null, newPwd: null, confirmNewPwd: null},
+      },
+      () => {
+        const _oldPwd = this.state.oldPwd;
+        const _newPwd = this.state.newPwd;
+        const _confirmNewPwd = this.state.confirmNewPwd;
+        let _errors = false;
 
-      if (!_oldPwd || _oldPwd.length < 1) {
-        this.handleError("Required field", "oldPwd")
-        _errors = true
-      } 
+        if (!_oldPwd || _oldPwd.length < 1) {
+          this.handleError('Required field', 'oldPwd');
+          _errors = true;
+        }
 
-      if (!_newPwd || _newPwd.length < 1) {
-        this.handleError("Required field", "newPwd")
-        _errors = true
-      } else if (_newPwd.length < 5) {
-        this.handleError("Min 5 characters", "newPwd")
-        _errors = true
-      } else if (_newPwd === _oldPwd) {
-        this.handleError("Current and new passwords must be different", "newPwd")
-        createAlert("Error", "Current and new passwords must be different")
-        _errors = true
-      }
+        if (!_newPwd || _newPwd.length < 1) {
+          this.handleError('Required field', 'newPwd');
+          _errors = true;
+        } else if (_newPwd.length < 5) {
+          this.handleError('Min 5 characters', 'newPwd');
+          _errors = true;
+        } else if (_newPwd === _oldPwd) {
+          this.handleError(
+            'Current and new passwords must be different',
+            'newPwd',
+          );
+          createAlert('Error', 'Current and new passwords must be different');
+          _errors = true;
+        }
 
-      if (_newPwd !== _confirmNewPwd) {
-        this.handleError("Passwords do not match", "confirmNewPwd")
-        createAlert("Error", "Passwords do not match")
-        _errors = true
-      }
+        if (_newPwd !== _confirmNewPwd) {
+          this.handleError('Passwords do not match', 'confirmNewPwd');
+          createAlert('Error', 'Passwords do not match');
+          _errors = true;
+        }
 
-      if (!_errors) {
-        this.canReset()
-        .then(async (res) => {
-          if (res) {
-            if (this.props.activeAccount) {
-              removeBiometricPassword(this.props.activeAccount.accountHash)
-              await setBiometry(this.props.activeAccount.id, false)
-              return (resetPwd(this.props.activeAccount.id, this.state.newPwd, this.state.oldPwd))
-            } else {
-              console.warn("Error, no active account")
-              return false
-            }
-          } else {
-            return false
-          }
-        })
-        .then((action) => {
-          if (action) {
-            this.props.dispatch(action)
-            this.onSuccess()
-          } else {
-            this.setState({ loading: false })
-            console.warn("Error, password reset failed")
-          }
-        })
-        .catch((error) => {
-          console.warn(error)
-        })
-      } 
-    });
-  }
+        if (!_errors) {
+          this.canReset()
+            .then(async res => {
+              if (res) {
+                if (this.props.activeAccount) {
+                  removeBiometricPassword(this.props.activeAccount.accountHash);
+                  await setBiometry(this.props.activeAccount.id, false);
+                  return resetPwd(
+                    this.props.activeAccount.id,
+                    this.state.newPwd,
+                    this.state.oldPwd,
+                  );
+                } else {
+                  console.warn('Error, no active account');
+                  return false;
+                }
+              } else {
+                return false;
+              }
+            })
+            .then(action => {
+              if (action) {
+                this.props.dispatch(action);
+                this.onSuccess();
+              } else {
+                this.setState({loading: false});
+                console.warn('Error, password reset failed');
+              }
+            })
+            .catch(error => {
+              console.warn(error);
+            });
+        }
+      },
+    );
+  };
 
   render() {
     return (
-      <View style={Styles.defaultRoot}>
+      <View
+        style={[
+          Styles.defaultRoot,
+          {
+            backgroundColor: this.props.darkMode
+              ? Colors.darkModeColor
+              : Colors.secondaryColor,
+          },
+        ]}>
         <ScrollView
           style={Styles.fullWidth}
           contentContainerStyle={{
             ...Styles.innerHeaderFooterContainerCentered,
             ...Styles.fullHeight,
-          }}
-        >
+          }}>
           <View style={Styles.wideBlock}>
             <TextInput
+              style={{
+                backgroundColor: this.props.darkMode
+                  ? Colors.verusDarkModeForm
+                  : Colors.tertiaryColor,
+              }}
               returnKeyType="done"
               dense
-              onChangeText={(text) => this.setState({ oldPwd: text })}
+              onChangeText={text => this.setState({oldPwd: text})}
               label="Current Password"
+              theme={{
+                colors: {
+                  text: this.props.darkMode
+                    ? Colors.secondaryColor
+                    : 'black',
+                  placeholder: this.props.darkMode
+                    ? Colors.verusDarkGray
+                    : Colors.verusDarkGray,
+                },
+              }}
               underlineColor={Colors.primaryColor}
               selectionColor={Colors.primaryColor}
-              render={(props) => (
+              render={props => (
                 <NativeTextInput
-                  autoCapitalize={"none"}
+                  autoCapitalize={'none'}
                   autoCorrect={false}
                   secureTextEntry={true}
                   {...props}
@@ -173,13 +208,28 @@ class ResetPwd extends Component {
             <TextInput
               returnKeyType="done"
               dense
-              onChangeText={(text) => this.setState({ newPwd: text })}
+              style={{
+                backgroundColor: this.props.darkMode
+                  ? Colors.verusDarkModeForm
+                  : Colors.tertiaryColor,
+              }}
+              onChangeText={text => this.setState({newPwd: text})}
               label="New Password (min. 5 characters)"
+              theme={{
+                colors: {
+                  text: this.props.darkMode
+                    ? Colors.secondaryColor
+                    : 'black',
+                  placeholder: this.props.darkMode
+                    ? Colors.verusDarkGray
+                    : Colors.verusDarkGray,
+                },
+              }}
               underlineColor={Colors.primaryColor}
               selectionColor={Colors.primaryColor}
-              render={(props) => (
+              render={props => (
                 <NativeTextInput
-                  autoCapitalize={"none"}
+                  autoCapitalize={'none'}
                   autoCorrect={false}
                   secureTextEntry={true}
                   {...props}
@@ -192,15 +242,28 @@ class ResetPwd extends Component {
             <TextInput
               returnKeyType="done"
               dense
-              onChangeText={(text) =>
-                this.setState({ confirmNewPwd: text })
-              }
+              style={{
+                backgroundColor: this.props.darkMode
+                  ? Colors.verusDarkModeForm
+                  : Colors.tertiaryColor,
+              }}
+              onChangeText={text => this.setState({confirmNewPwd: text})}
+              theme={{
+                colors: {
+                  text: this.props.darkMode
+                    ? Colors.secondaryColor
+                    : 'black',
+                  placeholder: this.props.darkMode
+                    ? Colors.verusDarkGray
+                    : Colors.verusDarkGray,
+                },
+              }}
               label="Confirm New Password"
               underlineColor={Colors.primaryColor}
               selectionColor={Colors.primaryColor}
-              render={(props) => (
+              render={props => (
                 <NativeTextInput
-                  autoCapitalize={"none"}
+                  autoCapitalize={'none'}
                   autoCorrect={false}
                   secureTextEntry={true}
                   {...props}
@@ -210,16 +273,21 @@ class ResetPwd extends Component {
             />
           </View>
         </ScrollView>
-        <View style={Styles.highFooterContainer}>
+        <View
+          style={[
+            Styles.highFooterContainer,
+            {
+              backgroundColor: this.props.darkMode
+                ? Colors.verusDarkModeForm
+                : Colors.secondaryColor,
+            },
+          ]}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
             <Button color={Colors.warningButtonColor} onPress={this.cancel}>
-              {"Cancel"}
+              {'Cancel'}
             </Button>
-            <Button
-              color={Colors.primaryColor}
-              onPress={this._handleSubmit}
-            >
-              {"Reset"}
+            <Button color={Colors.primaryColor} onPress={this._handleSubmit}>
+              {'Reset'}
             </Button>
           </View>
         </View>
@@ -228,10 +296,11 @@ class ResetPwd extends Component {
   }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     activeAccount: state.authentication.activeAccount,
-  }
+    darkMode: state.settings.darkModeState,
+  };
 };
 
 export default connect(mapStateToProps)(ResetPwd);

@@ -191,7 +191,8 @@ class PersonalAttributes extends Component {
 const mapStateToProps = (state) => {
   return {
     activeAccount: state.authentication.activeAccount,
-    encryptedAttributes: state.personal.attributes
+    encryptedAttributes: state.personal.attributes,
+    darkMode: state.settings.darkModeState,
   }
 };
 

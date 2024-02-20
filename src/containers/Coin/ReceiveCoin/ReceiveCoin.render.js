@@ -13,9 +13,11 @@ import { Portal, Button, TextInput, Checkbox } from "react-native-paper"
 import TextInputModal from "../../../components/TextInputModal/TextInputModal"
 import NumberPadModal from "../../../components/NumberPadModal/NumberPadModal"
 import ListSelectionModal from "../../../components/ListSelectionModal/ListSelectionModal";
+import { useSelector } from "react-redux";
 import AnimatedActivityIndicatorBox from "../../../components/AnimatedActivityIndicatorBox";
 
 export const RenderReceiveCoin = function() {
+ 
   const _price = this.getPrice();
   const {
     state,
@@ -42,7 +44,11 @@ export const RenderReceiveCoin = function() {
   const fiatEnabled = rates[displayCurrency] != null;
 
   return loadingBox ? <AnimatedActivityIndicatorBox /> : (
-    <View style={Styles.defaultRoot}>
+    <View style={[Styles.defaultRoot,
+    {
+      backgroundColor: this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor,
+    }
+    ]}>
       <ScrollView
         style={Styles.fullWidth}
         contentContainerStyle={Styles.horizontalCenterContainer}
@@ -120,8 +126,21 @@ export const RenderReceiveCoin = function() {
               <View style={Styles.flexRow}>
                 <TouchableOpacity
                   onPress={() => this.copyAddressToClipboard(address)}
-                  style={{...Styles.flex}}>
+                  style={{...Styles.flex,backgroundColor:this.props.darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey}}>
                   <TextInput
+                   style={{ flex: 1,
+                    backgroundColor:this.props.darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey
+                  }}
+                  theme={{
+                    colors: {
+                      text:this.props.darkMode
+                        ? Colors.secondaryColor
+                        : 'black',
+                      placeholder:this.props.darkMode
+                        ? Colors.verusDarkGray
+                        : Colors.verusDarkGray,
+                    },
+                  }}
                     returnKeyType="done"
                     label={label}
                     value={address}
@@ -129,9 +148,7 @@ export const RenderReceiveCoin = function() {
                     editable={false}
                     multiline
                     pointerEvents="none"
-                    style={{
-                      backgroundColor: Colors.secondaryColor,
-                    }}
+                    
                     error={errors.memo}
                   />
                 </TouchableOpacity>
@@ -177,8 +194,18 @@ export const RenderReceiveCoin = function() {
                 value={amount}
                 editable={false}
                 pointerEvents="none"
-                style={{
-                  backgroundColor: Colors.secondaryColor,
+                style={{ flex: 1,
+                  backgroundColor:this.props.darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey
+                }}
+                theme={{
+                  colors: {
+                    text:this.props.darkMode
+                      ? Colors.secondaryColor
+                      : 'black',
+                    placeholder:this.props.darkMode
+                      ? Colors.verusDarkGray
+                      : Colors.verusDarkGray,
+                  },
                 }}
                 error={errors.amount}
               />

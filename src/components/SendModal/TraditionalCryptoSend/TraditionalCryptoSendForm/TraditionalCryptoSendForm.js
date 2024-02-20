@@ -229,24 +229,39 @@ const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormD
     fillAmount(BigNumber(balances.results.confirmed));
   };
 
+  const darkMode = useSelector(state => state.settings.darkModeState);
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <ScrollView
         style={{
-          backgroundColor: Colors.secondaryColor,
+          backgroundColor: darkMode ?Colors.darkModeColor:Colors.secondaryColor,
           ...Styles.fullWidth,
         }}
         contentContainerStyle={{
           justifyContent: 'flex-start',
           alignItems: 'center',
-          backgroundColor: Colors.secondaryColor,
+          backgroundColor: darkMode ?Colors.darkModeColor:Colors.secondaryColor,
         }}>
         <View style={Styles.wideBlock}>
           <TextInput
             label="Sending from"
             value={sendModal.subWallet.name}
             mode="outlined"
-            disabled={true}
+            editable={false}
+            style={{ flex: 1,
+              backgroundColor:darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey
+            }}
+            theme={{
+              colors: {
+                text:darkMode
+                  ? Colors.secondaryColor
+                  : 'black',
+                placeholder:darkMode
+                  ? Colors.verusDarkGray
+                  : Colors.verusDarkGray,
+              },
+            }}
           />
           {
             networkName != null ? (
@@ -267,11 +282,37 @@ const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormD
             }
             autoCapitalize={'none'}
             autoCorrect={false}
+            style={{ flex: 1,
+              backgroundColor:darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey
+            }}
+            theme={{
+              colors: {
+                text:darkMode
+                  ? Colors.secondaryColor
+                  : 'black',
+                placeholder:darkMode
+                  ? Colors.verusDarkGray
+                  : Colors.verusDarkGray,
+              },
+            }}
           />
         </View>
         <View style={{...Styles.wideBlock, paddingTop: 0}}>
           <View style={Styles.flexRow}>
             <TextInput
+             style={{ flex: 1,
+              backgroundColor:darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey
+            }}
+            theme={{
+              colors: {
+                text:darkMode
+                  ? Colors.secondaryColor
+                  : 'black',
+                placeholder:darkMode
+                  ? Colors.verusDarkGray
+                  : Colors.verusDarkGray,
+              },
+            }}
               returnKeyType="done"
               label={`Amount${
                 rates[sendModal.coinObj.id] && rates[sendModal.coinObj.id][displayCurrency] != null && price != 0
@@ -288,9 +329,6 @@ const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormD
               onChangeText={text =>
                 updateSendFormData(SEND_MODAL_AMOUNT_FIELD, text)
               }
-              style={{
-                flex: 1,
-              }}
             />
             {
               rates[sendModal.coinObj.id] &&
@@ -335,6 +373,19 @@ const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormD
                 onChangeText={text =>
                   updateSendFormData(SEND_MODAL_MEMO_FIELD, text)
                 }
+                style={{ flex: 1,
+                  backgroundColor:darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey
+                }}
+                theme={{
+                  colors: {
+                    text:darkMode
+                      ? Colors.secondaryColor
+                      : 'black',
+                    placeholder:darkMode
+                      ? Colors.verusDarkGray
+                      : Colors.verusDarkGray,
+                  },
+                }}
               />
             </View>
           )}

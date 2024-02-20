@@ -129,6 +129,7 @@ class PersonalLocationsEditTaxCountry extends Component {
 const mapStateToProps = (state) => {
   return {
     activeAccount: state.authentication.activeAccount,
+    darkMode:state.settings.darkModeState
   }
 };
 

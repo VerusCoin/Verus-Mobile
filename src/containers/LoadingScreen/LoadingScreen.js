@@ -13,14 +13,19 @@ import {
 } from "react-native";
 import styles from './LoadingScreen.styles';
 
-export default class LoadingScreen extends Component {
+import { connect } from "react-redux";
+
+
+
+class LoadingScreen extends Component {
   constructor(props) {
     super(props)
   }
-
   render() {
     return (
       <View style={styles.loadingRoot} />
-    );
+    )
   }
 }
+
+export default connect()(LoadingScreen);

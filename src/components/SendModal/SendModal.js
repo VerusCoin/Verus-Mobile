@@ -1,12 +1,12 @@
 import BigNumber from "bignumber.js";
-import { Component } from "react"
-import { connect } from 'react-redux'
-import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
+import {Component} from 'react';
+import {connect} from 'react-redux';
+import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
 import {
   closeSendModal,
   setSendModalDataField,
   setSendModalVisible,
-} from "../../actions/actions/sendModal/dispatchers/sendModal";
+} from '../../actions/actions/sendModal/dispatchers/sendModal';
 import {
   CONVERSION_SEND_MODAL,
   WITHDRAW_SEND_MODAL,
@@ -36,7 +36,7 @@ class SendModal extends Component {
       [AUTHENTICATE_USER_SEND_MODAL]: 442,
       [ADD_PBAAS_CURRENCY_MODAL]: 442,
       [ADD_ERC20_TOKEN_MODAL]: 442,
-      [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: 696
+      [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: 696,
     };
 
     for (const key in this.DEFAULT_MODAL_HEIGHTS) {
@@ -49,7 +49,7 @@ class SendModal extends Component {
       persistFormDataOnClose: false,
       loading: false,
       preventExit: false,
-      modalHeight: this.DEFAULT_MODAL_HEIGHTS[props.sendModal.type]
+      modalHeight: this.DEFAULT_MODAL_HEIGHTS[props.sendModal.type],
     };
   }
 
@@ -61,34 +61,36 @@ class SendModal extends Component {
         },
         () => {
           setSendModalVisible(!this.props.alertActive);
-        }
+        },
       );
     }
   }
 
   setModalHeight(height) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this.setState(
         {
           modalHeight:
-            height == null ? this.DEFAULT_MODAL_HEIGHTS[this.props.sendModal.type] : height,
+            height == null
+              ? this.DEFAULT_MODAL_HEIGHTS[this.props.sendModal.type]
+              : height,
         },
         () => {
           resolve();
-        }
+        },
       );
     });
   }
 
   setPreventExit(preventExit) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this.setState(
         {
-          preventExit: preventExit
+          preventExit: preventExit,
         },
         () => {
           resolve();
-        }
+        },
       );
     });
   }
@@ -96,15 +98,15 @@ class SendModal extends Component {
   // This is to be called from sub-components, so it doesn't call
   // cancel()
   setVisible(visible) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this.setState(
         {
-          persistFormDataOnClose: !visible
+          persistFormDataOnClose: !visible,
         },
         () => {
           setSendModalVisible(visible);
-          resolve()
-        }
+          resolve();
+        },
       );
     });
   }
@@ -114,11 +116,11 @@ class SendModal extends Component {
   }
 
   showHelpModal() {
-    createAlert("Help", this.props.sendModal.helpText);
+    createAlert('Help', this.props.sendModal.helpText);
   }
 
   setLoading(loading, preventExit = false) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this.setState(
         {
           loading,
@@ -126,7 +128,7 @@ class SendModal extends Component {
         },
         () => {
           resolve();
-        }
+        },
       );
     });
   }
@@ -142,12 +144,13 @@ class SendModal extends Component {
   }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = state => {
   return {
     sendModal: state.sendModal,
     keyboard: state.keyboard,
     alertActive: state.alert.active,
-  }
+    darkMode: state.settings.darkModeState,
+  };
 };
 
 export default connect(mapStateToProps)(SendModal);

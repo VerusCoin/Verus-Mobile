@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import { View } from 'react-native'
 import styles from "../styles";
 import AnimatedActivityIndicator from "./AnimatedActivityIndicator";
+import { connect } from "react-redux";
+import Colors from "../globals/colors";
 
 class AnimatedActivityIndicatorBox extends Component {
   constructor(props) {
@@ -10,7 +12,7 @@ class AnimatedActivityIndicatorBox extends Component {
 
   render() {
     return (
-      <View style={styles.focalCenter}>
+      <View style={[styles.focalCenter,{backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor}]}>
         <AnimatedActivityIndicator
           style={{
             width: 128,
@@ -21,4 +23,10 @@ class AnimatedActivityIndicatorBox extends Component {
   }
 }
 
-export default AnimatedActivityIndicatorBox;
+const mapStateToProps = (state)=>{
+  return{
+    darkMode:state.settings.darkModeState
+  }
+}
+
+export default connect(mapStateToProps)(AnimatedActivityIndicatorBox);

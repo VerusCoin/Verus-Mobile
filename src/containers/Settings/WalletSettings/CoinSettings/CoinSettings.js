@@ -116,7 +116,11 @@ class CoinSettings extends Component {
     const utxoVerificationBtns = ['Low', 'Mid', 'High']
 
     return (
-      <View style={Styles.defaultRoot}>
+      <View style={[Styles.defaultRoot,
+      {
+        backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
+      }
+      ]}>
         <ScrollView
           style={Styles.fullWidth}
           contentContainerStyle={{
@@ -124,8 +128,16 @@ class CoinSettings extends Component {
           }}
         >
           <View style={Styles.fullWidth}>
-            <List.Subheader>{"Electrum Transaction Verification"}</List.Subheader>
-            <Divider />
+            <List.Subheader
+            style={{
+              color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+            }}
+            >{"Electrum Transaction Verification"}</List.Subheader>
+            <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
               <RadioButton.Group
                 onValueChange={
                   this.verificationLock
@@ -136,26 +148,45 @@ class CoinSettings extends Component {
               >
                 <RadioButton.Item
                   color={Colors.primaryColor}
+                  uncheckedColor={this.props.darkMode?Colors.verusDarkGray:'black'}
                   label={utxoVerificationBtns[0]}
+                  labelStyle={{
+                    color:this.props.darkMode?Colors.secondaryColor:'black'
+                  }}
                   value={0}
                   mode="android"
                 />
                 <RadioButton.Item
                   color={Colors.primaryColor}
+                  uncheckedColor={this.props.darkMode?Colors.verusDarkGray:'black'}
                   label={utxoVerificationBtns[1]}
+                  labelStyle={{
+                    color:this.props.darkMode?Colors.secondaryColor:'black'
+                  }}
                   value={1}
                   mode="android"
                 />
                 <RadioButton.Item
                   color={Colors.primaryColor}
                   label={utxoVerificationBtns[2]}
+                  labelStyle={{
+                    color:this.props.darkMode?Colors.secondaryColor:'black'
+                  }}
                   value={2}
                   mode="android"
                 />
               </RadioButton.Group>
-            <Divider />
+            <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
             <View style={Styles.wideCenterBlock}>
-              <Paragraph>
+              <Paragraph
+              style={{
+                color:this.props.darkMode?Colors.secondaryColor:'black'
+              }}
+              >
                 {this.verificationLock
                   ? VERIFICATION_LOCKED
                   : this.state.verificationLvl === NO_VERIFICATION
@@ -167,7 +198,11 @@ class CoinSettings extends Component {
             </View>
           </View>
         </ScrollView>
-        <View style={Styles.highFooterContainer}>
+        <View style={[Styles.highFooterContainer,
+        {
+          backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
+        }
+        ]}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
             <Button
               color={Colors.warningButtonColor}
@@ -189,6 +224,7 @@ class CoinSettings extends Component {
 const mapStateToProps = (state) => {
   return {
     coinSettings: state.settings.coinSettings,
+    darkMode: state.settings.darkModeState
   }
 };
 

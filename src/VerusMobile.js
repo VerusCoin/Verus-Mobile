@@ -17,7 +17,8 @@ import {
   initSettings,
   fetchActiveCoins,
   requestSeedData,
-  initNotifications
+  initNotifications,
+  setDarkModeState
 } from './actions/actionCreators';
 import {
   initCache,
@@ -40,6 +41,7 @@ import LoadingModal from "./components/LoadingModal/LoadingModal";
 import { CoinDirectory } from "./utils/CoinData/CoinDirectory";
 import { removeInactiveCurrencyDefinitions } from "./utils/asyncStore/currencyDefinitionStorage";
 import { removeInactiveContractDefinitions } from "./utils/asyncStore/contractDefinitionStorage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 class VerusMobile extends React.Component {
   constructor(props) {

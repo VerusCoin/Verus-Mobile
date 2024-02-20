@@ -9,7 +9,6 @@ import Colors from '../../../globals/colors';
 const TotalUniBalanceWidget = props => {
   const {totalBalance} = props;
   const {width} = Dimensions.get('window');
-  const dispatch = useDispatch();
   const showBalance = useSelector(state => state.coins.showBalance);
 
   const displayCurrency = useSelector(state =>

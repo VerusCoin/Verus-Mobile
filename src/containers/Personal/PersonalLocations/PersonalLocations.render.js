@@ -5,10 +5,13 @@ import ListSelectionModal from "../../../components/ListSelectionModal/ListSelec
 import Styles from "../../../styles";
 import { ISO_3166_COUNTRIES } from "../../../utils/constants/iso3166";
 import { renderPersonalTaxId } from "../../../utils/personal/displayUtils";
+import Colors from "../../../globals/colors";
 
 export const PersonalLocationsRender = function () {
   return (
-    <SafeAreaView style={Styles.defaultRoot}>
+    <SafeAreaView style={[Styles.defaultRoot,
+      {backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor}
+    ]}>
       <ScrollView style={Styles.fullWidth}>
         <Portal>
           {this.state.editPropertyModal.open && (
@@ -22,8 +25,16 @@ export const PersonalLocationsRender = function () {
             />
           )}
         </Portal>
-        <List.Subheader>{"Tax countries & IDs"}</List.Subheader>
-        <Divider />
+        <List.Subheader
+        style={{
+          color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+        }}
+        >{"Tax countries & IDs"}</List.Subheader>
+        <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         {this.state.locations.tax_countries == null
           ? null
           : this.state.locations.tax_countries.map((taxCountry, index) => {
@@ -32,36 +43,68 @@ export const PersonalLocationsRender = function () {
               return (
                 <React.Fragment key={index}>
                   <List.Item
+                  titleStyle={{
+                    color:this.props.darkMode?Colors.secondaryColor:'black'  
+                  }}
                     key={index}
                     title={nationality == null ? "Unknown Country" : `${nationality.emoji} ${nationality.name}`}
+                    descriptionStyle={{
+                      color:this.props.darkMode?Colors.ultraLightGrey:Colors.defaultGrayColor  
+                    }}
                     description={
                       taxCountry.tin.length > 2
                         ? `Tax ID: ${renderPersonalTaxId(taxCountry).title}`
                         : null
                     }
                     right={(props) => (
-                      <List.Icon {...props} icon={"account-edit"} size={20} />
+                      <List.Icon {...props} 
+                      color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+                      icon={"account-edit"} size={20} />
                     )}
                     onPress={() => this.openEditTaxCountry(index)}
                   />
-                  <Divider />
+                  <Divider 
+                  style={{
+                    backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+                  }}
+                  />
                 </React.Fragment>
               );
             })}
         <List.Item
+        titleStyle={{
+          color:this.props.darkMode?Colors.secondaryColor:'black'  
+        }}
           title={"Add tax country & Tax ID"}
-          right={(props) => <List.Icon {...props} icon={"chevron-right"} size={20} />}
+          right={(props) => <List.Icon {...props} 
+          color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+          icon={"chevron-right"} size={20} />}
           onPress={() => this.openEditTaxCountry()}
         />
-        <Divider />
-        <List.Subheader>{"Addresses"}</List.Subheader>
-        <Divider />
+        <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
+        <List.Subheader
+        style={{
+          color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+        }}
+        >{"Addresses"}</List.Subheader>
+        <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         {this.state.locations.physical_addresses == null
           ? null
           : this.state.locations.physical_addresses.map((address, index) => {
               return (
                 <React.Fragment key={index}>
                   <List.Item
+                    titleStyle={{
+                      color:this.props.darkMode?Colors.secondaryColor:'black'  
+                    }}
                     key={index}
                     title={
                       address.street1.length > 0
@@ -85,21 +128,40 @@ export const PersonalLocationsRender = function () {
                           }`
                         : "Unknown Country"
                     }`}
-                    right={(props) => <List.Icon {...props} icon={"chevron-right"} size={20} />}
+                    descriptionStyle={{
+                      color:this.props.darkMode?Colors.ultraLightGrey:Colors.defaultGrayColor  
+                    }}
+                    right={(props) => <List.Icon 
+                      {...props} 
+                      color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+                      icon={"chevron-right"} size={20} />}
                     onPress={() => this.openEditAddress(index)}
                   />
-                  <Divider />
+                  <Divider 
+                  style={{
+                    backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+                  }}
+                  />
                 </React.Fragment>
               );
             })}
         <List.Item
+        titleStyle={{
+          color:this.props.darkMode?Colors.secondaryColor:'black'  
+        }}
           title={"Add physical address"}
           right={(props) => (
-            <List.Icon {...props} icon={"chevron-right"} size={20} />
+            <List.Icon {...props} 
+            color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+            icon={"chevron-right"} size={20} />
           )}
           onPress={() => this.openEditAddress()}
         />
-        <Divider />
+        <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
       </ScrollView>
     </SafeAreaView>
   );

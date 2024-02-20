@@ -4,13 +4,26 @@ import { Divider, List } from "react-native-paper";
 import Styles from "../../../styles";
 import { ISO_3166_COUNTRIES } from "../../../utils/constants/iso3166";
 import { renderPersonalBankAccount } from "../../../utils/personal/displayUtils";
+import Colors from "../../../globals/colors";
 
 export const PersonalPaymentMethodsRender = function () {
   return (
-    <SafeAreaView style={Styles.defaultRoot}>
+    <SafeAreaView style={[Styles.defaultRoot,
+      {
+        backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
+      }
+    ]}>
       <ScrollView style={Styles.fullWidth}>
-        <List.Subheader>{"Bank accounts"}</List.Subheader>
-        <Divider />
+        <List.Subheader
+        style={{
+          color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+        }}
+        >{"Bank accounts"}</List.Subheader>
+        <Divider 
+         style={{
+          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
+        />
         {this.state.payment_methods.bank_accounts == null
           ? null
           : this.state.payment_methods.bank_accounts.map((bankAccount, index) => {
@@ -19,11 +32,18 @@ export const PersonalPaymentMethodsRender = function () {
               return (
                 <React.Fragment key={index}>
                   <List.Item
+                  titleStyle={{
+                    color:this.props.darkMode?Colors.secondaryColor:'black'
+                  }} 
                     key={index}
                     title={title}
                     description={description}
+                    descriptionStyle={{color:this.props.darkMode ? Colors.secondaryColor : Colors.defaultGrayColor}}
                     right={(props) => (
-                      <List.Icon {...props} icon={"account-edit"} size={20} />
+                      <List.Icon 
+                      {...props} 
+                      color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+                      icon={"account-edit"} size={20} />
                     )}
                     onPress={() => this.openEditBankAccount(index)}
                   />
@@ -32,11 +52,21 @@ export const PersonalPaymentMethodsRender = function () {
               );
             })}
         <List.Item
+          titleStyle={{
+            color:this.props.darkMode?Colors.secondaryColor:'black'
+          }}
           title={"Add bank account"}
-          right={(props) => <List.Icon {...props} icon={"chevron-right"} size={20} />}
+          right={(props) => <List.Icon 
+            {...props} 
+            color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+            icon={"chevron-right"} size={20} />}
           onPress={() => this.openEditBankAccount()}
         />
-        <Divider />
+        <Divider 
+         style={{
+          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
+        />
       </ScrollView>
     </SafeAreaView>
   );

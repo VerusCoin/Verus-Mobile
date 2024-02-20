@@ -408,6 +408,7 @@ const mapStateToProps = (state) => {
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
     addresses: selectAddresses(state),
     subWallet: state.coinMenus.activeSubWallets[chainTicker],
+    darkMode:state.settings.darkModeState,
     generalWalletSettings: state.settings.generalWalletSettings
   }
 };

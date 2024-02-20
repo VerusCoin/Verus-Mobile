@@ -342,7 +342,7 @@ class ProfileSettings extends Component {
     const zSetupComplete = dlightEnabled()
 
     return (
-      <ScrollView style={Styles.fullWidth}>
+      <ScrollView style={{...Styles.fullWidth, backgroundColor:this.props.darkMode? Colors.darkModeColor:Colors.secondaryColor}}>
         <Portal>
           <SetupSeedModal
             animationType="slide"
@@ -381,51 +381,105 @@ class ProfileSettings extends Component {
               containerStyle={{ borderBottomWidth: 0 }} 
             />
           </TouchableOpacity>*/}
-        <List.Subheader>{"Current Profile"}</List.Subheader>
-        <Divider />
+        <List.Subheader
+        style={{color:this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}}
+        >{"Current Profile"}</List.Subheader>
+        <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
+          titleStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor}}
+          descriptionStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}}
           title={this.props.activeAccount.id}
           description={"Logged In"}
-          left={(props) => <List.Icon {...props} icon={"account"} />}
+          left={(props) => <List.Icon 
+            {...props} 
+            icon={"account"}
+            color={this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}
+            />}
         />
-        <Divider />
+        <Divider
+        style={{
+          backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
+        />
         {
           this.props.testAccount && (
             <React.Fragment>
               <List.Item
+                titleStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor}}
+                descriptionStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}}
                 title={"Test Profile"}
                 description={'All testnet coins/currencies have no value and will disappear whenever their testnet is reset.'}
-                left={props => <List.Icon {...props} icon={'alert'} color={Colors.infoButtonColor}/>}
+                left={props => <List.Icon 
+                {...props} icon={'alert'} 
+                color={Colors.infoButtonColor}
+                />}
               />
-              <Divider />
+              <Divider 
+              style={{
+                backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+              }}
+              />
             </React.Fragment>
           )
         }
-        <List.Subheader>{"Security Settings"}</List.Subheader>
+        <List.Subheader
+        style={{color:this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}}
+        >{"Security Settings"}</List.Subheader>
         <TouchableOpacity
           onPress={async () => {
             if (await canShowSeed()) this.openPasswordCheck(this.showSeed);
           }}
         >
-          <Divider />
+          <Divider
+           style={{
+            backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+          }} 
+          />
           <List.Item
+            titleStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor}}
+            descriptionStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}}
             title={"Recover Seed"}
-            left={(props) => <List.Icon {...props} icon={"lock-open"} />}
+            left={(props) => <List.Icon 
+              {...props} 
+              color={this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}
+              icon={"lock-open"} />}
             right={(props) => (
-              <List.Icon {...props} icon={"chevron-right"} size={20} />
+              <List.Icon {...props} 
+              color={this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}
+              icon={"chevron-right"} size={20} />
             )}
           />
-          <Divider />
+          <Divider
+          style={{
+            backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+          }}
+          />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => this._openSettings(RESET_PWD)}>
           <List.Item
+            titleStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor}}
+            descriptionStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}}
             title={"Change Password"}
-            left={(props) => <List.Icon {...props} icon={"lock-reset"} />}
+            left={(props) => <List.Icon {...props} 
+            color={this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}
+            icon={"lock-reset"} />}
             right={(props) => (
-              <List.Icon {...props} icon={"chevron-right"} size={20} />
+              <List.Icon 
+              {...props}
+              color={this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray} 
+              icon={"chevron-right"} 
+              size={20} />
             )}
           />
-          <Divider />
+          <Divider 
+           style={{
+            backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+          }}
+          />
         </TouchableOpacity>
         {(this.props.activeAccount.biometry ||
           this.state.supportedBiometryType.biometry) && (
@@ -438,24 +492,41 @@ class ProfileSettings extends Component {
             }}
           >
             <List.Item
+              titleStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor}}
+              descriptionStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}}
               title={`${
                 this.props.activeAccount.biometry ? "Disable" : "Setup"
               } Biometric Authentication`}
-              left={(props) => <List.Icon {...props} icon={"lock"} />}
+              left={(props) => <List.Icon 
+                {...props} 
+                color={this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}
+                icon={"lock"} />}
             />
-            <Divider />
+            <Divider
+             style={{
+              backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+            }}
+            />
           </TouchableOpacity>
         )}
-        <List.Subheader>{"Key Settings"}</List.Subheader>
+        <List.Subheader
+        style={{color:this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}}>
+          {"Key Settings"}</List.Subheader>
         <TouchableOpacity
           onPress={() => this.openKeyDerivationVersionModal()}
           style={{ ...Styles.flex }}
         >
-          <Divider />
+          <Divider
+           style={{
+                backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+            }}
+          />
           <List.Item
+            titleStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor}}
+            descriptionStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}}
             title={"Key Derivation Version"}
             right={() => (
-              <Text style={Styles.listItemTableCell}>
+              <Text style={{...Styles.listItemTableCell,color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor}}>
                 {
                   this.KEY_DERIVATION_VERSION_LABELS[
                     this.props.activeAccount.keyDerivationVersion
@@ -464,7 +535,11 @@ class ProfileSettings extends Component {
               </Text>
             )}
           />
-          <Divider />
+          <Divider 
+          style={{
+            backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
+          />
         </TouchableOpacity>
         <PasswordCheck
           cancel={() => this.closePasswordDialog()}
@@ -475,7 +550,9 @@ class ProfileSettings extends Component {
           account={this.props.activeAccount}
           allowBiometry={true}
         />
-        <List.Subheader>{"Profile Actions"}</List.Subheader>
+        <List.Subheader
+        style={{color:this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}}
+        >{"Profile Actions"}</List.Subheader>
         {ENABLE_DLIGHT && !this.props.testAccount && (
           <TouchableOpacity
             onPress={() => {
@@ -483,9 +560,15 @@ class ProfileSettings extends Component {
             }}
             disabled={zSetupComplete}
           >
-            <Divider />
+            <Divider
+            style={{
+              backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+          }}
+            />
             <List.Item
-              title={
+            titleStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor}}
+            descriptionStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}}
+            title={
                 zSetupComplete
                   ? "Z Seed Setup Complete"
                   : "Setup Z (Shielded Address) Seed"
@@ -495,7 +578,10 @@ class ProfileSettings extends Component {
                   ? ""
                   : "Setting up a Z Seed will allow you to use private transactions on compatible coins (after a restart)"
               }
-              left={(props) => <List.Icon {...props} icon={"shield-key"} />}
+              left={(props) => <List.Icon 
+              {...props} 
+              color={this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}
+              icon={"shield-key"} />}
               descriptionNumberOfLines={100}
             />
           </TouchableOpacity>
@@ -503,8 +589,14 @@ class ProfileSettings extends Component {
         {
           WYRE_ACCESSIBLE && !this.props.testAccount && (
             <TouchableOpacity onPress={() => this.toggleWyreEnabled()}>
-              <Divider />
+              <Divider 
+              style={{
+                backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+            }}
+              />
               <List.Item
+              titleStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor}}
+              descriptionStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}}
                 title={
                   this.props.wyreEnabled
                     ? 'Wyre Enabled'
@@ -515,20 +607,39 @@ class ProfileSettings extends Component {
                     ? ''
                     : 'Enabling deprecated Wyre features will allow you to access your existing Wyre account from the services tab'
                 }
-                left={props => <List.Icon {...props} icon={'account-cash'} />}
+                left={props => <List.Icon 
+                  {...props} 
+                  color={this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}
+                  icon={'account-cash'} />}
                 descriptionNumberOfLines={100}
               />
             </TouchableOpacity>
           )
         }
         <TouchableOpacity onPress={() => this._openSettings(REMOVE_PROFILE)}>
-          <Divider />
-          <List.Item
-            title={"Delete Profile"}
-            left={(props) => <List.Icon {...props} icon={"trash-can"} />}
-            right={(props) => <List.Icon {...props} icon={"chevron-right"} />}
+          <Divider 
+          style={{
+            backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
           />
-          <Divider />
+          <List.Item
+            titleStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor}}
+            descriptionStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}}
+            title={"Delete Profile"}
+            left={(props) => <List.Icon 
+              {...props}
+              color={this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}
+              icon={"trash-can"} />}
+            right={(props) => <List.Icon 
+              {...props} 
+              color={this.props.darkMode?Colors.secondaryColor:Colors.verusDarkGray}
+              icon={"chevron-right"} />}
+          />
+          <Divider 
+          style={{
+            backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+        }}
+          />
         </TouchableOpacity>
       </ScrollView>
     );
@@ -546,6 +657,7 @@ const mapStateToProps = state => {
     wyreEnabled:
       state.authentication.activeAccount != null &&
       state.authentication.activeAccount.disabledServices[WYRE_SERVICE_ID] != true,
+    darkMode:state.settings.darkModeState
   };
 };
 

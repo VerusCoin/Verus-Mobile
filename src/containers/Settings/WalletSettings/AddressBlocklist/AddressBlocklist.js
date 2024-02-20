@@ -289,7 +289,8 @@ class AddressBlocklist extends Component {
 const mapStateToProps = (state) => {
   return {
     activeAccount: state.authentication.activeAccount,
-    settings: state.settings.generalWalletSettings
+    settings: state.settings.generalWalletSettings,
+    darkMode:state.settings.darkModeState
   }
 };
 

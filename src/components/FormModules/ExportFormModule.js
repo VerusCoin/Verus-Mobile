@@ -4,6 +4,7 @@ import { IconButton, Divider, Text, TextInput } from 'react-native-paper';
 import Colors from '../../globals/colors';
 import Styles from '../../styles';
 import { VETH } from '../../utils/constants/web3Constants';
+import { useSelector } from 'react-redux';
 
 const ExportFormModule = ({
   isExport,
@@ -20,6 +21,7 @@ const ExportFormModule = ({
   exporttoDisabled,
   mappingDisabled
 }) => {
+  const darkMode = useSelector(state => state.settings.darkModeState);
   return (
     <React.Fragment>
       <View style={{...Styles.wideBlockDense}}>
@@ -29,6 +31,19 @@ const ExportFormModule = ({
         {
           advancedForm ? (
             <TextInput
+            style={{ flex: 1,
+              backgroundColor:darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey
+            }}
+            theme={{
+              colors: {
+                text:darkMode
+                  ? Colors.secondaryColor
+                  : 'black',
+                placeholder:darkMode
+                  ? Colors.verusDarkGray
+                  : Colors.verusDarkGray,
+              },
+            }}
               returnKeyType="done"
               label={exporttoDisabled ? "System to send to" : "System to send to (optional)"}
               value={exportToField}
@@ -37,7 +52,6 @@ const ExportFormModule = ({
               onChangeText={text => onSystemChange(text)}
               autoCapitalize={'none'}
               autoCorrect={false}
-              style={{ flex: 1 }}
               disabled={exporttoDisabled}
             />
           ) : (
@@ -86,6 +100,19 @@ const ExportFormModule = ({
           <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
             {advancedForm ? (
               <TextInput
+              style={{ flex: 1,
+                backgroundColor:darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey
+              }}
+              theme={{
+                colors: {
+                  text:darkMode
+                    ? Colors.secondaryColor
+                    : 'black',
+                  placeholder:darkMode
+                    ? Colors.verusDarkGray
+                    : Colors.verusDarkGray,
+                },
+              }}
                 returnKeyType="done"
                 label={exportToField != null && exportToField.length > 0 ? "Currency to receive as (required)" : "Currency to receive as (optional)"}
                 value={mappingField}
@@ -94,7 +121,6 @@ const ExportFormModule = ({
                 onChangeText={text => onMappingChange(text)}
                 autoCapitalize={'none'}
                 autoCorrect={false}
-                style={{flex: 1}}
                 disabled={mappingDisabled}
               />
             ) : (

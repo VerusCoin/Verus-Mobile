@@ -76,7 +76,8 @@ import {
   ADD_BAD_SERVER,
   SET_SECURE_LOADING_SUCCESS_DATA,
   SET_SECURE_LOADING_ERROR_DATA,
-  CLEAR_SECURE_LOADING_DATA
+  CLEAR_SECURE_LOADING_DATA,
+  DARK_MODE_STATE
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -168,6 +169,14 @@ export const setGeneralWalletSettingsState = (state) => {
   return {
     type: SET_GENERAL_WALLET_SETTINGS_STATE,
     state
+  }
+}
+
+//Reducer Name:settings
+export const setDarkModeState = (darkModeValue) => {
+  return {
+    type: DARK_MODE_STATE,
+    payload:darkModeValue
   }
 }
 

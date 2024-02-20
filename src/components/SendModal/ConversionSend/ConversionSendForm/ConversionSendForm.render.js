@@ -53,7 +53,7 @@ export const ConversionSendFormRenderInputForm = function() {
             elevation={2}
             onPress={Keyboard.dismiss}
             style={{
-              backgroundColor: Colors.secondaryColor,
+              backgroundColor: 'red',
               padding: 16,
               paddingTop: 8,
             }}

@@ -58,6 +58,7 @@ import {
   openAddErc20TokenModal,
   openAddPbaasCurrencyModal,
 } from '../../actions/actions/sendModal/dispatchers/sendModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 class Home extends Component {
   constructor(props) {
@@ -529,6 +530,7 @@ class Home extends Component {
   }
 }
 
+
 const mapStateToProps = state => {
   return {
     activeCoinsForUser: state.coins.activeCoinsForUser,
@@ -547,6 +549,7 @@ const mapStateToProps = state => {
     widgetOrder: state.widgets.order,
     homeCardDragDetection:
       state.settings.generalWalletSettings.homeCardDragDetection,
+    darkMode:state.settings.darkModeState
   };
 };
 

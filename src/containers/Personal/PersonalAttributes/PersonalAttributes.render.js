@@ -7,11 +7,17 @@ import Styles from "../../../styles";
 import { ISO_3166_COUNTRIES, ISO_3166_ALPHA_2_CODES } from "../../../utils/constants/iso3166";
 import { PERSONAL_NATIONALITIES } from "../../../utils/constants/personal";
 import { renderPersonalBirthday, renderPersonalFullName } from "../../../utils/personal/displayUtils";
+import Colors from "../../../globals/colors";
 
 export const PersonalAttributesRender = function () {
   return (
-    <SafeAreaView style={Styles.defaultRoot}>
-      <ScrollView style={Styles.fullWidth}>
+    <SafeAreaView style={[Styles.defaultRoot.alignContent,{
+      flex:this.props.darkMode?1:0,
+      backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
+    }]}>
+      <ScrollView style={[Styles.fullWidth,{
+      backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
+      }]}>
         <Portal>
           {this.state.nationalityModalOpen && (
             <ListSelectionModal
@@ -61,36 +67,85 @@ export const PersonalAttributesRender = function () {
             />
           )}
         </Portal>
-        <List.Subheader>{"Name"}</List.Subheader>
-        <Divider />
+        <List.Subheader
+        style={{
+          color:this.props.darkMode?Colors.lightGrey:Colors.verusDarkGray
+        }}
+        >{"Name"}</List.Subheader>
+        <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
+          titleStyle={{
+            color: this.props.darkMode ? Colors.secondaryColor : 'black',
+          }}
           title={renderPersonalFullName(this.state.attributes.name).title}
+          descriptionStyle={{
+            color: this.props.darkMode ? Colors.secondaryColor : 'black'
+          }}
           right={(props) => (
-            <List.Icon {...props} icon={"chevron-right"} size={20} />
+            <List.Icon 
+            {...props} 
+            color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+            icon={"chevron-right"} size={20} />
           )}
           onPress={() => this.openEditNameScreen()}
         />
-        <Divider />
-        <List.Subheader>{"Date of birth"}</List.Subheader>
+        <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
+        <List.Subheader
+        style={{
+          color:this.props.darkMode?Colors.lightGrey:Colors.verusDarkGray
+        }}
+        >{"Date of birth"}</List.Subheader>
         <Divider />
         {this.state.attributes.birthday != null ? (
           <List.Item
+          titleStyle={{
+            color: this.props.darkMode ? Colors.secondaryColor : 'black',
+          }}
             title={renderPersonalBirthday(this.state.attributes.birthday).title}
             right={(props) => (
-              <List.Icon {...props} icon={"account-edit"} size={20} />
+              <List.Icon 
+              {...props} 
+              color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+              icon={"account-edit"} size={20} />
             )}
             onPress={() => this.setState({ birthdaySelectorModalOpen: true })}
           />
         ) : (
           <List.Item
             title={"Add birthday"}
-            right={(props) => <List.Icon {...props} icon={"plus"} size={20} />}
+            titleStyle={{
+              color: this.props.darkMode ? Colors.secondaryColor : 'black',
+            }}
+            right={(props) => <List.Icon 
+              {...props} 
+              color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+              icon={"plus"} size={20} />}
             onPress={() => this.setState({ birthdaySelectorModalOpen: true })}
           />
         )}
-        <Divider />
-        <List.Subheader>{"Nationalities"}</List.Subheader>
-        <Divider />
+        <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
+        <List.Subheader
+        style={{
+          color:this.props.darkMode?Colors.lightGrey:Colors.verusDarkGray
+        }}
+        >{"Nationalities"}</List.Subheader>
+        <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         {this.state.attributes.nationalities == null
           ? null
           : this.state.attributes.nationalities.map((code, index) => {
@@ -99,11 +154,17 @@ export const PersonalAttributesRender = function () {
               return (
                 <React.Fragment key={index}>
                   <List.Item
+                  titleStyle={{
+                    color: this.props.darkMode ? Colors.secondaryColor : 'black',
+                  }}
                     key={index}
                     title={`${nationality.emoji} ${nationality.name}`}
                     description={`Nationality ${index + 1}`}
                     right={(props) => (
-                      <List.Icon {...props} icon={"account-edit"} size={20} />
+                      <List.Icon 
+                      {...props} 
+                      color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+                      icon={"account-edit"} size={20} />
                     )}
                     onPress={() =>
                       this.openEditPropertyModal(
@@ -113,16 +174,30 @@ export const PersonalAttributesRender = function () {
                       )
                     }
                   />
-                  <Divider />
+                  <Divider 
+                  style={{
+                    backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+                  }}
+                  />
                 </React.Fragment>
               );
             })}
         <List.Item
+        titleStyle={{
+          color: this.props.darkMode ? Colors.secondaryColor : 'black',
+        }}
           title={"Add nationality"}
-          right={(props) => <List.Icon {...props} icon={"plus"} size={20} />}
+          right={(props) => <List.Icon 
+          {...props} 
+          color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+          icon={"plus"} size={20} />}
           onPress={() => this.setState({ nationalityModalOpen: true })}
         />
-        <Divider />
+        <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
       </ScrollView>
     </SafeAreaView>
   );

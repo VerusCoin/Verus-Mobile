@@ -22,7 +22,11 @@ const PersonalPaymentMethodsEditBankAccountRenderInputBlock = function (
 ) {
   return (
     <React.Fragment key={renderIndex}>
-      <List.Subheader>{title}</List.Subheader>
+      <List.Subheader
+      style={{
+        color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+      }}
+      >{title}</List.Subheader>
       <Divider />
       <List.Item
         title={value.length > 0 ? value : placeholder}
@@ -31,7 +35,9 @@ const PersonalPaymentMethodsEditBankAccountRenderInputBlock = function (
             value.length > 0 ? Colors.quaternaryColor : Colors.verusDarkGray,
         }}
         right={(props) => (
-          <List.Icon {...props} icon={"account-edit"} size={20} />
+          <List.Icon {...props} 
+          color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+          icon={"account-edit"} size={20} />
         )}
         onPress={
           this.state.loading
@@ -53,14 +59,22 @@ const PersonalPaymentMethodsEditBankAccountRenderAddressSelector = function (
 ) {
   return (
     <React.Fragment key={renderIndex}>
-      <List.Subheader>{title}</List.Subheader>
-      <Divider />
+      <List.Subheader
+       style={{
+        color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+      }}
+      >{title}</List.Subheader>
+      <Divider 
+      style={{
+        backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+      }}
+      />
       <List.Item
         title={value}
         titleStyle={{
           color: value.includes("Configure address")
-            ? Colors.verusDarkGray
-            : Colors.quaternaryColor,
+            ? this.props.darkMode?Colors.quaternaryColor:Colors.verusDarkGray
+            : this.props.darkMode?Colors.verusDarkGray:Colors.quaternaryColor
         }}
         right={(props) => (
           <List.Icon {...props} icon={"chevron-right"} size={20} />
@@ -71,8 +85,15 @@ const PersonalPaymentMethodsEditBankAccountRenderAddressSelector = function (
             : () => this.openEditBankAccountAddress()
         }
         description={description}
+        descriptionStyle={{
+          color:this.props.darkMode?Colors.verusDarkGray:Colors.quaternaryColor
+        }}
       />
-      <Divider />
+      <Divider
+      style={{
+        backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+      }}
+      />
     </React.Fragment>
   );
 };
@@ -158,7 +179,12 @@ const PersonalPaymentMethodsEditBankAccountRenderInputKey = function (key, rende
 
 export const PersonalPaymentMethodsEditBankAccountRender = function () {
   return (
-    <SafeAreaView style={Styles.defaultRoot}>
+    <SafeAreaView style={[
+      Styles.defaultRoot,
+      {
+        backgroundColor:this.props.darkMode? Colors.darkModeColor:Colors.secondaryColor
+      }
+    ]}>
       <ScrollView style={Styles.fullWidth}>
         <Portal>
           {this.state.currentTextInputModal != null && (
@@ -302,8 +328,18 @@ export const PersonalPaymentMethodsEditBankAccountRender = function () {
             PERSONAL_BANK_COUNTRY
           )
         )}
-        <List.Subheader style={Styles.wide}>{"Bank account options"}</List.Subheader>
-        <Divider />
+        <List.Subheader 
+        style={[Styles.wide,
+        {
+          color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+        }
+        ]}
+        >{"Bank account options"}</List.Subheader>
+        <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
         <List.Item
           title={"Delete bank account"}
           titleStyle={{
@@ -314,7 +350,11 @@ export const PersonalPaymentMethodsEditBankAccountRender = function () {
             this.state.loading ? () => {} : () => this.tryDeleteBankAccount()
           }
         />
-        <Divider />
+        <Divider 
+            style={{
+              backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.ultraLightGrey
+            }}
+            />
       </ScrollView>
     </SafeAreaView>
   );

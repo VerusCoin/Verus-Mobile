@@ -29,7 +29,7 @@ class VerusIdServiceIntroSlider extends Component {
     return (
       <View
         style={{
-          backgroundColor: "#3165D4",
+          backgroundColor: this.props.darkMode?Colors.verusDarkBlue:"#3165D4",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
@@ -64,7 +64,7 @@ class VerusIdServiceIntroSlider extends Component {
     return (
       <View
         style={{
-          backgroundColor: "#3165D4",
+          backgroundColor: this.props.darkMode?Colors.verusDarkBlue:"#3165D4",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
@@ -114,7 +114,8 @@ class VerusIdServiceIntroSlider extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    testnetOverrides: state.authentication.activeAccount.testnetOverrides
+    testnetOverrides: state.authentication.activeAccount.testnetOverrides,
+    darkMode:state.settings.darkModeState
   }
 };
 

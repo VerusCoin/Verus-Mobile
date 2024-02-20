@@ -13,7 +13,11 @@ const Colors = {
     basicButtonColor: 'black',
     lightGrey:'#b5b5b5',
     ultraLightGrey:'#d6cccb',
-    ultraUltraLightGrey: "#FBFBFB"
+    ultraUltraLightGrey: "#FBFBFB",
+    darkModeColor:'#121212',
+    verusDarkBlue:'#08328C',
+    verusDarkModeForm:'#202020',
+    defaultGrayColor:'#8D8E8D'
 }
 
 export default Colors

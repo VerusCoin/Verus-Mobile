@@ -13,13 +13,15 @@ import PersonalLocationsEditTaxCountry from '../../Personal/PersonalLocations/Pe
 import PersonalPaymentMethods from '../../Personal/PersonalPaymentMethods/PersonalPaymentMethods';
 import PersonalPaymentMethodsEditBankAccount from '../../Personal/PersonalPaymentMethods/PersonalPaymentMethodsEditBankAccount/PersonalPaymentMethodsEditBankAccount';
 import PersonalPaymentMethodsEditBankAccountAddress from '../../Personal/PersonalPaymentMethods/PersonalPaymentMethodsEditBankAccountAddress/PersonalPaymentMethodsEditBankAccountAddress';
+import { useSelector } from 'react-redux';
 
 const ProfileStack = createStackNavigator();
 
 const ProfileStackScreens = props => {
+  const darkMode = useSelector(state=>state.settings.darkModeState)
   return (
     <ProfileStack.Navigator
-      screenOptions={defaultHeaderOptions}
+      screenOptions={defaultHeaderOptions({darkMode})}
     >
       <ProfileStack.Screen
         name="PersonalProfile"

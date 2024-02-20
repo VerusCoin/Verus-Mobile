@@ -3,6 +3,7 @@ import { View, TouchableOpacity } from 'react-native';
 import { IconButton, Divider, TextInput, Text } from 'react-native-paper'; // Assuming you're using react-native-paper
 import Colors from '../../globals/colors';
 import Styles from '../../styles';
+import { useSelector } from 'react-redux';
 
 const ConvertFormModule = ({
   isConversion,
@@ -20,17 +21,31 @@ const ConvertFormModule = ({
   convertDisabled,
   viaDisabled
 }) => {
+  const darkMode = useSelector((state)=>state.settings.darkModeState);
   return (
     <React.Fragment>
-      <View style={{...Styles.wideBlockDense}}>
+      <View style={{...Styles.wideBlockDense, backgroundColor:darkMode?Colors.darkModeColor:Colors.secondaryColor}}>
         <Divider />
       </View>
       {
         showConversionField ? (
-          <View style={{...Styles.wideBlockDense, paddingTop: advancedForm ? 2 : 8}}>
+          <View style={{...Styles.wideBlockDense, paddingTop: advancedForm ? 2 : 8, backgroundColor:darkMode?Colors.darkModeColor:Colors.secondaryColor}}>
             {
               advancedForm ? (
                 <TextInput
+                style={{ flex: 1,
+                  backgroundColor:darkMode?Colors.verusDarkModeForm:Colors.ultraUltraLightGrey
+                }}
+                theme={{
+                  colors: {
+                    text:darkMode
+                      ? Colors.secondaryColor
+                      : 'black',
+                    placeholder:darkMode
+                      ? Colors.verusDarkGray
+                      : Colors.verusDarkGray,
+                  },
+                }}
                   returnKeyType="done"
                   label={isPreconvert ? 'Preconvert to' : 'Convert to'}
                   value={convertToField}
@@ -39,7 +54,6 @@ const ConvertFormModule = ({
                   onChangeText={text => onConvertToChange(text)}
                   autoCapitalize={'none'}
                   autoCorrect={false}
-                  style={{ flex: 1 }}
                   disabled={convertDisabled}
                 />
               ) : (
@@ -81,13 +95,28 @@ const ConvertFormModule = ({
                 <TextInput
                   returnKeyType="done"
                   label="Convert via (optional)"
+                  theme={{
+                    colors: {
+                      text:darkMode
+                        ? Colors.secondaryColor
+                        : 'black',
+                      placeholder:darkMode
+                        ? Colors.verusDarkGray
+                        : Colors.verusDarkGray,
+                    },
+                  }}
+                  style={{
+                    flex: 1 ,
+                    backgroundColor:darkMode
+                                ? Colors.verusDarkModeForm
+                                : Colors.ultraUltraLightGrey,
+                  }}
                   value={viaField}
                   mode="outlined"
                   multiline={true}
                   onChangeText={text => onViaChange(text)}
                   autoCapitalize={'none'}
                   autoCorrect={false}
-                  style={{ flex: 1 }}
                   disabled={viaDisabled}
                 />
               ) : (

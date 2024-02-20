@@ -12,8 +12,10 @@ import {
 import Colors from "../globals/colors";
 import Styles from "../styles/index";
 import Modal from './Modal'
+import { connect } from "react-redux";
 
 class SemiModal extends Component {
+  
   constructor(props) {
     super(props);
     this.state = {};
@@ -48,7 +50,6 @@ class SemiModal extends Component {
 
   render() {
     const flexHeight = this.props.flexHeight != null ? this.props.flexHeight : 1
-
     return (
       <React.Fragment>
         {this.props.visible && (
@@ -74,7 +75,7 @@ class SemiModal extends Component {
           <View
             style={{
               flex: flexHeight,
-              backgroundColor: Colors.secondaryColor,
+              backgroundColor: this.props.darkMode? Colors.darkModeColor:Colors.secondaryColor,
               borderRadius: 10,
               paddingTop: 10,
               ...(this.props.contentContainerStyle
@@ -90,4 +91,10 @@ class SemiModal extends Component {
   }
 }
 
-export default SemiModal;
+const mapStateToProps = (state) => {
+  return {
+    darkMode:state.settings.darkModeState
+  }
+};
+
+export default connect(mapStateToProps)(SemiModal);

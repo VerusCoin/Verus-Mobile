@@ -10,6 +10,7 @@ export default function ChooseName({ profileName, setProfileName, navigation }) 
   const {height} = Dimensions.get('window');
   const accounts = useSelector(state => state.authentication.accounts)
   const isKeyboardActive = useSelector(state => state.keyboard.active);
+  const darkMode = useSelector(state=>state.settings.darkModeState)
 
   const isDuplicateAccount = (accountID) => {
     let index = 0;
@@ -62,7 +63,7 @@ export default function ChooseName({ profileName, setProfileName, navigation }) 
           justifyContent: 'center',
           flex: 1,
           alignItems: 'center',
-          backgroundColor: Colors.secondaryColor
+          backgroundColor: darkMode?Colors.darkModeColor:Colors.secondaryColor
         }}>
         <View
           style={{
@@ -84,7 +85,8 @@ export default function ChooseName({ profileName, setProfileName, navigation }) 
               textAlign: 'center',
               width: '75%',
               marginTop: 24,
-              width: 280
+              width: 280,
+              color:darkMode?Colors.secondaryColor:'black'
             }}>
             {"Give your profile a name. You can have multiple profiles."}
           </Paragraph>
@@ -93,10 +95,23 @@ export default function ChooseName({ profileName, setProfileName, navigation }) 
             label="Choose name"          
             value={profileName}
             mode={"outlined"}
+            theme={{
+              colors: {
+                text: darkMode
+                  ? Colors.secondaryColor
+                  : 'black',
+                placeholder: darkMode
+                  ? Colors.primaryColor
+                  : Colors.verusDarkGray,
+              },
+            }}
             style={{
               width: '75%',
               marginTop: 48,
-              width: 280
+              width: 280,
+              backgroundColor:darkMode
+              ? Colors.verusDarkModeForm
+              : Colors.ultraUltraLightGrey,
             }}
             placeholder="Enter name"
             dense={true}

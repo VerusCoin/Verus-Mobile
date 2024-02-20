@@ -43,7 +43,7 @@ class DynamicHeader extends Component {
       carouselItems: [],
       currentIndex: 0,
       loadingCarouselItems: true,
-      mappedCoinObj: null
+      mappedCoinObj: null,
     };
     this.fadeAnimation = new Animated.Value(0);
     this.carousel = null;
@@ -343,7 +343,7 @@ class DynamicHeader extends Component {
           flexDirection: 'column',
           justifyContent: 'flex-end',
           alignItems: 'center',
-          backgroundColor: Colors.primaryColor,
+          backgroundColor: this.props.darkMode?Colors.verusDarkBlue:Colors.primaryColor,
         }}>
         <View
           style={{
@@ -352,6 +352,7 @@ class DynamicHeader extends Component {
             alignItems: 'center',
             justifyContent: 'center',
             flex: 1,
+            
           }}>
           <Text
             style={{
@@ -482,7 +483,7 @@ class DynamicHeader extends Component {
             justifyContent: 'center',
             alignItems: 'flex-end',
             paddingBottom: 16,
-            backgroundColor: Colors.primaryColor,
+            backgroundColor: this.props.darkMode?Colors.verusDarkBlue:Colors.primaryColor,
           }}>
           {this.state.loadingCarouselItems ? null : this.state.carouselItems
               .length == 1 ? (
@@ -515,6 +516,7 @@ class DynamicHeader extends Component {
 const mapStateToProps = state => {
   const chainTicker = state.coins.activeCoin.id;
   const showBalance = state.coins.showBalance;
+  const darkMode = state.settings.darkModeState;
   const balances = extractLedgerData(
     state,
     'balances',
@@ -525,6 +527,7 @@ const mapStateToProps = state => {
   return {
     chainTicker,
     showBalance,
+    darkMode,
     displayTicker: state.coins.activeCoin.display_ticker,
     activeCoin: state.coins.activeCoin,
     selectedSubWallet: state.coinMenus.activeSubWallets[chainTicker],

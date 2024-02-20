@@ -64,7 +64,8 @@ class PersonalImages extends Component {
 const mapStateToProps = (state) => {
   return {
     activeAccount: state.authentication.activeAccount,
-    encryptedImages: state.personal.images
+    encryptedImages: state.personal.images,
+    darkMode:state.settings.darkModeState
   }
 };
 

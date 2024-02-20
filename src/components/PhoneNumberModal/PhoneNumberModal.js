@@ -66,7 +66,8 @@ class PhoneNumberModal extends Component {
 const mapStateToProps = (state) => {
   return {
     activeAccount: state.authentication.activeAccount,
-    encryptedContact: state.personal.contact
+    encryptedContact: state.personal.contact,
+    darkMode:state.settings.darkModeState
   }
 };
 

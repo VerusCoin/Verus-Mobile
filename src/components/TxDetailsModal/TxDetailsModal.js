@@ -26,6 +26,7 @@ import { API_GET_DEPOSIT_SOURCES, API_GET_PENDING_DEPOSITS } from "../../utils/c
 import { conditionallyUpdateWallet } from "../../actions/actionDispatchers";
 import store from "../../store";
 import { openUrl } from "../../utils/linking";
+import { connect } from "react-redux";
 
 class TxDetailsModal extends Component {
   constructor(props) {
@@ -131,7 +132,8 @@ class TxDetailsModal extends Component {
         flexHeight={4}
       >
         <SafeAreaView style={Styles.centerContainer}>
-          <View style={{ ...Styles.headerContainer, minHeight: 48 }}>
+          <View style={{ ...Styles.headerContainer, minHeight: 48, 
+            backgroundColor: this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor }}>
             <View style={Styles.semiModalHeaderContainer}>
               <Button onPress={cancel} color={Colors.primaryColor}>
                 {"Close"}
@@ -140,6 +142,7 @@ class TxDetailsModal extends Component {
                 style={{
                   ...Styles.centralHeader,
                   ...Styles.smallMediumFont,
+                  color: this.props.darkMode?Colors.secondaryColor:'black'
                 }}
               >
                 {"Transaction"}
@@ -167,7 +170,13 @@ class TxDetailsModal extends Component {
                         title={item.data}
                         description={item.key}
                         titleNumberOfLines={item.numLines || 1}
-                        titleStyle={item.capitalized ? Styles.capitalizeFirstLetter : undefined}
+                        titleStyle={{
+                          color: this.props.darkMode ? Colors.secondaryColor : 'black',
+                          ...(item.capitalized ? Styles.capitalizeFirstLetter : {}), // Spread the styles conditionally
+                        }}
+                        descriptionStyle={{
+                          color: this.props.darkMode ? Colors.verusDarkGray : Colors.defaultGrayColor,
+                        }}
                         right={(props) =>
                           item.right ? (
                             <Text
@@ -268,4 +277,11 @@ class TxDetailsModal extends Component {
   }
 }
 
-export default TxDetailsModal;
+const mapStateToProps = (state) => {
+  return {
+    darkMode:state.settings.darkModeState
+  }
+};
+
+
+export default connect(mapStateToProps)(TxDetailsModal);

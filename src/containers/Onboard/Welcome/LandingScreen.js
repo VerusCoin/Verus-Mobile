@@ -5,14 +5,16 @@ import TallButton from '../../../components/LargerButton';
 import Colors from '../../../globals/colors';
 import {VerusLogo} from '../../../images/customIcons';
 import styles from '../../../styles';
+import { useSelector } from 'react-redux';
 
 export default function LandingScreen(props) {
   const { height } = Dimensions.get('window');
+  const darkMode = useSelector(state => state.settings.darkModeState);
 
   return (
     <View
       style={{
-        backgroundColor: Colors.secondaryColor,
+        backgroundColor:darkMode ? Colors.darkModeColor : Colors.secondaryColor,
         ...styles.focalCenter,
       }}>
       <VerusLogo width={180} height={'15%'} style={{ top: 100, position: 'absolute' }}/>

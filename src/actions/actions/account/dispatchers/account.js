@@ -14,6 +14,8 @@ import { initSettings, saveGeneralSettings } from "../../WalletSettings";
 import { DISABLED_CHANNELS } from '../../../../../env/index'
 import store from "../../../../store";
 import { getAddressBlocklistFromServer } from "../../../../utils/api/channels/general/addressBlocklist/getAddressBlocklist";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect } from "react";
 
 export const initializeAccountData = async (
   account,
@@ -24,6 +26,7 @@ export const initializeAccountData = async (
   setInitStep(VALIDATING_ACCOUNT);
   const accountAuthenticator = await validateLogin(account, password);
 
+  const value = await AsyncStorage.getItem('darkModeKey');
   if (accountAuthenticator) {
     setInitStep(LOADING_ACCOUNT);
     await initServiceStoredDataForUser(account.accountHash);

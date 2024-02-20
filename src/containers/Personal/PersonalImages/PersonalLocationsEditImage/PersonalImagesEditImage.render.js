@@ -22,7 +22,11 @@ export const PersonalImagesEditImageRender = function () {
       : PERSONAL_IMAGE_TYPE_SCHEMA[this.state.image.image_type];
     
   return (
-    <SafeAreaView style={Styles.defaultRoot}>
+    <SafeAreaView style={[Styles.defaultRoot,
+    {
+      backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor
+    }
+    ]}>
       <ScrollView style={Styles.fullWidth}>
         <Portal>
           {this.state.currentTextInputModal != null && (
@@ -97,17 +101,24 @@ export const PersonalImagesEditImageRender = function () {
 
           return (
             <React.Fragment key={index}>
-              <Divider />
+              <Divider 
+              style={{
+                backgroundColor:this.props.darkMode?Colors.secondaryColor:Colors.ultraLightGrey
+              }}
+              />
               <List.Item
+               
                 title={imageType != null ? imageType.title : input.placeholder}
                 titleStyle={{
                   color:
                     imageType != null
-                      ? Colors.quaternaryColor
-                      : Colors.verusDarkGray,
+                      ?this.props.darkMode?Colors.verusDarkGray:Colors.quaternaryColor
+                      : this.props.darkMode?Colors.quaternaryColor:Colors.verusDarkGray,
                 }}
                 right={(props) => (
-                  <List.Icon {...props} icon={"account-edit"} size={20} />
+                  <List.Icon {...props} 
+                  color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+                  icon={"account-edit"} size={20} />
                 )}
                 onPress={
                   this.state.loadingImage || this.state.loading
@@ -115,8 +126,15 @@ export const PersonalImagesEditImageRender = function () {
                     : () => this.setState({ imageTypeModalOpen: true })
                 }
                 description={input.title}
+                descriptionStyle={{
+                  color:this.props.darkMode?Colors.ultraLightGrey:Colors.defaultGrayColor  
+                }}
               />
-              <Divider />
+              <Divider 
+              style={{
+                backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+              }}
+              />
             </React.Fragment>
           );
         })}
@@ -134,11 +152,13 @@ export const PersonalImagesEditImageRender = function () {
                 titleStyle={{
                   color:
                     this.state.image[key].length > 0
-                      ? Colors.quaternaryColor
-                      : Colors.verusDarkGray,
+                      ? this.props.darkMode?Colors.verusDarkGray:Colors.quaternaryColor
+                      : this.props.darkMode?Colors.quaternaryColor:Colors.verusDarkGray,
                 }}
                 right={(props) => (
-                  <List.Icon {...props} icon={"account-edit"} size={20} />
+                  <List.Icon {...props} 
+                  color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+                  icon={"account-edit"} size={20} />
                 )}
                 onPress={
                   this.state.loadingImage || this.state.loading
@@ -146,8 +166,15 @@ export const PersonalImagesEditImageRender = function () {
                     : () => this.setState({ currentTextInputModal: key })
                 }
                 description={input.title}
+                descriptionStyle={{
+                  color:this.props.darkMode?Colors.ultraLightGrey:Colors.defaultGrayColor  
+                }}
               />
-              <Divider />
+              <Divider
+              style={{
+                backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+              }}
+              />
             </React.Fragment>
           );
         })}
@@ -160,17 +187,23 @@ export const PersonalImagesEditImageRender = function () {
               return (
                 <React.Fragment key={index}>
                   <List.Item
+                   titleStyle={{
+                    color:this.props.darkMode?Colors.secondaryColor:'black'  
+                  }}
                     title={option.title}
                     right={(props) =>
                       this.state.image.image_subtype != key ? (
                         <List.Icon
                           {...props}
-                          color={Colors.secondaryColor}
+                          // color={Colors.secondaryColor}
+                          color={this.props.darkMode?Colors.verusDarkGray:Colors.secondaryColor}
                           icon={"check"}
                           size={20}
                         />
                       ) : (
-                        <List.Icon {...props} icon={"check"} size={20} />
+                        <List.Icon {...props} 
+                        color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+                        icon={"check"} size={20} />
                       )
                     }
                     onPress={
@@ -179,18 +212,33 @@ export const PersonalImagesEditImageRender = function () {
                         : () => this.selectImageSubtype(key)
                     }
                   />
-                  <Divider />
+                  <Divider
+                  style={{
+                    backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+                  }}
+                  />
                 </React.Fragment>
               );
             })}
           </React.Fragment>
         )}
-        <List.Subheader>{"Images"}</List.Subheader>
-        <Divider />
+        <List.Subheader
+         style={{
+          color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+        }}
+        >{"Images"}</List.Subheader>
+        <Divider 
+         style={{
+          backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+        }}
+        />
         {(this.state.loadingImage ||
           schema.images == null ||
           this.state.image.uris.length < schema.images.length) && (
           <List.Item
+          titleStyle={{
+            color:this.props.darkMode?Colors.secondaryColor:'black'  
+          }}
             title={
               this.state.loadingImage
                 ? "Loading..."
@@ -208,7 +256,9 @@ export const PersonalImagesEditImageRender = function () {
                   }}
                 />
               ) : (
-                <List.Icon {...props} icon={"plus"} size={20} />
+                <List.Icon {...props} 
+                color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+                icon={"plus"} size={20} />
               );
             }}
             onPress={
@@ -233,11 +283,13 @@ export const PersonalImagesEditImageRender = function () {
               }
               style={{
                 borderRadius: 0,
-                backgroundColor: Colors.secondaryColor,
+                backgroundColor: this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor,
                 marginHorizontal: 8,
                 marginTop: index == 0 ? 8 : 4,
                 marginBottom: index == uris.length - 1 ? 8 : 4,
+                
               }}
+              
               key={index}
             >
               <Card.Cover
@@ -247,7 +299,7 @@ export const PersonalImagesEditImageRender = function () {
                 }}
               />
               <Card.Content
-                style={{ display: "flex", justifyContent: "center" }}
+                style={{ display: "flex", justifyContent: "center" ,color:this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor }}
               >
                 <Title style={{ marginTop: 16, padding: 0 }}>
                   {schema.images == null
@@ -258,18 +310,37 @@ export const PersonalImagesEditImageRender = function () {
             </Card>
           );
         })}
-        <Divider />
-        <List.Subheader>{"Options"}</List.Subheader>
-        <Divider />
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+        }}
+        />
+        <List.Subheader
+         style={{
+          color:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+        }}
+        >{"Options"}</List.Subheader>
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+        }}
+        />
         <List.Item
           title={"Delete image"}
           titleStyle={{
             color: Colors.warningButtonColor,
           }}
-          right={(props) => <List.Icon {...props} icon={"close"} size={20} />}
+          right={(props) => <List.Icon 
+            {...props} 
+            color={this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor}
+            icon={"close"} size={20} />}
           onPress={this.state.loading ? () => {} : () => this.tryDeleteImage()}
         />
-        <Divider />
+        <Divider 
+        style={{
+          backgroundColor:this.props.darkMode?Colors.verusDarkGray:Colors.defaultGrayColor
+        }}
+        />
       </ScrollView>
     </SafeAreaView>
   );

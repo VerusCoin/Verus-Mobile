@@ -14,6 +14,7 @@ import { getCurrenciesMappedToEth } from '../../../../utils/api/channels/vrpc/re
 const AddErc20TokenForm = props => {
   const dispatch = useDispatch();
   const sendModal = useSelector(state => state.sendModal);
+  const darkMode = useSelector(state=> state.settings.darkModeState)
 
   const [useMappedCurrency, setUseMappedCurrency] = useState(false);
 
@@ -110,7 +111,8 @@ const AddErc20TokenForm = props => {
     updateSendFormData: props.updateSendFormData,
     formDataValue: sendModal.data[SEND_MODAL_CONTRACT_ADDRESS_FIELD],
     useMappedCurrency,
-    setUseMappedCurrency
+    setUseMappedCurrency,
+    darkMode
   });
 };
 

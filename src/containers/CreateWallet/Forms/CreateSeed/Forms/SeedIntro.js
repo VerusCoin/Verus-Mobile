@@ -4,9 +4,11 @@ import {Text, Paragraph, Button, Checkbox, List} from 'react-native-paper';
 import {MnemonicSeed} from '../../../../../images/customIcons';
 import Colors from '../../../../../globals/colors';
 import TallButton from '../../../../../components/LargerButton';
+import { useSelector } from 'react-redux';
 
 export default function SeedIntro({navigation}) {
   const {height} = Dimensions.get('window');
+  const darkMode = useSelector((state)=>state.settings.darkModeState);
 
   const [userAgrees, setUserAgrees] = useState(false);
 
@@ -18,7 +20,7 @@ export default function SeedIntro({navigation}) {
         justifyContent: 'center',
         flex: 1,
         alignItems: 'center',
-        backgroundColor: Colors.secondaryColor
+        backgroundColor: darkMode?Colors.darkModeColor:Colors.secondaryColor
       }}>
       <MnemonicSeed
         width={180}
@@ -44,6 +46,7 @@ export default function SeedIntro({navigation}) {
             textAlign: 'center',
             marginTop: 24,
             width: 280,
+            color:darkMode?Colors.secondaryColor:'black'
           }}>
           {
             'Your 24 word seed is the secret key that gives you access to your wallet.'
@@ -54,6 +57,7 @@ export default function SeedIntro({navigation}) {
             textAlign: 'center',
             marginTop: 24,
             width: 280,
+            color:darkMode?Colors.secondaryColor:'black'
           }}>
           {
             'Write each word down, separated by a space, and keep your words safe.'
@@ -85,8 +89,12 @@ export default function SeedIntro({navigation}) {
         </View>
         <Checkbox.Item
           color={Colors.primaryColor}
+          uncheckedColor={
+            darkMode ? Colors.secondaryColor : Colors.quinaryColor
+          }
           labelStyle={{
             fontSize: 14,
+            color:darkMode?Colors.secondaryColor:'black'
           }}
           label={
             'I understand the need to write down the seed, and to keep it secure.'

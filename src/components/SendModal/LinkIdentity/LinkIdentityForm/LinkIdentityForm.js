@@ -19,6 +19,7 @@ import {LinkIdentityFormRender} from './LinkIdentityForm.render';
 const LinkIdentityForm = (props) => {
   const dispatch = useDispatch();
   const sendModal = useSelector(state => state.sendModal);
+  const darkMode = useSelector(state => state.settings.darkModeState)
 
   const formHasError = useCallback(() => {
     const {data} = sendModal;
@@ -119,7 +120,8 @@ const LinkIdentityForm = (props) => {
   return LinkIdentityFormRender({
     submitData,
     updateSendFormData: props.updateSendFormData,
-    formDataValue: sendModal.data[SEND_MODAL_IDENTITY_TO_LINK_FIELD]
+    formDataValue: sendModal.data[SEND_MODAL_IDENTITY_TO_LINK_FIELD],
+    darkMode
   });
 };
 

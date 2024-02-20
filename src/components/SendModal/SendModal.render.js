@@ -1,7 +1,8 @@
-import React, { Component } from "react";
-import { Platform, SafeAreaView } from "react-native";
-import { Text, Portal, Button } from "react-native-paper";
-import { Colors } from "react-native/Libraries/NewAppScreen";
+import React, {Component} from 'react';
+import {Platform, SafeAreaView, View} from 'react-native';
+import {Text, Portal, Button} from 'react-native-paper';
+// import { Colors } from "react-native/Libraries/NewAppScreen";
+
 import {
   ADD_ERC20_TOKEN_MODAL,
   ADD_PBAAS_CURRENCY_MODAL,
@@ -16,42 +17,43 @@ import {
   SEND_MODAL_FORM_STEP_RESULT,
   TRADITIONAL_CRYPTO_SEND_MODAL,
   WITHDRAW_SEND_MODAL,
-} from "../../utils/constants/sendModal";
-import SemiModal from "../SemiModal";
-import TraditionalCryptoSendForm from "./TraditionalCryptoSend/TraditionalCryptoSendForm/TraditionalCryptoSendForm";
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
-import AnimatedActivityIndicatorBox from "../AnimatedActivityIndicatorBox";
-import TraditionalCryptoSendConfirm from "./TraditionalCryptoSend/TraditionalCryptoSendConfirm/TraditionalCryptoSendConfirm";
-import TraditionalCryptoSendResult from "./TraditionalCryptoSend/TraditionalCryptoSendResult/TraditionalCryptoSendResult";
-import ConversionSendForm from "./ConversionSend/ConversionSendForm/ConversionSendForm";
-import ConversionSendConfirm from "./ConversionSend/ConversionSendConfirm/ConversionSendConfirm";
-import ConversionSendResult from "./ConversionSend/ConversionSendResult/ConversionSendResult";
-import WithdrawSendForm from "./WithdrawSend/WithdrawSendForm/WithdrawSendForm";
-import WithdrawSendConfirm from "./WithdrawSend/WithdrawSendConfirm/WithdrawSendConfirm";
-import WithdrawSendResult from "./WithdrawSend/WithdrawSendResult/WithdrawSendResult";
-import DepositSendForm from "./DepositSend/DepositSendForm/DepositSendForm";
-import DepositSendConfirm from "./DepositSend/DepositSendConfirm/DepositSendConfirm";
-import DepositSendResult from "./DepositSend/DepositSendResult/DepositSendResult";
-import LinkIdentityForm from "./LinkIdentity/LinkIdentityForm/LinkIdentityForm";
-import LinkIdentityConfirm from "./LinkIdentity/LinkIdentityConfirm/LinkIdentityConfirm";
-import LinkIdentityResult from "./LinkIdentity/LinkIdentityResult/LinkIdentityResult";
-import AuthenticateUserForm from "./AuthenticateUser/AuthenticateUserForm/AuthenticateUserForm";
-import AuthenticateUserPassword from "./AuthenticateUser/AuthenticateUserPassword/AuthenticateUserPassword";
-import AuthenticateUserResult from "./AuthenticateUser/AuthenticateUserResult/AuthenticateUserResult";
-import ProvisionIdentityForm from "./ProvisionIdentity/ProvisionIdentityForm/ProvisionIdentityForm";
-import ProvisionIdentityConfirm from "./ProvisionIdentity/ProvisionIdentityConfirm/ProvisionIdentityConfirm";
-import ProvisionIdentityResult from "./ProvisionIdentity/ProvisionIdentityResult/ProvisionIdentityResult";
-import AddPbaasCurrencyForm from "./AddPbaasCurrency/AddPbaasCurrencyForm/AddPbaasCurrencyForm";
-import AddPbaasCurrencyConfirm from "./AddPbaasCurrency/AddPbaasCurrencyConfirm/AddPbaasCurrencyConfirm";
-import AddPbaasCurrencyResult from "./AddPbaasCurrency/AddPbaasCurrencyResult/AddPbaasCurrencyResult";
-import ConvertOrCrossChainSendForm from "./ConvertOrCrossChainSend/ConvertOrCrossChainSendForm/ConvertOrCrossChainSendForm";
-import ConvertOrCrossChainSendConfirm from "./ConvertOrCrossChainSend/ConvertOrCrossChainSendConfirm/ConvertOrCrossChainSendConfirm";
-import ConvertOrCrossChainSendResult from "./ConvertOrCrossChainSend/ConvertOrCrossChainSendResult/ConvertOrCrossChainSendResult";
-import AddErc20TokenForm from "./AddErc20Token/AddErc20TokenForm/AddErc20TokenForm";
-import AddErc20TokenConfirm from "./AddErc20Token/AddErc20TokenConfirm/AddErc20TokenConfirm";
-import AddErc20TokenResult from "./AddErc20Token/AddErc20TokenResult/AddErc20TokenResult";
+} from '../../utils/constants/sendModal';
+import SemiModal from '../SemiModal';
+import TraditionalCryptoSendForm from './TraditionalCryptoSend/TraditionalCryptoSendForm/TraditionalCryptoSendForm';
+import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
+import {NavigationContainer} from '@react-navigation/native';
+import {createStackNavigator} from '@react-navigation/stack';
+import AnimatedActivityIndicatorBox from '../AnimatedActivityIndicatorBox';
+import TraditionalCryptoSendConfirm from './TraditionalCryptoSend/TraditionalCryptoSendConfirm/TraditionalCryptoSendConfirm';
+import TraditionalCryptoSendResult from './TraditionalCryptoSend/TraditionalCryptoSendResult/TraditionalCryptoSendResult';
+import ConversionSendForm from './ConversionSend/ConversionSendForm/ConversionSendForm';
+import ConversionSendConfirm from './ConversionSend/ConversionSendConfirm/ConversionSendConfirm';
+import ConversionSendResult from './ConversionSend/ConversionSendResult/ConversionSendResult';
+import WithdrawSendForm from './WithdrawSend/WithdrawSendForm/WithdrawSendForm';
+import WithdrawSendConfirm from './WithdrawSend/WithdrawSendConfirm/WithdrawSendConfirm';
+import WithdrawSendResult from './WithdrawSend/WithdrawSendResult/WithdrawSendResult';
+import DepositSendForm from './DepositSend/DepositSendForm/DepositSendForm';
+import DepositSendConfirm from './DepositSend/DepositSendConfirm/DepositSendConfirm';
+import DepositSendResult from './DepositSend/DepositSendResult/DepositSendResult';
+import LinkIdentityForm from './LinkIdentity/LinkIdentityForm/LinkIdentityForm';
+import LinkIdentityConfirm from './LinkIdentity/LinkIdentityConfirm/LinkIdentityConfirm';
+import LinkIdentityResult from './LinkIdentity/LinkIdentityResult/LinkIdentityResult';
+import AuthenticateUserForm from './AuthenticateUser/AuthenticateUserForm/AuthenticateUserForm';
+import AuthenticateUserPassword from './AuthenticateUser/AuthenticateUserPassword/AuthenticateUserPassword';
+import AuthenticateUserResult from './AuthenticateUser/AuthenticateUserResult/AuthenticateUserResult';
+import ProvisionIdentityForm from './ProvisionIdentity/ProvisionIdentityForm/ProvisionIdentityForm';
+import ProvisionIdentityConfirm from './ProvisionIdentity/ProvisionIdentityConfirm/ProvisionIdentityConfirm';
+import ProvisionIdentityResult from './ProvisionIdentity/ProvisionIdentityResult/ProvisionIdentityResult';
+import AddPbaasCurrencyForm from './AddPbaasCurrency/AddPbaasCurrencyForm/AddPbaasCurrencyForm';
+import AddPbaasCurrencyConfirm from './AddPbaasCurrency/AddPbaasCurrencyConfirm/AddPbaasCurrencyConfirm';
+import AddPbaasCurrencyResult from './AddPbaasCurrency/AddPbaasCurrencyResult/AddPbaasCurrencyResult';
+import ConvertOrCrossChainSendForm from './ConvertOrCrossChainSend/ConvertOrCrossChainSendForm/ConvertOrCrossChainSendForm';
+import ConvertOrCrossChainSendConfirm from './ConvertOrCrossChainSend/ConvertOrCrossChainSendConfirm/ConvertOrCrossChainSendConfirm';
+import ConvertOrCrossChainSendResult from './ConvertOrCrossChainSend/ConvertOrCrossChainSendResult/ConvertOrCrossChainSendResult';
+import AddErc20TokenForm from './AddErc20Token/AddErc20TokenForm/AddErc20TokenForm';
+import AddErc20TokenConfirm from './AddErc20Token/AddErc20TokenConfirm/AddErc20TokenConfirm';
+import AddErc20TokenResult from './AddErc20Token/AddErc20TokenResult/AddErc20TokenResult';
+import Colors from '../../globals/colors';
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
@@ -66,9 +68,9 @@ const SEND_FORMS = {
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserForm,
   [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyForm,
   [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendForm,
-  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenForm
+  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenForm,
 };
-
+``;
 const SEND_CONFIRMATION = {
   [TRADITIONAL_CRYPTO_SEND_MODAL]: TraditionalCryptoSendConfirm,
   [CONVERSION_SEND_MODAL]: ConversionSendConfirm,
@@ -79,7 +81,7 @@ const SEND_CONFIRMATION = {
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserPassword,
   [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyConfirm,
   [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendConfirm,
-  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenConfirm
+  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenConfirm,
 };
 
 const SEND_RESULTS = {
@@ -92,16 +94,15 @@ const SEND_RESULTS = {
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserResult,
   [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyResult,
   [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendResult,
-  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenResult
+  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenResult,
 };
 
 export const SendModalRender = function () {
-  const { visible, title } = this.props.sendModal;
+  const {visible, title} = this.props.sendModal;
   const modalStarterHeight = this.state.modalHeight;
   const modalHeight = this.props.keyboard.active
     ? this.props.keyboard.height + modalStarterHeight
     : modalStarterHeight;
-
 
   return (
     <Portal>
@@ -112,43 +113,59 @@ export const SendModalRender = function () {
           visible={visible}
           onRequestClose={() => this.cancel()}
           contentContainerStyle={{
-            height: Platform.OS === "android" ? modalStarterHeight : modalHeight,
+            height:
+              Platform.OS === 'android' ? modalStarterHeight : modalHeight,
             flex: 0,
-            backgroundColor: "white",
-          }}
-        >
-          <SafeAreaView style={{ flex: 1 }}>
+            backgroundColor: this.props.darkMode
+              ? Colors.darkModeColor
+              : Colors.secondaryColor,
+          }}>
+          <SafeAreaView style={{flex: 1}}>
             <Root.Navigator
               screenOptions={{
-                headerTitle: () => <Text style={{ marginBottom: 16, fontSize: 16, textAlign: "center" }}>{title}</Text>,
-                headerRight: (props) => (
+                headerTitle: () => (
+                  <Text
+                    style={{
+                      marginBottom: 16,
+                      fontSize: 16,
+                      textAlign: 'center',
+                      color: this.props.darkMode
+                        ? Colors.secondaryColor
+                        : Colors.quinaryColor,
+                    }}>
+                    {title}
+                  </Text>
+                ),
+                headerRight: props => (
                   <Button
                     {...props}
-                    style={{ marginBottom: 16 }}
+                    style={{marginBottom: 16}}
                     onPress={() => this.showHelpModal()}
                     color={Colors.primaryColor}
-                    disabled={this.state.preventExit}
-                  >
-                    {"Help"}
+                    disabled={this.state.preventExit}>
+                    {'Help'}
                   </Button>
                 ),
-                headerLeft: (props) => (
+                headerLeft: props => (
                   <Button
                     {...props}
-                    style={{ marginBottom: 16 }}
+                    style={{marginBottom: 16}}
                     onPress={() => this.cancel()}
                     color={Colors.primaryColor}
-                    disabled={this.state.preventExit}
-                  >
-                    {"Close"}
+                    disabled={this.state.preventExit}>
+                    {'Close'}
                   </Button>
                 ),
                 headerStyle: {
                   height: 52,
+                  backgroundColor: this.props.darkMode
+                    ? Colors.darkModeColor
+                    : Colors.secondaryColor,
                 },
-              }}
-            >
-              <Root.Screen name="SendModalInner">{SendModalInnerAreaRender.call(this)}</Root.Screen>
+              }}>
+              <Root.Screen name="SendModalInner">
+                {SendModalInnerAreaRender.call(this)}
+              </Root.Screen>
             </Root.Navigator>
           </SafeAreaView>
         </SemiModal>
@@ -160,10 +177,10 @@ export const SendModalRender = function () {
 export const SendModalInnerAreaRender = function () {
   const starterProps = {
     updateSendFormData: (key, value) => this.updateSendFormData(key, value),
-    setLoading: (loading) => this.setLoading(loading),
-    setModalHeight: (height) => this.setModalHeight(height),
-    setPreventExit: (preventExit) => this.setPreventExit(preventExit),
-    setVisible: (visible) => this.setVisible(visible)
+    setLoading: loading => this.setLoading(loading),
+    setModalHeight: height => this.setModalHeight(height),
+    setPreventExit: preventExit => this.setPreventExit(preventExit),
+    setVisible: visible => this.setVisible(visible),
   };
 
   const Form =
@@ -175,7 +192,7 @@ export const SendModalInnerAreaRender = function () {
     this.state.loading || SEND_CONFIRMATION[this.props.sendModal.type] == null
       ? AnimatedActivityIndicatorBox
       : SEND_CONFIRMATION[this.props.sendModal.type];
-  
+
   const Result =
     this.state.loading || SEND_RESULTS[this.props.sendModal.type] == null
       ? AnimatedActivityIndicatorBox
@@ -183,6 +200,18 @@ export const SendModalInnerAreaRender = function () {
 
   return () => (
     <TopTabs.Navigator
+      screenOptions={({route}) => ({
+        tabBarLabelStyle: {
+          color:
+            route.name === 'Select' ||
+            'Enter' ||
+            route.name === 'Login' ||
+            'Confirm' ||
+            route.name === 'Result'
+              ? Colors.verusDarkGray
+              : 'grey',
+        },
+      })}
       initialRouteName={
         this.props.sendModal.initialRouteName
           ? this.props.sendModal.initialRouteName
@@ -195,8 +224,21 @@ export const SendModalInnerAreaRender = function () {
         pressColor: 'transparent',
         pressOpacity: 1,
         labelStyle: {
-          fontSize: 12
-        }
+          fontSize: 12,
+        },
+        style: {
+          backgroundColor: this.props.darkMode
+            ? Colors.darkModeColor
+            : Colors.secondaryColor,
+        },
+        tabBarLabelStyle: {
+          color: this.props.darkMode
+            ? Colors.primaryColor
+            : Colors.quinaryColor,
+        },
+        tabBarInactiveLabelStyle: {
+          color: 'grey', // Set the color for inactive tabs
+        },
       }}
       lazy={true}
       lazyPlaceholder={() => <AnimatedActivityIndicatorBox />}>

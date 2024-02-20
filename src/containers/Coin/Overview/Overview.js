@@ -38,6 +38,7 @@ import BigNumber from "bignumber.js";
 import { TransactionLogos } from '../../../images/customIcons/index'
 import Colors from "../../../globals/colors";
 import { CoinDirectory } from "../../../utils/CoinData/CoinDirectory";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const TX_LOGOS = {
   self: TransactionLogos.SelfArrow,
@@ -66,7 +67,8 @@ class Overview extends Component {
         activeCoinExplorerId: null,
         activeCoinDisplayTicker: null,
         TxLogo: TX_LOGOS.unknown
-      }
+      },
+
     };
     //this.updateProps = this.updateProps.bind(this);
     this.refresh = this.refresh.bind(this);
@@ -260,6 +262,7 @@ class Overview extends Component {
         ? CoinDirectory.findSystemCoinObj(this.props.activeCoin.id).id
         : this.props.activeCoin.id;
     } catch(e) { console.warn(e) }
+
     
     return (
       <TouchableOpacity
@@ -279,6 +282,8 @@ class Overview extends Component {
         }
       >
         <List.Item
+          titleStyle={{color:this.props.darkMode?Colors.secondaryColor:'black'}}
+          descriptionStyle={{color:this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}}
           title={`${
             displayAmount != null
               ? displayAmount.isLessThan(BigNumber(0.0001)) &&
@@ -307,7 +312,9 @@ class Overview extends Component {
           right={(props) => (
             <React.Fragment>
               {item.memo != null && <List.Icon {...props} icon={"email"} size={20} />}
-              <List.Icon {...props} icon={"chevron-right"} size={20} />
+              <List.Icon {...props} icon={"chevron-right"} size={20} 
+              color={this.props.darkMode?Colors.secondaryColor:Colors.defaultGrayColor}
+              />
             </React.Fragment>
           )}
         />
@@ -337,15 +344,15 @@ class Overview extends Component {
   renderTransactionList = () => {
     return (
       <FlatList
-        style={Styles.fullWidth}
+        style={[Styles.fullWidth, {backgroundColor: this.props.darkMode?Colors.darkModeColor:''}]}
         contentContainerStyle={{ flexGrow: 1 }}
         data={this.parseTransactionLists()}
         scrollEnabled={true}
         ListEmptyComponent={
           <View
-            style={Styles.focalCenter}
+            style={{...Styles.focalCenter,backgroundColor: this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor}}
           >
-            <Text style={{...Styles.centeredText, fontSize: 16, color: Colors.verusDarkGray}}>
+            <Text style={{...Styles.centeredText, fontSize: 16, color: this.props.darkMode?Colors.secondaryColor : 'black'}}>
               {"No transactions found..."}
             </Text>
           </View>
@@ -406,6 +413,7 @@ const mapStateToProps = (state) => {
     activeAccount: state.authentication.activeAccount,
     activeCoinsForUser: state.coins.activeCoinsForUser,
     generalWalletSettings: state.settings.generalWalletSettings,
+    darkMode:state.settings.darkModeState
   }
 };
 

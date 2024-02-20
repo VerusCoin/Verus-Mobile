@@ -9689,11 +9689,11 @@ react-native-url-polyfill@1.3.0:
   dependencies:
     whatwg-url-without-unicode "8.0.0-3"
 
-"react-native-vector-icons@git+https://github.com/michaeltout/react-native-vector-icons.git":
-  version "8.1.0"
-  resolved "git+https://github.com/michaeltout/react-native-vector-icons.git#8e7de391c452401b0e2bf0da695aa0edeb8b323d"
+react-native-vector-icons@^10.0.3:
+  version "10.0.3"
+  resolved "https://registry.yarnpkg.com/react-native-vector-icons/-/react-native-vector-icons-10.0.3.tgz#369824a3b17994b2cd65edbaa32dbf9540d49678"
+  integrity sha512-ZgVlV5AdQgnPHHvBEihGf2xwyziT1acpXV1U+WfCgCv3lcEeCRsmwAsBU+kUSNsU+8TcWVsX04kdI6qUaS8D7w==
   dependencies:
-    lodash "^4.17.21"
     prop-types "^15.7.2"
     yargs "^16.1.1"
 

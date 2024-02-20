@@ -47,9 +47,22 @@ class TextInputModal extends Component {
           }}
           mode={mode}
           style={{
-            marginTop: -10,
+            backgroundColor: this.props.darkMode
+                ? Colors.verusDarkModeForm
+                : Colors.ultraUltraLightGrey,
+            
           }}
           autoFocus
+          theme={{
+            colors: {
+              text: this.props.darkMode
+                ? Colors.secondaryColor
+                : 'black',
+              placeholder: this.props.darkMode
+                ? Colors.verusDarkGray
+                : Colors.verusDarkGray,
+            },
+          }}
           underlineColor={Colors.primaryColor}
           selectionColor={Colors.primaryColor}
           render={(props) => (
@@ -70,7 +83,8 @@ class TextInputModal extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    keyboardHeight: state.keyboard.height
+    keyboardHeight: state.keyboard.height,
+    darkMode: state.settings.darkModeState,
   }
 };
 

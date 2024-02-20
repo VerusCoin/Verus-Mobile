@@ -286,11 +286,20 @@ export const getCoinObj = (coinList, coinId) => {
   })
 }
 
-export const getCoinLogo = (id, proto, theme = 'light') => {  
-  if (CoinLogos[id]) return CoinLogos[id][theme]
-  else if (proto === 'erc20') return CoinLogos.ETH[theme]
-  else return CoinLogoIcons.pbaas.RenderPbaasCurrencyLogo(id)[theme]
-}
+
+// export const getCoinLogo = (id, proto, theme = 'light', coinInfo=[]) => {  
+//   if (CoinLogos[id]) return CoinLogos[id][theme]
+//   else if (proto === 'erc20') return CoinLogos.ETH[theme]
+//   else if (proto === 'vrsc') return coinInfo?.mappedTo
+//   // else if (proto === )
+//   else return CoinLogoIcons.pbaas.RenderPbaasCurrencyLogo(id)[theme]
+// }
+
+export const getCoinLogo = (id, proto, theme = 'light', coinInfo = {}) => {  
+  if (CoinLogos[id]) return CoinLogos[id][theme];
+  else if (proto === 'erc20') return CoinLogos.ETH[theme];
+  else return CoinLogoIcons.pbaas.RenderPbaasCurrencyLogo(id)[theme];
+};
 
 export const getNetworkTxVersion = (networkId) => {
   const versions = {

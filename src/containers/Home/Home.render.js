@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {View, RefreshControl} from 'react-native';
 import {Text, Provider, Portal, Banner} from 'react-native-paper';
 import {truncateDecimal} from '../../utils/math';
@@ -25,6 +25,8 @@ import {
 } from '../../utils/constants/currencies';
 import VerusIdWidget from './HomeWidgets/VerusIdWidget';
 import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
+import Colors from '../../globals/colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import NotificationWidget from './HomeWidgets/NotificationWidget';
 
 export const HomeRender = function () {
@@ -117,13 +119,15 @@ export const HomeRenderCoinsList = function () {
   const {widgets} = this.state;
   const dragDetection = this.dragDetectionEnabled();
 
+
+
   return widgets.length == 0 ? (
     <View />
   ) : (
     <View
       style={{
         height: '100%',
-        backgroundColor: 'white',
+        backgroundColor: this.props.darkMode ? Colors.darkModeColor : 'white',
         width: '100%',
         overflow: 'visible',
       }}>

@@ -1,16 +1,18 @@
 import React from "react";
 import { ScrollView, View, TouchableWithoutFeedback, Keyboard } from "react-native";
-import { TextInput, Button } from "react-native-paper";
+import { TextInput, Button} from "react-native-paper";
 import Styles from "../../../../styles";
 import { SEND_MODAL_IDENTITY_TO_LINK_FIELD } from "../../../../utils/constants/sendModal";
+import Colors from "../../../../globals/colors";
 
-export const LinkIdentityFormRender = ({submitData, updateSendFormData, formDataValue}) => {
+export const LinkIdentityFormRender = ({submitData, updateSendFormData, formDataValue,darkMode}) => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <ScrollView
         style={{
           ...Styles.flexBackground,
           ...Styles.fullWidth,
+          backgroundColor:darkMode?Colors.darkModeColor:Colors.secondaryColor
         }}
         contentContainerStyle={{
           ...Styles.centerContainer,
@@ -26,6 +28,22 @@ export const LinkIdentityFormRender = ({submitData, updateSendFormData, formData
             onChangeText={(text) =>
               updateSendFormData(SEND_MODAL_IDENTITY_TO_LINK_FIELD, text)
             }
+            style={{
+              backgroundColor:darkMode
+                  ? Colors.verusDarkModeForm
+                  : Colors.tertiaryColor,
+              
+            }}
+            theme={{
+              colors: {
+                text: darkMode
+                  ? Colors.secondaryColor
+                  : 'black',
+                placeholder: darkMode
+                  ? Colors.primaryColor
+                  : Colors.verusDarkGray,
+              },
+            }}
             autoCapitalize={"none"}
             autoCorrect={false}
           />

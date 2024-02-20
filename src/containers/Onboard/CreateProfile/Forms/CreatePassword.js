@@ -19,6 +19,7 @@ export default function CreatePassword({password, setPassword, navigation}) {
   const [secondBox, setSecondBox] = useState('');
   
   const isKeyboardActive = useSelector(state => state.keyboard.active);
+  const darkMode = useSelector(state=>state.settings.darkModeState)
 
   const validate = () => {
     const res = {valid: false, message: ''};
@@ -63,7 +64,7 @@ export default function CreatePassword({password, setPassword, navigation}) {
           justifyContent: 'center',
           flex: 1,
           alignItems: 'center',
-          backgroundColor: Colors.secondaryColor,
+          backgroundColor: darkMode?Colors.darkModeColor:Colors.secondaryColor
         }}>
         <View
           style={{
@@ -86,6 +87,7 @@ export default function CreatePassword({password, setPassword, navigation}) {
               width: '75%',
               marginTop: 24,
               width: 280,
+              color:darkMode?Colors.secondaryColor:'black'
             }}>
             {
               'Create a secure password for your profile. Your password will be used to encrypt your wallet.'
@@ -96,10 +98,23 @@ export default function CreatePassword({password, setPassword, navigation}) {
             label="Create password"
             value={firstBox}
             mode={'outlined'}
+            theme={{
+              colors: {
+                text: darkMode
+                  ? Colors.secondaryColor
+                  : 'black',
+                placeholder: darkMode
+                  ? Colors.primaryColor
+                  : Colors.verusDarkGray,
+              },
+            }}
             style={{
               width: '75%',
               marginTop: 24,
               width: 280,
+              backgroundColor:darkMode
+              ? Colors.verusDarkModeForm
+              : Colors.ultraUltraLightGrey,
             }}
             placeholder="Enter password"
             dense={true}
@@ -113,10 +128,23 @@ export default function CreatePassword({password, setPassword, navigation}) {
             label="Confirm password"
             value={secondBox}
             mode={'outlined'}
+            theme={{
+              colors: {
+                text: darkMode
+                  ? Colors.secondaryColor
+                  : 'black',
+                placeholder: darkMode
+                  ? Colors.primaryColor
+                  : Colors.verusDarkGray,
+              },
+            }}
             style={{
               width: '75%',
               marginTop: 8,
               width: 280,
+              backgroundColor:darkMode
+              ? Colors.verusDarkModeForm
+              : Colors.ultraUltraLightGrey,
             }}
             placeholder="Enter password"
             dense={true}

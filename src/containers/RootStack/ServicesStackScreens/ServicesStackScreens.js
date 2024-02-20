@@ -6,13 +6,15 @@ import Service from '../../Services/Service/Service'
 import WyreServiceAccountData from '../../Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceAccountData/WyreServiceAccountData';
 import WyreServiceAddPaymentMethod from '../../Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceAddPaymentMethod/WyreServiceAddPaymentMethod';
 import WyreServiceEditPaymentMethod from '../../Services/ServiceComponents/WyreService/WyreServiceAccount/WyreServiceEditPaymentMethod/WyreServiceEditPaymentMethod';
+import { useSelector } from 'react-redux';
 
 const ServicesStack = createStackNavigator();
 
 const ServicesStackScreens = props => {
+  const darkMode = useSelector(state=>state.settings.darkModeState)
   return (
     <ServicesStack.Navigator
-      screenOptions={defaultHeaderOptions}
+        screenOptions={defaultHeaderOptions({darkMode})}
     >
       <ServicesStack.Screen
         name="Services"

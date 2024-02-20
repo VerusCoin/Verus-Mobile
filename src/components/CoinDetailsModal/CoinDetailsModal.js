@@ -167,7 +167,7 @@ class CoinDetailsModal extends Component {
         flexHeight={1}
       >
         <View style={Styles.centerContainer}>
-          <View style={{ ...Styles.headerContainer, minHeight: 48 }}>
+          <View style={{ ...Styles.headerContainer, minHeight: 48, backgroundColor:this.props.darkMode?Colors.darkModeColor:Colors.secondaryColor}}>
             <View style={Styles.semiModalHeaderContainer}>
               <Button
                 onPress={cancel}
@@ -180,6 +180,7 @@ class CoinDetailsModal extends Component {
                 style={{
                   ...Styles.centralHeader,
                   ...Styles.smallMediumFont,
+                  color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor
                 }}
               >
                 {display_name || "None"}
@@ -237,4 +238,10 @@ class CoinDetailsModal extends Component {
   }
 }
 
-export default connect()(CoinDetailsModal);
+const mapStateToProps = (state) => {
+  return {
+    darkMode:state.settings.darkModeState
+  }
+};
+
+export default connect(mapStateToProps)(CoinDetailsModal);
