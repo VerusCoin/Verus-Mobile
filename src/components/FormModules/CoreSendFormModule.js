@@ -18,7 +18,9 @@ const CoreSendFormModule = ({
   onMaxPress,
   maxButtonDisabled = false,
   estimatedResultSubtitle = null,
-  networkName
+  networkName,
+  destDisabled,
+  amountDisabled
 }) => {
   const darkMode = useSelector((state)=>state.settings.darkModeState);
   return (
@@ -81,14 +83,19 @@ const CoreSendFormModule = ({
             onChangeText={onRecipientAddressChange}
             autoCapitalize={'none'}
             autoCorrect={false}
+            disabled={destDisabled}
           />
-          <Button
-            onPress={onSelfPress}
-            color={Colors.primaryColor}
-            style={{alignSelf: 'center', marginTop: 6, width: 64}}
-            compact>
-            {'Self'}
-          </Button>
+          {
+            !destDisabled && (
+              <Button
+                onPress={onSelfPress}
+                color={Colors.primaryColor}
+                style={{alignSelf: 'center', marginTop: 6, width: 64}}
+                compact>
+                {'Self'}
+              </Button>
+            )
+          }
         </View>
       </View>
       <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
@@ -115,15 +122,20 @@ const CoreSendFormModule = ({
                   : Colors.verusDarkGray,
               }
             }}
+            disabled={amountDisabled}
           />
-          <Button
-            onPress={onMaxPress}
-            color={Colors.primaryColor}
-            style={{alignSelf: 'center', marginTop: 6, width: 64}}
-            disabled={maxButtonDisabled}
-            compact>
-            {'Max'}
-          </Button>
+          {
+            !amountDisabled && (
+              <Button
+                onPress={onMaxPress}
+                color={Colors.primaryColor}
+                style={{alignSelf: 'center', marginTop: 6, width: 64}}
+                disabled={maxButtonDisabled}
+                compact>
+                {'Max'}
+              </Button>
+            )
+          }
         </View>
         {estimatedResultSubtitle != null ? (
           <Text

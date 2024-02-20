@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { primitives } from "verusid-ts-client";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
-import { getCurrency, getIdentity } from "../../../../utils/api/channels/verusid/callCreators";
+import { getIdentity } from "../../../../utils/api/channels/verusid/callCreators";
 import {
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
@@ -15,7 +15,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";
-import { TextInput, Button } from "react-native-paper";
+import { TextInput, Button, Paragraph } from "react-native-paper";
 import Styles from "../../../../styles";
 
 const ProvisionIdentityForm = (props) => {
@@ -43,6 +43,7 @@ const ProvisionIdentityForm = (props) => {
     provWebhook: null,
     assignedIdentity: null,
     loading: false,
+    parentname: ''
   });
 
   useEffect(() => {
@@ -69,7 +70,6 @@ const ProvisionIdentityForm = (props) => {
         provWebhook,
       }));
     };
-  
     const initializeState = async () => {
       await updateProvisioningInfoProcessedData();
     
@@ -77,14 +77,14 @@ const ProvisionIdentityForm = (props) => {
         const provIdKey = currentState.provAddress || currentState.provFqn || null;
     
         const identitykeys = provIdKey == null ? [] : [provIdKey];
-    
         if (currentState.provParent) identitykeys.push(currentState.provParent);
         if (currentState.provSystemId) identitykeys.push(currentState.provSystemId);
     
         const fetchIdentities = async () => {
           let friendlyNameMap = currentState.friendlyNameMap;
           let assignedIdentity = null;
-    
+          let parentname = '';
+
           for (const idKey of identitykeys) {
             if (idKey != null) {
               const identity = await getIdentity(sendModal.coinObj.system_id, idKey.data);
@@ -95,16 +95,24 @@ const ProvisionIdentityForm = (props) => {
     
                 if (provIdKey != null && idKey.data === provIdKey.data) {
                   assignedIdentity = identity.result.identity.identityaddress;
+                  props.updateSendFormData(
+                    SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
+                    identity.result.identity.name
+                  );
+
                 }
+                if (idKey.vdxfkey === primitives.ID_PARENT_VDXF_KEY.vdxfid) {
+                   parentname = `.${identity.result.fullyqualifiedname}`
+                } 
               }
             }
           }
     
-          return { friendlyNameMap, assignedIdentity };
+          return { friendlyNameMap, assignedIdentity, parentname };
         };
     
-        fetchIdentities().then(({ friendlyNameMap, assignedIdentity }) => {
-          setState({ ...currentState, friendlyNameMap, assignedIdentity, loading: false });
+        fetchIdentities().then(({ parentname, friendlyNameMap, assignedIdentity }) => {
+          setState({ ...currentState, friendlyNameMap, assignedIdentity, loading: false, parentname });
         });
     
         return { ...currentState, loading: true };
@@ -124,8 +132,16 @@ const ProvisionIdentityForm = (props) => {
   
     try {
       fromBase58Check(identity);
+      if (state.parentname) {
+        createAlert(
+          'Invalid Identity',
+          'i-Address cannot have a parent name.',
+        );
+        return true;
+      }
     } catch (e) {
-      if (!identity.endsWith('@')) {
+      const formattedId = state.parentname ? `${identity}${state.parentname}` : identity;
+      if (!formattedId.endsWith('@')) {
         createAlert(
           'Invalid Identity',
           'Identity not a valid identity handle or iAddress.',
@@ -144,9 +160,10 @@ const ProvisionIdentityForm = (props) => {
   
     const { coinObj, data } = sendModal;
     const identity = data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD];
-  
+    const formattedId = state.parentname ? `${identity}${state.parentname}` : identity;
+
     try {
-      const res = await getIdentity(coinObj.system_id, identity);
+      const res = await getIdentity(coinObj.system_id, formattedId);
   
       if (res.error && res.error.code !== -5) {
         throw new Error(res.error.message);
@@ -155,6 +172,7 @@ const ProvisionIdentityForm = (props) => {
       }
   
       props.setModalHeight(496);
+
   
       props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
         primaryAddress: addresses[0],
@@ -187,16 +205,16 @@ const ProvisionIdentityForm = (props) => {
         <View style={Styles.wideBlock}>
         <TextInput
           returnKeyType="done"
-          label="i-Address or VerusID handle"
+          label={state.parentname ? "VerusID name" : "i-Address or VerusID name"}
           value={state.assignedIdentity
             ? state.friendlyNameMap[state.assignedIdentity]
-              ? `${state.friendlyNameMap[state.assignedIdentity]}@`
+              ? `${state.friendlyNameMap[state.assignedIdentity]}`
               : state.assignedIdentity
             : sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]}
           mode="outlined"
           disabled={state.assignedIdentity != null || state.loading}
           onChangeText={text => {
-            if (state.assignedIdentity == null) {
+            if (state.assignedIdentity == null && !text.endsWith("@")) {
               props.updateSendFormData(
                 SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
                 text
@@ -206,6 +224,15 @@ const ProvisionIdentityForm = (props) => {
           autoCapitalize="none"
           autoCorrect={false}
         />
+         <Paragraph style={{color: "grey"}}>{"Your Fully qualified name will be: \n\n"}{
+            state.assignedIdentity
+            ? state.friendlyNameMap[state.assignedIdentity]
+              ? `${
+                  state.friendlyNameMap[state.assignedIdentity]
+                }`
+              : state.assignedIdentity
+            : sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]
+          }{state.parentname}</Paragraph> 
         </View>
         <View style={{ ...Styles.wideBlock, paddingTop: 0 }}>
           <Button mode="contained" onPress={() => submitData()} disabled={state.loading}>

@@ -312,6 +312,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         via,
         source,
         address.getAddressString(),
+        preconvert
       );
     }
 
@@ -389,15 +390,30 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         if (transDest.transfer_destination.gateway_id !== exportto) throw new Error("Expected gateway_id to match exportto");
         if (transDest.transfer_destination.gateway_code !== "i3UXS5QPRQGNRDDqVnyWTnmFCTHDbzmsYk") throw new Error("Expected null gateway_code");
         if (!transDest.transfer_destination.hasAuxDests()) throw new Error("Expected output with aux dests");
-        for (const aux_dest of transDest.transfer_destination.aux_dests) {
-          if (aux_dest.hasAuxDests()) {
-            throw new Error("Nested aux destinations not supported");
+
+        if (transDest.transfer_destination.aux_dests.length > 0) {
+          const selfSystemRes = await getCurrency(systemId, systemId);
+          if (selfSystemRes.error) throw new Error("Couldn't get own system information")
+
+          const permittedAuxDests = selfSystemRes.result.notaries != null && exportto != null ? selfSystemRes.result.notaries : []
+
+          for (const aux_dest of transDest.transfer_destination.aux_dests) {
+            if (aux_dest.hasAuxDests()) {
+              throw new Error("Nested aux destinations not supported");
+            }
+    
+            if (aux_dest.isGateway()) throw new Error("Expected non gateway output in aux dest");
+    
+            const addrString = aux_dest.getAddressString();
+            if (
+              addrString !== addrDest &&
+              addrString !== source &&
+              !(permittedAuxDests.includes(addrString) && aux_dest.isIAddr())
+            )
+              throw new Error(
+                `Aux dest ${addrString} does not match source or destination`,
+              );
           }
-  
-          if (aux_dest.isGateway()) throw new Error("Expected non gateway output in aux dest");
-  
-          const addrString =aux_dest.getAddressString();
-          if (addrString !== addrDest && addrString !== source) throw new Error(`Aux dest ${addrString} does not match source or destination`);
         }
       }
       
@@ -432,14 +448,17 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     const utxoList = []
 
     utxosRes.result.forEach((inputUtxo) => {
-      if (inputUtxo.isspendable) {
+      if (inputUtxo.isspendable && 
+        (inputUtxo.satoshis != 0 || 
+          (inputUtxo.currencyvalues != null && Object.keys(inputUtxo.currencyvalues).includes(currency))
+        )) {
         const _script = Buffer.from(inputUtxo.script, 'hex')
         const _value = inputUtxo.satoshis
-  
+
         try {
           unpackOutput({ value: _value, script: _script }, systemId, true)
           utxoList.push(inputUtxo)
-        } catch(e) {
+        } catch (e) {
           console.warn(e.message)
         }
       }

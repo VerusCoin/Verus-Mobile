@@ -15,7 +15,7 @@ import {
   Platform
 } from "react-native"
 import Modal from '../components/Modal'
-import CameraRoll from "@react-native-camera-roll/camera-roll";
+import { CameraRoll } from "@react-native-camera-roll/camera-roll";
 import QRCode from 'react-native-qrcode-svg'
 import AlertAsync from "react-native-alert-async"
 import { Button, IconButton, Text } from "react-native-paper"
@@ -52,16 +52,18 @@ class QRModal extends Component {
   }
 
   saveQRToDisk = () => {
+    const fileName = this.props.showingAddress ? (this.props.qrString ? this.props.qrString : "UnknownQRString") : ("VerusPayQR" + Date.now().toString());
+
     this.QRCodeRef.toDataURL((data) => {
-      RNFS.writeFile(RNFS.CachesDirectoryPath+"/VerusPayQR.png", data, 'base64')
+      RNFS.writeFile(RNFS.CachesDirectoryPath+`/${fileName}.png`, data, 'base64')
         .then((success) => {
-          return CameraRoll.save(RNFS.CachesDirectoryPath+"/VerusPayQR.png", { type: 'photo' })
+          return CameraRoll.save(RNFS.CachesDirectoryPath+`/${fileName}.png`, { type: 'photo' })
         })
         .then(() => {
-          return RNFS.unlink(RNFS.CachesDirectoryPath+"/VerusPayQR.png")
+          return RNFS.unlink(RNFS.CachesDirectoryPath+`/${fileName}.png`)
         })
         .then(() => {
-          Alert.alert("Success", "VerusPay QR Code saved to camera roll")
+          Alert.alert("Success", "QR Code saved to camera roll")
         })
         .catch(e => {
           Alert.alert("Error", e.message)
@@ -88,16 +90,18 @@ class QRModal extends Component {
   }
 
   requestShareQR = () => {
+    const fileName = this.props.showingAddress ? (this.props.qrString ? this.props.qrString : "UnknownQRString") : ("VerusPayQR" + Date.now().toString());
+
     this.setState({ sharePressed: true },
     () => {
       this.QRCodeRef.toDataURL((data) => {
-        RNFS.writeFile(RNFS.CachesDirectoryPath+"/VerusPayQR.png", data, 'base64')
+        RNFS.writeFile(RNFS.CachesDirectoryPath+`/${fileName}.png`, data, 'base64')
           .then((success) => {
-            return Share.open({ url: RNFS.CachesDirectoryPath+"/VerusPayQR.png" })
+            return Share.open({ url: RNFS.CachesDirectoryPath+`/${fileName}.png` })
           })
           .then(() => {
             this.setState({ sharePressed: false })
-            return RNFS.unlink(RNFS.CachesDirectoryPath+"/VerusPayQR.png")
+            return RNFS.unlink(RNFS.CachesDirectoryPath+`/${fileName}.png`)
           })
           .catch(e => {
             this.setState({ sharePressed: false })
@@ -146,7 +150,7 @@ class QRModal extends Component {
             {
               color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor
             }
-            ]}>{"VerusPay Invoice"}</Text>
+            ]}>{this.props.showingAddress ? "Address QR" : "VerusPay Invoice"}</Text>
           </View>
           <View style={Styles.standardWidthFlexGrowCenterBlock}>
             <Text
@@ -156,17 +160,16 @@ class QRModal extends Component {
                   color:this.props.darkMode?Colors.secondaryColor:Colors.quaternaryColor
               }}
             >
-              {"Scan this QR code with VerusPay to automatically create" +
-                " a transaction."}
+              {this.props.showingAddress ? (this.props.qrString ? this.props.qrString : "-") : "Scan this QR code with VerusPay"}
             </Text>
             <View style={Styles.fullWidthAlignCenter}>
               <QRCode
                 value={this.props.qrString ? this.props.qrString : "-"}
                 size={232}
-                //TODO: Add in differently so it doesn't impact readability
-                // logo={LOGO_DIR}
-                // logoSize={50}
-                // logoBackgroundColor='transparent'
+                logo={this.props.showVerusIconInQr ? LOGO_DIR : undefined}
+                logoSize={this.props.showVerusIconInQr ? 50 : undefined}
+                logoBackgroundColor={this.props.showVerusIconInQr ? 'white' : undefined}
+                logoBorderRadius={this.props.showVerusIconInQr ? 100 : undefined}
                 getRef={(qr) => (this.QRCodeRef = qr)}
               />
             </View>

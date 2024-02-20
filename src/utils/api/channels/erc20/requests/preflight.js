@@ -18,7 +18,8 @@ import {
   NULL_ETH_ADDRESS,
   ETH_VERUS_BRIDGE_CONTRACT_PRELAUNCH_RESERVE_TRANSFER_FEE,
   MKR_VETH,
-  ETH_VERUS_BRIDGE_CONTRACT_RESERVE_TRANSFER_FEE_WEI
+  ETH_VERUS_BRIDGE_CONTRACT_RESERVE_TRANSFER_FEE_WEI,
+  MINIMUM_IMPORT_FEE_WEI
 } from '../../../../constants/web3Constants';
 import { getCurrency, getIdentity } from "../../verusid/callCreators"
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData"
@@ -272,18 +273,18 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
     const minGasPrice = ethers.BigNumber.from(MINIMUM_GAS_PRICE_WEI_DELEGATOR_CONTRACT);
     const gasPriceModifier = ethers.BigNumber.from("2");
     const modifiedGasPrice = baseGasPrice.add(baseGasPrice.div(gasPriceModifier));
-    let gasPrice;
+    const gasPrice = modifiedGasPrice.gte(minGasPrice) ? modifiedGasPrice : minGasPrice;
 
-    if (modifiedGasPrice.gte(minGasPrice)) {
-      gasPrice = modifiedGasPrice;
-    } else gasPrice = minGasPrice;
-
-    const gasFeeWei = gasPrice.mul(ethers.BigNumber.from(GAS_TRANSACTION_IMPORT_FEE));
-    const gasFeeString = ethers.utils.formatUnits(
-      gasFeeWei,
+    const minimumImportFee = ethers.BigNumber.from(MINIMUM_IMPORT_FEE_WEI)
+    const importGasMarketFee = gasPrice.mul(ethers.BigNumber.from(GAS_TRANSACTION_IMPORT_FEE));
+    const importGasFeeWei = importGasMarketFee.lt(minimumImportFee)
+      ? minimumImportFee
+      : importGasMarketFee;
+    const importGasFeeString = ethers.utils.formatUnits(
+      importGasFeeWei,
       ETHERS
     );
-    const gasFeeSatsString = coinsToSats(BigNumber(gasFeeString)).toString();
+    const importGasFeeSatsString = coinsToSats(BigNumber(importGasFeeString)).toString();
     let approvalGasFee = ethers.BigNumber.from("0");
 
     if (address.isETHAccount()) {
@@ -300,7 +301,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
         destination_bytes: destAddrBytes,
         gateway_id: vEthIAddress,
         gateway_code: toBase58Check(Buffer.from(NULL_ETH_ADDRESS, 'hex'), 102),
-        fees: new BN(gasFeeSatsString),
+        fees: new BN(importGasFeeSatsString),
         aux_dests: [
           new TransferDestination({
             type: DEST_PKH,
@@ -336,7 +337,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
     let ethValueForContract = baseFee;
     
     if (isGateway) {
-      ethValueForContract = ethValueForContract.add(gasFeeWei);
+      ethValueForContract = ethValueForContract.add(importGasFeeWei);
     }
 
     if (coinObj.currency_id === ETH_CONTRACT_ADDRESS) {
@@ -379,7 +380,9 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
 
     const gasLimit = gasEst;
 
-    const maxTotalFee = (gasLimit.mul(gasPrice)).add(gasFeeWei).add(baseFee);
+    const maxTotalFee = isGateway
+      ? gasLimit.mul(gasPrice).add(importGasFeeWei).add(baseFee)
+      : gasLimit.mul(gasPrice).add(baseFee);
 
     const ethBalance = coinsToSats(await getStandardEthBalance(fromAddress, Web3Provider.network));
 

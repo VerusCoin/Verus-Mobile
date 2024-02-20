@@ -91,51 +91,49 @@ class DisplaySeed extends Component {
     this.props.navigation.dispatch(NavigationActions.back());
   };
 
-  toggleDerived = async key => {
-    if (!this.state.derivedKeys[key]) {
+  toggleDerived = async (key, coinObj) => {
+    if (!this.state.toggleDerivedKey[key]) {
       try {
-        this.setState({
-          fetchingDerivedKey: {...this.state.fetchingDerivedKey, [key]: true},
+        this.setState({ fetchingDerivedKey: { ...this.state.fetchingDerivedKey, [key]: true } });
+        const derivedKey = await this.deriveKeyFromSeed(this.state.seeds[key], key, coinObj);
+        this.setState({ 
+          derivedKeys: { ...this.state.derivedKeys, [key]: derivedKey }, 
+          fetchingDerivedKey: { ...this.state.fetchingDerivedKey, [key]: false },
+          toggleDerivedKey: { ...this.state.toggleDerivedKey, [key]: true } 
         });
-        const derivedKey = await this.deriveKeyFromSeed(
-          this.state.seeds[key],
-          key,
-        );
-        this.setState({
-          derivedKeys: {...this.state.derivedKeys, [key]: derivedKey},
-          fetchingDerivedKey: {...this.state.fetchingDerivedKey, [key]: false},
-          toggleDerivedKey: {...this.state.toggleDerivedKey, [key]: true},
-        });
-      } catch (e) {
-        createAlert('Failed to fetch derived key', e.message);
-        this.setState({
-          fetchingDerivedKey: {...this.state.fetchingDerivedKey, [key]: false},
-        });
+      } catch(e) {
+        createAlert("Failed to fetch derived key", e.message);
+        this.setState({ fetchingDerivedKey: { ...this.state.fetchingDerivedKey, [key]: false } });
       }
     } else {
       this.setState(prevState => ({
         toggleDerivedKey: {
           ...prevState.toggleDerivedKey,
-          [key]: !prevState.toggleDerivedKey[key],
-        },
+          [key]: !prevState.toggleDerivedKey[key]
+        }
       }));
     }
-  };
+  }
 
   // Method to derive the key from seed. Replace this with your actual implementation
-  deriveKeyFromSeed = async (seed, key) => {
+  deriveKeyFromSeed = async (seed, key, coinObj) => {
     switch (key) {
       case DLIGHT_PRIVATE:
         return Buffer.from(await dlightSeedToBytes(seed)).toString('hex');
       case ETH:
-        return (
-          await deriveKeyPair(
-            seed,
-            coinsList.ETH,
-            key,
-            this.props.activeAccount.keyDerivationVersion,
-          )
-        ).privKey;
+        return (await deriveKeyPair(
+          seed,
+          coinsList.ETH,
+          key,
+          this.props.activeAccount.keyDerivationVersion,
+        )).privKey;
+      case ELECTRUM:
+        return (await deriveKeyPair(
+          seed,
+          coinObj,
+          key,
+          this.props.activeAccount.keyDerivationVersion,
+        )).privKey;
       default:
         return seed;
     }

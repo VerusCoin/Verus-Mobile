@@ -17,6 +17,6 @@ export const setDeeplinkData = (id, data) => {
 export const resetDeeplinkData = () => {
   return {
     type: SET_DEEPLINK_DATA,
-    payload: { id: null, data: {} }
+    payload: { id: null, data: {}, fromService: null, passthrough: null}
   }
 }

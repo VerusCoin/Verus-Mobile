@@ -9,7 +9,10 @@ import { API_SEND, DLIGHT_PRIVATE, ERC20, ETH } from "../../../../utils/constant
 import {
   SEND_MODAL_ADVANCED_FORM,
   SEND_MODAL_AMOUNT_FIELD,
+  SEND_MODAL_CONTINUE_IMMEDIATELY,
   SEND_MODAL_CONVERTTO_FIELD,
+  SEND_MODAL_DESTINATION_FIELD,
+  SEND_MODAL_DISABLED_INPUTS,
   SEND_MODAL_EXPORTTO_FIELD,
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_IS_PRECONVERT,
@@ -17,8 +20,10 @@ import {
   SEND_MODAL_PRICE_ESTIMATE,
   SEND_MODAL_SHOW_CONVERTTO_FIELD,
   SEND_MODAL_SHOW_EXPORTTO_FIELD,
+  SEND_MODAL_SHOW_IS_PRECONVERT,
   SEND_MODAL_SHOW_MAPPING_FIELD,
   SEND_MODAL_SHOW_VIA_FIELD,
+  SEND_MODAL_STRICT_AMOUNT,
   SEND_MODAL_TO_ADDRESS_FIELD,
   SEND_MODAL_VIA_FIELD,
 } from '../../../../utils/constants/sendModal';
@@ -79,6 +84,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
   const [processedAmount, setProcessedAmount] = useState(null);
 
   const [localNetworkName, setLocalNetworkName] = useState(null);
+
   const [localBalances, setLocalBalances] = useState(null);
 
   const [suggestions, setSuggestions] = useState([]);
@@ -704,6 +710,13 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
       sendModal.data[SEND_MODAL_MAPPING_FIELD].length > 0))
   }, [sendModal.data[SEND_MODAL_MAPPING_FIELD]])
 
+  useEffect(() => {
+    if (localBalances != null && sendModal.data[SEND_MODAL_CONTINUE_IMMEDIATELY]) {
+      updateSendFormData(SEND_MODAL_CONTINUE_IMMEDIATELY, false);
+      submitData();
+    }
+  }, [localBalances])
+  
   const fillAmount = (amount) => {
     let displayAmount = BigNumber(amount);
     if (displayAmount.isLessThan(BigNumber(0))) {
@@ -901,14 +914,22 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
       }
   
       if (submittedsats !== resout.satoshis) {
-        Alert.alert(
-          'Amount changed',
-          `You have insufficient funds to send your submitted amount of ${satsToCoins(
-            BigNumber(submittedsats),
-          ).toString()} ${coinObj.display_ticker} with the transaction fee, so the transaction amount has been changed to the maximum sendable value of ${satsToCoins(
-            BigNumber(resout.satoshis),
-          ).toString()} ${coinObj.display_ticker}.`,
-        );
+        if (sendModal.data[SEND_MODAL_STRICT_AMOUNT]) {
+          throw new Error(
+            `You have insufficient funds to send your submitted amount of ${satsToCoins(
+              BigNumber(submittedsats),
+            ).toString()} ${coinObj.display_ticker} plus the transaction fee.`,
+          );
+        } else {
+          Alert.alert(
+            'Amount changed',
+            `You have insufficient funds to send your submitted amount of ${satsToCoins(
+              BigNumber(submittedsats),
+            ).toString()} ${coinObj.display_ticker} with the transaction fee, so the transaction amount has been changed to the maximum sendable value of ${satsToCoins(
+              BigNumber(resout.satoshis),
+            ).toString()} ${coinObj.display_ticker}.`,
+          );
+        }
       }
 
       navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, { preflight: res.result, balances: localBalances });
@@ -942,7 +963,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
   const darkMode = useSelector(state => state.settings.darkModeState);
 
-  return (
+  return localBalances == null ? (<AnimatedActivityIndicatorBox />) : (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View
         style={{
@@ -970,19 +991,6 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                   mode="outlined"
                   style={{
                     flex: 1,
-                    backgroundColor: darkMode
-                      ? Colors.verusDarkModeForm
-                      : Colors.ultraUltraLightGrey,
-                  }}
-                  theme={{
-                    colors: {
-                      text: darkMode
-                        ? Colors.secondaryColor
-                        :'black',
-                      placeholder: darkMode
-                        ? Colors.verusDarkGray
-                        : Colors.verusDarkGray,
-                    },
                   }}
                 />
                 <Button
@@ -1014,11 +1022,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                   <List.Item
                     title={
                       <Text
-                        style={{
-                          ...Styles.listItemTableCell,
-                          fontWeight: 'bold',
-                          color: darkMode ? Colors.secondaryColor : 'black',
-                        }}>
+                        style={{...Styles.listItemTableCell, fontWeight: 'bold'}}>
                         {'Name'}
                       </Text>
                     }
@@ -1029,7 +1033,6 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                           style={{
                             ...Styles.listItemTableCell,
                             fontWeight: 'bold',
-                            color: darkMode ? Colors.secondaryColor : 'black',
                           }}>
                           {'est. price in ' + sendModal.coinObj.display_ticker}
                         </Text>
@@ -1041,40 +1044,20 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                   <List.Item
                     title={item.title}
                     key={index.toString()}
-                    titleStyle={{
-                      color: darkMode ? Colors.secondaryColor : 'black',
-                    }}
-                    descriptionStyle={{
-                      color: darkMode
-                        ? Colors.secondaryColor
-                        : Colors.defaultGrayColor,
-                    }}
                     description={item.description}
                     onPress={() => selectSuggestion(item)}
                     right={() => (
-                      <Text
-                        style={
-                          (Styles.listItemTableCell,
-                          {color: darkMode ? Colors.secondaryColor : 'black'})
-                        }>
-                        {item.right}
-                      </Text>
+                      <Text style={Styles.listItemTableCell}>{item.right}</Text>
                     )}
                     left={props => {
-                      console.log('suggestions:', suggestions);
-                      console.log('item:', item);
-                      let id;
-                      if (item.title.includes('.')) {
-                        const logoId = item?.title?.split('.');
-                        id = logoId[0];
-                      } else {
-                        id = item.logoid;
-                      }
-                      console.log(id);
-                      const Logo = getCoinLogo(id, item.logoproto, 'dark');
+                      const Logo = getCoinLogo(
+                        item.logoid,
+                        item.logoproto,
+                        'dark',
+                      );
+
                       return (
-                        <View
-                          style={{justifyContent: 'center', paddingLeft: 8}}>
+                        <View style={{justifyContent: 'center', paddingLeft: 8}}>
                           <Logo
                             width={36}
                             height={36}
@@ -1091,14 +1074,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
             )}
           </Animated.View>
         ) : (
-          <Animated.View
-            style={{
-              flex: 1,
-              opacity: fadeNormalForm,
-              backgroundColor: darkMode
-                ? Colors.darkModeColor
-                : Colors.secondaryColor,
-            }}>
+          <Animated.View style={{flex: 1, opacity: fadeNormalForm}}>
             <KeyboardAwareScrollView
               style={{
                 backgroundColor: darkMode
@@ -1120,6 +1096,18 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
               extraScrollHeight={150}
               keyboardShouldPersistTaps="handled">
               <CoreSendFormModule
+                destDisabled={
+                  sendModal.data[SEND_MODAL_DISABLED_INPUTS] &&
+                  sendModal.data[SEND_MODAL_DISABLED_INPUTS][
+                    SEND_MODAL_TO_ADDRESS_FIELD
+                  ]
+                }
+                amountDisabled={
+                  sendModal.data[SEND_MODAL_DISABLED_INPUTS] &&
+                  sendModal.data[SEND_MODAL_DISABLED_INPUTS][
+                    SEND_MODAL_AMOUNT_FIELD
+                  ]
+                }
                 sendingFromValue={sendModal.subWallet.name}
                 recipientAddressValue={
                   sendModal.data[SEND_MODAL_TO_ADDRESS_FIELD]
@@ -1150,6 +1138,18 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
               />
               {showConversionField || showViaField ? (
                 <ConvertFormModule
+                  convertDisabled={
+                    sendModal.data[SEND_MODAL_DISABLED_INPUTS] &&
+                    sendModal.data[SEND_MODAL_DISABLED_INPUTS][
+                      SEND_MODAL_CONVERTTO_FIELD
+                    ]
+                  }
+                  viaDisabled={
+                    sendModal.data[SEND_MODAL_DISABLED_INPUTS] &&
+                    sendModal.data[SEND_MODAL_DISABLED_INPUTS][
+                      SEND_MODAL_VIA_FIELD
+                    ]
+                  }
                   isConversion={isConversion}
                   isPreconvert={sendModal.data[SEND_MODAL_IS_PRECONVERT]}
                   advancedForm={sendModal.data[SEND_MODAL_ADVANCED_FORM]}
@@ -1174,6 +1174,18 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
               ) : null}
               {showExportField && (
                 <ExportFormModule
+                  exporttoDisabled={
+                    sendModal.data[SEND_MODAL_DISABLED_INPUTS] &&
+                    sendModal.data[SEND_MODAL_DISABLED_INPUTS][
+                      SEND_MODAL_EXPORTTO_FIELD
+                    ]
+                  }
+                  mappingDisabled={
+                    sendModal.data[SEND_MODAL_DISABLED_INPUTS] &&
+                    sendModal.data[SEND_MODAL_DISABLED_INPUTS][
+                      SEND_MODAL_MAPPING_FIELD
+                    ]
+                  }
                   isExport={isExport}
                   isConversion={isConversion}
                   exportToField={sendModal.data[SEND_MODAL_EXPORTTO_FIELD]}
@@ -1186,9 +1198,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                   localNetworkName={localNetworkName}
                   advancedForm={sendModal.data[SEND_MODAL_ADVANCED_FORM]}
                   isPreconvert={sendModal.data[SEND_MODAL_IS_PRECONVERT]}
-                  showMappingField={
-                    sendModal.data[SEND_MODAL_SHOW_MAPPING_FIELD]
-                  }
+                  showMappingField={sendModal.data[SEND_MODAL_SHOW_MAPPING_FIELD]}
                   mappingField={sendModal.data[SEND_MODAL_MAPPING_FIELD]}
                   handleMappingFieldFocus={() =>
                     handleFieldFocus(SEND_MODAL_MAPPING_FIELD)
@@ -1199,43 +1209,38 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                 />
               )}
               {(sendModal.data[SEND_MODAL_IS_PRECONVERT] ||
-                sendModal.data[SEND_MODAL_ADVANCED_FORM]) && (
-                <React.Fragment>
-                  <View style={{...Styles.wideBlockDense}}>
-                    <Divider />
-                  </View>
-                  <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
-                    <Checkbox.Item
-                      labelStyle={{
-                        color: darkMode ? Colors.secondaryColor : 'black',
-                      }}
-                      uncheckedColor={
-                        darkMode ? Colors.secondaryColor : Colors.quinaryColor
-                      }
-                      color={Colors.primaryColor}
-                      disabled={
-                        sendModal.data[SEND_MODAL_ADVANCED_FORM] ? false : true
-                      }
-                      label={'Send as preconvert'}
-                      status={
-                        sendModal.data[SEND_MODAL_IS_PRECONVERT]
-                          ? 'checked'
-                          : 'unchecked'
-                      }
-                      onPress={
-                        sendModal.data[SEND_MODAL_ADVANCED_FORM]
-                          ? () =>
-                              updateSendFormData(
-                                SEND_MODAL_IS_PRECONVERT,
-                                !sendModal.data[SEND_MODAL_IS_PRECONVERT],
-                              )
-                          : undefined
-                      }
-                      mode="android"
-                    />
-                  </View>
-                </React.Fragment>
-              )}
+                sendModal.data[SEND_MODAL_ADVANCED_FORM]) &&
+                sendModal.data[SEND_MODAL_SHOW_IS_PRECONVERT] && (
+                  <React.Fragment>
+                    <View style={{...Styles.wideBlockDense}}>
+                      <Divider />
+                    </View>
+                    <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
+                      <Checkbox.Item
+                        color={Colors.primaryColor}
+                        disabled={
+                          sendModal.data[SEND_MODAL_ADVANCED_FORM] ? false : true
+                        }
+                        label={'Send as preconvert'}
+                        status={
+                          sendModal.data[SEND_MODAL_IS_PRECONVERT]
+                            ? 'checked'
+                            : 'unchecked'
+                        }
+                        onPress={
+                          sendModal.data[SEND_MODAL_ADVANCED_FORM]
+                            ? () =>
+                                updateSendFormData(
+                                  SEND_MODAL_IS_PRECONVERT,
+                                  !sendModal.data[SEND_MODAL_IS_PRECONVERT],
+                                )
+                            : undefined
+                        }
+                        mode="android"
+                      />
+                    </View>
+                  </React.Fragment>
+                )}
             </KeyboardAwareScrollView>
           </Animated.View>
         )}
@@ -1252,7 +1257,6 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
       </View>
     </TouchableWithoutFeedback>
   );
-
 };
 
 export default ConvertOrCrossChainSendForm;

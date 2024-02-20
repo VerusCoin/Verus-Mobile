@@ -5,6 +5,7 @@ import DeepLink from '../../DeepLink/DeepLink';
 import LoginRequestIdentity from '../../DeepLink/LoginRequestIdentity/LoginRequestIdentity';
 import LoginRequestComplete from '../../DeepLink/LoginRequestComplete/LoginRequestComplete';
 import { useSelector } from 'react-redux';
+import InvoicePaymentConfiguration from '../../DeepLink/InvoicePaymentConfiguration/InvoicePaymentConfiguration';
 
 const DeepLinkStack = createStackNavigator();
 
@@ -36,6 +37,14 @@ const DeepLinkStackScreens = props => {
         component={LoginRequestComplete}
         options={{
           headerShown: false
+        }}
+      />
+      <DeepLinkStack.Screen
+        name="InvoicePaymentConfiguration"
+        component={InvoicePaymentConfiguration}
+        options={{
+          headerRight: () => null,
+          title: "Configure Payment"
         }}
       />
     </DeepLinkStack.Navigator>

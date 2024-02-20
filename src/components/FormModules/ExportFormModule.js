@@ -17,7 +17,9 @@ const ExportFormModule = ({
   localNetworkDefinition,
   advancedForm,
   showMappingField,
-  mappingField
+  mappingField,
+  exporttoDisabled,
+  mappingDisabled
 }) => {
   const darkMode = useSelector(state => state.settings.darkModeState);
   return (
@@ -43,17 +45,19 @@ const ExportFormModule = ({
               },
             }}
               returnKeyType="done"
-              label="System to send to (optional)"
+              label={exporttoDisabled ? "System to send to" : "System to send to (optional)"}
               value={exportToField}
               mode="outlined"
               multiline={true}
               onChangeText={text => onSystemChange(text)}
               autoCapitalize={'none'}
               autoCorrect={false}
+              disabled={exporttoDisabled}
             />
           ) : (
             <TouchableOpacity
-              onPress={() => handleNetworkFieldFocus()}
+              onPress={() => exporttoDisabled ? {} : handleNetworkFieldFocus()}
+              disabled={exporttoDisabled}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -117,10 +121,12 @@ const ExportFormModule = ({
                 onChangeText={text => onMappingChange(text)}
                 autoCapitalize={'none'}
                 autoCorrect={false}
+                disabled={mappingDisabled}
               />
             ) : (
               <TouchableOpacity
-                onPress={() => handleMappingFieldFocus()}
+                onPress={() => mappingDisabled ? {} : handleMappingFieldFocus()}
+                disabled={mappingDisabled}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
