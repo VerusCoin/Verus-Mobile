@@ -377,6 +377,12 @@ const WalletSettings = props => {
           onPress={toggleAllowSettingVerusPaySlippage}
         >
           <List.Item
+          titleStyle={{
+            color: darkMode ? Colors.secondaryColor : 'black',
+          }}
+          descriptionStyle={{
+            color: darkMode ? Colors.verusDarkGray : Colors.defaultGrayColor,
+          }}
             title="Edit max VerusPay invoice slippage"
             description="Show the option to edit maximum slippage when creating a VerusPay invoice with conversion"
             right={() => (
@@ -395,9 +401,17 @@ const WalletSettings = props => {
               </View>
             )}
           />
-          <Divider />
+          <Divider 
+           style={{
+            backgroundColor: darkMode
+              ? Colors.verusDarkGray
+              : Colors.ultraLightGrey,
+          }}
+          />
         </TouchableOpacity>
-        <List.Subheader>{'Start Settings'}</List.Subheader>
+        <List.Subheader style={{
+            color: darkMode ? Colors.verusDarkGray : Colors.defaultGrayColor,
+          }}>{'Start Settings'}</List.Subheader>
         <TouchableOpacity
           onPress={() => openDefaultProfileModal()}
           style={{...Styles.flex}}>

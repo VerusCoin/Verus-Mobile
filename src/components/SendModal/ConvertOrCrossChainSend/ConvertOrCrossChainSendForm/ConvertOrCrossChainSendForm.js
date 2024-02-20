@@ -963,7 +963,9 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
   const darkMode = useSelector(state => state.settings.darkModeState);
 
-  return localBalances == null ? (<AnimatedActivityIndicatorBox />) : (
+  return localBalances == null ? (
+    <AnimatedActivityIndicatorBox />
+  ) : (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View
         style={{
@@ -991,6 +993,17 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                   mode="outlined"
                   style={{
                     flex: 1,
+                    backgroundColor: darkMode
+                      ? Colors.verusDarkModeForm
+                      : Colors.ultraUltraLightGrey,
+                  }}
+                  theme={{
+                    colors: {
+                      text: darkMode ? Colors.secondaryColor : 'black',
+                      placeholder: darkMode
+                        ? Colors.verusDarkGray
+                        : Colors.verusDarkGray,
+                    },
                   }}
                 />
                 <Button
@@ -1022,7 +1035,11 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                   <List.Item
                     title={
                       <Text
-                        style={{...Styles.listItemTableCell, fontWeight: 'bold'}}>
+                        style={{
+                          ...Styles.listItemTableCell,
+                          fontWeight: 'bold',
+                          color: darkMode ? Colors.secondaryColor : 'black',
+                        }}>
                         {'Name'}
                       </Text>
                     }
@@ -1033,6 +1050,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                           style={{
                             ...Styles.listItemTableCell,
                             fontWeight: 'bold',
+                            color: darkMode ? Colors.secondaryColor : 'black',
                           }}>
                           {'est. price in ' + sendModal.coinObj.display_ticker}
                         </Text>
@@ -1044,20 +1062,38 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                   <List.Item
                     title={item.title}
                     key={index.toString()}
+                    titleStyle={{
+                      color: darkMode ? Colors.secondaryColor : 'black',
+                    }}
+                    descriptionStyle={{
+                      color: darkMode
+                        ? Colors.secondaryColor
+                        : Colors.defaultGrayColor,
+                    }}
                     description={item.description}
                     onPress={() => selectSuggestion(item)}
                     right={() => (
-                      <Text style={Styles.listItemTableCell}>{item.right}</Text>
+                      <Text
+                        style={
+                          {...Styles.listItemTableCell,
+                          color: darkMode ? Colors.secondaryColor : 'black'}}>
+                        {item.right}
+                      </Text>
                     )}
                     left={props => {
-                      const Logo = getCoinLogo(
-                        item.logoid,
-                        item.logoproto,
-                        'dark',
-                      );
+                      let id;
+                      if (item.title.includes('.')) {
+                        const logoId = item?.title?.split('.');
+                        id = logoId[0];
+                      } else {
+                        id = item.logoid;
+                      }
+                      console.log(id);
+                      const Logo = getCoinLogo(id, item.logoproto, 'dark');
 
                       return (
-                        <View style={{justifyContent: 'center', paddingLeft: 8}}>
+                        <View
+                          style={{justifyContent: 'center', paddingLeft: 8}}>
                           <Logo
                             width={36}
                             height={36}
@@ -1074,7 +1110,9 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
             )}
           </Animated.View>
         ) : (
-          <Animated.View style={{flex: 1, opacity: fadeNormalForm}}>
+          <Animated.View style={{flex: 1, opacity: fadeNormalForm,backgroundColor: darkMode
+            ? Colors.darkModeColor
+            : Colors.secondaryColor,}}>
             <KeyboardAwareScrollView
               style={{
                 backgroundColor: darkMode
@@ -1198,7 +1236,9 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                   localNetworkName={localNetworkName}
                   advancedForm={sendModal.data[SEND_MODAL_ADVANCED_FORM]}
                   isPreconvert={sendModal.data[SEND_MODAL_IS_PRECONVERT]}
-                  showMappingField={sendModal.data[SEND_MODAL_SHOW_MAPPING_FIELD]}
+                  showMappingField={
+                    sendModal.data[SEND_MODAL_SHOW_MAPPING_FIELD]
+                  }
                   mappingField={sendModal.data[SEND_MODAL_MAPPING_FIELD]}
                   handleMappingFieldFocus={() =>
                     handleFieldFocus(SEND_MODAL_MAPPING_FIELD)
@@ -1217,9 +1257,17 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                     </View>
                     <View style={{...Styles.wideBlockDense, paddingTop: 0}}>
                       <Checkbox.Item
+                      labelStyle={{
+                        color: darkMode ? Colors.secondaryColor : 'black',
+                      }}
+                      uncheckedColor={
+                        darkMode ? Colors.secondaryColor : Colors.quinaryColor
+                      }
                         color={Colors.primaryColor}
                         disabled={
-                          sendModal.data[SEND_MODAL_ADVANCED_FORM] ? false : true
+                          sendModal.data[SEND_MODAL_ADVANCED_FORM]
+                            ? false
+                            : true
                         }
                         label={'Send as preconvert'}
                         status={

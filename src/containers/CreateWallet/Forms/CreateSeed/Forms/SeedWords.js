@@ -155,7 +155,7 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
                       colors: {
                         text: darkMode
                           ? Colors.secondaryColor
-                          : Colors.ultraLightGrey,
+                          : 'black',
                         placeholder: darkMode
                           ? Colors.primaryColor
                           : Colors.verusDarkGray,

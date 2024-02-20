@@ -135,9 +135,9 @@ class DisplaySeed extends Component {
           this.props.activeAccount.keyDerivationVersion,
         )).privKey;
       default:
-        return seed;
+        return seed
     }
-  };
+  }
 
   render() {
     const {seeds, toggleDerivedKey, fetchingDerivedKey, derivedKeys} =

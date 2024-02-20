@@ -95,13 +95,28 @@ const ConvertFormModule = ({
                 <TextInput
                   returnKeyType="done"
                   label="Convert via (optional)"
+                  theme={{
+                    colors: {
+                      text:darkMode
+                        ? Colors.secondaryColor
+                        : 'black',
+                      placeholder:darkMode
+                        ? Colors.verusDarkGray
+                        : Colors.verusDarkGray,
+                    },
+                  }}
+                  style={{
+                    flex: 1 ,
+                    backgroundColor:darkMode
+                                ? Colors.verusDarkModeForm
+                                : Colors.ultraUltraLightGrey,
+                  }}
                   value={viaField}
                   mode="outlined"
                   multiline={true}
                   onChangeText={text => onViaChange(text)}
                   autoCapitalize={'none'}
                   autoCorrect={false}
-                  style={{ flex: 1 }}
                   disabled={viaDisabled}
                 />
               ) : (
