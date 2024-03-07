@@ -21,7 +21,7 @@ import { getCurrency, getIdentity } from '../../utils/api/channels/verusid/callC
 import { convertFqnToDisplayFormat } from '../../utils/fullyqualifiedname';
 import { resetDeeplinkData } from '../../actions/actionCreators';
 
-const authorizedPermissions = [primitives.IDENTITY_VIEW.vdxfid,/*TODO: primitives.IDENTITY_AGREEMENT.vdxfid, primitives.ATTESTATION_READ_REQUEST.vdxfid */]
+const authorizedPermissions = [primitives.IDENTITY_VIEW.vdxfid, primitives.IDENTITY_AGREEMENT.vdxfid, primitives.ATTESTATION_READ_REQUEST.vdxfid, primitives.PROFILE_DATA_VIEW_REQUEST.vdxfid]
 import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 import BigNumber from 'bignumber.js';
 import { blocksToTime, satsToCoins } from '../../utils/math';

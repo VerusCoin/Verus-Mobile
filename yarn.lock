@@ -946,7 +946,7 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bitgo/blake2b-wasm@^3.0.1", "@bitgo/blake2b-wasm@https://github.com/michaeltout/blake2b-wasm/", "blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b", "blake2b-wasm@https://github.com/michaeltout/blake2b-wasm/":
+"@bitgo/blake2b-wasm@^3.0.1", "@bitgo/blake2b-wasm@https://github.com/michaeltout/blake2b-wasm/", blake2b-wasm@^2.4.0, "blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b", "blake2b-wasm@https://github.com/michaeltout/blake2b-wasm/":
   version "2.0.0"
   resolved "https://github.com/michaeltout/blake2b-wasm/#a16070b30bb8d8aee670f0c69b642913eca79998"
   dependencies:
@@ -3195,6 +3195,11 @@ bech32@0.0.3:
   resolved "https://registry.yarnpkg.com/bech32/-/bech32-0.0.3.tgz#736747c4a6531c5d8937d0400498de30e93b2f9c"
   integrity sha512-O+K1w8P/aAOLcYwwQ4sbiPYZ51ZIW95lnS4/6nE8Aib/z+OOddQIIPdu2qi94qGDp4HhYy/wJotttXKkak1lXg==
 
+bech32@2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/bech32/-/bech32-2.0.0.tgz#078d3686535075c8c79709f054b1b226a133b355"
+  integrity sha512-LcknSilhIGatDAsY1ak2I8VtGaHNhgMSYVxFrGLXv+xLHytaKZKcaUJJUE7qmBr7h33o5YQwP55pMI0xmkpJwg==
+
 bech32@^1.1.2, bech32@^1.1.3:
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/bech32/-/bech32-1.1.4.tgz#e38c9f37bf179b8eb16ae3a772b40c356d4832e9"
@@ -3368,6 +3373,13 @@ bl@^4.1.0:
   dependencies:
     blake2b-wasm "https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b"
     nanoassert "^1.0.0"
+
+"blake2b@https://github.com/VerusCoin/blake2b":
+  version "2.1.4"
+  resolved "https://github.com/VerusCoin/blake2b#578dc12b7b68a3ce76d1e1add1402b28a5890a6b"
+  dependencies:
+    blake2b-wasm "^2.4.0"
+    nanoassert "^2.0.0"
 
 bn.js@5.2.1, bn.js@^5.0.0, bn.js@^5.2.0, bn.js@^5.2.1:
   version "5.2.1"
@@ -11601,11 +11613,22 @@ version_compare@0.0.3:
     bignumber.js "^9.0.0"
     verus-zkedid-utils "https://github.com/michaeltout/verus-zkedid-utils#dev"
 
-"verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git":
-  version "1.0.0"
-  resolved "https://github.com/VerusCoin/verus-typescript-primitives.git#ca735cf46b0dd4ad4a6d4b37ab451bd2f5af4c3e"
+"verus-typescript-primitives@file:../../verus-typescript-primitives":
+  version "1.0.1"
   dependencies:
     base64url "3.0.1"
+    bech32 "2.0.0"
+    blake2b "https://github.com/VerusCoin/blake2b"
+    bn.js "5.2.1"
+    bs58check "https://github.com/bitcoinjs/bs58check"
+    create-hash "1.2.0"
+
+"verus-typescript-primitives@file:d:/dev/verus-typescript-primitives", "verus-typescript-primitives@https://github.com/VerusCoin/verus-typescript-primitives.git":
+  version "1.0.1"
+  dependencies:
+    base64url "3.0.1"
+    bech32 "2.0.0"
+    blake2b "https://github.com/VerusCoin/blake2b"
     bn.js "5.2.1"
     bs58check "https://github.com/bitcoinjs/bs58check"
     create-hash "1.2.0"
@@ -11627,6 +11650,7 @@ version_compare@0.0.3:
 
 "verusd-rpc-ts-client@https://github.com/VerusCoin/verusd-rpc-ts-client.git":
   version "0.1.0"
+  uid "62d260563c23ecf9b3333355e8596191c764e415"
   resolved "https://github.com/VerusCoin/verusd-rpc-ts-client.git#62d260563c23ecf9b3333355e8596191c764e415"
   dependencies:
     axios "1.6.5"
