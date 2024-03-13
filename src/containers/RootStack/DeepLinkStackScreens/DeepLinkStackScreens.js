@@ -6,6 +6,7 @@ import LoginRequestIdentity from '../../DeepLink/LoginRequestIdentity/LoginReque
 import LoginRequestComplete from '../../DeepLink/LoginRequestComplete/LoginRequestComplete';
 import InvoicePaymentConfiguration from '../../DeepLink/InvoicePaymentConfiguration/InvoicePaymentConfiguration';
 import PersonalSelectData from '../../DeepLink/PersonalSelectData/PersonalSelectData';
+import ProfileStackScreens from '../ProfileStackScreens/ProfileStackScreens';
 const DeepLinkStack = createStackNavigator();
 
 const DeepLinkStackScreens = props => {
@@ -50,6 +51,11 @@ const DeepLinkStackScreens = props => {
           headerRight: () => null,
           title: "Personal Data"
         }}
+      />
+      <DeepLinkStack.Screen
+        name="ProfileStackScreens"
+        component={ProfileStackScreens}
+        options={{ headerShown: false }}
       />
     </DeepLinkStack.Navigator>
   );

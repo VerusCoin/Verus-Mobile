@@ -125,6 +125,21 @@ const LoginRequestInfo = props => {
   }, [sendModalType]);
   
   const buildAlert = (request) => {
+
+    if (request.agreed) return;
+
+    if (request.openAttestation) { 
+      return;
+    }
+    else if (request.openProfile) { 
+      props.navigation.navigate("PersonalSelectData",
+      {
+        deeplinkData,
+        fromService: false
+      });
+      return;
+    }
+
     return createAlert(
       request.title,
       request.data,
@@ -144,7 +159,7 @@ const LoginRequestInfo = props => {
             });
             setExtraPermissions(_permissions);
             resolveAlert(true)
-            props.navigation.navigate("PersonalSelectData");
+
            
           }
         },
@@ -168,9 +183,9 @@ const LoginRequestInfo = props => {
           } else if (req.challenge.requested_access[i].vdxfkey === primitives.IDENTITY_AGREEMENT.vdxfid) {
             tempdata = { data: req.challenge.requested_access[i].toJson().data, title: "Agreement to accept" }
           } else if (req.challenge.requested_access[i].vdxfkey === primitives.ATTESTATION_READ_REQUEST.vdxfid) {
-            tempdata = { data: "Agree to share attestation data", title: "Attestation View Request" }
+            tempdata = { data: "Agree to share attestation data", title: "Attestation View Request", openAttestation: true }
           } else if (req.challenge.requested_access[i].vdxfkey === primitives.PROFILE_DATA_VIEW_REQUEST.vdxfid) {
-            tempdata = { data: "Agree to share profile data", title: "Personal Data Input Request" }
+            tempdata = { data: "Agree to share profile data", title: "Personal Data Input Request", openProfile: true }
 
           }
           loginTemp.push({ vdxfkey: req.challenge.requested_access[i].vdxfkey, ...tempdata, agreed: false })

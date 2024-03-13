@@ -6,27 +6,31 @@ import { requestPersonalData } from "../../../utils/auth/authBox";
 import { PERSONAL_ATTRIBUTES, PERSONAL_BIRTHDAY, PERSONAL_NATIONALITIES } from "../../../utils/constants/personal";
 import { provideCustomBackButton } from "../../../utils/navigation/customBack";
 import { PersonalSelectDataRender } from "./PersonalSelectData.render"
+import { primitives } from "verusid-ts-client"
 
+//const { defaultPersonalProfileDataTemplate } = primitives;
 const EDIT = 'edit'
 const REMOVE = 'remove'
+const PERSONALDATACATAGORIES = [
+  primitives.IDENTITYDATA_CONTACT.vdxfid,
+  primitives.IDENTITYDATA_LOCATIONS.vdxfid,
+  primitives.IDENTITYDATA_DOCUMENTS_AND_IMAGES.vdxfid,
+  primitives.IDENTITYDATA_PERSONAL_DETAILS.vdxfid,
+  primitives.IDENTITYDATA_BANKING_INFORMATION.vdxfid
+];
 
+const PERSONALDATALINKS = [
+  "PersonalContact",
+  "PersonalLocations",
+  "PersonalImages",
+  "PersonalAttributes",
+  "PersonalPaymentMethods"
+]
 class PersonalSelectData extends Component {
-  constructor() {
+  constructor(props) {
     super();
     this.state = {
-      attributes: {
-        name: {
-          first: "John",
-          middle: "",
-          last: "Doe"
-        },
-        birthday: {
-          day: null,
-          month: null,
-          year: null
-        },
-        nationalities: []
-      },
+      loginConsent: null,
       nationalityModalOpen: false,
       birthdaySelectorModalOpen: false,
       editPropertyModal: {
@@ -35,41 +39,62 @@ class PersonalSelectData extends Component {
         label: "",
         index: null
       },
-      loading: false
+      loading: false,
+      ready: false,
+      permissions: [1, 2, 3, 4],
+      catagoriesRequested: null,
+      otherKeysRequested: null
     };
-
-    // this.EDIT_PROPERTY_BUTTONS = [{
-    //   key: EDIT,
-    //   title: "Change"
-    // }, {
-    //   key: REMOVE,
-    //   title: "Remove"
-    // }]
-    this.EDIT_PROPERTY_BUTTONS = [{
-      key: REMOVE,
-      title: "Remove"
-    }]
   }
 
   componentDidMount() {
-    if (this.props.route.params != null && this.props.route.params.customBack != null) {
-      provideCustomBackButton(
-        this,
-        this.props.route.params.customBack.route,
-        this.props.route.params.customBack.params
-      );
-    }
 
+    const { deeplinkData } = this.props.route.params
+    const loginConsent = new primitives.LoginConsentRequest(deeplinkData);
+
+    const requestedPersonalData = loginConsent.challenge.subject
+      .filter((permission) => permission.vdxfkey === primitives.PROFILE_DATA_VIEW_REQUEST.vdxfid);
+
+    const catagoriesRequested = {};
+    requestedPersonalData.forEach((permission) => {
+      PERSONALDATACATAGORIES.forEach((category, idx) => {
+        if (category === permission.data) {
+          primitives.defaultPersonalProfileDataTemplate.forEach((templateCategory) => {
+            if (templateCategory.vdxfid === permission.data) {
+              catagoriesRequested[permission.data] = { title: templateCategory.category, 
+                details: templateCategory.details, navigateTo: PERSONALDATALINKS[idx] };
+            }
+          })
+        }
+      })
+    })
+
+    const otherKeysRequested = {}
+    requestedPersonalData.forEach((permission) => {
+
+      if (primitives.IdentityVdxfidMap[permission.data]) {
+        otherKeysRequested[permission.data] = primitives.IdentityVdxfidMap[permission.data].name;
+      }
+
+    })
+    this.setState({ catagoriesRequested, otherKeysRequested });
     this.loadPersonalAttributes()
   }
 
+  handleContinue() { }
+
   loadPersonalAttributes() {
-    this.setState({loading: true}, async () => {
+    this.setState({ loading: true }, async () => {
       this.setState({
         attributes: await requestPersonalData(PERSONAL_ATTRIBUTES),
         loading: false
       })
     })
+  }
+  openAttributes(navigateTo) {
+    this.props.navigation.navigate("ProfileStackScreens", {
+      screen: navigateTo
+    });
   }
 
 
