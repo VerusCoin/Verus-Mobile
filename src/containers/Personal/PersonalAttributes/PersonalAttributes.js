@@ -1,11 +1,14 @@
 import moment from "moment";
-import { Component } from "react"
+import { Component } from "react" 
+import { Platform, NativeModules } from 'react-native'
 import { connect } from 'react-redux'
 import { modifyPersonalDataForUser } from "../../../actions/actionDispatchers";
 import { requestPersonalData } from "../../../utils/auth/authBox";
 import { PERSONAL_ATTRIBUTES, PERSONAL_BIRTHDAY, PERSONAL_NATIONALITIES } from "../../../utils/constants/personal";
 import { provideCustomBackButton } from "../../../utils/navigation/customBack";
 import { PersonalAttributesRender } from "./PersonalAttributes.render"
+import { primitives } from "verusid-ts-client"
+const { IDENTITYDATA_PERSONAL_DETAILS, IDENTITYDATA_FIRSTNAME, IDENTITYDATA_MIDDLENAME, IDENTITYDATA_LASTNAME, IDENTITYDATA_DATEOFBIRTH, IDENTITYDATA_NATIONALITY } = primitives;
 
 const EDIT = 'edit'
 const REMOVE = 'remove'
@@ -15,17 +18,11 @@ class PersonalAttributes extends Component {
     super();
     this.state = {
       attributes: {
-        name: {
-          first: "John",
-          middle: "",
-          last: "Doe"
-        },
-        birthday: {
-          day: null,
-          month: null,
-          year: null
-        },
-        nationalities: []
+        [IDENTITYDATA_FIRSTNAME.vdxfid]: "John",
+        [IDENTITYDATA_MIDDLENAME.vdxfid]: "",
+        [IDENTITYDATA_LASTNAME.vdxfid]: "Doe",
+        [IDENTITYDATA_DATEOFBIRTH.vdxfid]: {},
+        [IDENTITYDATA_NATIONALITY.vdxfid]: [],
       },
       nationalityModalOpen: false,
       birthdaySelectorModalOpen: false,
@@ -126,21 +123,23 @@ class PersonalAttributes extends Component {
   }
 
   addNationality(nationalityCode) {
-    const nationalities = this.state.attributes.nationalities ? this.state.attributes.nationalities : []
-    this.updateAttribute(PERSONAL_NATIONALITIES, [...nationalities, nationalityCode])
+    const nationalities = this.state.attributes[IDENTITYDATA_NATIONALITY.vdxfid] 
+      ? this.state.attributes[IDENTITYDATA_NATIONALITY.vdxfid] : []
+    this.updateAttribute(IDENTITYDATA_NATIONALITY.vdxfid, [...nationalities, nationalityCode])
   }
 
   removeNationality(index) {
-    let nationalities = this.state.attributes.nationalities ? this.state.attributes.nationalities : []
+    let nationalities = this.state.attributes[IDENTITYDATA_NATIONALITY.vdxfid] 
+      ? this.state.attributes[IDENTITYDATA_NATIONALITY.vdxfid] : []
     nationalities.splice(index, 1);
-    this.updateAttribute(PERSONAL_NATIONALITIES, nationalities)
+    this.updateAttribute(IDENTITYDATA_NATIONALITY.vdxfid, nationalities)
   }
 
   setBirthday(date) {
     this.setState({
       birthdaySelectorModalOpen: false
     }, () => {
-      this.updateAttribute(PERSONAL_BIRTHDAY, date)
+      this.updateAttribute(IDENTITYDATA_DATEOFBIRTH.vdxfid, date)
     })
   }
 
@@ -173,10 +172,16 @@ class PersonalAttributes extends Component {
   }
 
   renderDate() {
-    const { day, month, year } = this.state.attributes.birthday;
+    const { day, month, year } = this.state.attributes[IDENTITYDATA_DATEOFBIRTH.vdxfid];
     const date = this.getDateClassInstance(day, month, year)
 
-    return date.toLocaleDateString("en-US", {
+    const deviceLanguage =
+      Platform.OS === 'ios'
+        ? NativeModules.SettingsManager.settings.AppleLocale ||
+          NativeModules.SettingsManager.settings.AppleLanguages[0] //iOS 13
+        : NativeModules.I18nManager.localeIdentifier;
+
+    return date.toLocaleDateString(deviceLanguage, {
       year: "numeric",
       month: "long",
       day: "numeric",

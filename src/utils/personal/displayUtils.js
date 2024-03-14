@@ -8,12 +8,14 @@ import {
 } from "../constants/personal";
 import { Platform } from 'react-native';
 var RNFS = require('react-native-fs');
+import { primitives } from "verusid-ts-client"
+const { IDENTITYDATA_FIRSTNAME, IDENTITYDATA_LASTNAME, IDENTITYDATA_MIDDLENAME} = primitives;
 
-export const renderPersonalFullName = (name) => {
+export const renderPersonalFullName = (state) => {
   return {
-    title: `${name.first} ${
-      name.middle != null && name.middle.length > 0 ? name.middle + " " : ""
-    }${name.last}`
+    title: `${state[IDENTITYDATA_FIRSTNAME.vdxfid]} ${
+      state[IDENTITYDATA_MIDDLENAME.vdxfid] != null && state[IDENTITYDATA_MIDDLENAME.vdxfid] > 0 ? state[IDENTITYDATA_MIDDLENAME.vdxfid] + " " : ""
+    }${state[IDENTITYDATA_LASTNAME.vdxfid]}`
   };
 };
 

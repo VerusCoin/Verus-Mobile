@@ -7,16 +7,18 @@ import { PERSONAL_ATTRIBUTES, PERSONAL_BIRTHDAY, PERSONAL_NATIONALITIES } from "
 import { provideCustomBackButton } from "../../../utils/navigation/customBack";
 import { PersonalSelectDataRender } from "./PersonalSelectData.render"
 import { primitives } from "verusid-ts-client"
+const { IDENTITYDATA_CONTACT, IDENTITYDATA_PERSONAL_DETAILS, IDENTITYDATA_LOCATIONS, IDENTITYDATA_DOCUMENTS_AND_IMAGES, IDENTITYDATA_BANKING_INFORMATION} = primitives;
+
 
 //const { defaultPersonalProfileDataTemplate } = primitives;
 const EDIT = 'edit'
 const REMOVE = 'remove'
 const PERSONALDATACATAGORIES = [
-  primitives.IDENTITYDATA_CONTACT.vdxfid,
-  primitives.IDENTITYDATA_LOCATIONS.vdxfid,
-  primitives.IDENTITYDATA_DOCUMENTS_AND_IMAGES.vdxfid,
-  primitives.IDENTITYDATA_PERSONAL_DETAILS.vdxfid,
-  primitives.IDENTITYDATA_BANKING_INFORMATION.vdxfid
+  IDENTITYDATA_CONTACT.vdxfid,
+  IDENTITYDATA_LOCATIONS.vdxfid,
+  IDENTITYDATA_DOCUMENTS_AND_IMAGES.vdxfid,
+  IDENTITYDATA_PERSONAL_DETAILS.vdxfid,
+  IDENTITYDATA_BANKING_INFORMATION.vdxfid
 ];
 
 const PERSONALDATALINKS = [
