@@ -8,7 +8,7 @@ import { PERSONAL_ATTRIBUTES, PERSONAL_BIRTHDAY, PERSONAL_NATIONALITIES } from "
 import { provideCustomBackButton } from "../../../utils/navigation/customBack";
 import { PersonalAttributesRender } from "./PersonalAttributes.render"
 import { primitives } from "verusid-ts-client"
-const { IDENTITYDATA_PERSONAL_DETAILS, IDENTITYDATA_FIRSTNAME, IDENTITYDATA_MIDDLENAME, IDENTITYDATA_LASTNAME, IDENTITYDATA_DATEOFBIRTH, IDENTITYDATA_NATIONALITY } = primitives;
+const { IDENTITYDATA_FIRSTNAME, IDENTITYDATA_MIDDLENAME, IDENTITYDATA_LASTNAME, IDENTITYDATA_DATEOFBIRTH, IDENTITYDATA_NATIONALITY } = primitives;
 
 const EDIT = 'edit'
 const REMOVE = 'remove'

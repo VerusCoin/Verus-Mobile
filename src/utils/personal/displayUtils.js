@@ -9,7 +9,9 @@ import {
 import { Platform } from 'react-native';
 var RNFS = require('react-native-fs');
 import { primitives } from "verusid-ts-client"
-const { IDENTITYDATA_FIRSTNAME, IDENTITYDATA_LASTNAME, IDENTITYDATA_MIDDLENAME} = primitives;
+const { IDENTITYDATA_FIRSTNAME, IDENTITYDATA_LASTNAME, IDENTITYDATA_MIDDLENAME,
+  BANK_ACCOUNT_COUNTRY, BANK_ACCOUNT_CURRENCY, BANK_ACCOUNT_NUMBER, BANK_ACCOUNT_TYPE} = primitives;
+  const { IDENTITYDATA_HOMEADDRESS_STREET1, IDENTITYDATA_HOMEADDRESS_STREET2, IDENTITYDATA_HOMEADDRESS_CITY, IDENTITYDATA_HOMEADDRESS_REGION, IDENTITYDATA_HOMEADDRESS_POSTCODE, IDENTITYDATA_HOMEADDRESS_COUNTRY } = primitives;
 
 export const renderPersonalFullName = (state) => {
   return {
@@ -104,34 +106,34 @@ export const renderPersonalTaxId = (taxCountry) => {
 export const renderPersonalAddress = (address) => {
   return {
     title:
-      address.street1.length > 0
-        ? `${address.street1}${
-            address.street2 != null && address.street2.length > 0 ? `, ${address.street2}` : ""
+      address[IDENTITYDATA_HOMEADDRESS_COUNTRY.vdxfid].length > 0
+        ? `${address[IDENTITYDATA_HOMEADDRESS_STREET1.vdxfid]}${
+            address[IDENTITYDATA_HOMEADDRESS_STREET2.vdxfid] != null && address[IDENTITYDATA_HOMEADDRESS_STREET2.vdxfid].length > 0 ? `, ${address[IDENTITYDATA_HOMEADDRESS_STREET2.vdxfid]}` : ""
           }`
         : "Empty address",
-    description: `${address.postal_code.length > 0 ? `${address.postal_code} ` : ""}${
-      address.state_province_region.length > 0 ? `${address.state_province_region}, ` : ""
-    }${address.city.length > 0 ? `${address.city}, ` : "Unknown City, "}${
-      ISO_3166_COUNTRIES[address.country] != null
-        ? `${ISO_3166_COUNTRIES[address.country].emoji} ${ISO_3166_COUNTRIES[address.country].name}`
+    description: `${address[IDENTITYDATA_HOMEADDRESS_POSTCODE.vdxfid].length > 0 ? `${address[IDENTITYDATA_HOMEADDRESS_POSTCODE.vdxfid]} ` : ""}${
+      address[IDENTITYDATA_HOMEADDRESS_REGION.vdxfid]?.length > 0 ? `${address[IDENTITYDATA_HOMEADDRESS_REGION.vdxfid]}, ` : ""
+    }${address[IDENTITYDATA_HOMEADDRESS_CITY.vdxfid]?.length > 0 ? `${address[IDENTITYDATA_HOMEADDRESS_CITY.vdxfid]}, ` : "Unknown City, "}${
+      ISO_3166_COUNTRIES[address[IDENTITYDATA_HOMEADDRESS_COUNTRY.vdxfid]] != null
+        ? `${ISO_3166_COUNTRIES[address[IDENTITYDATA_HOMEADDRESS_COUNTRY.vdxfid]].emoji} ${ISO_3166_COUNTRIES[address[IDENTITYDATA_HOMEADDRESS_COUNTRY.vdxfid]].name}`
         : "Unknown Country"
     }`,
   };
 }
 
 export const renderPersonalBankAccount = (account) => {
-  const accountLocaleString = ISO_3166_COUNTRIES[account.country]
-    ? `${ISO_3166_COUNTRIES[account.country].emoji} Account`
+  const accountLocaleString = ISO_3166_COUNTRIES[account[BANK_ACCOUNT_COUNTRY.vdxfid]]
+    ? `${ISO_3166_COUNTRIES[account[BANK_ACCOUNT_COUNTRY.vdxfid]].emoji} Account`
     : "Bank Account";
   const accountNumberString =
-    account.account_number != null && account.account_number.length > 4
-      ? ` ending in ${account.account_number.slice(-4)}`
+    account[BANK_ACCOUNT_NUMBER.vdxfid] != null && account[BANK_ACCOUNT_NUMBER.vdxfid].length > 4
+      ? ` ending in ${account[BANK_ACCOUNT_NUMBER.vdxfid].slice(-4)}`
       : "";
   const accountDescription = `${
-    account.primary_currency != null && account.primary_currency.length > 0
-      ? account.primary_currency + " "
+    account[BANK_ACCOUNT_CURRENCY.vdxfid] != null && account[BANK_ACCOUNT_CURRENCY.vdxfid].length > 0
+      ? account[BANK_ACCOUNT_CURRENCY.vdxfid] + " "
       : ""
-  }${account.account_type}`;
+  }${account[BANK_ACCOUNT_TYPE.vdxfid]}`;
 
   return {
     title: `${accountLocaleString}${accountNumberString}`,

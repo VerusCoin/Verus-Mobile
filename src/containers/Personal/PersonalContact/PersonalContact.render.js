@@ -10,6 +10,8 @@ import { ISO_3166_COUNTRIES, ISO_3166_ALPHA_2_CODES } from "../../../utils/const
 import { CALLING_CODES_TO_ISO_3166 } from "../../../utils/constants/callingCodes";
 import { PERSONAL_EMAILS, PERSONAL_NATIONALITIES, PERSONAL_PHONE_NUMBERS } from "../../../utils/constants/personal";
 import { renderPersonalPhoneNumber } from "../../../utils/personal/displayUtils";
+import { primitives } from "verusid-ts-client"
+const { IDENTITYDATA_EMAIL, IDENTITYDATA_PHONENUMBER } = primitives;
 
 export const PersonalContactRender = function () {
   return (
@@ -70,9 +72,9 @@ export const PersonalContactRender = function () {
         </Portal>
         <List.Subheader>{"Email addresses"}</List.Subheader>
         <Divider />
-        {this.state.contact.emails == null
+        {this.state.contact[IDENTITYDATA_EMAIL.vdxfid] == null
           ? null
-          : this.state.contact.emails.map((email, index) => {
+          : this.state.contact[IDENTITYDATA_EMAIL.vdxfid].map((email, index) => {
               return (
                 <React.Fragment key={index}>
                   <List.Item
@@ -101,9 +103,9 @@ export const PersonalContactRender = function () {
         <Divider />
         <List.Subheader>{"Phone numbers"}</List.Subheader>
         <Divider />
-        {this.state.contact.phone_numbers == null
+        {this.state.contact[IDENTITYDATA_PHONENUMBER.vdxfid] == null
           ? null
-          : this.state.contact.phone_numbers.map((phone, index) => {
+          : this.state.contact[IDENTITYDATA_PHONENUMBER.vdxfid].map((phone, index) => {
               const type = phone.type;
               const typeFr = type.charAt(0).toUpperCase() + type.slice(1);
 
