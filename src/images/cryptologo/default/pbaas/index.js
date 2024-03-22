@@ -1,6 +1,11 @@
 import React from 'react'
 import { View } from "react-native"
 
+import PURE_DARK from './pure/pure_dark.svg'
+import PURE_LIGHT from './pure/pure_light.svg'
+import BRIDGE_VETH_DARK from './bridge-veth/bridge-veth_dark.svg'
+import BRIDGE_VETH_LIGHT from './bridge-veth/bridge-veth_light.svg'
+
 const RenderPbaasCurrencyLogo = (iAddr) => {
   function hashCode(str) {
     var hash = 0;
@@ -65,5 +70,7 @@ const RenderPbaasCurrencyLogo = (iAddr) => {
 }
 
 export default {
-  RenderPbaasCurrencyLogo
+  RenderPbaasCurrencyLogo,
+  PURE: { light: PURE_LIGHT, dark: PURE_DARK },
+  BRIDGE_VETH: { light: BRIDGE_VETH_LIGHT, dark: BRIDGE_VETH_DARK }
 }
