@@ -14,6 +14,7 @@ import TextInputModal from "../../../components/TextInputModal/TextInputModal"
 import NumberPadModal from "../../../components/NumberPadModal/NumberPadModal"
 import ListSelectionModal from "../../../components/ListSelectionModal/ListSelectionModal";
 import AnimatedActivityIndicatorBox from "../../../components/AnimatedActivityIndicatorBox";
+import { coinsList } from "../../../utils/CoinData/CoinsList";
 
 export const RenderReceiveCoin = function() {
   const _price = this.getPrice();
@@ -110,6 +111,33 @@ export const RenderReceiveCoin = function() {
             />
           )}
         </Portal>
+        {this.props.networkName != null && 
+          (<View style={Styles.wideBlock}>
+            <View style={Styles.flexRow}>
+              <TouchableOpacity
+                onPress={() => this.networksInfoAlert()}
+                style={{ ...Styles.flex }}>
+                <TextInput
+                  returnKeyType="done"
+                  label={"Supported networks"}
+                  dense
+                  value={
+                    this.props.subWallet.network !== coinsList.VRSC.currency_id && 
+                    this.props.subWallet.network !== coinsList.VRSCTEST.currency_id ? 
+                      `${this.props.networkName}, VRSC` 
+                      : 
+                      this.props.networkName
+                  }
+                  editable={false}
+                  pointerEvents="none"
+                  style={{
+                    backgroundColor: Colors.secondaryColor,
+                  }}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>)
+        }
         {addresses.map((address) => {
           const addressInfo =
             this.props.subWallet.address_info[this.state.infoIndexes[address]];
