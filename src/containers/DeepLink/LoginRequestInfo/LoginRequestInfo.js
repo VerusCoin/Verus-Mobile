@@ -126,6 +126,16 @@ const LoginRequestInfo = props => {
   
   const buildAlert = (request) => {
 
+    const setPermission = () => {
+      const _permissions = permissions.map(permission => {
+        if (permission.vdxfkey === request.vdxfkey) {
+          return { ...permission, agreed: true };
+        }
+        return permission;
+      });
+      setExtraPermissions(_permissions);
+    }
+
     if (request.agreed) return;
 
     if (request.openAttestation) { 
@@ -135,7 +145,9 @@ const LoginRequestInfo = props => {
       props.navigation.navigate("PersonalSelectData",
       {
         deeplinkData,
-        fromService: false
+        fromService: false,
+        cancel: {cancel},
+        onGoBack: (data) => data ? setPermission(data) : () => {},
       });
       return;
     }
@@ -151,13 +163,7 @@ const LoginRequestInfo = props => {
         },
         {
           text: 'ACCEPT', onPress: () => {
-            const _permissions = permissions.map(permission => {
-              if (permission.vdxfkey === request.vdxfkey) {
-                return { ...permission, agreed: true };
-              }
-              return permission;
-            });
-            setExtraPermissions(_permissions);
+            setPermission();
             resolveAlert(true)
 
            

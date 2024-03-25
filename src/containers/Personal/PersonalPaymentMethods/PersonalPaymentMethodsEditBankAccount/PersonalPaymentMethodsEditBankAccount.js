@@ -38,6 +38,8 @@ import {
   PERSONAL_BANK_CLABE
 } from "../../../../utils/constants/personal";
 import { PersonalPaymentMethodsEditBankAccountRender } from "./PersonalPaymentMethodsEditBankAccount.render"
+import { primitives } from "verus-typescript-primitives"
+const { IDENTITYDATA_HOMEADDRESS_STREET1, IDENTITYDATA_HOMEADDRESS_STREET2, IDENTITYDATA_HOMEADDRESS_CITY, IDENTITYDATA_HOMEADDRESS_REGION, IDENTITYDATA_HOMEADDRESS_POSTCODE, IDENTITYDATA_HOMEADDRESS_COUNTRY } = primitives;
 
 class PersonalPaymentMethodsEditBankAccount extends Component {
   constructor(props) {
@@ -56,12 +58,12 @@ class PersonalPaymentMethodsEditBankAccount extends Component {
             [PERSONAL_BANK_BENEFICIARY_TYPE]:
               PERSONAL_BENEFICIARY_TYPE_INDIVIDUAL,
             [PERSONAL_BANK_BENEFICIARY_PHYSICAL_ADDRESS]: {
-              street1: "",
-              street2: "",
-              city: "",
-              state_province_region: "",
-              postal_code: "",
-              country: "",
+              [IDENTITYDATA_HOMEADDRESS_STREET1.vdxfid]: "",
+              [IDENTITYDATA_HOMEADDRESS_STREET2.vdxfid]: "",
+              [IDENTITYDATA_HOMEADDRESS_CITY.vdxfid]: "",
+              [IDENTITYDATA_HOMEADDRESS_REGION.vdxfid]: "",
+              [IDENTITYDATA_HOMEADDRESS_POSTCODE.vdxfid]: "",
+              [IDENTITYDATA_HOMEADDRESS_COUNTRY.vdxfid]: "",
             },
             [PERSONAL_BANK_BENEFICIARY_NAME_FIRST]: "",
             [PERSONAL_BANK_BENEFICIARY_NAME_LAST]: "",

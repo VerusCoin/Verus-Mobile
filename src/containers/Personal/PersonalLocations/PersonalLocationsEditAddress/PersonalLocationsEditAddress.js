@@ -57,7 +57,7 @@ class PersonalLocationsEditAddress extends Component {
         title: "State/Province/Region",
         placeholder: "optional"
       },
-      [IDENTITYDATA_HOMEADDRESS_COUNTRY.vdxfid]: {
+      [IDENTITYDATA_HOMEADDRESS_POSTCODE.vdxfid]: {
         title: "ZIP/Postal Code",
         placeholder: "required"
       }

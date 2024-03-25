@@ -1,12 +1,15 @@
 import moment from "moment";
 import { Component } from "react"
 import { connect } from 'react-redux'
+import { createAlert } from "../../../actions/actions/alert/dispatchers/alert"
 import { modifyPersonalDataForUser } from "../../../actions/actionDispatchers";
 import { requestPersonalData } from "../../../utils/auth/authBox";
 import { PERSONAL_ATTRIBUTES, PERSONAL_BIRTHDAY, PERSONAL_NATIONALITIES } from "../../../utils/constants/personal";
 import { provideCustomBackButton } from "../../../utils/navigation/customBack";
 import { PersonalSelectDataRender } from "./PersonalSelectData.render"
-import { primitives } from "verusid-ts-client"
+import { checkPersonalDataCatagories, checkPersonalDataKeys } from "../../../utils/personal/displayUtils";
+import { primitives } from "verus-typescript-primitives"
+
 const { IDENTITYDATA_CONTACT, IDENTITYDATA_PERSONAL_DETAILS, IDENTITYDATA_LOCATIONS, IDENTITYDATA_DOCUMENTS_AND_IMAGES, IDENTITYDATA_BANKING_INFORMATION} = primitives;
 
 
@@ -30,7 +33,7 @@ const PERSONALDATALINKS = [
 ]
 class PersonalSelectData extends Component {
   constructor(props) {
-    super();
+    super(props);
     this.state = {
       loginConsent: null,
       nationalityModalOpen: false,
@@ -43,16 +46,33 @@ class PersonalSelectData extends Component {
       },
       loading: false,
       ready: false,
-      permissions: [1, 2, 3, 4],
       catagoriesRequested: null,
-      otherKeysRequested: null
+      personalDataURL: ""
     };
   }
 
   componentDidMount() {
+    this.updateDisplay();
+  }
 
+  componentDidUpdate(lastProps) {
+    if (lastProps.encryptedPersonalData !== this.props.encryptedPersonalData) {
+      this.updateDisplay();
+    }
+  }
+
+  cancel = () => {
+    if (this.props.route.params.cancel) {
+      this.props.route.params.cancel.cancel()
+    }
+  }
+
+  updateDisplay() {
     const { deeplinkData } = this.props.route.params
     const loginConsent = new primitives.LoginConsentRequest(deeplinkData);
+
+    const personalDataURL = loginConsent.challenge.subject
+      .filter((permission) => permission.vdxfkey === primitives.LOGIN_CONSENT_PERSONALINFO_WEBHOOK_VDXF_KEY.vdxfid);
 
     const requestedPersonalData = loginConsent.challenge.subject
       .filter((permission) => permission.vdxfkey === primitives.PROFILE_DATA_VIEW_REQUEST.vdxfid);
@@ -64,41 +84,69 @@ class PersonalSelectData extends Component {
           primitives.defaultPersonalProfileDataTemplate.forEach((templateCategory) => {
             if (templateCategory.vdxfid === permission.data) {
               catagoriesRequested[permission.data] = { title: templateCategory.category, 
-                details: templateCategory.details, navigateTo: PERSONALDATALINKS[idx] };
+                details: templateCategory.details, navigateTo: PERSONALDATALINKS[idx], color: "black" };
             }
           })
         }
       })
-    })
+    });
 
-    const otherKeysRequested = {}
-    requestedPersonalData.forEach((permission) => {
-
-      if (primitives.IdentityVdxfidMap[permission.data]) {
-        otherKeysRequested[permission.data] = primitives.IdentityVdxfidMap[permission.data].name;
-      }
-
-    })
-    this.setState({ catagoriesRequested, otherKeysRequested });
-    this.loadPersonalAttributes()
+    checkPersonalDataCatagories(catagoriesRequested).then((success) => {
+      this.setState({ catagoriesRequested: catagoriesRequested, personalDataURL, ready: success});
+    });  
   }
 
-  handleContinue() { }
-
-  loadPersonalAttributes() {
-    this.setState({ loading: true }, async () => {
-      this.setState({
-        attributes: await requestPersonalData(PERSONAL_ATTRIBUTES),
-        loading: false
+  handleContinue() { 
+    this.setState({loading: true});
+    
+    this.getPersonalDataFromCategories(personalData).then(() => {
+      sendPersonalData(personalData, this.state.personalDataURL)
+      .then(() => {
+        this.setState({loading: false});
+        this.props.route.params.onGoBack(true);
+        this.props.navigation.goBack();
       })
-    })
+      .catch((e) => {
+        this.setState({loading: false});
+        createAlert("Error", e.message);
+      })
+    }
+    ).catch((e) => {
+      this.setState({loading: false});
+      createAlert("Error", e.message);
+    })};
+
+  async getPersonalDataFromCategories() {
+    let personalData = {};
+    // await Promise.all(Object.keys(this.state.catagoriesRequested).forEach(async (categoryVdxfkey) => {
+    //   switch (categoryVdxfkey) {
+    //     case IDENTITYDATA_PERSONAL_DETAILS.vdxfid:
+    //       personalData[IDENTITYDATA_PERSONAL_DETAILS.vdxfid] = await requestPersonalData(PERSONAL_ATTRIBUTES);
+    //       break;
+    //     case IDENTITYDATA_CONTACT.vdxfid:
+    //       personalData[IDENTITYDATA_CONTACT.vdxfid] = await requestPersonalData(PERSONAL_CONTACT);
+    //       break;
+    //     case IDENTITYDATA_LOCATIONS.vdxfid:
+    //       personalData[IDENTITYDATA_LOCATIONS.vdxfid] = await requestPersonalData(PERSONAL_LOCATIONS);
+    //       break;
+    //     case IDENTITYDATA_BANKING_INFORMATION.vdxfid:
+    //       personalData[IDENTITYDATA_BANKING_INFORMATION.vdxfid] = await requestPersonalData(PERSONAL_PAYMENT_METHODS);
+    //       break;
+    //     case IDENTITYDATA_DOCUMENTS_AND_IMAGES.vdxfid:
+    //       personalData[IDENTITYDATA_DOCUMENTS_AND_IMAGES.vdxfid] = await requestPersonalData(PERSONAL_IMAGES);
+    //       break;
+    //     default:
+    //       break;
+    //   }
+    // }));
+    return personalData;
   }
+
   openAttributes(navigateTo) {
     this.props.navigation.navigate("ProfileStackScreens", {
       screen: navigateTo
     });
   }
-
 
   render() {
     return PersonalSelectDataRender.call(this);
@@ -108,7 +156,7 @@ class PersonalSelectData extends Component {
 const mapStateToProps = (state) => {
   return {
     activeAccount: state.authentication.activeAccount,
-    encryptedAttributes: state.personal.attributes
+    encryptedPersonalData: state.personal
   }
 };
 
