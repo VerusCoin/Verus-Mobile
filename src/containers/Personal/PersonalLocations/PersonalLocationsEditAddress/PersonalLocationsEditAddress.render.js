@@ -6,7 +6,8 @@ import TextInputModal from "../../../../components/TextInputModal/TextInputModal
 import ListSelectionModal from "../../../../components/ListSelectionModal/ListSelectionModal";
 import { ISO_3166_COUNTRIES, ISO_3166_ALPHA_2_CODES } from "../../../../utils/constants/iso3166";
 import Colors from "../../../../globals/colors";
-
+import { primitives } from "verusid-ts-client"
+const { IDENTITYDATA_HOMEADDRESS_COUNTRY } = primitives;
 export const PersonalLocationsEditAddressRender = function () {
   return (
     <SafeAreaView style={Styles.defaultRoot}>
@@ -83,15 +84,15 @@ export const PersonalLocationsEditAddressRender = function () {
         <Divider />
         <List.Item
           title={
-            ISO_3166_COUNTRIES[this.state.address.country] == null
+            ISO_3166_COUNTRIES[this.state.address[IDENTITYDATA_HOMEADDRESS_COUNTRY.vdxfid]] == null
               ? "Select a country"
-              : `${ISO_3166_COUNTRIES[this.state.address.country].emoji} ${
-                  ISO_3166_COUNTRIES[this.state.address.country].name
+              : `${ISO_3166_COUNTRIES[this.state.address[IDENTITYDATA_HOMEADDRESS_COUNTRY.vdxfid]].emoji} ${
+                  ISO_3166_COUNTRIES[this.state.address[IDENTITYDATA_HOMEADDRESS_COUNTRY.vdxfid]].name
                 }`
           }
           titleStyle={{
             color:
-              ISO_3166_COUNTRIES[this.state.address.country] == null
+              ISO_3166_COUNTRIES[this.state.address[IDENTITYDATA_HOMEADDRESS_COUNTRY.vdxfid]] == null
                 ? Colors.verusDarkGray
                 : Colors.quaternaryColor,
           }}

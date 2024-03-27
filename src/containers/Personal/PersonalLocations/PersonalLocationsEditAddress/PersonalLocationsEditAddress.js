@@ -6,6 +6,8 @@ import { createAlert, resolveAlert } from "../../../../actions/actions/alert/dis
 import { PERSONAL_LOCATIONS } from "../../../../utils/constants/personal";
 import { provideCustomBackButton } from "../../../../utils/navigation/customBack";
 import { PersonalLocationsEditAddressRender } from "./PersonalLocationsEditAddress.render"
+import { primitives } from "verusid-ts-client"
+const { IDENTITYDATA_HOMEADDRESS_STREET1, IDENTITYDATA_HOMEADDRESS_STREET2, IDENTITYDATA_HOMEADDRESS_CITY, IDENTITYDATA_HOMEADDRESS_REGION, IDENTITYDATA_HOMEADDRESS_POSTCODE, IDENTITYDATA_HOMEADDRESS_COUNTRY } = primitives;
 
 class PersonalLocationsEditAddress extends Component {
   constructor(props) {
@@ -19,12 +21,12 @@ class PersonalLocationsEditAddress extends Component {
             props.route.params.index
           ]
         : {
-            street1: "",
-            street2: "",
-            city: "",
-            state_province_region: "",
-            postal_code: "",
-            country: "",
+            [IDENTITYDATA_HOMEADDRESS_STREET1.vdxfid]: "",
+            [IDENTITYDATA_HOMEADDRESS_STREET2.vdxfid]: "",
+            [IDENTITYDATA_HOMEADDRESS_CITY.vdxfid]: "",
+            [IDENTITYDATA_HOMEADDRESS_REGION.vdxfid]: "",
+            [IDENTITYDATA_HOMEADDRESS_POSTCODE.vdxfid]: "",
+            [IDENTITYDATA_HOMEADDRESS_COUNTRY.vdxfid]: "",
           };
 
     this.state = {
@@ -37,29 +39,30 @@ class PersonalLocationsEditAddress extends Component {
     };
 
     this.addressTextInputLabels = {
-      street1: {
+      [IDENTITYDATA_HOMEADDRESS_STREET1.vdxfid]: {
         title: "Address line 1",
         description: "Street address, company name, P.O. box",
         placeholder: "required"
       },
-      street2: {
+      [IDENTITYDATA_HOMEADDRESS_STREET2.vdxfid]: {
         title: "Address line 2",
         description: "Apartment number, unit, floor, etc.",
         placeholder: "optional"
       },
-      city: {
+      [IDENTITYDATA_HOMEADDRESS_CITY.vdxfid]: {
         title: "City",
         placeholder: "required"
       },
-      state_province_region: {
+      [IDENTITYDATA_HOMEADDRESS_REGION.vdxfid]: {
         title: "State/Province/Region",
         placeholder: "optional"
       },
-      postal_code: {
+      [IDENTITYDATA_HOMEADDRESS_POSTCODE.vdxfid]: {
         title: "ZIP/Postal Code",
         placeholder: "required"
       }
     }
+    const sdf =324
   }
 
   componentDidMount() {
@@ -142,7 +145,7 @@ class PersonalLocationsEditAddress extends Component {
     this.setState({
       address: {
         ...this.state.address,
-        country: countryCode
+        [IDENTITYDATA_HOMEADDRESS_COUNTRY.vdxfid]: countryCode
       }
     }, () => this.updateAddress())
   }

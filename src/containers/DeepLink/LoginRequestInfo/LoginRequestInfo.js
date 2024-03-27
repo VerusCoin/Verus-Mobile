@@ -29,6 +29,8 @@ const LoginRequestInfo = props => {
   const signedIn = useSelector(state => state.authentication.signedIn)
   const passthrough = useSelector((state) => state.deeplink.passthrough);
   const sendModalType = useSelector(state => state.sendModal.type)
+  const [permissions, setExtraPermissions] = useState(null);
+  const [ready, setReady] = useState(false);
 
   const dispatch = useDispatch()
 
@@ -121,6 +123,95 @@ const LoginRequestInfo = props => {
       setLoading(false)
     } else setLoading(true)
   }, [sendModalType]);
+  
+  const buildAlert = (request) => {
+
+    const setPermission = () => {
+      const _permissions = permissions.map(permission => {
+        if (permission.vdxfkey === request.vdxfkey) {
+          return { ...permission, agreed: true };
+        }
+        return permission;
+      });
+      setExtraPermissions(_permissions);
+    }
+
+    if (request.agreed) return;
+
+    if (request.openAttestation) { 
+      return;
+    }
+    else if (request.openProfile) { 
+      if(!signedIn) return;
+      props.navigation.navigate("PersonalSelectData",
+      {
+        deeplinkData,
+        fromService: false,
+        cancel: {cancel},
+        onGoBack: (data) => data ? setPermission(data) : () => {},
+        signerFqn
+      });
+      return;
+    }
+
+    return createAlert(
+      request.title,
+      request.data,
+      [
+        {
+          text: 'DECLINE',
+          onPress: () => resolveAlert(false),
+          style: 'cancel',
+        },
+        {
+          text: 'ACCEPT', onPress: () => {
+            setPermission();
+            resolveAlert(true)           
+          }
+        },
+      ],
+      {cancelable: true});
+    }
+
+  useEffect(() => {
+
+    if (req && req.challenge && req.challenge.requested_access) {
+      if (req.challenge.requested_access.length === 1 && req.challenge.requested_access.some(primitives.IDENTITY_VIEW.vdxfid)) {
+        setReady(true);
+      } else {
+        var loginTemp = [];
+        for (let i = 0; i < req.challenge.requested_access.length; i++) {
+          var tempdata = {};
+
+          if (req.challenge.requested_access[i].vdxfkey === primitives.IDENTITY_VIEW.vdxfid) {            
+            continue;
+          } else if (req.challenge.requested_access[i].vdxfkey === primitives.IDENTITY_AGREEMENT.vdxfid) {
+            tempdata = { data: req.challenge.requested_access[i].toJson().data, title: "Agreement to accept" }
+          } else if (req.challenge.requested_access[i].vdxfkey === primitives.ATTESTATION_READ_REQUEST.vdxfid) {
+            tempdata = { data: "Agree to share attestation data", title: "Attestation View Request", openAttestation: true }
+          } else if (req.challenge.requested_access[i].vdxfkey === primitives.PROFILE_DATA_VIEW_REQUEST.vdxfid) {
+            tempdata = { data: "Agree to share profile data", title: "Personal Data Input Request", openProfile: true }
+          } else if (req.challenge.requested_access[i].vdxfkey === primitives.LOGIN_CONSENT_PERSONALINFO_WEBHOOK_VDXF_KEY.vdxfid) {
+            continue;
+          }
+          loginTemp.push({ vdxfkey: req.challenge.requested_access[i].vdxfkey, ...tempdata, agreed: false })
+        }
+        setExtraPermissions(loginTemp);
+      }
+    }
+  }, [req]);
+
+  useEffect(() => {
+    if (permissions) {
+      for (let i = 0; i < permissions.length; i++) {
+        if (!permissions[i].agreed)
+          return;
+      }
+      setReady(true);
+    }
+  }, [permissions]);
+
+
 
   const addRootSystem = async () => {
     setLoading(true)
@@ -189,8 +280,14 @@ const LoginRequestInfo = props => {
     }
   }
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (signedIn) {
+      if (!ready) {
+        for (let i = 0; i < permissions.length; i++) {
+          const result = await buildAlert(permissions[i], i);
+          if (!result) return;
+        }
+      }
       const coinObj = CoinDirectory.findCoinObj(chain_id);
       if (!!coinObj.testnet != isTestnet) {
         createAlert(
@@ -294,6 +391,23 @@ const LoginRequestInfo = props => {
             <List.Item title={sigDateString} description={'Signed on'} />
             <Divider />
           </TouchableOpacity>
+          {permissions && permissions.map((request, index) => {
+            return (
+              <TouchableOpacity key={index} onPress={() => buildAlert(request)}>
+                <List.Item title={request.title} description={`View the ${request.title} Details.`}
+                  right={props => (
+                    <List.Icon
+                      key={request}
+                      {...props}
+                      icon="check"
+                      style={{ borderRadius: 90, backgroundColor: request.agreed ? Colors.verusGreenColor : 'grey' }}
+                      color={Colors.secondaryColor}
+                    />
+                  )} />
+                <Divider />
+              </TouchableOpacity>
+            );
+          })}
         </View>
         <View
           style={{
@@ -310,7 +424,7 @@ const LoginRequestInfo = props => {
             Cancel
           </Button>
           <Button
-            color={Colors.verusGreenColor}
+            color={ready ? Colors.verusGreenColor : Colors.lightGrey}
             style={{width: 148}}
             onPress={() => handleContinue()}>
             Continue

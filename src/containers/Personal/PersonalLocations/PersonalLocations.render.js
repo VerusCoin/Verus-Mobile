@@ -5,6 +5,8 @@ import ListSelectionModal from "../../../components/ListSelectionModal/ListSelec
 import Styles from "../../../styles";
 import { ISO_3166_COUNTRIES } from "../../../utils/constants/iso3166";
 import { renderPersonalTaxId } from "../../../utils/personal/displayUtils";
+import { primitives } from "verusid-ts-client"
+const { IDENTITYDATA_HOMEADDRESS_STREET1, IDENTITYDATA_HOMEADDRESS_STREET2, IDENTITYDATA_HOMEADDRESS_CITY, IDENTITYDATA_HOMEADDRESS_REGION, IDENTITYDATA_HOMEADDRESS_POSTCODE, IDENTITYDATA_HOMEADDRESS_COUNTRY } = primitives;
 
 export const PersonalLocationsRender = function () {
   return (
@@ -64,24 +66,24 @@ export const PersonalLocationsRender = function () {
                   <List.Item
                     key={index}
                     title={
-                      address.street1.length > 0
-                        ? `${address.street1}${
-                            address.street2 != null && address.street2.length > 0
-                              ? `, ${address.street2}`
+                      address[IDENTITYDATA_HOMEADDRESS_STREET1.vdxfid]?.length > 0
+                        ? `${address[IDENTITYDATA_HOMEADDRESS_STREET1.vdxfid]}${
+                            address[IDENTITYDATA_HOMEADDRESS_STREET2.vdxfid] != null && address[IDENTITYDATA_HOMEADDRESS_STREET2.vdxfid].length > 0
+                              ? `, ${address[IDENTITYDATA_HOMEADDRESS_STREET2.vdxfid]}`
                               : ""
                           }`
                         : "Empty address"
                     }
                     description={`${
-                      address.postal_code.length > 0 ? `${address.postal_code} ` : ""
+                      address[IDENTITYDATA_HOMEADDRESS_POSTCODE.vdxfid]?.length > 0 ? `${address[IDENTITYDATA_HOMEADDRESS_POSTCODE.vdxfid]} ` : ""
                     }${
-                      address.state_province_region.length > 0
-                        ? `${address.state_province_region}, `
+                      address[IDENTITYDATA_HOMEADDRESS_REGION.vdxfid]?.length > 0
+                        ? `${address[IDENTITYDATA_HOMEADDRESS_REGION.vdxfid]}, `
                         : ""
-                    }${address.city.length > 0 ? `${address.city}, ` : "Unknown City, "}${
-                      ISO_3166_COUNTRIES[address.country] != null
-                        ? `${ISO_3166_COUNTRIES[address.country].emoji} ${
-                            ISO_3166_COUNTRIES[address.country].name
+                    }${address[IDENTITYDATA_HOMEADDRESS_CITY.vdxfid]?.length > 0 ? `${address[IDENTITYDATA_HOMEADDRESS_CITY.vdxfid]}, ` : "Unknown City, "}${
+                      ISO_3166_COUNTRIES[address[IDENTITYDATA_HOMEADDRESS_COUNTRY.vdxfid]] != null
+                        ? `${ISO_3166_COUNTRIES[address[IDENTITYDATA_HOMEADDRESS_COUNTRY.vdxfid]].emoji} ${
+                            ISO_3166_COUNTRIES[address[IDENTITYDATA_HOMEADDRESS_COUNTRY.vdxfid]].name
                           }`
                         : "Unknown Country"
                     }`}

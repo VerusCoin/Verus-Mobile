@@ -7,6 +7,8 @@ import Styles from "../../../styles";
 import { ISO_3166_COUNTRIES, ISO_3166_ALPHA_2_CODES } from "../../../utils/constants/iso3166";
 import { PERSONAL_NATIONALITIES } from "../../../utils/constants/personal";
 import { renderPersonalBirthday, renderPersonalFullName } from "../../../utils/personal/displayUtils";
+import { primitives } from "verusid-ts-client"
+const { IDENTITYDATA_PERSONAL_DETAILS, IDENTITYDATA_FIRSTNAME, IDENTITYDATA_MIDDLENAME, IDENTITYDATA_LASTNAME, IDENTITYDATA_DATEOFBIRTH, IDENTITYDATA_NATIONALITY } = primitives;
 
 export const PersonalAttributesRender = function () {
   return (
@@ -46,12 +48,12 @@ export const PersonalAttributesRender = function () {
               flexHeight={0.5}
               visible={this.state.birthdaySelectorModalOpen}
               initialDate={
-                this.state.attributes.birthday == null
+                this.state.attributes[IDENTITYDATA_DATEOFBIRTH.vdxfid] == null
                   ? new Date()
                   : this.getDateClassInstance(
-                      this.state.attributes.birthday.day,
-                      this.state.attributes.birthday.month,
-                      this.state.attributes.birthday.year
+                      this.state.attributes[IDENTITYDATA_DATEOFBIRTH.vdxfid].day,
+                      this.state.attributes[IDENTITYDATA_DATEOFBIRTH.vdxfid].month,
+                      this.state.attributes[IDENTITYDATA_DATEOFBIRTH.vdxfid].year
                     )
               }
               onSelect={(date) => this.setBirthday(date)}
@@ -64,7 +66,7 @@ export const PersonalAttributesRender = function () {
         <List.Subheader>{"Name"}</List.Subheader>
         <Divider />
         <List.Item
-          title={renderPersonalFullName(this.state.attributes.name).title}
+          title={renderPersonalFullName(this.state.attributes).title}
           right={(props) => (
             <List.Icon {...props} icon={"chevron-right"} size={20} />
           )}
@@ -73,9 +75,9 @@ export const PersonalAttributesRender = function () {
         <Divider />
         <List.Subheader>{"Date of birth"}</List.Subheader>
         <Divider />
-        {this.state.attributes.birthday != null ? (
+        {this.state.attributes[IDENTITYDATA_DATEOFBIRTH.vdxfid] != null ? (
           <List.Item
-            title={renderPersonalBirthday(this.state.attributes.birthday).title}
+            title={renderPersonalBirthday(this.state.attributes[IDENTITYDATA_DATEOFBIRTH.vdxfid]).title}
             right={(props) => (
               <List.Icon {...props} icon={"account-edit"} size={20} />
             )}
@@ -91,9 +93,9 @@ export const PersonalAttributesRender = function () {
         <Divider />
         <List.Subheader>{"Nationalities"}</List.Subheader>
         <Divider />
-        {this.state.attributes.nationalities == null
+        {this.state.attributes[IDENTITYDATA_NATIONALITY.vdxfid] == null
           ? null
-          : this.state.attributes.nationalities.map((code, index) => {
+          : this.state.attributes[IDENTITYDATA_NATIONALITY.vdxfid].map((code, index) => {
               const nationality = ISO_3166_COUNTRIES[code];
 
               return (

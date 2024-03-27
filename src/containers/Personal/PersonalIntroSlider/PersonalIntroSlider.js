@@ -16,6 +16,8 @@ import { useEffect } from "react";
 import { modifyPersonalDataForUser } from "../../../actions/actionDispatchers";
 import { PERSONAL_ATTRIBUTES } from "../../../utils/constants/personal";
 import { createAlert } from "../../../actions/actions/alert/dispatchers/alert";
+import { primitives } from "verusid-ts-client"
+const { IDENTITYDATA_PERSONAL_DETAILS, IDENTITYDATA_FIRSTNAME, IDENTITYDATA_MIDDLENAME, IDENTITYDATA_LASTNAME, IDENTITYDATA_DATEOFBIRTH, IDENTITYDATA_NATIONALITY } = primitives;
 
 const slides = [
   {
@@ -48,7 +50,7 @@ const NameForm = (props) => {
   const [last, setLast] = React.useState('');
 
   useEffect(() => {
-    onChange({ first: first.trim(), middle: middle.trim(), last: last.trim() });
+    onChange({ [IDENTITYDATA_FIRSTNAME.vdxfid]: first.trim(), [IDENTITYDATA_MIDDLENAME.vdxfid]: middle.trim(), [IDENTITYDATA_LASTNAME.vdxfid]: last.trim() });
   }, [first, middle, last]);
 
   return (
@@ -104,9 +106,9 @@ class PersonalIntroSlider extends Component {
     super();
     this.state = {
       name: {
-        first: '',
-        middle: '',
-        last: ''
+        [IDENTITYDATA_FIRSTNAME.vdxfid]: '',
+        [IDENTITYDATA_MIDDLENAME.vdxfid]: '',
+        [IDENTITYDATA_LASTNAME.vdxfid]: ''
       },
       loading: false,
       currentSlide: 0
@@ -179,7 +181,7 @@ class PersonalIntroSlider extends Component {
   _onDone = () => {
     this.setState({loading: true}, async () => {
       await modifyPersonalDataForUser(
-        { name: this.state.name }, 
+        this.state.name, 
         PERSONAL_ATTRIBUTES, 
         this.props.activeAccount.accountHash
       )
