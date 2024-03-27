@@ -38,7 +38,7 @@ import {
   PERSONAL_BANK_CLABE
 } from "../../../../utils/constants/personal";
 import { PersonalPaymentMethodsEditBankAccountRender } from "./PersonalPaymentMethodsEditBankAccount.render"
-import { primitives } from "verus-typescript-primitives"
+import { primitives } from "verusid-ts-client"
 const { IDENTITYDATA_HOMEADDRESS_STREET1, IDENTITYDATA_HOMEADDRESS_STREET2, IDENTITYDATA_HOMEADDRESS_CITY, IDENTITYDATA_HOMEADDRESS_REGION, IDENTITYDATA_HOMEADDRESS_POSTCODE, IDENTITYDATA_HOMEADDRESS_COUNTRY } = primitives;
 
 class PersonalPaymentMethodsEditBankAccount extends Component {

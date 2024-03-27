@@ -142,12 +142,14 @@ const LoginRequestInfo = props => {
       return;
     }
     else if (request.openProfile) { 
+      if(!signedIn) return;
       props.navigation.navigate("PersonalSelectData",
       {
         deeplinkData,
         fromService: false,
         cancel: {cancel},
         onGoBack: (data) => data ? setPermission(data) : () => {},
+        signerFqn
       });
       return;
     }
@@ -164,15 +166,12 @@ const LoginRequestInfo = props => {
         {
           text: 'ACCEPT', onPress: () => {
             setPermission();
-            resolveAlert(true)
-
-           
+            resolveAlert(true)           
           }
         },
       ],
       {cancelable: true});
     }
-
 
   useEffect(() => {
 
@@ -192,7 +191,8 @@ const LoginRequestInfo = props => {
             tempdata = { data: "Agree to share attestation data", title: "Attestation View Request", openAttestation: true }
           } else if (req.challenge.requested_access[i].vdxfkey === primitives.PROFILE_DATA_VIEW_REQUEST.vdxfid) {
             tempdata = { data: "Agree to share profile data", title: "Personal Data Input Request", openProfile: true }
-
+          } else if (req.challenge.requested_access[i].vdxfkey === primitives.LOGIN_CONSENT_PERSONALINFO_WEBHOOK_VDXF_KEY.vdxfid) {
+            continue;
           }
           loginTemp.push({ vdxfkey: req.challenge.requested_access[i].vdxfkey, ...tempdata, agreed: false })
         }
@@ -400,7 +400,7 @@ const LoginRequestInfo = props => {
                       key={request}
                       {...props}
                       icon="check"
-                      style={{ borderRadius: 90, backgroundColor: request.agreed ? 'green' : 'grey' }}
+                      style={{ borderRadius: 90, backgroundColor: request.agreed ? Colors.verusGreenColor : 'grey' }}
                       color={Colors.secondaryColor}
                     />
                   )} />

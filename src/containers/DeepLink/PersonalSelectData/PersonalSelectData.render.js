@@ -20,12 +20,13 @@ export const PersonalSelectDataRender = function (props) {
           </Text>
           {this.state.catagoriesRequested && Object.values(this.state.catagoriesRequested).map(request => {
             return (
-              <React.Fragment >
+              <React.Fragment key={request.details}>
                 <List.Item
                   title={request.title}
                   description={ <Text style={{color: request.color}}> {request.details}</Text>}
                   onPress={this.state.loading ? () => { } : () => this.openAttributes(request.navigateTo)}
-                  right={(props) => <List.Icon {...props} icon={"select-group"} size={20} />}
+                  right={(props) => <List.Icon {...props} color={(request.color == "black" ? Colors.verusGreenColor : "red")} icon={"select-group"} size={20} />}
+                  key={request.details}
                 />
                 <Divider />
               </React.Fragment>

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { primitives } from "verus-typescript-primitives"
+import * as primitives  from "verus-typescript-primitives"
 
 
 const handlers = {

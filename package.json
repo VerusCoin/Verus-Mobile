@@ -221,6 +221,7 @@
     "@sideway/formula": "3.0.1",
     "@babel/traverse": "7.23.2",
     "@babel/core": "7.21.3",
+    "@bitgo/utxo-lib": "git+https://github.com/VerusCoin/BitGoJS.git#7c754d4a5920198d9fe6827d3e23bd5cf431f264",
     "blake2b-wasm": "https://github.com/michaeltout/blake2b-wasm/",
     "@bitgo/blake2b-wasm": "https://github.com/michaeltout/blake2b-wasm/",
     "verus-typescript-primitives": "file:d:/dev/verus-typescript-primitives",

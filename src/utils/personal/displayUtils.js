@@ -18,7 +18,7 @@ import {
   PERSONAL_IMAGES,
 } from "../constants/personal";
 
-import { AttestationVdxfidMap } from 'verus-typescript-primitives/dist/vdxf/classes/attestationData.js';
+import  { IdentityVdxfidMap }  from 'verus-typescript-primitives/dist/vdxf/classes/IdentityData';
 import Colors from '../../globals/colors';
 
 const { IDENTITYDATA_FIRSTNAME, IDENTITYDATA_LASTNAME, IDENTITYDATA_MIDDLENAME,
@@ -28,9 +28,14 @@ const { IDENTITYDATA_CONTACT, IDENTITYDATA_PERSONAL_DETAILS, IDENTITYDATA_LOCATI
 
 
 export const renderPersonalFullName = (state) => {
+
+  if (!state[IDENTITYDATA_FIRSTNAME.vdxfid] && !state[IDENTITYDATA_LASTNAME.vdxfid]) {
+    return {title: "John Doe"}
+  }
+
   return {
-    title: `${state[IDENTITYDATA_FIRSTNAME.vdxfid]} ${state[IDENTITYDATA_MIDDLENAME.vdxfid] != null && state[IDENTITYDATA_MIDDLENAME.vdxfid] > 0 ? state[IDENTITYDATA_MIDDLENAME.vdxfid] + " " : ""
-      }${state[IDENTITYDATA_LASTNAME.vdxfid]}`
+    title: `${state[IDENTITYDATA_FIRSTNAME.vdxfid] || ""} ${state[IDENTITYDATA_MIDDLENAME.vdxfid] != null && state[IDENTITYDATA_MIDDLENAME.vdxfid] > 0 ? state[IDENTITYDATA_MIDDLENAME.vdxfid] + " " : ""
+      }${state[IDENTITYDATA_LASTNAME.vdxfid] || ""}`
   };
 };
 
@@ -162,7 +167,7 @@ export const checkPersonalDataCatagories = async (profileDataRequested = []) => 
     let errorDetails = "";
     let profiletype;
     let optionalKeys = {}
-
+    let attributes = {};
     switch (permission) {
 
       case IDENTITYDATA_PERSONAL_DETAILS.vdxfid:
@@ -196,16 +201,17 @@ export const checkPersonalDataCatagories = async (profileDataRequested = []) => 
       const one = attributes[templateCategory.vdxfkey];
       if (!optionalKeys[templateCategory.vdxfkey] && ((typeof one === 'object' && Array.isArray(one) && one.length === 0) ||
         (typeof one === 'object' && Object.keys(one).length === 0) ||
-        (typeof one === 'string' && one.length === 0))) {
-        errorDetails += `${AttestationVdxfidMap[templateCategory.vdxfkey]?.name || templateCategory.vdxfkey}, `;
+        (typeof one === 'string' && one.length === 0)
+        || one == undefined)) {
+        errorDetails += (errorDetails ? ", " : "") +`${IdentityVdxfidMap[templateCategory.vdxfkey]?.name || templateCategory.vdxfkey}`;
       }
     })
 
     if (errorDetails.length > 0) {
-      profileDataRequested[permission].details = "Missing: " + errorDetails + " please add.";
+      profileDataRequested[permission].details = "Missing Information: " + errorDetails;
       profileDataRequested[permission].color = Colors.warningButtonColor;
       success = false;
-    }
+    } 
 
   }));
   return success;
