@@ -152,8 +152,9 @@ export const CoinLogos = {
   ["iCkKJuJScy4Z6NSDK7Mt42ZAB2NEnAE1o4"]: CoinLogoIcons.web3.MKR, // MKR on Verus
   ["i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X"]: CoinLogoIcons.web3.ETH, // ETH on Verus
   ["iS8TfRPfVpKo5FVfSUzfHBQxo9KuzpnqLU"]: CoinLogoIcons.web3.TBTC, // TBTC on Verus
-  ["i61cV2uicKSi1rSMQCBNQeSYC3UAi9GVzd"]: CoinLogoIcons.web3.USDC, // TBTC on Verus
-  ["iC5TQFrFXSYLQGkiZ8FYmZHFJzaRF5CYgE"]: CoinLogoIcons.web3.EURC, // TBTC on Verus
+  ["i61cV2uicKSi1rSMQCBNQeSYC3UAi9GVzd"]: CoinLogoIcons.web3.USDC, // USDC on Verus
+  ["iC5TQFrFXSYLQGkiZ8FYmZHFJzaRF5CYgE"]: CoinLogoIcons.web3.EURC, // EURC on Verus
+  ["iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2"]: CoinLogoIcons.pbaas.VARRR,
 
   // web3 protocol
   BAT: CoinLogoIcons.web3.BAT,
