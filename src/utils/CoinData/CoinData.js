@@ -301,10 +301,12 @@ export const getCoinObj = (coinList, coinId) => {
   })
 }
 
-export const getCoinLogo = (id, proto, theme = 'light') => {  
-  if (CoinLogos[id]) return CoinLogos[id][theme]
+export const getCoinLogo = (id, proto, theme = 'light') => {
+  const _id = id === coinsList.VRSC.currency_id ? "VRSC" : id === coinsList.VRSCTEST.currency_id ? "VRSCTEST" : id;
+
+  if (CoinLogos[_id]) return CoinLogos[_id][theme]
   else if (proto === 'erc20') return CoinLogos.ETH[theme]
-  else return CoinLogoIcons.pbaas.RenderPbaasCurrencyLogo(id)[theme]
+  else return CoinLogoIcons.pbaas.RenderPbaasCurrencyLogo(_id)[theme]
 }
 
 export const getNetworkTxVersion = (networkId) => {
