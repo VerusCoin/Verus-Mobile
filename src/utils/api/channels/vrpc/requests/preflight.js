@@ -509,6 +509,14 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       } 
     })
 
+    Object.keys(validation.fees).forEach((key) => {
+      const value = BigNumber(validation.fees[key]);
+
+      if (((feecurrency != null && key !== feecurrency) || (feecurrency == null && key !== systemId)) && value.isGreaterThan(0)) {
+        throw new Error("Can only spend fee in fee currency (if specified) or system currency.")
+      }
+    })
+
     const preflightTx = Transaction.fromHex(fundRes.result.hex, networks.verus);
 
     const inputs = []
