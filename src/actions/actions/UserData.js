@@ -50,7 +50,7 @@ import {clearEncryptedServiceStoredDataForUser} from './services/dispatchers/ser
 import {clearActiveAccountLifecycles} from './account/dispatchers/account';
 import {WYRE_SERVICE_ID} from '../../utils/constants/services';
 
-export const addUser = (
+export const addUser = async (
   userName,
   seeds,
   password,
@@ -60,24 +60,20 @@ export const addUser = (
   disabledServices = SERVICES_DISABLED_DEFAULT,
   testnetOverrides = {},
 ) => {
-  return new Promise((resolve, reject) => {
-    storeUser(
-      {
-        seeds,
-        password,
-        userName,
-        biometry,
-        keyDerivationVersion,
-        disabledServices,
-        testnetOverrides,
-      },
-      users,
-    )
-      .then(res => {
-        resolve(setAccounts(res));
-      })
-      .catch(err => reject(err));
-  });
+  const res = await storeUser(
+    {
+      seeds,
+      password,
+      userName,
+      biometry,
+      keyDerivationVersion,
+      disabledServices,
+      testnetOverrides,
+    },
+    users,
+  )
+
+  return setAccounts(res);
 };
 
 export const resetPwd = (userID, newPwd, oldPwd) => {

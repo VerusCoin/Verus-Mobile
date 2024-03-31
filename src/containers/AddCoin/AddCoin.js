@@ -55,6 +55,19 @@ const AddCoin = props => {
       : CoinDirectory.supportedCoinList;
     const activeCoinIds = activeCoinsForUser.map(coinObj => coinObj.id);
 
+    // Define the order of priority for currency IDs
+    const priorityOrder = [
+      'VRSC', '0xBc2738BA63882891094C99E59a02141Ca1A1C36a',
+      'VRSCTEST',
+      'BTC', '0x18084fbA666a33d37592fA2633fD49a74DD93a88', 'iS8TfRPfVpKo5FVfSUzfHBQxo9KuzpnqLU',
+      'DAI', 'iGBs4DWztRNvNEJBt4mqHszLxfKTNHTkhM',
+      'MKR', 'iCkKJuJScy4Z6NSDK7Mt42ZAB2NEnAE1o4',
+      'ETH', 'i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X',
+      'i3f7tSctFkiPpiedY8QR5Tep9p4qDVebDx', '0xE6052Dcc60573561ECef2D9A4C0FEA6d3aC5B9A2',
+      'USDC', 'i61cV2uicKSi1rSMQCBNQeSYC3UAi9GVzd',
+      '0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c', 'iC5TQFrFXSYLQGkiZ8FYmZHFJzaRF5CYgE',
+    ];
+
     return displayedCoinList
       .map(x => {
         return {
@@ -63,7 +76,7 @@ const AddCoin = props => {
         };
       })
       .filter(item => {
-        const {coinObj} = item;
+        const { coinObj } = item;
         const queryLc = query.toLowerCase();
         const coinIdLc = coinObj.id.toLowerCase();
         const coinNameLc = coinObj.display_name.toLowerCase();
@@ -77,40 +90,30 @@ const AddCoin = props => {
         );
       })
       .sort((a, b) => {
-        const {coinObj: currencyA} = a;
-        const {coinObj: currencyB} = b;
+        const { coinObj: currencyA } = a;
+        const { coinObj: currencyB } = b;
 
-        if (
-          currencyB.id === 'VRSC' ||
-          currencyB.id === 'BTC' ||
-          currencyB.id === 'VRSCTEST' ||
-          currencyB.id === "iGBs4DWztRNvNEJBt4mqHszLxfKTNHTkhM" ||
-          currencyB.id === "iCkKJuJScy4Z6NSDK7Mt42ZAB2NEnAE1o4" ||
-          currencyB.id === "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X" ||
-          currencyB.id === "i3f7tSctFkiPpiedY8QR5Tep9p4qDVebDx" ||
-          currencyB.id === '0xBc2738BA63882891094C99E59a02141Ca1A1C36a' ||
-          currencyB.id === '0xE6052Dcc60573561ECef2D9A4C0FEA6d3aC5B9A2' ||
-          currencyB.id === 'MKR' ||
-          currencyB.id === 'DAI'
-        ) {
-          return 1;
-        } else if (
-          currencyA.id === 'VRSC' ||
-          currencyA.id === 'BTC' ||
-          currencyA.id === 'VRSCTEST' ||
-          currencyA.id === "iGBs4DWztRNvNEJBt4mqHszLxfKTNHTkhM" ||
-          currencyA.id === "iCkKJuJScy4Z6NSDK7Mt42ZAB2NEnAE1o4" ||
-          currencyA.id === "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X" ||
-          currencyA.id === "i3f7tSctFkiPpiedY8QR5Tep9p4qDVebDx" ||
-          currencyA.id === '0xBc2738BA63882891094C99E59a02141Ca1A1C36a' ||
-          currencyA.id === '0xE6052Dcc60573561ECef2D9A4C0FEA6d3aC5B9A2' ||
-          currencyA.id === 'MKR' ||
-          currencyA.id === 'DAI'
-        ) {
-          return -1;
-        } else {
-          return currencyA.display_ticker <= currencyB.display_ticker ? -1 : 1;
+        // Determine the rank based on the position in the priorityOrder array
+        const rankA = priorityOrder.indexOf(currencyA.id);
+        const rankB = priorityOrder.indexOf(currencyB.id);
+
+        // If both currencies are in the priority list, sort by their order in the list
+        if (rankA !== -1 && rankB !== -1) {
+          return rankA - rankB;
         }
+
+        // If only currencyA is in the priority list, it should come first
+        if (rankA !== -1) {
+          return -1;
+        }
+
+        // If only currencyB is in the priority list, it should come first
+        if (rankB !== -1) {
+          return 1;
+        }
+
+        // If neither currency is in the priority list, sort by display_ticker
+        return currencyA.display_ticker.localeCompare(currencyB.display_ticker);
       });
   };
 
