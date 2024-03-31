@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Dimensions,
@@ -11,14 +11,59 @@ import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
 import TallButton from '../../../../components/LargerButton';
 import Colors from '../../../../globals/colors';
 import { getSupportedBiometryType } from '../../../../utils/keychain/keychain';
+import scorePassword from '../../../../utils/auth/scorePassword';
+import { MIN_PASS_LENGTH, MIN_PASS_SCORE, PASS_SCORE_LIMIT } from '../../../../utils/constants/constants';
 
 export default function CreatePassword({password, setPassword, navigation}) {
   const {height} = Dimensions.get('window');
 
   const [firstBox, setFirstBox] = useState('');
   const [secondBox, setSecondBox] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState(null);
+  const [passwordAffixDetails, setPasswordAffixDetails] = useState({
+    text: "strength",
+    color: Colors.tertiaryColor
+  });
   
   const isKeyboardActive = useSelector(state => state.keyboard.active);
+
+  useEffect(() => {
+    calculatePasswordAffix()
+  }, [firstBox])
+
+  const calculatePasswordAffix = () => {
+    if (!firstBox) {
+      setPasswordAffixDetails({
+        text: "strength",
+        color: Colors.tertiaryColor
+      })
+    } else {
+      const passScore = scorePassword(firstBox, MIN_PASS_LENGTH, PASS_SCORE_LIMIT);
+      setPasswordStrength(passScore);
+
+      if (passScore < MIN_PASS_SCORE) {
+        setPasswordAffixDetails({
+          text: "weak",
+          color: Colors.warningButtonColor
+        })
+      } else if (passScore < PASS_SCORE_LIMIT - ((PASS_SCORE_LIMIT - MIN_PASS_SCORE) / 2)) {
+        setPasswordAffixDetails({
+          text: "mediocre",
+          color: Colors.infoButtonColor
+        })
+      } else if (passScore < PASS_SCORE_LIMIT) {
+        setPasswordAffixDetails({
+          text: "good",
+          color: Colors.primaryColor
+        })
+      } else {
+        setPasswordAffixDetails({
+          text: "excellent",
+          color: Colors.verusGreenColor
+        })
+      }
+    }
+  }
 
   const validate = () => {
     const res = {valid: false, message: ''};
@@ -26,8 +71,8 @@ export default function CreatePassword({password, setPassword, navigation}) {
     if (!firstBox || firstBox.length < 1) {
       res.message = 'Please enter a password.';
       return res;
-    } else if (firstBox.length < 5) {
-      res.message = 'Please enter a password longer than 5 characters.';
+    } else if (passwordStrength < MIN_PASS_SCORE) {
+      res.message = 'Please enter a stronger password.';
       return res;
     } else if (firstBox !== secondBox) {
       res.message = 'Password and confirm password do not match.';
@@ -107,6 +152,7 @@ export default function CreatePassword({password, setPassword, navigation}) {
             autoCapitalize={'none'}
             autoCorrect={false}
             secureTextEntry={true}
+            right={<TextInput.Affix text={passwordAffixDetails.text} textStyle={{color: passwordAffixDetails.color}}/>}
           />
           <TextInput
             returnKeyType="done"
