@@ -21,7 +21,8 @@ export const testReactMethod = async (msg) => {
 
 function openWallet(coinId, coinProto, accountHash) {
 
-  testReactMethod("openWallet")
+  VerusLightClientAndroid.testReactMethod("test.test.test");
+
   return new Promise((resolve, reject) => {
     if (WalletFolder[coinId + '_' + coinProto + '_' + accountHash] == null) reject("Failed to open " + coinId + " wallet.")
     else {
