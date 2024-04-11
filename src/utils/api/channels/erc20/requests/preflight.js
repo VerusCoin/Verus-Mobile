@@ -251,7 +251,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
 
         if (via != null) {
           secondreserveid = finalDestinationCurrencyAddress;
-        }
+        } else secondreserveid = NULL_ETH_ADDRESS;
 
         if (importToSource) {
           destinationcurrency = finalDestinationCurrencyAddress;
