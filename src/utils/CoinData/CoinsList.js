@@ -937,7 +937,7 @@ export const coinsList = {
     compatible_channels: [ERC20, GENERAL],
     theme_color: '#000000',
     dominant_channel: ERC20,
-    decimals: DEFAULT_DECIMALS,
+    decimals: ETHERS,
     tags: [],
     proto: 'erc20',
     rate_url_params: {coin_paprika: 'tbtc-tbtc'},

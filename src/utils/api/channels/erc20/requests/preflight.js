@@ -19,7 +19,8 @@ import {
   ETH_VERUS_BRIDGE_CONTRACT_PRELAUNCH_RESERVE_TRANSFER_FEE,
   MKR_VETH,
   ETH_VERUS_BRIDGE_CONTRACT_RESERVE_TRANSFER_FEE_WEI,
-  MINIMUM_IMPORT_FEE_WEI
+  MINIMUM_IMPORT_FEE_WEI,
+  GAS_PRICE_MODIFIER
 } from '../../../../constants/web3Constants';
 import { getCurrency, getIdentity } from "../../verusid/callCreators"
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData"
@@ -251,7 +252,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
 
         if (via != null) {
           secondreserveid = finalDestinationCurrencyAddress;
-        }
+        } else secondreserveid = NULL_ETH_ADDRESS;
 
         if (importToSource) {
           destinationcurrency = finalDestinationCurrencyAddress;
@@ -271,8 +272,8 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
 
     const baseGasPrice = await Web3Provider.DefaultProvider.getGasPrice();
     const minGasPrice = ethers.BigNumber.from(MINIMUM_GAS_PRICE_WEI_DELEGATOR_CONTRACT);
-    const gasPriceModifier = ethers.BigNumber.from("2");
-    const modifiedGasPrice = baseGasPrice.add(baseGasPrice.div(gasPriceModifier));
+    const gasFeeModifier = ethers.BigNumber.from("4");
+    const modifiedGasPrice = baseGasPrice.add(GAS_PRICE_MODIFIER);
     const gasPrice = modifiedGasPrice.gte(minGasPrice) ? modifiedGasPrice : minGasPrice;
 
     const minimumImportFee = ethers.BigNumber.from(MINIMUM_IMPORT_FEE_WEI)
@@ -364,7 +365,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
     let gasEst =
       coinObj.currency_id !== ETH_CONTRACT_ADDRESS
         ? ethers.BigNumber.from(ERC20_BRIDGE_TRANSFER_GAS_LIMIT)
-        : transferGas.add(transferGas.div(gasPriceModifier));
+        : transferGas.add(transferGas.div(gasFeeModifier));
 
     if (coinObj.currency_id !== ETH_CONTRACT_ADDRESS) {
       const contract = Web3Provider.getContract(coinObj.currency_id).connect(signer);
@@ -374,7 +375,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
         coinsToUnits(satsToCoins(BigNumber(satoshis)), coinObj.decimals).toString(),
         { from: fromAddress, gasLimit: INITIAL_GAS_LIMIT, gasPrice: gasPrice },
       ))
-      approvalGasFee = approvalGasFee.add(approvalGasFee.div(gasPriceModifier));
+      approvalGasFee = approvalGasFee.add(approvalGasFee.div(gasFeeModifier));
       gasEst = gasEst.add(approvalGasFee)
     }
 
