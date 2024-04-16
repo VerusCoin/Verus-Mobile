@@ -1,4 +1,5 @@
 apply plugin: "com.android.application"
+apply plugin: "kotlin-android"
 
 import com.android.build.OutputFile
 
@@ -292,6 +293,9 @@ dependencies {
     //noinspection GradleDynamicVersion
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
     implementation "com.facebook.react:react-native:+"  // From node_modules
+
+    implementation project(':react-native-verus-light-client')
+
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
       exclude group:'com.facebook.fbjni'
     }
