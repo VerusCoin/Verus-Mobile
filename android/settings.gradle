@@ -5,9 +5,6 @@ apply from: file("../node_modules/@react-native-community/cli-platform-android/n
 
 include ':app'
 
-include ':react-native-verus-light-client'
-project(':react-native-verus-light-client').projectDir = new File('../node_modules/react-native-verus-light-client/android')
-
 includeBuild('../node_modules/react-native-gradle-plugin')
 if (settings.hasProperty("newArchEnabled") && settings.newArchEnabled == "true") {
     include(":ReactAndroid")
