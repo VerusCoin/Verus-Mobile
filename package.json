@@ -100,7 +100,7 @@
     "react-native-udp": "4.1.5",
     "react-native-url-polyfill": "1.3.0",
     "react-native-vector-icons": "git+https://github.com/michaeltout/react-native-vector-icons.git",
-    "react-native-verus-light-client": "git+https://github.com/who-biz/react-native-verus-light-client.git",
+    "react-native-verus-light-client": "git+https://github.com/who-biz/react-native-verus-light-client.git#android-development-backup",
     "react-redux": "8.0.2",
     "readable-stream": "1.0.33",
     "redux": "3.7.2",
