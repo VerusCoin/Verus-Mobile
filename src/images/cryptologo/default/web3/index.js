@@ -38,6 +38,10 @@ import CRV_DARK from './crv/crv_dark.svg'
 import MKR_DARK from './mkr/mkr_dark.svg'
 import SUSHI_DARK from './sushi/sushi_dark.svg'
 import WBTC_DARK from './wbtc/wbtc_dark.svg'
+import TBTC_LIGHT from './tbtc/tbtc_light.svg'
+import TBTC_DARK from './tbtc/tbtc_dark.svg'
+import EURC_LIGHT from './eurc/eurc_light.svg'
+import EURC_DARK from './eurc/eurc_dark.svg'
 
 export default {
   ETH: { light: ETH_LIGHT, dark: ETH_DARK },
@@ -60,4 +64,6 @@ export default {
   MKR: { light: MKR_LIGHT, dark: MKR_DARK },
   SUSHI: { light: SUSHI_LIGHT, dark: SUSHI_DARK },
   WBTC: { light: WBTC_LIGHT, dark: WBTC_DARK },
+  TBTC: { light: TBTC_LIGHT, dark: TBTC_DARK },
+  EURC: { light: EURC_LIGHT, dark: EURC_DARK },
 }

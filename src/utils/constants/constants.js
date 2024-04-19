@@ -200,3 +200,8 @@ export const I_ADDRESS_VERSION = 102;
 
 // Address blocklist
 export const DEFAULT_ADDRESS_BLOCKLIST_WEBSERVER = 'https://eth.verusbridge.io/exclude.json'
+
+// Password Strength
+export const MIN_PASS_LENGTH = 7
+export const MIN_PASS_SCORE = 65
+export const PASS_SCORE_LIMIT = 100

@@ -144,6 +144,18 @@ export const CoinLogos = {
   LTC: CoinLogoIcons.btc.LTC,
   CCL: CoinLogoIcons.btc.CCL,
 
+  // pbaas protocol
+  ["iHax5qYQGbcMGqJKKrPorpzUBX2oFFXGnY"]: CoinLogoIcons.pbaas.PURE,
+  ["i3f7tSctFkiPpiedY8QR5Tep9p4qDVebDx"]: CoinLogoIcons.pbaas.BRIDGE_VETH,
+  ["i4Xr5TAMrDTD99H69EemhjDxJ4ktNskUtc"]: CoinLogoIcons.pbaas.SWITCH,
+  ["iGBs4DWztRNvNEJBt4mqHszLxfKTNHTkhM"]: CoinLogoIcons.web3.DAI, // DAI on Verus
+  ["iCkKJuJScy4Z6NSDK7Mt42ZAB2NEnAE1o4"]: CoinLogoIcons.web3.MKR, // MKR on Verus
+  ["i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X"]: CoinLogoIcons.web3.ETH, // ETH on Verus
+  ["iS8TfRPfVpKo5FVfSUzfHBQxo9KuzpnqLU"]: CoinLogoIcons.web3.TBTC, // TBTC on Verus
+  ["i61cV2uicKSi1rSMQCBNQeSYC3UAi9GVzd"]: CoinLogoIcons.web3.USDC, // USDC on Verus
+  ["iC5TQFrFXSYLQGkiZ8FYmZHFJzaRF5CYgE"]: CoinLogoIcons.web3.EURC, // EURC on Verus
+  ["iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2"]: CoinLogoIcons.pbaas.VARRR,
+
   // web3 protocol
   BAT: CoinLogoIcons.web3.BAT,
   TST: CoinLogoIcons.web3.ETH,
@@ -171,6 +183,9 @@ export const CoinLogos = {
   MKR: CoinLogoIcons.web3.MKR,
   WBTC: CoinLogoIcons.web3.WBTC,
   ["0xBc2738BA63882891094C99E59a02141Ca1A1C36a"]: CoinLogoIcons.btc.VRSC, // VRSC on Ethereum
+  ["0x18084fbA666a33d37592fA2633fD49a74DD93a88"]: CoinLogoIcons.web3.TBTC, // TBTC
+  ["0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c"]: CoinLogoIcons.web3.EURC, // EURC
+  ["0xE6052Dcc60573561ECef2D9A4C0FEA6d3aC5B9A2"]: CoinLogoIcons.pbaas.BRIDGE_VETH, // BRIDGE.VETH on Ethereum
 
   // fiat "protocol"
   USD: CoinLogoIcons.fiat.USD,
@@ -286,10 +301,12 @@ export const getCoinObj = (coinList, coinId) => {
   })
 }
 
-export const getCoinLogo = (id, proto, theme = 'light') => {  
-  if (CoinLogos[id]) return CoinLogos[id][theme]
+export const getCoinLogo = (id, proto, theme = 'light') => {
+  const _id = id === coinsList.VRSC.currency_id ? "VRSC" : id === coinsList.VRSCTEST.currency_id ? "VRSCTEST" : id;
+
+  if (CoinLogos[_id]) return CoinLogos[_id][theme]
   else if (proto === 'erc20') return CoinLogos.ETH[theme]
-  else return CoinLogoIcons.pbaas.RenderPbaasCurrencyLogo(id)[theme]
+  else return CoinLogoIcons.pbaas.RenderPbaasCurrencyLogo(_id)[theme]
 }
 
 export const getNetworkTxVersion = (networkId) => {

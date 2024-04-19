@@ -83,7 +83,9 @@ const SendCoin = ({ navigation }) => {
         [SEND_MODAL_SHOW_MAPPING_FIELD]: true,
         [SEND_MODAL_SHOW_VIA_FIELD]: false,
         [SEND_MODAL_ADVANCED_FORM]: false,
-        [SEND_MODAL_DISABLED_INPUTS]: {}
+        [SEND_MODAL_DISABLED_INPUTS]: {
+          [SEND_MODAL_MAPPING_FIELD]: activeCoin.proto === 'vrsc'
+        }
       },
     },
     {
