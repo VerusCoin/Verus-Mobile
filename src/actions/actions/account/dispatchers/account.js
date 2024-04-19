@@ -15,6 +15,9 @@ import { DISABLED_CHANNELS } from '../../../../../env/index'
 import store from "../../../../store";
 import { getAddressBlocklistFromServer } from "../../../../utils/api/channels/general/addressBlocklist/getAddressBlocklist";
 
+//import { VerusLightClient} from 'react-native-verus-light-client';
+import { VerusLightClient} from 'react-native-verus';
+
 export const initializeAccountData = async (
   account,
   password,
@@ -25,6 +28,8 @@ export const initializeAccountData = async (
   const accountAuthenticator = await validateLogin(account, password);
 
   if (accountAuthenticator) {
+
+    VerusLightClient.testReactMethod("Testing successfully!!");
     setInitStep(LOADING_ACCOUNT);
     await initServiceStoredDataForUser(account.accountHash);
 

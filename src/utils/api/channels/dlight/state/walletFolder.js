@@ -1,4 +1,5 @@
-import VerusLightClient from 'react-native-verus-light-client'
+//import VerusLightClient from 'react-native-verus-light-client'
+import VerusLightClient from 'react-native-verus'
 
 /**
  * Initializes a wallet for the first time
