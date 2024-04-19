@@ -1,4 +1,6 @@
 rootProject.name = 'verusmobile'
+include ':react-native-verus'
+project(':react-native-verus').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-verus/android')
 //include ':react-native-verus-light-client'
 //project(':react-native-verus-light-client').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-verus-light-client/android')
 include ':react-native-verus'

@@ -1,5 +1,5 @@
 apply plugin: "com.android.application"
-apply plugin: "kotlin-android"
+apply plugin: "org.jetbrains.kotlin.android"
 
 import com.android.build.OutputFile
 
