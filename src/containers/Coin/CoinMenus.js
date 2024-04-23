@@ -196,7 +196,7 @@ class CoinMenus extends Component {
               displayTicker={activeCoin.display_ticker}
             />
           )}
-          {selectedSubWallet != null && <DynamicHeader />}
+          {selectedSubWallet != null && <DynamicHeader switchTab={this.switchTab} />}
           {selectedSubWallet != null && (
             <BottomNavigation
               shifting={false}
