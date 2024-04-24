@@ -207,7 +207,7 @@ class DynamicHeader extends Component {
     }
   }
 
-  _renderCarouselItem({item, index}) {
+  _renderCarouselItem({item, index, alone}) {
     const displayBalance =
       this.props.balances[item.id] != null
         ? this.props.balances[item.id].confirmed
@@ -244,11 +244,11 @@ class DynamicHeader extends Component {
           opacity: this.fadeAnimation,
           width: index == 0 ? (3 * DEVICE_WINDOW_WIDTH) / 4 : DEVICE_WINDOW_WIDTH / 4,
           overflow: "hidden",
-          marginRight: index == 0 ? 16 : 0,
+          marginRight: index == 0 && !alone ? 16 : 0,
           flexDirection: "column",
-          alignItems: "flex-start"
+          alignItems: "flex-start",
         }}>
-        {index == 0 && (
+        {index == 0 && !alone && (
           <Button
             icon="format-list-bulleted"
             mode="text"
@@ -534,12 +534,13 @@ class DynamicHeader extends Component {
                 alignItems: 'flex-end',
                 paddingBottom: 16,
                 width: '100%',
-                paddingLeft: 48
+                paddingLeft: this.state.carouselItems.length === 1 ? 0 : 48
               }}>
               {this.state.loadingCarouselItems ? null : this.state.carouselItems.slice(0, 2).map((x, index) => {
                 return this._renderCarouselItem({
                   item: this.state.carouselItems[index],
-                  index
+                  index,
+                  alone: this.state.carouselItems.length === 1,
                 })
               })}
             </View>
