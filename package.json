@@ -1,6 +1,6 @@
 {
   "name": "verusmobile",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "private": true,
   "scripts": {
     "postinstall": "./node_modules/.bin/rn-nodeify --hack --install --yarn && npx jetify",
@@ -91,7 +91,6 @@
     "react-native-safe-area-context": "3.2.0",
     "react-native-screens": "2.9.0",
     "react-native-share": "1.2.1",
-    "react-native-snap-carousel": "3.9.1",
     "react-native-svg": "9.13.6",
     "react-native-svg-transformer": "0.14.3",
     "react-native-tab-view": "2.x",
@@ -118,7 +117,7 @@
     "uuid": "8.0.0",
     "version_compare": "0.0.3",
     "verus-pay-utils": "git+https://github.com/michaeltout/verus-pay-utils.git",
-    "verus-typescript-primitives": "https://github.com/VerusCoin/verus-typescript-primitives.git",
+    "verus-typescript-primitives": "git+https://github.com/VerusCoin/verus-typescript-primitives.git",
     "verus-zkedid-utils": "git+https://github.com/michaeltout/verus-zkedid-utils.git",
     "verusd-rpc-ts-client": "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git",
     "verusid-ts-client": "git+https://github.com/VerusCoin/verusid-ts-client.git",
