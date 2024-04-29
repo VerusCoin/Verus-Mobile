@@ -130,6 +130,21 @@ def reactNativeArchitectures() {
     return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 }
 
+buildscript {
+    repositories {
+        gradlePluginPortal()
+        // mavenCentral() include if you need plugins from other repositories
+        // google() include if you need plugins from other repositories
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10"
+        // other plugin dependencies...
+    }
+}
+
+apply plugin: 'org.jetbrains.kotlin.android'
+
 android {
    ndkVersion rootProject.ext.ndkVersion
 
