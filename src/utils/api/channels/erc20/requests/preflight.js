@@ -20,7 +20,9 @@ import {
   MKR_VETH,
   ETH_VERUS_BRIDGE_CONTRACT_RESERVE_TRANSFER_FEE_WEI,
   MINIMUM_IMPORT_FEE_WEI,
-  GAS_PRICE_MODIFIER
+  GAS_PRICE_MODIFIER,
+  DAI_CONTRACT_ADDRESS,
+  DAI_BRIDGE_TRANSFER_GAS_LIMIT
 } from '../../../../constants/web3Constants';
 import { getCurrency, getIdentity } from "../../verusid/callCreators"
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData"
@@ -364,7 +366,12 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
 
     let gasEst =
       coinObj.currency_id !== ETH_CONTRACT_ADDRESS
-        ? ethers.BigNumber.from(ERC20_BRIDGE_TRANSFER_GAS_LIMIT)
+        ? ethers.BigNumber.from(
+            coinObj.currency_id.toLowerCase() === DAI_CONTRACT_ADDRESS.toLowerCase() ? 
+              DAI_BRIDGE_TRANSFER_GAS_LIMIT 
+              : 
+              ERC20_BRIDGE_TRANSFER_GAS_LIMIT
+            )
         : transferGas.add(transferGas.div(gasFeeModifier));
 
     if (coinObj.currency_id !== ETH_CONTRACT_ADDRESS) {
