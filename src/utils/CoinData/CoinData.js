@@ -146,6 +146,7 @@ export const CoinLogos = {
 
   // pbaas protocol
   ["iHax5qYQGbcMGqJKKrPorpzUBX2oFFXGnY"]: CoinLogoIcons.pbaas.PURE,
+  ["i9kVWKU2VwARALpbXn4RS9zvrhvNRaUibb"]: CoinLogoIcons.pbaas.KAIJU,
   ["i3f7tSctFkiPpiedY8QR5Tep9p4qDVebDx"]: CoinLogoIcons.pbaas.BRIDGE_VETH,
   ["i4Xr5TAMrDTD99H69EemhjDxJ4ktNskUtc"]: CoinLogoIcons.pbaas.SWITCH,
   ["iGBs4DWztRNvNEJBt4mqHszLxfKTNHTkhM"]: CoinLogoIcons.web3.DAI, // DAI on Verus

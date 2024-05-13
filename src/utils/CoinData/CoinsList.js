@@ -291,8 +291,28 @@ export const coinsList = {
     decimals: 8,
     seconds_per_block: 60,
     default_app: "wallet",
-    apps: VERUS_APPS,
-    website: 'https://verus.io'
+    apps: VERUS_APPS
+  },
+  ["i9kVWKU2VwARALpbXn4RS9zvrhvNRaUibb"]: {
+    pbaas_options: 41,
+    system_options: 264,
+    id: "i9kVWKU2VwARALpbXn4RS9zvrhvNRaUibb",
+    currency_id: "i9kVWKU2VwARALpbXn4RS9zvrhvNRaUibb",
+    system_id: "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV",
+    launch_system_id: "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV",
+    bitgojs_network_key: "verus",
+    display_ticker: "Kaiju",
+    display_name: "Kaiju",
+    alt_names: [],
+    theme_color: "#030a17",
+    compatible_channels: [VERUSID, VRPC],
+    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
+    proto: "vrsc",
+    vrpc_endpoints: ["https://api.verus.services"],
+    decimals: 8,
+    seconds_per_block: 60,
+    default_app: "wallet",
+    apps: VERUS_APPS
   },
   ["i4Xr5TAMrDTD99H69EemhjDxJ4ktNskUtc"]: {
     pbaas_options: 33,
@@ -313,8 +333,7 @@ export const coinsList = {
     decimals: 8,
     seconds_per_block: 60,
     default_app: "wallet",
-    apps: VERUS_APPS,
-    website: 'https://verus.io'
+    apps: VERUS_APPS
   },
   ["iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2"]: {
     pbaas_options: 268,
