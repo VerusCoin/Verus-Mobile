@@ -34,6 +34,20 @@ THIS IS EXPERIMENTAL SOFTWARE AND IT IS PROVIDED "AS IS" AND ANY EXPRESSED OR IM
 
 # Build Instructions
 
+## Android (on Ubuntu)
+
+0. Clone GitHub repository, and `cd` into it
+
+1. Install Android Studio (Android SDK 34)
+
+2. Install `openjdk-17-jdk` package
+
+3. Install `nvm` and run `nvm use 18.14`
+
+4. Enable corepack with `corepack enable` for access to `yarn` commands
+
+5. Run `yarn install` then `yarn android`
+
 ## iOS (on macOS)
 
 0. Clone the GitHub repository and cd into it with a terminal window
