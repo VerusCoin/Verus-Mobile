@@ -28,6 +28,7 @@ import { primitives } from "verusid-ts-client"
 import { I_ADDRESS_VERSION, R_ADDRESS_VERSION } from "../../../utils/constants/constants"
 import { coinsList } from "../../../utils/CoinData/CoinsList"
 import { fromBase58Check } from "verus-typescript-primitives"
+import selectNetworkName from "../../../selectors/networkName"
 
 class ReceiveCoin extends Component {
   constructor(props) {
@@ -317,6 +318,13 @@ class ReceiveCoin extends Component {
     }
   }
 
+  networksInfoAlert = () => {
+    createAlert(
+      "Supported Blockchain Networks", 
+      "VerusPay invoices can support payment on more than one blockchain network. The QR invoice generated with this form will support payments on any networks listed here."
+    )
+  }
+
   validateFormData = (addressIndex) => {
     this.setState({
       errors: {selectedCoin: null, amount: null, addresses: null, memo: null },
@@ -408,6 +416,7 @@ const mapStateToProps = (state) => {
     displayCurrency: state.settings.generalWalletSettings.displayCurrency || USD,
     addresses: selectAddresses(state),
     subWallet: state.coinMenus.activeSubWallets[chainTicker],
+    networkName: selectNetworkName(state),
     generalWalletSettings: state.settings.generalWalletSettings
   }
 };

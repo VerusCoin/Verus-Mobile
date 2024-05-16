@@ -312,6 +312,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         via,
         source,
         address.getAddressString(),
+        preconvert
       );
     }
 
@@ -384,7 +385,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
        */
       const transDest = outputInfo.params[0].data;
 
-      if (ethBridgeDelegatorActive) {
+      if (ethBridgeDelegatorActive || (exportto !== "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X" && exportto !== "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm")) {
         if (!transDest.transfer_destination.isGateway()) throw new Error("Expected gateway output");
         if (transDest.transfer_destination.gateway_id !== exportto) throw new Error("Expected gateway_id to match exportto");
         if (transDest.transfer_destination.gateway_code !== "i3UXS5QPRQGNRDDqVnyWTnmFCTHDbzmsYk") throw new Error("Expected null gateway_code");
@@ -447,14 +448,17 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     const utxoList = []
 
     utxosRes.result.forEach((inputUtxo) => {
-      if (inputUtxo.isspendable) {
+      if (inputUtxo.isspendable && 
+        (inputUtxo.satoshis != 0 || 
+          (inputUtxo.currencyvalues != null && Object.keys(inputUtxo.currencyvalues).includes(currency))
+        )) {
         const _script = Buffer.from(inputUtxo.script, 'hex')
         const _value = inputUtxo.satoshis
-  
+
         try {
           unpackOutput({ value: _value, script: _script }, systemId, true)
           utxoList.push(inputUtxo)
-        } catch(e) {
+        } catch (e) {
           console.warn(e.message)
         }
       }
@@ -503,6 +507,14 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       if (key !== currency && key !== feecurrency && value.isGreaterThan(0)) {
         throw new Error("Can only spend either fee currency or sent currency.")
       } 
+    })
+
+    Object.keys(validation.fees).forEach((key) => {
+      const value = BigNumber(validation.fees[key]);
+
+      if (((feecurrency != null && key !== feecurrency) || (feecurrency == null && key !== systemId)) && value.isGreaterThan(0)) {
+        throw new Error("Can only spend fee in fee currency (if specified) or system currency.")
+      }
     })
 
     const preflightTx = Transaction.fromHex(fundRes.result.hex, networks.verus);

@@ -260,6 +260,7 @@ function ConvertOrCrossChainSendConfirm({
                 ? '2-10 minutes'
                 : '1-5 minutes',
         numLines: 100,
+        condition: preconvert != true
       },
       {
         key: 'Preconvert',

@@ -24,6 +24,7 @@ import TransactionLogos from './transactions/index'
 import VerusPayLogo from './verusPay.svg'
 import VerusLogo from './VerusLogo.svg'
 import VerusIdLogo from './VerusIdLogo.svg'
+import VerusPayTextLogo from './VerusPayTextLogo.svg'
 import AddCoinLogo from './coinAdd.svg'
 
 import EncryptLocally from './EncryptLocally.svg'
@@ -78,7 +79,8 @@ export {
   VerusIdWallet,
   Revoke,
   Recover,
-  Coins
+  Coins,
+  VerusPayTextLogo
 };
 
 export default Open;
