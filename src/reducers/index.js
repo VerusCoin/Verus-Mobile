@@ -4,6 +4,7 @@ import { coins } from './coins';
 import { ledger } from './ledger';
 import { settings } from './settings';
 import { personal } from './personal';
+import { attestation } from './attestations';
 import { services } from './services';
 import { electrum } from './cache/electrum';
 import { headers } from './cache/headers';
@@ -71,5 +72,6 @@ export default combineReducers({
   sendModal,
   loadingModal,
   secureLoading,
-  deeplink
+  deeplink,
+  attestation
 });

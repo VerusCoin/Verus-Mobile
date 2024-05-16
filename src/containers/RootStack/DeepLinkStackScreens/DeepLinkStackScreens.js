@@ -7,6 +7,7 @@ import LoginRequestComplete from '../../DeepLink/LoginRequestComplete/LoginReque
 import InvoicePaymentConfiguration from '../../DeepLink/InvoicePaymentConfiguration/InvoicePaymentConfiguration';
 import PersonalSelectData from '../../DeepLink/PersonalSelectData/PersonalSelectData';
 import ProfileStackScreens from '../ProfileStackScreens/ProfileStackScreens';
+import LoginReceiveAttestation from '../../DeepLink/LoginReceiveAttestation/LoginReceiveAttestation';
 const DeepLinkStack = createStackNavigator();
 
 const DeepLinkStackScreens = props => {
@@ -56,6 +57,14 @@ const DeepLinkStackScreens = props => {
         name="ProfileStackScreens"
         component={ProfileStackScreens}
         options={{ headerShown: false }}
+      />
+      <DeepLinkStack.Screen
+        name="LoginReceiveAttestation"
+        component={LoginReceiveAttestation}
+        options={{
+          headerRight: () => null,
+          title: "Receive Attestation"
+        }}
       />
     </DeepLinkStack.Navigator>
   );
