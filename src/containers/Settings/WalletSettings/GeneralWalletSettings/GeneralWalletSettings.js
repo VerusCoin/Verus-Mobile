@@ -127,6 +127,7 @@ const WalletSettings = props => {
             : settings.addressBlocklistDefinition,
         addressBlocklist:
           settings.addressBlocklist == null ? [] : settings.addressBlocklist,
+        vrpcOverrides: settings.vrpcOverrides == null ? {} : settings.vrpcOverrides,
       };
       const res = await saveGeneralSettings(stateToSave);
       dispatch(res);

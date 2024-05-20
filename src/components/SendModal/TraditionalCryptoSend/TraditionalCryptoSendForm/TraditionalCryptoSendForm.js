@@ -14,7 +14,7 @@ import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import { useEffect } from "react";
 import { CoinDirectory } from "../../../../utils/CoinData/CoinDirectory";
-import selectAddressBlocklist from "../../../../selectors/settings";
+import { selectAddressBlocklist } from "../../../../selectors/settings";
 import { addressIsBlocked } from "../../../../utils/addressBlocklist";
 
 const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {

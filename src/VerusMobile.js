@@ -107,6 +107,10 @@ class VerusMobile extends React.Component {
     //version)
     clearCachedVersions()
     .then(async () => {
+      const settingsAction = await initSettings();
+      this.props.dispatch(settingsAction);
+      CoinDirectory.setVrpcOverrides(settingsAction.settings.generalWalletSettings.vrpcOverrides);
+
       await clearCachedVrpcResponses()
 
       const usedCoins = await purgeUnusedCoins()
@@ -126,7 +130,6 @@ class VerusMobile extends React.Component {
       
       let promiseArr = [
         fetchUsers(),
-        initSettings(),
         initNotifications(),
         fetchActiveCoins(),
       ];

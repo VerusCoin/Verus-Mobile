@@ -50,7 +50,7 @@ import { ETH_CONTRACT_ADDRESS, VETH } from "../../../../utils/constants/web3Cons
 import { preflightConvertOrCrossChain } from "../../../../utils/api/routers/preflightConvertOrCrossChain";
 import { getIdentity } from "../../../../utils/api/routers/getIdentity";
 import { addressIsBlocked } from "../../../../utils/addressBlocklist";
-import selectAddressBlocklist from "../../../../selectors/settings";
+import { selectAddressBlocklist } from "../../../../selectors/settings";
 import { I_ADDRESS_VERSION, R_ADDRESS_VERSION } from "../../../../utils/constants/constants";
 import { getWeb3ProviderForNetwork } from "../../../../utils/web3/provider";
 

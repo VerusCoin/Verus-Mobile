@@ -1,7 +1,7 @@
 import { electrumServers } from './electrum/servers';
 import Colors from '../../globals/colors'
 import { coinsList } from './CoinsList'
-import { DLIGHT_PRIVATE, ELECTRUM, ERC20, GENERAL, WYRE_SERVICE } from '../constants/intervalConstants';
+import { DLIGHT_PRIVATE, ELECTRUM } from '../constants/intervalConstants';
 
 import { ENABLE_VERUS_IDENTITIES } from '../../../env/index'
 

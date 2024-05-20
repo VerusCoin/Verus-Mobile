@@ -11,6 +11,7 @@ import { getCachedVrpcResponse, getVrpcResponseCacheKey, setCachedVrpcResponse }
 import { ApiRequest } from 'verus-typescript-primitives';
 import { coinsList } from '../CoinData/CoinsList';
 import { Alert } from 'react-native';
+import { CoinDirectory } from '../CoinData/CoinDirectory';
 
 class CachedVerusdRpcInterface extends VerusdRpcInterface {
   static CACHED_REQUESTS = [
@@ -305,8 +306,8 @@ class VrpcInterface {
   }
 
   addDefaultEndpoints = () => {
-    this.initEndpoint(coinsList.VRSC.system_id, coinsList.VRSC.vrpc_endpoints[0]);
-    this.initEndpoint(coinsList.VRSCTEST.system_id, coinsList.VRSCTEST.vrpc_endpoints[0]); 
+    this.initEndpoint(coinsList.VRSC.system_id, CoinDirectory.getVrpcEndpoints("VRSC")[0]);
+    this.initEndpoint(coinsList.VRSCTEST.system_id, CoinDirectory.getVrpcEndpoints("VRSCTEST")[0]); 
   }
 }
 
