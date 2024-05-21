@@ -113,7 +113,7 @@ class WalletSettings extends Component {
             />
           <Divider />
         </TouchableOpacity>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => this._openSettings(ADDRESS_BLOCKLIST)}
         >
             <List.Item
@@ -126,7 +126,7 @@ class WalletSettings extends Component {
               )}
             />
           <Divider />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity
           onPress={() => this._openSettings(VRPC_OVERRIDES)}
         >
