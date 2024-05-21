@@ -15,6 +15,7 @@ import { VerusPayInvoice } from "verus-typescript-primitives";
 import { coinsList } from "../../utils/CoinData/CoinsList";
 import MissingInfoRedirect from "../../components/MissingInfoRedirect/MissingInfoRedirect";
 import AnimatedActivityIndicatorBox from "../../components/AnimatedActivityIndicatorBox";
+import { CONVERSION_DISABLED } from "../../../env/index";
 
 const FundSourceSelectList = (props) => {
   const { coinObjs, allSubWallets, sourceOptions: rawSourceOptions, invoice } = props;
@@ -190,7 +191,7 @@ const FundSourceSelectList = (props) => {
 
         const requiredAmount = inv.details.acceptsAnyAmount() ? BigNumber(0) : BigNumber(amount);
 
-        if (coinObj && balance.isGreaterThan(requiredAmount)) {
+        if (coinObj && balance.isGreaterThan(requiredAmount) && ((conversion && !CONVERSION_DISABLED) || !conversion)) {
           cards.push({
             title: `Pay with ${inv.details.acceptsAnyAmount() ? "any amount" : `${amount} ${coinObj.display_ticker}`} from ${wallet.name}${
               via != null ? ` via ${via}` : ''
