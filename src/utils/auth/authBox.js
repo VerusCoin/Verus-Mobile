@@ -177,3 +177,28 @@ export const requestServiceStoredData = async (service) => {
     }
   }
 };
+
+export const requestAttestationData = async (dataType) => {
+  const state = store.getState()
+
+  if (
+    state.authentication.activeAccount == null
+  ) {
+    throw new Error("You must be signed in to retrieve attestation data");
+  } else if (state.attestation[dataType] == null) {
+    return {}
+  } else {
+    const password = await requestPassword()
+    const data = decryptkey(password, state.attestation[dataType])
+    
+    if (data !== false) {
+      try {
+        return JSON.parse(data)
+      } catch(e) {
+        throw new Error("Unable to parse attestation data")
+      }
+    } else {
+      throw new Error("Unable to decrypt attestation data");
+    }
+  }
+}

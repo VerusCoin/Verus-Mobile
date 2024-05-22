@@ -3,24 +3,25 @@
   use to configure their personal wallet profile. They can then
   take this profile data and submit it to applications that require
   KYC if they want.
-*/  
+*/
 
 import { Component } from "react"
 import { connect } from 'react-redux'
 import { requestPersonalData } from "../../../utils/auth/authBox";
 import { PERSONAL_ATTRIBUTES } from "../../../utils/constants/personal";
 import { PersonalInfoRender } from "./PersonalInfo.render"
+import { primitives } from "verusid-ts-client"
+const { IDENTITYDATA_MIDDLENAME, IDENTITYDATA_FIRSTNAME, IDENTITYDATA_LASTNAME, IDENTITYDATA_DATEOFBIRTH } = primitives;
 
 class PersonalInfo extends Component {
   constructor(props) {
     super(props);
     this.state = {
       attributes: {
-        name: {
-          first: "John",
-          middle: "",
-          last: "Doe"
-        }
+        [IDENTITYDATA_FIRSTNAME.vdxfid]: "John",
+        [IDENTITYDATA_MIDDLENAME.vdxfid]: "",
+        [IDENTITYDATA_LASTNAME.vdxfid]: "Doe",
+        [IDENTITYDATA_DATEOFBIRTH.vdxfid]: {},
       },
       loading: false
     };

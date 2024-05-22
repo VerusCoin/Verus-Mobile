@@ -5,6 +5,10 @@ import DeepLink from '../../DeepLink/DeepLink';
 import LoginRequestIdentity from '../../DeepLink/LoginRequestIdentity/LoginRequestIdentity';
 import LoginRequestComplete from '../../DeepLink/LoginRequestComplete/LoginRequestComplete';
 import InvoicePaymentConfiguration from '../../DeepLink/InvoicePaymentConfiguration/InvoicePaymentConfiguration';
+import PersonalSelectData from '../../DeepLink/PersonalSelectData/PersonalSelectData';
+import ProfileStackScreens from '../ProfileStackScreens/ProfileStackScreens';
+import LoginReceiveAttestation from '../../DeepLink/LoginReceiveAttestation/LoginReceiveAttestation';
+import LoginShareAttestation from '../../DeepLink/LoginShareAttestation/LoginShareAttestation';
 
 const DeepLinkStack = createStackNavigator();
 
@@ -41,6 +45,35 @@ const DeepLinkStackScreens = props => {
         options={{
           headerRight: () => null,
           title: "Configure Payment"
+        }}
+      />
+      <DeepLinkStack.Screen
+        name="PersonalSelectData"
+        component={PersonalSelectData}
+        options={{
+          headerRight: () => null,
+          title: "Personal Data"
+        }}
+      />
+      <DeepLinkStack.Screen
+        name="ProfileStackScreens"
+        component={ProfileStackScreens}
+        options={{ headerShown: false }}
+      />
+      <DeepLinkStack.Screen
+        name="LoginReceiveAttestation"
+        component={LoginReceiveAttestation}
+        options={{
+          headerRight: () => null,
+          title: "Receive Attestation"
+        }}
+      />
+      <DeepLinkStack.Screen
+        name="LoginShareAttestation"
+        component={LoginShareAttestation}
+        options={{
+          headerRight: () => null,
+          title: "Share Attestation data"
         }}
       />
     </DeepLinkStack.Navigator>

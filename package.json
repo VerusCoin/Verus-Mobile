@@ -117,7 +117,7 @@
     "uuid": "8.0.0",
     "version_compare": "0.0.3",
     "verus-pay-utils": "git+https://github.com/michaeltout/verus-pay-utils.git",
-    "verus-typescript-primitives": "git+https://github.com/VerusCoin/verus-typescript-primitives.git",
+    "verus-typescript-primitives": "file:d:/dev/verus-typescript-primitives",
     "verus-zkedid-utils": "git+https://github.com/michaeltout/verus-zkedid-utils.git",
     "verusd-rpc-ts-client": "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git",
     "verusid-ts-client": "git+https://github.com/VerusCoin/verusid-ts-client.git",
@@ -220,8 +220,10 @@
     "@sideway/formula": "3.0.1",
     "@babel/traverse": "7.23.2",
     "@babel/core": "7.21.3",
+    "@bitgo/utxo-lib": "git+https://github.com/VerusCoin/BitGoJS.git#7c754d4a5920198d9fe6827d3e23bd5cf431f264",
     "blake2b-wasm": "https://github.com/michaeltout/blake2b-wasm/",
     "@bitgo/blake2b-wasm": "https://github.com/michaeltout/blake2b-wasm/",
+    "verus-typescript-primitives": "file:d:/dev/verus-typescript-primitives",
     "browserify-sign": "4.2.2"
   },
   "jest": {

@@ -1,0 +1,1 @@
+export const ATTESTATIONS_PROVISIONED = "attestations_provisioned"

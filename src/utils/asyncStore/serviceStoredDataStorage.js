@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SERVICE_STORAGE_INTERNAL_KEY } from "../../../env/index";
-import { VERUSID_SERVICE_ID, WYRE_SERVICE_ID } from "../constants/services";
+import { VERUSID_SERVICE_ID, WYRE_SERVICE_ID, ATTESTATION_SERVICE_ID } from "../constants/services";
 
 export const storeServiceStoredData = (data) => {
   if (typeof data !== "object")

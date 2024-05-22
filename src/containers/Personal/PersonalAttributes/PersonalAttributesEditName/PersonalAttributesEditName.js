@@ -4,17 +4,14 @@ import { modifyPersonalDataForUser } from "../../../../actions/actionDispatchers
 import { PERSONAL_ATTRIBUTES } from "../../../../utils/constants/personal";
 import { provideCustomBackButton } from "../../../../utils/navigation/customBack";
 import { PersonalAttributesEditNameRender } from "./PersonalAttributesEditName.render"
+import { primitives } from "verusid-ts-client"
+const { IDENTITYDATA_PERSONAL_DETAILS, IDENTITYDATA_DATEOFBIRTH} = primitives;
 
 class PersonalAttributesEditName extends Component {
   constructor(props) {
     super(props);
     this.state = {
       attributes: props.route.params.attributes,
-      name: {
-        first: props.route.params.attributes.name ? props.route.params.attributes.name.first : "",
-        middle: props.route.params.attributes.name ? props.route.params.attributes.name.middle : "",
-        last: props.route.params.attributes.name ? props.route.params.attributes.name.last : "",
-      },
       currentTextInputModal: null,
       loading: false,
     };
@@ -33,7 +30,7 @@ class PersonalAttributesEditName extends Component {
   updateName() {
     this.setState({ loading: true }, async () => {
       await modifyPersonalDataForUser(
-        {...this.state.attributes, name: this.state.name},
+        this.state.attributes,
         PERSONAL_ATTRIBUTES,
         this.props.activeAccount.accountHash
       );
