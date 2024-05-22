@@ -2,7 +2,7 @@
   The personal reducer stores data used by services
 */
 
-import { VERUSID_SERVICE_ID, WYRE_SERVICE_ID, PBAAS_PRECONVERT_SERVICE_ID } from "../utils/constants/services";
+import { VERUSID_SERVICE_ID, WYRE_SERVICE_ID, PBAAS_PRECONVERT_SERVICE_ID, ATTESTATION_SERVICE_ID } from "../utils/constants/services";
 import {
   SET_SERVICE_ACCOUNT,
   SIGN_OUT,
@@ -24,7 +24,8 @@ export const services = (
     loading: {
       [WYRE_SERVICE_ID]: false,
       [VERUSID_SERVICE_ID]: false,
-      [PBAAS_PRECONVERT_SERVICE_ID]: false
+      [PBAAS_PRECONVERT_SERVICE_ID]: false,
+      [ATTESTATION_SERVICE_ID]: false
     },
   },
   action,
@@ -94,7 +95,8 @@ export const services = (
         loading: {
           [WYRE_SERVICE_ID]: false,
           [VERUSID_SERVICE_ID]: false,
-          [PBAAS_PRECONVERT_SERVICE_ID]: false
+          [PBAAS_PRECONVERT_SERVICE_ID]: false,
+          [ATTESTATION_SERVICE_ID]: false
         },
       };
     default:

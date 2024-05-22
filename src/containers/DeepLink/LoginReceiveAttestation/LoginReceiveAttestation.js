@@ -131,7 +131,11 @@ class LoginReceiveAttestation extends Component {
         }
 
         const containingData = this.getAttestationData(mmrData.datadescriptors);
-        this.setState({ attestationData: containingData, completeAttestaton: {[loginConsent.getChallengeHash(1).toString('base64')]: dataDescriptorObject} });
+        this.setState({ attestationData: containingData, 
+          completeAttestaton: {[loginConsent.getChallengeHash(1).toString('base64')]:{ name: Object.values(attestationName)[0].objectdata.message, 
+            signer: this.state.signerFqn, 
+            data: dataDescriptorObject}}
+          });
 
       } else {
         createAlert("Error", "Invalid attestation type.");
@@ -146,7 +150,6 @@ class LoginReceiveAttestation extends Component {
     this.setState(
       { loading: true },
       async () => {
-      //  console.log(JSON.stringify(this.state.completeAttestaton, null, 2))
         await modifyAttestationDataForUser(
           this.state.completeAttestaton,
           ATTESTATIONS_PROVISIONED,

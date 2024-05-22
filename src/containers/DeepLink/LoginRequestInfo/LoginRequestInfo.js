@@ -141,6 +141,15 @@ const LoginRequestInfo = props => {
     if (request.agreed) return;
 
     if (request.viewAttestation) {
+      if (!signedIn) return;
+      props.navigation.navigate("LoginShareAttestation",
+        {
+          deeplinkData,
+          fromService: false,
+          cancel: { cancel },
+          onGoBack: (data) => data ? setPermission(data) : () => { },
+          signerFqn
+        });
       return;
     }
     else if (request.attestationToAccept) {

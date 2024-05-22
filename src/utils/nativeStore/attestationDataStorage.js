@@ -63,7 +63,7 @@ export const loadAttestationDataForUser = async (accountHash) => {
 
   if (allAttestationData[accountHash] == null)
     return {
-      attestations: null
+      attestations_provisioned: null
     };
   else return allAttestationData[accountHash];
 };
