@@ -15,7 +15,6 @@ import { VerusPayInvoice } from "verus-typescript-primitives";
 import { coinsList } from "../../utils/CoinData/CoinsList";
 import MissingInfoRedirect from "../../components/MissingInfoRedirect/MissingInfoRedirect";
 import AnimatedActivityIndicatorBox from "../../components/AnimatedActivityIndicatorBox";
-import { CONVERSION_DISABLED } from "../../../env/index";
 
 const FundSourceSelectList = (props) => {
   const { coinObjs, allSubWallets, sourceOptions: rawSourceOptions, invoice } = props;
@@ -181,8 +180,7 @@ const FundSourceSelectList = (props) => {
           amount,
           via,
           network,
-          wallet,
-          conversion
+          wallet
         } = sourceOptions[networkId][optionId];
 
         const balanceLoaded = cryptoBalances[coinObj.id] && cryptoBalances[coinObj.id][wallet.id];
@@ -191,7 +189,7 @@ const FundSourceSelectList = (props) => {
 
         const requiredAmount = inv.details.acceptsAnyAmount() ? BigNumber(0) : BigNumber(amount);
 
-        if (coinObj && balance.isGreaterThan(requiredAmount) && ((conversion && !CONVERSION_DISABLED) || !conversion)) {
+        if (coinObj && balance.isGreaterThan(requiredAmount)) {
           cards.push({
             title: `Pay with ${inv.details.acceptsAnyAmount() ? "any amount" : `${amount} ${coinObj.display_ticker}`} from ${wallet.name}${
               via != null ? ` via ${via}` : ''
