@@ -180,8 +180,7 @@ const FundSourceSelectList = (props) => {
           amount,
           via,
           network,
-          wallet,
-          conversion
+          wallet
         } = sourceOptions[networkId][optionId];
 
         const balanceLoaded = cryptoBalances[coinObj.id] && cryptoBalances[coinObj.id][wallet.id];

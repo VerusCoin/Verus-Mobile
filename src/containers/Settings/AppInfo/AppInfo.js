@@ -21,7 +21,7 @@ import { APP_VERSION } from '../../../../env/index'
 import { CoinLogos } from "../../../utils/CoinData/CoinData";
 import { openUrl } from "../../../utils/linking";
 
-const DISCORD_URL = "https://discord.gg/VRKMP2S"
+const DISCORD_URL = "https://www.verus.io/discord"
 const REDDIT_URL = "https://www.reddit.com/r/VerusCoin/"
 const TWITTER_URL = "https://twitter.com/VerusCoin"
 const PRIVACY_URL = "https://github.com/VerusCoin/Verus-Mobile/blob/master/PRIVACY.txt"

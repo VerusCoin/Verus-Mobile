@@ -25,6 +25,7 @@ import { RenderSquareCoinLogo } from "../../../utils/CoinData/Graphics";
 const GENERAL_WALLET_SETTINGS = "GeneralWalletSettings"
 const COIN_SETTINGS = "CoinSettings"
 const ADDRESS_BLOCKLIST = "AddressBlocklist"
+const VRPC_OVERRIDES = "VrpcOverrides"
 
 class WalletSettings extends Component {
   constructor(props) {
@@ -112,13 +113,27 @@ class WalletSettings extends Component {
             />
           <Divider />
         </TouchableOpacity>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => this._openSettings(ADDRESS_BLOCKLIST)}
         >
             <List.Item
               title={"Address Blocklist"}
               left={(props) => (
                 <List.Icon {...props} icon={"block-helper"} />
+              )}
+              right={(props) => (
+                <List.Icon {...props} icon={"chevron-right"} />
+              )}
+            />
+          <Divider />
+        </TouchableOpacity> */}
+        <TouchableOpacity
+          onPress={() => this._openSettings(VRPC_OVERRIDES)}
+        >
+            <List.Item
+              title={"Custom RPC Servers"}
+              left={(props) => (
+                <List.Icon {...props} icon={"server"} />
               )}
               right={(props) => (
                 <List.Icon {...props} icon={"chevron-right"} />
@@ -139,7 +154,7 @@ class WalletSettings extends Component {
         </TouchableOpacity>
         {electrumCoins.length > 0 && (
           <React.Fragment>
-            <List.Subheader>{"Coin Settings"}</List.Subheader>
+            <List.Subheader>{"Electrum Coin Settings"}</List.Subheader>
             <Divider />
           </React.Fragment>
         )}

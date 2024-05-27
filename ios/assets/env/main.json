@@ -49,5 +49,7 @@
   "CURRENCY_DEFINITION_STORAGE_INTERNAL_KEY": "currencyDefinitions",
   "CONTRACT_DEFINITION_STORAGE_INTERNAL_KEY": "ethereumContractDefinitions",
 
-  "WYRE_ACCESSIBLE": false
+  "WYRE_ACCESSIBLE": false,
+
+  "CONVERSION_DISABLED": false
 }
