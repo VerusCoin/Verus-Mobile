@@ -122,15 +122,17 @@ class _CoinDirectory {
   }
 
   setVrpcOverrides(overrides) {
-    this.vrpcOverrides = overrides;
+    this.vrpcOverrides = overrides ? overrides : {};
   }
 
   getVrpcEndpoints(coinId) {
-    if (this.vrpcOverrides && this.vrpcOverrides.hasOwnProperty(coinId)) {
-      return this.vrpcOverrides[coinId];
-    } else if (this.coins.hasOwnProperty(coinId) && this.coins[coinId].vrpc_endpoints) {
-      return this.coins[coinId].vrpc_endpoints;
-    } else throw new Error("Cannot find VRPC endpoints for " + coinId);
+    const simpleCoinObj = this.getBasicCoinObj(coinId);
+    
+    if (this.vrpcOverrides && this.vrpcOverrides.hasOwnProperty(simpleCoinObj.system_id)) {
+      return this.vrpcOverrides[simpleCoinObj.system_id];
+    } else if (simpleCoinObj && simpleCoinObj.vrpc_endpoints) {
+      return simpleCoinObj.vrpc_endpoints;
+    } else throw new Error("Cannot find VRPC endpoints for " + simpleCoinObj.id);
   }
 
   findSystemCoinObj(id) {

@@ -54,8 +54,8 @@ export const VrpcOverridesRender = function () {
                     <List.Item
                       key={index}
                       title={
-                        this.state.vrpcOverridesSettings.vrpcOverrides && this.state.vrpcOverridesSettings.vrpcOverrides[system.id] ? 
-                          this.state.vrpcOverridesSettings.vrpcOverrides[system.id][0] 
+                        this.state.vrpcOverridesSettings.vrpcOverrides && this.state.vrpcOverridesSettings.vrpcOverrides[system.system_id] ? 
+                          this.state.vrpcOverridesSettings.vrpcOverrides[system.system_id][0] 
                           : 
                           system.vrpc_endpoints[0]
                       }
@@ -66,7 +66,7 @@ export const VrpcOverridesRender = function () {
                       onPress={() =>
                         this.openEditPropertyModal(
                           `Edit RPC Server`,
-                          system.id
+                          system.system_id
                         )
                       }
                     />

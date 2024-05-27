@@ -109,7 +109,8 @@ class VerusMobile extends React.Component {
     .then(async () => {
       const settingsAction = await initSettings();
       this.props.dispatch(settingsAction);
-      CoinDirectory.setVrpcOverrides(settingsAction.settings.generalWalletSettings.vrpcOverrides);
+
+      CoinDirectory.setVrpcOverrides(settingsAction.settings.generalWalletSettings ? settingsAction.settings.generalWalletSettings.vrpcOverrides : {});
 
       await clearCachedVrpcResponses()
 

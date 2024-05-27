@@ -16,9 +16,9 @@ class VrpcOverrides extends Component {
     super();
 
     this.DEFAULT_SYSTEMS = {
-      [coinsList.VRSC.id]: coinsList.VRSC,
-      [coinsList.VRSCTEST.id]: coinsList.VRSCTEST,
-      [coinsList.iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2.id]: coinsList.iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2
+      [coinsList.VRSC.system_id]: coinsList.VRSC,
+      [coinsList.VRSCTEST.system_id]: coinsList.VRSCTEST,
+      [coinsList.iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2.system_id]: coinsList.iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2
     };
 
     this.state = {
@@ -142,7 +142,7 @@ class VrpcOverrides extends Component {
               ...this.state.systems,
               [testResult.result.chainid]: {
                 vrpc_endpoints: [server],
-                id: testResult.result.chainid,
+                system_id: testResult.result.chainid,
                 display_name: testResult.result.chainid
               }
             });
@@ -213,7 +213,7 @@ class VrpcOverrides extends Component {
       if (!systems.hasOwnProperty(systemid)) {
         systems[systemid] = {
           vrpc_endpoints: this.state.vrpcOverridesSettings.vrpcOverrides[systemid],
-          id: systemid,
+          system_id: systemid,
           display_name: systemid
         }
       }
