@@ -32,7 +32,8 @@ export const settings = (state = {
       type: ADDRESS_BLOCKLIST_FROM_WEBSERVER,
       data: null
     },
-    addressBlocklist: []
+    addressBlocklist: [],
+    vrpcOverrides: {} // {[systemId]: [vrpcEndpoint1, vrpcEndpoint2, ...]}
   },
   buySellSettings: {}, //e.g. {user1': {buySellEnabled: true, wyreData: {}}, 'user2: {buySellEnabled: false, wyreData: {}}}
   coinSettings: {}, //e.g. {VRSC: {verificationLvl: 2, verificationLock: false, channels: ['dlight', 'electrum', 'general'], privateAddrs: 100}}

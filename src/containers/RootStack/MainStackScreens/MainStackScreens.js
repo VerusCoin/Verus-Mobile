@@ -16,6 +16,7 @@ import DeleteProfile from '../../Settings/ProfileSettings/DeleteProfile/DeletePr
 import SecureLoading from '../../SecureLoading/SecureLoading'
 import HomeTabScreens from '../HomeTabScreens/HomeTabScreens';
 import AddressBlocklist from '../../Settings/WalletSettings/AddressBlocklist/AddressBlocklist';
+import VrpcOverrides from '../../Settings/WalletSettings/VrpcOverrides/VrpcOverrides';
 
 const MainStack = createStackNavigator();
 
@@ -98,6 +99,14 @@ const MainStackScreens = props => {
           title: "Blocked Addresses",
         }}
       />
+
+      <MainStack.Screen
+        name="VrpcOverrides"
+        component={VrpcOverrides}
+        options={{
+          title: "Custom RPC Servers",
+        }}
+      />  
 
       <MainStack.Screen
         name="CoinSettings"

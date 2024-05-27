@@ -3,7 +3,8 @@ import { isJson } from '../../../../objectManip'
 import axios from 'axios'
 
 export const getAddressBlocklistFromServer = async (source) => {
-  const server = source == null || source.length === 0 ? DEFAULT_ADDRESS_BLOCKLIST_WEBSERVER : source;
+  //const server = source == null || source.length === 0 ? DEFAULT_ADDRESS_BLOCKLIST_WEBSERVER : source;
+  const server = DEFAULT_ADDRESS_BLOCKLIST_WEBSERVER;
 
   const res = await axios.get(server);
 

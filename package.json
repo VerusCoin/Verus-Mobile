@@ -1,6 +1,6 @@
 {
   "name": "verusmobile",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "private": true,
   "scripts": {
     "postinstall": "./node_modules/.bin/rn-nodeify --hack --install --yarn && npx jetify",
@@ -14,7 +14,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@bitgo/utxo-lib": "git+https://github.com/VerusCoin/BitGoJS.git#7c754d4a5920198d9fe6827d3e23bd5cf431f264",
+    "@bitgo/utxo-lib": "git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus",
     "@ethersproject/signing-key": "5.0.5",
     "@react-native-async-storage/async-storage": "1.17.10",
     "@react-native-camera-roll/camera-roll": "5.0.4",
