@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import BigNumber from "bignumber.js";
-import { Alert, View, TouchableWithoutFeedback, Keyboard, FlatList, Animated, TouchableOpacity } from "react-native";
+import { Alert, View, TouchableWithoutFeedback, Keyboard, FlatList, Animated, TouchableOpacity, Dimensions } from "react-native";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { TextInput, Button, Divider, Checkbox, List, Text, IconButton } from "react-native-paper";
 import { useSelector } from 'react-redux';
@@ -55,6 +55,7 @@ import { I_ADDRESS_VERSION, R_ADDRESS_VERSION } from "../../../../utils/constant
 import { getWeb3ProviderForNetwork } from "../../../../utils/web3/provider";
 
 const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
+  const { height } = Dimensions.get('window');
   const sendModal = useSelector(state => state.sendModal);
   const activeUser = useSelector(state => state.authentication.activeAccount);
   const addresses = useSelector(state => selectAddresses(state));
@@ -890,7 +891,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
       const res = await preflightConvertOrCrossChain(coinObj, activeAccount, channel, output)
 
-      setModalHeight(696);
+      setModalHeight(height >= 720 ? 696 : height - 24);
 
       if (res.err) {
         throw new Error(res.result);
