@@ -5,6 +5,7 @@ import Colors from '../../../../globals/colors';
 import { canEnableBiometry } from '../../../../actions/actions/channels/dlight/dispatchers/AlertManager';
 import { Biometrics } from '../../../../images/customIcons';
 import TallButton from '../../../../components/LargerButton';
+import { SMALL_DEVICE_HEGHT } from '../../../../utils/constants/constants';
 
 export default function UseBiometrics({ setUseBiometrics, navigation }) {
   const {height} = Dimensions.get('window');
@@ -29,10 +30,10 @@ export default function UseBiometrics({ setUseBiometrics, navigation }) {
         alignItems: 'center',
         backgroundColor: Colors.secondaryColor
       }}>
-      <Biometrics
+      {height >= SMALL_DEVICE_HEGHT && <Biometrics
         width={180}
-        style={{top: height / 2 - 260, position: 'absolute'}}
-      />
+        style={{ top: height / 2 - 260, position: 'absolute' }}
+      />}
       <View
         style={{
           alignItems: 'center',
