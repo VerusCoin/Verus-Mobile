@@ -17,7 +17,8 @@ import {
   SIGN_OUT,
   OPEN_SEND_COIN_MODAL,
   UPDATE_ACCOUNT_DISABLED_SERVICES,
-  UPDATE_ACCOUNT_TESTNET_OVERRIDES_COMPLETE
+  UPDATE_ACCOUNT_TESTNET_OVERRIDES_COMPLETE,
+  UPDATE_SESSION_KEY
 } from "../utils/constants/storeType";
 import {
   SERVICES_DISABLED_DEFAULT
@@ -67,6 +68,11 @@ export const authentication = (
       return {
         ...state,
         activeAccount: action.activeAccount,
+        sessionKey: action.sessionKey
+      };
+    case UPDATE_SESSION_KEY:
+      return {
+        ...state,
         sessionKey: action.sessionKey
       };
     case SIGN_IN_USER:

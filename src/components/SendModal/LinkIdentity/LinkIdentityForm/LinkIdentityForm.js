@@ -55,6 +55,8 @@ const LinkIdentityForm = (props) => {
 
     const seed = seeds[channel];
 
+    if (!seed) throw new Error("No seed found");
+
     const keyObj = await deriveKeyPair(seed, coinObj, channel);
     const {addresses} = keyObj;
 

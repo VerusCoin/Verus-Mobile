@@ -1,6 +1,6 @@
 import store from "../../../../store"
 import { deletePersonalDataForUser, loadPersonalDataForUser, storePersonalDataForUser } from "../../../../utils/asyncStore/personalDataStorage"
-import { requestPassword } from "../../../../utils/auth/authBox"
+import { requestPassword, requestPersonalData } from "../../../../utils/auth/authBox"
 import { encryptkey } from "../../../../utils/seedCrypt"
 import { setPersonalData } from "../creators/personal"
 
@@ -22,6 +22,24 @@ export const modifyPersonalDataForUser = async (data = {}, dataType, accountHash
   await saveEncryptedPersonalDataForUser(personalData, accountHash)
 
   return data
+}
+
+export const resetPersonalDataEncryptionForUser = async (accountHash, oldPwd) => {
+  let personalData = {...(await loadPersonalDataForUser(accountHash))}
+
+  // Iterate through every key in the personal data object and re-encrypt it with the current password
+  for (let key in personalData) {
+    if (personalData[key] == null) {
+      continue;
+    };
+    
+    const data = await requestPersonalData(key, oldPwd);
+    personalData[key] = await encryptkey(await requestPassword(), JSON.stringify(data))
+  }
+
+  await saveEncryptedPersonalDataForUser(personalData, accountHash)
+
+  return personalData;
 }
 
 export const initPersonalDataForUser = async (accountHash) => {
