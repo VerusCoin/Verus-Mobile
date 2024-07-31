@@ -369,6 +369,9 @@ export const addKeypairs = async (
     const seed = accountSeeds[seedType]
       ? accountSeeds[seedType]
       : accountSeeds[ELECTRUM];
+
+    if (!seed) throw new Error('No seed found for account');
+
     if (
       coinObj.compatible_channels.includes(seedType) &&
       (seedType !== DLIGHT_PRIVATE || accountSeeds[seedType])
