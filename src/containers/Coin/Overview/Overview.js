@@ -212,7 +212,7 @@ class Overview extends Component {
           this.props.activeCoin.proto === ERC20
         ) {
           if (
-            (this.props.activeCoin.testnet &&
+            (!!(this.props.activeCoin.testnet) &&
               VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT != null &&
               subtitle.toLowerCase() === VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT.toLowerCase()) ||
             (!this.props.activeCoin.testnet &&

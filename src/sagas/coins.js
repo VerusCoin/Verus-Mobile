@@ -45,7 +45,7 @@ function* handleFinishSetUserCoins(action) {
                 !allSeenSystems.includes(coin.system_id) &&
                 coin.system_options != null && 
                 (coin.system_options & IS_PBAAS_CHAIN) === IS_PBAAS_CHAIN &&
-                coin.testnet === coinObj.testnet) {
+                !!(coin.testnet) === !!(coinObj.testnet)) {
                   allSeenSystems.push(coin.system_id);
             }
           }
