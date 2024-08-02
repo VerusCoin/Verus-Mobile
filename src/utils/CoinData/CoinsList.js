@@ -330,6 +330,27 @@ export const coinsList = {
     apps: VERUS_APPS,
     website: 'https://piratechain.com/'
   },
+  ["iHog9UCTrn95qpUBFCZ7kKz7qWdMA8MQ6N"]: {
+    pbaas_options: 264,
+    system_options: 264,
+    id: "iHog9UCTrn95qpUBFCZ7kKz7qWdMA8MQ6N",
+    currency_id: "iHog9UCTrn95qpUBFCZ7kKz7qWdMA8MQ6N",
+    system_id: "iHog9UCTrn95qpUBFCZ7kKz7qWdMA8MQ6N",
+    launch_system_id: "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV",
+    bitgojs_network_key: "verus",
+    display_ticker: "vDEX",
+    display_name: "vDEX",
+    alt_names: [],
+    theme_color: "#1d1d2c",
+    compatible_channels: [VERUSID, VRPC],
+    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
+    proto: "vrsc",
+    vrpc_endpoints: ["https://api.vdex.to/"],
+    decimals: 8,
+    seconds_per_block: 60,
+    default_app: "wallet",
+    apps: VERUS_APPS
+  },
   ["iD5WRg7jdQM1uuoVHsBCAEKfJCKGs1U3TB"]: {
     pbaas_options: 545,
     id: "iD5WRg7jdQM1uuoVHsBCAEKfJCKGs1U3TB",

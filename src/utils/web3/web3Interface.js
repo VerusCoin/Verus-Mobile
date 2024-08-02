@@ -90,7 +90,7 @@ class Web3Interface {
     for (const key in coinsList) {
       if (
         coinsList[key].proto === ERC20 &&
-        ((coinsList[key].testnet && this.network === 'goerli') ||
+        ((!!coinsList[key].testnet && this.network === 'goerli') ||
           (!coinsList[key].testnet && this.network === 'homestead')) &&
         coinsList[key].currency_id.toLowerCase() === contractAddress.toLowerCase()
       ) {
