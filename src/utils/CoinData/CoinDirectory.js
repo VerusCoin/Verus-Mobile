@@ -42,6 +42,8 @@ class _CoinDirectory {
   updateCoinLists() {
     this.fullCoinList = Object.values(this.coins).map(function(coin) {
       return coin.id;
+    }).filter(x => {
+      return this.coins[x];
     });
     
     this.testCoinList = this.fullCoinList.filter(x => {
@@ -126,6 +128,10 @@ class _CoinDirectory {
   }
 
   getVrpcEndpoints(coinId) {
+    if (this.vrpcOverrides && this.vrpcOverrides.hasOwnProperty(coinId)) {
+      return this.vrpcOverrides[coinId];
+    }
+
     const simpleCoinObj = this.getBasicCoinObj(coinId);
     
     if (this.vrpcOverrides && this.vrpcOverrides.hasOwnProperty(simpleCoinObj.system_id)) {

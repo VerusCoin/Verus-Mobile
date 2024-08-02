@@ -19,7 +19,7 @@ import { coinsList } from '../../../../utils/CoinData/CoinsList';
 import { IS_PBAAS_CHAIN } from '../../../../utils/constants/currencies';
 
 export const activateChainLifecycle = (coinObj, activeCoinsForUser) => {
-  const allSeenSystems = [coinObj.testnet ? coinsList.VRSCTEST.currency_id : coinsList.VRSC.currency_id];
+  const allSeenSystems = [!!(coinObj.testnet) ? coinsList.VRSCTEST.currency_id : coinsList.VRSC.currency_id];
 
   if (coinObj.tags.includes(IS_PBAAS) && activeCoinsForUser != null) {
     for (const coin of activeCoinsForUser) {
@@ -27,7 +27,7 @@ export const activateChainLifecycle = (coinObj, activeCoinsForUser) => {
           !allSeenSystems.includes(coin.system_id) &&
           coin.system_options != null && 
           (coin.system_options & IS_PBAAS_CHAIN) === IS_PBAAS_CHAIN &&
-          coin.testnet === coinObj.testnet) {
+          !!(coin.testnet) === !!(coinObj.testnet)) {
           allSeenSystems.push(coin.system_id);
       }
     }
