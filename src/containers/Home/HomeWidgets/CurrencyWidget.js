@@ -139,7 +139,7 @@ const CurrencyWidget = props => {
              numberOfLines={1}
              style={{fontSize: 16, paddingTop: 8, fontWeight: '500'}}
             >
-              {coinObj.testnet || uniValueDisplay === '-'
+              {!!coinObj.testnet || uniValueDisplay === '-'
                 ? `${
                     currencyBalance == null
                       ? '-'
@@ -153,7 +153,7 @@ const CurrencyWidget = props => {
             >
               {coinObj.testnet && coinObj.proto === 'erc20'
                 ? 'Testnet ERC20 Token'
-                : coinObj.testnet
+                : !!coinObj.testnet
                 ? 'Testnet Currency'
                 : coinObj.pbaas_options &&
                   !coinObj.compatible_channels.includes(GENERAL)
@@ -185,7 +185,7 @@ const CurrencyWidget = props => {
             <Paragraph style={{fontSize: 12}}>
               {coinObj.testnet && coinObj.proto === 'erc20'
                 ? 'Testnet ERC20 Token'
-                : coinObj.testnet
+                : !!coinObj.testnet
                 ? 'Testnet Currency'
                 : coinObj.pbaas_options &&
                   !coinObj.compatible_channels.includes(GENERAL)

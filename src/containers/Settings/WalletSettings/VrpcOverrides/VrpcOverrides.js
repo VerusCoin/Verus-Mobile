@@ -18,7 +18,8 @@ class VrpcOverrides extends Component {
     this.DEFAULT_SYSTEMS = {
       [coinsList.VRSC.system_id]: coinsList.VRSC,
       [coinsList.VRSCTEST.system_id]: coinsList.VRSCTEST,
-      [coinsList.iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2.system_id]: coinsList.iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2
+      [coinsList.iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2.system_id]: coinsList.iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2,
+      [coinsList.iHog9UCTrn95qpUBFCZ7kKz7qWdMA8MQ6N.system_id]: coinsList.iHog9UCTrn95qpUBFCZ7kKz7qWdMA8MQ6N,
     };
 
     this.state = {
