@@ -169,7 +169,10 @@ class ResetPwd extends Component {
         .then(async (res) => {
           if (res) {
             if (this.props.activeAccount) {
-              await removeBiometricPassword(this.props.activeAccount.accountHash)
+              if (this.props.activeAccount.biometry) {
+                await removeBiometricPassword(this.props.activeAccount.accountHash)
+              }
+              
               await setBiometry(this.props.activeAccount.accountHash, false)
               return (resetPwd(this.props.activeAccount.accountHash, this.state.newPwd, this.state.oldPwd))
             } else {
