@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import { Component } from "react"
-import { Alert } from "react-native";
+import { Alert, Dimensions } from "react-native";
 import { connect } from 'react-redux'
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import { preflightConversion } from "../../../../utils/api/routers/preflightConversion";
@@ -57,6 +57,8 @@ class WithdrawSendForm extends Component {
         open: false,
       }
     };
+
+    this.height = Dimensions.get('window').height;
   }
 
   formHasError = () => {
@@ -259,7 +261,7 @@ class WithdrawSendForm extends Component {
 
       if (res.err) throw new Error(res.result);
 
-      this.props.setModalHeight(696);
+      this.props.setModalHeight(this.height >= 720 ? 696 : this.height - 24);
 
       this.props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
         coinObj,

@@ -76,7 +76,8 @@ import {
   ADD_BAD_SERVER,
   SET_SECURE_LOADING_SUCCESS_DATA,
   SET_SECURE_LOADING_ERROR_DATA,
-  CLEAR_SECURE_LOADING_DATA
+  CLEAR_SECURE_LOADING_DATA,
+  UPDATE_SESSION_KEY
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -104,6 +105,14 @@ export const authenticateUser = (account, sessionKey) => {
   return {
     type: AUTHENTICATE_USER,
     activeAccount: account,
+    sessionKey: sessionKey
+  }
+}
+
+//Reducer Name: authentication
+export const updateSessionKey = (sessionKey) => {
+  return {
+    type: UPDATE_SESSION_KEY,
     sessionKey: sessionKey
   }
 }

@@ -10,9 +10,12 @@ import { hashAccountId } from "../crypto/hash";
 import { CHANNELS_NULL_TEMPLATE, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from "../constants/intervalConstants";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import store from '../../store';
-import { setAccounts } from '../../actions/actionCreators';
+import { setAccounts, updateSessionKey } from '../../actions/actionCreators';
 import { USER_DATA_STORAGE_INTERNAL_KEY } from '../../../env/index';
 import { WYRE_SERVICE_ID } from '../constants/services';
+import { resetPersonalDataEncryptionForUser, resetServicesStoredEncryptionForUser } from '../../actions/actionDispatchers';
+import { removeSessionPassword, setSessionPassword } from '../keychain/keychain';
+import { initSession } from '../auth/authBox';
 
 //Set storage to hold encrypted user data
 export const storeUser = (authData, users) => {
@@ -136,79 +139,67 @@ export const deleteUser = (accountHash) => {
   });
 };
 
-export const resetUserPwd = (userID, newPwd, oldPwd) => {
-  return new Promise((resolve, reject) => {
-    AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
-      .then(async res => {
-        let _users = res ? JSON.parse(res).users : [];
-        if(userID !== null) {
-          let userIndex = _users.findIndex(n => n.id === userID);
+export const resetUserPwd = async (accountHash, newPwd, oldPwd) => {
+  try {
+    const res = await AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY);
+    let users = res ? JSON.parse(res).users : [];
+    let userIndex = users.findIndex(n => n.accountHash === accountHash);
 
-          if (userIndex > -1) {
-            const _oldEncryptedKeys = _users[userIndex].encryptedKeys
-            const { dlight_private, electrum, wyre_service } = _oldEncryptedKeys
+    if (accountHash === null || userIndex === -1) {
+      createAlert("Error", `User with ID ${accountHash} not found`);
+      return false;
+    }
 
-            const _decryptedElectrum = electrum != null ? decryptkey(oldPwd, _oldEncryptedKeys.electrum) : null
-            const _decryptedDlight = dlight_private != null ? decryptkey(oldPwd, _oldEncryptedKeys.dlight_private) : null
-            const _decryptedWyre = wyre_service != null ? decryptkey(oldPwd, _oldEncryptedKeys.wyre_service) : null
+    const { dlight_private, electrum, wyre_service } = users[userIndex].encryptedKeys;
+    const decryptedKeys = {
+      electrum: electrum ? decryptkey(oldPwd, electrum) : null,
+      dlight_private: dlight_private ? decryptkey(oldPwd, dlight_private) : null,
+      wyre_service: wyre_service ? decryptkey(oldPwd, wyre_service) : null
+    };
 
-            if ((electrum == null || _decryptedElectrum) && (dlight_private == null || _decryptedDlight)) {
-              const _newElectrumKey = electrum ? await encryptkey(newPwd, _decryptedElectrum) : null
-              const _newDlightKey = dlight_private ? await encryptkey(newPwd, _decryptedDlight) : null
-              const _newWyreKey = wyre_service ? await encryptkey(newPwd, _decryptedWyre) : null
+    if ((electrum && !decryptedKeys.electrum) || (dlight_private && !decryptedKeys.dlight_private)) {
+      createAlert("Authentication Error", "Incorrect password");
+      return false;
+    }
 
-              _users[userIndex].encryptedKeys = {
-                [ELECTRUM]: _newElectrumKey,
-                [DLIGHT_PRIVATE]: _newDlightKey,
-                [WYRE_SERVICE]: _newWyreKey
-              }
-              
-              let _toStore = {users: _users}
-              let promiseArr = [AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(_toStore)), _users]
-              return Promise.all(promiseArr)
-            } else {
-              createAlert("Authentication Error", "incorrect password")
-              return "error";
-            }
+    users[userIndex].encryptedKeys = {
+      [ELECTRUM]: electrum ? await encryptkey(newPwd, decryptedKeys.electrum) : null,
+      [DLIGHT_PRIVATE]: dlight_private ? await encryptkey(newPwd, decryptedKeys.dlight_private) : null,
+      [WYRE_SERVICE]: wyre_service ? await encryptkey(newPwd, decryptedKeys.wyre_service) : null
+    };
 
-          } else {
-            createAlert("Error", "User with ID " + userID + " not found")
-            return "error"
-          }
-        } else {
-          createAlert("Error", "UserID is null")
-          return "error"
-        }
-      })
-      .then((res) => {
-        if (res === "error") {
-          resolve(false);
-        } else if (Array.isArray(res)) {
-          let _users = res.pop()
-          resolve(_users);
-        }
-      })
-      .catch(err => {
-        reject(err)
-        console.warn(err)
-      });
-  });
+    // Reset the session password
+    await removeSessionPassword();
+    const sessionKey = await initSession(newPwd);
+    store.dispatch(updateSessionKey(sessionKey));
+
+    await resetPersonalDataEncryptionForUser(accountHash, oldPwd);
+    
+    await resetServicesStoredEncryptionForUser(accountHash, oldPwd);
+    
+    await AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify({users}));
+  
+    return users;
+  } catch (err) {
+    console.warn(err);
+    return false;
+  }
 };
 
-const setUserSetting = (userID, settingKey, setting) => {
+const setUserSetting = (accountHash, settingKey, setting) => {
   return new Promise((resolve, reject) => {
     AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(async (res) => {
         let _users = res ? JSON.parse(res).users : [];
-        if(userID !== null) {
-          let userIndex = _users.findIndex(n => n.id === userID);
+        if(accountHash !== null) {
+          let userIndex = _users.findIndex(n => n.accountHash === accountHash);
 
           if (userIndex > -1) {
             _users[userIndex][settingKey] = setting
             await AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify({users: _users}))
             resolve(_users)
           } else {
-            throw new Error("User with ID " + userID + " not found")
+            throw new Error("User with hash " + accountHash + " not found")
           }
         } else {
           throw new Error("UserID is null")
@@ -221,20 +212,20 @@ const setUserSetting = (userID, settingKey, setting) => {
   });
 };
 
-export const setUserBiometry = (userID, biometry) => {
-  return setUserSetting(userID, "biometry", biometry)
+export const setUserBiometry = (accountHash, biometry) => {
+  return setUserSetting(accountHash, "biometry", biometry)
 };
 
-export const setUserKeyDerivationVersion = (userID, keyDerivationVersion) => {
-  return setUserSetting(userID, "keyDerivationVersion", keyDerivationVersion)
+export const setUserKeyDerivationVersion = (accountHash, keyDerivationVersion) => {
+  return setUserSetting(accountHash, "keyDerivationVersion", keyDerivationVersion)
 };
 
-export const setUserDisabledServices = (userID, disabledServices) => {
-  return setUserSetting(userID, "disabledServices", disabledServices)
+export const setUserDisabledServices = (accountHash, disabledServices) => {
+  return setUserSetting(accountHash, "disabledServices", disabledServices)
 };
 
-export const setUserTestnetOverrides = (userID, testnetOverrides) => {
-  return setUserSetting(userID, "testnetOverrides", testnetOverrides)
+export const setUserTestnetOverrides = (accountHash, testnetOverrides) => {
+  return setUserSetting(accountHash, "testnetOverrides", testnetOverrides)
 }
 
 //TODO: Stop using wifKey to encrypt payment methods before using them in production

@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {SafeAreaView, ScrollView, TouchableOpacity, View} from 'react-native';
+import {Dimensions, SafeAreaView, ScrollView, TouchableOpacity, View} from 'react-native';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
 import { Button, Divider, List, Portal, Text } from 'react-native-paper';
@@ -17,6 +17,7 @@ import { createAlert, resolveAlert } from '../../../actions/actions/alert/dispat
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import { addCoin, addKeypairs, setUserCoins } from '../../../actions/actionCreators';
 import { refreshActiveChainLifecycles } from '../../../actions/actions/intervals/dispatchers/lifecycleManager';
+import { SMALL_DEVICE_HEGHT } from '../../../utils/constants/constants';
 
 const LoginRequestInfo = props => {
   const { deeplinkData, sigtime, cancel, signerFqn } = props
@@ -29,6 +30,7 @@ const LoginRequestInfo = props => {
   const signedIn = useSelector(state => state.authentication.signedIn)
   const passthrough = useSelector((state) => state.deeplink.passthrough);
   const sendModalType = useSelector(state => state.sendModal.type)
+  const { height } = Dimensions.get('window');
 
   const dispatch = useDispatch()
 
@@ -261,7 +263,7 @@ const LoginRequestInfo = props => {
       <ScrollView
         style={Styles.fullWidth}
         contentContainerStyle={Styles.focalCenter}>
-        <VerusIdLogo width={'55%'} height={'10%'} />
+        {height >= SMALL_DEVICE_HEGHT && <VerusIdLogo width={'55%'} height={'10%'} />}
         <View style={Styles.wideBlock}>
           <Text style={{fontSize: 20, textAlign: 'center'}}>
             {mainLoginMessage}

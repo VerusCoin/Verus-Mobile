@@ -325,7 +325,7 @@ class DynamicHeader extends Component {
                         : ''
                       }`}
                   </Paragraph>
-                  <Paragraph style={{ fontSize: 16, color: Colors.secondaryColor }} numberOfLines={1}>
+                  <Paragraph style={{ fontSize: 16, color: Colors.secondaryColor, alignSelf: "center" }} numberOfLines={1}>
                     {this.props.balanceErrors[item.id]
                       ? ""
                       : ` ${this.props.displayTicker}`}
@@ -368,13 +368,15 @@ class DynamicHeader extends Component {
                     style={{
                       color: 'white',
                       fontSize: 12,
-                      fontWeight: "bold"
+                      fontWeight: "bold",
                     }}>{`${this.getNetworkName(item)}`}</Text>
                   <Text
                     numberOfLines={1}
                     style={{
                       color: 'white',
                       fontSize: 12,
+                      alignSelf: "center",
+                      paddingTop: 1
                     }}>{` Network`}</Text>
                 </View>
               </View>

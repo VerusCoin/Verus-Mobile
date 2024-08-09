@@ -14,11 +14,13 @@ import {
   View,
   TouchableWithoutFeedback,
   Keyboard,
+  Dimensions,
 } from "react-native";
 import { TextInput, Button, Paragraph } from "react-native-paper";
 import Styles from "../../../../styles";
 
 const ProvisionIdentityForm = (props) => {
+  const { height } = Dimensions.get("window");
   const sendModal = useSelector((state) => state.sendModal);
   const chainTicker = sendModal.coinObj.id;
   const addresses = useSelector(state =>
@@ -171,9 +173,8 @@ const ProvisionIdentityForm = (props) => {
         throw new Error('Identity name taken, please select a different name');
       }
   
-      props.setModalHeight(496);
+      props.setModalHeight(height >= 496 ? 520 : height - 24);
 
-  
       props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
         primaryAddress: addresses[0],
         provAddress: state.provAddress,
