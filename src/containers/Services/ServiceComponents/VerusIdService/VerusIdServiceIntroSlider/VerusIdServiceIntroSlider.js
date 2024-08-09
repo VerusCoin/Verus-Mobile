@@ -45,7 +45,6 @@ class VerusIdServiceIntroSlider extends Component {
           }
         </Text>
         <Button
-          style={{ marginTop: 16 }}
           mode="text"
           color={Colors.secondaryColor}
           onPress={() => openUrl(VERUS_ID_URL)}

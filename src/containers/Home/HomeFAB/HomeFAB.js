@@ -22,11 +22,6 @@ const HomeFAB = (props) => {
   const actions = !showConfigureHomeCards
       ? [
           {
-            icon: 'qrcode-scan',
-            label: 'Scan QR Code',
-            onPress: handleVerusPay,
-          },
-          {
             icon: 'format-list-bulleted',
             label: 'Manage Coins',
             onPress: handleAddCoin,
@@ -43,11 +38,6 @@ const HomeFAB = (props) => {
           }
         ]
       : [
-          {
-            icon: 'qrcode-scan',
-            label: 'Scan QR Code',
-            onPress: handleVerusPay,
-          },
           {
             icon: 'swap-horizontal-variant',
             label: 'Configure Home Cards',

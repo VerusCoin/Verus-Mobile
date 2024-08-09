@@ -4,7 +4,7 @@ import {
   loadServiceStoredDataForUser,
   storeServiceStoredDataForUser,
 } from "../../../../utils/asyncStore/serviceStoredDataStorage";
-import { requestPassword } from "../../../../utils/auth/authBox";
+import { requestPassword, requestServiceStoredData } from "../../../../utils/auth/authBox";
 import {
   CONNECTED_SERVICES,
   WYRE_SERVICE_ID,
@@ -48,6 +48,27 @@ export const modifyServiceStoredDataForUser = async (
   await saveEncryptedServiceStoredDataForUser(serviceStoredData, accountHash);
 
   return data;
+};
+
+export const resetServicesStoredEncryptionForUser = async (
+  accountHash,
+  oldPwd
+) => {
+  let serviceStoredData = { ...(await loadServiceStoredDataForUser(accountHash)) };
+
+  // Iterate through every key in the services data object and re-encrypt it with the current password
+  for (let key in serviceStoredData) {
+    if (serviceStoredData[key] == null) {
+      continue;
+    };
+
+    const data = await requestServiceStoredData(key, oldPwd);
+    serviceStoredData[key] = await encryptkey(await requestPassword(), JSON.stringify(data))
+  }
+  
+  await saveEncryptedServiceStoredDataForUser(serviceStoredData, accountHash);
+
+  return serviceStoredData;
 };
 
 export const initServiceStoredDataForUser = async (accountHash) => {

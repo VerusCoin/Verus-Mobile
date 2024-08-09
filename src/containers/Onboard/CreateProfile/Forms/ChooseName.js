@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { createAlert } from '../../../../actions/actions/alert/dispatchers/alert';
 import TallButton from '../../../../components/LargerButton';
 import Colors from '../../../../globals/colors';
+import { SMALL_DEVICE_HEGHT } from '../../../../utils/constants/constants';
 
 export default function ChooseName({ profileName, setProfileName, navigation }) {
   const {height} = Dimensions.get('window');
@@ -68,7 +69,7 @@ export default function ChooseName({ profileName, setProfileName, navigation }) 
           style={{
             alignItems: 'center',
             position: 'absolute',
-            top: height / 2 - 250,
+            top: height < SMALL_DEVICE_HEGHT ? 60 : height / 2 - 250,
           }}>
           <Text
             style={{

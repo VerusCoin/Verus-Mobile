@@ -1,6 +1,8 @@
 import { Dimensions } from "react-native";
 import { primitives } from "verusid-ts-client"
 
+export const SMALL_DEVICE_HEGHT = 600;
+
 // Electrum
 export const ELECTRUM_PROTOCOL_CHANGE = 1.4;
 
