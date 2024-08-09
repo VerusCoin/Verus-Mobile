@@ -417,7 +417,7 @@ class ProfileSettings extends Component {
           />
           <Divider />
         </TouchableOpacity>
-        {/* <TouchableOpacity onPress={() => this._openSettings(RESET_PWD)}>
+        <TouchableOpacity onPress={() => this._openSettings(RESET_PWD)}>
           <List.Item
             title={"Change Password"}
             left={(props) => <List.Icon {...props} icon={"lock-reset"} />}
@@ -426,7 +426,7 @@ class ProfileSettings extends Component {
             )}
           />
           <Divider />
-        </TouchableOpacity> */}
+        </TouchableOpacity>
         {(this.props.activeAccount.biometry ||
           this.state.supportedBiometryType.biometry) && (
           <TouchableOpacity
