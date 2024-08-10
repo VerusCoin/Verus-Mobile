@@ -234,35 +234,39 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
                 ? 'Please verify the listed words.'
                 : "When you've written them down, press next."}
             </Text>
-            <TallButton
-              onPress={next}
-              mode="contained"
-              disabled={
-                isAtEnd &&
-                (wordGuesses[0].length == 0 ||
-                  wordGuesses[1].length == 0 ||
-                  wordGuesses[2].length == 0)
-              }
-              labelStyle={{fontWeight: 'bold'}}
-              style={{
-                marginTop: 8,
-              }}>
-              {isAtEnd ? 'Complete' : 'Next'}
-            </TallButton>
-            {formStep > 0 && (
+            <View style={{flexDirection: "row"}}>
+              {formStep > 0 && (
+                <TallButton
+                  onPress={back}
+                  mode="text"
+                  labelStyle={{
+                    fontWeight: 'bold',
+                    color: Colors.warningButtonColor,
+                  }}
+                  style={{
+                    marginTop: 8,
+                    flex: 1
+                  }}>
+                  {'Back'}
+                </TallButton>
+              )}
               <TallButton
-                onPress={back}
-                mode="text"
-                labelStyle={{
-                  fontWeight: 'bold',
-                  color: Colors.warningButtonColor,
-                }}
+                onPress={next}
+                mode="contained"
+                disabled={
+                  isAtEnd &&
+                  (wordGuesses[0].length == 0 ||
+                    wordGuesses[1].length == 0 ||
+                    wordGuesses[2].length == 0)
+                }
+                labelStyle={{fontWeight: 'bold'}}
                 style={{
                   marginTop: 8,
+                  flex: 1
                 }}>
-                {'Back'}
+                {isAtEnd ? 'Complete' : 'Next'}
               </TallButton>
-            )}
+            </View>
           </View>
         )}
       </View>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import BigNumber from "bignumber.js";
-import { Alert, ScrollView, View, TouchableWithoutFeedback, Keyboard } from "react-native";
+import { Alert, ScrollView, View, TouchableWithoutFeedback, Keyboard, Dimensions } from "react-native";
 import { TextInput, Button, Text } from "react-native-paper";
 import { useSelector } from 'react-redux';
 import { traditionalCryptoSend, TraditionalCryptoSendFee } from "../../../../actions/actionDispatchers";
@@ -18,6 +18,7 @@ import { selectAddressBlocklist } from "../../../../selectors/settings";
 import { addressIsBlocked } from "../../../../utils/addressBlocklist";
 
 const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
+  const { height } = Dimensions.get("window");
   const [amountFiat, setAmountFiat] = useState(false);
   const sendModal = useSelector(state => state.sendModal);
   const addressBlocklist = useSelector(selectAddressBlocklist);
@@ -211,7 +212,7 @@ const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormD
         true
       );
 
-      setModalHeight(696);
+      setModalHeight(height >= 720 ? 696 : height - 24);
 
       if (res.feeTakenMessage != null) {
         Alert.alert("Amount changed", res.feeTakenMessage)

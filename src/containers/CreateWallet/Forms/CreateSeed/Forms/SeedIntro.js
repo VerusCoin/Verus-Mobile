@@ -4,6 +4,7 @@ import {Text, Paragraph, Button, Checkbox, List} from 'react-native-paper';
 import {MnemonicSeed} from '../../../../../images/customIcons';
 import Colors from '../../../../../globals/colors';
 import TallButton from '../../../../../components/LargerButton';
+import { SMALL_DEVICE_HEGHT } from '../../../../../utils/constants/constants';
 
 export default function SeedIntro({navigation}) {
   const {height} = Dimensions.get('window');
@@ -20,15 +21,15 @@ export default function SeedIntro({navigation}) {
         alignItems: 'center',
         backgroundColor: Colors.secondaryColor
       }}>
-      <MnemonicSeed
+      {height >= SMALL_DEVICE_HEGHT && <MnemonicSeed
         width={180}
-        style={{top: height / 2 - 260, position: 'absolute'}}
-      />
+        style={{ top: height / 2 - 260, position: 'absolute' }}
+      />}
       <View
         style={{
           alignItems: 'center',
           position: 'absolute',
-          top: height / 2 - 130,
+          top: height < SMALL_DEVICE_HEGHT ? 60 : height / 2 - 130,
         }}>
         <Text
           style={{
