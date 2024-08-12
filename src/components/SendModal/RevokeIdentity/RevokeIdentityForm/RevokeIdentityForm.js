@@ -7,16 +7,18 @@ import {
   getFriendlyNameMap,
   getIdentity,
 } from '../../../../utils/api/channels/verusid/callCreators';
-import {requestSeeds} from '../../../../utils/auth/authBox';
 import {ELECTRUM} from '../../../../utils/constants/intervalConstants';
 import {
   SEND_MODAL_FORM_STEP_CONFIRM,
-  SEND_MODAL_IDENTITY_TO_LINK_FIELD,
+  SEND_MODAL_IDENTITY_TO_REVOKE_FIELD,
+  SEND_MODAL_SYSTEM_ID,
 } from '../../../../utils/constants/sendModal';
 import {deriveKeyPair} from '../../../../utils/keys';
-import {LinkIdentityFormRender} from './LinkIdentityForm.render';
+import {RevokeIdentityFormRender} from './RevokeIdentityForm.render';
+import { createRevokeIdentityTx } from '../../../../utils/api/channels/verusid/requests/updateIdentity';
+import { coinsList } from '../../../../utils/CoinData/CoinsList';
 
-const LinkIdentityForm = (props) => {
+const RevokeIdentityForm = (props) => {
   const { height } = Dimensions.get("window");
   const dispatch = useDispatch();
   const sendModal = useSelector(state => state.sendModal);
@@ -25,8 +27,8 @@ const LinkIdentityForm = (props) => {
     const {data} = sendModal;
 
     const identity =
-      data[SEND_MODAL_IDENTITY_TO_LINK_FIELD] != null
-        ? data[SEND_MODAL_IDENTITY_TO_LINK_FIELD].trim()
+      data[SEND_MODAL_IDENTITY_TO_REVOKE_FIELD] != null
+        ? data[SEND_MODAL_IDENTITY_TO_REVOKE_FIELD].trim()
         : '';
 
     if (!identity || identity.length < 1) {
@@ -51,7 +53,7 @@ const LinkIdentityForm = (props) => {
   }, [sendModal, dispatch]);
 
   const getPotentialPrimaryAddresses = useCallback(async (coinObj, channel) => {
-    const seeds = await requestSeeds();
+    const seeds = await props.requestSeeds();
 
     const seed = seeds[channel];
 
@@ -70,47 +72,57 @@ const LinkIdentityForm = (props) => {
 
     props.setLoading(true)
 
-    const {coinObj, data} = sendModal;
+    const {data} = sendModal;
 
-    const identity = data[SEND_MODAL_IDENTITY_TO_LINK_FIELD];
+    const identity = data[SEND_MODAL_IDENTITY_TO_REVOKE_FIELD];
 
     let ownedAddress = '';
-    let ownedByUser = false;
+    let revocableByUser = false;
 
     try {
-      const res = await getIdentity(coinObj.system_id, identity);
-
-      if (res.error) {
-        throw new Error(res.error.message);
+      const tarRes = await getIdentity(data[SEND_MODAL_SYSTEM_ID], identity);
+      if (tarRes.error) {
+        throw new Error(tarRes.error.message);
       }
 
-      const addrs = await getPotentialPrimaryAddresses(coinObj, ELECTRUM);
+      const revocation = tarRes.result.identity.revocationauthority;
+
+      const revRes = await getIdentity(data[SEND_MODAL_SYSTEM_ID], revocation);
+      if (revRes.error) {
+        throw new Error(revRes.error.message);
+      }
 
       let isInWallet = false;
+      const addrs = await getPotentialPrimaryAddresses(coinsList.VRSC, ELECTRUM);
 
-      for (const address of res.result.identity.primaryaddresses) {
+      for (const address of revRes.result.identity.primaryaddresses) {
         if (addrs.includes(address)) {
           isInWallet = true;
           ownedAddress = address;
-          ownedByUser = true;
+          revocableByUser = true;
           break;
         }
       }
 
       if (!isInWallet) {
         throw new Error(
-          'Ensure that your wallet address for this account matches a primary address of the VerusID you are trying to add.',
+          'Ensure that your imported seed/key corresponds to the primary address of the VerusID set as your revocation authority.',
         );
       }
 
-      const friendlyNames = await getFriendlyNameMap(coinObj.system_id, res.result);
+      const friendlyNames = await getFriendlyNameMap(data[SEND_MODAL_SYSTEM_ID], targetId.result);
       props.setModalHeight(height >= 720 ? 696 : height - 24);
 
+      const targetIdAddr = tarRes.result.identity.identityaddress;
+      const revocationResult = await createRevokeIdentityTx(data[SEND_MODAL_SYSTEM_ID], targetIdAddr, addrs[0])
+
       props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
-        verusId: res.result,
+        targetId: tarRes.result,
+        revocationId: revRes.result,
         friendlyNames,
         ownedAddress,
-        ownedByUser
+        revocableByUser,
+        revocationResult
       })
     } catch (e) {
       Alert.alert('Error', e.message);
@@ -119,11 +131,11 @@ const LinkIdentityForm = (props) => {
     props.setLoading(false)
   }, [formHasError, getPotentialPrimaryAddresses, sendModal, dispatch, props]);
 
-  return LinkIdentityFormRender({
+  return RevokeIdentityFormRender({
     submitData,
     updateSendFormData: props.updateSendFormData,
-    formDataValue: sendModal.data[SEND_MODAL_IDENTITY_TO_LINK_FIELD]
+    formDataValue: sendModal.data[SEND_MODAL_IDENTITY_TO_REVOKE_FIELD]
   });
 };
 
-export default LinkIdentityForm;
+export default RevokeIdentityForm;

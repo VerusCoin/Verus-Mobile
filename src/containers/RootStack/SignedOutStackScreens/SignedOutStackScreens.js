@@ -9,6 +9,7 @@ import SignUp from '../../SignUp/SignUp';
 import {useDispatch, useSelector} from 'react-redux';
 import {setDeeplinkUrl} from '../../../actions/actionCreators';
 import CreateProfile from '../../Onboard/CreateProfile/CreateProfile';
+import RevokeRecoverStackScreens from '../RevokeRecoverStackScreens/RevokeRecoverStackScreens';
 
 const SignedOutStack = createStackNavigator();
 
@@ -80,6 +81,14 @@ const SignedOutStackScreens = props => {
       <SignedOutStack.Screen
         name="CreateProfile"
         component={CreateProfile}
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      <SignedOutStack.Screen
+        name="RevokeRecover"
+        component={RevokeRecoverStackScreens}
         options={{
           headerShown: false,
         }}

@@ -67,12 +67,27 @@ const Login = props => {
     props.navigation.navigate('CreateProfile');
   };
 
+  handleRevokeRecover = () => {
+    props.navigation.navigate('RevokeRecover');
+  };
+
   return (
     <SafeAreaView
       style={{
         backgroundColor: Colors.secondaryColor,
         ...Styles.focalCenter,
       }}>
+      <TouchableOpacity
+        style={{
+          alignItems: 'center',
+          position: 'absolute',
+          top: 20,
+        }}
+      >
+        <Button onPress={() => handleRevokeRecover()}>
+          Revoke/Recover VerusID
+        </Button>
+      </TouchableOpacity>
       <VerusLogo
         width={180}
         height={'15%'}
