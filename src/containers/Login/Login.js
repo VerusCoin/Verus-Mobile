@@ -76,7 +76,7 @@ const Login = props => {
   }
 
   handleRecoverSeed = () => {
-    props.navigation.navigate("RecoverSeeds");
+    props.navigation.navigate('RecoverSeed');
   };
 
   return (
