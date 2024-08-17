@@ -38,7 +38,11 @@ THIS IS EXPERIMENTAL SOFTWARE AND IT IS PROVIDED "AS IS" AND ANY EXPRESSED OR IM
 
 0. Clone GitHub repository, and `cd` into it
 
-1. Install Android Studio (Android SDK 34)
+1. Install Android Studio
+  - Required SDK Components:
+    - Android SDK 35 (33 or higher will work)
+    - System Image for Emulator (Intel x86_64)
+    - NDK version 27.0.12077973 (or change `gradle.properties` to match your precise version)
 
 2. Install `openjdk-17-jdk` package
 
