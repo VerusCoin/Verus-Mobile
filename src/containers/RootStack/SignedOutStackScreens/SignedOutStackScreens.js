@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
-import DisplaySeed from '../../Settings/ProfileSettings/DisplaySeed/DisplaySeed';
+import DisplaySeed from '../../DisplaySeed/DisplaySeed';
 import RecoverSeed from '../../Settings/ProfileSettings/RecoverSeed/RecoverSeed';
 import DeleteProfile from '../../Settings/ProfileSettings/DeleteProfile/DeleteProfile';
 import SecureLoading from '../../SecureLoading/SecureLoading';
@@ -10,6 +10,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {setDeeplinkUrl} from '../../../actions/actionCreators';
 import CreateProfile from '../../Onboard/CreateProfile/CreateProfile';
 import RevokeRecoverStackScreens from '../RevokeRecoverStackScreens/RevokeRecoverStackScreens';
+import RecoverSeedsStackScreens from '../RecoverSeedsStackScreens/RecoverSeedsStackScreens';
 
 const SignedOutStack = createStackNavigator();
 
@@ -89,6 +90,14 @@ const SignedOutStackScreens = props => {
       <SignedOutStack.Screen
         name="RevokeRecover"
         component={RevokeRecoverStackScreens}
+        options={{
+          headerShown: false,
+        }}
+      />
+
+      <SignedOutStack.Screen
+        name="RecoverSeeds"
+        component={RecoverSeedsStackScreens}
         options={{
           headerShown: false,
         }}
