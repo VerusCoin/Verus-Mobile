@@ -276,7 +276,7 @@ class ProfileSettings extends Component {
           .then((seeds) => {
             this.setState({ password: null }, () => {
               this.props.navigation.navigate("DisplaySeed", {
-                data: { seeds },
+                data: { seeds, showDerivedKeys: true, keyDerivationVersion: this.props.activeAccount.keyDerivationVersion },
               });
             });
           })
