@@ -88,6 +88,8 @@ class VerusMobile extends React.Component {
   }
   
   componentDidMount() {
+    LogBox.ignoreLogs(['EventEmitter']);
+
     activateKeyboardListener()
 
     AppState.addEventListener("change", (nextAppState) => this._handleAppStateChange(nextAppState));
