@@ -3,7 +3,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { defaultHeaderOptions } from '../../../utils/navigation/header';
 import AddCoin from '../../AddCoin/AddCoin'
 import CoinDetails from '../../CoinDetails/CoinDetails'
-import DisplaySeed from '../../Settings/ProfileSettings/DisplaySeed/DisplaySeed'
+import DisplaySeed from '../../DisplaySeed/DisplaySeed'
 import SettingsMenus from '../../Settings/SettingsMenus'
 import CoinMenus from '../../Coin/CoinMenus'
 import VerusPay from '../../VerusPay/VerusPay'

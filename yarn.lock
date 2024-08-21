@@ -946,9 +946,9 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bitgo/blake2b-wasm@^3.0.1", "@bitgo/blake2b-wasm@https://github.com/michaeltout/blake2b-wasm/", "blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b", "blake2b-wasm@https://github.com/michaeltout/blake2b-wasm/":
+"@bitgo/blake2b-wasm@^3.0.1", "@bitgo/blake2b-wasm@https://github.com/VerusCoin/blake2b-wasm/", "blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b", "blake2b-wasm@https://github.com/VerusCoin/blake2b-wasm/":
   version "2.0.0"
-  resolved "https://github.com/michaeltout/blake2b-wasm/#a16070b30bb8d8aee670f0c69b642913eca79998"
+  resolved "https://github.com/VerusCoin/blake2b-wasm/#a16070b30bb8d8aee670f0c69b642913eca79998"
   dependencies:
     nanoassert "1.0.0"
 
@@ -1125,7 +1125,7 @@
     "@ethersproject/logger" "^5.7.0"
     bn.js "^5.2.1"
 
-"@ethersproject/bytes@^5.0.0", "@ethersproject/bytes@^5.0.4", "@ethersproject/bytes@^5.7.0":
+"@ethersproject/bytes@^5.0.0", "@ethersproject/bytes@^5.7.0":
   version "5.7.0"
   resolved "https://registry.yarnpkg.com/@ethersproject/bytes/-/bytes-5.7.0.tgz#a00f6ea8d7e7534d6d87f47188af1148d71f155d"
   integrity sha512-nsbxwgFXWh9NyYWo+U8atvmMsSdKJprTcICAkvbBffT75qDocbuggBU0SJiVK2MuTrp0q+xvLkTnGMPK1+uA9A==
@@ -1215,7 +1215,7 @@
     "@ethersproject/bytes" "^5.7.0"
     js-sha3 "0.8.0"
 
-"@ethersproject/logger@^5.0.0", "@ethersproject/logger@^5.0.5", "@ethersproject/logger@^5.7.0":
+"@ethersproject/logger@^5.0.0", "@ethersproject/logger@^5.7.0":
   version "5.7.0"
   resolved "https://registry.yarnpkg.com/@ethersproject/logger/-/logger-5.7.0.tgz#6ce9ae168e74fecf287be17062b590852c311892"
   integrity sha512-0odtFdXu/XHtjQXJYA3u9G0G8btm0ND5Cu8M7i5vhEcE8/HmF4Lbdqanwyv4uQTr2tx6b7fQRmgLrsnpQlmnig==
@@ -1235,16 +1235,16 @@
     "@ethersproject/bytes" "^5.7.0"
     "@ethersproject/sha2" "^5.7.0"
 
-"@ethersproject/properties@^5.0.0", "@ethersproject/properties@^5.0.3", "@ethersproject/properties@^5.7.0":
+"@ethersproject/properties@^5.0.0", "@ethersproject/properties@^5.7.0":
   version "5.7.0"
   resolved "https://registry.yarnpkg.com/@ethersproject/properties/-/properties-5.7.0.tgz#a6e12cb0439b878aaf470f1902a176033067ed30"
   integrity sha512-J87jy8suntrAkIZtecpxEPxY//szqr1mlBaYlQ0r4RCaiD2hjheqF9s1LVE8vVuJCXisjIP+JgtK/Do54ej4Sw==
   dependencies:
     "@ethersproject/logger" "^5.7.0"
 
-"@ethersproject/providers@https://github.com/michaeltout/ethersjs-providers-package.git":
+"@ethersproject/providers@https://github.com/VerusCoin/ethersjs-providers-package.git":
   version "5.0.5"
-  resolved "https://github.com/michaeltout/ethersjs-providers-package.git#9d3086fca457b0207f74cdad2c8819b2102ffc63"
+  resolved "https://github.com/VerusCoin/ethersjs-providers-package.git#dffe7607f48db0dc773ece418dfaf687865219ae"
   dependencies:
     "@ethersproject/abstract-provider" "^5.0.0"
     "@ethersproject/abstract-signer" "^5.0.0"
@@ -1288,26 +1288,26 @@
     "@ethersproject/logger" "^5.7.0"
     hash.js "1.1.7"
 
-"@ethersproject/signing-key@5.0.5":
-  version "5.0.5"
-  resolved "https://registry.yarnpkg.com/@ethersproject/signing-key/-/signing-key-5.0.5.tgz#acfd06fc05a14180df7e027688bbd23fc4baf782"
-  integrity sha512-Z1wY7JC1HVO4CvQWY2TyTTuAr8xK3bJijZw1a9G92JEmKdv1j255R/0YLBBcFTl2J65LUjtXynNJ2GbArPGi5g==
-  dependencies:
-    "@ethersproject/bytes" "^5.0.4"
-    "@ethersproject/logger" "^5.0.5"
-    "@ethersproject/properties" "^5.0.3"
-    elliptic "6.5.3"
-
-"@ethersproject/signing-key@^5.0.0", "@ethersproject/signing-key@^5.7.0":
+"@ethersproject/signing-key@^5.7.0", "@ethersproject/signing-key@git+https://github.com/VerusCoin/ethersjs-signing-key-package.git":
   version "5.7.0"
-  resolved "https://registry.yarnpkg.com/@ethersproject/signing-key/-/signing-key-5.7.0.tgz#06b2df39411b00bc57c7c09b01d1e41cf1b16ab3"
-  integrity sha512-MZdy2nL3wO0u7gkB4nA/pEf8lu1TlFswPNmy8AiYkfKTdO6eXBJyUdmHO/ehm/htHw9K/qF8ujnTyUAD+Ry54Q==
+  resolved "git+https://github.com/VerusCoin/ethersjs-signing-key-package.git#602f32146d0f6c2bfd5d70f2a252b8614151a1cb"
   dependencies:
     "@ethersproject/bytes" "^5.7.0"
     "@ethersproject/logger" "^5.7.0"
     "@ethersproject/properties" "^5.7.0"
     bn.js "^5.2.1"
-    elliptic "6.5.4"
+    elliptic "6.5.7"
+    hash.js "1.1.7"
+
+"@ethersproject/signing-key@https://github.com/VerusCoin/ethersjs-signing-key-package.git":
+  version "5.7.0"
+  resolved "https://github.com/VerusCoin/ethersjs-signing-key-package.git#602f32146d0f6c2bfd5d70f2a252b8614151a1cb"
+  dependencies:
+    "@ethersproject/bytes" "^5.7.0"
+    "@ethersproject/logger" "^5.7.0"
+    "@ethersproject/properties" "^5.7.0"
+    bn.js "^5.2.1"
+    elliptic "6.5.7"
     hash.js "1.1.7"
 
 "@ethersproject/solidity@^5.0.0":
@@ -2981,12 +2981,12 @@ aws4@^1.8.0:
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.12.0.tgz#ce1c9d143389679e253b314241ea9aa5cec980d3"
   integrity sha512-NmWvPnx0F1SfrQbYwOi7OeaNGokp9XhzNioJ/CSBs8Qa4vxug81mhJEAVZwxXuBmYB5KDRfMq/F3RR0BIU7sWg==
 
-axios@1.6.5:
-  version "1.6.5"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.6.5.tgz#2c090da14aeeab3770ad30c3a1461bc970fb0cd8"
-  integrity sha512-Ii012v05KEVuUoFWmMW/UQv9aRIc3ZwkWDcM+h5Il8izZCtRVpDUfwpoFf7eOtajT3QiGR4yDUx7lPqHJULgbg==
+axios@1.6.5, axios@1.7.4:
+  version "1.7.4"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.7.4.tgz#4c8ded1b43683c8dd362973c393f3ede24052aa2"
+  integrity sha512-DukmaFRnY6AzAALSH4J2M3k6PkaC+MfaAGdEERRWcC9q3/TWQwLpHR8ZRLKTdQ3aBDL64EdluRDjJqKw+BPZEw==
   dependencies:
-    follow-redirects "^1.15.4"
+    follow-redirects "^1.15.6"
     form-data "^4.0.0"
     proxy-from-env "^1.1.0"
 
@@ -3202,11 +3202,6 @@ bech32@2.0.0:
   resolved "https://registry.yarnpkg.com/bech32/-/bech32-2.0.0.tgz#078d3686535075c8c79709f054b1b226a133b355"
   integrity sha512-LcknSilhIGatDAsY1ak2I8VtGaHNhgMSYVxFrGLXv+xLHytaKZKcaUJJUE7qmBr7h33o5YQwP55pMI0xmkpJwg==
 
-bech32@^1.1.2, bech32@^1.1.3:
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/bech32/-/bech32-1.1.4.tgz#e38c9f37bf179b8eb16ae3a772b40c356d4832e9"
-  integrity sha512-s0IrSOzLlbvX7yp4WBfPITzpAU8sqQcpsmwXDiKwrG4r491vwCO/XpejasRNl0piBMe/DvP4Tz0mIS/X1DPJBQ==
-
 big-integer@1.6.x:
   version "1.6.51"
   resolved "https://registry.yarnpkg.com/big-integer/-/big-integer-1.6.51.tgz#0df92a5d9880560d3ff2d5fd20245c889d130686"
@@ -3269,32 +3264,9 @@ bip32@2.0.6:
     typeforce "^1.11.5"
     wif "^2.0.6"
 
-bip32@^1.0.2, bip32@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/bip32/-/bip32-1.0.4.tgz#188ad57a45fb1342c9aabe969d0612c704a987b4"
-  integrity sha512-8T21eLWylZETolyqCPgia+MNp+kY37zFr7PTFDTPObHeNi9JlfG4qGIh8WzerIJidtwoK+NsWq2I5i66YfHoIw==
-  dependencies:
-    bs58check "^2.1.1"
-    create-hash "^1.2.0"
-    create-hmac "^1.1.7"
-    tiny-secp256k1 "^1.0.0"
-    typeforce "^1.11.5"
-    wif "^2.0.6"
-
-bip39@^2.3.1:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/bip39/-/bip39-2.6.0.tgz#9e3a720b42ec8b3fbe4038f1e445317b6a99321c"
-  integrity sha512-RrnQRG2EgEoqO24ea+Q/fftuPUZLmrEM3qNhhGsA3PbaXaCW791LTzPuVyx/VprXQcTbPJ3K3UeTna8ZnVl2sg==
-  dependencies:
-    create-hash "^1.1.0"
-    pbkdf2 "^3.0.9"
-    randombytes "^2.0.1"
-    safe-buffer "^5.0.1"
-    unorm "^1.3.3"
-
-"bip39@git+https://github.com/michaeltout/bip39.git":
+"bip39@git+https://github.com/VerusCoin/bip39.git":
   version "3.0.3"
-  resolved "git+https://github.com/michaeltout/bip39.git#17d3bbefc80d243903eabd60e0ed64f20aa2bf31"
+  resolved "git+https://github.com/VerusCoin/bip39.git#17d3bbefc80d243903eabd60e0ed64f20aa2bf31"
   dependencies:
     "@types/node" "11.11.6"
     create-hash "^1.1.0"
@@ -3313,30 +3285,9 @@ bip66@^1.1.0, bip66@^1.1.3, bip66@^1.1.5:
   dependencies:
     safe-buffer "^5.0.1"
 
-bitcoin-ops@^1.3.0, bitcoin-ops@^1.4.0, bitcoin-ops@^1.4.1, "bitcoin-ops@git+https://github.com/VerusCoin/bitcoin-ops":
+bitcoin-ops@^1.3.0, "bitcoin-ops@git+https://github.com/VerusCoin/bitcoin-ops":
   version "1.4.1"
   resolved "git+https://github.com/VerusCoin/bitcoin-ops#a5f8f56e658301bc39881d41740b3a0010530efd"
-
-bitcoinjs-lib@^4.0.1:
-  version "4.0.5"
-  resolved "https://registry.yarnpkg.com/bitcoinjs-lib/-/bitcoinjs-lib-4.0.5.tgz#2cce3469b950fade9f0442755ebb26bf9de519a1"
-  integrity sha512-gYs7K2hiY4Xb96J8AIF+Rx+hqbwjVlp5Zt6L6AnHOdzfe/2tODdmDxsEytnaxVCdhOUg0JnsGpl+KowBpGLxtA==
-  dependencies:
-    bech32 "^1.1.2"
-    bip32 "^1.0.4"
-    bip66 "^1.1.0"
-    bitcoin-ops "^1.4.0"
-    bs58check "^2.0.0"
-    create-hash "^1.1.0"
-    create-hmac "^1.1.3"
-    merkle-lib "^2.0.10"
-    pushdata-bitcoin "^1.0.1"
-    randombytes "^2.0.1"
-    safe-buffer "^5.1.1"
-    tiny-secp256k1 "^1.0.0"
-    typeforce "^1.11.3"
-    varuint-bitcoin "^1.0.4"
-    wif "^2.0.1"
 
 "bitgo-utxo-lib@https://github.com/VerusCoin/bitgo-utxo-lib.git#react-native":
   version "1.2.1"
@@ -3508,7 +3459,7 @@ bs58@^4.0.0:
   dependencies:
     base-x "^3.0.2"
 
-bs58check@2.0.0, bs58check@2.1.2, bs58check@<3.0.0, bs58check@^1.0.6, bs58check@^2.0.0, bs58check@^2.1.1, bs58check@^2.1.2, "bs58check@https://github.com/bitcoinjs/bs58check":
+bs58check@2.0.0, bs58check@2.1.2, bs58check@<3.0.0, bs58check@^1.0.6, bs58check@^2.0.0, bs58check@^2.1.1, "bs58check@https://github.com/bitcoinjs/bs58check":
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/bs58check/-/bs58check-2.1.2.tgz#53b018291228d82a5aa08e7d796fdafda54aebfc"
   integrity sha512-0TS1jicxdU09dwJMNZtVAfzPi6Q6QeN0pM1Fkzrjn+XYHvzMKPU3pHVpva+769iNVSfIYWf7LJ6WR+BuuMf8cA==
@@ -4552,10 +4503,10 @@ electron-to-chromium@^1.4.411:
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.421.tgz#2b8c0ef98ba00d4aef4c664933d570922da52161"
   integrity sha512-wZOyn3s/aQOtLGAwXMZfteQPN68kgls2wDAnYOA8kCjBvKVrW5RwmWVspxJYTqrcN7Y263XJVsC66VCIGzDO3g==
 
-elliptic@6.5.3, elliptic@6.5.4, elliptic@^6.2.3, elliptic@^6.4.0, elliptic@^6.5.2, elliptic@^6.5.3, elliptic@^6.5.4:
-  version "6.5.4"
-  resolved "https://registry.yarnpkg.com/elliptic/-/elliptic-6.5.4.tgz#da37cebd31e79a1367e941b592ed1fbebd58abbb"
-  integrity sha512-iLhC6ULemrljPZb+QutR5TQGB+pdW6KGD5RSegS+8sorOZT+rdQFbsQFJgvN3eRqNALqJer4oQ16YvJHlU8hzQ==
+elliptic@6.5.7, elliptic@^6.2.3, elliptic@^6.4.0, elliptic@^6.5.2, elliptic@^6.5.3, elliptic@^6.5.4:
+  version "6.5.7"
+  resolved "https://registry.yarnpkg.com/elliptic/-/elliptic-6.5.7.tgz#8ec4da2cb2939926a1b9a73619d768207e647c8b"
+  integrity sha512-ESVCtTwiA+XhY3wyh24QqRGBoP3rEdDUl3EDUUo9tft074fi19IrdpH7hLCMMP3CIj7jb3W96rn8lt/BqIlt5Q==
   dependencies:
     bn.js "^4.11.9"
     brorand "^1.1.0"
@@ -5062,9 +5013,9 @@ ethereumjs-util@6.0.0:
     safe-buffer "^5.1.1"
     secp256k1 "^3.0.1"
 
-"ethers@git+https://github.com/michaeltout/ethersjs-package.git":
+"ethers@git+https://github.com/VerusCoin/ethersjs-package.git":
   version "5.0.8"
-  resolved "git+https://github.com/michaeltout/ethersjs-package.git#cec8e071f373116182e7804278c78da7a7493f33"
+  resolved "git+https://github.com/VerusCoin/ethersjs-package.git#4c586d8733f71e793b33ffe5080ff1d4b023463d"
   dependencies:
     "@ethersproject/abi" "^5.0.0"
     "@ethersproject/abstract-provider" "^5.0.0"
@@ -5084,11 +5035,11 @@ ethereumjs-util@6.0.0:
     "@ethersproject/networks" "^5.0.0"
     "@ethersproject/pbkdf2" "^5.0.0"
     "@ethersproject/properties" "^5.0.0"
-    "@ethersproject/providers" "https://github.com/michaeltout/ethersjs-providers-package.git"
+    "@ethersproject/providers" "https://github.com/VerusCoin/ethersjs-providers-package.git"
     "@ethersproject/random" "^5.0.0"
     "@ethersproject/rlp" "^5.0.0"
     "@ethersproject/sha2" "^5.0.0"
-    "@ethersproject/signing-key" "^5.0.0"
+    "@ethersproject/signing-key" "https://github.com/VerusCoin/ethersjs-signing-key-package.git"
     "@ethersproject/solidity" "^5.0.0"
     "@ethersproject/strings" "^5.0.0"
     "@ethersproject/transactions" "^5.0.0"
@@ -5366,7 +5317,7 @@ flow-parser@^0.121.0:
   resolved "https://registry.yarnpkg.com/flow-parser/-/flow-parser-0.121.0.tgz#9f9898eaec91a9f7c323e9e992d81ab5c58e618f"
   integrity sha512-1gIBiWJNR0tKUNv8gZuk7l9rVX06OuLzY9AoGio7y/JT4V1IZErEMEq2TJS+PFcw/y0RshZ1J/27VfK1UQzYVg==
 
-follow-redirects@1.15.4, follow-redirects@^1.15.4:
+follow-redirects@1.15.4, follow-redirects@^1.15.6:
   version "1.15.4"
   resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.4.tgz#cdc7d308bf6493126b17ea2191ea0ccf3e535adf"
   integrity sha512-Cr4D/5wlrb0z9dgERpUL3LrmPKVDsETIJhaCMeDfuFYcqa5bldGV6wBsAN6X/vxlXQtFBMrXdXxdL8CbDTGniw==
@@ -6978,11 +6929,6 @@ js-sha3@0.8.0:
   version "0.8.0"
   resolved "https://registry.yarnpkg.com/js-sha3/-/js-sha3-0.8.0.tgz#b9b7a5da73afad7dedd0f8c463954cbde6818840"
   integrity sha512-gF1cRrHhIzNfToc802P800N8PpXS+evLLXfsVpowqmAFR9uwbi89WvXg2QspOmXL8QL86J4T1EpFu+yUkwJY3Q==
-
-js-sha3@^0.7.0:
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/js-sha3/-/js-sha3-0.7.0.tgz#0a5c57b36f79882573b2d84051f8bb85dd1bd63a"
-  integrity sha512-Wpks3yBDm0UcL5qlVhwW9Jr9n9i4FfeWBFOOXP5puDS/SiudJGhw7DPyBqn3487qD4F0lsC0q3zxink37f7zeA==
 
 "js-tokens@^3.0.0 || ^4.0.0", js-tokens@^4.0.0:
   version "4.0.0"
@@ -9283,7 +9229,7 @@ quick-lru@^5.1.1:
   resolved "https://registry.yarnpkg.com/quick-lru/-/quick-lru-5.1.1.tgz#366493e6b3e42a3a6885e2e99d18f80fb7a8c932"
   integrity sha512-WuyALRjWPDGtt/wzJiadO5AXY+8hZ80hVpe6MyivgraREW751X3SbhRvG3eLKOYN+8VEvqLcf3wdnt44Z4S4SA==
 
-ramda@0.27.2, ramda@^0.24.1:
+ramda@0.27.2:
   version "0.27.2"
   resolved "https://registry.yarnpkg.com/ramda/-/ramda-0.27.2.tgz#84463226f7f36dc33592f6f4ed6374c48306c3f1"
   integrity sha512-SbiLPU40JuJniHexQSAgad32hfwd+DRUdwF2PlVuI5RZD0/vahUco7R8vD86J/tcEKKF9vZrUVwgtmGCqlCKyA==
@@ -9352,9 +9298,9 @@ react-native-barcode-mask@1.2.4:
   dependencies:
     prop-types "^15.6.2"
 
-"react-native-cache@git+https://github.com/michaeltout/react-native-cache.git":
+"react-native-cache@git+https://github.com/VerusCoin/react-native-cache.git":
   version "1.1.7"
-  resolved "git+https://github.com/michaeltout/react-native-cache.git#f8c1a72b50177aa93de5e8c329b1523409505dd6"
+  resolved "git+https://github.com/VerusCoin/react-native-cache.git#f8c1a72b50177aa93de5e8c329b1523409505dd6"
   dependencies:
     async "^2.6.1"
 
@@ -9411,9 +9357,9 @@ react-native-elements@1.0.0:
     react-native-ratings "^6.3.0"
     react-native-status-bar-height "^2.2.0"
 
-"react-native-format-currency@https://github.com/michaeltout/react-native-format-currency.git":
+"react-native-format-currency@https://github.com/VerusCoin/react-native-format-currency.git":
   version "0.0.3"
-  resolved "https://github.com/michaeltout/react-native-format-currency.git#7002ee86a689ea52f1ff1e7fb71e216f282fad35"
+  resolved "https://github.com/VerusCoin/react-native-format-currency.git#7002ee86a689ea52f1ff1e7fb71e216f282fad35"
 
 react-native-fs@2.18.0:
   version "2.18.0"
@@ -9497,9 +9443,9 @@ react-native-modal@^9.0.0:
     prop-types "^15.6.2"
     react-native-animatable "^1.2.4"
 
-"react-native-os@git+https://github.com/michaeltout/react-native-os.git#1f79a5ae777ff296bd4911e2eb37e1de6f711d12":
+"react-native-os@git+https://github.com/VerusCoin/react-native-os.git#1f79a5ae777ff296bd4911e2eb37e1de6f711d12":
   version "1.2.7"
-  resolved "git+https://github.com/michaeltout/react-native-os.git#1f79a5ae777ff296bd4911e2eb37e1de6f711d12"
+  resolved "git+https://github.com/VerusCoin/react-native-os.git#1f79a5ae777ff296bd4911e2eb37e1de6f711d12"
 
 react-native-paper@4.7.1:
   version "4.7.1"
@@ -9616,9 +9562,9 @@ react-native-tab-view@2.x:
   resolved "https://registry.yarnpkg.com/react-native-tab-view/-/react-native-tab-view-2.16.0.tgz#cae72c7084394bd328fac5fefb86cd966df37a86"
   integrity sha512-ac2DmT7+l13wzIFqtbfXn4wwfgtPoKzWjjZyrK1t+T8sdemuUvD4zIt+UImg03fu3s3VD8Wh/fBrIdcqQyZJWg==
 
-"react-native-tcp@git+https://github.com/aprock/react-native-tcp.git#be5f656ffd3aa4559270e8472ee24a1c36029cf1":
+"react-native-tcp@git+https://github.com/VerusCoin/react-native-tcp.git#be5f656ffd3aa4559270e8472ee24a1c36029cf1":
   version "4.0.0"
-  resolved "git+https://github.com/aprock/react-native-tcp.git#be5f656ffd3aa4559270e8472ee24a1c36029cf1"
+  resolved "git+https://github.com/VerusCoin/react-native-tcp.git#be5f656ffd3aa4559270e8472ee24a1c36029cf1"
   dependencies:
     base64-js "1.3.1"
     buffer "^5.4.3"
@@ -9647,9 +9593,9 @@ react-native-url-polyfill@1.3.0:
   dependencies:
     whatwg-url-without-unicode "8.0.0-3"
 
-"react-native-vector-icons@git+https://github.com/michaeltout/react-native-vector-icons.git":
+"react-native-vector-icons@git+https://github.com/VerusCoin/react-native-vector-icons.git":
   version "8.1.0"
-  resolved "git+https://github.com/michaeltout/react-native-vector-icons.git#8e7de391c452401b0e2bf0da695aa0edeb8b323d"
+  resolved "git+https://github.com/VerusCoin/react-native-vector-icons.git#8e7de391c452401b0e2bf0da695aa0edeb8b323d"
   dependencies:
     lodash "^4.17.21"
     prop-types "^15.7.2"
@@ -11026,7 +10972,7 @@ timers-browserify@1.0.1:
   dependencies:
     process "~0.5.1"
 
-tiny-secp256k1@^1.0.0, tiny-secp256k1@^1.1.3:
+tiny-secp256k1@^1.1.3:
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/tiny-secp256k1/-/tiny-secp256k1-1.1.6.tgz#7e224d2bee8ab8283f284e40e6b4acb74ffe047c"
   integrity sha512-FmqJZGduTyvsr2cF3375fqGHUovSwDi/QytexX1Se4BPuPZpTE5Ftp5fg+EFSuEf3lhZqgCRjEG3ydUQ/aNiwA==
@@ -11152,23 +11098,6 @@ tweetnacl@^0.14.3, tweetnacl@~0.14.0:
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-0.14.5.tgz#5ae68177f192d4456269d108afa93ff8743f4f64"
   integrity sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==
 
-tx-builder@0.18.0:
-  version "0.18.0"
-  resolved "https://registry.yarnpkg.com/tx-builder/-/tx-builder-0.18.0.tgz#efa063790020a5fea63056bad0f44ef0b03d6fa4"
-  integrity sha512-pr6v2JNdT2KXcZm1vaPgSLg5//wrXlYTY+Tw+6O0hEL1f+cH20cmWooTop2DLWikPBN/qnrUiUzxVIRrYkDpYQ==
-  dependencies:
-    bech32 "^1.1.3"
-    bip32 "^1.0.2"
-    bip39 "^2.3.1"
-    bitcoin-ops "^1.4.1"
-    bitcoinjs-lib "^4.0.1"
-    bs58check "^2.1.2"
-    js-sha3 "^0.7.0"
-    ramda "^0.24.1"
-    safe-buffer "^5.1.1"
-    typeforce "^1.11.1"
-    varuint-bitcoin "^1.0.4"
-
 type-check@^0.4.0, type-check@~0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/type-check/-/type-check-0.4.0.tgz#07b8203bfa7056c0657050e3ccd2c37730bab8f1"
@@ -11234,9 +11163,16 @@ typedarray@^0.0.6:
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==
 
-typeforce@1.11.3, typeforce@^1.11.1, typeforce@^1.11.3, typeforce@^1.11.5, "typeforce@git+https://github.com/michaeltout/typeforce", "typeforce@git+https://github.com/michaeltout/typeforce.git":
+typeforce@1.11.3:
+  version "1.11.3"
+  resolved "https://registry.yarnpkg.com/typeforce/-/typeforce-1.11.3.tgz#a54d0ff58808788fba358020982270bd6995d8e4"
+  integrity sha512-+vllWbxe1AKLkO3KNyZPjb51NRHwRE/8bAi/cmF6TK24VqrPiQPRiHrFV19j1xHxxCHQbIvN4Zfco+skuiXSWQ==
+  dependencies:
+    inherits "^2.0.1"
+
+typeforce@^1.11.5, "typeforce@git+https://github.com/VerusCoin/typeforce.git", "typeforce@git+https://github.com/michaeltout/typeforce":
   version "1.18.0"
-  resolved "git+https://github.com/michaeltout/typeforce.git#c9b0abc33ff006d7a6a6150eff034bc7eb8b07de"
+  resolved "git+https://github.com/VerusCoin/typeforce.git#c9b0abc33ff006d7a6a6150eff034bc7eb8b07de"
 
 typescript-compare@^0.0.2:
   version "0.0.2"
@@ -11341,11 +11277,6 @@ universalify@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/universalify/-/universalify-0.2.0.tgz#6451760566fa857534745ab1dde952d1b1761be0"
   integrity sha512-CJ1QgKmNg3CwvAv/kOFmtnEN05f0D/cn9QntgNOQlQF9dgvVTHj3t+8JPdjqawCHk7V/KA+fbUqzZ9XWhcqPUg==
-
-unorm@^1.3.3:
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/unorm/-/unorm-1.6.0.tgz#029b289661fba714f1a9af439eb51d9b16c205af"
-  integrity sha512-b2/KCUlYZUeA7JFUuRJZPUtr4gZvBh7tavtv4fvk4+KV9pfGiR6CQAQAWl49ZpR3ts2dk4FYkP7EIgDJoiOLDA==
 
 unpipe@~1.0.0:
   version "1.0.0"
@@ -11552,9 +11483,9 @@ version_compare@0.0.3:
   resolved "https://registry.yarnpkg.com/version_compare/-/version_compare-0.0.3.tgz#ec30bbd187526a7f8b55027ac1cb2e65993483a5"
   integrity sha512-a9YzbQmnPZ3GhnE/LCxyRhL+xCP7SrYN+XAMCszRpwp8WRR89Jp8+1tw1InkBuZ+6jWKxGe+cr6SJpdP8RShtw==
 
-"verus-pay-utils@git+https://github.com/michaeltout/verus-pay-utils.git":
+"verus-pay-utils@git+https://github.com/VerusCoin/verus-pay-utils.git":
   version "2.0.0"
-  resolved "git+https://github.com/michaeltout/verus-pay-utils.git#cc34a4cae48f30714200742eca3d43ee42e13290"
+  resolved "git+https://github.com/VerusCoin/verus-pay-utils.git#cc34a4cae48f30714200742eca3d43ee42e13290"
   dependencies:
     bignumber.js "^9.0.0"
     verus-zkedid-utils "https://github.com/michaeltout/verus-zkedid-utils#dev"
@@ -11579,9 +11510,9 @@ version_compare@0.0.3:
     bs58check "https://github.com/bitcoinjs/bs58check"
     create-hash "1.2.0"
 
-"verus-zkedid-utils@git+https://github.com/michaeltout/verus-zkedid-utils.git":
+"verus-zkedid-utils@git+https://github.com/VerusCoin/verus-zkedid-utils.git":
   version "1.0.0"
-  resolved "git+https://github.com/michaeltout/verus-zkedid-utils.git#70d7f5ed6b4787da14b06de5d2d669d714d1860b"
+  resolved "git+https://github.com/VerusCoin/verus-zkedid-utils.git#70d7f5ed6b4787da14b06de5d2d669d714d1860b"
 
 "verus-zkedid-utils@https://github.com/michaeltout/verus-zkedid-utils#dev":
   version "1.0.0"
@@ -11589,7 +11520,6 @@ version_compare@0.0.3:
 
 "verusd-rpc-ts-client@git+https://github.com/VerusCoin/verusd-rpc-ts-client.git":
   version "0.1.0"
-  uid d758a068e439df995b2ade9ab4947bda23f811e4
   resolved "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git#d758a068e439df995b2ade9ab4947bda23f811e4"
   dependencies:
     axios "1.6.5"
