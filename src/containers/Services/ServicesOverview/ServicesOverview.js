@@ -1,5 +1,5 @@
 /*
-  This component represents the screen the the user can use to oversee all of the
+  This component represents the screen the user can use to oversee all of the
   services they can connect to Verus Mobile
 */  
 

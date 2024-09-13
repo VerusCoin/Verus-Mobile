@@ -1,5 +1,5 @@
 /*
-  This component represents the screen the the user will
+  This component represents the screen the user will
   use to configure their personal wallet profile. They can then
   take this profile data and submit it to applications that require
   KYC if they want.
