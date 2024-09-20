@@ -1,8 +1,7 @@
-import { toIAddress, GetIdentityResponse } from "verus-typescript-primitives";
+import { decompile, GetIdentityResponse, OPS, OptCCParams, Identity, SmartTransactionScript, IdentityID } from "verus-typescript-primitives";
 import { CoinDirectory } from "../../../../CoinData/CoinDirectory";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 import { IS_PBAAS } from "../../../../constants/intervalConstants";
-import { Identity, decompile, OptCCParams } from 'verus-typescript-primitives';
 import { getIdentity } from "./getIdentity";
 import { getSpendableUtxos, getTransaction, sendRawTransaction } from "../../vrpc/callCreators";
 import { networks, Transaction } from "@bitgo/utxo-lib";
@@ -24,22 +23,18 @@ export const getUpdatableIdentity = async (systemId, getIdentityResult) => {
     const rawIdTx = rawIdTxRes.result;
     const identityTransaction = Transaction.fromHex(rawIdTx, networks.verus);
     const idOutput = identityTransaction.outs[vout];
-    const decomp = decompile(idOutput.script);
+    const decomp = decompile(Buffer.from(idOutput.script));
 
     if (decomp.length !== 4) throw new Error("Identity output script is not the correct length");
     if (decomp[1] !== OPS.OP_CHECKCRYPTOCONDITION) throw new Error("Identity output script does not contain a cryptocondition");
     if (decomp[3] !== OPS.OP_DROP) throw new Error("Identity output script does not contain a drop");
 
-    const outMaster = OptCCParams.fromChunk(decomp[0]);
-    const outParams = OptCCParams.fromChunk(decomp[2]);
-
-    if (!outMaster.eval_code.eq(new BN(EVALS.EVAL_NONE))) throw new Error("Identity output script does not contain a master");
-    if (!outParams.eval_code.eq(new BN(EVALS.EVAL_IDENTITY_PRIMARY))) throw new Error("Identity output script does not contain a primary identity");
+    const outParams = OptCCParams.fromChunk(Buffer.from(decomp[2]));
 
     const __identity = new Identity();
-    __identity.fromBuffer(outParams.getParamObject())
+    __identity.fromBuffer(outParams.getParamObject());
 
-    return { tx: rawIdTxRes, identity: __identity };
+    return { tx: rawIdTx, identity: __identity };
   }
 }
 

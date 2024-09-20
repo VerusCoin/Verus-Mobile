@@ -9,6 +9,7 @@ import {
 } from '../../../../utils/api/channels/verusid/callCreators';
 import {ELECTRUM} from '../../../../utils/constants/intervalConstants';
 import {
+  SEND_MODAL_ENCRYPTED_IDENTITY_SEED,
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_IDENTITY_TO_REVOKE_FIELD,
   SEND_MODAL_SYSTEM_ID,
@@ -17,11 +18,13 @@ import {deriveKeyPair} from '../../../../utils/keys';
 import {RevokeIdentityFormRender} from './RevokeIdentityForm.render';
 import { createRevokeIdentityTx } from '../../../../utils/api/channels/verusid/requests/updateIdentity';
 import { coinsList } from '../../../../utils/CoinData/CoinsList';
+import { decryptkey } from '../../../../utils/seedCrypt';
 
 const RevokeIdentityForm = (props) => {
   const { height } = Dimensions.get("window");
   const dispatch = useDispatch();
   const sendModal = useSelector(state => state.sendModal);
+  const instanceKey = useSelector(state => state.authentication.instanceKey);
 
   const formHasError = useCallback(() => {
     const {data} = sendModal;
@@ -52,14 +55,13 @@ const RevokeIdentityForm = (props) => {
     return false;
   }, [sendModal, dispatch]);
 
-  const getPotentialPrimaryAddresses = useCallback(async (coinObj, channel) => {
-    const seeds = await props.requestSeeds();
+  const getPotentialPrimaryAddresses = useCallback(async (coinObj) => {
+    const encryptedSeed = sendModal.data[SEND_MODAL_ENCRYPTED_IDENTITY_SEED];
+    const seed = decryptkey(instanceKey, encryptedSeed);
 
-    const seed = seeds[channel];
+    if (!seed) throw new Error("Unable to decrypt seed");
 
-    if (!seed) throw new Error("No seed found");
-
-    const keyObj = await deriveKeyPair(seed, coinObj, channel);
+    const keyObj = await deriveKeyPair(seed, coinObj, ELECTRUM);
     const {addresses} = keyObj;
 
     return addresses;
@@ -93,7 +95,7 @@ const RevokeIdentityForm = (props) => {
       }
 
       let isInWallet = false;
-      const addrs = await getPotentialPrimaryAddresses(coinsList.VRSC, ELECTRUM);
+      const addrs = await getPotentialPrimaryAddresses(coinsList.VRSC);
 
       for (const address of revRes.result.identity.primaryaddresses) {
         if (addrs.includes(address)) {
@@ -110,12 +112,12 @@ const RevokeIdentityForm = (props) => {
         );
       }
 
-      const friendlyNames = await getFriendlyNameMap(data[SEND_MODAL_SYSTEM_ID], targetId.result);
-      props.setModalHeight(height >= 720 ? 696 : height - 24);
+      const friendlyNames = await getFriendlyNameMap(data[SEND_MODAL_SYSTEM_ID], tarRes.result);
 
       const targetIdAddr = tarRes.result.identity.identityaddress;
       const revocationResult = await createRevokeIdentityTx(data[SEND_MODAL_SYSTEM_ID], targetIdAddr, addrs[0])
 
+      props.setModalHeight(height >= 720 ? 696 : height - 24);
       props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
         targetId: tarRes.result,
         revocationId: revRes.result,

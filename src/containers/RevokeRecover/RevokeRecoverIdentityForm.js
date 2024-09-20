@@ -9,8 +9,10 @@ import { SMALL_DEVICE_HEGHT } from '../../utils/constants/constants';
 import { openRevokeIdentitySendModal } from '../../actions/actions/sendModal/dispatchers/sendModal';
 import { coinsList } from '../../utils/CoinData/CoinsList';
 import ListSelectionModal from '../../components/ListSelectionModal/ListSelectionModal';
+import { SEND_MODAL_ENCRYPTED_IDENTITY_SEED, SEND_MODAL_IDENTITY_TO_REVOKE_FIELD, SEND_MODAL_SYSTEM_ID } from '../../utils/constants/sendModal';
+import { encryptkey } from '../../utils/seedCrypt';
 
-export default function RevokeRecoverIdentityForm({ navigation, isRecovery }) {
+export default function RevokeRecoverIdentityForm({ navigation, isRecovery, importedSeed }) {
   const DEFAULT_SYSTEMS = [coinsList.VRSC, coinsList.iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2, coinsList.VRSCTEST];
 
   const {height} = Dimensions.get('window');
@@ -18,6 +20,8 @@ export default function RevokeRecoverIdentityForm({ navigation, isRecovery }) {
   const [identityTerm, setIdentityTerm] = useState("");
   const [networkSelectOpen, setNetworkSelectOpen] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState(coinsList.VRSC);
+  const [loading, setLoading] = useState(false);
+  const instanceKey = useSelector(state => state.authentication.instanceKey);
 
   const validate = () => {
     const res = { valid: false, message: "" }
@@ -37,14 +41,25 @@ export default function RevokeRecoverIdentityForm({ navigation, isRecovery }) {
     return res
   }
 
-  const next = () => {
-    const { valid, message } = validate()
+  const next = async () => {
+    const { valid, message } = validate();
 
-    if (!valid) createAlert("Error", message)
-    else {
-      openRevokeIdentitySendModal(
-        
-      )
+    if (!valid) createAlert("Error", message);
+    else if (!loading) {
+      try {
+        setLoading(true);
+
+        openRevokeIdentitySendModal({
+          [SEND_MODAL_IDENTITY_TO_REVOKE_FIELD]: '',
+          [SEND_MODAL_SYSTEM_ID]: coinsList.VRSC.system_id,
+          [SEND_MODAL_ENCRYPTED_IDENTITY_SEED]: await encryptkey(instanceKey, importedSeed)
+        });
+
+        setLoading(false);
+      } catch(e) {
+        setLoading(false);
+        createAlert("Error", e.message);
+      }
     }
   }
 

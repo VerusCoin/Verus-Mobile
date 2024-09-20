@@ -17,7 +17,8 @@ import {
   initSettings,
   fetchActiveCoins,
   requestSeedData,
-  initNotifications
+  initNotifications,
+  initInstanceKey
 } from './actions/actionCreators';
 import {
   initCache,
@@ -40,6 +41,7 @@ import LoadingModal from "./components/LoadingModal/LoadingModal";
 import { CoinDirectory } from "./utils/CoinData/CoinDirectory";
 import { removeInactiveCurrencyDefinitions } from "./utils/asyncStore/currencyDefinitionStorage";
 import { removeInactiveContractDefinitions } from "./utils/asyncStore/contractDefinitionStorage";
+import { initInstance } from "./utils/auth/authBox";
 
 class VerusMobile extends React.Component {
   constructor(props) {
@@ -109,6 +111,8 @@ class VerusMobile extends React.Component {
     .then(async () => {
       const settingsAction = await initSettings();
       this.props.dispatch(settingsAction);
+
+      this.props.dispatch(initInstanceKey(await initInstance()));
 
       CoinDirectory.setVrpcOverrides(settingsAction.settings.generalWalletSettings ? settingsAction.settings.generalWalletSettings.vrpcOverrides : {});
 

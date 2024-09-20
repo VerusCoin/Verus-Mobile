@@ -275,8 +275,12 @@ export const authenticateAccount = async (account, password) => {
 
                   if (seeds[seedChannel] == null) throw new Error('No seed for channel ' + seedChannel);
 
+                  const decryptedSeed = decryptkey(password, seeds[seedChannel]);
+
+                  if (!decryptedSeed) throw new Error('Failed to decrypt seed for channel ' + seedChannel);
+
                   const keyObj = await deriveKeyPair(
-                    decryptkey(password, seeds[seedChannel]),
+                    decryptedSeed,
                     activeCoins[i],
                     channel,
                     account.keyDerivationVersion == null

@@ -40,7 +40,8 @@ import {
   SEND_MODAL_DISABLED_INPUTS,
   SEND_MODAL_IDENTITY_TO_REVOKE_FIELD,
   REVOKE_IDENTITY_SEND_MODAL,
-  SEND_MODAL_SYSTEM_ID
+  SEND_MODAL_SYSTEM_ID,
+  SEND_MODAL_ENCRYPTED_IDENTITY_SEED
 } from '../../../../utils/constants/sendModal';
 import {
   CLOSE_SEND_COIN_MODAL,
@@ -141,7 +142,8 @@ export const openRevokeIdentitySendModal = (data) => {
     data == null
       ? {
           [SEND_MODAL_IDENTITY_TO_REVOKE_FIELD]: '',
-          [SEND_MODAL_SYSTEM_ID]: coinsList.VRSC.system_id
+          [SEND_MODAL_SYSTEM_ID]: coinsList.VRSC.system_id,
+          [SEND_MODAL_ENCRYPTED_IDENTITY_SEED]: ''
         }
       : data,
     REVOKE_IDENTITY_SEND_MODAL,

@@ -55,6 +55,7 @@ const RevokeRecoverStackScreens = props => {
           <RevokeRecoverIdentityForm
             navigation={props.navigation}
             isRecovery={isRecovery}
+            importedSeed={importedSeed}
           />
         )}
       </RevokeRecoverStack.Screen>
