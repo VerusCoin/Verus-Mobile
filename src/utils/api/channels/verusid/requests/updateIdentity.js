@@ -74,5 +74,5 @@ export const pushUpdateIdentityTx = (systemId, txHex, inputs, keys) => {
   const verusid = VrpcProvider.getVerusIdInterface(systemId);
   const signedTx = verusid.signUpdateIdentityTransaction(txHex, inputs, keys);
 
-  return sendRawTransaction(systemId, signedTx, inputs, keys);
+  return sendRawTransaction(systemId, signedTx);
 }

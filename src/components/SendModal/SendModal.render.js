@@ -55,6 +55,7 @@ import AddErc20TokenConfirm from "./AddErc20Token/AddErc20TokenConfirm/AddErc20T
 import AddErc20TokenResult from "./AddErc20Token/AddErc20TokenResult/AddErc20TokenResult";
 import RevokeIdentityForm from "./RevokeIdentity/RevokeIdentityForm/RevokeIdentityForm";
 import RevokeIdentityConfirm from "./RevokeIdentity/RevokeIdentityConfirm/RevokeIdentityConfirm";
+import RevokeIdentityResult from "./RevokeIdentity/RevokeIdentityResult/RevokeIdentityResult";
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
@@ -98,7 +99,7 @@ const SEND_RESULTS = {
   [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyResult,
   [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendResult,
   [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenResult,
-  [REVOKE_IDENTITY_SEND_MODAL]: LinkIdentityResult
+  [REVOKE_IDENTITY_SEND_MODAL]: RevokeIdentityResult
 };
 
 export const SendModalRender = function () {

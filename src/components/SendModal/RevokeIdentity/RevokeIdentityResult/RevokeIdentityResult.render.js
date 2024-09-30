@@ -5,12 +5,11 @@ import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
 import AnimatedSuccessCheckmark from '../../../AnimatedSuccessCheckmark';
-import { useSelector } from 'react-redux';
 import { convertFqnToDisplayFormat } from '../../../../utils/fullyqualifiedname';
+import { explorers } from '../../../../utils/CoinData/CoinData';
 
-export const LinkIdentityResultRender = ({verusId, finishSend}) => {
-  const coinObj = useSelector(state => state.sendModal.coinObj);
-  const formattedFriendlyName = convertFqnToDisplayFormat(verusId.fullyqualifiedname);
+export const RevokeIdentityResultRender = ({targetId, networkObj, finishSend, txid, openExplorer}) => {
+  const formattedFriendlyName = convertFqnToDisplayFormat(targetId.fullyqualifiedname);
 
   return (
     <ScrollView
@@ -21,9 +20,9 @@ export const LinkIdentityResultRender = ({verusId, finishSend}) => {
       }}>
       <TouchableOpacity
         onPress={() =>
-          copyToClipboard(verusId.identity.identityaddress, {
+          copyToClipboard(targetId.identity.identityaddress, {
             title: 'Address copied',
-            message: `${verusId.identity.identityaddress} copied to clipboard.`,
+            message: `${targetId.identity.identityaddress} copied to clipboard.`,
           })
         }
         style={{
@@ -37,7 +36,7 @@ export const LinkIdentityResultRender = ({verusId, finishSend}) => {
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {`${formattedFriendlyName} linked`}
+          {`${formattedFriendlyName} revoked!`}
         </Text>
       </TouchableOpacity>
       <View style={{paddingVertical: 16}}>
@@ -47,14 +46,24 @@ export const LinkIdentityResultRender = ({verusId, finishSend}) => {
           }}
         />
       </View>
-      <View style={{paddingVertical: 16, width: '75%'}}>
+      <View style={{width: '75%'}}>
         <Text
           style={{
             textAlign: 'center',
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {`Your VerusID will now appear as a card in your ${coinObj.display_ticker} wallet.`}
+          {`Your VerusID has been revoked on the ${networkObj ? networkObj.display_name : "???"} blockchain.`}
+        </Text>
+      </View>
+      <View style={{paddingVertical: 8, width: '75%'}}>
+        <Text
+          style={{
+            textAlign: 'center',
+            fontSize: 20,
+            color: Colors.verusDarkGray,
+          }}>
+          {'This action may take a few minutes to confirm on-chain.'}
         </Text>
       </View>
       <View
@@ -63,6 +72,15 @@ export const LinkIdentityResultRender = ({verusId, finishSend}) => {
           flexDirection: 'row',
           justifyContent: 'space-evenly',
         }}>
+        {networkObj != null && explorers[networkObj.id] != null && (
+          <Button
+            color={Colors.primaryColor}
+            style={{width: 148}}
+            labelStyle={{fontSize: 18}}
+            onPress={openExplorer}>
+            Details
+          </Button>
+        )}
         <Button
           color={Colors.verusGreenColor}
           style={{width: 148}}
@@ -71,6 +89,26 @@ export const LinkIdentityResultRender = ({verusId, finishSend}) => {
           Done
         </Button>
       </View>
+      <TouchableOpacity
+        onPress={() =>
+          copyToClipboard(txid, {
+            title: 'Transaction ID copied',
+            message: `${txid} copied to clipboard.`,
+          })
+        }
+        style={{
+          width: '75%',
+        }}>
+        <Text
+          numberOfLines={1}
+          style={{
+            textAlign: 'center',
+            fontSize: 14,
+            color: Colors.verusDarkGray,
+          }}>
+          {`id: ${txid}`}
+        </Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };

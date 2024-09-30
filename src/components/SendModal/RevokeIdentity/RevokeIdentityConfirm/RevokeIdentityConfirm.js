@@ -1,25 +1,29 @@
 import React, {useState, useCallback} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {Alert} from 'react-native';
-import {setUserCoins} from '../../../../actions/actionCreators';
-import {updateVerusIdWallet} from '../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager';
 import {
-  clearChainLifecycle,
-  refreshActiveChainLifecycles,
-} from '../../../../actions/actions/intervals/dispatchers/lifecycleManager';
-import {linkVerusId} from '../../../../actions/actions/services/dispatchers/verusid/verusid';
-import {
+  SEND_MODAL_ENCRYPTED_IDENTITY_SEED,
   SEND_MODAL_FORM_STEP_FORM,
   SEND_MODAL_FORM_STEP_RESULT,
+  SEND_MODAL_SYSTEM_ID,
 } from '../../../../utils/constants/sendModal';
-import {convertFqnToDisplayFormat} from '../../../../utils/fullyqualifiedname';
 import {RevokeIdentityConfirmRender} from './RevokeIdentityConfirm.render';
+import { pushUpdateIdentityTx } from '../../../../utils/api/channels/verusid/requests/updateIdentity';
+import { decryptkey } from '../../../../utils/seedCrypt';
+import { deriveKeyPair } from '../../../../utils/keys';
+import { ELECTRUM } from '../../../../utils/constants/intervalConstants';
+import { coinsList } from '../../../../utils/CoinData/CoinsList';
 
 const RevokeIdentityConfirm = props => {
-  const [verusId, setVerusId] = useState(props.route.params.targetId);
+  const [targetId, setTargetId] = useState(props.route.params.targetId);
+  const [revocationId, setRevocationId] = useState(props.route.params.revocationId);
+  const [ownedAddress, setOwnedAddress] = useState(props.route.params.ownedAddress);
+  const [revocableByUser, setRevocableByUser] = useState(props.route.params.revocableByUser);
+  const [revocationResult, setRevocationResult] = useState(props.route.params.revocationResult);
   const [friendlyNames, setFriendlyNames] = useState(
     props.route.params.friendlyNames,
   );
+  const instanceKey = useSelector(state => state.authentication.instanceKey);
 
   const dispatch = useDispatch();
   const sendModal = useSelector(state => state.sendModal);
@@ -33,32 +37,40 @@ const RevokeIdentityConfirm = props => {
     props.navigation.navigate(SEND_MODAL_FORM_STEP_FORM);
   }, [props]);
 
+  const getSpendingKey = useCallback(async () => {
+    const encryptedSeed = sendModal.data[SEND_MODAL_ENCRYPTED_IDENTITY_SEED];
+    const seed = decryptkey(instanceKey, encryptedSeed);
+
+    if (!seed) throw new Error("Unable to decrypt seed");
+
+    const keyObj = await deriveKeyPair(seed, coinsList.VRSC, ELECTRUM);
+
+    return keyObj.privKey;
+  }, []);
+
   const submitData = useCallback(async () => {
     await props.setLoading(true);
     await props.setPreventExit(true);
+    const { data } = sendModal;
 
     try {
-      const {identityaddress} = verusId.identity;
-      const {coinObj} = sendModal;
+      const spendingKey = await getSpendingKey();
 
-      await linkVerusId(
-        identityaddress,
-        convertFqnToDisplayFormat(verusId.fullyqualifiedname),
-        coinObj.id,
-      );
+      const keys = [];
+      for (let i = 0; i < revocationResult.utxos.length; i++) {
+        keys.push([spendingKey])
+      }
 
-      await updateVerusIdWallet();
-      clearChainLifecycle(coinObj.id);
-      const setUserCoinsAction = setUserCoins(activeCoinList, activeAccount.id);
-      dispatch(setUserCoinsAction);
-
-      refreshActiveChainLifecycles(
-        setUserCoinsAction.payload.activeCoinsForUser,
-      );
+      const result = await pushUpdateIdentityTx(data[SEND_MODAL_SYSTEM_ID], revocationResult.hex, revocationResult.utxos, keys);
+      
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
 
       props.navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, {
-        verusId,
-        friendlyNames,
+        targetId,
+        revocationId,
+        txid: result.result
       });
     } catch (e) {
       Alert.alert('Error', e.message);
@@ -67,7 +79,7 @@ const RevokeIdentityConfirm = props => {
     props.setPreventExit(false);
     props.setLoading(false);
   }, [
-    verusId,
+    targetId,
     friendlyNames,
     sendModal,
     activeAccount,
@@ -77,7 +89,7 @@ const RevokeIdentityConfirm = props => {
   ]);
 
   return RevokeIdentityConfirmRender({
-    verusId,
+    targetId,
     friendlyNames,
     goBack,
     submitData,

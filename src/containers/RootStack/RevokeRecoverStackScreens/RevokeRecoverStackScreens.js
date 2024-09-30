@@ -4,12 +4,15 @@ import { defaultHeaderOptions } from '../../../utils/navigation/header';
 import RevokeRecoverSlider from '../../RevokeRecover/RevokeRecoverSlider';
 import ImportWalletStackScreens from '../../CreateWallet/Forms/ImportWallet/ImportWallet';
 import RevokeRecoverIdentityForm from '../../RevokeRecover/RevokeRecoverIdentityForm';
+import { NavigationActions } from '@react-navigation/compat';
 
 const RevokeRecoverStack = createStackNavigator();
 
 const RevokeRecoverStackScreens = props => {
   const [importedSeed, setImportedSeed] = useState(null);
   const [isRecovery, setIsRecovery] = useState(false);
+
+  const exitRevokeRecover = () => props.navigation.dispatch(NavigationActions.back())
 
   return (
     <RevokeRecoverStack.Navigator
@@ -56,6 +59,7 @@ const RevokeRecoverStackScreens = props => {
             navigation={props.navigation}
             isRecovery={isRecovery}
             importedSeed={importedSeed}
+            exitRevokeRecover={exitRevokeRecover}
           />
         )}
       </RevokeRecoverStack.Screen>

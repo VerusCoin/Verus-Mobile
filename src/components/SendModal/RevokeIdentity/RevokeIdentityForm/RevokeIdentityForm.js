@@ -1,4 +1,4 @@
-import {useCallback} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {fromBase58Check} from '@bitgo/utxo-lib/dist/src/address';
 import {Alert, Dimensions} from 'react-native';
@@ -19,12 +19,21 @@ import {RevokeIdentityFormRender} from './RevokeIdentityForm.render';
 import { createRevokeIdentityTx } from '../../../../utils/api/channels/verusid/requests/updateIdentity';
 import { coinsList } from '../../../../utils/CoinData/CoinsList';
 import { decryptkey } from '../../../../utils/seedCrypt';
+import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
 
 const RevokeIdentityForm = (props) => {
   const { height } = Dimensions.get("window");
   const dispatch = useDispatch();
   const sendModal = useSelector(state => state.sendModal);
   const instanceKey = useSelector(state => state.authentication.instanceKey);
+  const [networkName, setNetworkName] = useState(sendModal.data[SEND_MODAL_SYSTEM_ID]);
+
+  useEffect(() => {
+    try {
+      const systemObj = CoinDirectory.findSystemCoinObj(sendModal.data[SEND_MODAL_SYSTEM_ID]);
+      setNetworkName(systemObj.display_name);
+    } catch(e) {}
+  }, [])
 
   const formHasError = useCallback(() => {
     const {data} = sendModal;
@@ -87,11 +96,23 @@ const RevokeIdentityForm = (props) => {
         throw new Error(tarRes.error.message);
       }
 
+      if (tarRes.result.status === "revoked") {
+        throw new Error(
+          'Cannot revoke VerusID that is already revoked.',
+        );
+      }
+
       const revocation = tarRes.result.identity.revocationauthority;
 
       const revRes = await getIdentity(data[SEND_MODAL_SYSTEM_ID], revocation);
       if (revRes.error) {
         throw new Error(revRes.error.message);
+      }
+
+      if (revRes.result.status !== "active") {
+        throw new Error(
+          'Revocation identity is not active, and therefore unable to sign transactions.',
+        );
       }
 
       let isInWallet = false;
@@ -136,7 +157,8 @@ const RevokeIdentityForm = (props) => {
   return RevokeIdentityFormRender({
     submitData,
     updateSendFormData: props.updateSendFormData,
-    formDataValue: sendModal.data[SEND_MODAL_IDENTITY_TO_REVOKE_FIELD]
+    formDataValue: sendModal.data[SEND_MODAL_IDENTITY_TO_REVOKE_FIELD],
+    networkName
   });
 };
 

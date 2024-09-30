@@ -5,11 +5,11 @@ import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import VerusIdObjectData from '../../../VerusIdObjectData';
 
-export const RevokeIdentityConfirmRender = ({ verusId, friendlyNames, goBack, submitData, ownedByUser, ownedAddress }) => {
+export const RevokeIdentityConfirmRender = ({ targetId, friendlyNames, goBack, submitData, ownedByUser, ownedAddress }) => {
   return (
     <SafeAreaView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }}>
       <VerusIdObjectData
-        verusId={verusId}
+        verusId={targetId}
         friendlyNames={friendlyNames}
         ownedByUser={false}
         ownedAddress={ownedAddress}

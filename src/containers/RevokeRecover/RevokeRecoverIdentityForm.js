@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {View, Dimensions, TouchableWithoutFeedback, Keyboard, TouchableOpacity} from 'react-native';
 import {Text, Paragraph, TextInput, Portal} from 'react-native-paper';
 import { useSelector } from 'react-redux';
@@ -9,33 +9,39 @@ import { SMALL_DEVICE_HEGHT } from '../../utils/constants/constants';
 import { openRevokeIdentitySendModal } from '../../actions/actions/sendModal/dispatchers/sendModal';
 import { coinsList } from '../../utils/CoinData/CoinsList';
 import ListSelectionModal from '../../components/ListSelectionModal/ListSelectionModal';
-import { SEND_MODAL_ENCRYPTED_IDENTITY_SEED, SEND_MODAL_IDENTITY_TO_REVOKE_FIELD, SEND_MODAL_SYSTEM_ID } from '../../utils/constants/sendModal';
+import { SEND_MODAL_ENCRYPTED_IDENTITY_SEED, SEND_MODAL_IDENTITY_TO_REVOKE_FIELD, SEND_MODAL_REVOCATION_COMPLETE, SEND_MODAL_SYSTEM_ID } from '../../utils/constants/sendModal';
 import { encryptkey } from '../../utils/seedCrypt';
 
-export default function RevokeRecoverIdentityForm({ navigation, isRecovery, importedSeed }) {
+export default function RevokeRecoverIdentityForm({ navigation, isRecovery, importedSeed, exitRevokeRecover }) {
   const DEFAULT_SYSTEMS = [coinsList.VRSC, coinsList.iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2, coinsList.VRSCTEST];
 
   const {height} = Dimensions.get('window');
   const isKeyboardActive = useSelector(state => state.keyboard.active);
-  const [identityTerm, setIdentityTerm] = useState("");
   const [networkSelectOpen, setNetworkSelectOpen] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState(coinsList.VRSC);
   const [loading, setLoading] = useState(false);
   const instanceKey = useSelector(state => state.authentication.instanceKey);
 
+  const revocationComplete = useSelector(state => state.sendModal.data[SEND_MODAL_REVOCATION_COMPLETE]);
+  const sendModalVisible = useSelector(state => state.sendModal.visible);
+  const [lastSendModalVisible, setLastSendModalVisible] = useState(true);
+  const [hasRevocationCompleted, setHasRevocationCompleted] = useState(false);
+
+  useEffect(() => {
+    if (revocationComplete && !hasRevocationCompleted) {
+      setHasRevocationCompleted(true);
+    }
+  }, [revocationComplete])
+
+  useEffect(() => {
+    if (!isRecovery && !sendModalVisible && lastSendModalVisible && hasRevocationCompleted) {
+      setLastSendModalVisible(false) 
+      exitRevokeRecover()
+    }
+  }, [sendModalVisible])
+
   const validate = () => {
     const res = { valid: false, message: "" }
-
-    // if (!profileName || profileName.length < 1) {
-    //   res.message = "Please enter a profile name."
-    //   return res
-    // } else if (profileName.length > 50) {
-    //   res.message = "Please enter a profile name shorter than 50 characters."
-    //   return res
-    // } else if (isDuplicateAccount(profileName)) {
-    //   res.message = "A profile with this name already exists."
-    //   return res
-    // }
 
     res.valid = true
     return res
@@ -51,7 +57,7 @@ export default function RevokeRecoverIdentityForm({ navigation, isRecovery, impo
 
         openRevokeIdentitySendModal({
           [SEND_MODAL_IDENTITY_TO_REVOKE_FIELD]: '',
-          [SEND_MODAL_SYSTEM_ID]: coinsList.VRSC.system_id,
+          [SEND_MODAL_SYSTEM_ID]: selectedNetwork.system_id,
           [SEND_MODAL_ENCRYPTED_IDENTITY_SEED]: await encryptkey(instanceKey, importedSeed)
         });
 
@@ -106,31 +112,8 @@ export default function RevokeRecoverIdentityForm({ navigation, isRecovery, impo
               fontSize: 28,
               fontWeight: 'bold',
             }}>
-            {"Enter VerusID"}
+            {"Select Blockchain"}
           </Text>
-          <Paragraph
-            style={{
-              textAlign: 'center',
-              width: '75%',
-              marginTop: 24,
-              width: 280
-            }}>
-            {`Enter the handle or i-address of the VerusID you want to ${isRecovery ? "recover" : "revoke"}, and select the blockchain that the VerusID exists on.`}
-          </Paragraph>
-          <TextInput
-            returnKeyType="done"
-            label="Identity"          
-            value={identityTerm}
-            mode={"outlined"}
-            style={{
-              width: '75%',
-              marginTop: 48,
-              width: 280
-            }}
-            placeholder="Enter handle/i-address"
-            dense={true}
-            onChangeText={(text) => setIdentityTerm(text)}
-          />
           <TouchableOpacity onPress={() => setNetworkSelectOpen(true)}>
             <TextInput
               style={{
@@ -147,12 +130,20 @@ export default function RevokeRecoverIdentityForm({ navigation, isRecovery, impo
               pointerEvents="none"
             />
           </TouchableOpacity>
+          <Paragraph
+            style={{
+              textAlign: 'center',
+              width: '75%',
+              marginTop: 24,
+              width: 280
+            }}>
+            {`Select the blockchain you want to ${isRecovery ? "recover" : "revoke"} your VerusID on, then press next. Keep in mind, if your identity has been exported to other blockchains, you will need to revoke/recover them separately.`}
+          </Paragraph>
         </View>
         {!isKeyboardActive && <TallButton
           onPress={next}
           mode="contained"
           labelStyle={{fontWeight: "bold"}}
-          disabled={identityTerm.length == 0}
           style={{
             position: "absolute",
             bottom: 80,
