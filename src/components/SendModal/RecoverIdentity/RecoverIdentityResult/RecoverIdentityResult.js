@@ -1,13 +1,13 @@
 import {useEffect, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import {closeSendModal} from '../../../../actions/actions/sendModal/dispatchers/sendModal';
-import { RevokeIdentityResultRender } from './RevokeIdentityResult.render';
+import { RecoverIdentityResultRender } from './RecoverIdentityResult.render';
 import { SEND_MODAL_REVOKE_RECOVER_COMPLETE, SEND_MODAL_SYSTEM_ID } from '../../../../utils/constants/sendModal';
 import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
 import { explorers } from '../../../../utils/CoinData/CoinData';
 import { openUrl } from '../../../../utils/linking';
 
-const RevokeIdentityResult = (props) => {
+const RecoverIdentityResult = (props) => {
   const sendModal = useSelector(state => state.sendModal);
   const {data} = sendModal;
   const [targetId, setTargetId] = useState(props.route.params == null ? {} : props.route.params.targetId);
@@ -35,7 +35,7 @@ const RevokeIdentityResult = (props) => {
     openUrl(url);
   };
 
-  return RevokeIdentityResultRender({
+  return RecoverIdentityResultRender({
     targetId,
     networkObj,
     finishSend,
@@ -44,4 +44,4 @@ const RevokeIdentityResult = (props) => {
   });
 };
 
-export default RevokeIdentityResult;
+export default RecoverIdentityResult;

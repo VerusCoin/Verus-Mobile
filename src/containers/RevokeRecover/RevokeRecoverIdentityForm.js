@@ -6,10 +6,10 @@ import { createAlert } from '../../actions/actions/alert/dispatchers/alert';
 import TallButton from '../../components/LargerButton';
 import Colors from '../../globals/colors';
 import { SMALL_DEVICE_HEGHT } from '../../utils/constants/constants';
-import { openRevokeIdentitySendModal } from '../../actions/actions/sendModal/dispatchers/sendModal';
+import { openRecoverIdentitySendModal, openRevokeIdentitySendModal } from '../../actions/actions/sendModal/dispatchers/sendModal';
 import { coinsList } from '../../utils/CoinData/CoinsList';
 import ListSelectionModal from '../../components/ListSelectionModal/ListSelectionModal';
-import { SEND_MODAL_ENCRYPTED_IDENTITY_SEED, SEND_MODAL_IDENTITY_TO_REVOKE_FIELD, SEND_MODAL_REVOCATION_COMPLETE, SEND_MODAL_SYSTEM_ID } from '../../utils/constants/sendModal';
+import { SEND_MODAL_ENCRYPTED_IDENTITY_SEED, SEND_MODAL_IDENTITY_TO_REVOKE_FIELD, SEND_MODAL_REVOKE_RECOVER_COMPLETE, SEND_MODAL_SYSTEM_ID } from '../../utils/constants/sendModal';
 import { encryptkey } from '../../utils/seedCrypt';
 
 export default function RevokeRecoverIdentityForm({ navigation, isRecovery, importedSeed, exitRevokeRecover }) {
@@ -22,19 +22,19 @@ export default function RevokeRecoverIdentityForm({ navigation, isRecovery, impo
   const [loading, setLoading] = useState(false);
   const instanceKey = useSelector(state => state.authentication.instanceKey);
 
-  const revocationComplete = useSelector(state => state.sendModal.data[SEND_MODAL_REVOCATION_COMPLETE]);
+  const complete = useSelector(state => state.sendModal.data[SEND_MODAL_REVOKE_RECOVER_COMPLETE]);
   const sendModalVisible = useSelector(state => state.sendModal.visible);
   const [lastSendModalVisible, setLastSendModalVisible] = useState(true);
-  const [hasRevocationCompleted, setHasRevocationCompleted] = useState(false);
+  const [alreadyComplete, setAlreadyComplete] = useState(false);
 
   useEffect(() => {
-    if (revocationComplete && !hasRevocationCompleted) {
-      setHasRevocationCompleted(true);
+    if (complete && !alreadyComplete) {
+      setAlreadyComplete(true);
     }
-  }, [revocationComplete])
+  }, [complete])
 
   useEffect(() => {
-    if (!isRecovery && !sendModalVisible && lastSendModalVisible && hasRevocationCompleted) {
+    if (!sendModalVisible && lastSendModalVisible && alreadyComplete) {
       setLastSendModalVisible(false) 
       exitRevokeRecover()
     }
@@ -55,11 +55,20 @@ export default function RevokeRecoverIdentityForm({ navigation, isRecovery, impo
       try {
         setLoading(true);
 
-        openRevokeIdentitySendModal({
-          [SEND_MODAL_IDENTITY_TO_REVOKE_FIELD]: '',
-          [SEND_MODAL_SYSTEM_ID]: selectedNetwork.system_id,
-          [SEND_MODAL_ENCRYPTED_IDENTITY_SEED]: await encryptkey(instanceKey, importedSeed)
-        });
+        if (isRecovery) {
+          openRecoverIdentitySendModal({
+            [SEND_MODAL_IDENTITY_TO_REVOKE_FIELD]: '',
+            [SEND_MODAL_SYSTEM_ID]: selectedNetwork.system_id,
+            [SEND_MODAL_ENCRYPTED_IDENTITY_SEED]: await encryptkey(instanceKey, importedSeed)
+          });
+        } else {
+          openRevokeIdentitySendModal({
+            [SEND_MODAL_IDENTITY_TO_REVOKE_FIELD]: '',
+            [SEND_MODAL_SYSTEM_ID]: selectedNetwork.system_id,
+            [SEND_MODAL_ENCRYPTED_IDENTITY_SEED]: await encryptkey(instanceKey, importedSeed)
+          });
+        }
+        
 
         setLoading(false);
       } catch(e) {

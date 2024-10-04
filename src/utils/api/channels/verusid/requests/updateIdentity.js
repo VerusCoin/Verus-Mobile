@@ -1,10 +1,11 @@
-import { decompile, GetIdentityResponse, OPS, OptCCParams, Identity, SmartTransactionScript, IdentityID } from "verus-typescript-primitives";
+import { decompile, GetIdentityResponse, OPS, OptCCParams, Identity, SmartTransactionScript, IdentityID, fromBase58Check } from "verus-typescript-primitives";
 import { CoinDirectory } from "../../../../CoinData/CoinDirectory";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 import { IS_PBAAS } from "../../../../constants/intervalConstants";
 import { getIdentity } from "./getIdentity";
 import { getSpendableUtxos, getTransaction, sendRawTransaction } from "../../vrpc/callCreators";
 import { networks, Transaction } from "@bitgo/utxo-lib";
+import { I_ADDRESS_VERSION } from "../../../../constants/constants";
 
 /**
  * Safely extracts an editable/serializable identity class instance from the transaction an identity came from,
@@ -67,6 +68,51 @@ export const createRevokeIdentityTx = async (systemId, iAddr, changeAaddr) => {
     const utxos = await getSpendableUtxos(systemId, systemId, [changeAaddr]);
 
     return verusid.createRevokeIdentityTransaction(identity, changeAaddr, tx, blockheight, utxos);
+  }
+}
+
+export const createRecoverIdentityTx = async (systemId, iAddr, recoveryAuthority, revocationAuthority, primaryAddresses, privateAddress, changeAaddr) => {
+  const verusid = VrpcProvider.getVerusIdInterface(systemId);
+
+  const idRes = await getIdentity(systemId, iAddr);
+
+  if (idRes.error) throw new Error(idRes.error.message);
+  else {
+    const { blockheight } = idRes.result;
+    const { tx, identity } = await getUpdatableIdentity(systemId, idRes.result);
+
+    async function getAuthorityAddress(authString) {
+      let addressVersion;
+      try {
+        const { version } = fromBase58Check(authString);
+        addressVersion = version
+      } catch(e) {}
+
+      if (addressVersion != null && addressVersion === I_ADDRESS_VERSION) {
+        return authString
+      } else {
+        const recRes = await getIdentity(systemId, authString);
+        if (recRes.error) throw new Error(recRes.error.message);
+        else {
+          const id = (await getUpdatableIdentity(systemId, recRes.result)).identity;
+          return id.getIdentityAddress()
+        }
+      }
+    }
+
+    if (primaryAddresses != null) identity.setPrimaryAddresses(primaryAddresses);
+    if (privateAddress != null) identity.setPrivateAddress(privateAddress);
+
+    if (recoveryAuthority != null) {
+      identity.setRecovery(await getAuthorityAddress(recoveryAuthority))
+    }
+
+    if (revocationAuthority != null) {
+      identity.setRevocation(await getAuthorityAddress(revocationAuthority))
+    }
+    
+    const utxos = await getSpendableUtxos(systemId, systemId, [changeAaddr]);
+    return verusid.createRecoverIdentityTransaction(identity, changeAaddr, tx, blockheight, utxos);
   }
 }
 

@@ -30,7 +30,7 @@ export const RevokeIdentityFormRender = ({submitData, updateSendFormData, formDa
             autoCapitalize={"none"}
             autoCorrect={false}
           />
-          <Paragraph style={{ color: Colors.quaternaryColor }}>
+          <Paragraph style={{ color: Colors.quaternaryColor, paddingLeft: 16 }}>
             {`${networkName} blockchain`}
           </Paragraph>
         </View>

@@ -19,6 +19,7 @@ import {
   CONVERT_OR_CROSS_CHAIN_SEND_MODAL,
   ADD_ERC20_TOKEN_MODAL,
   REVOKE_IDENTITY_SEND_MODAL,
+  RECOVER_IDENTITY_SEND_MODAL,
 } from "../../utils/constants/sendModal";
 import { SendModalRender } from "./SendModal.render"
 import { DEVICE_WINDOW_HEIGHT } from "../../utils/constants/constants";
@@ -38,7 +39,8 @@ class SendModal extends Component {
       [ADD_PBAAS_CURRENCY_MODAL]: 442,
       [ADD_ERC20_TOKEN_MODAL]: 442,
       [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: 696,
-      [REVOKE_IDENTITY_SEND_MODAL]: 442
+      [REVOKE_IDENTITY_SEND_MODAL]: 442,
+      [RECOVER_IDENTITY_SEND_MODAL]: 624
     };
 
     for (const key in this.DEFAULT_MODAL_HEIGHTS) {
