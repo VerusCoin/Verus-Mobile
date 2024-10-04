@@ -11,7 +11,6 @@ import {setDeeplinkUrl} from '../../../actions/actionCreators';
 import CreateProfile from '../../Onboard/CreateProfile/CreateProfile';
 import RevokeRecoverStackScreens from '../RevokeRecoverStackScreens/RevokeRecoverStackScreens';
 import RecoverSeedsStackScreens from '../RecoverSeedsStackScreens/RecoverSeedsStackScreens';
-import RevokeRecoverStackScreens from '../RevokeRecoverStackScreens/RevokeRecoverStackScreens';
 
 const SignedOutStack = createStackNavigator();
 
