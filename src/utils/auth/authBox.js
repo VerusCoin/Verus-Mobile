@@ -19,6 +19,10 @@ export const initSession = async (password) => {
   return sessionKey
 }
 
+export const initInstance = async () => {
+  return (await randomBytes(32)).toString('hex')
+}
+
 export const requestPassword = async () => {
   const state = store.getState()
 

@@ -7,15 +7,6 @@ export const calculateMerkleRoot = (txid, proof, pos, txBlockHeight) => {
   let hash = txid;
   let serialized;
 
-  /* For debugging
-  if (__DEV__) {
-    console.log("Fetching root for transaction with id " + txid)
-    console.log("Hashes required to prove merkle root:")
-    console.log(proof)
-    console.log("Transaction index in block: " + pos)
-  }
-  */
-
   for (i = 0; i < proof.length; i++) {
     const _hashBuff = new Buffer(hash, 'hex');
     const _proofBuff = new Buffer(proof[i], 'hex');
@@ -29,12 +20,6 @@ export const calculateMerkleRoot = (txid, proof, pos, txBlockHeight) => {
     hash = reverse(sha256(sha256(serialized))).toString('hex');
     pos /= 2;
   }
-
-  /* For debugging
-  if (__DEV__) {
-    console.log("Merkle root calculated is " + hash)
-  }
-  */
   
   return {
     root: hash,

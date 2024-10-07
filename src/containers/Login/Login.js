@@ -71,8 +71,12 @@ const Login = props => {
     props.navigation.navigate('CreateProfile');
   };
 
+  handleRevokeRecover = () => {
+    props.navigation.navigate('RevokeRecover');
+  }
+
   handleRecoverSeed = () => {
-    props.navigation.navigate("RecoverSeeds");
+    props.navigation.navigate('RecoverSeeds');
   };
 
   return (
@@ -84,6 +88,7 @@ const Login = props => {
       <View style={{ position: "absolute", width: "100%", height: "100%" }}>
         {!modalVisible && <SignedOutDropdown
           handleRecoverSeed={() => handleRecoverSeed()}
+          handleRevokeRecover={() => handleRevokeRecover()}
           hasAccount={true}
         />}
       </View>

@@ -1,7 +1,7 @@
 import { convertFqnToDisplayFormat } from "../../../../fullyqualifiedname";
 import { getIdentity } from "./getIdentity";
 
-export const getFriendlyNameMap = async (coinObj, identityObj) => {
+export const getFriendlyNameMap = async (systemId, identityObj) => {
   let names = {
     ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',
     ['iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq']: 'VRSCTEST',
@@ -20,7 +20,7 @@ export const getFriendlyNameMap = async (coinObj, identityObj) => {
 
   for (const addr of iAddresses) {
     try {
-      const id = await getIdentity(coinObj.system_id, addr);
+      const id = await getIdentity(systemId, addr);
 
       names[addr] = convertFqnToDisplayFormat(id.result.fullyqualifiedname);
     } catch (e) {

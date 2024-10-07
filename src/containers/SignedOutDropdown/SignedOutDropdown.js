@@ -6,6 +6,7 @@ import Colors from '../../globals/colors';
 const SignedOutDropdown = (props) => {
   const {
     handleRecoverSeed,
+    handleRevokeRecover,
     hasAccount
   } = props;
   const [visible, setVisible] = React.useState(false);
@@ -20,6 +21,10 @@ const SignedOutDropdown = (props) => {
           {
             label: 'Recover account seeds',
             onPress: handleRecoverSeed,
+          },
+          {
+            label: 'Revoke/Recover VerusID',
+            onPress: handleRevokeRecover,
           }
         ];
 

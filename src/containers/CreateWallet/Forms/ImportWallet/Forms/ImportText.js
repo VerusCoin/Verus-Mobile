@@ -77,7 +77,7 @@ export default function ImportText({
               width: 280,
             }}>
             {
-              "Enter your key or mnemonic seed into the text box below, then press 'import' to create your wallet."
+              "Enter your key or mnemonic seed into the text box below, then press 'import'."
             }
           </Paragraph>
           <View style={Styles.wideCenterBlock}>

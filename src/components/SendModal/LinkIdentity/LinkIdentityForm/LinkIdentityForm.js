@@ -103,7 +103,7 @@ const LinkIdentityForm = (props) => {
         );
       }
 
-      const friendlyNames = await getFriendlyNameMap(coinObj, res.result);
+      const friendlyNames = await getFriendlyNameMap(coinObj.system_id, res.result);
       props.setModalHeight(height >= 720 ? 696 : height - 24);
 
       props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {

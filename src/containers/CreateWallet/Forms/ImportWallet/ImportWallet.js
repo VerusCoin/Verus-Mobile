@@ -10,6 +10,7 @@ export default function ImportWalletStackScreens({
   importedSeed,
   setImportedSeed,
   onComplete,
+  label
 }) {
   return (
     <ImportWalletStack.Navigator>
@@ -23,6 +24,7 @@ export default function ImportWalletStackScreens({
             navigation={navigation}
             importedSeed={importedSeed}
             setImportedSeed={setImportedSeed}
+            label={label}
           />
         )}
       </ImportWalletStack.Screen>
