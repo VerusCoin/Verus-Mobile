@@ -136,7 +136,7 @@ const RevokeIdentityForm = (props) => {
       const friendlyNames = await getFriendlyNameMap(data[SEND_MODAL_SYSTEM_ID], tarRes.result);
 
       const targetIdAddr = tarRes.result.identity.identityaddress;
-      const revocationResult = await createRevokeIdentityTx(data[SEND_MODAL_SYSTEM_ID], targetIdAddr, addrs[0])
+      const revocationResult = await createRevokeIdentityTx(data[SEND_MODAL_SYSTEM_ID], targetIdAddr, revRes.result.identity.identityaddress)
 
       props.setModalHeight(height >= 720 ? 696 : height - 24);
       props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {

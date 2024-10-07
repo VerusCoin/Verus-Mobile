@@ -203,7 +203,7 @@ const RecoverIdentityForm = (props) => {
         revocationAddr, 
         [primaryAddr], 
         privateAddr, 
-        addrs[0]
+        recRes.result.identity.identityaddress
       )
 
       props.setModalHeight(height >= 720 ? 696 : height - 24);
