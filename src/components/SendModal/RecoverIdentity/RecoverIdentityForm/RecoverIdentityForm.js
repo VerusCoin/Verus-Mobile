@@ -154,6 +154,12 @@ const RecoverIdentityForm = (props) => {
         );
       }
 
+      if (recRes.result.identity.minimumsignatures > 1) {
+        throw new Error(
+          'Recovery identity has minimum signatures > 1. Please recover through CLI or Verus Desktop.',
+        );
+      }
+
       let isInWallet = false;
       const addrs = await getPotentialPrimaryAddresses(coinsList.VRSC);
 

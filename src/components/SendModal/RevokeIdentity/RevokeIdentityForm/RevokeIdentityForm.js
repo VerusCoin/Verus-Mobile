@@ -115,6 +115,12 @@ const RevokeIdentityForm = (props) => {
         );
       }
 
+      if (revRes.result.identity.minimumsignatures > 1) {
+        throw new Error(
+          'Revocation identity has minimum signatures > 1. Please revoke through CLI or Verus Desktop.',
+        );
+      }
+
       let isInWallet = false;
       const addrs = await getPotentialPrimaryAddresses(coinsList.VRSC);
 
