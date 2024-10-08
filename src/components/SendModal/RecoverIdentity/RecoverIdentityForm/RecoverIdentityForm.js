@@ -219,7 +219,11 @@ const RecoverIdentityForm = (props) => {
         friendlyNames,
         ownedAddress,
         recoverableByUser,
-        recoveryResult
+        recoveryResult,
+        revocationAddr,
+        recoveryAddr,
+        primaryAddr,
+        privateAddr
       })
     } catch (e) {
       Alert.alert('Error', e.message);

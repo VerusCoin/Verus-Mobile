@@ -20,6 +20,11 @@ const RecoverIdentityConfirm = props => {
   const [ownedAddress, setOwnedAddress] = useState(props.route.params.ownedAddress);
   const [recoverableByUser, setRecoverableByUser] = useState(props.route.params.recoverableByUser);
   const [recoveryResult, setRecoveryResult] = useState(props.route.params.recoveryResult);
+  const [revocationAddr, setRevocationAddr] = useState(props.route.params.revocationAddr);
+  const [recoveryAddr, setRecoveryAddr] = useState(props.route.params.recoveryAddr);
+  const [primaryAddr, setPrimaryAddr] = useState(props.route.params.primaryAddr);
+  const [privateAddr, setPrivateAddr] = useState(props.route.params.privateAddr);
+
   const [friendlyNames, setFriendlyNames] = useState(
     props.route.params.friendlyNames,
   );
@@ -95,6 +100,11 @@ const RecoverIdentityConfirm = props => {
     submitData,
     recoverableByUser: !!props.route.params.recoverableByUser,
     ownedAddress: props.route.params.ownedAddress || '',
+    sendModal,
+    revocationAddr,
+    recoveryAddr,
+    primaryAddr,
+    privateAddr
   });
 };
 

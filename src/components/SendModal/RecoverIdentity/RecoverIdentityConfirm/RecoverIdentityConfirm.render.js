@@ -5,7 +5,7 @@ import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import VerusIdObjectData from '../../../VerusIdObjectData';
 
-export const RecoverIdentityConfirmRender = ({ targetId, friendlyNames, goBack, submitData, ownedByUser, ownedAddress }) => {
+export const RecoverIdentityConfirmRender = ({ targetId, friendlyNames, goBack, submitData, ownedByUser, ownedAddress, sendModal, revocationAddr, recoveryAddr, primaryAddr, privateAddr }) => {
   return (
     <SafeAreaView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }}>
       <VerusIdObjectData
@@ -13,6 +13,23 @@ export const RecoverIdentityConfirmRender = ({ targetId, friendlyNames, goBack, 
         friendlyNames={friendlyNames}
         ownedByUser={false}
         ownedAddress={ownedAddress}
+        updates={{
+          ['Recovery Authority']: recoveryAddr ? {
+            data: recoveryAddr
+          } : null,
+          ['Revocation Authority']: revocationAddr ? {
+            data: revocationAddr
+          } : null,
+          ['Private Address']: privateAddr ? {
+            data: privateAddr
+          } : null,
+          ['Primary Address #1']: primaryAddr ? {
+            data: primaryAddr
+          } : null,
+          ["Status"]: {
+            data: "Active"
+          }
+        }}
         StickyFooterComponent={
           <View
             style={{

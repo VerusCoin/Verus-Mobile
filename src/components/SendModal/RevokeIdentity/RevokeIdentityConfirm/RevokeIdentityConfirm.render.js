@@ -13,6 +13,11 @@ export const RevokeIdentityConfirmRender = ({ targetId, friendlyNames, goBack, s
         friendlyNames={friendlyNames}
         ownedByUser={false}
         ownedAddress={ownedAddress}
+        updates={{
+          ["Status"]: {
+            data: "Revoked"
+          }
+        }}
         StickyFooterComponent={
           <View
             style={{
