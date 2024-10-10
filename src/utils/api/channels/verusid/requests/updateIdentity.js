@@ -1,4 +1,4 @@
-import { decompile, GetIdentityResponse, OPS, OptCCParams, Identity, SmartTransactionScript, IdentityID, fromBase58Check } from "verus-typescript-primitives";
+import { decompile, GetIdentityResponse, OPS, OptCCParams, Identity, fromBase58Check } from "verus-typescript-primitives";
 import { CoinDirectory } from "../../../../CoinData/CoinDirectory";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 import { IS_PBAAS } from "../../../../constants/intervalConstants";
