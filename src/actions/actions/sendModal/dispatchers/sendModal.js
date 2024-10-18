@@ -1,4 +1,5 @@
 import store from '../../../../store';
+import { coinsList } from '../../../../utils/CoinData/CoinsList';
 import {
   CONVERSION_SEND_MODAL,
   WITHDRAW_SEND_MODAL,
@@ -36,7 +37,12 @@ import {
   SEND_MODAL_SHOW_MAPPING_FIELD,
   SEND_MODAL_PBAAS_CURRENCY_PASSTHROUGH,
   SEND_MODAL_SHOW_IS_PRECONVERT,
-  SEND_MODAL_DISABLED_INPUTS
+  SEND_MODAL_DISABLED_INPUTS,
+  SEND_MODAL_IDENTITY_TO_REVOKE_FIELD,
+  REVOKE_IDENTITY_SEND_MODAL,
+  SEND_MODAL_SYSTEM_ID,
+  SEND_MODAL_ENCRYPTED_IDENTITY_SEED,
+  RECOVER_IDENTITY_SEND_MODAL
 } from '../../../../utils/constants/sendModal';
 import {
   CLOSE_SEND_COIN_MODAL,
@@ -126,6 +132,40 @@ export const openLinkIdentityModal = (coinObj, data) => {
       : data,
     LINK_IDENTITY_SEND_MODAL,
     'To link a VerusID with your wallet, enter the handle or i-Address of a VerusID with a primary address that you have in your wallet.',
+  );
+};
+
+export const openRevokeIdentitySendModal = (data) => {
+  openSendModal(
+    `Revoke VerusID`,
+    null,
+    null,
+    data == null
+      ? {
+          [SEND_MODAL_IDENTITY_TO_REVOKE_FIELD]: '',
+          [SEND_MODAL_SYSTEM_ID]: coinsList.VRSC.system_id,
+          [SEND_MODAL_ENCRYPTED_IDENTITY_SEED]: ''
+        }
+      : data,
+    REVOKE_IDENTITY_SEND_MODAL,
+    'To revoke a VerusID, enter the handle or i-Address of a VerusID with a revocation VerusID that you control.',
+  );
+};
+
+export const openRecoverIdentitySendModal = (data) => {
+  openSendModal(
+    `Recover VerusID`,
+    null,
+    null,
+    data == null
+      ? {
+          [SEND_MODAL_IDENTITY_TO_REVOKE_FIELD]: '',
+          [SEND_MODAL_SYSTEM_ID]: coinsList.VRSC.system_id,
+          [SEND_MODAL_ENCRYPTED_IDENTITY_SEED]: ''
+        }
+      : data,
+    RECOVER_IDENTITY_SEND_MODAL,
+    'To recover a VerusID, enter the new primary address you would like your VerusID to use.',
   );
 };
 

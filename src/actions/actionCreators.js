@@ -77,7 +77,8 @@ import {
   SET_SECURE_LOADING_SUCCESS_DATA,
   SET_SECURE_LOADING_ERROR_DATA,
   CLEAR_SECURE_LOADING_DATA,
-  UPDATE_SESSION_KEY
+  UPDATE_SESSION_KEY,
+  INIT_INSTANCE_KEY
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -114,6 +115,16 @@ export const updateSessionKey = (sessionKey) => {
   return {
     type: UPDATE_SESSION_KEY,
     sessionKey: sessionKey
+  }
+}
+
+//Reducer Name: authentication
+export const initInstanceKey = (instanceKey) => {
+  return {
+    type: INIT_INSTANCE_KEY,
+    payload: {
+      instanceKey
+    }
   }
 }
 
