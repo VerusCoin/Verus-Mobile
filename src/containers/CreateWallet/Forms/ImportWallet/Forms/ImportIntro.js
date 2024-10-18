@@ -4,7 +4,7 @@ import {Text, Button} from 'react-native-paper';
 import {TwentyFourWordIcon, ScanQrIcon, EnterKeyIcon} from '../../../../../images/customIcons';
 import Colors from '../../../../../globals/colors';
 
-export default function ImportIntro({navigation}) {
+export default function ImportIntro({navigation, label}) {
   const {height} = Dimensions.get('window');
 
   return (
@@ -29,9 +29,10 @@ export default function ImportIntro({navigation}) {
             color: Colors.primaryColor,
             fontSize: 28,
             fontWeight: 'bold',
-            marginBottom: 48
+            marginBottom: 48,
+            maxWidth: "90%"
           }}>
-          {'Import Wallet'}
+          {label ? label : 'Import Wallet'}
         </Text>
         <Button
           icon={({ size, color }) => (
