@@ -11,6 +11,8 @@ import {
   DEPOSIT_SEND_MODAL,
   LINK_IDENTITY_SEND_MODAL,
   PROVISION_IDENTITY_SEND_MODAL,
+  RECOVER_IDENTITY_SEND_MODAL,
+  REVOKE_IDENTITY_SEND_MODAL,
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_FORM_STEP_FORM,
   SEND_MODAL_FORM_STEP_RESULT,
@@ -52,6 +54,12 @@ import ConvertOrCrossChainSendResult from "./ConvertOrCrossChainSend/ConvertOrCr
 import AddErc20TokenForm from "./AddErc20Token/AddErc20TokenForm/AddErc20TokenForm";
 import AddErc20TokenConfirm from "./AddErc20Token/AddErc20TokenConfirm/AddErc20TokenConfirm";
 import AddErc20TokenResult from "./AddErc20Token/AddErc20TokenResult/AddErc20TokenResult";
+import RevokeIdentityForm from "./RevokeIdentity/RevokeIdentityForm/RevokeIdentityForm";
+import RevokeIdentityConfirm from "./RevokeIdentity/RevokeIdentityConfirm/RevokeIdentityConfirm";
+import RevokeIdentityResult from "./RevokeIdentity/RevokeIdentityResult/RevokeIdentityResult";
+import RecoverIdentityForm from "./RecoverIdentity/RecoverIdentityForm/RecoverIdentityForm";
+import RecoverIdentityConfirm from "./RecoverIdentity/RecoverIdentityConfirm/RecoverIdentityConfirm";
+import RecoverIdentityResult from "./RecoverIdentity/RecoverIdentityResult/RecoverIdentityResult";
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
@@ -66,7 +74,9 @@ const SEND_FORMS = {
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserForm,
   [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyForm,
   [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendForm,
-  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenForm
+  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenForm,
+  [REVOKE_IDENTITY_SEND_MODAL]: RevokeIdentityForm,
+  [RECOVER_IDENTITY_SEND_MODAL]: RecoverIdentityForm
 };
 
 const SEND_CONFIRMATION = {
@@ -79,7 +89,9 @@ const SEND_CONFIRMATION = {
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserPassword,
   [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyConfirm,
   [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendConfirm,
-  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenConfirm
+  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenConfirm,
+  [REVOKE_IDENTITY_SEND_MODAL]: RevokeIdentityConfirm,
+  [RECOVER_IDENTITY_SEND_MODAL]: RecoverIdentityConfirm
 };
 
 const SEND_RESULTS = {
@@ -92,7 +104,9 @@ const SEND_RESULTS = {
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserResult,
   [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyResult,
   [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendResult,
-  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenResult
+  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenResult,
+  [REVOKE_IDENTITY_SEND_MODAL]: RevokeIdentityResult,
+  [RECOVER_IDENTITY_SEND_MODAL]: RecoverIdentityResult
 };
 
 export const SendModalRender = function () {
