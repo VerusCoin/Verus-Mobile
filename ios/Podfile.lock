@@ -31,7 +31,6 @@ PODS:
     - SwiftNIOSSL (< 3.0.0, >= 2.14.0)
     - SwiftNIOTransportServices (< 2.0.0, >= 1.11.1)
     - SwiftProtobuf (< 2.0.0, >= 1.9.0)
-  - InputMask (6.1.0)
   - Logging (1.4.0)
   - lottie-ios (3.4.4)
   - lottie-react-native (5.1.4):
@@ -267,10 +266,6 @@ PODS:
     - React-Core
   - react-native-safe-area-context (3.2.0):
     - React-Core
-  - react-native-text-input-mask (3.1.4):
-    - InputMask (~> 6.1.0)
-    - React-Core
-    - React-RCTText
   - react-native-udp (4.1.5):
     - CocoaAsyncSocket
     - React-Core
@@ -575,7 +570,6 @@ DEPENDENCIES:
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-randombytes (from `../node_modules/react-native-randombytes`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
-  - react-native-text-input-mask (from `../node_modules/react-native-text-input-mask`)
   - react-native-udp (from `../node_modules/react-native-udp`)
   - react-native-verus-light-client (from `../node_modules/react-native-verus-light-client`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -625,7 +619,6 @@ SPEC REPOS:
     - CocoaAsyncSocket
     - fmt
     - gRPC-Swift
-    - InputMask
     - Logging
     - lottie-ios
     - MnemonicSwift
@@ -700,8 +693,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-randombytes"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
-  react-native-text-input-mask:
-    :path: "../node_modules/react-native-text-input-mask"
   react-native-udp:
     :path: "../node_modules/react-native-udp"
   react-native-verus-light-client:
@@ -791,7 +782,6 @@ SPEC CHECKSUMS:
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
   glog: 476ee3e89abb49e07f822b48323c51c57124b572
   gRPC-Swift: 8426019a9c56401ee1b9ef00f15fb5530eb8cdd2
-  InputMask: 71d291dc54d2deaeac6512afb6ec2304228c0bb7
   Logging: beeb016c9c80cf77042d62e83495816847ef108b
   lottie-ios: 8f97d3271e155c2d688875c29cd3c74908aef5f8
   lottie-react-native: b702fab740cdb952a8e2354713d3beda63ff97b0
@@ -817,7 +807,6 @@ SPEC CHECKSUMS:
   react-native-netinfo: 92e6e4476eb8bf6fc2d7c0a6ca0a1406f663d73a
   react-native-randombytes: 421f1c7d48c0af8dbcd471b0324393ebf8fe7846
   react-native-safe-area-context: f0906bf8bc9835ac9a9d3f97e8bde2a997d8da79
-  react-native-text-input-mask: 36a546b378fadd2efe1b7484a859d34bc2c80395
   react-native-udp: 8864b1211857e9d8224ae5cbaf8580970fb99de1
   react-native-verus-light-client: ba8400658314adecefa08593e46d9fa69029bea8
   React-perflogger: 0458a87ea9a7342079e7a31b0d32b3734fb8415f
