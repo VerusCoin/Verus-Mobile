@@ -1,6 +1,6 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
-import TextInputMask from 'react-native-text-input-mask';
+//import TextInputMask from 'react-native-text-input-mask';
 import { Text, TextInput, RadioButton, List, Divider } from "react-native-paper";
 import Styles from "../../styles/";
 import SemiModal from "../SemiModal";
@@ -58,7 +58,7 @@ export const PhoneNumberModalRender = function () {
               marginTop: 16,
             }}
           >
-            <TextInput
+            {/* <TextInput
               style={{ flex: 1 }}
               label="Ext."
               mode="outlined"
@@ -92,7 +92,7 @@ export const PhoneNumberModalRender = function () {
                   mask={"[000] [000] [0000]"}
                 />
               )}
-            />
+            /> */}
           </View>
           <View style={{ ...Styles.fullWidth, marginTop: 16 }}>
             <Divider />
