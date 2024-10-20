@@ -96,7 +96,6 @@
     "react-native-svg-transformer": "0.14.3",
     "react-native-tab-view": "2.x",
     "react-native-tcp": "git+https://github.com/VerusCoin/react-native-tcp.git#be5f656ffd3aa4559270e8472ee24a1c36029cf1",
-    "react-native-text-input-mask": "3.1.4",
     "react-native-udp": "4.1.5",
     "react-native-url-polyfill": "1.3.0",
     "react-native-vector-icons": "git+https://github.com/VerusCoin/react-native-vector-icons.git",
