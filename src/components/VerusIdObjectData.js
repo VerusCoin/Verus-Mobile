@@ -183,7 +183,7 @@ export default function VerusIdObjectData(props) {
                       {...(item.capitalized
                         ? Styles.capitalizeFirstLetter
                         : {}),
-                        color: updates && updates[item.key] ? Colors.warningButtonColor : undefined
+                        color: updates && updates[item.key] ? Colors.warningButtonColor : Colors.quaternaryColor
                       }
                     }
                     right={props =>
