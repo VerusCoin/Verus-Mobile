@@ -123,13 +123,13 @@ const AuthenticateUserPassword = props => {
           display: 'flex',
         }}>
         <Button
-          color={Colors.warningButtonColor}
+          buttonColor={Colors.warningButtonColor}
           style={{width: 148}}
           onPress={() => goBack()}>
           Back
         </Button>
         <Button
-          color={Colors.verusGreenColor}
+          buttonColor={Colors.verusGreenColor}
           style={{width: 148}}
           disabled={password.length == 0}
           onPress={() => tryUnlockAccount(password)}>

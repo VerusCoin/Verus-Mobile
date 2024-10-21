@@ -354,7 +354,7 @@ const WalletSettings = props => {
           />
         ) : (
           <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <Button color={Colors.warningButtonColor} onPress={back}>
+            <Button buttonColor={Colors.warningButtonColor} onPress={back}>
               {"Back"}
             </Button>
             <Button

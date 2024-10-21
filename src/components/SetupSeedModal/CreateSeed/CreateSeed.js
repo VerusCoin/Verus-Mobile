@@ -196,7 +196,7 @@ class CreateSeed extends Component {
           <View style={Styles.standardWidthSpaceBetweenBlock}>
             <Button
               onPress={formStep === 0 ? this.cancel : this.goBack}
-              color={Colors.warningButtonColor}
+              buttonColor={Colors.warningButtonColor}
             >
               {formStep === 0 ? "Cancel" : "Back"}
             </Button>

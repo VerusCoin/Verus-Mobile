@@ -82,7 +82,7 @@ export const RecoverIdentityResultRender = ({targetId, networkObj, finishSend, t
           </Button>
         )}
         <Button
-          color={Colors.verusGreenColor}
+          buttonColor={Colors.verusGreenColor}
           style={{width: 148}}
           labelStyle={{fontSize: 18}}
           onPress={finishSend}>

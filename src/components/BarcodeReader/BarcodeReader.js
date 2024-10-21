@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {View, ScrollView} from 'react-native';
 import {Text, Button} from 'react-native-paper';
-import {RNCamera} from 'react-native-camera';
+//import {RNCamera} from 'react-native-camera';
 import Colors from '../../globals/colors';
 import styles from '../../styles';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -81,7 +81,7 @@ const BarcodeReader = props => {
       />
     </View>
   ) : hasCameraPermission ? (
-    <RNCamera
+    {/*<RNCamera
       style={{
         flex: 1,
         justifyContent: 'flex-end',
@@ -109,7 +109,7 @@ const BarcodeReader = props => {
         {...maskProps}
       />
       {button ? button() : null}
-    </RNCamera>
+    </RNCamera>*/}
   ) : (
     <ScrollView
       style={styles.flexBackground}

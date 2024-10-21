@@ -193,7 +193,7 @@ class DeleteProfile extends Component {
         <View style={Styles.highFooterContainer}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
             <Button 
-              color={Colors.warningButtonColor}
+              buttonColor={Colors.warningButtonColor}
               onPress={this.cancel}
             >{"Cancel"}</Button>
             <Button 

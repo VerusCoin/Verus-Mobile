@@ -170,7 +170,7 @@ class CoinSettings extends Component {
         <View style={Styles.highFooterContainer}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
             <Button
-              color={Colors.warningButtonColor}
+              buttonColor={Colors.warningButtonColor}
               onPress={this.back}
               disabled={this.state.loading}
             >{"Back"}</Button>

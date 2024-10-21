@@ -57,7 +57,7 @@ export const ProvisionIdentitySuccessRender = function () {
             justifyContent: 'space-evenly',
           }}>
           <Button
-            color={Colors.verusGreenColor}
+            buttonColor={Colors.verusGreenColor}
             style={{width: 148}}
             labelStyle={{fontSize: 18}}
             onPress={() => this.finishSend()}>

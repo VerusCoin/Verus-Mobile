@@ -253,7 +253,7 @@ function TraditionalCryptoSendConfirm({ navigation, route, setLoading, setModalH
         }}
       >
         <Button
-          color={Colors.warningButtonColor}
+          buttonColor={Colors.warningButtonColor}
           style={{ width: 148 }}
           onPress={goBack}
           mode="contained"
@@ -261,7 +261,7 @@ function TraditionalCryptoSendConfirm({ navigation, route, setLoading, setModalH
           Back
         </Button>
         <Button
-          color={Colors.verusGreenColor}
+          buttonColor={Colors.verusGreenColor}
           style={{ width: 148 }}
           labelStyle={{ color: Colors.secondaryColor }}
           onPress={submitData}

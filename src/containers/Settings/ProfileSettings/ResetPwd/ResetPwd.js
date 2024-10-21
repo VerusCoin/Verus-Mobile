@@ -271,7 +271,7 @@ class ResetPwd extends Component {
         </ScrollView>
         <View style={Styles.highFooterContainer}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <Button color={Colors.warningButtonColor} onPress={this.cancel}>
+            <Button buttonColor={Colors.warningButtonColor} onPress={this.cancel}>
               {"Cancel"}
             </Button>
             <Button

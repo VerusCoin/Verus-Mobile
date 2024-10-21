@@ -455,14 +455,14 @@ function ConvertOrCrossChainSendConfirm({
           justifyContent: 'space-between',
         }}>
         <Button
-          color={Colors.warningButtonColor}
+          buttonColor={Colors.warningButtonColor}
           style={{width: 148}}
           onPress={goBack}
           mode="contained">
           Back
         </Button>
         <Button
-          color={Colors.verusGreenColor}
+          buttonColor={Colors.verusGreenColor}
           labelStyle={{color: Colors.secondaryColor}}
           style={{width: 148}}
           onPress={submitData}

@@ -48,14 +48,14 @@ export const DepositSendConfirmRender = function () {
         }}
       >
         <Button
-          color={Colors.warningButtonColor}
+          buttonColor={Colors.warningButtonColor}
           style={{ width: 148 }}
           onPress={() => this.goBack()}
         >
           Back
         </Button>
         <Button
-          color={Colors.verusGreenColor}
+          buttonColor={Colors.verusGreenColor}
           style={{ width: 148 }}
           onPress={() => this.submitData()}
         >

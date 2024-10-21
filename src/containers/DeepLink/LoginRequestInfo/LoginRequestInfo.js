@@ -306,13 +306,13 @@ const LoginRequestInfo = props => {
             display: 'flex',
           }}>
           <Button
-            color={Colors.warningButtonColor}
+            buttonColor={Colors.warningButtonColor}
             style={{width: 148}}
             onPress={() => cancel()}>
             Cancel
           </Button>
           <Button
-            color={Colors.verusGreenColor}
+            buttonColor={Colors.verusGreenColor}
             style={{width: 148}}
             onPress={() => handleContinue()}>
             Continue

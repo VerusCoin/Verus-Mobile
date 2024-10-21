@@ -82,7 +82,7 @@ export const RevokeIdentityResultRender = ({targetId, networkObj, finishSend, tx
           </Button>
         )}
         <Button
-          color={Colors.verusGreenColor}
+          buttonColor={Colors.verusGreenColor}
           style={{width: 148}}
           labelStyle={{fontSize: 18}}
           onPress={finishSend}>

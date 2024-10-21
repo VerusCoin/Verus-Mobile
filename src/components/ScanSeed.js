@@ -14,8 +14,6 @@ import {
 import {
   Button
 } from "react-native-paper";
-import QRCodeScanner from 'react-native-qrcode-scanner';
-import QRCode from 'react-native-qrcode-svg';
 import Colors from "../globals/colors";
 import Styles from '../styles/index'
 import BarcodeReader from "./BarcodeReader/BarcodeReader";
@@ -57,7 +55,7 @@ class ScanSeed extends Component {
           button={() => (
             <Button
               mode="contained"
-              color={Colors.warningButtonColor}
+              buttonColor={Colors.warningButtonColor}
               onPress={this.cancelHandler}
               style={{
                 marginBottom: 48

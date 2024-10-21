@@ -369,13 +369,13 @@ const InvoiceInfo = props => {
             backgroundColor: '#fff' // or any other background color
           }}>
           <Button
-            color={Colors.warningButtonColor}
+            buttonColor={Colors.warningButtonColor}
             style={{ width: 148 }}
             onPress={() => cancel()}>
             Cancel
           </Button>
           <Button
-            color={Colors.verusGreenColor}
+            buttonColor={Colors.verusGreenColor}
             style={{ width: 148 }}
             disabled={isWrongInvoiceType}
             onPress={() => handleContinue()}>

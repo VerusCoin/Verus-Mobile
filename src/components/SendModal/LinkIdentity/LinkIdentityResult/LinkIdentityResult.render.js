@@ -64,7 +64,7 @@ export const LinkIdentityResultRender = ({verusId, finishSend}) => {
           justifyContent: 'space-evenly',
         }}>
         <Button
-          color={Colors.verusGreenColor}
+          buttonColor={Colors.verusGreenColor}
           style={{width: 148}}
           labelStyle={{fontSize: 18}}
           onPress={finishSend}>

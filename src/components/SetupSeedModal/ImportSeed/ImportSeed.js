@@ -147,7 +147,7 @@ class ImportSeed extends Component {
               <View style={Styles.standardWidthSpaceBetweenBlock}>
                 <Button
                   onPress={this.props.onBack}
-                  color={Colors.warningButtonColor}
+                  buttonColor={Colors.warningButtonColor}
                 >
                   {this.props.backLabel ? this.props.backLabel : "Back"}
                 </Button>

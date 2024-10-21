@@ -25,7 +25,7 @@ export const RecoverIdentityFormRender = ({
         button={() => (
           <Button
             mode="contained"
-            color={Colors.warningButtonColor}
+            buttonColor={Colors.warningButtonColor}
             onPress={toggleScanner}
             style={{
               marginBottom: 48

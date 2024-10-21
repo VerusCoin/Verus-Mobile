@@ -98,7 +98,7 @@ const RecoverSeedsSelectAccount = ({ navigation }) => {
         {renderAccountCards()}
       </ScrollView>
       <TallButton 
-        color={Colors.warningButtonColor} 
+        buttonColor={Colors.warningButtonColor} 
         onPress={() => navigation.goBack()}
         mode="outlined"
         style={{ marginHorizontal: 8 }}
