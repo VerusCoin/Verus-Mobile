@@ -15,7 +15,7 @@ buildscript {
             ndkVersion = "21.4.7075529"
         }
 
-        kotlinVersion = '1.6.10'
+        kotlinVersion = '1.9.0'
     }
     repositories {
         mavenCentral()
@@ -98,11 +98,6 @@ subprojects {
         if (details.requested.group == 'org.apache.commons' && details.requested.name == 'commons-compress') {
             details.useVersion '1.21'
             details.because 'https://security.snyk.io/vuln/SNYK-JAVA-ORGAPACHECOMMONS-1316641'
-        }
-
-        if (details.requested.group == 'org.jetbrains.kotlin' && details.requested.name == 'kotlin-stdlib') {
-            details.useVersion '1.6.0'
-            details.because 'https://security.snyk.io/vuln/SNYK-JAVA-ORGJETBRAINSKOTLIN-2628385'
         }
 
         if (details.requested.group == 'com.google.code.gson' && details.requested.name == 'gson') {

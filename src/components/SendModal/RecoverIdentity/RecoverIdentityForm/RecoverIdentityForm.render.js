@@ -21,7 +21,7 @@ export const RecoverIdentityFormRender = ({
     <View style={Styles.blackRoot}>
       <BarcodeReader
         prompt="Scan an address"
-        onScan={(e) => handleScan(e)}
+        onScan={(codes) => handleScan(codes)}
         button={() => (
           <Button
             mode="contained"

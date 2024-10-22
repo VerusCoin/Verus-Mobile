@@ -39,19 +39,22 @@ class SettingsMenus extends Component {
     let tabArray = [
       {
         key: "settings-profile",
-        icon: "account-settings",
+        focusedIcon: "account-settings",
+        unfocusedIcon: "account-settings",
         title: "Profile",
         screen: "ProfileSettings"
       },
       {
         key: "settings-wallet",
-        icon: "credit-card-settings",
+        focusedIcon: "credit-card-settings",
+        unfocusedIcon: "account-settings",
         title: "Wallet",
         screen: "WalletSettings"
       },
       {
         key: "settings-info",
-        icon: "information",
+        focusedIcon: "information",
+        unfocusedIcon: "account-settings",
         title: "App Info",
         screen: "AppInfo"
       },

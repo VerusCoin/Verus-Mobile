@@ -25,8 +25,8 @@ class ScanSeed extends Component {
     super(props)
   }
 
-  onSuccess(e) {
-    let result = e.data
+  onSuccess(codes) {
+    let result = codes[0]
 
     if (typeof result === "string" && result.length <= 5000 && this.props.onScan) {
       this.props.onScan(result)
@@ -51,7 +51,7 @@ class ScanSeed extends Component {
       <View style={Styles.blackRoot}>
         <BarcodeReader
           prompt="Scan a QR seed or private key"
-          onScan={(e) => this.onSuccess(e)}
+          onScan={(codes) => this.onSuccess(codes)}
           button={() => (
             <Button
               mode="contained"
