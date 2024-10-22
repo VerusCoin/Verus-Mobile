@@ -66,7 +66,7 @@ const ConvertFormModule = ({
                       ? isPreconvert ? `Preconvert to: ${convertToField}` : `Convert to: ${convertToField}`
                       : isPreconvert ? 'Select currency to preconvert to' : 'Select currency to convert to'}
                   </Text>
-                  <IconButton icon="magnify" size={16} color={Colors.verusDarkGray} />
+                  <IconButton icon="magnify" size={16} iconColor={Colors.verusDarkGray} />
                 </TouchableOpacity>
               )
             }
@@ -112,7 +112,7 @@ const ConvertFormModule = ({
                     }}>
                     {isVia ? `Convert via: ${viaField}` : 'Select currency to convert via'}
                   </Text>
-                  <IconButton icon="magnify" size={16} color={Colors.verusDarkGray} />
+                  <IconButton icon="magnify" size={16} iconColor={Colors.verusDarkGray} />
                 </TouchableOpacity>
               )
             }

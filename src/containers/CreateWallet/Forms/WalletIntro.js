@@ -98,7 +98,7 @@ export default function WalletIntro({ navigation, setNewSeed, setTestProfile, te
           right: 20
         }}
       >
-        <IconButton icon={testProfile ? "test-tube-off" : "test-tube"} color={Colors.verusDarkGray} />
+        <IconButton icon={testProfile ? "test-tube-off" : "test-tube"} iconColor={Colors.verusDarkGray} />
       </TouchableOpacity>
       {height >= SMALL_DEVICE_HEGHT && <MyWallet
         width={180}

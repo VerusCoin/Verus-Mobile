@@ -94,7 +94,7 @@ export const ConversionSendSuccessRender = function () {
         }}>
         {explorers[coinObj.id] != null && (
           <Button
-            color={Colors.primaryColor}
+            textColor={Colors.primaryColor}
             style={{width: 148}}
             labelStyle={{fontSize: 18}}
             onPress={() => this.openExplorer()}>
@@ -103,6 +103,7 @@ export const ConversionSendSuccessRender = function () {
         )}
         <Button
           buttonColor={Colors.verusGreenColor}
+          textColor={Colors.secondaryColor}
           style={{width: 148}}
           labelStyle={{fontSize: 18}}
           onPress={() => this.finishSend()}>

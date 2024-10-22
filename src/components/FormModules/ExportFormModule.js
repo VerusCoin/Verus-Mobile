@@ -76,7 +76,7 @@ const ExportFormModule = ({
                     : 'Select network to send to'
                 }
               </Text>
-              <IconButton icon="magnify" size={16} color={Colors.verusDarkGray} />
+              <IconButton icon="magnify" size={16} iconColor={Colors.verusDarkGray} />
             </TouchableOpacity>
           )
         }
@@ -122,7 +122,7 @@ const ExportFormModule = ({
                     ? `Receive as: ${mappingField}`
                     : 'Select currency to receive as'}
                 </Text>
-                <IconButton icon="magnify" size={16} color={Colors.verusDarkGray} />
+                <IconButton icon="magnify" size={16} iconColor={Colors.verusDarkGray} />
               </TouchableOpacity>
             )}
           </View>

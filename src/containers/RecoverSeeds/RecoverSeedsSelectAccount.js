@@ -72,7 +72,7 @@ const RecoverSeedsSelectAccount = ({ navigation }) => {
             left={() => <List.Icon color={Colors.secondaryColor} icon="account-circle" />}
             descriptionStyle={{ color: Colors.secondaryColor }}
             right={() => (
-              <IconButton name="chevron-right" color={Colors.secondaryColor} size={20} />
+              <IconButton name="chevron-right" iconColor={Colors.secondaryColor} size={20} />
             )}
           />
         </Card>

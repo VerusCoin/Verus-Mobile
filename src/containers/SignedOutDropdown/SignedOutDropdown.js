@@ -42,7 +42,7 @@ const SignedOutDropdown = (props) => {
             icon="dots-vertical"
             size={28}
             onPress={openMenu}
-            color={Colors.quaternaryColor}
+            iconColor={Colors.quaternaryColor}
           />
         }>
           {

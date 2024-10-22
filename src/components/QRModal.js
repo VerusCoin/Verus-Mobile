@@ -176,11 +176,11 @@ class QRModal extends Component {
               >
                 <IconButton
                   icon="content-save"
-                  color={Colors.quinaryColor}
+                  iconColor={Colors.quinaryColor}
                 />
               </TouchableOpacity>
               <Button
-                buttonColor={Colors.warningButtonColor}
+                textColor={Colors.warningButtonColor}
                 onPress={this.cancelHandler}
                 style={{ alignSelf: "center" }}
               >
@@ -199,7 +199,7 @@ class QRModal extends Component {
                     this.state.sharePressed ? 1 : DEFAULT_OPACITY
                   }
                 >
-                  <IconButton icon="share" color={Colors.quinaryColor} />
+                  <IconButton icon="share" iconColor={Colors.quinaryColor} />
                 </TouchableOpacity>
               )}
             </View>
