@@ -1,7 +1,7 @@
 import React, { Component } from "react";
-import { Platform, SafeAreaView } from "react-native";
+import { Platform, SafeAreaView, View } from "react-native";
 import { Text, Portal, Button } from "react-native-paper";
-import { Colors } from "react-native/Libraries/NewAppScreen";
+import Colors from "../../globals/colors";
 import {
   ADD_ERC20_TOKEN_MODAL,
   ADD_PBAAS_CURRENCY_MODAL,
@@ -134,28 +134,31 @@ export const SendModalRender = function () {
           <SafeAreaView style={{ flex: 1 }}>
             <Root.Navigator
               screenOptions={{
-                headerTitle: () => <Text style={{ marginBottom: 16, fontSize: 16, textAlign: "center" }}>{title}</Text>,
-                headerRight: (props) => (
-                  <Button
-                    {...props}
-                    style={{ marginBottom: 16 }}
-                    onPress={() => this.showHelpModal()}
-                    color={Colors.primaryColor}
-                    disabled={this.state.preventExit}
-                  >
-                    {"Help"}
-                  </Button>
-                ),
-                headerLeft: (props) => (
-                  <Button
-                    {...props}
-                    style={{ marginBottom: 16 }}
-                    onPress={() => this.cancel()}
-                    color={Colors.primaryColor}
-                    disabled={this.state.preventExit}
-                  >
-                    {"Close"}
-                  </Button>
+                header: () => (
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: "center", 
+                    justifyContent: "space-between", 
+                    backgroundColor: Colors.secondaryColor 
+                  }}>
+                    <Button
+                      style={{ marginBottom: 16 }}
+                      onPress={() => this.showHelpModal()}
+                      textColor={Colors.primaryColor}
+                      disabled={this.state.preventExit}
+                    >
+                      {"Help"}
+                    </Button>   
+                    <Text style={{ marginBottom: 16, fontSize: 16, textAlign: "center" }}>{title}</Text>
+                    <Button
+                      style={{ marginBottom: 16 }}
+                      onPress={() => this.cancel()}
+                      textColor={Colors.primaryColor}
+                      disabled={this.state.preventExit}
+                    >
+                      {"Close"}
+                    </Button>
+                  </View>
                 ),
                 headerStyle: {
                   height: 52,
