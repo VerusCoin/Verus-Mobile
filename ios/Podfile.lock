@@ -576,7 +576,7 @@ PODS:
     - SwiftNIOFoundationCompat (< 3, >= 2.32.0)
     - SwiftNIOPosix (< 3, >= 2.32.0)
     - SwiftNIOTLS (< 3, >= 2.32.0)
-  - SwiftProtobuf (1.28.2)
+  - SwiftProtobuf (1.25.1)
   - TcpSockets (4.0.0):
     - React
   - VisionCamera (4.3.1):
@@ -655,8 +655,8 @@ DEPENDENCIES:
   - TcpSockets (from `../node_modules/react-native-tcp`)
   - VisionCamera (from `../node_modules/react-native-vision-camera`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
-  - ZcashLightClientKit (from `https://github.com/michaeltout/ZcashLightClientKit.git`, branch `0.9.1`)
-  - ZcashLightClientKit/Tests (from `https://github.com/michaeltout/ZcashLightClientKit.git`, branch `0.9.1`)
+  - ZcashLightClientKit (from `https://github.com/VerusCoin/ZcashLightClientKit.git`, branch `0.9.1`)
+  - ZcashLightClientKit/Tests (from `https://github.com/VerusCoin/ZcashLightClientKit.git`, branch `0.9.1`)
 
 SPEC REPOS:
   trunk:
@@ -807,12 +807,12 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
   ZcashLightClientKit:
     :branch: 0.9.1
-    :git: https://github.com/michaeltout/ZcashLightClientKit.git
+    :git: https://github.com/VerusCoin/ZcashLightClientKit.git
 
 CHECKOUT OPTIONS:
   ZcashLightClientKit:
-    :commit: 998281cdc402f4dedf8dd1a2136339a6cdb4f6e8
-    :git: https://github.com/michaeltout/ZcashLightClientKit.git
+    :commit: 1c046460a5b1a2eb4f7d58fedb5a7579e89ca7d1
+    :git: https://github.com/VerusCoin/ZcashLightClientKit.git
 
 SPEC CHECKSUMS:
   _NIODataStructures: 3d45d8e70a1d17a15b1dc59d102c63dbc0525ffd
@@ -878,7 +878,7 @@ SPEC CHECKSUMS:
   RNGestureHandler: 071d7a9ad81e8b83fe7663b303d132406a7d8f39
   RNKeychain: f1b48665a4646f61191eb048c4c05c58d9a7596f
   RNOS: 728cdea6d232de48cfede274443dbe3f669b86e9
-  RNPermissions: 294531ede5a64d1528463e88fffef05675842042
+  RNPermissions: 0ea6720dfe344d6ec160a4aed36f7d1ca54a0428
   RNReactNativeHapticFeedback: 653a8c126a0f5e88ce15ffe280b3ff37e1fbb285
   RNReanimated: cc5e3aa479cb9170bcccf8204291a6950a3be128
   RNScreens: c526239bbe0e957b988dacc8d75ac94ec9cb19da
@@ -898,12 +898,12 @@ SPEC CHECKSUMS:
   SwiftNIOSSL: d153c5a6fc5b2301b0519b4c4d037a9414212da6
   SwiftNIOTLS: 598af547490133e9aac52aed0c23c4a90c31dcfc
   SwiftNIOTransportServices: 0b2b407819d82eb63af558c5396e33c945759503
-  SwiftProtobuf: 4dbaffec76a39a8dc5da23b40af1a5dc01a4c02d
+  SwiftProtobuf: 69f02cd54fb03201c5e6bf8b76f687c5ef7541a3
   TcpSockets: 4ef55305239923b343ed0a378b1fac188b1373b0
   VisionCamera: 58d2120e6e23c155b25f4702b7912dc2b1e5e8c2
   Yoga: d4f5b037672e6b68ba484c7cf7fe6790122df792
   ZcashLightClientKit: 4e4273f2e841e982fedad461a9008cca19089f5c
 
-PODFILE CHECKSUM: 5f22bbade230a87827fdaa91ddab8d1db540bd1a
+PODFILE CHECKSUM: 6484296297e28f08e0a87b93c87d210ae1b20317
 
 COCOAPODS: 1.13.0
