@@ -202,18 +202,18 @@ export const SendModalInnerAreaRender = function () {
           ? this.props.sendModal.initialRouteName
           : SEND_MODAL_FORM_STEP_FORM
       }
-      swipeEnabled={false}
       backBehavior={'none'}
       tabBarPosition="bottom"
-      tabBarOptions={{
-        pressColor: 'transparent',
-        pressOpacity: 1,
-        labelStyle: {
+      screenOptions={{
+        swipeEnabled: false,
+        tabBarPressColor: "transparent",
+        tabBarPressOpacity: 1,
+        tabBarLabelStyle: {
           fontSize: 12
-        }
-      }}
-      lazy={true}
-      lazyPlaceholder={() => <AnimatedActivityIndicatorBox />}>
+        },
+        lazy: true,
+        lazyPlaceholder: () => <AnimatedActivityIndicatorBox />
+      }}>
       <TopTabs.Screen
         name={SEND_MODAL_FORM_STEP_FORM}
         options={{
