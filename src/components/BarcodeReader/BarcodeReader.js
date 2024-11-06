@@ -145,11 +145,13 @@ const BarcodeReader = props => {
           color: Colors.secondaryColor,
           fontSize: 20,
         }}>
-        {'Allow Verus Mobile to use your camera to scan QR codes.'}
+        {device == null ? 'No camera hardware detected' : 'Allow Verus Mobile to use your camera to scan QR codes.'}
       </Text>
-      <Button onPress={openSettings} textColor={Colors.secondaryColor} style={{ marginBottom: 8 }}>
-        {needToGoToSettings ? 'Configure in settings' : 'Allow'}
-      </Button>
+      {device != null && 
+        (<Button onPress={openSettings} textColor={Colors.secondaryColor} style={{ marginBottom: 8 }}>
+          {needToGoToSettings ? 'Configure in settings' : 'Allow'}
+        </Button>)
+      }
       {button ? button() : null}
     </ScrollView>
   );
