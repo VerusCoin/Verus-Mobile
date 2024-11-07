@@ -985,7 +985,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                 />
                 <Button
                   onPress={() => handleSearch('')}
-                  color={Colors.primaryColor}
+                  textColor={Colors.primaryColor}
                   style={{
                     alignSelf: 'center',
                     marginTop: 6,

@@ -60,6 +60,7 @@ export const AddErc20TokenResultRender = ({contract, finishSend}) => {
         }}>
         <Button
           buttonColor={Colors.verusGreenColor}
+          textColor={Colors.secondaryColor}
           style={{width: 148}}
           labelStyle={{fontSize: 18}}
           onPress={finishSend}>

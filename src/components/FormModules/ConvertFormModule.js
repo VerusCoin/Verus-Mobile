@@ -35,7 +35,6 @@ const ConvertFormModule = ({
                   label={isPreconvert ? 'Preconvert to' : 'Convert to'}
                   value={convertToField}
                   mode="outlined"
-                  multiline={true}
                   onChangeText={text => onConvertToChange(text)}
                   autoCapitalize={'none'}
                   autoCorrect={false}
@@ -83,7 +82,6 @@ const ConvertFormModule = ({
                   label="Convert via (optional)"
                   value={viaField}
                   mode="outlined"
-                  multiline={true}
                   onChangeText={text => onViaChange(text)}
                   autoCapitalize={'none'}
                   autoCorrect={false}

@@ -149,13 +149,14 @@ export const ProvisionIdentityConfirmRender = function () {
           backgroundColor: 'white',
         }}>
         <Button
-          buttonColor={Colors.warningButtonColor}
+          textColor={Colors.warningButtonColor}
           style={{width: 148}}
           onPress={() => this.goBack()}>
           Back
         </Button>
         <Button
           buttonColor={Colors.verusGreenColor}
+          textColor={Colors.secondaryColor}
           style={{width: 148}}
           onPress={() => this.submitData()}>
           Request

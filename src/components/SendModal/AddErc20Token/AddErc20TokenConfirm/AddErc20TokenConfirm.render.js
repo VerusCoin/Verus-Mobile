@@ -100,13 +100,14 @@ export const AddErc20TokenConfirmRender = ({
             bottom: 0,
           }}>
           <Button
-            buttonColor={Colors.warningButtonColor}
+            textColor={Colors.warningButtonColor}
             style={{width: 148}}
             onPress={goBack}>
             Back
           </Button>
           <Button
             buttonColor={Colors.verusGreenColor}
+            textColor={Colors.secondaryColor}
             style={{width: 148}}
             onPress={submitData}>
             Add

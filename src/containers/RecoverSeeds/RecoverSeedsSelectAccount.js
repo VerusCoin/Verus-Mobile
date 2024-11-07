@@ -99,6 +99,7 @@ const RecoverSeedsSelectAccount = ({ navigation }) => {
       </ScrollView>
       <TallButton 
         buttonColor={Colors.warningButtonColor} 
+        textColor={Colors.secondaryColor}
         onPress={() => navigation.goBack()}
         mode="outlined"
         style={{ marginHorizontal: 8 }}

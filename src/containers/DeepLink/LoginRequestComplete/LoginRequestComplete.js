@@ -148,7 +148,7 @@ const LoginRequestComplete = props => {
             paddingTop: 16,
           }}>
           <Button
-            buttonColor={Colors.warningButtonColor}
+            textColor={Colors.warningButtonColor}
             style={{width: 148}}
             labelStyle={{fontSize: 18}}
             disabled={loading}
@@ -157,6 +157,7 @@ const LoginRequestComplete = props => {
           </Button>
           <Button
             buttonColor={Colors.verusGreenColor}
+            textColor={Colors.secondaryColor}
             style={{width: 148}}
             labelStyle={{fontSize: 18}}
             disabled={loading}

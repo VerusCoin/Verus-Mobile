@@ -200,7 +200,7 @@ class CreateSeed extends Component {
             >
               {formStep === 0 ? "Cancel" : "Back"}
             </Button>
-            <Button color={Colors.primaryColor} onPress={isAtEnd ? this.verifySeed : this.next}>
+            <Button textColor={Colors.primaryColor} onPress={isAtEnd ? this.verifySeed : this.next}>
               {isAtEnd ? "Done" : "Next"}
             </Button>
           </View>

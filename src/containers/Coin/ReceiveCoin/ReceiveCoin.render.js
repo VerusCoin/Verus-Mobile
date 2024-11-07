@@ -165,7 +165,7 @@ export const RenderReceiveCoin = function() {
                 </TouchableOpacity>
                 <Button
                   onPress={() => this.showAddressString()}
-                  color={Colors.primaryColor}
+                  textColor={Colors.primaryColor}
                   style={{
                     alignSelf: 'center',
                     marginTop: 6,
@@ -175,7 +175,7 @@ export const RenderReceiveCoin = function() {
                 </Button>
                 <Button
                   onPress={() => this.copyAddressToClipboard(address)}
-                  color={Colors.primaryColor}
+                  textColor={Colors.primaryColor}
                   style={{
                     alignSelf: 'center',
                     marginTop: 6,
@@ -217,7 +217,7 @@ export const RenderReceiveCoin = function() {
                   amountFiat: !amountFiat,
                 })
               }
-              color={Colors.primaryColor}
+              textColor={Colors.primaryColor}
               disabled={!fiatEnabled}
               style={{
                 alignSelf: 'center',
@@ -263,7 +263,7 @@ export const RenderReceiveCoin = function() {
                       />
                     </TouchableOpacity>
                     <Button
-                      color={Colors.primaryColor}
+                      textColor={Colors.primaryColor}
                       disabled={true}
                       style={{
                         alignSelf: 'center',
@@ -280,7 +280,7 @@ export const RenderReceiveCoin = function() {
         }
         <View style={Styles.fullWidthFlexCenterBlock}>
           <Button
-            color={Colors.primaryColor}
+            textColor={Colors.primaryColor}
             disabled={addresses.length === 0}
             onPress={
               addresses.length > 1

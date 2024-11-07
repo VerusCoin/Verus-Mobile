@@ -83,7 +83,7 @@ export const RecoverIdentityFormRender = ({
             }}
           />
           <Button
-            color={Colors.primaryColor}
+            textColor={Colors.primaryColor}
             style={{
               alignSelf: 'center',
               marginTop: 6,
@@ -168,7 +168,7 @@ export const RecoverIdentityFormRender = ({
                 }}
               />
               <Button
-                color={Colors.primaryColor}
+                textColor={Colors.primaryColor}
                 style={{
                   alignSelf: 'center',
                   marginTop: 6,

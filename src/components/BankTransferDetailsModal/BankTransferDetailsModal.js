@@ -71,7 +71,7 @@ class BankTransferDetailsModal extends Component {
         <SafeAreaView style={Styles.centerContainer}>
           <View style={{ ...Styles.headerContainer, minHeight: 48, maxHeight: 48 }}>
             <View style={Styles.semiModalHeaderContainer}>
-              <Button onPress={cancel} color={Colors.primaryColor}>
+              <Button onPress={cancel} textColor={Colors.primaryColor}>
                 {"Close"}
               </Button>
               <Text
@@ -82,7 +82,7 @@ class BankTransferDetailsModal extends Component {
               >
                 {title}
               </Text>
-              <Button onPress={() => this.openWebsite(url)} color={Colors.primaryColor}>
+              <Button onPress={() => this.openWebsite(url)} textColor={Colors.primaryColor}>
                 {label}
               </Button>
             </View>

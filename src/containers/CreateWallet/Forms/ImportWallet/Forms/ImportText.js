@@ -101,13 +101,13 @@ export default function ImportText({
             />
           </View>
           <Button
-            color={Colors.primaryColor}
+            textColor={Colors.primaryColor}
             onPress={() => setShowSeed(!showSeed)}
             disabled={importedSeed == null || importedSeed.length == 0}>{`${
             showSeed ? 'Hide' : 'Show'
           } Seed`}</Button>
           <Button
-            color={Colors.primaryColor}
+            textColor={Colors.primaryColor}
             style={{marginTop: 8}}
             onPress={() => setScanQr(true)}>
             {'Scan QR'}

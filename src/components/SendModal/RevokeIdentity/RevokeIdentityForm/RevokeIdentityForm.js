@@ -103,6 +103,14 @@ const RevokeIdentityForm = (props) => {
       }
 
       const revocation = tarRes.result.identity.revocationauthority;
+      const recovery = tarRes.result.identity.recoveryauthority;
+      const idaddr = tarRes.result.identity.identityaddress;
+
+      if (revocation === idaddr && revocation === recovery) {
+        throw new Error(
+          'Cannot revoke VerusID that has itself set as both revocation and recovery.',
+        );
+      }
 
       const revRes = await getIdentity(data[SEND_MODAL_SYSTEM_ID], revocation);
       if (revRes.error) {

@@ -48,7 +48,7 @@ export const WithdrawSendConfirmRender = function () {
         }}
       >
         <Button
-          buttonColor={Colors.warningButtonColor}
+          textColor={Colors.warningButtonColor}
           style={{ width: 148 }}
           onPress={() => this.goBack()}
         >
@@ -56,6 +56,7 @@ export const WithdrawSendConfirmRender = function () {
         </Button>
         <Button
           buttonColor={Colors.verusGreenColor}
+          textColor={Colors.secondaryColor}
           style={{ width: 148 }}
           onPress={() => this.submitData()}
         >

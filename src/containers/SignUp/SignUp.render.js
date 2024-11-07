@@ -201,13 +201,14 @@ export const SignUpRender = function() {
             }
           >
             {this.hasAccount() && (
-              <Button onPress={this.cancel} buttonColor={Colors.warningButtonColor}>
+              <Button onPress={this.cancel} textColor={Colors.warningButtonColor}>
                 {"Cancel"}
               </Button>
             )}
             <Button
               onPress={() => this._handleSubmit()}
               buttonColor={Colors.verusGreenColor}
+              textColor={Colors.secondaryColor}
             >
               {"Add Profile"}
             </Button>

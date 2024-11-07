@@ -33,7 +33,6 @@ const ExportFormModule = ({
               label={exporttoDisabled ? "System to send to" : "System to send to (optional)"}
               value={exportToField}
               mode="outlined"
-              multiline={true}
               onChangeText={text => onSystemChange(text)}
               autoCapitalize={'none'}
               autoCorrect={false}
@@ -90,7 +89,6 @@ const ExportFormModule = ({
                 label={exportToField != null && exportToField.length > 0 ? "Currency to receive as (required)" : "Currency to receive as (optional)"}
                 value={mappingField}
                 mode="outlined"
-                multiline={true}
                 onChangeText={text => onMappingChange(text)}
                 autoCapitalize={'none'}
                 autoCorrect={false}

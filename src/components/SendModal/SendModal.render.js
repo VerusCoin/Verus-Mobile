@@ -143,21 +143,21 @@ export const SendModalRender = function () {
                   }}>
                     <Button
                       style={{ marginBottom: 16 }}
-                      onPress={() => this.showHelpModal()}
-                      textColor={Colors.primaryColor}
-                      disabled={this.state.preventExit}
-                    >
-                      {"Help"}
-                    </Button>   
-                    <Text style={{ marginBottom: 16, fontSize: 16, textAlign: "center" }}>{title}</Text>
-                    <Button
-                      style={{ marginBottom: 16 }}
                       onPress={() => this.cancel()}
                       textColor={Colors.primaryColor}
                       disabled={this.state.preventExit}
                     >
                       {"Close"}
                     </Button>
+                    <Text style={{ marginBottom: 16, fontSize: 16, textAlign: "center" }}>{title}</Text>
+                    <Button
+                      style={{ marginBottom: 16 }}
+                      onPress={() => this.showHelpModal()}
+                      textColor={Colors.primaryColor}
+                      disabled={this.state.preventExit}
+                    >
+                      {"Help"}
+                    </Button>   
                   </View>
                 ),
                 headerStyle: {

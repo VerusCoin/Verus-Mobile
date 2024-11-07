@@ -186,22 +186,24 @@ class QRModal extends Component {
               >
                 {"Close"}
               </Button>
-              {Platform.OS === "ios" && (
-                <TouchableOpacity
-                  onPress={
-                    this.state.sharePressed
-                      ? () => {
-                          return 0;
-                        }
-                      : this.requestShareQR
-                  }
-                  activeOpacity={
-                    this.state.sharePressed ? 1 : DEFAULT_OPACITY
-                  }
-                >
-                  <IconButton icon="share" iconColor={Colors.quinaryColor} />
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                disabled={true}
+                style={{
+                  opacity: 0
+                }}
+                onPress={
+                  this.state.sharePressed
+                    ? () => {
+                        return 0;
+                      }
+                    : this.requestShareQR
+                }
+                activeOpacity={
+                  this.state.sharePressed ? 1 : DEFAULT_OPACITY
+                }
+              >
+                <IconButton icon="share" iconColor={Colors.quinaryColor} />
+              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>
