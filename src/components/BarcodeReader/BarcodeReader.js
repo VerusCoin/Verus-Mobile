@@ -116,7 +116,7 @@ const BarcodeReader = props => {
             style={{
               fontSize: 20,
               color: Colors.secondaryColor,
-              marginTop: maskHeight + 24,
+              marginTop: 24,
               textAlign: 'center',
             }}>
             {prompt ? prompt : 'Scan a QR code'}
