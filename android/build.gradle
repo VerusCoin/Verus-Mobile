@@ -1,12 +1,9 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
-//workaround for react-native <0.71
-def REACT_NATIVE_VERSION = new File(['node', '--print',"JSON.parse(require('fs').readFileSync(require.resolve('react-native/package.json'), 'utf-8')).version"].execute(null, rootDir).text.trim())
-
 buildscript {
     ext {
         buildToolsVersion = "34.0.0"
-        minSdkVersion = 21
+        minSdkVersion = 24
         compileSdkVersion = 34
         targetSdkVersion = 34
 
@@ -24,13 +21,13 @@ buildscript {
         mavenLocal()
         mavenCentral()
         google()
-        jcenter()
+        //jcenter()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.3.1")
+        classpath("com.android.tools.build:gradle:7.4.2")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("de.undercouch:gradle-download-task:4.1.2")
-//        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files

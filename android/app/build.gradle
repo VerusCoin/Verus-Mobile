@@ -103,7 +103,7 @@ buildscript {
     }
 
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
         // other plugin dependencies...
     }
 }
@@ -120,6 +120,7 @@ android {
         applicationId "com.verusmobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
+        multiDexEnabled true
         
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionRevision * 100 + versionBuild
         if (versionBuild > 0) {
