@@ -50,28 +50,24 @@ export const initializeAccountData = async (
     store.dispatch(settingsAction);
 
     try {
-      const { addressBlocklistDefinition, addressBlocklist } = store.getState().settings.generalWalletSettings;
+      const { addressBlocklist } = store.getState().settings.generalWalletSettings;
 
-      if (addressBlocklistDefinition.type === ADDRESS_BLOCKLIST_FROM_WEBSERVER) {
-        const fetchedBlocklist = await getAddressBlocklistFromServer();
-        const currentBlocklist = [...addressBlocklist];
+      const fetchedBlocklist = await getAddressBlocklistFromServer();
+      const currentBlocklist = [];
 
-        for (const address of fetchedBlocklist) {
-          if (currentBlocklist.find(x => x.address === address) == null) {
-            currentBlocklist.unshift({ 
-              address, 
-              details: '', 
-              lastModified: Math.floor(Date.now() / 1000) 
-            });
-          }
-        }
-
-        const saveGeneralSettingsAction = await saveGeneralSettings({
-          addressBlocklist: currentBlocklist
+      for (const address of fetchedBlocklist) {
+        currentBlocklist.unshift({ 
+          address, 
+          details: '', 
+          lastModified: Math.floor(Date.now() / 1000) 
         });
-
-        store.dispatch(saveGeneralSettingsAction);
       }
+
+      const saveGeneralSettingsAction = await saveGeneralSettings({
+        addressBlocklist: currentBlocklist
+      });
+
+      store.dispatch(saveGeneralSettingsAction);
     } catch(e) {
       console.warn("Failed to fetch address blocklist");
       console.warn(e);

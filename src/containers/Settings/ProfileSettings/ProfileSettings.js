@@ -128,7 +128,7 @@ class ProfileSettings extends Component {
 
           if (biometry) {
             await removeBiometricPassword(accountHash);
-            this.props.dispatch(await setBiometry(id, false));
+            this.props.dispatch(await setBiometry(accountHash, false));
             createAlert(
               "Success",
               `${
@@ -137,7 +137,7 @@ class ProfileSettings extends Component {
             );
           } else {
             await storeBiometricPassword(accountHash, passwordCheck.password);
-            this.props.dispatch(await setBiometry(id, true));
+            this.props.dispatch(await setBiometry(accountHash, true));
             createAlert(
               "Success",
               `${
@@ -185,10 +185,10 @@ class ProfileSettings extends Component {
       (await this.canSetUserKeyDerivationVersion())
     ) {
       const { activeAccount } = this.props;
-      const { id } = activeAccount;
+      const { accountHash } = activeAccount;
 
       this.props.dispatch(
-        await setKeyDerivationVersion(id, keyDerivationVersion)
+        await setKeyDerivationVersion(accountHash, keyDerivationVersion)
       );
       this.resetToScreen(
         "SecureLoading",
@@ -253,11 +253,11 @@ class ProfileSettings extends Component {
   toggleWyreEnabled = async () => {
     if ((this.props.wyreEnabled && await this.canDisableWyre()) || (!this.props.wyreEnabled && await this.canEnableWyre())) {
       const { activeAccount } = this.props;
-      const { id, disabledServices } = activeAccount;
+      const { accountHash, disabledServices } = activeAccount;
 
       this.props.dispatch(
         await setDisabledServices(
-          id, 
+          accountHash, 
           {...disabledServices, 
             [WYRE_SERVICE_ID]: disabledServices[WYRE_SERVICE_ID] ? false : true
           }
@@ -276,7 +276,7 @@ class ProfileSettings extends Component {
           .then((seeds) => {
             this.setState({ password: null }, () => {
               this.props.navigation.navigate("DisplaySeed", {
-                data: { seeds },
+                data: { seeds, showDerivedKeys: true, keyDerivationVersion: this.props.activeAccount.keyDerivationVersion },
               });
             });
           })

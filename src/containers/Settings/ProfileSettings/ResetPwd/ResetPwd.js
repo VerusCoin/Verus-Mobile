@@ -16,7 +16,7 @@ import {
   TextInput as NativeTextInput
 } from "react-native";
 import { NavigationActions } from '@react-navigation/compat';
-import { resetPwd, setBiometry } from '../../../../actions/actionCreators';
+import { resetPwd, setBiometry, signOut } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import AlertAsync from "react-native-alert-async";
 import { TextInput, Button } from "react-native-paper";
@@ -24,6 +24,10 @@ import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors';
 import { removeBiometricPassword } from "../../../../utils/keychain/keychain";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
+import scorePassword from "../../../../utils/auth/scorePassword";
+import { MIN_PASS_LENGTH, MIN_PASS_SCORE, PASS_SCORE_LIMIT } from "../../../../utils/constants/constants";
+import { CommonActions } from "@react-navigation/native";
+import { clearActiveAccountLifecycles } from "../../../../actions/actionDispatchers";
 
 class ResetPwd extends Component {
   constructor() {
@@ -55,13 +59,13 @@ class ResetPwd extends Component {
 
   onSuccess = () => {
     createAlert("Success!", "Password for " + this.props.activeAccount.id + " reset successfully.");
-    this.props.navigation.dispatch(NavigationActions.back())
+    this.handleLogout();
   }
 
   canReset = () => {
     return AlertAsync(
       'Confirm Reset',
-      "Are you sure you would like to attempt to reset your password?",
+      "Are you sure you would like to reset your password? This will log you out.",
       [
         {
           text: 'No, take me back',
@@ -74,6 +78,50 @@ class ResetPwd extends Component {
         cancelable: false,
       },
     )
+  }
+
+  resetToScreen = (route, title, data, fullReset) => {
+    let resetAction
+
+    if (fullReset) {
+      resetAction = CommonActions.reset({
+        index: 0, // <-- currect active route from actions array
+        routes: [
+          { name: route, params: { data: data } },
+        ],
+      })
+    } else {
+      resetAction = CommonActions.reset({
+        index: 1, // <-- currect active route from actions array
+        routes: [
+          { name: "Home" },
+          { name: route, params: { title: title, data: data } },
+        ],
+      })
+    }
+
+    this.props.navigation.closeDrawer();
+    this.props.navigation.dispatch(resetAction)
+  }
+
+  handleLogout = () => {
+    this.resetToScreen("SecureLoading", null, {
+      task: () => {
+        // Hack to prevent crash on screens that require activeAccount not to be null
+        // TODO: Find a more elegant solution
+        return new Promise((resolve, reject) => {
+          setTimeout(async () => {
+            await clearActiveAccountLifecycles()
+            this.props.dispatch(signOut())
+            resolve()
+          }, 1000)
+        })
+      },
+      message: "Signing out...",
+      route: "Home",
+      successMsg: "Reset password",
+      errorMsg: "Failed to sign out"
+    }, true)
   }
 
   validateFormData = () => {
@@ -100,6 +148,14 @@ class ResetPwd extends Component {
         this.handleError("Current and new passwords must be different", "newPwd")
         createAlert("Error", "Current and new passwords must be different")
         _errors = true
+      } else {
+        const passScore = scorePassword(_newPwd, MIN_PASS_LENGTH, PASS_SCORE_LIMIT);
+
+        if (passScore < MIN_PASS_SCORE) {
+          this.handleError("Please choose a stronger password", "newPwd")
+          createAlert("Error", "Please choose a stronger password")
+          _errors = true
+        }
       }
 
       if (_newPwd !== _confirmNewPwd) {
@@ -113,9 +169,12 @@ class ResetPwd extends Component {
         .then(async (res) => {
           if (res) {
             if (this.props.activeAccount) {
-              removeBiometricPassword(this.props.activeAccount.accountHash)
-              await setBiometry(this.props.activeAccount.id, false)
-              return (resetPwd(this.props.activeAccount.id, this.state.newPwd, this.state.oldPwd))
+              if (this.props.activeAccount.biometry) {
+                await removeBiometricPassword(this.props.activeAccount.accountHash)
+              }
+              
+              await setBiometry(this.props.activeAccount.accountHash, false)
+              return (resetPwd(this.props.activeAccount.accountHash, this.state.newPwd, this.state.oldPwd))
             } else {
               console.warn("Error, no active account")
               return false
@@ -155,7 +214,7 @@ class ResetPwd extends Component {
               returnKeyType="done"
               dense
               onChangeText={(text) => this.setState({ oldPwd: text })}
-              label="Current Password"
+              label="Current password"
               underlineColor={Colors.primaryColor}
               selectionColor={Colors.primaryColor}
               render={(props) => (
@@ -174,7 +233,7 @@ class ResetPwd extends Component {
               returnKeyType="done"
               dense
               onChangeText={(text) => this.setState({ newPwd: text })}
-              label="New Password (min. 5 characters)"
+              label="New password (min. 5 characters)"
               underlineColor={Colors.primaryColor}
               selectionColor={Colors.primaryColor}
               render={(props) => (
@@ -195,7 +254,7 @@ class ResetPwd extends Component {
               onChangeText={(text) =>
                 this.setState({ confirmNewPwd: text })
               }
-              label="Confirm New Password"
+              label="Confirm new password"
               underlineColor={Colors.primaryColor}
               selectionColor={Colors.primaryColor}
               render={(props) => (
@@ -212,11 +271,14 @@ class ResetPwd extends Component {
         </ScrollView>
         <View style={Styles.highFooterContainer}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <Button color={Colors.warningButtonColor} onPress={this.cancel}>
+            <Button 
+              textColor={Colors.warningButtonColor} 
+              onPress={this.cancel}
+            >
               {"Cancel"}
             </Button>
             <Button
-              color={Colors.primaryColor}
+              mode="contained"
               onPress={this._handleSubmit}
             >
               {"Reset"}

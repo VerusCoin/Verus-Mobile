@@ -6,7 +6,7 @@ import { Transaction, networks, smarttxs } from "@bitgo/utxo-lib";
 import { calculateCurrencyTransferFee } from "./calculateCurrencyTransferFee";
 import { getInfo } from "./getInfo";
 import { fundRawTransaction } from "./fundRawTransaction";
-import { getAddressUtxos } from "./getAddressUtxos";
+import { getAddressUtxos, getSpendableUtxos } from "./getAddressUtxos";
 import { getCurrency, getIdentity } from "../../verusid/callCreators";
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData";
 import { estimateConversion } from "./estimateConversion";
@@ -441,28 +441,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       );
     }
 
-    const utxosRes = await getAddressUtxos(systemId, [source]);
-
-    if (utxosRes.error) throw new Error(utxosRes.error.message);
-
-    const utxoList = []
-
-    utxosRes.result.forEach((inputUtxo) => {
-      if (inputUtxo.isspendable && 
-        (inputUtxo.satoshis != 0 || 
-          (inputUtxo.currencyvalues != null && Object.keys(inputUtxo.currencyvalues).includes(currency))
-        )) {
-        const _script = Buffer.from(inputUtxo.script, 'hex')
-        const _value = inputUtxo.satoshis
-
-        try {
-          unpackOutput({ value: _value, script: _script }, systemId, true)
-          utxoList.push(inputUtxo)
-        } catch (e) {
-          console.warn(e.message)
-        }
-      }
-    })
+    const utxoList = await getSpendableUtxos(systemId, currency, [source]);
 
     const fundRes = await fundRawTransaction(
       systemId,

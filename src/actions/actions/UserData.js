@@ -76,9 +76,9 @@ export const addUser = async (
   return setAccounts(res);
 };
 
-export const resetPwd = (userID, newPwd, oldPwd) => {
+export const resetPwd = (accountHash, newPwd, oldPwd) => {
   return new Promise((resolve, reject) => {
-    resetUserPwd(userID, newPwd, oldPwd)
+    resetUserPwd(accountHash, newPwd, oldPwd)
       .then(res => {
         if (res) {
           resolve(setAccounts(res));
@@ -104,13 +104,13 @@ export const addEncryptedKey = (accountHash, channel, seed, password) => {
   });
 };
 
-export const setBiometry = (userID, biometry) => {
+export const setBiometry = (accountHash, biometry) => {
   return new Promise((resolve, reject) => {
-    setUserBiometry(userID, biometry)
+    setUserBiometry(accountHash, biometry)
       .then(accounts => {
         resolve({
           type: BIOMETRIC_AUTH,
-          payload: {biometry, userID, accounts},
+          payload: {biometry, accountHash, accounts},
         });
       })
       .catch(err => reject(err));
@@ -118,9 +118,9 @@ export const setBiometry = (userID, biometry) => {
 };
 
 // Requires user to logout and log back in
-export const setKeyDerivationVersion = async (userID, keyDerivationVersion) => {
+export const setKeyDerivationVersion = async (accountHash, keyDerivationVersion) => {
   return new Promise((resolve, reject) => {
-    setUserKeyDerivationVersion(userID, keyDerivationVersion)
+    setUserKeyDerivationVersion(accountHash, keyDerivationVersion)
       .then(accounts => {
         resolve({
           type: SET_ACCOUNTS,
@@ -131,9 +131,9 @@ export const setKeyDerivationVersion = async (userID, keyDerivationVersion) => {
   });
 };
 
-export const setDisabledServices = async (userID, disabledServices) => {
+export const setDisabledServices = async (accountHash, disabledServices) => {
   return new Promise((resolve, reject) => {
-    setUserDisabledServices(userID, disabledServices)
+    setUserDisabledServices(accountHash, disabledServices)
       .then(accounts => {
         resolve({
           type: UPDATE_ACCOUNT_DISABLED_SERVICES,
@@ -144,9 +144,9 @@ export const setDisabledServices = async (userID, disabledServices) => {
   });
 };
 
-export const setTestnetOverrides = async (userID, testnetOverrides) => {
+export const setTestnetOverrides = async (accountHash, testnetOverrides) => {
   return new Promise((resolve, reject) => {
-    setUserTestnetOverrides(userID, testnetOverrides)
+    setUserTestnetOverrides(accountHash, testnetOverrides)
       .then(accounts => {
         resolve({
           type: UPDATE_ACCOUNT_TESTNET_OVERRIDES,
@@ -273,8 +273,14 @@ export const authenticateAccount = async (account, password) => {
                       ? ELECTRUM
                       : channel;
 
+                  if (seeds[seedChannel] == null) throw new Error('No seed for channel ' + seedChannel);
+
+                  const decryptedSeed = decryptkey(password, seeds[seedChannel]);
+
+                  if (!decryptedSeed) throw new Error('Failed to decrypt seed for channel ' + seedChannel);
+
                   const keyObj = await deriveKeyPair(
-                    decryptkey(password, seeds[seedChannel]),
+                    decryptedSeed,
                     activeCoins[i],
                     channel,
                     account.keyDerivationVersion == null
@@ -369,6 +375,9 @@ export const addKeypairs = async (
     const seed = accountSeeds[seedType]
       ? accountSeeds[seedType]
       : accountSeeds[ELECTRUM];
+
+    if (!seed) throw new Error('No seed found for account');
+    
     if (
       coinObj.compatible_channels.includes(seedType) &&
       (seedType !== DLIGHT_PRIVATE || accountSeeds[seedType])

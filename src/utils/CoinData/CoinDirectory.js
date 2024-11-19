@@ -19,6 +19,8 @@ class _CoinDirectory {
   disabledNameList = [];
   enabledNameList = [];
 
+  vrpcOverrides = {};
+
   constructor(coins = {}) {
     this.coins = coins;
     this.updateCoinLists();
@@ -40,6 +42,8 @@ class _CoinDirectory {
   updateCoinLists() {
     this.fullCoinList = Object.values(this.coins).map(function(coin) {
       return coin.id;
+    }).filter(x => {
+      return this.coins[x];
     });
     
     this.testCoinList = this.fullCoinList.filter(x => {
@@ -69,7 +73,7 @@ class _CoinDirectory {
   }
 
   // Function to find a coin object by coinId.
-  findCoinObj(key, userName, useSystemId) {
+  findSimpleCoinObj(key, userName, useSystemId) {
     const id = useSystemId
       ? getSystemNameFromSystemId(key)
       : key === 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq'
@@ -88,6 +92,10 @@ class _CoinDirectory {
         coinObj.overrideCoinSettings = {
           privateAddrs: 0
         }
+      }
+
+      if (coinObj.vrpc_endpoints) {
+        coinObj.vrpc_endpoints = this.getVrpcEndpoints(coinObj.id);
       }
       
       if (!coinObj.apps || Object.keys(coinObj.apps).length === 0) {
@@ -115,20 +123,52 @@ class _CoinDirectory {
     return coinObj;
   }
 
+  setVrpcOverrides(overrides) {
+    this.vrpcOverrides = overrides ? overrides : {};
+  }
+
+  getVrpcEndpoints(coinId) {
+    if (this.vrpcOverrides && this.vrpcOverrides.hasOwnProperty(coinId)) {
+      return this.vrpcOverrides[coinId];
+    }
+
+    const simpleCoinObj = this.getBasicCoinObj(coinId);
+    
+    if (this.vrpcOverrides && this.vrpcOverrides.hasOwnProperty(simpleCoinObj.system_id)) {
+      return this.vrpcOverrides[simpleCoinObj.system_id];
+    } else if (simpleCoinObj && simpleCoinObj.vrpc_endpoints) {
+      return simpleCoinObj.vrpc_endpoints;
+    } else throw new Error("Cannot find VRPC endpoints for " + simpleCoinObj.id);
+  }
+
   findSystemCoinObj(id) {
-    const coinObj = this.findCoinObj(id)
+    const coinObj = this.findSimpleCoinObj(id)
     const system = coinObj.system_id
 
     try {
-      const systemObj = this.findCoinObj(system, null, true);
+      const systemObj = this.findSimpleCoinObj(system, null, true);
       return systemObj;
     } catch(e) {
       if (this.coinExistsInDirectory(system)) {
-        return this.findCoinObj(system);
+        return this.findSimpleCoinObj(system);
       } else {
         throw new Error("Cannot find system " + system)
       }
     }
+  }
+
+  findCoinObj(key, userName, useSystemId) {
+    const coinObj = this.findSimpleCoinObj(key, userName, useSystemId);
+    
+    if (coinObj.proto === 'vrsc' && (coinObj.compatible_channels.includes(VRPC) || coinObj.compatible_channels.includes(VERUSID))) {
+      const systemObj = this.findSystemCoinObj(coinObj.id);
+
+      coinObj.system_options = systemObj.pbaas_options;
+      coinObj.vrpc_endpoints = systemObj.vrpc_endpoints;
+      coinObj.seconds_per_block = systemObj.seconds_per_block;
+    }
+
+    return coinObj;
   }
 
   // Function to add PBaaS currency
@@ -196,21 +236,27 @@ class _CoinDirectory {
       systemOptions = systemObj.pbaas_options;
     } catch(e) {
       if (this.coinExistsInDirectory(system)) {
-        endpoints = this.coins[system].vrpc_endpoints;
+        endpoints = this.getVrpcEndpoints(system);
         secondsPerBlock = this.coins[system].seconds_per_block;
         systemOptions = this.coins[system].pbaas_options;
       } else if (currencyDefinition.nodes) {
-        const firstNode = currencyDefinition.nodes[0].networkaddress;
         secondsPerBlock = currencyDefinition.blocktime;
         systemOptions = currencyDefinition.options;
 
-        const firstNodeSplit = firstNode.split(':')
-        const firstNodePort = firstNodeSplit[firstNodeSplit.length - 1]
+        let endpoint;
 
-        if (isNaN(firstNodePort)) throw new Error("Cannot deduce vrpc endpoint with port" + firstNodePort + " for " + system)
-
-        const baseServer = isTestnet ? coinsList.VRSCTEST.vrpc_endpoints[0] : coinsList.VRSC.vrpc_endpoints[0]
-        const endpoint = `${baseServer}:${(Number(firstNodePort) + 1).toString()}`
+        try {
+          endpoint = this.getVrpcEndpoints(system)[0];
+        } catch(e) {
+          const firstNode = currencyDefinition.nodes[0].networkaddress;
+          const firstNodeSplit = firstNode.split(':')
+          const firstNodePort = firstNodeSplit[firstNodeSplit.length - 1]
+  
+          if (isNaN(firstNodePort)) throw new Error("Cannot deduce vrpc endpoint with port" + firstNodePort + " for " + system)
+  
+          const baseServer = isTestnet ? this.getVrpcEndpoints("VRSCTEST")[0] : this.getVrpcEndpoints("VRSC")[0]
+          endpoint = `${baseServer}:${(Number(firstNodePort) + 1).toString()}`
+        }
 
         if (checkEndpoint) {
           try {
@@ -230,8 +276,8 @@ class _CoinDirectory {
         const currencyInterface = new VerusdRpcInterface(
           isTestnet ? coinsList.VRSCTEST.currency_id : coinsList.VRSC.currency_id,
           isTestnet
-            ? coinsList.VRSCTEST.vrpc_endpoints[0]
-            : coinsList.VRSC.vrpc_endpoints[0],
+            ? this.getVrpcEndpoints("VRSCTEST")[0]
+            : this.getVrpcEndpoints("VRSC")[0],
         );
 
         const systemDefinition = await currencyInterface.getCurrency(system)
@@ -242,7 +288,7 @@ class _CoinDirectory {
           systemDefinition.result.nodes
         ) {
           await this.addPbaasCurrency(systemDefinition.result, isTestnet, checkEndpoint);
-          endpoints = this.coins[systemDefinition.result.currencyid].vrpc_endpoints;
+          endpoints = this.getVrpcEndpoints(systemDefinition.result.currencyid);
           secondsPerBlock = this.coins[systemDefinition.result.currencyid].seconds_per_block;
           systemOptions = this.coins[systemDefinition.result.currencyid].pbaas_options;
         } else {

@@ -29,6 +29,9 @@ import {
 import { saveGeneralSettings } from "../../../actions/actionCreators";
 import { openUrl } from "../../../utils/linking";
 import { createAlert, resolveAlert } from "../../../actions/actions/alert/dispatchers/alert";
+import {
+  CONVERSION_DISABLED
+} from '../../../../env/index';
 
 const SendCoin = ({ navigation }) => {
   const activeCoin = useSelector(state => state.coins.activeCoin);
@@ -41,7 +44,55 @@ const SendCoin = ({ navigation }) => {
   );
   const dispatch = useDispatch()
 
-  const CONVERT_OR_CROSS_CHAIN_OPTIONS = [
+  const CONVERT_OR_CROSS_CHAIN_OPTIONS = CONVERSION_DISABLED ? [
+    {
+      key: 'export',
+      title: 'Send off-chain',
+      description: `Send ${activeCoin.display_ticker} to an address on a different blockchain network without converting it`,
+      data: {
+        [SEND_MODAL_TO_ADDRESS_FIELD]: '',
+        [SEND_MODAL_AMOUNT_FIELD]: '',
+        [SEND_MODAL_MEMO_FIELD]: '',
+        [SEND_MODAL_CONVERTTO_FIELD]: '',
+        [SEND_MODAL_EXPORTTO_FIELD]: '',
+        [SEND_MODAL_VIA_FIELD]: '',
+        [SEND_MODAL_MAPPING_FIELD]: '',
+        [SEND_MODAL_PRICE_ESTIMATE]: null,
+        [SEND_MODAL_IS_PRECONVERT]: false,
+        [SEND_MODAL_SHOW_CONVERTTO_FIELD]: false,
+        [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
+        [SEND_MODAL_SHOW_MAPPING_FIELD]: true,
+        [SEND_MODAL_SHOW_VIA_FIELD]: false,
+        [SEND_MODAL_ADVANCED_FORM]: false,
+        [SEND_MODAL_DISABLED_INPUTS]: {
+          [SEND_MODAL_MAPPING_FIELD]: activeCoin.proto === 'vrsc'
+        }
+      },
+    },
+    {
+      key: 'advanced',
+      title: 'Advanced',
+      description: 'Send off-chain using an unguided form',
+      data: {
+        [SEND_MODAL_TO_ADDRESS_FIELD]: '',
+        [SEND_MODAL_AMOUNT_FIELD]: '',
+        [SEND_MODAL_MEMO_FIELD]: '',
+        [SEND_MODAL_CONVERTTO_FIELD]: '',
+        [SEND_MODAL_EXPORTTO_FIELD]: '',
+        [SEND_MODAL_VIA_FIELD]: '',
+        [SEND_MODAL_MAPPING_FIELD]: '',
+        [SEND_MODAL_PRICE_ESTIMATE]: null,
+        [SEND_MODAL_IS_PRECONVERT]: false,
+        [SEND_MODAL_SHOW_CONVERTTO_FIELD]: false,
+        [SEND_MODAL_SHOW_EXPORTTO_FIELD]: true,
+        [SEND_MODAL_SHOW_MAPPING_FIELD]: (activeCoin.proto === 'erc20' || activeCoin.proto === 'eth'),
+        [SEND_MODAL_SHOW_VIA_FIELD]: false,
+        [SEND_MODAL_ADVANCED_FORM]: true,
+        [SEND_MODAL_SHOW_IS_PRECONVERT]: false,
+        [SEND_MODAL_DISABLED_INPUTS]: {}
+      },
+    }
+  ] : [
     {
       key: 'convert',
       title: 'Convert currency',
@@ -223,7 +274,7 @@ By proceeding, you confirm that you've read, understood, and agreed to this. Ens
         button={() => (
           <View>
             <Button
-              color={Colors.secondaryColor}
+              buttonColor={Colors.secondaryColor}
               mode={"contained"}
               onPress={() =>
                 openSubwalletSendModal(activeCoin, subWallet)
@@ -236,8 +287,7 @@ By proceeding, you confirm that you've read, understood, and agreed to this. Ens
             </Button>
             {allowConvertOrOffchain && (
               <Button
-                color={Colors.secondaryColor}
-                mode={"text"}
+                textColor={Colors.secondaryColor}
                 onPress={() =>
                   openConvertOrCrossChainModal()
                 }
@@ -245,7 +295,7 @@ By proceeding, you confirm that you've read, understood, and agreed to this. Ens
                   marginBottom: 8,
                 }}
               >
-                {"Convert or cross-chain"}
+                {CONVERSION_DISABLED ? "Send cross-chain" : "Convert or cross-chain"}
               </Button>
             )}
           </View>

@@ -33,7 +33,6 @@ const ExportFormModule = ({
               label={exporttoDisabled ? "System to send to" : "System to send to (optional)"}
               value={exportToField}
               mode="outlined"
-              multiline={true}
               onChangeText={text => onSystemChange(text)}
               autoCapitalize={'none'}
               autoCorrect={false}
@@ -76,7 +75,7 @@ const ExportFormModule = ({
                     : 'Select network to send to'
                 }
               </Text>
-              <IconButton icon="magnify" size={16} color={Colors.verusDarkGray} />
+              <IconButton icon="magnify" size={16} iconColor={Colors.verusDarkGray} />
             </TouchableOpacity>
           )
         }
@@ -90,7 +89,6 @@ const ExportFormModule = ({
                 label={exportToField != null && exportToField.length > 0 ? "Currency to receive as (required)" : "Currency to receive as (optional)"}
                 value={mappingField}
                 mode="outlined"
-                multiline={true}
                 onChangeText={text => onMappingChange(text)}
                 autoCapitalize={'none'}
                 autoCorrect={false}
@@ -122,7 +120,7 @@ const ExportFormModule = ({
                     ? `Receive as: ${mappingField}`
                     : 'Select currency to receive as'}
                 </Text>
-                <IconButton icon="magnify" size={16} color={Colors.verusDarkGray} />
+                <IconButton icon="magnify" size={16} iconColor={Colors.verusDarkGray} />
               </TouchableOpacity>
             )}
           </View>

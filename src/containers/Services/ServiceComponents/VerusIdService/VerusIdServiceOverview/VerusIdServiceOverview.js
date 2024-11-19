@@ -24,7 +24,7 @@ class VerusIdServiceOverview extends Component {
     try {
       const identityObj = await this.getVerusId(chain, iAddress);
 
-      return getFriendlyNameMap(CoinDirectory.getBasicCoinObj(chain), identityObj);
+      return getFriendlyNameMap(CoinDirectory.getBasicCoinObj(chain).system_id, identityObj);
     } catch (e) {
       return {
         ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',

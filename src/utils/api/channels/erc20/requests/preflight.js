@@ -1,6 +1,6 @@
 import { ethers } from "ethers"
 import { getWeb3ProviderForNetwork } from '../../../../web3/provider'
-import { ERC20, ETH, VRPC } from "../../../../constants/intervalConstants"
+import { ERC20, ETH } from "../../../../constants/intervalConstants"
 import { coinsToSats, coinsToUnits, satsToCoins, scientificToDecimal } from "../../../../math"
 import {
   DAI_VETH,
@@ -20,7 +20,10 @@ import {
   MKR_VETH,
   ETH_VERUS_BRIDGE_CONTRACT_RESERVE_TRANSFER_FEE_WEI,
   MINIMUM_IMPORT_FEE_WEI,
-  GAS_PRICE_MODIFIER
+  GAS_PRICE_MODIFIER,
+  DAI_CONTRACT_ADDRESS,
+  DAI_BRIDGE_TRANSFER_GAS_LIMIT,
+  TRANSFER_SKIP_CALLSTATIC_TOKENS
 } from '../../../../constants/web3Constants';
 import { getCurrency, getIdentity } from "../../verusid/callCreators"
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData"
@@ -41,8 +44,6 @@ import {
 } from 'verus-typescript-primitives';
 
 import BigNumber from "bignumber.js"
-import { requestPrivKey } from "../../../../auth/authBox";
-import { BufferWriter } from "@bitgo/utxo-lib/dist/src/bufferutils";
 import { BN } from "bn.js";
 import { getStandardEthBalance } from "../../eth/callCreator";
 import { ECPair, networks } from "@bitgo/utxo-lib";
@@ -68,11 +69,14 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
     const gasLimModifier = ethers.BigNumber.from("3")
     const gasEst = await contract.estimateGas.transfer(address, amountBn)
     const gasLimit = gasEst.add(gasEst.div(gasLimModifier))
-    const transaction = await contract.callStatic.transfer(
-      address,
-      amountBn,
-      { gasLimit: gasLimit.toNumber(), gasPrice }
-    );
+
+    if (!(TRANSFER_SKIP_CALLSTATIC_TOKENS.some(x => (x.toLowerCase() === coinObj.currency_id.toLowerCase())))) {
+      const transaction = await contract.callStatic.transfer(
+        address,
+        amountBn,
+        { gasLimit: gasLimit.toNumber(), gasPrice }
+      );
+    }
 
     const maxFee = gasLimit.mul(gasPrice)
     
@@ -364,7 +368,12 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
 
     let gasEst =
       coinObj.currency_id !== ETH_CONTRACT_ADDRESS
-        ? ethers.BigNumber.from(ERC20_BRIDGE_TRANSFER_GAS_LIMIT)
+        ? ethers.BigNumber.from(
+            coinObj.currency_id.toLowerCase() === DAI_CONTRACT_ADDRESS.toLowerCase() ? 
+              DAI_BRIDGE_TRANSFER_GAS_LIMIT 
+              : 
+              ERC20_BRIDGE_TRANSFER_GAS_LIMIT
+            )
         : transferGas.add(transferGas.div(gasFeeModifier));
 
     if (coinObj.currency_id !== ETH_CONTRACT_ADDRESS) {

@@ -12,14 +12,14 @@ import {
 import { NavigationActions } from '@react-navigation/compat';
 import { connect } from 'react-redux';
 import QRCode from 'react-native-qrcode-svg';
-import Styles from '../../../../styles/index'
-import Colors from "../../../../globals/colors";
+import Styles from '../../styles/index'
+import Colors from "../../globals/colors";
 import { CommonActions } from '@react-navigation/native';
-import { DLIGHT_PRIVATE, ELECTRUM, ETH, WYRE_SERVICE } from "../../../../utils/constants/intervalConstants";
+import { DLIGHT_PRIVATE, ELECTRUM, ETH, WYRE_SERVICE } from "../../utils/constants/intervalConstants";
 import { Card, Paragraph, Title, Button } from 'react-native-paper'
-import { deriveKeyPair, dlightSeedToBytes, isSeedPhrase } from "../../../../utils/keys";
-import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
-import { coinsList } from "../../../../utils/CoinData/CoinsList";
+import { deriveKeyPair, dlightSeedToBytes, isSeedPhrase } from "../../utils/keys";
+import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
+import { coinsList } from "../../utils/CoinData/CoinsList";
 
 class DisplaySeed extends Component {
   constructor() {
@@ -31,7 +31,8 @@ class DisplaySeed extends Component {
       dualSameSeed: false,
       derivedKeys: {},
       toggleDerivedKey: {},
-      fetchingDerivedKey: {}
+      fetchingDerivedKey: {},
+      completeOnBack: false,
     };
 
     this.SEED_NAMES = {
@@ -63,6 +64,15 @@ class DisplaySeed extends Component {
       this.setState({
         fromDeleteAccount: data
           .fromDeleteAccount,
+      });
+    }
+
+    if (
+      data &&
+      data.completeOnBack
+    ) {
+      this.setState({
+        completeOnBack: data.completeOnBack,
       });
     }
   }
@@ -114,8 +124,9 @@ class DisplaySeed extends Component {
     }
   }
 
-  // Method to derive the key from seed. Replace this with your actual implementation
   deriveKeyFromSeed = async (seed, key, coinObj) => {
+    const { data } = this.props.route.params;
+
     switch (key) {
       case DLIGHT_PRIVATE:
         return Buffer.from(await dlightSeedToBytes(seed)).toString('hex');
@@ -124,14 +135,14 @@ class DisplaySeed extends Component {
           seed,
           coinsList.ETH,
           key,
-          this.props.activeAccount.keyDerivationVersion,
+          data.keyDerivationVersion,
         )).privKey;
       case ELECTRUM:
         return (await deriveKeyPair(
           seed,
           coinObj,
           key,
-          this.props.activeAccount.keyDerivationVersion,
+          data.keyDerivationVersion,
         )).privKey;
       default:
         return seed
@@ -139,7 +150,8 @@ class DisplaySeed extends Component {
   }
 
   render() {
-    const { seeds, toggleDerivedKey, fetchingDerivedKey, derivedKeys } = this.state;
+    const { seeds, toggleDerivedKey, fetchingDerivedKey, derivedKeys, completeOnBack } = this.state;
+    const { data } = this.props.route.params;
 
     return (
       <View style={Styles.defaultRoot}>
@@ -163,28 +175,30 @@ class DisplaySeed extends Component {
                     <View style={Styles.fullWidthFlexCenterBlock}>
                       <QRCode value={displayedValue} size={250} />
                     </View>
-                    {
-                      ((key === DLIGHT_PRIVATE && isSeedPhrase(seeds[key])) ||
-                        key === ETH ||
-                        key === ELECTRUM) && (
-                        <Button onPress={() => this.toggleDerived(key, coinsList.VRSC)}>
-                          {fetchingDerivedKey[key]
-                            ? 'Fetching...'
-                            : isToggleOn
-                            ? 'Show Seed'
-                            : key === ELECTRUM
-                            ? 'Show Derived Key (VRSC)'
-                            : 'Show Derived Key'}
-                        </Button>
-                      )
-                    }
-                    {
-                      !isToggleOn && !fetchingDerivedKey[key] && key === ELECTRUM && (
-                        <Button onPress={() => this.toggleDerived(key, coinsList.BTC)}>
-                          {'Show Derived Key (BTC)'}
-                        </Button>
-                      )
-                    }
+                    {data.showDerivedKeys && <>
+                      {
+                        ((key === DLIGHT_PRIVATE && isSeedPhrase(seeds[key])) ||
+                          key === ETH ||
+                          key === ELECTRUM) && (
+                          <Button onPress={() => this.toggleDerived(key, coinsList.VRSC)}>
+                            {fetchingDerivedKey[key]
+                              ? 'Fetching...'
+                              : isToggleOn
+                                ? 'Show Seed'
+                                : key === ELECTRUM
+                                  ? 'Show Derived Key (VRSC)'
+                                  : 'Show Derived Key'}
+                          </Button>
+                        )
+                      }
+                      {
+                        !isToggleOn && !fetchingDerivedKey[key] && key === ELECTRUM && (
+                          <Button onPress={() => this.toggleDerived(key, coinsList.BTC)}>
+                            {'Show Derived Key (BTC)'}
+                          </Button>
+                        )
+                      }
+                    </>}
                   </Card.Content>
                 </Card>
               </View>
@@ -194,12 +208,16 @@ class DisplaySeed extends Component {
         </ScrollView>
         <View style={Styles.highFooterContainer}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <Button color={Colors.warningButtonColor} onPress={this.back}>
-              {"Back"}
+            <Button style={completeOnBack ? {
+              flex: 1
+            } : {}} textColor={completeOnBack ? Colors.primaryColor : Colors.warningButtonColor} onPress={this.back}>
+              {completeOnBack ? "Done" : "Back"}
             </Button>
-            <Button color={Colors.linkButtonColor} onPress={this.resetToScreen}>
-              {this.state.fromDeleteAccount ? "CONTINUE" : "HOME"}
-            </Button>
+            {!completeOnBack && (
+              <Button textColor={Colors.linkButtonColor} onPress={this.resetToScreen}>
+                {this.state.fromDeleteAccount ? "CONTINUE" : "HOME"}
+              </Button>
+            )}
           </View>
         </View>
       </View>

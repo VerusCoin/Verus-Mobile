@@ -6,24 +6,20 @@
 */
 
 import React, { Component } from "react";
-import { 
-  View,
+import {
   ScrollView, 
   Platform, 
   TouchableOpacity,
-  Image,
-  Linking,
   SafeAreaView
 } from "react-native";
-import { List, DataTable, Divider, Text } from 'react-native-paper'
+import { List, Divider, Text } from 'react-native-paper'
 import Styles from '../../../styles/index'
 import { APP_VERSION } from '../../../../env/index'
-import { CoinLogos } from "../../../utils/CoinData/CoinData";
 import { openUrl } from "../../../utils/linking";
 
-const DISCORD_URL = "https://discord.gg/VRKMP2S"
+const DISCORD_URL = "https://www.verus.io/discord"
 const REDDIT_URL = "https://www.reddit.com/r/VerusCoin/"
-const TWITTER_URL = "https://twitter.com/VerusCoin"
+const GITHUB_URL = "https://github.com/VerusCoin/"
 const PRIVACY_URL = "https://github.com/VerusCoin/Verus-Mobile/blob/master/PRIVACY.txt"
 const LICENCE_URL = "https://github.com/VerusCoin/Verus-Mobile/blob/master/LICENCE"
 
@@ -101,10 +97,10 @@ class AppInfo extends Component {
             />
             <Divider />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => openUrl(TWITTER_URL)}>
+          <TouchableOpacity onPress={() => openUrl(GITHUB_URL)}>
             <List.Item
-              title={"Twitter"}
-              description={"The Verus Coin Foundation Twitter account"}
+              title={"GitHub"}
+              description={"The Verus Coin GitHub"}
               right={(props) => (
                 <List.Icon {...props} icon={"open-in-new"} size={20} />
               )}

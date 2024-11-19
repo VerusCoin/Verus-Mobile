@@ -1,7 +1,7 @@
 import React, { Component } from "react";
-import { Platform, SafeAreaView } from "react-native";
+import { Platform, SafeAreaView, View } from "react-native";
 import { Text, Portal, Button } from "react-native-paper";
-import { Colors } from "react-native/Libraries/NewAppScreen";
+import Colors from "../../globals/colors";
 import {
   ADD_ERC20_TOKEN_MODAL,
   ADD_PBAAS_CURRENCY_MODAL,
@@ -11,6 +11,8 @@ import {
   DEPOSIT_SEND_MODAL,
   LINK_IDENTITY_SEND_MODAL,
   PROVISION_IDENTITY_SEND_MODAL,
+  RECOVER_IDENTITY_SEND_MODAL,
+  REVOKE_IDENTITY_SEND_MODAL,
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_FORM_STEP_FORM,
   SEND_MODAL_FORM_STEP_RESULT,
@@ -52,6 +54,12 @@ import ConvertOrCrossChainSendResult from "./ConvertOrCrossChainSend/ConvertOrCr
 import AddErc20TokenForm from "./AddErc20Token/AddErc20TokenForm/AddErc20TokenForm";
 import AddErc20TokenConfirm from "./AddErc20Token/AddErc20TokenConfirm/AddErc20TokenConfirm";
 import AddErc20TokenResult from "./AddErc20Token/AddErc20TokenResult/AddErc20TokenResult";
+import RevokeIdentityForm from "./RevokeIdentity/RevokeIdentityForm/RevokeIdentityForm";
+import RevokeIdentityConfirm from "./RevokeIdentity/RevokeIdentityConfirm/RevokeIdentityConfirm";
+import RevokeIdentityResult from "./RevokeIdentity/RevokeIdentityResult/RevokeIdentityResult";
+import RecoverIdentityForm from "./RecoverIdentity/RecoverIdentityForm/RecoverIdentityForm";
+import RecoverIdentityConfirm from "./RecoverIdentity/RecoverIdentityConfirm/RecoverIdentityConfirm";
+import RecoverIdentityResult from "./RecoverIdentity/RecoverIdentityResult/RecoverIdentityResult";
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
@@ -66,7 +74,9 @@ const SEND_FORMS = {
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserForm,
   [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyForm,
   [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendForm,
-  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenForm
+  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenForm,
+  [REVOKE_IDENTITY_SEND_MODAL]: RevokeIdentityForm,
+  [RECOVER_IDENTITY_SEND_MODAL]: RecoverIdentityForm
 };
 
 const SEND_CONFIRMATION = {
@@ -79,7 +89,9 @@ const SEND_CONFIRMATION = {
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserPassword,
   [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyConfirm,
   [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendConfirm,
-  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenConfirm
+  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenConfirm,
+  [REVOKE_IDENTITY_SEND_MODAL]: RevokeIdentityConfirm,
+  [RECOVER_IDENTITY_SEND_MODAL]: RecoverIdentityConfirm
 };
 
 const SEND_RESULTS = {
@@ -92,7 +104,9 @@ const SEND_RESULTS = {
   [AUTHENTICATE_USER_SEND_MODAL]: AuthenticateUserResult,
   [ADD_PBAAS_CURRENCY_MODAL]: AddPbaasCurrencyResult,
   [CONVERT_OR_CROSS_CHAIN_SEND_MODAL]: ConvertOrCrossChainSendResult,
-  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenResult
+  [ADD_ERC20_TOKEN_MODAL]: AddErc20TokenResult,
+  [REVOKE_IDENTITY_SEND_MODAL]: RevokeIdentityResult,
+  [RECOVER_IDENTITY_SEND_MODAL]: RecoverIdentityResult
 };
 
 export const SendModalRender = function () {
@@ -120,28 +134,31 @@ export const SendModalRender = function () {
           <SafeAreaView style={{ flex: 1 }}>
             <Root.Navigator
               screenOptions={{
-                headerTitle: () => <Text style={{ marginBottom: 16, fontSize: 16, textAlign: "center" }}>{title}</Text>,
-                headerRight: (props) => (
-                  <Button
-                    {...props}
-                    style={{ marginBottom: 16 }}
-                    onPress={() => this.showHelpModal()}
-                    color={Colors.primaryColor}
-                    disabled={this.state.preventExit}
-                  >
-                    {"Help"}
-                  </Button>
-                ),
-                headerLeft: (props) => (
-                  <Button
-                    {...props}
-                    style={{ marginBottom: 16 }}
-                    onPress={() => this.cancel()}
-                    color={Colors.primaryColor}
-                    disabled={this.state.preventExit}
-                  >
-                    {"Close"}
-                  </Button>
+                header: () => (
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: "center", 
+                    justifyContent: "space-between", 
+                    backgroundColor: Colors.secondaryColor 
+                  }}>
+                    <Button
+                      style={{ marginBottom: 16 }}
+                      onPress={() => this.cancel()}
+                      textColor={Colors.primaryColor}
+                      disabled={this.state.preventExit}
+                    >
+                      {"Close"}
+                    </Button>
+                    <Text style={{ marginBottom: 16, fontSize: 16, textAlign: "center" }}>{title}</Text>
+                    <Button
+                      style={{ marginBottom: 16 }}
+                      onPress={() => this.showHelpModal()}
+                      textColor={Colors.primaryColor}
+                      disabled={this.state.preventExit}
+                    >
+                      {"Help"}
+                    </Button>   
+                  </View>
                 ),
                 headerStyle: {
                   height: 52,
@@ -188,18 +205,18 @@ export const SendModalInnerAreaRender = function () {
           ? this.props.sendModal.initialRouteName
           : SEND_MODAL_FORM_STEP_FORM
       }
-      swipeEnabled={false}
       backBehavior={'none'}
       tabBarPosition="bottom"
-      tabBarOptions={{
-        pressColor: 'transparent',
-        pressOpacity: 1,
-        labelStyle: {
+      screenOptions={{
+        swipeEnabled: false,
+        tabBarPressColor: "transparent",
+        tabBarPressOpacity: 1,
+        tabBarLabelStyle: {
           fontSize: 12
-        }
-      }}
-      lazy={true}
-      lazyPlaceholder={() => <AnimatedActivityIndicatorBox />}>
+        },
+        lazy: true,
+        lazyPlaceholder: () => <AnimatedActivityIndicatorBox />
+      }}>
       <TopTabs.Screen
         name={SEND_MODAL_FORM_STEP_FORM}
         options={{

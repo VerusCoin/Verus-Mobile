@@ -1,7 +1,7 @@
 import {useCallback} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {fromBase58Check} from '@bitgo/utxo-lib/dist/src/address';
-import {Alert} from 'react-native';
+import {Alert, Dimensions} from 'react-native';
 import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
 import {
   getFriendlyNameMap,
@@ -17,6 +17,7 @@ import {deriveKeyPair} from '../../../../utils/keys';
 import {LinkIdentityFormRender} from './LinkIdentityForm.render';
 
 const LinkIdentityForm = (props) => {
+  const { height } = Dimensions.get("window");
   const dispatch = useDispatch();
   const sendModal = useSelector(state => state.sendModal);
 
@@ -53,6 +54,8 @@ const LinkIdentityForm = (props) => {
     const seeds = await requestSeeds();
 
     const seed = seeds[channel];
+
+    if (!seed) throw new Error("No seed found");
 
     const keyObj = await deriveKeyPair(seed, coinObj, channel);
     const {addresses} = keyObj;
@@ -100,8 +103,8 @@ const LinkIdentityForm = (props) => {
         );
       }
 
-      const friendlyNames = await getFriendlyNameMap(coinObj, res.result);
-      props.setModalHeight(696)
+      const friendlyNames = await getFriendlyNameMap(coinObj.system_id, res.result);
+      props.setModalHeight(height >= 720 ? 696 : height - 24);
 
       props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
         verusId: res.result,

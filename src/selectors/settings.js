@@ -1,15 +1,25 @@
 import { createSelector } from 'reselect';
 
-const getAddressBlocklistFromServer = state =>
+const addressBlocklist = state =>
   state.settings.generalWalletSettings.addressBlocklist
     ? state.settings.generalWalletSettings.addressBlocklist
     : [];
 
+const vrpcOverrides = state =>
+  state.settings.generalWalletSettings.vrpcOverrides
+    ? state.settings.generalWalletSettings.vrpcOverrides
+    : {};
+
 export const selectAddressBlocklist = createSelector(
-  [getAddressBlocklistFromServer],
-  (addressBlocklist) => {
-    return addressBlocklist
+  [addressBlocklist],
+  (_addressBlocklist) => {
+    return _addressBlocklist
   }
 );
 
-export default selectAddressBlocklist;
+export const selectVrpcOverrides = createSelector(
+  [vrpcOverrides],
+  (_vrpcOverrides) => {
+    return _vrpcOverrides
+  }
+);

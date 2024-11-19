@@ -19,6 +19,10 @@ export const initSession = async (password) => {
   return sessionKey
 }
 
+export const initInstance = async () => {
+  return (await randomBytes(32)).toString('hex')
+}
+
 export const requestPassword = async () => {
   const state = store.getState()
 
@@ -28,7 +32,8 @@ export const requestPassword = async () => {
   ) {
     throw new Error("You must be signed in to retrieve sensitive info");
   } else {
-    const sessionPass = await getSessionPassword()
+    const sessionPass = await getSessionPassword();
+    
     const password = decryptkey(state.authentication.sessionKey, sessionPass)
 
     if (password !== false) {
@@ -50,10 +55,15 @@ export const requestSeeds = async () => {
     const password = await requestPassword()
     let seeds = arrayToObject(
       CHANNELS,
-      (acc, key) =>
-        state.authentication.activeAccount.seeds[key]
-          ? decryptkey(password, state.authentication.activeAccount.seeds[key])
-          : null,
+      (acc, key) => {
+        if (state.authentication.activeAccount.seeds[key]) {
+          const seed = decryptkey(password, state.authentication.activeAccount.seeds[key]);
+
+          if (!seed) {
+            throw new Error("Unable to decrypt seed");
+          } else return seed;
+        } else return null;
+      },
       true
     );
 
@@ -128,7 +138,7 @@ export const requestViewingKey = async (chainTicker, channel) => {
   }
 }
 
-export const requestPersonalData = async (dataType) => {
+export const requestPersonalData = async (dataType, _password) => {
   const state = store.getState()
 
   if (
@@ -138,8 +148,9 @@ export const requestPersonalData = async (dataType) => {
   } else if (state.personal[dataType] == null) {
     return {}
   } else {
-    const password = await requestPassword()
-    const data = decryptkey(password, state.personal[dataType])
+    const password = _password ? _password : await requestPassword();
+    
+    const data = decryptkey(password, state.personal[dataType]);
     
     if (data !== false) {
       try {
@@ -153,7 +164,7 @@ export const requestPersonalData = async (dataType) => {
   }
 }
 
-export const requestServiceStoredData = async (service) => {
+export const requestServiceStoredData = async (service, _password) => {
   const state = store.getState();
 
   if (state.authentication.activeAccount == null) {
@@ -163,7 +174,7 @@ export const requestServiceStoredData = async (service) => {
   } else if (state.services.stored[service] == null) {
     return {};
   } else {
-    const password = await requestPassword();
+    const password = _password ? _password : await requestPassword();
     const data = decryptkey(password, state.services.stored[service]);
 
     if (data !== false) {

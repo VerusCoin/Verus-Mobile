@@ -127,6 +127,7 @@ const WalletSettings = props => {
             : settings.addressBlocklistDefinition,
         addressBlocklist:
           settings.addressBlocklist == null ? [] : settings.addressBlocklist,
+        vrpcOverrides: settings.vrpcOverrides == null ? {} : settings.vrpcOverrides,
       };
       const res = await saveGeneralSettings(stateToSave);
       dispatch(res);
@@ -353,11 +354,14 @@ const WalletSettings = props => {
           />
         ) : (
           <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <Button color={Colors.warningButtonColor} onPress={back}>
+            <Button
+              textColor={Colors.warningButtonColor}
+              onPress={back}
+            >
               {"Back"}
             </Button>
             <Button
-              color={Colors.primaryColor}
+              mode='contained'
               onPress={handleSubmit}
               disabled={!hasChanges}
             >

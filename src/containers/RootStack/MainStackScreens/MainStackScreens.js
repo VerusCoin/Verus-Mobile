@@ -3,7 +3,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { defaultHeaderOptions } from '../../../utils/navigation/header';
 import AddCoin from '../../AddCoin/AddCoin'
 import CoinDetails from '../../CoinDetails/CoinDetails'
-import DisplaySeed from '../../Settings/ProfileSettings/DisplaySeed/DisplaySeed'
+import DisplaySeed from '../../DisplaySeed/DisplaySeed'
 import SettingsMenus from '../../Settings/SettingsMenus'
 import CoinMenus from '../../Coin/CoinMenus'
 import VerusPay from '../../VerusPay/VerusPay'
@@ -16,6 +16,7 @@ import DeleteProfile from '../../Settings/ProfileSettings/DeleteProfile/DeletePr
 import SecureLoading from '../../SecureLoading/SecureLoading'
 import HomeTabScreens from '../HomeTabScreens/HomeTabScreens';
 import AddressBlocklist from '../../Settings/WalletSettings/AddressBlocklist/AddressBlocklist';
+import VrpcOverrides from '../../Settings/WalletSettings/VrpcOverrides/VrpcOverrides';
 
 const MainStack = createStackNavigator();
 
@@ -98,6 +99,14 @@ const MainStackScreens = props => {
           title: "Blocked Addresses",
         }}
       />
+
+      <MainStack.Screen
+        name="VrpcOverrides"
+        component={VrpcOverrides}
+        options={{
+          title: "Custom RPC Servers",
+        }}
+      />  
 
       <MainStack.Screen
         name="CoinSettings"

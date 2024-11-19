@@ -237,7 +237,7 @@ class ReceiveCoin extends Component {
     
             invoice.details.setFlags({
               acceptsConversion,
-              isTestnet: coinObj.testnet,
+              isTestnet: !!(coinObj.testnet),
               acceptsNonVerusSystems: nonVerusSystems.length > 0,
               acceptsAnyAmount: !amountGtZero
             })

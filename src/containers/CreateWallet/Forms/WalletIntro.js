@@ -6,6 +6,7 @@ import TallButton from '../../../components/LargerButton';
 import Colors from '../../../globals/colors';
 import { MyWallet } from '../../../images/customIcons';
 import { getKey } from '../../../utils/keyGenerator/keyGenerator';
+import { SMALL_DEVICE_HEGHT } from '../../../utils/constants/constants';
 
 export default function WalletIntro({ navigation, setNewSeed, setTestProfile, testProfile }) {
   const {height} = Dimensions.get('window');
@@ -97,13 +98,13 @@ export default function WalletIntro({ navigation, setNewSeed, setTestProfile, te
           right: 20
         }}
       >
-        <IconButton icon={testProfile ? "test-tube-off" : "test-tube"} color={Colors.verusDarkGray} />
+        <IconButton icon={testProfile ? "test-tube-off" : "test-tube"} iconColor={Colors.verusDarkGray} />
       </TouchableOpacity>
-      <MyWallet
+      {height >= SMALL_DEVICE_HEGHT && <MyWallet
         width={180}
         onPress={handleIconPress}
-        style={{top: height / 2 - 260, position: 'absolute'}}
-      />
+        style={{ top: height / 2 - 260, position: 'absolute' }}
+      />}
       <View
         style={{
           alignItems: 'center',

@@ -22,6 +22,7 @@ import {
 } from '../../utils/constants/sendModal';
 import {useSelector} from 'react-redux';
 import TallButton from '../../components/LargerButton';
+import SignedOutDropdown from '../SignedOutDropdown/SignedOutDropdown';
 
 const {height} = Dimensions.get('window');
 
@@ -31,6 +32,9 @@ const Login = props => {
   );
   const authModalUsed = useSelector(
     state => state.authentication.authModalUsed,
+  );
+  const modalVisible = useSelector(
+    state => state.sendModal.visible,
   );
   const accounts = useSelector(state => state.authentication.accounts);
 
@@ -67,12 +71,27 @@ const Login = props => {
     props.navigation.navigate('CreateProfile');
   };
 
+  handleRevokeRecover = () => {
+    props.navigation.navigate('RevokeRecover');
+  }
+
+  handleRecoverSeed = () => {
+    props.navigation.navigate('RecoverSeeds');
+  };
+
   return (
     <SafeAreaView
       style={{
         backgroundColor: Colors.secondaryColor,
         ...Styles.focalCenter,
       }}>
+      <View style={{ position: "absolute", width: "100%", height: "100%" }}>
+        {!modalVisible && <SignedOutDropdown
+          handleRecoverSeed={() => handleRecoverSeed()}
+          handleRevokeRecover={() => handleRevokeRecover()}
+          hasAccount={true}
+        />}
+      </View>
       <VerusLogo
         width={180}
         height={'15%'}

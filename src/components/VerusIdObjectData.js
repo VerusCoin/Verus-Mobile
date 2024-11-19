@@ -13,7 +13,7 @@ const checkmark = (<AnimatedSuccessCheckmark style={{ width: 20, marginRight: 5,
 const triangle = <MaterialCommunityIcons name={'information'} size={20} color={Colors.warningButtonColor} style={{ width: 20, marginRight: 9, alignSelf: 'flex-end', }} />;
 
 export default function VerusIdObjectData(props) {
-  const { friendlyNames, verusId, StickyFooterComponent, flex, ownedByUser, ownedAddress } = props;
+  const { friendlyNames, verusId, StickyFooterComponent, flex, ownedByUser, ownedAddress, updates } = props;
   const [listData, setListData] = useState([]);
   tryDisplayFriendlyName = iAddr => {
     return friendlyNames[iAddr] ? friendlyNames[iAddr] : iAddr;
@@ -124,15 +124,14 @@ export default function VerusIdObjectData(props) {
       },
       ];
 
-      if (verusId.identity.privateaddress) {
+      if (verusId.identity.privateaddress || (updates && updates['Private Address'])) {
         data.push({
           key: 'Private Address',
-          data: verusId.identity.privateaddress,
-          onPress: () =>
-            copyDataToClipboard(
-              verusId.identity.privateaddress,
-              'Private Address',
-            ),
+          data: !verusId.identity.privateaddress ? "None" : verusId.identity.privateaddress,
+          onPress: !verusId.identity.privateaddress ? undefined : () => copyDataToClipboard(
+            verusId.identity.privateaddress,
+            'Private Address',
+          ),
         });
       }
 
@@ -148,7 +147,11 @@ export default function VerusIdObjectData(props) {
         });
       }
 
-      setListData(data);
+      setListData(updates ? data.sort((a, b) => {
+        if (updates[a.key]) return -1
+        else if (updates[b.key]) return 1
+        else return 1
+      }) : data);
     }
   }, [verusId, friendlyNames]);
 
@@ -174,12 +177,14 @@ export default function VerusIdObjectData(props) {
                   onPress={() => item.onPress()}>
                   <List.Item
                     title={item.data}
-                    description={item.key}
+                    description={updates && updates[item.key] ? `Current ${item.key.toLowerCase()}` : item.key}
                     titleNumberOfLines={item.numLines || 1}
                     titleStyle={
-                      item.capitalized
+                      {...(item.capitalized
                         ? Styles.capitalizeFirstLetter
-                        : undefined
+                        : {}),
+                        color: updates && updates[item.key] ? Colors.warningButtonColor : Colors.quaternaryColor
+                      }
                     }
                     right={props =>
                       item.right ? (
@@ -197,6 +202,36 @@ export default function VerusIdObjectData(props) {
                   />
                   <Divider />
                 </TouchableOpacity>
+                {updates && updates[item.key] &&
+                  <>
+                    <List.Item
+                      title={updates[item.key].data}
+                      description={`New ${item.key.toLowerCase()}`}
+                      titleNumberOfLines={item.numLines || 1}
+                      titleStyle={
+                        {...(item.capitalized
+                          ? Styles.capitalizeFirstLetter
+                          : {}),
+                          color: Colors.verusGreenColor
+                        }
+                      }
+                      right={props =>
+                        item.right ? (
+                          <Text
+                            {...props}
+                            style={{
+                              fontSize: 16,
+                              alignSelf: 'center',
+                              marginRight: 8,
+                            }}>
+                            {item.right}
+                          </Text>
+                        ) : null
+                      }
+                    />
+                    <Divider />
+                  </>
+                }
               </React.Fragment>
             );
           } else if (item.condition == 'warning') {

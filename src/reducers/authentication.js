@@ -17,7 +17,9 @@ import {
   SIGN_OUT,
   OPEN_SEND_COIN_MODAL,
   UPDATE_ACCOUNT_DISABLED_SERVICES,
-  UPDATE_ACCOUNT_TESTNET_OVERRIDES_COMPLETE
+  UPDATE_ACCOUNT_TESTNET_OVERRIDES_COMPLETE,
+  UPDATE_SESSION_KEY,
+  INIT_INSTANCE_KEY
 } from "../utils/constants/storeType";
 import {
   SERVICES_DISABLED_DEFAULT
@@ -26,7 +28,8 @@ import {
 export const authentication = (
   state = {
     accounts: [],
-    sessionKey: null,
+    sessionKey: null, // The session key should be set every time a user logs in
+    instanceKey: null, // The instance key should be set once per app instance and never changed until app restart
     activeAccount: {
       id: null,
       accountHash: null,
@@ -45,6 +48,11 @@ export const authentication = (
   action
 ) => {
   switch (action.type) {
+    case INIT_INSTANCE_KEY:
+      return {
+        ...state,
+        instanceKey: state.instanceKey == null ? action.payload.instanceKey : state.instanceKey
+      };
     case OPEN_SEND_COIN_MODAL:
       return {
         ...state,
@@ -67,6 +75,11 @@ export const authentication = (
       return {
         ...state,
         activeAccount: action.activeAccount,
+        sessionKey: action.sessionKey
+      };
+    case UPDATE_SESSION_KEY:
+      return {
+        ...state,
         sessionKey: action.sessionKey
       };
     case SIGN_IN_USER:

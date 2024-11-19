@@ -99,7 +99,7 @@ export const PersonalContactRender = function () {
           onPress={() => this.openAddEmailModal()}
         />
         <Divider />
-        <List.Subheader>{"Phone numbers"}</List.Subheader>
+        {/* <List.Subheader>{"Phone numbers"}</List.Subheader>
         <Divider />
         {this.state.contact.phone_numbers == null
           ? null
@@ -133,7 +133,7 @@ export const PersonalContactRender = function () {
           right={(props) => <List.Icon {...props} icon={"plus"} size={20} />}
           onPress={() => this.openAddPhoneModal()}
         />
-        <Divider />
+        <Divider /> */}
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,7 +1,7 @@
 import {useCallback, useEffect} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {fromBase58Check} from '@bitgo/utxo-lib/dist/src/address';
-import {Alert} from 'react-native';
+import {Alert, Dimensions} from 'react-native';
 import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
 import {
   getCurrency,
@@ -17,6 +17,7 @@ import {deriveKeyPair} from '../../../../utils/keys';
 import {AddPbaasCurrencyFormRender} from './AddPbaasCurrencyForm.render';
 
 const AddPbaasCurrencyForm = (props) => {
+  const { height } = Dimensions.get("window");
   const dispatch = useDispatch();
   const sendModal = useSelector(state => state.sendModal);
   const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser);
@@ -69,7 +70,7 @@ const AddPbaasCurrencyForm = (props) => {
       }
 
       const friendlyNames = await getCurrencyNameMap(coinObj, res.result);
-      props.setModalHeight(696)
+      props.setModalHeight(height >= 720 ? 696 : height - 24);
 
       props.navigation.navigate(SEND_MODAL_FORM_STEP_CONFIRM, {
         currency: res.result,

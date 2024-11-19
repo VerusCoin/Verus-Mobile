@@ -45,9 +45,7 @@ const CoreSendFormModule = ({
             label={recipientAddressLabel}
             value={recipientAddressValue}
             mode="outlined"
-            multiline={true}
             onChangeText={onRecipientAddressChange}
-            autoCapitalize={'none'}
             autoCorrect={false}
             style={{ flex: 1 }}
             disabled={destDisabled}
@@ -56,7 +54,7 @@ const CoreSendFormModule = ({
             !destDisabled && (
               <Button
                 onPress={onSelfPress}
-                color={Colors.primaryColor}
+                textColor={Colors.primaryColor}
                 style={{alignSelf: 'center', marginTop: 6, width: 64}}
                 compact>
                 {'Self'}
@@ -83,7 +81,7 @@ const CoreSendFormModule = ({
             !amountDisabled && (
               <Button
                 onPress={onMaxPress}
-                color={Colors.primaryColor}
+                textColor={Colors.primaryColor}
                 style={{alignSelf: 'center', marginTop: 6, width: 64}}
                 disabled={maxButtonDisabled}
                 compact>

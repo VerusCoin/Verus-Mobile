@@ -34,16 +34,12 @@ const {
   readSlice,
   readInt32,
   readUInt32,
-} = require('tx-builder/src/buffer-read');
-const {
   compose,
   addProp,
-} = require('tx-builder/src/compose-read');
-const {
   readInputs,
   readInput,
   readOutput,
-} = require('tx-builder/src/tx-decoder');
+} = require('./deprecatedTxDecoderLib');
 const crypto = require('react-native-crypto');
 const _sha256 = (data) => {
   return crypto.createHash('sha256').update(data).digest();

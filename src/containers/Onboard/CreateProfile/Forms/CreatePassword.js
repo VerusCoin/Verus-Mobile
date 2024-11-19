@@ -12,7 +12,7 @@ import TallButton from '../../../../components/LargerButton';
 import Colors from '../../../../globals/colors';
 import { getSupportedBiometryType } from '../../../../utils/keychain/keychain';
 import scorePassword from '../../../../utils/auth/scorePassword';
-import { MIN_PASS_LENGTH, MIN_PASS_SCORE, PASS_SCORE_LIMIT } from '../../../../utils/constants/constants';
+import { MIN_PASS_LENGTH, MIN_PASS_SCORE, PASS_SCORE_LIMIT, SMALL_DEVICE_HEGHT } from '../../../../utils/constants/constants';
 
 export default function CreatePassword({password, setPassword, navigation}) {
   const {height} = Dimensions.get('window');
@@ -25,8 +25,6 @@ export default function CreatePassword({password, setPassword, navigation}) {
     color: Colors.tertiaryColor
   });
   
-  const isKeyboardActive = useSelector(state => state.keyboard.active);
-
   useEffect(() => {
     calculatePasswordAffix()
   }, [firstBox])
@@ -114,7 +112,7 @@ export default function CreatePassword({password, setPassword, navigation}) {
           style={{
             alignItems: 'center',
             position: 'absolute',
-            top: height / 2 - 250,
+            top: height < SMALL_DEVICE_HEGHT ? 60 : height / 2 - 250,
           }}>
           <Text
             style={{
@@ -172,20 +170,18 @@ export default function CreatePassword({password, setPassword, navigation}) {
             secureTextEntry={true}
           />
         </View>
-        {!isKeyboardActive && (
-          <TallButton
-            onPress={next}
-            mode="contained"
-            labelStyle={{fontWeight: 'bold'}}
-            disabled={firstBox.length == 0 || secondBox.length == 0}
-            style={{
-              position: 'absolute',
-              bottom: 80,
-              width: 280,
-            }}>
-            {'Next'}
-          </TallButton>
-        )}
+        <TallButton
+          onPress={next}
+          mode="contained"
+          labelStyle={{fontWeight: 'bold'}}
+          disabled={firstBox.length == 0 || secondBox.length == 0}
+          style={{
+            position: 'absolute',
+            bottom: 80,
+            width: 280,
+          }}>
+          {'Next'}
+        </TallButton>
       </View>
     </TouchableWithoutFeedback>
   );

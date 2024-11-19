@@ -82,7 +82,8 @@ class CoinMenus extends Component {
     for (let i = 0; i < options.length; i++) {
       let _tab = {
         key: options[i].key,
-        icon: options[i].icon,
+        focusedIcon: options[i].icon,
+        unfocusedIcon: options[i].icon,
         title: options[i].name,
         //color: options[i].color, // Disregarded for now
         activeSection: options[i],
@@ -196,7 +197,7 @@ class CoinMenus extends Component {
               displayTicker={activeCoin.display_ticker}
             />
           )}
-          {selectedSubWallet != null && <DynamicHeader />}
+          {selectedSubWallet != null && <DynamicHeader switchTab={this.switchTab} />}
           {selectedSubWallet != null && (
             <BottomNavigation
               shifting={false}

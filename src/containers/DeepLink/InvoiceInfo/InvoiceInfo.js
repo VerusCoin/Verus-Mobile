@@ -83,7 +83,7 @@ const InvoiceInfo = props => {
         try {
           const identityObj = await getVerusId(chain, iAddress);
     
-          return getFriendlyNameMap(CoinDirectory.getBasicCoinObj(chain), identityObj);
+          return getFriendlyNameMap(CoinDirectory.getBasicCoinObj(chain).system_id, identityObj);
         } catch (e) {
           return {
             ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',
@@ -369,13 +369,14 @@ const InvoiceInfo = props => {
             backgroundColor: '#fff' // or any other background color
           }}>
           <Button
-            color={Colors.warningButtonColor}
+            textColor={Colors.warningButtonColor}
             style={{ width: 148 }}
             onPress={() => cancel()}>
             Cancel
           </Button>
           <Button
-            color={Colors.verusGreenColor}
+            buttonColor={Colors.verusGreenColor}
+            textColor={Colors.secondaryColor}
             style={{ width: 148 }}
             disabled={isWrongInvoiceType}
             onPress={() => handleContinue()}>
