@@ -22,6 +22,8 @@ export default function ImportText({
 }) {
   const {height} = Dimensions.get('window');
 
+  const isKeyboardActive = useSelector(state => state.keyboard.active);
+
   const [showSeed, setShowSeed] = useState(false);
   const [scanQr, setScanQr] = useState(qr === true);
 
@@ -111,7 +113,7 @@ export default function ImportText({
             {'Scan QR'}
           </Button>
         </View>
-        <TallButton
+        {!isKeyboardActive && <TallButton
           onPress={handleImport}
           mode="contained"
           labelStyle={{fontWeight: 'bold'}}
@@ -122,7 +124,7 @@ export default function ImportText({
             width: 280,
           }}>
           {'Import'}
-        </TallButton>
+        </TallButton>}
       </View>
     </TouchableWithoutFeedback>
   );

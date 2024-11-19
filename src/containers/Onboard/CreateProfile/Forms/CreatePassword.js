@@ -25,6 +25,8 @@ export default function CreatePassword({password, setPassword, navigation}) {
     color: Colors.tertiaryColor
   });
   
+  const isKeyboardActive = useSelector(state => state.keyboard.active);
+
   useEffect(() => {
     calculatePasswordAffix()
   }, [firstBox])
@@ -170,18 +172,20 @@ export default function CreatePassword({password, setPassword, navigation}) {
             secureTextEntry={true}
           />
         </View>
-        <TallButton
-          onPress={next}
-          mode="contained"
-          labelStyle={{fontWeight: 'bold'}}
-          disabled={firstBox.length == 0 || secondBox.length == 0}
-          style={{
-            position: 'absolute',
-            bottom: 80,
-            width: 280,
-          }}>
-          {'Next'}
-        </TallButton>
+        {!isKeyboardActive && (
+          <TallButton
+            onPress={next}
+            mode="contained"
+            labelStyle={{fontWeight: 'bold'}}
+            disabled={firstBox.length == 0 || secondBox.length == 0}
+            style={{
+              position: 'absolute',
+              bottom: 80,
+              width: 280,
+            }}>
+            {'Next'}
+          </TallButton>
+        )}
       </View>
     </TouchableWithoutFeedback>
   );
