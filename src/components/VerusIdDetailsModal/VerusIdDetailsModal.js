@@ -81,7 +81,7 @@ export default function VerusIdDetailsModal(props) {
         <SafeAreaView style={Styles.centerContainer}>
           <View style={{...Styles.headerContainer, minHeight: 48}}>
             <View style={Styles.semiModalHeaderContainer}>
-              <Button onPress={cancel} color={Colors.primaryColor}>
+              <Button onPress={cancel} textColor={Colors.primaryColor}>
                 {'Close'}
               </Button>
               <Text
@@ -92,7 +92,7 @@ export default function VerusIdDetailsModal(props) {
                 {failedToLoad ? "Error" : verusIdTitle}
               </Text>
               <Button
-                onPresscolor={Colors.primaryColor}
+                textColor={Colors.primaryColor}
                 disabled={verusId == null || failedToLoad}
                 onPress={openIdDetails}>
                 {'Details'}

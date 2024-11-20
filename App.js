@@ -8,8 +8,8 @@ import store from './src/store';
 import {Provider} from 'react-redux';
 import {
   Provider as PaperProvider,
-  DefaultTheme,
   configureFonts,
+  MD2LightTheme
 } from 'react-native-paper';
 import {
   Text,
@@ -84,13 +84,14 @@ const fontConfig = {
 };
 
 const theme = {
-  ...DefaultTheme,
+  ...MD2LightTheme,
   colors: {
-    ...DefaultTheme.colors,
+    ...MD2LightTheme.colors,
     primary: Colors.primaryColor,
     accent: Colors.verusGreenColor,
   },
   fonts: configureFonts(fontConfig),
+  version: 2
 };
 
 export default class App extends React.Component {

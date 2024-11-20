@@ -20,7 +20,7 @@ import QRCode from 'react-native-qrcode-svg'
 import AlertAsync from "react-native-alert-async"
 import { Button, IconButton, Text } from "react-native-paper"
 import RNFS from "react-native-fs"
-import Share from 'react-native-share';
+//import Share from 'react-native-share';
 import Colors from '../globals/colors';
 import Styles from '../styles/index'
 
@@ -91,23 +91,23 @@ class QRModal extends Component {
   requestShareQR = () => {
     const fileName = this.props.showingAddress ? (this.props.qrString ? this.props.qrString : "UnknownQRString") : ("VerusPayQR" + Date.now().toString());
 
-    this.setState({ sharePressed: true },
-    () => {
-      this.QRCodeRef.toDataURL((data) => {
-        RNFS.writeFile(RNFS.CachesDirectoryPath+`/${fileName}.png`, data, 'base64')
-          .then((success) => {
-            return Share.open({ url: RNFS.CachesDirectoryPath+`/${fileName}.png` })
-          })
-          .then(() => {
-            this.setState({ sharePressed: false })
-            return RNFS.unlink(RNFS.CachesDirectoryPath+`/${fileName}.png`)
-          })
-          .catch(e => {
-            this.setState({ sharePressed: false })
-            e.message !== NOT_REAL_ERROR_MSG ? Alert.alert("Error", e.message) : null
-          })
-      })
-    })
+    // this.setState({ sharePressed: true },
+    // () => {
+    //   this.QRCodeRef.toDataURL((data) => {
+    //     RNFS.writeFile(RNFS.CachesDirectoryPath+`/${fileName}.png`, data, 'base64')
+    //       .then((success) => {
+    //         return Share.open({ url: RNFS.CachesDirectoryPath+`/${fileName}.png` })
+    //       })
+    //       .then(() => {
+    //         this.setState({ sharePressed: false })
+    //         return RNFS.unlink(RNFS.CachesDirectoryPath+`/${fileName}.png`)
+    //       })
+    //       .catch(e => {
+    //         this.setState({ sharePressed: false })
+    //         e.message !== NOT_REAL_ERROR_MSG ? Alert.alert("Error", e.message) : null
+    //       })
+    //   })
+    // })
   }
 
   requestSaveQR = () => {
@@ -176,32 +176,34 @@ class QRModal extends Component {
               >
                 <IconButton
                   icon="content-save"
-                  color={Colors.quinaryColor}
+                  iconColor={Colors.quinaryColor}
                 />
               </TouchableOpacity>
               <Button
-                color={Colors.warningButtonColor}
+                textColor={Colors.warningButtonColor}
                 onPress={this.cancelHandler}
                 style={{ alignSelf: "center" }}
               >
                 {"Close"}
               </Button>
-              {Platform.OS === "ios" && (
-                <TouchableOpacity
-                  onPress={
-                    this.state.sharePressed
-                      ? () => {
-                          return 0;
-                        }
-                      : this.requestShareQR
-                  }
-                  activeOpacity={
-                    this.state.sharePressed ? 1 : DEFAULT_OPACITY
-                  }
-                >
-                  <IconButton icon="share" color={Colors.quinaryColor} />
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                disabled={true}
+                style={{
+                  opacity: 0
+                }}
+                onPress={
+                  this.state.sharePressed
+                    ? () => {
+                        return 0;
+                      }
+                    : this.requestShareQR
+                }
+                activeOpacity={
+                  this.state.sharePressed ? 1 : DEFAULT_OPACITY
+                }
+              >
+                <IconButton icon="share" iconColor={Colors.quinaryColor} />
+              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>

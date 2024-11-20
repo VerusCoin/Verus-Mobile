@@ -299,7 +299,7 @@ const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormD
                 balances.results != null && (
                   <Button
                     onPress={() => setAmountFiat(!amountFiat)}
-                    color={Colors.primaryColor}
+                    textColor={Colors.primaryColor}
                     style={{
                       alignSelf: 'center',
                       marginTop: 6,
@@ -311,7 +311,7 @@ const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormD
             }
             <Button
               onPress={() => maxAmount()}
-              color={Colors.primaryColor}
+              textColor={Colors.primaryColor}
               style={{
                 alignSelf: 'center',
                 marginTop: 6,

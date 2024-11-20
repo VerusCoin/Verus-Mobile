@@ -85,8 +85,8 @@ const RecoverIdentityForm = (props) => {
     return addresses;
   }, []);
 
-  const handleScan = (e) => {
-    const result = e.data
+  const handleScan = (codes) => {
+    const result = codes[0]
     setScannerOpen(false)
 
     if (typeof result === "string" && result.length <= 5000) {

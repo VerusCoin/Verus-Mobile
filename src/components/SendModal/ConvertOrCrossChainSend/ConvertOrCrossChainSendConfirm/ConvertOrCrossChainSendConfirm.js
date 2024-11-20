@@ -432,6 +432,9 @@ function ConvertOrCrossChainSendConfirm({
                 <React.Fragment>
                   <List.Accordion
                     title={item.label}
+                    style={{
+                      backgroundColor: Colors.secondaryColor
+                    }}
                     onPress={() => toggleAccordion(key)}
                     expanded={!closedAccordions[key]}>
                     {item.fields.map((x, i) => {
@@ -455,14 +458,14 @@ function ConvertOrCrossChainSendConfirm({
           justifyContent: 'space-between',
         }}>
         <Button
-          color={Colors.warningButtonColor}
+          textColor={Colors.warningButtonColor}
           style={{width: 148}}
-          onPress={goBack}
-          mode="contained">
+          onPress={goBack}>
           Back
         </Button>
         <Button
-          color={Colors.verusGreenColor}
+          buttonColor={Colors.verusGreenColor}
+          textColor={Colors.secondaryColor}
           labelStyle={{color: Colors.secondaryColor}}
           style={{width: 148}}
           onPress={submitData}

@@ -354,11 +354,14 @@ const WalletSettings = props => {
           />
         ) : (
           <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <Button color={Colors.warningButtonColor} onPress={back}>
+            <Button
+              textColor={Colors.warningButtonColor}
+              onPress={back}
+            >
               {"Back"}
             </Button>
             <Button
-              color={Colors.primaryColor}
+              mode='contained'
               onPress={handleSubmit}
               disabled={!hasChanges}
             >

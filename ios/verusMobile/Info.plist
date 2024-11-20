@@ -48,36 +48,16 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>NSAppleMusicUsageDescription</key>
-	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-	<key>NSCalendarsUsageDescription</key>
-	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Verus Mobile needs access to the camera to scan QR codes, and to allow you to add images to your locally encrypted personal profile</string>
-	<key>NSContactsUsageDescription</key>
-	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Enabling Face ID allows you quick and secure access to your account.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Verus Mobile needs access to the camera to scan QR codes</string>
-	<key>NSMotionUsageDescription</key>
-	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
+	<string>The user can save QR code invoices to their photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>The user can use the photo library to add images to their locally encrypted personal profile</string>
-	<key>NSSiriUsageDescription</key>
-	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>My app does not request this permission or utilize this functionality but it is included in our info.plist since our app utilizes the react-native-permissions library, which references this permission in its code.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>AntDesign.ttf</string>
