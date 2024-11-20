@@ -170,13 +170,12 @@ class CoinSettings extends Component {
         <View style={Styles.highFooterContainer}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
             <Button
-              buttonColor={Colors.warningButtonColor}
-              textColor={Colors.secondaryColor}
+              textColor={Colors.warningButtonColor}
               onPress={this.back}
               disabled={this.state.loading}
             >{"Back"}</Button>
             <Button
-              textColor={Colors.linkButtonColor}
+              mode="contained"
               onPress={this._handleSubmit}
               disabled={this.state.loading}
             >{"Confirm"}</Button>

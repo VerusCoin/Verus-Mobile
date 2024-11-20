@@ -86,10 +86,10 @@ const RecoverIdentityForm = (props) => {
   }, []);
 
   const handleScan = (codes) => {
-    const result = codes[0]
+    const result = codes[0] ? codes[0].value : null;
     setScannerOpen(false)
 
-    if (typeof result === "string" && result.length <= 5000) {
+    if (result != null && typeof result === "string" && result.length <= 5000) {
       props.updateSendFormData(scannerField, result)
     } else {
       Alert.alert("Error", "Unknown data in qr code")

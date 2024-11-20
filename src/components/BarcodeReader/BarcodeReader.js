@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react';
-import {View, ScrollView} from 'react-native';
+import {View, ScrollView, AppState} from 'react-native';
 import {Text, Button} from 'react-native-paper';
 import { Camera, useCameraDevice, useCodeScanner } from 'react-native-vision-camera';
 import Colors from '../../globals/colors';
@@ -14,8 +14,10 @@ import {triggerHapticSuccess} from '../../utils/haptics/haptics';
 const BarcodeReader = props => {
   const cameraProps = props.cameraProps == null ? {} : props.cameraProps;
   const maskProps = props.maskProps == null ? {} : props.maskProps;
+  const appState = useRef(AppState.currentState);
 
   const componentIsMounted = useRef(true);
+  const [appStateVisible, setAppStateVisible] = useState(appState.current);
   const [needToGoToSettings, setNeedToGoToSettings] = useState(false);
   const [hasCameraPermission, setHasCameraPermission] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -48,6 +50,17 @@ const BarcodeReader = props => {
       }
     }
   })
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      appState.current = nextAppState;
+      setAppStateVisible(appState.current);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   const onMount = async () => {
     const permissionStatus = await verifyPermissions(
@@ -95,7 +108,7 @@ const BarcodeReader = props => {
           }}
           device={device}
           codeScanner={codeScanner}
-          isActive={true}
+          isActive={appStateVisible === 'active'}
           {...cameraProps} 
         />
         <View style={{ 

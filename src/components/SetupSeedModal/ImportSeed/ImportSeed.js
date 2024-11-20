@@ -35,8 +35,8 @@ class ImportSeed extends Component {
     if (lastState !== this.state) this.props.saveState(this.state);
   }
 
-  handleScan = (codes) => {
-    this.setState({ seed: codes[0], scanning: false });
+  handleScan = (seed) => {
+    this.setState({ seed, scanning: false });
   };
 
   verifySeed = async () => {
