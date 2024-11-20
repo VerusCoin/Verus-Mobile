@@ -5,7 +5,7 @@ import com.android.build.OutputFile
 
 def versionMajor = 1
 def versionMinor = 0
-def versionRevision = 19
+def versionRevision = 20
 def versionBuild = 0
 
 def keystorePropertiesFile = rootProject.file("keystore.properties");
