@@ -72,7 +72,7 @@ const AttestationDetails = (props) => {
         <View style={Styles.footerContainer}>
           <View style={[Styles.alignItemsCenter, Styles.paddingTop]}>
             <StandardButton
-              color={Colors.warningButtonColor}
+              buttonColor={Colors.warningButtonColor}
               title="CLOSE"
               onPress={cancelHandler}
             />

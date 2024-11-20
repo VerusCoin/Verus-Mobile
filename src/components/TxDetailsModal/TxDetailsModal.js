@@ -133,7 +133,7 @@ class TxDetailsModal extends Component {
         <SafeAreaView style={Styles.centerContainer}>
           <View style={{ ...Styles.headerContainer, minHeight: 48 }}>
             <View style={Styles.semiModalHeaderContainer}>
-              <Button onPress={cancel} color={Colors.primaryColor}>
+              <Button onPress={cancel} textColor={Colors.primaryColor}>
                 {"Close"}
               </Button>
               <Text
@@ -146,7 +146,7 @@ class TxDetailsModal extends Component {
               </Text>
               <Button
                 onPress={() => this.openExplorer()}
-                color={Colors.primaryColor}
+                textColor={Colors.primaryColor}
                 disabled={!explorers[activeCoinExplorerId]}
               >
                 {"Details"}

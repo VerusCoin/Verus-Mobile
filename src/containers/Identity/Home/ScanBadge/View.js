@@ -4,7 +4,6 @@ import {
   TouchableOpacity,
   Text,
 } from 'react-native';
-import QRCodeScanner from 'react-native-qrcode-scanner';
 import Styles from '../../../../styles/index';
 import ScannedInformation from '../ScannedInformation';
 
@@ -24,12 +23,12 @@ const ScanBadge = (props) => {
   };
   return (
     <View style={Styles.blackRoot}>
-      <QRCodeScanner
+      {/* <QRCodeScanner
         onRead={onSuccess}
         showMarker
         captureAudio={false}
         cameraStyle={Styles.fullHeight}
-      />
+      /> */}
       <TouchableOpacity
         style={{ ...Styles.footerContainer, ...Styles.blackRoot }}
         onPress={nextHandler}

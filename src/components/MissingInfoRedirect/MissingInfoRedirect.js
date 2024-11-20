@@ -26,7 +26,7 @@ class MissingInfoRedirect extends Component {
           {this.props.label}
         </Text>
         {this.props.buttonLabel != null && (
-          <Button onPress={() => this.props.onPress()} color={Colors.primaryColor}>
+          <Button onPress={() => this.props.onPress()} textColor={Colors.primaryColor}>
             {this.props.buttonLabel}
           </Button>
         )}

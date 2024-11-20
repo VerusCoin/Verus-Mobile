@@ -172,7 +172,7 @@ class CoinDetailsModal extends Component {
               <Button
                 onPress={cancel}
                 disabled={this.state.loading}
-                color={Colors.primaryColor}
+                textColor={Colors.primaryColor}
               >
                 {"Close"}
               </Button>
@@ -186,7 +186,7 @@ class CoinDetailsModal extends Component {
               </Text>
               <Button
                 onPress={() => this.openWebsite()}
-                color={Colors.primaryColor}
+                textColor={Colors.primaryColor}
                 disabled={
                   !website || website.length === 0 || this.state.loading
                 }
@@ -221,7 +221,7 @@ class CoinDetailsModal extends Component {
                 <Logo width={72} height={72} />
                 <Button
                   disabled={this.state.loading}
-                  color={Colors.secondaryColor}
+                  textColor={Colors.secondaryColor}
                   style={{
                     marginTop: 32,
                   }}

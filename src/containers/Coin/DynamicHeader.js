@@ -295,7 +295,7 @@ class DynamicHeader extends Component {
               </View>
               <IconButton
                 icon="arrow-down"
-                color={Colors.secondaryColor}
+                iconColor={Colors.secondaryColor}
                 style={{
                   marginRight: 0
                 }}
@@ -375,8 +375,7 @@ class DynamicHeader extends Component {
                     style={{
                       color: 'white',
                       fontSize: 12,
-                      alignSelf: "center",
-                      paddingTop: 1
+                      alignSelf: "center"
                     }}>{` Network`}</Text>
                 </View>
               </View>

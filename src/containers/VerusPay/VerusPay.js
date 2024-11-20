@@ -120,12 +120,12 @@ class VerusPay extends Component {
     }));
   }
 
-  onSuccess(e) {
-    let result = e.data;
+  onSuccess(codes) {
+    let result = codes[0];
 
     try {
       try {
-        this.tryProcessDeeplink(e.data)
+        this.tryProcessDeeplink(result)
         return
       } catch(dlError) {
         console.log(
@@ -444,7 +444,7 @@ class VerusPay extends Component {
                   ? "Scan an invoice or address"
                   : 'Scan a QR code'
               }
-              onScan={e => this.onSuccess(e)}
+              onScan={codes => this.onSuccess(codes)}
               button={this.props.button}
               maskProps={this.props.maskProps}
             />
