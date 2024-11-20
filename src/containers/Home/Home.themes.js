@@ -6,6 +6,7 @@ export const HomeListItemThemeDark = {
     ...DefaultTheme.colors,
     text: "#FFFFFF"
   },
+  version: 2
 };
 
 export const HomeListItemThemeLight = {
@@ -14,5 +15,6 @@ export const HomeListItemThemeLight = {
     ...DefaultTheme.colors,
     text: "#1C1C1C"
   },
+  version: 2
 };
 

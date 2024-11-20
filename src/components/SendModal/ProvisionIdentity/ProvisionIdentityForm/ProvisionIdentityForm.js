@@ -142,7 +142,7 @@ const ProvisionIdentityForm = (props) => {
         return true;
       }
     } catch (e) {
-      const formattedId = state.parentname ? `${identity}${state.parentname}` : identity;
+      const formattedId = state.parentname ? `${identity}${state.parentname}` : `${identity}@`;
       if (!formattedId.endsWith('@')) {
         createAlert(
           'Invalid Identity',
@@ -162,7 +162,14 @@ const ProvisionIdentityForm = (props) => {
   
     const { coinObj, data } = sendModal;
     const identity = data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD];
-    const formattedId = state.parentname ? `${identity}${state.parentname}` : identity;
+
+    let formattedId;
+
+    try {
+      formattedId = fromBase58Check(identity);
+    } catch(e) {
+      formattedId = state.parentname ? `${identity}${state.parentname}` : `${identity}@`;
+    }
 
     try {
       const res = await getIdentity(coinObj.system_id, formattedId);

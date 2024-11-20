@@ -46,7 +46,7 @@ class VerusIdServiceIntroSlider extends Component {
         </Text>
         <Button
           mode="text"
-          color={Colors.secondaryColor}
+          textColor={Colors.secondaryColor}
           onPress={() => openUrl(VERUS_ID_URL)}
         >
           {"Learn More"}
@@ -78,7 +78,7 @@ class VerusIdServiceIntroSlider extends Component {
         <Button
           style={{ marginTop: 16 }}
           mode="contained"
-          color={Colors.secondaryColor}
+          buttonColor={Colors.secondaryColor}
           onPress={() => openLinkIdentityModal(CoinDirectory.findCoinObj(identityNetwork))}
         >
           {"Link VerusID"}

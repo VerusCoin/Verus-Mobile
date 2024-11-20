@@ -39,7 +39,8 @@ export const VerusIdServiceOverviewRender = function () {
                   display: 'flex',
                 }}>
                 <Button
-                  color={Colors.warningButtonColor}
+                  buttonColor={Colors.warningButtonColor}
+                  textColor={Colors.secondaryColor}
                   style={{width: 148}}
                   onPress={() =>
                     this.tryUnlinkIdentity(

@@ -74,7 +74,7 @@ export const RecoverIdentityResultRender = ({targetId, networkObj, finishSend, t
         }}>
         {networkObj != null && explorers[networkObj.id] != null && (
           <Button
-            color={Colors.primaryColor}
+            textColor={Colors.primaryColor}
             style={{width: 148}}
             labelStyle={{fontSize: 18}}
             onPress={openExplorer}>
@@ -82,7 +82,8 @@ export const RecoverIdentityResultRender = ({targetId, networkObj, finishSend, t
           </Button>
         )}
         <Button
-          color={Colors.verusGreenColor}
+          buttonColor={Colors.verusGreenColor}
+          textColor={Colors.secondaryColor}
           style={{width: 148}}
           labelStyle={{fontSize: 18}}
           onPress={finishSend}>

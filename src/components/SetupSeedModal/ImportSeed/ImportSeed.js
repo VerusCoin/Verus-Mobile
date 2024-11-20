@@ -35,8 +35,8 @@ class ImportSeed extends Component {
     if (lastState !== this.state) this.props.saveState(this.state);
   }
 
-  handleScan = (seed) => {
-    this.setState({ seed, scanning: false });
+  handleScan = (codes) => {
+    this.setState({ seed: codes[0], scanning: false });
   };
 
   verifySeed = async () => {
@@ -128,7 +128,7 @@ class ImportSeed extends Component {
               </View>
               <View style={Styles.fullWidthFlexCenterBlock}>
                 <Button
-                  color={Colors.primaryColor}
+                  textColor={Colors.primaryColor}
                   onPress={() => this.setState({ scanning: true })}
                 >
                   {"Scan QR"}
@@ -136,7 +136,7 @@ class ImportSeed extends Component {
               </View>
               <View style={Styles.fullWidthFlexCenterBlock}>
                 <Button
-                  color={Colors.primaryColor}
+                  textColor={Colors.primaryColor}
                   onPress={() =>
                     this.setState({ showSeed: !this.state.showSeed })
                   }
@@ -147,13 +147,14 @@ class ImportSeed extends Component {
               <View style={Styles.standardWidthSpaceBetweenBlock}>
                 <Button
                   onPress={this.props.onBack}
-                  color={Colors.warningButtonColor}
+                  textColor={Colors.warningButtonColor}
                 >
                   {this.props.backLabel ? this.props.backLabel : "Back"}
                 </Button>
                 <Button
                   onPress={() => this.verifySeed()}
-                  color={Colors.primaryColor}
+                  buttonColor={Colors.primaryColor}
+                  textColor={Colors.secondaryColor}
                   disabled={
                     !this.state.seed ||
                     this.state.seed.length < 1 ||

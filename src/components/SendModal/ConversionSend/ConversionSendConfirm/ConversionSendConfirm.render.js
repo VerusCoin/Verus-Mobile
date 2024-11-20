@@ -48,14 +48,15 @@ export const ConversionSendConfirmRender = function () {
         }}
       >
         <Button
-          color={Colors.warningButtonColor}
+          textColor={Colors.warningButtonColor}
           style={{ width: 148 }}
           onPress={() => this.goBack()}
         >
           Back
         </Button>
         <Button
-          color={Colors.verusGreenColor}
+          buttonColor={Colors.verusGreenColor}
+          textColor={Colors.secondaryColor}
           style={{ width: 148 }}
           onPress={() => this.submitData()}
         >

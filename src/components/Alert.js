@@ -49,7 +49,7 @@ const AlertModal = (props) => {
                   <Button
                     disabled={button.disabled || disabled}
                     onPress={button.onPress}
-                    color={Colors.primaryColor}
+                    textColor={Colors.primaryColor}
                     key={index}
                   >
                     {button.text}

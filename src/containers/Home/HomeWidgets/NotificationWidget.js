@@ -193,7 +193,7 @@ const NotificationWidget = ({ props } = props) => {
                 }}>
                 <IconButton
                   icon="bell"
-                  color="white"
+                  iconColor="white"
                   size={15}
                   style={{ marginRight: 3 }}
                 />
@@ -225,7 +225,7 @@ const NotificationWidget = ({ props } = props) => {
                 onPress={() => { setCollapsed(!collapsed) }}>
                 <IconButton
                   icon={collapsed ? "chevron-down" : "chevron-up"}
-                  color="grey"
+                  iconColor="grey"
                   size={28}
                   style={{ marginRight: 10 }}
                 />
@@ -263,7 +263,7 @@ const NotificationWidget = ({ props } = props) => {
                   }}>
                     <IconButton
                       icon="close"
-                      color="grey"
+                      iconColor="grey"
                       size={20}
                       style={{ marginRight: 16, marginLeft: 12 }}
                     />
