@@ -25,9 +25,9 @@ export default function ImportText({
   const [showSeed, setShowSeed] = useState(false);
   const [scanQr, setScanQr] = useState(qr === true);
 
-  const handleScan = (codes) => {
+  const handleScan = (seed) => {
     setScanQr(false)
-    setImportedSeed(codes[0])
+    setImportedSeed(seed)
   }
 
   const handleImport = () => {
@@ -39,7 +39,7 @@ export default function ImportText({
   return scanQr ? (
     <ScanSeed
       cancel={() => setScanQr(false)}
-      onScan={(codes) => handleScan(codes)}
+      onScan={(seed) => handleScan(seed)}
     />
   ) : (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
