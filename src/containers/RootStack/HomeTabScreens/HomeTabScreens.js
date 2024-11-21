@@ -54,7 +54,7 @@ const HomeTabScreens = props => {
           ),
         }}
       />
-      <HomeTabs.Screen
+      {/* <HomeTabs.Screen
         name="Convert"
         component={ConvertStackScreens}
         options={{
@@ -67,7 +67,7 @@ const HomeTabScreens = props => {
             />
           ),
         }}
-      />
+      /> */}
       <HomeTabs.Screen
         name="VerusPay"
         component={VerusPay}
