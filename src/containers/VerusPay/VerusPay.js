@@ -121,9 +121,9 @@ class VerusPay extends Component {
   }
 
   onSuccess(codes) {
-    let result = codes[0];
-
     try {
+      let result = codes[0].value;
+
       try {
         this.tryProcessDeeplink(result)
         return

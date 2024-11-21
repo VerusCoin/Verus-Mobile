@@ -26,9 +26,9 @@ class ScanSeed extends Component {
   }
 
   onSuccess(codes) {
-    let result = codes[0]
+    let result = codes[0] ? codes[0].value : null;
 
-    if (typeof result === "string" && result.length <= 5000 && this.props.onScan) {
+    if (result != null && typeof result === "string" && result.length <= 5000 && this.props.onScan) {
       this.props.onScan(result)
     } else {
       this.errorHandler(FORMAT_UNKNOWN)
