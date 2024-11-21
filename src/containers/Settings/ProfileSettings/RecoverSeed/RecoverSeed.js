@@ -137,7 +137,7 @@ class RecoverSeed extends Component {
         <View style={Styles.highFooterContainer}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
             <StandardButton 
-              color={Colors.warningButtonColor}
+              buttonColor={Colors.warningButtonColor}
               title="CANCEL" 
               onPress={this.cancel}
             />

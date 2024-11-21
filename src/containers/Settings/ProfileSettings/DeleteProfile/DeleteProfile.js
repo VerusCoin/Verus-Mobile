@@ -192,12 +192,12 @@ class DeleteProfile extends Component {
         </ScrollView>
         <View style={Styles.highFooterContainer}>
           <View style={Styles.standardWidthSpaceBetweenBlock}>
-            <Button 
-              color={Colors.warningButtonColor}
+            <Button
+              textColor={Colors.warningButtonColor}
               onPress={this.cancel}
             >{"Cancel"}</Button>
             <Button 
-              color={Colors.primaryColor}
+              mode="contained"
               onPress={this._handleSubmit}
             >{"Delete"}</Button>
           </View>

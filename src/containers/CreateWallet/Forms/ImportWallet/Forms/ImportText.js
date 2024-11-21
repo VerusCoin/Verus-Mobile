@@ -22,8 +22,6 @@ export default function ImportText({
 }) {
   const {height} = Dimensions.get('window');
 
-  const isKeyboardActive = useSelector(state => state.keyboard.active);
-
   const [showSeed, setShowSeed] = useState(false);
   const [scanQr, setScanQr] = useState(qr === true);
 
@@ -101,19 +99,19 @@ export default function ImportText({
             />
           </View>
           <Button
-            color={Colors.primaryColor}
+            textColor={Colors.primaryColor}
             onPress={() => setShowSeed(!showSeed)}
             disabled={importedSeed == null || importedSeed.length == 0}>{`${
             showSeed ? 'Hide' : 'Show'
           } Seed`}</Button>
           <Button
-            color={Colors.primaryColor}
+            textColor={Colors.primaryColor}
             style={{marginTop: 8}}
             onPress={() => setScanQr(true)}>
             {'Scan QR'}
           </Button>
         </View>
-        {!isKeyboardActive && <TallButton
+        <TallButton
           onPress={handleImport}
           mode="contained"
           labelStyle={{fontWeight: 'bold'}}
@@ -124,7 +122,7 @@ export default function ImportText({
             width: 280,
           }}>
           {'Import'}
-        </TallButton>}
+        </TallButton>
       </View>
     </TouchableWithoutFeedback>
   );

@@ -103,7 +103,7 @@ const ConvertOrCrossChainSendResult = (props) => {
         }}>
         {explorers[coinObj.id] != null && (
           <Button
-            color={Colors.primaryColor}
+            textColor={Colors.primaryColor}
             style={{width: 148}}
             labelStyle={{fontSize: 18}}
             onPress={() => openExplorer()}>
@@ -111,7 +111,8 @@ const ConvertOrCrossChainSendResult = (props) => {
           </Button>
         )}
         <Button
-          color={Colors.verusGreenColor}
+          buttonColor={Colors.verusGreenColor}
+          textColor={Colors.secondaryColor}
           style={{width: 148}}
           labelStyle={{fontSize: 18}}
           onPress={() => finishSend()}>

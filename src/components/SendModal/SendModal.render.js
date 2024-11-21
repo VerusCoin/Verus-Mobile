@@ -1,7 +1,7 @@
 import React, { Component } from "react";
-import { Platform, SafeAreaView } from "react-native";
+import { Platform, SafeAreaView, View } from "react-native";
 import { Text, Portal, Button } from "react-native-paper";
-import { Colors } from "react-native/Libraries/NewAppScreen";
+import Colors from "../../globals/colors";
 import {
   ADD_ERC20_TOKEN_MODAL,
   ADD_PBAAS_CURRENCY_MODAL,
@@ -134,28 +134,31 @@ export const SendModalRender = function () {
           <SafeAreaView style={{ flex: 1 }}>
             <Root.Navigator
               screenOptions={{
-                headerTitle: () => <Text style={{ marginBottom: 16, fontSize: 16, textAlign: "center" }}>{title}</Text>,
-                headerRight: (props) => (
-                  <Button
-                    {...props}
-                    style={{ marginBottom: 16 }}
-                    onPress={() => this.showHelpModal()}
-                    color={Colors.primaryColor}
-                    disabled={this.state.preventExit}
-                  >
-                    {"Help"}
-                  </Button>
-                ),
-                headerLeft: (props) => (
-                  <Button
-                    {...props}
-                    style={{ marginBottom: 16 }}
-                    onPress={() => this.cancel()}
-                    color={Colors.primaryColor}
-                    disabled={this.state.preventExit}
-                  >
-                    {"Close"}
-                  </Button>
+                header: () => (
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: "center", 
+                    justifyContent: "space-between", 
+                    backgroundColor: Colors.secondaryColor 
+                  }}>
+                    <Button
+                      style={{ marginBottom: 16 }}
+                      onPress={() => this.cancel()}
+                      textColor={Colors.primaryColor}
+                      disabled={this.state.preventExit}
+                    >
+                      {"Close"}
+                    </Button>
+                    <Text style={{ marginBottom: 16, fontSize: 16, textAlign: "center" }}>{title}</Text>
+                    <Button
+                      style={{ marginBottom: 16 }}
+                      onPress={() => this.showHelpModal()}
+                      textColor={Colors.primaryColor}
+                      disabled={this.state.preventExit}
+                    >
+                      {"Help"}
+                    </Button>   
+                  </View>
                 ),
                 headerStyle: {
                   height: 52,
@@ -202,18 +205,18 @@ export const SendModalInnerAreaRender = function () {
           ? this.props.sendModal.initialRouteName
           : SEND_MODAL_FORM_STEP_FORM
       }
-      swipeEnabled={false}
       backBehavior={'none'}
       tabBarPosition="bottom"
-      tabBarOptions={{
-        pressColor: 'transparent',
-        pressOpacity: 1,
-        labelStyle: {
+      screenOptions={{
+        swipeEnabled: false,
+        tabBarPressColor: "transparent",
+        tabBarPressOpacity: 1,
+        tabBarLabelStyle: {
           fontSize: 12
-        }
-      }}
-      lazy={true}
-      lazyPlaceholder={() => <AnimatedActivityIndicatorBox />}>
+        },
+        lazy: true,
+        lazyPlaceholder: () => <AnimatedActivityIndicatorBox />
+      }}>
       <TopTabs.Screen
         name={SEND_MODAL_FORM_STEP_FORM}
         options={{

@@ -274,7 +274,7 @@ By proceeding, you confirm that you've read, understood, and agreed to this. Ens
         button={() => (
           <View>
             <Button
-              color={Colors.secondaryColor}
+              buttonColor={Colors.secondaryColor}
               mode={"contained"}
               onPress={() =>
                 openSubwalletSendModal(activeCoin, subWallet)
@@ -287,8 +287,7 @@ By proceeding, you confirm that you've read, understood, and agreed to this. Ens
             </Button>
             {allowConvertOrOffchain && (
               <Button
-                color={Colors.secondaryColor}
-                mode={"text"}
+                textColor={Colors.secondaryColor}
                 onPress={() =>
                   openConvertOrCrossChainModal()
                 }

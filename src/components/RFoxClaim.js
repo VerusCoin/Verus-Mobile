@@ -115,13 +115,13 @@ class RFoxClaim extends Component {
           <View style={Styles.footerContainer}>
             <View style={Styles.standardWidthSpaceBetweenBlock}>
               <StandardButton 
-                color={Colors.warningButtonColor}
+                buttonColor={Colors.warningButtonColor}
                 disabled={this.state.loading}
                 title="CLOSE" 
                 onPress={this.cancelHandler}
               />
               <StandardButton 
-                color={Colors.verusGreenColor}
+                buttonColor={Colors.verusGreenColor}
                 disabled={this.state.loading}
                 title="CLAIM" 
                 onPress={this.claim}

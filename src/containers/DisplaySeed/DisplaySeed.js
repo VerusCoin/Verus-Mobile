@@ -210,11 +210,11 @@ class DisplaySeed extends Component {
           <View style={Styles.standardWidthSpaceBetweenBlock}>
             <Button style={completeOnBack ? {
               flex: 1
-            } : {}} color={completeOnBack ? Colors.primaryColor : Colors.warningButtonColor} onPress={this.back}>
+            } : {}} textColor={completeOnBack ? Colors.primaryColor : Colors.warningButtonColor} onPress={this.back}>
               {completeOnBack ? "Done" : "Back"}
             </Button>
             {!completeOnBack && (
-              <Button color={Colors.linkButtonColor} onPress={this.resetToScreen}>
+              <Button textColor={Colors.linkButtonColor} onPress={this.resetToScreen}>
                 {this.state.fromDeleteAccount ? "CONTINUE" : "HOME"}
               </Button>
             )}

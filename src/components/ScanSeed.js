@@ -14,8 +14,6 @@ import {
 import {
   Button
 } from "react-native-paper";
-import QRCodeScanner from 'react-native-qrcode-scanner';
-import QRCode from 'react-native-qrcode-svg';
 import Colors from "../globals/colors";
 import Styles from '../styles/index'
 import BarcodeReader from "./BarcodeReader/BarcodeReader";
@@ -27,10 +25,10 @@ class ScanSeed extends Component {
     super(props)
   }
 
-  onSuccess(e) {
-    let result = e.data
+  onSuccess(codes) {
+    let result = codes[0] ? codes[0].value : null;
 
-    if (typeof result === "string" && result.length <= 5000 && this.props.onScan) {
+    if (result != null && typeof result === "string" && result.length <= 5000 && this.props.onScan) {
       this.props.onScan(result)
     } else {
       this.errorHandler(FORMAT_UNKNOWN)
@@ -53,11 +51,11 @@ class ScanSeed extends Component {
       <View style={Styles.blackRoot}>
         <BarcodeReader
           prompt="Scan a QR seed or private key"
-          onScan={(e) => this.onSuccess(e)}
+          onScan={(codes) => this.onSuccess(codes)}
           button={() => (
             <Button
               mode="contained"
-              color={Colors.warningButtonColor}
+              buttonColor={Colors.warningButtonColor}
               onPress={this.cancelHandler}
               style={{
                 marginBottom: 48
