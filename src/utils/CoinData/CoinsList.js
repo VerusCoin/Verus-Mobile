@@ -11,7 +11,8 @@ import {
   WYRE_SERVICE,
   IS_FIAT,
   VRPC,
-  VERUSID
+  VERUSID,
+  IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE
 } from "../constants/intervalConstants";
 import { dlightServers } from '../agama-wallet-lib/dlight-servers';
 import {
@@ -72,7 +73,7 @@ export const coinsList = {
     website: 'https://verus.io',
     fee: 10000,
     compatible_channels: [DLIGHT_PRIVATE, GENERAL, VERUSID, VRPC],
-    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT],
+    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_PBAAS_ROOT, IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE],
     proto: 'vrsc',
     dlight_endpoints: dlightServers.vrsc,
     vrpc_endpoints: ['https://api.verus.services'],
@@ -117,7 +118,7 @@ export const coinsList = {
     alt_names: [],
     theme_color: "#F5AC37",
     compatible_channels: [VERUSID, VRPC, GENERAL],
-    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
+    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE],
     proto: "vrsc",
     decimals: 8,
     default_app: "wallet",
@@ -138,7 +139,7 @@ export const coinsList = {
     alt_names: [],
     theme_color: "#1AAB9B",
     compatible_channels: [VERUSID, VRPC, GENERAL],
-    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
+    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE],
     proto: "vrsc",
     decimals: 8,
     default_app: "wallet",
@@ -223,7 +224,7 @@ export const coinsList = {
     alt_names: [],
     theme_color: "#141C30",
     compatible_channels: [VERUSID, VRPC, GENERAL],
-    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
+    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE],
     proto: "vrsc",
     vrpc_endpoints: ["https://api.verus.services"],
     decimals: 8,
@@ -246,7 +247,7 @@ export const coinsList = {
     alt_names: [],
     theme_color: "#081C45",
     compatible_channels: [VERUSID, VRPC],
-    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
+    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS, IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE],
     proto: "vrsc",
     decimals: 8,
     default_app: "wallet",
@@ -412,7 +413,7 @@ export const coinsList = {
     website: 'https://ethereum.org/en/',
     compatible_channels: [ETH, GENERAL],
     dominant_channel: ETH,
-    tags: [],
+    tags: [IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE],
     proto: 'eth',
     decimals: ETHERS,
     network: "homestead"
@@ -611,7 +612,7 @@ export const coinsList = {
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     decimals: ETHERS,
-    tags: [],
+    tags: [IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE],
     proto: 'erc20',
     rate_url_params: {coin_paprika: 'dai-dai'},
   },
@@ -918,7 +919,7 @@ export const coinsList = {
     theme_color: '#3165D4',
     dominant_channel: ERC20,
     decimals: ETHERS,
-    tags: [],
+    tags: [IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE],
     proto: 'erc20',
   },
   ["0xE6052Dcc60573561ECef2D9A4C0FEA6d3aC5B9A2"]: {
@@ -933,7 +934,7 @@ export const coinsList = {
     theme_color: '#081C45',
     dominant_channel: ERC20,
     decimals: ETHERS,
-    tags: [],
+    tags: [IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE],
     proto: 'erc20',
   },
   ["0x18084fbA666a33d37592fA2633fD49a74DD93a88"]: {
@@ -964,7 +965,7 @@ export const coinsList = {
     compatible_channels: [ERC20, GENERAL],
     dominant_channel: ERC20,
     decimals: ETHERS,
-    tags: [],
+    tags: [IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE],
     proto: 'erc20',
   },
   WBTC: {
