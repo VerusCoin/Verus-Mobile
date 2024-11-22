@@ -1,3 +1,5 @@
+// DEPRECATED
+
 import React, { Component } from "react"
 import { connect } from 'react-redux'
 import { API_GET_WITHDRAW_DESTINATIONS } from "../../../../utils/constants/intervalConstants";

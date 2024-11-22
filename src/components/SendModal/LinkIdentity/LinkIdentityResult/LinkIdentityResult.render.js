@@ -5,11 +5,11 @@ import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
 import AnimatedSuccessCheckmark from '../../../AnimatedSuccessCheckmark';
-import { useSelector } from 'react-redux';
 import { convertFqnToDisplayFormat } from '../../../../utils/fullyqualifiedname';
+import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 
 export const LinkIdentityResultRender = ({verusId, finishSend}) => {
-  const coinObj = useSelector(state => state.sendModal.coinObj);
+  const coinObj = useObjectSelector(state => state.sendModal.coinObj);
   const formattedFriendlyName = convertFqnToDisplayFormat(verusId.fullyqualifiedname);
 
   return (

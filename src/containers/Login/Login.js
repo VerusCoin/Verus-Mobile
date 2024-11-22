@@ -23,6 +23,7 @@ import {
 import {useSelector} from 'react-redux';
 import TallButton from '../../components/LargerButton';
 import SignedOutDropdown from '../SignedOutDropdown/SignedOutDropdown';
+import { useObjectSelector } from '../../hooks/useObjectSelector';
 
 const {height} = Dimensions.get('window');
 
@@ -36,7 +37,8 @@ const Login = props => {
   const modalVisible = useSelector(
     state => state.sendModal.visible,
   );
-  const accounts = useSelector(state => state.authentication.accounts);
+  
+  const accounts = useObjectSelector(state => state.authentication.accounts);
 
   openAuthModal = ignoreDefault => {
     if (ignoreDefault) {
