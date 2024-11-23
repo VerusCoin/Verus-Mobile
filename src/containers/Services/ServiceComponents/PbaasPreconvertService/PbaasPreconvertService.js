@@ -8,11 +8,12 @@ import { listCurrencies } from "../../../../utils/api/channels/vrpc/requests/lis
 import { getInfo } from "../../../../utils/api/channels/vrpc/callCreators";
 import BigNumber from "bignumber.js";
 import { coinsList } from "../../../../utils/CoinData/CoinsList";
+import { useObjectSelector } from "../../../../hooks/useObjectSelector";
 
 const PbaasPreconvertService = (props) => {
   const [currenciesInPreconvert, setCurrenciesInPreconvert] = useState(null);
   const loading = useSelector(state => state.services.loading[PBAAS_PRECONVERT_SERVICE_ID]);
-  const activeAccount = useSelector(state => state.authentication.activeAccount);
+  const activeAccount = useObjectSelector(state => state.authentication.activeAccount);
   const dispatch = useDispatch();
 
   props.navigation.setOptions({ title: 'Preconvert' });

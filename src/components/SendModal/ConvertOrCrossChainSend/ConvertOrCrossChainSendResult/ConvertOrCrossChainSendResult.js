@@ -8,11 +8,11 @@ import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import { copyToClipboard } from "../../../../utils/clipboard/clipboard";
 import AnimatedSuccessCheckmark from "../../../AnimatedSuccessCheckmark";
-import { useSelector } from "react-redux";
 import { SEND_MODAL_SEND_COMPLETED } from "../../../../utils/constants/sendModal";
+import { useObjectSelector } from "../../../../hooks/useObjectSelector";
 
 const ConvertOrCrossChainSendResult = (props) => {
-  const coinObj = useSelector(state => state.sendModal.coinObj);
+  const coinObj = useObjectSelector(state => state.sendModal.coinObj);
   const [params, setParams] = useState(props.route.params == null ? {} : props.route.params);
   const { updateSendFormData } = props;
 

@@ -3,7 +3,6 @@ import BigNumber from "bignumber.js";
 import { Alert, View, TouchableWithoutFeedback, Keyboard, FlatList, Animated, TouchableOpacity, Dimensions } from "react-native";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { TextInput, Button, Divider, Checkbox, List, Text, IconButton } from "react-native-paper";
-import { useSelector } from 'react-redux';
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import { API_SEND, DLIGHT_PRIVATE, ERC20, ETH } from "../../../../utils/constants/intervalConstants";
 import {
@@ -53,15 +52,16 @@ import { addressIsBlocked } from "../../../../utils/addressBlocklist";
 import { selectAddressBlocklist } from "../../../../selectors/settings";
 import { I_ADDRESS_VERSION, R_ADDRESS_VERSION } from "../../../../utils/constants/constants";
 import { getWeb3ProviderForNetwork } from "../../../../utils/web3/provider";
+import { useObjectSelector } from "../../../../hooks/useObjectSelector";
 
 const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
   const { height } = Dimensions.get('window');
-  const sendModal = useSelector(state => state.sendModal);
-  const activeUser = useSelector(state => state.authentication.activeAccount);
-  const addresses = useSelector(state => selectAddresses(state));
-  const activeAccount = useSelector(state => state.authentication.activeAccount);
-  const addressBlocklist = useSelector(selectAddressBlocklist);
-  const networkName = useSelector(state => {
+  const sendModal = useObjectSelector(state => state.sendModal);
+  const activeUser = useObjectSelector(state => state.authentication.activeAccount);
+  const addresses = useObjectSelector(state => selectAddresses(state));
+  const activeAccount = useObjectSelector(state => state.authentication.activeAccount);
+  const addressBlocklist = useObjectSelector(selectAddressBlocklist);
+  const networkName = useObjectSelector(state => {
     try {
       const subwallet = state.sendModal.subWallet;
 

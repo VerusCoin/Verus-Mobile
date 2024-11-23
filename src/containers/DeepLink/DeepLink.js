@@ -26,10 +26,11 @@ import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 import BigNumber from 'bignumber.js';
 import { blocksToTime, satsToCoins } from '../../utils/math';
 import InvoiceInfo from './InvoiceInfo/InvoiceInfo';
+import { useObjectSelector } from '../../hooks/useObjectSelector';
 
 const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
-  const deeplinkData = useSelector((state) => state.deeplink.data)
+  const deeplinkData = useObjectSelector((state) => state.deeplink.data)
 
   const signedIn = useSelector((state) => state.authentication.signedIn)
   const [displayKey, setDisplayKey] = useState(null)

@@ -20,11 +20,14 @@ import { createRevokeIdentityTx } from '../../../../utils/api/channels/verusid/r
 import { coinsList } from '../../../../utils/CoinData/CoinsList';
 import { decryptkey } from '../../../../utils/seedCrypt';
 import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
+import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 
 const RevokeIdentityForm = (props) => {
   const { height } = Dimensions.get("window");
   const dispatch = useDispatch();
-  const sendModal = useSelector(state => state.sendModal);
+
+  const sendModal = useObjectSelector(state => state.sendModal);
+  
   const instanceKey = useSelector(state => state.authentication.instanceKey);
   const [networkName, setNetworkName] = useState(sendModal.data[SEND_MODAL_SYSTEM_ID]);
 

@@ -1,3 +1,5 @@
+// DEPRECATED
+
 /*
   This component is responsible for allowing a user to create
   conversion transactions/transfers (if the card they are using allows it)

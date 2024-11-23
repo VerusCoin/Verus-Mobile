@@ -1,5 +1,5 @@
 import React, {useState, useCallback} from 'react';
-import {useDispatch, useSelector} from 'react-redux';
+import {useDispatch} from 'react-redux';
 import {Alert} from 'react-native';
 import {addCoin, addKeypairs, setUserCoins} from '../../../../actions/actionCreators';
 import {
@@ -11,6 +11,7 @@ import {
 } from '../../../../utils/constants/sendModal';
 import {AddPbaasCurrencyConfirmRender} from './AddPbaasCurrencyConfirm.render';
 import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
+import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 
 const AddPbaasCurrencyConfirm = props => {
   const [currency, setCurrency] = useState(props.route.params.currency);
@@ -22,11 +23,11 @@ const AddPbaasCurrencyConfirm = props => {
   );
 
   const dispatch = useDispatch();
-  const sendModal = useSelector(state => state.sendModal);
-  const activeAccount = useSelector(
+  const sendModal = useObjectSelector(state => state.sendModal);
+  const activeAccount = useObjectSelector(
     state => state.authentication.activeAccount,
   );
-  const activeCoinList = useSelector(state => state.coins.activeCoinList);
+  const activeCoinList = useObjectSelector(state => state.coins.activeCoinList);
 
   const goBack = useCallback(() => {
     props.setModalHeight();

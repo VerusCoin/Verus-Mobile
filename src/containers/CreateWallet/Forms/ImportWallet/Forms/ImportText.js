@@ -8,7 +8,6 @@ import {
   Keyboard,
 } from 'react-native';
 import {Text, Button, Paragraph, TextInput} from 'react-native-paper';
-import { useSelector } from 'react-redux';
 import { createAlert } from '../../../../../actions/actions/alert/dispatchers/alert';
 import TallButton from '../../../../../components/LargerButton';
 import ScanSeed from '../../../../../components/ScanSeed';

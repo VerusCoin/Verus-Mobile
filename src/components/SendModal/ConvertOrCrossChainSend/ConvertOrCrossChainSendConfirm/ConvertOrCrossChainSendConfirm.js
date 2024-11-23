@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {ScrollView, View, TouchableOpacity, Alert} from 'react-native';
 import {Button, List, Divider, Text} from 'react-native-paper';
-import {useDispatch, useSelector} from 'react-redux';
+import {useDispatch} from 'react-redux';
 import {expireCoinData} from '../../../../actions/actionCreators';
 import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
 import {
@@ -29,6 +29,7 @@ import {TransferDestination} from 'verus-typescript-primitives';
 import {sendCurrencyTransfer} from '../../../../utils/api/channels/vrpc/callCreators';
 import {CoinDirectory} from '../../../../utils/CoinData/CoinDirectory';
 import { sendConvertOrCrossChain } from '../../../../utils/api/routers/sendConvertOrCrossChain';
+import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 
 function ConvertOrCrossChainSendConfirm({
   navigation,
@@ -37,9 +38,9 @@ function ConvertOrCrossChainSendConfirm({
   setModalHeight,
   setPreventExit,
 }) {
-  const sendModal = useSelector(state => state.sendModal);
-  const activeAccount = useSelector(state => state.authentication.activeAccount);
-  const networkName = useSelector(state => {
+  const sendModal = useObjectSelector(state => state.sendModal);
+  const activeAccount = useObjectSelector(state => state.authentication.activeAccount);
+  const networkName = useObjectSelector(state => {
     try {
       const subwallet = state.sendModal.subWallet;
 

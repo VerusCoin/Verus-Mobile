@@ -1,3 +1,5 @@
+// DEPRECATED
+
 /*
   This component represents the screen that the user is met with
   if there is no account present in AsyncStorage. It allows them

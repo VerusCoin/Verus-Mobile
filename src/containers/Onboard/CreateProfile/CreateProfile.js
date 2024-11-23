@@ -12,7 +12,7 @@ import CreatePassword from './Forms/CreatePassword';
 import UseBiometrics from './Forms/UseBiometrics';
 import {KEY_DERIVATION_VERSION, SERVICES_DISABLED_DEFAULT} from '../../../../env/index';
 import {START_COINS, TEST_PROFILE_OVERRIDES} from '../../../utils/constants/constants';
-import {useDispatch, useSelector} from 'react-redux';
+import {useDispatch} from 'react-redux';
 import {
   closeLoadingModal,
   initializeAccountData,
@@ -20,6 +20,7 @@ import {
 } from '../../../actions/actionDispatchers';
 import { deriveKeyPair } from '../../../utils/keys';
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
+import { useObjectSelector } from '../../../hooks/useObjectSelector';
 
 const CreateProfileStack = createStackNavigator();
 
@@ -28,8 +29,9 @@ export default function CreateProfileStackScreens(props) {
   const [password, setPassword] = useState('');
   const [useBiometrics, setUseBiometrics] = useState(false);
   const dispatch = useDispatch();
-  const accounts = useSelector(state => state.authentication.accounts);
-  const activeCoinList = useSelector(state => state.coins.activeCoinList);
+
+  const accounts = useObjectSelector(state => state.authentication.accounts);
+  const activeCoinList = useObjectSelector(state => state.coins.activeCoinList);
 
   const addStartingCoins = async (accountId, testnetOverrides = {}) => {
     const testAccount = Object.keys(testnetOverrides).length > 0;
