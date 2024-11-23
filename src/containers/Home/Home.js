@@ -1,14 +1,14 @@
 /*
   The purpose of this component is to be the first screen a user is
-  met with after login. This screen should have all necesarry or
+  met with after login. This screen should have all necessary or
   essential wallet components available at the press of one button.
   This includes VerusPay, adding coins, and coin menus. Keeping this
-  screen clean is also essential, as users will spend alot of time with
+  screen clean is also essential, as users will spend a lot of time with
   it in their faces. It updates the balances and the rates upon loading
   if they are flagged to be updated in the redux store.
 */
 
-import React, {Component} from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   setActiveCoin,
   setActiveApp,
@@ -18,9 +18,7 @@ import {
   expireServiceData,
   saveGeneralSettings,
 } from '../../actions/actionCreators';
-import {connect} from 'react-redux';
-import {Animated} from 'react-native';
-import {CommonActions} from '@react-navigation/native';
+import { CommonActions, useNavigation, useFocusEffect } from '@react-navigation/native';
 import {
   API_GET_FIATPRICE,
   API_GET_BALANCES,
@@ -30,9 +28,9 @@ import {
   API_GET_SERVICE_ACCOUNT,
   API_GET_SERVICE_PAYMENT_METHODS,
   API_GET_SERVICE_RATES,
-  API_GET_SERVICE_NOTIFICATIONS
+  API_GET_SERVICE_NOTIFICATIONS,
 } from '../../utils/constants/intervalConstants';
-import {USD} from '../../utils/constants/currencies';
+import { USD } from '../../utils/constants/currencies';
 import {
   conditionallyUpdateService,
   conditionallyUpdateWallet,
@@ -41,171 +39,155 @@ import {
 import BigNumber from 'bignumber.js';
 import {
   extractLedgerData,
-  extractErrorData,
 } from '../../utils/ledger/extractLedgerData';
-import {HomeRender} from './Home.render';
-import {extractDisplaySubWallets} from '../../utils/subwallet/extractSubWallets';
+import { HomeRender, HomeRenderCoinsList, HomeRenderWidget } from './Home.render';
+import { extractDisplaySubWallets } from '../../utils/subwallet/extractSubWallets';
 import {
   CURRENCY_WIDGET_TYPE,
   TOTAL_UNI_BALANCE_WIDGET_TYPE,
   VERUSID_WIDGET_TYPE,
 } from '../../utils/constants/widgets';
-import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
-import {VERUSID_SERVICE_ID} from '../../utils/constants/services';
-import {dragDetectionEnabled} from '../../utils/dragDetection';
-import {CoinDirectory} from '../../utils/CoinData/CoinDirectory';
+import { createAlert } from '../../actions/actions/alert/dispatchers/alert';
+import { VERUSID_SERVICE_ID } from '../../utils/constants/services';
+import { dragDetectionEnabled } from '../../utils/dragDetection';
+import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 import {
   openAddErc20TokenModal,
   openAddPbaasCurrencyModal,
 } from '../../actions/actions/sendModal/dispatchers/sendModal';
+import { useSelector, useDispatch } from 'react-redux';
+import store from '../../store';
+import { useObjectSelector } from '../../hooks/useObjectSelector';
 
-class Home extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      totalFiatBalance: 0,
-      totalCryptoBalances: {},
-      loading: false,
-      listItemHeights: {},
-      widgets: [],
-      displayCurrencyModalOpen: false,
-      editingCards: false,
-      //TODO: MOVE TO REDUX
-      expandedListItems: {},
-    };
+const Home = () => {
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
 
-    this._unsubscribeFocus = null;
-    this.LIST_ITEM_INITIAL_HEIGHT = 58;
-    this.LIST_ITEM_MARGIN = 8;
-    this.LIST_ITEM_ANIMATION_DURATION = 250;
-  }
+  const activeCoinsForUser = useObjectSelector((state) => state.coins.activeCoinsForUser);
 
-  async componentDidMount() {
-    this._unsubscribeFocus = this.props.navigation.addListener('focus', () => {
-      this.refresh(false);
-    });
+  const activeAccount = useObjectSelector((state) => state.authentication.activeAccount);
+  const testnetOverrides = useObjectSelector(
+    (state) => state.authentication.activeAccount.testnetOverrides,
+  );
+  const balances = useObjectSelector((state) =>
+    extractLedgerData(state, 'balances', API_GET_BALANCES),
+  );
+  const rates = useObjectSelector((state) => state.ledger.rates);
+  const allSubWallets = useObjectSelector((state) => extractDisplaySubWallets(state));
+  const activeSubWallets = useObjectSelector((state) => state.coinMenus.activeSubWallets);
+  const widgetOrder = useObjectSelector((state) => state.widgets.order);
 
-    await this.getWidgets();
-  }
+  const homeCardDragDetection = useSelector(
+    (state) => state.settings.generalWalletSettings.homeCardDragDetection,
+  );
+  const displayCurrency = useSelector(
+    (state) => state.settings.generalWalletSettings.displayCurrency || USD,
+  );
 
-  dragDetectionEnabled() {
-    const {homeCardDragDetection} = this.props;
+  const [totalFiatBalance, setTotalFiatBalance] = useState(0);
+  const [totalCryptoBalances, setTotalCryptoBalances] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [listItemHeights, setListItemHeights] = useState({});
+  const [widgets, setWidgets] = useState([]);
+  const [displayCurrencyModalOpen, setDisplayCurrencyModalOpen] = useState(false);
+  const [editingCards, setEditingCards] = useState(false);
+  const [expandedListItems, setExpandedListItems] = useState({});
 
+  const LIST_ITEM_INITIAL_HEIGHT = 58;
+  const LIST_ITEM_MARGIN = 8;
+  const LIST_ITEM_ANIMATION_DURATION = 250;
+
+  const isDragDetectionEnabled = () => {
     return dragDetectionEnabled(homeCardDragDetection);
-  }
+  };
 
-  setEditingCards(editing) {
-    this.setState({
-      editingCards: editing,
+  const handleSetEditingCards = (editing) => {
+    setEditingCards(editing);
+  };
+
+  const sortWidgets = useCallback(() => {
+    setWidgets((prevWidgets) => {
+      const sortedWidgets = [...prevWidgets].sort((a, b) => {
+        return widgetOrder[a] <= widgetOrder[b] ? -1 : 1;
+      });
+      return sortedWidgets;
     });
-  }
+  }, [widgetOrder]);
 
-  sortWidgets() {
-    const widgets = this.state.widgets.sort((a, b) => {
-      return this.props.widgetOrder[a] <= this.props.widgetOrder[b] ? -1 : 1;
+  const getWidgets = useCallback(async () => {
+    setWidgets([]);
+    let widgetsList = [...Object.keys(widgetOrder)].sort((a, b) => {
+      return widgetOrder[a] <= widgetOrder[b] ? -1 : 1;
     });
 
-    this.setState({
-      widgets,
-    });
-  }
+    const widgetsToRemove = [];
 
-  async getWidgets() {
-    this.setState(
-      {
-        widgets: [],
-      },
-      () => {
-        const widgets = [...Object.keys(this.props.widgetOrder)].sort(
-          (a, b) => {
-            return this.props.widgetOrder[a] <= this.props.widgetOrder[b]
-              ? -1
-              : 1;
-          },
-        );
+    // Remove currency widgets for coins that aren't active
+    for (let i = 0; i < widgetsList.length; i++) {
+      const widgetId = widgetsList[i];
+      const widgetSplit = widgetId.split(':');
+      const widgetType = widgetSplit[0];
 
-        const activeAccount = this.props.activeAccount;
-        const widgetsToRemove = [];
+      if (
+        widgetType === CURRENCY_WIDGET_TYPE &&
+        !activeCoinsForUser.some((x) => x.id === widgetSplit[1])
+      ) {
+        widgetsToRemove.unshift(i);
+      }
+    }
 
-        // Remove currency widgets for coins that arent active
-        for (let i = 0; i < widgets.length; i++) {
-          const widgetId = widgets[i];
-          const widgetSplit = widgetId.split(':');
-          const widgetType = widgetSplit[0];
+    for (const widgetIndex of widgetsToRemove) {
+      widgetsList.splice(widgetIndex, 1);
+    }
 
-          if (
-            widgetType === CURRENCY_WIDGET_TYPE &&
-            !this.props.activeCoinsForUser.some(x => x.id === widgetSplit[1])
-          ) {
-            widgetsToRemove.unshift(i);
-          }
-        }
+    // Add the balance widget if not present
+    if (!widgetsList.includes(TOTAL_UNI_BALANCE_WIDGET_TYPE)) {
+      widgetsList.push(TOTAL_UNI_BALANCE_WIDGET_TYPE);
+      dispatchAddWidget(TOTAL_UNI_BALANCE_WIDGET_TYPE, activeAccount.accountHash);
+    }
 
-        for (const widgetIndex of widgetsToRemove) {
-          widgets.splice(widgetIndex, 1);
-        }
+    // Add currency widgets for active coins
+    for (const coinObj of activeCoinsForUser) {
+      const currencyWidgetId = `${CURRENCY_WIDGET_TYPE}:${coinObj.id}`;
 
-        // Add the balance widget if not present
-        if (!widgets.includes(TOTAL_UNI_BALANCE_WIDGET_TYPE)) {
-          widgets.push(TOTAL_UNI_BALANCE_WIDGET_TYPE);
-          dispatchAddWidget(
-            TOTAL_UNI_BALANCE_WIDGET_TYPE,
-            activeAccount.accountHash,
-          );
-        }
+      if (!widgetsList.includes(currencyWidgetId)) {
+        widgetsList.push(currencyWidgetId);
+        dispatchAddWidget(currencyWidgetId, activeAccount.accountHash);
+      }
+    }
 
-        // Add currency widgets for active coins
-        for (const coinObj of this.props.activeCoinsForUser) {
-          const currencyWidgetId = `${CURRENCY_WIDGET_TYPE}:${coinObj.id}`;
+    // Add the VerusID widget if not present
+    if (!widgetsList.includes(VERUSID_WIDGET_TYPE)) {
+      widgetsList.push(VERUSID_WIDGET_TYPE);
+      dispatchAddWidget(VERUSID_WIDGET_TYPE, activeAccount.accountHash);
+    }
 
-          if (!widgets.includes(currencyWidgetId)) {
-            widgets.push(currencyWidgetId);
-            dispatchAddWidget(currencyWidgetId, activeAccount.accountHash);
-          }
-        }
+    setWidgets(widgetsList);
+  }, [activeAccount.accountHash, activeCoinsForUser, widgetOrder]);
 
-        // Add the balance widget if not present
-        if (!widgets.includes(VERUSID_WIDGET_TYPE)) {
-          widgets.push(VERUSID_WIDGET_TYPE);
-          dispatchAddWidget(VERUSID_WIDGET_TYPE, activeAccount.accountHash);
-        }
-
-        this.setState({
-          widgets,
-        });
-      },
-    );
-  }
-
-  handleWidgetPress(widgetId) {
+  const handleWidgetPress = (widgetId) => {
     const widgetSplit = widgetId.split(':');
     const widgetType = widgetSplit[0];
 
     const widgetOnPress = {
       [CURRENCY_WIDGET_TYPE]: () => {
         const coinId = widgetSplit[1];
-        const coinObj = this.props.activeCoinsForUser.find(
-          x => x.id === coinId,
-        );
+        const coinObj = activeCoinsForUser.find((x) => x.id === coinId);
 
         if (coinObj) {
-          const subWallets = this.props.allSubWallets[coinId];
+          const subWallets = allSubWallets[coinId];
 
-          this.openCoin(
+          openCoin(
             coinObj,
-            this.props.activeSubWallets[coinId]
-              ? this.props.activeSubWallets[coinId]
-              : subWallets[0],
+            activeSubWallets[coinId] ? activeSubWallets[coinId] : subWallets[0],
           );
         }
       },
       [TOTAL_UNI_BALANCE_WIDGET_TYPE]: () => {
-        this.setState({
-          displayCurrencyModalOpen: true,
-        });
+        setDisplayCurrencyModalOpen(true);
       },
       [VERUSID_WIDGET_TYPE]: () => {
-        this.props.navigation.navigate('Service', {
+        navigation.navigate('Service', {
           service: VERUSID_SERVICE_ID,
         });
       },
@@ -214,94 +196,45 @@ class Home extends Component {
     if (widgetOnPress[widgetType]) {
       widgetOnPress[widgetType]();
     }
-  }
+  };
 
-  async setDisplayCurrency(displayCurrency) {
+  const setDisplayCurrencyFunc = async (currency) => {
     try {
-      this.props.dispatch(await saveGeneralSettings({displayCurrency}));
+      dispatch(await saveGeneralSettings({ displayCurrency: currency }));
     } catch (e) {
       createAlert('Error setting display currency', e.message);
     }
-  }
+  };
 
-  animateHeightChange(anim, toValue, cb = () => {}) {
-    Animated.timing(anim, {
-      toValue,
-      duration: this.LIST_ITEM_ANIMATION_DURATION,
-      useNativeDriver: false,
-    }).start(cb);
-  }
+  useFocusEffect(
+    useCallback(() => {
+      refresh(false);
+      return () => {};
+    }, []),
+  );
 
-  toggleListItem(id, numCards) {
-    const _toggleListItem = () => {
-      const newExpanded = !this.state.expandedListItems[id];
-      const changeExpandState = (cb = () => {}) => {
-        this.setState(
-          {
-            expandedListItems: {
-              ...this.state.expandedListItems,
-              [id]: newExpanded,
-            },
-          },
-          cb,
-        );
-      };
+  useEffect(() => {
+    getWidgets();
+  }, [getWidgets]);
 
-      if (newExpanded) {
-        changeExpandState(
-          this.animateHeightChange(
-            this.state.listItemHeights[id],
-            this.LIST_ITEM_INITIAL_HEIGHT * (numCards + 1) +
-              numCards * this.LIST_ITEM_MARGIN,
-          ),
-        );
-      } else {
-        this.animateHeightChange(
-          this.state.listItemHeights[id],
-          this.LIST_ITEM_INITIAL_HEIGHT,
-          () => changeExpandState(),
-        );
-      }
-    };
+  useEffect(() => {
+    const totalBalances = getTotalBalances();
+    setTotalFiatBalance(totalBalances.fiat);
+    setTotalCryptoBalances(totalBalances.crypto);
+  }, [balances]);
 
-    if (this.state.listItemHeights[id] == null) {
-      this.setState(
-        {
-          listItemHeights: {
-            ...this.state.listItemHeights,
-            [id]: new Animated.Value(this.LIST_ITEM_INITIAL_HEIGHT),
-          },
-        },
-        () => _toggleListItem(),
-      );
-    } else {
-      _toggleListItem();
-    }
-  }
+  useEffect(() => {
+    getWidgets();
+  }, [activeCoinsForUser, getWidgets]);
 
-  componentWillUnmount() {
-    this._unsubscribeFocus();
-  }
+  useEffect(() => {
+    sortWidgets();
+  }, [widgetOrder, sortWidgets]);
 
-  componentDidUpdate(lastProps) {
-    if (this.props.balances !== lastProps.balances) {
-      const totalBalances = this.getTotalBalances(this.props);
+  const refresh = useCallback(
+    async (showLoading = true) => {
+      setLoading(showLoading);
 
-      this.setState({
-        totalFiatBalance: totalBalances.fiat,
-        totalCryptoBalances: totalBalances.crypto,
-      });
-    }
-
-    if (this.props.activeCoinsForUser !== lastProps.activeCoinsForUser) {
-      this.getWidgets();
-    } else if (this.props.widgetOrder !== lastProps.widgetOrder) {
-      this.sortWidgets();
-    }
-  }
-
-  refresh = (showLoading = true) => {
-    this.setState({loading: showLoading}, async () => {
       const serviceUpdates = [
         API_GET_SERVICE_ACCOUNT,
         API_GET_SERVICE_PAYMENT_METHODS,
@@ -315,13 +248,13 @@ class Home extends Component {
         {
           keys: serviceUpdates,
           update: conditionallyUpdateService,
-          params: [[this.props.dispatch]],
+          params: [[dispatch]],
         },
         {
           keys: coinUpdates,
           update: conditionallyUpdateWallet,
-          params: this.props.activeCoinsForUser.map(coinObj => {
-            return [this.props.dispatch, coinObj.id];
+          params: activeCoinsForUser.map((coinObj) => {
+            return [dispatch, coinObj.id];
           }),
         },
       ];
@@ -339,97 +272,60 @@ class Home extends Component {
         }
       }
 
-      this.setState({loading: false});
-    });
-  };
+      setLoading(false);
+    },
+    [activeCoinsForUser, dispatch],
+  );
 
-  resetToScreen = (route, title, data) => {
+  const resetToScreen = (route, title, data) => {
     const resetAction = CommonActions.reset({
-      index: 1, // <-- currect active route from actions array
+      index: 1,
       routes: [
-        {name: 'Home'},
-        {name: route, params: {title: title, data: data}},
+        { name: 'Home' },
+        { name: route, params: { title: title, data: data } },
       ],
     });
 
-    this.props.navigation.closeDrawer();
-    this.props.navigation.dispatch(resetAction);
+    navigation.closeDrawer();
+    navigation.dispatch(resetAction);
   };
 
-  forceUpdate = () => {
-    this.props.activeCoinsForUser.map(coinObj => {
-      this.props.dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE));
-      this.props.dispatch(expireCoinData(coinObj.id, API_GET_BALANCES));
-      this.props.dispatch(expireCoinData(coinObj.id, API_GET_INFO));
+  const forceUpdate = () => {
+    activeCoinsForUser.forEach((coinObj) => {
+      dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE));
+      dispatch(expireCoinData(coinObj.id, API_GET_BALANCES));
+      dispatch(expireCoinData(coinObj.id, API_GET_INFO));
     });
 
-    this.props.dispatch(expireServiceData(API_GET_SERVICE_ACCOUNT));
-    this.props.dispatch(expireServiceData(API_GET_SERVICE_PAYMENT_METHODS));
-    this.props.dispatch(expireServiceData(API_GET_SERVICE_RATES));
-    this.props.dispatch(expireServiceData(API_GET_SERVICE_NOTIFICATIONS));
-    this.refresh();
+    dispatch(expireServiceData(API_GET_SERVICE_ACCOUNT));
+    dispatch(expireServiceData(API_GET_SERVICE_PAYMENT_METHODS));
+    dispatch(expireServiceData(API_GET_SERVICE_RATES));
+    dispatch(expireServiceData(API_GET_SERVICE_NOTIFICATIONS));
+
+    refresh();
   };
 
-  updateProps = promiseArray => {
-    return new Promise((resolve, reject) => {
-      Promise.all(promiseArray)
-        .then(updatesArray => {
-          if (updatesArray.length > 0) {
-            for (let i = 0; i < updatesArray.length; i++) {
-              if (updatesArray[i]) {
-                this.props.dispatch(updatesArray[i]);
-              }
-            }
-            if (this.state.loading) {
-              this.setState({loading: false});
-            }
-            return true;
-          } else {
-            return false;
-          }
-        })
-        .then(res => {
-          if (res) {
-            const totalBalances = this.getTotalBalances(this.props);
-
-            this.setState({
-              totalFiatBalance: totalBalances.fiat,
-              totalCryptoBalances: totalBalances.crypto,
-            });
-            resolve(true);
-          } else {
-            resolve(false);
-          }
-        });
-    });
-  };
-
-  getTotalBalances = props => {
+  const getTotalBalances = () => {
     let _totalFiatBalance = BigNumber(0);
     let coinBalances = {};
-    const balances = props.balances;
-    const {displayCurrency, activeCoinsForUser, allSubWallets} = props;
 
-    activeCoinsForUser.map(coinObj => {
+    activeCoinsForUser.forEach((coinObj) => {
       const key = coinObj.id;
-      coinBalances[coinObj.id] = BigNumber('0');
+      coinBalances[coinObj.id] = BigNumber(0);
 
-      allSubWallets[coinObj.id].map(wallet => {
-        if (
-          balances[coinObj.id] != null &&
-          balances[coinObj.id][wallet.id] != null
-        ) {
+      allSubWallets[coinObj.id].forEach((wallet) => {
+        if (balances[coinObj.id] != null && balances[coinObj.id][wallet.id] != null) {
           coinBalances[coinObj.id] = coinBalances[coinObj.id].plus(
             balances[key] &&
               balances[key][wallet.id] &&
               balances[key][wallet.id].total != null
               ? BigNumber(balances[key][wallet.id].total)
-              : BigNumber('0'),
+              : BigNumber(0),
           );
         }
       });
 
-      const rate = this.getRate(key, displayCurrency);
+      const rate = getRate(key, displayCurrency);
 
       if (rate != null) {
         const price = BigNumber(rate);
@@ -446,108 +342,87 @@ class Home extends Component {
     };
   };
 
-  getRate = (coinId, displayCurrency) => {
-    return this.props.rates[WYRE_SERVICE] &&
-      this.props.rates[WYRE_SERVICE][coinId] &&
-      this.props.rates[WYRE_SERVICE][coinId][displayCurrency]
-      ? this.props.rates[WYRE_SERVICE][coinId][displayCurrency]
-      : this.props.rates[GENERAL] &&
-        this.props.rates[GENERAL][coinId] &&
-        this.props.rates[GENERAL][coinId][displayCurrency]
-      ? this.props.rates[GENERAL][coinId][displayCurrency]
+  const getRate = (coinId, currency) => {
+    return rates[WYRE_SERVICE] &&
+      rates[WYRE_SERVICE][coinId] &&
+      rates[WYRE_SERVICE][coinId][currency]
+      ? rates[WYRE_SERVICE][coinId][currency]
+      : rates[GENERAL] &&
+        rates[GENERAL][coinId] &&
+        rates[GENERAL][coinId][currency]
+      ? rates[GENERAL][coinId][currency]
       : null;
   };
 
-  _verusPay = () => {
-    let navigation = this.props.navigation;
-
+  const _verusPay = () => {
     navigation.navigate('VerusPay');
   };
 
-  openCoin = (coinObj, subWallet) => {
+  const openCoin = (coinObj, subWallet) => {
     if (subWallet != null) {
-      this.props.dispatch(setCoinSubWallet(coinObj.id, subWallet));
+      dispatch(setCoinSubWallet(coinObj.id, subWallet));
     }
-    this.props.dispatch(setActiveCoin(coinObj));
-    this.props.dispatch(setActiveApp(coinObj.default_app));
-    this.props.dispatch(
-      setActiveSection(coinObj.apps[coinObj.default_app].data[0]),
-    );
+    dispatch(setActiveCoin(coinObj));
+    dispatch(setActiveApp(coinObj.default_app));
+    dispatch(setActiveSection(coinObj.apps[coinObj.default_app].data[0]));
 
-    this.resetToScreen('CoinMenus', 'Overview');
+    resetToScreen('CoinMenus', 'Overview');
   };
 
-  _handleIdentity = () => {
-    let navigation = this.props.navigation;
-    navigation.navigate('Identity', {selectedScreen: 'Identity'});
+  const _addCoin = () => {
+    navigation.navigate('AddCoin', { refresh: refresh });
   };
 
-  calculateSyncProgress = (coinObj, subWallet) => {
-    const syncInfo = this.props.info;
-
-    if (
-      syncInfo[coinObj.id] == null ||
-      syncInfo[coinObj.id][subWallet.id] == null
-    ) {
-      return 100;
-    } else {
-      return syncInfo[coinObj.id][subWallet.id].percent;
-    }
-  };
-
-  _addCoin = () => {
-    let navigation = this.props.navigation;
-    navigation.navigate('AddCoin', {refresh: this.refresh});
-  };
-
-  handleScanToVerify = () => {
-    this.props.navigation.navigate('ScanBadge');
-  };
-
-  _addPbaasCurrency = async () => {
+  const _addPbaasCurrency = async () => {
     openAddPbaasCurrencyModal(
-      CoinDirectory.findCoinObj(
-        this.props.testnetOverrides.VRSC
-          ? this.props.testnetOverrides.VRSC
-          : 'VRSC',
-      ),
+      CoinDirectory.findCoinObj(testnetOverrides.VRSC ? testnetOverrides.VRSC : 'VRSC'),
     );
   };
 
-  _addErc20Token = () => {
+  const _addErc20Token = () => {
     openAddErc20TokenModal(
-      CoinDirectory.findCoinObj(
-        this.props.testnetOverrides.ETH
-          ? this.props.testnetOverrides.ETH
-          : 'ETH',
-      ),
+      CoinDirectory.findCoinObj(testnetOverrides.ETH ? testnetOverrides.ETH : 'ETH'),
     );
   };
 
-  render() {
-    return HomeRender.call(this);
-  }
-}
-
-const mapStateToProps = state => {
-  return {
-    activeCoinsForUser: state.coins.activeCoinsForUser,
-    activeCoinList: state.coins.activeCoinList,
-
-    activeAccount: state.authentication.activeAccount,
-    testnetOverrides: state.authentication.activeAccount.testnetOverrides,
-    balances: extractLedgerData(state, 'balances', API_GET_BALANCES),
-    balanceErrors: extractErrorData(state, API_GET_BALANCES),
-    info: extractLedgerData(state, 'info', API_GET_INFO),
-    rates: state.ledger.rates,
-    displayCurrency:
-      state.settings.generalWalletSettings.displayCurrency || USD,
-    allSubWallets: extractDisplaySubWallets(state),
-    activeSubWallets: state.coinMenus.activeSubWallets,
-    widgetOrder: state.widgets.order,
-    homeCardDragDetection:
-      state.settings.generalWalletSettings.homeCardDragDetection,
-  };
+  return (
+    <HomeRender
+      dragDetectionEnabled={isDragDetectionEnabled}
+      displayCurrencyModalOpen={displayCurrencyModalOpen}
+      displayCurrency={displayCurrency}
+      setDisplayCurrency={setDisplayCurrencyFunc}
+      setDisplayCurrencyModalOpen={setDisplayCurrencyModalOpen}
+      editingCards={editingCards}
+      setEditingCards={handleSetEditingCards}
+      _addCoin={_addCoin}
+      _verusPay={_verusPay}
+      _addPbaasCurrency={_addPbaasCurrency}
+      _addErc20Token={_addErc20Token}
+      forceUpdate={forceUpdate}
+      loading={loading}
+      HomeRenderCoinsList={() =>
+        HomeRenderCoinsList({
+          widgets,
+          dragDetectionEnabled: isDragDetectionEnabled,
+          editingCards,
+          loading,
+          forceUpdate,
+          handleWidgetPress,
+          dispatch,
+          navigation,
+          activeAccount,
+          totalCryptoBalances,
+          totalFiatBalance,
+          HomeRenderWidget: (widgetId) =>
+            HomeRenderWidget({
+              widgetId,
+              totalCryptoBalances,
+              totalFiatBalance,
+            }),
+        })
+      }
+    />
+  );
 };
 
-export default connect(mapStateToProps)(Home);
+export default Home;

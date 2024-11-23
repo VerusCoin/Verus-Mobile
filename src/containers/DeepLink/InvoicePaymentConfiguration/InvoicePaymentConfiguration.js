@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import { View, SafeAreaView, Alert } from 'react-native';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client";
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { openConvertOrCrossChainSendModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import BigNumber from 'bignumber.js';
@@ -31,6 +31,7 @@ import FundSourceSelectList from '../../FundSourceSelect/FundSourceSelectList';
 import { usePrevious } from '../../../hooks/usePrevious';
 import { conditionallyUpdateWallet } from '../../../actions/actionDispatchers';
 import store from '../../../store';
+import { useObjectSelector } from '../../../hooks/useObjectSelector';
 
 const InvoicePaymentConfiguration = props => {
   const {
@@ -51,12 +52,12 @@ const InvoicePaymentConfiguration = props => {
   const [loading, setLoading] = useState(false);
   const inv = primitives.VerusPayInvoice.fromJson(deeplinkData);
 
-  const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser);
+  const activeCoinsForUser = useObjectSelector(state => state.coins.activeCoinsForUser);
   
-  const sendModal = useSelector(state => state.sendModal);
+  const sendModal = useObjectSelector(state => state.sendModal);
   const prevSendModal = usePrevious(sendModal);
   
-  const allSubWallets = useSelector(state => state.coinMenus.allSubWallets)
+  const allSubWallets = useObjectSelector(state => state.coinMenus.allSubWallets)
 
   const dispatch = useDispatch()
 

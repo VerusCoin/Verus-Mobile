@@ -13,17 +13,19 @@ import {AddErc20TokenConfirmRender} from './AddErc20TokenConfirm.render';
 import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
 import { coinsList } from '../../../../utils/CoinData/CoinsList';
 import { ERC20 } from '../../../../utils/constants/intervalConstants';
+import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 
 const AddErc20TokenConfirm = props => {
   const [contract, setCurrency] = useState(props.route.params.contract);
 
   const dispatch = useDispatch();
-  const sendModal = useSelector(state => state.sendModal);
-  const activeAccount = useSelector(
+  const sendModal = useObjectSelector(state => state.sendModal);
+  const activeAccount = useObjectSelector(
     state => state.authentication.activeAccount,
   );
-  const activeCoinList = useSelector(state => state.coins.activeCoinList);
-  const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser);
+  const activeCoinList = useObjectSelector(state => state.coins.activeCoinList);
+  const activeCoinsForUser = useObjectSelector(state => state.coins.activeCoinsForUser);
+  
   const testAccount = useSelector(state => (Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0))
 
   const goBack = useCallback(() => {

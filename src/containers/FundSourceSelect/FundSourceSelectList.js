@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from 'react-redux';
 import {
   ScrollView,
   View
@@ -15,11 +14,12 @@ import { VerusPayInvoice } from "verus-typescript-primitives";
 import { coinsList } from "../../utils/CoinData/CoinsList";
 import MissingInfoRedirect from "../../components/MissingInfoRedirect/MissingInfoRedirect";
 import AnimatedActivityIndicatorBox from "../../components/AnimatedActivityIndicatorBox";
+import { useObjectSelector } from "../../hooks/useObjectSelector";
 
 const FundSourceSelectList = (props) => {
   const { coinObjs, allSubWallets, sourceOptions: rawSourceOptions, invoice } = props;
 
-  const allBalances = useSelector(state => state.ledger.balances);
+  const allBalances = useObjectSelector(state => state.ledger.balances);
 
   const [cryptoBalances, setCryptoBalances] = useState({});
   const [sourceOptions, setSourceOptions] = useState({});

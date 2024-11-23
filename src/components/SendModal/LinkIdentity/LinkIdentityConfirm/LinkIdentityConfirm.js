@@ -1,5 +1,5 @@
 import React, {useState, useCallback} from 'react';
-import {useDispatch, useSelector} from 'react-redux';
+import {useDispatch} from 'react-redux';
 import {Alert} from 'react-native';
 import {setUserCoins} from '../../../../actions/actionCreators';
 import {updateVerusIdWallet} from '../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager';
@@ -14,6 +14,7 @@ import {
 } from '../../../../utils/constants/sendModal';
 import {convertFqnToDisplayFormat} from '../../../../utils/fullyqualifiedname';
 import {LinkIdentityConfirmRender} from './LinkIdentityConfirm.render';
+import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 
 const LinkIdentityConfirm = props => {
   const [verusId, setVerusId] = useState(props.route.params.verusId);
@@ -22,11 +23,11 @@ const LinkIdentityConfirm = props => {
   );
 
   const dispatch = useDispatch();
-  const sendModal = useSelector(state => state.sendModal);
-  const activeAccount = useSelector(
+  const sendModal = useObjectSelector(state => state.sendModal);
+  const activeAccount = useObjectSelector(
     state => state.authentication.activeAccount,
   );
-  const activeCoinList = useSelector(state => state.coins.activeCoinList);
+  const activeCoinList = useObjectSelector(state => state.coins.activeCoinList);
 
   const goBack = useCallback(() => {
     props.setModalHeight();

@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
-import {useSelector, useDispatch} from 'react-redux';
+import {useDispatch} from 'react-redux';
 import Styles from '../../../../styles/index';
 import Colors from '../../../../globals/colors';
 import {
@@ -27,16 +27,17 @@ import {saveGeneralSettings} from '../../../../actions/actionCreators';
 import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
 import {NavigationActions} from '@react-navigation/compat';
 import { ADDRESS_BLOCKLIST_FROM_WEBSERVER } from '../../../../utils/constants/constants';
+import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 
 const NO_DEFAULT = 'None';
 
 const WalletSettings = props => {
   const isMounted = useRef(false);
-  const generalWalletSettings = useSelector(
+  const generalWalletSettings = useObjectSelector(
     state => state.settings.generalWalletSettings,
   );
-  const accounts = useSelector(state => state.authentication.accounts);
-  const activeAccount = useSelector(
+  const accounts = useObjectSelector(state => state.authentication.accounts);
+  const activeAccount = useObjectSelector(
     state => state.authentication.activeAccount,
   );
   const dispatch = useDispatch();

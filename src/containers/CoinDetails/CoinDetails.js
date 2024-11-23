@@ -1,3 +1,5 @@
+// DEPRECATED
+
 /*
   This screen is passed a coinID, which it finds more data for in the 
   activeCoinsForUser section of the store upon being mounted. It's purpose
