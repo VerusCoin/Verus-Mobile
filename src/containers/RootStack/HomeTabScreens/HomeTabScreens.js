@@ -6,6 +6,7 @@ import WalletStackScreens from '../WalletStackScreens/WalletStackScreens';
 import ProfileStackScreens from '../ProfileStackScreens/ProfileStackScreens';
 import ServicesStackScreens from '../ServicesStackScreens/ServicesStackScreens';
 import VerusPay from '../../VerusPay/VerusPay';
+import ConvertStackScreens from '../ConvertStackScreens/ConvertStackScreens';
 
 const HomeTabs = createMaterialBottomTabNavigator()
 
@@ -53,6 +54,20 @@ const HomeTabScreens = props => {
           ),
         }}
       />
+      {/* <HomeTabs.Screen
+        name="Convert"
+        component={ConvertStackScreens}
+        options={{
+          title: "Convert",
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons
+              name="swap-horizontal"
+              color={color}
+              size={26}
+            />
+          ),
+        }}
+      /> */}
       <HomeTabs.Screen
         name="VerusPay"
         component={VerusPay}

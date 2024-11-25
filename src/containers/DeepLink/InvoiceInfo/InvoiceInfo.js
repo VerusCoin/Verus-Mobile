@@ -18,6 +18,7 @@ import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import ListSelectionModal from '../../../components/ListSelectionModal/ListSelectionModal';
 import { copyToClipboard } from '../../../utils/clipboard/clipboard';
 import BigNumber from 'bignumber.js';
+import { useObjectSelector } from '../../../hooks/useObjectSelector';
 
 const InvoiceInfo = props => {
   const { 
@@ -106,7 +107,8 @@ const InvoiceInfo = props => {
   const [sigDateString, setSigDateString] = useState(unixToDate(sigtime));
   const [waitingForSignin, setWaitingForSignin] = useState(false);
 
-  const accounts = useSelector(state => state.authentication.accounts);
+  const accounts = useObjectSelector(state => state.authentication.accounts);
+  
   const signedIn = useSelector(state => state.authentication.signedIn);
   const sendModalType = useSelector(state => state.sendModal.type);
   const isWrongInvoiceType = useSelector(state => {

@@ -16,6 +16,7 @@ import { VerusIdAtIcon, ReceivedIcon, VerusIdErrorIcon } from "../../../images/c
 import { DeeplinkNotification, BasicNotification, LoadingNotification, VerusIdProvisioningNotification } from '../../../utils/notification';
 import { processVerusId } from '../../../containers/Services/ServiceComponents/VerusIdService/VerusIdLogin';
 import { dispatchRemoveNotification, dispatchClearNotifications } from '../../../actions/actions/notifications/dispatchers/notifications';
+import { useObjectSelector } from '../../../hooks/useObjectSelector';
 // has the state changed hook
 const useCompare = (val) => {
   const prevVal = usePrevious(val)
@@ -32,7 +33,6 @@ const usePrevious = (value) => {
 }
 
 const createNotificationText = (text, icon, index) => {
-
   return (
     <View
       style={{
@@ -63,7 +63,6 @@ const createNotificationText = (text, icon, index) => {
 }
 
 const getIcon = (type, index) => {
-
   switch (type) {
     case NOTIFICATION_ICON_VERUSID:
       return (<VerusIdAtIcon
@@ -97,7 +96,6 @@ const getIcon = (type, index) => {
 }
 
 const getNotifications = (notifications, acchash) => {
-
   const { directory } = notifications;
   let tempNotificaions = [];
   const keys = Object.keys(directory || {});
@@ -124,11 +122,11 @@ const getNotifications = (notifications, acchash) => {
   return tempNotificaions;
 }
 
-const NotificationWidget = ({ props } = props) => {
+const NotificationWidget = (props) => {
   const { width } = Dimensions.get('window');
   const [collapsed, setCollapsed] = useState(false);
   const [traynotifications, setTrayNotifications] = useState([]);
-  const notifications = useSelector(state =>
+  const notifications = useObjectSelector(state =>
     state.notifications
   );
   const acchash = useSelector(state =>

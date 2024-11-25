@@ -14,6 +14,7 @@ import {RenderSquareCoinLogo} from '../../utils/CoinData/Graphics';
 import CoinDetailsModal from '../../components/CoinDetailsModal/CoinDetailsModal';
 import {WYRE_SERVICE} from '../../utils/constants/intervalConstants';
 import {CoinDirectory} from '../../utils/CoinData/CoinDirectory';
+import { useObjectSelector } from '../../hooks/useObjectSelector';
 
 const AddCoin = props => {
   const [loading, setLoading] = useState(true);
@@ -27,13 +28,14 @@ const AddCoin = props => {
       Object.keys(state.authentication.activeAccount.testnetOverrides).length >
       0,
   );
-  const activeAccount = useSelector(
+
+  const activeAccount = useObjectSelector(
     state => state.authentication.activeAccount,
   );
-  const activeCoinsForUser = useSelector(
+  const activeCoinsForUser = useObjectSelector(
     state => state.coins.activeCoinsForUser,
   );
-  const activeCoinList = useSelector(state => state.coins.activeCoinList);
+  const activeCoinList = useObjectSelector(state => state.coins.activeCoinList);
 
   useEffect(() => {
     setCoinList(getCoinList());

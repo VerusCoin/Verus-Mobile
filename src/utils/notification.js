@@ -85,7 +85,7 @@ export class DeeplinkNotification extends Notification {
 
   static fromJson(json, reopen) {
     const {body, title, uid, uri, fromService} = json;
-    return new DeeplinkNotification(body, title, reopen, uid, uri, null , fromService);
+    return new DeeplinkNotification(body, title, reopen, uid, uri, null, fromService);
   }
 
   onAction(props = null) {
@@ -109,7 +109,6 @@ export class VerusIdProvisioningNotification extends DeeplinkNotification {
     super(body, title, reopen, uid, uri, acchash, fromService)
     this.type = NOTIFICATION_TYPE_VERUS_ID_PROVISIONING
     this.fqn = fqn
-
   }
 
   static fromJson(json, reopen) {
@@ -130,7 +129,6 @@ export class VerusIdProvisioningNotification extends DeeplinkNotification {
       uri: this.uri,
       fqn: this.fqn,
       fromService: this.fromService
-
     };
   }
 }

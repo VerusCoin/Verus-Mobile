@@ -13,6 +13,7 @@ import { decryptkey } from '../../../../utils/seedCrypt';
 import { deriveKeyPair } from '../../../../utils/keys';
 import { ELECTRUM } from '../../../../utils/constants/intervalConstants';
 import { coinsList } from '../../../../utils/CoinData/CoinsList';
+import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 
 const RevokeIdentityConfirm = props => {
   const [targetId, setTargetId] = useState(props.route.params.targetId);
@@ -26,11 +27,12 @@ const RevokeIdentityConfirm = props => {
   const instanceKey = useSelector(state => state.authentication.instanceKey);
 
   const dispatch = useDispatch();
-  const sendModal = useSelector(state => state.sendModal);
-  const activeAccount = useSelector(
+
+  const sendModal = useObjectSelector(state => state.sendModal);
+  const activeAccount = useObjectSelector(
     state => state.authentication.activeAccount,
   );
-  const activeCoinList = useSelector(state => state.coins.activeCoinList);
+  const activeCoinList = useObjectSelector(state => state.coins.activeCoinList);
 
   const goBack = useCallback(() => {
     props.setModalHeight();
