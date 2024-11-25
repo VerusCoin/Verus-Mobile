@@ -19,6 +19,7 @@ import { ELECTRUM } from '../../../utils/constants/intervalConstants';
 import { coinsList } from '../../../utils/CoinData/CoinsList';
 import { requestSeeds } from '../../../utils/auth/authBox';
 import { deriveKeyPair } from '../../../utils/keys';
+import { useObjectSelector } from '../../../hooks/useObjectSelector';
 
 const LoginRequestIdentity = props => {
   const { deeplinkData } = props.route.params
@@ -28,8 +29,9 @@ const LoginRequestIdentity = props => {
   const [idProvisionSuccess, setIdProvisionSuccess] = useState(false)
   const [canProvision, setCanProvision] = useState(false)
   const req = new primitives.LoginConsentRequest(deeplinkData)
-  const encryptedIds = useSelector(state => state.services.stored[VERUSID_SERVICE_ID])
-  const sendModal = useSelector((state) => state.sendModal);
+  const encryptedIds = useObjectSelector(state => state.services.stored[VERUSID_SERVICE_ID])
+  const sendModal = useObjectSelector((state) => state.sendModal);
+
   const fromService = useSelector((state) => state.deeplink.fromService);
   const passthrough = useSelector((state) => state.deeplink.passthrough);
 
@@ -54,8 +56,8 @@ const LoginRequestIdentity = props => {
     setCanProvision(canProvision)
   }, [linkedIds])
 
-  const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser)
-  const testnetOverrides = useSelector(state => state.authentication.activeAccount.testnetOverrides)
+  const activeCoinsForUser = useObjectSelector(state => state.coins.activeCoinsForUser)
+  const testnetOverrides = useObjectSelector(state => state.authentication.activeAccount.testnetOverrides)
   const identityNetwork = testnetOverrides[VERUSID_NETWORK_DEFAULT]
     ? testnetOverrides[VERUSID_NETWORK_DEFAULT]
     : VERUSID_NETWORK_DEFAULT;

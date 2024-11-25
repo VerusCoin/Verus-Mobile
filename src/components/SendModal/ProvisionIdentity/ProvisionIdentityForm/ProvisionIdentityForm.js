@@ -1,6 +1,5 @@
 import { fromBase58Check } from "@bitgo/utxo-lib/dist/src/address";
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
 import { primitives } from "verusid-ts-client";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import { getIdentity } from "../../../../utils/api/channels/verusid/callCreators";
@@ -18,12 +17,13 @@ import {
 } from "react-native";
 import { TextInput, Button, Paragraph } from "react-native-paper";
 import Styles from "../../../../styles";
+import { useObjectSelector } from "../../../../hooks/useObjectSelector";
 
 const ProvisionIdentityForm = (props) => {
   const { height } = Dimensions.get("window");
-  const sendModal = useSelector((state) => state.sendModal);
+  const sendModal = useObjectSelector((state) => state.sendModal);
   const chainTicker = sendModal.coinObj.id;
-  const addresses = useSelector(state =>
+  const addresses = useObjectSelector(state =>
     state.authentication.activeAccount.keys[chainTicker]
       ? state.authentication.activeAccount.keys[chainTicker].vrpc.addresses
       : [],

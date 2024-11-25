@@ -13,12 +13,11 @@ import { decryptkey } from '../../../../utils/seedCrypt';
 import { deriveKeyPair } from '../../../../utils/keys';
 import { ELECTRUM } from '../../../../utils/constants/intervalConstants';
 import { coinsList } from '../../../../utils/CoinData/CoinsList';
+import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 
 const RecoverIdentityConfirm = props => {
   const [targetId, setTargetId] = useState(props.route.params.targetId);
   const [recoveryId, setRecoveryId] = useState(props.route.params.recoveryId);
-  const [ownedAddress, setOwnedAddress] = useState(props.route.params.ownedAddress);
-  const [recoverableByUser, setRecoverableByUser] = useState(props.route.params.recoverableByUser);
   const [recoveryResult, setRecoveryResult] = useState(props.route.params.recoveryResult);
   const [revocationAddr, setRevocationAddr] = useState(props.route.params.revocationAddr);
   const [recoveryAddr, setRecoveryAddr] = useState(props.route.params.recoveryAddr);
@@ -31,11 +30,12 @@ const RecoverIdentityConfirm = props => {
   const instanceKey = useSelector(state => state.authentication.instanceKey);
 
   const dispatch = useDispatch();
-  const sendModal = useSelector(state => state.sendModal);
-  const activeAccount = useSelector(
+  
+  const sendModal = useObjectSelector(state => state.sendModal);
+  const activeAccount = useObjectSelector(
     state => state.authentication.activeAccount,
   );
-  const activeCoinList = useSelector(state => state.coins.activeCoinList);
+  const activeCoinList = useObjectSelector(state => state.coins.activeCoinList);
 
   const goBack = useCallback(() => {
     props.setModalHeight();

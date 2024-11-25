@@ -17,11 +17,13 @@ import {
 import store from "../../../store";
 import { useSelector } from "react-redux";
 import { expireCoinData } from "../../../actions/actionCreators";
+import { useObjectSelector } from "../../../hooks/useObjectSelector";
 
 export default function ManageCoin(props) {
   const layout = useWindowDimensions();
   const chainTicker = useSelector(state => state.coins.activeCoin.id)
-  const updateIntervals = useSelector(
+
+  const updateIntervals = useObjectSelector(
     state => state.updates.coinUpdateTracker[chainTicker],
   );
 

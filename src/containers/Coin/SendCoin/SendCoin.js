@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import Styles from "../../../styles/index";
 import { Button, Portal } from "react-native-paper";
 import VerusPay from "../../VerusPay/VerusPay";
@@ -32,14 +32,15 @@ import { createAlert, resolveAlert } from "../../../actions/actions/alert/dispat
 import {
   CONVERSION_DISABLED
 } from '../../../../env/index';
+import { useObjectSelector } from "../../../hooks/useObjectSelector";
 
 const SendCoin = ({ navigation }) => {
-  const activeCoin = useSelector(state => state.coins.activeCoin);
-  const subWallet = useSelector(state => {
+  const activeCoin = useObjectSelector(state => state.coins.activeCoin);
+  const subWallet = useObjectSelector(state => {
     const chainTicker = state.coins.activeCoin.id;
     return state.coinMenus.activeSubWallets[chainTicker];
   });
-  const generalWalletSettings = useSelector(
+  const generalWalletSettings = useObjectSelector(
     state => state.settings.generalWalletSettings,
   );
   const dispatch = useDispatch()

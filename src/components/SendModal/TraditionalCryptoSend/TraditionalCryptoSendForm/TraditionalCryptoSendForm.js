@@ -16,13 +16,14 @@ import { useEffect } from "react";
 import { CoinDirectory } from "../../../../utils/CoinData/CoinDirectory";
 import { selectAddressBlocklist } from "../../../../selectors/settings";
 import { addressIsBlocked } from "../../../../utils/addressBlocklist";
+import { useObjectSelector } from "../../../../hooks/useObjectSelector";
 
 const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
   const { height } = Dimensions.get("window");
   const [amountFiat, setAmountFiat] = useState(false);
-  const sendModal = useSelector(state => state.sendModal);
-  const addressBlocklist = useSelector(selectAddressBlocklist);
-  const balances = useSelector(state => {
+  const sendModal = useObjectSelector(state => state.sendModal);
+  const addressBlocklist = useObjectSelector(selectAddressBlocklist);
+  const balances = useObjectSelector(state => {
     const chainTicker = state.sendModal.coinObj.id;
     const balance_channel = state.sendModal.subWallet.api_channels[API_GET_BALANCES];
     return {
@@ -32,10 +33,10 @@ const TraditionalCryptoSendForm = ({ setLoading, setModalHeight, updateSendFormD
       errors: state.errors[API_GET_BALANCES][balance_channel][chainTicker],
     };
   });
-  const rates = useSelector(state => state.ledger.rates[state.sendModal.subWallet.api_channels[API_GET_FIATPRICE]]);
+  const rates = useObjectSelector(state => state.ledger.rates[state.sendModal.subWallet.api_channels[API_GET_FIATPRICE]]);
   const displayCurrency = useSelector(state => state.settings.generalWalletSettings.displayCurrency || USD);
   const [price, setPrice] = useState(0);
-  const networkName = useSelector(state => {
+  const networkName = useObjectSelector(state => {
     try {
       const subwallet = state.sendModal.subWallet;
 
