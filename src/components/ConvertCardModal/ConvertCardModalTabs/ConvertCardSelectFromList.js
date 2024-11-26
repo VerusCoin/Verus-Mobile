@@ -3,29 +3,44 @@ import { View, TextInput, FlatList } from 'react-native';
 import { List, Text } from 'react-native-paper';
 import { RenderCircleCoinLogo } from '../../../utils/CoinData/Graphics';
 import Colors from '../../../globals/colors';
+import { useNavigation } from '@react-navigation/native';
 
-const ConvertCardSelectCurrency = (props) => {
+const ConvertCardSelectFromList = (props) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const currencies = props.currencies ? props.currencies : [];
+  const items = props.items ? props.items : [];
+
+  const navigation = useNavigation();
 
   // Filter the data based on the search query
   const filteredData = useMemo(() => {
-    return currencies.filter(item =>
-      item.title.toLowerCase().includes(searchQuery.toLowerCase())
+    return items.filter(item =>
+      (
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+      )
     );
-  }, [searchQuery]);
+  }, [searchQuery, items]);
+
+  const handleSelect = (key) => {
+    if (props.onSelect) props.onSelect(key);
+    if (props.nextScreen) navigation.navigate(props.nextScreen)
+  }
 
   // Render each item in the FlatList
   const renderItem = ({ item }) => (
     <List.Item
       title={item.title}
+      titleStyle={{
+        fontWeight: "600"
+      }}
       description={item.description}
-      onPress={() => props.onSelect(item.key)}
+      descriptionStyle={{
+        color: Colors.lightGrey
+      }}
+      onPress={() => handleSelect(item.key)}
       left={() => (
         <View
           style={{
-            paddingLeft: 8,
-            paddingRight: 8,
             alignItems: "center",
             justifyContent: "center",
           }}
@@ -38,14 +53,20 @@ const ConvertCardSelectCurrency = (props) => {
           {...props}
           style={{
             display: "flex",
-            flexDirection: "row"
+            flexDirection: "column",
+            alignItems: "flex-end",
+            justifyContent: "center"
           }}>
-          {item.rightTitle && <Text>
-            {item.rightTitle}
-          </Text>}
-          {item.rightDescription && <Text>
-            {item.rightDescription}
-          </Text>}
+          {item.rightTitle && (
+            <Text style={{ fontWeight: "600" }}>
+              {item.rightTitle}
+            </Text>
+          )}
+          {item.rightDescription && (
+            <Text style={{ color: Colors.lightGrey }}>
+              {item.rightDescription}
+            </Text>
+        )}
         </View>
       }
     />
@@ -62,7 +83,8 @@ const ConvertCardSelectCurrency = (props) => {
           height: 40,
           marginVertical: 10,
           paddingHorizontal: 15,
-          borderRadius: 20,
+          marginHorizontal: 8,
+          borderRadius: 8,
           backgroundColor: '#f0f0f0',
           color: '#000',
         }}
@@ -90,4 +112,4 @@ const ConvertCardSelectCurrency = (props) => {
   );
 };
 
-export default ConvertCardSelectCurrency;
+export default ConvertCardSelectFromList;

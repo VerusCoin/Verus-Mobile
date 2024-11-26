@@ -6,7 +6,7 @@ import Colors from "../../globals/colors";
 import ConvertCard from "./ConvertCard/ConvertCard";
 import { useSelector } from "react-redux";
 import { extractLedgerData } from "../../utils/ledger/extractLedgerData";
-import { API_GET_BALANCES, GENERAL, IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE } from "../../utils/constants/intervalConstants";
+import { API_GET_BALANCES, GENERAL, IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE, VRPC } from "../../utils/constants/intervalConstants";
 import { USD } from "../../utils/constants/currencies";
 import BigNumber from 'bignumber.js';
 import ConvertCardModal from "../../components/ConvertCardModal/ConvertCardModal";
@@ -14,6 +14,7 @@ import { CONVERT_CARD_MODAL_MODES } from "../../utils/constants/convert";
 import { normalizeNum } from "../../utils/normalizeNum";
 import { formatCurrency } from "react-native-format-currency";
 import { useObjectSelector } from "../../hooks/useObjectSelector";
+import { CoinDirectory } from "../../utils/CoinData/CoinDirectory";
 
 const Convert = (props) => {
   const displayCurrency = useSelector(state => state.settings.generalWalletSettings.displayCurrency || USD);
@@ -36,7 +37,14 @@ const Convert = (props) => {
   const [sourceCurrencyOptionsList, setSourceCurrencyOptionsList] = useState([]);
   const [destCurrencyOptionsList, setDestCurrencyOptionsList] = useState([]);
 
+  const [sourceNetworkOptionsList, setSourceNetworkOptionsList] = useState([]);
+  const [destNetworkOptionsList, setDestNetworkOptionsList] = useState([]);
+
   const [selectedSourceCurrency, setSelectedSourceCurrency] = useState(null);
+  const [selectedSourceNetwork, setSelectedSourceNetwork] = useState(null);
+
+  const [selectedDestCurrency, setSelectedDestCurrency] = useState(null);
+  const [selectedDestNetwork, setSelectedDestNetwork] = useState(null);
 
   const getTotalBalances = () => {
     let coinBalances = {};
@@ -75,15 +83,17 @@ const Convert = (props) => {
 
   const getSourceCurrencyMap = () => {
     const currencyMap = {};
+    const usedCoins = [];
 
-    for (const coinObj of activeCoinsForUser) {
-      if (coinObj.proto === 'vrsc') {
+    for (const coinObj of activeCoinsForUser.sort(x => (x.mapped_to ? -1 : 1))) {
+      if (!usedCoins.includes(coinObj.id) && (coinObj.proto === 'vrsc' || coinObj.tags.includes(IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE))) {
         currencyMap[coinObj.currency_id] = [coinObj];
 
         if (coinObj.mapped_to != null && coinObj.tags.includes(IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE)) {
           const mappedCoinObj = activeCoinsForUser.find(x => x.id === coinObj.mapped_to);
 
           if (mappedCoinObj != null) {
+            usedCoins.push(mappedCoinObj.id)
             currencyMap[coinObj.currency_id].push(mappedCoinObj);
           }
         }
@@ -100,7 +110,7 @@ const Convert = (props) => {
       const rootCoinObj = coinObjs[0];
       const mappedCoinObj = coinObjs.length > 1 ? coinObjs[1] : null;
 
-      const titleCoinObj = mappedCoinObj && mappedCoinObj.display_name.length > rootCoinObj.display_name.length ? 
+      const titleCoinObj = mappedCoinObj && mappedCoinObj.display_name.length < rootCoinObj.display_name.length ? 
                             mappedCoinObj
                             : 
                             rootCoinObj;
@@ -144,7 +154,7 @@ const Convert = (props) => {
         rightTitle = valueFormattedWithSymbol;
       }
 
-      rightDescription = `${Number(totalCryptoBalance.toString())} ${titleCoinObj.display_ticker}`;
+      rightDescription = `${Number(totalCryptoBalance.toString())}`;
 
       currencies.push({
         title,
@@ -159,6 +169,105 @@ const Convert = (props) => {
     return currencies;
   };
 
+  const getSourceNetworkOptionsList = () => {
+    const networks = [];
+
+    function getRightText (coinId, walletIds) {
+      let title = '-';
+      let description = '-';
+
+      if (balances[coinId] != null) {
+        const uniRate = rates[GENERAL] && rates[GENERAL][coinId] ? BigNumber(rates[GENERAL][coinId][displayCurrency]) : null;
+
+        let totalCryptoBalance = BigNumber(0);
+
+        for (const walletId of walletIds) {
+          const cryptoBalance = balances[coinId][walletId];
+
+          if (cryptoBalance != null) {
+            totalCryptoBalance = totalCryptoBalance.plus(BigNumber(cryptoBalance.confirmed));
+          }
+        }
+
+        description = `${Number(totalCryptoBalance.toString())}`;
+        
+        if (uniRate != null) {
+          const rawFiatDisplayValue = normalizeNum(
+            Number((totalCryptoBalance.multipliedBy(uniRate)).toString()),
+            2,
+          )[3];
+    
+          const [valueFormattedWithSymbol] = formatCurrency({amount: rawFiatDisplayValue, code: displayCurrency});
+          
+          title = valueFormattedWithSymbol;
+        }
+      }
+
+      return { title, description };
+    }
+
+    if (selectedSourceCurrency) {
+      for (const alias of selectedSourceCurrency) {
+        if (alias.proto === 'vrsc') {
+          if (allSubWallets[alias.id]) {
+            const networkWallets = {};
+
+            for (const subWallet of allSubWallets[alias.id]) {
+              const [channelName, addr, network] = subWallet.channel.split('.');
+
+              if (channelName === VRPC) {
+                if (!networkWallets[network]) networkWallets[network] = [subWallet.id];
+                else networkWallets[network].push(subWallet.id);
+              }
+            }
+
+            for (const network in networkWallets) {
+              try {
+                const networkObj = CoinDirectory.getBasicCoinObj(network);
+
+                if (networkObj) {
+                  const rightText = getRightText(alias.id, networkWallets[network]);
+
+                  networks.push({
+                    title: `From ${networkObj.display_name} network`,
+                    description: `as ${alias.display_ticker}`,
+                    logo: networkObj.id,
+                    key: networkObj.id,
+                    rightTitle: rightText.title,
+                    rightDescription: rightText.description
+                  });
+                }
+              } catch(e) {
+                console.warn(e)
+              }
+            }
+          }
+        } else if (alias.proto === 'eth' || alias.proto === 'erc20') {
+          const rightText = getRightText(alias.id, ['MAIN_WALLET']);
+
+          networks.push({
+            title: 'From Ethereum network',
+            description: `as ${alias.display_ticker}`,
+            logo: alias.testnet ? 'GETH' : 'ETH',
+            key: alias.testnet ? 'GETH' : 'ETH',
+            rightTitle: rightText.title,
+            rightDescription: rightText.description
+          });
+        }
+      }
+    }
+
+    return networks;
+  };
+
+  const handleCurrencySelection = (key) => {
+    if (convertCardModalMode === CONVERT_CARD_MODAL_MODES.SEND) {
+      setSelectedSourceCurrency(sourceCurrencyMap[key]);
+    } else {
+      setSelectedDestCurrency(destCurrencyMap[key]);
+    }
+  }
+
   useEffect(() => {
     setTotalBalances(getTotalBalances());
   }, [allSubWallets, activeCoinsForUser, balances, displayCurrency, rates]);
@@ -170,6 +279,10 @@ const Convert = (props) => {
   useEffect(() => {
     setSourceCurrencyOptionsList(getSourceCurrencyOptionsList());
   }, [sourceCurrencyMap, totalBalances]);
+
+  useEffect(() => {
+    setSourceNetworkOptionsList(getSourceNetworkOptionsList());
+  }, [selectedSourceCurrency, totalBalances]);
 
   return (
     <ScrollView
@@ -185,7 +298,8 @@ const Convert = (props) => {
         mode={convertCardModalMode}
         totalBalances={totalBalances}
         currencies={convertCardModalMode === CONVERT_CARD_MODAL_MODES.SEND ? sourceCurrencyOptionsList : destCurrencyOptionsList}
-        onSelectCurrency={(currencyId) => setSelectedSourceCurrency(currencyId)}
+        networks={convertCardModalMode === CONVERT_CARD_MODAL_MODES.SEND ? sourceNetworkOptionsList : destNetworkOptionsList}
+        onSelectCurrency={(currencyId) => handleCurrencySelection(currencyId)}
         setVisible={setConvertCardModalVisible}
       />
       <View
@@ -196,8 +310,9 @@ const Convert = (props) => {
         }}>
         <ConvertCard
           onSelectPressed={() => {
+            setSelectedSourceCurrency(null);
             setConvertCardModalMode(CONVERT_CARD_MODAL_MODES.SEND);
-            setConvertCardModalVisible(true)
+            setConvertCardModalVisible(true);
           }}
         />
       </View>

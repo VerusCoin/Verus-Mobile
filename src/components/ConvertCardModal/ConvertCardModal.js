@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Platform, SafeAreaView, View } from "react-native";
 import { Text, Portal, Button, IconButton } from "react-native-paper";
 import Colors from "../../globals/colors";
@@ -8,7 +8,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import AnimatedActivityIndicatorBox from "../AnimatedActivityIndicatorBox";
 
-import ConvertCardSelectCurrency from "./ConvertCardModalTabs/ConvertCardSelectCurrency";
+import ConvertCardSelectFromList from "./ConvertCardModalTabs/ConvertCardSelectFromList";
 import { useSelector } from "react-redux";
 import { USD } from "../../utils/constants/currencies";
 import { extractLedgerData } from "../../utils/ledger/extractLedgerData";
@@ -17,7 +17,17 @@ import { API_GET_BALANCES } from "../../utils/constants/intervalConstants";
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
 
-const ConvertCardModal = ({ onClose, visible, setVisible, totalBalances, mode, currencies, onSelectCurrency }) => {
+const ConvertCardModal = ({ 
+  onClose, 
+  visible, 
+  setVisible, 
+  totalBalances, 
+  mode, 
+  currencies, 
+  onSelectCurrency,
+  networks,
+  onSelectNetwork
+}) => {
   const [loading, setLoading] = useState(false);
   const [preventExit, setPreventExit] = useState(false);
   const [modalHeight, setModalHeight] = useState(600); // Adjust as needed
@@ -97,7 +107,7 @@ const ConvertCardModal = ({ onClose, visible, setVisible, totalBalances, mode, c
                     <TopTabs.Screen
                       name="SelectCurrency"
                       options={{
-                        tabBarLabel: 'Select a Currency',
+                        tabBarLabel: 'Currency',
                       }}
                       listeners={{
                         tabPress: e => {
@@ -106,11 +116,33 @@ const ConvertCardModal = ({ onClose, visible, setVisible, totalBalances, mode, c
                       }}
                     >
                       {tabProps => (
-                        <ConvertCardSelectCurrency 
+                        <ConvertCardSelectFromList 
                           {...tabProps} 
-                          currencies={currencies}
+                          items={currencies}
                           setModalTitle={setModalTitle}
                           onSelect={onSelectCurrency}
+                          nextScreen="SelectNetwork"
+                        />
+                      )}
+                    </TopTabs.Screen>
+                    <TopTabs.Screen
+                      name="SelectNetwork"
+                      options={{
+                        tabBarLabel: 'Network',
+                      }}
+                      listeners={{
+                        tabPress: e => {
+                          e.preventDefault();
+                        },
+                      }}
+                    >
+                      {tabProps => (
+                        <ConvertCardSelectFromList 
+                          {...tabProps} 
+                          items={networks}
+                          setModalTitle={setModalTitle}
+                          onSelect={onSelectCurrency}
+                          nextScreen="SelectNetwork"
                         />
                       )}
                     </TopTabs.Screen>
