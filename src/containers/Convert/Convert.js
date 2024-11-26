@@ -6,7 +6,7 @@ import Colors from "../../globals/colors";
 import ConvertCard from "./ConvertCard/ConvertCard";
 import { useSelector } from "react-redux";
 import { extractLedgerData } from "../../utils/ledger/extractLedgerData";
-import { API_GET_BALANCES, GENERAL, IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE, VRPC } from "../../utils/constants/intervalConstants";
+import { API_GET_BALANCES, ERC20, ETH, GENERAL, IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE, VRPC } from "../../utils/constants/intervalConstants";
 import { USD } from "../../utils/constants/currencies";
 import BigNumber from 'bignumber.js';
 import ConvertCardModal from "../../components/ConvertCardModal/ConvertCardModal";
@@ -40,11 +40,20 @@ const Convert = (props) => {
   const [sourceNetworkOptionsList, setSourceNetworkOptionsList] = useState([]);
   const [destNetworkOptionsList, setDestNetworkOptionsList] = useState([]);
 
+  const [sourceWalletOptionsList, setSourceWalletOptionsList] = useState([]);
+  const [destAddressOptionsList, setDestAddressOptionsList] = useState([]);
+
   const [selectedSourceCurrency, setSelectedSourceCurrency] = useState(null);
+  const [selectedSourceCoinObj, setSelectedSourceCoinObj] = useState(null);
   const [selectedSourceNetwork, setSelectedSourceNetwork] = useState(null);
+  const [selectedSourceWallet, setSelectedSourceWallet] = useState(null);
 
   const [selectedDestCurrency, setSelectedDestCurrency] = useState(null);
   const [selectedDestNetwork, setSelectedDestNetwork] = useState(null);
+  const [selectedDestAddress, setSelectedDestAddress] = useState(null);
+
+  const [sendAmount, setSendAmount] = useState(null);
+  const [sourceBalance, setSourceBalance] = useState(null);
 
   const getTotalBalances = () => {
     let coinBalances = {};
@@ -169,42 +178,42 @@ const Convert = (props) => {
     return currencies;
   };
 
-  const getSourceNetworkOptionsList = () => {
-    const networks = [];
+  const getRightText = (coinId, walletIds) => {
+    let title = '-';
+    let description = '-';
 
-    function getRightText (coinId, walletIds) {
-      let title = '-';
-      let description = '-';
+    if (balances[coinId] != null) {
+      const uniRate = rates[GENERAL] && rates[GENERAL][coinId] ? BigNumber(rates[GENERAL][coinId][displayCurrency]) : null;
 
-      if (balances[coinId] != null) {
-        const uniRate = rates[GENERAL] && rates[GENERAL][coinId] ? BigNumber(rates[GENERAL][coinId][displayCurrency]) : null;
+      let totalCryptoBalance = BigNumber(0);
 
-        let totalCryptoBalance = BigNumber(0);
+      for (const walletId of walletIds) {
+        const cryptoBalance = balances[coinId][walletId];
 
-        for (const walletId of walletIds) {
-          const cryptoBalance = balances[coinId][walletId];
-
-          if (cryptoBalance != null) {
-            totalCryptoBalance = totalCryptoBalance.plus(BigNumber(cryptoBalance.confirmed));
-          }
-        }
-
-        description = `${Number(totalCryptoBalance.toString())}`;
-        
-        if (uniRate != null) {
-          const rawFiatDisplayValue = normalizeNum(
-            Number((totalCryptoBalance.multipliedBy(uniRate)).toString()),
-            2,
-          )[3];
-    
-          const [valueFormattedWithSymbol] = formatCurrency({amount: rawFiatDisplayValue, code: displayCurrency});
-          
-          title = valueFormattedWithSymbol;
+        if (cryptoBalance != null) {
+          totalCryptoBalance = totalCryptoBalance.plus(BigNumber(cryptoBalance.confirmed));
         }
       }
 
-      return { title, description };
+      description = `${Number(totalCryptoBalance.toString())}`;
+      
+      if (uniRate != null) {
+        const rawFiatDisplayValue = normalizeNum(
+          Number((totalCryptoBalance.multipliedBy(uniRate)).toString()),
+          2,
+        )[3];
+  
+        const [valueFormattedWithSymbol] = formatCurrency({amount: rawFiatDisplayValue, code: displayCurrency});
+        
+        title = valueFormattedWithSymbol;
+      }
     }
+
+    return { title, description };
+  }
+
+  const getSourceNetworkOptionsList = () => {
+    const networks = [];
 
     if (selectedSourceCurrency) {
       for (const alias of selectedSourceCurrency) {
@@ -260,6 +269,41 @@ const Convert = (props) => {
     return networks;
   };
 
+  const getSourceWalletOptionsList = () => {
+    const wallets = [];
+
+    if (selectedSourceCurrency && selectedSourceNetwork) {      
+      if (selectedSourceCoinObj && allSubWallets[selectedSourceCoinObj.id]) {
+        for (const wallet of allSubWallets[selectedSourceCoinObj.id]) {
+          const [channelName, addr, network] = wallet.channel.split('.');
+
+          if (
+            channelName === ERC20 || 
+            channelName === ETH || 
+            (channelName === VRPC && selectedSourceNetwork.currency_id === network)
+          ) {
+            const rightText = getRightText(selectedSourceCoinObj.id, [wallet.id]);
+
+            wallets.push({
+              title: wallet.name,
+              description: `as ${selectedSourceCoinObj.display_ticker}`,
+              logo: selectedSourceNetwork.id,
+              key: wallet.id,
+              rightTitle: rightText.title,
+              rightDescription: rightText.description
+            })
+          }
+        }
+      }
+    }
+
+    return wallets;
+  };
+
+  const getSourceBalance = () => {
+    return balances[selectedSourceCoinObj.id][selectedSourceWallet.id].confirmed;
+  }
+
   const handleCurrencySelection = (key) => {
     if (convertCardModalMode === CONVERT_CARD_MODAL_MODES.SEND) {
       setSelectedSourceCurrency(sourceCurrencyMap[key]);
@@ -268,9 +312,62 @@ const Convert = (props) => {
     }
   }
 
+  const handleNetworkSelection = (key) => {
+    try {
+      if (convertCardModalMode === CONVERT_CARD_MODAL_MODES.SEND) {
+        const networkObj = CoinDirectory.getBasicCoinObj(key);
+
+        setSelectedSourceNetwork(networkObj);
+      } else {
+        setSelectedDestNetwork(null);
+      }
+    } catch (e) {
+      console.warn(e)
+    }
+  }
+
+  const handleAddressSelection = (key) => {
+    try {
+      if (convertCardModalMode === CONVERT_CARD_MODAL_MODES.SEND) {
+        if (selectedSourceCoinObj) {
+          const subWallets = allSubWallets[selectedSourceCoinObj.id];
+
+          if (subWallets) {
+            const selectedWallet = subWallets.find(x => x.id === key);
+
+            setSelectedSourceWallet(selectedWallet);
+            setConvertCardModalVisible(false);
+          }
+        }
+      } else {
+        setSelectedDestAddress(null);
+      }
+    } catch (e) {
+      console.warn(e)
+    }
+  }
+
+  const handleSelectPressed = () => {
+    setSelectedSourceCoinObj(null);
+    setSelectedSourceWallet(null);
+    setSelectedSourceNetwork(null);
+    setSelectedSourceCurrency(null);
+    setConvertCardModalMode(CONVERT_CARD_MODAL_MODES.SEND);
+    setConvertCardModalVisible(true);
+  }
+
   useEffect(() => {
     setTotalBalances(getTotalBalances());
   }, [allSubWallets, activeCoinsForUser, balances, displayCurrency, rates]);
+
+  useEffect(() => {
+    if (selectedSourceCoinObj &&
+      selectedSourceWallet &&
+      balances[selectedSourceCoinObj.id] &&
+      balances[selectedSourceCoinObj.id][selectedSourceWallet.id]) {
+      setSourceBalance(getSourceBalance())
+    }
+  }, [selectedSourceCoinObj, selectedSourceWallet, balances])
 
   useEffect(() => {
     setSourceCurrencyMap(getSourceCurrencyMap());
@@ -283,6 +380,21 @@ const Convert = (props) => {
   useEffect(() => {
     setSourceNetworkOptionsList(getSourceNetworkOptionsList());
   }, [selectedSourceCurrency, totalBalances]);
+
+  useEffect(() => {
+    if (selectedSourceCurrency && selectedSourceNetwork) {
+      const sourceCoinObj = selectedSourceCurrency.find(x => {
+        const networkProtocol = x.proto === 'erc20' ? 'eth' : x.proto;
+        return networkProtocol === selectedSourceNetwork.proto
+      });
+
+      setSelectedSourceCoinObj(sourceCoinObj);
+    } else setSelectedSourceCoinObj(null);
+  }, [selectedSourceCurrency, selectedSourceNetwork]);
+
+  useEffect(() => {
+    setSourceWalletOptionsList(getSourceWalletOptionsList());
+  }, [selectedSourceCoinObj, totalBalances]);
 
   return (
     <ScrollView
@@ -299,21 +411,38 @@ const Convert = (props) => {
         totalBalances={totalBalances}
         currencies={convertCardModalMode === CONVERT_CARD_MODAL_MODES.SEND ? sourceCurrencyOptionsList : destCurrencyOptionsList}
         networks={convertCardModalMode === CONVERT_CARD_MODAL_MODES.SEND ? sourceNetworkOptionsList : destNetworkOptionsList}
+        addresses={convertCardModalMode === CONVERT_CARD_MODAL_MODES.SEND ? sourceWalletOptionsList : destAddressOptionsList}
         onSelectCurrency={(currencyId) => handleCurrencySelection(currencyId)}
+        onSelectNetwork={(networkId) => handleNetworkSelection(networkId)}
+        onSelectAddress={(addressKey) => handleAddressSelection(addressKey)}
         setVisible={setConvertCardModalVisible}
       />
       <View
         style={{
           width: '90%',
-          flexDirection: 'row',
+          flexDirection: 'column',
           justifyContent: 'space-evenly',
         }}>
         <ConvertCard
-          onSelectPressed={() => {
-            setSelectedSourceCurrency(null);
-            setConvertCardModalMode(CONVERT_CARD_MODAL_MODES.SEND);
-            setConvertCardModalVisible(true);
-          }}
+          onSelectPressed={handleSelectPressed}
+          coinObj={selectedSourceCoinObj} 
+          networkObj={selectedSourceNetwork}
+          address={selectedSourceWallet ? selectedSourceWallet.name : null}
+          amount={sendAmount}
+          setAmount={setSendAmount}
+          balance={sourceBalance}
+          onMaxPressed={() => setSendAmount(sourceBalance ? sourceBalance.toString() : 0)}
+        />
+        <ConvertCard
+          onSelectPressed={handleSelectPressed}
+          selectDisabled={selectedSourceCoinObj == null || selectedSourceNetwork == null || selectedSourceWallet == null}
+          //coinObj={selectedSourceCoinObj} 
+          //networkObj={selectedSourceNetwork}
+          //address={selectedSourceWallet ? selectedSourceWallet.name : null}
+          //amount={sendAmount}
+          //setAmount={setSendAmount}
+          //balance={sourceBalance}
+          //onMaxPressed={() => setSendAmount(sourceBalance ? sourceBalance.toString() : 0)}
         />
       </View>
       <View

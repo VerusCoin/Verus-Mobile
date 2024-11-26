@@ -22,11 +22,13 @@ const ConvertCardModal = ({
   visible, 
   setVisible, 
   totalBalances, 
-  mode, 
-  currencies, 
-  onSelectCurrency,
+  mode,
   networks,
-  onSelectNetwork
+  currencies,
+  addresses,
+  onSelectNetwork,
+  onSelectAddress,
+  onSelectCurrency,
 }) => {
   const [loading, setLoading] = useState(false);
   const [preventExit, setPreventExit] = useState(false);
@@ -141,8 +143,28 @@ const ConvertCardModal = ({
                           {...tabProps} 
                           items={networks}
                           setModalTitle={setModalTitle}
-                          onSelect={onSelectCurrency}
-                          nextScreen="SelectNetwork"
+                          onSelect={onSelectNetwork}
+                          nextScreen="SelectAddress"
+                        />
+                      )}
+                    </TopTabs.Screen>
+                    <TopTabs.Screen
+                      name="SelectAddress"
+                      options={{
+                        tabBarLabel: 'Source',
+                      }}
+                      listeners={{
+                        tabPress: e => {
+                          e.preventDefault();
+                        },
+                      }}
+                    >
+                      {tabProps => (
+                        <ConvertCardSelectFromList 
+                          {...tabProps} 
+                          items={addresses}
+                          setModalTitle={setModalTitle}
+                          onSelect={onSelectAddress}
                         />
                       )}
                     </TopTabs.Screen>
