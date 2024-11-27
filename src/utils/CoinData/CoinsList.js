@@ -80,7 +80,8 @@ export const coinsList = {
     decimals: DEFAULT_DECIMALS,
     seconds_per_block: 60,
     default_app: 'wallet',
-    apps: VERUS_APPS
+    apps: VERUS_APPS,
+    mapped_to: "0xBc2738BA63882891094C99E59a02141Ca1A1C36a"
   },
   VRSCTEST: {
     testnet: true,

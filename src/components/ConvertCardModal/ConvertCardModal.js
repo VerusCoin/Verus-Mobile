@@ -29,8 +29,8 @@ const ConvertCardModal = ({
   onSelectNetwork,
   onSelectAddress,
   onSelectCurrency,
+  loading
 }) => {
-  const [loading, setLoading] = useState(false);
   const [preventExit, setPreventExit] = useState(false);
   const [modalHeight, setModalHeight] = useState(600); // Adjust as needed
 
@@ -68,111 +68,113 @@ const ConvertCardModal = ({
             backgroundColor: "white",
           }}
         >
-          <SafeAreaView style={{ flex: 1 }}>
-            <Root.Navigator
-              screenOptions={{
-                header: () => (
-                  <View style={{ 
-                    flexDirection: 'row', 
-                    alignItems: "center", 
-                    justifyContent: "space-between", 
-                    backgroundColor: Colors.secondaryColor 
-                  }}>
-                    <IconButton icon="close" size={16} iconColor={Colors.verusDarkGray} />
-                    <Text style={{ marginBottom: 16, fontSize: 16, textAlign: "center" }}>
-                      {modalTitle}
-                    </Text> 
-                  </View>
-                ),
-                headerStyle: {
-                  height: 52,
-                },
-              }}
-            >
-              <Root.Screen name="ModalInner">
-                {() => (
-                  <TopTabs.Navigator
-                    initialRouteName="SelectCurrency"
-                    backBehavior="none"
-                    tabBarPosition="bottom"
-                    screenOptions={{
-                      swipeEnabled: false,
-                      tabBarPressColor: "transparent",
-                      tabBarPressOpacity: 1,
-                      tabBarLabelStyle: {
-                        fontSize: 12,
-                      },
-                      lazy: true,
-                      lazyPlaceholder: () => <AnimatedActivityIndicatorBox />,
-                    }}
-                  >
-                    <TopTabs.Screen
-                      name="SelectCurrency"
-                      options={{
-                        tabBarLabel: 'Currency',
-                      }}
-                      listeners={{
-                        tabPress: e => {
-                          e.preventDefault();
+          {loading ? <AnimatedActivityIndicatorBox /> : 
+            <SafeAreaView style={{ flex: 1 }}>
+              <Root.Navigator
+                screenOptions={{
+                  header: () => (
+                    <View style={{ 
+                      flexDirection: 'row', 
+                      alignItems: "center", 
+                      justifyContent: "space-between", 
+                      backgroundColor: Colors.secondaryColor 
+                    }}>
+                      <IconButton icon="close" size={16} iconColor={Colors.verusDarkGray} />
+                      <Text style={{ marginBottom: 16, fontSize: 16, textAlign: "center" }}>
+                        {modalTitle}
+                      </Text> 
+                    </View>
+                  ),
+                  headerStyle: {
+                    height: 52,
+                  },
+                }}
+              >
+                <Root.Screen name="ModalInner">
+                  {() => (
+                    <TopTabs.Navigator
+                      initialRouteName="SelectCurrency"
+                      backBehavior="none"
+                      tabBarPosition="bottom"
+                      screenOptions={{
+                        swipeEnabled: false,
+                        tabBarPressColor: "transparent",
+                        tabBarPressOpacity: 1,
+                        tabBarLabelStyle: {
+                          fontSize: 12,
                         },
+                        lazy: true,
+                        lazyPlaceholder: () => <AnimatedActivityIndicatorBox />,
                       }}
                     >
-                      {tabProps => (
-                        <ConvertCardSelectFromList 
-                          {...tabProps} 
-                          items={currencies}
-                          setModalTitle={setModalTitle}
-                          onSelect={onSelectCurrency}
-                          nextScreen="SelectNetwork"
-                        />
-                      )}
-                    </TopTabs.Screen>
-                    <TopTabs.Screen
-                      name="SelectNetwork"
-                      options={{
-                        tabBarLabel: 'Network',
-                      }}
-                      listeners={{
-                        tabPress: e => {
-                          e.preventDefault();
-                        },
-                      }}
-                    >
-                      {tabProps => (
-                        <ConvertCardSelectFromList 
-                          {...tabProps} 
-                          items={networks}
-                          setModalTitle={setModalTitle}
-                          onSelect={onSelectNetwork}
-                          nextScreen="SelectAddress"
-                        />
-                      )}
-                    </TopTabs.Screen>
-                    <TopTabs.Screen
-                      name="SelectAddress"
-                      options={{
-                        tabBarLabel: 'Source',
-                      }}
-                      listeners={{
-                        tabPress: e => {
-                          e.preventDefault();
-                        },
-                      }}
-                    >
-                      {tabProps => (
-                        <ConvertCardSelectFromList 
-                          {...tabProps} 
-                          items={addresses}
-                          setModalTitle={setModalTitle}
-                          onSelect={onSelectAddress}
-                        />
-                      )}
-                    </TopTabs.Screen>
-                  </TopTabs.Navigator>
-                )}
-              </Root.Screen>
-            </Root.Navigator>
-          </SafeAreaView>
+                      <TopTabs.Screen
+                        name="SelectCurrency"
+                        options={{
+                          tabBarLabel: 'Currency',
+                        }}
+                        listeners={{
+                          tabPress: e => {
+                            e.preventDefault();
+                          },
+                        }}
+                      >
+                        {tabProps => (
+                          <ConvertCardSelectFromList 
+                            {...tabProps} 
+                            items={currencies}
+                            setModalTitle={setModalTitle}
+                            onSelect={onSelectCurrency}
+                            nextScreen="SelectNetwork"
+                          />
+                        )}
+                      </TopTabs.Screen>
+                      <TopTabs.Screen
+                        name="SelectNetwork"
+                        options={{
+                          tabBarLabel: 'Network',
+                        }}
+                        listeners={{
+                          tabPress: e => {
+                            e.preventDefault();
+                          },
+                        }}
+                      >
+                        {tabProps => (
+                          <ConvertCardSelectFromList 
+                            {...tabProps} 
+                            items={networks}
+                            setModalTitle={setModalTitle}
+                            onSelect={onSelectNetwork}
+                            nextScreen="SelectAddress"
+                          />
+                        )}
+                      </TopTabs.Screen>
+                      <TopTabs.Screen
+                        name="SelectAddress"
+                        options={{
+                          tabBarLabel: 'Source',
+                        }}
+                        listeners={{
+                          tabPress: e => {
+                            e.preventDefault();
+                          },
+                        }}
+                      >
+                        {tabProps => (
+                          <ConvertCardSelectFromList 
+                            {...tabProps} 
+                            items={addresses}
+                            setModalTitle={setModalTitle}
+                            onSelect={onSelectAddress}
+                          />
+                        )}
+                      </TopTabs.Screen>
+                    </TopTabs.Navigator>
+                  )}
+                </Root.Screen>
+              </Root.Navigator>
+            </SafeAreaView>
+          }
         </SemiModal>
       </NavigationContainer>
     </Portal>
