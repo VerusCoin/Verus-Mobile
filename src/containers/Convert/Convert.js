@@ -19,6 +19,7 @@ import { closeLoadingModal, openLoadingModal } from "../../actions/actionDispatc
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import { getConversionPaths } from "../../utils/api/routers/getConversionPaths";
 import { VETH } from "../../utils/constants/web3Constants";
+import { coinsList } from "../../utils/CoinData/CoinsList";
 
 const Convert = (props) => {
   const displayCurrency = useSelector(state => state.settings.generalWalletSettings.displayCurrency || USD);
@@ -27,6 +28,7 @@ const Convert = (props) => {
   const activeCoinsForUser = useObjectSelector(state => state.coins.activeCoinsForUser);
   const rates = useObjectSelector(state => state.ledger.rates);
   const balances = useObjectSelector(state => extractLedgerData(state, 'balances', API_GET_BALANCES));
+  const activeAccount = useObjectSelector(state => state.authentication.activeAccount);
 
   const [loading, setLoading] = useState(false);
 
@@ -46,7 +48,7 @@ const Convert = (props) => {
   const [sourceNetworkOptionsList, setSourceNetworkOptionsList] = useState([]);
   const [destNetworkOptionsList, setDestNetworkOptionsList] = useState([]);
 
-  const [destViaOptionsList, setDestViaOptionsList] = useState([]);
+  const [destConverterOptionsList, setDestConverterOptionsList] = useState([]);
 
   const [sourceWalletOptionsList, setSourceWalletOptionsList] = useState([]);
   const [destAddressOptionsList, setDestAddressOptionsList] = useState([]);
@@ -58,8 +60,9 @@ const Convert = (props) => {
 
   const [selectedDestCurrencyId, setSelectedDestCurrencyId] = useState(null);
   const [selectedDestCoinObj, setSelectedDestCoinObj] = useState(null);
-  
-  const [selectedDestNetwork, setSelectedDestNetwork] = useState(null);
+  const [selectedDestNetworkId, setSelectedDestNetworkId] = useState(null);
+
+  const [selectedConverterId, setSelectedConverterId] = useState(null);
   const [selectedDestAddress, setSelectedDestAddress] = useState(null);
 
   const [sendAmount, setSendAmount] = useState(null);
@@ -374,7 +377,7 @@ const Convert = (props) => {
   };
 
   const getDestNetworkOptionsList = () => {
-    const networks = []
+    const networks = [];
 
     if (selectedSourceNetwork && selectedSourceCoinObj && selectedDestCurrencyId && conversionPaths[selectedDestCurrencyId]) {
       const conversionOptions = conversionPaths[selectedDestCurrencyId];
@@ -480,7 +483,7 @@ const Convert = (props) => {
           }
 
           logo = selectedSourceNetwork.id;
-          key = selectedSourceNetwork.id;
+          key = selectedSourceNetwork.currency_id;
 
           setRightText(selectedSourceNetwork.currencyid);
           pushNetwork();
@@ -489,6 +492,55 @@ const Convert = (props) => {
     }
 
     return networks;
+  };
+
+  const getDestConverterOptionsList = () => {
+    const converters = [];
+
+    function pushConverter(title, ticker, logo, key, price) {
+      converters.push({
+        title: title,
+        description: '',
+        logo,
+        key,
+        rightTitle: price,
+        rightDescription: `Est. ${ticker} per ${selectedSourceCoinObj.display_ticker}`
+      })
+    }
+
+    if (selectedSourceNetwork && selectedDestCurrencyId && conversionPaths[selectedDestCurrencyId] && selectedDestNetworkId) {
+      for (let i = 0; i < conversionPaths[selectedDestCurrencyId].length; i++) {
+        const path = conversionPaths[selectedDestCurrencyId][i];
+
+        if ((selectedDestNetworkId === selectedSourceNetwork.currency_id && path.exportto == null) || 
+            (path.exportto && (path.exportto.currencyid === selectedDestNetworkId))) {
+            let title;
+            let logo;
+            const ticker = selectedDestCoinObj ? 
+                selectedDestCoinObj.display_ticker : path.ethdest ? 
+                  path.mapto.destination.fullyqualifiedname : path.destination.fullyqualifiedname;
+    
+            if (path.via) {
+              try {
+                const converterObj = CoinDirectory.getBasicCoinObj(path.via.currencyid);
+    
+                title = `Via ${converterObj.display_name}`;
+                logo = converterObj.id;
+              } catch(e) {
+                title = `Via ${path.via.fullyqualifiedname}`;
+                logo = path.via.currencyid;
+              }
+            } else {
+              title = "Direct"
+              logo = path.ethdest ? path.destination.mapto.currencyid : path.destination.currencyid;
+            }
+            
+            pushConverter(title, ticker, logo, `${selectedDestCurrencyId}:${i}`, normalizeNum(path.price, 8)[3]);
+        }
+      }
+    }
+
+    return converters;
   };
 
   const getSourceWalletOptionsList = () => {
@@ -520,6 +572,93 @@ const Convert = (props) => {
     }
 
     return wallets;
+  };
+
+  const getDestAddressOptionsList = () => {
+    const addresses = [];
+
+    if (activeAccount && allSubWallets[coinsList.VRSC.id] && conversionPaths && selectedConverterId && selectedDestNetworkId) {
+      const [currencyKey, converterIndex] = selectedConverterId.split(':');
+
+      if (conversionPaths[currencyKey] && conversionPaths[currencyKey][converterIndex]) {
+        const converter = conversionPaths[currencyKey][converterIndex];
+        const currencyAlias = selectedDestCoinObj ? 
+          selectedDestCoinObj.display_ticker : converter.ethdest ? 
+            converter.destination.name : converter.destination.fullyqualifiedname;
+        const allowEthAddrs = converter.ethdest || (converter.exportto && converter.exportto.fullyqualifiedname === VETH);
+
+        if (!converter.ethdest) {
+          const vrscKeys = activeAccount.keys[coinsList.VRSC.id];
+
+          for (const channelId in vrscKeys) {
+            const [channelName, addr, network] = channelId.split('.');
+            let rightTitle = formatFiatValue(0);
+            let rightDescription = '0';
+    
+            if (channelName === VRPC) {
+              const walletId = `SUBWALLET_${channelId}`;
+
+              if (allSubWallets[coinsList.VRSC.id]) {
+                const wallet = allSubWallets[coinsList.VRSC.id].find(x => x.id === walletId);
+
+                if (wallet) {
+                  if (selectedDestCoinObj) {
+                    const rightText = getRightText(selectedDestCoinObj.id, [walletId]);
+                    rightTitle = rightText.title;
+                    rightDescription = rightText.description;
+                  }
+    
+                  addresses.push({
+                    title: wallet.name,
+                    description: `as ${currencyAlias}`,
+                    logo: selectedDestNetworkId,
+                    key: addr,
+                    rightTitle,
+                    rightDescription
+                  })
+                }
+              }
+            }
+          }
+        }
+
+        if (allowEthAddrs) {
+          for (const coinId in activeAccount.keys) {
+            if (activeAccount.keys[coinId] && (activeAccount.keys[coinId][ETH] || activeAccount.keys[coinId][ERC20])) {
+              const ethAddresses = activeAccount.keys[coinId][ETH] ? 
+                activeAccount.keys[coinId][ETH].addresses : activeAccount.keys[coinId][ERC20].addresses;
+              
+              if (ethAddresses && ethAddresses.length > 0) {
+                const addr = ethAddresses[0];
+                const addrTitle = addr.substring(0, 8) + '...' + addr.substring(addr.length - 8);
+
+                let rightTitle = formatFiatValue(0);
+                let rightDescription = "0";
+
+                if (selectedDestCoinObj) {
+                  const rightText = getRightText(selectedDestCoinObj.id, ['MAIN_WALLET']);
+                  rightTitle = rightText.title;
+                  rightDescription = rightText.description;
+                }
+
+                addresses.push({
+                  title: addrTitle,
+                  description: `as ${currencyAlias}`,
+                  logo: coinsList.ETH.id,
+                  key: addr,
+                  rightTitle,
+                  rightDescription
+                })
+
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return addresses;
   };
 
   const getSourceBalance = () => {
@@ -578,7 +717,7 @@ const Convert = (props) => {
 
         setSelectedSourceNetwork(networkObj);
       } else {
-        setSelectedDestNetwork(null);
+        setSelectedDestNetworkId(key);
       }
     } catch (e) {
       console.warn(e)
@@ -599,11 +738,16 @@ const Convert = (props) => {
           }
         }
       } else {
-        setSelectedDestAddress(null);
+        setSelectedDestAddress(key);
+        setConvertCardModalVisible(false);
       }
     } catch (e) {
       console.warn(e)
     }
+  }
+
+  const handleConverterSelection = (key) => {
+    setSelectedConverterId(key);
   }
 
   const handleSendSelectPressed = () => {
@@ -659,7 +803,15 @@ const Convert = (props) => {
 
   useEffect(() => {
     setDestNetworkOptionsList(getDestNetworkOptionsList());
-  }, [selectedDestCurrencyId, selectedSourceCoinObj, selectedDestCoinObj]);
+  }, [selectedDestCurrencyId, selectedSourceCoinObj, selectedDestCoinObj, conversionPaths]);
+
+  useEffect(() => {
+    setDestConverterOptionsList(getDestConverterOptionsList());
+  }, [selectedDestCurrencyId, selectedSourceCoinObj, selectedDestNetworkId, conversionPaths]);
+
+  useEffect(() => {
+    setDestAddressOptionsList(getDestAddressOptionsList());
+  }, [activeAccount, allSubWallets, conversionPaths, selectedConverterId, selectedDestCurrencyId, selectedSourceCoinObj, selectedDestNetworkId]);
 
   useEffect(() => {
     if (selectedSourceCurrency && selectedSourceNetwork) {
@@ -701,10 +853,12 @@ const Convert = (props) => {
         totalBalances={totalBalances}
         currencies={convertCardModalMode === CONVERT_CARD_MODAL_MODES.SEND ? sourceCurrencyOptionsList : destCurrencyOptionsList}
         networks={convertCardModalMode === CONVERT_CARD_MODAL_MODES.SEND ? sourceNetworkOptionsList : destNetworkOptionsList}
+        converters={convertCardModalMode === CONVERT_CARD_MODAL_MODES.SEND ? null : destConverterOptionsList}
         addresses={convertCardModalMode === CONVERT_CARD_MODAL_MODES.SEND ? sourceWalletOptionsList : destAddressOptionsList}
         onSelectCurrency={(currencyId) => handleCurrencySelection(currencyId)}
         onSelectNetwork={(networkId) => handleNetworkSelection(networkId)}
         onSelectAddress={(addressKey) => handleAddressSelection(addressKey)}
+        onSelectConverter={(converterId) => handleConverterSelection(converterId)}
         setVisible={setConvertCardModalVisible}
         loading={loading}
       />

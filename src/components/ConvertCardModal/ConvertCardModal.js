@@ -13,6 +13,7 @@ import { useSelector } from "react-redux";
 import { USD } from "../../utils/constants/currencies";
 import { extractLedgerData } from "../../utils/ledger/extractLedgerData";
 import { API_GET_BALANCES } from "../../utils/constants/intervalConstants";
+import { CONVERT_CARD_MODAL_MODES } from "../../utils/constants/convert";
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
@@ -24,11 +25,13 @@ const ConvertCardModal = ({
   totalBalances, 
   mode,
   networks,
+  converters,
   currencies,
   addresses,
   onSelectNetwork,
   onSelectAddress,
   onSelectCurrency,
+  onSelectConverter,
   loading
 }) => {
   const [preventExit, setPreventExit] = useState(false);
@@ -145,14 +148,37 @@ const ConvertCardModal = ({
                             items={networks}
                             setModalTitle={setModalTitle}
                             onSelect={onSelectNetwork}
-                            nextScreen="SelectAddress"
+                            nextScreen={mode === CONVERT_CARD_MODAL_MODES.SEND ? "SelectAddress" : "SelectConverter"}
                           />
                         )}
                       </TopTabs.Screen>
+                      {mode === CONVERT_CARD_MODAL_MODES.RECEIVE && (
+                        <TopTabs.Screen
+                          name="SelectConverter"
+                          options={{
+                            tabBarLabel: 'Via',
+                          }}
+                          listeners={{
+                            tabPress: e => {
+                              e.preventDefault();
+                            },
+                          }}
+                        >
+                          {tabProps => (
+                            <ConvertCardSelectFromList 
+                              {...tabProps} 
+                              items={converters}
+                              setModalTitle={setModalTitle}
+                              onSelect={onSelectConverter}
+                              nextScreen="SelectAddress"
+                            />
+                          )}
+                        </TopTabs.Screen>
+                      )}
                       <TopTabs.Screen
                         name="SelectAddress"
                         options={{
-                          tabBarLabel: 'Source',
+                          tabBarLabel: mode === CONVERT_CARD_MODAL_MODES.SEND ? 'Source' : 'Dest',
                         }}
                         listeners={{
                           tabPress: e => {
