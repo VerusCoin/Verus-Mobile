@@ -63,11 +63,11 @@ const VerusPay = (props) => {
   const [subWalletSelectorDisplayTicker, setSubWalletSelectorDisplayTicker] =
     useState(null);
 
-  const activeCoinsForUser = useSelector(
+  const activeCoinsForUser = useObjectSelector(
     (state) => state.coins.activeCoinsForUser,
   );
-  const activeCoin = useSelector((state) => state.coins.activeCoin);
-  const activeAccount = useSelector(
+  const activeCoin = useObjectSelector((state) => state.coins.activeCoin);
+  const activeAccount = useObjectSelector(
     (state) => state.authentication.activeAccount,
   );
   const allSubWallets = useObjectSelector(
@@ -83,6 +83,12 @@ const VerusPay = (props) => {
       refresh();
     };
   }, []);
+
+  useEffect(() => {
+    if (coinObj) {
+      handleUpdates();
+    }
+  }, [coinObj]);
 
   const refresh = useCallback(() => {
     activeCoinsForUser.forEach(async (coinObj) => {
@@ -276,9 +282,7 @@ const VerusPay = (props) => {
     setAmount(amount);
     setNote(note);
 
-    await handleUpdates();
-
-    openSendModal(subWallet);
+    openSendModal(subWallet, coinObj, address, amount);
   };
 
   const canExitWallet = (fromTicker, toTicker) => {
@@ -296,23 +300,23 @@ const VerusPay = (props) => {
     );
   };
 
-  const openSendModal = (subWallet) => {
+  const openSendModal = (subWallet, sendCoinObj = coinObj, sendAddress = address, sendAmount = amount) => {
     if (subWallet != null) {
       setSubWalletSelectorOpen(false);
       setSubWalletSelectorCoin(null);
-      openSubwalletSendModal(coinObj, subWallet, {
-        [SEND_MODAL_TO_ADDRESS_FIELD]: address,
-        [SEND_MODAL_AMOUNT_FIELD]: amount.toString(),
+      openSubwalletSendModal(sendCoinObj, subWallet, {
+        [SEND_MODAL_TO_ADDRESS_FIELD]: sendAddress,
+        [SEND_MODAL_AMOUNT_FIELD]: sendAmount ? sendAmount.toString() : '',
         [SEND_MODAL_MEMO_FIELD]: '',
       });
     } else {
-      setSubWalletSelectorCoin(coinObj.id);
-      setSubWalletSelectorDisplayTicker(coinObj.display_ticker);
+      setSubWalletSelectorCoin(sendCoinObj.id);
+      setSubWalletSelectorDisplayTicker(sendCoinObj.display_ticker);
 
-      const subWallets = allSubWallets[coinObj.id];
+      const subWallets = allSubWallets[sendCoinObj.id];
 
       if (subWallets.length === 1) {
-        openSendModal(subWallets[0]);
+        openSendModal(subWallets[0], sendCoinObj, sendAddress, sendAmount);
       } else {
         setSubWalletSelectorOpen(true);
       }
@@ -338,7 +342,7 @@ const VerusPay = (props) => {
 
   const addressOnly = (address) => {
     if (acceptAddressOnly) {
-      preConfirm(propCoinObj, activeAccount, address, '', '', false);
+      preConfirm(propCoinObj, activeAccount, address, null, null, false);
     } else {
       errorHandler(ONLY_ADDRESS);
     }
