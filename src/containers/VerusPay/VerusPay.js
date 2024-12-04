@@ -76,7 +76,7 @@ const VerusPay = (props) => {
   const activeAlert = useObjectSelector((state) => state.alert.active);
   const sendModal = useObjectSelector((state) => state.sendModal);
 
-  const { containerStyle, acceptAddressOnly, channel, coinObj: propCoinObj, button, maskProps } = props;
+  const { containerStyle, acceptAddressOnly, channel, coinObj: propCoinObj, button, maskProps, cameraDisabled } = props;
 
   useEffect(() => {
     return () => {
@@ -390,6 +390,7 @@ const VerusPay = (props) => {
                 : 'Scan a QR code'
             }
             onScan={(codes) => onSuccess(codes)}
+            cameraDisabled={cameraDisabled}
             button={button}
             maskProps={maskProps}
           />
