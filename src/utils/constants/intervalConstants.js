@@ -64,6 +64,7 @@ export const API_GET_SERVICE_RATES = 'get_rates'
 // Interval restriction labels
 export const IS_VERUS = "is_verus"
 export const IS_PBAAS = "is_pbaas"
+export const IS_CONVERTABLE_WITH_VRSC_ETH_BRIDGE = 'is_convertable_with_vrsc_eth_bridge'
 export const IS_ZCASH = "is_zcash"
 export const IS_PBAAS_ROOT = "is_pbaas_root"
 export const IS_FIAT = 'is_fiat'

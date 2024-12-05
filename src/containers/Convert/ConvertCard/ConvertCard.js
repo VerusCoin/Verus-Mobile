@@ -4,6 +4,7 @@ import Styles from "../../../styles";
 import { Button, Card, Text, TextInput } from "react-native-paper";
 import Colors from "../../../globals/colors";
 import { RenderCircleCoinLogo, RenderPlainCoinLogo } from "../../../utils/CoinData/Graphics";
+import { TouchableOpacity } from "react-native";
 
 const ConvertCard = ({ 
   coinObj, 
@@ -23,6 +24,12 @@ const ConvertCard = ({
       setCardActive(true);
     } else setCardActive(false);
   }, [coinObj, networkObj, address])
+
+  const handleSelectPressed = () => {
+    setCardActive(false);
+
+    if (onSelectPressed) onSelectPressed();
+  }
 
   return (
     <Card mode="contained" style={{
@@ -59,6 +66,7 @@ const ConvertCard = ({
             onChangeText={x => setAmount(x)}
             mode="outlined"
             keyboardType="numeric"
+            disabled={!setAmount}
           />
           {!cardActive ? 
             <Button
@@ -70,20 +78,24 @@ const ConvertCard = ({
                 alignItems: "center",
                 justifyContent: "center"
               }}
-              onPress={onSelectPressed}
+              onPress={handleSelectPressed}
               disabled={selectDisabled}
             >
               {"Select"}
             </Button> 
             : 
-            <View style={{
-              backgroundColor: Colors.ultraUltraLightGrey,
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              padding: 8,
-              borderRadius: 20
-            }}>
+            <TouchableOpacity 
+              style={{
+                backgroundColor: Colors.ultraUltraLightGrey,
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                padding: 8,
+                borderRadius: 20
+              }}
+              onPress={handleSelectPressed}
+              disabled={selectDisabled}
+            >
               {RenderCircleCoinLogo(coinObj.id)}
               <View style={{
                 display: "flex",
@@ -104,7 +116,7 @@ const ConvertCard = ({
                   {coinObj.display_name}
                 </Text>
               </View>
-            </View>
+            </TouchableOpacity>
           }
         </View>
         <View style={{
@@ -117,7 +129,7 @@ const ConvertCard = ({
             fontWeight: "600",
             color: Colors.quaternaryColor
           }}>
-            {!cardActive ? '' : `${balance == null ? balance : '-'} ${coinObj.display_ticker}`}
+            {!cardActive ? '' : `${balance != null ? balance : '-'} ${coinObj.display_ticker}`}
           </Text>
           <Button
             mode="text"
