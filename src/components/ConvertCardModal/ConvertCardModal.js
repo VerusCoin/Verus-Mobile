@@ -8,12 +8,9 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import AnimatedActivityIndicatorBox from "../AnimatedActivityIndicatorBox";
 
-import ConvertCardSelectFromList from "./ConvertCardModalTabs/ConvertCardSelectFromList";
 import { useSelector } from "react-redux";
-import { USD } from "../../utils/constants/currencies";
-import { extractLedgerData } from "../../utils/ledger/extractLedgerData";
-import { API_GET_BALANCES } from "../../utils/constants/intervalConstants";
 import { CONVERT_CARD_MODAL_MODES } from "../../utils/constants/convert";
+import SearchableList from "../SearchableList";
 
 const TopTabs = createMaterialTopTabNavigator();
 const Root = createStackNavigator();
@@ -122,7 +119,7 @@ const ConvertCardModal = ({
                         }}
                       >
                         {tabProps => (
-                          <ConvertCardSelectFromList 
+                          <SearchableList 
                             {...tabProps} 
                             items={currencies}
                             setModalTitle={setModalTitle}
@@ -143,7 +140,7 @@ const ConvertCardModal = ({
                         }}
                       >
                         {tabProps => (
-                          <ConvertCardSelectFromList 
+                          <SearchableList 
                             {...tabProps} 
                             items={networks}
                             setModalTitle={setModalTitle}
@@ -165,7 +162,7 @@ const ConvertCardModal = ({
                           }}
                         >
                           {tabProps => (
-                            <ConvertCardSelectFromList 
+                            <SearchableList 
                               {...tabProps} 
                               items={converters}
                               setModalTitle={setModalTitle}
@@ -187,7 +184,7 @@ const ConvertCardModal = ({
                         }}
                       >
                         {tabProps => (
-                          <ConvertCardSelectFromList 
+                          <SearchableList 
                             {...tabProps} 
                             items={addresses}
                             setModalTitle={setModalTitle}

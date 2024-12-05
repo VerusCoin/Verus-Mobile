@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { View, TextInput, FlatList } from 'react-native';
 import { List, Text } from 'react-native-paper';
-import { RenderCircleCoinLogo } from '../../../utils/CoinData/Graphics';
-import Colors from '../../../globals/colors';
+import { RenderCircleCoinLogo } from '../utils/CoinData/Graphics';
+import Colors from '../globals/colors';
 import { useNavigation } from '@react-navigation/native';
 
-const ConvertCardSelectFromList = (props) => {
+const SearchableList = (props) => {
   const [searchQuery, setSearchQuery] = useState('');
   const items = props.items ? props.items : [];
 
@@ -95,7 +95,7 @@ const ConvertCardSelectFromList = (props) => {
       />
       <FlatList
         data={filteredData}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item.key}
         renderItem={renderItem}
         ListEmptyComponent={
           <View style={{
@@ -112,4 +112,4 @@ const ConvertCardSelectFromList = (props) => {
   );
 };
 
-export default ConvertCardSelectFromList;
+export default SearchableList;
