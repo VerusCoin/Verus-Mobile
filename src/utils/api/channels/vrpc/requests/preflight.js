@@ -15,7 +15,8 @@ import { unpackOutput } from "@bitgo/utxo-lib/dist/src/smart_transactions";
 import { coinsList } from "../../../../CoinData/CoinsList";
 import { getSendCurrencyTransaction } from "./getSendCurrencyTransaction";
 import { I_ADDRESS_VERSION, R_ADDRESS_VERSION } from "../../../../constants/constants";
-import { VETH } from "../../../../constants/web3Constants";
+import VrpcProvider from "../../../../vrpc/vrpcInterface"
+import { Alert } from "react-native";
 const { createUnfundedCurrencyTransfer, validateFundedCurrencyTransfer } = smarttxs
 
 //TODO: Calculate fee for each coin seperately
@@ -348,6 +349,23 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
 
     if (currencyDefs.has(exportto)) {
       const exportDefinition = currencyDefs.get(exportto);
+
+      // Check that destination ID has been exported.
+      if (address.isIAddr()) {
+        const iAddr = address.getAddressString();
+        const addrName = friendlyNames.has(iAddr) ? friendlyNames.get(iAddr) : iAddr;
+
+        if (VrpcProvider.isSystemIdActivated(exportto)) {
+          const destIdRes = await getIdentity(exportto, iAddr);
+
+          if (destIdRes.error) throw new Error("Unable to verify presence of " + addrName + "@ on destination network. It may need to be exported to the " + exportDefinition.fullyqualifiedname + " chain.");
+        } else {
+          Alert.alert(
+            'Warning',
+            `Cannot verify that destination VerusID exists on destination network. If you would like to continue, be aware that funds sent to ${addrName}@ on ${exportDefinition.fullyqualifiedname} may not be spendable if the VerusID is not yet exported. Adding ${exportDefinition.fullyqualifiedname} as a currency card to your wallet may allow Verus Mobile to automatically verify this and avoid this warning.`
+          )
+        }
+      }
 
       if (exportDefinition.gatewayconverterid) {
         bridgeid = currencyDefs.get(exportto).gatewayconverterid;
