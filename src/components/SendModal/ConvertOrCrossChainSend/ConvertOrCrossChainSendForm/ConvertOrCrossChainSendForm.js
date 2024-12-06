@@ -81,6 +81,13 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     [SEND_MODAL_TO_ADDRESS_FIELD]: "Recipient address"
   }
 
+  const CONVERSION_PATH_FIELDS = [
+    SEND_MODAL_EXPORTTO_FIELD, 
+    SEND_MODAL_VIA_FIELD, 
+    SEND_MODAL_CONVERTTO_FIELD, 
+    SEND_MODAL_MAPPING_FIELD
+  ];
+
   const [searchMode, setSearchMode] = useState(false);
   const [selectedField, setSelectedField] = useState("");
 
@@ -623,25 +630,27 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
       //   mapping: boolean;
       //   bounceback: boolean;
       // }>}
-      
-      const paths = conversionPaths
-        ? conversionPaths
-        : await getConversionPaths(
-            sendModal.coinObj,
-            sendModal.subWallet.api_channels[API_SEND],
-            {
-              src: sendModal.coinObj.currency_id,
-            },
-          );
 
       let flatPaths = []
+      
+      if (CONVERSION_PATH_FIELDS.includes(field)) {
+        const paths = conversionPaths
+          ? conversionPaths
+          : await getConversionPaths(
+              sendModal.coinObj,
+              sendModal.subWallet.api_channels[API_SEND],
+              {
+                src: sendModal.coinObj.currency_id,
+              },
+            );
 
-      for (const destinationid in paths) {
-        flatPaths = flatPaths.concat(paths[destinationid])
+        for (const destinationid in paths) {
+          flatPaths = flatPaths.concat(paths[destinationid])
+        }
+        
+        setConversionPaths(paths)
       }
       
-      setConversionPaths(paths)
-
       switch (field) {
         case SEND_MODAL_CONVERTTO_FIELD:
           newSuggestionsBase = await processConverttoSuggestionPaths(flatPaths, sendModal.coinObj);
