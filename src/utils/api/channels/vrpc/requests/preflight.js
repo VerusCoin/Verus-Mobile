@@ -30,7 +30,7 @@ export const preflight = async (coinObj, activeUser, address, amount, params, ch
       if (addr.endsWith("@")) {
         const identityRes = await getIdentity(systemId, addr);
 
-        if (identityRes.error) throw new Error("Failed to fetch " + addr);
+        if (identityRes.error) throw new Error(`Failed to get information about ${addr}. Try using the i-address of this VerusID.`);
 
         keyhash = identityRes.result.identity.identityaddress;
       } else keyhash = addr;
@@ -584,7 +584,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       const nativeFeeAmount = satsToCoins(nativeFeesPaid).toString();
 
       message = `Insufficient funds. Ensure you have at least ${
-        output.feecurrency === systemId
+        (output.feecurrency == null || output.feecurrency === systemId)
           ? nativeFeeAmount
             : satsToCoins(BigNumber(_feeamount)).toString()
             } ${feeCurrencyName} on the ${systemName} network to fund the fee for transaction.`;

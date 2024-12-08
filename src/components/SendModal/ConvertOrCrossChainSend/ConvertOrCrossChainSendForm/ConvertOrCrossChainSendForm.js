@@ -905,7 +905,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         if (addr.endsWith("@")) {
           const identityRes = await getIdentity(coinObj, activeAccount, channel, addr);
 
-          if (identityRes.error) throw new Error("Failed to fetch " + addr);
+          if (identityRes.error) throw new Error(`Failed to get information about ${addr}. Try using the i-address of this VerusID.`);
 
           keyhash = identityRes.result.identity.identityaddress;
         } else keyhash = addr;
