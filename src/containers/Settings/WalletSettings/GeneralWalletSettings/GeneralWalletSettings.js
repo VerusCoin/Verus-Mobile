@@ -51,6 +51,9 @@ const WalletSettings = props => {
   const [allowSettingVerusPaySlippage, setAllowSettingVerusPaySlippage] = useState(
     !!generalWalletSettings.allowSettingVerusPaySlippage
   );
+  const [enableSendCoinCameraToggle, setEnableSendCoinCameraToggle] = useState(
+    !!generalWalletSettings.enableSendCoinCameraToggle
+  );
 
   const [errors, setErrors] = useState({
     maxTxCount: false,
@@ -80,13 +83,14 @@ const WalletSettings = props => {
       setSettings({
         ...settings,
         homeCardDragDetection,
-        allowSettingVerusPaySlippage
+        allowSettingVerusPaySlippage,
+        enableSendCoinCameraToggle
       });
       setHasChanges(true);
     } else {
       isMounted.current = true;
     }
-  }, [homeCardDragDetection, allowSettingVerusPaySlippage]);
+  }, [homeCardDragDetection, allowSettingVerusPaySlippage, enableSendCoinCameraToggle]);
 
   const describeSlippage = () => {
     createAlert(
@@ -108,6 +112,10 @@ const WalletSettings = props => {
     setAllowSettingVerusPaySlippage(!allowSettingVerusPaySlippage);
   }
 
+  const toggleEnableSendCoinCameraToggle = () => {
+    setEnableSendCoinCameraToggle(!enableSendCoinCameraToggle);
+  }
+
   const saveSettings = async () => {
     setLoading(true);
     try {
@@ -118,6 +126,7 @@ const WalletSettings = props => {
           settings.defaultAccount === NO_DEFAULT ? null : settings.defaultAccount,
         homeCardDragDetection,
         allowSettingVerusPaySlippage,
+        enableSendCoinCameraToggle,
         ackedCurrencyDisclaimer: settings.ackedCurrencyDisclaimer,
         addressBlocklistDefinition:
           settings.addressBlocklistDefinition == null
@@ -320,6 +329,30 @@ const WalletSettings = props => {
                 <Switch
                   value={allowSettingVerusPaySlippage}
                   onValueChange={toggleAllowSettingVerusPaySlippage}
+                  color={Colors.primaryColor}
+                />
+              </View>
+            )}
+          />
+          <Divider />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={toggleEnableSendCoinCameraToggle}
+        >
+          <List.Item
+            title="Add toggle button for QR scanner"
+            description="Keep the QR scanner under the send tab off by default, and add a button to toggle it"
+            right={() => (
+              <View
+                style={{
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'flex-end',
+                }}
+              >
+                <Switch
+                  value={enableSendCoinCameraToggle}
+                  onValueChange={toggleEnableSendCoinCameraToggle}
                   color={Colors.primaryColor}
                 />
               </View>

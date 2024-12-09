@@ -41,6 +41,17 @@ const CONVERSION_PATH_FUNCTION_MAP = {
  * @param {Object} coinObj The coin object
  * @param {String} channel The channel to search on
  * @param {Object} params Any other parameters specific to the send channel's search function
+ * @returns {Promise<{[destinationid: string]: Array<{ 
+ * via?: import("verus-typescript-primitives").CurrencyDefinition; 
+ * destination: import("verus-typescript-primitives").CurrencyDefinition;
+ * exportto?: import("verus-typescript-primitives").CurrencyDefinition;
+ * price: number;
+ * viapriceinroot?: number;
+ * destpriceinvia?: number;
+ * gateway: boolean;
+ * mapping: boolean;
+ * bounceback: boolean;
+ * }>}>}
  */
 export const getConversionPaths = async (coinObj, channel, params) => {
   const channelId = channel.split('.')[0]

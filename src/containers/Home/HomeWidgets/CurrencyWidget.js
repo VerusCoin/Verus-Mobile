@@ -13,6 +13,7 @@ import {normalizeNum} from '../../../utils/normalizeNum';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../../globals/colors';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
+import { coinsList } from '../../../utils/CoinData/CoinsList';
 
 const CurrencyWidget = props => {
   const {currencyBalance, coinObj} = props;
@@ -124,7 +125,7 @@ const CurrencyWidget = props => {
               {allSubwallets[coinObj.id] ? allSubwallets[coinObj.id].length : 1}
             </Paragraph>
             <SubWalletsLogo />
-            {coinObj.mapped_to != null && (
+            {coinObj.mapped_to != null && coinObj.id !== coinsList.VRSC.id && (
               <MaterialCommunityIcons
                 name={'link'}
                 color={Colors.secondaryColor}
