@@ -4,7 +4,7 @@ import { Alert, View, TouchableWithoutFeedback, Keyboard, FlatList, Animated, To
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { TextInput, Button, Divider, Checkbox, List, Text, IconButton } from "react-native-paper";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
-import { API_SEND, DLIGHT_PRIVATE, ERC20, ETH } from "../../../../utils/constants/intervalConstants";
+import { API_SEND, DLIGHT_PRIVATE, ERC20, ETH, VRPC } from "../../../../utils/constants/intervalConstants";
 import {
   SEND_MODAL_ADVANCED_FORM,
   SEND_MODAL_AMOUNT_FIELD,
@@ -57,6 +57,7 @@ import { useObjectSelector } from "../../../../hooks/useObjectSelector";
 const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFormData, navigation }) => {
   const { height } = Dimensions.get('window');
   const sendModal = useObjectSelector(state => state.sendModal);
+  const allSubWallets = useObjectSelector(state => state.coinMenus.allSubWallets);
   const activeUser = useObjectSelector(state => state.authentication.activeAccount);
   const addresses = useObjectSelector(state => selectAddresses(state));
   const activeAccount = useObjectSelector(state => state.authentication.activeAccount);
@@ -76,8 +77,16 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     [SEND_MODAL_EXPORTTO_FIELD]: "Destination network",
     [SEND_MODAL_VIA_FIELD]: "Convert via",
     [SEND_MODAL_CONVERTTO_FIELD]: sendModal.data[SEND_MODAL_IS_PRECONVERT] ? "Preconvert to" : "Convert to",
-    [SEND_MODAL_MAPPING_FIELD]: "Receive as"
+    [SEND_MODAL_MAPPING_FIELD]: "Receive as",
+    [SEND_MODAL_TO_ADDRESS_FIELD]: "Recipient address"
   }
+
+  const CONVERSION_PATH_FIELDS = [
+    SEND_MODAL_EXPORTTO_FIELD, 
+    SEND_MODAL_VIA_FIELD, 
+    SEND_MODAL_CONVERTTO_FIELD, 
+    SEND_MODAL_MAPPING_FIELD
+  ];
 
   const [searchMode, setSearchMode] = useState(false);
   const [selectedField, setSelectedField] = useState("");
@@ -529,6 +538,80 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     }
   };
 
+  const processSelfSuggestionPaths = () => {
+    const addresses = [];
+    const seen = new Set();
+
+    if (activeAccount) {
+      if (allSubWallets[coinsList.VRSC.id]) {
+        const vrscKeys = activeAccount.keys[coinsList.VRSC.id];
+
+        for (const channelId in vrscKeys) {
+          const [channelName, addr, network] = channelId.split('.');
+  
+          if (channelName === VRPC && !seen.has(addr)) {
+            const walletId = `SUBWALLET_${channelId}`;
+  
+            if (allSubWallets[coinsList.VRSC.id]) {
+              const wallet = allSubWallets[coinsList.VRSC.id].find(x => x.id === walletId);
+  
+              if (wallet) {  
+                seen.add(addr);
+                addresses.push({
+                  title: wallet.name,
+                  logoid: coinsList.VRSC.id,
+                  key: addr,
+                  description: addr,
+                  values: {
+                    [SEND_MODAL_TO_ADDRESS_FIELD]: addr
+                  },
+                  right: "",
+                  keywords: [
+                    addr,
+                    wallet.name
+                  ],
+                })
+              }
+            }
+          }
+        }
+      }
+
+      for (const coinId in activeAccount.keys) {
+        if (activeAccount.keys[coinId] && (activeAccount.keys[coinId][ETH] || activeAccount.keys[coinId][ERC20])) {
+          const ethAddresses = activeAccount.keys[coinId][ETH] ? 
+            activeAccount.keys[coinId][ETH].addresses : activeAccount.keys[coinId][ERC20].addresses;
+          
+          if (ethAddresses && ethAddresses.length > 0) {
+            const addr = ethAddresses[0];
+            const addrTitle = addr.substring(0, 8) + '...' + addr.substring(addr.length - 8);
+
+            if (!seen.has(addr)) {
+              seen.add(addr);
+              addresses.push({
+                title: addrTitle,
+                logoid: coinsList.ETH.id,
+                key: addr,
+                description: addr,
+                values: {
+                  [SEND_MODAL_TO_ADDRESS_FIELD]: addr
+                },
+                right: "",
+                keywords: [
+                  addr
+                ]
+              })
+            }
+
+            break;
+          }
+        }
+      }
+    }
+
+    return addresses;
+  };
+
   const fetchSuggestionsBase = async (field) => {
     if (loadingSuggestions) return;
     let newSuggestionsBase = []
@@ -547,25 +630,27 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
       //   mapping: boolean;
       //   bounceback: boolean;
       // }>}
-      
-      const paths = conversionPaths
-        ? conversionPaths
-        : await getConversionPaths(
-            sendModal.coinObj,
-            sendModal.subWallet.api_channels[API_SEND],
-            {
-              src: sendModal.coinObj.currency_id,
-            },
-          );
 
       let flatPaths = []
+      
+      if (CONVERSION_PATH_FIELDS.includes(field)) {
+        const paths = conversionPaths
+          ? conversionPaths
+          : await getConversionPaths(
+              sendModal.coinObj,
+              sendModal.subWallet.api_channels[API_SEND],
+              {
+                src: sendModal.coinObj.currency_id,
+              },
+            );
 
-      for (const destinationid in paths) {
-        flatPaths = flatPaths.concat(paths[destinationid])
+        for (const destinationid in paths) {
+          flatPaths = flatPaths.concat(paths[destinationid])
+        }
+        
+        setConversionPaths(paths)
       }
       
-      setConversionPaths(paths)
-
       switch (field) {
         case SEND_MODAL_CONVERTTO_FIELD:
           newSuggestionsBase = await processConverttoSuggestionPaths(flatPaths, sendModal.coinObj);
@@ -581,6 +666,9 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
           break;
         case SEND_MODAL_MAPPING_FIELD:
           newSuggestionsBase = await processMappingSuggestionPaths(flatPaths, sendModal.coinObj);
+          setSuggestionBase(newSuggestionsBase);
+        case SEND_MODAL_TO_ADDRESS_FIELD:
+          newSuggestionsBase = processSelfSuggestionPaths();
           setSuggestionBase(newSuggestionsBase);
         default:
           setSuggestionBase(newSuggestionsBase);
@@ -817,7 +905,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         if (addr.endsWith("@")) {
           const identityRes = await getIdentity(coinObj, activeAccount, channel, addr);
 
-          if (identityRes.error) throw new Error("Failed to fetch " + addr);
+          if (identityRes.error) throw new Error(`Failed to get information about ${addr}. Try using the i-address of this VerusID.`);
 
           keyhash = identityRes.result.identity.identityaddress;
         } else keyhash = addr;
@@ -1018,7 +1106,8 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                     }
                     right={() =>
                       selectedField !== SEND_MODAL_EXPORTTO_FIELD &&
-                      selectedField !== SEND_MODAL_MAPPING_FIELD ? (
+                      selectedField !== SEND_MODAL_MAPPING_FIELD &&
+                      selectedField !== SEND_MODAL_TO_ADDRESS_FIELD ? (
                         <Text
                           style={{
                             ...Styles.listItemTableCell,
@@ -1101,7 +1190,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                 onRecipientAddressChange={text =>
                   updateSendFormData(SEND_MODAL_TO_ADDRESS_FIELD, text)
                 }
-                onSelfPress={() => setAddressSelf()}
+                onSelfPress={() => handleFieldFocus(SEND_MODAL_TO_ADDRESS_FIELD)}
                 amountValue={sendModal.data[SEND_MODAL_AMOUNT_FIELD]}
                 onAmountChange={text =>
                   updateSendFormData(SEND_MODAL_AMOUNT_FIELD, text)

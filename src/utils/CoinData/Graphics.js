@@ -3,6 +3,7 @@ import { Card } from "react-native-paper";
 import { View } from "react-native";
 import { getCoinLogo } from "./CoinData";
 import { CoinDirectory } from "./CoinDirectory";
+import { coinsList } from "./CoinsList";
 
 export const RenderSquareLogo = (LogoComponent, color, width = 40, height = 40) => {
   return (
@@ -47,10 +48,26 @@ export const RenderCircleLogo = (LogoComponent, color, width = 40, height = 40) 
   );
 };
 
-export const RenderSquareCoinLogo = (chainTicker, style = {}, width = 40, height = 40) => {
-  const coinObj = CoinDirectory.findCoinObj(chainTicker)
+export const getSimpleLogo = (chainTicker, theme = 'light') => {
+  let proto;
+  let color;
 
-  const Logo = getCoinLogo(chainTicker, coinObj.proto);
+  try {
+    const coinObj = CoinDirectory.findCoinObj(chainTicker)
+    color = coinObj.theme_color;
+    proto = coinObj.proto;
+  } catch(e) {
+    proto = 'vrsc';
+    color = coinsList.VRSC.theme_color;
+  }
+  
+  const Logo = getCoinLogo(chainTicker, proto, theme);
+
+  return { Logo: Logo, color };
+}
+
+export const RenderSquareCoinLogo = (chainTicker, style = {}, width = 40, height = 40) => {
+  const { Logo, color } = getSimpleLogo(chainTicker);
 
   return RenderSquareLogo(
     <Logo
@@ -61,16 +78,14 @@ export const RenderSquareCoinLogo = (chainTicker, style = {}, width = 40, height
         ...style
       }}
     />,
-    coinObj.theme_color,
+    color,
     width,
     height
   );
 };
 
 export const RenderCircleCoinLogo = (chainTicker, style = {}, width = 40, height = 40) => {
-  const coinObj = CoinDirectory.findCoinObj(chainTicker)
-
-  const Logo = getCoinLogo(chainTicker, coinObj.proto);
+  const { Logo, color } = getSimpleLogo(chainTicker);
 
   return RenderCircleLogo(
     <Logo
@@ -81,16 +96,14 @@ export const RenderCircleCoinLogo = (chainTicker, style = {}, width = 40, height
         ...style
       }}
     />,
-    coinObj.theme_color,
+    color,
     width,
     height
   );
 };
 
 export const RenderPlainCoinLogo = (chainTicker, style = {}, width = 40, height = 40) => {
-  const coinObj = CoinDirectory.findCoinObj(chainTicker)
-
-  const Logo = getCoinLogo(chainTicker, coinObj.proto, 'dark');
+  const { Logo } = getSimpleLogo(chainTicker, 'dark');
 
   return <Logo
     width={width}

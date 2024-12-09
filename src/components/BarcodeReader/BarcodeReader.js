@@ -108,7 +108,7 @@ const BarcodeReader = props => {
           }}
           device={device}
           codeScanner={codeScanner}
-          isActive={appStateVisible === 'active'}
+          isActive={appStateVisible === 'active' && !props.cameraDisabled}
           {...cameraProps} 
         />
         <View style={{ 
