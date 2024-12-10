@@ -38,6 +38,7 @@ import { GestureDetector, Gesture, Directions } from 'react-native-gesture-handl
 import { useSelector, useDispatch } from 'react-redux';
 import Styles from '../../styles';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
+import { coinsList } from '../../utils/CoinData/CoinsList';
 
 const DynamicHeader = ({ switchTab }) => {
   const dispatch = useDispatch();
@@ -144,7 +145,7 @@ const DynamicHeader = ({ switchTab }) => {
 
     let mappedCoin = null;
 
-    if (activeCoin.mapped_to != null) {
+    if (activeCoin.mapped_to != null && activeCoin.id !== coinsList.VRSC.id) {
       try {
         mappedCoin = CoinDirectory.getBasicCoinObj(activeCoin.mapped_to);
       } catch (e) {
