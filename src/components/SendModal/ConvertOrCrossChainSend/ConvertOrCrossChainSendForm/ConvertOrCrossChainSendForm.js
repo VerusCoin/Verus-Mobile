@@ -1208,6 +1208,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                 networkName={networkName}
                 estimatedResultSubtitle={
                   isConversion &&
+                  !isExport &&
                   sendModal.data[SEND_MODAL_PRICE_ESTIMATE] != null &&
                   processedAmount != null
                     ? `≈ ${Number(
