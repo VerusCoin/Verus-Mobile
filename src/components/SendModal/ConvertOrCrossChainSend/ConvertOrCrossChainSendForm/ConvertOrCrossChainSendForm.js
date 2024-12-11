@@ -667,9 +667,11 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         case SEND_MODAL_MAPPING_FIELD:
           newSuggestionsBase = await processMappingSuggestionPaths(flatPaths, sendModal.coinObj);
           setSuggestionBase(newSuggestionsBase);
+          break;
         case SEND_MODAL_TO_ADDRESS_FIELD:
           newSuggestionsBase = processSelfSuggestionPaths();
           setSuggestionBase(newSuggestionsBase);
+          break;
         default:
           setSuggestionBase(newSuggestionsBase);
           break;
