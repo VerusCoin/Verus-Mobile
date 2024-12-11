@@ -577,33 +577,35 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         }
       }
 
-      for (const coinId in activeAccount.keys) {
-        if (activeAccount.keys[coinId] && (activeAccount.keys[coinId][ETH] || activeAccount.keys[coinId][ERC20])) {
-          const ethAddresses = activeAccount.keys[coinId][ETH] ? 
-            activeAccount.keys[coinId][ETH].addresses : activeAccount.keys[coinId][ERC20].addresses;
-          
-          if (ethAddresses && ethAddresses.length > 0) {
-            const addr = ethAddresses[0];
-            const addrTitle = addr.substring(0, 8) + '...' + addr.substring(addr.length - 8);
-
-            if (!seen.has(addr)) {
-              seen.add(addr);
-              addresses.push({
-                title: addrTitle,
-                logoid: coinsList.ETH.id,
-                key: addr,
-                description: addr,
-                values: {
-                  [SEND_MODAL_TO_ADDRESS_FIELD]: addr
-                },
-                right: "",
-                keywords: [
-                  addr
-                ]
-              })
+      if (!sendModal.data[SEND_MODAL_IS_PRECONVERT]) {
+        for (const coinId in activeAccount.keys) {
+          if (activeAccount.keys[coinId] && (activeAccount.keys[coinId][ETH] || activeAccount.keys[coinId][ERC20])) {
+            const ethAddresses = activeAccount.keys[coinId][ETH] ? 
+              activeAccount.keys[coinId][ETH].addresses : activeAccount.keys[coinId][ERC20].addresses;
+            
+            if (ethAddresses && ethAddresses.length > 0) {
+              const addr = ethAddresses[0];
+              const addrTitle = addr.substring(0, 8) + '...' + addr.substring(addr.length - 8);
+  
+              if (!seen.has(addr)) {
+                seen.add(addr);
+                addresses.push({
+                  title: addrTitle,
+                  logoid: coinsList.ETH.id,
+                  key: addr,
+                  description: addr,
+                  values: {
+                    [SEND_MODAL_TO_ADDRESS_FIELD]: addr
+                  },
+                  right: "",
+                  keywords: [
+                    addr
+                  ]
+                })
+              }
+  
+              break;
             }
-
-            break;
           }
         }
       }
@@ -1039,13 +1041,17 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     fillAmount(BigNumber(spendableBalance));
   };
 
-  const setAddressSelf = () => {
-    const addr = addresses.results[0]
-
-    updateSendFormData(
-      SEND_MODAL_TO_ADDRESS_FIELD,
-      addr
-    );
+  const handleSelfPressed = () => {
+    if (allSubWallets[coinsList.VRSC.id]) {
+      handleFieldFocus(SEND_MODAL_TO_ADDRESS_FIELD);
+    } else {
+      const addr = addresses.results[0]
+    
+      updateSendFormData(
+        SEND_MODAL_TO_ADDRESS_FIELD,
+        addr
+      );
+    }
   };
 
   return localBalances == null ? (<AnimatedActivityIndicatorBox />) : (
@@ -1192,7 +1198,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                 onRecipientAddressChange={text =>
                   updateSendFormData(SEND_MODAL_TO_ADDRESS_FIELD, text)
                 }
-                onSelfPress={() => handleFieldFocus(SEND_MODAL_TO_ADDRESS_FIELD)}
+                onSelfPress={() => handleSelfPressed()}
                 amountValue={sendModal.data[SEND_MODAL_AMOUNT_FIELD]}
                 onAmountChange={text =>
                   updateSendFormData(SEND_MODAL_AMOUNT_FIELD, text)
