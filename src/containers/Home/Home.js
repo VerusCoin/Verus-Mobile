@@ -221,7 +221,7 @@ const Home = () => {
     const totalBalances = getTotalBalances();
     setTotalFiatBalance(totalBalances.fiat);
     setTotalCryptoBalances(totalBalances.crypto);
-  }, [balances]);
+  }, [balances, displayCurrency, activeCoinsForUser, allSubWallets]);
 
   useEffect(() => {
     getWidgets();
