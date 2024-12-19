@@ -2,6 +2,10 @@
  * @format
  * @flow strict-local
  */
+if (__DEV__) {
+  require("./ReactotronConfig");
+}
+
 import React from 'react';
 import VerusMobile from './src/VerusMobile';
 import store from './src/store';
