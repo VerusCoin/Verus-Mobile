@@ -5,8 +5,8 @@ import com.android.build.OutputFile
 
 def versionMajor = 1
 def versionMinor = 0
-def versionRevision = 18
-def versionBuild = 1
+def versionRevision = 25
+def versionBuild = 0
 
 def keystorePropertiesFile = rootProject.file("keystore.properties");
 
@@ -105,7 +105,7 @@ android {
         applicationId "com.verusmobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        
+
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionRevision * 100 + versionBuild
         if (versionBuild > 0) {
             versionName "${versionMajor}.${versionMinor}.${versionRevision}-${versionBuild}"

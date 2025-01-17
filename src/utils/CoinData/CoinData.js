@@ -104,10 +104,10 @@ const identityApp = {
 export const explorers = {
   KMD: 'https://kmdexplorer.io',
   OOT: 'https://explorer.utrum.io',
-  VRSC: 'https://insight.verus.io/',
+  VRSC: 'https://insight.verus.io',
   VRSCTEST: 'https://testex.verus.io',
   ETH: 'https://etherscan.io',
-  GETH: 'https://goerli.etherscan.io/',
+  GETH: 'https://goerli.etherscan.io',
   RFOX: 'https://etherscan.io',
   BAT: 'https://etherscan.io',
   DAI: 'https://etherscan.io',
@@ -123,7 +123,7 @@ export const explorers = {
   ZRX: 'https://etherscan.io',
   TST: 'https://ropsten.etherscan.io',
   BTC: 'https://www.blockchain.com/btc',
-  DOGE: 'https://dogeblocks.com/'
+  DOGE: 'https://dogeblocks.com'
 }
 
 export const CoinLogos = {
