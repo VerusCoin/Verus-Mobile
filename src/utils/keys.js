@@ -22,7 +22,7 @@ const deriveLightwalletdKeyPair = async (seed) => {
   return {
     pubKey: null,
     privKey: spendingKey,
-    viewingKey: await VerusLightClient.deriveViewingKey(spendingKey),
+    viewingKey: await VerusLightClient.deriveViewingKey(seed),
     addresses: [],
   };
 };
@@ -107,11 +107,14 @@ export const deriveKeyPairV1 = async (seed, coinObj, channel) => {
 export const deriveKeypairV0 = async (seed, coinObj, channel) => {
   if (channel === DLIGHT_PRIVATE) {
     const spendingKey = await parseDlightSeed(seed)
+    const viewKey = await VerusLightClient.deriveViewingKey(seed);
+    console.log(viewingKey);
 
     return {
       pubKey: null,
       privKey: spendingKey,
-      viewingKey: await VerusLightClient.deriveViewingKey(spendingKey),
+      viewingKey: viewKey,
+//      viewingKey: await VerusLightClient.deriveViewingKey(spendingKey),
       addresses: [],
     };
   } else {
@@ -164,7 +167,8 @@ export const parseDlightSeed = async (seed) => {
   if (isDlightSpendingKey(seed)) return seed
   
   try {
-    const keys = await VerusLightClient.deriveSpendingKeys(seed, true, 1)
+    const keys = await VerusLightClient.deriveShieldedSpendingKey(seed)
+    console.log(keys);
     return keys[0]
   } catch(e) { throw e }
 }
@@ -178,3 +182,4 @@ export const isSeedPhrase = (seed, minWordLength = 12) => {
     seed.split(/\s+/g).length >= minWordLength && validateMnemonic(seed)
   );
 }
+
