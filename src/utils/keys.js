@@ -6,6 +6,7 @@ import {
 } from './agama-wallet-lib/keys';
 import { ETH, ERC20, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from './constants/intervalConstants';
 import ethers from 'ethers';
+require("../../ReactotronConfig");
 
 //import VerusLightClient from 'react-native-verus-light-client'
 import VerusLightClient from 'react-native-verus'
@@ -108,7 +109,7 @@ export const deriveKeypairV0 = async (seed, coinObj, channel) => {
   if (channel === DLIGHT_PRIVATE) {
     const spendingKey = await parseDlightSeed(seed)
     const viewKey = await VerusLightClient.deriveViewingKey(seed);
-    console.log(viewingKey);
+    console.log("viewingKey" + viewingKey.toString);
 
     return {
       pubKey: null,
