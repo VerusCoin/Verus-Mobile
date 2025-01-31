@@ -58,22 +58,22 @@ export default function VerusIdObjectData(props) {
     }
 
     if (verusId.identity.revocationauthority !== verusId.identity.identityaddress) {
-      let tmpRecAddr = `${tryDisplayFriendlyName(verusId.identity.recoveryauthority)} `;
-      if (tmpRecAddr.length > 30) { 
-        tmpRecAddr = "[recovery ID listed below]"
-      } 
-      tmpwarningData[1].warning = true;
-      tmpwarningData[1].data = (<Text style={{ color: 'red'}}>{`Set to another VerusID, `}<Text style={{color: Colors.primaryColor}}>{tmpRecAddr}</Text> {`can revoke access to funds and signing`}</Text>)
-      tmpwarningData[1].status = triangle;
-    }
-
-    if (verusId.identity.recoveryauthority !== verusId.identity.identityaddress) {
       let tmpRevAddr = `${tryDisplayFriendlyName(verusId.identity.revocationauthority)} `;
       if (tmpRevAddr.length > 30) { 
         tmpRevAddr = "[revocation ID listed below]"
       } 
+      tmpwarningData[1].warning = true;
+      tmpwarningData[1].data = (<Text style={{ color: 'red'}}>{`Set to another VerusID, `}<Text style={{color: Colors.primaryColor}}>{tmpRevAddr}</Text> {`can revoke access to funds and signing`}</Text>)
+      tmpwarningData[1].status = triangle;
+    }
+
+    if (verusId.identity.recoveryauthority !== verusId.identity.identityaddress) {
+      let tmpRecAddr = `${tryDisplayFriendlyName(verusId.identity.recoveryauthority)} `;
+      if (tmpRecAddr.length > 30) { 
+        tmpRecAddr = "[recovery ID listed below]"
+      } 
       tmpwarningData[2].warning = true;
-      tmpwarningData[2].data = (<Text style={{ color: 'red'}}>{`Set to another VerusID, `}<Text style={{color: Colors.primaryColor}}>{tmpRevAddr}</Text> {`can change ID ownership`}</Text>)
+      tmpwarningData[2].data = (<Text style={{ color: 'red'}}>{`Set to another VerusID, `}<Text style={{color: Colors.primaryColor}}>{tmpRecAddr}</Text> {`can change ID ownership`}</Text>)
       tmpwarningData[2].status = triangle;
     }
     return tmpwarningData;

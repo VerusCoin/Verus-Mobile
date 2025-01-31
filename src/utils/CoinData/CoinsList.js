@@ -332,6 +332,28 @@ export const coinsList = {
     apps: VERUS_APPS,
     website: 'https://piratechain.com/'
   },
+  ["iJ3WZocnjG9ufv7GKUA4LijQno5gTMb7tP"]: {
+    pbaas_options: 264,
+    system_options: 264,
+    id: "iJ3WZocnjG9ufv7GKUA4LijQno5gTMb7tP",
+    currency_id: "iJ3WZocnjG9ufv7GKUA4LijQno5gTMb7tP",
+    system_id: "iJ3WZocnjG9ufv7GKUA4LijQno5gTMb7tP",
+    launch_system_id: "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV",
+    bitgojs_network_key: "verus",
+    display_ticker: "CHIPS",
+    display_name: "CHIPS",
+    alt_names: [],
+    theme_color: "#1f095e",
+    compatible_channels: [VERUSID, VRPC],
+    tags: [IS_VERUS, IS_ZCASH, IS_PBAAS],
+    proto: "vrsc",
+    vrpc_endpoints: ["https://api.chips.cash/"],
+    decimals: 8,
+    seconds_per_block: 10,
+    default_app: "wallet",
+    apps: VERUS_APPS,
+    website: 'https://chips.cash/'
+  },
   ["iHog9UCTrn95qpUBFCZ7kKz7qWdMA8MQ6N"]: {
     pbaas_options: 264,
     system_options: 264,

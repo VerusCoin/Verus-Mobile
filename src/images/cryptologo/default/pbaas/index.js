@@ -11,6 +11,8 @@ import VARRR_LIGHT from './varrr/varrr_light.svg'
 import VARRR_DARK from './varrr/varrr_dark.svg'
 import KAIJU_DARK from './kaiju/kaiju_dark.svg'
 import KAIJU_LIGHT from './kaiju/kaiju_light.svg'
+import CHIPS_DARK from './chips/chips_dark.svg'
+import CHIPS_LIGHT from './chips/chips_light.svg'
 
 const RenderPbaasCurrencyLogo = (iAddr) => {
   function hashCode(str) {
@@ -82,4 +84,5 @@ export default {
   SWITCH: { light: SWITCH_LIGHT, dark: SWITCH_DARK },
   VARRR: { light: VARRR_LIGHT, dark: VARRR_DARK },
   KAIJU: { light: KAIJU_LIGHT, dark: KAIJU_DARK },
+  CHIPS: { light: CHIPS_LIGHT, dark: CHIPS_DARK }
 }

@@ -57,7 +57,6 @@ const _komodoAssetChains = [
 ];
 
 const _komodoCoins = _komodoAssetChains.concat([
-  'CHIPS',
   'KMD',
   'KOMODO',
 ]);
@@ -102,7 +101,6 @@ const explorerList = {
   BOTS: 'https://bots.kmdexplorer.io',
   MGW: 'https://mgw.kmdexplorer.io',
   WLC: 'https://wlc.kmdexplorer.io',
-  CHIPS: 'https://explorer.chips.cash',
   COQUI: 'https://explorer.coqui.cash',
   EQL: 'http://178.62.240.191',
   BTCH: 'https://btch.kmdexplorer.io',
