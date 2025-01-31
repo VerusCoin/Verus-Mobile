@@ -19,6 +19,7 @@ class VrpcOverrides extends Component {
       [coinsList.VRSC.system_id]: coinsList.VRSC,
       [coinsList.VRSCTEST.system_id]: coinsList.VRSCTEST,
       [coinsList.iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2.system_id]: coinsList.iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2,
+      [coinsList.iJ3WZocnjG9ufv7GKUA4LijQno5gTMb7tP.system_id]: coinsList.iJ3WZocnjG9ufv7GKUA4LijQno5gTMb7tP,
       [coinsList.iHog9UCTrn95qpUBFCZ7kKz7qWdMA8MQ6N.system_id]: coinsList.iHog9UCTrn95qpUBFCZ7kKz7qWdMA8MQ6N,
     };
 
