@@ -123,7 +123,8 @@ export const explorers = {
   ZRX: 'https://etherscan.io',
   TST: 'https://ropsten.etherscan.io',
   BTC: 'https://www.blockchain.com/btc',
-  DOGE: 'https://dogeblocks.com'
+  DOGE: 'https://dogeblocks.com',
+  ["iJ3WZocnjG9ufv7GKUA4LijQno5gTMb7tP"]: 'https://explorer.chips.cash/'
 }
 
 export const CoinLogos = {
@@ -156,6 +157,7 @@ export const CoinLogos = {
   ["i61cV2uicKSi1rSMQCBNQeSYC3UAi9GVzd"]: CoinLogoIcons.web3.USDC, // USDC on Verus
   ["iC5TQFrFXSYLQGkiZ8FYmZHFJzaRF5CYgE"]: CoinLogoIcons.web3.EURC, // EURC on Verus
   ["iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2"]: CoinLogoIcons.pbaas.VARRR,
+  ["iJ3WZocnjG9ufv7GKUA4LijQno5gTMb7tP"]: CoinLogoIcons.pbaas.CHIPS,
 
   // web3 protocol
   BAT: CoinLogoIcons.web3.BAT,
