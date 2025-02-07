@@ -9,7 +9,7 @@ import ethers from 'ethers';
 require("../../ReactotronConfig");
 
 //import VerusLightClient from 'react-native-verus-light-client'
-import { VerusLightClient } from 'react-native-verus'
+import { VerusLightClient, Tools } from '../../node_modules/react-native-verus'
 
 import {
   KEY_DERIVATION_VERSION,
@@ -23,7 +23,7 @@ const deriveLightwalletdKeyPair = async (seed) => {
   return {
     pubKey: null,
     privKey: spendingKey,
-    viewingKey: await VerusLightClient.deriveViewingKey(seed),
+    viewingKey: await VerusLightClient.Tools.deriveViewingKey(seed),
     addresses: [],
   };
 };
@@ -165,21 +165,20 @@ export const isDlightSpendingKey = (seed) => {
 }
 
 export const parseDlightSeed = async (seed) => {
+  console.log("parseDlightSeed called!")
   if (isDlightSpendingKey(seed)) return seed
   
   try {
-//    const viewkey = await VerusLightClient.deriveViewingKey(seed)
-//    console.log(viewkey)
+    const viewkey = await Tools.deriveViewingKey(seed)
+    console.log("Viewkey(" + viewkey + ")")
 
-    // testing isValidAddress here, since it doesn't require Synchronizer
-    // EDIT: function actually does call synchronizerMap - despite docs' indication
-    const address = 'RVbAayLi7LNP4pFkcwojjLEJECrbFbjVy3'
-    const network = 'mainnet'
-    const isValid = await VerusLightClient.isValidAddress(address, network)
+    const isValid = await Tools.deriveShieldedAddress(seed)
+    console.log("isValidAdress(" + isValid + ")")
 
-    //TODO: This function needs a running Synchronizer class to work
-    const keys = await VerusLightClient.deriveUnifiedSpendingKey(seed)
-    console.log(keys);
+    const keys = await Tools.deriveShieldedSpendingKey(seed)
+    console.log("UnifiedSpendingKey(" + keys + ")");
+    console.log("Keys[0](" + keys[0] + ")");
+
     return keys[0]
   } catch(e) { throw e }
 }
