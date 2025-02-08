@@ -9,7 +9,7 @@ import ethers from 'ethers';
 require("../../ReactotronConfig");
 
 //import VerusLightClient from 'react-native-verus-light-client'
-import { VerusLightClient, Tools } from '../../node_modules/react-native-verus'
+import { Tools } from 'react-native-verus'
 
 import {
   KEY_DERIVATION_VERSION,
@@ -23,7 +23,7 @@ const deriveLightwalletdKeyPair = async (seed) => {
   return {
     pubKey: null,
     privKey: spendingKey,
-    viewingKey: await VerusLightClient.Tools.deriveViewingKey(seed),
+    viewingKey: await Tools.deriveViewingKey(seed),
     addresses: [],
   };
 };
@@ -108,8 +108,8 @@ export const deriveKeyPairV1 = async (seed, coinObj, channel) => {
 export const deriveKeypairV0 = async (seed, coinObj, channel) => {
   if (channel === DLIGHT_PRIVATE) {
     const spendingKey = await parseDlightSeed(seed)
-    const viewKey = await VerusLightClient.deriveViewingKey(seed);
-    console.log("viewingKey" + viewingKey.toString);
+    const viewKey = await Tools.deriveViewingKey(seed);
+    console.log("viewingKey" + viewKey.toString);
 
     return {
       pubKey: null,
@@ -172,14 +172,22 @@ export const parseDlightSeed = async (seed) => {
     const viewkey = await Tools.deriveViewingKey(seed)
     console.log("Viewkey(" + viewkey + ")")
 
-    const isValid = await Tools.deriveShieldedAddress(seed)
-    console.log("isValidAdress(" + isValid + ")")
+    const saplingAddressFromView = await Tools.deriveShieldedAddress(seed)
+    console.log("deriveShieldedAddress(" + saplingAddressFromView + ")")
 
-    const keys = await Tools.deriveShieldedSpendingKey(seed)
-    console.log("UnifiedSpendingKey(" + keys + ")");
-    console.log("Keys[0](" + keys[0] + ")");
+    //TODO: only works with UnifiedAddresses
+    //const isValid = await Tools.isValidAddress(saplingAddress)
+    //console.log("isValidAddress(" + isValid + ")");
 
-    return keys[0]
+    //TODO: have this return only sapling Key with Accounts = 1
+    const spendingKey = await Tools.deriveShieldedSpendingKey(seed)
+    console.log("UnifiedSpendingKey(" + spendingKey + ")");
+
+    //TODO: below does not derive properly, and we can use the above function anyway
+    //const saplingAddrFromSeed = await Tools.deriveShieldedAddressFromSeed(seed)
+    //console.log("saplingAddrFromSeed(" + saplingAddrFromSeed + ")")
+
+    return spendingKey
   } catch(e) { throw e }
 }
 
