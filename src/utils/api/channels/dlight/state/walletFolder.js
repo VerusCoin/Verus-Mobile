@@ -16,10 +16,11 @@ import { InitializerConfig, makeSynchronizer } from 'react-native-verus'
 export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed, birthday = 0) => {
 
   const config: InitializerConfig = {
-    networkName: coinId,
+    networkName: "VRSC",
     defaultHost: host,
     defaultPort: port,
     mnemonicSeed: seed,
+    wif: "",
     alias: "vrsc", //TODO: not sure what alias is used for here
     birthdayHeight: birthday,
     newWallet: true
