@@ -15,17 +15,19 @@ import { InitializerConfig, Synchronizer } from 'react-native-verus'
 //export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, viewingKeys, birthday = 0) => {
 export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed, birthday = 0) => {
 
- InitializerConfig.networkName = coinId
- InitializerConfig.defaultHost = host
- InitializerConfig.defaultPort = port
- InitializerConfig.mnemonicSeed = seed
- InitializerConfig.alias = "vrsc"
- InitializerConfig.birthdayHeight = birthday
- InitializerConfig.newWallet = true
+  const config: InitializerConfig = {
+    networkName: coinId,
+    defaultHost: host,
+    defaultPort: port,
+    mnemonicSeed: seed,
+    alias: "vrsc", //TODO: not sure what alias is used for here
+    birthdayHeight: birthday,
+    newWallet: true
+ }
 
  try {
     return await Synchronizer.initialize(
-      InitializerConfig
+      config
     );
   } catch (error) {
     throw error
