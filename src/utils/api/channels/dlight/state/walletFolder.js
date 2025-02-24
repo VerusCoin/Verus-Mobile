@@ -26,7 +26,10 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
  }
 
  try {
-    return await makeSynchronizer(config);
+    console.log("before calling makeSynchronizer")
+    result = await makeSynchronizer(config);
+    console.log("after calling makeSynchronizer")
+    return result
   } catch (error) {
     throw error
   }
