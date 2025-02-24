@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Clipboard, FlatList, TouchableOpacity, Alert, View, Image } from 'react-native';
+import { Clipboard, FlatList, TouchableOpacity, Alert, View, Image, ScrollView } from 'react-native';
 import { Text, List, Divider, Paragraph } from 'react-native-paper';
 import Colors from '../globals/colors';
 import Styles from '../styles';
@@ -13,7 +13,19 @@ const checkmark = (<AnimatedSuccessCheckmark style={{ width: 20, marginRight: 5,
 const triangle = <MaterialCommunityIcons name={'information'} size={20} color={Colors.warningButtonColor} style={{ width: 20, marginRight: 9, alignSelf: 'flex-end', }} />;
 
 export default function VerusIdObjectData(props) {
-  const { friendlyNames, verusId, StickyFooterComponent, flex, ownedByUser, ownedAddress, updates } = props;
+  const { 
+    friendlyNames, 
+    verusId, 
+    StickyFooterComponent, 
+    flex, 
+    ownedByUser, 
+    ownedAddress, 
+    updates, 
+    hideUnchanged, 
+    scrollDisabled, 
+    containerStyle 
+  } = props;
+  
   const [listData, setListData] = useState([]);
   tryDisplayFriendlyName = iAddr => {
     return friendlyNames[iAddr] ? friendlyNames[iAddr] : iAddr;
@@ -51,7 +63,7 @@ export default function VerusIdObjectData(props) {
       status: checkmark
     }];
 
-    if (verusId.identity.primaryaddresses.length > 1 || !verusId.identity.primaryaddresses.includes(ownedAddress)) {
+    if (ownedAddress && verusId.identity.primaryaddresses.length > 1 || !verusId.identity.primaryaddresses.includes(ownedAddress)) {
       tmpwarningData[0].warning = true;
       tmpwarningData[0].data = 'Funds can be spent by other addresses, see primary addresses below';
       tmpwarningData[0].status = triangle;
@@ -81,77 +93,104 @@ export default function VerusIdObjectData(props) {
 
   useEffect(() => {
     if (friendlyNames != null && verusId != null) {
-
       let warningData = ownedByUser ? getWarningData() : [];
-
-      let data = [...warningData,
-      {
-        key: 'Name',
-        data: verusId.identity.name,
-        onPress: () => copyDataToClipboard(verusId.identity.name, 'Name'),
-      },
-      {
-        key: 'i-Address',
-        data: verusId.identity.identityaddress,
-        onPress: () =>
-          copyDataToClipboard(verusId.identity.identityaddress, 'Address'),
-      },
-      {
-        key: 'Status',
-        data: verusId.status,
-        capitalized: true,
-      },
-      {
-        key: 'Revocation Authority',
-        data: tryDisplayFriendlyName(verusId.identity.revocationauthority),
-        onPress: () =>
-          copyDataToClipboard(
-            verusId.identity.revocationauthority,
-            'Revocation',
-          ),
-      },
-      {
-        key: 'Recovery Authority',
-        data: tryDisplayFriendlyName(verusId.identity.recoveryauthority),
-        onPress: () =>
-          copyDataToClipboard(verusId.identity.recoveryauthority, 'Recovery'),
-      },
-      {
-        key: 'System',
-        data: tryDisplayFriendlyName(verusId.identity.systemid).replace(/@/g, ''),
-        onPress: () =>
-          copyDataToClipboard(verusId.identity.systemid, 'System ID'),
-      },
+      
+      const baseInfo = [
+        {
+          key: 'Name',
+          data: verusId.identity.name,
+          onPress: () => copyDataToClipboard(verusId.identity.name, 'Name'),
+        },
+        {
+          key: 'i-Address',
+          data: verusId.identity.identityaddress,
+          onPress: () => copyDataToClipboard(verusId.identity.identityaddress, 'Address'),
+        },
+        {
+          key: 'Status',
+          data: verusId.status,
+          capitalized: true,
+        },
+        {
+          key: 'System',
+          data: tryDisplayFriendlyName(verusId.identity.systemid).replace(/@/g, ''),
+          onPress: () => copyDataToClipboard(verusId.identity.systemid, 'System ID'),
+        },
+      ];
+  
+      const authorityInfo = [
+        {
+          key: 'Revocation Authority',
+          data: tryDisplayFriendlyName(verusId.identity.revocationauthority),
+          onPress: () => copyDataToClipboard(verusId.identity.revocationauthority, 'Revocation'),
+        },
+        {
+          key: 'Recovery Authority',
+          data: tryDisplayFriendlyName(verusId.identity.recoveryauthority),
+          onPress: () => copyDataToClipboard(verusId.identity.recoveryauthority, 'Recovery'),
+        },
       ];
 
+      const privacyData = [];
       if (verusId.identity.privateaddress || (updates && updates['Private Address'])) {
-        data.push({
+        privacyData.push({
           key: 'Private Address',
-          data: !verusId.identity.privateaddress ? "None" : verusId.identity.privateaddress,
-          onPress: !verusId.identity.privateaddress ? undefined : () => copyDataToClipboard(
-            verusId.identity.privateaddress,
-            'Private Address',
-          ),
+          data: verusId.identity.privateaddress || null,
+          onPress: verusId.identity.privateaddress
+            ? () => copyDataToClipboard(verusId.identity.privateaddress, 'Private Address')
+            : undefined,
+        });
+      }
+  
+      const primaryAddresses = [];
+      const primaryAddressUpdates = updates
+        ? Object.keys(updates)
+            .map(x => x.startsWith('Primary Address') ? updates[x] : undefined)
+            .filter(x => !!x)
+        : [];
+      const primaryAddrs = verusId.identity.primaryaddresses;
+
+      const numPrimaryAddrs = primaryAddrs.length > 
+        primaryAddressUpdates.length ? 
+          primaryAddrs.length 
+          : 
+          primaryAddressUpdates.length;
+      
+      for (let i = 0; i < numPrimaryAddrs; i++) {
+        const key = `Primary Address #${i + 1}`;
+        primaryAddresses.push({
+          key,
+          data: primaryAddrs[i] ? primaryAddrs[i] : 'None',
+          onPress: primaryAddrs[i]
+            ? () => copyDataToClipboard(primaryAddrs[i], 'Primary Address')
+            : undefined,
         });
       }
 
-      for (let i = 0; i < verusId.identity.primaryaddresses.length; i++) {
-        data.push({
-          key: `Primary Address #${i + 1}`,
-          data: verusId.identity.primaryaddresses[i],
-          onPress: () =>
-            copyDataToClipboard(
-              verusId.identity.primaryaddresses[i],
-              'Primary Address',
-            ),
+      primaryAddresses.sort((a, b) => b.key.localeCompare(a.key));
+  
+      // Build grouped data
+      const groupedData = [
+        { title: 'Warnings', items: warningData },
+        { title: 'Identity Info', items: baseInfo },
+        { title: 'Authorities', items: authorityInfo.concat(primaryAddresses) },
+        { title: 'Private Address', items: privacyData },
+      ];
+  
+      // Filter out unchanged if hideUnchanged is true
+      const finalGroups = groupedData.map(group => {
+        const filtered = group.items.filter(item => {
+          if (!hideUnchanged) return true;
+          else return item.key && updates && updates[item.key];
+        }).sort((a, b) => {
+          if (updates && updates[a.key]) return -1;
+          else if (updates && updates[b.key]) return 1;
+          return 1;
         });
-      }
-
-      setListData(updates ? data.sort((a, b) => {
-        if (updates[a.key]) return -1
-        else if (updates[b.key]) return 1
-        else return 1
-      }) : data);
+        return { ...group, items: filtered };
+      });
+  
+      setListData(finalGroups);
     }
   }, [verusId, friendlyNames]);
 
@@ -161,119 +200,109 @@ export default function VerusIdObjectData(props) {
     Alert.alert(`${name} Copied`, `${data} copied to clipboard.`);
   };
 
-
-
   return (
-    <View style={flex ? { ...Styles.fullWidth, flex: 1 } : { ...Styles.fullWidth, height: "100%" }}>
-      <FlatList
-        style={flex ? { ...Styles.fullWidth, flex: 1 } : { ...Styles.fullWidth }}
-        contentContainerStyle={{ paddingBottom: 152 }}
-        renderItem={({ item }) => {
-          if (item.condition == null || item.condition === true) {
-            return (
-              <React.Fragment>
-                <TouchableOpacity
-                  disabled={item.onPress == null}
-                  onPress={() => item.onPress()}>
+    <View style={containerStyle ? containerStyle : flex ? { ...Styles.fullWidth, flex: 1 } : { ...Styles.fullWidth, height: "100%" }}>
+      {scrollDisabled ? (
+        /* No scrolling */
+        <List.Section>
+          {listData.map((group, idx) => group.items.length > 0 && (
+            <List.Accordion
+              key={idx}
+              title={group.title}
+              style={{ backgroundColor: Colors.secondaryBackground }}
+            >
+              {group.items.map((item, index) => (
+                <React.Fragment key={index}>
                   <List.Item
-                    title={item.data}
-                    description={updates && updates[item.key] ? `Current ${item.key.toLowerCase()}` : item.key}
-                    titleNumberOfLines={item.numLines || 1}
-                    titleStyle={
-                      {...(item.capitalized
-                        ? Styles.capitalizeFirstLetter
-                        : {}),
-                        color: updates && updates[item.key] ? Colors.warningButtonColor : Colors.quaternaryColor
-                      }
+                    title={
+                      updates && updates[item.key]
+                        ? `${updates[item.key].data}`
+                        : item.data
                     }
-                    right={props =>
-                      item.right ? (
-                        <Text
-                          {...props}
-                          style={{
-                            fontSize: 16,
-                            alignSelf: 'center',
-                            marginRight: 8,
-                          }}>
-                          {item.right}
-                        </Text>
-                      ) : null
+                    titleStyle={
+                      updates && updates[item.key] ? { color: 'green' } : {}
+                    }
+                    titleNumberOfLines={100}
+                    description={() =>
+                      updates && updates[item.key] ? (
+                        <>
+                          {
+                            item.data != null && 
+                            (<Text style={{ color: Colors.warningButtonColor }}>{item.data}</Text>)
+                          }
+                          <Text style={{ color: Colors.verusDarkGray }}>{item.key}</Text>
+                        </>
+                      ) : (
+                        <Text style={{ color: Colors.verusDarkGray }}>{item.key}</Text>
+                      )
+                    }
+                    onPress={
+                      updates && 
+                      updates[item.key] && 
+                      updates[item.key].onPress ? 
+                        updates[item.key].onPress 
+                        : 
+                        item.onPress
                     }
                   />
                   <Divider />
-                </TouchableOpacity>
-                {updates && updates[item.key] &&
-                  <>
+                </React.Fragment>
+              ))}
+            </List.Accordion>
+          ))}
+        </List.Section>
+      ) : (
+        /* Enable scrolling */
+        <ScrollView>
+          <List.Section>
+            {listData.map((group, idx) => group.items.length > 0 && (
+              <List.Accordion
+                key={idx}
+                title={group.title}
+                style={{ backgroundColor: Colors.secondaryBackground }}
+              >
+                {group.items.map((item, index) => (
+                  <React.Fragment key={index}>
                     <List.Item
-                      title={updates[item.key].data}
-                      description={`New ${item.key.toLowerCase()}`}
-                      titleNumberOfLines={item.numLines || 1}
-                      titleStyle={
-                        {...(item.capitalized
-                          ? Styles.capitalizeFirstLetter
-                          : {}),
-                          color: Colors.verusGreenColor
-                        }
+                      title={
+                        updates && updates[item.key]
+                          ? `${updates[item.key].data}`
+                          : item.data
                       }
-                      right={props =>
-                        item.right ? (
-                          <Text
-                            {...props}
-                            style={{
-                              fontSize: 16,
-                              alignSelf: 'center',
-                              marginRight: 8,
-                            }}>
-                            {item.right}
-                          </Text>
-                        ) : null
+                      titleStyle={
+                        updates && updates[item.key] ? { color: 'green' } : {}
+                      }
+                      titleNumberOfLines={100}
+                      description={() =>
+                        updates && updates[item.key] ? (
+                          <>
+                            {
+                              item.data != null && 
+                              (<Text style={{ color: Colors.warningButtonColor }}>{item.data}</Text>)
+                            }
+                            <Text style={{ color: Colors.verusDarkGray }}>{item.key}</Text>
+                          </>
+                        ) : (
+                          <Text style={{ color: Colors.verusDarkGray }}>{item.key}</Text>
+                        )
+                      }
+                      onPress={
+                        updates && 
+                        updates[item.key] && 
+                        updates[item.key].onPress ? 
+                          updates[item.key].onPress 
+                          : 
+                          item.onPress
                       }
                     />
                     <Divider />
-                  </>
-                }
-              </React.Fragment>
-            );
-          } else if (item.condition == 'warning') {
-            return (
-              <React.Fragment>
-                <TouchableOpacity
-                  disabled={item.onPress == null}
-                  onPress={() => item.onPress()}>
-                  <List.Item
-                    title={item.data}
-                    description={item.key}
-                    titleNumberOfLines={item.numLines || 3}
-                    titleStyle={{ textAlign: 'left', color: item.warning ? 'red' : 'black', width: '100%' }}
-                    right={props =>
-                      <View style={{ width: '20%', flexDirection: 'row', alignContent: 'flex-end', justifyContent: 'flex-end', }}>
-                        {item.status}
-                        <Paragraph style={{
-                          fontSize: 12,
-                          textDecorationLine: 'underline',
-                          marginRight: 8,
-                          alignSelf: 'flex-end',
-                          color: 'grey'
-                        }}>
-                          Learn more
-                        </Paragraph>
-                      </View>
-                    }
-                    left={() =>
-                      <View style={{ width: '15%', justifyContent: 'center', flexDirection: 'row' }}>
-                        {item.icon}
-                      </View>}
-                  />
-                  <Divider />
-                </TouchableOpacity>
-              </React.Fragment>
-            );
-          } else {
-            return null;
-          }
-        }}
-        data={listData}
-      />
+                  </React.Fragment>
+                ))}
+              </List.Accordion>
+            ))}
+          </List.Section>
+        </ScrollView>
+      )}
       {StickyFooterComponent != null ? StickyFooterComponent : null}
     </View>
   );

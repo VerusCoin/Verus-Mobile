@@ -54,6 +54,17 @@ function* handleDeeplinkUrl(action) {
             uri: urlstring
           },
         });
+      } else if (id === primitives.IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid) {
+        const req = primitives.IdentityUpdateRequest.fromWalletDeeplinkUri(urlstring);
+
+        yield call(handleFinishDeeplink, {
+          type: SET_DEEPLINK_DATA,
+          payload: {
+            id,
+            data: req.toJson(),
+            uri: urlstring
+          },
+        });
       }
     } catch (e) {
       console.error(e)
