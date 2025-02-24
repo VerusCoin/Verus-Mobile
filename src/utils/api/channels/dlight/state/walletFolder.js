@@ -1,5 +1,5 @@
 //import VerusLightClient from 'react-native-verus-light-client'
-import { InitializerConfig, Synchronizer } from 'react-native-verus'
+import { InitializerConfig, makeSynchronizer } from 'react-native-verus'
 
 /**
  * Initializes a wallet for the first time
@@ -26,9 +26,7 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
  }
 
  try {
-    return await Synchronizer.initialize(
-      config
-    );
+    return await makeSynchronizer(config);
   } catch (error) {
     throw error
   }
