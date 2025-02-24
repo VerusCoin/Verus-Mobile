@@ -19,7 +19,7 @@ import {
   INIT_DLIGHT_CHANNEL_START,
   CLOSE_DLIGHT_CHANNEL,
 } from "../../../../../utils/constants/storeType";
-import { requestViewingKey } from '../../../../../utils/auth/authBox'
+import { requestViewingKey, requestSeeds } from '../../../../../utils/auth/authBox'
 import { DLIGHT_PRIVATE } from '../../../../../utils/constants/intervalConstants'
 
 // Initializes dlight wallet by either creating a backend native wallet and opening it or just opening it
@@ -59,6 +59,9 @@ export const initDlightWallet = async (coinObj) => {
       if (lightWalletEndpointArr[1] == null || isNaN(lightWalletEndpointArr[1])) 
         throw new Error(id + " lightwallet was requested with port " + lightWalletEndpointArr[1], " this is not a valid port.")
 
+      const accountSeeds = await requestSeeds();
+      const seed = accountSeeds[DLIGHT_PRIVATE];
+
       initializationPromises = [
         initializeWallet(
           id,
@@ -67,7 +70,8 @@ export const initDlightWallet = async (coinObj) => {
           lightWalletEndpointArr[0],
           Number(lightWalletEndpointArr[1]),
           DEFAULT_PRIVATE_ADDRS,
-          [await requestViewingKey(coinObj.id, DLIGHT_PRIVATE)]
+//          [await requestViewingKey(coinObj.id, DLIGHT_PRIVATE)]
+          seed
         ),
         openWallet(id, proto, accountHash),
         startSync(id, proto, accountHash),

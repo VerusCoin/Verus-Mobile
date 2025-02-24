@@ -1,5 +1,5 @@
 //import VerusLightClient from 'react-native-verus-light-client'
-import VerusLightClient from 'react-native-verus'
+import { InitializerConfig, Synchronizer } from 'react-native-verus'
 
 /**
  * Initializes a wallet for the first time
@@ -12,17 +12,20 @@ import VerusLightClient from 'react-native-verus'
  * @param {String[]} viewingKeys The viewing keys for this wallet (array of viewing keys with indices matching numAddresses)
  * @param {Integer} birthday (optional) The last known blockheight the wallet was created on 
  */
-export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, viewingKeys, birthday = 0) => {
-  try {
-    return await VerusLightClient.createWallet(
-      coinId,
-      coinProto,
-      accountHash,
-      host,
-      port,
-      numAddresses,
-      viewingKeys,
-      birthday
+//export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, viewingKeys, birthday = 0) => {
+export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed, birthday = 0) => {
+
+ InitializerConfig.networkName = coinId
+ InitializerConfig.defaultHost = host
+ InitializerConfig.defaultPort = port
+ InitializerConfig.mnemonicSeed = seed
+ InitializerConfig.alias = "vrsc"
+ InitializerConfig.birthdayHeight = birthday
+ InitializerConfig.newWallet = true
+
+ try {
+    return await Synchronizer.initialize(
+      InitializerConfig
     );
   } catch (error) {
     throw error

@@ -180,14 +180,14 @@ export const parseDlightSeed = async (seed) => {
     //console.log("isValidAddress(" + isValid + ")");
 
     //TODO: have this return only sapling Key with Accounts = 1
-    const spendingKey = await Tools.deriveShieldedSpendingKey(seed)
-    console.log("UnifiedSpendingKey(" + spendingKey + ")");
+    const saplingSpendKey = await Tools.deriveSaplingSpendingKey(seed)
+    console.log("SaplingSpendingKey(" + saplingSpendKey + ")");
 
     //TODO: below does not derive properly, and we can use the above function anyway
     //const saplingAddrFromSeed = await Tools.deriveShieldedAddressFromSeed(seed)
     //console.log("saplingAddrFromSeed(" + saplingAddrFromSeed + ")")
 
-    return spendingKey
+    return saplingSpendKey
   } catch(e) { throw e }
 }
 
