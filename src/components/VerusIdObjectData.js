@@ -23,13 +23,17 @@ export default function VerusIdObjectData(props) {
     updates, 
     hideUnchanged, 
     scrollDisabled, 
-    containerStyle 
+    containerStyle,
+    hideDataOnLoad
   } = props;
   
   const [listData, setListData] = useState([]);
+  const [expandedAccordions, setExpandedAccordions] = useState({});
+
   tryDisplayFriendlyName = iAddr => {
     return friendlyNames[iAddr] ? friendlyNames[iAddr] : iAddr;
   };
+
   copyDataToClipboard = (data, name) => {
     Clipboard.setString(data);
 
@@ -191,6 +195,14 @@ export default function VerusIdObjectData(props) {
       });
   
       setListData(finalGroups);
+
+      if (!hideDataOnLoad) {
+        const initialExpandedState = {};
+        finalGroups.forEach((group, idx) => {
+          initialExpandedState[idx] = true;
+        });
+        setExpandedAccordions(initialExpandedState);
+      }
     }
   }, [verusId, friendlyNames]);
 
@@ -209,6 +221,8 @@ export default function VerusIdObjectData(props) {
             <List.Accordion
               key={idx}
               title={group.title}
+              expanded={expandedAccordions[idx]}
+              onPress={() => setExpandedAccordions({ ...expandedAccordions, [idx]: !expandedAccordions[idx] })}
               style={{ backgroundColor: Colors.secondaryBackground }}
             >
               {group.items.map((item, index) => (
@@ -259,6 +273,8 @@ export default function VerusIdObjectData(props) {
               <List.Accordion
                 key={idx}
                 title={group.title}
+                expanded={expandedAccordions[idx]}
+                onPress={() => setExpandedAccordions({ ...expandedAccordions, [idx]: !expandedAccordions[idx] })}
                 style={{ backgroundColor: Colors.secondaryBackground }}
               >
                 {group.items.map((item, index) => (
