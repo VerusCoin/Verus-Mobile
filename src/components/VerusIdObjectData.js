@@ -7,6 +7,7 @@ import { Revoke, Recover, Coins } from '../images/customIcons';
 import { openUrl } from "../utils/linking";
 import AnimatedSuccessCheckmark from "./AnimatedSuccessCheckmark";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { getVerusIdStatus } from '../utils/verusid/getVerusIdStatus';
 
 const checkmark = (<AnimatedSuccessCheckmark style={{ width: 20, marginRight: 5, marginBottom: 1, alignSelf: 'flex-end', }} />);
 
@@ -24,7 +25,9 @@ export default function VerusIdObjectData(props) {
     hideUnchanged, 
     scrollDisabled, 
     containerStyle,
-    hideDataOnLoad
+    hideDataOnLoad,
+    chainInfo,
+    coinObj
   } = props;
   
   const [listData, setListData] = useState([]);
@@ -112,7 +115,7 @@ export default function VerusIdObjectData(props) {
         },
         {
           key: 'Status',
-          data: verusId.status,
+          data: chainInfo && coinObj ? getVerusIdStatus(verusId.identity, chainInfo, coinObj.seconds_per_block) : verusId.status,
           capitalized: true,
         },
         {

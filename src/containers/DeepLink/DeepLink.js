@@ -208,6 +208,17 @@ const DeepLink = (props) => {
     if (subjectIdentityRes.error) throw new Error(subjectIdentityRes.error.message);
 
     const subjectIdentity = subjectIdentityRes.result;
+    const subjectIdClass = primitives.Identity.fromJson(subjectIdentity.identity);
+
+    if (deeplinkData.details.identity.flags) {
+      if (subjectIdClass.hasActiveCurrency() !== req.details.identity.hasActiveCurrency()) {
+        throw new Error("Cannot change active currency status.");
+      }
+  
+      if (subjectIdClass.hasTokenizedIdControl() !== req.details.identity.hasTokenizedIdControl()) {
+        throw new Error("Cannot change tokenized id control status.");
+      }
+    }
 
     let friendlyNames;
 
@@ -236,7 +247,7 @@ const DeepLink = (props) => {
         const age = (req.details.expiryheight.toNumber() - chainInfo.result.longestchain) * -1;
         createAlert(
           'Expired invoice',
-          `This invoice is expired (expired for approx. ${blocksToTime(age)}).`,
+          `This invoice is expired (expired for approx. ${blocksToTime(age, coinObj.seconds_per_block)}).`,
         );
         cancel();
       }

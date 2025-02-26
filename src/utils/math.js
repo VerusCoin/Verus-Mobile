@@ -134,8 +134,15 @@ export const checkForPlural = (term, time) => {
   }
 }
 
-export const blocksToTime = (blocks) => {
-  const years = ((blocks/60)/24)/356;
+/**
+ * Returns a string to display the time in years, months, days, hours, and minutes for a given
+ * number of blocks and blocktime.
+ * @param {number} blocks Number of blocks
+ * @param {number} blocktime Blocktime in seconds
+ * @returns 
+ */
+export const blocksToTime = (blocks, blocktime = 60) => {
+  const years = (((blocks/(60/blocktime))/60)/24)/356;
   const months = (years % 1) * 12;
   const days = (months % 1) * 30.4375;
   const hours = (days % 1) * 24;

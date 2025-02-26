@@ -20,6 +20,7 @@ import { copyToClipboard } from '../../../utils/clipboard/clipboard';
 import BigNumber from 'bignumber.js';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
 import VerusIdObjectData from '../../../components/VerusIdObjectData';
+import { getVerusIdStatus } from '../../../utils/verusid/getVerusIdStatus';
 
 const IdentityUpdateRequestInfo = props => {
   const { 
@@ -35,7 +36,6 @@ const IdentityUpdateRequestInfo = props => {
   } = props;
   
   const { fullyqualifiedname, identity } = subjectIdentity;
-  
 
   const [subject, setSubject] = useState(primitives.Identity.fromJson(subjectIdentity));
   const [req, setReq] = useState(primitives.IdentityUpdateRequest.fromJson(deeplinkData));
@@ -92,7 +92,7 @@ const IdentityUpdateRequestInfo = props => {
     if (identityUpdates.flags) {
       if (subject.isRevoked() !== req.details.identity.isRevoked()) {
         displayUpdates['Status'] = {
-          data: req.details.identity.isRevoked() ? "Revoked" : "Active"
+          data: getVerusIdStatus(identityUpdates, chainInfo, coinObj),
         }
       } 
     }
@@ -109,7 +109,10 @@ const IdentityUpdateRequestInfo = props => {
   const getExpiryLabel = () => {
     if (!req.details.expires()) return "";
 
-    return blocksToTime(req.details.expiryheight.toNumber() - chainInfo.longestchain);
+    return blocksToTime(
+      req.details.expiryheight.toNumber() - chainInfo.longestchain, 
+      coinObj.seconds_per_block
+    );
   }
 
   const openVerusIdDetailsModal = (chain, iAddress) => {
@@ -341,6 +344,8 @@ const IdentityUpdateRequestInfo = props => {
             hideUnchanged={true}
             scrollDisabled={true}
             containerStyle={{ ...Styles.fullWidth }}
+            chainInfo={chainInfo}
+            coinObj={coinObj}
           />
         </ScrollView>
         <View
