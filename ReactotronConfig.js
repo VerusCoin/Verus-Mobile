@@ -6,16 +6,9 @@ import sagaPlugin from 'reactotron-redux-saga';
 Reactotron.configure()
   .connect()
 
-const reactotron = Reactotron.configure({ name: 'Verus Mobile' })
-  .setAsyncStorageHandler(AsyncStorage)
-  .useReactNative()
-  .use(sagaPlugin())
-  .use(reactotronRedux())
-  .connect();
-
-/*Reactotron.setAsyncStorageHandler(AsyncStorage)
+const reactotron = Reactotron.setAsyncStorageHandler(AsyncStorage)
   .configure({
-    name: "React Native Demo",
+    name: "VerusMobile",
   })
   .useReactNative({
     asyncStorage: true, // there are more options to the async storage.
@@ -27,7 +20,8 @@ const reactotron = Reactotron.configure({ name: 'Verus Mobile' })
     errors: { veto: (stackFrame) => false }, // or turn it off with false
     overlay: false, // just turning off overlay
   })
-//  .use(reactotronRedux())
+  .use(sagaPlugin())
+  .use(reactotronRedux())
   .connect();
-*/
+
 export default reactotron

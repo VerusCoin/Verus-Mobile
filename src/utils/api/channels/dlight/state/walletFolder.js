@@ -13,11 +13,14 @@ import { InitializerConfig, makeSynchronizer, VerusLightClient } from 'react-nat
  * @param {Integer} birthday (optional) The last known blockheight the wallet was created on 
  */
 //export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, viewingKeys, birthday = 0) => {
-export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed, birthday = 0) => {
+export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, seed, birthday = 0) => {
 
   const config: InitializerConfig = {
     mnemonicSeed: seed,
+    defaultHost: "lwdlegacy.blur.cash",
+    defaultPort: 443,
     wif: "",
+    networkName: "VRSC",
     alias: "vrsc", //TODO: not sure what alias is used for here
     birthdayHeight: 227520,
     newWallet: true
@@ -44,7 +47,7 @@ export const openWallet = async (coinId, coinProto, accountHash) => {
     console.log("Before VerusLightClient.openWallet")
     return await VerusLightClient.openWallet(coinId, coinProto, accountHash)
   } catch (error) {
-    console.warn(errorgetCause().getStackTrace())
+    console.warn(error)
   }
 }
 

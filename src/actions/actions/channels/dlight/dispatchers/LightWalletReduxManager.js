@@ -71,24 +71,26 @@ export const initDlightWallet = async (coinObj) => {
           Number(lightWalletEndpointArr[1]),
           DEFAULT_PRIVATE_ADDRS,
 //          [await requestViewingKey(coinObj.id, DLIGHT_PRIVATE)]
-          seed
-        )//,
+          seed,
+          227520
+        ),
         //openWallet(id, proto, accountHash),
         //startSync(id, proto, accountHash),
-        //getAddresses(id, accountHash, proto),
+        getAddresses(id, accountHash, proto)
       ];
 
     } else if (dlightSockets[id] === false) {
       initializationPromises = [
-        //openWallet(id, proto, accountHash),
-        //startSync(id, proto, accountHash),
-        //getAddresses(id, accountHash, proto)
+        getAddresses(id, accountHash, proto)
+
+        /*openWallet(id, proto, accountHash),
+        startSync(id, proto, accountHash),*/
       ]
     } else {
       throw new Error(id + " is already initialized and connected in lightwalletd mode. Cannot intialize and connect a coin twice.")
     }
   } catch (e) {
-    console.warn(e.getCause().getStackTrace())
+    console.warn(e)
 
     dispatch({
       type: ERROR_DLIGHT_INIT,
