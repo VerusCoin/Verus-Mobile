@@ -1,5 +1,5 @@
 //import VerusLightClient from 'react-native-verus-light-client'
-import { InitializerConfig, makeSynchronizer } from 'react-native-verus'
+import { InitializerConfig, makeSynchronizer, VerusLightClient } from 'react-native-verus'
 
 /**
  * Initializes a wallet for the first time
@@ -16,13 +16,10 @@ import { InitializerConfig, makeSynchronizer } from 'react-native-verus'
 export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed, birthday = 0) => {
 
   const config: InitializerConfig = {
-    networkName: "VRSC",
-    defaultHost: host,
-    defaultPort: port,
     mnemonicSeed: seed,
     wif: "",
     alias: "vrsc", //TODO: not sure what alias is used for here
-    birthdayHeight: birthday,
+    birthdayHeight: 227520,
     newWallet: true
  }
 
@@ -44,9 +41,10 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
  */
 export const openWallet = async (coinId, coinProto, accountHash) => {
   try {
+    console.log("Before VerusLightClient.openWallet")
     return await VerusLightClient.openWallet(coinId, coinProto, accountHash)
   } catch (error) {
-    throw error
+    console.warn(errorgetCause().getStackTrace())
   }
 }
 

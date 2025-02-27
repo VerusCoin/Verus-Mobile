@@ -3,23 +3,33 @@ import createSagaMiddleware from 'redux-saga';
 import thunk from 'redux-thunk';
 
 import rootReducer from '../reducers/index';
-import rootSaga from '../sagas'
+import rootSaga from '../sagas';
+
+import reactotron from '../../ReactotronConfig';
 
 const configureStore = () => {
   const sagaMiddleware = createSagaMiddleware();
 
   const middlewares = [thunk, sagaMiddleware];
-  
-  // const ret = createStore(
-  //   rootReducer,
-  //   compose(
-  //     applyMiddleware(...middlewares),
-  //     window.__REDUX_DEVTOOLS_EXTENSION__ &&
-  //       window.__REDUX_DEVTOOLS_EXTENSION__(),
-  //   ),
-  // );
 
-  const ret = createStore(rootReducer, applyMiddleware(...middlewares));
+  const createEnhancers = (getDefaultEnhancers: GetDefaultEnhancers<any>) => {
+    if (__DEV__) {
+      return getDefaultEnhancers().concat(reactotron.createEnhancer())
+    } else {
+      return getDefaultEnhancers()
+    }
+  }
+
+  /* const ret = createStore(
+     rootReducer,
+     compose(
+       applyMiddleware(...middlewares),
+       window.__REDUX_DEVTOOLS_EXTENSION__ &&
+         window.__REDUX_DEVTOOLS_EXTENSION__(),
+     ),
+   );
+*/
+  const ret = createStore(rootReducer, compose(applyMiddleware(...middlewares), reactotron.createEnhancer()));
 
   sagaMiddleware.run(rootSaga)
 

@@ -61,7 +61,7 @@ export const initDlightWallet = async (coinObj) => {
 
       const accountSeeds = await requestSeeds();
       const seed = accountSeeds[DLIGHT_PRIVATE];
-
+      console.log("Redux: before InitializationPromises")
       initializationPromises = [
         initializeWallet(
           id,
@@ -72,23 +72,23 @@ export const initDlightWallet = async (coinObj) => {
           DEFAULT_PRIVATE_ADDRS,
 //          [await requestViewingKey(coinObj.id, DLIGHT_PRIVATE)]
           seed
-        ),
-        openWallet(id, proto, accountHash),
-        startSync(id, proto, accountHash),
-        getAddresses(id, accountHash, proto),
+        )//,
+        //openWallet(id, proto, accountHash),
+        //startSync(id, proto, accountHash),
+        //getAddresses(id, accountHash, proto),
       ];
 
     } else if (dlightSockets[id] === false) {
       initializationPromises = [
-        openWallet(id, proto, accountHash),
-        startSync(id, proto, accountHash),
-        getAddresses(id, accountHash, proto)
+        //openWallet(id, proto, accountHash),
+        //startSync(id, proto, accountHash),
+        //getAddresses(id, accountHash, proto)
       ]
     } else {
       throw new Error(id + " is already initialized and connected in lightwalletd mode. Cannot intialize and connect a coin twice.")
     }
   } catch (e) {
-    console.warn(e)
+    console.warn(e.getCause().getStackTrace())
 
     dispatch({
       type: ERROR_DLIGHT_INIT,
@@ -97,17 +97,19 @@ export const initDlightWallet = async (coinObj) => {
   }
 
   return new Promise((resolve) => {
+    console.log("Redux: before resolveSequentially")
     resolveSequentially(initializationPromises)
-    .then(res => {
+    .then(console.log("Redux: before dispatch"),
+          res => {
       dispatch({
         type: INIT_DLIGHT_CHANNEL_START,
         payload: { chainTicker: id }
       })
 
-      dispatch({
+      /*dispatch({
         type: SET_ADDRESSES,
         payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: res.pop().result },
-      });
+      });*/
 
       resolve()
     })
