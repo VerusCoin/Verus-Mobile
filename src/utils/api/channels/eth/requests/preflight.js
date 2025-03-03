@@ -75,7 +75,7 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
   } catch(e) {
     return {
       err: true,
-      result: e.message
+      result: "Error preflighting transaction"
     }
   }
 }

@@ -45,11 +45,9 @@ export const send = async (coinObj, activeUser, address, amount, params) => {
       },
     };
   } catch(e) {
-    console.error(e)
-
     return {
       err: true,
-      result: e.message.includes('processing response error') ? "Error creating transaction" : e.message
+      result: "Error sending transaction"
     }
   }
 }

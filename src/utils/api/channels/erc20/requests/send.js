@@ -57,11 +57,9 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
       },
     };
   } catch(e) {
-    console.error(e)
-
     return {
       err: true,
-      result: e.message.includes('processing response error') ? "Error creating transaction" : e.message
+      result: "Error sending transaction"
     }
   }
 }
@@ -109,7 +107,7 @@ export const sendBridgeTransfer = async (coinObj, [reserveTransfer, transferOpti
 
     return {
       err: true,
-      result: e.message
+      result: "Error sending transaction"
     }
   }
 }

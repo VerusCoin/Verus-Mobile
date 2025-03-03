@@ -101,11 +101,9 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
       },
     };
   } catch(e) {
-    console.error(e)
-
     return {
       err: true,
-      result: e.message
+      result: "Error preflighting transaction"
     }
   }
 }
@@ -487,11 +485,9 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
       },
     };
   } catch(e) {
-    console.error(e)
-
     return {
       err: true,
-      result: e.message
+      result: "Error preflighting transaction"
     }
   }
 }
