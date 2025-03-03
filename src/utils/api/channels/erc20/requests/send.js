@@ -69,11 +69,11 @@ export const sendBridgeTransfer = async (coinObj, [reserveTransfer, transferOpti
     const Web3Provider = getWeb3ProviderForNetwork(coinObj.network);
 
     const privKey = await requestPrivKey(coinObj.id, coinObj.proto);
-    const signer = new ethers.Wallet(ethers.utils.hexlify(privKey), Web3Provider.DefaultProvider);
-    const gasPrice = await Web3Provider.DefaultProvider.getGasPrice();
+    const signer = new ethers.Wallet(ethers.utils.hexlify(privKey), Web3Provider.InfuraProvider);
+    const gasPrice = await Web3Provider.InfuraProvider.getGasPrice();
     const maxGasPriceBn = ethers.BigNumber.from(maxGasPrice);
 
-    const delegatorContract = Web3Provider.getVerusBridgeDelegatorContract().connect(signer);
+    const delegatorContract = Web3Provider.getVerusBridgeDelegatorContract(Web3Provider.InfuraProvider).connect(signer);
 
     if (gasPrice.gt(maxGasPriceBn)) {
       throw new Error("Current gas price exceeds maximum confirmed value, try re-entering form data and sending again.")
@@ -81,7 +81,7 @@ export const sendBridgeTransfer = async (coinObj, [reserveTransfer, transferOpti
 
     if (coinObj.currency_id !== ETH_CONTRACT_ADDRESS) {
       const [delegatorAddress, approvalAmount, approvalOptions] = approvalParams
-      const contract = Web3Provider.getContract(coinObj.currency_id).connect(signer);
+      const contract = Web3Provider.getContract(coinObj.currency_id, null, Web3Provider.InfuraProvider).connect(signer);
 
       const approval = await contract.approve(delegatorContract.address, approvalAmount, approvalOptions);
       const reply = await approval.wait();
