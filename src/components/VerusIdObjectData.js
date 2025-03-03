@@ -8,6 +8,26 @@ import { openUrl } from "../utils/linking";
 import AnimatedSuccessCheckmark from "./AnimatedSuccessCheckmark";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { getVerusIdStatus } from '../utils/verusid/getVerusIdStatus';
+import { 
+  VERUSID_AUTH_INFO, 
+  VERUSID_BASE_INFO, 
+  VERUSID_CMM_DATA, 
+  VERUSID_CMM_INFO, 
+  VERUSID_IADDRESS, 
+  VERUSID_NAME, 
+  VERUSID_PRIMARY_ADDRESS, 
+  VERUSID_PRIVATE_ADDRESS, 
+  VERUSID_PRIVATE_INFO, 
+  VERUSID_RECOVERY_AUTH, 
+  VERUSID_REVOCATION_AUTH, 
+  VERUSID_STATUS, 
+  VERUSID_SYSTEM, 
+  VERUSID_WARNING_RECOVER, 
+  VERUSID_WARNING_REVOKE, 
+  VERUSID_WARNING_SPEND_AND_SIGN, 
+  VERUSID_WARNINGS 
+} from '../utils/constants/verusidObjectData';
+import { getCmmDataLabel } from '../utils/vdxf/cmmDataLabel';
 
 const checkmark = (<AnimatedSuccessCheckmark style={{ width: 20, marginRight: 5, marginBottom: 1, alignSelf: 'flex-end', }} />);
 
@@ -33,6 +53,26 @@ export default function VerusIdObjectData(props) {
   const [listData, setListData] = useState([]);
   const [expandedAccordions, setExpandedAccordions] = useState({});
 
+  const getDisplayUpdates = () => {
+    const updateFrame = {
+      [VERUSID_BASE_INFO.key]: {},
+      [VERUSID_AUTH_INFO.key]: {},
+      [VERUSID_PRIVATE_INFO.key]: {},
+      [VERUSID_CMM_INFO.key]: {},
+      [VERUSID_WARNINGS.key]: {}
+    }
+
+    if (updates) {
+      for (const groupKey in updates) {
+        updateFrame[groupKey] = updates[groupKey];
+      }
+    }
+
+    return updateFrame
+  };
+
+  const [displayUpdates, setDisplayUpdates] = useState(getDisplayUpdates());
+
   tryDisplayFriendlyName = iAddr => {
     return friendlyNames[iAddr] ? friendlyNames[iAddr] : iAddr;
   };
@@ -45,7 +85,8 @@ export default function VerusIdObjectData(props) {
 
   const getWarningData = () => {
     const tmpwarningData = [{
-      key: 'Spend and Sign',
+      key: VERUSID_WARNING_SPEND_AND_SIGN.key,
+      title: VERUSID_WARNING_SPEND_AND_SIGN.label,
       data: 'Owned by you',
       onPress: () => openUrl('https://docs.verus.io/verusid/#multisig'),
       warning: false,
@@ -53,7 +94,8 @@ export default function VerusIdObjectData(props) {
       icon: (<Image source={Coins} style={{ aspectRatio: 1, height: 50, width: 50, alignSelf: 'center' }} />),
       status: checkmark
     }, {
-      key: 'Revoke',
+      key: VERUSID_WARNING_REVOKE.key,
+      title: VERUSID_WARNING_REVOKE.label,
       data: 'Set to this ID',
       onPress: () => openUrl('https://docs.verus.io/verusid/#revoke-recover'),
       warning: false,
@@ -61,7 +103,8 @@ export default function VerusIdObjectData(props) {
       icon: <Image source={Revoke} style={{ aspectRatio: 1.1, height: 50, width: 50, alignSelf: 'center' }} />,
       status: checkmark
     }, {
-      key: 'Recover',
+      key: VERUSID_WARNING_RECOVER.key,
+      title: VERUSID_WARNING_RECOVER.label,
       data: 'Set to this ID',
       onPress: () => openUrl('https://docs.verus.io/verusid/#revoke-recover'),
       warning: false,
@@ -104,57 +147,62 @@ export default function VerusIdObjectData(props) {
       
       const baseInfo = [
         {
-          key: 'Name',
+          key: VERUSID_NAME.key,
+          title: VERUSID_NAME.label,
           data: verusId.identity.name,
-          onPress: () => copyDataToClipboard(verusId.identity.name, 'Name'),
+          onPress: () => copyDataToClipboard(verusId.identity.name, VERUSID_NAME.label),
         },
         {
-          key: 'i-Address',
+          key: VERUSID_IADDRESS.key,
+          title: VERUSID_IADDRESS.label,
           data: verusId.identity.identityaddress,
-          onPress: () => copyDataToClipboard(verusId.identity.identityaddress, 'Address'),
+          onPress: () => copyDataToClipboard(verusId.identity.identityaddress, VERUSID_IADDRESS.label),
         },
         {
-          key: 'Status',
+          key: VERUSID_STATUS.key,
+          title: VERUSID_STATUS.label,
           data: chainInfo && coinObj ? getVerusIdStatus(verusId.identity, chainInfo, coinObj.seconds_per_block) : verusId.status,
           capitalized: true,
         },
         {
-          key: 'System',
+          key: VERUSID_SYSTEM.key,
+          title: VERUSID_SYSTEM.label,
           data: tryDisplayFriendlyName(verusId.identity.systemid).replace(/@/g, ''),
-          onPress: () => copyDataToClipboard(verusId.identity.systemid, 'System ID'),
+          onPress: () => copyDataToClipboard(verusId.identity.systemid, VERUSID_SYSTEM.label),
         },
       ];
   
       const authorityInfo = [
         {
-          key: 'Revocation Authority',
+          key: VERUSID_REVOCATION_AUTH.key,
+          title: VERUSID_REVOCATION_AUTH.label,
           data: tryDisplayFriendlyName(verusId.identity.revocationauthority),
-          onPress: () => copyDataToClipboard(verusId.identity.revocationauthority, 'Revocation'),
+          onPress: () => copyDataToClipboard(verusId.identity.revocationauthority, VERUSID_REVOCATION_AUTH.label),
         },
         {
-          key: 'Recovery Authority',
+          key: VERUSID_RECOVERY_AUTH.key,
+          title: VERUSID_RECOVERY_AUTH.label,
           data: tryDisplayFriendlyName(verusId.identity.recoveryauthority),
-          onPress: () => copyDataToClipboard(verusId.identity.recoveryauthority, 'Recovery'),
+          onPress: () => copyDataToClipboard(verusId.identity.recoveryauthority, VERUSID_RECOVERY_AUTH.label),
         },
       ];
 
       const privacyData = [];
-      if (verusId.identity.privateaddress || (updates && updates['Private Address'])) {
+      if (verusId.identity.privateaddress || (displayUpdates[VERUSID_PRIVATE_INFO.key][VERUSID_PRIVATE_ADDRESS.key])) {
         privacyData.push({
-          key: 'Private Address',
+          key: VERUSID_PRIVATE_ADDRESS.key,
+          title: VERUSID_PRIVATE_ADDRESS.label,
           data: verusId.identity.privateaddress || null,
           onPress: verusId.identity.privateaddress
-            ? () => copyDataToClipboard(verusId.identity.privateaddress, 'Private Address')
+            ? () => copyDataToClipboard(verusId.identity.privateaddress, VERUSID_PRIVATE_ADDRESS.key)
             : undefined,
         });
       }
   
       const primaryAddresses = [];
-      const primaryAddressUpdates = updates
-        ? Object.keys(updates)
-            .map(x => x.startsWith('Primary Address') ? updates[x] : undefined)
-            .filter(x => !!x)
-        : [];
+      const primaryAddressUpdates = Object.keys(displayUpdates[VERUSID_AUTH_INFO.key])
+        .map(x => (x.split(":")[0] === VERUSID_PRIMARY_ADDRESS.key) ? displayUpdates[VERUSID_AUTH_INFO.key][x] : undefined)
+        .filter(x => !!x);
       const primaryAddrs = verusId.identity.primaryaddresses;
 
       const numPrimaryAddrs = primaryAddrs.length > 
@@ -164,9 +212,9 @@ export default function VerusIdObjectData(props) {
           primaryAddressUpdates.length;
       
       for (let i = 0; i < numPrimaryAddrs; i++) {
-        const key = `Primary Address #${i + 1}`;
         primaryAddresses.push({
-          key,
+          key: `${VERUSID_PRIMARY_ADDRESS.key}:${i}`,
+          title: `${VERUSID_PRIMARY_ADDRESS.label} ${i + 1}`,
           data: primaryAddrs[i] ? primaryAddrs[i] : 'None',
           onPress: primaryAddrs[i]
             ? () => copyDataToClipboard(primaryAddrs[i], 'Primary Address')
@@ -175,23 +223,50 @@ export default function VerusIdObjectData(props) {
       }
 
       primaryAddresses.sort((a, b) => b.key.localeCompare(a.key));
+
+      const contentMultiMapInfo = {};
+
+      if (verusId.identity.contentmultimap) {
+        for (const iAddrKey in verusId.identity.contentmultimap) {
+          const shortIAddr = iAddrKey.substring(0, 4) + '...' + iAddrKey.substring(iAddrKey.length - 4);
+
+          contentMultiMapInfo[`${VERUSID_CMM_DATA.key}:${iAddrKey}`] = {
+            key: `${VERUSID_CMM_DATA}:${iAddrKey}`,
+            title: `Key: ${shortIAddr}, press for details`,
+            data: getCmmDataLabel(verusId.identity.contentmultimap[iAddrKey])
+          };
+        }
+      }
+
+      for (const key in displayUpdates[VERUSID_CMM_INFO.key]) {
+        if (!contentMultiMapInfo[key]) {
+          const iAddr = key.split(':')[1];
+          const shortIAddr = iAddr.substring(0, 4) + '...' + iAddr.substring(iAddr.length - 4);
+          
+          contentMultiMapInfo[key] = {
+            key,
+            title: `Key: ${shortIAddr}, press for details`,
+          };
+        }
+      }
   
       // Build grouped data
       const groupedData = [
-        { title: 'Warnings', items: warningData },
-        { title: 'Identity Info', items: baseInfo },
-        { title: 'Authorities', items: authorityInfo.concat(primaryAddresses) },
-        { title: 'Private Address', items: privacyData },
+        { key: VERUSID_WARNINGS.key, title: VERUSID_WARNINGS.label, items: warningData },
+        { key: VERUSID_BASE_INFO.key, title: VERUSID_BASE_INFO.label, items: baseInfo },
+        { key: VERUSID_CMM_INFO.key, title: VERUSID_CMM_INFO.label, items: Object.values(contentMultiMapInfo) },
+        { key: VERUSID_AUTH_INFO.key, title: VERUSID_AUTH_INFO.label, items: authorityInfo.concat(primaryAddresses) },
+        { key: VERUSID_PRIVATE_INFO.key, title: VERUSID_PRIVATE_INFO.label, items: privacyData },
       ];
   
       // Filter out unchanged if hideUnchanged is true
       const finalGroups = groupedData.map(group => {
         const filtered = group.items.filter(item => {
           if (!hideUnchanged) return true;
-          else return item.key && updates && updates[item.key];
+          else return item.key && displayUpdates[group.key][item.key];
         }).sort((a, b) => {
-          if (updates && updates[a.key]) return -1;
-          else if (updates && updates[b.key]) return 1;
+          if (displayUpdates[group.key][a.key]) return -1;
+          else if (displayUpdates[group.key][b.key]) return 1;
           return 1;
         });
         return { ...group, items: filtered };
@@ -232,32 +307,31 @@ export default function VerusIdObjectData(props) {
                 <React.Fragment key={index}>
                   <List.Item
                     title={
-                      updates && updates[item.key]
-                        ? `${updates[item.key].data}`
+                      displayUpdates[group.key][item.key]
+                        ? `${displayUpdates[group.key][item.key].data}`
                         : item.data
                     }
                     titleStyle={
-                      updates && updates[item.key] ? { color: 'green' } : {}
+                      displayUpdates[group.key][item.key] ? { color: 'green' } : {}
                     }
                     titleNumberOfLines={100}
                     description={() =>
-                      updates && updates[item.key] ? (
+                      displayUpdates[group.key][item.key] ? (
                         <>
                           {
                             item.data != null && 
                             (<Text style={{ color: Colors.warningButtonColor }}>{item.data}</Text>)
                           }
-                          <Text style={{ color: Colors.verusDarkGray }}>{item.key}</Text>
+                          <Text style={{ color: Colors.verusDarkGray }}>{item.title}</Text>
                         </>
                       ) : (
-                        <Text style={{ color: Colors.verusDarkGray }}>{item.key}</Text>
+                        <Text style={{ color: Colors.verusDarkGray }}>{item.title}</Text>
                       )
                     }
                     onPress={
-                      updates && 
-                      updates[item.key] && 
-                      updates[item.key].onPress ? 
-                        updates[item.key].onPress 
+                      displayUpdates[group.key][item.key] && 
+                      displayUpdates[group.key][item.key].onPress ? 
+                        displayUpdates[group.key][item.key].onPress 
                         : 
                         item.onPress
                     }
@@ -284,32 +358,31 @@ export default function VerusIdObjectData(props) {
                   <React.Fragment key={index}>
                     <List.Item
                       title={
-                        updates && updates[item.key]
-                          ? `${updates[item.key].data}`
+                        displayUpdates[group.key][item.key]
+                          ? `${displayUpdates[group.key][item.key].data}`
                           : item.data
                       }
                       titleStyle={
-                        updates && updates[item.key] ? { color: 'green' } : {}
+                        displayUpdates[group.key][item.key] ? { color: 'green' } : {}
                       }
                       titleNumberOfLines={100}
                       description={() =>
-                        updates && updates[item.key] ? (
+                        displayUpdates[group.key][item.key] ? (
                           <>
                             {
                               item.data != null && 
                               (<Text style={{ color: Colors.warningButtonColor }}>{item.data}</Text>)
                             }
-                            <Text style={{ color: Colors.verusDarkGray }}>{item.key}</Text>
+                            <Text style={{ color: Colors.verusDarkGray }}>{item.title}</Text>
                           </>
                         ) : (
-                          <Text style={{ color: Colors.verusDarkGray }}>{item.key}</Text>
+                          <Text style={{ color: Colors.verusDarkGray }}>{item.title}</Text>
                         )
                       }
                       onPress={
-                        updates && 
-                        updates[item.key] && 
-                        updates[item.key].onPress ? 
-                          updates[item.key].onPress 
+                        displayUpdates[group.key][item.key] && 
+                        displayUpdates[group.key][item.key].onPress ? 
+                          displayUpdates[group.key][item.key].onPress 
                           : 
                           item.onPress
                       }

@@ -21,6 +21,8 @@ import BigNumber from 'bignumber.js';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
 import VerusIdObjectData from '../../../components/VerusIdObjectData';
 import { getVerusIdStatus } from '../../../utils/verusid/getVerusIdStatus';
+import { VERUSID_AUTH_INFO, VERUSID_BASE_INFO, VERUSID_CMM_DATA, VERUSID_CMM_INFO, VERUSID_PRIMARY_ADDRESS, VERUSID_PRIVATE_ADDRESS, VERUSID_PRIVATE_INFO, VERUSID_RECOVERY_AUTH, VERUSID_REVOCATION_AUTH, VERUSID_STATUS } from '../../../utils/constants/verusidObjectData';
+import { getCmmDataLabel } from '../../../utils/vdxf/cmmDataLabel';
 
 const IdentityUpdateRequestInfo = props => {
   const { 
@@ -60,26 +62,32 @@ const IdentityUpdateRequestInfo = props => {
 
   const getDisplayUpdates = () => {
     const displayUpdates = {
-      ['Recovery Authority']: identityUpdates.recoveryauthority ? {
-        data: displayIdentityAddress(identityUpdates.recoveryauthority),
-        onPress: () => openVerusIdDetailsModal(coinObj.system_id, identityUpdates.recoveryauthority)
-      } : null,
-      ['Revocation Authority']: identityUpdates.revocationauthority ? {
-        data: displayIdentityAddress(identityUpdates.revocationauthority),
-        onPress: () => openVerusIdDetailsModal(coinObj.system_id, identityUpdates.revocationauthority)
-      } : null,
-      ['Private Address']: identityUpdates.privateaddress ? {
-        data: displayIdentityAddress(identityUpdates.privateaddress),
-        onPress: () => copyToClipboard(
-          identityUpdates.privateaddress,
-          { message: `${identityUpdates.privateaddress} copied to clipboard.` }
-        )
-      } : null
+      [VERUSID_AUTH_INFO.key]: {
+        [VERUSID_RECOVERY_AUTH.key]: identityUpdates.recoveryauthority ? {
+          data: displayIdentityAddress(identityUpdates.recoveryauthority),
+          onPress: () => openVerusIdDetailsModal(coinObj.system_id, identityUpdates.recoveryauthority)
+        } : null,
+        [VERUSID_REVOCATION_AUTH.key]: identityUpdates.revocationauthority ? {
+          data: displayIdentityAddress(identityUpdates.revocationauthority),
+          onPress: () => openVerusIdDetailsModal(coinObj.system_id, identityUpdates.revocationauthority)
+        } : null
+      },
+      [VERUSID_PRIVATE_INFO.key]: {
+        [VERUSID_PRIVATE_ADDRESS.key]: identityUpdates.privateaddress ? {
+          data: displayIdentityAddress(identityUpdates.privateaddress),
+          onPress: () => copyToClipboard(
+            identityUpdates.privateaddress,
+            { message: `${identityUpdates.privateaddress} copied to clipboard.` }
+          )
+        } : null
+      },
+      [VERUSID_BASE_INFO.key]: {},
+      [VERUSID_CMM_INFO.key]: {}
     }
 
     if (identityUpdates.primaryaddresses) {
       for (let i = 0; i < identityUpdates.primaryaddresses.length; i++) {
-        displayUpdates[`Primary Address #${i + 1}`] = {
+        displayUpdates[VERUSID_AUTH_INFO.key][`${VERUSID_PRIMARY_ADDRESS.key}:${i}`] = {
           data: identityUpdates.primaryaddresses[i],
           onPress: () => copyToClipboard(
             identityUpdates.primaryaddresses[i],
@@ -91,10 +99,18 @@ const IdentityUpdateRequestInfo = props => {
 
     if (identityUpdates.flags) {
       if (subject.isRevoked() !== req.details.identity.isRevoked()) {
-        displayUpdates['Status'] = {
+        displayUpdates[VERUSID_BASE_INFO.key][VERUSID_STATUS.key] = {
           data: getVerusIdStatus(identityUpdates, chainInfo, coinObj),
         }
       } 
+    }
+
+    if (identityUpdates.contentmultimap) {
+      for (const key in identityUpdates.contentmultimap) {
+        displayUpdates[VERUSID_CMM_INFO.key][`${VERUSID_CMM_DATA.key}:${key}`] = {
+          data: getCmmDataLabel(identityUpdates.contentmultimap[key])
+        };
+      }
     }
 
     return displayUpdates;
