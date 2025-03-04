@@ -15,16 +15,16 @@ import { InitializerConfig, makeSynchronizer, VerusLightClient } from 'react-nat
 //export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, viewingKeys, birthday = 0) => {
 export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, seed, birthday = 0) => {
 
-  const config: InitializerConfig = {
+  /*const config: InitializerConfig = {
     mnemonicSeed: seed,
-    defaultHost: "lwdlegacy.blur.cash",
-    defaultPort: 443,
+    defaultHost: host,
+    defaultPort: port,
     wif: "",
-    networkName: "VRSC",
-    alias: "vrsc", //TODO: not sure what alias is used for here
+    networkName: coinId,
+    alias: accountHash, //TODO: not sure what alias is used for here
     birthdayHeight: 227520,
     newWallet: true
- }
+ }*/
 
  try {
     console.log("before calling makeSynchronizer")
@@ -34,6 +34,28 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
   } catch (error) {
     throw error
   }
+};
+
+export const setConfig = (coinId, coinProto, accountHash, host, port, seed, birthday, newWallet) => {
+  const config: InitializerConfig = {
+    mnemonicSeed: seed,
+    defaultHost: host,
+    defaultPort: port,
+    wif: "",
+    networkName: coinId,
+    alias: accountHash,
+    birthdayHeight: birthday,
+    newWallet: newWallet
+  }
+  return config
+}
+
+export const initConfig = (coinId, coinProto, accountHash, host, port, seed, birthday, newWallet) => {
+  return setConfig(coinId, coinProto, accountHash, host, port, seed, birthday, newWallet)
+}
+
+export var Synchronizer = async (initializerConfig) => {
+  return await makeSynchronizer(initConfig)
 }
 
 /**
@@ -42,10 +64,21 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
  * @param {String} coinProto The protocol the coin is based on (e.g. 'btc' || 'vrsc')
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
-export const openWallet = async (coinId, coinProto, accountHash) => {
+export const openWallet = async (coinId, coinProto, accountHash, host, port, seed) => {
+  console.log("openWalletCalled")
+  /*const config: InitializerConfig = {
+    mnemonicSeed: seed,
+    defaultHost: host,
+    defaultPort: port,
+    wif: "",
+    networkName: coinId,
+    alias: accountHash, //TODO: not sure what alias is used for here
+    birthdayHeight: 227520,
+    newWallet: false
+ }*/
   try {
-    console.log("Before VerusLightClient.openWallet")
-    return await VerusLightClient.openWallet(coinId, coinProto, accountHash)
+    console.log("openWallet: before makeSynchronizer")
+    return await makeSynchronizer(config)
   } catch (error) {
     console.warn(error)
   }

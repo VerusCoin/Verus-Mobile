@@ -1,5 +1,8 @@
 import Store from '../../../../../store/index'
+import { InitializerConfig, makeSynchronizer } from 'react-native-verus'
 import {
+  setConfig,
+  Synchronizer,
   initializeWallet,
   openWallet,
   closeWallet,
@@ -61,29 +64,38 @@ export const initDlightWallet = async (coinObj) => {
 
       const accountSeeds = await requestSeeds();
       const seed = accountSeeds[DLIGHT_PRIVATE];
+      const config: InitializerConfig = setConfig(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), seed, 227520, false)
+      const Synchronizer = makeSynchronizer(config);
+      // TODO: if we instantiate Synchronizer as above, maybe we can pass around the class
+      // note: this is just research prodding
+     
       console.log("Redux: before InitializationPromises")
       initializationPromises = [
-        initializeWallet(
-          id,
-          proto,
-          accountHash,
-          lightWalletEndpointArr[0],
-          Number(lightWalletEndpointArr[1]),
-          DEFAULT_PRIVATE_ADDRS,
+        //initializeWallet(
+        //  id,
+        //  proto,
+        //  accountHash,
+        //  lightWalletEndpointArr[0],
+        //  Number(lightWalletEndpointArr[1]),
+        //  DEFAULT_PRIVATE_ADDRS,
 //          [await requestViewingKey(coinObj.id, DLIGHT_PRIVATE)]
-          seed,
-          227520
-        ),
-        //openWallet(id, proto, accountHash),
+        //  seed,
+        //  227520
+        //),
+        console.log("before openWallet"),
+        //openWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]),seed),
         //startSync(id, proto, accountHash),
-        getAddresses(id, accountHash, proto)
+        getAddresses(id, accountHash, proto, seed)
       ];
+      /*secondInitializationPromises = [
+        await getAddresses(id, accountHash, proto, seed)
+      ]*/
 
     } else if (dlightSockets[id] === false) {
       initializationPromises = [
-        getAddresses(id, accountHash, proto),
+        openWallet(id, proto, accountHash),
+        getAddresses(id, accountHash, proto, seed)
 
-        openWallet(id, proto, accountHash)
 //        startSync(id, proto, accountHash),
       ]
     } else {
@@ -98,23 +110,41 @@ export const initDlightWallet = async (coinObj) => {
     })
   }
 
-  return new Promise((resolve) => {
-    console.log("Redux: before resolveSequentially")
+   return new Promise((resolve) => {
+    console.log("Redux: before resolveSequentially 1st")
     resolveSequentially(initializationPromises)
-    .then(console.log("Redux: before dispatch"),
+    .then(console.log("Redux: before dispatch 1st"),
           res => {
       dispatch({
         type: INIT_DLIGHT_CHANNEL_START,
         payload: { chainTicker: id }
       })
 
-      /*dispatch({
+      dispatch({
         type: SET_ADDRESSES,
-        payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: res.pop().result },
-      });*/
+        payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: JSON.stringify(res) },
+      })
+      console.log("dispatch res: " + JSON.stringify(res))
 
       resolve()
     })
+
+    /*return new Promise((resolve) => {
+        console.log("Redux: before resolveSequentially 2nd")
+        resolveSequentially(secondInitializationPromises)
+        .then(console.log("Redux: before dispatch 2nd"),
+              res => {
+
+          dispatch({
+            type: SET_ADDRESSES,
+            payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: res },
+          })
+
+          console.log("dispatch res: " + JSON.stringify(res))
+          resolve()
+
+        })
+    })*/
     .catch(err => {
       console.warn(err)
 
