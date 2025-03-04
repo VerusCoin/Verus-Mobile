@@ -5,6 +5,7 @@ import { ETH_NETWORK_IDS } from "../../../../constants/constants"
 import { ETH_HOMESTEAD } from '../../../../../../env/index'
 import { scientificToDecimal } from "../../../../math"
 import { requestPrivKey } from "../../../../auth/authBox"
+import { cleanEthersErrorMessage } from "../../../../errors"
 
 export const send = async (coinObj, activeUser, address, amount, params) => {
   try {
@@ -47,7 +48,7 @@ export const send = async (coinObj, activeUser, address, amount, params) => {
   } catch(e) {
     return {
       err: true,
-      result: "Error sending transaction"
+      result: cleanEthersErrorMessage(e.message)
     }
   }
 }

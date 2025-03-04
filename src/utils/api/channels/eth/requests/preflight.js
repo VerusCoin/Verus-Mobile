@@ -5,6 +5,7 @@ import { ETH_NETWORK_IDS } from "../../../../constants/constants"
 import { ETH_HOMESTEAD } from '../../../../../../env/index'
 import BigNumber from "bignumber.js"
 import { scientificToDecimal } from "../../../../math"
+import { cleanEthersErrorMessage } from "../../../../errors"
 
 export const txPreflight = async (coinObj, activeUser, address, amount, params) => {
   try {
@@ -75,7 +76,7 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
   } catch(e) {
     return {
       err: true,
-      result: "Error preflighting transaction"
+      result: cleanEthersErrorMessage(e.message)
     }
   }
 }

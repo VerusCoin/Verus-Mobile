@@ -4,6 +4,7 @@ import { ERC20, ETH } from "../../../../constants/intervalConstants"
 import { scientificToDecimal } from "../../../../math"
 import { requestPrivKey } from "../../../../auth/authBox"
 import { ETHERS, ETH_CONTRACT_ADDRESS } from "../../../../constants/web3Constants"
+import { cleanEthersErrorMessage } from "../../../../errors"
 
 export const send = async (coinObj, activeUser, address, amount, passthrough) => {
   try {
@@ -59,7 +60,7 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
   } catch(e) {
     return {
       err: true,
-      result: "Error sending transaction"
+      result: cleanEthersErrorMessage(e.message)
     }
   }
 }
@@ -103,11 +104,9 @@ export const sendBridgeTransfer = async (coinObj, [reserveTransfer, transferOpti
       },
     };
   } catch(e) {
-    console.error(e)
-
     return {
       err: true,
-      result: "Error sending transaction"
+      result: cleanEthersErrorMessage(e.message)
     }
   }
 }

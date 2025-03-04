@@ -47,6 +47,7 @@ import BigNumber from "bignumber.js"
 import { BN } from "bn.js";
 import { getStandardEthBalance } from "../../eth/callCreator";
 import { ECPair, networks } from "@bitgo/utxo-lib";
+import { cleanEthersErrorMessage } from "../../../../errors";
 
 // TODO: Add balance recalculation with eth gas
 export const txPreflight = async (coinObj, activeUser, address, amount, params) => {
@@ -103,7 +104,7 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
   } catch(e) {
     return {
       err: true,
-      result: "Error preflighting transaction"
+      result: cleanEthersErrorMessage(e.message)
     }
   }
 }
@@ -487,7 +488,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
   } catch(e) {
     return {
       err: true,
-      result: "Error preflighting transaction"
+      result: cleanEthersErrorMessage(e.message)
     }
   }
 }
