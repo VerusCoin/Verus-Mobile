@@ -271,7 +271,7 @@ const DeepLink = (props) => {
           sigtime,
           signerFqn: convertFqnToDisplayFormat(signedBy.result.fullyqualifiedname),
           subjectIdentity,
-          identityUpdates: req.details.toCLIJson(),
+          identityUpdates: req.details.identity.toJson(),
           coinObj,
           chainInfo: chainInfo.result,
           friendlyNames
@@ -289,7 +289,7 @@ const DeepLink = (props) => {
       setDisplayProps({
         deeplinkData,
         subjectIdentity,
-        identityUpdates: req.details.toCLIJson(),
+        identityUpdates: req.details.identity.toJson(),
         coinObj,
         chainInfo: chainInfo.result,
         friendlyNames
