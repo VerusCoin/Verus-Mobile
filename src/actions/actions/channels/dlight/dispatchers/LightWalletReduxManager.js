@@ -1,8 +1,7 @@
 import Store from '../../../../../store/index'
-import { InitializerConfig, makeSynchronizer } from 'react-native-verus'
+import { InitializerConfig, makeSynchronizer, Synchronizer } from 'react-native-verus'
 import {
   setConfig,
-  Synchronizer,
   initializeWallet,
   openWallet,
   closeWallet,
@@ -65,10 +64,15 @@ export const initDlightWallet = async (coinObj) => {
       const accountSeeds = await requestSeeds();
       const seed = accountSeeds[DLIGHT_PRIVATE];
       const config: InitializerConfig = setConfig(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), seed, 227520, false)
-      const Synchronizer = makeSynchronizer(config);
+      const Synchronizer = new Synchronizer(config.alias, config.networkName);
+      await Synchronizer.initialize(config);
+      const saplingAddress = Synchronizer.deriveSaplingAddress()
+      console.log("saplingAddress from Synchronizer: " + saplingAddress)
       // TODO: if we instantiate Synchronizer as above, maybe we can pass around the class
       // note: this is just research prodding
-     
+
+      //TODO: use class-transformer to get class from object?
+
       console.log("Redux: before InitializationPromises")
       initializationPromises = [
         //initializeWallet(
