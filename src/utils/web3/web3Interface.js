@@ -59,7 +59,7 @@ class Web3Interface {
     this.web3Contracts = {};
   }
 
-  getContract = (contractAddress, customAbiFragment) => {
+  getContract = (contractAddress, customAbiFragment, provider = this.DefaultProvider) => {
     const params = this.web3Contracts[contractAddress]
 
     if (!params)
@@ -67,7 +67,7 @@ class Web3Interface {
     return new ethers.Contract(
       params[0],
       customAbiFragment != null ? customAbiFragment : params[1],
-      this.DefaultProvider
+      provider
     );
   };
 
@@ -133,19 +133,19 @@ class Web3Interface {
     }
   }
 
-  getVerusBridgeDelegatorContract = () => {
+  getVerusBridgeDelegatorContract = (provider = this.DefaultProvider) => {
     switch (this.network) {
       case 'goerli':
         return new ethers.Contract(
           VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT,
           VERUS_BRIDGE_DELEGATOR_ABI,
-          this.DefaultProvider
+          provider
         );
       case 'homestead':
         return new ethers.Contract(
           VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT,
           VERUS_BRIDGE_DELEGATOR_ABI,
-          this.DefaultProvider
+          provider
         );
       default:
         throw new Error("No Verus bridge delegator for network " + this.network)
