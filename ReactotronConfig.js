@@ -3,10 +3,15 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { reactotronRedux } from 'reactotron-redux';
 import sagaPlugin from 'reactotron-redux-saga';
 
-Reactotron.configure()
-  .connect()
+//Reactotron.configure()
+//  .connect()
 
-const reactotron = Reactotron.setAsyncStorageHandler(AsyncStorage)
+const reactotron = Reactotron.configure({ name: 'VerusMobile' }) // Customize the app name
+  .use(reactotronRedux()) // Connect Redux plugin
+  .use(sagaPlugin()) // Connect Redux-Saga plugin
+  .connect(); // Establish the connection
+
+/*const reactotron = Reactotron.setAsyncStorageHandler(AsyncStorage)
   .configure({
     name: "VerusMobile",
   })
@@ -23,5 +28,5 @@ const reactotron = Reactotron.setAsyncStorageHandler(AsyncStorage)
   .use(sagaPlugin())
   .use(reactotronRedux())
   .connect();
-
+*/
 export default reactotron

@@ -7,8 +7,23 @@ import rootSaga from '../sagas';
 
 import reactotron from '../../ReactotronConfig';
 
+//const middleware = [thunk, sagaMiddleware];
+
+/*const store = createStore(
+  rootReducer,
+  compose(
+    applyMiddleware(...middleware),
+    reactotron.createEnhancer() // Add Reactotron as an enhancer
+  )
+);
+
+sagaMiddleware.run(rootSaga); // Run the root saga
+
+export default store;
+*/
 const configureStore = () => {
-  const sagaMiddleware = createSagaMiddleware();
+  const sagaMonitor = reactotron.createSagaMonitor();
+  const sagaMiddleware = createSagaMiddleware( { sagaMonitor });
 
   const middlewares = [thunk, sagaMiddleware];
 
@@ -20,15 +35,6 @@ const configureStore = () => {
     }
   }
 
-  /* const ret = createStore(
-     rootReducer,
-     compose(
-       applyMiddleware(...middlewares),
-       window.__REDUX_DEVTOOLS_EXTENSION__ &&
-         window.__REDUX_DEVTOOLS_EXTENSION__(),
-     ),
-   );
-*/
   const ret = createStore(rootReducer, compose(applyMiddleware(...middlewares), reactotron.createEnhancer()));
 
   sagaMiddleware.run(rootSaga)
