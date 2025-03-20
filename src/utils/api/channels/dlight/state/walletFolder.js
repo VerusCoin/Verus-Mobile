@@ -1,5 +1,6 @@
 //import VerusLightClient from 'react-native-verus-light-client'
-import { InitializerConfig, makeSynchronizer, VerusLightClient } from 'react-native-verus'
+import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, VerusLightClient } from 'react-native-verus'
+//import { syncInstance, SynchronizerSingleton } from './synchronizer';
 
 /**
  * Initializes a wallet for the first time
@@ -13,27 +14,15 @@ import { InitializerConfig, makeSynchronizer, VerusLightClient } from 'react-nat
  * @param {Integer} birthday (optional) The last known blockheight the wallet was created on 
  */
 //export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, viewingKeys, birthday = 0) => {
-export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, seed, birthday = 0) => {
+export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed) => {
 
-  /*const config: InitializerConfig = {
-    mnemonicSeed: seed,
-    defaultHost: host,
-    defaultPort: port,
-    wif: "",
-    networkName: coinId,
-    alias: accountHash, //TODO: not sure what alias is used for here
-    birthdayHeight: 227520,
-    newWallet: true
- }*/
-
- try {
-    console.log("before calling makeSynchronizer")
-    result = await makeSynchronizer(config);
-    console.log("after calling makeSynchronizer")
-    return result
-  } catch (error) {
-    throw error
-  }
+   const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, 227520, true);
+   try {
+     console.log("openWallet: before makeSynchronizer")
+     return await makeSynchronizer(config);
+   } catch (error) {
+     console.warn(error)
+   }
 };
 
 export const setConfig = (coinId, coinProto, accountHash, host, port, seed, birthday, newWallet) => {
@@ -54,10 +43,6 @@ export const initConfig = (coinId, coinProto, accountHash, host, port, seed, bir
   return setConfig(coinId, coinProto, accountHash, host, port, seed, birthday, newWallet)
 }
 
-export var Synchronizer = async (initializerConfig) => {
-  return await makeSynchronizer(initConfig)
-}
-
 /**
  * Opens a wallet that has been created before
  * @param {String} coinId The chainticker to create a light wallet client for
@@ -76,9 +61,11 @@ export const openWallet = async (coinId, coinProto, accountHash, host, port, see
     birthdayHeight: 227520,
     newWallet: false
  }*/
+  const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, 227520, false);
   try {
     console.log("openWallet: before makeSynchronizer")
-    return await makeSynchronizer(config)
+    const synchronizer = getSynchronizerInstance(accountHash, coinId);
+    return await synchronizer.initialize(config);
   } catch (error) {
     console.warn(error)
   }

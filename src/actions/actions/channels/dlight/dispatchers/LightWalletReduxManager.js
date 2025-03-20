@@ -1,5 +1,6 @@
 import Store from '../../../../../store/index'
-import { InitializerConfig, makeSynchronizer, Synchronizer } from 'react-native-verus'
+import { InitializerConfig } from 'react-native-verus'
+import Synchronizer from '../../../../../utils/api/channels/dlight/state/walletFolder'
 import {
   setConfig,
   initializeWallet,
@@ -63,17 +64,16 @@ export const initDlightWallet = async (coinObj) => {
 
       const accountSeeds = await requestSeeds();
       const seed = accountSeeds[DLIGHT_PRIVATE];
-      const config: InitializerConfig = setConfig(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), seed, 227520, false)
-      const Synchronizer = new Synchronizer(config.alias, config.networkName);
-      await Synchronizer.initialize(config);
-      const saplingAddress = Synchronizer.deriveSaplingAddress()
+      /*const config: InitializerConfig = setConfig(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), seed, 227520, false)
+      const synchronizer = Synchronizer(config);
+      const saplingAddress = synchronizer.deriveSaplingAddress()
       console.log("saplingAddress from Synchronizer: " + saplingAddress)
+      */
       // TODO: if we instantiate Synchronizer as above, maybe we can pass around the class
       // note: this is just research prodding
 
       //TODO: use class-transformer to get class from object?
-
-      console.log("Redux: before InitializationPromises")
+      console.log("Redux: before InitializationPromises, after initializeWallet")
       initializationPromises = [
         //initializeWallet(
         //  id,
@@ -86,19 +86,21 @@ export const initDlightWallet = async (coinObj) => {
         //  seed,
         //  227520
         //),
-        console.log("before openWallet"),
-        //openWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]),seed),
+        //console.log("before openWallet"),
+,
         //startSync(id, proto, accountHash),
-        getAddresses(id, accountHash, proto, seed)
+        await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]),seed),
+
+        await getAddresses(id, accountHash, proto)
       ];
-      /*secondInitializationPromises = [
+      secondInitializationPromises = [
         await getAddresses(id, accountHash, proto, seed)
-      ]*/
+      ]
 
     } else if (dlightSockets[id] === false) {
       initializationPromises = [
         openWallet(id, proto, accountHash),
-        getAddresses(id, accountHash, proto, seed)
+        //getAddresses(id, accountHash, proto, seed)
 
 //        startSync(id, proto, accountHash),
       ]
@@ -113,59 +115,32 @@ export const initDlightWallet = async (coinObj) => {
       payload: { chainTicker: id, error: e }
     })
   }
+  let dispatchres;
 
-   return new Promise((resolve) => {
-    console.log("Redux: before resolveSequentially 1st")
-    resolveSequentially(initializationPromises)
-    .then(console.log("Redux: before dispatch 1st"),
-          res => {
+/*return new Promise((resolve) => {
+  //console.log("Redux: before resolveSequentially 1st");
+  resolveSequentially(initializationPromises)
+    .then(() => {
+
       dispatch({
         type: INIT_DLIGHT_CHANNEL_START,
         payload: { chainTicker: id }
-      })
+      });
 
-      dispatch({
-        type: SET_ADDRESSES,
-        payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: JSON.stringify(res) },
-      })
-      console.log("dispatch res: " + JSON.stringify(res))
-
-      resolve()
-    })
-
-    /*return new Promise((resolve) => {
-        console.log("Redux: before resolveSequentially 2nd")
-        resolveSequentially(secondInitializationPromises)
-        .then(console.log("Redux: before dispatch 2nd"),
-              res => {
-
-          dispatch({
-            type: SET_ADDRESSES,
-            payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: res },
+      resolve();  // Resolve the promise once the dispatches have been made
+    }).then(
+      new Promise((resolve) => {
+              resolveSequentially(secondInitializationPromises)
+              .then(res => {
+                dispatch({
+                  type: SET_ADDRESSES,
+                  payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: res },
+                })
+                console.log('SET_ADDRESSES res: ' + res)
+                resolve()
+              })
           })
-
-          console.log("dispatch res: " + JSON.stringify(res))
-          resolve()
-
-        })
-    })*/
-    .catch(err => {
-      console.warn(err)
-
-      canRetryDlightInitialization(id)
-      .then(canRetry => {
-        if (canRetry) {
-          return initDlightWallet(coinObj).then(resolve)
-        } else {
-          dispatch({
-            type: ERROR_DLIGHT_INIT,
-            payload: { chainTicker: id, error: err }
-          })
-          
-          resolve()
-        }
-      })
-      .catch(e => {
+          ).catch(e => {
         dispatch({
           type: ERROR_DLIGHT_INIT,
           payload: { chainTicker: id, error: e }
@@ -174,9 +149,49 @@ export const initDlightWallet = async (coinObj) => {
         resolve()
       })
     })
-  })
-}
+    */
+       return new Promise((resolve) => {
+       // console.log("Redux: before resolveSequentially 1st")
+        resolveSequentially(initializationPromises)
+        .then(res => {
+          dispatch({
+            type: INIT_DLIGHT_CHANNEL_START,
+            payload: { chainTicker: id }
+          })
 
+          dispatch({
+            type: SET_ADDRESSES,
+            payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: res.pop() },
+          })
+          console.log("dispatch res (after pop() on address entry): " + JSON.stringify(res))
+
+          resolve()
+        }).catch(err => {
+            console.warn(err)
+
+            canRetryDlightInitialization(id)
+              .then(canRetry => {
+                  if (canRetry) {
+                    return initDlightWallet(coinObj).then(resolve)
+                  } else {
+                    dispatch({
+                      type: ERROR_DLIGHT_INIT,
+                      payload: { chainTicker: id, error: err }
+                    })
+                    resolve()
+                  }
+                })
+                .catch(e => {
+                  dispatch({
+                    type: ERROR_DLIGHT_INIT,
+                    payload: { chainTicker: id, error: e }
+                  })
+
+                  resolve()
+                })
+              })
+            })
+}
 // Closes and optionally deletes a dlightWallet
 export const closeDlightWallet = (coinObj, clearDb) => {
   const { dispatch, getState } = Store
