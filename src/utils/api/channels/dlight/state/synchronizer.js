@@ -1,5 +1,5 @@
 //import VerusLightClient from 'react-native-verus-light-client'
-import { Synchronizer, InitializerConfig } from 'react-native-verus'
+import { getSynchronizerInstance, InitializerConfig } from 'react-native-verus'
 
 /*let syncInstance = null;
 
@@ -23,7 +23,8 @@ export const getSynchronizerInstance = (alias, network) => {
 // and user's account hash to identify a light client wallet
 // and start syncing it to the blockchain
 export const startSync = (coinId, coinProto, accountHash) => {
-  return VerusLightClient.startSync(coinId, coinProto, accountHash)
+  const synchronizer = getSynchronizerInstance(accountHash, coinId)
+  //synchronizer.subscribe()
 }
 
 // Uses a coin's ticker symbol (id), protocol (btc || vrsc)

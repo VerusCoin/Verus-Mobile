@@ -1,5 +1,12 @@
 //import VerusLightClient from 'react-native-verus-light-client'
-import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, VerusLightClient } from 'react-native-verus'
+import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, Synchronizer, SynchronizerCallbacks } from 'react-native-verus'
+import Store from '../../../../../store/index';
+import {
+START_DLIGHT_SYNC,
+SET_BALANCES,
+SET_TRANSACTIONS
+} from '../../../../constants/storeType'
+import { eventChannel } from "redux-saga";
 //import { syncInstance, SynchronizerSingleton } from './synchronizer';
 
 /**
@@ -16,13 +23,32 @@ import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, VerusLigh
 //export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, viewingKeys, birthday = 0) => {
 export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed) => {
 
+   const { dispatch } = Store
    const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, 227520, true);
-   try {
-     console.log("openWallet: before makeSynchronizer")
-     return await makeSynchronizer(config);
-   } catch (error) {
-     console.warn(error)
-   }
+   console.log("openWallet: before makeSynchronizer")
+     const sync = await makeSynchronizer(config);
+
+     const subscriptions = {
+       onBalanceChanged: (balance) => {
+         console.log("Balance Updated:", balance);
+         dispatch({ type: SET_BALANCES, id: coinId, payload: balance });
+       },
+       onStatusChanged: (status) => {
+         console.log("Status Updated:", status);
+         dispatch({ type: START_DLIGHT_SYNC, id: coinId, payload: status });
+       },
+       onTransactionsChanged: (transactions) => {
+          console.log("Transactions Updated:", transactions);
+          setTransactions(transactions)(res => {
+          dispatch({ res })})
+       },
+       onUpdate: (update) => {
+          console.log("Update Received:", update);
+          dispatch({ type: UPDATE_RECEIVED, id: coinId, payload: update });
+       }
+     }
+     sync.subscribe(subscriptions)
+     return sync;
 };
 
 export const setConfig = (coinId, coinProto, accountHash, host, port, seed, birthday, newWallet) => {
@@ -65,7 +91,26 @@ export const openWallet = async (coinId, coinProto, accountHash, host, port, see
   try {
     console.log("openWallet: before makeSynchronizer")
     const synchronizer = getSynchronizerInstance(accountHash, coinId);
-    return await synchronizer.initialize(config);
+    await makeSynchronizer(config);
+    synchronizer.subscribe({
+          onBalanceChanged: (balance) => {
+            console.log("Balance Updated:", balance);
+            //emit({ type: BALANCE_UPDATED, payload: balance });
+          },
+          onStatusChanged: (status) => {
+            console.log("Status Updated:", status);
+            //emit({ type: STATUS_UPDATED, payload: status });
+          },
+          onTransactionsChanged: (transactions) => {
+            console.log("Transactions Updated:", transactions);
+            //emit({ type: TRANSACTIONS_UPDATED, payload: transactions });
+          },
+          onUpdate: (update) => {
+            console.log("Update Received:", update);
+            //emit({ type: UPDATE_RECEIVED, payload: update });
+          }
+    })
+    return synchronizer;
   } catch (error) {
     console.warn(error)
   }
