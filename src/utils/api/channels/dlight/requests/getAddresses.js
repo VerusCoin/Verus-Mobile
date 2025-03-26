@@ -2,6 +2,8 @@ import { makeDlightRequest } from '../callCreators'
 import { DLIGHT_PRIVATE_ADDRESSES } from '../../../../constants/dlightConstants'
 import { syncInstance } from '../state/synchronizer'
 import { getSynchronizerInstance } from 'react-native-verus'
+import { createJsonRpcResponse } from './jsonResponse'
+
 
 // Lists addresses associated with a light daemon wallet
 export const getAddresses = async (coinId, accountHash, coinProto) => {
@@ -23,10 +25,12 @@ export const getAddresses = async (coinId, accountHash, coinProto) => {
           )
         );
       } else {
+        result = createJsonRpcResponse(0, res, res.error)
+
         //console.log("before jsonResponse")
         //const jsonResponse = createJsonRpcResponse("1", res);
         //console.warn("getAddresses response: " + jsonResponse)
-        resolve(res);
+        resolve(result);
       }
     })
   })
