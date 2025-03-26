@@ -35,15 +35,3 @@ export const getAddresses = async (coinId, accountHash, coinProto) => {
   //return res;
 }
 
-export const createJsonRpcResponse = (id, result, error) => {
-  const response = {
-    id: id,
-  }
-
-  if (error) {
-    response.error = error;
-  } else {
-    response.result = result;
-  }
-  return JSON.stringify(response)
-}
