@@ -2,10 +2,12 @@
 import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, Synchronizer, SynchronizerCallbacks } from 'react-native-verus'
 import Store from '../../../../../store/index';
 import {
-START_DLIGHT_SYNC,
-SET_BALANCES,
-SET_TRANSACTIONS
+DLIGHT_BALANCE_UPDATED,
+DLIGHT_STATUS_UPDATED,
+DLIGHT_TRANSACTIONS_UPDATED,
+DLIGHT_SYNC_UPDATED
 } from '../../../../constants/storeType'
+import { setTransactions } from '../../../../../actions/actionCreators'
 import { eventChannel } from "redux-saga";
 //import { syncInstance, SynchronizerSingleton } from './synchronizer';
 
@@ -25,28 +27,27 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
 
    const { dispatch } = Store
    const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, 227520, true);
-   console.log("openWallet: before makeSynchronizer")
+   console.log("initializeWallet: before makeSynchronizer")
      const sync = await makeSynchronizer(config);
 
-     const subscriptions = {
-       onBalanceChanged: (balance) => {
-         console.log("Balance Updated:", balance);
-         dispatch({ type: SET_BALANCES, id: coinId, payload: balance });
-       },
-       onStatusChanged: (status) => {
-         console.log("Status Updated:", status);
-         dispatch({ type: START_DLIGHT_SYNC, id: coinId, payload: status });
-       },
-       onTransactionsChanged: (transactions) => {
-          console.log("Transactions Updated:", transactions);
-          setTransactions(transactions)(res => {
-          dispatch({ res })})
-       },
-       onUpdate: (update) => {
-          console.log("Update Received:", update);
-          dispatch({ type: UPDATE_RECEIVED, id: coinId, payload: update });
-       }
-     }
+    const subscriptions = {
+      onBalanceChanged: (balance) => {
+        console.log("Balance Updated:", balance);
+        dispatch({ type: DLIGHT_BALANCE_UPDATED, id: coinId, payload: balance });
+      },
+      onStatusChanged: (status) => {
+        console.log("Status Updated:", status);
+        dispatch({ type: DLIGHT_STATUS_UPDATED, id: coinId, payload: status });
+      },
+      onTransactionsChanged: (transactions) => {
+        console.log("Transactions Updated:", transactions);
+        dispatch({ type: DLIGHT_TRANSACTIONS_UPDATED, id: coinId, payload: transactions });
+      },
+      onUpdate: (update) => {
+        console.log("Update Received:", update);
+        dispatch({ type: DLIGHT_SYNC_UPDATED, id: coinId, payload: update });
+      }
+    };
      sync.subscribe(subscriptions)
      return sync;
 };
