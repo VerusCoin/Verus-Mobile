@@ -25,10 +25,17 @@ import { eventChannel } from "redux-saga";
 //export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, viewingKeys, birthday = 0) => {
 export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed) => {
 
-   const { dispatch } = Store
    const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, 227520, true);
-   console.log("initializeWallet: before makeSynchronizer")
-     const sync = await makeSynchronizer(config);
+   console.log(">>> initializeWallet called")
+     try {
+       console.log("initializeWallet: before makeSynchronizer")
+       const sync = await makeSynchronizer(config);
+       return sync;
+
+     } catch (error) {
+       console.warn(error)
+     }
+    /* const sync = await makeSynchronizer(config);
 
     const subscriptions = {
       onBalanceChanged: (balance) => {
@@ -45,11 +52,12 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
       },
       onUpdate: (update) => {
         console.log("Update Received:", update);
-        dispatch({ type: DLIGHT_SYNC_UPDATED, id: coinId, payload: update });
+        dispatch({ type: DLIGHT_SYNC_UPDATED, id: coinId, payload: update }); //TODO: figure out how to open DLIGHT_SOCKET and toggle DLIGHT_SYNC
       }
     };
      sync.subscribe(subscriptions)
      return sync;
+     */
 };
 
 export const setConfig = (coinId, coinProto, accountHash, host, port, seed, birthday, newWallet) => {
@@ -77,7 +85,7 @@ export const initConfig = (coinId, coinProto, accountHash, host, port, seed, bir
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
 export const openWallet = async (coinId, coinProto, accountHash, host, port, seed) => {
-  console.log("openWalletCalled")
+  console.log(">>>>>> openWalletCalled")
   /*const config: InitializerConfig = {
     mnemonicSeed: seed,
     defaultHost: host,
@@ -91,27 +99,9 @@ export const openWallet = async (coinId, coinProto, accountHash, host, port, see
   const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, 227520, false);
   try {
     console.log("openWallet: before makeSynchronizer")
-    const synchronizer = getSynchronizerInstance(accountHash, coinId);
-    await makeSynchronizer(config);
-    synchronizer.subscribe({
-          onBalanceChanged: (balance) => {
-            console.log("Balance Updated:", balance);
-            //emit({ type: BALANCE_UPDATED, payload: balance });
-          },
-          onStatusChanged: (status) => {
-            console.log("Status Updated:", status);
-            //emit({ type: STATUS_UPDATED, payload: status });
-          },
-          onTransactionsChanged: (transactions) => {
-            console.log("Transactions Updated:", transactions);
-            //emit({ type: TRANSACTIONS_UPDATED, payload: transactions });
-          },
-          onUpdate: (update) => {
-            console.log("Update Received:", update);
-            //emit({ type: UPDATE_RECEIVED, payload: update });
-          }
-    })
-    return synchronizer;
+    const sync = await makeSynchronizer(config);
+    return sync;
+
   } catch (error) {
     console.warn(error)
   }
@@ -124,8 +114,10 @@ export const openWallet = async (coinId, coinProto, accountHash, host, port, see
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
 export const closeWallet = async (coinId, coinProto, accountHash) => {
+  console.warn(">>> closeWallet called")
   try {
-    return await VerusLightClient.closeWallet(coinId, coinProto, accountHash)
+    const synchronizer = getSynchronizerInstance(accountHash, coinId);
+    return await synchronizer.stop()
   } catch (error) {
     throw error
   }
