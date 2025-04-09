@@ -73,7 +73,7 @@ export const initDlightWallet = async (coinObj) => {
       // note: this is just research prodding
 
       //TODO: use class-transformer to get class from object?
-      console.log("Redux: before InitializationPromises, after initializeWallet")
+      console.log("Redux: before InitializationPromises")
       initializationPromises = [
         //initializeWallet(
         //  id,
@@ -88,8 +88,8 @@ export const initDlightWallet = async (coinObj) => {
         //),
         //console.log("before openWallet"),
 ,
-        //startSync(id, proto, accountHash),
         await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]),seed),
+        await startSync(id, proto, accountHash),
 
         await getAddresses(id, accountHash, proto)
       ];
@@ -100,9 +100,8 @@ export const initDlightWallet = async (coinObj) => {
     } else if (dlightSockets[id] === false) {
       initializationPromises = [
         openWallet(id, proto, accountHash),
-        //getAddresses(id, accountHash, proto, seed)
-
-//        startSync(id, proto, accountHash),
+        startSync(id, proto, accountHash),
+        getAddresses(id, accountHash, proto, seed)
       ]
     } else {
       throw new Error(id + " is already initialized and connected in lightwalletd mode. Cannot intialize and connect a coin twice.")
@@ -159,6 +158,8 @@ export const initDlightWallet = async (coinObj) => {
             payload: { chainTicker: id }
           })
 
+          //startSync(id, accountHash)
+
           dispatch({
             type: SET_ADDRESSES,
             payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: res.pop() },
@@ -210,7 +211,7 @@ export const closeDlightWallet = (coinObj, clearDb) => {
   try {
     if (dlightSockets[id] === true) {
       if (dlightSyncing[id] === true) {
-        closePromises.push(stopSync(id, proto, accountHash))
+        //closePromises.push(stopSync(id, proto, accountHash))
       } 
 
       closePromises.push(closeWallet(id, proto, accountHash))
