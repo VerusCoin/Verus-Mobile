@@ -27,6 +27,7 @@ export * from './requests/sendPrivateTransaction'
  */
 export const makeDlightRequest = (coinId, accountHash, coinProto, reqId, method, params) => {
   return new Promise((resolve, reject) => {
+    console.log("makeDlightRequest called, reqId(" + reqId + "), method(" + method + ")");
     VerusLightClient.request(reqId, method, [coinId, coinProto, accountHash, ...params])
     .then(res => {      
       if (res.error != null) {
