@@ -7,6 +7,7 @@ import {DLIGHT_PRIVATE} from '../../../../../utils/constants/intervalConstants';
 import { standardizeDlightTxObj } from '../../../../../utils/standardization/standardizeTxObj';
 
 export const updateDlightBalances = async (activeUser, coinObj) => {
+  console.error(">>>> updateDlightBalances called")
   const zBalances = await getPrivateBalance(
     coinObj.id,
     activeUser.accountHash,
@@ -14,6 +15,7 @@ export const updateDlightBalances = async (activeUser, coinObj) => {
   );
 
   const {result, ...header} = zBalances;
+  console.error("zBalances result = " + result);
   const {confirmed, total} = result;
 
   return {
