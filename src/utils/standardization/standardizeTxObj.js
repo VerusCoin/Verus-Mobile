@@ -10,6 +10,10 @@ export const standardizeDlightTxObj = (txObj) => {
 
 // TODO: fix this to accommodate new Tx data structure
   const { address, amount, category, height, status, time, txid, memo } = txObj
+  console.error("Address: " + address + ", amount: " + amount);
+  console.error("Category: " + category + ", height: " + height);
+  console.error("Status: " + status + ", time: " + time);
+  console.error("Txid: " + txid + ", memo: " + memo)
   return {
     address,
     amount: typeof amount !== "string" ? amount.toString() : amount,

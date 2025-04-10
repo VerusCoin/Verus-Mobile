@@ -59,11 +59,24 @@ export const updateDlightTransactions = async (activeUser, coinObj) => {
   const {result, ...header} = zTransactions;
 
   console.error("zTransactions result = " + JSON.stringify(result));
+  console.error("result.transactions = " + JSON.stringify(result.transactions));
+  const transactions = result.transactions;
+  //TODO: result.transactions is an array, standardize func returns a single txObj
+  // Ethereum seems to handle in batches, need to see if we gain anything by that, here.
+
+  const _txs = [];
+  transactions.forEach(function(transaction) {
+      let standardizedTxObj = standardizeDlightTxObj(transaction)
+      console.error("Standardized = " + JSON.stringify(standardizedTxObj));
+      _txs.push(standardizedTxObj)
+  })
+  //const standard = standardizeDlightTxObj(txObj)
+  //console.error("Standardized = " + JSON.stringify(standard));
 
   return {
     chainTicker: coinObj.id,
     channel: DLIGHT_PRIVATE,
     header,
-    body: result.map(standardizeDlightTxObj),
+    body: result.map(_txs),
   };
 };
