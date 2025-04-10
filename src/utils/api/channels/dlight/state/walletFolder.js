@@ -25,7 +25,7 @@ import { eventChannel } from "redux-saga";
 //export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, viewingKeys, birthday = 0) => {
 export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed) => {
 
-   const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, 227520, true);
+   const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, 3500000, true);
    console.log(">>> initializeWallet called")
      try {
        console.log("initializeWallet: before makeSynchronizer")
