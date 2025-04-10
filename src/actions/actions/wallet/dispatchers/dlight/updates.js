@@ -15,7 +15,7 @@ export const updateDlightBalances = async (activeUser, coinObj) => {
   );
 
   const {result, ...header} = zBalances;
-  console.error("zBalances result = " + result);
+  console.error("zBalances result = " + JSON.stringify(result));
   const {confirmed, total} = result;
 
   return {
@@ -48,6 +48,8 @@ export const updateDlightInfo = async (activeUser, coinObj) => {
 };
 
 export const updateDlightTransactions = async (activeUser, coinObj) => {
+  console.error(">>>> updateDlightTransactions called")
+
   const zTransactions = await getZTransactions(
     coinObj.id,
     activeUser.accountHash,
@@ -55,6 +57,8 @@ export const updateDlightTransactions = async (activeUser, coinObj) => {
     'all',
   );
   const {result, ...header} = zTransactions;
+
+  console.error("zTransactions result = " + JSON.stringify(result));
 
   return {
     chainTicker: coinObj.id,
