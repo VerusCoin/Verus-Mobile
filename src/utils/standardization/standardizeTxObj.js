@@ -7,6 +7,8 @@ import { RESERVE_TRANSFER_DESTINATION } from "verus-typescript-primitives";
 // Makes transaction objects from lightwalletd client resemble those from electrum,
 // for predictable, standard behaviour
 export const standardizeDlightTxObj = (txObj) => {
+
+// TODO: fix this to accommodate new Tx data structure
   const { address, amount, category, height, status, time, txid, memo } = txObj
   return {
     address,
