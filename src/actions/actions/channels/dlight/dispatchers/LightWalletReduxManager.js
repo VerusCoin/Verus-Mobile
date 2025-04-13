@@ -64,34 +64,14 @@ export const initDlightWallet = async (coinObj) => {
 
       const accountSeeds = await requestSeeds();
       const seed = accountSeeds[DLIGHT_PRIVATE];
-      /*const config: InitializerConfig = setConfig(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), seed, 227520, false)
-      const synchronizer = Synchronizer(config);
-      const saplingAddress = synchronizer.deriveSaplingAddress()
-      console.log("saplingAddress from Synchronizer: " + saplingAddress)
-      */
-      // TODO: if we instantiate Synchronizer as above, maybe we can pass around the class
-      // note: this is just research prodding
 
       //TODO: use class-transformer to get class from object?
       console.log("Redux: before InitializationPromises")
       initializationPromises = [
-        //initializeWallet(
-        //  id,
-        //  proto,
-        //  accountHash,
-        //  lightWalletEndpointArr[0],
-        //  Number(lightWalletEndpointArr[1]),
-        //  DEFAULT_PRIVATE_ADDRS,
-//          [await requestViewingKey(coinObj.id, DLIGHT_PRIVATE)]
-        //  seed,
-        //  227520
-        //),
-        //console.log("before openWallet"),
-,
         await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]),seed),
-        await startSync(id, proto, accountHash),
+        startSync(id, proto, accountHash),
 
-        await getAddresses(id, accountHash, proto)
+        getAddresses(id, accountHash, proto)
       ];
       secondInitializationPromises = [
         await getAddresses(id, accountHash, proto, seed)
