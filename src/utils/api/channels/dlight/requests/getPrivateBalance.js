@@ -24,13 +24,34 @@ export const getPrivateBalance = async (coinId, accountHash, coinProto) => {
               )
             );
           } else {
-            result = createJsonRpcResponse(0, res, res.error)
+
+            // TODO: resolve `total.minus is not a function` error here.
+            // Showing ERROR_BALANCES in Reactotron
+
+            console.log("getPrivateBalance createJsonRpcResponse res = " + JSON.stringify(res));
+
+            const transformedRes = {
+                ...res,
+                ...(res && res.confirmed && res.total && {
+                    confirmed: BigNumber(res.confirmed),
+                    total: BigNumber(res.total),
+                    pending: BigNumber(res.pending)
+                })
+            };
+
+            console.error("transformedResult)" + JSON.stringify(transformedRes))
+
+            const result = createJsonRpcResponse(0, transformedRes, transformedRes.error)
+
+
+            //console.error("BigNumber(transformedResult.result.total)" + BigNumber(transformedResult.total))
+            //console.error("BigNumber(res.result.pending)" + BigNumber(transformedResult.pending))
+
             //console.log("before jsonResponse")
             //const jsonResponse = createJsonRpcResponse("1", res);
             //console.log("getLatestNetworkHeight response: " res);
             resolve(result);
           }
-        console.log("getPrivateBalance res = " + JSON.stringify(res));
         })
       })
   //const res = await makeDlightRequest(coinId, accountHash, coinProto, 0, DLIGHT_PRIVATE_BALANCES, [])

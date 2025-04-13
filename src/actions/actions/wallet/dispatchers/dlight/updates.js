@@ -16,7 +16,7 @@ export const updateDlightBalances = async (activeUser, coinObj) => {
 
   const {result, ...header} = zBalances;
   console.error("zBalances result = " + JSON.stringify(result));
-  const {confirmed, total} = result;
+  const {confirmed, total, pending} = result;
 
   return {
     chainTicker: coinObj.id,
@@ -24,7 +24,7 @@ export const updateDlightBalances = async (activeUser, coinObj) => {
     header,
     body: {
       confirmed: confirmed,
-      pending: total.minus(confirmed).toString(),
+      pending: pending,
       total: total,
     },
   };
