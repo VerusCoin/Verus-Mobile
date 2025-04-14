@@ -77,6 +77,6 @@ export const updateDlightTransactions = async (activeUser, coinObj) => {
     chainTicker: coinObj.id,
     channel: DLIGHT_PRIVATE,
     header,
-    body: result.map(_txs),
+    body: _txs,
   };
 };
