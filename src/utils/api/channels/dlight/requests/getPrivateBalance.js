@@ -4,6 +4,7 @@ import { DLIGHT_PRIVATE_BALANCES } from '../../../../constants/dlightConstants'
 import { createJsonRpcResponse } from './jsonResponse'
 
 import BigNumber from "bignumber.js";
+import { satsToCoins} from '../../../../math'
 
 // Get the total private balance associated with a light wallet daemon
 export const getPrivateBalance = async (coinId, accountHash, coinProto) => {
@@ -33,9 +34,9 @@ export const getPrivateBalance = async (coinId, accountHash, coinProto) => {
             const transformedRes = {
                 ...res,
                 ...(res && res.confirmed && res.total && {
-                    confirmed: BigNumber(res.confirmed),
-                    total: BigNumber(res.total),
-                    pending: BigNumber(res.pending)
+                    confirmed: satsToCoins(BigNumber(res.confirmed)),
+                    total: satsToCoins(BigNumber(res.total)),
+                    pending: satsToCoins(BigNumber(res.pending))
                 })
             };
 

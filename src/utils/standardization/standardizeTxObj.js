@@ -3,6 +3,7 @@ import { ETHERS } from "../constants/web3Constants";
 import { unitsToCoins, weiToCoins } from "../math";
 import { decodeMemo } from "../memoUtils";
 import { RESERVE_TRANSFER_DESTINATION } from "verus-typescript-primitives";
+import { satsToCoins } from '../math'
 
 // Makes transaction objects from lightwalletd client resemble those from electrum,
 // for predictable, standard behaviour
@@ -16,7 +17,7 @@ export const standardizeDlightTxObj = (txObj) => {
   console.error("Txid: " + txid + ", memo: " + memo)
   return {
     address,
-    amount: typeof amount !== "string" ? amount.toString() : amount,
+    amount: typeof amount !== "string" ? satsToCoins(BigNumber(amount.toString())) : satsToCoins(BigNumber(amount)),
     type: category,
     confirmed: status === "pending" || height < 0 ? false : true,
     height,
