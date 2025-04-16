@@ -31,7 +31,7 @@ export const sendPrivateTransaction = async (coinObj, activeUser, address, amoun
       //spendingKey = await requestPrivKey(coinObj.id, DLIGHT_PRIVATE)
       //console.log("spendingKey = " + spendingKey)
 
-      let mnemonicSeed = (await requestSeeds())[DLIGHT_PRIVATE];
+      mnemonicSeed = (await requestSeeds())[DLIGHT_PRIVATE];
       console.log("mnemonicSeed = " + mnemonicSeed)
 
     } catch(e) {
