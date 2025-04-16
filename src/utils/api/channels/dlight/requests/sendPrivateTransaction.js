@@ -24,15 +24,14 @@ export const sendPrivateTransaction = async (coinObj, activeUser, address, amoun
       );
     }
 
-    let spendingKey;
+    //let spendingKey;
     let mnemonicSeed;
 
     try {
-      spendingKey = await requestPrivKey(coinObj.id, DLIGHT_PRIVATE)
-      console.log("spendingKey = " + spendingKey)
+      //spendingKey = await requestPrivKey(coinObj.id, DLIGHT_PRIVATE)
+      //console.log("spendingKey = " + spendingKey)
 
-      let seeds = await requestSeeds();
-      mnemonicSeed = accountSeeds[DLIGHT_PRIVATE];
+      let mnemonicSeed = (await requestSeeds())[DLIGHT_PRIVATE];
       console.log("mnemonicSeed = " + mnemonicSeed)
 
     } catch(e) {
@@ -59,8 +58,8 @@ export const sendPrivateTransaction = async (coinObj, activeUser, address, amoun
         spendingKey,
       ];*/
 
-      if (preflight.result.fromAddress != null) params.push(preflight.result.fromAddress)
-      if (preflight.result.memo != null) params.push(preflight.result.memo)
+      //if (preflight.result.fromAddress != null) params.push(preflight.result.fromAddress)
+      //if (preflight.result.memo != null) params.push(preflight.result.memo)
 
       //return makeDlightRequest(coinId, accountHash, coinProto, 0, DLIGHT_PRIVATE_SEND_PRIVATE_TX, params)
         return new Promise((resolve, reject) => {
