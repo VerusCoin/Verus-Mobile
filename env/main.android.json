@@ -13,7 +13,7 @@
 
   "ENABLE_VERUS_IDENTITIES": false,
   "DISABLED_CHANNELS": [""],
-  "ENABLE_DLIGHT": false,
+  "ENABLE_DLIGHT": true,
   "ENABLE_ERC20": true,
   "ENABLE_ETH": true,
   "ENABLE_ELECTRUM": true,
