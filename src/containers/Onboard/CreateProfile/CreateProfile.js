@@ -60,7 +60,8 @@ export default function CreateProfileStackScreens(props) {
           await deriveKeyPair(
             seed,
             CoinDirectory.findCoinObj(startCoin),
-            DLIGHT_PRIVATE,
+            ELECTRUM,
+//            DLIGHT_PRIVATE,
             KEY_DERIVATION_VERSION,
           );
         }
