@@ -6,7 +6,29 @@ export const throwError = (message, name = UNKNOWN_ERROR) => {
   throw error
 }
 
-export const cleanEthersErrorMessage = (msg) => {
+export const cleanEthersErrorMessage = (msg, body) => {
+  try {
+    if (body && typeof body === 'object') {
+      const errorChars = [];
+
+      for (const x of body) {
+        errorChars.push(String.fromCharCode(Number(x)))
+      }
+
+      const errorString = errorChars.join('')
+
+      try {
+        const errorJson = JSON.parse(errorString);
+
+        if (errorJson.error) {
+          return cleanEthersErrorMessage(errorJson.error.message);
+        } else return cleanEthersErrorMessage(errorString);
+      } catch(r) {
+        return cleanEthersErrorMessage(errorString);
+      }
+    }
+  } catch(e) {}
+
   if (
     msg.includes('API_KEY') || 
     msg.includes('apiKey') || 
