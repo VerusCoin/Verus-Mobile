@@ -110,70 +110,99 @@ class QrScanner {
   }
 
   processPaymentRequestURI = (uri) => {
-    //TODO: Add support for messages in btc urls as well (&message=Hello)
-
-    let fullURL = /^\w{1,30}:\w{1,100}\?amount\=[+-]?([0-9]+\.?[0-9]*|\.[0-9]+)/;
-    //<coinName>:<address>?amount=<amount>
-    let partialURL = /\w{1,30}:\w{1,100}/;
-    //<coinName>:<address>
-
+    const fullURL = /^\w{1,30}:\w{1,100}(\?[^ ]+)?$/;
+    const partialURL = /^\w{1,30}:\w{1,100}/;
+  
+    const parseQueryString = (queryString) => {
+      const params = {};
+      if (!queryString) return params;
+  
+      queryString.split("&").forEach((pair) => {
+        const [key, value] = pair.split("=");
+        if (key) params[decodeURIComponent(key)] = decodeURIComponent(value || "");
+      });
+  
+      return params;
+    };
+  
     try {
-      let firstTry = uri.match(fullURL);
-
-      if (firstTry) {
-        //parse full URL here
-        let coinName = firstTry[0].substring(0, firstTry[0].indexOf(":"));
-        let address = firstTry[0].substring(firstTry[0].indexOf(":") + 1, firstTry[0].indexOf("?"));
-        let amount = firstTry[0].substring(firstTry[0].indexOf("=") + 1);
-
-        if (coinName && address && amount) {
-          //Find coin ticker from coin data here, URL uses full name
-
-          for (const key in coinsList) {
-            if (
-              coinsList[key] &&
-              (removeSpaces(coinsList[key].display_name).toLowerCase() === coinName.toLowerCase() ||
-                coinsList[key].alt_names.some((name) => name === coinName.toLowerCase()))
-            ) {
-              //Create verusQR compatible data from coin URL
-              return {
-                coinTicker: coinsList[key].id,
-                address: address,
-                amount: BigNumber(amount),
-              };
-            }
+      const [schemePart, pathPartRaw] = uri.split(":");
+      if (!pathPartRaw) return null;
+  
+      const coinName = schemePart;
+      const [pathPart, queryStringRaw] = pathPartRaw.split("?");
+      const queryParams = parseQueryString(queryStringRaw);
+  
+      const amount = queryParams.amount;
+  
+      // Handle Ethereum ERC20 special case
+      if (coinName.toLowerCase() === "ethereum" && pathPart.includes("/transfer")) {
+        const [contractAddress] = pathPart.split("/");
+  
+        const destination = queryParams.address;
+        if (!destination) throw new Error(PARSE_ERROR);
+  
+        for (const key in coinsList) {
+          const coinObj = coinsList[key];
+          if (
+            coinObj.currency_id &&
+            coinObj.currency_id.toLowerCase() === contractAddress.toLowerCase()
+          ) {
+            return {
+              coinTicker: coinObj.id,
+              address: destination,
+              ...(amount ? { amount: BigNumber(amount) } : {}),
+            };
           }
-
-          throw new Error(INCOMPATIBLE_COIN);
         }
-      } else {
-        let secondTry = uri.match(partialURL);
-
-        if (secondTry) {
-          //Parse partial URL here
-          let coinName = secondTry[0].substring(0, secondTry[0].indexOf(":"));
-          let address = secondTry[0].substring(secondTry[0].indexOf(":") + 1);
-
-          for (const key in coinsList) {
-            const coinObj = coinsList[key];
-
-            if (
-              removeSpaces(coinObj.display_name).toLowerCase() === coinName.toLowerCase() ||
-              coinObj.alt_names.some((name) => name === coinName.toLowerCase())
-            ) {
-              //Create verusQR compatible data from coin URL
-              return {
-                coinTicker: coinObj.id,
-                address: address,
-              };
-            }
-          }
-
-          throw new Error(INCOMPATIBLE_COIN);
-        } else {
-          return null;
-        }
+  
+        throw new Error(INCOMPATIBLE_COIN);
       }
+  
+      // Handle normal full URL: coinName:address?amount=x
+      const fullMatch = uri.match(fullURL);
+      if (fullMatch) {
+        const address = pathPart;
+  
+        for (const key in coinsList) {
+          const coinObj = coinsList[key];
+          if (
+            removeSpaces(coinObj.display_name).toLowerCase() === coinName.toLowerCase() ||
+            coinObj.alt_names.some((name) => name === coinName.toLowerCase())
+          ) {
+            return {
+              coinTicker: coinObj.id,
+              address: address,
+              ...(amount ? { amount: BigNumber(amount) } : {}),
+            };
+          }
+        }
+  
+        throw new Error(INCOMPATIBLE_COIN);
+      }
+  
+      // Handle partial URI: coinName:address
+      const partialMatch = uri.match(partialURL);
+      if (partialMatch) {
+        const address = pathPart;
+  
+        for (const key in coinsList) {
+          const coinObj = coinsList[key];
+          if (
+            removeSpaces(coinObj.display_name).toLowerCase() === coinName.toLowerCase() ||
+            coinObj.alt_names.some((name) => name === coinName.toLowerCase())
+          ) {
+            return {
+              coinTicker: coinObj.id,
+              address: address,
+            };
+          }
+        }
+  
+        throw new Error(INCOMPATIBLE_COIN);
+      }
+  
+      return null;
     } catch (e) {
       if (e.message !== INCOMPATIBLE_COIN) {
         console.warn(e);
