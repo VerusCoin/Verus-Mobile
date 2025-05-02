@@ -8,8 +8,8 @@ import { cleanEthersErrorMessage } from "../../../../errors"
 
 export const send = async (coinObj, activeUser, address, amount, passthrough) => {
   try {
-    const gasPrice = passthrough.params.gasPrice
-    const gasLimit = passthrough.params.gasLimit
+    const gasPrice = passthrough.params.gasPrice;
+    const gasLimit = passthrough.params.gasLimit;
     const maxFeeAllowed = gasPrice.mul(gasLimit);
 
     const Web3Provider = getWeb3ProviderForNetwork(coinObj.network)
@@ -20,7 +20,7 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
 
     const amountBn = ethers.utils.parseUnits(scientificToDecimal(amount.toString()), coinObj.decimals)
     const signableContract = contract.connect(
-      new ethers.Wallet(ethers.utils.hexlify(privKey), Web3Provider.DefaultProvider)
+      new ethers.Wallet(ethers.utils.hexlify(privKey), Web3Provider.InfuraProvider)
     );
     const gasEst = await signableContract.estimateGas.transfer(address, amountBn)
     
@@ -60,7 +60,7 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
   } catch(e) {
     return {
       err: true,
-      result: cleanEthersErrorMessage(e.message)
+      result: cleanEthersErrorMessage(e.message, e.body)
     }
   }
 }
