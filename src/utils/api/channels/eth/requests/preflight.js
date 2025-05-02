@@ -6,13 +6,21 @@ import { ETH_HOMESTEAD } from '../../../../../../env/index'
 import BigNumber from "bignumber.js"
 import { scientificToDecimal } from "../../../../math"
 import { cleanEthersErrorMessage } from "../../../../errors"
+import store from "../../../../../store"
+import { MINIMUM_GAS_PRICE_GWEI, ONE_GWEI_IN_WEI } from "../../../../constants/web3Constants"
 
 export const txPreflight = async (coinObj, activeUser, address, amount, params) => {
   try {
     const Web3Provider = getWeb3ProviderForNetwork(coinObj.network)
+
+    const { minGasPriceGwei } = store.getState().settings.generalWalletSettings;
+    const minGasPrice = minGasPriceGwei != null ? 
+          ethers.BigNumber.from(minGasPriceGwei).mul(ONE_GWEI_IN_WEI) 
+          : 
+          ethers.BigNumber.from(MINIMUM_GAS_PRICE_GWEI).mul(ONE_GWEI_IN_WEI);
     
     const fromAddress = activeUser.keys[coinObj.id][ETH].addresses[0]
-    const signer = new ethers.VoidSigner(fromAddress, Web3Provider.DefaultProvider)
+    const signer = new ethers.VoidSigner(fromAddress, Web3Provider.InfuraProvider)
     const balance = await signer.getBalance()
     const value = ethers.utils.parseUnits(scientificToDecimal(amount.toString()))
 
@@ -26,6 +34,10 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
 
     if (transaction.to == null) {
       throw new Error(`"${address}" is not a valid destination.`)
+    }
+
+    if (transaction.gasPrice.lt(minGasPrice)) {
+      transaction.gasPrice = minGasPrice;
     }
 
     const maxFee = transaction.gasLimit.mul(transaction.gasPrice)
@@ -70,13 +82,15 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
         params: {
           utxoVerified: true,
           feeTakenFromAmount: params.feeTakenFromAmount ? true : false,
+          gasPrice: transaction.gasPrice,
+          gasLimit: transaction.gasLimit
         },
       },
     };
   } catch(e) {
     return {
       err: true,
-      result: cleanEthersErrorMessage(e.message)
+      result: cleanEthersErrorMessage(e.message, e.body)
     }
   }
 }

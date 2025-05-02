@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Platform,
+  Alert,
 } from 'react-native';
 import {useDispatch} from 'react-redux';
 import Styles from '../../../../styles/index';
@@ -28,6 +29,7 @@ import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
 import {NavigationActions} from '@react-navigation/compat';
 import { ADDRESS_BLOCKLIST_FROM_WEBSERVER } from '../../../../utils/constants/constants';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
+import { MINIMUM_GAS_PRICE_GWEI } from '../../../../utils/constants/web3Constants';
 
 const NO_DEFAULT = 'None';
 
@@ -57,6 +59,7 @@ const WalletSettings = props => {
 
   const [errors, setErrors] = useState({
     maxTxCount: false,
+    minGasPriceGwei: false,
     displayCurrency: false,
   });
   const [loading, setLoading] = useState(false);
@@ -121,6 +124,7 @@ const WalletSettings = props => {
     try {
       const stateToSave = {
         maxTxCount: Number(settings.maxTxCount),
+        minGasPriceGwei: settings.minGasPriceGwei == null || isNaN(settings.minGasPriceGwei) ? undefined : Number(settings.minGasPriceGwei),
         displayCurrency: settings.displayCurrency,
         defaultAccount:
           settings.defaultAccount === NO_DEFAULT ? null : settings.defaultAccount,
@@ -142,7 +146,7 @@ const WalletSettings = props => {
       const res = await saveGeneralSettings(stateToSave);
       dispatch(res);
       createAlert('Success', 'General wallet settings saved.');
-      setSettings({...generalWalletSettings});
+      setSettings({...stateToSave});
       setLoading(false);
     } catch (err) {
       createAlert('Error', err.message);
@@ -152,7 +156,7 @@ const WalletSettings = props => {
   };
 
   const handleError = (error, field) => {
-    setErrors({...errors, [field]: error});
+    Alert.alert(error);
   };
 
   const back = () => {
@@ -160,9 +164,10 @@ const WalletSettings = props => {
   };
 
   const validateFormData = () => {
-    setErrors({maxTxCount: null, displayCurrency: null});
+    setErrors({maxTxCount: null, minGasPriceGwei: null, displayCurrency: null});
     let _errors = false;
     const _maxTxCount = settings.maxTxCount;
+    const _minGasPriceGwei = settings.minGasPriceGwei;
 
     if (
       !_maxTxCount ||
@@ -172,6 +177,11 @@ const WalletSettings = props => {
       Number(_maxTxCount) > 100
     ) {
       handleError('Please enter a valid number from 10 to 100', 'maxTxCount');
+      _errors = true;
+    } else if (
+      _minGasPriceGwei != null && (_minGasPriceGwei.length === 0 || isNaN(_minGasPriceGwei))
+    ) {
+      handleError('Please enter a valid minimum gas price in Gwei', '_minGasPriceGwei');
       _errors = true;
     }
 
@@ -191,7 +201,12 @@ const WalletSettings = props => {
       <Portal>
         {currentNumberInputModal != null && (
           <NumberPadModal
-            value={Number(settings[currentNumberInputModal])}
+            value={
+              settings[currentNumberInputModal] == null || isNaN(settings[currentNumberInputModal]) ? 
+                0
+                : 
+                Number(settings[currentNumberInputModal])
+            }
             visible={currentNumberInputModal != null}
             onChange={(number) => {
               setSettings({
@@ -376,8 +391,25 @@ const WalletSettings = props => {
           />
           <Divider />
         </TouchableOpacity>
+        <List.Subheader>{'Other Settings'}</List.Subheader>
+        <TouchableOpacity
+          onPress={() => openNumberInputModal('minGasPriceGwei')}
+          style={{...Styles.flex}}>
+          <Divider />
+          <List.Item
+            title={'Min. ETH Gas Price (Gwei)'}
+            description="Min. gas price in Gwei when creating simple transfers on the Ethereum network (ETH/ERC20)"
+            descriptionNumberOfLines={10}
+            right={() => (
+              <Text style={Styles.listItemTableCell}>
+                {settings.minGasPriceGwei == null ? MINIMUM_GAS_PRICE_GWEI : settings.minGasPriceGwei}
+              </Text>
+            )}
+          />
+          <Divider />
+        </TouchableOpacity>
       </ScrollView>
-      <View style={Styles.highFooterContainer}>
+      <View style={{...Styles.highFooterContainer, flex: 0, height: 100}}>
         {loading ? (
           <ActivityIndicator
             animating={loading}
@@ -391,6 +423,7 @@ const WalletSettings = props => {
             <Button
               textColor={Colors.warningButtonColor}
               onPress={back}
+              style={{ padding: 0, height: 36 }}
             >
               {"Back"}
             </Button>
@@ -398,6 +431,7 @@ const WalletSettings = props => {
               mode='contained'
               onPress={handleSubmit}
               disabled={!hasChanges}
+              style={{ padding: 0, height: 36 }}
             >
               {"Confirm"}
             </Button>
