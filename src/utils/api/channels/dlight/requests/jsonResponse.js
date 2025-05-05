@@ -7,7 +7,7 @@ export const createJsonRpcResponse = (id, result, error) => {
   if (error) {
     responseData.error = error;
   } else {
-    console.error("result in createJsonResponse: " + JSON.stringify(result));
+   // console.error("result in createJsonResponse: " + JSON.stringify(result));
     responseData.result = result;
   }
   const response = new Response(JSON.stringify(responseData), {
@@ -16,6 +16,6 @@ export const createJsonRpcResponse = (id, result, error) => {
       'Content-Type': 'application/json'
     },
   });
-  console.error("responseData: " + JSON.stringify(responseData));
+  //console.error("responseData: " + JSON.stringify(responseData));
   return response.json()
 }

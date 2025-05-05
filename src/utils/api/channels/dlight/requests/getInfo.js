@@ -5,7 +5,7 @@ import { createJsonRpcResponse } from './jsonResponse'
 
 // Get the syncing status/information about a blockchain
 export const getInfo = (coinId, accountHash, coinProto) => {
-  console.log(">>> getInfo called")
+  //console.log(">>> getInfo called")
   const synchronizer = getSynchronizerInstance(accountHash, coinId);
   //const res = synchronizer.getInfo(accountHash);
   //console.log("getInfo response: " + res);
@@ -30,7 +30,7 @@ export const getInfo = (coinId, accountHash, coinProto) => {
           //console.log("getLatestNetworkHeight response: " res);
           resolve(result);
         }
-      console.log("getInfo res = " + JSON.stringify(res));
+     // console.log("getInfo res = " + JSON.stringify(res));
       })
     })
   //return makeDlightRequest(coinId, accountHash, coinProto, 0, DLIGHT_INFO, [])

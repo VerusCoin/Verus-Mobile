@@ -1,4 +1,3 @@
-import { makeDlightRequest } from '../callCreators'
 import { getSynchronizerInstance } from 'react-native-verus'
 import { DLIGHT_PRIVATE_BALANCES } from '../../../../constants/dlightConstants'
 import { createJsonRpcResponse } from './jsonResponse'
