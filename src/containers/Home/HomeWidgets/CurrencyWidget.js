@@ -12,6 +12,8 @@ import {extractDisplaySubWallets} from '../../../utils/subwallet/extractSubWalle
 import {normalizeNum} from '../../../utils/normalizeNum';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../../globals/colors';
+import { useObjectSelector } from '../../../hooks/useObjectSelector';
+import { coinsList } from '../../../utils/CoinData/CoinsList';
 
 const CurrencyWidget = props => {
   const {currencyBalance, coinObj} = props;
@@ -21,13 +23,13 @@ const CurrencyWidget = props => {
   const themeColor = coinObj.theme_color ? coinObj.theme_color : '#1C1C1C';
   const showBalance = useSelector(state => state.coins.showBalance);
 
-  const allSubwallets = useSelector(state => extractDisplaySubWallets(state));
+  const allSubwallets = useObjectSelector(state => extractDisplaySubWallets(state));
+
   const displayCurrency = useSelector(state =>
     state.settings.generalWalletSettings.displayCurrency
       ? state.settings.generalWalletSettings.displayCurrency
       : USD,
   );
-
   const uniRate = useSelector(state =>
     state.ledger.rates[GENERAL] && state.ledger.rates[GENERAL][coinObj.id]
       ? state.ledger.rates[GENERAL][coinObj.id][displayCurrency]
@@ -123,7 +125,7 @@ const CurrencyWidget = props => {
               {allSubwallets[coinObj.id] ? allSubwallets[coinObj.id].length : 1}
             </Paragraph>
             <SubWalletsLogo />
-            {coinObj.mapped_to != null && (
+            {coinObj.mapped_to != null && coinObj.id !== coinsList.VRSC.id && (
               <MaterialCommunityIcons
                 name={'link'}
                 color={Colors.secondaryColor}

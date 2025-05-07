@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
-import { useSelector } from 'react-redux';
 import { Card, Button, List, IconButton } from 'react-native-paper';
 import styles from '../../styles';
 import Colors from '../../globals/colors';
@@ -10,9 +9,10 @@ import { createAlert } from '../../actions/actions/alert/dispatchers/alert';
 import { checkPinForUser } from '../../utils/asyncStore/authDataStorage';
 import { canShowSeed } from '../../actions/actions/channels/dlight/dispatchers/AlertManager';
 import { CommonActions } from '@react-navigation/native';
+import { useObjectSelector } from '../../hooks/useObjectSelector';
 
 const RecoverSeedsSelectAccount = ({ navigation }) => {
-  const accounts = useSelector(state => state.authentication.accounts);
+  const accounts = useObjectSelector(state => state.authentication.accounts);
   const [numSeeds, setNumSeeds] = useState({});
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [passwordDialogTitle, setPasswordDialogTitle] = useState('');

@@ -2,13 +2,13 @@ import React from 'react';
 import { useEffect, useState } from "react"
 import { FlatList, TouchableOpacity } from "react-native";
 import { List } from "react-native-paper";
-import { useSelector } from 'react-redux'
 import styles from "../../../../styles";
 import { SEND_MODAL_FORM_STEP_CONFIRM, SEND_MODAL_USER_ALLOWLIST } from "../../../../utils/constants/sendModal";
+import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 
 const AuthenticateUserForm = props => {
-  const accounts = useSelector(state => state.authentication.accounts)
-  const data = useSelector(state => state.sendModal.data)
+  const accounts = useObjectSelector(state => state.authentication.accounts)
+  const data = useObjectSelector(state => state.sendModal.data)
   const [accountList, setAccountList] = useState([])
 
   const selectAccount = (account) => {

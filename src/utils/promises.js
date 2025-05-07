@@ -16,13 +16,15 @@ export const timeout = (ms, promise) => {
  * @param {Array} promises An array of any type
  */
 export const resolveSequentially = (promises) => {
-	return promises.reduce((accumulator, promise) => {
-		return accumulator.then(arr => {
-    	if (!promise.then) return arr.concat(promise)
-			return promise.then(res => {
-      	return arr.concat(res)
-      })
-		})
-	},
-  Promise.resolve([]))
-}
+  return promises.reduce((accumulator, promise) => {
+    return accumulator.then(arr => {
+      if (!promise.then) return arr.concat(promise);
+      return promise
+        .then(res => arr.concat(res))
+        .catch(err => {
+          console.error("Skipping failed promise:", err);
+          return arr;
+        });
+    });
+  }, Promise.resolve([]));
+};

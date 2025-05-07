@@ -5,8 +5,8 @@ import com.android.build.OutputFile
 
 def versionMajor = 1
 def versionMinor = 0
-def versionRevision = 18
-def versionBuild = 1
+def versionRevision = 28
+def versionBuild = 0
 
 def keystorePropertiesFile = rootProject.file("keystore.properties");
 
@@ -121,7 +121,6 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         multiDexEnabled true
-        
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionRevision * 100 + versionBuild
         if (versionBuild > 0) {
             versionName "${versionMajor}.${versionMinor}.${versionRevision}-${versionBuild}"
@@ -187,7 +186,7 @@ android {
                 output.versionCodeOverride =
                         defaultConfig.versionCode * 1000 + versionCodes.get(abi)
             }
-
+            output.outputFileName = "VerusWallet-${defaultConfig.versionName}.apk"
         }
     }
 }

@@ -13,7 +13,13 @@ import { SEND_MODAL_ENCRYPTED_IDENTITY_SEED, SEND_MODAL_IDENTITY_TO_REVOKE_FIELD
 import { encryptkey } from '../../utils/seedCrypt';
 
 export default function RevokeRecoverIdentityForm({ navigation, isRecovery, importedSeed, exitRevokeRecover }) {
-  const DEFAULT_SYSTEMS = [coinsList.VRSC, coinsList.iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2, coinsList.iHog9UCTrn95qpUBFCZ7kKz7qWdMA8MQ6N, coinsList.VRSCTEST];
+  const DEFAULT_SYSTEMS = [
+    coinsList.VRSC, 
+    coinsList.iExBJfZYK7KREDpuhj6PzZBzqMAKaFg7d2, 
+    coinsList.iJ3WZocnjG9ufv7GKUA4LijQno5gTMb7tP, 
+    coinsList.iHog9UCTrn95qpUBFCZ7kKz7qWdMA8MQ6N, 
+    coinsList.VRSCTEST
+  ];
 
   const {height} = Dimensions.get('window');
   const isKeyboardActive = useSelector(state => state.keyboard.active);

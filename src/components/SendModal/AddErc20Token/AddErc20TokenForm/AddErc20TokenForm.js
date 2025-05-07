@@ -1,5 +1,5 @@
 import {useCallback, useState} from 'react';
-import {useSelector, useDispatch} from 'react-redux';
+import {useDispatch} from 'react-redux';
 import {Alert} from 'react-native';
 import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
 import {
@@ -10,10 +10,11 @@ import {getWeb3ProviderForNetwork} from '../../../../utils/web3/provider';
 import {AddErc20TokenFormRender} from './AddErc20TokenForm.render';
 import { getCurrency } from '../../../../utils/api/channels/verusid/callCreators';
 import { getCurrenciesMappedToEth } from '../../../../utils/api/channels/vrpc/requests/getCurrenciesMappedToEth';
+import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 
 const AddErc20TokenForm = props => {
   const dispatch = useDispatch();
-  const sendModal = useSelector(state => state.sendModal);
+  const sendModal = useObjectSelector(state => state.sendModal);
 
   const [useMappedCurrency, setUseMappedCurrency] = useState(false);
 

@@ -12,24 +12,25 @@ import { truncateDecimal } from "../../../../utils/math";
 import Colors from "../../../../globals/colors";
 import Styles from "../../../../styles";
 import BigNumber from "bignumber.js";
+import { useObjectSelector } from "../../../../hooks/useObjectSelector";
 
 function TraditionalCryptoSendConfirm({ navigation, route, setLoading, setModalHeight, setPreventExit }) {
   const [params, setParams] = useState(route.params.txConfirmation);
   const [confirmationFields, setConfirmationFields] = useState([]);
   const dispatch = useDispatch();
 
-  const balance_channel = useSelector(state => state.sendModal.subWallet.api_channels[API_GET_BALANCES]);
-  const rates_channel = useSelector(state => state.sendModal.subWallet.api_channels[API_GET_FIATPRICE]);
+  const balance_channel = useObjectSelector(state => state.sendModal.subWallet.api_channels[API_GET_BALANCES]);
+  const rates_channel = useObjectSelector(state => state.sendModal.subWallet.api_channels[API_GET_FIATPRICE]);
   const chainTicker = params.coinObj.id
 
   const balances = {
-    results: useSelector(state => state.ledger.balances[balance_channel]
+    results: useObjectSelector(state => state.ledger.balances[balance_channel]
       ? state.ledger.balances[balance_channel][chainTicker]
       : null),
-    errors: useSelector(state => state.errors[API_GET_BALANCES][balance_channel][chainTicker]),
+    errors: useObjectSelector(state => state.errors[API_GET_BALANCES][balance_channel][chainTicker]),
   };
 
-  const rates = useSelector(state => state.ledger.rates[rates_channel]);
+  const rates = useObjectSelector(state => state.ledger.rates[rates_channel]);
 
   const displayCurrency = useSelector(state => state.settings.generalWalletSettings.displayCurrency || USD);
 

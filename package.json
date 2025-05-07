@@ -1,6 +1,6 @@
 {
   "name": "verusmobile",
-  "version": "1.0.18",
+  "version": "1.0.28",
   "private": true,
   "scripts": {
     "postinstall": "./node_modules/.bin/rn-nodeify --hack --install --yarn && npx jetify",
@@ -168,7 +168,8 @@
     "levelup": "4.1.0",
     "mem": "5.1.1",
     "handlebars": "4.7.7",
-    "elliptic": "6.5.7",
+    "@ethersproject/signing-key": "git+https://github.com/VerusCoin/ethersjs-signing-key-package.git",
+    "elliptic": "6.6.1",
     "yargs-parser": "13.1.2",
     "minimist": "1.2.6",
     "debug": "2.6.9",

@@ -9,15 +9,18 @@ import Colors from '../../../../globals/colors';
 import styles from "../../../../styles";
 import { SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT, SEND_MODAL_USER_TO_AUTHENTICATE } from "../../../../utils/constants/sendModal";
 import { getBiometricPassword, getSupportedBiometryType } from '../../../../utils/keychain/keychain';
+import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 
 const AuthenticateUserPassword = props => {
   const [password, setPassword] = useState("")
   const defaultAccount = useSelector(
     state => state.settings.generalWalletSettings.defaultAccount,
   );
-  const accounts = useSelector(state => state.authentication.accounts)
-  const activeAccount = useSelector(state => state.authentication.activeAccount)
-  const data = useSelector(state => state.sendModal.data)
+
+  const accounts = useObjectSelector(state => state.authentication.accounts)
+  const activeAccount = useObjectSelector(state => state.authentication.activeAccount)
+  const data = useObjectSelector(state => state.sendModal.data)
+  
   const account =
     props.route.params == null || props.route.params.account == null
       ? accounts.find(

@@ -6,7 +6,6 @@ import {
   Keyboard,
 } from 'react-native';
 import {Text, Paragraph, Button, TextInput} from 'react-native-paper';
-import {useSelector} from 'react-redux';
 import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
 import TallButton from '../../../../components/LargerButton';
 import Colors from '../../../../globals/colors';

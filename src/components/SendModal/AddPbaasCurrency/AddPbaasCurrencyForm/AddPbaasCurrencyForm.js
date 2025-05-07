@@ -1,5 +1,5 @@
 import {useCallback, useEffect} from 'react';
-import {useSelector, useDispatch} from 'react-redux';
+import {useDispatch} from 'react-redux';
 import {fromBase58Check} from '@bitgo/utxo-lib/dist/src/address';
 import {Alert, Dimensions} from 'react-native';
 import {createAlert} from '../../../../actions/actions/alert/dispatchers/alert';
@@ -15,12 +15,13 @@ import {
 } from '../../../../utils/constants/sendModal';
 import {deriveKeyPair} from '../../../../utils/keys';
 import {AddPbaasCurrencyFormRender} from './AddPbaasCurrencyForm.render';
+import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 
 const AddPbaasCurrencyForm = (props) => {
   const { height } = Dimensions.get("window");
   const dispatch = useDispatch();
-  const sendModal = useSelector(state => state.sendModal);
-  const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser);
+  const sendModal = useObjectSelector(state => state.sendModal);
+  const activeCoinsForUser = useObjectSelector(state => state.coins.activeCoinsForUser);
 
   const formHasError = useCallback(() => {
     const {data} = sendModal;

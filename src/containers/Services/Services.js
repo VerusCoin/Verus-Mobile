@@ -1,5 +1,5 @@
 /*
-  This component represents the screen the the user will
+  This component represents the screen the user will
   use to configure connected wallet services like Wyre
 */  
 

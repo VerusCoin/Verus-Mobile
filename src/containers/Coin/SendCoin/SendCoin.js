@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import Styles from "../../../styles/index";
 import { Button, Portal } from "react-native-paper";
 import VerusPay from "../../VerusPay/VerusPay";
@@ -32,17 +32,20 @@ import { createAlert, resolveAlert } from "../../../actions/actions/alert/dispat
 import {
   CONVERSION_DISABLED
 } from '../../../../env/index';
+import { useObjectSelector } from "../../../hooks/useObjectSelector";
 
 const SendCoin = ({ navigation }) => {
-  const activeCoin = useSelector(state => state.coins.activeCoin);
-  const subWallet = useSelector(state => {
+  const activeCoin = useObjectSelector(state => state.coins.activeCoin);
+  const subWallet = useObjectSelector(state => {
     const chainTicker = state.coins.activeCoin.id;
     return state.coinMenus.activeSubWallets[chainTicker];
   });
-  const generalWalletSettings = useSelector(
+  const generalWalletSettings = useObjectSelector(
     state => state.settings.generalWalletSettings,
   );
+  
   const dispatch = useDispatch()
+  const [cameraDisabled, setCameraDisabled] = useState(generalWalletSettings.enableSendCoinCameraToggle === true);
 
   const CONVERT_OR_CROSS_CHAIN_OPTIONS = CONVERSION_DISABLED ? [
     {
@@ -206,6 +209,10 @@ const SendCoin = ({ navigation }) => {
     openConvertOrCrossChainSendModal(activeCoin, subWallet, option.data)
   }
 
+  const toggleCameraDisabled = () => {
+    setCameraDisabled(!cameraDisabled);
+  }
+
   const openConvertOrCrossChainModal = () => {
     const { ackedCurrencyDisclaimer } = generalWalletSettings;
 
@@ -260,6 +267,7 @@ By proceeding, you confirm that you've read, understood, and agreed to this. Ens
       <VerusPay
         coinObj={activeCoin}
         channel={subWallet}
+        cameraDisabled={cameraDisabled}
         showSpinner={convertOrCrossChainOptionsModalOpen}
         acceptAddressOnly={true}
         containerStyle={{
@@ -291,11 +299,19 @@ By proceeding, you confirm that you've read, understood, and agreed to this. Ens
                 onPress={() =>
                   openConvertOrCrossChainModal()
                 }
+              >
+                {CONVERSION_DISABLED ? "Send cross-chain" : "Convert or cross-chain"}
+              </Button>
+            )}
+            {generalWalletSettings.enableSendCoinCameraToggle && (
+              <Button
+                textColor={Colors.secondaryColor}
+                onPress={() => toggleCameraDisabled()}
                 style={{
                   marginBottom: 8,
                 }}
               >
-                {CONVERSION_DISABLED ? "Send cross-chain" : "Convert or cross-chain"}
+                {cameraDisabled ? "Turn camera on" : "Turn camera off"}
               </Button>
             )}
           </View>

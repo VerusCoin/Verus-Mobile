@@ -23,7 +23,9 @@ import {
   GAS_PRICE_MODIFIER,
   DAI_CONTRACT_ADDRESS,
   DAI_BRIDGE_TRANSFER_GAS_LIMIT,
-  TRANSFER_SKIP_CALLSTATIC_TOKENS
+  TRANSFER_SKIP_CALLSTATIC_TOKENS,
+  MINIMUM_GAS_PRICE_GWEI,
+  ONE_GWEI_IN_WEI
 } from '../../../../constants/web3Constants';
 import { getCurrency, getIdentity } from "../../verusid/callCreators"
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData"
@@ -47,14 +49,17 @@ import BigNumber from "bignumber.js"
 import { BN } from "bn.js";
 import { getStandardEthBalance } from "../../eth/callCreator";
 import { ECPair, networks } from "@bitgo/utxo-lib";
+import { cleanEthersErrorMessage } from "../../../../errors";
+import store from "../../../../../store";
 
 // TODO: Add balance recalculation with eth gas
 export const txPreflight = async (coinObj, activeUser, address, amount, params) => {
   try {
     const Web3Provider = getWeb3ProviderForNetwork(coinObj.network);
+    const { minGasPriceGwei } = store.getState().settings.generalWalletSettings;
     
     const fromAddress = activeUser.keys[coinObj.id][ERC20].addresses[0]
-    const signer = new ethers.VoidSigner(fromAddress, Web3Provider.DefaultProvider)
+    const signer = new ethers.VoidSigner(fromAddress, Web3Provider.InfuraProvider)
     const contract = Web3Provider.getContract(coinObj.currency_id).connect(signer)
     
     const amountBn = ethers.utils.parseUnits(
@@ -62,9 +67,17 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
       coinObj.decimals
     );
 
-    const gasMarketPrice = await Web3Provider.DefaultProvider.getGasPrice()
-    const gasPriceModifier = ethers.BigNumber.from("3")
-    const gasPrice = gasMarketPrice.add(gasMarketPrice.div(gasPriceModifier))
+    const gasMarketPrice = await Web3Provider.DefaultProvider.getGasPrice();
+
+    const gasPriceModifier = ethers.BigNumber.from("3");
+
+    const minGasPrice = minGasPriceGwei != null ? 
+      ethers.BigNumber.from(minGasPriceGwei).mul(ONE_GWEI_IN_WEI) 
+      : 
+      ethers.BigNumber.from(MINIMUM_GAS_PRICE_GWEI).mul(ONE_GWEI_IN_WEI);
+
+    const modifiedGasPrice = gasMarketPrice.add(gasMarketPrice.div(gasPriceModifier));
+    const gasPrice = modifiedGasPrice.gte(minGasPrice) ? modifiedGasPrice : minGasPrice;
 
     const gasLimModifier = ethers.BigNumber.from("3")
     const gasEst = await contract.estimateGas.transfer(address, amountBn)
@@ -101,11 +114,9 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
       },
     };
   } catch(e) {
-    console.error(e)
-
     return {
       err: true,
-      result: e.message
+      result: cleanEthersErrorMessage(e.message, e.body)
     }
   }
 }
@@ -117,9 +128,9 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
     const fromAddress = activeUserKeys.addresses[0];
     const submittedAmount = amountSubmitted == null ? output.satoshis : amountSubmitted;
 
-    const signer = new ethers.VoidSigner(fromAddress, Web3Provider.DefaultProvider);
+    const signer = new ethers.VoidSigner(fromAddress, Web3Provider.InfuraProvider);
 
-    const delegatorContract = Web3Provider.getVerusBridgeDelegatorContract().connect(signer);
+    const delegatorContract = Web3Provider.getVerusBridgeDelegatorContract(Web3Provider.InfuraProvider).connect(signer);
     const systemId = Web3Provider.getVrscSystem();
     const systemName = getSystemNameFromSystemId(systemId);
     const tokenContract = coinObj.currency_id;
@@ -274,7 +285,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
 
     let destinationtype, destinationaddress;
 
-    const baseGasPrice = await Web3Provider.DefaultProvider.getGasPrice();
+    const baseGasPrice = await Web3Provider.InfuraProvider.getGasPrice();
     const minGasPrice = ethers.BigNumber.from(MINIMUM_GAS_PRICE_WEI_DELEGATOR_CONTRACT);
     const gasFeeModifier = ethers.BigNumber.from("4");
     const modifiedGasPrice = baseGasPrice.add(GAS_PRICE_MODIFIER);
@@ -377,7 +388,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
         : transferGas.add(transferGas.div(gasFeeModifier));
 
     if (coinObj.currency_id !== ETH_CONTRACT_ADDRESS) {
-      const contract = Web3Provider.getContract(coinObj.currency_id).connect(signer);
+      const contract = Web3Provider.getContract(coinObj.currency_id, null, Web3Provider.InfuraProvider).connect(signer);
 
       approvalGasFee = (await contract.estimateGas.approve(
         delegatorContract.address,
@@ -487,11 +498,9 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
       },
     };
   } catch(e) {
-    console.error(e)
-
     return {
       err: true,
-      result: e.message
+      result: cleanEthersErrorMessage(e.message)
     }
   }
 }

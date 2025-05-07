@@ -1,16 +1,15 @@
 import React from 'react';
 import {View, Dimensions, TouchableWithoutFeedback, Keyboard} from 'react-native';
 import {Text, Paragraph, TextInput} from 'react-native-paper';
-import { useSelector } from 'react-redux';
 import { createAlert } from '../../../../actions/actions/alert/dispatchers/alert';
 import TallButton from '../../../../components/LargerButton';
 import Colors from '../../../../globals/colors';
 import { SMALL_DEVICE_HEGHT } from '../../../../utils/constants/constants';
+import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 
 export default function ChooseName({ profileName, setProfileName, navigation }) {
   const {height} = Dimensions.get('window');
-  const accounts = useSelector(state => state.authentication.accounts)
-  const isKeyboardActive = useSelector(state => state.keyboard.active);
+  const accounts = useObjectSelector(state => state.authentication.accounts)
 
   const isDuplicateAccount = (accountID) => {
     let index = 0;

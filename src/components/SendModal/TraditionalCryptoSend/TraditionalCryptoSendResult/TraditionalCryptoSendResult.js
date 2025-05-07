@@ -45,7 +45,7 @@ const TraditionalCryptoSendResult = (props) => {
           marginTop: 16,
         }}>
         <Text
-          numberOfLines={1}
+          numberOfLines={2}
           style={{
             textAlign: 'center',
             fontSize: 20,

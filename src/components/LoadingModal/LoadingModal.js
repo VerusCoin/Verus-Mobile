@@ -6,9 +6,10 @@ import Colors from '../../globals/colors';
 import styles from '../../styles';
 import AnimatedActivityIndicator from '../AnimatedActivityIndicator';
 import SemiModal from '../SemiModal';
+import { useObjectSelector } from '../../hooks/useObjectSelector';
 
 export default function LoadingModal(props) {
-  const {visible, message, height} = useSelector(state => state.loadingModal);
+  const {visible, message, height} = useObjectSelector(state => state.loadingModal);
 
   return (
     <Portal>

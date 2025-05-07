@@ -26,12 +26,16 @@ import { createRecoverIdentityTx, createRevokeIdentityTx } from '../../../../uti
 import { coinsList } from '../../../../utils/CoinData/CoinsList';
 import { decryptkey } from '../../../../utils/seedCrypt';
 import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
+import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 
 const RecoverIdentityForm = (props) => {
   const { height } = Dimensions.get("window");
   const dispatch = useDispatch();
-  const sendModal = useSelector(state => state.sendModal);
+
+  const sendModal = useObjectSelector(state => state.sendModal);
+
   const instanceKey = useSelector(state => state.authentication.instanceKey);
+  
   const [networkName, setNetworkName] = useState(sendModal.data[SEND_MODAL_SYSTEM_ID]);
   
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -86,10 +90,10 @@ const RecoverIdentityForm = (props) => {
   }, []);
 
   const handleScan = (codes) => {
-    const result = codes[0]
+    const result = codes[0] ? codes[0].value : null;
     setScannerOpen(false)
 
-    if (typeof result === "string" && result.length <= 5000) {
+    if (result != null && typeof result === "string" && result.length <= 5000) {
       props.updateSendFormData(scannerField, result)
     } else {
       Alert.alert("Error", "Unknown data in qr code")

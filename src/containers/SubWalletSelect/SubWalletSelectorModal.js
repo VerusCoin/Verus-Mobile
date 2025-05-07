@@ -15,11 +15,12 @@ import { USD } from "../../utils/constants/currencies";
 import BigNumber from "bignumber.js";
 import Colors from "../../globals/colors";
 import { CoinDirectory } from "../../utils/CoinData/CoinDirectory";
+import { useObjectSelector } from "../../hooks/useObjectSelector";
 
 const SubWalletSelectorModal = (props) => {
   const dispatch = useDispatch();
-  const allBalances = useSelector(state => state.ledger.balances);
-  const rates = useSelector(state => state.ledger.rates);
+  const allBalances = useObjectSelector(state => state.ledger.balances);
+  const rates = useObjectSelector(state => state.ledger.rates);
   const displayCurrency = useSelector(state => state.settings.generalWalletSettings.displayCurrency || USD);
 
   const [cryptoBalances, setCryptoBalances] = useState({});

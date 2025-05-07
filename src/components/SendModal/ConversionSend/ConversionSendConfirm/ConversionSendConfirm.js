@@ -1,3 +1,5 @@
+// DEPRECATED
+
 import BigNumber from "bignumber.js";
 import { Component } from "react"
 import { Alert } from "react-native";
