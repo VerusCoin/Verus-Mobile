@@ -48,8 +48,7 @@ export const updateDlightInfo = async (activeUser, coinObj) => {
 };
 
 export const updateDlightTransactions = async (activeUser, coinObj) => {
-  //console.error(">>>> updateDlightTransactions called")
-
+  //console.log(">>>> updateDlightTransactions called")
   const zTransactions = await getZTransactions(
     coinObj.id,
     activeUser.accountHash,
@@ -57,22 +56,17 @@ export const updateDlightTransactions = async (activeUser, coinObj) => {
     'all',
   );
   const {result, ...header} = zTransactions;
-
-  //console.error("zTransactions result = " + JSON.stringify(result));
-  //console.error("result.transactions = " + JSON.stringify(result.transactions));
+  //console.log("zTransactions result = " + JSON.stringify(result));
+  //console.log("result.transactions = " + JSON.stringify(result.transactions));
+  // TODO: below is redundant, just pass through without jsonRpc formatting from getZtx
   const transactions = result.transactions;
-  //TODO: result.transactions is an array, standardize func returns a single txObj
-  // Ethereum seems to handle in batches, need to see if we gain anything by that, here.
-
+  // TODO: result.transactions is an array, standardize func returns a single txObj. batch instead
   const _txs = [];
   transactions.forEach(function(transaction) {
       let standardizedTxObj = standardizeDlightTxObj(transaction)
-      //console.error("Standardized = " + JSON.stringify(standardizedTxObj));
+      //console.log("Standardized = " + JSON.stringify(standardizedTxObj));
       _txs.push(standardizedTxObj)
   })
-  //const standard = standardizeDlightTxObj(txObj)
-  //console.error("Standardized = " + JSON.stringify(standard));
-
   return {
     chainTicker: coinObj.id,
     channel: DLIGHT_PRIVATE,

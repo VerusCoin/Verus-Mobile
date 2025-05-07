@@ -1,11 +1,7 @@
-import { makeDlightRequest } from '../callCreators'
-import { DLIGHT_BLOCKCOUNT } from '../../../../constants/dlightConstants'
 import { getSynchronizerInstance } from 'react-native-verus'
-
 
 // Get the current chain blockheight
 export const getBlockCount = (coinId, accountHash, coinProto) => {
-  //console.log(">>> getBlockCount called")
   const sync = getSynchronizerInstance(accountHash, coinId);
     let res, error = "";
 
@@ -30,5 +26,4 @@ export const getBlockCount = (coinId, accountHash, coinProto) => {
         }
       })
     })
-  //return makeDlightRequest(coinId, accountHash, coinProto, 0, DLIGHT_BLOCKCOUNT, [])
 }
