@@ -1,5 +1,3 @@
-import VerusLightClientAndroid from 'react-native-verus-light-client'
-
 const requestFunctions = require('./requests/WalletRequests')
 const formatResponse = require('./requests/JsonRpc')
 
@@ -11,18 +9,7 @@ function createWallet(coinId, coinProto, accountHash, address, port, numAddresse
   return new Promise((resolve, reject) => resolve(true))
 }
 
-export const testReactMethod = async (msg) => {
-  try {
-    return await VerusLightClientAndroid.testReactMethod(msg);
-  } catch (error) {
-    throw error
-  }
-}
-
 function openWallet(coinId, coinProto, accountHash) {
-
-  VerusLightClientAndroid.testReactMethod("test.test.test");
-
   return new Promise((resolve, reject) => {
     if (WalletFolder[coinId + '_' + coinProto + '_' + accountHash] == null) reject("Failed to open " + coinId + " wallet.")
     else {
@@ -34,8 +21,6 @@ function openWallet(coinId, coinProto, accountHash) {
 }
 
 function startSync(coinId, coinProto, accountHash) {
-  VerusLightClientAndroid.testReactMethod("startSync");
-
   return new Promise((resolve, reject) => {
     if (WalletFolder[coinId + '_' + coinProto + '_' + accountHash] == null) reject("Failed to open " + coinId + " wallet.")
     else {

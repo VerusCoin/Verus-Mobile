@@ -6,7 +6,6 @@ import {
 } from './agama-wallet-lib/keys';
 import { ETH, ERC20, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from './constants/intervalConstants';
 import ethers from 'ethers';
-require("../../ReactotronConfig");
 
 //import VerusLightClient from 'react-native-verus-light-client'
 import { Tools } from 'react-native-verus'
@@ -165,23 +164,22 @@ export const isDlightSpendingKey = (seed) => {
 }
 
 export const parseDlightSeed = async (seed) => {
-  console.log("parseDlightSeed called!")
+  //console.log("parseDlightSeed called!")
   if (isDlightSpendingKey(seed)) return seed
   
   try {
     const viewkey = await Tools.deriveViewingKey(seed)
-    console.log("Viewkey(" + viewkey + ")")
+    //console.log("Viewkey(" + viewkey + ")")
 
-    const saplingAddressFromView = await Tools.deriveShieldedAddress(seed)
-    console.log("deriveShieldedAddress(" + saplingAddressFromView + ")")
+    const saplingAddress = await Tools.deriveShieldedAddress(seed)
+    //console.log("deriveShieldedAddress(" + saplingAddressFromView + ")")
 
-    //TODO: only works with UnifiedAddresses
+    //TODO: Find out why this is returning false
     //const isValid = await Tools.isValidAddress(saplingAddress)
     //console.log("isValidAddress(" + isValid + ")");
 
-    //TODO: have this return only sapling Key with Accounts = 1
     const saplingSpendKey = await Tools.deriveSaplingSpendingKey(seed)
-    console.log("SaplingSpendingKey(" + saplingSpendKey + ")");
+    //console.log("SaplingSpendingKey(" + saplingSpendKey + ")");
 
     //TODO: below does not derive properly, and we can use the above function anyway
     //const saplingAddrFromSeed = await Tools.deriveShieldedAddressFromSeed(seed)

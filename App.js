@@ -3,13 +3,17 @@
  * @flow strict-local
  */
 
-const createEnhancers = (getDefaultEnhancers: GetDefaultEnhancers<any>) => {
+/*const createEnhancers = (getDefaultEnhancers: GetDefaultEnhancers<any>) => {
   if (__DEV__) {
     const reactotron = require("./ReactotronConfig").default
     return getDefaultEnhancers().concat(reactotron.createEnhancer())
   } else {
     return getDefaultEnhancers()
   }
+}*/
+
+const createEnhancers = (getDefaultEnhancers: GetDefaultEnhancers<any>) => {
+    return getDefaultEnhancers()
 }
 
 /*if (__DEV__) {

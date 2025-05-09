@@ -1,54 +1,38 @@
 import { createStore, applyMiddleware, compose } from 'redux';
-import createSagaMiddleware from 'redux-saga';
-import thunk from 'redux-thunk';
+ import createSagaMiddleware from 'redux-saga';
+ import thunk from 'redux-thunk';
 
-import rootReducer from '../reducers/index';
-import rootSaga from '../sagas';
+ import rootReducer from '../reducers/index';
+ import rootSaga from '../sagas'
 
-import reactotron from '../../ReactotronConfig';
+ const configureStore = () => {
+   const sagaMiddleware = createSagaMiddleware();
 
-//const middleware = [thunk, sagaMiddleware];
+   const middlewares = [thunk, sagaMiddleware];
 
-/*const store = createStore(
-  rootReducer,
-  compose(
-    applyMiddleware(...middleware),
-    reactotron.createEnhancer() // Add Reactotron as an enhancer
-  )
-);
+   // const ret = createStore(
+   //   rootReducer,
+   //   compose(
+   //     applyMiddleware(...middlewares),
+   //     window.__REDUX_DEVTOOLS_EXTENSION__ &&
+   //       window.__REDUX_DEVTOOLS_EXTENSION__(),
+   //   ),
+   // );
 
-sagaMiddleware.run(rootSaga); // Run the root saga
+   const ret = createStore(rootReducer, applyMiddleware(...middlewares));
 
-export default store;
-*/
-const configureStore = () => {
-  const sagaMonitor = reactotron.createSagaMonitor();
-  const sagaMiddleware = createSagaMiddleware( { sagaMonitor });
+   sagaMiddleware.run(rootSaga)
 
-  const middlewares = [thunk, sagaMiddleware];
+   return ret
+ }
 
-  const createEnhancers = (getDefaultEnhancers: GetDefaultEnhancers<any>) => {
-    if (__DEV__) {
-      return getDefaultEnhancers().concat(reactotron.createEnhancer())
-    } else {
-      return getDefaultEnhancers()
-    }
-  }
-
-  const ret = createStore(rootReducer, compose(applyMiddleware(...middlewares), reactotron.createEnhancer()));
-
-  sagaMiddleware.run(rootSaga)
-
-  return ret
-}
-
-export default store = configureStore();
+ export default store = configureStore();
 
 
 
-// Use this for testing with Jest
-// import { createStore, applyMiddleware } from 'redux';
-// import thunk from 'redux-thunk';
-// import rootReducer from '../reducers/index'
+ // Use this for testing with Jest
+ // import { createStore, applyMiddleware } from 'redux';
+ // import thunk from 'redux-thunk';
+ // import rootReducer from '../reducers/index'
 
-// export default store = createStore(rootReducer, applyMiddleware(thunk))
+ // export default store = createStore(rootReducer, applyMiddleware(thunk))mport { createStore, applyMiddleware, compose } from 'redux';
