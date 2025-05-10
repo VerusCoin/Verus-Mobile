@@ -22,7 +22,6 @@ export default function RevokeRecoverIdentityForm({ navigation, isRecovery, impo
   ];
 
   const {height} = Dimensions.get('window');
-  const isKeyboardActive = useSelector(state => state.keyboard.active);
   const [networkSelectOpen, setNetworkSelectOpen] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState(coinsList.VRSC);
   const [loading, setLoading] = useState(false);
@@ -155,7 +154,7 @@ export default function RevokeRecoverIdentityForm({ navigation, isRecovery, impo
             {`Select the blockchain you want to ${isRecovery ? "recover" : "revoke"} your VerusID on, then press next. Keep in mind, if your identity has been exported to other blockchains, you will need to revoke/recover them separately.`}
           </Paragraph>
         </View>
-        {!isKeyboardActive && <TallButton
+        <TallButton
           onPress={next}
           mode="contained"
           labelStyle={{fontWeight: "bold"}}
@@ -165,7 +164,7 @@ export default function RevokeRecoverIdentityForm({ navigation, isRecovery, impo
             width: 280
           }}>
           {"Next"}
-        </TallButton>}
+        </TallButton>
       </View>
     </TouchableWithoutFeedback>
   );

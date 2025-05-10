@@ -103,7 +103,7 @@ export default function ChooseName({ profileName, setProfileName, navigation }) 
             onChangeText={(text) => setProfileName(text)}
           />
         </View>
-        {!isKeyboardActive && <TallButton
+        <TallButton
           onPress={next}
           mode="contained"
           labelStyle={{fontWeight: "bold"}}
@@ -114,7 +114,7 @@ export default function ChooseName({ profileName, setProfileName, navigation }) 
             width: 280
           }}>
           {"Next"}
-        </TallButton>}
+        </TallButton>
       </View>
     </TouchableWithoutFeedback>
   );

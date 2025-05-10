@@ -29,7 +29,6 @@ export const initializeAccountData = async (
 
   if (accountAuthenticator) {
 
-//    VerusLightClient.testReactMethod("Testing successfully!!");
     setInitStep(LOADING_ACCOUNT);
     await initServiceStoredDataForUser(account.accountHash);
 

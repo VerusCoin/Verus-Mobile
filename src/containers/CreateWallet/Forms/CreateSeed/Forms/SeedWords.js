@@ -15,8 +15,6 @@ import {DEFAULT_SEED_PHRASE_LENGTH} from '../../../../../utils/constants/constan
 export default function SeedWords({navigation, newSeed, onComplete}) {
   const {height} = Dimensions.get('window');
 
-  const isKeyboardActive = useSelector(state => state.keyboard.active);
-
   const [formStep, setFormStep] = useState(0);
   const [seedWords, setSeedWords] = useState(newSeed.split(' '));
 
@@ -221,53 +219,51 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
             </View>
           )}
         </View>
-        {!isKeyboardActive && (
-          <View
-            style={{
-              position: 'absolute',
-              bottom: 40,
-              width: 280,
-            }}>
-            <Text style={{textAlign: 'center', paddingBottom: 8}}>
-              {isAtEnd
-                ? 'Please verify the listed words.'
-                : "When you've written them down, press next."}
-            </Text>
-            <View style={{flexDirection: "row"}}>
-              {formStep > 0 && (
-                <TallButton
-                  onPress={back}
-                  mode="text"
-                  labelStyle={{
-                    fontWeight: 'bold',
-                    color: Colors.warningButtonColor,
-                  }}
-                  style={{
-                    marginTop: 8,
-                    flex: 1
-                  }}>
-                  {'Back'}
-                </TallButton>
-              )}
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 40,
+            width: 280,
+          }}>
+          <Text style={{textAlign: 'center', paddingBottom: 8}}>
+            {isAtEnd
+              ? 'Please verify the listed words.'
+              : "When you've written them down, press next."}
+          </Text>
+          <View style={{flexDirection: "row"}}>
+            {formStep > 0 && (
               <TallButton
-                onPress={next}
-                mode="contained"
-                disabled={
-                  isAtEnd &&
-                  (wordGuesses[0].length == 0 ||
-                    wordGuesses[1].length == 0 ||
-                    wordGuesses[2].length == 0)
-                }
-                labelStyle={{fontWeight: 'bold'}}
+                onPress={back}
+                mode="text"
+                labelStyle={{
+                  fontWeight: 'bold',
+                  color: Colors.warningButtonColor,
+                }}
                 style={{
                   marginTop: 8,
                   flex: 1
                 }}>
-                {isAtEnd ? 'Complete' : 'Next'}
+                {'Back'}
               </TallButton>
-            </View>
+            )}
+            <TallButton
+              onPress={next}
+              mode="contained"
+              disabled={
+                isAtEnd &&
+                (wordGuesses[0].length == 0 ||
+                  wordGuesses[1].length == 0 ||
+                  wordGuesses[2].length == 0)
+              }
+              labelStyle={{fontWeight: 'bold'}}
+              style={{
+                marginTop: 8,
+                flex: 1
+              }}>
+              {isAtEnd ? 'Complete' : 'Next'}
+            </TallButton>
           </View>
-        )}
+        </View>
       </View>
     </TouchableWithoutFeedback>
   );

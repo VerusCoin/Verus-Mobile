@@ -2,7 +2,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import React, {useEffect, useState} from 'react';
 import {addCoin, addUser} from '../../../actions/actionCreators';
 import {createAlert} from '../../../actions/actions/alert/dispatchers/alert';
-import {CHANNELS, ELECTRUM, DLIGHT_PRIVATE} from '../../../utils/constants/intervalConstants';
+import {CHANNELS, ELECTRUM} from '../../../utils/constants/intervalConstants';
 import {hashAccountId} from '../../../utils/crypto/hash';
 import {storeBiometricPassword} from '../../../utils/keychain/keychain';
 import {arrayToObject} from '../../../utils/objectManip';
@@ -63,7 +63,6 @@ export default function CreateProfileStackScreens(props) {
             seed,
             CoinDirectory.findCoinObj(startCoin),
             ELECTRUM,
-//            DLIGHT_PRIVATE,
             KEY_DERIVATION_VERSION,
           );
         }
