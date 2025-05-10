@@ -2,24 +2,6 @@
  * @format
  * @flow strict-local
  */
-
-/*const createEnhancers = (getDefaultEnhancers: GetDefaultEnhancers<any>) => {
-  if (__DEV__) {
-    const reactotron = require("./ReactotronConfig").default
-    return getDefaultEnhancers().concat(reactotron.createEnhancer())
-  } else {
-    return getDefaultEnhancers()
-  }
-}*/
-
-const createEnhancers = (getDefaultEnhancers: GetDefaultEnhancers<any>) => {
-    return getDefaultEnhancers()
-}
-
-/*if (__DEV__) {
-  require("./ReactotronConfig");
-}*/
-
 import React from 'react';
 import VerusMobile from './src/VerusMobile';
 import store from './src/store';

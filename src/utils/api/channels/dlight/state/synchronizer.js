@@ -8,26 +8,6 @@ DLIGHT_TRANSACTIONS_UPDATED,
 DLIGHT_SYNC_UPDATED
 } from '../../../../constants/storeType'
 
-//import { eventChannel } from "redux-saga";
-
-/*let syncInstance = null;
-
-class SynchronizerSingleton {
-  constructor(alias, network) {
-    if (!syncInstance) {
-      syncInstance = new Synchronizer(alias, network);
-    }
-    return syncInstance;
-  }
-}
-
-export const getSynchronizerInstance = (alias, network) => {
-  if (!syncInstance) {
-    syncInstance = new Synchronizer(alias, network);
-  }
-  return syncInstance;
-};*/
-
 // Uses a coin's ticker symbol (id), protocol (btc || vrsc)
 // and user's account hash to identify a light client wallet
 // and start syncing it to the blockchain

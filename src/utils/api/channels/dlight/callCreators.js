@@ -1,5 +1,4 @@
 //import VerusLightClient from 'react-native-verus-light-client'
-import { VerusLightClient } from 'react-native-verus'
 import ApiException from '../../errors/apiError'
 import { DLIGHT_PRIVATE } from '../../../constants/intervalConstants'
 
@@ -26,8 +25,9 @@ export * from './requests/sendPrivateTransaction'
  * @param {String[]} params Paramters to pass in with the request
  */
 export const makeDlightRequest = (coinId, accountHash, coinProto, reqId, method, params) => {
+  //TODO: We probably don't need this function anymore. definitely not, once iOS is done
   return new Promise((resolve, reject) => {
-    console.log("makeDlightRequest called, reqId(" + reqId + "), method(" + method + ")");
+    //console.log("makeDlightRequest called, reqId(" + reqId + "), method(" + method + ")");
     VerusLightClient.request(reqId, method, [coinId, coinProto, accountHash, ...params])
     .then(res => {      
       if (res.error != null) {
