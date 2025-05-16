@@ -46,8 +46,20 @@ THIS IS EXPERIMENTAL SOFTWARE AND IT IS PROVIDED "AS IS" AND ANY EXPRESSED OR IM
 
 2. Install `openjdk-17-jdk` package
 
-3. Install `nvm` and run `nvm use 18.14`
+3. Install `nvm`, select and use v18.14
 
+```
+# from https://github.com/nvm-sh/nvm?tab=readme-ov-file#install--update-script
+
+# install nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+
+# install version 18.14
+nvm install 18.14
+
+# use 18.14. You will need to do this before you run `yarn` in any new terminals
+nvm use 18.14
+```
 4. Enable corepack with `corepack enable` for access to `yarn` commands
 
 5. Clone `verus-android-wallet-sdk` (`main` branch) repository, build and publish Maven artifacts locally, with steps below
