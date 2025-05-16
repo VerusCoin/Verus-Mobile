@@ -34,8 +34,6 @@ THIS IS EXPERIMENTAL SOFTWARE AND IT IS PROVIDED "AS IS" AND ANY EXPRESSED OR IM
 
 # Build Instructions
 
-# Build Instructions
-
 ## Android (on Ubuntu)
 
 0. Clone GitHub repository, and `cd` into it
