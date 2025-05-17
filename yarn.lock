@@ -9933,7 +9933,7 @@ react-native-url-polyfill@1.3.0:
 
 "react-native-verus@git+https://github.com/who-biz/react-native-zcash.git#maven-verus":
   version "0.6.10"
-  resolved "git+https://github.com/who-biz/react-native-zcash.git#ef2b1fe6a1641e35a93450062dca4c8d3871df1f"
+  resolved "git+https://github.com/who-biz/react-native-zcash.git#6bc0038f3d8bfb4c59d471436f2495a3d0b1ff82"
   dependencies:
     biggystring "^4.1.3"
     rfc4648 "^1.3.0"
