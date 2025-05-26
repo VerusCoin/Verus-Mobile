@@ -32,43 +32,125 @@ import {
   ProfileMediaKey,
   ZMemoMessageKey,
   ZMemoSignatureKey,
-  CurrencyStartNotarizationKey
+  CurrencyStartNotarizationKey,
+  VERUSPAY_INVOICE_VDXF_KEY,
+  IDENTITY_UPDATE_REQUEST_VDXF_KEY,
+  IDENTITY_UPDATE_RESPONSE_VDXF_KEY,
+  IDENTITY_AUTH_SIG_VDXF_KEY,
+  LOGIN_CONSENT_RESPONSE_SIG_VDXF_KEY,
+  LOGIN_CONSENT_REQUEST_VDXF_KEY,
+  LOGIN_CONSENT_RESPONSE_VDXF_KEY,
+  LOGIN_CONSENT_CHALLENGE_VDXF_KEY,
+  LOGIN_CONSENT_DECISION_VDXF_KEY,
+  WALLET_VDXF_KEY,
+  LOGIN_CONSENT_REDIRECT_VDXF_KEY,
+  LOGIN_CONSENT_WEBHOOK_VDXF_KEY,
+  LOGIN_CONSENT_CONTEXT_VDXF_KEY,
+  LOGIN_CONSENT_ID_PROVISIONING_WEBHOOK_VDXF_KEY,
+  ID_ADDRESS_VDXF_KEY,
+  ID_SYSTEMID_VDXF_KEY,
+  ID_FULLYQUALIFIEDNAME_VDXF_KEY,
+  ID_PARENT_VDXF_KEY,
+  LOGIN_CONSENT_PROVISIONING_REQUEST_VDXF_KEY,
+  LOGIN_CONSENT_PROVISIONING_CHALLENGE_VDXF_KEY,
+  LOGIN_CONSENT_PROVISIONING_DECISION_VDXF_KEY,
+  LOGIN_CONSENT_PROVISIONING_RESPONSE_VDXF_KEY,
+  LOGIN_CONSENT_PROVISIONING_RESULT_VDXF_KEY,
+  IDENTITY_NAME_COMMITMENT_TXID,
+  IDENTITY_REGISTRATION_TXID,
+  IDENTITY_UPDATE_TXID,
+  LOGIN_CONSENT_PROVISIONING_RESULT_STATE_PENDINGREQUIREDINFO,
+  LOGIN_CONSENT_PROVISIONING_RESULT_STATE_PENDINGAPPROVAL,
+  LOGIN_CONSENT_PROVISIONING_RESULT_STATE_COMPLETE,
+  LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED,
+  LOGIN_CONSENT_PROVISIONING_ERROR_KEY_NAMETAKEN,
+  LOGIN_CONSENT_PROVISIONING_ERROR_KEY_UNKNOWN,
+  LOGIN_CONSENT_PROVISIONING_ERROR_KEY_COMMIT_FAILED,
+  LOGIN_CONSENT_PROVISIONING_ERROR_KEY_CREATION_FAILED,
+  LOGIN_CONSENT_PROVISIONING_ERROR_KEY_TRANSFER_FAILED,
+  SIGNED_SESSION_OBJECT_DATA,
+  SIGNED_SESSION_OBJECT,
+  CURRENCY_ADDRESS,
+  DATA_TYPE_STRING,
+  DATA_TYPE_DEFINEDKEY
 } from 'verus-typescript-primitives';
 
-export function getVDXFKeyLabel(key) {
-  if (key === DataByteKey.vdxfid) return "byte";
-  if (key === DataInt16Key.vdxfid) return "int16";
-  if (key === DataUint16Key.vdxfid) return "uint16";
-  if (key === DataInt32Key.vdxfid) return "int32";
-  if (key === DataUint32Key.vdxfid) return "uint32";
-  if (key === DataInt64Key.vdxfid) return "int64";
-  if (key === DataUint64Key.vdxfid) return "uint64";
-  if (key === DataUint160Key.vdxfid) return "uint160";
-  if (key === DataUint256Key.vdxfid) return "uint256";
-  if (key === DataStringKey.vdxfid) return "string";
-  if (key === DataVectorKey.vdxfid) return "vector";
-  if (key === DataByteVectorKey.vdxfid) return "byte vector";
-  if (key === DataInt32VectorKey.vdxfid) return "int32 vector";
-  if (key === DataInt64VectorKey.vdxfid) return "int64 vector";
-  if (key === DataCurrencyMapKey.vdxfid) return "currency map";
-  if (key === DataRatingsKey.vdxfid) return "ratings";
-  if (key === DataURLKey.vdxfid) return "url";
-  if (key === DataTransferDestinationKey.vdxfid) return "transfer destination";
-  if (key === UTXORefKey.vdxfid) return "utxo ref";
-  if (key === CrossChainDataRefKey.vdxfid) return "cross chain data ref";
-  if (key === EncryptionDescriptorKey.vdxfid) return "encryption descriptor";
-  if (key === SaltedDataKey.vdxfid) return "salted data";
-  if (key === DataDescriptorKey.vdxfid) return "data descriptor";
-  if (key === SignatureDataKey.vdxfid) return "signature data";
-  if (key === VectorUint256Key.vdxfid) return "vector uint256";
-  if (key === MMRLinksKey.vdxfid) return "mmr links";
-  if (key === MMRDescriptorKey.vdxfid) return "mmr descriptor";
-  if (key === TypeDefinitionKey.vdxfid) return "type definition";
-  if (key === MultiMapKey.vdxfid) return "multi map";
-  if (key === ContentMultiMapRemoveKey.vdxfid) return "content multi map remove";
-  if (key === ProfileMediaKey.vdxfid) return "profile media";
-  if (key === ZMemoMessageKey.vdxfid) return "z memo message";
-  if (key === ZMemoSignatureKey.vdxfid) return "z memo signature";
-  if (key === CurrencyStartNotarizationKey.vdxfid) return "currency start notarization";
-  return "unknown";
+const vdxfKeyLabelMap = new Map([
+  [DataByteKey.vdxfid, "byte"],
+  [DataInt16Key.vdxfid, "int16"],
+  [DataUint16Key.vdxfid, "uint16"],
+  [DataInt32Key.vdxfid, "int32"],
+  [DataUint32Key.vdxfid, "uint32"],
+  [DataInt64Key.vdxfid, "int64"],
+  [DataUint64Key.vdxfid, "uint64"],
+  [DataUint160Key.vdxfid, "uint160"],
+  [DataUint256Key.vdxfid, "uint256"],
+  [DataStringKey.vdxfid, "string"],
+  [DataVectorKey.vdxfid, "vector"],
+  [DataByteVectorKey.vdxfid, "byte vector"],
+  [DataInt32VectorKey.vdxfid, "int32 vector"],
+  [DataInt64VectorKey.vdxfid, "int64 vector"],
+  [DataCurrencyMapKey.vdxfid, "currency map"],
+  [DataRatingsKey.vdxfid, "ratings"],
+  [DataURLKey.vdxfid, "url"],
+  [DataTransferDestinationKey.vdxfid, "transfer destination"],
+  [UTXORefKey.vdxfid, "utxo ref"],
+  [CrossChainDataRefKey.vdxfid, "cross chain data ref"],
+  [EncryptionDescriptorKey.vdxfid, "encryption descriptor"],
+  [SaltedDataKey.vdxfid, "salted data"],
+  [DataDescriptorKey.vdxfid, "data descriptor"],
+  [SignatureDataKey.vdxfid, "signature data"],
+  [VectorUint256Key.vdxfid, "vector uint256"],
+  [MMRLinksKey.vdxfid, "mmr links"],
+  [MMRDescriptorKey.vdxfid, "mmr descriptor"],
+  [TypeDefinitionKey.vdxfid, "type definition"],
+  [MultiMapKey.vdxfid, "multi map"],
+  [ContentMultiMapRemoveKey.vdxfid, "content multi map remove"],
+  [ProfileMediaKey.vdxfid, "profile media"],
+  [ZMemoMessageKey.vdxfid, "z memo message"],
+  [ZMemoSignatureKey.vdxfid, "z memo signature"],
+  [CurrencyStartNotarizationKey.vdxfid, "currency start notarization"],
+  [VERUSPAY_INVOICE_VDXF_KEY.vdxfid, "veruspay invoice"],
+  [IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid, "identity update request"],
+  [IDENTITY_UPDATE_RESPONSE_VDXF_KEY.vdxfid, "identity update response"],
+  [IDENTITY_AUTH_SIG_VDXF_KEY.vdxfid, "identity auth signature"],
+  [LOGIN_CONSENT_RESPONSE_SIG_VDXF_KEY.vdxfid, "login consent response signature"],
+  [LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid, "login consent request"],
+  [LOGIN_CONSENT_RESPONSE_VDXF_KEY.vdxfid, "login consent response"],
+  [LOGIN_CONSENT_CHALLENGE_VDXF_KEY.vdxfid, "login consent challenge"],
+  [LOGIN_CONSENT_DECISION_VDXF_KEY.vdxfid, "login consent decision"],
+  [WALLET_VDXF_KEY.vdxfid, "wallet"],
+  [LOGIN_CONSENT_REDIRECT_VDXF_KEY.vdxfid, "login consent redirect"],
+  [LOGIN_CONSENT_WEBHOOK_VDXF_KEY.vdxfid, "login consent webhook"],
+  [LOGIN_CONSENT_CONTEXT_VDXF_KEY.vdxfid, "login consent context"],
+  [LOGIN_CONSENT_ID_PROVISIONING_WEBHOOK_VDXF_KEY.vdxfid, "login consent id provisioning webhook"],
+  [ID_ADDRESS_VDXF_KEY.vdxfid, "id address"],
+  [ID_SYSTEMID_VDXF_KEY.vdxfid, "id system id"],
+  [ID_FULLYQUALIFIEDNAME_VDXF_KEY.vdxfid, "id fully qualified name"],
+  [ID_PARENT_VDXF_KEY.vdxfid, "id parent"],
+  [LOGIN_CONSENT_PROVISIONING_REQUEST_VDXF_KEY.vdxfid, "login consent provisioning request"],
+  [LOGIN_CONSENT_PROVISIONING_CHALLENGE_VDXF_KEY.vdxfid, "login consent provisioning challenge"],
+  [LOGIN_CONSENT_PROVISIONING_DECISION_VDXF_KEY.vdxfid, "login consent provisioning decision"],
+  [LOGIN_CONSENT_PROVISIONING_RESPONSE_VDXF_KEY.vdxfid, "login consent provisioning response"],
+  [LOGIN_CONSENT_PROVISIONING_RESULT_VDXF_KEY.vdxfid, "login consent provisioning result"],
+  [IDENTITY_NAME_COMMITMENT_TXID.vdxfid, "identity name commitment txid"],
+  [IDENTITY_REGISTRATION_TXID.vdxfid, "identity registration txid"],
+  [IDENTITY_UPDATE_TXID.vdxfid, "identity update txid"],
+  [LOGIN_CONSENT_PROVISIONING_RESULT_STATE_PENDINGREQUIREDINFO.vdxfid, "provisioning result state pending required info"],
+  [LOGIN_CONSENT_PROVISIONING_RESULT_STATE_PENDINGAPPROVAL.vdxfid, "provisioning result state pending approval"],
+  [LOGIN_CONSENT_PROVISIONING_RESULT_STATE_COMPLETE.vdxfid, "provisioning result state complete"],
+  [LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED.vdxfid, "provisioning result state failed"],
+  [LOGIN_CONSENT_PROVISIONING_ERROR_KEY_NAMETAKEN.vdxfid, "provisioning error name taken"],
+  [LOGIN_CONSENT_PROVISIONING_ERROR_KEY_UNKNOWN.vdxfid, "provisioning error unknown"],
+  [LOGIN_CONSENT_PROVISIONING_ERROR_KEY_COMMIT_FAILED.vdxfid, "provisioning error commit failed"],
+  [LOGIN_CONSENT_PROVISIONING_ERROR_KEY_CREATION_FAILED.vdxfid, "provisioning error creation failed"],
+  [LOGIN_CONSENT_PROVISIONING_ERROR_KEY_TRANSFER_FAILED.vdxfid, "provisioning error transfer failed"],
+  [SIGNED_SESSION_OBJECT_DATA.vdxfid, "signed session object data"],
+  [SIGNED_SESSION_OBJECT.vdxfid, "signed session object"],
+  [CURRENCY_ADDRESS.vdxfid, "currency address"],
+  [DATA_TYPE_DEFINEDKEY.vdxfid, "vdxf key definitions"],
+]);
+
+export function getVDXFKeyLabel(key, nullOnMiss = false) {
+  return vdxfKeyLabelMap.get(key) ?? (nullOnMiss ? null : (key.substring(0, 4) + '...' + key.substring(key.length - 4)));
 }

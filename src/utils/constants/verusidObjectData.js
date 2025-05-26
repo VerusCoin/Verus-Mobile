@@ -21,7 +21,7 @@ export const VERUSID_WARNINGS = {
 
 export const VERUSID_CMM_INFO = {
   key: 'VERUSID_CMM_INFO',
-  label: 'Content MultiMap'
+  label: 'Identity Content'
 };
 
 // Info Items

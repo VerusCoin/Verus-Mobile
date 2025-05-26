@@ -29,8 +29,11 @@ import InvoiceInfo from './InvoiceInfo/InvoiceInfo';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
 import { verifyIdentityUpdateRequest } from '../../utils/api/channels/vrpc/requests/verifyIdentityUpdateRequest';
 import { extractIdentityUpdateRequestSig } from '../../utils/api/channels/vrpc/requests/extractIdentityUpdateRequestSig';
-import { nameAndParentAddrToIAddr } from 'verus-typescript-primitives';
+import { DATA_TYPE_DEFINEDKEY, DefinedKey, nameAndParentAddrToIAddr } from 'verus-typescript-primitives';
 import IdentityUpdateRequestInfo from './IdentityUpdateRequestInfo/IdentityUpdateRequestInfo';
+import { getIdentityContent } from '../../utils/api/channels/verusid/requests/getIdentityContent';
+import { capitalizeString } from '../../utils/stringUtils';
+import { createUpdateIdentityTx, getUpdatableIdentity } from '../../utils/api/channels/verusid/requests/updateIdentity';
 
 const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
@@ -208,7 +211,10 @@ const DeepLink = (props) => {
     if (subjectIdentityRes.error) throw new Error(subjectIdentityRes.error.message);
 
     const subjectIdentity = subjectIdentityRes.result;
-    const subjectIdClass = primitives.Identity.fromJson(subjectIdentity.identity);
+    const updatableIdentity = await getUpdatableIdentity(coinObj.system_id, subjectIdentity);
+
+    const subjectIdClass = updatableIdentity.identity;
+    const subjectIdTxHex = updatableIdentity.tx;
 
     if (deeplinkData.details.identity.flags) {
       if (subjectIdClass.hasActiveCurrency() !== req.details.identity.hasActiveCurrency()) {
@@ -253,6 +259,16 @@ const DeepLink = (props) => {
       }
     }
 
+    let cmmDataKeys = {};
+
+    const updateIdentityTx = await createUpdateIdentityTx(
+      req.systemid.toAddress(), 
+      req.details,
+      subjectIdClass.getIdentityAddress(),
+      subjectIdTxHex,
+      subjectIdentity.blockheight
+    );
+
     if (req.isSigned()) {
       if (await verifyIdentityUpdateRequest(coinObj, req)) {
         const sig = await extractIdentityUpdateRequestSig(coinObj, deeplinkData);
@@ -262,8 +278,58 @@ const DeepLink = (props) => {
 
         const sigtime = sigblock.result.time;
 
-        const signedBy = await getIdentity(coinObj.system_id, req.signingid);
+        const signingIAddr = req.signingid.toAddress();
+
+        const signedBy = await getIdentity(coinObj.system_id, signingIAddr);
         if (signedBy.error) throw new Error(signedBy.error.message);
+
+        try {
+          const contentRes = await getIdentityContent(
+            coinObj.system_id,
+            signingIAddr
+          );
+
+          if (contentRes.error) throw new Error(contentRes.error.message);
+          else {
+            const signerIdentity = contentRes.result.identity;
+
+            if (signerIdentity.contentmultimap && signerIdentity.contentmultimap[DATA_TYPE_DEFINEDKEY.vdxfid]) {
+              const definedKeyContent = signerIdentity.contentmultimap[DATA_TYPE_DEFINEDKEY.vdxfid];
+
+              let definedKeyBufs = [];
+
+              if (Array.isArray(definedKeyContent)) definedKeyBufs = definedKeyContent
+              else definedKeyBufs = [definedKeyContent]
+
+              for (const definedKeyHex of definedKeyBufs) {
+                try {
+                  const definedKey = new DefinedKey();
+                  definedKey.fromBuffer(Buffer.from(definedKeyHex, 'hex'));
+
+                  const iAddr = definedKey.getIAddr();
+                  const ns = definedKey.getNameSpaceID();
+
+                  if (ns !== signerIdentity.identityaddress) {
+                    throw new Error(`Found defined key ${definedKey.vdxfuri} with namespace ${ns} not matching signer ID.`);
+                  } else {
+                    const splitUri = definedKey.vdxfuri.split("::");
+                    const label = splitUri.length > 1 ? splitUri[1] : splitUri[0]
+
+                    cmmDataKeys[iAddr] = {
+                      vdxfuri: definedKey.vdxfuri,
+                      nsid: ns,
+                      label: capitalizeString(label.split('.').join(' ')),
+                    }
+                  }
+                } catch(e) {
+                  console.warn(e);
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn(e);
+        }
 
         await validateExpiry();
         setDisplayProps({
@@ -271,10 +337,11 @@ const DeepLink = (props) => {
           sigtime,
           signerFqn: convertFqnToDisplayFormat(signedBy.result.fullyqualifiedname),
           subjectIdentity,
-          identityUpdates: req.details.identity.toJson(),
+          identityUpdates: updateIdentityTx.identity.toJson(),
           coinObj,
           chainInfo: chainInfo.result,
-          friendlyNames
+          friendlyNames,
+          cmmDataKeys
         })
         setDisplayKey(IDENTITY_UPDATE_REQUEST_INFO);
       } else {
@@ -289,10 +356,11 @@ const DeepLink = (props) => {
       setDisplayProps({
         deeplinkData,
         subjectIdentity,
-        identityUpdates: req.details.identity.toJson(),
+        identityUpdates: updateIdentityTx.identity.toJson(),
         coinObj,
         chainInfo: chainInfo.result,
-        friendlyNames
+        friendlyNames,
+        cmmDataKeys
       })
       setDisplayKey(IDENTITY_UPDATE_REQUEST_INFO);
     }

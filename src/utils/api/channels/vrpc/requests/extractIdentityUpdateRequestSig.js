@@ -6,7 +6,7 @@ export const extractIdentityUpdateRequestSig = (coinObj, req) => {
 
   return getSignatureInfo(
     coinObj.system_id,
-    request.signingid,
+    request.signingid.toAddress(),
     request.signature.signature
   );
 };

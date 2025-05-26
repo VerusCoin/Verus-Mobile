@@ -34,7 +34,8 @@ const IdentityUpdateRequestInfo = props => {
     chainInfo,
     subjectIdentity,
     identityUpdates,
-    friendlyNames
+    friendlyNames,
+    cmmDataKeys
   } = props;
   
   const { fullyqualifiedname, identity } = subjectIdentity;
@@ -46,7 +47,7 @@ const IdentityUpdateRequestInfo = props => {
 
   const friendlyNameMap = new Map(Object.entries(friendlyNames));
 
-  const chainId = req.isSigned() ? getSystemNameFromSystemId(systemid) : null;
+  const chainId = req.isSigned() ? getSystemNameFromSystemId(systemid.toAddress()) : null;
 
   const getVerusId = async (chain, iAddrOrName) => {
     const identity = await getIdentity(CoinDirectory.getBasicCoinObj(chain).system_id, iAddrOrName);
@@ -337,7 +338,7 @@ const IdentityUpdateRequestInfo = props => {
               req.isSigned() && (
                 <React.Fragment>
                   <TouchableOpacity
-                    onPress={() => openVerusIdDetailsModal(chainId, signingid)}>
+                    onPress={() => openVerusIdDetailsModal(chainId, signingid.toAddress())}>
                     <List.Item
                       title={signerFqn}
                       description={'Signed by'}
@@ -362,6 +363,7 @@ const IdentityUpdateRequestInfo = props => {
             containerStyle={{ ...Styles.fullWidth }}
             chainInfo={chainInfo}
             coinObj={coinObj}
+            cmmDataKeys={cmmDataKeys}
           />
         </ScrollView>
         <View

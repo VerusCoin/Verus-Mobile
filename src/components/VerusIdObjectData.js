@@ -28,6 +28,8 @@ import {
   VERUSID_WARNINGS 
 } from '../utils/constants/verusidObjectData';
 import { getCmmDataLabel } from '../utils/vdxf/cmmDataLabel';
+import { getVDXFKeyLabel } from '../utils/vdxf/vdxfTypeLabels';
+import { capitalizeString } from '../utils/stringUtils';
 
 const checkmark = (<AnimatedSuccessCheckmark style={{ width: 20, marginRight: 5, marginBottom: 1, alignSelf: 'flex-end', }} />);
 
@@ -47,7 +49,8 @@ export default function VerusIdObjectData(props) {
     containerStyle,
     hideDataOnLoad,
     chainInfo,
-    coinObj
+    coinObj,
+    cmmDataKeys
   } = props;
   
   const [listData, setListData] = useState([]);
@@ -76,6 +79,16 @@ export default function VerusIdObjectData(props) {
   tryDisplayFriendlyName = iAddr => {
     return friendlyNames[iAddr] ? friendlyNames[iAddr] : iAddr;
   };
+
+  const getCmmDataKey = iAddr => {
+    const keyLabel = getVDXFKeyLabel(iAddr, true);
+
+    if (keyLabel == null) {
+      if (cmmDataKeys && cmmDataKeys[iAddr]) {
+        return cmmDataKeys[iAddr].label;
+      } else return iAddr.substring(0, 4) + '...' + iAddr.substring(iAddr.length - 4);
+    } else return capitalizeString(keyLabel);
+  }
 
   copyDataToClipboard = (data, name) => {
     Clipboard.setString(data);
@@ -228,12 +241,13 @@ export default function VerusIdObjectData(props) {
 
       if (verusId.identity.contentmultimap) {
         for (const iAddrKey in verusId.identity.contentmultimap) {
-          const shortIAddr = iAddrKey.substring(0, 4) + '...' + iAddrKey.substring(iAddrKey.length - 4);
+          const shortIAddr = getCmmDataKey(iAddrKey);
 
           contentMultiMapInfo[`${VERUSID_CMM_DATA.key}:${iAddrKey}`] = {
             key: `${VERUSID_CMM_DATA}:${iAddrKey}`,
-            title: `Key: ${shortIAddr}, press for details`,
-            data: getCmmDataLabel(verusId.identity.contentmultimap[iAddrKey])
+            title: shortIAddr,
+            data: getCmmDataLabel(verusId.identity.contentmultimap[iAddrKey]),
+            dataInDescription: true
           };
         }
       }
@@ -241,11 +255,12 @@ export default function VerusIdObjectData(props) {
       for (const key in displayUpdates[VERUSID_CMM_INFO.key]) {
         if (!contentMultiMapInfo[key]) {
           const iAddr = key.split(':')[1];
-          const shortIAddr = iAddr.substring(0, 4) + '...' + iAddr.substring(iAddr.length - 4);
+          const shortIAddr = getCmmDataKey(iAddr);
           
           contentMultiMapInfo[key] = {
             key,
-            title: `Key: ${shortIAddr}, press for details`,
+            title: shortIAddr,
+            dataInDescription: true
           };
         }
       }
@@ -303,42 +318,44 @@ export default function VerusIdObjectData(props) {
               onPress={() => setExpandedAccordions({ ...expandedAccordions, [idx]: !expandedAccordions[idx] })}
               style={{ backgroundColor: Colors.secondaryBackground }}
             >
-              {group.items.map((item, index) => (
-                <React.Fragment key={index}>
-                  <List.Item
-                    title={
-                      displayUpdates[group.key][item.key]
-                        ? `${displayUpdates[group.key][item.key].data}`
-                        : item.data
-                    }
-                    titleStyle={
-                      displayUpdates[group.key][item.key] ? { color: 'green' } : {}
-                    }
-                    titleNumberOfLines={100}
-                    description={() =>
-                      displayUpdates[group.key][item.key] ? (
-                        <>
-                          {
-                            item.data != null && 
-                            (<Text style={{ color: Colors.warningButtonColor }}>{item.data}</Text>)
-                          }
-                          <Text style={{ color: Colors.verusDarkGray }}>{item.title}</Text>
-                        </>
-                      ) : (
-                        <Text style={{ color: Colors.verusDarkGray }}>{item.title}</Text>
-                      )
-                    }
-                    onPress={
-                      displayUpdates[group.key][item.key] && 
-                      displayUpdates[group.key][item.key].onPress ? 
-                        displayUpdates[group.key][item.key].onPress 
-                        : 
-                        item.onPress
-                    }
-                  />
-                  <Divider />
-                </React.Fragment>
-              ))}
+              {group.items.map((item, index) => {
+                return (
+                  <React.Fragment key={index}>
+                    <List.Item
+                      title={
+                        displayUpdates[group.key][item.key]
+                          ? `${item.dataInDescription ? item.title : displayUpdates[group.key][item.key].data}`
+                          : item.dataInDescription ? item.title : item.data
+                      }
+                      titleStyle={
+                        displayUpdates[group.key][item.key] ? { color: 'green' } : {}
+                      }
+                      titleNumberOfLines={100}
+                      description={() =>
+                        displayUpdates[group.key][item.key] ? (
+                          <>
+                            {
+                              item.data != null && 
+                              (<Text style={{ color: Colors.warningButtonColor }}>{item.dataInDescription ? item.title : item.data}</Text>)
+                            }
+                            <Text style={{ color: Colors.verusDarkGray }}>{item.dataInDescription ? displayUpdates[group.key][item.key].data : item.title}</Text>
+                          </>
+                        ) : (
+                          <Text style={{ color: Colors.verusDarkGray }}>{item.dataInDescription ? item.data : item.title}</Text>
+                        )
+                      }
+                      onPress={
+                        displayUpdates[group.key][item.key] && 
+                        displayUpdates[group.key][item.key].onPress ? 
+                          displayUpdates[group.key][item.key].onPress 
+                          : 
+                          item.onPress
+                      }
+                    />
+                    <Divider />
+                  </React.Fragment>
+                )
+              })}
             </List.Accordion>
           ))}
         </List.Section>
@@ -359,8 +376,8 @@ export default function VerusIdObjectData(props) {
                     <List.Item
                       title={
                         displayUpdates[group.key][item.key]
-                          ? `${displayUpdates[group.key][item.key].data}`
-                          : item.data
+                          ? `${item.dataInDescription ? item.title : displayUpdates[group.key][item.key].data}`
+                          : item.dataInDescription ? item.title : item.data
                       }
                       titleStyle={
                         displayUpdates[group.key][item.key] ? { color: 'green' } : {}
@@ -371,12 +388,12 @@ export default function VerusIdObjectData(props) {
                           <>
                             {
                               item.data != null && 
-                              (<Text style={{ color: Colors.warningButtonColor }}>{item.data}</Text>)
+                              (<Text style={{ color: Colors.warningButtonColor }}>{item.dataInDescription ? item.title : item.data}</Text>)
                             }
-                            <Text style={{ color: Colors.verusDarkGray }}>{item.title}</Text>
+                            <Text style={{ color: Colors.verusDarkGray }}>{item.dataInDescription ? item.data : item.title}</Text>
                           </>
                         ) : (
-                          <Text style={{ color: Colors.verusDarkGray }}>{item.title}</Text>
+                          <Text style={{ color: Colors.verusDarkGray }}>{item.dataInDescription ? item.data : item.title}</Text>
                         )
                       }
                       onPress={

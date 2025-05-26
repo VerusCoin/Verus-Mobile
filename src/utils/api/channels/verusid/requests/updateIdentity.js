@@ -1,4 +1,4 @@
-import { decompile, GetIdentityResponse, OPS, OptCCParams, Identity, fromBase58Check } from "verus-typescript-primitives";
+import { decompile, GetIdentityResponse, OPS, OptCCParams, Identity, fromBase58Check, IdentityUpdateRequestDetails } from "verus-typescript-primitives";
 import { CoinDirectory } from "../../../../CoinData/CoinDirectory";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 import { IS_PBAAS } from "../../../../constants/intervalConstants";
@@ -43,7 +43,7 @@ export const getUpdatableIdentity = async (systemId, getIdentityResult) => {
  * Updates the provided identity from its current state (using the provided identities i-addr) to the 
  * state provided in identity
  * @param {string} systemId The system id to update the id on
- * @param {Identity} identity The identity to update to
+ * @param {Identity | IdentityUpdateRequestDetails} identity The identity to update to
  * @param {string} changeAaddr The address to send the change to
  * @param {string} rawIdTx The raw transaction that created the identity
  * @param {number} idHeight The height of the block that the identity was created in
