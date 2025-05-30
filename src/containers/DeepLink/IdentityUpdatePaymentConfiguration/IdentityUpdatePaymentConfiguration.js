@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, SafeAreaView, Text } from 'react-native';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client";
@@ -17,8 +17,10 @@ import {
   SEND_MODAL_IDENTITY_UPDATE_REQUEST_HEX, 
   SEND_MODAL_IDENTITY_UPDATE_SUBJECT_ID, 
   SEND_MODAL_IDENTITY_UPDATE_TX_HEX, 
-  SEND_MODAL_IDENTITY_UPDATE_UPDATES 
+  SEND_MODAL_IDENTITY_UPDATE_UPDATES, 
+  SEND_MODAL_SEND_COMPLETED
 } from '../../../utils/constants/sendModal';
+import { usePrevious } from '../../../hooks/usePrevious';
 
 const IdentityUpdatePaymentConfiguration = props => {
   const {
@@ -56,17 +58,17 @@ const IdentityUpdatePaymentConfiguration = props => {
     })
   }
 
-  useEffect(() => {
-    if (
-      sendModal &&
-      prevSendModal &&
-      sendModal.type == null &&
-      prevSendModal.type != null &&
-      prevSendModal.data[SEND_MODAL_SEND_COMPLETED]
-    ) {
-      cancel();
-    }
-  }, [sendModal]);
+  // useEffect(() => {
+  //   if (
+  //     sendModal &&
+  //     prevSendModal &&
+  //     sendModal.type == null &&
+  //     prevSendModal.type != null &&
+  //     prevSendModal.data[SEND_MODAL_SEND_COMPLETED]
+  //   ) {
+  //     cancel();
+  //   }
+  // }, [sendModal]);
 
   return loading ? (
     <AnimatedActivityIndicatorBox />
