@@ -64,17 +64,17 @@ const IdentityUpdateRequestInfo = props => {
   const getDisplayUpdates = () => {
     const displayUpdates = {
       [VERUSID_AUTH_INFO.key]: {
-        [VERUSID_RECOVERY_AUTH.key]: identityUpdates.recoveryauthority ? {
+        [VERUSID_RECOVERY_AUTH.key]: identityUpdates.recoveryauthority && identityUpdates.recoveryauthority !== identity.recoveryauthority ? {
           data: displayIdentityAddress(identityUpdates.recoveryauthority),
           onPress: () => openVerusIdDetailsModal(coinObj.system_id, identityUpdates.recoveryauthority)
         } : null,
-        [VERUSID_REVOCATION_AUTH.key]: identityUpdates.revocationauthority ? {
+        [VERUSID_REVOCATION_AUTH.key]: identityUpdates.revocationauthority && identityUpdates.revocationauthority !== identity.revocationauthority ? {
           data: displayIdentityAddress(identityUpdates.revocationauthority),
           onPress: () => openVerusIdDetailsModal(coinObj.system_id, identityUpdates.revocationauthority)
         } : null
       },
       [VERUSID_PRIVATE_INFO.key]: {
-        [VERUSID_PRIVATE_ADDRESS.key]: identityUpdates.privateaddress ? {
+        [VERUSID_PRIVATE_ADDRESS.key]: identityUpdates.privateaddress && identityUpdates.privateaddress !== identity.privateaddress ? {
           data: displayIdentityAddress(identityUpdates.privateaddress),
           onPress: () => copyToClipboard(
             identityUpdates.privateaddress,
@@ -86,7 +86,7 @@ const IdentityUpdateRequestInfo = props => {
       [VERUSID_CMM_INFO.key]: {}
     }
 
-    if (identityUpdates.primaryaddresses) {
+    if (identityUpdates.primaryaddresses && identityUpdates.primaryaddresses.join(',') !== identity.primaryaddresses.join(',')) {
       for (let i = 0; i < identityUpdates.primaryaddresses.length; i++) {
         displayUpdates[VERUSID_AUTH_INFO.key][`${VERUSID_PRIMARY_ADDRESS.key}:${i}`] = {
           data: identityUpdates.primaryaddresses[i],
@@ -98,7 +98,7 @@ const IdentityUpdateRequestInfo = props => {
       }
     }
 
-    if (identityUpdates.flags) {
+    if (identityUpdates.flags && identityUpdates.flags !== identity.flags) {
       if (subject.isRevoked() !== req.details.identity.isRevoked()) {
         displayUpdates[VERUSID_BASE_INFO.key][VERUSID_STATUS.key] = {
           data: getVerusIdStatus(identityUpdates, chainInfo, coinObj),
@@ -181,54 +181,48 @@ const IdentityUpdateRequestInfo = props => {
     );
   });
 
-  const [selectCurrencyModalProps, setSelectCurrencyModalProps] = useState(null);
+  handleContinue = () => {
+    if (signedIn) {
+      props.navigation.navigate('IdentityUpdatePaymentConfiguration', { ...props, displayUpdates });
+    } else {
+      setWaitingForSignin(true);
+      const allowList = req.details.isTestnet() ? accounts.filter(x => {
+        if (
+          x.testnetOverrides &&
+          x.testnetOverrides[coinObj.mainnet_id] === coinObj.id
+        ) {
+          return true;
+        } else {
+          return false;
+        }
+      }) : accounts.filter(x => {
+        if (
+          x.testnetOverrides &&
+          x.testnetOverrides[coinObj.id] != null
+        ) {
+          return false;
+        } else {
+          return true;
+        }
+      })
 
-  // handleContinue = () => {
-  //   if (signedIn) {
-  //     props.navigation.navigate('InvoicePaymentConfiguration', props);
-  //   } else {
-  //     setWaitingForSignin(true);
-  //     const allowList = req.details.isTestnet() ? accounts.filter(x => {
-  //       if (
-  //         x.testnetOverrides &&
-  //         x.testnetOverrides[coinObj.mainnet_id] === coinObj.id
-  //       ) {
-  //         return true;
-  //       } else {
-  //         return false;
-  //       }
-  //     }) : accounts.filter(x => {
-  //       if (
-  //         x.testnetOverrides &&
-  //         x.testnetOverrides[coinObj.id] != null
-  //       ) {
-  //         return false;
-  //       } else {
-  //         return true;
-  //       }
-  //     })
-
-  //     if (allowList.length > 0) {
-  //       const data = {
-  //         [SEND_MODAL_USER_ALLOWLIST]: allowList
-  //       }
+      if (allowList.length > 0) {
+        const data = {
+          [SEND_MODAL_USER_ALLOWLIST]: allowList
+        }
   
-  //       openAuthenticateUserModal(data);
-  //     } else {
-  //       createAlert(
-  //         "Cannot continue",
-  //         `No ${
-  //           req.details.isTestnet() ? 'testnet' : 'mainnet'
-  //         } profiles found, cannot respond to ${
-  //           req.details.isTestnet() ? 'testnet' : 'mainnet'
-  //         } login request.`,
-  //       );
-  //     }
-  //   }
-  // };
-
-  const openListSelectionModal = () => {
-    setIsListSelectionModalVisible(true);
+        openAuthenticateUserModal(data);
+      } else {
+        createAlert(
+          "Cannot continue",
+          `No ${
+            req.details.isTestnet() ? 'testnet' : 'mainnet'
+          } profiles found, cannot respond to ${
+            req.details.isTestnet() ? 'testnet' : 'mainnet'
+          } login request.`,
+        );
+      }
+    }
   };
   
   const handleSupportedNetworkSelect = (item) => {

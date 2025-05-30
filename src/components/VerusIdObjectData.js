@@ -50,7 +50,8 @@ export default function VerusIdObjectData(props) {
     hideDataOnLoad,
     chainInfo,
     coinObj,
-    cmmDataKeys
+    cmmDataKeys,
+    extraListItems
   } = props;
   
   const [listData, setListData] = useState([]);
@@ -244,7 +245,7 @@ export default function VerusIdObjectData(props) {
           const shortIAddr = getCmmDataKey(iAddrKey);
 
           contentMultiMapInfo[`${VERUSID_CMM_DATA.key}:${iAddrKey}`] = {
-            key: `${VERUSID_CMM_DATA}:${iAddrKey}`,
+            key: `${VERUSID_CMM_DATA.key}:${iAddrKey}`,
             title: shortIAddr,
             data: getCmmDataLabel(verusId.identity.contentmultimap[iAddrKey]),
             dataInDescription: true
@@ -260,6 +261,8 @@ export default function VerusIdObjectData(props) {
           contentMultiMapInfo[key] = {
             key,
             title: shortIAddr,
+            data: displayUpdates[VERUSID_CMM_INFO.key][key].data,
+            hideOldData: true,
             dataInDescription: true
           };
         }
@@ -310,6 +313,7 @@ export default function VerusIdObjectData(props) {
       {scrollDisabled ? (
         /* No scrolling */
         <List.Section>
+          { extraListItems }
           {listData.map((group, idx) => group.items.length > 0 && (
             <List.Accordion
               key={idx}
@@ -335,7 +339,7 @@ export default function VerusIdObjectData(props) {
                         displayUpdates[group.key][item.key] ? (
                           <>
                             {
-                              item.data != null && 
+                              item.data != null && !item.hideOldData && 
                               (<Text style={{ color: Colors.warningButtonColor }}>{item.dataInDescription ? item.title : item.data}</Text>)
                             }
                             <Text style={{ color: Colors.verusDarkGray }}>{item.dataInDescription ? displayUpdates[group.key][item.key].data : item.title}</Text>
@@ -363,6 +367,7 @@ export default function VerusIdObjectData(props) {
         /* Enable scrolling */
         <ScrollView>
           <List.Section>
+            { extraListItems }
             {listData.map((group, idx) => group.items.length > 0 && (
               <List.Accordion
                 key={idx}
@@ -387,7 +392,7 @@ export default function VerusIdObjectData(props) {
                         displayUpdates[group.key][item.key] ? (
                           <>
                             {
-                              item.data != null && 
+                              item.data != null && !item.hideOldData && 
                               (<Text style={{ color: Colors.warningButtonColor }}>{item.dataInDescription ? item.title : item.data}</Text>)
                             }
                             <Text style={{ color: Colors.verusDarkGray }}>{item.dataInDescription ? item.data : item.title}</Text>

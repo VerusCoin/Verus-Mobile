@@ -266,7 +266,8 @@ const DeepLink = (props) => {
       req.details,
       subjectIdClass.getIdentityAddress(),
       subjectIdTxHex,
-      subjectIdentity.blockheight
+      subjectIdentity.blockheight,
+      false
     );
 
     if (req.isSigned()) {
@@ -338,10 +339,12 @@ const DeepLink = (props) => {
           signerFqn: convertFqnToDisplayFormat(signedBy.result.fullyqualifiedname),
           subjectIdentity,
           identityUpdates: updateIdentityTx.identity.toJson(),
+          updateIdTxHex: updateIdentityTx.hex,
           coinObj,
           chainInfo: chainInfo.result,
           friendlyNames,
-          cmmDataKeys
+          cmmDataKeys,
+          subjectIdTxHex,
         })
         setDisplayKey(IDENTITY_UPDATE_REQUEST_INFO);
       } else {
@@ -357,10 +360,12 @@ const DeepLink = (props) => {
         deeplinkData,
         subjectIdentity,
         identityUpdates: updateIdentityTx.identity.toJson(),
+        updateIdTxHex: updateIdentityTx.hex,
         coinObj,
         chainInfo: chainInfo.result,
         friendlyNames,
-        cmmDataKeys
+        cmmDataKeys,
+        subjectIdTxHex
       })
       setDisplayKey(IDENTITY_UPDATE_REQUEST_INFO);
     }
