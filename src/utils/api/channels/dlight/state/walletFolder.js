@@ -1,5 +1,5 @@
 //import VerusLightClient from 'react-native-verus-light-client'
-import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, Synchronizer, SynchronizerCallbacks } from 'react-native-verus'
+import { getSynchronizerInstance, InitializerConfig, makeSynchronizer } from 'react-native-verus'
 import Store from '../../../../../store/index';
 import {
 DLIGHT_BALANCE_UPDATED,
@@ -64,10 +64,10 @@ export const openWallet = async (coinId, coinProto, accountHash, host, port, see
 
   //TODO: Everything works, despite this, but openWallet is never called due to dlightSockets logic
   // or something else in initDlight function in LightWalletReduxManager. Since it breaks nothing, I left it be
-  console.log(">>>>>> openWalletCalled")
+  //console.log(">>>>>> openWalletCalled")
   const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, 227520, false);
   try {
-    console.log("openWallet: before makeSynchronizer")
+    //console.log("openWallet: before makeSynchronizer")
     const sync = await makeSynchronizer(config);
     return sync;
 

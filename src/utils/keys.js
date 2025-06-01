@@ -108,13 +108,11 @@ export const deriveKeypairV0 = async (seed, coinObj, channel) => {
   if (channel === DLIGHT_PRIVATE) {
     const spendingKey = await parseDlightSeed(seed)
     const viewKey = await Tools.deriveViewingKey(seed);
-    console.log("viewingKey" + viewKey.toString);
 
     return {
       pubKey: null,
       privKey: spendingKey,
       viewingKey: viewKey,
-//      viewingKey: await VerusLightClient.deriveViewingKey(spendingKey),
       addresses: [],
     };
   } else {
