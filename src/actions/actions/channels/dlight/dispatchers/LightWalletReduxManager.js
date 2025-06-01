@@ -1,6 +1,5 @@
 import Store from '../../../../../store/index'
 import { InitializerConfig } from 'react-native-verus'
-import Synchronizer from '../../../../../utils/api/channels/dlight/state/walletFolder'
 import {
   setConfig,
   initializeWallet,
@@ -69,18 +68,14 @@ export const initDlightWallet = async (coinObj) => {
       initializationPromises = [
         await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]),seed),
         startSync(id, proto, accountHash),
-
         getAddresses(id, accountHash, proto)
       ];
-      secondInitializationPromises = [
-        await getAddresses(id, accountHash, proto, seed)
-      ]
 
     } else if (dlightSockets[id] === false) {
       initializationPromises = [
         openWallet(id, proto, accountHash),
         startSync(id, proto, accountHash),
-        getAddresses(id, accountHash, proto, seed)
+        getAddresses(id, accountHash, proto)
       ]
     } else {
       throw new Error(id + " is already initialized and connected in lightwalletd mode. Cannot intialize and connect a coin twice.")
@@ -96,42 +91,47 @@ export const initDlightWallet = async (coinObj) => {
 
   return new Promise((resolve) => {
     resolveSequentially(initializationPromises)
-      .then(res => {
-        dispatch({
-          type: INIT_DLIGHT_CHANNEL_START,
-          payload: { chainTicker: id }
-        })
-        dispatch({
-          type: SET_ADDRESSES,
-          payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: res.pop() },
-        })
-
-        resolve()
-      }).catch(err => {
-        console.warn(err)
-
-        canRetryDlightInitialization(id)
-          .then(canRetry => {
-             if (canRetry) {
-               return initDlightWallet(coinObj).then(resolve)
-             } else {
-               dispatch({
-                 type: ERROR_DLIGHT_INIT,
-                 payload: { chainTicker: id, error: err }
-               })
-               resolve()
-             }
-          })
-          .catch(e => {
-            dispatch({
-              type: ERROR_DLIGHT_INIT,
-              payload: { chainTicker: id, error: e }
-            })
-            resolve()
-          })
+    .then(res => {
+      dispatch({
+        type: INIT_DLIGHT_CHANNEL_START,
+        payload: { chainTicker: id }
       })
+
+      dispatch({
+        type: SET_ADDRESSES,
+        payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: res.pop() },
+      });
+
+      resolve()
+    })
+    .catch(err => {
+      console.warn(err)
+
+      canRetryDlightInitialization(id)
+      .then(canRetry => {
+        if (canRetry) {
+          return initDlightWallet(coinObj).then(resolve)
+        } else {
+          dispatch({
+            type: ERROR_DLIGHT_INIT,
+            payload: { chainTicker: id, error: err }
+          })
+          
+          resolve()
+        }
+      })
+      .catch(e => {
+        dispatch({
+          type: ERROR_DLIGHT_INIT,
+          payload: { chainTicker: id, error: e }
+        })
+        
+        resolve()
+      })
+    })
   })
 }
+
 // Closes and optionally deletes a dlightWallet
 export const closeDlightWallet = (coinObj, clearDb) => {
   const { dispatch, getState } = Store
@@ -156,6 +156,7 @@ export const closeDlightWallet = (coinObj, clearDb) => {
       closePromises.push(closeWallet(id, proto, accountHash))
 
       if (clearDb) {
+        //TODO: we no longer have a deleteWallet 
         closePromises.push(deleteWallet(id, proto, accountHash))
       }
     } else  {
