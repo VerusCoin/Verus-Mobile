@@ -169,7 +169,23 @@ export const parseDlightSeed = async (seed) => {
   
   try {
     const viewkey = await Tools.deriveViewingKey(seed)
-    //console.log("Viewkey(" + viewkey + ")")
+    console.warn("Viewkey(" + viewkey + ")")
+
+    const epk = "d2ae5e1c1004aa0c0bca45db471a36d188e53a667b30e328365dcb9a9f65b4dc"
+    const sharedSecret = await Tools.ka_agree(viewkey, epk)
+    console.warn("sharedSecret(" + sharedSecret.toString() + ")")
+
+    const saplingRecipient = "zs1tdrqnlwps6v78tsruvkx0tuhwp3jt6wx73kmzznky90qz80f5jrh42z4qe9rt4tq583f5yhayyv"
+    const esk = "d2e648e59747d2d234cf1644a95e5aeb5a628c1db4083fbf6e1e65eac617e254"
+
+    const pubkey = await Tools.ka_derive_public(saplingRecipient, esk)
+    const pubkey_str = pubkey.toString()
+
+    const shared = await Tools.ka_agree(viewkey, pubkey_str)
+
+    console.warn("derived pubkey(" + pubkey + ")")
+    console.warn("shared(" + shared.toString() + ")")
+
 
     const saplingAddress = await Tools.deriveShieldedAddress(seed)
     //console.log("deriveShieldedAddress(" + saplingAddressFromView + ")")
