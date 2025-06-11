@@ -11,8 +11,8 @@ export const dlightEnabled = () => {
   const state = store.getState();
 
   return (
-    ENABLE_DLIGHT && state.authentication.activeAccount.seeds[DLIGHT_PRIVATE]
-  );
+   ENABLE_DLIGHT && (state.authentication.activeAccount.seeds[DLIGHT_PRIVATE] != null)
+  )
 };
 
 export const wyreCoinChannelEnabled = () => {
