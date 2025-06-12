@@ -172,8 +172,7 @@ export const parseDlightSeed = async (seed) => {
     const saplingAddress = await Tools.deriveShieldedAddress(seed)
     //console.log("deriveShieldedAddress(" + saplingAddressFromView + ")")
 
-    //TODO: Find out why this is returning false
-    //const isValid = await Tools.isValidAddress(saplingAddress)
+    const isValid = await Tools.isValidAddress(saplingAddress)
     //console.log("isValidAddress(" + isValid + ")");
 
     const saplingSpendKey = await Tools.deriveSaplingSpendingKey(seed)
