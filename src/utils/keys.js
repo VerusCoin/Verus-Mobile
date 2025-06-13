@@ -195,4 +195,3 @@ export const isSeedPhrase = (seed, minWordLength = 12) => {
     seed.split(/\s+/g).length >= minWordLength && validateMnemonic(seed)
   );
 }
-

@@ -31,4 +31,3 @@ export const getAddresses = async (coinId, accountHash, coinProto) => {
     })
   })
 }
-

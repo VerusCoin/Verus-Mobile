@@ -11,7 +11,7 @@ export const dlightEnabled = () => {
   const state = store.getState();
 
   return (
-   ENABLE_DLIGHT && (state.authentication.activeAccount.seeds[DLIGHT_PRIVATE] != null)
+    ENABLE_DLIGHT && (state.authentication.activeAccount.seeds[DLIGHT_PRIVATE] != null)
   )
 };
 
