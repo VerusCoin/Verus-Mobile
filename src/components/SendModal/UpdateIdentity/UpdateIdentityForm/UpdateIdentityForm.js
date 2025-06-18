@@ -51,7 +51,8 @@ const UpdateIdentityForm = (props) => {
       fee: satsToCoins(BigNumber(updateIdentityTx.deltas.get(feeCurrency).abs().toString())).toString(),
       feeCurrency,
       txHex: updateIdentityTx.hex,
-      utxos: updateIdentityTx.utxos
+      utxos: updateIdentityTx.utxos,
+      identity: req.details.identity.toJson()
     });
   }, [props]);
 

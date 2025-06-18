@@ -8,6 +8,7 @@ import {
 import base64url from 'base64url';
 import { URL } from 'react-native-url-polyfill';
 import { primitives } from 'verusid-ts-client'
+import { MAX_DEEPLINK_STRING_LENGTH } from '../utils/constants/deeplink';
 
 export default function* deeplinkSaga() {
   yield all([takeEvery(SET_DEEPLINK_URL, handleDeeplinkUrl)]);
@@ -18,6 +19,7 @@ function* handleDeeplinkUrl(action) {
 
   if (urlstring != null) {
     try {
+      if (urlstring.length >= MAX_DEEPLINK_STRING_LENGTH) throw new Error("Deeplink URL max length exceeded.");
       const url = new URL(urlstring);
   
       if (url.host !== CALLBACK_HOST) throw new Error('Unsupported host url.');

@@ -5,9 +5,10 @@ import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import VerusIdObjectData from '../../../VerusIdObjectData';
 import { SEND_MODAL_IDENTITY_UPDATE_CHAIN_INFO, SEND_MODAL_IDENTITY_UPDATE_CMM_DATA_KEYS, SEND_MODAL_IDENTITY_UPDATE_SUBJECT_ID, SEND_MODAL_IDENTITY_UPDATE_UPDATES } from '../../../../utils/constants/sendModal';
+import AnimatedActivityIndicatorBox from '../../../AnimatedActivityIndicatorBox';
 
-export const UpdateIdentityConfirmRender = ({ goBack, submitData, ownedAddress, sendModal, friendlyNames, fee, feeCurrency }) => {
-  return (
+export const UpdateIdentityConfirmRender = ({ goBack, submitData, ownedAddress, sendModal, friendlyNames, fee, feeCurrency, loading }) => {
+  return loading ? <AnimatedActivityIndicatorBox /> : (
     <SafeAreaView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite, height: '100%' }}>
       <VerusIdObjectData
         verusId={sendModal.data[SEND_MODAL_IDENTITY_UPDATE_SUBJECT_ID]}

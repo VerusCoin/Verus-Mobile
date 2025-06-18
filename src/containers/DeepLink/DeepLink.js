@@ -355,19 +355,20 @@ const DeepLink = (props) => {
         cancel();
       }
     } else {
-      await validateExpiry();
-      setDisplayProps({
-        deeplinkData,
-        subjectIdentity,
-        identityUpdates: updateIdentityTx.identity.toJson(),
-        updateIdTxHex: updateIdentityTx.hex,
-        coinObj,
-        chainInfo: chainInfo.result,
-        friendlyNames,
-        cmmDataKeys,
-        subjectIdTxHex
-      })
-      setDisplayKey(IDENTITY_UPDATE_REQUEST_INFO);
+      throw new Error("Unsigned identity update requests not currently supported.")
+      // await validateExpiry();
+      // setDisplayProps({
+      //   deeplinkData,
+      //   subjectIdentity,
+      //   identityUpdates: updateIdentityTx.identity.toJson(),
+      //   updateIdTxHex: updateIdentityTx.hex,
+      //   coinObj,
+      //   chainInfo: chainInfo.result,
+      //   friendlyNames,
+      //   cmmDataKeys,
+      //   subjectIdTxHex
+      // })
+      // setDisplayKey(IDENTITY_UPDATE_REQUEST_INFO);
     }
   }
 

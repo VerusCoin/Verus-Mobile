@@ -11,14 +11,14 @@ import { openUpdateIdentitySendModal } from '../../../actions/actions/sendModal/
 import { 
   SEND_MODAL_IDENTITY_UPDATE_CHAIN_INFO, 
   SEND_MODAL_IDENTITY_UPDATE_CMM_DATA_KEYS, 
+  SEND_MODAL_IDENTITY_UPDATE_COMPLETE, 
   SEND_MODAL_IDENTITY_UPDATE_FRIENDLY_NAMES, 
   SEND_MODAL_IDENTITY_UPDATE_ID_BLOCKHEIGHT, 
   SEND_MODAL_IDENTITY_UPDATE_ID_RAW_TX_HEX, 
   SEND_MODAL_IDENTITY_UPDATE_REQUEST_HEX, 
   SEND_MODAL_IDENTITY_UPDATE_SUBJECT_ID, 
   SEND_MODAL_IDENTITY_UPDATE_TX_HEX, 
-  SEND_MODAL_IDENTITY_UPDATE_UPDATES, 
-  SEND_MODAL_SEND_COMPLETED
+  SEND_MODAL_IDENTITY_UPDATE_UPDATES
 } from '../../../utils/constants/sendModal';
 import { usePrevious } from '../../../hooks/usePrevious';
 
@@ -31,7 +31,8 @@ const IdentityUpdatePaymentConfiguration = props => {
     friendlyNames,
     cmmDataKeys,
     subjectIdTxHex,
-    updateIdTxHex
+    updateIdTxHex,
+    cancel
   } = props.route.params;
 
   const [req, setReq] = useState(primitives.IdentityUpdateRequest.fromJson(deeplinkData));
@@ -58,17 +59,17 @@ const IdentityUpdatePaymentConfiguration = props => {
     })
   }
 
-  // useEffect(() => {
-  //   if (
-  //     sendModal &&
-  //     prevSendModal &&
-  //     sendModal.type == null &&
-  //     prevSendModal.type != null &&
-  //     prevSendModal.data[SEND_MODAL_SEND_COMPLETED]
-  //   ) {
-  //     cancel();
-  //   }
-  // }, [sendModal]);
+  useEffect(() => {
+    if (
+      sendModal &&
+      prevSendModal &&
+      sendModal.type == null &&
+      prevSendModal.type != null &&
+      prevSendModal.data[SEND_MODAL_IDENTITY_UPDATE_COMPLETE]
+    ) {
+      cancel();
+    }
+  }, [sendModal]);
 
   return loading ? (
     <AnimatedActivityIndicatorBox />

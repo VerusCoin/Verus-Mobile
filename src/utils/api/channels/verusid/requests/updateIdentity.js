@@ -1,4 +1,4 @@
-import { decompile, GetIdentityResponse, OPS, OptCCParams, Identity, fromBase58Check, IdentityUpdateRequestDetails } from "verus-typescript-primitives";
+import { decompile, GetIdentityResponse, OPS, OptCCParams, Identity, fromBase58Check, IdentityUpdateRequestDetails, IdentityUpdateResponseDetails } from "verus-typescript-primitives";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 import { getIdentity } from "./getIdentity";
 import { getSpendableUtxos, getTransaction, sendRawTransaction } from "../../vrpc/callCreators";
@@ -70,6 +70,17 @@ export const createUpdateIdentityTx = async (systemId, identity, changeAaddr, ra
   const utxos = fundTransaction ? await getSpendableUtxos(systemId, systemId, [changeAaddr]) : undefined;
 
   return verusid.createUpdateIdentityTransaction(identity, changeAaddr, rawIdTx, idHeight, utxos, undefined, undefined, undefined, undefined, updateIdentityTransactionHex);
+}
+
+export const createUpdateIdentityResponse = async (systemId, signerId, reqId, txid, primAddrWif) => {
+  const verusid = VrpcProvider.getVerusIdInterface(systemId);
+
+  return verusid.createIdentityUpdateResponse(signerId, IdentityUpdateResponseDetails.fromJson({
+    flags: "0",
+    requestid: reqId,
+    createdat: (Date.now() / 1000).toFixed(0),
+    txid: txid
+  }), primAddrWif)
 }
 
 export const createRevokeIdentityTx = async (systemId, iAddr, changeAaddr) => {

@@ -5,12 +5,9 @@ import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import {copyToClipboard} from '../../../../utils/clipboard/clipboard';
 import AnimatedSuccessCheckmark from '../../../AnimatedSuccessCheckmark';
-import { convertFqnToDisplayFormat } from '../../../../utils/fullyqualifiedname';
 import { explorers } from '../../../../utils/CoinData/CoinData';
 
 export const UpdateIdentityResultRender = ({targetId, networkObj, finishSend, txid, openExplorer}) => {
-  const formattedFriendlyName = convertFqnToDisplayFormat(targetId.fullyqualifiedname);
-
   return (
     <ScrollView
       style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}
@@ -36,7 +33,7 @@ export const UpdateIdentityResultRender = ({targetId, networkObj, finishSend, tx
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {`${formattedFriendlyName} recovered!`}
+          {'Identity updated!'}
         </Text>
       </TouchableOpacity>
       <View style={{paddingVertical: 16}}>
@@ -53,7 +50,7 @@ export const UpdateIdentityResultRender = ({targetId, networkObj, finishSend, tx
             fontSize: 20,
             color: Colors.verusDarkGray,
           }}>
-          {`Your VerusID has been recovered on the ${networkObj ? networkObj.display_name : "???"} blockchain.`}
+          {`Your VerusID has been updated on the ${networkObj ? networkObj.display_name : "???"} blockchain.`}
         </Text>
       </View>
       <View style={{paddingVertical: 8, width: '75%'}}>
@@ -72,15 +69,6 @@ export const UpdateIdentityResultRender = ({targetId, networkObj, finishSend, tx
           flexDirection: 'row',
           justifyContent: 'space-evenly',
         }}>
-        {networkObj != null && explorers[networkObj.id] != null && (
-          <Button
-            textColor={Colors.primaryColor}
-            style={{width: 148}}
-            labelStyle={{fontSize: 18}}
-            onPress={openExplorer}>
-            Details
-          </Button>
-        )}
         <Button
           buttonColor={Colors.verusGreenColor}
           textColor={Colors.secondaryColor}
