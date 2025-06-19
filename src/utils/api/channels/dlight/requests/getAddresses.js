@@ -1,6 +1,3 @@
-//import { makeDlightRequest } from '../callCreators'
-//import { DLIGHT_PRIVATE_ADDRESSES } from '../../../../constants/dlightConstants'
-import { syncInstance } from '../state/synchronizer'
 import { getSynchronizerInstance } from 'react-native-verus'
 import { createJsonRpcResponse } from './jsonResponse'
 

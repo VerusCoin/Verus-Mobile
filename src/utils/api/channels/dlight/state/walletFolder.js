@@ -2,11 +2,12 @@
 import { getSynchronizerInstance, InitializerConfig, makeSynchronizer } from 'react-native-verus'
 import Store from '../../../../../store/index';
 import {
-DLIGHT_BALANCE_UPDATED,
-DLIGHT_STATUS_UPDATED,
-DLIGHT_TRANSACTIONS_UPDATED,
-DLIGHT_SYNC_UPDATED
+  DLIGHT_BALANCE_UPDATED,
+  DLIGHT_STATUS_UPDATED,
+  DLIGHT_TRANSACTIONS_UPDATED,
+  DLIGHT_SYNC_UPDATED
 } from '../../../../constants/storeType'
+import { VRSC_SAPLING_ACTIVATION_HEIGHT } from '../../../../constants/constants'
 import { setTransactions } from '../../../../../actions/actionCreators'
 import { eventChannel } from "redux-saga";
 //import { syncInstance, SynchronizerSingleton } from './synchronizer';
@@ -24,7 +25,7 @@ import { eventChannel } from "redux-saga";
 //export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, viewingKeys, birthday = 0) => {
 export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed) => {
 
-   const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, 227520, true);
+   const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, VRSC_SAPLING_ACTIVATION_HEIGHT, true);
    //console.log(">>> initializeWallet called")
      try {
        //console.log("initializeWallet: before makeSynchronizer")
@@ -65,7 +66,7 @@ export const openWallet = async (coinId, coinProto, accountHash, host, port, see
   //TODO: Everything works, despite this, but openWallet is never called due to dlightSockets logic
   // or something else in initDlight function in LightWalletReduxManager. Since it breaks nothing, I left it be
   //console.log(">>>>>> openWalletCalled")
-  const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, 227520, false);
+  const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, VRSC_SAPLING_ACTIVATION_HEIGHT, false);
   try {
     //console.log("openWallet: before makeSynchronizer")
     const sync = await makeSynchronizer(config);
