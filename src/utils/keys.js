@@ -18,11 +18,12 @@ import { networks } from "@bitgo/utxo-lib"
 
 const deriveLightwalletdKeyPair = async (seed) => {
   const spendingKey = await parseDlightSeed(seed);
+  const viewingKey = await Tools.deriveViewingKey(seed);
 
   return {
     pubKey: null,
     privKey: spendingKey,
-    viewingKey: await Tools.deriveViewingKey(seed),
+    viewingKey: viewingKey,
     addresses: [],
   };
 };

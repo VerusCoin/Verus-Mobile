@@ -99,7 +99,7 @@ export const initDlightWallet = async (coinObj) => {
 
       dispatch({
         type: SET_ADDRESSES,
-        payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: res.pop() },
+        payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: [res.pop().result]  }
       });
 
       resolve()
