@@ -157,7 +157,7 @@ export const closeDlightWallet = (coinObj, clearDb) => {
 
       if (clearDb) {
         //TODO: we no longer have a deleteWallet 
-        closePromises.push(deleteWallet(id, proto, accountHash))
+        //closePromises.push(deleteWallet(id, proto, accountHash))
       }
     } else  {
       throw new Error(id + "'s dlight wallet cannot be stopped if it was never started.")

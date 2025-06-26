@@ -86,7 +86,7 @@ export const closeWallet = async (coinId, coinProto, accountHash) => {
  * @param {String} coinProto The protocol the coin is based on (e.g. 'btc' || 'vrsc')
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
-export const deleteWallet = async (coinId, coinProto, accountHash) => {
+/*export const deleteWallet = async (coinId, coinProto, accountHash) => {
   //TODO: no way to delete wallet presently without uninstalling app
   // can add this, if we need it
   try {
@@ -95,3 +95,4 @@ export const deleteWallet = async (coinId, coinProto, accountHash) => {
     throw error
   }
 }
+*/
