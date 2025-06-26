@@ -1,4 +1,3 @@
-//import VerusLightClient from 'react-native-verus-light-client'
 import { getSynchronizerInstance, InitializerConfig } from 'react-native-verus'
 import Store from '../../../../../store/index';
 import {
@@ -16,25 +15,24 @@ export const startSync = async (coinId, coinProto, accountHash) => {
   const synchronizer = getSynchronizerInstance(accountHash, coinId)
       const subscriptions = {
         onBalanceChanged: (balance) => {
-          console.log("Balance Updated:", balance);
+          console.debug("Balance Updated:", balance);
           dispatch({ type: DLIGHT_BALANCE_UPDATED, id: coinId, payload: balance });
         },
         onStatusChanged: (status) => {
-          console.log("Status Updated:", status);
+          console.debug("Status Updated:", status);
           dispatch({ type: DLIGHT_STATUS_UPDATED, id: coinId, payload: status });
         },
         onTransactionsChanged: (transactions) => {
-          console.log("Transactions Updated:", transactions);
+          console.debug("Transactions Updated:", transactions);
           dispatch({ type: DLIGHT_TRANSACTIONS_UPDATED, id: coinId, payload: transactions });
         },
         onUpdate: (update) => {
-          console.log("Update Received:", update);
+          console.debug("Update Received:", update);
           dispatch({ type: DLIGHT_SYNC_UPDATED, id: coinId, payload: update }); //TODO: figure out how to open DLIGHT_SOCKET and toggle DLIGHT_SYNC
         }
       };
       synchronizer.subscribe(subscriptions)
       return true
-  //synchronizer.subscribe()
 }
 
 // Uses a coin's ticker symbol (id), protocol (btc || vrsc)
@@ -43,7 +41,4 @@ export const startSync = async (coinId, coinProto, accountHash) => {
 export const stopSync = (coinId, coinProto, accountHash) => {
   const synchronizer = getSynchronizerInstance(accountHash, coinId)
   return synchronizer.stop();
-//  return VerusLightClient.stopSync(coinId, coinProto, accountHash)
 }
-
-//export default syncInstance;
