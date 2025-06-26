@@ -1,16 +1,5 @@
-//import VerusLightClient from 'react-native-verus-light-client'
 import { getSynchronizerInstance, InitializerConfig, makeSynchronizer } from 'react-native-verus'
-import Store from '../../../../../store/index';
-import {
-  DLIGHT_BALANCE_UPDATED,
-  DLIGHT_STATUS_UPDATED,
-  DLIGHT_TRANSACTIONS_UPDATED,
-  DLIGHT_SYNC_UPDATED
-} from '../../../../constants/storeType'
 import { VRSC_SAPLING_ACTIVATION_HEIGHT } from '../../../../constants/constants'
-import { setTransactions } from '../../../../../actions/actionCreators'
-import { eventChannel } from "redux-saga";
-//import { syncInstance, SynchronizerSingleton } from './synchronizer';
 
 /**
  * Initializes a wallet for the first time
@@ -26,9 +15,7 @@ import { eventChannel } from "redux-saga";
 export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed) => {
 
    const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, VRSC_SAPLING_ACTIVATION_HEIGHT, true);
-   //console.log(">>> initializeWallet called")
      try {
-       //console.log("initializeWallet: before makeSynchronizer")
        const sync = await makeSynchronizer(config);
        return sync;
 
