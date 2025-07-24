@@ -11,6 +11,7 @@ import {
   stopSync,
   getAddresses
 } from '../../../../../utils/api/channels/dlight/callCreators'
+import { isDlightSpendingKey } from '../../../../../utils/keys'
 import { DEFAULT_PRIVATE_ADDRS } from '../../../../../utils/constants/constants'
 import { resolveSequentially } from '../../../../../utils/promises'
 import { canRetryDlightInitialization, blockchainQuitError } from './AlertManager'
@@ -66,12 +67,19 @@ export const initDlightWallet = async (coinObj) => {
       const seed = accountSeeds[DLIGHT_PRIVATE];
 
       console.warn("LightWalletManager: seed = " + seed)
-      initializationPromises = [
-        await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), seed, ""),
-        startSync(id, proto, accountHash),
-        getAddresses(id, accountHash, proto)
-      ];
-
+      if (isDlightSpendingKey(seed)) {
+            initializationPromises = [
+              await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), "", seed),
+              startSync(id, proto, accountHash),
+              getAddresses(id, accountHash, proto)
+            ];
+      } else {
+            initializationPromises = [
+              await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), seed, ""),
+              startSync(id, proto, accountHash),
+              getAddresses(id, accountHash, proto)
+            ];
+      }
     } else if (dlightSockets[id] === false) {
       initializationPromises = [
         openWallet(id, proto, accountHash),

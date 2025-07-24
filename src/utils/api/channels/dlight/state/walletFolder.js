@@ -16,6 +16,7 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
 
    const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, true);
      try {
+       console.warn("in initializeWallet, after setting config extsk(" + extsk +")")
        const sync = await makeSynchronizer(config);
        return sync;
 
@@ -25,6 +26,7 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
 };
 
 export const setConfig = (coinId, coinProto, accountHash, host, port, seed, extsk, birthday, newWallet) => {
+  console.warn("in setConfig extsk(" + extsk + ")")
   const config: InitializerConfig = {
     mnemonicSeed: seed,
     extsk: extsk,

@@ -166,8 +166,13 @@ export const deriveKeyPair = async (seed, coinObj, channel, version = KEY_DERIVA
 }
 
 export const isDlightSpendingKey = (seed) => {
-  console.warn("isDlightSpendingKey: " + seed)
-  return seed.startsWith('secret-extended-key-main')
+  console.warn("isDlightSpendingKey: " + seed);
+  if (seed.startsWith('secret-extended-key-main')) {
+    return true;
+  } else if (seed.length == 338) {
+    return true;
+  }
+  return false;
 }
 
 export const parseDlightSeed = async (seed) => {
