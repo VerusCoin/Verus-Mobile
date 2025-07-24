@@ -1,4 +1,4 @@
-import { getSynchronizerInstance, InitializerConfig, makeSynchronizer } from 'react-native-verus'
+import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, deleteWallet } from 'react-native-verus'
 import { VRSC_SAPLING_ACTIVATION_HEIGHT } from '../../../../constants/constants'
 
 /**
@@ -12,9 +12,9 @@ import { VRSC_SAPLING_ACTIVATION_HEIGHT } from '../../../../constants/constants'
  * @param {String} seed The HDSeed for the wallet in question
  */
 //export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, viewingKeys, birthday = 0) => {
-export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed) => {
+export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed, extsk) => {
 
-   const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, VRSC_SAPLING_ACTIVATION_HEIGHT, true);
+   const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, true);
      try {
        const sync = await makeSynchronizer(config);
        return sync;
@@ -24,9 +24,10 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
      }
 };
 
-export const setConfig = (coinId, coinProto, accountHash, host, port, seed, birthday, newWallet) => {
+export const setConfig = (coinId, coinProto, accountHash, host, port, seed, extsk, birthday, newWallet) => {
   const config: InitializerConfig = {
     mnemonicSeed: seed,
+    extsk: extsk,
     defaultHost: host,
     defaultPort: port,
     wif: "",
@@ -86,13 +87,11 @@ export const closeWallet = async (coinId, coinProto, accountHash) => {
  * @param {String} coinProto The protocol the coin is based on (e.g. 'btc' || 'vrsc')
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
-/*export const deleteWallet = async (coinId, coinProto, accountHash) => {
-  //TODO: no way to delete wallet presently without uninstalling app
-  // can add this, if we need it
+export const eraseWallet = async (coinId, coinProto, accountHash) => {
   try {
-    return await VerusLightClient.deleteWallet(coinId, coinProto, accountHash)
+    return await deleteWallet(coinId, accountHash)
   } catch (error) {
     throw error
   }
 }
-*/
+

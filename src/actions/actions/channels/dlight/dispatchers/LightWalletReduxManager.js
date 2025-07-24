@@ -3,6 +3,7 @@ import { InitializerConfig } from 'react-native-verus'
 import {
   setConfig,
   initializeWallet,
+  eraseWallet,
   openWallet,
   closeWallet,
   deleteWallet,
@@ -64,9 +65,9 @@ export const initDlightWallet = async (coinObj) => {
       const accountSeeds = await requestSeeds();
       const seed = accountSeeds[DLIGHT_PRIVATE];
 
-      //console.log("Redux: before InitializationPromises")
+      console.warn("LightWalletManager: seed = " + seed)
       initializationPromises = [
-        await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]),seed),
+        await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), seed, ""),
         startSync(id, proto, accountHash),
         getAddresses(id, accountHash, proto)
       ];
@@ -156,8 +157,7 @@ export const closeDlightWallet = (coinObj, clearDb) => {
       closePromises.push(closeWallet(id, proto, accountHash))
 
       if (clearDb) {
-        //TODO: we no longer have a deleteWallet 
-        //closePromises.push(deleteWallet(id, proto, accountHash))
+        closePromises.push(eraseWallet(id, proto, accountHash))
       }
     } else  {
       throw new Error(id + "'s dlight wallet cannot be stopped if it was never started.")

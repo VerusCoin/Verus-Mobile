@@ -17,8 +17,15 @@ import { validateMnemonic } from "bip39"
 import { networks } from "@bitgo/utxo-lib"
 
 const deriveLightwalletdKeyPair = async (seed) => {
+  let extendedSpendingKey = "";
+  if (isDlightSpendingKey(seed)) {
+    console.warn("seed is spending key! (" + seed + ")");
+    extendedSpendingKey = seed;
+    seed = "";
+  }
   const spendingKey = await parseDlightSeed(seed);
-  const viewingKey = await Tools.deriveViewingKey(seed);
+  const viewingKey = await Tools.deriveViewingKey(extendedSpendingKey, seed);
+  console.warn("Resulting viewingkey(" + viewingKey + ")");
 
   return {
     pubKey: null,
@@ -159,18 +166,22 @@ export const deriveKeyPair = async (seed, coinObj, channel, version = KEY_DERIVA
 }
 
 export const isDlightSpendingKey = (seed) => {
+  console.warn("isDlightSpendingKey: " + seed)
   return seed.startsWith('secret-extended-key-main')
 }
 
 export const parseDlightSeed = async (seed) => {
   //console.log("parseDlightSeed called!")
-  if (isDlightSpendingKey(seed)) return seed
+  let extendedSpendingKey = ""
+  if (isDlightSpendingKey(seed)) {
+    return seed
+  }
   
   try {
-    const viewkey = await Tools.deriveViewingKey(seed)
+    const viewkey = await Tools.deriveViewingKey("", seed)
     //console.log("Viewkey(" + viewkey + ")")
 
-    const saplingAddress = await Tools.deriveShieldedAddress(seed)
+    const saplingAddress = await Tools.deriveShieldedAddress("", seed)
     //console.log("deriveShieldedAddress(" + saplingAddressFromView + ")")
 
     const isValid = await Tools.isValidAddress(saplingAddress)
