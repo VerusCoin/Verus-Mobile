@@ -18,12 +18,12 @@ import { networks } from "@bitgo/utxo-lib"
 
 const deriveLightwalletdKeyPair = async (seed) => {
   let extendedSpendingKey = "";
+  const spendingKey = await parseDlightSeed(seed);
   if (isDlightSpendingKey(seed)) {
     console.warn("seed is spending key! (" + seed + ")");
     extendedSpendingKey = seed;
     seed = "";
   }
-  const spendingKey = await parseDlightSeed(seed);
   const viewingKey = await Tools.deriveViewingKey(extendedSpendingKey, seed);
   console.warn("Resulting viewingkey(" + viewingKey + ")");
 
