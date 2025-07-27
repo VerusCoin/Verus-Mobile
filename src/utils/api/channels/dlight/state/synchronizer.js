@@ -12,7 +12,7 @@ DLIGHT_SYNC_UPDATED
 // and start syncing it to the blockchain
 export const startSync = async (coinId, coinProto, accountHash) => {
   const { dispatch } = Store
-  const synchronizer = getSynchronizerInstance(accountHash, coinId)
+  const synchronizer = getSynchronizerInstance(coinId, coinId)
       const subscriptions = {
         onBalanceChanged: (balance) => {
           console.debug("Balance Updated:", balance);
@@ -38,7 +38,7 @@ export const startSync = async (coinId, coinProto, accountHash) => {
 // Uses a coin's ticker symbol (id), protocol (btc || vrsc)
 // and user's account hash to identify a light client wallet
 // and stop it syncing to the blockchain
-export const stopSync = (coinId, coinProto, accountHash) => {
-  const synchronizer = getSynchronizerInstance(accountHash, coinId)
-  return synchronizer.stop();
+export const stopSync = async (coinId, coinProto, accountHash) => {
+  const synchronizer = await getSynchronizerInstance(coinId, coinId)
+  return await synchronizer.stop();
 }

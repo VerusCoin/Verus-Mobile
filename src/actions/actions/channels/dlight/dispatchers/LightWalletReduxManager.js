@@ -142,7 +142,7 @@ export const initDlightWallet = async (coinObj) => {
 }
 
 // Closes and optionally deletes a dlightWallet
-export const closeDlightWallet = (coinObj, clearDb) => {
+export const closeDlightWallet = async (coinObj, clearDb) => {
   const { dispatch, getState } = Store
   const State = getState()
 
@@ -160,12 +160,17 @@ export const closeDlightWallet = (coinObj, clearDb) => {
     if (dlightSockets[id] === true) {
       if (dlightSyncing[id] === true) {
         //closePromises.push(stopSync(id, proto, accountHash))
-      } 
-
-      closePromises.push(closeWallet(id, proto, accountHash))
+      }
 
       if (clearDb) {
-        closePromises.push(eraseWallet(id, proto, accountHash))
+        closePromises = [
+          await closeWallet(id, proto, accountHash),
+          await eraseWallet(id, proto, accountHash)
+        ]
+      } else {
+         closePromises = [
+           await closeWallet(id, proto, accountHash)
+         ]
       }
     } else  {
       throw new Error(id + "'s dlight wallet cannot be stopped if it was never started.")
@@ -193,7 +198,7 @@ export const closeDlightWallet = (coinObj, clearDb) => {
       resolve()
     })
     .catch(err => {
-      console.warn(err)
+      //console.warn(err)
 
       blockchainQuitError(id)
       .then(canRetry => {

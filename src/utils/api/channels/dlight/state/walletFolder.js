@@ -1,5 +1,7 @@
 import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, deleteWallet } from 'react-native-verus'
 import { VRSC_SAPLING_ACTIVATION_HEIGHT } from '../../../../constants/constants'
+import {ApiException} from '../../../errors/apiError'
+import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
 
 /**
  * Initializes a wallet for the first time
@@ -26,7 +28,7 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
 };
 
 export const setConfig = (coinId, coinProto, accountHash, host, port, seed, extsk, birthday, newWallet) => {
-  console.warn("in setConfig extsk(" + extsk + ")")
+  console.warn("in setConfig extsk(" + extsk + "), coindId(" + coinId +")")
   const config: InitializerConfig = {
     mnemonicSeed: seed,
     extsk: extsk,
@@ -34,7 +36,7 @@ export const setConfig = (coinId, coinProto, accountHash, host, port, seed, exts
     defaultPort: port,
     wif: "",
     networkName: coinId,
-    alias: accountHash,
+    alias: coinId,
     birthdayHeight: birthday,
     newWallet: newWallet
   }
@@ -55,8 +57,8 @@ export const openWallet = async (coinId, coinProto, accountHash, host, port, see
 
   //TODO: Everything works, despite this, but openWallet is never called due to dlightSockets logic
   // or something else in initDlight function in LightWalletReduxManager. Since it breaks nothing, I left it be
-  //console.log(">>>>>> openWalletCalled")
-  const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, VRSC_SAPLING_ACTIVATION_HEIGHT, false);
+  console.warn(">>>>>> openWalletCalled")
+  const config: InitializerConfig = setConfig(coinId, coinProto, accountId, host, port, seed, VRSC_SAPLING_ACTIVATION_HEIGHT, false);
   try {
     //console.log("openWallet: before makeSynchronizer")
     const sync = await makeSynchronizer(config);
@@ -74,13 +76,31 @@ export const openWallet = async (coinId, coinProto, accountHash, host, port, see
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
 export const closeWallet = async (coinId, coinProto, accountHash) => {
-  //console.warn(">>> closeWallet called")
-  try {
-    const synchronizer = getSynchronizerInstance(accountHash, coinId);
-    return await synchronizer.stop()
-  } catch (error) {
-    throw error
-  }
+  console.warn(">>> closeWallet called")
+ // let res, error = "";
+    const synchronizer = getSynchronizerInstance(coinId, coinId);
+    await synchronizer.stop()
+   /* return new Promise((resolve, reject) => {
+      synchronizer.stop()
+        .then(res => {
+            if (res.error != null) {
+              reject(
+                new ApiException(
+                  res.error.message,
+                  res.error.data,
+                  coinId,
+                  DLIGHT_PRIVATE,
+                  res.error.code
+                )
+              );
+            } else {
+              //console.log("before jsonResponse")
+              //const jsonResponse = createJsonRpcResponse("1", res);
+              //console.log("getLatestNetworkHeight response: " res);
+              resolve(res);
+            }
+        })
+    })*/
 }
 
 /**
@@ -89,11 +109,52 @@ export const closeWallet = async (coinId, coinProto, accountHash) => {
  * @param {String} coinProto The protocol the coin is based on (e.g. 'btc' || 'vrsc')
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
-export const eraseWallet = async (coinId, coinProto, accountHash) => {
-  try {
-    return await deleteWallet(coinId, accountHash)
-  } catch (error) {
-    throw error
-  }
-}
+ export const eraseWallet = async (coinId, coinProto, accountHash) => {
+   return new Promise((resolve, reject) => {
+     deleteWallet(coinId, accountHash)
+       .then((res) => {
+         if (res && typeof res.error === 'object' && res.error !== null) {
+           const { message = "Unknown error", data, code } = res.error;
+           reject(
+             new ApiException(
+               message,
+               data,
+               coinId,
+               DLIGHT_PRIVATE,
+               code
+             )
+           );
+         } else {
+           resolve(res);
+         }
+       })
+       .catch((err) => {
+         console.warn("Error in eraseWallet: " + err);
+         // In case deleteWallet itself throws
+         reject(new ApiException(err.message, null, coinId, DLIGHT_PRIVATE, null));
+       });
+   });
+ };
+/*export const eraseWallet = async (coinId, coinProto, accountHash) => {
+  //console.warn(">>> closeWallet called")
+  let res, error = "";
+    return new Promise((resolve, reject) => {
+      deleteWallet(coinId, accountHash)
+        .then(res => {
+            if (res.error != null) {
+              reject(
+                new ApiException(
+                  res.error.message,
+                  res.error.data,
+                  coinId,
+                  DLIGHT_PRIVATE,
+                  res.error.code
+                )
+              );
+            } else {
+              resolve(res);
+            }
+        })
+    })
+}*/
 

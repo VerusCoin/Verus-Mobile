@@ -21,7 +21,7 @@ const deriveLightwalletdKeyPair = async (seed) => {
   const spendingKey = await parseDlightSeed(seed);
   if (isDlightSpendingKey(seed)) {
     console.warn("seed is spending key! (" + seed + ")");
-    extendedSpendingKey = seed;
+    extendedSpendingKey = await Tools.bech32Decode(seed);
     seed = "";
   }
   const viewingKey = await Tools.deriveViewingKey(extendedSpendingKey, seed);
@@ -177,9 +177,10 @@ export const isDlightSpendingKey = (seed) => {
 
 export const parseDlightSeed = async (seed) => {
   //console.log("parseDlightSeed called!")
-  let extendedSpendingKey = ""
+
   if (isDlightSpendingKey(seed)) {
-    return seed
+    const spendkey = await Tools.bech32Decode(seed);
+    return seed;
   }
   
   try {
