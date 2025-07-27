@@ -74,33 +74,16 @@ export const openWallet = async (coinId, coinProto, accountHash, host, port, see
  * @param {String} coinProto The protocol the coin is based on (e.g. 'btc' || 'vrsc')
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
-export const closeWallet = async (coinId, coinProto, accountHash) => {
-  console.warn(">>> closeWallet called")
- // let res, error = "";
-    const synchronizer = getSynchronizerInstance(coinId, coinId);
-    await synchronizer.stop()
-   /* return new Promise((resolve, reject) => {
-      synchronizer.stop()
-        .then(res => {
-            if (res.error != null) {
-              reject(
-                new ApiException(
-                  res.error.message,
-                  res.error.data,
-                  coinId,
-                  DLIGHT_PRIVATE,
-                  res.error.code
-                )
-              );
-            } else {
-              //console.log("before jsonResponse")
-              //const jsonResponse = createJsonRpcResponse("1", res);
-              //console.log("getLatestNetworkHeight response: " res);
-              resolve(res);
-            }
-        })
-    })*/
-}
+export const closeWallet = (coinId, accountHash, coinProto) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const synchronizer = getSynchronizerInstance(coinId, coinId);
+      resolve(synchronizer.stop());
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
 
 /**
  * Deletes a wallet by closing it and deleting all of its data 
@@ -108,52 +91,12 @@ export const closeWallet = async (coinId, coinProto, accountHash) => {
  * @param {String} coinProto The protocol the coin is based on (e.g. 'btc' || 'vrsc')
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
- export const eraseWallet = async (coinId, coinProto, accountHash) => {
-   return new Promise((resolve, reject) => {
-     deleteWallet(coinId, accountHash)
-       .then((res) => {
-         if (res && typeof res.error === 'object' && res.error !== null) {
-           const { message = "Unknown error", data, code } = res.error;
-           reject(
-             new ApiException(
-               message,
-               data,
-               coinId,
-               DLIGHT_PRIVATE,
-               code
-             )
-           );
-         } else {
-           resolve(res);
-         }
-       })
-       .catch((err) => {
-         console.warn("Error in eraseWallet: " + err);
-         // In case deleteWallet itself throws
-         reject(new ApiException(err.message, null, coinId, DLIGHT_PRIVATE, null));
-       });
-   });
- };
-/*export const eraseWallet = async (coinId, coinProto, accountHash) => {
-  //console.warn(">>> closeWallet called")
-  let res, error = "";
-    return new Promise((resolve, reject) => {
-      deleteWallet(coinId, accountHash)
-        .then(res => {
-            if (res.error != null) {
-              reject(
-                new ApiException(
-                  res.error.message,
-                  res.error.data,
-                  coinId,
-                  DLIGHT_PRIVATE,
-                  res.error.code
-                )
-              );
-            } else {
-              resolve(res);
-            }
-        })
-    })
-}*/
-
+export const eraseWallet = (coinId, accountHash, coinProto) => {
+  return new Promise(async (resolve, reject) => {
+     try {
+       resolve(deleteWallet(coinId, coinId));
+     } catch (error) {
+       reject(error);
+     }
+  });
+};
