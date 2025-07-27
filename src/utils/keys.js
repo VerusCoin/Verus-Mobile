@@ -204,8 +204,8 @@ export const parseDlightSeed = async (seed) => {
   } catch(e) { throw e }
 }
 
-export const dlightSeedToBytes = (seed) => {
-  return VerusLightClient.deterministicSeedBytes(seed)
+export const dlightSeedToBytes = async (seed) => {
+  return await Tools.becnh32Decode(seed)
 }
 
 export const isSeedPhrase = (seed, minWordLength = 12) => {

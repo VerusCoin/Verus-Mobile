@@ -1,4 +1,4 @@
-import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, deleteWallet } from 'react-native-verus'
+import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, deleteWallet, Tools } from 'react-native-verus'
 import { VRSC_SAPLING_ACTIVATION_HEIGHT } from '../../../../constants/constants'
 import {ApiException} from '../../../errors/apiError'
 import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
@@ -16,22 +16,21 @@ import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
 //export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, viewingKeys, birthday = 0) => {
 export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed, extsk) => {
 
-   const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, true);
      try {
+       const config: InitializerConfig = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, true);
        console.warn("in initializeWallet, after setting config extsk(" + extsk +")")
        const sync = await makeSynchronizer(config);
        return sync;
-
      } catch (error) {
        console.warn(error)
      }
 };
 
-export const setConfig = (coinId, coinProto, accountHash, host, port, seed, extsk, birthday, newWallet) => {
+export const setConfig = async (coinId, coinProto, accountHash, host, port, seed, extsk, birthday, newWallet) => {
   console.warn("in setConfig extsk(" + extsk + "), coindId(" + coinId +")")
   const config: InitializerConfig = {
     mnemonicSeed: seed,
-    extsk: extsk,
+    extsk: await Tools.bech32Decode(extsk),
     defaultHost: host,
     defaultPort: port,
     wif: "",
