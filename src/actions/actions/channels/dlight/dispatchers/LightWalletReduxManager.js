@@ -81,11 +81,27 @@ export const initDlightWallet = async (coinObj) => {
             ];
       }
     } else if (dlightSockets[id] === false) {
-      initializationPromises = [
-        openWallet(id, proto, accountHash),
-        startSync(id, proto, accountHash),
-        getAddresses(id, accountHash, proto)
-      ]
+      const lightWalletEndpointArr = dlight_endpoints[0].split(':')
+
+      if (lightWalletEndpointArr[1] == null || isNaN(lightWalletEndpointArr[1]))
+        throw new Error(id + " lightwallet was requested with port " + lightWalletEndpointArr[1], " this is not a valid port.")
+
+      const accountSeeds = await requestSeeds();
+      const seed = accountSeeds[DLIGHT_PRIVATE];
+
+      if (isDlightSpendingKey(seed)) {
+        initializationPromises = [
+          await openWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), "", seed),
+          startSync(id, proto, accountHash),
+          getAddresses(id, accountHash, proto)
+        ]
+      } else {
+         initializationPromises = [
+           await openWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), seed, ""),
+           startSync(id, proto, accountHash),
+           getAddresses(id, accountHash, proto)
+         ]
+      }
     } else {
       throw new Error(id + " is already initialized and connected in lightwalletd mode. Cannot intialize and connect a coin twice.")
     }

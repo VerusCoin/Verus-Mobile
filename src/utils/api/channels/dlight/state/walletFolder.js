@@ -52,14 +52,13 @@ export const initConfig = (coinId, coinProto, accountHash, host, port, seed, bir
  * @param {String} coinProto The protocol the coin is based on (e.g. 'btc' || 'vrsc')
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
-export const openWallet = async (coinId, coinProto, accountHash, host, port, seed) => {
+export const openWallet = async (coinId, coinProto, accountHash, host, port, seed, extsk) => {
 
   //TODO: Everything works, despite this, but openWallet is never called due to dlightSockets logic
   // or something else in initDlight function in LightWalletReduxManager. Since it breaks nothing, I left it be
   console.warn(">>>>>> openWalletCalled")
-  const config: InitializerConfig = setConfig(coinId, coinProto, accountId, host, port, seed, VRSC_SAPLING_ACTIVATION_HEIGHT, false);
   try {
-    //console.log("openWallet: before makeSynchronizer")
+    const config: InitializerConfig = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, false);
     const sync = await makeSynchronizer(config);
     return sync;
 
