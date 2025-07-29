@@ -20,12 +20,12 @@ const deriveLightwalletdKeyPair = async (seed) => {
   let extendedSpendingKey = "";
   const spendingKey = await parseDlightSeed(seed);
   if (isDlightSpendingKey(seed)) {
-    console.warn("seed is spending key! (" + seed + ")");
+    //console.warn("seed is spending key! (" + seed + ")");
     extendedSpendingKey = await Tools.bech32Decode(seed);
     seed = "";
   }
   const viewingKey = await Tools.deriveViewingKey(extendedSpendingKey, seed);
-  console.warn("Resulting viewingkey(" + viewingKey + ")");
+  //console.warn("Resulting viewingkey(" + viewingKey + ")");
 
   return {
     pubKey: null,
@@ -167,12 +167,7 @@ export const deriveKeyPair = async (seed, coinObj, channel, version = KEY_DERIVA
 
 export const isDlightSpendingKey = (seed) => {
   //console.warn("isDlightSpendingKey: " + seed);
-  if (seed.startsWith('secret-extended-key-main')) {
-    return true;
-  } else if (seed.length == 338) {
-    return true;
-  }
-  return false;
+  return (seed.startsWith('secret-extended-key-main'))
 }
 
 export const parseDlightSeed = async (seed) => {
@@ -201,8 +196,7 @@ export const parseDlightSeed = async (seed) => {
 }
 
 export const dlightSeedToBytes = async (seed) => {
-  return seed;
-  //return await Tools.bech32Decode(seed);
+  return await Tools.deterministicSeedBytes(seed);
 }
 
 export const isSeedPhrase = (seed, minWordLength = 12) => {
