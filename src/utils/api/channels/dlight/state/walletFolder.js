@@ -28,18 +28,33 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
 
 export const setConfig = async (coinId, coinProto, accountHash, host, port, seed, extsk, birthday, newWallet) => {
   //console.warn("in setConfig extsk(" + extsk + "), coindId(" + coinId +")")
-  const config: InitializerConfig = {
-    mnemonicSeed: seed,
-    extsk: await Tools.bech32Decode(extsk),
-    defaultHost: host,
-    defaultPort: port,
-    wif: "",
-    networkName: coinId,
-    alias: coinId,
-    birthdayHeight: birthday,
-    newWallet: newWallet
+  if (!extsk) {
+    const config: InitializerConfig = {
+      mnemonicSeed: seed,
+      extsk: extsk,
+      defaultHost: host,
+      defaultPort: port,
+      wif: "",
+      networkName: coinId,
+      alias: coinId,
+      birthdayHeight: birthday,
+      newWallet: newWallet
+    }
+    return config;
+  } else {
+      const config: InitializerConfig = {
+        mnemonicSeed: seed,
+        extsk: await Tools.bech32Decode(extsk),
+        defaultHost: host,
+        defaultPort: port,
+        wif: "",
+        networkName: coinId,
+        alias: coinId,
+        birthdayHeight: birthday,
+        newWallet: newWallet
+      }
+      return config;
   }
-  return config
 }
 
 export const initConfig = (coinId, coinProto, accountHash, host, port, seed, birthday, newWallet) => {

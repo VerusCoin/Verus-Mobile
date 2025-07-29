@@ -73,7 +73,7 @@ export const initDlightWallet = async (coinObj) => {
         mnemonicSeed = seed;
       }
 
-      console.warn("LightWalletManager: seed = " + seed)
+      //console.warn("LightWalletManager: seed = " + seed)
       initializationPromises = [
           await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), mnemonicSeed, extsk),
           startSync(id, proto, accountHash),

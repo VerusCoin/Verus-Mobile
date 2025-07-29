@@ -166,7 +166,7 @@ export const deriveKeyPair = async (seed, coinObj, channel, version = KEY_DERIVA
 }
 
 export const isDlightSpendingKey = (seed) => {
-  console.warn("isDlightSpendingKey: " + seed);
+  //console.warn("isDlightSpendingKey: " + seed);
   if (seed.startsWith('secret-extended-key-main')) {
     return true;
   } else if (seed.length == 338) {
@@ -196,16 +196,13 @@ export const parseDlightSeed = async (seed) => {
     const saplingSpendKey = await Tools.deriveSaplingSpendingKey(seed)
     //console.log("SaplingSpendingKey(" + saplingSpendKey + ")");
 
-    //TODO: below does not derive properly, and we can use the above function anyway
-    //const saplingAddrFromSeed = await Tools.deriveShieldedAddressFromSeed(seed)
-    //console.log("saplingAddrFromSeed(" + saplingAddrFromSeed + ")")
-
     return saplingSpendKey
   } catch(e) { throw e }
 }
 
 export const dlightSeedToBytes = async (seed) => {
-  return await Tools.becnh32Decode(seed)
+  return seed;
+  //return await Tools.bech32Decode(seed);
 }
 
 export const isSeedPhrase = (seed, minWordLength = 12) => {
