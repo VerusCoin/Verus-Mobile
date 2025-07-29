@@ -18,7 +18,7 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
 
      try {
        const config: InitializerConfig = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, true);
-       console.warn("in initializeWallet, after setting config extsk(" + extsk +")")
+       //console.warn("in initializeWallet, after setting config extsk(" + extsk +")")
        const sync = await makeSynchronizer(config);
        return sync;
      } catch (error) {
@@ -27,7 +27,7 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
 };
 
 export const setConfig = async (coinId, coinProto, accountHash, host, port, seed, extsk, birthday, newWallet) => {
-  console.warn("in setConfig extsk(" + extsk + "), coindId(" + coinId +")")
+  //console.warn("in setConfig extsk(" + extsk + "), coindId(" + coinId +")")
   const config: InitializerConfig = {
     mnemonicSeed: seed,
     extsk: await Tools.bech32Decode(extsk),
@@ -56,7 +56,7 @@ export const openWallet = async (coinId, coinProto, accountHash, host, port, see
 
   //TODO: Everything works, despite this, but openWallet is never called due to dlightSockets logic
   // or something else in initDlight function in LightWalletReduxManager. Since it breaks nothing, I left it be
-  console.warn(">>>>>> openWalletCalled")
+  //console.warn(">>>>>> openWalletCalled")
   try {
     const config: InitializerConfig = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, false);
     const sync = await makeSynchronizer(config);
