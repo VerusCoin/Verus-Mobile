@@ -1,5 +1,5 @@
 import Store from '../../../../../store/index'
-import { InitializerConfig } from 'react-native-verus'
+import { Tools } from 'react-native-verus'
 import {
   setConfig,
   initializeWallet,
@@ -63,45 +63,43 @@ export const initDlightWallet = async (coinObj) => {
       if (lightWalletEndpointArr[1] == null || isNaN(lightWalletEndpointArr[1])) 
         throw new Error(id + " lightwallet was requested with port " + lightWalletEndpointArr[1], " this is not a valid port.")
 
-      const accountSeeds = await requestSeeds();
-      const seed = accountSeeds[DLIGHT_PRIVATE];
+      const seed = (await requestSeeds())[DLIGHT_PRIVATE];
+      let mnemonicSeed = "";
+      let extsk = "";
+
+      if (isDlightSpendingKey(seed)) {
+        extsk = seed;
+      } else {
+        mnemonicSeed = seed;
+      }
 
       console.warn("LightWalletManager: seed = " + seed)
-      if (isDlightSpendingKey(seed)) {
-            initializationPromises = [
-              await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), "", seed),
-              startSync(id, proto, accountHash),
-              getAddresses(id, accountHash, proto)
-            ];
-      } else {
-            initializationPromises = [
-              await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), seed, ""),
-              startSync(id, proto, accountHash),
-              getAddresses(id, accountHash, proto)
-            ];
-      }
+      initializationPromises = [
+          await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), mnemonicSeed, extsk),
+          startSync(id, proto, accountHash),
+          getAddresses(id, accountHash, proto)
+      ];
     } else if (dlightSockets[id] === false) {
       const lightWalletEndpointArr = dlight_endpoints[0].split(':')
 
       if (lightWalletEndpointArr[1] == null || isNaN(lightWalletEndpointArr[1]))
         throw new Error(id + " lightwallet was requested with port " + lightWalletEndpointArr[1], " this is not a valid port.")
 
-      const accountSeeds = await requestSeeds();
-      const seed = accountSeeds[DLIGHT_PRIVATE];
+      const seed = (await requestSeeds())[DLIGHT_PRIVATE];
+      let mnemonicSeed = "";
+      let extsk = "";
 
       if (isDlightSpendingKey(seed)) {
-        initializationPromises = [
-          await openWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), "", seed),
+        extsk = seed;
+      } else {
+        mnemonicSeed = seed;
+      }
+
+      initializationPromises = [
+          await openWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), mnemonicSeed, extsk),
           startSync(id, proto, accountHash),
           getAddresses(id, accountHash, proto)
-        ]
-      } else {
-         initializationPromises = [
-           await openWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), seed, ""),
-           startSync(id, proto, accountHash),
-           getAddresses(id, accountHash, proto)
-         ]
-      }
+      ]
     } else {
       throw new Error(id + " is already initialized and connected in lightwalletd mode. Cannot intialize and connect a coin twice.")
     }
