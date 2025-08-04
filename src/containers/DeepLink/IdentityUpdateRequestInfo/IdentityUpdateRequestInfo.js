@@ -23,6 +23,9 @@ import VerusIdObjectData from '../../../components/VerusIdObjectData';
 import { getVerusIdStatus } from '../../../utils/verusid/getVerusIdStatus';
 import { VERUSID_AUTH_INFO, VERUSID_BASE_INFO, VERUSID_CMM_DATA, VERUSID_CMM_INFO, VERUSID_PRIMARY_ADDRESS, VERUSID_PRIVATE_ADDRESS, VERUSID_PRIVATE_INFO, VERUSID_RECOVERY_AUTH, VERUSID_REVOCATION_AUTH, VERUSID_STATUS } from '../../../utils/constants/verusidObjectData';
 import { getCmmDataLabel } from '../../../utils/vdxf/cmmDataLabel';
+import VdxfUniValueModal from '../../../components/VdxfUniValueModal/VdxfUniValueModal';
+import { getVDXFKeyLabel } from '../../../utils/vdxf/vdxfTypeLabels';
+import { capitalizeString } from '../../../utils/stringUtils';
 
 const IdentityUpdateRequestInfo = props => {
   const { 
@@ -42,6 +45,16 @@ const IdentityUpdateRequestInfo = props => {
 
   const [subject, setSubject] = useState(primitives.Identity.fromJson(subjectIdentity));
   const [req, setReq] = useState(primitives.IdentityUpdateRequest.fromJson(deeplinkData));
+
+  const [vdxfUniValueModalData, setVdxfUniValueModalData] = useState([]);
+  const [vdxfUniValueModalTitle, setVdxfUniValueModalTitle] = useState("Data");
+  const [vdxfUniValueModalVisible, setVdxfUniValueModalVisible] = useState(false);
+
+  const [partialSignDataModalData, setPartialSignDataModalData] = useState(null);
+  const [partialSignDataModalTitle, setPartialSignDataModalTitle] = useState("Data");
+  const [partialSignDataModalVisible, setPartialSignDataModalVisible] = useState(false);
+
+  const [encryptedDataAccordionOpen, setEncryptedDataAccordionOpen] = useState(true);
   
   const { systemid, signingid, details } = req;
 
@@ -108,9 +121,26 @@ const IdentityUpdateRequestInfo = props => {
 
     if (identityUpdates.contentmultimap) {
       for (const key in identityUpdates.contentmultimap) {
-        displayUpdates[VERUSID_CMM_INFO.key][`${VERUSID_CMM_DATA.key}:${key}`] = {
-          data: getCmmDataLabel(identityUpdates.contentmultimap[key])
-        };
+        
+        if (req.details.containsSignData() && req.details.signdatamap.has(key)) {
+          
+        } else {
+          const dataLabel = getCmmDataLabel(identityUpdates.contentmultimap[key]);
+
+          displayUpdates[VERUSID_CMM_INFO.key][`${VERUSID_CMM_DATA.key}:${key}`] = {
+            data: dataLabel,
+            onPress: () => {
+              const updates = identityUpdates.contentmultimap[key];
+  
+              return openVdxfUniValueModal(updates.map(x => {
+                return {
+                  key: Object.keys(x)[0],
+                  data: Object.values(x)[0]
+                }
+              }), getCmmDataKey(key))
+            }
+          };
+        }
       }
     }
 
@@ -120,7 +150,9 @@ const IdentityUpdateRequestInfo = props => {
   const getMainHeading = () => {
     const recipientLabel = req.isSigned() ? signerFqn : 'This unsigned request';
 
-    return `${recipientLabel} is asking to make changes to ${fullyqualifiedname}`
+    if (req.details.containsSignData()) {
+      return `${recipientLabel} is asking to make changes and upload encrypted data into to ${fullyqualifiedname}`
+    } else return `${recipientLabel} is asking to make changes to ${fullyqualifiedname}`
   }
 
   const getExpiryLabel = () => {
@@ -153,6 +185,40 @@ const IdentityUpdateRequestInfo = props => {
       iAddress,
       chain
     });
+  }
+
+  const getCmmDataKey = iAddr => {
+    const keyLabel = getVDXFKeyLabel(iAddr, true);
+
+    if (keyLabel == null) {
+      if (cmmDataKeys && cmmDataKeys[iAddr]) {
+        return cmmDataKeys[iAddr].label;
+      } else return iAddr.substring(0, 4) + '...' + iAddr.substring(iAddr.length - 4);
+    } else return capitalizeString(keyLabel);
+  }
+
+  const openVdxfUniValueModal = (objects, title) => {
+    setVdxfUniValueModalTitle(title);
+    setVdxfUniValueModalData(objects);
+    setVdxfUniValueModalVisible(true);
+  }
+
+  const closeVdxfUniValueModal = () => {
+    setVdxfUniValueModalVisible(false);
+    setVdxfUniValueModalTitle("Data");
+    setVdxfUniValueModalData([]);
+  }
+
+  const closePartialSignDataModal = () => {
+    setPartialSignDataModalVisible(false);
+    setPartialSignDataModalTitle("Data");
+    setPartialSignDataModalData(null);
+  }
+
+  const openPartialSignDataModal = (data, title) => {
+    setPartialSignDataModalTitle(title);
+    setPartialSignDataModalData(data);
+    setPartialSignDataModalVisible(true);
   }
 
   const [isListSelectionModalVisible, setIsListSelectionModalVisible] = useState(false);
@@ -293,6 +359,25 @@ const IdentityUpdateRequestInfo = props => {
         {verusIdDetailsModalProps != null && (
           <VerusIdDetailsModal {...verusIdDetailsModalProps} />
         )}
+        {vdxfUniValueModalData.length > 0 && (
+          <VdxfUniValueModal 
+            objects={vdxfUniValueModalData}
+            visible={vdxfUniValueModalVisible}
+            title={vdxfUniValueModalTitle}
+            setVisible={(x) => setVdxfUniValueModalVisible(x)}
+            cancel={closeVdxfUniValueModal}
+          />
+        )}
+        {partialSignDataModalData != null && (
+          <VdxfUniValueModal 
+            data={partialSignDataModalData}
+            objects={[]}
+            visible={partialSignDataModalVisible}
+            title={partialSignDataModalTitle}
+            setVisible={(x) => setPartialSignDataModalVisible(x)}
+            cancel={closePartialSignDataModal}
+          />
+        )}
         {isListSelectionModalVisible && <ListSelectionModal
           visible={isListSelectionModalVisible}
           data={listData}
@@ -345,6 +430,33 @@ const IdentityUpdateRequestInfo = props => {
                   <List.Item title={sigDateString} description={'Signed on'} />
                   <Divider />
                 </React.Fragment>
+              )
+            }
+            {
+              req.details.containsSignData() && (
+                <List.Accordion
+                  title={"Encrypt & Upload"}
+                  onPress={() => setEncryptedDataAccordionOpen(!encryptedDataAccordionOpen)}
+                  expanded={encryptedDataAccordionOpen}
+                  style={{ backgroundColor: Colors.secondaryBackground }}
+                >
+                  {Array.from(req.details.signdatamap).map(([key, value]) => {
+                    const dataLabel = getCmmDataKey(key);
+
+                    return (
+                      <TouchableOpacity 
+                        onPress={() => openPartialSignDataModal(value, dataLabel)}
+                      >
+                        <List.Item
+                          title={getCmmDataKey(key)}
+                          description={'Tap to see information and agree'}
+                          right={props => <List.Icon {...props} icon={'information'} size={20} />}
+                        />
+                        <Divider />
+                      </TouchableOpacity>
+                    )
+                  })}
+                </List.Accordion>
               )
             }
           </View>

@@ -6,7 +6,7 @@ export const getCmmDataLabel = (cmmData, recurse = true, stringLenLimit = 20) =>
       let ret = `${cmmData.length} ${cmmData.length === 1 ? 'item' : 'items'} (`;
 
       let i = 0
-      for (; i < cmmData.length && i < 3; i++) {
+      for (; i < cmmData.length; i++) {
         ret += getCmmDataLabel(cmmData[i], false, 8);
         if (i < cmmData.length - 1) ret += ", ";
       }
