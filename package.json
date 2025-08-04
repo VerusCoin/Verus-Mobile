@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@bitgo/utxo-lib": "git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus",
-    "@ethersproject/signing-key": "git+https://github.com/VerusCoin/ethersjs-signing-key-package.git",
     "@react-native-async-storage/async-storage": "2.0.0",
     "@react-native-camera-roll/camera-roll": "5.0.4",
     "@react-native-community/cli": "8.0.4",
