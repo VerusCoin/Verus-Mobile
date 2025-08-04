@@ -36,8 +36,8 @@ const PartialSignDataModal = (props, navigator) => {
    */
   const renderVdxfUniValue = (vdxfObj) => {
     if (vdxfObj.message) return renderField('Message', vdxfObj.message)
-    else if (vdxfObj.serializedbase64) return renderField('Serialized VDXF Object (base64)', vdxfObj.message)
-    else if (vdxfObj.serializedhex) return renderField('Serialized VDXF Object (hex)', vdxfObj.message)
+    else if (vdxfObj.serializedbase64) return renderField('Serialized VDXF Object (base64)', vdxfObj.serializedbase64)
+    else if (vdxfObj.serializedhex) return renderField('Serialized VDXF Object (hex)', vdxfObj.serializedhex)
     else {
       const key = Object.keys(vdxfObj)[0];
 
