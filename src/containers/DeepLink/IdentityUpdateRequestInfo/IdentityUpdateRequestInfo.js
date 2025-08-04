@@ -247,7 +247,7 @@ const IdentityUpdateRequestInfo = props => {
     );
   });
 
-  handleContinue = () => {
+  const handleContinue = () => {
     if (signedIn) {
       props.navigation.navigate('IdentityUpdatePaymentConfiguration', { ...props, displayUpdates });
     } else {
