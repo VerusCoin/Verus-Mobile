@@ -25,3 +25,8 @@ export const camelizeString = (string) => {
   const text = string.replace(/[-_\s.]+(.)?/g, (match, chr) => (chr ? chr.toUpperCase() : ''));
   return text.substr(0, 1).toLowerCase() + text.substr(1);
 };
+
+export const capitalizeString = (string) => {
+  const firstChar = string.charAt(0).toUpperCase();
+  return firstChar + string.slice(1);
+};

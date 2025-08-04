@@ -1,13 +1,13 @@
 import { convertFqnToDisplayFormat } from "../../../../fullyqualifiedname";
 import { getIdentity } from "./getIdentity";
 
-export const getFriendlyNameMap = async (systemId, identityObj) => {
+export const getFriendlyNameMap = async (systemId, identityObj, initAddresses = []) => {
   let names = {
     ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',
     ['iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq']: 'VRSCTEST',
   };
 
-  let iAddresses = [];
+  let iAddresses = initAddresses;
   const iAddress = identityObj.identity.identityaddress
 
   iAddresses.push(iAddress);

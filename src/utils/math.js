@@ -134,8 +134,19 @@ export const checkForPlural = (term, time) => {
   }
 }
 
-export const blocksToTime = (blocks) => {
-  const years = ((blocks/60)/24)/356;
+/**
+ * Returns a string to display the time in years, months, days, hours, and minutes for a given
+ * number of blocks and blocktime.
+ * @param {number} blocks Number of blocks
+ * @param {number} blocktime Blocktime in seconds
+ * @returns {string} A human-readable string representing the time duration (e.g., "2 YEARS 3 MONTHS 5 DAYS 4 HOURS 20 MINUTES").
+ */
+export const blocksToTime = (blocks, blocktime = 60) => {
+  if (typeof blocktime !== "number" || blocktime <= 0) {
+    return translate('TX_INFO.INVALID_BLOCKTIME');
+  }
+  
+  const years = (((blocks/(60/blocktime))/60)/24)/365.25;
   const months = (years % 1) * 12;
   const days = (months % 1) * 30.4375;
   const hours = (days % 1) * 24;
