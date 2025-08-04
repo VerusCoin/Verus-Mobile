@@ -26,7 +26,7 @@ function* handleDeeplinkUrl(action) {
   
       const id = url.pathname.split('/')[1];
   
-      if (!SUPPORTED_DLS.includes(id)) throw new Error('Unsupported url path.');
+      if (!SUPPORTED_DLS.includes(id)) throw new Error('Unsupported deeplink type.');
 
       if (id === primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid) {
         const req = new primitives.LoginConsentRequest();
@@ -56,18 +56,19 @@ function* handleDeeplinkUrl(action) {
             uri: urlstring
           },
         });
-      } else if (id === primitives.IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid) {
-        const req = primitives.IdentityUpdateRequest.fromWalletDeeplinkUri(urlstring);
+      } 
+      // else if (id === primitives.IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid) {
+      //   const req = primitives.IdentityUpdateRequest.fromWalletDeeplinkUri(urlstring);
 
-        yield call(handleFinishDeeplink, {
-          type: SET_DEEPLINK_DATA,
-          payload: {
-            id,
-            data: req.toJson(),
-            uri: urlstring
-          },
-        });
-      }
+      //   yield call(handleFinishDeeplink, {
+      //     type: SET_DEEPLINK_DATA,
+      //     payload: {
+      //       id,
+      //       data: req.toJson(),
+      //       uri: urlstring
+      //     },
+      //   });
+      // }
     } catch (e) {
       console.error(e)
       
