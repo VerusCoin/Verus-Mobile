@@ -5,7 +5,7 @@ import { primitives } from "verusid-ts-client"
 import { Button, Divider, List, Portal, Text } from 'react-native-paper';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import { getFriendlyNameMap, getIdentity } from '../../../utils/api/channels/verusid/callCreators';
-import { blocksToTime, satsToCoins, unixToDate } from '../../../utils/math';
+import { blocksToTime, unixToDate } from '../../../utils/math';
 import { useSelector } from 'react-redux';
 import Colors from '../../../globals/colors';
 import { VerusPayTextLogo } from '../../../images/customIcons';
