@@ -77,7 +77,7 @@ const PartialSignDataModal = (props, navigator) => {
             } else if (x.serializedhex) {
               renderedItems.push(renderField('Hex', x.serializedhex));
             } else if (x.serializedbase64) {
-              renderedItems.push(renderField('Base74', x.serializedbase64));
+              renderedItems.push(renderField('Base64', x.serializedbase64));
             } else if (x.datahash) {
               renderedItems.push(renderField('Data Hash', x.datahash));
             } else if (x.vdxfdata) {
