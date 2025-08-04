@@ -17,7 +17,6 @@ import { createAlert, resolveAlert } from '../../../actions/actions/alert/dispat
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import ListSelectionModal from '../../../components/ListSelectionModal/ListSelectionModal';
 import { copyToClipboard } from '../../../utils/clipboard/clipboard';
-import BigNumber from 'bignumber.js';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
 import VerusIdObjectData from '../../../components/VerusIdObjectData';
 import { getVerusIdStatus } from '../../../utils/verusid/getVerusIdStatus';
