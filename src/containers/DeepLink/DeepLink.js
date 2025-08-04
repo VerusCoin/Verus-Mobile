@@ -350,7 +350,7 @@ const DeepLink = (props) => {
       } else {
         createAlert(
           'Failed to verify',
-          'Failed to verify invoice signature',
+          'Failed to verify identity update request signature',
         );
         cancel();
       }
