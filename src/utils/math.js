@@ -139,7 +139,7 @@ export const checkForPlural = (term, time) => {
  * number of blocks and blocktime.
  * @param {number} blocks Number of blocks
  * @param {number} blocktime Blocktime in seconds
- * @returns 
+ * @returns {string} A human-readable string representing the time duration (e.g., "2 YEARS 3 MONTHS 5 DAYS 4 HOURS 20 MINUTES").
  */
 export const blocksToTime = (blocks, blocktime = 60) => {
   const years = (((blocks/(60/blocktime))/60)/24)/356;
