@@ -46,7 +46,7 @@ export const VdxfUniValueModalInnerAreaRender = (props, navigator) => {
   const components = VdxfUniValueModalInnerAreaContentRender(props);
 
   return components.map((Content, index) => {
-    const key = `${x.key}_${index}`;
+    const key = `inner_area_${index}`;
 
     return <navigator.Screen
       name={key}
