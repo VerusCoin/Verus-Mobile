@@ -96,7 +96,7 @@ const PartialSignDataModal = (props, navigator) => {
       } else if (dataJson.messagehex) {
         return renderField('Hex', dataJson.messagehex);
       } else if (dataJson.messagebase64) {
-        return renderField('Base74', dataJson.messagebase64);
+        return renderField('Base64', dataJson.messagebase64);
       } else if (dataJson.datahash) {
         return renderField('Data Hash', dataJson.datahash);
       }
