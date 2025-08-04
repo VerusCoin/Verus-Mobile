@@ -127,7 +127,7 @@ export default function VerusIdObjectData(props) {
       status: checkmark
     }];
 
-    if (ownedAddress && verusId.identity.primaryaddresses.length > 1 || !verusId.identity.primaryaddresses.includes(ownedAddress)) {
+    if ((ownedAddress && verusId.identity.primaryaddresses.length > 1) || (ownedAddress && !verusId.identity.primaryaddresses.includes(ownedAddress))) {
       tmpwarningData[0].warning = true;
       tmpwarningData[0].data = 'Funds can be spent by other addresses, see primary addresses below';
       tmpwarningData[0].status = triangle;
