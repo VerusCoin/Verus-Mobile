@@ -129,7 +129,7 @@ class DisplaySeed extends Component {
 
     switch (key) {
       case DLIGHT_PRIVATE:
-        return Buffer.from(await dlightSeedToBytes(seed)).toString('hex');
+        return (await dlightSeedToBytes(seed));
       case ETH:
         return (await deriveKeyPair(
           seed,

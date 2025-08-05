@@ -17,8 +17,15 @@ import { validateMnemonic } from "bip39"
 import { networks } from "@bitgo/utxo-lib"
 
 const deriveLightwalletdKeyPair = async (seed) => {
+  let extendedSpendingKey = "";
   const spendingKey = await parseDlightSeed(seed);
-  const viewingKey = await Tools.deriveViewingKey(seed);
+  if (isDlightSpendingKey(seed)) {
+    //console.warn("seed is spending key! (" + seed + ")");
+    extendedSpendingKey = await Tools.bech32Decode(seed);
+    seed = "";
+  }
+  const viewingKey = await Tools.deriveViewingKey(extendedSpendingKey, seed);
+  //console.warn("Resulting viewingkey(" + viewingKey + ")");
 
   return {
     pubKey: null,
@@ -159,18 +166,23 @@ export const deriveKeyPair = async (seed, coinObj, channel, version = KEY_DERIVA
 }
 
 export const isDlightSpendingKey = (seed) => {
-  return seed.startsWith('secret-extended-key-main')
+  //console.warn("isDlightSpendingKey: " + seed);
+  return (seed.startsWith('secret-extended-key-main'))
 }
 
 export const parseDlightSeed = async (seed) => {
   //console.log("parseDlightSeed called!")
-  if (isDlightSpendingKey(seed)) return seed
+
+  if (isDlightSpendingKey(seed)) {
+    const spendkey = await Tools.bech32Decode(seed);
+    return seed;
+  }
   
   try {
-    const viewkey = await Tools.deriveViewingKey(seed)
+    const viewkey = await Tools.deriveViewingKey("", seed)
     //console.log("Viewkey(" + viewkey + ")")
 
-    const saplingAddress = await Tools.deriveShieldedAddress(seed)
+    const saplingAddress = await Tools.deriveShieldedAddress("", seed)
     //console.log("deriveShieldedAddress(" + saplingAddressFromView + ")")
 
     const isValid = await Tools.isValidAddress(saplingAddress)
@@ -179,16 +191,12 @@ export const parseDlightSeed = async (seed) => {
     const saplingSpendKey = await Tools.deriveSaplingSpendingKey(seed)
     //console.log("SaplingSpendingKey(" + saplingSpendKey + ")");
 
-    //TODO: below does not derive properly, and we can use the above function anyway
-    //const saplingAddrFromSeed = await Tools.deriveShieldedAddressFromSeed(seed)
-    //console.log("saplingAddrFromSeed(" + saplingAddrFromSeed + ")")
-
     return saplingSpendKey
   } catch(e) { throw e }
 }
 
-export const dlightSeedToBytes = (seed) => {
-  return VerusLightClient.deterministicSeedBytes(seed)
+export const dlightSeedToBytes = async (seed) => {
+  return await Tools.deterministicSeedBytes(seed);
 }
 
 export const isSeedPhrase = (seed, minWordLength = 12) => {

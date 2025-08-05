@@ -7,7 +7,7 @@ import { satsToCoins} from '../../../../math'
 // Get the total private balance associated with a light wallet daemon
 export const getPrivateBalance = async (coinId, accountHash, coinProto) => {
   //console.log(">>> getPrivateBalance called")
-  const synchronizer = await getSynchronizerInstance(accountHash, coinId);
+  const synchronizer = await getSynchronizerInstance(coinId, coinId);
   return new Promise((resolve, reject) => {
     synchronizer.getPrivateBalance()
       .then(res => {
