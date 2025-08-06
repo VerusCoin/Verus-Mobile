@@ -20,7 +20,7 @@ export const getStandardEthTransactions = async (address, network) => {
 
     if (tx.type === 'self') {
       const txReceipt = await getTxReceipt(tx.txid, network)
-      const fee = ethers.utils.formatEther(txReceipt.gasUsed.mul(ethers.utils.parseEther(tx.gasPrice))).toString()
+      const fee = ethers.formatEther(txReceipt.gasUsed * ethers.parseEther(tx.gasPrice)).toString()
 
       processedTxs[i] = { ...tx, ...txReceipt, amount: fee, fee }
     }

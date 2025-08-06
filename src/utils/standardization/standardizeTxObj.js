@@ -21,14 +21,20 @@ export const standardizeDlightTxObj = (txObj) => {
   };
 }
 
-export const standardizeEthTxObj = (transactions, address, decimals = ETHERS) => {
+export const standardizeEthTxObj = (transactions, address, decimals = ETHERS, tokenTxs) => {
   let _txs = [];
 
   if (transactions.length) {
     for (let i = 0; i < transactions.length; i++) {
       let type;
 
-      if (transactions[i].from === transactions[i].to) {
+      const amount = transactions[i].value != null && typeof transactions[i].value === 'string'
+        ? unitsToCoins(BigNumber(transactions[i].value), decimals).toString()
+        : null
+
+      if (tokenTxs && (amount == null || amount == "0")) {
+        type = 'unknown';
+      } else if (transactions[i].from === transactions[i].to) {
         type = 'self';
       } else if (transactions[i].from && transactions[i].from.toLowerCase() === address.toLowerCase()) {
         type = 'sent';                    
@@ -38,47 +44,44 @@ export const standardizeEthTxObj = (transactions, address, decimals = ETHERS) =>
 
       let _txObj = {
         type,
-        height: transactions[i].blockNumber,
-        timestamp: transactions[i].timestamp,
+        height: Number(transactions[i].blockNumber),
+        timestamp: Number(transactions[i].timeStamp),
         txid: transactions[i].hash,
         nonce: transactions[i].nonce,
         blockhash: transactions[i].blockHash,
         txindex: transactions[i].transactionIndex,
         src: transactions[i].from,
         address: transactions[i].to,
-        amount:
-          transactions[i].value != null && BigNumber.isBigNumber(transactions[i].value)
-            ? unitsToCoins(BigNumber(transactions[i].value.toString()), decimals).toString()
-            : null,
+        amount,
         gas:
-          transactions[i].gas != null && BigNumber.isBigNumber(transactions[i].gas)
-            ? weiToCoins(BigNumber(transactions[i].gas.toString())).toString()
+          transactions[i].gas != null && typeof transactions[i].gas === 'string'
+            ? weiToCoins(BigNumber(transactions[i].gas)).toString()
             : null,
         gasPrice:
-          transactions[i].gasPrice != null && BigNumber.isBigNumber(transactions[i].gasPrice)
-            ? weiToCoins(BigNumber(transactions[i].gasPrice.toString())).toString()
+          transactions[i].gasPrice != null && typeof transactions[i].gasPrice === 'string'
+            ? weiToCoins(BigNumber(transactions[i].gasPrice)).toString()
             : null,
         cumulativeGasUsed:
-          transactions[i].cumulativeGasUsed != null && BigNumber.isBigNumber(transactions[i].cumulativeGasUsed)
-            ? weiToCoins(BigNumber(transactions[i].cumulativeGasUsed.toString())).toString()
+          transactions[i].cumulativeGasUsed != null && typeof transactions[i].cumulativeGasUsed === 'string'
+            ? weiToCoins(BigNumber(transactions[i].cumulativeGasUsed)).toString()
             : null,
         gasUsed:
-          transactions[i].gasUsed != null && BigNumber.isBigNumber(transactions[i].gasUsed)
-            ? weiToCoins(BigNumber(transactions[i].gasUsed.toString())).toString()
+          transactions[i].gasUsed != null && typeof transactions[i].gasUsed === 'string'
+            ? weiToCoins(BigNumber(transactions[i].gasUsed)).toString()
             : null,
         fee:
-          transactions[i].gasPrice != null && BigNumber.isBigNumber(transactions[i].gasPrice) &&
-          transactions[i].gasUsed != null && BigNumber.isBigNumber(transactions[i].gasUsed)
+          transactions[i].gasPrice != null && typeof transactions[i].gasPrice === 'string' &&
+          transactions[i].gasUsed != null && typeof transactions[i].gasUsed === 'string'
             ? weiToCoins(
-                BigNumber(transactions[i].gasPrice.toString())
-                  .multipliedBy(BigNumber(transactions[i].gasUsed.toString()))
+                BigNumber(transactions[i].gasPrice)
+                  .multipliedBy(BigNumber(transactions[i].gasUsed))
               ).toString()
             : null,
         input: transactions[i].input,
         contractAddress: transactions[i].contractAddress,
         confirmed:
           transactions[i].confirmations != null &&
-          transactions[i].confirmations > 0
+          BigInt(transactions[i].confirmations) > BigInt(0)
             ? true
             : false,
       };

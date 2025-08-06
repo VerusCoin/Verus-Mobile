@@ -1,9 +1,10 @@
-import ethers from 'ethers';
+import { ethers } from 'ethers';
 import { DEFAULT_ERC20_ABI } from '../constants/abi';
 import { ETHERS, VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT, VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT } from '../constants/web3Constants';
 import { VERUS_BRIDGE_DELEGATOR_ABI } from '../constants/abis/verusBridgeDelegatorAbi';
 import { coinsList } from '../CoinData/CoinsList';
 import { ERC20 } from '../constants/intervalConstants';
+import { HistorySupportingEtherscanProvider } from './etherscan';
 
 class Web3Interface {
   constructor(network, apiKeys) {
@@ -12,17 +13,24 @@ class Web3Interface {
 
     this.web3Contracts = {}; // { [key: contractAddress]: Array[contractAddress, contractAbi]}
 
-    this.DefaultProvider = new ethers.getDefaultProvider(this.network, apiKeys);
+    /** @type {import('ethers').Provider} */
+    this.DefaultProvider = new ethers.getDefaultProvider(this.network, {
+      etherscan: apiKeys.etherscan,
+      infura: apiKeys.infura,
+      exclusive: [ "etherscan", "infura" ]
+    })
 
-    this.EtherscanProvider = new ethers.providers.EtherscanProvider(
+    /** @type {HistorySupportingEtherscanProvider} */
+    this.EtherscanProvider = new HistorySupportingEtherscanProvider(
       this.network,
       apiKeys.etherscan
-    );
+    )
     
-    this.InfuraProvider = new ethers.providers.InfuraProvider(
+    /** @type {import('ethers').InfuraProvider} */
+    this.InfuraProvider = new ethers.InfuraProvider(
       this.network,
       apiKeys.infura
-    );
+    )
   }
 
   initContract = async (contractAddress) => {
@@ -59,11 +67,19 @@ class Web3Interface {
     this.web3Contracts = {};
   }
 
+  /**
+   * Returns an ethers contract instance for the contract you're trying to get
+   * @param {string} contractAddress 
+   * @param {ethers.Interface | ethers.InterfaceAbi} customAbiFragment 
+   * @param {ethers.ContractRunner} provider 
+   * @returns {ethers.Contract}
+   */
   getContract = (contractAddress, customAbiFragment, provider = this.DefaultProvider) => {
     const params = this.web3Contracts[contractAddress]
 
     if (!params)
       throw new Error(`ERC20 contract ${contractAddress} not initialized`);
+    
     return new ethers.Contract(
       params[0],
       customAbiFragment != null ? customAbiFragment : params[1],
@@ -82,7 +98,7 @@ class Web3Interface {
   };
 
   getContractInfo = async (contractAddress) => {
-    if (!ethers.utils.isAddress(contractAddress)) throw new Error("Invalid contract address '" + contractAddress + "'")
+    if (!ethers.isAddress(contractAddress)) throw new Error("Invalid contract address '" + contractAddress + "'")
 
     const contract = this.getUnitializedContractInstance(contractAddress);
     let name, symbol, decimals;

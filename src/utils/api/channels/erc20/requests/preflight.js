@@ -25,7 +25,9 @@ import {
   DAI_BRIDGE_TRANSFER_GAS_LIMIT,
   TRANSFER_SKIP_CALLSTATIC_TOKENS,
   MINIMUM_GAS_PRICE_GWEI,
-  ONE_GWEI_IN_WEI
+  ONE_GWEI_IN_WEI,
+  ERC20_SEND_GAS_PRICE_MODIFIER,
+  GAS_PRICE_MODIFIER_DELEGATOR_CONTRACT
 } from '../../../../constants/web3Constants';
 import { getCurrency, getIdentity } from "../../verusid/callCreators"
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData"
@@ -62,46 +64,49 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
     const signer = new ethers.VoidSigner(fromAddress, Web3Provider.InfuraProvider)
     const contract = Web3Provider.getContract(coinObj.currency_id).connect(signer)
     
-    const amountBn = ethers.utils.parseUnits(
+    const amountBn = ethers.parseUnits(
       scientificToDecimal(amount.toString()),
       coinObj.decimals
     );
 
-    const gasMarketPrice = await Web3Provider.DefaultProvider.getGasPrice();
+    const gasMarketPrice = (await Web3Provider.InfuraProvider.getFeeData()).gasPrice
 
-    const gasPriceModifier = ethers.BigNumber.from("3");
+    if (gasMarketPrice == null) throw new Error("Couldn't fetch gas price");
+
+    const gasMarketPriceBn = BigInt(gasMarketPrice);
 
     const minGasPrice = minGasPriceGwei != null ? 
-      ethers.BigNumber.from(minGasPriceGwei).mul(ONE_GWEI_IN_WEI) 
+      BigInt(minGasPriceGwei) * ONE_GWEI_IN_WEI
       : 
-      ethers.BigNumber.from(MINIMUM_GAS_PRICE_GWEI).mul(ONE_GWEI_IN_WEI);
+      MINIMUM_GAS_PRICE_GWEI * ONE_GWEI_IN_WEI;
 
-    const modifiedGasPrice = gasMarketPrice.add(gasMarketPrice.div(gasPriceModifier));
-    const gasPrice = modifiedGasPrice.gte(minGasPrice) ? modifiedGasPrice : minGasPrice;
+    const modifiedGasPrice = gasMarketPriceBn + (gasMarketPriceBn / ERC20_SEND_GAS_PRICE_MODIFIER);
 
-    const gasLimModifier = ethers.BigNumber.from("3")
-    const gasEst = await contract.estimateGas.transfer(address, amountBn)
-    const gasLimit = gasEst.add(gasEst.div(gasLimModifier))
+    const gasPrice = modifiedGasPrice >= minGasPrice ? modifiedGasPrice : minGasPrice;
+
+    const gasEst = BigInt(await contract.transfer.estimateGas(address, amountBn));
+    
+    const gasLimit = gasEst + (gasEst / ERC20_SEND_GAS_PRICE_MODIFIER);
 
     if (!(TRANSFER_SKIP_CALLSTATIC_TOKENS.some(x => (x.toLowerCase() === coinObj.currency_id.toLowerCase())))) {
-      const transaction = await contract.callStatic.transfer(
+      const transaction = await contract.transfer.staticCall(
         address,
         amountBn,
-        { gasLimit: gasLimit.toNumber(), gasPrice }
+        { gasLimit: gasLimit, gasPrice: gasPrice }
       );
     }
 
-    const maxFee = gasLimit.mul(gasPrice)
+    const maxFee = gasLimit * gasPrice;
     
     return {
       err: false,
       result: {
-        fee: ethers.utils.formatUnits(
+        fee: ethers.formatUnits(
             maxFee,
             ETHERS
           ),
         feeCurr: ETH.toUpperCase(),
-        value: ethers.utils.formatUnits(amountBn, coinObj.decimals),
+        value: ethers.formatUnits(amountBn, coinObj.decimals),
         toAddress: address,
         fromAddress,
         amountSubmitted: amount.toString(),
@@ -135,7 +140,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
     const systemName = getSystemNameFromSystemId(systemId);
     const tokenContract = coinObj.currency_id;
 
-    const pastPrelaunch = await delegatorContract.callStatic.bridgeConverterActive();
+    const pastPrelaunch = await delegatorContract.bridgeConverterActive.staticCall();
 
     const {
       currency,
@@ -196,7 +201,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
         toIAddress(DAI_VETH, systemName),
         toIAddress(MKR_VETH, systemName)
       ];
-      const tokenList = await delegatorContract.callStatic.getTokenList(0, 0);
+      const tokenList = await delegatorContract.getTokenList.staticCall(0, 0);
       
       for (const tokenInfo of tokenList) {
         const [iAddrBytesHex, contractAddr, nftTokenId, flags] = tokenInfo;
@@ -285,23 +290,29 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
 
     let destinationtype, destinationaddress;
 
-    const baseGasPrice = await Web3Provider.InfuraProvider.getGasPrice();
-    const minGasPrice = ethers.BigNumber.from(MINIMUM_GAS_PRICE_WEI_DELEGATOR_CONTRACT);
-    const gasFeeModifier = ethers.BigNumber.from("4");
-    const modifiedGasPrice = baseGasPrice.add(GAS_PRICE_MODIFIER);
-    const gasPrice = modifiedGasPrice.gte(minGasPrice) ? modifiedGasPrice : minGasPrice;
+    const baseGasPrice = (await Web3Provider.InfuraProvider.getFeeData()).gasPrice;
 
-    const minimumImportFee = ethers.BigNumber.from(MINIMUM_IMPORT_FEE_WEI)
-    const importGasMarketFee = gasPrice.mul(ethers.BigNumber.from(GAS_TRANSACTION_IMPORT_FEE));
-    const importGasFeeWei = importGasMarketFee.lt(minimumImportFee)
+    if (baseGasPrice == null) throw new Error("Could not calculate gas price");
+
+    const minGasPrice = MINIMUM_GAS_PRICE_WEI_DELEGATOR_CONTRACT;
+    const gasFeeModifier = GAS_PRICE_MODIFIER_DELEGATOR_CONTRACT;
+    const modifiedGasPrice = baseGasPrice + GAS_PRICE_MODIFIER;
+    const gasPrice = modifiedGasPrice >= minGasPrice ? modifiedGasPrice : minGasPrice;
+
+    const minimumImportFee = MINIMUM_IMPORT_FEE_WEI;
+    const importGasMarketFee = gasPrice * GAS_TRANSACTION_IMPORT_FEE;
+    const importGasFeeWei = importGasMarketFee < minimumImportFee
       ? minimumImportFee
       : importGasMarketFee;
-    const importGasFeeString = ethers.utils.formatUnits(
+
+    const importGasFeeString = ethers.formatUnits(
       importGasFeeWei,
       ETHERS
     );
+
     const importGasFeeSatsString = coinsToSats(BigNumber(importGasFeeString)).toString();
-    let approvalGasFee = ethers.BigNumber.from("0");
+
+    let approvalGasFee = BigInt(0);
 
     if (address.isETHAccount()) {
       const refundAddress = ECPair.fromPublicKeyBuffer(
@@ -348,66 +359,63 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
       destination: { destinationtype, destinationaddress }
     }
 
-    const baseFee = ethers.BigNumber.from(pastPrelaunch ? ETH_VERUS_BRIDGE_CONTRACT_RESERVE_TRANSFER_FEE_WEI : "0");
+    const baseFee = pastPrelaunch ? ETH_VERUS_BRIDGE_CONTRACT_RESERVE_TRANSFER_FEE_WEI : BigInt(0);
 
     let ethValueForContract = baseFee;
     
     if (isGateway) {
-      ethValueForContract = ethValueForContract.add(importGasFeeWei);
+      ethValueForContract = ethValueForContract + importGasFeeWei;
     }
 
     if (coinObj.currency_id === ETH_CONTRACT_ADDRESS) {
-      ethValueForContract = ethValueForContract.add(
-        ethers.BigNumber.from(satoshis).mul(ethers.BigNumber.from('10000000000')),
-      );
+      ethValueForContract = ethValueForContract + (BigInt(satoshis) * BigInt('10000000000'));
     }
 
+    /** @type {BigInt} */
     let transferGas;
 
     try {
       transferGas = coinObj.currency_id !== ETH_CONTRACT_ADDRESS
-      ? ethers.BigNumber.from('0')
-      : await delegatorContract.estimateGas.sendTransfer(reserveTransfer, {
+        ? BigInt(0)
+        : BigInt(await delegatorContract.sendTransfer.estimateGas(reserveTransfer, {
           from: fromAddress,
           gasLimit: INITIAL_GAS_LIMIT,
           gasPrice: gasPrice,
           value: ethValueForContract.toString(),
-        });
+        }));
     } catch(e) {
-      transferGas = ethers.BigNumber.from(FALLBACK_GAS_BRIDGE_TRANSFER);
+      transferGas = FALLBACK_GAS_BRIDGE_TRANSFER;
     }
 
     let gasEst =
       coinObj.currency_id !== ETH_CONTRACT_ADDRESS
-        ? ethers.BigNumber.from(
-            coinObj.currency_id.toLowerCase() === DAI_CONTRACT_ADDRESS.toLowerCase() ? 
-              DAI_BRIDGE_TRANSFER_GAS_LIMIT 
-              : 
-              ERC20_BRIDGE_TRANSFER_GAS_LIMIT
-            )
-        : transferGas.add(transferGas.div(gasFeeModifier));
+        ? coinObj.currency_id.toLowerCase() === DAI_CONTRACT_ADDRESS.toLowerCase() ? 
+            DAI_BRIDGE_TRANSFER_GAS_LIMIT 
+            : 
+            ERC20_BRIDGE_TRANSFER_GAS_LIMIT
+        : transferGas + (transferGas / gasFeeModifier);
 
     if (coinObj.currency_id !== ETH_CONTRACT_ADDRESS) {
       const contract = Web3Provider.getContract(coinObj.currency_id, null, Web3Provider.InfuraProvider).connect(signer);
 
-      approvalGasFee = (await contract.estimateGas.approve(
+      approvalGasFee = (await contract.approve.estimateGas(
         delegatorContract.address,
         coinsToUnits(satsToCoins(BigNumber(satoshis)), coinObj.decimals).toString(),
         { from: fromAddress, gasLimit: INITIAL_GAS_LIMIT, gasPrice: gasPrice },
       ))
-      approvalGasFee = approvalGasFee.add(approvalGasFee.div(gasFeeModifier));
-      gasEst = gasEst.add(approvalGasFee)
+      approvalGasFee = approvalGasFee + (approvalGasFee / gasFeeModifier);
+      gasEst = gasEst + approvalGasFee
     }
 
     const gasLimit = gasEst;
 
     const maxTotalFee = isGateway
-      ? gasLimit.mul(gasPrice).add(importGasFeeWei).add(baseFee)
-      : gasLimit.mul(gasPrice).add(baseFee);
+      ? (gasLimit * gasPrice) + importGasFeeWei + baseFee
+      : (gasLimit * gasPrice) + baseFee;
 
     const ethBalance = coinsToSats(await getStandardEthBalance(fromAddress, Web3Provider.network));
 
-    const maxTotalFeeSatoshis = coinsToSats(BigNumber(ethers.utils.formatEther(maxTotalFee)));
+    const maxTotalFeeSatoshis = coinsToSats(BigNumber(ethers.formatEther(maxTotalFee)));
     const satoshisBn = coinObj.currency_id === ETH_CONTRACT_ADDRESS ? BigNumber(satoshis) : BigNumber(0);
 
     if (maxTotalFeeSatoshis.plus(satoshisBn).isGreaterThan(ethBalance)) {
@@ -423,14 +431,14 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
         }
       }
 
-      throw new Error("Wallet does not contain enough ETH to pay maximum fee of " + (ethers.utils.formatEther(maxTotalFee)));
+      throw new Error("Wallet does not contain enough ETH to pay maximum fee of " + (ethers.formatEther(maxTotalFee)));
     }
 
     if (coinObj.currency_id === ETH_CONTRACT_ADDRESS) {
       // Try making sure the tx can go through
-      await delegatorContract.callStatic.sendTransfer(
+      await delegatorContract.sendTransfer.callStatic(
         reserveTransfer,
-        {from: fromAddress, gasLimit: gasLimit.toNumber(), value: ethValueForContract.toString(), gasPrice: gasPrice },
+        {from: fromAddress, gasLimit: gasLimit, value: ethValueForContract, gasPrice: gasPrice },
       );
     }
 
@@ -488,11 +496,11 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
         approvalparams: coinObj.currency_id === ETH_CONTRACT_ADDRESS ? null : [
           delegatorContract.address,
           coinsToUnits(satsToCoins(BigNumber(satoshis)), coinObj.decimals).toString(),
-          { from: fromAddress, gasLimit: approvalGasFee.toNumber(), gasPrice: gasPrice }
+          { from: fromAddress, gasLimit: approvalGasFee, gasPrice: gasPrice }
         ],
         transferparams: [
           reserveTransfer,
-          {from: fromAddress, gasLimit: gasLimit.sub(approvalGasFee).toNumber(), value: ethValueForContract.toString(), gasPrice: gasPrice }
+          {from: fromAddress, gasLimit: gasLimit - approvalGasFee, value: ethValueForContract.toString(), gasPrice: gasPrice }
         ],
         gasprice: gasPrice.toString()
       },

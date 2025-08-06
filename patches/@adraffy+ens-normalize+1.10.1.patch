@@ -1,0 +1,25 @@
+diff --git a/node_modules/@adraffy/ens-normalize/stub.js b/node_modules/@adraffy/ens-normalize/stub.js
+new file mode 100644
+index 0000000..9f289a8
+--- /dev/null
++++ b/node_modules/@adraffy/ens-normalize/stub.js
+@@ -0,0 +1,19 @@
++
++function throwError() { 
++  throw new Error("ENS features are not supported in this app.");
++}
++
++module.exports = {
++  ens_beautify: throwError,
++  ens_emoji: throwError,
++  ens_normalize: throwError,
++  ens_normalize_fragment: throwError,
++  ens_split: throwError,
++  ens_tokenize: throwError,
++  is_combining_mark: throwError,
++  nfc: throwError,
++  nfd: throwError,
++  safe_str_from_cps: throwError,
++  should_escape: throwError,
++}
++
