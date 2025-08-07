@@ -11,30 +11,25 @@ export const getErc20Transactions = async (address, contractAddress, network = '
 }
 
 export const getStandardErc20Transactions = async(address, contractAddress, decimals = ETHERS, network) => {
-  try {
-    const erc20txs = await getErc20Transactions(address, contractAddress, network);
+  const erc20txs = await getErc20Transactions(address, contractAddress, network);
 
-    let processedTxs = standardizeEthTxObj(
-      erc20txs,
-      address,
-      decimals,
-      true
-    );
-  
-    for (let i = 0; i < processedTxs.length; i++) {
-      let tx = processedTxs[i]
-  
-      if (tx.type === 'self') {
-        const txReceipt = await getTxReceipt(tx.txid, network)
-        const fee = ethers.formatEther(txReceipt.gasUsed * ethers.parseEther(tx.gasPrice)).toString();
-  
-        processedTxs[i] = { ...txReceipt, ...tx, amount: "0", fee, feeCurr: ETH.toUpperCase() }
-      }
+  let processedTxs = standardizeEthTxObj(
+    erc20txs,
+    address,
+    decimals,
+    true
+  );
+
+  for (let i = 0; i < processedTxs.length; i++) {
+    let tx = processedTxs[i]
+
+    if (tx.type === 'self') {
+      const txReceipt = await getTxReceipt(tx.txid, network)
+      const fee = ethers.formatEther(txReceipt.gasUsed * ethers.parseEther(tx.gasPrice)).toString();
+
+      processedTxs[i] = { ...txReceipt, ...tx, amount: "0", fee, feeCurr: ETH.toUpperCase() }
     }
-  
-    return processedTxs
-  } catch(e) {
-    console.log(e)
-    throw e
   }
+
+  return processedTxs
 }
