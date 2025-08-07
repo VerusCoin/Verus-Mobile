@@ -170,9 +170,12 @@ class Web3Interface {
 
   isVerusBridgeDelegatorActive = () => {
     const delegatorContract = this.getVerusBridgeDelegatorContract();
-    const signer = new ethers.VoidSigner(delegatorContract.address, this.DefaultProvider);
-    
-    return delegatorContract.connect(signer).callStatic.bridgeConverterActive();
+    const signer = new ethers.VoidSigner(
+      this.network === 'homestead' ? VERUS_BRIDGE_DELEGATOR_MAINNET_CONTRACT : VERUS_BRIDGE_DELEGATOR_GOERLI_CONTRACT, 
+      this.DefaultProvider
+    );
+
+    return delegatorContract.connect(signer).bridgeConverterActive.staticCall();
   }
 
   getVrscSystem = () => {

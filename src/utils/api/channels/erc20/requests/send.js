@@ -9,20 +9,20 @@ import { cleanEthersErrorMessage } from "../../../../errors"
 export const send = async (coinObj, activeUser, address, amount, passthrough) => {
   try {
     /** @type {BigInt} */
-    const gasPrice = passthrough.params.gasPrice;
+    const maxFeePerGas = passthrough.params.maxFeePerGas;
 
     /** @type {BigInt} */
     const gasLimit = passthrough.params.gasLimit;
 
-    const maxFeeAllowed = gasPrice * gasLimit;
+    const maxFeeAllowed = maxFeePerGas * gasLimit;
 
     const Web3Provider = getWeb3ProviderForNetwork(coinObj.network)
     
     const privKey = await requestPrivKey(coinObj.id, ERC20);
     const contract = Web3Provider.getContract(coinObj.currency_id);
-    const currentGasPrice = (await Web3Provider.InfuraProvider.getFeeData()).gasPrice;
+    const currentMaxFeePerGas = (await Web3Provider.InfuraProvider.getFeeData()).maxFeePerGas;
 
-    if (currentGasPrice == null) throw new Error("Couldn't get current gas price");
+    if (currentMaxFeePerGas == null) throw new Error("Couldn't get current gas price");
 
     const amountBn = ethers.parseUnits(scientificToDecimal(amount.toString()), coinObj.decimals)
     const signableContract = contract.connect(
@@ -30,7 +30,7 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
     );
     const gasEst = BigInt(await signableContract.transfer.estimateGas(address, amountBn))
     
-    const estFee = gasEst * currentGasPrice;
+    const estFee = gasEst * currentMaxFeePerGas;
 
     if (estFee > maxFeeAllowed) {
       throw new Error("Estimated fee exceeds maximum fee calculated in confirm step. Try sending again to recalculate fee.")
@@ -39,7 +39,7 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
     const response = await signableContract.transfer(
       address,
       amountBn,
-      { gasLimit: gasLimit, gasPrice: gasPrice }
+      { gasLimit: gasLimit, maxFeePerGas: maxFeePerGas }
     );
     
     return {
@@ -77,15 +77,16 @@ export const sendBridgeTransfer = async (coinObj, [reserveTransfer, transferOpti
 
     const privKey = await requestPrivKey(coinObj.id, coinObj.proto);
     const signer = new ethers.Wallet(ethers.hexlify(privKey), Web3Provider.InfuraProvider);
-    const gasPrice = (await Web3Provider.InfuraProvider.getFeeData()).gasPrice;
+    const maxFeePerGas = (await Web3Provider.InfuraProvider.getFeeData()).maxFeePerGas;
 
-    if (gasPrice == null) throw new Error("Couldn't get current gas price");
+    if (maxFeePerGas == null) throw new Error("Couldn't get current gas price");
 
     const maxGasPriceBn = BigInt(maxGasPrice)
 
     const delegatorContract = Web3Provider.getVerusBridgeDelegatorContract(Web3Provider.InfuraProvider).connect(signer);
+    const delegatorContractAddress = await delegatorContract.getAddress()
 
-    if (gasPrice > maxGasPriceBn) {
+    if (maxFeePerGas > maxGasPriceBn) {
       throw new Error("Current gas price exceeds maximum confirmed value, try re-entering form data and sending again.")
     }
 
@@ -93,7 +94,7 @@ export const sendBridgeTransfer = async (coinObj, [reserveTransfer, transferOpti
       const [delegatorAddress, approvalAmount, approvalOptions] = approvalParams
       const contract = Web3Provider.getContract(coinObj.currency_id, null, Web3Provider.InfuraProvider).connect(signer);
 
-      const approval = await contract.approve(delegatorContract.address, approvalAmount, approvalOptions);
+      const approval = await contract.approve(delegatorContractAddress, approvalAmount, approvalOptions);
       const reply = await approval.wait();
 
       if (reply.status === 0) {

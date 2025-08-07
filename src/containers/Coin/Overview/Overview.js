@@ -248,7 +248,7 @@ class Overview extends Component {
     // Handle possible int overflows
     try { 
       if (!gasFees && item.fee && item.type !== "unknown") {
-        displayAmount = amount.minus(item.fee)
+        displayAmount = amount.minus(item.fee).abs()
       } else displayAmount = amount
     }
     catch(e) { console.error(e) }
@@ -282,7 +282,7 @@ class Overview extends Component {
         <List.Item
           title={`${
             displayAmount != null
-              ? displayAmount.isLessThan(BigNumber(0.0001)) &&
+              ? displayAmount.isLessThan(BigNumber(0.000001)) &&
                 !displayAmount.isEqualTo(BigNumber(0))
                 ? displayAmount.toExponential()
                 : scientificToDecimal(displayAmount.toString())

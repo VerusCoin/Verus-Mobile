@@ -13,7 +13,9 @@ export const getErc20Balance = async (address, contract) => {
 
   if (contract.balanceOf) {
     return await contract.balanceOf(address)
-  } else throw new Error(`ERC20 contract ${contract.address} does not support a known balance function.`)
+  } else {
+    throw new Error(`ERC20 contract ${await contract.getAddress()} does not support a known balance function.`)
+  }
 }
 
 export const getStandardErc20Balance = async (address, contractAddress, decimals = ETHERS, network = 'homestead') => {

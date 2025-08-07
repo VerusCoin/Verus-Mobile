@@ -10,8 +10,10 @@ export const getEthTransactions = async (address, network = 'homestead') => {
 }
 
 export const getStandardEthTransactions = async (address, network) => {
+  const ethTxs = await getEthTransactions(address, network);
+
   let processedTxs = standardizeEthTxObj(
-    await getEthTransactions(address, network),
+    ethTxs,
     address
   );
 
@@ -22,7 +24,7 @@ export const getStandardEthTransactions = async (address, network) => {
       const txReceipt = await getTxReceipt(tx.txid, network)
       const fee = ethers.formatEther(txReceipt.gasUsed * ethers.parseEther(tx.gasPrice)).toString()
 
-      processedTxs[i] = { ...tx, ...txReceipt, amount: fee, fee }
+      processedTxs[i] = { ...txReceipt, ...tx, amount: fee, fee }
     }
   }
 

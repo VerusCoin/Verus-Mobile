@@ -21,7 +21,7 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
     const fromAddress = activeUser.keys[coinObj.id][ETH].addresses[0]
     const signer = new ethers.VoidSigner(fromAddress, Web3Provider.InfuraProvider)
     const balance = await Web3Provider.InfuraProvider.getBalance(fromAddress)
-    const value = ethers.parseUnits(scientificToDecimal(amount.toString()))
+    const value = ethers.parseUnits(scientificToDecimal(typeof amount === 'string' ? amount : amount.toString()))
 
     const transaction = await signer.populateTransaction({
       to: address,
@@ -35,18 +35,18 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
       throw new Error(`"${address}" is not a valid destination.`)
     }
 
-    if (transaction.gasLimit == null || transaction.gasPrice == null) {
+    if (transaction.gasLimit == null || transaction.maxFeePerGas == null) {
       throw new Error('Unable to get gas info from preflight transaction')
     }
 
-    if (transaction.gasPrice < minGasPrice) {
-      transaction.gasPrice = minGasPrice;
+    if (transaction.maxFeePerGas < minGasPrice) {
+      transaction.maxFeePerGas = minGasPrice;
     }
 
     const gasLimitBn = BigInt(transaction.gasLimit)
-    const gasPriceBn = BigInt(transaction.gasPrice)
+    const maxFeePerGasBn = BigInt(transaction.maxFeePerGas)
 
-    const maxFee = gasLimitBn * gasPriceBn
+    const maxFee = gasLimitBn * maxFeePerGasBn
     const maxValue = maxFee + value
 
     if (maxValue > balance) {
@@ -56,12 +56,12 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
         throw new Error(
           `Insufficient funds, cannot cover fee costs of at least ${ethers.formatUnits(maxFee)} ETH.`
         );
-      else
+      else {
         return await txPreflight(
           coinObj,
           activeUser,
           address,
-          BigInt(ethers.formatUnits(adjustedValue)),
+          ethers.formatUnits(adjustedValue),
           {
             ...params,
             feeTakenFromAmount: true,
@@ -71,6 +71,7 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
                 : amount,
           }
         );
+      }
     }
     
     return {
@@ -85,7 +86,7 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
         params: {
           utxoVerified: true,
           feeTakenFromAmount: params.feeTakenFromAmount ? true : false,
-          gasPrice: gasPriceBn,
+          maxFeePerGas: maxFeePerGasBn,
           gasLimit: gasLimitBn
         },
       },

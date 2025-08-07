@@ -10,7 +10,7 @@ import { cleanEthersErrorMessage } from "../../../../errors"
 export const send = async (coinObj, activeUser, address, amount, passthrough) => {
   try {
     /** @type {BigInt} */
-    const gasPrice = passthrough.params.gasPrice;
+    const maxFeePerGas = passthrough.params.maxFeePerGas;
 
     /** @type {BigInt} */
     const gasLimit = passthrough.params.gasLimit;
@@ -30,7 +30,7 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
       value: ethers.parseUnits(scientificToDecimal(amount.toString())),
       chainId: ETH_NETWORK_IDS[coinObj.network ? coinObj.network : ETH_HOMESTEAD],
       gasLimit: gasLimit,
-      gasPrice
+      maxFeePerGas
     })
 
     const response = await signer.sendTransaction(transaction);
@@ -40,7 +40,7 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
       result: {
         fee: Number(
           ethers.formatUnits(
-            BigInt(transaction.gasLimit) * BigInt(transaction.gasPrice)
+            BigInt(transaction.gasLimit) * BigInt(transaction.maxFeePerGas)
           )
         ),
         value: Number(ethers.formatUnits(response.value)),

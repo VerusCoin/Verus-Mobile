@@ -28,7 +28,7 @@ export const getStandardErc20Transactions = async(address, contractAddress, deci
         const txReceipt = await getTxReceipt(tx.txid, network)
         const fee = ethers.formatEther(txReceipt.gasUsed * ethers.parseEther(tx.gasPrice)).toString();
   
-        processedTxs[i] = { ...tx, ...txReceipt, amount: "0", fee, feeCurr: ETH.toUpperCase() }
+        processedTxs[i] = { ...txReceipt, ...tx, amount: "0", fee, feeCurr: ETH.toUpperCase() }
       }
     }
   
