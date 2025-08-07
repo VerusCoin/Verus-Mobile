@@ -31,7 +31,6 @@ export const sendPrivateTransaction = async (coinObj, activeUser, address, amoun
       let seed = (await requestSeeds())[DLIGHT_PRIVATE];
       if (isDlightSpendingKey(seed)) {
         extsk = await Tools.bech32Decode(seed);
-        //console.warn("in SendPrivateTransaction: extsk(" + extsk + ")");
       } else {
         mnemonicSeed = seed;
       }
@@ -53,28 +52,16 @@ export const sendPrivateTransaction = async (coinObj, activeUser, address, amoun
         extsk: extsk,
         mnemonicSeed: mnemonicSeed
       }
-      return new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
         synchronizer.sendToAddress(spendInfo)
           .then(res => {
-            if (res.errorMessage != null) {
-              //TODO: make sure this error handling works, it may not
-              //console.error("SendPrivateTransaction: res.errorMessage(" + res.errorMessage + "), res.errorCode(" + res.errorCode + ")");
-              reject(
-                new ApiException(
-                  res.errorMessage,
-                  res.error.data,
-                  coinId,
-                  DLIGHT_PRIVATE,
-                  res.errorCode
-                )
-              );
-            } else {
-              //console.log("SendPrivateTransaction: res.txid(" + res.txid + ")");
-              const result = createJsonRpcResponse(0, res, res.error)
-              resolve(result);
-            }
+            const result = createJsonRpcResponse(0, res, null)
+            resolve(result);
           })
-      })
+          .catch(err => {
+            reject(err);
+          });
+      });
     }
   } catch(e) {
     return {
