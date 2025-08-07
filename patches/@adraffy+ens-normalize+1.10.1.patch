@@ -1,11 +1,10 @@
 diff --git a/node_modules/@adraffy/ens-normalize/stub.js b/node_modules/@adraffy/ens-normalize/stub.js
 new file mode 100644
-index 0000000..9f289a8
+index 0000000..0c74e9c
 --- /dev/null
 +++ b/node_modules/@adraffy/ens-normalize/stub.js
-@@ -0,0 +1,19 @@
-+
-+function throwError() { 
+@@ -0,0 +1,17 @@
++function throwError() {
 +  throw new Error("ENS features are not supported in this app.");
 +}
 +
@@ -22,4 +21,4 @@ index 0000000..9f289a8
 +  safe_str_from_cps: throwError,
 +  should_escape: throwError,
 +}
-+
+\ No newline at end of file
