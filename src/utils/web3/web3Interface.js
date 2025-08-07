@@ -137,7 +137,9 @@ class Web3Interface {
     try {
       decimals = await contract.decimals();
 
-      if (typeof decimals !== 'number') throw new Error("Decimals is not number");
+      if (typeof decimals !== 'bigint') throw new Error("Decimals is not number");
+
+      decimals = Number(decimals);
     } catch(e) {
       decimals = ETHERS;
     }
