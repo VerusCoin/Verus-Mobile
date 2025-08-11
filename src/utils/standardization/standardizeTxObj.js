@@ -3,6 +3,7 @@ import { ETHERS } from "../constants/web3Constants";
 import { unitsToCoins, weiToCoins } from "../math";
 import { decodeMemo } from "../memoUtils";
 import { RESERVE_TRANSFER_DESTINATION } from "verus-typescript-primitives";
+import { ETH } from "../constants/intervalConstants";
 
 // Makes transaction objects from lightwalletd client resemble those from electrum,
 // for predictable, standard behaviour
@@ -77,6 +78,7 @@ export const standardizeEthTxObj = (transactions, address, decimals = ETHERS, to
                   .multipliedBy(BigNumber(transactions[i].gasUsed))
               ).toString()
             : null,
+        feeCurr: ETH.toUpperCase(),
         input: transactions[i].input,
         contractAddress: transactions[i].contractAddress,
         confirmed:

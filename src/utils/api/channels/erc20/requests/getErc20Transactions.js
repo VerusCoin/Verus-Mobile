@@ -1,8 +1,5 @@
 import { getWeb3ProviderForNetwork } from '../../../../web3/provider'
 import { ETHERS } from '../../../../constants/web3Constants'
-import { ethers } from 'ethers'
-import { ETH } from '../../../../constants/intervalConstants'
-import { getTxReceipt } from '../../eth/requests/getTxReceipt'
 import { standardizeEthTxObj } from '../../../../standardization/standardizeTxObj'
 
 // Gets an ERC20 token transaction list for an address
@@ -24,10 +21,7 @@ export const getStandardErc20Transactions = async(address, contractAddress, deci
     let tx = processedTxs[i]
 
     if (tx.type === 'self') {
-      const txReceipt = await getTxReceipt(tx.txid, network)
-      const fee = ethers.formatEther(txReceipt.gasUsed * ethers.parseEther(tx.gasPrice)).toString();
-
-      processedTxs[i] = { ...txReceipt, ...tx, amount: "0", fee, feeCurr: ETH.toUpperCase() }
+      processedTxs[i] = { ...tx, amount: "0" }
     }
   }
 
