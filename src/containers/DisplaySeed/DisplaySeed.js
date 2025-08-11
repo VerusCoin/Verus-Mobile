@@ -177,7 +177,7 @@ class DisplaySeed extends Component {
                     </View>
                     {data.showDerivedKeys && <>
                       {
-                        ((key === DLIGHT_PRIVATE && isSeedPhrase(seeds[key])) ||
+                        ((key === DLIGHT_PRIVATE /*&& isSeedPhrase(seeds[key])*/) ||
                           key === ETH ||
                           key === ELECTRUM) && (
                           <Button onPress={() => this.toggleDerived(key, coinsList.VRSC)}>
