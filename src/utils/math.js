@@ -1,8 +1,28 @@
-import { ethers } from "ethers"
 import { ETHERS } from "./constants/web3Constants"
 import BigNumber from "bignumber.js";
 import { translate } from "./translate";
 import { KOMODO_DIVISOR, KOMODO_ENDOFERA, KOMODO_LOCKTIME_THRESHOLD, KOMODO_MIN_SATOSHIS, KOMODO_N_S7_HARDFORK_HEIGHT, KOMODO_ONE_MONTH_CAP_HARDFORK, ONE_HOUR, ONE_MONTH, ONE_YEAR } from "./constants/constants";
+
+/**
+ * Turns a 0x prefixed hex string into a BigInt value
+ * @param {string} hex 
+ * @returns {BigInt}
+ */
+export const hexToBigint = (hex) => {
+  if (typeof hex !== 'string' || !hex.startsWith('0x')) {
+    throw new Error('Invalid hex string. Must start with "0x".');
+  }
+  return BigInt(hex);
+}
+
+/**
+ * Turns a js bigint into a 0x prefixed hex string
+ * @param {BigInt} bigint 
+ * @returns {string}
+ */
+export const bigintToHex = (bigint) => {
+  return '0x' + bigint.toString(16);
+}
 
 //Math done to eliminate JS rounding errors when moving from statoshis to coin denominations
 export const coinsToUnits = (coin, decimals) => {
@@ -87,17 +107,6 @@ export const isNumber = (value) => {
   return !isNaN(parseFloat(value)) && isFinite(value);
 }
 
-export class MathableNumber {
-  constructor(num, maxDecimals = ETHERS, bigNum = null) {
-    this.num = bigNum == null ? ethers.utils.parseUnits(num.toString(), maxDecimals) : bigNum
-    this.maxDecimals = maxDecimals
-  }
-
-  display() {
-    return ethers.utils.formatUnits(this.num, this.maxDecimals)
-  }
-} 
-
 export const scientificToDecimal = function(number) {
   let numberHasSign = number.startsWith("-") || number.startsWith("+");
   let sign = numberHasSign ? number[0] : "";
@@ -134,8 +143,19 @@ export const checkForPlural = (term, time) => {
   }
 }
 
-export const blocksToTime = (blocks) => {
-  const years = ((blocks/60)/24)/356;
+/**
+ * Returns a string to display the time in years, months, days, hours, and minutes for a given
+ * number of blocks and blocktime.
+ * @param {number} blocks Number of blocks
+ * @param {number} blocktime Blocktime in seconds
+ * @returns {string} A human-readable string representing the time duration (e.g., "2 YEARS 3 MONTHS 5 DAYS 4 HOURS 20 MINUTES").
+ */
+export const blocksToTime = (blocks, blocktime = 60) => {
+  if (typeof blocktime !== "number" || blocktime <= 0) {
+    return translate('TX_INFO.INVALID_BLOCKTIME');
+  }
+  
+  const years = (((blocks/(60/blocktime))/60)/24)/365.25;
   const months = (years % 1) * 12;
   const days = (months % 1) * 30.4375;
   const hours = (days % 1) * 24;

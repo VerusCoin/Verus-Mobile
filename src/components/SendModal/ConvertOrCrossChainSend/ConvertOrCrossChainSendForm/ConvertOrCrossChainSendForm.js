@@ -916,7 +916,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
         const keyhashIsEth = () => {
           try {
-            return ethers.utils.isAddress(keyhash);
+            return ethers.isAddress(keyhash);
           } catch(e) {
             return false;
           }
