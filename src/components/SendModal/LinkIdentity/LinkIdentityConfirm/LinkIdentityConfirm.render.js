@@ -16,13 +16,11 @@ export const LinkIdentityConfirmRender = ({ verusId, friendlyNames, goBack, subm
         StickyFooterComponent={
           <View
             style={{
-              position: 'absolute',
               backgroundColor: 'white',
               width: '100%',
               flexDirection: 'row',
               justifyContent: 'space-evenly',
-              paddingVertical: 20,
-              bottom: 0,
+              paddingVertical: 20
             }}>
             <Button
               textColor={Colors.warningButtonColor}

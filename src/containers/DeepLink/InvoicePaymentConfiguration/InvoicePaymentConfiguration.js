@@ -155,7 +155,15 @@ const InvoicePaymentConfiguration = props => {
           sourceOptions={conversionOptions}
           allSubWallets={allSubWallets}
           coinObjs={activeCoinsForUser}
-          invoice={inv.toJson()}
+          testnet={inv.details.isTestnet()}
+          allowAnyAmount={inv.details.acceptsAnyAmount()}
+          allowConversion={inv.details.acceptsConversion()}
+          expires={inv.details.expires()}
+          allowNonVerusSystems={inv.details.acceptsNonVerusSystems()}
+          acceptedSystems={inv.details.acceptedsystems}
+          requestedCurrency={inv.details.requestedcurrencyid}
+          amount={inv.details.amount.toNumber()}
+          excludeVerusBlockchain={inv.details.excludesVerusBlockchain()}
         />
       </View>
     </SafeAreaView>

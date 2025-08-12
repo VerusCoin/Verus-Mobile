@@ -7,7 +7,7 @@ import { toIAddress } from "verus-typescript-primitives";
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData";
 
 export const getCurrencyConversionPaths = async (systemId, src, ethNetwork) => {
-  const ethSrc = src === ETH_CONTRACT_ADDRESS || ethers.utils.isAddress(src);
+  const ethSrc = src === ETH_CONTRACT_ADDRESS || ethers.isAddress(src);
   const endpoint = VrpcProvider.getEndpoint(systemId);
 
   const systemCurrencyResponse = await endpoint.getCurrency(systemId);
