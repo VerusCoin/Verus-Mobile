@@ -1,6 +1,6 @@
 {
   "name": "verusmobile",
-  "version": "1.0.28",
+  "version": "1.0.29",
   "private": true,
   "scripts": {
     "postinstall": "./node_modules/.bin/rn-nodeify --hack --install --yarn && npx jetify && rm node_modules/@adraffy/ens-normalize/package.json && cp patches/@adraffy/ens-normalize/adraffy_ens_normalize_package.json node_modules/@adraffy/ens-normalize/package.json && patch-package",
