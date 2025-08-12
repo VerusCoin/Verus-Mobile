@@ -30,3 +30,13 @@ export const capitalizeString = (string) => {
   const firstChar = string.charAt(0).toUpperCase();
   return firstChar + string.slice(1);
 };
+
+/**
+ * Prefixes a hex string with 0x, regardless of if it already has it or not
+ * @param {string} hex hex string with or without 0x prefix
+ * @returns {string} hex string with 0x prefix
+ */
+export const prefixHex0x = (hex) => {
+  if (typeof hex !== 'string') throw new Error("Invalid input to prefix hex")
+  return hex.startsWith('0x') ? hex : '0x' + hex;
+}

@@ -8,7 +8,7 @@ import { ETH_TRANSACTION_RECEIPT_CAP } from '../../../../env/index'
 import {
   setEthTxReceipts
 } from '../../actionCreators'
-import { BigNumber } from 'ethers';
+import { hexToBigint } from '../../../utils/math';
 
 export const loadEthTxReceipts = (dispatch) => {
   return new Promise((resolve) => {
@@ -20,8 +20,8 @@ export const loadEthTxReceipts = (dispatch) => {
         const jsonParsedValue = JSON.parse(txReceipts[key]).value
         txReceiptsParsed[key] = {
           ...jsonParsedValue,
-          gasUsed: BigNumber.from(jsonParsedValue.gasUsed),
-          cumulativeGasUsed: BigNumber.from(
+          gasUsed: hexToBigint(jsonParsedValue.gasUsed),
+          cumulativeGasUsed: hexToBigint(
             jsonParsedValue.cumulativeGasUsed
           ),
         };
