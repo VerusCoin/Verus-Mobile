@@ -5,16 +5,17 @@ import {
   seedToPriv
 } from './agama-wallet-lib/keys';
 import { ETH, ERC20, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from './constants/intervalConstants';
-import ethers from 'ethers';
 
 //import VerusLightClient from 'react-native-verus-light-client'
 import { Tools } from 'react-native-verus'
 
+import { SigningKey, ethers } from 'ethers';
 import {
   KEY_DERIVATION_VERSION,
 } from "../../env/index";
 import { validateMnemonic } from "bip39"
 import { networks } from "@bitgo/utxo-lib"
+import { prefixHex0x } from './stringUtils';
 
 const deriveLightwalletdKeyPair = async (seed) => {
   let extendedSpendingKey = "";
@@ -73,8 +74,11 @@ const deriveWeb3Keypair = async (seed, coinObj) => {
   const electrumKeys = await deriveElectrumKeypair(seed, coinObj.id);
   let seedIsEthPrivkey = false
 
+  /** @type {SigningKey} */
+  let signingKey;
+
   try {
-    new ethers.utils.SigningKey(seed)
+    signingKey = new SigningKey(seed)
     seedIsEthPrivkey = true
   } catch(e) {}
 
@@ -82,8 +86,8 @@ const deriveWeb3Keypair = async (seed, coinObj) => {
     pubKey: electrumKeys.pubKey,
     privKey: seedIsEthPrivkey ? seed : seedToPriv(electrumKeys.privKey, "eth"),
     addresses: [
-      ethers.utils.computeAddress(
-        seedIsEthPrivkey ? seed : Buffer.from(electrumKeys.pubKey, "hex")
+      ethers.computeAddress(
+        seedIsEthPrivkey ? signingKey : prefixHex0x(electrumKeys.pubKey)
       ),
     ],
   };
@@ -144,7 +148,7 @@ export const deriveKeypairV0 = async (seed, coinObj, channel) => {
       privKey: channel === ETH || channel === ERC20 ? seedToPriv(_seedToWif.priv, 'eth') : _seedToWif.priv,
       addresses: [
         channel === ETH || channel === ERC20
-          ? ethers.utils.computeAddress(Buffer.from(_seedToWif.pubHex, "hex"))
+          ? ethers.computeAddress(prefixHex0x(_seedToWif.pubHex))
           : _seedToWif.pub,
       ],
     };

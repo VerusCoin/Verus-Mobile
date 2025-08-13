@@ -5,6 +5,8 @@ const ethUtil = require('ethereumjs-util');
 const ethersWallet = require('ethers')
 const wif = require('wif');
 const { sha256 } = require('../crypto/hash');
+const { secp256k1 } = require('@noble/curves/secp256k1');
+const { Alert } = require('react-native');
 
 const wifToWif = (_wif, network) => {
   const key = new bitcoin.ECPair.fromWIF(_wif, network, true);
@@ -20,12 +22,15 @@ const seedToWif = (seed, network, iguana) => {
   let isWif = false;
 
   try {
-    bs58check.decode(seed);
+    bs58check.decode(typeof seed === 'string' ? seed : '');
     isWif = true;
     throw new Error('provided string is a WIF key');
   } catch (e) {
     if (!isWif) {
-      const bytes = sha256(seed);
+      const bytes = Buffer.from(sha256(seed)); // must be 32 bytes
+      if (bytes.length !== 32) {
+        throw new Error('sha256 must return 32 bytes');
+      }
 
       if (iguana) {
         bytes[0] &= 248;
@@ -33,13 +38,27 @@ const seedToWif = (seed, network, iguana) => {
         bytes[31] |= 64;
       }
 
-      let d = bigi.fromBuffer(bytes);
-      const keyPair = new bitcoin.ECPair(d, null, { network });
+      // bigi -> bigint for the noble check
+      const dBigi = bigi.fromBuffer(bytes);
+      const dBig  = BigInt('0x' + dBigi.toBuffer(32).toString('hex'));
+      const n     = secp256k1.CURVE.n; // bigint
+
+      if (dBig === BigInt(0)) {
+        throw new Error('derived private key scalar is out of range');
+      } else if (dBig >= n) {
+        Alert.alert(
+          'Private Key Warning',
+          'The derived private key scalar is ≥ curve order. Some wallets may behave inconsistently when importing it. Consider generating a new seed.'
+        );
+      }
+
+      // proceed with utxolib ECPair (legacy API)
+      const keyPair = new bitcoin.ECPair(dBigi, null, { network });
 
       return {
-        pub: keyPair.getAddress(),
-        priv: keyPair.toWIF(),
-        pubHex: keyPair.getPublicKeyBuffer().toString('hex'),
+        pub: keyPair.getAddress(),                               // P2PKH
+        priv: keyPair.toWIF(),                                   // WIF (compressed)
+        pubHex: keyPair.getPublicKeyBuffer().toString('hex'),    // 33-byte compressed
       };
     } else {
       throw new Error('provided string is a WIF key');

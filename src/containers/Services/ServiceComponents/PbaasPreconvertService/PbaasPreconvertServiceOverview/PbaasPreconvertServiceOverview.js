@@ -27,6 +27,8 @@ const PbaasPreconvertServiceOverview = props => {
       .map(x => {
         return {
           ...x,
+          // Needs to be adjusted to include launch system blocktime
+          // to calculate time left, when PbaasPreconvertService is implemented
           time_left_string: blocksToTime(x.blocks_left)
         }
       })

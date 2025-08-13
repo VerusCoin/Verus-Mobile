@@ -85,11 +85,11 @@ export const BIOMETRY_WARNING = "Enabling biometric authentication relies on the
 
 // ETH Network IDs
 export const ETH_NETWORK_IDS = {
-    ['homestead']: 1,
-    ['ropsten']: 3,
-    ['rinkeby']: 4,
-    ['goerli']: 5,
-    ['kovan']: 42
+    ['homestead']: BigInt(1),
+    ['ropsten']: BigInt(3),
+    ['rinkeby']: BigInt(4),
+    ['goerli']: BigInt(5),
+    ['kovan']: BigInt(42)
 }
 
 export const SUPPORTED_COUNTRIES = ['US'];
@@ -178,7 +178,7 @@ export const IADDRESS_VERSION = 102
 
 // Deep links
 export const CALLBACK_HOST = 'x-callback-url'
-export const SUPPORTED_DLS = [primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid, primitives.VERUSPAY_INVOICE_VDXF_KEY.vdxfid]
+export const SUPPORTED_DLS = [primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid, primitives.VERUSPAY_INVOICE_VDXF_KEY.vdxfid/*, primitives.IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid */]
 
 // Komodo
 export const KOMODO_ENDOFERA = 7777777;

@@ -3,7 +3,6 @@ import { getWeb3ProviderForNetwork } from '../../../../web3/provider'
 import { ETH } from "../../../../constants/intervalConstants"
 import { ETH_NETWORK_IDS } from "../../../../constants/constants"
 import { ETH_HOMESTEAD } from '../../../../../../env/index'
-import BigNumber from "bignumber.js"
 import { scientificToDecimal } from "../../../../math"
 import { cleanEthersErrorMessage } from "../../../../errors"
 import store from "../../../../../store"
@@ -15,47 +14,54 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
 
     const { minGasPriceGwei } = store.getState().settings.generalWalletSettings;
     const minGasPrice = minGasPriceGwei != null ? 
-          ethers.BigNumber.from(minGasPriceGwei).mul(ONE_GWEI_IN_WEI) 
+          BigInt(minGasPriceGwei) * ONE_GWEI_IN_WEI
           : 
-          ethers.BigNumber.from(MINIMUM_GAS_PRICE_GWEI).mul(ONE_GWEI_IN_WEI);
+          BigInt(MINIMUM_GAS_PRICE_GWEI) * ONE_GWEI_IN_WEI;
     
     const fromAddress = activeUser.keys[coinObj.id][ETH].addresses[0]
     const signer = new ethers.VoidSigner(fromAddress, Web3Provider.InfuraProvider)
-    const balance = await signer.getBalance()
-    const value = ethers.utils.parseUnits(scientificToDecimal(amount.toString()))
+    const balance = await Web3Provider.InfuraProvider.getBalance(fromAddress)
+    const value = ethers.parseUnits(scientificToDecimal(typeof amount === 'string' ? amount : amount.toString()))
 
     const transaction = await signer.populateTransaction({
       to: address,
       from: fromAddress,
       value,
       chainId: ETH_NETWORK_IDS[coinObj.network ? coinObj.network : ETH_HOMESTEAD],
-      gasLimit: ethers.BigNumber.from(42000)
+      gasLimit: BigInt(42000)
     })
 
     if (transaction.to == null) {
       throw new Error(`"${address}" is not a valid destination.`)
     }
 
-    if (transaction.gasPrice.lt(minGasPrice)) {
-      transaction.gasPrice = minGasPrice;
+    if (transaction.gasLimit == null || transaction.maxFeePerGas == null) {
+      throw new Error('Unable to get gas info from preflight transaction')
     }
 
-    const maxFee = transaction.gasLimit.mul(transaction.gasPrice)
-    const maxValue = maxFee.add(value)
+    if (transaction.maxFeePerGas < minGasPrice) {
+      transaction.maxFeePerGas = minGasPrice;
+    }
 
-    if (maxValue.gt(balance)) {
-      const adjustedValue = value.sub(maxFee)
+    const gasLimitBn = BigInt(transaction.gasLimit)
+    const maxFeePerGasBn = BigInt(transaction.maxFeePerGas)
 
-      if (adjustedValue.lt(ethers.BigNumber.from(0)))
+    const maxFee = gasLimitBn * maxFeePerGasBn
+    const maxValue = maxFee + value
+
+    if (maxValue > balance) {
+      const adjustedValue = value - maxFee
+
+      if (adjustedValue < BigInt(0))
         throw new Error(
-          `Insufficient funds, cannot cover fee costs of at least ${ethers.utils.formatUnits(maxFee)} ETH.`
+          `Insufficient funds, cannot cover fee costs of at least ${ethers.formatUnits(maxFee)} ETH.`
         );
-      else
+      else {
         return await txPreflight(
           coinObj,
           activeUser,
           address,
-          BigNumber(ethers.utils.formatUnits(adjustedValue)),
+          ethers.formatUnits(adjustedValue),
           {
             ...params,
             feeTakenFromAmount: true,
@@ -65,25 +71,23 @@ export const txPreflight = async (coinObj, activeUser, address, amount, params) 
                 : amount,
           }
         );
+      }
     }
     
     return {
       err: false,
       result: {
-        fee: ethers.utils.formatUnits(
-            transaction.gasLimit.mul(transaction.gasPrice)
-          ),
-        value: ethers.utils.formatUnits(transaction.value),
+        fee: ethers.formatUnits(maxFee),
+        value: ethers.formatUnits(transaction.value),
         toAddress: transaction.to,
         fromAddress: transaction.from,
-        amountSubmitted:
-          params.amountSubmitted != null ? params.amountSubmitted : amount,
+        amountSubmitted: params.amountSubmitted != null ? params.amountSubmitted : amount,
         memo: null,
         params: {
           utxoVerified: true,
           feeTakenFromAmount: params.feeTakenFromAmount ? true : false,
-          gasPrice: transaction.gasPrice,
-          gasLimit: transaction.gasLimit
+          maxFeePerGas: maxFeePerGasBn,
+          gasLimit: gasLimitBn
         },
       },
     };
