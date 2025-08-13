@@ -50,7 +50,6 @@
     "ethereumjs-util": "6.0.0",
     "ethers": "git+https://github.com/VerusCoin/ethers.js.git",
     "events": "1.0.0",
-    "fast-text-encoding": "^1.0.6",
     "https-browserify": "0.0.0",
     "immutable": "4.0.0-rc.12",
     "lodash": "4.17.21",
