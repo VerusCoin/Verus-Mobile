@@ -109,15 +109,27 @@ REACT_NATIVE_MAVEN_LOCAL_REPO=/home/<yourUserName>/.m2/repository/
 
 2. Install homebrew (version >= 3.6.14)
 
-3. Install cocoapods (version >= 1.11.3)
+3. Install rbenv to manage your ruby versions with `brew install rbenv ruby-build`
 
-4. Install node (version >= 16.14.1)
+4. Run `rbenv init`, `rbenv install 3.4.1` and `rbenv global 3.4.1`
 
-5. Install yarn (version >= 1.22.19)
+5. Install cocoapods (version >= 1.11.3)
 
-6. Install rbenv to manage your ruby versions with `brew install rbenv ruby-build`
+6. Install node (version >= 16.14.1 - tested up to 18.14)
 
-7. Run `rbenv init`, `rbenv install 2.7.5` and `rbenv global 2.7.5`
+via Node Version Manager:
+```
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+nvm install 18.14
+nvm use 18.14
+```
+
+7. Install yarn (version >= 1.22.19)
+
+```
+nvm use 18.14
+corepack enable
+```
 
 8. Run `yarn install`
 
