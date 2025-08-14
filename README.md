@@ -113,6 +113,11 @@ REACT_NATIVE_MAVEN_LOCAL_REPO=/home/<yourUserName>/.m2/repository/
 
 4. Run `rbenv init`, `rbenv install 3.4.1` and `rbenv global 3.4.1`
 
+ - You may also need to edit `~/.zprofile` to include rbenv path before system paths:
+```
+echo 'eval "$(export PATH=$HOME/.rbenv/shims:$PATH)"' >> $HOME/.zprofile
+```
+
 5. Install cocoapods (version >= 1.11.3)
 
 6. Install node (version >= 16.14.1 - tested up to 18.14)
