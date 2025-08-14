@@ -150,7 +150,7 @@ corepack enable
 
 14. Under Pods > Targets > ZcashLightClientKit > Build Settings, set "ZCASH_NETWORK_ENVIRONMENT" to "MAINNET"
 
-15. Under Pods > Targets > react-native-verus-light-client-kit > Compile Sources, remove every file that contains "test" in its name, there should be a total of 24 files remaining
+15. Under Pods > Targets > react-native-verus-light-client-kit > Build Phases > Compile Sources, remove every file that contains "test" in its name, there should be a total of 24 files remaining
 
 16. Run `yarn start` in a terminal window within the Verus-Mobile directory
 
