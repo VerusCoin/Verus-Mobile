@@ -1,7 +1,7 @@
 PODS:
   - _NIODataStructures (2.40.0)
   - boost (1.76.0)
-  - CGRPCZlib (1.7.2)
+  - CGRPCZlib (1.8.0)
   - CNIOAtomics (2.40.0)
   - CNIOBoringSSL (2.19.0)
   - CNIOBoringSSLShims (2.19.0):
@@ -22,15 +22,15 @@ PODS:
     - ReactCommon/turbomodule/core (= 0.71.19)
   - fmt (6.2.1)
   - glog (0.3.5)
-  - gRPC-Swift (1.7.2):
-    - CGRPCZlib (= 1.7.2)
+  - gRPC-Swift (1.8.0):
+    - CGRPCZlib (= 1.8.0)
     - Logging (< 2.0.0, >= 1.4.0)
     - SwiftNIO (< 3.0.0, >= 2.32.0)
     - SwiftNIOExtras (< 2.0.0, >= 1.4.0)
-    - SwiftNIOHTTP2 (< 2.0.0, >= 1.19.2)
+    - SwiftNIOHTTP2 (< 2.0.0, >= 1.22.0)
     - SwiftNIOSSL (< 3.0.0, >= 2.14.0)
     - SwiftNIOTransportServices (< 2.0.0, >= 1.11.1)
-    - SwiftProtobuf (< 2.0.0, >= 1.9.0)
+    - SwiftProtobuf (< 2.0.0, >= 1.19.0)
   - hermes-engine (0.71.19):
     - hermes-engine/Pre-built (= 0.71.19)
   - hermes-engine/Pre-built (0.71.19)
@@ -305,11 +305,11 @@ PODS:
   - react-native-udp (4.1.5):
     - CocoaAsyncSocket
     - React-Core
-  - react-native-verus-light-client (1.0.0):
-    - MnemonicSwift
-    - React
+  - react-native-verus (0.6.10):
+    - gRPC-Swift (~> 1.8)
+    - MnemonicSwift (~> 2.0)
     - React-Core
-    - ZcashLightClientKit
+    - SQLite.swift (~> 0.12)
   - React-perflogger (0.71.19)
   - React-RCTActionSheet (0.71.19):
     - React-Core/RCTActionSheetHeaders (= 0.71.19)
@@ -443,9 +443,9 @@ PODS:
     - React
   - RNVectorIcons (8.1.0):
     - React-Core
-  - SQLite.swift (0.12.2):
-    - SQLite.swift/standard (= 0.12.2)
-  - SQLite.swift/standard (0.12.2)
+  - SQLite.swift (0.15.4):
+    - SQLite.swift/standard (= 0.15.4)
+  - SQLite.swift/standard (0.15.4)
   - SwiftNIO (2.40.0):
     - _NIODataStructures (= 2.40.0)
     - CNIOAtomics (= 2.40.0)
@@ -576,7 +576,7 @@ PODS:
     - SwiftNIOFoundationCompat (< 3, >= 2.32.0)
     - SwiftNIOPosix (< 3, >= 2.32.0)
     - SwiftNIOTLS (< 3, >= 2.32.0)
-  - SwiftProtobuf (1.25.1)
+  - SwiftProtobuf (1.30.0)
   - TcpSockets (4.0.0):
     - React
   - VisionCamera (4.3.1):
@@ -586,12 +586,6 @@ PODS:
   - VisionCamera/React (4.3.1):
     - React-Core
   - Yoga (1.14.0)
-  - ZcashLightClientKit (0.9.1):
-    - gRPC-Swift (= 1.7.2)
-    - SQLite.swift (~> 0.12.2)
-  - ZcashLightClientKit/Tests (0.9.1):
-    - gRPC-Swift (= 1.7.2)
-    - SQLite.swift (~> 0.12.2)
 
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
@@ -625,7 +619,7 @@ DEPENDENCIES:
   - react-native-randombytes (from `../node_modules/react-native-randombytes`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-udp (from `../node_modules/react-native-udp`)
-  - react-native-verus-light-client (from `../node_modules/react-native-verus-light-client`)
+  - react-native-verus (from `../node_modules/react-native-verus/react-native-zcash.podspec`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
@@ -655,8 +649,6 @@ DEPENDENCIES:
   - TcpSockets (from `../node_modules/react-native-tcp`)
   - VisionCamera (from `../node_modules/react-native-vision-camera`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
-  - ZcashLightClientKit (from `https://github.com/VerusCoin/ZcashLightClientKit.git`, branch `0.9.1`)
-  - ZcashLightClientKit/Tests (from `https://github.com/VerusCoin/ZcashLightClientKit.git`, branch `0.9.1`)
 
 SPEC REPOS:
   trunk:
@@ -747,8 +739,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-udp:
     :path: "../node_modules/react-native-udp"
-  react-native-verus-light-client:
-    :path: "../node_modules/react-native-verus-light-client"
+  react-native-verus:
+    :podspec: "../node_modules/react-native-verus/react-native-zcash.podspec"
   React-perflogger:
     :path: "../node_modules/react-native/ReactCommon/reactperflogger"
   React-RCTActionSheet:
@@ -805,19 +797,11 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-vision-camera"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
-  ZcashLightClientKit:
-    :branch: 0.9.1
-    :git: https://github.com/VerusCoin/ZcashLightClientKit.git
-
-CHECKOUT OPTIONS:
-  ZcashLightClientKit:
-    :commit: 1c046460a5b1a2eb4f7d58fedb5a7579e89ca7d1
-    :git: https://github.com/VerusCoin/ZcashLightClientKit.git
 
 SPEC CHECKSUMS:
   _NIODataStructures: 3d45d8e70a1d17a15b1dc59d102c63dbc0525ffd
   boost: 7dcd2de282d72e344012f7d6564d024930a6a440
-  CGRPCZlib: 290fba348cc0c620ebb461f82c1c2d05bb7b9075
+  CGRPCZlib: 298dd3237ba4bd7b3eed109e7080ff3324b7d9c9
   CNIOAtomics: 8edf08644e5e6fa0f021c239be9e8beb1cd9ef18
   CNIOBoringSSL: 2c9c96c2e95f15e83fb8d26b9738d939cc39ae33
   CNIOBoringSSLShims: c5c9346e7bbd1040f4f8793a35441dda7487539a
@@ -831,39 +815,39 @@ SPEC CHECKSUMS:
   FBReactNativeSpec: 25c3e937fdcfe4d7c898449051e1f30b93cc99ce
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
   glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
-  gRPC-Swift: 8426019a9c56401ee1b9ef00f15fb5530eb8cdd2
+  gRPC-Swift: 74adcaaa62ac5e0a018938840328cb1fdfb09e7b
   hermes-engine: 1468b458e81705fcd55ed6e29c32ff069f04b69c
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   Logging: beeb016c9c80cf77042d62e83495816847ef108b
   lottie-ios: 8f97d3271e155c2d688875c29cd3c74908aef5f8
-  lottie-react-native: b702fab740cdb952a8e2354713d3beda63ff97b0
+  lottie-react-native: 61e02fe80b8873ae42c45df06b5941d158b46776
   MnemonicSwift: 36384fc6b2640d93df9fe9fb60a8da7957cec36d
-  RCT-Folly: 424b8c9a7a0b9ab2886ffe9c3b041ef628fd4fb1
+  RCT-Folly: 8dc08ca5a393b48b1c523ab6220dfdcc0fe000ad
   RCTRequired: 79b5f823c2b4b865451ba9ddb33c676786760ea8
   RCTTypeSafety: 4f6d5414413d8848923ccd448c4cef4b6ffcd403
   React: d277ab7d840987a460690fcbe979e9234785ad63
   React-callinvoker: 2d15c3bc682ef720a9a23428606aab643df74622
-  React-Codegen: f00947eb19953c13e78c38d73233706e4d6f9bcb
-  React-Core: b3d9f6a3a406fb3a6ee84f98df0a3e45df3aed99
-  React-CoreModules: a70aed68d7cf8bb94f368cbfc8da02d9586e6a65
-  React-cxxreact: 12d097fb82c333c4a193cd2cd2111b0295257453
-  React-hermes: fa22fb2131e784d87105343833d88c1dc6971676
-  React-jsi: a7a06cf56e5af973a35972aa57443629d5621aed
-  React-jsiexecutor: 7263801e44e004967685dd40672bfcedcda00834
+  React-Codegen: 5828805f97189a35c179a24e5b6080c40dff6619
+  React-Core: b3377c8a149f4943c02d089689fe9d88fb4ee98c
+  React-CoreModules: 4865f456a432aefa5d0e86beefe29dd30699f2bc
+  React-cxxreact: 9fafa416940b7c56048976b769d24476a6d43445
+  React-hermes: 734ae2dc106c77af0f5170f1a687189055f86ee2
+  React-jsi: 6ea37d7eb59ea5b8300aa634e490b08d762ba546
+  React-jsiexecutor: ff40751c9fd087dc3dd2b18f5336081f2ee196e7
   React-jsinspector: e591d9ecb571456fc929ee10409d8847a442d6a7
-  React-logger: 70ddbe0e07179c8adb94c4bffc36c6abc952d3d4
-  react-native-cameraroll: 38b40d9033e4077b6c603f92f95c6d05fa7907df
-  react-native-image-picker: 3269f75c251cdcd61ab51b911dd30d6fff8c6169
-  react-native-netinfo: 92e6e4476eb8bf6fc2d7c0a6ca0a1406f663d73a
-  react-native-randombytes: 421f1c7d48c0af8dbcd471b0324393ebf8fe7846
-  react-native-safe-area-context: 5141f11858b033636f1788b14f32eaba92cee810
-  react-native-udp: 8864b1211857e9d8224ae5cbaf8580970fb99de1
-  react-native-verus-light-client: ba8400658314adecefa08593e46d9fa69029bea8
+  React-logger: e1edee51442163c77f9fdfb4b08c7169cfc22424
+  react-native-cameraroll: 6252850a66c54ff7e6e4a60b0e2ddfdd9a472076
+  react-native-image-picker: b981b88b807605540b2de3245c76e9729f418b37
+  react-native-netinfo: 68ef6a757dfd419a64359c30a37708ecb16f349f
+  react-native-randombytes: 3c8f3e89d12487fd03a2f966c288d495415fc116
+  react-native-safe-area-context: 17a482f540310e2209f884fd49472d9e1c0e73d6
+  react-native-udp: d88de32b4a2c8c4ff3f55902d77bc0df573eab5a
+  react-native-verus: fb6bab7c74044b697ab7fc55ddd36f68f50484c1
   React-perflogger: 0ba097528e325435aca94b32b5330f58f6acb6fb
   React-RCTActionSheet: 805b3a83f3dd7ae5a1213ea9df0ed748eeb74b85
   React-RCTAnimation: 2a0233681dee47e468302b8233652b35b68329cb
-  React-RCTAppDelegate: 3171d94d0ce2ed7fcf982689cd6bbaf4a8721ce8
-  React-RCTBlob: 8c6962fcab4a5a3d0078a3a4a98bb914a7703abf
+  React-RCTAppDelegate: ff8bab890caf7eeb7c90039f78b446ffce496a0b
+  React-RCTBlob: ebbc25c2cb443b95acdd978a587455fadd3be5e6
   React-RCTImage: 015ce2b9d2ad78c24deee5c807d88574225974f3
   React-RCTLinking: 6dd57d2d99ecdf6ee016c5a742ed9b68cdc8680a
   React-RCTNetwork: f14e9681496cd394196c2417966769d10b45e674
@@ -871,20 +855,20 @@ SPEC CHECKSUMS:
   React-RCTText: 4cbca7004176dd0ed495afa60a3978acf040059d
   React-RCTVibration: 5b2bfab941e938ee5060acefdd7598077b394975
   React-runtimeexecutor: b9be1f58ce9a8b849cb8a37dd998f04ca97e3619
-  ReactCommon: bb3d7051c9b8c58ee34f9af76f883bd0fd7c9c31
-  RNCAsyncStorage: d35c79ffba52c1013013e16b1fc295aec2feabb6
-  RNDateTimePicker: e073697ac3e8a378968d68ab0581fef542b8af8a
-  RNFS: 3ab21fa6c56d65566d1fb26c2228e2b6132e5e32
-  RNGestureHandler: 071d7a9ad81e8b83fe7663b303d132406a7d8f39
-  RNKeychain: f1b48665a4646f61191eb048c4c05c58d9a7596f
-  RNOS: 728cdea6d232de48cfede274443dbe3f669b86e9
-  RNPermissions: 0ea6720dfe344d6ec160a4aed36f7d1ca54a0428
-  RNReactNativeHapticFeedback: 653a8c126a0f5e88ce15ffe280b3ff37e1fbb285
-  RNReanimated: cc5e3aa479cb9170bcccf8204291a6950a3be128
-  RNScreens: c526239bbe0e957b988dacc8d75ac94ec9cb19da
-  RNSVG: 8ba35cbeb385a52fd960fd28db9d7d18b4c2974f
-  RNVectorIcons: 31cebfcf94e8cf8686eb5303ae0357da64d7a5a4
-  SQLite.swift: d2b4642190917051ce6bd1d49aab565fe794eea3
+  ReactCommon: 9d5423a44441e73260000f780f209004e7a15678
+  RNCAsyncStorage: 40367e8d25522dca9c3513c7b9815a184669bd97
+  RNDateTimePicker: 72b949e2e893764a6a2216379f43ca78e1d26409
+  RNFS: 4f02bbb5c95d71bade3d36a1b6514305ccefc4c9
+  RNGestureHandler: 5fe9e4f847b51d8cc9006cec6c7dc6718dd82809
+  RNKeychain: c497f7844b24577523bb84a6e8af9d217957972f
+  RNOS: 42dbaed967a2cbc4faaf1d8d5aad344170be6ce0
+  RNPermissions: 01d5a336d2145f61817ce78d252a4965358ac155
+  RNReactNativeHapticFeedback: 8ac55b5470a920d9333848a40fb876afca2e0db9
+  RNReanimated: 96faf89fef41e16cacaf3e3231cf6a34d672e864
+  RNScreens: 982b83f6ab5c252ea7ec2098b6207d31e2abb58c
+  RNSVG: af004514150de2bd928e11d215bca33a5d1c19ce
+  RNVectorIcons: 1f688883f7dfb5b346a03689800a88c5e3376029
+  SQLite.swift: a107c734115fea616a4ad31371d39f1637e8de56
   SwiftNIO: 829958aab300642625091f82fc2f49cb7cf4ef24
   SwiftNIOConcurrencyHelpers: 697370136789b1074e4535eaae75cbd7f900370e
   SwiftNIOCore: 473fdfe746534d7aa25766916459eeaf6f92ef49
@@ -898,12 +882,11 @@ SPEC CHECKSUMS:
   SwiftNIOSSL: d153c5a6fc5b2301b0519b4c4d037a9414212da6
   SwiftNIOTLS: 598af547490133e9aac52aed0c23c4a90c31dcfc
   SwiftNIOTransportServices: 0b2b407819d82eb63af558c5396e33c945759503
-  SwiftProtobuf: 69f02cd54fb03201c5e6bf8b76f687c5ef7541a3
-  TcpSockets: 4ef55305239923b343ed0a378b1fac188b1373b0
-  VisionCamera: 58d2120e6e23c155b25f4702b7912dc2b1e5e8c2
+  SwiftProtobuf: 3697407f0d5b23bedeba9c2eaaf3ec6fdff69349
+  TcpSockets: c5f030d4dbc758c4c7acb00496dc92c412b02cd2
+  VisionCamera: fc6f0f2cf7dd3da7c6496b279350bb357fab9964
   Yoga: d4f5b037672e6b68ba484c7cf7fe6790122df792
-  ZcashLightClientKit: 4e4273f2e841e982fedad461a9008cca19089f5c
 
-PODFILE CHECKSUM: 6484296297e28f08e0a87b93c87d210ae1b20317
+PODFILE CHECKSUM: a6ed02cb3e6ec497e59d0c91c9786777836ad552
 
-COCOAPODS: 1.13.0
+COCOAPODS: 1.16.2

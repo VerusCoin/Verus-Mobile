@@ -1235,7 +1235,7 @@
   dependencies:
     uint8array-tools "0.0.7"
 
-"@bitgo/blake2b-wasm@^3.0.1", "@bitgo/blake2b-wasm@https://github.com/VerusCoin/blake2b-wasm/", blake2b-wasm@^2.4.0, "blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b", "blake2b-wasm@https://github.com/VerusCoin/blake2b-wasm/":
+"@bitgo/blake2b-wasm@^3.0.1", "@bitgo/blake2b-wasm@https://github.com/VerusCoin/blake2b-wasm/":
   version "2.0.0"
   resolved "https://github.com/VerusCoin/blake2b-wasm/#a16070b30bb8d8aee670f0c69b642913eca79998"
   dependencies:
@@ -3422,6 +3422,12 @@ bl@^4.1.0:
     buffer "^5.5.0"
     inherits "^2.0.4"
     readable-stream "^3.4.0"
+
+blake2b-wasm@^2.4.0, "blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b", "blake2b-wasm@https://github.com/VerusCoin/blake2b-wasm/":
+  version "2.0.0"
+  resolved "https://github.com/VerusCoin/blake2b-wasm/#a16070b30bb8d8aee670f0c69b642913eca79998"
+  dependencies:
+    nanoassert "1.0.0"
 
 "blake2b@git+https://github.com/michaeltout/blake2b":
   version "2.1.3"
@@ -10074,7 +10080,7 @@ react-native-url-polyfill@1.3.0:
 
 "react-native-verus@git+https://github.com/who-biz/react-native-zcash.git#spendkey-import":
   version "0.6.10"
-  resolved "git+https://github.com/who-biz/react-native-zcash.git#3c1e2e46a6666b7331914eb773fc62b5c92c3039"
+  resolved "git+https://github.com/who-biz/react-native-zcash.git#33945b50c8622f1aebca53d9a3d5eb338fdd055a"
   dependencies:
     biggystring "^4.1.3"
     rfc4648 "^1.3.0"
