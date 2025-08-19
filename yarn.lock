@@ -10080,7 +10080,7 @@ react-native-url-polyfill@1.3.0:
 
 "react-native-verus@git+https://github.com/who-biz/react-native-zcash.git#spendkey-import":
   version "0.6.10"
-  resolved "git+https://github.com/who-biz/react-native-zcash.git#d914480176105739ba2126f8616cad09c6f58028"
+  resolved "git+https://github.com/who-biz/react-native-zcash.git#8e9ee626eaf36039f69d58f3cedc90a7c81653a0"
   dependencies:
     biggystring "^4.1.3"
     rfc4648 "^1.3.0"

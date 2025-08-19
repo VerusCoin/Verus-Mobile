@@ -149,7 +149,6 @@ target 'verusmobile' do
   )
 
   # Pods for Verus-Mobile
-  #pod 'react-native-verus', :podspec => '../node_modules/react-native-verus/react-native-zcash.podspec'
   #pod 'ZcashLightClientKit', :git => 'https://github.com/who-biz/verus-swift-wallet-sdk.git', :branch => 'verus'
   pod 'MnemonicSwift', '~> 2.0.0'
   #pod 'Permission-Camera', :path => "#{permissions_path}/Camera/Permission-Camera.podspec"
@@ -174,8 +173,6 @@ target 'verusmobile' do
 
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
-
-
         if target.name == 'ZcashLightClientKit'
            config.build_settings['ZCASH_NETWORK_ENVIRONMENT'] = ENV["ZCASH_NETWORK_ENVIRONMENT"]
         end
