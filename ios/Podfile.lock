@@ -619,7 +619,7 @@ DEPENDENCIES:
   - react-native-randombytes (from `../node_modules/react-native-randombytes`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-udp (from `../node_modules/react-native-udp`)
-  - react-native-verus (from `../node_modules/react-native-verus/react-native-zcash.podspec`)
+  - react-native-verus (from `../node_modules/react-native-verus`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
@@ -740,7 +740,7 @@ EXTERNAL SOURCES:
   react-native-udp:
     :path: "../node_modules/react-native-udp"
   react-native-verus:
-    :podspec: "../node_modules/react-native-verus/react-native-zcash.podspec"
+    :path: "../node_modules/react-native-verus"
   React-perflogger:
     :path: "../node_modules/react-native/ReactCommon/reactperflogger"
   React-RCTActionSheet:
@@ -842,7 +842,7 @@ SPEC CHECKSUMS:
   react-native-randombytes: 3c8f3e89d12487fd03a2f966c288d495415fc116
   react-native-safe-area-context: 17a482f540310e2209f884fd49472d9e1c0e73d6
   react-native-udp: d88de32b4a2c8c4ff3f55902d77bc0df573eab5a
-  react-native-verus: fb6bab7c74044b697ab7fc55ddd36f68f50484c1
+  react-native-verus: f0dcf01149d419e8dd10c3feab9342263d6e1574
   React-perflogger: 0ba097528e325435aca94b32b5330f58f6acb6fb
   React-RCTActionSheet: 805b3a83f3dd7ae5a1213ea9df0ed748eeb74b85
   React-RCTAnimation: 2a0233681dee47e468302b8233652b35b68329cb
@@ -887,6 +887,6 @@ SPEC CHECKSUMS:
   VisionCamera: fc6f0f2cf7dd3da7c6496b279350bb357fab9964
   Yoga: d4f5b037672e6b68ba484c7cf7fe6790122df792
 
-PODFILE CHECKSUM: a6ed02cb3e6ec497e59d0c91c9786777836ad552
+PODFILE CHECKSUM: 99eb30ee883f1baf66e7cc011c981034ff33f852
 
 COCOAPODS: 1.16.2
