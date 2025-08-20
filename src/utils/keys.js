@@ -21,17 +21,18 @@ const deriveLightwalletdKeyPair = async (seed) => {
   let extendedSpendingKey = "";
   const spendingKey = await parseDlightSeed(seed);
   if (isDlightSpendingKey(seed)) {
-    //console.warn("seed is spending key! (" + seed + ")");
+    console.warn("seed is spending key! (" + seed + ")");
     extendedSpendingKey = await Tools.bech32Decode(seed);
     seed = "";
   }
-  const viewingKey = await Tools.deriveViewingKey(extendedSpendingKey, seed);
+  console.warn("seed is NOT spending key! (" + seed + ")");
+//  const viewingKey = await Tools.deriveViewingKey(extendedSpendingKey, seed);
   //console.warn("Resulting viewingkey(" + viewingKey + ")");
 
   return {
     pubKey: null,
     privKey: spendingKey,
-    viewingKey: viewingKey,
+    viewingKey: null,
     addresses: [],
   };
 };
@@ -170,12 +171,12 @@ export const deriveKeyPair = async (seed, coinObj, channel, version = KEY_DERIVA
 }
 
 export const isDlightSpendingKey = (seed) => {
-  //console.warn("isDlightSpendingKey: " + seed);
+  console.warn("isDlightSpendingKey: " + seed);
   return (seed.startsWith('secret-extended-key-main'))
 }
 
 export const parseDlightSeed = async (seed) => {
-  //console.log("parseDlightSeed called!")
+  console.warn("parseDlightSeed called!")
 
   if (isDlightSpendingKey(seed)) {
     const spendkey = await Tools.bech32Decode(seed);
@@ -183,7 +184,7 @@ export const parseDlightSeed = async (seed) => {
   }
   
   try {
-    const viewkey = await Tools.deriveViewingKey("", seed)
+    //const viewkey = await Tools.deriveViewingKey("", seed)
     //console.log("Viewkey(" + viewkey + ")")
 
     const saplingAddress = await Tools.deriveShieldedAddress("", seed)
