@@ -272,7 +272,7 @@ const DeepLink = (props) => {
 
     if (req.isSigned()) {
       if (await verifyIdentityUpdateRequest(coinObj, req)) {
-        const sig = await extractIdentityUpdateRequestSig(coinObj, deeplinkData);
+        const sig = await extractIdentityUpdateRequestSig(coinObj, req);
         const sigblock = await getBlock(coinObj.system_id, sig.height);
        
         if (sigblock.error) throw new Error(sigblock.error.message);
