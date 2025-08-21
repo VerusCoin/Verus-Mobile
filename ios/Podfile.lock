@@ -842,7 +842,7 @@ SPEC CHECKSUMS:
   react-native-randombytes: 3c8f3e89d12487fd03a2f966c288d495415fc116
   react-native-safe-area-context: 17a482f540310e2209f884fd49472d9e1c0e73d6
   react-native-udp: d88de32b4a2c8c4ff3f55902d77bc0df573eab5a
-  react-native-verus: 65ea8ce2492f65f808a1ee24e41de10f7a83f050
+  react-native-verus: faf0122c28b14afc59860f3c8ea2ee64d679e24e
   React-perflogger: 0ba097528e325435aca94b32b5330f58f6acb6fb
   React-RCTActionSheet: 805b3a83f3dd7ae5a1213ea9df0ed748eeb74b85
   React-RCTAnimation: 2a0233681dee47e468302b8233652b35b68329cb
@@ -887,6 +887,6 @@ SPEC CHECKSUMS:
   VisionCamera: fc6f0f2cf7dd3da7c6496b279350bb357fab9964
   Yoga: d4f5b037672e6b68ba484c7cf7fe6790122df792
 
-PODFILE CHECKSUM: ba493e94ff11916defa426d0a7344b9f57bf4b54
+PODFILE CHECKSUM: 67a4a86df5f16fbfe2205d24acbc944ba422c1e5
 
 COCOAPODS: 1.16.2
