@@ -19,6 +19,6 @@ LogBox.ignoreLogs(IGNORED_LOGS);
 import App from './App';
 import {name as appName} from './app.json';
 import './shims/crypto.js';
-import './shims/stringify.js';
+import './shims/buffer.js';
 
 AppRegistry.registerComponent(appName, () => App);
