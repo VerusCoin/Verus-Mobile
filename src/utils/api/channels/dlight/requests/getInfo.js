@@ -7,20 +7,11 @@ export const getInfo = (coinId, accountHash, coinProto) => {
   return new Promise((resolve, reject) => {
     synchronizer.getInfo(coinId)
     .then(res => {
-      if (res.error != null) {
-        reject(
-          new ApiException(
-            res.error.message,
-            res.error.data,
-            coinId,
-            DLIGHT_PRIVATE,
-            res.error.code
-          )
-        );
-      } else {
-        result = createJsonRpcResponse(0, res, res.error)
+        result = createJsonRpcResponse(0, res, null)
         resolve(result);
-      }
     })
+    .catch(err => {
+      reject(err);
+    });
   })
 };

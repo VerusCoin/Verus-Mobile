@@ -576,7 +576,7 @@ PODS:
     - SwiftNIOFoundationCompat (< 3, >= 2.32.0)
     - SwiftNIOPosix (< 3, >= 2.32.0)
     - SwiftNIOTLS (< 3, >= 2.32.0)
-  - SwiftProtobuf (1.30.0)
+  - SwiftProtobuf (1.31.0)
   - TcpSockets (4.0.0):
     - React
   - VisionCamera (4.3.1):
@@ -842,7 +842,7 @@ SPEC CHECKSUMS:
   react-native-randombytes: 3c8f3e89d12487fd03a2f966c288d495415fc116
   react-native-safe-area-context: 17a482f540310e2209f884fd49472d9e1c0e73d6
   react-native-udp: d88de32b4a2c8c4ff3f55902d77bc0df573eab5a
-  react-native-verus: faf0122c28b14afc59860f3c8ea2ee64d679e24e
+  react-native-verus: 481fa9dd2f87936418e1a5c3fb438e85d3e1ab20
   React-perflogger: 0ba097528e325435aca94b32b5330f58f6acb6fb
   React-RCTActionSheet: 805b3a83f3dd7ae5a1213ea9df0ed748eeb74b85
   React-RCTAnimation: 2a0233681dee47e468302b8233652b35b68329cb
@@ -882,11 +882,11 @@ SPEC CHECKSUMS:
   SwiftNIOSSL: d153c5a6fc5b2301b0519b4c4d037a9414212da6
   SwiftNIOTLS: 598af547490133e9aac52aed0c23c4a90c31dcfc
   SwiftNIOTransportServices: 0b2b407819d82eb63af558c5396e33c945759503
-  SwiftProtobuf: 3697407f0d5b23bedeba9c2eaaf3ec6fdff69349
+  SwiftProtobuf: caa61117d9a5eeb60a52375f6685991a1fd4bd7b
   TcpSockets: c5f030d4dbc758c4c7acb00496dc92c412b02cd2
   VisionCamera: fc6f0f2cf7dd3da7c6496b279350bb357fab9964
   Yoga: d4f5b037672e6b68ba484c7cf7fe6790122df792
 
-PODFILE CHECKSUM: 67a4a86df5f16fbfe2205d24acbc944ba422c1e5
+PODFILE CHECKSUM: eb3f1a254037eb44fddea488afbecf63ff948654
 
 COCOAPODS: 1.16.2
