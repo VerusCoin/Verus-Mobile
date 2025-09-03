@@ -13,19 +13,10 @@ const SESSION_CREDENTIAL_KEY = `${INTERNAL_APP_ID}_Session`
 // in case of password bruteforce
 const PERSISTENT_CREDENTIAL_KEY = `${INTERNAL_APP_ID}_Persistent`
 
+// This credential key is used to encrypt the data retrievable through biometric auth
+const BIOMETRIC_CREDENTIAL_KEY = `${INTERNAL_APP_ID}_Biometric`
+
 const DEFAULT_GENERIC_PASSWORD_KEY = 'default'
-
-export const getBiometricPassword = async (accountHash, title = "Authenticate to retreive password") => {
-  const credentials = await Keychain.getGenericPassword(INCLUDE_SERVICE ? {
-    service: 'com.verus.verusmobile',
-    authenticationPrompt: { title }
-  } : {
-    authenticationPrompt: { title }
-  });
-
-  if (credentials != null) return (JSON.parse(credentials.password))[accountHash]
-  else throw new Error("Biometric authentication not enabled on this device!")
-}
 
 const getInternetCredential = async (credentialKey, title) => {
   const credentials = await Keychain.getInternetCredentials(credentialKey, INCLUDE_SERVICE ? {
@@ -95,7 +86,7 @@ export const generatePersistentCredential = async () => {
 export const saveNewPersistentCredential = async (credBuf) => {
   if (!Buffer.isBuffer(credBuf)) throw new Error("Credential is not buffer")
 
-  const credString = credBuf.toString('hex');
+  const credString = credBuf.toString('base64');
 
   const originalCred = await getPersistentCredential();
   await setPersistentCredential(credString);
@@ -121,7 +112,62 @@ export const removeSessionCredential = async () => {
   return removeInternetCredential(SESSION_CREDENTIAL_KEY)
 }
 
-export const storeBiometricPassword = async (accountHash, password) => {
+export const getBiometricCredential = async (title = "Authenticate to retrieve password") => {
+  const credentials = await Keychain.getGenericPassword({
+    service: BIOMETRIC_CREDENTIAL_KEY,
+    authenticationPrompt: { title }
+  });
+
+  if (credentials != null) return credentials.password
+  else throw new Error(`Failed to retrieve biometric credential`)
+}
+
+export const setBiometricCredential = (value) => {
+  return Keychain.setGenericPassword(INTERNAL_APP_ID, value, {
+    service: BIOMETRIC_CREDENTIAL_KEY,
+    accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY,
+    accessible: Keychain.ACCESSIBLE.WHEN_PASSCODE_SET_THIS_DEVICE_ONLY
+  })
+}
+
+export const generateBiometricCredential = async () => {
+  const bytes = await randomBytes(128);
+  if (!Buffer.isBuffer(bytes)) throw new Error("Credential is not buffer");
+
+  return await setBiometricCredential(bytes.toString('base64'))
+}
+
+export const removeBiometricCredential = () => {
+  return Keychain.resetGenericPassword({
+    service: BIOMETRIC_CREDENTIAL_KEY
+  })
+}
+
+export const getLegacyBiometricData = async (title = "Authenticate to retrieve password") => {
+  const credentials = await Keychain.getGenericPassword(INCLUDE_SERVICE ? {
+    service: 'com.verus.verusmobile',
+    authenticationPrompt: { title }
+  } : {
+    authenticationPrompt: { title }
+  });
+
+  if (credentials != null) return (JSON.parse(credentials.password))
+  else throw new Error("Biometric authentication not enabled on this device!")
+}
+
+export const getLegacyBiometricPassword = async (accountHash, title = "Authenticate to retrieve password") => {
+  const credentials = await Keychain.getGenericPassword(INCLUDE_SERVICE ? {
+    service: 'com.verus.verusmobile',
+    authenticationPrompt: { title }
+  } : {
+    authenticationPrompt: { title }
+  });
+
+  if (credentials != null) return (JSON.parse(credentials.password))[accountHash]
+  else throw new Error("Biometric authentication not enabled on this device!")
+}
+
+export const storeLegacyBiometricPassword = async (accountHash, password) => {
   let credentials = {}
 
   try {
@@ -158,7 +204,7 @@ export const storeBiometricPassword = async (accountHash, password) => {
   })
 }
 
-export const removeBiometricPassword = async (accountHash) => {
+export const removeLegacyBiometricPassword = async (accountHash) => {
   let credentials = {}
 
   try {
@@ -177,6 +223,17 @@ export const removeBiometricPassword = async (accountHash) => {
   delete credentials[accountHash]
 
   await Keychain.setGenericPassword(INTERNAL_APP_ID, JSON.stringify(credentials), INCLUDE_SERVICE ? {
+    service: 'com.verus.verusmobile',
+    accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY,
+    accessible: Keychain.ACCESSIBLE.WHEN_PASSCODE_SET_THIS_DEVICE_ONLY
+  } : {
+    accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY,
+    accessible: Keychain.ACCESSIBLE.WHEN_PASSCODE_SET_THIS_DEVICE_ONLY
+  })
+}
+
+export const removeAllLegacyBiometricPasswords = async () => {
+  await Keychain.setGenericPassword(INTERNAL_APP_ID, "{}", INCLUDE_SERVICE ? {
     service: 'com.verus.verusmobile',
     accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY,
     accessible: Keychain.ACCESSIBLE.WHEN_PASSCODE_SET_THIS_DEVICE_ONLY
