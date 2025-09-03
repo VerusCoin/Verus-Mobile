@@ -1,6 +1,6 @@
 {
   "name": "verusmobile",
-  "version": "1.0.29",
+  "version": "1.0.30",
   "private": true,
   "scripts": {
     "postinstall": "./node_modules/.bin/rn-nodeify --hack --install --yarn && npx jetify && rm node_modules/@adraffy/ens-normalize/package.json && cp patches/@adraffy/ens-normalize/adraffy_ens_normalize_package.json node_modules/@adraffy/ens-normalize/package.json && patch-package",
@@ -227,7 +227,9 @@
     "tiny-secp256k1": "1.1.7",
     "pbkdf2": "3.1.3",
     "brace-expansion": "1.1.12",
-    "base-x": "3.0.11"
+    "base-x": "3.0.11",
+    "cipher-base": "1.0.5",
+    "sha.js": "2.4.12"
   },
   "jest": {
     "preset": "react-native",

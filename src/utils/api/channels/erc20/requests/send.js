@@ -3,7 +3,7 @@ import { getWeb3ProviderForNetwork } from '../../../../web3/provider'
 import { ERC20, ETH } from "../../../../constants/intervalConstants"
 import { scientificToDecimal } from "../../../../math"
 import { requestPrivKey } from "../../../../auth/authBox"
-import { ETHERS, ETH_CONTRACT_ADDRESS } from "../../../../constants/web3Constants"
+import { BRIDGE_APPROVAL_ZERO_OUT_TOKENS, ETHERS, ETH_CONTRACT_ADDRESS } from "../../../../constants/web3Constants"
 import { cleanEthersErrorMessage } from "../../../../errors"
 
 export const send = async (coinObj, activeUser, address, amount, passthrough) => {
@@ -93,6 +93,16 @@ export const sendBridgeTransfer = async (coinObj, [reserveTransfer, transferOpti
     if (coinObj.currency_id !== ETH_CONTRACT_ADDRESS) {
       const [delegatorAddress, approvalAmount, approvalOptions] = approvalParams
       const contract = Web3Provider.getContract(coinObj.currency_id, null, Web3Provider.InfuraProvider).connect(signer);
+
+      // Some tokens require approval amount to be zero before approval is allowed
+      if (BRIDGE_APPROVAL_ZERO_OUT_TOKENS.some(x => (x.toLowerCase() === coinObj.currency_id.toLowerCase()))) {
+        const zeroOutApproval = await contract.approve(delegatorContractAddress, "0", approvalOptions);
+        const zeroOutReply = await zeroOutApproval.wait();
+
+        if (zeroOutReply.status === 0) {
+          throw new Error("Zeroing out approval amount failed, please check your ETH balance.");
+        }
+      }
 
       const approval = await contract.approve(delegatorContractAddress, approvalAmount, approvalOptions);
       const reply = await approval.wait();
