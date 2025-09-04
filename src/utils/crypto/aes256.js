@@ -25,68 +25,65 @@ SOFTWARE.
 const { randomBytes } = require('./randomBytes');
 
 var aes256 = {},
-    crypto = require('crypto'),
-    algorithm = 'aes-256-gcm',
-    legacy_algorithm = 'aes-256-ctr';
+  crypto = require('crypto'),
+  algorithm = 'aes-256-gcm',
+  legacy_algorithm = 'aes-256-ctr';
 
 aes256.encrypt = async function (key, data) {
-    var sha256 = crypto.createHash('sha256');
-    sha256.update(key);
+  var sha256 = crypto.createHash('sha256');
+  sha256.update(key);
 
-    var iv = await randomBytes(16)
+  var iv = await randomBytes(16)
 
-    var plaintext = new Buffer(data),
-        cipher = crypto.createCipheriv(algorithm, sha256.digest(), iv),
-        ciphertext = cipher.update(plaintext);
-    ciphertext = Buffer.concat([iv, ciphertext, cipher.final(), cipher.getAuthTag()]);
+  var plaintext = Buffer.from(data),
+    cipher = crypto.createCipheriv(algorithm, sha256.digest(), iv),
+    ciphertext = cipher.update(plaintext);
+  ciphertext = Buffer.concat([iv, ciphertext, cipher.final(), cipher.getAuthTag()]);
 
-    return ciphertext.toString('base64');
+  return ciphertext.toString('base64');
 };
 
 aes256.decrypt = function (key, data) {
-    var sha256 = crypto.createHash('sha256');
-    sha256.update(key);
+  var sha256 = crypto.createHash('sha256');
+  sha256.update(key);
 
-    var input = new Buffer(data, 'base64'),
-        iv = input.slice(0, 16),
-        ciphertext = input.slice(16, -16),
-        authTag = input.slice(-16),
-        decipher = crypto.createDecipheriv(algorithm, sha256.digest(), iv);
+  var input = Buffer.from(data, 'base64'),
+    iv = input.slice(0, 16),
+    ciphertext = input.slice(16, -16),
+    authTag = input.slice(-16),
+    decipher = crypto.createDecipheriv(algorithm, sha256.digest(), iv);
 
-    decipher.setAuthTag(authTag);
+  decipher.setAuthTag(authTag);
 
-    var plaintext = decipher.update(ciphertext);
-    plaintext += decipher.final();
-
-    return plaintext;
+  const plaintextBuf = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+  return plaintextBuf.toString('utf8');
 };
 
 aes256.legacy_encrypt = async function (key, data) {
-    var sha256 = crypto.createHash('sha256');
-    sha256.update(key);
+  var sha256 = crypto.createHash('sha256');
+  sha256.update(key);
 
-    var iv = await randomBytes(16)
+  var iv = await randomBytes(16)
 
-    var plaintext = new Buffer(data),
-        cipher = crypto.createCipheriv(legacy_algorithm, sha256.digest(), iv),
-        ciphertext = cipher.update(plaintext);
-    ciphertext = Buffer.concat([iv, ciphertext, cipher.final()]);
+  var plaintext = Buffer.from(data),
+    cipher = crypto.createCipheriv(legacy_algorithm, sha256.digest(), iv),
+    ciphertext = cipher.update(plaintext);
+  ciphertext = Buffer.concat([iv, ciphertext, cipher.final()]);
 
-    return ciphertext.toString('base64');
+  return ciphertext.toString('base64');
 };
 
 aes256.legacy_decrypt = function (key, data) {
-    var sha256 = crypto.createHash('sha256');
-    sha256.update(key);
+  var sha256 = crypto.createHash('sha256');
+  sha256.update(key);
 
-    var input = new Buffer(data, 'base64'),
-        iv = input.slice(0, 16),
-        ciphertext = input.slice(16),
-        decipher = crypto.createDecipheriv(legacy_algorithm, sha256.digest(), iv),
-        plaintext = decipher.update(ciphertext);
-    plaintext += decipher.final();
+  var input = Buffer.from(data, 'base64'),
+    iv = input.slice(0, 16),
+    ciphertext = input.slice(16),
+    decipher = crypto.createDecipheriv(legacy_algorithm, sha256.digest(), iv)
 
-    return plaintext;
+  const plaintextBuf = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+  return plaintextBuf.toString('utf8');
 };
 
 module.exports = aes256;

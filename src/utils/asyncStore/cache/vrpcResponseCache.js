@@ -2,7 +2,7 @@ import { Cache } from "react-native-cache";
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiRequest, fromBase58Check } from "verus-typescript-primitives";
-const crypto = require('react-native-crypto');
+const crypto = require('react-native-quick-crypto');
 
 export const VRPC_RESPONSE_CACHE_CAP = 1000
 

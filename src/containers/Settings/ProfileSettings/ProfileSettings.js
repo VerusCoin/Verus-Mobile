@@ -18,9 +18,7 @@ import { Text } from "react-native-paper"
 import { connect } from 'react-redux';
 import Styles from '../../../styles/index'
 import {
-  getSupportedBiometryType,
-  removeBiometricPassword,
-  storeBiometricPassword
+  getSupportedBiometryType
 } from "../../../utils/keychain/keychain";
 import {
   addEncryptedKey,
@@ -43,6 +41,7 @@ import { DLIGHT_PRIVATE } from "../../../utils/constants/intervalConstants";
 import ListSelectionModal from "../../../components/ListSelectionModal/ListSelectionModal";
 import { WYRE_SERVICE_ID } from "../../../utils/constants/services";
 import Colors from "../../../globals/colors";
+import { removeBiometricPassword, storeBiometricPassword } from "../../../utils/keychain/biometrics";
 
 const RESET_PWD = "ResetPwd"
 const REMOVE_PROFILE = "DeleteProfile"

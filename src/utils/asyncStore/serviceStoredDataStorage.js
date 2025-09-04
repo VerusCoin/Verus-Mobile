@@ -1,6 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SERVICE_STORAGE_INTERNAL_KEY } from "../../../env/index";
 import { VERUSID_SERVICE_ID, WYRE_SERVICE_ID } from "../constants/services";
+import { SecureStorage } from "../keychain/secureStore";
 
 export const storeServiceStoredData = (data) => {
   if (typeof data !== "object")
@@ -9,7 +9,7 @@ export const storeServiceStoredData = (data) => {
     );
 
   return new Promise((resolve, reject) => {
-    AsyncStorage.setItem(
+    SecureStorage.setItem(
       SERVICE_STORAGE_INTERNAL_KEY,
       JSON.stringify(data)
     )
@@ -22,7 +22,7 @@ export const storeServiceStoredData = (data) => {
 
 export const loadServiceStoredData = () => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem(SERVICE_STORAGE_INTERNAL_KEY)
+    SecureStorage.getItem(SERVICE_STORAGE_INTERNAL_KEY)
       .then((res) => {
         if (!res) {
           resolve({});
@@ -37,7 +37,7 @@ export const loadServiceStoredData = () => {
 
 export const clearServiceStoredData = () => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.removeItem(SERVICE_STORAGE_INTERNAL_KEY)
+    SecureStorage.removeItem(SERVICE_STORAGE_INTERNAL_KEY)
       .then(() => {
         resolve();
       })

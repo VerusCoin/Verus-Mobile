@@ -22,8 +22,8 @@ import { connect } from 'react-redux';
 import { checkPinForUser } from '../../../../utils/asyncStore/asyncStore'
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles/index'
-import { removeBiometricPassword } from "../../../../utils/keychain/keychain";
 import { createAlert, resolveAlert } from "../../../../actions/actions/alert/dispatchers/alert";
+import { removeBiometricPassword } from "../../../../utils/keychain/biometrics";
 
 class DeleteProfile extends Component {
   constructor() {

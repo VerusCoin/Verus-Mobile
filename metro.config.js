@@ -2,7 +2,7 @@ const { getDefaultConfig } = require("metro-config");
 
 module.exports = (async () => {
   const {
-    resolver: {sourceExts, assetExts},
+    resolver: { sourceExts, assetExts },
   } = await getDefaultConfig();
 
   return {
@@ -19,6 +19,12 @@ module.exports = (async () => {
     resolver: {
       assetExts: assetExts.filter(ext => ext !== 'svg'),
       sourceExts: [...sourceExts, 'svg'],
+      extraNodeModules: {
+        crypto: require.resolve('react-native-quick-crypto'),
+        path: require.resolve('path-browserify'),
+        stream: require.resolve('stream-browserify'),
+        process: require.resolve('process'),
+      },
     },
   };
 })();

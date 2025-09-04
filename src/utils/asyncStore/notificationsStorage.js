@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NOTIFICATIONS_STORAGE_INTERNAL_KEY } from '../../../env/index'
+import { SecureStorage } from '../keychain/secureStore';
 
 export const storeNotifications = async data => {
   if (typeof data !== 'object') {
@@ -8,7 +8,7 @@ export const storeNotifications = async data => {
     );
   }
 
-  await AsyncStorage.setItem(
+  await SecureStorage.setItem(
     NOTIFICATIONS_STORAGE_INTERNAL_KEY,
     JSON.stringify(data),
   )
@@ -17,7 +17,7 @@ export const storeNotifications = async data => {
 };
 
 export const loadNotifications = async () => {
-  const res = await AsyncStorage.getItem(NOTIFICATIONS_STORAGE_INTERNAL_KEY)
+  const res = await SecureStorage.getItem(NOTIFICATIONS_STORAGE_INTERNAL_KEY)
 
   if (res) return JSON.parse(res)
   else return {}
