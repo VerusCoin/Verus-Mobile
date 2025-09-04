@@ -5,8 +5,11 @@ import {
   seedToPriv
 } from './agama-wallet-lib/keys';
 import { ETH, ERC20, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from './constants/intervalConstants';
+
+//import VerusLightClient from 'react-native-verus-light-client'
+import { Tools } from 'react-native-verus'
+
 import { SigningKey, ethers } from 'ethers';
-import VerusLightClient from 'react-native-verus-light-client'
 import {
   KEY_DERIVATION_VERSION,
 } from "../../env/index";
@@ -15,12 +18,20 @@ import { networks } from "@bitgo/utxo-lib"
 import { prefixHex0x } from './stringUtils';
 
 const deriveLightwalletdKeyPair = async (seed) => {
+  let extendedSpendingKey = "";
   const spendingKey = await parseDlightSeed(seed);
+  if (isDlightSpendingKey(seed)) {
+    //console.warn("seed is spending key! (" + seed + ")");
+    extendedSpendingKey = await Tools.bech32Decode(seed);
+    seed = "";
+  }
+  const viewingKey = await Tools.deriveViewingKey(extendedSpendingKey, seed);
+  //console.warn("Resulting viewingkey(" + viewingKey + ")");
 
   return {
     pubKey: null,
     privKey: spendingKey,
-    viewingKey: await VerusLightClient.deriveViewingKey(spendingKey),
+    viewingKey: viewingKey,
     addresses: [],
   };
 };
@@ -108,11 +119,12 @@ export const deriveKeyPairV1 = async (seed, coinObj, channel) => {
 export const deriveKeypairV0 = async (seed, coinObj, channel) => {
   if (channel === DLIGHT_PRIVATE) {
     const spendingKey = await parseDlightSeed(seed)
+    const viewKey = await Tools.deriveViewingKey(seed);
 
     return {
       pubKey: null,
       privKey: spendingKey,
-      viewingKey: await VerusLightClient.deriveViewingKey(spendingKey),
+      viewingKey: viewKey,
       addresses: [],
     };
   } else {
@@ -158,20 +170,37 @@ export const deriveKeyPair = async (seed, coinObj, channel, version = KEY_DERIVA
 }
 
 export const isDlightSpendingKey = (seed) => {
-  return seed.startsWith('secret-extended-key-main')
+  //console.warn("isDlightSpendingKey: " + seed);
+  return (seed.startsWith('secret-extended-key-main'))
 }
 
 export const parseDlightSeed = async (seed) => {
-  if (isDlightSpendingKey(seed)) return seed
+  //console.log("parseDlightSeed called!")
+
+  if (isDlightSpendingKey(seed)) {
+    const spendkey = await Tools.bech32Decode(seed);
+    return seed;
+  }
   
   try {
-    const keys = await VerusLightClient.deriveSpendingKeys(seed, true, 1)
-    return keys[0]
+    const viewkey = await Tools.deriveViewingKey("", seed)
+    //console.log("Viewkey(" + viewkey + ")")
+
+    const saplingAddress = await Tools.deriveShieldedAddress("", seed)
+    //console.log("deriveShieldedAddress(" + saplingAddressFromView + ")")
+
+    const isValid = await Tools.isValidAddress(saplingAddress)
+    //console.log("isValidAddress(" + isValid + ")");
+
+    const saplingSpendKey = await Tools.deriveSaplingSpendingKey(seed)
+    //console.log("SaplingSpendingKey(" + saplingSpendKey + ")");
+
+    return saplingSpendKey
   } catch(e) { throw e }
 }
 
-export const dlightSeedToBytes = (seed) => {
-  return VerusLightClient.deterministicSeedBytes(seed)
+export const dlightSeedToBytes = async (seed) => {
+  return await Tools.deterministicSeedBytes(seed);
 }
 
 export const isSeedPhrase = (seed, minWordLength = 12) => {

@@ -1,7 +1,26 @@
-import { makeDlightRequest } from '../callCreators'
-import { DLIGHT_INFO } from '../../../../constants/dlightConstants'
+import { getSynchronizerInstance } from 'react-native-verus'
+import { createJsonRpcResponse } from './jsonResponse'
 
 // Get the syncing status/information about a blockchain
 export const getInfo = (coinId, accountHash, coinProto) => {
-  return makeDlightRequest(coinId, accountHash, coinProto, 0, DLIGHT_INFO, [])
-}
+  const synchronizer = getSynchronizerInstance(coinId, coinId)
+  return new Promise((resolve, reject) => {
+    synchronizer.getInfo(coinId)
+    .then(res => {
+      if (res.error != null) {
+        reject(
+          new ApiException(
+            res.error.message,
+            res.error.data,
+            coinId,
+            DLIGHT_PRIVATE,
+            res.error.code
+          )
+        );
+      } else {
+        result = createJsonRpcResponse(0, res, res.error)
+        resolve(result);
+      }
+    })
+  })
+};

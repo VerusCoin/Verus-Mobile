@@ -1,31 +1,64 @@
-import VerusLightClient from 'react-native-verus-light-client'
+import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, deleteWallet, Tools } from 'react-native-verus'
+import { VRSC_SAPLING_ACTIVATION_HEIGHT } from '../../../../constants/constants'
+import {ApiException} from '../../../errors/apiError'
+import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
 
 /**
  * Initializes a wallet for the first time
  * @param {String} coinId The chainticker to create a light wallet client for
  * @param {String} coinProto The protocol the coin is based on (e.g. 'btc' || 'vrsc')
+ * @param {String} accountHash The account hash of the user account to create the wallet for
  * @param {String} host The host address for the lightwalletd server to connect to
  * @param {Integer} port The port of the lightwalletd server to connect to
- * @param {String} accountHash The account hash of the user account to create the wallet for
  * @param {Integer} numAddresses The number of addresses (address accounts) to initialize this wallet with
- * @param {String[]} viewingKeys The viewing keys for this wallet (array of viewing keys with indices matching numAddresses)
- * @param {Integer} birthday (optional) The last known blockheight the wallet was created on 
+ * @param {String} seed The HDSeed for the wallet in question
  */
-export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, viewingKeys, birthday = 0) => {
-  try {
-    return await VerusLightClient.createWallet(
-      coinId,
-      coinProto,
-      accountHash,
-      host,
-      port,
-      numAddresses,
-      viewingKeys,
-      birthday
-    );
-  } catch (error) {
-    throw error
+//export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, viewingKeys, birthday = 0) => {
+export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed, extsk) => {
+
+     try {
+       const config: InitializerConfig = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, true);
+       //console.warn("in initializeWallet, after setting config extsk(" + extsk +")")
+       const sync = await makeSynchronizer(config);
+       return sync;
+     } catch (error) {
+       console.warn(error)
+     }
+};
+
+export const setConfig = async (coinId, coinProto, accountHash, host, port, seed, extsk, birthday, newWallet) => {
+  //console.warn("in setConfig extsk(" + extsk + "), coindId(" + coinId +")")
+  if (!extsk) {
+    const config: InitializerConfig = {
+      mnemonicSeed: seed,
+      extsk: extsk,
+      defaultHost: host,
+      defaultPort: port,
+      wif: "",
+      networkName: coinId,
+      alias: coinId,
+      birthdayHeight: birthday,
+      newWallet: newWallet
+    }
+    return config;
+  } else {
+      const config: InitializerConfig = {
+        mnemonicSeed: seed,
+        extsk: await Tools.bech32Decode(extsk),
+        defaultHost: host,
+        defaultPort: port,
+        wif: "",
+        networkName: coinId,
+        alias: coinId,
+        birthdayHeight: birthday,
+        newWallet: newWallet
+      }
+      return config;
   }
+}
+
+export const initConfig = (coinId, coinProto, accountHash, host, port, seed, birthday, newWallet) => {
+  return setConfig(coinId, coinProto, accountHash, host, port, seed, birthday, newWallet)
 }
 
 /**
@@ -34,11 +67,18 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
  * @param {String} coinProto The protocol the coin is based on (e.g. 'btc' || 'vrsc')
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
-export const openWallet = async (coinId, coinProto, accountHash) => {
+export const openWallet = async (coinId, coinProto, accountHash, host, port, seed, extsk) => {
+
+  //TODO: Everything works, despite this, but openWallet is never called due to dlightSockets logic
+  // or something else in initDlight function in LightWalletReduxManager. Since it breaks nothing, I left it be
+  //console.warn(">>>>>> openWalletCalled")
   try {
-    return await VerusLightClient.openWallet(coinId, coinProto, accountHash)
+    const config: InitializerConfig = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, false);
+    const sync = await makeSynchronizer(config);
+    return sync;
+
   } catch (error) {
-    throw error
+    console.warn(error)
   }
 }
 
@@ -48,13 +88,16 @@ export const openWallet = async (coinId, coinProto, accountHash) => {
  * @param {String} coinProto The protocol the coin is based on (e.g. 'btc' || 'vrsc')
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
-export const closeWallet = async (coinId, coinProto, accountHash) => {
-  try {
-    return await VerusLightClient.closeWallet(coinId, coinProto, accountHash)
-  } catch (error) {
-    throw error
-  }
-}
+export const closeWallet = (coinId, accountHash, coinProto) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const synchronizer = getSynchronizerInstance(coinId, coinId);
+      resolve(synchronizer.stop());
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
 
 /**
  * Deletes a wallet by closing it and deleting all of its data 
@@ -62,10 +105,12 @@ export const closeWallet = async (coinId, coinProto, accountHash) => {
  * @param {String} coinProto The protocol the coin is based on (e.g. 'btc' || 'vrsc')
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
-export const deleteWallet = async (coinId, coinProto, accountHash) => {
-  try {
-    return await VerusLightClient.deleteWallet(coinId, coinProto, accountHash)
-  } catch (error) {
-    throw error
-  }
-}
+export const eraseWallet = (coinId, accountHash, coinProto) => {
+  return new Promise(async (resolve, reject) => {
+     try {
+       resolve(deleteWallet(coinId, coinId));
+     } catch (error) {
+       reject(error);
+     }
+  });
+};

@@ -17,7 +17,7 @@ import Colors from "../../globals/colors";
 import { CommonActions } from '@react-navigation/native';
 import { DLIGHT_PRIVATE, ELECTRUM, ETH, WYRE_SERVICE } from "../../utils/constants/intervalConstants";
 import { Card, Paragraph, Title, Button } from 'react-native-paper'
-import { deriveKeyPair, dlightSeedToBytes, isSeedPhrase } from "../../utils/keys";
+import { deriveKeyPair, dlightSeedToBytes, isDlightSpendingKey } from "../../utils/keys";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import { coinsList } from "../../utils/CoinData/CoinsList";
 
@@ -129,7 +129,7 @@ class DisplaySeed extends Component {
 
     switch (key) {
       case DLIGHT_PRIVATE:
-        return Buffer.from(await dlightSeedToBytes(seed)).toString('hex');
+        return (await dlightSeedToBytes(seed));
       case ETH:
         return (await deriveKeyPair(
           seed,
@@ -177,7 +177,7 @@ class DisplaySeed extends Component {
                     </View>
                     {data.showDerivedKeys && <>
                       {
-                        ((key === DLIGHT_PRIVATE && isSeedPhrase(seeds[key])) ||
+                        ((key === DLIGHT_PRIVATE && !isDlightSpendingKey(seeds[key])) ||
                           key === ETH ||
                           key === ELECTRUM) && (
                           <Button onPress={() => this.toggleDerived(key, coinsList.VRSC)}>

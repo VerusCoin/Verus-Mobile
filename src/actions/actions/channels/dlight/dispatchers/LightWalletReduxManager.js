@@ -1,6 +1,9 @@
 import Store from '../../../../../store/index'
+import { Tools } from 'react-native-verus'
 import {
+  setConfig,
   initializeWallet,
+  eraseWallet,
   openWallet,
   closeWallet,
   deleteWallet,
@@ -8,6 +11,7 @@ import {
   stopSync,
   getAddresses
 } from '../../../../../utils/api/channels/dlight/callCreators'
+import { isDlightSpendingKey } from '../../../../../utils/keys'
 import { DEFAULT_PRIVATE_ADDRS } from '../../../../../utils/constants/constants'
 import { resolveSequentially } from '../../../../../utils/promises'
 import { canRetryDlightInitialization, blockchainQuitError } from './AlertManager'
@@ -19,7 +23,7 @@ import {
   INIT_DLIGHT_CHANNEL_START,
   CLOSE_DLIGHT_CHANNEL,
 } from "../../../../../utils/constants/storeType";
-import { requestViewingKey } from '../../../../../utils/auth/authBox'
+import { requestViewingKey, requestSeeds } from '../../../../../utils/auth/authBox'
 import { DLIGHT_PRIVATE } from '../../../../../utils/constants/intervalConstants'
 
 // Initializes dlight wallet by either creating a backend native wallet and opening it or just opening it
@@ -59,26 +63,42 @@ export const initDlightWallet = async (coinObj) => {
       if (lightWalletEndpointArr[1] == null || isNaN(lightWalletEndpointArr[1])) 
         throw new Error(id + " lightwallet was requested with port " + lightWalletEndpointArr[1], " this is not a valid port.")
 
-      initializationPromises = [
-        initializeWallet(
-          id,
-          proto,
-          accountHash,
-          lightWalletEndpointArr[0],
-          Number(lightWalletEndpointArr[1]),
-          DEFAULT_PRIVATE_ADDRS,
-          [await requestViewingKey(coinObj.id, DLIGHT_PRIVATE)]
-        ),
-        openWallet(id, proto, accountHash),
-        startSync(id, proto, accountHash),
-        getAddresses(id, accountHash, proto),
-      ];
+      const seed = (await requestSeeds())[DLIGHT_PRIVATE];
+      let mnemonicSeed = "";
+      let extsk = "";
 
-    } else if (dlightSockets[id] === false) {
+      if (isDlightSpendingKey(seed)) {
+        extsk = seed;
+      } else {
+        mnemonicSeed = seed;
+      }
+
+      //console.warn("LightWalletManager: seed = " + seed)
       initializationPromises = [
-        openWallet(id, proto, accountHash),
-        startSync(id, proto, accountHash),
-        getAddresses(id, accountHash, proto)
+          await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), mnemonicSeed, extsk),
+          startSync(id, proto, accountHash),
+          getAddresses(id, accountHash, proto)
+      ];
+    } else if (dlightSockets[id] === false) {
+      const lightWalletEndpointArr = dlight_endpoints[0].split(':')
+
+      if (lightWalletEndpointArr[1] == null || isNaN(lightWalletEndpointArr[1]))
+        throw new Error(id + " lightwallet was requested with port " + lightWalletEndpointArr[1], " this is not a valid port.")
+
+      const seed = (await requestSeeds())[DLIGHT_PRIVATE];
+      let mnemonicSeed = "";
+      let extsk = "";
+
+      if (isDlightSpendingKey(seed)) {
+        extsk = seed;
+      } else {
+        mnemonicSeed = seed;
+      }
+
+      initializationPromises = [
+          await openWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), mnemonicSeed, extsk),
+          startSync(id, proto, accountHash),
+          getAddresses(id, accountHash, proto)
       ]
     } else {
       throw new Error(id + " is already initialized and connected in lightwalletd mode. Cannot intialize and connect a coin twice.")
@@ -102,7 +122,7 @@ export const initDlightWallet = async (coinObj) => {
 
       dispatch({
         type: SET_ADDRESSES,
-        payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: res.pop().result },
+        payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: [res.pop().result]  }
       });
 
       resolve()
@@ -136,7 +156,7 @@ export const initDlightWallet = async (coinObj) => {
 }
 
 // Closes and optionally deletes a dlightWallet
-export const closeDlightWallet = (coinObj, clearDb) => {
+export const closeDlightWallet = async (coinObj, clearDb) => {
   const { dispatch, getState } = Store
   const State = getState()
 
@@ -153,13 +173,18 @@ export const closeDlightWallet = (coinObj, clearDb) => {
   try {
     if (dlightSockets[id] === true) {
       if (dlightSyncing[id] === true) {
-        closePromises.push(stopSync(id, proto, accountHash))
-      } 
-
-      closePromises.push(closeWallet(id, proto, accountHash))
+        //closePromises.push(stopSync(id, proto, accountHash))
+      }
 
       if (clearDb) {
-        closePromises.push(deleteWallet(id, proto, accountHash))
+        closePromises = [
+          closeWallet(id, proto, accountHash),
+          eraseWallet(id, proto, accountHash)
+        ]
+      } else {
+         closePromises = [
+           closeWallet(id, proto, accountHash)
+         ]
       }
     } else  {
       throw new Error(id + "'s dlight wallet cannot be stopped if it was never started.")
@@ -187,7 +212,7 @@ export const closeDlightWallet = (coinObj, clearDb) => {
       resolve()
     })
     .catch(err => {
-      console.warn(err)
+      //console.warn(err)
 
       blockchainQuitError(id)
       .then(canRetry => {

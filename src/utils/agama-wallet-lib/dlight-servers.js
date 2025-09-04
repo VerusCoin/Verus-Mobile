@@ -1,5 +1,5 @@
 let dlightServers = {
-  vrsc: ['lightwallet.verus.services:8120'],
+  vrsc: ['lightwalletd.whobiz.dev:443'],
   zec: ['lightwalletd.z.cash:9067'],
   zectest: ['lightwalletd.testnet.z.cash:9067']
 };
