@@ -174,10 +174,14 @@ target 'verusmobile' do
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
 
-        if target.name == 'RCT-Folly'
-          config.build_settings['OTHER_CPLUSPLUSFLAGS'] ||= ['']
-          config.build_settings['OTHER_CPLUSPLUSFLAGS'] << '-D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION'
+        if target.name.include?('RCT-Folly')
+           config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+           config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << '_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION=1'
         end
+        #if target.name == 'RCT-Folly'
+        #  config.build_settings['OTHER_CPLUSPLUSFLAGS'] ||= ['']
+        #  config.build_settings['OTHER_CPLUSPLUSFLAGS'] << '-D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION'
+        #end
 
 #        if target.name == 'ZcashLightClientKit'
 #           config.build_settings['ZCASH_NETWORK_ENVIRONMENT'] = ENV["ZCASH_NETWORK_ENVIRONMENT"]
