@@ -26,13 +26,13 @@ const deriveLightwalletdKeyPair = async (seed) => {
     seed = "";
   }
   console.warn("seed is NOT spending key! (" + seed + ")");
-//  const viewingKey = await Tools.deriveViewingKey(extendedSpendingKey, seed);
-  //console.warn("Resulting viewingkey(" + viewingKey + ")");
+  const viewingKey = await Tools.deriveViewingKey(extendedSpendingKey, seed);
+  console.warn("Resulting viewingkey(" + viewingKey + ")");
 
   return {
     pubKey: null,
     privKey: spendingKey,
-    viewingKey: null,
+    viewingKey: viewingKey,
     addresses: [],
   };
 };
@@ -184,17 +184,18 @@ export const parseDlightSeed = async (seed) => {
   }
   
   try {
-    //const viewkey = await Tools.deriveViewingKey("", seed)
-    //console.log("Viewkey(" + viewkey + ")")
+    const viewkey = await Tools.deriveViewingKey("", seed)
+    console.warn("Viewkey(" + viewkey + ")")
 
+    console.warn("before deriveShieldedAddress!");
     const saplingAddress = await Tools.deriveShieldedAddress("", seed)
-    //console.log("deriveShieldedAddress(" + saplingAddressFromView + ")")
+    console.warn("deriveShieldedAddress(" + saplingAddress + ")")
 
     const isValid = await Tools.isValidAddress(saplingAddress)
-    //console.log("isValidAddress(" + isValid + ")");
+    console.warn("isValidAddress(" + isValid + ")");
 
     const saplingSpendKey = await Tools.deriveSaplingSpendingKey(seed)
-    //console.log("SaplingSpendingKey(" + saplingSpendKey + ")");
+    console.warn("SaplingSpendingKey(" + saplingSpendKey + ")");
 
     return saplingSpendKey
   } catch(e) { throw e }

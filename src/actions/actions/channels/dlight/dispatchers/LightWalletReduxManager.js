@@ -178,8 +178,8 @@ export const closeDlightWallet = async (coinObj, clearDb) => {
 
       if (clearDb) {
         closePromises = [
-          closeWallet(id, proto, accountHash),
-          eraseWallet(id, proto, accountHash)
+          eraseWallet(id, proto, accountHash),
+          closeWallet(id, proto, accountHash)
         ]
       } else {
          closePromises = [
