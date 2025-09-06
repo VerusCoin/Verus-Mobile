@@ -179,7 +179,7 @@ export const parseDlightSeed = async (seed) => {
   console.warn("parseDlightSeed called!")
 
   if (isDlightSpendingKey(seed)) {
-    const spendkey = await Tools.bech32Decode(seed);
+//    const spendkey = await Tools.bech32Decode(seed);
     return seed;
   }
   
