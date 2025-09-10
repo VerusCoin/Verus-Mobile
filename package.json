@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@bitgo/utxo-lib": "git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus",
-    "@noble/curves": "1.2.0",
+    "@noble/curves": "1.9.7",
     "@react-native-async-storage/async-storage": "2.0.0",
     "@react-native-camera-roll/camera-roll": "5.0.4",
     "@react-native-community/cli": "8.0.4",
@@ -48,6 +48,7 @@
     "ethereumjs-util": "6.0.0",
     "ethers": "git+https://github.com/VerusCoin/ethers.js.git",
     "events": "1.0.0",
+    "fast-text-encoding": "1.0.6",
     "https-browserify": "0.0.0",
     "immutable": "4.0.0-rc.12",
     "lodash": "4.17.21",
