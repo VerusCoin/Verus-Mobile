@@ -4,7 +4,7 @@ import { createJsonRpcResponse } from './jsonResponse'
 
 // Lists addresses associated with a light daemon wallet
 export const getAddresses = async (coinId, accountHash, coinProto) => {
-  const synchronizer = await getSynchronizerInstance(coinId, coinId)
+  const synchronizer = await getSynchronizerInstance(accountHash, coinId)
   return new Promise((resolve, reject) => {
     synchronizer.deriveSaplingAddress()
     .then(res => {   
