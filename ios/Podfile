@@ -64,7 +64,6 @@ $dynamic_frameworks = [
   'CNIOBoringSSLShims',
   'SwiftNIOTransportServices',
   'SwiftNIOFoundationCompat',
-  'SwiftProtobuf',
   'CGRPCZlib',
   'SQLite.swift',
   'SwiftNIOCore',
