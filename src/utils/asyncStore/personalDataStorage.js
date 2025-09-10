@@ -1,11 +1,11 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PERSONAL_DATA_STORAGE_INTERNAL_KEY } from '../../../env/index'
+import { SecureStorage } from '../keychain/secureStore';
 
 export const storePersonalData = (data) => {
   if (typeof data !== 'object') throw new Error(`Personal data store function expected object, received ${typeof data}`)
 
   return new Promise((resolve, reject) => {
-    AsyncStorage.setItem(PERSONAL_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(data))
+    SecureStorage.setItem(PERSONAL_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(data))
       .then(() => {
         resolve(data);
       })
@@ -15,7 +15,7 @@ export const storePersonalData = (data) => {
 
 export const loadPersonalData = () => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem(PERSONAL_DATA_STORAGE_INTERNAL_KEY)
+    SecureStorage.getItem(PERSONAL_DATA_STORAGE_INTERNAL_KEY)
       .then(res => {
         if (!res) {
           resolve({});
@@ -30,7 +30,7 @@ export const loadPersonalData = () => {
 
 export const clearAllPersonalData = () => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.removeItem(PERSONAL_DATA_STORAGE_INTERNAL_KEY)
+    SecureStorage.removeItem(PERSONAL_DATA_STORAGE_INTERNAL_KEY)
       .then(() => {
         resolve();
       })

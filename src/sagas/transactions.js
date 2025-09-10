@@ -13,7 +13,7 @@ import { selectTransactions } from '../selectors/transactions';
 import { getStoredBlockHeight, storeBlockHeight } from '../utils/asyncStore/transactionsStorage';
 import { SET_TRANSACTIONS } from '../utils/constants/storeType';
 
-const crypto = require('react-native-crypto');
+const crypto = require('react-native-quick-crypto');
 
 const sha256Hash = (memoData) => crypto.createHash('sha256')
   .update(memoData)
