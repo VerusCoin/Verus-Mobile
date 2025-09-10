@@ -132,7 +132,7 @@ const WalletSettings = ({ navigation, dispatch, activeCoinsForUser }) => {
         resetToScreen("SecureLoading", data)
       }
     })
-  }, [canClearCache, dispatch, resetToScreen]);
+  }, [canToggleKeychainEncryption, dispatch, resetToScreen]);
 
   const renderSettingsList = () => {
     const electrumCoins = activeCoinsForUser.filter((coin) => 
