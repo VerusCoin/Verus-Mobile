@@ -16,6 +16,7 @@ const IGNORED_LOGS = [
 
 LogBox.ignoreLogs(IGNORED_LOGS);
 
+import 'fast-text-encoding';
 import './shims/crypto.js';
 import './shims/buffer.js';
 import App from './App';
