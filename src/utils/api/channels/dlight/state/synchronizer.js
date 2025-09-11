@@ -1,4 +1,4 @@
-import { getSynchronizerInstance, InitializerConfig } from 'react-native-verus'
+import { getSynchronizerInstance } from 'react-native-verus'
 import Store from '../../../../../store/index';
 import {
 DLIGHT_BALANCE_UPDATED,
@@ -12,7 +12,7 @@ DLIGHT_SYNC_UPDATED
 // and start syncing it to the blockchain
 export const startSync = async (coinId, coinProto, accountHash) => {
   const { dispatch } = Store
-  const synchronizer = getSynchronizerInstance(coinId, coinId)
+  const synchronizer = getSynchronizerInstance(accountHash, coinId)
       const subscriptions = {
         onBalanceChanged: (balance) => {
           console.debug("Balance Updated:", balance);
@@ -39,6 +39,6 @@ export const startSync = async (coinId, coinProto, accountHash) => {
 // and user's account hash to identify a light client wallet
 // and stop it syncing to the blockchain
 export const stopSync = async (coinId, coinProto, accountHash) => {
-  const synchronizer = await getSynchronizerInstance(coinId, coinId)
+  const synchronizer = await getSynchronizerInstance(accountHash, coinId)
   return await synchronizer.stop();
 }

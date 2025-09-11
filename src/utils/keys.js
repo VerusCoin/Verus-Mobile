@@ -184,18 +184,18 @@ export const parseDlightSeed = async (seed) => {
   }
   
   try {
-    const viewkey = await Tools.deriveViewingKey("", seed)
-    console.warn("Viewkey(" + viewkey + ")")
+    //const viewkey = await Tools.deriveViewingKey("", seed)
+    //console.warn("Viewkey(" + viewkey + ")")
 
-    console.warn("before deriveShieldedAddress!");
-    const saplingAddress = await Tools.deriveShieldedAddress("", seed)
-    console.warn("deriveShieldedAddress(" + saplingAddress + ")")
+   // console.warn("before deriveShieldedAddress!");
+ //   const saplingAddress = await Tools.deriveShieldedAddress("", seed)
+//    console.warn("deriveShieldedAddress(" + saplingAddress + ")")
 
-    const isValid = await Tools.isValidAddress(saplingAddress)
-    console.warn("isValidAddress(" + isValid + ")");
+  //  const isValid = await Tools.isValidAddress(saplingAddress)
+  //  console.warn("isValidAddress(" + isValid + ")");
 
     const saplingSpendKey = await Tools.deriveSaplingSpendingKey(seed)
-    console.warn("SaplingSpendingKey(" + saplingSpendKey + ")");
+    //console.warn("SaplingSpendingKey(" + saplingSpendKey + ")");
 
     return saplingSpendKey
   } catch(e) { throw e }

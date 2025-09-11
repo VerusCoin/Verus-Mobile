@@ -6,9 +6,6 @@ import {
   eraseWallet,
   openWallet,
   closeWallet,
-  deleteWallet,
-  startSync,
-  stopSync,
   getAddresses
 } from '../../../../../utils/api/channels/dlight/callCreators'
 import { isDlightSpendingKey } from '../../../../../utils/keys'
@@ -76,8 +73,8 @@ export const initDlightWallet = async (coinObj) => {
       //console.warn("LightWalletManager: seed = " + seed)
       initializationPromises = [
           await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), mnemonicSeed, extsk),
-          startSync(id, proto, accountHash),
-          getAddresses(id, accountHash, proto)
+          //startSync(id, proto, accountHash),
+          getAddresses(extsk, mnemonicSeed, id)
       ];
     } else if (dlightSockets[id] === false) {
       const lightWalletEndpointArr = dlight_endpoints[0].split(':')
@@ -97,8 +94,8 @@ export const initDlightWallet = async (coinObj) => {
 
       initializationPromises = [
           await openWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), mnemonicSeed, extsk),
-          startSync(id, proto, accountHash),
-          getAddresses(id, accountHash, proto)
+          //startSync(id, proto, accountHash),
+          getAddresses(extsk, seed, id)
       ]
     } else {
       throw new Error(id + " is already initialized and connected in lightwalletd mode. Cannot intialize and connect a coin twice.")
@@ -172,19 +169,14 @@ export const closeDlightWallet = async (coinObj, clearDb) => {
 
   try {
     if (dlightSockets[id] === true) {
-      if (dlightSyncing[id] === true) {
-        //closePromises.push(stopSync(id, proto, accountHash))
-      }
-
       if (clearDb) {
         closePromises = [
-          eraseWallet(id, proto, accountHash),
-          closeWallet(id, proto, accountHash)
+          eraseWallet(id, proto, accountHash)
         ]
       } else {
-         closePromises = [
-           closeWallet(id, proto, accountHash)
-         ]
+        closePromises = [
+          closeWallet(id, proto, accountHash)
+        ]
       }
     } else  {
       throw new Error(id + "'s dlight wallet cannot be stopped if it was never started.")
