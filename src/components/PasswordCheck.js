@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { Button, Dialog, Portal } from 'react-native-paper';
 import { checkPinForUser } from '../utils/asyncStore/asyncStore';
-import { getBiometricPassword, getSupportedBiometryType } from '../utils/keychain/keychain';
+import { getSupportedBiometryType } from '../utils/keychain/keychain';
 import PasswordInput from './PasswordInput';
+import { getBiometricPassword } from '../utils/keychain/biometrics';
 
 const PasswordCheck = (props) => {
   const { visible, title, submit, cancel, userName, account, allowBiometry } = props;

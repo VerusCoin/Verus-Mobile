@@ -40,7 +40,7 @@ const {
   readInput,
   readOutput,
 } = require('./deprecatedTxDecoderLib');
-const crypto = require('react-native-crypto');
+const crypto = require('react-native-quick-crypto');
 const _sha256 = (data) => {
   return crypto.createHash('sha256').update(data).digest();
 };
