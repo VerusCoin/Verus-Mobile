@@ -8,8 +8,9 @@ import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert
 import Colors from '../../../../globals/colors';
 import styles from "../../../../styles";
 import { SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT, SEND_MODAL_USER_TO_AUTHENTICATE } from "../../../../utils/constants/sendModal";
-import { getBiometricPassword, getSupportedBiometryType } from '../../../../utils/keychain/keychain';
+import { getSupportedBiometryType } from '../../../../utils/keychain/keychain';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
+import { getBiometricPassword } from '../../../../utils/keychain/biometrics';
 
 const AuthenticateUserPassword = props => {
   const [password, setPassword] = useState("")

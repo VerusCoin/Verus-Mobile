@@ -1,12 +1,12 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CONTRACT_DEFINITION_STORAGE_INTERNAL_KEY } from '../../../env/index'
+import { SecureStorage } from '../keychain/secureStore';
 
 export const storeContractDefinitions = async (contractDefinitions) => {
-  return await AsyncStorage.setItem(CONTRACT_DEFINITION_STORAGE_INTERNAL_KEY, JSON.stringify(contractDefinitions))
+  return await SecureStorage.setItem(CONTRACT_DEFINITION_STORAGE_INTERNAL_KEY, JSON.stringify(contractDefinitions))
 };
 
 export const getStoredContractDefinitions = async () => {
-  const res = await AsyncStorage.getItem(CONTRACT_DEFINITION_STORAGE_INTERNAL_KEY);
+  const res = await SecureStorage.getItem(CONTRACT_DEFINITION_STORAGE_INTERNAL_KEY);
 
   if (!res) return {};
   else return JSON.parse(res);

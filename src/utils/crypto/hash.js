@@ -1,6 +1,6 @@
 import { reverse } from '../buffer';
 
-const crypto = require('react-native-crypto');
+const crypto = require('react-native-quick-crypto');
 const Buffer = require('safe-buffer').Buffer;
 const bitcoin = require('bitgo-utxo-lib')
 
