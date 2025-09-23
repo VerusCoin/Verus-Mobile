@@ -11,6 +11,7 @@ import {List, Searchbar} from 'react-native-paper';
 import Styles from '../../../../../styles/index';
 import { blocksToTime } from '../../../../../utils/math';
 import { getCoinLogo } from '../../../../../utils/CoinData/CoinData';
+import { toLowerCaseCLocale } from 'verus-typescript-primitives';
 
 const PbaasPreconvertServiceOverview = props => {
   const { navigation, currenciesInPreconvert, refreshCurrenciesInPreconvert } = props;
@@ -36,8 +37,8 @@ const PbaasPreconvertServiceOverview = props => {
         const {currencydefinition} = item;
         const {fullyqualifiedname, currencyid} = currencydefinition;
 
-        const queryLc = query.toLowerCase();
-        const fqnLc = fullyqualifiedname.toLowerCase();
+        const queryLc = toLowerCaseCLocale(query);
+        const fqnLc = toLowerCaseCLocale(fullyqualifiedname);
         const currencyIdLc = currencyid.toLowerCase();
 
         return (
