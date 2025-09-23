@@ -116,7 +116,7 @@
     "verus-pay-utils": "git+https://github.com/VerusCoin/verus-pay-utils.git",
     "verus-typescript-primitives": "git+https://github.com/VerusCoin/verus-typescript-primitives.git",
     "verus-zkedid-utils": "git+https://github.com/VerusCoin/verus-zkedid-utils.git",
-    "verusd-rpc-ts-client": "git+https://github.com/VerusCoin/verusd-rpc-ts-client",
+    "verusd-rpc-ts-client": "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git",
     "verusid-ts-client": "git+https://github.com/VerusCoin/verusid-ts-client.git",
     "vm-browserify": "0.0.4",
     "wif": "2.0.6"
