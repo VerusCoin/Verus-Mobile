@@ -4,6 +4,7 @@ import { List, Text } from 'react-native-paper';
 import { RenderCircleCoinLogo } from '../utils/CoinData/Graphics';
 import Colors from '../globals/colors';
 import { useNavigation } from '@react-navigation/native';
+import { toLowerCaseCLocale } from 'verus-typescript-primitives';
 
 const SearchableList = (props) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,8 +16,8 @@ const SearchableList = (props) => {
   const filteredData = useMemo(() => {
     return items.filter(item =>
       (
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+        toLowerCaseCLocale(item.title).includes(toLowerCaseCLocale(searchQuery)) || 
+        toLowerCaseCLocale(item.description).includes(toLowerCaseCLocale(searchQuery))
       )
     );
   }, [searchQuery, items]);
