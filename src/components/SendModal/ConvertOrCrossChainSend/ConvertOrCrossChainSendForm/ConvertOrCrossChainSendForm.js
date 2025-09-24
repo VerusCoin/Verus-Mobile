@@ -37,7 +37,7 @@ import { getCurrency } from "../../../../utils/api/channels/verusid/callCreators
 import selectAddresses from "../../../../selectors/address";
 import MissingInfoRedirect from "../../../MissingInfoRedirect/MissingInfoRedirect";
 import { getInfo, preflightCurrencyTransfer } from "../../../../utils/api/channels/vrpc/callCreators";
-import { DEST_ETH, DEST_ID, DEST_PKH, TransferDestination, fromBase58Check, toIAddress } from "verus-typescript-primitives";
+import { DEST_ETH, DEST_ID, DEST_PKH, TransferDestination, fromBase58Check, toIAddress, toLowerCaseCLocale } from "verus-typescript-primitives";
 import { CoinDirectory } from "../../../../utils/CoinData/CoinDirectory";
 import { ethers } from "ethers";
 import CoreSendFormModule from "../../../FormModules/CoreSendFormModule";
@@ -182,8 +182,8 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
     if (text.length == 0) return base;
     else return base.filter(x => {
       for (const keyword of x.keywords) {
-        const keywordLc = keyword.toLowerCase();
-        const textLc = text.trim().toLowerCase();
+        const keywordLc = toLowerCaseCLocale(keyword);
+        const textLc = toLowerCaseCLocale(text.trim());
 
         if (keywordLc.includes(textLc) || textLc.includes(keywordLc)) {
           return true;
@@ -313,8 +313,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
             return (
               x.via != null &&
               (x.destination.currencyid === destinationCurrency ||
-                destinationCurrency.toLowerCase() ===
-                  x.destination.fullyqualifiedname.toLowerCase())
+                toLowerCaseCLocale(destinationCurrency) === toLowerCaseCLocale(x.destination.fullyqualifiedname))
             );
           } else return x.via != null;
         }).map((path, index) => {
@@ -347,11 +346,9 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
           if (isConversion) {
             const destinationCurrency = sendModal.data[SEND_MODAL_CONVERTTO_FIELD];
             const destinationCurrencyMatch = !x.ethdest && (x.destination.currencyid === destinationCurrency ||
-              destinationCurrency.toLowerCase() ===
-                x.destination.fullyqualifiedname.toLowerCase())
+              toLowerCaseCLocale(destinationCurrency) === toLowerCaseCLocale(x.destination.fullyqualifiedname))
             const destinationTokenMatch = x.ethdest && (x.destination.address === destinationCurrency ||
-              destinationCurrency.toLowerCase() ===
-                x.destination.address.toLowerCase())
+              toLowerCaseCLocale(destinationCurrency) === toLowerCaseCLocale(x.destination.address))
             
             return (
               x.via != null &&
@@ -958,7 +955,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
       if (
         coinObj.proto === 'vrsc' &&
           output.exportto != null &&
-          (output.exportto.toLowerCase() === toIAddress(VETH, coinObj.testnet ? 'VRSCTEST' : 'VRSC').toLowerCase() || output.exportto.toLowerCase() === 'veth')
+          (toLowerCaseCLocale(output.exportto) === toIAddress(VETH, coinObj.testnet ? 'VRSCTEST' : 'VRSC').toLowerCase() || toLowerCaseCLocale(output.exportto) === 'veth')
       ) {
         try {
           const provider = getWeb3ProviderForNetwork(

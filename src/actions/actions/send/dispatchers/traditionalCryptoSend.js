@@ -6,6 +6,7 @@ import { extractIdentityAddress } from "../../../../utils/api/channels/verusid/c
 import { send } from "../../../../utils/api/routers/send";
 import { preflightSend } from "../../../../utils/api/routers/preflightSend";
 import store from "../../../../store";
+import { toLowerCaseCLocale } from "verus-typescript-primitives";
 
 export class TraditionalCryptoSendFee {
   constructor (fee, isPerByte = false) {
@@ -33,8 +34,8 @@ export const traditionalCryptoSend = async (
   const activeUser = state.authentication.activeAccount;
   const coinSettings = state.settings.coinSettings;
 
-  const network = networks[coinObj.id.toLowerCase()]
-    ? networks[coinObj.id.toLowerCase()]
+  const network = networks[toLowerCaseCLocale(coinObj.id)]
+    ? networks[toLowerCaseCLocale(coinObj.id)]
     : networks["default"];
 
   let verifyMerkle, verifyTxid;
