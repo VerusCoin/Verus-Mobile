@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WIDGET_STORAGE_INTERNAL_KEY } from '../../../env/index'
+import { SecureStorage } from '../keychain/secureStore';
 
 export const storeWidgets = async data => {
   if (typeof data !== 'object') {
@@ -8,7 +8,7 @@ export const storeWidgets = async data => {
     );
   }
 
-  await AsyncStorage.setItem(
+  await SecureStorage.setItem(
     WIDGET_STORAGE_INTERNAL_KEY,
     JSON.stringify(data),
   )
@@ -17,7 +17,7 @@ export const storeWidgets = async data => {
 };
 
 export const loadWidgets = async () => {
-  const res = await AsyncStorage.getItem(WIDGET_STORAGE_INTERNAL_KEY)
+  const res = await SecureStorage.getItem(WIDGET_STORAGE_INTERNAL_KEY)
 
   if (res) return JSON.parse(res)
   else return {}

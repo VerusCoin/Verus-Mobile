@@ -27,7 +27,9 @@ import {
   MINIMUM_GAS_PRICE_GWEI,
   ONE_GWEI_IN_WEI,
   ERC20_SEND_GAS_PRICE_MODIFIER,
-  GAS_PRICE_MODIFIER_DELEGATOR_CONTRACT
+  GAS_PRICE_MODIFIER_DELEGATOR_CONTRACT,
+  BRIDGE_SKIP_APPROVAL_ESTIMATE_GAS_TOKENS,
+  FALLBACK_APPROVAL_GAS_COST
 } from '../../../../constants/web3Constants';
 import { getCurrency, getIdentity } from "../../verusid/callCreators"
 import { getSystemNameFromSystemId } from "../../../../CoinData/CoinData"
@@ -399,11 +401,16 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
     if (coinObj.currency_id !== ETH_CONTRACT_ADDRESS) {
       const contract = Web3Provider.getContract(coinObj.currency_id, null, Web3Provider.InfuraProvider).connect(signer);
 
-      approvalGasFee = (await contract.approve.estimateGas(
-        delegatorContractAddress,
-        coinsToUnits(satsToCoins(BigNumber(satoshis)), coinObj.decimals).toString(),
-        { from: fromAddress, gasLimit: INITIAL_GAS_LIMIT, maxFeePerGas: maxFeePerGas },
-      ))
+      if (!(BRIDGE_SKIP_APPROVAL_ESTIMATE_GAS_TOKENS.some(x => (x.toLowerCase() === coinObj.currency_id.toLowerCase())))) {
+        approvalGasFee = (await contract.approve.estimateGas(
+          delegatorContractAddress,
+          coinsToUnits(satsToCoins(BigNumber(satoshis)), coinObj.decimals).toString(),
+          { from: fromAddress, gasLimit: INITIAL_GAS_LIMIT, maxFeePerGas: maxFeePerGas },
+        ));
+      } else {
+        approvalGasFee = FALLBACK_APPROVAL_GAS_COST;
+      }
+
       approvalGasFee = approvalGasFee + (approvalGasFee / gasFeeModifier);
       gasEst = gasEst + approvalGasFee
     }
