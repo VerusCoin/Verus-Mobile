@@ -5,7 +5,6 @@ import {
 
 import { hashAccountId } from "../crypto/hash";
 import { CHANNELS_NULL_TEMPLATE, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from "../constants/intervalConstants";
-import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import store from '../../store';
 import { setAccounts, updateSessionKey } from '../../actions/actionCreators';
 import { USER_DATA_STORAGE_INTERNAL_KEY } from '../../../env/index';
@@ -14,6 +13,7 @@ import { resetPersonalDataEncryptionForUser, resetServicesStoredEncryptionForUse
 import { removeSessionCredential } from '../keychain/keychain';
 import { initSession } from '../auth/authBox';
 import { SecureStorage } from '../keychain/secureStore';
+import { Alert } from 'react-native';
 
 //Set storage to hold encrypted user data
 export const storeUser = (authData, users) => {
@@ -121,11 +121,11 @@ export const deleteUser = (accountHash) => {
               _users]
             return Promise.all(promiseArr)
           } else {
-            createAlert("Error", "User with hash " + accountHash + " not found");
+            Alert.alert("Error", "User with hash " + accountHash + " not found");
             throw new Error("User with hash " + accountHash + " not found")
           }
         } else {
-          createAlert("Error", "accountHash is null");
+          Alert.alert("Error", "accountHash is null");
           throw new Error("accountHash is null")
         }
       })
@@ -144,7 +144,7 @@ export const resetUserPwd = async (accountHash, newPwd, oldPwd) => {
     let userIndex = users.findIndex(n => n.accountHash === accountHash);
 
     if (accountHash === null || userIndex === -1) {
-      createAlert("Error", `User with ID ${accountHash} not found`);
+      Alert.alert("Error", `User with ID ${accountHash} not found`);
       return false;
     }
 
@@ -156,7 +156,7 @@ export const resetUserPwd = async (accountHash, newPwd, oldPwd) => {
     };
 
     if ((electrum && !decryptedKeys.electrum) || (dlight_private && !decryptedKeys.dlight_private)) {
-      createAlert("Authentication Error", "Incorrect password");
+      Alert.alert("Authentication Error", "Incorrect password");
       return false;
     }
 
@@ -320,24 +320,24 @@ export const checkPinForUser = (pin, userName, alertOnFail = true) => {
                       )
                     );
                   } catch (e) {
-                    createAlert("Authentication Error", "Internal authentication error.");
+                    Alert.alert("Authentication Error", "Internal authentication error.");
                   }
                 }
               }
 
               resolve(_decryptedSeeds);
             } else {
-              if (alertOnFail) createAlert("Authentication Error", "Incorrect password");
+              if (alertOnFail) Alert.alert("Authentication Error", "Incorrect password");
               throw new Error("Incorrect password");
             }
           }
           else {
-            if (alertOnFail) createAlert("Authentication Error", "Please select an existing user")
+            if (alertOnFail) Alert.alert("Authentication Error", "Please select an existing user")
             throw new Error("Please select an existing user");
           }
         }
         else {
-          if (alertOnFail) createAlert("Authentication Error", "Please enter a password")
+          if (alertOnFail) Alert.alert("Authentication Error", "Please enter a password")
           throw new Error("Please enter a password");
         }
       })
