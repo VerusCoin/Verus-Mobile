@@ -1,6 +1,6 @@
 import { pbkdf2 } from '@noble/hashes/pbkdf2';
 import { sha256 } from '@noble/hashes/sha256';
-import crypto from 'react-native-quick-crypto';
+import crypto from 'react-native-crypto';
 import { Buffer } from 'buffer';
 import { randomBytes } from './randomBytes';
 
