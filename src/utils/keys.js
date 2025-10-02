@@ -6,7 +6,6 @@ import {
 } from './agama-wallet-lib/keys';
 import { ETH, ERC20, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from './constants/intervalConstants';
 
-//import VerusLightClient from 'react-native-verus-light-client'
 import { Tools } from 'react-native-verus'
 
 import { SigningKey, ethers } from 'ethers';
@@ -18,21 +17,12 @@ import { networks } from "@bitgo/utxo-lib"
 import { prefixHex0x } from './stringUtils';
 
 const deriveLightwalletdKeyPair = async (seed) => {
-  let extendedSpendingKey = "";
   const spendingKey = await parseDlightSeed(seed);
-  if (isDlightSpendingKey(seed)) {
-    console.warn("seed is spending key! (" + seed + ")");
-    extendedSpendingKey = await Tools.bech32Decode(seed);
-    seed = "";
-  }
-  console.warn("seed is NOT spending key! (" + seed + ")");
-  const viewingKey = await Tools.deriveViewingKey(extendedSpendingKey, seed);
-  console.warn("Resulting viewingkey(" + viewingKey + ")");
 
   return {
     pubKey: null,
     privKey: spendingKey,
-    viewingKey: viewingKey,
+    viewingKey: null, // no longer needed since all functions now take spendkey/seed, and derive view internally
     addresses: [],
   };
 };
@@ -132,18 +122,18 @@ export const deriveKeypairV0 = async (seed, coinObj, channel) => {
     let isWif = false;
     let _seedToWif;
     let keyObj = {};
-  
+
     try {
       bs58check.decode(seed);
       isWif = true;
     } catch (e) {}
-  
+
     if (isWif) {
       _seedToWif = wifToWif(seed, networks[coinObj.bitgojs_network_key]);
     } else {
       _seedToWif = seedToWif(seed, networks[coinObj.bitgojs_network_key], true);
     }
-  
+
     keyObj = {
       pubKey: _seedToWif.pubHex,
       privKey: channel === ETH || channel === ERC20 ? seedToPriv(_seedToWif.priv, 'eth') : _seedToWif.priv,
@@ -153,7 +143,7 @@ export const deriveKeypairV0 = async (seed, coinObj, channel) => {
           : _seedToWif.pub,
       ],
     };
-  
+
     return keyObj;
   }
 }
@@ -171,32 +161,16 @@ export const deriveKeyPair = async (seed, coinObj, channel, version = KEY_DERIVA
 }
 
 export const isDlightSpendingKey = (seed) => {
-  console.warn("isDlightSpendingKey: " + seed);
   return (seed.startsWith('secret-extended-key-main'))
 }
 
 export const parseDlightSeed = async (seed) => {
-  console.warn("parseDlightSeed called!")
-
   if (isDlightSpendingKey(seed)) {
-//    const spendkey = await Tools.bech32Decode(seed);
     return seed;
   }
-  
+
   try {
-    //const viewkey = await Tools.deriveViewingKey("", seed)
-    //console.warn("Viewkey(" + viewkey + ")")
-
-   // console.warn("before deriveShieldedAddress!");
- //   const saplingAddress = await Tools.deriveShieldedAddress("", seed)
-//    console.warn("deriveShieldedAddress(" + saplingAddress + ")")
-
-  //  const isValid = await Tools.isValidAddress(saplingAddress)
-  //  console.warn("isValidAddress(" + isValid + ")");
-
     const saplingSpendKey = await Tools.deriveSaplingSpendingKey(seed)
-    //console.warn("SaplingSpendingKey(" + saplingSpendKey + ")");
-
     return saplingSpendKey
   } catch(e) { throw e }
 }
