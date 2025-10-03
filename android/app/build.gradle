@@ -193,8 +193,6 @@ android {
 
 dependencies {
 
-    //implementation project(':react-native-verus-light-client')
-
     implementation project(':react-native-verus')
 
     // The version of react-native is set by the React Native Gradle Plugin
