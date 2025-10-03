@@ -19,7 +19,9 @@ import {
   UPDATE_ACCOUNT_DISABLED_SERVICES,
   UPDATE_ACCOUNT_TESTNET_OVERRIDES_COMPLETE,
   UPDATE_SESSION_KEY,
-  INIT_INSTANCE_KEY
+  INIT_INSTANCE_KEY,
+  HIDE_SEED_WARNINGS,
+  SET_SHOW_HIDE_SEED_CORRUPTION_SETTING
 } from "../utils/constants/storeType";
 import {
   SERVICES_DISABLED_DEFAULT
@@ -37,13 +39,15 @@ export const authentication = (
       keys: {},
       paymentMethods: {},
       biometry: false,
+      hideSeedWarnings: false,
       keyDerivationVersion: 1,
       disabledServices: SERVICES_DISABLED_DEFAULT,
       testnetOverrides: {}
     },
     signedIn: false,
     selectDefaultAccount: true,
-    authModalUsed: false
+    authModalUsed: false,
+    showHideSeedCorruptionSetting: false
   },
   action
 ) => {
@@ -123,7 +127,8 @@ export const authentication = (
       return {
         ...state,
         activeAccount: null,
-        sessionKey: null
+        sessionKey: null,
+        showHideSeedCorruptionSetting: false
       };
     case SIGN_OUT:
       return {
@@ -136,6 +141,17 @@ export const authentication = (
         activeAccount: { ...state.activeAccount, biometry: action.payload.biometry },
         accounts: action.payload.accounts
       };
+    case HIDE_SEED_WARNINGS:
+      return {
+        ...state,
+        activeAccount: { ...state.activeAccount, hideSeedWarnings: action.payload.hideSeedWarnings },
+        accounts: action.payload.accounts
+      };
+    case SET_SHOW_HIDE_SEED_CORRUPTION_SETTING:
+      return {
+        ...state,
+        showHideSeedCorruptionSetting: action.showHideSeedCorruptionSetting
+      }
     case UPDATE_ACCOUNT_DISABLED_SERVICES:
       return {
         ...state,

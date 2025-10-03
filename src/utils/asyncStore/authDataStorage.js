@@ -6,7 +6,7 @@ import {
 import { hashAccountId } from "../crypto/hash";
 import { CHANNELS_NULL_TEMPLATE, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from "../constants/intervalConstants";
 import store from '../../store';
-import { setAccounts, updateSessionKey } from '../../actions/actionCreators';
+import { setAccounts, setShowHideSeedCorruptionSetting, updateSessionKey } from '../../actions/actionCreators';
 import { USER_DATA_STORAGE_INTERNAL_KEY } from '../../../env/index';
 import { WYRE_SERVICE_ID } from '../constants/services';
 import { resetPersonalDataEncryptionForUser, resetServicesStoredEncryptionForUser } from '../../actions/actionDispatchers';
@@ -14,6 +14,7 @@ import { removeSessionCredential } from '../keychain/keychain';
 import { initSession } from '../auth/authBox';
 import { SecureStorage } from '../keychain/secureStore';
 import { Alert } from 'react-native';
+import { SUSPICIOUS_UNICODE_CHARACTER_TEST } from '../constants/regex';
 
 //Set storage to hold encrypted user data
 export const storeUser = (authData, users) => {
@@ -35,6 +36,7 @@ export const storeUser = (authData, users) => {
       accountHash: hashAccountId(authData.userName),
       encryptedKeys,
       biometry: authData.biometry ? true : false,
+      hideSeedWarnings: !!(authData.hideSeedWarnings),
       keyDerivationVersion:
         authData.keyDerivationVersion == null
           ? 0
@@ -214,6 +216,10 @@ export const setUserBiometry = (accountHash, biometry) => {
   return setUserSetting(accountHash, "biometry", biometry)
 };
 
+export const setUserHideSeedWarnings = (accountHash, hideSeedWarnings) => {
+  return setUserSetting(accountHash, "hideSeedWarnings", hideSeedWarnings)
+};
+
 export const setUserKeyDerivationVersion = (accountHash, keyDerivationVersion) => {
   return setUserSetting(accountHash, "keyDerivationVersion", keyDerivationVersion)
 };
@@ -284,7 +290,7 @@ export const getUsers = () => {
 };
 
 // Check user password
-export const checkPinForUser = (pin, userName, alertOnFail = true) => {
+export const checkPinForUser = (pin, userName, alertOnFail = true, alertOnCorruptedSeed = false) => {
   return new Promise((resolve, reject) => {
     SecureStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(async res => {
@@ -305,9 +311,15 @@ export const checkPinForUser = (pin, userName, alertOnFail = true) => {
               (dlight_private == null || _decryptedSeeds.dlight_private) &&
               (wyre_service == null || _decryptedSeeds.wyre_service)
             ) {
+              let seedPotentiallyCorrupted = false;
+
               for (const channel in _decryptedSeeds) {
                 if (_decryptedSeeds[channel]) {
                   try {
+                    if (alertOnCorruptedSeed) {
+                      seedPotentiallyCorrupted = (SUSPICIOUS_UNICODE_CHARACTER_TEST).test(_decryptedSeeds[channel])
+                    }
+
                     store.dispatch(
                       setAccounts(
                         await addEncryptedKeyToUser(
@@ -323,6 +335,17 @@ export const checkPinForUser = (pin, userName, alertOnFail = true) => {
                     Alert.alert("Authentication Error", "Internal authentication error.");
                   }
                 }
+              }
+
+              if (seedPotentiallyCorrupted) {
+                if (!user.hideSeedWarnings) {
+                  Alert.alert(
+                    "Possible Seed Corruption Detected",
+                    "Non-standard characters were detected in your profile seed.\n\nIf your seed is a standard word-based phrase, or a WIF key, this could indicate that your seed data was corrupted, and may not match your seed backup.\n\nCheck your seed by going into Settings > Profile > Recover Seed. If it does not match your backup, create a new profile from your backup and send any funds on this profile to that new profile.\n\nYou can disable this warning in Profile > Settings."
+                  );
+                }
+
+                store.dispatch(setShowHideSeedCorruptionSetting(true));
               }
 
               resolve(_decryptedSeeds);

@@ -24,6 +24,7 @@ import {
   addEncryptedKey,
   setBiometry,
   setDisabledServices,
+  setHideSeedWarnings,
   setKeyDerivationVersion,
   signOut,
 } from "../../../actions/actionCreators";
@@ -156,6 +157,29 @@ class ProfileSettings extends Component {
       });
     } else {
       createAlert("Authentication Error", "Incorrect password");
+    }
+  };
+
+  toggleSeedCorruptionWarning = async () => {
+    const { activeAccount } = this.props;
+    const { hideSeedWarnings, accountHash, id } = activeAccount;
+
+    try {
+      if (accountHash == null)
+        throw new Error("No account hash for profile: " + id);
+
+      if (hideSeedWarnings) {
+        this.props.dispatch(await setHideSeedWarnings(accountHash, false));
+      } else {
+        this.props.dispatch(await setHideSeedWarnings(accountHash, true));
+      }
+    } catch (e) {
+      console.warn(e);
+      createAlert(
+        "Error",
+        `Failed to ${hideSeedWarnings ? "enable" : "disable"
+        } seed corruption warning.`
+      );
     }
   };
 
@@ -445,6 +469,17 @@ class ProfileSettings extends Component {
             <Divider />
           </TouchableOpacity>
         )}
+        {(this.props.activeAccount.hideSeedWarnings || this.props.showHideSeedCorruptionSetting) && <TouchableOpacity
+          onPress={() => this.toggleSeedCorruptionWarning()}
+        >
+          <List.Item
+            title={`${this.props.activeAccount.hideSeedWarnings ? "Show" : "Hide"} Seed Corruption Warnings`}
+            left={(props) => <List.Icon {...props} icon={"information"} />}
+            description={`On login, you ${this.props.activeAccount.hideSeedWarnings ? "will not" : "will"} be alerted if non-standard characters are detected in your profile seed, indicating potential seed corruption`}
+            descriptionNumberOfLines={100}
+          />
+          <Divider />
+        </TouchableOpacity>}
         <List.Subheader>{"Key Settings"}</List.Subheader>
         <TouchableOpacity
           onPress={() => this.openKeyDerivationVersionModal()}
@@ -542,6 +577,7 @@ const mapStateToProps = state => {
   return {
     testAccount: Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0,
     activeAccount: state.authentication.activeAccount,
+    showHideSeedCorruptionSetting: state.authentication.showHideSeedCorruptionSetting,
     wyreEnabled:
       state.authentication.activeAccount != null &&
       state.authentication.activeAccount.disabledServices[WYRE_SERVICE_ID] != true,
