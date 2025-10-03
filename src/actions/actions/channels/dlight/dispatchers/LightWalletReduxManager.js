@@ -70,12 +70,11 @@ export const initDlightWallet = async (coinObj) => {
         mnemonicSeed = seed;
       }
 
-      //console.warn("LightWalletManager: seed = " + seed)
       initializationPromises = [
           await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), mnemonicSeed, extsk),
-          //startSync(id, proto, accountHash),
           getAddresses(extsk, mnemonicSeed, id)
       ];
+
     } else if (dlightSockets[id] === false) {
       const lightWalletEndpointArr = dlight_endpoints[0].split(':')
 
@@ -94,7 +93,6 @@ export const initDlightWallet = async (coinObj) => {
 
       initializationPromises = [
           await openWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), mnemonicSeed, extsk),
-          //startSync(id, proto, accountHash),
           getAddresses(extsk, seed, id)
       ]
     } else {
