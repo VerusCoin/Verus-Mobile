@@ -9,12 +9,7 @@ import { ETH } from "../constants/intervalConstants";
 // Makes transaction objects from lightwalletd client resemble those from electrum,
 // for predictable, standard behaviour
 export const standardizeDlightTxObj = (txObj) => {
-
   const { address, amount, category, height, status, time, txid, memo } = txObj
-  //console.error("Address: " + address + ", amount: " + amount);
-  //console.error("Category: " + category + ", height: " + height);
-  //console.error("Status: " + status + ", time: " + time);
-  //console.error("Txid: " + txid + ", memo: " + memo)
   return {
     address,
     amount: typeof amount !== "string" ? satsToCoins(BigNumber(amount.toString())) : satsToCoins(BigNumber(amount)),

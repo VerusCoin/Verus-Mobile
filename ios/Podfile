@@ -148,7 +148,6 @@ target 'verusmobile' do
   )
 
   # Pods for Verus-Mobile
-  #pod 'ZcashLightClientKit', :git => 'https://github.com/who-biz/verus-swift-wallet-sdk.git', :branch => 'verus'
   pod 'MnemonicSwift', '~> 2.0.0'
   #pod 'Permission-Camera', :path => "#{permissions_path}/Camera/Permission-Camera.podspec"
   #pod 'Permission-PhotoLibrary', :path => "#{permissions_path}/PhotoLibrary/Permission-PhotoLibrary.podspec"
@@ -177,14 +176,6 @@ target 'verusmobile' do
            config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
            config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << '_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION=1'
         end
-        #if target.name == 'RCT-Folly'
-        #  config.build_settings['OTHER_CPLUSPLUSFLAGS'] ||= ['']
-        #  config.build_settings['OTHER_CPLUSPLUSFLAGS'] << '-D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION'
-        #end
-
-#        if target.name == 'ZcashLightClientKit'
-#           config.build_settings['ZCASH_NETWORK_ENVIRONMENT'] = ENV["ZCASH_NETWORK_ENVIRONMENT"]
-#        end
 
         config.build_settings['ENABLE_BITCODE'] = 'NO'
       end

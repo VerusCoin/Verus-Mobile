@@ -204,7 +204,7 @@ export const closeDlightWallet = async (coinObj, clearDb) => {
       resolve()
     })
     .catch(err => {
-      //console.warn(err)
+      console.warn(err)
 
       blockchainQuitError(id)
       .then(canRetry => {

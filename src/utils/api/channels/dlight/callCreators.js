@@ -1,6 +1,4 @@
 
-//import VerusLightClient from 'react-native-verus-light-client'
-import ApiException from '../../errors/apiError'
 import { DLIGHT_PRIVATE } from '../../../constants/intervalConstants'
 
 // State requests

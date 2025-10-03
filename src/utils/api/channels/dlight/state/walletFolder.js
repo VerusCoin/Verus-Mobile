@@ -41,7 +41,7 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
          },
          onUpdate: (update) => {
            console.debug("Update Received:", update);
-           dispatch({ type: DLIGHT_SYNC_UPDATED, id: coinId, payload: update }); //TODO: figure out how to open DLIGHT_SOCKET and toggle DLIGHT_SYNC
+           dispatch({ type: DLIGHT_SYNC_UPDATED, id: coinId, payload: update });
          }
       };
        await sync.subscribe(subscriptions)
@@ -90,16 +90,13 @@ export const setConfig = async (coinId, coinProto, accountHash, host, port, seed
  */
 export const openWallet = async (coinId, coinProto, accountHash, host, port, seed, extsk) => {
 
-  //TODO: Everything works, despite this, but openWallet is never called due to dlightSockets logic
-  // or something else in initDlight function in LightWalletReduxManager. Since it breaks nothing, I left it be
-  //console.warn(">>>>>> openWalletCalled")
   try {
     const config: InitializerConfig = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, false);
     const sync = await makeSynchronizer(config);
     return sync;
 
   } catch (error) {
-    console.warn(error)
+    throw error
   }
 }
 

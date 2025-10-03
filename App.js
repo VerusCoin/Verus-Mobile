@@ -18,11 +18,6 @@ import {
 import BigNumber from 'bignumber.js';
 import Colors from './src/globals/colors';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
-/*import 'fast-text-encoding';
-
-if (typeof TextEncoder === 'undefined') {
-  require('fast-text-encoding');
-}*/
 
 Text.defaultProps = Text.defaultProps || {};
 Text.defaultProps.allowFontScaling = false;
