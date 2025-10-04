@@ -78,7 +78,8 @@ import {
   SET_SECURE_LOADING_ERROR_DATA,
   CLEAR_SECURE_LOADING_DATA,
   UPDATE_SESSION_KEY,
-  INIT_INSTANCE_KEY
+  INIT_INSTANCE_KEY,
+  SET_SHOW_HIDE_SEED_CORRUPTION_SETTING
 } from "../utils/constants/storeType";
 
 //Reducer Name: authentication
@@ -148,6 +149,14 @@ export const setConfigSection = (section) => {
   return {
     type: SET_CONFIG_SECTION,
     activeConfigSection: section
+  }
+}
+
+//Reducer Name: authentication
+export const setShowHideSeedCorruptionSetting = (showHideSeedCorruptionSetting) => {
+  return {
+    type: SET_SHOW_HIDE_SEED_CORRUPTION_SETTING,
+    showHideSeedCorruptionSetting: showHideSeedCorruptionSetting
   }
 }
 
