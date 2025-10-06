@@ -207,3 +207,5 @@ export const DEFAULT_ADDRESS_BLOCKLIST_WEBSERVER = 'https://eth.verusbridge.io/e
 export const MIN_PASS_LENGTH = 7
 export const MIN_PASS_SCORE = 65
 export const PASS_SCORE_LIMIT = 100
+
+export const MAX_SEED_CHARS_FOR_QR_DISPLAY = 1000
