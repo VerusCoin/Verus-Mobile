@@ -603,6 +603,10 @@
 				"${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/SimpleLineIcons.ttf",
 				"${PODS_ROOT}/../../node_modules/react-native-vector-icons/Fonts/Zocial.ttf",
 				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/AccessibilityResources.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/SQLite.swift/SQLite.swift.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/SwiftProtobuf/SwiftProtobuf.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/react-native-verus/zcash-mainnet.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/react-native-verus/zcash-testnet.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
@@ -625,6 +629,10 @@
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/SimpleLineIcons.ttf",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Zocial.ttf",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/AccessibilityResources.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/SQLite.swift.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/SwiftProtobuf.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/zcash-mainnet.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/zcash-testnet.bundle",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -745,7 +753,7 @@
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/react-native-webview\"",
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/rn-fetch-blob\"",
 				);
-				MARKETING_VERSION = 1.0.29;
+				MARKETING_VERSION = 1.0.31;
 				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.verusmobile;
 				PRODUCT_NAME = verusmobile;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -817,7 +825,7 @@
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/react-native-webview\"",
 					"\"${PODS_CONFIGURATION_BUILD_DIR}/rn-fetch-blob\"",
 				);
-				MARKETING_VERSION = 1.0.29;
+				MARKETING_VERSION = 1.0.31;
 				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.verusmobile;
 				PRODUCT_NAME = verusmobile;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -976,7 +984,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
@@ -1033,7 +1041,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
