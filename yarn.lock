@@ -10063,6 +10063,13 @@ react-native-url-polyfill@1.3.0:
     prop-types "^15.7.2"
     yargs "^16.1.1"
 
+"react-native-verus@git+https://github.com/who-biz/react-native-verus.git":
+  version "0.6.10"
+  resolved "git+https://github.com/who-biz/react-native-verus.git#ff5c801ccb7b30ae98aef0043baf3dcb429ab94c"
+  dependencies:
+    biggystring "^4.1.3"
+    rfc4648 "^1.3.0"
+
 react-native-vision-camera@4.3.1:
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/react-native-vision-camera/-/react-native-vision-camera-4.3.1.tgz#f755107f259f71f51a619ccaaefc55bbe341b2c7"
