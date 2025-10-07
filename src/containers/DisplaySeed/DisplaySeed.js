@@ -20,6 +20,7 @@ import { Card, Paragraph, Title, Button } from 'react-native-paper'
 import { deriveKeyPair, dlightSeedToBytes, isDlightSpendingKey } from "../../utils/keys";
 import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import { coinsList } from "../../utils/CoinData/CoinsList";
+import { MAX_SEED_CHARS_FOR_QR_DISPLAY } from "../../utils/constants/constants";
 
 class DisplaySeed extends Component {
   constructor() {
@@ -172,9 +173,11 @@ class DisplaySeed extends Component {
                   <Card.Content>
                     <Title>{this.SEED_NAMES[key]}</Title>
                     <Paragraph>{displayedValue}</Paragraph>
-                    <View style={Styles.fullWidthFlexCenterBlock}>
-                      <QRCode value={displayedValue} size={250} />
-                    </View>
+                    {
+                      displayedValue.length < MAX_SEED_CHARS_FOR_QR_DISPLAY && <View style={Styles.fullWidthFlexCenterBlock}>
+                        <QRCode value={displayedValue} size={250} />
+                      </View>
+                    }
                     {data.showDerivedKeys && <>
                       {
                         ((key === DLIGHT_PRIVATE && !isDlightSpendingKey(seeds[key])) ||
