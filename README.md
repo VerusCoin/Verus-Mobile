@@ -79,7 +79,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup toolchain install 1.81.0
 rustup default 1.81.0
 ```
-7. Clone `verus-android-wallet-sdk` (`main` branch) repository, build and publish Maven artifacts locally, with steps below
+7. Clone `verus-android-wallet-sdk` (`master` branch) repository, build and publish Maven artifacts locally, with steps below
 
 ```
 cd ~
