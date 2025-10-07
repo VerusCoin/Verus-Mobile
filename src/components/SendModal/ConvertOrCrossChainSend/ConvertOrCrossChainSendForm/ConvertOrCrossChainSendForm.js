@@ -1134,11 +1134,14 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
                       <Text style={Styles.listItemTableCell}>{item.right}</Text>
                     )}
                     left={props => {
-                      const Logo = getCoinLogo(
-                        item.logoid,
-                        item.logoproto,
-                        'dark',
-                      );
+                      let id;
+                      if (item.title.includes('.')) {
+                        const logoId = item?.title?.split('.');
+                        id = logoId[0];
+                      } else {
+                        id = item.logoid;
+                      }
+                      const Logo = getCoinLogo(id, item.logoproto, 'dark');
 
                       return (
                         <View style={{justifyContent: 'center', paddingLeft: 8}}>
