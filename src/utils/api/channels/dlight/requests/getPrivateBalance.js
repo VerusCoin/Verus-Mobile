@@ -23,7 +23,7 @@ export const getPrivateBalance = async (coinId, accountHash, coinProto) => {
       const result = createJsonRpcResponse(0, transformedRes, transformedRes.error)
       resolve(result);
     }).catch(err => {
-      reject(error);
+      reject(err);
     });
   })
 }
