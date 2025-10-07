@@ -93,7 +93,7 @@ export const initDlightWallet = async (coinObj) => {
 
       initializationPromises = [
           await openWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), mnemonicSeed, extsk),
-          getAddresses(extsk, seed, id)
+          getAddresses(extsk, mnemonicSeed, id)
       ]
     } else {
       throw new Error(id + " is already initialized and connected in lightwalletd mode. Cannot intialize and connect a coin twice.")
