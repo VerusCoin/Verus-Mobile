@@ -168,8 +168,8 @@ export const closeDlightWallet = async (coinObj, clearDb) => {
     if (dlightSockets[id] === true) {
       closePromises = [
         Promise.resolve(clearDb
-          ? eraseWallet(id, proto, accountHash)
-          : closeWallet(id, proto, accountHash))
+          ? eraseWallet(id, accountHash, proto)
+          : closeWallet(id, accountHash, proto))
        ];
     } else  {
       throw new Error(id + "'s dlight wallet cannot be stopped if it was never started.")
