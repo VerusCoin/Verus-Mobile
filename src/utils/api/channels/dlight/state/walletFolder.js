@@ -1,7 +1,6 @@
 import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, stopAndDeleteWallet, Tools } from 'react-native-verus'
 import { VRSC_SAPLING_ACTIVATION_HEIGHT } from '../../../../constants/constants'
 import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
-import Store from '../../../../../store/index';
 import {
 DLIGHT_BALANCE_UPDATED,
 DLIGHT_STATUS_UPDATED,
@@ -25,26 +24,6 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
        const config: InitializerConfig = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, true);
        //console.warn("in initializeWallet, after setting config extsk(" + extsk +")")
        const sync = await makeSynchronizer(config);
-       const { dispatch } = Store
-       const subscriptions = {
-         onBalanceChanged: (balance) => {
-           console.debug("Balance Updated:", balance);
-           dispatch({ type: DLIGHT_BALANCE_UPDATED, id: coinId, payload: balance });
-         },
-         onStatusChanged: (status) => {
-           console.debug("Status Updated:", status);
-           dispatch({ type: DLIGHT_STATUS_UPDATED, id: coinId, payload: status });
-         },
-         onTransactionsChanged: (transactions) => {
-           console.debug("Transactions Updated:", transactions);
-           dispatch({ type: DLIGHT_TRANSACTIONS_UPDATED, id: coinId, payload: transactions });
-         },
-         onUpdate: (update) => {
-           console.debug("Update Received:", update);
-           dispatch({ type: DLIGHT_SYNC_UPDATED, id: coinId, payload: update });
-         }
-      };
-       await sync.subscribe(subscriptions)
        return sync;
      } catch (error) {
        console.warn(error)
