@@ -2,7 +2,6 @@
 import { DLIGHT_PRIVATE } from '../../../constants/intervalConstants'
 
 // State requests
-export * from './state/synchronizer'
 export * from './state/walletFolder'
 
 // JSON-RPC requests

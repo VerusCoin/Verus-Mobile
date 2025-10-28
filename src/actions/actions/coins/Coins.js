@@ -110,12 +110,12 @@ export const addCoin = (fullCoinObj, activeCoins, userName, channels) => {
 export const removeExistingCoin = async (coinID, userName, dispatch, deleteWallet = false) => {
   const state = store.getState()
   const activeCoins = state.coins.activeCoinList
-
+  
   const removeWithIndex = (coinIndex) => {
     if (coinIndex > -1 && activeCoins[coinIndex].users.includes(userName)) {
       let userIndex = activeCoins[coinIndex].users.findIndex(n => n === userName);
       let closers = []
-
+  
       Object.keys(COIN_MANAGER_MAP.closers).map(channel => {
         if (
           activeCoins[coinIndex].compatible_channels.includes(channel) &&
@@ -129,9 +129,9 @@ export const removeExistingCoin = async (coinID, userName, dispatch, deleteWalle
           );
         }
       })
-
+  
       activeCoins[coinIndex].users.splice(userIndex, 1)
-
+  
       return new Promise((resolve, reject) => {
         storeCoins(activeCoins)
         .then(() => {
@@ -144,7 +144,7 @@ export const removeExistingCoin = async (coinID, userName, dispatch, deleteWalle
       });
     } else throwError("Inactive coin", INACTIVE_COIN)
   }
-
+  
   if (coinID != null) {
     let index = activeCoins.findIndex(x => x.id === coinID);
 

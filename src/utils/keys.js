@@ -5,9 +5,7 @@ import {
   seedToPriv
 } from './agama-wallet-lib/keys';
 import { ETH, ERC20, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from './constants/intervalConstants';
-
 import { Tools } from 'react-native-verus'
-
 import { SigningKey, ethers } from 'ethers';
 import {
   KEY_DERIVATION_VERSION,

@@ -1,12 +1,6 @@
 import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, stopAndDeleteWallet, Tools } from 'react-native-verus'
 import { VRSC_SAPLING_ACTIVATION_HEIGHT } from '../../../../constants/constants'
 import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
-import {
-DLIGHT_BALANCE_UPDATED,
-DLIGHT_STATUS_UPDATED,
-DLIGHT_TRANSACTIONS_UPDATED,
-DLIGHT_SYNC_UPDATED
-} from '../../../../constants/storeType'
 
 /**
  * Initializes a wallet for the first time
@@ -22,7 +16,6 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
 
      try {
        const config: InitializerConfig = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, true);
-       //console.warn("in initializeWallet, after setting config extsk(" + extsk +")")
        const sync = await makeSynchronizer(config);
        return sync;
      } catch (error) {
@@ -31,7 +24,6 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
 };
 
 export const setConfig = async (coinId, coinProto, accountHash, host, port, seed, extsk, birthday, newWallet) => {
-  //console.warn("in setConfig extsk(" + extsk + "), coindId(" + coinId +")")
   if (!extsk) {
     const config: InitializerConfig = {
       mnemonicSeed: seed,

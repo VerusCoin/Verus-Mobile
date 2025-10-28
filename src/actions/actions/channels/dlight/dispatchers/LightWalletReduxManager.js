@@ -1,7 +1,6 @@
 import Store from '../../../../../store/index'
 import { Tools } from 'react-native-verus'
 import {
-  setConfig,
   initializeWallet,
   eraseWallet,
   openWallet,
@@ -9,7 +8,6 @@ import {
   getAddresses
 } from '../../../../../utils/api/channels/dlight/callCreators'
 import { isDlightSpendingKey } from '../../../../../utils/keys'
-import { DEFAULT_PRIVATE_ADDRS } from '../../../../../utils/constants/constants'
 import { resolveSequentially } from '../../../../../utils/promises'
 import { canRetryDlightInitialization, blockchainQuitError } from './AlertManager'
 import {
@@ -20,7 +18,7 @@ import {
   INIT_DLIGHT_CHANNEL_START,
   CLOSE_DLIGHT_CHANNEL,
 } from "../../../../../utils/constants/storeType";
-import { requestViewingKey, requestSeeds } from '../../../../../utils/auth/authBox'
+import { requestSeeds } from '../../../../../utils/auth/authBox'
 import { DLIGHT_PRIVATE } from '../../../../../utils/constants/intervalConstants'
 
 // Initializes dlight wallet by either creating a backend native wallet and opening it or just opening it
@@ -117,7 +115,7 @@ export const initDlightWallet = async (coinObj) => {
 
       dispatch({
         type: SET_ADDRESSES,
-        payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: [res.pop().result]  }
+        payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: [ res.pop().result ]  }
       });
 
       resolve()
@@ -134,7 +132,7 @@ export const initDlightWallet = async (coinObj) => {
             type: ERROR_DLIGHT_INIT,
             payload: { chainTicker: id, error: err }
           })
-          
+
           resolve()
         }
       })
@@ -143,7 +141,7 @@ export const initDlightWallet = async (coinObj) => {
           type: ERROR_DLIGHT_INIT,
           payload: { chainTicker: id, error: e }
         })
-        
+
         resolve()
       })
     })

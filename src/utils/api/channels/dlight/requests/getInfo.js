@@ -5,7 +5,7 @@ import { createJsonRpcResponse } from './jsonResponse'
 export const getInfo = (coinId, accountHash, coinProto) => {
   const synchronizer = getSynchronizerInstance(accountHash, coinId)
   return new Promise((resolve, reject) => {
-    synchronizer.getInfo(coinId)
+    synchronizer.getInfo()
     .then(res => {
         result = createJsonRpcResponse(0, res, null)
         resolve(result);

@@ -1,6 +1,5 @@
 import { Tools } from 'react-native-verus'
 import { createJsonRpcResponse } from './jsonResponse'
-import { isDlightSpendingKey } from '../../../../keys'
 
 // Lists addresses associated with a light daemon wallet
 export const getAddresses = async (extsk, seed, coinId) => {

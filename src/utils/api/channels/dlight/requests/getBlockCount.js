@@ -4,7 +4,7 @@ import { getSynchronizerInstance } from 'react-native-verus'
 export const getBlockCount = (coinId, accountHash, coinProto) => {
   const sync = getSynchronizerInstance(accountHash, coinId);
   return new Promise((resolve, reject) => {
-    synchronizer.getLatestNetworkHeight(coinId)
+    synchronizer.getLatestNetworkHeight()
       .then(res => {
         resolve(res);
       })

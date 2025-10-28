@@ -6,14 +6,14 @@ import { requestSeeds } from '../../../../auth/authBox'
 import { createJsonRpcResponse } from './jsonResponse'
 import { isDlightSpendingKey } from '../../../../keys'
 
-import { getSynchronizerInstance, SpendInfo, SpendSuccess, SpendFailure, Tools } from 'react-native-verus'
+import { getSynchronizerInstance, SpendInfo, Tools } from 'react-native-verus'
 
 // Sends a private transaction with given parameters
 export const sendPrivateTransaction = async (coinObj, activeUser, address, amount, params) => {
   const coinId = coinObj.id
   const accountHash = activeUser.accountHash
   const coinProto = coinObj.proto
-  
+
   try {
     if (
       activeUser.keys[coinObj.id] == null ||
