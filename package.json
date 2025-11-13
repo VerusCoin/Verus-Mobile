@@ -292,6 +292,5 @@
     "tty": "tty-browserify",
     "vm": "vm-browserify",
     "zlib": "browserify-zlib"
-  },
-  "packageManager": "yarn@4.10.3"
+  }
 }
