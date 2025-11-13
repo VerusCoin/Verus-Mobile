@@ -10,6 +10,7 @@ const LANG_EN = {
     DAYS: 'days',
     HOURS: 'hours',
     MINUTES: 'minutes',
+    INVALID_BLOCKTIME: 'invalid blocktime'
   }
 }
 

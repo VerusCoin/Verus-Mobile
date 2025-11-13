@@ -102,7 +102,8 @@ const AddPbaasCurrencyConfirm = props => {
     goBack,
     submitData,
     spotterSystem: sendModal.coinObj.system_id,
-    longestChainOnLaunchSystem: launchSystem == null ? 0 : launchSystem.bestheight
+    longestChainOnLaunchSystem: launchSystem == null ? 0 : launchSystem.bestheight,
+    blockTimeOnLaunchSystem: launchSystem == null ? 60 : launchSystem.blocktime,
   });
 };
 

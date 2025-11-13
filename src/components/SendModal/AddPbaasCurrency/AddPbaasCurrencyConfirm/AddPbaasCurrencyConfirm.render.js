@@ -11,13 +11,16 @@ export const AddPbaasCurrencyConfirmRender = ({
   goBack, 
   submitData, 
   spotterSystem,
-  longestChainOnLaunchSystem }) => {
+  longestChainOnLaunchSystem,
+  blockTimeOnLaunchSystem
+}) => {
   return (
     <SafeAreaView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }}>
       <CurrencyObjectData
         currency={currency}
         friendlyNames={friendlyNames}
         longestChainOnLaunchSystem={longestChainOnLaunchSystem}
+        blockTimeOnLaunchSystem={blockTimeOnLaunchSystem}
         spotterSystem={spotterSystem}
         StickyFooterComponent={
           <View

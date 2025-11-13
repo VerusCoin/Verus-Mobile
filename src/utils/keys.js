@@ -5,16 +5,14 @@ import {
   seedToPriv
 } from './agama-wallet-lib/keys';
 import { ETH, ERC20, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from './constants/intervalConstants';
-import ethers from 'ethers';
-
-//import VerusLightClient from 'react-native-verus-light-client'
 import { Tools } from 'react-native-verus'
-
+import { SigningKey, ethers } from 'ethers';
 import {
   KEY_DERIVATION_VERSION,
 } from "../../env/index";
 import { validateMnemonic } from "bip39"
 import { networks } from "@bitgo/utxo-lib"
+import { prefixHex0x } from './stringUtils';
 
 const deriveLightwalletdKeyPair = async (seed) => {
   const spendingKey = await parseDlightSeed(seed);
@@ -22,7 +20,7 @@ const deriveLightwalletdKeyPair = async (seed) => {
   return {
     pubKey: null,
     privKey: spendingKey,
-    viewingKey: await Tools.deriveViewingKey(seed),
+    viewingKey: null, // no longer needed since all functions now take spendkey/seed, and derive view internally
     addresses: [],
   };
 };
@@ -65,8 +63,11 @@ const deriveWeb3Keypair = async (seed, coinObj) => {
   const electrumKeys = await deriveElectrumKeypair(seed, coinObj.id);
   let seedIsEthPrivkey = false
 
+  /** @type {SigningKey} */
+  let signingKey;
+
   try {
-    new ethers.utils.SigningKey(seed)
+    signingKey = new SigningKey(seed)
     seedIsEthPrivkey = true
   } catch(e) {}
 
@@ -74,8 +75,8 @@ const deriveWeb3Keypair = async (seed, coinObj) => {
     pubKey: electrumKeys.pubKey,
     privKey: seedIsEthPrivkey ? seed : seedToPriv(electrumKeys.privKey, "eth"),
     addresses: [
-      ethers.utils.computeAddress(
-        seedIsEthPrivkey ? seed : Buffer.from(electrumKeys.pubKey, "hex")
+      ethers.computeAddress(
+        seedIsEthPrivkey ? signingKey : prefixHex0x(electrumKeys.pubKey)
       ),
     ],
   };
@@ -108,41 +109,39 @@ export const deriveKeypairV0 = async (seed, coinObj, channel) => {
   if (channel === DLIGHT_PRIVATE) {
     const spendingKey = await parseDlightSeed(seed)
     const viewKey = await Tools.deriveViewingKey(seed);
-    console.log("viewingKey" + viewKey.toString);
 
     return {
       pubKey: null,
       privKey: spendingKey,
       viewingKey: viewKey,
-//      viewingKey: await VerusLightClient.deriveViewingKey(spendingKey),
       addresses: [],
     };
   } else {
     let isWif = false;
     let _seedToWif;
     let keyObj = {};
-  
+
     try {
       bs58check.decode(seed);
       isWif = true;
     } catch (e) {}
-  
+
     if (isWif) {
       _seedToWif = wifToWif(seed, networks[coinObj.bitgojs_network_key]);
     } else {
       _seedToWif = seedToWif(seed, networks[coinObj.bitgojs_network_key], true);
     }
-  
+
     keyObj = {
       pubKey: _seedToWif.pubHex,
       privKey: channel === ETH || channel === ERC20 ? seedToPriv(_seedToWif.priv, 'eth') : _seedToWif.priv,
       addresses: [
         channel === ETH || channel === ERC20
-          ? ethers.utils.computeAddress(Buffer.from(_seedToWif.pubHex, "hex"))
+          ? ethers.computeAddress(prefixHex0x(_seedToWif.pubHex))
           : _seedToWif.pub,
       ],
     };
-  
+
     return keyObj;
   }
 }
@@ -160,53 +159,22 @@ export const deriveKeyPair = async (seed, coinObj, channel, version = KEY_DERIVA
 }
 
 export const isDlightSpendingKey = (seed) => {
-  return seed.startsWith('secret-extended-key-main')
+  return (seed.startsWith('secret-extended-key-main'))
 }
 
 export const parseDlightSeed = async (seed) => {
-  //console.log("parseDlightSeed called!")
-  if (isDlightSpendingKey(seed)) return seed
-  
+  if (isDlightSpendingKey(seed)) {
+    return seed;
+  }
+
   try {
-    const viewkey = await Tools.deriveViewingKey(seed)
-    console.warn("Viewkey(" + viewkey + ")")
-
-    const epk = "d2ae5e1c1004aa0c0bca45db471a36d188e53a667b30e328365dcb9a9f65b4dc"
-    const sharedSecret = await Tools.ka_agree(viewkey, epk)
-    console.warn("sharedSecret(" + sharedSecret.toString() + ")")
-
-    const saplingRecipient = "zs1tdrqnlwps6v78tsruvkx0tuhwp3jt6wx73kmzznky90qz80f5jrh42z4qe9rt4tq583f5yhayyv"
-    const esk = "d2e648e59747d2d234cf1644a95e5aeb5a628c1db4083fbf6e1e65eac617e254"
-
-    const pubkey = await Tools.ka_derive_public(saplingRecipient, esk)
-    const pubkey_str = pubkey.toString()
-
-    const shared = await Tools.ka_agree(viewkey, pubkey_str)
-
-    console.warn("derived pubkey(" + pubkey + ")")
-    console.warn("shared(" + shared.toString() + ")")
-
-
-    const saplingAddress = await Tools.deriveShieldedAddress(seed)
-    //console.log("deriveShieldedAddress(" + saplingAddressFromView + ")")
-
-    //TODO: Find out why this is returning false
-    //const isValid = await Tools.isValidAddress(saplingAddress)
-    //console.log("isValidAddress(" + isValid + ")");
-
     const saplingSpendKey = await Tools.deriveSaplingSpendingKey(seed)
-    //console.log("SaplingSpendingKey(" + saplingSpendKey + ")");
-
-    //TODO: below does not derive properly, and we can use the above function anyway
-    //const saplingAddrFromSeed = await Tools.deriveShieldedAddressFromSeed(seed)
-    //console.log("saplingAddrFromSeed(" + saplingAddrFromSeed + ")")
-
     return saplingSpendKey
   } catch(e) { throw e }
 }
 
-export const dlightSeedToBytes = (seed) => {
-  return VerusLightClient.deterministicSeedBytes(seed)
+export const dlightSeedToBytes = async (seed) => {
+  return await Tools.deterministicSeedBytes(seed);
 }
 
 export const isSeedPhrase = (seed, minWordLength = 12) => {
@@ -214,4 +182,3 @@ export const isSeedPhrase = (seed, minWordLength = 12) => {
     seed.split(/\s+/g).length >= minWordLength && validateMnemonic(seed)
   );
 }
-

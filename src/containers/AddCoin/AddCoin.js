@@ -15,6 +15,7 @@ import CoinDetailsModal from '../../components/CoinDetailsModal/CoinDetailsModal
 import {WYRE_SERVICE} from '../../utils/constants/intervalConstants';
 import {CoinDirectory} from '../../utils/CoinData/CoinDirectory';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
+import { toLowerCaseCLocale } from 'verus-typescript-primitives';
 
 const AddCoin = props => {
   const [loading, setLoading] = useState(true);
@@ -79,10 +80,10 @@ const AddCoin = props => {
       })
       .filter(item => {
         const { coinObj } = item;
-        const queryLc = query.toLowerCase();
-        const coinIdLc = coinObj.id.toLowerCase();
-        const coinNameLc = coinObj.display_name.toLowerCase();
-        const coinTickerLc = coinObj.display_ticker.toLowerCase();
+        const queryLc = toLowerCaseCLocale(query);
+        const coinIdLc = toLowerCaseCLocale(coinObj.id);
+        const coinNameLc = toLowerCaseCLocale(coinObj.display_name);
+        const coinTickerLc = toLowerCaseCLocale(coinObj.display_ticker);
 
         return (
           query.length == 0 ||

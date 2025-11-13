@@ -13,6 +13,7 @@ export default function CurrencyObjectData(props) {
     flex,
     spotterSystem,
     longestChainOnLaunchSystem,
+    blockTimeOnLaunchSystem
   } = props;
 
   const [listData, setListData] = useState([]);
@@ -66,10 +67,10 @@ export default function CurrencyObjectData(props) {
               : status === 'pending'
               ? `${preConvert ? 'Preconvert' : 'Pending'} - ${
                   -1 * age
-                } blocks (~${blocksToTime(-1 * age)}) until start`
+                } blocks (~${blocksToTime(-1 * age, blockTimeOnLaunchSystem)}) until start`
               : status === 'failed'
               ? 'Failed to Launch'
-              : (currency.startblock != 0 ? `Active (~${blocksToTime(Math.abs(age))} old)` : 'Active'),
+              : (currency.startblock != 0 ? `Active (~${blocksToTime(Math.abs(age), blockTimeOnLaunchSystem)} old)` : 'Active'),
         },
         {
           key: 'Type',

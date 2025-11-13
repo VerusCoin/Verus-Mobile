@@ -1,15 +1,6 @@
-//import VerusLightClient from 'react-native-verus-light-client'
-import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, Synchronizer, SynchronizerCallbacks } from 'react-native-verus'
-import Store from '../../../../../store/index';
-import {
-DLIGHT_BALANCE_UPDATED,
-DLIGHT_STATUS_UPDATED,
-DLIGHT_TRANSACTIONS_UPDATED,
-DLIGHT_SYNC_UPDATED
-} from '../../../../constants/storeType'
-import { setTransactions } from '../../../../../actions/actionCreators'
-import { eventChannel } from "redux-saga";
-//import { syncInstance, SynchronizerSingleton } from './synchronizer';
+import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, stopAndDeleteWallet, Tools } from 'react-native-verus'
+import { VRSC_SAPLING_ACTIVATION_HEIGHT } from '../../../../constants/constants'
+import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
 
 /**
  * Initializes a wallet for the first time
@@ -21,37 +12,45 @@ import { eventChannel } from "redux-saga";
  * @param {Integer} numAddresses The number of addresses (address accounts) to initialize this wallet with
  * @param {String} seed The HDSeed for the wallet in question
  */
-//export const initializeWallet = async (coinId, coinProto, accountHash, host, port, numAddresses, viewingKeys, birthday = 0) => {
-export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed) => {
+export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed, extsk) => {
 
-   const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, 227520, true);
-   //console.log(">>> initializeWallet called")
      try {
-       //console.log("initializeWallet: before makeSynchronizer")
+       const config: InitializerConfig = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, true);
        const sync = await makeSynchronizer(config);
        return sync;
-
      } catch (error) {
        console.warn(error)
      }
 };
 
-export const setConfig = (coinId, coinProto, accountHash, host, port, seed, birthday, newWallet) => {
-  const config: InitializerConfig = {
-    mnemonicSeed: seed,
-    defaultHost: host,
-    defaultPort: port,
-    wif: "",
-    networkName: coinId,
-    alias: accountHash,
-    birthdayHeight: birthday,
-    newWallet: newWallet
+export const setConfig = async (coinId, coinProto, accountHash, host, port, seed, extsk, birthday, newWallet) => {
+  if (!extsk) {
+    const config: InitializerConfig = {
+      mnemonicSeed: seed,
+      extsk: extsk,
+      defaultHost: host,
+      defaultPort: port,
+      wif: "",
+      networkName: coinId,
+      alias: accountHash,
+      birthdayHeight: birthday,
+      newWallet: newWallet
+    }
+    return config;
+  } else {
+      const config: InitializerConfig = {
+        mnemonicSeed: seed,
+        extsk: await Tools.bech32Decode(extsk),
+        defaultHost: host,
+        defaultPort: port,
+        wif: "",
+        networkName: coinId,
+        alias: accountHash,
+        birthdayHeight: birthday,
+        newWallet: newWallet
+      }
+      return config;
   }
-  return config
-}
-
-export const initConfig = (coinId, coinProto, accountHash, host, port, seed, birthday, newWallet) => {
-  return setConfig(coinId, coinProto, accountHash, host, port, seed, birthday, newWallet)
 }
 
 /**
@@ -60,19 +59,15 @@ export const initConfig = (coinId, coinProto, accountHash, host, port, seed, bir
  * @param {String} coinProto The protocol the coin is based on (e.g. 'btc' || 'vrsc')
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
-export const openWallet = async (coinId, coinProto, accountHash, host, port, seed) => {
+export const openWallet = async (coinId, coinProto, accountHash, host, port, seed, extsk) => {
 
-  //TODO: Everything works, despite this, but openWallet is never called due to dlightSockets logic
-  // or something else in initDlight function in LightWalletReduxManager. Since it breaks nothing, I left it be
-  console.log(">>>>>> openWalletCalled")
-  const config: InitializerConfig = setConfig(coinId, coinProto, accountHash, host, port, seed, 227520, false);
   try {
-    console.log("openWallet: before makeSynchronizer")
+    const config: InitializerConfig = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, false);
     const sync = await makeSynchronizer(config);
     return sync;
 
   } catch (error) {
-    console.warn(error)
+    throw error
   }
 }
 
@@ -82,15 +77,16 @@ export const openWallet = async (coinId, coinProto, accountHash, host, port, see
  * @param {String} coinProto The protocol the coin is based on (e.g. 'btc' || 'vrsc')
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
-export const closeWallet = async (coinId, coinProto, accountHash) => {
-  //console.warn(">>> closeWallet called")
-  try {
-    const synchronizer = getSynchronizerInstance(accountHash, coinId);
-    return await synchronizer.stop()
-  } catch (error) {
-    throw error
-  }
-}
+export const closeWallet = (coinId, accountHash, coinProto) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const synchronizer = getSynchronizerInstance(accountHash, coinId);
+      resolve(synchronizer.stop());
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
 
 /**
  * Deletes a wallet by closing it and deleting all of its data 
@@ -98,12 +94,13 @@ export const closeWallet = async (coinId, coinProto, accountHash) => {
  * @param {String} coinProto The protocol the coin is based on (e.g. 'btc' || 'vrsc')
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
-export const deleteWallet = async (coinId, coinProto, accountHash) => {
-  //TODO: no way to delete wallet presently without uninstalling app
-  // can add this, if we need it
-  try {
-    return await VerusLightClient.deleteWallet(coinId, coinProto, accountHash)
-  } catch (error) {
-    throw error
-  }
-}
+export const eraseWallet = (coinId, accountHash, coinProto) => {
+  return new Promise((resolve, reject) => {
+     try {
+       const synchronizer = getSynchronizerInstance(accountHash, coinId);
+       resolve(synchronizer.stopAndDeleteWallet(accountHash, coinId))
+     } catch (error) {
+       reject(error);
+     }
+  });
+};

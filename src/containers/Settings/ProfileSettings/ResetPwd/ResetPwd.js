@@ -22,12 +22,12 @@ import AlertAsync from "react-native-alert-async";
 import { TextInput, Button } from "react-native-paper";
 import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors';
-import { removeBiometricPassword } from "../../../../utils/keychain/keychain";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import scorePassword from "../../../../utils/auth/scorePassword";
 import { MIN_PASS_LENGTH, MIN_PASS_SCORE, PASS_SCORE_LIMIT } from "../../../../utils/constants/constants";
 import { CommonActions } from "@react-navigation/native";
 import { clearActiveAccountLifecycles } from "../../../../actions/actionDispatchers";
+import { removeBiometricPassword } from "../../../../utils/keychain/biometrics";
 
 class ResetPwd extends Component {
   constructor() {

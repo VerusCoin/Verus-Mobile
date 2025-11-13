@@ -9,7 +9,10 @@ import { cleanEthersErrorMessage } from "../../../../errors"
 
 export const send = async (coinObj, activeUser, address, amount, passthrough) => {
   try {
-    const gasPrice = passthrough.params.gasPrice;
+    /** @type {BigInt} */
+    const maxFeePerGas = passthrough.params.maxFeePerGas;
+
+    /** @type {BigInt} */
     const gasLimit = passthrough.params.gasLimit;
 
     const Web3Provider = getWeb3ProviderForNetwork(coinObj.network)
@@ -24,10 +27,10 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
 
     let transaction = await voidSigner.populateTransaction({
       to: address,
-      value: ethers.utils.parseUnits(scientificToDecimal(amount.toString())),
+      value: ethers.parseUnits(scientificToDecimal(amount.toString())),
       chainId: ETH_NETWORK_IDS[coinObj.network ? coinObj.network : ETH_HOMESTEAD],
       gasLimit: gasLimit,
-      gasPrice
+      maxFeePerGas
     })
 
     const response = await signer.sendTransaction(transaction);
@@ -36,11 +39,11 @@ export const send = async (coinObj, activeUser, address, amount, passthrough) =>
       err: false,
       result: {
         fee: Number(
-          ethers.utils.formatUnits(
-            transaction.gasLimit.mul(transaction.gasPrice)
+          ethers.formatUnits(
+            BigInt(transaction.gasLimit) * BigInt(transaction.maxFeePerGas)
           )
         ),
-        value: Number(ethers.utils.formatUnits(response.value)),
+        value: Number(ethers.formatUnits(response.value)),
         toAddress: response.to,
         fromAddress: response.from,
         txid: response.hash,

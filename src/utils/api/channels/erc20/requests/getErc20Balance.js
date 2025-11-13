@@ -9,14 +9,18 @@ import BigNumber from "bignumber.js";
  * @param {Object} contract The contract object of the ERC20 token created in the Web3Interface
  */
 export const getErc20Balance = async (address, contract) => {  
+  if (contract == null) throw new Error("No contract provided to fetch balances")
+
   if (contract.balanceOf) {
     return await contract.balanceOf(address)
-  } else throw new Error(`ERC20 contract ${contract.address} does not support a known balance function.`)
+  } else {
+    throw new Error(`ERC20 contract ${await contract.getAddress()} does not support a known balance function.`)
+  }
 }
 
 export const getStandardErc20Balance = async (address, contractAddress, decimals = ETHERS, network = 'homestead') => {
   return BigNumber(
-    ethers.utils.formatUnits(
+    ethers.formatUnits(
       await getErc20Balance(
         address,
         getWeb3ProviderForNetwork(network).getContract(contractAddress, [

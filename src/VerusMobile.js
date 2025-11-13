@@ -42,6 +42,7 @@ import { CoinDirectory } from "./utils/CoinData/CoinDirectory";
 import { removeInactiveCurrencyDefinitions } from "./utils/asyncStore/currencyDefinitionStorage";
 import { removeInactiveContractDefinitions } from "./utils/asyncStore/contractDefinitionStorage";
 import { initInstance } from "./utils/auth/authBox";
+import { SecureStorage } from "./utils/keychain/secureStore";
 
 class VerusMobile extends React.Component {
   constructor(props) {
@@ -86,31 +87,19 @@ class VerusMobile extends React.Component {
       loading
     })
   }
-  
-  componentDidMount() {
-    LogBox.ignoreLogs(['EventEmitter']);
 
-    activateKeyboardListener()
+  async initializeStorage() {
+    try {
+      // Load secret credential from keychain to decrypt data storage, and if loaded successfully, 
+      // cycle secret credential with a newly generated one
+      await SecureStorage.initializeWithKeychain();
 
-    AppState.addEventListener("change", (nextAppState) => this._handleAppStateChange(nextAppState));
+      // Clear cached electrum versions, TODO: Figure out what should trigger a cache clear on startup of server 
+      //versions. (The action that triggers it should indicate a server upgraded it's 
+      //version)
+      await clearCachedVersions();
 
-    // Handle deeplinks
-    Linking.addEventListener("url", ({ url }) => {
-      updateDeeplinkUrl(url)
-    })
-    const updateUrlState = async () => {
-      const url = await Linking.getInitialURL()
-
-      updateDeeplinkUrl(url)
-    }
-
-    updateUrlState()
-    
-    //TODO: Figure out what should trigger a cache clear on startup of server 
-    //versions. (The action that triggers it should indicate a server upgraded it's 
-    //version)
-    clearCachedVersions()
-    .then(async () => {
+      // Initialize app settings
       const settingsAction = await initSettings();
       this.props.dispatch(settingsAction);
 
@@ -127,40 +116,61 @@ class VerusMobile extends React.Component {
       await CoinDirectory.populateEthereumContractDefinitionsFromStorage()
       await CoinDirectory.populatePbaasCurrencyDefinitionsFromStorage()
 
-      return initCache()
-    })
-    .then(() => {
-      return checkAndSetVersion()
-    })
-    .then(async () => {
-      await updateActiveCoinList()
-      
-      let promiseArr = [
-        fetchUsers(),
-        initNotifications(),
-        fetchActiveCoins(),
-      ];
+      await initCache()
 
-      return Promise.all(promiseArr)
-    })
-    .then((actionArr) => {
-      actionArr.forEach((action) => {
-        this.props.dispatch(action)
-      })
-      return Promise.all([
-        loadServerVersions(this.props.dispatch),
-        loadCachedHeaders(this.props.dispatch),
-        loadEthTxReceipts(this.props.dispatch)
-      ]);
-    })
-    .then(() => {
-      this.setState({ loading: false })
-    })
-    .catch((err) => {
+      // Checks and saves current app version to storage
+      await checkAndSetVersion()
+
+      // Update coin list to new style introduced in earlier version
+      await updateActiveCoinList()
+
+      // Load in users from storage
+      this.props.dispatch(await fetchUsers())
+
+      // Load in in-app notification from storage
+      this.props.dispatch(await initNotifications())
+
+      // Load in active coins from storage
+      this.props.dispatch(await fetchActiveCoins())
+
+      // Load electrum server versions from cache in storage
+      await loadServerVersions(this.props.dispatch)
+
+      // Load cached block headers from block header cache
+      await loadCachedHeaders(this.props.dispatch)
+
+      // Load cached eth tx receipts from eth tx receipt cache
+      await loadEthTxReceipts(this.props.dispatch)
+
+      this.setLoading(false)
+    } catch (err) {
       console.error(err)
 
       Alert.alert("Error", err.message)
+    }
+  }
+
+  componentDidMount() {
+    LogBox.ignoreLogs(['EventEmitter']);
+
+    activateKeyboardListener()
+
+    AppState.addEventListener("change", (nextAppState) => this._handleAppStateChange(nextAppState));
+
+    // Handle deeplinks
+    Linking.addEventListener("url", ({ url }) => {
+      updateDeeplinkUrl(url)
     })
+
+    const updateUrlState = async () => {
+      const url = await Linking.getInitialURL()
+
+      updateDeeplinkUrl(url)
+    }
+
+    updateUrlState()
+
+    this.initializeStorage()
 
     if (ENABLE_VERUS_IDENTITIES) {
       this.props.dispatch(requestSeedData());

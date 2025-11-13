@@ -10,14 +10,26 @@ import BigNumber from "bignumber.js";
 import Colors from "../../globals/colors";
 import { CoinDirectory } from "../../utils/CoinData/CoinDirectory";
 import { getCoinLogo } from "../../utils/CoinData/CoinData";
-import { VerusPayInvoice } from "verus-typescript-primitives";
 import { coinsList } from "../../utils/CoinData/CoinsList";
 import MissingInfoRedirect from "../../components/MissingInfoRedirect/MissingInfoRedirect";
 import AnimatedActivityIndicatorBox from "../../components/AnimatedActivityIndicatorBox";
 import { useObjectSelector } from "../../hooks/useObjectSelector";
 
-const FundSourceSelectList = (props) => {
-  const { coinObjs, allSubWallets, sourceOptions: rawSourceOptions, invoice } = props;
+const FundSourceSelectList = ({ 
+    coinObjs, 
+    allSubWallets, 
+    sourceOptions: rawSourceOptions, 
+    testnet, 
+    allowAnyAmount, 
+    allowConversion,
+    expires, 
+    allowNonVerusSystems, 
+    acceptedSystems,
+    requestedCurrency,
+    amount,
+    excludeVerusBlockchain,
+    onSelect
+  }) => {
 
   const allBalances = useObjectSelector(state => state.ledger.balances);
 
@@ -32,8 +44,6 @@ const FundSourceSelectList = (props) => {
 
   const [searchTerm, setSearchTerm] = useState('');
 
-  const inv = VerusPayInvoice.fromJson(invoice);
-
   useEffect(() => {
     // Times out waiting for balance updates as opposed to flashing error screen
     setTimeout(() => {
@@ -43,7 +53,7 @@ const FundSourceSelectList = (props) => {
 
   useEffect(() => {
     parseProps();
-  }, [coinObjs, allSubWallets, rawSourceOptions, invoice, allBalances]);
+  }, [coinObjs, allSubWallets, rawSourceOptions, allBalances]);
 
   useEffect(() => {
     updateDisplayedCards();
@@ -56,7 +66,6 @@ const FundSourceSelectList = (props) => {
   const parseProps = () => {
     const sourceOptionsMap = new Map();
     const displayedCoinObjsMap = new Map();
-    const inv = VerusPayInvoice.fromJson(invoice);
 
     for (const coinObj of coinObjs) {
       const chainTicker = coinObj.id;
@@ -68,32 +77,32 @@ const FundSourceSelectList = (props) => {
       
       for (const wallet of subWallets) {
         const network = wallet.network;
-        const rootNetwork = inv.details.isTestnet() ? coinsList.VRSCTEST : coinsList.VRSC;
+        const rootNetwork = testnet ? coinsList.VRSCTEST : coinsList.VRSC;
         const rootNetworkId = rootNetwork.currency_id
 
         if (network && 
-            ((inv.details.acceptsNonVerusSystems() && inv.details.acceptedsystems.includes(network)) || 
-              (network === rootNetworkId && !inv.details.excludesVerusBlockchain()) || 
-              (!inv.details.expires() && !inv.details.acceptsConversion())
+            ((allowNonVerusSystems && acceptedSystems.includes(network)) || 
+              (network === rootNetworkId && !excludeVerusBlockchain) || 
+              (!expires && !allowConversion)
             )
         ) {
           displayedCoinObjsMap.set(network, CoinDirectory.findCoinObj(network));
           const newNetworkSourceOptionMap = new Map(sourceOptionsMap.get(network));
           
-          const acceptedNonVerusSystems = inv.details.acceptsNonVerusSystems() ? inv.details.acceptedsystems : [];
+          const acceptedNonVerusSystems = allowNonVerusSystems ? acceptedSystems : [];
           const exportTo =
-            !inv.details.expires() &&
-            !inv.details.acceptsConversion() &&
+            !expires &&
+            !allowConversion &&
             wallet.network !== rootNetworkId &&
             !acceptedNonVerusSystems.includes(wallet.network)
               ? rootNetwork.id
               : null;
 
-          if (coinObj.currency_id === inv.details.requestedcurrencyid) {
+          if (coinObj.currency_id === requestedCurrency) {
             // Accept cross-network sends if no conversion or expiry
-            if (!inv.details.acceptsConversion() && !inv.details.expires()) {
+            if (!allowConversion && !expires) {
               newNetworkSourceOptionMap.set(getNetworkSourceOptionKey(coinObj.currency_id, wallet.id), {
-                amount: satsToCoins(BigNumber(inv.details.amount)).toNumber(),
+                amount: satsToCoins(BigNumber(amount)).toNumber(),
                 network: network,
                 conversion: false,
                 wallet,
@@ -101,12 +110,12 @@ const FundSourceSelectList = (props) => {
                 exportTo
               });
             } else if (
-              (inv.details.isTestnet() && network === coinsList.VRSCTEST.system_id) || 
-              (!inv.details.isTestnet() && network === coinsList.VRSC.system_id) || 
-              (inv.details.acceptsNonVerusSystems() && inv.details.acceptedsystems.includes(network))
+              (testnet && network === coinsList.VRSCTEST.system_id) || 
+              (!testnet && network === coinsList.VRSC.system_id) || 
+              (allowNonVerusSystems && acceptedSystems.includes(network))
             ) {
               newNetworkSourceOptionMap.set(getNetworkSourceOptionKey(coinObj.currency_id, wallet.id), {
-                amount: satsToCoins(BigNumber(inv.details.amount)).toNumber(),
+                amount: satsToCoins(BigNumber(amount)).toNumber(),
                 network: network,
                 conversion: false,
                 wallet,
@@ -187,11 +196,11 @@ const FundSourceSelectList = (props) => {
         const balance = balanceLoaded ? cryptoBalances[coinObj.id][wallet.id] : BigNumber(0);
         const balanceDisplay = balanceLoaded ? truncateDecimal(cryptoBalances[coinObj.id][wallet.id], 4) : '-';
 
-        const requiredAmount = inv.details.acceptsAnyAmount() ? BigNumber(0) : BigNumber(amount);
+        const requiredAmount = allowAnyAmount ? BigNumber(0) : BigNumber(amount);
 
         if (coinObj && balance.isGreaterThan(requiredAmount)) {
           cards.push({
-            title: `Pay with ${inv.details.acceptsAnyAmount() ? "any amount" : `${amount} ${coinObj.display_ticker}`} from ${wallet.name}${
+            title: `Pay ${allowAnyAmount ? 'from' : `with ${amount} ${coinObj.display_ticker} from`} ${wallet.name}${
               via != null ? ` via ${via}` : ''
             }`,
             subtitle: `Network: ${
@@ -203,7 +212,7 @@ const FundSourceSelectList = (props) => {
             color: coinObj.theme_color,
             option: sourceOptions[networkId][optionId],
             searchTerms: [
-              inv.details.acceptsAnyAmount() ? '' : amount.toString(),
+              allowAnyAmount ? '' : amount.toString(),
               coinObj.display_ticker,
               wallet.name,
               via != null ? via : ''
@@ -238,23 +247,23 @@ const FundSourceSelectList = (props) => {
       <View style={{flex: 1, width: '100%'}}>
         <MissingInfoRedirect
           icon={'alert-circle-outline'}
-          label={'No valid sources to pay this invoice from in your wallet.'}
+          label={'No valid sources to pay from in your wallet with enough balance.'}
         />
       </View>
     )
     :
     <ScrollView>
-      <TextInput
+      {displayedCards.length > 5 && <TextInput
         label={`Search ${displayedCards.length} payment ${displayedCards.length === 1 ? 'option' : 'options'}`}
         value={searchTerm}
         onChangeText={text => setSearchTerm(text)}
         mode="outlined"
-        style={{marginHorizontal: 8, marginTop: 2}}
-      />
+        style={{ marginHorizontal: 8, marginTop: 2 }}
+      />}
       {displayedCards.map((card, index) => (
         <View style={{ margin: 8, marginTop: index === 0 ? 8 : 0 }} key={index}>
           <Card
-            onPress={() => props.onSelect(card)}
+            onPress={() => onSelect(card)}
             key={index}
             style={{ backgroundColor: card.color }}
           >

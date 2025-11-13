@@ -402,7 +402,7 @@ const WalletSettings = props => {
             descriptionNumberOfLines={10}
             right={() => (
               <Text style={Styles.listItemTableCell}>
-                {settings.minGasPriceGwei == null ? MINIMUM_GAS_PRICE_GWEI : settings.minGasPriceGwei}
+                {settings.minGasPriceGwei == null ? Number(MINIMUM_GAS_PRICE_GWEI) : settings.minGasPriceGwei}
               </Text>
             )}
           />

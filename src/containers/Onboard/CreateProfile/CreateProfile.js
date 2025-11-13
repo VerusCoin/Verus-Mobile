@@ -4,7 +4,6 @@ import {addCoin, addUser} from '../../../actions/actionCreators';
 import {createAlert} from '../../../actions/actions/alert/dispatchers/alert';
 import {CHANNELS, ELECTRUM} from '../../../utils/constants/intervalConstants';
 import {hashAccountId} from '../../../utils/crypto/hash';
-import {storeBiometricPassword} from '../../../utils/keychain/keychain';
 import {arrayToObject} from '../../../utils/objectManip';
 import CreateWalletStackScreens from '../../CreateWallet/CreateWallet';
 import ChooseName from './Forms/ChooseName';
@@ -21,6 +20,7 @@ import {
 import { deriveKeyPair } from '../../../utils/keys';
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
+import { storeBiometricPassword } from '../../../utils/keychain/biometrics';
 
 const CreateProfileStack = createStackNavigator();
 

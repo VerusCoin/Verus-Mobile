@@ -38,6 +38,7 @@ import BigNumber from "bignumber.js";
 import { TransactionLogos } from '../../../images/customIcons/index'
 import Colors from "../../../globals/colors";
 import { CoinDirectory } from "../../../utils/CoinData/CoinDirectory";
+import { scientificToDecimal } from "../../../utils/math";
 
 const TX_LOGOS = {
   self: TransactionLogos.SelfArrow,
@@ -246,8 +247,8 @@ class Overview extends Component {
 
     // Handle possible int overflows
     try { 
-      if (!gasFees && item.fee) {
-        displayAmount = amount.minus(item.fee)
+      if (!gasFees && item.fee && item.type !== "unknown") {
+        displayAmount = amount.minus(item.fee).abs()
       } else displayAmount = amount
     }
     catch(e) { console.error(e) }
@@ -281,10 +282,10 @@ class Overview extends Component {
         <List.Item
           title={`${
             displayAmount != null
-              ? displayAmount.isLessThan(BigNumber(0.0001)) &&
+              ? displayAmount.isLessThan(BigNumber(0.000001)) &&
                 !displayAmount.isEqualTo(BigNumber(0))
                 ? displayAmount.toExponential()
-                : displayAmount.toString()
+                : scientificToDecimal(displayAmount.toString())
               : "??"
           } ${
             item.feeCurr != null && item.type === "self"

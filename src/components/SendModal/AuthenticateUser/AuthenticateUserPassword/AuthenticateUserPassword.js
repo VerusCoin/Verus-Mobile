@@ -8,8 +8,10 @@ import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert
 import Colors from '../../../../globals/colors';
 import styles from "../../../../styles";
 import { SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT, SEND_MODAL_USER_TO_AUTHENTICATE } from "../../../../utils/constants/sendModal";
-import { getBiometricPassword, getSupportedBiometryType } from '../../../../utils/keychain/keychain';
+import { getSupportedBiometryType } from '../../../../utils/keychain/keychain';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
+import { getBiometricPassword } from '../../../../utils/keychain/biometrics';
+import AnimatedActivityIndicatorBox from '../../../AnimatedActivityIndicatorBox';
 
 const AuthenticateUserPassword = props => {
   const [password, setPassword] = useState("")
@@ -30,8 +32,10 @@ const AuthenticateUserPassword = props => {
   const defaultAccountSelected = account != null && defaultAccount === account.accountHash
   const [makeDefaultAccount, setMakeDefaultAccount] = useState(defaultAccountSelected)
 
+  const [internalLoading, setInternalLoading] = useState(false)
+
   const tryUnlockAccount = async key => {
-    await props.setLoading(true);
+    setInternalLoading(true);
     await props.setPreventExit(true)
     props.updateSendFormData(SEND_MODAL_USER_TO_AUTHENTICATE, account.accountHash)
     Keyboard.dismiss();
@@ -43,11 +47,11 @@ const AuthenticateUserPassword = props => {
         makeDefaultAccount
       );
 
-      await props.setLoading(false);
+      setInternalLoading(false);
       await props.setPreventExit(false);
       props.navigation.navigate(SEND_MODAL_FORM_STEP_RESULT);
     } catch(e) {
-      await props.setLoading(false);
+      setInternalLoading(false);
       await props.setPreventExit(false);
       console.warn(e)
     }
@@ -67,8 +71,10 @@ const AuthenticateUserPassword = props => {
           'Authenticate to unlock profile',
         );
 
-        setPassword(password);
-        await tryUnlockAccount(password);
+        if (password != null) {
+          setPassword(password);
+          await tryUnlockAccount(password);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -86,7 +92,7 @@ const AuthenticateUserPassword = props => {
     props.updateSendFormData(SEND_MODAL_USER_TO_AUTHENTICATE, null);
   }
 
-  return (
+  return internalLoading ? <AnimatedActivityIndicatorBox /> : (
     <View
       style={{
         ...styles.flexBackground,

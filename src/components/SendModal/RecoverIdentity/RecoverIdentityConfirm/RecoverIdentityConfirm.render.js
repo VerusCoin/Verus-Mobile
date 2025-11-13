@@ -4,42 +4,47 @@ import { Button } from 'react-native-paper';
 import Colors from '../../../../globals/colors';
 import Styles from '../../../../styles';
 import VerusIdObjectData from '../../../VerusIdObjectData';
+import { VERUSID_AUTH_INFO, VERUSID_BASE_INFO, VERUSID_PRIMARY_ADDRESS, VERUSID_PRIVATE_ADDRESS, VERUSID_PRIVATE_INFO, VERUSID_RECOVERY_AUTH, VERUSID_REVOCATION_AUTH, VERUSID_STATUS } from '../../../../utils/constants/verusidObjectData';
 
 export const RecoverIdentityConfirmRender = ({ targetId, friendlyNames, goBack, submitData, ownedByUser, ownedAddress, sendModal, revocationAddr, recoveryAddr, primaryAddr, privateAddr }) => {
   return (
-    <SafeAreaView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }}>
+    <SafeAreaView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite, height: '100%' }}>
       <VerusIdObjectData
         verusId={targetId}
         friendlyNames={friendlyNames}
         ownedByUser={false}
         ownedAddress={ownedAddress}
         updates={{
-          ['Recovery Authority']: recoveryAddr ? {
-            data: recoveryAddr
-          } : null,
-          ['Revocation Authority']: revocationAddr ? {
-            data: revocationAddr
-          } : null,
-          ['Private Address']: privateAddr ? {
-            data: privateAddr
-          } : null,
-          ['Primary Address #1']: primaryAddr ? {
-            data: primaryAddr
-          } : null,
-          ["Status"]: {
-            data: "Active"
+          [VERUSID_AUTH_INFO.key]: {
+            [VERUSID_RECOVERY_AUTH.key]: recoveryAddr ? {
+              data: recoveryAddr
+            } : null,
+            [VERUSID_REVOCATION_AUTH.key]: revocationAddr ? {
+              data: revocationAddr
+            } : null,
+            [`${VERUSID_PRIMARY_ADDRESS.key}:0`]: primaryAddr ? {
+              data: primaryAddr
+            } : null,
+          },
+          [VERUSID_PRIVATE_INFO.key]: {
+            [VERUSID_PRIVATE_ADDRESS.key]: privateAddr ? {
+              data: privateAddr
+            } : null,
+          },
+          [VERUSID_BASE_INFO.key]: {
+            [VERUSID_STATUS.key]: {
+              data: "Active"
+            }
           }
         }}
         StickyFooterComponent={
           <View
             style={{
-              position: 'absolute',
               backgroundColor: 'white',
               width: '100%',
               flexDirection: 'row',
               justifyContent: 'space-evenly',
-              paddingVertical: 20,
-              bottom: 0,
+              paddingVertical: 20
             }}>
             <Button
               textColor={Colors.warningButtonColor}

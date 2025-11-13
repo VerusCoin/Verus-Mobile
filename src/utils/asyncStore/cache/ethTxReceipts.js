@@ -2,6 +2,7 @@ import { Cache } from "react-native-cache"
 //Cache library built on AsyncStorage
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { bigintToHex } from "../../math";
 
 export const ETH_TX_CACHE_CAP = 1000
 
@@ -35,8 +36,8 @@ export const setCachedEthTxReceipt = (ethTxReceiptObj, txid) => {
   return ethTxReceiptCache
     .setItem(key, {
       ...ethTxReceiptObj,
-      cumulativeGasUsed: ethTxReceiptObj.cumulativeGasUsed.toHexString(),
-      gasUsed: ethTxReceiptObj.gasUsed.toHexString(),
+      cumulativeGasUsed: bigintToHex(ethTxReceiptObj.cumulativeGasUsed),
+      gasUsed: bigintToHex(ethTxReceiptObj.gasUsed),
     })
     .catch((e) => {
       console.log("Error while setting ethTxReceipt cache");

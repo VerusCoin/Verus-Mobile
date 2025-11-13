@@ -22,7 +22,7 @@ const handlers = {
 
     const urlstring = url.toString()
 
-    openUrl(urlstring.toString())
+    openUrl(urlstring)
 
     return null
   }

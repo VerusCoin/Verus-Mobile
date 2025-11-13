@@ -1,17 +1,13 @@
 import Store from '../../../../../store/index'
-import { InitializerConfig } from 'react-native-verus'
-import Synchronizer from '../../../../../utils/api/channels/dlight/state/walletFolder'
+import { Tools } from 'react-native-verus'
 import {
-  setConfig,
   initializeWallet,
+  eraseWallet,
   openWallet,
   closeWallet,
-  deleteWallet,
-  startSync,
-  stopSync,
   getAddresses
 } from '../../../../../utils/api/channels/dlight/callCreators'
-import { DEFAULT_PRIVATE_ADDRS } from '../../../../../utils/constants/constants'
+import { isDlightSpendingKey } from '../../../../../utils/keys'
 import { resolveSequentially } from '../../../../../utils/promises'
 import { canRetryDlightInitialization, blockchainQuitError } from './AlertManager'
 import {
@@ -22,7 +18,7 @@ import {
   INIT_DLIGHT_CHANNEL_START,
   CLOSE_DLIGHT_CHANNEL,
 } from "../../../../../utils/constants/storeType";
-import { requestViewingKey, requestSeeds } from '../../../../../utils/auth/authBox'
+import { requestSeeds } from '../../../../../utils/auth/authBox'
 import { DLIGHT_PRIVATE } from '../../../../../utils/constants/intervalConstants'
 
 // Initializes dlight wallet by either creating a backend native wallet and opening it or just opening it
@@ -62,25 +58,40 @@ export const initDlightWallet = async (coinObj) => {
       if (lightWalletEndpointArr[1] == null || isNaN(lightWalletEndpointArr[1])) 
         throw new Error(id + " lightwallet was requested with port " + lightWalletEndpointArr[1], " this is not a valid port.")
 
-      const accountSeeds = await requestSeeds();
-      const seed = accountSeeds[DLIGHT_PRIVATE];
+      const seed = (await requestSeeds())[DLIGHT_PRIVATE];
+      let mnemonicSeed = "";
+      let extsk = "";
 
-      //console.log("Redux: before InitializationPromises")
+      if (isDlightSpendingKey(seed)) {
+        extsk = seed;
+      } else {
+        mnemonicSeed = seed;
+      }
+
       initializationPromises = [
-        await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]),seed),
-        startSync(id, proto, accountHash),
-
-        getAddresses(id, accountHash, proto)
+          await initializeWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), mnemonicSeed, extsk),
+          getAddresses(extsk, mnemonicSeed, id)
       ];
-      secondInitializationPromises = [
-        await getAddresses(id, accountHash, proto, seed)
-      ]
 
     } else if (dlightSockets[id] === false) {
+      const lightWalletEndpointArr = dlight_endpoints[0].split(':')
+
+      if (lightWalletEndpointArr[1] == null || isNaN(lightWalletEndpointArr[1]))
+        throw new Error(id + " lightwallet was requested with port " + lightWalletEndpointArr[1], " this is not a valid port.")
+
+      const seed = (await requestSeeds())[DLIGHT_PRIVATE];
+      let mnemonicSeed = "";
+      let extsk = "";
+
+      if (isDlightSpendingKey(seed)) {
+        extsk = seed;
+      } else {
+        mnemonicSeed = seed;
+      }
+
       initializationPromises = [
-        openWallet(id, proto, accountHash),
-        startSync(id, proto, accountHash),
-        getAddresses(id, accountHash, proto, seed)
+          await openWallet(id, proto, accountHash, lightWalletEndpointArr[0], Number(lightWalletEndpointArr[1]), mnemonicSeed, extsk),
+          getAddresses(extsk, mnemonicSeed, id)
       ]
     } else {
       throw new Error(id + " is already initialized and connected in lightwalletd mode. Cannot intialize and connect a coin twice.")
@@ -96,44 +107,49 @@ export const initDlightWallet = async (coinObj) => {
 
   return new Promise((resolve) => {
     resolveSequentially(initializationPromises)
-      .then(res => {
+    .then(res => {
+      dispatch({
+        type: INIT_DLIGHT_CHANNEL_START,
+        payload: { chainTicker: id }
+      })
+
+      dispatch({
+        type: SET_ADDRESSES,
+        payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: [ res.pop().result ]  }
+      });
+
+      resolve()
+    })
+    .catch(err => {
+      console.warn(err)
+
+      canRetryDlightInitialization(id)
+      .then(canRetry => {
+        if (canRetry) {
+          return initDlightWallet(coinObj).then(resolve)
+        } else {
+          dispatch({
+            type: ERROR_DLIGHT_INIT,
+            payload: { chainTicker: id, error: err }
+          })
+
+          resolve()
+        }
+      })
+      .catch(e => {
         dispatch({
-          type: INIT_DLIGHT_CHANNEL_START,
-          payload: { chainTicker: id }
-        })
-        dispatch({
-          type: SET_ADDRESSES,
-          payload: { chainTicker: id, channel: DLIGHT_PRIVATE, addresses: res.pop() },
+          type: ERROR_DLIGHT_INIT,
+          payload: { chainTicker: id, error: e }
         })
 
         resolve()
-      }).catch(err => {
-        console.warn(err)
-
-        canRetryDlightInitialization(id)
-          .then(canRetry => {
-             if (canRetry) {
-               return initDlightWallet(coinObj).then(resolve)
-             } else {
-               dispatch({
-                 type: ERROR_DLIGHT_INIT,
-                 payload: { chainTicker: id, error: err }
-               })
-               resolve()
-             }
-          })
-          .catch(e => {
-            dispatch({
-              type: ERROR_DLIGHT_INIT,
-              payload: { chainTicker: id, error: e }
-            })
-            resolve()
-          })
       })
+    })
   })
 }
+
 // Closes and optionally deletes a dlightWallet
-export const closeDlightWallet = (coinObj, clearDb) => {
+export const closeDlightWallet = async (coinObj, clearDb) => {
   const { dispatch, getState } = Store
   const State = getState()
 
@@ -146,21 +162,16 @@ export const closeDlightWallet = (coinObj, clearDb) => {
   if (activeAccount.seeds.dlight_private == null) return Promise.resolve()
 
   let closePromises = []
-
   try {
     if (dlightSockets[id] === true) {
-      if (dlightSyncing[id] === true) {
-        //closePromises.push(stopSync(id, proto, accountHash))
-      } 
-
-      closePromises.push(closeWallet(id, proto, accountHash))
-
-      if (clearDb) {
-        closePromises.push(deleteWallet(id, proto, accountHash))
-      }
+      closePromises = [
+        Promise.resolve(clearDb
+          ? eraseWallet(id, accountHash, proto)
+          : closeWallet(id, accountHash, proto))
+       ];
     } else  {
       throw new Error(id + "'s dlight wallet cannot be stopped if it was never started.")
-    } 
+    }
   } catch (e) {
     console.warn(e)
   }

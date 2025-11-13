@@ -1,6 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COIN_STORAGE_INTERNAL_KEY } from '../../../env/index'
 import { CoinDirectory } from '../CoinData/CoinDirectory';
+import { SecureStorage } from '../keychain/secureStore';
 // react-native's version of local storage
 
 //Clear user from coin, or delete user from all if no coin specified
@@ -44,7 +44,7 @@ export const storeCoins = (coins) => {
   let _toStore = {coins: _coins}
 
   return new Promise((resolve, reject) => {
-    AsyncStorage.setItem(COIN_STORAGE_INTERNAL_KEY, JSON.stringify(_toStore))
+    SecureStorage.setItem(COIN_STORAGE_INTERNAL_KEY, JSON.stringify(_toStore))
       .then(() => {
         resolve(true);
       })
@@ -54,7 +54,7 @@ export const storeCoins = (coins) => {
 
 export const getActiveCoinList = () => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem(COIN_STORAGE_INTERNAL_KEY)
+    SecureStorage.getItem(COIN_STORAGE_INTERNAL_KEY)
       .then(res => {
         if (!res) {
           let coinsList = {coins: []};
@@ -71,7 +71,7 @@ export const getActiveCoinList = () => {
 
 export const updateActiveCoinList = () => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem(COIN_STORAGE_INTERNAL_KEY)
+    SecureStorage.getItem(COIN_STORAGE_INTERNAL_KEY)
       .then((res) => {
         let coinList = []
         let newCoinList = []

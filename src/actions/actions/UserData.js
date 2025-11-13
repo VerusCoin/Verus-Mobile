@@ -16,6 +16,7 @@ import {
   setUserKeyDerivationVersion,
   setUserDisabledServices,
   setUserTestnetOverrides,
+  setUserHideSeedWarnings,
 } from '../../utils/asyncStore/asyncStore';
 import {deriveKeyPair} from '../../utils/keys';
 import {decryptkey, encryptkey} from '../../utils/seedCrypt';
@@ -35,6 +36,7 @@ import {
 } from '../../../env/index';
 import {
   BIOMETRIC_AUTH,
+  HIDE_SEED_WARNINGS,
   SET_ACCOUNTS,
   UPDATE_ACCOUNT_DISABLED_SERVICES,
   UPDATE_ACCOUNT_TESTNET_OVERRIDES,
@@ -111,6 +113,19 @@ export const setBiometry = (accountHash, biometry) => {
         resolve({
           type: BIOMETRIC_AUTH,
           payload: {biometry, accountHash, accounts},
+        });
+      })
+      .catch(err => reject(err));
+  });
+};
+
+export const setHideSeedWarnings = (accountHash, hideSeedWarnings) => {
+  return new Promise((resolve, reject) => {
+    setUserHideSeedWarnings(accountHash, hideSeedWarnings)
+      .then(accounts => {
+        resolve({
+          type: HIDE_SEED_WARNINGS,
+          payload: {hideSeedWarnings, accountHash, accounts},
         });
       })
       .catch(err => reject(err));
@@ -322,6 +337,7 @@ export const authenticateAccount = async (account, password) => {
               keys: _keys,
               paymentMethods: {},
               biometry: account.biometry ? true : false,
+              hideSeedWarnings: !!(account.hideSeedWarnings),
               keyDerivationVersion:
                 account.keyDerivationVersion == null
                   ? 0
@@ -347,7 +363,7 @@ export const authenticateAccount = async (account, password) => {
 
 export const validateLogin = (account, password) => {
   return new Promise((resolve, reject) => {
-    checkPinForUser(password, account.id)
+    checkPinForUser(password, account.id, true, true)
       .then(() => {
         return authenticateAccount(account, password);
       })

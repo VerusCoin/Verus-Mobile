@@ -4,6 +4,7 @@ import { IconButton, Divider, Text, TextInput } from 'react-native-paper';
 import Colors from '../../globals/colors';
 import Styles from '../../styles';
 import { VETH } from '../../utils/constants/web3Constants';
+import { toLowerCaseCLocale } from 'verus-typescript-primitives';
 
 const ExportFormModule = ({
   isExport,
@@ -63,7 +64,7 @@ const ExportFormModule = ({
                 }}>
                 {
                   isExport
-                    ? exportToField.toLowerCase() === VETH.toLowerCase()
+                    ? toLowerCaseCLocale(exportToField) === VETH.toLowerCase()
                       ? 'To Ethereum network'
                       : `To network: ${exportToField}`
                     : isConversion

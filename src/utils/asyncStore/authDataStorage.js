@@ -1,6 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-// react-native's version of local storage
-
 import {
   encryptkey,
   decryptkey,
@@ -8,14 +5,16 @@ import {
 
 import { hashAccountId } from "../crypto/hash";
 import { CHANNELS_NULL_TEMPLATE, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from "../constants/intervalConstants";
-import { createAlert } from "../../actions/actions/alert/dispatchers/alert";
 import store from '../../store';
-import { setAccounts, updateSessionKey } from '../../actions/actionCreators';
+import { setAccounts, setShowHideSeedCorruptionSetting, updateSessionKey } from '../../actions/actionCreators';
 import { USER_DATA_STORAGE_INTERNAL_KEY } from '../../../env/index';
 import { WYRE_SERVICE_ID } from '../constants/services';
 import { resetPersonalDataEncryptionForUser, resetServicesStoredEncryptionForUser } from '../../actions/actionDispatchers';
-import { removeSessionPassword, setSessionPassword } from '../keychain/keychain';
+import { removeSessionCredential } from '../keychain/keychain';
 import { initSession } from '../auth/authBox';
+import { SecureStorage } from '../keychain/secureStore';
+import { Alert } from 'react-native';
+import { SUSPICIOUS_UNICODE_CHARACTER_TEST } from '../constants/regex';
 
 //Set storage to hold encrypted user data
 export const storeUser = (authData, users) => {
@@ -37,6 +36,7 @@ export const storeUser = (authData, users) => {
       accountHash: hashAccountId(authData.userName),
       encryptedKeys,
       biometry: authData.biometry ? true : false,
+      hideSeedWarnings: !!(authData.hideSeedWarnings),
       keyDerivationVersion:
         authData.keyDerivationVersion == null
           ? 0
@@ -54,7 +54,7 @@ export const storeUser = (authData, users) => {
     _users.push(userObj);
     let _toStore = {users: _users};
 
-    AsyncStorage.setItem(
+    SecureStorage.setItem(
       USER_DATA_STORAGE_INTERNAL_KEY,
       JSON.stringify(_toStore),
     )
@@ -85,7 +85,7 @@ export const addEncryptedKeyToUser = async (accountHash, channel, seed, password
       let newUsers = [...users]
       newUsers[userObjIndex] = newUserObj
 
-      await AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify({users: newUsers}))
+      await SecureStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify({users: newUsers}))
       return await getUsers()
     }
   } catch(e) {
@@ -98,7 +98,7 @@ export const setUsers = (users) => {
   let _toStore = {users}
 
   return new Promise((resolve, reject) => {
-    AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(_toStore))
+    SecureStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(_toStore))
       .then(() => {
         resolve(_toStore.users);
       })
@@ -109,7 +109,7 @@ export const setUsers = (users) => {
 //Delete user by user ID and return new user array
 export const deleteUser = (accountHash) => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
+    SecureStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(res => {
         let _users = res ? JSON.parse(res).users : [];
         if(accountHash !== null) {
@@ -119,15 +119,15 @@ export const deleteUser = (accountHash) => {
             _users.splice(userIndex, 1);
             let _toStore = {users: _users}
             let promiseArr = [
-              AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(_toStore)),
+              SecureStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(_toStore)),
               _users]
             return Promise.all(promiseArr)
           } else {
-            createAlert("Error", "User with hash " + accountHash + " not found");
+            Alert.alert("Error", "User with hash " + accountHash + " not found");
             throw new Error("User with hash " + accountHash + " not found")
           }
         } else {
-          createAlert("Error", "accountHash is null");
+          Alert.alert("Error", "accountHash is null");
           throw new Error("accountHash is null")
         }
       })
@@ -141,12 +141,12 @@ export const deleteUser = (accountHash) => {
 
 export const resetUserPwd = async (accountHash, newPwd, oldPwd) => {
   try {
-    const res = await AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY);
+    const res = await SecureStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY);
     let users = res ? JSON.parse(res).users : [];
     let userIndex = users.findIndex(n => n.accountHash === accountHash);
 
     if (accountHash === null || userIndex === -1) {
-      createAlert("Error", `User with ID ${accountHash} not found`);
+      Alert.alert("Error", `User with ID ${accountHash} not found`);
       return false;
     }
 
@@ -158,7 +158,7 @@ export const resetUserPwd = async (accountHash, newPwd, oldPwd) => {
     };
 
     if ((electrum && !decryptedKeys.electrum) || (dlight_private && !decryptedKeys.dlight_private)) {
-      createAlert("Authentication Error", "Incorrect password");
+      Alert.alert("Authentication Error", "Incorrect password");
       return false;
     }
 
@@ -169,7 +169,7 @@ export const resetUserPwd = async (accountHash, newPwd, oldPwd) => {
     };
 
     // Reset the session password
-    await removeSessionPassword();
+    await removeSessionCredential();
     const sessionKey = await initSession(newPwd);
     store.dispatch(updateSessionKey(sessionKey));
 
@@ -177,7 +177,7 @@ export const resetUserPwd = async (accountHash, newPwd, oldPwd) => {
     
     await resetServicesStoredEncryptionForUser(accountHash, oldPwd);
     
-    await AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify({users}));
+    await SecureStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify({users}));
   
     return users;
   } catch (err) {
@@ -188,7 +188,7 @@ export const resetUserPwd = async (accountHash, newPwd, oldPwd) => {
 
 const setUserSetting = (accountHash, settingKey, setting) => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
+    SecureStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(async (res) => {
         let _users = res ? JSON.parse(res).users : [];
         if(accountHash !== null) {
@@ -196,7 +196,7 @@ const setUserSetting = (accountHash, settingKey, setting) => {
 
           if (userIndex > -1) {
             _users[userIndex][settingKey] = setting
-            await AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify({users: _users}))
+            await SecureStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify({users: _users}))
             resolve(_users)
           } else {
             throw new Error("User with hash " + accountHash + " not found")
@@ -214,6 +214,10 @@ const setUserSetting = (accountHash, settingKey, setting) => {
 
 export const setUserBiometry = (accountHash, biometry) => {
   return setUserSetting(accountHash, "biometry", biometry)
+};
+
+export const setUserHideSeedWarnings = (accountHash, hideSeedWarnings) => {
+  return setUserSetting(accountHash, "hideSeedWarnings", hideSeedWarnings)
 };
 
 export const setUserKeyDerivationVersion = (accountHash, keyDerivationVersion) => {
@@ -239,7 +243,7 @@ export const putUserPaymentMethods = async (user, paymentMethods) => {
 
 export const putUser = (userID, userParams) => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
+    SecureStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(res => {
         const _users = res ? JSON.parse(res).users : [];
         if(userID !== null) {
@@ -251,7 +255,7 @@ export const putUser = (userID, userParams) => {
               ...userParams,
             }
             const _toStore = { users: _users }
-            const promiseArr = [AsyncStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(_toStore)), _users]
+            const promiseArr = [SecureStorage.setItem(USER_DATA_STORAGE_INTERNAL_KEY, JSON.stringify(_toStore)), _users]
             return Promise.all(promiseArr)
           }
         }
@@ -276,7 +280,7 @@ export const putUser = (userID, userParams) => {
 export const getUsers = () => {
   let users = {}
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
+    SecureStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(res => {
         users = res ? JSON.parse(res) : {users: []};
         resolve(users.users)
@@ -286,9 +290,9 @@ export const getUsers = () => {
 };
 
 // Check user password
-export const checkPinForUser = (pin, userName, alertOnFail = true) => {
+export const checkPinForUser = (pin, userName, alertOnFail = true, alertOnCorruptedSeed = false) => {
   return new Promise((resolve, reject) => {
-    AsyncStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
+    SecureStorage.getItem(USER_DATA_STORAGE_INTERNAL_KEY)
       .then(async res => {
         let users = res ? JSON.parse(res) : {users: []};
         if(pin !== null && users.users) {
@@ -307,9 +311,15 @@ export const checkPinForUser = (pin, userName, alertOnFail = true) => {
               (dlight_private == null || _decryptedSeeds.dlight_private) &&
               (wyre_service == null || _decryptedSeeds.wyre_service)
             ) {
+              let seedPotentiallyCorrupted = false;
+
               for (const channel in _decryptedSeeds) {
                 if (_decryptedSeeds[channel]) {
                   try {
+                    if (alertOnCorruptedSeed) {
+                      seedPotentiallyCorrupted = (SUSPICIOUS_UNICODE_CHARACTER_TEST).test(_decryptedSeeds[channel])
+                    }
+
                     store.dispatch(
                       setAccounts(
                         await addEncryptedKeyToUser(
@@ -322,24 +332,35 @@ export const checkPinForUser = (pin, userName, alertOnFail = true) => {
                       )
                     );
                   } catch (e) {
-                    createAlert("Authentication Error", "Internal authentication error.");
+                    Alert.alert("Authentication Error", "Internal authentication error.");
                   }
                 }
               }
 
+              if (seedPotentiallyCorrupted) {
+                if (!user.hideSeedWarnings) {
+                  Alert.alert(
+                    "Possible Seed Corruption Detected",
+                    "Non-standard characters were detected in your profile seed.\n\nIf your seed is a standard word-based phrase, or a WIF key, this could indicate that your seed data was corrupted, and may not match your seed backup.\n\nCheck your seed by going into Settings > Profile > Recover Seed. If it does not match your backup, create a new profile from your backup and send any funds on this profile to that new profile.\n\nYou can disable this warning in Profile > Settings."
+                  );
+                }
+
+                store.dispatch(setShowHideSeedCorruptionSetting(true));
+              }
+
               resolve(_decryptedSeeds);
             } else {
-              if (alertOnFail) createAlert("Authentication Error", "Incorrect password");
+              if (alertOnFail) Alert.alert("Authentication Error", "Incorrect password");
               throw new Error("Incorrect password");
             }
           }
           else {
-            if (alertOnFail) createAlert("Authentication Error", "Please select an existing user")
+            if (alertOnFail) Alert.alert("Authentication Error", "Please select an existing user")
             throw new Error("Please select an existing user");
           }
         }
         else {
-          if (alertOnFail) createAlert("Authentication Error", "Please enter a password")
+          if (alertOnFail) Alert.alert("Authentication Error", "Please enter a password")
           throw new Error("Please enter a password");
         }
       })
@@ -349,5 +370,5 @@ export const checkPinForUser = (pin, userName, alertOnFail = true) => {
   });
 };
 
-export const onSignOut = () => AsyncStorage.removeItem(KEY);
+export const onSignOut = () => SecureStorage.removeItem(KEY);
 //if user signs out, remove TRUE key

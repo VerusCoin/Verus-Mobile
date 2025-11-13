@@ -13,6 +13,7 @@ import {
   ETH,
 } from '../../../../utils/constants/intervalConstants';
 import {
+  CONVERT_OR_CROSS_CHAIN_SLIPPAGE_WARNING_THRESHOLD,
   SEND_MODAL_FORM_STEP_FORM,
   SEND_MODAL_FORM_STEP_RESULT,
   SEND_MODAL_PRICE_ESTIMATE,
@@ -30,6 +31,7 @@ import {sendCurrencyTransfer} from '../../../../utils/api/channels/vrpc/callCrea
 import {CoinDirectory} from '../../../../utils/CoinData/CoinDirectory';
 import { sendConvertOrCrossChain } from '../../../../utils/api/routers/sendConvertOrCrossChain';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 function ConvertOrCrossChainSendConfirm({
   navigation,
@@ -59,6 +61,39 @@ function ConvertOrCrossChainSendConfirm({
   const dispatch = useDispatch();
   const balances = route.params.balances;
   const scrollRef = useRef();
+
+  const alertHighSlippage = () => {
+    Alert.alert("Slippage Warning", `Due to low liquidity, the estimated amount you are to receive differs significantly from the less accurate estimate shown earlier. Verify the new amount before continuing. If possible, try a higher liquidity conversion path.`);
+  }
+
+  const warnIfSlippageHigh = () => {
+    const { validation, output, estimate } = params;
+
+    if (sendModal.data[SEND_MODAL_PRICE_ESTIMATE] != null && estimate != null) {
+      const { sent } = validation;
+      const { currency } = output;
+
+      const primaryCurrencyAmountSats = sent[currency] ? sent[currency] : 0;
+      const primaryCurrencyAmount = satsToCoins(BigNumber(primaryCurrencyAmountSats)).toNumber();
+
+      const quickEstimate = primaryCurrencyAmount * sendModal.data[SEND_MODAL_PRICE_ESTIMATE].price;
+      const accurateEstimate = estimate.estimatedcurrencyout;
+
+      if (quickEstimate != null && !isNaN(quickEstimate) && accurateEstimate && !isNaN(accurateEstimate)) {
+        const bnQuick = new BigNumber(quickEstimate);
+        const bnAcc = new BigNumber(accurateEstimate);
+        const bnDiff = (bnQuick.minus(bnAcc)).abs();
+
+        const fracDiff = bnDiff.dividedBy(bnAcc);
+
+        if (fracDiff.isGreaterThan(new BigNumber(CONVERT_OR_CROSS_CHAIN_SLIPPAGE_WARNING_THRESHOLD))) {
+          return true
+        }
+      }
+    }
+
+    return false;
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -191,6 +226,12 @@ function ConvertOrCrossChainSendConfirm({
       return nameMap.has(address) ? nameMap.get(address) : address;
     };
 
+    const highSlippageWarning = warnIfSlippageHigh();
+
+    if (highSlippageWarning) {
+      alertHighSlippage()
+    }
+
     setConfirmationFields([
       {
         key: 'Source',
@@ -230,6 +271,7 @@ function ConvertOrCrossChainSendConfirm({
       },
       {
         key: 'Estimated To Receive',
+        warn: highSlippageWarning,
         data:
           estimate != null
             ? `${estimate.estimatedcurrencyout} ${tryRenderFriendlyName(
@@ -242,7 +284,7 @@ function ConvertOrCrossChainSendConfirm({
               )} ${tryRenderFriendlyName(convertto)}` : "",
         numLines: 100,
         onPress: () =>
-          copyToClipboard(tryRenderFriendlyName(convertto), {
+          highSlippageWarning ? alertHighSlippage() : copyToClipboard(tryRenderFriendlyName(convertto), {
             title: 'Amount copied',
             message: `${estimate.estimatedcurrencyout} copied to clipboard.`,
           }),
@@ -391,9 +433,12 @@ function ConvertOrCrossChainSendConfirm({
           <List.Item
             title={item.data}
             description={item.key}
+            descriptionStyle={item.warn ? {
+              color: Colors.infoButtonColor
+            } : undefined}
             titleNumberOfLines={item.numLines || 1}
             right={props =>
-              item.right ? (
+              (item.right || item.warn) ? (
                 <Text
                   {...props}
                   style={{
@@ -403,7 +448,11 @@ function ConvertOrCrossChainSendConfirm({
                     fontWeight: '300',
                     marginRight: 8,
                   }}>
-                  {item.right}
+                  {item.warn ? (<MaterialCommunityIcons
+                    name="alert-box"
+                    color={Colors.infoButtonColor}
+                    size={26}
+                  />) : item.right}
                 </Text>
               ) : null
             }

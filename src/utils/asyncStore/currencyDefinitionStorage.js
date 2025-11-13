@@ -1,12 +1,12 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CURRENCY_DEFINITION_STORAGE_INTERNAL_KEY } from '../../../env/index'
+import { SecureStorage } from '../keychain/secureStore';
 
 export const storeCurrencyDefinitions = async (currencyDefinitions) => {
-  return await AsyncStorage.setItem(CURRENCY_DEFINITION_STORAGE_INTERNAL_KEY, JSON.stringify(currencyDefinitions))
+  return await SecureStorage.setItem(CURRENCY_DEFINITION_STORAGE_INTERNAL_KEY, JSON.stringify(currencyDefinitions))
 };
 
 export const getStoredCurrencyDefinitions = async () => {
-  const res = await AsyncStorage.getItem(CURRENCY_DEFINITION_STORAGE_INTERNAL_KEY);
+  const res = await SecureStorage.getItem(CURRENCY_DEFINITION_STORAGE_INTERNAL_KEY);
 
   if (!res) return {};
   else return JSON.parse(res);

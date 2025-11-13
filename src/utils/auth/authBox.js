@@ -5,7 +5,7 @@
 import store from "../../store";
 import { CHANNELS } from "../constants/intervalConstants";
 import { randomBytes } from "../crypto/randomBytes";
-import { getSessionPassword, setSessionPassword } from "../keychain/keychain";
+import { getSessionCredential, setSessionCredential } from "../keychain/keychain";
 import { arrayToObject } from "../objectManip";
 import { decryptkey, encryptkey } from "../seedCrypt";
 
@@ -14,7 +14,7 @@ import { decryptkey, encryptkey } from "../seedCrypt";
 export const initSession = async (password) => {
   const sessionKey = (await randomBytes(32)).toString('hex')
   const sessionPass = await encryptkey(sessionKey, password)
-  await setSessionPassword(sessionPass)
+  await setSessionCredential(sessionPass)
 
   return sessionKey
 }
@@ -32,7 +32,7 @@ export const requestPassword = async () => {
   ) {
     throw new Error("You must be signed in to retrieve sensitive info");
   } else {
-    const sessionPass = await getSessionPassword();
+    const sessionPass = await getSessionCredential();
     
     const password = decryptkey(state.authentication.sessionKey, sessionPass)
 

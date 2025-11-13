@@ -9,6 +9,7 @@ import VerusPayParser from '../verusPay/index'
 import { coinsList } from "../CoinData/CoinsList";
 import { removeSpaces } from "../stringUtils";
 import { CoinDirectory } from "../CoinData/CoinDirectory";
+import { toLowerCaseCLocale } from "verus-typescript-primitives";
 
 class QrScanner {
   constructor() {}
@@ -167,8 +168,8 @@ class QrScanner {
         for (const key in coinsList) {
           const coinObj = coinsList[key];
           if (
-            removeSpaces(coinObj.display_name).toLowerCase() === coinName.toLowerCase() ||
-            coinObj.alt_names.some((name) => name === coinName.toLowerCase())
+            toLowerCaseCLocale(removeSpaces(coinObj.display_name)) === toLowerCaseCLocale(coinName) ||
+            coinObj.alt_names.some((name) => name === toLowerCaseCLocale(coinName))
           ) {
             return {
               coinTicker: coinObj.id,
@@ -189,8 +190,8 @@ class QrScanner {
         for (const key in coinsList) {
           const coinObj = coinsList[key];
           if (
-            removeSpaces(coinObj.display_name).toLowerCase() === coinName.toLowerCase() ||
-            coinObj.alt_names.some((name) => name === coinName.toLowerCase())
+            toLowerCaseCLocale(removeSpaces(coinObj.display_name)) === toLowerCaseCLocale(coinName) ||
+            coinObj.alt_names.some((name) => name === toLowerCaseCLocale(coinName))
           ) {
             return {
               coinTicker: coinObj.id,

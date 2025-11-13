@@ -56,9 +56,7 @@ export const getCurrenciesMappedToEth = async (systemId, ethNetwork) => {
     }
 
     try {
-      const tokenList = await getWeb3ProviderForNetwork(ethNetwork)
-        .getVerusBridgeDelegatorContract()
-        .callStatic.getTokenList(0, 0);
+      const tokenList = await getWeb3ProviderForNetwork(ethNetwork).getVerusBridgeDelegatorContract().getTokenList.staticCall(0, 0);
       
       tokenList.forEach(tokenInfo => {
         const [iAddrBytesHex, contractAddr, nftTokenId, flags] = tokenInfo;
