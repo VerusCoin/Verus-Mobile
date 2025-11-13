@@ -1,6 +1,6 @@
 {
   "name": "verusmobile",
-  "version": "1.0.31",
+  "version": "1.0.34",
   "private": true,
   "scripts": {
     "postinstall": "npx jetify && rm node_modules/@adraffy/ens-normalize/package.json && cp patches/@adraffy/ens-normalize/adraffy_ens_normalize_package.json node_modules/@adraffy/ens-normalize/package.json && patch-package",
@@ -268,29 +268,29 @@
     "tls": false
   },
   "browser": {
-    "_stream_duplex": "readable-stream/duplex",
-    "_stream_passthrough": "readable-stream/passthrough",
-    "_stream_readable": "readable-stream/readable",
-    "_stream_transform": "readable-stream/transform",
-    "_stream_writable": "readable-stream/writable",
+    "zlib": "browserify-zlib",
     "console": "console-browserify",
     "constants": "constants-browserify",
     "crypto": "react-native-crypto",
-    "dgram": "react-native-udp",
     "dns": "dns.js",
+    "net": "react-native-tcp",
     "domain": "domain-browser",
-    "fs": "react-native-level-fs",
     "http": "@tradle/react-native-http",
     "https": "https-browserify",
-    "net": "react-native-tcp",
     "os": "react-native-os",
     "path": "path-browserify",
     "querystring": "querystring-es3",
+    "fs": "react-native-level-fs",
+    "_stream_transform": "readable-stream/transform",
+    "_stream_readable": "readable-stream/readable",
+    "_stream_writable": "readable-stream/writable",
+    "_stream_duplex": "readable-stream/duplex",
+    "_stream_passthrough": "readable-stream/passthrough",
+    "dgram": "react-native-udp",
     "stream": "stream-browserify",
     "timers": "timers-browserify",
-    "tls": false,
     "tty": "tty-browserify",
     "vm": "vm-browserify",
-    "zlib": "browserify-zlib"
+    "tls": false
   }
 }
