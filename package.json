@@ -1,15 +1,17 @@
 {
   "name": "verusmobile",
-  "version": "1.0.29",
+  "version": "1.0.31",
   "private": true,
   "scripts": {
     "postinstall": "npx jetify && rm node_modules/@adraffy/ens-normalize/package.json && cp patches/@adraffy/ens-normalize/adraffy_ens_normalize_package.json node_modules/@adraffy/ens-normalize/package.json && patch-package",
     "android": "react-native run-android",
+    "clean-android": "cd android && ./gradlew clean && cd ..",
     "ios": "react-native run-ios",
     "start": "react-native start",
     "bundle-android": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/",
     "bundle-ios": "react-native bundle --dev false --entry-file index.js --bundle-output ios/main.jsbundle --platform ios --assets-dest='./ios'",
     "dist-android": "cd android && ./gradlew assembleRelease && cd ..",
+    "debug-android": "cd android && ./gradlew assembleDebug --stacktrace && cd ..",
     "test": "jest",
     "lint": "eslint .",
     "update-verus-libs": "yarn remove verus-typescript-primitives && yarn add 'git+https://github.com/VerusCoin/verus-typescript-primitives.git' && yarn remove @bitgo/utxo-lib && yarn add 'git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus' && yarn remove verusd-rpc-ts-client && yarn add 'git+https://github.com/VerusCoin/verusd-rpc-ts-client.git' && yarn remove verusid-ts-client && yarn add 'git+https://github.com/VerusCoin/verusid-ts-client.git'"
@@ -94,7 +96,7 @@
     "react-native-udp": "4.1.5",
     "react-native-url-polyfill": "1.3.0",
     "react-native-vector-icons": "git+https://github.com/VerusCoin/react-native-vector-icons.git",
-    "react-native-verus-light-client": "git+https://github.com/VerusCoin/react-native-verus-light-client.git",
+    "react-native-verus": "git+https://github.com/who-biz/react-native-verus.git",
     "react-native-vision-camera": "4.3.1",
     "react-redux": "8.0.2",
     "readable-stream": "1.0.33",

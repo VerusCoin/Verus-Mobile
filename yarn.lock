@@ -3289,6 +3289,13 @@ big-integer@1.6.x:
   resolved "https://registry.yarnpkg.com/big-integer/-/big-integer-1.6.51.tgz#0df92a5d9880560d3ff2d5fd20245c889d130686"
   integrity sha512-GPEid2Y9QU1Exl1rpO9B2IPJGHPSupF5GnVIP0blYvNOMer2bTvSWs1jGOUg04hTmu67nmLsQ9TBo1puaotBHg==
 
+biggystring@^4.1.3:
+  version "4.2.3"
+  resolved "https://registry.yarnpkg.com/biggystring/-/biggystring-4.2.3.tgz#30486cf09657038b332e44717fe54a78ed043cf8"
+  integrity sha512-VsbLBLrL5RJDjEb5j5UEs9zrLsW332BFxVMy+DPF7K+UWOHXGydG6amrl1eDE88s+DVOoal05JUy1G9BT/YSww==
+  dependencies:
+    bn.js "^4.11.7"
+
 bigi@1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/bigi/-/bigi-1.4.0.tgz#90ac1aeac0a531216463bdb58f42c1e05c8407ac"
@@ -3425,7 +3432,7 @@ bn.js@^4.0.0, bn.js@^4.11.0, bn.js@^4.11.8, bn.js@^4.11.9:
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.12.0.tgz#775b3f278efbb9718eec7361f483fb36fbbfea88"
   integrity sha512-c98Bf3tPniI+scsdk237ku1Dc3ujXQTSgyiPUDEOe7tRkhrqridvh8klBv0HCEso1OLOYcHuCv/cS6DNxKH+ZA==
 
-bn.js@^4.1.0:
+bn.js@^4.1.0, bn.js@^4.11.7:
   version "4.12.2"
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.12.2.tgz#3d8fed6796c24e177737f7cc5172ee04ef39ec99"
   integrity sha512-n4DSx829VRTRByMRGdjQ9iqsN0Bh4OolPsFnaZBLcbi8iXcB+kJ9s7EnRt4wILZNV3kPLHkRVfOc/HvhC3ovDw==
@@ -10050,19 +10057,19 @@ react-native-url-polyfill@1.3.0:
     prop-types "^15.7.2"
     yargs "^16.1.1"
 
-"react-native-verus-light-client@git+https://github.com/VerusCoin/react-native-verus-light-client.git":
-  version "1.0.0"
-  resolved "git+https://github.com/VerusCoin/react-native-verus-light-client.git#e73aeb774b4a7da5f08eb85e15c0c92af24c5955"
+"react-native-verus@git+https://github.com/who-biz/react-native-verus.git":
+  version "0.6.10"
+  resolved "git+https://github.com/who-biz/react-native-verus.git#be12191ce33d8a29c67440f883600166c19aa2e3"
   dependencies:
-    react "17.0.1"
-    react-native "0.64.0"
+    biggystring "^4.1.3"
+    rfc4648 "^1.3.0"
 
 react-native-vision-camera@4.3.1:
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/react-native-vision-camera/-/react-native-vision-camera-4.3.1.tgz#f755107f259f71f51a619ccaaefc55bbe341b2c7"
   integrity sha512-7BzvZnorTQDQ5qZEOeiRpjA1BM0ZsUxxCsPtntRf1by7Ialok+gD04k285+n+7yy/2+WT4TwLSPeiAqx9z+uew==
 
-react-native@0.64.0, react-native@0.71.19:
+react-native@0.71.19:
   version "0.71.19"
   resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.71.19.tgz#966c91b2154058a9e5987cf5eb9fc0e4f1ab4157"
   integrity sha512-E6Rz4lpe4NC9ZR6zq9AWiB0MAoVeidr+aPu/pmwk5ezvVL/wbQ1Gdj70v7fKMC8Nz5wYFO1S0XUNPUKYaPhfeg==
@@ -10136,14 +10143,6 @@ react-test-renderer@18.2.0:
     react-is "^18.2.0"
     react-shallow-renderer "^16.15.0"
     scheduler "^0.23.0"
-
-react@17.0.1:
-  version "17.0.1"
-  resolved "https://registry.yarnpkg.com/react/-/react-17.0.1.tgz#6e0600416bd57574e3f86d92edba3d9008726127"
-  integrity sha512-lG9c9UuMHdcAexXtigOZLX8exLWkW0Ku29qPRU8uhF2R9BN96dLCt0psvzPLlHc5OWkgymP3qwTRgbnw5BKx3w==
-  dependencies:
-    loose-envify "^1.1.0"
-    object-assign "^4.1.1"
 
 react@18.2.0:
   version "18.2.0"
@@ -10533,6 +10532,11 @@ retry@^0.12.0:
   version "0.12.0"
   resolved "https://registry.yarnpkg.com/retry/-/retry-0.12.0.tgz#1b42a6266a21f07421d1b0b54b7dc167b01c013b"
   integrity sha512-9LkiTwjUh6rT555DtE9rTX+BKByPfrMzEAtnlEtdEwr3Nkffwiihqe2bWADg+OQRjt9gl6ICdmB/ZFDCGAtSow==
+
+rfc4648@^1.3.0:
+  version "1.5.4"
+  resolved "https://registry.yarnpkg.com/rfc4648/-/rfc4648-1.5.4.tgz#1174c0afba72423a0b70c386ecfeb80aa61b05ca"
+  integrity sha512-rRg/6Lb+IGfJqO05HZkN50UtY7K/JhxJag1kP23+zyMfrvoB0B7RWv06MbOzoc79RgCdNTiUaNsTT1AJZ7Z+cg==
 
 rimraf@^2.5.4, rimraf@^2.6.3:
   version "2.7.1"
