@@ -163,14 +163,23 @@ export const isDlightSpendingKey = (seed) => {
 }
 
 export const parseDlightSeed = async (seed) => {
-  if (isDlightSpendingKey(seed)) {
-    return seed;
-  }
-
   try {
-    const saplingSpendKey = await Tools.deriveSaplingSpendingKey(seed)
-    return saplingSpendKey.extsk
-  } catch(e) { throw e }
+    if (isDlightSpendingKey(seed)) {
+      await Tools.bech32Decode(seed)
+      return seed;
+    }
+
+    if (isSeedPhrase(seed)) {
+      const saplingSpendKey = await Tools.deriveSaplingSpendingKey(seed)
+      return saplingSpendKey.extsk
+    }
+    // if we got here, it's neither a valid bech32-encoded key, nor a mnemonic.
+    // must be invalid input or a hexstring. we don't support hex equivalently on ios/android yet
+    // so we use a soft disable here if it's anything but a seedPhrase
+    throw new Error("Invalid input")
+  } catch (e) {
+    throw e
+  }
 }
 
 export const dlightSeedToBytes = async (seed) => {
