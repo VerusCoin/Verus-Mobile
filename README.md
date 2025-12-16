@@ -83,15 +83,18 @@ rustup default 1.81.0
 
 ```
 cd ~
-git clone https://github.com/who-biz/verus-android-wallet-sdk.git
+git clone https://github.com/VerusCoin/verus-android-wallet-sdk.git
 cd verus-android-wallet-sdk
 
 # stop here and open verus-android-wallet-sdk repo in Android studio, to download gradle with proper versions
 
+# On Ubuntu 22.04 and later, if 'python' cmd does not map to python2.7, create a local.properties, so rust can locate it
+echo "rust.pythonCommand=/usr/bin/python2" >> local.properties
+
 # then run gradle wrapper to generate local Maven artifacts
 ./gradlew publishToMavenLocal
 
-# this will install the artifacts locally in ~/.m2/repository/com/github/who-biz/verus-android-sdk` etc by module
+# this will install the artifacts locally in ~/.m2/repository/com/github/VerusCoin/verus-android-sdk` etc by module
 ```
 6. Change the last line in `~/Verus-mobile/android/gradle.properties` to match your full location of Maven artifacts
 ```

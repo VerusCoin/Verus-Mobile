@@ -842,7 +842,7 @@ SPEC CHECKSUMS:
   react-native-randombytes: 3c8f3e89d12487fd03a2f966c288d495415fc116
   react-native-safe-area-context: 17a482f540310e2209f884fd49472d9e1c0e73d6
   react-native-udp: d88de32b4a2c8c4ff3f55902d77bc0df573eab5a
-  react-native-verus: 481fa9dd2f87936418e1a5c3fb438e85d3e1ab20
+  react-native-verus: 84dd7b2bc7736c3709d35083f388318f41045667
   React-perflogger: 0ba097528e325435aca94b32b5330f58f6acb6fb
   React-RCTActionSheet: 805b3a83f3dd7ae5a1213ea9df0ed748eeb74b85
   React-RCTAnimation: 2a0233681dee47e468302b8233652b35b68329cb
