@@ -1,4 +1,4 @@
-import { Tools } from 'react-native-zcash';
+import { Tools } from 'react-native-verus'; 
 import ApiException from '../../../../errors/apiError';
 import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants';
 

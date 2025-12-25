@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, ScrollView, View, Alert } from 'react-native';
+import { SafeAreaView, ScrollView, View } from 'react-native';
 import Styles from '../../../styles/index';
-import { primitives } from "verusid-ts-client";
 import { Button, Divider, List, Text } from 'react-native-paper';
 import { useSelector } from 'react-redux';
 import Colors from '../../../globals/colors';
@@ -9,21 +8,33 @@ import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/di
 import { AUTHENTICATE_USER_SEND_MODAL } from '../../../utils/constants/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
-import { requestSeeds } from '../../../utils/auth/authBox';
-import { DLIGHT_PRIVATE } from '../../../utils/constants/intervalConstants';
-import { z_getencryptionaddress } from '../../../utils/api/channels/dlight/requests/getEncryptionAddress';
-import { encryptVerusMessage } from '../../../utils/api/channels/dlight/requests/encrypt';
 import { handleRedirect } from '../../../utils/deeplink/handleRedirect';
 import { copyToClipboard } from '../../../utils/clipboard/clipboard';
+import { 
+  handleAppEncryptionRequest,
+  parseAppEncryptionRequest,
+  getRequestDisplayInfo
+} from './appEncryptionHandler';
 
 const AppEncryptionRequestInfo = props => {
-  const { deeplinkData, cancel, coinObj, requestedBy, redirectInfo } = props;
-  const [encRequest] = useState(primitives.AppEncryptionRequestDetails.fromJson(deeplinkData));
+  const { 
+    deeplinkData, 
+    cancel, 
+    coinObj, 
+    displayInfo,
+    redirectUri,
+    passthrough,
+    activeAccount,
+    requestSignerID,
+    appOrDelegatedID,
+    responseSignerID
+  } = props;
+
+  const [encRequest] = useState(parseAppEncryptionRequest(deeplinkData));
   const [loading, setLoading] = useState(false);
   const [waitingForSignin, setWaitingForSignin] = useState(false);
   const [encryptedResult, setEncryptedResult] = useState(null);
 
-  const accounts = useSelector(state => state.authentication.accounts);
   const signedIn = useSelector(state => state.authentication.signedIn);
   const sendModalType = useSelector(state => state.sendModal.type);
 
@@ -47,61 +58,40 @@ const AppEncryptionRequestInfo = props => {
         return;
       }
 
-      // Get user's seeds
-      const seeds = await requestSeeds();
-      const dlightSeed = seeds[DLIGHT_PRIVATE];
+      // response array to collect results
+      const response = [];
 
-      if (!dlightSeed) {
-        throw new Error("No dlight seed available for encryption");
-      }
-
-      // Derive encryption keys
-      const encKeys = await z_getencryptionaddress(coinObj.id, {
-        seed: dlightSeed,
-        hdIndex: encRequest.derivationNumber.toNumber(),
-        encryptionIndex: encRequest.secondaryDerivationNumber?.toNumber() || 0,
-        fromId: encRequest.fromAddress?.getAddressString() || null,
-        toId: encRequest.toAddress?.getAddressString() || null,
-        returnSecret: true
+      // call our handler
+      const result = await handleAppEncryptionRequest({
+        request: encRequest,
+        requestIndex: 0,
+        systemID: coinObj.system_id || coinObj.id,
+        requestSignerID,
+        appOrDelegatedID,
+        response,
+        responseSignerID,
+        activeAccount
       });
 
-      if (encKeys.err) {
-        throw new Error(encKeys.result);
+      if (!result.success) {
+        throw new Error(result.error);
       }
 
-      // Encrypt to target z-address
-      const encrypted = await encryptVerusMessage(
-        coinObj.id,
-        encRequest.encryptToZAddress,
-        encKeys.result.secret,
-        true
-      );
+      const encryptedData = response[0]?.encryptedData;
+      setEncryptedResult(encryptedData);
 
-      if (encrypted.err) {
-        throw new Error(encrypted.result.message || "Encryption failed");
-      }
-
-      setEncryptedResult(encrypted.result);
-
-      // Handle redirect if specified
-      if (redirectInfo) {
-        await handleRedirect(encrypted.result, redirectInfo);
-        createAlert(
-          'Success',
-          'Encrypted seed has been sent successfully.'
-        );
+      // handle redirect if specified
+      if (redirectUri) {
+        await handleRedirect(encryptedData, { uri: redirectUri, passthrough });
+        createAlert('Success', 'Encrypted response has been sent successfully.');
         cancel();
       } else {
-        createAlert(
-          'Encryption Complete',
-          'Your encrypted seed is ready. You can copy it below.'
-        );
+        createAlert('Encryption Complete', 'Your encrypted response is ready.');
       }
 
     } catch (error) {
       console.error('Encryption error:', error);
-      createAlert('Error', error.message || 'Failed to encrypt seed');
-      setLoading(false);
+      createAlert('Error', error.message || 'Failed to process encryption request');
     } finally {
       setLoading(false);
     }
@@ -116,16 +106,8 @@ const AppEncryptionRequestInfo = props => {
   };
 
   const getMainHeading = () => {
-    const requester = requestedBy || 'An application';
-    return `${requester} is requesting an encrypted derived seed`;
-  };
-
-  const getDerivationPath = () => {
-    let path = `m/${encRequest.derivationNumber.toString()}`;
-    if (encRequest.secondaryDerivationNumber) {
-      path += `/${encRequest.secondaryDerivationNumber.toString()}`;
-    }
-    return path;
+    const appName = displayInfo?.appOrDelegatedID || 'An application';
+    return `${appName} is requesting encryption keys`;
   };
 
   if (loading) {
@@ -150,64 +132,60 @@ const AppEncryptionRequestInfo = props => {
             <List.Subheader>Request Details</List.Subheader>
 
             <List.Item
-              title="Encrypt To Address"
-              description={encRequest.encryptToZAddress}
-              descriptionNumberOfLines={2}
-              left={props => <List.Icon {...props} icon="shield-lock" />}
+              title="Requesting App"
+              description={displayInfo?.appOrDelegatedID || 'Unknown'}
+              left={props => <List.Icon {...props} icon="application" />}
             />
 
             <Divider />
 
             <List.Item
-              title="Derivation Path"
-              description={getDerivationPath()}
-              left={props => <List.Icon {...props} icon="file-tree" />}
+              title="Your Identity"
+              description={responseSignerID || 'Not specified'}
+              left={props => <List.Icon {...props} icon="account" />}
             />
 
             <Divider />
 
             <List.Item
               title="Network"
-              description={coinObj.id}
+              description={coinObj.display_ticker || coinObj.id}
               left={props => <List.Icon {...props} icon="network" />}
             />
 
-            {encRequest.fromAddress && (
-              <>
-                <Divider />
-                <List.Item
-                  title="From Address"
-                  description={encRequest.fromAddress.getAddressString()}
-                  descriptionNumberOfLines={2}
-                  left={props => <List.Icon {...props} icon="account" />}
-                />
-              </>
-            )}
+            <Divider />
 
-            {encRequest.toAddress && (
-              <>
-                <Divider />
-                <List.Item
-                  title="To Address"
-                  description={encRequest.toAddress.getAddressString()}
-                  descriptionNumberOfLines={2}
-                  left={props => <List.Icon {...props} icon="account-arrow-right" />}
-                />
-              </>
-            )}
+            <List.Item
+              title="Derivation Number"
+              description={displayInfo?.derivationNumber?.toString() || '0'}
+              left={props => <List.Icon {...props} icon="file-tree" />}
+            />
 
-            {encRequest.requestID && (
+            {displayInfo?.requestsSpendingKey && (
               <>
                 <Divider />
                 <List.Item
-                  title="Request ID"
-                  description={encRequest.requestID}
-                  descriptionNumberOfLines={2}
-                  left={props => <List.Icon {...props} icon="identifier" />}
+                  title="Spending Key Requested"
+                  description="This app is requesting spending key access"
+                  left={props => <List.Icon {...props} icon="alert" color={Colors.warningButtonColor} />}
+                  descriptionStyle={{ color: Colors.warningButtonColor }}
                 />
               </>
             )}
           </List.Section>
+
+          {displayInfo?.warning && (
+            <View style={{ 
+              backgroundColor: Colors.warningButtonColor + '20',
+              padding: 12,
+              borderRadius: 8,
+              marginBottom: 16
+            }}>
+              <Text style={{ color: Colors.warningButtonColor, fontSize: 14 }}>
+                ⚠️ {displayInfo.warning}
+              </Text>
+            </View>
+          )}
 
           {encryptedResult && (
             <View style={{ marginTop: 16 }}>
@@ -227,8 +205,8 @@ const AppEncryptionRequestInfo = props => {
 
           <View style={{ marginTop: 24, marginBottom: 16 }}>
             <Text style={{ fontSize: 12, color: Colors.secondaryColor, marginBottom: 16 }}>
-              ⚠️ This will derive a child seed from your master seed and encrypt it to the specified z-address.
-              Only approve if you trust the requesting application.
+              This will create encrypted channel keys between your identity and the requesting app.
+              Only approve if you trust this application.
             </Text>
 
             {!encryptedResult && (
@@ -238,7 +216,7 @@ const AppEncryptionRequestInfo = props => {
                 disabled={loading}
                 style={{ marginBottom: 8, backgroundColor: Colors.primaryColor }}
               >
-                Approve & Encrypt
+                Approve
               </Button>
             )}
 

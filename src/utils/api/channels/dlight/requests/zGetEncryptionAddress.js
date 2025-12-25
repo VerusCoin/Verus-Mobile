@@ -1,4 +1,4 @@
-import { Tools } from 'react-native-zcash'; // or a local alias to the react-native.ts module
+import { Tools } from 'react-native-verus'; 
 import ApiException from '../../../../errors/apiError'
 import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
 
@@ -19,7 +19,7 @@ export const z_getencryptionaddress = async (alias, params) => {
   } catch (e) {
     return {
       err: true,
-      result: e.message || 'Unknown native error during key derivation.'
+      result: new ApiException(e.message, e.data, alias, DLIGHT_PRIVATE, e.code)
     }
   }
 }

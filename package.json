@@ -14,7 +14,7 @@
     "debug-android": "cd android && ./gradlew assembleDebug --stacktrace && cd ..",
     "test": "jest",
     "lint": "eslint .",
-    "update-verus-libs": "yarn remove verus-typescript-primitives && yarn add 'git+https://github.com/VerusCoin/verus-typescript-primitives.git' && yarn remove @bitgo/utxo-lib && yarn add 'git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus' && yarn remove verusd-rpc-ts-client && yarn add 'git+https://github.com/VerusCoin/verusd-rpc-ts-client.git' && yarn remove verusid-ts-client && yarn add 'git+https://github.com/VerusCoin/verusid-ts-client.git'"
+    "update-verus-libs": "yarn remove verus-typescript-primitives && yarn add 'git+https://github.com/michaeltout/verus-typescript-primitives#generic-signed-request' && yarn remove @bitgo/utxo-lib && yarn add 'git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus' && yarn remove verusd-rpc-ts-client && yarn add 'git+https://github.com/VerusCoin/verusd-rpc-ts-client.git' && yarn remove verusid-ts-client && yarn add 'git+https://github.com/VerusCoin/verusid-ts-client.git'"
   },
   "dependencies": {
     "@bitgo/blake2b-wasm": "https://github.com/VerusCoin/blake2b-wasm/",
@@ -118,7 +118,7 @@
     "varuint-bitcoin": "1.0.4",
     "version_compare": "0.0.3",
     "verus-pay-utils": "git+https://github.com/VerusCoin/verus-pay-utils.git",
-    "verus-typescript-primitives": "git+https://github.com/VerusCoin/verus-typescript-primitives.git",
+    "verus-typescript-primitives": "git+https://github.com/michaeltout/verus-typescript-primitives#generic-signed-request",
     "verus-zkedid-utils": "git+https://github.com/VerusCoin/verus-zkedid-utils.git",
     "verusd-rpc-ts-client": "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git",
     "verusid-ts-client": "git+https://github.com/VerusCoin/verusid-ts-client.git",

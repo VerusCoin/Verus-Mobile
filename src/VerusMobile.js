@@ -8,6 +8,7 @@ import {
   Linking
 } from "react-native";
 import Modal from './components/Modal'
+import { runAllTests } from '../src/containers/DeepLink/AppEncryptionRequest/appEncryptionTest';
 import RootStackScreens from './containers/RootStack/RootStackScreens';
 import { 
   fetchUsers, 
@@ -165,6 +166,11 @@ class VerusMobile extends React.Component {
     if (ENABLE_VERUS_IDENTITIES) {
       this.props.dispatch(requestSeedData());
     }
+
+    setTimeout(() => {
+    console.log('Running AppEncryption tests...');
+    runAllTests();
+  }, 6000); 
   }
 
   render() {    
