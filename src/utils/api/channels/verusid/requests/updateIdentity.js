@@ -8,7 +8,7 @@ import { I_ADDRESS_VERSION } from "../../../../constants/constants";
 export const extractIdOutputFromTx = (rawIdTx, vout = null) => {
   const identityTransaction = Transaction.fromHex(rawIdTx, networks.verus);
 
-  for (const i = vout != null ? vout : 0; i < identityTransaction.outs.length; i++) {
+  for (let i = vout != null ? vout : 0; i < identityTransaction.outs.length; i++) {
     if (vout != null && i > vout) break;
 
     const output = identityTransaction.outs[i];

@@ -19,9 +19,8 @@ import { coinsList } from '../../../../utils/CoinData/CoinsList';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 import { closeSendModal } from '../../../../actions/actions/sendModal/dispatchers/sendModal';
 import { requestPrivKey } from '../../../../utils/auth/authBox';
-import { IdentityUpdateRequest, IdentityUpdateResponse } from 'verus-typescript-primitives';
+import { IdentityUpdateRequest, ResponseURI } from 'verus-typescript-primitives';
 import axios from 'axios';
-import { ResponseUri } from 'verus-typescript-primitives/dist/vdxf/classes/ResponseUri';
 import base64url from 'base64url';
 import { primitives } from 'verusid-ts-client';
 import AlertAsync from 'react-native-alert-async';
@@ -122,7 +121,7 @@ const UpdateIdentityConfirm = props => {
         const primaryResponseUri = req.details.responseuris[0];
         const uriString = primaryResponseUri.getUriString();
 
-        if (primaryResponseUri.type.eq(ResponseUri.TYPE_POST)) {
+        if (primaryResponseUri.type.eq(ResponseURI.TYPE_POST)) {
           await axios.post(
             uriString,
             res.toJson()

@@ -22,10 +22,13 @@ import { useObjectSelector } from '../../../hooks/useObjectSelector';
 
 const InvoiceInfo = props => {
   const { 
-    deeplinkData, 
+    detailsBufferString, 
+    isSigned,
+    invoiceVersion,
     sigtime, 
     cancel, 
     signerFqn, 
+    signerSystemID,
     currencyDefinition, 
     amountDisplay, 
     destinationDisplay,
@@ -33,10 +36,10 @@ const InvoiceInfo = props => {
     chainInfo,
     acceptedSystemsDefinitions
   } = props;
+
   const { fullyqualifiedname } = currencyDefinition;
-  const [inv, setInv] = useState(primitives.VerusPayInvoice.fromJson(deeplinkData));
-  const { system_id, signing_id, details } = inv;
-  const chain_id = inv.isSigned() ? getSystemNameFromSystemId(system_id) : null;
+  const [details, setDetails] = useState(new primitives.VerusPayInvoiceDetails());
+  const chain_id = isSigned ? getSystemNameFromSystemId(signerSystemID) : null;
 
   const getVerusId = async (chain, iAddrOrName) => {
     const identity = await getIdentity(CoinDirectory.getBasicCoinObj(chain).system_id, iAddrOrName);
@@ -46,8 +49,8 @@ const InvoiceInfo = props => {
   }
 
   const getMainHeading = () => {
-    const recipientLabel = inv.isSigned() ? signerFqn : 'This unsigned invoice';
-    const amountLabel = inv.details.acceptsAnyAmount() ? 'any amount of' : amountDisplay;
+    const recipientLabel = isSigned ? signerFqn : 'This unsigned invoice';
+    const amountLabel = details.acceptsAnyAmount() ? 'any amount of' : amountDisplay;
     const destinationLabel = destinationDisplay;
     const currencyLabel = fullyqualifiedname;
 
@@ -55,8 +58,8 @@ const InvoiceInfo = props => {
   }
 
   const getAcceptedSystemsLabel = () => {
-    if (!inv.details.acceptsNonVerusSystems() && !inv.details.excludesVerusBlockchain()) {
-      return inv.details.isTestnet() ? 'VRSCTEST' : 'VRSC'
+    if (!details.acceptsNonVerusSystems() && !details.excludesVerusBlockchain()) {
+      return details.isTestnet() ? 'VRSCTEST' : 'VRSC'
     }
 
     const acceptedNames = Object.values(acceptedSystemsDefinitions.definitions).map(definition => {
@@ -69,9 +72,9 @@ const InvoiceInfo = props => {
   }
 
   const getExpiryLabel = () => {
-    if (!inv.details.expires()) return "";
+    if (!details.expires()) return "";
 
-    return blocksToTime(inv.details.expiryheight.toNumber() - chainInfo.longestchain);
+    return blocksToTime(details.expiryheight.toNumber() - chainInfo.longestchain);
   }
 
   const openVerusIdDetailsModal = (chain, iAddress) => {
@@ -111,17 +114,14 @@ const InvoiceInfo = props => {
   
   const signedIn = useSelector(state => state.authentication.signedIn);
   const sendModalType = useSelector(state => state.sendModal.type);
-  const isWrongInvoiceType = useSelector(state => {
-    const isTestAccount =
-      state.authentication.activeAccount &&
-      Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0;
 
-    return (
-      state.authentication.signedIn &&
-      ((isTestAccount && !inv.details.isTestnet()) ||
-      (!isTestAccount && inv.details.isTestnet()))
-    );
+  const isTestAccount = useSelector(state => {
+    return state.authentication.activeAccount && Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0;
   });
+
+  const isSignedIn = useSelector(state => {
+    return state.authentication.signedIn
+  })
 
   const [sendCurrencyDefinition, setSendCurrencyDefinition] = useState(null);
   const [selectCurrencyModalProps, setSelectCurrencyModalProps] = useState(null);
@@ -132,7 +132,7 @@ const InvoiceInfo = props => {
       props.navigation.navigate('InvoicePaymentConfiguration', props);
     } else {
       setWaitingForSignin(true);
-      const allowList = inv.details.isTestnet() ? accounts.filter(x => {
+      const allowList = details.isTestnet() ? accounts.filter(x => {
         if (
           x.testnetOverrides &&
           x.testnetOverrides[coinObj.mainnet_id] === coinObj.id
@@ -162,9 +162,9 @@ const InvoiceInfo = props => {
         createAlert(
           "Cannot continue",
           `No ${
-            inv.details.isTestnet() ? 'testnet' : 'mainnet'
+            details.isTestnet() ? 'testnet' : 'mainnet'
           } profiles found, cannot respond to ${
-            inv.details.isTestnet() ? 'testnet' : 'mainnet'
+            details.isTestnet() ? 'testnet' : 'mainnet'
           } login request.`,
         );
       }
@@ -174,6 +174,10 @@ const InvoiceInfo = props => {
   const openListSelectionModal = () => {
     setIsListSelectionModalVisible(true);
   };
+
+  const isWrongInvoiceType = (det) => {
+    return isSignedIn && ((isTestAccount && !det.isTestnet()) || (!isTestAccount && det.isTestnet()))
+  }
   
   const handleSupportedNetworkSelect = (item) => {
     setIsListSelectionModalVisible(false);
@@ -215,12 +219,6 @@ const InvoiceInfo = props => {
   };
 
   useEffect(() => {
-    if (isWrongInvoiceType) {
-      wrongInvoiceType(inv.details.isTestnet());
-    }
-  }, [])
-
-  useEffect(() => {
     if (signedIn && waitingForSignin) {
       handleContinue();
     }
@@ -235,7 +233,7 @@ const InvoiceInfo = props => {
   useEffect(() => {
     setMainHeading(getMainHeading())
     setExpiryLabel(getExpiryLabel())
-  }, [inv]);
+  }, [isSigned, signerSystemID, details]);
 
   useEffect(() => {
     setAcceptedSystemsLabel(getAcceptedSystemsLabel())
@@ -251,8 +249,16 @@ const InvoiceInfo = props => {
   }, [acceptedSystemsDefinitions]);
 
   useEffect(() => {
-    setInv(primitives.VerusPayInvoice.fromJson(deeplinkData))
-  }, [deeplinkData]);
+    const det = new primitives.VerusPayInvoiceDetails();
+
+    det.fromBuffer(Buffer.from(detailsBufferString, 'hex'), 0, new primitives.BigNumber(invoiceVersion));
+
+    setDetails(det);
+
+    if (isWrongInvoiceType(det)) {
+      wrongInvoiceType(det.isTestnet());
+    }
+  }, [detailsBufferString]);
 
   useEffect(() => {
     setSigDateString(unixToDate(sigtime))
@@ -287,7 +293,7 @@ const InvoiceInfo = props => {
           contentContainerStyle={Styles.focalCenter}>
           <VerusPayTextLogo width={'55%'} height={'10%'} />
           <TouchableOpacity
-            disabled={inv.details.acceptsAnyDestination()}
+            disabled={details.acceptsAnyDestination()}
             style={Styles.wideBlock}
             onPress={() =>
               copyToClipboard(destinationDisplay, {
@@ -298,18 +304,18 @@ const InvoiceInfo = props => {
             <Text style={{fontSize: 18, textAlign: 'center'}}>{mainHeading}</Text>
           </TouchableOpacity>
           <View style={Styles.fullWidth}>
-            {(inv.details.acceptsConversion() ||
-              inv.details.expires() ||
-              inv.details.acceptsNonVerusSystems() ||
-              inv.isSigned()
+            {(details.acceptsConversion() ||
+              details.expires() ||
+              details.acceptsNonVerusSystems() ||
+              isSigned
             ) && <Divider />}
             {
-              inv.details.acceptsConversion() && (
+              details.acceptsConversion() && (
                 <React.Fragment>
                   <List.Item title={"This invoice accepts conversion, continue to see which currencies you can pay it with."} titleNumberOfLines={100}/>
                   <Divider />
                   <List.Item 
-                    title={`${satsToCoins(BigNumber(inv.details.maxestimatedslippage)).multipliedBy(100).toString()}%`} 
+                    title={`${satsToCoins(BigNumber(details.maxestimatedslippage)).multipliedBy(100).toString()}%`} 
                     titleNumberOfLines={100}
                     description={'Max. est. deviation from predicted conversion result'}
                     right={props => <List.Icon {...props} icon={'information'} size={20} />}
@@ -320,7 +326,7 @@ const InvoiceInfo = props => {
               )
             }
             {
-              inv.details.expires() && (
+              details.expires() && (
                 <React.Fragment>
                   <List.Item title={expiryLabel} description={'Expires in approx.'} />
                   <Divider />
@@ -328,7 +334,7 @@ const InvoiceInfo = props => {
               )
             }
             {
-              inv.details.acceptsNonVerusSystems() && (
+              details.acceptsNonVerusSystems() && (
                 <React.Fragment>
                   <List.Item
                     title={acceptedSystemsLabel}
@@ -342,7 +348,7 @@ const InvoiceInfo = props => {
               )
             }
             {
-              inv.isSigned() && (
+              isSigned && (
                 <React.Fragment>
                   <TouchableOpacity
                     onPress={() => openVerusIdDetailsModal(chain_id, signing_id)}>
@@ -380,7 +386,6 @@ const InvoiceInfo = props => {
             buttonColor={Colors.verusGreenColor}
             textColor={Colors.secondaryColor}
             style={{ width: 148 }}
-            disabled={isWrongInvoiceType}
             onPress={() => handleContinue()}>
             Continue
           </Button>
