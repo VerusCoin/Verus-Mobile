@@ -11,6 +11,7 @@
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="i5jtwbp6zymeay9llnraglgjqgdrffsau4"/>
         <data android:scheme="i5JtwbP6zyMEAy9LLnRAGLgJQGdRFfsAu4"/>
+        <data android:scheme="verus"/>
       </intent-filter>
     </activity>
     <activity android:name=".SplashActivity" android:exported="true" android:screenOrientation="portrait" android:theme="@style/SplashTheme" android:label="@string/app_name">
