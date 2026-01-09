@@ -1,6 +1,7 @@
-import { GenericRequest, VERUSPAY_INVOICE_DETAILS_VDXF_KEY, VerusPayInvoiceOrdinalVDXFObject } from "verus-typescript-primitives"
+import { AUTHENTICATION_REQUEST_VDXF_KEY, GenericRequest, VERUSPAY_INVOICE_DETAILS_VDXF_KEY, VerusPayInvoiceOrdinalVDXFObject } from "verus-typescript-primitives"
 import { getInfo, verifyGenericRequest } from "../../api/channels/vrpc/callCreators"
 import { getIdentity } from "../../api/channels/verusid/callCreators";
+import { validateAuthenticationRequestVDXFObject } from "./authenticationRequestValidator";
 import { validateVerusPayInvoiceVDXFObject } from "./verusPayInvoiceDetailsValidator";
 import { CoinDirectory } from "../../CoinData/CoinDirectory";
 import VrpcProvider from '../../vrpc/vrpcInterface';
@@ -21,6 +22,7 @@ export const isRequestRequiredSignature = (request) => {
 
 export const getValidatorForDetail = (detailKey) => {
   const detailValidators = {
+    [AUTHENTICATION_REQUEST_VDXF_KEY.vdxfid]: validateAuthenticationRequestVDXFObject,
     [VERUSPAY_INVOICE_DETAILS_VDXF_KEY.vdxfid]: validateVerusPayInvoiceVDXFObject
   }
 
@@ -42,6 +44,10 @@ export const validateGenericRequest = async (request) => {
     const coinObj = CoinDirectory.getBasicCoinObj(request.signature.systemID.toIAddress())
     VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0])
 
+    if (!!coinObj.testnet !== request.isTestnet()) {
+      throw new Error(`Cannot validate request made for ${request.isTestnet() ? "testnet" : "mainnet"} on ${coinObj.testnet ? "testnet" : "mainnet"}`)
+    }
+
     const signedBy = await getIdentity(coinObj.system_id, request.signature.identityID.toIAddress())
     if (signedBy.error) throw new Error(signedBy.error.message)
 
@@ -56,11 +62,11 @@ export const validateGenericRequest = async (request) => {
     throw new Error("Encrypt response to address not yet supported.")
   }
 
-  for (const detail of request.details) {
+  for (let i = 0; i < request.details.length; i++) {
+    const detail = request.getDetails(i);
     const detailKey = detail.getIAddressKey();
-
     const validator = getValidatorForDetail(detailKey);
 
-    await validator(detail);
+    await validator(request, i);
   }
 }

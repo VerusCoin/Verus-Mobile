@@ -2,14 +2,15 @@ import { CoinDirectory } from "../../CoinData/CoinDirectory"
 import VrpcProvider from '../../vrpc/vrpcInterface';
 import { getInfo } from "../../api/channels/vrpc/callCreators";
 import { blocksToTime } from "../../math";
-import { VerusPayInvoiceDetails, VerusPayInvoiceOrdinalVDXFObject } from "verus-typescript-primitives/dist/vdxf/classes";
+import { GenericRequest, VerusPayInvoiceDetails, VerusPayInvoiceOrdinalVDXFObject } from "verus-typescript-primitives/dist/vdxf/classes";
 import { getCurrency } from "../../api/channels/verusid/callCreators";
 
 /**
- * @param {VerusPayInvoiceOrdinalVDXFObject} detailsObject 
+ * @param {GenericRequest} request
+ * @param {number} detailIndex
  */
-export const validateVerusPayInvoiceVDXFObject = (detailsObject) => {
-  return validateVerusPayInvoiceDetails(detailsObject.data);
+export const validateVerusPayInvoiceVDXFObject = (request, detailIndex) => {
+  return validateVerusPayInvoiceDetails(request.getDetails(detailIndex).data);
 }
 
 /**

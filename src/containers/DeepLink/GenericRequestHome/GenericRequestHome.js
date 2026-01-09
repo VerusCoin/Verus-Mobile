@@ -3,11 +3,13 @@ import {View} from 'react-native';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
-import { GenericRequest, GenericResponse, VERUSPAY_INVOICE_DETAILS_VDXF_KEY } from 'verus-typescript-primitives';
+import { AUTHENTICATION_REQUEST_VDXF_KEY, GenericRequest, GenericResponse, VERUSPAY_INVOICE_DETAILS_VDXF_KEY } from 'verus-typescript-primitives';
 import InvoiceInfo from '../InvoiceInfo/InvoiceInfo';
 import { handleVerusPayInvoiceDetailsVDXFObject } from '../../../utils/deeplink/handlers/verusPayInvoiceDetailsHandler';
+import { handleAuthenticationRequestDetailsVDXFObject } from '../../../utils/deeplink/handlers/authenticationRequestDetailsHandler';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import { CommonActions } from '@react-navigation/native';
+import AuthenticationRequestInfo from '../AuthenticationRequestInfo/AuthenticationRequestInfo';
 
 const GenericRequestHome = props => {
   const {
@@ -46,6 +48,7 @@ const GenericRequestHome = props => {
   const detailHandlers = new Map();
 
   detailHandlers.set(VERUSPAY_INVOICE_DETAILS_VDXF_KEY.vdxfid, handleVerusPayInvoiceDetailsVDXFObject);
+  detailHandlers.set(AUTHENTICATION_REQUEST_VDXF_KEY.vdxfid, handleAuthenticationRequestDetailsVDXFObject);
 
   /**
    * Processes a detail in the request at a certain index
@@ -117,14 +120,16 @@ const GenericRequestHome = props => {
    * @param {Array<number>} handledIndices
    */
   const next = async (response, handledIndices) => {
-    props.navigation.popToTop();
-
     let newDetailsProcessed = detailsProcessed;
 
     for (const handledIndex of handledIndices) {
       if (!processedDetailIndices.includes(handledIndex)) {
         newDetailsProcessed++;
       }
+    }
+
+    if (request && newDetailsProcessed < request.details.length - 1) {
+      props.navigation.popToTop();
     }
 
     setResponse(response);
@@ -150,12 +155,24 @@ const GenericRequestHome = props => {
         setDisplayProps({});
         processNextDetail();
       } else {
-        props.cancel();
+        props.navigation.navigate('GenericRequestComplete');
       }
     }
   }, [detailsProcessed]);
 
   const screens = {
+    [AUTHENTICATION_REQUEST_VDXF_KEY.vdxfid]: () => (
+      <AuthenticationRequestInfo
+        {...displayProps}
+        cancel={props.cancel}
+        setLoading={props.setLoading}
+        navigation={props.navigation}
+        next={next}
+        response={response}
+        request={request}
+        detailIndex={detailIndex}
+      />
+    ),
     [VERUSPAY_INVOICE_DETAILS_VDXF_KEY.vdxfid]: () => (
       <InvoiceInfo
         {...displayProps}
