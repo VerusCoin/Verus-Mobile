@@ -155,7 +155,15 @@ const GenericRequestHome = props => {
         setDisplayProps({});
         processNextDetail();
       } else {
-        props.navigation.navigate('GenericRequestComplete');
+        const responseBufferString = response.details && response.details.length > 0
+          ? response.toBuffer().toString('hex')
+          : '';
+        const requestBufferString = request.toBuffer().toString('hex');
+
+        props.navigation.navigate('GenericRequestComplete', {
+          requestBufferString,
+          responseBufferString
+        });
       }
     }
   }, [detailsProcessed]);

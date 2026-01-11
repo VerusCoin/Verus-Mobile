@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { Divider, List } from 'react-native-paper';
-import { AuthenticationRequestDetails, AuthenticationResponseDetails, AuthenticationResponseOrdinalVDXFObject, GenericRequest, GenericResponse } from 'verus-typescript-primitives';
+import { AuthenticationRequestDetails, AuthenticationResponseDetails, AuthenticationResponseOrdinalVDXFObject, CompactAddressObject, GenericRequest, GenericResponse, VerifiableSignatureData } from 'verus-typescript-primitives';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import { openLinkIdentityModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
@@ -152,7 +152,7 @@ const AuthenticationRequestIdentity = props => {
     return true;
   };
 
-  const selectIdentity = (iAddress) => {
+  const selectIdentity = (chainId, iAddress) => {
     const responseDetail = new AuthenticationResponseOrdinalVDXFObject({
       data: new AuthenticationResponseDetails({
         requestID: details.requestID
@@ -162,6 +162,16 @@ const AuthenticationRequestIdentity = props => {
     const updatedResponse = baseResponse;
     if (updatedResponse.details == null) updatedResponse.details = [];
     updatedResponse.details = [...updatedResponse.details, responseDetail];
+
+    if (updatedResponse.signature == null) {
+      const coinObj = CoinDirectory.findCoinObj(chainId);
+      updatedResponse.signature = new VerifiableSignatureData({
+        systemID: CompactAddressObject.fromIAddress(coinObj.system_id),
+        identityID: CompactAddressObject.fromIAddress(iAddress)
+      });
+
+      updatedResponse.setSigned();
+    }
 
     next(updatedResponse, [detailIndex]);
   };
@@ -204,7 +214,7 @@ const AuthenticationRequestIdentity = props => {
                     right={props => (
                       <List.Icon {...props} icon={'chevron-right'} size={20} />
                     )}
-                    onPress={() => selectIdentity(iAddr)}
+                    onPress={() => selectIdentity(chainId, iAddr)}
                   />
                 </React.Fragment>
               );
