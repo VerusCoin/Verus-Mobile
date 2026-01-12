@@ -56,7 +56,7 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
   VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0]);
   
   // process the request
-  const result = await processAppEncryptionRequest({
+  const encryptedResponse = await processAppEncryptionRequest({
     request: encryptionRequest,
     systemID: coinObj.system_id,
     requestSignerID,
@@ -71,7 +71,7 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
   
   // create response detail
   const responseDetail = new AppEncryptionResponseOrdinalVDXFObject({
-    data: result.responseDetails
+    data: encryptedResponse
   });
   
   // add to response
@@ -137,7 +137,6 @@ const isIdentityInWallet = async (identityID, systemID, accountAddresses) => {
     
     return identityAddresses.some(addr => accountAddresses.includes(addr));
   } catch (error) {
-    console.error("isIdentityInWallet check failed:", error);
     return false;
   }
 };
@@ -252,7 +251,6 @@ const processAppEncryptionRequest = async ({
   responseSignerID,
   activeAccount
 }) => {
-  console.log("=== processing AppEncryptionRequest ===");
   
   // validate responseSignerID
   const responseSignerValidation = await validateResponseSignerID(
@@ -262,11 +260,9 @@ const processAppEncryptionRequest = async ({
   );
 
   if (!responseSignerValidation.valid) {
-    console.error("responseSignerID validation failed:", responseSignerValidation.error);
-    return { success: false, error: responseSignerValidation.error };
+    throw new Error(responseSignerValidation.error);
   }
 
-  console.log("responseSignerID validated:", responseSignerValidation.fullyQualifiedName);
 
   // validate request identities
   const identityValidation = await validateRequestIdentities(
@@ -277,26 +273,19 @@ const processAppEncryptionRequest = async ({
   );
 
   if (!identityValidation.valid) {
-    console.error("identity validation failed:", identityValidation.error);
-    return { success: false, error: identityValidation.error };
+    throw new Error(identityValidation.error);
   }
 
   const appID = identityValidation.appID;
   console.log("identity validation passed, appID:", appID);
 
   // retrieve master seed
-  let masterSeed;
-  try {
-    const accountHash = activeAccount.accountHash;
-    const seeds = await requestSeeds(null, [accountHash]);
-    masterSeed = seeds[accountHash];
-    
-    if (!masterSeed) {
-      throw new Error("failed to retrieve master seed");
-    }
-  } catch (error) {
-    console.error("seed retrieval failed:", error);
-    return { success: false, error: `seed retrieval failed: ${error.message}` };
+  const accountHash = activeAccount.accountHash;
+  const seeds = await requestSeeds(null, [accountHash]);
+  const masterSeed = seeds[accountHash];
+  
+  if (!masterSeed) {
+    throw new Error("failed to retrieve master seed for key derivation");
   }
 
   // check if spending key requested
@@ -316,34 +305,14 @@ const processAppEncryptionRequest = async ({
     returnSecret: returnEsk
   };
 
-  console.log("derivation params:", {
-    fromId: derivationParams.fromId,
-    toId: derivationParams.toId,
-    hdIndex: derivationParams.hdIndex,
-    encryptionIndex: derivationParams.encryptionIndex,
-    returnSecret: derivationParams.returnSecret
-  });
 
-  let keys;
-  try {
-    const derivationResult = await z_getencryptionaddress(systemID, derivationParams);
-    
-    if (derivationResult.err) {
-      throw new Error(`key derivation failed: ${derivationResult.result}`);
-    }
-    
-    keys = derivationResult.result;
-    
-    console.log("key derivation successful:", {
-      hasAddress: !!keys.address,
-      hasFvk: !!keys.fvk,
-      hasIvk: !!keys.ivk,
-      hasSpendingKey: !!keys.spending_key
-    });
-  } catch (error) {
-    console.error("key derivation failed:", error);
-    return { success: false, error: `key derivation failed: ${error.message}` };
+  const derivationResult = await z_getencryptionaddress(systemID, derivationParams);
+
+  if (derivationResult.err) {
+    throw new Error(`key derivation failed: ${derivationResult.result}`);
   }
+
+  const keys = derivationResult.result;
 
   // build response details
   const responseDetails = AppEncryptionResponseDetails.fromJson({
@@ -362,37 +331,25 @@ const processAppEncryptionRequest = async ({
   const encryptTo = request.encryptToZAddress;
 
   if (!encryptTo) {
-    return { success: false, error: "no encryption address available in request" };
+   throw new Error("no encryption address available in request");
   }
 
-  let encryptedResponse;
-  try {
-    const encryptResult = await encryptVerusMessage(
+
+  const encryptResult = await encryptVerusMessage(
       systemID,
       encryptTo,
       responseHex,
       true  // isHex = true since responseHex is hex string
-    );
+  );
 
-    if (encryptResult.err) {
-      throw new Error(`encryption failed: ${encryptResult.result}`);
-    }
-
-    encryptedResponse = encryptResult.result;
-  } catch (error) {
-    console.error("encryption failed:", error);
-    return { success: false, error: `encryption failed: ${error.message}` };
+   if (encryptResult.err) {
+    throw new Error(`encryption failed: ${encryptResult.result}`);
   }
 
-  console.log("=== AppEncryptionRequest processing complete ===");
-
-  return { 
-    success: true,
-    responseDetails,
-    encryptedResponse
-  };
+      // return encryptedResponse directly
+      // this is what gets pushed to GenericResponse
+      return encryptResult.result;
 };
-
 
 export default {
   handleAppEncryptionRequestVDXFObject
