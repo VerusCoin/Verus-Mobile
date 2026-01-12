@@ -89,6 +89,28 @@ const IdentityUpdateRequestInfo = props => {
     else return addr;
   }
 
+  const getSignDataLabel = (signData) => {
+    if (!signData) return 'Sign data';
+
+    const trim = (value, maxLen = 60) => {
+      if (value == null) return '';
+      const str = String(value);
+      return str.length > maxLen ? `${str.slice(0, maxLen)}...` : str;
+    };
+
+    const dataJson = signData.toCLIJson();
+
+    if (signData.isVdxfData()) return 'VDXF data';
+    if (signData.isMMRData()) return 'MMR data';
+    if (dataJson.filename) return `Filename: ${trim(dataJson.filename)}`;
+    if (dataJson.message) return `Message: ${trim(dataJson.message)}`;
+    if (dataJson.messagehex) return `Hex message: ${trim(dataJson.messagehex)}`;
+    if (dataJson.messagebase64) return `Base64 message: ${trim(dataJson.messagebase64)}`;
+    if (dataJson.datahash) return `Data hash: ${trim(dataJson.datahash)}`;
+
+    return 'Sign data';
+  };
+
   const getDisplayUpdates = () => {
     const signDataMap = details.signDataMap || new Map();
     const displayUpdates = {
@@ -139,12 +161,18 @@ const IdentityUpdateRequestInfo = props => {
       for (const key in identityUpdates.contentmultimap) {
 
         if (details.containsSignData() && signDataMap.has(key)) {
-          
+          const signData = signDataMap.get(key);
+
+          displayUpdates[VERUSID_CMM_INFO.key][`${VERUSID_CMM_DATA.key}:${key}`] = {
+            data: getSignDataLabel(signData),
+            onPress: () => openPartialSignDataModal(signData, getCmmDataKey(key))
+          };
         } else {
           const dataLabel = getCmmDataLabel(identityUpdates.contentmultimap[key]);
 
           displayUpdates[VERUSID_CMM_INFO.key][`${VERUSID_CMM_DATA.key}:${key}`] = {
             data: dataLabel,
+            rawData: identityUpdates.contentmultimap[key],
             onPress: () => {
               const updates = identityUpdates.contentmultimap[key];
   

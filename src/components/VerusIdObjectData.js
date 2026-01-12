@@ -57,6 +57,37 @@ export default function VerusIdObjectData(props) {
   const [listData, setListData] = useState([]);
   const [expandedAccordions, setExpandedAccordions] = useState({});
 
+  const getCmmDataPreview = (data, maxItems = 3, maxLen = 80) => {
+    const trim = (value) => {
+      if (value == null) return 'null';
+      const str = String(value);
+      return str.length > maxLen ? `${str.slice(0, maxLen)}...` : str;
+    };
+
+    const formatValue = (value) => {
+      if (Array.isArray(value)) {
+        const items = value.map((entry) => formatValue(entry));
+        const shown = items.slice(0, maxItems).join(' | ');
+        return items.length > maxItems ? `${shown} +${items.length - maxItems} more` : shown;
+      }
+
+      if (typeof value === 'object' && value != null) {
+        const keys = Object.keys(value);
+        if (keys.length === 1) {
+          const key = keys[0];
+          const label = getVDXFKeyLabel(key, true) || key;
+          return `${label}: ${formatValue(value[key])}`;
+        }
+
+        return `${keys.length} fields`;
+      }
+
+      return trim(value);
+    };
+
+    return formatValue(data);
+  };
+
   const getDisplayUpdates = () => {
     const updateFrame = {
       [VERUSID_BASE_INFO.key]: {},
@@ -68,7 +99,20 @@ export default function VerusIdObjectData(props) {
 
     if (updates) {
       for (const groupKey in updates) {
-        updateFrame[groupKey] = updates[groupKey];
+        updateFrame[groupKey] = { ...updates[groupKey] };
+      }
+    }
+
+    const cmmUpdates = updateFrame[VERUSID_CMM_INFO.key];
+    if (cmmUpdates) {
+      for (const key in cmmUpdates) {
+        const entry = cmmUpdates[key];
+        if (entry && entry.rawData != null) {
+          cmmUpdates[key] = {
+            ...entry,
+            data: getCmmDataPreview(entry.rawData)
+          };
+        }
       }
     }
 
@@ -76,6 +120,10 @@ export default function VerusIdObjectData(props) {
   };
 
   const [displayUpdates, setDisplayUpdates] = useState(getDisplayUpdates());
+
+  useEffect(() => {
+    setDisplayUpdates(getDisplayUpdates());
+  }, [updates, cmmDataKeys]);
 
   tryDisplayFriendlyName = iAddr => {
     return friendlyNames[iAddr] ? friendlyNames[iAddr] : iAddr;
@@ -300,7 +348,7 @@ export default function VerusIdObjectData(props) {
         setExpandedAccordions(initialExpandedState);
       }
     }
-  }, [verusId, friendlyNames]);
+  }, [verusId, friendlyNames, updates, cmmDataKeys, chainInfo, coinObj, hideUnchanged, hideDataOnLoad]);
 
   copyDataToClipboard = (data, name) => {
     Clipboard.setString(data);
