@@ -3,13 +3,15 @@ import {View} from 'react-native';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
-import { AUTHENTICATION_REQUEST_VDXF_KEY, GenericRequest, GenericResponse, VERUSPAY_INVOICE_DETAILS_VDXF_KEY } from 'verus-typescript-primitives';
+import { AUTHENTICATION_REQUEST_VDXF_KEY, GenericRequest, GenericResponse, IDENTITY_UPDATE_REQUEST_VDXF_KEY, VERUSPAY_INVOICE_DETAILS_VDXF_KEY } from 'verus-typescript-primitives';
 import InvoiceInfo from '../InvoiceInfo/InvoiceInfo';
 import { handleVerusPayInvoiceDetailsVDXFObject } from '../../../utils/deeplink/handlers/verusPayInvoiceDetailsHandler';
 import { handleAuthenticationRequestDetailsVDXFObject } from '../../../utils/deeplink/handlers/authenticationRequestDetailsHandler';
+import { handleIdentityUpdateRequestDetailsVDXFObject } from '../../../utils/deeplink/handlers/identityUpdateRequestDetailsHandler';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import { CommonActions } from '@react-navigation/native';
 import AuthenticationRequestInfo from '../AuthenticationRequestInfo/AuthenticationRequestInfo';
+import IdentityUpdateRequestInfo from '../IdentityUpdateRequestInfo/IdentityUpdateRequestInfo';
 
 const GenericRequestHome = props => {
   const {
@@ -49,6 +51,7 @@ const GenericRequestHome = props => {
 
   detailHandlers.set(VERUSPAY_INVOICE_DETAILS_VDXF_KEY.vdxfid, handleVerusPayInvoiceDetailsVDXFObject);
   detailHandlers.set(AUTHENTICATION_REQUEST_VDXF_KEY.vdxfid, handleAuthenticationRequestDetailsVDXFObject);
+  detailHandlers.set(IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid, handleIdentityUpdateRequestDetailsVDXFObject);
 
   /**
    * Processes a detail in the request at a certain index
@@ -179,6 +182,22 @@ const GenericRequestHome = props => {
         response={response}
         request={request}
         detailIndex={detailIndex}
+      />
+    ),
+    [IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid]: () => (
+      <IdentityUpdateRequestInfo
+        {...displayProps}
+        cancel={props.cancel}
+        setLoading={props.setLoading}
+        navigation={props.navigation}
+        requestBufferString={request.toBuffer().toString('hex')}
+        responseBufferString={
+          response.details && response.details.length > 0
+            ? response.toBuffer().toString('hex')
+            : ''
+        }
+        detailIndex={detailIndex}
+        next={next}
       />
     ),
     [VERUSPAY_INVOICE_DETAILS_VDXF_KEY.vdxfid]: () => (

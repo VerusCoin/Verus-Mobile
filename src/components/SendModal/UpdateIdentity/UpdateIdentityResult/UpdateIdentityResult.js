@@ -1,7 +1,7 @@
 import {useEffect, useState} from 'react';
 import {closeSendModal} from '../../../../actions/actions/sendModal/dispatchers/sendModal';
 import { UpdateIdentityResultRender } from './UpdateIdentityResult.render';
-import { SEND_MODAL_IDENTITY_UPDATE_COMPLETE, SEND_MODAL_IDENTITY_UPDATE_REQUEST_HEX } from '../../../../utils/constants/sendModal';
+import { SEND_MODAL_IDENTITY_UPDATE_COMPLETE, SEND_MODAL_IDENTITY_UPDATE_TXID } from '../../../../utils/constants/sendModal';
 import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
 import { explorers } from '../../../../utils/CoinData/CoinData';
 import { openUrl } from '../../../../utils/linking';
@@ -24,6 +24,10 @@ const UpdateIdentityResult = (props) => {
   }, []);
 
   const finishSend = async () => {
+    await props.updateSendFormData(
+      SEND_MODAL_IDENTITY_UPDATE_TXID,
+      txid
+    );
     await props.updateSendFormData(
       SEND_MODAL_IDENTITY_UPDATE_COMPLETE,
       true,

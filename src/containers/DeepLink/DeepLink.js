@@ -286,7 +286,9 @@ const DeepLink = (props) => {
       subjectIdClass.getIdentityAddress(),
       subjectIdTxHex,
       subjectIdentity.blockheight,
-      false
+      false,
+      undefined,
+      req.isTestnet()
     );
 
     if (req.isSigned()) {
@@ -353,9 +355,12 @@ const DeepLink = (props) => {
 
         await validateExpiry();
         setDisplayProps({
-          deeplinkData,
+          detailsBufferString: req.details.toBuffer().toString('hex'),
           sigtime,
           signerFqn: convertFqnToDisplayFormat(signedBy.result.fullyqualifiedname),
+          signerSystemID: coinObj.system_id,
+          signerSystemName: coinObj.id,
+          signerIdentityID: signingIAddr,
           subjectIdentity,
           identityUpdates: updateIdentityTx.identity.toJson(),
           updateIdTxHex: updateIdentityTx.hex,
