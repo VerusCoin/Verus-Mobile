@@ -35,6 +35,11 @@ const {
  * @returns {Promise<{ response: GenericResponse, handledIndices: number[] }>}
  */
 export const handleAppEncryptionRequestVDXFObject = async (request, response, detailIndex, context) => {
+
+  // context comes from GenericRequestHome and contains wallet state
+  // activeAccount has the wallet addresses and accountHash for seed retrieval
+  // responseSignerID is the logged in verusid that will sign/create the response
+  
   const { activeAccount, responseSignerID } = context;
   
   // extract detail
@@ -212,9 +217,12 @@ const validateResponseSignerID = async (responseSignerID, systemID, activeAccoun
       };
     }
 
+    const zAddress = identity.privateaddress || null;
+
     return { 
       valid: true, 
       identity,
+      zAddress, 
       fullyQualifiedName: identity.fullyqualifiedname
     };
 
@@ -233,7 +241,7 @@ const validateResponseSignerID = async (responseSignerID, systemID, activeAccoun
 const shouldReturnExtendedSpendingKey = (request) => {
   if (!request.flags) return false;
   const eskFlag = AppEncryptionRequestDetails?.RETURN_ESK || new BN(4);
-  return request.flags.and(eskFlag).gt(new BN(0));
+  return request.flags.and(eskFlag).get(new BN(0));
 };
 
 
@@ -241,7 +249,6 @@ const shouldReturnExtendedSpendingKey = (request) => {
 // main processing logic - derives keys and encrypts response
 
 const processAppEncryptionRequest = async ({
-
   // no requestIndex needed here GenericRequestHome handles index tracking 
   // it passes detailIndex and expects handledIndices back
   request,
@@ -277,7 +284,6 @@ const processAppEncryptionRequest = async ({
   }
 
   const appID = identityValidation.appID;
-  console.log("identity validation passed, appID:", appID);
 
   // retrieve master seed
   const accountHash = activeAccount.accountHash;
