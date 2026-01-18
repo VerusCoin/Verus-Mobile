@@ -10059,7 +10059,7 @@ react-native-url-polyfill@1.3.0:
 
 "react-native-verus@git+https://github.com/who-biz/react-native-verus.git#ka_agree-string-fixes":
   version "0.6.10"
-  resolved "git+https://github.com/who-biz/react-native-verus.git#e725b9144c2306a05624c9ade72304affced0f45"
+  resolved "git+https://github.com/who-biz/react-native-verus.git#d047cb2f7a8811bededb51067a0370a8ee8f2aa2"
   dependencies:
     biggystring "^4.1.3"
     rfc4648 "^1.3.0"

@@ -1,25 +1,21 @@
-import { Tools } from 'react-native-zcash'; // or a local alias to the react-native.ts module
-import ApiException from '../../../../errors/apiError'
-import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
+import { ChannelKeysRequest, Tools } from 'react-native-verus';
+import { createJsonRpcResponse } from './jsonResponse'
 
-
-export const z_getencryptionaddress = async (alias, params) => {
-  try {
-    const keys = await Tools.getVerusEncryptionAddress(
-      params.seed || null,
-      params.spendingKey || null,
-      params.fromId || null,
-      params.toId || null,
-      params.hdIndex || 0,
-      params.encryptionIndex || 0,
-      params.returnSecret || false
-    );
-
-    return { result: keys };
-  } catch (e) {
-    return {
-      err: true,
-      result: e.message || 'Unknown native error during key derivation.'
+export const z_getencryptionaddress = async (seed, extsk, fromId, toId, hdIndex, encryptionIndex, returnSecret) => {
+    const params: ChannelKeysRequest = {
+        mnemonicSeed: seed,
+        extsk: extsk ? await Tools.bech32Decode(extsk) : extsk,
+        fromId,
+        toId,
+        hdIndex: hdIndex ?? -1,
+        encryptionIndex: encryptionIndex ?? 0,
+        returnSecret: returnSecret ?? false
     }
-  }
+    try {
+        const res = await Tools.getVerusEncryptionAddress(params);
+        return res;
+        //createJsonResponse(0, res, null); //TODO: verify we actually need this in JsonResponse format
+   } catch (err) {
+        throw err;
+   }
 }
