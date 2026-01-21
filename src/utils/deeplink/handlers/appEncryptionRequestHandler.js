@@ -196,6 +196,7 @@ const validateResponseSignerID = async (responseSignerID, systemID, activeAccoun
   }
 
   try {
+    // fetch identity from chain to verify it exists and get primaryaddresses
     const identityResult = await getIdentity(systemID, responseSignerID);
     
     if (identityResult.error) {
@@ -211,6 +212,7 @@ const validateResponseSignerID = async (responseSignerID, systemID, activeAccoun
       return { valid: false, error: `identity ${responseSignerID} not found` };
     }
 
+    // check if wallet controls this identity
     const identityAddresses = identity.primaryaddresses || [];
     const walletControlsIdentity = identityAddresses.some(addr => 
       accountAddresses.includes(addr)
@@ -223,14 +225,15 @@ const validateResponseSignerID = async (responseSignerID, systemID, activeAccoun
       };
     }
 
-    const zAddress = identity.privateaddress;
-
-    const extendedSpendingKey = identity.extendedspendingkey || identity.spending_key;
+    // get ESK from activeAccount
+    const extendedSpendingKey = activeAccount.extendedSpendingKey 
+      || activeAccount.esk
+      || activeAccount.keys?.[0]?.extendedSpendingKey;
 
     return { 
       valid: true, 
       identity,
-      zAddress, 
+      zAddress: identity.privateaddress, 
       fullyQualifiedName: identity.fullyqualifiedname,
       extendedSpendingKey
     };
