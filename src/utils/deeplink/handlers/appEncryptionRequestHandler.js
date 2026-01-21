@@ -12,7 +12,7 @@ import VrpcProvider from "../../vrpc/vrpcInterface";
 import { getIdentity } from "../../api/channels/verusid/callCreators";
 import { z_getencryptionaddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
 import { encryptVerusMessage } from "../../api/channels/dlight/requests/encrypt";
-import { requestSeeds } from "../../auth/authBox";
+import store from "../../../store";
 
 const { 
   GenericRequest,
@@ -31,16 +31,26 @@ const {
  * @param {GenericRequest} request - the parent GenericRequest
  * @param {GenericResponse} response - the response being built
  * @param {number} detailIndex - index of this detail in request.details
- * @param {Object} context - contains activeAccount, responseSignerID
  * @returns {Promise<{ response: GenericResponse, handledIndices: number[] }>}
  */
-export const handleAppEncryptionRequestVDXFObject = async (request, response, detailIndex, context) => {
+export const handleAppEncryptionRequestVDXFObject = async (request, response, detailIndex) => {
 
-  // context comes from GenericRequestHome and contains wallet state
-  // activeAccount has the wallet addresses and accountHash for seed retrieval
-  // responseSignerID is the logged in verusid that will sign/create the response
+   // get activeAccount from redux store
+  // this contains wallet addresses and accountHash for seed retrieval
+  const activeAccount = store.getState().authentication.activeAccount;
   
-  const { activeAccount, responseSignerID } = context;
+  if (!activeAccount) {
+    throw new Error("no active account found");
+  }
+  
+  // responseSignerID comes from the response signature
+  // this is the identity that will create/sign the response
+
+  if (!response.signature || !response.signature.identityID) {
+    throw new Error("response signature with identityID is required");
+  }
+  
+  const responseSignerID = response.signature.identityID.toIAddress();
   
   // extract detail
   const detail = request.getDetails(detailIndex);
@@ -69,10 +79,6 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
     responseSignerID,
     activeAccount
   });
-  
-  if (!result.success) {
-    throw new Error(result.error);
-  }
   
   // create response detail
   const responseDetail = new AppEncryptionResponseOrdinalVDXFObject({
@@ -217,13 +223,16 @@ const validateResponseSignerID = async (responseSignerID, systemID, activeAccoun
       };
     }
 
-    const zAddress = identity.privateaddress || null;
+    const zAddress = identity.privateaddress;
+
+    const extendedSpendingKey = identity.extendedspendingkey || identity.spending_key;
 
     return { 
       valid: true, 
       identity,
       zAddress, 
-      fullyQualifiedName: identity.fullyqualifiedname
+      fullyQualifiedName: identity.fullyqualifiedname,
+      extendedSpendingKey
     };
 
   } catch (error) {
@@ -270,6 +279,12 @@ const processAppEncryptionRequest = async ({
     throw new Error(responseSignerValidation.error);
   }
 
+    // this is used as the seed for deriving channel encryption keys
+  const extendedSpendingKey = responseSignerValidation.extendedSpendingKey;
+  
+  if (!extendedSpendingKey) {
+    throw new Error("identity does not have an extended spending key");
+  }
 
   // validate request identities
   const identityValidation = await validateRequestIdentities(
@@ -285,21 +300,12 @@ const processAppEncryptionRequest = async ({
 
   const appID = identityValidation.appID;
 
-  // retrieve master seed
-  const accountHash = activeAccount.accountHash;
-  const seeds = await requestSeeds(null, [accountHash]);
-  const masterSeed = seeds[accountHash];
-  
-  if (!masterSeed) {
-    throw new Error("failed to retrieve master seed for key derivation");
-  }
-
   // check if spending key requested
   const returnEsk = shouldReturnExtendedSpendingKey(request);
 
   // derive channel keys
   const derivationParams = {
-    seed: masterSeed,
+    seed: extendedSpendingKey,
     fromId: responseSignerID,
     toId: appID,
     hdIndex: request.derivationNumber?.toNumber?.() || request.derivationNumber || 0,
@@ -315,7 +321,7 @@ const processAppEncryptionRequest = async ({
   const derivationResult = await z_getencryptionaddress(systemID, derivationParams);
 
   if (derivationResult.err) {
-    throw new Error(`key derivation failed: ${derivationResult.result}`);
+    throw new Error(`key derivation failed`);
   }
 
   const keys = derivationResult.result;
@@ -331,21 +337,24 @@ const processAppEncryptionRequest = async ({
   });
 
   const responseBuffer = responseDetails.toBuffer();
+    
   const responseHex = responseBuffer.toString("hex");
 
   // encrypt response to app's z-address
   const encryptTo = request.encryptToZAddress;
 
   if (!encryptTo) {
-   throw new Error("no encryption address available in request");
+    // if encryptTo address is empty just return the unencrypted result
+   return responseHex;
   }
 
+// if request.encryptoAdresss is empty we do not need to encrypt the reponse 
 
   const encryptResult = await encryptVerusMessage(
       systemID,
-      encryptTo,
-      responseHex,
-      true  // isHex = true since responseHex is hex string
+      encryptTo, 
+      responseHex, 
+      true  
   );
 
    if (encryptResult.err) {
@@ -360,3 +369,4 @@ const processAppEncryptionRequest = async ({
 export default {
   handleAppEncryptionRequestVDXFObject
 };
+

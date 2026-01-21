@@ -58,11 +58,6 @@ export const validateAppEncryptionRequestDetails = async (request, details, deta
     throw new Error("AppEncryptionRequest must include encryptToZAddress");
   }
   
-  // validate encryptToZAddress format (should be a z-address)
-  if (!details.encryptToZAddress.startsWith('zs1')) {
-    throw new Error("encryptToZAddress must be a valid sapling address");
-  }
-  
   // validate requestSignerID exists on chain
   const requestSignerID = request.signature.identityID.toIAddress();
   const signerIdentity = await getIdentity(coinObj.system_id, requestSignerID);
@@ -75,27 +70,12 @@ export const validateAppEncryptionRequestDetails = async (request, details, deta
     throw new Error(`Request signer identity ${requestSignerID} not found on chain`);
   }
 
-  // if appOrDelegatedID is present at envelope level, validate it
-  // we only check it EXISTS here
-  // the spoofing check (does requestSignerID have permission to specify this app)
-  // happens in the handler because it needs activeAccount to determine
-  // if requestSignerID is in the wallet
-  if (request.hasAppOrDelegatedID && request.hasAppOrDelegatedID()) {
-    const appOrDelegatedID = request.appordelegatedid?.toIAddress?.() 
-      || request.appordelegatedid?.getAddressString?.();
-    
-    if (appOrDelegatedID) {
-      const appIdentity = await getIdentity(coinObj.system_id, appOrDelegatedID);
-      
-      if (appIdentity.error) {
-        throw new Error(`Failed to fetch app identity: ${appIdentity.error.message}`);
-      }
-      
-      if (!appIdentity.result) {
-        throw new Error(`App identity ${appOrDelegatedID} not found on chain`);
-      }
-    }
-  }
   
   // validation passed - no return value
 };
+
+
+
+// the app id can only be a valid delegated id only if the signer of the request is in the wallet
+
+// if it is self signed then it can be anything
