@@ -308,7 +308,7 @@ const processAppEncryptionRequest = async ({
 
   // derive channel keys
   const derivationParams = {
-    seed: extendedSpendingKey,
+    spendingKey: extendedSpendingKey,
     fromId: responseSignerID,
     toId: appID,
     hdIndex: request.derivationNumber?.toNumber?.() || request.derivationNumber || 0,
@@ -340,7 +340,7 @@ const processAppEncryptionRequest = async ({
   });
 
   const responseBuffer = responseDetails.toBuffer();
-    
+  
   const responseHex = responseBuffer.toString("hex");
 
   // encrypt response to app's z-address
