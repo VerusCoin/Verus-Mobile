@@ -13,9 +13,8 @@ import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
  * @param {String} seed The HDSeed for the wallet in question
  */
 export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed, extsk) => {
-
      try {
-       const config: InitializerConfig = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, true);
+       const config = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, true);
        const sync = await makeSynchronizer(config);
        return sync;
      } catch (error) {
@@ -25,7 +24,7 @@ export const initializeWallet = async (coinId, coinProto, accountHash, host, por
 
 export const setConfig = async (coinId, coinProto, accountHash, host, port, seed, extsk, birthday, newWallet) => {
   if (!extsk) {
-    const config: InitializerConfig = {
+    const config = {
       mnemonicSeed: seed,
       extsk: extsk,
       defaultHost: host,
@@ -38,7 +37,7 @@ export const setConfig = async (coinId, coinProto, accountHash, host, port, seed
     }
     return config;
   } else {
-      const config: InitializerConfig = {
+      const config = {
         mnemonicSeed: seed,
         extsk: await Tools.bech32Decode(extsk),
         defaultHost: host,
@@ -60,9 +59,8 @@ export const setConfig = async (coinId, coinProto, accountHash, host, port, seed
  * @param {String} accountHash The account hash of the user account to create the wallet for
  */
 export const openWallet = async (coinId, coinProto, accountHash, host, port, seed, extsk) => {
-
   try {
-    const config: InitializerConfig = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, false);
+    const config = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, false);
     const sync = await makeSynchronizer(config);
     return sync;
 
