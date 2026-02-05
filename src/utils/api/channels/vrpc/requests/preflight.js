@@ -287,11 +287,12 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     const parentTransactionFee = isConversionOrExport || isBasicNativeSend ? 0.0001 : 0.0002;
 
     const useSendCurrencyOutput =
-      isConversionOrExport &&
+      address.isETHAccount() ||
+      (isConversionOrExport &&
       (exportto === coinsList.VRSC.system_id ||
         exportto === coinsList.VRSCTEST.system_id || 
         exportto === "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X" || // vETH i-addr on VRSC
-        exportto === "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm");  // vETH i-addr on VRSCTEST
+        exportto === "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm"));  // vETH i-addr on VRSCTEST
 
     _feeamount = feesatoshis;
     nativeFeesPaid = coinsToSats(BigNumber(parentTransactionFee));
