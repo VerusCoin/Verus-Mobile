@@ -310,6 +310,14 @@ const InvoiceInfo = props => {
               isSigned
             ) && <Divider />}
             {
+              details.isTagged() && (
+                <React.Fragment>
+                  <List.Item title={"This invoice is tagged, the transaction that pays it will be easier to recognize on-chain."} titleNumberOfLines={100}/>
+                  <Divider />
+                </React.Fragment>
+              )
+            }
+            {
               details.acceptsConversion() && (
                 <React.Fragment>
                   <List.Item title={"This invoice accepts conversion, continue to see which currencies you can pay it with."} titleNumberOfLines={100}/>
@@ -362,6 +370,25 @@ const InvoiceInfo = props => {
                   <List.Item title={chain_id} description={'Signature system'} />
                   <Divider />
                   <List.Item title={sigDateString} description={'Signed on'} />
+                  <Divider />
+                </React.Fragment>
+              )
+            }
+            {
+              details.isTagged() && (
+                <React.Fragment>
+                  <Divider />
+                  <List.Item
+                    title={details.tag.address}
+                    titleNumberOfLines={100}
+                    description={'Transaction tag'}
+                    onPress={() =>
+                      copyToClipboard(details.tag.address, {
+                        title: 'Tag copied',
+                        message: `${details.tag.address} copied to clipboard.`,
+                      })
+                    }
+                  />
                   <Divider />
                 </React.Fragment>
               )

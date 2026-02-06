@@ -24,6 +24,7 @@ import {
   SEND_MODAL_SHOW_VIA_FIELD,
   SEND_MODAL_STRICT_AMOUNT,
   SEND_MODAL_TO_ADDRESS_FIELD,
+  SEND_MODAL_VDXF_TAG,
   SEND_MODAL_VIA_FIELD,
 } from '../../../../utils/constants/sendModal';
 import { coinsToSats, isNumber, satsToCoins } from "../../../../utils/math";
@@ -949,7 +950,8 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
         via: selectData(data[SEND_MODAL_VIA_FIELD]),
         address: await selectAddress(data[SEND_MODAL_TO_ADDRESS_FIELD]),
         satoshis: coinsToSats(BigNumber(amount)).toString(),
-        preconvert: selectData(data[SEND_MODAL_IS_PRECONVERT])
+        preconvert: selectData(data[SEND_MODAL_IS_PRECONVERT]),
+        vdxftag: selectData(data[SEND_MODAL_VDXF_TAG])
       }
 
       if (

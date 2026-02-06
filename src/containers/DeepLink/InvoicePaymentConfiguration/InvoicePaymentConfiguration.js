@@ -23,6 +23,7 @@ import {
   SEND_MODAL_TO_ADDRESS_FIELD,
   SEND_MODAL_VIA_FIELD,
   SEND_MODAL_MAPPING_FIELD,
+  SEND_MODAL_VDXF_TAG,
 } from '../../../utils/constants/sendModal';
 import { API_GET_BALANCES, IS_PBAAS } from '../../../utils/constants/intervalConstants';
 import { getInvoiceSourceOptions } from '../../../utils/api/channels/vrpc/callCreators';
@@ -143,7 +144,8 @@ const InvoicePaymentConfiguration = props => {
         [SEND_MODAL_TO_ADDRESS_FIELD]: !details.acceptsAnyDestination(),
       },
       [SEND_MODAL_CONTINUE_IMMEDIATELY]: !details.acceptsAnyAmount() && !details.acceptsAnyDestination(),
-      [SEND_MODAL_STRICT_AMOUNT]: !details.acceptsAnyAmount()
+      [SEND_MODAL_STRICT_AMOUNT]: !details.acceptsAnyAmount(),
+      [SEND_MODAL_VDXF_TAG]: details.isTagged() ? details.tag.toXAddress() : ''
     })
   }
 

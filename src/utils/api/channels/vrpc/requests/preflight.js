@@ -132,7 +132,8 @@ export const validateCurrencyTransferOutputParams = obj => {
     'burn',
     'burnweight',
     'mintnew',
-    'mapto'
+    'mapto',
+    'vdxftag'
   ];
   const allKeys = [...requiredKeys, ...optionalKeys];
 
@@ -271,7 +272,8 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       via,
       feesatoshis,
       preconvert,
-      address
+      address,
+      vdxftag
     } = output;
 
     if (address.isIAddr()) {
@@ -287,11 +289,11 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     const parentTransactionFee = isConversionOrExport || isBasicNativeSend ? 0.0001 : 0.0002;
 
     const useSendCurrencyOutput =
-      isConversionOrExport &&
+      (isConversionOrExport &&
       (exportto === coinsList.VRSC.system_id ||
         exportto === coinsList.VRSCTEST.system_id || 
         exportto === "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X" || // vETH i-addr on VRSC
-        exportto === "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm");  // vETH i-addr on VRSCTEST
+        exportto === "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm"));  // vETH i-addr on VRSCTEST
 
     _feeamount = feesatoshis;
     nativeFeesPaid = coinsToSats(BigNumber(parentTransactionFee));
@@ -313,7 +315,8 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         via,
         source,
         address.getAddressString(),
-        preconvert
+        preconvert,
+        vdxftag
       );
     }
 
@@ -388,7 +391,8 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         convertto,
         _feecurrency,
         via,
-        source
+        source,
+        vdxftag
       );
 
       if (sendCurrencyRes.error) throw new Error(sendCurrencyRes.error.message);
@@ -396,6 +400,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       const sendCurrencyHex = sendCurrencyRes.result.hextx;
       
       const unfundedTxObj = Transaction.fromHex(sendCurrencyHex, networks.verus);
+
       const outputInfo = unpackOutput(unfundedTxObj.outs[0], systemId);
 
       /**
@@ -448,6 +453,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
             feecurrency: _feecurrency,
             importtosource: importToSource,
             bridgeid,
+            vdxftag
           },
         ],
         networks.verus,
