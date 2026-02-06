@@ -1244,7 +1244,7 @@
 
 "@bitgo/utxo-lib@git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus":
   version "1.9.6"
-  resolved "git+https://github.com/VerusCoin/BitGoJS.git#37a0da395919024f69add13418d9b99af019e4ce"
+  resolved "git+https://github.com/VerusCoin/BitGoJS.git#6f988355143201fc24391f9656580b17bd72385e"
   dependencies:
     "@bitgo/blake2b" "3.0.1"
     "@noble/curves" "1.9.7"
@@ -3054,7 +3054,7 @@ aws4@^1.8.0:
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.12.0.tgz#ce1c9d143389679e253b314241ea9aa5cec980d3"
   integrity sha512-NmWvPnx0F1SfrQbYwOi7OeaNGokp9XhzNioJ/CSBs8Qa4vxug81mhJEAVZwxXuBmYB5KDRfMq/F3RR0BIU7sWg==
 
-axios@1.11.0, axios@1.7.4, axios@1.8.2:
+axios@1.11.0, axios@1.8.2:
   version "1.8.2"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.8.2.tgz#fabe06e241dfe83071d4edfbcaa7b1c3a40f7979"
   integrity sha512-ls4GYBm5aig9vWx8AWDSGLpnpDQRtWAfrjU+EuytuODrFBkqesN2RkOQCBzrA1RQNHw1SmRMSDDDSwzNAYQ6Rg==
@@ -10056,12 +10056,19 @@ react-native-url-polyfill@1.3.0:
     prop-types "^15.7.2"
     yargs "^16.1.1"
 
+"react-native-verus-light-client@git+https://github.com/VerusCoin/react-native-verus-light-client.git":
+  version "1.0.0"
+  resolved "git+https://github.com/VerusCoin/react-native-verus-light-client.git#e73aeb774b4a7da5f08eb85e15c0c92af24c5955"
+  dependencies:
+    react "17.0.1"
+    react-native "0.64.0"
+
 react-native-vision-camera@4.3.1:
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/react-native-vision-camera/-/react-native-vision-camera-4.3.1.tgz#f755107f259f71f51a619ccaaefc55bbe341b2c7"
   integrity sha512-7BzvZnorTQDQ5qZEOeiRpjA1BM0ZsUxxCsPtntRf1by7Ialok+gD04k285+n+7yy/2+WT4TwLSPeiAqx9z+uew==
 
-react-native@0.71.19:
+react-native@0.64.0, react-native@0.71.19:
   version "0.71.19"
   resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.71.19.tgz#966c91b2154058a9e5987cf5eb9fc0e4f1ab4157"
   integrity sha512-E6Rz4lpe4NC9ZR6zq9AWiB0MAoVeidr+aPu/pmwk5ezvVL/wbQ1Gdj70v7fKMC8Nz5wYFO1S0XUNPUKYaPhfeg==
@@ -10135,6 +10142,14 @@ react-test-renderer@18.2.0:
     react-is "^18.2.0"
     react-shallow-renderer "^16.15.0"
     scheduler "^0.23.0"
+
+react@17.0.1:
+  version "17.0.1"
+  resolved "https://registry.yarnpkg.com/react/-/react-17.0.1.tgz#6e0600416bd57574e3f86d92edba3d9008726127"
+  integrity sha512-lG9c9UuMHdcAexXtigOZLX8exLWkW0Ku29qPRU8uhF2R9BN96dLCt0psvzPLlHc5OWkgymP3qwTRgbnw5BKx3w==
+  dependencies:
+    loose-envify "^1.1.0"
+    object-assign "^4.1.1"
 
 react@18.2.0:
   version "18.2.0"
@@ -11953,18 +11968,7 @@ version_compare@0.0.3:
 
 "verus-typescript-primitives@git+https://github.com/VerusCoin/verus-typescript-primitives.git":
   version "1.0.0"
-  resolved "git+https://github.com/VerusCoin/verus-typescript-primitives.git#b96b28011595273b18c4aaee97a6b3e3cc0d0850"
-  dependencies:
-    base64url "3.0.1"
-    bech32 "2.0.0"
-    blake2b "https://github.com/VerusCoin/blake2b"
-    bn.js "5.2.1"
-    bs58check "2.0.0"
-    create-hash "1.2.0"
-
-"verus-typescript-primitives@git+https://github.com/michaeltout/verus-typescript-primitives.git#generic-signed-request":
-  version "1.0.0"
-  resolved "git+https://github.com/michaeltout/verus-typescript-primitives.git#36095866d7e2dc684afbae13ca1d3c74cb105e4d"
+  resolved "git+https://github.com/VerusCoin/verus-typescript-primitives.git#0ba0af7f83a781269a475ab09fe2c989326d815c"
   dependencies:
     base64url "3.0.1"
     bech32 "2.0.0"
@@ -11981,23 +11985,23 @@ version_compare@0.0.3:
   version "1.0.0"
   resolved "https://github.com/michaeltout/verus-zkedid-utils#f9a97d448a0b460794132bea9789e278a0084a62"
 
-"verusd-rpc-ts-client@git+https://github.com/michaeltout/verusd-rpc-ts-client#generic-request-changes":
+"verusd-rpc-ts-client@git+https://github.com/VerusCoin/verusd-rpc-ts-client":
   version "0.1.0"
-  resolved "git+https://github.com/michaeltout/verusd-rpc-ts-client#03540288971702f2625c81ae37e5fbd121e9902b"
+  resolved "git+https://github.com/VerusCoin/verusd-rpc-ts-client#ba996adad12b4059a6f9b36ec678f4359a3a578a"
   dependencies:
-    axios "1.7.4"
-    verus-typescript-primitives "git+https://github.com/michaeltout/verus-typescript-primitives.git#generic-signed-request"
+    axios "1.11.0"
+    verus-typescript-primitives "git+https://github.com/VerusCoin/verus-typescript-primitives.git"
 
-"verusid-ts-client@git+https://github.com/michaeltout/verusid-ts-client.git#generic-request-changes":
+"verusid-ts-client@git+https://github.com/VerusCoin/verusid-ts-client.git":
   version "0.1.0"
-  resolved "git+https://github.com/michaeltout/verusid-ts-client.git#7bc4e6f7ca3e53ab25f8cd0ca51ffd52ff597488"
+  resolved "git+https://github.com/VerusCoin/verusid-ts-client.git#229b72da4da577a914ceecd400dd74cafece6eb8"
   dependencies:
     "@bitgo/utxo-lib" "git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus"
     axios "1.11.0"
     bignumber.js "9.1.0"
     bn.js "5.2.1"
-    verus-typescript-primitives "git+https://github.com/michaeltout/verus-typescript-primitives.git#generic-signed-request"
-    verusd-rpc-ts-client "git+https://github.com/michaeltout/verusd-rpc-ts-client#generic-request-changes"
+    verus-typescript-primitives "git+https://github.com/VerusCoin/verus-typescript-primitives.git"
+    verusd-rpc-ts-client "git+https://github.com/VerusCoin/verusd-rpc-ts-client"
 
 vlq@^1.0.0:
   version "1.0.1"
