@@ -2,7 +2,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import React, {useEffect, useState} from 'react';
 import {addCoin, addUser} from '../../../actions/actionCreators';
 import {createAlert} from '../../../actions/actions/alert/dispatchers/alert';
-import {CHANNELS, ELECTRUM} from '../../../utils/constants/intervalConstants';
+import {CHANNELS, DLIGHT_PRIVATE, ELECTRUM} from '../../../utils/constants/intervalConstants';
 import {hashAccountId} from '../../../utils/crypto/hash';
 import {arrayToObject} from '../../../utils/objectManip';
 import CreateWalletStackScreens from '../../CreateWallet/CreateWallet';
@@ -49,13 +49,17 @@ export default function CreateProfileStackScreens(props) {
     }
   };
 
-  const createProfile = async (seed, testProfile) => {
+  const createProfile = async (seed, testProfile, useSeedAsZ) => {
     openLoadingModal('Setting up your new profile...');
 
     try {
       const _userName = profileName;
       const _pin = password;
       const _seeds = {[ELECTRUM]: seed};
+
+      if (!testProfile && useSeedAsZ) {
+        _seeds[DLIGHT_PRIVATE] = seed;
+      }
 
       try {
         for (const startCoin of START_COINS) {

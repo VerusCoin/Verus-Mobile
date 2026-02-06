@@ -26,8 +26,8 @@ export const preflightPrivateTransaction = async (coinObj, activeUser, address, 
   try {
     const privBalance = await getPrivateBalance(coinId, accountHash, coinProto)
 
-    spendableBalance = privBalance.result.confirmed
-    pendingBalance = privBalance.result.total.minus(privBalance.result.confirmed)
+    spendableBalance = BigNumber(privBalance.result.confirmed)
+    pendingBalance = BigNumber(privBalance.result.pending)
   } catch(e) {
     return {
       err: true,

@@ -5,7 +5,7 @@ import com.android.build.OutputFile
 
 def versionMajor = 1
 def versionMinor = 0
-def versionRevision = 34
+def versionRevision = 31
 def versionBuild = 0
 
 def keystorePropertiesFile = rootProject.file("keystore.properties");
@@ -95,6 +95,21 @@ def reactNativeArchitectures() {
     return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 }
 
+buildscript {
+    repositories {
+        gradlePluginPortal()
+        // mavenCentral() include if you need plugins from other repositories
+        // google() include if you need plugins from other repositories
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        // other plugin dependencies...
+    }
+}
+
+apply plugin: 'org.jetbrains.kotlin.android'
+
 android {
     ndkVersion rootProject.ext.ndkVersion
 
@@ -105,7 +120,7 @@ android {
         applicationId "com.verusmobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-
+        multiDexEnabled true
         versionCode versionMajor * 10000 + versionMinor * 1000 + versionRevision * 100 + versionBuild
         if (versionBuild > 0) {
             versionName "${versionMajor}.${versionMinor}.${versionRevision}-${versionBuild}"
@@ -177,6 +192,9 @@ android {
 }
 
 dependencies {
+
+    implementation project(':react-native-verus')
+
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
