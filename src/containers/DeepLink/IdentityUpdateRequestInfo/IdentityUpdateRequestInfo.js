@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useMemo, useState, useEffect} from 'react';
 import {SafeAreaView, ScrollView, TouchableOpacity, View} from 'react-native';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
@@ -25,25 +25,35 @@ import { getCmmDataLabel } from '../../../utils/vdxf/cmmDataLabel';
 import VdxfUniValueModal from '../../../components/VdxfUniValueModal/VdxfUniValueModal';
 import { getVDXFKeyLabel } from '../../../utils/vdxf/vdxfTypeLabels';
 import { capitalizeString } from '../../../utils/stringUtils';
+import { GenericRequest, IdentityUpdateRequestDetails } from 'verus-typescript-primitives';
 
 const IdentityUpdateRequestInfo = props => {
   const { 
-    deeplinkData, 
+    detailsBufferString,
+    requestBufferString,
+    responseBufferString,
     sigtime, 
     cancel, 
     signerFqn,
+    signerSystemID,
+    signerSystemName,
+    signerIdentityID,
     coinObj,
     chainInfo,
     subjectIdentity,
     identityUpdates,
     friendlyNames,
-    cmmDataKeys
+    cmmDataKeys,
+    detailIndex,
+    next,
+    subjectIdTxHex,
+    updateIdTxHex,
   } = props;
   
   const { fullyqualifiedname, identity } = subjectIdentity;
 
   const [subject, setSubject] = useState(primitives.Identity.fromJson(subjectIdentity));
-  const [req, setReq] = useState(primitives.IdentityUpdateRequest.fromJson(deeplinkData));
+  const [details, setDetails] = useState(new IdentityUpdateRequestDetails());
 
   const [vdxfUniValueModalData, setVdxfUniValueModalData] = useState([]);
   const [vdxfUniValueModalTitle, setVdxfUniValueModalTitle] = useState("Data");
@@ -55,11 +65,17 @@ const IdentityUpdateRequestInfo = props => {
 
   const [encryptedDataAccordionOpen, setEncryptedDataAccordionOpen] = useState(true);
   
-  const { systemid, signingid, details } = req;
-
   const friendlyNameMap = new Map(Object.entries(friendlyNames));
 
-  const chainId = req.isSigned() ? getSystemNameFromSystemId(systemid.toAddress()) : null;
+  const chainId = signerSystemName || (signerSystemID ? getSystemNameFromSystemId(signerSystemID) : null);
+  const canOpenSignerModal = Boolean(chainId && signerIdentityID);
+  const request = useMemo(() => {
+    if (!requestBufferString) return null;
+    const req = new GenericRequest();
+    req.fromBuffer(Buffer.from(requestBufferString, 'hex'), 0);
+    return req;
+  }, [requestBufferString]);
+  const requestIsTestnet = request != null ? request.isTestnet() : false;
 
   const getVerusId = async (chain, iAddrOrName) => {
     const identity = await getIdentity(CoinDirectory.getBasicCoinObj(chain).system_id, iAddrOrName);
@@ -73,7 +89,30 @@ const IdentityUpdateRequestInfo = props => {
     else return addr;
   }
 
+  const getSignDataLabel = (signData) => {
+    if (!signData) return 'Sign data';
+
+    const trim = (value, maxLen = 60) => {
+      if (value == null) return '';
+      const str = String(value);
+      return str.length > maxLen ? `${str.slice(0, maxLen)}...` : str;
+    };
+
+    const dataJson = signData.toCLIJson();
+
+    if (signData.isVdxfData()) return 'VDXF data';
+    if (signData.isMMRData()) return 'MMR data';
+    if (dataJson.filename) return `Filename: ${trim(dataJson.filename)}`;
+    if (dataJson.message) return `Message: ${trim(dataJson.message)}`;
+    if (dataJson.messagehex) return `Hex message: ${trim(dataJson.messagehex)}`;
+    if (dataJson.messagebase64) return `Base64 message: ${trim(dataJson.messagebase64)}`;
+    if (dataJson.datahash) return `Data hash: ${trim(dataJson.datahash)}`;
+
+    return 'Sign data';
+  };
+
   const getDisplayUpdates = () => {
+    const signDataMap = details.signDataMap || new Map();
     const displayUpdates = {
       [VERUSID_AUTH_INFO.key]: {
         [VERUSID_RECOVERY_AUTH.key]: identityUpdates.recoveryauthority && identityUpdates.recoveryauthority !== identity.recoveryauthority ? {
@@ -111,7 +150,7 @@ const IdentityUpdateRequestInfo = props => {
     }
 
     if (identityUpdates.flags && identityUpdates.flags !== identity.flags) {
-      if (subject.isRevoked() !== req.details.identity.isRevoked()) {
+      if (subject.isRevoked() !== details.identity.isRevoked()) {
         displayUpdates[VERUSID_BASE_INFO.key][VERUSID_STATUS.key] = {
           data: getVerusIdStatus(identityUpdates, chainInfo, coinObj),
         }
@@ -120,14 +159,20 @@ const IdentityUpdateRequestInfo = props => {
 
     if (identityUpdates.contentmultimap) {
       for (const key in identityUpdates.contentmultimap) {
-        
-        if (req.details.containsSignData() && req.details.signdatamap.has(key)) {
-          
+
+        if (details.containsSignData() && signDataMap.has(key)) {
+          const signData = signDataMap.get(key);
+
+          displayUpdates[VERUSID_CMM_INFO.key][`${VERUSID_CMM_DATA.key}:${key}`] = {
+            data: getSignDataLabel(signData),
+            onPress: () => openPartialSignDataModal(signData, getCmmDataKey(key))
+          };
         } else {
           const dataLabel = getCmmDataLabel(identityUpdates.contentmultimap[key]);
 
           displayUpdates[VERUSID_CMM_INFO.key][`${VERUSID_CMM_DATA.key}:${key}`] = {
             data: dataLabel,
+            rawData: identityUpdates.contentmultimap[key],
             onPress: () => {
               const updates = identityUpdates.contentmultimap[key];
   
@@ -147,18 +192,18 @@ const IdentityUpdateRequestInfo = props => {
   }
 
   const getMainHeading = () => {
-    const recipientLabel = req.isSigned() ? signerFqn : 'This unsigned request';
+    const recipientLabel = signerFqn ? signerFqn : 'This unsigned request';
 
-    if (req.details.containsSignData()) {
+    if (details.containsSignData()) {
       return `${recipientLabel} is asking to make changes and upload encrypted data into to ${fullyqualifiedname}`
     } else return `${recipientLabel} is asking to make changes to ${fullyqualifiedname}`
   }
 
   const getExpiryLabel = () => {
-    if (!req.details.expires()) return "";
+    if (!details.expires()) return "";
 
     return blocksToTime(
-      req.details.expiryheight.toNumber() - chainInfo.longestchain, 
+      details.expiryHeight.toNumber() - chainInfo.longestchain, 
       coinObj.seconds_per_block
     );
   }
@@ -241,17 +286,32 @@ const IdentityUpdateRequestInfo = props => {
 
     return (
       state.authentication.signedIn &&
-      ((isTestAccount && !req.details.isTestnet()) ||
-      (!isTestAccount && req.details.isTestnet()))
+      ((isTestAccount && !requestIsTestnet) ||
+      (!isTestAccount && requestIsTestnet))
     );
   });
 
   const handleContinue = () => {
     if (signedIn) {
-      props.navigation.navigate('IdentityUpdatePaymentConfiguration', { ...props, displayUpdates });
+      props.navigation.navigate('IdentityUpdatePaymentConfiguration', {
+        detailsBufferString,
+        requestBufferString,
+        responseBufferString,
+        detailIndex,
+        next,
+        cancel,
+        chainInfo,
+        subjectIdentity,
+        displayUpdates,
+        friendlyNames,
+        cmmDataKeys,
+        subjectIdTxHex,
+        updateIdTxHex,
+        coinObj
+      });
     } else {
       setWaitingForSignin(true);
-      const allowList = req.details.isTestnet() ? accounts.filter(x => {
+      const allowList = requestIsTestnet ? accounts.filter(x => {
         if (
           x.testnetOverrides &&
           x.testnetOverrides[coinObj.mainnet_id] === coinObj.id
@@ -281,9 +341,9 @@ const IdentityUpdateRequestInfo = props => {
         createAlert(
           "Cannot continue",
           `No ${
-            req.details.isTestnet() ? 'testnet' : 'mainnet'
+            requestIsTestnet ? 'testnet' : 'mainnet'
           } profiles found, cannot respond to ${
-            req.details.isTestnet() ? 'testnet' : 'mainnet'
+            requestIsTestnet ? 'testnet' : 'mainnet'
           } login request.`,
         );
       }
@@ -321,7 +381,7 @@ const IdentityUpdateRequestInfo = props => {
 
   useEffect(() => {
     if (isWrongRequestType) {
-      wrongRequestType(req.details.isTestnet());
+      wrongRequestType(requestIsTestnet);
     }
   }, [])
 
@@ -334,11 +394,19 @@ const IdentityUpdateRequestInfo = props => {
   useEffect(() => {
     setMainHeading(getMainHeading())
     setExpiryLabel(getExpiryLabel())
-  }, [req]);
+  }, [details]);
 
   useEffect(() => {
-    setReq(primitives.IdentityUpdateRequest.fromJson(deeplinkData))
-  }, [deeplinkData]);
+    setDisplayUpdates(getDisplayUpdates());
+  }, [details, identityUpdates, friendlyNames, cmmDataKeys]);
+
+  useEffect(() => {
+    if (detailsBufferString) {
+      const det = new IdentityUpdateRequestDetails();
+      det.fromBuffer(Buffer.from(detailsBufferString, 'hex'), 0);
+      setDetails(det);
+    }
+  }, [detailsBufferString]);
 
   useEffect(() => {
     setSigDateString(unixToDate(sigtime))
@@ -401,11 +469,11 @@ const IdentityUpdateRequestInfo = props => {
               <Text style={{fontSize: 18, textAlign: 'center'}}>{mainHeading}</Text>
             </View>
           <View style={Styles.fullWidth}>
-            {(req.details.expires() ||
-              req.isSigned()
+            {(details.expires() ||
+              signerFqn
             ) && <Divider />}
             {
-              req.details.expires() && (
+              details.expires() && (
                 <React.Fragment>
                   <List.Item title={expiryLabel} description={'Expires in approx.'} />
                   <Divider />
@@ -413,17 +481,27 @@ const IdentityUpdateRequestInfo = props => {
               )
             }
             {
-              req.isSigned() && (
+              signerFqn && (
                 <React.Fragment>
-                  <TouchableOpacity
-                    onPress={() => openVerusIdDetailsModal(chainId, signingid.toAddress())}>
-                    <List.Item
-                      title={signerFqn}
-                      description={'Signed by'}
-                      right={props => <List.Icon {...props} icon={'information'} size={20} />}
-                    />
-                    <Divider />
-                  </TouchableOpacity>
+                  {canOpenSignerModal ? (
+                    <TouchableOpacity
+                      onPress={() => openVerusIdDetailsModal(chainId, signerIdentityID)}>
+                      <List.Item
+                        title={signerFqn}
+                        description={'Signed by'}
+                        right={props => <List.Icon {...props} icon={'information'} size={20} />}
+                      />
+                      <Divider />
+                    </TouchableOpacity>
+                  ) : (
+                    <React.Fragment>
+                      <List.Item
+                        title={signerFqn}
+                        description={'Signed by'}
+                      />
+                      <Divider />
+                    </React.Fragment>
+                  )}
                   <List.Item title={chainId} description={'Signature system'} />
                   <Divider />
                   <List.Item title={sigDateString} description={'Signed on'} />
@@ -432,14 +510,14 @@ const IdentityUpdateRequestInfo = props => {
               )
             }
             {
-              req.details.containsSignData() && (
+              details.containsSignData() && (
                 <List.Accordion
                   title={"Encrypt & Upload"}
                   onPress={() => setEncryptedDataAccordionOpen(!encryptedDataAccordionOpen)}
                   expanded={encryptedDataAccordionOpen}
                   style={{ backgroundColor: Colors.secondaryBackground }}
                 >
-                  {Array.from(req.details.signdatamap).map(([key, value]) => {
+                  {Array.from((details.signDataMap || new Map()).entries()).map(([key, value]) => {
                     const dataLabel = getCmmDataKey(key);
 
                     return (

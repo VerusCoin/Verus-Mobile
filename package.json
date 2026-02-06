@@ -14,7 +14,7 @@
     "debug-android": "cd android && ./gradlew assembleDebug --stacktrace && cd ..",
     "test": "jest",
     "lint": "eslint .",
-    "update-verus-libs": "yarn remove verus-typescript-primitives && yarn add 'git+https://github.com/VerusCoin/verus-typescript-primitives.git' && yarn remove @bitgo/utxo-lib && yarn add 'git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus' && yarn remove verusd-rpc-ts-client && yarn add 'git+https://github.com/VerusCoin/verusd-rpc-ts-client.git' && yarn remove verusid-ts-client && yarn add 'git+https://github.com/VerusCoin/verusid-ts-client.git'"
+    "update-verus-libs": "yarn remove verus-typescript-primitives && yarn add 'git+https://github.com/VerusCoin/verus-typescript-primitives.git' && yarn remove @bitgo/utxo-lib && yarn add 'git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus' && yarn remove verusd-rpc-ts-client && yarn add 'git+https://github.com/VerusCoin/verusd-rpc-ts-client' && yarn remove verusid-ts-client && yarn add 'git+https://github.com/VerusCoin/verusid-ts-client.git'"
   },
   "dependencies": {
     "@bitgo/utxo-lib": "git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus",

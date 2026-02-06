@@ -132,7 +132,8 @@ export const validateCurrencyTransferOutputParams = obj => {
     'burn',
     'burnweight',
     'mintnew',
-    'mapto'
+    'mapto',
+    'vdxftag'
   ];
   const allKeys = [...requiredKeys, ...optionalKeys];
 
@@ -271,7 +272,8 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       via,
       feesatoshis,
       preconvert,
-      address
+      address,
+      vdxftag
     } = output;
 
     if (address.isIAddr()) {
@@ -314,7 +316,8 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         via,
         source,
         address.getAddressString(),
-        preconvert
+        preconvert,
+        vdxftag
       );
     }
 
@@ -389,7 +392,8 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         convertto,
         _feecurrency,
         via,
-        source
+        source,
+        vdxftag
       );
 
       if (sendCurrencyRes.error) throw new Error(sendCurrencyRes.error.message);
@@ -397,6 +401,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       const sendCurrencyHex = sendCurrencyRes.result.hextx;
       
       const unfundedTxObj = Transaction.fromHex(sendCurrencyHex, networks.verus);
+
       const outputInfo = unpackOutput(unfundedTxObj.outs[0], systemId);
 
       /**
@@ -449,6 +454,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
             feecurrency: _feecurrency,
             importtosource: importToSource,
             bridgeid,
+            vdxftag
           },
         ],
         networks.verus,

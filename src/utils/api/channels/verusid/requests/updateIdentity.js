@@ -8,7 +8,7 @@ import { I_ADDRESS_VERSION } from "../../../../constants/constants";
 export const extractIdOutputFromTx = (rawIdTx, vout = null) => {
   const identityTransaction = Transaction.fromHex(rawIdTx, networks.verus);
 
-  for (const i = vout != null ? vout : 0; i < identityTransaction.outs.length; i++) {
+  for (let i = vout != null ? vout : 0; i < identityTransaction.outs.length; i++) {
     if (vout != null && i > vout) break;
 
     const output = identityTransaction.outs[i];
@@ -65,11 +65,11 @@ export const getUpdatableIdentity = async (systemId, getIdentityResult) => {
  * @param {boolean} fundTransaction Whether or not to fund the transaction that gets returned
  * @returns 
  */
-export const createUpdateIdentityTx = async (systemId, identity, changeAaddr, rawIdTx, idHeight, fundTransaction = true, updateIdentityTransactionHex) => {
+export const createUpdateIdentityTx = async (systemId, identity, changeAaddr, rawIdTx, idHeight, fundTransaction = true, updateIdentityTransactionHex, isTestnet) => {
   const verusid = VrpcProvider.getVerusIdInterface(systemId);
   const utxos = fundTransaction ? await getSpendableUtxos(systemId, systemId, [changeAaddr]) : undefined;
 
-  return verusid.createUpdateIdentityTransaction(identity, changeAaddr, rawIdTx, idHeight, utxos, undefined, undefined, undefined, undefined, updateIdentityTransactionHex);
+  return verusid.createUpdateIdentityTransaction(identity, changeAaddr, rawIdTx, idHeight, utxos, undefined, undefined, undefined, undefined, updateIdentityTransactionHex, true, isTestnet);
 }
 
 export const createUpdateIdentityResponse = async (systemId, signerId, reqId, txid, primAddrWif) => {

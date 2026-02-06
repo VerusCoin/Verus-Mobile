@@ -15,7 +15,7 @@ import {
   extractVerusPayInvoiceSig,
   getInfo
 } from '../../utils/api/channels/vrpc/callCreators';
-import { IDENTITY_UPDATE_REQUEST_INFO, LOGIN_CONSENT_INFO, VERUSPAY_INVOICE_INFO } from '../../utils/constants/deeplink';
+import { GENERIC_REQUEST, IDENTITY_UPDATE_REQUEST_INFO, LOGIN_CONSENT_INFO, VERUSPAY_INVOICE_INFO } from '../../utils/constants/deeplink';
 import LoginRequestInfo from './LoginRequestInfo/LoginRequestInfo';
 import { getCurrency, getFriendlyNameMap, getIdentity } from '../../utils/api/channels/verusid/callCreators';
 import { convertFqnToDisplayFormat } from '../../utils/fullyqualifiedname';
@@ -34,6 +34,8 @@ import IdentityUpdateRequestInfo from './IdentityUpdateRequestInfo/IdentityUpdat
 import { getIdentityContent } from '../../utils/api/channels/verusid/requests/getIdentityContent';
 import { capitalizeString } from '../../utils/stringUtils';
 import { createUpdateIdentityTx, getUpdatableIdentity } from '../../utils/api/channels/verusid/requests/updateIdentity';
+import { validateGenericRequest } from '../../utils/deeplink/validator/envelopeValidator';
+import GenericRequestHome from './GenericRequestHome/GenericRequestHome';
 
 const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
@@ -61,6 +63,18 @@ const DeepLink = (props) => {
     }
     dispatch(resetDeeplinkData())
     props.navigation.dispatch(resetAction);
+  }
+
+  const processGenericRequest = async () => {
+    const request = new primitives.GenericRequest();
+    request.fromBuffer(Buffer.from(deeplinkData, 'hex'));
+
+    await validateGenericRequest(request);
+
+    setDisplayProps({
+      deeplinkData
+    })
+    setDisplayKey(GENERIC_REQUEST)
   }
 
   const processVerusPayInvoice = async () => {
@@ -151,9 +165,12 @@ const DeepLink = (props) => {
 
         await validateExpiry()
         setDisplayProps({
-          deeplinkData,
+          detailsBufferString: invoice.details.toBuffer().toString('hex'),
+          invoiceVersion: invoice.version.toString(),
+          isSigned: true,
           sigtime,
           signerFqn: convertFqnToDisplayFormat(signedBy.result.fullyqualifiedname),
+          signerSystemID: invoice.system_id,
           currencyDefinition: requestedCurrency.result,
           amountDisplay: invoice.details.acceptsAnyAmount() ? null : satsToCoins(BigNumber(invoice.details.amount)).toString(),
           destinationDisplay: await getDestinationDisplay(),
@@ -175,7 +192,9 @@ const DeepLink = (props) => {
 
       await validateExpiry()
       setDisplayProps({
-        deeplinkData,
+        detailsBufferString: invoice.details.toBuffer().toString('hex'),
+        invoiceVersion: invoice.version.toString(),
+        isSigned: false,
         currencyDefinition: requestedCurrency.result,
         amountDisplay: invoice.details.acceptsAnyAmount() ? null : satsToCoins(BigNumber(invoice.details.amount)).toString(),
         destinationDisplay: await getDestinationDisplay(),
@@ -267,7 +286,9 @@ const DeepLink = (props) => {
       subjectIdClass.getIdentityAddress(),
       subjectIdTxHex,
       subjectIdentity.blockheight,
-      false
+      false,
+      undefined,
+      req.isTestnet()
     );
 
     if (req.isSigned()) {
@@ -334,9 +355,12 @@ const DeepLink = (props) => {
 
         await validateExpiry();
         setDisplayProps({
-          deeplinkData,
+          detailsBufferString: req.details.toBuffer().toString('hex'),
           sigtime,
           signerFqn: convertFqnToDisplayFormat(signedBy.result.fullyqualifiedname),
+          signerSystemID: coinObj.system_id,
+          signerSystemName: coinObj.id,
+          signerIdentityID: signingIAddr,
           subjectIdentity,
           identityUpdates: updateIdentityTx.identity.toJson(),
           updateIdTxHex: updateIdentityTx.hex,
@@ -436,6 +460,9 @@ const DeepLink = (props) => {
         case primitives.VERUSPAY_INVOICE_VDXF_KEY.vdxfid:
           await processVerusPayInvoice();
           break;
+        case primitives.GENERIC_REQUEST_DEEPLINK_VDXF_KEY.vdxfid:
+          await processGenericRequest();
+          break;
         case primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid:
           await processLoginConsentRequest();
           break;
@@ -478,6 +505,14 @@ const DeepLink = (props) => {
     ),
     [IDENTITY_UPDATE_REQUEST_INFO]: () => (
       <IdentityUpdateRequestInfo
+        {...displayProps}
+        cancel={cancel}
+        setLoading={setLoading}
+        navigation={props.navigation}
+      />
+    ),
+    [GENERIC_REQUEST]: () => (
+      <GenericRequestHome
         {...displayProps}
         cancel={cancel}
         setLoading={setLoading}
