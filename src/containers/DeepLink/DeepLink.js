@@ -29,7 +29,7 @@ import InvoiceInfo from './InvoiceInfo/InvoiceInfo';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
 import { verifyIdentityUpdateRequest } from '../../utils/api/channels/vrpc/requests/verifyIdentityUpdateRequest';
 import { extractIdentityUpdateRequestSig } from '../../utils/api/channels/vrpc/requests/extractIdentityUpdateRequestSig';
-import { DATA_TYPE_DEFINEDKEY, DefinedKey, nameAndParentAddrToIAddr } from 'verus-typescript-primitives';
+import { DATA_TYPE_DEFINEDKEY, DefinedKey, IDENTITY_UPDATE_REQUEST_VDXF_KEY, nameAndParentAddrToIAddr } from 'verus-typescript-primitives';
 import IdentityUpdateRequestInfo from './IdentityUpdateRequestInfo/IdentityUpdateRequestInfo';
 import { getIdentityContent } from '../../utils/api/channels/verusid/requests/getIdentityContent';
 import { capitalizeString } from '../../utils/stringUtils';
@@ -38,6 +38,7 @@ import { validateGenericRequest } from '../../utils/deeplink/validator/envelopeV
 import GenericRequestHome from './GenericRequestHome/GenericRequestHome';
 import { openAuthenticateUserModal } from '../../actions/actions/sendModal/dispatchers/sendModal';
 import { AUTHENTICATE_USER_SEND_MODAL, SEND_MODAL_USER_ALLOWLIST } from '../../utils/constants/sendModal';
+import store from '../../store';
 
 const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
@@ -80,6 +81,18 @@ const DeepLink = (props) => {
       request.isSigned() &&
       request.hasAppOrDelegatedID() &&
       request.appOrDelegatedID.toAddress() !== request.signature.identityID.toAddress();
+    
+    const identityUpdateAllowed = store.getState().settings.generalWalletSettings.enableExperimentalIdentityUpdate === true;
+
+    if (!identityUpdateAllowed) {
+      const hasIdentityUpdateDetail = request.details.some(detail =>
+        detail.getIAddressKey && detail.getIAddressKey() === IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid
+      );
+
+      if (hasIdentityUpdateDetail) {
+        throw new Error("Identity update deeplink requests are currently experimental and disabled in settings.");
+      }
+    }
 
     if (requiresDelegatedUserCheck && !signedIn) {
       setWaitingForSignin(true);
