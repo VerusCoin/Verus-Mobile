@@ -36,15 +36,22 @@ import { capitalizeString } from '../../utils/stringUtils';
 import { createUpdateIdentityTx, getUpdatableIdentity } from '../../utils/api/channels/verusid/requests/updateIdentity';
 import { validateGenericRequest } from '../../utils/deeplink/validator/envelopeValidator';
 import GenericRequestHome from './GenericRequestHome/GenericRequestHome';
+import { openAuthenticateUserModal } from '../../actions/actions/sendModal/dispatchers/sendModal';
+import { AUTHENTICATE_USER_SEND_MODAL, SEND_MODAL_USER_ALLOWLIST } from '../../utils/constants/sendModal';
 
 const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
   const deeplinkData = useObjectSelector((state) => state.deeplink.data)
 
   const signedIn = useSelector((state) => state.authentication.signedIn)
+  const sendModalVisible = useSelector(state => state.sendModal.visible);
+  const sendModalType = useSelector(state => state.sendModal.type);
+  const accounts = useObjectSelector(state => state.authentication.accounts)
   const [displayKey, setDisplayKey] = useState(null)
   const [loading, setLoading] = useState(false)
   const [displayProps, setDisplayProps] = useState({})
+  const [waitingForSignin, setWaitingForSignin] = useState(false)
+  const [authModalOpened, setAuthModalOpened] = useState(false)
   const dispatch = useDispatch()
 
   const cancel = () => {
@@ -68,6 +75,39 @@ const DeepLink = (props) => {
   const processGenericRequest = async () => {
     const request = new primitives.GenericRequest();
     request.fromBuffer(Buffer.from(deeplinkData, 'hex'));
+
+    const requiresDelegatedUserCheck =
+      request.isSigned() &&
+      request.hasAppOrDelegatedID() &&
+      request.appOrDelegatedID.toAddress() !== request.signature.identityID.toAddress();
+
+    if (requiresDelegatedUserCheck && !signedIn) {
+      setWaitingForSignin(true);
+
+      const allowList = request.isTestnet()
+        ? accounts.filter(x => x.testnetOverrides && Object.keys(x.testnetOverrides).length > 0)
+        : accounts.filter(x => !x.testnetOverrides || Object.keys(x.testnetOverrides).length === 0);
+
+      if (allowList.length > 0) {
+        const data = {
+          [SEND_MODAL_USER_ALLOWLIST]: allowList
+        };
+
+        // Unfortunate hack to prevent screen from locking with gray overlay if deeplink is 
+        // called when app is closed
+        setTimeout(() => {
+          openAuthenticateUserModal(data);
+        }, 1000)
+        return;
+      }
+
+      createAlert(
+        "Cannot continue",
+        `No ${request.isTestnet() ? 'testnet' : 'mainnet'} profiles found, cannot verify delegated request signer.`,
+      );
+      cancel();
+      return;
+    }
 
     await validateGenericRequest(request);
 
@@ -485,6 +525,39 @@ const DeepLink = (props) => {
   useEffect(() => {
     processDeeplink()
   }, [])
+
+  useEffect(() => {
+    if (signedIn && waitingForSignin) {
+      setWaitingForSignin(false);
+      setAuthModalOpened(false);
+      processDeeplink();
+    }
+  }, [signedIn, waitingForSignin]);
+
+  useEffect(() => {
+    if (
+      waitingForSignin &&
+      !authModalOpened &&
+      sendModalVisible &&
+      sendModalType === AUTHENTICATE_USER_SEND_MODAL
+    ) {
+      setAuthModalOpened(true);
+    }
+  }, [waitingForSignin, authModalOpened, sendModalVisible, sendModalType]);
+
+  useEffect(() => {
+    if (authModalOpened && !signedIn && waitingForSignin) {
+      const authModalClosed =
+        sendModalType !== AUTHENTICATE_USER_SEND_MODAL || !sendModalVisible;
+
+      if (authModalClosed) {
+        setWaitingForSignin(false);
+        setAuthModalOpened(false);
+        createAlert('Error', 'You must be signed in to verify this deeplink request.');
+        cancel();
+      }
+    }
+  }, [authModalOpened, signedIn, waitingForSignin, sendModalVisible, sendModalType]);
 
   const screens = {
     [LOGIN_CONSENT_INFO]: () => (

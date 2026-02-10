@@ -6,6 +6,9 @@ import { validateIdentityUpdateRequestVDXFObject } from "./identityUpdateRequest
 import { validateVerusPayInvoiceVDXFObject } from "./verusPayInvoiceDetailsValidator";
 import { CoinDirectory } from "../../CoinData/CoinDirectory";
 import VrpcProvider from '../../vrpc/vrpcInterface';
+import store from "../../../store";
+import { coinsList } from "../../CoinData/CoinsList";
+import { VRPC } from "../../constants/intervalConstants";
 
 /**
  * Checks if a generic envelope has anything in its details that requires
@@ -56,7 +59,34 @@ export const validateGenericRequest = async (request) => {
     if (!await verifyGenericRequest(coinObj, request, signedBy.result)) {
       throw new Error("Failed to verify request signature")
     }
-  } else if (isRequestRequiredSignature(request)) {
+
+    if (request.hasAppOrDelegatedID()) {
+      if (request.appOrDelegatedID.toAddress() !== request.signature.identityID.toAddress()) {
+        const state = store.getState();
+        const activeAccount = state.authentication.activeAccount;
+
+        if (activeAccount == null) {
+          throw new Error("Active account required to validate delegated request signer");
+        }
+
+        const vrscSystem = request.isTestnet() ? coinsList.VRSCTEST : coinsList.VRSC;
+        const userVrscAddresses =
+          activeAccount.keys[vrscSystem.id]?.[VRPC]?.addresses || [];
+
+        const signerIdentity = signedBy.result.identity;
+        const signerPrimaryAddresses = signerIdentity.primaryaddresses || [];
+        const signerMinSigs = signerIdentity.minimumsignatures;
+
+        const signerMatchesUser =
+          signerMinSigs === 1 &&
+          signerPrimaryAddresses.some((address) => userVrscAddresses.includes(address));
+
+        if (!signerMatchesUser) {
+          throw new Error("Request not signed by appOrDelegatedID or a user-controlled VerusID.");
+        }
+      }
+    }
+  } else if (isRequestRequiredSignature(request) || request.hasAppOrDelegatedID()) {
     throw new Error("This type of request requires a signature")
   }
 
