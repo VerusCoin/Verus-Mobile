@@ -9,7 +9,16 @@ import { ETH } from "../constants/intervalConstants";
 // Makes transaction objects from lightwalletd client resemble those from electrum,
 // for predictable, standard behaviour
 export const standardizeDlightTxObj = (txObj) => {
-  const { address, amount, category, height, status, time, txid, memo } = txObj
+  const { address, amount, category, height, status, time, txid, memos } = txObj
+
+  // check with michael to ensure we don't already have a function like this
+  // calling decodeMemo was causing every incoming tx to display an envelope
+  // decodeMemo in memoUtils also decodes base64 - SDKs don't require this
+  const normalizedMemo =
+    Array.isArray(memos)
+      ? memos.find(m => typeof m === "string" && m.trim().length > 0) ?? null
+      : null;
+
   return {
     address,
     amount: typeof amount !== "string" ? satsToCoins(BigNumber(amount.toString())) : satsToCoins(BigNumber(amount)),
@@ -19,7 +28,7 @@ export const standardizeDlightTxObj = (txObj) => {
     status,
     timestamp: time,
     txid,
-    memo: decodeMemo(memo),
+    memo: normalizedMemo,
   };
 }
 
