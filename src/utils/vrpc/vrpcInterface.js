@@ -201,12 +201,33 @@ class VrpcInterface {
 
   getEndpointAddressForChain(systemId) {
     if (this.systemEndpointIds[systemId] == null) this.systemEndpointIds[systemId] = [];
+    const endpoints = Store.getState().channelStore_vrpc.vrpcEndpoints;
+    const overrideEndpoints =
+      CoinDirectory.vrpcOverrides && CoinDirectory.vrpcOverrides[systemId]
+        ? CoinDirectory.vrpcOverrides[systemId]
+        : null;
+
+    if (overrideEndpoints && overrideEndpoints.length > 0) {
+      for (const endpoint of overrideEndpoints) {
+        this.initEndpoint(systemId, endpoint);
+      }
+
+      const allowed = new Set(overrideEndpoints);
+      this.systemEndpointIds[systemId] = this.systemEndpointIds[systemId].filter(
+        id => endpoints[id] && allowed.has(endpoints[id][1]),
+      );
+    }
+
+    if (this.systemEndpointIds[systemId].length === 0) {
+      throw new Error(`No VRPC endpoints initialized for systemId ${systemId}`);
+    }
+
     const randomId =
       this.systemEndpointIds[systemId][
         Math.floor(Math.random() * this.systemEndpointIds[systemId].length)
       ];
 
-    return Store.getState().channelStore_vrpc.vrpcEndpoints[randomId][1];
+    return endpoints[randomId][1];
   }
 
   recordEndpointConnection(id) {
@@ -306,8 +327,16 @@ class VrpcInterface {
   }
 
   addDefaultEndpoints = () => {
-    this.initEndpoint(coinsList.VRSC.system_id, CoinDirectory.getVrpcEndpoints("VRSC")[0]);
-    this.initEndpoint(coinsList.VRSCTEST.system_id, CoinDirectory.getVrpcEndpoints("VRSCTEST")[0]); 
+    const vrscEndpoints = CoinDirectory.getVrpcEndpoints("VRSC");
+    const vrsctestEndpoints = CoinDirectory.getVrpcEndpoints("VRSCTEST");
+
+    for (const endpoint of vrscEndpoints) {
+      this.initEndpoint(coinsList.VRSC.system_id, endpoint);
+    }
+
+    for (const endpoint of vrsctestEndpoints) {
+      this.initEndpoint(coinsList.VRSCTEST.system_id, endpoint);
+    }
   }
 }
 
