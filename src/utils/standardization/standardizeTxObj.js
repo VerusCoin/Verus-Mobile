@@ -11,9 +11,7 @@ import { ETH } from "../constants/intervalConstants";
 export const standardizeDlightTxObj = (txObj) => {
   const { address, amount, category, height, status, time, txid, memos } = txObj
 
-  // check with michael to ensure we don't already have a function like this
-  // calling decodeMemo was causing every incoming tx to display an envelope
-  // decodeMemo in memoUtils also decodes base64 - SDKs don't require this
+  // normalize memo, remove duplicates if they exist
   const normalizedMemo =
     Array.isArray(memos)
       ? memos.find(m => typeof m === "string" && m.trim().length > 0) ?? null
