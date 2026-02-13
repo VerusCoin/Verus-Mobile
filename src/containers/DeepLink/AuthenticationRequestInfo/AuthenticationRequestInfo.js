@@ -355,7 +355,7 @@ const AuthenticationRequestInfo = props => {
           style={Styles.fullWidth}
           contentContainerStyle={Styles.focalCenter}>
           {height >= SMALL_DEVICE_HEGHT && <VerusIdLogo width={'55%'} height={'10%'} />}
-          <Text style={{ fontSize: 18, textAlign: 'center', paddingBottom: 12 }}>
+          <Text style={{ fontSize: 18, textAlign: 'center', paddingBottom: 12, width: "90%" }}>
             {getMainHeading()}
           </Text>
           <View style={Styles.fullWidth}>
