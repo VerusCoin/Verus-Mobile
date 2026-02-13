@@ -10,13 +10,14 @@ import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/di
 import { AUTHENTICATE_USER_SEND_MODAL, SEND_MODAL_USER_ALLOWLIST } from '../../../utils/constants/sendModal';
 import { createAlert, resolveAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import { unixToDate } from '../../../utils/math';
-import { AuthenticationRequestDetails } from 'verus-typescript-primitives';
+import { AuthenticationRequestDetails, RecipientConstraint } from 'verus-typescript-primitives';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
 import { getFriendlyNameMap, getIdentity } from '../../../utils/api/channels/verusid/callCreators';
 import { getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
 import { SMALL_DEVICE_HEGHT } from '../../../utils/constants/constants';
 import { VerusIdLogo } from '../../../images/customIcons';
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
+import { convertFqnToDisplayFormat } from '../../../utils/fullyqualifiedname';
 
 const AuthenticationRequestInfo = props => {
   const {
@@ -26,6 +27,8 @@ const AuthenticationRequestInfo = props => {
     signerSystemID,
     signerSystemName,
     signerIdentityID,
+    provisioningDetailsBufferString,
+    provisioningDetailIndex,
     cancel,
     navigation,
     next,
@@ -39,9 +42,12 @@ const AuthenticationRequestInfo = props => {
   const [sigDateString, setSigDateString] = useState(null);
   const [waitingForSignin, setWaitingForSignin] = useState(false);
   const [verusIdDetailsModalProps, setVerusIdDetailsModalProps] = useState(null);
+  const [constraintFriendlyNames, setConstraintFriendlyNames] = useState({});
+  const [constraintNamesLoading, setConstraintNamesLoading] = useState(false);
 
   const accounts = useObjectSelector(state => state.authentication.accounts);
   const signedIn = useSelector(state => state.authentication.signedIn);
+  const passthrough = useSelector(state => state.deeplink.passthrough);
   const sendModalType = useSelector(state => state.sendModal.type);
   const { height } = Dimensions.get('window');
 
@@ -50,28 +56,51 @@ const AuthenticationRequestInfo = props => {
 
   const requestIsTestnet = request != null && request.isTestnet();
   const canOpenSignerModal = signerSystemName && signerIdentityID;
+  const defaultConstraintChain = requestIsTestnet ? 'VRSCTEST' : 'VRSC';
+  const constraintChain = signerSystemName || defaultConstraintChain;
 
-  const getConstraintLabel = (constraint) => {
-    let identityLabel = constraint.identity.address;
-    let constraintLabel = identityLabel;
+  const getConstraintAddress = (constraint) => {
+    if (constraint == null || constraint.identity == null) return null;
 
     try {
-      constraintLabel = constraint.identity.toIAddress();
+      return constraint.identity.toIAddress();
     } catch (e) {
-      constraintLabel = identityLabel;
+      try {
+        return constraint.identity.toAddress();
+      } catch (e2) {
+        return constraint.identity.address || null;
+      }
+    }
+  };
+
+  const getConstraintDisplayName = (constraintType, constraintAddress) => {
+    if (constraintAddress && constraintFriendlyNames[constraintAddress]) {
+      return constraintFriendlyNames[constraintAddress];
     }
 
-    if (constraint.type === AuthenticationRequestDetails.REQUIRED_SYSTEM) {
-      const systemName = getSystemNameFromSystemId(constraintLabel);
-      if (systemName) constraintLabel = systemName;
+    if (constraintType === RecipientConstraint.REQUIRED_SYSTEM && constraintAddress) {
+      const systemName = getSystemNameFromSystemId(constraintAddress);
+      if (systemName) return systemName;
+      return 'Unknown system';
     }
+
+    if (constraintAddress && constraintAddress.includes('@')) {
+      return constraintAddress;
+    }
+
+    return 'Unknown identity';
+  };
+
+  const getConstraintLabel = (constraint) => {
+    const constraintAddress = getConstraintAddress(constraint);
+    const constraintLabel = getConstraintDisplayName(constraint.type, constraintAddress);
 
     switch (constraint.type) {
-      case AuthenticationRequestDetails.REQUIRED_ID:
+      case RecipientConstraint.REQUIRED_ID:
         return `Required identity: ${constraintLabel}`;
-      case AuthenticationRequestDetails.REQUIRED_SYSTEM:
-        return `Required system: ${constraintLabel}`;
-      case AuthenticationRequestDetails.REQUIRED_PARENT:
+      case RecipientConstraint.REQUIRED_SYSTEM:
+        return `Required system: ${constraintLabel.substring(0, constraintLabel.length - 1)}`;
+      case RecipientConstraint.REQUIRED_PARENT:
         return `Required parent: ${constraintLabel}`;
       default:
         return `Constraint: ${constraintLabel}`;
@@ -115,7 +144,17 @@ const AuthenticationRequestInfo = props => {
 
   const getMainHeading = () => {
     const requesterLabel = signerFqn ? signerFqn : 'An app';
-    return `${requesterLabel} is requesting login with VerusID`;
+    const hasResponseUris = details && details.responseURIs && details.responseURIs.length > 0;
+
+    if (hasResponseUris) {
+      return `${requesterLabel} is requesting login with VerusID`;
+    }
+
+    if (passthrough?.fqnToAutoLink) {
+      return `VerusID from ${requesterLabel} now ready to link`;
+    }
+
+    return `Would you like to request a VerusID from ${requesterLabel}?`;
   };
 
   const getAllowList = () => {
@@ -137,7 +176,10 @@ const AuthenticationRequestInfo = props => {
         requestBufferString,
         responseBufferString,
         detailIndex,
-        next
+        next,
+        signerIdentityID,
+        provisioningDetailsBufferString,
+        provisioningDetailIndex
       });
     } else {
       setWaitingForSignin(true);
@@ -223,6 +265,82 @@ const AuthenticationRequestInfo = props => {
     }
   }, [sigtime]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadConstraintFriendlyNames = async () => {
+      const recipientConstraints = details && details.recipientConstraints ? details.recipientConstraints : [];
+
+      if (recipientConstraints.length === 0) {
+        setConstraintFriendlyNames(prev => (Object.keys(prev).length > 0 ? {} : prev));
+        setConstraintNamesLoading(false);
+        return;
+      }
+
+      setConstraintNamesLoading(true);
+
+      const constraintAddresses = Array.from(
+        new Set(recipientConstraints.map(getConstraintAddress).filter(addr => addr != null))
+      );
+
+      if (constraintAddresses.length === 0) {
+        setConstraintFriendlyNames(prev => (Object.keys(prev).length > 0 ? {} : prev));
+        setConstraintNamesLoading(false);
+        return;
+      }
+
+      try {
+        const coinObj = CoinDirectory.getBasicCoinObj(constraintChain);
+        let names = {
+          ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',
+          ['iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq']: 'VRSCTEST',
+        };
+
+        if (signerIdentityID) {
+          const signerIdentity = await getIdentity(coinObj.system_id, signerIdentityID);
+          if (!signerIdentity.error && signerIdentity.result) {
+            names = await getFriendlyNameMap(coinObj.system_id, signerIdentity.result, [...constraintAddresses]);
+          } else {
+            for (const addr of constraintAddresses) {
+              const identity = await getIdentity(coinObj.system_id, addr);
+              if (!identity.error && identity.result && identity.result.fullyqualifiedname) {
+                names[addr] = convertFqnToDisplayFormat(identity.result.fullyqualifiedname);
+              }
+            }
+          }
+        } else {
+          for (const addr of constraintAddresses) {
+            const identity = await getIdentity(coinObj.system_id, addr);
+            if (!identity.error && identity.result && identity.result.fullyqualifiedname) {
+              names[addr] = convertFqnToDisplayFormat(identity.result.fullyqualifiedname);
+            }
+          }
+        }
+
+        if (!cancelled) {
+          setConstraintFriendlyNames(names);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setConstraintFriendlyNames({
+            ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',
+            ['iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq']: 'VRSCTEST',
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setConstraintNamesLoading(false);
+        }
+      }
+    };
+
+    loadConstraintFriendlyNames();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [details, signerIdentityID, constraintChain]);
+
   return loading ? (
     <AnimatedActivityIndicatorBox />
   ) : (
@@ -272,9 +390,16 @@ const AuthenticationRequestInfo = props => {
                 )}
               </React.Fragment>
             )}
-            {constraints.length > 0 && (
+            {constraints.length > 0 && constraintNamesLoading && (
               <React.Fragment>
-                <List.Subheader>Recipient constraints</List.Subheader>
+                <List.Subheader>Your VerusID must have:</List.Subheader>
+                <List.Item title={'Resolving recipient constraints...'} />
+                <Divider />
+              </React.Fragment>
+            )}
+            {constraints.length > 0 && !constraintNamesLoading && (
+              <React.Fragment>
+                <List.Subheader>Your VerusID must have:</List.Subheader>
                 {constraints.map((constraint, index) => (
                   <React.Fragment key={`${constraint.type}-${index}`}>
                     <List.Item title={getConstraintLabel(constraint)} />

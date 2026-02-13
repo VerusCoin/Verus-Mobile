@@ -1,4 +1,4 @@
-import { AuthenticationRequestOrdinalVDXFObject, GenericRequest, GenericResponse } from "verus-typescript-primitives";
+import { AuthenticationRequestOrdinalVDXFObject, GenericRequest, GenericResponse, ProvisionIdentityDetailsOrdinalVDXFObject } from "verus-typescript-primitives";
 import VrpcProvider from '../../vrpc/vrpcInterface';
 import { getBlock } from "../../api/channels/vrpc/requests/getBlock";
 import { getSignatureInfo } from "../../api/channels/vrpc/requests/getSignatureInfo";
@@ -38,6 +38,8 @@ export const handleAuthenticationRequestDetailsVDXFObject = async (request, resp
   let signerSystemName;
   let signerIdentityID;
   let sigtime;
+  let provisioningDetailsBufferString;
+  let provisioningDetailIndex;
 
   signerSystemID = request.signature.systemID.toIAddress();
   signerIdentityID = request.signature.identityID.toIAddress();
@@ -63,6 +65,13 @@ export const handleAuthenticationRequestDetailsVDXFObject = async (request, resp
     signerFqn = request.signature.identityID.toIAddress();
   }
 
+  const possibleProvisioningDetail = request.details.find(x => x instanceof ProvisionIdentityDetailsOrdinalVDXFObject);
+  
+  if (possibleProvisioningDetail instanceof ProvisionIdentityDetailsOrdinalVDXFObject) {
+    provisioningDetailsBufferString = possibleProvisioningDetail.data.toBuffer().toString('hex');
+    provisioningDetailIndex = detailIndex + 1;
+  }
+
   return {
     displayProps: {
       detailsBufferString: details.data.toBuffer().toString('hex'),
@@ -70,7 +79,9 @@ export const handleAuthenticationRequestDetailsVDXFObject = async (request, resp
       signerFqn,
       signerSystemID,
       signerSystemName,
-      signerIdentityID
+      signerIdentityID,
+      provisioningDetailsBufferString,
+      provisioningDetailIndex
     },
     response,
     handledIndices: []

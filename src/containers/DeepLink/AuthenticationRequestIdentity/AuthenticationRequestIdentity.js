@@ -1,16 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { Divider, List } from 'react-native-paper';
-import { AuthenticationRequestDetails, AuthenticationResponseDetails, AuthenticationResponseOrdinalVDXFObject, CompactAddressObject, GenericRequest, GenericResponse, VerifiableSignatureData } from 'verus-typescript-primitives';
+import { CommonActions } from '@react-navigation/native';
+import { AuthenticationRequestDetails, AuthenticationResponseDetails, AuthenticationResponseOrdinalVDXFObject, CompactAddressObject, GenericRequest, GenericResponse, ProvisionIdentityDetails, VerifiableSignatureData } from 'verus-typescript-primitives';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
-import { openLinkIdentityModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
+import { openLinkIdentityModal, openProvisionIdentityModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import { requestServiceStoredData } from '../../../utils/auth/authBox';
 import { VERUSID_SERVICE_ID } from '../../../utils/constants/services';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
 import { getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
 import { VERUSID_NETWORK_DEFAULT } from '../../../../env/index';
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
+import { SEND_MODAL_IDENTITY_TO_LINK_FIELD } from '../../../utils/constants/sendModal';
 import Styles from '../../../styles/index';
 
 const AuthenticationRequestIdentity = props => {
@@ -19,6 +21,9 @@ const AuthenticationRequestIdentity = props => {
     responseBufferString,
     detailsBufferString,
     detailIndex,
+    provisioningDetailsBufferString,
+    provisioningDetailIndex,
+    signerIdentityID,
     next,
   } = props.route.params;
 
@@ -26,7 +31,12 @@ const AuthenticationRequestIdentity = props => {
   const [linkedIds, setLinkedIds] = useState({});
   const [sortedIds, setSortedIds] = useState({});
   const [details, setDetails] = useState(new AuthenticationRequestDetails());
+  const [provisioningDetails, setProvisioningDetails] = useState(null);
+  const [idProvisionSuccess, setIdProvisionSuccess] = useState(false);
+  const [passthroughHandled, setPassthroughHandled] = useState(false);
   const encryptedIds = useObjectSelector(state => state.services.stored[VERUSID_SERVICE_ID]);
+  const sendModal = useObjectSelector(state => state.sendModal);
+  const passthrough = useObjectSelector(state => state.deeplink.passthrough);
   const testnetOverrides = useObjectSelector(state => state.authentication.activeAccount.testnetOverrides);
   const identityNetwork = testnetOverrides[VERUSID_NETWORK_DEFAULT]
     ? testnetOverrides[VERUSID_NETWORK_DEFAULT]
@@ -117,8 +127,46 @@ const AuthenticationRequestIdentity = props => {
   }, [detailsBufferString]);
 
   useEffect(() => {
+    if (provisioningDetailsBufferString) {
+      const det = new ProvisionIdentityDetails();
+      det.fromBuffer(Buffer.from(provisioningDetailsBufferString, 'hex'), 0);
+      setProvisioningDetails(det);
+    }
+  }, [provisioningDetailsBufferString]);
+
+  useEffect(() => {
     onEncryptedIdsUpdate();
   }, [encryptedIds]);
+
+  useEffect(() => {
+    if (!idProvisionSuccess && sendModal.data?.success){
+      setIdProvisionSuccess(true);
+    }
+
+    if (idProvisionSuccess && !sendModal.visible) {
+      props.navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{name: 'SignedInStack'}],
+        }),
+      );
+    }
+  }, [sendModal]);
+
+  useEffect(() => {
+    if (passthroughHandled) return;
+    if (!(passthrough && passthrough.fqnToAutoLink)) return;
+    if (!request) return;
+
+    const noLogin = !request.responseURIs || request.responseURIs.length === 0;
+    const data = {
+      [SEND_MODAL_IDENTITY_TO_LINK_FIELD]: passthrough.fqnToAutoLink,
+      noLogin,
+    };
+
+    openLinkIdentityModal(CoinDirectory.findCoinObj(linkChainId), data);
+    setPassthroughHandled(true);
+  }, [passthrough, request, linkChainId, passthroughHandled]);
 
   useEffect(() => {
     const sortedIdKeysPerChain = {};
@@ -155,7 +203,7 @@ const AuthenticationRequestIdentity = props => {
   const selectIdentity = (chainId, iAddress) => {
     const responseDetail = new AuthenticationResponseOrdinalVDXFObject({
       data: new AuthenticationResponseDetails({
-        requestID: details.requestID
+        requestID: request.requestID
       })
     });
 
@@ -173,11 +221,34 @@ const AuthenticationRequestIdentity = props => {
       updatedResponse.setSigned();
     }
 
-    next(updatedResponse, [detailIndex]);
+    const handledIndices = [detailIndex];
+    if (provisioningDetailIndex != null) handledIndices.push(provisioningDetailIndex);
+    next(updatedResponse, handledIndices);
   };
 
   const openLinkIdentityModalFromChain = () => {
     return openLinkIdentityModal(CoinDirectory.findCoinObj(linkChainId));
+  };
+
+  const openProvisionIdentityModalFromChain = () => {
+    if (!provisioningDetailsBufferString || provisioningDetails == null) return;
+
+    const systemId = provisioningDetails.systemID ? provisioningDetails.systemID.toAddress() : null;
+    const provisioningCoinObj = systemId
+      ? CoinDirectory.findCoinObj(systemId, null, true)
+      : CoinDirectory.findCoinObj(linkChainId);
+
+    const requestId = request.hasRequestID ? request.requestID.toAddress() : null;
+    const requestSignerId = signerIdentityID || (request.signature ? request.signature.identityID.toIAddress() : null);
+
+    openProvisionIdentityModal(provisioningCoinObj, {
+      provisioningDetailsBufferString,
+      provisioningRequestID: requestId,
+      provisioningSignerId: requestSignerId,
+      provisioningRequestBufferString: requestBufferString,
+      provisioningRequestType: 'generic',
+      provisioningRequestHasResponseUris: request.responseURIs != null && request.responseURIs.length > 0,
+    });
   };
 
   if (loading) {
@@ -187,6 +258,21 @@ const AuthenticationRequestIdentity = props => {
   const hasIdentities = Object.keys(sortedIds).some(chainId => {
     return sortedIds[chainId].some(iAddr => isIdentityAllowed(chainId, iAddr));
   });
+
+  const canProvision = (() => {
+    if (!provisioningDetails) return false;
+
+    if (provisioningDetails.identityID) {
+      const targetId = provisioningDetails.identityID.toAddress();
+      for (const chainId of Object.keys(linkedIds)) {
+        if (linkedIds[chainId] && Object.keys(linkedIds[chainId]).includes(targetId)) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  })();
 
   return (
     <ScrollView style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}>
@@ -232,6 +318,18 @@ const AuthenticationRequestIdentity = props => {
         onPress={() => openLinkIdentityModalFromChain()}
       />
       <Divider />
+      {canProvision && (
+        <React.Fragment>
+          <List.Item
+            title={'Request new VerusID'}
+            right={props => (
+              <List.Icon {...props} icon={'plus'} size={20} />
+            )}
+            onPress={() => openProvisionIdentityModalFromChain()}
+          />
+          <Divider />
+        </React.Fragment>
+      )}
     </ScrollView>
   );
 };
