@@ -144,7 +144,7 @@ const AuthenticationRequestInfo = props => {
 
   const getMainHeading = () => {
     const requesterLabel = signerFqn ? signerFqn : 'An app';
-    const hasResponseUris = details && details.responseURIs && details.responseURIs.length > 0;
+    const hasResponseUris = request && request.responseURIs && request.responseURIs.length > 0;
 
     if (hasResponseUris) {
       return `${requesterLabel} is requesting login with VerusID`;
@@ -247,7 +247,7 @@ const AuthenticationRequestInfo = props => {
 
   const expiryLabel = getExpiryLabel();
   const constraints = details && details.recipientConstraints ? details.recipientConstraints : [];
-  const responseUris = details && details.responseURIs ? details.responseURIs : [];
+  const responseUris = request && request.responseURIs ? request.responseURIs : [];
 
   useEffect(() => {
     if (detailsBufferString) {
@@ -403,17 +403,6 @@ const AuthenticationRequestInfo = props => {
                 {constraints.map((constraint, index) => (
                   <React.Fragment key={`${constraint.type}-${index}`}>
                     <List.Item title={getConstraintLabel(constraint)} />
-                    <Divider />
-                  </React.Fragment>
-                ))}
-              </React.Fragment>
-            )}
-            {responseUris.length > 0 && (
-              <React.Fragment>
-                <List.Subheader>Response URIs</List.Subheader>
-                {responseUris.map((uri, index) => (
-                  <React.Fragment key={`${uri.getUriString()}-${index}`}>
-                    <List.Item title={uri.getUriString()} />
                     <Divider />
                   </React.Fragment>
                 ))}
