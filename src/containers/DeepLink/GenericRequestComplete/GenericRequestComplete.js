@@ -14,7 +14,9 @@ import { openUrl } from '../../../utils/linking';
 import { getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import { signGenericResponse } from '../../../utils/api/channels/vrpc/callCreators';
-import { GenericRequest, GenericResponse, GENERIC_RESPONSE_DEEPLINK_VDXF_KEY, ResponseURI } from 'verus-typescript-primitives';
+import { GenericRequest, GenericResponse, GENERIC_RESPONSE_DEEPLINK_VDXF_KEY, ResponseURI, BigNumber } from 'verus-typescript-primitives';
+import { verifyGenericResponse } from '../../../utils/api/channels/vrpc/requests/verifyGenericResponse';
+import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 
 const GenericRequestComplete = props => {
   const { requestBufferString, responseBufferString } = props.route.params;
@@ -121,6 +123,8 @@ const GenericRequestComplete = props => {
       const response = new GenericResponse();
       response.fromBuffer(Buffer.from(responseBufferString, 'hex'), 0);
 
+      response.createdAt = new BigNumber((Date.now() / 1000).toFixed(0));
+
       if (response.signature == null) {
         setLoading(false);
         completeRequest();
@@ -132,10 +136,15 @@ const GenericRequestComplete = props => {
       const coinObj = CoinDirectory.getBasicCoinObj(signerSystemName);
 
       const signedResponse = await signGenericResponse(coinObj, response);
+      const verification = await verifyGenericResponse(coinObj, signedResponse);
+
+      if (!verification) {
+        throw new Error("Response failed verification, ensure the identity you selected is still under your control.")
+      }
 
       await handleResponseUri(request, signedResponse);
     } catch (e) {
-      console.warn(e)
+      createAlert("Error", e.message)
 
       setLoading(false);
     }
