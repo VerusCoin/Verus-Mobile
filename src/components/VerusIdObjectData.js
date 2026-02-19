@@ -1,5 +1,19 @@
+/*
+  VerusIdObjectData
+  - 2026-01-24: Fixed accordion title colors to use neutral black instead of blue when expanded.
+    Added titleStyle prop with Colors.quinaryColor to override default theme color.
+  - 2026-02-05: Added optional change badges (icons + labels) for identity content updates.
+    Replaced red/green-only update styling with explicit New/From/To text and encrypted flags.
+  - 2026-02-06: Introduced 'appended' change type for CMM keys that already exist on the identity.
+    ContentMultiMap is additive by default, so adding values to an existing key now shows
+    "Adding" badge (green) with "Existing: / Adding:" labels instead of the misleading
+    "Updated" badge with "From: / To:" strikethrough labels.
+  - 2026-02-06: Redesigned CMM change items as card-based layout when showChangeBadges is true.
+    Title gets its own row, badges sit below it, and description blocks use left accent bars
+    with truncated previews for cleaner scanning.
+*/
 import React, { useEffect, useState } from 'react';
-import { Clipboard, FlatList, TouchableOpacity, Alert, View, Image, ScrollView } from 'react-native';
+import { Clipboard, FlatList, TouchableOpacity, Alert, View, Image, ScrollView, StyleSheet } from 'react-native';
 import { Text, List, Divider, Paragraph } from 'react-native-paper';
 import Colors from '../globals/colors';
 import Styles from '../styles';
@@ -35,6 +49,78 @@ const checkmark = (<AnimatedSuccessCheckmark style={{ width: 20, marginRight: 5,
 
 const triangle = <MaterialCommunityIcons name={'information'} size={20} color={Colors.warningButtonColor} style={{ width: 20, marginRight: 9, alignSelf: 'flex-end', }} />;
 
+const LocalStyles = StyleSheet.create({
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  badgeIcon: {
+    marginRight: 4,
+  },
+  badgeText: {
+    fontSize: 11,
+    lineHeight: 13,
+  },
+  cmmDescLine: {
+    color: Colors.verusDarkGray,
+    fontSize: 12,
+  },
+  cmmDescMuted: {
+    color: Colors.verusDarkGray,
+    fontSize: 12,
+    textDecorationLine: 'line-through',
+  },
+  // Card-based CMM item styles
+  cmmCard: {
+    backgroundColor: '#F9F9F9',
+    borderRadius: 12,
+    padding: 14,
+    marginHorizontal: 16,
+    marginBottom: 10,
+  },
+  cmmCardTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    marginBottom: 6,
+  },
+  cmmCardBadgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 10,
+  },
+  cmmCardDescBlock: {
+    borderLeftWidth: 3,
+    borderRadius: 2,
+    paddingLeft: 10,
+    paddingVertical: 4,
+    marginBottom: 6,
+  },
+  cmmCardDescLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    marginBottom: 2,
+  },
+  cmmCardDescValue: {
+    fontSize: 13,
+    color: '#444',
+    lineHeight: 18,
+  },
+});
+
 export default function VerusIdObjectData(props) {
   const { 
     friendlyNames, 
@@ -51,7 +137,8 @@ export default function VerusIdObjectData(props) {
     chainInfo,
     coinObj,
     cmmDataKeys,
-    extraListItems
+    extraListItems,
+    showChangeBadges
   } = props;
   
   const [listData, setListData] = useState([]);
@@ -86,6 +173,164 @@ export default function VerusIdObjectData(props) {
     };
 
     return formatValue(data);
+  };
+
+  const isContentMultiMapRemove = (rawData) => {
+    const isRemoveObj = (obj) => {
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return false;
+      const keys = Object.keys(obj);
+      if (keys.length !== 1) return false;
+      return getVDXFKeyLabel(keys[0], true) === 'content multi map remove';
+    };
+
+    if (isRemoveObj(rawData)) return true;
+    if (Array.isArray(rawData)) return rawData.some(isRemoveObj);
+    return false;
+  };
+
+  const getCmmChangeType = (hasExisting, updateEntry) => {
+    if (!updateEntry) return null;
+    if (isContentMultiMapRemove(updateEntry.rawData)) return 'removed';
+    if (!hasExisting) return 'added';
+    return 'appended';
+  };
+
+  const getChangeBadgeConfig = (changeType) => {
+    switch (changeType) {
+      case 'added':
+        return { icon: 'plus-circle-outline', label: 'Added', color: Colors.verusGreenColor };
+      case 'appended':
+        return { icon: 'plus-circle-outline', label: 'Adding', color: Colors.verusGreenColor };
+      case 'removed':
+        return { icon: 'minus-circle-outline', label: 'Removed', color: Colors.warningButtonColor };
+      default:
+        return null;
+    }
+  };
+
+  const getBadgeList = (item) => {
+    const badges = [];
+    const baseBadge = getChangeBadgeConfig(item.changeType);
+    if (baseBadge) badges.push(baseBadge);
+    if (item.isEncrypted) {
+      badges.push({ icon: 'lock-outline', label: 'Encrypted', color: Colors.verusDarkGray });
+    }
+    return badges;
+  };
+
+  const renderChangeBadges = (item) => {
+    const badges = getBadgeList(item);
+    if (badges.length === 0) return null;
+
+    return (
+      <View style={LocalStyles.badgeRow}>
+        {badges.map((badge, idx) => (
+          <View
+            key={`${badge.label}-${idx}`}
+            style={[LocalStyles.badge, { borderColor: badge.color }]}
+          >
+            <MaterialCommunityIcons
+              name={badge.icon}
+              size={12}
+              color={badge.color}
+              style={LocalStyles.badgeIcon}
+            />
+            <Text style={[LocalStyles.badgeText, { color: badge.color }]}>{badge.label}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  const truncatePreview = (text, maxLen = 60) => {
+    if (text == null) return '';
+    const str = String(text);
+    return str.length > maxLen ? `${str.slice(0, maxLen)}...` : str;
+  };
+
+  const renderCmmDescBlock = (label, value, borderColor, muted = false) => (
+    <View style={[LocalStyles.cmmCardDescBlock, { borderLeftColor: borderColor }]}>
+      <Text style={[LocalStyles.cmmCardDescLabel, { color: borderColor }]}>{label}</Text>
+      <Text
+        style={[
+          LocalStyles.cmmCardDescValue,
+          muted && { textDecorationLine: 'line-through', color: '#999' }
+        ]}
+        numberOfLines={2}
+      >
+        {truncatePreview(value, 80) || 'Unknown'}
+      </Text>
+    </View>
+  );
+
+  const renderCmmChangeDescription = (item, updateEntry) => {
+    const updatedPreview = item.isEncrypted
+      ? 'Encrypted upload (tap to view)'
+      : (item.updatedData ?? updateEntry?.data ?? item.data);
+
+    if (item.changeType === 'added') {
+      return renderCmmDescBlock('New', updatedPreview || 'New value', Colors.verusGreenColor);
+    }
+
+    if (item.changeType === 'removed') {
+      return renderCmmDescBlock('Removing', item.data || 'Unknown value', Colors.warningButtonColor, true);
+    }
+
+    if (item.changeType === 'appended') {
+      return (
+        <>
+          {item.data != null && renderCmmDescBlock('Existing', item.data, '#CCC')}
+          {renderCmmDescBlock('Adding', updatedPreview || 'New value', Colors.verusGreenColor)}
+        </>
+      );
+    }
+
+    return (
+      <Text style={{ color: Colors.verusDarkGray }}>
+        {item.dataInDescription ? item.data : item.title}
+      </Text>
+    );
+  };
+
+  const renderCmmCard = (item, updateEntry) => {
+    const badges = getBadgeList(item);
+    const onPress = (updateEntry && updateEntry.onPress) ? updateEntry.onPress : item.onPress;
+
+    return (
+      <TouchableOpacity
+        key={item.key}
+        style={LocalStyles.cmmCard}
+        onPress={onPress}
+        activeOpacity={onPress ? 0.7 : 1}
+        disabled={!onPress}
+      >
+        {/* Title row */}
+        <Text style={LocalStyles.cmmCardTitle}>{item.title}</Text>
+
+        {/* Badge row */}
+        {badges.length > 0 && (
+          <View style={LocalStyles.cmmCardBadgeRow}>
+            {badges.map((badge, idx) => (
+              <View
+                key={`${badge.label}-${idx}`}
+                style={[LocalStyles.badge, { borderColor: badge.color }]}
+              >
+                <MaterialCommunityIcons
+                  name={badge.icon}
+                  size={12}
+                  color={badge.color}
+                  style={LocalStyles.badgeIcon}
+                />
+                <Text style={[LocalStyles.badgeText, { color: badge.color }]}>{badge.label}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Description blocks */}
+        {renderCmmChangeDescription(item, updateEntry)}
+      </TouchableOpacity>
+    );
   };
 
   const getDisplayUpdates = () => {
@@ -291,12 +536,18 @@ export default function VerusIdObjectData(props) {
       if (verusId.identity.contentmultimap) {
         for (const iAddrKey in verusId.identity.contentmultimap) {
           const shortIAddr = getCmmDataKey(iAddrKey);
+          const updateKey = `${VERUSID_CMM_DATA.key}:${iAddrKey}`;
+          const updateEntry = displayUpdates[VERUSID_CMM_INFO.key][updateKey];
+          const changeType = getCmmChangeType(true, updateEntry);
 
-          contentMultiMapInfo[`${VERUSID_CMM_DATA.key}:${iAddrKey}`] = {
-            key: `${VERUSID_CMM_DATA.key}:${iAddrKey}`,
+          contentMultiMapInfo[updateKey] = {
+            key: updateKey,
             title: shortIAddr,
             data: getCmmDataLabel(verusId.identity.contentmultimap[iAddrKey]),
-            dataInDescription: true
+            dataInDescription: true,
+            changeType,
+            isEncrypted: Boolean(updateEntry && updateEntry.isEncrypted),
+            updatedData: updateEntry ? updateEntry.data : null
           };
         }
       }
@@ -305,13 +556,18 @@ export default function VerusIdObjectData(props) {
         if (!contentMultiMapInfo[key]) {
           const iAddr = key.split(':')[1];
           const shortIAddr = getCmmDataKey(iAddr);
+          const updateEntry = displayUpdates[VERUSID_CMM_INFO.key][key];
+          const changeType = getCmmChangeType(false, updateEntry);
           
           contentMultiMapInfo[key] = {
             key,
             title: shortIAddr,
-            data: displayUpdates[VERUSID_CMM_INFO.key][key].data,
+            data: updateEntry ? updateEntry.data : null,
             hideOldData: true,
-            dataInDescription: true
+            dataInDescription: true,
+            changeType,
+            isEncrypted: Boolean(updateEntry && updateEntry.isEncrypted),
+            updatedData: updateEntry ? updateEntry.data : null
           };
         }
       }
@@ -369,8 +625,17 @@ export default function VerusIdObjectData(props) {
               expanded={expandedAccordions[idx]}
               onPress={() => setExpandedAccordions({ ...expandedAccordions, [idx]: !expandedAccordions[idx] })}
               style={{ backgroundColor: Colors.secondaryBackground }}
+              titleStyle={{ color: Colors.quinaryColor }}
             >
               {group.items.map((item, index) => {
+                const isCmmWithBadge = showChangeBadges && group.key === VERUSID_CMM_INFO.key && item.changeType;
+                if (isCmmWithBadge) {
+                  return (
+                    <React.Fragment key={index}>
+                      {renderCmmCard(item, displayUpdates[group.key][item.key])}
+                    </React.Fragment>
+                  );
+                }
                 return (
                   <React.Fragment key={index}>
                     <List.Item
@@ -380,7 +645,9 @@ export default function VerusIdObjectData(props) {
                           : item.dataInDescription ? item.title : item.data
                       }
                       titleStyle={
-                        displayUpdates[group.key][item.key] ? { color: 'green' } : {}
+                        displayUpdates[group.key][item.key]
+                          ? { color: 'green' }
+                          : {}
                       }
                       titleNumberOfLines={100}
                       description={() =>
@@ -423,43 +690,56 @@ export default function VerusIdObjectData(props) {
                 expanded={expandedAccordions[idx]}
                 onPress={() => setExpandedAccordions({ ...expandedAccordions, [idx]: !expandedAccordions[idx] })}
                 style={{ backgroundColor: Colors.secondaryBackground }}
+                titleStyle={{ color: Colors.quinaryColor }}
               >
-                {group.items.map((item, index) => (
-                  <React.Fragment key={index}>
-                    <List.Item
-                      title={
-                        displayUpdates[group.key][item.key]
-                          ? `${item.dataInDescription ? item.title : displayUpdates[group.key][item.key].data}`
-                          : item.dataInDescription ? item.title : item.data
-                      }
-                      titleStyle={
-                        displayUpdates[group.key][item.key] ? { color: 'green' } : {}
-                      }
-                      titleNumberOfLines={100}
-                      description={() =>
-                        displayUpdates[group.key][item.key] ? (
-                          <>
-                            {
-                              item.data != null && !item.hideOldData && 
-                              (<Text style={{ color: Colors.warningButtonColor }}>{item.dataInDescription ? item.title : item.data}</Text>)
-                            }
+                {group.items.map((item, index) => {
+                  const isCmmWithBadge = showChangeBadges && group.key === VERUSID_CMM_INFO.key && item.changeType;
+                  if (isCmmWithBadge) {
+                    return (
+                      <React.Fragment key={index}>
+                        {renderCmmCard(item, displayUpdates[group.key][item.key])}
+                      </React.Fragment>
+                    );
+                  }
+                  return (
+                    <React.Fragment key={index}>
+                      <List.Item
+                        title={
+                          displayUpdates[group.key][item.key]
+                            ? `${item.dataInDescription ? item.title : displayUpdates[group.key][item.key].data}`
+                            : item.dataInDescription ? item.title : item.data
+                        }
+                        titleStyle={
+                          displayUpdates[group.key][item.key]
+                            ? { color: 'green' }
+                            : {}
+                        }
+                        titleNumberOfLines={100}
+                        description={() =>
+                          displayUpdates[group.key][item.key] ? (
+                            <>
+                              {
+                                item.data != null && !item.hideOldData && 
+                                (<Text style={{ color: Colors.warningButtonColor }}>{item.dataInDescription ? item.title : item.data}</Text>)
+                              }
+                              <Text style={{ color: Colors.verusDarkGray }}>{item.dataInDescription ? item.data : item.title}</Text>
+                            </>
+                          ) : (
                             <Text style={{ color: Colors.verusDarkGray }}>{item.dataInDescription ? item.data : item.title}</Text>
-                          </>
-                        ) : (
-                          <Text style={{ color: Colors.verusDarkGray }}>{item.dataInDescription ? item.data : item.title}</Text>
-                        )
-                      }
-                      onPress={
-                        displayUpdates[group.key][item.key] && 
-                        displayUpdates[group.key][item.key].onPress ? 
-                          displayUpdates[group.key][item.key].onPress 
-                          : 
-                          item.onPress
-                      }
-                    />
-                    <Divider />
-                  </React.Fragment>
-                ))}
+                          )
+                        }
+                        onPress={
+                          displayUpdates[group.key][item.key] && 
+                          displayUpdates[group.key][item.key].onPress ? 
+                            displayUpdates[group.key][item.key].onPress 
+                            : 
+                            item.onPress
+                        }
+                      />
+                      <Divider />
+                    </React.Fragment>
+                  );
+                })}
               </List.Accordion>
             ))}
           </List.Section>

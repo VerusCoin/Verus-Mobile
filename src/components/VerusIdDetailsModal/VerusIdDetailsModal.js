@@ -1,17 +1,16 @@
+/*
+  VerusIdDetailsModal
+  - 2026-02-02: Use SemiModal standardized header (title + top-right X)
+    and remove legacy Close/Details buttons.
+*/
 import React, {useEffect, useState} from 'react';
-import {Linking, SafeAreaView, View} from 'react-native';
-import Colors from '../../globals/colors';
+import {SafeAreaView, View} from 'react-native';
 import SemiModal from '../SemiModal';
-import {Button, Text, Divider} from 'react-native-paper';
 import Styles from '../../styles';
 import AnimatedActivityIndicatorBox from '../AnimatedActivityIndicatorBox';
 import VerusIdObjectData from '../VerusIdObjectData';
-import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
 import MissingInfoRedirect from '../MissingInfoRedirect/MissingInfoRedirect';
 import { convertFqnToDisplayFormat } from '../../utils/fullyqualifiedname';
-import { getSystemNameFromSystemId } from '../../utils/CoinData/CoinData';
-import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
-import { openUrl } from '../../utils/linking';
 
 export default function VerusIdDetailsModal(props) {
   const {
@@ -54,26 +53,6 @@ export default function VerusIdDetailsModal(props) {
     }
   }
 
-  openIdDetails = () => {
-    let url = `https://verus.io/verusid-lookup/${verusId.fullyqualifiedname}`;
-
-    openUrl(url)
-  };
-
-  const isTestnetSystem = () => {
-    if (!verusId || !verusId.identity || !verusId.identity.systemid) return false;
-
-    try {
-      const systemName = getSystemNameFromSystemId(verusId.identity.systemid);
-      const coinObj = CoinDirectory.getBasicCoinObj(systemName);
-      return !!coinObj.testnet;
-    } catch (e) {
-      return false;
-    }
-  };
-
-  const showDetailsButton = !isTestnetSystem();
-
   useEffect(() => {
     onVisibleUpdate();
   }, [visible]);
@@ -84,37 +63,20 @@ export default function VerusIdDetailsModal(props) {
     }
   }, [verusId])
 
+  const modalTitle = failedToLoad ? 'Error' : (verusIdTitle || 'VerusID');
+
   return (
     <SemiModal
       animationType={animationType}
       transparent={true}
       visible={visible}
       onRequestClose={cancel}
+      title={modalTitle}
       flexHeight={4}>
       {(friendlyNames == null || verusId == null) && !failedToLoad ? (
         <AnimatedActivityIndicatorBox />
       ) : (
         <SafeAreaView style={Styles.centerContainer}>
-          <View style={{ ...Styles.headerContainer, minHeight: 48 }}>
-            <View style={Styles.semiModalHeaderContainer}>
-              <Button onPress={cancel} textColor={Colors.primaryColor}>
-                {'Close'}
-              </Button>
-              <Text
-                style={{
-                  ...Styles.centralHeader,
-                  ...Styles.smallMediumFont,
-                }}>
-                {failedToLoad ? "Error" : verusIdTitle}
-              </Text>
-              <Button
-                textColor={Colors.primaryColor}
-                disabled={verusId == null || failedToLoad || !showDetailsButton}
-                onPress={openIdDetails}>
-                {'Details'}
-              </Button>
-            </View>
-          </View>
           {failedToLoad ? (
             <View style={{flex: 1, ...Styles.fullWidth}}>
               <MissingInfoRedirect

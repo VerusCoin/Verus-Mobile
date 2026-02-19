@@ -1,7 +1,11 @@
-// VdxfUniValueModal.render.js (Refactored for Hooks)
+/*
+  VdxfUniValueModal.render
+  - 2026-02-02: Use SemiModal standardized header (title + top-right X)
+    and remove legacy Close/Help header actions.
+*/
 import React from "react";
 import { SafeAreaView, View } from "react-native";
-import { Text, Portal, Button } from "react-native-paper";
+import { Portal } from "react-native-paper";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import Colors from "../../globals/colors";
@@ -25,6 +29,8 @@ export const VdxfUniValueModalRender = (props) => {
           transparent={true}
           visible={visible}
           onRequestClose={props.cancel}
+          title={title}
+          closeDisabled={props.preventExit}
           contentContainerStyle={{
             height: 600,
             flex: 0,
@@ -34,35 +40,7 @@ export const VdxfUniValueModalRender = (props) => {
           <SafeAreaView style={{ flex: 1 }}>
             <Root.Navigator
               screenOptions={{
-                header: () => (
-                  <View style={{
-                    flexDirection: 'row',
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    backgroundColor: Colors.secondaryColor
-                  }}>
-                    <Button
-                      style={{ marginBottom: 16 }}
-                      onPress={props.cancel}
-                      textColor={Colors.primaryColor}
-                      disabled={props.preventExit}
-                    >
-                      {"Close"}
-                    </Button>
-                    <Text style={{ marginBottom: 16, fontSize: 16, textAlign: "center" }}>{title}</Text>
-                    <Button
-                      style={{ marginBottom: 16 }}
-                      onPress={props.showHelpModal}
-                      textColor={Colors.primaryColor}
-                      disabled={props.preventExit}
-                    >
-                      {"Help"}
-                    </Button>
-                  </View>
-                ),
-                headerStyle: {
-                  height: 52,
-                },
+                headerShown: false,
               }}
             >
               <Root.Screen name="VdxfUniValueModalInner">
