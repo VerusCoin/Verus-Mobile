@@ -21,17 +21,14 @@ import { SaplingExtendedSpendingKey } from "verus-typescript-primitives/dist/pba
 import { BN } from "bn.js";
 import { CoinDirectory } from "../../CoinData/CoinDirectory";
 import VrpcProvider from "../../vrpc/vrpcInterface";
-import { getIdentity } from "../../api/channels/verusid/callCreators";
 import store from "../../../store";
 
 import { requestPrivKey } from "../../auth/authBox";
 import { DLIGHT_PRIVATE } from "../../constants/intervalConstants";
 import { getAppOrDelegatedID } from "../helper/getAppOrDelegatedIDhelper";
-import { act } from "react";
 
-// uncomment when real z_functions are available todo
-// import { z_getencryptionaddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
-// import { encryptVerusMessage } from "../../api/channels/dlight/requests/encrypt";
+import { z_getencryptionaddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
+import { encryptVerusMessage } from "../../api/channels/dlight/requests/encrypt";
 
 
 // Configuration
@@ -62,10 +59,7 @@ const getExtendedSpendingKey = async (systemID) => {
 };
 
 
-// ============================================================================
-// Mock Functions (for development/testing)
-// TODO: Remove when real z_functions are available
-// ============================================================================
+// remove when tested with real functions
 
 const mock_z_getencryptionaddress = async (systemID, params) => {
   return {
@@ -92,18 +86,15 @@ const callZGetEncryptionAddress = async (systemID, params) => {
   if (USE_MOCK_Z_FUNCTIONS) {
     return mock_z_getencryptionaddress(systemID, params);
   }
-  // TODO: uncomment when real function is available
-  // return z_getencryptionaddress(systemID, params);
-  throw new Error("z_getencryptionaddress not implemented");
+
+    return z_getencryptionaddress(systemID, params);
 };
 
 const callEncryptVerusMessage = async (systemID, toAddress, data, returnSsk) => {
   if (USE_MOCK_Z_FUNCTIONS) {
     return mock_encryptVerusMessage(systemID, toAddress, data, returnSsk);
   }
-  // TODO: uncomment when real function is available
-  // return encryptVerusMessage(systemID, toAddress, data, returnSsk);
-  throw new Error("encryptVerusMessage not implemented");
+    return encryptVerusMessage(systemID, toAddress, data, returnSsk);
 };
 
 
@@ -121,17 +112,17 @@ const callEncryptVerusMessage = async (systemID, toAddress, data, returnSsk) => 
  */
 export const handleAppEncryptionRequestVDXFObject = async (request, response, detailIndex) => {
   const activeAccount = store.getState().authentication.activeAccount;
-  
+
   if (!activeAccount) {
     throw new Error("no active account found");
   }
-  
+
   if (!response.signature || !response.signature.identityID) {
     throw new Error("response signature with identityID is required");
   }
-  
-  const responseSignerID = response.signature.identityID.toAddress();
-  
+
+  const responseSignerID = response.signature.identityID.toIAddress();
+
   const detail = request.getDetails(detailIndex);
   
   if (!detail || !(detail instanceof AppEncryptionRequestOrdinalVDXFObject)) {
@@ -140,10 +131,12 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
   
   const encryptionRequest = detail.data;
   
-  const systemID = request.signature.systemID.toAddress();
-  const requestSignerID = request.signature.identityID.toAddress();
+  const systemID = request.signature.systemID.toIAddress();
+
+
+  const requestSignerID = request.signature.identityID.toIAddress();
   const appOrDelegatedID = getAppOrDelegatedID(request);
-  
+
   const coinObj = CoinDirectory.getBasicCoinObj(systemID);
   
   if (!coinObj) {
@@ -159,10 +152,10 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
     appOrDelegatedID,
     responseSignerID,
   });
-  
+
   response.details = response.details || [];
   response.details.push(responseDetail);
-  
+
   return {
     response,
     handledIndices: [detailIndex]
@@ -208,8 +201,9 @@ const processAppEncryptionRequest = async ({
   // Use appOrDelegatedID if present, otherwise use requestSignerID
   const appID = appOrDelegatedID || requestSignerID;
 
+
   // Check if spending key requested via flags
-  const returnEsk = request.returnEsk();
+  const returnESK = request.returnESK();
 
   // Build derivation params
   const derivationParams = {
@@ -218,11 +212,11 @@ const processAppEncryptionRequest = async ({
     toId: appID,
     hdIndex: 0,
     encryptionIndex: request.derivationNumber.toNumber(),
-    returnSecret: returnEsk
+    returnSecret: returnESK
   };
 
   // Derive channel keys
-  const derivationResult = await callZGetEncryptionAddress(systemID, derivationParams);
+  const derivationResult = await callZGetEncryptionAddress(systemID, derivationParams); // directly use z_getencryption when available
 
   if (derivationResult.err) {
     throw new Error("key derivation failed");
@@ -273,7 +267,7 @@ const processAppEncryptionRequest = async ({
     });
   }
 
-  // get the encryption address or return null as its optional
+  // get the encrypt to address or return null as its optional
   const encryptTo = request.hasEncryptResponseToAddress() 
   ? request.encryptResponseToAddress.toAddressString() 
   : null;
@@ -304,8 +298,8 @@ const processAppEncryptionRequest = async ({
   // Wrap encrypted data in DataDescriptor
   const encryptedDescriptor = new DataDescriptor({
     flags: DataDescriptor.FLAG_ENCRYPTED_DATA,
-    objectdata: Buffer.from(encryptResult.result, 'hex'), // we can change it to encryptResult.result once real function is available and returns hex string
-    epk: encryptedData.epk,
+    objectdata: Buffer.from(encryptResult.result, 'hex'), // it is a buffer type in DataDescriptor in mock result its a hex string but need to update my encrypt Function
+    epk: encryptedData.epk, // same goes here
   });
 
   return new DataDescriptorOrdinalVDXFObject({
