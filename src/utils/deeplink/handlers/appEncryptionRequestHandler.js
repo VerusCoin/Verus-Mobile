@@ -319,26 +319,3 @@ export default {
 };
 
 
-
-/* commit message
-
-
-- improved method to check system ID
-
-- created getAppOrDelegatedID as a helper function.
-
-- added getAccountAddresses as a helper function
-
-- fixed hdIndex in parameters to 0  because we are using a spendingKey and encryptionIndex to derivationNumber for the encryption channel
-
-- fixed typo in const eskFlag property name
-
--fixed typo in conversion function is called toAddress 
-
--removed unnessary validation functions 
-
-- removeed ValidateResponseSignerID check
-
-- removed activeAccount entirely
-
-*/
