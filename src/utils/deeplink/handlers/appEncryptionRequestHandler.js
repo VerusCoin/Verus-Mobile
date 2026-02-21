@@ -162,23 +162,6 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
   };
 };
 
-/**
- * Extracts wallet addresses from activeAccount
- * @param {Object} activeAccount
- * @returns {string[]}
- */
-const getAccountAddresses = (activeAccount , systemID) => {
-  if (!activeAccount || !activeAccount.keys) return [];
-
-  const coinObj = CoinDirectory.getBasicCoinObj(systemID);
-  const coinId = coinObj.id;
-
-  const vrpcData = activeAccount.keys[coinId]?.vrpcData;
-  
-  if (!vrpcData) return [];
-
-  return vrpcData.addresses;
-};
 
 
 /**
@@ -256,14 +239,17 @@ const processAppEncryptionRequest = async ({
       throw new Error("incomplete key derivation result");
     }
 
+    if (returnESK && !keys.spending_key) {
+      throw new Error("spending key requested but not returned");
+    }
+
     responseDetails = new AppEncryptionResponseDetails({
       version: new BN(1),
       incomingViewingKey: Buffer.from(keys.ivk, 'hex'),
       extendedViewingKey: SaplingExtendedViewingKey.fromKeyString(keys.fvk),
       address: SaplingPaymentAddress.fromAddressString(keys.address),
-      extendedSpendingKey: returnEsk && keys.spending_key
-        ? SaplingExtendedSpendingKey.fromKeyString(keys.spending_key)
-        : undefined
+      extendedSpendingKey: returnESK
+        ? SaplingExtendedSpendingKey.fromKeyString(keys.spending_key) : undefined
     });
   }
 
@@ -299,7 +285,7 @@ const processAppEncryptionRequest = async ({
   const encryptedDescriptor = new DataDescriptor({
     flags: DataDescriptor.FLAG_ENCRYPTED_DATA,
     objectdata: Buffer.from(encryptResult.result, 'hex'), // it is a buffer type in DataDescriptor in mock result its a hex string but need to update my encrypt Function
-    epk: encryptedData.epk, // same goes here
+    epk: encryptedData.epk, // same goes here, its undefined cause its mock data 
   });
 
   return new DataDescriptorOrdinalVDXFObject({
