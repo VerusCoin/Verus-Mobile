@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { Divider, List } from 'react-native-paper';
 import { CommonActions } from '@react-navigation/native';
-import { AuthenticationRequestDetails, AuthenticationResponseDetails, AuthenticationResponseOrdinalVDXFObject, CompactAddressObject, GenericRequest, GenericResponse, ProvisionIdentityDetails, VerifiableSignatureData } from 'verus-typescript-primitives';
+import { AuthenticationRequestDetails, AuthenticationResponseDetails, AuthenticationResponseOrdinalVDXFObject, CompactAddressObject, GenericRequest, GenericResponse, ProvisionIdentityDetails, RecipientConstraint, VerifiableSignatureData } from 'verus-typescript-primitives';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import { openLinkIdentityModal, openProvisionIdentityModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
@@ -46,7 +46,7 @@ const AuthenticationRequestIdentity = props => {
 
   const getAllowedSystems = () => {
     const systems = recipientConstraints
-      .filter(x => x.type === AuthenticationRequestDetails.REQUIRED_SYSTEM)
+      .filter(x => x.type === RecipientConstraint.REQUIRED_SYSTEM)
       .map(x => {
         try {
           return getSystemNameFromSystemId(x.identity.toIAddress());
@@ -62,7 +62,7 @@ const AuthenticationRequestIdentity = props => {
   const getRequiredIds = () => {
     return new Set(
       recipientConstraints
-        .filter(x => x.type === AuthenticationRequestDetails.REQUIRED_ID)
+        .filter(x => x.type === RecipientConstraint.REQUIRED_ID)
         .map(x => {
           try {
             return x.identity.toIAddress();

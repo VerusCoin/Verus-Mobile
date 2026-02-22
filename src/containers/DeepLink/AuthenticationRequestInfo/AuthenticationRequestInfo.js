@@ -10,42 +10,90 @@
     - Disabled Continue until identity is selected
     - Resolved constraint i-addresses to friendly names via getIdentity
 */
-import React, { useEffect, useMemo, useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Button, Portal, Text, Divider, List } from 'react-native-paper';
-import { useSelector } from 'react-redux';
+import React, {useEffect, useMemo, useState} from 'react';
+import {
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import {Button, Portal, Text} from 'react-native-paper';
+import {useSelector} from 'react-redux';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import Colors from '../../../globals/colors';
-import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
-import { AUTHENTICATE_USER_SEND_MODAL, SEND_MODAL_USER_ALLOWLIST } from '../../../utils/constants/sendModal';
-import { createAlert, resolveAlert } from '../../../actions/actions/alert/dispatchers/alert';
-import { unixToDate } from '../../../utils/math';
 import {
-  AuthenticationRequestDetails, RecipientConstraint,
+  openAuthenticateUserModal,
+  openLinkIdentityModal,
+  openProvisionIdentityModal,
+} from '../../../actions/actions/sendModal/dispatchers/sendModal';
+import {
+  AUTHENTICATE_USER_SEND_MODAL,
+  SEND_MODAL_IDENTITY_TO_LINK_FIELD,
+  SEND_MODAL_USER_ALLOWLIST,
+} from '../../../utils/constants/sendModal';
+import {
+  createAlert,
+  resolveAlert,
+} from '../../../actions/actions/alert/dispatchers/alert';
+import {unixToDate} from '../../../utils/math';
+import {
+  AuthenticationRequestDetails,
+  RecipientConstraint,
   AuthenticationResponseDetails,
   AuthenticationResponseOrdinalVDXFObject,
   CompactAddressObject,
   GenericResponse,
+  ProvisionIdentityDetails,
   VerifiableSignatureData,
 } from 'verus-typescript-primitives';
-import { useObjectSelector } from '../../../hooks/useObjectSelector';
-import { getFriendlyNameMap, getIdentity } from '../../../utils/api/channels/verusid/callCreators';
-import { getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
-import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
-import { convertFqnToDisplayFormat } from '../../../utils/fullyqualifiedname';
-import { requestServiceStoredData } from '../../../utils/auth/authBox';
-import { VERUSID_SERVICE_ID } from '../../../utils/constants/services';
-import { VERUSID_NETWORK_DEFAULT } from '../../../../env/index';
+import {useObjectSelector} from '../../../hooks/useObjectSelector';
+import {
+  getFriendlyNameMap,
+  getIdentity,
+} from '../../../utils/api/channels/verusid/callCreators';
+import {getSystemNameFromSystemId} from '../../../utils/CoinData/CoinData';
+import {CoinDirectory} from '../../../utils/CoinData/CoinDirectory';
+import {convertFqnToDisplayFormat} from '../../../utils/fullyqualifiedname';
+import {requestServiceStoredData} from '../../../utils/auth/authBox';
+import {VERUSID_SERVICE_ID} from '../../../utils/constants/services';
+import {VERUSID_NETWORK_DEFAULT} from '../../../../env/index';
 import GradientButton from '../../../components/GradientButton';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import VerusIdAtIcon from '../../../images/customIcons/verusid-at-icon.svg';
 import IdentityPickerSheet from './components/IdentityPickerSheet';
 
-const truncateAddress = (addr) => {
+const truncateAddress = addr => {
   if (!addr || addr.length <= 14) return addr;
   return `${addr.slice(0, 6)}...${addr.slice(-6)}`;
 };
+
+const toAddressString = addressObj => {
+  if (addressObj == null) return null;
+  if (typeof addressObj === 'string') return addressObj;
+
+  try {
+    if (typeof addressObj.toIAddress === 'function') {
+      return addressObj.toIAddress();
+    }
+  } catch (e) {
+    // Ignore and try fallback conversion
+  }
+
+  try {
+    if (typeof addressObj.toAddress === 'function') {
+      return addressObj.toAddress();
+    }
+  } catch (e) {
+    // Ignore and try fallback conversion
+  }
+
+  if (typeof addressObj.address === 'string') return addressObj.address;
+  return null;
+};
+
+const EMPTY_RECIPIENT_CONSTRAINTS = [];
 
 const Connector = () => {
   return (
@@ -65,9 +113,7 @@ const AuthenticationRequestInfo = props => {
     signerSystemName,
     signerIdentityID,
     provisioningDetailsBufferString,
-    provisioningDetailIndex,
     cancel,
-    navigation,
     next,
     request,
     response,
@@ -78,25 +124,39 @@ const AuthenticationRequestInfo = props => {
   const [loading, setLoading] = useState(false);
   const [sigDateString, setSigDateString] = useState(null);
   const [waitingForSignin, setWaitingForSignin] = useState(false);
-  const [verusIdDetailsModalProps, setVerusIdDetailsModalProps] = useState(null);
+  const [verusIdDetailsModalProps, setVerusIdDetailsModalProps] =
+    useState(null);
   const [constraintFriendlyNames, setConstraintFriendlyNames] = useState({});
   const [constraintNamesLoading, setConstraintNamesLoading] = useState(false);
+  const [passthroughHandled, setPassthroughHandled] = useState(false);
+  const [technicalDetailsExpanded, setTechnicalDetailsExpanded] =
+    useState(false);
 
   // Identity picker state
   const [linkedIds, setLinkedIds] = useState({});
+  const [linkedIdsLoaded, setLinkedIdsLoaded] = useState(false);
+  const [linkedIdentityParentIds, setLinkedIdentityParentIds] = useState({});
+  const [linkedIdentityParentsLoaded, setLinkedIdentityParentsLoaded] =
+    useState(false);
   const [sortedIds, setSortedIds] = useState({});
   const [identitySheetVisible, setIdentitySheetVisible] = useState(false);
   const [selectedIdentity, setSelectedIdentity] = useState(null); // { chainId, iAddress, friendlyName }
-
 
   const accounts = useObjectSelector(state => state.authentication.accounts);
   const signedIn = useSelector(state => state.authentication.signedIn);
   const passthrough = useSelector(state => state.deeplink.passthrough);
   const sendModalType = useSelector(state => state.sendModal.type);
-  const activeAccount = useObjectSelector(state => state.authentication.activeAccount);
-  const isTestAccount = activeAccount && Object.keys(activeAccount.testnetOverrides).length > 0;
-  const encryptedIds = useObjectSelector(state => state.services.stored[VERUSID_SERVICE_ID]);
-  const testnetOverrides = useObjectSelector(state => state.authentication.activeAccount?.testnetOverrides || {});
+  const activeAccount = useObjectSelector(
+    state => state.authentication.activeAccount,
+  );
+  const isTestAccount =
+    activeAccount && Object.keys(activeAccount.testnetOverrides).length > 0;
+  const encryptedIds = useObjectSelector(
+    state => state.services.stored[VERUSID_SERVICE_ID],
+  );
+  const testnetOverrides = useObjectSelector(
+    state => state.authentication.activeAccount?.testnetOverrides || {},
+  );
   const identityNetwork = testnetOverrides[VERUSID_NETWORK_DEFAULT]
     ? testnetOverrides[VERUSID_NETWORK_DEFAULT]
     : VERUSID_NETWORK_DEFAULT;
@@ -107,14 +167,30 @@ const AuthenticationRequestInfo = props => {
   const constraintChain = signerSystemName || defaultConstraintChain;
   const requesterLabel = signerFqn || 'An app';
   const systemLabel =
-    signerSystemName || getSystemNameFromSystemId(signerSystemID) || signerSystemID;
+    signerSystemName ||
+    getSystemNameFromSystemId(signerSystemID) ||
+    signerSystemID;
 
   // Identity constraint filtering (mirrored from AuthenticationRequestIdentity)
-  const recipientConstraints = details && details.recipientConstraints ? details.recipientConstraints : [];
+  const recipientConstraints =
+    details && details.recipientConstraints
+      ? details.recipientConstraints
+      : EMPTY_RECIPIENT_CONSTRAINTS;
+  const responseUris = useMemo(() => {
+    if (request && request.responseURIs && request.responseURIs.length > 0) {
+      return request.responseURIs;
+    }
+
+    if (details && details.responseURIs && details.responseURIs.length > 0) {
+      return details.responseURIs;
+    }
+
+    return [];
+  }, [request, details]);
 
   const allowedSystems = useMemo(() => {
     const systems = recipientConstraints
-      .filter(x => x.type === AuthenticationRequestDetails.REQUIRED_SYSTEM)
+      .filter(x => x.type === RecipientConstraint.REQUIRED_SYSTEM)
       .map(x => {
         try {
           return getSystemNameFromSystemId(x.identity.toIAddress());
@@ -129,7 +205,7 @@ const AuthenticationRequestInfo = props => {
   const requiredIds = useMemo(() => {
     return new Set(
       recipientConstraints
-        .filter(x => x.type === AuthenticationRequestDetails.REQUIRED_ID)
+        .filter(x => x.type === RecipientConstraint.REQUIRED_ID)
         .map(x => {
           try {
             return x.identity.toIAddress();
@@ -141,24 +217,42 @@ const AuthenticationRequestInfo = props => {
     );
   }, [recipientConstraints]);
 
+  const requiredParentIds = useMemo(() => {
+    return new Set(
+      recipientConstraints
+        .filter(x => x.type === RecipientConstraint.REQUIRED_PARENT)
+        .map(x => toAddressString(x.identity))
+        .filter(x => x != null),
+    );
+  }, [recipientConstraints]);
+
+  const linkChainId =
+    allowedSystems.size > 0
+      ? Array.from(allowedSystems)[0]
+      : requestIsTestnet
+      ? 'VRSCTEST'
+      : identityNetwork;
+
   const isIdentityAllowed = (chainId, iAddr) => {
     if (requiredIds.size > 0 && !requiredIds.has(iAddr)) return false;
     if (allowedSystems.size > 0 && !allowedSystems.has(chainId)) return false;
+
+    if (requiredParentIds.size > 0) {
+      if (!linkedIdentityParentsLoaded) return false;
+
+      const identityParent =
+        linkedIdentityParentIds[`${chainId}:${iAddr}`] || null;
+      if (identityParent == null || !requiredParentIds.has(identityParent)) {
+        return false;
+      }
+    }
+
     return true;
   };
 
-  const getConstraintAddress = (constraint) => {
+  const getConstraintAddress = constraint => {
     if (constraint == null || constraint.identity == null) return null;
-
-    try {
-      return constraint.identity.toIAddress();
-    } catch (e) {
-      try {
-        return constraint.identity.toAddress();
-      } catch (e2) {
-        return constraint.identity.address || null;
-      }
-    }
+    return toAddressString(constraint.identity);
   };
 
   const getConstraintDisplayName = (constraintType, constraintAddress) => {
@@ -166,7 +260,10 @@ const AuthenticationRequestInfo = props => {
       return constraintFriendlyNames[constraintAddress];
     }
 
-    if (constraintType === RecipientConstraint.REQUIRED_SYSTEM && constraintAddress) {
+    if (
+      constraintType === RecipientConstraint.REQUIRED_SYSTEM &&
+      constraintAddress
+    ) {
       const systemName = getSystemNameFromSystemId(constraintAddress);
       if (systemName) return systemName;
       return 'Unknown system';
@@ -179,25 +276,35 @@ const AuthenticationRequestInfo = props => {
     return 'Unknown identity';
   };
 
-  const getConstraintLabel = (constraint) => {
+  const getConstraintRowData = constraint => {
     const constraintAddress = getConstraintAddress(constraint);
-    const constraintLabel = getConstraintDisplayName(constraint.type, constraintAddress);
+    let constraintValue = getConstraintDisplayName(
+      constraint.type,
+      constraintAddress,
+    );
 
     // Use resolved friendly name if available
-    const friendlyName = constraintFriendlyNames[constraintLabel];
-    if (friendlyName && constraint.type !== AuthenticationRequestDetails.REQUIRED_SYSTEM) {
-      constraintLabel = friendlyName;
+    const friendlyName = constraintFriendlyNames[constraintValue];
+    if (
+      friendlyName &&
+      constraint.type !== RecipientConstraint.REQUIRED_SYSTEM
+    ) {
+      constraintValue = friendlyName;
     }
 
     switch (constraint.type) {
       case RecipientConstraint.REQUIRED_ID:
-        return `Required identity:\n${constraintLabel}`;
-      case RecipientConstraint.REQUIRED_SYSTEM:
-        return `Required system:\n${constraintLabel.substring(0, constraintLabel.length - 1)}`;
+        return {label: 'Required identity', value: constraintValue};
+      case RecipientConstraint.REQUIRED_SYSTEM: {
+        const systemValue = constraintValue.endsWith('@')
+          ? constraintValue.substring(0, constraintValue.length - 1)
+          : constraintValue;
+        return {label: 'Required system', value: systemValue};
+      }
       case RecipientConstraint.REQUIRED_PARENT:
-        return `Required parent:\n${constraintLabel}`;
+        return {label: 'Required parent', value: constraintValue};
       default:
-        return `Constraint:\n${constraintLabel}`;
+        return {label: 'Constraint', value: constraintValue};
     }
   };
 
@@ -207,7 +314,10 @@ const AuthenticationRequestInfo = props => {
   };
 
   const getVerusId = async (chain, iAddrOrName) => {
-    const identity = await getIdentity(CoinDirectory.getBasicCoinObj(chain).system_id, iAddrOrName);
+    const identity = await getIdentity(
+      CoinDirectory.getBasicCoinObj(chain).system_id,
+      iAddrOrName,
+    );
 
     if (identity.error) throw new Error(identity.error.message);
     else return identity.result;
@@ -222,8 +332,11 @@ const AuthenticationRequestInfo = props => {
       loadFriendlyNames: async () => {
         try {
           const identityObj = await getVerusId(chain, iAddress);
-    
-          return getFriendlyNameMap(CoinDirectory.getBasicCoinObj(chain).system_id, identityObj);
+
+          return getFriendlyNameMap(
+            CoinDirectory.getBasicCoinObj(chain).system_id,
+            identityObj,
+          );
         } catch (e) {
           return {
             ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',
@@ -232,39 +345,42 @@ const AuthenticationRequestInfo = props => {
         }
       },
       iAddress,
-      chain
-    })
+      chain,
+    });
   };
 
-  const getMainHeading = () => {
-    const requesterLabel = signerFqn ? signerFqn : 'An app';
-    const hasResponseUris = details && details.responseURIs && details.responseURIs.length > 0;
-
-    if (hasResponseUris) {
-      return `${requesterLabel} is requesting login with VerusID`;
+  const getMainTitle = () => {
+    if (responseUris.length > 0) {
+      return 'Sign-in request';
     }
 
     if (passthrough?.fqnToAutoLink) {
-      return `VerusID from ${requesterLabel} now ready to link`;
+      return 'Identity link request';
     }
 
-    return `Would you like to request a VerusID from ${requesterLabel}?`;
+    return 'Identity request';
   };
 
   const getAllowList = () => {
     if (requestIsTestnet) {
-      return accounts.filter(x => x.testnetOverrides && Object.keys(x.testnetOverrides).length > 0);
+      return accounts.filter(
+        x => x.testnetOverrides && Object.keys(x.testnetOverrides).length > 0,
+      );
     }
-    return accounts.filter(x => !x.testnetOverrides || Object.keys(x.testnetOverrides).length === 0);
+    return accounts.filter(
+      x => !x.testnetOverrides || Object.keys(x.testnetOverrides).length === 0,
+    );
   };
 
   // Build response using selected identity and call next()
   const buildResponseAndContinue = () => {
-    const { chainId, iAddress } = selectedIdentity;
+    const {chainId, iAddress} = selectedIdentity;
+    const requestID =
+      request && request.requestID ? request.requestID : details.requestID;
 
     const responseDetail = new AuthenticationResponseOrdinalVDXFObject({
       data: new AuthenticationResponseDetails({
-        requestID: details.requestID,
+        requestID,
       }),
     });
 
@@ -286,43 +402,34 @@ const AuthenticationRequestInfo = props => {
 
   const handleContinue = () => {
     if (signedIn) {
-      const requestBufferString = request.toBuffer().toString('hex');
-      const responseBufferString = response.details && response.details.length > 0
-        ? response.toBuffer().toString('hex')
-        : '';
-
-      navigation.navigate('AuthenticationRequestIdentity', {
-        detailsBufferString,
-        requestBufferString,
-        responseBufferString,
-        detailIndex,
-        next,
-        signerIdentityID,
-        provisioningDetailsBufferString,
-        provisioningDetailIndex
-      });
-      if (!selectedIdentity) return;
+      if (!selectedIdentity) {
+        handleOpenIdentitySheet();
+        return;
+      }
       buildResponseAndContinue();
+      return;
     } else {
       setWaitingForSignin(true);
       const allowList = getAllowList();
 
       if (allowList.length > 0) {
         const data = {
-          [SEND_MODAL_USER_ALLOWLIST]: allowList
+          [SEND_MODAL_USER_ALLOWLIST]: allowList,
         };
 
         openAuthenticateUserModal(data);
       } else {
         createAlert(
-          "Cannot continue",
-          `No ${requestIsTestnet ? 'testnet' : 'mainnet'} profiles found, cannot respond to authentication request.`,
+          'Cannot continue',
+          `No ${
+            requestIsTestnet ? 'testnet' : 'mainnet'
+          } profiles found, cannot respond to authentication request.`,
         );
       }
     }
   };
 
-  const wrongRequestType = (isTestRequest) => {
+  const wrongRequestType = isTestRequest => {
     createAlert(
       isTestRequest ? 'Testnet Request' : 'Mainnet Request',
       `This request was created for ${
@@ -349,6 +456,7 @@ const AuthenticationRequestInfo = props => {
 
   useEffect(() => {
     if (signedIn && waitingForSignin) {
+      setWaitingForSignin(false);
       handleContinue();
     }
   }, [signedIn, waitingForSignin]);
@@ -361,27 +469,36 @@ const AuthenticationRequestInfo = props => {
 
   useEffect(() => {
     if (signedIn && request != null) {
-      if ((isTestAccount && !requestIsTestnet) || (!isTestAccount && requestIsTestnet)) {
+      if (
+        (isTestAccount && !requestIsTestnet) ||
+        (!isTestAccount && requestIsTestnet)
+      ) {
         wrongRequestType(requestIsTestnet);
       }
     }
   }, [signedIn, requestIsTestnet, isTestAccount]);
 
   const expiryLabel = getExpiryLabel();
-  const constraints = details && details.recipientConstraints ? details.recipientConstraints : [];
-  const responseUris = details && details.responseURIs ? details.responseURIs : [];
-  const detailRows = useMemo(() => {
+  const constraints =
+    details && details.recipientConstraints ? details.recipientConstraints : [];
+  const constraintRows = useMemo(() => {
     const rows = [];
 
     if (constraints.length > 0) {
       constraints.forEach((constraint, index) => {
+        const rowData = getConstraintRowData(constraint);
         rows.push({
           key: `constraint-${index}`,
-          title: getConstraintLabel(constraint),
-          subtitle: 'Recipient constraint',
+          ...rowData,
         });
       });
     }
+
+    return rows;
+  }, [constraints, constraintFriendlyNames]);
+
+  const technicalRows = useMemo(() => {
+    const rows = [];
 
     if (responseUris.length > 0) {
       responseUris.forEach((uri, index) => {
@@ -402,7 +519,7 @@ const AuthenticationRequestInfo = props => {
     }
 
     return rows;
-  }, [constraints, responseUris, expiryLabel, constraintFriendlyNames]);
+  }, [responseUris, expiryLabel]);
 
   useEffect(() => {
     if (detailsBufferString) {
@@ -416,20 +533,29 @@ const AuthenticationRequestInfo = props => {
   useEffect(() => {
     const resolveConstraintNames = async () => {
       const constraintsToResolve = recipientConstraints.filter(
-        c => c.type === AuthenticationRequestDetails.REQUIRED_PARENT ||
-             c.type === AuthenticationRequestDetails.REQUIRED_ID
+        c =>
+          c.type === RecipientConstraint.REQUIRED_PARENT ||
+          c.type === RecipientConstraint.REQUIRED_ID,
       );
 
       if (constraintsToResolve.length === 0) return;
 
       const names = {};
-      const systemId = signerSystemID || (requestIsTestnet ? 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq' : 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV');
+      const systemId =
+        signerSystemID ||
+        (requestIsTestnet
+          ? 'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq'
+          : 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV');
 
       for (const constraint of constraintsToResolve) {
         try {
           const iAddr = constraint.identity.toIAddress();
           const result = await getIdentity(systemId, iAddr);
-          if (!result.error && result.result && result.result.fullyqualifiedname) {
+          if (
+            !result.error &&
+            result.result &&
+            result.result.fullyqualifiedname
+          ) {
             names[iAddr] = result.result.fullyqualifiedname;
           }
         } catch (e) {
@@ -438,7 +564,7 @@ const AuthenticationRequestInfo = props => {
       }
 
       if (Object.keys(names).length > 0) {
-        setConstraintFriendlyNames(prev => ({ ...prev, ...names }));
+        setConstraintFriendlyNames(prev => ({...prev, ...names}));
       }
     };
 
@@ -459,10 +585,15 @@ const AuthenticationRequestInfo = props => {
     let cancelled = false;
 
     const loadConstraintFriendlyNames = async () => {
-      const recipientConstraints = details && details.recipientConstraints ? details.recipientConstraints : [];
+      const recipientConstraints =
+        details && details.recipientConstraints
+          ? details.recipientConstraints
+          : [];
 
       if (recipientConstraints.length === 0) {
-        setConstraintFriendlyNames(prev => (Object.keys(prev).length > 0 ? {} : prev));
+        setConstraintFriendlyNames(prev =>
+          Object.keys(prev).length > 0 ? {} : prev,
+        );
         setConstraintNamesLoading(false);
         return;
       }
@@ -470,11 +601,17 @@ const AuthenticationRequestInfo = props => {
       setConstraintNamesLoading(true);
 
       const constraintAddresses = Array.from(
-        new Set(recipientConstraints.map(getConstraintAddress).filter(addr => addr != null))
+        new Set(
+          recipientConstraints
+            .map(getConstraintAddress)
+            .filter(addr => addr != null),
+        ),
       );
 
       if (constraintAddresses.length === 0) {
-        setConstraintFriendlyNames(prev => (Object.keys(prev).length > 0 ? {} : prev));
+        setConstraintFriendlyNames(prev =>
+          Object.keys(prev).length > 0 ? {} : prev,
+        );
         setConstraintNamesLoading(false);
         return;
       }
@@ -487,22 +624,41 @@ const AuthenticationRequestInfo = props => {
         };
 
         if (signerIdentityID) {
-          const signerIdentity = await getIdentity(coinObj.system_id, signerIdentityID);
+          const signerIdentity = await getIdentity(
+            coinObj.system_id,
+            signerIdentityID,
+          );
           if (!signerIdentity.error && signerIdentity.result) {
-            names = await getFriendlyNameMap(coinObj.system_id, signerIdentity.result, [...constraintAddresses]);
+            names = await getFriendlyNameMap(
+              coinObj.system_id,
+              signerIdentity.result,
+              [...constraintAddresses],
+            );
           } else {
             for (const addr of constraintAddresses) {
               const identity = await getIdentity(coinObj.system_id, addr);
-              if (!identity.error && identity.result && identity.result.fullyqualifiedname) {
-                names[addr] = convertFqnToDisplayFormat(identity.result.fullyqualifiedname);
+              if (
+                !identity.error &&
+                identity.result &&
+                identity.result.fullyqualifiedname
+              ) {
+                names[addr] = convertFqnToDisplayFormat(
+                  identity.result.fullyqualifiedname,
+                );
               }
             }
           }
         } else {
           for (const addr of constraintAddresses) {
             const identity = await getIdentity(coinObj.system_id, addr);
-            if (!identity.error && identity.result && identity.result.fullyqualifiedname) {
-              names[addr] = convertFqnToDisplayFormat(identity.result.fullyqualifiedname);
+            if (
+              !identity.error &&
+              identity.result &&
+              identity.result.fullyqualifiedname
+            ) {
+              names[addr] = convertFqnToDisplayFormat(
+                identity.result.fullyqualifiedname,
+              );
             }
           }
         }
@@ -535,7 +691,9 @@ const AuthenticationRequestInfo = props => {
   useEffect(() => {
     const loadLinkedIds = async () => {
       try {
-        const verusIdServiceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+        const verusIdServiceData = await requestServiceStoredData(
+          VERUSID_SERVICE_ID,
+        );
         if (verusIdServiceData.linked_ids) {
           setLinkedIds(verusIdServiceData.linked_ids);
         } else {
@@ -544,11 +702,16 @@ const AuthenticationRequestInfo = props => {
       } catch (e) {
         // Silently handle — identities will show as empty
         setLinkedIds({});
+      } finally {
+        setLinkedIdsLoaded(true);
       }
     };
 
     if (signedIn) {
+      setLinkedIdsLoaded(false);
       loadLinkedIds();
+    } else {
+      setLinkedIdsLoaded(false);
     }
   }, [encryptedIds, signedIn]);
 
@@ -567,15 +730,219 @@ const AuthenticationRequestInfo = props => {
     setSortedIds(sorted);
   }, [linkedIds]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadLinkedIdentityParents = async () => {
+      const parentMap = {};
+      const identities = [];
+
+      for (const chainId of Object.keys(linkedIds)) {
+        const chainIds = Object.keys(linkedIds[chainId] || {});
+        chainIds.forEach(iAddress => identities.push({chainId, iAddress}));
+      }
+
+      if (identities.length === 0) {
+        if (!cancelled) {
+          setLinkedIdentityParentIds({});
+          setLinkedIdentityParentsLoaded(true);
+        }
+        return;
+      }
+
+      await Promise.all(
+        identities.map(async ({chainId, iAddress}) => {
+          const mapKey = `${chainId}:${iAddress}`;
+
+          try {
+            const coinObj = CoinDirectory.getBasicCoinObj(chainId);
+            const identity = await getIdentity(coinObj.system_id, iAddress);
+            const parentId = identity?.error
+              ? null
+              : toAddressString(identity?.result?.identity?.parent);
+            parentMap[mapKey] = parentId;
+          } catch (e) {
+            parentMap[mapKey] = null;
+          }
+        }),
+      );
+
+      if (!cancelled) {
+        setLinkedIdentityParentIds(parentMap);
+        setLinkedIdentityParentsLoaded(true);
+      }
+    };
+
+    if (!signedIn) {
+      setLinkedIdentityParentIds(prev =>
+        Object.keys(prev).length > 0 ? {} : prev,
+      );
+      setLinkedIdentityParentsLoaded(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (requiredParentIds.size === 0) {
+      setLinkedIdentityParentIds(prev =>
+        Object.keys(prev).length > 0 ? {} : prev,
+      );
+      setLinkedIdentityParentsLoaded(true);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setLinkedIdentityParentsLoaded(false);
+    loadLinkedIdentityParents();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [linkedIds, signedIn, requiredParentIds]);
+
+  useEffect(() => {
+    if (passthroughHandled) return;
+    if (!signedIn) return;
+    if (!(passthrough && passthrough.fqnToAutoLink)) return;
+
+    const noLogin = responseUris.length === 0;
+    const data = {
+      [SEND_MODAL_IDENTITY_TO_LINK_FIELD]: passthrough.fqnToAutoLink,
+      noLogin,
+    };
+
+    openLinkIdentityModal(CoinDirectory.findCoinObj(linkChainId), data);
+    setPassthroughHandled(true);
+  }, [passthroughHandled, signedIn, passthrough, responseUris, linkChainId]);
+
+  const openLinkIdentityModalFromChain = () => {
+    openLinkIdentityModal(CoinDirectory.findCoinObj(linkChainId));
+  };
+
+  const openProvisionIdentityModalFromChain = () => {
+    if (!provisioningDetailsBufferString) return;
+
+    try {
+      const provisioningDetails = new ProvisionIdentityDetails();
+      provisioningDetails.fromBuffer(
+        Buffer.from(provisioningDetailsBufferString, 'hex'),
+        0,
+      );
+
+      const systemId = provisioningDetails.systemID
+        ? provisioningDetails.systemID.toAddress()
+        : null;
+      const provisioningCoinObj = systemId
+        ? CoinDirectory.findCoinObj(systemId, null, true)
+        : CoinDirectory.findCoinObj(linkChainId);
+
+      const requestId =
+        request && request.requestID ? request.requestID.toAddress() : null;
+      const requestSignerId =
+        signerIdentityID ||
+        (request && request.signature
+          ? request.signature.identityID.toIAddress()
+          : null);
+      const requestBufferString = request
+        ? request.toBuffer().toString('hex')
+        : '';
+
+      openProvisionIdentityModal(provisioningCoinObj, {
+        provisioningDetailsBufferString,
+        provisioningRequestID: requestId,
+        provisioningSignerId: requestSignerId,
+        provisioningRequestBufferString: requestBufferString,
+        provisioningRequestType: 'generic',
+        provisioningRequestHasResponseUris: responseUris.length > 0,
+      });
+    } catch (e) {
+      createAlert('Error', e.message);
+    }
+  };
+
+  const canProvision = useMemo(() => {
+    if (!provisioningDetailsBufferString) return false;
+
+    try {
+      const provisioningDetails = new ProvisionIdentityDetails();
+      provisioningDetails.fromBuffer(
+        Buffer.from(provisioningDetailsBufferString, 'hex'),
+        0,
+      );
+
+      if (provisioningDetails.identityID) {
+        const targetId = provisioningDetails.identityID.toAddress();
+        for (const chainId of Object.keys(linkedIds)) {
+          if (
+            linkedIds[chainId] &&
+            Object.keys(linkedIds[chainId]).includes(targetId)
+          ) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }, [provisioningDetailsBufferString, linkedIds]);
+
   // Identity sheet handlers
   const handleOpenIdentitySheet = () => {
     setIdentitySheetVisible(true);
   };
 
   const handleSelectIdentity = (chainId, iAddress, friendlyName) => {
-    setSelectedIdentity({ chainId, iAddress, friendlyName });
+    setSelectedIdentity({chainId, iAddress, friendlyName});
     setIdentitySheetVisible(false);
   };
+
+  const hasRequirements = constraintRows.length > 0;
+  const hasTechnicalDetails = technicalRows.length > 0;
+  const showIdentityPrompt = signedIn && !selectedIdentity;
+  const hasMatchingIdentity = useMemo(() => {
+    for (const chainId of Object.keys(sortedIds)) {
+      const chainIdentityAddresses = sortedIds[chainId] || [];
+      for (const iAddress of chainIdentityAddresses) {
+        if (isIdentityAllowed(chainId, iAddress)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }, [
+    sortedIds,
+    requiredIds,
+    allowedSystems,
+    requiredParentIds,
+    linkedIdentityParentIds,
+    linkedIdentityParentsLoaded,
+  ]);
+  const eligibilityReady =
+    linkedIdsLoaded &&
+    (requiredParentIds.size === 0 || linkedIdentityParentsLoaded);
+  const shouldShowRequestNewAsPrimary =
+    signedIn &&
+    eligibilityReady &&
+    !selectedIdentity &&
+    canProvision &&
+    !hasMatchingIdentity;
+  const primaryActionLabel = signedIn
+    ? selectedIdentity
+      ? 'Continue'
+      : shouldShowRequestNewAsPrimary
+      ? 'Request new ID'
+      : 'Select identity'
+    : 'Sign in';
+  const primaryActionHandler = shouldShowRequestNewAsPrimary
+    ? openProvisionIdentityModalFromChain
+    : handleContinue;
+  const requestIdentityCtaText = hasMatchingIdentity
+    ? 'Need another identity? Request new VerusID'
+    : 'No matching identity? Request new VerusID';
 
   return loading ? (
     <AnimatedActivityIndicatorBox />
@@ -585,86 +952,278 @@ const AuthenticationRequestInfo = props => {
         {verusIdDetailsModalProps != null && (
           <VerusIdDetailsModal {...verusIdDetailsModalProps} />
         )}
+        <IdentityPickerSheet
+          visible={identitySheetVisible}
+          linkedIds={linkedIds}
+          sortedIds={sortedIds}
+          isIdentityAllowed={isIdentityAllowed}
+          selectedIdentity={selectedIdentity}
+          onClose={() => setIdentitySheetVisible(false)}
+          onSelect={handleSelectIdentity}
+        />
       </Portal>
-      <View style={{ flex: 1, width: '100%' }}>
-        <ScrollView
-          style={Styles.fullWidth}
-          contentContainerStyle={Styles.focalCenter}>
-          <Text style={{ fontSize: 18, textAlign: 'center', paddingBottom: 12, width: "90%" }}>
-            {getMainHeading()}
-          </Text>
-          <View style={Styles.fullWidth}>
-            <Divider />
-            {(signerFqn || sigDateString) && (
-              <React.Fragment>
-                {signerFqn && (
-                  <TouchableOpacity
-                    disabled={!canOpenSignerModal}
-                    onPress={() => openVerusIdDetailsModal(signerSystemName, signerIdentityID)}>
-                    <List.Item
-                      title={signerFqn}
-                      description={'Requested by'}
-                      right={props => (
-                        <List.Icon {...props} icon={'information'} size={20} />
-                      )}
-                    />
-                    <Divider />
-                  </TouchableOpacity>
-                )}
-                {(signerSystemName || signerSystemID) && (
-                  <React.Fragment>
-                    <List.Item title={signerSystemName || signerSystemID} description={'Signature system'} />
-                    <Divider />
-                  </React.Fragment>
-                )}
-                {sigDateString && (
-                  <React.Fragment>
-                    <List.Item title={sigDateString} description={'Signed on'} />
-                    <Divider />
-                  </React.Fragment>
-                )}
-              </React.Fragment>
-            )}
-            {constraints.length > 0 && constraintNamesLoading && (
-              <React.Fragment>
-                <List.Subheader>Your VerusID must have:</List.Subheader>
-                <List.Item title={'Resolving recipient constraints...'} />
-                <Divider />
-              </React.Fragment>
-            )}
-            {constraints.length > 0 && !constraintNamesLoading && (
-              <React.Fragment>
-                <List.Subheader>Your VerusID must have:</List.Subheader>
-                {constraints.map((constraint, index) => (
-                  <React.Fragment key={`${constraint.type}-${index}`}>
-                    <List.Item title={getConstraintLabel(constraint)} />
-                    <Divider />
-                  </React.Fragment>
-                ))}
-              </React.Fragment>
-            )}
-            {responseUris.length > 0 && (
-              <React.Fragment>
-                <List.Subheader>Response URIs</List.Subheader>
-                {responseUris.map((uri, index) => (
-                  <React.Fragment key={`${uri.getUriString()}-${index}`}>
-                    <List.Item title={uri.getUriString()} />
-                    <Divider />
-                  </React.Fragment>
-                ))}
-              </React.Fragment>
-            )}
-            {expiryLabel != null && (
-              <React.Fragment>
-                <List.Item title={expiryLabel} description={'Expires at'} />
-                <Divider />
-              </React.Fragment>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={styles.mainTitle}>{getMainTitle()}</Text>
+        </View>
+
+        {(signerFqn || sigDateString || systemLabel) && (
+          <TouchableOpacity
+            style={styles.requesterCard}
+            onPress={
+              canOpenSignerModal
+                ? () =>
+                    openVerusIdDetailsModal(signerSystemName, signerIdentityID)
+                : undefined
+            }
+            activeOpacity={canOpenSignerModal ? 0.7 : 1}>
+            <View style={styles.requesterHeaderRow}>
+              <View style={styles.requesterIconContainer}>
+                <MaterialCommunityIcons
+                  name="shield-check"
+                  size={28}
+                  color={Colors.verusGreenColor}
+                />
+              </View>
+              <View style={styles.requesterTextContainer}>
+                <Text style={styles.requesterLabel}>Request from</Text>
+                <Text style={styles.requesterName}>{requesterLabel}</Text>
+              </View>
+              {canOpenSignerModal && (
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={22}
+                  color={Colors.verusDarkGray}
+                />
+              )}
+            </View>
+            <View style={styles.requesterDetailsRow}>
+              {systemLabel ? (
+                <View style={styles.chipContainer}>
+                  <Text style={styles.chipText}>{systemLabel}</Text>
+                </View>
+              ) : null}
+              {sigDateString ? (
+                <View style={styles.chipContainer}>
+                  <Text style={styles.chipText}>{sigDateString}</Text>
+                </View>
+              ) : null}
+            </View>
+          </TouchableOpacity>
+        )}
+
+        <Connector />
+
+        <TouchableOpacity
+          style={[
+            styles.targetCard,
+            showIdentityPrompt && styles.targetCardActionNeeded,
+            selectedIdentity && styles.targetCardSelected,
+          ]}
+          onPress={signedIn ? handleOpenIdentitySheet : undefined}
+          activeOpacity={signedIn ? 0.7 : 1}
+          disabled={!signedIn}>
+          <View style={styles.targetRow}>
+            <View style={styles.targetIconContainer}>
+              <VerusIdAtIcon width={24} height={24} fill="#3165D4" />
+            </View>
+            <View style={styles.targetInfo}>
+              <Text style={styles.targetLabel}>Identity</Text>
+              <Text style={styles.targetName}>
+                {selectedIdentity
+                  ? selectedIdentity.friendlyName
+                  : 'Select identity'}
+              </Text>
+              <Text style={styles.targetAddress}>
+                {selectedIdentity
+                  ? truncateAddress(selectedIdentity.iAddress)
+                  : signedIn
+                  ? 'Required to continue'
+                  : 'Sign in to select identity'}
+              </Text>
+            </View>
+            {signedIn && (
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={22}
+                color={Colors.verusDarkGray}
+              />
             )}
           </View>
+        </TouchableOpacity>
 
-          <View style={{ height: 24 }} />
-        </ScrollView>
-      </View>
+        {hasRequirements && (
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionHeaderLeft}>
+                <MaterialCommunityIcons
+                  name="shield-account-outline"
+                  size={20}
+                  color="#666"
+                />
+                <Text style={styles.sectionTitle}>Request requirements</Text>
+              </View>
+            </View>
+            <View style={styles.sectionContent}>
+              {constraintRows.map((row, index) => (
+                <View
+                  key={row.key}
+                  style={[styles.detailRow, index > 0 && styles.detailRowBorder]}>
+                  <Text style={styles.requirementLabel}>{row.label}</Text>
+                  <Text style={styles.requirementValue} numberOfLines={1}>
+                    {row.value}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {hasTechnicalDetails && (
+          <View style={styles.sectionCard}>
+            <TouchableOpacity
+              style={styles.sectionHeader}
+              onPress={() =>
+                setTechnicalDetailsExpanded(expanded => !expanded)
+              }
+              activeOpacity={0.7}>
+              <View style={styles.sectionHeaderLeft}>
+                <MaterialCommunityIcons
+                  name="information-outline"
+                  size={20}
+                  color="#666"
+                />
+                <Text style={styles.sectionTitle}>Technical details</Text>
+              </View>
+              <MaterialCommunityIcons
+                name={
+                  technicalDetailsExpanded
+                    ? 'chevron-up'
+                    : 'chevron-down'
+                }
+                size={20}
+                color="#999"
+              />
+            </TouchableOpacity>
+            {technicalDetailsExpanded && (
+              <View style={styles.sectionContent}>
+                {technicalRows.map((row, index) => (
+                  <View
+                    key={row.key}
+                    style={[
+                      styles.detailRow,
+                      index > 0 && styles.detailRowBorder,
+                    ]}>
+                    <View style={styles.detailLeft}>
+                      <Text style={styles.detailTitle}>{row.title}</Text>
+                      <Text style={styles.detailSubtitle}>{row.subtitle}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        {signedIn && (
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionHeaderLeft}>
+                <MaterialCommunityIcons
+                  name="account-plus-outline"
+                  size={20}
+                  color="#666"
+                />
+                <Text style={styles.sectionTitle}>Need another identity?</Text>
+              </View>
+            </View>
+            <Text style={styles.sectionHelper}>
+              Link an existing VerusID or request one.
+            </Text>
+            <View style={styles.sectionContent}>
+              <TouchableOpacity
+                style={styles.detailRow}
+                onPress={openLinkIdentityModalFromChain}>
+                <View style={styles.detailLeft}>
+                  <Text style={styles.detailTitle}>Link VerusID</Text>
+                  <Text style={styles.detailSubtitle}>
+                    Connect an existing VerusID to this profile.
+                  </Text>
+                </View>
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={20}
+                  color="#BBB"
+                />
+              </TouchableOpacity>
+              {canProvision && (
+                <TouchableOpacity
+                  style={[styles.detailRow, styles.detailRowBorder]}
+                  onPress={openProvisionIdentityModalFromChain}>
+                  <View style={styles.detailLeft}>
+                    <Text style={styles.detailTitle}>Request new VerusID</Text>
+                    <Text style={styles.detailSubtitle}>
+                      Start guided provisioning for this request.
+                    </Text>
+                  </View>
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={20}
+                    color="#BBB"
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
+        {!hasRequirements && !hasTechnicalDetails && (
+          <View style={styles.simpleInfoRow}>
+            <MaterialCommunityIcons
+              name="information-outline"
+              size={16}
+              color="#6B7280"
+            />
+            <Text style={styles.simpleInfoText}>
+              No additional data will be shared.
+            </Text>
+          </View>
+        )}
+        {!signedIn && (
+          <View style={styles.simpleInfoRow}>
+            <MaterialCommunityIcons
+              name="information-outline"
+              size={16}
+              color="#6B7280"
+            />
+            <Text style={styles.simpleInfoText}>
+              Sign in first, then select identity.
+            </Text>
+          </View>
+        )}
+        {!signedIn && (
+          <View style={{height: 8}} />
+        )}
+        <View style={{height: 24}} />
+      </ScrollView>
+
+      {signedIn && canProvision && (
+        <TouchableOpacity
+          style={styles.inlineRequestIdentityCta}
+          onPress={openProvisionIdentityModalFromChain}
+          activeOpacity={0.7}>
+          <MaterialCommunityIcons
+            name="account-plus-outline"
+            size={16}
+            color="#666"
+          />
+          <Text style={styles.inlineRequestIdentityCtaText}>
+            {requestIdentityCtaText}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       <View style={styles.footer}>
         <View style={styles.ctaCol}>
@@ -676,18 +1235,13 @@ const AuthenticationRequestInfo = props => {
             uppercase={false}
             buttonColor="#EBF6FF"
             textColor={Colors.primaryColor}
-            labelStyle={styles.secondaryCtaLabel}
-          >
+            labelStyle={styles.secondaryCtaLabel}>
             Cancel
           </Button>
         </View>
         <View style={styles.ctaCol}>
-          <GradientButton
-            onPress={() => handleContinue()}
-            style={[styles.primaryCta, !selectedIdentity && styles.primaryCtaDisabled]}
-            disabled={!selectedIdentity}
-          >
-            Continue
+          <GradientButton onPress={primaryActionHandler} style={styles.primaryCta}>
+            {primaryActionLabel}
           </GradientButton>
         </View>
       </View>
@@ -811,6 +1365,10 @@ const styles = StyleSheet.create({
     borderColor: '#E8E8E8',
     zIndex: 2,
   },
+  targetCardActionNeeded: {
+    borderColor: Colors.primaryColor,
+    backgroundColor: '#F5FAFF',
+  },
   targetCardSelected: {
     borderColor: Colors.verusGreenColor,
     backgroundColor: '#F5FBF6',
@@ -911,15 +1469,54 @@ const styles = StyleSheet.create({
     color: '#888',
     lineHeight: 16,
   },
-  emptyRow: {
-    paddingVertical: 14,
+  requirementLabel: {
+    flex: 1,
+    marginRight: 12,
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1A1A1A',
+  },
+  requirementValue: {
+    flexShrink: 1,
+    maxWidth: '55%',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    textAlign: 'right',
+  },
+  simpleInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+    marginBottom: 8,
+  },
+  simpleInfoText: {
+    fontSize: 13,
+    color: '#6B7280',
+  },
+  simpleInfoTextPrimary: {
+    color: Colors.primaryColor,
+    fontWeight: '600',
+  },
+  inlineRequestIdentityCta: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 6,
     borderTopWidth: 1,
     borderTopColor: '#E8E8E8',
+    backgroundColor: '#FFFFFF',
   },
-  emptyText: {
-    fontSize: 12,
-    color: '#888',
+  inlineRequestIdentityCtaText: {
+    fontSize: 13,
+    color: '#666',
+    fontWeight: '600',
   },
   footer: {
     backgroundColor: 'white',
@@ -928,8 +1525,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E8E8E8',
   },
   ctaCol: {
     flex: 1,
@@ -945,7 +1540,7 @@ const styles = StyleSheet.create({
     shadowColor: 'transparent',
     shadowOpacity: 0,
     shadowRadius: 0,
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: {width: 0, height: 0},
   },
   secondaryCtaContent: {
     height: 44,
@@ -962,8 +1557,5 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     height: 44,
     borderRadius: 22,
-  },
-  primaryCtaDisabled: {
-    opacity: 0.4,
   },
 });
