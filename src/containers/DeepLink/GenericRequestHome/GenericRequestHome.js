@@ -3,7 +3,14 @@ import {View} from 'react-native';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
-import { AUTHENTICATION_REQUEST_VDXF_KEY, GenericRequest, GenericResponse, IDENTITY_UPDATE_REQUEST_VDXF_KEY, VERUSPAY_INVOICE_DETAILS_VDXF_KEY } from 'verus-typescript-primitives';
+import {
+  AUTHENTICATION_REQUEST_VDXF_KEY,
+  GenericRequest,
+  GenericResponse,
+  IDENTITY_UPDATE_REQUEST_VDXF_KEY,
+  VERUSPAY_INVOICE_DETAILS_VDXF_KEY,
+  PROVISION_IDENTITY_DETAILS_VDXF_KEY,
+} from 'verus-typescript-primitives';
 import InvoiceInfo from '../InvoiceInfo/InvoiceInfo';
 import { handleVerusPayInvoiceDetailsVDXFObject } from '../../../utils/deeplink/handlers/verusPayInvoiceDetailsHandler';
 import { handleAuthenticationRequestDetailsVDXFObject } from '../../../utils/deeplink/handlers/authenticationRequestDetailsHandler';
@@ -49,10 +56,18 @@ const GenericRequestHome = props => {
    */
   const detailHandlers = new Map();
 
+  const handleProvisionIdentityDetailsVDXFObject = async (_request, currentResponse, index) => {
+    return {
+      displayProps: undefined,
+      response: currentResponse,
+      handledIndices: [index],
+    };
+  };
+
   detailHandlers.set(VERUSPAY_INVOICE_DETAILS_VDXF_KEY.vdxfid, handleVerusPayInvoiceDetailsVDXFObject);
   detailHandlers.set(AUTHENTICATION_REQUEST_VDXF_KEY.vdxfid, handleAuthenticationRequestDetailsVDXFObject);
   detailHandlers.set(IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid, handleIdentityUpdateRequestDetailsVDXFObject);
-
+  detailHandlers.set(PROVISION_IDENTITY_DETAILS_VDXF_KEY.vdxfid, handleProvisionIdentityDetailsVDXFObject);
   /**
    * Processes a detail in the request at a certain index
    * @param {number} index 

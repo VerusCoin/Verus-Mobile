@@ -74,11 +74,12 @@ export const handleAuthenticationRequestDetailsVDXFObject = async (request, resp
     }
   }
 
-  const possibleProvisioningDetail = request.details.find(x => x instanceof ProvisionIdentityDetailsOrdinalVDXFObject);
+  const provisioningIndex = request.details.findIndex(x => x instanceof ProvisionIdentityDetailsOrdinalVDXFObject);
+  const possibleProvisioningDetail = provisioningIndex > -1 ? request.details[provisioningIndex] : null;
   
   if (possibleProvisioningDetail instanceof ProvisionIdentityDetailsOrdinalVDXFObject) {
     provisioningDetailsBufferString = possibleProvisioningDetail.data.toBuffer().toString('hex');
-    provisioningDetailIndex = detailIndex + 1;
+    provisioningDetailIndex = provisioningIndex;
   }
 
   return {

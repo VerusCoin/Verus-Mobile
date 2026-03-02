@@ -45,7 +45,7 @@ const IdentityPickerSheet = ({
         transparent={true}
         visible={visible}
         onRequestClose={onClose}
-        title="Select identity"
+        title="Select VerusID"
         flexHeight={0.01}
         contentContainerStyle={{
           borderTopLeftRadius: 16,

@@ -7,8 +7,8 @@
     redirect shows "You'll be redirected to {host} to finish", POST shows
     "Your response will be sent to the requester".
 */
-import React, { useMemo, useState } from 'react';
-import { SafeAreaView, StyleSheet, View } from 'react-native';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
+import { SafeAreaView, StyleSheet, View, TouchableOpacity, Clipboard } from 'react-native';
 import { Text } from 'react-native-paper';
 import { CommonActions } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -24,7 +24,7 @@ import { openUrl } from '../../../utils/linking';
 import { getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import { signGenericResponse } from '../../../utils/api/channels/vrpc/callCreators';
-import { GenericRequest, GenericResponse, GENERIC_RESPONSE_DEEPLINK_VDXF_KEY, ResponseURI } from 'verus-typescript-primitives';
+import { GenericRequest, GenericResponse, GENERIC_RESPONSE_DEEPLINK_VDXF_KEY, IDENTITY_UPDATE_RESPONSE_VDXF_KEY, ResponseURI } from 'verus-typescript-primitives';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const GenericRequestComplete = props => {
@@ -32,6 +32,8 @@ const GenericRequestComplete = props => {
   const signedIn = useSelector(state => state.authentication.signedIn);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
+  const [txidCopied, setTxidCopied] = useState(false);
+  const txidCopyTimeoutRef = useRef(null);
 
   const completeRequest = () => {
     const resetAction = CommonActions.reset({
@@ -116,6 +118,61 @@ const GenericRequestComplete = props => {
     return null;
   }, [requestBufferString]);
 
+  const identityUpdateTxid = useMemo(() => {
+    if (!responseBufferString) return null;
+
+    try {
+      const response = new GenericResponse();
+      response.fromBuffer(Buffer.from(responseBufferString, 'hex'), 0);
+
+      if (!response.details || response.details.length === 0) return null;
+
+      for (const detail of response.details) {
+        if (!detail || !detail.getIAddressKey || detail.getIAddressKey() !== IDENTITY_UPDATE_RESPONSE_VDXF_KEY.vdxfid) {
+          continue;
+        }
+
+        if (
+          detail.data &&
+          typeof detail.data.containsTxid === 'function' &&
+          typeof detail.data.getTxidString === 'function' &&
+          detail.data.containsTxid()
+        ) {
+          return detail.data.getTxidString();
+        }
+      }
+    } catch (e) {
+      return null;
+    }
+
+    return null;
+  }, [responseBufferString]);
+
+  const copyTxid = () => {
+    if (!identityUpdateTxid) return;
+
+    if (txidCopyTimeoutRef.current) clearTimeout(txidCopyTimeoutRef.current);
+    setTxidCopied(true);
+    txidCopyTimeoutRef.current = setTimeout(() => {
+      setTxidCopied(false);
+      txidCopyTimeoutRef.current = null;
+    }, 2000);
+
+    Clipboard.setString(identityUpdateTxid);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (txidCopyTimeoutRef.current) clearTimeout(txidCopyTimeoutRef.current);
+    };
+  }, []);
+
+  const truncate = (value, start = 8, end = 6) => {
+    if (!value) return '';
+    if (value.length <= start + end + 3) return value;
+    return `${value.slice(0, start)}...${value.slice(-end)}`;
+  };
+
   const onComplete = async () => {
     try {
       setLoading(true);
@@ -175,6 +232,30 @@ const GenericRequestComplete = props => {
             style={{ width: 128 }}
           />
         </View>
+
+        {identityUpdateTxid && (
+          <View style={styles.txidCard}>
+            <TouchableOpacity
+              style={styles.txidRow}
+              onPress={copyTxid}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Copy transaction ID"
+            >
+              <Text style={styles.txidLabel}>Transaction ID</Text>
+              <View style={styles.txidValueRow}>
+                <Text style={styles.txidValue} numberOfLines={1}>
+                  {truncate(identityUpdateTxid)}
+                </Text>
+                {txidCopied ? (
+                  <Text style={styles.copiedLabel}>Copied</Text>
+                ) : (
+                  <MaterialCommunityIcons name="content-copy" size={16} color={Colors.primaryColor} style={{ marginLeft: 6 }} />
+                )}
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {responseNotice && (
           <View style={styles.noticeCard}>
@@ -238,6 +319,41 @@ const styles = StyleSheet.create({
     color: '#666',
     lineHeight: 20,
     flex: 1,
+  },
+  txidCard: {
+    width: '100%',
+    backgroundColor: '#F9F9F9',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginTop: 16,
+  },
+  txidRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  txidLabel: {
+    fontSize: 14,
+    color: '#888',
+  },
+  txidValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+  txidValue: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#1A1A1A',
+    maxWidth: 170,
+    textAlign: 'right',
+  },
+  copiedLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.primaryColor,
+    marginLeft: 6,
   },
   loadingText: {
     marginTop: 16,

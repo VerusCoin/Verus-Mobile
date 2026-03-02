@@ -113,6 +113,7 @@ const AuthenticationRequestInfo = props => {
     signerSystemName,
     signerIdentityID,
     provisioningDetailsBufferString,
+    provisioningDetailIndex,
     cancel,
     next,
     request,
@@ -397,7 +398,15 @@ const AuthenticationRequestInfo = props => {
       baseResponse.setSigned();
     }
 
-    next(baseResponse, [detailIndex]);
+    const handledIndices = [detailIndex];
+    if (
+      provisioningDetailIndex != null &&
+      !handledIndices.includes(provisioningDetailIndex)
+    ) {
+      handledIndices.push(provisioningDetailIndex);
+    }
+
+    next(baseResponse, handledIndices);
   };
 
   const handleContinue = () => {
@@ -455,11 +464,17 @@ const AuthenticationRequestInfo = props => {
   };
 
   useEffect(() => {
-    if (signedIn && waitingForSignin) {
+    // After unlocking via auth modal, return to this screen and wait for
+    // explicit user action (tap "Select VerusID") instead of auto-opening
+    // the picker sheet.
+    if (
+      signedIn &&
+      waitingForSignin &&
+      sendModalType !== AUTHENTICATE_USER_SEND_MODAL
+    ) {
       setWaitingForSignin(false);
-      handleContinue();
     }
-  }, [signedIn, waitingForSignin]);
+  }, [signedIn, waitingForSignin, sendModalType]);
 
   useEffect(() => {
     if (sendModalType != AUTHENTICATE_USER_SEND_MODAL) {
@@ -930,19 +945,27 @@ const AuthenticationRequestInfo = props => {
     !selectedIdentity &&
     canProvision &&
     !hasMatchingIdentity;
+  const shouldShowLinkAsPrimary =
+    signedIn &&
+    eligibilityReady &&
+    !selectedIdentity &&
+    !canProvision &&
+    !hasMatchingIdentity;
+  const showSecondaryActionRail = signedIn && !selectedIdentity;
   const primaryActionLabel = signedIn
     ? selectedIdentity
       ? 'Continue'
       : shouldShowRequestNewAsPrimary
-      ? 'Request new ID'
-      : 'Select identity'
+      ? 'Request new VerusID'
+      : shouldShowLinkAsPrimary
+      ? 'Link VerusID'
+      : 'Select VerusID'
     : 'Sign in';
   const primaryActionHandler = shouldShowRequestNewAsPrimary
     ? openProvisionIdentityModalFromChain
+    : shouldShowLinkAsPrimary
+    ? openLinkIdentityModalFromChain
     : handleContinue;
-  const requestIdentityCtaText = hasMatchingIdentity
-    ? 'Need another identity? Request new VerusID'
-    : 'No matching identity? Request new VerusID';
 
   return loading ? (
     <AnimatedActivityIndicatorBox />
@@ -1035,7 +1058,7 @@ const AuthenticationRequestInfo = props => {
               <Text style={styles.targetName}>
                 {selectedIdentity
                   ? selectedIdentity.friendlyName
-                  : 'Select identity'}
+                  : 'Select VerusID'}
               </Text>
               <Text style={styles.targetAddress}>
                 {selectedIdentity
@@ -1128,57 +1151,6 @@ const AuthenticationRequestInfo = props => {
           </View>
         )}
 
-        {signedIn && (
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionHeaderLeft}>
-                <MaterialCommunityIcons
-                  name="account-plus-outline"
-                  size={20}
-                  color="#666"
-                />
-                <Text style={styles.sectionTitle}>Need another identity?</Text>
-              </View>
-            </View>
-            <Text style={styles.sectionHelper}>
-              Link an existing VerusID or request one.
-            </Text>
-            <View style={styles.sectionContent}>
-              <TouchableOpacity
-                style={styles.detailRow}
-                onPress={openLinkIdentityModalFromChain}>
-                <View style={styles.detailLeft}>
-                  <Text style={styles.detailTitle}>Link VerusID</Text>
-                  <Text style={styles.detailSubtitle}>
-                    Connect an existing VerusID to this profile.
-                  </Text>
-                </View>
-                <MaterialCommunityIcons
-                  name="chevron-right"
-                  size={20}
-                  color="#BBB"
-                />
-              </TouchableOpacity>
-              {canProvision && (
-                <TouchableOpacity
-                  style={[styles.detailRow, styles.detailRowBorder]}
-                  onPress={openProvisionIdentityModalFromChain}>
-                  <View style={styles.detailLeft}>
-                    <Text style={styles.detailTitle}>Request new VerusID</Text>
-                    <Text style={styles.detailSubtitle}>
-                      Start guided provisioning for this request.
-                    </Text>
-                  </View>
-                  <MaterialCommunityIcons
-                    name="chevron-right"
-                    size={20}
-                    color="#BBB"
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        )}
         {!hasRequirements && !hasTechnicalDetails && (
           <View style={styles.simpleInfoRow}>
             <MaterialCommunityIcons
@@ -1209,20 +1181,28 @@ const AuthenticationRequestInfo = props => {
         <View style={{height: 24}} />
       </ScrollView>
 
-      {signedIn && canProvision && (
-        <TouchableOpacity
-          style={styles.inlineRequestIdentityCta}
-          onPress={openProvisionIdentityModalFromChain}
-          activeOpacity={0.7}>
-          <MaterialCommunityIcons
-            name="account-plus-outline"
-            size={16}
-            color="#666"
-          />
-          <Text style={styles.inlineRequestIdentityCtaText}>
-            {requestIdentityCtaText}
-          </Text>
-        </TouchableOpacity>
+      {showSecondaryActionRail && (
+        <View style={styles.identityActionLinksRow}>
+          <TouchableOpacity
+            style={styles.identityActionLinkTouch}
+            onPress={openLinkIdentityModalFromChain}
+            activeOpacity={0.75}>
+            <Text style={styles.identityActionLinkText}>Link VerusID</Text>
+          </TouchableOpacity>
+          {canProvision && (
+            <>
+              <Text style={styles.identityActionLinksDivider}>·</Text>
+              <TouchableOpacity
+                style={styles.identityActionLinkTouch}
+                onPress={openProvisionIdentityModalFromChain}
+                activeOpacity={0.75}>
+                <Text style={styles.identityActionLinkText}>
+                  Request new VerusID
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
       )}
 
       <View style={styles.footer}>
@@ -1418,8 +1398,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 8,
+    paddingVertical: 12,
+    minHeight: 48,
   },
   sectionHeaderLeft: {
     flexDirection: 'row',
@@ -1428,16 +1408,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 15,
+    lineHeight: 20,
     fontWeight: '600',
     color: '#1A1A1A',
-  },
-  sectionHelper: {
-    fontSize: 12,
-    color: '#888',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    backgroundColor: '#FFFFFF',
-    marginTop: -4,
   },
   sectionContent: {
     padding: 0,
@@ -1496,27 +1469,35 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6B7280',
   },
-  simpleInfoTextPrimary: {
-    color: Colors.primaryColor,
-    fontWeight: '600',
-  },
-  inlineRequestIdentityCta: {
+  identityActionLinksRow: {
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    flexWrap: 'wrap',
+    columnGap: 10,
+    rowGap: 6,
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 6,
+    paddingBottom: 8,
     borderTopWidth: 1,
     borderTopColor: '#E8E8E8',
     backgroundColor: '#FFFFFF',
   },
-  inlineRequestIdentityCtaText: {
-    fontSize: 13,
-    color: '#666',
+  identityActionLinkTouch: {
+    paddingVertical: 4,
+    paddingHorizontal: 0,
+  },
+  identityActionLinkText: {
+    fontSize: 14,
+    color: '#5F6B7A',
     fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  identityActionLinksDivider: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    lineHeight: 18,
   },
   footer: {
     backgroundColor: 'white',
