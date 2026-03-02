@@ -1,4 +1,4 @@
-import { AUTHENTICATION_REQUEST_VDXF_KEY, GenericRequest, IDENTITY_UPDATE_REQUEST_VDXF_KEY, PROVISION_IDENTITY_DETAILS_VDXF_KEY, VERUSPAY_INVOICE_DETAILS_VDXF_KEY, VerusPayInvoiceOrdinalVDXFObject } from "verus-typescript-primitives"
+import { AUTHENTICATION_REQUEST_VDXF_KEY, GenericRequest, IDENTITY_UPDATE_REQUEST_VDXF_KEY, PROVISION_IDENTITY_DETAILS_VDXF_KEY, VERUSPAY_INVOICE_DETAILS_VDXF_KEY, VerusPayInvoiceDetailsOrdinalVDXFObject } from "verus-typescript-primitives"
 import { getInfo, verifyGenericRequest } from "../../api/channels/vrpc/callCreators"
 import { getIdentity } from "../../api/channels/verusid/callCreators";
 import { validateAuthenticationRequestVDXFObject } from "./authenticationRequestValidator";
@@ -21,7 +21,7 @@ export const isRequestRequiredSignature = (request) => {
   const details = request.details;
 
   return !details.every((detail) => {
-    return detail instanceof VerusPayInvoiceOrdinalVDXFObject 
+    return detail instanceof VerusPayInvoiceDetailsOrdinalVDXFObject 
   })
 }
 

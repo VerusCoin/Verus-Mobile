@@ -2,7 +2,7 @@ import { CoinDirectory } from "../../CoinData/CoinDirectory"
 import VrpcProvider from '../../vrpc/vrpcInterface';
 import { getInfo } from "../../api/channels/vrpc/callCreators";
 import { blocksToTime } from "../../math";
-import { GenericRequest, VerusPayInvoiceDetails, VerusPayInvoiceOrdinalVDXFObject } from "verus-typescript-primitives/dist/vdxf/classes";
+import { GenericRequest, VerusPayInvoiceDetails } from "verus-typescript-primitives/dist/vdxf/classes";
 import { getCurrency } from "../../api/channels/verusid/callCreators";
 
 /**
