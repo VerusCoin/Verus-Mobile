@@ -28,7 +28,7 @@ import { DLIGHT_PRIVATE } from "../../constants/intervalConstants";
 import { getAppOrDelegatedID } from "../helper/getAppOrDelegatedIDhelper";
 
 import { z_getencryptionaddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
-import { encryptVerusMessage } from "../../api/channels/dlight/requests/encrypt";
+import { encrypt_verus_data } from "../../api/channels/dlight/requests/encrypt";
 
 
 // Configuration
@@ -70,7 +70,7 @@ const mock_z_getencryptionaddress = async (systemID, params) => {
   };
 };
 
-const mock_encryptVerusMessage = async (systemID, toAddress, data, returnSsk) => {
+const mock_encryptverusdata = async (systemID, toAddress, data, returnSsk) => {
   return {
     err: false,
     result: data
@@ -90,11 +90,11 @@ const callZGetEncryptionAddress = async (systemID, params) => {
     return z_getencryptionaddress(systemID, params);
 };
 
-const callEncryptVerusMessage = async (systemID, toAddress, data, returnSsk) => {
+const callEncryptVerusData = async (systemID, toAddress, data, returnSsk) => {
   if (USE_MOCK_Z_FUNCTIONS) {
-    return mock_encryptVerusMessage(systemID, toAddress, data, returnSsk);
+    return mock_encryptverusdata(systemID, toAddress, data, returnSsk);
   }
-    return encryptVerusMessage(systemID, toAddress, data, returnSsk);
+    return encrypt_verus_data(systemID, toAddress, data, returnSsk);
 };
 
 
@@ -193,7 +193,6 @@ const processAppEncryptionRequest = async ({
     spendingKey: eskForDerivation,
     fromId: responseSignerID,
     toId: appID,
-    hdIndex: 0,
     encryptionIndex: request.derivationNumber.toNumber(),
     returnSecret: returnESK
   };
@@ -245,8 +244,8 @@ const processAppEncryptionRequest = async ({
 
     responseDetails = new AppEncryptionResponseDetails({
       version: new BN(1),
-      incomingViewingKey: Buffer.from(keys.ivk, 'hex'),
-      extendedViewingKey: SaplingExtendedViewingKey.fromKeyString(keys.fvk),
+      incomingViewingKey: keys.ivk, 
+      extendedViewingKey: SaplingExtendedViewingKey.fromBuffer(keys.fvk),
       address: SaplingPaymentAddress.fromAddressString(keys.address),
       extendedSpendingKey: returnESK
         ? SaplingExtendedSpendingKey.fromKeyString(keys.spending_key) : undefined
@@ -267,12 +266,11 @@ const processAppEncryptionRequest = async ({
 
   // Encrypt response
   const responseBuffer = responseDetails.toBuffer();
-  const responseHex = responseBuffer.toString("hex");
 
-  const encryptResult = await callEncryptVerusMessage(
+  const encryptResult = await callEncryptVerusData(
     systemID,
     encryptTo,
-    responseHex,
+    responseBuffer,
     true
   );
 
@@ -284,8 +282,8 @@ const processAppEncryptionRequest = async ({
   // Wrap encrypted data in DataDescriptor
   const encryptedDescriptor = new DataDescriptor({
     flags: DataDescriptor.FLAG_ENCRYPTED_DATA,
-    objectdata: Buffer.from(encryptResult.result, 'hex'), // it is a buffer type in DataDescriptor in mock result its a hex string but need to update my encrypt Function
-    epk: encryptedData.epk, // same goes here, its undefined cause its mock data 
+    objectdata: encryptedData.encryptdData, 
+    epk: encryptedData.ephemeralPublicKey, 
   });
 
   return new DataDescriptorOrdinalVDXFObject({
