@@ -6,7 +6,6 @@
  */
 
 import { 
-  AppEncryptionRequestDetails,
   AppEncryptionResponseDetails,
   AppEncryptionRequestOrdinalVDXFObject,
   AppEncryptionResponseOrdinalVDXFObject,
@@ -248,13 +247,13 @@ const processAppEncryptionRequest = async ({
       extendedViewingKey: SaplingExtendedViewingKey.fromBuffer(keys.fvk),
       address: SaplingPaymentAddress.fromBuffer(keys.address),
       extendedSpendingKey: returnESK
-        ? SaplingExtendedSpendingKey.fromKeyString(keys.spending_key) : undefined
+        ? SaplingExtendedSpendingKey.fromBuffer(keys.spending_key) : undefined
     });
   }
 
   // get the encrypt to address or return null as its optional
   const encryptTo = request.hasEncryptResponseToAddress() 
-  ? request.encryptResponseToAddress.toAddressString() 
+  ? request.encryptResponseToAddress.toBuffer() 
   : null;
 
   if (!encryptTo) {
