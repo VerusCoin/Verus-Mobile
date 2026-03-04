@@ -141,17 +141,28 @@ const AuthenticationRequestIdentity = props => {
   useEffect(() => {
     if (!idProvisionSuccess && sendModal.data?.success){
       setIdProvisionSuccess(true);
+      return;
     }
 
     if (idProvisionSuccess && !sendModal.visible) {
       props.navigation.dispatch(
         CommonActions.reset({
           index: 0,
-          routes: [{name: 'SignedInStack'}],
+          routes: [
+            {
+              name: 'SignedInStack',
+              params: {
+                screen: 'Home',
+                params: {
+                  screen: 'IdentityTab',
+                },
+              },
+            },
+          ],
         }),
       );
     }
-  }, [sendModal]);
+  }, [idProvisionSuccess, sendModal.data?.success, sendModal.visible, props.navigation]);
 
   useEffect(() => {
     if (passthroughHandled) return;

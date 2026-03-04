@@ -74,8 +74,13 @@ export const classifyChanges = displayUpdates => {
       const entry = displayUpdates[groupKey][itemKey];
       if (!entry) continue;
 
-      if (isHighRiskKey(itemKey)) {
-        const label = getHighRiskLabel(itemKey);
+      if (entry.highRisk === true || isHighRiskKey(itemKey)) {
+        const label = entry.highRisk === true
+          ? {
+            title: entry.highRiskTitle || 'Change',
+            warning: entry.highRiskWarning || '',
+          }
+          : getHighRiskLabel(itemKey);
         highRiskChanges.push({
           key: itemKey,
           groupKey,

@@ -384,6 +384,8 @@ const InvoiceInfo = props => {
           <ListSelectionModal
             visible={isListSelectionModalVisible}
             data={listData}
+            showSearch={true}
+            searchPlaceholder="Search networks"
             onSelect={handleSupportedNetworkSelect}
             cancel={() => setIsListSelectionModalVisible(false)}
             title="Supported Payment Networks"

@@ -212,9 +212,6 @@ export default function VerusIdObjectData(props) {
     const badges = [];
     const baseBadge = getChangeBadgeConfig(item.changeType);
     if (baseBadge) badges.push(baseBadge);
-    if (item.isEncrypted) {
-      badges.push({ icon: 'lock-outline', label: 'Encrypted', color: Colors.verusDarkGray });
-    }
     return badges;
   };
 
@@ -263,6 +260,22 @@ export default function VerusIdObjectData(props) {
     </View>
   );
 
+  const getRemoveActionDescription = (removeMeta) => {
+    if (!removeMeta) return null;
+
+    const { action, entryLabel, valueHash } = removeMeta;
+    const valueHashText = typeof valueHash === 'string' && valueHash.length > 0
+      ? ` (hash ${valueHash.substring(0, 10)}...)`
+      : '';
+
+    if (action === 4) return 'All content keys and values';
+    if (action === 3) return `All values under ${entryLabel || 'selected key'}`;
+    if (action === 2) return `All matching values under ${entryLabel || 'selected key'}${valueHashText}`;
+    if (action === 1) return `One value under ${entryLabel || 'selected key'}${valueHashText}`;
+
+    return 'Selected content';
+  };
+
   const renderCmmChangeDescription = (item, updateEntry) => {
     const updatedPreview = item.isEncrypted
       ? 'Encrypted upload (tap to view)'
@@ -273,6 +286,17 @@ export default function VerusIdObjectData(props) {
     }
 
     if (item.changeType === 'removed') {
+      if (item.removeMeta) {
+        const removeActionDescription = getRemoveActionDescription(item.removeMeta);
+
+        return (
+          <>
+            {item.data != null && !item.hideOldData && renderCmmDescBlock('Existing', item.data, '#CCC', true)}
+            {renderCmmDescBlock('Removing', removeActionDescription || 'Selected content', Colors.warningButtonColor)}
+          </>
+        );
+      }
+
       return renderCmmDescBlock('Removing', item.data || 'Unknown value', Colors.warningButtonColor, true);
     }
 
@@ -547,7 +571,8 @@ export default function VerusIdObjectData(props) {
             dataInDescription: true,
             changeType,
             isEncrypted: Boolean(updateEntry && updateEntry.isEncrypted),
-            updatedData: updateEntry ? updateEntry.data : null
+            updatedData: updateEntry ? updateEntry.data : null,
+            removeMeta: updateEntry ? updateEntry.removeMeta : null
           };
         }
       }
@@ -555,8 +580,8 @@ export default function VerusIdObjectData(props) {
       for (const key in displayUpdates[VERUSID_CMM_INFO.key]) {
         if (!contentMultiMapInfo[key]) {
           const iAddr = key.split(':')[1];
-          const shortIAddr = getCmmDataKey(iAddr);
           const updateEntry = displayUpdates[VERUSID_CMM_INFO.key][key];
+          const shortIAddr = updateEntry && updateEntry.displayTitle ? updateEntry.displayTitle : getCmmDataKey(iAddr);
           const changeType = getCmmChangeType(false, updateEntry);
           
           contentMultiMapInfo[key] = {
@@ -567,7 +592,8 @@ export default function VerusIdObjectData(props) {
             dataInDescription: true,
             changeType,
             isEncrypted: Boolean(updateEntry && updateEntry.isEncrypted),
-            updatedData: updateEntry ? updateEntry.data : null
+            updatedData: updateEntry ? updateEntry.data : null,
+            removeMeta: updateEntry ? updateEntry.removeMeta : null
           };
         }
       }

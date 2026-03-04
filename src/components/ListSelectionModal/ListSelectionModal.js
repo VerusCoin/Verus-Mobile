@@ -20,6 +20,16 @@ class ListSelectionModal extends Component {
     };
   }
 
+  componentDidUpdate(prevProps) {
+    if (
+      prevProps.visible &&
+      !this.props.visible &&
+      (this.state.searchQuery.length > 0 || this.state.searchFocused)
+    ) {
+      this.setState({ searchQuery: '', searchFocused: false });
+    }
+  }
+
   handleSelect = (item) => {
     const { onSelect, cancel } = this.props;
     this.setState({ searchQuery: '' });
@@ -30,23 +40,33 @@ class ListSelectionModal extends Component {
   }
 
   getFilteredData = () => {
-    const { data } = this.props;
+    const { data, showSearch } = this.props;
     const { searchQuery } = this.state;
+    const dataList = Array.isArray(data) ? data : [];
 
-    if (!searchQuery.trim()) {
-      return data;
+    if (!showSearch || !searchQuery.trim()) {
+      return dataList;
     }
 
     const query = searchQuery.toLowerCase().trim();
-    return data.filter((item) => 
+    return dataList.filter((item) => 
       item.title?.toLowerCase().includes(query) ||
       item.description?.toLowerCase().includes(query) ||
-      item.key?.toLowerCase().includes(query)
+      item.key?.toString().toLowerCase().includes(query)
     );
   }
 
   render() {
-    const { visible, cancel, selectedKey, title, flexHeight } = this.props;
+    const {
+      visible,
+      cancel,
+      selectedKey,
+      title,
+      flexHeight,
+      showSearch = false,
+      searchPlaceholder = "Search",
+      keyExtractor,
+    } = this.props;
     const { searchQuery, searchFocused } = this.state;
     const filteredData = this.getFilteredData();
 
@@ -73,31 +93,32 @@ class ListSelectionModal extends Component {
           keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
         >
           <View style={styles.container}>
-            {/* Search bar */}
-            <View style={styles.searchContainer}>
-              <View
-                style={[
-                  styles.searchInputContainer,
-                  searchFocused && styles.searchInputFocused,
-                ]}
-              >
-                <RNTextInput
-                  value={searchQuery}
-                  onChangeText={(text) => this.setState({ searchQuery: text })}
-                  onFocus={() => this.setState({ searchFocused: true })}
-                  onBlur={() => this.setState({ searchFocused: false })}
-                  placeholder="Search currencies"
-                  placeholderTextColor="#999"
-                  autoCorrect={false}
-                  autoCapitalize="none"
-                  returnKeyType="search"
-                  style={styles.searchInput}
-                />
-                <View style={styles.searchIcon}>
-                  <MaterialCommunityIcons name="magnify" size={20} color="#999" />
+            {showSearch && (
+              <View style={styles.searchContainer}>
+                <View
+                  style={[
+                    styles.searchInputContainer,
+                    searchFocused && styles.searchInputFocused,
+                  ]}
+                >
+                  <RNTextInput
+                    value={searchQuery}
+                    onChangeText={(text) => this.setState({ searchQuery: text })}
+                    onFocus={() => this.setState({ searchFocused: true })}
+                    onBlur={() => this.setState({ searchFocused: false })}
+                    placeholder={searchPlaceholder}
+                    placeholderTextColor="#999"
+                    autoCorrect={false}
+                    autoCapitalize="none"
+                    returnKeyType="search"
+                    style={styles.searchInput}
+                  />
+                  <View style={styles.searchIcon}>
+                    <MaterialCommunityIcons name="magnify" size={20} color="#999" />
+                  </View>
                 </View>
               </View>
-            </View>
+            )}
 
           {/* Currency list */}
           <FlatList
@@ -130,8 +151,9 @@ class ListSelectionModal extends Component {
                 );
               }}
               data={filteredData}
-              keyExtractor={(item) => item.key}
-              keyExtractor={(item, index) => item.key || `item-${index}`}
+              keyExtractor={keyExtractor || ((item, index) => (
+                item?.key != null ? item.key.toString() : `item-${index}`
+              ))}
           />
           </View>
         </KeyboardAvoidingView>

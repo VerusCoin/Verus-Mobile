@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 import {Button, Portal, Text} from 'react-native-paper';
 import {useSelector} from 'react-redux';
+import {CommonActions} from '@react-navigation/native';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import Colors from '../../../globals/colors';
@@ -142,10 +143,12 @@ const AuthenticationRequestInfo = props => {
   const [sortedIds, setSortedIds] = useState({});
   const [identitySheetVisible, setIdentitySheetVisible] = useState(false);
   const [selectedIdentity, setSelectedIdentity] = useState(null); // { chainId, iAddress, friendlyName }
+  const [idProvisionSuccess, setIdProvisionSuccess] = useState(false);
 
   const accounts = useObjectSelector(state => state.authentication.accounts);
   const signedIn = useSelector(state => state.authentication.signedIn);
   const passthrough = useSelector(state => state.deeplink.passthrough);
+  const sendModal = useObjectSelector(state => state.sendModal);
   const sendModalType = useSelector(state => state.sendModal.type);
   const activeAccount = useObjectSelector(
     state => state.authentication.activeAccount,
@@ -475,6 +478,37 @@ const AuthenticationRequestInfo = props => {
       setWaitingForSignin(false);
     }
   }, [signedIn, waitingForSignin, sendModalType]);
+
+  useEffect(() => {
+    if (!idProvisionSuccess && sendModal.data?.success) {
+      setIdProvisionSuccess(true);
+      return;
+    }
+
+    if (idProvisionSuccess && !sendModal.visible) {
+      props.navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'SignedInStack',
+              params: {
+                screen: 'Home',
+                params: {
+                  screen: 'IdentityTab',
+                },
+              },
+            },
+          ],
+        }),
+      );
+    }
+  }, [
+    idProvisionSuccess,
+    sendModal.data?.success,
+    sendModal.visible,
+    props.navigation,
+  ]);
 
   useEffect(() => {
     if (sendModalType != AUTHENTICATE_USER_SEND_MODAL) {

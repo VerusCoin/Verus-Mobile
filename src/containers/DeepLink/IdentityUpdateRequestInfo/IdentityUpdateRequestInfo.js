@@ -46,7 +46,7 @@ import { getCmmDataLabel } from '../../../utils/vdxf/cmmDataLabel';
 import VdxfUniValueModal from '../../../components/VdxfUniValueModal/VdxfUniValueModal';
 import { getVDXFKeyLabel } from '../../../utils/vdxf/vdxfTypeLabels';
 import { capitalizeString } from '../../../utils/stringUtils';
-import { GenericRequest, IdentityUpdateRequestDetails } from 'verus-typescript-primitives';
+import { ContentMultiMapRemoveKey, GenericRequest, IdentityUpdateRequestDetails } from 'verus-typescript-primitives';
 import GradientButton from '../../../components/GradientButton';
 
 import ReviewStep from './steps/ReviewStep';
@@ -60,6 +60,7 @@ const STEP_REVIEW = 0;
 const STEP_CONTENT = 1;
 const STEP_HIGH_RISK = 2;
 const STEP_CONFIRM_PAY = 3;
+const CMM_CLEAR_MAP_SENTINEL = '__CMM_CLEAR__';
 
 const IdentityUpdateRequestInfo = props => {
   const { 
@@ -155,6 +156,88 @@ const IdentityUpdateRequestInfo = props => {
     return capitalizeString(keyLabel);
   };
 
+  const normalizeCmmUpdates = updates => {
+    if (Array.isArray(updates)) return updates;
+    if (updates == null) return [];
+    return [updates];
+  };
+
+  const toCmmModalObjects = updates => {
+    const normalizedUpdates = normalizeCmmUpdates(updates);
+    return normalizedUpdates.map((entry, index) => {
+      if (entry != null && typeof entry === 'object' && !Array.isArray(entry)) {
+        const keys = Object.keys(entry);
+        if (keys.length > 0) {
+          const key = keys[0];
+          return { key, data: entry[key] };
+        }
+      }
+
+      return {
+        key: `value:${index + 1}`,
+        data: entry
+      };
+    });
+  };
+
+  const extractContentMultiMapRemoveMeta = value => {
+    if (value == null || typeof value !== 'object' || Array.isArray(value)) return null;
+
+    const topLevel = value[ContentMultiMapRemoveKey.vdxfid];
+    if (topLevel == null || typeof topLevel !== 'object' || Array.isArray(topLevel)) return null;
+
+    const nested = topLevel[ContentMultiMapRemoveKey.vdxfid];
+    const payload = nested != null && typeof nested === 'object' && !Array.isArray(nested)
+      ? nested
+      : topLevel;
+
+    const parsedAction = Number(payload.action);
+    if (!Number.isFinite(parsedAction)) return null;
+
+    return {
+      action: parsedAction,
+      entryKey: typeof payload.entrykey === 'string' ? payload.entrykey : null,
+      valueHash: typeof payload.valuehash === 'string' ? payload.valuehash : null,
+    };
+  };
+
+  const getContentMultiMapRemoveMetas = updates => {
+    const removeMetas = [];
+    for (const update of normalizeCmmUpdates(updates)) {
+      const removeMeta = extractContentMultiMapRemoveMeta(update);
+      if (removeMeta) removeMetas.push(removeMeta);
+    }
+    return removeMetas;
+  };
+
+  const getContentMultiMapRemoveSummary = removeMeta => {
+    const entryLabel = removeMeta.entryKey ? getCmmDataKey(removeMeta.entryKey) : null;
+
+    switch (removeMeta.action) {
+      case 4:
+        return {
+          summary: 'Clear all identity content keys',
+          entryLabel: null
+        };
+      case 3:
+        return {
+          summary: `Remove all values under ${entryLabel || 'selected key'}`,
+          entryLabel
+        };
+      case 2:
+        return {
+          summary: `Remove all matching values under ${entryLabel || 'selected key'}`,
+          entryLabel
+        };
+      case 1:
+      default:
+        return {
+          summary: `Remove one matching value under ${entryLabel || 'selected key'}`,
+          entryLabel
+        };
+    }
+  };
+
   // --- Display updates ---
   const getDisplayUpdates = () => {
     const signDataMap = details.signDataMap || new Map();
@@ -198,6 +281,8 @@ const IdentityUpdateRequestInfo = props => {
 
     if (identityUpdates.contentmultimap) {
       for (const key in identityUpdates.contentmultimap) {
+        const updates = identityUpdates.contentmultimap[key];
+
         if (details.containsSignData() && signDataMap.has(key)) {
           const signData = signDataMap.get(key);
           displayUpdates[VERUSID_CMM_INFO.key][`${VERUSID_CMM_DATA.key}:${key}`] = {
@@ -206,18 +291,46 @@ const IdentityUpdateRequestInfo = props => {
             onPress: () => openPartialSignDataModal(signData, getCmmDataKey(key))
           };
         } else {
-          const dataLabel = getCmmDataLabel(identityUpdates.contentmultimap[key]);
-          displayUpdates[VERUSID_CMM_INFO.key][`${VERUSID_CMM_DATA.key}:${key}`] = {
-            data: dataLabel,
-            rawData: identityUpdates.contentmultimap[key],
-            onPress: () => {
-              const updates = identityUpdates.contentmultimap[key];
-              return openVdxfUniValueModal(updates.map(x => ({
-                key: Object.keys(x)[0],
-                data: Object.values(x)[0]
-              })), getCmmDataKey(key));
-            }
-          };
+          const normalizedUpdates = normalizeCmmUpdates(updates);
+          const removeMetas = getContentMultiMapRemoveMetas(normalizedUpdates);
+          const nonRemoveUpdates = normalizedUpdates.filter(update => extractContentMultiMapRemoveMeta(update) == null);
+
+          if (removeMetas.length > 0) {
+            removeMetas.forEach((removeMeta, index) => {
+              const targetKey = removeMeta.action === 4
+                ? CMM_CLEAR_MAP_SENTINEL
+                : (removeMeta.entryKey || key);
+              const baseUpdateKey = `${VERUSID_CMM_DATA.key}:${targetKey}`;
+              const updateKey = displayUpdates[VERUSID_CMM_INFO.key][baseUpdateKey] == null
+                ? baseUpdateKey
+                : `${baseUpdateKey}:remove:${index}`;
+              const removeSummary = getContentMultiMapRemoveSummary(removeMeta);
+              const modalTitle = removeMeta.entryKey ? getCmmDataKey(removeMeta.entryKey) : getCmmDataKey(key);
+
+              displayUpdates[VERUSID_CMM_INFO.key][updateKey] = {
+                data: removeSummary.summary,
+                rawData: normalizedUpdates,
+                removeMeta: {
+                  ...removeMeta,
+                  entryLabel: removeSummary.entryLabel
+                },
+                highRisk: removeMeta.action === 4,
+                highRiskTitle: removeMeta.action === 4 ? 'Clear identity content' : undefined,
+                highRiskWarning: removeMeta.action === 4 ? 'This removes all content multi map entries from your identity.' : undefined,
+                displayTitle: removeMeta.action === 4 ? 'All Content Keys' : undefined,
+                onPress: () => openVdxfUniValueModal(toCmmModalObjects(normalizedUpdates), modalTitle)
+              };
+            });
+          }
+
+          if (nonRemoveUpdates.length > 0) {
+            const dataLabel = getCmmDataLabel(nonRemoveUpdates);
+            displayUpdates[VERUSID_CMM_INFO.key][`${VERUSID_CMM_DATA.key}:${key}`] = {
+              data: dataLabel,
+              rawData: nonRemoveUpdates,
+              onPress: () => openVdxfUniValueModal(toCmmModalObjects(nonRemoveUpdates), getCmmDataKey(key))
+            };
+          }
         }
       }
     }
