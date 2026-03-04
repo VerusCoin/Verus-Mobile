@@ -246,7 +246,7 @@ const processAppEncryptionRequest = async ({
       version: new BN(1),
       incomingViewingKey: keys.ivk, 
       extendedViewingKey: SaplingExtendedViewingKey.fromBuffer(keys.fvk),
-      address: SaplingPaymentAddress.fromAddressString(keys.address),
+      address: SaplingPaymentAddress.fromBuffer(keys.address),
       extendedSpendingKey: returnESK
         ? SaplingExtendedSpendingKey.fromKeyString(keys.spending_key) : undefined
     });
