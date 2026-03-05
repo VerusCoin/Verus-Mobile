@@ -1,25 +1,18 @@
-import { Tools } from 'react-native-zcash';
-import ApiException from '../../../../errors/apiError';
+import { Tools } from 'react-native-verus';
 import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants';
 
 
-export const decryptVerusMessage = async (alias, params) => {
-  try {
-    const plaintext = await Tools.decryptVerusMessage(
-      params.fvkHex || null,
-      params.epkHex || null,
-      params.ciphertextHex,
-      params.sskHex || null
-    );
-
-    return {
-      result: plaintext,
-      err: false
-    };
-  } catch (e) {
-    return {
-      err: true,
-      result: new ApiException(e.message, e.data, alias, DLIGHT_PRIVATE, e.code)
-    };
-  }
+export const decryptVerusMessage = async (fvkHex, epkHex, cipertextHex, sskHex) => {
+    try {
+        const res = await Tools.decryptVerusMessage(
+            //TODO: I think we should handle default args elsewhere
+            fvkHex || null,
+            epkHex || null,
+            ciphertextHex,
+            sskHex || null
+        );
+        return res
+    } catch (err) {
+        throw err;
+    }
 }
