@@ -17,8 +17,8 @@ const GradientButton = ({
   style,
   contentStyle,
   labelStyle,
-  topColor = '#53C6F4',
-  bottomColor = '#30A1CE',
+  topColor = '#3165D4',
+  bottomColor = '#3165D4',
   mode = 'contained',
   leftIcon,
   rightIcon,
@@ -128,10 +128,7 @@ const GradientButton = ({
         style={[
           styles.gradientButtonLabel, 
           isOutlined && { 
-            color: bottomColor, 
-            textShadowColor: 'transparent',
-            textShadowOffset: { width: 0, height: 0 },
-            textShadowRadius: 0
+            color: bottomColor,
           },
           labelStyle
         ]}
@@ -260,9 +257,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: 'white',
     letterSpacing: 0,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
   },
 });
 

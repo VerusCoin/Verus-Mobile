@@ -1,0 +1,22 @@
+diff --git a/node_modules/react-native-verus/react-native-verus.podspec b/node_modules/react-native-verus/react-native-verus.podspec
+index 0ff84e2..27899ec 100644
+--- a/node_modules/react-native-verus/react-native-verus.podspec
++++ b/node_modules/react-native-verus/react-native-verus.podspec
+@@ -25,8 +25,15 @@ Pod::Spec.new do |s|
+     export HUSKY=0
+     export CI=1
+ 
+-    echo "Installing deps (ignoring lifecycle scripts to avoid Husky)..."
+-    yarn install --frozen-lockfile --ignore-scripts || npm ci --ignore-scripts
++    echo "Installing deps with Yarn (ignoring lifecycle scripts to avoid Husky)..."
++    YARN_VERSION="$(yarn --version)"
++    echo "Detected Yarn version: ${YARN_VERSION}"
++
++    if echo "$YARN_VERSION" | grep -q '^1\.'; then
++      yarn install --frozen-lockfile --ignore-scripts
++    else
++      YARN_ENABLE_SCRIPTS=false YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install --mode=skip-build
++    fi
+ 
+     echo "Transpiling TS -> JS (with imports->CJS) ..."
+     rm -rf ./scripts-built
