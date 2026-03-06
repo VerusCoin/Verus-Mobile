@@ -5,6 +5,8 @@
     inside an accordion on the overview screen.
   - 2026-02-06: Filter displayUpdates to only pass CMM and private-info groups.
     Authority/status changes are already shown in the High Risk step.
+  - 2026-03-06: Updated content-removal framing  so the step focuses on current
+    identity publication state instead of permanent deletion.
 */
 import React, { useMemo } from 'react';
 import { View } from 'react-native';
@@ -39,8 +41,8 @@ const ContentStep = ({
     <View style={{ flex: 1 }}>
       {/* Header */}
       <View style={[styles.header, { paddingHorizontal: 16, paddingTop: 16 }]}>
-        <Text style={styles.mainTitle}>Review changes</Text>
-        <Text style={styles.subtitle}>Review the content updates to your identity</Text>
+        <Text style={styles.mainTitle}>Review content changes</Text>
+        <Text style={styles.subtitle}>Review changes to the current content published by your identity</Text>
       </View>
 
       {/* Full-screen VerusIdObjectData with native scrolling */}

@@ -11,6 +11,8 @@
   - 2026-02-06: Redesigned CMM change items as card-based layout when showChangeBadges is true.
     Title gets its own row, badges sit below it, and description blocks use left accent bars
     with truncated previews for cleaner scanning.
+  - 2026-03-06: Clarified current-content removal wording  so pre-confirmation cards use
+    future tense and content-clear actions get dedicated copy.
 */
 import React, { useEffect, useState } from 'react';
 import { Clipboard, FlatList, TouchableOpacity, Alert, View, Image, ScrollView, StyleSheet } from 'react-native';
@@ -202,7 +204,7 @@ export default function VerusIdObjectData(props) {
       case 'appended':
         return { icon: 'plus-circle-outline', label: 'Adding', color: Colors.verusGreenColor };
       case 'removed':
-        return { icon: 'minus-circle-outline', label: 'Removed', color: Colors.warningButtonColor };
+        return { icon: 'minus-circle-outline', label: 'Will remove', color: Colors.warningButtonColor };
       default:
         return null;
     }
@@ -211,7 +213,16 @@ export default function VerusIdObjectData(props) {
   const getBadgeList = (item) => {
     const badges = [];
     const baseBadge = getChangeBadgeConfig(item.changeType);
-    if (baseBadge) badges.push(baseBadge);
+    if (baseBadge) {
+      if (item.changeType === 'removed') {
+        badges.push({
+          ...baseBadge,
+          label: item.removeMeta?.action === 4 ? 'Will clear' : 'Will remove',
+        });
+      } else {
+        badges.push(baseBadge);
+      }
+    }
     return badges;
   };
 
@@ -268,10 +279,10 @@ export default function VerusIdObjectData(props) {
       ? ` (hash ${valueHash.substring(0, 10)}...)`
       : '';
 
-    if (action === 4) return 'All content keys and values';
-    if (action === 3) return `All values under ${entryLabel || 'selected key'}`;
-    if (action === 2) return `All matching values under ${entryLabel || 'selected key'}${valueHashText}`;
-    if (action === 1) return `One value under ${entryLabel || 'selected key'}${valueHashText}`;
+    if (action === 4) return 'All current content keys and values';
+    if (action === 3) return `All current values under ${entryLabel || 'selected key'}`;
+    if (action === 2) return `All current matching values under ${entryLabel || 'selected key'}${valueHashText}`;
+    if (action === 1) return `One current value under ${entryLabel || 'selected key'}${valueHashText}`;
 
     return 'Selected content';
   };
@@ -286,18 +297,21 @@ export default function VerusIdObjectData(props) {
     }
 
     if (item.changeType === 'removed') {
+      const actionLabel = item.removeMeta?.action === 4 ? 'Will clear' : 'Will remove';
+
       if (item.removeMeta) {
         const removeActionDescription = getRemoveActionDescription(item.removeMeta);
 
         return (
           <>
-            {item.data != null && !item.hideOldData && renderCmmDescBlock('Existing', item.data, '#CCC', true)}
-            {renderCmmDescBlock('Removing', removeActionDescription || 'Selected content', Colors.warningButtonColor)}
+            {item.data != null && !item.hideOldData && renderCmmDescBlock('Current', item.data, '#CCC', true)}
+            {renderCmmDescBlock(actionLabel, removeActionDescription || 'Selected content', Colors.warningButtonColor)}
           </>
         );
       }
 
-      return renderCmmDescBlock('Removing', item.data || 'Unknown value', Colors.warningButtonColor, true);
+      // Codex GPT-5: keep removal cards clearly pre-confirmation by avoiding past tense labels.
+      return renderCmmDescBlock(actionLabel, item.data || 'Unknown value', Colors.warningButtonColor, true);
     }
 
     if (item.changeType === 'appended') {

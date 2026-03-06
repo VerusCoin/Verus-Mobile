@@ -12,6 +12,9 @@
     authority changes, shows a clean card with the authority type as label and
     the target ID name prominently. Info icon opens AuthorityInfoSheet explaining
     what the authority is. Summary card and details toggle hidden for authority-only.
+  - 2026-03-06: Added a content-clear branch  so clearing current identity content
+    is described as a publication visibility risk instead of a control change.
+    Trimmed duplicate summary/detail blocks for the action:4-only case.
 */
 import React, { useMemo, useState } from 'react';
 import { ScrollView, TouchableOpacity, View, StyleSheet, Platform } from 'react-native';
@@ -49,6 +52,12 @@ const HighRiskStep = ({
   }, [highRiskChanges]);
 
   const isAuthorityOnly = !hasPrimaryInfo && (authorityChanges.revocation || authorityChanges.recovery);
+  const isContentClearOnly =
+    !hasPrimaryInfo &&
+    !authorityChanges.revocation &&
+    !authorityChanges.recovery &&
+    (highRiskChanges || []).length === 1 &&
+    highRiskChanges[0].title === 'Clear current identity content';
 
   // Determine info sheet type based on which authorities are changing
   const authorityInfoType = useMemo(() => {
@@ -86,6 +95,15 @@ const HighRiskStep = ({
       };
     }
 
+    if (isContentClearOnly) {
+      return {
+        icon: 'shield-alert-outline',
+        color: Colors.warningButtonColor,
+        title: 'Apps may stop seeing current content',
+        description: 'After you confirm, apps may no longer see content from this identity. Earlier on-chain versions may still be publicly retrievable.',
+      };
+    }
+
     // Fallback for non-authority, non-primary changes (e.g. status)
     return {
       icon: 'shield-alert-outline',
@@ -93,7 +111,7 @@ const HighRiskStep = ({
       title: 'Review required',
       description: 'These changes can affect who controls this identity.',
     };
-  }, [hasPrimaryInfo, walletCount, externalCount]);
+  }, [hasPrimaryInfo, walletCount, externalCount, isContentClearOnly]);
 
   /* Build a compact, plain-language summary of what's changing */
   const changeSummaryLines = useMemo(() => {
@@ -151,7 +169,9 @@ const HighRiskStep = ({
         <View style={parentStyles.header}>
           <Text style={parentStyles.mainTitle}>High-risk changes</Text>
           <Text style={parentStyles.subtitle}>
-            These changes can affect who controls this identity.
+            {isContentClearOnly
+              ? 'This clears current identity content.'
+              : 'These changes can affect who controls this identity.'}
           </Text>
         </View>
 
@@ -283,7 +303,7 @@ const HighRiskStep = ({
             </View>
 
             {/* Compact change summary */}
-            {changeSummaryLines.length > 0 && (
+            {!isContentClearOnly && changeSummaryLines.length > 0 && (
               <View style={localStyles.summaryCard}>
                 {changeSummaryLines.map((line, idx) => (
                   <View
@@ -307,25 +327,27 @@ const HighRiskStep = ({
             )}
 
             {/* View details — progressive disclosure for power users */}
-            <TouchableOpacity
-              style={localStyles.detailsToggle}
-              onPress={() => setDetailsExpanded(x => !x)}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel="View change details"
-            >
-              <MaterialCommunityIcons
-                name={detailsExpanded ? 'chevron-up' : 'chevron-down'}
-                size={16}
-                color="#888"
-                style={{ marginRight: 5 }}
-              />
-              <Text style={localStyles.detailsToggleText}>
-                {detailsExpanded ? 'Hide details' : 'View details'}
-              </Text>
-            </TouchableOpacity>
+            {!isContentClearOnly && (
+              <TouchableOpacity
+                style={localStyles.detailsToggle}
+                onPress={() => setDetailsExpanded(x => !x)}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="View change details"
+              >
+                <MaterialCommunityIcons
+                  name={detailsExpanded ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color="#888"
+                  style={{ marginRight: 5 }}
+                />
+                <Text style={localStyles.detailsToggleText}>
+                  {detailsExpanded ? 'Hide details' : 'View details'}
+                </Text>
+              </TouchableOpacity>
+            )}
 
-            {detailsExpanded && (
+            {!isContentClearOnly && detailsExpanded && (
               <View style={localStyles.detailsCard}>
                 {/* Addresses after update */}
                 {hasPrimaryInfo && (
@@ -404,7 +426,11 @@ const HighRiskStep = ({
             uncheckedColor="#B0B0B0"
           />
           <View style={{ flex: 1 }}>
-            <Text style={localStyles.ackTitle}>I understand these high-risk changes.</Text>
+            <Text style={localStyles.ackTitle}>
+              {isContentClearOnly
+                ? 'I understand this clears current identity content.'
+                : 'I understand these high-risk changes.'}
+            </Text>
             {hasUnownedPrimaryAddress && (
               <Text style={localStyles.ackSubtitle}>Includes an external primary address.</Text>
             )}

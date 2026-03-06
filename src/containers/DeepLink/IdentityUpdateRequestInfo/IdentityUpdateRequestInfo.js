@@ -21,6 +21,8 @@
     "You will share control" message from appearing for authority-only changes.
   - 2026-02-07: Authority-only changes now show a dedicated card with prominent ID
     name and info icon (AuthorityInfoSheet) instead of generic outcome messaging.
+  - 2026-03-06: Clarified current-content removal copy  and added remove-action
+    detail content that explains historical on-chain visibility.
 */
 import React, {useMemo, useState, useEffect, useCallback} from 'react';
 import {SafeAreaView, View, StyleSheet} from 'react-native';
@@ -46,7 +48,7 @@ import { getCmmDataLabel } from '../../../utils/vdxf/cmmDataLabel';
 import VdxfUniValueModal from '../../../components/VdxfUniValueModal/VdxfUniValueModal';
 import { getVDXFKeyLabel } from '../../../utils/vdxf/vdxfTypeLabels';
 import { capitalizeString } from '../../../utils/stringUtils';
-import { ContentMultiMapRemoveKey, GenericRequest, IdentityUpdateRequestDetails } from 'verus-typescript-primitives';
+import { ContentMultiMapRemoveKey, DATA_TYPE_DEFINEDKEY, GenericRequest, IdentityUpdateRequestDetails } from 'verus-typescript-primitives';
 import GradientButton from '../../../components/GradientButton';
 
 import ReviewStep from './steps/ReviewStep';
@@ -54,6 +56,7 @@ import ContentStep from './steps/ContentStep';
 import HighRiskStep from './steps/HighRiskStep';
 import ConfirmPayStep from './steps/ConfirmPayStep';
 import { classifyChanges } from './utils/classifyChanges';
+import { buildContentMultiMapRemoveUi } from './utils/contentMultiMapRemoveUi';
 
 // Step identifiers
 const STEP_REVIEW = 0;
@@ -162,14 +165,25 @@ const IdentityUpdateRequestInfo = props => {
     return [updates];
   };
 
-  const toCmmModalObjects = updates => {
+  const toCmmModalObjects = (updates, fallbackKey = null) => {
     const normalizedUpdates = normalizeCmmUpdates(updates);
     return normalizedUpdates.map((entry, index) => {
       if (entry != null && typeof entry === 'object' && !Array.isArray(entry)) {
         const keys = Object.keys(entry);
         if (keys.length > 0) {
           const key = keys[0];
-          return { key, data: entry[key] };
+          const removeMeta = extractContentMultiMapRemoveMeta(entry);
+          const detailUi = removeMeta
+            ? buildContentMultiMapRemoveUi({
+              removeMeta,
+              fallbackKey,
+              currentContentMultiMap: identity.contentmultimap,
+              getKeyLabel: getCmmDataKey,
+              definedKeyVdxfId: DATA_TYPE_DEFINEDKEY.vdxfid,
+            })
+            : null;
+
+          return { key, data: entry[key], meta: detailUi };
         }
       }
 
@@ -199,43 +213,6 @@ const IdentityUpdateRequestInfo = props => {
       entryKey: typeof payload.entrykey === 'string' ? payload.entrykey : null,
       valueHash: typeof payload.valuehash === 'string' ? payload.valuehash : null,
     };
-  };
-
-  const getContentMultiMapRemoveMetas = updates => {
-    const removeMetas = [];
-    for (const update of normalizeCmmUpdates(updates)) {
-      const removeMeta = extractContentMultiMapRemoveMeta(update);
-      if (removeMeta) removeMetas.push(removeMeta);
-    }
-    return removeMetas;
-  };
-
-  const getContentMultiMapRemoveSummary = removeMeta => {
-    const entryLabel = removeMeta.entryKey ? getCmmDataKey(removeMeta.entryKey) : null;
-
-    switch (removeMeta.action) {
-      case 4:
-        return {
-          summary: 'Clear all identity content keys',
-          entryLabel: null
-        };
-      case 3:
-        return {
-          summary: `Remove all values under ${entryLabel || 'selected key'}`,
-          entryLabel
-        };
-      case 2:
-        return {
-          summary: `Remove all matching values under ${entryLabel || 'selected key'}`,
-          entryLabel
-        };
-      case 1:
-      default:
-        return {
-          summary: `Remove one matching value under ${entryLabel || 'selected key'}`,
-          entryLabel
-        };
-    }
   };
 
   // --- Display updates ---
@@ -292,11 +269,24 @@ const IdentityUpdateRequestInfo = props => {
           };
         } else {
           const normalizedUpdates = normalizeCmmUpdates(updates);
-          const removeMetas = getContentMultiMapRemoveMetas(normalizedUpdates);
+          const removeEntries = normalizedUpdates
+            .map((update, index) => ({
+              update,
+              index,
+              removeMeta: extractContentMultiMapRemoveMeta(update),
+            }))
+            .filter(entry => entry.removeMeta != null);
           const nonRemoveUpdates = normalizedUpdates.filter(update => extractContentMultiMapRemoveMeta(update) == null);
 
-          if (removeMetas.length > 0) {
-            removeMetas.forEach((removeMeta, index) => {
+          if (removeEntries.length > 0) {
+            removeEntries.forEach(({ update, removeMeta, index }) => {
+              const removeUi = buildContentMultiMapRemoveUi({
+                removeMeta,
+                fallbackKey: key,
+                currentContentMultiMap: identity.contentmultimap,
+                getKeyLabel: getCmmDataKey,
+                definedKeyVdxfId: DATA_TYPE_DEFINEDKEY.vdxfid,
+              });
               const targetKey = removeMeta.action === 4
                 ? CMM_CLEAR_MAP_SENTINEL
                 : (removeMeta.entryKey || key);
@@ -304,21 +294,20 @@ const IdentityUpdateRequestInfo = props => {
               const updateKey = displayUpdates[VERUSID_CMM_INFO.key][baseUpdateKey] == null
                 ? baseUpdateKey
                 : `${baseUpdateKey}:remove:${index}`;
-              const removeSummary = getContentMultiMapRemoveSummary(removeMeta);
-              const modalTitle = removeMeta.entryKey ? getCmmDataKey(removeMeta.entryKey) : getCmmDataKey(key);
 
+              // Codex GPT-5: derive remove-action copy from the current identity state, not from chain permanence.
               displayUpdates[VERUSID_CMM_INFO.key][updateKey] = {
-                data: removeSummary.summary,
-                rawData: normalizedUpdates,
+                data: removeUi.summary,
+                rawData: [update],
                 removeMeta: {
                   ...removeMeta,
-                  entryLabel: removeSummary.entryLabel
+                  entryLabel: removeUi.targetLabel
                 },
                 highRisk: removeMeta.action === 4,
-                highRiskTitle: removeMeta.action === 4 ? 'Clear identity content' : undefined,
-                highRiskWarning: removeMeta.action === 4 ? 'This removes all content multi map entries from your identity.' : undefined,
-                displayTitle: removeMeta.action === 4 ? 'All Content Keys' : undefined,
-                onPress: () => openVdxfUniValueModal(toCmmModalObjects(normalizedUpdates), modalTitle)
+                highRiskTitle: removeMeta.action === 4 ? 'Clear current identity content' : undefined,
+                highRiskWarning: removeMeta.action === 4 ? removeUi.highRiskWarning : undefined,
+                displayTitle: removeUi.displayTitle,
+                onPress: () => openVdxfUniValueModal(toCmmModalObjects([update], key), removeUi.modalTitle)
               };
             });
           }

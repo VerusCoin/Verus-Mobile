@@ -1,6 +1,12 @@
-// VdxfUniValueModal.render.js (Refactored for Hooks)
+/*
+  VdxfUniValueModalInnerArea.render 
+  - Routes VDXF payloads to the correct modal renderer.
+  - Adds dedicated detail content for current identity removal actions.
+*/
 import React from "react";
-import { DataByteVectorKey, DataCurrencyMapKey, DataDescriptorKey, DataRatingsKey, DataStringKey, DataTransferDestinationKey } from "verus-typescript-primitives";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Text } from "react-native-paper";
+import { ContentMultiMapRemoveKey, DataByteVectorKey, DataCurrencyMapKey, DataDescriptorKey, DataRatingsKey, DataStringKey, DataTransferDestinationKey } from "verus-typescript-primitives";
 import DataStringKeyModal from "./DataStringKeyModal/DataStringKeyModal";
 import CurrencyValueMapModal from "./CurrencyValueMapModal/CurrencyValueMapModal";
 import ByteVectorKeyModal from "./ByteVectorKeyModal/ByteVectorKeyModal";
@@ -8,6 +14,68 @@ import RatingModal from "./RatingModal/RatingModal";
 import TransferDestinationModal from "./TransferDestinationModal/TransferDestinationModal";
 import DataDescriptorModal from "./DataDescriptorModal/DataDescriptorModal";
 import MissingInfoRedirect from "../MissingInfoRedirect/MissingInfoRedirect";
+import Colors from "../../globals/colors";
+
+const localStyles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: Colors.secondaryColor,
+  },
+  content: {
+    padding: 16,
+    paddingBottom: 28,
+  },
+  section: {
+    backgroundColor: Colors.secondaryBackground,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    color: Colors.quinaryColor,
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  sectionBody: {
+    color: Colors.verusDarkGray,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+});
+
+const RemoveActionSection = ({ title, body }) => {
+  if (!body) return null;
+
+  return (
+    <View style={localStyles.section}>
+      <Text style={localStyles.sectionTitle}>{title}</Text>
+      <Text style={localStyles.sectionBody}>{body}</Text>
+    </View>
+  );
+};
+
+const ContentMultiMapRemoveModal = props => {
+  const meta = props.item?.meta;
+
+  // Codex GPT-5: keep remove-action details explicit about current-state visibility and history.
+  return (
+    <ScrollView style={localStyles.root} contentContainerStyle={localStyles.content}>
+      <RemoveActionSection
+        title="What this changes"
+        body={meta?.detailBody || 'This request changes the current content published by your identity.'}
+      />
+      <RemoveActionSection title="What apps will see" body={meta?.effectNote} />
+      <RemoveActionSection title="Current state" body={meta?.emptyStateNote} />
+      <RemoveActionSection title="Metadata note" body={meta?.metadataNote} />
+      <RemoveActionSection title="Matching values" body={meta?.valueHashNote} />
+      <RemoveActionSection
+        title="What stays public"
+        body={meta?.historyNote || 'Earlier on-chain versions may still be publicly retrievable.'}
+      />
+    </ScrollView>
+  );
+};
 
 export const VdxfUniValueInnerAreaContentMap = new Map(
   [
@@ -16,7 +84,8 @@ export const VdxfUniValueInnerAreaContentMap = new Map(
     [DataByteVectorKey.vdxfid, ByteVectorKeyModal],
     [DataRatingsKey.vdxfid, RatingModal],
     [DataTransferDestinationKey.vdxfid, TransferDestinationModal],
-    [DataDescriptorKey.vdxfid, DataDescriptorModal]
+    [DataDescriptorKey.vdxfid, DataDescriptorModal],
+    [ContentMultiMapRemoveKey.vdxfid, ContentMultiMapRemoveModal]
   ]
 )
 
@@ -33,7 +102,7 @@ export const VdxfUniValueModalInnerAreaContentRender = (props) => {
         const Content = VdxfUniValueInnerAreaContentMap.get(x.key);
 
         return (extraProps) => (
-          <Content {...props} {...starterProps} {...extraProps} data={x.data} />
+          <Content {...props} {...starterProps} {...extraProps} data={x.data} item={x} />
         );
       }
 
