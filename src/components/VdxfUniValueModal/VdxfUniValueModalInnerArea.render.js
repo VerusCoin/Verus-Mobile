@@ -4,7 +4,7 @@
   - Adds dedicated detail content for current identity removal actions.
 */
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { Text } from "react-native-paper";
 import { ContentMultiMapRemoveKey, DataByteVectorKey, DataCurrencyMapKey, DataDescriptorKey, DataRatingsKey, DataStringKey, DataTransferDestinationKey } from "verus-typescript-primitives";
 import DataStringKeyModal from "./DataStringKeyModal/DataStringKeyModal";
@@ -14,35 +14,7 @@ import RatingModal from "./RatingModal/RatingModal";
 import TransferDestinationModal from "./TransferDestinationModal/TransferDestinationModal";
 import DataDescriptorModal from "./DataDescriptorModal/DataDescriptorModal";
 import MissingInfoRedirect from "../MissingInfoRedirect/MissingInfoRedirect";
-import Colors from "../../globals/colors";
-
-const localStyles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: Colors.secondaryColor,
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 28,
-  },
-  section: {
-    backgroundColor: Colors.secondaryBackground,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    color: Colors.quinaryColor,
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 6,
-  },
-  sectionBody: {
-    color: Colors.verusDarkGray,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-});
+import localStyles from "./styles/VdxfUniValueModalInnerArea.styles";
 
 const RemoveActionSection = ({ title, body }) => {
   if (!body) return null;

@@ -5,9 +5,10 @@
     outcome card.
 */
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import SemiModal from '../../../../components/SemiModal';
 import GradientButton from '../../../../components/GradientButton';
+import styles from '../styles/AuthorityInfoSheet.styles';
 
 const CONTENT = {
   revocation: {
@@ -57,27 +58,5 @@ const AuthorityInfoSheet = ({ visible, onClose, type = 'revocation' }) => {
     </SemiModal>
   );
 };
-
-const styles = StyleSheet.create({
-  sheetContent: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    flex: 0,
-    alignSelf: 'flex-end',
-    width: '100%',
-    backgroundColor: 'white',
-  },
-  sheetBody: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-    paddingTop: 10,
-  },
-  paragraph: {
-    fontSize: 14,
-    color: '#444',
-    lineHeight: 21,
-    marginBottom: 16,
-  },
-});
 
 export default AuthorityInfoSheet;
