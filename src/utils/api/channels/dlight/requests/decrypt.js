@@ -1,25 +1,32 @@
-import { Tools } from 'react-native-verus'; 
+import { Tools } from 'react-native-verus';
 import ApiException from '../../../errors/apiError';
 import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants';
 
-
 export const decrypt_verus_data = async (alias, params) => {
   try {
-    const plaintext = await Tools.decryptVerusData(
-      params.ivkHex ? params.ivkHex.toString('hex') : null,
-      params.epkHex ? params.epkHex.toString('hex') : null,
-      params.dataToEncrypt.toString('hex'),
-      params.sskHex ? params.sskBytes.toString('hex') : null
-    );
+    const ivkHex = params.ivk instanceof Buffer
+      ? params.ivk.toString('hex')
+      : params.ivk ?? null;
 
-    return {
-      result: Buffer.from(decryptedData, 'hex'),
-      err: false
-    };
+    const epkHex = params.epk instanceof Buffer
+      ? params.epk.toString('hex')
+      : params.epk ?? null;
+
+    const dataHex = params.data instanceof Buffer
+      ? params.data.toString('hex')
+      : params.data;
+
+    const sskHex = params.ssk
+      ? (params.ssk instanceof Buffer ? params.ssk.toString('hex') : params.ssk)
+      : null;
+
+    const plaintext = await Tools.decryptVerusData(ivkHex, epkHex, dataHex, sskHex);
+
+    return { result: Buffer.from(plaintext, 'hex') };
   } catch (e) {
     return {
       err: true,
       result: new ApiException(e.message, e.data, alias, DLIGHT_PRIVATE, e.code)
     };
   }
-}
+};
