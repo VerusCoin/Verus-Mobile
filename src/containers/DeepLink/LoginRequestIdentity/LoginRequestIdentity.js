@@ -227,7 +227,7 @@ const LoginRequestIdentity = props => {
             {canProvision && (
               <React.Fragment>
                 <List.Item
-                  title={'Request new VerusID'}
+                  title={'Request VerusID'}
                   right={props => (
                     <List.Icon {...props} icon={'plus'} size={20} />
                   )}

@@ -985,12 +985,14 @@ const AuthenticationRequestInfo = props => {
     !selectedIdentity &&
     !canProvision &&
     !hasMatchingIdentity;
+  const showRequestAsSecondaryAction =
+    canProvision && !shouldShowRequestNewAsPrimary;
   const showSecondaryActionRail = signedIn && !selectedIdentity;
   const primaryActionLabel = signedIn
     ? selectedIdentity
       ? 'Continue'
       : shouldShowRequestNewAsPrimary
-      ? 'Request new VerusID'
+      ? 'Request VerusID'
       : shouldShowLinkAsPrimary
       ? 'Link VerusID'
       : 'Select VerusID'
@@ -1223,7 +1225,7 @@ const AuthenticationRequestInfo = props => {
             activeOpacity={0.75}>
             <Text style={styles.identityActionLinkText}>Link VerusID</Text>
           </TouchableOpacity>
-          {canProvision && (
+          {showRequestAsSecondaryAction && (
             <>
               <Text style={styles.identityActionLinksDivider}>·</Text>
               <TouchableOpacity
@@ -1231,7 +1233,7 @@ const AuthenticationRequestInfo = props => {
                 onPress={openProvisionIdentityModalFromChain}
                 activeOpacity={0.75}>
                 <Text style={styles.identityActionLinkText}>
-                  Request new VerusID
+                  Request VerusID
                 </Text>
               </TouchableOpacity>
             </>
