@@ -7,9 +7,12 @@ import { GenericRequest } from "verus-typescript-primitives/dist/vdxf/classes";
  * @param {GenericRequest} req 
  * @returns {Promise<boolean>}
  */
-export const verifyGenericRequest = (coinObj, req, getIdentityResult) => {
+export const verifyGenericRequest = (coinObj, req, getIdentityResult, acceptUnsigned) => {
   return VrpcProvider.getVerusIdInterface(coinObj.system_id).verifyGenericRequest(
     req,
-    getIdentityResult
+    getIdentityResult,
+    undefined,
+    undefined,
+    acceptUnsigned
   )
 };

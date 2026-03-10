@@ -58,7 +58,7 @@ export const validateGenericRequest = async (request) => {
     const signedBy = await getIdentity(coinObj.system_id, request.signature.identityID.toIAddress())
     if (signedBy.error) throw new Error(signedBy.error.message)
 
-    if (!await verifyGenericRequest(coinObj, request, signedBy.result)) {
+    if (!await verifyGenericRequest(coinObj, request, signedBy.result, false)) {
       throw new Error("Failed to verify request signature")
     }
 
@@ -90,6 +90,10 @@ export const validateGenericRequest = async (request) => {
     }
   } else if (isRequestRequiredSignature(request) || request.hasAppOrDelegatedID()) {
     throw new Error("This type of request requires a signature")
+  } else {
+    if (await verifyGenericRequest(coinObj, request, signedBy.result, true)) {
+      throw new Error("Failed to verify request")
+    }
   }
 
   if (request.hasEncryptResponseToAddress()) {
