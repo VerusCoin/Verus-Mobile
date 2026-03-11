@@ -2,15 +2,15 @@
 
 buildscript {
     ext {
-        buildToolsVersion = "34.0.0"
+        // buildTools redundant, and may cause problems (according to online sources)
+        //buildToolsVersion = "35.0.0"
         minSdkVersion = 24
-        compileSdkVersion = 34
-        targetSdkVersion = 34
-        ndkVersion= "27.0.12077973"
-        kotlinVersion = '1.9.0'
+        compileSdkVersion = 35
+        targetSdkVersion = 35
+        ndkVersion = "27.0.12077973"
+        kotlinVersion = "1.9.0"
     }
     repositories {
-        mavenLocal()
         mavenCentral()
         google()
     }

@@ -38,11 +38,13 @@ import { checkPinForUser } from "../../../utils/asyncStore/asyncStore";
 import { ENABLE_DLIGHT, APP_VERSION, WYRE_ACCESSIBLE } from '../../../../env/index'
 import { dlightEnabled } from "../../../utils/enabledChannels";
 import SetupSeedModal from "../../../components/SetupSeedModal/SetupSeedModal";
-import { DLIGHT_PRIVATE } from "../../../utils/constants/intervalConstants";
+import { DLIGHT_PRIVATE, ELECTRUM } from "../../../utils/constants/intervalConstants";
 import ListSelectionModal from "../../../components/ListSelectionModal/ListSelectionModal";
 import { WYRE_SERVICE_ID } from "../../../utils/constants/services";
 import Colors from "../../../globals/colors";
 import { removeBiometricPassword, storeBiometricPassword } from "../../../utils/keychain/biometrics";
+import { requestSeeds } from "../../../utils/auth/authBox";
+import { isSeedPhrase } from "../../../utils/keys";
 
 const RESET_PWD = "ResetPwd"
 const REMOVE_PROFILE = "DeleteProfile"
@@ -352,6 +354,49 @@ class ProfileSettings extends Component {
     })
   }
 
+  canUseCurrentSeedForZ = () => {
+    return createAlert(
+      "Use existing seed for Z?",
+      "Your current seed has been detected as a valid 24-word mnemonic. Would you like to use it as your Z (shielded address) seed?",
+      [
+        {
+          text: "No",
+          onPress: () => resolveAlert(false),
+          style: "cancel",
+        },
+        { text: "Yes", onPress: () => resolveAlert(true) },
+      ],
+      {
+        cancelable: true,
+      }
+    );
+  }
+
+  is24WordMnemonic = (seed) => {
+    if (seed == null || typeof seed !== "string") return false;
+    const wordCount = seed.trim().split(/\s+/g).length;
+    return wordCount === 24 && isSeedPhrase(seed, 24);
+  }
+
+  handleZSeedSetup = async () => {
+    try {
+      const seeds = await requestSeeds();
+      const primarySeed = seeds[ELECTRUM];
+
+      if (this.is24WordMnemonic(primarySeed)) {
+        const useExisting = await this.canUseCurrentSeedForZ();
+        if (useExisting) {
+          this.addZSeed(primarySeed, DLIGHT_PRIVATE);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+
+    this.setState({ privateSeedModalOpen: true });
+  }
+
   openPasswordCheck = (onPasswordCorrect) =>
     this.setState({
       passwordDialogOpen: true,
@@ -512,9 +557,7 @@ class ProfileSettings extends Component {
         <List.Subheader>{"Profile Actions"}</List.Subheader>
         {ENABLE_DLIGHT && !this.props.testAccount && (
           <TouchableOpacity
-            onPress={() => {
-              this.setState({ privateSeedModalOpen: true });
-            }}
+            onPress={this.handleZSeedSetup}
             disabled={zSetupComplete}
           >
             <Divider />

@@ -4,7 +4,7 @@ import SeedIntro from './Forms/SeedIntro';
 import SeedWords from './Forms/SeedWords';
 const CreateSeedStack = createStackNavigator();
 
-export default function CreateSeedStackScreens({ navigation, newSeed, onComplete }) {
+export default function CreateSeedStackScreens({ navigation, newSeed, onComplete, testProfile }) {
   return (
     <CreateSeedStack.Navigator>
       <CreateSeedStack.Screen
@@ -28,6 +28,7 @@ export default function CreateSeedStackScreens({ navigation, newSeed, onComplete
             navigation={navigation}
             newSeed={newSeed}
             onComplete={onComplete}
+            testProfile={testProfile}
           />
         )}
       </CreateSeedStack.Screen>

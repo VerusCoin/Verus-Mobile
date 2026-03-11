@@ -7,12 +7,12 @@ import {
   TouchableWithoutFeedback,
   Alert,
 } from 'react-native';
-import {Text, Button, TextInput} from 'react-native-paper';
+import {Text, Button, TextInput, Checkbox} from 'react-native-paper';
 import TallButton from '../../../../../components/LargerButton';
 import Colors from '../../../../../globals/colors';
 import {DEFAULT_SEED_PHRASE_LENGTH} from '../../../../../utils/constants/constants';
 
-export default function SeedWords({navigation, newSeed, onComplete}) {
+export default function SeedWords({navigation, newSeed, onComplete, testProfile}) {
   const {height} = Dimensions.get('window');
 
   const [formStep, setFormStep] = useState(0);
@@ -28,10 +28,12 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
 
   const [wordGuesses, setWordGuesses] = useState(['', '', '']);
   const [wordErrors, setWordErrors] = useState([false, false, false]);
+  const [useSeedAsZ, setUseSeedAsZ] = useState(!testProfile);
 
   const resetForm = () => {
     setFormStep(0);
     setSeedWords(newSeed.split(' '));
+    setUseSeedAsZ(!testProfile);
   };
 
   const getRandIndex = (exclusions = []) => {
@@ -64,7 +66,7 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
     setWordErrors(guessErrors);
 
     if (!errors) {
-      onComplete();
+      onComplete(useSeedAsZ);
     }
   };
 
@@ -230,6 +232,22 @@ export default function SeedWords({navigation, newSeed, onComplete}) {
               ? 'Please verify the listed words.'
               : "When you've written them down, press next."}
           </Text>
+          {isAtEnd && !testProfile && (
+            <Checkbox.Item
+              color={Colors.primaryColor}
+              labelStyle={{
+                fontSize: 14
+              }}
+              style={{
+                width: "100%"
+              }}
+              label={'Create a z (shielded) address'}
+              status={useSeedAsZ ? 'checked' : 'unchecked'}
+              onPress={() => setUseSeedAsZ(!useSeedAsZ)}
+              mode="android"
+              position="leading"
+            />
+          )}
           <View style={{flexDirection: "row"}}>
             {formStep > 0 && (
               <TallButton

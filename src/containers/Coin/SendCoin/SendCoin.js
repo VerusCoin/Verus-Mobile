@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { View } from "react-native";
+import { View, ScrollView } from "react-native";
 import { useDispatch } from "react-redux";
 import Styles from "../../../styles/index";
-import { Button, Portal } from "react-native-paper";
+import { Button, Portal, Text } from "react-native-paper";
 import VerusPay from "../../VerusPay/VerusPay";
 import Colors from "../../../globals/colors";
 import { openConvertOrCrossChainSendModal, openSubwalletSendModal } from "../../../actions/actions/sendModal/dispatchers/sendModal";
-import { IS_PBAAS, VRPC } from "../../../utils/constants/intervalConstants";
+import { API_GET_INFO, DLIGHT_PRIVATE, IS_PBAAS, VRPC } from "../../../utils/constants/intervalConstants";
 import ListSelectionModal from "../../../components/ListSelectionModal/ListSelectionModal";
 import {
   SEND_MODAL_ADVANCED_FORM,
@@ -33,6 +33,8 @@ import {
   CONVERSION_DISABLED
 } from '../../../../env/index';
 import { useObjectSelector } from "../../../hooks/useObjectSelector";
+import { extractLedgerData } from "../../../utils/ledger/extractLedgerData";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 const SendCoin = ({ navigation }) => {
   const activeCoin = useObjectSelector(state => state.coins.activeCoin);
@@ -42,6 +44,9 @@ const SendCoin = ({ navigation }) => {
   });
   const generalWalletSettings = useObjectSelector(
     state => state.settings.generalWalletSettings,
+  );
+  const info = useObjectSelector(state =>
+    extractLedgerData(state, 'info', API_GET_INFO, activeCoin.id),
   );
   
   const dispatch = useDispatch()
@@ -199,6 +204,10 @@ const SendCoin = ({ navigation }) => {
   ] = useState(false);
 
   const channel = subWallet.channel.split(".")[0];
+  const syncProgress =
+    info == null || info[subWallet.id] == null ? 100 : info[subWallet.id].percent;
+  const isZWalletSyncing =
+    channel === DLIGHT_PRIVATE && syncProgress !== 100 && syncProgress !== -1;
   const allowConvertOrOffchain =
     (activeCoin.tags.includes(IS_PBAAS) && channel === VRPC) ||
     activeCoin.proto === 'erc20' ||
@@ -248,6 +257,37 @@ By proceeding, you confirm that you've read, understood, and agreed to this. Ens
         ],
       );
     } else setConvertOrCrossChainOptionsModalOpen(true);
+  }
+
+  if (isZWalletSyncing) {
+    return (
+      <View style={{...Styles.defaultRoot, backgroundColor: Colors.primaryColor}}>
+        <ScrollView
+          style={Styles.flexBackground}
+          contentContainerStyle={{
+            ...Styles.centerContainer,
+            backgroundColor: Colors.primaryColor,
+          }}
+        >
+          <MaterialCommunityIcons
+            name={'sync'}
+            color={Colors.secondaryColor}
+            size={104}
+          />
+          <Text
+            style={{
+              ...Styles.centeredText,
+              ...Styles.standardWidthCenterBlock,
+              color: Colors.secondaryColor,
+              fontSize: 18,
+              maxWidth: '100%',
+            }}
+          >
+            {'Your shielded wallet is still syncing. Please wait for sync to finish before sending. This may take a few hours the first time.'}
+          </Text>
+        </ScrollView>
+      </View>
+    );
   }
 
   return (
