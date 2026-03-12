@@ -6,9 +6,10 @@
     Shows animated progress fill and haptic feedback. Prevents accidental taps on critical actions.
 */
 import React, { useRef, useEffect, useState } from 'react';
-import { TouchableOpacity, View, StyleSheet, Animated, Vibration, Platform } from 'react-native';
+import { TouchableOpacity, View, Animated, Vibration, Platform } from 'react-native';
 import { Text } from 'react-native-paper';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
+import { gradientButtonStyles as styles } from '../styles';
 
 const GradientButton = ({
   onPress,
@@ -218,46 +219,5 @@ const GradientButton = ({
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  gradientButtonWrapper: {
-    borderRadius: 24,
-    overflow: 'hidden',
-    position: 'relative',
-    height: 52,
-  },
-  gradientBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  holdProgressOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    zIndex: 1,
-  },
-  gradientButtonContent: {
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 2,
-  },
-  rowContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gradientButtonLabel: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: 'white',
-    letterSpacing: 0,
-  },
-});
 
 export default GradientButton;

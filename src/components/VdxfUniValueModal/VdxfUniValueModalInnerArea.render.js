@@ -14,7 +14,7 @@ import RatingModal from "./RatingModal/RatingModal";
 import TransferDestinationModal from "./TransferDestinationModal/TransferDestinationModal";
 import DataDescriptorModal from "./DataDescriptorModal/DataDescriptorModal";
 import MissingInfoRedirect from "../MissingInfoRedirect/MissingInfoRedirect";
-import localStyles from "./styles/VdxfUniValueModalInnerArea.styles";
+import { vdxfUniValueModalInnerAreaStyles as localStyles } from "../../styles";
 
 const RemoveActionSection = ({ title, body }) => {
   if (!body) return null;

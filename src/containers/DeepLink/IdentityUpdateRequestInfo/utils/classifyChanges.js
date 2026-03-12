@@ -3,11 +3,13 @@
   - 2026-02-05: Created utility to split displayUpdates into highRiskChanges and
     contentChanges arrays. High-risk: primary address, revocation/recovery authority,
     status/lock changes. Content: everything else (CMM, private address, etc.).
+  - 2026-03-11: Treat private-address changes as high-risk because funds can be directed there .
 */
 import {
   VERUSID_AUTH_INFO,
   VERUSID_BASE_INFO,
   VERUSID_CMM_INFO,
+  VERUSID_PRIVATE_ADDRESS,
   VERUSID_PRIMARY_ADDRESS,
   VERUSID_RECOVERY_AUTH,
   VERUSID_REVOCATION_AUTH,
@@ -15,6 +17,7 @@ import {
 } from '../../../../utils/constants/verusidObjectData';
 
 const HIGH_RISK_KEYS = new Set([
+  VERUSID_PRIVATE_ADDRESS.key,
   VERUSID_PRIMARY_ADDRESS.key,
   VERUSID_REVOCATION_AUTH.key,
   VERUSID_RECOVERY_AUTH.key,
@@ -22,6 +25,10 @@ const HIGH_RISK_KEYS = new Set([
 ]);
 
 const HIGH_RISK_LABELS = {
+  [VERUSID_PRIVATE_ADDRESS.key]: {
+    title: 'Change private address',
+    warning: 'Private payments sent to this identity can be directed to the private address.',
+  },
   [VERUSID_PRIMARY_ADDRESS.key]: {
     title: 'Change primary address',
     warning: 'Primary addresses control who can spend and sign for this ID.',
@@ -45,6 +52,7 @@ const HIGH_RISK_LABELS = {
  * Primary address keys are formatted as "VERUSID_PRIMARY_ADDRESS:0", so we
  * check the prefix before the colon.
  */
+// Codex GPT-5: keep the high-risk list conservative so payment-routing changes always surface in the warning step.
 const isHighRiskKey = key => {
   const baseKey = key.includes(':') ? key.split(':')[0] : key;
   return HIGH_RISK_KEYS.has(baseKey);

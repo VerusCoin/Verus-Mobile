@@ -57,7 +57,7 @@ import HighRiskStep from './steps/HighRiskStep';
 import ConfirmPayStep from './steps/ConfirmPayStep';
 import { classifyChanges } from './utils/classifyChanges';
 import { buildContentMultiMapRemoveUi } from './utils/contentMultiMapRemoveUi';
-import styles from './styles/IdentityUpdateRequestInfo.styles';
+import { identityUpdateRequestInfoStyles as styles } from '../../../styles';
 
 // Step identifiers
 const STEP_REVIEW = 0;

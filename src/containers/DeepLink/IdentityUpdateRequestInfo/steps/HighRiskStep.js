@@ -23,7 +23,7 @@ import Colors from '../../../../globals/colors';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { VERUSID_REVOCATION_AUTH, VERUSID_RECOVERY_AUTH } from '../../../../utils/constants/verusidObjectData';
 import AuthorityInfoSheet from '../components/AuthorityInfoSheet';
-import localStyles from '../styles/HighRiskStep.styles';
+import { highRiskStepStyles as localStyles } from '../../../../styles';
 
 const HighRiskStep = ({
   highRiskChanges,

@@ -15,10 +15,10 @@
     future tense and content-clear actions get dedicated copy.
 */
 import React, { useEffect, useState } from 'react';
-import { Clipboard, FlatList, TouchableOpacity, Alert, View, Image, ScrollView, StyleSheet } from 'react-native';
+import { Clipboard, FlatList, TouchableOpacity, Alert, View, Image, ScrollView } from 'react-native';
 import { Text, List, Divider, Paragraph } from 'react-native-paper';
 import Colors from '../globals/colors';
-import Styles from '../styles';
+import Styles, { verusIdObjectDataStyles as LocalStyles } from '../styles';
 import { Revoke, Recover, Coins } from '../images/customIcons';
 import { openUrl } from "../utils/linking";
 import AnimatedSuccessCheckmark from "./AnimatedSuccessCheckmark";
@@ -46,82 +46,11 @@ import {
 import { getCmmDataLabel } from '../utils/vdxf/cmmDataLabel';
 import { getVDXFKeyLabel } from '../utils/vdxf/vdxfTypeLabels';
 import { capitalizeString } from '../utils/stringUtils';
+import { ContentMultiMapRemoveKey } from 'verus-typescript-primitives';
 
 const checkmark = (<AnimatedSuccessCheckmark style={{ width: 20, marginRight: 5, marginBottom: 1, alignSelf: 'flex-end', }} />);
 
 const triangle = <MaterialCommunityIcons name={'information'} size={20} color={Colors.warningButtonColor} style={{ width: 20, marginRight: 9, alignSelf: 'flex-end', }} />;
-
-const LocalStyles = StyleSheet.create({
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  badgeIcon: {
-    marginRight: 4,
-  },
-  badgeText: {
-    fontSize: 11,
-    lineHeight: 13,
-  },
-  cmmDescLine: {
-    color: Colors.verusDarkGray,
-    fontSize: 12,
-  },
-  cmmDescMuted: {
-    color: Colors.verusDarkGray,
-    fontSize: 12,
-    textDecorationLine: 'line-through',
-  },
-  // Card-based CMM item styles
-  cmmCard: {
-    backgroundColor: '#F9F9F9',
-    borderRadius: 12,
-    padding: 14,
-    marginHorizontal: 16,
-    marginBottom: 10,
-  },
-  cmmCardTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1A1A1A',
-    marginBottom: 6,
-  },
-  cmmCardBadgeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 10,
-  },
-  cmmCardDescBlock: {
-    borderLeftWidth: 3,
-    borderRadius: 2,
-    paddingLeft: 10,
-    paddingVertical: 4,
-    marginBottom: 6,
-  },
-  cmmCardDescLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-    marginBottom: 2,
-  },
-  cmmCardDescValue: {
-    fontSize: 13,
-    color: '#444',
-    lineHeight: 18,
-  },
-});
 
 export default function VerusIdObjectData(props) {
   const { 
@@ -182,11 +111,11 @@ export default function VerusIdObjectData(props) {
       if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return false;
       const keys = Object.keys(obj);
       if (keys.length !== 1) return false;
-      return getVDXFKeyLabel(keys[0], true) === 'content multi map remove';
+      return keys[0] === ContentMultiMapRemoveKey.vdxfid;
     };
 
     if (isRemoveObj(rawData)) return true;
-    if (Array.isArray(rawData)) return rawData.some(isRemoveObj);
+    if (Array.isArray(rawData)) return rawData.length > 0 && rawData.every(isRemoveObj);
     return false;
   };
 
@@ -200,9 +129,9 @@ export default function VerusIdObjectData(props) {
   const getChangeBadgeConfig = (changeType) => {
     switch (changeType) {
       case 'added':
-        return { icon: 'plus-circle-outline', label: 'Added', color: Colors.verusGreenColor };
+        return { icon: 'plus-circle-outline', label: 'New key', color: Colors.verusGreenColor };
       case 'appended':
-        return { icon: 'plus-circle-outline', label: 'Adding', color: Colors.verusGreenColor };
+        return { icon: 'plus-circle-outline', label: 'Add value', color: Colors.verusGreenColor };
       case 'removed':
         return { icon: 'minus-circle-outline', label: 'Will remove', color: Colors.warningButtonColor };
       default:
@@ -293,7 +222,7 @@ export default function VerusIdObjectData(props) {
       : (item.updatedData ?? updateEntry?.data ?? item.data);
 
     if (item.changeType === 'added') {
-      return renderCmmDescBlock('New', updatedPreview || 'New value', Colors.verusGreenColor);
+      return renderCmmDescBlock('New key', updatedPreview || 'New value', Colors.verusGreenColor);
     }
 
     if (item.changeType === 'removed') {
@@ -318,7 +247,7 @@ export default function VerusIdObjectData(props) {
       return (
         <>
           {item.data != null && renderCmmDescBlock('Existing', item.data, '#CCC')}
-          {renderCmmDescBlock('Adding', updatedPreview || 'New value', Colors.verusGreenColor)}
+          {renderCmmDescBlock('Add value', updatedPreview || 'New value', Colors.verusGreenColor)}
         </>
       );
     }

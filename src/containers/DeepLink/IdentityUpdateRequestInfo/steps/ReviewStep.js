@@ -12,11 +12,12 @@ import { Text } from 'react-native-paper';
 import Colors from '../../../../globals/colors';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import VerusIdAtIcon from '../../../../images/customIcons/verusid-at-icon.svg';
+import { reviewStepStyles } from '../../../../styles';
 
 const Connector = () => (
-  <View style={connectorStyles.container}>
-    <View style={connectorStyles.line} />
-    <View style={connectorStyles.arrow} />
+  <View style={reviewStepStyles.connectorContainer}>
+    <View style={reviewStepStyles.connectorLine} />
+    <View style={reviewStepStyles.connectorArrow} />
   </View>
 );
 
@@ -126,41 +127,9 @@ const ReviewStep = ({
         </View>
       </View>
 
-      <View style={{ height: 24 }} />
+      <View style={reviewStepStyles.bottomSpacer} />
     </ScrollView>
   );
-};
-
-const connectorStyles = {
-  container: {
-    alignItems: 'center',
-    height: 40,
-    justifyContent: 'center',
-    zIndex: 1,
-    marginTop: -2,
-    marginBottom: -2,
-  },
-  line: {
-    width: 2,
-    height: '100%',
-    backgroundColor: '#E0E0E0',
-    position: 'absolute',
-  },
-  arrow: {
-    width: 0,
-    height: 0,
-    backgroundColor: 'transparent',
-    borderStyle: 'solid',
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderBottomWidth: 0,
-    borderTopWidth: 8,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: '#E0E0E0',
-    position: 'absolute',
-    bottom: 0,
-  },
 };
 
 export default ReviewStep;

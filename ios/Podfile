@@ -101,6 +101,30 @@ setup_permissions([
   # 'SpeechRecognition',
   # 'StoreKit',
 ])
+
+def ensure_react_native_verus_ios_sources
+  package_dir = File.expand_path('../node_modules/react-native-verus', __dir__)
+  source_marker = File.join(package_dir, 'ios', 'ZCashLightClientKit', 'Initializer.swift')
+  framework_marker = File.join(package_dir, 'ios', 'libzcashlc.xcframework')
+
+  return if File.exist?(source_marker) && File.directory?(framework_marker)
+
+  Pod::UI.puts '[react-native-verus] Missing generated iOS sources. Rebuilding package assets...'.yellow
+
+  Dir.chdir(package_dir) do
+    env = {
+      'PATH' => "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:#{ENV['PATH']}",
+      'HUSKY' => '0',
+      'CI' => '1',
+      'YARN_ENABLE_SCRIPTS' => 'false',
+      'YARN_ENABLE_IMMUTABLE_INSTALLS' => 'false',
+    }
+
+    system(env, 'yarn', 'install', '--mode=skip-build') || raise('[react-native-verus] yarn install failed')
+    system(env, './node_modules/.bin/sucrase', './scripts', '--transforms', 'typescript,imports', '--out-dir', './scripts-built') || raise('[react-native-verus] sucrase transpile failed')
+    system(env, 'node', './scripts-built/updateSources.js') || raise('[react-native-verus] updateSources failed')
+  end
+end
  
 # If you are using a `react-native-flipper` your iOS build will fail when `NO_FLIPPER=1` is set.
 # because `react-native-flipper` depends on (FlipperKit,...) that will be excluded
@@ -131,6 +155,7 @@ pre_install do |installer|
 end
 
 target 'verusmobile' do
+  ensure_react_native_verus_ios_sources
   config = use_native_modules!
   use_modular_headers!
   permissions_path = '../node_modules/react-native-permissions/ios'
@@ -182,4 +207,3 @@ target 'verusmobile' do
     end
   end
 end
-

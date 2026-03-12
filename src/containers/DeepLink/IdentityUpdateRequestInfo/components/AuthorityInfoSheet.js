@@ -3,12 +3,13 @@
   - 2026-02-07: Created. SemiModal that explains what revocation and recovery
     authorities are. Triggered by the info icon on the HighRiskStep authority
     outcome card.
+  - 2026-03-11: Clarified that recovery authority changes can hand over identity control .
 */
 import React from 'react';
 import { View, Text } from 'react-native';
 import SemiModal from '../../../../components/SemiModal';
 import GradientButton from '../../../../components/GradientButton';
-import styles from '../styles/AuthorityInfoSheet.styles';
+import { authorityInfoSheetStyles as styles } from '../../../../styles';
 
 const CONTENT = {
   revocation: {
@@ -22,7 +23,7 @@ const CONTENT = {
     title: 'What is a recovery authority?',
     paragraphs: [
       'The recovery authority is an identity that can recover this VerusID if it is revoked or compromised. It can restore access and update the primary addresses.',
-      'Changing the recovery authority means a different identity will have the power to recover this ID.',
+      'Changing the recovery authority means a different identity can recover this ID and potentially hand over control to a new owner.',
     ],
   },
   both: {

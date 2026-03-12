@@ -15,6 +15,7 @@ import InvoiceInfo from '../InvoiceInfo/InvoiceInfo';
 import { handleVerusPayInvoiceDetailsVDXFObject } from '../../../utils/deeplink/handlers/verusPayInvoiceDetailsHandler';
 import { handleAuthenticationRequestDetailsVDXFObject } from '../../../utils/deeplink/handlers/authenticationRequestDetailsHandler';
 import { handleIdentityUpdateRequestDetailsVDXFObject } from '../../../utils/deeplink/handlers/identityUpdateRequestDetailsHandler';
+import { handleProvisionIdentityDetailsVDXFObject } from '../../../utils/deeplink/handlers/provisionIdentityDetailsHandler';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import { CommonActions } from '@react-navigation/native';
 import AuthenticationRequestInfo from '../AuthenticationRequestInfo/AuthenticationRequestInfo';
@@ -55,14 +56,6 @@ const GenericRequestHome = props => {
    * }>}
    */
   const detailHandlers = new Map();
-
-  const handleProvisionIdentityDetailsVDXFObject = async (_request, currentResponse, index) => {
-    return {
-      displayProps: undefined,
-      response: currentResponse,
-      handledIndices: [index],
-    };
-  };
 
   detailHandlers.set(VERUSPAY_INVOICE_DETAILS_VDXF_KEY.vdxfid, handleVerusPayInvoiceDetailsVDXFObject);
   detailHandlers.set(AUTHENTICATION_REQUEST_VDXF_KEY.vdxfid, handleAuthenticationRequestDetailsVDXFObject);

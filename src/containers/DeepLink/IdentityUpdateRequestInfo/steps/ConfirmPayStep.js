@@ -9,6 +9,7 @@
   - 2026-02-06: Cleaned up icons -- removed heavy icons from fee card and recap
     rows, kept wallet icon on payment source card. Added fiat fee display below
     crypto fee using Redux rates (WYRE_SERVICE -> GENERAL fallback).
+  - 2026-03-11: Tightened fee validation and post-broadcast error handling .
 */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, TouchableOpacity, View } from 'react-native';
@@ -35,7 +36,7 @@ import {
   IdentityUpdateResponseOrdinalVDXFObject,
   VerifiableSignatureData,
 } from 'verus-typescript-primitives';
-import localStyles from '../styles/ConfirmPayStep.styles';
+import { confirmPayStepStyles as localStyles } from '../../../../styles';
 
 const ConfirmPayStep = ({
   details,
@@ -165,7 +166,7 @@ const ConfirmPayStep = ({
     setFeeCurrency(null);
 
     try {
-      const [channelName, address, systemId] = source.wallet.channel.split('.');
+      const [, address, systemId] = source.wallet.channel.split('.');
 
       const updateIdentityTx = await createUpdateIdentityTx(
         systemId,
@@ -182,6 +183,9 @@ const ConfirmPayStep = ({
 
       const feeObj = Object.fromEntries(updateIdentityTx.deltas.entries());
       const currency = Object.keys(feeObj)[0];
+      if (currency !== requestedCurrency) {
+        throw new Error('Unexpected fee currency');
+      }
 
       setFee(satsToCoins(BigNumber(updateIdentityTx.deltas.get(currency).abs().toString())).toString());
       setFeeCurrency(currency);
@@ -197,10 +201,11 @@ const ConfirmPayStep = ({
 
   const handleUpdate = useCallback(async () => {
     setBroadcasting(true);
+    let broadcastTxid = null;
 
     try {
       const { wallet, coinObj: sourceCoinObj } = selectedSource;
-      const [channelName, channelAddress, systemId] = wallet.api_channels[API_SEND].split('.');
+      const [channelName, , systemId] = wallet.api_channels[API_SEND].split('.');
 
       const spendingKey = await requestPrivKey(sourceCoinObj.id, channelName);
 
@@ -213,7 +218,7 @@ const ConfirmPayStep = ({
 
       if (result.error) throw new Error(result.error.message);
 
-      const txid = result.result;
+      broadcastTxid = result.result;
 
       // Build response (mirrored from IdentityUpdatePaymentConfiguration)
       const baseResponse = new GenericResponse();
@@ -224,7 +229,9 @@ const ConfirmPayStep = ({
       const responseDetail = new IdentityUpdateResponseOrdinalVDXFObject({
         data: new IdentityUpdateResponseDetails({
           requestID: details.containsRequestID() ? details.requestID : undefined,
-          txid: txid ? Buffer.from(txid, 'hex').reverse() : undefined,
+          txid: broadcastTxid
+            ? Buffer.from(broadcastTxid, 'hex').reverse()
+            : undefined,
         }),
       });
 
@@ -245,7 +252,11 @@ const ConfirmPayStep = ({
         cancel();
       }
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to broadcast transaction');
+      const errorMessage = broadcastTxid
+        ? `Your identity update transaction was already broadcast${broadcastTxid ? ` (${broadcastTxid})` : ''}. ${e.message || 'A later step failed after the broadcast completed.'}`
+        : e.message || 'Failed to broadcast transaction';
+      // Codex GPT-5: once a txid exists, surface that funds were spent instead of implying a failed broadcast.
+      Alert.alert('Error', errorMessage);
       setBroadcasting(false);
     }
   }, [selectedSource, txHex, utxos, details, responseBufferString, coinObj, signerIdentityAddress, next, detailIndex, cancel]);

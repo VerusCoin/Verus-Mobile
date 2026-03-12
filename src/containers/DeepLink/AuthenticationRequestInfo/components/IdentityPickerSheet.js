@@ -8,12 +8,13 @@
 */
 
 import React from 'react';
-import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, ScrollView } from 'react-native';
 import { Portal, Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../../../globals/colors';
 import SemiModal from '../../../../components/SemiModal';
+import { identityPickerSheetStyles as styles } from '../../../../styles';
 
 const truncateAddress = (addr) => {
   if (!addr || addr.length <= 14) return addr;
@@ -64,7 +65,7 @@ const IdentityPickerSheet = ({
             </Text>
           </View>
 
-          <ScrollView style={{ maxHeight: 400 }}>
+          <ScrollView style={styles.scrollView}>
             <View style={styles.listContainer}>
               {!hasIdentities && (
                 <View style={styles.emptyContainer}>
@@ -157,87 +158,5 @@ const IdentityPickerSheet = ({
     </Portal>
   );
 };
-
-const styles = StyleSheet.create({
-  description: {
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-  },
-  descriptionText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-  },
-  listContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-  },
-  emptyContainer: {
-    paddingVertical: 24,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#888',
-  },
-  networkGroup: {
-    marginBottom: 20,
-  },
-  networkHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-    paddingHorizontal: 4,
-  },
-  networkHeaderText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#888',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  identityCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8F8F8',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    marginBottom: 8,
-  },
-  identityCardSelected: {
-    backgroundColor: '#F0F9F1',
-    borderWidth: 1,
-    borderColor: Colors.verusGreenColor,
-  },
-  identityIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#EFEFEF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  identityTextSection: {
-    flex: 1,
-  },
-  identityName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1A1A1A',
-    marginBottom: 2,
-  },
-  identityNameSelected: {
-    color: Colors.verusGreenColor,
-  },
-  identityAddress: {
-    fontSize: 12,
-    color: '#888',
-  },
-  chevron: {
-    marginLeft: 8,
-  },
-});
 
 export default IdentityPickerSheet;
