@@ -482,9 +482,15 @@ const AuthenticationRequestInfo = props => {
     });
 
     const baseResponse = new GenericResponse();
-    baseResponse.fromBuffer(response.toBuffer(), 0);
+    if (response.details && response.details.length > 0) {
+      baseResponse.fromBuffer(response.toBuffer(), 0);
+    } else {
+      Object.assign(baseResponse, response);
+      baseResponse.details = [];
+    }
     if (baseResponse.details == null) baseResponse.details = [];
     baseResponse.details = [...baseResponse.details, responseDetail];
+    baseResponse.setFlags();
 
     if (baseResponse.signature == null) {
       const coinObj = CoinDirectory.findCoinObj(chainId);
