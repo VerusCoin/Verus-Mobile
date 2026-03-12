@@ -348,7 +348,17 @@ class VrpcInterface {
       throw new Error(
         `Verus RPC endpoint ${endpoint} not initialized for systemId ${systemId}`,
       );
-    return new VerusIdInterface(systemId, endpoint)
+
+    const urlKey = getUrlKey(endpoint);
+
+    if (VRPC_API_KEYS[urlKey]) {
+      return new VerusIdInterface(systemId, endpoint, undefined, undefined, {
+        id: VRPC_API_APP_ID,
+        key: VRPC_API_KEYS[urlKey]
+      });
+    } else {
+      return new VerusIdInterface(systemId, endpoint)
+    }
   }
 
   addDefaultEndpoints = () => {

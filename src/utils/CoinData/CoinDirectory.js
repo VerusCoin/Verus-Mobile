@@ -11,6 +11,7 @@ import { getStoredContractDefinitions, storeContractDefinitionForNetwork } from 
 import { DEST_ETH, FLAG_MASK } from "verus-typescript-primitives";
 import { BN } from "bn.js";
 import { getWeb3ProviderForNetwork } from "../web3/provider";
+import { getAuthDataForUrl } from "../url";
 
 class _CoinDirectory {
   fullCoinList = [];
@@ -260,7 +261,7 @@ class _CoinDirectory {
 
         if (checkEndpoint) {
           try {
-            const testInterface = new VerusdRpcInterface(system, endpoint);
+            const testInterface = new VerusdRpcInterface(system, endpoint, undefined, undefined, getAuthDataForUrl(endpoint));
 
             const testResult = await timeout(10000, testInterface.getInfo());
   
@@ -272,12 +273,16 @@ class _CoinDirectory {
           }
         } else endpoints = [endpoint]
       } else if (trySystemFallback) {
+        const fallbackEndpoint = isTestnet
+          ? this.getVrpcEndpoints("VRSCTEST")[0]
+          : this.getVrpcEndpoints("VRSC")[0]
         // Fallback to trying to see currency system from VRSC/VRSCTEST and get nodes from there
         const currencyInterface = new VerusdRpcInterface(
           isTestnet ? coinsList.VRSCTEST.currency_id : coinsList.VRSC.currency_id,
-          isTestnet
-            ? this.getVrpcEndpoints("VRSCTEST")[0]
-            : this.getVrpcEndpoints("VRSC")[0],
+          fallbackEndpoint,
+          undefined,
+          undefined,
+          getAuthDataForUrl(fallbackEndpoint)
         );
 
         const systemDefinition = await currencyInterface.getCurrency(system)
