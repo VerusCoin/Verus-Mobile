@@ -10,6 +10,7 @@ import VrpcProvider from '../../vrpc/vrpcInterface';
 import store from "../../../store";
 import { coinsList } from "../../CoinData/CoinsList";
 import { VRPC } from "../../constants/intervalConstants";
+import { VerusIdInterface } from "verusid-ts-client";
 
 /**
  * Checks if a generic envelope has anything in its details that requires
@@ -91,7 +92,7 @@ export const validateGenericRequest = async (request) => {
   } else if (isRequestRequiredSignature(request) || request.hasAppOrDelegatedID()) {
     throw new Error("This type of request requires a signature")
   } else {
-    if (await verifyGenericRequest(coinObj, request, signedBy.result, true)) {
+    if (!VerusIdInterface.validateUnsignedGenericRequest(request)) {
       throw new Error("Failed to verify request")
     }
   }
