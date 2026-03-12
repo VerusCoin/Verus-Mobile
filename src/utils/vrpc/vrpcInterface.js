@@ -12,6 +12,8 @@ import { ApiRequest } from 'verus-typescript-primitives';
 import { coinsList } from '../CoinData/CoinsList';
 import { Alert } from 'react-native';
 import { CoinDirectory } from '../CoinData/CoinDirectory';
+import { VRPC_API_KEYS, VRPC_API_APP_ID } from '../../../env/index';
+import { getUrlKey } from '../url';
 
 class CachedVerusdRpcInterface extends VerusdRpcInterface {
   static CACHED_REQUESTS = [
@@ -44,9 +46,15 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
    * @param {string} endpoint
    * @param {(id: string, time: number) => void} setLastTime 
    * @param {(id: string) => number} getLastTime 
+   * @param {import('verusd-rpc-ts-client/lib/VerusdRpcInterface').APIAuthData} APIAuth
    */
-  constructor(systemId, endpoint, setLastTime, getLastTime) {
-    super(systemId, endpoint)
+  constructor(systemId, endpoint, setLastTime, getLastTime, APIAuth) {
+    if (APIAuth) {
+      super(systemId, endpoint, undefined, undefined, APIAuth)
+    } else {
+      super(systemId, endpoint)
+    }
+    
     this.endpoint = endpoint;
     this.lastheight = 0;
     this.lasttime = 0;
@@ -189,12 +197,29 @@ class VrpcInterface {
 
     const id = VrpcInterface.getEndpointId(systemId, endpoint)
 
-    if (!this.cacheInterfaces[id]) this.cacheInterfaces[id] = new CachedVerusdRpcInterface(
-      systemId,
-      endpoint,
-      (...params) => this.setLastTime(...params),
-      (...params) => this.getLastTIme(...params)
-    )
+    if (!this.cacheInterfaces[id]) {
+      const urlKey = getUrlKey(endpoint);
+
+      if (VRPC_API_KEYS[urlKey]) {
+        this.cacheInterfaces[id] = new CachedVerusdRpcInterface(
+          systemId,
+          endpoint,
+          (...params) => this.setLastTime(...params),
+          (...params) => this.getLastTIme(...params),
+          {
+            id: VRPC_API_APP_ID,
+            key: VRPC_API_KEYS[urlKey]
+          }
+        )
+      } else {
+        this.cacheInterfaces[id] = new CachedVerusdRpcInterface(
+          systemId,
+          endpoint,
+          (...params) => this.setLastTime(...params),
+          (...params) => this.getLastTIme(...params)
+        )
+      }
+    }
     
     this.systemEndpointIds[systemId].push(id);
   }
@@ -323,7 +348,17 @@ class VrpcInterface {
       throw new Error(
         `Verus RPC endpoint ${endpoint} not initialized for systemId ${systemId}`,
       );
-    return new VerusIdInterface(systemId, endpoint)
+
+    const urlKey = getUrlKey(endpoint);
+
+    if (VRPC_API_KEYS[urlKey]) {
+      return new VerusIdInterface(systemId, endpoint, undefined, undefined, {
+        id: VRPC_API_APP_ID,
+        key: VRPC_API_KEYS[urlKey]
+      });
+    } else {
+      return new VerusIdInterface(systemId, endpoint)
+    }
   }
 
   addDefaultEndpoints = () => {
