@@ -4,7 +4,7 @@
 */
 import { StyleSheet } from 'react-native';
 
-// Codex GPT-5: keep the review-step connector styling out of the render component.
+// keep the review-step connector styling out of the render component.
 export default StyleSheet.create({
   connectorContainer: {
     alignItems: 'center',

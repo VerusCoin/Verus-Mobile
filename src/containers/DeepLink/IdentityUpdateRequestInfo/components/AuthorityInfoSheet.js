@@ -22,14 +22,14 @@ const CONTENT = {
   recovery: {
     title: 'What is a recovery authority?',
     paragraphs: [
-      'The recovery authority is an identity that can recover this VerusID if it is revoked or compromised. It can restore access and update the primary addresses.',
+      'The recovery authority is an identity that can recover this VerusID if it is revoked or compromised. It can restore access and change the identity owner.',
       'Changing the recovery authority means a different identity can recover this ID and potentially hand over control to a new owner.',
     ],
   },
   both: {
     title: 'Authority changes',
     paragraphs: [
-      'The revocation authority can revoke (lock) this VerusID. The recovery authority can recover it if revoked or compromised, restoring access and updating primary addresses.',
+      'The revocation authority can revoke (lock) this VerusID. The recovery authority can recover it if revoked or compromised, restoring access and changing the identity owner.',
       'Both authorities are being changed, meaning different identities will have these powers after this update.',
     ],
   },

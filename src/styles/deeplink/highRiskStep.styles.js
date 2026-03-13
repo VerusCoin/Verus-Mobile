@@ -4,7 +4,7 @@
 */
 import { Platform, StyleSheet } from 'react-native';
 
-// Codex GPT-5: extracted step styling so the high-risk logic stays easier to review.
+// extracted step styling so the high-risk logic stays easier to review.
 export default StyleSheet.create({
   root: {
     flex: 1,

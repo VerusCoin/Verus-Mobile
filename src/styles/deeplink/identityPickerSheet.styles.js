@@ -5,7 +5,7 @@
 import { StyleSheet } from 'react-native';
 import Colors from '../../globals/colors';
 
-// Codex GPT-5: keep the authentication identity picker presentation centralized for reuse.
+// keep the authentication identity picker presentation centralized for reuse.
 export default StyleSheet.create({
   description: {
     paddingHorizontal: 20,

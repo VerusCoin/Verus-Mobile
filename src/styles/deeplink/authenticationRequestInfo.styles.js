@@ -5,7 +5,7 @@
 import { StyleSheet } from 'react-native';
 import Colors from '../../globals/colors';
 
-// Codex GPT-5: keep authentication request styling centralized without mixing it into request logic.
+// keep authentication request styling centralized without mixing it into request logic.
 export default StyleSheet.create({
   container: {
     flex: 1,

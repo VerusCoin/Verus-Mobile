@@ -46,6 +46,7 @@ import {
   AuthenticationResponseOrdinalVDXFObject,
   CompactAddressObject,
   fqnToParentAddress,
+  fqnToParentFqn,
   GenericResponse,
   ProvisionIdentityDetails,
   VerifiableSignatureData,
@@ -236,7 +237,7 @@ const AuthenticationRequestInfo = props => {
             );
           }
         } catch (e) {
-          // Codex GPT-5: leave unresolved systems empty rather than guessing the wrong chain.
+          // leave unresolved systems empty rather than guessing the wrong chain.
         }
       }
 
@@ -296,6 +297,39 @@ const AuthenticationRequestInfo = props => {
         .filter(x => x != null),
     );
   }, [recipientConstraints]);
+  const parentConstraintFriendlyNames = useMemo(() => {
+    const names = {};
+
+    if (requiredParentIds.size === 0) {
+      return names;
+    }
+
+    for (const chainId of Object.keys(linkedIds)) {
+      for (const fullyqualifiedname of Object.values(linkedIds[chainId] || {})) {
+        if (!fullyqualifiedname) {
+          continue;
+        }
+
+        try {
+          const parentAddress = fqnToParentAddress(fullyqualifiedname, chainId);
+          const parentFqn = fqnToParentFqn(fullyqualifiedname);
+
+          if (
+            parentAddress &&
+            parentFqn &&
+            requiredParentIds.has(parentAddress) &&
+            names[parentAddress] == null
+          ) {
+            names[parentAddress] = convertFqnToDisplayFormat(parentFqn);
+          }
+        } catch (e) {
+          // Ignore malformed FQNs and keep the address fallback below.
+        }
+      }
+    }
+
+    return names;
+  }, [linkedIds, requiredParentIds]);
 
   const getKnownChainId = chainName => {
     if (!chainName) return chainName;
@@ -367,7 +401,7 @@ const AuthenticationRequestInfo = props => {
       return constraintAddress;
     }
 
-    return 'Unknown identity';
+    return constraintAddress || 'Unknown identity';
   };
 
   const getConstraintRowData = constraint => {
@@ -724,6 +758,15 @@ const AuthenticationRequestInfo = props => {
           continue;
         }
 
+        if (constraint.type === RecipientConstraint.REQUIRED_PARENT) {
+          if (parentConstraintFriendlyNames[constraintAddress]) {
+            names[constraintAddress] =
+              parentConstraintFriendlyNames[constraintAddress];
+          }
+
+          continue;
+        }
+
         try {
           const identity = await getIdentity(lookupSystemId, constraintAddress);
           if (!identity.error && identity.result?.fullyqualifiedname) {
@@ -750,6 +793,7 @@ const AuthenticationRequestInfo = props => {
     defaultRootSystemId,
     recipientConstraints,
     requiredSystemIds,
+    parentConstraintFriendlyNames,
     resolvedSystemNames,
     signerSystemID,
   ]);

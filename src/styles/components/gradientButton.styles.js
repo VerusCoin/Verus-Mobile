@@ -4,7 +4,7 @@
 */
 import { StyleSheet } from 'react-native';
 
-// Codex GPT-5: keep the gradient button layout centralized without altering button behavior.
+// keep the gradient button layout centralized without altering button behavior.
 export default StyleSheet.create({
   gradientButtonWrapper: {
     borderRadius: 24,

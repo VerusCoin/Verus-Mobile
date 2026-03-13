@@ -5,7 +5,7 @@
 import { StyleSheet } from 'react-native';
 import Colors from '../../globals/colors';
 
-// Codex GPT-5: keep invoice request presentation centralized rather than embedded in the request screen.
+// keep invoice request presentation centralized rather than embedded in the request screen.
 export default StyleSheet.create({
   container: {
     flex: 1,

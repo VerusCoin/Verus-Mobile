@@ -5,7 +5,7 @@
 import { StyleSheet } from 'react-native';
 import Colors from '../../globals/colors';
 
-// Codex GPT-5: keep the remove-action renderer focused on content selection instead of styling.
+// keep the remove-action renderer focused on content selection instead of styling.
 export default StyleSheet.create({
   root: {
     flex: 1,

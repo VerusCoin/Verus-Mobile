@@ -5,7 +5,7 @@
 import { StyleSheet } from 'react-native';
 import Colors from '../../globals/colors';
 
-// Codex GPT-5: keep the completion screen presentation centralized and separate from response handling.
+// keep the completion screen presentation centralized and separate from response handling.
 export default StyleSheet.create({
   container: {
     flex: 1,

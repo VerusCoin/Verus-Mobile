@@ -30,7 +30,7 @@ const RemoveActionSection = ({ title, body }) => {
 const ContentMultiMapRemoveModal = props => {
   const meta = props.item?.meta;
 
-  // Codex GPT-5: keep remove-action details explicit about current-state visibility and history.
+  // keep remove-action details explicit about current-state visibility and history.
   return (
     <ScrollView style={localStyles.root} contentContainerStyle={localStyles.content}>
       <RemoveActionSection

@@ -239,7 +239,7 @@ export default function VerusIdObjectData(props) {
         );
       }
 
-      // Codex GPT-5: keep removal cards clearly pre-confirmation by avoiding past tense labels.
+      // keep removal cards clearly pre-confirmation by avoiding past tense labels.
       return renderCmmDescBlock(actionLabel, item.data || 'Unknown value', Colors.warningButtonColor, true);
     }
 

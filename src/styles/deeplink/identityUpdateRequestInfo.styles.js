@@ -5,7 +5,7 @@
 import { StyleSheet } from 'react-native';
 import Colors from '../../globals/colors';
 
-// Codex GPT-5: keep the stepper screen styling separate from the request parsing logic.
+// keep the stepper screen styling separate from the request parsing logic.
 export default StyleSheet.create({
   container: {
     flex: 1,

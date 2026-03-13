@@ -52,7 +52,7 @@ const HIGH_RISK_LABELS = {
  * Primary address keys are formatted as "VERUSID_PRIMARY_ADDRESS:0", so we
  * check the prefix before the colon.
  */
-// Codex GPT-5: keep the high-risk list conservative so payment-routing changes always surface in the warning step.
+// keep the high-risk list conservative so payment-routing changes always surface in the warning step.
 const isHighRiskKey = key => {
   const baseKey = key.includes(':') ? key.split(':')[0] : key;
   return HIGH_RISK_KEYS.has(baseKey);

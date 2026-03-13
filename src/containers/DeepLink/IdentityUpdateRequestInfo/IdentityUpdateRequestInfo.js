@@ -296,7 +296,7 @@ const IdentityUpdateRequestInfo = props => {
                 ? baseUpdateKey
                 : `${baseUpdateKey}:remove:${index}`;
 
-              // Codex GPT-5: derive remove-action copy from the current identity state, not from chain permanence.
+              // derive remove-action copy from the current identity state, not from chain permanence.
               displayUpdates[VERUSID_CMM_INFO.key][updateKey] = {
                 data: removeUi.summary,
                 rawData: [update],

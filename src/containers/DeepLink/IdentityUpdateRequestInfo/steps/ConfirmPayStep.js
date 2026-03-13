@@ -255,7 +255,7 @@ const ConfirmPayStep = ({
       const errorMessage = broadcastTxid
         ? `Your identity update transaction was already broadcast${broadcastTxid ? ` (${broadcastTxid})` : ''}. ${e.message || 'A later step failed after the broadcast completed.'}`
         : e.message || 'Failed to broadcast transaction';
-      // Codex GPT-5: once a txid exists, surface that funds were spent instead of implying a failed broadcast.
+      // once a txid exists, surface that funds were spent instead of implying a failed broadcast.
       Alert.alert('Error', errorMessage);
       setBroadcasting(false);
     }

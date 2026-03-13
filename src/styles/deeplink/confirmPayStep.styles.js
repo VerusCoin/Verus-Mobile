@@ -5,7 +5,7 @@
 import { StyleSheet } from 'react-native';
 import Colors from '../../globals/colors';
 
-// Codex GPT-5: extracted payment-step styling to keep fee and signing logic focused.
+// extracted payment-step styling to keep fee and signing logic focused.
 export default StyleSheet.create({
   sourceSelectCard: {
     backgroundColor: '#FFFFFF',

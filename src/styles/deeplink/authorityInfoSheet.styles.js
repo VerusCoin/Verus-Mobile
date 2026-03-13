@@ -4,7 +4,7 @@
 */
 import { StyleSheet } from 'react-native';
 
-// Codex GPT-5: keep authority explainer presentation isolated from the sheet copy.
+// keep authority explainer presentation isolated from the sheet copy.
 export default StyleSheet.create({
   sheetContent: {
     borderTopLeftRadius: 16,

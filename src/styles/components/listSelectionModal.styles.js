@@ -5,7 +5,7 @@
 import { StyleSheet } from 'react-native';
 import Colors from '../../globals/colors';
 
-// Codex GPT-5: keep the list-selection search UI reusable without keeping styles in the component file.
+// keep the list-selection search UI reusable without keeping styles in the component file.
 export default StyleSheet.create({
   container: {
     flex: 0,

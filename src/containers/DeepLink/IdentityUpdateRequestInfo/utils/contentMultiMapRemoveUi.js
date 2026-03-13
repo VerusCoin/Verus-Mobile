@@ -55,7 +55,7 @@ export const buildContentMultiMapRemoveUi = ({
     ? `This request targets values matching hash ${removeMeta.valueHash.slice(0, 10)}...`
     : null;
 
-  // Codex GPT-5: keep remove-action wording tied to current-state visibility, not permanence.
+  // keep remove-action wording tied to current-state visibility, not permanence.
   switch (removeMeta.action) {
     case 4:
       return {

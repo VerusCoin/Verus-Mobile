@@ -19,7 +19,7 @@ export const getUrlKey = (uri) => {
 export const getAuthDataForUrl = (uri) => {
   const urlKey = getUrlKey(uri);
 
-  // Codex GPT-5: keep auth lookup centralized so every caller passes the same shape.
+  // keep auth lookup centralized so every caller passes the same shape.
   if (VRPC_API_KEYS[urlKey]) {
     return {
       id: VRPC_API_APP_ID,

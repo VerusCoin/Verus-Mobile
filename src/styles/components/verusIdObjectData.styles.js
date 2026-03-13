@@ -5,7 +5,7 @@
 import { StyleSheet } from 'react-native';
 import Colors from '../../globals/colors';
 
-// Codex GPT-5: keep VerusID change-card presentation centralized and out of the data renderer.
+// keep VerusID change-card presentation centralized and out of the data renderer.
 export default StyleSheet.create({
   badgeRow: {
     flexDirection: 'row',
