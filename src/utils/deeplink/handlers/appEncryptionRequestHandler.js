@@ -9,13 +9,10 @@ import {
   AppEncryptionResponseDetails,
   AppEncryptionRequestOrdinalVDXFObject,
   AppEncryptionResponseOrdinalVDXFObject,
-  SaplingPaymentAddress,
   DataDescriptor,
   DataDescriptorOrdinalVDXFObject
 } from "verus-typescript-primitives";
 
-import { SaplingExtendedViewingKey } from "verus-typescript-primitives/dist/pbaas/SaplingExtendedViewingKey";
-import { SaplingExtendedSpendingKey } from "verus-typescript-primitives/dist/pbaas/SaplingExtendedSpendingKey";
 
 import { BN } from "bn.js";
 import { CoinDirectory } from "../../CoinData/CoinDirectory";
@@ -28,12 +25,6 @@ import { getAppOrDelegatedID } from "../helper/getAppOrDelegatedIDhelper";
 
 import { z_getencryptionaddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
 import { encrypt_verus_data } from "../../api/channels/dlight/requests/encrypt";
-
-
-// Configuration
-
-// Set to false when real z_functions are available
-const USE_MOCK_Z_FUNCTIONS = true;
 
 
 /**
@@ -58,39 +49,13 @@ const getExtendedSpendingKey = async (systemID) => {
 };
 
 
-// remove when tested with real functions
-
-const mock_z_getencryptionaddress = async (systemID, params) => {
-  return {
-    err: false,
-    result: {
-      ivk: "a".repeat(64),
-    }
-  };
-};
-
-const mock_encryptverusdata = async (systemID, toAddress, data, returnSsk) => {
-  return {
-    err: false,
-    result: data
-  };
-};
-
-
-
 const callZGetEncryptionAddress = async (systemID, params) => {
-  if (USE_MOCK_Z_FUNCTIONS) {
-    return mock_z_getencryptionaddress(systemID, params);
-  }
 
-    return z_getencryptionaddress(systemID, params);
+  const result = await z_getencryptionaddress(systemID, params);
+  return result;
 };
 
 const callEncryptVerusData = async (systemID, toAddress, data, returnSsk) => {
-  if (USE_MOCK_Z_FUNCTIONS) {
-    return mock_encryptverusdata(systemID, toAddress, data, returnSsk);
-  }
-
   return encrypt_verus_data(systemID, toAddress, data, returnSsk);
 };
 
@@ -124,7 +89,7 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
   
   const encryptionRequest = detail.data;
   
-  const systemID = request.signature.systemID.toIAddress()
+  const systemID = request.signature.systemID.toIAddress();
   const requestSignerID = request.signature.identityID.toIAddress();
   const appOrDelegatedID = getAppOrDelegatedID(request);
 
@@ -175,7 +140,6 @@ const processAppEncryptionRequest = async ({
   // Use appOrDelegatedID if present, otherwise use requestSignerID
   const appID = appOrDelegatedID || requestSignerID;
 
-
   // Check if spending key requested via flags
   const returnESK = request.returnESK();
 
@@ -188,8 +152,9 @@ const processAppEncryptionRequest = async ({
     returnSecret: returnESK
   };
 
-  // Derive channel keys
-  const derivationResult = await callZGetEncryptionAddress(systemID, derivationParams); 
+// Derive channel keys
+  const derivationResult = await callZGetEncryptionAddress(systemID, derivationParams);
+
 
   if (derivationResult.err) {
     throw new Error("key derivation failed");
@@ -197,57 +162,26 @@ const processAppEncryptionRequest = async ({
 
   const keys = derivationResult.result;
 
-  // Build response details
-  let responseDetails;
-
-  if (USE_MOCK_Z_FUNCTIONS) {
-    // Mock mode: create mock objects with valid buffers
-    const mockAddress = new SaplingPaymentAddress();
-    mockAddress.d = Buffer.alloc(11).fill(0x01);
-    mockAddress.pk_d = Buffer.alloc(32).fill(0x02);
-
-    const mockFvk = new SaplingExtendedViewingKey();
-    mockFvk.depth = 0;
-    mockFvk.parentFVKTag = Buffer.alloc(4);
-    mockFvk.childIndex = Buffer.alloc(4);
-    mockFvk.chainCode = Buffer.alloc(32);
-    mockFvk.ak = Buffer.alloc(32);
-    mockFvk.nk = Buffer.alloc(32);
-    mockFvk.ovk = Buffer.alloc(32);
-    mockFvk.dk = Buffer.alloc(32);
-
-    responseDetails = new AppEncryptionResponseDetails({
-      version: new BN(1),
-      flags: new BN(0),
-      incomingViewingKey: Buffer.alloc(32).fill(0xaa),
-      extendedViewingKey: mockFvk,
-      address: mockAddress,
-    });
-  } else {
-    // Real mode: parse actual keys from z_getencryptionaddress
-    if (!keys.ivk || !keys.extfvk || !keys.address) {
-      throw new Error("incomplete key derivation result");
-    }
-
-    if (returnESK && !keys.spendingKey) {
-      throw new Error("spending key requested but not returned");
-    }
-
-    responseDetails = new AppEncryptionResponseDetails({
-      version: new BN(1),
-      incomingViewingKey: keys.ivk, 
-      extendedViewingKey: keys.extfvk,
-      address: keys.address,
-      extendedSpendingKey: returnESK
-        ? SaplingExtendedSpendingKey.fromKeyString(keys.spending_key) : undefined
-    });
-    
+  if (!keys.ivk || !keys.extfvk || !keys.address) {
+    throw new Error("incomplete key derivation result");
   }
-  console.log ("Resonse", responseDetails);
+
+  if (returnESK && !keys.spendingKey) {
+    throw new Error("spending key requested but not returned");
+  }
+
+  const responseDetails = new AppEncryptionResponseDetails({
+    version:             new BN(1),
+    incomingViewingKey:  keys.ivk,
+    extendedViewingKey:  keys.extfvk,
+    address:             keys.address,
+    extendedSpendingKey: keys.spendingKey,
+  });
+
   // get the encrypt to address or return null as its optional
   const encryptTo = request.hasEncryptResponseToAddress() 
-  ? request.encryptResponseToAddress
-  : null;
+    ? request.encryptResponseToAddress
+    : null;
 
   if (!encryptTo) {
     // Return unencrypted response
@@ -269,13 +203,14 @@ const processAppEncryptionRequest = async ({
   if (encryptResult.err) {
     throw new Error("encryption failed");
   }
+
   const encryptedData = encryptResult.result;
 
   // Wrap encrypted data in DataDescriptor
   const encryptedDescriptor = new DataDescriptor({
-    flags: DataDescriptor.FLAG_ENCRYPTED_DATA,
-    objectdata: Buffer.from(encryptedData.encryptedData, 'hex'),
-    epk: Buffer.from(encryptedData.ephemeralPublicKey, 'hex'),
+    flags:      DataDescriptor.FLAG_ENCRYPTED_DATA,
+    objectdata: encryptedData.encryptedData,
+    epk:        encryptedData.ephemeralPublicKey,
   });
 
   return new DataDescriptorOrdinalVDXFObject({
@@ -287,5 +222,3 @@ const processAppEncryptionRequest = async ({
 export default {
   handleAppEncryptionRequestVDXFObject
 };
-
-

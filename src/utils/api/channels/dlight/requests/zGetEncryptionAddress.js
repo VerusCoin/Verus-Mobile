@@ -1,28 +1,42 @@
 import { Tools } from 'react-native-verus';
-import ApiException from '../../../errors/apiError';
-import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants';
+import { SaplingPaymentAddress, decodeDestination } from 'verus-typescript-primitives';
+import { SaplingExtendedViewingKey } from 'verus-typescript-primitives/dist/pbaas/SaplingExtendedViewingKey';
+import { SaplingExtendedSpendingKey } from 'verus-typescript-primitives/dist/pbaas/SaplingExtendedSpendingKey';
 
 export const z_getencryptionaddress = async (alias, params) => {
-  try {
-    const extskHex = params.extsk 
-      ? await Tools.bech32Decode(params.extsk)  
-      : null;
+
+  try
+  {
+    const fromIdHex = params.fromId
+    ? Buffer.from(decodeDestination(params.fromId)).toString('hex')
+    : null;
+
+    const toIdHex = params.toId
+    ? Buffer.from(decodeDestination(params.toId)).toString('hex')
+    : null;
 
     const keys = await Tools.getVerusEncryptionAddress({
-      mnemonicSeed: params.mnemonicSeed ?? null,
-      extsk:        extskHex,
-      fromId:       params.fromId  ?? null,
-      toId:         params.toId    ?? null,
-      hdIndex:      params.hdIndex ?? -1,
+      mnemonicSeed:    params.mnemonicSeed    ?? null,
+      extsk:           params.extsk           ?? null,
+      fromId:          fromIdHex,            
+      toId:            toIdHex,              
+      hdIndex:         params.hdIndex         ?? -1,
       encryptionIndex: params.encryptionIndex ?? 0,
-      returnSecret: params.returnSecret ?? false,
+      returnSecret:    params.returnSecret    ?? false,
     });
 
-    return { result: keys };
-  } catch (e) {
     return {
-      err: true,
-      result: new ApiException(e.message, e.data, alias, DLIGHT_PRIVATE, e.code)
+      result: {
+        address:    SaplingPaymentAddress.fromAddressString(keys.address),
+        ivk:        Buffer.from(keys.ivk, 'hex'),
+        extfvk:     SaplingExtendedViewingKey.fromKeyString(keys.extfvk),
+        spendingKey: keys.spendingKey
+          ? SaplingExtendedSpendingKey.fromKeyString(keys.spendingKey)
+          : null,
+      }
     };
+
+  } catch (e) {
+     throw new Error(`z_getencryptionaddress key derivation failed ${e.message}`);
   }
 };

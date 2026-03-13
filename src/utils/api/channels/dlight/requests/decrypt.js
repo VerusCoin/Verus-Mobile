@@ -1,6 +1,4 @@
 import { Tools } from 'react-native-verus';
-import ApiException from '../../../errors/apiError';
-import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants';
 
 export const decrypt_verus_data = async (alias, params) => {
   try {
@@ -24,9 +22,6 @@ export const decrypt_verus_data = async (alias, params) => {
 
     return { result: Buffer.from(plaintext, 'hex') };
   } catch (e) {
-    return {
-      err: true,
-      result: new ApiException(e.message, e.data, alias, DLIGHT_PRIVATE, e.code)
-    };
+      throw new Error(`decrypt verus data failed ${e.message}`);
   }
 };
