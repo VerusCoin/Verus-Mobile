@@ -56,8 +56,8 @@ const WalletSettings = props => {
   const [enableSendCoinCameraToggle, setEnableSendCoinCameraToggle] = useState(
     !!generalWalletSettings.enableSendCoinCameraToggle
   );
-  const [enableExperimentalIdentityUpdate, setEnableExperimentalIdentityUpdate] = useState(
-    !!generalWalletSettings.enableExperimentalIdentityUpdate
+  const [enableExperimentalGenericRequests, setEnableExperimentalGenericRequests] = useState(
+    !!generalWalletSettings.enableExperimentalGenericRequests
   );
 
   const [errors, setErrors] = useState({
@@ -91,13 +91,13 @@ const WalletSettings = props => {
         homeCardDragDetection,
         allowSettingVerusPaySlippage,
         enableSendCoinCameraToggle,
-        enableExperimentalIdentityUpdate
+        enableExperimentalGenericRequests
       });
       setHasChanges(true);
     } else {
       isMounted.current = true;
     }
-  }, [homeCardDragDetection, allowSettingVerusPaySlippage, enableSendCoinCameraToggle, enableExperimentalIdentityUpdate]);
+  }, [homeCardDragDetection, allowSettingVerusPaySlippage, enableSendCoinCameraToggle, enableExperimentalGenericRequests]);
 
   const describeSlippage = () => {
     createAlert(
@@ -123,8 +123,8 @@ const WalletSettings = props => {
     setEnableSendCoinCameraToggle(!enableSendCoinCameraToggle);
   }
 
-  const toggleEnableExperimentalIdentityUpdate = () => {
-    setEnableExperimentalIdentityUpdate(!enableExperimentalIdentityUpdate);
+  const toggleEnableExperimentalGenericRequests = () => {
+    setEnableExperimentalGenericRequests(!enableExperimentalGenericRequests);
   }
 
   const saveSettings = async () => {
@@ -139,7 +139,7 @@ const WalletSettings = props => {
         homeCardDragDetection,
         allowSettingVerusPaySlippage,
         enableSendCoinCameraToggle,
-        enableExperimentalIdentityUpdate,
+        enableExperimentalGenericRequests,
         ackedCurrencyDisclaimer: settings.ackedCurrencyDisclaimer,
         addressBlocklistDefinition:
           settings.addressBlocklistDefinition == null
@@ -385,11 +385,11 @@ const WalletSettings = props => {
           <Divider />
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={toggleEnableExperimentalIdentityUpdate}
+          onPress={toggleEnableExperimentalGenericRequests}
         >
           <List.Item
-            title="Enable experimental identity update deeplinks"
-            description="Allow GenericRequests that include identity updates (experimental)"
+            title="Enable experimental deeplinks"
+            description="Allow deeplinks that include experimental features (identity update, app encryption, etc.)"
             titleNumberOfLines={100}
             right={() => (
               <View
@@ -400,8 +400,8 @@ const WalletSettings = props => {
                 }}
               >
                 <Switch
-                  value={enableExperimentalIdentityUpdate}
-                  onValueChange={toggleEnableExperimentalIdentityUpdate}
+                  value={enableExperimentalGenericRequests}
+                  onValueChange={toggleEnableExperimentalGenericRequests}
                   color={Colors.primaryColor}
                 />
               </View>
