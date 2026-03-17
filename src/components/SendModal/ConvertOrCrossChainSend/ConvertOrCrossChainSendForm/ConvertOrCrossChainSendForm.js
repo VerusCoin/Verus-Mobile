@@ -922,7 +922,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
 
         if (keyhashIsEth()) {
           return new TransferDestination({
-            destination_bytes: Buffer.from(keyhash.substring(2), 'hex'),
+            destinationBytes: Buffer.from(keyhash.substring(2), 'hex'),
             type: DEST_ETH
           })
         } else {
@@ -934,7 +934,7 @@ const ConvertOrCrossChainSendForm = ({ setLoading, setModalHeight, updateSendFor
           else throw new Error("Incompatible address type.");
 
           return new TransferDestination({
-            destination_bytes: hash,
+            destinationBytes: hash,
             type
           })
         }        

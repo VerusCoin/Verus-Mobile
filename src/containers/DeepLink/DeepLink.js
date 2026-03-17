@@ -308,11 +308,11 @@ const DeepLink = (props) => {
       const initAddresses = [];
 
       if (req.details.identity.containsRevocation()) {
-        initAddresses.push(req.details.identity.revocation_authority.toAddress());
+        initAddresses.push(req.details.identity.revocationAuthority.toAddress());
       }
 
       if (req.details.identity.containsRecovery()) {
-        initAddresses.push(req.details.identity.recovery_authority.toAddress());
+        initAddresses.push(req.details.identity.recoveryAuthority.toAddress());
       }
 
       friendlyNames = await getFriendlyNameMap(coinObj.system_id, subjectIdentity, initAddresses);
