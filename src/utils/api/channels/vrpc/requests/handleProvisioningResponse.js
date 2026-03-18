@@ -13,7 +13,10 @@ export const handleProvisioningResponse = async (
   notificationUid,
   requestedId,
   requestedFqn,
-  setNotification = () => { }
+  setNotification = () => { },
+  requestType = 'loginconsent',
+  signingId = null,
+  hasResponseUris = null
 ) => {
 
   // Verify response signature
@@ -42,6 +45,9 @@ export const handleProvisioningResponse = async (
       status: NOTIFICATION_TYPE_VERUSID_PENDING,
       fqn: requestedFqn,
       loginRequest: loginRequestBase64,
+      requestType,
+      signingId,
+      hasResponseUris,
       fromService: fromService,
       createdAt: Number((Date.now() / 1000).toFixed(0)),
       infoUri: result.info_uri,

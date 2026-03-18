@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, SafeAreaView, Text } from 'react-native';
 import Styles from '../../../styles/index';
-import { primitives } from "verusid-ts-client";
-import { useDispatch } from 'react-redux';
+import { CompactAddressObject, GenericRequest, GenericResponse, IdentityUpdateRequestDetails, IdentityUpdateResponseDetails, IdentityUpdateResponseOrdinalVDXFObject, VerifiableSignatureData } from 'verus-typescript-primitives';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import FundSourceSelectList from '../../FundSourceSelect/FundSourceSelectList';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
@@ -12,10 +11,12 @@ import {
   SEND_MODAL_IDENTITY_UPDATE_CHAIN_INFO, 
   SEND_MODAL_IDENTITY_UPDATE_CMM_DATA_KEYS, 
   SEND_MODAL_IDENTITY_UPDATE_COMPLETE, 
+  SEND_MODAL_IDENTITY_UPDATE_DETAILS_HEX,
+  SEND_MODAL_IDENTITY_UPDATE_IS_TESTNET,
   SEND_MODAL_IDENTITY_UPDATE_FRIENDLY_NAMES, 
   SEND_MODAL_IDENTITY_UPDATE_ID_BLOCKHEIGHT, 
   SEND_MODAL_IDENTITY_UPDATE_ID_RAW_TX_HEX, 
-  SEND_MODAL_IDENTITY_UPDATE_REQUEST_HEX, 
+  SEND_MODAL_IDENTITY_UPDATE_TXID,
   SEND_MODAL_IDENTITY_UPDATE_SUBJECT_ID, 
   SEND_MODAL_IDENTITY_UPDATE_TX_HEX, 
   SEND_MODAL_IDENTITY_UPDATE_UPDATES
@@ -24,7 +25,11 @@ import { usePrevious } from '../../../hooks/usePrevious';
 
 const IdentityUpdatePaymentConfiguration = props => {
   const {
-    deeplinkData,
+    detailsBufferString,
+    requestBufferString,
+    responseBufferString,
+    detailIndex,
+    next,
     chainInfo,
     subjectIdentity,
     displayUpdates,
@@ -32,10 +37,11 @@ const IdentityUpdatePaymentConfiguration = props => {
     cmmDataKeys,
     subjectIdTxHex,
     updateIdTxHex,
+    coinObj,
     cancel
   } = props.route.params;
 
-  const [req, setReq] = useState(primitives.IdentityUpdateRequest.fromJson(deeplinkData));
+  const [details, setDetails] = useState(new IdentityUpdateRequestDetails());
 
   const [loading, setLoading] = useState(false);
 
@@ -45,9 +51,31 @@ const IdentityUpdatePaymentConfiguration = props => {
 
   const prevSendModal = usePrevious(sendModal);
 
+  const baseResponse = React.useMemo(() => {
+    const res = new GenericResponse();
+
+    if (responseBufferString && responseBufferString.length > 0) {
+      res.fromBuffer(Buffer.from(responseBufferString, 'hex'), 0);
+    }
+
+    return res;
+  }, [responseBufferString]);
+
+  const requestIsTestnet = useMemo(() => {
+    if (!requestBufferString) return false;
+    const req = new GenericRequest();
+    req.fromBuffer(Buffer.from(requestBufferString, 'hex'), 0);
+    return req.isTestnet();
+  }, [requestBufferString]);
+
+  const signerIdentityAddress = subjectIdentity.identity
+    ? subjectIdentity.identity.identityaddress
+    : subjectIdentity.identityaddress;
+
   const onSelectFundSource = (source) => {
     openUpdateIdentitySendModal(source.option.coinObj, source.option.wallet, {
-      [SEND_MODAL_IDENTITY_UPDATE_REQUEST_HEX]: req.toBuffer().toString('hex'),
+      [SEND_MODAL_IDENTITY_UPDATE_DETAILS_HEX]: details.toBuffer().toString('hex'),
+      [SEND_MODAL_IDENTITY_UPDATE_IS_TESTNET]: requestIsTestnet,
       [SEND_MODAL_IDENTITY_UPDATE_ID_RAW_TX_HEX]: subjectIdTxHex,
       [SEND_MODAL_IDENTITY_UPDATE_ID_BLOCKHEIGHT]: subjectIdentity.blockheight,
       [SEND_MODAL_IDENTITY_UPDATE_SUBJECT_ID]: subjectIdentity,
@@ -60,6 +88,14 @@ const IdentityUpdatePaymentConfiguration = props => {
   }
 
   useEffect(() => {
+    if (detailsBufferString) {
+      const det = new IdentityUpdateRequestDetails();
+      det.fromBuffer(Buffer.from(detailsBufferString, 'hex'), 0);
+      setDetails(det);
+    }
+  }, [detailsBufferString]);
+
+  useEffect(() => {
     if (
       sendModal &&
       prevSendModal &&
@@ -67,9 +103,34 @@ const IdentityUpdatePaymentConfiguration = props => {
       prevSendModal.type != null &&
       prevSendModal.data[SEND_MODAL_IDENTITY_UPDATE_COMPLETE]
     ) {
-      cancel();
+      if (next) {
+        const txid = prevSendModal.data[SEND_MODAL_IDENTITY_UPDATE_TXID];
+        const responseDetail = new IdentityUpdateResponseOrdinalVDXFObject({
+          data: new IdentityUpdateResponseDetails({
+            requestID: details.containsRequestID() ? details.requestID : undefined,
+            txid: txid ? Buffer.from(txid, 'hex').reverse() : undefined
+          })
+        });
+
+        const updatedResponse = baseResponse;
+        if (updatedResponse.details == null) updatedResponse.details = [];
+        updatedResponse.details = [...updatedResponse.details, responseDetail];
+
+        if (updatedResponse.signature == null) {
+          updatedResponse.signature = new VerifiableSignatureData({
+            systemID: CompactAddressObject.fromIAddress(coinObj.system_id),
+            identityID: CompactAddressObject.fromIAddress(signerIdentityAddress)
+          });
+
+          updatedResponse.setSigned();
+        }
+
+        next(updatedResponse, [detailIndex]);
+      } else {
+        cancel();
+      }
     }
-  }, [sendModal]);
+  }, [sendModal, prevSendModal, baseResponse, details, coinObj, detailIndex, next, cancel, signerIdentityAddress]);
 
   return loading ? (
     <AnimatedActivityIndicatorBox />
@@ -86,11 +147,11 @@ const IdentityUpdatePaymentConfiguration = props => {
           sourceOptions={{}}
           allSubWallets={allSubWallets}
           coinObjs={activeCoinsForUser}
-          testnet={req.details.isTestnet()}
+          testnet={requestIsTestnet}
           requestedCurrency={
-            req.details.containsSystem() ?
-              req.details.systemid.toAddress() :
-              req.details.isTestnet() ?
+            details.containsSystem() ?
+              details.systemID.toAddress() :
+              requestIsTestnet ?
                 coinsList.VRSCTEST.currency_id :
                 coinsList.VRSC.currency_id
           }

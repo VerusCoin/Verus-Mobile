@@ -22,3 +22,5 @@ export * from './requests/extractLoginConsentSig';
 export * from './requests/getCurrencyConverters';
 export * from './requests/getInvoiceSourceOptions';
 export * from './requests/createVerusPayInvoice';
+export * from './requests/verifyGenericRequest';
+export * from './requests/signGenericResponse';

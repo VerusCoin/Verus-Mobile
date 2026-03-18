@@ -9,6 +9,8 @@ import VerusIdObjectData from '../VerusIdObjectData';
 import {createAlert} from '../../actions/actions/alert/dispatchers/alert';
 import MissingInfoRedirect from '../MissingInfoRedirect/MissingInfoRedirect';
 import { convertFqnToDisplayFormat } from '../../utils/fullyqualifiedname';
+import { getSystemNameFromSystemId } from '../../utils/CoinData/CoinData';
+import { CoinDirectory } from '../../utils/CoinData/CoinDirectory';
 import { openUrl } from '../../utils/linking';
 
 export default function VerusIdDetailsModal(props) {
@@ -58,6 +60,20 @@ export default function VerusIdDetailsModal(props) {
     openUrl(url)
   };
 
+  const isTestnetSystem = () => {
+    if (!verusId || !verusId.identity || !verusId.identity.systemid) return false;
+
+    try {
+      const systemName = getSystemNameFromSystemId(verusId.identity.systemid);
+      const coinObj = CoinDirectory.getBasicCoinObj(systemName);
+      return !!coinObj.testnet;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const showDetailsButton = !isTestnetSystem();
+
   useEffect(() => {
     onVisibleUpdate();
   }, [visible]);
@@ -79,7 +95,7 @@ export default function VerusIdDetailsModal(props) {
         <AnimatedActivityIndicatorBox />
       ) : (
         <SafeAreaView style={Styles.centerContainer}>
-          <View style={{...Styles.headerContainer, minHeight: 48}}>
+          <View style={{ ...Styles.headerContainer, minHeight: 48 }}>
             <View style={Styles.semiModalHeaderContainer}>
               <Button onPress={cancel} textColor={Colors.primaryColor}>
                 {'Close'}
@@ -93,7 +109,7 @@ export default function VerusIdDetailsModal(props) {
               </Text>
               <Button
                 textColor={Colors.primaryColor}
-                disabled={verusId == null || failedToLoad}
+                disabled={verusId == null || failedToLoad || !showDetailsButton}
                 onPress={openIdDetails}>
                 {'Details'}
               </Button>

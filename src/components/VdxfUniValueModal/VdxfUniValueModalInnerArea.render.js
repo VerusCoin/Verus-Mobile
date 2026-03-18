@@ -27,19 +27,33 @@ export const VdxfUniValueModalInnerAreaContentRender = (props) => {
     setVisible: props.setVisible
   };
 
-  return props.objects && props.objects.length > 0 ? props.objects.map((x, index) => {
-    if (VdxfUniValueInnerAreaContentMap.has(x.key)) {
-      const Content = VdxfUniValueInnerAreaContentMap.get(x.key);
+  if (props.objects && props.objects.length > 0) {
+    return props.objects.map((x) => {
+      if (VdxfUniValueInnerAreaContentMap.has(x.key)) {
+        const Content = VdxfUniValueInnerAreaContentMap.get(x.key);
 
-      return <Content {...props} {...starterProps} data={x.data} />
-    } else return <MissingInfoRedirect
-      icon={'alert-circle-outline'}
-      label={"Unable to display data"}
-    />
-  }) : <MissingInfoRedirect
-    icon={'alert-circle-outline'}
-    label={"No data"}
-  />
+        return (extraProps) => (
+          <Content {...props} {...starterProps} {...extraProps} data={x.data} />
+        );
+      }
+
+      return () => (
+        <MissingInfoRedirect
+          icon={'alert-circle-outline'}
+          label={"Unable to display data"}
+        />
+      );
+    });
+  }
+
+  return [
+    () => (
+      <MissingInfoRedirect
+        icon={'alert-circle-outline'}
+        label={"No data"}
+      />
+    )
+  ];
 };
 
 export const VdxfUniValueModalInnerAreaRender = (props, navigator) => {

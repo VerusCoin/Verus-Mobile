@@ -9,6 +9,7 @@ import base64url from 'base64url';
 import { URL } from 'react-native-url-polyfill';
 import { primitives } from 'verusid-ts-client'
 import { MAX_DEEPLINK_STRING_LENGTH } from '../utils/constants/deeplink';
+import { DEEPLINK_PROTOCOL_URL_STRING, GENERIC_REQUEST_DEEPLINK_VDXF_KEY, GenericRequest } from 'verus-typescript-primitives';
 
 export default function* deeplinkSaga() {
   yield all([takeEvery(SET_DEEPLINK_URL, handleDeeplinkUrl)]);
@@ -21,54 +22,66 @@ function* handleDeeplinkUrl(action) {
     try {
       if (urlstring.length >= MAX_DEEPLINK_STRING_LENGTH) throw new Error("Deeplink URL max length exceeded.");
       const url = new URL(urlstring);
-  
-      if (url.host !== CALLBACK_HOST) throw new Error('Unsupported host url.');
-  
-      const id = url.pathname.split('/')[1];
-  
-      if (!SUPPORTED_DLS.includes(id)) throw new Error('Unsupported deeplink type.');
 
-      if (id === primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid) {
-        const req = new primitives.LoginConsentRequest();
-        req.fromBuffer(
-          base64url.toBuffer(
-            url.searchParams.get(
-              primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid,
+      if (url.protocol === `${DEEPLINK_PROTOCOL_URL_STRING}:`) {
+        const req = GenericRequest.fromWalletDeeplinkUri(urlstring);
+
+        yield call(handleFinishDeeplink, {
+          type: SET_DEEPLINK_DATA,
+          payload: {
+            id: GENERIC_REQUEST_DEEPLINK_VDXF_KEY.vdxfid,
+            data: req.toBuffer().toString('hex'),
+          },
+        });
+      } else {
+        if (url.host !== CALLBACK_HOST) throw new Error('Unsupported host url.');
+
+        const id = url.pathname.split('/')[1];
+
+        if (!SUPPORTED_DLS.includes(id)) throw new Error('Unsupported deeplink type.');
+
+        if (id === primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid) {
+          const req = new primitives.LoginConsentRequest();
+          req.fromBuffer(
+            base64url.toBuffer(
+              url.searchParams.get(
+                primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid,
+              ),
             ),
-          ),
-        );
-    
-        yield call(handleFinishDeeplink, {
-          type: SET_DEEPLINK_DATA,
-          payload: {
-            id,
-            data: req.toJson(),
-          },
-        });
-      } else if (id === primitives.VERUSPAY_INVOICE_VDXF_KEY.vdxfid) {
-        const inv = primitives.VerusPayInvoice.fromWalletDeeplinkUri(urlstring);
-    
-        yield call(handleFinishDeeplink, {
-          type: SET_DEEPLINK_DATA,
-          payload: {
-            id,
-            data: inv.toJson(),
-            uri: urlstring
-          },
-        });
-      } 
-      // else if (id === primitives.IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid) {
-      //   const req = primitives.IdentityUpdateRequest.fromWalletDeeplinkUri(urlstring);
+          );
 
-      //   yield call(handleFinishDeeplink, {
-      //     type: SET_DEEPLINK_DATA,
-      //     payload: {
-      //       id,
-      //       data: req.toJson(),
-      //       uri: urlstring
-      //     },
-      //   });
-      // }
+          yield call(handleFinishDeeplink, {
+            type: SET_DEEPLINK_DATA,
+            payload: {
+              id,
+              data: req.toJson(),
+            },
+          });
+        } else if (id === primitives.VERUSPAY_INVOICE_VDXF_KEY.vdxfid) {
+          const inv = primitives.VerusPayInvoice.fromWalletDeeplinkUri(urlstring);
+
+          yield call(handleFinishDeeplink, {
+            type: SET_DEEPLINK_DATA,
+            payload: {
+              id,
+              data: inv.toJson(),
+              uri: urlstring
+            },
+          });
+        }
+        // else if (id === primitives.IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid) {
+        //   const req = primitives.IdentityUpdateRequest.fromWalletDeeplinkUri(urlstring);
+
+        //   yield call(handleFinishDeeplink, {
+        //     type: SET_DEEPLINK_DATA,
+        //     payload: {
+        //       id,
+        //       data: req.toJson(),
+        //       uri: urlstring
+        //     },
+        //   });
+        // }
+      }
     } catch (e) {
       console.error(e)
       

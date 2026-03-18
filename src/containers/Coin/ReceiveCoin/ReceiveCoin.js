@@ -221,7 +221,7 @@ class ReceiveCoin extends Component {
                 ) : undefined,
                 destination: new primitives.TransferDestination({
                   type: destinationType,
-                  destination_bytes: hash,
+                  destinationBytes: hash,
                 }),
                 requestedcurrencyid: coinObj.currency_id,
                 acceptedsystems: nonVerusSystems,
