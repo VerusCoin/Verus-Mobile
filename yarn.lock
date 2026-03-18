@@ -3289,7 +3289,7 @@ big-integer@1.6.x:
   resolved "https://registry.yarnpkg.com/big-integer/-/big-integer-1.6.51.tgz#0df92a5d9880560d3ff2d5fd20245c889d130686"
   integrity sha512-GPEid2Y9QU1Exl1rpO9B2IPJGHPSupF5GnVIP0blYvNOMer2bTvSWs1jGOUg04hTmu67nmLsQ9TBo1puaotBHg==
 
-biggystring@^4.1.3:
+biggystring@4.2.3:
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/biggystring/-/biggystring-4.2.3.tgz#30486cf09657038b332e44717fe54a78ed043cf8"
   integrity sha512-VsbLBLrL5RJDjEb5j5UEs9zrLsW332BFxVMy+DPF7K+UWOHXGydG6amrl1eDE88s+DVOoal05JUy1G9BT/YSww==
@@ -10057,12 +10057,12 @@ react-native-url-polyfill@1.3.0:
     prop-types "^15.7.2"
     yargs "^16.1.1"
 
-"react-native-verus@git+https://github.com/who-biz/react-native-verus.git#ka_agree-string-fixes":
+"react-native-verus@git+https://github.com/VerusCoin/react-native-verus.git#c4af13240fa5dc2fc2606d40038a1e753db417bf":
   version "0.6.10"
-  resolved "git+https://github.com/who-biz/react-native-verus.git#c94698243ecbe46f0b8d1db86232ee6131662783"
+  resolved "git+https://github.com/VerusCoin/react-native-verus.git#c4af13240fa5dc2fc2606d40038a1e753db417bf"
   dependencies:
-    biggystring "^4.1.3"
-    rfc4648 "^1.3.0"
+    biggystring "4.2.3"
+    rfc4648 "1.5.4"
 
 react-native-vision-camera@4.3.1:
   version "4.3.1"
@@ -10533,7 +10533,7 @@ retry@^0.12.0:
   resolved "https://registry.yarnpkg.com/retry/-/retry-0.12.0.tgz#1b42a6266a21f07421d1b0b54b7dc167b01c013b"
   integrity sha512-9LkiTwjUh6rT555DtE9rTX+BKByPfrMzEAtnlEtdEwr3Nkffwiihqe2bWADg+OQRjt9gl6ICdmB/ZFDCGAtSow==
 
-rfc4648@^1.3.0:
+rfc4648@1.5.4:
   version "1.5.4"
   resolved "https://registry.yarnpkg.com/rfc4648/-/rfc4648-1.5.4.tgz#1174c0afba72423a0b70c386ecfeb80aa61b05ca"
   integrity sha512-rRg/6Lb+IGfJqO05HZkN50UtY7K/JhxJag1kP23+zyMfrvoB0B7RWv06MbOzoc79RgCdNTiUaNsTT1AJZ7Z+cg==
