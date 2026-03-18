@@ -1,7 +1,10 @@
 import { ChannelKeysRequest, Tools } from 'react-native-verus';
 
 export const z_getencryptionaddress = async (seed, extsk, fromId, toId, hdIndex, encryptionIndex, returnSecret) => {
-    const params: ChannelKeysRequest = {
+    /**
+     * @type {ChannelKeysRequest}
+     */
+    const params = {
         mnemonicSeed: seed,
         extsk: extsk ? await Tools.bech32Decode(extsk) : null,
         fromId,
