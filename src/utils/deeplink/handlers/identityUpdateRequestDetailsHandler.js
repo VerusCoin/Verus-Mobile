@@ -166,7 +166,7 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
         if (knownVDXFKey != null) continue;
 
         if (fqnNamespace !== reqSigner) {
-          throw new Error("Cannot use unknown cmm key not in signer namespace");
+          throw new Error(`Cannot update with key not in signer namespace (key namespace is ${fqnSplit[0]}@)`);
         }
 
         cmmDataKeys[dataKey] = {
@@ -174,6 +174,12 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
           nsid: fqnNamespace,
           label: capitalizeString(fqnSplit[1].split('.').join(' ')),
         };
+      } else {
+        const knownKeyName = getKnownVDXFKeyName(key);
+
+        if (!knownKeyName) {
+          throw new Error("Cannot update with unknown key " + key);
+        }
       }
     }
   }
