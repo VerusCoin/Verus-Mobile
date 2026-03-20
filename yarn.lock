@@ -1228,7 +1228,7 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bitgo/blake2b-wasm@^3.0.1", "@bitgo/blake2b-wasm@git+https://github.com/VerusCoin/blake2b-wasm.git", blake2b-wasm@^2.4.0, "blake2b-wasm@git+https://github.com/VerusCoin/blake2b-wasm.git", "blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b":
+"@bitgo/blake2b-wasm@^3.0.1", "@bitgo/blake2b-wasm@git+https://github.com/VerusCoin/blake2b-wasm.git":
   version "2.0.0"
   resolved "git+https://github.com/VerusCoin/blake2b-wasm.git#a16070b30bb8d8aee670f0c69b642913eca79998"
   dependencies:
@@ -1244,7 +1244,7 @@
 
 "@bitgo/utxo-lib@git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus":
   version "1.9.6"
-  resolved "git+https://github.com/VerusCoin/BitGoJS.git#bdeba35c3bc110a0a68c5570a3dc01d3d00ee7ce"
+  resolved "git+https://github.com/VerusCoin/BitGoJS.git#21bdb75e4885a081c28ce16c09485f9015a4dde7"
   dependencies:
     "@bitgo/blake2b" "3.0.1"
     "@noble/curves" "1.9.7"
@@ -3361,9 +3361,9 @@ bl@^4.1.0:
     inherits "^2.0.4"
     readable-stream "^3.4.0"
 
-blake2b-wasm@^2.4.0, "blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b", "blake2b-wasm@https://github.com/VerusCoin/blake2b-wasm/":
+blake2b-wasm@^2.4.0, "blake2b-wasm@git+https://github.com/VerusCoin/blake2b-wasm.git", "blake2b-wasm@https://github.com/BitGo/blake2b-wasm#193cdb71656c1a6c7f89b05d0327bb9b758d071b":
   version "2.0.0"
-  resolved "https://github.com/VerusCoin/blake2b-wasm/#a16070b30bb8d8aee670f0c69b642913eca79998"
+  resolved "git+https://github.com/VerusCoin/blake2b-wasm.git#a16070b30bb8d8aee670f0c69b642913eca79998"
   dependencies:
     nanoassert "1.0.0"
 
@@ -11479,7 +11479,7 @@ version_compare@0.0.3:
 
 "verus-typescript-primitives@git+https://github.com/VerusCoin/verus-typescript-primitives.git":
   version "1.0.0"
-  resolved "git+https://github.com/VerusCoin/verus-typescript-primitives.git#6103331a5e1ef229ba89cd4965c7170757eadb87"
+  resolved "git+https://github.com/VerusCoin/verus-typescript-primitives.git#54dc62aecec3337e3b5672cb061a51445c3c8acd"
   dependencies:
     base64url "3.0.1"
     bech32 "2.0.0"
@@ -11498,8 +11498,8 @@ version_compare@0.0.3:
 
 "verusd-rpc-ts-client@git+https://github.com/VerusCoin/verusd-rpc-ts-client":
   version "0.1.0"
-  uid b558c4d14560eeaa697f84e4d53727214450423d
-  resolved "git+https://github.com/VerusCoin/verusd-rpc-ts-client#b558c4d14560eeaa697f84e4d53727214450423d"
+  uid e393236112a3bf5d51e25db541f986531d381fbd
+  resolved "git+https://github.com/VerusCoin/verusd-rpc-ts-client#e393236112a3bf5d51e25db541f986531d381fbd"
   dependencies:
     axios "1.13.5"
     blake2b "https://github.com/VerusCoin/blake2b"
@@ -11507,7 +11507,7 @@ version_compare@0.0.3:
 
 "verusd-rpc-ts-client@git+https://github.com/VerusCoin/verusd-rpc-ts-client.git":
   version "0.1.0"
-  resolved "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git#b558c4d14560eeaa697f84e4d53727214450423d"
+  resolved "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git#e393236112a3bf5d51e25db541f986531d381fbd"
   dependencies:
     axios "1.13.5"
     blake2b "https://github.com/VerusCoin/blake2b"
@@ -11515,7 +11515,7 @@ version_compare@0.0.3:
 
 "verusid-ts-client@git+https://github.com/VerusCoin/verusid-ts-client.git":
   version "0.1.0"
-  resolved "git+https://github.com/VerusCoin/verusid-ts-client.git#98976160c45c17024a3a6c25c6e33c98b5c75d24"
+  resolved "git+https://github.com/VerusCoin/verusid-ts-client.git#31eff976d8dfbbf3b191283f472ef55e6f5a66d6"
   dependencies:
     "@bitgo/utxo-lib" "git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus"
     axios "1.13.5"
