@@ -23,8 +23,8 @@ import { requestPrivKey } from "../../auth/authBox";
 import { DLIGHT_PRIVATE } from "../../constants/intervalConstants";
 import { getAppOrDelegatedID } from "../helper/getAppOrDelegatedIDhelper";
 
-import { z_getencryptionaddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
-import { encrypt_verus_data } from "../../api/channels/dlight/requests/encrypt";
+import { zGetVerusEncryptionAddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
+import { encryptVerusData } from "../../api/channels/dlight/requests/encrypt";
 
 
 /**
@@ -49,14 +49,14 @@ const getExtendedSpendingKey = async (systemID) => {
 };
 
 
-const callZGetEncryptionAddress = async (systemID, params) => {
+const callZGetEncryptionAddress = async (params) => {
 
-  const result = await z_getencryptionaddress(systemID, params);
+  const result = await zGetVerusEncryptionAddress(params);
   return result;
 };
 
-const callEncryptVerusData = async (systemID, toAddress, data, returnSsk) => {
-  return encrypt_verus_data(systemID, toAddress, data, returnSsk);
+const callEncryptVerusData = async (toAddress, data, returnSsk) => {
+  return encryptVerusData(toAddress, data, returnSsk);
 };
 
 
@@ -153,7 +153,7 @@ const processAppEncryptionRequest = async ({
   };
 
 // Derive channel keys
-  const derivationResult = await callZGetEncryptionAddress(systemID, derivationParams);
+  const derivationResult = await callZGetEncryptionAddress(derivationParams);
 
 
   if (derivationResult.err) {
@@ -194,7 +194,6 @@ const processAppEncryptionRequest = async ({
   const responseBuffer = responseDetails.toBuffer();
 
   const encryptResult = await callEncryptVerusData(
-    systemID,
     encryptTo,
     responseBuffer,
     true

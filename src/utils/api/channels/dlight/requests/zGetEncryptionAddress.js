@@ -3,7 +3,7 @@ import { SaplingPaymentAddress, decodeDestination } from 'verus-typescript-primi
 import { SaplingExtendedViewingKey } from 'verus-typescript-primitives/dist/pbaas/SaplingExtendedViewingKey';
 import { SaplingExtendedSpendingKey } from 'verus-typescript-primitives/dist/pbaas/SaplingExtendedSpendingKey';
 
-export const z_getencryptionaddress = async (alias, params) => {
+export const zGetVerusEncryptionAddress = async (params) => {
 
   try
   {
