@@ -33,16 +33,7 @@ module.exports = (async () => {
           };
         }
         return context.resolveRequest(context, moduleName, platform);
-      },
-      resolveRequest: (context, moduleName, platform) => {
-        if (moduleName === 'axios') {
-          return {
-            filePath: require.resolve('axios/dist/browser/axios.cjs'),
-            type: 'sourceFile',
-          };
-        }
-        return context.resolveRequest(context, moduleName, platform);
-      },
+      }
     },
   };
 })();
