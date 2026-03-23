@@ -1,12 +1,20 @@
-import { Tools } from 'react-native-verus';
+import { Tools } from 'react-native-verus'; 
+import ApiException from '../../../errors/apiError';
 import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants';
 
 
-export const encryptVerusData = async (address, data, returnSsk = false) => {
+export const encryptData = async (alias, address, dataHex, returnSsk = false) => {
   try {
-      const payload = await Tools.encryptVerusData(address, data, returnSsk);
-      return payload;
-  } catch (err) {
-      throw err;
+    const payload = await Tools.encryptVerusData(address, dataHex, returnSsk);
+
+    return {
+      result: payload,
+      err: false
+    };
+  } catch (e) {
+    return {
+      err: true,
+      result: new ApiException(e.message, e.data, alias, DLIGHT_PRIVATE, e.code)
+    };
   }
 }

@@ -18,12 +18,21 @@ module.exports = (async () => {
     },
     resolver: {
       assetExts: assetExts.filter(ext => ext !== 'svg'),
-      sourceExts: [...sourceExts, 'svg'],
+      sourceExts: [...sourceExts, 'svg', 'cjs'],
       extraNodeModules: {
         crypto: require.resolve('react-native-crypto'),
         path: require.resolve('path-browserify'),
         stream: require.resolve('stream-browserify'),
-        process: require.resolve('process'),
+        process: require.resolve('process')
+      },
+      resolveRequest: (context, moduleName, platform) => {
+        if (moduleName === 'axios') {
+          return {
+            filePath: require.resolve('axios/dist/browser/axios.cjs'),
+            type: 'sourceFile',
+          };
+        }
+        return context.resolveRequest(context, moduleName, platform);
       },
     },
   };
