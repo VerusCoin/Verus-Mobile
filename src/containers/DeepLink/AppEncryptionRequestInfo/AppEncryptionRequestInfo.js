@@ -495,119 +495,104 @@ const AppEncryptionRequestInfo = (props) => {
     }
   };
 
+  // ── Debug dropdown state ──
+  const [debugExpanded, setDebugExpanded] = useState(false);
+
   // ── Render encrypted response preview screen ──
   if (encryptedResponseHex && pendingResponse) {
     return (
       <SafeAreaView style={styles.root}>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
-            <MaterialCommunityIcons name="lock-check" size={48} color={Colors.verusGreenColor} />
-            <Text style={styles.headerTitle}>Encrypted Response Ready</Text>
-            <Text style={styles.headerSubtitle}>
-              Your encrypted response has been generated. Review and copy the hex below, then send it back to the requesting app.
+          <View style={styles.readyHeader}>
+            <View style={styles.readyIconCircle}>
+              <MaterialCommunityIcons name="lock-check" size={48} color={Colors.verusGreenColor} />
+            </View>
+            <Text style={styles.readyTitle}>Your encrypted response is ready to send</Text>
+            <Text style={styles.readySubtitle}>
+              The encryption was successful. Press continue to send it back to the requesting app.
             </Text>
           </View>
 
-          {/* Response Hex */}
-          <View style={styles.card}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Response Hex ({encryptedResponseHex.length} chars)</Text>
-            </View>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => {
-                copyToClipboard(encryptedResponseHex);
-                createAlert('Copied', 'Encrypted response hex copied to clipboard.');
-              }}
-              style={styles.responseHexContainer}
-            >
-              <Text selectable style={styles.responseHexText}>
-                {encryptedResponseHex}
-              </Text>
-              <View style={styles.responseHexCopyHint}>
-                <MaterialCommunityIcons name="content-copy" size={16} color={Colors.primaryColor} />
-                <Text style={styles.responseHexCopyHintText}>Tap to copy</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* Encrypted Descriptor JSON (daemon-compatible) */}
+          {/* Debug dropdown */}
           {encryptedDescriptorJson && (
-            <View style={styles.card}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Encrypted Descriptor (JSON)</Text>
-              </View>
+            <View style={styles.debugSection}>
               <TouchableOpacity
+                style={styles.debugToggle}
+                onPress={() => setDebugExpanded(!debugExpanded)}
                 activeOpacity={0.7}
-                onPress={() => {
-                  const jsonStr = JSON.stringify(encryptedDescriptorJson, null, 2);
-                  copyToClipboard(jsonStr);
-                  createAlert('Copied', 'Encrypted descriptor JSON copied to clipboard.');
-                }}
-                style={styles.responseHexContainer}
               >
-                <Text selectable style={styles.responseHexText}>
-                  {JSON.stringify(encryptedDescriptorJson, null, 2)}
-                </Text>
-                <View style={styles.responseHexCopyHint}>
-                  <MaterialCommunityIcons name="content-copy" size={16} color={Colors.primaryColor} />
-                  <Text style={styles.responseHexCopyHintText}>Tap to copy</Text>
-                </View>
+                <MaterialCommunityIcons
+                  name={debugExpanded ? 'chevron-up' : 'chevron-down'}
+                  size={20}
+                  color="#888"
+                />
+                <Text style={styles.debugToggleText}>View debug information</Text>
               </TouchableOpacity>
-            </View>
-          )}
 
-          {/* Daemon decryptdata command */}
-          {encryptedDescriptorJson && (
-            <View style={styles.card}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Daemon Command</Text>
-              </View>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => {
-                  const cmd = `./verus -chain=vrsctest decryptdata '${JSON.stringify({ datadescriptor: encryptedDescriptorJson })}'`;
-                  copyToClipboard(cmd);
-                  createAlert('Copied', 'Daemon command copied to clipboard.');
-                }}
-                style={styles.responseHexContainer}
-              >
-                <Text selectable style={styles.responseHexText}>
-                  {`./verus -chain=vrsctest decryptdata '${JSON.stringify({ datadescriptor: encryptedDescriptorJson })}'`}
-                </Text>
-                <View style={styles.responseHexCopyHint}>
-                  <MaterialCommunityIcons name="content-copy" size={16} color={Colors.primaryColor} />
-                  <Text style={styles.responseHexCopyHintText}>Tap to copy command</Text>
+              {debugExpanded && (
+                <View style={styles.debugContent}>
+                  {/* Encrypted Descriptor JSON */}
+                  <View style={styles.debugCard}>
+                    <View style={styles.sectionHeader}>
+                      <Text style={styles.sectionTitle}>Encrypted Descriptor (JSON)</Text>
+                    </View>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        const jsonStr = JSON.stringify(encryptedDescriptorJson, null, 2);
+                        copyToClipboard(jsonStr);
+                        createAlert('Copied', 'Encrypted descriptor JSON copied to clipboard.');
+                      }}
+                      style={styles.responseHexContainer}
+                    >
+                      <Text selectable style={styles.responseHexText}>
+                        {JSON.stringify(encryptedDescriptorJson, null, 2)}
+                      </Text>
+                      <View style={styles.responseHexCopyHint}>
+                        <MaterialCommunityIcons name="content-copy" size={16} color={Colors.primaryColor} />
+                        <Text style={styles.responseHexCopyHintText}>Tap to copy</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Daemon decryptdata command */}
+                  <View style={styles.debugCard}>
+                    <View style={styles.sectionHeader}>
+                      <Text style={styles.sectionTitle}>Daemon Command</Text>
+                    </View>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        const cmd = `./verus -chain=vrsctest decryptdata '${JSON.stringify({ datadescriptor: encryptedDescriptorJson })}'`;
+                        copyToClipboard(cmd);
+                        createAlert('Copied', 'Daemon command copied to clipboard.');
+                      }}
+                      style={styles.responseHexContainer}
+                    >
+                      <Text selectable style={styles.responseHexText}>
+                        {`./verus -chain=vrsctest decryptdata '${JSON.stringify({ datadescriptor: encryptedDescriptorJson })}'`}
+                      </Text>
+                      <View style={styles.responseHexCopyHint}>
+                        <MaterialCommunityIcons name="content-copy" size={16} color={Colors.primaryColor} />
+                        <Text style={styles.responseHexCopyHintText}>Tap to copy command</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </TouchableOpacity>
+              )}
             </View>
           )}
         </ScrollView>
 
-        {/* Footer: Copy + Send */}
+        {/* Footer: single Continue button */}
         <View style={styles.footer}>
-          <View style={styles.ctaCol}>
-            <Button
-              mode="outlined"
-              onPress={() => {
-                copyToClipboard(encryptedResponseHex);
-                createAlert('Copied', 'Response hex copied to clipboard.');
-              }}
-              style={styles.secondaryCta}
-              contentStyle={styles.secondaryCtaContent}
-              labelStyle={styles.secondaryCtaLabel}
-            >
-              Copy Hex
-            </Button>
-          </View>
-          <View style={styles.ctaCol}>
-            <GradientButton
-              onPress={handleSendResponse}
-              style={styles.primaryCta}
-            >
-              Send Response
-            </GradientButton>
-          </View>
+          <TouchableOpacity
+            style={styles.continueCta}
+            onPress={handleSendResponse}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.continueCtaText}>Continue</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -811,13 +796,17 @@ const AppEncryptionRequestInfo = (props) => {
           </Button>
         </View>
         <View style={styles.ctaCol}>
-          <GradientButton 
-            onPress={handleApprove} 
-            style={styles.primaryCta}
+          <TouchableOpacity
+            style={[
+              styles.continueCta,
+              (isWrongRequestType || !selectedIdentity) && styles.continueCtaDisabled,
+            ]}
+            onPress={handleApprove}
+            activeOpacity={0.8}
             disabled={isWrongRequestType || !selectedIdentity}
           >
-            Approve
-          </GradientButton>
+            <Text style={styles.continueCtaText}>Approve</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -1160,6 +1149,80 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.primaryColor,
     fontWeight: '600',
+  },
+  // Ready screen styles
+  readyHeader: {
+    alignItems: 'center',
+    paddingVertical: 48,
+    paddingHorizontal: 32,
+  },
+  readyIconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#F0F9F1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  readyTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1A1A1A',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  readySubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  debugSection: {
+    marginHorizontal: 16,
+    marginTop: 4,
+  },
+  debugToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 6,
+  },
+  debugToggleText: {
+    fontSize: 14,
+    color: '#888',
+    fontWeight: '500',
+  },
+  debugContent: {
+    marginTop: 4,
+  },
+  debugCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  continueCta: {
+    flex: 1,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.primaryColor,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  continueCtaText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  continueCtaDisabled: {
+    opacity: 0.4,
   },
 });
 
