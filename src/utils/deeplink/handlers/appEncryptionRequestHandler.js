@@ -294,10 +294,10 @@ export const processAppEncryptionRequest = async ({
 
   // Set flags based on what we're returning
   if (encryptionRequest.hasRequestID()) {
-    responseFlags = responseFlags.or(AppEncryptionRequestDetails.FLAG_HAS_REQUEST_ID);
+    responseFlags = responseFlags.or(AppEncryptionResponseDetails.FLAG_HAS_REQUEST_ID);
   }
   if (returnESK) {
-    responseFlags = responseFlags.or(AppEncryptionRequestDetails.FLAG_HAS_EXTENDED_SPENDING_KEY);
+    responseFlags = responseFlags.or(AppEncryptionResponseDetails.FLAG_HAS_EXTENDED_SPENDING_KEY);
   }
 
   if (!keys.ivk || !keys.extfvk || !keys.address) {
