@@ -55,7 +55,8 @@ export const validateAppEncryptionRequestDetails = async (request, details, deta
   if (details.hasEncryptResponseToAddress()) {
     try {
       const zAddr = details.encryptResponseToAddress;
-      if (!zAddr || !zAddr.toZAddress()) {
+
+      if (!zAddr || !(zAddr.d.length > 0) || !(zAddr.pkD.length > 0)) {
         throw new Error("Invalid encryptResponseToAddress: not a valid Sapling z-address.");
       }
     } catch (e) {
@@ -67,6 +68,7 @@ export const validateAppEncryptionRequestDetails = async (request, details, deta
   if (details.hasDerivationID()) {
     try {
       const derivationIdAddr = details.derivationID.toIAddress();
+      const coinObj = CoinDirectory.getBasicCoinObj(request.signature.systemID.toIAddress());
       const checkedIdentity = await getIdentity(coinObj.system_id, derivationIdAddr);
       if (!checkedIdentity || checkedIdentity.error || !checkedIdentity.result) {
         throw new Error("Invalid derivationID: not a valid i-address.");
