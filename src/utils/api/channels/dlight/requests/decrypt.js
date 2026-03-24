@@ -9,10 +9,7 @@ export const decryptData = async (params) => {
       params.symmetricKeyHex || null
     );
 
-    return {
-      result: plaintext,
-      err: false
-    };
+    return plaintext;
   } catch (e) {
     throw new Error(e?.message || String(e));
   }

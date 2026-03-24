@@ -362,17 +362,11 @@ export const processAppEncryptionRequest = async ({
   // Create VdxfUniValue from the map
   const urlRefUniValue = new VdxfUniValue({ values: innerRef });
 
-  const encryptResult = await encryptData(
+  const encryptedData = await encryptData(
     encryptTo,
     urlRefUniValue.toBuffer().toString('hex'), // Pass the buffer of the VdxfUniValue
     true
   );
-
-  if (encryptResult.err) {
-    throw new Error("Encryption failed: " + (encryptResult.err.message || encryptResult.err));
-  }
-
-  const encryptedData = encryptResult.result;
 
   // Extract raw ciphertext hex — handle both string result and object result
   const ciphertextHex = typeof encryptedData === 'string' ? encryptedData : encryptedData.encryptedData;

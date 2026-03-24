@@ -15,10 +15,7 @@ export const encryptData = async (address, dataHex, returnSsk = false) => {
   try {
     const payload = await Tools.encryptVerusData(address, dataHex, returnSsk);
 
-    return {
-      result: payload,
-      err: false
-    };
+    return payload;
   } catch (e) {
     throw new Error(e?.message || String(e));
   }

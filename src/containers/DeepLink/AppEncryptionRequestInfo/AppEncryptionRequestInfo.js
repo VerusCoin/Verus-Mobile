@@ -446,7 +446,6 @@ const AppEncryptionRequestInfo = (props) => {
       setEncryptedDescriptorJson(descriptorJson);
       setPendingResponse({ updatedResponse, handledIndices: [detailIndex] });
     } catch (e) {
-      console.error('AppEncryptionRequest processing failed:', e);
       const isZSeedMissing = e.message && e.message.includes('No Z (shielded address) seed');
       createAlert(
         isZSeedMissing ? 'Z Seed Required' : 'Error',
@@ -485,7 +484,6 @@ const AppEncryptionRequestInfo = (props) => {
     try {
       await next(pendingResponse.updatedResponse, pendingResponse.handledIndices);
     } catch (e) {
-      console.error('Failed to send response:', e);
       createAlert('Error', e.message || 'Failed to send response.');
     } finally {
       setLoading(false);
