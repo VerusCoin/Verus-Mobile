@@ -23,7 +23,6 @@ export const z_getencryptionaddress = async (alias, params) => {
 
     return { result: keys };
   } catch (e) {
-    console.error('z_getencryptionaddress native error:', e?.message ?? e);
     return {
       err: e?.message || String(e),
       result: new ApiException(e.message, e.data, alias, DLIGHT_PRIVATE, e.code)
