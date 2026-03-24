@@ -1,10 +1,11 @@
 import React, {useState, useEffect} from 'react';
-import {View} from 'react-native';
+import {Linking, TouchableOpacity, View} from 'react-native';
+import { Portal, Text } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
-import { AUTHENTICATION_REQUEST_VDXF_KEY, GenericRequest, GenericResponse, IDENTITY_UPDATE_REQUEST_VDXF_KEY, VERUSPAY_INVOICE_DETAILS_VDXF_KEY,
-  APP_ENCRYPTION_REQUEST_VDXF_KEY } from 'verus-typescript-primitives';
+import { AUTHENTICATION_REQUEST_VDXF_KEY, DEEPLINK_PROTOCOL_URL_STRING, GenericRequest, GenericResponse, IDENTITY_UPDATE_REQUEST_VDXF_KEY, VALU_MOBILE_GENERIC_REQUEST_HANDLER_ID, VERUSPAY_INVOICE_DETAILS_VDXF_KEY, APP_ENCRYPTION_REQUEST_VDXF_KEY } from 'verus-typescript-primitives';
 import InvoiceInfo from '../InvoiceInfo/InvoiceInfo';
 import { handleVerusPayInvoiceDetailsVDXFObject } from '../../../utils/deeplink/handlers/verusPayInvoiceDetailsHandler';
 import { handleAuthenticationRequestDetailsVDXFObject } from '../../../utils/deeplink/handlers/authenticationRequestDetailsHandler';
@@ -15,6 +16,10 @@ import { CommonActions } from '@react-navigation/native';
 import AuthenticationRequestInfo from '../AuthenticationRequestInfo/AuthenticationRequestInfo';
 import IdentityUpdateRequestInfo from '../IdentityUpdateRequestInfo/IdentityUpdateRequestInfo';
 import AppEncryptionRequestInfo from '../AppEncryptionRequestInfo/AppEncryptionRequestInfo';
+import ListSelectionModal from '../../../components/ListSelectionModal/ListSelectionModal';
+import { isDeeplinkHandlerInstalled } from '../../../utils/deeplink/isDeeplinkHandlerInstalled';
+import Colors from '../../../globals/colors';
+
 
 const GenericRequestHome = props => {
   const {
@@ -32,6 +37,9 @@ const GenericRequestHome = props => {
   const [displayKey, setDisplayKey] = useState(null);
 
   const [detailIndex, setDetailIndex] = useState(0);
+
+  const [valuInstalled, setValuInstalled] = useState(false);
+  const [openInAnotherAppVisible, setOpenInAnotherAppVisible] = useState(false);
 
   /**
    * @type {[number, (number) => {}]}
@@ -145,6 +153,12 @@ const GenericRequestHome = props => {
   }
 
   useEffect(() => {
+    isDeeplinkHandlerInstalled(VALU_MOBILE_GENERIC_REQUEST_HANDLER_ID).then(installed => {
+      setValuInstalled(installed);
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     // Do not update after initial update
     if (request == null) {
       const req = new primitives.GenericRequest();
@@ -174,6 +188,8 @@ const GenericRequestHome = props => {
       }
     }
   }, [detailsProcessed]);
+
+  const insets = useSafeAreaInsets();
 
   const screens = {
     [AUTHENTICATION_REQUEST_VDXF_KEY.vdxfid]: () => (
@@ -230,9 +246,49 @@ const GenericRequestHome = props => {
     )
   };
 
+  const openInValu = () => {
+    const originalUri = request.toWalletDeeplinkUri();
+    const redirectUri = originalUri.replace(
+      `${DEEPLINK_PROTOCOL_URL_STRING}://`,
+      `${DEEPLINK_PROTOCOL_URL_STRING}${VALU_MOBILE_GENERIC_REQUEST_HANDLER_ID}://`
+    );
+    Linking.openURL(redirectUri).catch(e => createAlert('Error', e.message));
+  };
+
   return (
     <View style={Styles.flexBackground}>
-      {(displayKey == null || props.loading) ? <AnimatedActivityIndicatorBox /> : screens[displayKey]()}
+      {(displayKey == null || props.loading) ? <AnimatedActivityIndicatorBox /> : (
+        <View style={{ flex: 1, marginTop: valuInstalled ? 100 : 0 }}>
+          {screens[displayKey]()}
+        </View>
+      )}
+      {valuInstalled && displayKey != null && !props.loading && (
+        <TouchableOpacity
+          onPress={() => setOpenInAnotherAppVisible(true)}
+          style={{
+            position: 'absolute',
+            top: insets.top + 6,
+            right: 16,
+            zIndex: 10,
+            backgroundColor: Colors.primaryColor,
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 16,
+          }}
+        >
+          <Text style={{ color: Colors.secondaryColor, fontSize: 12 }}>Open in another app</Text>
+        </TouchableOpacity>
+      )}
+      <Portal>
+        <ListSelectionModal
+          visible={openInAnotherAppVisible}
+          cancel={() => setOpenInAnotherAppVisible(false)}
+          title="Open in another app"
+          data={[{ key: 'valu', title: 'Open in Valu Mobile' }]}
+          onSelect={openInValu}
+          flexHeight={0.5}
+        />
+      </Portal>
     </View>
   );
 };

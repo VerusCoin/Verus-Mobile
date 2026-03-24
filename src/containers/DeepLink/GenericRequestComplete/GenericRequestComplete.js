@@ -17,6 +17,7 @@ import { signGenericResponse } from '../../../utils/api/channels/vrpc/callCreato
 import { GenericRequest, GenericResponse, GENERIC_RESPONSE_DEEPLINK_VDXF_KEY, ResponseURI, BigNumber } from 'verus-typescript-primitives';
 import { verifyGenericResponse } from '../../../utils/api/channels/vrpc/requests/verifyGenericResponse';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
+import { VERUS_MOBILE_HANDLER_ID } from '../../../utils/constants/deeplink';
 
 const GenericRequestComplete = props => {
   const { requestBufferString, responseBufferString } = props.route.params;
@@ -124,6 +125,9 @@ const GenericRequestComplete = props => {
       response.fromBuffer(Buffer.from(responseBufferString, 'hex'), 0);
 
       response.createdAt = new BigNumber((Date.now() / 1000).toFixed(0));
+      response.handledBy = VERUS_MOBILE_HANDLER_ID;
+
+      response.setFlags();
 
       if (response.signature == null) {
         setLoading(false);
