@@ -278,6 +278,7 @@ export const authenticateAccount = async (account, password) => {
               if (
                 (activeCoins[i].compatible_channels.includes(channel) &&
                   seeds[channel]) ||
+                (channel === DLIGHT_PRIVATE && seeds[DLIGHT_PRIVATE]) ||
                 channel === ETH ||
                 channel === ERC20 ||
                 channel === VRPC
@@ -395,8 +396,9 @@ export const addKeypairs = async (
     if (!seed) throw new Error('No seed found for account');
     
     if (
-      coinObj.compatible_channels.includes(seedType) &&
-      (seedType !== DLIGHT_PRIVATE || accountSeeds[seedType])
+      (coinObj.compatible_channels.includes(seedType) &&
+      (seedType !== DLIGHT_PRIVATE || accountSeeds[seedType])) ||
+      (seedType === DLIGHT_PRIVATE && accountSeeds[DLIGHT_PRIVATE])
     ) {
       const keyObj = await deriveKeyPair(
         seed,

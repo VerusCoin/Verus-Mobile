@@ -54,31 +54,11 @@ import { encryptData } from "../../api/channels/dlight/requests/encrypt";
 const getKeyMaterial = async (systemID) => {
   const coinObj = CoinDirectory.getBasicCoinObj(systemID);
 
-  // 1. Try the stored seed — convert mnemonic to extsk if needed.
-  try {
-    const seeds = await requestSeeds();
-    const dlightSeed = seeds[DLIGHT_PRIVATE];
-    if (dlightSeed) {
-      const extsk = await parseDlightSeed(dlightSeed);
-      return { extsk };
-    }
-  } catch (e) {
-  }
-
-  // 2. Fallback: try stored ESK for the requested coin
   try {
     const esk = await requestPrivKey(coinObj.id, DLIGHT_PRIVATE);
     if (esk) return { extsk: esk };
-  } catch (_) {}
-
-  // 3. Fallback: try stored ESK for VRSC (same seed, network-agnostic)
-  if (coinObj.id !== 'VRSC') {
-    try {
-      const esk = await requestPrivKey('VRSC', DLIGHT_PRIVATE);
-      if (esk) return { extsk: esk };
-    } catch (_) {}
-  }
-
+  } catch (e) {}
+  
   throw new Error(
     `No Z (shielded address) seed has been set up. ` +
     `Please go to Settings → Profile and set up a Z Seed before accepting encryption requests.`
