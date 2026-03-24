@@ -255,8 +255,8 @@ export const processAppEncryptionRequest = async ({
   // reversal they end up in the original order—matching the daemon.
   const fromIdBytes = IdentityID.fromAddress(responseSignerID).hash;
   const toIdBytes = IdentityID.fromAddress(toIdAddress).hash;
-  let fromIdHex = Buffer.from(fromIdBytes).reverse().toString('hex');
-  let toIdHex = Buffer.from(toIdBytes).reverse().toString('hex');
+  let fromIdHex = Buffer.from(fromIdBytes).toString('hex');
+  let toIdHex = Buffer.from(toIdBytes).toString('hex');
 
   // Ensure even-length hex (native Hex.decode requires it).
   // This should always be 40 chars from a 20-byte hash, but guard against edge cases.
