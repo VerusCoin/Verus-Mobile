@@ -35,43 +35,54 @@ import { getSignatureInfo } from "../../api/channels/vrpc/requests/getSignatureI
 
 import { requestPrivKey, requestSeeds } from "../../auth/authBox";
 import { DLIGHT_PRIVATE } from "../../constants/intervalConstants";
-import { isDlightSpendingKey } from "../../keys";
+import { isDlightSpendingKey, parseDlightSeed } from "../../keys";
 
 import { z_getencryptionaddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
 import { encryptData } from "../../api/channels/dlight/requests/encrypt";
 
 
 /**
- * Gets key material for z_getencryptionaddress.
- * 
+ * Gets an extended spending key for z_getencryptionaddress.
+ * If the user has a mnemonic seed stored, it is converted to an extsk
+ * via Tools.deriveSaplingSpendingKey so behaviour is identical regardless
+ * of what form the seed was originally stored in.
  *
- * Returns { mnemonicSeed }.
- * The native module converts mnemonicSeed via SeedPhrase.new() internally.
- *
- * @returns {Promise<{mnemonicSeed?: string}>}
+ * @param {string} systemID - Coin system ID (e.g. 'VRSC')
+ * @returns {Promise<{extsk: string}>}
  * @throws {Error} If no key material can be retrieved
  */
-const getKeyMaterial = async () => {
+const getKeyMaterial = async (systemID) => {
+  const coinObj = CoinDirectory.getBasicCoinObj(systemID);
 
+  // 1. Try the stored seed — convert mnemonic to extsk if needed.
   try {
     const seeds = await requestSeeds();
     const dlightSeed = seeds[DLIGHT_PRIVATE];
     if (dlightSeed) {
-      if (isDlightSpendingKey(dlightSeed)) {
-        // Stored "seed" is actually an extsk (bech32 spending key).
-        // Can't use it as a mnemonic — fall through to extsk path.
-
-      } else {
-        // Raw mnemonic seed — this is what the daemon's z_getencryptionaddress expects.
-        return { mnemonicSeed: dlightSeed };
-      }
+      const extsk = await parseDlightSeed(dlightSeed);
+      return { extsk };
     }
-  } catch (_) {
-    throw new Error(
-      `No Z (shielded address) seed has been set up. ` +
-      `Please go to Settings → Profile and set up a Z Seed before accepting encryption requests.`
-    );
+  } catch (e) {
   }
+
+  // 2. Fallback: try stored ESK for the requested coin
+  try {
+    const esk = await requestPrivKey(coinObj.id, DLIGHT_PRIVATE);
+    if (esk) return { extsk: esk };
+  } catch (_) {}
+
+  // 3. Fallback: try stored ESK for VRSC (same seed, network-agnostic)
+  if (coinObj.id !== 'VRSC') {
+    try {
+      const esk = await requestPrivKey('VRSC', DLIGHT_PRIVATE);
+      if (esk) return { extsk: esk };
+    } catch (_) {}
+  }
+
+  throw new Error(
+    `No Z (shielded address) seed has been set up. ` +
+    `Please go to Settings → Profile and set up a Z Seed before accepting encryption requests.`
+  );
 };
 
 // ============================================================================
@@ -238,7 +249,7 @@ export const processAppEncryptionRequest = async ({
     throw new Error("Unsupported system: " + systemID);
   }
 
-  // Get key material (either extsk or mnemonicSeed) for derivation
+  // Get extended spending key for derivation
   const keyMaterial = await getKeyMaterial(coinObj.id);
 
   // Use appOrDelegatedID if present, otherwise use requestSignerID
@@ -274,15 +285,10 @@ export const processAppEncryptionRequest = async ({
 
 
   // Build derivation params matching ChannelKeysRequest interface.
-  // When using an extsk (already-derived spending key), omit hdIndex so the
-  // JS wrapper sends -1 ("not provided") to the native module.  The native
-  // code rejects hdIndex >= 0 together with a spending key because HD
-  // derivation only applies to a mnemonic seed.
   let derivationParams = {
-    ...keyMaterial,           // { mnemonicSeed }
+    ...keyMaterial,
     fromId: fromIdHex,
     toId: toIdHex,
-    ...(keyMaterial.mnemonicSeed ? { hdIndex: 0 } : {}),
     encryptionIndex: encryptionRequest.derivationNumber.toNumber(),
     returnSecret: returnESK
   };
