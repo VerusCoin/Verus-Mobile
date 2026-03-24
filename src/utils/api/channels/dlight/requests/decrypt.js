@@ -1,9 +1,6 @@
 import { Tools } from 'react-native-verus'; 
-import ApiException from '../../../errors/apiError';
-import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants';
 
-
-export const decryptData = async (alias, params) => {
+export const decryptData = async (params) => {
   try {
     const plaintext = await Tools.decryptVerusData(
       params.ivkHex || null,
@@ -17,9 +14,6 @@ export const decryptData = async (alias, params) => {
       err: false
     };
   } catch (e) {
-    return {
-      err: true,
-      result: new ApiException(e.message, e.data, alias, DLIGHT_PRIVATE, e.code)
-    };
+    throw new Error(e?.message || String(e));
   }
 }

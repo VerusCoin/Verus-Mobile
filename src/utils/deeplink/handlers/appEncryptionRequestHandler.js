@@ -5,7 +5,7 @@
  * Shows user approval UI before deriving encryption keys.
  */
 
-import { 
+import {
   AppEncryptionRequestDetails,
   AppEncryptionResponseDetails,
   AppEncryptionRequestOrdinalVDXFObject,
@@ -40,33 +40,19 @@ import { isDlightSpendingKey } from "../../keys";
 import { z_getencryptionaddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
 import { encryptData } from "../../api/channels/dlight/requests/encrypt";
 
-// Configuration
-
-// Set to false when real z_functions are available
-const USE_MOCK_Z_FUNCTIONS = false;
 
 /**
  * Gets key material for z_getencryptionaddress.
  * 
- * IMPORTANT: We prefer the raw mnemonic seed over the extsk because the
- * daemon's z_getencryptionaddress takes the raw 64-byte seed (the output of
- * SeedPhrase.new(mnemonic).toByteArray()), NOT the extended spending key.
- * Passing extsk goes through a different derivation path and produces
- * different results.
  *
- * Returns { mnemonicSeed } when possible, or { extsk } as last resort.
+ * Returns { mnemonicSeed }.
  * The native module converts mnemonicSeed via SeedPhrase.new() internally.
  *
- * @param {string} systemID - The system ID (VRSC or VRSCTEST)
- * @returns {Promise<{extsk?: string, mnemonicSeed?: string}>}
+ * @returns {Promise<{mnemonicSeed?: string}>}
  * @throws {Error} If no key material can be retrieved
  */
-const getKeyMaterial = async (systemID) => {
-  const coinObj = CoinDirectory.getBasicCoinObj(systemID);
+const getKeyMaterial = async () => {
 
-  // 1. Prefer raw mnemonic seed — this matches what the daemon uses.
-  //    The native module will run SeedPhrase.new(mnemonic).toByteArray()
-  //    to turn it into the 64-byte seed the derivation expects.
   try {
     const seeds = await requestSeeds();
     const dlightSeed = seeds[DLIGHT_PRIVATE];
@@ -74,79 +60,19 @@ const getKeyMaterial = async (systemID) => {
       if (isDlightSpendingKey(dlightSeed)) {
         // Stored "seed" is actually an extsk (bech32 spending key).
         // Can't use it as a mnemonic — fall through to extsk path.
-        console.warn('dlight seed is an extsk, cannot use as mnemonic');
+
       } else {
         // Raw mnemonic seed — this is what the daemon's z_getencryptionaddress expects.
         return { mnemonicSeed: dlightSeed };
       }
     }
-  } catch (e) {
-    console.warn('Failed to get raw seeds, trying stored keys:', e?.message);
+  } catch (_) {
+    throw new Error(
+      `No Z (shielded address) seed has been set up. ` +
+      `Please go to Settings → Profile and set up a Z Seed before accepting encryption requests.`
+    );
   }
-
-  // 2. Fallback: try stored ESK for the requested coin
-  try {
-    const esk = await requestPrivKey(coinObj.id, DLIGHT_PRIVATE);
-    if (esk) return { extsk: esk };
-  } catch (_) {}
-
-  // 3. Fallback: try stored ESK for VRSC (same seed, network-agnostic)
-  if (coinObj.id !== 'VRSC') {
-    try {
-      const esk = await requestPrivKey('VRSC', DLIGHT_PRIVATE);
-      if (esk) return { extsk: esk };
-    } catch (_) {}
-  }
-
-  throw new Error(
-    `No Z (shielded address) seed has been set up. ` +
-    `Please go to Settings → Profile and set up a Z Seed before accepting encryption requests.`
-  );
 };
-
-// remove when tested with real functions
-
-const mock_z_getencryptionaddress = async (systemID, params) => {
-  return {
-    err: false,
-    result: {
-      ivk: "a".repeat(64),
-    }
-  };
-};
-
-const mock_encryptData = async (systemID, toAddress, data, returnSsk) => {
-  return {
-    err: false,
-    result: data
-  };
-};
-
-
-// ============================================================================
-// z_function Wrappers
-// ============================================================================
-
-const callZGetEncryptionAddress = async (systemID, params) => {
-  if (USE_MOCK_Z_FUNCTIONS) {
-    return mock_z_getencryptionaddress(systemID, params);
-  }
-
-    return z_getencryptionaddress(systemID, params);
-};
-
-const callEncryptData = async (systemID, toAddress, data, returnSsk) => {
-  if (USE_MOCK_Z_FUNCTIONS) {
-    return mock_encryptData(systemID, toAddress, data, returnSsk);
-  }
-
-    return encryptData(systemID, toAddress, data, returnSsk);
-};
-
-
-// ============================================================================
-// Main Handler
-// ============================================================================
 
 // ============================================================================
 // Main Handler - Returns displayProps for UI
@@ -165,21 +91,21 @@ const callEncryptData = async (systemID, toAddress, data, returnSsk) => {
  */
 export const handleAppEncryptionRequestVDXFObject = async (request, response, detailIndex) => {
   const detail = request.getDetails(detailIndex);
-  
+
   if (!detail || !(detail instanceof AppEncryptionRequestOrdinalVDXFObject)) {
     throw new Error("Invalid AppEncryptionRequest detail at index " + detailIndex);
   }
-  
+
   const encryptionRequest = detail.data;
   const systemID = request.signature.systemID.toIAddress();
   const requestSignerID = request.signature.identityID.toIAddress();
 
   const coinObj = CoinDirectory.getBasicCoinObj(systemID);
-  
+
   if (!coinObj) {
     throw new Error("Unsupported system: " + systemID);
   }
-  
+
   VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0]);
 
   // Resolve signer identity to FQN
@@ -206,9 +132,7 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
         sigtime = sigblock.result.time;
       }
     }
-  } catch (e) {
-    console.warn("Unable to load signer metadata for app encryption request", e?.message ?? e);
-  }
+  } catch (_) { }
 
   // Resolve derivationID to FQN if present
   let derivationIdFqn = null;
@@ -220,9 +144,7 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
       if (!derivationIdentity.error && derivationIdentity.result?.fullyqualifiedname) {
         derivationIdFqn = convertFqnToDisplayFormat(derivationIdentity.result.fullyqualifiedname);
       }
-    } catch (e) {
-      console.warn("Unable to resolve derivationID", e);
-    }
+    } catch (_) { }
   }
 
   // Resolve requestID to FQN if present
@@ -235,7 +157,7 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
       if (!requestIdentity.error && requestIdentity.result?.fullyqualifiedname) {
         requestIdFqn = convertFqnToDisplayFormat(requestIdentity.result.fullyqualifiedname);
       }
-    } catch (e) {
+    } catch (_) {
       // Keep raw i-address if resolution fails
     }
   }
@@ -291,15 +213,15 @@ export const processAppEncryptionRequest = async ({
   responseSignerID,
 }) => {
   const detail = request.getDetails(detailIndex);
-  
+
   if (!detail || !(detail instanceof AppEncryptionRequestOrdinalVDXFObject)) {
     throw new Error("Invalid AppEncryptionRequest detail at index " + detailIndex);
   }
-  
+
   const encryptionRequest = detail.data;
   const systemID = request.signature.systemID.toIAddress();
   const requestSignerID = request.signature.identityID.toIAddress();
-  
+
   // Get appOrDelegatedID if present
   let appOrDelegatedID = null;
   try {
@@ -311,7 +233,7 @@ export const processAppEncryptionRequest = async ({
   }
 
   const coinObj = CoinDirectory.getBasicCoinObj(systemID);
-  
+
   if (!coinObj) {
     throw new Error("Unsupported system: " + systemID);
   }
@@ -356,8 +278,8 @@ export const processAppEncryptionRequest = async ({
   // JS wrapper sends -1 ("not provided") to the native module.  The native
   // code rejects hdIndex >= 0 together with a spending key because HD
   // derivation only applies to a mnemonic seed.
-  const derivationParams = {
-    ...keyMaterial,           // { extsk } or { mnemonicSeed }
+  let derivationParams = {
+    ...keyMaterial,           // { mnemonicSeed }
     fromId: fromIdHex,
     toId: toIdHex,
     ...(keyMaterial.mnemonicSeed ? { hdIndex: 0 } : {}),
@@ -366,7 +288,10 @@ export const processAppEncryptionRequest = async ({
   };
 
   // Derive channel keys
-  const derivationResult = await callZGetEncryptionAddress(coinObj.system_id, derivationParams);
+  const derivationResult = await z_getencryptionaddress(coinObj.system_id, derivationParams);
+  
+  // Clear sensitive data from memory as soon as possible
+  derivationParams = null;
 
   if (derivationResult.err) {
     const errMsg = typeof derivationResult.err === 'string'
@@ -383,62 +308,35 @@ export const processAppEncryptionRequest = async ({
 
   // Set flags based on what we're returning
   if (encryptionRequest.hasRequestID()) {
-    responseFlags = responseFlags.or(new BN(1)); // FLAG_HAS_REQUEST_ID
+    responseFlags = responseFlags.or(AppEncryptionRequestDetails.FLAG_HAS_REQUEST_ID);
   }
   if (returnESK) {
-    responseFlags = responseFlags.or(new BN(2)); // FLAG_HAS_EXTENDED_SPENDING_KEY
+    responseFlags = responseFlags.or(AppEncryptionRequestDetails.FLAG_HAS_EXTENDED_SPENDING_KEY);
   }
 
-  if (USE_MOCK_Z_FUNCTIONS) {
-    // Mock mode: create mock objects with valid buffers
-    const mockAddress = new SaplingPaymentAddress();
-    mockAddress.d = Buffer.alloc(11).fill(0x01);
-    mockAddress.pk_d = Buffer.alloc(32).fill(0x02);
-
-    const mockFvk = new SaplingExtendedViewingKey();
-    mockFvk.depth = 0;
-    mockFvk.parentFVKTag = Buffer.alloc(4);
-    mockFvk.childIndex = Buffer.alloc(4);
-    mockFvk.chainCode = Buffer.alloc(32);
-    mockFvk.ak = Buffer.alloc(32);
-    mockFvk.nk = Buffer.alloc(32);
-    mockFvk.ovk = Buffer.alloc(32);
-    mockFvk.dk = Buffer.alloc(32);
-
-    responseDetails = new AppEncryptionResponseDetails({
-      version: new BN(1),
-      flags: responseFlags,
-      incomingViewingKey: Buffer.alloc(32).fill(0xaa),
-      extendedViewingKey: mockFvk,
-      address: mockAddress,
-      requestID: encryptionRequest.hasRequestID() ? encryptionRequest.requestID : undefined,
-    });
-  } else {
-    // Real mode: parse actual keys from z_getencryptionaddress
-    console.log("keys", {keys})
-    if (!keys.ivk || !keys.extfvk || !keys.address) {
-      throw new Error("Incomplete key derivation result");
-    }
-
-    if (returnESK && !keys.spendingKey) {
-      throw new Error("Spending key requested but not returned");
-    }
-    responseDetails = new AppEncryptionResponseDetails({
-      version: new BN(1),
-      flags: responseFlags,
-      incomingViewingKey: Buffer.from(keys.ivk, 'hex'),
-      extendedViewingKey: SaplingExtendedViewingKey.fromKeyString(keys.extfvk),
-      address: SaplingPaymentAddress.fromAddressString(keys.address),
-      extendedSpendingKey: returnESK
-        ? SaplingExtendedSpendingKey.fromKeyString(keys.spendingKey) 
-        : undefined,
-      requestID: encryptionRequest.hasRequestID() ? encryptionRequest.requestID : undefined,
-    });
+  if (!keys.ivk || !keys.extfvk || !keys.address) {
+    throw new Error("Incomplete key derivation result");
   }
+
+  if (returnESK && !keys.spendingKey) {
+    throw new Error("Spending key requested but not returned");
+  }
+  responseDetails = new AppEncryptionResponseDetails({
+    version: new BN(1),
+    flags: responseFlags,
+    incomingViewingKey: Buffer.from(keys.ivk, 'hex'),
+    extendedViewingKey: SaplingExtendedViewingKey.fromKeyString(keys.extfvk),
+    address: SaplingPaymentAddress.fromAddressString(keys.address),
+    extendedSpendingKey: returnESK
+      ? SaplingExtendedSpendingKey.fromKeyString(keys.spendingKey)
+      : undefined,
+    requestID: encryptionRequest.hasRequestID() ? encryptionRequest.requestID : undefined,
+  });
+
 
   // Get the encrypt to address or return null as it's optional
-  const encryptTo = encryptionRequest.hasEncryptResponseToAddress() 
-    ? encryptionRequest.encryptResponseToAddress.toAddressString() 
+  const encryptTo = encryptionRequest.hasEncryptResponseToAddress()
+    ? encryptionRequest.encryptResponseToAddress.toAddressString()
     : null;
 
   if (!encryptTo) {
@@ -454,19 +352,17 @@ export const processAppEncryptionRequest = async ({
   // Encrypt response
   const responseBuffer = responseDetails.toBuffer();
 
-  
   //wrap data in a DataDescriptor for encryption
 
-  const innerDescriptor = new DataDescriptor({objectdata: responseBuffer});
+  const innerDescriptor = new DataDescriptor({ objectdata: responseBuffer });
 
   const innerRef = [];
   innerRef.push({ [DataDescriptorKey.vdxfid]: innerDescriptor });
-  
+
   // Create VdxfUniValue from the map
   const urlRefUniValue = new VdxfUniValue({ values: innerRef });
 
-  const encryptResult = await callEncryptData(
-    coinObj.system_id,
+  const encryptResult = await encryptData(
     encryptTo,
     urlRefUniValue.toBuffer().toString('hex'), // Pass the buffer of the VdxfUniValue
     true
@@ -475,22 +371,19 @@ export const processAppEncryptionRequest = async ({
   if (encryptResult.err) {
     throw new Error("Encryption failed: " + (encryptResult.err.message || encryptResult.err));
   }
-  
+
   const encryptedData = encryptResult.result;
 
   // Extract raw ciphertext hex — handle both string result and object result
   const ciphertextHex = typeof encryptedData === 'string' ? encryptedData : encryptedData.encryptedData;
   const epkHex = encryptedData.ephemeralPublicKey;
-  const sskHex = encryptedData.symmetricKey;
-
-  
 
   // Wrap encrypted data in DataDescriptor
   const encryptedDescriptor = new DataDescriptor({
     flags: DataDescriptor.FLAG_ENCRYPTED_DATA,
     objectdata: Buffer.from(ciphertextHex, 'hex'),
     epk: Buffer.from(epkHex, 'hex'),
-   // ssk: sskHex ? Buffer.from(sskHex, 'hex') : undefined,
+    // ssk: sskHex ? Buffer.from(sskHex, 'hex') : undefined,
   });
 
   // Build daemon-compatible JSON (raw hex values, NOT through VdxfUniValue)
@@ -498,8 +391,7 @@ export const processAppEncryptionRequest = async ({
     version: 1,
     flags: encryptedDescriptor.flags.toNumber(),
     objectdata: ciphertextHex,
-    epk: epkHex,
-   // ...(sskHex ? { ssk: sskHex } : {}),
+    epk: epkHex
   };
 
   return {
@@ -510,10 +402,7 @@ export const processAppEncryptionRequest = async ({
   };
 };
 
-
 export default {
   handleAppEncryptionRequestVDXFObject,
   processAppEncryptionRequest
 };
-
-
