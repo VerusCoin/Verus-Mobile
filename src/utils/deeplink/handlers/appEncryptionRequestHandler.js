@@ -249,10 +249,7 @@ export const processAppEncryptionRequest = async ({
   }
 
   // Convert i-addresses to 20-byte hex strings for the native module.
-  // The native Rust code (verus_zfunc) reverses these bytes before hashing,
-  // but the C++ daemon hashes uint160::data[] directly (no reversal).
-  // To compensate, we send the bytes pre-reversed so that after the Rust
-  // reversal they end up in the original order—matching the daemon.
+
   const fromIdBytes = IdentityID.fromAddress(responseSignerID).hash;
   const toIdBytes = IdentityID.fromAddress(toIdAddress).hash;
   let fromIdHex = Buffer.from(fromIdBytes).toString('hex');
