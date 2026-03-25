@@ -269,19 +269,10 @@ export const processAppEncryptionRequest = async ({
   };
 
   // Derive channel keys
-  const derivationResult = await zGetEncryptionAddress(coinObj.system_id, derivationParams);
+  const keys  = await zGetEncryptionAddress(coinObj.system_id, derivationParams);
   
   // Clear sensitive data from memory as soon as possible
-  derivationParams = null;
-
-  if (derivationResult.err) {
-    const errMsg = typeof derivationResult.err === 'string'
-      ? derivationResult.err
-      : derivationResult.result?.message || derivationResult.result?.toString() || String(derivationResult.err);
-    throw new Error("Key derivation failed: " + errMsg);
-  }
-
-  const keys = derivationResult.result;
+  derivationParams = null
 
   // Build response details
   let responseDetails;

@@ -1,7 +1,4 @@
 import { Tools } from 'react-native-verus'; 
-import ApiException from '../../../errors/apiError'
-import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
-
 
 /**
  * Calls Tools.getVerusEncryptionAddress with a ChannelKeysRequest object.
@@ -21,11 +18,8 @@ export const zGetEncryptionAddress = async (alias, params) => {
       returnSecret: params.returnSecret ?? false,
     });
 
-    return { result: keys };
+    return keys;
   } catch (e) {
-    return {
-      err: e?.message || String(e),
-      result: new ApiException(e.message, e.data, alias, DLIGHT_PRIVATE, e.code)
-    }
+    throw e;
   }
 }
