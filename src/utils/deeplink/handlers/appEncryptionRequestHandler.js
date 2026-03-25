@@ -16,8 +16,6 @@ import {
   GenericRequest,
   GenericResponse,
   IdentityID,
-  DataDescriptorKey,
-  VdxfUniValue
 } from "verus-typescript-primitives";
 
 import { SaplingExtendedViewingKey } from "verus-typescript-primitives/dist/pbaas/SaplingExtendedViewingKey";
@@ -38,7 +36,7 @@ import { DLIGHT_PRIVATE } from "../../constants/intervalConstants";
 import { isDlightSpendingKey, parseDlightSeed } from "../../keys";
 
 import { z_getencryptionaddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
-import { encryptData } from "../../api/channels/dlight/requests/encrypt";
+import { encryptDataToDescriptor } from "../../crypto/encryptDataDescriptor";
 
 
 /**
@@ -333,43 +331,8 @@ export const processAppEncryptionRequest = async ({
   }
 
   // Encrypt response
-  const responseBuffer = responseDetails.toBuffer();
-
-  //wrap data in a DataDescriptor for encryption
-
-  const innerDescriptor = new DataDescriptor({ objectdata: responseBuffer });
-
-  const innerRef = [];
-  innerRef.push({ [DataDescriptorKey.vdxfid]: innerDescriptor });
-
-  // Create VdxfUniValue from the map
-  const urlRefUniValue = new VdxfUniValue({ values: innerRef });
-
-  const encryptedData = await encryptData(
-    encryptTo,
-    urlRefUniValue.toBuffer().toString('hex'), // Pass the buffer of the VdxfUniValue
-    true
-  );
-
-  // Extract raw ciphertext hex — handle both string result and object result
-  const ciphertextHex = typeof encryptedData === 'string' ? encryptedData : encryptedData.encryptedData;
-  const epkHex = encryptedData.ephemeralPublicKey;
-
-  // Wrap encrypted data in DataDescriptor
-  const encryptedDescriptor = new DataDescriptor({
-    flags: DataDescriptor.FLAG_ENCRYPTED_DATA,
-    objectdata: Buffer.from(ciphertextHex, 'hex'),
-    epk: Buffer.from(epkHex, 'hex'),
-    // ssk: sskHex ? Buffer.from(sskHex, 'hex') : undefined,
-  });
-
-  // Build daemon-compatible JSON (raw hex values, NOT through VdxfUniValue)
-  const encryptedDescriptorJson = {
-    version: 1,
-    flags: encryptedDescriptor.flags.toNumber(),
-    objectdata: ciphertextHex,
-    epk: epkHex
-  };
+  const { encryptedDescriptor, encryptedDescriptorJson } =
+    await encryptDataToDescriptor(encryptTo, responseDetails.toBuffer());
 
   return {
     responseDetail: new DataDescriptorOrdinalVDXFObject({
