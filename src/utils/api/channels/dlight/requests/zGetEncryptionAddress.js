@@ -9,7 +9,7 @@ import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
  * @param {object} params - ChannelKeysRequest: { mnemonicSeed?, extsk?, fromId?, toId?, hdIndex?, encryptionIndex?, returnSecret? }
  * @returns {Promise<{result?: object, err?: boolean}>}
  */
-export const z_getencryptionaddress = async (alias, params) => {
+export const zGetEncryptionAddress = async (alias, params) => {
   try {
     const keys = await Tools.getVerusEncryptionAddress({
       mnemonicSeed: params.mnemonicSeed || null,
