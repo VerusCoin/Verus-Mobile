@@ -1,0 +1,339 @@
+/*
+ * appEncryptionRequestHandler.js
+ * 
+ * Handles AppEncryptionRequest from GenericRequest envelope.
+ * Shows user approval UI before deriving encryption keys.
+ */
+
+import {
+  AppEncryptionRequestDetails,
+  AppEncryptionResponseDetails,
+  AppEncryptionRequestOrdinalVDXFObject,
+  AppEncryptionResponseOrdinalVDXFObject,
+  SaplingPaymentAddress,
+  DataDescriptor,
+  DataDescriptorOrdinalVDXFObject,
+  GenericRequest,
+  GenericResponse,
+  IdentityID,
+} from "verus-typescript-primitives";
+
+import { SaplingExtendedViewingKey } from "verus-typescript-primitives/dist/pbaas/SaplingExtendedViewingKey";
+import { SaplingExtendedSpendingKey } from "verus-typescript-primitives/dist/pbaas/SaplingExtendedSpendingKey";
+
+import { BN } from "bn.js";
+import { CoinDirectory } from "../../CoinData/CoinDirectory";
+import VrpcProvider from "../../vrpc/vrpcInterface";
+import store from "../../../store";
+import { getIdentity } from "../../api/channels/verusid/callCreators";
+import { getSystemNameFromSystemId } from "../../CoinData/CoinData";
+import { convertFqnToDisplayFormat } from "../../fullyqualifiedname";
+import { getBlock } from "../../api/channels/vrpc/requests/getBlock";
+import { getSignatureInfo } from "../../api/channels/vrpc/requests/getSignatureInfo";
+
+import { requestPrivKey, requestSeeds } from "../../auth/authBox";
+import { DLIGHT_PRIVATE } from "../../constants/intervalConstants";
+import { isDlightSpendingKey, parseDlightSeed } from "../../keys";
+
+import { zGetEncryptionAddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
+import { encryptDataToDescriptor } from "../../crypto/encryptDataDescriptor";
+
+
+/**
+ * Gets an extended spending key for zGetEncryptionAddress.
+ * If the user has a mnemonic seed stored, it is converted to an extsk
+ * via Tools.deriveSaplingSpendingKey so behaviour is identical regardless
+ * of what form the seed was originally stored in.
+ *
+ * @param {string} systemID - Coin system ID (e.g. 'VRSC')
+ * @returns {Promise<{extsk: string}>}
+ * @throws {Error} If no key material can be retrieved
+ */
+const getKeyMaterial = async (systemID) => {
+  const coinObj = CoinDirectory.getBasicCoinObj(systemID);
+
+  try {
+    const esk = await requestPrivKey(coinObj.id, DLIGHT_PRIVATE);
+    if (esk) return { extsk: esk };
+  } catch (e) {}
+  
+  throw new Error(
+    `No Z (shielded address) seed has been set up. ` +
+    `Please go to Settings → Profile and set up a Z Seed before accepting encryption requests.`
+  );
+};
+
+// ============================================================================
+// Main Handler - Returns displayProps for UI
+// ============================================================================
+
+/**
+ * Entry point called from GenericRequestHome.
+ * Prepares display props for AppEncryptionRequestInfo UI.
+ * Actual key derivation happens after user approval.
+ * 
+ * @param {GenericRequest} request - The parent GenericRequest
+ * @param {GenericResponse} response - The response being built
+ * @param {number} detailIndex - Index of this detail in request.details
+ * @returns {Promise<{ displayProps: object, response: GenericResponse, handledIndices: number[] }>}
+ * @throws {Error} If processing fails
+ */
+export const handleAppEncryptionRequestVDXFObject = async (request, response, detailIndex) => {
+  const detail = request.getDetails(detailIndex);
+
+  if (!detail || !(detail instanceof AppEncryptionRequestOrdinalVDXFObject)) {
+    throw new Error("Invalid AppEncryptionRequest detail at index " + detailIndex);
+  }
+
+  const encryptionRequest = detail.data;
+  const systemID = request.signature.systemID.toIAddress();
+  const requestSignerID = request.signature.identityID.toIAddress();
+
+  const coinObj = CoinDirectory.getBasicCoinObj(systemID);
+
+  if (!coinObj) {
+    throw new Error("Unsupported system: " + systemID);
+  }
+
+  VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0]);
+
+  // Resolve signer identity to FQN
+  let signerFqn = requestSignerID;
+  let signerSystemName = getSystemNameFromSystemId(systemID);
+  let sigtime = null;
+
+  try {
+    const signedBy = await getIdentity(coinObj.system_id, requestSignerID);
+    if (!signedBy.error && signedBy.result?.fullyqualifiedname) {
+      signerFqn = convertFqnToDisplayFormat(signedBy.result.fullyqualifiedname);
+    }
+
+    // Get signature timestamp
+    const sig = await getSignatureInfo(
+      coinObj.system_id,
+      request.signature.identityID.toIAddress(),
+      request.signature.signatureAsVch.toString('base64')
+    );
+
+    if (sig && sig.height != null) {
+      const sigblock = await getBlock(coinObj.system_id, sig.height);
+      if (!sigblock.error && sigblock.result) {
+        sigtime = sigblock.result.time;
+      }
+    }
+  } catch (_) { }
+
+  // Resolve derivationID to FQN if present
+  let derivationIdFqn = null;
+  if (encryptionRequest.hasDerivationID()) {
+    const derivationIdAddr = encryptionRequest.derivationID.toIAddress();
+    derivationIdFqn = derivationIdAddr;
+    try {
+      const derivationIdentity = await getIdentity(coinObj.system_id, derivationIdAddr);
+      if (!derivationIdentity.error && derivationIdentity.result?.fullyqualifiedname) {
+        derivationIdFqn = convertFqnToDisplayFormat(derivationIdentity.result.fullyqualifiedname);
+      }
+    } catch (_) { }
+  }
+
+  // Resolve requestID to FQN if present
+  let requestIdFqn = null;
+  if (encryptionRequest.hasRequestID()) {
+    const requestIdAddr = encryptionRequest.requestID.toIAddress();
+    requestIdFqn = requestIdAddr;
+    try {
+      const requestIdentity = await getIdentity(coinObj.system_id, requestIdAddr);
+      if (!requestIdentity.error && requestIdentity.result?.fullyqualifiedname) {
+        requestIdFqn = convertFqnToDisplayFormat(requestIdentity.result.fullyqualifiedname);
+      }
+    } catch (_) {
+      // Keep raw i-address if resolution fails
+    }
+  }
+
+  // Get encrypt response to address if present
+  let encryptResponseToAddress = null;
+  if (encryptionRequest.hasEncryptResponseToAddress()) {
+    encryptResponseToAddress = encryptionRequest.encryptResponseToAddress.toAddressString();
+  }
+
+  return {
+    displayProps: {
+      detailsBufferString: detail.data.toBuffer().toString('hex'),
+      signerFqn,
+      signerSystemID: systemID,
+      signerSystemName,
+      signerIdentityID: requestSignerID,
+      sigtime,
+      derivationNumber: encryptionRequest.derivationNumber.toNumber(),
+      derivationIdFqn,
+      hasDerivationID: encryptionRequest.hasDerivationID(),
+      requestIdFqn,
+      hasRequestID: encryptionRequest.hasRequestID(),
+      encryptResponseToAddress,
+      hasEncryptResponseToAddress: encryptionRequest.hasEncryptResponseToAddress(),
+      returnESK: encryptionRequest.returnESK(),
+    },
+    response,
+    handledIndices: []
+  };
+};
+
+
+
+// ============================================================================
+// Processing Function - Called after user approval
+// ============================================================================
+
+/**
+ * Derives keys and builds the response object.
+ * Called by AppEncryptionRequestInfo after user approval.
+ * 
+ * @param {Object} params
+ * @param {GenericRequest} params.request - The parent GenericRequest
+ * @param {number} params.detailIndex - Index of the encryption request detail
+ * @param {string} params.responseSignerID - The user's signing identity i-address
+ * @returns {Promise<AppEncryptionResponseOrdinalVDXFObject|DataDescriptorOrdinalVDXFObject>}
+ * @throws {Error} If processing fails
+ */
+export const processAppEncryptionRequest = async ({
+  request,
+  detailIndex,
+  responseSignerID,
+}) => {
+  const detail = request.getDetails(detailIndex);
+
+  if (!detail || !(detail instanceof AppEncryptionRequestOrdinalVDXFObject)) {
+    throw new Error("Invalid AppEncryptionRequest detail at index " + detailIndex);
+  }
+
+  const encryptionRequest = detail.data;
+  const systemID = request.signature.systemID.toIAddress();
+  const requestSignerID = request.signature.identityID.toIAddress();
+
+  // Get appOrDelegatedID if present
+  let appOrDelegatedID = null;
+  try {
+    if (request.appOrDelegatedID) {
+      appOrDelegatedID = request.appOrDelegatedID.toAddress();
+    }
+  } catch (e) {
+    // appOrDelegatedID is optional
+  }
+
+  const coinObj = CoinDirectory.getBasicCoinObj(systemID);
+
+  if (!coinObj) {
+    throw new Error("Unsupported system: " + systemID);
+  }
+
+  // Get extended spending key for derivation
+  const keyMaterial = await getKeyMaterial(coinObj.id);
+
+  // Use appOrDelegatedID if present, otherwise use requestSignerID
+  const appID = appOrDelegatedID || requestSignerID;
+
+  // Check if spending key requested via flags
+  const returnESK = encryptionRequest.returnESK();
+
+  // Determine toId: the derivationID from the encryption request is the
+  // identity we derive a shared key with (matches daemon's "toid").
+  // Falls back to appOrDelegatedID or requestSignerID if no derivationID.
+  let toIdAddress;
+  if (encryptionRequest.hasDerivationID()) {
+    toIdAddress = encryptionRequest.derivationID.toIAddress();
+  } else {
+    toIdAddress = appID;
+  }
+
+  // Convert i-addresses to 20-byte hex strings for the native module.
+
+  const fromIdBytes = IdentityID.fromAddress(responseSignerID).hash;
+  const toIdBytes = IdentityID.fromAddress(toIdAddress).hash;
+  let fromIdHex = Buffer.from(fromIdBytes).toString('hex');
+  let toIdHex = Buffer.from(toIdBytes).toString('hex');
+
+  // Ensure even-length hex (native Hex.decode requires it).
+  // This should always be 40 chars from a 20-byte hash, but guard against edge cases.
+  if (fromIdHex.length % 2 !== 0) fromIdHex = '0' + fromIdHex;
+  if (toIdHex.length % 2 !== 0) toIdHex = '0' + toIdHex;
+
+
+  // Build derivation params matching ChannelKeysRequest interface.
+  let derivationParams = {
+    ...keyMaterial,
+    fromId: fromIdHex,
+    toId: toIdHex,
+    encryptionIndex: encryptionRequest.derivationNumber.toNumber(),
+    returnSecret: returnESK
+  };
+
+  // Derive channel keys
+  const keys  = await zGetEncryptionAddress(coinObj.system_id, derivationParams);
+  
+  // Clear sensitive data from memory as soon as possible
+  derivationParams = null
+
+  // Build response details
+  let responseDetails;
+  let responseFlags = new BN(0);
+
+  // Set flags based on what we're returning
+  if (encryptionRequest.hasRequestID()) {
+    responseFlags = responseFlags.or(AppEncryptionResponseDetails.FLAG_HAS_REQUEST_ID);
+  }
+  if (returnESK) {
+    responseFlags = responseFlags.or(AppEncryptionResponseDetails.FLAG_HAS_EXTENDED_SPENDING_KEY);
+  }
+
+  if (!keys.ivk || !keys.extfvk || !keys.address) {
+    throw new Error("Incomplete key derivation result");
+  }
+
+  if (returnESK && !keys.spendingKey) {
+    throw new Error("Spending key requested but not returned");
+  }
+  responseDetails = new AppEncryptionResponseDetails({
+    version: new BN(1),
+    flags: responseFlags,
+    incomingViewingKey: Buffer.from(keys.ivk, 'hex'),
+    extendedViewingKey: SaplingExtendedViewingKey.fromKeyString(keys.extfvk),
+    address: SaplingPaymentAddress.fromAddressString(keys.address),
+    extendedSpendingKey: returnESK
+      ? SaplingExtendedSpendingKey.fromKeyString(keys.spendingKey)
+      : undefined,
+    requestID: encryptionRequest.hasRequestID() ? encryptionRequest.requestID : undefined,
+  });
+
+
+  // Get the encrypt to address or return null as it's optional
+  const encryptTo = encryptionRequest.hasEncryptResponseToAddress()
+    ? encryptionRequest.encryptResponseToAddress.toAddressString()
+    : null;
+
+  if (!encryptTo) {
+    // Return unencrypted response
+    return {
+      responseDetail: new AppEncryptionResponseOrdinalVDXFObject({
+        data: responseDetails
+      }),
+      encryptedDescriptorJson: null,
+    };
+  }
+
+  // Encrypt response
+  const { encryptedDescriptor, encryptedDescriptorJson } =
+    await encryptDataToDescriptor(encryptTo, responseDetails.toBuffer());
+
+  return {
+    responseDetail: new DataDescriptorOrdinalVDXFObject({
+      data: encryptedDescriptor
+    }),
+    encryptedDescriptorJson,
+  };
+};
+
+export default {
+  handleAppEncryptionRequestVDXFObject,
+  processAppEncryptionRequest
+};

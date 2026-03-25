@@ -555,7 +555,7 @@ class ProfileSettings extends Component {
           allowBiometry={true}
         />
         <List.Subheader>{"Profile Actions"}</List.Subheader>
-        {ENABLE_DLIGHT && !this.props.testAccount && (
+        {ENABLE_DLIGHT && (
           <TouchableOpacity
             onPress={this.handleZSeedSetup}
             disabled={zSetupComplete}

@@ -5,18 +5,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
-import { AUTHENTICATION_REQUEST_VDXF_KEY, DEEPLINK_PROTOCOL_URL_STRING, GenericRequest, GenericResponse, IDENTITY_UPDATE_REQUEST_VDXF_KEY, VALU_MOBILE_GENERIC_REQUEST_HANDLER_ID, VERUSPAY_INVOICE_DETAILS_VDXF_KEY } from 'verus-typescript-primitives';
+import { AUTHENTICATION_REQUEST_VDXF_KEY, DEEPLINK_PROTOCOL_URL_STRING, GenericRequest, GenericResponse, IDENTITY_UPDATE_REQUEST_VDXF_KEY, VALU_MOBILE_GENERIC_REQUEST_HANDLER_ID, VERUSPAY_INVOICE_DETAILS_VDXF_KEY, APP_ENCRYPTION_REQUEST_VDXF_KEY } from 'verus-typescript-primitives';
 import InvoiceInfo from '../InvoiceInfo/InvoiceInfo';
 import { handleVerusPayInvoiceDetailsVDXFObject } from '../../../utils/deeplink/handlers/verusPayInvoiceDetailsHandler';
 import { handleAuthenticationRequestDetailsVDXFObject } from '../../../utils/deeplink/handlers/authenticationRequestDetailsHandler';
 import { handleIdentityUpdateRequestDetailsVDXFObject } from '../../../utils/deeplink/handlers/identityUpdateRequestDetailsHandler';
+import { handleAppEncryptionRequestVDXFObject } from '../../../utils/deeplink/handlers/appEncryptionRequestHandler';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import { CommonActions } from '@react-navigation/native';
 import AuthenticationRequestInfo from '../AuthenticationRequestInfo/AuthenticationRequestInfo';
 import IdentityUpdateRequestInfo from '../IdentityUpdateRequestInfo/IdentityUpdateRequestInfo';
+import AppEncryptionRequestInfo from '../AppEncryptionRequestInfo/AppEncryptionRequestInfo';
 import ListSelectionModal from '../../../components/ListSelectionModal/ListSelectionModal';
 import { isDeeplinkHandlerInstalled } from '../../../utils/deeplink/isDeeplinkHandlerInstalled';
 import Colors from '../../../globals/colors';
+
 
 const GenericRequestHome = props => {
   const {
@@ -60,6 +63,7 @@ const GenericRequestHome = props => {
   detailHandlers.set(VERUSPAY_INVOICE_DETAILS_VDXF_KEY.vdxfid, handleVerusPayInvoiceDetailsVDXFObject);
   detailHandlers.set(AUTHENTICATION_REQUEST_VDXF_KEY.vdxfid, handleAuthenticationRequestDetailsVDXFObject);
   detailHandlers.set(IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid, handleIdentityUpdateRequestDetailsVDXFObject);
+  detailHandlers.set(APP_ENCRYPTION_REQUEST_VDXF_KEY.vdxfid, handleAppEncryptionRequestVDXFObject);
 
   /**
    * Processes a detail in the request at a certain index
@@ -228,6 +232,18 @@ const GenericRequestHome = props => {
         detailIndex={detailIndex}
       />
     ),
+    [APP_ENCRYPTION_REQUEST_VDXF_KEY.vdxfid]: () => (
+      <AppEncryptionRequestInfo
+        {...displayProps}
+        cancel={props.cancel}
+        setLoading={props.setLoading}
+        navigation={props.navigation}
+        next={next}
+        response={response}
+        request={request}
+        detailIndex={detailIndex}
+      />
+    )
   };
 
   const openInValu = () => {
