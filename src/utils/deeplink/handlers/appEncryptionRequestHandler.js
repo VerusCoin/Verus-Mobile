@@ -35,12 +35,12 @@ import { requestPrivKey, requestSeeds } from "../../auth/authBox";
 import { DLIGHT_PRIVATE } from "../../constants/intervalConstants";
 import { isDlightSpendingKey, parseDlightSeed } from "../../keys";
 
-import { z_getencryptionaddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
+import { zGetEncryptionAddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
 import { encryptDataToDescriptor } from "../../crypto/encryptDataDescriptor";
 
 
 /**
- * Gets an extended spending key for z_getencryptionaddress.
+ * Gets an extended spending key for zGetEncryptionAddress.
  * If the user has a mnemonic seed stored, it is converted to an extsk
  * via Tools.deriveSaplingSpendingKey so behaviour is identical regardless
  * of what form the seed was originally stored in.
@@ -269,7 +269,7 @@ export const processAppEncryptionRequest = async ({
   };
 
   // Derive channel keys
-  const derivationResult = await z_getencryptionaddress(coinObj.system_id, derivationParams);
+  const derivationResult = await zGetEncryptionAddress(coinObj.system_id, derivationParams);
   
   // Clear sensitive data from memory as soon as possible
   derivationParams = null;
