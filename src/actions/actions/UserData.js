@@ -27,6 +27,7 @@ import {
   ERC20,
   ETH,
   DLIGHT_PRIVATE,
+  IS_PBAAS,
   VRPC,
   WYRE_SERVICE,
 } from '../../utils/constants/intervalConstants';
@@ -275,10 +276,14 @@ export const authenticateAccount = async (account, password) => {
             _keys[activeCoins[i].id] = {};
 
             for (const channel of CHANNELS) {
-              if (
+             if (
                 (activeCoins[i].compatible_channels.includes(channel) &&
                   seeds[channel]) ||
-                (channel === DLIGHT_PRIVATE && seeds[DLIGHT_PRIVATE]) ||
+                (channel === DLIGHT_PRIVATE &&
+                  seeds[DLIGHT_PRIVATE] &&
+                  activeCoins[i].testnet &&
+                  activeCoins[i].tags &&
+                  activeCoins[i].tags.includes(IS_PBAAS)) ||
                 channel === ETH ||
                 channel === ERC20 ||
                 channel === VRPC
@@ -398,7 +403,11 @@ export const addKeypairs = async (
     if (
       (coinObj.compatible_channels.includes(seedType) &&
       (seedType !== DLIGHT_PRIVATE || accountSeeds[seedType])) ||
-      (seedType === DLIGHT_PRIVATE && accountSeeds[DLIGHT_PRIVATE])
+      (seedType === DLIGHT_PRIVATE &&
+        accountSeeds[DLIGHT_PRIVATE] &&
+        coinObj.testnet &&
+        coinObj.tags &&
+        coinObj.tags.includes(IS_PBAAS))
     ) {
       const keyObj = await deriveKeyPair(
         seed,
