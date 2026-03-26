@@ -1,10 +1,12 @@
-import { AUTHENTICATION_REQUEST_VDXF_KEY, GenericRequest, IDENTITY_UPDATE_REQUEST_VDXF_KEY, PROVISION_IDENTITY_DETAILS_VDXF_KEY, VERUSPAY_INVOICE_DETAILS_VDXF_KEY, VerusPayInvoiceDetailsOrdinalVDXFObject } from "verus-typescript-primitives"
+import { AUTHENTICATION_REQUEST_VDXF_KEY, GenericRequest, IDENTITY_UPDATE_REQUEST_VDXF_KEY, PROVISION_IDENTITY_DETAILS_VDXF_KEY, 
+  VERUSPAY_INVOICE_DETAILS_VDXF_KEY, VerusPayInvoiceDetailsOrdinalVDXFObject, APP_ENCRYPTION_REQUEST_VDXF_KEY} from "verus-typescript-primitives"
 import { getInfo, verifyGenericRequest } from "../../api/channels/vrpc/callCreators"
 import { getIdentity } from "../../api/channels/verusid/callCreators";
 import { validateAuthenticationRequestVDXFObject } from "./authenticationRequestValidator";
 import { validateIdentityUpdateRequestVDXFObject } from "./identityUpdateRequestValidator";
 import { validateProvisionIdentityDetailsVDXFObject } from "./provisionIdentityDetailsValidator";
 import { validateVerusPayInvoiceVDXFObject } from "./verusPayInvoiceDetailsValidator";
+import { validateAppEncryptionRequestVDXFObject } from "./appEncryptionRequestValidator";
 import { CoinDirectory } from "../../CoinData/CoinDirectory";
 import VrpcProvider from '../../vrpc/vrpcInterface';
 import store from "../../../store";
@@ -31,7 +33,8 @@ export const getValidatorForDetail = (detailKey) => {
     [AUTHENTICATION_REQUEST_VDXF_KEY.vdxfid]: validateAuthenticationRequestVDXFObject,
     [IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid]: validateIdentityUpdateRequestVDXFObject,
     [PROVISION_IDENTITY_DETAILS_VDXF_KEY.vdxfid]: validateProvisionIdentityDetailsVDXFObject,
-    [VERUSPAY_INVOICE_DETAILS_VDXF_KEY.vdxfid]: validateVerusPayInvoiceVDXFObject
+    [VERUSPAY_INVOICE_DETAILS_VDXF_KEY.vdxfid]: validateVerusPayInvoiceVDXFObject,
+    [APP_ENCRYPTION_REQUEST_VDXF_KEY.vdxfid]: validateAppEncryptionRequestVDXFObject
   }
 
   if (Object.keys(detailValidators).includes(detailKey)) {

@@ -1,4 +1,4 @@
-import { DefinedKey, IdentityUpdateRequestOrdinalVDXFObject, GenericRequest, GenericResponse, DATA_TYPE_DEFINEDKEY } from "verus-typescript-primitives";
+import { DefinedKey, IdentityUpdateRequestOrdinalVDXFObject, GenericRequest, GenericResponse, DATA_TYPE_DEFINEDKEY, fqnToAddress, toIAddress, getDataKey } from "verus-typescript-primitives";
 import VrpcProvider from '../../vrpc/vrpcInterface';
 import { getBlock } from "../../api/channels/vrpc/requests/getBlock";
 import { getSignatureInfo } from "../../api/channels/vrpc/requests/getSignatureInfo";
@@ -10,6 +10,7 @@ import { getSystemNameFromSystemId } from "../../CoinData/CoinData";
 import { createUpdateIdentityTx, getUpdatableIdentity } from "../../api/channels/verusid/requests/updateIdentity";
 import { convertFqnToDisplayFormat } from "../../fullyqualifiedname";
 import { capitalizeString } from "../../stringUtils";
+import { getKnownVDXFKeyName } from "../../vdxf/vdxfTypeLabels";
 
 /**
  * @param {GenericRequest} request
@@ -45,10 +46,11 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
   if (details == null) throw new Error("Invalid index for request details");
   if (!(details instanceof IdentityUpdateRequestOrdinalVDXFObject)) throw new Error("Identity update request details not found at specified index");
 
+  const rootSystem = request.isTestnet() ? 'VRSCTEST' : 'VRSC';
   const requestDetails = details.data;
   const requestSystem = requestDetails.containsSystem()
     ? requestDetails.systemID.toAddress()
-    : request.isTestnet() ? 'VRSCTEST' : 'VRSC';
+    : rootSystem;
 
   const coinObj = CoinDirectory.getBasicCoinObj(requestSystem);
   VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0]);
@@ -81,11 +83,11 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
     const initAddresses = [];
 
     if (requestDetails.identity.containsRevocation && requestDetails.identity.containsRevocation()) {
-      initAddresses.push(requestDetails.identity.revocation_authority.toAddress());
+      initAddresses.push(requestDetails.identity.revocationAuthority.toAddress());
     }
 
     if (requestDetails.identity.containsRecovery && requestDetails.identity.containsRecovery()) {
-      initAddresses.push(requestDetails.identity.recovery_authority.toAddress());
+      initAddresses.push(requestDetails.identity.recoveryAuthority.toAddress());
     }
 
     friendlyNames = await getFriendlyNameMap(coinObj.system_id, subjectIdentity, initAddresses);
@@ -148,6 +150,38 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
     }
   } catch (e) {
     console.warn(e);
+  }
+
+  if (requestDetails.identity != null) {
+    const cmmKeys = requestDetails.getContentMultiMapKeys();
+    const reqSigner = request.signature.identityID.toAddress();
+
+    for (const key of cmmKeys) {
+      if (key.includes("::")) {
+        const fqnSplit = key.split("::");
+        const fqnNamespace = toIAddress(fqnSplit[0], rootSystem);
+        const dataKey = getDataKey(key, fqnNamespace, toIAddress(rootSystem)).id;
+        const knownVDXFKey = getKnownVDXFKeyName(dataKey);
+
+        if (knownVDXFKey != null) continue;
+
+        if (fqnNamespace !== reqSigner) {
+          throw new Error(`Cannot update with key not in signer namespace (key namespace is ${fqnSplit[0]}@)`);
+        }
+
+        cmmDataKeys[dataKey] = {
+          vdxfuri: key,
+          nsid: fqnNamespace,
+          label: capitalizeString(fqnSplit[1].split('.').join(' ')),
+        };
+      } else {
+        const knownKeyName = getKnownVDXFKeyName(key);
+
+        if (!knownKeyName) {
+          throw new Error("Cannot update with unknown key " + key);
+        }
+      }
+    }
   }
 
   const updateIdentityTx = await createUpdateIdentityTx(

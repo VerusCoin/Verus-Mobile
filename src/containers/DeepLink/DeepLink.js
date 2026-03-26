@@ -29,7 +29,7 @@ import InvoiceInfo from './InvoiceInfo/InvoiceInfo';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
 import { verifyIdentityUpdateRequest } from '../../utils/api/channels/vrpc/requests/verifyIdentityUpdateRequest';
 import { extractIdentityUpdateRequestSig } from '../../utils/api/channels/vrpc/requests/extractIdentityUpdateRequestSig';
-import { DATA_TYPE_DEFINEDKEY, DefinedKey, IDENTITY_UPDATE_REQUEST_VDXF_KEY, nameAndParentAddrToIAddr } from 'verus-typescript-primitives';
+import { APP_ENCRYPTION_REQUEST_VDXF_KEY, DATA_PACKET_REQUEST_VDXF_KEY, DATA_TYPE_DEFINEDKEY, DefinedKey, IDENTITY_UPDATE_REQUEST_VDXF_KEY, nameAndParentAddrToIAddr, USER_DATA_REQUEST_VDXF_KEY } from 'verus-typescript-primitives';
 import IdentityUpdateRequestInfo from './IdentityUpdateRequestInfo/IdentityUpdateRequestInfo';
 import { getIdentityContent } from '../../utils/api/channels/verusid/requests/getIdentityContent';
 import { capitalizeString } from '../../utils/stringUtils';
@@ -82,15 +82,19 @@ const DeepLink = (props) => {
       request.hasAppOrDelegatedID() &&
       request.appOrDelegatedID.toAddress() !== request.signature.identityID.toAddress();
     
-    const identityUpdateAllowed = store.getState().settings.generalWalletSettings.enableExperimentalIdentityUpdate === true;
+    const experimentalRequestsAllowed = store.getState().settings.generalWalletSettings.enableExperimentalGenericRequests === true;
 
-    if (!identityUpdateAllowed) {
-      const hasIdentityUpdateDetail = request.details.some(detail =>
-        detail.getIAddressKey && detail.getIAddressKey() === IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid
+    if (!experimentalRequestsAllowed) {
+      const hasExperimentalRequest = request.details.some(detail =>
+        detail.getIAddressKey() === IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid || 
+        detail.getIAddressKey() === APP_ENCRYPTION_REQUEST_VDXF_KEY.vdxfid ||
+        detail.getIAddressKey() === DATA_PACKET_REQUEST_VDXF_KEY.vdxfid ||
+        detail.getIAddressKey() === USER_DATA_REQUEST_VDXF_KEY.vdxfid ||
+        detail.getIAddressKey() === DATA_PACKET_REQUEST_VDXF_KEY.vdxfid
       );
 
-      if (hasIdentityUpdateDetail) {
-        throw new Error("Identity update deeplink requests are currently experimental and disabled in settings.");
+      if (hasExperimentalRequest) {
+        throw new Error("This type of request is currently experimental and disabled in your general wallet settings.");
       }
     }
 
@@ -304,11 +308,11 @@ const DeepLink = (props) => {
       const initAddresses = [];
 
       if (req.details.identity.containsRevocation()) {
-        initAddresses.push(req.details.identity.revocation_authority.toAddress());
+        initAddresses.push(req.details.identity.revocationAuthority.toAddress());
       }
 
       if (req.details.identity.containsRecovery()) {
-        initAddresses.push(req.details.identity.recovery_authority.toAddress());
+        initAddresses.push(req.details.identity.recoveryAuthority.toAddress());
       }
 
       friendlyNames = await getFriendlyNameMap(coinObj.system_id, subjectIdentity, initAddresses);
