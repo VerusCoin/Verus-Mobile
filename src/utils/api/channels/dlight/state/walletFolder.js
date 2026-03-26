@@ -1,5 +1,5 @@
 import { getSynchronizerInstance, InitializerConfig, makeSynchronizer, stopAndDeleteWallet, Tools } from 'react-native-verus'
-import { VRSC_SAPLING_ACTIVATION_HEIGHT } from '../../../../constants/constants'
+import { VRSC_SAPLING_ACTIVATION_HEIGHT, PBAAS_SAPLING_ACTIVATION_HEIGHT } from '../../../../constants/constants'
 import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
 
 /**
@@ -14,18 +14,21 @@ import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
  */
 export const initializeWallet = async (coinId, coinProto, accountHash, host, port, seed, extsk) => {
      try {
-       const config = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, true);
+       const config = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, true);
        const sync = await makeSynchronizer(config);
        return sync;
      } catch (error) {
-       console.warn(error)
+       throw error;
      }
 };
 
-export const setConfig = async (coinId, coinProto, accountHash, host, port, seed, extsk, birthday, newWallet) => {
+export const setConfig = async (coinId, coinProto, accountHash, host, port, seed, extsk, newWallet) => {
     /**
      * @type {InitializerConfig}
      */
+    //TODO: birthday below can be removed, and provided as argument to func, but only once we are 
+    // capable of discrete 'scan-from' height (daemon or lwd need to provide a saplingOutput index)
+    const birthday = (coinId === "VRSC") ? VRSC_SAPLING_ACTIVATION_HEIGHT : PBAAS_SAPLING_ACTIVATION_HEIGHT;
     const config = {
       mnemonicSeed: seed,
       extsk: extsk ? await Tools.bech32Decode(extsk) : extsk,
@@ -48,7 +51,7 @@ export const setConfig = async (coinId, coinProto, accountHash, host, port, seed
  */
 export const openWallet = async (coinId, coinProto, accountHash, host, port, seed, extsk) => {
   try {
-    const config = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, VRSC_SAPLING_ACTIVATION_HEIGHT, false);
+    const config = await setConfig(coinId, coinProto, accountHash, host, port, seed, extsk, false);
     const sync = await makeSynchronizer(config);
     return sync;
 
