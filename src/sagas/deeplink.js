@@ -28,7 +28,10 @@ function* handleDeeplinkUrl(action) {
       const isInternalProtocol = url.protocol === `${DEEPLINK_PROTOCOL_URL_STRING}${VERUS_MOBILE_GENERIC_REQUEST_HANDLER_ID}:`;
 
       if (url.protocol === `${DEEPLINK_PROTOCOL_URL_STRING}:` || isInternalProtocol) {
-        const otherHandlerInstalled = yield call(isDeeplinkHandlerInstalled, 1);
+        const otherHandlerInstalled = yield call(
+          isDeeplinkHandlerInstalled,
+          VALU_MOBILE_GENERIC_REQUEST_HANDLER_ID,
+        );
 
         if (isInternalProtocol && !otherHandlerInstalled) {
           throw new Error("Internal deeplinks cannot be used unless multiple deeplink handlers are installed.");

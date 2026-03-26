@@ -228,6 +228,7 @@ const GenericRequestComplete = props => {
       createAlert('Error', e.message);
       console.warn(e);
       setLoading(false);
+      return;
     }
 
     completeRequest();
