@@ -12,6 +12,7 @@ import { createAlert } from '../../../../../actions/actions/alert/dispatchers/al
 import TallButton from '../../../../../components/LargerButton';
 import ScanSeed from '../../../../../components/ScanSeed';
 import Colors from '../../../../../globals/colors';
+import Styles from '../../../../../styles';
 
 export default function ImportText({
   qr,
