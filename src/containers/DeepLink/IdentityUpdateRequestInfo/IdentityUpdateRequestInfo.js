@@ -26,38 +26,64 @@
 */
 import React, {useMemo, useState, useEffect, useCallback} from 'react';
 import {SafeAreaView, View} from 'react-native';
-import { primitives } from "verusid-ts-client"
-import { Button, Portal, Text } from 'react-native-paper';
+import {primitives} from 'verusid-ts-client';
+import {Button, Portal, Text} from 'react-native-paper';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
-import { getFriendlyNameMap, getIdentity } from '../../../utils/api/channels/verusid/callCreators';
-import { blocksToTime, unixToDate } from '../../../utils/math';
-import { useSelector } from 'react-redux';
+import {
+  getFriendlyNameMap,
+  getIdentity,
+} from '../../../utils/api/channels/verusid/callCreators';
+import {blocksToTime, unixToDate} from '../../../utils/math';
+import {useSelector} from 'react-redux';
 import Colors from '../../../globals/colors';
-import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
-import { AUTHENTICATE_USER_SEND_MODAL, SEND_MODAL_USER_ALLOWLIST } from '../../../utils/constants/sendModal';
+import {openAuthenticateUserModal} from '../../../actions/actions/sendModal/dispatchers/sendModal';
+import {
+  AUTHENTICATE_USER_SEND_MODAL,
+  SEND_MODAL_USER_ALLOWLIST,
+} from '../../../utils/constants/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
-import { getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
-import { createAlert, resolveAlert } from '../../../actions/actions/alert/dispatchers/alert';
-import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
+import {getSystemNameFromSystemId} from '../../../utils/CoinData/CoinData';
+import {
+  createAlert,
+  resolveAlert,
+} from '../../../actions/actions/alert/dispatchers/alert';
+import {CoinDirectory} from '../../../utils/CoinData/CoinDirectory';
 import ListSelectionModal from '../../../components/ListSelectionModal/ListSelectionModal';
-import { copyToClipboard } from '../../../utils/clipboard/clipboard';
-import { useObjectSelector } from '../../../hooks/useObjectSelector';
-import { getVerusIdStatus } from '../../../utils/verusid/getVerusIdStatus';
-import { VERUSID_AUTH_INFO, VERUSID_BASE_INFO, VERUSID_CMM_DATA, VERUSID_CMM_INFO, VERUSID_PRIMARY_ADDRESS, VERUSID_PRIVATE_ADDRESS, VERUSID_PRIVATE_INFO, VERUSID_RECOVERY_AUTH, VERUSID_REVOCATION_AUTH, VERUSID_STATUS } from '../../../utils/constants/verusidObjectData';
-import { getCmmDataLabel } from '../../../utils/vdxf/cmmDataLabel';
+import {copyToClipboard} from '../../../utils/clipboard/clipboard';
+import {useObjectSelector} from '../../../hooks/useObjectSelector';
+import {getVerusIdStatus} from '../../../utils/verusid/getVerusIdStatus';
+import {
+  VERUSID_AUTH_INFO,
+  VERUSID_BASE_INFO,
+  VERUSID_CMM_DATA,
+  VERUSID_CMM_INFO,
+  VERUSID_PRIMARY_ADDRESS,
+  VERUSID_PRIVATE_ADDRESS,
+  VERUSID_PRIVATE_INFO,
+  VERUSID_RECOVERY_AUTH,
+  VERUSID_REVOCATION_AUTH,
+  VERUSID_STATUS,
+} from '../../../utils/constants/verusidObjectData';
+import {getCmmDataLabel} from '../../../utils/vdxf/cmmDataLabel';
 import VdxfUniValueModal from '../../../components/VdxfUniValueModal/VdxfUniValueModal';
-import { getVDXFKeyLabel } from '../../../utils/vdxf/vdxfTypeLabels';
-import { capitalizeString } from '../../../utils/stringUtils';
-import { ContentMultiMapRemoveKey, DATA_TYPE_DEFINEDKEY, GenericRequest, IdentityUpdateRequestDetails } from 'verus-typescript-primitives';
+import {getVDXFKeyLabel} from '../../../utils/vdxf/vdxfTypeLabels';
+import {capitalizeString} from '../../../utils/stringUtils';
+import {
+  ContentMultiMapRemoveKey,
+  DATA_TYPE_DEFINEDKEY,
+  GenericRequest,
+  IdentityUpdateRequestDetails,
+  KvMap,
+} from 'verus-typescript-primitives';
 import GradientButton from '../../../components/GradientButton';
 
 import ReviewStep from './steps/ReviewStep';
 import ContentStep from './steps/ContentStep';
 import HighRiskStep from './steps/HighRiskStep';
 import ConfirmPayStep from './steps/ConfirmPayStep';
-import { classifyChanges } from './utils/classifyChanges';
-import { buildContentMultiMapRemoveUi } from './utils/contentMultiMapRemoveUi';
-import { identityUpdateRequestInfoStyles as styles } from '../../../styles';
+import {classifyChanges} from './utils/classifyChanges';
+import {buildContentMultiMapRemoveUi} from './utils/contentMultiMapRemoveUi';
+import {identityUpdateRequestInfoStyles as styles} from '../../../styles';
 
 // Step identifiers
 const STEP_REVIEW = 0;
@@ -67,12 +93,12 @@ const STEP_CONFIRM_PAY = 3;
 const CMM_CLEAR_MAP_SENTINEL = '__CMM_CLEAR__';
 
 const IdentityUpdateRequestInfo = props => {
-  const { 
+  const {
     detailsBufferString,
     requestBufferString,
     responseBufferString,
-    sigtime, 
-    cancel, 
+    sigtime,
+    cancel,
     signerFqn,
     signerSystemID,
     signerSystemName,
@@ -88,29 +114,39 @@ const IdentityUpdateRequestInfo = props => {
     subjectIdTxHex,
     updateIdTxHex,
   } = props;
-  
-  const { fullyqualifiedname, identity } = subjectIdentity;
+
+  const {fullyqualifiedname, identity} = subjectIdentity;
 
   // --- Core state ---
-  const [subject, setSubject] = useState(primitives.Identity.fromJson(subjectIdentity));
+  const [subject, setSubject] = useState(
+    primitives.Identity.fromJson(subjectIdentity),
+  );
   const [details, setDetails] = useState(new IdentityUpdateRequestDetails());
   const [stepIndex, setStepIndex] = useState(STEP_REVIEW);
   const [acknowledged, setAcknowledged] = useState(false);
 
   // --- Modal state ---
   const [vdxfUniValueModalData, setVdxfUniValueModalData] = useState([]);
-  const [vdxfUniValueModalTitle, setVdxfUniValueModalTitle] = useState("Data");
-  const [vdxfUniValueModalVisible, setVdxfUniValueModalVisible] = useState(false);
-  const [partialSignDataModalData, setPartialSignDataModalData] = useState(null);
-  const [partialSignDataModalTitle, setPartialSignDataModalTitle] = useState("Data");
-  const [partialSignDataModalVisible, setPartialSignDataModalVisible] = useState(false);
-  const [isListSelectionModalVisible, setIsListSelectionModalVisible] = useState(false);
+  const [vdxfUniValueModalTitle, setVdxfUniValueModalTitle] = useState('Data');
+  const [vdxfUniValueModalVisible, setVdxfUniValueModalVisible] =
+    useState(false);
+  const [partialSignDataModalData, setPartialSignDataModalData] =
+    useState(null);
+  const [partialSignDataModalTitle, setPartialSignDataModalTitle] =
+    useState('Data');
+  const [partialSignDataModalVisible, setPartialSignDataModalVisible] =
+    useState(false);
+  const [isListSelectionModalVisible, setIsListSelectionModalVisible] =
+    useState(false);
   const [listData, setListData] = useState([]);
-  const [verusIdDetailsModalProps, setVerusIdDetailsModalProps] = useState(null);
+  const [verusIdDetailsModalProps, setVerusIdDetailsModalProps] =
+    useState(null);
 
   // --- Derived values ---
   const friendlyNameMap = new Map(Object.entries(friendlyNames));
-  const chainId = signerSystemName || (signerSystemID ? getSystemNameFromSystemId(signerSystemID) : null);
+  const chainId =
+    signerSystemName ||
+    (signerSystemID ? getSystemNameFromSystemId(signerSystemID) : null);
   const canOpenSignerModal = Boolean(chainId && signerIdentityID);
 
   const request = useMemo(() => {
@@ -123,17 +159,20 @@ const IdentityUpdateRequestInfo = props => {
 
   // --- Helper functions ---
   const getVerusId = async (chain, iAddrOrName) => {
-    const id = await getIdentity(CoinDirectory.getBasicCoinObj(chain).system_id, iAddrOrName);
+    const id = await getIdentity(
+      CoinDirectory.getBasicCoinObj(chain).system_id,
+      iAddrOrName,
+    );
     if (id.error) throw new Error(id.error.message);
     return id.result;
   };
 
-  const displayIdentityAddress = (addr) => {
+  const displayIdentityAddress = addr => {
     if (friendlyNameMap.has(addr)) return friendlyNameMap.get(addr);
     return addr;
   };
 
-  const getSignDataLabel = (signData) => {
+  const getSignDataLabel = signData => {
     if (!signData) return 'Sign data';
     const trim = (value, maxLen = 60) => {
       if (value == null) return '';
@@ -146,7 +185,8 @@ const IdentityUpdateRequestInfo = props => {
     if (dataJson.filename) return `Filename: ${trim(dataJson.filename)}`;
     if (dataJson.message) return `Message: ${trim(dataJson.message)}`;
     if (dataJson.messagehex) return `Hex message: ${trim(dataJson.messagehex)}`;
-    if (dataJson.messagebase64) return `Base64 message: ${trim(dataJson.messagebase64)}`;
+    if (dataJson.messagebase64)
+      return `Base64 message: ${trim(dataJson.messagebase64)}`;
     if (dataJson.datahash) return `Data hash: ${trim(dataJson.datahash)}`;
     return 'Sign data';
   };
@@ -176,35 +216,42 @@ const IdentityUpdateRequestInfo = props => {
           const removeMeta = extractContentMultiMapRemoveMeta(entry);
           const detailUi = removeMeta
             ? buildContentMultiMapRemoveUi({
-              removeMeta,
-              fallbackKey,
-              currentContentMultiMap: identity.contentmultimap,
-              getKeyLabel: getCmmDataKey,
-              definedKeyVdxfId: DATA_TYPE_DEFINEDKEY.vdxfid,
-            })
+                removeMeta,
+                fallbackKey,
+                currentContentMultiMap: identity.contentmultimap,
+                getKeyLabel: getCmmDataKey,
+                definedKeyVdxfId: DATA_TYPE_DEFINEDKEY.vdxfid,
+              })
             : null;
 
-          return { key, data: entry[key], meta: detailUi };
+          return {key, data: entry[key], meta: detailUi};
         }
       }
 
       return {
         key: `value:${index + 1}`,
-        data: entry
+        data: entry,
       };
     });
   };
 
   const extractContentMultiMapRemoveMeta = value => {
-    if (value == null || typeof value !== 'object' || Array.isArray(value)) return null;
+    if (value == null || typeof value !== 'object' || Array.isArray(value))
+      return null;
 
     const topLevel = value[ContentMultiMapRemoveKey.vdxfid];
-    if (topLevel == null || typeof topLevel !== 'object' || Array.isArray(topLevel)) return null;
+    if (
+      topLevel == null ||
+      typeof topLevel !== 'object' ||
+      Array.isArray(topLevel)
+    )
+      return null;
 
     const nested = topLevel[ContentMultiMapRemoveKey.vdxfid];
-    const payload = nested != null && typeof nested === 'object' && !Array.isArray(nested)
-      ? nested
-      : topLevel;
+    const payload =
+      nested != null && typeof nested === 'object' && !Array.isArray(nested)
+        ? nested
+        : topLevel;
 
     const parsedAction = Number(payload.action);
     if (!Number.isFinite(parsedAction)) return null;
@@ -212,39 +259,87 @@ const IdentityUpdateRequestInfo = props => {
     return {
       action: parsedAction,
       entryKey: typeof payload.entrykey === 'string' ? payload.entrykey : null,
-      valueHash: typeof payload.valuehash === 'string' ? payload.valuehash : null,
+      valueHash:
+        typeof payload.valuehash === 'string' ? payload.valuehash : null,
     };
   };
 
   // --- Display updates ---
   const getDisplayUpdates = () => {
-    const signDataMap = details.signDataMap || new Map();
+    const signDataMap = details.signDataMap || new KvMap();
+    const getSignDataForKey = lookupKey => {
+      if (signDataMap.hasAddress(lookupKey)) {
+        return signDataMap.getByAddress(lookupKey);
+      }
+
+      for (const [signDataKey, value] of signDataMap.entries()) {
+        if (signDataKey.toString() === lookupKey) {
+          return value;
+        }
+      }
+
+      return null;
+    };
     const displayUpdates = {
       [VERUSID_AUTH_INFO.key]: {
-        [VERUSID_RECOVERY_AUTH.key]: identityUpdates.recoveryauthority && identityUpdates.recoveryauthority !== identity.recoveryauthority ? {
-          data: displayIdentityAddress(identityUpdates.recoveryauthority),
-          onPress: () => openVerusIdDetailsModal(coinObj.system_id, identityUpdates.recoveryauthority)
-        } : null,
-        [VERUSID_REVOCATION_AUTH.key]: identityUpdates.revocationauthority && identityUpdates.revocationauthority !== identity.revocationauthority ? {
-          data: displayIdentityAddress(identityUpdates.revocationauthority),
-          onPress: () => openVerusIdDetailsModal(coinObj.system_id, identityUpdates.revocationauthority)
-        } : null
+        [VERUSID_RECOVERY_AUTH.key]:
+          identityUpdates.recoveryauthority &&
+          identityUpdates.recoveryauthority !== identity.recoveryauthority
+            ? {
+                data: displayIdentityAddress(identityUpdates.recoveryauthority),
+                onPress: () =>
+                  openVerusIdDetailsModal(
+                    coinObj.system_id,
+                    identityUpdates.recoveryauthority,
+                  ),
+              }
+            : null,
+        [VERUSID_REVOCATION_AUTH.key]:
+          identityUpdates.revocationauthority &&
+          identityUpdates.revocationauthority !== identity.revocationauthority
+            ? {
+                data: displayIdentityAddress(
+                  identityUpdates.revocationauthority,
+                ),
+                onPress: () =>
+                  openVerusIdDetailsModal(
+                    coinObj.system_id,
+                    identityUpdates.revocationauthority,
+                  ),
+              }
+            : null,
       },
       [VERUSID_PRIVATE_INFO.key]: {
-        [VERUSID_PRIVATE_ADDRESS.key]: identityUpdates.privateaddress && identityUpdates.privateaddress !== identity.privateaddress ? {
-          data: displayIdentityAddress(identityUpdates.privateaddress),
-          onPress: () => copyToClipboard(identityUpdates.privateaddress, { message: `${identityUpdates.privateaddress} copied to clipboard.` })
-        } : null
+        [VERUSID_PRIVATE_ADDRESS.key]:
+          identityUpdates.privateaddress &&
+          identityUpdates.privateaddress !== identity.privateaddress
+            ? {
+                data: displayIdentityAddress(identityUpdates.privateaddress),
+                onPress: () =>
+                  copyToClipboard(identityUpdates.privateaddress, {
+                    message: `${identityUpdates.privateaddress} copied to clipboard.`,
+                  }),
+              }
+            : null,
       },
       [VERUSID_BASE_INFO.key]: {},
-      [VERUSID_CMM_INFO.key]: {}
+      [VERUSID_CMM_INFO.key]: {},
     };
 
-    if (identityUpdates.primaryaddresses && identityUpdates.primaryaddresses.join(',') !== identity.primaryaddresses.join(',')) {
+    if (
+      identityUpdates.primaryaddresses &&
+      identityUpdates.primaryaddresses.join(',') !==
+        identity.primaryaddresses.join(',')
+    ) {
       for (let i = 0; i < identityUpdates.primaryaddresses.length; i++) {
-        displayUpdates[VERUSID_AUTH_INFO.key][`${VERUSID_PRIMARY_ADDRESS.key}:${i}`] = {
+        displayUpdates[VERUSID_AUTH_INFO.key][
+          `${VERUSID_PRIMARY_ADDRESS.key}:${i}`
+        ] = {
           data: identityUpdates.primaryaddresses[i],
-          onPress: () => copyToClipboard(identityUpdates.primaryaddresses[i], { message: `${identityUpdates.primaryaddresses[i]} copied to clipboard.` })
+          onPress: () =>
+            copyToClipboard(identityUpdates.primaryaddresses[i], {
+              message: `${identityUpdates.primaryaddresses[i]} copied to clipboard.`,
+            }),
         };
       }
     }
@@ -260,13 +355,18 @@ const IdentityUpdateRequestInfo = props => {
     if (identityUpdates.contentmultimap) {
       for (const key in identityUpdates.contentmultimap) {
         const updates = identityUpdates.contentmultimap[key];
+        const signData = details.containsSignData()
+          ? getSignDataForKey(key)
+          : null;
 
-        if (details.containsSignData() && signDataMap.has(key)) {
-          const signData = signDataMap.get(key);
-          displayUpdates[VERUSID_CMM_INFO.key][`${VERUSID_CMM_DATA.key}:${key}`] = {
+        if (signData != null) {
+          displayUpdates[VERUSID_CMM_INFO.key][
+            `${VERUSID_CMM_DATA.key}:${key}`
+          ] = {
             data: getSignDataLabel(signData),
             isEncrypted: true,
-            onPress: () => openPartialSignDataModal(signData, getCmmDataKey(key))
+            onPress: () =>
+              openPartialSignDataModal(signData, getCmmDataKey(key)),
           };
         } else {
           const normalizedUpdates = normalizeCmmUpdates(updates);
@@ -277,10 +377,12 @@ const IdentityUpdateRequestInfo = props => {
               removeMeta: extractContentMultiMapRemoveMeta(update),
             }))
             .filter(entry => entry.removeMeta != null);
-          const nonRemoveUpdates = normalizedUpdates.filter(update => extractContentMultiMapRemoveMeta(update) == null);
+          const nonRemoveUpdates = normalizedUpdates.filter(
+            update => extractContentMultiMapRemoveMeta(update) == null,
+          );
 
           if (removeEntries.length > 0) {
-            removeEntries.forEach(({ update, removeMeta, index }) => {
+            removeEntries.forEach(({update, removeMeta, index}) => {
               const removeUi = buildContentMultiMapRemoveUi({
                 removeMeta,
                 fallbackKey: key,
@@ -288,13 +390,15 @@ const IdentityUpdateRequestInfo = props => {
                 getKeyLabel: getCmmDataKey,
                 definedKeyVdxfId: DATA_TYPE_DEFINEDKEY.vdxfid,
               });
-              const targetKey = removeMeta.action === 4
-                ? CMM_CLEAR_MAP_SENTINEL
-                : (removeMeta.entryKey || key);
+              const targetKey =
+                removeMeta.action === 4
+                  ? CMM_CLEAR_MAP_SENTINEL
+                  : removeMeta.entryKey || key;
               const baseUpdateKey = `${VERUSID_CMM_DATA.key}:${targetKey}`;
-              const updateKey = displayUpdates[VERUSID_CMM_INFO.key][baseUpdateKey] == null
-                ? baseUpdateKey
-                : `${baseUpdateKey}:remove:${index}`;
+              const updateKey =
+                displayUpdates[VERUSID_CMM_INFO.key][baseUpdateKey] == null
+                  ? baseUpdateKey
+                  : `${baseUpdateKey}:remove:${index}`;
 
               // derive remove-action copy from the current identity state, not from chain permanence.
               displayUpdates[VERUSID_CMM_INFO.key][updateKey] = {
@@ -302,23 +406,41 @@ const IdentityUpdateRequestInfo = props => {
                 rawData: [update],
                 removeMeta: {
                   ...removeMeta,
-                  entryLabel: removeUi.targetLabel
+                  entryLabel: removeUi.targetLabel,
                 },
                 highRisk: removeMeta.action === 4,
-                highRiskTitle: removeMeta.action === 4 ? 'Clear current identity content' : undefined,
-                highRiskWarning: removeMeta.action === 4 ? removeUi.highRiskWarning : undefined,
+                highRiskType:
+                  removeMeta.action === 4 ? 'content-clear' : undefined,
+                highRiskTitle:
+                  removeMeta.action === 4
+                    ? 'Clear current identity content'
+                    : undefined,
+                highRiskWarning:
+                  removeMeta.action === 4
+                    ? removeUi.highRiskWarning
+                    : undefined,
                 displayTitle: removeUi.displayTitle,
-                onPress: () => openVdxfUniValueModal(toCmmModalObjects([update], key), removeUi.modalTitle)
+                onPress: () =>
+                  openVdxfUniValueModal(
+                    toCmmModalObjects([update], key),
+                    removeUi.modalTitle,
+                  ),
               };
             });
           }
 
           if (nonRemoveUpdates.length > 0) {
             const dataLabel = getCmmDataLabel(nonRemoveUpdates);
-            displayUpdates[VERUSID_CMM_INFO.key][`${VERUSID_CMM_DATA.key}:${key}`] = {
+            displayUpdates[VERUSID_CMM_INFO.key][
+              `${VERUSID_CMM_DATA.key}:${key}`
+            ] = {
               data: dataLabel,
               rawData: nonRemoveUpdates,
-              onPress: () => openVdxfUniValueModal(toCmmModalObjects(nonRemoveUpdates), getCmmDataKey(key))
+              onPress: () =>
+                openVdxfUniValueModal(
+                  toCmmModalObjects(nonRemoveUpdates),
+                  getCmmDataKey(key),
+                ),
             };
           }
         }
@@ -329,8 +451,11 @@ const IdentityUpdateRequestInfo = props => {
   };
 
   const getExpiryLabel = () => {
-    if (!details.expires()) return "";
-    return blocksToTime(details.expiryHeight.toNumber() - chainInfo.longestchain, coinObj.seconds_per_block);
+    if (!details.expires()) return '';
+    return blocksToTime(
+      details.expiryHeight.toNumber() - chainInfo.longestchain,
+      coinObj.seconds_per_block,
+    );
   };
 
   // --- Modal helpers ---
@@ -343,7 +468,10 @@ const IdentityUpdateRequestInfo = props => {
       loadFriendlyNames: async () => {
         try {
           const identityObj = await getVerusId(chain, iAddress);
-          return getFriendlyNameMap(CoinDirectory.getBasicCoinObj(chain).system_id, identityObj);
+          return getFriendlyNameMap(
+            CoinDirectory.getBasicCoinObj(chain).system_id,
+            identityObj,
+          );
         } catch (e) {
           return {
             ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',
@@ -352,7 +480,7 @@ const IdentityUpdateRequestInfo = props => {
         }
       },
       iAddress,
-      chain
+      chain,
     });
   };
 
@@ -364,7 +492,7 @@ const IdentityUpdateRequestInfo = props => {
 
   const closeVdxfUniValueModal = () => {
     setVdxfUniValueModalVisible(false);
-    setVdxfUniValueModalTitle("Data");
+    setVdxfUniValueModalTitle('Data');
     setVdxfUniValueModalData([]);
   };
 
@@ -376,7 +504,7 @@ const IdentityUpdateRequestInfo = props => {
 
   const closePartialSignDataModal = () => {
     setPartialSignDataModalVisible(false);
-    setPartialSignDataModalTitle("Data");
+    setPartialSignDataModalTitle('Data');
     setPartialSignDataModalData(null);
   };
 
@@ -388,22 +516,25 @@ const IdentityUpdateRequestInfo = props => {
   const [displayUpdates, setDisplayUpdates] = useState(getDisplayUpdates());
 
   const accounts = useObjectSelector(state => state.authentication.accounts);
-  const activeAccount = useSelector(state => state.authentication.activeAccount);
+  const activeAccount = useSelector(
+    state => state.authentication.activeAccount,
+  );
   const signedIn = useSelector(state => state.authentication.signedIn);
   const sendModalType = useSelector(state => state.sendModal.type);
   const isWrongRequestType = useSelector(state => {
     const isTestAccount =
       state.authentication.activeAccount &&
-      Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0;
+      Object.keys(state.authentication.activeAccount.testnetOverrides).length >
+        0;
     return (
       state.authentication.signedIn &&
       ((isTestAccount && !requestIsTestnet) ||
-      (!isTestAccount && requestIsTestnet))
+        (!isTestAccount && requestIsTestnet))
     );
   });
 
   const walletAddresses = useMemo(() => {
-    const normalize = (addresses) => {
+    const normalize = addresses => {
       if (!Array.isArray(addresses)) return [];
       return addresses
         .map(entry => (typeof entry === 'string' ? entry : entry?.address))
@@ -414,7 +545,9 @@ const IdentityUpdateRequestInfo = props => {
 
     const primaryKey = coinObj.id;
     const fallbackKey = coinObj.mainnet_id;
-    const primary = normalize(activeAccount?.keys?.[primaryKey]?.vrpc?.addresses);
+    const primary = normalize(
+      activeAccount?.keys?.[primaryKey]?.vrpc?.addresses,
+    );
     if (primary.length > 0) return primary;
     return normalize(activeAccount?.keys?.[fallbackKey]?.vrpc?.addresses);
   }, [activeAccount, coinObj]);
@@ -431,20 +564,29 @@ const IdentityUpdateRequestInfo = props => {
       inWallet: walletSet.has(addr),
     }));
 
-    const walletCount = addresses.reduce((acc, item) => acc + (item.inWallet ? 1 : 0), 0);
-    return { addresses, walletCount, externalCount: addresses.length - walletCount };
+    const walletCount = addresses.reduce(
+      (acc, item) => acc + (item.inWallet ? 1 : 0),
+      0,
+    );
+    return {
+      addresses,
+      walletCount,
+      externalCount: addresses.length - walletCount,
+    };
   }, [identityUpdates, walletAddresses, friendlyNames]);
 
   // --- Classify changes ---
-  const { highRiskChanges: baseHighRiskChanges, contentChanges } = useMemo(
+  const {highRiskChanges: baseHighRiskChanges, contentChanges} = useMemo(
     () => classifyChanges(displayUpdates),
-    [displayUpdates]
+    [displayUpdates],
   );
 
   const primaryAddressChanges = useMemo(() => {
     if (!Array.isArray(identityUpdates?.primaryaddresses)) return [];
 
-    const current = Array.isArray(identity?.primaryaddresses) ? identity.primaryaddresses : [];
+    const current = Array.isArray(identity?.primaryaddresses)
+      ? identity.primaryaddresses
+      : [];
     const updated = identityUpdates.primaryaddresses;
     const currentSet = new Set(current);
     const updatedSet = new Set(updated);
@@ -454,7 +596,9 @@ const IdentityUpdateRequestInfo = props => {
     if (added.length === 0 && removed.length === 0) return [];
 
     const walletSet = new Set(walletAddresses);
-    const hasWalletPrimaryAfterUpdate = updated.some(addr => walletSet.has(addr));
+    const hasWalletPrimaryAfterUpdate = updated.some(addr =>
+      walletSet.has(addr),
+    );
     const changes = [];
 
     added.forEach(addr => {
@@ -465,8 +609,8 @@ const IdentityUpdateRequestInfo = props => {
         warning: inWallet
           ? 'Adding a primary address makes this ID multisig.'
           : hasWalletPrimaryAfterUpdate
-            ? 'This address is not in your wallet. Adding it shares control of this ID with someone else. Your wallet will still control this ID.'
-            : 'This address is not in your wallet. After this update, none of the primary addresses are in your wallet. You will lose control of this ID.',
+          ? 'This address is not in your wallet. Adding it shares control of this ID with someone else. Your wallet will still control this ID.'
+          : 'This address is not in your wallet. After this update, none of the primary addresses are in your wallet. You will lose control of this ID.',
         data: displayIdentityAddress(addr),
         valueLabel: 'New value',
         type: 'primary-add',
@@ -489,19 +633,25 @@ const IdentityUpdateRequestInfo = props => {
   }, [identity, identityUpdates, walletAddresses, friendlyNames]);
 
   const nonPrimaryHighRiskChanges = useMemo(
-    () => baseHighRiskChanges.filter(change => !change.key.startsWith(VERUSID_PRIMARY_ADDRESS.key)),
-    [baseHighRiskChanges]
+    () =>
+      baseHighRiskChanges.filter(
+        change => !change.key.startsWith(VERUSID_PRIMARY_ADDRESS.key),
+      ),
+    [baseHighRiskChanges],
   );
 
   const highRiskChanges = useMemo(
     () => [...primaryAddressChanges, ...nonPrimaryHighRiskChanges],
-    [primaryAddressChanges, nonPrimaryHighRiskChanges]
+    [primaryAddressChanges, nonPrimaryHighRiskChanges],
   );
 
   const hasHighRisk = highRiskChanges.length > 0;
   const hasUnownedPrimaryAddress = useMemo(
-    () => primaryAddressChanges.some(change => change.type === 'primary-add' && change.walletMatch === false),
-    [primaryAddressChanges]
+    () =>
+      primaryAddressChanges.some(
+        change => change.type === 'primary-add' && change.walletMatch === false,
+      ),
+    [primaryAddressChanges],
   );
 
   // Check if all high-risk items are acknowledged
@@ -544,18 +694,29 @@ const IdentityUpdateRequestInfo = props => {
       goNext();
     } else {
       setWaitingForSignin(true);
-      const allowList = requestIsTestnet ? accounts.filter(x => {
-        return x.testnetOverrides && x.testnetOverrides[coinObj.mainnet_id] === coinObj.id;
-      }) : accounts.filter(x => {
-        return !(x.testnetOverrides && x.testnetOverrides[coinObj.id] != null);
-      });
+      const allowList = requestIsTestnet
+        ? accounts.filter(x => {
+            return (
+              x.testnetOverrides &&
+              x.testnetOverrides[coinObj.mainnet_id] === coinObj.id
+            );
+          })
+        : accounts.filter(x => {
+            return !(
+              x.testnetOverrides && x.testnetOverrides[coinObj.id] != null
+            );
+          });
 
       if (allowList.length > 0) {
-        openAuthenticateUserModal({ [SEND_MODAL_USER_ALLOWLIST]: allowList });
+        openAuthenticateUserModal({[SEND_MODAL_USER_ALLOWLIST]: allowList});
       } else {
         createAlert(
-          "Cannot continue",
-          `No ${requestIsTestnet ? 'testnet' : 'mainnet'} profiles found, cannot respond to ${requestIsTestnet ? 'testnet' : 'mainnet'} login request.`,
+          'Cannot continue',
+          `No ${
+            requestIsTestnet ? 'testnet' : 'mainnet'
+          } profiles found, cannot respond to ${
+            requestIsTestnet ? 'testnet' : 'mainnet'
+          } login request.`,
         );
       }
     }
@@ -564,9 +725,23 @@ const IdentityUpdateRequestInfo = props => {
   const wrongRequestType = isTestRequest => {
     createAlert(
       isTestRequest ? 'Testnet Request' : 'Mainnet Request',
-      `This request was created for ${isTestRequest ? 'testnet' : 'mainnet'}, but you are using a ${isTestRequest ? 'mainnet' : 'testnet'} profile. Please logout, select a ${isTestRequest ? 'testnet' : 'mainnet'} profile, and retry this request to continue.`,
-      [{ text: 'Ok', onPress: () => { cancel(); resolveAlert(true); } }],
-      { cancelable: false },
+      `This request was created for ${
+        isTestRequest ? 'testnet' : 'mainnet'
+      }, but you are using a ${
+        isTestRequest ? 'mainnet' : 'testnet'
+      } profile. Please logout, select a ${
+        isTestRequest ? 'testnet' : 'mainnet'
+      } profile, and retry this request to continue.`,
+      [
+        {
+          text: 'Ok',
+          onPress: () => {
+            cancel();
+            resolveAlert(true);
+          },
+        },
+      ],
+      {cancelable: false},
     );
   };
 
@@ -582,7 +757,9 @@ const IdentityUpdateRequestInfo = props => {
     }
   }, [signedIn, waitingForSignin]);
 
-  useEffect(() => { setExpiryLabel(getExpiryLabel()); }, [details]);
+  useEffect(() => {
+    setExpiryLabel(getExpiryLabel());
+  }, [details]);
 
   useEffect(() => {
     setDisplayUpdates(getDisplayUpdates());
@@ -596,7 +773,9 @@ const IdentityUpdateRequestInfo = props => {
     }
   }, [detailsBufferString]);
 
-  useEffect(() => { setSigDateString(unixToDate(sigtime)); }, [sigtime]);
+  useEffect(() => {
+    setSigDateString(unixToDate(sigtime));
+  }, [sigtime]);
 
   useEffect(() => {
     if (sendModalType != AUTHENTICATE_USER_SEND_MODAL) setLoading(false);
@@ -616,7 +795,8 @@ const IdentityUpdateRequestInfo = props => {
 
   const isNextDisabled = () => {
     if (isWrongRequestType) return true;
-    if (currentStepId === STEP_HIGH_RISK && !allHighRiskAcknowledged) return true;
+    if (currentStepId === STEP_HIGH_RISK && !allHighRiskAcknowledged)
+      return true;
     return false;
   };
 
@@ -631,7 +811,10 @@ const IdentityUpdateRequestInfo = props => {
   const handleFooterRight = () => {
     if (currentStepId === STEP_REVIEW) {
       handleContinue();
-    } else if (currentStepId === STEP_CONTENT || currentStepId === STEP_HIGH_RISK) {
+    } else if (
+      currentStepId === STEP_CONTENT ||
+      currentStepId === STEP_HIGH_RISK
+    ) {
       goNext();
     }
     // For STEP_CONFIRM_PAY, the ConfirmPayStep handles its own buttons
@@ -651,32 +834,34 @@ const IdentityUpdateRequestInfo = props => {
           <VerusIdDetailsModal {...verusIdDetailsModalProps} />
         )}
         {vdxfUniValueModalData.length > 0 && (
-          <VdxfUniValueModal 
+          <VdxfUniValueModal
             objects={vdxfUniValueModalData}
             visible={vdxfUniValueModalVisible}
             title={vdxfUniValueModalTitle}
-            setVisible={(x) => setVdxfUniValueModalVisible(x)}
+            setVisible={x => setVdxfUniValueModalVisible(x)}
             cancel={closeVdxfUniValueModal}
           />
         )}
         {partialSignDataModalData != null && (
-          <VdxfUniValueModal 
+          <VdxfUniValueModal
             data={partialSignDataModalData}
             objects={[]}
             visible={partialSignDataModalVisible}
             title={partialSignDataModalTitle}
-            setVisible={(x) => setPartialSignDataModalVisible(x)}
+            setVisible={x => setPartialSignDataModalVisible(x)}
             cancel={closePartialSignDataModal}
           />
         )}
-        {isListSelectionModalVisible && <ListSelectionModal
-          visible={isListSelectionModalVisible}
-          data={listData}
-          onSelect={() => setIsListSelectionModalVisible(false)}
-          cancel={() => setIsListSelectionModalVisible(false)}
-          title="Supported Payment Networks"
-          flexHeight={1}
-        />}
+        {isListSelectionModalVisible && (
+          <ListSelectionModal
+            visible={isListSelectionModalVisible}
+            data={listData}
+            onSelect={() => setIsListSelectionModalVisible(false)}
+            cancel={() => setIsListSelectionModalVisible(false)}
+            title="Supported Payment Networks"
+            flexHeight={1}
+          />
+        )}
       </Portal>
 
       {/* Step content */}
@@ -712,13 +897,21 @@ const IdentityUpdateRequestInfo = props => {
       {currentStepId === STEP_HIGH_RISK && (
         <HighRiskStep
           highRiskChanges={highRiskChanges}
-          primaryAddressAfterUpdateInfo={primaryAddressChanges.length > 0 ? primaryAddressAfterUpdateInfo : null}
+          primaryAddressAfterUpdateInfo={
+            primaryAddressChanges.length > 0
+              ? primaryAddressAfterUpdateInfo
+              : null
+          }
           acknowledged={acknowledged}
           onToggle={toggleAcknowledgment}
           hasUnownedPrimaryAddress={hasUnownedPrimaryAddress}
           currentAuthorities={{
-            revocation: identity.revocationauthority ? displayIdentityAddress(identity.revocationauthority) : null,
-            recovery: identity.recoveryauthority ? displayIdentityAddress(identity.recoveryauthority) : null,
+            revocation: identity.revocationauthority
+              ? displayIdentityAddress(identity.revocationauthority)
+              : null,
+            recovery: identity.recoveryauthority
+              ? displayIdentityAddress(identity.recoveryauthority)
+              : null,
           }}
           styles={styles}
         />
@@ -756,17 +949,15 @@ const IdentityUpdateRequestInfo = props => {
               uppercase={false}
               buttonColor="#EBF6FF"
               textColor={Colors.primaryColor}
-              labelStyle={styles.secondaryCtaLabel}
-            >
+              labelStyle={styles.secondaryCtaLabel}>
               {getFooterLeftLabel()}
             </Button>
           </View>
           <View style={styles.ctaCol}>
-            <GradientButton 
-              onPress={handleFooterRight} 
+            <GradientButton
+              onPress={handleFooterRight}
               style={styles.primaryCta}
-              disabled={isNextDisabled()}
-            >
+              disabled={isNextDisabled()}>
               {getFooterButtonLabel()}
             </GradientButton>
           </View>

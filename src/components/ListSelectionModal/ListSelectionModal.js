@@ -9,6 +9,7 @@ import SemiModal from "../SemiModal";
 import { List } from "react-native-paper"
 import { TouchableOpacity, FlatList, View, TextInput as RNTextInput, KeyboardAvoidingView, Platform } from "react-native"
 import { listSelectionModalStyles as styles } from "../../styles";
+import Colors from "../../globals/colors";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 class ListSelectionModal extends Component {

@@ -95,6 +95,7 @@ export const classifyChanges = displayUpdates => {
           data: entry.data,
           title: label.title,
           warning: label.warning,
+          highRiskType: entry.highRiskType,
         });
       } else {
         contentChanges.push({

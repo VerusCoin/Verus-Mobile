@@ -58,7 +58,7 @@ const HighRiskStep = ({
     !authorityChanges.revocation &&
     !authorityChanges.recovery &&
     (highRiskChanges || []).length === 1 &&
-    highRiskChanges[0].title === 'Clear current identity content';
+    highRiskChanges[0].highRiskType === 'content-clear';
 
   // Determine info sheet type based on which authorities are changing
   const authorityInfoType = useMemo(() => {

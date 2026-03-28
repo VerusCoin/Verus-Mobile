@@ -11,7 +11,7 @@
     - Resolved constraint i-addresses to friendly names via getIdentity
   - 2026-03-11: Fixed auth constraint system resolution and offline parent derivation .
 */
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {
   SafeAreaView,
   ScrollView,
@@ -143,6 +143,7 @@ const AuthenticationRequestInfo = props => {
   const [technicalDetailsExpanded, setTechnicalDetailsExpanded] =
     useState(false);
   const [resolvedSystemNames, setResolvedSystemNames] = useState({});
+  const attemptedSystemNameLookupsRef = useRef(new Set());
 
   // Identity picker state
   const [linkedIds, setLinkedIds] = useState({});
@@ -212,7 +213,11 @@ const AuthenticationRequestInfo = props => {
 
     const resolveSystemNames = async () => {
       const pendingSystemIds = systemIdsToResolve.filter(
-        systemId => resolvedSystemNames[systemId] == null,
+        systemId =>
+          resolvedSystemNames[systemId] == null &&
+          !attemptedSystemNameLookupsRef.current.has(
+            `${defaultRootSystemId}:${systemId}`,
+          ),
       );
 
       if (pendingSystemIds.length === 0) {
@@ -222,6 +227,13 @@ const AuthenticationRequestInfo = props => {
       const resolvedNames = {};
 
       for (const systemId of pendingSystemIds) {
+        if (cancelled) {
+          return;
+        }
+
+        attemptedSystemNameLookupsRef.current.add(
+          `${defaultRootSystemId}:${systemId}`,
+        );
         const offlineName = getOfflineSystemName(systemId);
 
         if (offlineName) {
@@ -500,8 +512,27 @@ const AuthenticationRequestInfo = props => {
     );
   };
 
+  const showContinueError = error => {
+    createAlert(
+      'Error',
+      error?.message || 'Failed to continue authentication request.',
+      [
+        {
+          text: 'Ok',
+          onPress: () => {
+            cancel();
+            resolveAlert(true);
+          },
+        },
+      ],
+      {
+        cancelable: false,
+      },
+    );
+  };
+
   // Build response using selected identity and call next()
-  const buildResponseAndContinue = () => {
+  const buildResponseAndContinue = async () => {
     const {chainId, iAddress} = selectedIdentity;
     const requestID =
       request && request.requestID ? request.requestID : details.requestID;
@@ -543,16 +574,22 @@ const AuthenticationRequestInfo = props => {
       handledIndices.push(provisioningDetailIndex);
     }
 
-    next(baseResponse, handledIndices);
+    await next(baseResponse, handledIndices);
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (signedIn) {
       if (!selectedIdentity) {
         handleOpenIdentitySheet();
         return;
       }
-      buildResponseAndContinue();
+
+      try {
+        await buildResponseAndContinue();
+      } catch (e) {
+        showContinueError(e);
+      }
+
       return;
     } else {
       setWaitingForSignin(true);
