@@ -126,15 +126,9 @@ const IdentityUpdateRequestInfo = props => {
   const [acknowledged, setAcknowledged] = useState(false);
 
   // --- Modal state ---
-  const [vdxfUniValueModalData, setVdxfUniValueModalData] = useState([]);
+  const [vdxfInspectorItems, setVdxfInspectorItems] = useState([]);
   const [vdxfUniValueModalTitle, setVdxfUniValueModalTitle] = useState('Data');
   const [vdxfUniValueModalVisible, setVdxfUniValueModalVisible] =
-    useState(false);
-  const [partialSignDataModalData, setPartialSignDataModalData] =
-    useState(null);
-  const [partialSignDataModalTitle, setPartialSignDataModalTitle] =
-    useState('Data');
-  const [partialSignDataModalVisible, setPartialSignDataModalVisible] =
     useState(false);
   const [isListSelectionModalVisible, setIsListSelectionModalVisible] =
     useState(false);
@@ -191,6 +185,14 @@ const IdentityUpdateRequestInfo = props => {
     return 'Sign data';
   };
 
+  const getSignDataRawValue = signData => {
+    if (!signData || typeof signData.toCLIJson !== 'function') {
+      return null;
+    }
+
+    return signData.toCLIJson();
+  };
+
   const getCmmDataKey = iAddr => {
     const keyLabel = getVDXFKeyLabel(iAddr, true);
     if (keyLabel == null) {
@@ -211,9 +213,10 @@ const IdentityUpdateRequestInfo = props => {
     return normalizedUpdates.map((entry, index) => {
       if (entry != null && typeof entry === 'object' && !Array.isArray(entry)) {
         const keys = Object.keys(entry);
-        if (keys.length > 0) {
+        const removeMeta = extractContentMultiMapRemoveMeta(entry);
+
+        if (removeMeta && keys.length > 0) {
           const key = keys[0];
-          const removeMeta = extractContentMultiMapRemoveMeta(entry);
           const detailUi = removeMeta
             ? buildContentMultiMapRemoveUi({
                 removeMeta,
@@ -224,16 +227,41 @@ const IdentityUpdateRequestInfo = props => {
               })
             : null;
 
-          return {key, data: entry[key], meta: detailUi};
+          return {
+            kind: removeMeta ? 'content-remove' : 'vdxf-value',
+            key,
+            data: entry[key],
+            rawData: entry,
+            meta: detailUi,
+          };
+        }
+
+        if (keys.length === 1) {
+          const key = keys[0];
+          return {
+            kind: 'vdxf-value',
+            key,
+            data: entry[key],
+            rawData: entry,
+          };
         }
       }
 
       return {
-        key: `value:${index + 1}`,
+        kind: 'raw-value',
+        key: `raw:${index + 1}`,
         data: entry,
+        rawData: entry,
       };
     });
   };
+
+  const toSignDataInspectorItem = signData => ({
+    kind: 'sign-data',
+    key: 'sign-data',
+    data: signData,
+    rawData: getSignDataRawValue(signData),
+  });
 
   const extractContentMultiMapRemoveMeta = value => {
     if (value == null || typeof value !== 'object' || Array.isArray(value))
@@ -366,7 +394,10 @@ const IdentityUpdateRequestInfo = props => {
             data: getSignDataLabel(signData),
             isEncrypted: true,
             onPress: () =>
-              openPartialSignDataModal(signData, getCmmDataKey(key)),
+              openVdxfUniValueModal(
+                [toSignDataInspectorItem(signData)],
+                getCmmDataKey(key),
+              ),
           };
         } else {
           const normalizedUpdates = normalizeCmmUpdates(updates);
@@ -484,28 +515,16 @@ const IdentityUpdateRequestInfo = props => {
     });
   };
 
-  const openVdxfUniValueModal = (objects, title) => {
+  const openVdxfUniValueModal = (items, title) => {
     setVdxfUniValueModalTitle(title);
-    setVdxfUniValueModalData(objects);
+    setVdxfInspectorItems(items);
     setVdxfUniValueModalVisible(true);
   };
 
   const closeVdxfUniValueModal = () => {
     setVdxfUniValueModalVisible(false);
     setVdxfUniValueModalTitle('Data');
-    setVdxfUniValueModalData([]);
-  };
-
-  const openPartialSignDataModal = (data, title) => {
-    setPartialSignDataModalTitle(title);
-    setPartialSignDataModalData(data);
-    setPartialSignDataModalVisible(true);
-  };
-
-  const closePartialSignDataModal = () => {
-    setPartialSignDataModalVisible(false);
-    setPartialSignDataModalTitle('Data');
-    setPartialSignDataModalData(null);
+    setVdxfInspectorItems([]);
   };
 
   // --- Computed state ---
@@ -833,23 +852,13 @@ const IdentityUpdateRequestInfo = props => {
         {verusIdDetailsModalProps != null && (
           <VerusIdDetailsModal {...verusIdDetailsModalProps} />
         )}
-        {vdxfUniValueModalData.length > 0 && (
+        {vdxfInspectorItems.length > 0 && (
           <VdxfUniValueModal
-            objects={vdxfUniValueModalData}
+            items={vdxfInspectorItems}
             visible={vdxfUniValueModalVisible}
             title={vdxfUniValueModalTitle}
             setVisible={x => setVdxfUniValueModalVisible(x)}
             cancel={closeVdxfUniValueModal}
-          />
-        )}
-        {partialSignDataModalData != null && (
-          <VdxfUniValueModal
-            data={partialSignDataModalData}
-            objects={[]}
-            visible={partialSignDataModalVisible}
-            title={partialSignDataModalTitle}
-            setVisible={x => setPartialSignDataModalVisible(x)}
-            cancel={closePartialSignDataModal}
           />
         )}
         {isListSelectionModalVisible && (
