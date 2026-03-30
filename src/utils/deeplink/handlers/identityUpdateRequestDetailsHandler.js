@@ -1,4 +1,4 @@
-import { DefinedKey, IdentityUpdateRequestOrdinalVDXFObject, GenericRequest, GenericResponse, DATA_TYPE_DEFINEDKEY, fqnToAddress, toIAddress, getDataKey } from "verus-typescript-primitives";
+import { DefinedKey, IdentityUpdateRequestOrdinalVDXFObject, GenericRequest, GenericResponse, DATA_TYPE_DEFINEDKEY, IDENTITY_CREDENTIAL, fqnToAddress, toIAddress, getDataKey } from "verus-typescript-primitives";
 import VrpcProvider from '../../vrpc/vrpcInterface';
 import { getBlock } from "../../api/channels/vrpc/requests/getBlock";
 import { getSignatureInfo } from "../../api/channels/vrpc/requests/getSignatureInfo";
@@ -184,16 +184,49 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
     }
   }
 
-  const updateIdentityTx = await createUpdateIdentityTx(
-    coinObj.system_id,
-    requestDetails,
-    subjectIdClass.getIdentityAddress(),
-    subjectIdTxHex,
-    subjectIdentity.blockheight,
-    false,
-    undefined,
-    request.isTestnet()
+  // Detect encrypted credential keys in contentMultiMap
+  const partialIdentity = requestDetails.identity;
+  const hasEncryptedKeys = !!(
+    partialIdentity.containsContentMultiMap() &&
+    partialIdentity.contentMultiMap.kvContent.hasAddress(IDENTITY_CREDENTIAL.vdxfid)
   );
+
+  // Credential encryption via signDataMap is not supported on mobile
+  if (requestDetails.containsSignData()) {
+    if (requestDetails.signDataMap.hasAddress(IDENTITY_CREDENTIAL.vdxfid)) {
+      throw new Error('Encrypted credentials in signDataMap are not supported on mobile');
+    }
+  }
+
+  // When the request contains encrypted credential keys, we must NOT call
+  // createUpdateIdentityTx here — that sends toCLIJson() (with plaintext
+  // credentials) to the RPC server.  Instead, compute the merged identity
+  // locally for display purposes.  The real (encrypted) tx is built later
+  // in ConfirmPayStep after the user confirms.
+  let identityUpdates;
+  let updateIdTxHex;
+
+  if (hasEncryptedKeys) {
+    // Overlay the partial identity fields onto the current on-chain identity
+    // to produce the merged view for the review UI.
+    const baseJson = subjectIdClass.toJson();
+    const partialJson = requestDetails.identity.withResolvedContentMultiMap().toJson();
+    identityUpdates = { ...baseJson, ...partialJson };
+    updateIdTxHex = undefined;
+  } else {
+    const updateIdentityTx = await createUpdateIdentityTx(
+      coinObj.system_id,
+      requestDetails,
+      subjectIdClass.getIdentityAddress(),
+      subjectIdTxHex,
+      subjectIdentity.blockheight,
+      false,
+      undefined,
+      request.isTestnet()
+    );
+    identityUpdates = updateIdentityTx.identity.toJson();
+    updateIdTxHex = updateIdentityTx.hex;
+  }
 
   const signerSystemID = request.signature.systemID.toIAddress();
   const signerSystemName = getSystemNameFromSystemId(signerSystemID);
@@ -230,13 +263,14 @@ export const handleIdentityUpdateRequestDetailsVDXFObject = async (request, resp
       signerSystemName,
       signerIdentityID,
       subjectIdentity,
-      identityUpdates: updateIdentityTx.identity.toJson(),
-      updateIdTxHex: updateIdentityTx.hex,
+      identityUpdates,
+      updateIdTxHex,
       coinObj,
       chainInfo: chainInfo.result,
       friendlyNames,
       cmmDataKeys,
       subjectIdTxHex,
+      hasEncryptedKeys,
     },
     response,
     handledIndices: []

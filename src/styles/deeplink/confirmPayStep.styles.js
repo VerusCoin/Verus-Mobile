@@ -147,4 +147,18 @@ export default StyleSheet.create({
     color: '#888',
     marginTop: 1,
   },
+  encryptedKeyRecapRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#EBF6FF',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 4,
+  },
+  encryptedKeyRecapText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 17,
+    color: Colors.primaryColor,
+  },
 });

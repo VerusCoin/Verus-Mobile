@@ -72,7 +72,9 @@ import {
   SIGNED_SESSION_OBJECT,
   CURRENCY_ADDRESS,
   DATA_TYPE_STRING,
-  DATA_TYPE_DEFINEDKEY
+  DATA_TYPE_DEFINEDKEY,
+  IDENTITY_CREDENTIAL,
+  CredentialKey
 } from 'verus-typescript-primitives';
 
 const vdxfKeyLabelMap = new Map([
@@ -149,6 +151,8 @@ const vdxfKeyLabelMap = new Map([
   [SIGNED_SESSION_OBJECT.vdxfid, { label: "signed session object", fqn: SIGNED_SESSION_OBJECT.qualifiedname.name }],
   [CURRENCY_ADDRESS.vdxfid, { label: "currency address", fqn: CURRENCY_ADDRESS.qualifiedname.name }],
   [DATA_TYPE_DEFINEDKEY.vdxfid, { label: "vdxf key definitions", fqn: DATA_TYPE_DEFINEDKEY.qualifiedname.name }],
+  [IDENTITY_CREDENTIAL.vdxfid, { label: "identity credential", fqn: IDENTITY_CREDENTIAL.qualifiedname.name }],
+  [CredentialKey.vdxfid, { label: "credential data", fqn: CredentialKey.qualifiedname.name }]
 ]);
 
 export function getVDXFKeyLabel(key, nullOnMiss = false) {

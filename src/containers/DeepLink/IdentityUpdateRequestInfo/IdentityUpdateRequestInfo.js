@@ -72,6 +72,7 @@ import {
   ContentMultiMapRemoveKey,
   DATA_TYPE_DEFINEDKEY,
   GenericRequest,
+  IDENTITY_CREDENTIAL,
   IdentityUpdateRequestDetails,
   KvMap,
 } from 'verus-typescript-primitives';
@@ -113,6 +114,7 @@ const IdentityUpdateRequestInfo = props => {
     next,
     subjectIdTxHex,
     updateIdTxHex,
+    hasEncryptedKeys,
   } = props;
 
   const {fullyqualifiedname, identity} = subjectIdentity;
@@ -462,11 +464,14 @@ const IdentityUpdateRequestInfo = props => {
 
           if (nonRemoveUpdates.length > 0) {
             const dataLabel = getCmmDataLabel(nonRemoveUpdates);
+            const isCredentialKey =
+              hasEncryptedKeys && key === IDENTITY_CREDENTIAL.vdxfid;
             displayUpdates[VERUSID_CMM_INFO.key][
               `${VERUSID_CMM_DATA.key}:${key}`
             ] = {
               data: dataLabel,
               rawData: nonRemoveUpdates,
+              isEncryptedKey: isCredentialKey,
               onPress: () =>
                 openVdxfUniValueModal(
                   toCmmModalObjects(nonRemoveUpdates),
@@ -942,6 +947,7 @@ const IdentityUpdateRequestInfo = props => {
           onGoBack={goBack}
           highRiskCount={highRiskChanges.length}
           contentCount={contentChanges.length}
+          hasEncryptedKeys={hasEncryptedKeys}
           styles={styles}
         />
       )}

@@ -152,6 +152,9 @@ export default function VerusIdObjectData(props) {
         badges.push(baseBadge);
       }
     }
+    if (item.isEncryptedKey) {
+      badges.push({ icon: 'shield-lock-outline', label: 'Will encrypt', color: Colors.primaryColor });
+    }
     return badges;
   };
 
@@ -296,6 +299,23 @@ export default function VerusIdObjectData(props) {
 
         {/* Description blocks */}
         {renderCmmChangeDescription(item, updateEntry)}
+
+        {/* Encrypted key info */}
+        {item.isEncryptedKey && (
+          <View style={LocalStyles.encryptedKeyInfo}>
+            <MaterialCommunityIcons
+              name="shield-lock-outline"
+              size={14}
+              color={Colors.primaryColor}
+              style={{ marginRight: 6, marginTop: 1 }}
+            />
+            <Text style={LocalStyles.encryptedKeyInfoText}>
+              This credential data will be encrypted before it is stored on-chain.
+              Neither the credential type nor its contents will be publicly visible.
+              The identity's z-address must match the z-address linked to your account's shielded (Z) seed.
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -514,6 +534,7 @@ export default function VerusIdObjectData(props) {
             dataInDescription: true,
             changeType,
             isEncrypted: Boolean(updateEntry && updateEntry.isEncrypted),
+            isEncryptedKey: Boolean(updateEntry && updateEntry.isEncryptedKey),
             updatedData: updateEntry ? updateEntry.data : null,
             removeMeta: updateEntry ? updateEntry.removeMeta : null
           };
@@ -535,6 +556,7 @@ export default function VerusIdObjectData(props) {
             dataInDescription: true,
             changeType,
             isEncrypted: Boolean(updateEntry && updateEntry.isEncrypted),
+            isEncryptedKey: Boolean(updateEntry && updateEntry.isEncryptedKey),
             updatedData: updateEntry ? updateEntry.data : null,
             removeMeta: updateEntry ? updateEntry.removeMeta : null
           };

@@ -36,6 +36,7 @@ import {
   IdentityUpdateResponseOrdinalVDXFObject,
   VerifiableSignatureData,
 } from 'verus-typescript-primitives';
+import { processEncryptedKeys } from '../../../../utils/crypto/encryptCredentials';
 import { confirmPayStepStyles as localStyles } from '../../../../styles';
 
 const ConfirmPayStep = ({
@@ -53,6 +54,7 @@ const ConfirmPayStep = ({
   onGoBack,
   highRiskCount,
   contentCount,
+  hasEncryptedKeys,
   styles: parentStyles,
 }) => {
   const [selectedSource, setSelectedSource] = useState(null);
@@ -168,14 +170,26 @@ const ConfirmPayStep = ({
     try {
       const [, address, systemId] = source.wallet.channel.split('.');
 
+      // If request contains encrypted credential keys, encrypt them before
+      // creating the tx so plaintext credentials are never sent to the server.
+      let effectiveDetails = details;
+      if (hasEncryptedKeys) {
+        effectiveDetails = await processEncryptedKeys(
+          systemId,
+          details,
+          subjectIdentity,
+          coinObj,
+        );
+      }
+
       const updateIdentityTx = await createUpdateIdentityTx(
         systemId,
-        details,
+        effectiveDetails,
         address,
         subjectIdTxHex,
         subjectIdentity.blockheight,
         true,
-        updateIdTxHex,
+        undefined,
         requestIsTestnet,
       );
 
@@ -344,6 +358,19 @@ const ConfirmPayStep = ({
           <View style={localStyles.recapRow}>
             <Text style={localStyles.recapText}>{contentCount} content {contentCount === 1 ? 'change' : 'changes'}</Text>
           </View>
+          {hasEncryptedKeys && (
+            <View style={localStyles.encryptedKeyRecapRow}>
+              <MaterialCommunityIcons
+                name="shield-lock-outline"
+                size={14}
+                color={Colors.primaryColor}
+                style={{ marginRight: 6, marginTop: 1 }}
+              />
+              <Text style={localStyles.encryptedKeyRecapText}>
+                Credential data will be encrypted with a key derived from your identity so that neither the credential type nor its contents are publicly visible on-chain. Your account's shielded (Z) seed must match the identity's z-address.
+              </Text>
+            </View>
+          )}
         </View>
 
         <View style={{ height: 24 }} />

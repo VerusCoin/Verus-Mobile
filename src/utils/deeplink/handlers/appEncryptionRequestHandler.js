@@ -31,37 +31,9 @@ import { convertFqnToDisplayFormat } from "../../fullyqualifiedname";
 import { getBlock } from "../../api/channels/vrpc/requests/getBlock";
 import { getSignatureInfo } from "../../api/channels/vrpc/requests/getSignatureInfo";
 
-import { requestPrivKey, requestSeeds } from "../../auth/authBox";
-import { DLIGHT_PRIVATE } from "../../constants/intervalConstants";
-import { isDlightSpendingKey, parseDlightSeed } from "../../keys";
-
 import { zGetEncryptionAddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
 import { encryptDataToDescriptor } from "../../crypto/encryptDataDescriptor";
-
-
-/**
- * Gets an extended spending key for zGetEncryptionAddress.
- * If the user has a mnemonic seed stored, it is converted to an extsk
- * via Tools.deriveSaplingSpendingKey so behaviour is identical regardless
- * of what form the seed was originally stored in.
- *
- * @param {string} systemID - Coin system ID (e.g. 'VRSC')
- * @returns {Promise<{extsk: string}>}
- * @throws {Error} If no key material can be retrieved
- */
-const getKeyMaterial = async (systemID) => {
-  const coinObj = CoinDirectory.getBasicCoinObj(systemID);
-
-  try {
-    const esk = await requestPrivKey(coinObj.id, DLIGHT_PRIVATE);
-    if (esk) return { extsk: esk };
-  } catch (e) {}
-  
-  throw new Error(
-    `No Z (shielded address) seed has been set up. ` +
-    `Please go to Settings → Profile and set up a Z Seed before accepting encryption requests.`
-  );
-};
+import { getKeyMaterial } from "../../crypto/getKeyMaterial";
 
 // ============================================================================
 // Main Handler - Returns displayProps for UI

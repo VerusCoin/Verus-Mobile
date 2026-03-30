@@ -75,4 +75,18 @@ export default StyleSheet.create({
     color: '#444',
     lineHeight: 18,
   },
+  encryptedKeyInfo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#EBF6FF',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 6,
+  },
+  encryptedKeyInfoText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 17,
+    color: Colors.primaryColor,
+  },
 });
