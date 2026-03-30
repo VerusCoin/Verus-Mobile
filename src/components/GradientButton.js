@@ -1,15 +1,14 @@
 /*
-  GradientButton
-  - Reusable gradient button component with optional hold-to-confirm functionality
-  - Updated 2026-01-22: Added hold-to-confirm feature for critical actions.
-    When holdToConfirm={true}, user must press and hold for specified duration (default 2.5s).
-    Shows animated progress fill and haptic feedback. Prevents accidental taps on critical actions.
+  GradientButton 
+  - Reusable gradient button component with optional hold-to-confirm functionality.
+  - Updated 2026-01-22: Added hold-to-confirm support for critical actions while
+    keeping the default gradient button API unchanged for ordinary taps.
 */
 import React, { useRef, useEffect, useState } from 'react';
-import { TouchableOpacity, View, StyleSheet, Animated, Vibration, Platform } from 'react-native';
+import { TouchableOpacity, View, Animated, Vibration, Platform } from 'react-native';
 import { Text } from 'react-native-paper';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
-import styles from '../styles/gradientbutton.styles';
+import { gradientButtonStyles as styles } from '../styles';
 
 const GradientButton = ({
   onPress,
@@ -18,8 +17,8 @@ const GradientButton = ({
   style,
   contentStyle,
   labelStyle,
-  topColor = '#53C6F4',
-  bottomColor = '#30A1CE',
+  topColor = '#3165D4',
+  bottomColor = '#3165D4',
   mode = 'contained',
   leftIcon,
   rightIcon,
@@ -129,7 +128,7 @@ const GradientButton = ({
         style={[
           styles.gradientButtonLabel, 
           isOutlined && { 
-            color: bottomColor, 
+            color: bottomColor,
             textShadowColor: 'transparent',
             textShadowOffset: { width: 0, height: 0 },
             textShadowRadius: 0
@@ -223,4 +222,5 @@ const GradientButton = ({
   );
 };
 
+// Keep this reusable button self-contained; integrated by Codex GPT-5 while preserving the existing call sites.
 export default GradientButton;

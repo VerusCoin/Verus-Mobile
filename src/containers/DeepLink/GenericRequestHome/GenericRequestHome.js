@@ -1,3 +1,8 @@
+/*
+  GenericRequestHome 
+  - Coordinates generic request detail handlers, chooses the matching deeplink
+    screen, and forwards completed responses through the request flow.
+*/
 import React, {useState, useEffect} from 'react';
 import {Linking, TouchableOpacity, View} from 'react-native';
 import { Portal, Text } from 'react-native-paper';
@@ -5,14 +10,24 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
-import { AUTHENTICATION_REQUEST_VDXF_KEY, DEEPLINK_PROTOCOL_URL_STRING, GenericRequest, GenericResponse, IDENTITY_UPDATE_REQUEST_VDXF_KEY, VALU_MOBILE_GENERIC_REQUEST_HANDLER_ID, VERUSPAY_INVOICE_DETAILS_VDXF_KEY, APP_ENCRYPTION_REQUEST_VDXF_KEY } from 'verus-typescript-primitives';
+import {
+  AUTHENTICATION_REQUEST_VDXF_KEY,
+  APP_ENCRYPTION_REQUEST_VDXF_KEY,
+  DEEPLINK_PROTOCOL_URL_STRING,
+  GenericRequest,
+  GenericResponse,
+  IDENTITY_UPDATE_REQUEST_VDXF_KEY,
+  PROVISION_IDENTITY_DETAILS_VDXF_KEY,
+  VALU_MOBILE_GENERIC_REQUEST_HANDLER_ID,
+  VERUSPAY_INVOICE_DETAILS_VDXF_KEY,
+} from 'verus-typescript-primitives';
 import InvoiceInfo from '../InvoiceInfo/InvoiceInfo';
 import { handleVerusPayInvoiceDetailsVDXFObject } from '../../../utils/deeplink/handlers/verusPayInvoiceDetailsHandler';
 import { handleAuthenticationRequestDetailsVDXFObject } from '../../../utils/deeplink/handlers/authenticationRequestDetailsHandler';
 import { handleIdentityUpdateRequestDetailsVDXFObject } from '../../../utils/deeplink/handlers/identityUpdateRequestDetailsHandler';
+import { handleProvisionIdentityDetailsVDXFObject } from '../../../utils/deeplink/handlers/provisionIdentityDetailsHandler';
 import { handleAppEncryptionRequestVDXFObject } from '../../../utils/deeplink/handlers/appEncryptionRequestHandler';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
-import { CommonActions } from '@react-navigation/native';
 import AuthenticationRequestInfo from '../AuthenticationRequestInfo/AuthenticationRequestInfo';
 import IdentityUpdateRequestInfo from '../IdentityUpdateRequestInfo/IdentityUpdateRequestInfo';
 import AppEncryptionRequestInfo from '../AppEncryptionRequestInfo/AppEncryptionRequestInfo';
@@ -63,8 +78,8 @@ const GenericRequestHome = props => {
   detailHandlers.set(VERUSPAY_INVOICE_DETAILS_VDXF_KEY.vdxfid, handleVerusPayInvoiceDetailsVDXFObject);
   detailHandlers.set(AUTHENTICATION_REQUEST_VDXF_KEY.vdxfid, handleAuthenticationRequestDetailsVDXFObject);
   detailHandlers.set(IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid, handleIdentityUpdateRequestDetailsVDXFObject);
+  detailHandlers.set(PROVISION_IDENTITY_DETAILS_VDXF_KEY.vdxfid, handleProvisionIdentityDetailsVDXFObject);
   detailHandlers.set(APP_ENCRYPTION_REQUEST_VDXF_KEY.vdxfid, handleAppEncryptionRequestVDXFObject);
-
   /**
    * Processes a detail in the request at a certain index
    * @param {number} index 
@@ -246,6 +261,7 @@ const GenericRequestHome = props => {
     )
   };
 
+  // Keep handler selection and alternate-app routing explicit; integrated by Codex GPT-5 so new VDXF types do not bypass the redesign flow.
   const openInValu = () => {
     const originalUri = request.toWalletDeeplinkUri();
     const redirectUri = originalUri.replace(

@@ -1,3 +1,6 @@
+/*
+  URL helpers for hashing VRPC hosts and looking up optional API auth data .
+*/
 import { URL } from 'react-native-url-polyfill';
 import { sha256 } from './crypto/hash';
 import { VRPC_API_KEYS, VRPC_API_APP_ID } from '../../env/index';
@@ -16,6 +19,7 @@ export const getUrlKey = (uri) => {
 export const getAuthDataForUrl = (uri) => {
   const urlKey = getUrlKey(uri);
 
+  // keep auth lookup centralized so every caller passes the same shape.
   if (VRPC_API_KEYS[urlKey]) {
     return {
       id: VRPC_API_APP_ID,

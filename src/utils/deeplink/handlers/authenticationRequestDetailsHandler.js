@@ -56,32 +56,42 @@ export const handleAuthenticationRequestDetailsVDXFObject = async (request, resp
   signerSystemID = request.signature.systemID.toIAddress();
   signerIdentityID = request.signature.identityID.toIAddress();
   signerSystemName = getSystemNameFromSystemId(signerSystemID);
+  signerFqn = signerIdentityID;
 
   if (signerSystemName) {
-    const coinObj = CoinDirectory.getBasicCoinObj(signerSystemName);
-    VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0]);
-    const signedBy = await getIdentity(coinObj.system_id, signerIdentityID);
+    try {
+      const coinObj = CoinDirectory.getBasicCoinObj(signerSystemName);
+      VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0]);
 
-    if (signedBy.error) throw new Error(signedBy.error.message);
-    signerFqn = convertFqnToDisplayFormat(signedBy.result.fullyqualifiedname);
+      const signedBy = await getIdentity(coinObj.system_id, signerIdentityID);
+      if (!signedBy.error && signedBy.result?.fullyqualifiedname) {
+        signerFqn = convertFqnToDisplayFormat(signedBy.result.fullyqualifiedname);
+      }
 
-    const sig = await getSignatureInfo(
-      coinObj.system_id,
-      request.signature.identityID.toIAddress(),
-      request.signature.signatureAsVch.toString('base64')
-    );
-    const sigblock = await getBlock(coinObj.system_id, sig.height);
-    if (sigblock.error) throw new Error(sigblock.error.message);
-    sigtime = sigblock.result.time;
-  } else {
-    signerFqn = request.signature.identityID.toIAddress();
+      const sig = await getSignatureInfo(
+        coinObj.system_id,
+        request.signature.identityID.toIAddress(),
+        request.signature.signatureAsVch.toString('base64')
+      );
+
+      if (sig && sig.height != null) {
+        const sigblock = await getBlock(coinObj.system_id, sig.height);
+        if (!sigblock.error && sigblock.result) {
+          sigtime = sigblock.result.time;
+        }
+      }
+    } catch (e) {
+      // The request has already been validated upstream; metadata fetch errors should not block display.
+      console.warn("Unable to load signer metadata for authentication request", e?.message ?? e);
+    }
   }
 
-  const possibleProvisioningDetail = request.details.find(x => x instanceof ProvisionIdentityDetailsOrdinalVDXFObject);
+  const provisioningIndex = request.details.findIndex(x => x instanceof ProvisionIdentityDetailsOrdinalVDXFObject);
+  const possibleProvisioningDetail = provisioningIndex > -1 ? request.details[provisioningIndex] : null;
   
   if (possibleProvisioningDetail instanceof ProvisionIdentityDetailsOrdinalVDXFObject) {
     provisioningDetailsBufferString = possibleProvisioningDetail.data.toBuffer().toString('hex');
-    provisioningDetailIndex = detailIndex + 1;
+    provisioningDetailIndex = provisioningIndex;
   }
 
   return {
