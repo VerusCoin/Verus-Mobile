@@ -102,7 +102,7 @@ const FundSourceSelectList = ({
             // Accept cross-network sends if no conversion or expiry
             if (!allowConversion && !expires) {
               newNetworkSourceOptionMap.set(getNetworkSourceOptionKey(coinObj.currency_id, wallet.id), {
-                amount: satsToCoins(BigNumber(amount)).toNumber(),
+                amount: allowAnyAmount || amount == null ? 0 : satsToCoins(BigNumber(amount)).toNumber(),
                 network: network,
                 conversion: false,
                 wallet,
@@ -110,12 +110,12 @@ const FundSourceSelectList = ({
                 exportTo
               });
             } else if (
-              (testnet && network === coinsList.VRSCTEST.system_id) || 
-              (!testnet && network === coinsList.VRSC.system_id) || 
+              (testnet && network === coinsList.VRSCTEST.system_id) ||
+              (!testnet && network === coinsList.VRSC.system_id) ||
               (allowNonVerusSystems && acceptedSystems.includes(network))
             ) {
               newNetworkSourceOptionMap.set(getNetworkSourceOptionKey(coinObj.currency_id, wallet.id), {
-                amount: satsToCoins(BigNumber(amount)).toNumber(),
+                amount: allowAnyAmount || amount == null ? 0 : satsToCoins(BigNumber(amount)).toNumber(),
                 network: network,
                 conversion: false,
                 wallet,

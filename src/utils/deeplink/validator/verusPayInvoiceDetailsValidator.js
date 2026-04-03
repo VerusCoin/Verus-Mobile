@@ -42,7 +42,7 @@ export const validateVerusPayInvoiceDetails = async (details) => {
   }
 
   if (details.expires() && details.expiryheight.toNumber() - chainInfo.result.longestchain < 0) {
-    const age = (invoice.details.expiryheight.toNumber() - chainInfo.result.longestchain) * -1
+    const age = (details.expiryheight.toNumber() - chainInfo.result.longestchain) * -1
     
     throw new Error(`This invoice is expired (expired for approx. ${blocksToTime(age)}).`,)
   }

@@ -1,6 +1,6 @@
 import { VerusPayInvoiceDetails, CurrencyDefinition, GenericRequest, VerusPayInvoiceDetailsOrdinalVDXFObject, GenericResponse } from "verus-typescript-primitives"
 import VrpcProvider from '../../vrpc/vrpcInterface';
-import { extractVerusPayInvoiceFromSigAndSigner, getInfo } from "../../api/channels/vrpc/callCreators";
+import { extractVerusPayInvoiceFromSigAndSigner, getBlock, getInfo } from "../../api/channels/vrpc/callCreators";
 import { getCurrency, getIdentity } from "../../api/channels/verusid/callCreators";
 import { convertFqnToDisplayFormat } from "../../fullyqualifiedname";
 import { VERUSPAY_INVOICE_INFO } from "../../constants/deeplink";
