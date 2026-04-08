@@ -12,8 +12,9 @@
  */
 
 import {
-  DataDescriptor,
+  CredentialKey,
   DataDescriptorKey,
+  FqnVdxfUniValue,
   IDENTITY_CREDENTIAL,
   IdentityUpdateRequestDetails,
   VdxfUniValue,
@@ -26,8 +27,8 @@ import { hash, hash160 } from "verus-typescript-primitives/dist/utils/hash";
 
 import { Tools } from "react-native-verus";
 import { zGetEncryptionAddress } from "../api/channels/dlight/requests/zGetEncryptionAddress";
-import { encryptData } from "../api/channels/dlight/requests/encrypt";
 import { getKeyMaterial } from "./getKeyMaterial";
+import { encryptCredentialToDescriptor } from "./encryptDataDescriptor";
 
 /**
  * Offline replication of C++ CCrossChainRPCData::GetConditionID(uint160, uint256).
@@ -50,34 +51,6 @@ export const getConditionID = (baseKeyIAddr, uint256Hex) => {
 };
 
 /**
- * Encrypts a single credential entry using the daemon's signdata approach:
- * serialize VdxfUniValue → encrypt to Sapling address → wrap as DataDescriptor.
- *
- * @param {object} credentialEntryJson - VdxfUniValue JSON for one credential entry
- * @param {string} encryptionAddress   - Sapling payment address to encrypt to
- * @returns {Promise<object>} Encrypted entry as { [DataDescriptorKey.vdxfid]: DataDescriptorJson }
- */
-const encryptCredentialEntry = async (credentialEntryJson, encryptionAddress) => {
-  // Serialize the credential VdxfUniValue to raw bytes (matches daemon signdata)
-  const vdxfBuffer = VdxfUniValue.fromJson(credentialEntryJson).toBuffer();
-
-  // Encrypt to the Sapling address
-  const result = await encryptData(encryptionAddress, vdxfBuffer.toString("hex"));
-
-  const ciphertextHex = typeof result === "string" ? result : result.encryptedData;
-  const epkHex = result.ephemeralPublicKey;
-
-  // Build encrypted DataDescriptor (flags=5: encrypted + epk present)
-  const encryptedDescriptor = new DataDescriptor({
-    flags: DataDescriptor.FLAG_ENCRYPTED_DATA,
-    objectdata: Buffer.from(ciphertextHex, "hex"),
-    epk: Buffer.from(epkHex, "hex"),
-  });
-
-  return { [DataDescriptorKey.vdxfid]: encryptedDescriptor.toJson() };
-};
-
-/**
  * Main entry point: processes encrypted keys in an identity update request.
  *
  * 1. Extracts credential entries from the CLI JSON contentmultimap
@@ -97,18 +70,20 @@ export const processEncryptedKeys = async (
   subjectIdentity,
   coinObj
 ) => {
-  // Get CLI JSON representation
-  const cliJson = details.toCLIJson();
+  const credentialKey = IDENTITY_CREDENTIAL.vdxfid;
 
   if (
-    !cliJson.contentmultimap ||
-    !cliJson.contentmultimap[IDENTITY_CREDENTIAL.vdxfid]
+    !details.identity.containsContentMultiMap() ||
+    !details.identity.contentMultiMap.kvContent.hasAddress(credentialKey)
   ) {
     return details; // nothing to encrypt
   }
 
-  const credentialKey = IDENTITY_CREDENTIAL.vdxfid;
-  const credentialEntries = cliJson.contentmultimap[credentialKey];
+  const credentialEntries = details.identity.contentMultiMap.kvContent.getByAddress(credentialKey);
+
+  if (!credentialEntries || credentialEntries.some(x => Buffer.isBuffer(x))) {
+    throw new Error("Incorrect credential data format");
+  }
 
   // Validate z-address exists on subject identity
   const identity = subjectIdentity.identity || subjectIdentity;
@@ -154,31 +129,40 @@ export const processEncryptedKeys = async (
   const encryptionAddress = keys.address;
   const ivkHex = keys.ivk;
 
-  // Encrypt each credential entry
-  const entriesArray = Array.isArray(credentialEntries)
-    ? credentialEntries
-    : [credentialEntries];
+  const encryptedUniValues = [];
 
-  const encryptedEntries = [];
-  for (const entry of entriesArray) {
-    const encryptedEntry = await encryptCredentialEntry(entry, encryptionAddress);
-    encryptedEntries.push(encryptedEntry);
+  for (const entry of credentialEntries) {
+    if (entry instanceof VdxfUniValue && entry instanceof FqnVdxfUniValue) {
+      for (const innerUniValue of entry.entries()) {
+        const iaddr = innerUniValue[0].toAddress();
+
+        if (iaddr !== CredentialKey.vdxfid) throw new Error("No inner credential key found in credential")
+        else {
+          const cred = innerUniValue[1];
+          const encryptedDescriptorRes = (await encryptCredentialToDescriptor(encryptionAddress, cred));
+
+          const val = new VdxfUniValue({
+            values: [{
+              [DataDescriptorKey.vdxfid]: encryptedDescriptorRes.encryptedDescriptor
+            }]
+          })
+
+          encryptedUniValues.push(FqnVdxfUniValue.fromVdxfUniValue(val));
+        }
+      }
+    } else throw new Error("Incorrectly formatted credential entries")
   }
 
   // Compute hashed key offline (replaces getvdxfid RPC)
   const hashedKeyHash = getConditionID(credentialKey, ivkHex);
   const hashedKeyIAddr = toBase58Check(hashedKeyHash, I_ADDR_VERSION);
 
-  // Modify CLI JSON: remove plaintext key, add encrypted entries under hashed key
-  const modifiedCmm = { ...cliJson.contentmultimap };
-  delete modifiedCmm[credentialKey];
-  modifiedCmm[hashedKeyIAddr] = encryptedEntries;
+  const modifiedDetails = new IdentityUpdateRequestDetails();
+  modifiedDetails.fromBuffer(details.toBuffer());
 
-  const modifiedCliJson = { ...cliJson, contentmultimap: modifiedCmm };
+  modifiedDetails.identity.contentMultiMap.kvContent.deleteByAddress(credentialKey);;
+  modifiedDetails.identity.contentMultiMap.kvContent.setByAddress(hashedKeyIAddr, encryptedUniValues);
 
   // Reconstruct IdentityUpdateRequestDetails from modified CLI JSON
-  return IdentityUpdateRequestDetails.fromCLIJson(
-    modifiedCliJson,
-    details.toJson()
-  );
+  return modifiedDetails;
 };

@@ -7,6 +7,9 @@
  */
 
 import {
+  Credential,
+  CredentialKey,
+  DATA_TYPE_STRING,
   DataDescriptor,
   DataDescriptorKey,
   VdxfUniValue,
@@ -15,21 +18,15 @@ import {
 import { encryptData } from "../api/channels/dlight/requests/encrypt";
 
 /**
- * Encrypt a Buffer of data to a Sapling payment address.
+ * Encrypt an array of uni values containing data descriptors to a Sapling payment address.
  *
  * @param {string} encryptToAddress - Sapling payment address to encrypt to.
- * @param {Buffer} dataBuffer       - Raw data to encrypt.
+ * @param {Array<{ [key: string]: DataDescriptor }>} uniValues       - Raw data to encrypt.
  * @returns {Promise<{ encryptedDescriptor: DataDescriptor, encryptedDescriptorJson: object }>}
  */
-export const encryptDataToDescriptor = async (encryptToAddress, dataBuffer) => {
-  // Wrap data in a DataDescriptor
-  const innerDescriptor = new DataDescriptor({ objectdata: dataBuffer });
-
-  const innerRef = [];
-  innerRef.push({ [DataDescriptorKey.vdxfid]: innerDescriptor });
-
+export const encryptVDXFUniValuesToDescriptor = async (encryptToAddress, uniValues) => {
   // Create VdxfUniValue from the map
-  const urlRefUniValue = new VdxfUniValue({ values: innerRef });
+  const urlRefUniValue = new VdxfUniValue({ values: uniValues });
 
   const encryptedData = await encryptData(
     encryptToAddress,
@@ -60,4 +57,68 @@ export const encryptDataToDescriptor = async (encryptToAddress, dataBuffer) => {
   };
 
   return { encryptedDescriptor, encryptedDescriptorJson };
+};
+
+
+/**
+ * Encrypt a Buffer of data to a Sapling payment address.
+ *
+ * @param {string} encryptToAddress - Sapling payment address to encrypt to.
+ * @param {Buffer} dataBuffer       - Raw data to encrypt.
+ * @returns {Promise<{ encryptedDescriptor: DataDescriptor, encryptedDescriptorJson: object }>}
+ */
+export const encryptDataBufferToDescriptor = async (encryptToAddress, dataBuffer) => {
+  // Wrap data in a DataDescriptor
+  const innerDescriptor = new DataDescriptor({ objectdata: dataBuffer });
+
+  const innerRef = [];
+  innerRef.push({ [DataDescriptorKey.vdxfid]: innerDescriptor });
+
+  return encryptVDXFUniValuesToDescriptor(encryptToAddress, innerRef);
+};
+
+/**
+ * Encrypt a credential to a Sapling payment address.
+ *
+ * @param {string} encryptToAddress - Sapling payment address to encrypt to.
+ * @param {Credential} credential       - Raw data to encrypt.
+ * @returns {Promise<{ encryptedDescriptor: DataDescriptor, encryptedDescriptorJson: object }>}
+ */
+export const encryptCredentialToDescriptor = async (encryptToAddress, credential) => {
+  // Wrap data in a DataDescriptor
+  const innerDescriptor = new DataDescriptor({
+    objectdata: new VdxfUniValue({
+      values: [
+        { [CredentialKey.vdxfid]: credential }
+      ]
+    }).toBuffer()
+  });
+
+  const innerRef = [];
+  innerRef.push({ [DataDescriptorKey.vdxfid]: innerDescriptor });
+  
+  return encryptVDXFUniValuesToDescriptor(encryptToAddress, innerRef);
+};
+
+/**
+ * Encrypt a utf8 string to a Sapling payment address.
+ *
+ * @param {string} encryptToAddress - Sapling payment address to encrypt to.
+ * @param {string} str       - Raw data to encrypt.
+ * @returns {Promise<{ encryptedDescriptor: DataDescriptor, encryptedDescriptorJson: object }>}
+ */
+export const encryptStringToDescriptor = async (encryptToAddress, str) => {
+  // Wrap data in a DataDescriptor
+  const innerDescriptor = new DataDescriptor({
+    objectdata: new VdxfUniValue({
+      values: [
+        { [DATA_TYPE_STRING.vdxfid]: str }
+      ]
+    }).toBuffer()
+  });
+
+  const innerRef = [];
+  innerRef.push({ [DataDescriptorKey.vdxfid]: innerDescriptor });
+  
+  return encryptVDXFUniValuesToDescriptor(encryptToAddress, innerRef);
 };

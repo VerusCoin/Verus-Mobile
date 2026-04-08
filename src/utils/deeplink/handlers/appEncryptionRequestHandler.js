@@ -32,7 +32,7 @@ import { getBlock } from "../../api/channels/vrpc/requests/getBlock";
 import { getSignatureInfo } from "../../api/channels/vrpc/requests/getSignatureInfo";
 
 import { zGetEncryptionAddress } from "../../api/channels/dlight/requests/zGetEncryptionAddress";
-import { encryptDataToDescriptor } from "../../crypto/encryptDataDescriptor";
+import { encryptDataBufferToDescriptor } from "../../crypto/encryptDataDescriptor";
 import { getKeyMaterial } from "../../crypto/getKeyMaterial";
 
 // ============================================================================
@@ -295,7 +295,7 @@ export const processAppEncryptionRequest = async ({
 
   // Encrypt response
   const { encryptedDescriptor, encryptedDescriptorJson } =
-    await encryptDataToDescriptor(encryptTo, responseDetails.toBuffer());
+    await encryptDataBufferToDescriptor(encryptTo, responseDetails.toBuffer());
 
   return {
     responseDetail: new DataDescriptorOrdinalVDXFObject({
