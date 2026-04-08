@@ -7,10 +7,12 @@
   redirect shows "You'll be redirected to {host} to finish", POST shows
   "Your response will be sent to the requester".
   - 2026-03-11: Clarified that the surfaced txid belongs to the identity update transaction .
+  - 2026-04-08: Reintroduced a guarded cancel escape hatch after a POST response URI
+  fails so users can leave the screen after at least one delivery attempt.
 */
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { SafeAreaView, View, TouchableOpacity, Clipboard } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
 import { CommonActions } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import base64url from 'base64url';
@@ -35,7 +37,7 @@ import {
   VERUS_MOBILE_GENERIC_REQUEST_HANDLER_ID,
 } from 'verus-typescript-primitives';
 import { verifyGenericResponse } from '../../../utils/api/channels/vrpc/requests/verifyGenericResponse';
-import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
+import { createAlert, resolveAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { genericRequestCompleteStyles as styles } from '../../../styles';
 
@@ -44,6 +46,7 @@ const GenericRequestComplete = props => {
   const signedIn = useSelector(state => state.authentication.signedIn);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
+  const [postFailed, setPostFailed] = useState(false);
   const [txidCopied, setTxidCopied] = useState(false);
   const txidCopyTimeoutRef = useRef(null);
 
@@ -89,11 +92,23 @@ const GenericRequestComplete = props => {
 
     if (isPostUri(responseUri)) {
       const responseBuffer = response.toBuffer();
-      await axios.post(
-        responseUri.getUriString(),
-        responseBuffer,
-        { headers: { 'Content-Type': 'application/octet-stream' } }
-      );
+      try {
+        await axios.post(
+          responseUri.getUriString(),
+          responseBuffer,
+          { headers: { 'Content-Type': 'application/octet-stream' } }
+        );
+      } catch (error) {
+        const status = error?.response?.status;
+        const statusSuffix = status != null ? ` (HTTP ${status})` : '';
+        const postError = new Error(
+          `Failed to send the response to the requester${statusSuffix}.`
+        );
+
+        postError.isResponsePostError = true;
+        postError.cause = error;
+        throw postError;
+      }
     } else if (isRedirectUri(responseUri)) {
       const url = new URL(responseUri.getUriString());
       url.searchParams.set(
@@ -173,6 +188,30 @@ const GenericRequestComplete = props => {
     Clipboard.setString(identityUpdateTxid);
   };
 
+  const onCancel = async () => {
+    const shouldCancel = await createAlert(
+      'Cancel response?',
+      'If you cancel now, the response will not be sent back to the requester.',
+      [
+        {
+          text: 'Keep trying',
+          style: 'cancel',
+          onPress: () => resolveAlert(false),
+        },
+        {
+          text: 'Cancel response',
+          style: 'destructive',
+          onPress: () => resolveAlert(true),
+        },
+      ],
+      { cancelable: true }
+    );
+
+    if (shouldCancel) {
+      completeRequest();
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (txidCopyTimeoutRef.current) clearTimeout(txidCopyTimeoutRef.current);
@@ -225,7 +264,11 @@ const GenericRequestComplete = props => {
 
       await handleResponseUri(request, signedResponse);
     } catch (e) {
-      createAlert('Error', e.message);
+      if (e?.isResponsePostError) {
+        setPostFailed(true);
+      }
+
+      createAlert('Error', e?.message || 'Failed to complete the request.');
       console.warn(e);
       setLoading(false);
       return;
@@ -294,14 +337,29 @@ const GenericRequestComplete = props => {
         )}
       </View>
 
-      {/* Footer with single Complete button */}
+      {/* Footer actions */}
       <View style={styles.footer}>
-        <GradientButton
-          onPress={onComplete}
-          style={styles.completeButton}
-        >
-          Complete
-        </GradientButton>
+        {postFailed && (
+          <View style={styles.ctaCol}>
+            <Button
+              mode="outlined"
+              onPress={onCancel}
+              style={styles.secondaryCta}
+              contentStyle={styles.secondaryCtaContent}
+              labelStyle={styles.secondaryCtaLabel}
+            >
+              Cancel
+            </Button>
+          </View>
+        )}
+        <View style={styles.ctaCol}>
+          <GradientButton
+            onPress={onComplete}
+            style={styles.completeButton}
+          >
+            Complete
+          </GradientButton>
+        </View>
       </View>
     </SafeAreaView>
   );

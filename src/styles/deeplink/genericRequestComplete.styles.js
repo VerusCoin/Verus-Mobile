@@ -86,10 +86,38 @@ export default StyleSheet.create({
   footer: {
     backgroundColor: 'white',
     width: '100%',
+    flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 16,
+    gap: 12,
     borderTopWidth: 1,
     borderTopColor: '#E8E8E8',
+  },
+  ctaCol: {
+    flex: 1,
+    minWidth: 0,
+  },
+  secondaryCta: {
+    width: '100%',
+    height: 52,
+    borderRadius: 24,
+    backgroundColor: '#EBF6FF',
+    borderWidth: 0,
+    elevation: 0,
+    shadowColor: 'transparent',
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  secondaryCtaContent: {
+    height: 52,
+  },
+  secondaryCtaLabel: {
+    color: Colors.primaryColor,
+    fontWeight: '700',
+    fontSize: 16,
+    letterSpacing: 0,
+    textTransform: 'none',
   },
   completeButton: {
     width: '100%',
