@@ -39,12 +39,15 @@ import GenericRequestHome from './GenericRequestHome/GenericRequestHome';
 import { openAuthenticateUserModal } from '../../actions/actions/sendModal/dispatchers/sendModal';
 import { AUTHENTICATE_USER_SEND_MODAL, SEND_MODAL_USER_ALLOWLIST } from '../../utils/constants/sendModal';
 import store from '../../store';
+import { selectHasAuthenticatedSession } from '../../selectors/authentication';
 
 const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
   const deeplinkData = useObjectSelector((state) => state.deeplink.data)
 
   const signedIn = useSelector((state) => state.authentication.signedIn)
+  const hasAuthenticatedSession = useSelector(selectHasAuthenticatedSession)
+  const alertActive = useSelector(state => state.alert.active);
   const sendModalVisible = useSelector(state => state.sendModal.visible);
   const sendModalType = useSelector(state => state.sendModal.type);
   const accounts = useObjectSelector(state => state.authentication.accounts)
@@ -563,9 +566,13 @@ const DeepLink = (props) => {
   }, [waitingForSignin, authModalOpened, sendModalVisible, sendModalType]);
 
   useEffect(() => {
-    if (authModalOpened && !signedIn && waitingForSignin) {
+    if (authModalOpened && !hasAuthenticatedSession && waitingForSignin) {
       const authModalClosed =
-        sendModalType !== AUTHENTICATE_USER_SEND_MODAL || !sendModalVisible;
+        !alertActive &&
+        (
+          sendModalType !== AUTHENTICATE_USER_SEND_MODAL ||
+          !sendModalVisible
+        );
 
       if (authModalClosed) {
         setWaitingForSignin(false);
@@ -574,7 +581,14 @@ const DeepLink = (props) => {
         cancel();
       }
     }
-  }, [authModalOpened, signedIn, waitingForSignin, sendModalVisible, sendModalType]);
+  }, [
+    alertActive,
+    authModalOpened,
+    hasAuthenticatedSession,
+    waitingForSignin,
+    sendModalVisible,
+    sendModalType,
+  ]);
 
   const screens = {
     [LOGIN_CONSENT_INFO]: () => (
