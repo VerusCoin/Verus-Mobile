@@ -165,6 +165,7 @@ export const clearAllCoinIntervals = (chainTicker) => {
 export const refreshCoinIntervals = (coinObj, onCompletes, updateParams, allSeenSystems = []) => {
   const state = Store.getState()
   const chainTicker = coinObj.id
+  const chainStatus = state.coins.status[chainTicker] == null ? PRE_DATA : state.coins.status[chainTicker]
   const vrpcSupported = coinObj.compatible_channels.includes(VRPC)
 
   // TODO: Channel manual enabling/disabling
@@ -195,7 +196,7 @@ export const refreshCoinIntervals = (coinObj, onCompletes, updateParams, allSeen
   if (!coinObj) throw new Error(`${chainTicker} is not added for current user. Coins must be added to be used.`)
   
   const updateDataAction = generateUpdateCoinDataAction(
-    PRE_DATA,
+    chainStatus,
     chainTicker,
     coinObj.tags,
     [...DEFAULT_INTERVAL_CHANNELS, ...verusIdChannels, ...vrpcChannels],

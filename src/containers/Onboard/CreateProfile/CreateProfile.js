@@ -57,7 +57,7 @@ export default function CreateProfileStackScreens(props) {
       const _pin = password;
       const _seeds = {[ELECTRUM]: seed};
 
-      if (!testProfile && useSeedAsZ) {
+      if (useSeedAsZ) {
         _seeds[DLIGHT_PRIVATE] = seed;
       }
 

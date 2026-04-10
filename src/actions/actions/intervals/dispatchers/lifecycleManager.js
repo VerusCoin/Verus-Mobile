@@ -18,20 +18,30 @@ import { DEFAULT_COIN_UPDATE_PARAMS } from '../../../../utils/constants/defaultU
 import { coinsList } from '../../../../utils/CoinData/CoinsList';
 import { IS_PBAAS_CHAIN } from '../../../../utils/constants/currencies';
 
-export const activateChainLifecycle = (coinObj, activeCoinsForUser) => {
-  const allSeenSystems = [!!(coinObj.testnet) ? coinsList.VRSCTEST.currency_id : coinsList.VRSC.currency_id];
+const getAllSeenSystemsForCoin = (coinObj, activeCoinsForUser) => {
+  const allSeenSystems = [
+    coinObj.testnet ? coinsList.VRSCTEST.currency_id : coinsList.VRSC.currency_id,
+  ];
 
   if (coinObj.tags.includes(IS_PBAAS) && activeCoinsForUser != null) {
     for (const coin of activeCoinsForUser) {
-      if (coin.tags.includes(IS_PBAAS) && 
-          !allSeenSystems.includes(coin.system_id) &&
-          coin.system_options != null && 
-          (coin.system_options & IS_PBAAS_CHAIN) === IS_PBAAS_CHAIN &&
-          !!(coin.testnet) === !!(coinObj.testnet)) {
-          allSeenSystems.push(coin.system_id);
+      if (
+        coin.tags.includes(IS_PBAAS) &&
+        !allSeenSystems.includes(coin.system_id) &&
+        coin.system_options != null &&
+        (coin.system_options & IS_PBAAS_CHAIN) === IS_PBAAS_CHAIN &&
+        !!coin.testnet === !!coinObj.testnet
+      ) {
+        allSeenSystems.push(coin.system_id);
       }
     }
   }
+
+  return allSeenSystems;
+};
+
+export const activateChainLifecycle = (coinObj, activeCoinsForUser) => {
+  const allSeenSystems = getAllSeenSystemsForCoin(coinObj, activeCoinsForUser);
 
   refreshCoinIntervals(coinObj, {[API_GET_INFO]: {update_expired_oncomplete: getInfoOnComplete}}, DEFAULT_COIN_UPDATE_PARAMS, allSeenSystems)
 }
@@ -62,12 +72,12 @@ export const getInfoOnComplete = (state, dispatch, chainTicker) => {
   if (activeCoin == null) return;
 
   const currentStatus = state.coins.status[chainTicker]
-  const getInfoResult = state.ledger.info[chainTicker];
+  const getInfoResult = state.ledger.info[DLIGHT_PRIVATE]?.[chainTicker];
   const getInfoError = state.errors[API_GET_INFO][DLIGHT_PRIVATE][chainTicker];
   const refresh = () =>
     refreshCoinIntervals(activeCoin, {
       [API_GET_INFO]: { update_expired_oncomplete: getInfoOnComplete }
-    });
+    }, DEFAULT_COIN_UPDATE_PARAMS, getAllSeenSystemsForCoin(activeCoin, state.coins.activeCoinsForUser));
 
   if (getInfoError && getInfoError.error) return
 
