@@ -56,6 +56,9 @@ const WalletSettings = props => {
   const [enableSendCoinCameraToggle, setEnableSendCoinCameraToggle] = useState(
     !!generalWalletSettings.enableSendCoinCameraToggle
   );
+  const [enableExperimentalGenericRequests, setEnableExperimentalGenericRequests] = useState(
+    !!generalWalletSettings.enableExperimentalGenericRequests
+  );
 
   const [errors, setErrors] = useState({
     maxTxCount: false,
@@ -87,13 +90,14 @@ const WalletSettings = props => {
         ...settings,
         homeCardDragDetection,
         allowSettingVerusPaySlippage,
-        enableSendCoinCameraToggle
+        enableSendCoinCameraToggle,
+        enableExperimentalGenericRequests
       });
       setHasChanges(true);
     } else {
       isMounted.current = true;
     }
-  }, [homeCardDragDetection, allowSettingVerusPaySlippage, enableSendCoinCameraToggle]);
+  }, [homeCardDragDetection, allowSettingVerusPaySlippage, enableSendCoinCameraToggle, enableExperimentalGenericRequests]);
 
   const describeSlippage = () => {
     createAlert(
@@ -119,6 +123,10 @@ const WalletSettings = props => {
     setEnableSendCoinCameraToggle(!enableSendCoinCameraToggle);
   }
 
+  const toggleEnableExperimentalGenericRequests = () => {
+    setEnableExperimentalGenericRequests(!enableExperimentalGenericRequests);
+  }
+
   const saveSettings = async () => {
     setLoading(true);
     try {
@@ -131,6 +139,7 @@ const WalletSettings = props => {
         homeCardDragDetection,
         allowSettingVerusPaySlippage,
         enableSendCoinCameraToggle,
+        enableExperimentalGenericRequests,
         ackedCurrencyDisclaimer: settings.ackedCurrencyDisclaimer,
         addressBlocklistDefinition:
           settings.addressBlocklistDefinition == null
@@ -368,6 +377,31 @@ const WalletSettings = props => {
                 <Switch
                   value={enableSendCoinCameraToggle}
                   onValueChange={toggleEnableSendCoinCameraToggle}
+                  color={Colors.primaryColor}
+                />
+              </View>
+            )}
+          />
+          <Divider />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={toggleEnableExperimentalGenericRequests}
+        >
+          <List.Item
+            title="Enable experimental deeplinks"
+            description="Allow deeplinks that include experimental features (identity update, app encryption, etc.)"
+            titleNumberOfLines={100}
+            right={() => (
+              <View
+                style={{
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'flex-end',
+                }}
+              >
+                <Switch
+                  value={enableExperimentalGenericRequests}
+                  onValueChange={toggleEnableExperimentalGenericRequests}
                   color={Colors.primaryColor}
                 />
               </View>

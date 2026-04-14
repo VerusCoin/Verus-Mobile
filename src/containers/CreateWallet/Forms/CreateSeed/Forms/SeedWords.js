@@ -232,7 +232,7 @@ export default function SeedWords({navigation, newSeed, onComplete, testProfile}
               ? 'Please verify the listed words.'
               : "When you've written them down, press next."}
           </Text>
-          {isAtEnd && !testProfile && (
+          {isAtEnd && (
             <Checkbox.Item
               color={Colors.primaryColor}
               labelStyle={{

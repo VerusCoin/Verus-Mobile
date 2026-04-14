@@ -2,7 +2,7 @@ import { getSynchronizerInstance } from 'react-native-verus'
 
 // Get the current chain blockheight
 export const getBlockCount = (coinId, accountHash, coinProto) => {
-  const sync = getSynchronizerInstance(accountHash, coinId);
+  const synchronizer = getSynchronizerInstance(accountHash, coinId);
   return new Promise((resolve, reject) => {
     synchronizer.getLatestNetworkHeight()
       .then(res => {

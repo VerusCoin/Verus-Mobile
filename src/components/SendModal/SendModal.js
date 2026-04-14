@@ -24,6 +24,7 @@ import {
 } from "../../utils/constants/sendModal";
 import { SendModalRender } from "./SendModal.render"
 import { DEVICE_WINDOW_HEIGHT } from "../../utils/constants/constants";
+import { selectHasAuthenticatedSession } from "../../selectors/authentication";
 
 class SendModal extends Component {
   constructor(props) {
@@ -61,12 +62,21 @@ class SendModal extends Component {
 
   componentDidUpdate(lastProps) {
     if (lastProps.alertActive != this.props.alertActive) {
+      const shouldRestoreVisibility =
+        !this.props.alertActive &&
+        !(
+          this.props.sendModal.type === AUTHENTICATE_USER_SEND_MODAL &&
+          this.props.hasAuthenticatedSession
+        );
+
       this.setState(
         {
           persistFormDataOnClose: this.props.alertActive,
         },
         () => {
-          setSendModalVisible(!this.props.alertActive);
+          setSendModalVisible(
+            this.props.alertActive ? false : shouldRestoreVisibility,
+          );
         }
       );
     }
@@ -153,6 +163,7 @@ const mapStateToProps = (state) => {
     sendModal: state.sendModal,
     keyboard: state.keyboard,
     alertActive: state.alert.active,
+    hasAuthenticatedSession: selectHasAuthenticatedSession(state),
   }
 };
 

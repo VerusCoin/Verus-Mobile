@@ -212,14 +212,18 @@ export const openAddErc20TokenModal = (coinObj, data) => {
   );
 };
 
-export const openProvisionIdentityModal = (coinObj, req, fromService = null) => {
+export const openProvisionIdentityModal = (coinObj, reqOrData, fromService = null) => {
+  const data =
+    reqOrData && reqOrData.challenge != null
+      ? { request: reqOrData, fromService }
+      : { ...(reqOrData || {}), fromService };
+
   openSendModal(
     `Request VerusID`,
     coinObj,
     null,
     {
-      request: req,
-      fromService,
+      ...data,
       [SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]: ''
     },
     PROVISION_IDENTITY_SEND_MODAL,

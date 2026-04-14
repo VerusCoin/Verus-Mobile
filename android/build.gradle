@@ -100,3 +100,9 @@ subprojects {
      }
   }
 }
+
+allprojects {
+    repositories {
+        mavenLocal()
+    }
+}

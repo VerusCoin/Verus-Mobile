@@ -12,6 +12,8 @@ import { ApiRequest } from 'verus-typescript-primitives';
 import { coinsList } from '../CoinData/CoinsList';
 import { Alert } from 'react-native';
 import { CoinDirectory } from '../CoinData/CoinDirectory';
+import { VRPC_API_KEYS, VRPC_API_APP_ID } from '../../../env/index';
+import { getUrlKey } from '../url';
 
 class CachedVerusdRpcInterface extends VerusdRpcInterface {
   static CACHED_REQUESTS = [
@@ -44,9 +46,15 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
    * @param {string} endpoint
    * @param {(id: string, time: number) => void} setLastTime 
    * @param {(id: string) => number} getLastTime 
+   * @param {import('verusd-rpc-ts-client/lib/VerusdRpcInterface').APIAuthData} APIAuth
    */
-  constructor(systemId, endpoint, setLastTime, getLastTime) {
-    super(systemId, endpoint)
+  constructor(systemId, endpoint, setLastTime, getLastTime, APIAuth) {
+    if (APIAuth) {
+      super(systemId, endpoint, undefined, undefined, APIAuth)
+    } else {
+      super(systemId, endpoint)
+    }
+    
     this.endpoint = endpoint;
     this.lastheight = 0;
     this.lasttime = 0;
@@ -189,24 +197,62 @@ class VrpcInterface {
 
     const id = VrpcInterface.getEndpointId(systemId, endpoint)
 
-    if (!this.cacheInterfaces[id]) this.cacheInterfaces[id] = new CachedVerusdRpcInterface(
-      systemId,
-      endpoint,
-      (...params) => this.setLastTime(...params),
-      (...params) => this.getLastTIme(...params)
-    )
+    if (!this.cacheInterfaces[id]) {
+      const urlKey = getUrlKey(endpoint);
+
+      if (VRPC_API_KEYS[urlKey]) {
+        this.cacheInterfaces[id] = new CachedVerusdRpcInterface(
+          systemId,
+          endpoint,
+          (...params) => this.setLastTime(...params),
+          (...params) => this.getLastTIme(...params),
+          {
+            id: VRPC_API_APP_ID,
+            key: VRPC_API_KEYS[urlKey]
+          }
+        )
+      } else {
+        this.cacheInterfaces[id] = new CachedVerusdRpcInterface(
+          systemId,
+          endpoint,
+          (...params) => this.setLastTime(...params),
+          (...params) => this.getLastTIme(...params)
+        )
+      }
+    }
     
     this.systemEndpointIds[systemId].push(id);
   }
 
   getEndpointAddressForChain(systemId) {
     if (this.systemEndpointIds[systemId] == null) this.systemEndpointIds[systemId] = [];
+    const endpoints = Store.getState().channelStore_vrpc.vrpcEndpoints;
+    const overrideEndpoints =
+      CoinDirectory.vrpcOverrides && CoinDirectory.vrpcOverrides[systemId]
+        ? CoinDirectory.vrpcOverrides[systemId]
+        : null;
+
+    if (overrideEndpoints && overrideEndpoints.length > 0) {
+      for (const endpoint of overrideEndpoints) {
+        this.initEndpoint(systemId, endpoint);
+      }
+
+      const allowed = new Set(overrideEndpoints);
+      this.systemEndpointIds[systemId] = this.systemEndpointIds[systemId].filter(
+        id => endpoints[id] && allowed.has(endpoints[id][1]),
+      );
+    }
+
+    if (this.systemEndpointIds[systemId].length === 0) {
+      throw new Error(`No VRPC endpoints initialized for systemId ${systemId}`);
+    }
+
     const randomId =
       this.systemEndpointIds[systemId][
         Math.floor(Math.random() * this.systemEndpointIds[systemId].length)
       ];
 
-    return Store.getState().channelStore_vrpc.vrpcEndpoints[randomId][1];
+    return endpoints[randomId][1];
   }
 
   recordEndpointConnection(id) {
@@ -302,12 +348,30 @@ class VrpcInterface {
       throw new Error(
         `Verus RPC endpoint ${endpoint} not initialized for systemId ${systemId}`,
       );
-    return new VerusIdInterface(systemId, endpoint)
+
+    const urlKey = getUrlKey(endpoint);
+
+    if (VRPC_API_KEYS[urlKey]) {
+      return new VerusIdInterface(systemId, endpoint, undefined, undefined, {
+        id: VRPC_API_APP_ID,
+        key: VRPC_API_KEYS[urlKey]
+      });
+    } else {
+      return new VerusIdInterface(systemId, endpoint)
+    }
   }
 
   addDefaultEndpoints = () => {
-    this.initEndpoint(coinsList.VRSC.system_id, CoinDirectory.getVrpcEndpoints("VRSC")[0]);
-    this.initEndpoint(coinsList.VRSCTEST.system_id, CoinDirectory.getVrpcEndpoints("VRSCTEST")[0]); 
+    const vrscEndpoints = CoinDirectory.getVrpcEndpoints("VRSC");
+    const vrsctestEndpoints = CoinDirectory.getVrpcEndpoints("VRSCTEST");
+
+    for (const endpoint of vrscEndpoints) {
+      this.initEndpoint(coinsList.VRSC.system_id, endpoint);
+    }
+
+    for (const endpoint of vrsctestEndpoints) {
+      this.initEndpoint(coinsList.VRSCTEST.system_id, endpoint);
+    }
   }
 }
 

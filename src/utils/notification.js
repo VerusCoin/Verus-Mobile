@@ -105,19 +105,20 @@ export class DeeplinkNotification extends Notification {
 }
 
 export class VerusIdProvisioningNotification extends DeeplinkNotification {
-  constructor(body, title, reopen = () => {}, uid, uri, acchash, fqn, fromService) {
+  constructor(body, title, reopen = () => {}, uid, uri, acchash, fqn, fromService, requestType) {
     super(body, title, reopen, uid, uri, acchash, fromService)
     this.type = NOTIFICATION_TYPE_VERUS_ID_PROVISIONING
     this.fqn = fqn
+    this.requestType = requestType
   }
 
   static fromJson(json, reopen) {
-    const {body, title, uid, uri, fqn, fromService} = json;
-    return new VerusIdProvisioningNotification(body, title, reopen, uid, uri, null, fqn, fromService);
+    const {body, title, uid, uri, fqn, fromService, requestType} = json;
+    return new VerusIdProvisioningNotification(body, title, reopen, uid, uri, null, fqn, fromService, requestType);
   }
 
   onAction(props = null) {
-    return this.reopen(props, this.uri, this.fromService, this.fqn)
+    return this.reopen(props, this.uri, this.fromService, this.fqn, this.requestType)
   }
 
   toJson() {
@@ -128,7 +129,8 @@ export class VerusIdProvisioningNotification extends DeeplinkNotification {
       uid: this.uid,
       uri: this.uri,
       fqn: this.fqn,
-      fromService: this.fromService
+      fromService: this.fromService,
+      requestType: this.requestType
     };
   }
 }

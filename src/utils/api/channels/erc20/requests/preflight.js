@@ -324,18 +324,18 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
       ).getAddress();
 
       // Manually construct a CTransferDestination (remove when switching to serialized method from JSON)
-      const destAddrBytes = address.destination_bytes;
+      const destAddrBytes = address.destinationBytes;
 
       const destination = new TransferDestination({
         type: DEST_ETH.xor(FLAG_DEST_GATEWAY).xor(FLAG_DEST_AUX),
-        destination_bytes: destAddrBytes,
-        gateway_id: vEthIAddress,
-        gateway_code: toBase58Check(Buffer.from(NULL_ETH_ADDRESS, 'hex'), 102),
+        destinationBytes: destAddrBytes,
+        gatewayID: vEthIAddress,
+        gatewayCode: toBase58Check(Buffer.from(NULL_ETH_ADDRESS, 'hex'), 102),
         fees: new BN(importGasFeeSatsString),
-        aux_dests: [
+        auxDests: [
           new TransferDestination({
             type: DEST_PKH,
-            destination_bytes: fromBase58Check(refundAddress).hash
+            destinationBytes: fromBase58Check(refundAddress).hash
           })
         ]
       })
@@ -345,7 +345,7 @@ export const preflightBridgeTransfer = async (coinObj, channelId, activeUser, ou
       destinationaddress = '0x' + destination.toBuffer().toString('hex').slice(4);
     } else {
       destinationtype = address.type.toNumber();
-      destinationaddress = '0x' + address.destination_bytes.toString('hex');
+      destinationaddress = '0x' + address.destinationBytes.toString('hex');
     }
 
     const reserveTransferFee = pastPrelaunch ? ETH_VERUS_BRIDGE_CONTRACT_RESERVE_TRANSFER_FEE : ETH_VERUS_BRIDGE_CONTRACT_PRELAUNCH_RESERVE_TRANSFER_FEE

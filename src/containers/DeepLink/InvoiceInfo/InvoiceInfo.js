@@ -1,14 +1,15 @@
+// Updated invoice request UI to match DeepLink request styling.
 import React, {useState, useEffect} from 'react';
 import {SafeAreaView, ScrollView, TouchableOpacity, View} from 'react-native';
-import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
-import { Button, Divider, List, Portal, Text } from 'react-native-paper';
+import { Button, Portal, Text } from 'react-native-paper';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
-import { getIdentity } from '../../../utils/api/channels/verusid/callCreators';
+import { getFriendlyNameMap, getIdentity } from '../../../utils/api/channels/verusid/callCreators';
 import { blocksToTime, satsToCoins, unixToDate } from '../../../utils/math';
 import { useSelector } from 'react-redux';
 import Colors from '../../../globals/colors';
-import { VerusPayTextLogo } from '../../../images/customIcons';
+import GradientButton from '../../../components/GradientButton';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { openAuthenticateUserModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import { AUTHENTICATE_USER_SEND_MODAL, SEND_MODAL_USER_ALLOWLIST } from '../../../utils/constants/sendModal';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
@@ -19,13 +20,42 @@ import ListSelectionModal from '../../../components/ListSelectionModal/ListSelec
 import { copyToClipboard } from '../../../utils/clipboard/clipboard';
 import BigNumber from 'bignumber.js';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
+import { invoiceInfoStyles as styles } from '../../../styles';
+
+const DetailRow = ({ title, subtitle, onPress, rightIcon, showBorder }) => {
+  const Wrapper = onPress ? TouchableOpacity : View;
+  const wrapperProps = onPress ? { onPress, activeOpacity: 0.7 } : {};
+
+  return (
+    <Wrapper
+      style={[
+        styles.detailRow,
+        showBorder && styles.detailRowBorder,
+        onPress && styles.detailRowPressable,
+      ]}
+      {...wrapperProps}
+    >
+      <View style={styles.detailLeft}>
+        <Text style={styles.detailTitle}>{title}</Text>
+        {subtitle ? <Text style={styles.detailSubtitle}>{subtitle}</Text> : null}
+      </View>
+      {rightIcon ? (
+        <MaterialCommunityIcons name={rightIcon} size={18} color="#888" />
+      ) : null}
+    </Wrapper>
+  );
+};
 
 const InvoiceInfo = props => {
   const { 
-    deeplinkData, 
+    detailsBufferString, 
+    isSigned,
+    invoiceVersion,
     sigtime, 
     cancel, 
     signerFqn, 
+    signerSystemID,
+    signerIdentityID,
     currencyDefinition, 
     amountDisplay, 
     destinationDisplay,
@@ -33,10 +63,10 @@ const InvoiceInfo = props => {
     chainInfo,
     acceptedSystemsDefinitions
   } = props;
+
   const { fullyqualifiedname } = currencyDefinition;
-  const [inv, setInv] = useState(primitives.VerusPayInvoice.fromJson(deeplinkData));
-  const { system_id, signing_id, details } = inv;
-  const chain_id = inv.isSigned() ? getSystemNameFromSystemId(system_id) : null;
+  const [details, setDetails] = useState(new primitives.VerusPayInvoiceDetails());
+  const chain_id = isSigned ? getSystemNameFromSystemId(signerSystemID) : null;
 
   const getVerusId = async (chain, iAddrOrName) => {
     const identity = await getIdentity(CoinDirectory.getBasicCoinObj(chain).system_id, iAddrOrName);
@@ -45,18 +75,9 @@ const InvoiceInfo = props => {
     else return identity.result;
   }
 
-  const getMainHeading = () => {
-    const recipientLabel = inv.isSigned() ? signerFqn : 'This unsigned invoice';
-    const amountLabel = inv.details.acceptsAnyAmount() ? 'any amount of' : amountDisplay;
-    const destinationLabel = destinationDisplay;
-    const currencyLabel = fullyqualifiedname;
-
-    return `${recipientLabel} is requesting ${amountLabel} ${currencyLabel} to ${destinationLabel}`
-  }
-
   const getAcceptedSystemsLabel = () => {
-    if (!inv.details.acceptsNonVerusSystems() && !inv.details.excludesVerusBlockchain()) {
-      return inv.details.isTestnet() ? 'VRSCTEST' : 'VRSC'
+    if (!details.acceptsNonVerusSystems() && !details.excludesVerusBlockchain()) {
+      return details.isTestnet() ? 'VRSCTEST' : 'VRSC'
     }
 
     const acceptedNames = Object.values(acceptedSystemsDefinitions.definitions).map(definition => {
@@ -69,9 +90,9 @@ const InvoiceInfo = props => {
   }
 
   const getExpiryLabel = () => {
-    if (!inv.details.expires()) return "";
+    if (!details.expires()) return "";
 
-    return blocksToTime(inv.details.expiryheight.toNumber() - chainInfo.longestchain);
+    return blocksToTime(details.expiryheight.toNumber() - chainInfo.longestchain);
   }
 
   const openVerusIdDetailsModal = (chain, iAddress) => {
@@ -97,9 +118,17 @@ const InvoiceInfo = props => {
     });
   }
 
+  const handleSignerDetailsPress = () => {
+    if (!chain_id || !signerIdentityID) {
+      createAlert('Signer unavailable', 'No signer identity is available for this invoice.');
+      return;
+    }
+
+    openVerusIdDetailsModal(chain_id, signerIdentityID);
+  }
+
   const [isListSelectionModalVisible, setIsListSelectionModalVisible] = useState(false);
   const [listData, setListData] = useState([]);
-  const [mainHeading, setMainHeading] = useState(getMainHeading());
   const [expiryLabel, setExpiryLabel] = useState(getExpiryLabel());
   const [acceptedSystemsLabel, setAcceptedSystemsLabel] = useState(getAcceptedSystemsLabel());
   const [loading, setLoading] = useState(false);
@@ -111,17 +140,14 @@ const InvoiceInfo = props => {
   
   const signedIn = useSelector(state => state.authentication.signedIn);
   const sendModalType = useSelector(state => state.sendModal.type);
-  const isWrongInvoiceType = useSelector(state => {
-    const isTestAccount =
-      state.authentication.activeAccount &&
-      Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0;
 
-    return (
-      state.authentication.signedIn &&
-      ((isTestAccount && !inv.details.isTestnet()) ||
-      (!isTestAccount && inv.details.isTestnet()))
-    );
+  const isTestAccount = useSelector(state => {
+    return state.authentication.activeAccount && Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0;
   });
+
+  const isSignedIn = useSelector(state => {
+    return state.authentication.signedIn
+  })
 
   const [sendCurrencyDefinition, setSendCurrencyDefinition] = useState(null);
   const [selectCurrencyModalProps, setSelectCurrencyModalProps] = useState(null);
@@ -132,7 +158,7 @@ const InvoiceInfo = props => {
       props.navigation.navigate('InvoicePaymentConfiguration', props);
     } else {
       setWaitingForSignin(true);
-      const allowList = inv.details.isTestnet() ? accounts.filter(x => {
+      const allowList = details.isTestnet() ? accounts.filter(x => {
         if (
           x.testnetOverrides &&
           x.testnetOverrides[coinObj.mainnet_id] === coinObj.id
@@ -162,9 +188,9 @@ const InvoiceInfo = props => {
         createAlert(
           "Cannot continue",
           `No ${
-            inv.details.isTestnet() ? 'testnet' : 'mainnet'
+            details.isTestnet() ? 'testnet' : 'mainnet'
           } profiles found, cannot respond to ${
-            inv.details.isTestnet() ? 'testnet' : 'mainnet'
+            details.isTestnet() ? 'testnet' : 'mainnet'
           } login request.`,
         );
       }
@@ -174,6 +200,10 @@ const InvoiceInfo = props => {
   const openListSelectionModal = () => {
     setIsListSelectionModalVisible(true);
   };
+
+  const isWrongInvoiceType = (det) => {
+    return isSignedIn && ((isTestAccount && !det.isTestnet()) || (!isTestAccount && det.isTestnet()))
+  }
   
   const handleSupportedNetworkSelect = (item) => {
     setIsListSelectionModalVisible(false);
@@ -215,12 +245,6 @@ const InvoiceInfo = props => {
   };
 
   useEffect(() => {
-    if (isWrongInvoiceType) {
-      wrongInvoiceType(inv.details.isTestnet());
-    }
-  }, [])
-
-  useEffect(() => {
     if (signedIn && waitingForSignin) {
       handleContinue();
     }
@@ -233,9 +257,8 @@ const InvoiceInfo = props => {
   }, [selectCurrencyModalProps]);
 
   useEffect(() => {
-    setMainHeading(getMainHeading())
     setExpiryLabel(getExpiryLabel())
-  }, [inv]);
+  }, [isSigned, signerSystemID, details]);
 
   useEffect(() => {
     setAcceptedSystemsLabel(getAcceptedSystemsLabel())
@@ -251,8 +274,16 @@ const InvoiceInfo = props => {
   }, [acceptedSystemsDefinitions]);
 
   useEffect(() => {
-    setInv(primitives.VerusPayInvoice.fromJson(deeplinkData))
-  }, [deeplinkData]);
+    const det = new primitives.VerusPayInvoiceDetails();
+
+    det.fromBuffer(Buffer.from(detailsBufferString, 'hex'), 0, new primitives.BigNumber(invoiceVersion));
+
+    setDetails(det);
+
+    if (isWrongInvoiceType(det)) {
+      wrongInvoiceType(det.isTestnet());
+    }
+  }, [detailsBufferString]);
 
   useEffect(() => {
     setSigDateString(unixToDate(sigtime))
@@ -264,126 +295,220 @@ const InvoiceInfo = props => {
     } else setLoading(true)
   }, [sendModalType]);
 
+  const requesterLabel = signerFqn || signerIdentityID || 'Unknown signer';
+  const canOpenSignerModal = Boolean(chain_id && signerIdentityID);
+  
+  const isAnyAmount = details.acceptsAnyAmount() || amountDisplay == null;
+  const heroAmount = isAnyAmount ? "Any Amount" : amountDisplay;
+  const heroCurrency = fullyqualifiedname;
+
+  const destinationLabel = details.acceptsAnyDestination() || !destinationDisplay
+    ? 'Any destination'
+    : destinationDisplay;
+
+  const detailRows = [];
+  detailRows.push({
+    key: 'destination',
+    title: destinationLabel,
+    subtitle: 'Destination',
+    onPress: details.acceptsAnyDestination()
+      ? null
+      : () =>
+          copyToClipboard(destinationDisplay, {
+            title: 'Destination copied',
+            message: `${destinationDisplay} copied to clipboard.`,
+          }),
+    rightIcon: details.acceptsAnyDestination() ? null : 'content-copy',
+  });
+
+  if (details.acceptsConversion()) {
+    detailRows.push({
+      key: 'conversion',
+      title: 'Conversion supported',
+      subtitle: 'You can pay with other currencies.',
+    });
+    detailRows.push({
+      key: 'slippage',
+      title: `${satsToCoins(BigNumber(details.maxestimatedslippage)).multipliedBy(100).toString()}%`,
+      subtitle: 'Max. est. deviation from predicted conversion result',
+      onPress: () => describeSlippage(),
+      rightIcon: 'information-outline',
+    });
+  }
+
+  if (details.expires()) {
+    detailRows.push({
+      key: 'expiry',
+      title: expiryLabel,
+      subtitle: 'Expires in approx.',
+    });
+  }
+
+  if (details.acceptsNonVerusSystems()) {
+    detailRows.push({
+      key: 'networks',
+      title: acceptedSystemsLabel,
+      subtitle: 'Supported payment networks',
+      onPress: () => openListSelectionModal(),
+      rightIcon: 'information-outline',
+    });
+  }
+
+  if (details.isTagged()) {
+    detailRows.push({
+      key: 'tag-note',
+      title: 'Tagged invoice',
+      subtitle: 'The payment will be easier to recognize on-chain.',
+    });
+    detailRows.push({
+      key: 'tag',
+      title: details.tag.address,
+      subtitle: 'Transaction tag',
+      onPress: () =>
+        copyToClipboard(details.tag.address, {
+          title: 'Tag copied',
+          message: `${details.tag.address} copied to clipboard.`,
+        }),
+      rightIcon: 'content-copy',
+    });
+  }
+
   return loading ? (
     <AnimatedActivityIndicatorBox />
   ) : (
-    <SafeAreaView style={Styles.defaultRoot}>
+    <SafeAreaView style={styles.container}>
       <Portal>
         {verusIdDetailsModalProps != null && (
           <VerusIdDetailsModal {...verusIdDetailsModalProps} />
         )}
-        {isListSelectionModalVisible && <ListSelectionModal
-          visible={isListSelectionModalVisible}
-          data={listData}
-          onSelect={handleSupportedNetworkSelect}
-          cancel={() => setIsListSelectionModalVisible(false)}
-          title="Supported Payment Networks"
-          flexHeight={1}
-        />}
+        {isListSelectionModalVisible && (
+          <ListSelectionModal
+            visible={isListSelectionModalVisible}
+            data={listData}
+            showSearch={true}
+            searchPlaceholder="Search networks"
+            onSelect={handleSupportedNetworkSelect}
+            cancel={() => setIsListSelectionModalVisible(false)}
+            title="Supported Payment Networks"
+            flexHeight={1}
+          />
+        )}
       </Portal>
-      <View style={{ flex: 1, width: '100%' }}>
-        <ScrollView
-          style={Styles.fullWidth}
-          contentContainerStyle={Styles.focalCenter}>
-          <VerusPayTextLogo width={'55%'} height={'10%'} />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.mainTitle}>VerusPay invoice</Text>
+        </View>
+
+        {isSigned ? (
           <TouchableOpacity
-            disabled={inv.details.acceptsAnyDestination()}
-            style={Styles.wideBlock}
-            onPress={() =>
-              copyToClipboard(destinationDisplay, {
-                title: 'Destination copied',
-                message: `${destinationDisplay} copied to clipboard.`,
-              })
-            }>
-            <Text style={{fontSize: 18, textAlign: 'center'}}>{mainHeading}</Text>
+            style={styles.requesterCard}
+            onPress={canOpenSignerModal ? handleSignerDetailsPress : undefined}
+            activeOpacity={canOpenSignerModal ? 0.7 : 1}
+          >
+            <View style={styles.requesterHeaderRow}>
+              <View style={styles.requesterIconContainer}>
+                <MaterialCommunityIcons
+                  name="file-document-outline"
+                  size={28}
+                  color={Colors.verusGreenColor}
+                />
+              </View>
+              <View style={styles.requesterTextContainer}>
+                <Text style={styles.requesterLabel}>Request from</Text>
+                <Text style={styles.requesterName}>{requesterLabel}</Text>
+              </View>
+              {canOpenSignerModal ? (
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={24}
+                  color={Colors.verusDarkGray}
+                />
+              ) : null}
+            </View>
+            <View style={styles.requesterDetailsRow}>
+              {chain_id ? (
+                <View style={styles.chipContainer}>
+                  <Text style={styles.chipText}>{chain_id}</Text>
+                </View>
+              ) : null}
+              {sigDateString ? (
+                <View style={styles.chipContainer}>
+                  <Text style={styles.chipText}>{sigDateString}</Text>
+                </View>
+              ) : null}
+            </View>
           </TouchableOpacity>
-          <View style={Styles.fullWidth}>
-            {(inv.details.acceptsConversion() ||
-              inv.details.expires() ||
-              inv.details.acceptsNonVerusSystems() ||
-              inv.isSigned()
-            ) && <Divider />}
-            {
-              inv.details.acceptsConversion() && (
-                <React.Fragment>
-                  <List.Item title={"This invoice accepts conversion, continue to see which currencies you can pay it with."} titleNumberOfLines={100}/>
-                  <Divider />
-                  <List.Item 
-                    title={`${satsToCoins(BigNumber(inv.details.maxestimatedslippage)).multipliedBy(100).toString()}%`} 
-                    titleNumberOfLines={100}
-                    description={'Max. est. deviation from predicted conversion result'}
-                    right={props => <List.Icon {...props} icon={'information'} size={20} />}
-                    onPress={() => describeSlippage()}
-                  />
-                  <Divider />
-                </React.Fragment>
-              )
-            }
-            {
-              inv.details.expires() && (
-                <React.Fragment>
-                  <List.Item title={expiryLabel} description={'Expires in approx.'} />
-                  <Divider />
-                </React.Fragment>
-              )
-            }
-            {
-              inv.details.acceptsNonVerusSystems() && (
-                <React.Fragment>
-                  <List.Item
-                    title={acceptedSystemsLabel}
-                    onPress={openListSelectionModal}
-                    titleNumberOfLines={100}
-                    description={'Supported Verus blockchains'}
-                    right={props => <List.Icon {...props} icon={'information'} size={20} />}
-                  />
-                  <Divider />
-                </React.Fragment>
-              )
-            }
-            {
-              inv.isSigned() && (
-                <React.Fragment>
-                  <TouchableOpacity
-                    onPress={() => openVerusIdDetailsModal(chain_id, signing_id)}>
-                    <List.Item
-                      title={signerFqn}
-                      description={'Signed by'}
-                      right={props => <List.Icon {...props} icon={'information'} size={20} />}
-                    />
-                    <Divider />
-                  </TouchableOpacity>
-                  <List.Item title={chain_id} description={'Signature system'} />
-                  <Divider />
-                  <List.Item title={sigDateString} description={'Signed on'} />
-                  <Divider />
-                </React.Fragment>
-              )
-            }
+        ) : (
+          <View style={styles.unsignedCard}>
+            <View style={styles.unsignedIconContainer}>
+              <MaterialCommunityIcons name="alert-circle-outline" size={24} color="#B45309" />
+            </View>
+            <View style={styles.unsignedTextContainer}>
+              <Text style={styles.unsignedTitle}>Unsigned invoice</Text>
+              <Text style={styles.unsignedSubtitle}>
+                This invoice does not include a signer identity.
+              </Text>
+            </View>
           </View>
-        </ScrollView>
-        <View
-          style={{
-            paddingHorizontal: 16,
-            paddingBottom: 16,
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            backgroundColor: '#fff' // or any other background color
-          }}>
+        )}
+
+        <View style={styles.heroContainer}>
+          <Text style={styles.heroAmount}>{heroAmount}</Text>
+          <Text style={styles.heroCurrency}>{heroCurrency}</Text>
+        </View>
+
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionHeaderLeft}>
+              <MaterialCommunityIcons name="information-outline" size={20} color="#666" />
+              <Text style={styles.sectionTitle}>Invoice details</Text>
+            </View>
+          </View>
+          <View style={styles.sectionContent}>
+            {detailRows.length === 0 ? (
+              <View style={styles.emptyRow}>
+                <Text style={styles.emptyText}>No additional details.</Text>
+              </View>
+            ) : (
+              detailRows.map((row, index) => (
+                <DetailRow
+                  key={row.key}
+                  title={row.title}
+                  subtitle={row.subtitle}
+                  onPress={row.onPress}
+                  rightIcon={row.rightIcon}
+                  showBorder={index > 0}
+                />
+              ))
+            )}
+          </View>
+        </View>
+
+        <View style={{ height: 24 }} />
+      </ScrollView>
+      <View style={styles.footer}>
+        <View style={styles.ctaCol}>
           <Button
-            textColor={Colors.warningButtonColor}
-            style={{ width: 148 }}
-            onPress={() => cancel()}>
+            mode="contained"
+            onPress={() => cancel()}
+            style={styles.secondaryCta}
+            contentStyle={styles.secondaryCtaContent}
+            uppercase={false}
+            buttonColor="#EBF6FF"
+            textColor={Colors.primaryColor}
+            labelStyle={styles.secondaryCtaLabel}
+          >
             Cancel
           </Button>
-          <Button
-            buttonColor={Colors.verusGreenColor}
-            textColor={Colors.secondaryColor}
-            style={{ width: 148 }}
-            disabled={isWrongInvoiceType}
-            onPress={() => handleContinue()}>
+        </View>
+        <View style={styles.ctaCol}>
+          <GradientButton onPress={() => handleContinue()} style={styles.primaryCta}>
             Continue
-          </Button>
+          </GradientButton>
         </View>
       </View>
     </SafeAreaView>

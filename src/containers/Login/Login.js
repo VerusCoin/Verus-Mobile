@@ -7,13 +7,12 @@
   login, creates a new update heartbeat interval.
 */
 
-import React, {useEffect} from 'react';
-import {View, ScrollView, Dimensions, SafeAreaView} from 'react-native';
-import {Button, Text} from 'react-native-paper';
+import React, {useEffect, useRef} from 'react';
+import {View, Dimensions, SafeAreaView} from 'react-native';
+import {Text} from 'react-native-paper';
 import Styles from '../../styles/index';
 import Colors from '../../globals/colors';
 import {VerusLogo} from '../../images/customIcons';
-import {TouchableOpacity} from 'react-native';
 import {openAuthenticateUserModal} from '../../actions/actions/sendModal/dispatchers/sendModal';
 import {
   SEND_MODAL_FORM_STEP_CONFIRM,
@@ -24,6 +23,7 @@ import {useSelector} from 'react-redux';
 import TallButton from '../../components/LargerButton';
 import SignedOutDropdown from '../SignedOutDropdown/SignedOutDropdown';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
+import { selectHasAuthenticatedSession } from '../../selectors/authentication';
 
 const {height} = Dimensions.get('window');
 
@@ -39,8 +39,14 @@ const Login = props => {
   );
   
   const accounts = useObjectSelector(state => state.authentication.accounts);
+  const hasAuthenticatedSession = useSelector(selectHasAuthenticatedSession);
+  const autoOpenTimeoutRef = useRef(null);
 
-  openAuthModal = ignoreDefault => {
+  const openAuthModal = ignoreDefault => {
+    if (hasAuthenticatedSession) {
+      return;
+    }
+
     if (ignoreDefault) {
       openAuthenticateUserModal();
     } else {
@@ -58,16 +64,29 @@ const Login = props => {
   };
 
   useEffect(() => {
+    if (autoOpenTimeoutRef.current != null) {
+      clearTimeout(autoOpenTimeoutRef.current);
+      autoOpenTimeoutRef.current = null;
+    }
+
     if (
+      !hasAuthenticatedSession &&
       !authModalUsed &&
       defaultAccount != null &&
       accounts.find(x => x.accountHash === defaultAccount) != null
     ) {
-      setTimeout(() => {
+      autoOpenTimeoutRef.current = setTimeout(() => {
         openAuthModal();
       }, 700);
     }
-  }, []);
+
+    return () => {
+      if (autoOpenTimeoutRef.current != null) {
+        clearTimeout(autoOpenTimeoutRef.current);
+        autoOpenTimeoutRef.current = null;
+      }
+    };
+  }, [accounts, authModalUsed, defaultAccount, hasAuthenticatedSession]);
 
   handleAddUser = () => {
     props.navigation.navigate('CreateProfile');
