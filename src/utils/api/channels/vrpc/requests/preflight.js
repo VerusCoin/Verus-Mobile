@@ -43,7 +43,7 @@ export const preflight = async (coinObj, activeUser, address, amount, params, ch
       else throw new Error("Incompatible address type.");
 
       return new TransferDestination({
-        destination_bytes: hash,
+        destinationBytes: hash,
         type
       })
     }
@@ -132,7 +132,8 @@ export const validateCurrencyTransferOutputParams = obj => {
     'burn',
     'burnweight',
     'mintnew',
-    'mapto'
+    'mapto',
+    'vdxftag'
   ];
   const allKeys = [...requiredKeys, ...optionalKeys];
 
@@ -271,7 +272,8 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       via,
       feesatoshis,
       preconvert,
-      address
+      address,
+      vdxftag
     } = output;
 
     if (address.isIAddr()) {
@@ -287,11 +289,12 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
     const parentTransactionFee = isConversionOrExport || isBasicNativeSend ? 0.0001 : 0.0002;
 
     const useSendCurrencyOutput =
-      isConversionOrExport &&
+      address.isETHAccount() ||
+      (isConversionOrExport &&
       (exportto === coinsList.VRSC.system_id ||
         exportto === coinsList.VRSCTEST.system_id || 
         exportto === "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X" || // vETH i-addr on VRSC
-        exportto === "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm");  // vETH i-addr on VRSCTEST
+        exportto === "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm"));  // vETH i-addr on VRSCTEST
 
     _feeamount = feesatoshis;
     nativeFeesPaid = coinsToSats(BigNumber(parentTransactionFee));
@@ -313,7 +316,8 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         via,
         source,
         address.getAddressString(),
-        preconvert
+        preconvert,
+        vdxftag
       );
     }
 
@@ -388,7 +392,8 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         convertto,
         _feecurrency,
         via,
-        source
+        source,
+        vdxftag
       );
 
       if (sendCurrencyRes.error) throw new Error(sendCurrencyRes.error.message);
@@ -396,6 +401,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       const sendCurrencyHex = sendCurrencyRes.result.hextx;
       
       const unfundedTxObj = Transaction.fromHex(sendCurrencyHex, networks.verus);
+
       const outputInfo = unpackOutput(unfundedTxObj.outs[0], systemId);
 
       /**
@@ -404,18 +410,18 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       const transDest = outputInfo.params[0].data;
 
       if (ethBridgeDelegatorActive || (exportto !== "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X" && exportto !== "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm")) {
-        if (!transDest.transfer_destination.isGateway()) throw new Error("Expected gateway output");
-        if (transDest.transfer_destination.gateway_id !== exportto) throw new Error("Expected gateway_id to match exportto");
-        if (transDest.transfer_destination.gateway_code !== "i3UXS5QPRQGNRDDqVnyWTnmFCTHDbzmsYk") throw new Error("Expected null gateway_code");
-        if (!transDest.transfer_destination.hasAuxDests()) throw new Error("Expected output with aux dests");
+        if (!transDest.transferDestination.isGateway()) throw new Error("Expected gateway output");
+        if (transDest.transferDestination.gatewayID !== exportto) throw new Error("Expected gateway_id to match exportto");
+        if (transDest.transferDestination.gatewayCode !== "i3UXS5QPRQGNRDDqVnyWTnmFCTHDbzmsYk") throw new Error("Expected null gateway_code");
+        if (!transDest.transferDestination.hasAuxDests()) throw new Error("Expected output with aux dests");
 
-        if (transDest.transfer_destination.aux_dests.length > 0) {
+        if (transDest.transferDestination.auxDests.length > 0) {
           const selfSystemRes = await getCurrency(systemId, systemId);
           if (selfSystemRes.error) throw new Error("Couldn't get own system information")
 
           const permittedAuxDests = selfSystemRes.result.notaries != null && exportto != null ? selfSystemRes.result.notaries : []
 
-          for (const aux_dest of transDest.transfer_destination.aux_dests) {
+          for (const aux_dest of transDest.transferDestination.auxDests) {
             if (aux_dest.hasAuxDests()) {
               throw new Error("Nested aux destinations not supported");
             }
@@ -435,7 +441,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
         }
       }
       
-      if (transDest.transfer_destination.getAddressString() !== addrDest) throw new Error("Expected output to match destination address");
+      if (transDest.transferDestination.getAddressString() !== addrDest) throw new Error("Expected output to match destination address");
 
       unfundedTxHex = sendCurrencyRes.result.hextx;
     } else {
@@ -448,6 +454,7 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
             feecurrency: _feecurrency,
             importtosource: importToSource,
             bridgeid,
+            vdxftag
           },
         ],
         networks.verus,

@@ -23,6 +23,7 @@ import {
   SEND_MODAL_TO_ADDRESS_FIELD,
   SEND_MODAL_VIA_FIELD,
   SEND_MODAL_MAPPING_FIELD,
+  SEND_MODAL_VDXF_TAG,
 } from '../../../utils/constants/sendModal';
 import { API_GET_BALANCES, IS_PBAAS } from '../../../utils/constants/intervalConstants';
 import { getInvoiceSourceOptions } from '../../../utils/api/channels/vrpc/callCreators';
@@ -32,25 +33,26 @@ import { usePrevious } from '../../../hooks/usePrevious';
 import { conditionallyUpdateWallet } from '../../../actions/actionDispatchers';
 import store from '../../../store';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
+import { NavigationActions } from '@react-navigation/compat';
 
 const InvoicePaymentConfiguration = props => {
   const {
-    deeplinkData, 
-    sigtime, 
-    cancel, 
-    signerFqn, 
-    currencyDefinition, 
-    amountDisplay, 
-    destinationDisplay,
-    coinObj,
-    chainInfo,
-    acceptedSystemsDefinitions
+    detailsBufferString,
+    invoiceVersion,
+    cancel,
+    currencyDefinition,
+    acceptedSystemsDefinitions,
+    next,
+    response,
+    detailIndex
   } = props.route.params;
 
   const [conversionOptions, setConversionOptions] = useState({});
 
   const [loading, setLoading] = useState(false);
-  const inv = primitives.VerusPayInvoice.fromJson(deeplinkData);
+
+  const details = new primitives.VerusPayInvoiceDetails();
+  details.fromBuffer(Buffer.from(detailsBufferString, 'hex'), 0, new primitives.BigNumber(invoiceVersion));
 
   const activeCoinsForUser = useObjectSelector(state => state.coins.activeCoinsForUser);
   
@@ -65,11 +67,17 @@ const InvoicePaymentConfiguration = props => {
     try {
       const { definitions, remainingSystems } = acceptedSystemsDefinitions;
       const supportedSystemIds = [...Object.keys(definitions), ...remainingSystems];
-      const maxSlippage = satsToCoins(BigNumber(inv.details.maxestimatedslippage)).toNumber();
-  
+      const maxSlippage = details.maxestimatedslippage != null
+        ? satsToCoins(BigNumber(details.maxestimatedslippage)).toNumber()
+        : 0;
+
+      const invoiceAmount = details.acceptsAnyAmount() || details.amount == null
+        ? 0
+        : satsToCoins(BigNumber(details.amount)).toNumber();
+
       const sourceOptionsMap = await getInvoiceSourceOptions(
-        inv.details.requestedcurrencyid,
-        satsToCoins(BigNumber(inv.details.amount)).toNumber(),
+        details.requestedcurrencyid,
+        invoiceAmount,
         supportedSystemIds,
         activeCoinsForUser.filter(x => x.tags.includes(IS_PBAAS)).map(x => x.currency_id),
         maxSlippage
@@ -90,7 +98,7 @@ const InvoicePaymentConfiguration = props => {
   }, []);
 
   useEffect(() => {
-    if (acceptedSystemsDefinitions && inv.details.acceptsConversion()) {
+    if (acceptedSystemsDefinitions && details.acceptsConversion()) {
       updateConversionOptions();
     }
   }, [acceptedSystemsDefinitions]);
@@ -103,16 +111,18 @@ const InvoicePaymentConfiguration = props => {
       prevSendModal.type != null &&
       prevSendModal.data[SEND_MODAL_SEND_COMPLETED]
     ) {
-      cancel();
+      if (next != null) {
+        next(response, [detailIndex])
+      } else {
+        cancel();
+      }
     }
   }, [sendModal]);
 
   const onSelectFundSource = (source) => {
     const {
       amount,
-      network,
       conversion,
-      viaCurrencyId,
       wallet,
       coinObj,
       exportTo,
@@ -120,15 +130,15 @@ const InvoicePaymentConfiguration = props => {
     } = source.option;
 
     openConvertOrCrossChainSendModal(coinObj, wallet, {
-      [SEND_MODAL_TO_ADDRESS_FIELD]: inv.details.acceptsAnyDestination() ? '' : inv.details.destination.getAddressString(),
-      [SEND_MODAL_AMOUNT_FIELD]: inv.details.acceptsAnyAmount() ? '' : amount.toString(),
+      [SEND_MODAL_TO_ADDRESS_FIELD]: details.acceptsAnyDestination() ? '' : details.destination.getAddressString(),
+      [SEND_MODAL_AMOUNT_FIELD]: details.acceptsAnyAmount() ? '' : amount.toString(),
       [SEND_MODAL_MEMO_FIELD]: '',
-      [SEND_MODAL_CONVERTTO_FIELD]: inv.details.acceptsConversion() && conversion ? currencyDefinition.fullyqualifiedname : '',
+      [SEND_MODAL_CONVERTTO_FIELD]: details.acceptsConversion() && conversion ? currencyDefinition.fullyqualifiedname : '',
       [SEND_MODAL_EXPORTTO_FIELD]: exportTo != null ? exportTo : '',
-      [SEND_MODAL_VIA_FIELD]: inv.details.acceptsConversion() && via != null ? via : '',
-      [SEND_MODAL_SHOW_CONVERTTO_FIELD]: inv.details.acceptsConversion() && conversion,
+      [SEND_MODAL_VIA_FIELD]: details.acceptsConversion() && via != null ? via : '',
+      [SEND_MODAL_SHOW_CONVERTTO_FIELD]: details.acceptsConversion() && conversion,
       [SEND_MODAL_SHOW_EXPORTTO_FIELD]: exportTo != null,
-      [SEND_MODAL_SHOW_VIA_FIELD]: inv.details.acceptsConversion() && via != null,
+      [SEND_MODAL_SHOW_VIA_FIELD]: details.acceptsConversion() && via != null,
       [SEND_MODAL_ADVANCED_FORM]: true,
       [SEND_MODAL_SHOW_IS_PRECONVERT]: false,
       [SEND_MODAL_DISABLED_INPUTS]: {
@@ -136,11 +146,12 @@ const InvoicePaymentConfiguration = props => {
         [SEND_MODAL_VIA_FIELD]: true,
         [SEND_MODAL_EXPORTTO_FIELD]: true,
         [SEND_MODAL_MAPPING_FIELD]: true,
-        [SEND_MODAL_AMOUNT_FIELD]: !inv.details.acceptsAnyAmount(),
-        [SEND_MODAL_TO_ADDRESS_FIELD]: !inv.details.acceptsAnyDestination(),
+        [SEND_MODAL_AMOUNT_FIELD]: !details.acceptsAnyAmount(),
+        [SEND_MODAL_TO_ADDRESS_FIELD]: !details.acceptsAnyDestination(),
       },
-      [SEND_MODAL_CONTINUE_IMMEDIATELY]: !inv.details.acceptsAnyAmount() && !inv.details.acceptsAnyDestination(),
-      [SEND_MODAL_STRICT_AMOUNT]: !inv.details.acceptsAnyAmount()
+      [SEND_MODAL_CONTINUE_IMMEDIATELY]: !details.acceptsAnyAmount() && !details.acceptsAnyDestination(),
+      [SEND_MODAL_STRICT_AMOUNT]: !details.acceptsAnyAmount(),
+      [SEND_MODAL_VDXF_TAG]: details.isTagged() ? details.tag.toXAddress() : ''
     })
   }
 
@@ -155,15 +166,15 @@ const InvoicePaymentConfiguration = props => {
           sourceOptions={conversionOptions}
           allSubWallets={allSubWallets}
           coinObjs={activeCoinsForUser}
-          testnet={inv.details.isTestnet()}
-          allowAnyAmount={inv.details.acceptsAnyAmount()}
-          allowConversion={inv.details.acceptsConversion()}
-          expires={inv.details.expires()}
-          allowNonVerusSystems={inv.details.acceptsNonVerusSystems()}
-          acceptedSystems={inv.details.acceptedsystems}
-          requestedCurrency={inv.details.requestedcurrencyid}
-          amount={inv.details.amount.toNumber()}
-          excludeVerusBlockchain={inv.details.excludesVerusBlockchain()}
+          testnet={details.isTestnet()}
+          allowAnyAmount={details.acceptsAnyAmount()}
+          allowConversion={details.acceptsConversion()}
+          expires={details.expires()}
+          allowNonVerusSystems={details.acceptsNonVerusSystems()}
+          acceptedSystems={details.acceptedsystems}
+          requestedCurrency={details.requestedcurrencyid}
+          amount={details.acceptsAnyAmount() || details.amount == null ? 0 : details.amount.toNumber()}
+          excludeVerusBlockchain={details.excludesVerusBlockchain()}
         />
       </View>
     </SafeAreaView>

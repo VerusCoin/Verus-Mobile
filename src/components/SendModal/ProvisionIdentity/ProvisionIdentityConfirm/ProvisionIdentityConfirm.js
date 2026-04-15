@@ -58,15 +58,24 @@ class ProvisionIdentityConfirm extends Component {
     try {
       const {coinObj} = this.props.sendModal;
 
-      const loginRequest = new primitives.LoginConsentRequest(this.props.sendModal.data.request)
+      const provisioningRequestType =
+        this.props.sendModal.data.provisioningRequestType ||
+        (this.props.sendModal.data.provisioningDetailsBufferString ? 'generic' : 'loginconsent');
 
-      const webhookSubject = loginRequest.challenge.provisioning_info ? loginRequest.challenge.provisioning_info.find(x => {
-        return x.vdxfkey === primitives.LOGIN_CONSENT_ID_PROVISIONING_WEBHOOK_VDXF_KEY.vdxfid
-      }) : null
+      let loginRequest = null;
+      if (this.props.sendModal.data.request) {
+        loginRequest = new primitives.LoginConsentRequest(this.props.sendModal.data.request)
+      }
 
-      if (webhookSubject == null) throw new Error("No endpoint for ID provisioning")
+      let webhookUrl = this.state.provWebhook ? this.state.provWebhook.data : null;
+      if (!webhookUrl && loginRequest && loginRequest.challenge.provisioning_info) {
+        const webhookSubject = loginRequest.challenge.provisioning_info.find(x => {
+          return x.vdxfkey === primitives.LOGIN_CONSENT_ID_PROVISIONING_WEBHOOK_VDXF_KEY.vdxfid
+        });
+        webhookUrl = webhookSubject ? webhookSubject.data : null;
+      }
 
-      const webhookUrl = webhookSubject.data
+      if (webhookUrl == null) throw new Error("No endpoint for ID provisioning")
 
       const identity =
         this.props.sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD] !=
@@ -113,10 +122,16 @@ class ProvisionIdentityConfirm extends Component {
         nameId = (await getVdxfId(coinObj.system_id, requestedFqn)).result.vdxfid;
       }
 
+      const challengeId =
+        this.props.sendModal.data.provisioningRequestID ||
+        (loginRequest ? loginRequest.challenge.challenge_id : null);
+
+      if (challengeId == null) throw new Error("Missing provisioning request ID");
+
       const provisionRequest = new primitives.LoginConsentProvisioningRequest({
         signing_address: this.state.primaryAddress,
         challenge: new primitives.LoginConsentProvisioningChallenge({
-          challenge_id: loginRequest.challenge.challenge_id,
+          challenge_id: challengeId,
           created_at: Number((Date.now() / 1000).toFixed(0)),
           name: identityName,
           system_id: systemid,
@@ -131,11 +146,38 @@ class ProvisionIdentityConfirm extends Component {
         signedRequest
       );
 
-      const provisioningName = (await getIdentity(coinObj.system_id, loginRequest.signing_id)).result.identity.name;
+      const provisioningSignerId =
+        this.props.sendModal.data.provisioningSignerId ||
+        (loginRequest ? loginRequest.signing_id : null);
+
+      if (provisioningSignerId == null) throw new Error("Missing provisioning signer ID");
+
+      const provisioningName = (await getIdentity(coinObj.system_id, provisioningSignerId)).result.identity.name;
       const newLoadingNotification = new LoadingNotification();
 
-      await handleProvisioningResponse(coinObj, res.data, loginRequest.toBuffer().toString('base64'), 
-        this.props.sendModal.data.fromService, provisioningName, newLoadingNotification.uid, nameId, requestedFqn, async () => {
+      const requestPayload =
+        provisioningRequestType === 'generic'
+          ? this.props.sendModal.data.provisioningRequestBufferString
+          : loginRequest.toBuffer().toString('base64');
+
+      if (provisioningRequestType === 'generic' && !requestPayload) {
+        throw new Error("Missing provisioning request payload");
+      }
+
+      const hasResponseUris =
+        this.props.sendModal.data.provisioningRequestHasResponseUris ||
+        (loginRequest && loginRequest.challenge.redirect_uris && loginRequest.challenge.redirect_uris.length > 0);
+
+      await handleProvisioningResponse(
+        coinObj,
+        res.data,
+        requestPayload,
+        this.props.sendModal.data.fromService,
+        provisioningName,
+        newLoadingNotification.uid,
+        nameId,
+        requestedFqn,
+        async () => {
           
           newLoadingNotification.body = "";
           let formattedName = ''
@@ -148,7 +190,11 @@ class ProvisionIdentityConfirm extends Component {
           newLoadingNotification.icon = NOTIFICATION_ICON_VERUSID;
 
           dispatchAddNotification(newLoadingNotification);
-        });
+        },
+        provisioningRequestType,
+        provisioningSignerId,
+        hasResponseUris
+      );
 
       submissionSuccess(res.data, requestedFqn)
     } catch (e) {

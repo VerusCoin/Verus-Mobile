@@ -1,13 +1,16 @@
-// VdxfUniValueModal.render.js (Refactored for Hooks)
+/*
+  VdxfUniValueModal.render
+  - 2026-02-02: Use SemiModal standardized header (title + top-right X)
+    and remove legacy Close/Help header actions.
+*/
 import React from "react";
 import { SafeAreaView, View } from "react-native";
-import { Text, Portal, Button } from "react-native-paper";
+import { Portal } from "react-native-paper";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import Colors from "../../globals/colors";
 import SemiModal from "../SemiModal";
 import { VdxfUniValueModalInnerAreaRender } from "./VdxfUniValueModalInnerArea.render";
-import PartialSignDataModal from "./PartialSignDataModal";
 import AnimatedActivityIndicatorBox from "../AnimatedActivityIndicatorBox";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 
@@ -16,6 +19,9 @@ const TopTabs = createMaterialTopTabNavigator();
 
 export const VdxfUniValueModalRender = (props) => {
   const { visible, title } = props;
+  const items =
+    props.items && props.items.length > 0 ? props.items : props.objects || [];
+  const hasMultipleItems = items.length > 1;
 
   return (
     <Portal>
@@ -25,6 +31,8 @@ export const VdxfUniValueModalRender = (props) => {
           transparent={true}
           visible={visible}
           onRequestClose={props.cancel}
+          title={title}
+          closeDisabled={props.preventExit}
           contentContainerStyle={{
             height: 600,
             flex: 0,
@@ -34,35 +42,7 @@ export const VdxfUniValueModalRender = (props) => {
           <SafeAreaView style={{ flex: 1 }}>
             <Root.Navigator
               screenOptions={{
-                header: () => (
-                  <View style={{
-                    flexDirection: 'row',
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    backgroundColor: Colors.secondaryColor
-                  }}>
-                    <Button
-                      style={{ marginBottom: 16 }}
-                      onPress={props.cancel}
-                      textColor={Colors.primaryColor}
-                      disabled={props.preventExit}
-                    >
-                      {"Close"}
-                    </Button>
-                    <Text style={{ marginBottom: 16, fontSize: 16, textAlign: "center" }}>{title}</Text>
-                    <Button
-                      style={{ marginBottom: 16 }}
-                      onPress={props.showHelpModal}
-                      textColor={Colors.primaryColor}
-                      disabled={props.preventExit}
-                    >
-                      {"Help"}
-                    </Button>
-                  </View>
-                ),
-                headerStyle: {
-                  height: 52,
-                },
+                headerShown: false,
               }}
             >
               <Root.Screen name="VdxfUniValueModalInner">
@@ -76,14 +56,11 @@ export const VdxfUniValueModalRender = (props) => {
                     tabBarLabelStyle: {
                       fontSize: 12
                     },
+                    tabBarStyle: hasMultipleItems ? undefined : { display: 'none' },
                     lazy: true,
                     lazyPlaceholder: () => <AnimatedActivityIndicatorBox />
                   }}>
-                  {props.data ?
-                    PartialSignDataModal(props, TopTabs)
-                    :
-                    VdxfUniValueModalInnerAreaRender(props, TopTabs)
-                  }
+                  {VdxfUniValueModalInnerAreaRender(props, TopTabs)}
                 </TopTabs.Navigator>}
               </Root.Screen>
             </Root.Navigator>

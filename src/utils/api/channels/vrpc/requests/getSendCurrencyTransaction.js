@@ -10,6 +10,7 @@ export const getSendCurrencyTransaction = async (
   feecurrency,
   via,
   source = '*',
+  vdxftag
 ) => {
   const params = {
     currency,
@@ -18,6 +19,7 @@ export const getSendCurrencyTransaction = async (
     convertto,
     via,
     address,
+    vdxftag
   };
 
   if (feecurrency != null) params.feecurrency = feecurrency;
