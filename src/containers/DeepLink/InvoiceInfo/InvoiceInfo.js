@@ -1,12 +1,13 @@
 // Updated invoice request UI to match DeepLink request styling.
 import React, {useState, useEffect} from 'react';
-import {SafeAreaView, ScrollView, TouchableOpacity, View} from 'react-native';
+import {Platform, SafeAreaView, ScrollView, TouchableOpacity, View} from 'react-native';
 import { primitives } from "verusid-ts-client"
 import { Button, Portal, Text } from 'react-native-paper';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import { getFriendlyNameMap, getIdentity } from '../../../utils/api/channels/verusid/callCreators';
 import { blocksToTime, satsToCoins, unixToDate } from '../../../utils/math';
 import { useSelector } from 'react-redux';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../../../globals/colors';
 import GradientButton from '../../../components/GradientButton';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -63,6 +64,12 @@ const InvoiceInfo = props => {
     chainInfo,
     acceptedSystemsDefinitions
   } = props;
+  const insets = useSafeAreaInsets();
+  const bottomNavigationInset = Math.max(
+    insets.bottom,
+    Platform.OS === 'android' ? 24 : 0,
+  );
+  const footerBottomPadding = 16 + bottomNavigationInset;
 
   const { fullyqualifiedname } = currencyDefinition;
   const [details, setDetails] = useState(new primitives.VerusPayInvoiceDetails());
@@ -490,7 +497,7 @@ const InvoiceInfo = props => {
 
         <View style={{ height: 24 }} />
       </ScrollView>
-      <View style={styles.footer}>
+      <View style={[styles.footer, {paddingBottom: footerBottomPadding}]}>
         <View style={styles.ctaCol}>
           <Button
             mode="contained"

@@ -1,15 +1,37 @@
 import { primitives } from 'verusid-ts-client'
 import { SET_DEEPLINK_DATA } from "../../../../utils/constants/storeType"
+import { saveProvisioningDeeplinkRequest } from '../../../../utils/deeplink/provisioningDeeplinkStorage';
 
 export const processVerusId = async (props, requestPayload, fromService = null, fqnToAutoLink = null, requestType = 'loginconsent') => {
   if (requestType === 'generic') {
+    let savedProvisioningRequest = null;
+
+    try {
+      savedProvisioningRequest = await saveProvisioningDeeplinkRequest({
+        requestBufferString: requestPayload,
+        fromService,
+        fqnToAutoLink,
+        requestType,
+      });
+    } catch (e) {
+      console.warn('Unable to save provisioning deeplink', e?.message ?? e);
+    }
+
+    const passthrough = {
+      fqnToAutoLink,
+    };
+
+    if (savedProvisioningRequest) {
+      passthrough.pendingProvisioningDeeplinkId = savedProvisioningRequest.id;
+    }
+
     props.dispatch({
       type: SET_DEEPLINK_DATA,
       payload: {
         id: primitives.GENERIC_REQUEST_DEEPLINK_VDXF_KEY.vdxfid,
         data: requestPayload,
         fromService: fromService,
-        passthrough: { fqnToAutoLink }
+        passthrough,
       },
     });
     props.navigation.navigate('DeepLink');

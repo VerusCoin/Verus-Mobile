@@ -12,6 +12,7 @@ import { primitives } from 'verusid-ts-client'
 import { MAX_DEEPLINK_STRING_LENGTH } from '../utils/constants/deeplink';
 import { DEEPLINK_PROTOCOL_URL_STRING, GENERIC_REQUEST_DEEPLINK_VDXF_KEY, GenericRequest, VALU_MOBILE_GENERIC_REQUEST_HANDLER_ID, VERUS_MOBILE_GENERIC_REQUEST_HANDLER_ID } from 'verus-typescript-primitives';
 import { isDeeplinkHandlerInstalled } from '../utils/deeplink/isDeeplinkHandlerInstalled';
+import { saveProvisioningDeeplinkRequest } from '../utils/deeplink/provisioningDeeplinkStorage';
 
 export default function* deeplinkSaga() {
   yield all([takeEvery(SET_DEEPLINK_URL, handleDeeplinkUrl)]);
@@ -72,11 +73,28 @@ function* handleDeeplinkUrl(action) {
           }
         }
 
+        const requestBufferString = req.toBuffer().toString('hex');
+        let savedProvisioningRequest = null;
+
+        try {
+          savedProvisioningRequest = yield call(saveProvisioningDeeplinkRequest, {
+            requestBufferString,
+            uri: parseUri,
+          });
+        } catch (e) {
+          console.warn('Unable to save provisioning deeplink', e?.message ?? e);
+        }
+
         yield call(handleFinishDeeplink, {
           type: SET_DEEPLINK_DATA,
           payload: {
             id: GENERIC_REQUEST_DEEPLINK_VDXF_KEY.vdxfid,
-            data: req.toBuffer().toString('hex'),
+            data: requestBufferString,
+            passthrough: savedProvisioningRequest
+              ? {
+                  pendingProvisioningDeeplinkId: savedProvisioningRequest.id,
+                }
+              : null,
           },
         });
       } else {
