@@ -16,7 +16,7 @@ export default function CreateWalletStackScreens({ navigation, createProfile }) 
         ? newSeed
         : (importedSeedOverride != null ? importedSeedOverride : importedSeed),
       testProfile,
-      asNew && useSeedAsZ,
+      useSeedAsZ,
     )
   }
 
@@ -62,7 +62,9 @@ export default function CreateWalletStackScreens({ navigation, createProfile }) 
             navigation={navigation}
             importedSeed={importedSeed}
             setImportedSeed={setImportedSeed}
-            onComplete={(seed) => completeSeedSetup(false, false, seed)}
+            onComplete={(seed, options = {}) =>
+              completeSeedSetup(false, !!options.useSeedAsZ, seed)
+            }
           />
         )}
       </CreateWalletStack.Screen>

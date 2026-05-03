@@ -11,10 +11,11 @@
   fails so users can leave the screen after at least one delivery attempt.
 */
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { SafeAreaView, View, TouchableOpacity, Clipboard } from 'react-native';
+import { Platform, SafeAreaView, View, TouchableOpacity, Clipboard } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { CommonActions } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import base64url from 'base64url';
 import axios from 'axios';
 import { URL } from 'react-native-url-polyfill';
@@ -43,6 +44,12 @@ import { genericRequestCompleteStyles as styles } from '../../../styles';
 
 const GenericRequestComplete = props => {
   const { requestBufferString, responseBufferString } = props.route.params;
+  const insets = useSafeAreaInsets();
+  const bottomNavigationInset = Math.max(
+    insets.bottom,
+    Platform.OS === 'android' ? 24 : 0,
+  );
+  const footerBottomPadding = 16 + bottomNavigationInset;
   const signedIn = useSelector(state => state.authentication.signedIn);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
@@ -338,7 +345,7 @@ const GenericRequestComplete = props => {
       </View>
 
       {/* Footer actions */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, {paddingBottom: footerBottomPadding}]}>
         {postFailed && (
           <View style={styles.ctaCol}>
             <Button

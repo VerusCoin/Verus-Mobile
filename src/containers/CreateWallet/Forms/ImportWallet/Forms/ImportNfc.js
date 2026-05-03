@@ -10,6 +10,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {createAlert} from '../../../../../actions/actions/alert/dispatchers/alert';
 import Colors from '../../../../../globals/colors';
 import {
+  isValid24WordBip39Mnemonic,
   walletBackupOrdinalToMnemonic,
   walletBackupRequiresPassword,
 } from '../../../../../utils/walletBackup/walletBackup';
@@ -31,22 +32,49 @@ export default function ImportNfc({
   const [walletBackupOrdinal, setWalletBackupOrdinal] = useState(null);
   const [backupPassword, setBackupPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [decrypting, setDecrypting] = useState(false);
+
+  const waitForSpinnerFrame = () => {
+    return new Promise(resolve => setTimeout(resolve, 0));
+  };
 
   const finishImport = mnemonic => {
     setImportedSeed(mnemonic);
-    onComplete(mnemonic);
+    onComplete(mnemonic, {
+      useSeedAsZ: isValid24WordBip39Mnemonic(mnemonic),
+    });
   };
 
-  const importWalletBackup = (backupOrdinal, password) => {
+  const importWalletBackup = async (
+    backupOrdinal,
+    password,
+    showDecrypting = false,
+  ) => {
+    if (showDecrypting) {
+      setDecrypting(true);
+      await waitForSpinnerFrame();
+    }
+
+    let didFinishImport = false;
+
     try {
       const mnemonic = walletBackupOrdinalToMnemonic({
         walletBackupOrdinal: backupOrdinal,
         password,
       });
 
+      if (showDecrypting) {
+        setDecrypting(false);
+      }
+
+      didFinishImport = true;
       finishImport(mnemonic);
     } catch (e) {
       createAlert('Error', e.message || 'Unable to import NFC wallet backup.');
+    } finally {
+      if (showDecrypting && !didFinishImport) {
+        setDecrypting(false);
+      }
     }
   };
 
@@ -92,12 +120,12 @@ export default function ImportNfc({
       return;
     }
 
-    importWalletBackup(scannedBackupOrdinal, null);
+    await importWalletBackup(scannedBackupOrdinal, null);
   };
 
-  const importEncryptedBackup = () => {
+  const importEncryptedBackup = async () => {
     Keyboard.dismiss();
-    importWalletBackup(walletBackupOrdinal, backupPassword);
+    await importWalletBackup(walletBackupOrdinal, backupPassword, true);
   };
 
   if (loading) {
@@ -187,6 +215,7 @@ export default function ImportNfc({
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
+                disabled={decrypting}
                 onChangeText={setBackupPassword}
                 right={
                   <TextInput.Icon
@@ -199,7 +228,8 @@ export default function ImportNfc({
               <Button
                 mode="contained"
                 onPress={importEncryptedBackup}
-                disabled={backupPassword.length === 0}
+                loading={decrypting}
+                disabled={decrypting || backupPassword.length === 0}
                 labelStyle={{fontWeight: 'bold'}}
                 style={{marginBottom: 8}}>
                 {'Decrypt and Import'}
@@ -207,6 +237,7 @@ export default function ImportNfc({
               <Button
                 mode="text"
                 textColor={Colors.primaryColor}
+                disabled={decrypting}
                 onPress={() => {
                   setWalletBackupOrdinal(null);
                   setBackupPassword('');
@@ -250,6 +281,7 @@ export default function ImportNfc({
           <Button
             mode="text"
             textColor={Colors.primaryColor}
+            disabled={decrypting}
             onPress={() => navigation.goBack()}>
             {'Back'}
           </Button>

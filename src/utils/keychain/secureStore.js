@@ -95,6 +95,10 @@ class SecureStore {
     return !!((this.flags.and(SecureStore.FLAG_STORE_HAS_BIOMETRIC_VAULT)).toNumber())
   }
 
+  async hasBiometricVault() {
+    return (await AsyncStorage.getItem(SecureStore.SECURE_STORE_BIOMETRIC_VAULT_KEY)) != null;
+  }
+
   toggleEncryptedFlag() {
     this.flags = this.flags.xor(SecureStore.FLAG_STORE_IS_ENCRYPTED);
   }
@@ -293,11 +297,13 @@ class SecureStore {
     if (bioCred == null) throw new Error("No biometric credential found in keychain");
 
     const encryptedVault = await saltedEncryptMGK(bioCred, JSON.stringify(vaultData));
+    const newFlags = this.flags.or(SecureStore.FLAG_STORE_HAS_BIOMETRIC_VAULT);
 
     changesMap.set(SecureStore.SECURE_STORE_BIOMETRIC_VAULT_KEY, encryptedVault);
-    changesMap.set(SecureStore.SECURE_STORE_FLAG_KEY, (this.flags.or(SecureStore.FLAG_STORE_HAS_BIOMETRIC_VAULT)).toString())
+    changesMap.set(SecureStore.SECURE_STORE_FLAG_KEY, newFlags.toString())
 
-    return AsyncStorage.multiSet(Array.from(changesMap))
+    await AsyncStorage.multiSet(Array.from(changesMap));
+    this.flags = newFlags;
   }
 
   async setPasswordInBiometricVault(accountHash, password) {
@@ -310,8 +316,13 @@ class SecureStore {
     newVault[accountHash] = password;
 
     const encryptedNewVault = await saltedEncryptMGK(bioCred, JSON.stringify(newVault));
+    const newFlags = this.flags.or(SecureStore.FLAG_STORE_HAS_BIOMETRIC_VAULT);
 
-    return AsyncStorage.setItem(SecureStore.SECURE_STORE_BIOMETRIC_VAULT_KEY, encryptedNewVault);
+    await AsyncStorage.multiSet([
+      [SecureStore.SECURE_STORE_BIOMETRIC_VAULT_KEY, encryptedNewVault],
+      [SecureStore.SECURE_STORE_FLAG_KEY, newFlags.toString()],
+    ]);
+    this.flags = newFlags;
   }
 
   async removePasswordFromBiometricVault(accountHash) {

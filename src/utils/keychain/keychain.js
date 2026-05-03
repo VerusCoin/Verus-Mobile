@@ -26,7 +26,7 @@ const getInternetCredential = async (credentialKey, title) => {
     authenticationPrompt: { title }
   });
 
-  if (credentials != null) return credentials.password
+  if (credentials !== false && credentials != null) return credentials.password
   else throw new Error(`Failed to retrieve credential for ${credentialKey}`)
 }
 
@@ -50,7 +50,7 @@ const getGenericCredential = async (credentialKey = DEFAULT_GENERIC_PASSWORD_KEY
     service: credentialKey
   });
 
-  if (credentials != null) return credentials.password
+  if (credentials !== false && credentials != null) return credentials.password
   else throw new Error(`Failed to retrieve credential for ${credentialKey}`)
 }
 
@@ -118,7 +118,7 @@ export const getBiometricCredential = async (title = "Authenticate to retrieve p
     authenticationPrompt: { title }
   });
 
-  if (credentials != null) return credentials.password
+  if (credentials !== false && credentials != null) return credentials.password
   else throw new Error(`Failed to retrieve biometric credential`)
 }
 
@@ -151,7 +151,7 @@ export const getLegacyBiometricData = async (title = "Authenticate to retrieve p
     authenticationPrompt: { title }
   });
 
-  if (credentials != null) return (JSON.parse(credentials.password))
+  if (credentials !== false && credentials != null) return (JSON.parse(credentials.password))
   else throw new Error("Biometric authentication not enabled on this device!")
 }
 
@@ -163,7 +163,7 @@ export const getLegacyBiometricPassword = async (accountHash, title = "Authentic
     authenticationPrompt: { title }
   });
 
-  if (credentials != null) return (JSON.parse(credentials.password))[accountHash]
+  if (credentials !== false && credentials != null) return (JSON.parse(credentials.password))[accountHash]
   else throw new Error("Biometric authentication not enabled on this device!")
 }
 

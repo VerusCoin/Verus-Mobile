@@ -13,6 +13,7 @@
 */
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {
+  Platform,
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
@@ -21,6 +22,7 @@ import {
 import {Button, Portal, Text} from 'react-native-paper';
 import {useSelector} from 'react-redux';
 import {CommonActions} from '@react-navigation/native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import Colors from '../../../globals/colors';
@@ -164,6 +166,12 @@ const AuthenticationRequestInfo = props => {
   const activeAccount = useObjectSelector(
     state => state.authentication.activeAccount,
   );
+  const insets = useSafeAreaInsets();
+  const bottomNavigationInset = Math.max(
+    insets.bottom,
+    Platform.OS === 'android' ? 24 : 0,
+  );
+  const footerBottomPadding = 16 + bottomNavigationInset;
   const isTestAccount =
     activeAccount && Object.keys(activeAccount.testnetOverrides).length > 0;
   const encryptedIds = useObjectSelector(
@@ -1347,7 +1355,7 @@ const AuthenticationRequestInfo = props => {
         </View>
       )}
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, {paddingBottom: footerBottomPadding}]}>
         <View style={styles.ctaCol}>
           <Button
             mode="contained"

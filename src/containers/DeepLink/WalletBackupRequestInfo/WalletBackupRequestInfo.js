@@ -1,6 +1,7 @@
-import React, {useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
   Keyboard,
+  Platform,
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
@@ -10,10 +11,12 @@ import {
 import {ActivityIndicator, Button, Checkbox, Text, TextInput} from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useDispatch, useSelector} from 'react-redux';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {
   closeLoadingModal,
   openLoadingModal,
 } from '../../../actions/actionDispatchers';
+import {canEnableBiometry} from '../../../actions/actions/channels/dlight/dispatchers/AlertManager';
 import {
   createAlert,
   resolveAlert,
@@ -31,6 +34,7 @@ import {
 import {ELECTRUM} from '../../../utils/constants/intervalConstants';
 import {SEND_MODAL_USER_ALLOWLIST} from '../../../utils/constants/sendModal';
 import {getKey} from '../../../utils/keyGenerator/keyGenerator';
+import {getSupportedBiometryType} from '../../../utils/keychain/keychain';
 import {createProfileFromSeed} from '../../../utils/profile/createProfileFromSeed';
 import {
   buildWalletBackupOrdinal,
@@ -99,6 +103,12 @@ const WalletBackupRequestInfo = props => {
   } = props;
 
   const dispatch = useDispatch();
+  const insets = useSafeAreaInsets();
+  const bottomNavigationInset = Math.max(
+    insets.bottom,
+    Platform.OS === 'android' ? 24 : 0,
+  );
+  const footerBottomOffset = 24 + bottomNavigationInset;
   const signedIn = useSelector(state => state.authentication.signedIn);
   const accounts = useObjectSelector(state => state.authentication.accounts);
   const activeAccount = useObjectSelector(state => state.authentication.activeAccount);
@@ -116,6 +126,8 @@ const WalletBackupRequestInfo = props => {
   const [profilePassword, setProfilePassword] = useState('');
   const [profilePasswordConfirm, setProfilePasswordConfirm] = useState('');
   const [showCreateProfile, setShowCreateProfile] = useState(matchingAccounts.length === 0);
+  const [useBiometrics, setUseBiometrics] = useState(false);
+  const [supportedBiometryType, setSupportedBiometryType] = useState(null);
 
   const [encryptBackup, setEncryptBackup] = useState(true);
   const [backupPassword, setBackupPassword] = useState('');
@@ -125,6 +137,28 @@ const WalletBackupRequestInfo = props => {
 
   const profilePasswordDetails = passwordStrengthDetails(profilePassword);
   const backupPasswordDetails = passwordStrengthDetails(backupPassword);
+
+  useEffect(() => {
+    let mounted = true;
+
+    getSupportedBiometryType()
+      .then(biometryType => {
+        if (mounted) setSupportedBiometryType(biometryType);
+      })
+      .catch(e => {
+        console.warn(e);
+        if (mounted) {
+          setSupportedBiometryType({
+            display_name: 'None',
+            biometry: false,
+          });
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const openLogin = () => {
     if (matchingAccounts.length === 0) {
@@ -175,7 +209,7 @@ const WalletBackupRequestInfo = props => {
         dispatch,
         testProfile: requestIsTestnet,
         includeDlightSeed: true,
-        useBiometrics: false,
+        useBiometrics,
       });
 
       createAlert(
@@ -187,6 +221,14 @@ const WalletBackupRequestInfo = props => {
       createAlert('Error', e.message);
     } finally {
       closeLoadingModal();
+    }
+  };
+
+  const toggleUseBiometrics = async () => {
+    if (useBiometrics) {
+      setUseBiometrics(false);
+    } else if (await canEnableBiometry()) {
+      setUseBiometrics(true);
     }
   };
 
@@ -437,6 +479,18 @@ const WalletBackupRequestInfo = props => {
                     autoCorrect={false}
                     onChangeText={setProfilePasswordConfirm}
                   />
+                  {supportedBiometryType && supportedBiometryType.biometry && (
+                    <Checkbox.Item
+                      color={Colors.primaryColor}
+                      label={`Enable ${supportedBiometryType.display_name} login`}
+                      labelStyle={{fontSize: 14}}
+                      status={useBiometrics ? 'checked' : 'unchecked'}
+                      onPress={toggleUseBiometrics}
+                      mode="android"
+                      position="leading"
+                      style={{paddingLeft: 0}}
+                    />
+                  )}
                   <Button
                     mode="contained"
                     onPress={createProfile}
@@ -533,7 +587,7 @@ const WalletBackupRequestInfo = props => {
             position: 'absolute',
             left: 24,
             right: 24,
-            bottom: 24,
+            bottom: footerBottomOffset,
             flexDirection: 'row',
             justifyContent: 'center',
           }}>

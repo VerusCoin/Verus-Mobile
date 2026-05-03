@@ -25,7 +25,7 @@
     detail content that explains historical on-chain visibility.
 */
 import React, {useMemo, useState, useEffect, useCallback} from 'react';
-import {SafeAreaView, View} from 'react-native';
+import {Platform, SafeAreaView, View} from 'react-native';
 import {primitives} from 'verusid-ts-client';
 import {Button, Portal, Text} from 'react-native-paper';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
@@ -35,6 +35,7 @@ import {
 } from '../../../utils/api/channels/verusid/callCreators';
 import {blocksToTime, unixToDate} from '../../../utils/math';
 import {useSelector} from 'react-redux';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Colors from '../../../globals/colors';
 import {openAuthenticateUserModal} from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import {
@@ -116,6 +117,12 @@ const IdentityUpdateRequestInfo = props => {
     updateIdTxHex,
     hasEncryptedKeys,
   } = props;
+  const insets = useSafeAreaInsets();
+  const bottomNavigationInset = Math.max(
+    insets.bottom,
+    Platform.OS === 'android' ? 24 : 0,
+  );
+  const footerBottomPadding = 16 + bottomNavigationInset;
 
   const {fullyqualifiedname, identity} = subjectIdentity;
 
@@ -954,7 +961,7 @@ const IdentityUpdateRequestInfo = props => {
 
       {/* Footer - hidden on ConfirmPayStep (it has its own buttons) */}
       {showFooter && (
-        <View style={styles.footer}>
+        <View style={[styles.footer, {paddingBottom: footerBottomPadding}]}>
           <View style={styles.ctaCol}>
             <Button
               mode="contained"
