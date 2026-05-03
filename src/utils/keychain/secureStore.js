@@ -33,36 +33,54 @@ class SecureStore {
     this.keys = keys
   }
 
+  async storageIsEncrypted() {
+    const item = await AsyncStorage.getItem(SecureStore.SECURE_STORE_FLAG_KEY);
+
+    if (item == null) return false;
+
+    return !!(new BigNumber(item).and(SecureStore.FLAG_STORE_IS_ENCRYPTED).toNumber());
+  }
+
   async initializeWithKeychain() {
     let persistentCredential;
 
     try {
       persistentCredential = await getPersistentCredential();
-
-      if (persistentCredential == null) {
-        persistentCredential = await generatePersistentCredential();
-      } else {
-        try {
-          await this.initialize(persistentCredential);
-
-          // TODO: Consider cycling on every app start
-          // if (this.isEncrypted() && this.credential != null) {
-          //   await this.cycleCredential();
-          // }
-          
-          return;
-        } catch (e) {
-          console.warn("Could not initialize persistent credential into keychain")
-          console.warn(e)
-          return;
-        }
-      }
     } catch(e) {
       console.warn("Could not initialize persistent credential into keychain")
       console.warn(e)
+      await this.initialize(persistentCredential);
+      return;
     }
 
-    await this.initialize(persistentCredential);
+    if (persistentCredential == null) {
+      if (await this.storageIsEncrypted()) {
+        await this.initialize(null);
+        return;
+      }
+
+      try {
+        persistentCredential = await generatePersistentCredential();
+      } catch(e) {
+        console.warn("Could not initialize persistent credential into keychain")
+        console.warn(e)
+      }
+
+      await this.initialize(persistentCredential);
+      return;
+    }
+
+    try {
+      await this.initialize(persistentCredential);
+
+      // TODO: Consider cycling on every app start
+      // if (this.isEncrypted() && this.credential != null) {
+      //   await this.cycleCredential();
+      // }
+    } catch (e) {
+      console.warn("Could not initialize persistent credential into keychain")
+      console.warn(e)
+    }
   }
 
   async initialize(credential) {

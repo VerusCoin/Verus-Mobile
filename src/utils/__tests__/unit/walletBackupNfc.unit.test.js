@@ -76,7 +76,6 @@ describe('wallet backup NFC writer', () => {
     });
     mockNfcManager.ndefHandler.getNdefMessage.mockResolvedValue({ndefMessage: []});
     mockNfcManager.ndefHandler.writeNdefMessage.mockResolvedValue();
-    mockNfcManager.ndefHandler.makeReadOnly.mockResolvedValue(true);
     mockNfcManager.ndefFormatableHandlerAndroid.formatNdef.mockResolvedValue();
   });
 
@@ -147,15 +146,15 @@ describe('wallet backup NFC writer', () => {
     expect(mockNfcManager.ndefHandler.writeNdefMessage).not.toHaveBeenCalled();
   });
 
-  it('erases, writes, and locks the NFC card', async () => {
+  it('erases and writes the NFC card without locking it read-only', async () => {
     const result = await writeWalletBackupToNfc(walletBackupOrdinal);
 
-    expect(result).toEqual({madeReadOnly: true, readOnlyWarning: null});
+    expect(result).toEqual({written: true});
     expect(mockNfcManager.ndefHandler.writeNdefMessage).toHaveBeenCalledTimes(2);
     expect(mockNfcManager.ndefHandler.writeNdefMessage.mock.calls[1][0]).toEqual(
       createWalletBackupNdefBytes(walletBackupOrdinal),
     );
-    expect(mockNfcManager.ndefHandler.makeReadOnly).toHaveBeenCalled();
+    expect(mockNfcManager.ndefHandler.makeReadOnly).not.toHaveBeenCalled();
   });
 
   it('formats NdefFormatable cards directly with the wallet backup', async () => {
@@ -163,21 +162,12 @@ describe('wallet backup NFC writer', () => {
 
     const result = await writeWalletBackupToNfc(walletBackupOrdinal);
 
-    expect(result).toEqual({madeReadOnly: true, readOnlyWarning: null});
+    expect(result).toEqual({written: true});
     expect(mockNfcManager.ndefFormatableHandlerAndroid.formatNdef).toHaveBeenCalledWith(
       createWalletBackupNdefBytes(walletBackupOrdinal),
-      {readOnly: true},
+      {readOnly: false},
     );
     expect(mockNfcManager.ndefHandler.writeNdefMessage).not.toHaveBeenCalled();
-  });
-
-  it('keeps a successful write when read-only locking is unsupported', async () => {
-    mockNfcManager.ndefHandler.makeReadOnly.mockRejectedValue(new Error('unsupported'));
-
-    const result = await writeWalletBackupToNfc(walletBackupOrdinal);
-
-    expect(result.madeReadOnly).toBe(false);
-    expect(result.readOnlyWarning).toMatch('could not make it read-only');
   });
 
   it('reads a wallet backup from an NFC card', async () => {

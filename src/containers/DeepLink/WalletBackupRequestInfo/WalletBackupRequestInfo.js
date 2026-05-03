@@ -300,14 +300,10 @@ const WalletBackupRequestInfo = props => {
       });
 
       nfcWriterStarted = true;
-      const writeResult = await writeWalletBackupToNfc(walletBackup, {
+      await writeWalletBackupToNfc(walletBackup, {
         onStatus: setNfcStatus,
         sessionPreRegistered: nfcSessionPreRegistered,
       });
-
-      if (writeResult.readOnlyWarning) {
-        await createAlert('Backup Written', writeResult.readOnlyWarning);
-      }
 
       const completionKey =
         backupCompletionKey ||

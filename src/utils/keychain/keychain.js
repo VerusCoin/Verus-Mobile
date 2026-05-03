@@ -45,13 +45,13 @@ const removeInternetCredential = (credentialKey) => {
   return Keychain.resetInternetCredentials(credentialKey)
 }
 
-const getGenericCredential = async (credentialKey = DEFAULT_GENERIC_PASSWORD_KEY) => {
+const getOptionalGenericCredential = async (credentialKey = DEFAULT_GENERIC_PASSWORD_KEY) => {
   const credentials = await Keychain.getGenericPassword({
     service: credentialKey
   });
 
   if (credentials !== false && credentials != null) return credentials.password
-  else throw new Error(`Failed to retrieve credential for ${credentialKey}`)
+  else return null
 }
 
 const setGenericCredential = (credentialKey = DEFAULT_GENERIC_PASSWORD_KEY, value) => {
@@ -68,7 +68,7 @@ const removeGenericCredential = (credentialKey = DEFAULT_GENERIC_PASSWORD_KEY) =
 }
 
 export const getPersistentCredential = () => {
-  return getGenericCredential(PERSISTENT_CREDENTIAL_KEY);
+  return getOptionalGenericCredential(PERSISTENT_CREDENTIAL_KEY);
 }
 
 export const setPersistentCredential = (value) => {
@@ -93,7 +93,12 @@ export const saveNewPersistentCredential = async (credBuf) => {
   const retrievedCred = await getPersistentCredential();
 
   if (retrievedCred !== credString) {
-    await setPersistentCredential(originalCred);
+    if (originalCred != null) {
+      await setPersistentCredential(originalCred);
+    } else {
+      await removePersistentCredential();
+    }
+
     throw new Error("Loaded credential does not equal set credential, reset cred")
   }
 

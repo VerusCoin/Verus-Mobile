@@ -12,7 +12,7 @@ import {
 } from 'verus-typescript-primitives';
 import {WALLET_BACKUP_NDEF_MIME} from './walletBackup';
 
-const NFC_REQUEST_TIMEOUT_MS = 30000;
+const NFC_REQUEST_TIMEOUT_MS = 300000;
 const NFC_POST_WRITE_ANDROID_HOLD_MS = 5000;
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -190,23 +190,11 @@ const eraseNdefCard = async () => {
 };
 
 const formatNdefCard = async backupBytes => {
-  try {
-    await NfcManager.ndefFormatableHandlerAndroid.formatNdef(backupBytes, {
-      readOnly: true,
-    });
+  await NfcManager.ndefFormatableHandlerAndroid.formatNdef(backupBytes, {
+    readOnly: false,
+  });
 
-    return {madeReadOnly: true, readOnlyWarning: null};
-  } catch (_) {
-    await NfcManager.ndefFormatableHandlerAndroid.formatNdef(backupBytes, {
-      readOnly: false,
-    });
-
-    return {
-      madeReadOnly: false,
-      readOnlyWarning:
-        'The NFC card was formatted and written, but it could not be made read-only.',
-    };
-  }
+  return {written: true};
 };
 
 export const beginWalletBackupNfcSession = async ({onStatus} = {}) => {
@@ -248,8 +236,6 @@ export const writeWalletBackupToNfc = async (
   if (!enabled) throw new Error('NFC is disabled on this device.');
 
   const backupBytes = createWalletBackupNdefBytes(walletBackupOrdinal);
-  let madeReadOnly = false;
-  let readOnlyWarning = null;
   let backupWriteCompleted = false;
 
   onStatus && onStatus('Preparing NFC writer...');
@@ -293,22 +279,9 @@ export const writeWalletBackupToNfc = async (
     });
     backupWriteCompleted = true;
 
-    onStatus && onStatus('Locking NFC card read-only...');
-    try {
-      const lockResult = await NfcManager.ndefHandler.makeReadOnly();
-      madeReadOnly = lockResult == null ? true : lockResult === true;
-
-      if (!madeReadOnly) {
-        readOnlyWarning = 'The NFC card was written, but it could not be made read-only.';
-      }
-    } catch (e) {
-      readOnlyWarning =
-        'The NFC card was written, but this card or device could not make it read-only.';
-    }
-
     onStatus && onStatus('Backup written. Move the card away from the device.');
 
-    return {madeReadOnly, readOnlyWarning};
+    return {written: true};
   } finally {
     const releaseDelayMs =
       Platform.OS === 'android' && backupWriteCompleted
