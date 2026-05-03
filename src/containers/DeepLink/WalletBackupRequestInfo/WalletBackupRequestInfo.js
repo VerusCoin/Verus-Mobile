@@ -396,7 +396,9 @@ const WalletBackupRequestInfo = props => {
                 marginTop: 12,
                 textAlign: 'center',
               }}>
-              Wallet Backup
+              {!activeAccountMatchesRequest && showCreateProfile
+                ? 'Create & Backup Wallet'
+                : 'Backup Wallet'}
             </Text>
             <Text
               style={{

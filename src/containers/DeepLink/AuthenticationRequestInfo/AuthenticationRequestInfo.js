@@ -33,6 +33,7 @@ import {
 } from '../../../actions/actions/sendModal/dispatchers/sendModal';
 import {
   AUTHENTICATE_USER_SEND_MODAL,
+  LINK_IDENTITY_SEND_MODAL,
   SEND_MODAL_IDENTITY_TO_LINK_FIELD,
   SEND_MODAL_USER_ALLOWLIST,
 } from '../../../utils/constants/sendModal';
@@ -69,6 +70,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import VerusIdAtIcon from '../../../images/customIcons/verusid-at-icon.svg';
 import { authenticationRequestInfoStyles as styles } from '../../../styles';
 import IdentityPickerSheet from './components/IdentityPickerSheet';
+import { markProvisioningDeeplinkComplete } from '../../../utils/deeplink/provisioningDeeplinkStorage';
 
 const truncateAddress = addr => {
   if (!addr || addr.length <= 14) return addr;
@@ -157,10 +159,13 @@ const AuthenticationRequestInfo = props => {
   const [identitySheetVisible, setIdentitySheetVisible] = useState(false);
   const [selectedIdentity, setSelectedIdentity] = useState(null); // { chainId, iAddress, friendlyName }
   const [idProvisionSuccess, setIdProvisionSuccess] = useState(false);
+  const successfulSendModalTypeRef = useRef(null);
+  const successNavigationStartedRef = useRef(false);
 
   const accounts = useObjectSelector(state => state.authentication.accounts);
   const signedIn = useSelector(state => state.authentication.signedIn);
   const passthrough = useSelector(state => state.deeplink.passthrough);
+  const fromService = useSelector(state => state.deeplink.fromService);
   const sendModal = useObjectSelector(state => state.sendModal);
   const sendModalType = useSelector(state => state.sendModal.type);
   const activeAccount = useObjectSelector(
@@ -660,32 +665,66 @@ const AuthenticationRequestInfo = props => {
 
   useEffect(() => {
     if (!idProvisionSuccess && sendModal.data?.success) {
+      successfulSendModalTypeRef.current = sendModalType;
       setIdProvisionSuccess(true);
       return;
     }
 
-    if (idProvisionSuccess && !sendModal.visible) {
-      props.navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [
-            {
-              name: 'SignedInStack',
-              params: {
-                screen: 'Home',
+    if (
+      idProvisionSuccess &&
+      !sendModal.visible &&
+      !successNavigationStartedRef.current
+    ) {
+      successNavigationStartedRef.current = true;
+
+      const finishSuccessfulModal = async () => {
+        if (
+          successfulSendModalTypeRef.current === LINK_IDENTITY_SEND_MODAL &&
+          passthrough?.pendingProvisioningDeeplinkId
+        ) {
+          try {
+            await markProvisioningDeeplinkComplete(
+              passthrough.pendingProvisioningDeeplinkId,
+            );
+          } catch (e) {
+            console.warn('Unable to mark provisioning deeplink complete', e);
+          }
+        }
+
+        props.navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [
+              {
+                name: 'SignedInStack',
                 params: {
-                  screen: 'IdentityTab',
+                  screen: 'Home',
+                  params: {
+                    screen: 'IdentityTab',
+                  },
                 },
               },
-            },
-          ],
-        }),
-      );
+            ],
+          }),
+        );
+      };
+
+      finishSuccessfulModal().catch(e => {
+        console.warn('Unable to finish successful authentication modal', e);
+        props.navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{name: 'SignedInStack'}],
+          }),
+        );
+      });
     }
   }, [
     idProvisionSuccess,
     sendModal.data?.success,
     sendModal.visible,
+    sendModalType,
+    passthrough?.pendingProvisioningDeeplinkId,
     props.navigation,
   ]);
 
@@ -1009,14 +1048,18 @@ const AuthenticationRequestInfo = props => {
         ? request.toBuffer().toString('hex')
         : '';
 
-      openProvisionIdentityModal(provisioningCoinObj, {
-        provisioningDetailsBufferString,
-        provisioningRequestID: requestId,
-        provisioningSignerId: requestSignerId,
-        provisioningRequestBufferString: requestBufferString,
-        provisioningRequestType: 'generic',
-        provisioningRequestHasResponseUris: responseUris.length > 0,
-      });
+      openProvisionIdentityModal(
+        provisioningCoinObj,
+        {
+          provisioningDetailsBufferString,
+          provisioningRequestID: requestId,
+          provisioningSignerId: requestSignerId,
+          provisioningRequestBufferString: requestBufferString,
+          provisioningRequestType: 'generic',
+          provisioningRequestHasResponseUris: responseUris.length > 0,
+        },
+        fromService,
+      );
     } catch (e) {
       createAlert('Error', e.message);
     }
@@ -1116,6 +1159,10 @@ const AuthenticationRequestInfo = props => {
     : shouldShowLinkAsPrimary
     ? openLinkIdentityModalFromChain
     : handleContinue;
+  const mainTitle =
+    primaryActionLabel === 'Request VerusID'
+      ? 'Accept or create your new VerusID'
+      : getMainTitle();
 
   return loading ? (
     <AnimatedActivityIndicatorBox />
@@ -1140,7 +1187,7 @@ const AuthenticationRequestInfo = props => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.mainTitle}>{getMainTitle()}</Text>
+          <Text style={styles.mainTitle}>{mainTitle}</Text>
         </View>
 
         {(signerFqn || sigDateString || systemLabel) && (

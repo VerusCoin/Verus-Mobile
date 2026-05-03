@@ -88,16 +88,20 @@ const Login = props => {
     };
   }, [accounts, authModalUsed, defaultAccount, hasAuthenticatedSession]);
 
-  handleAddUser = () => {
+  const handleAddUser = () => {
     props.navigation.navigate('CreateProfile');
   };
 
-  handleRevokeRecover = () => {
+  const handleRevokeRecover = () => {
     props.navigation.navigate('RevokeRecover');
-  }
+  };
 
-  handleRecoverSeed = () => {
+  const handleRecoverSeed = () => {
     props.navigation.navigate('RecoverSeeds');
+  };
+
+  const handleProvisioningRequests = () => {
+    props.navigation.navigate('ProvisioningDeeplinks');
   };
 
   return (
@@ -110,6 +114,7 @@ const Login = props => {
         {!modalVisible && <SignedOutDropdown
           handleRecoverSeed={() => handleRecoverSeed()}
           handleRevokeRecover={() => handleRevokeRecover()}
+          handleProvisioningRequests={() => handleProvisioningRequests()}
           hasAccount={true}
         />}
       </View>

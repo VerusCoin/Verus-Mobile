@@ -6,6 +6,7 @@
 import React, {useState, useEffect} from 'react';
 import {Linking, TouchableOpacity, View} from 'react-native';
 import { Portal, Text } from 'react-native-paper';
+import {useSelector} from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
@@ -58,6 +59,7 @@ const GenericRequestHome = props => {
 
   const [valuInstalled, setValuInstalled] = useState(false);
   const [openInAnotherAppVisible, setOpenInAnotherAppVisible] = useState(false);
+  const passthrough = useSelector(state => state.deeplink.passthrough);
 
   /**
    * @type {[number, (number) => {}]}
@@ -95,6 +97,16 @@ const GenericRequestHome = props => {
       const iaddr = detail.getIAddressKey();
 
       if (detailHandlers.has(iaddr)) {
+        if (
+          passthrough?.skipWalletBackupRequests &&
+          iaddr === CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY.vdxfid
+        ) {
+          return {
+            response,
+            handledIndices: [index],
+          };
+        }
+
         setDetailIndex(index);
         return await detailHandlers.get(iaddr)(request, response, index);
       }
