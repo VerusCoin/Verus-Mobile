@@ -10,8 +10,14 @@ export default function CreateWalletStackScreens({ navigation, createProfile }) 
   const [testProfile, setTestProfile] = useState(false)
   const [importedSeed, setImportedSeed] = useState(null)
 
-  const completeSeedSetup = (asNew, useSeedAsZ) => {
-    createProfile(asNew ? newSeed : importedSeed, testProfile, asNew && useSeedAsZ)
+  const completeSeedSetup = (asNew, useSeedAsZ, importedSeedOverride) => {
+    createProfile(
+      asNew
+        ? newSeed
+        : (importedSeedOverride != null ? importedSeedOverride : importedSeed),
+      testProfile,
+      asNew && useSeedAsZ,
+    )
   }
 
   return (
@@ -56,7 +62,7 @@ export default function CreateWalletStackScreens({ navigation, createProfile }) 
             navigation={navigation}
             importedSeed={importedSeed}
             setImportedSeed={setImportedSeed}
-            onComplete={() => completeSeedSetup(false, false)}
+            onComplete={(seed) => completeSeedSetup(false, false, seed)}
           />
         )}
       </CreateWalletStack.Screen>
