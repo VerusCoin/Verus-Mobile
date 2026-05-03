@@ -95,9 +95,10 @@ const validatePasswordPair = (password, confirmPassword) => {
 const WalletBackupRequestInfo = props => {
   const {
     backupCompletionKey,
-    cancel,
+    cancel = () => {},
     detailIndex,
-    next,
+    next = async () => {},
+    profileBackup = false,
     request,
     response,
   } = props;
@@ -114,9 +115,16 @@ const WalletBackupRequestInfo = props => {
   const activeAccount = useObjectSelector(state => state.authentication.activeAccount);
   const activeCoinList = useObjectSelector(state => state.coins.activeCoinList);
 
-  const requestIsTestnet = request != null && request.isTestnet();
+  const activeAccountIsTestnet = activeAccount ? isTestProfile(activeAccount) : false;
+  const requestIsTestnet = profileBackup
+    ? activeAccountIsTestnet
+    : request != null && request.isTestnet();
   const activeAccountMatchesRequest =
-    signedIn && activeAccount && isTestProfile(activeAccount) === requestIsTestnet;
+    profileBackup
+      ? signedIn && activeAccount != null
+      : signedIn &&
+        activeAccount &&
+        activeAccountIsTestnet === requestIsTestnet;
 
   const matchingAccounts = useMemo(() => {
     return accounts.filter(account => isTestProfile(account) === requestIsTestnet);
@@ -409,7 +417,11 @@ const WalletBackupRequestInfo = props => {
                 width: fieldWidth,
               }}>
               {requestIsTestnet
-                ? 'This request will create a testnet wallet backup on an NFC card.'
+                ? profileBackup
+                  ? 'This will create a testnet wallet backup for the current profile on an NFC card.'
+                  : 'This request will create a testnet wallet backup on an NFC card.'
+                : profileBackup
+                ? 'This will create a wallet backup for the current profile on an NFC card.'
                 : 'This request will create a wallet backup on an NFC card.'}
             </Text>
           </View>
