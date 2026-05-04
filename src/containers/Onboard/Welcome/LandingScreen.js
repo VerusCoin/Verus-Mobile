@@ -8,6 +8,7 @@ import styles from '../../../styles';
 import { SMALL_DEVICE_HEGHT } from '../../../utils/constants/constants';
 import { useState } from 'react';
 import { useEffect } from 'react';
+import {readDeeplinkFromNfc} from '../../../actions/actionDispatchers';
 
 export default function LandingScreen(props) {
   const { height } = Dimensions.get('window');
@@ -62,10 +63,26 @@ export default function LandingScreen(props) {
         labelStyle={{fontWeight: "bold"}}
         style={{
           position: "absolute",
-          bottom: 80,
+          bottom: 96,
           width: 280
         }}>
         {"Get Started"}
+      </TallButton>
+      <TallButton
+        onPress={() =>
+          readDeeplinkFromNfc({
+            onWalletBackupDetected: () =>
+              props.navigation.navigate("WelcomeSlider"),
+          })
+        }
+        mode="text"
+        labelStyle={{fontWeight: "bold"}}
+        style={{
+          position: "absolute",
+          bottom: 40,
+          width: 280
+        }}>
+        {"Initialize from NFC"}
       </TallButton>
     </View>
   );

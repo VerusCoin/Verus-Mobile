@@ -167,8 +167,22 @@ const ProvisionIdentityForm = (props) => {
     initializeState();    
   }, []);  
   
-  const formHasError = () => {
-    const identity = sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]?.trim() || '';
+  const trimProvisionIdentityInput = () => {
+    const currentIdentity =
+      sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD] || '';
+    const trimmedIdentity = currentIdentity.trim();
+
+    if (trimmedIdentity !== currentIdentity) {
+      props.updateSendFormData(
+        SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
+        trimmedIdentity,
+      );
+    }
+
+    return trimmedIdentity;
+  };
+
+  const formHasError = identity => {
   
     if (!identity) {
       createAlert('Required Field', 'Identity is a required field.');
@@ -199,12 +213,13 @@ const ProvisionIdentityForm = (props) => {
   };
 
   const submitData = async () => {
-    if (formHasError()) return;
+    const identity = trimProvisionIdentityInput();
+
+    if (formHasError(identity)) return;
   
     props.setLoading(true);
   
-    const { coinObj, data } = sendModal;
-    const identity = data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD];
+    const { coinObj } = sendModal;
 
     let formattedId;
 
@@ -272,6 +287,7 @@ const ProvisionIdentityForm = (props) => {
               );
             }
           }}
+          onBlur={trimProvisionIdentityInput}
           autoCapitalize="none"
           autoCorrect={false}
         />

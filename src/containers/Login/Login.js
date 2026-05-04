@@ -24,6 +24,7 @@ import TallButton from '../../components/LargerButton';
 import SignedOutDropdown from '../SignedOutDropdown/SignedOutDropdown';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
 import { selectHasAuthenticatedSession } from '../../selectors/authentication';
+import {readDeeplinkFromNfc} from '../../actions/actionDispatchers';
 
 const {height} = Dimensions.get('window');
 
@@ -110,11 +111,20 @@ const Login = props => {
         backgroundColor: Colors.secondaryColor,
         ...Styles.focalCenter,
       }}>
-      <View style={{ position: "absolute", width: "100%", height: "100%" }}>
+      <View
+        pointerEvents="box-none"
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          zIndex: 20,
+          elevation: 20,
+        }}>
         {!modalVisible && <SignedOutDropdown
           handleRecoverSeed={() => handleRecoverSeed()}
           handleRevokeRecover={() => handleRevokeRecover()}
           handleProvisioningRequests={() => handleProvisioningRequests()}
+          handleReadDeeplinkFromNfc={readDeeplinkFromNfc}
           hasAccount={true}
         />}
       </View>
