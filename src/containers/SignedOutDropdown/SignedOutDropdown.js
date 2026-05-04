@@ -7,6 +7,7 @@ const SignedOutDropdown = (props) => {
   const {
     handleRecoverSeed,
     handleRevokeRecover,
+    handleProvisioningRequests,
     hasAccount
   } = props;
   const [visible, setVisible] = React.useState(false);
@@ -25,7 +26,11 @@ const SignedOutDropdown = (props) => {
           {
             label: 'Revoke/Recover VerusID',
             onPress: handleRevokeRecover,
-          }
+          },
+          {
+            label: 'Provisioning requests',
+            onPress: handleProvisioningRequests,
+          },
         ];
 
   return (

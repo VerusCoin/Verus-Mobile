@@ -6,6 +6,7 @@
 import React, {useState, useEffect} from 'react';
 import {Linking, TouchableOpacity, View} from 'react-native';
 import { Portal, Text } from 'react-native-paper';
+import {useSelector} from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Styles from '../../../styles/index';
 import { primitives } from "verusid-ts-client"
@@ -18,6 +19,7 @@ import {
   GenericResponse,
   IDENTITY_UPDATE_REQUEST_VDXF_KEY,
   PROVISION_IDENTITY_DETAILS_VDXF_KEY,
+  CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY,
   VALU_MOBILE_GENERIC_REQUEST_HANDLER_ID,
   VERUSPAY_INVOICE_DETAILS_VDXF_KEY,
 } from 'verus-typescript-primitives';
@@ -27,10 +29,12 @@ import { handleAuthenticationRequestDetailsVDXFObject } from '../../../utils/dee
 import { handleIdentityUpdateRequestDetailsVDXFObject } from '../../../utils/deeplink/handlers/identityUpdateRequestDetailsHandler';
 import { handleProvisionIdentityDetailsVDXFObject } from '../../../utils/deeplink/handlers/provisionIdentityDetailsHandler';
 import { handleAppEncryptionRequestVDXFObject } from '../../../utils/deeplink/handlers/appEncryptionRequestHandler';
+import { handleCreateWalletBackupDetailsVDXFObject } from '../../../utils/deeplink/handlers/createWalletBackupDetailsHandler';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import AuthenticationRequestInfo from '../AuthenticationRequestInfo/AuthenticationRequestInfo';
 import IdentityUpdateRequestInfo from '../IdentityUpdateRequestInfo/IdentityUpdateRequestInfo';
 import AppEncryptionRequestInfo from '../AppEncryptionRequestInfo/AppEncryptionRequestInfo';
+import WalletBackupRequestInfo from '../WalletBackupRequestInfo/WalletBackupRequestInfo';
 import ListSelectionModal from '../../../components/ListSelectionModal/ListSelectionModal';
 import { isDeeplinkHandlerInstalled } from '../../../utils/deeplink/isDeeplinkHandlerInstalled';
 import Colors from '../../../globals/colors';
@@ -55,6 +59,7 @@ const GenericRequestHome = props => {
 
   const [valuInstalled, setValuInstalled] = useState(false);
   const [openInAnotherAppVisible, setOpenInAnotherAppVisible] = useState(false);
+  const passthrough = useSelector(state => state.deeplink.passthrough);
 
   /**
    * @type {[number, (number) => {}]}
@@ -80,6 +85,7 @@ const GenericRequestHome = props => {
   detailHandlers.set(IDENTITY_UPDATE_REQUEST_VDXF_KEY.vdxfid, handleIdentityUpdateRequestDetailsVDXFObject);
   detailHandlers.set(PROVISION_IDENTITY_DETAILS_VDXF_KEY.vdxfid, handleProvisionIdentityDetailsVDXFObject);
   detailHandlers.set(APP_ENCRYPTION_REQUEST_VDXF_KEY.vdxfid, handleAppEncryptionRequestVDXFObject);
+  detailHandlers.set(CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY.vdxfid, handleCreateWalletBackupDetailsVDXFObject);
   /**
    * Processes a detail in the request at a certain index
    * @param {number} index 
@@ -91,6 +97,16 @@ const GenericRequestHome = props => {
       const iaddr = detail.getIAddressKey();
 
       if (detailHandlers.has(iaddr)) {
+        if (
+          passthrough?.skipWalletBackupRequests &&
+          iaddr === CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY.vdxfid
+        ) {
+          return {
+            response,
+            handledIndices: [index],
+          };
+        }
+
         setDetailIndex(index);
         return await detailHandlers.get(iaddr)(request, response, index);
       }
@@ -249,6 +265,18 @@ const GenericRequestHome = props => {
     ),
     [APP_ENCRYPTION_REQUEST_VDXF_KEY.vdxfid]: () => (
       <AppEncryptionRequestInfo
+        {...displayProps}
+        cancel={props.cancel}
+        setLoading={props.setLoading}
+        navigation={props.navigation}
+        next={next}
+        response={response}
+        request={request}
+        detailIndex={detailIndex}
+      />
+    ),
+    [CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY.vdxfid]: () => (
+      <WalletBackupRequestInfo
         {...displayProps}
         cancel={props.cancel}
         setLoading={props.setLoading}

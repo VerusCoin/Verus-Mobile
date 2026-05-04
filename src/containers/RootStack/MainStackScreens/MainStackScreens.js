@@ -17,6 +17,7 @@ import SecureLoading from '../../SecureLoading/SecureLoading'
 import HomeTabScreens from '../HomeTabScreens/HomeTabScreens';
 import AddressBlocklist from '../../Settings/WalletSettings/AddressBlocklist/AddressBlocklist';
 import VrpcOverrides from '../../Settings/WalletSettings/VrpcOverrides/VrpcOverrides';
+import NfcBackup from '../../Settings/WalletSettings/NfcBackup/NfcBackup';
 
 const MainStack = createStackNavigator();
 
@@ -107,6 +108,15 @@ const MainStackScreens = props => {
           title: "Custom RPC Servers",
         }}
       />  
+
+      <MainStack.Screen
+        name="NfcBackup"
+        component={NfcBackup}
+        options={{
+          title: "NFC Backup",
+          headerRight: () => null,
+        }}
+      />
 
       <MainStack.Screen
         name="CoinSettings"

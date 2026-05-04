@@ -7,10 +7,15 @@ export const setDeeplinkUrl = (url) => {
   }
 }
 
-export const setDeeplinkData = (id, data) => {
+export const setDeeplinkData = (
+  id,
+  data,
+  fromService = null,
+  passthrough = null,
+) => {
   return {
     type: SET_DEEPLINK_DATA,
-    payload: { id, data }
+    payload: { id, data, fromService, passthrough }
   }
 }
 

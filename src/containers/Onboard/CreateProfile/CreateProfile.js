@@ -1,26 +1,17 @@
 import {createStackNavigator} from '@react-navigation/stack';
-import React, {useEffect, useState} from 'react';
-import {addCoin, addUser} from '../../../actions/actionCreators';
+import React, {useState} from 'react';
 import {createAlert} from '../../../actions/actions/alert/dispatchers/alert';
-import {CHANNELS, DLIGHT_PRIVATE, ELECTRUM} from '../../../utils/constants/intervalConstants';
-import {hashAccountId} from '../../../utils/crypto/hash';
-import {arrayToObject} from '../../../utils/objectManip';
 import CreateWalletStackScreens from '../../CreateWallet/CreateWallet';
 import ChooseName from './Forms/ChooseName';
 import CreatePassword from './Forms/CreatePassword';
 import UseBiometrics from './Forms/UseBiometrics';
-import {KEY_DERIVATION_VERSION, SERVICES_DISABLED_DEFAULT} from '../../../../env/index';
-import {START_COINS, TEST_PROFILE_OVERRIDES} from '../../../utils/constants/constants';
 import {useDispatch} from 'react-redux';
 import {
   closeLoadingModal,
-  initializeAccountData,
   openLoadingModal,
 } from '../../../actions/actionDispatchers';
-import { deriveKeyPair } from '../../../utils/keys';
-import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
-import { storeBiometricPassword } from '../../../utils/keychain/biometrics';
+import { createProfileFromSeed } from '../../../utils/profile/createProfileFromSeed';
 
 const CreateProfileStack = createStackNavigator();
 
@@ -33,94 +24,23 @@ export default function CreateProfileStackScreens(props) {
   const accounts = useObjectSelector(state => state.authentication.accounts);
   const activeCoinList = useObjectSelector(state => state.coins.activeCoinList);
 
-  const addStartingCoins = async (accountId, testnetOverrides = {}) => {
-    const testAccount = Object.keys(testnetOverrides).length > 0;
-
-    for (const coinId of START_COINS) {
-      if (testAccount && testnetOverrides[coinId] == null) {
-        continue;
-      }
-
-      const coinKey = testnetOverrides[coinId] ? testnetOverrides[coinId] : coinId;
-
-      const fullCoinData = CoinDirectory.findCoinObj(coinKey, accountId);
-
-      dispatch(await addCoin(fullCoinData, activeCoinList, accountId, []));
-    }
-  };
-
   const createProfile = async (seed, testProfile, useSeedAsZ) => {
     openLoadingModal('Setting up your new profile...');
 
     try {
-      const _userName = profileName;
-      const _pin = password;
-      const _seeds = {[ELECTRUM]: seed};
-
-      if (useSeedAsZ) {
-        _seeds[DLIGHT_PRIVATE] = seed;
-      }
-
-      try {
-        for (const startCoin of START_COINS) {
-          await deriveKeyPair(
-            seed,
-            CoinDirectory.findCoinObj(startCoin),
-            ELECTRUM,
-            KEY_DERIVATION_VERSION,
-          );
-        }
-      } catch(e) {
-        throw new Error(`Could not create keypair from seed: ${e.message}`);
-      }
-
-      if (_seeds[ELECTRUM] == null) {
-        throw new Error('Please configure at least a primary seed.');
-      }
-
-      let biometry = false;
-      const accountHash = hashAccountId(_userName);
-
-      if (accounts.find(x => x.accountHash === accountHash) != null) {
-        throw new Error('Cannot create duplicate account.');
-      }
-
-      if (useBiometrics) {
-        try {
-          await storeBiometricPassword(accountHash, _pin);
-          biometry = true;
-        } catch (e) {
-          console.warn(e);
-        }
-      }
-
-      const overrides = testProfile ? TEST_PROFILE_OVERRIDES : undefined
-
-      const action = await addUser(
-        _userName,
-        arrayToObject(CHANNELS, (acc, channel) => _seeds[channel], true),
-        _pin,
+      await createProfileFromSeed({
+        profileName,
+        password,
+        seed,
         accounts,
-        biometry,
-        KEY_DERIVATION_VERSION,
-        SERVICES_DISABLED_DEFAULT,
-        overrides
-      );
+        activeCoinList,
+        dispatch,
+        testProfile,
+        includeDlightSeed: useSeedAsZ,
+        useBiometrics,
+      });
 
-      dispatch(action);
-      await addStartingCoins(_userName, overrides);
-
-      const newAccount = action.payload.accounts.find(
-        x => x.accountHash === accountHash,
-      );
-
-      if (!newAccount) {
-        throw new Error('Failed to create new account');
-      }
-
-      //Log in new user
-      await initializeAccountData(newAccount, _pin);
-      createAlert('Profile created!', `Your '${_userName}' profile has been created and is ready to use.`);
+      createAlert('Profile created!', `Your '${profileName}' profile has been created and is ready to use.`);
     } catch (e) {
       console.error(e)
       createAlert('Error', e.message);

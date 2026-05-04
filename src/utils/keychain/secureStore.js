@@ -33,36 +33,54 @@ class SecureStore {
     this.keys = keys
   }
 
+  async storageIsEncrypted() {
+    const item = await AsyncStorage.getItem(SecureStore.SECURE_STORE_FLAG_KEY);
+
+    if (item == null) return false;
+
+    return !!(new BigNumber(item).and(SecureStore.FLAG_STORE_IS_ENCRYPTED).toNumber());
+  }
+
   async initializeWithKeychain() {
     let persistentCredential;
 
     try {
       persistentCredential = await getPersistentCredential();
-
-      if (persistentCredential == null) {
-        persistentCredential = await generatePersistentCredential();
-      } else {
-        try {
-          await this.initialize(persistentCredential);
-
-          // TODO: Consider cycling on every app start
-          // if (this.isEncrypted() && this.credential != null) {
-          //   await this.cycleCredential();
-          // }
-          
-          return;
-        } catch (e) {
-          console.warn("Could not initialize persistent credential into keychain")
-          console.warn(e)
-          return;
-        }
-      }
     } catch(e) {
       console.warn("Could not initialize persistent credential into keychain")
       console.warn(e)
+      await this.initialize(persistentCredential);
+      return;
     }
 
-    await this.initialize(persistentCredential);
+    if (persistentCredential == null) {
+      if (await this.storageIsEncrypted()) {
+        await this.initialize(null);
+        return;
+      }
+
+      try {
+        persistentCredential = await generatePersistentCredential();
+      } catch(e) {
+        console.warn("Could not initialize persistent credential into keychain")
+        console.warn(e)
+      }
+
+      await this.initialize(persistentCredential);
+      return;
+    }
+
+    try {
+      await this.initialize(persistentCredential);
+
+      // TODO: Consider cycling on every app start
+      // if (this.isEncrypted() && this.credential != null) {
+      //   await this.cycleCredential();
+      // }
+    } catch (e) {
+      console.warn("Could not initialize persistent credential into keychain")
+      console.warn(e)
+    }
   }
 
   async initialize(credential) {
@@ -93,6 +111,10 @@ class SecureStore {
 
   biometryFlagSet() {
     return !!((this.flags.and(SecureStore.FLAG_STORE_HAS_BIOMETRIC_VAULT)).toNumber())
+  }
+
+  async hasBiometricVault() {
+    return (await AsyncStorage.getItem(SecureStore.SECURE_STORE_BIOMETRIC_VAULT_KEY)) != null;
   }
 
   toggleEncryptedFlag() {
@@ -293,11 +315,13 @@ class SecureStore {
     if (bioCred == null) throw new Error("No biometric credential found in keychain");
 
     const encryptedVault = await saltedEncryptMGK(bioCred, JSON.stringify(vaultData));
+    const newFlags = this.flags.or(SecureStore.FLAG_STORE_HAS_BIOMETRIC_VAULT);
 
     changesMap.set(SecureStore.SECURE_STORE_BIOMETRIC_VAULT_KEY, encryptedVault);
-    changesMap.set(SecureStore.SECURE_STORE_FLAG_KEY, (this.flags.or(SecureStore.FLAG_STORE_HAS_BIOMETRIC_VAULT)).toString())
+    changesMap.set(SecureStore.SECURE_STORE_FLAG_KEY, newFlags.toString())
 
-    return AsyncStorage.multiSet(Array.from(changesMap))
+    await AsyncStorage.multiSet(Array.from(changesMap));
+    this.flags = newFlags;
   }
 
   async setPasswordInBiometricVault(accountHash, password) {
@@ -310,8 +334,13 @@ class SecureStore {
     newVault[accountHash] = password;
 
     const encryptedNewVault = await saltedEncryptMGK(bioCred, JSON.stringify(newVault));
+    const newFlags = this.flags.or(SecureStore.FLAG_STORE_HAS_BIOMETRIC_VAULT);
 
-    return AsyncStorage.setItem(SecureStore.SECURE_STORE_BIOMETRIC_VAULT_KEY, encryptedNewVault);
+    await AsyncStorage.multiSet([
+      [SecureStore.SECURE_STORE_BIOMETRIC_VAULT_KEY, encryptedNewVault],
+      [SecureStore.SECURE_STORE_FLAG_KEY, newFlags.toString()],
+    ]);
+    this.flags = newFlags;
   }
 
   async removePasswordFromBiometricVault(accountHash) {

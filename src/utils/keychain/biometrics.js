@@ -7,11 +7,55 @@ import { SecureStorage } from "./secureStore"
 // was necessary due to a limitation on keychain size in Android. If limitations occur on iOS, iOS can be migrated
 // by simply deleting the Platform.OS exceptions in the functions below.
 
+const androidBiometricVaultExists = async () => {
+  return (
+    SecureStorage.biometryFlagSet() ||
+    (await SecureStorage.hasBiometricVault())
+  );
+}
+
+const getLegacyBiometricDataIfAvailable = async title => {
+  try {
+    const legacyBiometricData = await getLegacyBiometricData(title);
+
+    return legacyBiometricData != null &&
+      typeof legacyBiometricData === "object" &&
+      !Array.isArray(legacyBiometricData)
+      ? legacyBiometricData
+      : {};
+  } catch(e) {
+    if (e.message !== "Biometric authentication not enabled on this device!") {
+      console.log("Unable to read legacy biometric data:");
+      console.log(e);
+    }
+
+    return {};
+  }
+}
+
 export const getBiometricPassword = async (accountHash, title) => {
   if (Platform.OS === "ios") return getLegacyBiometricPassword(accountHash, title);
 
-  if (SecureStorage.biometryFlagSet()) {
-    return SecureStorage.getPasswordFromBiometricVault(accountHash);
+  if (await androidBiometricVaultExists()) {
+    try {
+      return await SecureStorage.getPasswordFromBiometricVault(accountHash);
+    } catch(e) {
+      const allBiometricDataJson = await getLegacyBiometricDataIfAvailable(title);
+      const password = allBiometricDataJson[accountHash];
+
+      if (password != null) {
+        try {
+          await SecureStorage.setPasswordInBiometricVault(accountHash, password);
+        } catch(storeError) {
+          console.log("Error migrating legacy biometric password to secure store:");
+          console.log(storeError);
+        }
+
+        return password;
+      }
+
+      throw e;
+    }
   } else {
     // Attempt to migrate data to secure store while also fetching biometric password if data is stored in legacy 
     // keychain format
@@ -34,16 +78,27 @@ export const getBiometricPassword = async (accountHash, title) => {
 export const storeBiometricPassword = async (accountHash, password) => {
   if (Platform.OS === "ios") return storeLegacyBiometricPassword(accountHash, password);
 
-  if (!SecureStorage.biometryFlagSet()) {
+  if (!(await androidBiometricVaultExists())) {
+    const legacyBiometricData = await getLegacyBiometricDataIfAvailable(
+      "Authenticate to store password in biometric keychain",
+    );
+
     await generateBiometricCredential();
-    await SecureStorage.setBiometricVaultData({ [accountHash]: password })
+    await SecureStorage.setBiometricVaultData({
+      ...legacyBiometricData,
+      [accountHash]: password,
+    })
+
+    if (Object.keys(legacyBiometricData).length > 0) {
+      await removeAllLegacyBiometricPasswords();
+    }
   } else return SecureStorage.setPasswordInBiometricVault(accountHash, password);
 }
 
 export const removeBiometricPassword = async (accountHash) => {
   if (Platform.OS === "ios") return removeLegacyBiometricPassword(accountHash);
 
-  if (SecureStorage.biometryFlagSet()) {
+  if (await androidBiometricVaultExists()) {
     return SecureStorage.removePasswordFromBiometricVault(accountHash);
   } else {
     return removeLegacyBiometricPassword(accountHash);

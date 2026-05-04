@@ -66,6 +66,11 @@ const DeepLink = (props) => {
         index: 0,
         routes: [{name: 'SignedInStack'}],
       });
+    } else if (accounts.length === 0) {
+      resetAction = CommonActions.reset({
+        index: 0,
+        routes: [{name: 'SignedOutNoKeyStack'}],
+      });
     } else {
       resetAction = CommonActions.reset({
         index: 0,
