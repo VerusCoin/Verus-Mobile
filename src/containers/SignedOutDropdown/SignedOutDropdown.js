@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { Divider, FAB, Menu, Portal, Button, IconButton } from 'react-native-paper';
-import { SafeAreaView, View } from 'react-native'
+import {Menu, IconButton} from 'react-native-paper';
+import {Platform, StatusBar, View} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Colors from '../../globals/colors';
 
 const SignedOutDropdown = (props) => {
@@ -12,6 +13,11 @@ const SignedOutDropdown = (props) => {
     hasAccount
   } = props;
   const [visible, setVisible] = React.useState(false);
+  const insets = useSafeAreaInsets();
+  const topInset = Math.max(
+    insets.top,
+    Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0,
+  );
 
   const openMenu = () => setVisible(true);
 
@@ -45,10 +51,14 @@ const SignedOutDropdown = (props) => {
   ];
 
   return (
-    <SafeAreaView
+    <View
       style={{
         flexDirection: 'row',
         justifyContent: "flex-end",
+        paddingTop: topInset,
+        paddingRight: 4,
+        zIndex: 20,
+        elevation: 20,
       }}>
       <Menu
         visible={visible}
@@ -72,7 +82,7 @@ const SignedOutDropdown = (props) => {
             })
           }
       </Menu>
-    </SafeAreaView>
+    </View>
   );
 };
 
