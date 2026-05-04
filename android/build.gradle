@@ -26,6 +26,17 @@ buildscript {
 }
 
 subprojects {
+  project.afterEvaluate {
+    if (project.name == "react-native-nfc-manager" && project.hasProperty("android")) {
+      project.android {
+        compileOptions {
+          sourceCompatibility JavaVersion.VERSION_11
+          targetCompatibility JavaVersion.VERSION_11
+        }
+      }
+    }
+  }
+
   project.configurations.all {
      resolutionStrategy.eachDependency { details ->
         if (details.requested.group == 'com.android.support'

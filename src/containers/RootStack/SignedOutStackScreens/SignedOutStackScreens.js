@@ -11,6 +11,7 @@ import {setDeeplinkUrl} from '../../../actions/actionCreators';
 import CreateProfile from '../../Onboard/CreateProfile/CreateProfile';
 import RevokeRecoverStackScreens from '../RevokeRecoverStackScreens/RevokeRecoverStackScreens';
 import RecoverSeedsStackScreens from '../RecoverSeedsStackScreens/RecoverSeedsStackScreens';
+import ProvisioningDeeplinkList from '../../ProvisioningDeeplinkList/ProvisioningDeeplinkList';
 
 const SignedOutStack = createStackNavigator();
 
@@ -100,6 +101,14 @@ const SignedOutStackScreens = props => {
         component={RecoverSeedsStackScreens}
         options={{
           headerShown: false,
+        }}
+      />
+
+      <SignedOutStack.Screen
+        name="ProvisioningDeeplinks"
+        component={ProvisioningDeeplinkList}
+        options={{
+          title: 'Provisioning Requests',
         }}
       />
     </SignedOutStack.Navigator>

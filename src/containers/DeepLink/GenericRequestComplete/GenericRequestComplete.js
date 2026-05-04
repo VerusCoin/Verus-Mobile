@@ -11,10 +11,11 @@
   fails so users can leave the screen after at least one delivery attempt.
 */
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { SafeAreaView, View, TouchableOpacity, Clipboard } from 'react-native';
+import { Platform, SafeAreaView, View, TouchableOpacity, Clipboard } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { CommonActions } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import base64url from 'base64url';
 import axios from 'axios';
 import { URL } from 'react-native-url-polyfill';
@@ -40,10 +41,18 @@ import { verifyGenericResponse } from '../../../utils/api/channels/vrpc/requests
 import { createAlert, resolveAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { genericRequestCompleteStyles as styles } from '../../../styles';
+import { markProvisioningDeeplinkComplete } from '../../../utils/deeplink/provisioningDeeplinkStorage';
 
 const GenericRequestComplete = props => {
   const { requestBufferString, responseBufferString } = props.route.params;
+  const insets = useSafeAreaInsets();
+  const bottomNavigationInset = Math.max(
+    insets.bottom,
+    Platform.OS === 'android' ? 24 : 0,
+  );
+  const footerBottomPadding = 16 + bottomNavigationInset;
   const signedIn = useSelector(state => state.authentication.signedIn);
+  const passthrough = useSelector(state => state.deeplink.passthrough);
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [postFailed, setPostFailed] = useState(false);
@@ -58,6 +67,18 @@ const GenericRequestComplete = props => {
 
     dispatch(resetDeeplinkData());
     props.navigation.dispatch(resetAction);
+  };
+
+  const markSavedProvisioningRequestComplete = async () => {
+    if (passthrough?.pendingProvisioningDeeplinkId) {
+      try {
+        await markProvisioningDeeplinkComplete(
+          passthrough.pendingProvisioningDeeplinkId,
+        );
+      } catch (e) {
+        console.warn('Unable to mark provisioning deeplink complete', e);
+      }
+    }
   };
 
   const isPostUri = (uri) => {
@@ -230,6 +251,7 @@ const GenericRequestComplete = props => {
       setLoading(true);
 
       if (!requestBufferString || !responseBufferString) {
+        await markSavedProvisioningRequestComplete();
         setLoading(false);
         completeRequest();
         return;
@@ -246,6 +268,7 @@ const GenericRequestComplete = props => {
 
       response.setFlags();
       if (response.signature == null) {
+        await markSavedProvisioningRequestComplete();
         setLoading(false);
         completeRequest();
         return;
@@ -263,6 +286,7 @@ const GenericRequestComplete = props => {
       }
 
       await handleResponseUri(request, signedResponse);
+      await markSavedProvisioningRequestComplete();
     } catch (e) {
       if (e?.isResponsePostError) {
         setPostFailed(true);
@@ -338,7 +362,7 @@ const GenericRequestComplete = props => {
       </View>
 
       {/* Footer actions */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, {paddingBottom: footerBottomPadding}]}>
         {postFailed && (
           <View style={styles.ctaCol}>
             <Button

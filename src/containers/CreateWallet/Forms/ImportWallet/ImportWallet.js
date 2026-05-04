@@ -1,12 +1,12 @@
 import {createStackNavigator} from '@react-navigation/stack';
-import React, {useState} from 'react';
+import React from 'react';
 import ImportIntro from './Forms/ImportIntro';
+import ImportNfc from './Forms/ImportNfc';
 import ImportSeed from './Forms/ImportSeed';
 import ImportText from './Forms/ImportText';
 const ImportWalletStack = createStackNavigator();
 
 export default function ImportWalletStackScreens({
-  navigation,
   importedSeed,
   setImportedSeed,
   onComplete,
@@ -19,9 +19,9 @@ export default function ImportWalletStackScreens({
         options={{
           headerShown: false,
         }}>
-        {() => (
+        {({navigation: stackNavigation}) => (
           <ImportIntro
-            navigation={navigation}
+            navigation={stackNavigation}
             importedSeed={importedSeed}
             setImportedSeed={setImportedSeed}
             label={label}
@@ -33,9 +33,9 @@ export default function ImportWalletStackScreens({
         options={{
           headerShown: false,
         }}>
-        {() => (
+        {({navigation: stackNavigation}) => (
           <ImportText
-            navigation={navigation}
+            navigation={stackNavigation}
             importedSeed={importedSeed}
             setImportedSeed={setImportedSeed}
             onComplete={onComplete}
@@ -47,9 +47,9 @@ export default function ImportWalletStackScreens({
         options={{
           headerShown: false,
         }}>
-        {() => (
+        {({navigation: stackNavigation}) => (
           <ImportText
-            navigation={navigation}
+            navigation={stackNavigation}
             importedSeed={importedSeed}
             setImportedSeed={setImportedSeed}
             onComplete={onComplete}
@@ -62,10 +62,23 @@ export default function ImportWalletStackScreens({
         options={{
           headerShown: false,
         }}>
-        {() => (
+        {({navigation: stackNavigation}) => (
           <ImportSeed
-            navigation={navigation}
+            navigation={stackNavigation}
             importedSeed={importedSeed}
+            setImportedSeed={setImportedSeed}
+            onComplete={onComplete}
+          />
+        )}
+      </ImportWalletStack.Screen>
+      <ImportWalletStack.Screen
+        name="ImportNfc"
+        options={{
+          headerShown: false,
+        }}>
+        {({navigation: stackNavigation}) => (
+          <ImportNfc
+            navigation={stackNavigation}
             setImportedSeed={setImportedSeed}
             onComplete={onComplete}
           />
