@@ -34,6 +34,7 @@ import {
 import {ELECTRUM} from '../../../utils/constants/intervalConstants';
 import {SEND_MODAL_USER_ALLOWLIST} from '../../../utils/constants/sendModal';
 import {getKey} from '../../../utils/keyGenerator/keyGenerator';
+import {withKeepAwake} from '../../../utils/keepAwake/keepAwake';
 import {getSupportedBiometryType} from '../../../utils/keychain/keychain';
 import {createProfileFromSeed} from '../../../utils/profile/createProfileFromSeed';
 import {
@@ -303,22 +304,24 @@ const WalletBackupRequestInfo = props => {
 
       setNfcStatus('Preparing secure backup. Keep the card nearby, but wait for the tap prompt.');
 
-      const seeds = await requestSeeds();
-      const mnemonic = seeds[ELECTRUM];
+      const walletBackup = await withKeepAwake(async () => {
+        const seeds = await requestSeeds();
+        const mnemonic = seeds[ELECTRUM];
 
-      if (!isValid24WordBip39Mnemonic(mnemonic)) {
-        throw new Error('The active profile primary seed is not a valid 24 word BIP39 mnemonic.');
-      }
+        if (!isValid24WordBip39Mnemonic(mnemonic)) {
+          throw new Error('The active profile primary seed is not a valid 24 word BIP39 mnemonic.');
+        }
 
-      const backupEncryptionPassword = encryptBackup
-        ? useProfilePasswordForBackup
-          ? await getProfilePasswordForBackup()
-          : backupPassword
-        : null;
+        const backupEncryptionPassword = encryptBackup
+          ? useProfilePasswordForBackup
+            ? await getProfilePasswordForBackup()
+            : backupPassword
+          : null;
 
-      const walletBackup = await buildWalletBackupOrdinal({
-        mnemonic,
-        password: backupEncryptionPassword,
+        return buildWalletBackupOrdinal({
+          mnemonic,
+          password: backupEncryptionPassword,
+        });
       });
 
       nfcWriterStarted = true;

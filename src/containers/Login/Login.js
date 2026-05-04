@@ -24,6 +24,7 @@ import TallButton from '../../components/LargerButton';
 import SignedOutDropdown from '../SignedOutDropdown/SignedOutDropdown';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
 import { selectHasAuthenticatedSession } from '../../selectors/authentication';
+import {readDeeplinkFromNfc} from '../../actions/actionDispatchers';
 
 const {height} = Dimensions.get('window');
 
@@ -115,6 +116,7 @@ const Login = props => {
           handleRecoverSeed={() => handleRecoverSeed()}
           handleRevokeRecover={() => handleRevokeRecover()}
           handleProvisioningRequests={() => handleProvisioningRequests()}
+          handleReadDeeplinkFromNfc={readDeeplinkFromNfc}
           hasAccount={true}
         />}
       </View>

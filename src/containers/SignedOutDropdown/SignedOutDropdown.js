@@ -8,6 +8,7 @@ const SignedOutDropdown = (props) => {
     handleRecoverSeed,
     handleRevokeRecover,
     handleProvisioningRequests,
+    handleReadDeeplinkFromNfc,
     hasAccount
   } = props;
   const [visible, setVisible] = React.useState(false);
@@ -16,9 +17,17 @@ const SignedOutDropdown = (props) => {
 
   const closeMenu = () => setVisible(false);
 
-  const actions = !hasAccount
-      ? []
-      : [
+  const actions = [
+    ...(handleReadDeeplinkFromNfc
+      ? [
+          {
+            label: 'Read deeplink from NFC',
+            onPress: handleReadDeeplinkFromNfc,
+          },
+        ]
+      : []),
+    ...(hasAccount
+      ? [
           {
             label: 'Recover account seeds',
             onPress: handleRecoverSeed,
@@ -31,7 +40,9 @@ const SignedOutDropdown = (props) => {
             label: 'Provisioning requests',
             onPress: handleProvisioningRequests,
           },
-        ];
+        ]
+      : []),
+  ];
 
   return (
     <SafeAreaView
