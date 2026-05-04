@@ -19,6 +19,10 @@ import {
   endWalletBackupNfcSession,
   readWalletBackupFromNfc,
 } from '../../../../../utils/walletBackup/walletBackupNfc';
+import {
+  activateKeepAwake,
+  deactivateKeepAwake,
+} from '../../../../../utils/keepAwake/keepAwake';
 
 const fieldWidth = 300;
 
@@ -56,8 +60,14 @@ export default function ImportNfc({
     }
 
     let didFinishImport = false;
+    let keepAwakeActive = false;
 
     try {
+      activateKeepAwake();
+      keepAwakeActive = true;
+
+      await waitForSpinnerFrame();
+
       const mnemonic = walletBackupOrdinalToMnemonic({
         walletBackupOrdinal: backupOrdinal,
         password,
@@ -72,6 +82,10 @@ export default function ImportNfc({
     } catch (e) {
       createAlert('Error', e.message || 'Unable to import NFC wallet backup.');
     } finally {
+      if (keepAwakeActive) {
+        deactivateKeepAwake();
+      }
+
       if (showDecrypting && !didFinishImport) {
         setDecrypting(false);
       }

@@ -23,11 +23,15 @@ import { TextInput, Button } from "react-native-paper";
 import Styles from '../../../../styles/index'
 import Colors from '../../../../globals/colors';
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
-import scorePassword from "../../../../utils/auth/scorePassword";
-import { MIN_PASS_LENGTH, MIN_PASS_SCORE, PASS_SCORE_LIMIT } from "../../../../utils/constants/constants";
 import { CommonActions } from "@react-navigation/native";
 import { clearActiveAccountLifecycles } from "../../../../actions/actionDispatchers";
 import { removeBiometricPassword } from "../../../../utils/keychain/biometrics";
+
+const passwordAutofillProps = {
+  autoComplete: "off",
+  importantForAutofill: "no",
+  textContentType: "none",
+};
 
 class ResetPwd extends Component {
   constructor() {
@@ -141,21 +145,10 @@ class ResetPwd extends Component {
       if (!_newPwd || _newPwd.length < 1) {
         this.handleError("Required field", "newPwd")
         _errors = true
-      } else if (_newPwd.length < 5) {
-        this.handleError("Min 5 characters", "newPwd")
-        _errors = true
       } else if (_newPwd === _oldPwd) {
         this.handleError("Current and new passwords must be different", "newPwd")
         createAlert("Error", "Current and new passwords must be different")
         _errors = true
-      } else {
-        const passScore = scorePassword(_newPwd, MIN_PASS_LENGTH, PASS_SCORE_LIMIT);
-
-        if (passScore < MIN_PASS_SCORE) {
-          this.handleError("Please choose a stronger password", "newPwd")
-          createAlert("Error", "Please choose a stronger password")
-          _errors = true
-        }
       }
 
       if (_newPwd !== _confirmNewPwd) {
@@ -219,10 +212,11 @@ class ResetPwd extends Component {
               selectionColor={Colors.primaryColor}
               render={(props) => (
                 <NativeTextInput
+                  {...props}
                   autoCapitalize={"none"}
                   autoCorrect={false}
+                  {...passwordAutofillProps}
                   secureTextEntry={true}
-                  {...props}
                 />
               )}
               error={this.state.errors.oldPwd}
@@ -233,15 +227,16 @@ class ResetPwd extends Component {
               returnKeyType="done"
               dense
               onChangeText={(text) => this.setState({ newPwd: text })}
-              label="New password (min. 5 characters)"
+              label="New password"
               underlineColor={Colors.primaryColor}
               selectionColor={Colors.primaryColor}
               render={(props) => (
                 <NativeTextInput
+                  {...props}
                   autoCapitalize={"none"}
                   autoCorrect={false}
+                  {...passwordAutofillProps}
                   secureTextEntry={true}
-                  {...props}
                 />
               )}
               error={this.state.errors.newPwd}
@@ -259,10 +254,11 @@ class ResetPwd extends Component {
               selectionColor={Colors.primaryColor}
               render={(props) => (
                 <NativeTextInput
+                  {...props}
                   autoCapitalize={"none"}
                   autoCorrect={false}
+                  {...passwordAutofillProps}
                   secureTextEntry={true}
-                  {...props}
                 />
               )}
               error={this.state.errors.confirmNewPwd}

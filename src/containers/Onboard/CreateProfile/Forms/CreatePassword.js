@@ -13,12 +13,17 @@ import { getSupportedBiometryType } from '../../../../utils/keychain/keychain';
 import scorePassword from '../../../../utils/auth/scorePassword';
 import { MIN_PASS_LENGTH, MIN_PASS_SCORE, PASS_SCORE_LIMIT, SMALL_DEVICE_HEGHT } from '../../../../utils/constants/constants';
 
+const passwordAutofillProps = {
+  autoComplete: 'off',
+  importantForAutofill: 'no',
+  textContentType: 'none',
+};
+
 export default function CreatePassword({password, setPassword, navigation}) {
   const {height} = Dimensions.get('window');
 
   const [firstBox, setFirstBox] = useState('');
   const [secondBox, setSecondBox] = useState('');
-  const [passwordStrength, setPasswordStrength] = useState(null);
   const [passwordAffixDetails, setPasswordAffixDetails] = useState({
     text: "strength",
     color: Colors.tertiaryColor
@@ -36,7 +41,6 @@ export default function CreatePassword({password, setPassword, navigation}) {
       })
     } else {
       const passScore = scorePassword(firstBox, MIN_PASS_LENGTH, PASS_SCORE_LIMIT);
-      setPasswordStrength(passScore);
 
       if (passScore < MIN_PASS_SCORE) {
         setPasswordAffixDetails({
@@ -48,14 +52,9 @@ export default function CreatePassword({password, setPassword, navigation}) {
           text: "mediocre",
           color: Colors.infoButtonColor
         })
-      } else if (passScore < PASS_SCORE_LIMIT) {
-        setPasswordAffixDetails({
-          text: "good",
-          color: Colors.primaryColor
-        })
       } else {
         setPasswordAffixDetails({
-          text: "excellent",
+          text: "strong",
           color: Colors.verusGreenColor
         })
       }
@@ -67,9 +66,6 @@ export default function CreatePassword({password, setPassword, navigation}) {
 
     if (!firstBox || firstBox.length < 1) {
       res.message = 'Please enter a password.';
-      return res;
-    } else if (passwordStrength < MIN_PASS_SCORE) {
-      res.message = 'Please enter a stronger password.';
       return res;
     } else if (firstBox !== secondBox) {
       res.message = 'Password and confirm password do not match.';
@@ -148,6 +144,7 @@ export default function CreatePassword({password, setPassword, navigation}) {
             onChangeText={text => setFirstBox(text)}
             autoCapitalize={'none'}
             autoCorrect={false}
+            {...passwordAutofillProps}
             secureTextEntry={true}
             right={<TextInput.Affix text={passwordAffixDetails.text} textStyle={{color: passwordAffixDetails.color}}/>}
           />
@@ -166,6 +163,7 @@ export default function CreatePassword({password, setPassword, navigation}) {
             onChangeText={text => setSecondBox(text)}
             autoCapitalize={'none'}
             autoCorrect={false}
+            {...passwordAutofillProps}
             secureTextEntry={true}
           />
         </View>
