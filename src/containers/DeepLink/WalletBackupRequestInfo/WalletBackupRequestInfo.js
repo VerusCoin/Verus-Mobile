@@ -57,6 +57,8 @@ const passwordAutofillProps = {
   importantForAutofill: 'no',
   textContentType: 'none',
 };
+const waitForSpinnerFrame = () =>
+  new Promise(resolve => setTimeout(resolve, 0));
 
 const isTestProfile = account => {
   return Object.keys(account?.testnetOverrides || {}).length > 0;
@@ -302,7 +304,12 @@ const WalletBackupRequestInfo = props => {
         onStatus: setNfcStatus,
       });
 
-      setNfcStatus('Preparing secure backup. Keep the card nearby, but wait for the tap prompt.');
+      setNfcStatus(
+        encryptBackup
+          ? 'Encrypting your wallet backup. This can take a few minutes. Keep this screen open and wait for the NFC tap prompt.'
+          : 'Preparing secure backup. Keep the card nearby, but wait for the tap prompt.',
+      );
+      await waitForSpinnerFrame();
 
       const walletBackup = await withKeepAwake(async () => {
         const seeds = await requestSeeds();

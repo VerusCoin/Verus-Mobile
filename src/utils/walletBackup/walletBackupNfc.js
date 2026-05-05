@@ -7,6 +7,9 @@ import NfcManager, {
   NfcTech,
 } from 'react-native-nfc-manager';
 import {
+  CreateWalletBackupDetails,
+  CreateWalletBackupDetailsOrdinalVDXFObject,
+  GenericRequest,
   OrdinalVDXFObject,
   WalletBackupOrdinalVDXFObject,
 } from 'verus-typescript-primitives';
@@ -144,6 +147,42 @@ export const getDeeplinkUriFromTag = tag => {
   return null;
 };
 
+const isCreateWalletBackupRequestDetail = detail => {
+  return (
+    detail instanceof CreateWalletBackupDetailsOrdinalVDXFObject &&
+    detail.data != null &&
+    detail.data.isValid() &&
+    detail.data.backupType != null &&
+    detail.data.backupType.eq(CreateWalletBackupDetails.NFC_NDEF_BACKUP)
+  );
+};
+
+export const getCreateWalletBackupRequestFromTag = tag => {
+  const uri = getDeeplinkUriFromTag(tag);
+
+  if (uri == null) return null;
+
+  try {
+    const request = GenericRequest.fromWalletDeeplinkUri(uri);
+
+    if (
+      request.isValidVersion() &&
+      Array.isArray(request.details) &&
+      request.details.some(isCreateWalletBackupRequestDetail)
+    ) {
+      return request;
+    }
+  } catch (e) {
+    return null;
+  }
+
+  return null;
+};
+
+export const tagContainsCreateWalletBackupRequest = tag => {
+  return getCreateWalletBackupRequestFromTag(tag) != null;
+};
+
 const assertWritableStatus = async ndefBytes => {
   const status = await NfcManager.ndefHandler.getNdefStatus();
 
@@ -266,14 +305,6 @@ const eraseNdefCard = async () => {
   );
 };
 
-const formatNdefCard = async backupBytes => {
-  await NfcManager.ndefFormatableHandlerAndroid.formatNdef(backupBytes, {
-    readOnly: false,
-  });
-
-  return {written: true};
-};
-
 export const beginWalletBackupNfcSession = async ({onStatus} = {}) => {
   if (Platform.OS !== 'android') return false;
 
@@ -329,18 +360,15 @@ export const writeWalletBackupToNfc = async (
   await NfcManager.start();
 
   try {
-    onStatus && onStatus('Hold your NFC card against the device.');
+    onStatus &&
+      onStatus('Hold your NFC wallet backup request card against the device.');
     nfcRequestStarted = true;
     const connectedTech = await requestNdefTechnology(timeoutMs);
 
     if (connectedTech === NfcTech.NdefFormatable) {
-      onStatus && onStatus('Formatting NFC card...');
-      const formatResult = await formatNdefCard(backupBytes);
-
-      backupWriteCompleted = true;
-      onStatus && onStatus('Backup written. Move the card away from the device.');
-
-      return formatResult;
+      throw new Error(
+        'This NFC card does not contain a valid Verus wallet backup request. Refusing to overwrite it.',
+      );
     }
 
     onStatus && onStatus('Checking NFC card...');
@@ -356,6 +384,12 @@ export const writeWalletBackupToNfc = async (
 
     if (tagContainsWalletBackup(existingTag)) {
       throw new Error('This NFC card already contains a wallet backup. Refusing to overwrite it.');
+    }
+
+    if (!tagContainsCreateWalletBackupRequest(existingTag)) {
+      throw new Error(
+        'This NFC card does not contain a valid Verus wallet backup request. Refusing to overwrite it.',
+      );
     }
 
     onStatus && onStatus('Erasing NFC card...');

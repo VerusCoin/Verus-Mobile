@@ -46,7 +46,9 @@ jest.mock('react-native-nfc-manager', () => {
 
 import {Ndef, NdefStatus} from 'react-native-nfc-manager';
 import {
+  CreateWalletBackupDetails,
   CreateWalletBackupDetailsOrdinalVDXFObject,
+  GenericRequest,
   WalletBackup,
   WalletBackupOrdinalVDXFObject,
 } from 'verus-typescript-primitives';
@@ -54,12 +56,29 @@ import {
   createWalletBackupNdefBytes,
   getWalletBackupOrdinalFromTag,
   readWalletBackupFromNfc,
+  tagContainsCreateWalletBackupRequest,
   tagContainsWalletBackup,
   writeWalletBackupToNfc,
 } from '../../walletBackup/walletBackupNfc';
 
 const walletBackupOrdinal = {
   toBuffer: () => Buffer.from('010203', 'hex'),
+};
+
+const createWalletBackupRequestTag = (
+  detail = new CreateWalletBackupDetailsOrdinalVDXFObject({
+    data: new CreateWalletBackupDetails({
+      backupType: CreateWalletBackupDetails.NFC_NDEF_BACKUP,
+    }),
+  }),
+) => {
+  const request = new GenericRequest({
+    details: [detail],
+  });
+
+  return {
+    ndefMessage: [Ndef.uriRecord(request.toWalletDeeplinkUri())],
+  };
 };
 
 describe('wallet backup NFC writer', () => {
@@ -74,7 +93,9 @@ describe('wallet backup NFC writer', () => {
       status: NdefStatus.ReadWrite,
       capacity: 1024,
     });
-    mockNfcManager.ndefHandler.getNdefMessage.mockResolvedValue({ndefMessage: []});
+    mockNfcManager.ndefHandler.getNdefMessage.mockResolvedValue(
+      createWalletBackupRequestTag(),
+    );
     mockNfcManager.ndefHandler.writeNdefMessage.mockResolvedValue();
     mockNfcManager.ndefFormatableHandlerAndroid.formatNdef.mockResolvedValue();
   });
@@ -122,6 +143,12 @@ describe('wallet backup NFC writer', () => {
     expect(tagContainsWalletBackup(tag)).toBe(false);
   });
 
+  it('detects a valid CreateWalletBackupDetails generic request deeplink', () => {
+    expect(
+      tagContainsCreateWalletBackupRequest(createWalletBackupRequestTag()),
+    ).toBe(true);
+  });
+
   it('refuses to overwrite an existing wallet backup', async () => {
     mockNfcManager.ndefHandler.getNdefMessage.mockResolvedValue({
       ndefMessage: [Ndef.mimeMediaRecord(WALLET_BACKUP_NDEF_MIME, [1, 2, 3])],
@@ -132,6 +159,17 @@ describe('wallet backup NFC writer', () => {
     );
     expect(mockNfcManager.ndefHandler.writeNdefMessage).not.toHaveBeenCalled();
     expect(mockNfcManager.cancelTechnologyRequest).toHaveBeenCalled();
+  });
+
+  it('refuses to overwrite NFC cards that are not wallet backup requests', async () => {
+    mockNfcManager.ndefHandler.getNdefMessage.mockResolvedValue({
+      ndefMessage: [],
+    });
+
+    await expect(writeWalletBackupToNfc(walletBackupOrdinal)).rejects.toThrow(
+      'valid Verus wallet backup request',
+    );
+    expect(mockNfcManager.ndefHandler.writeNdefMessage).not.toHaveBeenCalled();
   });
 
   it('rejects read-only cards before writing', async () => {
@@ -157,16 +195,13 @@ describe('wallet backup NFC writer', () => {
     expect(mockNfcManager.ndefHandler.makeReadOnly).not.toHaveBeenCalled();
   });
 
-  it('formats NdefFormatable cards directly with the wallet backup', async () => {
+  it('refuses NdefFormatable cards because no wallet backup request can be verified', async () => {
     mockNfcManager.requestTechnology.mockResolvedValue('NdefFormatable');
 
-    const result = await writeWalletBackupToNfc(walletBackupOrdinal);
-
-    expect(result).toEqual({written: true});
-    expect(mockNfcManager.ndefFormatableHandlerAndroid.formatNdef).toHaveBeenCalledWith(
-      createWalletBackupNdefBytes(walletBackupOrdinal),
-      {readOnly: false},
+    await expect(writeWalletBackupToNfc(walletBackupOrdinal)).rejects.toThrow(
+      'valid Verus wallet backup request',
     );
+    expect(mockNfcManager.ndefFormatableHandlerAndroid.formatNdef).not.toHaveBeenCalled();
     expect(mockNfcManager.ndefHandler.writeNdefMessage).not.toHaveBeenCalled();
   });
 

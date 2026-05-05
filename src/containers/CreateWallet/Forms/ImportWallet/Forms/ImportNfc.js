@@ -248,6 +248,18 @@ export default function ImportNfc({
                 style={{marginBottom: 8}}>
                 {'Decrypt and Import'}
               </Button>
+              {decrypting && (
+                <Text
+                  style={{
+                    color: Colors.verusDarkGray,
+                    fontSize: 14,
+                    lineHeight: 20,
+                    marginBottom: 8,
+                    textAlign: 'center',
+                  }}>
+                  {'Decrypting your wallet backup. This can take a few minutes.'}
+                </Text>
+              )}
               <Button
                 mode="text"
                 textColor={Colors.primaryColor}
