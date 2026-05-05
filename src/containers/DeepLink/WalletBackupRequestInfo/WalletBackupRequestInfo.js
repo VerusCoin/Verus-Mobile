@@ -25,7 +25,7 @@ import {openAuthenticateUserModal} from '../../../actions/actions/sendModal/disp
 import Colors from '../../../globals/colors';
 import {useObjectSelector} from '../../../hooks/useObjectSelector';
 import scorePassword from '../../../utils/auth/scorePassword';
-import {requestSeeds} from '../../../utils/auth/authBox';
+import {requestPassword, requestSeeds} from '../../../utils/auth/authBox';
 import {
   MIN_PASS_LENGTH,
   MIN_PASS_SCORE,
@@ -34,6 +34,7 @@ import {
 import {ELECTRUM} from '../../../utils/constants/intervalConstants';
 import {SEND_MODAL_USER_ALLOWLIST} from '../../../utils/constants/sendModal';
 import {getKey} from '../../../utils/keyGenerator/keyGenerator';
+import {withKeepAwake} from '../../../utils/keepAwake/keepAwake';
 import {getSupportedBiometryType} from '../../../utils/keychain/keychain';
 import {createProfileFromSeed} from '../../../utils/profile/createProfileFromSeed';
 import {
@@ -51,6 +52,11 @@ import {
 } from '../../../utils/walletBackup/walletBackupNfc';
 
 const fieldWidth = 300;
+const passwordAutofillProps = {
+  autoComplete: 'off',
+  importantForAutofill: 'no',
+  textContentType: 'none',
+};
 
 const isTestProfile = account => {
   return Object.keys(account?.testnetOverrides || {}).length > 0;
@@ -71,20 +77,14 @@ const passwordStrengthDetails = password => {
     return {score, text: 'weak', color: Colors.warningButtonColor};
   } else if (score < PASS_SCORE_LIMIT - ((PASS_SCORE_LIMIT - MIN_PASS_SCORE) / 2)) {
     return {score, text: 'mediocre', color: Colors.infoButtonColor};
-  } else if (score < PASS_SCORE_LIMIT) {
-    return {score, text: 'good', color: Colors.primaryColor};
   } else {
-    return {score, text: 'excellent', color: Colors.verusGreenColor};
+    return {score, text: 'strong', color: Colors.verusGreenColor};
   }
 };
 
 const validatePasswordPair = (password, confirmPassword) => {
-  const strength = passwordStrengthDetails(password);
-
   if (!password) {
     return 'Please enter a password.';
-  } else if (strength.score < MIN_PASS_SCORE) {
-    return 'Please enter a stronger password.';
   } else if (password !== confirmPassword) {
     return 'Password and confirm password do not match.';
   }
@@ -130,7 +130,9 @@ const WalletBackupRequestInfo = props => {
     return accounts.filter(account => isTestProfile(account) === requestIsTestnet);
   }, [accounts, requestIsTestnet]);
 
-  const [profileName, setProfileName] = useState('');
+  const [profileName, setProfileName] = useState(
+    accounts.length === 0 ? 'My Verus Wallet' : '',
+  );
   const [profilePassword, setProfilePassword] = useState('');
   const [profilePasswordConfirm, setProfilePasswordConfirm] = useState('');
   const [showCreateProfile, setShowCreateProfile] = useState(matchingAccounts.length === 0);
@@ -138,6 +140,8 @@ const WalletBackupRequestInfo = props => {
   const [supportedBiometryType, setSupportedBiometryType] = useState(null);
 
   const [encryptBackup, setEncryptBackup] = useState(true);
+  const [useProfilePasswordForBackup, setUseProfilePasswordForBackup] =
+    useState(true);
   const [backupPassword, setBackupPassword] = useState('');
   const [backupPasswordConfirm, setBackupPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -261,6 +265,11 @@ const WalletBackupRequestInfo = props => {
     );
   };
 
+  const getProfilePasswordForBackup = async () => {
+    if (profilePassword) return profilePassword;
+    return requestPassword();
+  };
+
   const writeBackup = async () => {
     Keyboard.dismiss();
 
@@ -269,7 +278,7 @@ const WalletBackupRequestInfo = props => {
       return;
     }
 
-    if (encryptBackup) {
+    if (encryptBackup && !useProfilePasswordForBackup) {
       const passwordError = validatePasswordPair(
         backupPassword,
         backupPasswordConfirm,
@@ -295,16 +304,24 @@ const WalletBackupRequestInfo = props => {
 
       setNfcStatus('Preparing secure backup. Keep the card nearby, but wait for the tap prompt.');
 
-      const seeds = await requestSeeds();
-      const mnemonic = seeds[ELECTRUM];
+      const walletBackup = await withKeepAwake(async () => {
+        const seeds = await requestSeeds();
+        const mnemonic = seeds[ELECTRUM];
 
-      if (!isValid24WordBip39Mnemonic(mnemonic)) {
-        throw new Error('The active profile primary seed is not a valid 24 word BIP39 mnemonic.');
-      }
+        if (!isValid24WordBip39Mnemonic(mnemonic)) {
+          throw new Error('The active profile primary seed is not a valid 24 word BIP39 mnemonic.');
+        }
 
-      const walletBackup = await buildWalletBackupOrdinal({
-        mnemonic,
-        password: encryptBackup ? backupPassword : null,
+        const backupEncryptionPassword = encryptBackup
+          ? useProfilePasswordForBackup
+            ? await getProfilePasswordForBackup()
+            : backupPassword
+          : null;
+
+        return buildWalletBackupOrdinal({
+          mnemonic,
+          password: backupEncryptionPassword,
+        });
       });
 
       nfcWriterStarted = true;
@@ -469,6 +486,7 @@ const WalletBackupRequestInfo = props => {
                     secureTextEntry
                     autoCapitalize="none"
                     autoCorrect={false}
+                    {...passwordAutofillProps}
                     onChangeText={setProfilePassword}
                     right={
                       <TextInput.Affix
@@ -487,6 +505,7 @@ const WalletBackupRequestInfo = props => {
                     secureTextEntry
                     autoCapitalize="none"
                     autoCorrect={false}
+                    {...passwordAutofillProps}
                     onChangeText={setProfilePasswordConfirm}
                   />
                   {supportedBiometryType && supportedBiometryType.biometry && (
@@ -546,36 +565,56 @@ const WalletBackupRequestInfo = props => {
 
               {encryptBackup && (
                 <View>
-                  <TextInput
-                    returnKeyType="done"
-                    label="Backup password"
-                    value={backupPassword}
-                    mode="outlined"
-                    dense
-                    style={{marginBottom: 8}}
-                    secureTextEntry
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    onChangeText={setBackupPassword}
-                    right={
-                      <TextInput.Affix
-                        text={backupPasswordDetails.text}
-                        textStyle={{color: backupPasswordDetails.color}}
-                      />
+                  <Checkbox.Item
+                    color={Colors.primaryColor}
+                    label="Use profile password for backup"
+                    labelStyle={{fontSize: 14}}
+                    status={useProfilePasswordForBackup ? 'checked' : 'unchecked'}
+                    onPress={() =>
+                      setUseProfilePasswordForBackup(
+                        !useProfilePasswordForBackup,
+                      )
                     }
+                    mode="android"
+                    position="leading"
+                    style={{paddingLeft: 0}}
                   />
-                  <TextInput
-                    returnKeyType="done"
-                    label="Confirm backup password"
-                    value={backupPasswordConfirm}
-                    mode="outlined"
-                    dense
-                    style={{marginBottom: 12}}
-                    secureTextEntry
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    onChangeText={setBackupPasswordConfirm}
-                  />
+                  {!useProfilePasswordForBackup && (
+                    <View>
+                      <TextInput
+                        returnKeyType="done"
+                        label="Backup password"
+                        value={backupPassword}
+                        mode="outlined"
+                        dense
+                        style={{marginBottom: 8}}
+                        secureTextEntry
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        {...passwordAutofillProps}
+                        onChangeText={setBackupPassword}
+                        right={
+                          <TextInput.Affix
+                            text={backupPasswordDetails.text}
+                            textStyle={{color: backupPasswordDetails.color}}
+                          />
+                        }
+                      />
+                      <TextInput
+                        returnKeyType="done"
+                        label="Confirm backup password"
+                        value={backupPasswordConfirm}
+                        mode="outlined"
+                        dense
+                        style={{marginBottom: 12}}
+                        secureTextEntry
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        {...passwordAutofillProps}
+                        onChangeText={setBackupPasswordConfirm}
+                      />
+                    </View>
+                  )}
                 </View>
               )}
 
@@ -584,7 +623,9 @@ const WalletBackupRequestInfo = props => {
                 onPress={writeBackup}
                 labelStyle={{fontWeight: 'bold'}}
                 disabled={
-                  encryptBackup && (!backupPassword || !backupPasswordConfirm)
+                  encryptBackup &&
+                  !useProfilePasswordForBackup &&
+                  (!backupPassword || !backupPasswordConfirm)
                 }>
                 Write NFC Backup
               </Button>

@@ -1107,6 +1107,11 @@ const AuthenticationRequestInfo = props => {
   const hasRequirements = constraintRows.length > 0;
   const hasTechnicalDetails = technicalRows.length > 0;
   const showIdentityPrompt = signedIn && !selectedIdentity;
+  const hasAnyLinkedIdentity = useMemo(() => {
+    return Object.keys(linkedIds).some(
+      chainId => Object.keys(linkedIds[chainId] || {}).length > 0,
+    );
+  }, [linkedIds]);
   const hasMatchingIdentity = useMemo(() => {
     for (const chainId of Object.keys(sortedIds)) {
       const chainIdentityAddresses = sortedIds[chainId] || [];
@@ -1163,6 +1168,8 @@ const AuthenticationRequestInfo = props => {
     primaryActionLabel === 'Request VerusID'
       ? 'Accept or create your new VerusID'
       : getMainTitle();
+  const hideIdentitySelector =
+    (linkedIdsLoaded && !hasAnyLinkedIdentity) || !signedIn;
 
   return loading ? (
     <AnimatedActivityIndicatorBox />
@@ -1235,48 +1242,52 @@ const AuthenticationRequestInfo = props => {
           </TouchableOpacity>
         )}
 
-        <Connector />
+        {!hideIdentitySelector && (
+          <>
+            <Connector />
 
-        <TouchableOpacity
-          style={[
-            styles.targetCard,
-            showIdentityPrompt && styles.targetCardActionNeeded,
-            selectedIdentity && styles.targetCardSelected,
-          ]}
-          onPress={signedIn ? handleOpenIdentitySheet : undefined}
-          activeOpacity={signedIn ? 0.7 : 1}
-          disabled={!signedIn}>
-          <View style={styles.targetRow}>
-            <View style={styles.targetIconContainer}>
-              <VerusIdAtIcon width={24} height={24} fill="#3165D4" />
-            </View>
-            <View style={styles.targetInfo}>
-              <Text style={styles.targetLabel}>Identity</Text>
-              <Text style={styles.targetName}>
-                {selectedIdentity
-                  ? selectedIdentity.friendlyName
-                  : 'Select VerusID'}
-              </Text>
-              <Text style={styles.targetAddress}>
-                {selectedIdentity
-                  ? truncateAddress(selectedIdentity.iAddress)
-                  : signedIn
-                  ? 'Required to continue'
-                  : 'Sign in to select identity'}
-              </Text>
-            </View>
-            {signedIn && (
-              <MaterialCommunityIcons
-                name="chevron-right"
-                size={22}
-                color={Colors.verusDarkGray}
-              />
-            )}
-          </View>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.targetCard,
+                showIdentityPrompt && styles.targetCardActionNeeded,
+                selectedIdentity && styles.targetCardSelected,
+              ]}
+              onPress={signedIn ? handleOpenIdentitySheet : undefined}
+              activeOpacity={signedIn ? 0.7 : 1}
+              disabled={!signedIn}>
+              <View style={styles.targetRow}>
+                <View style={styles.targetIconContainer}>
+                  <VerusIdAtIcon width={24} height={24} fill="#3165D4" />
+                </View>
+                <View style={styles.targetInfo}>
+                  <Text style={styles.targetLabel}>Identity</Text>
+                  <Text style={styles.targetName}>
+                    {selectedIdentity
+                      ? selectedIdentity.friendlyName
+                      : 'Select VerusID'}
+                  </Text>
+                  <Text style={styles.targetAddress}>
+                    {selectedIdentity
+                      ? truncateAddress(selectedIdentity.iAddress)
+                      : signedIn
+                      ? 'Required to continue'
+                      : 'Sign in to select identity'}
+                  </Text>
+                </View>
+                {signedIn && (
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={22}
+                    color={Colors.verusDarkGray}
+                  />
+                )}
+              </View>
+            </TouchableOpacity>
+          </>
+        )}
 
         {hasRequirements && (
-          <View style={styles.sectionCard}>
+          <View style={ hideIdentitySelector ? { ...styles.sectionCard, marginTop: 12 } : styles.sectionCard }>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionHeaderLeft}>
                 <MaterialCommunityIcons
