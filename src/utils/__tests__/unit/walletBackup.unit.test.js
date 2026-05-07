@@ -1,6 +1,7 @@
 import {WalletBackup} from 'verus-typescript-primitives';
 import {
   WALLET_BACKUP_ENCRYPTION_ITERS,
+  WALLET_BACKUP_ENCRYPTION_ITERS_LOW,
   buildWalletBackupOrdinal,
   getMnemonicEntropyBuffer,
   isValid24WordBip39Mnemonic,
@@ -53,5 +54,21 @@ describe('wallet backup payloads', () => {
       walletBackupOrdinal: backupOrdinal,
       password: 'wrong password',
     })).toThrow('Unable to decrypt wallet backup');
+  });
+
+  it('uses the requested encrypted backup KDF iterations', async () => {
+    const backupOrdinal = await buildWalletBackupOrdinal({
+      mnemonic: MNEMONIC,
+      password: 'correct horse battery staple',
+      kdfIters: WALLET_BACKUP_ENCRYPTION_ITERS_LOW,
+    });
+
+    expect(backupOrdinal.data.KDFIters.toNumber()).toBe(
+      WALLET_BACKUP_ENCRYPTION_ITERS_LOW,
+    );
+    expect(walletBackupOrdinalToMnemonic({
+      walletBackupOrdinal: backupOrdinal,
+      password: 'correct horse battery staple',
+    })).toBe(MNEMONIC);
   });
 });

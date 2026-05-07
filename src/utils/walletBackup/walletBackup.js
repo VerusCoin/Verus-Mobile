@@ -8,7 +8,28 @@ import {
 import {saltedDecryptToBuffer, saltedEncrypt} from '../crypto/crypto';
 
 export const WALLET_BACKUP_NDEF_MIME = 'application/x-vrsc-wallet.backup';
-export const WALLET_BACKUP_ENCRYPTION_ITERS = 600000;
+export const WALLET_BACKUP_ENCRYPTION_ITERS_LOW = 100000;
+export const WALLET_BACKUP_ENCRYPTION_ITERS_MEDIUM = 300000;
+export const WALLET_BACKUP_ENCRYPTION_ITERS_HIGH = 600000;
+export const WALLET_BACKUP_ENCRYPTION_ITERS =
+  WALLET_BACKUP_ENCRYPTION_ITERS_HIGH;
+export const WALLET_BACKUP_ENCRYPTION_ITERATION_OPTIONS = [
+  {
+    key: 'low',
+    label: 'Low',
+    iterations: WALLET_BACKUP_ENCRYPTION_ITERS_LOW,
+  },
+  {
+    key: 'medium',
+    label: 'Medium',
+    iterations: WALLET_BACKUP_ENCRYPTION_ITERS_MEDIUM,
+  },
+  {
+    key: 'high',
+    label: 'High',
+    iterations: WALLET_BACKUP_ENCRYPTION_ITERS_HIGH,
+  },
+];
 export const WALLET_BACKUP_MNEMONIC_WORDS = 24;
 
 export const isValid24WordBip39Mnemonic = mnemonic => {
@@ -110,23 +131,32 @@ export const walletBackupOrdinalToMnemonic = ({
   return entropyBufferToMnemonic(backup.data);
 };
 
-export const buildWalletBackupOrdinal = async ({mnemonic, password}) => {
+export const buildWalletBackupOrdinal = async ({
+  mnemonic,
+  password,
+  kdfIters = WALLET_BACKUP_ENCRYPTION_ITERS,
+}) => {
   const entropy = getMnemonicEntropyBuffer(mnemonic);
   const encrypted = password != null && password.length > 0;
+  const parsedKdfIters = Number(kdfIters);
   let data = entropy;
   let encryptionFormat = WalletBackup.ENCRYPTION_FORMAT_NONE;
   let KDFIters = new BN(0, 10);
 
   if (encrypted) {
+    if (!Number.isInteger(parsedKdfIters) || parsedKdfIters <= 0) {
+      throw new Error('Wallet backup encryption iterations must be a positive integer.');
+    }
+
     const encryptedBackup = await saltedEncrypt(
       password,
       entropy,
-      WALLET_BACKUP_ENCRYPTION_ITERS,
+      parsedKdfIters,
     );
 
     data = Buffer.from(encryptedBackup, 'base64');
     encryptionFormat = WalletBackup.ENCRYPTION_FORMAT_SALTED_TAGGED_AES_256_GCM;
-    KDFIters = new BN(WALLET_BACKUP_ENCRYPTION_ITERS, 10);
+    KDFIters = new BN(parsedKdfIters, 10);
   }
 
   const backup = new WalletBackup({

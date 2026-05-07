@@ -376,7 +376,7 @@ class ProfileSettings extends Component {
   canBackupCurrentProfileToNfc = () => {
     return createAlert(
       "Backup profile to NFC?",
-      "This will write an NFC wallet backup for your current profile seed.\n\n" +
+      "This will write an NFC wallet backup for your current profile seed. If you manually setup your Z seed to be different from your main profile seed, this process will not backup your Z seed.\n\n" +
         "If you choose an unencrypted backup on the next screen, anyone with the NFC card can access this wallet. Keep the card secure.\n\n" +
         "Would you like to proceed?",
       [
