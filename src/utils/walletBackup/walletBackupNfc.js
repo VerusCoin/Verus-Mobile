@@ -298,13 +298,6 @@ const requestNdefReadTechnology = async (
   return connectedTech;
 };
 
-const eraseNdefCard = async () => {
-  await NfcManager.ndefHandler.writeNdefMessage(
-    Ndef.encodeMessage([Ndef.emptyRecord()]),
-    {reconnectAfterWrite: true},
-  );
-};
-
 export const beginWalletBackupNfcSession = async ({onStatus} = {}) => {
   if (Platform.OS !== 'android') return false;
 
@@ -391,9 +384,6 @@ export const writeWalletBackupToNfc = async (
         'This NFC card does not contain a valid Verus wallet backup request. Refusing to overwrite it.',
       );
     }
-
-    onStatus && onStatus('Erasing NFC card...');
-    await eraseNdefCard();
 
     onStatus && onStatus('Writing wallet backup...');
     await NfcManager.ndefHandler.writeNdefMessage(backupBytes, {

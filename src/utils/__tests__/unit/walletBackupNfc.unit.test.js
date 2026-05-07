@@ -184,12 +184,12 @@ describe('wallet backup NFC writer', () => {
     expect(mockNfcManager.ndefHandler.writeNdefMessage).not.toHaveBeenCalled();
   });
 
-  it('erases and writes the NFC card without locking it read-only', async () => {
+  it('writes the NFC card without locking it read-only', async () => {
     const result = await writeWalletBackupToNfc(walletBackupOrdinal);
 
     expect(result).toEqual({written: true});
-    expect(mockNfcManager.ndefHandler.writeNdefMessage).toHaveBeenCalledTimes(2);
-    expect(mockNfcManager.ndefHandler.writeNdefMessage.mock.calls[1][0]).toEqual(
+    expect(mockNfcManager.ndefHandler.writeNdefMessage).toHaveBeenCalledTimes(1);
+    expect(mockNfcManager.ndefHandler.writeNdefMessage.mock.calls[0][0]).toEqual(
       createWalletBackupNdefBytes(walletBackupOrdinal),
     );
     expect(mockNfcManager.ndefHandler.makeReadOnly).not.toHaveBeenCalled();
