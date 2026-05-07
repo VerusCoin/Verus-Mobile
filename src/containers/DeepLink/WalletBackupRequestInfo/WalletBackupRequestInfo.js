@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {
   Keyboard,
   Platform,
@@ -8,7 +8,14 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import {ActivityIndicator, Button, Checkbox, Text, TextInput} from 'react-native-paper';
+import {
+  ActivityIndicator,
+  Button,
+  Checkbox,
+  Menu,
+  Text,
+  TextInput,
+} from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useDispatch, useSelector} from 'react-redux';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -38,6 +45,8 @@ import {withKeepAwake} from '../../../utils/keepAwake/keepAwake';
 import {getSupportedBiometryType} from '../../../utils/keychain/keychain';
 import {createProfileFromSeed} from '../../../utils/profile/createProfileFromSeed';
 import {
+  WALLET_BACKUP_ENCRYPTION_ITERATION_OPTIONS,
+  WALLET_BACKUP_ENCRYPTION_ITERS_MEDIUM,
   buildWalletBackupOrdinal,
   isValid24WordBip39Mnemonic,
 } from '../../../utils/walletBackup/walletBackup';
@@ -57,6 +66,12 @@ const passwordAutofillProps = {
   importantForAutofill: 'no',
   textContentType: 'none',
 };
+const waitForSpinnerFrame = () =>
+  new Promise(resolve => setTimeout(resolve, 0));
+
+const formatKdfIterations = iterations => `${iterations / 1000}k`;
+const formatBackupKdfOptionLabel = option =>
+  `${option.label} (${formatKdfIterations(option.iterations)})`;
 
 const isTestProfile = account => {
   return Object.keys(account?.testnetOverrides || {}).length > 0;
@@ -114,6 +129,7 @@ const WalletBackupRequestInfo = props => {
   const accounts = useObjectSelector(state => state.authentication.accounts);
   const activeAccount = useObjectSelector(state => state.authentication.activeAccount);
   const activeCoinList = useObjectSelector(state => state.coins.activeCoinList);
+  const activeAccountHash = activeAccount?.accountHash;
 
   const activeAccountIsTestnet = activeAccount ? isTestProfile(activeAccount) : false;
   const requestIsTestnet = profileBackup
@@ -144,11 +160,20 @@ const WalletBackupRequestInfo = props => {
     useState(true);
   const [backupPassword, setBackupPassword] = useState('');
   const [backupPasswordConfirm, setBackupPasswordConfirm] = useState('');
+  const [backupKdfIters, setBackupKdfIters] = useState(
+    WALLET_BACKUP_ENCRYPTION_ITERS_MEDIUM,
+  );
+  const [backupKdfMenuVisible, setBackupKdfMenuVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [nfcStatus, setNfcStatus] = useState(null);
+  const walletBackupCacheRef = useRef(null);
 
   const profilePasswordDetails = passwordStrengthDetails(profilePassword);
   const backupPasswordDetails = passwordStrengthDetails(backupPassword);
+  const selectedBackupKdfOption =
+    WALLET_BACKUP_ENCRYPTION_ITERATION_OPTIONS.find(
+      option => option.iterations === backupKdfIters,
+    ) || WALLET_BACKUP_ENCRYPTION_ITERATION_OPTIONS[1];
 
   useEffect(() => {
     let mounted = true;
@@ -171,6 +196,17 @@ const WalletBackupRequestInfo = props => {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    walletBackupCacheRef.current = null;
+  }, [
+    activeAccountHash,
+    backupKdfIters,
+    backupPassword,
+    encryptBackup,
+    profilePassword,
+    useProfilePasswordForBackup,
+  ]);
 
   const openLogin = () => {
     if (matchingAccounts.length === 0) {
@@ -270,6 +306,61 @@ const WalletBackupRequestInfo = props => {
     return requestPassword();
   };
 
+  const getWalletBackupForWrite = async () => {
+    const backupEncryptionPassword = encryptBackup
+      ? useProfilePasswordForBackup
+        ? await getProfilePasswordForBackup()
+        : backupPassword
+      : null;
+    const effectiveKdfIters = encryptBackup ? backupKdfIters : 0;
+    const cachedWalletBackup = walletBackupCacheRef.current;
+
+    if (
+      cachedWalletBackup != null &&
+      cachedWalletBackup.accountHash === activeAccountHash &&
+      cachedWalletBackup.encryptBackup === encryptBackup &&
+      cachedWalletBackup.password === backupEncryptionPassword &&
+      cachedWalletBackup.kdfIters === effectiveKdfIters
+    ) {
+      setNfcStatus('Using prepared wallet backup. Wait for the NFC tap prompt.');
+      await waitForSpinnerFrame();
+
+      return cachedWalletBackup.walletBackup;
+    }
+
+    setNfcStatus(
+      encryptBackup
+        ? 'Encrypting your wallet backup. This can take a few minutes. Keep this screen open and wait for the NFC tap prompt.'
+        : 'Preparing secure backup. Keep the card nearby, but wait for the tap prompt.',
+    );
+    await waitForSpinnerFrame();
+
+    return withKeepAwake(async () => {
+      const seeds = await requestSeeds();
+      const mnemonic = seeds[ELECTRUM];
+
+      if (!isValid24WordBip39Mnemonic(mnemonic)) {
+        throw new Error('The active profile primary seed is not a valid 24 word BIP39 mnemonic.');
+      }
+
+      const walletBackup = await buildWalletBackupOrdinal({
+        mnemonic,
+        password: backupEncryptionPassword,
+        kdfIters: effectiveKdfIters,
+      });
+
+      walletBackupCacheRef.current = {
+        accountHash: activeAccountHash,
+        encryptBackup,
+        password: backupEncryptionPassword,
+        kdfIters: effectiveKdfIters,
+        walletBackup,
+      };
+
+      return walletBackup;
+    });
+  };
+
   const writeBackup = async () => {
     Keyboard.dismiss();
 
@@ -302,27 +393,7 @@ const WalletBackupRequestInfo = props => {
         onStatus: setNfcStatus,
       });
 
-      setNfcStatus('Preparing secure backup. Keep the card nearby, but wait for the tap prompt.');
-
-      const walletBackup = await withKeepAwake(async () => {
-        const seeds = await requestSeeds();
-        const mnemonic = seeds[ELECTRUM];
-
-        if (!isValid24WordBip39Mnemonic(mnemonic)) {
-          throw new Error('The active profile primary seed is not a valid 24 word BIP39 mnemonic.');
-        }
-
-        const backupEncryptionPassword = encryptBackup
-          ? useProfilePasswordForBackup
-            ? await getProfilePasswordForBackup()
-            : backupPassword
-          : null;
-
-        return buildWalletBackupOrdinal({
-          mnemonic,
-          password: backupEncryptionPassword,
-        });
-      });
+      const walletBackup = await getWalletBackupForWrite();
 
       nfcWriterStarted = true;
       await writeWalletBackupToNfc(walletBackup, {
@@ -615,6 +686,52 @@ const WalletBackupRequestInfo = props => {
                       />
                     </View>
                   )}
+                  <Menu
+                    visible={backupKdfMenuVisible}
+                    onDismiss={() => setBackupKdfMenuVisible(false)}
+                    anchor={
+                      <View>
+                        <Text
+                          style={{
+                            color: Colors.verusDarkGray,
+                            fontSize: 13,
+                            fontWeight: 'bold',
+                            marginBottom: 6,
+                          }}>
+                          {"Brute-force resistance (iterations)"}
+                        </Text>
+                        <Button
+                          mode="outlined"
+                          icon="shield-key-outline"
+                          onPress={() => setBackupKdfMenuVisible(true)}
+                          contentStyle={{height: 46}}
+                          labelStyle={{fontWeight: 'bold'}}
+                          style={{marginBottom: 8}}>
+                          {formatBackupKdfOptionLabel(selectedBackupKdfOption)}
+                        </Button>
+                      </View>
+                    }>
+                    {WALLET_BACKUP_ENCRYPTION_ITERATION_OPTIONS.map(option => (
+                      <Menu.Item
+                        key={option.key}
+                        onPress={() => {
+                          setBackupKdfIters(option.iterations);
+                          setBackupKdfMenuVisible(false);
+                        }}
+                        title={formatBackupKdfOptionLabel(option)}
+                      />
+                    ))}
+                  </Menu>
+                  <Text
+                    style={{
+                      color: Colors.verusDarkGray,
+                      fontSize: 13,
+                      lineHeight: 19,
+                      marginBottom: 12,
+                      textAlign: 'center',
+                    }}>
+                    Higher resistance takes longer to encrypt and decrypt.
+                  </Text>
                 </View>
               )}
 
