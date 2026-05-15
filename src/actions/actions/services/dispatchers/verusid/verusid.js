@@ -4,7 +4,8 @@ import { requestServiceStoredData } from '../../../../../utils/auth/authBox';
 import { VERUSID_SERVICE_ID } from '../../../../../utils/constants/services';
 import { modifyServiceStoredDataForUser } from '../services';
 import { coinsList } from '../../../../../utils/CoinData/CoinsList';
-import { getIdentity } from "../../../../../utils/api/channels/verusid/callCreators";
+import { getIdentitiesWithAddress, getIdentity } from "../../../../../utils/api/channels/verusid/callCreators";
+import { convertFqnToDisplayFormat } from "../../../../../utils/fullyqualifiedname";
 import { primitives } from 'verusid-ts-client';
 import { NOTIFICATION_TYPE_VERUSID_READY, NOTIFICATION_TYPE_VERUSID_ERROR, NOTIFICATION_TYPE_VERUSID_FAILED } from '../../../../../utils/constants/services';
 import { NOTIFICATION_ICON_ERROR, NOTIFICATION_ICON_VERUSID } from '../../../../../utils/constants/notifications';
@@ -44,6 +45,93 @@ export const linkVerusId = async (iAddress, fqn, chain) => {
     VERUSID_SERVICE_ID,
     state.authentication.activeAccount.accountHash,
   );
+};
+
+// Soft cap on how many discovered IDs we auto-link on import. The vast majority
+// of users have 1-3 IDs (their personal handle, maybe a sub-ID or two). A cap of
+// 5 covers the personal use case comfortably while keeping the import fast, the
+// picker UI scannable, and preventing automation / batch-issuance wallets (e.g.
+// lottery ticket IDs) from bulk-linking hundreds. Anyone with more IDs is
+// already a power user who can link the rest manually from the overview.
+const AUTO_DISCOVER_LINK_CAP = 5;
+
+// Discover every VerusID whose primaryaddresses include the wallet's R-address on
+// the given system, and bulk-link them under serviceStoredData.linked_ids[coinObj.id].
+// Used post-import so the user doesn't have to re-add IDs by hand.
+//
+// Idempotent: existing linked_ids[coinObj.id] entries are preserved; discovered IDs
+// are merged in. Never throws — RPC failures log and return null so callers
+// (e.g. createProfileFromSeed) can't have import blocked by a transient endpoint.
+export const discoverAndLinkOwnedIds = async (coinObj, walletRAddress) => {
+  if (!walletRAddress) return null;
+
+  const state = store.getState();
+  if (state.authentication.activeAccount == null) return null;
+
+  let res;
+  try {
+    res = await getIdentitiesWithAddress(coinObj.system_id, walletRAddress);
+  } catch (e) {
+    return null;
+  }
+
+  if (!res || res.error || !Array.isArray(res.result) || res.result.length === 0) {
+    return null;
+  }
+
+  // Cap the working set before the per-ID FQN fetches so a batch-issuance wallet
+  // doesn't fire hundreds of RPCs at import time.
+  const entries = res.result.slice(0, AUTO_DISCOVER_LINK_CAP);
+
+  // `getidentitieswithaddress` returns identity objects directly without the
+  // computed `fullyqualifiedname` field that `getidentity` synthesizes (parent
+  // chain/ID names included). Follow up per discovered iAddress to fetch the
+  // canonical FQN, then apply convertFqnToDisplayFormat so e.g.
+  // "bob.bitcoins.VRSC@" becomes the friendly "bob.bitcoins@" used elsewhere.
+  // getIdentity is cached, so a refresh later won't re-hit the network.
+  const discovered = {};
+  for (const entry of entries) {
+    const idObj = entry && entry.identity ? entry.identity : entry;
+    if (!idObj || !idObj.identityaddress) continue;
+
+    let fqn = null;
+    try {
+      const idRes = await getIdentity(coinObj.system_id, idObj.identityaddress);
+      if (idRes && !idRes.error && idRes.result && idRes.result.fullyqualifiedname) {
+        fqn = convertFqnToDisplayFormat(idRes.result.fullyqualifiedname);
+      }
+    } catch (e) {
+      // fall through to name fallback
+    }
+
+    discovered[idObj.identityaddress] =
+      fqn || (idObj.name ? `${idObj.name}@` : idObj.identityaddress);
+  }
+
+  if (Object.keys(discovered).length === 0) return null;
+
+  try {
+    const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+    const currentLinkedIdentities =
+      serviceData.linked_ids == null ? {} : serviceData.linked_ids;
+
+    return await modifyServiceStoredDataForUser(
+      {
+        ...serviceData,
+        linked_ids: {
+          ...currentLinkedIdentities,
+          [coinObj.id]: {
+            ...(currentLinkedIdentities[coinObj.id] || {}),
+            ...discovered,
+          },
+        },
+      },
+      VERUSID_SERVICE_ID,
+      state.authentication.activeAccount.accountHash,
+    );
+  } catch (e) {
+    return null;
+  }
 };
 
 export const unlinkVerusId = async (iAddress, chain) => {
