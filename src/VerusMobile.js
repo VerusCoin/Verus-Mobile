@@ -88,11 +88,11 @@ class VerusMobile extends React.Component {
     })
   }
 
-  async initializeStorage() {
+  async initializeStorage(secureStorageInitialization = SecureStorage.initializeWithKeychain()) {
     try {
       // Load secret credential from keychain to decrypt data storage, and if loaded successfully, 
       // cycle secret credential with a newly generated one
-      await SecureStorage.initializeWithKeychain();
+      await secureStorageInitialization;
 
       // Clear cached electrum versions, TODO: Figure out what should trigger a cache clear on startup of server 
       //versions. (The action that triggers it should indicate a server upgraded it's 
@@ -157,20 +157,33 @@ class VerusMobile extends React.Component {
 
     AppState.addEventListener("change", (nextAppState) => this._handleAppStateChange(nextAppState));
 
+    const secureStorageInitialization = SecureStorage.initializeWithKeychain();
+    this.initializeStorage(secureStorageInitialization);
+
     // Handle deeplinks
-    Linking.addEventListener("url", ({ url }) => {
+    Linking.addEventListener("url", async ({ url }) => {
+      try {
+        await secureStorageInitialization;
+      } catch (e) {
+        return;
+      }
+
       updateDeeplinkUrl(url)
     })
 
     const updateUrlState = async () => {
+      try {
+        await secureStorageInitialization;
+      } catch (e) {
+        return;
+      }
+
       const url = await Linking.getInitialURL()
 
       updateDeeplinkUrl(url)
     }
 
     updateUrlState()
-
-    this.initializeStorage()
 
     if (ENABLE_VERUS_IDENTITIES) {
       this.props.dispatch(requestSeedData());

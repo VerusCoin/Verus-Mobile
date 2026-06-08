@@ -72,6 +72,67 @@ export const createUpdateIdentityTx = async (systemId, identity, changeAaddr, ra
   return verusid.createUpdateIdentityTransaction(identity, changeAaddr, rawIdTx, idHeight, utxos, undefined, undefined, undefined, undefined, updateIdentityTransactionHex, true, isTestnet);
 }
 
+export const createUpdateIdentityTxWithUtxos = async ({
+  systemId,
+  identity,
+  changeAaddr,
+  rawIdTx,
+  idHeight,
+  utxos,
+  maxFee,
+  updateIdentityTransactionHex,
+  isTestnet,
+}) => {
+  const verusid = VrpcProvider.getVerusIdInterface(systemId);
+
+  return verusid.createUpdateIdentityTransaction(
+    identity,
+    changeAaddr,
+    rawIdTx,
+    idHeight,
+    utxos,
+    undefined,
+    maxFee,
+    undefined,
+    undefined,
+    updateIdentityTransactionHex,
+    true,
+    isTestnet,
+  );
+}
+
+export const createUpdateIdentityWithCurrencyTransferTx = async ({
+  systemId,
+  identity,
+  changeAaddr,
+  rawIdTx,
+  idHeight,
+  currencyTransferOutputs,
+  utxos,
+  maxFee,
+  updateIdentityTransactionHex,
+  isTestnet,
+}) => {
+  const verusid = VrpcProvider.getVerusIdInterface(systemId);
+
+  return verusid.createUpdateIdentityWithCurrencyTransferTransaction(
+    identity,
+    changeAaddr,
+    rawIdTx,
+    idHeight,
+    currencyTransferOutputs,
+    utxos,
+    {
+      chainIAddr: systemId,
+      maxFee,
+      updateIdentityTransactionHex,
+      parseVdxfObjects: true,
+      isTestnet,
+      expectedIdentityPrimaryAddress: changeAaddr,
+    },
+  );
+}
+
 export const createUpdateIdentityResponse = async (systemId, signerId, reqId, txid, primAddrWif) => {
   const verusid = VrpcProvider.getVerusIdInterface(systemId);
 

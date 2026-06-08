@@ -70,7 +70,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import VerusIdAtIcon from '../../../images/customIcons/verusid-at-icon.svg';
 import { authenticationRequestInfoStyles as styles } from '../../../styles';
 import IdentityPickerSheet from './components/IdentityPickerSheet';
-import { markProvisioningDeeplinkComplete } from '../../../utils/deeplink/provisioningDeeplinkStorage';
+import { markPendingDeeplinkComplete } from '../../../utils/deeplink/pendingDeeplinkStorage';
 
 const truncateAddress = addr => {
   if (!addr || addr.length <= 14) return addr;
@@ -165,6 +165,9 @@ const AuthenticationRequestInfo = props => {
   const accounts = useObjectSelector(state => state.authentication.accounts);
   const signedIn = useSelector(state => state.authentication.signedIn);
   const passthrough = useSelector(state => state.deeplink.passthrough);
+  const pendingDeeplinkId =
+    passthrough?.pendingDeeplinkId ||
+    passthrough?.pendingProvisioningDeeplinkId;
   const fromService = useSelector(state => state.deeplink.fromService);
   const sendModal = useObjectSelector(state => state.sendModal);
   const sendModalType = useSelector(state => state.sendModal.type);
@@ -680,14 +683,12 @@ const AuthenticationRequestInfo = props => {
       const finishSuccessfulModal = async () => {
         if (
           successfulSendModalTypeRef.current === LINK_IDENTITY_SEND_MODAL &&
-          passthrough?.pendingProvisioningDeeplinkId
+          pendingDeeplinkId
         ) {
           try {
-            await markProvisioningDeeplinkComplete(
-              passthrough.pendingProvisioningDeeplinkId,
-            );
+            await markPendingDeeplinkComplete(pendingDeeplinkId);
           } catch (e) {
-            console.warn('Unable to mark provisioning deeplink complete', e);
+            console.warn('Unable to mark pending deeplink complete', e);
           }
         }
 
@@ -724,7 +725,7 @@ const AuthenticationRequestInfo = props => {
     sendModal.data?.success,
     sendModal.visible,
     sendModalType,
-    passthrough?.pendingProvisioningDeeplinkId,
+    pendingDeeplinkId,
     props.navigation,
   ]);
 

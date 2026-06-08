@@ -41,7 +41,7 @@ import { verifyGenericResponse } from '../../../utils/api/channels/vrpc/requests
 import { createAlert, resolveAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { genericRequestCompleteStyles as styles } from '../../../styles';
-import { markProvisioningDeeplinkComplete } from '../../../utils/deeplink/provisioningDeeplinkStorage';
+import { markPendingDeeplinkComplete } from '../../../utils/deeplink/pendingDeeplinkStorage';
 
 const GenericRequestComplete = props => {
   const { requestBufferString, responseBufferString } = props.route.params;
@@ -69,14 +69,16 @@ const GenericRequestComplete = props => {
     props.navigation.dispatch(resetAction);
   };
 
-  const markSavedProvisioningRequestComplete = async () => {
-    if (passthrough?.pendingProvisioningDeeplinkId) {
+  const markSavedPendingRequestComplete = async () => {
+    const pendingRequestId =
+      passthrough?.pendingDeeplinkId ||
+      passthrough?.pendingProvisioningDeeplinkId;
+
+    if (pendingRequestId) {
       try {
-        await markProvisioningDeeplinkComplete(
-          passthrough.pendingProvisioningDeeplinkId,
-        );
+        await markPendingDeeplinkComplete(pendingRequestId);
       } catch (e) {
-        console.warn('Unable to mark provisioning deeplink complete', e);
+        console.warn('Unable to mark pending deeplink complete', e);
       }
     }
   };
@@ -142,7 +144,7 @@ const GenericRequestComplete = props => {
   };
 
   const responseNotice = useMemo(() => {
-    if (!requestBufferString) return null;
+    if (!requestBufferString || !responseBufferString) return null;
 
     try {
       const request = new GenericRequest();
@@ -164,7 +166,7 @@ const GenericRequestComplete = props => {
     }
 
     return null;
-  }, [requestBufferString]);
+  }, [requestBufferString, responseBufferString]);
 
   const identityUpdateTxid = useMemo(() => {
     if (!responseBufferString) return null;
@@ -251,7 +253,7 @@ const GenericRequestComplete = props => {
       setLoading(true);
 
       if (!requestBufferString || !responseBufferString) {
-        await markSavedProvisioningRequestComplete();
+        await markSavedPendingRequestComplete();
         setLoading(false);
         completeRequest();
         return;
@@ -268,7 +270,7 @@ const GenericRequestComplete = props => {
 
       response.setFlags();
       if (response.signature == null) {
-        await markSavedProvisioningRequestComplete();
+        await markSavedPendingRequestComplete();
         setLoading(false);
         completeRequest();
         return;
@@ -286,7 +288,7 @@ const GenericRequestComplete = props => {
       }
 
       await handleResponseUri(request, signedResponse);
-      await markSavedProvisioningRequestComplete();
+      await markSavedPendingRequestComplete();
     } catch (e) {
       if (e?.isResponsePostError) {
         setPostFailed(true);

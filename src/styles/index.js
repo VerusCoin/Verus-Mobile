@@ -49,6 +49,9 @@ export {
   default as reviewStepStyles,
 } from './deeplink/reviewStep.styles';
 export {
+  default as spendableKeyRequestInfoStyles,
+} from './deeplink/spendableKeyRequestInfo.styles';
+export {
   default as vdxfUniValueModalInnerAreaStyles,
 } from './components/vdxfUniValueModalInnerArea.styles';
 export {

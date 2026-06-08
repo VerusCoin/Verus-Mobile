@@ -226,7 +226,6 @@ class VrpcInterface {
 
   getEndpointAddressForChain(systemId) {
     if (this.systemEndpointIds[systemId] == null) this.systemEndpointIds[systemId] = [];
-    const endpoints = Store.getState().channelStore_vrpc.vrpcEndpoints;
     const overrideEndpoints =
       CoinDirectory.vrpcOverrides && CoinDirectory.vrpcOverrides[systemId]
         ? CoinDirectory.vrpcOverrides[systemId]
@@ -237,9 +236,11 @@ class VrpcInterface {
         this.initEndpoint(systemId, endpoint);
       }
 
+      const newEndpoints = Store.getState().channelStore_vrpc.vrpcEndpoints;
+
       const allowed = new Set(overrideEndpoints);
       this.systemEndpointIds[systemId] = this.systemEndpointIds[systemId].filter(
-        id => endpoints[id] && allowed.has(endpoints[id][1]),
+        id => newEndpoints[id] && allowed.has(newEndpoints[id][1]),
       );
     }
 
@@ -252,7 +253,7 @@ class VrpcInterface {
         Math.floor(Math.random() * this.systemEndpointIds[systemId].length)
       ];
 
-    return endpoints[randomId][1];
+    return Store.getState().channelStore_vrpc.vrpcEndpoints[randomId][1];
   }
 
   recordEndpointConnection(id) {

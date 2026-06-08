@@ -3,7 +3,7 @@
   - Coordinates generic request detail handlers, chooses the matching deeplink
     screen, and forwards completed responses through the request flow.
 */
-import React, {useState, useEffect} from 'react';
+import React, {useCallback, useState, useEffect} from 'react';
 import {Linking, TouchableOpacity, View} from 'react-native';
 import { Portal, Text } from 'react-native-paper';
 import {useSelector} from 'react-redux';
@@ -20,6 +20,7 @@ import {
   IDENTITY_UPDATE_REQUEST_VDXF_KEY,
   PROVISION_IDENTITY_DETAILS_VDXF_KEY,
   CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY,
+  SPENDABLE_KEY_DETAILS_VDXF_KEY,
   VALU_MOBILE_GENERIC_REQUEST_HANDLER_ID,
   VERUSPAY_INVOICE_DETAILS_VDXF_KEY,
 } from 'verus-typescript-primitives';
@@ -30,14 +31,21 @@ import { handleIdentityUpdateRequestDetailsVDXFObject } from '../../../utils/dee
 import { handleProvisionIdentityDetailsVDXFObject } from '../../../utils/deeplink/handlers/provisionIdentityDetailsHandler';
 import { handleAppEncryptionRequestVDXFObject } from '../../../utils/deeplink/handlers/appEncryptionRequestHandler';
 import { handleCreateWalletBackupDetailsVDXFObject } from '../../../utils/deeplink/handlers/createWalletBackupDetailsHandler';
+import { handleSpendableKeyDetailsVDXFObject } from '../../../utils/deeplink/handlers/spendableKeyDetailsHandler';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import AuthenticationRequestInfo from '../AuthenticationRequestInfo/AuthenticationRequestInfo';
 import IdentityUpdateRequestInfo from '../IdentityUpdateRequestInfo/IdentityUpdateRequestInfo';
 import AppEncryptionRequestInfo from '../AppEncryptionRequestInfo/AppEncryptionRequestInfo';
 import WalletBackupRequestInfo from '../WalletBackupRequestInfo/WalletBackupRequestInfo';
+import SpendableKeyRequestInfo from '../SpendableKeyRequestInfo/SpendableKeyRequestInfo';
 import ListSelectionModal from '../../../components/ListSelectionModal/ListSelectionModal';
+import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import { isDeeplinkHandlerInstalled } from '../../../utils/deeplink/isDeeplinkHandlerInstalled';
 import Colors from '../../../globals/colors';
+import {
+  getFriendlyNameMap,
+  getIdentity,
+} from '../../../utils/api/channels/verusid/callCreators';
 
 
 const GenericRequestHome = props => {
@@ -59,6 +67,8 @@ const GenericRequestHome = props => {
 
   const [valuInstalled, setValuInstalled] = useState(false);
   const [openInAnotherAppVisible, setOpenInAnotherAppVisible] = useState(false);
+  const [verusIdDetailsModalProps, setVerusIdDetailsModalProps] =
+    useState(null);
   const passthrough = useSelector(state => state.deeplink.passthrough);
 
   /**
@@ -86,6 +96,7 @@ const GenericRequestHome = props => {
   detailHandlers.set(PROVISION_IDENTITY_DETAILS_VDXF_KEY.vdxfid, handleProvisionIdentityDetailsVDXFObject);
   detailHandlers.set(APP_ENCRYPTION_REQUEST_VDXF_KEY.vdxfid, handleAppEncryptionRequestVDXFObject);
   detailHandlers.set(CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY.vdxfid, handleCreateWalletBackupDetailsVDXFObject);
+  detailHandlers.set(SPENDABLE_KEY_DETAILS_VDXF_KEY.vdxfid, handleSpendableKeyDetailsVDXFObject);
   /**
    * Processes a detail in the request at a certain index
    * @param {number} index 
@@ -182,6 +193,36 @@ const GenericRequestHome = props => {
     setProcessedDetailIndices([...processedDetailIndices, ...handledIndices]);
     setDetailsProcessed(newDetailsProcessed);
   }
+
+  const getVerusId = useCallback(async (systemId, iAddrOrName) => {
+    const identity = await getIdentity(systemId, iAddrOrName);
+
+    if (identity.error) throw new Error(identity.error.message);
+    return identity.result;
+  }, []);
+
+  const openVerusIdDetailsModal = useCallback((systemId, iAddress) => {
+    setVerusIdDetailsModalProps({
+      loadVerusId: () => getVerusId(systemId, iAddress),
+      visible: true,
+      animationType: 'slide',
+      cancel: () => setVerusIdDetailsModalProps(null),
+      loadFriendlyNames: async () => {
+        try {
+          const identityObj = await getVerusId(systemId, iAddress);
+
+          return getFriendlyNameMap(systemId, identityObj);
+        } catch (e) {
+          return {
+            ['i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV']: 'VRSC',
+            ['iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq']: 'VRSCTEST',
+          };
+        }
+      },
+      iAddress,
+      chain: systemId,
+    });
+  }, [getVerusId]);
 
   useEffect(() => {
     isDeeplinkHandlerInstalled(VALU_MOBILE_GENERIC_REQUEST_HANDLER_ID).then(installed => {
@@ -286,6 +327,19 @@ const GenericRequestHome = props => {
         request={request}
         detailIndex={detailIndex}
       />
+    ),
+    [SPENDABLE_KEY_DETAILS_VDXF_KEY.vdxfid]: () => (
+      <SpendableKeyRequestInfo
+        {...displayProps}
+        cancel={props.cancel}
+        setLoading={props.setLoading}
+        navigation={props.navigation}
+        next={next}
+        response={response}
+        request={request}
+        detailIndex={detailIndex}
+        openVerusIdDetailsModal={openVerusIdDetailsModal}
+      />
     )
   };
 
@@ -324,6 +378,9 @@ const GenericRequestHome = props => {
         </TouchableOpacity>
       )}
       <Portal>
+        {verusIdDetailsModalProps != null && (
+          <VerusIdDetailsModal {...verusIdDetailsModalProps} />
+        )}
         <ListSelectionModal
           visible={openInAnotherAppVisible}
           cancel={() => setOpenInAnotherAppVisible(false)}
