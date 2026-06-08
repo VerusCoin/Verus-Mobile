@@ -55,6 +55,7 @@
   "WIDGET_STORAGE_INTERNAL_KEY": "widgets",
   "CURRENCY_DEFINITION_STORAGE_INTERNAL_KEY": "currencyDefinitions",
   "CONTRACT_DEFINITION_STORAGE_INTERNAL_KEY": "ethereumContractDefinitions",
+  "DEEPLINK_STORAGE_INTERNAL_KEY": "pendingDeeplinks",
 
   "WYRE_ACCESSIBLE": true,
 
