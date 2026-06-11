@@ -5,6 +5,7 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import {Button, Text, TextInput} from 'react-native-paper';
@@ -12,6 +13,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
+import BarcodeReader from '../../../components/BarcodeReader/BarcodeReader';
 import GradientButton from '../../../components/GradientButton';
 import {createAlert} from '../../../actions/actions/alert/dispatchers/alert';
 import {openAuthenticateUserModal} from '../../../actions/actions/sendModal/dispatchers/sendModal';
@@ -79,6 +81,16 @@ const getClaimTitle = totals => {
 const getErrorMessage = (error, fallback) => {
   return error && error.message ? error.message : fallback;
 };
+
+const waitForStatusPaint = () =>
+  new Promise(resolve => {
+    const scheduleFrame =
+      global.requestAnimationFrame == null
+        ? callback => setTimeout(callback, 0)
+        : global.requestAnimationFrame;
+
+    scheduleFrame(() => setTimeout(resolve, 0));
+  });
 
 const getScanError = error => ({
   title: 'Network error',
@@ -385,7 +397,8 @@ const SpendableKeyRequestInfo = props => {
     setRequestError(null);
     setClaimPlan(null);
     setClaimPlanScanKey(null);
-    setStatus('scanning');
+    setStatus(requiresPassword ? 'decrypting' : 'scanning');
+    await waitForStatusPaint();
 
     try {
       mnemonic = spendableKeyDetailsOrdinalToMnemonic({
@@ -409,6 +422,11 @@ const SpendableKeyRequestInfo = props => {
     }
 
     try {
+      if (requiresPassword) {
+        setStatus('scanning');
+        await waitForStatusPaint();
+      }
+
       const discovered = await discoverSpendableKeyClaims({
         mnemonic,
         requestIsTestnet,
@@ -435,6 +453,27 @@ const SpendableKeyRequestInfo = props => {
     requestIsTestnet,
     requiresPassword,
   ]);
+
+  const scanPasswordQr = useCallback(() => {
+    Keyboard.dismiss();
+    setStatus('passwordScanner');
+  }, []);
+
+  const handlePasswordQrScan = useCallback(async codes => {
+    const scannedValue = codes && codes[0] ? codes[0].value : null;
+
+    if (
+      typeof scannedValue === 'string' &&
+      scannedValue.length > 0 &&
+      scannedValue.length <= 5000
+    ) {
+      setPassword(scannedValue);
+      setStatus('password');
+    } else {
+      createAlert('Error', 'QR code did not contain a valid claim password.');
+      setStatus('password');
+    }
+  }, []);
 
   const claimPlanNeedsAccountRefresh =
     claimPlan != null &&
@@ -696,54 +735,91 @@ const SpendableKeyRequestInfo = props => {
     return renderLoading('Scanning spendable key...');
   }
 
+  if (status === 'decrypting') {
+    return renderLoading('Decrypting spendable key...');
+  }
+
   if (status === 'claiming') {
     return renderLoading('Claiming spendable key...');
+  }
+
+  if (status === 'passwordScanner') {
+    return (
+      <SafeAreaView style={styles.scannerContainer}>
+        <BarcodeReader
+          prompt="Scan the claim password QR"
+          onScan={handlePasswordQrScan}
+          button={() => (
+            <Button
+              mode="contained"
+              buttonColor={Colors.warningButtonColor}
+              onPress={() => setStatus('password')}
+              style={styles.scannerCancelButton}
+            >
+              {'Cancel'}
+            </Button>
+          )}
+        />
+      </SafeAreaView>
+    );
   }
 
   if (status === 'password') {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.centerContent}>
-          <View style={styles.passwordCard}>
-            <View style={styles.iconWrap}>
-              <MaterialCommunityIcons
-                name="key-chain"
-                size={54}
-                color={Colors.primaryColor}
-              />
-            </View>
-            <Text style={[styles.mainTitle, {textAlign: 'center'}]}>
-              {'Encrypted key'}
-            </Text>
-            <Text style={[styles.subtitle, {textAlign: 'center', marginBottom: 18}]}>
-              {'Enter the claim password to scan this spendable key.'}
-            </Text>
-            <TextInput
-              returnKeyType="done"
-              label="Claim password"
-              value={password}
-              mode="outlined"
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              autoCorrect={false}
-              onChangeText={setPassword}
-              right={
-                <TextInput.Icon
-                  icon={showPassword ? 'eye-off' : 'eye'}
-                  onPress={() => setShowPassword(!showPassword)}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <View style={styles.centerContent}>
+            <View style={styles.passwordCard}>
+              <View style={styles.iconWrap}>
+                <MaterialCommunityIcons
+                  name="key-outline"
+                  size={54}
+                  color={Colors.primaryColor}
                 />
-              }
-              style={{marginBottom: 12}}
-            />
-            <GradientButton
-              onPress={scanClaims}
-              disabled={password.length === 0}
-              style={styles.primaryCta}
-            >
-              {'Scan key'}
-            </GradientButton>
+              </View>
+              <Text style={[styles.mainTitle, {textAlign: 'center'}]}>
+                {'Decrypt spendable key'}
+              </Text>
+              <Text style={styles.passwordDescription}>
+                {'This spendable key is encrypted and needs to be decrypted before you can redeem its funds or VerusIDs.'}
+              </Text>
+              <TextInput
+                returnKeyType="done"
+                label="Claim password"
+                value={password}
+                mode="outlined"
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+                onChangeText={setPassword}
+                right={
+                  <TextInput.Icon
+                    icon={showPassword ? 'eye-off' : 'eye'}
+                    onPress={() => setShowPassword(!showPassword)}
+                  />
+                }
+                style={styles.passwordInput}
+              />
+              <Button
+                mode="outlined"
+                icon="qrcode-scan"
+                onPress={scanPasswordQr}
+                style={styles.passwordQrButton}
+                contentStyle={styles.passwordQrButtonContent}
+                labelStyle={styles.passwordQrButtonLabel}
+              >
+                {'Scan QR'}
+              </Button>
+              <GradientButton
+                onPress={scanClaims}
+                disabled={password.length === 0}
+                style={styles.primaryCta}
+              >
+                {'Decrypt'}
+              </GradientButton>
+            </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </SafeAreaView>
     );
   }

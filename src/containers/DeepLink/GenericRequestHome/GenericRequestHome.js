@@ -186,7 +186,18 @@ const GenericRequestHome = props => {
     }
 
     if (request && newDetailsProcessed < request.details.length) {
-      props.navigation.popToTop();
+      const navigationState = props.navigation.getState
+        ? props.navigation.getState()
+        : null;
+
+      if (
+        navigationState &&
+        navigationState.type === 'stack' &&
+        navigationState.index > 0 &&
+        typeof props.navigation.popToTop === 'function'
+      ) {
+        props.navigation.popToTop();
+      }
     }
 
     setResponse(response);

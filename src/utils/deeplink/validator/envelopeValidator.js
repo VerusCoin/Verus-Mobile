@@ -1,5 +1,6 @@
 import { AUTHENTICATION_REQUEST_VDXF_KEY, GenericRequest, IDENTITY_UPDATE_REQUEST_VDXF_KEY, PROVISION_IDENTITY_DETAILS_VDXF_KEY, 
-  VERUSPAY_INVOICE_DETAILS_VDXF_KEY, VerusPayInvoiceDetailsOrdinalVDXFObject, APP_ENCRYPTION_REQUEST_VDXF_KEY, CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY, SPENDABLE_KEY_DETAILS_VDXF_KEY, SpendableKeyDetailsOrdinalVDXFObject} from "verus-typescript-primitives"
+  VERUSPAY_INVOICE_DETAILS_VDXF_KEY, VerusPayInvoiceDetailsOrdinalVDXFObject, APP_ENCRYPTION_REQUEST_VDXF_KEY, CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY, SPENDABLE_KEY_DETAILS_VDXF_KEY, SpendableKeyDetailsOrdinalVDXFObject,
+  CreateWalletBackupDetailsOrdinalVDXFObject} from "verus-typescript-primitives"
 import { getInfo, verifyGenericRequest } from "../../api/channels/vrpc/callCreators"
 import { getIdentity } from "../../api/channels/verusid/callCreators";
 import { validateAuthenticationRequestVDXFObject } from "./authenticationRequestValidator";
@@ -27,7 +28,8 @@ export const isRequestRequiredSignature = (request) => {
 
   return !details.every((detail) => {
     return detail instanceof VerusPayInvoiceDetailsOrdinalVDXFObject ||
-      detail instanceof SpendableKeyDetailsOrdinalVDXFObject
+      detail instanceof SpendableKeyDetailsOrdinalVDXFObject || 
+      detail instanceof CreateWalletBackupDetailsOrdinalVDXFObject
   })
 }
 

@@ -45,10 +45,43 @@ export default StyleSheet.create({
     width: '100%',
     maxWidth: 340,
   },
+  passwordDescription: {
+    color: '#666',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 18,
+    textAlign: 'center',
+  },
+  passwordInput: {
+    marginBottom: 12,
+  },
+  passwordQrButton: {
+    borderColor: Colors.primaryColor,
+    borderRadius: 22,
+    height: 44,
+    marginBottom: 12,
+  },
+  passwordQrButtonContent: {
+    height: 44,
+  },
+  passwordQrButtonLabel: {
+    color: Colors.primaryColor,
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0,
+    textTransform: 'none',
+  },
   iconWrap: {
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+  },
+  scannerContainer: {
+    flex: 1,
+    backgroundColor: '#232323',
+  },
+  scannerCancelButton: {
+    marginBottom: 48,
   },
   summaryCard: {
     backgroundColor: '#FFFFFF',
