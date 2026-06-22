@@ -245,6 +245,7 @@
   },
   "jest": {
     "preset": "react-native",
+    "testEnvironment": "./debug/reactNativeJestEnvironment.js",
     "setupFiles": [
       "./global.js",
       "./debug/setupJest.js"

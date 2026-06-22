@@ -160,11 +160,17 @@ jest.mock('../../api/channels/verusid/requests/updateIdentity', () => ({
   pushUpdateIdentityTx: mockPushUpdateIdentityTx,
 }));
 
-jest.mock('verusid-ts-client', () => ({
-  VerusIdInterface: {
-    createUnfundedCurrencyTransferTransaction: mockCreateUnfundedCurrencyTransferTransaction,
-  },
-}));
+jest.mock('verusid-ts-client', () => {
+  const actual = jest.requireActual('verusid-ts-client');
+
+  return {
+    ...actual,
+    VerusIdInterface: {
+      ...actual.VerusIdInterface,
+      createUnfundedCurrencyTransferTransaction: mockCreateUnfundedCurrencyTransferTransaction,
+    },
+  };
+});
 
 jest.mock('@bitgo/utxo-lib', () => ({
   ECPair: {
@@ -189,11 +195,11 @@ jest.mock('@bitgo/utxo-lib/dist/src/smart_transactions', () => ({
   unpackOutput: mockUnpackOutput,
 }));
 
-import {
+const {
   broadcastSpendableKeyClaim,
   discoverSpendableKeyClaims,
   preflightSpendableKeyClaim,
-} from '../../spendableKey/spendableKey';
+} = require('../../spendableKey/spendableKey');
 
 const makeUtxo = ({
   txid,
@@ -903,7 +909,7 @@ describe('spendable key claim utilities', () => {
     expect(combinedOutput.address.getAddressString()).toBe(
       mockClaimedIdentityAddress,
     );
-    expect(combinedOutput.address.isID()).toBe(true);
+    expect(combinedOutput.address.isIAddr()).toBe(true);
   });
 
   it('combines the last identity update with the sweep when assets would otherwise be left without native fees', async () => {
@@ -979,7 +985,7 @@ describe('spendable key claim utilities', () => {
     expect(combinedOutput.address.getAddressString()).toBe(
       mockClaimedIdentityAddress,
     );
-    expect(combinedOutput.address.isID()).toBe(true);
+    expect(combinedOutput.address.isIAddr()).toBe(true);
   });
 
   it('combines identity and asset funds even when there are enough native funds for a separate sweep', async () => {
@@ -1043,7 +1049,7 @@ describe('spendable key claim utilities', () => {
     expect(combinedOutput.address.getAddressString()).toBe(
       mockClaimedIdentityAddress,
     );
-    expect(combinedOutput.address.isID()).toBe(true);
+    expect(combinedOutput.address.isIAddr()).toBe(true);
   });
 
   it('uses ID-held native funds to pay identity update fees when the R-address has none', async () => {
@@ -1176,7 +1182,7 @@ describe('spendable key claim utilities', () => {
         .currencyTransferOutputs[0];
 
     expect(output.address.getAddressString()).toBe(mockClaimedIdentityAddress);
-    expect(output.address.isID()).toBe(true);
+    expect(output.address.isIAddr()).toBe(true);
   });
 
   it('uses ID-held native funds for the identity update when combined sweep fees are not covered', async () => {

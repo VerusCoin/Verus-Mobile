@@ -1,4 +1,4 @@
-import {WALLET_BACKUP_NDEF_MIME} from '../../walletBackup/walletBackup';
+const {WALLET_BACKUP_NDEF_MIME} = require('../../walletBackup/walletBackup');
 
 const mockNfcManager = {
   isSupported: jest.fn(),
@@ -44,22 +44,22 @@ jest.mock('react-native-nfc-manager', () => {
   };
 });
 
-import {Ndef, NdefStatus} from 'react-native-nfc-manager';
-import {
+const {Ndef, NdefStatus} = require('react-native-nfc-manager');
+const {
   CreateWalletBackupDetails,
   CreateWalletBackupDetailsOrdinalVDXFObject,
   GenericRequest,
   WalletBackup,
   WalletBackupOrdinalVDXFObject,
-} from 'verus-typescript-primitives';
-import {
+} = require('verus-typescript-primitives');
+const {
   createWalletBackupNdefBytes,
   getWalletBackupOrdinalFromTag,
   readWalletBackupFromNfc,
   tagContainsCreateWalletBackupRequest,
   tagContainsWalletBackup,
   writeWalletBackupToNfc,
-} from '../../walletBackup/walletBackupNfc';
+} = require('../../walletBackup/walletBackupNfc');
 
 const walletBackupOrdinal = {
   toBuffer: () => Buffer.from('010203', 'hex'),
