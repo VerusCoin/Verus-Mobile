@@ -355,6 +355,7 @@ const SpendableKeyRequestInfo = props => {
   const [claimResult, setClaimResult] = useState(null);
   const [requestError, setRequestError] = useState(null);
   const scanStartedRef = useRef(false);
+  const scanCacheRef = useRef(null);
 
   const destinationBySystem = useMemo(
     () => getSystemDestinationMap(claimPlan, activeAccount),
@@ -362,6 +363,36 @@ const SpendableKeyRequestInfo = props => {
   );
 
   const detail = request ? request.getDetails(detailIndex) : null;
+
+  const getScanCache = useCallback(() => {
+    const passwordKey = requiresPassword ? password : '';
+    const currentCache = scanCacheRef.current;
+
+    if (
+      currentCache == null ||
+      currentCache.detail !== detail ||
+      currentCache.passwordKey !== passwordKey ||
+      currentCache.requestIsTestnet !== requestIsTestnet
+    ) {
+      const nextCache = {
+        detail,
+        passwordKey,
+        requestIsTestnet,
+        mnemonic: null,
+        systemsById: new Map(),
+      };
+
+      scanCacheRef.current = nextCache;
+      return nextCache;
+    }
+
+    return currentCache;
+  }, [
+    detail,
+    password,
+    requestIsTestnet,
+    requiresPassword,
+  ]);
 
   const totals = useMemo(() => {
     if (!claimPlan) return {currencies: 0, identities: 0, unsupported: 0};
@@ -392,6 +423,7 @@ const SpendableKeyRequestInfo = props => {
   const scanClaims = useCallback(async () => {
     Keyboard.dismiss();
     let mnemonic;
+    const scanCache = getScanCache();
 
     setClaimResult(null);
     setRequestError(null);
@@ -401,10 +433,15 @@ const SpendableKeyRequestInfo = props => {
     await waitForStatusPaint();
 
     try {
-      mnemonic = spendableKeyDetailsOrdinalToMnemonic({
-        spendableKeyOrdinal: detail,
-        password,
-      });
+      if (scanCache.mnemonic != null) {
+        mnemonic = scanCache.mnemonic;
+      } else {
+        mnemonic = spendableKeyDetailsOrdinalToMnemonic({
+          spendableKeyOrdinal: detail,
+          password,
+        });
+        scanCache.mnemonic = mnemonic;
+      }
     } catch (e) {
       createAlert('Error', getErrorMessage(e, 'Unable to scan spendable key.'));
       setStatus(requiresPassword ? 'password' : 'error');
@@ -433,7 +470,12 @@ const SpendableKeyRequestInfo = props => {
         activeCoinsForUser: activeAccountMatchesRequest
           ? activeCoinsForUser
           : [],
+        cachedSystems: Array.from(scanCache.systemsById.values()),
       });
+
+      for (const system of discovered.systems) {
+        scanCache.systemsById.set(system.systemId, system);
+      }
 
       setClaimPlan(discovered);
       setClaimPlanScanKey(activeScanKey);
@@ -449,6 +491,7 @@ const SpendableKeyRequestInfo = props => {
     activeCoinsForUser,
     activeScanKey,
     detail,
+    getScanCache,
     password,
     requestIsTestnet,
     requiresPassword,
@@ -646,6 +689,7 @@ const SpendableKeyRequestInfo = props => {
           `Funds were claimed, but one or more redeemed currencies could not be added to your wallet automatically. ${e.message}`,
         );
       }
+      scanCacheRef.current = null;
       setClaimResult(broadcastResult);
       setRequestError(null);
       setStatus('complete');
@@ -665,6 +709,7 @@ const SpendableKeyRequestInfo = props => {
           results: e.results,
           partialError: e.message || 'Unable to complete every claim transaction.',
         });
+        scanCacheRef.current = null;
         setStatus('complete');
         createAlert(
           'Claim partially completed',

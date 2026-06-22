@@ -56,6 +56,7 @@ const mockVethAssetCoin = {
 const mockRootClaimAddress = 'RRootClaimAddress';
 const mockPbaasClaimAddress = 'RPbaasClaimAddress';
 const mockDestinationAddress = 'RDCr3h5wYGoMh2QF7akoZy2GNsjCeSqgpu';
+const mockClaimedIdentityAddress = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
 const mockEndpoints = {};
 const mockTxInputsByHex = {};
 
@@ -199,13 +200,14 @@ const makeUtxo = ({
   outputIndex = 0,
   satoshis = 0,
   currencyvalues,
+  isspendable = true,
   script = '00',
 }) => ({
   txid,
   outputIndex,
   satoshis,
   currencyvalues,
-  isspendable: true,
+  isspendable,
   script,
 });
 
@@ -218,11 +220,25 @@ const rootFeeUtxo = makeUtxo({
   txid: '11'.repeat(32),
   outputIndex: 0,
   satoshis: 20000,
+  currencyvalues: {
+    [mockRootCoin.system_id]: '0.0002',
+  },
+});
+const rootExactFeeUtxo = makeUtxo({
+  txid: '0f'.repeat(32),
+  outputIndex: 5,
+  satoshis: 10000,
+  currencyvalues: {
+    [mockRootCoin.system_id]: '0.0001',
+  },
 });
 const rootSweepUtxo = makeUtxo({
   txid: '22'.repeat(32),
   outputIndex: 1,
   satoshis: 50000,
+  currencyvalues: {
+    [mockRootCoin.system_id]: '0.0005',
+  },
 });
 const rootTokenUtxo = makeUtxo({
   txid: '33'.repeat(32),
@@ -249,6 +265,35 @@ const rootIdentityUtxo = makeUtxo({
   outputIndex: 3,
   satoshis: 0,
   script: 'ff',
+});
+const rootIdentityFundsUtxo = makeUtxo({
+  txid: 'aa'.repeat(32),
+  outputIndex: 0,
+  satoshis: 40000,
+  currencyvalues: {
+    'identity-token-system': '0.25',
+    [mockRootCoin.system_id]: '0.0004',
+  },
+  isspendable: false,
+});
+const rootIdentityTokenCurrencyId = 'identity-token-system';
+const rootIdentityFeeUtxo = makeUtxo({
+  txid: 'bb'.repeat(32),
+  outputIndex: 1,
+  satoshis: 20000,
+  currencyvalues: {
+    [mockRootCoin.system_id]: '0.0002',
+  },
+  isspendable: false,
+});
+const rootIdentityNonNativeFeeUtxo = makeUtxo({
+  txid: 'cc'.repeat(32),
+  outputIndex: 2,
+  satoshis: 30000,
+  currencyvalues: {
+    [mockRootCoin.system_id]: '0.0003',
+  },
+  isspendable: false,
 });
 const pbaasUtxo = makeUtxo({
   txid: '44'.repeat(32),
@@ -322,10 +367,11 @@ describe('spendable key claim utilities', () => {
         toBuffer: jest.fn(() => Buffer.from('dd', 'hex')),
       },
     });
-    mockCreateUpdateIdentityTxWithUtxos.mockResolvedValue({
+    mockCreateUpdateIdentityTxWithUtxos.mockImplementation(async args => ({
       hex: 'identity-hex',
-      utxos: [rootFeeUtxo],
-    });
+      utxos: args.utxos,
+      deltas: new Map(),
+    }));
     mockCreateUpdateIdentityWithCurrencyTransferTx.mockResolvedValue({
       hex: 'combined-identity-sweep',
       utxos: [
@@ -366,7 +412,7 @@ describe('spendable key claim utilities', () => {
             eval: 14,
             data: {
               toJson: () => ({
-                identityaddress: 'identity-address',
+                identityaddress: mockClaimedIdentityAddress,
                 minimumsignatures: 1,
                 name: 'gift',
                 primaryaddresses: [mockRootClaimAddress],
@@ -376,12 +422,21 @@ describe('spendable key claim utilities', () => {
         };
       },
     );
-    mockGetAddressUtxos.mockImplementation(async systemId => ({
-      result:
-        systemId === mockPbaasCoin.system_id
-          ? [pbaasUtxo]
-          : [rootFeeUtxo, rootTokenUtxo, rootIdentityUtxo],
-    }));
+    mockGetAddressUtxos.mockImplementation(async (systemId, addresses) => {
+      if (systemId === mockPbaasCoin.system_id) {
+        return {result: [pbaasUtxo]};
+      }
+
+      if (addresses[0] === mockClaimedIdentityAddress) {
+        return {result: [rootIdentityFundsUtxo]};
+      }
+
+      if (addresses[0] === 'rpc-identity-address') {
+        return {result: []};
+      }
+
+      return {result: [rootFeeUtxo, rootTokenUtxo, rootIdentityUtxo]};
+    });
     mockEndpoints[mockRootCoin.system_id].getIdentitiesWithAddress.mockResolvedValue({
       result: [
         {
@@ -412,12 +467,51 @@ describe('spendable key claim utilities', () => {
     expect(claimPlan.hasClaims).toBe(true);
     expect(claimPlan.systems).toHaveLength(2);
     expect(rootSystem.currencies.map(currency => currency.currencyId)).toEqual(
-      expect.arrayContaining([mockRootCoin.system_id, 'token-system']),
+      expect.arrayContaining([
+        mockRootCoin.system_id,
+        'token-system',
+        rootIdentityTokenCurrencyId,
+      ]),
+    );
+    expect(
+      rootSystem.currencies.find(
+        currency => currency.currencyId === mockRootCoin.system_id,
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        satoshis: '50000',
+        amount: '0.0005',
+      }),
+    );
+    expect(
+      rootSystem.currencies.find(
+        currency => currency.currencyId === rootIdentityTokenCurrencyId,
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        satoshis: '25000000',
+        amount: '0.25',
+      }),
     );
     expect(rootSystem.identities).toHaveLength(2);
-    expect(rootSystem.identities.map(identity => identity.identityAddress)).toEqual(
-      expect.arrayContaining(['identity-address', 'rpc-identity-address']),
+    expect(
+      rootSystem.identities.map(identity => identity.identityAddress),
+    ).toEqual(
+      expect.arrayContaining([
+        mockClaimedIdentityAddress,
+        'rpc-identity-address',
+      ]),
     );
+    expect(
+      rootSystem.identities.find(
+        identity => identity.identityAddress === mockClaimedIdentityAddress,
+      ).utxos,
+    ).toEqual([rootIdentityFundsUtxo]);
+    expect(
+      rootSystem.identities.find(
+        identity => identity.identityAddress === 'rpc-identity-address',
+      ).utxos,
+    ).toEqual([]);
     expect(
       rootSystem.identities.find(
         identity => identity.identityAddress === 'rpc-identity-address',
@@ -448,6 +542,115 @@ describe('spendable key claim utilities', () => {
     );
     expect(mockFindCoinObj).not.toHaveBeenCalledWith('.btc', null, true);
     expect(mockFindCoinObj).not.toHaveBeenCalledWith('.eth', null, true);
+  });
+
+  it('does not show native funds that will be consumed by identity fees', async () => {
+    mockUnpackOutput.mockImplementation(
+      (output, _systemId, _isInput, allowNonTransferEvals) => {
+        if (output.script.toString('hex') !== 'ff') return {};
+        if (!allowNonTransferEvals) throw new Error('identity output');
+
+        return {
+          master: {
+            eval: 14,
+            data: {
+              toJson: () => ({
+                identityaddress: mockClaimedIdentityAddress,
+                minimumsignatures: 1,
+                name: 'gift',
+                primaryaddresses: [mockRootClaimAddress],
+              }),
+            },
+          },
+        };
+      },
+    );
+    mockGetAddressUtxos.mockImplementation(async (systemId, addresses) => {
+      if (systemId === mockPbaasCoin.system_id) {
+        return {result: []};
+      }
+
+      if (addresses[0] === mockClaimedIdentityAddress) {
+        return {result: []};
+      }
+
+      return {result: [rootExactFeeUtxo, rootIdentityUtxo]};
+    });
+
+    const claimPlan = await discoverSpendableKeyClaims({
+      mnemonic: 'seed words',
+      requestIsTestnet: false,
+      activeCoinsForUser: [],
+    });
+    const rootSystem = claimPlan.systems.find(
+      system => system.systemId === mockRootCoin.system_id,
+    );
+
+    expect(claimPlan.hasClaims).toBe(true);
+    expect(rootSystem.identities).toHaveLength(1);
+    expect(rootSystem.currencies).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({currencyId: mockRootCoin.system_id}),
+      ]),
+    );
+  });
+
+  it('reuses cached discovered systems and scans only newly active systems', async () => {
+    const cachedRootSystem = {
+      systemId: mockRootCoin.system_id,
+      coinObj: mockRootCoin,
+      claimAddress: mockRootClaimAddress,
+      claimWif: 'cached-root-wif',
+      utxos: [rootFeeUtxo],
+      currencies: [
+        {
+          currencyId: mockRootCoin.system_id,
+          satoshis: '20000',
+          amount: '0.0002',
+          display: {
+            currencyId: mockRootCoin.system_id,
+            name: 'VRSC',
+            definition: null,
+          },
+        },
+      ],
+      identities: [],
+    };
+
+    mockGetAddressUtxos.mockImplementation(async systemId => ({
+      result: systemId === mockPbaasCoin.system_id ? [pbaasUtxo] : [],
+    }));
+
+    const claimPlan = await discoverSpendableKeyClaims({
+      mnemonic: 'seed words',
+      requestIsTestnet: false,
+      activeCoinsForUser: [mockPbaasCoin],
+      cachedSystems: [cachedRootSystem],
+    });
+
+    expect(claimPlan.systems).toHaveLength(2);
+    expect(
+      claimPlan.systems.find(
+        system => system.systemId === mockRootCoin.system_id,
+      ),
+    ).toEqual(cachedRootSystem);
+    expect(
+      claimPlan.systems.find(
+        system => system.systemId === mockPbaasCoin.system_id,
+      ).currencies[0].currencyId,
+    ).toBe(mockPbaasCoin.system_id);
+    expect(mockDeriveKeyPair).toHaveBeenCalledTimes(1);
+    expect(mockDeriveKeyPair.mock.calls[0][1]).toBe(mockPbaasCoin);
+    expect(mockGetAddressUtxos).toHaveBeenCalledWith(
+      mockPbaasCoin.system_id,
+      [mockPbaasClaimAddress],
+      true,
+    );
+    expect(mockGetAddressUtxos).not.toHaveBeenCalledWith(
+      mockRootCoin.system_id,
+      [mockRootClaimAddress],
+      true,
+    );
   });
 
   it('does not scan bridged vETH systems as spendable-key systems', async () => {
@@ -561,11 +764,43 @@ describe('spendable key claim utilities', () => {
     );
   });
 
+  it('rejects standalone sweeps that exceed the planned native fee', async () => {
+    mockValidateFundedCurrencyTransfer.mockReturnValueOnce({
+      valid: true,
+      fees: {
+        [mockRootCoin.system_id]: '10001',
+      },
+    });
+
+    await expect(
+      preflightSpendableKeyClaim({
+        claimPlan: {
+          requestIsTestnet: false,
+          systems: [
+            {
+              systemId: mockRootCoin.system_id,
+              coinObj: mockRootCoin,
+              claimWif: 'claim-wif',
+              utxos: [rootFeeUtxo, rootSweepUtxo],
+              identities: [],
+            },
+          ],
+        },
+        destinationBySystem: {
+          [mockRootCoin.system_id]: mockDestinationAddress,
+        },
+      }),
+    ).rejects.toThrow('Fee exceeds maximum spendable key claim fee.');
+  });
+
   it('requires the higher native fee for non-native asset sweeps', async () => {
     const smallNativeUtxo = makeUtxo({
       txid: '88'.repeat(32),
       outputIndex: 0,
       satoshis: 10000,
+      currencyvalues: {
+        [mockRootCoin.system_id]: '0.0001',
+      },
     });
 
     await expect(
@@ -610,7 +845,7 @@ describe('spendable key claim utilities', () => {
     ).rejects.toThrow('No claimable transparent funds or VerusIDs');
   });
 
-  it('preflights identity updates before sweeping remaining UTXOs', async () => {
+  it('combines an identity update with native funds and sends funds to the claimed VerusID', async () => {
     const plan = await preflightSpendableKeyClaim({
       claimPlan: {
         requestIsTestnet: false,
@@ -622,7 +857,7 @@ describe('spendable key claim utilities', () => {
             utxos: [rootFeeUtxo, rootSweepUtxo],
             identities: [
               {
-                identityAddress: 'identity-address',
+                identityAddress: mockClaimedIdentityAddress,
                 fullyQualifiedName: 'gift@',
                 result: {
                   blockheight: 20,
@@ -637,15 +872,38 @@ describe('spendable key claim utilities', () => {
       },
     });
 
-    expect(plan.transactions.map(tx => tx.type)).toEqual(['identity', 'sweep']);
-    expect(mockCreateUpdateIdentityTxWithUtxos).toHaveBeenCalledWith(
+    expect(plan.transactions).toHaveLength(1);
+    expect(plan.transactions[0]).toEqual(
       expect.objectContaining({
-        utxos: [rootFeeUtxo],
-        changeAaddr: mockDestinationAddress,
-        maxFee: 0.0001,
+        type: 'identity',
+        txHex: 'combined-identity-sweep',
+        includesSweep: true,
       }),
     );
-    expect(plan.transactions[1].inputs).toEqual([rootSweepUtxo]);
+    expect(mockCreateUpdateIdentityTxWithUtxos).not.toHaveBeenCalled();
+    expect(mockCreateUpdateIdentityWithCurrencyTransferTx).toHaveBeenCalledWith(
+      expect.objectContaining({
+        changeAaddr: mockDestinationAddress,
+        expectedIdentityPrimaryAddress: mockDestinationAddress,
+        currencyTransferOutputs: [
+          expect.objectContaining({
+            currencies: expect.objectContaining({
+              [mockRootCoin.system_id]: '50000',
+            }),
+          }),
+        ],
+        maxFee: 0.0002,
+      }),
+    );
+
+    const combinedOutput =
+      mockCreateUpdateIdentityWithCurrencyTransferTx.mock.calls[0][0]
+        .currencyTransferOutputs[0];
+
+    expect(combinedOutput.address.getAddressString()).toBe(
+      mockClaimedIdentityAddress,
+    );
+    expect(combinedOutput.address.isID()).toBe(true);
   });
 
   it('combines the last identity update with the sweep when assets would otherwise be left without native fees', async () => {
@@ -660,7 +918,7 @@ describe('spendable key claim utilities', () => {
             utxos: [rootTokenUtxo, rootFeeUtxo],
             identities: [
               {
-                identityAddress: 'identity-address',
+                identityAddress: mockClaimedIdentityAddress,
                 fullyQualifiedName: 'gift@',
                 result: {
                   txid: '77'.repeat(32),
@@ -699,12 +957,12 @@ describe('spendable key claim utilities', () => {
       expect.objectContaining({
         systemId: mockRootCoin.system_id,
         changeAaddr: mockDestinationAddress,
+        expectedIdentityPrimaryAddress: mockDestinationAddress,
         rawIdTx: 'raw-id-tx',
         idHeight: 20,
         currencyTransferOutputs: [
           expect.objectContaining({
             currencies: expect.objectContaining({
-              [mockRootCoin.system_id]: expect.any(String),
               [rootTokenCurrencyId]: expect.any(String),
             }),
           }),
@@ -714,6 +972,345 @@ describe('spendable key claim utilities', () => {
         isTestnet: false,
       }),
     );
+    const combinedOutput =
+      mockCreateUpdateIdentityWithCurrencyTransferTx.mock.calls[0][0]
+        .currencyTransferOutputs[0];
+
+    expect(combinedOutput.address.getAddressString()).toBe(
+      mockClaimedIdentityAddress,
+    );
+    expect(combinedOutput.address.isID()).toBe(true);
+  });
+
+  it('combines identity and asset funds even when there are enough native funds for a separate sweep', async () => {
+    const plan = await preflightSpendableKeyClaim({
+      claimPlan: {
+        requestIsTestnet: false,
+        systems: [
+          {
+            systemId: mockRootCoin.system_id,
+            coinObj: mockRootCoin,
+            claimWif: 'claim-wif',
+            utxos: [rootFeeUtxo, rootSweepUtxo, rootTokenUtxo],
+            identities: [
+              {
+                identityAddress: mockClaimedIdentityAddress,
+                fullyQualifiedName: 'gift@',
+                result: {
+                  txid: '77'.repeat(32),
+                  vout: 0,
+                  blockheight: 20,
+                },
+              },
+            ],
+          },
+        ],
+      },
+      destinationBySystem: {
+        [mockRootCoin.system_id]: mockDestinationAddress,
+      },
+    });
+
+    expect(plan.transactions).toHaveLength(1);
+    expect(plan.transactions[0]).toEqual(
+      expect.objectContaining({
+        type: 'identity',
+        txHex: 'combined-identity-sweep',
+        includesSweep: true,
+      }),
+    );
+    expect(mockCreateUpdateIdentityTxWithUtxos).not.toHaveBeenCalled();
+    expect(mockCreateUpdateIdentityWithCurrencyTransferTx).toHaveBeenCalledWith(
+      expect.objectContaining({
+        changeAaddr: mockDestinationAddress,
+        expectedIdentityPrimaryAddress: mockDestinationAddress,
+        currencyTransferOutputs: [
+          expect.objectContaining({
+            currencies: expect.objectContaining({
+              [mockRootCoin.system_id]: '50000',
+              [rootTokenCurrencyId]: '150000000',
+            }),
+          }),
+        ],
+        maxFee: 0.0002,
+      }),
+    );
+
+    const combinedOutput =
+      mockCreateUpdateIdentityWithCurrencyTransferTx.mock.calls[0][0]
+        .currencyTransferOutputs[0];
+
+    expect(combinedOutput.address.getAddressString()).toBe(
+      mockClaimedIdentityAddress,
+    );
+    expect(combinedOutput.address.isID()).toBe(true);
+  });
+
+  it('uses ID-held native funds to pay identity update fees when the R-address has none', async () => {
+    const plan = await preflightSpendableKeyClaim({
+      claimPlan: {
+        requestIsTestnet: false,
+        systems: [
+          {
+            systemId: mockRootCoin.system_id,
+            coinObj: mockRootCoin,
+            claimWif: 'claim-wif',
+            utxos: [],
+            identities: [
+              {
+                identityAddress: mockClaimedIdentityAddress,
+                fullyQualifiedName: 'gift@',
+                utxos: [rootIdentityFeeUtxo],
+                result: {
+                  txid: '77'.repeat(32),
+                  vout: 0,
+                  blockheight: 20,
+                },
+              },
+            ],
+          },
+        ],
+      },
+      destinationBySystem: {
+        [mockRootCoin.system_id]: mockDestinationAddress,
+      },
+    });
+
+    expect(plan.transactions).toHaveLength(1);
+    expect(mockCreateUpdateIdentityWithCurrencyTransferTx).not.toHaveBeenCalled();
+    expect(mockCreateUpdateIdentityTxWithUtxos).toHaveBeenCalledWith(
+      expect.objectContaining({
+        changeAaddr: mockClaimedIdentityAddress,
+        utxos: [rootIdentityFeeUtxo],
+        maxFee: 0.0001,
+      }),
+    );
+    expect(plan.transactions[0].outputs).toEqual([
+      {
+        currencyId: mockRootCoin.system_id,
+        satoshis: '10000',
+        amount: '0.0001',
+      },
+    ]);
+
+    expect(plan.transactions[0]).toEqual(
+      expect.objectContaining({
+        type: 'identity',
+        txHex: 'identity-hex',
+      }),
+    );
+  });
+
+  it('uses ID-held native funds as the fee source for combined identity and asset claims', async () => {
+    const plan = await preflightSpendableKeyClaim({
+      claimPlan: {
+        requestIsTestnet: false,
+        systems: [
+          {
+            systemId: mockRootCoin.system_id,
+            coinObj: mockRootCoin,
+            claimWif: 'claim-wif',
+            utxos: [rootTokenUtxo],
+            identities: [
+              {
+                identityAddress: mockClaimedIdentityAddress,
+                fullyQualifiedName: 'gift@',
+                utxos: [rootIdentityNonNativeFeeUtxo],
+                result: {
+                  txid: '77'.repeat(32),
+                  vout: 0,
+                  blockheight: 20,
+                },
+              },
+            ],
+          },
+        ],
+      },
+      destinationBySystem: {
+        [mockRootCoin.system_id]: mockDestinationAddress,
+      },
+    });
+
+    expect(plan.transactions).toHaveLength(1);
+    expect(plan.transactions[0]).toEqual(
+      expect.objectContaining({
+        type: 'identity',
+        txHex: 'combined-identity-sweep',
+        includesSweep: true,
+      }),
+    );
+    expect(mockCreateUpdateIdentityTxWithUtxos).not.toHaveBeenCalled();
+    expect(mockCreateUpdateIdentityWithCurrencyTransferTx).toHaveBeenCalledWith(
+      expect.objectContaining({
+        changeAaddr: mockClaimedIdentityAddress,
+        expectedIdentityPrimaryAddress: mockDestinationAddress,
+        currencyTransferOutputs: [
+          expect.objectContaining({
+            currencies: expect.objectContaining({
+              [mockRootCoin.system_id]: '10000',
+              [rootTokenCurrencyId]: '150000000',
+            }),
+          }),
+        ],
+        utxos: [rootTokenUtxo, rootIdentityNonNativeFeeUtxo],
+        maxFee: 0.0002,
+      }),
+    );
+    expect(plan.transactions[0].outputs).toEqual(
+      expect.arrayContaining([
+        {
+          currencyId: rootTokenCurrencyId,
+          satoshis: '150000000',
+          amount: '1.5',
+        },
+        {
+          currencyId: mockRootCoin.system_id,
+          satoshis: '10000',
+          amount: '0.0001',
+        },
+      ]),
+    );
+
+    const output =
+      mockCreateUpdateIdentityWithCurrencyTransferTx.mock.calls[0][0]
+        .currencyTransferOutputs[0];
+
+    expect(output.address.getAddressString()).toBe(mockClaimedIdentityAddress);
+    expect(output.address.isID()).toBe(true);
+  });
+
+  it('uses ID-held native funds for the identity update when combined sweep fees are not covered', async () => {
+    const smallNativeUtxo = makeUtxo({
+      txid: 'de'.repeat(32),
+      outputIndex: 0,
+      satoshis: 5000,
+      currencyvalues: {
+        [mockRootCoin.system_id]: '0.00005',
+      },
+    });
+    const identityExactFeeUtxo = makeUtxo({
+      txid: 'ef'.repeat(32),
+      outputIndex: 1,
+      satoshis: 10000,
+      currencyvalues: {
+        [mockRootCoin.system_id]: '0.0001',
+      },
+      isspendable: false,
+    });
+
+    const plan = await preflightSpendableKeyClaim({
+      claimPlan: {
+        requestIsTestnet: false,
+        systems: [
+          {
+            systemId: mockRootCoin.system_id,
+            coinObj: mockRootCoin,
+            claimWif: 'claim-wif',
+            utxos: [smallNativeUtxo],
+            identities: [
+              {
+                identityAddress: mockClaimedIdentityAddress,
+                fullyQualifiedName: 'gift@',
+                utxos: [identityExactFeeUtxo],
+                result: {
+                  txid: '77'.repeat(32),
+                  vout: 0,
+                  blockheight: 20,
+                },
+              },
+            ],
+          },
+        ],
+      },
+      destinationBySystem: {
+        [mockRootCoin.system_id]: mockDestinationAddress,
+      },
+    });
+
+    expect(plan.transactions).toHaveLength(1);
+    expect(mockCreateUpdateIdentityWithCurrencyTransferTx).not.toHaveBeenCalled();
+    expect(mockCreateUpdateIdentityTxWithUtxos).toHaveBeenCalledWith(
+      expect.objectContaining({
+        changeAaddr: mockClaimedIdentityAddress,
+        utxos: [identityExactFeeUtxo],
+        maxFee: 0.0001,
+      }),
+    );
+    expect(plan.transactions[0].outputs).toEqual([]);
+  });
+
+  it('uses ID-held native funds for combined native sweeps when they cover the combined fee', async () => {
+    const smallNativeUtxo = makeUtxo({
+      txid: 'da'.repeat(32),
+      outputIndex: 0,
+      satoshis: 5000,
+      currencyvalues: {
+        [mockRootCoin.system_id]: '0.00005',
+      },
+    });
+    const identityCombinedFeeUtxo = makeUtxo({
+      txid: 'eb'.repeat(32),
+      outputIndex: 1,
+      satoshis: 20000,
+      currencyvalues: {
+        [mockRootCoin.system_id]: '0.0002',
+      },
+      isspendable: false,
+    });
+
+    const plan = await preflightSpendableKeyClaim({
+      claimPlan: {
+        requestIsTestnet: false,
+        systems: [
+          {
+            systemId: mockRootCoin.system_id,
+            coinObj: mockRootCoin,
+            claimWif: 'claim-wif',
+            utxos: [smallNativeUtxo],
+            identities: [
+              {
+                identityAddress: mockClaimedIdentityAddress,
+                fullyQualifiedName: 'gift@',
+                utxos: [identityCombinedFeeUtxo],
+                result: {
+                  txid: '77'.repeat(32),
+                  vout: 0,
+                  blockheight: 20,
+                },
+              },
+            ],
+          },
+        ],
+      },
+      destinationBySystem: {
+        [mockRootCoin.system_id]: mockDestinationAddress,
+      },
+    });
+
+    expect(plan.transactions).toHaveLength(1);
+    expect(mockCreateUpdateIdentityTxWithUtxos).not.toHaveBeenCalled();
+    expect(mockCreateUpdateIdentityWithCurrencyTransferTx).toHaveBeenCalledWith(
+      expect.objectContaining({
+        changeAaddr: mockClaimedIdentityAddress,
+        expectedIdentityPrimaryAddress: mockDestinationAddress,
+        currencyTransferOutputs: [
+          expect.objectContaining({
+            currencies: expect.objectContaining({
+              [mockRootCoin.system_id]: '5000',
+            }),
+          }),
+        ],
+        utxos: [smallNativeUtxo, identityCombinedFeeUtxo],
+        maxFee: 0.0002,
+      }),
+    );
+    expect(plan.transactions[0].outputs).toEqual([
+      {
+        currencyId: mockRootCoin.system_id,
+        satoshis: '5000',
+        amount: '0.00005',
+      },
+    ]);
   });
 
   it('broadcasts identity updates and locally signed sweeps', async () => {

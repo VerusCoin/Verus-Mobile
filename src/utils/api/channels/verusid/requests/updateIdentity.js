@@ -80,6 +80,7 @@ export const createUpdateIdentityTxWithUtxos = async ({
   idHeight,
   utxos,
   maxFee,
+  expectedIdentityPrimaryAddress,
   updateIdentityTransactionHex,
   isTestnet,
 }) => {
@@ -110,6 +111,7 @@ export const createUpdateIdentityWithCurrencyTransferTx = async ({
   currencyTransferOutputs,
   utxos,
   maxFee,
+  expectedIdentityPrimaryAddress,
   updateIdentityTransactionHex,
   isTestnet,
 }) => {
@@ -128,7 +130,7 @@ export const createUpdateIdentityWithCurrencyTransferTx = async ({
       updateIdentityTransactionHex,
       parseVdxfObjects: true,
       isTestnet,
-      expectedIdentityPrimaryAddress: changeAaddr,
+      expectedIdentityPrimaryAddress,
     },
   );
 }

@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import {
+  DEST_ID,
   DEST_PKH,
   EVALS,
   SpendableKeyDetailsOrdinalVDXFObject,
@@ -18,6 +19,7 @@ import {CoinDirectory} from '../CoinData/CoinDirectory';
 import {coinsList} from '../CoinData/CoinsList';
 import {deriveKeyPair} from '../keys';
 import {IS_PBAAS, VRPC} from '../constants/intervalConstants';
+import {I_ADDRESS_VERSION, R_ADDRESS_VERSION} from '../constants/constants';
 import {coinsToSats, satsToCoins} from '../math';
 import {
   getAddressUtxos,
@@ -50,16 +52,27 @@ export const SPENDABLE_KEY_CLAIM_FEE_SATS = BigNumber(10000);
 export const SPENDABLE_KEY_CLAIM_FEE_COINS = 0.0001;
 export const SPENDABLE_KEY_CLAIM_NON_NATIVE_FEE_SATS = BigNumber(20000);
 export const SPENDABLE_KEY_CLAIM_NON_NATIVE_FEE_COINS = 0.0002;
+export const SPENDABLE_KEY_CLAIM_IDENTITY_SWEEP_FEE_SATS = BigNumber(20000);
+export const SPENDABLE_KEY_CLAIM_IDENTITY_SWEEP_FEE_COINS = 0.0002;
 const VETH_SYSTEM_ID = 'i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X';
 
 const utxoKey = utxo => `${utxo.txid}:${utxo.outputIndex}`;
 
-const toAddressDestination = address => {
+const toTransferDestination = address => {
   const {hash, version} = fromBase58Check(address);
+  let type;
+
+  if (version === R_ADDRESS_VERSION) {
+    type = DEST_PKH;
+  } else if (version === I_ADDRESS_VERSION) {
+    type = DEST_ID;
+  } else {
+    throw new Error('Incompatible address type.');
+  }
 
   return new TransferDestination({
     destinationBytes: hash,
-    type: DEST_PKH,
+    type,
     addressVersion: version,
   });
 };
@@ -207,6 +220,20 @@ const getIdentitiesWithPrimaryAddress = async (systemId, address) => {
   return normalizeIdentityResults(res.result);
 };
 
+const getIdentityTransferUtxos = async (systemId, identityAddress, knownUtxos) => {
+  const res = await getAddressUtxos(systemId, [identityAddress], true);
+
+  if (res.error) throw new Error(res.error.message);
+
+  const knownUtxoKeys = new Set((knownUtxos || []).map(utxoKey));
+
+  return (res.result || []).filter(
+    utxo =>
+      !knownUtxoKeys.has(utxoKey(utxo)) &&
+      isTransferUtxo(systemId, utxo),
+  );
+};
+
 const getCurrencyDisplay = async (systemId, currencyId) => {
   try {
     const currencyRes = await getCurrency(systemId, currencyId);
@@ -236,28 +263,55 @@ const unpackUtxoOutput = (systemId, utxo, allowNonTransferEvals = false) => {
   );
 };
 
-const isSpendableUtxo = (systemId, utxo) => {
-  if (!utxo || !(utxo.isspendable === true || utxo.isspendable === 1)) {
-    return false;
-  }
+const isTransferUtxo = (systemId, utxo) => {
+  if (!utxo) return false;
 
   try {
     unpackUtxoOutput(systemId, utxo);
     return true;
   } catch (e) {
-    console.warn(e.message);
+    // This is a type probe. Identity outputs and other non-transfer evals are
+    // expected here and are handled separately when discovering identities.
     return false;
   }
 };
 
+const isSpendableUtxo = (systemId, utxo) => {
+  if (!utxo || !(utxo.isspendable === true || utxo.isspendable === 1)) {
+    return false;
+  }
+
+  return isTransferUtxo(systemId, utxo);
+};
+
+const getCurrencyValueSats = value => coinsToSats(BigNumber(value));
+
+const getUtxoNativeSatoshis = (systemId, utxo) => {
+  const nativeSats = BigNumber(utxo.satoshis || 0);
+
+  if (nativeSats.isGreaterThan(0)) return nativeSats;
+
+  const nativeCurrencyValue = (utxo.currencyvalues || {})[systemId];
+
+  return nativeCurrencyValue == null
+    ? BigNumber(0)
+    : getCurrencyValueSats(nativeCurrencyValue);
+};
+
+const hasPositiveNonNativeCurrencyValue = (systemId, currencyValues = {}) => {
+  return Object.keys(currencyValues).some(currencyId => {
+    return (
+      currencyId !== systemId &&
+      getCurrencyValueSats(currencyValues[currencyId]).isGreaterThan(0)
+    );
+  });
+};
+
 const isPureNativeUtxo = systemId => utxo => {
   return (
-    isSpendableUtxo(systemId, utxo) &&
-    BigNumber(utxo.satoshis || 0).isGreaterThan(0) &&
-    (
-      utxo.currencyvalues == null ||
-      Object.keys(utxo.currencyvalues).length === 0
-    )
+    isTransferUtxo(systemId, utxo) &&
+    getUtxoNativeSatoshis(systemId, utxo).isGreaterThan(0) &&
+    !hasPositiveNonNativeCurrencyValue(systemId, utxo.currencyvalues)
   );
 };
 
@@ -265,9 +319,9 @@ const sumUtxoBalances = (systemId, utxos) => {
   const balances = new Map();
 
   for (const utxo of utxos) {
-    if (!isSpendableUtxo(systemId, utxo)) continue;
+    if (!isTransferUtxo(systemId, utxo)) continue;
 
-    const nativeSats = BigNumber(utxo.satoshis || 0);
+    const nativeSats = getUtxoNativeSatoshis(systemId, utxo);
     if (nativeSats.isGreaterThan(0)) {
       balances.set(
         systemId,
@@ -277,7 +331,9 @@ const sumUtxoBalances = (systemId, utxos) => {
 
     const currencyValues = utxo.currencyvalues || {};
     for (const currencyId of Object.keys(currencyValues)) {
-      const sats = coinsToSats(BigNumber(currencyValues[currencyId]));
+      if (currencyId === systemId) continue;
+
+      const sats = getCurrencyValueSats(currencyValues[currencyId]);
       balances.set(
         currencyId,
         (balances.get(currencyId) || BigNumber(0)).plus(sats),
@@ -288,13 +344,21 @@ const sumUtxoBalances = (systemId, utxos) => {
   return balances;
 };
 
-const selectUtxosForAmount = (utxos, amountSats) => {
+const selectUtxosForAmount = (
+  utxos,
+  amountSats,
+  getUtxoSats = utxo => BigNumber(utxo.satoshis || 0),
+) => {
+  if (BigNumber(amountSats).isLessThanOrEqualTo(0)) {
+    return [];
+  }
+
   const selected = [];
   let total = BigNumber(0);
 
   for (const utxo of utxos) {
     selected.push(utxo);
-    total = total.plus(BigNumber(utxo.satoshis || 0));
+    total = total.plus(getUtxoSats(utxo));
 
     if (total.isGreaterThanOrEqualTo(amountSats)) {
       return selected;
@@ -326,6 +390,39 @@ const removeUtxos = (utxos, used) => {
   return utxos.filter(utxo => !usedKeys.has(utxoKey(utxo)));
 };
 
+const uniqueUtxos = utxos => {
+  const seen = new Set();
+  const unique = [];
+
+  for (const utxo of utxos) {
+    const key = utxoKey(utxo);
+
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(utxo);
+    }
+  }
+
+  return unique;
+};
+
+const addBalanceMap = (target, source) => {
+  for (const [currencyId, sats] of source.entries()) {
+    target.set(currencyId, (target.get(currencyId) || BigNumber(0)).plus(sats));
+  }
+};
+
+const subtractBalanceMap = (target, currencyId, sats) => {
+  const currentSats = target.get(currencyId) || BigNumber(0);
+  const nextSats = currentSats.minus(sats);
+
+  target.set(currencyId, nextSats.isGreaterThan(0) ? nextSats : BigNumber(0));
+};
+
+const getNativeBalance = (systemId, utxos) => {
+  return sumUtxoBalances(systemId, utxos).get(systemId) || BigNumber(0);
+};
+
 const hasNonNativeBalance = (systemId, utxos) => {
   const balanceMap = sumUtxoBalances(systemId, utxos);
 
@@ -334,7 +431,20 @@ const hasNonNativeBalance = (systemId, utxos) => {
   );
 };
 
-const getSweepClaimFee = hasNonNative => {
+const hasPositiveBalance = (systemId, utxos) => {
+  return Array.from(sumUtxoBalances(systemId, utxos).values()).some(sats =>
+    sats.isGreaterThan(0),
+  );
+};
+
+const getSweepClaimFee = (hasNonNative, includesIdentityUpdate = false) => {
+  if (includesIdentityUpdate) {
+    return {
+      feeSats: SPENDABLE_KEY_CLAIM_IDENTITY_SWEEP_FEE_SATS,
+      feeCoins: SPENDABLE_KEY_CLAIM_IDENTITY_SWEEP_FEE_COINS,
+    };
+  }
+
   return {
     feeSats: hasNonNative
       ? SPENDABLE_KEY_CLAIM_NON_NATIVE_FEE_SATS
@@ -348,21 +458,132 @@ const getSweepClaimFee = hasNonNative => {
 const shouldCombineIdentityWithSweep = ({
   systemId,
   availableUtxos,
-  feeUtxos,
+  identity,
   isLastIdentity,
 }) => {
-  if (!isLastIdentity || !hasNonNativeBalance(systemId, availableUtxos)) {
-    return false;
+  if (!isLastIdentity) return false;
+  const hasNonNative = hasNonNativeBalance(systemId, availableUtxos);
+  const nativeBalance = getNativeBalance(systemId, availableUtxos);
+  const combinedFeeSats = SPENDABLE_KEY_CLAIM_IDENTITY_SWEEP_FEE_SATS;
+
+  if (hasNonNative && nativeBalance.isGreaterThanOrEqualTo(combinedFeeSats)) {
+    return true;
   }
 
-  if (feeUtxos == null) return true;
+  if (!hasNonNative && nativeBalance.isGreaterThan(combinedFeeSats)) {
+    return true;
+  }
 
-  const remainingUtxos = removeUtxos(availableUtxos, feeUtxos);
-  const remainingBalanceMap = sumUtxoBalances(systemId, remainingUtxos);
-  const remainingNative =
-    remainingBalanceMap.get(systemId) || BigNumber(0);
+  if (!hasPositiveBalance(systemId, availableUtxos)) return false;
 
-  return remainingNative.isLessThan(SPENDABLE_KEY_CLAIM_NON_NATIVE_FEE_SATS);
+  const identityFeeUtxos = getIdentityFeeUtxos(
+    systemId,
+    identity,
+    combinedFeeSats,
+    nativeBalance,
+  );
+
+  if (identityFeeUtxos == null) return false;
+
+  const totalNative = nativeBalance.plus(
+    getNativeBalance(systemId, identityFeeUtxos),
+  );
+
+  return (
+    hasNonNative ||
+    totalNative.isGreaterThan(combinedFeeSats)
+  );
+};
+
+const getIdentityFeeUtxos = (
+  systemId,
+  identity,
+  feeSats,
+  nativeSatsAvailable = BigNumber(0),
+) => {
+  const identityFeeCandidates = (identity.utxos || []).filter(
+    isPureNativeUtxo(systemId),
+  );
+  const requiredFeeSats = BigNumber(feeSats)
+    .minus(nativeSatsAvailable)
+    .integerValue(BigNumber.ROUND_CEIL);
+
+  return selectUtxosForAmount(
+    identityFeeCandidates,
+    requiredFeeSats,
+    utxo => getUtxoNativeSatoshis(systemId, utxo),
+  );
+};
+
+const getDisplayFeeSats = ({
+  systemId,
+  spendableUtxos,
+  identities,
+}) => {
+  let availableUtxos = [...spendableUtxos];
+  let displayFeeSats = BigNumber(0);
+  const claimableIdentities = identities.filter(
+    identity => !identity.unsupportedReason,
+  );
+
+  for (let i = 0; i < claimableIdentities.length; i++) {
+    const identity = claimableIdentities[i];
+    const feeCandidates = availableUtxos.filter(isPureNativeUtxo(systemId));
+    const feeUtxos = selectUtxosForAmount(
+      feeCandidates,
+      SPENDABLE_KEY_CLAIM_FEE_SATS,
+      utxo => getUtxoNativeSatoshis(systemId, utxo),
+    );
+    const combineIdentityWithSweep = shouldCombineIdentityWithSweep({
+      systemId,
+      availableUtxos,
+      identity,
+      isLastIdentity: i === claimableIdentities.length - 1,
+    });
+
+    if (combineIdentityWithSweep) {
+      const hasNonNative = hasNonNativeBalance(systemId, availableUtxos);
+      const {feeSats} = getSweepClaimFee(hasNonNative, true);
+
+      displayFeeSats = displayFeeSats.plus(feeSats);
+      availableUtxos = [];
+      continue;
+    }
+
+    if (feeUtxos == null) {
+      const identityFeeUtxos = getIdentityFeeUtxos(
+        systemId,
+        identity,
+        SPENDABLE_KEY_CLAIM_FEE_SATS,
+      );
+
+      if (identityFeeUtxos != null) {
+        displayFeeSats = displayFeeSats.plus(SPENDABLE_KEY_CLAIM_FEE_SATS);
+
+        if (!hasNonNativeBalance(systemId, availableUtxos)) {
+          availableUtxos = [];
+        }
+      }
+
+      continue;
+    }
+
+    displayFeeSats = displayFeeSats.plus(SPENDABLE_KEY_CLAIM_FEE_SATS);
+    availableUtxos = removeUtxos(availableUtxos, feeUtxos);
+  }
+
+  if (availableUtxos.length > 0) {
+    const nativeBalance = getNativeBalance(systemId, availableUtxos);
+
+    if (nativeBalance.isGreaterThan(0)) {
+      const hasNonNative = hasNonNativeBalance(systemId, availableUtxos);
+      const {feeSats} = getSweepClaimFee(hasNonNative);
+
+      displayFeeSats = displayFeeSats.plus(feeSats);
+    }
+  }
+
+  return displayFeeSats;
 };
 
 const isVrpcScanCandidate = coinObj => {
@@ -532,11 +753,25 @@ export const discoverSpendableKeyClaims = async ({
   mnemonic,
   requestIsTestnet,
   activeCoinsForUser,
+  cachedSystems,
 }) => {
   const systems = [];
   const scanSystems = getActiveScanSystems(requestIsTestnet, activeCoinsForUser);
+  const cachedSystemsById = new Map(
+    (cachedSystems || []).map(system => [system.systemId, system]),
+  );
 
   for (const coinObj of scanSystems) {
+    const cachedSystem = cachedSystemsById.get(coinObj.system_id);
+
+    if (cachedSystem != null) {
+      systems.push({
+        ...cachedSystem,
+        coinObj,
+      });
+      continue;
+    }
+
     VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0]);
 
     const keyPair = await deriveKeyPair(mnemonic, coinObj, VRPC);
@@ -552,19 +787,6 @@ export const discoverSpendableKeyClaims = async ({
     const spendableUtxos = (utxosRes.result || []).filter(utxo =>
       isSpendableUtxo(coinObj.system_id, utxo),
     );
-    const balanceMap = sumUtxoBalances(coinObj.system_id, spendableUtxos);
-    const currencies = [];
-
-    for (const [currencyId, sats] of balanceMap.entries()) {
-      if (sats.isLessThanOrEqualTo(0)) continue;
-
-      currencies.push({
-        currencyId,
-        satoshis: sats.toString(),
-        amount: satsToCoins(sats).toString(),
-        display: await getCurrencyDisplay(coinObj.system_id, currencyId),
-      });
-    }
 
     const identitiesFromUtxos = await getClaimableIdentitiesFromUtxos(
       coinObj.system_id,
@@ -590,7 +812,53 @@ export const discoverSpendableKeyClaims = async ({
     } catch (e) {
       console.warn(e.message);
     }
-    const identities = mergeIdentityClaims(identitiesFromUtxos, identitiesFromRpc);
+    const identities = await Promise.all(
+      mergeIdentityClaims(identitiesFromUtxos, identitiesFromRpc).map(
+        async identity => {
+          const identityUtxos = await getIdentityTransferUtxos(
+            coinObj.system_id,
+            identity.identityAddress,
+            spendableUtxos,
+          );
+
+          return {
+            ...identity,
+            utxos: identityUtxos,
+          };
+        },
+      ),
+    );
+    const balanceMap = sumUtxoBalances(coinObj.system_id, spendableUtxos);
+
+    for (const identity of identities) {
+      addBalanceMap(
+        balanceMap,
+        sumUtxoBalances(coinObj.system_id, identity.utxos || []),
+      );
+    }
+
+    subtractBalanceMap(
+      balanceMap,
+      coinObj.system_id,
+      getDisplayFeeSats({
+        systemId: coinObj.system_id,
+        spendableUtxos,
+        identities,
+      }),
+    );
+
+    const currencies = [];
+
+    for (const [currencyId, sats] of balanceMap.entries()) {
+      if (sats.isLessThanOrEqualTo(0)) continue;
+
+      currencies.push({
+        currencyId,
+        satoshis: sats.toString(),
+        amount: satsToCoins(sats).toString(),
+        display: await getCurrencyDisplay(coinObj.system_id, currencyId),
+      });
+    }
 
     systems.push({
       systemId: coinObj.system_id,
@@ -616,13 +884,17 @@ const getSweepOutputPlan = ({
   system,
   destinationAddress,
   availableUtxos,
+  includesIdentityUpdate = false,
 }) => {
   const balanceMap = sumUtxoBalances(system.systemId, availableUtxos);
   const nativeBalance = balanceMap.get(system.systemId) || BigNumber(0);
   const hasNonNative = Array.from(balanceMap.entries()).some(
     ([currencyId, sats]) => currencyId !== system.systemId && sats.isGreaterThan(0),
   );
-  const {feeSats, feeCoins} = getSweepClaimFee(hasNonNative);
+  const {feeSats, feeCoins} = getSweepClaimFee(
+    hasNonNative,
+    includesIdentityUpdate,
+  );
 
   if (nativeBalance.isLessThanOrEqualTo(0)) {
     if (hasNonNative) {
@@ -646,7 +918,7 @@ const getSweepOutputPlan = ({
     throw new Error(`Spendable key on ${system.coinObj.display_ticker || system.coinObj.id} does not contain enough native funds to pay the sweep fee.`);
   }
 
-  const destination = toAddressDestination(destinationAddress);
+  const destination = toTransferDestination(destinationAddress);
   const outputs = [];
 
   for (const [currencyId, sats] of balanceMap.entries()) {
@@ -721,12 +993,57 @@ const toCurrencyTransferOutputs = outputs => {
   return currencyTransferOutputs;
 };
 
+const toOutputSummaries = outputs => {
+  return outputs.map(output => ({
+    currencyId: output.currency,
+    satoshis: output.satoshis,
+    amount: satsToCoins(BigNumber(output.satoshis)).toString(),
+  }));
+};
+
+const getIdentityBalanceOutputSummaries = (
+  system,
+  identity,
+  excludedUtxos = [],
+) => {
+  const excludedKeys = new Set(excludedUtxos.map(utxoKey));
+  const retainedUtxos = (identity.utxos || []).filter(
+    utxo => !excludedKeys.has(utxoKey(utxo)),
+  );
+
+  return Array.from(
+    sumUtxoBalances(system.systemId, retainedUtxos).entries(),
+  )
+    .filter(([, sats]) => sats.isGreaterThan(0))
+    .map(([currencyId, sats]) => ({
+      currencyId,
+      satoshis: sats.toString(),
+      amount: satsToCoins(sats).toString(),
+    }));
+};
+
+const getNativeFeeSatsFromDeltas = (deltas, systemId, fallbackFeeSats) => {
+  const nativeDelta = deltas && typeof deltas.get === 'function'
+    ? deltas.get(systemId)
+    : null;
+
+  return nativeDelta == null
+    ? BigNumber(fallbackFeeSats)
+    : BigNumber(nativeDelta).absoluteValue();
+};
+
+const getIdentityUtxosUsed = (identity, usedUtxos) => {
+  const identityUtxoKeys = new Set((identity.utxos || []).map(utxoKey));
+
+  return (usedUtxos || []).filter(utxo => identityUtxoKeys.has(utxoKey(utxo)));
+};
+
 const buildSweepTransaction = async ({
   system,
   destinationAddress,
   availableUtxos,
 }) => {
-  const {feeCoins, outputs} = getSweepOutputPlan({
+  const {feeCoins, feeSats, outputs} = getSweepOutputPlan({
     system,
     destinationAddress,
     availableUtxos,
@@ -768,6 +1085,16 @@ const buildSweepTransaction = async ({
     throw new Error(validation.message);
   }
 
+  const actualNativeFee = BigNumber(
+    validation.fees && validation.fees[system.systemId] != null
+      ? validation.fees[system.systemId]
+      : 0,
+  );
+
+  if (actualNativeFee.isGreaterThan(feeSats)) {
+    throw new Error('Fee exceeds maximum spendable key claim fee.');
+  }
+
   const inputs = getUsedUtxos(fundRes.result.hex, availableUtxos);
 
   return {
@@ -793,10 +1120,12 @@ const buildCombinedIdentityAndSweepTransaction = async ({
   destinationAddress,
   availableUtxos,
 }) => {
+  const fundingUtxos = uniqueUtxos(availableUtxos);
   const {feeCoins, outputs} = getSweepOutputPlan({
     system,
-    destinationAddress,
-    availableUtxos,
+    destinationAddress: identity.identityAddress,
+    availableUtxos: fundingUtxos,
+    includesIdentityUpdate: true,
   });
 
   const updatableIdentity = await getUpdatableIdentity(
@@ -805,15 +1134,21 @@ const buildCombinedIdentityAndSweepTransaction = async ({
   );
 
   updatableIdentity.identity.setPrimaryAddresses([destinationAddress]);
+  const spentIdentityUtxos = getIdentityUtxosUsed(identity, fundingUtxos);
+  const changeAddress =
+    spentIdentityUtxos.length > 0
+      ? identity.identityAddress
+      : destinationAddress;
   const updateTx = await createUpdateIdentityWithCurrencyTransferTx({
     systemId: system.systemId,
     identity: updatableIdentity.identity,
-    changeAaddr: destinationAddress,
+    changeAaddr: changeAddress,
     rawIdTx: updatableIdentity.tx,
     idHeight: identity.result.blockheight,
     currencyTransferOutputs: toCurrencyTransferOutputs(outputs),
-    utxos: availableUtxos,
+    utxos: fundingUtxos,
     maxFee: feeCoins,
+    expectedIdentityPrimaryAddress: destinationAddress,
     isTestnet: claimPlan.requestIsTestnet,
   });
 
@@ -828,13 +1163,75 @@ const buildCombinedIdentityAndSweepTransaction = async ({
       identityAddress: identity.identityAddress,
       fullyQualifiedName: identity.fullyQualifiedName,
     },
-    outputs: outputs.map(output => ({
-      currencyId: output.currency,
-      satoshis: output.satoshis,
-      amount: satsToCoins(BigNumber(output.satoshis)).toString(),
-    })),
+    outputs: [
+      ...toOutputSummaries(outputs),
+      ...getIdentityBalanceOutputSummaries(
+        system,
+        identity,
+        spentIdentityUtxos,
+      ),
+    ],
     deltas: updateTx.deltas,
     includesSweep: true,
+    requestIsTestnet: claimPlan.requestIsTestnet,
+  };
+};
+
+const buildIdentityTransactionWithIdentityFee = async ({
+  claimPlan,
+  system,
+  identity,
+  destinationAddress,
+  feeUtxos,
+}) => {
+  const feeNative = getNativeBalance(system.systemId, feeUtxos);
+  const updatableIdentity = await getUpdatableIdentity(
+    system.systemId,
+    identity.result,
+  );
+
+  updatableIdentity.identity.setPrimaryAddresses([destinationAddress]);
+
+  const updateTx = await createUpdateIdentityTxWithUtxos({
+    systemId: system.systemId,
+    identity: updatableIdentity.identity,
+    changeAaddr: identity.identityAddress,
+    rawIdTx: updatableIdentity.tx,
+    idHeight: identity.result.blockheight,
+    utxos: feeUtxos,
+    maxFee: SPENDABLE_KEY_CLAIM_FEE_COINS,
+    isTestnet: claimPlan.requestIsTestnet,
+  });
+  const actualFeeSats = getNativeFeeSatsFromDeltas(
+    updateTx.deltas,
+    system.systemId,
+    SPENDABLE_KEY_CLAIM_FEE_SATS,
+  );
+  const changeBackToIdentity = feeNative.minus(actualFeeSats);
+  const changeOutput = changeBackToIdentity.isGreaterThan(0)
+    ? [{
+      currencyId: system.systemId,
+      satoshis: changeBackToIdentity.toString(),
+      amount: satsToCoins(changeBackToIdentity).toString(),
+    }]
+    : [];
+
+  return {
+    type: 'identity',
+    systemId: system.systemId,
+    coinObj: system.coinObj,
+    txHex: updateTx.hex,
+    inputs: updateTx.utxos,
+    keys: updateTx.utxos.map(() => [system.claimWif]),
+    identity: {
+      identityAddress: identity.identityAddress,
+      fullyQualifiedName: identity.fullyQualifiedName,
+    },
+    outputs: [
+      ...changeOutput,
+      ...getIdentityBalanceOutputSummaries(system, identity, feeUtxos),
+    ],
+    deltas: updateTx.deltas,
     requestIsTestnet: claimPlan.requestIsTestnet,
   };
 };
@@ -871,22 +1268,50 @@ export const preflightSpendableKeyClaim = async ({
       const feeUtxos = selectUtxosForAmount(
         feeCandidates,
         SPENDABLE_KEY_CLAIM_FEE_SATS,
+        utxo => getUtxoNativeSatoshis(system.systemId, utxo),
       );
       const combineIdentityWithSweep = shouldCombineIdentityWithSweep({
         systemId: system.systemId,
         availableUtxos,
-        feeUtxos,
+        identity,
         isLastIdentity: i === system.identities.length - 1,
       });
 
       if (combineIdentityWithSweep) {
+        const hasNonNative = hasNonNativeBalance(
+          system.systemId,
+          availableUtxos,
+        );
+        const {feeSats} = getSweepClaimFee(hasNonNative, true);
+        const nativeBalance = getNativeBalance(system.systemId, availableUtxos);
+        let combinedUtxos = availableUtxos;
+
+        if (
+          nativeBalance.isLessThan(feeSats) ||
+          (!hasNonNative && nativeBalance.isLessThanOrEqualTo(feeSats))
+        ) {
+          const identityFeeUtxos = getIdentityFeeUtxos(
+            system.systemId,
+            identity,
+            feeSats,
+            nativeBalance,
+          );
+
+          if (identityFeeUtxos != null) {
+            combinedUtxos = uniqueUtxos([
+              ...availableUtxos,
+              ...identityFeeUtxos,
+            ]);
+          }
+        }
+
         transactions.push(
           await buildCombinedIdentityAndSweepTransaction({
             claimPlan,
             system,
             identity,
             destinationAddress,
-            availableUtxos,
+            availableUtxos: combinedUtxos,
           }),
         );
         availableUtxos = [];
@@ -894,7 +1319,31 @@ export const preflightSpendableKeyClaim = async ({
       }
 
       if (feeUtxos == null) {
-        throw new Error(`Spendable key on ${system.coinObj.display_ticker || system.coinObj.id} does not contain enough native fee UTXOs to update ${identity.fullyQualifiedName || identity.identityAddress}.`);
+        const identityFeeUtxos = getIdentityFeeUtxos(
+          system.systemId,
+          identity,
+          SPENDABLE_KEY_CLAIM_FEE_SATS,
+        );
+
+        if (identityFeeUtxos == null) {
+          throw new Error(`Spendable key on ${system.coinObj.display_ticker || system.coinObj.id} does not contain enough native fee UTXOs to update ${identity.fullyQualifiedName || identity.identityAddress}.`);
+        }
+
+        transactions.push(
+          await buildIdentityTransactionWithIdentityFee({
+            claimPlan,
+            system,
+            identity,
+            destinationAddress,
+            feeUtxos: identityFeeUtxos,
+          }),
+        );
+
+        if (!hasNonNativeBalance(system.systemId, availableUtxos)) {
+          availableUtxos = [];
+        }
+
+        continue;
       }
 
       const updatableIdentity = await getUpdatableIdentity(
@@ -932,6 +1381,7 @@ export const preflightSpendableKeyClaim = async ({
           identityAddress: identity.identityAddress,
           fullyQualifiedName: identity.fullyQualifiedName,
         },
+        outputs: getIdentityBalanceOutputSummaries(system, identity),
       });
     }
 
