@@ -13,6 +13,7 @@ import { MAX_DEEPLINK_STRING_LENGTH } from '../utils/constants/deeplink';
 import { DEEPLINK_PROTOCOL_URL_STRING, GENERIC_REQUEST_DEEPLINK_VDXF_KEY, GenericRequest, VALU_MOBILE_GENERIC_REQUEST_HANDLER_ID, VERUS_MOBILE_GENERIC_REQUEST_HANDLER_ID } from 'verus-typescript-primitives';
 import { isDeeplinkHandlerInstalled } from '../utils/deeplink/isDeeplinkHandlerInstalled';
 import { saveProvisioningDeeplinkRequest } from '../utils/deeplink/provisioningDeeplinkStorage';
+import VrpcProvider from '../utils/vrpc/vrpcInterface';
 
 export default function* deeplinkSaga() {
   yield all([takeEvery(SET_DEEPLINK_URL, handleDeeplinkUrl)]);
@@ -44,6 +45,7 @@ function* handleDeeplinkUrl(action) {
               `${DEEPLINK_PROTOCOL_URL_STRING}://`
             )
           : urlstring;
+
         const req = GenericRequest.fromWalletDeeplinkUri(parseUri);
 
         if (
