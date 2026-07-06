@@ -1,6 +1,7 @@
 import { AUTHENTICATION_REQUEST_VDXF_KEY, GenericRequest, IDENTITY_UPDATE_REQUEST_VDXF_KEY, PROVISION_IDENTITY_DETAILS_VDXF_KEY, 
   VERUSPAY_INVOICE_DETAILS_VDXF_KEY, VerusPayInvoiceDetailsOrdinalVDXFObject, APP_ENCRYPTION_REQUEST_VDXF_KEY, CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY,
-  MARKETPLACE_MAKEOFFER_REQUEST_VDXF_KEY} from "verus-typescript-primitives"
+  MARKETPLACE_MAKEOFFER_REQUEST_VDXF_KEY,
+  MARKETPLACE_TAKEOFFER_REQUEST_VDXF_KEY} from "verus-typescript-primitives"
 import { getInfo, verifyGenericRequest } from "../../api/channels/vrpc/callCreators"
 import { getIdentity } from "../../api/channels/verusid/callCreators";
 import { validateAuthenticationRequestVDXFObject } from "./authenticationRequestValidator";
@@ -9,6 +10,7 @@ import { validateProvisionIdentityDetailsVDXFObject } from "./provisionIdentityD
 import { validateVerusPayInvoiceVDXFObject } from "./verusPayInvoiceDetailsValidator";
 import { validateAppEncryptionRequestVDXFObject } from "./appEncryptionRequestValidator";
 import { validateCreateWalletBackupDetailsVDXFObject } from "./createWalletBackupDetailsValidator";
+import { validateMarketplaceTakeOfferRequestVDXFObject } from "./marketplaceTakeOfferRequestValidator";
 import { validateMarketplaceMakeOfferRequestVDXFObject } from "./marketplaceMakeOfferRequestValidator";
 import { CoinDirectory } from "../../CoinData/CoinDirectory";
 import VrpcProvider from '../../vrpc/vrpcInterface';
@@ -39,7 +41,8 @@ export const getValidatorForDetail = (detailKey) => {
     [VERUSPAY_INVOICE_DETAILS_VDXF_KEY.vdxfid]: validateVerusPayInvoiceVDXFObject,
     [APP_ENCRYPTION_REQUEST_VDXF_KEY.vdxfid]: validateAppEncryptionRequestVDXFObject,
     [CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY.vdxfid]: validateCreateWalletBackupDetailsVDXFObject,
-    [MARKETPLACE_MAKEOFFER_REQUEST_VDXF_KEY.vdxfid]: validateMarketplaceMakeOfferRequestVDXFObject
+    [MARKETPLACE_MAKEOFFER_REQUEST_VDXF_KEY.vdxfid]: validateMarketplaceMakeOfferRequestVDXFObject,
+    [MARKETPLACE_TAKEOFFER_REQUEST_VDXF_KEY.vdxfid]: validateMarketplaceTakeOfferRequestVDXFObject
   }
 
   if (Object.keys(detailValidators).includes(detailKey)) {
