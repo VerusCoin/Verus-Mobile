@@ -1,0 +1,33 @@
+diff --git a/node_modules/@bitgo/utxo-lib/src/transaction_builder.js b/node_modules/@bitgo/utxo-lib/src/transaction_builder.js
+
+--- a/node_modules/@bitgo/utxo-lib/src/transaction_builder.js
++++ b/node_modules/@bitgo/utxo-lib/src/transaction_builder.js
+@@ -860,7 +860,11 @@ TransactionBuilder.prototype.sign = function (vin, keyPair, redeemScript, hashTy
+     debug('Produced signature (r: %s, s: %s)', signature.r, signature.s)
+ 
+     if (input.signType === scriptTypes.SMART_TRANSACTION) {
+-      input.signatures[i] = new SmartTransactionSignatures(1, 1, [
++      // The signature digest above is computed with the caller-requested
++      // hashType; the serialized blob must declare the SAME hashtype or
++      // verification recomputes the digest differently and fails (e.g.
++      // SIGHASH_SINGLE|ANYONECANPAY atomic-swap offers).
++      input.signatures[i] = new SmartTransactionSignatures(1, hashType, [
+         new SmartTransactionSignature(
+           1,
+           1,
+
+diff --git a/node_modules/@bitgo/utxo-lib/dist/src/transaction_builder.js b/node_modules/@bitgo/utxo-lib/dist/src/transaction_builder.js
+
+--- a/node_modules/@bitgo/utxo-lib/dist/src/transaction_builder.js
++++ b/node_modules/@bitgo/utxo-lib/dist/src/transaction_builder.js
+@@ -749,7 +749,9 @@ TransactionBuilder.prototype.sign = function (vin, keyPair, redeemScript, hashTy
+             signature = ECSignature.fromRSBuffer(signature);
+         debug('Produced signature (r: %s, s: %s)', signature.r, signature.s);
+         if (input.signType === scriptTypes.SMART_TRANSACTION) {
+-            input.signatures[i] = new SmartTransactionSignatures(1, 1, [
++            // Blob must declare the same hashtype used for the digest above,
++            // or verification fails (e.g. SIGHASH_SINGLE|ANYONECANPAY offers).
++            input.signatures[i] = new SmartTransactionSignatures(1, hashType, [
+                 new SmartTransactionSignature(1, 1, pubKey, signature.toCompact().slice(1))
+             ]).toChunk();
+         }

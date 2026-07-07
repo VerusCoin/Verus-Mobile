@@ -24,7 +24,7 @@ const { getFundedTxBuilder } = smarttxs;
 
 // On-chain listing publication: the deposit that makes the offer indexable by
 // getoffers (reclaimable by this wallet via closeoffers) and the network fee.
-const LISTING_DEPOSIT_SATS = 10000;
+const LISTING_DEPOSIT_SATS = 20000;
 const LISTING_FEE_SATS = 10000;
 const ONE_DAY_BLOCKS = 1440;
 
@@ -151,7 +151,10 @@ const MarketplaceMakeOfferRequestInfo = props => {
       console.log('[MarketplaceMakeOffer] built offer tx:', unsignedHex.length / 2, 'bytes');
 
       // 4. Decrypt the seller's spending key and sign the identity (CC) input.
-      const coinTicker = (activeCoin && activeCoin.id) || coinObj.id;
+      // GenericRequests are signed for their own chain. Do not use the UI's
+      // currently active coin here; it can point at another wallet namespace
+      // and produce an address with no spendable UTXOs for this request.
+      const coinTicker = coinObj.id;
       const spendingKey = await requestPrivKey(coinTicker, VRPC);
       const keyPair = ECPair.fromWIF(spendingKey, network);
 
@@ -163,11 +166,17 @@ const MarketplaceMakeOfferRequestInfo = props => {
       // 5. Publish the listing on-chain ourselves so getoffers indexes it:
       // a second tx funded from THIS wallet, carrying the tagged deposit
       // (which returns to us — spending it via closeoffers delists) and the
-      // signed offer in an OP_RETURN. Best-effort: without funds the listing
-      // still works platform-side via the response URI.
+      // signed offer in an OP_RETURN. Publication is MANDATORY: a listing
+      // that only exists on a marketplace server is not a real offer, and
+      // the marketplace rejects callbacks without the listing txid.
       let onchainListingTxid = null;
+      let listingHex = null;
+      let publishError = null;
+      let publishFundingAddress = null;
+      let publishPlainSats = 0;
       try {
         const sellerAddress = keyPair.getAddress();
+        publishFundingAddress = sellerAddress;
         const utxoRes = await endpoint.getAddressUtxos({ addresses: [sellerAddress] });
         // Plain P2PKH funds only: never spend cryptocondition outputs (e.g. the
         // offered identity's own UTXO, which would invalidate the signed offer).
@@ -175,6 +184,15 @@ const MarketplaceMakeOfferRequestInfo = props => {
           .filter(u => u.satoshis > 0 && u.script && u.script.startsWith('76a914'))
           .filter(u => !(u.txid === idTxid && u.outputIndex === idVout))
           .sort((a, b) => b.satoshis - a.satoshis);
+        publishPlainSats = utxos.reduce((sum, u) => sum + u.satoshis, 0);
+        console.log(
+          '[MarketplaceMakeOffer] listing funding address:',
+          sellerAddress,
+          'plainUtxos=',
+          utxos.length,
+          'plainSats=',
+          publishPlainSats
+        );
 
         const needed = LISTING_DEPOSIT_SATS + LISTING_FEE_SATS;
         const picked = [];
@@ -185,7 +203,9 @@ const MarketplaceMakeOfferRequestInfo = props => {
           if (total >= needed) break;
         }
         if (total < needed) {
-          throw new Error('no spendable funds for the listing deposit');
+          throw new Error(
+            `no spendable plain ${coinObj.id} UTXOs at ${sellerAddress}; found ${publishPlainSats / 1e8}, need ${needed / 1e8}`
+          );
         }
 
         const offerKey = deriveOfferIndexKey(
@@ -221,7 +241,7 @@ const MarketplaceMakeOfferRequestInfo = props => {
         for (let i = 0; i < picked.length; i++) {
           fundedLtxb.sign(i, keyPair, null, 1, picked[i].satoshis);
         }
-        const listingHex = fundedLtxb.build().toHex();
+        listingHex = fundedLtxb.build().toHex();
         const sendRes = await endpoint.sendRawTransaction(listingHex);
         if (sendRes && sendRes.result && typeof sendRes.result === 'string') {
           onchainListingTxid = sendRes.result;
@@ -230,13 +250,27 @@ const MarketplaceMakeOfferRequestInfo = props => {
           throw new Error((sendRes && sendRes.error && sendRes.error.message) || 'broadcast failed');
         }
       } catch (pubErr) {
+        publishError = pubErr;
         console.warn(
-          '[MarketplaceMakeOffer] on-chain publication skipped:',
+          '[MarketplaceMakeOffer] on-chain publication failed:',
           pubErr && pubErr.message
         );
       }
 
-      // 6. Return the signed offer (and listing txid, if published) to the requester.
+      if (!onchainListingTxid) {
+        const detail = publishError && publishError.message ? publishError.message : 'unknown publish error';
+        const fundingDetail = publishFundingAddress
+          ? ` Funding address: ${publishFundingAddress}; plain balance seen by wallet: ${publishPlainSats / 1e8} ${coinObj.id}.`
+          : '';
+        throw new Error(
+          `Could not publish the listing on-chain: ${detail}.${fundingDetail}`
+        );
+      }
+
+      // 6. Return the signed offer, the listing txid, AND the raw listing hex
+      // to the requester. The marketplace server re-broadcasts the listing hex
+      // to its own node if P2P propagation hasn't delivered it yet, eliminating
+      // the race where the wallet's node sees the tx but the server's doesn't.
       const responseURIs = (request && request.responseURIs) || [];
       if (responseURIs.length === 0) {
         throw new Error('Request has no response URI to return the signed offer to');
@@ -246,7 +280,11 @@ const MarketplaceMakeOfferRequestInfo = props => {
       const postRes = await fetch(responseUri, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(onchainListingTxid ? { signedHex, onchainListingTxid } : { signedHex }),
+        body: JSON.stringify({
+          signedHex,
+          onchainListingTxid,
+          onchainListingHex: listingHex,
+        }),
       }).then(r => r.json());
 
       if (postRes && postRes.error) {

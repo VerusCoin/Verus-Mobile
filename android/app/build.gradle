@@ -121,6 +121,9 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         multiDexEnabled true
+        // Force native lib extraction to disk — required on Android 14+ when libs
+        // are not 4096-byte aligned in the APK (VisionCamera packaging issue)
+        ndk { abiFilters "arm64-v8a" }
         versionCode versionMajor * 1000000 + versionMinor * 10000 + versionRevision * 100 + versionBuild
         if (versionBuild > 0) {
             versionName "${versionMajor}.${versionMinor}.${versionRevision}-${versionBuild}"
@@ -159,6 +162,11 @@ android {
             storePassword 'android'
             keyAlias 'androiddebugkey'
             keyPassword 'android'
+        }
+    }
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = true
         }
     }
     buildTypes {

@@ -24,6 +24,7 @@ import {
   VERUSPAY_INVOICE_DETAILS_VDXF_KEY,
   MARKETPLACE_MAKEOFFER_REQUEST_VDXF_KEY,
   MARKETPLACE_TAKEOFFER_REQUEST_VDXF_KEY,
+  MARKETPLACE_CLOSEOFFER_REQUEST_VDXF_KEY,
 } from 'verus-typescript-primitives';
 import InvoiceInfo from '../InvoiceInfo/InvoiceInfo';
 import { handleVerusPayInvoiceDetailsVDXFObject } from '../../../utils/deeplink/handlers/verusPayInvoiceDetailsHandler';
@@ -41,8 +42,10 @@ import ListSelectionModal from '../../../components/ListSelectionModal/ListSelec
 import { isDeeplinkHandlerInstalled } from '../../../utils/deeplink/isDeeplinkHandlerInstalled';
 import MarketplaceTakeOfferRequestInfo from '../MarketplaceTakeOfferRequestInfo/MarketplaceTakeOfferRequestInfo';
 import MarketplaceMakeOfferRequestInfo from '../MarketplaceMakeOfferRequestInfo/MarketplaceMakeOfferRequestInfo';
+import MarketplaceCloseOfferRequestInfo from '../MarketplaceCloseOfferRequestInfo/MarketplaceCloseOfferRequestInfo';
 import { handleMarketplaceTakeOfferRequestDetailsVDXFObject } from '../../../utils/deeplink/handlers/marketplaceTakeOfferRequestDetailsHandler';
 import { handleMarketplaceMakeOfferRequestDetailsVDXFObject } from '../../../utils/deeplink/handlers/marketplaceMakeOfferRequestDetailsHandler';
+import { handleMarketplaceCloseOfferRequestDetailsVDXFObject } from '../../../utils/deeplink/handlers/marketplaceCloseOfferRequestDetailsHandler';
 import Colors from '../../../globals/colors';
 const GenericRequestHome = props => {
   const {
@@ -92,6 +95,7 @@ const GenericRequestHome = props => {
   detailHandlers.set(CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY.vdxfid, handleCreateWalletBackupDetailsVDXFObject);
   detailHandlers.set(MARKETPLACE_MAKEOFFER_REQUEST_VDXF_KEY.vdxfid, handleMarketplaceMakeOfferRequestDetailsVDXFObject);
   detailHandlers.set(MARKETPLACE_TAKEOFFER_REQUEST_VDXF_KEY.vdxfid, handleMarketplaceTakeOfferRequestDetailsVDXFObject);
+  detailHandlers.set(MARKETPLACE_CLOSEOFFER_REQUEST_VDXF_KEY.vdxfid, handleMarketplaceCloseOfferRequestDetailsVDXFObject);
   /**
    * Processes a detail in the request at a certain index
    * @param {number} index 
@@ -307,6 +311,18 @@ const GenericRequestHome = props => {
     ),
     [MARKETPLACE_TAKEOFFER_REQUEST_VDXF_KEY.vdxfid]: () => (
       <MarketplaceTakeOfferRequestInfo
+        {...displayProps}
+        cancel={props.cancel}
+        setLoading={props.setLoading}
+        navigation={props.navigation}
+        next={next}
+        response={response}
+        request={request}
+        detailIndex={detailIndex}
+      />
+    ),
+    [MARKETPLACE_CLOSEOFFER_REQUEST_VDXF_KEY.vdxfid]: () => (
+      <MarketplaceCloseOfferRequestInfo
         {...displayProps}
         cancel={props.cancel}
         setLoading={props.setLoading}

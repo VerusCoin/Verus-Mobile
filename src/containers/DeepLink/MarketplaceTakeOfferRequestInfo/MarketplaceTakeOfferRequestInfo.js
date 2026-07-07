@@ -145,7 +145,10 @@ const MarketplaceTakeOfferRequestInfo = props => {
       }
 
       // 4. Fund the purchase from this wallet: price + fee in plain P2PKH utxos.
-      const coinTicker = (activeCoin && activeCoin.id) || coinObj.id;
+      // GenericRequests are signed for their own chain. Do not use the UI's
+      // currently active coin here; it can point at another wallet namespace
+      // and produce an address with no spendable UTXOs for this request.
+      const coinTicker = coinObj.id;
       const spendingKey = await requestPrivKey(coinTicker, VRPC);
       const keyPair = ECPair.fromWIF(spendingKey, network);
       const buyerAddress = keyPair.getAddress();
@@ -168,12 +171,13 @@ const MarketplaceTakeOfferRequestInfo = props => {
 
       // 5. Complete the atomic swap: keep the seller-signed identity input and
       // payment output, add our funds, the identity transferred to us, and change.
+      // Only the primary addresses may change here: altering revocation or
+      // recovery requires the CURRENT authority to co-sign, and the seller
+      // only signed with the primary key — the chain rejects any other change.
       const newIdentity = Identity.fromJson({
         ...idRes.result.identity,
         primaryaddresses: [buyerAddress],
         minimumsignatures: 1,
-        revocationauthority: offerParams.offeredIdentityId,
-        recoveryauthority: offerParams.offeredIdentityId,
       });
       const identityOutScript = IdentityScript.fromIdentity(newIdentity).toBuffer();
 

@@ -67,7 +67,16 @@ export const getUpdatableIdentity = async (systemId, getIdentityResult) => {
  */
 export const createUpdateIdentityTx = async (systemId, identity, changeAaddr, rawIdTx, idHeight, fundTransaction = true, updateIdentityTransactionHex, isTestnet) => {
   const verusid = VrpcProvider.getVerusIdInterface(systemId);
-  const utxos = fundTransaction ? await getSpendableUtxos(systemId, systemId, [changeAaddr]) : undefined;
+  // Fund from plain P2PKH utxos only. Smart-tx utxos that carry reserve
+  // currencies alongside the native coin put a non-native currency key in the
+  // funded tx's deltas, and createUpdateIdentityTransaction rejects any
+  // non-native delta key (even zero) with "Fee exceeds maximum permissable
+  // fee value".
+  const utxos = fundTransaction
+    ? (await getSpendableUtxos(systemId, systemId, [changeAaddr])).filter(
+        (u) => typeof u.script === 'string' && u.script.startsWith('76a914'),
+      )
+    : undefined;
 
   return verusid.createUpdateIdentityTransaction(identity, changeAaddr, rawIdTx, idHeight, utxos, undefined, undefined, undefined, undefined, updateIdentityTransactionHex, true, isTestnet);
 }
