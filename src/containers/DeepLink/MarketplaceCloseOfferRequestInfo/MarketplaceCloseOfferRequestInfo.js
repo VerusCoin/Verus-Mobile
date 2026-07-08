@@ -129,7 +129,7 @@ const MarketplaceCloseOfferRequestInfo = props => {
       const postRes = await fetch(responseUri, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offerTxid, closeTxid }),
+        body: JSON.stringify({ offerTxid, closeTxid, closeHex }),
       }).then(r => r.json());
 
       if (postRes && postRes.error) {

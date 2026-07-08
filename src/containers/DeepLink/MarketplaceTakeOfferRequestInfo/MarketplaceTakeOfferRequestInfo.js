@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView } from 'react-native';
 import { Text, Button, Divider } from 'react-native-paper';
 import { useSelector } from 'react-redux';
-import { networks, ECPair, smarttxs, TransactionBuilder, Transaction, address as baddress } from '@bitgo/utxo-lib';
+import { networks, ECPair, TransactionBuilder, Transaction, address as baddress } from '@bitgo/utxo-lib';
 import Styles from '../../../styles';
 import Colors from '../../../globals/colors';
 import { requestPrivKey } from '../../../utils/auth/authBox';
@@ -12,8 +12,6 @@ import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIn
 import VrpcProvider from '../../../utils/vrpc/vrpcInterface';
 import { coinsList } from '../../../utils/CoinData/CoinsList';
 import { Identity, IdentityScript } from 'verus-typescript-primitives';
-
-const { getFundedTxBuilder } = smarttxs;
 
 // On-chain listing publication: the deposit that makes the offer indexable by
 // getoffers (reclaimable by this wallet via closeoffers) and the network fee.
@@ -26,22 +24,23 @@ const SAPLING_VERSION_GROUP_ID = 0x892f2085;
 const SIGHASH_SINGLE_ANYONECANPAY = 131;
 
 /**
- * Confirmation screen for marketplace makeoffer requests (GenericRequest ordinal,
- * vrsc::request.marketplace.makeoffer). Handles self-custodial sell listings:
+ * Confirmation screen for marketplace takeoffer requests (GenericRequest ordinal,
+ * vrsc::request.marketplace.takeoffer). Handles self-custodial purchases:
  *
- * The request carries only OFFER PARAMETERS (identity for sale, price, payout
- * destination, expiry). This wallet constructs the partial makeoffer
- * transaction itself, entirely client-side:
- *   1. look up the offered identity's current definition UTXO on-chain
- *      (getidentity → txid/vout, getrawtransaction → CC script),
- *   2. build the partial offer tx (vin[0] = identity UTXO,
- *      vout[0] = requested payment to the payout destination),
- *   3. decrypt the seller key and sign the identity input locally,
- *   4. POST the signed offer to the request's response URI.
+ * The request carries the seller's SIGNED partial offer (identity input signed
+ * SIGHASH_SINGLE|ANYONECANPAY, payment output at the same index) plus the offer
+ * parameters. This wallet completes the atomic swap itself, entirely client-side:
+ *   1. verify the signed offer against the request terms and the chain
+ *      (identity outpoint unmoved, payment amount matches, not expired),
+ *   2. fund the purchase from this wallet's plain P2PKH UTXOs,
+ *   3. add the identity output (transferred to this wallet's primary address,
+ *      revocation/recovery authorities preserved) and change,
+ *   4. sign only the buyer inputs locally and broadcast the completed swap,
+ *   5. POST the settlement txid to the request's response URI.
  *
- * The seller's key never leaves this device, and nothing about the offer is
+ * The buyer's key never leaves this device, and nothing about the offer is
  * trusted from the requester: the identity input and its script come from the
- * blockchain, and the user confirms the payout destination and price on screen.
+ * blockchain, and the user confirms the price and payment destination on screen.
  *
  * Signing MUST happen here (a mounted component driven by a user gesture) so
  * requestPrivKey can present the keychain/biometric prompt.
@@ -69,7 +68,7 @@ const MarketplaceTakeOfferRequestInfo = props => {
 
   useEffect(() => {
     if (!offerParams) {
-      createAlert('Error', 'Marketplace makeoffer request is missing offer parameters');
+      createAlert('Error', 'Marketplace takeoffer request is missing offer parameters');
       cancel();
       return;
     }
@@ -114,7 +113,6 @@ const MarketplaceTakeOfferRequestInfo = props => {
         throw new Error('Could not fetch the identity definition transaction');
       }
       const idOutput = txRes.result.vout[idVout];
-      const ccScript = Buffer.from(idOutput.scriptPubKey.hex, 'hex');
       const inputSats = Math.round((idOutput.value || 0) * 1e8);
 
       // 2. Validate expiry against the chain.
@@ -181,25 +179,23 @@ const MarketplaceTakeOfferRequestInfo = props => {
       });
       const identityOutScript = IdentityScript.fromIdentity(newIdentity).toBuffer();
 
+      // Assemble and sign on a single builder: getFundedTxBuilder rebuilds
+      // every input from scratch and would drop the seller's scriptSig, so
+      // the seller-signed input is kept untouched and only the buyer inputs
+      // are signed here (SIGHASH_ALL).
       const txb = TransactionBuilder.fromTransaction(offerTx, network);
       for (const u of picked) {
-        txb.addInput(u.txid, u.outputIndex, 0xffffffff);
+        txb.addInput(u.txid, u.outputIndex, 0xffffffff, Buffer.from(u.script, 'hex'));
       }
       txb.addOutput(identityOutScript, inputSats);
       const changeSats = total - needed;
       if (changeSats > 0) {
         txb.addOutput(baddress.toOutputScript(buyerAddress, network), changeSats);
       }
-
-      const incompleteHex = txb.buildIncomplete().toHex();
-      const fundedTxb = getFundedTxBuilder(incompleteHex, network, [
-        ccScript,
-        ...picked.map(u => Buffer.from(u.script, 'hex')),
-      ]);
       for (let i = 0; i < picked.length; i++) {
-        fundedTxb.sign(i + 1, keyPair, null, 1, picked[i].satoshis);
+        txb.sign(i + 1, keyPair, null, Transaction.SIGHASH_ALL, picked[i].satoshis);
       }
-      const completedHex = fundedTxb.build().toHex();
+      const completedHex = txb.build().toHex();
       const sendRes = await endpoint.sendRawTransaction(completedHex);
       if (!sendRes || !sendRes.result || typeof sendRes.result !== 'string') {
         throw new Error((sendRes && sendRes.error && sendRes.error.message) || 'Broadcast failed');
@@ -231,7 +227,7 @@ const MarketplaceTakeOfferRequestInfo = props => {
       next(response, [detailIndex]);
     } catch (e) {
       console.error('[MarketplaceTakeOffer] confirm error:', e && e.message, e);
-      createAlert('Error', (e && e.message) || 'Failed to sign marketplace listing');
+      createAlert('Error', (e && e.message) || 'Failed to complete marketplace purchase');
       setSubmitting(false);
     }
   }, [offerParams, activeCoin, request, response, detailIndex, identityName]);
@@ -248,13 +244,14 @@ const MarketplaceTakeOfferRequestInfo = props => {
     <ScrollView style={Styles.flexBackground}>
       <View style={Styles.headerContainer}>
         <Text style={{ fontSize: 20, color: Colors.quaternaryColor, paddingBottom: 8 }}>
-          Confirm Marketplace Listing
+          Confirm Marketplace Purchase
         </Text>
       </View>
       <View style={{ padding: 16 }}>
         <Text style={{ fontSize: 16, marginBottom: 16 }}>
-          You are creating a sell offer for an NFT you own. This device will build
-          and sign the offer locally — your key never leaves this device.
+          You are buying this NFT with an atomic swap. This device verifies the
+          seller's signed offer and signs the purchase locally — your key never
+          leaves this device.
         </Text>
         {offerParams && (
           <View style={{ backgroundColor: Colors.verusDarkGray, padding: 16, borderRadius: 8 }}>
@@ -287,7 +284,7 @@ const MarketplaceTakeOfferRequestInfo = props => {
           Cancel
         </Button>
         <Button mode="contained" color={Colors.primaryColor} onPress={handleConfirm}>
-          Sign &amp; List
+          Sign &amp; Buy
         </Button>
       </View>
     </ScrollView>
