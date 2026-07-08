@@ -26,6 +26,8 @@ const { getFundedTxBuilder } = smarttxs;
 // getoffers (reclaimable by this wallet via closeoffers) and the network fee.
 const LISTING_DEPOSIT_SATS = 20000;
 const LISTING_FEE_SATS = 10000;
+// Change below this is dust the daemon would reject; fold it into the fee.
+const DUST_THRESHOLD_SATS = 1000;
 const ONE_DAY_BLOCKS = 1440;
 
 // Verus makeoffer constants (must match the daemon's makeoffer):
@@ -227,7 +229,7 @@ const MarketplaceMakeOfferRequestInfo = props => {
         }
         ltxb.addOutput(buildListingDepositScript(forKey, offerKey, ownerHash), LISTING_DEPOSIT_SATS);
         const changeSats = total - needed;
-        if (changeSats > 0) {
+        if (changeSats >= DUST_THRESHOLD_SATS) {
           ltxb.addOutput(baddress.toOutputScript(sellerAddress, network), changeSats);
         }
         ltxb.addOutput(buildListingOpReturnScript(signedHex), 0);

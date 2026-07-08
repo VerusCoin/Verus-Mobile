@@ -16,6 +16,8 @@ import { Identity, IdentityScript } from 'verus-typescript-primitives';
 // On-chain listing publication: the deposit that makes the offer indexable by
 // getoffers (reclaimable by this wallet via closeoffers) and the network fee.
 const TAKEOFFER_FEE_SATS = 10000;
+// Change below this is dust the daemon would reject; fold it into the fee.
+const DUST_THRESHOLD_SATS = 1000;
 
 // Verus makeoffer constants (must match the daemon's makeoffer):
 // the maker's identity input is signed SIGHASH_SINGLE | SIGHASH_ANYONECANPAY so a
@@ -196,7 +198,7 @@ const MarketplaceTakeOfferRequestInfo = props => {
       }
       txb.addOutput(identityOutScript, inputSats);
       const changeSats = total - needed;
-      if (changeSats > 0) {
+      if (changeSats >= DUST_THRESHOLD_SATS) {
         txb.addOutput(baddress.toOutputScript(buyerAddress, network), changeSats);
       }
       for (let i = 0; i < picked.length; i++) {
