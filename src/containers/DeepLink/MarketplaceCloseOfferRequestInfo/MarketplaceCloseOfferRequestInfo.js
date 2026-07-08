@@ -12,6 +12,11 @@ import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIn
 import VrpcProvider from '../../../utils/vrpc/vrpcInterface';
 import { coinsList } from '../../../utils/CoinData/CoinsList';
 import { fromBase58Check } from 'verus-typescript-primitives';
+import { getIdentity } from '../../../utils/api/channels/verusid/requests/getIdentity';
+import {
+  getUpdatableIdentity,
+  createUpdateIdentityTx,
+} from '../../../utils/api/channels/verusid/requests/updateIdentity';
 
 const { getFundedTxBuilder } = smarttxs;
 
@@ -100,6 +105,53 @@ const MarketplaceCloseOfferRequestInfo = props => {
         throw new Error('This wallet does not own the listing deposit for this offer');
       }
 
+      // SECURITY: invalidate the signed offer on-chain by moving the NFT
+      // identity's UTXO. The offer (SIGHASH_SINGLE|ANYONECANPAY partial tx,
+      // published in the deposit OP_RETURN) spends that UTXO; until it is
+      // spent the offer stays fillable via takeoffer even after this unlist
+      // (stale-signed-order / OpenSea inactive-listing class). A
+      // content-preserving updateidentity re-homes the outpoint, so every
+      // outstanding offer for this NFT becomes unspendable. This runs first:
+      // if it fails we abort without reporting a false 'unlisted'.
+      const identityRef = description;
+      if (!identityRef) {
+        throw new Error('Close request is missing the NFT identity to invalidate');
+      }
+      const systemId = coinObj.system_id;
+      const idRes = await getIdentity(systemId, identityRef);
+      if (idRes.error || !idRes.result) {
+        throw new Error(
+          (idRes.error && idRes.error.message) || 'Could not resolve the NFT identity to unlist',
+        );
+      }
+      const { tx: rawIdTx, identity: idObj } = await getUpdatableIdentity(systemId, idRes.result);
+      const updateTx = await createUpdateIdentityTx(
+        systemId,
+        idObj,
+        ownerAddress,
+        rawIdTx,
+        idRes.result.blockheight,
+        true,
+        undefined,
+        isTestnet,
+      );
+      const updateKeys = updateTx.utxos.map(() => [spendingKey]);
+      const verusid = VrpcProvider.getVerusIdInterface(systemId);
+      const signedUpdateHex = verusid.signUpdateIdentityTransaction(
+        updateTx.hex,
+        updateTx.utxos,
+        updateKeys,
+      );
+      const updSend = await endpoint.sendRawTransaction(signedUpdateHex);
+      if (!updSend || updSend.error || !updSend.result || typeof updSend.result !== 'string') {
+        throw new Error(
+          (updSend && updSend.error && updSend.error.message) ||
+            'Failed to invalidate the offer (identity move)',
+        );
+      }
+      const updateIdentityTxid = updSend.result;
+      console.log('[MarketplaceCloseOffer] identity moved to invalidate offer:', updateIdentityTxid);
+
       const txb = new TransactionBuilder(network);
       txb.setVersion(4);
       txb.setVersionGroupId(SAPLING_VERSION_GROUP_ID);
@@ -129,7 +181,7 @@ const MarketplaceCloseOfferRequestInfo = props => {
       const postRes = await fetch(responseUri, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offerTxid, closeTxid, closeHex }),
+        body: JSON.stringify({ offerTxid, closeTxid, closeHex, updateIdentityTxid }),
       }).then(r => r.json());
 
       if (postRes && postRes.error) {
