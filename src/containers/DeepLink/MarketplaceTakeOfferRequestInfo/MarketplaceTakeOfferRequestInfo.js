@@ -141,6 +141,13 @@ const MarketplaceTakeOfferRequestInfo = props => {
       if (offerTx.outs[0].value !== priceSats) {
         throw new Error('Offer payment does not match the request terms');
       }
+      // Verify the payment DESTINATION baked into the seller-signed offer matches
+      // the payout address shown on screen — the amount alone is not enough, a
+      // hostile request could display one address while the funds go to another.
+      const signedPayoutAddress = baddress.fromOutputScript(offerTx.outs[0].script, network);
+      if (signedPayoutAddress !== offerParams.payoutDestination.getAddressString()) {
+        throw new Error('Offer pays a different address than the request shows');
+      }
 
       // 4. Fund the purchase from this wallet: price + fee in plain P2PKH utxos.
       // GenericRequests are signed for their own chain. Do not use the UI's
