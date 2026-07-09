@@ -1,0 +1,1275 @@
+diff --git a/node_modules/verus-typescript-primitives/dist/constants/ordinals/ordinals.d.ts b/node_modules/verus-typescript-primitives/dist/constants/ordinals/ordinals.d.ts
+index 6dd3272..9738a13 100644
+--- a/node_modules/verus-typescript-primitives/dist/constants/ordinals/ordinals.d.ts
++++ b/node_modules/verus-typescript-primitives/dist/constants/ordinals/ordinals.d.ts
+@@ -16,3 +16,7 @@ export declare const DATA_RESPONSE_VDXF_ORDINAL: import("bn.js");
+ export declare const CREATE_WALLET_BACKUP_DETAILS_VDXF_ORDINAL: import("bn.js");
+ export declare const WALLET_BACKUP_VDXF_ORDINAL: import("bn.js");
+ export declare const SPENDABLE_KEY_DETAILS_VDXF_ORDINAL: import("bn.js");
++export declare const MARKETPLACE_MAKEOFFER_REQUEST_VDXF_ORDINAL: import("bn.js");
++export declare const MARKETPLACE_TAKEOFFER_REQUEST_VDXF_ORDINAL: import("bn.js");
++
++export declare const MARKETPLACE_CLOSEOFFER_REQUEST_VDXF_ORDINAL: import("bn.js");
+diff --git a/node_modules/verus-typescript-primitives/dist/constants/ordinals/ordinals.js b/node_modules/verus-typescript-primitives/dist/constants/ordinals/ordinals.js
+index 109fb0d..fea0211 100644
+--- a/node_modules/verus-typescript-primitives/dist/constants/ordinals/ordinals.js
++++ b/node_modules/verus-typescript-primitives/dist/constants/ordinals/ordinals.js
+@@ -1,6 +1,6 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+-exports.SPENDABLE_KEY_DETAILS_VDXF_ORDINAL = exports.WALLET_BACKUP_VDXF_ORDINAL = exports.CREATE_WALLET_BACKUP_DETAILS_VDXF_ORDINAL = exports.DATA_RESPONSE_VDXF_ORDINAL = exports.USER_DATA_REQUEST_VDXF_ORDINAL = exports.DATA_PACKET_REQUEST_VDXF_ORDINAL = exports.APP_ENCRYPTION_RESPONSE_VDXF_ORDINAL = exports.APP_ENCRYPTION_REQUEST_VDXF_ORDINAL = exports.PROVISION_IDENTITY_DETAILS_VDXF_ORDINAL = exports.IDENTITY_UPDATE_RESPONSE_VDXF_ORDINAL = exports.IDENTITY_UPDATE_REQUEST_VDXF_ORDINAL = exports.AUTHENTICATION_RESPONSE_VDXF_ORDINAL = exports.AUTHENTICATION_REQUEST_VDXF_ORDINAL = exports.VERUSPAY_INVOICE_DETAILS_VDXF_ORDINAL = exports.DATA_DESCRIPTOR_VDXF_ORDINAL = exports.VDXF_OBJECT_RESERVED_BYTE_ID_OR_CURRENCY = exports.VDXF_OBJECT_RESERVED_BYTE_VDXF_ID_STRING = exports.VDXF_OBJECT_RESERVED_BYTE_I_ADDR = void 0;
++exports.MARKETPLACE_TAKEOFFER_REQUEST_VDXF_ORDINAL = exports.MARKETPLACE_MAKEOFFER_REQUEST_VDXF_ORDINAL = exports.SPENDABLE_KEY_DETAILS_VDXF_ORDINAL = exports.WALLET_BACKUP_VDXF_ORDINAL = exports.CREATE_WALLET_BACKUP_DETAILS_VDXF_ORDINAL = exports.DATA_RESPONSE_VDXF_ORDINAL = exports.USER_DATA_REQUEST_VDXF_ORDINAL = exports.DATA_PACKET_REQUEST_VDXF_ORDINAL = exports.APP_ENCRYPTION_RESPONSE_VDXF_ORDINAL = exports.APP_ENCRYPTION_REQUEST_VDXF_ORDINAL = exports.PROVISION_IDENTITY_DETAILS_VDXF_ORDINAL = exports.IDENTITY_UPDATE_RESPONSE_VDXF_ORDINAL = exports.IDENTITY_UPDATE_REQUEST_VDXF_ORDINAL = exports.AUTHENTICATION_RESPONSE_VDXF_ORDINAL = exports.AUTHENTICATION_REQUEST_VDXF_ORDINAL = exports.VERUSPAY_INVOICE_DETAILS_VDXF_ORDINAL = exports.DATA_DESCRIPTOR_VDXF_ORDINAL = exports.VDXF_OBJECT_RESERVED_BYTE_ID_OR_CURRENCY = exports.VDXF_OBJECT_RESERVED_BYTE_VDXF_ID_STRING = exports.VDXF_OBJECT_RESERVED_BYTE_I_ADDR = void 0;
+ const bn_js_1 = require("bn.js");
+ exports.VDXF_OBJECT_RESERVED_BYTE_I_ADDR = new bn_js_1.BN(102, 10);
+ exports.VDXF_OBJECT_RESERVED_BYTE_VDXF_ID_STRING = new bn_js_1.BN(103, 10);
+@@ -20,3 +20,6 @@ exports.DATA_RESPONSE_VDXF_ORDINAL = new bn_js_1.BN(11, 10);
+ exports.CREATE_WALLET_BACKUP_DETAILS_VDXF_ORDINAL = new bn_js_1.BN(12, 10);
+ exports.WALLET_BACKUP_VDXF_ORDINAL = new bn_js_1.BN(13, 10);
+ exports.SPENDABLE_KEY_DETAILS_VDXF_ORDINAL = new bn_js_1.BN(14, 10);
++exports.MARKETPLACE_MAKEOFFER_REQUEST_VDXF_ORDINAL = new bn_js_1.BN(15, 10);
++exports.MARKETPLACE_TAKEOFFER_REQUEST_VDXF_ORDINAL = new bn_js_1.BN(16, 10);
++exports.MARKETPLACE_CLOSEOFFER_REQUEST_VDXF_ORDINAL = new bn_js_1.BN(17, 10);
+diff --git a/node_modules/verus-typescript-primitives/dist/constants/ordinals/register.js b/node_modules/verus-typescript-primitives/dist/constants/ordinals/register.js
+index 42273c5..d77fc8e 100644
+--- a/node_modules/verus-typescript-primitives/dist/constants/ordinals/register.js
++++ b/node_modules/verus-typescript-primitives/dist/constants/ordinals/register.js
+@@ -19,7 +19,9 @@ const AppEncryptionResponseOrdinalVDXFObject_1 = require("../../vdxf/classes/ord
+ const CreateWalletBackupDetailsOrdinalVDXFObject_1 = require("../../vdxf/classes/ordinals/CreateWalletBackupDetailsOrdinalVDXFObject");
+ const WalletBackupOrdinalVDXFObject_1 = require("../../vdxf/classes/ordinals/WalletBackupOrdinalVDXFObject");
+ const SpendableKeyDetailsOrdinalVDXFObject_1 = require("../../vdxf/classes/ordinals/SpendableKeyDetailsOrdinalVDXFObject");
+-// This is where all ordinals are currently registered for ordinal VDXF objects. Standard naming convention for the VDXF keys is to
++const MarketplaceMakeOfferRequestOrdinalVDXFObject_1 = require("../../vdxf/classes/ordinals/MarketplaceMakeOfferRequestOrdinalVDXFObject");
++const MarketplaceTakeOfferRequestOrdinalVDXFObject_1 = require("../../vdxf/classes/ordinals/MarketplaceTakeOfferRequestOrdinalVDXFObject");
++const MarketplaceCloseOfferRequestOrdinalVDXFObject_1 = require("../../vdxf/classes/ordinals/MarketplaceCloseOfferRequestOrdinalVDXFObject");
+ // include the word "response" at the end if it is a response and "request" at the end if it is a request. In case it isn't a request
+ // (an object expecting a response) or a response, you can use the world "details" at the end, but best not to mix request + details
+ // or response + details
+@@ -39,5 +41,8 @@ const registerOrdinals = () => {
+     OrdinalVDXFObjectOrdinalMap_1.OrdinalVDXFObjectOrdinalMap.registerOrdinal(ordinals_1.CREATE_WALLET_BACKUP_DETAILS_VDXF_ORDINAL.toNumber(), vdxf_1.CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY.vdxfid, CreateWalletBackupDetailsOrdinalVDXFObject_1.CreateWalletBackupDetailsOrdinalVDXFObject, false);
+     OrdinalVDXFObjectOrdinalMap_1.OrdinalVDXFObjectOrdinalMap.registerOrdinal(ordinals_1.WALLET_BACKUP_VDXF_ORDINAL.toNumber(), vdxf_1.WALLET_BACKUP.vdxfid, WalletBackupOrdinalVDXFObject_1.WalletBackupOrdinalVDXFObject, false);
+     OrdinalVDXFObjectOrdinalMap_1.OrdinalVDXFObjectOrdinalMap.registerOrdinal(ordinals_1.SPENDABLE_KEY_DETAILS_VDXF_ORDINAL.toNumber(), vdxf_1.SPENDABLE_KEY_DETAILS_VDXF_KEY.vdxfid, SpendableKeyDetailsOrdinalVDXFObject_1.SpendableKeyDetailsOrdinalVDXFObject, false);
++    OrdinalVDXFObjectOrdinalMap_1.OrdinalVDXFObjectOrdinalMap.registerOrdinal(ordinals_1.MARKETPLACE_MAKEOFFER_REQUEST_VDXF_ORDINAL.toNumber(), vdxf_1.MARKETPLACE_MAKEOFFER_REQUEST_VDXF_KEY.vdxfid, MarketplaceMakeOfferRequestOrdinalVDXFObject_1.MarketplaceMakeOfferRequestOrdinalVDXFObject, false);
++    OrdinalVDXFObjectOrdinalMap_1.OrdinalVDXFObjectOrdinalMap.registerOrdinal(ordinals_1.MARKETPLACE_TAKEOFFER_REQUEST_VDXF_ORDINAL.toNumber(), vdxf_1.MARKETPLACE_TAKEOFFER_REQUEST_VDXF_KEY.vdxfid, MarketplaceTakeOfferRequestOrdinalVDXFObject_1.MarketplaceTakeOfferRequestOrdinalVDXFObject, false);
++    OrdinalVDXFObjectOrdinalMap_1.OrdinalVDXFObjectOrdinalMap.registerOrdinal(ordinals_1.MARKETPLACE_CLOSEOFFER_REQUEST_VDXF_ORDINAL.toNumber(), vdxf_1.MARKETPLACE_CLOSEOFFER_REQUEST_VDXF_KEY.vdxfid, MarketplaceCloseOfferRequestOrdinalVDXFObject_1.MarketplaceCloseOfferRequestOrdinalVDXFObject, false);
+ };
+ exports.registerOrdinals = registerOrdinals;
+diff --git a/node_modules/verus-typescript-primitives/dist/constants/ordinals/types.d.ts b/node_modules/verus-typescript-primitives/dist/constants/ordinals/types.d.ts
+index dfbef38..c7ada48 100644
+--- a/node_modules/verus-typescript-primitives/dist/constants/ordinals/types.d.ts
++++ b/node_modules/verus-typescript-primitives/dist/constants/ordinals/types.d.ts
+@@ -1,6 +1,6 @@
+ import { DataDescriptor, DataDescriptorJson } from "../../pbaas";
+-import { AppEncryptionRequestDetails, AppEncryptionRequestDetailsJson, IdentityUpdateRequestDetails, IdentityUpdateRequestDetailsJson, IdentityUpdateResponseDetails, IdentityUpdateResponseDetailsJson, AuthenticationRequestDetails, AuthenticationRequestDetailsJson, AuthenticationResponseDetails, AuthenticationResponseDetailsJson, ProvisionIdentityDetails, ProvisionIdentityDetailsJson, UserDataRequestDetails, UserDataRequestJson, DataPacketRequestDetails, DataPacketRequestDetailsJson, CreateWalletBackupDetails, CreateWalletBackupDetailsJson, WalletBackup, WalletBackupJson, SpendableKeyDetails, SpendableKeyDetailsJson, VerusPayInvoiceDetails, AppEncryptionResponseDetails, AppEncryptionResponseDetailsJson } from "../../vdxf/classes";
++import { AppEncryptionRequestDetails, AppEncryptionRequestDetailsJson, IdentityUpdateRequestDetails, IdentityUpdateRequestDetailsJson, IdentityUpdateResponseDetails, IdentityUpdateResponseDetailsJson, AuthenticationRequestDetails, AuthenticationRequestDetailsJson, AuthenticationResponseDetails, AuthenticationResponseDetailsJson, ProvisionIdentityDetails, ProvisionIdentityDetailsJson, UserDataRequestDetails, UserDataRequestJson, DataPacketRequestDetails, DataPacketRequestDetailsJson, CreateWalletBackupDetails, CreateWalletBackupDetailsJson, WalletBackup, WalletBackupJson, SpendableKeyDetails, SpendableKeyDetailsJson, VerusPayInvoiceDetails, AppEncryptionResponseDetails, AppEncryptionResponseDetailsJson, MarketplaceMakeOfferRequestDetails, MarketplaceMakeOfferRequestDetailsJson, MarketplaceTakeOfferRequestDetails, MarketplaceTakeOfferRequestDetailsJson, MarketplaceCloseOfferRequestDetails, MarketplaceCloseOfferRequestDetailsJson } from "../../vdxf/classes";
+ import { VerusPayInvoiceDetailsJson } from "../../vdxf/classes/payment/VerusPayInvoiceDetails";
+ import { DataResponseDetails, DataResponseDetailsJson } from "../../vdxf/classes/data/DataResponseDetails";
+-export type OrdinalVDXFObjectReservedData = DataDescriptor | VerusPayInvoiceDetails | IdentityUpdateRequestDetails | IdentityUpdateResponseDetails | AuthenticationRequestDetails | AuthenticationResponseDetails | ProvisionIdentityDetails | AppEncryptionRequestDetails | DataResponseDetails | UserDataRequestDetails | DataPacketRequestDetails | CreateWalletBackupDetails | WalletBackup | SpendableKeyDetails | AppEncryptionResponseDetails;
+-export type OrdinalVDXFObjectReservedDataJson = DataDescriptorJson | VerusPayInvoiceDetailsJson | IdentityUpdateRequestDetailsJson | IdentityUpdateResponseDetailsJson | AuthenticationRequestDetailsJson | AuthenticationResponseDetailsJson | ProvisionIdentityDetailsJson | AppEncryptionRequestDetailsJson | DataResponseDetailsJson | UserDataRequestJson | DataPacketRequestDetailsJson | CreateWalletBackupDetailsJson | WalletBackupJson | SpendableKeyDetailsJson | AppEncryptionResponseDetailsJson;
++export type OrdinalVDXFObjectReservedData = DataDescriptor | VerusPayInvoiceDetails | IdentityUpdateRequestDetails | IdentityUpdateResponseDetails | AuthenticationRequestDetails | AuthenticationResponseDetails | ProvisionIdentityDetails | AppEncryptionRequestDetails | DataResponseDetails | UserDataRequestDetails | DataPacketRequestDetails | CreateWalletBackupDetails | WalletBackup | SpendableKeyDetails | AppEncryptionResponseDetails | MarketplaceMakeOfferRequestDetails | MarketplaceTakeOfferRequestDetails | MarketplaceCloseOfferRequestDetails;
++export type OrdinalVDXFObjectReservedDataJson = DataDescriptorJson | VerusPayInvoiceDetailsJson | IdentityUpdateRequestDetailsJson | IdentityUpdateResponseDetailsJson | AuthenticationRequestDetailsJson | AuthenticationResponseDetailsJson | ProvisionIdentityDetailsJson | AppEncryptionRequestDetailsJson | DataResponseDetailsJson | UserDataRequestJson | DataPacketRequestDetailsJson | CreateWalletBackupDetailsJson | WalletBackupJson | SpendableKeyDetailsJson | AppEncryptionResponseDetailsJson | MarketplaceMakeOfferRequestDetailsJson | MarketplaceTakeOfferRequestDetailsJson | MarketplaceCloseOfferRequestDetailsJson;
+diff --git a/node_modules/verus-typescript-primitives/dist/index.d.ts b/node_modules/verus-typescript-primitives/dist/index.d.ts
+index 6484782..b724d68 100644
+--- a/node_modules/verus-typescript-primitives/dist/index.d.ts
++++ b/node_modules/verus-typescript-primitives/dist/index.d.ts
+@@ -6,6 +6,7 @@ export * from './vdxf/classes/index';
+ export * from './vdxf/index';
+ export * from './vdxf/parser';
+ export * from './utils/address';
++export * from './utils/onchainoffers';
+ export * from './utils/bufferutils';
+ export * from './utils/varuint';
+ export * from './utils/ops';
+diff --git a/node_modules/verus-typescript-primitives/dist/index.js b/node_modules/verus-typescript-primitives/dist/index.js
+index 896aa4c..d1a0dec 100644
+--- a/node_modules/verus-typescript-primitives/dist/index.js
++++ b/node_modules/verus-typescript-primitives/dist/index.js
+@@ -23,6 +23,7 @@ __exportStar(require("./vdxf/classes/index"), exports);
+ __exportStar(require("./vdxf/index"), exports);
+ __exportStar(require("./vdxf/parser"), exports);
+ __exportStar(require("./utils/address"), exports);
++__exportStar(require("./utils/onchainoffers"), exports);
+ __exportStar(require("./utils/bufferutils"), exports);
+ __exportStar(require("./utils/varuint"), exports);
+ __exportStar(require("./utils/ops"), exports);
+diff --git a/node_modules/verus-typescript-primitives/dist/utils/onchainoffers.d.ts b/node_modules/verus-typescript-primitives/dist/utils/onchainoffers.d.ts
+new file mode 100644
+index 0000000..3cb47db
+--- /dev/null
++++ b/node_modules/verus-typescript-primitives/dist/utils/onchainoffers.d.ts
+@@ -0,0 +1,36 @@
++/**
++ * On-chain marketplace offer listing primitives.
++ *
++ * A signed partial offer transaction (makeoffer-style, SIGHASH_SINGLE |
++ * ANYONECANPAY) becomes discoverable via getoffers when a "listing"
++ * transaction is posted on chain carrying:
++ *  - a deposit output (>= the network default fee on PBaaS chains) whose
++ *    script is an identity-commitment cryptocondition tagged with the two
++ *    on-chain offer index keys, and
++ *  - an OP_RETURN output embedding the signed offer transaction.
++ *
++ * These builders produce byte-exact equivalents of the daemon's own
++ * listing outputs (COnChainOffer / GetOpRetChainOffer format), so any
++ * wallet holding ordinary funds can post a listing for an offer it signed,
++ * paying its own fee and keeping the reclaimable deposit.
++ */
++export declare const IDENTITY_OFFER_BASE_KEY = "04e9923a4e0736bdf2098564cb3e7c68f9d12359";
++export declare const CURRENCY_OFFER_BASE_KEY = "37ea50baa4f2fb07e33252be3202319e35790380";
++export declare const OFFER_FOR_IDENTITY_BASE_KEY = "1a077aae5e356da8191e780c8a68452998a86201";
++export declare const OFFER_FOR_CURRENCY_BASE_KEY = "ecbb3a6edc834d4dbdc7fb83514cf65e97667eba";
++/**
++ * CCrossChainRPCData::GetConditionID(baseKey, targetID): the per-target
++ * offer index key, as indexed on chain (address-index P2PKH form).
++ */
++export declare const deriveOfferIndexKey: (baseKeyHash160Hex: string, targetIAddress: string) => Buffer;
++/**
++ * The identity-commitment deposit output script carrying the offer index
++ * keys. Spendable by ownerHash160 (a P2PKH destination) — spending it (e.g.
++ * via closeoffers) reclaims the deposit and delists the offer.
++ */
++export declare const buildListingDepositScript: (forIndexKey: Buffer, offerIndexKey: Buffer, ownerHash160: Buffer) => Buffer;
++/**
++ * The OP_RETURN script embedding the signed offer transaction in the
++ * CCrossChainProof/CPartialTransactionProof envelope getoffers parses.
++ */
++export declare const buildListingOpReturnScript: (signedOfferTxHex: string) => Buffer;
+diff --git a/node_modules/verus-typescript-primitives/dist/utils/onchainoffers.js b/node_modules/verus-typescript-primitives/dist/utils/onchainoffers.js
+new file mode 100644
+index 0000000..f13dac6
+--- /dev/null
++++ b/node_modules/verus-typescript-primitives/dist/utils/onchainoffers.js
+@@ -0,0 +1,106 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.buildListingOpReturnScript = exports.buildListingDepositScript = exports.deriveOfferIndexKey = exports.OFFER_FOR_CURRENCY_BASE_KEY = exports.OFFER_FOR_IDENTITY_BASE_KEY = exports.CURRENCY_OFFER_BASE_KEY = exports.IDENTITY_OFFER_BASE_KEY = void 0;
++const crypto_1 = require("crypto");
++const address_1 = require("./address");
++/**
++ * On-chain marketplace offer listing primitives.
++ *
++ * A signed partial offer transaction (makeoffer-style, SIGHASH_SINGLE |
++ * ANYONECANPAY) becomes discoverable via getoffers when a "listing"
++ * transaction is posted on chain carrying:
++ *  - a deposit output (>= the network default fee on PBaaS chains) whose
++ *    script is an identity-commitment cryptocondition tagged with the two
++ *    on-chain offer index keys, and
++ *  - an OP_RETURN output embedding the signed offer transaction.
++ *
++ * These builders produce byte-exact equivalents of the daemon's own
++ * listing outputs (COnChainOffer / GetOpRetChainOffer format), so any
++ * wallet holding ordinary funds can post a listing for an offer it signed,
++ * paying its own fee and keeping the reclaimable deposit.
++ */
++// hash160result of vrsc::system.exchange.identityoffer
++exports.IDENTITY_OFFER_BASE_KEY = "04e9923a4e0736bdf2098564cb3e7c68f9d12359";
++// hash160result of vrsc::system.exchange.currencyoffer
++exports.CURRENCY_OFFER_BASE_KEY = "37ea50baa4f2fb07e33252be3202319e35790380";
++// hash160result of vrsc::system.exchange.offerforidentity
++exports.OFFER_FOR_IDENTITY_BASE_KEY = "1a077aae5e356da8191e780c8a68452998a86201";
++// hash160result of vrsc::system.exchange.offerforcurrency
++exports.OFFER_FOR_CURRENCY_BASE_KEY = "ecbb3a6edc834d4dbdc7fb83514cf65e97667eba";
++const sha256 = (b) => (0, crypto_1.createHash)("sha256").update(b).digest();
++const dsha256 = (b) => sha256(sha256(b));
++const hash160 = (b) => (0, crypto_1.createHash)("ripemd160").update(sha256(b)).digest();
++/**
++ * CCrossChainRPCData::GetConditionID(baseKey, targetID): the per-target
++ * offer index key, as indexed on chain (address-index P2PKH form).
++ */
++const deriveOfferIndexKey = (baseKeyHash160Hex, targetIAddress) => {
++    const target = (0, address_1.fromBase58Check)(targetIAddress).hash;
++    const base = Buffer.from(baseKeyHash160Hex, "hex").reverse();
++    return hash160(dsha256(Buffer.concat([target, base])));
++};
++exports.deriveOfferIndexKey = deriveOfferIndexKey;
++/**
++ * The identity-commitment deposit output script carrying the offer index
++ * keys. Spendable by ownerHash160 (a P2PKH destination) — spending it (e.g.
++ * via closeoffers) reclaims the deposit and delists the offer.
++ */
++const buildListingDepositScript = (forIndexKey, offerIndexKey, ownerHash160) => {
++    if (forIndexKey.length !== 20 || offerIndexKey.length !== 20 || ownerHash160.length !== 20) {
++        throw new Error("Index keys and owner hash must be 20 bytes");
++    }
++    return Buffer.concat([
++        Buffer.from("2f0403000202", "hex"),
++        Buffer.from("14", "hex"),
++        forIndexKey,
++        Buffer.from("14", "hex"),
++        offerIndexKey,
++        Buffer.from("cc", "hex"),
++        Buffer.from("3b0403110101", "hex"),
++        Buffer.from("14", "hex"),
++        ownerHash160,
++        Buffer.from("20", "hex"),
++        Buffer.alloc(32),
++        Buffer.from("75", "hex"),
++    ]);
++};
++exports.buildListingDepositScript = buildListingDepositScript;
++const compactSize = (n) => {
++    if (n < 0xfd)
++        return Buffer.from([n]);
++    if (n <= 0xffff) {
++        const b = Buffer.alloc(3);
++        b[0] = 0xfd;
++        b.writeUInt16LE(n, 1);
++        return b;
++    }
++    const b = Buffer.alloc(5);
++    b[0] = 0xfe;
++    b.writeUInt32LE(n, 1);
++    return b;
++};
++/**
++ * The OP_RETURN script embedding the signed offer transaction in the
++ * CCrossChainProof/CPartialTransactionProof envelope getoffers parses.
++ */
++const buildListingOpReturnScript = (signedOfferTxHex) => {
++    const tx = Buffer.from(signedOfferTxHex, "hex");
++    const payload = Buffer.concat([
++        Buffer.from("0500000003000201000000000100000000", "hex"),
++        compactSize(tx.length),
++        tx,
++        Buffer.alloc(4),
++    ]);
++    let push;
++    if (payload.length <= 75)
++        push = Buffer.from([payload.length]);
++    else if (payload.length <= 0xff)
++        push = Buffer.from([0x4c, payload.length]);
++    else {
++        push = Buffer.alloc(3);
++        push[0] = 0x4d;
++        push.writeUInt16LE(payload.length, 1);
++    }
++    return Buffer.concat([Buffer.from("6a", "hex"), push, payload]);
++};
++exports.buildListingOpReturnScript = buildListingOpReturnScript;
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/index.d.ts b/node_modules/verus-typescript-primitives/dist/vdxf/classes/index.d.ts
+index 5b9ac7b..622c118 100644
+--- a/node_modules/verus-typescript-primitives/dist/vdxf/classes/index.d.ts
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/index.d.ts
+@@ -25,6 +25,9 @@ export * from "./identity/IdentityUpdateResponseDetails";
+ export * from './ResponseURI';
+ export * from './RequestURI';
+ export * from './request/GenericRequest';
++export * from './request/MarketplaceMakeOfferRequestDetails';
++export * from './request/MarketplaceTakeOfferRequestDetails';
++export * from './request/MarketplaceCloseOfferRequestDetails';
+ export * from './response/GenericResponse';
+ export * from './appencryption/AppEncryptionResponseDetails';
+ export * from './data/DataResponseDetails';
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/index.js b/node_modules/verus-typescript-primitives/dist/vdxf/classes/index.js
+index 6c2d484..b6a6f73 100644
+--- a/node_modules/verus-typescript-primitives/dist/vdxf/classes/index.js
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/index.js
+@@ -46,6 +46,9 @@ __exportStar(require("./identity/IdentityUpdateResponseDetails"), exports);
+ __exportStar(require("./ResponseURI"), exports);
+ __exportStar(require("./RequestURI"), exports);
+ __exportStar(require("./request/GenericRequest"), exports);
++__exportStar(require("./request/MarketplaceMakeOfferRequestDetails"), exports);
++__exportStar(require("./request/MarketplaceTakeOfferRequestDetails"), exports);
++__exportStar(require("./request/MarketplaceCloseOfferRequestDetails"), exports);
+ __exportStar(require("./response/GenericResponse"), exports);
+ __exportStar(require("./appencryption/AppEncryptionResponseDetails"), exports);
+ __exportStar(require("./data/DataResponseDetails"), exports);
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceCloseOfferRequestOrdinalVDXFObject.d.ts b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceCloseOfferRequestOrdinalVDXFObject.d.ts
+new file mode 100644
+index 0000000..d65e41f
+--- /dev/null
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceCloseOfferRequestOrdinalVDXFObject.d.ts
+@@ -0,0 +1,10 @@
++import { SerializableDataEntity } from "../../../utils/types/SerializableEntity";
++import { OrdinalVDXFObjectInterfaceTemplate, OrdinalVDXFObjectJsonTemplate } from "./OrdinalVDXFObject";
++import { MarketplaceCloseOfferRequestDetails, MarketplaceCloseOfferRequestDetailsJson } from "../request/MarketplaceCloseOfferRequestDetails";
++import { SerializableEntityOrdinalVDXFObject } from "./SerializableEntityOrdinalVDXFObject";
++export declare class MarketplaceCloseOfferRequestOrdinalVDXFObject extends SerializableEntityOrdinalVDXFObject implements SerializableDataEntity {
++    data: MarketplaceCloseOfferRequestDetails;
++    constructor(request?: OrdinalVDXFObjectInterfaceTemplate<MarketplaceCloseOfferRequestDetails>);
++    fromDataBuffer(buffer: Buffer, rootSystemName?: string): void;
++    static fromJson(details: OrdinalVDXFObjectJsonTemplate<MarketplaceCloseOfferRequestDetailsJson>): MarketplaceCloseOfferRequestOrdinalVDXFObject;
++}
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceCloseOfferRequestOrdinalVDXFObject.js b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceCloseOfferRequestOrdinalVDXFObject.js
+new file mode 100644
+index 0000000..4f56c2a
+--- /dev/null
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceCloseOfferRequestOrdinalVDXFObject.js
+@@ -0,0 +1,26 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.MarketplaceCloseOfferRequestOrdinalVDXFObject = void 0;
++const ordinals_1 = require("../../../constants/ordinals/ordinals");
++const MarketplaceCloseOfferRequestDetails_1 = require("../request/MarketplaceCloseOfferRequestDetails");
++const SerializableEntityOrdinalVDXFObject_1 = require("./SerializableEntityOrdinalVDXFObject");
++class MarketplaceCloseOfferRequestOrdinalVDXFObject extends SerializableEntityOrdinalVDXFObject_1.SerializableEntityOrdinalVDXFObject {
++    constructor(request = {
++        data: new MarketplaceCloseOfferRequestDetails_1.MarketplaceCloseOfferRequestDetails()
++    }) {
++        super({
++            type: ordinals_1.MARKETPLACE_CLOSEOFFER_REQUEST_VDXF_ORDINAL,
++            data: request.data
++        }, MarketplaceCloseOfferRequestDetails_1.MarketplaceCloseOfferRequestDetails);
++    }
++    fromDataBuffer(buffer, rootSystemName) {
++        this.data = new MarketplaceCloseOfferRequestDetails_1.MarketplaceCloseOfferRequestDetails();
++        this.data.fromBuffer(buffer, 0);
++    }
++    static fromJson(details) {
++        return new MarketplaceCloseOfferRequestOrdinalVDXFObject({
++            data: MarketplaceCloseOfferRequestDetails_1.MarketplaceCloseOfferRequestDetails.fromJson(details.data)
++        });
++    }
++}
++exports.MarketplaceCloseOfferRequestOrdinalVDXFObject = MarketplaceCloseOfferRequestOrdinalVDXFObject;
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceMakeOfferRequestOrdinalVDXFObject.d.ts b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceMakeOfferRequestOrdinalVDXFObject.d.ts
+new file mode 100644
+index 0000000..576617a
+--- /dev/null
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceMakeOfferRequestOrdinalVDXFObject.d.ts
+@@ -0,0 +1,10 @@
++import { SerializableDataEntity } from "../../../utils/types/SerializableEntity";
++import { OrdinalVDXFObjectInterfaceTemplate, OrdinalVDXFObjectJsonTemplate } from "./OrdinalVDXFObject";
++import { MarketplaceMakeOfferRequestDetails, MarketplaceMakeOfferRequestDetailsJson } from "../request/MarketplaceMakeOfferRequestDetails";
++import { SerializableEntityOrdinalVDXFObject } from "./SerializableEntityOrdinalVDXFObject";
++export declare class MarketplaceMakeOfferRequestOrdinalVDXFObject extends SerializableEntityOrdinalVDXFObject implements SerializableDataEntity {
++    data: MarketplaceMakeOfferRequestDetails;
++    constructor(request?: OrdinalVDXFObjectInterfaceTemplate<MarketplaceMakeOfferRequestDetails>);
++    fromDataBuffer(buffer: Buffer, rootSystemName?: string): void;
++    static fromJson(details: OrdinalVDXFObjectJsonTemplate<MarketplaceMakeOfferRequestDetailsJson>): MarketplaceMakeOfferRequestOrdinalVDXFObject;
++}
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceMakeOfferRequestOrdinalVDXFObject.js b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceMakeOfferRequestOrdinalVDXFObject.js
+new file mode 100644
+index 0000000..33ea8a2
+--- /dev/null
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceMakeOfferRequestOrdinalVDXFObject.js
+@@ -0,0 +1,26 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.MarketplaceMakeOfferRequestOrdinalVDXFObject = void 0;
++const ordinals_1 = require("../../../constants/ordinals/ordinals");
++const MarketplaceMakeOfferRequestDetails_1 = require("../request/MarketplaceMakeOfferRequestDetails");
++const SerializableEntityOrdinalVDXFObject_1 = require("./SerializableEntityOrdinalVDXFObject");
++class MarketplaceMakeOfferRequestOrdinalVDXFObject extends SerializableEntityOrdinalVDXFObject_1.SerializableEntityOrdinalVDXFObject {
++    constructor(request = {
++        data: new MarketplaceMakeOfferRequestDetails_1.MarketplaceMakeOfferRequestDetails()
++    }) {
++        super({
++            type: ordinals_1.MARKETPLACE_MAKEOFFER_REQUEST_VDXF_ORDINAL,
++            data: request.data
++        }, MarketplaceMakeOfferRequestDetails_1.MarketplaceMakeOfferRequestDetails);
++    }
++    fromDataBuffer(buffer, rootSystemName) {
++        this.data = new MarketplaceMakeOfferRequestDetails_1.MarketplaceMakeOfferRequestDetails();
++        this.data.fromBuffer(buffer, 0);
++    }
++    static fromJson(details) {
++        return new MarketplaceMakeOfferRequestOrdinalVDXFObject({
++            data: MarketplaceMakeOfferRequestDetails_1.MarketplaceMakeOfferRequestDetails.fromJson(details.data)
++        });
++    }
++}
++exports.MarketplaceMakeOfferRequestOrdinalVDXFObject = MarketplaceMakeOfferRequestOrdinalVDXFObject;
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceTakeOfferRequestOrdinalVDXFObject.d.ts b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceTakeOfferRequestOrdinalVDXFObject.d.ts
+new file mode 100644
+index 0000000..b00543a
+--- /dev/null
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceTakeOfferRequestOrdinalVDXFObject.d.ts
+@@ -0,0 +1,10 @@
++import { SerializableDataEntity } from "../../../utils/types/SerializableEntity";
++import { OrdinalVDXFObjectInterfaceTemplate, OrdinalVDXFObjectJsonTemplate } from "./OrdinalVDXFObject";
++import { MarketplaceTakeOfferRequestDetails, MarketplaceTakeOfferRequestDetailsJson } from "../request/MarketplaceTakeOfferRequestDetails";
++import { SerializableEntityOrdinalVDXFObject } from "./SerializableEntityOrdinalVDXFObject";
++export declare class MarketplaceTakeOfferRequestOrdinalVDXFObject extends SerializableEntityOrdinalVDXFObject implements SerializableDataEntity {
++    data: MarketplaceTakeOfferRequestDetails;
++    constructor(request?: OrdinalVDXFObjectInterfaceTemplate<MarketplaceTakeOfferRequestDetails>);
++    fromDataBuffer(buffer: Buffer, rootSystemName?: string): void;
++    static fromJson(details: OrdinalVDXFObjectJsonTemplate<MarketplaceTakeOfferRequestDetailsJson>): MarketplaceTakeOfferRequestOrdinalVDXFObject;
++}
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceTakeOfferRequestOrdinalVDXFObject.js b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceTakeOfferRequestOrdinalVDXFObject.js
+new file mode 100644
+index 0000000..318adcf
+--- /dev/null
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/MarketplaceTakeOfferRequestOrdinalVDXFObject.js
+@@ -0,0 +1,26 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.MarketplaceTakeOfferRequestOrdinalVDXFObject = void 0;
++const ordinals_1 = require("../../../constants/ordinals/ordinals");
++const MarketplaceTakeOfferRequestDetails_1 = require("../request/MarketplaceTakeOfferRequestDetails");
++const SerializableEntityOrdinalVDXFObject_1 = require("./SerializableEntityOrdinalVDXFObject");
++class MarketplaceTakeOfferRequestOrdinalVDXFObject extends SerializableEntityOrdinalVDXFObject_1.SerializableEntityOrdinalVDXFObject {
++    constructor(request = {
++        data: new MarketplaceTakeOfferRequestDetails_1.MarketplaceTakeOfferRequestDetails()
++    }) {
++        super({
++            type: ordinals_1.MARKETPLACE_TAKEOFFER_REQUEST_VDXF_ORDINAL,
++            data: request.data
++        }, MarketplaceTakeOfferRequestDetails_1.MarketplaceTakeOfferRequestDetails);
++    }
++    fromDataBuffer(buffer, rootSystemName) {
++        this.data = new MarketplaceTakeOfferRequestDetails_1.MarketplaceTakeOfferRequestDetails();
++        this.data.fromBuffer(buffer, 0);
++    }
++    static fromJson(details) {
++        return new MarketplaceTakeOfferRequestOrdinalVDXFObject({
++            data: MarketplaceTakeOfferRequestDetails_1.MarketplaceTakeOfferRequestDetails.fromJson(details.data)
++        });
++    }
++}
++exports.MarketplaceTakeOfferRequestOrdinalVDXFObject = MarketplaceTakeOfferRequestOrdinalVDXFObject;
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/index.d.ts b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/index.d.ts
+index 6cd7e5f..70f8fb1 100644
+--- a/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/index.d.ts
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/index.d.ts
+@@ -16,3 +16,6 @@ export * from './DataPacketRequestOrdinalVDXFObject';
+ export * from './CreateWalletBackupDetailsOrdinalVDXFObject';
+ export * from './WalletBackupOrdinalVDXFObject';
+ export * from './SpendableKeyDetailsOrdinalVDXFObject';
++export * from './MarketplaceMakeOfferRequestOrdinalVDXFObject';
++export * from './MarketplaceTakeOfferRequestOrdinalVDXFObject';
++export * from './MarketplaceCloseOfferRequestOrdinalVDXFObject';
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/index.js b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/index.js
+index fee7b04..3c7898c 100644
+--- a/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/index.js
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/ordinals/index.js
+@@ -33,4 +33,7 @@ __exportStar(require("./DataPacketRequestOrdinalVDXFObject"), exports);
+ __exportStar(require("./CreateWalletBackupDetailsOrdinalVDXFObject"), exports);
+ __exportStar(require("./WalletBackupOrdinalVDXFObject"), exports);
+ __exportStar(require("./SpendableKeyDetailsOrdinalVDXFObject"), exports);
++__exportStar(require("./MarketplaceMakeOfferRequestOrdinalVDXFObject"), exports);
++__exportStar(require("./MarketplaceTakeOfferRequestOrdinalVDXFObject"), exports);
++__exportStar(require("./MarketplaceCloseOfferRequestOrdinalVDXFObject"), exports);
+ (0, register_1.registerOrdinals)();
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceCloseOfferRequestDetails.d.ts b/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceCloseOfferRequestDetails.d.ts
+new file mode 100644
+index 0000000..da4fb71
+--- /dev/null
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceCloseOfferRequestDetails.d.ts
+@@ -0,0 +1,46 @@
++import { SerializableEntity } from '../../../utils/types/SerializableEntity';
++import { BigNumber } from '../../../utils/types/BigNumber';
++export type MarketplaceCloseOfferParamsJson = {
++    offertxid: string;
++};
++export type MarketplaceCloseOfferRequestDetailsJson = {
++    flags?: string;
++    offerDescription?: string;
++    closeOfferParams?: MarketplaceCloseOfferParamsJson;
++};
++export declare class MarketplaceCloseOfferParams implements SerializableEntity {
++    offerTxid: string;
++    constructor(data?: {
++        offerTxid?: string;
++    });
++    getByteLength(): number;
++    toBuffer(): Buffer;
++    fromBuffer(buffer: Buffer, offset?: number): number;
++    isValid(): boolean;
++    toJson(): MarketplaceCloseOfferParamsJson;
++    static fromJson(json: MarketplaceCloseOfferParamsJson): MarketplaceCloseOfferParams;
++}
++export declare class MarketplaceCloseOfferRequestDetails implements SerializableEntity {
++    flags?: BigNumber;
++    offerDescription?: string;
++    closeOfferParams?: MarketplaceCloseOfferParams;
++    static MARKETPLACE_CLOSEOFFER_REQUEST_VALID: import("bn.js");
++    static MARKETPLACE_CLOSEOFFER_REQUEST_CONTAINS_DESC: import("bn.js");
++    static MARKETPLACE_CLOSEOFFER_REQUEST_CONTAINS_CLOSE_PARAMS: import("bn.js");
++    constructor(data?: {
++        flags?: BigNumber;
++        offerDescription?: string;
++        closeOfferParams?: MarketplaceCloseOfferParams;
++    });
++    containsDesc(): boolean;
++    containsCloseOfferParams(): boolean;
++    toggleContainsDesc(): void;
++    toggleContainsCloseOfferParams(): void;
++    isValid(): boolean;
++    toSha256(): Buffer<ArrayBufferLike>;
++    getByteLength(): number;
++    toBuffer(): Buffer<ArrayBufferLike>;
++    fromBuffer(buffer: Buffer, offset?: number): number;
++    toJson(): MarketplaceCloseOfferRequestDetailsJson;
++    static fromJson(json: MarketplaceCloseOfferRequestDetailsJson): MarketplaceCloseOfferRequestDetails;
++}
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceCloseOfferRequestDetails.js b/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceCloseOfferRequestDetails.js
+new file mode 100644
+index 0000000..32892df
+--- /dev/null
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceCloseOfferRequestDetails.js
+@@ -0,0 +1,130 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.MarketplaceCloseOfferRequestDetails = exports.MarketplaceCloseOfferParams = void 0;
++const bn_js_1 = require("bn.js");
++const varuint_1 = require("../../../utils/varuint");
++const bufferutils_1 = require("../../../utils/bufferutils");
++const createHash = require("create-hash");
++const { BufferReader, BufferWriter } = bufferutils_1.default;
++class MarketplaceCloseOfferParams {
++    constructor(data) {
++        this.offerTxid = data === null || data === void 0 ? void 0 : data.offerTxid;
++    }
++    getByteLength() {
++        return 32;
++    }
++    toBuffer() {
++        const writer = new BufferWriter(Buffer.alloc(this.getByteLength()));
++        writer.writeSlice(Buffer.from(this.offerTxid, 'hex'));
++        return writer.buffer;
++    }
++    fromBuffer(buffer, offset = 0) {
++        const reader = new BufferReader(buffer, offset);
++        this.offerTxid = reader.readSlice(32).toString('hex');
++        return reader.offset;
++    }
++    isValid() {
++        return typeof this.offerTxid === 'string' && /^[0-9a-fA-F]{64}$/.test(this.offerTxid);
++    }
++    toJson() {
++        return { offertxid: this.offerTxid };
++    }
++    static fromJson(json) {
++        return new MarketplaceCloseOfferParams({ offerTxid: json.offertxid });
++    }
++}
++exports.MarketplaceCloseOfferParams = MarketplaceCloseOfferParams;
++class MarketplaceCloseOfferRequestDetails {
++    constructor(data) {
++        this.flags = data && data.flags ? data.flags : new bn_js_1.BN("0", 10);
++        if (data === null || data === void 0 ? void 0 : data.offerDescription) {
++            if (!this.containsDesc())
++                this.toggleContainsDesc();
++            this.offerDescription = data.offerDescription;
++        }
++        if (data === null || data === void 0 ? void 0 : data.closeOfferParams) {
++            if (!this.containsCloseOfferParams())
++                this.toggleContainsCloseOfferParams();
++            this.closeOfferParams = data.closeOfferParams;
++        }
++    }
++    containsDesc() {
++        return !!(this.flags.and(MarketplaceCloseOfferRequestDetails.MARKETPLACE_CLOSEOFFER_REQUEST_CONTAINS_DESC).toNumber());
++    }
++    containsCloseOfferParams() {
++        return !!(this.flags.and(MarketplaceCloseOfferRequestDetails.MARKETPLACE_CLOSEOFFER_REQUEST_CONTAINS_CLOSE_PARAMS).toNumber());
++    }
++    toggleContainsDesc() {
++        this.flags = this.flags.xor(MarketplaceCloseOfferRequestDetails.MARKETPLACE_CLOSEOFFER_REQUEST_CONTAINS_DESC);
++    }
++    toggleContainsCloseOfferParams() {
++        this.flags = this.flags.xor(MarketplaceCloseOfferRequestDetails.MARKETPLACE_CLOSEOFFER_REQUEST_CONTAINS_CLOSE_PARAMS);
++    }
++    isValid() {
++        if (!this.containsCloseOfferParams())
++            return false;
++        if (this.containsDesc() && !this.offerDescription)
++            return false;
++        if (this.closeOfferParams == null || !this.closeOfferParams.isValid())
++            return false;
++        return true;
++    }
++    toSha256() {
++        return createHash("sha256").update(this.toBuffer()).digest();
++    }
++    getByteLength() {
++        let length = 0;
++        length += varuint_1.default.encodingLength(this.flags.toNumber());
++        if (this.containsDesc()) {
++            length += varuint_1.default.encodingLength(Buffer.from(this.offerDescription, 'utf8').length);
++            length += Buffer.from(this.offerDescription, 'utf8').length;
++        }
++        if (this.containsCloseOfferParams()) {
++            const paramsLength = this.closeOfferParams.getByteLength();
++            length += varuint_1.default.encodingLength(paramsLength);
++            length += paramsLength;
++        }
++        return length;
++    }
++    toBuffer() {
++        const writer = new BufferWriter(Buffer.alloc(this.getByteLength()));
++        writer.writeCompactSize(this.flags.toNumber());
++        if (this.containsDesc()) {
++            writer.writeVarSlice(Buffer.from(this.offerDescription, 'utf8'));
++        }
++        if (this.containsCloseOfferParams()) {
++            writer.writeVarSlice(this.closeOfferParams.toBuffer());
++        }
++        return writer.buffer;
++    }
++    fromBuffer(buffer, offset = 0) {
++        const reader = new BufferReader(buffer, offset);
++        this.flags = new bn_js_1.BN(reader.readCompactSize());
++        if (this.containsDesc()) {
++            this.offerDescription = reader.readVarSlice().toString('utf8');
++        }
++        if (this.containsCloseOfferParams()) {
++            this.closeOfferParams = new MarketplaceCloseOfferParams();
++            this.closeOfferParams.fromBuffer(reader.readVarSlice(), 0);
++        }
++        return reader.offset;
++    }
++    toJson() {
++        return {
++            flags: this.flags ? this.flags.toString(10) : undefined,
++            offerDescription: this.containsDesc() ? this.offerDescription : undefined,
++            closeOfferParams: this.containsCloseOfferParams() ? this.closeOfferParams.toJson() : undefined
++        };
++    }
++    static fromJson(json) {
++        return new MarketplaceCloseOfferRequestDetails({
++            flags: json.flags ? new bn_js_1.BN(json.flags, 10) : undefined,
++            offerDescription: json.offerDescription,
++            closeOfferParams: json.closeOfferParams ? MarketplaceCloseOfferParams.fromJson(json.closeOfferParams) : undefined
++        });
++    }
++}
++exports.MarketplaceCloseOfferRequestDetails = MarketplaceCloseOfferRequestDetails;
++MarketplaceCloseOfferRequestDetails.MARKETPLACE_CLOSEOFFER_REQUEST_VALID = new bn_js_1.BN(0, 10);
++MarketplaceCloseOfferRequestDetails.MARKETPLACE_CLOSEOFFER_REQUEST_CONTAINS_DESC = new bn_js_1.BN(1, 10);
++MarketplaceCloseOfferRequestDetails.MARKETPLACE_CLOSEOFFER_REQUEST_CONTAINS_CLOSE_PARAMS = new bn_js_1.BN(2, 10);
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceMakeOfferRequestDetails.d.ts b/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceMakeOfferRequestDetails.d.ts
+new file mode 100644
+index 0000000..cd7254a
+--- /dev/null
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceMakeOfferRequestDetails.d.ts
+@@ -0,0 +1,73 @@
++import { SerializableEntity } from '../../../utils/types/SerializableEntity';
++import { BigNumber } from '../../../utils/types/BigNumber';
++import { TransferDestination, TransferDestinationJson } from '../../../pbaas/TransferDestination';
++export type MarketplaceMakeOfferParamsJson = {
++    offeredidentityid: string;
++    payoutdestination: TransferDestinationJson;
++    forcurrencyid: string;
++    foramount: string;
++    expiryheight: string;
++};
++export type MarketplaceMakeOfferRequestDetailsJson = {
++    flags?: string;
++    rawTransactionHex?: string;
++    offerDescription?: string;
++    offerParams?: MarketplaceMakeOfferParamsJson;
++};
++/**
++ * Parameters a wallet needs to construct a Verus marketplace sell offer (makeoffer)
++ * (partial makeoffer transaction) entirely client-side:
++ *   vin[0]  = the offered identity's current definition UTXO (looked up on-chain
++ *             by the wallet from offeredIdentityId via getidentity)
++ *   vout[0] = forAmountSats of forCurrencyId paid to payoutDestination
++ * signed SIGHASH_SINGLE | SIGHASH_ANYONECANPAY over the identity input.
++ */
++export declare class MarketplaceMakeOfferParams implements SerializableEntity {
++    offeredIdentityId: string;
++    payoutDestination: TransferDestination;
++    forCurrencyId: string;
++    forAmountSats: BigNumber;
++    expiryHeight: BigNumber;
++    constructor(data?: {
++        offeredIdentityId?: string;
++        payoutDestination?: TransferDestination;
++        forCurrencyId?: string;
++        forAmountSats?: BigNumber;
++        expiryHeight?: BigNumber;
++    });
++    getByteLength(): number;
++    toBuffer(): Buffer;
++    fromBuffer(buffer: Buffer, offset?: number): number;
++    isValid(): boolean;
++    toJson(): MarketplaceMakeOfferParamsJson;
++    static fromJson(json: MarketplaceMakeOfferParamsJson): MarketplaceMakeOfferParams;
++}
++export declare class MarketplaceMakeOfferRequestDetails implements SerializableEntity {
++    flags?: BigNumber;
++    rawTransactionHex?: string;
++    offerDescription?: string;
++    offerParams?: MarketplaceMakeOfferParams;
++    static MARKETPLACE_MAKEOFFER_REQUEST_VALID: import("bn.js");
++    static MARKETPLACE_MAKEOFFER_REQUEST_CONTAINS_RAW_TX: import("bn.js");
++    static MARKETPLACE_MAKEOFFER_REQUEST_CONTAINS_DESC: import("bn.js");
++    static MARKETPLACE_MAKEOFFER_REQUEST_CONTAINS_OFFER_PARAMS: import("bn.js");
++    constructor(data?: {
++        flags?: BigNumber;
++        rawTransactionHex?: string;
++        offerDescription?: string;
++        offerParams?: MarketplaceMakeOfferParams;
++    });
++    containsRawTx(): boolean;
++    containsDesc(): boolean;
++    containsOfferParams(): boolean;
++    toggleContainsRawTx(): void;
++    toggleContainsDesc(): void;
++    toggleContainsOfferParams(): void;
++    isValid(): boolean;
++    toSha256(): Buffer<ArrayBufferLike>;
++    getByteLength(): number;
++    toBuffer(): Buffer<ArrayBufferLike>;
++    fromBuffer(buffer: Buffer, offset?: number): number;
++    toJson(): MarketplaceMakeOfferRequestDetailsJson;
++    static fromJson(json: MarketplaceMakeOfferRequestDetailsJson): MarketplaceMakeOfferRequestDetails;
++}
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceMakeOfferRequestDetails.js b/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceMakeOfferRequestDetails.js
+new file mode 100644
+index 0000000..ac18c86
+--- /dev/null
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceMakeOfferRequestDetails.js
+@@ -0,0 +1,209 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.MarketplaceMakeOfferRequestDetails = exports.MarketplaceMakeOfferParams = void 0;
++const bn_js_1 = require("bn.js");
++const varuint_1 = require("../../../utils/varuint");
++const varint_1 = require("../../../utils/varint");
++const bufferutils_1 = require("../../../utils/bufferutils");
++const createHash = require("create-hash");
++const TransferDestination_1 = require("../../../pbaas/TransferDestination");
++const address_1 = require("../../../utils/address");
++const vdxf_1 = require("../../../constants/vdxf");
++const { BufferReader, BufferWriter } = bufferutils_1.default;
++/**
++ * Parameters a wallet needs to construct a Verus marketplace sell offer (makeoffer)
++ * (partial makeoffer transaction) entirely client-side:
++ *   vin[0]  = the offered identity's current definition UTXO (looked up on-chain
++ *             by the wallet from offeredIdentityId via getidentity)
++ *   vout[0] = forAmountSats of forCurrencyId paid to payoutDestination
++ * signed SIGHASH_SINGLE | SIGHASH_ANYONECANPAY over the identity input.
++ */
++class MarketplaceMakeOfferParams {
++    constructor(data) {
++        this.offeredIdentityId = data === null || data === void 0 ? void 0 : data.offeredIdentityId;
++        this.payoutDestination = data === null || data === void 0 ? void 0 : data.payoutDestination;
++        this.forCurrencyId = data === null || data === void 0 ? void 0 : data.forCurrencyId;
++        this.forAmountSats = (data === null || data === void 0 ? void 0 : data.forAmountSats) ? data.forAmountSats : new bn_js_1.BN(0, 10);
++        this.expiryHeight = (data === null || data === void 0 ? void 0 : data.expiryHeight) ? data.expiryHeight : new bn_js_1.BN(0, 10);
++    }
++    getByteLength() {
++        let length = 0;
++        length += vdxf_1.HASH160_BYTE_LENGTH; // offeredIdentityId
++        length += this.payoutDestination.getByteLength();
++        length += vdxf_1.HASH160_BYTE_LENGTH; // forCurrencyId
++        length += varint_1.default.encodingLength(this.forAmountSats);
++        length += varint_1.default.encodingLength(this.expiryHeight);
++        return length;
++    }
++    toBuffer() {
++        const writer = new BufferWriter(Buffer.alloc(this.getByteLength()));
++        writer.writeSlice((0, address_1.fromBase58Check)(this.offeredIdentityId).hash);
++        writer.writeSlice(this.payoutDestination.toBuffer());
++        writer.writeSlice((0, address_1.fromBase58Check)(this.forCurrencyId).hash);
++        writer.writeVarInt(this.forAmountSats);
++        writer.writeVarInt(this.expiryHeight);
++        return writer.buffer;
++    }
++    fromBuffer(buffer, offset = 0) {
++        const reader = new BufferReader(buffer, offset);
++        this.offeredIdentityId = (0, address_1.toBase58Check)(reader.readSlice(vdxf_1.HASH160_BYTE_LENGTH), vdxf_1.I_ADDR_VERSION);
++        this.payoutDestination = new TransferDestination_1.TransferDestination();
++        reader.offset = this.payoutDestination.fromBuffer(reader.buffer, reader.offset);
++        this.forCurrencyId = (0, address_1.toBase58Check)(reader.readSlice(vdxf_1.HASH160_BYTE_LENGTH), vdxf_1.I_ADDR_VERSION);
++        this.forAmountSats = reader.readVarInt();
++        this.expiryHeight = reader.readVarInt();
++        return reader.offset;
++    }
++    isValid() {
++        return (typeof this.offeredIdentityId === 'string' &&
++            this.offeredIdentityId.length > 0 &&
++            this.payoutDestination != null &&
++            this.payoutDestination.isValid() &&
++            typeof this.forCurrencyId === 'string' &&
++            this.forCurrencyId.length > 0 &&
++            this.forAmountSats.gt(new bn_js_1.BN(0, 10)) &&
++            this.expiryHeight.gt(new bn_js_1.BN(0, 10)));
++    }
++    toJson() {
++        return {
++            offeredidentityid: this.offeredIdentityId,
++            payoutdestination: this.payoutDestination.toJson(),
++            forcurrencyid: this.forCurrencyId,
++            foramount: this.forAmountSats.toString(10),
++            expiryheight: this.expiryHeight.toString(10)
++        };
++    }
++    static fromJson(json) {
++        return new MarketplaceMakeOfferParams({
++            offeredIdentityId: json.offeredidentityid,
++            payoutDestination: TransferDestination_1.TransferDestination.fromJson(json.payoutdestination),
++            forCurrencyId: json.forcurrencyid,
++            forAmountSats: new bn_js_1.BN(json.foramount, 10),
++            expiryHeight: new bn_js_1.BN(json.expiryheight, 10)
++        });
++    }
++}
++exports.MarketplaceMakeOfferParams = MarketplaceMakeOfferParams;
++class MarketplaceMakeOfferRequestDetails {
++    constructor(data) {
++        this.flags = data && data.flags ? data.flags : new bn_js_1.BN("0", 10);
++        if (data === null || data === void 0 ? void 0 : data.rawTransactionHex) {
++            if (!this.containsRawTx())
++                this.toggleContainsRawTx();
++            this.rawTransactionHex = data.rawTransactionHex;
++        }
++        if (data === null || data === void 0 ? void 0 : data.offerDescription) {
++            if (!this.containsDesc())
++                this.toggleContainsDesc();
++            this.offerDescription = data.offerDescription;
++        }
++        if (data === null || data === void 0 ? void 0 : data.offerParams) {
++            if (!this.containsOfferParams())
++                this.toggleContainsOfferParams();
++            this.offerParams = data.offerParams;
++        }
++    }
++    containsRawTx() {
++        return !!(this.flags.and(MarketplaceMakeOfferRequestDetails.MARKETPLACE_MAKEOFFER_REQUEST_CONTAINS_RAW_TX).toNumber());
++    }
++    containsDesc() {
++        return !!(this.flags.and(MarketplaceMakeOfferRequestDetails.MARKETPLACE_MAKEOFFER_REQUEST_CONTAINS_DESC).toNumber());
++    }
++    containsOfferParams() {
++        return !!(this.flags.and(MarketplaceMakeOfferRequestDetails.MARKETPLACE_MAKEOFFER_REQUEST_CONTAINS_OFFER_PARAMS).toNumber());
++    }
++    toggleContainsRawTx() {
++        this.flags = this.flags.xor(MarketplaceMakeOfferRequestDetails.MARKETPLACE_MAKEOFFER_REQUEST_CONTAINS_RAW_TX);
++    }
++    toggleContainsDesc() {
++        this.flags = this.flags.xor(MarketplaceMakeOfferRequestDetails.MARKETPLACE_MAKEOFFER_REQUEST_CONTAINS_DESC);
++    }
++    toggleContainsOfferParams() {
++        this.flags = this.flags.xor(MarketplaceMakeOfferRequestDetails.MARKETPLACE_MAKEOFFER_REQUEST_CONTAINS_OFFER_PARAMS);
++    }
++    isValid() {
++        // The request must carry something actionable: either a pre-built raw
++        // transaction or the parameters to construct one.
++        if (!this.containsRawTx() && !this.containsOfferParams())
++            return false;
++        if (this.containsRawTx() && !this.rawTransactionHex)
++            return false;
++        if (this.containsDesc() && !this.offerDescription)
++            return false;
++        if (this.containsOfferParams() && (this.offerParams == null || !this.offerParams.isValid())) {
++            return false;
++        }
++        return true;
++    }
++    toSha256() {
++        return createHash("sha256").update(this.toBuffer()).digest();
++    }
++    getByteLength() {
++        let length = 0;
++        length += varuint_1.default.encodingLength(this.flags.toNumber());
++        if (this.containsRawTx()) {
++            length += varuint_1.default.encodingLength(Buffer.from(this.rawTransactionHex, 'hex').length);
++            length += Buffer.from(this.rawTransactionHex, 'hex').length;
++        }
++        if (this.containsDesc()) {
++            length += varuint_1.default.encodingLength(Buffer.from(this.offerDescription, 'utf8').length);
++            length += Buffer.from(this.offerDescription, 'utf8').length;
++        }
++        if (this.containsOfferParams()) {
++            const paramsLength = this.offerParams.getByteLength();
++            length += varuint_1.default.encodingLength(paramsLength);
++            length += paramsLength;
++        }
++        return length;
++    }
++    toBuffer() {
++        const writer = new BufferWriter(Buffer.alloc(this.getByteLength()));
++        writer.writeCompactSize(this.flags.toNumber());
++        if (this.containsRawTx()) {
++            writer.writeVarSlice(Buffer.from(this.rawTransactionHex, 'hex'));
++        }
++        if (this.containsDesc()) {
++            writer.writeVarSlice(Buffer.from(this.offerDescription, 'utf8'));
++        }
++        if (this.containsOfferParams()) {
++            writer.writeVarSlice(this.offerParams.toBuffer());
++        }
++        return writer.buffer;
++    }
++    fromBuffer(buffer, offset = 0) {
++        const reader = new BufferReader(buffer, offset);
++        this.flags = new bn_js_1.BN(reader.readCompactSize());
++        if (this.containsRawTx()) {
++            this.rawTransactionHex = reader.readVarSlice().toString('hex');
++        }
++        if (this.containsDesc()) {
++            this.offerDescription = reader.readVarSlice().toString('utf8');
++        }
++        if (this.containsOfferParams()) {
++            this.offerParams = new MarketplaceMakeOfferParams();
++            this.offerParams.fromBuffer(reader.readVarSlice(), 0);
++        }
++        return reader.offset;
++    }
++    toJson() {
++        return {
++            flags: this.flags ? this.flags.toString(10) : undefined,
++            rawTransactionHex: this.containsRawTx() ? this.rawTransactionHex : undefined,
++            offerDescription: this.containsDesc() ? this.offerDescription : undefined,
++            offerParams: this.containsOfferParams() ? this.offerParams.toJson() : undefined
++        };
++    }
++    static fromJson(json) {
++        return new MarketplaceMakeOfferRequestDetails({
++            flags: json.flags ? new bn_js_1.BN(json.flags, 10) : undefined,
++            rawTransactionHex: json.rawTransactionHex,
++            offerDescription: json.offerDescription,
++            offerParams: json.offerParams ? MarketplaceMakeOfferParams.fromJson(json.offerParams) : undefined
++        });
++    }
++}
++exports.MarketplaceMakeOfferRequestDetails = MarketplaceMakeOfferRequestDetails;
++MarketplaceMakeOfferRequestDetails.MARKETPLACE_MAKEOFFER_REQUEST_VALID = new bn_js_1.BN(0, 10);
++MarketplaceMakeOfferRequestDetails.MARKETPLACE_MAKEOFFER_REQUEST_CONTAINS_RAW_TX = new bn_js_1.BN(1, 10);
++MarketplaceMakeOfferRequestDetails.MARKETPLACE_MAKEOFFER_REQUEST_CONTAINS_DESC = new bn_js_1.BN(2, 10);
++MarketplaceMakeOfferRequestDetails.MARKETPLACE_MAKEOFFER_REQUEST_CONTAINS_OFFER_PARAMS = new bn_js_1.BN(4, 10);
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceTakeOfferRequestDetails.d.ts b/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceTakeOfferRequestDetails.d.ts
+new file mode 100644
+index 0000000..57ea259
+--- /dev/null
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceTakeOfferRequestDetails.d.ts
+@@ -0,0 +1,73 @@
++import { SerializableEntity } from '../../../utils/types/SerializableEntity';
++import { BigNumber } from '../../../utils/types/BigNumber';
++import { TransferDestination, TransferDestinationJson } from '../../../pbaas/TransferDestination';
++export type MarketplaceTakeOfferParamsJson = {
++    offeredidentityid: string;
++    payoutdestination: TransferDestinationJson;
++    forcurrencyid: string;
++    foramount: string;
++    expiryheight: string;
++};
++export type MarketplaceTakeOfferRequestDetailsJson = {
++    flags?: string;
++    rawTransactionHex?: string;
++    offerDescription?: string;
++    offerParams?: MarketplaceTakeOfferParamsJson;
++};
++/**
++ * Parameters a wallet needs to construct a Verus marketplace sell offer (makeoffer)
++ * (partial makeoffer transaction) entirely client-side:
++ *   vin[0]  = the offered identity's current definition UTXO (looked up on-chain
++ *             by the wallet from offeredIdentityId via getidentity)
++ *   vout[0] = forAmountSats of forCurrencyId paid to payoutDestination
++ * signed SIGHASH_SINGLE | SIGHASH_ANYONECANPAY over the identity input.
++ */
++export declare class MarketplaceTakeOfferParams implements SerializableEntity {
++    offeredIdentityId: string;
++    payoutDestination: TransferDestination;
++    forCurrencyId: string;
++    forAmountSats: BigNumber;
++    expiryHeight: BigNumber;
++    constructor(data?: {
++        offeredIdentityId?: string;
++        payoutDestination?: TransferDestination;
++        forCurrencyId?: string;
++        forAmountSats?: BigNumber;
++        expiryHeight?: BigNumber;
++    });
++    getByteLength(): number;
++    toBuffer(): Buffer;
++    fromBuffer(buffer: Buffer, offset?: number): number;
++    isValid(): boolean;
++    toJson(): MarketplaceTakeOfferParamsJson;
++    static fromJson(json: MarketplaceTakeOfferParamsJson): MarketplaceTakeOfferParams;
++}
++export declare class MarketplaceTakeOfferRequestDetails implements SerializableEntity {
++    flags?: BigNumber;
++    rawTransactionHex?: string;
++    offerDescription?: string;
++    offerParams?: MarketplaceTakeOfferParams;
++    static MARKETPLACE_TAKEOFFER_REQUEST_VALID: import("bn.js");
++    static MARKETPLACE_TAKEOFFER_REQUEST_CONTAINS_RAW_TX: import("bn.js");
++    static MARKETPLACE_TAKEOFFER_REQUEST_CONTAINS_DESC: import("bn.js");
++    static MARKETPLACE_TAKEOFFER_REQUEST_CONTAINS_OFFER_PARAMS: import("bn.js");
++    constructor(data?: {
++        flags?: BigNumber;
++        rawTransactionHex?: string;
++        offerDescription?: string;
++        offerParams?: MarketplaceTakeOfferParams;
++    });
++    containsRawTx(): boolean;
++    containsDesc(): boolean;
++    containsOfferParams(): boolean;
++    toggleContainsRawTx(): void;
++    toggleContainsDesc(): void;
++    toggleContainsOfferParams(): void;
++    isValid(): boolean;
++    toSha256(): Buffer<ArrayBufferLike>;
++    getByteLength(): number;
++    toBuffer(): Buffer<ArrayBufferLike>;
++    fromBuffer(buffer: Buffer, offset?: number): number;
++    toJson(): MarketplaceTakeOfferRequestDetailsJson;
++    static fromJson(json: MarketplaceTakeOfferRequestDetailsJson): MarketplaceTakeOfferRequestDetails;
++}
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceTakeOfferRequestDetails.js b/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceTakeOfferRequestDetails.js
+new file mode 100644
+index 0000000..9c6237d
+--- /dev/null
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/classes/request/MarketplaceTakeOfferRequestDetails.js
+@@ -0,0 +1,209 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.MarketplaceTakeOfferRequestDetails = exports.MarketplaceTakeOfferParams = void 0;
++const bn_js_1 = require("bn.js");
++const varuint_1 = require("../../../utils/varuint");
++const varint_1 = require("../../../utils/varint");
++const bufferutils_1 = require("../../../utils/bufferutils");
++const createHash = require("create-hash");
++const TransferDestination_1 = require("../../../pbaas/TransferDestination");
++const address_1 = require("../../../utils/address");
++const vdxf_1 = require("../../../constants/vdxf");
++const { BufferReader, BufferWriter } = bufferutils_1.default;
++/**
++ * Parameters a wallet needs to construct a Verus marketplace sell offer (makeoffer)
++ * (partial makeoffer transaction) entirely client-side:
++ *   vin[0]  = the offered identity's current definition UTXO (looked up on-chain
++ *             by the wallet from offeredIdentityId via getidentity)
++ *   vout[0] = forAmountSats of forCurrencyId paid to payoutDestination
++ * signed SIGHASH_SINGLE | SIGHASH_ANYONECANPAY over the identity input.
++ */
++class MarketplaceTakeOfferParams {
++    constructor(data) {
++        this.offeredIdentityId = data === null || data === void 0 ? void 0 : data.offeredIdentityId;
++        this.payoutDestination = data === null || data === void 0 ? void 0 : data.payoutDestination;
++        this.forCurrencyId = data === null || data === void 0 ? void 0 : data.forCurrencyId;
++        this.forAmountSats = (data === null || data === void 0 ? void 0 : data.forAmountSats) ? data.forAmountSats : new bn_js_1.BN(0, 10);
++        this.expiryHeight = (data === null || data === void 0 ? void 0 : data.expiryHeight) ? data.expiryHeight : new bn_js_1.BN(0, 10);
++    }
++    getByteLength() {
++        let length = 0;
++        length += vdxf_1.HASH160_BYTE_LENGTH; // offeredIdentityId
++        length += this.payoutDestination.getByteLength();
++        length += vdxf_1.HASH160_BYTE_LENGTH; // forCurrencyId
++        length += varint_1.default.encodingLength(this.forAmountSats);
++        length += varint_1.default.encodingLength(this.expiryHeight);
++        return length;
++    }
++    toBuffer() {
++        const writer = new BufferWriter(Buffer.alloc(this.getByteLength()));
++        writer.writeSlice((0, address_1.fromBase58Check)(this.offeredIdentityId).hash);
++        writer.writeSlice(this.payoutDestination.toBuffer());
++        writer.writeSlice((0, address_1.fromBase58Check)(this.forCurrencyId).hash);
++        writer.writeVarInt(this.forAmountSats);
++        writer.writeVarInt(this.expiryHeight);
++        return writer.buffer;
++    }
++    fromBuffer(buffer, offset = 0) {
++        const reader = new BufferReader(buffer, offset);
++        this.offeredIdentityId = (0, address_1.toBase58Check)(reader.readSlice(vdxf_1.HASH160_BYTE_LENGTH), vdxf_1.I_ADDR_VERSION);
++        this.payoutDestination = new TransferDestination_1.TransferDestination();
++        reader.offset = this.payoutDestination.fromBuffer(reader.buffer, reader.offset);
++        this.forCurrencyId = (0, address_1.toBase58Check)(reader.readSlice(vdxf_1.HASH160_BYTE_LENGTH), vdxf_1.I_ADDR_VERSION);
++        this.forAmountSats = reader.readVarInt();
++        this.expiryHeight = reader.readVarInt();
++        return reader.offset;
++    }
++    isValid() {
++        return (typeof this.offeredIdentityId === 'string' &&
++            this.offeredIdentityId.length > 0 &&
++            this.payoutDestination != null &&
++            this.payoutDestination.isValid() &&
++            typeof this.forCurrencyId === 'string' &&
++            this.forCurrencyId.length > 0 &&
++            this.forAmountSats.gt(new bn_js_1.BN(0, 10)) &&
++            this.expiryHeight.gt(new bn_js_1.BN(0, 10)));
++    }
++    toJson() {
++        return {
++            offeredidentityid: this.offeredIdentityId,
++            payoutdestination: this.payoutDestination.toJson(),
++            forcurrencyid: this.forCurrencyId,
++            foramount: this.forAmountSats.toString(10),
++            expiryheight: this.expiryHeight.toString(10)
++        };
++    }
++    static fromJson(json) {
++        return new MarketplaceTakeOfferParams({
++            offeredIdentityId: json.offeredidentityid,
++            payoutDestination: TransferDestination_1.TransferDestination.fromJson(json.payoutdestination),
++            forCurrencyId: json.forcurrencyid,
++            forAmountSats: new bn_js_1.BN(json.foramount, 10),
++            expiryHeight: new bn_js_1.BN(json.expiryheight, 10)
++        });
++    }
++}
++exports.MarketplaceTakeOfferParams = MarketplaceTakeOfferParams;
++class MarketplaceTakeOfferRequestDetails {
++    constructor(data) {
++        this.flags = data && data.flags ? data.flags : new bn_js_1.BN("0", 10);
++        if (data === null || data === void 0 ? void 0 : data.rawTransactionHex) {
++            if (!this.containsRawTx())
++                this.toggleContainsRawTx();
++            this.rawTransactionHex = data.rawTransactionHex;
++        }
++        if (data === null || data === void 0 ? void 0 : data.offerDescription) {
++            if (!this.containsDesc())
++                this.toggleContainsDesc();
++            this.offerDescription = data.offerDescription;
++        }
++        if (data === null || data === void 0 ? void 0 : data.offerParams) {
++            if (!this.containsOfferParams())
++                this.toggleContainsOfferParams();
++            this.offerParams = data.offerParams;
++        }
++    }
++    containsRawTx() {
++        return !!(this.flags.and(MarketplaceTakeOfferRequestDetails.MARKETPLACE_TAKEOFFER_REQUEST_CONTAINS_RAW_TX).toNumber());
++    }
++    containsDesc() {
++        return !!(this.flags.and(MarketplaceTakeOfferRequestDetails.MARKETPLACE_TAKEOFFER_REQUEST_CONTAINS_DESC).toNumber());
++    }
++    containsOfferParams() {
++        return !!(this.flags.and(MarketplaceTakeOfferRequestDetails.MARKETPLACE_TAKEOFFER_REQUEST_CONTAINS_OFFER_PARAMS).toNumber());
++    }
++    toggleContainsRawTx() {
++        this.flags = this.flags.xor(MarketplaceTakeOfferRequestDetails.MARKETPLACE_TAKEOFFER_REQUEST_CONTAINS_RAW_TX);
++    }
++    toggleContainsDesc() {
++        this.flags = this.flags.xor(MarketplaceTakeOfferRequestDetails.MARKETPLACE_TAKEOFFER_REQUEST_CONTAINS_DESC);
++    }
++    toggleContainsOfferParams() {
++        this.flags = this.flags.xor(MarketplaceTakeOfferRequestDetails.MARKETPLACE_TAKEOFFER_REQUEST_CONTAINS_OFFER_PARAMS);
++    }
++    isValid() {
++        // The request must carry something actionable: either a pre-built raw
++        // transaction or the parameters to construct one.
++        if (!this.containsRawTx() && !this.containsOfferParams())
++            return false;
++        if (this.containsRawTx() && !this.rawTransactionHex)
++            return false;
++        if (this.containsDesc() && !this.offerDescription)
++            return false;
++        if (this.containsOfferParams() && (this.offerParams == null || !this.offerParams.isValid())) {
++            return false;
++        }
++        return true;
++    }
++    toSha256() {
++        return createHash("sha256").update(this.toBuffer()).digest();
++    }
++    getByteLength() {
++        let length = 0;
++        length += varuint_1.default.encodingLength(this.flags.toNumber());
++        if (this.containsRawTx()) {
++            length += varuint_1.default.encodingLength(Buffer.from(this.rawTransactionHex, 'hex').length);
++            length += Buffer.from(this.rawTransactionHex, 'hex').length;
++        }
++        if (this.containsDesc()) {
++            length += varuint_1.default.encodingLength(Buffer.from(this.offerDescription, 'utf8').length);
++            length += Buffer.from(this.offerDescription, 'utf8').length;
++        }
++        if (this.containsOfferParams()) {
++            const paramsLength = this.offerParams.getByteLength();
++            length += varuint_1.default.encodingLength(paramsLength);
++            length += paramsLength;
++        }
++        return length;
++    }
++    toBuffer() {
++        const writer = new BufferWriter(Buffer.alloc(this.getByteLength()));
++        writer.writeCompactSize(this.flags.toNumber());
++        if (this.containsRawTx()) {
++            writer.writeVarSlice(Buffer.from(this.rawTransactionHex, 'hex'));
++        }
++        if (this.containsDesc()) {
++            writer.writeVarSlice(Buffer.from(this.offerDescription, 'utf8'));
++        }
++        if (this.containsOfferParams()) {
++            writer.writeVarSlice(this.offerParams.toBuffer());
++        }
++        return writer.buffer;
++    }
++    fromBuffer(buffer, offset = 0) {
++        const reader = new BufferReader(buffer, offset);
++        this.flags = new bn_js_1.BN(reader.readCompactSize());
++        if (this.containsRawTx()) {
++            this.rawTransactionHex = reader.readVarSlice().toString('hex');
++        }
++        if (this.containsDesc()) {
++            this.offerDescription = reader.readVarSlice().toString('utf8');
++        }
++        if (this.containsOfferParams()) {
++            this.offerParams = new MarketplaceTakeOfferParams();
++            this.offerParams.fromBuffer(reader.readVarSlice(), 0);
++        }
++        return reader.offset;
++    }
++    toJson() {
++        return {
++            flags: this.flags ? this.flags.toString(10) : undefined,
++            rawTransactionHex: this.containsRawTx() ? this.rawTransactionHex : undefined,
++            offerDescription: this.containsDesc() ? this.offerDescription : undefined,
++            offerParams: this.containsOfferParams() ? this.offerParams.toJson() : undefined
++        };
++    }
++    static fromJson(json) {
++        return new MarketplaceTakeOfferRequestDetails({
++            flags: json.flags ? new bn_js_1.BN(json.flags, 10) : undefined,
++            rawTransactionHex: json.rawTransactionHex,
++            offerDescription: json.offerDescription,
++            offerParams: json.offerParams ? MarketplaceTakeOfferParams.fromJson(json.offerParams) : undefined
++        });
++    }
++}
++exports.MarketplaceTakeOfferRequestDetails = MarketplaceTakeOfferRequestDetails;
++MarketplaceTakeOfferRequestDetails.MARKETPLACE_TAKEOFFER_REQUEST_VALID = new bn_js_1.BN(0, 10);
++MarketplaceTakeOfferRequestDetails.MARKETPLACE_TAKEOFFER_REQUEST_CONTAINS_RAW_TX = new bn_js_1.BN(1, 10);
++MarketplaceTakeOfferRequestDetails.MARKETPLACE_TAKEOFFER_REQUEST_CONTAINS_DESC = new bn_js_1.BN(2, 10);
++MarketplaceTakeOfferRequestDetails.MARKETPLACE_TAKEOFFER_REQUEST_CONTAINS_OFFER_PARAMS = new bn_js_1.BN(4, 10);
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/keys.d.ts b/node_modules/verus-typescript-primitives/dist/vdxf/keys.d.ts
+index ba9ed5d..083edc1 100644
+--- a/node_modules/verus-typescript-primitives/dist/vdxf/keys.d.ts
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/keys.d.ts
+@@ -94,3 +94,7 @@ export declare const APP_ENCRYPTION_RESPONSE_VDXF_KEY: VDXFKeyInterface;
+ export declare const CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY: VDXFKeyInterface;
+ export declare const WALLET_BACKUP: VDXFKeyInterface;
+ export declare const SPENDABLE_KEY_DETAILS_VDXF_KEY: VDXFKeyInterface;
++export declare const MARKETPLACE_MAKEOFFER_REQUEST_VDXF_KEY: VDXFKeyInterface;
++export declare const MARKETPLACE_TAKEOFFER_REQUEST_VDXF_KEY: VDXFKeyInterface;
++
++export declare const MARKETPLACE_CLOSEOFFER_REQUEST_VDXF_KEY: VDXFKeyInterface;
+diff --git a/node_modules/verus-typescript-primitives/dist/vdxf/keys.js b/node_modules/verus-typescript-primitives/dist/vdxf/keys.js
+index 7427082..0a4a4d9 100644
+--- a/node_modules/verus-typescript-primitives/dist/vdxf/keys.js
++++ b/node_modules/verus-typescript-primitives/dist/vdxf/keys.js
+@@ -1,7 +1,7 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.ATTESTATION_ID = exports.ATTESTATION_VIEW_RESPONSE = exports.ATTESTATION_VIEW_REQUEST = exports.ATTESTATION_PROVISION_OBJECT = exports.ATTESTATION_PROVISION_TYPE = exports.ATTESTATION_PROVISION_URL = exports.CURRENCY_ADDRESS = exports.SIGNED_SESSION_OBJECT = exports.SIGNED_SESSION_OBJECT_DATA = exports.LOGIN_CONSENT_PROVISIONING_ERROR_KEY_TRANSFER_FAILED = exports.LOGIN_CONSENT_PROVISIONING_ERROR_KEY_CREATION_FAILED = exports.LOGIN_CONSENT_PROVISIONING_ERROR_KEY_COMMIT_FAILED = exports.LOGIN_CONSENT_PROVISIONING_ERROR_KEY_UNKNOWN = exports.LOGIN_CONSENT_PROVISIONING_ERROR_KEY_NAMETAKEN = exports.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_FAILED = exports.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_COMPLETE = exports.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_PENDINGAPPROVAL = exports.LOGIN_CONSENT_PROVISIONING_RESULT_STATE_PENDINGREQUIREDINFO = exports.IDENTITY_UPDATE_TXID = exports.IDENTITY_REGISTRATION_TXID = exports.IDENTITY_NAME_COMMITMENT_TXID = exports.LOGIN_CONSENT_PROVISIONING_RESULT_VDXF_KEY = exports.LOGIN_CONSENT_PROVISIONING_RESPONSE_VDXF_KEY = exports.LOGIN_CONSENT_PROVISIONING_DECISION_VDXF_KEY = exports.LOGIN_CONSENT_PROVISIONING_CHALLENGE_VDXF_KEY = exports.LOGIN_CONSENT_PROVISIONING_REQUEST_VDXF_KEY = exports.ID_PARENT_VDXF_KEY = exports.ID_FULLYQUALIFIEDNAME_VDXF_KEY = exports.ID_SYSTEMID_VDXF_KEY = exports.ID_ADDRESS_VDXF_KEY = exports.LOGIN_CONSENT_ID_PROVISIONING_WEBHOOK_VDXF_KEY = exports.LOGIN_CONSENT_CONTEXT_VDXF_KEY = exports.LOGIN_CONSENT_PERSONALINFO_WEBHOOK_VDXF_KEY = exports.LOGIN_CONSENT_ATTESTATION_WEBHOOK_VDXF_KEY = exports.LOGIN_CONSENT_WEBHOOK_VDXF_KEY = exports.LOGIN_CONSENT_REDIRECT_VDXF_KEY = exports.WALLET_VDXF_KEY = exports.LOGIN_CONSENT_DECISION_VDXF_KEY = exports.LOGIN_CONSENT_CHALLENGE_VDXF_KEY = exports.LOGIN_CONSENT_RESPONSE_VDXF_KEY = exports.LOGIN_CONSENT_REQUEST_VDXF_KEY = exports.LOGIN_CONSENT_RESPONSE_SIG_VDXF_KEY = exports.IDENTITY_AUTH_SIG_VDXF_KEY = exports.IDENTITY_UPDATE_RESPONSE_VDXF_KEY = exports.IDENTITY_UPDATE_REQUEST_VDXF_KEY = exports.GENERIC_RESPONSE_DEEPLINK_VDXF_KEY = exports.GENERIC_REQUEST_DEEPLINK_VDXF_KEY = exports.GENERIC_ENVELOPE_DEEPLINK_VDXF_KEY = exports.VERUSPAY_INVOICE_DETAILS_VDXF_KEY = exports.VERUSPAY_INVOICE_VDXF_KEY = void 0;
+-exports.SPENDABLE_KEY_DETAILS_VDXF_KEY = exports.WALLET_BACKUP = exports.CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY = exports.APP_ENCRYPTION_RESPONSE_VDXF_KEY = exports.DATA_PACKET_REQUEST_VDXF_KEY = exports.USER_DATA_REQUEST_VDXF_KEY = exports.DATA_RESPONSE_VDXF_KEY = exports.APP_ENCRYPTION_REQUEST_VDXF_KEY = exports.PROVISION_IDENTITY_DETAILS_VDXF_KEY = exports.AUTHENTICATION_RESPONSE_VDXF_KEY = exports.AUTHENTICATION_REQUEST_VDXF_KEY = exports.ATTESTATION_VIEW_REQUEST_MULTIPLEATTESTATIONS = exports.PROOFS_CONTROLLER_BLUESKY = exports.PROOFS_CONTROLLER_REDDIT = exports.PROOFS_CONTROLLER_LINKEDIN = exports.PROOFS_CONTROLLER_GITHUB = exports.PROOFS_CONTROLLER_FACEBOOK = exports.PROOFS_CONTROLLER_DISCORD = exports.PROOFS_CONTROLLER = exports.IDENTITY_CREDENTIAL_USERNAME = exports.IDENTITY_CREDENTIAL_PLAINLOGIN = exports.IDENTITY_CREDENTIAL = exports.DATA_TYPE_OBJECT_CREDENTIAL = exports.DATA_DESCRIPTOR_VDXF_KEY = exports.DATA_TYPE_DEFINEDKEY = exports.DATA_TYPE_STRING = exports.IDENTITY_SIGNDATA_REQUEST = exports.PROFILE_DATA_VIEW_REQUEST = exports.ATTESTATION_VIEW_REQUEST_ID = exports.ATTESTATION_VIEW_REQUEST_ATTESTOR = exports.ATTESTATION_VIEW_REQUEST_NAME = exports.ATTESTATION_VIEW_REQUEST_KEY = exports.ATTESTATION_TYPE = exports.ATTESTATION_NAME = void 0;
++exports.MARKETPLACE_TAKEOFFER_REQUEST_VDXF_KEY = exports.MARKETPLACE_MAKEOFFER_REQUEST_VDXF_KEY = exports.SPENDABLE_KEY_DETAILS_VDXF_KEY = exports.WALLET_BACKUP = exports.CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY = exports.APP_ENCRYPTION_RESPONSE_VDXF_KEY = exports.DATA_PACKET_REQUEST_VDXF_KEY = exports.USER_DATA_REQUEST_VDXF_KEY = exports.DATA_RESPONSE_VDXF_KEY = exports.APP_ENCRYPTION_REQUEST_VDXF_KEY = exports.PROVISION_IDENTITY_DETAILS_VDXF_KEY = exports.AUTHENTICATION_RESPONSE_VDXF_KEY = exports.AUTHENTICATION_REQUEST_VDXF_KEY = exports.ATTESTATION_VIEW_REQUEST_MULTIPLEATTESTATIONS = exports.PROOFS_CONTROLLER_BLUESKY = exports.PROOFS_CONTROLLER_REDDIT = exports.PROOFS_CONTROLLER_LINKEDIN = exports.PROOFS_CONTROLLER_GITHUB = exports.PROOFS_CONTROLLER_FACEBOOK = exports.PROOFS_CONTROLLER_DISCORD = exports.PROOFS_CONTROLLER = exports.IDENTITY_CREDENTIAL_USERNAME = exports.IDENTITY_CREDENTIAL_PLAINLOGIN = exports.IDENTITY_CREDENTIAL = exports.DATA_TYPE_OBJECT_CREDENTIAL = exports.DATA_DESCRIPTOR_VDXF_KEY = exports.DATA_TYPE_DEFINEDKEY = exports.DATA_TYPE_STRING = exports.IDENTITY_SIGNDATA_REQUEST = exports.PROFILE_DATA_VIEW_REQUEST = exports.ATTESTATION_VIEW_REQUEST_ID = exports.ATTESTATION_VIEW_REQUEST_ATTESTOR = exports.ATTESTATION_VIEW_REQUEST_NAME = exports.ATTESTATION_VIEW_REQUEST_KEY = exports.ATTESTATION_TYPE = exports.ATTESTATION_NAME = void 0;
+ exports.VERUSPAY_INVOICE_VDXF_KEY = {
+     hash160result: "628efc28c2e2d40050e1a9de7a93e7ddf2aa0076",
+     indexid: "xK4aRumetZg2ecW4Z45qdDBH769xxnaiEH",
+@@ -708,3 +708,31 @@ exports.SPENDABLE_KEY_DETAILS_VDXF_KEY = {
+     },
+     "vdxfid": "iQyEPTS4qaDNc1NPcmkW1KTrdWcEfQdm5Y"
+ };
++exports.MARKETPLACE_MAKEOFFER_REQUEST_VDXF_KEY = {
++    "vdxfid": "iQiUWZcSFQKrGumFwmsBXfjRLfYVpRMaKG",
++    "indexid": "xVYayN3X6iYWu5eHoTXLW4FxNKZWhFqopE",
++    "hash160result": "98d138508ac4ead9082dba5b558db7ca7406fee8",
++    "qualifiedname": {
++        "namespace": "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV",
++        "name": "vrsc::request.marketplace.makeoffer"
++    }
++};
++exports.MARKETPLACE_TAKEOFFER_REQUEST_VDXF_KEY = {
++    "vdxfid": "iF3YnfPRipDxsH52BLYaKuqncTr4XHF3Lx",
++    "indexid": "xKsfFTpWa8SdVSx432CjJJNKe7s5QVBdaW",
++    "hash160result": "708855f407d71eca7032a126393c1e52cc3de87e",
++    "qualifiedname": {
++        "namespace": "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV",
++        "name": "vrsc::request.marketplace.takeoffer"
++    }
++};
++
++exports.MARKETPLACE_CLOSEOFFER_REQUEST_VDXF_KEY = {
++    "vdxfid": "i6P9nvfandSDfAJ6Kt3BEVkVbpyYZe79t9",
++    "indexid": "xBDGFj6fdwetHLB8BZhLCtH2dUzZQgpn7p",
++    "hash160result": "0e50d4be70fc06be491e517447fe13e2a13be41f",
++    "qualifiedname": {
++        "namespace": "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV",
++        "name": "vrsc::request.marketplace.closeoffer"
++    }
++};

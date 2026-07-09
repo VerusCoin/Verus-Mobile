@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, ScrollView } from 'react-native';
-import { Text, Button, Divider } from 'react-native-paper';
+import { Text, Button } from 'react-native-paper';
 import { useSelector } from 'react-redux';
 import { networks, ECPair, smarttxs, TransactionBuilder, address as baddress } from '@bitgo/utxo-lib';
 import Styles from '../../../styles';
@@ -17,6 +17,10 @@ import {
   getUpdatableIdentity,
   createUpdateIdentityTx,
 } from '../../../utils/api/channels/verusid/requests/updateIdentity';
+import { parseNftPreview } from '../../../utils/marketplace/parseNftPreview';
+import { verifyNftContentHash } from '../../../utils/marketplace/nftIntegrity';
+import MarketplaceAssetPreview from '../components/MarketplaceAssetPreview';
+import cardStyles from '../components/marketplaceCardStyles';
 
 const { getFundedTxBuilder } = smarttxs;
 
@@ -41,6 +45,9 @@ const MarketplaceCloseOfferRequestInfo = props => {
 
   const activeCoin = useSelector(state => state.coins.activeCoin);
   const [submitting, setSubmitting] = useState(false);
+  const [identityName, setIdentityName] = useState(null);
+  const [assetPreview, setAssetPreview] = useState(null);
+  const [verification, setVerification] = useState(null);
 
   const isTestnet = request && request.isTestnet ? request.isTestnet() : true;
   const coinObj = isTestnet ? coinsList.VRSCTEST : coinsList.VRSC;
@@ -52,10 +59,36 @@ const MarketplaceCloseOfferRequestInfo = props => {
       ? closeOfferRequest.closeOfferParams
       : null;
 
+  // The NFT identity ref this closeoffer applies to rides in offerDescription
+  // (see EscrowUnlistService.ts) — not a human-facing description, but the
+  // identity name/i-address `handleConfirm` also uses to move the UTXO.
   const description =
     closeOfferRequest && closeOfferRequest.containsDesc && closeOfferRequest.containsDesc()
       ? closeOfferRequest.offerDescription
       : null;
+
+  useEffect(() => {
+    if (!description) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const idRes = await getIdentity(coinObj.system_id, description);
+        if (!cancelled && idRes && idRes.result) {
+          const name = idRes.result.friendlyname || idRes.result.fullyqualifiedname;
+          setIdentityName(name);
+          const cmm = idRes.result.identity && idRes.result.identity.contentmultimap;
+          const preview = parseNftPreview(cmm);
+          setAssetPreview(preview);
+          setVerification(verifyNftContentHash(name, preview));
+        }
+      } catch (e) {
+        console.warn('[MarketplaceCloseOffer] identity preview lookup failed:', e && e.message);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleConfirm = useCallback(async () => {
     if (!closeParams) {
@@ -214,19 +247,16 @@ const MarketplaceCloseOfferRequestInfo = props => {
           that spends the listing deposit, which removes the offer from the on-chain index.
         </Text>
         {closeParams && (
-          <View style={{ backgroundColor: Colors.verusDarkGray, padding: 16, borderRadius: 8 }}>
-            <Text style={{ color: Colors.secondaryColor, fontSize: 12 }}>Listing transaction</Text>
-            <Text style={{ color: Colors.secondaryColor, fontSize: 13, marginBottom: 12 }}>
-              {closeParams.offerTxid}
-            </Text>
+          <View style={cardStyles.card}>
             {description != null && (
-              <>
-                <Divider />
-                <Text style={{ color: Colors.secondaryColor, fontSize: 12, marginTop: 12 }}>
-                  {description}
-                </Text>
-              </>
+              <MarketplaceAssetPreview
+                preview={assetPreview}
+                fallbackName={identityName || description}
+                verification={verification}
+              />
             )}
+            <Text style={cardStyles.label}>Listing transaction</Text>
+            <Text style={cardStyles.valueMono}>{closeParams.offerTxid}</Text>
           </View>
         )}
       </View>

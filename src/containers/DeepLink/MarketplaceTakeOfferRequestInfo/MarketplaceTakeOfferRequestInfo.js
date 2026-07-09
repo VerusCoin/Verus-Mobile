@@ -12,6 +12,10 @@ import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIn
 import VrpcProvider from '../../../utils/vrpc/vrpcInterface';
 import { coinsList } from '../../../utils/CoinData/CoinsList';
 import { Identity, IdentityScript } from 'verus-typescript-primitives';
+import { parseNftPreview } from '../../../utils/marketplace/parseNftPreview';
+import { verifyNftContentHash } from '../../../utils/marketplace/nftIntegrity';
+import MarketplaceAssetPreview from '../components/MarketplaceAssetPreview';
+import cardStyles from '../components/marketplaceCardStyles';
 
 // On-chain listing publication: the deposit that makes the offer indexable by
 // getoffers (reclaimable by this wallet via closeoffers) and the network fee.
@@ -53,6 +57,8 @@ const MarketplaceTakeOfferRequestInfo = props => {
   const activeCoin = useSelector(state => state.coins.activeCoin);
 
   const [identityName, setIdentityName] = useState(null);
+  const [assetPreview, setAssetPreview] = useState(null);
+  const [verification, setVerification] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const isTestnet = request && request.isTestnet ? request.isTestnet() : true;
@@ -81,7 +87,12 @@ const MarketplaceTakeOfferRequestInfo = props => {
         const endpoint = VrpcProvider.getEndpoint(coinObj.system_id);
         const idRes = await endpoint.getIdentity(offerParams.offeredIdentityId);
         if (!cancelled && idRes && idRes.result) {
-          setIdentityName(idRes.result.friendlyname || idRes.result.fullyqualifiedname);
+          const name = idRes.result.friendlyname || idRes.result.fullyqualifiedname;
+          setIdentityName(name);
+          const cmm = idRes.result.identity && idRes.result.identity.contentmultimap;
+          const preview = parseNftPreview(cmm);
+          setAssetPreview(preview);
+          setVerification(verifyNftContentHash(name, preview));
         }
       } catch (e) {
         console.warn('[MarketplaceTakeOffer] identity name lookup failed:', e && e.message);
@@ -263,28 +274,20 @@ const MarketplaceTakeOfferRequestInfo = props => {
           leaves this device.
         </Text>
         {offerParams && (
-          <View style={{ backgroundColor: Colors.verusDarkGray, padding: 16, borderRadius: 8 }}>
-            <Text style={{ color: Colors.secondaryColor, fontSize: 12 }}>NFT</Text>
-            <Text style={{ color: Colors.secondaryColor, fontSize: 16, marginBottom: 12 }}>
-              {identityName || offerParams.offeredIdentityId}
-            </Text>
-            <Divider />
-            <Text style={{ color: Colors.secondaryColor, fontSize: 12, marginTop: 12 }}>Price</Text>
-            <Text style={{ color: Colors.secondaryColor, fontSize: 16, marginBottom: 12 }}>
-              {priceDisplay}
-            </Text>
-            <Divider />
-            <Text style={{ color: Colors.secondaryColor, fontSize: 12, marginTop: 12 }}>
-              Payment goes to
-            </Text>
-            <Text style={{ color: Colors.secondaryColor, fontSize: 14 }}>
+          <View style={cardStyles.card}>
+            <MarketplaceAssetPreview
+              preview={assetPreview}
+              fallbackName={identityName || offerParams.offeredIdentityId}
+              verification={verification}
+            />
+            <Text style={cardStyles.label}>Price</Text>
+            <Text style={cardStyles.value}>{priceDisplay}</Text>
+            <Divider style={cardStyles.divider} />
+            <Text style={cardStyles.label}>Payment goes to</Text>
+            <Text style={cardStyles.valueMono}>
               {offerParams.payoutDestination.getAddressString()}
             </Text>
-            {description != null && (
-              <Text style={{ color: Colors.secondaryColor, fontSize: 12, marginTop: 12 }}>
-                {description}
-              </Text>
-            )}
+            {description != null && <Text style={cardStyles.note}>{description}</Text>}
           </View>
         )}
       </View>
