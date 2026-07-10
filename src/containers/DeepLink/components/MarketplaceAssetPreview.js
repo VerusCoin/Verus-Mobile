@@ -1,7 +1,10 @@
+/* eslint-disable react/prop-types, no-use-before-define */
 import React, { useState } from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
-import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
+import Svg, {
+  Defs, LinearGradient, Stop, Rect,
+} from 'react-native-svg';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Colors from '../../../globals/colors';
 
@@ -35,23 +38,24 @@ const MarketplaceAssetPreview = ({ preview, fallbackName, verification }) => {
   const imageUrl = preview && (preview.image || (isAudio && preview.albumCover));
   const hasImage = Boolean(imageUrl) && !imageFailed;
 
-  const typeBadge = isAudio
-    ? { icon: 'music-note', label: 'AUDIO' }
-    : isVideo
-      ? { icon: 'play-circle-outline', label: 'VIDEO' }
-      : null;
+  let typeBadge = null;
+  if (isAudio) {
+    typeBadge = { icon: 'music-note', label: 'AUDIO' };
+  } else if (isVideo) {
+    typeBadge = { icon: 'play-circle-outline', label: 'VIDEO' };
+  }
 
-  const integrityBadge =
-    verification && verification.checked
-      ? verification.verified
-        ? { icon: 'shield-check', label: 'VERIFIED', color: Colors.verusGreenColor }
-        : { icon: 'shield-alert', label: 'UNVERIFIED', color: Colors.warningButtonColor }
-      : null;
+  let integrityBadge = null;
+  if (verification && verification.checked) {
+    integrityBadge = verification.verified
+      ? { icon: 'shield-check', label: 'VERIFIED', color: Colors.verusGreenColor }
+      : { icon: 'shield-alert', label: 'UNVERIFIED', color: Colors.warningButtonColor };
+  }
 
   return (
     <View style={styles.heroCard}>
       {hasImage ? (
-        <React.Fragment>
+        <>
           <Image
             source={{ uri: imageUrl }}
             style={styles.heroImage}
@@ -94,7 +98,7 @@ const MarketplaceAssetPreview = ({ preview, fallbackName, verification }) => {
               </Text>
             ) : null}
           </View>
-        </React.Fragment>
+        </>
       ) : (
         <View style={styles.placeholder}>
           <MaterialCommunityIcons

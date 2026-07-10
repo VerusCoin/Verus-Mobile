@@ -1,3 +1,4 @@
+/* eslint-disable no-bitwise, no-plusplus, no-continue, no-restricted-syntax, import/prefer-default-export */
 import { DataDescriptor } from 'verus-typescript-primitives/dist/index';
 import { DataDescriptorKey } from 'verus-typescript-primitives/dist/vdxf/vdxfdatakeys';
 
@@ -44,7 +45,7 @@ function hexToBytes(hex) {
   const length = clean.length / 2;
   const bytes = new Uint8Array(length);
   for (let i = 0; i < length; i++) {
-    bytes[i] = parseInt(clean.substring(i * 2, i * 2 + 2), 16);
+    bytes[i] = parseInt(clean.substring(i * 2, (i * 2) + 2), 16);
   }
   return bytes;
 }
@@ -52,8 +53,7 @@ function hexToBytes(hex) {
 function readVarInt(bytes, offset) {
   let value = 0;
   let bytesRead = 0;
-  while (true) {
-    if (offset + bytesRead >= bytes.length) break;
+  while (offset + bytesRead < bytes.length) {
     const b = bytes[offset + bytesRead];
     value = (value << 7) | (b & 0x7f);
     bytesRead++;
@@ -125,7 +125,7 @@ function extractFuzzyString(bytes, offset) {
     const vi = readVarInt(bytes, offset);
     if (vi.value > 0 && vi.value < 2000 && offset + vi.bytesRead + vi.value <= bytes.length) {
       const data = new TextDecoder().decode(
-        bytes.slice(offset + vi.bytesRead, offset + vi.bytesRead + vi.value)
+        bytes.slice(offset + vi.bytesRead, offset + vi.bytesRead + vi.value),
       );
       if (/[ -~]{2,}/.test(data) && !data.includes('\0')) {
         return { data, bytesRead: vi.bytesRead + vi.value };
@@ -138,7 +138,7 @@ function extractFuzzyString(bytes, offset) {
     const cs = readCompactSize(bytes, offset);
     if (cs.value > 0 && cs.value < 2000 && offset + cs.bytesRead + cs.value <= bytes.length) {
       const data = new TextDecoder().decode(
-        bytes.slice(offset + cs.bytesRead, offset + cs.bytesRead + cs.value)
+        bytes.slice(offset + cs.bytesRead, offset + cs.bytesRead + cs.value),
       );
       if (/[ -~]{2,}/.test(data) && !data.includes('\0')) {
         return { data, bytesRead: cs.bytesRead + cs.value };
@@ -192,9 +192,9 @@ function getEntryValueFromItem(item) {
     }
   }
   return (
-    (item && typeof item.serializedhex === 'string' && item.serializedhex) ||
-    (item && typeof item.message === 'string' && item.message) ||
-    (typeof item === 'string' ? item : null)
+    (item && typeof item.serializedhex === 'string' && item.serializedhex)
+    || (item && typeof item.message === 'string' && item.message)
+    || (typeof item === 'string' ? item : null)
   );
 }
 
@@ -253,11 +253,11 @@ function extractJson(bytes) {
             const fuzzyResult = {};
             const fields = ['displayName', 'title', 'description', 'image', 'contentType', 'albumCover'];
             let foundAny = false;
-            fields.forEach(field => {
+            fields.forEach((field) => {
               const regex = new RegExp(`"${field}"\\s*:\\s*"([^"]+)"`, 'i');
               const match = regex.exec(candidate);
               if (match && match[1]) {
-                fuzzyResult[field] = match[1];
+                [, fuzzyResult[field]] = match;
                 foundAny = true;
               }
             });
@@ -450,11 +450,11 @@ export function parseNftPreview(contentmultimap) {
   // Audio NFTs: the binary parser exposes the media file as `image`; normalize
   // to `url` for playback and prefer albumCover as the thumbnail image.
   if (
-    !result.url &&
-    typeof result.contentType === 'string' &&
-    result.contentType.startsWith('audio/') &&
-    typeof result.image === 'string' &&
-    !isImageLikeUrl(result.image)
+    !result.url
+    && typeof result.contentType === 'string'
+    && result.contentType.startsWith('audio/')
+    && typeof result.image === 'string'
+    && !isImageLikeUrl(result.image)
   ) {
     result.url = result.image;
     if (result.albumCover) result.image = result.albumCover;

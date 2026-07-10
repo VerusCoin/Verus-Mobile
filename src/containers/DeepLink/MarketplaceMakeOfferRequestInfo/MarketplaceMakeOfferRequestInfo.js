@@ -1,16 +1,11 @@
+/* eslint-disable react/prop-types */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView } from 'react-native';
 import { Text, Button, Divider } from 'react-native-paper';
 import { useSelector } from 'react-redux';
-import { networks, ECPair, smarttxs, TransactionBuilder, address as baddress } from '@bitgo/utxo-lib';
-import Styles from '../../../styles';
-import Colors from '../../../globals/colors';
-import { requestPrivKey } from '../../../utils/auth/authBox';
-import { VRPC } from '../../../utils/constants/intervalConstants';
-import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
-import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
-import VrpcProvider from '../../../utils/vrpc/vrpcInterface';
-import { coinsList } from '../../../utils/CoinData/CoinsList';
+import {
+  networks, ECPair, smarttxs, TransactionBuilder, address as baddress,
+} from '@bitgo/utxo-lib';
 import {
   deriveOfferIndexKey,
   buildListingDepositScript,
@@ -19,6 +14,14 @@ import {
   OFFER_FOR_CURRENCY_BASE_KEY,
   fromBase58Check,
 } from 'verus-typescript-primitives';
+import Styles from '../../../styles';
+import Colors from '../../../globals/colors';
+import { requestPrivKey } from '../../../utils/auth/authBox';
+import { VRPC } from '../../../utils/constants/intervalConstants';
+import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
+import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
+import VrpcProvider from '../../../utils/vrpc/vrpcInterface';
+import { coinsList } from '../../../utils/CoinData/CoinsList';
 import { parseNftPreview } from '../../../utils/marketplace/parseNftPreview';
 import { verifyNftContentHash } from '../../../utils/marketplace/nftIntegrity';
 import MarketplaceAssetPreview from '../components/MarketplaceAssetPreview';
@@ -62,10 +65,12 @@ const SIGHASH_SINGLE_ANYONECANPAY = 131;
  * Signing MUST happen here (a mounted component driven by a user gesture) so
  * requestPrivKey can present the keychain/biometric prompt.
  */
-const MarketplaceMakeOfferRequestInfo = props => {
-  const { makeOfferRequest, cancel, next, response, request, detailIndex } = props;
+const MarketplaceMakeOfferRequestInfo = (props) => {
+  const {
+    makeOfferRequest, cancel, next, response, request, detailIndex,
+  } = props;
 
-  const activeCoin = useSelector(state => state.coins.activeCoin);
+  const activeCoin = useSelector((state) => state.coins.activeCoin);
 
   const [identityName, setIdentityName] = useState(null);
   const [assetPreview, setAssetPreview] = useState(null);
@@ -75,21 +80,19 @@ const MarketplaceMakeOfferRequestInfo = props => {
   const isTestnet = request && request.isTestnet ? request.isTestnet() : true;
   const coinObj = isTestnet ? coinsList.VRSCTEST : coinsList.VRSC;
 
-  const offerParams =
-    makeOfferRequest && makeOfferRequest.containsOfferParams && makeOfferRequest.containsOfferParams()
-      ? makeOfferRequest.offerParams
-      : null;
+  const offerParams = makeOfferRequest && makeOfferRequest.containsOfferParams && makeOfferRequest.containsOfferParams()
+    ? makeOfferRequest.offerParams
+    : null;
 
-  const description =
-    makeOfferRequest && makeOfferRequest.containsDesc && makeOfferRequest.containsDesc()
-      ? makeOfferRequest.offerDescription
-      : null;
+  const description = makeOfferRequest && makeOfferRequest.containsDesc && makeOfferRequest.containsDesc()
+    ? makeOfferRequest.offerDescription
+    : null;
 
   useEffect(() => {
     if (!offerParams) {
       createAlert('Error', 'Marketplace makeoffer request is missing offer parameters');
       cancel();
-      return;
+      return undefined;
     }
 
     let cancelled = false;
@@ -124,7 +127,7 @@ const MarketplaceMakeOfferRequestInfo = props => {
       const idRes = await endpoint.getIdentity(offerParams.offeredIdentityId);
       if (!idRes || idRes.error || !idRes.result) {
         throw new Error(
-          (idRes && idRes.error && idRes.error.message) || 'Could not fetch offered identity'
+          (idRes && idRes.error && idRes.error.message) || 'Could not fetch offered identity',
         );
       }
       const { txid: idTxid, vout: idVout } = idRes.result;
@@ -159,10 +162,9 @@ const MarketplaceMakeOfferRequestInfo = props => {
       const payoutAddress = offerParams.payoutDestination.getAddressString();
       txb.addOutput(
         baddress.toOutputScript(payoutAddress, network),
-        offerParams.forAmountSats.toNumber()
+        offerParams.forAmountSats.toNumber(),
       );
       const unsignedHex = txb.buildIncomplete().toHex();
-      console.log('[MarketplaceMakeOffer] built offer tx:', unsignedHex.length / 2, 'bytes');
 
       // 4. Decrypt the seller's spending key and sign the identity (CC) input.
       // GenericRequests are signed for their own chain. Do not use the UI's
@@ -175,7 +177,6 @@ const MarketplaceMakeOfferRequestInfo = props => {
       const fundedTxb = getFundedTxBuilder(unsignedHex, network, [ccScript]);
       fundedTxb.sign(0, keyPair, null, SIGHASH_SINGLE_ANYONECANPAY, inputSats);
       const signedHex = fundedTxb.buildIncomplete().toHex();
-      console.log('[MarketplaceMakeOffer] signed offer, len=', signedHex.length);
 
       // 5. Publish the listing on-chain ourselves so getoffers indexes it:
       // a second tx funded from THIS wallet, carrying the tagged deposit
@@ -195,40 +196,33 @@ const MarketplaceMakeOfferRequestInfo = props => {
         // Plain P2PKH funds only: never spend cryptocondition outputs (e.g. the
         // offered identity's own UTXO, which would invalidate the signed offer).
         const utxos = ((utxoRes && utxoRes.result) || [])
-          .filter(u => u.satoshis > 0 && u.script && u.script.startsWith('76a914'))
-          .filter(u => !(u.txid === idTxid && u.outputIndex === idVout))
+          .filter((u) => u.satoshis > 0 && u.script && u.script.startsWith('76a914'))
+          .filter((u) => !(u.txid === idTxid && u.outputIndex === idVout))
           .sort((a, b) => b.satoshis - a.satoshis);
         publishPlainSats = utxos.reduce((sum, u) => sum + u.satoshis, 0);
-        console.log(
-          '[MarketplaceMakeOffer] listing funding address:',
-          sellerAddress,
-          'plainUtxos=',
-          utxos.length,
-          'plainSats=',
-          publishPlainSats
-        );
 
         const needed = LISTING_DEPOSIT_SATS + LISTING_FEE_SATS;
         const picked = [];
         let total = 0;
-        for (const u of utxos) {
+        for (let i = 0; i < utxos.length; i += 1) {
+          const u = utxos[i];
           picked.push(u);
           total += u.satoshis;
           if (total >= needed) break;
         }
         if (total < needed) {
           throw new Error(
-            `no spendable plain ${coinObj.id} UTXOs at ${sellerAddress}; found ${publishPlainSats / 1e8}, need ${needed / 1e8}`
+            `no spendable plain ${coinObj.id} UTXOs at ${sellerAddress}; found ${publishPlainSats / 1e8}, need ${needed / 1e8}`,
           );
         }
 
         const offerKey = deriveOfferIndexKey(
           IDENTITY_OFFER_BASE_KEY,
-          offerParams.offeredIdentityId
+          offerParams.offeredIdentityId,
         );
         const forKey = deriveOfferIndexKey(
           OFFER_FOR_CURRENCY_BASE_KEY,
-          offerParams.forCurrencyId
+          offerParams.forCurrencyId,
         );
         const ownerHash = fromBase58Check(sellerAddress).hash;
 
@@ -236,7 +230,8 @@ const MarketplaceMakeOfferRequestInfo = props => {
         ltxb.setVersion(4);
         ltxb.setVersionGroupId(SAPLING_VERSION_GROUP_ID);
         ltxb.setExpiryHeight(Math.min(expiryHeight, curHeight + ONE_DAY_BLOCKS));
-        for (const u of picked) {
+        for (let i = 0; i < picked.length; i += 1) {
+          const u = picked[i];
           ltxb.addInput(u.txid, u.outputIndex, 0xffffffff);
         }
         ltxb.addOutput(buildListingDepositScript(forKey, offerKey, ownerHash), LISTING_DEPOSIT_SATS);
@@ -250,7 +245,7 @@ const MarketplaceMakeOfferRequestInfo = props => {
         const fundedLtxb = getFundedTxBuilder(
           unsignedListingHex,
           network,
-          picked.map(u => Buffer.from(u.script, 'hex'))
+          picked.map((u) => Buffer.from(u.script, 'hex')),
         );
         for (let i = 0; i < picked.length; i++) {
           fundedLtxb.sign(i, keyPair, null, 1, picked[i].satoshis);
@@ -259,7 +254,6 @@ const MarketplaceMakeOfferRequestInfo = props => {
         const sendRes = await endpoint.sendRawTransaction(listingHex);
         if (sendRes && sendRes.result && typeof sendRes.result === 'string') {
           onchainListingTxid = sendRes.result;
-          console.log('[MarketplaceMakeOffer] listing published on-chain:', onchainListingTxid);
         } else {
           throw new Error((sendRes && sendRes.error && sendRes.error.message) || 'broadcast failed');
         }
@@ -267,7 +261,7 @@ const MarketplaceMakeOfferRequestInfo = props => {
         publishError = pubErr;
         console.warn(
           '[MarketplaceMakeOffer] on-chain publication failed:',
-          pubErr && pubErr.message
+          pubErr && pubErr.message,
         );
       }
 
@@ -277,7 +271,7 @@ const MarketplaceMakeOfferRequestInfo = props => {
           ? ` Funding address: ${publishFundingAddress}; plain balance seen by wallet: ${publishPlainSats / 1e8} ${coinObj.id}.`
           : '';
         throw new Error(
-          `Could not publish the listing on-chain: ${detail}.${fundingDetail}`
+          `Could not publish the listing on-chain: ${detail}.${fundingDetail}`,
         );
       }
 
@@ -299,7 +293,7 @@ const MarketplaceMakeOfferRequestInfo = props => {
           onchainListingTxid,
           onchainListingHex: listingHex,
         }),
-      }).then(r => r.json());
+      }).then((r) => r.json());
 
       if (postRes && postRes.error) {
         throw new Error(postRes.error);
@@ -307,7 +301,7 @@ const MarketplaceMakeOfferRequestInfo = props => {
 
       createAlert(
         'Listing Signed',
-        `Your sell offer was signed on this device.\n\nNFT: ${identityName || offerParams.offeredIdentityId}\nPrice: ${offerParams.forAmountSats.toNumber() / 1e8} ${coinObj.id}`
+        `Your sell offer was signed on this device.\n\nNFT: ${identityName || offerParams.offeredIdentityId}\nPrice: ${offerParams.forAmountSats.toNumber() / 1e8} ${coinObj.id}`,
       );
       next(response, [detailIndex]);
     } catch (e) {

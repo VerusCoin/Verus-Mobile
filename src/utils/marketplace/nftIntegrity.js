@@ -58,9 +58,9 @@ export function sanitizeSecure(name) {
 export function canonicalStringify(obj) {
   const sortedKeys = Object.keys(obj).sort((a, b) => a.localeCompare(b));
   const sorted = {};
-  for (const key of sortedKeys) {
+  sortedKeys.forEach((key) => {
     sorted[key] = obj[key];
-  }
+  });
   return JSON.stringify(sorted);
 }
 
@@ -103,7 +103,7 @@ export function parseSecureNFTName(identityName) {
   const serialStr = parts[parts.length - 2];
   if (!serialStr) return null;
   const serial = parseInt(serialStr, 10);
-  if (isNaN(serial)) return null;
+  if (Number.isNaN(serial)) return null;
 
   return { serial, contentHash };
 }

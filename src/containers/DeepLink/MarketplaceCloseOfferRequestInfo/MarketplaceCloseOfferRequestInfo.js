@@ -1,8 +1,12 @@
+/* eslint-disable react/prop-types */
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, ScrollView } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { useSelector } from 'react-redux';
-import { networks, ECPair, smarttxs, TransactionBuilder, address as baddress } from '@bitgo/utxo-lib';
+import {
+  networks, ECPair, smarttxs, TransactionBuilder, address as baddress,
+} from '@bitgo/utxo-lib';
+import { fromBase58Check } from 'verus-typescript-primitives';
 import Styles from '../../../styles';
 import Colors from '../../../globals/colors';
 import { requestPrivKey } from '../../../utils/auth/authBox';
@@ -11,7 +15,6 @@ import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import VrpcProvider from '../../../utils/vrpc/vrpcInterface';
 import { coinsList } from '../../../utils/CoinData/CoinsList';
-import { fromBase58Check } from 'verus-typescript-primitives';
 import { getIdentity } from '../../../utils/api/channels/verusid/requests/getIdentity';
 import {
   getUpdatableIdentity,
@@ -29,7 +32,7 @@ const SAPLING_VERSION_GROUP_ID = 0x892f2085;
 const LISTING_DEPOSIT_OWNER_HASH_OFFSET = 56;
 const LISTING_DEPOSIT_OWNER_HASH_LENGTH = 20;
 
-const getListingDepositOwnerHash = script => {
+const getListingDepositOwnerHash = (script) => {
   if (!Buffer.isBuffer(script)) return null;
   if (script.length < LISTING_DEPOSIT_OWNER_HASH_OFFSET + LISTING_DEPOSIT_OWNER_HASH_LENGTH) {
     return null;
@@ -40,10 +43,12 @@ const getListingDepositOwnerHash = script => {
   );
 };
 
-const MarketplaceCloseOfferRequestInfo = props => {
-  const { closeOfferRequest, cancel, next, response, request, detailIndex } = props;
+const MarketplaceCloseOfferRequestInfo = (props) => {
+  const {
+    closeOfferRequest, cancel, next, response, request, detailIndex,
+  } = props;
 
-  const activeCoin = useSelector(state => state.coins.activeCoin);
+  const activeCoin = useSelector((state) => state.coins.activeCoin);
   const [submitting, setSubmitting] = useState(false);
   const [identityName, setIdentityName] = useState(null);
   const [assetPreview, setAssetPreview] = useState(null);
@@ -52,23 +57,21 @@ const MarketplaceCloseOfferRequestInfo = props => {
   const isTestnet = request && request.isTestnet ? request.isTestnet() : true;
   const coinObj = isTestnet ? coinsList.VRSCTEST : coinsList.VRSC;
 
-  const closeParams =
-    closeOfferRequest &&
-    closeOfferRequest.containsCloseOfferParams &&
-    closeOfferRequest.containsCloseOfferParams()
-      ? closeOfferRequest.closeOfferParams
-      : null;
+  const closeParams = closeOfferRequest
+    && closeOfferRequest.containsCloseOfferParams
+    && closeOfferRequest.containsCloseOfferParams()
+    ? closeOfferRequest.closeOfferParams
+    : null;
 
   // The NFT identity ref this closeoffer applies to rides in offerDescription
   // (see EscrowUnlistService.ts) — not a human-facing description, but the
   // identity name/i-address `handleConfirm` also uses to move the UTXO.
-  const description =
-    closeOfferRequest && closeOfferRequest.containsDesc && closeOfferRequest.containsDesc()
-      ? closeOfferRequest.offerDescription
-      : null;
+  const description = closeOfferRequest && closeOfferRequest.containsDesc && closeOfferRequest.containsDesc()
+    ? closeOfferRequest.offerDescription
+    : null;
 
   useEffect(() => {
-    if (!description) return;
+    if (!description) return undefined;
     let cancelled = false;
     (async () => {
       try {
@@ -99,20 +102,20 @@ const MarketplaceCloseOfferRequestInfo = props => {
 
     setSubmitting(true);
     try {
-      const offerTxid = closeParams.offerTxid;
+      const { offerTxid } = closeParams;
       const endpoint = VrpcProvider.getEndpoint(coinObj.system_id);
 
       const listingTxRes = await endpoint.getRawTransaction(offerTxid, 1);
       if (
-        !listingTxRes ||
-        listingTxRes.error ||
-        !listingTxRes.result ||
-        !listingTxRes.result.vout ||
-        !listingTxRes.result.vout[0]
+        !listingTxRes
+        || listingTxRes.error
+        || !listingTxRes.result
+        || !listingTxRes.result.vout
+        || !listingTxRes.result.vout[0]
       ) {
         throw new Error(
-          (listingTxRes && listingTxRes.error && listingTxRes.error.message) ||
-            'Could not fetch listing deposit transaction',
+          (listingTxRes && listingTxRes.error && listingTxRes.error.message)
+            || 'Could not fetch listing deposit transaction',
         );
       }
 
@@ -178,12 +181,11 @@ const MarketplaceCloseOfferRequestInfo = props => {
       const updSend = await endpoint.sendRawTransaction(signedUpdateHex);
       if (!updSend || updSend.error || !updSend.result || typeof updSend.result !== 'string') {
         throw new Error(
-          (updSend && updSend.error && updSend.error.message) ||
-            'Failed to invalidate the offer (identity move)',
+          (updSend && updSend.error && updSend.error.message)
+            || 'Failed to invalidate the offer (identity move)',
         );
       }
       const updateIdentityTxid = updSend.result;
-      console.log('[MarketplaceCloseOffer] identity moved to invalidate offer:', updateIdentityTxid);
 
       const txb = new TransactionBuilder(network);
       txb.setVersion(4);
@@ -203,7 +205,6 @@ const MarketplaceCloseOfferRequestInfo = props => {
         throw new Error((sendRes && sendRes.error && sendRes.error.message) || 'Broadcast failed');
       }
       const closeTxid = sendRes.result;
-      console.log('[MarketplaceCloseOffer] listing deposit spent:', closeTxid);
 
       const responseURIs = (request && request.responseURIs) || [];
       if (responseURIs.length === 0) {
@@ -214,8 +215,10 @@ const MarketplaceCloseOfferRequestInfo = props => {
       const postRes = await fetch(responseUri, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offerTxid, closeTxid, closeHex, updateIdentityTxid }),
-      }).then(r => r.json());
+        body: JSON.stringify({
+          offerTxid, closeTxid, closeHex, updateIdentityTxid,
+        }),
+      }).then((r) => r.json());
 
       if (postRes && postRes.error) {
         throw new Error(postRes.error);
