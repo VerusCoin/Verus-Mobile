@@ -4,10 +4,10 @@ export const validateMarketplaceTakeOfferRequestVDXFObject = (request, detailInd
   const detailsObject = request.getDetails(detailIndex);
 
   if (!(detailsObject instanceof MarketplaceTakeOfferRequestOrdinalVDXFObject)) {
-    throw new Error("Marketplace makeoffer request details not found at specified index");
+    throw new Error("Marketplace takeoffer request details not found at specified index");
   }
 
   if (detailsObject.data == null || !detailsObject.data.isValid()) {
-    throw new Error("Invalid marketplace makeoffer request details.");
+    throw new Error("Invalid marketplace takeoffer request details.");
   }
 }

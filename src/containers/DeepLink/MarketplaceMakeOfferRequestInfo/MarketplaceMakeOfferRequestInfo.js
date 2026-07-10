@@ -28,7 +28,8 @@ const { getFundedTxBuilder } = smarttxs;
 
 // On-chain listing publication: the deposit that makes the offer indexable by
 // getoffers (reclaimable by this wallet via closeoffers) and the network fee.
-const LISTING_DEPOSIT_SATS = 20000;
+// Must match COnChainOffer::MIN_LISTING_DEPOSIT in the daemon.
+const LISTING_DEPOSIT_SATS = 100000000;
 const LISTING_FEE_SATS = 10000;
 // Change below this is dust the daemon would reject; fold it into the fee.
 const DUST_THRESHOLD_SATS = 1000;

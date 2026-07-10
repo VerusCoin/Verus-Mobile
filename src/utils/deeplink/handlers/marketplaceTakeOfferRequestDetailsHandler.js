@@ -4,7 +4,7 @@ export const handleMarketplaceTakeOfferRequestDetailsVDXFObject = async (request
   const details = request.getDetails(detailIndex);
 
   if (details == null) throw new Error("Invalid index for request details");
-  if (!(details instanceof MarketplaceTakeOfferRequestOrdinalVDXFObject)) throw new Error("Marketplace makeoffer request details not found at specified index");
+  if (!(details instanceof MarketplaceTakeOfferRequestOrdinalVDXFObject)) throw new Error("Marketplace takeoffer request details not found at specified index");
 
   return {
     displayProps: {
