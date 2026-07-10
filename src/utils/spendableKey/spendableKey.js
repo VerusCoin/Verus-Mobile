@@ -22,6 +22,7 @@ import {IS_PBAAS, VRPC} from '../constants/intervalConstants';
 import {I_ADDRESS_VERSION, R_ADDRESS_VERSION} from '../constants/constants';
 import {coinsToSats, satsToCoins} from '../math';
 import {
+  getAddressDeltas,
   getAddressUtxos,
   getInfo,
   sendRawTransaction,
@@ -628,6 +629,42 @@ const getActiveScanSystems = (requestIsTestnet, activeCoinsForUser) => {
   return Array.from(systems.values());
 };
 
+export const deriveSpendableKeyAddresses = async ({
+  mnemonic,
+  requestIsTestnet,
+  activeCoinsForUser,
+}) => {
+  const systems = [];
+  const scanSystems = getActiveScanSystems(requestIsTestnet, activeCoinsForUser);
+
+  for (const coinObj of scanSystems) {
+    VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0]);
+
+    const keyPair = await deriveKeyPair(mnemonic, coinObj, VRPC);
+    const claimAddress = keyPair.addresses && keyPair.addresses[0];
+
+    if (!claimAddress || !keyPair.privKey) {
+      throw new Error(`Unable to derive spendable key address for ${coinObj.display_ticker || coinObj.id}.`);
+    }
+
+    systems.push({
+      systemId: coinObj.system_id,
+      coinObj,
+      claimAddress,
+      claimWif: keyPair.privKey,
+    });
+  }
+
+  return {
+    requestIsTestnet,
+    systems,
+    addressesBySystem: systems.reduce((addresses, system) => {
+      addresses[system.systemId] = system.claimAddress;
+      return addresses;
+    }, {}),
+  };
+};
+
 const getClaimableIdentities = (identityResults, claimAddress, systemId) => {
   return identityResults
     .filter(result => {
@@ -877,6 +914,173 @@ export const discoverSpendableKeyClaims = async ({
     hasClaims: systems.some(
       system => system.currencies.length > 0 || system.identities.length > 0,
     ),
+  };
+};
+
+export const discoverSpendableKeyAddressClaims = async ({
+  addressesBySystem,
+  requestIsTestnet,
+  activeCoinsForUser,
+  expectedIdentities = [],
+  subtractDisplayFees = false,
+}) => {
+  const systems = [];
+  const scanSystems = getActiveScanSystems(requestIsTestnet, activeCoinsForUser);
+
+  for (const coinObj of scanSystems) {
+    const claimAddress = addressesBySystem && addressesBySystem[coinObj.system_id];
+
+    if (!claimAddress) continue;
+
+    VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0]);
+
+    const utxosRes = await getAddressUtxos(coinObj.system_id, [claimAddress], true);
+    if (utxosRes.error) throw new Error(utxosRes.error.message);
+
+    const deltasRes = await getAddressDeltas(coinObj.system_id, [claimAddress], true, 1);
+    if (deltasRes.error) throw new Error(deltasRes.error.message);
+
+    const spendableUtxos = (utxosRes.result || []).filter(utxo =>
+      isSpendableUtxo(coinObj.system_id, utxo),
+    );
+
+    const identitiesFromUtxos = await getClaimableIdentitiesFromUtxos(
+      coinObj.system_id,
+      utxosRes.result || [],
+      claimAddress,
+    );
+    let identitiesFromRpc = [];
+
+    try {
+      const identityResults = await getIdentitiesWithPrimaryAddress(
+        coinObj.system_id,
+        claimAddress,
+      );
+      const enrichedIdentityResults = await enrichIdentityResults(
+        coinObj.system_id,
+        identityResults,
+      );
+      identitiesFromRpc = getClaimableIdentities(
+        enrichedIdentityResults,
+        claimAddress,
+        coinObj.system_id,
+      );
+    } catch (e) {
+      console.warn(e.message);
+    }
+    let identitiesFromExpected = [];
+    const expectedIdentitiesForSystem = (expectedIdentities || []).filter(
+      identity =>
+        identity &&
+        identity.identityAddress &&
+        identity.systemId === coinObj.system_id,
+    );
+
+    for (const expectedIdentity of expectedIdentitiesForSystem) {
+      try {
+        const identityRes = await getIdentity(
+          coinObj.system_id,
+          expectedIdentity.identityAddress,
+        );
+
+        if (identityRes.error) throw new Error(identityRes.error.message);
+
+        const enrichedIdentityResults = await enrichIdentityResults(
+          coinObj.system_id,
+          [identityRes.result],
+        );
+
+        identitiesFromExpected.push(
+          ...getClaimableIdentities(
+            enrichedIdentityResults,
+            claimAddress,
+            coinObj.system_id,
+          ),
+        );
+      } catch (e) {
+        console.warn(e.message);
+      }
+    }
+
+    const identities = await Promise.all(
+      mergeIdentityClaims(
+        identitiesFromUtxos,
+        identitiesFromRpc,
+        identitiesFromExpected,
+      ).map(async identity => {
+          const identityUtxos = await getIdentityTransferUtxos(
+            coinObj.system_id,
+            identity.identityAddress,
+            spendableUtxos,
+          );
+
+          return {
+            ...identity,
+            utxos: identityUtxos,
+          };
+        },
+      ),
+    );
+    const balanceMap = sumUtxoBalances(coinObj.system_id, spendableUtxos);
+
+    for (const identity of identities) {
+      addBalanceMap(
+        balanceMap,
+        sumUtxoBalances(coinObj.system_id, identity.utxos || []),
+      );
+    }
+
+    if (subtractDisplayFees) {
+      subtractBalanceMap(
+        balanceMap,
+        coinObj.system_id,
+        getDisplayFeeSats({
+          systemId: coinObj.system_id,
+          spendableUtxos,
+          identities,
+        }),
+      );
+    }
+
+    const currencies = [];
+
+    for (const [currencyId, sats] of balanceMap.entries()) {
+      if (sats.isLessThanOrEqualTo(0)) continue;
+
+      currencies.push({
+        currencyId,
+        satoshis: sats.toString(),
+        amount: satsToCoins(sats).toString(),
+        display: await getCurrencyDisplay(coinObj.system_id, currencyId),
+      });
+    }
+
+    const deltas = deltasRes.result || [];
+    const deltaCount = Array.isArray(deltas) ? deltas.length : 0;
+
+    systems.push({
+      systemId: coinObj.system_id,
+      coinObj,
+      claimAddress,
+      utxos: spendableUtxos,
+      currencies,
+      identities,
+      deltas,
+      deltaCount,
+      redeemed:
+        currencies.length === 0 &&
+        identities.length === 0 &&
+        deltaCount > 0,
+    });
+  }
+
+  return {
+    requestIsTestnet,
+    systems,
+    hasClaims: systems.some(
+      system => system.currencies.length > 0 || system.identities.length > 0,
+    ),
+    redeemed: systems.length > 0 && systems.every(system => system.redeemed),
   };
 };
 

@@ -1,12 +1,29 @@
 import {
   CreateWalletBackupDetails,
   CreateWalletBackupDetailsOrdinalVDXFObject,
+  SPENDABLE_KEY_DETAILS_VDXF_KEY,
 } from 'verus-typescript-primitives';
 import store from '../../../store';
 import {
   getWalletBackupCompletionKey,
   hasCompletedWalletBackupRequest,
 } from '../../walletBackup/walletBackupCompletionStorage';
+
+const isTestProfile = account => {
+  return Object.keys(account?.testnetOverrides || {}).length > 0;
+};
+
+const requestHasSpendableKeyDetail = request => {
+  return (request?.details || []).some(
+    detail => detail?.getIAddressKey?.() === SPENDABLE_KEY_DETAILS_VDXF_KEY.vdxfid,
+  );
+};
+
+const hasMatchingExistingProfile = (accounts, requestIsTestnet) => {
+  return (accounts || []).some(
+    account => isTestProfile(account) === requestIsTestnet,
+  );
+};
 
 export const handleCreateWalletBackupDetailsVDXFObject = async (
   request,
@@ -24,7 +41,8 @@ export const handleCreateWalletBackupDetailsVDXFObject = async (
   }
 
   const state = store.getState();
-  const accountHash = state.authentication.activeAccount?.accountHash;
+  const accountHash = state.authentication?.activeAccount?.accountHash;
+  const requestIsTestnet = request.isTestnet();
   const completionKey = getWalletBackupCompletionKey(
     request,
     detailIndex,
@@ -43,6 +61,13 @@ export const handleCreateWalletBackupDetailsVDXFObject = async (
       detailsBufferString: detail.data.toBuffer().toString('hex'),
       backupCompletionKey: completionKey,
       backupType: detail.data.backupType.toNumber(),
+      showSpendableKeyBackupChoice:
+        state.deeplink?.passthrough?.fromNfc === true &&
+        requestHasSpendableKeyDetail(request) &&
+        hasMatchingExistingProfile(
+          state.authentication?.accounts,
+          requestIsTestnet,
+        ),
     },
     response,
     handledIndices: [],

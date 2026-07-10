@@ -22,7 +22,7 @@ export default function* deeplinkSaga() {
 }
 
 function* handleDeeplinkUrl(action) {
-  const {url: urlstring} = action.payload;
+  const {url: urlstring, passthrough = null} = action.payload;
 
   if (urlstring != null) {
     try {
@@ -88,12 +88,21 @@ function* handleDeeplinkUrl(action) {
           console.warn('Unable to save pending deeplink', e?.message ?? e);
         }
 
+        const pendingPassthrough = getPendingDeeplinkPassthrough(savedPendingRequest);
+        const mergedPassthrough =
+          pendingPassthrough != null || passthrough != null
+            ? {
+                ...(pendingPassthrough || {}),
+                ...(passthrough || {}),
+              }
+            : null;
+
         yield call(handleFinishDeeplink, {
           type: SET_DEEPLINK_DATA,
           payload: {
             id: GENERIC_REQUEST_DEEPLINK_VDXF_KEY.vdxfid,
             data: requestBufferString,
-            passthrough: getPendingDeeplinkPassthrough(savedPendingRequest),
+            passthrough: mergedPassthrough,
           },
         });
       } else {

@@ -54,10 +54,13 @@ const {
 } = require('verus-typescript-primitives');
 const {
   createWalletBackupNdefBytes,
+  createDeeplinkUriNdefBytes,
   getWalletBackupOrdinalFromTag,
   readWalletBackupFromNfc,
   tagContainsCreateWalletBackupRequest,
+  tagContainsVerusDeeplink,
   tagContainsWalletBackup,
+  writeDeeplinkUriToNfc,
   writeWalletBackupToNfc,
 } = require('../../walletBackup/walletBackupNfc');
 
@@ -149,6 +152,14 @@ describe('wallet backup NFC writer', () => {
     ).toBe(true);
   });
 
+  it('detects Verus deeplink URI tags', () => {
+    const tag = {
+      ndefMessage: [Ndef.uriRecord('verus://1/test')],
+    };
+
+    expect(tagContainsVerusDeeplink(tag)).toBe(true);
+  });
+
   it('refuses to overwrite an existing wallet backup', async () => {
     mockNfcManager.ndefHandler.getNdefMessage.mockResolvedValue({
       ndefMessage: [Ndef.mimeMediaRecord(WALLET_BACKUP_NDEF_MIME, [1, 2, 3])],
@@ -203,6 +214,44 @@ describe('wallet backup NFC writer', () => {
     );
     expect(mockNfcManager.ndefFormatableHandlerAndroid.formatNdef).not.toHaveBeenCalled();
     expect(mockNfcManager.ndefHandler.writeNdefMessage).not.toHaveBeenCalled();
+  });
+
+  it('writes gift card deeplink URI records to blank writable NFC cards', async () => {
+    const tag = {
+      ndefMessage: [],
+    };
+
+    mockNfcManager.ndefHandler.getNdefMessage.mockResolvedValue(tag);
+
+    const result = await writeDeeplinkUriToNfc('verus://1/test');
+
+    expect(result).toEqual({written: true});
+    expect(mockNfcManager.ndefHandler.writeNdefMessage).toHaveBeenCalledWith(
+      createDeeplinkUriNdefBytes('verus://1/test'),
+      {reconnectAfterWrite: true},
+    );
+  });
+
+  it('refuses to overwrite existing Verus deeplinks when writing gift cards', async () => {
+    mockNfcManager.ndefHandler.getNdefMessage.mockResolvedValue({
+      ndefMessage: [Ndef.uriRecord('verus://1/existing')],
+    });
+
+    await expect(writeDeeplinkUriToNfc('verus://1/new')).rejects.toThrow(
+      'already contains a Verus deeplink',
+    );
+    expect(mockNfcManager.ndefHandler.writeNdefMessage).not.toHaveBeenCalled();
+  });
+
+  it('formats blank NdefFormatable cards when writing gift card deeplinks', async () => {
+    mockNfcManager.requestTechnology.mockResolvedValue('NdefFormatable');
+
+    const result = await writeDeeplinkUriToNfc('verus://1/new');
+
+    expect(result).toEqual({written: true});
+    expect(mockNfcManager.ndefFormatableHandlerAndroid.formatNdef).toHaveBeenCalledWith(
+      createDeeplinkUriNdefBytes('verus://1/new'),
+    );
   });
 
   it('reads a wallet backup from an NFC card', async () => {
