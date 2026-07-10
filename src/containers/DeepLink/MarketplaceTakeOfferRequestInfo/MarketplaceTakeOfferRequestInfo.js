@@ -233,7 +233,7 @@ const MarketplaceTakeOfferRequestInfo = props => {
       const postRes = await fetch(responseUri, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ completedTxid }),
+        body: JSON.stringify({ completedTxid, completedHex }),
       }).then(r => r.json());
 
       if (postRes && postRes.error) {
