@@ -6,43 +6,41 @@ import { useSelector } from 'react-redux';
 import {
   networks, ECPair, smarttxs, TransactionBuilder, address as baddress,
 } from '@bitgo/utxo-lib';
-import { fromBase58Check } from 'verus-typescript-primitives';
+import { Identity, IdentityScript } from 'verus-typescript-primitives';
 import Styles from '../../../styles';
 import Colors from '../../../globals/colors';
 import { requestPrivKey } from '../../../utils/auth/authBox';
 import { VRPC } from '../../../utils/constants/intervalConstants';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
-import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import VrpcProvider from '../../../utils/vrpc/vrpcInterface';
 import { coinsList } from '../../../utils/CoinData/CoinsList';
 import { getIdentity } from '../../../utils/api/channels/verusid/requests/getIdentity';
-import {
-  getUpdatableIdentity,
-  createUpdateIdentityTx,
-} from '../../../utils/api/channels/verusid/requests/updateIdentity';
 import { parseNftPreview } from '../../../utils/marketplace/parseNftPreview';
 import { verifyNftContentHash } from '../../../utils/marketplace/nftIntegrity';
 import MarketplaceAssetPreview from '../components/MarketplaceAssetPreview';
+import MarketplaceActionStatus, {
+  getMarketplaceActionError,
+} from '../components/MarketplaceActionStatus';
 import cardStyles from '../components/marketplaceCardStyles';
 
 const { getFundedTxBuilder } = smarttxs;
 
 const CLOSEOFFER_FEE_SATS = 1000;
 const SAPLING_VERSION_GROUP_ID = 0x892f2085;
-const LISTING_DEPOSIT_OWNER_HASH_OFFSET = 56;
-const LISTING_DEPOSIT_OWNER_HASH_LENGTH = 20;
+const CLOSE_OFFER_STEPS = [
+  'Checking offer ownership',
+  'Unlocking wallet',
+  'Closing offer on-chain',
+  'Returning to marketplace',
+];
 
-const getListingDepositOwnerHash = (script) => {
-  if (!Buffer.isBuffer(script)) return null;
-  if (script.length < LISTING_DEPOSIT_OWNER_HASH_OFFSET + LISTING_DEPOSIT_OWNER_HASH_LENGTH) {
-    return null;
-  }
-  return script.slice(
-    LISTING_DEPOSIT_OWNER_HASH_OFFSET,
-    LISTING_DEPOSIT_OWNER_HASH_OFFSET + LISTING_DEPOSIT_OWNER_HASH_LENGTH,
-  );
-};
-
+/**
+ * Confirmation screen for marketplace closeoffer requests. A native offer locks
+ * the NFT identity inside the offer CC output; closing it is simply spending
+ * that output back into a normal identity output owned by the seller. That single
+ * spend both recovers the NFT and invalidates the offer's takeable partial (which
+ * spends the same output), so no separate identity-move is needed.
+ */
 const MarketplaceCloseOfferRequestInfo = (props) => {
   const {
     closeOfferRequest, cancel, next, response, request, detailIndex,
@@ -50,6 +48,8 @@ const MarketplaceCloseOfferRequestInfo = (props) => {
 
   const activeCoin = useSelector((state) => state.coins.activeCoin);
   const [submitting, setSubmitting] = useState(false);
+  const [submitStep, setSubmitStep] = useState(0);
+  const [submitError, setSubmitError] = useState(null);
   const [identityName, setIdentityName] = useState(null);
   const [assetPreview, setAssetPreview] = useState(null);
   const [verification, setVerification] = useState(null);
@@ -63,9 +63,7 @@ const MarketplaceCloseOfferRequestInfo = (props) => {
     ? closeOfferRequest.closeOfferParams
     : null;
 
-  // The NFT identity ref this closeoffer applies to rides in offerDescription
-  // (see EscrowUnlistService.ts) — not a human-facing description, but the
-  // identity name/i-address `handleConfirm` also uses to move the UTXO.
+  // The NFT identity ref this closeoffer applies to rides in offerDescription.
   const description = closeOfferRequest && closeOfferRequest.containsDesc && closeOfferRequest.containsDesc()
     ? closeOfferRequest.offerDescription
     : null;
@@ -88,9 +86,7 @@ const MarketplaceCloseOfferRequestInfo = (props) => {
         console.warn('[MarketplaceCloseOffer] identity preview lookup failed:', e && e.message);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   const handleConfirm = useCallback(async () => {
@@ -99,142 +95,112 @@ const MarketplaceCloseOfferRequestInfo = (props) => {
       cancel();
       return;
     }
-
     setSubmitting(true);
+    setSubmitError(null);
+    setSubmitStep(0);
     try {
       const { offerTxid } = closeParams;
       const endpoint = VrpcProvider.getEndpoint(coinObj.system_id);
-
-      const listingTxRes = await endpoint.getRawTransaction(offerTxid, 1);
-      if (
-        !listingTxRes
-        || listingTxRes.error
-        || !listingTxRes.result
-        || !listingTxRes.result.vout
-        || !listingTxRes.result.vout[0]
-      ) {
-        throw new Error(
-          (listingTxRes && listingTxRes.error && listingTxRes.error.message)
-            || 'Could not fetch listing deposit transaction',
-        );
-      }
-
-      const depositOutput = listingTxRes.result.vout[0];
-      const depositScript = Buffer.from(depositOutput.scriptPubKey.hex, 'hex');
-      const inputSats = Math.round((depositOutput.value || 0) * 1e8);
-      if (inputSats <= CLOSEOFFER_FEE_SATS) {
-        throw new Error('Listing deposit is too small to close');
-      }
-
-      // GenericRequests are signed for their own chain. Do not use the UI's
-      // currently active coin here; it can point at another wallet namespace
-      // and produce a key that does not own the listing deposit.
-      const coinTicker = coinObj.id;
-      const spendingKey = await requestPrivKey(coinTicker, VRPC);
       const network = networks.verus;
+
+      // 1. Fetch the on-chain offer output (the identity locked in the offer).
+      const offerTxRes = await endpoint.getRawTransaction(offerTxid, 1);
+      if (!offerTxRes || offerTxRes.error || !offerTxRes.result
+        || !offerTxRes.result.vout || !offerTxRes.result.vout[0]) {
+        throw new Error((offerTxRes && offerTxRes.error && offerTxRes.error.message)
+          || 'Could not fetch the offer transaction');
+      }
+      const offerOutput = offerTxRes.result.vout[0];
+      const offerScript = Buffer.from(offerOutput.scriptPubKey.hex, 'hex');
+      const inputSats = Math.round((offerOutput.value || 0) * 1e8);
+      if (inputSats <= CLOSEOFFER_FEE_SATS) {
+        throw new Error('Offer output is too small to close');
+      }
+
+      // 2. Unlock the seller key (this chain's key, not the UI's active coin).
+      setSubmitStep(1);
+      const spendingKey = await requestPrivKey(coinObj.id, VRPC);
       const keyPair = ECPair.fromWIF(spendingKey, network);
       const ownerAddress = keyPair.getAddress();
-      const ownerHash = fromBase58Check(ownerAddress).hash;
-      const depositOwnerHash = getListingDepositOwnerHash(depositScript);
 
-      if (!depositOwnerHash || !depositOwnerHash.equals(ownerHash)) {
-        throw new Error('This wallet does not own the listing deposit for this offer');
-      }
-
-      // SECURITY: invalidate the signed offer on-chain by moving the NFT
-      // identity's UTXO. The offer (SIGHASH_SINGLE|ANYONECANPAY partial tx,
-      // published in the deposit OP_RETURN) spends that UTXO; until it is
-      // spent the offer stays fillable via takeoffer even after this unlist
-      // (stale-signed-order / OpenSea inactive-listing class). A
-      // content-preserving updateidentity re-homes the outpoint, so every
-      // outstanding offer for this NFT becomes unspendable. This runs first:
-      // if it fails we abort without reporting a false 'unlisted'.
-      const identityRef = description;
-      if (!identityRef) {
-        throw new Error('Close request is missing the NFT identity to invalidate');
-      }
-      const systemId = coinObj.system_id;
-      const idRes = await getIdentity(systemId, identityRef);
+      // 3. Resolve the identity and confirm this wallet controls it.
+      if (!description) throw new Error('Close request is missing the NFT identity');
+      const idRes = await getIdentity(coinObj.system_id, description);
       if (idRes.error || !idRes.result) {
-        throw new Error(
-          (idRes.error && idRes.error.message) || 'Could not resolve the NFT identity to unlist',
-        );
+        throw new Error((idRes.error && idRes.error.message) || 'Could not resolve the NFT identity');
       }
-      const { tx: rawIdTx, identity: idObj } = await getUpdatableIdentity(systemId, idRes.result);
-      const updateTx = await createUpdateIdentityTx(
-        systemId,
-        idObj,
-        ownerAddress,
-        rawIdTx,
-        idRes.result.blockheight,
-        true,
-        undefined,
-        isTestnet,
-      );
-      const updateKeys = updateTx.utxos.map(() => [spendingKey]);
-      const verusid = VrpcProvider.getVerusIdInterface(systemId);
-      const signedUpdateHex = verusid.signUpdateIdentityTransaction(
-        updateTx.hex,
-        updateTx.utxos,
-        updateKeys,
-      );
-      const updSend = await endpoint.sendRawTransaction(signedUpdateHex);
-      if (!updSend || updSend.error || !updSend.result || typeof updSend.result !== 'string') {
-        throw new Error(
-          (updSend && updSend.error && updSend.error.message)
-            || 'Failed to invalidate the offer (identity move)',
-        );
+      const identityJson = idRes.result.identity;
+      const primaries = (identityJson && identityJson.primaryaddresses) || [];
+      if (!primaries.includes(ownerAddress)) {
+        throw new Error('This wallet does not control the offered NFT identity');
       }
-      const updateIdentityTxid = updSend.result;
 
+      // 4. Close = spend the offer output back into a normal identity output.
+      setSubmitStep(2);
+      const identityScript = IdentityScript.fromIdentity(Identity.fromJson(identityJson)).toBuffer();
       const txb = new TransactionBuilder(network);
       txb.setVersion(4);
       txb.setVersionGroupId(SAPLING_VERSION_GROUP_ID);
       txb.addInput(offerTxid, 0, 0xffffffff);
-      txb.addOutput(
-        baddress.toOutputScript(ownerAddress, network),
-        inputSats - CLOSEOFFER_FEE_SATS,
-      );
-
-      const unsignedHex = txb.buildIncomplete().toHex();
-      const fundedTxb = getFundedTxBuilder(unsignedHex, network, [depositScript]);
-      fundedTxb.sign(0, keyPair, null, 1, inputSats);
-      const closeHex = fundedTxb.build().toHex();
+      txb.addOutput(identityScript, inputSats - CLOSEOFFER_FEE_SATS);
+      const funded = getFundedTxBuilder(txb.buildIncomplete().toHex(), network, [offerScript]);
+      funded.sign(0, keyPair, null, 1, inputSats);
+      const closeHex = funded.build().toHex();
       const sendRes = await endpoint.sendRawTransaction(closeHex);
       if (!sendRes || sendRes.error || !sendRes.result || typeof sendRes.result !== 'string') {
         throw new Error((sendRes && sendRes.error && sendRes.error.message) || 'Broadcast failed');
       }
       const closeTxid = sendRes.result;
 
+      // 5. Report the close to the marketplace.
+      setSubmitStep(3);
       const responseURIs = (request && request.responseURIs) || [];
-      if (responseURIs.length === 0) {
-        throw new Error('Request has no response URI to report closeoffer');
-      }
-      const responseUri = responseURIs[0].getUriString();
-
-      const postRes = await fetch(responseUri, {
+      if (responseURIs.length === 0) throw new Error('Request has no response URI to report closeoffer');
+      const postRes = await fetch(responseURIs[0].getUriString(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          offerTxid, closeTxid, closeHex, updateIdentityTxid,
-        }),
+        body: JSON.stringify({ offerTxid, closeTxid, closeHex }),
       }).then((r) => r.json());
+      if (postRes && postRes.error) throw new Error(postRes.error);
 
-      if (postRes && postRes.error) {
-        throw new Error(postRes.error);
-      }
-
-      createAlert('Offer Closed', 'Your listing close transaction was signed and broadcast by this wallet.');
+      createAlert('Offer Closed', 'Your NFT was returned and the offer removed on-chain.');
       next(response, [detailIndex]);
     } catch (e) {
       console.error('[MarketplaceCloseOffer] confirm error:', e && e.message, e);
-      createAlert('Error', (e && e.message) || 'Failed to close marketplace offer');
+      const actionError = getMarketplaceActionError(e, 'Failed to close marketplace offer');
+      setSubmitError(actionError);
+      createAlert(actionError.title, actionError.message);
       setSubmitting(false);
     }
-  }, [closeParams, activeCoin, request, response, detailIndex]);
+  }, [closeParams, activeCoin, request, response, detailIndex, description]);
 
   if (submitting) {
-    return <AnimatedActivityIndicatorBox />;
+    return (
+      <ScrollView style={Styles.flexBackground}>
+        <MarketplaceActionStatus
+          title="Closing Offer"
+          message="Keep Verus Mobile open while the wallet closes the offer on-chain and returns the result."
+          steps={CLOSE_OFFER_STEPS}
+          activeIndex={submitStep}
+        />
+      </ScrollView>
+    );
+  }
+
+  if (submitError) {
+    return (
+      <ScrollView style={Styles.flexBackground}>
+        <MarketplaceActionStatus
+          title={submitError.title}
+          message={submitError.message}
+          steps={CLOSE_OFFER_STEPS}
+          activeIndex={submitStep}
+          error
+          onRetry={handleConfirm}
+          onCancel={cancel}
+        />
+      </ScrollView>
+    );
   }
 
   return (
@@ -246,8 +212,8 @@ const MarketplaceCloseOfferRequestInfo = (props) => {
       </View>
       <View style={{ padding: 16 }}>
         <Text style={{ fontSize: 16, marginBottom: 16 }}>
-          You are closing a marketplace listing from this wallet. The wallet signs a transaction
-          that spends the listing deposit, which removes the offer from the on-chain index.
+          You are closing a marketplace offer from this wallet. The wallet signs a transaction
+          that spends the on-chain offer, returning the NFT to you and removing the listing.
         </Text>
         {closeParams && (
           <View style={cardStyles.card}>
@@ -258,7 +224,7 @@ const MarketplaceCloseOfferRequestInfo = (props) => {
                 verification={verification}
               />
             )}
-            <Text style={cardStyles.label}>Listing transaction</Text>
+            <Text style={cardStyles.label}>Offer transaction</Text>
             <Text style={cardStyles.valueMono}>{closeParams.offerTxid}</Text>
           </View>
         )}

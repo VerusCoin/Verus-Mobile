@@ -15,6 +15,7 @@ def keystorePropertiesFile = rootProject.file("keystore.properties");
  * By default you don't need to apply any configuration, just uncomment the lines you need.
  */
 react {
+    debuggableVariants = []
     /* Folders */
     //   The root of your project, i.e. where "package.json" lives. Default is '..'
     // root = file("../")
