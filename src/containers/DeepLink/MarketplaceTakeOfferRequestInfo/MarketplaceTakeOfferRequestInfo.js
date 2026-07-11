@@ -12,12 +12,15 @@ import Colors from '../../../globals/colors';
 import { requestPrivKey } from '../../../utils/auth/authBox';
 import { VRPC } from '../../../utils/constants/intervalConstants';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
-import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import VrpcProvider from '../../../utils/vrpc/vrpcInterface';
 import { coinsList } from '../../../utils/CoinData/CoinsList';
 import { parseNftPreview } from '../../../utils/marketplace/parseNftPreview';
 import { verifyNftContentHash } from '../../../utils/marketplace/nftIntegrity';
+import { getSpendablePlainUtxos } from '../../../utils/marketplace/spendablePlainUtxos';
 import MarketplaceAssetPreview from '../components/MarketplaceAssetPreview';
+import MarketplaceActionStatus, {
+  getMarketplaceActionError,
+} from '../components/MarketplaceActionStatus';
 import cardStyles from '../components/marketplaceCardStyles';
 
 // On-chain listing publication: the deposit that makes the offer indexable by
@@ -25,6 +28,13 @@ import cardStyles from '../components/marketplaceCardStyles';
 const TAKEOFFER_FEE_SATS = 10000;
 // Change below this is dust the daemon would reject; fold it into the fee.
 const DUST_THRESHOLD_SATS = 1000;
+const TAKE_OFFER_STEPS = [
+  'Verifying listing',
+  'Unlocking wallet',
+  'Signing purchase',
+  'Broadcasting atomic swap',
+  'Returning to marketplace',
+];
 
 /**
  * Confirmation screen for marketplace takeoffer requests (GenericRequest ordinal,
@@ -59,6 +69,8 @@ const MarketplaceTakeOfferRequestInfo = (props) => {
   const [assetPreview, setAssetPreview] = useState(null);
   const [verification, setVerification] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [submitStep, setSubmitStep] = useState(0);
+  const [submitError, setSubmitError] = useState(null);
 
   const isTestnet = request && request.isTestnet ? request.isTestnet() : true;
   const coinObj = isTestnet ? coinsList.VRSCTEST : coinsList.VRSC;
@@ -103,6 +115,8 @@ const MarketplaceTakeOfferRequestInfo = (props) => {
   const handleConfirm = useCallback(async () => {
     if (!offerParams) return;
     setSubmitting(true);
+    setSubmitError(null);
+    setSubmitStep(0);
     try {
       const endpoint = VrpcProvider.getEndpoint(coinObj.system_id);
 
@@ -160,18 +174,17 @@ const MarketplaceTakeOfferRequestInfo = (props) => {
       }
 
       // 4. Fund the purchase from this wallet: price + fee in plain P2PKH utxos.
+      setSubmitStep(1);
       // GenericRequests are signed for their own chain. Do not use the UI's
       // currently active coin here; it can point at another wallet namespace
       // and produce an address with no spendable UTXOs for this request.
       const coinTicker = coinObj.id;
       const spendingKey = await requestPrivKey(coinTicker, VRPC);
+      setSubmitStep(2);
       const keyPair = ECPair.fromWIF(spendingKey, network);
       const buyerAddress = keyPair.getAddress();
 
-      const utxoRes = await endpoint.getAddressUtxos({ addresses: [buyerAddress] });
-      const utxos = ((utxoRes && utxoRes.result) || [])
-        .filter((u) => u.satoshis > 0 && u.script && u.script.startsWith('76a914'))
-        .sort((a, b) => b.satoshis - a.satoshis);
+      const { utxos, hasPendingSpends } = await getSpendablePlainUtxos(endpoint, buyerAddress);
       const needed = priceSats + TAKEOFFER_FEE_SATS;
       const picked = [];
       let total = 0;
@@ -182,7 +195,11 @@ const MarketplaceTakeOfferRequestInfo = (props) => {
         if (total >= needed) break;
       }
       if (total < needed) {
-        throw new Error('Insufficient funds for this purchase');
+        throw new Error(
+          hasPendingSpends
+            ? 'Insufficient confirmed funds — a previous transaction from this address is still confirming. Wait about a minute and try again.'
+            : 'Insufficient funds for this purchase',
+        );
       }
 
       // 5. Complete the atomic swap: keep the seller-signed identity input and
@@ -201,6 +218,7 @@ const MarketplaceTakeOfferRequestInfo = (props) => {
       // every input from scratch and would drop the seller's scriptSig, so
       // the seller-signed input is kept untouched and only the buyer inputs
       // are signed here (SIGHASH_ALL).
+      setSubmitStep(3);
       const txb = TransactionBuilder.fromTransaction(offerTx, network);
       for (let i = 0; i < picked.length; i += 1) {
         const u = picked[i];
@@ -222,6 +240,7 @@ const MarketplaceTakeOfferRequestInfo = (props) => {
       const completedTxid = sendRes.result;
 
       // 6. Report the settlement to the requester.
+      setSubmitStep(4);
       const responseURIs = (request && request.responseURIs) || [];
       if (responseURIs.length === 0) {
         throw new Error('Request has no response URI to return the signed offer to');
@@ -245,13 +264,40 @@ const MarketplaceTakeOfferRequestInfo = (props) => {
       next(response, [detailIndex]);
     } catch (e) {
       console.error('[MarketplaceTakeOffer] confirm error:', e && e.message, e);
-      createAlert('Error', (e && e.message) || 'Failed to complete marketplace purchase');
+      const actionError = getMarketplaceActionError(e, 'Failed to complete marketplace purchase');
+      setSubmitError(actionError);
+      createAlert(actionError.title, actionError.message);
       setSubmitting(false);
     }
   }, [offerParams, activeCoin, request, response, detailIndex, identityName]);
 
   if (submitting) {
-    return <AnimatedActivityIndicatorBox />;
+    return (
+      <ScrollView style={Styles.flexBackground}>
+        <MarketplaceActionStatus
+          title="Buying NFT"
+          message="Keep Verus Mobile open while the wallet verifies the listing, signs the purchase, broadcasts the swap, and returns the result."
+          steps={TAKE_OFFER_STEPS}
+          activeIndex={submitStep}
+        />
+      </ScrollView>
+    );
+  }
+
+  if (submitError) {
+    return (
+      <ScrollView style={Styles.flexBackground}>
+        <MarketplaceActionStatus
+          title={submitError.title}
+          message={submitError.message}
+          steps={TAKE_OFFER_STEPS}
+          activeIndex={submitStep}
+          error
+          onRetry={handleConfirm}
+          onCancel={cancel}
+        />
+      </ScrollView>
+    );
   }
 
   const priceDisplay = offerParams
