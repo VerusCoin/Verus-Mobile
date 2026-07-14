@@ -25,6 +25,9 @@ export {
   default as confirmPayStepStyles,
 } from './deeplink/confirmPayStep.styles';
 export {
+  default as dataRequestInfoStyles,
+} from './deeplink/dataRequestInfo.styles';
+export {
   default as genericRequestCompleteStyles,
 } from './deeplink/genericRequestComplete.styles';
 export {

@@ -29,7 +29,6 @@ import { getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import { signGenericResponse } from '../../../utils/api/channels/vrpc/callCreators';
 import {
-  BigNumber,
   GenericRequest,
   GenericResponse,
   GENERIC_RESPONSE_DEEPLINK_VDXF_KEY,
@@ -42,6 +41,7 @@ import { createAlert, resolveAlert } from '../../../actions/actions/alert/dispat
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { genericRequestCompleteStyles as styles } from '../../../styles';
 import { markPendingDeeplinkComplete } from '../../../utils/deeplink/pendingDeeplinkStorage';
+import { prepareGenericResponseForSigning } from '../../../utils/deeplink/genericResponse/prepareGenericResponseForSigning';
 
 const GenericRequestComplete = props => {
   const { requestBufferString, responseBufferString } = props.route.params;
@@ -265,10 +265,11 @@ const GenericRequestComplete = props => {
       const response = new GenericResponse();
       response.fromBuffer(Buffer.from(responseBufferString, 'hex'), 0);
 
-      response.createdAt = new BigNumber((Date.now() / 1000).toFixed(0));
-      response.handledBy = VERUS_MOBILE_GENERIC_REQUEST_HANDLER_ID;
-
-      response.setFlags();
+      prepareGenericResponseForSigning({
+        request,
+        response,
+        handledBy: VERUS_MOBILE_GENERIC_REQUEST_HANDLER_ID,
+      });
       if (response.signature == null) {
         await markSavedPendingRequestComplete();
         setLoading(false);

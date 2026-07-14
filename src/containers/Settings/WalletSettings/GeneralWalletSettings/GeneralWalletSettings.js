@@ -389,7 +389,7 @@ const WalletSettings = props => {
         >
           <List.Item
             title="Enable experimental deeplinks"
-            description="Allow deeplinks that include experimental features (identity update, app encryption, etc.)"
+            description="Allow deeplinks that include experimental features (identity update, app encryption, credentials, data packets, etc.)"
             titleNumberOfLines={100}
             right={() => (
               <View

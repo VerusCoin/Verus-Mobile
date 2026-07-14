@@ -11,8 +11,8 @@ import {
   AppEncryptionRequestOrdinalVDXFObject,
   AppEncryptionResponseOrdinalVDXFObject,
   SaplingPaymentAddress,
-  DataDescriptor,
-  DataDescriptorOrdinalVDXFObject,
+  DataResponseDetails,
+  DataResponseOrdinalVDXFObject,
   GenericRequest,
   GenericResponse,
   IdentityID,
@@ -157,6 +157,16 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
 // Processing Function - Called after user approval
 // ============================================================================
 
+export const buildEncryptedAppEncryptionResponseDetail = (
+  encryptionRequest,
+  encryptedDescriptor,
+) => new DataResponseOrdinalVDXFObject({
+  data: new DataResponseDetails({
+    requestID: encryptionRequest.hasRequestID() ? encryptionRequest.requestID : undefined,
+    data: encryptedDescriptor,
+  })
+});
+
 /**
  * Derives keys and builds the response object.
  * Called by AppEncryptionRequestInfo after user approval.
@@ -165,7 +175,7 @@ export const handleAppEncryptionRequestVDXFObject = async (request, response, de
  * @param {GenericRequest} params.request - The parent GenericRequest
  * @param {number} params.detailIndex - Index of the encryption request detail
  * @param {string} params.responseSignerID - The user's signing identity i-address
- * @returns {Promise<AppEncryptionResponseOrdinalVDXFObject|DataDescriptorOrdinalVDXFObject>}
+ * @returns {Promise<AppEncryptionResponseOrdinalVDXFObject|DataResponseOrdinalVDXFObject>}
  * @throws {Error} If processing fails
  */
 export const processAppEncryptionRequest = async ({
@@ -298,14 +308,16 @@ export const processAppEncryptionRequest = async ({
     await encryptDataBufferToDescriptor(encryptTo, responseDetails.toBuffer());
 
   return {
-    responseDetail: new DataDescriptorOrdinalVDXFObject({
-      data: encryptedDescriptor
-    }),
+    responseDetail: buildEncryptedAppEncryptionResponseDetail(
+      encryptionRequest,
+      encryptedDescriptor,
+    ),
     encryptedDescriptorJson,
   };
 };
 
 export default {
   handleAppEncryptionRequestVDXFObject,
+  buildEncryptedAppEncryptionResponseDetail,
   processAppEncryptionRequest
 };

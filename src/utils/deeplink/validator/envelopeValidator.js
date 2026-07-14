@@ -1,5 +1,6 @@
 import { AUTHENTICATION_REQUEST_VDXF_KEY, GenericRequest, IDENTITY_UPDATE_REQUEST_VDXF_KEY, PROVISION_IDENTITY_DETAILS_VDXF_KEY, 
   VERUSPAY_INVOICE_DETAILS_VDXF_KEY, VerusPayInvoiceDetailsOrdinalVDXFObject, APP_ENCRYPTION_REQUEST_VDXF_KEY, CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY, SPENDABLE_KEY_DETAILS_VDXF_KEY, SpendableKeyDetailsOrdinalVDXFObject,
+  USER_DATA_REQUEST_VDXF_KEY, DATA_PACKET_REQUEST_VDXF_KEY,
   CreateWalletBackupDetailsOrdinalVDXFObject} from "verus-typescript-primitives"
 import { getInfo, verifyGenericRequest } from "../../api/channels/vrpc/callCreators"
 import { getIdentity } from "../../api/channels/verusid/callCreators";
@@ -10,6 +11,8 @@ import { validateVerusPayInvoiceVDXFObject } from "./verusPayInvoiceDetailsValid
 import { validateAppEncryptionRequestVDXFObject } from "./appEncryptionRequestValidator";
 import { validateCreateWalletBackupDetailsVDXFObject } from "./createWalletBackupDetailsValidator";
 import { validateSpendableKeyDetailsVDXFObject } from "./spendableKeyDetailsValidator";
+import { validateUserDataRequestVDXFObject } from "./userDataRequestValidator";
+import { validateDataPacketRequestVDXFObject } from "./dataPacketRequestValidator";
 import { CoinDirectory } from "../../CoinData/CoinDirectory";
 import VrpcProvider from '../../vrpc/vrpcInterface';
 import store from "../../../store";
@@ -41,7 +44,9 @@ export const getValidatorForDetail = (detailKey) => {
     [VERUSPAY_INVOICE_DETAILS_VDXF_KEY.vdxfid]: validateVerusPayInvoiceVDXFObject,
     [APP_ENCRYPTION_REQUEST_VDXF_KEY.vdxfid]: validateAppEncryptionRequestVDXFObject,
     [CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY.vdxfid]: validateCreateWalletBackupDetailsVDXFObject,
-    [SPENDABLE_KEY_DETAILS_VDXF_KEY.vdxfid]: validateSpendableKeyDetailsVDXFObject
+    [SPENDABLE_KEY_DETAILS_VDXF_KEY.vdxfid]: validateSpendableKeyDetailsVDXFObject,
+    [USER_DATA_REQUEST_VDXF_KEY.vdxfid]: validateUserDataRequestVDXFObject,
+    [DATA_PACKET_REQUEST_VDXF_KEY.vdxfid]: validateDataPacketRequestVDXFObject
   }
 
   if (Object.keys(detailValidators).includes(detailKey)) {

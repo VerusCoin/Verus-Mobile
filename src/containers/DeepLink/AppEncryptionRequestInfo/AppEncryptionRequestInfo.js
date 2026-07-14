@@ -48,6 +48,26 @@ const truncateZAddress = (addr) => {
   return `${addr.slice(0, 10)}...${addr.slice(-10)}`;
 };
 
+const getDaemonChainArg = (systemName, requestIsTestnet) => {
+  if (requestIsTestnet || systemName === 'VRSCTEST') return ' -chain=vrsctest';
+  if (systemName && systemName !== 'VRSC') return ` -chain=${systemName.toLowerCase()}`;
+  return '';
+};
+
+const buildDaemonDecryptCommand = ({
+  encryptedDescriptorJson,
+  signerSystemName,
+  requestIsTestnet,
+}) => {
+  const chainArg = getDaemonChainArg(signerSystemName, requestIsTestnet);
+  const payload = JSON.stringify({ datadescriptor: encryptedDescriptorJson });
+  return `./verus${chainArg} decryptdata '${payload}'`;
+};
+
+const isTestProfile = account => {
+  return Object.keys(account?.testnetOverrides || {}).length > 0;
+};
+
 // ── Identity Picker Sheet ──
 
 const IdentityPickerSheet = ({
@@ -255,6 +275,7 @@ const AppEncryptionRequestInfo = (props) => {
 
   // ── Redux state ──
   const signedIn = useSelector(state => state.authentication.signedIn);
+  const accounts = useObjectSelector(state => state.authentication.accounts);
   const sendModalType = useSelector(state => state.sendModal.type);
   const activeAccount = useObjectSelector(state => state.authentication.activeAccount);
   const encryptedIds = useObjectSelector(state => state.services.stored[VERUSID_SERVICE_ID]);
@@ -288,13 +309,16 @@ const AppEncryptionRequestInfo = (props) => {
   const chainId = signerSystemName 
     ? signerSystemName 
     : getSystemNameFromSystemId(signerSystemID) || signerSystemID;
+  const matchingAccounts = useMemo(() => {
+    return (accounts || []).filter(account => isTestProfile(account) === requestIsTestnet);
+  }, [accounts, requestIsTestnet]);
 
   // ── isWrongRequestType check (testnet/mainnet mismatch) ──
   const isWrongRequestType = useMemo(() => {
-    if (!activeAccount) return false;
-    const isTestAccount = Object.keys(activeAccount.testnetOverrides || {}).length > 0;
+    if (!signedIn || !activeAccount) return false;
+    const isTestAccount = isTestProfile(activeAccount);
     return requestIsTestnet !== isTestAccount;
-  }, [activeAccount, requestIsTestnet]);
+  }, [activeAccount, requestIsTestnet, signedIn]);
 
   // ── Load linked identities (decrypt stored data) ──
   useEffect(() => {
@@ -392,21 +416,26 @@ const AppEncryptionRequestInfo = (props) => {
     }
   };
 
+  const handleSignin = () => {
+    if (matchingAccounts.length === 0) {
+      createAlert(
+        'No profile found',
+        `No ${requestIsTestnet ? 'testnet' : 'mainnet'} profile is available for this request.`,
+      );
+      return;
+    }
+
+    openAuthenticateUserModal({
+      [SEND_MODAL_USER_ALLOWLIST]: matchingAccounts,
+    });
+    setWaitingForSignin(true);
+  };
+
   // ── Handle approval ──
   const handleApprove = async () => {
     // Check if signed in
     if (!signedIn) {
-      const allowlist = {};
-      const identityChain = requestIsTestnet ? 'VRSCTEST' : identityNetwork;
-      const chainIds = linkedIds[identityChain];
-      if (chainIds) {
-        allowlist[identityChain] = Object.keys(chainIds);
-      }
-
-      openAuthenticateUserModal({
-        [SEND_MODAL_USER_ALLOWLIST]: allowlist,
-      });
-      setWaitingForSignin(true);
+      handleSignin();
       return;
     }
 
@@ -492,6 +521,17 @@ const AppEncryptionRequestInfo = (props) => {
 
   // ── Debug dropdown state ──
   const [debugExpanded, setDebugExpanded] = useState(false);
+  const approveDisabled =
+    waitingForSignin || isWrongRequestType || (signedIn && !selectedIdentity);
+  const daemonDecryptCommand = useMemo(() => {
+    if (!encryptedDescriptorJson) return null;
+
+    return buildDaemonDecryptCommand({
+      encryptedDescriptorJson,
+      signerSystemName,
+      requestIsTestnet,
+    });
+  }, [encryptedDescriptorJson, requestIsTestnet, signerSystemName]);
 
   // ── Render encrypted response preview screen ──
   if (encryptedResponseHex && pendingResponse) {
@@ -558,14 +598,13 @@ const AppEncryptionRequestInfo = (props) => {
                     <TouchableOpacity
                       activeOpacity={0.7}
                       onPress={() => {
-                        const cmd = `./verus -chain=vrsctest decryptdata '${JSON.stringify({ datadescriptor: encryptedDescriptorJson })}'`;
-                        copyToClipboard(cmd);
+                        copyToClipboard(daemonDecryptCommand);
                         createAlert('Copied', 'Daemon command copied to clipboard.');
                       }}
                       style={styles.responseHexContainer}
                     >
                       <Text selectable style={styles.responseHexText}>
-                        {`./verus -chain=vrsctest decryptdata '${JSON.stringify({ datadescriptor: encryptedDescriptorJson })}'`}
+                        {daemonDecryptCommand}
                       </Text>
                       <View style={styles.responseHexCopyHint}>
                         <MaterialCommunityIcons name="content-copy" size={16} color={Colors.primaryColor} />
@@ -620,6 +659,96 @@ const AppEncryptionRequestInfo = (props) => {
             {requesterLabel} is requesting a private encryption address from your identity.
           </Text>
         </View>
+
+        {!signedIn && (
+          <View style={styles.infoCard}>
+            <MaterialCommunityIcons
+              name="information-outline"
+              size={20}
+              color={Colors.primaryColor}
+            />
+            <Text style={styles.infoText}>
+              Sign in to a {requestIsTestnet ? 'testnet' : 'mainnet'} profile to approve this request.
+            </Text>
+          </View>
+        )}
+
+        {/* Wrong Network Warning */}
+        {isWrongRequestType && (
+          <View style={styles.errorCard}>
+            <MaterialCommunityIcons
+              name="alert-circle"
+              size={20}
+              color="#C62828"
+            />
+            <Text style={styles.errorText}>
+              This request is for {requestIsTestnet ? 'testnet' : 'mainnet'},
+              but you are signed into a {requestIsTestnet ? 'mainnet' : 'testnet'} profile.
+            </Text>
+          </View>
+        )}
+
+        {/* ESK Warning */}
+        {returnESK && (
+          <View style={styles.warningCard}>
+            <View style={styles.warningHeader}>
+              <MaterialCommunityIcons
+                name="alert"
+                size={24}
+                color="#E65100"
+              />
+              <Text style={styles.warningTitle}>Extended Spending Key Requested</Text>
+            </View>
+            <Text style={styles.warningText}>
+              This app is also requesting your Extended Spending Key for this derived address.
+              This grants spending capability to this specific derived address.
+            </Text>
+            <Text style={styles.warningEmphasis}>
+              Only approve if you fully trust this application.
+            </Text>
+          </View>
+        )}
+
+        {/* Identity Selection Card */}
+        {signedIn && (
+          <TouchableOpacity
+            style={[
+              styles.identitySelectCard,
+              selectedIdentity && styles.identitySelectCardSelected,
+            ]}
+            onPress={handleOpenIdentitySheet}
+            activeOpacity={0.7}
+          >
+            <View style={styles.identitySelectIconContainer}>
+              <MaterialCommunityIcons
+                name="account-check"
+                size={28}
+                color={selectedIdentity ? Colors.verusGreenColor : '#666'}
+              />
+            </View>
+            <View style={styles.identitySelectTextContainer}>
+              <Text style={styles.identitySelectLabel}>
+                {selectedIdentity ? 'You are Responding as' : 'Select identity to respond'}
+              </Text>
+              <Text style={[
+                styles.identitySelectName,
+                selectedIdentity && styles.identitySelectNameSelected,
+              ]}>
+                {selectedIdentity ? selectedIdentity.friendlyName : 'Tap to choose'}
+              </Text>
+              {selectedIdentity && (
+                <Text style={styles.identitySelectAddress}>
+                  {truncateAddress(selectedIdentity.iAddress)}
+                </Text>
+              )}
+            </View>
+            <MaterialCommunityIcons
+              name={selectedIdentity ? 'check-circle' : 'chevron-right'}
+              size={24}
+              color={selectedIdentity ? Colors.verusGreenColor : '#CCC'}
+            />
+          </TouchableOpacity>
+        )}
 
         {/* Request Details Card */}
         <View style={styles.card}>
@@ -689,68 +818,6 @@ const AppEncryptionRequestInfo = (props) => {
           )}
         </View>
 
-        {/* ESK Warning */}
-        {returnESK && (
-          <View style={styles.warningCard}>
-            <View style={styles.warningHeader}>
-              <MaterialCommunityIcons 
-                name="alert" 
-                size={24} 
-                color="#E65100" 
-              />
-              <Text style={styles.warningTitle}>Extended Spending Key Requested</Text>
-            </View>
-            <Text style={styles.warningText}>
-              This app is also requesting your Extended Spending Key for this derived address. 
-              This grants spending capability to this specific derived address.
-            </Text>
-            <Text style={styles.warningEmphasis}>
-              Only approve if you fully trust this application.
-            </Text>
-          </View>
-        )}
-
-        {/* Identity Selection Card */}
-        {signedIn && (
-          <TouchableOpacity
-            style={[
-              styles.identitySelectCard,
-              selectedIdentity && styles.identitySelectCardSelected,
-            ]}
-            onPress={handleOpenIdentitySheet}
-            activeOpacity={0.7}
-          >
-            <View style={styles.identitySelectIconContainer}>
-              <MaterialCommunityIcons
-                name="account-check"
-                size={28}
-                color={selectedIdentity ? Colors.verusGreenColor : '#666'}
-              />
-            </View>
-            <View style={styles.identitySelectTextContainer}>
-              <Text style={styles.identitySelectLabel}>
-                {selectedIdentity ? 'You are Responding as' : 'Select identity to respond'}
-              </Text>
-              <Text style={[
-                styles.identitySelectName,
-                selectedIdentity && styles.identitySelectNameSelected,
-              ]}>
-                {selectedIdentity ? selectedIdentity.friendlyName : 'Tap to choose'}
-              </Text>
-              {selectedIdentity && (
-                <Text style={styles.identitySelectAddress}>
-                  {truncateAddress(selectedIdentity.iAddress)}
-                </Text>
-              )}
-            </View>
-            <MaterialCommunityIcons
-              name={selectedIdentity ? 'check-circle' : 'chevron-right'}
-              size={24}
-              color={selectedIdentity ? Colors.verusGreenColor : '#CCC'}
-            />
-          </TouchableOpacity>
-        )}
-
         {/* Identity Picker Sheet */}
         <IdentityPickerSheet
           visible={identitySheetVisible}
@@ -761,20 +828,6 @@ const AppEncryptionRequestInfo = (props) => {
           onSelect={handleSelectIdentity}
         />
 
-        {/* Wrong Network Warning */}
-        {isWrongRequestType && (
-          <View style={styles.errorCard}>
-            <MaterialCommunityIcons 
-              name="alert-circle" 
-              size={20} 
-              color="#C62828" 
-            />
-            <Text style={styles.errorText}>
-              This request is for {requestIsTestnet ? 'testnet' : 'mainnet'}, 
-              but you are signed into a {requestIsTestnet ? 'mainnet' : 'testnet'} account.
-            </Text>
-          </View>
-        )}
       </ScrollView>
 
       {/* Footer Buttons */}
@@ -794,13 +847,13 @@ const AppEncryptionRequestInfo = (props) => {
           <TouchableOpacity
             style={[
               styles.continueCta,
-              (isWrongRequestType || !selectedIdentity) && styles.continueCtaDisabled,
+              approveDisabled && styles.continueCtaDisabled,
             ]}
             onPress={handleApprove}
             activeOpacity={0.8}
-            disabled={isWrongRequestType || !selectedIdentity}
+            disabled={approveDisabled}
           >
-            <Text style={styles.continueCtaText}>Approve</Text>
+            <Text style={styles.continueCtaText}>{signedIn ? 'Approve' : 'Sign In'}</Text>
           </TouchableOpacity>
         </View>
       </View>
