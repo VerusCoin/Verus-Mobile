@@ -74,11 +74,28 @@ const extractCredentialsFromPlaintext = plaintextBuffer => {
   const credentials = [];
 
   for (const entry of outerValue.values) {
+    const credential = entry[CredentialKey.vdxfid];
+    if (credential instanceof Credential) {
+      credentials.push(credential);
+      continue;
+    }
+
     const descriptor = entry[DataDescriptorKey.vdxfid];
     credentials.push(...extractCredentialFromInnerDescriptor(descriptor));
   }
 
   return credentials;
+};
+
+const parseDescriptorJson = value => {
+  if (value instanceof DataDescriptor) return value;
+  if (value == null || typeof value !== "object") return null;
+
+  try {
+    return DataDescriptor.fromJson(value);
+  } catch (_) {
+    return null;
+  }
 };
 
 const getDescriptorFromStoredValue = storedValue => {
@@ -94,16 +111,39 @@ const getDescriptorFromStoredValue = storedValue => {
     }
   }
 
+  if (storedValue != null && typeof storedValue === "object") {
+    const descriptorData =
+      storedValue[DataDescriptorKey.vdxfid] ||
+      storedValue[DataDescriptorKey.qualifiedname.name];
+
+    const descriptor = parseDescriptorJson(descriptorData);
+    if (descriptor instanceof DataDescriptor) return descriptor;
+
+    if (storedValue.objectdata != null) {
+      return parseDescriptorJson(storedValue);
+    }
+  }
+
   return null;
 };
 
-const decryptCredentialDescriptor = async (descriptor, ivkHex) => {
+const decryptCredentialDescriptor = async (descriptor, fallbackIvkHex) => {
   if (!(descriptor instanceof DataDescriptor)) return [];
+
+  const symmetricKeyHex = descriptor.ssk ? descriptor.ssk.toString("hex") : null;
+  let ivkHex = descriptor.ivk ? descriptor.ivk.toString("hex") : fallbackIvkHex;
+  let ephemeralPublicKeyHex = descriptor.epk ? descriptor.epk.toString("hex") : null;
+
+  if (symmetricKeyHex) {
+    ivkHex = null;
+    ephemeralPublicKeyHex = null;
+  }
 
   const plaintext = await decryptData({
     ivkHex,
-    ephemeralPublicKeyHex: descriptor.epk ? descriptor.epk.toString("hex") : null,
+    ephemeralPublicKeyHex,
     ciphertextHex: descriptor.objectdata.toString("hex"),
+    symmetricKeyHex,
   });
 
   const plaintextBuffer = Buffer.isBuffer(plaintext)
@@ -147,11 +187,6 @@ export const getScopedCredentials = async ({
   const contentRes = await getIdentityContent(
     coinObj.system_id,
     identityAddress,
-    0,
-    0,
-    false,
-    0,
-    hashedKey,
   );
 
   if (contentRes.error) {

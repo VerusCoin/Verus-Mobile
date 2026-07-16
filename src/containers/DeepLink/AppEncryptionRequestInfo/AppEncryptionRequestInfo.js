@@ -468,6 +468,7 @@ const AppEncryptionRequestInfo = (props) => {
         });
         updatedResponse.setSigned();
       }
+      updatedResponse.setFlags();
 
       // Serialize to hex so the user can preview/copy the encrypted response
       const responseHex = updatedResponse.toBuffer().toString('hex');

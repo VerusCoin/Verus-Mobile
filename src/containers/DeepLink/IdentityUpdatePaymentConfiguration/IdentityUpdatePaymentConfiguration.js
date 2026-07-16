@@ -124,6 +124,7 @@ const IdentityUpdatePaymentConfiguration = props => {
 
           updatedResponse.setSigned();
         }
+        updatedResponse.setFlags();
 
         next(updatedResponse, [detailIndex]);
       } else {

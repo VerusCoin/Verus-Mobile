@@ -239,6 +239,7 @@ const UserDataRequestInfo = props => {
         });
         updatedResponse.setSigned();
       }
+      updatedResponse.setFlags();
 
       next(updatedResponse, [detailIndex]);
     } catch (e) {

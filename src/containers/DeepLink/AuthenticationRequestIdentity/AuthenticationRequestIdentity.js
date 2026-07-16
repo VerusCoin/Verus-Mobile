@@ -231,6 +231,7 @@ const AuthenticationRequestIdentity = props => {
 
       updatedResponse.setSigned();
     }
+    updatedResponse.setFlags();
 
     const handledIndices = [detailIndex];
     if (provisioningDetailIndex != null) handledIndices.push(provisioningDetailIndex);

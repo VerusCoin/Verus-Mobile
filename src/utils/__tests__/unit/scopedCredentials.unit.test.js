@@ -39,7 +39,9 @@ const {
   DataDescriptorKey,
   FqnVdxfUniValue,
   VdxfUniValue,
+  toBase58Check,
 } = require('verus-typescript-primitives');
+const { I_ADDR_VERSION } = require('verus-typescript-primitives/dist/constants/vdxf');
 const {
   getMissingCredentialKeys,
   getScopedCredentials,
@@ -48,8 +50,9 @@ const {
 const SYSTEM_ID = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
 const IDENTITY_ID = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
 const CREDENTIAL_KEY = 'iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj';
+const HASHED_KEY = toBase58Check(Buffer.alloc(20, 1), I_ADDR_VERSION);
 
-const buildStoredCredentialEntry = credential => {
+const buildStoredCredentialEntry = (credential, descriptorOverrides = {}) => {
   const plaintextDescriptor = new DataDescriptor({
     objectdata: new VdxfUniValue({
       values: [{[CredentialKey.vdxfid]: credential}],
@@ -59,18 +62,25 @@ const buildStoredCredentialEntry = credential => {
   const plaintext = new VdxfUniValue({
     values: [{[DataDescriptorKey.vdxfid]: plaintextDescriptor}],
   }).toBuffer();
+  const directPlaintext = new VdxfUniValue({
+    values: [{[CredentialKey.vdxfid]: credential}],
+  }).toBuffer();
 
   const encryptedDescriptor = new DataDescriptor({
     flags: DataDescriptor.FLAG_ENCRYPTED_DATA,
     objectdata: Buffer.from('aabbcc', 'hex'),
     epk: Buffer.from('ddeeff', 'hex'),
+    ...descriptorOverrides,
   });
 
   const stored = FqnVdxfUniValue.fromVdxfUniValue(new VdxfUniValue({
     values: [{[DataDescriptorKey.vdxfid]: encryptedDescriptor}],
   })).toBuffer().toString('hex');
+  const storedJson = {
+    [DataDescriptorKey.vdxfid]: encryptedDescriptor.toJson(),
+  };
 
-  return {plaintext, stored};
+  return {plaintext, directPlaintext, stored, storedJson};
 };
 
 describe('scoped credential retrieval', () => {
@@ -87,14 +97,14 @@ describe('scoped credential retrieval', () => {
       credential: ['username', 'password'],
       scopes: [IDENTITY_ID],
     });
-    const {plaintext, stored} = buildStoredCredentialEntry(credential);
+    const {plaintext, storedJson} = buildStoredCredentialEntry(credential);
 
     mockDecryptData.mockResolvedValue(plaintext.toString('hex'));
-    mockGetIdentityContent.mockImplementation((systemId, identity, a, b, c, d, vdxfKey) => ({
+    mockGetIdentityContent.mockImplementation(() => ({
       result: {
         identity: {
           contentmultimap: {
-            [vdxfKey]: [stored],
+            [HASHED_KEY]: [storedJson],
           },
         },
       },
@@ -110,12 +120,13 @@ describe('scoped credential retrieval', () => {
     expect(mockGetIdentityContent).toHaveBeenCalledWith(
       SYSTEM_ID,
       IDENTITY_ID,
-      0,
-      0,
-      false,
-      0,
-      expect.any(String),
     );
+    expect(mockDecryptData).toHaveBeenCalledWith({
+      ivkHex: '11'.repeat(32),
+      ephemeralPublicKeyHex: 'ddeeff',
+      ciphertextHex: 'aabbcc',
+      symmetricKeyHex: null,
+    });
     expect(credentials).toHaveLength(1);
     expect(credentials[0].credentialKey).toBe(CREDENTIAL_KEY);
   });
@@ -130,11 +141,11 @@ describe('scoped credential retrieval', () => {
     const {plaintext, stored} = buildStoredCredentialEntry(credential);
 
     mockDecryptData.mockResolvedValue(plaintext.toString('hex'));
-    mockGetIdentityContent.mockImplementation((systemId, identity, a, b, c, d, vdxfKey) => ({
+    mockGetIdentityContent.mockImplementation(() => ({
       result: {
         identity: {
           contentmultimap: {
-            [vdxfKey]: [stored],
+            [HASHED_KEY]: [stored],
           },
         },
       },
@@ -149,5 +160,109 @@ describe('scoped credential retrieval', () => {
 
     expect(credentials).toHaveLength(0);
     expect(getMissingCredentialKeys([CREDENTIAL_KEY], credentials)).toEqual([CREDENTIAL_KEY]);
+  });
+
+  it('returns credentials from direct decrypted credential plaintext', async () => {
+    const credential = new Credential({
+      version: Credential.VERSION_CURRENT,
+      credentialKey: CREDENTIAL_KEY,
+      credential: ['username', 'password'],
+      scopes: [IDENTITY_ID],
+    });
+    const {directPlaintext, storedJson} = buildStoredCredentialEntry(credential);
+
+    mockDecryptData.mockResolvedValue(directPlaintext.toString('hex'));
+    mockGetIdentityContent.mockImplementation(() => ({
+      result: {
+        identity: {
+          contentmultimap: {
+            [HASHED_KEY]: [storedJson],
+          },
+        },
+      },
+    }));
+
+    const credentials = await getScopedCredentials({
+      systemID: SYSTEM_ID,
+      identityAddress: IDENTITY_ID,
+      scope: IDENTITY_ID,
+      credentialKeys: [CREDENTIAL_KEY],
+    });
+
+    expect(credentials).toHaveLength(1);
+    expect(credentials[0].credentialKey).toBe(CREDENTIAL_KEY);
+  });
+
+  it('uses descriptor IVK when present', async () => {
+    const credential = new Credential({
+      version: Credential.VERSION_CURRENT,
+      credentialKey: CREDENTIAL_KEY,
+      credential: ['username', 'password'],
+      scopes: [IDENTITY_ID],
+    });
+    const descriptorIvk = Buffer.from('22'.repeat(32), 'hex');
+    const {plaintext, storedJson} = buildStoredCredentialEntry(credential, {
+      ivk: descriptorIvk,
+    });
+
+    mockDecryptData.mockResolvedValue(plaintext.toString('hex'));
+    mockGetIdentityContent.mockImplementation(() => ({
+      result: {
+        identity: {
+          contentmultimap: {
+            [HASHED_KEY]: [storedJson],
+          },
+        },
+      },
+    }));
+
+    const credentials = await getScopedCredentials({
+      systemID: SYSTEM_ID,
+      identityAddress: IDENTITY_ID,
+      scope: IDENTITY_ID,
+      credentialKeys: [CREDENTIAL_KEY],
+    });
+
+    expect(mockDecryptData).toHaveBeenCalledWith({
+      ivkHex: '22'.repeat(32),
+      ephemeralPublicKeyHex: 'ddeeff',
+      ciphertextHex: 'aabbcc',
+      symmetricKeyHex: null,
+    });
+    expect(credentials).toHaveLength(1);
+  });
+
+  it('continues after an undecryptable stored entry', async () => {
+    const credential = new Credential({
+      version: Credential.VERSION_CURRENT,
+      credentialKey: CREDENTIAL_KEY,
+      credential: ['username', 'password'],
+      scopes: [IDENTITY_ID],
+    });
+    const {plaintext, storedJson} = buildStoredCredentialEntry(credential);
+
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    mockDecryptData
+      .mockRejectedValueOnce(new Error('Failed to decrypt data'))
+      .mockResolvedValueOnce(plaintext.toString('hex'));
+    mockGetIdentityContent.mockImplementation(() => ({
+      result: {
+        identity: {
+          contentmultimap: {
+            [HASHED_KEY]: [storedJson, storedJson],
+          },
+        },
+      },
+    }));
+
+    const credentials = await getScopedCredentials({
+      systemID: SYSTEM_ID,
+      identityAddress: IDENTITY_ID,
+      scope: IDENTITY_ID,
+      credentialKeys: [CREDENTIAL_KEY],
+    });
+
+    expect(credentials).toHaveLength(1);
+    console.warn.mockRestore();
   });
 });

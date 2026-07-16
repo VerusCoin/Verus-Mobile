@@ -259,6 +259,7 @@ const ConfirmPayStep = ({
         });
         baseResponse.setSigned();
       }
+      baseResponse.setFlags();
 
       if (next) {
         next(baseResponse, [detailIndex]);
