@@ -20,7 +20,7 @@ export const getSignableObjectBuffer = signableObject => {
   }
 
   if (signableObject instanceof DataDescriptor) {
-    return signableObject.objectdata || Buffer.alloc(0);
+    return signableObject.toBuffer();
   }
 
   throw new Error("Unsupported signable object type.");
@@ -63,6 +63,16 @@ export const buildDataPacketResponse = async ({
       coinObj,
       identityAddress,
       signableObject,
+    });
+
+    values.push({ [SignatureDataKey.vdxfid]: signatureData });
+  }
+
+  for (const statement of dataPacketDetail.statements || []) {
+    const signatureData = await signDataPacketObject({
+      coinObj,
+      identityAddress,
+      signableObject: statement,
     });
 
     values.push({ [SignatureDataKey.vdxfid]: signatureData });

@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Button, Checkbox, Text } from 'react-native-paper';
 import { useSelector } from 'react-redux';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
@@ -47,6 +47,74 @@ const DetailRow = ({ title, subtitle, showBorder, icon }) => (
   </View>
 );
 
+const formatJson = value => {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch (_) {
+    return String(value);
+  }
+};
+
+const CredentialField = ({ label, value, monospace }) => {
+  if (value == null || value === '') return null;
+
+  return (
+    <View style={styles.payloadField}>
+      <Text style={styles.payloadLabel}>{label}</Text>
+      <Text style={monospace ? styles.payloadCodeText : styles.payloadText}>
+        {value}
+      </Text>
+    </View>
+  );
+};
+
+const CredentialConsent = ({ credential, index, checked, onToggle, showBorder }) => (
+  <View style={[styles.credentialDisclosure, showBorder && styles.detailRowBorder]}>
+    <View style={styles.credentialDisclosureHeader}>
+      <View style={styles.detailLeft}>
+        <Text style={styles.detailTitle}>{credential.credentialKey}</Text>
+        {credential.label ? (
+          <Text style={styles.detailSubtitle}>{credential.label}</Text>
+        ) : null}
+      </View>
+      <MaterialCommunityIcons name="key-variant" size={18} color="#888" />
+    </View>
+    <CredentialField
+      label="Credential being sent"
+      value={formatJson(credential.credential)}
+      monospace
+    />
+    <CredentialField
+      label="Credential scopes"
+      value={formatJson(credential.scopes)}
+      monospace
+    />
+    <TouchableOpacity
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked }}
+      activeOpacity={0.75}
+      onPress={onToggle}
+      style={[styles.reviewCheckRow, styles.credentialConsentRow]}
+    >
+      <View pointerEvents="none">
+        <Checkbox.Android
+          status={checked ? 'checked' : 'unchecked'}
+          color={Colors.verusGreenColor}
+          uncheckedColor="#888"
+        />
+      </View>
+      <View style={styles.reviewCheckTextContainer}>
+        <Text style={styles.reviewCheckTitle}>
+          {`I agree to send credential ${index + 1}`}
+        </Text>
+        <Text style={styles.reviewCheckSubtitle}>
+          This credential will be encrypted and sent to the requester.
+        </Text>
+      </View>
+    </TouchableOpacity>
+  </View>
+);
+
 const UserDataRequestInfo = props => {
   const {
     signerFqn,
@@ -82,6 +150,7 @@ const UserDataRequestInfo = props => {
   const [missingCredentialKeys, setMissingCredentialKeys] = useState([]);
   const [credentialsLoading, setCredentialsLoading] = useState(false);
   const [waitingForSignin, setWaitingForSignin] = useState(false);
+  const [acknowledgedCredentials, setAcknowledgedCredentials] = useState({});
 
   const requestIsTestnet = request != null ? request.isTestnet() : false;
   const identityChain = requestIsTestnet ? 'VRSCTEST' : identityNetwork;
@@ -187,6 +256,10 @@ const UserDataRequestInfo = props => {
     };
   }, [credentialKeys, requestScope, selectedIdentity, signedIn, signerSystemID]);
 
+  useEffect(() => {
+    setAcknowledgedCredentials({});
+  }, [credentials]);
+
   const isIdentityAllowed = (chainId) => chainId === identityChain;
 
   const handleSelectIdentity = (chainId, iAddress, friendlyName) => {
@@ -202,7 +275,26 @@ const UserDataRequestInfo = props => {
     setWaitingForSignin(true);
   };
 
+  const toggleCredentialAcknowledgement = index => {
+    setAcknowledgedCredentials(current => ({
+      ...current,
+      [index]: !current[index],
+    }));
+  };
+
+  const credentialReviewComplete =
+    credentials.length === 0 ||
+    credentials.every((_, index) => acknowledgedCredentials[index]);
+
   const handleContinue = async () => {
+    if (!credentialReviewComplete) {
+      createAlert(
+        'Review required',
+        'Review and agree to every credential being sent before continuing.',
+      );
+      return;
+    }
+
     if (!signedIn) {
       handleSignin();
       return;
@@ -247,7 +339,7 @@ const UserDataRequestInfo = props => {
     }
   };
 
-  const continueDisabled = credentialsLoading || waitingForSignin;
+  const continueDisabled = credentialsLoading || waitingForSignin || !credentialReviewComplete;
 
   if (credentialsLoading && credentials.length === 0) {
     return <AnimatedActivityIndicatorBox />;
@@ -281,8 +373,7 @@ const UserDataRequestInfo = props => {
           {credentialRequests.map((item, index) => (
             <DetailRow
               key={item.key}
-              title={item.label}
-              subtitle={item.key}
+              title={item.key}
               showBorder={index > 0}
             />
           ))}
@@ -296,20 +387,29 @@ const UserDataRequestInfo = props => {
           </View>
         ) : null}
 
+        {credentials.length > 0 ? (
+          <View style={styles.dangerCard}>
+            <Text style={styles.dangerText}>
+              The credentials below will be encrypted and sent to {requesterLabel}. Only continue if every credential is expected.
+            </Text>
+          </View>
+        ) : null}
+
         <View style={styles.card}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Credentials Found</Text>
+            <Text style={styles.sectionTitle}>Credentials Being Sent</Text>
           </View>
           {credentials.length === 0 ? (
             <Text style={styles.emptyText}>No matching credentials were found for this scope.</Text>
           ) : (
             credentials.map((credential, index) => (
-              <DetailRow
+              <CredentialConsent
                 key={`${credential.credentialKey}-${index}`}
-                title={credential.label || 'Credential'}
-                subtitle={credential.credentialKey}
+                credential={credential}
+                index={index}
+                checked={!!acknowledgedCredentials[index]}
+                onToggle={() => toggleCredentialAcknowledgement(index)}
                 showBorder={index > 0}
-                icon="check-circle-outline"
               />
             ))
           )}

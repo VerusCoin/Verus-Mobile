@@ -59,7 +59,6 @@ export const encryptVDXFUniValuesToDescriptor = async (encryptToAddress, uniValu
   return { encryptedDescriptor, encryptedDescriptorJson };
 };
 
-
 /**
  * Encrypt a Buffer of data to a Sapling payment address.
  *

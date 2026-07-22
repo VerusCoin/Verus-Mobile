@@ -19,7 +19,7 @@ export const handleUserDataRequestVDXFObject = async (request, response, detailI
     const key = Object.keys(item)[0];
     return {
       key,
-      label: item[key] || key,
+      label: key,
     };
   });
 

@@ -42,6 +42,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { genericRequestCompleteStyles as styles } from '../../../styles';
 import { markPendingDeeplinkComplete } from '../../../utils/deeplink/pendingDeeplinkStorage';
 import { prepareGenericResponseForSigning } from '../../../utils/deeplink/genericResponse/prepareGenericResponseForSigning';
+import { encryptGenericResponseDetails } from '../../../utils/deeplink/genericResponse/encryptGenericResponseDetails';
 
 const GenericRequestComplete = props => {
   const { requestBufferString, responseBufferString } = props.route.params;
@@ -154,7 +155,11 @@ const GenericRequestComplete = props => {
       if (!responseUri) return null;
 
       if (isPostUri(responseUri)) {
-        return "Your response will be sent to the requester";
+        const url = new URL(responseUri.getUriString());
+        const responseLabel = request.hasEncryptResponseToAddress()
+          ? "Your encrypted response"
+          : "Your response";
+        return `${responseLabel} will be sent to ${url.protocol}//${url.host}`;
       }
 
       if (isRedirectUri(responseUri)) {
@@ -265,6 +270,7 @@ const GenericRequestComplete = props => {
       const response = new GenericResponse();
       response.fromBuffer(Buffer.from(responseBufferString, 'hex'), 0);
 
+      await encryptGenericResponseDetails({ request, response });
       prepareGenericResponseForSigning({
         request,
         response,

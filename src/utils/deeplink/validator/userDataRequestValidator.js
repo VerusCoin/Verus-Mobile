@@ -29,6 +29,16 @@ export const validateUserDataRequestVDXFObject = (request, detailIndex) => {
     throw new Error("Only credential user data requests are supported on mobile.");
   }
 
+  if (!request.hasEncryptResponseToAddress() || request.encryptResponseToAddress == null) {
+    throw new Error("Credential user data requests must specify encryptResponseToAddress.");
+  }
+
+  try {
+    request.encryptResponseToAddress.toAddressString();
+  } catch (e) {
+    throw new Error("Invalid encryptResponseToAddress for credential user data request.");
+  }
+
   if (!details.dataType.eq(UserDataRequestDetails.FULL_DATA)) {
     throw new Error("Only full credential data requests are supported on mobile.");
   }

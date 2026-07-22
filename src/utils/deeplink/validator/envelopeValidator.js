@@ -112,10 +112,6 @@ export const validateGenericRequest = async (request) => {
     }
   }
 
-  if (request.hasEncryptResponseToAddress()) {
-    throw new Error("Encrypt response to address not yet supported.")
-  }
-
   for (let i = 0; i < request.details.length; i++) {
     const detail = request.getDetails(i);
     const detailKey = detail.getIAddressKey();

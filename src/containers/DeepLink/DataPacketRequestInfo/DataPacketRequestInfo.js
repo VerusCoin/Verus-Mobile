@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Button, Checkbox, Text } from 'react-native-paper';
 import { useSelector } from 'react-redux';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
@@ -43,6 +43,85 @@ const DetailRow = ({ title, subtitle, showBorder, icon }) => (
   </View>
 );
 
+const formatHex = value => {
+  if (!value) return '';
+  return value.match(/.{1,64}/g)?.join('\n') || value;
+};
+
+const ReviewCheckbox = ({ checked, onPress, title, subtitle, showBorder }) => (
+  <TouchableOpacity
+    accessibilityRole="checkbox"
+    accessibilityState={{ checked }}
+    activeOpacity={0.75}
+    onPress={onPress}
+    style={[styles.reviewCheckRow, showBorder && styles.detailRowBorder]}
+  >
+    <View pointerEvents="none">
+      <Checkbox.Android
+        status={checked ? 'checked' : 'unchecked'}
+        color={Colors.verusGreenColor}
+        uncheckedColor="#888"
+      />
+    </View>
+    <View style={styles.reviewCheckTextContainer}>
+      <Text style={styles.reviewCheckTitle}>{title}</Text>
+      {subtitle ? <Text style={styles.reviewCheckSubtitle}>{subtitle}</Text> : null}
+    </View>
+  </TouchableOpacity>
+);
+
+const PayloadField = ({ label, value, monospace }) => {
+  if (value == null || value === '') return null;
+
+  return (
+    <View style={styles.payloadField}>
+      <Text style={styles.payloadLabel}>{label}</Text>
+      <Text style={monospace ? styles.payloadCodeText : styles.payloadText}>
+        {value}
+      </Text>
+    </View>
+  );
+};
+
+const SignableObjectReview = ({ item, index, checked, onToggle, showBorder }) => (
+  <View style={[styles.signableItem, showBorder && styles.detailRowBorder]}>
+    <View style={styles.signableHeader}>
+      <View style={styles.detailLeft}>
+        <Text style={styles.detailTitle}>{item.type}</Text>
+        <Text style={styles.detailSubtitle}>
+          {item.label}{item.size != null ? ` - ${item.size} bytes` : ''}
+        </Text>
+      </View>
+      <MaterialCommunityIcons name="signature-freehand" size={18} color="#888" />
+    </View>
+
+    <PayloadField label="SHA-256 hash being signed" value={item.sha256} monospace />
+    <PayloadField label="Text being signed" value={item.signedText} />
+    <PayloadField label="JSON being signed" value={item.signedJson} monospace />
+    <PayloadField label="Signed bytes" value={formatHex(item.signedBytesHex)} monospace />
+
+    {item.descriptorVersion != null ? (
+      <View style={styles.payloadMetaGrid}>
+        <PayloadField label="Descriptor version" value={item.descriptorVersion} />
+        <PayloadField label="Descriptor flags" value={item.descriptorFlags} />
+        <PayloadField label="Descriptor label" value={item.descriptorLabel} />
+        <PayloadField label="Descriptor MIME type" value={item.descriptorMimeType} />
+      </View>
+    ) : null}
+    <PayloadField label="Descriptor object text" value={item.objectDataText} />
+    <PayloadField label="Descriptor object JSON" value={item.objectDataJson} monospace />
+    <PayloadField label="Descriptor object bytes" value={formatHex(item.objectDataBytesHex)} monospace />
+    <PayloadField label="Descriptor JSON" value={item.descriptorJson} monospace />
+
+    <ReviewCheckbox
+      checked={checked}
+      onPress={onToggle}
+      title={`I reviewed data item ${index + 1} and agree to sign it`}
+      showBorder
+    />
+  </View>
+);
+
 const DataPacketRequestInfo = props => {
   const {
     signerFqn,
@@ -76,11 +155,23 @@ const DataPacketRequestInfo = props => {
   const [identitySheetVisible, setIdentitySheetVisible] = useState(false);
   const [waitingForSignin, setWaitingForSignin] = useState(false);
   const [signing, setSigning] = useState(false);
+  const [acknowledgedStatements, setAcknowledgedStatements] = useState({});
+  const [acknowledgedSignableObjects, setAcknowledgedSignableObjects] = useState({});
 
   const requestIsTestnet = request != null ? request.isTestnet() : false;
   const identityChain = requestIsTestnet ? 'VRSCTEST' : identityNetwork;
   const requesterLabel = signerFqn || signerIdentityID || 'Requester';
   const sigDateString = sigtime ? unixToDate(sigtime) : null;
+  const statementsReviewed = useMemo(
+    () => !statements.length || statements.every((_, index) => acknowledgedStatements[index]),
+    [acknowledgedStatements, statements],
+  );
+  const signableObjectsReviewed = useMemo(
+    () => signableObjectSummaries.length > 0 &&
+      signableObjectSummaries.every((_, index) => acknowledgedSignableObjects[index]),
+    [acknowledgedSignableObjects, signableObjectSummaries],
+  );
+  const reviewComplete = statementsReviewed && signableObjectsReviewed;
 
   useEffect(() => {
     const loadLinkedIds = async () => {
@@ -151,7 +242,26 @@ const DataPacketRequestInfo = props => {
     setWaitingForSignin(true);
   };
 
+  const toggleStatementAcknowledgement = index => {
+    setAcknowledgedStatements(current => ({
+      ...current,
+      [index]: !current[index],
+    }));
+  };
+
+  const toggleSignableObjectAcknowledgement = index => {
+    setAcknowledgedSignableObjects(current => ({
+      ...current,
+      [index]: !current[index],
+    }));
+  };
+
   const handleContinue = async () => {
+    if (!reviewComplete) {
+      createAlert('Review required', 'Review and agree to every statement and data item before continuing.');
+      return;
+    }
+
     if (!signedIn) {
       handleSignin();
       return;
@@ -213,7 +323,7 @@ const DataPacketRequestInfo = props => {
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <MaterialCommunityIcons name="file-sign" size={48} color={Colors.primaryColor} />
+          <MaterialCommunityIcons name="text-box-check-outline" size={48} color={Colors.primaryColor} />
           <Text style={styles.headerTitle}>Data Signature Request</Text>
           <Text style={styles.headerSubtitle}>
             {requesterLabel} is requesting signatures over data shown below.
@@ -270,12 +380,15 @@ const DataPacketRequestInfo = props => {
         {statements && statements.length > 0 ? (
           <View style={styles.card}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Statements</Text>
+              <Text style={styles.sectionTitle}>Statements to Sign</Text>
             </View>
             {statements.map((statement, index) => (
-              <DetailRow
+              <ReviewCheckbox
                 key={`${statement}-${index}`}
-                title={statement}
+                checked={!!acknowledgedStatements[index]}
+                onPress={() => toggleStatementAcknowledgement(index)}
+                title={`Statement ${index + 1}`}
+                subtitle={statement}
                 showBorder={index > 0}
               />
             ))}
@@ -287,12 +400,13 @@ const DataPacketRequestInfo = props => {
             <Text style={styles.sectionTitle}>Data to Sign</Text>
           </View>
           {signableObjectSummaries.map((item, index) => (
-            <DetailRow
+            <SignableObjectReview
               key={`${item.type}-${index}`}
-              title={item.type}
-              subtitle={`${item.label}${item.size != null ? ` - ${item.size} bytes` : ''}`}
+              item={item}
+              index={index}
+              checked={!!acknowledgedSignableObjects[index]}
+              onToggle={() => toggleSignableObjectAcknowledgement(index)}
               showBorder={index > 0}
-              icon="signature-freehand"
             />
           ))}
         </View>
@@ -314,8 +428,10 @@ const DataPacketRequestInfo = props => {
           <Button
             mode="contained"
             onPress={handleContinue}
-            disabled={waitingForSignin}
+            disabled={waitingForSignin || !reviewComplete}
             style={styles.primaryCta}
+            contentStyle={styles.primaryCtaContent}
+            labelStyle={styles.primaryCtaLabel}
           >
             Continue
           </Button>
