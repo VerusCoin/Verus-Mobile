@@ -16,7 +16,6 @@ import {
 } from 'react-native-paper';
 import {useSelector} from 'react-redux';
 import {modifyServiceStoredDataForUser} from '../../../../../actions/actions/services/dispatchers/services';
-import {requestServiceStoredData} from '../../../../../utils/auth/authBox';
 import {GIFT_CARD_SERVICE_ID} from '../../../../../utils/constants/services';
 import {
   createGiftCard,
@@ -65,18 +64,18 @@ const GiftCardCreate = props => {
         requestIsTestnet,
         activeCoinsForUser,
       });
-      const current = normalizeGiftCardServiceData(
-        await requestServiceStoredData(GIFT_CARD_SERVICE_ID),
-      );
-
       await modifyServiceStoredDataForUser(
-        {
+        currentData => {
+          const current = normalizeGiftCardServiceData(currentData);
+
+          return {
           ...current,
           introSeen: true,
           cards: {
             ...current.cards,
             [card.id]: card,
           },
+          };
         },
         GIFT_CARD_SERVICE_ID,
         activeAccount.accountHash,

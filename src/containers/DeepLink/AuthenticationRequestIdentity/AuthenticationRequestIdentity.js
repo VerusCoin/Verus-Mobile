@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { Divider, List } from 'react-native-paper';
 import { CommonActions } from '@react-navigation/native';
-import { AuthenticationRequestDetails, AuthenticationResponseDetails, AuthenticationResponseOrdinalVDXFObject, CompactAddressObject, GenericRequest, GenericResponse, ProvisionIdentityDetails, RecipientConstraint, VerifiableSignatureData } from 'verus-typescript-primitives';
+import { AuthenticationRequestDetails, AuthenticationResponseDetails, AuthenticationResponseOrdinalVDXFObject, GenericRequest, GenericResponse, ProvisionIdentityDetails, RecipientConstraint } from 'verus-typescript-primitives';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import { openLinkIdentityModal, openProvisionIdentityModal } from '../../../actions/actions/sendModal/dispatchers/sendModal';
@@ -14,6 +14,7 @@ import { VERUSID_NETWORK_DEFAULT } from '../../../../env/index';
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import { SEND_MODAL_IDENTITY_TO_LINK_FIELD } from '../../../utils/constants/sendModal';
 import Styles from '../../../styles/index';
+import {ensureGenericResponseSigner} from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
 
 const AuthenticationRequestIdentity = props => {
   const {
@@ -212,25 +213,34 @@ const AuthenticationRequestIdentity = props => {
   };
 
   const selectIdentity = (chainId, iAddress) => {
+    const updatedResponse = baseResponse;
+    const coinObj = CoinDirectory.findCoinObj(chainId);
+
+    if (!coinObj) {
+      createAlert('Error', 'Unsupported signing chain.');
+      return;
+    }
+
+    try {
+      ensureGenericResponseSigner({
+        response: updatedResponse,
+        systemID: coinObj.system_id,
+        identityID: iAddress,
+      });
+    } catch (e) {
+      createAlert('Identity Mismatch', e.message);
+      return;
+    }
+
     const responseDetail = new AuthenticationResponseOrdinalVDXFObject({
       data: new AuthenticationResponseDetails({
         requestID: request.requestID
       })
     });
 
-    const updatedResponse = baseResponse;
     if (updatedResponse.details == null) updatedResponse.details = [];
     updatedResponse.details = [...updatedResponse.details, responseDetail];
 
-    if (updatedResponse.signature == null) {
-      const coinObj = CoinDirectory.findCoinObj(chainId);
-      updatedResponse.signature = new VerifiableSignatureData({
-        systemID: CompactAddressObject.fromIAddress(coinObj.system_id),
-        identityID: CompactAddressObject.fromIAddress(iAddress)
-      });
-
-      updatedResponse.setSigned();
-    }
     updatedResponse.setFlags();
 
     const handledIndices = [detailIndex];

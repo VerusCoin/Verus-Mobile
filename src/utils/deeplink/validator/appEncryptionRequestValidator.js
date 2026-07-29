@@ -50,6 +50,12 @@ export const validateAppEncryptionRequestDetails = async (request, details, deta
   if (!derivationNumber || derivationNumber.isNeg()) {
     throw new Error("Invalid request: derivation number is missing or negative.");
   }
+
+  if (details.returnESK() && !details.hasEncryptResponseToAddress()) {
+    throw new Error(
+      "Extended spending key requests must specify encryptResponseToAddress.",
+    );
+  }
  
   // Validate encryptResponseToAddress is a valid z-address if present
   if (details.hasEncryptResponseToAddress()) {

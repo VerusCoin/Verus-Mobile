@@ -8,11 +8,7 @@ import {
 import { Button, Checkbox, Text } from 'react-native-paper';
 import { useSelector } from 'react-redux';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {
-  CompactAddressObject,
-  GenericResponse,
-  VerifiableSignatureData,
-} from 'verus-typescript-primitives';
+import {GenericResponse} from 'verus-typescript-primitives';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import Colors from '../../../globals/colors';
 import { dataRequestInfoStyles as styles } from '../../../styles';
@@ -31,6 +27,7 @@ import {
   getScopedCredentials,
 } from '../../../utils/deeplink/credentials/scopedCredentials';
 import { buildUserDataResponse } from '../../../utils/deeplink/userData/buildUserDataResponse';
+import {ensureGenericResponseSigner} from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
 
 const truncateAddress = addr => {
   if (!addr || addr.length <= 14) return addr;
@@ -308,29 +305,30 @@ const UserDataRequestInfo = props => {
     if (credentialsLoading) return;
 
     try {
+      const coinObj = CoinDirectory.findCoinObj(selectedIdentity.chainId);
+      if (!coinObj) throw new Error("Unsupported signing chain.");
+
+      const updatedResponse = response || new GenericResponse();
       const detail = request.getDetails(detailIndex);
       const responseDetail = buildUserDataResponse({
         userDataDetail: detail.data,
         credentials,
       });
 
-      const updatedResponse = response || new GenericResponse();
       updatedResponse.details = updatedResponse.details || [];
 
       if (responseDetail != null) {
         updatedResponse.details.push(responseDetail);
       }
 
-      if (updatedResponse.details.length > 0 && updatedResponse.signature == null) {
-        const coinObj = CoinDirectory.findCoinObj(selectedIdentity.chainId);
-        if (!coinObj) throw new Error("Unsupported signing chain.");
-
-        updatedResponse.signature = new VerifiableSignatureData({
-          systemID: CompactAddressObject.fromIAddress(coinObj.system_id),
-          identityID: CompactAddressObject.fromIAddress(selectedIdentity.iAddress),
+      if (updatedResponse.details.length > 0) {
+        ensureGenericResponseSigner({
+          response: updatedResponse,
+          systemID: coinObj.system_id,
+          identityID: selectedIdentity.iAddress,
         });
-        updatedResponse.setSigned();
       }
+
       updatedResponse.setFlags();
 
       next(updatedResponse, [detailIndex]);

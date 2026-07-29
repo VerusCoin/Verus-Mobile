@@ -46,6 +46,7 @@ const {encryptGenericResponseDetails} = require('../../deeplink/genericResponse/
 
 const SYSTEM_ID = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
 const IDENTITY_ID = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
+const SEARCH_DATA_HASH = Buffer.alloc(32, 1);
 
 describe('generic data request response builders', () => {
   beforeEach(() => {
@@ -66,7 +67,7 @@ describe('generic data request response builders', () => {
       scopes: [IDENTITY_ID],
     });
     const requestDetail = new UserDataRequestDetails({
-      searchDataKey: [{[credential.credentialKey]: 'Plain Login'}],
+      searchDataKey: [{[credential.credentialKey]: SEARCH_DATA_HASH}],
       dataType: UserDataRequestDetails.FULL_DATA,
       requestType: UserDataRequestDetails.CREDENTIAL,
       requestID: CompactAddressObject.fromIAddress(IDENTITY_ID),
@@ -87,7 +88,7 @@ describe('generic data request response builders', () => {
 
   it('returns null for empty credential responses', () => {
     const requestDetail = new UserDataRequestDetails({
-      searchDataKey: [{iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj: 'Plain Login'}],
+      searchDataKey: [{iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj: SEARCH_DATA_HASH}],
       dataType: UserDataRequestDetails.FULL_DATA,
       requestType: UserDataRequestDetails.CREDENTIAL,
     });
@@ -135,7 +136,7 @@ describe('generic data request response builders', () => {
   it('encrypts complete generic response details when requested', async () => {
     const detailA = buildUserDataResponse({
       userDataDetail: new UserDataRequestDetails({
-        searchDataKey: [{iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj: 'Plain Login'}],
+        searchDataKey: [{iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj: SEARCH_DATA_HASH}],
         dataType: UserDataRequestDetails.FULL_DATA,
         requestType: UserDataRequestDetails.CREDENTIAL,
       }),

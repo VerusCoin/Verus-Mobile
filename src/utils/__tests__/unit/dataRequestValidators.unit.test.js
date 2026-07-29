@@ -52,6 +52,7 @@ import {validateUserDataRequestVDXFObject} from '../../deeplink/validator/userDa
 
 const SYSTEM_ID = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
 const IDENTITY_ID = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
+const SEARCH_DATA_HASH = Buffer.alloc(32, 1);
 
 const requestForDetail = (detail, signed = true, hasEncryptResponseToAddress = true) => ({
   getDetails: () => detail,
@@ -84,7 +85,7 @@ describe('generic data request validators', () => {
   it('accepts full credential user data requests', () => {
     const detail = new UserDataRequestOrdinalVDXFObject({
       data: new UserDataRequestDetails({
-        searchDataKey: [{iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj: 'Plain Login'}],
+        searchDataKey: [{iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj: SEARCH_DATA_HASH}],
         dataType: UserDataRequestDetails.FULL_DATA,
         requestType: UserDataRequestDetails.CREDENTIAL,
       }),
@@ -98,7 +99,7 @@ describe('generic data request validators', () => {
   it('rejects unsupported user data request modes', () => {
     const detail = new UserDataRequestOrdinalVDXFObject({
       data: new UserDataRequestDetails({
-        searchDataKey: [{iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj: 'Plain Login'}],
+        searchDataKey: [{iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj: SEARCH_DATA_HASH}],
         dataType: UserDataRequestDetails.PARTIAL_DATA,
         requestType: UserDataRequestDetails.CREDENTIAL,
       }),
@@ -112,7 +113,7 @@ describe('generic data request validators', () => {
   it('rejects credential user data requests without encrypted responses', () => {
     const detail = new UserDataRequestOrdinalVDXFObject({
       data: new UserDataRequestDetails({
-        searchDataKey: [{iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj: 'Plain Login'}],
+        searchDataKey: [{iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj: SEARCH_DATA_HASH}],
         dataType: UserDataRequestDetails.FULL_DATA,
         requestType: UserDataRequestDetails.CREDENTIAL,
       }),
@@ -126,7 +127,7 @@ describe('generic data request validators', () => {
   it('rejects unsigned user data requests', () => {
     const detail = new UserDataRequestOrdinalVDXFObject({
       data: new UserDataRequestDetails({
-        searchDataKey: [{iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj: 'Plain Login'}],
+        searchDataKey: [{iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj: SEARCH_DATA_HASH}],
         dataType: UserDataRequestDetails.FULL_DATA,
         requestType: UserDataRequestDetails.CREDENTIAL,
       }),
@@ -135,6 +136,20 @@ describe('generic data request validators', () => {
     expect(() =>
       validateUserDataRequestVDXFObject(requestForDetail(detail, false), 0),
     ).toThrow('require a signed GenericRequest');
+  });
+
+  it('rejects legacy string credential search values', () => {
+    const detail = new UserDataRequestOrdinalVDXFObject({
+      data: new UserDataRequestDetails({
+        searchDataKey: [{iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj: 'Plain Login'}],
+        dataType: UserDataRequestDetails.FULL_DATA,
+        requestType: UserDataRequestDetails.CREDENTIAL,
+      }),
+    });
+
+    expect(() =>
+      validateUserDataRequestVDXFObject(requestForDetail(detail), 0),
+    ).toThrow('credential search values must be binary hashes');
   });
 
   it('accepts data packet requests with string and descriptor signable objects', () => {

@@ -27,11 +27,13 @@ import {
   discoverGiftCardIdentityFunds,
   getGiftCardFundingTopups,
   getSubmittedGiftCardFundingIdentities,
+  hasGiftCardBeenShared,
   normalizeGiftCardServiceData,
   preflightGiftCardFunding,
   refreshGiftCardStatus,
   unlinkGiftCardFundingIdentitiesFromVerusIdData,
   upsertGiftCard,
+  upsertGiftCardIfUnchanged,
 } from '../../../../../utils/giftCard/giftCard';
 import {GIFT_CARD_SERVICE_ID, VERUSID_SERVICE_ID} from '../../../../../utils/constants/services';
 import {VRPC} from '../../../../../utils/constants/intervalConstants';
@@ -338,15 +340,44 @@ const GiftCardFund = props => {
     };
   }, [step, selectedIdentityKeys, selections.identities]);
 
-  const saveCard = async nextCard => {
-    const nextData = upsertGiftCard(serviceData, nextCard);
+  const updateCard = async updater => {
+    const savedData = await modifyServiceStoredDataForUser(
+      currentData => {
+        const normalized = normalizeGiftCardServiceData(currentData);
+        const currentCard = normalized.cards?.[cardId];
 
-    setServiceData(nextData);
-    await modifyServiceStoredDataForUser(
-      nextData,
+        if (!currentCard) {
+          throw new Error('Gift card is no longer available.');
+        }
+
+        return updater(normalized, currentCard);
+      },
       GIFT_CARD_SERVICE_ID,
       activeAccount.accountHash,
     );
+
+    setServiceData(savedData);
+    return savedData.cards?.[cardId] || null;
+  };
+
+  const loadLatestFundableCard = async () => {
+    const latestData = normalizeGiftCardServiceData(
+      await requestServiceStoredData(GIFT_CARD_SERVICE_ID),
+    );
+    const latestCard = latestData.cards?.[cardId];
+
+    if (!latestCard) {
+      throw new Error('Gift card is no longer available.');
+    }
+
+    if (hasGiftCardBeenShared(latestCard)) {
+      throw new Error(
+        'Shared gift cards cannot be funded. Create a new gift card instead.',
+      );
+    }
+
+    setServiceData(latestData);
+    return latestCard;
   };
 
   const unlinkFundedIdentities = async identities => {
@@ -410,10 +441,11 @@ const GiftCardFund = props => {
 
     try {
       await new Promise(resolve => setTimeout(resolve, 0));
+      const latestCard = await loadLatestFundableCard();
 
       const plan = await preflightGiftCardFunding({
-        card,
-        password: card.encrypted ? claimPassword : undefined,
+        card: latestCard,
+        password: latestCard.encrypted ? claimPassword : undefined,
         selections,
         identityFunding,
         activeCoinsForUser,
@@ -431,12 +463,16 @@ const GiftCardFund = props => {
   };
 
   const persistFundingResult = async fundingResult => {
-    const pendingCard = addGiftCardPendingFunding(card, fundingResult);
     const submittedIdentities =
       getSubmittedGiftCardFundingIdentities(fundingResult);
     let unlinkError = null;
 
-    await saveCard(pendingCard);
+    const pendingCard = await updateCard((currentData, currentCard) =>
+      upsertGiftCard(
+        currentData,
+        addGiftCardPendingFunding(currentCard, fundingResult),
+      ),
+    );
 
     if (submittedIdentities.length > 0) {
       setLoadingText('Unlinking transferred VerusIDs...');
@@ -457,7 +493,13 @@ const GiftCardFund = props => {
         activeCoinsForUser,
       });
 
-      await saveCard(refreshed);
+      await updateCard(currentData =>
+        upsertGiftCardIfUnchanged(
+          currentData,
+          pendingCard,
+          refreshed,
+        ),
+      );
     } catch (refreshError) {
       console.warn(refreshError.message);
     }
@@ -476,6 +518,7 @@ const GiftCardFund = props => {
     setLoadingText('Confirming gift card funding transactions...');
 
     try {
+      await loadLatestFundableCard();
       const result = await broadcastGiftCardFunding({preflightPlan});
       const {unlinkError} = await persistFundingResult(result);
 

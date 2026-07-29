@@ -47,12 +47,10 @@ import {
   RecipientConstraint,
   AuthenticationResponseDetails,
   AuthenticationResponseOrdinalVDXFObject,
-  CompactAddressObject,
   fqnToParentAddress,
   fqnToParentFqn,
   GenericResponse,
   ProvisionIdentityDetails,
-  VerifiableSignatureData,
 } from 'verus-typescript-primitives';
 import {useObjectSelector} from '../../../hooks/useObjectSelector';
 import {
@@ -71,6 +69,7 @@ import VerusIdAtIcon from '../../../images/customIcons/verusid-at-icon.svg';
 import { authenticationRequestInfoStyles as styles } from '../../../styles';
 import IdentityPickerSheet from './components/IdentityPickerSheet';
 import { markPendingDeeplinkComplete } from '../../../utils/deeplink/pendingDeeplinkStorage';
+import {ensureGenericResponseSigner} from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
 
 const truncateAddress = addr => {
   if (!addr || addr.length <= 14) return addr;
@@ -573,14 +572,14 @@ const AuthenticationRequestInfo = props => {
     baseResponse.details = [...baseResponse.details, responseDetail];
     baseResponse.setFlags();
 
-    if (baseResponse.signature == null) {
-      const coinObj = CoinDirectory.findCoinObj(chainId);
-      baseResponse.signature = new VerifiableSignatureData({
-        systemID: CompactAddressObject.fromIAddress(coinObj.system_id),
-        identityID: CompactAddressObject.fromIAddress(iAddress),
-      });
-      baseResponse.setSigned();
-    }
+    const coinObj = CoinDirectory.findCoinObj(chainId);
+    if (!coinObj) throw new Error('Unsupported signing chain.');
+
+    ensureGenericResponseSigner({
+      response: baseResponse,
+      systemID: coinObj.system_id,
+      identityID: iAddress,
+    });
 
     const handledIndices = [detailIndex];
     if (

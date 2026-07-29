@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Button, Portal, Text } from 'react-native-paper';
 import { useSelector } from 'react-redux';
-import { GenericResponse, VerifiableSignatureData, CompactAddressObject } from 'verus-typescript-primitives';
+import { GenericResponse } from 'verus-typescript-primitives';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import SemiModal from '../../../components/SemiModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,6 +34,7 @@ import { requestServiceStoredData } from '../../../utils/auth/authBox';
 import { VERUSID_SERVICE_ID } from '../../../utils/constants/services';
 import { VERUSID_NETWORK_DEFAULT } from '../../../../env/index';
 import { processAppEncryptionRequest } from '../../../utils/deeplink/handlers/appEncryptionRequestHandler';
+import { ensureGenericResponseSigner } from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
 import styles from '../../../styles/appEncryption.styles';
 
 // ── Helpers ──
@@ -447,6 +448,19 @@ const AppEncryptionRequestInfo = (props) => {
     setLoading(true);
 
     try {
+      const updatedResponse = response || new GenericResponse();
+      const coinObj = CoinDirectory.findCoinObj(selectedIdentity.chainId);
+
+      if (!coinObj) {
+        throw new Error('Unsupported signing chain.');
+      }
+
+      ensureGenericResponseSigner({
+        response: updatedResponse,
+        systemID: coinObj.system_id,
+        identityID: selectedIdentity.iAddress,
+      });
+
       // Process the encryption request
       const { responseDetail, encryptedDescriptorJson: descriptorJson } = await processAppEncryptionRequest({
         request,
@@ -455,19 +469,9 @@ const AppEncryptionRequestInfo = (props) => {
       });
 
       // Build updated response
-      const updatedResponse = response || new GenericResponse();
       updatedResponse.details = updatedResponse.details || [];
       updatedResponse.details.push(responseDetail);
 
-      // Set signature template so GenericRequestComplete can sign and deliver
-      if (updatedResponse.signature == null) {
-        const coinObj = CoinDirectory.findCoinObj(selectedIdentity.chainId);
-        updatedResponse.signature = new VerifiableSignatureData({
-          systemID: CompactAddressObject.fromIAddress(coinObj.system_id),
-          identityID: CompactAddressObject.fromIAddress(selectedIdentity.iAddress),
-        });
-        updatedResponse.setSigned();
-      }
       updatedResponse.setFlags();
 
       // Serialize to hex so the user can preview/copy the encrypted response
@@ -534,18 +538,30 @@ const AppEncryptionRequestInfo = (props) => {
     });
   }, [encryptedDescriptorJson, requestIsTestnet, signerSystemName]);
 
-  // ── Render encrypted response preview screen ──
+  // ── Render response preview screen ──
   if (encryptedResponseHex && pendingResponse) {
+    const responseIsEncrypted = encryptedDescriptorJson != null;
+
     return (
       <SafeAreaView style={styles.root}>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           <View style={styles.readyHeader}>
             <View style={styles.readyIconCircle}>
-              <MaterialCommunityIcons name="lock-check" size={48} color={Colors.verusGreenColor} />
+              <MaterialCommunityIcons
+                name={responseIsEncrypted ? 'lock-check' : 'check-circle'}
+                size={48}
+                color={Colors.verusGreenColor}
+              />
             </View>
-            <Text style={styles.readyTitle}>Your encrypted response is ready to send</Text>
+            <Text style={styles.readyTitle}>
+              {responseIsEncrypted
+                ? 'Your encrypted response is ready to send'
+                : 'Your response is ready to send'}
+            </Text>
             <Text style={styles.readySubtitle}>
-              The encryption was successful. Press continue to send it back to the requesting app.
+              {responseIsEncrypted
+                ? 'The encryption was successful. Press continue to send it back to the requesting app.'
+                : 'Press continue to send it back to the requesting app.'}
             </Text>
           </View>
 

@@ -8,7 +8,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import {Button, Text, TextInput} from 'react-native-paper';
+import {Button, Checkbox, Text, TextInput} from 'react-native-paper';
 import {useDispatch, useSelector} from 'react-redux';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -32,8 +32,12 @@ import {
   preflightSpendableKeyClaim,
   spendableKeyDetailsOrdinalToMnemonic,
 } from '../../../utils/spendableKey/spendableKey';
+import {reconcileSpendableKeyClaimResults} from '../../../utils/spendableKey/claimResultReconciliation';
 import {convertFqnToDisplayFormat} from '../../../utils/fullyqualifiedname';
-import {VRPC} from '../../../utils/constants/intervalConstants';
+import {
+  DLIGHT_PRIVATE,
+  VRPC,
+} from '../../../utils/constants/intervalConstants';
 import {SEND_MODAL_USER_ALLOWLIST} from '../../../utils/constants/sendModal';
 import {spendableKeyRequestInfoStyles as styles} from '../../../styles';
 import {explorers} from '../../../utils/CoinData/CoinData';
@@ -46,6 +50,41 @@ const truncate = (value, start = 8, end = 6) => {
   if (!value) return '';
   if (value.length <= start + end + 3) return value;
   return `${value.slice(0, start)}...${value.slice(-end)}`;
+};
+const IDENTITY_DEFINITION_FIELDS = [
+  'contentmap',
+  'contentMap',
+  'contentmultimap',
+  'contentMultiMap',
+  'flags',
+  'identityaddress',
+  'identityAddress',
+  'minimumsignatures',
+  'minimumSignatures',
+  'name',
+  'parent',
+  'primaryaddresses',
+  'primaryAddresses',
+  'privateaddress',
+  'privateAddress',
+  'recoveryauthority',
+  'recoveryAuthority',
+  'revocationauthority',
+  'revocationAuthority',
+  'systemid',
+  'systemId',
+  'timelock',
+  'txid',
+  'txout',
+  'version',
+  'vout',
+];
+
+const getTopLevelIdentityFields = result => {
+  return IDENTITY_DEFINITION_FIELDS.reduce((fields, field) => {
+    if (result?.[field] !== undefined) fields[field] = result[field];
+    return fields;
+  }, {});
 };
 
 const isTestProfile = account => {
@@ -67,6 +106,23 @@ const getSystemDestinationMap = (claimPlan, activeAccount) => {
   }
 
   return destinations;
+};
+
+const getSystemPrivateAddressMap = (claimPlan, activeAccount) => {
+  const privateAddresses = {};
+
+  if (!claimPlan || !activeAccount) return privateAddresses;
+
+  for (const system of claimPlan.systems) {
+    const address =
+      activeAccount.keys?.[system.coinObj.id]?.[DLIGHT_PRIVATE]?.addresses?.[0];
+
+    if (address) {
+      privateAddresses[system.systemId] = address;
+    }
+  }
+
+  return privateAddresses;
 };
 
 const getClaimTitle = totals => {
@@ -124,7 +180,14 @@ const getAddressString = value => {
 };
 
 const getIdentityDefinition = identityClaim => {
-  return identityClaim?.result?.identity || identityClaim?.result || {};
+  const result = identityClaim?.result || {};
+
+  if (!result.identity) return result;
+
+  return {
+    ...result.identity,
+    ...getTopLevelIdentityFields(result),
+  };
 };
 
 const getIdentityAuthorityIssues = identityClaim => {
@@ -354,11 +417,19 @@ const SpendableKeyRequestInfo = props => {
   const [claimPlanScanKey, setClaimPlanScanKey] = useState(null);
   const [claimResult, setClaimResult] = useState(null);
   const [requestError, setRequestError] = useState(null);
+  const [
+    assignClaimedIdentityPrivateAddresses,
+    setAssignClaimedIdentityPrivateAddresses,
+  ] = useState(true);
   const scanStartedRef = useRef(false);
   const scanCacheRef = useRef(null);
 
   const destinationBySystem = useMemo(
     () => getSystemDestinationMap(claimPlan, activeAccount),
+    [claimPlan, activeAccount],
+  );
+  const privateAddressBySystem = useMemo(
+    () => getSystemPrivateAddressMap(claimPlan, activeAccount),
     [claimPlan, activeAccount],
   );
 
@@ -418,7 +489,81 @@ const SpendableKeyRequestInfo = props => {
       ),
     );
   }, [claimPlan]);
+  const identitySystemIds = useMemo(() => {
+    if (!claimPlan) return [];
+
+    return claimPlan.systems
+      .filter(system => system.identities.length > 0)
+      .map(system => system.systemId);
+  }, [claimPlan]);
+  const assignablePrivateAddressSystemIds = useMemo(() => {
+    return identitySystemIds.filter(
+      systemId => privateAddressBySystem[systemId],
+    );
+  }, [
+    identitySystemIds,
+    privateAddressBySystem,
+  ]);
+  const canAssignClaimedIdentityPrivateAddresses = useMemo(() => {
+    return (
+      activeAccountMatchesRequest &&
+      assignablePrivateAddressSystemIds.length > 0
+    );
+  }, [
+    activeAccountMatchesRequest,
+    assignablePrivateAddressSystemIds,
+  ]);
+  const systemsWithoutPrivateAddressCount =
+    identitySystemIds.length - assignablePrivateAddressSystemIds.length;
+  const selectedPrivateAddressBySystem = useMemo(() => {
+    return identitySystemIds.reduce((addresses, systemId) => {
+      const privateAddress = privateAddressBySystem[systemId];
+
+      if (!privateAddress) {
+        addresses[systemId] = null;
+      } else if (
+        canAssignClaimedIdentityPrivateAddresses &&
+        assignClaimedIdentityPrivateAddresses
+      ) {
+        addresses[systemId] = privateAddress;
+      }
+
+      return addresses;
+    }, {});
+  }, [
+    assignClaimedIdentityPrivateAddresses,
+    canAssignClaimedIdentityPrivateAddresses,
+    identitySystemIds,
+    privateAddressBySystem,
+  ]);
+  const privateAddressOptionSubtitle = useMemo(() => {
+    if (!canAssignClaimedIdentityPrivateAddresses) return null;
+
+    const privateAddresses = Array.from(
+      new Set(
+        assignablePrivateAddressSystemIds.map(
+          systemId => privateAddressBySystem[systemId],
+        ),
+      ),
+    );
+    const eligibleText = privateAddresses.length === 1
+      ? `Set the private address of your new identity to ${truncate(privateAddresses[0], 12, 8)}, your wallet z-address.`
+      : 'Use each available chain wallet Z address for private transactions to claimed IDs.';
+
+    return systemsWithoutPrivateAddressCount === 0
+      ? eligibleText
+      : `${eligibleText} ${systemsWithoutPrivateAddressCount} chain${systemsWithoutPrivateAddressCount === 1 ? '' : 's'} without a wallet z-address will have existing identity z-addresses removed.`;
+  }, [
+    assignablePrivateAddressSystemIds,
+    canAssignClaimedIdentityPrivateAddresses,
+    privateAddressBySystem,
+    systemsWithoutPrivateAddressCount,
+  ]);
   const claimTitle = getClaimTitle(totals);
+
+  const toggleAssignClaimedIdentityPrivateAddresses = useCallback(() => {
+    setAssignClaimedIdentityPrivateAddresses(current => !current);
+  }, []);
 
   const scanClaims = useCallback(async () => {
     Keyboard.dismiss();
@@ -674,19 +819,36 @@ const SpendableKeyRequestInfo = props => {
       const preflightPlan = await preflightSpendableKeyClaim({
         claimPlan,
         destinationBySystem,
+        privateAddressBySystem: selectedPrivateAddressBySystem,
       });
       const broadcastResult = await broadcastSpendableKeyClaim({
         preflightPlan,
       });
 
-      await linkClaimedIdentities(broadcastResult.results);
-      try {
-        await addMissingRedeemedCurrencies(broadcastResult.results);
-      } catch (e) {
-        console.warn(e);
+      const {
+        identityLinkError,
+        currencyAddError,
+      } = await reconcileSpendableKeyClaimResults({
+        results: broadcastResult.results,
+        linkClaimedIdentities,
+        addMissingRedeemedCurrencies,
+      });
+
+      if (identityLinkError) console.warn(identityLinkError);
+      if (currencyAddError) console.warn(currencyAddError);
+
+      if (identityLinkError || currencyAddError) {
         createAlert(
-          'Currency not added',
-          `Funds were claimed, but one or more redeemed currencies could not be added to your wallet automatically. ${e.message}`,
+          'Wallet update incomplete',
+          `The claim transactions succeeded, but some wallet metadata could not be updated automatically.${
+            identityLinkError
+              ? ` One or more claimed VerusIDs could not be linked: ${identityLinkError.message}`
+              : ''
+          }${
+            currencyAddError
+              ? ` One or more redeemed currencies could not be added: ${currencyAddError.message}`
+              : ''
+          }`,
         );
       }
       scanCacheRef.current = null;
@@ -695,14 +857,17 @@ const SpendableKeyRequestInfo = props => {
       setStatus('complete');
     } catch (e) {
       if (Array.isArray(e.results) && e.results.length > 0) {
-        let currencyAddError = null;
+        const {
+          identityLinkError,
+          currencyAddError,
+        } = await reconcileSpendableKeyClaimResults({
+          results: e.results,
+          linkClaimedIdentities,
+          addMissingRedeemedCurrencies,
+        });
 
-        try {
-          await addMissingRedeemedCurrencies(e.results);
-        } catch (addError) {
-          console.warn(addError);
-          currencyAddError = addError;
-        }
+        if (identityLinkError) console.warn(identityLinkError);
+        if (currencyAddError) console.warn(currencyAddError);
 
         setClaimResult({
           preflightPlan: e.preflightPlan,
@@ -716,6 +881,10 @@ const SpendableKeyRequestInfo = props => {
           `${e.results.length} transaction${e.results.length === 1 ? '' : 's'} were submitted before an error occurred. Review the transaction IDs shown on this screen.${
             currencyAddError
               ? ` One or more redeemed currencies could not be added to your wallet automatically. ${currencyAddError.message}`
+              : ''
+          }${
+            identityLinkError
+              ? ` One or more claimed VerusIDs could not be linked automatically. ${identityLinkError.message}`
               : ''
           }`,
         );
@@ -739,7 +908,12 @@ const SpendableKeyRequestInfo = props => {
     linkClaimedIdentities,
     openLogin,
     scanClaims,
+    selectedPrivateAddressBySystem,
   ]);
+
+  useEffect(() => {
+    setAssignClaimedIdentityPrivateAddresses(true);
+  }, [detailIndex, request]);
 
   useEffect(() => {
     if (
@@ -1091,10 +1265,55 @@ const SpendableKeyRequestInfo = props => {
                 {'VerusID control warning'}
               </Text>
               <Text style={styles.criticalWarningText}>
-                {'Claiming changes the primary address only. External recovery or revocation authorities listed under a VerusID may still be able to recover, reassign, or revoke the ID after you claim it.'}
+                {'Claiming changes the primary address and may replace or remove the identity z-address. External recovery or revocation authorities listed under a VerusID may still be able to recover, reassign, or revoke the ID after you claim it.'}
               </Text>
             </View>
           </View>
+        )}
+
+        {status === 'review' && systemsWithoutPrivateAddressCount > 0 && (
+          <View style={styles.warningCard}>
+            <MaterialCommunityIcons
+              name="shield-off-outline"
+              size={18}
+              color="#9A3412"
+            />
+            <Text style={styles.warningText}>
+              {`Your wallet has no z-address for ${systemsWithoutPrivateAddressCount} identity chain${systemsWithoutPrivateAddressCount === 1 ? '' : 's'}. Existing z-addresses will be removed from those claimed VerusIDs.`}
+            </Text>
+          </View>
+        )}
+
+        {status === 'review' && canAssignClaimedIdentityPrivateAddresses && (
+          <TouchableOpacity
+            accessibilityRole="checkbox"
+            accessibilityState={{
+              checked: assignClaimedIdentityPrivateAddresses,
+            }}
+            activeOpacity={0.75}
+            onPress={toggleAssignClaimedIdentityPrivateAddresses}
+            style={styles.privateAddressOptionCard}
+          >
+            <View pointerEvents="none">
+              <Checkbox.Android
+                status={
+                  assignClaimedIdentityPrivateAddresses
+                    ? 'checked'
+                    : 'unchecked'
+                }
+                color={Colors.verusGreenColor}
+                uncheckedColor="#888"
+              />
+            </View>
+            <View style={styles.privateAddressOptionText}>
+              <Text style={styles.privateAddressOptionTitle}>
+                {'Assign identity z-address to wallet z-address'}
+              </Text>
+              <Text style={styles.privateAddressOptionSubtitle}>
+                {privateAddressOptionSubtitle}
+              </Text>
+            </View>
+          </TouchableOpacity>
         )}
 
         {claimPlan &&

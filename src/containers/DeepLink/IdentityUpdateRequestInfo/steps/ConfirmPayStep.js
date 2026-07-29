@@ -30,14 +30,13 @@ import { satsToCoins, truncateDecimal } from '../../../../utils/math';
 import { API_GET_BALANCES, API_SEND, GENERAL, WYRE_SERVICE, USD } from '../../../../utils/constants/intervalConstants';
 import BigNumber from 'bignumber.js';
 import {
-  CompactAddressObject,
   GenericResponse,
   IdentityUpdateResponseDetails,
   IdentityUpdateResponseOrdinalVDXFObject,
-  VerifiableSignatureData,
 } from 'verus-typescript-primitives';
 import { processEncryptedKeys } from '../../../../utils/crypto/encryptCredentials';
 import { confirmPayStepStyles as localStyles } from '../../../../styles';
+import {ensureGenericResponseSigner} from '../../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
 
 const ConfirmPayStep = ({
   details,
@@ -218,6 +217,17 @@ const ConfirmPayStep = ({
     let broadcastTxid = null;
 
     try {
+      const baseResponse = new GenericResponse();
+      if (responseBufferString && responseBufferString.length > 0) {
+        baseResponse.fromBuffer(Buffer.from(responseBufferString, 'hex'), 0);
+      }
+
+      ensureGenericResponseSigner({
+        response: baseResponse,
+        systemID: coinObj.system_id,
+        identityID: signerIdentityAddress,
+      });
+
       const { wallet, coinObj: sourceCoinObj } = selectedSource;
       const [channelName, , systemId] = wallet.api_channels[API_SEND].split('.');
 
@@ -235,11 +245,6 @@ const ConfirmPayStep = ({
       broadcastTxid = result.result;
 
       // Build response (mirrored from IdentityUpdatePaymentConfiguration)
-      const baseResponse = new GenericResponse();
-      if (responseBufferString && responseBufferString.length > 0) {
-        baseResponse.fromBuffer(Buffer.from(responseBufferString, 'hex'), 0);
-      }
-
       const responseDetail = new IdentityUpdateResponseOrdinalVDXFObject({
         data: new IdentityUpdateResponseDetails({
           requestID: details.containsRequestID() ? details.requestID : undefined,
@@ -252,13 +257,6 @@ const ConfirmPayStep = ({
       if (baseResponse.details == null) baseResponse.details = [];
       baseResponse.details = [...baseResponse.details, responseDetail];
 
-      if (baseResponse.signature == null) {
-        baseResponse.signature = new VerifiableSignatureData({
-          systemID: CompactAddressObject.fromIAddress(coinObj.system_id),
-          identityID: CompactAddressObject.fromIAddress(signerIdentityAddress),
-        });
-        baseResponse.setSigned();
-      }
       baseResponse.setFlags();
 
       if (next) {

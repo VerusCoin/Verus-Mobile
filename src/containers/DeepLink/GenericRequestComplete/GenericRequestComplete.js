@@ -43,6 +43,10 @@ import { genericRequestCompleteStyles as styles } from '../../../styles';
 import { markPendingDeeplinkComplete } from '../../../utils/deeplink/pendingDeeplinkStorage';
 import { prepareGenericResponseForSigning } from '../../../utils/deeplink/genericResponse/prepareGenericResponseForSigning';
 import { encryptGenericResponseDetails } from '../../../utils/deeplink/genericResponse/encryptGenericResponseDetails';
+import {
+  assertNoPlaintextExtendedSpendingKey,
+  assertSecurePostResponseUri,
+} from '../../../utils/deeplink/genericResponse/responseDeliverySecurity';
 
 const GenericRequestComplete = props => {
   const { requestBufferString, responseBufferString } = props.route.params;
@@ -114,11 +118,17 @@ const GenericRequestComplete = props => {
 
     if (responseUri == null) return;
 
+    assertNoPlaintextExtendedSpendingKey(response);
+
     if (isPostUri(responseUri)) {
       const responseBuffer = response.toBuffer();
+      const secureResponseUri = assertSecurePostResponseUri(
+        responseUri.getUriString(),
+      );
+
       try {
         await axios.post(
-          responseUri.getUriString(),
+          secureResponseUri,
           responseBuffer,
           { headers: { 'Content-Type': 'application/octet-stream' } }
         );

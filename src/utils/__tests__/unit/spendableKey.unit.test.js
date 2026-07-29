@@ -56,6 +56,7 @@ const mockVethAssetCoin = {
 const mockRootClaimAddress = 'RRootClaimAddress';
 const mockPbaasClaimAddress = 'RPbaasClaimAddress';
 const mockDestinationAddress = 'RDCr3h5wYGoMh2QF7akoZy2GNsjCeSqgpu';
+const mockPrivateAddress = 'zs1walletprivateaddress';
 const mockClaimedIdentityAddress = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
 const mockEndpoints = {};
 const mockTxInputsByHex = {};
@@ -370,6 +371,7 @@ describe('spendable key claim utilities', () => {
       tx: 'raw-id-tx',
       identity: {
         setPrimaryAddresses: jest.fn(),
+        setPrivateAddress: jest.fn(),
         toBuffer: jest.fn(() => Buffer.from('dd', 'hex')),
       },
     });
@@ -443,6 +445,33 @@ describe('spendable key claim utilities', () => {
 
       return {result: [rootFeeUtxo, rootTokenUtxo, rootIdentityUtxo]};
     });
+    mockGetIdentity.mockImplementation(async (_systemId, identityAddress) => ({
+      result: {
+        status: 'active',
+        txid: `${identityAddress}-txid`,
+        vout: 0,
+        fullyqualifiedname:
+          identityAddress === 'rpc-identity-address'
+            ? 'Brain782.valuid@'
+            : 'gift@',
+        identity: {
+          identityaddress: identityAddress,
+          minimumsignatures: 1,
+          name:
+            identityAddress === 'rpc-identity-address'
+              ? 'Brain782'
+              : 'gift',
+          parent:
+            identityAddress === 'rpc-identity-address'
+              ? 'valuid-system'
+              : mockRootCoin.system_id,
+          primaryaddresses:
+            identityAddress === 'rpc-identity-address'
+              ? ['RStaleClaimAddress']
+              : [mockRootClaimAddress],
+        },
+      },
+    }));
     mockEndpoints[mockRootCoin.system_id].getIdentitiesWithAddress.mockResolvedValue({
       result: [
         {
@@ -533,6 +562,11 @@ describe('spendable key claim utilities', () => {
         identity => identity.identityAddress === 'rpc-identity-address',
       ).fullyQualifiedName,
     ).toBe('Brain782.valuid@');
+    expect(
+      rootSystem.identities.find(
+        identity => identity.identityAddress === 'rpc-identity-address',
+      ).result.identity.primaryaddresses,
+    ).toEqual([mockRootClaimAddress]);
     expect(pbaasSystem.currencies[0].currencyId).toBe(mockPbaasCoin.system_id);
     expect(mockGetAddressUtxos).toHaveBeenCalledWith(
       mockRootCoin.system_id,
@@ -851,6 +885,251 @@ describe('spendable key claim utilities', () => {
     ).rejects.toThrow('No claimable transparent funds or VerusIDs');
   });
 
+  it('sets the wallet private address on every claimed identity when requested', async () => {
+    const secondExactFeeUtxo = makeUtxo({
+      txid: '10'.repeat(32),
+      outputIndex: 6,
+      satoshis: 10000,
+      currencyvalues: {
+        [mockRootCoin.system_id]: '0.0001',
+      },
+    });
+
+    const plan = await preflightSpendableKeyClaim({
+      claimPlan: {
+        requestIsTestnet: false,
+        systems: [
+          {
+            systemId: mockRootCoin.system_id,
+            coinObj: mockRootCoin,
+            claimWif: 'claim-wif',
+            utxos: [rootExactFeeUtxo, secondExactFeeUtxo],
+            identities: [
+              {
+                identityAddress: mockClaimedIdentityAddress,
+                fullyQualifiedName: 'gift@',
+                result: {
+                  blockheight: 20,
+                },
+              },
+              {
+                identityAddress: 'iSecondClaimedIdentityAddress',
+                fullyQualifiedName: 'second@',
+                result: {
+                  blockheight: 21,
+                },
+              },
+            ],
+          },
+        ],
+      },
+      destinationBySystem: {
+        [mockRootCoin.system_id]: mockDestinationAddress,
+      },
+      privateAddressBySystem: {
+        [mockRootCoin.system_id]: mockPrivateAddress,
+      },
+    });
+
+    expect(plan.transactions).toHaveLength(2);
+    expect(mockCreateUpdateIdentityTxWithUtxos).toHaveBeenCalledTimes(2);
+    const updateIdentity =
+      mockCreateUpdateIdentityTxWithUtxos.mock.calls[0][0].identity;
+
+    expect(updateIdentity.setPrimaryAddresses).toHaveBeenCalledTimes(2);
+    expect(updateIdentity.setPrimaryAddresses).toHaveBeenCalledWith([
+      mockDestinationAddress,
+    ]);
+    expect(updateIdentity.setPrivateAddress).toHaveBeenCalledTimes(2);
+    expect(updateIdentity.setPrivateAddress).toHaveBeenCalledWith(
+      mockPrivateAddress,
+    );
+  });
+
+  it('sets private addresses only on systems with a provided wallet private address', async () => {
+    const rootUpdateIdentity = {
+      setPrimaryAddresses: jest.fn(),
+      setPrivateAddress: jest.fn(),
+      toBuffer: jest.fn(() => Buffer.from('dd', 'hex')),
+    };
+    const pbaasUpdateIdentity = {
+      setPrimaryAddresses: jest.fn(),
+      setPrivateAddress: jest.fn(),
+      toBuffer: jest.fn(() => Buffer.from('ee', 'hex')),
+    };
+    const pbaasExactFeeUtxo = makeUtxo({
+      txid: '12'.repeat(32),
+      outputIndex: 0,
+      satoshis: 10000,
+      currencyvalues: {
+        [mockPbaasCoin.system_id]: '0.0001',
+      },
+    });
+
+    mockGetUpdatableIdentity.mockImplementation(async systemId => ({
+      tx: `raw-id-tx-${systemId}`,
+      identity:
+        systemId === mockPbaasCoin.system_id
+          ? pbaasUpdateIdentity
+          : rootUpdateIdentity,
+    }));
+
+    const plan = await preflightSpendableKeyClaim({
+      claimPlan: {
+        requestIsTestnet: false,
+        systems: [
+          {
+            systemId: mockRootCoin.system_id,
+            coinObj: mockRootCoin,
+            claimWif: 'root-claim-wif',
+            utxos: [rootExactFeeUtxo],
+            identities: [
+              {
+                identityAddress: mockClaimedIdentityAddress,
+                fullyQualifiedName: 'gift@',
+                result: {
+                  blockheight: 20,
+                },
+              },
+            ],
+          },
+          {
+            systemId: mockPbaasCoin.system_id,
+            coinObj: mockPbaasCoin,
+            claimWif: 'pbaas-claim-wif',
+            utxos: [pbaasExactFeeUtxo],
+            identities: [
+              {
+                identityAddress: 'iPbaasClaimedIdentityAddress',
+                fullyQualifiedName: 'pbaasgift@',
+                result: {
+                  blockheight: 22,
+                },
+              },
+            ],
+          },
+        ],
+      },
+      destinationBySystem: {
+        [mockRootCoin.system_id]: mockDestinationAddress,
+        [mockPbaasCoin.system_id]: mockDestinationAddress,
+      },
+      privateAddressBySystem: {
+        [mockRootCoin.system_id]: mockPrivateAddress,
+      },
+    });
+
+    const updateCalls = mockCreateUpdateIdentityTxWithUtxos.mock.calls.map(
+      ([args]) => args,
+    );
+
+    expect(plan.transactions).toHaveLength(2);
+    expect(updateCalls).toHaveLength(2);
+    expect(rootUpdateIdentity.setPrimaryAddresses).toHaveBeenCalledWith([
+      mockDestinationAddress,
+    ]);
+    expect(rootUpdateIdentity.setPrivateAddress).toHaveBeenCalledWith(
+      mockPrivateAddress,
+    );
+    expect(pbaasUpdateIdentity.setPrimaryAddresses).toHaveBeenCalledWith([
+      mockDestinationAddress,
+    ]);
+    expect(pbaasUpdateIdentity.setPrivateAddress).not.toHaveBeenCalled();
+    expect(updateCalls.find(args => args.systemId === mockRootCoin.system_id))
+      .toEqual(expect.objectContaining({identity: rootUpdateIdentity}));
+    expect(updateCalls.find(args => args.systemId === mockPbaasCoin.system_id))
+      .toEqual(expect.objectContaining({identity: pbaasUpdateIdentity}));
+  });
+
+  it('leaves identity private addresses unchanged when no private address is requested', async () => {
+    await preflightSpendableKeyClaim({
+      claimPlan: {
+        requestIsTestnet: false,
+        systems: [
+          {
+            systemId: mockRootCoin.system_id,
+            coinObj: mockRootCoin,
+            claimWif: 'claim-wif',
+            utxos: [rootExactFeeUtxo],
+            identities: [
+              {
+                identityAddress: mockClaimedIdentityAddress,
+                fullyQualifiedName: 'gift@',
+                result: {
+                  blockheight: 20,
+                },
+              },
+            ],
+          },
+        ],
+      },
+      destinationBySystem: {
+        [mockRootCoin.system_id]: mockDestinationAddress,
+      },
+    });
+
+    const updateIdentity =
+      mockCreateUpdateIdentityTxWithUtxos.mock.calls[0][0].identity;
+
+    expect(updateIdentity.setPrimaryAddresses).toHaveBeenCalledWith([
+      mockDestinationAddress,
+    ]);
+    expect(updateIdentity.setPrivateAddress).not.toHaveBeenCalled();
+  });
+
+  it('removes an existing identity private address when the wallet has no z-address', async () => {
+    const existingPrivateAddress = {toAddressString: () => 'zs1giftprivateaddress'};
+    const updateIdentity = {
+      privateAddresses: [existingPrivateAddress],
+      setPrimaryAddresses: jest.fn(),
+      setPrivateAddress: jest.fn(),
+      toBuffer: jest.fn(() => Buffer.from('dd', 'hex')),
+    };
+
+    mockGetUpdatableIdentity.mockResolvedValue({
+      tx: 'raw-id-tx',
+      identity: updateIdentity,
+    });
+
+    await preflightSpendableKeyClaim({
+      claimPlan: {
+        requestIsTestnet: false,
+        systems: [
+          {
+            systemId: mockRootCoin.system_id,
+            coinObj: mockRootCoin,
+            claimWif: 'claim-wif',
+            utxos: [rootExactFeeUtxo],
+            identities: [
+              {
+                identityAddress: mockClaimedIdentityAddress,
+                fullyQualifiedName: 'gift@',
+                result: {
+                  blockheight: 20,
+                },
+              },
+            ],
+          },
+        ],
+      },
+      destinationBySystem: {
+        [mockRootCoin.system_id]: mockDestinationAddress,
+      },
+      privateAddressBySystem: {
+        [mockRootCoin.system_id]: null,
+      },
+    });
+
+    expect(updateIdentity.setPrimaryAddresses).toHaveBeenCalledWith([
+      mockDestinationAddress,
+    ]);
+    expect(updateIdentity.setPrivateAddress).not.toHaveBeenCalled();
+    expect(updateIdentity.privateAddresses).toEqual([]);
+    expect(
+      mockCreateUpdateIdentityTxWithUtxos.mock.calls[0][0].identity,
+    ).toBe(updateIdentity);
+  });
+
   it('combines an identity update with native funds and sends funds to the claimed VerusID', async () => {
     const plan = await preflightSpendableKeyClaim({
       claimPlan: {
@@ -910,6 +1189,55 @@ describe('spendable key claim utilities', () => {
       mockClaimedIdentityAddress,
     );
     expect(combinedOutput.address.isIAddr()).toBe(true);
+  });
+
+  it('sets the wallet private address on combined identity and sweep claims', async () => {
+    const plan = await preflightSpendableKeyClaim({
+      claimPlan: {
+        requestIsTestnet: false,
+        systems: [
+          {
+            systemId: mockRootCoin.system_id,
+            coinObj: mockRootCoin,
+            claimWif: 'claim-wif',
+            utxos: [rootFeeUtxo, rootSweepUtxo],
+            identities: [
+              {
+                identityAddress: mockClaimedIdentityAddress,
+                fullyQualifiedName: 'gift@',
+                result: {
+                  blockheight: 20,
+                },
+              },
+            ],
+          },
+        ],
+      },
+      destinationBySystem: {
+        [mockRootCoin.system_id]: mockDestinationAddress,
+      },
+      privateAddressBySystem: {
+        [mockRootCoin.system_id]: mockPrivateAddress,
+      },
+    });
+
+    expect(plan.transactions).toHaveLength(1);
+    expect(plan.transactions[0]).toEqual(
+      expect.objectContaining({
+        type: 'identity',
+        includesSweep: true,
+      }),
+    );
+
+    const updateIdentity =
+      mockCreateUpdateIdentityWithCurrencyTransferTx.mock.calls[0][0].identity;
+
+    expect(updateIdentity.setPrimaryAddresses).toHaveBeenCalledWith([
+      mockDestinationAddress,
+    ]);
+    expect(updateIdentity.setPrivateAddress).toHaveBeenCalledWith(
+      mockPrivateAddress,
+    );
   });
 
   it('combines the last identity update with the sweep when assets would otherwise be left without native fees', async () => {

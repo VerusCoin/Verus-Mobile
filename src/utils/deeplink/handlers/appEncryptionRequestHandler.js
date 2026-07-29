@@ -209,14 +209,20 @@ export const processAppEncryptionRequest = async ({
     throw new Error("Unsupported system: " + systemID);
   }
 
+  // Check if spending key requested via flags
+  const returnESK = encryptionRequest.returnESK();
+
+  if (returnESK && !encryptionRequest.hasEncryptResponseToAddress()) {
+    throw new Error(
+      "Extended spending keys can only be returned in an encrypted response.",
+    );
+  }
+
   // Get extended spending key for derivation
   const keyMaterial = await getKeyMaterial(coinObj.id);
 
   // Use appOrDelegatedID if present, otherwise use requestSignerID
   const appID = appOrDelegatedID || requestSignerID;
-
-  // Check if spending key requested via flags
-  const returnESK = encryptionRequest.returnESK();
 
   // Determine toId: the derivationID from the encryption request is the
   // identity we derive a shared key with (matches daemon's "toid").
@@ -294,6 +300,12 @@ export const processAppEncryptionRequest = async ({
     : null;
 
   if (!encryptTo) {
+    if (returnESK) {
+      throw new Error(
+        "Extended spending keys can only be returned in an encrypted response.",
+      );
+    }
+
     // Return unencrypted response
     return {
       responseDetail: new AppEncryptionResponseOrdinalVDXFObject({

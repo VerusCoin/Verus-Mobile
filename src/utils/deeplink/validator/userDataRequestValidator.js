@@ -46,4 +46,16 @@ export const validateUserDataRequestVDXFObject = (request, detailIndex) => {
   if (!Array.isArray(details.searchDataKey) || details.searchDataKey.length === 0) {
     throw new Error("User data request must specify at least one credential key.");
   }
+
+  const hasInvalidSearchDataKey = details.searchDataKey.some(item => {
+    if (item == null || typeof item !== "object") return true;
+
+    const keys = Object.keys(item);
+
+    return keys.length !== 1 || !Buffer.isBuffer(item[keys[0]]);
+  });
+
+  if (hasInvalidSearchDataKey) {
+    throw new Error("User data request credential search values must be binary hashes.");
+  }
 };
