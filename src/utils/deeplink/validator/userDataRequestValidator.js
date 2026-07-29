@@ -3,6 +3,7 @@ import {
   UserDataRequestDetails,
   UserDataRequestOrdinalVDXFObject,
 } from "verus-typescript-primitives";
+import { getUserDataRequestedSignerID } from "../userData/requestedSigner";
 
 /**
  * @param {GenericRequest} request
@@ -42,6 +43,8 @@ export const validateUserDataRequestVDXFObject = (request, detailIndex) => {
   if (!details.dataType.eq(UserDataRequestDetails.FULL_DATA)) {
     throw new Error("Only full credential data requests are supported on mobile.");
   }
+
+  getUserDataRequestedSignerID(details);
 
   if (!Array.isArray(details.searchDataKey) || details.searchDataKey.length === 0) {
     throw new Error("User data request must specify at least one credential key.");

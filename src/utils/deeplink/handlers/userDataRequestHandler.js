@@ -5,6 +5,7 @@ import {
   getRequestScope,
   getSignedRequestDisplayProps,
 } from "./requestDisplayUtils";
+import { getUserDataRequestedSignerID } from "../userData/requestedSigner";
 
 export const handleUserDataRequestVDXFObject = async (request, response, detailIndex) => {
   const detail = request.getDetails(detailIndex);
@@ -30,6 +31,7 @@ export const handleUserDataRequestVDXFObject = async (request, response, detailI
       credentialRequests,
       requestedKeys: requestDetail.requestedKeys || [],
       requestScope: getRequestScope(request),
+      requestedSignerID: getUserDataRequestedSignerID(requestDetail),
       hasRequestID: requestDetail.hasRequestID(),
       requestID: requestDetail.requestID
         ? requestDetail.requestID.toIAddress()

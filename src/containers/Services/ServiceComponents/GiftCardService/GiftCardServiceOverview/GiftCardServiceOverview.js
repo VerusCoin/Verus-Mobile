@@ -538,32 +538,7 @@ const GiftCardServiceOverview = ({
         return;
       }
 
-      const savedData = await saveServiceData(currentData => {
-        const normalized = normalizeGiftCardServiceData(currentData);
-        const currentCard = normalized.cards?.[card.id];
-
-        if (
-          currentCard == null ||
-          hasPendingGiftCardFunding(currentCard) ||
-          !hasGiftCardClaims(currentCard)
-        ) {
-          return normalized;
-        }
-
-        return upsertGiftCard(
-          normalized,
-          markGiftCardShared(currentCard),
-        );
-      });
-      const sharedCard = savedData.cards?.[card.id];
-
-      if (!hasGiftCardBeenShared(sharedCard)) {
-        throw new Error(
-          'Gift card state changed before it could be marked as shared.',
-        );
-      }
-
-      setShareCardTarget(sharedCard);
+      setShareCardTarget(latestCard);
     } catch (e) {
       console.error(e);
       Alert.alert('Unable to Share', e.message || 'Unable to prepare gift card.');
@@ -572,22 +547,77 @@ const GiftCardServiceOverview = ({
     }
   };
 
-  const shareQr = card => {
+  const markCardSharedForAction = async card => {
+    if (hasGiftCardBeenShared(card)) return card;
+
+    const savedData = await saveServiceData(currentData => {
+      const normalized = normalizeGiftCardServiceData(currentData);
+      const currentCard = normalized.cards?.[card.id];
+
+      if (currentCard == null) {
+        throw new Error('Gift card is no longer available.');
+      }
+
+      if (hasPendingGiftCardFunding(currentCard)) {
+        throw new Error(
+          'Wait for funding transactions to confirm before sharing this gift card.',
+        );
+      }
+
+      if (!hasGiftCardClaims(currentCard)) {
+        throw new Error(
+          'Fund this gift card and wait for confirmation before sharing it.',
+        );
+      }
+
+      return upsertGiftCard(
+        normalized,
+        markGiftCardShared(currentCard),
+      );
+    });
+    const sharedCard = savedData.cards?.[card.id];
+
+    if (!hasGiftCardBeenShared(sharedCard)) {
+      throw new Error(
+        'Gift card state changed before it could be marked as shared.',
+      );
+    }
+
+    return sharedCard;
+  };
+
+  const runShareAction = async (card, action) => {
     setShareCardTarget(null);
-    setQrCard(card);
+    setBusyCardId(card.id);
+
+    try {
+      const sharedCard = await markCardSharedForAction(card);
+      await action(sharedCard);
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Unable to Share', e.message || 'Unable to share gift card.');
+    } finally {
+      setBusyCardId(null);
+    }
+  };
+
+  const shareQr = card => {
+    runShareAction(card, sharedCard => {
+      setQrCard(sharedCard);
+    });
   };
 
   const shareCopy = card => {
-    setShareCardTarget(null);
-    copyToClipboard(card.requestUri, {
-      title: 'Copied',
-      message: 'Gift card link copied to clipboard.',
+    runShareAction(card, sharedCard => {
+      copyToClipboard(sharedCard.requestUri, {
+        title: 'Copied',
+        message: 'Gift card link copied to clipboard.',
+      });
     });
   };
 
   const shareNfcFromDialog = card => {
-    setShareCardTarget(null);
-    shareNfc(card);
+    runShareAction(card, shareNfc);
   };
 
   const renderCard = card => {

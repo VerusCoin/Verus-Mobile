@@ -37,6 +37,7 @@ jest.mock('../../../store', () => ({
 }));
 
 import {
+  CompactAddressObject,
   DataDescriptor,
   DataPacketRequestDetails,
   DataPacketRequestOrdinalVDXFObject,
@@ -49,6 +50,10 @@ import {CoinDirectory} from '../../CoinData/CoinDirectory';
 import {validateDataPacketRequestVDXFObject} from '../../deeplink/validator/dataPacketRequestValidator';
 import {validateGenericRequest} from '../../deeplink/validator/envelopeValidator';
 import {validateUserDataRequestVDXFObject} from '../../deeplink/validator/userDataRequestValidator';
+import {
+  getUserDataRequestedSignerID,
+  userDataRequestedSignerMatchesIdentity,
+} from '../../deeplink/userData/requestedSigner';
 
 const SYSTEM_ID = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
 const IDENTITY_ID = 'i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV';
@@ -94,6 +99,47 @@ describe('generic data request validators', () => {
     expect(() =>
       validateUserDataRequestVDXFObject(requestForDetail(detail), 0),
     ).not.toThrow();
+  });
+
+  it('accepts a valid requested signer on credential requests', () => {
+    const details = new UserDataRequestDetails({
+      searchDataKey: [{iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj: SEARCH_DATA_HASH}],
+      dataType: UserDataRequestDetails.FULL_DATA,
+      requestType: UserDataRequestDetails.CREDENTIAL,
+      signer: CompactAddressObject.fromIAddress(IDENTITY_ID),
+    });
+    const detail = new UserDataRequestOrdinalVDXFObject({
+      data: details,
+    });
+
+    expect(() =>
+      validateUserDataRequestVDXFObject(requestForDetail(detail), 0),
+    ).not.toThrow();
+    expect(getUserDataRequestedSignerID(details)).toBe(IDENTITY_ID);
+    expect(
+      userDataRequestedSignerMatchesIdentity(IDENTITY_ID, IDENTITY_ID),
+    ).toBe(true);
+    expect(
+      userDataRequestedSignerMatchesIdentity(
+        IDENTITY_ID,
+        'iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq',
+      ),
+    ).toBe(false);
+  });
+
+  it('rejects credential requests with an invalid requested signer', () => {
+    const detail = new UserDataRequestOrdinalVDXFObject({
+      data: new UserDataRequestDetails({
+        flags: UserDataRequestDetails.FLAG_HAS_SIGNER,
+        searchDataKey: [{iHh1FFVvcNb2mcBudD11umfKJXHbBbH6Sj: SEARCH_DATA_HASH}],
+        dataType: UserDataRequestDetails.FULL_DATA,
+        requestType: UserDataRequestDetails.CREDENTIAL,
+      }),
+    });
+
+    expect(() =>
+      validateUserDataRequestVDXFObject(requestForDetail(detail), 0),
+    ).toThrow('invalid requested signer');
   });
 
   it('rejects unsupported user data request modes', () => {
@@ -155,6 +201,7 @@ describe('generic data request validators', () => {
   it('accepts data packet requests with string and descriptor signable objects', () => {
     const detail = new DataPacketRequestOrdinalVDXFObject({
       data: new DataPacketRequestDetails({
+        flags: DataPacketRequestDetails.FLAG_FOR_USERS_SIGNATURE,
         signableObjects: [
           'message',
           new DataDescriptor({objectdata: Buffer.from('descriptor')}),
@@ -165,6 +212,31 @@ describe('generic data request validators', () => {
     expect(() =>
       validateDataPacketRequestVDXFObject(requestForDetail(detail), 0),
     ).not.toThrow();
+  });
+
+  it('rejects data packet requests without the user-signature flag', () => {
+    const detail = new DataPacketRequestOrdinalVDXFObject({
+      data: new DataPacketRequestDetails({
+        signableObjects: ['message'],
+      }),
+    });
+
+    expect(() =>
+      validateDataPacketRequestVDXFObject(requestForDetail(detail), 0),
+    ).toThrow("for the user's signature");
+  });
+
+  it('rejects data packet transmittal requests', () => {
+    const detail = new DataPacketRequestOrdinalVDXFObject({
+      data: new DataPacketRequestDetails({
+        flags: DataPacketRequestDetails.FLAG_FOR_TRANSMITTAL_TO_USER,
+        signableObjects: ['message'],
+      }),
+    });
+
+    expect(() =>
+      validateDataPacketRequestVDXFObject(requestForDetail(detail), 0),
+    ).toThrow('transmittal to the user is not supported');
   });
 
   it('allows encrypted responses for non-user-data requests', async () => {
@@ -195,6 +267,7 @@ describe('generic data request validators', () => {
   it('rejects unsupported data packet signable objects', () => {
     const detail = new DataPacketRequestOrdinalVDXFObject({
       data: new DataPacketRequestDetails({
+        flags: DataPacketRequestDetails.FLAG_FOR_USERS_SIGNATURE,
         signableObjects: [{}],
       }),
     });
