@@ -46,9 +46,8 @@ export const handleVerusPayInvoiceDetailsVDXFObject = async (request, response, 
 
   if (request.isSigned()) {
     displayProps = await getDisplayDataFromVerusPayInvoiceDetails(
-      details.data, 
-      request.signature.identityID.toIAddress(), 
-      request.signature.signatureAsVch.toString('base64')
+      details.data,
+      getVerusPayInvoiceSignerContext(request),
     );
   } else {
     displayProps = await getDisplayDataFromVerusPayInvoiceDetails(details.data);
@@ -61,12 +60,20 @@ export const handleVerusPayInvoiceDetailsVDXFObject = async (request, response, 
   }
 }
 
+export const getVerusPayInvoiceSignerContext = request => ({
+  signingID: request.signature.identityID.toIAddress(),
+  signerSystemID: request.signature.systemID.toIAddress(),
+  signatureAsVch: request.signature.signatureAsVch.toString('base64'),
+});
+
 /**
  * Gets display data provided a validated Verus Pay Invoice details
- * @param {VerusPayInvoiceDetails} details 
- * @param {string} signingID
- * @param {string} signerSystemID
- * @param {string} signatureAsVch
+ * @param {VerusPayInvoiceDetails} details
+ * @param {{
+ *   signingID?: string,
+ *   signerSystemID?: string,
+ *   signatureAsVch?: string,
+ * }} signerContext
  * @returns {Promise<{
  *    detailsBufferString: string;
  *    isSigned: boolean;
@@ -85,7 +92,14 @@ export const handleVerusPayInvoiceDetailsVDXFObject = async (request, response, 
  *   invoiceVersion: string;
  * }>}
  */
-export const getDisplayDataFromVerusPayInvoiceDetails = async (details, signingID, signerSystemID, signatureAsVch) => {
+export const getDisplayDataFromVerusPayInvoiceDetails = async (
+  details,
+  {
+    signingID,
+    signerSystemID,
+    signatureAsVch,
+  } = {},
+) => {
   const coinObj = CoinDirectory.getBasicCoinObj(details.isTestnet() ? 'VRSCTEST' : 'VRSC')
   VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0])
 

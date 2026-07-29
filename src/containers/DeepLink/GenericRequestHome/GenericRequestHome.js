@@ -20,7 +20,9 @@ import {
   IDENTITY_UPDATE_REQUEST_VDXF_KEY,
   PROVISION_IDENTITY_DETAILS_VDXF_KEY,
   CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY,
+  DATA_PACKET_REQUEST_VDXF_KEY,
   SPENDABLE_KEY_DETAILS_VDXF_KEY,
+  USER_DATA_REQUEST_VDXF_KEY,
   VALU_MOBILE_GENERIC_REQUEST_HANDLER_ID,
   VERUSPAY_INVOICE_DETAILS_VDXF_KEY,
 } from 'verus-typescript-primitives';
@@ -32,12 +34,16 @@ import { handleProvisionIdentityDetailsVDXFObject } from '../../../utils/deeplin
 import { handleAppEncryptionRequestVDXFObject } from '../../../utils/deeplink/handlers/appEncryptionRequestHandler';
 import { handleCreateWalletBackupDetailsVDXFObject } from '../../../utils/deeplink/handlers/createWalletBackupDetailsHandler';
 import { handleSpendableKeyDetailsVDXFObject } from '../../../utils/deeplink/handlers/spendableKeyDetailsHandler';
+import { handleUserDataRequestVDXFObject } from '../../../utils/deeplink/handlers/userDataRequestHandler';
+import { handleDataPacketRequestVDXFObject } from '../../../utils/deeplink/handlers/dataPacketRequestHandler';
 import { createAlert } from '../../../actions/actions/alert/dispatchers/alert';
 import AuthenticationRequestInfo from '../AuthenticationRequestInfo/AuthenticationRequestInfo';
 import IdentityUpdateRequestInfo from '../IdentityUpdateRequestInfo/IdentityUpdateRequestInfo';
 import AppEncryptionRequestInfo from '../AppEncryptionRequestInfo/AppEncryptionRequestInfo';
 import WalletBackupRequestInfo from '../WalletBackupRequestInfo/WalletBackupRequestInfo';
 import SpendableKeyRequestInfo from '../SpendableKeyRequestInfo/SpendableKeyRequestInfo';
+import UserDataRequestInfo from '../UserDataRequestInfo/UserDataRequestInfo';
+import DataPacketRequestInfo from '../DataPacketRequestInfo/DataPacketRequestInfo';
 import ListSelectionModal from '../../../components/ListSelectionModal/ListSelectionModal';
 import VerusIdDetailsModal from '../../../components/VerusIdDetailsModal/VerusIdDetailsModal';
 import { isDeeplinkHandlerInstalled } from '../../../utils/deeplink/isDeeplinkHandlerInstalled';
@@ -46,6 +52,11 @@ import {
   getFriendlyNameMap,
   getIdentity,
 } from '../../../utils/api/channels/verusid/callCreators';
+import {
+  EXPERIMENTAL_DEEPLINK_DISABLED_MESSAGE,
+  isExperimentalGenericRequestDetailKey,
+  isExperimentalGenericRequestsEnabled,
+} from '../../../utils/deeplink/experimentalDeeplinks';
 
 
 const GenericRequestHome = props => {
@@ -70,6 +81,7 @@ const GenericRequestHome = props => {
   const [verusIdDetailsModalProps, setVerusIdDetailsModalProps] =
     useState(null);
   const passthrough = useSelector(state => state.deeplink.passthrough);
+  const experimentalRequestsAllowed = useSelector(isExperimentalGenericRequestsEnabled);
 
   /**
    * @type {[number, (number) => {}]}
@@ -97,6 +109,8 @@ const GenericRequestHome = props => {
   detailHandlers.set(APP_ENCRYPTION_REQUEST_VDXF_KEY.vdxfid, handleAppEncryptionRequestVDXFObject);
   detailHandlers.set(CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY.vdxfid, handleCreateWalletBackupDetailsVDXFObject);
   detailHandlers.set(SPENDABLE_KEY_DETAILS_VDXF_KEY.vdxfid, handleSpendableKeyDetailsVDXFObject);
+  detailHandlers.set(USER_DATA_REQUEST_VDXF_KEY.vdxfid, handleUserDataRequestVDXFObject);
+  detailHandlers.set(DATA_PACKET_REQUEST_VDXF_KEY.vdxfid, handleDataPacketRequestVDXFObject);
   /**
    * Processes a detail in the request at a certain index
    * @param {number} index 
@@ -106,6 +120,13 @@ const GenericRequestHome = props => {
 
     if (detail) {
       const iaddr = detail.getIAddressKey();
+
+      if (
+        !experimentalRequestsAllowed &&
+        isExperimentalGenericRequestDetailKey(iaddr)
+      ) {
+        throw new Error(EXPERIMENTAL_DEEPLINK_DISABLED_MESSAGE);
+      }
 
       if (detailHandlers.has(iaddr)) {
         if (
@@ -317,6 +338,30 @@ const GenericRequestHome = props => {
     ),
     [APP_ENCRYPTION_REQUEST_VDXF_KEY.vdxfid]: () => (
       <AppEncryptionRequestInfo
+        {...displayProps}
+        cancel={props.cancel}
+        setLoading={props.setLoading}
+        navigation={props.navigation}
+        next={next}
+        response={response}
+        request={request}
+        detailIndex={detailIndex}
+      />
+    ),
+    [USER_DATA_REQUEST_VDXF_KEY.vdxfid]: () => (
+      <UserDataRequestInfo
+        {...displayProps}
+        cancel={props.cancel}
+        setLoading={props.setLoading}
+        navigation={props.navigation}
+        next={next}
+        response={response}
+        request={request}
+        detailIndex={detailIndex}
+      />
+    ),
+    [DATA_PACKET_REQUEST_VDXF_KEY.vdxfid]: () => (
+      <DataPacketRequestInfo
         {...displayProps}
         cancel={props.cancel}
         setLoading={props.setLoading}

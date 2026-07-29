@@ -58,25 +58,33 @@ const GiftCardService = props => {
   }, [loadCards, encryptedCards]);
 
   const saveServiceData = useCallback(
-    async nextData => {
-      const normalizedData = normalizeGiftCardServiceData(nextData);
+    async nextDataOrUpdater => {
+      const savedData = await modifyServiceStoredDataForUser(
+        currentData => {
+          const normalizedCurrent = normalizeGiftCardServiceData(currentData);
+          const nextData =
+            typeof nextDataOrUpdater === 'function'
+              ? nextDataOrUpdater(normalizedCurrent)
+              : nextDataOrUpdater;
 
-      setServiceData(normalizedData);
-      await modifyServiceStoredDataForUser(
-        normalizedData,
+          return normalizeGiftCardServiceData(nextData);
+        },
         GIFT_CARD_SERVICE_ID,
         activeAccount.accountHash,
       );
+
+      setServiceData(savedData);
+      return savedData;
     },
     [activeAccount],
   );
 
   const markIntroSeen = useCallback(async () => {
-    await saveServiceData({
-      ...normalizeGiftCardServiceData(serviceData),
+    await saveServiceData(currentData => ({
+      ...currentData,
       introSeen: true,
-    });
-  }, [saveServiceData, serviceData]);
+    }));
+  }, [saveServiceData]);
 
   if (serviceData == null || (loading && !initialLoadCompleteRef.current)) {
     return (

@@ -6,6 +6,7 @@ import {saltedDecryptToBuffer, saltedEncrypt} from '../crypto/crypto';
 export const SEED_DETAILS_ENCRYPTION_ITERS_LOW = 100000;
 export const SEED_DETAILS_ENCRYPTION_ITERS_MEDIUM = 300000;
 export const SEED_DETAILS_ENCRYPTION_ITERS_HIGH = 600000;
+export const SEED_DETAILS_ENCRYPTION_ITERS_MAX = 1000000;
 export const SEED_DETAILS_ENCRYPTION_ITERS =
   SEED_DETAILS_ENCRYPTION_ITERS_HIGH;
 export const SEED_DETAILS_ENCRYPTION_ITERATION_OPTIONS = [
@@ -26,6 +27,10 @@ export const SEED_DETAILS_ENCRYPTION_ITERATION_OPTIONS = [
   },
 ];
 export const SEED_DETAILS_MNEMONIC_WORDS = 24;
+const SEED_DETAILS_ENCRYPTION_ITERS_MAX_BN = new BN(
+  SEED_DETAILS_ENCRYPTION_ITERS_MAX,
+  10,
+);
 
 export const isValid24WordBip39Mnemonic = mnemonic => {
   if (typeof mnemonic !== 'string') return false;
@@ -96,11 +101,14 @@ export const validateSeedDetails = (
       throw new Error('Unsupported seed details encryption format.');
     }
 
-    if (
-      !seedDetails.containsKDFIters() ||
-      seedDetails.KDFIters.toNumber() <= 0
-    ) {
+    if (!seedDetails.containsKDFIters() || seedDetails.KDFIters.lte(new BN(0))) {
       throw new Error('Encrypted seed details are missing KDF iteration metadata.');
+    }
+
+    if (seedDetails.KDFIters.gt(SEED_DETAILS_ENCRYPTION_ITERS_MAX_BN)) {
+      throw new Error(
+        `Encrypted seed details exceed the maximum supported KDF iteration count of ${SEED_DETAILS_ENCRYPTION_ITERS_MAX}.`,
+      );
     }
   } else if (
     !seedDetails.encryptionFormat.eq(seedDetails.constructor.ENCRYPTION_FORMAT_NONE)
@@ -165,8 +173,14 @@ export const buildSeedDetails = async ({
   let KDFIters = new BN(0, 10);
 
   if (encrypted) {
-    if (!Number.isInteger(parsedKdfIters) || parsedKdfIters <= 0) {
-      throw new Error('Seed details encryption iterations must be a positive integer.');
+    if (
+      !Number.isInteger(parsedKdfIters) ||
+      parsedKdfIters <= 0 ||
+      parsedKdfIters > SEED_DETAILS_ENCRYPTION_ITERS_MAX
+    ) {
+      throw new Error(
+        `Seed details encryption iterations must be an integer between 1 and ${SEED_DETAILS_ENCRYPTION_ITERS_MAX}.`,
+      );
     }
 
     const encryptedSeedDetails = await saltedEncrypt(

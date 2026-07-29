@@ -8,7 +8,10 @@ import {
 } from "../constants/storeType";
 import { hashAccountId } from '../crypto/hash';
 import { getCachedVrpcResponse, getVrpcResponseCacheKey, setCachedVrpcResponse } from '../asyncStore/asyncStore';
-import { ApiRequest } from 'verus-typescript-primitives';
+import {
+  ApiRequest,
+  GetBlockHashRequest,
+} from 'verus-typescript-primitives';
 import { coinsList } from '../CoinData/CoinsList';
 import { Alert } from 'react-native';
 import { CoinDirectory } from '../CoinData/CoinDirectory';
@@ -76,6 +79,10 @@ class CachedVerusdRpcInterface extends VerusdRpcInterface {
   registerCallComplete(cacheId) {
     this.callswaiting[cacheId] = this.callswaiting[cacheId] - 1;
     if (this.callswaiting[cacheId] == 0) delete this.callswaiting[cacheId];
+  }
+
+  getBlockHash(height) {
+    return this.request(new GetBlockHashRequest(this.chain, height));
   }
 
   /**

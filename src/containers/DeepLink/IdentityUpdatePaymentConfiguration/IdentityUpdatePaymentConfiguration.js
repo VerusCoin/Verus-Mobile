@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, SafeAreaView, Text } from 'react-native';
+import { Alert, View, SafeAreaView, Text } from 'react-native';
 import Styles from '../../../styles/index';
-import { CompactAddressObject, GenericRequest, GenericResponse, IdentityUpdateRequestDetails, IdentityUpdateResponseDetails, IdentityUpdateResponseOrdinalVDXFObject, VerifiableSignatureData } from 'verus-typescript-primitives';
+import { GenericRequest, GenericResponse, IdentityUpdateRequestDetails, IdentityUpdateResponseDetails, IdentityUpdateResponseOrdinalVDXFObject } from 'verus-typescript-primitives';
 import AnimatedActivityIndicatorBox from '../../../components/AnimatedActivityIndicatorBox';
 import FundSourceSelectList from '../../FundSourceSelect/FundSourceSelectList';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
@@ -22,6 +22,7 @@ import {
   SEND_MODAL_IDENTITY_UPDATE_UPDATES
 } from '../../../utils/constants/sendModal';
 import { usePrevious } from '../../../hooks/usePrevious';
+import {ensureGenericResponseSigner} from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
 
 const IdentityUpdatePaymentConfiguration = props => {
   const {
@@ -73,18 +74,28 @@ const IdentityUpdatePaymentConfiguration = props => {
     : subjectIdentity.identityaddress;
 
   const onSelectFundSource = (source) => {
-    openUpdateIdentitySendModal(source.option.coinObj, source.option.wallet, {
-      [SEND_MODAL_IDENTITY_UPDATE_DETAILS_HEX]: details.toBuffer().toString('hex'),
-      [SEND_MODAL_IDENTITY_UPDATE_IS_TESTNET]: requestIsTestnet,
-      [SEND_MODAL_IDENTITY_UPDATE_ID_RAW_TX_HEX]: subjectIdTxHex,
-      [SEND_MODAL_IDENTITY_UPDATE_ID_BLOCKHEIGHT]: subjectIdentity.blockheight,
-      [SEND_MODAL_IDENTITY_UPDATE_SUBJECT_ID]: subjectIdentity,
-      [SEND_MODAL_IDENTITY_UPDATE_FRIENDLY_NAMES]: friendlyNames,
-      [SEND_MODAL_IDENTITY_UPDATE_UPDATES]: displayUpdates,
-      [SEND_MODAL_IDENTITY_UPDATE_CHAIN_INFO]: chainInfo,
-      [SEND_MODAL_IDENTITY_UPDATE_CMM_DATA_KEYS]: cmmDataKeys,
-      [SEND_MODAL_IDENTITY_UPDATE_TX_HEX]: updateIdTxHex
-    })
+    try {
+      ensureGenericResponseSigner({
+        response: baseResponse,
+        systemID: coinObj.system_id,
+        identityID: signerIdentityAddress,
+      });
+
+      openUpdateIdentitySendModal(source.option.coinObj, source.option.wallet, {
+        [SEND_MODAL_IDENTITY_UPDATE_DETAILS_HEX]: details.toBuffer().toString('hex'),
+        [SEND_MODAL_IDENTITY_UPDATE_IS_TESTNET]: requestIsTestnet,
+        [SEND_MODAL_IDENTITY_UPDATE_ID_RAW_TX_HEX]: subjectIdTxHex,
+        [SEND_MODAL_IDENTITY_UPDATE_ID_BLOCKHEIGHT]: subjectIdentity.blockheight,
+        [SEND_MODAL_IDENTITY_UPDATE_SUBJECT_ID]: subjectIdentity,
+        [SEND_MODAL_IDENTITY_UPDATE_FRIENDLY_NAMES]: friendlyNames,
+        [SEND_MODAL_IDENTITY_UPDATE_UPDATES]: displayUpdates,
+        [SEND_MODAL_IDENTITY_UPDATE_CHAIN_INFO]: chainInfo,
+        [SEND_MODAL_IDENTITY_UPDATE_CMM_DATA_KEYS]: cmmDataKeys,
+        [SEND_MODAL_IDENTITY_UPDATE_TX_HEX]: updateIdTxHex
+      })
+    } catch (e) {
+      Alert.alert('Identity Mismatch', e.message);
+    }
   }
 
   useEffect(() => {
@@ -116,14 +127,12 @@ const IdentityUpdatePaymentConfiguration = props => {
         if (updatedResponse.details == null) updatedResponse.details = [];
         updatedResponse.details = [...updatedResponse.details, responseDetail];
 
-        if (updatedResponse.signature == null) {
-          updatedResponse.signature = new VerifiableSignatureData({
-            systemID: CompactAddressObject.fromIAddress(coinObj.system_id),
-            identityID: CompactAddressObject.fromIAddress(signerIdentityAddress)
-          });
-
-          updatedResponse.setSigned();
-        }
+        ensureGenericResponseSigner({
+          response: updatedResponse,
+          systemID: coinObj.system_id,
+          identityID: signerIdentityAddress,
+        });
+        updatedResponse.setFlags();
 
         next(updatedResponse, [detailIndex]);
       } else {

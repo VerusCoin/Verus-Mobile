@@ -56,8 +56,43 @@ export const SPENDABLE_KEY_CLAIM_NON_NATIVE_FEE_COINS = 0.0002;
 export const SPENDABLE_KEY_CLAIM_IDENTITY_SWEEP_FEE_SATS = BigNumber(20000);
 export const SPENDABLE_KEY_CLAIM_IDENTITY_SWEEP_FEE_COINS = 0.0002;
 const VETH_SYSTEM_ID = 'i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X';
+const IDENTITY_DEFINITION_FIELDS = [
+  'contentmap',
+  'contentMap',
+  'contentmultimap',
+  'contentMultiMap',
+  'flags',
+  'identityaddress',
+  'identityAddress',
+  'minimumsignatures',
+  'minimumSignatures',
+  'name',
+  'parent',
+  'primaryaddresses',
+  'primaryAddresses',
+  'privateaddress',
+  'privateAddress',
+  'recoveryauthority',
+  'recoveryAuthority',
+  'revocationauthority',
+  'revocationAuthority',
+  'systemid',
+  'systemId',
+  'timelock',
+  'txid',
+  'txout',
+  'version',
+  'vout',
+];
 
 const utxoKey = utxo => `${utxo.txid}:${utxo.outputIndex}`;
+
+const getTopLevelIdentityFields = result => {
+  return IDENTITY_DEFINITION_FIELDS.reduce((fields, field) => {
+    if (result?.[field] !== undefined) fields[field] = result[field];
+    return fields;
+  }, {});
+};
 
 const toTransferDestination = address => {
   const {hash, version} = fromBase58Check(address);
@@ -89,15 +124,34 @@ const normalizeIdentityResults = result => {
 
       return {
         ...identityResult,
-        txid: identityResult.txout?.txid,
-        vout: identityResult.txout?.voutnum
+        txid: identityResult.txout?.txid || identityResult.txid,
+        vout:
+          identityResult.txout?.voutnum == null
+            ? identityResult.vout
+            : identityResult.txout.voutnum,
       };
     })
     .filter(identityResult => identityResult != null);
 };
 
 const getIdentityFromResult = result => {
-  return result.identity || result;
+  if (!result || !result.identity) return result;
+
+  return {
+    ...result.identity,
+    ...getTopLevelIdentityFields(result),
+  };
+};
+
+const getIdentityAddress = identity => {
+  return identity?.identityaddress || identity?.identityAddress;
+};
+
+const getIdentityPrimaryAddresses = identity => {
+  const primaryAddresses =
+    identity?.primaryaddresses || identity?.primaryAddresses || [];
+
+  return Array.isArray(primaryAddresses) ? primaryAddresses : [];
 };
 
 const getIdentityDisplayName = (result, identity, systemId) => {
@@ -120,7 +174,7 @@ const getIdentityDisplayName = (result, identity, systemId) => {
 };
 
 const getIdentityAuthorityAddresses = identity => {
-  const identityAddress = identity.identityaddress;
+  const identityAddress = getIdentityAddress(identity);
   const addresses = [];
 
   for (const authority of [
@@ -167,25 +221,35 @@ const getIdentityAuthorityNames = async (systemId, identityResult) => {
 
 const enrichIdentityResult = async (systemId, identityResult) => {
   const identity = getIdentityFromResult(identityResult);
+  const identityAddress = getIdentityAddress(identity);
 
-  if (!identity || !identity.identityaddress) return identityResult;
+  if (!identity || !identityAddress) return identityResult;
 
   try {
-    const identityRes = await getIdentity(systemId, identity.identityaddress);
+    const identityRes = await getIdentity(systemId, identityAddress);
 
     if (identityRes.error) throw new Error(identityRes.error.message);
 
+    const directResult = identityRes.result || {};
+    const directIdentity = getIdentityFromResult(directResult) || {};
     const enrichedIdentityResult = {
+      ...directResult,
       ...identityResult,
-      ...identityRes.result,
+      blockheight: identityResult.blockheight || directResult.blockheight,
+      friendlyname: identityResult.friendlyname || directResult.friendlyname,
+      fullyqualifiedname:
+        identityResult.fullyqualifiedname || directResult.fullyqualifiedname,
+      status: identityResult.status || directResult.status,
+      cansignfor: identityResult.cansignfor ?? directResult.cansignfor,
+      canspendfor: identityResult.canspendfor ?? directResult.canspendfor,
       identity: {
+        ...directIdentity,
         ...identity,
-        ...(identityRes.result.identity || {}),
       },
-      txid: identityResult.txid || identityRes.result.txid,
+      txid: identityResult.txid || directResult.txid,
       vout:
         identityResult.vout == null
-          ? identityRes.result.vout
+          ? directResult.vout
           : identityResult.vout,
     };
 
@@ -669,14 +733,16 @@ const getClaimableIdentities = (identityResults, claimAddress, systemId) => {
   return identityResults
     .filter(result => {
       const identity = getIdentityFromResult(result);
-      const primaryAddresses = identity.primaryaddresses || [];
+      const primaryAddresses = getIdentityPrimaryAddresses(identity);
 
       return primaryAddresses.includes(claimAddress);
     })
     .map(result => {
       const identity = getIdentityFromResult(result);
-      const primaryAddresses = identity.primaryaddresses || [];
-      const minimumSignatures = Number(identity.minimumsignatures || 0);
+      const primaryAddresses = getIdentityPrimaryAddresses(identity);
+      const minimumSignatures = Number(
+        identity.minimumsignatures || identity.minimumSignatures || 0,
+      );
       const active = result.status == null || result.status === 'active';
       let unsupportedReason = null;
 
@@ -689,7 +755,7 @@ const getClaimableIdentities = (identityResults, claimAddress, systemId) => {
       }
 
       return {
-        identityAddress: identity.identityaddress,
+        identityAddress: getIdentityAddress(identity),
         fullyQualifiedName: getIdentityDisplayName(result, identity, systemId),
         authorityNames: result.authorityNames || {},
         result,
@@ -831,6 +897,7 @@ export const discoverSpendableKeyClaims = async ({
       claimAddress,
     );
     let identitiesFromRpc = [];
+    let identityLookupError = null;
 
     try {
       const identityResults = await getIdentitiesWithPrimaryAddress(
@@ -847,6 +914,7 @@ export const discoverSpendableKeyClaims = async ({
         coinObj.system_id,
       );
     } catch (e) {
+      identityLookupError = e.message;
       console.warn(e.message);
     }
     const identities = await Promise.all(
@@ -905,6 +973,7 @@ export const discoverSpendableKeyClaims = async ({
       utxos: spendableUtxos,
       currencies,
       identities,
+      identityLookupError,
     });
   }
 
@@ -950,6 +1019,7 @@ export const discoverSpendableKeyAddressClaims = async ({
       claimAddress,
     );
     let identitiesFromRpc = [];
+    let identityLookupError = null;
 
     try {
       const identityResults = await getIdentitiesWithPrimaryAddress(
@@ -966,6 +1036,7 @@ export const discoverSpendableKeyAddressClaims = async ({
         coinObj.system_id,
       );
     } catch (e) {
+      identityLookupError = e.message;
       console.warn(e.message);
     }
     let identitiesFromExpected = [];
@@ -985,14 +1056,9 @@ export const discoverSpendableKeyAddressClaims = async ({
 
         if (identityRes.error) throw new Error(identityRes.error.message);
 
-        const enrichedIdentityResults = await enrichIdentityResults(
-          coinObj.system_id,
-          [identityRes.result],
-        );
-
         identitiesFromExpected.push(
           ...getClaimableIdentities(
-            enrichedIdentityResults,
+            [identityRes.result],
             claimAddress,
             coinObj.system_id,
           ),
@@ -1067,6 +1133,7 @@ export const discoverSpendableKeyAddressClaims = async ({
       identities,
       deltas,
       deltaCount,
+      identityLookupError,
       redeemed:
         currencies.length === 0 &&
         identities.length === 0 &&
@@ -1317,11 +1384,28 @@ const buildSweepTransaction = async ({
   };
 };
 
+const applyClaimedIdentityAddresses = ({
+  identity,
+  destinationAddress,
+  privateAddress,
+  removePrivateAddress,
+}) => {
+  identity.setPrimaryAddresses([destinationAddress]);
+
+  if (privateAddress) {
+    identity.setPrivateAddress(privateAddress);
+  } else if (removePrivateAddress) {
+    identity.privateAddresses = [];
+  }
+};
+
 const buildCombinedIdentityAndSweepTransaction = async ({
   claimPlan,
   system,
   identity,
   destinationAddress,
+  privateAddress,
+  removePrivateAddress,
   availableUtxos,
 }) => {
   const fundingUtxos = uniqueUtxos(availableUtxos);
@@ -1337,7 +1421,12 @@ const buildCombinedIdentityAndSweepTransaction = async ({
     identity.result,
   );
 
-  updatableIdentity.identity.setPrimaryAddresses([destinationAddress]);
+  applyClaimedIdentityAddresses({
+    identity: updatableIdentity.identity,
+    destinationAddress,
+    privateAddress,
+    removePrivateAddress,
+  });
   const spentIdentityUtxos = getIdentityUtxosUsed(identity, fundingUtxos);
   const changeAddress =
     spentIdentityUtxos.length > 0
@@ -1386,6 +1475,8 @@ const buildIdentityTransactionWithIdentityFee = async ({
   system,
   identity,
   destinationAddress,
+  privateAddress,
+  removePrivateAddress,
   feeUtxos,
 }) => {
   const feeNative = getNativeBalance(system.systemId, feeUtxos);
@@ -1394,7 +1485,12 @@ const buildIdentityTransactionWithIdentityFee = async ({
     identity.result,
   );
 
-  updatableIdentity.identity.setPrimaryAddresses([destinationAddress]);
+  applyClaimedIdentityAddresses({
+    identity: updatableIdentity.identity,
+    destinationAddress,
+    privateAddress,
+    removePrivateAddress,
+  });
 
   const updateTx = await createUpdateIdentityTxWithUtxos({
     systemId: system.systemId,
@@ -1443,6 +1539,7 @@ const buildIdentityTransactionWithIdentityFee = async ({
 export const preflightSpendableKeyClaim = async ({
   claimPlan,
   destinationBySystem,
+  privateAddressBySystem = {},
 }) => {
   const transactions = [];
   const unsupportedIdentities = [];
@@ -1459,6 +1556,14 @@ export const preflightSpendableKeyClaim = async ({
 
   for (const system of claimPlan.systems) {
     const destinationAddress = destinationBySystem[system.systemId];
+    const privateAddress = privateAddressBySystem[system.systemId];
+    // Missing means the user opted out; explicit null means the wallet has no
+    // z-address for this system and the claimed identity must not retain one.
+    const removePrivateAddress =
+      Object.prototype.hasOwnProperty.call(
+        privateAddressBySystem,
+        system.systemId,
+      ) && privateAddress == null;
 
     if (!destinationAddress) {
       throw new Error(`No destination address found for ${system.coinObj.display_ticker || system.coinObj.id}.`);
@@ -1515,6 +1620,8 @@ export const preflightSpendableKeyClaim = async ({
             system,
             identity,
             destinationAddress,
+            privateAddress,
+            removePrivateAddress,
             availableUtxos: combinedUtxos,
           }),
         );
@@ -1539,6 +1646,8 @@ export const preflightSpendableKeyClaim = async ({
             system,
             identity,
             destinationAddress,
+            privateAddress,
+            removePrivateAddress,
             feeUtxos: identityFeeUtxos,
           }),
         );
@@ -1555,7 +1664,12 @@ export const preflightSpendableKeyClaim = async ({
         identity.result,
       );
 
-      updatableIdentity.identity.setPrimaryAddresses([destinationAddress]);
+      applyClaimedIdentityAddresses({
+        identity: updatableIdentity.identity,
+        destinationAddress,
+        privateAddress,
+        removePrivateAddress,
+      });
 
       const updateTx = await createUpdateIdentityTxWithUtxos({
         systemId: system.systemId,

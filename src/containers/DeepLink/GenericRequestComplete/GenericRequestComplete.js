@@ -29,7 +29,6 @@ import { getSystemNameFromSystemId } from '../../../utils/CoinData/CoinData';
 import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import { signGenericResponse } from '../../../utils/api/channels/vrpc/callCreators';
 import {
-  BigNumber,
   GenericRequest,
   GenericResponse,
   GENERIC_RESPONSE_DEEPLINK_VDXF_KEY,
@@ -42,6 +41,12 @@ import { createAlert, resolveAlert } from '../../../actions/actions/alert/dispat
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { genericRequestCompleteStyles as styles } from '../../../styles';
 import { markPendingDeeplinkComplete } from '../../../utils/deeplink/pendingDeeplinkStorage';
+import { prepareGenericResponseForSigning } from '../../../utils/deeplink/genericResponse/prepareGenericResponseForSigning';
+import { encryptGenericResponseDetails } from '../../../utils/deeplink/genericResponse/encryptGenericResponseDetails';
+import {
+  assertNoPlaintextExtendedSpendingKey,
+  assertSecurePostResponseUri,
+} from '../../../utils/deeplink/genericResponse/responseDeliverySecurity';
 
 const GenericRequestComplete = props => {
   const { requestBufferString, responseBufferString } = props.route.params;
@@ -113,11 +118,17 @@ const GenericRequestComplete = props => {
 
     if (responseUri == null) return;
 
+    assertNoPlaintextExtendedSpendingKey(response);
+
     if (isPostUri(responseUri)) {
       const responseBuffer = response.toBuffer();
+      const secureResponseUri = assertSecurePostResponseUri(
+        responseUri.getUriString(),
+      );
+
       try {
         await axios.post(
-          responseUri.getUriString(),
+          secureResponseUri,
           responseBuffer,
           { headers: { 'Content-Type': 'application/octet-stream' } }
         );
@@ -154,7 +165,11 @@ const GenericRequestComplete = props => {
       if (!responseUri) return null;
 
       if (isPostUri(responseUri)) {
-        return "Your response will be sent to the requester";
+        const url = new URL(responseUri.getUriString());
+        const responseLabel = request.hasEncryptResponseToAddress()
+          ? "Your encrypted response"
+          : "Your response";
+        return `${responseLabel} will be sent to ${url.protocol}//${url.host}`;
       }
 
       if (isRedirectUri(responseUri)) {
@@ -265,10 +280,12 @@ const GenericRequestComplete = props => {
       const response = new GenericResponse();
       response.fromBuffer(Buffer.from(responseBufferString, 'hex'), 0);
 
-      response.createdAt = new BigNumber((Date.now() / 1000).toFixed(0));
-      response.handledBy = VERUS_MOBILE_GENERIC_REQUEST_HANDLER_ID;
-
-      response.setFlags();
+      await encryptGenericResponseDetails({ request, response });
+      prepareGenericResponseForSigning({
+        request,
+        response,
+        handledBy: VERUS_MOBILE_GENERIC_REQUEST_HANDLER_ID,
+      });
       if (response.signature == null) {
         await markSavedPendingRequestComplete();
         setLoading(false);

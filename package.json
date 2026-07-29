@@ -18,7 +18,7 @@
     "update-verus-libs": "pnpm remove verus-typescript-primitives && pnpm add 'git+https://github.com/VerusCoin/verus-typescript-primitives.git' && pnpm remove @bitgo/utxo-lib && pnpm add 'git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus' && pnpm remove verusd-rpc-ts-client && pnpm add 'git+https://github.com/VerusCoin/verusd-rpc-ts-client.git' && pnpm remove verusid-ts-client && pnpm add 'git+https://github.com/VerusCoin/verusid-ts-client.git'"
   },
   "dependencies": {
-    "@bitgo/utxo-lib": "git+https://github.com/VerusCoin/BitGoJS.git#utxo-lib-verus",
+    "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#utxo-lib-verus",
     "@noble/curves": "1.9.7",
     "@react-native-async-storage/async-storage": "2.0.0",
     "@react-native-camera-roll/camera-roll": "5.0.4",
@@ -118,10 +118,10 @@
     "varuint-bitcoin": "1.0.4",
     "version_compare": "0.0.3",
     "verus-pay-utils": "git+https://github.com/VerusCoin/verus-pay-utils.git",
-    "verus-typescript-primitives": "git+https://github.com/VerusCoin/verus-typescript-primitives.git",
+    "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives",
     "verus-zkedid-utils": "git+https://github.com/VerusCoin/verus-zkedid-utils.git",
-    "verusd-rpc-ts-client": "git+https://github.com/VerusCoin/verusd-rpc-ts-client.git",
-    "verusid-ts-client": "git+https://github.com/VerusCoin/verusid-ts-client.git",
+    "verusd-rpc-ts-client": "github:VerusCoin/verusd-rpc-ts-client",
+    "verusid-ts-client": "github:VerusCoin/verusid-ts-client",
     "vm-browserify": "0.0.4",
     "wif": "2.0.6"
   },

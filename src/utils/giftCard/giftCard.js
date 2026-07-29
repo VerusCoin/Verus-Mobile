@@ -36,9 +36,12 @@ import {VRPC} from '../constants/intervalConstants';
 import {I_ADDRESS_VERSION, R_ADDRESS_VERSION} from '../constants/constants';
 import {
   fundRawTransaction,
+  getBlock,
+  getBlockHash,
   getAddressUtxos,
   getInfo,
   getSpendableUtxos,
+  getTransaction,
   sendRawTransaction,
 } from '../api/channels/vrpc/callCreators';
 import {getCurrency, getIdentity} from '../api/channels/verusid/callCreators';
@@ -63,8 +66,43 @@ export const GIFT_CARD_FUNDING_STATUS_PENDING = 'pending';
 export const GIFT_CARD_FUNDING_STATUS_CONFIRMED = 'confirmed';
 
 const DEFAULT_LABEL = 'Gift Card';
+const IDENTITY_DEFINITION_FIELDS = [
+  'contentmap',
+  'contentMap',
+  'contentmultimap',
+  'contentMultiMap',
+  'flags',
+  'identityaddress',
+  'identityAddress',
+  'minimumsignatures',
+  'minimumSignatures',
+  'name',
+  'parent',
+  'primaryaddresses',
+  'primaryAddresses',
+  'privateaddress',
+  'privateAddress',
+  'recoveryauthority',
+  'recoveryAuthority',
+  'revocationauthority',
+  'revocationAuthority',
+  'systemid',
+  'systemId',
+  'timelock',
+  'txid',
+  'txout',
+  'version',
+  'vout',
+];
 
 const getUtxoKey = utxo => `${utxo.txid}:${utxo.outputIndex}`;
+
+const getTopLevelIdentityFields = result => {
+  return IDENTITY_DEFINITION_FIELDS.reduce((fields, field) => {
+    if (result?.[field] !== undefined) fields[field] = result[field];
+    return fields;
+  }, {});
+};
 
 const uniqueUtxos = utxos => {
   const seen = new Set();
@@ -243,6 +281,258 @@ const getGiftCardId = requestBufferString => {
   return `${Date.now()}-${requestBufferString.slice(0, 16)}`;
 };
 
+const hasNegativeCurrencyValue = currencyValues => {
+  return Object.values(currencyValues || {}).some(value =>
+    BigNumber(value || 0).isLessThan(0),
+  );
+};
+
+const isClaimDelta = delta => {
+  if (!delta) return false;
+
+  if (delta.satoshis != null || delta.currencyvalues != null) {
+    return (
+      BigNumber(delta.satoshis || 0).isLessThan(0) ||
+      hasNegativeCurrencyValue(delta.currencyvalues)
+    );
+  }
+
+  return delta.sent?.outputs != null;
+};
+
+const getDeltaTime = delta => {
+  const blocktime = Number(delta?.blocktime);
+
+  if (!Number.isFinite(blocktime) || blocktime <= 0) return null;
+
+  return blocktime < 10000000000 ? blocktime * 1000 : blocktime;
+};
+
+const compareClaimDeltas = (a, b) => {
+  const aTime = getDeltaTime(a) || 0;
+  const bTime = getDeltaTime(b) || 0;
+
+  if (aTime !== bTime) return aTime - bTime;
+
+  const aHeight = Number(a?.height || 0);
+  const bHeight = Number(b?.height || 0);
+
+  if (aHeight !== bHeight) return aHeight - bHeight;
+
+  const aBlockIndex = Number(a?.blockindex || 0);
+  const bBlockIndex = Number(b?.blockindex || 0);
+
+  if (aBlockIndex !== bBlockIndex) return aBlockIndex - bBlockIndex;
+
+  return Number(a?.index || 0) - Number(b?.index || 0);
+};
+
+const normalizeOutputAddresses = addresses => {
+  if (Array.isArray(addresses)) return addresses;
+  if (addresses == null) return [];
+
+  return [addresses];
+};
+
+const getClaimedByAddresses = (delta, claimAddress) => {
+  const seen = new Set();
+  const claimedByAddresses = [];
+
+  for (const output of delta?.sent?.outputs || []) {
+    for (const address of normalizeOutputAddresses(output.addresses)) {
+      if (!address || address === claimAddress || seen.has(address)) continue;
+
+      seen.add(address);
+      claimedByAddresses.push(address);
+    }
+  }
+
+  return claimedByAddresses;
+};
+
+const getIdentityFromResult = result => {
+  if (!result || !result.identity) return result;
+
+  return {
+    ...result.identity,
+    ...getTopLevelIdentityFields(result),
+  };
+};
+
+const getIdentityPrimaryAddresses = identity => {
+  const primaryAddresses =
+    identity?.primaryaddresses || identity?.primaryAddresses || [];
+
+  return Array.isArray(primaryAddresses) ? primaryAddresses : [];
+};
+
+const normalizeChainTime = timestamp => {
+  const normalized = Number(timestamp);
+
+  if (!Number.isFinite(normalized) || normalized <= 0) return null;
+
+  return normalized < 10000000000 ? normalized * 1000 : normalized;
+};
+
+const getIdentityResultHeight = identityResult => {
+  return (
+    identityResult?.blockheight ||
+    identityResult?.height ||
+    identityResult?.txout?.height ||
+    null
+  );
+};
+
+const getIdentityResultTxid = identityResult => {
+  return identityResult?.txid || identityResult?.txout?.txid || null;
+};
+
+const getIdentityResultTime = identityResult => {
+  return normalizeChainTime(
+    identityResult?.blocktime ||
+      identityResult?.time ||
+      identityResult?.txout?.blocktime ||
+      identityResult?.txout?.time,
+  );
+};
+
+const getBlockClaimTime = async (systemId, height) => {
+  if (!height) return null;
+
+  try {
+    const hashRes = await getBlockHash(systemId, Number(height));
+
+    if (hashRes.error) throw new Error(hashRes.error.message);
+
+    const blockRes = await getBlock(systemId, hashRes.result, true);
+
+    if (blockRes.error) throw new Error(blockRes.error.message);
+
+    return normalizeChainTime(
+      blockRes.result?.time || blockRes.result?.blocktime,
+    );
+  } catch (e) {
+    console.warn(e.message);
+    return null;
+  }
+};
+
+const getIdentityRedemptionClaimInfo = redemption => {
+  return {
+    systemId: redemption.systemId,
+    coinObj: redemption.coinObj,
+    claimAddress: redemption.claimAddress || null,
+    txid: redemption.txid || null,
+    height: redemption.height || null,
+    claimedAt: redemption.claimedAt || null,
+    claimedByAddresses: redemption.claimedByAddresses || [],
+    identities: redemption.identities || [],
+  };
+};
+
+const statusSystemBelongsToCard = (card, system) => {
+  const expectedAddress = card?.addressesBySystem?.[system?.systemId];
+
+  return (
+    expectedAddress != null &&
+    system?.claimAddress != null &&
+    system.claimAddress === expectedAddress
+  );
+};
+
+const identityRedemptionBelongsToCard = (card, redemption) => {
+  const expectedAddress = card?.addressesBySystem?.[redemption?.systemId];
+
+  if (!expectedAddress) return false;
+  if (redemption?.claimAddress) return redemption.claimAddress === expectedAddress;
+
+  return (card?.status?.systems || []).some(system =>
+    statusSystemBelongsToCard(card, system) &&
+    system.systemId === redemption.systemId,
+  );
+};
+
+export const getGiftCardClaimInfo = card => {
+  const isRedeemed =
+    card?.status?.state === GIFT_CARD_STATUS_REDEEMED ||
+    card?.status?.redeemed;
+
+  if (!isRedeemed) {
+    return null;
+  }
+
+  const deltaSystems = (card.status?.systems || [])
+    .filter(system => statusSystemBelongsToCard(card, system))
+    .map(system => {
+      const deltas = (system.deltas || [])
+        .filter(isClaimDelta)
+        .sort(compareClaimDeltas);
+      const claimDelta = deltas[deltas.length - 1];
+
+      if (!claimDelta) return null;
+
+      const claimedAt = getDeltaTime(claimDelta);
+
+      return {
+        systemId: system.systemId,
+        coinObj: system.coinObj,
+        txid: claimDelta.txid || null,
+        height: claimDelta.height || null,
+        claimedAt,
+        claimedByAddresses: getClaimedByAddresses(
+          claimDelta,
+          system.claimAddress,
+        ),
+      };
+    })
+    .filter(system => system != null);
+  const identityRedemptionSystems = (card.status?.identityRedemptions || [])
+    .filter(redemption => identityRedemptionBelongsToCard(card, redemption))
+    .map(getIdentityRedemptionClaimInfo)
+    .filter(system => system.claimedByAddresses.length > 0);
+  const systems = [...deltaSystems, ...identityRedemptionSystems];
+
+  if (systems.length === 0) return null;
+
+  const claimedByAddresses = [];
+  const seenAddresses = new Set();
+
+  for (const system of systems) {
+    for (const address of system.claimedByAddresses) {
+      if (seenAddresses.has(address)) continue;
+
+      seenAddresses.add(address);
+      claimedByAddresses.push(address);
+    }
+  }
+
+  const latestSystem = systems.reduce((latest, system) => {
+    if (latest == null) return system;
+
+    const systemSort = [
+      Number(system.claimedAt || 0),
+      Number(system.height || 0),
+    ];
+    const latestSort = [
+      Number(latest.claimedAt || 0),
+      Number(latest.height || 0),
+    ];
+
+    return systemSort[0] > latestSort[0] ||
+      (systemSort[0] === latestSort[0] && systemSort[1] > latestSort[1])
+      ? system
+      : latest;
+  }, null);
+
+  return {
+    systems,
+    claimedByAddresses,
+    claimedAt: latestSystem?.claimedAt || null,
+    height: latestSystem?.height || null,
+    txid: latestSystem?.txid || null,
+  };
+};
+
 const normalizeCardLabel = label => {
   const normalized = typeof label === 'string' ? label.trim() : '';
 
@@ -321,6 +611,7 @@ export const createGiftCard = async ({
     requestIsTestnet,
     encrypted,
     kdfIters: encrypted ? Number(kdfIters) : 0,
+    sharedAt: null,
     requestUri,
     requestBufferString,
     addressesBySystem: derived.addressesBySystem,
@@ -388,7 +679,13 @@ export const buildGiftCardNfcDeeplinkUri = card => {
 };
 
 const getCardStateFromClaims = claims => {
-  if (claims.redeemed) return GIFT_CARD_STATUS_REDEEMED;
+  if (
+    claims.redeemed ||
+    ((claims.identityRedemptions || []).length > 0 && !claims.hasClaims)
+  ) {
+    return GIFT_CARD_STATUS_REDEEMED;
+  }
+
   if (claims.hasClaims) return GIFT_CARD_STATUS_FUNDED;
   return GIFT_CARD_STATUS_NEW;
 };
@@ -419,15 +716,75 @@ export const hasPendingGiftCardFunding = card => {
   return getGiftCardPendingFundings(card).length > 0;
 };
 
+export const hasGiftCardBeenShared = card => {
+  const sharedAt = Number(card?.sharedAt);
+
+  return Number.isFinite(sharedAt) && sharedAt > 0;
+};
+
+export const markGiftCardShared = (card, sharedAt = Date.now()) => {
+  if (hasGiftCardBeenShared(card)) return card;
+
+  const normalizedSharedAt = Number(sharedAt);
+
+  if (!Number.isFinite(normalizedSharedAt) || normalizedSharedAt <= 0) {
+    throw new Error('Gift card share time must be a positive timestamp.');
+  }
+
+  return {
+    ...card,
+    sharedAt: normalizedSharedAt,
+    updatedAt: Date.now(),
+  };
+};
+
+export const getGiftCardIdentityLookupErrors = card => {
+  return (card?.status?.systems || []).filter(system => {
+    return (
+      statusSystemBelongsToCard(card, system) &&
+      typeof system.identityLookupError === 'string' &&
+      system.identityLookupError.length > 0
+    );
+  });
+};
+
+const getFundingIdentityAddress = identity => {
+  return identity?.identityAddress || identity?.identityaddress;
+};
+
+const getFundingIdentitySystemId = identity => {
+  return identity?.systemId || identity?.systemid;
+};
+
 const normalizeFundingIdentity = identity => {
-  if (!identity?.identityAddress || !identity?.systemId) return null;
+  const identityAddress = getFundingIdentityAddress(identity);
+  const systemId = getFundingIdentitySystemId(identity);
+
+  if (!identityAddress || !systemId) return null;
 
   return {
     chain: identity.chain,
-    systemId: identity.systemId,
-    identityAddress: identity.identityAddress,
-    fullyQualifiedName: identity.fullyQualifiedName || identity.name,
+    systemId,
+    identityAddress,
+    fullyQualifiedName:
+      identity.fullyQualifiedName ||
+      identity.fullyqualifiedname ||
+      identity.friendlyname ||
+      identity.name,
   };
+};
+
+const addExpectedFundingIdentity = (identities, seen, identity) => {
+  const normalized = normalizeFundingIdentity(identity);
+
+  if (!normalized) return;
+
+  const key = `${normalized.systemId}:${normalized.identityAddress}`;
+
+  if (seen.has(key)) return;
+
+  seen.add(key);
+  identities.push(normalized);
 };
 
 const getExpectedFundingIdentities = card => {
@@ -436,57 +793,364 @@ const getExpectedFundingIdentities = card => {
 
   for (const entry of card?.fundingHistory || []) {
     for (const identity of entry.identities || []) {
-      const normalized = normalizeFundingIdentity(identity);
+      addExpectedFundingIdentity(identities, seen, identity);
+    }
+  }
 
-      if (!normalized) continue;
+  for (const system of card?.status?.systems || []) {
+    if (!statusSystemBelongsToCard(card, system)) continue;
 
-      const key = `${normalized.systemId}:${normalized.identityAddress}`;
+    for (const identity of system.identities || []) {
+      addExpectedFundingIdentity(identities, seen, {
+        ...identity,
+        systemId: system.systemId,
+      });
+    }
+  }
 
-      if (seen.has(key)) continue;
+  for (const redemption of card?.status?.identityRedemptions || []) {
+    if (!identityRedemptionBelongsToCard(card, redemption)) continue;
 
-      seen.add(key);
-      identities.push(normalized);
+    for (const identity of redemption.identities || []) {
+      addExpectedFundingIdentity(identities, seen, {
+        ...identity,
+        systemId: redemption.systemId,
+      });
     }
   }
 
   return identities;
 };
 
-const statusHasExpectedIdentity = (status, expectedIdentity) => {
-  return (status?.systems || []).some(system => {
+const getStatusExpectedIdentity = (status, expectedIdentity, card) => {
+  for (const system of status?.systems || []) {
+    if (system.systemId !== expectedIdentity.systemId) continue;
+    if (card != null && !statusSystemBelongsToCard(card, system)) continue;
+
+    const identity = (system.identities || []).find(
+      candidate =>
+        getFundingIdentityAddress(candidate) === expectedIdentity.identityAddress,
+    );
+
+    if (identity != null) return identity;
+  }
+
+  return null;
+};
+
+const statusHasExpectedIdentity = (status, expectedIdentity, card) => {
+  return getStatusExpectedIdentity(status, expectedIdentity, card) != null;
+};
+
+const statusSystemHasClaims = system => {
+  return (
+    (system.currencies || []).length > 0 ||
+    (system.identities || []).length > 0
+  );
+};
+
+const statusSystemsHaveClaims = systems => {
+  return (systems || []).some(statusSystemHasClaims);
+};
+
+const identityRedemptionsHaveExpectedIdentity = (
+  identityRedemptions,
+  expectedIdentity,
+) => {
+  return (identityRedemptions || []).some(redemption => {
     return (
-      system.systemId === expectedIdentity.systemId &&
-      (system.identities || []).some(
-        identity => identity.identityAddress === expectedIdentity.identityAddress,
+      redemption.systemId === expectedIdentity.systemId &&
+      (redemption.identities || []).some(
+        identity =>
+          getFundingIdentityAddress(identity) ===
+          expectedIdentity.identityAddress,
       )
     );
   });
 };
 
-const isPendingFundingResolved = (entry, status) => {
-  if (status.redeemed === true) return true;
+const identityStateIsNewerThanObservation = (identityResult, observation) => {
+  const observedResult = observation?.result || observation;
+  const identityHeight = Number(getIdentityResultHeight(identityResult));
+  const observedHeight = Number(getIdentityResultHeight(observedResult));
 
-  const expectedIdentities = (entry.identities || [])
-    .map(normalizeFundingIdentity)
-    .filter(identity => identity != null);
+  if (
+    Number.isFinite(identityHeight) &&
+    identityHeight > 0 &&
+    Number.isFinite(observedHeight) &&
+    observedHeight > 0
+  ) {
+    return identityHeight >= observedHeight;
+  }
 
-  if (expectedIdentities.length > 0) {
-    return expectedIdentities.every(identity =>
-      statusHasExpectedIdentity(status, identity),
+  return false;
+};
+
+const preserveObservedIdentityClaims = ({
+  card,
+  claims,
+  expectedIdentities,
+  identityRedemptions,
+}) => {
+  let systems = claims.systems || [];
+  let changed = false;
+
+  for (const expectedIdentity of expectedIdentities || []) {
+    if (statusHasExpectedIdentity({systems}, expectedIdentity)) continue;
+    if (
+      identityRedemptionsHaveExpectedIdentity(
+        identityRedemptions,
+        expectedIdentity,
+      )
+    ) {
+      continue;
+    }
+
+    const observedIdentity = getStatusExpectedIdentity(
+      card?.status,
+      expectedIdentity,
+      card,
+    );
+
+    if (observedIdentity == null) continue;
+
+    const previousSystem = (card?.status?.systems || []).find(system => {
+      return (
+        system.systemId === expectedIdentity.systemId &&
+        statusSystemBelongsToCard(card, system)
+      );
+    });
+    const systemIndex = systems.findIndex(
+      system => system.systemId === expectedIdentity.systemId,
+    );
+
+    if (systemIndex >= 0) {
+      systems = systems.map((system, index) => {
+        if (index !== systemIndex) return system;
+
+        return {
+          ...system,
+          identities: [...(system.identities || []), observedIdentity],
+          redeemed: false,
+        };
+      });
+    } else if (previousSystem != null) {
+      systems = [
+        ...systems,
+        {
+          ...previousSystem,
+          currencies: previousSystem.currencies || [],
+          identities: [observedIdentity],
+          deltas: [],
+          deltaCount: 0,
+          redeemed: false,
+        },
+      ];
+    }
+
+    changed = true;
+  }
+
+  if (!changed) return claims;
+
+  return {
+    ...claims,
+    systems,
+    hasClaims: statusSystemsHaveClaims(systems),
+    redeemed: systems.length > 0 && systems.every(system => system.redeemed),
+  };
+};
+
+const discoverGiftCardIdentityRedemptions = async ({
+  card,
+  claims,
+  expectedIdentities,
+}) => {
+  const redemptions = [];
+
+  for (const expectedIdentity of expectedIdentities || []) {
+    if (statusHasExpectedIdentity(claims, expectedIdentity)) continue;
+
+    const observedOnCard = getStatusExpectedIdentity(
+      card?.status,
+      expectedIdentity,
+      card,
+    );
+
+    if (observedOnCard == null) continue;
+
+    try {
+      const identityRes = await getIdentity(
+        expectedIdentity.systemId,
+        expectedIdentity.identityAddress,
+      );
+
+      if (identityRes.error) throw new Error(identityRes.error.message);
+
+      const identityResult = identityRes.result;
+      const identity = getIdentityFromResult(identityResult);
+      const claimAddress = card.addressesBySystem?.[expectedIdentity.systemId];
+      const primaryAddresses = getIdentityPrimaryAddresses(identity);
+      const claimedByAddresses = primaryAddresses.filter(
+        address => address && address !== claimAddress,
+      );
+
+      if (claimedByAddresses.length === 0) continue;
+      if (!identityStateIsNewerThanObservation(identityResult, observedOnCard)) {
+        continue;
+      }
+
+      const height = getIdentityResultHeight(identityResult);
+
+      redemptions.push({
+        systemId: expectedIdentity.systemId,
+        coinObj: (claims.systems || []).find(
+          system => system.systemId === expectedIdentity.systemId,
+        )?.coinObj,
+        claimAddress,
+        txid: getIdentityResultTxid(identityResult),
+        height,
+        claimedAt:
+          getIdentityResultTime(identityResult) ||
+          (await getBlockClaimTime(expectedIdentity.systemId, height)),
+        claimedByAddresses,
+        identities: [
+          {
+            identityAddress: expectedIdentity.identityAddress,
+            fullyQualifiedName: expectedIdentity.fullyQualifiedName,
+          },
+        ],
+      });
+    } catch (e) {
+      console.warn(e.message);
+    }
+  }
+
+  return redemptions;
+};
+
+const getPendingFundingTransactions = entry => {
+  if (Array.isArray(entry?.transactions)) {
+    return entry.transactions.filter(
+      transaction =>
+        typeof transaction?.txid === 'string' &&
+        transaction.txid.length > 0 &&
+        typeof transaction?.systemId === 'string' &&
+        transaction.systemId.length > 0,
     );
   }
 
-  return status.hasClaims === true;
+  return (entry?.txids || [])
+    .map((txid, index) => ({
+      txid,
+      systemId: entry?.systems?.[index],
+    }))
+    .filter(
+      transaction =>
+        typeof transaction.txid === 'string' &&
+        transaction.txid.length > 0 &&
+        typeof transaction.systemId === 'string' &&
+        transaction.systemId.length > 0,
+    );
 };
 
-const resolveFundingHistory = (fundingHistory, status) => {
-  return (fundingHistory || []).map(entry => {
+const getStatusConfirmedTransactionIds = status => {
+  const txids = new Set();
+  const addTxid = txid => {
+    if (typeof txid === 'string' && txid.length > 0) {
+      txids.add(txid);
+    }
+  };
+
+  for (const system of status?.systems || []) {
+    for (const utxo of system.utxos || []) addTxid(utxo?.txid);
+    for (const delta of system.deltas || []) addTxid(delta?.txid);
+
+    for (const identity of system.identities || []) {
+      addTxid(identity?.txid);
+      addTxid(identity?.result?.txid);
+      addTxid(identity?.result?.txout?.txid);
+    }
+  }
+
+  for (const redemption of status?.identityRedemptions || []) {
+    addTxid(redemption?.txid);
+
+    for (const identity of redemption.identities || []) {
+      addTxid(identity?.txid);
+      addTxid(identity?.result?.txid);
+      addTxid(identity?.result?.txout?.txid);
+    }
+  }
+
+  return txids;
+};
+
+const fundingTransactionIsConfirmed = async (
+  transaction,
+  confirmedTransactionIds,
+) => {
+  if (confirmedTransactionIds.has(transaction.txid)) return true;
+
+  try {
+    const result = await getTransaction(
+      transaction.systemId,
+      transaction.txid,
+      1,
+    );
+
+    return (
+      result?.error == null &&
+      Number(result?.result?.confirmations || 0) > 0
+    );
+  } catch (_) {
+    return false;
+  }
+};
+
+const isPendingFundingResolved = async (entry, status) => {
+  const expectedIdentities = (entry.identities || [])
+    .map(normalizeFundingIdentity)
+    .filter(identity => identity != null);
+  const transactions = getPendingFundingTransactions(entry);
+  const confirmedTransactionIds = getStatusConfirmedTransactionIds(status);
+  const identitiesResolved =
+    expectedIdentities.length === 0 ||
+    expectedIdentities.every(
+      identity =>
+        statusHasExpectedIdentity(status, identity) ||
+        identityRedemptionsHaveExpectedIdentity(
+          status?.identityRedemptions,
+          identity,
+        ),
+    );
+
+  if (!identitiesResolved) return false;
+
+  if (transactions.length === 0) {
+    return expectedIdentities.length > 0;
+  }
+
+  const confirmations = await Promise.all(
+    transactions.map(transaction =>
+      fundingTransactionIsConfirmed(
+        transaction,
+        confirmedTransactionIds,
+      ),
+    ),
+  );
+
+  return confirmations.every(Boolean);
+};
+
+const resolveFundingHistory = async (fundingHistory, status) => {
+  return Promise.all((fundingHistory || []).map(async entry => {
     const normalizedStatus =
       entry.status || (entry.pending ? GIFT_CARD_FUNDING_STATUS_PENDING : null);
 
     if (
       normalizedStatus === GIFT_CARD_FUNDING_STATUS_PENDING &&
-      isPendingFundingResolved(entry, status)
+      await isPendingFundingResolved(entry, status)
     ) {
       return {
         ...entry,
@@ -497,7 +1161,7 @@ const resolveFundingHistory = (fundingHistory, status) => {
     }
 
     return entry;
-  });
+  }));
 };
 
 export const getSubmittedGiftCardFundingIdentities = fundingResult => {
@@ -562,7 +1226,20 @@ export const getSubmittedGiftCardFundingIdentities = fundingResult => {
 
 export const addGiftCardPendingFunding = (card, fundingResult) => {
   const now = Date.now();
-  const txids = (fundingResult?.results || [])
+  const transactions = (fundingResult?.results || [])
+    .filter(
+      result =>
+        typeof result?.txid === 'string' &&
+        result.txid.length > 0 &&
+        typeof result?.systemId === 'string' &&
+        result.systemId.length > 0,
+    )
+    .map(result => ({
+      txid: result.txid,
+      systemId: result.systemId,
+      type: result.type || null,
+    }));
+  const txids = transactions
     .map(result => result.txid)
     .filter(txid => typeof txid === 'string' && txid.length > 0);
 
@@ -576,6 +1253,7 @@ export const addGiftCardPendingFunding = (card, fundingResult) => {
         status: GIFT_CARD_FUNDING_STATUS_PENDING,
         pending: true,
         txids,
+        transactions,
         systems: (fundingResult?.results || []).map(result => result.systemId),
         identities: getSubmittedGiftCardFundingIdentities(fundingResult),
       },
@@ -624,22 +1302,40 @@ export const refreshGiftCardStatus = async ({
   card,
   activeCoinsForUser,
 }) => {
+  const expectedIdentities = getExpectedFundingIdentities(card);
   const claims = await discoverSpendableKeyAddressClaims({
     addressesBySystem: card.addressesBySystem,
     requestIsTestnet: card.requestIsTestnet,
     activeCoinsForUser,
-    expectedIdentities: getExpectedFundingIdentities(card),
+    expectedIdentities,
   });
+  const identityRedemptions = await discoverGiftCardIdentityRedemptions({
+    card,
+    claims,
+    expectedIdentities,
+  });
+  const claimsWithPreservedIdentities = preserveObservedIdentityClaims({
+    card,
+    claims,
+    expectedIdentities,
+    identityRedemptions,
+  });
+  const claimsWithRedemptions = {
+    ...claimsWithPreservedIdentities,
+    identityRedemptions,
+  };
+  const state = getCardStateFromClaims(claimsWithRedemptions);
   const status = {
-    ...claims,
-    state: getCardStateFromClaims(claims),
+    ...claimsWithRedemptions,
+    redeemed: state === GIFT_CARD_STATUS_REDEEMED,
+    state,
     lastCheckedAt: Date.now(),
   };
 
   return {
     ...card,
     status,
-    fundingHistory: resolveFundingHistory(card.fundingHistory, status),
+    fundingHistory: await resolveFundingHistory(card.fundingHistory, status),
     updatedAt: Date.now(),
   };
 };
@@ -1289,6 +1985,12 @@ export const preflightGiftCardFunding = async ({
   activeCoinsForUser,
   activeAccount,
 }) => {
+  if (hasGiftCardBeenShared(card)) {
+    throw new Error(
+      'Shared gift cards cannot be funded. Create a new gift card instead.',
+    );
+  }
+
   if (card?.status?.state === GIFT_CARD_STATUS_REDEEMED || card?.status?.redeemed) {
     throw new Error('Redeemed gift cards cannot be funded.');
   }
@@ -1463,6 +2165,27 @@ export const getGiftCardServiceDefaults = () => ({
   cards: {},
 });
 
+const normalizeGiftCardCards = cards => {
+  if (cards == null || typeof cards !== 'object') return {};
+
+  return Object.keys(cards).reduce((normalizedCards, key) => {
+    const card = cards[key];
+
+    if (card == null || typeof card !== 'object') return normalizedCards;
+
+    const cardId =
+      typeof card.id === 'string' && card.id.length > 0 ? card.id : key;
+
+    normalizedCards[cardId] = {
+      ...card,
+      id: cardId,
+      sharedAt: hasGiftCardBeenShared(card) ? Number(card.sharedAt) : null,
+    };
+
+    return normalizedCards;
+  }, {});
+};
+
 export const normalizeGiftCardServiceData = data => {
   const defaults = getGiftCardServiceDefaults();
 
@@ -1471,30 +2194,81 @@ export const normalizeGiftCardServiceData = data => {
   return {
     ...defaults,
     ...data,
-    cards:
-      data.cards != null && typeof data.cards === 'object'
-        ? data.cards
-        : {},
+    cards: normalizeGiftCardCards(data.cards),
   };
 };
 
 export const upsertGiftCard = (serviceData, card) => {
   const normalized = normalizeGiftCardServiceData(serviceData);
+  const cards = Object.keys(normalized.cards).reduce((nextCards, key) => {
+    const existingCard = normalized.cards[key];
+
+    if (key === card.id || existingCard?.id === card.id) return nextCards;
+
+    nextCards[key] = existingCard;
+    return nextCards;
+  }, {});
 
   return {
     ...normalized,
     cards: {
-      ...normalized.cards,
+      ...cards,
       [card.id]: card,
     },
   };
 };
 
+const getGiftCardPersistenceSnapshot = card => {
+  if (card == null) return null;
+
+  return {
+    id: card.id,
+    version: card.version,
+    label: card.label,
+    createdAt: card.createdAt,
+    updatedAt: card.updatedAt,
+    sharedAt: hasGiftCardBeenShared(card) ? Number(card.sharedAt) : null,
+    requestIsTestnet: card.requestIsTestnet,
+    encrypted: card.encrypted,
+    kdfIters: card.kdfIters,
+    requestUri: card.requestUri,
+    requestBufferString: card.requestBufferString,
+    addressesBySystem: card.addressesBySystem || {},
+    status: card.status || null,
+    fundingHistory: card.fundingHistory || [],
+  };
+};
+
+export const upsertGiftCardIfUnchanged = (
+  serviceData,
+  expectedCard,
+  nextCard,
+) => {
+  const normalized = normalizeGiftCardServiceData(serviceData);
+  const currentCard = normalized.cards?.[expectedCard?.id];
+
+  if (currentCard == null) return normalized;
+
+  if (
+    JSON.stringify(getGiftCardPersistenceSnapshot(currentCard)) !==
+    JSON.stringify(getGiftCardPersistenceSnapshot(expectedCard))
+  ) {
+    return normalized;
+  }
+
+  return upsertGiftCard(normalized, nextCard);
+};
+
 export const removeGiftCard = (serviceData, cardId) => {
   const normalized = normalizeGiftCardServiceData(serviceData);
-  const cards = {...normalized.cards};
+  const cards = Object.keys(normalized.cards).reduce((nextCards, key) => {
+    const card = normalized.cards[key];
 
-  delete cards[cardId];
+    if (key === cardId || card?.id === cardId) return nextCards;
+
+    nextCards[key] = card;
+    return nextCards;
+  }, {});
 
   return {
     ...normalized,

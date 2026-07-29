@@ -112,7 +112,7 @@ export const processEncryptedKeys = async (
 
   // Convert identity address to 20-byte hex for zGetEncryptionAddress
   const identityAddress = identity.identityaddress;
-  let idHex = fromBase58Check(identityAddress).hash.toString("hex");
+  let idHex = Buffer.from(fromBase58Check(identityAddress).hash).toString("hex");
   if (idHex.length % 2 !== 0) idHex = "0" + idHex;
 
   // Derive encryption address (self-encryption: fromId=toId=subject identity)

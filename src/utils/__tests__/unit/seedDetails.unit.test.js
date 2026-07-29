@@ -6,6 +6,7 @@ import {
   WalletBackupOrdinalVDXFObject,
 } from 'verus-typescript-primitives';
 import {
+  SEED_DETAILS_ENCRYPTION_ITERS_MAX,
   buildSeedDetails,
   getMnemonicEntropyBuffer,
   seedDetailsOrdinalToMnemonic,
@@ -122,5 +123,40 @@ describe('seed details helpers', () => {
         ExpectedOrdinalClass: SpendableKeyDetailsOrdinalVDXFObject,
       }),
     ).toThrow('Only BIP39 seed details are supported');
+  });
+
+  it('rejects encryption settings above one million KDF iterations', async () => {
+    await expect(
+      buildSeedDetails({
+        SeedDetailsClass: SpendableKeyDetails,
+        mnemonic: MNEMONIC,
+        password: 'claim password',
+        kdfIters: SEED_DETAILS_ENCRYPTION_ITERS_MAX + 1,
+      }),
+    ).rejects.toThrow('between 1 and 1000000');
+  });
+
+  it('rejects received encrypted seed details above the KDF limit', async () => {
+    const spendableKey = await buildSeedDetails({
+      SeedDetailsClass: SpendableKeyDetails,
+      mnemonic: MNEMONIC,
+      password: 'claim password',
+      kdfIters: 1,
+    });
+    spendableKey.KDFIters = new BN(
+      SEED_DETAILS_ENCRYPTION_ITERS_MAX + 1,
+      10,
+    );
+    const spendableKeyOrdinal = new SpendableKeyDetailsOrdinalVDXFObject({
+      data: spendableKey,
+    });
+
+    expect(() =>
+      seedDetailsOrdinalToMnemonic({
+        seedDetailsOrdinal: spendableKeyOrdinal,
+        ExpectedOrdinalClass: SpendableKeyDetailsOrdinalVDXFObject,
+        password: 'claim password',
+      }),
+    ).toThrow('maximum supported KDF iteration count of 1000000');
   });
 });
