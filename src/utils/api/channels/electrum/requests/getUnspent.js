@@ -4,7 +4,7 @@ import { TxDecoder } from '../../../../crypto/txDecoder'
 import { hashRawTx, hexHashToDecimal } from '../../../../crypto/hash'
 import { arraysEqual } from '../../../../objectManip'
 import { resolveSequentially } from '../../../../promises'
-import { networks } from 'bitgo-utxo-lib'
+import { networks, Transaction } from 'bitgo-utxo-lib'
 import { coinsToSats, satsToCoins, kmdCalcInterest, truncateDecimal } from '../../../../math'
 import { ELECTRUM } from '../../../../constants/intervalConstants'
 import BigNumber from 'bignumber.js'
@@ -119,6 +119,24 @@ export const getUnspentFormatted = (coinObj, activeUser, verifyMerkle = false, v
               ' does not appear to match the values of the transaction that it represents.')
           } 
           formattedUtxos[index].verifiedTxid = true
+
+          const previousTransaction = Transaction.fromHex(
+            getTxsRes[index].result,
+            network,
+          );
+          const previousOutput = previousTransaction.outs[formattedUtxo.vout];
+
+          if (
+            previousOutput == null ||
+            !Number.isSafeInteger(previousOutput.value) ||
+            previousOutput.value < 0
+          ) {
+            throw new Error(
+              "Mismatch error! Unable to verify the referenced previous transaction output value.",
+            );
+          }
+
+          formattedUtxos[index].verifiedValueSats = previousOutput.value;
 
           //Calculate interest to claim when transaction is sent
           if (coinObj.id === 'KMD') {

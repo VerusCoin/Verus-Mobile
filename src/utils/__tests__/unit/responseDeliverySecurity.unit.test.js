@@ -23,7 +23,10 @@ describe('generic response delivery security', () => {
 
   it('requires HTTPS for POST response URIs', () => {
     try {
-      assertSecurePostResponseUri('http://requester.example/response');
+      assertSecurePostResponseUri(
+        'http://requester.example/response',
+        false,
+      );
       throw new Error('Expected insecure response URI to be rejected.');
     } catch (error) {
       expect(error).toEqual(
@@ -35,7 +38,10 @@ describe('generic response delivery security', () => {
     }
 
     expect(
-      assertSecurePostResponseUri('https://requester.example/response'),
+      assertSecurePostResponseUri(
+        'https://requester.example/response',
+        false,
+      ),
     ).toBe('https://requester.example/response');
   });
 

@@ -17,6 +17,7 @@ import { getSendCurrencyTransaction } from "./getSendCurrencyTransaction";
 import { I_ADDRESS_VERSION, R_ADDRESS_VERSION } from "../../../../constants/constants";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
 import { Alert } from "react-native";
+import { getSingleSendCurrencyOutput } from "./sendCurrencyOutputValidation";
 const { createUnfundedCurrencyTransfer, validateFundedCurrencyTransfer } = smarttxs
 
 //TODO: Calculate fee for each coin seperately
@@ -402,7 +403,10 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       
       const unfundedTxObj = Transaction.fromHex(sendCurrencyHex, networks.verus);
 
-      const outputInfo = unpackOutput(unfundedTxObj.outs[0], systemId);
+      const outputInfo = unpackOutput(
+        getSingleSendCurrencyOutput(unfundedTxObj),
+        systemId,
+      );
 
       /**
        * @type {ReserveTransfer}

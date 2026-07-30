@@ -6,6 +6,7 @@ import { buildSignedTx } from '../../../../crypto/buildTx'
 import { ELECTRUM } from '../../../../constants/intervalConstants';
 import BigNumber from 'bignumber.js';
 import { requestPrivKey } from '../../../../auth/authBox';
+import { assertSanePotentialTransactionFee } from '../transactionFee';
 
 export const pushTx = (coinObj, _rawtx) => {
   const callType = 'pushtx'
@@ -49,7 +50,12 @@ export const txPreflight = (
   value = BigNumber(truncateDecimal(coinsToSats(value), coinObj.decimals));
 
   return new Promise((resolve, reject) => {
-    getUnspentFormatted(coinObj, activeUser, verifyMerkle, verifyTxid)
+    getUnspentFormatted(
+      coinObj,
+      activeUser,
+      verifyMerkle,
+      verifyTxid || coinObj.id === "BTC",
+    )
       .then(async (res) => {
         utxoList = res.utxoList;
         let unshieldedFunds = res.unshieldedFunds;
@@ -99,6 +105,7 @@ export const txPreflight = (
                 txid: utxoList[i].txid,
                 vout: utxoList[i].vout,
                 value: utxoList[i].amountSats,
+                verifiedValueSats: utxoList[i].verifiedValueSats,
                 interestSats: utxoList[i].interestSats,
                 verifiedMerkle: utxoList[i].verifiedMerkle,
                 verifiedTxid: utxoList[i].verifiedTxid,
@@ -108,6 +115,7 @@ export const txPreflight = (
                 txid: utxoList[i].txid,
                 vout: utxoList[i].vout,
                 value: utxoList[i].amountSats,
+                verifiedValueSats: utxoList[i].verifiedValueSats,
                 verified: utxoList[i].verified ? utxoList[i].verified : false,
                 verifiedMerkle: utxoList[i].verifiedMerkle,
                 verifiedTxid: utxoList[i].verifiedTxid,
@@ -277,6 +285,15 @@ export const txPreflight = (
               }
 
               const _estimatedFee = vinSum - outputs[0].value - _change;
+
+              if (coinObj.id === "BTC") {
+                assertSanePotentialTransactionFee(
+                  inputs,
+                  value,
+                  _change,
+                  btcFees ? fee : _estimatedFee,
+                );
+              }
 
               let _rawtx;
 
