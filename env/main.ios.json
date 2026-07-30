@@ -21,6 +21,7 @@
   "ENABLE_WYRE_COIN": true,
   "ENABLE_VRPC": true,
   "ENABLE_VERUSID": true,
+  "ALLOW_HTTP_GENERIC_RESPONSE_POSTS": false,
 
   "SERVICES_DISABLED_DEFAULT": {
     "wyre_service": true,

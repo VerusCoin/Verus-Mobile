@@ -22,11 +22,38 @@ describe('generic response delivery security', () => {
   });
 
   it('requires HTTPS for POST response URIs', () => {
-    expect(() =>
-      assertSecurePostResponseUri('http://requester.example/response'),
-    ).toThrow('must use HTTPS');
+    try {
+      assertSecurePostResponseUri('http://requester.example/response');
+      throw new Error('Expected insecure response URI to be rejected.');
+    } catch (error) {
+      expect(error).toEqual(
+        expect.objectContaining({
+          isResponsePostError: true,
+        }),
+      );
+      expect(error.message).toContain('must use HTTPS');
+    }
+
     expect(
       assertSecurePostResponseUri('https://requester.example/response'),
     ).toBe('https://requester.example/response');
+  });
+
+  it('allows HTTP for POST response URIs when explicitly enabled', () => {
+    expect(
+      assertSecurePostResponseUri(
+        'http://requester.example/response',
+        true,
+      ),
+    ).toBe('http://requester.example/response');
+  });
+
+  it('rejects non-HTTP protocols when HTTP responses are enabled', () => {
+    expect(() =>
+      assertSecurePostResponseUri(
+        'ftp://requester.example/response',
+        true,
+      ),
+    ).toThrow('must use HTTPS');
   });
 });

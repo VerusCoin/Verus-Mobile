@@ -2,6 +2,13 @@ import {
   AppEncryptionResponseOrdinalVDXFObject,
 } from 'verus-typescript-primitives';
 import {URL} from 'react-native-url-polyfill';
+import {ALLOW_HTTP_GENERIC_RESPONSE_POSTS} from '../../../../env/index';
+
+const responsePostUriError = message => {
+  const error = new Error(message);
+  error.isResponsePostError = true;
+  return error;
+};
 
 export const responseContainsPlaintextExtendedSpendingKey = response => {
   return (response?.details || []).some(detail => {
@@ -20,17 +27,26 @@ export const assertNoPlaintextExtendedSpendingKey = response => {
   }
 };
 
-export const assertSecurePostResponseUri = uriString => {
+export const assertSecurePostResponseUri = (
+  uriString,
+  allowHttp = ALLOW_HTTP_GENERIC_RESPONSE_POSTS,
+) => {
   let url;
 
   try {
     url = new URL(uriString);
   } catch (_) {
-    throw new Error('Requester supplied an invalid response URL.');
+    throw responsePostUriError(
+      'Requester supplied an invalid response URL.',
+    );
   }
 
-  if (url.protocol !== 'https:') {
-    throw new Error('Response POST URLs must use HTTPS.');
+  const protocolAllowed =
+    url.protocol === 'https:' ||
+    (allowHttp === true && url.protocol === 'http:');
+
+  if (!protocolAllowed) {
+    throw responsePostUriError('Response POST URLs must use HTTPS.');
   }
 
   return url.toString();
