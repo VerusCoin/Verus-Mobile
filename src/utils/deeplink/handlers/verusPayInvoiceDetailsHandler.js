@@ -7,6 +7,7 @@ import { VERUSPAY_INVOICE_INFO } from "../../constants/deeplink";
 import { satsToCoins } from "../../math";
 import { CoinDirectory } from "../../CoinData/CoinDirectory";
 import BigNumber from "bignumber.js";
+import { VERUSPAY_BURN_OWN_ADDRESS_DISPLAY } from "../verusPayBurnChangePrice";
 
 /**
  * @param {GenericRequest} request
@@ -109,7 +110,11 @@ export const getDisplayDataFromVerusPayInvoiceDetails = async (
   const getDestinationDisplay = async () => {
     let destinationDisplay;
 
-    if (details.acceptsAnyDestination()) destinationDisplay = 'any destination'
+    if (details.acceptsAnyDestination()) {
+      destinationDisplay = details.isBurnChangePrice()
+        ? VERUSPAY_BURN_OWN_ADDRESS_DISPLAY
+        : 'any destination';
+    }
     else if (details.destination.isIAddr()) {
       const destinationId = await getIdentity(coinObj.system_id, details.destination.getAddressString())
       if (destinationId.error) throw new Error(destinationId.error.message)

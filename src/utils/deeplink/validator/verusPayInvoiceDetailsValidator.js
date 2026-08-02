@@ -4,6 +4,7 @@ import { getInfo } from "../../api/channels/vrpc/callCreators";
 import { blocksToTime } from "../../math";
 import { GenericRequest, VerusPayInvoiceDetails } from "verus-typescript-primitives/dist/vdxf/classes";
 import { getCurrency } from "../../api/channels/verusid/callCreators";
+import { validateVerusPayBurnChangePrice } from "../verusPayBurnChangePrice";
 
 /**
  * @param {GenericRequest} request
@@ -34,6 +35,12 @@ export const validateVerusPayInvoiceDetails = async (details) => {
 
   const requestedCurrency = await getCurrency(coinObj.system_id, details.requestedcurrencyid)
   if (requestedCurrency.error) throw new Error(requestedCurrency.error.message)
+
+  validateVerusPayBurnChangePrice(
+    details,
+    requestedCurrency.result,
+    coinObj.system_id,
+  );
 
   if (details.isPreconvert()) {
     if (chainInfo.result.longestchain - requestedCurrency.result.startblock >= 0) {

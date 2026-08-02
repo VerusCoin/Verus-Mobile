@@ -20,6 +20,7 @@
   "dependencies": {
     "@bitgo/utxo-lib": "github:VerusCoin/BitGoJS#utxo-lib-verus",
     "@noble/curves": "1.9.7",
+    "@noble/hashes": "1.8.0",
     "@react-native-async-storage/async-storage": "2.0.0",
     "@react-native-camera-roll/camera-roll": "5.0.4",
     "@react-native-community/cli": "8.0.4",
