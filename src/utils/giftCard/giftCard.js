@@ -156,24 +156,14 @@ const getUtxoNativeSatoshis = (systemId, utxo) => {
     : coinsToSats(BigNumber(nativeCurrencyValue));
 };
 
-const hasPositiveNonNativeCurrencyValue = (systemId, currencyValues = {}) => {
-  return Object.keys(currencyValues).some(currencyId => {
-    return (
-      currencyId !== systemId &&
-      coinsToSats(BigNumber(currencyValues[currencyId])).isGreaterThan(0)
-    );
-  });
-};
-
 const isSpendableUtxo = utxo => {
   return utxo?.isspendable === true || utxo?.isspendable === 1;
 };
 
-const isPureNativeFeeUtxo = systemId => utxo => {
+const isNativeFeeUtxo = systemId => utxo => {
   return (
     isSpendableUtxo(utxo) &&
-    getUtxoNativeSatoshis(systemId, utxo).isGreaterThan(0) &&
-    !hasPositiveNonNativeCurrencyValue(systemId, utxo.currencyvalues)
+    getUtxoNativeSatoshis(systemId, utxo).isGreaterThan(0)
   );
 };
 
@@ -190,7 +180,7 @@ const getIdentityFeeUtxos = (
   nativeSatsAvailable = BigNumber(0),
 ) => {
   const feeCandidates = (identity?.utxos || []).filter(
-    isPureNativeFeeUtxo(systemId),
+    isNativeFeeUtxo(systemId),
   );
   const requiredFeeSats = BigNumber(feeSats)
     .minus(nativeSatsAvailable)
@@ -1464,7 +1454,7 @@ const getIdentityNativeFundingSats = (identity, identityFundingByKey) => {
   if (Array.isArray(fundedIdentity?.utxos)) {
     return getNativeBalance(
       identity.systemId,
-      fundedIdentity.utxos.filter(isPureNativeFeeUtxo(identity.systemId)),
+      fundedIdentity.utxos.filter(isNativeFeeUtxo(identity.systemId)),
     );
   }
 

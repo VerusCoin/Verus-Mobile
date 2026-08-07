@@ -628,13 +628,16 @@ describe('gift card helpers', () => {
     ).rejects.toThrow('Fee exceeds maximum gift card funding fee.');
   });
 
-  it('uses transferred VerusID native funds for identity transfer fees when wallet funds are unavailable', async () => {
+  it('uses native funds from a mixed-currency VerusID UTXO when wallet fee funds are unavailable', async () => {
     const cardAddress = 'RDCr3h5wYGoMh2QF7akoZy2GNsjCeSqgpu';
     const identityFeeUtxo = {
       txid: 'bb'.repeat(32),
       outputIndex: 1,
       satoshis: 10000,
-      currencyvalues: {},
+      currencyvalues: {
+        [mockRootCoin.system_id]: 0.0001,
+        'reserve-currency': 1,
+      },
       script: '00',
       isspendable: 1,
     };
