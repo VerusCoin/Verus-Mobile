@@ -1348,7 +1348,8 @@ export const canDeleteGiftCard = card => {
   return (
     status != null &&
     !hasPendingGiftCardFunding(card) &&
-    !hasGiftCardClaims(card)
+    !hasGiftCardClaims(card) &&
+    getGiftCardIdentityLookupErrors(card).length === 0
   );
 };
 

@@ -24,6 +24,7 @@ import { CoinDirectory } from '../../../utils/CoinData/CoinDirectory';
 import IdentityPickerSheet from '../AuthenticationRequestInfo/components/IdentityPickerSheet';
 import { buildDataPacketResponse } from '../../../utils/deeplink/dataPacket/signDataPacket';
 import {ensureGenericResponseSigner} from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
+import {getMatchingRequestAccounts} from '../../../utils/deeplink/requestAccounts';
 
 const truncateAddress = addr => {
   if (!addr || addr.length <= 14) return addr;
@@ -137,6 +138,7 @@ const DataPacketRequestInfo = props => {
 
   const signedIn = useSelector(state => state.authentication.signedIn);
   const sendModalType = useSelector(state => state.sendModal.type);
+  const accounts = useObjectSelector(state => state.authentication.accounts);
   const encryptedIds = useObjectSelector(state => state.services.stored[VERUSID_SERVICE_ID]);
   const testnetOverrides = useObjectSelector(
     state => state.authentication.activeAccount?.testnetOverrides || {},
@@ -157,6 +159,10 @@ const DataPacketRequestInfo = props => {
 
   const requestIsTestnet = request != null ? request.isTestnet() : false;
   const identityChain = requestIsTestnet ? 'VRSCTEST' : identityNetwork;
+  const matchingAccounts = useMemo(
+    () => getMatchingRequestAccounts(accounts, requestIsTestnet),
+    [accounts, requestIsTestnet],
+  );
   const requesterLabel = signerFqn || signerIdentityID || 'Requester';
   const sigDateString = sigtime ? unixToDate(sigtime) : null;
   const statementsReviewed = useMemo(
@@ -232,10 +238,17 @@ const DataPacketRequestInfo = props => {
   };
 
   const handleSignin = () => {
-    const allowlist = {};
-    const chainIds = linkedIds[identityChain];
-    if (chainIds) allowlist[identityChain] = Object.keys(chainIds);
-    openAuthenticateUserModal({ [SEND_MODAL_USER_ALLOWLIST]: allowlist });
+    if (matchingAccounts.length === 0) {
+      createAlert(
+        'No profile found',
+        `No ${requestIsTestnet ? 'testnet' : 'mainnet'} profile is available for this request.`,
+      );
+      return;
+    }
+
+    openAuthenticateUserModal({
+      [SEND_MODAL_USER_ALLOWLIST]: matchingAccounts,
+    });
     setWaitingForSignin(true);
   };
 

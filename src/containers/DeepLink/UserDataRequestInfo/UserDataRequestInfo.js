@@ -29,6 +29,7 @@ import {
 import { buildUserDataResponse } from '../../../utils/deeplink/userData/buildUserDataResponse';
 import {ensureGenericResponseSigner} from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
 import {userDataRequestedSignerMatchesIdentity} from '../../../utils/deeplink/userData/requestedSigner';
+import {getMatchingRequestAccounts} from '../../../utils/deeplink/requestAccounts';
 
 const truncateAddress = addr => {
   if (!addr || addr.length <= 14) return addr;
@@ -139,6 +140,7 @@ const UserDataRequestInfo = props => {
 
   const signedIn = useSelector(state => state.authentication.signedIn);
   const sendModalType = useSelector(state => state.sendModal.type);
+  const accounts = useObjectSelector(state => state.authentication.accounts);
   const encryptedIds = useObjectSelector(state => state.services.stored[VERUSID_SERVICE_ID]);
   const testnetOverrides = useObjectSelector(
     state => state.authentication.activeAccount?.testnetOverrides || {},
@@ -160,6 +162,10 @@ const UserDataRequestInfo = props => {
 
   const requestIsTestnet = request != null ? request.isTestnet() : false;
   const identityChain = requestIsTestnet ? 'VRSCTEST' : identityNetwork;
+  const matchingAccounts = useMemo(
+    () => getMatchingRequestAccounts(accounts, requestIsTestnet),
+    [accounts, requestIsTestnet],
+  );
   const credentialKeys = useMemo(
     () => credentialRequests.map(item => item.key),
     [credentialRequests],
@@ -334,10 +340,17 @@ const UserDataRequestInfo = props => {
   };
 
   const handleSignin = () => {
-    const allowlist = {};
-    const chainIds = linkedIds[identityChain];
-    if (chainIds) allowlist[identityChain] = Object.keys(chainIds);
-    openAuthenticateUserModal({ [SEND_MODAL_USER_ALLOWLIST]: allowlist });
+    if (matchingAccounts.length === 0) {
+      createAlert(
+        'No profile found',
+        `No ${requestIsTestnet ? 'testnet' : 'mainnet'} profile is available for this request.`,
+      );
+      return;
+    }
+
+    openAuthenticateUserModal({
+      [SEND_MODAL_USER_ALLOWLIST]: matchingAccounts,
+    });
     setWaitingForSignin(true);
   };
 

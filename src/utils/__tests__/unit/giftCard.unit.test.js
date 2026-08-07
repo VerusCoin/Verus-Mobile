@@ -1742,6 +1742,7 @@ describe('gift card helpers', () => {
           'getidentitieswithaddress requires -idindex=1 when starting the daemon',
       }),
     );
+    expect(canDeleteGiftCard(refreshed)).toBe(false);
     expect(getIdentitiesWithAddress).toHaveBeenCalledWith({
       address: card.addressesBySystem[mockTestCoin.system_id],
       unspent: true,
