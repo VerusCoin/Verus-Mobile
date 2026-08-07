@@ -1271,7 +1271,7 @@ const SpendableKeyRequestInfo = props => {
           </View>
         )}
 
-        {status === 'review' && systemsWithoutPrivateAddressCount > 0 && (
+        {signedIn && status === 'review' && systemsWithoutPrivateAddressCount > 0 && (
           <View style={styles.warningCard}>
             <MaterialCommunityIcons
               name="shield-off-outline"

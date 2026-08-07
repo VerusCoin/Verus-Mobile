@@ -492,6 +492,46 @@ describe('gift card helpers', () => {
       identityWithNativeFeeFundsTopup[mockRootCoin.system_id],
     ).toBeUndefined();
 
+    const orderSensitiveTopup = getGiftCardFundingTopups(
+      {
+        funds: [
+          {
+            systemId: mockRootCoin.system_id,
+            currencyId: 'reserve-currency',
+            amount: '5',
+          },
+        ],
+        identities: [
+          {
+            systemId: mockRootCoin.system_id,
+            identityAddress: 'i-combined-first',
+          },
+          {
+            systemId: mockRootCoin.system_id,
+            identityAddress: 'i-standalone-second',
+          },
+        ],
+      },
+      {
+        identityFunding: [
+          {
+            systemId: mockRootCoin.system_id,
+            identityAddress: 'i-combined-first',
+            currencies: [
+              {
+                currencyId: mockRootCoin.system_id,
+                satoshis: '15000',
+              },
+            ],
+          },
+        ],
+      },
+    );
+
+    expect(orderSensitiveTopup[mockRootCoin.system_id].satoshis).toBe(
+      '15000',
+    );
+
     const covered = getGiftCardFundingTopups({
       funds: [
         {
@@ -590,6 +630,9 @@ describe('gift card helpers', () => {
     ]);
     mockValidateFundedCurrencyTransfer.mockReturnValueOnce({
       valid: true,
+      sent: {
+        [mockRootCoin.system_id]: '100000000',
+      },
       fees: {
         [mockRootCoin.system_id]: '10001',
       },
@@ -628,14 +671,76 @@ describe('gift card helpers', () => {
     ).rejects.toThrow('Fee exceeds maximum gift card funding fee.');
   });
 
+  it('rejects gift card funding that consumes an unrelated reserve currency as a fee', async () => {
+    const cardAddress = 'RDCr3h5wYGoMh2QF7akoZy2GNsjCeSqgpu';
+
+    mockDeriveKeyPair.mockImplementation(async () => ({
+      addresses: [cardAddress],
+      privKey: `K-${mockRootCoin.system_id}`,
+    }));
+    mockGetSpendableUtxos.mockResolvedValue([
+      {
+        txid: 'ab'.repeat(32),
+        outputIndex: 0,
+        satoshis: 100010000,
+        currencyvalues: {
+          'unrelated-reserve': 1,
+        },
+        script: '00',
+      },
+    ]);
+    mockValidateFundedCurrencyTransfer.mockReturnValueOnce({
+      valid: true,
+      sent: {
+        [mockRootCoin.system_id]: '100000000',
+      },
+      fees: {
+        [mockRootCoin.system_id]: '10000',
+        'unrelated-reserve': '100000000',
+      },
+    });
+
+    const card = await createGiftCard({
+      requestIsTestnet: false,
+      activeCoinsForUser: [],
+    });
+
+    await expect(
+      preflightGiftCardFunding({
+        card,
+        selections: {
+          funds: [
+            {
+              systemId: mockRootCoin.system_id,
+              currencyId: mockRootCoin.system_id,
+              amount: '1',
+              coinObj: mockRootCoin,
+            },
+          ],
+          identities: [],
+        },
+        activeCoinsForUser: [mockRootCoin],
+        activeAccount: {
+          keys: {
+            [mockRootCoin.id]: {
+              vrpc: {
+                addresses: ['RSourceAddress'],
+              },
+            },
+          },
+        },
+      }),
+    ).rejects.toThrow('Unexpected non-native gift card funding fee');
+  });
+
   it('uses native funds from a mixed-currency VerusID UTXO when wallet fee funds are unavailable', async () => {
     const cardAddress = 'RDCr3h5wYGoMh2QF7akoZy2GNsjCeSqgpu';
     const identityFeeUtxo = {
       txid: 'bb'.repeat(32),
       outputIndex: 1,
-      satoshis: 10000,
+      satoshis: 20000,
       currencyvalues: {
-        [mockRootCoin.system_id]: 0.0001,
+        [mockRootCoin.system_id]: 0.0002,
         'reserve-currency': 1,
       },
       script: '00',
@@ -679,7 +784,7 @@ describe('gift card helpers', () => {
           currencies: [
             {
               currencyId: mockRootCoin.system_id,
-              satoshis: '10000',
+              satoshis: '20000',
             },
           ],
           utxos: [identityFeeUtxo],
@@ -710,6 +815,154 @@ describe('gift card helpers', () => {
         usesIdentityFeeFunds: true,
         feeSource: 'identity',
         feeSats: '10000',
+      }),
+    );
+  });
+
+  it('does not spend a VerusID fee UTXO that would leave no native claim fee', async () => {
+    const cardAddress = 'RDCr3h5wYGoMh2QF7akoZy2GNsjCeSqgpu';
+    const identityFeeUtxo = {
+      txid: 'bc'.repeat(32),
+      outputIndex: 1,
+      satoshis: 10000,
+      currencyvalues: {
+        [mockRootCoin.system_id]: 0.0001,
+        'reserve-currency': 1,
+      },
+      script: '00',
+      isspendable: 1,
+    };
+
+    mockDeriveKeyPair.mockImplementation(async () => ({
+      addresses: [cardAddress],
+      privKey: `K-${mockRootCoin.system_id}`,
+    }));
+    mockGetSpendableUtxos.mockResolvedValue([]);
+    mockGetIdentity.mockResolvedValueOnce({
+      result: {
+        blockheight: 123,
+      },
+    });
+
+    const card = await createGiftCard({
+      requestIsTestnet: false,
+      activeCoinsForUser: [mockRootCoin],
+    });
+
+    await expect(
+      preflightGiftCardFunding({
+        card,
+        selections: {
+          funds: [],
+          identities: [
+            {
+              systemId: mockRootCoin.system_id,
+              identityAddress: 'i-underfunded-id',
+            },
+          ],
+        },
+        identityFunding: [
+          {
+            systemId: mockRootCoin.system_id,
+            identityAddress: 'i-underfunded-id',
+            currencies: [
+              {
+                currencyId: mockRootCoin.system_id,
+                satoshis: '10000',
+              },
+            ],
+            utxos: [identityFeeUtxo],
+          },
+        ],
+        activeCoinsForUser: [mockRootCoin],
+        activeAccount: {
+          keys: {
+            [mockRootCoin.id]: {
+              vrpc: {
+                addresses: ['RSourceAddress'],
+              },
+            },
+          },
+        },
+      }),
+    ).rejects.toThrow('retaining the gift card claim fee');
+    expect(mockCreateUpdateIdentityTxWithUtxos).not.toHaveBeenCalled();
+  });
+
+  it('does not reuse wallet inputs across multiple identity funding transactions', async () => {
+    const cardAddress = 'RDCr3h5wYGoMh2QF7akoZy2GNsjCeSqgpu';
+    const firstWalletUtxo = {
+      txid: 'bd'.repeat(32),
+      outputIndex: 0,
+      satoshis: 50000,
+      script: '00',
+      isspendable: 1,
+    };
+    const secondWalletUtxo = {
+      txid: 'be'.repeat(32),
+      outputIndex: 1,
+      satoshis: 20000,
+      script: '00',
+      isspendable: 1,
+    };
+
+    mockDeriveKeyPair.mockImplementation(async () => ({
+      addresses: [cardAddress],
+      privKey: `K-${mockRootCoin.system_id}`,
+    }));
+    mockGetSpendableUtxos.mockResolvedValue([
+      firstWalletUtxo,
+      secondWalletUtxo,
+    ]);
+    mockGetIdentity.mockResolvedValue({
+      result: {
+        blockheight: 123,
+      },
+    });
+    mockCreateUpdateIdentityWithCurrencyTransferTx.mockImplementationOnce(
+      async args => ({
+        hex: 'first-identity-update',
+        utxos: [firstWalletUtxo],
+        deltas: new Map([[args.systemId, '-20000']]),
+      }),
+    );
+
+    const card = await createGiftCard({
+      requestIsTestnet: false,
+      activeCoinsForUser: [mockRootCoin],
+    });
+    const plan = await preflightGiftCardFunding({
+      card,
+      selections: {
+        funds: [],
+        identities: [
+          {
+            systemId: mockRootCoin.system_id,
+            identityAddress: 'i-first',
+          },
+          {
+            systemId: mockRootCoin.system_id,
+            identityAddress: 'i-second',
+          },
+        ],
+      },
+      identityFunding: [],
+      activeCoinsForUser: [mockRootCoin],
+      activeAccount: {
+        keys: {
+          [mockRootCoin.id]: {
+            vrpc: {
+              addresses: ['RSourceAddress'],
+            },
+          },
+        },
+      },
+    });
+
+    expect(plan.transactions).toHaveLength(2);
+    expect(mockCreateUpdateIdentityTxWithUtxos).toHaveBeenCalledWith(
+      expect.objectContaining({
+        utxos: [secondWalletUtxo],
       }),
     );
   });

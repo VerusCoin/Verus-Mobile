@@ -120,6 +120,14 @@ const uniqueUtxos = utxos => {
   return unique;
 };
 
+const excludeUtxos = (utxos, excludedUtxos = []) => {
+  const excludedKeys = new Set(excludedUtxos.map(getUtxoKey));
+
+  return uniqueUtxos(utxos).filter(
+    utxo => !excludedKeys.has(getUtxoKey(utxo)),
+  );
+};
+
 const selectUtxosForAmount = (
   utxos,
   amountSats,
@@ -178,8 +186,12 @@ const getIdentityFeeUtxos = (
   identity,
   feeSats,
   nativeSatsAvailable = BigNumber(0),
+  excludedUtxos = [],
 ) => {
-  const feeCandidates = (identity?.utxos || []).filter(
+  const feeCandidates = excludeUtxos(
+    identity?.utxos || [],
+    excludedUtxos,
+  ).filter(
     isNativeFeeUtxo(systemId),
   );
   const requiredFeeSats = BigNumber(feeSats)
@@ -1490,8 +1502,7 @@ const getIdentityAndFundsRequiredFeeSats = (
   identities,
   identityFundingByKey,
 ) => {
-  const remainingIdentities = [...identities];
-  const combinedIdentity = remainingIdentities.pop();
+  const [combinedIdentity, ...remainingIdentities] = identities;
   const standaloneFeeSats = getIdentityOnlyRequiredFeeSats(
     remainingIdentities,
     identityFundingByKey,
@@ -1695,7 +1706,12 @@ const addTopupsToGroups = (groups, topups, activeCoinsForUser, activeAccount) =>
   });
 };
 
-const getFundingUtxos = async (systemId, sourceAddress, outputs) => {
+const getFundingUtxos = async (
+  systemId,
+  sourceAddress,
+  outputs,
+  excludedUtxos = [],
+) => {
   const currencies = new Set([systemId]);
 
   for (const output of outputs || []) {
@@ -1710,7 +1726,7 @@ const getFundingUtxos = async (systemId, sourceAddress, outputs) => {
     );
   }
 
-  return uniqueUtxos(utxos);
+  return excludeUtxos(utxos, excludedUtxos);
 };
 
 const getParentFeeCoins = outputs => {
@@ -1736,6 +1752,42 @@ const makeOutputSummaries = outputs => {
     amount: satsToCoins(BigNumber(output.satoshis)).toString(),
     isFeeTopup: output.isFeeTopup === true,
   }));
+};
+
+const validateGiftCardCurrencyFunding = (validation, outputs, systemId) => {
+  const expectedSent = (outputs || []).reduce((totals, output) => {
+    totals.set(
+      output.currency,
+      (totals.get(output.currency) || BigNumber(0)).plus(output.satoshis),
+    );
+    return totals;
+  }, new Map());
+  const sentCurrencies = new Set([
+    ...expectedSent.keys(),
+    ...Object.keys(validation.sent || {}),
+  ]);
+
+  for (const currencyId of sentCurrencies) {
+    const expected = expectedSent.get(currencyId) || BigNumber(0);
+    const actual = BigNumber((validation.sent || {})[currencyId] || 0);
+
+    if (!actual.isEqualTo(expected)) {
+      throw new Error(
+        `Gift card funding amount changed for ${currencyId}.`,
+      );
+    }
+  }
+
+  for (const currencyId of Object.keys(validation.fees || {})) {
+    if (
+      currencyId !== systemId &&
+      BigNumber(validation.fees[currencyId]).isGreaterThan(0)
+    ) {
+      throw new Error(
+        `Unexpected non-native gift card funding fee in ${currencyId}.`,
+      );
+    }
+  }
 };
 
 const buildCurrencyFundingTransaction = async ({
@@ -1788,6 +1840,8 @@ const buildCurrencyFundingTransaction = async ({
   );
 
   if (!validation.valid) throw new Error(validation.message);
+
+  validateGiftCardCurrencyFunding(validation, outputs, group.systemId);
 
   const actualNativeFee = BigNumber(
     validation.fees && validation.fees[group.systemId] != null
@@ -1847,19 +1901,37 @@ const getIdentityFundingInputPlan = async ({
   sourceAddress,
   outputs,
   identityFundingByKey,
+  excludedUtxos = [],
 }) => {
   const usesCurrencyTransfer = outputs.length > 0;
   const sourceUtxos = usesCurrencyTransfer
-    ? await getFundingUtxos(group.systemId, sourceAddress, outputs)
-    : await getSpendableUtxos(group.systemId, group.systemId, [sourceAddress]);
+    ? await getFundingUtxos(
+        group.systemId,
+        sourceAddress,
+        outputs,
+        excludedUtxos,
+      )
+    : excludeUtxos(
+        await getSpendableUtxos(
+          group.systemId,
+          group.systemId,
+          [sourceAddress],
+        ),
+        excludedUtxos,
+      );
   const requiredFeeSats = usesCurrencyTransfer
     ? SPENDABLE_KEY_CLAIM_IDENTITY_SWEEP_FEE_SATS
     : SPENDABLE_KEY_CLAIM_FEE_SATS;
+  const nativeOutputSats = outputs.reduce((total, output) => {
+    return output.currency === group.systemId
+      ? total.plus(output.satoshis)
+      : total;
+  }, BigNumber(0));
+  const walletRequiredNativeSats = requiredFeeSats.plus(nativeOutputSats);
 
   if (
-    usesCurrencyTransfer ||
     getNativeBalance(group.systemId, sourceUtxos)
-      .isGreaterThanOrEqualTo(requiredFeeSats)
+      .isGreaterThanOrEqualTo(walletRequiredNativeSats)
   ) {
     return {
       utxos: sourceUtxos,
@@ -1869,19 +1941,24 @@ const getIdentityFundingInputPlan = async ({
     };
   }
 
+  if (usesCurrencyTransfer) {
+    throw new Error(
+      `Wallet does not contain enough native funds for the gift card outputs and transaction fee on ${group.systemId}.`,
+    );
+  }
+
   const identityFeeUtxos = getIdentityFeeUtxos(
     group.systemId,
     getIdentityFunding(identity, identityFundingByKey),
-    requiredFeeSats,
+    requiredFeeSats.plus(SPENDABLE_KEY_CLAIM_FEE_SATS),
+    BigNumber(0),
+    excludedUtxos,
   );
 
   if (identityFeeUtxos == null) {
-    return {
-      utxos: sourceUtxos,
-      changeAddress: sourceAddress,
-      usesIdentityFeeFunds: false,
-      expectedFeeSats: requiredFeeSats,
-    };
+    throw new Error(
+      `Wallet cannot fund the transaction fee, and the VerusID does not contain enough native funds to pay it while retaining the gift card claim fee on ${group.systemId}.`,
+    );
   }
 
   return {
@@ -1901,6 +1978,7 @@ const buildIdentityFundingTransaction = async ({
   outputs = [],
   identityFundingByKey,
   requestIsTestnet,
+  excludedUtxos = [],
 }) => {
   const {identityResult, updatableIdentity} = await getIdentityUpdate(
     group.systemId,
@@ -1915,6 +1993,7 @@ const buildIdentityFundingTransaction = async ({
     sourceAddress,
     outputs,
     identityFundingByKey,
+    excludedUtxos,
   });
   const updateTx = outputs.length > 0
     ? await createUpdateIdentityWithCurrencyTransferTx({
@@ -2011,6 +2090,7 @@ export const preflightGiftCardFunding = async ({
   const transactions = [];
 
   for (const group of groups) {
+    let reservedFundingUtxos = [];
     const cardAddress = card.addressesBySystem[group.systemId];
     const sourceCoin =
       group.funds[0]?.coinObj ||
@@ -2033,31 +2113,39 @@ export const preflightGiftCardFunding = async ({
     if (group.identities.length > 0) {
       const [firstIdentity, ...remainingIdentities] = group.identities;
 
-      transactions.push(
-        await buildIdentityFundingTransaction({
+      const firstTransaction = await buildIdentityFundingTransaction({
+        group,
+        identity: firstIdentity,
+        sourceCoin,
+        sourceAddress,
+        cardAddress,
+        outputs: fundOutputs,
+        identityFundingByKey,
+        requestIsTestnet: card.requestIsTestnet,
+        excludedUtxos: reservedFundingUtxos,
+      });
+      transactions.push(firstTransaction);
+      reservedFundingUtxos = uniqueUtxos([
+        ...reservedFundingUtxos,
+        ...firstTransaction.inputs,
+      ]);
+
+      for (const identity of remainingIdentities) {
+        const transaction = await buildIdentityFundingTransaction({
           group,
-          identity: firstIdentity,
+          identity,
           sourceCoin,
           sourceAddress,
           cardAddress,
-          outputs: fundOutputs,
           identityFundingByKey,
           requestIsTestnet: card.requestIsTestnet,
-        }),
-      );
-
-      for (const identity of remainingIdentities) {
-        transactions.push(
-          await buildIdentityFundingTransaction({
-            group,
-            identity,
-            sourceCoin,
-            sourceAddress,
-            cardAddress,
-            identityFundingByKey,
-            requestIsTestnet: card.requestIsTestnet,
-          }),
-        );
+          excludedUtxos: reservedFundingUtxos,
+        });
+        transactions.push(transaction);
+        reservedFundingUtxos = uniqueUtxos([
+          ...reservedFundingUtxos,
+          ...transaction.inputs,
+        ]);
       }
     } else if (fundOutputs.length > 0) {
       transactions.push(

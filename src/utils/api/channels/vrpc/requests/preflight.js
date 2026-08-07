@@ -28,6 +28,9 @@ import {
   createUnfundedBurnChangePriceTransaction,
   validateBurnChangePriceTransferOutput,
 } from "./createBurnChangePriceTransaction";
+import {
+  validateCurrencyTransferSpendDeltas,
+} from "./validateCurrencyTransferSpend";
 const { createUnfundedCurrencyTransfer, validateFundedCurrencyTransfer } = smarttxs
 
 //TODO: Calculate fee for each coin seperately
@@ -570,11 +573,12 @@ export const preflightCurrencyTransfer = async (coinObj, channelId, activeUser, 
       }
     };
 
-    deltas.forEach((value, key) => {
-      if (key !== currency && key !== feecurrency && value.isGreaterThan(0)) {
-        throw new Error("Can only spend either fee currency or sent currency.")
-      } 
-    })
+    validateCurrencyTransferSpendDeltas({
+      currency,
+      deltas,
+      feeCurrency: feecurrency,
+      systemId,
+    });
 
     Object.keys(validation.fees).forEach((key) => {
       const value = BigNumber(validation.fees[key]);

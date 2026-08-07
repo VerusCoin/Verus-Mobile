@@ -290,6 +290,7 @@ const rootIdentityFeeUtxo = makeUtxo({
   satoshis: 20000,
   currencyvalues: {
     [mockRootCoin.system_id]: '0.0002',
+    'identity-fee-token-system': '0.25',
   },
   isspendable: false,
 });
@@ -1424,6 +1425,11 @@ describe('spendable key claim utilities', () => {
         currencyId: mockRootCoin.system_id,
         satoshis: '10000',
         amount: '0.0001',
+      },
+      {
+        currencyId: 'identity-fee-token-system',
+        satoshis: '25000000',
+        amount: '0.25',
       },
     ]);
 

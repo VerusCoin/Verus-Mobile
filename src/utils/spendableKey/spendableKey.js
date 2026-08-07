@@ -372,10 +372,16 @@ const hasPositiveNonNativeCurrencyValue = (systemId, currencyValues = {}) => {
   });
 };
 
-const isPureNativeUtxo = systemId => utxo => {
+const isNativeUtxo = systemId => utxo => {
   return (
     isTransferUtxo(systemId, utxo) &&
-    getUtxoNativeSatoshis(systemId, utxo).isGreaterThan(0) &&
+    getUtxoNativeSatoshis(systemId, utxo).isGreaterThan(0)
+  );
+};
+
+const isPureNativeUtxo = systemId => utxo => {
+  return (
+    isNativeUtxo(systemId)(utxo) &&
     !hasPositiveNonNativeCurrencyValue(systemId, utxo.currencyvalues)
   );
 };
@@ -567,7 +573,7 @@ const getIdentityFeeUtxos = (
   nativeSatsAvailable = BigNumber(0),
 ) => {
   const identityFeeCandidates = (identity.utxos || []).filter(
-    isPureNativeUtxo(systemId),
+    isNativeUtxo(systemId),
   );
   const requiredFeeSats = BigNumber(feeSats)
     .minus(nativeSatsAvailable)
@@ -1479,7 +1485,6 @@ const buildIdentityTransactionWithIdentityFee = async ({
   removePrivateAddress,
   feeUtxos,
 }) => {
-  const feeNative = getNativeBalance(system.systemId, feeUtxos);
   const updatableIdentity = await getUpdatableIdentity(
     system.systemId,
     identity.result,
@@ -1507,14 +1512,17 @@ const buildIdentityTransactionWithIdentityFee = async ({
     system.systemId,
     SPENDABLE_KEY_CLAIM_FEE_SATS,
   );
-  const changeBackToIdentity = feeNative.minus(actualFeeSats);
-  const changeOutput = changeBackToIdentity.isGreaterThan(0)
-    ? [{
-      currencyId: system.systemId,
-      satoshis: changeBackToIdentity.toString(),
-      amount: satsToCoins(changeBackToIdentity).toString(),
-    }]
-    : [];
+  const changeBalances = sumUtxoBalances(system.systemId, feeUtxos);
+
+  subtractBalanceMap(changeBalances, system.systemId, actualFeeSats);
+
+  const changeOutputs = Array.from(changeBalances.entries())
+    .filter(([, sats]) => sats.isGreaterThan(0))
+    .map(([currencyId, sats]) => ({
+      currencyId,
+      satoshis: sats.toString(),
+      amount: satsToCoins(sats).toString(),
+    }));
 
   return {
     type: 'identity',
@@ -1528,7 +1536,7 @@ const buildIdentityTransactionWithIdentityFee = async ({
       fullyQualifiedName: identity.fullyQualifiedName,
     },
     outputs: [
-      ...changeOutput,
+      ...changeOutputs,
       ...getIdentityBalanceOutputSummaries(system, identity, feeUtxos),
     ],
     deltas: updateTx.deltas,
