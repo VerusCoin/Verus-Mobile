@@ -1,10 +1,8 @@
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   Alert,
-  Keyboard,
   SafeAreaView,
   ScrollView,
-  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import {
@@ -833,8 +831,8 @@ const GiftCardServiceOverview = ({
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={Styles.defaultRoot}>
+    <SafeAreaView style={Styles.defaultRoot}>
+      <View style={{...Styles.fullWidth, flex: 1}}>
         <ShareGiftCardDialog
           card={shareCardTarget}
           onCancel={() => setShareCardTarget(null)}
@@ -886,7 +884,11 @@ const GiftCardServiceOverview = ({
           </View>
         )}
         <ScrollView
-          style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}
+          style={{
+            ...Styles.fullWidth,
+            ...Styles.backgroundColorWhite,
+            flex: 1,
+          }}
           contentContainerStyle={{
             padding: 16,
             paddingBottom: 120,
@@ -940,8 +942,8 @@ const GiftCardServiceOverview = ({
             cards.map(renderCard)
           )}
         </ScrollView>
-      </SafeAreaView>
-    </TouchableWithoutFeedback>
+      </View>
+    </SafeAreaView>
   );
 };
 
