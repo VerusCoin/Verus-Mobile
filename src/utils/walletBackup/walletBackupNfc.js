@@ -389,10 +389,6 @@ export const writeWalletBackupToNfc = async (
       throw new Error('This NFC card already contains a wallet backup. Refusing to overwrite it.');
     }
 
-    if (!tagContainsCreateWalletBackupRequest(existingTag)) {
-      throw new Error('This NFC card does not contain a valid Verus wallet backup request.');
-    }
-
     onStatus && onStatus('Writing wallet backup...');
     await NfcManager.ndefHandler.writeNdefMessage(backupBytes, {
       reconnectAfterWrite: true,
