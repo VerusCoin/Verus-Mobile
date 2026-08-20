@@ -13,8 +13,33 @@ import { LoadingNotification } from '../../../../utils/notification';
 import { dispatchAddNotification } from '../../../../actions/actions/notifications/dispatchers/notifications';
 import { NOTIFICATION_ICON_VERUSID } from '../../../../utils/constants/notifications';
 import  { getVdxfId } from '../../../../utils/api/channels/vrpc/requests/getVdxfid';
+import Store from '../../../../store';
+import {
+  captureSessionScope,
+  sessionScopeIsCurrent,
+} from '../../../../actions/actions/updates/sessionRequests';
 
-class ProvisionIdentityConfirm extends Component {
+export const assertProvisioningSessionCurrent = requestContext => {
+  const state = Store.getState();
+  const modalRequestIsCurrent =
+    requestContext.modalRequestId == null ||
+    state.sendModal?.requestId === requestContext.modalRequestId;
+
+  if (
+    sessionScopeIsCurrent(state, requestContext.sessionScope) &&
+    modalRequestIsCurrent
+  ) {
+    return;
+  }
+
+  const error = new Error(
+    'Account changed while the VerusID provisioning request was being submitted.',
+  );
+  error.code = 'SESSION_CHANGED';
+  throw error;
+};
+
+export class ProvisionIdentityConfirm extends Component {
   constructor(props) {
     super(props);
 
@@ -27,6 +52,11 @@ class ProvisionIdentityConfirm extends Component {
       provWebhook: props.route.params.provWebhook,
       friendlyNameMap: props.route.params.friendlyNameMap
     };
+    this.provisioningRequestContext = {
+      sessionScope:
+        props.sendModal?.sessionScope || captureSessionScope(Store.getState()),
+      modalRequestId: props.sendModal?.requestId || null,
+    };
   }
 
   goBack() {
@@ -35,8 +65,7 @@ class ProvisionIdentityConfirm extends Component {
   }
 
   submitData = async () => {
-    await this.props.setLoading(true);
-    await this.props.setPreventExit(true);
+    const requestContext = this.provisioningRequestContext;
 
     const submissionSuccess = (response, requestedFqn) => {
       this.props.setPreventExit(false);
@@ -56,6 +85,12 @@ class ProvisionIdentityConfirm extends Component {
     }
 
     try {
+      assertProvisioningSessionCurrent(requestContext);
+      await this.props.setLoading(true);
+      assertProvisioningSessionCurrent(requestContext);
+      await this.props.setPreventExit(true);
+      assertProvisioningSessionCurrent(requestContext);
+
       const {coinObj} = this.props.sendModal;
 
       const provisioningRequestType =
@@ -101,6 +136,7 @@ class ProvisionIdentityConfirm extends Component {
 
       if (isIAddress) {
         const identityObj = await getIdentity(coinObj.system_id, identity)
+        assertProvisioningSessionCurrent(requestContext);
         
         if (identityObj.error) throw new Error(identityObj.error.message)
   
@@ -115,11 +151,14 @@ class ProvisionIdentityConfirm extends Component {
         parent = this.state.provParent ? this.state.provParent.data : null;
         systemid = this.state.provSystemId ? this.state.provSystemId.data : null;
         const parentObj = await getIdentity(coinObj.system_id, parent ? parent : loginRequest.system_id);
+        assertProvisioningSessionCurrent(requestContext);
 
         if (parentObj.error) throw new Error(parentObj.error.message)
 
         requestedFqn = `${identityName.split(".")[0]}.${parentObj.result.fullyqualifiedname}`
-        nameId = (await getVdxfId(coinObj.system_id, requestedFqn)).result.vdxfid;
+        const nameIdResult = await getVdxfId(coinObj.system_id, requestedFqn);
+        assertProvisioningSessionCurrent(requestContext);
+        nameId = nameIdResult.result.vdxfid;
       }
 
       const challengeId =
@@ -139,12 +178,22 @@ class ProvisionIdentityConfirm extends Component {
         }),
       });
 
-      const signedRequest = await signIdProvisioningRequest(coinObj, provisionRequest);
+      assertProvisioningSessionCurrent(requestContext);
+      const signedRequest = await signIdProvisioningRequest(
+        coinObj,
+        provisionRequest,
+        requestContext,
+      );
+      assertProvisioningSessionCurrent(requestContext);
 
+      // This is the irreversible external side effect. Keep the check adjacent
+      // to the POST so no future awaited work can create a stale-session gap.
+      assertProvisioningSessionCurrent(requestContext);
       const res = await axios.post(
         webhookUrl,
         signedRequest
       );
+      assertProvisioningSessionCurrent(requestContext);
 
       const provisioningSignerId =
         this.props.sendModal.data.provisioningSignerId ||
@@ -152,7 +201,12 @@ class ProvisionIdentityConfirm extends Component {
 
       if (provisioningSignerId == null) throw new Error("Missing provisioning signer ID");
 
-      const provisioningName = (await getIdentity(coinObj.system_id, provisioningSignerId)).result.identity.name;
+      const provisioningIdentity = await getIdentity(
+        coinObj.system_id,
+        provisioningSignerId,
+      );
+      assertProvisioningSessionCurrent(requestContext);
+      const provisioningName = provisioningIdentity.result.identity.name;
       const newLoadingNotification = new LoadingNotification();
 
       const requestPayload =
@@ -168,6 +222,7 @@ class ProvisionIdentityConfirm extends Component {
         this.props.sendModal.data.provisioningRequestHasResponseUris ||
         (loginRequest && loginRequest.challenge.redirect_uris && loginRequest.challenge.redirect_uris.length > 0);
 
+      assertProvisioningSessionCurrent(requestContext);
       await handleProvisioningResponse(
         coinObj,
         res.data,
@@ -177,8 +232,9 @@ class ProvisionIdentityConfirm extends Component {
         newLoadingNotification.uid,
         nameId,
         requestedFqn,
-        async () => {
-          
+        async originatingContext => {
+          assertProvisioningSessionCurrent(originatingContext);
+
           newLoadingNotification.body = "";
           let formattedName = ''
           const lastDotIndex = requestedFqn.lastIndexOf('.');
@@ -186,18 +242,39 @@ class ProvisionIdentityConfirm extends Component {
           else formattedName = requestedFqn.substring(0, lastDotIndex);
 
           newLoadingNotification.title =  [`${formattedName}@`, ` is being provisioned by `, `${provisioningName}@`]
-          newLoadingNotification.acchash = this.props.activeAccount.accountHash;
+          newLoadingNotification.acchash =
+            originatingContext.sessionScope.accountHash;
           newLoadingNotification.icon = NOTIFICATION_ICON_VERUSID;
 
           dispatchAddNotification(newLoadingNotification);
         },
         provisioningRequestType,
         provisioningSignerId,
-        hasResponseUris
+        hasResponseUris,
+        requestContext,
       );
+      assertProvisioningSessionCurrent(requestContext);
 
       submissionSuccess(res.data, requestedFqn)
     } catch (e) {
+      const currentState = Store.getState();
+      const requestStillCurrent = sessionScopeIsCurrent(
+        currentState,
+        requestContext.sessionScope,
+      );
+      const sameModalStillOpen =
+        requestContext.modalRequestId == null ||
+        currentState.sendModal?.requestId === requestContext.modalRequestId;
+
+      if (!requestStillCurrent || !sameModalStillOpen) {
+        return;
+      }
+
+      if (e?.code === 'SESSION_CHANGED') {
+        await this.props.setPreventExit(false);
+        await this.props.setLoading(false);
+        return;
+      }
       submissionError(e.message)
     }
   };
@@ -211,6 +288,7 @@ const mapStateToProps = (state, ownProps) => {
   return {
     sendModal: state.sendModal,
     activeAccount: state.authentication.activeAccount,
+    sessionEpoch: state.authentication.sessionEpoch || 0,
     activeCoinList: state.coins.activeCoinList,
   };
 };

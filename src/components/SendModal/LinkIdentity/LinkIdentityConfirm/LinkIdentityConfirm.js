@@ -15,8 +15,21 @@ import {
 import {convertFqnToDisplayFormat} from '../../../../utils/fullyqualifiedname';
 import {LinkIdentityConfirmRender} from './LinkIdentityConfirm.render';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
+import Store from '../../../../store';
+import {
+  captureSessionScope,
+  sessionScopeIsCurrent,
+} from '../../../../actions/actions/updates/sessionRequests';
 
-const LinkIdentityConfirm = props => {
+const assertSessionCurrent = requestContext => {
+  if (!sessionScopeIsCurrent(Store.getState(), requestContext.sessionScope)) {
+    const error = new Error('Account changed while the VerusID was being linked.');
+    error.code = 'SESSION_CHANGED';
+    throw error;
+  }
+};
+
+export const LinkIdentityConfirm = props => {
   const [verusId, setVerusId] = useState(props.route.params.verusId);
   const [friendlyNames, setFriendlyNames] = useState(
     props.route.params.friendlyNames,
@@ -35,10 +48,16 @@ const LinkIdentityConfirm = props => {
   }, [props]);
 
   const submitData = useCallback(async () => {
-    await props.setLoading(true);
-    await props.setPreventExit(true);
+    const requestContext = {
+      sessionScope: captureSessionScope(Store.getState()),
+    };
 
     try {
+      await props.setLoading(true);
+      assertSessionCurrent(requestContext);
+      await props.setPreventExit(true);
+      assertSessionCurrent(requestContext);
+
       const {identityaddress} = verusId.identity;
       const {coinObj} = sendModal;
 
@@ -46,9 +65,12 @@ const LinkIdentityConfirm = props => {
         identityaddress,
         convertFqnToDisplayFormat(verusId.fullyqualifiedname),
         coinObj.id,
+        requestContext,
       );
 
-      await updateVerusIdWallet();
+      assertSessionCurrent(requestContext);
+      await updateVerusIdWallet(requestContext);
+      assertSessionCurrent(requestContext);
       clearChainLifecycle(coinObj.id);
       const setUserCoinsAction = setUserCoins(activeCoinList, activeAccount.id);
       dispatch(setUserCoinsAction);

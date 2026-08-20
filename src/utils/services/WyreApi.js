@@ -6,6 +6,27 @@ import { WYRE_SERVICE_ID, CONNECTED_SERVICE_DISPLAY_INFO } from "../constants/se
 import { AUTHENTICATE_WYRE_SERVICE, DEAUTHENTICATE_WYRE_SERVICE, SET_ADDRESSES } from "../constants/storeType";
 import { AccountBasedFintechApiTemplate } from "./ServiceTemplates";
 import WyreService from './WyreService'
+import {
+  captureSessionScope,
+  scopeSessionAction,
+  sessionScopeIsCurrent,
+} from '../../actions/actions/updates/sessionRequests';
+
+const getSessionScope = requestContext =>
+  requestContext?.sessionScope ||
+  (requestContext?.sessionScoped ? requestContext : null) ||
+  captureSessionScope(Store.getState());
+
+const assertSessionCurrent = (sessionScope, requestContext) => {
+  if (
+    requestContext?.signal?.aborted === true ||
+    !sessionScopeIsCurrent(Store.getState(), sessionScope)
+  ) {
+    const error = new Error('Account changed while Wyre data was being submitted.');
+    error.code = 'SESSION_CHANGED';
+    throw error;
+  }
+};
 
 export class WyreApi extends AccountBasedFintechApiTemplate {
   constructor() {
@@ -33,17 +54,26 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
   }
 
   authenticate = async (seed, reauthenticate = false) => {
+    const sessionScope = captureSessionScope(Store.getState());
+
     if (reauthenticate) {
       this.service.deauthenticate()
     }
 
     const key = await WyreService.bearerFromSeed(seed);
+    if (!sessionScopeIsCurrent(Store.getState(), sessionScope)) {
+      throw new Error('Account changed while Wyre authentication was loading.');
+    }
+
     const authenticated = Store.getState().channelStore_wyre_service.authenticated;
 
     if (authenticated && !reauthenticate)
       return { apiKey: this.apiKey, authenticatedAs: this.accountId };
 
     const res = await this.service.submitAuthToken(key);
+    if (!sessionScopeIsCurrent(Store.getState(), sessionScope)) {
+      throw new Error('Account changed while Wyre authentication was loading.');
+    }
 
     this.bearerToken = key;
     this.apiKey = res.apiKey;
@@ -51,15 +81,18 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
 
     this.service.authenticate(this.bearerToken, this.apiKey);
 
-    await this.initAccountData()
+    await this.initAccountData(sessionScope)
 
     return res;
   };
 
-  loadWyreCoinAddresses = async () => {
+  loadWyreCoinAddresses = async (
+    sessionScope = captureSessionScope(Store.getState()),
+  ) => {
     try {
       if (this.accountId != null) {
         const { depositAddresses, id } = await this.getAccount();
+        if (!sessionScopeIsCurrent(Store.getState(), sessionScope)) return;
 
         for (const coinObj of Object.values(coinsList)) {
           if (coinObj.compatible_channels.includes(WYRE_SERVICE)) {
@@ -68,7 +101,7 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
                 ? 'ETH'
                 : coinObj.id;
 
-            Store.dispatch({
+            Store.dispatch(scopeSessionAction({
               type: SET_ADDRESSES,
               payload: {
                 chainTicker: coinObj.id,
@@ -78,7 +111,7 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
                     ? [`account:${id}`]
                     : [`account:${id}`, depositAddresses[depositAddressId]],
               },
-            });
+            }, sessionScope));
           }
         }
       }
@@ -87,15 +120,18 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
     }
   }
 
-  initAccountData = async () => {
-    await this.loadWyreCoinAddresses()
+  initAccountData = async (
+    sessionScope = captureSessionScope(Store.getState()),
+  ) => {
+    await this.loadWyreCoinAddresses(sessionScope)
+    if (!sessionScopeIsCurrent(Store.getState(), sessionScope)) return;
 
-    Store.dispatch({
+    Store.dispatch(scopeSessionAction({
       type: AUTHENTICATE_WYRE_SERVICE,
       payload: {
         accountId: this.accountId,
       },
-    });
+    }, sessionScope));
   };
 
   reset = () => {
@@ -123,19 +159,48 @@ export class WyreApi extends AccountBasedFintechApiTemplate {
     );
   };
 
-  uploadDocument = async ({ accountId, field, uris, format, documentType, documentSubTypes }) => {
-    return await this.service.uploadDocument(
+  uploadDocument = async ({
+    accountId,
+    field,
+    uris,
+    format,
+    documentType,
+    documentSubTypes,
+    requestContext,
+  }) => {
+    const sessionScope = getSessionScope(requestContext);
+    const scopedRequestContext = {...(requestContext || {}), sessionScope};
+    assertSessionCurrent(sessionScope, scopedRequestContext);
+    const result = await this.service.uploadDocument(
       accountId == null ? this.accountId : accountId,
       field,
       uris,
       documentType,
       documentSubTypes,
-      format == null ? "image/jpeg" : format
+      format == null ? "image/jpeg" : format,
+      scopedRequestContext,
     );
+    assertSessionCurrent(sessionScope, scopedRequestContext);
+    return result;
   };
 
-  followupPaymentMethod = async ({ paymentMethod, uris, format }) => {
-    return await this.service.followupPaymentMethod(paymentMethod, uris, format);
+  followupPaymentMethod = async ({
+    paymentMethod,
+    uris,
+    format,
+    requestContext,
+  }) => {
+    const sessionScope = getSessionScope(requestContext);
+    const scopedRequestContext = {...(requestContext || {}), sessionScope};
+    assertSessionCurrent(sessionScope, scopedRequestContext);
+    const result = await this.service.followupPaymentMethod(
+      paymentMethod,
+      uris,
+      format,
+      scopedRequestContext,
+    );
+    assertSessionCurrent(sessionScope, scopedRequestContext);
+    return result;
   };
 
   getAccount = async (payload = {}) => {
