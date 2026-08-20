@@ -25,7 +25,6 @@ import {
   getAddressDeltas,
   getAddressUtxos,
   getInfo,
-  sendRawTransaction,
 } from '../api/channels/vrpc/callCreators';
 import {
   getCurrency,
@@ -36,13 +35,18 @@ import {
   createUpdateIdentityWithCurrencyTransferTx,
   createUpdateIdentityTxWithUtxos,
   getUpdatableIdentity,
-  pushUpdateIdentityTx,
+  signUpdateIdentityTx,
 } from '../api/channels/verusid/requests/updateIdentity';
 import {
   seedDetailsOrdinalToMnemonic,
   seedDetailsRequiresPassword,
 } from '../seedDetails/seedDetails';
 import {VerusIdInterface} from 'verusid-ts-client';
+import {
+  broadcastPendingTransactions,
+  createPendingBroadcast,
+  createPendingBroadcastTransaction,
+} from './durableBroadcast';
 
 const {
   getFundedTxBuilder,
@@ -669,20 +673,31 @@ const isVrpcScanCandidate = coinObj => {
   );
 };
 
-const getActiveScanSystems = (requestIsTestnet, activeCoinsForUser) => {
+const getScanSystems = (
+  requestIsTestnet,
+  activeCoinsForUser,
+  includeKnownSystems = false,
+) => {
   const rootCoin = requestIsTestnet ? coinsList.VRSCTEST : coinsList.VRSC;
   const systems = new Map([[rootCoin.system_id, rootCoin]]);
+  let scanUniverseComplete = includeKnownSystems;
+  const scanCandidates = [
+    ...(activeCoinsForUser || []),
+    ...(includeKnownSystems
+      ? Object.values(CoinDirectory.coins || {})
+      : []),
+  ];
 
-  for (const coinObj of activeCoinsForUser || []) {
+  for (const coinObj of scanCandidates) {
     if (!!coinObj.testnet !== !!requestIsTestnet) continue;
     if (!isVrpcScanCandidate(coinObj)) continue;
 
     try {
-      const systemCoin = CoinDirectory.findCoinObj(
-        coinObj.system_id,
-        null,
-        true,
-      );
+      // Every candidate is itself a PBaaS system (currency_id === system_id),
+      // so resolve it by its actual directory key. System-ID name lookup only
+      // maps the Verus main/test roots and rejects independent systems such as
+      // vARRR, CHIPS, and vDEX.
+      const systemCoin = CoinDirectory.findCoinObj(coinObj.id);
 
       if (
         systemCoin &&
@@ -690,13 +705,19 @@ const getActiveScanSystems = (requestIsTestnet, activeCoinsForUser) => {
         systemCoin.vrpc_endpoints.length > 0
       ) {
         systems.set(systemCoin.system_id, systemCoin);
+      } else if (includeKnownSystems) {
+        scanUniverseComplete = false;
       }
     } catch (e) {
       console.warn(e.message);
+      if (includeKnownSystems) scanUniverseComplete = false;
     }
   }
 
-  return Array.from(systems.values());
+  return {
+    systems: Array.from(systems.values()),
+    scanUniverseComplete,
+  };
 };
 
 export const deriveSpendableKeyAddresses = async ({
@@ -705,7 +726,10 @@ export const deriveSpendableKeyAddresses = async ({
   activeCoinsForUser,
 }) => {
   const systems = [];
-  const scanSystems = getActiveScanSystems(requestIsTestnet, activeCoinsForUser);
+  const {systems: scanSystems} = getScanSystems(
+    requestIsTestnet,
+    activeCoinsForUser,
+  );
 
   for (const coinObj of scanSystems) {
     VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0]);
@@ -863,9 +887,17 @@ export const discoverSpendableKeyClaims = async ({
   requestIsTestnet,
   activeCoinsForUser,
   cachedSystems,
+  includeKnownSystems = false,
 }) => {
   const systems = [];
-  const scanSystems = getActiveScanSystems(requestIsTestnet, activeCoinsForUser);
+  const {
+    systems: scanSystems,
+    scanUniverseComplete: selectedScanUniverseComplete,
+  } = getScanSystems(
+    requestIsTestnet,
+    activeCoinsForUser,
+    includeKnownSystems,
+  );
   const cachedSystemsById = new Map(
     (cachedSystems || []).map(system => [system.systemId, system]),
   );
@@ -904,6 +936,7 @@ export const discoverSpendableKeyClaims = async ({
     );
     let identitiesFromRpc = [];
     let identityLookupError = null;
+    let identityLookupSucceeded = false;
 
     try {
       const identityResults = await getIdentitiesWithPrimaryAddress(
@@ -919,9 +952,10 @@ export const discoverSpendableKeyClaims = async ({
         claimAddress,
         coinObj.system_id,
       );
+      identityLookupSucceeded = true;
     } catch (e) {
-      identityLookupError = e.message;
-      console.warn(e.message);
+      identityLookupError = e?.message || String(e || 'Identity lookup failed.');
+      console.warn(identityLookupError);
     }
     const identities = await Promise.all(
       mergeIdentityClaims(identitiesFromUtxos, identitiesFromRpc).map(
@@ -976,16 +1010,27 @@ export const discoverSpendableKeyClaims = async ({
       coinObj,
       claimAddress,
       claimWif: keyPair.privKey,
+      // Preserve every unspent output for callers that must distinguish an
+      // actually empty key from one holding funds that are not spendable yet.
+      observedUtxos: utxosRes.result || [],
       utxos: spendableUtxos,
       currencies,
       identities,
       identityLookupError,
+      identityLookupSucceeded,
     });
   }
 
   return {
     requestIsTestnet,
     systems,
+    // NFC overwrite policy uses the complete locally supported PBaaS universe,
+    // not merely the active profile. Selection failures or any failed identity
+    // query make this false; UTXO query failures reject the whole scan above.
+    scanUniverseComplete:
+      selectedScanUniverseComplete &&
+      systems.length === scanSystems.length &&
+      systems.every(system => system.identityLookupSucceeded === true),
     hasClaims: systems.some(
       system => system.currencies.length > 0 || system.identities.length > 0,
     ),
@@ -1000,7 +1045,10 @@ export const discoverSpendableKeyAddressClaims = async ({
   subtractDisplayFees = false,
 }) => {
   const systems = [];
-  const scanSystems = getActiveScanSystems(requestIsTestnet, activeCoinsForUser);
+  const {systems: scanSystems} = getScanSystems(
+    requestIsTestnet,
+    activeCoinsForUser,
+  );
 
   for (const coinObj of scanSystems) {
     const claimAddress = addressesBySystem && addressesBySystem[coinObj.system_id];
@@ -1729,6 +1777,7 @@ export const preflightSpendableKeyClaim = async ({
   return {
     claimPlan,
     destinationBySystem,
+    privateAddressBySystem,
     transactions,
   };
 };
@@ -1755,47 +1804,199 @@ const signSweepTransaction = transaction => {
   return txb.build().toHex();
 };
 
-export const broadcastSpendableKeyClaim = async ({preflightPlan}) => {
-  const results = [];
+const prepareSpendableKeyClaimBroadcast = (
+  preflightPlan,
+  ownerAccountHash,
+) => {
+  const ownerWalletBinding = (preflightPlan?.claimPlan?.systems || []).reduce(
+    (binding, system) => {
+      const systemId = system?.systemId;
+      const coinId = system?.coinObj?.id;
+      const destinationAddress = preflightPlan?.destinationBySystem?.[systemId];
 
-  for (const transaction of preflightPlan.transactions) {
-    try {
-      if (transaction.type === 'identity') {
-        const result = await pushUpdateIdentityTx(
-          transaction.systemId,
-          transaction.txHex,
-          transaction.inputs,
-          transaction.keys,
+      if (
+        typeof systemId !== 'string' ||
+        typeof coinId !== 'string' ||
+        typeof destinationAddress !== 'string' ||
+        destinationAddress.length === 0
+      ) {
+        throw new Error(
+          'Unable to bind this claim to the originating wallet destination.',
         );
-
-        if (result.error) throw new Error(result.error.message);
-
-        results.push({
-          ...transaction,
-          txid: result.result,
-        });
-      } else if (transaction.type === 'sweep') {
-        const signedTx = signSweepTransaction(transaction);
-        const result = await sendRawTransaction(transaction.systemId, signedTx);
-
-        if (result.error) throw new Error(result.error.message);
-
-        results.push({
-          ...transaction,
-          txid: result.result,
-        });
       }
-    } catch (e) {
-      const error = e instanceof Error ? e : new Error(String(e));
 
-      error.results = results;
-      error.preflightPlan = preflightPlan;
-      throw error;
-    }
+      binding[systemId] = {
+        coinId,
+        destinationAddress,
+      };
+
+      const privateAddress = preflightPlan?.privateAddressBySystem?.[systemId];
+      if (typeof privateAddress === 'string' && privateAddress.length > 0) {
+        binding[systemId].privateAddress = privateAddress;
+      }
+
+      return binding;
+    },
+    {},
+  );
+
+  if (Object.keys(ownerWalletBinding).length === 0) {
+    throw new Error(
+      'Unable to bind this claim to the originating wallet destination.',
+    );
   }
 
-  return {
-    preflightPlan,
-    results,
-  };
+  const transactions = preflightPlan.transactions.map(transaction => {
+    let rawTx;
+
+    if (transaction.type === 'identity') {
+      rawTx = signUpdateIdentityTx(
+        transaction.systemId,
+        transaction.txHex,
+        transaction.inputs,
+        transaction.keys,
+      );
+    } else if (transaction.type === 'sweep') {
+      rawTx = signSweepTransaction(transaction);
+    } else {
+      throw new Error(`Unsupported spendable-key transaction type: ${transaction.type}`);
+    }
+
+    return createPendingBroadcastTransaction({transaction, rawTx});
+  });
+
+  return createPendingBroadcast({
+    kind: 'spendable-key-claim',
+    transactions,
+    ownerAccountHash,
+    ownerWalletBinding,
+  });
+};
+
+export const assertSpendableKeyBroadcastOwner = (
+  pendingBroadcast,
+  ownerAccountHash,
+  currentOwnerWalletBinding,
+) => {
+  if (
+    typeof ownerAccountHash !== 'string' ||
+    ownerAccountHash.length === 0
+  ) {
+    throw new Error(
+      'An active profile is required to submit a spendable-key claim.',
+    );
+  }
+
+  if (
+    typeof pendingBroadcast?.ownerAccountHash !== 'string' ||
+    pendingBroadcast.ownerAccountHash.length === 0
+  ) {
+    const error = new Error(
+      'The saved spendable-key claim is missing its originating profile and cannot be retried safely.',
+    );
+
+    error.code = 'PENDING_BROADCAST_OWNER_MISSING';
+    throw error;
+  }
+
+  if (pendingBroadcast.ownerAccountHash !== ownerAccountHash) {
+    const error = new Error(
+      'This saved spendable-key claim belongs to a different profile. Switch to the originating profile to retry it.',
+    );
+
+    error.code = 'PENDING_BROADCAST_ACCOUNT_MISMATCH';
+    throw error;
+  }
+
+  const expectedWalletBinding = pendingBroadcast?.ownerWalletBinding;
+  if (
+    expectedWalletBinding == null ||
+    typeof expectedWalletBinding !== 'object' ||
+    Array.isArray(expectedWalletBinding) ||
+    Object.keys(expectedWalletBinding).length === 0
+  ) {
+    const error = new Error(
+      'The saved spendable-key claim is missing its originating wallet destination and cannot be retried safely.',
+    );
+
+    error.code = 'PENDING_BROADCAST_WALLET_BINDING_MISSING';
+    throw error;
+  }
+
+  const walletMatches = Object.entries(expectedWalletBinding).every(
+    ([systemId, expected]) => {
+      const current = currentOwnerWalletBinding?.[systemId];
+      if (
+        typeof expected?.coinId !== 'string' ||
+        typeof expected?.destinationAddress !== 'string' ||
+        current?.coinId !== expected.coinId ||
+        current?.destinationAddress !== expected.destinationAddress
+      ) {
+        return false;
+      }
+
+      return (
+        typeof expected.privateAddress !== 'string' ||
+        current?.privateAddress === expected.privateAddress
+      );
+    },
+  );
+
+  if (!walletMatches) {
+    const error = new Error(
+      'This saved spendable-key claim belongs to a different wallet. Sign in to the wallet that created it to retry it.',
+    );
+
+    error.code = 'PENDING_BROADCAST_WALLET_MISMATCH';
+    throw error;
+  }
+
+  return pendingBroadcast;
+};
+
+export const broadcastSpendableKeyClaim = async ({
+  preflightPlan,
+  pendingBroadcast = null,
+  ownerAccountHash,
+  currentOwnerWalletBinding = null,
+  persistPendingBroadcast,
+  requestTimeoutMs,
+}) => {
+  if (
+    typeof ownerAccountHash !== 'string' ||
+    ownerAccountHash.length === 0
+  ) {
+    throw new Error(
+      'An active profile is required to submit a spendable-key claim.',
+    );
+  }
+
+  const durableBroadcast = pendingBroadcast ||
+    prepareSpendableKeyClaimBroadcast(preflightPlan, ownerAccountHash);
+
+  assertSpendableKeyBroadcastOwner(
+    durableBroadcast,
+    ownerAccountHash,
+    pendingBroadcast == null
+      ? durableBroadcast.ownerWalletBinding
+      : currentOwnerWalletBinding,
+  );
+
+  try {
+    const result = await broadcastPendingTransactions({
+      pendingBroadcast: durableBroadcast,
+      persistPendingBroadcast,
+      requestTimeoutMs,
+    });
+
+    return {
+      preflightPlan,
+      ...result,
+    };
+  } catch (e) {
+    const error = e instanceof Error ? e : new Error(String(e));
+
+    error.preflightPlan = preflightPlan;
+    throw error;
+  }
 };

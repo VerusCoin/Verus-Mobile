@@ -36,4 +36,34 @@ describe('spendable-key claim result reconciliation', () => {
     });
     expect(addMissingRedeemedCurrencies).toHaveBeenCalled();
   });
+
+  it('threads origin context and stops all later metadata after a session switch', async () => {
+    const sessionError = Object.assign(new Error('account switched'), {
+      code: 'SESSION_CHANGED',
+    });
+    const requestContext = {
+      sessionScope: {
+        sessionScoped: true,
+        accountHash: 'account-a',
+        sessionEpoch: 1,
+      },
+    };
+    const results = [{type: 'identity'}];
+    const linkClaimedIdentities = jest.fn().mockRejectedValue(sessionError);
+    const addMissingRedeemedCurrencies = jest.fn();
+
+    await expect(
+      reconcileSpendableKeyClaimResults({
+        results,
+        linkClaimedIdentities,
+        addMissingRedeemedCurrencies,
+        requestContext,
+      }),
+    ).rejects.toBe(sessionError);
+    expect(linkClaimedIdentities).toHaveBeenCalledWith(
+      results,
+      requestContext,
+    );
+    expect(addMissingRedeemedCurrencies).not.toHaveBeenCalled();
+  });
 });

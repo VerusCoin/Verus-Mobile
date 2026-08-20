@@ -37,7 +37,8 @@ const mockSendRawTransaction = jest.fn();
 const mockCreateUpdateIdentityTxWithUtxos = jest.fn();
 const mockCreateUpdateIdentityWithCurrencyTransferTx = jest.fn();
 const mockGetUpdatableIdentity = jest.fn();
-const mockPushUpdateIdentityTx = jest.fn();
+const mockSignUpdateIdentityTx = jest.fn();
+const mockRequestPrivKey = jest.fn();
 const mockCreateUnfundedCurrencyTransferTransaction = jest.fn(
   () => 'unfunded-gift',
 );
@@ -117,11 +118,11 @@ jest.mock('../../api/channels/verusid/requests/updateIdentity', () => ({
   createUpdateIdentityTxWithUtxos: mockCreateUpdateIdentityTxWithUtxos,
   createUpdateIdentityWithCurrencyTransferTx: mockCreateUpdateIdentityWithCurrencyTransferTx,
   getUpdatableIdentity: mockGetUpdatableIdentity,
-  pushUpdateIdentityTx: mockPushUpdateIdentityTx,
+  signUpdateIdentityTx: mockSignUpdateIdentityTx,
 }));
 
 jest.mock('../../auth/authBox', () => ({
-  requestPrivKey: jest.fn(),
+  requestPrivKey: mockRequestPrivKey,
 }));
 
 jest.mock('@bitgo/utxo-lib/dist/src/smart_transactions', () => ({
@@ -166,6 +167,7 @@ const {
   GIFT_CARD_STATUS_FUNDED,
   GIFT_CARD_STATUS_REDEEMED,
   addGiftCardPendingFunding,
+  broadcastGiftCardFunding,
   buildGiftCardNfcDeeplinkUri,
   canDeleteGiftCard,
   createGiftCard,
@@ -173,6 +175,7 @@ const {
   getGiftCardClaimInfo,
   getGiftCardPendingFundings,
   getGiftCardFundingTopups,
+  getRetryableGiftCardFunding,
   getGiftCardMnemonic,
   getSubmittedGiftCardFundingIdentities,
   hasGiftCardBeenShared,
@@ -217,7 +220,13 @@ describe('gift card helpers', () => {
         [mockRootCoin.system_id]: '10000',
       },
     });
-    mockTransactionFromHex.mockReturnValue({ins: []});
+    mockTransactionFromHex.mockImplementation(hex => ({
+      ins: [],
+      getId: () =>
+        hex === 'signed-gift-identity'
+          ? 'gift-identity-txid'
+          : `${hex}-txid`,
+    }));
     mockGetIdentity.mockResolvedValue({
       error: {
         message: 'identity not found',
@@ -241,7 +250,8 @@ describe('gift card helpers', () => {
         deltas: new Map([[args.systemId, '-20000']]),
       }),
     );
-    mockPushUpdateIdentityTx.mockResolvedValue({result: 'identity-txid'});
+    mockRequestPrivKey.mockResolvedValue('wallet-spending-key');
+    mockSignUpdateIdentityTx.mockReturnValue('signed-gift-identity');
   });
 
   it('creates an unencrypted spendable-key gift card without storing the mnemonic', async () => {
@@ -1072,6 +1082,54 @@ describe('gift card helpers', () => {
     );
   });
 
+  it('updates one durable funding entry as its exact raw transaction changes status', async () => {
+    const card = await createGiftCard({
+      requestIsTestnet: false,
+      activeCoinsForUser: [],
+    });
+    const pendingBroadcast = {
+      id: 'durable-funding-id',
+      kind: 'gift-card-funding',
+      createdAt: 100,
+      updatedAt: 100,
+      transactions: [
+        {
+          type: 'currency',
+          systemId: mockRootCoin.system_id,
+          txid: 'durable-funding-txid',
+          rawTx: 'signed-funding-transaction',
+          status: 'prepared',
+        },
+      ],
+    };
+    const preparedCard = addGiftCardPendingFunding(card, {pendingBroadcast});
+    const retryBroadcast = {
+      ...pendingBroadcast,
+      updatedAt: 200,
+      transactions: pendingBroadcast.transactions.map(transaction => ({
+        ...transaction,
+        status: 'prepared',
+      })),
+    };
+    const retryCard = addGiftCardPendingFunding(preparedCard, {
+      pendingBroadcast: retryBroadcast,
+    });
+
+    expect(retryCard.fundingHistory).toHaveLength(1);
+    expect(getRetryableGiftCardFunding(retryCard)).toEqual(
+      expect.objectContaining({
+        id: 'durable-funding-id',
+        updatedAt: 200,
+        transactions: [
+          expect.objectContaining({
+            rawTx: 'signed-funding-transaction',
+            status: 'prepared',
+          }),
+        ],
+      }),
+    );
+  });
+
   it('does not clear a top-up using claims that were already on the card', async () => {
     const card = await createGiftCard({
       requestIsTestnet: false,
@@ -1816,6 +1874,165 @@ describe('gift card helpers', () => {
     expect(mockGetIdentity).toHaveBeenCalledWith(
       mockTestCoin.system_id,
       'i8jHXEEYEQ7KEoYe6eKXBib8cUBZ6vjWSd',
+    );
+  });
+
+  it('persists signed gift-card funding before broadcasting it', async () => {
+    mockSendRawTransaction.mockResolvedValueOnce({
+      result: 'gift-identity-txid',
+    });
+    const persistPendingBroadcast = jest.fn().mockResolvedValue();
+
+    const result = await broadcastGiftCardFunding({
+      preflightPlan: {
+        transactions: [
+          {
+            type: 'identity',
+            systemId: mockRootCoin.system_id,
+            signingCoinId: mockRootCoin.id,
+            txHex: 'identity-update-tx',
+            inputs: [{txid: '11'.repeat(32), outputIndex: 0}],
+            identity: {
+              identityAddress: 'i8jHXEEYEQ7KEoYe6eKXBib8cUBZ6vjWSd',
+              fullyQualifiedName: 'gift@',
+            },
+          },
+        ],
+      },
+      persistPendingBroadcast,
+    });
+
+    expect(persistPendingBroadcast.mock.invocationCallOrder[0]).toBeLessThan(
+      mockSendRawTransaction.mock.invocationCallOrder[0],
+    );
+    expect(persistPendingBroadcast.mock.calls[0][0].transactions[0]).toEqual(
+      expect.objectContaining({
+        rawTx: 'signed-gift-identity',
+        txid: 'gift-identity-txid',
+        status: 'prepared',
+      }),
+    );
+    expect(result.results[0].txid).toBe('gift-identity-txid');
+  });
+
+  it('retries the saved signed gift-card transaction after a lost response', async () => {
+    mockSendRawTransaction.mockRejectedValueOnce(new Error('socket closed'));
+    const persistPendingBroadcast = jest.fn().mockResolvedValue();
+    let error;
+
+    try {
+      await broadcastGiftCardFunding({
+        preflightPlan: {
+          transactions: [
+            {
+              type: 'identity',
+              systemId: mockRootCoin.system_id,
+              signingCoinId: mockRootCoin.id,
+              txHex: 'identity-update-tx',
+              inputs: [{txid: '22'.repeat(32), outputIndex: 1}],
+            },
+          ],
+        },
+        persistPendingBroadcast,
+      });
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error.pendingBroadcast.transactions[0]).toEqual(
+      expect.objectContaining({
+        rawTx: 'signed-gift-identity',
+        txid: 'gift-identity-txid',
+        status: 'prepared',
+      }),
+    );
+    expect(mockGetTransaction).not.toHaveBeenCalled();
+
+    mockSendRawTransaction.mockResolvedValueOnce({
+      result: 'gift-identity-txid',
+    });
+    const result = await broadcastGiftCardFunding({
+      pendingBroadcast: error.pendingBroadcast,
+      persistPendingBroadcast,
+    });
+
+    expect(mockSendRawTransaction.mock.calls.slice(-2)).toEqual([
+      [mockRootCoin.system_id, 'signed-gift-identity'],
+      [mockRootCoin.system_id, 'signed-gift-identity'],
+    ]);
+    expect(result.results[0]).toEqual(
+      expect.objectContaining({
+        txid: 'gift-identity-txid',
+        status: 'submitted',
+      }),
+    );
+  });
+
+  it('keeps an explicitly rejected gift-card transaction prepared for retry', async () => {
+    mockSendRawTransaction.mockResolvedValueOnce({
+      error: {message: 'transaction rejected'},
+    });
+
+    let error;
+    try {
+      await broadcastGiftCardFunding({
+        preflightPlan: {
+          transactions: [
+            {
+              type: 'identity',
+              systemId: mockRootCoin.system_id,
+              signingCoinId: mockRootCoin.id,
+              txHex: 'identity-update-tx',
+              inputs: [{txid: '23'.repeat(32), outputIndex: 1}],
+            },
+          ],
+        },
+        persistPendingBroadcast: jest.fn().mockResolvedValue(),
+      });
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error.pendingBroadcast.transactions[0]).toEqual(
+      expect.objectContaining({
+        txid: 'gift-identity-txid',
+        status: 'prepared',
+      }),
+    );
+    expect(mockGetTransaction).not.toHaveBeenCalled();
+  });
+
+  it('times out a stalled gift-card broadcast and keeps its exact raw transaction', async () => {
+    mockSendRawTransaction.mockReturnValueOnce(new Promise(() => {}));
+    let error;
+
+    try {
+      await broadcastGiftCardFunding({
+        preflightPlan: {
+          transactions: [
+            {
+              type: 'identity',
+              systemId: mockRootCoin.system_id,
+              signingCoinId: mockRootCoin.id,
+              txHex: 'identity-update-tx',
+              inputs: [{txid: '33'.repeat(32), outputIndex: 2}],
+            },
+          ],
+        },
+        persistPendingBroadcast: jest.fn().mockResolvedValue(),
+        requestTimeoutMs: 5,
+      });
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error.message).toContain('Transaction broadcast timed out');
+    expect(error.pendingBroadcast.transactions[0]).toEqual(
+      expect.objectContaining({
+        rawTx: 'signed-gift-identity',
+        txid: 'gift-identity-txid',
+        status: 'prepared',
+      }),
     );
   });
 });

@@ -42,16 +42,20 @@ import {
   getInfo,
   getSpendableUtxos,
   getTransaction,
-  sendRawTransaction,
 } from '../api/channels/vrpc/callCreators';
 import {getCurrency, getIdentity} from '../api/channels/verusid/callCreators';
 import {
   createUpdateIdentityTxWithUtxos,
   createUpdateIdentityWithCurrencyTransferTx,
   getUpdatableIdentity,
-  pushUpdateIdentityTx,
+  signUpdateIdentityTx,
 } from '../api/channels/verusid/requests/updateIdentity';
 import {requestPrivKey} from '../auth/authBox';
+import {
+  broadcastPendingTransactions,
+  createPendingBroadcast,
+  createPendingBroadcastTransaction,
+} from '../spendableKey/durableBroadcast';
 
 const {getFundedTxBuilder, validateFundedCurrencyTransfer} = smarttxs;
 
@@ -718,6 +722,20 @@ export const hasPendingGiftCardFunding = card => {
   return getGiftCardPendingFundings(card).length > 0;
 };
 
+export const getRetryableGiftCardFunding = card => {
+  return getGiftCardPendingFundings(card).find(entry =>
+    Array.isArray(entry?.transactions) &&
+    entry.transactions.length > 0 &&
+    entry.transactions.every(
+      transaction =>
+        typeof transaction?.rawTx === 'string' &&
+        transaction.rawTx.length > 0 &&
+        typeof transaction?.txid === 'string' &&
+        transaction.txid.length > 0,
+    ),
+  ) || null;
+};
+
 export const hasGiftCardBeenShared = card => {
   const sharedAt = Number(card?.sharedAt);
 
@@ -1228,7 +1246,10 @@ export const getSubmittedGiftCardFundingIdentities = fundingResult => {
 
 export const addGiftCardPendingFunding = (card, fundingResult) => {
   const now = Date.now();
-  const transactions = (fundingResult?.results || [])
+  const pendingBroadcast = fundingResult?.pendingBroadcast;
+  const sourceTransactions = pendingBroadcast?.transactions ||
+    fundingResult?.results || [];
+  const transactions = sourceTransactions
     .filter(
       result =>
         typeof result?.txid === 'string' &&
@@ -1237,6 +1258,7 @@ export const addGiftCardPendingFunding = (card, fundingResult) => {
         result.systemId.length > 0,
     )
     .map(result => ({
+      ...result,
       txid: result.txid,
       systemId: result.systemId,
       type: result.type || null,
@@ -1245,21 +1267,42 @@ export const addGiftCardPendingFunding = (card, fundingResult) => {
     .map(result => result.txid)
     .filter(txid => typeof txid === 'string' && txid.length > 0);
 
+  const fundingEntry = {
+    id: pendingBroadcast?.id || null,
+    kind: pendingBroadcast?.kind || 'gift-card-funding',
+    createdAt: pendingBroadcast?.createdAt || now,
+    updatedAt: pendingBroadcast?.updatedAt || now,
+    status: GIFT_CARD_FUNDING_STATUS_PENDING,
+    pending: true,
+    txids,
+    transactions,
+    systems: transactions.map(result => result.systemId),
+    identities: getSubmittedGiftCardFundingIdentities({
+      ...fundingResult,
+      results: transactions,
+    }),
+  };
+  const existingIndex = fundingEntry.id == null
+    ? -1
+    : (card.fundingHistory || []).findIndex(
+        entry => entry?.id === fundingEntry.id,
+      );
+  const fundingHistory = existingIndex === -1
+    ? [...(card.fundingHistory || []), fundingEntry]
+    : (card.fundingHistory || []).map((entry, index) =>
+        index === existingIndex
+          ? {
+              ...entry,
+              ...fundingEntry,
+              createdAt: entry.createdAt || fundingEntry.createdAt,
+            }
+          : entry,
+      );
+
   return {
     ...card,
     updatedAt: now,
-    fundingHistory: [
-      ...(card.fundingHistory || []),
-      {
-        createdAt: now,
-        status: GIFT_CARD_FUNDING_STATUS_PENDING,
-        pending: true,
-        txids,
-        transactions,
-        systems: (fundingResult?.results || []).map(result => result.systemId),
-        identities: getSubmittedGiftCardFundingIdentities(fundingResult),
-      },
-    ],
+    fundingHistory,
   };
 };
 
@@ -2191,51 +2234,69 @@ const signCurrencyFundingTransaction = async transaction => {
   return txb.build().toHex();
 };
 
-export const broadcastGiftCardFunding = async ({preflightPlan}) => {
-  const results = [];
+const prepareGiftCardFundingBroadcast = async preflightPlan => {
+  const transactions = [];
 
   for (const transaction of preflightPlan.transactions) {
-    try {
-      if (transaction.type === 'identity') {
-        const spendingKey = await requestPrivKey(transaction.signingCoinId, VRPC);
-        const keys = transaction.inputs.map(() => [spendingKey]);
-        const result = await pushUpdateIdentityTx(
-          transaction.systemId,
-          transaction.txHex,
-          transaction.inputs,
-          keys,
-        );
+    let rawTx;
 
-        if (result.error) throw new Error(result.error.message);
+    if (transaction.type === 'identity') {
+      const spendingKey = await requestPrivKey(transaction.signingCoinId, VRPC);
+      const keys = transaction.inputs.map(() => [spendingKey]);
 
-        results.push({
-          ...transaction,
-          txid: result.result,
-        });
-      } else if (transaction.type === 'currency') {
-        const signedTx = await signCurrencyFundingTransaction(transaction);
-        const result = await sendRawTransaction(transaction.systemId, signedTx);
-
-        if (result.error) throw new Error(result.error.message);
-
-        results.push({
-          ...transaction,
-          txid: result.result,
-        });
-      }
-    } catch (e) {
-      const error = e instanceof Error ? e : new Error(String(e));
-
-      error.results = results;
-      error.preflightPlan = preflightPlan;
-      throw error;
+      rawTx = signUpdateIdentityTx(
+        transaction.systemId,
+        transaction.txHex,
+        transaction.inputs,
+        keys,
+      );
+    } else if (transaction.type === 'currency') {
+      rawTx = await signCurrencyFundingTransaction(transaction);
+    } else {
+      throw new Error(`Unsupported gift-card transaction type: ${transaction.type}`);
     }
+
+    transactions.push(
+      createPendingBroadcastTransaction({transaction, rawTx}),
+    );
   }
 
-  return {
-    preflightPlan,
-    results,
-  };
+  return createPendingBroadcast({
+    kind: 'gift-card-funding',
+    transactions,
+  });
+};
+
+export const broadcastGiftCardFunding = async ({
+  preflightPlan = null,
+  pendingBroadcast = null,
+  persistPendingBroadcast,
+  requestTimeoutMs,
+}) => {
+  if (pendingBroadcast == null && preflightPlan == null) {
+    throw new Error('Gift-card funding requires a preflight plan or pending broadcast.');
+  }
+
+  const durableBroadcast = pendingBroadcast ||
+    await prepareGiftCardFundingBroadcast(preflightPlan);
+
+  try {
+    const result = await broadcastPendingTransactions({
+      pendingBroadcast: durableBroadcast,
+      persistPendingBroadcast,
+      requestTimeoutMs,
+    });
+
+    return {
+      preflightPlan,
+      ...result,
+    };
+  } catch (e) {
+    const error = e instanceof Error ? e : new Error(String(e));
+
+    error.preflightPlan = preflightPlan;
+    throw error;
+  }
 };
 
 export const getGiftCardServiceDefaults = () => ({

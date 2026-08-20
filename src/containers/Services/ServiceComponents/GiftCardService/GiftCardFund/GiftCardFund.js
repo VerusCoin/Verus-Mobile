@@ -155,11 +155,19 @@ const GiftCardFund = props => {
   const [identityFundingError, setIdentityFundingError] = useState(null);
   const [claimPassword, setClaimPassword] = useState('');
   const [preflightPlan, setPreflightPlan] = useState(null);
+  const [pendingFundingBroadcast, setPendingFundingBroadcast] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState(null);
   const cardId = props.route.params.cardId;
+  const pendingFundingId = props.route.params.pendingFundingId || null;
 
   const card = serviceData?.cards?.[cardId];
+  const savedPendingFunding = pendingFundingId == null
+    ? null
+    : (card?.fundingHistory || []).find(
+        entry => entry?.id === pendingFundingId,
+      ) || null;
+  const pendingFunding = pendingFundingBroadcast || savedPendingFunding;
   const steps = getFundingSteps(mode);
   const step = steps[stepIndex];
 
@@ -511,15 +519,34 @@ const GiftCardFund = props => {
     };
   };
 
+  const persistFundingBroadcast = async pendingBroadcast => {
+    const updatedCard = await updateCard((currentData, currentCard) =>
+      upsertGiftCard(
+        currentData,
+        addGiftCardPendingFunding(currentCard, {
+          pendingBroadcast,
+          results: pendingBroadcast.transactions,
+        }),
+      ),
+    );
+
+    setPendingFundingBroadcast(pendingBroadcast);
+    return updatedCard;
+  };
+
   const broadcast = async () => {
-    if (!preflightPlan) return;
+    if (!preflightPlan && !pendingFunding) return;
 
     setLoading(true);
-    setLoadingText('Confirming gift card funding transactions...');
+    setLoadingText('Submitting signed gift card funding transactions...');
 
     try {
       await loadLatestFundableCard();
-      const result = await broadcastGiftCardFunding({preflightPlan});
+      const result = await broadcastGiftCardFunding({
+        preflightPlan,
+        pendingBroadcast: pendingFunding,
+        persistPendingBroadcast: persistFundingBroadcast,
+      });
       const {unlinkError} = await persistFundingResult(result);
 
       Alert.alert(
@@ -538,6 +565,7 @@ const GiftCardFund = props => {
 
           const partialResult = {
             preflightPlan: e.preflightPlan || preflightPlan,
+            pendingBroadcast: e.pendingBroadcast,
             results: e.results,
           };
           const {unlinkError} = await persistFundingResult(partialResult);
@@ -562,7 +590,10 @@ const GiftCardFund = props => {
           );
         }
       } else {
-        Alert.alert('Error', e.message);
+        Alert.alert(
+          'Funding not confirmed',
+          `${e.message}\n\nThe signed transaction was saved and can be retried safely.`,
+        );
       }
     } finally {
       setLoading(false);
@@ -593,6 +624,54 @@ const GiftCardFund = props => {
               {loadingText}
             </Text>
           )}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  if (pendingFundingId != null && pendingFunding == null) {
+    return (
+      <SafeAreaView style={Styles.defaultRoot}>
+        <View style={{padding: 24}}>
+          <Text style={{fontSize: 20, fontWeight: 'bold', marginBottom: 12}}>
+            Pending funding unavailable
+          </Text>
+          <Text style={{marginBottom: 16}}>
+            This saved funding attempt no longer exists. Refresh the gift card before trying again.
+          </Text>
+          <Button onPress={() => props.navigation.goBack()}>Close</Button>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (pendingFunding != null) {
+    return (
+      <SafeAreaView style={Styles.defaultRoot}>
+        <ScrollView
+          contentContainerStyle={{padding: 24}}
+          style={{...Styles.fullWidth, ...Styles.backgroundColorWhite}}>
+          <Text style={{fontSize: 20, fontWeight: 'bold', marginBottom: 12}}>
+            Retry pending funding
+          </Text>
+          <Text style={{color: Colors.verusDarkGray, marginBottom: 16}}>
+            These exact signed transactions were saved before broadcast. Retrying rebroadcasts any that are not already marked submitted.
+          </Text>
+          {(pendingFunding.transactions || []).map(transaction => (
+            <View key={`${transaction.systemId}:${transaction.txid}`} style={{marginBottom: 12}}>
+              <Text style={{fontWeight: 'bold'}}>{transaction.systemId}</Text>
+              <Text selectable style={{fontSize: 12}}>{transaction.txid}</Text>
+              <Text style={{color: Colors.verusDarkGray, fontSize: 12}}>
+                {transaction.status || 'prepared'}
+              </Text>
+            </View>
+          ))}
+          <Button mode="contained" icon="send" onPress={broadcast}>
+            Retry exact transactions
+          </Button>
+          <Button onPress={() => props.navigation.goBack()} style={{marginTop: 8}}>
+            Close
+          </Button>
         </ScrollView>
       </SafeAreaView>
     );

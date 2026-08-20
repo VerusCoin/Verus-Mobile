@@ -29,6 +29,7 @@ import {
   getGiftCardClaimInfo,
   getGiftCardIdentityLookupErrors,
   getGiftCardPendingFundings,
+  getRetryableGiftCardFunding,
   hasGiftCardBeenShared,
   hasGiftCardClaims,
   hasPendingGiftCardFunding,
@@ -318,10 +319,19 @@ const GiftCardServiceOverview = ({
     }
 
     if (hasPendingGiftCardFunding(card)) {
-      Alert.alert(
-        'Pending Funding',
-        'Wait for pending funding transactions to confirm before adding more funds.',
-      );
+      const retryableFunding = getRetryableGiftCardFunding(card);
+
+      if (retryableFunding != null) {
+        navigation.navigate('GiftCardFund', {
+          cardId: card.id,
+          pendingFundingId: retryableFunding.id,
+        });
+      } else {
+        Alert.alert(
+          'Pending Funding',
+          'Wait for pending funding transactions to confirm before adding more funds.',
+        );
+      }
       return;
     }
 
@@ -342,10 +352,19 @@ const GiftCardServiceOverview = ({
       }
 
       if (hasPendingGiftCardFunding(refreshed)) {
-        Alert.alert(
-          'Pending Funding',
-          'Wait for pending funding transactions to confirm before adding more funds.',
-        );
+        const retryableFunding = getRetryableGiftCardFunding(refreshed);
+
+        if (retryableFunding != null) {
+          navigation.navigate('GiftCardFund', {
+            cardId: refreshed.id,
+            pendingFundingId: retryableFunding.id,
+          });
+        } else {
+          Alert.alert(
+            'Pending Funding',
+            'Wait for pending funding transactions to confirm before adding more funds.',
+          );
+        }
         return;
       }
 
@@ -624,6 +643,7 @@ const GiftCardServiceOverview = ({
     const busy = busyCardId === card.id;
     const pendingFundings = getGiftCardPendingFundings(card);
     const pending = pendingFundings.length > 0;
+    const retryableFunding = getRetryableGiftCardFunding(card);
     const hasClaims = hasGiftCardClaims(card);
     const deleteEnabled = canDeleteGiftCard(card);
     const claimInfo = getGiftCardClaimInfo(card);
@@ -796,9 +816,13 @@ const GiftCardServiceOverview = ({
           <Button
             compact
             icon="cash-plus"
-            disabled={card.status?.state === 'redeemed' || pending || busy}
+            disabled={
+              card.status?.state === 'redeemed' ||
+              (pending && retryableFunding == null) ||
+              busy
+            }
             onPress={() => fundCard(card)}>
-            Fund
+            {retryableFunding == null ? 'Fund' : 'Retry'}
           </Button>
           <Button
             compact
