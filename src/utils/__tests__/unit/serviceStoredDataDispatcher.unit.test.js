@@ -1,9 +1,16 @@
 let mockStoredData = {};
+let mockState = {
+  authentication: {
+    activeAccount: {accountHash: 'account'},
+    sessionEpoch: 1,
+  },
+};
 
 jest.mock('../../../store', () => ({
   __esModule: true,
   default: {
     dispatch: jest.fn(),
+    getState: jest.fn(() => mockState),
   },
 }));
 
@@ -54,6 +61,12 @@ describe('service stored data dispatcher', () => {
         cards: {},
       }),
     };
+    mockState = {
+      authentication: {
+        activeAccount: {accountHash: 'account'},
+        sessionEpoch: 1,
+      },
+    };
   });
 
   it('serializes functional updates so concurrent writes are merged', async () => {
@@ -83,5 +96,45 @@ describe('service stored data dispatcher', () => {
     });
     expect(loadServiceStoredDataForUser).toHaveBeenCalledTimes(2);
     expect(storeServiceStoredDataForUser).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not persist an originating account update after the session changes', async () => {
+    let releaseUpdater;
+    const updaterStarted = new Promise(resolve => {
+      releaseUpdater = resolve;
+    });
+    let continueUpdater;
+    const updaterMayFinish = new Promise(resolve => {
+      continueUpdater = resolve;
+    });
+    const requestContext = {
+      sessionScope: {
+        sessionScoped: true,
+        accountHash: 'account',
+        sessionEpoch: 1,
+      },
+    };
+    const update = modifyServiceStoredDataForUser(
+      async current => {
+        releaseUpdater();
+        await updaterMayFinish;
+        return {...current, fromAccountA: true};
+      },
+      'giftcards',
+      'account',
+      requestContext,
+    );
+
+    await updaterStarted;
+    mockState = {
+      authentication: {
+        activeAccount: {accountHash: 'account-b'},
+        sessionEpoch: 2,
+      },
+    };
+    continueUpdater();
+
+    await expect(update).rejects.toMatchObject({code: 'SESSION_CHANGED'});
+    expect(storeServiceStoredDataForUser).not.toHaveBeenCalled();
   });
 });
