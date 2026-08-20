@@ -19,6 +19,7 @@ import { addCoin, addKeypairs, setUserCoins } from '../../../actions/actionCreat
 import { refreshActiveChainLifecycles } from '../../../actions/actions/intervals/dispatchers/lifecycleManager';
 import { SMALL_DEVICE_HEGHT } from '../../../utils/constants/constants';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
+import {scopeSessionAction} from '../../../actions/actions/updates/sessionRequests';
 
 const LoginRequestInfo = props => {
   const { deeplinkData, sigtime, cancel, signerFqn } = props
@@ -51,6 +52,9 @@ const LoginRequestInfo = props => {
 
   const isTestnet = activeAccount ? Object.keys(activeAccount.testnetOverrides).length > 0 : false;
   const activeCoinList = useObjectSelector(state => state.coins.activeCoinList);
+  const sessionEpoch = useObjectSelector(
+    state => state.authentication.sessionEpoch,
+  );
 
   let mainLoginMessage = '';
 
@@ -127,6 +131,12 @@ const LoginRequestInfo = props => {
 
   const addRootSystem = async () => {
     setLoading(true)
+    const sessionScope = {
+      sessionScoped: true,
+      accountHash: activeAccount.accountHash,
+      sessionEpoch,
+    };
+    const requestContext = {sessionScope};
 
     try {
       const fullCoinData = CoinDirectory.findCoinObj(chain_id)
@@ -138,6 +148,7 @@ const LoginRequestInfo = props => {
           activeAccount.keyDerivationVersion == null
             ? 0
             : activeAccount.keyDerivationVersion,
+          requestContext,
         ),
       );
   
@@ -146,16 +157,17 @@ const LoginRequestInfo = props => {
         activeCoinList,
         activeAccount.id,
         fullCoinData.compatible_channels,
+        requestContext,
       );
   
       if (addCoinAction) {
         dispatch(addCoinAction);
   
         const setUserCoinsAction = setUserCoins(
-          activeCoinList,
+          addCoinAction.activeCoinList,
           activeAccount.id,
         );
-        dispatch(setUserCoinsAction);
+        dispatch(scopeSessionAction(setUserCoinsAction, sessionScope));
   
         refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);
       } else {

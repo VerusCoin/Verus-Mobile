@@ -3,40 +3,54 @@ import { CoinDirectory } from '../CoinData/CoinDirectory';
 import { SecureStorage } from '../keychain/secureStore';
 // react-native's version of local storage
 
+// Keep the coordinator outside this module instance so React Native Fast
+// Refresh cannot create a second read/modify/write queue while an operation
+// started by the previous module instance is still in flight.
+const COIN_STORAGE_MUTATION_COORDINATOR_KEY = Symbol.for(
+  'verus.mobile.coinStorageMutationCoordinator.v1',
+);
+if (globalThis[COIN_STORAGE_MUTATION_COORDINATOR_KEY] == null) {
+  globalThis[COIN_STORAGE_MUTATION_COORDINATOR_KEY] = {
+    queue: Promise.resolve(),
+  };
+}
+const coinStorageMutationCoordinator =
+  globalThis[COIN_STORAGE_MUTATION_COORDINATOR_KEY];
+
+export const queueCoinStorageMutation = mutation => {
+  const result = coinStorageMutationCoordinator.queue.then(
+    mutation,
+    mutation,
+  );
+  coinStorageMutationCoordinator.queue = result.catch(() => {});
+  return result;
+};
+
+export const awaitCoinStorageMutations = () =>
+  coinStorageMutationCoordinator.queue;
+
 //Clear user from coin, or delete user from all if no coin specified
-export const deleteUserFromCoin = (userID, coinID) => {
-  return new Promise((resolve, reject) => {
-    getActiveCoinList()
-    .then((coinList) => {
-      let newList = coinList.slice()
-      for (let i = 0; i < newList.length; i++) {
-        if (coinID === null || newList[i].id === coinID) {
-          let userIndex = newList[i].users.findIndex(n => n === userID);
-
-          if (userIndex > -1) {
-            newList[i].users.splice(userIndex, 1);
-          }
-        }
-      }
-
-      return storeCoins(newList)
-    })
-    .then((res) => {
-      resolve(res)
-    })
-    .catch((err) => {
-      reject(err)
-    })
+export const deleteUserFromCoin = (userID, coinID) =>
+  queueCoinStorageMutation(async () => {
+    const coinList = await getActiveCoinList();
+    const newList = coinList.map(coin =>
+      coinID === null || coin.id === coinID
+        ? {...coin, users: coin.users.filter(name => name !== userID)}
+        : {...coin, users: [...coin.users]},
+    );
+    return storeCoins(newList);
   });
-}
 
-export const purgeUnusedCoins = async () => {
-  const coins = await getActiveCoinList();
-  const coinsUsed = coins.filter(x => x.users.length > 0);
+export const purgeUnusedCoins = () =>
+  queueCoinStorageMutation(async () => {
+    const coins = await getActiveCoinList();
+    const coinsUsed = coins
+      .filter(x => x.users.length > 0)
+      .map(coin => ({...coin, users: [...coin.users]}));
 
-  await storeCoins(coinsUsed);
-  return coinsUsed;
-}
+    await storeCoins(coinsUsed);
+    return coinsUsed;
+  });
 
 //Set storage to hold list of activated coins
 export const storeCoins = (coins) => {
@@ -61,39 +75,40 @@ export const getActiveCoinList = () => {
           resolve(coinsList.coins);
         }
         else {
-          _res = JSON.parse(res);
-          resolve(_res.coins);
+          const parsed = JSON.parse(res);
+          resolve(parsed.coins);
         }
       })
       .catch(err => reject(err));
   });
 };
 
-export const updateActiveCoinList = () => {
-  return new Promise((resolve, reject) => {
-    SecureStorage.getItem(COIN_STORAGE_INTERNAL_KEY)
-      .then((res) => {
-        let coinList = []
-        let newCoinList = []
+export const updateActiveCoinList = () =>
+  queueCoinStorageMutation(() =>
+    new Promise((resolve, reject) => {
+      SecureStorage.getItem(COIN_STORAGE_INTERNAL_KEY)
+        .then((res) => {
+          let coinList = []
+          let newCoinList = []
 
-        if (res) {
-          coinList = JSON.parse(res).coins;
-        }
-        
-        coinList = coinList.map((coin) => {
-          try {
-            const newCoinObj = CoinDirectory.findCoinObj(coin.id, "")
-            newCoinList.push({...newCoinObj, users: coin.users})
-          } catch(e) {
-            console.warn(e)
+          if (res) {
+            coinList = JSON.parse(res).coins;
           }
-        })
 
-        return storeCoins(newCoinList)
-      })
-      .then(() => {
-        resolve(true)
-      })
-      .catch(err => reject(err));
-  });
-};
+          coinList.forEach((coin) => {
+            try {
+              const newCoinObj = CoinDirectory.findCoinObj(coin.id, "")
+              newCoinList.push({...newCoinObj, users: [...coin.users]})
+            } catch(e) {
+              console.warn(e)
+            }
+          })
+
+          return storeCoins(newCoinList)
+        })
+        .then(() => {
+          resolve(true)
+        })
+        .catch(err => reject(err));
+    }),
+  );
