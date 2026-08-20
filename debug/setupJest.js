@@ -1,6 +1,6 @@
-const mockVerusLightClient = require('../__mocks__/react-native-verus-light-client/mock')
-const mockRnAlertAsync = require('../__mocks__/react-native-alert-async/mock')
-const mockRedux = require('../__mocks__/redux/mock')
+const mockVerusLightClient = require('../__mocks__/react-native-verus-light-client/mock');
+const mockRnAlertAsync = require('../__mocks__/react-native-alert-async/mock');
+const mockRedux = require('../__mocks__/redux/mock');
 
 jest.mock('react-native-verus-light-client', () => mockVerusLightClient(), {
   virtual: true,
@@ -75,15 +75,26 @@ jest.mock('react-native-nfc-manager', () => {
 jest.mock('react-native-alert-async', () => mockRnAlertAsync());
 jest.mock('redux', () => mockRedux());
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
-jest.mock('react-native-crypto', () =>
-  require('crypto')
-);
+jest.mock('react-native-crypto', () => require('crypto'));
 jest.mock('react-native-keychain', () => ({
+  ACCESS_CONTROL: {
+    BIOMETRY_CURRENT_SET: 'BiometryCurrentSet',
+  },
   ACCESSIBLE: {
     WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'AccessibleWhenUnlockedThisDeviceOnly',
+    WHEN_PASSCODE_SET_THIS_DEVICE_ONLY:
+      'AccessibleWhenPasscodeSetThisDeviceOnly',
   },
+  SECURITY_LEVEL: {
+    SECURE_HARDWARE: 'SECURE_HARDWARE',
+    SECURE_SOFTWARE: 'SECURE_SOFTWARE',
+    ANY: 'ANY',
+  },
+  getSecurityLevel: jest.fn(() => Promise.resolve('SECURE_HARDWARE')),
+  getSupportedBiometryType: jest.fn(() => Promise.resolve(null)),
+  getAllGenericPasswordServices: jest.fn(() => Promise.resolve([])),
   setGenericPassword: jest.fn(() => Promise.resolve('mockPass')),
   getGenericPassword: jest.fn(() => Promise.resolve('mockPass')),
   resetGenericPassword: jest.fn(() => Promise.resolve(null)),
@@ -140,13 +151,23 @@ jest.mock('react-native-randombytes', () => {
   return {
     randomBytes: (length, cb) => {
       if (!cb) {
-        return Buffer.alloc(length)
+        return Buffer.alloc(length);
       } else {
-        cb(null, Buffer.alloc(length))
+        cb(null, Buffer.alloc(length));
       }
-    }
+    },
   };
 });
+
+const {NativeModules} = require('react-native');
+NativeModules.VerusBiometricEnrollment = {
+  getEnrollmentBoundCredentialStatus: jest.fn(() => Promise.resolve('VALID')),
+  setEnrollmentBoundCredential: jest.fn(() => Promise.resolve(true)),
+  getEnrollmentBoundCredential: jest.fn(() =>
+    Promise.resolve('mock-biometric-credential'),
+  ),
+  removeEnrollmentBoundCredential: jest.fn(() => Promise.resolve(true)),
+};
 jest.mock('react-native-iphone-x-helper', () => {
   return {
     isIphoneX: jest.fn(),
@@ -178,9 +199,9 @@ jest.mock('@react-native-community/netinfo', () => {
 jest.mock('ethers', () => require('ethers/dist/ethers.umd'));
 jest.mock('react-native-url-polyfill', () => require('url'));
 
-global.fetch = require('../__mocks__/react-native-fetch/fetch')
+global.fetch = require('../__mocks__/react-native-fetch/fetch');
 
 // App functionality
 global.ENABLE_VERUS_IDENTITIES = true;
 global.DISABLED_CHANNELS = ['dlight'];
-global.ENABLE_DLIGHT = !global.DISABLED_CHANNELS.includes('dlight')
+global.ENABLE_DLIGHT = !global.DISABLED_CHANNELS.includes('dlight');
