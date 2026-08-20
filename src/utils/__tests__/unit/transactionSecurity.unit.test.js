@@ -1,7 +1,10 @@
 import BigNumber from "bignumber.js";
 import {
+  assertAndUseVerifiedInputValues,
+  assertFeeWithinLimits,
   assertSanePotentialTransactionFee,
   calculatePotentialTransactionFee,
+  estimateLegacyTransactionByteSize,
 } from "../../api/channels/electrum/transactionFee";
 import { getSingleSendCurrencyOutput } from "../../api/channels/vrpc/requests/sendCurrencyOutputValidation";
 
@@ -66,6 +69,75 @@ describe("transaction security validation", () => {
           1000,
         ),
       ).toThrow("verified input values");
+    });
+
+    it("uses a hash-verified input value as the authoritative amount", () => {
+      const [input] = assertAndUseVerifiedInputValues([
+        {
+          amountSats: "100000",
+          reportedValueSats: "100000",
+          verifiedTxid: true,
+          verifiedValueSats: 100000,
+        },
+      ]);
+
+      expect(input.value).toBe(100000);
+      expect(input.amountSats).toBe(100000);
+    });
+
+    it("rejects an Electrum value that disagrees with the previous transaction", () => {
+      expect(() =>
+        assertAndUseVerifiedInputValues([
+          {
+            amountSats: 1000,
+            reportedValueSats: 1000,
+            verifiedTxid: true,
+            verifiedValueSats: 100000,
+          },
+        ]),
+      ).toThrow("does not match the hash-verified previous transaction");
+    });
+
+    it("rejects an input whose previous transaction was not hash verified", () => {
+      expect(() =>
+        assertAndUseVerifiedInputValues([
+          {
+            amountSats: 100000,
+            verifiedTxid: false,
+            verifiedValueSats: 100000,
+          },
+        ]),
+      ).toThrow("hash-verified previous transactions");
+    });
+
+    it("accounts for independently calculated KMD interest in the fee", () => {
+      expect(
+        calculatePotentialTransactionFee(
+          [{verifiedValueSats: 100000}],
+          95000,
+          14000,
+          10000,
+        ).toString(),
+      ).toBe("1000");
+    });
+
+    it("rejects fees above configured absolute and fee-rate limits", () => {
+      expect(() =>
+        assertFeeWithinLimits(10001, 200, {
+          maxAbsoluteFee: 10000,
+          maxFeeRatePerByte: 1000,
+        }),
+      ).toThrow("absolute fee limit");
+
+      expect(() =>
+        assertFeeWithinLimits(10000, 100, {
+          maxFeeRatePerByte: 99,
+        }),
+      ).toThrow("maximum fee rate");
+    });
+
+    it("estimates the legacy transaction size for pre-signing fee checks", () => {
+      expect(estimateLegacyTransactionByteSize(1, 2)).toBe(226);
     });
   });
 });
