@@ -23,6 +23,12 @@ import {
   ERROR_RATES,
   SET_SERVICE_UPDATE_DATA,
   OCCUPY_SERVICE_API_CALL,
+  RELEASE_COIN_API_CALL,
+  RELEASE_SERVICE_API_CALL,
+  SESSION_REQUEST_STARTED,
+  AUTHENTICATE_USER,
+  SIGN_OUT,
+  UPDATE_SESSION_KEY,
   SET_SERVICE_EXPIRE_ID,
   CLEAR_SERVICE_EXPIRE_ID,
   SET_SERVICE_UPDATE_EXPIRED_ID,
@@ -71,7 +77,8 @@ export const updates = (state = {
   coinUpdateTracker: {},
   coinUpdateIntervals: {},
   serviceUpdateTracker: {},
-  serviceUpdateIntervals: {}
+  serviceUpdateIntervals: {},
+  latestSessionRequests: {},
 }, action) => {
   let { chainTicker, channel, dataType, channels, error } = action.payload || {}
   if (chainTicker == null && error) {
@@ -485,7 +492,16 @@ export const updates = (state = {
               }
             },
           };
-    case OCCUPY_COIN_API_CALL: 
+    case OCCUPY_COIN_API_CALL: {
+      const coinUpdate =
+        state.coinUpdateTracker[chainTicker] == null
+          ? {}
+          : state.coinUpdateTracker[chainTicker][dataType] || {};
+      const occupiedCoinRequestIds = {...(coinUpdate.busyRequestIds || {})};
+      for (const busyChannel of Object.keys(channels || {})) {
+        occupiedCoinRequestIds[busyChannel] = action.payload.requestId;
+      }
+
       return {
         ...state,
         coinUpdateTracker: {
@@ -493,24 +509,108 @@ export const updates = (state = {
           [chainTicker]: {
             ...state.coinUpdateTracker[chainTicker], 
             [dataType]: {
-              ...state.coinUpdateTracker[chainTicker][dataType],
+              ...coinUpdate,
               busy: {
-                ...state.coinUpdateTracker[chainTicker][API_GET_FIATPRICE].busy,
+                ...(coinUpdate.busy || {}),
                 ...channels
-              }
+              },
+              busyRequestIds: occupiedCoinRequestIds,
             }}}
+      };
+    }
+    case OCCUPY_SERVICE_API_CALL: {
+      const serviceUpdate = state.serviceUpdateTracker[dataType] || {};
+      const occupiedServiceRequestIds = {...(serviceUpdate.busyRequestIds || {})};
+      for (const busyChannel of Object.keys(channels || {})) {
+        occupiedServiceRequestIds[busyChannel] = action.payload.requestId;
       }
-    case OCCUPY_SERVICE_API_CALL: 
+
       return {
         ...state,
         serviceUpdateTracker: {
           ...state.serviceUpdateTracker,
-          [action.dataType]: {
-            ...state.serviceUpdateTracker[action.dataType],
-            busy: true
+          [dataType]: {
+            ...serviceUpdate,
+            busy: {
+              ...(serviceUpdate.busy || {}),
+              ...channels,
+            },
+            busyRequestIds: occupiedServiceRequestIds,
           }
         }
+      };
+    }
+    case RELEASE_COIN_API_CALL: {
+      const currentCoinUpdate =
+        state.coinUpdateTracker[chainTicker] == null
+          ? null
+          : state.coinUpdateTracker[chainTicker][dataType];
+      if (currentCoinUpdate == null) return state;
+
+      const nextBusy = {...(currentCoinUpdate.busy || {})};
+      const nextRequestIds = {...(currentCoinUpdate.busyRequestIds || {})};
+      for (const releasedChannel of channels || []) {
+        if (nextRequestIds[releasedChannel] === action.payload.requestId) {
+          nextBusy[releasedChannel] = false;
+          delete nextRequestIds[releasedChannel];
+        }
       }
+
+      return {
+        ...state,
+        coinUpdateTracker: {
+          ...state.coinUpdateTracker,
+          [chainTicker]: {
+            ...state.coinUpdateTracker[chainTicker],
+            [dataType]: {
+              ...currentCoinUpdate,
+              busy: nextBusy,
+              busyRequestIds: nextRequestIds,
+            },
+          },
+        },
+      };
+    }
+    case RELEASE_SERVICE_API_CALL: {
+      const currentServiceUpdate = state.serviceUpdateTracker[dataType];
+      if (currentServiceUpdate == null) return state;
+
+      const nextBusy = {...(currentServiceUpdate.busy || {})};
+      const nextRequestIds = {...(currentServiceUpdate.busyRequestIds || {})};
+      for (const releasedChannel of channels || []) {
+        if (nextRequestIds[releasedChannel] === action.payload.requestId) {
+          nextBusy[releasedChannel] = false;
+          delete nextRequestIds[releasedChannel];
+        }
+      }
+
+      return {
+        ...state,
+        serviceUpdateTracker: {
+          ...state.serviceUpdateTracker,
+          [dataType]: {
+            ...currentServiceUpdate,
+            busy: nextBusy,
+            busyRequestIds: nextRequestIds,
+          },
+        },
+      };
+    }
+    case SESSION_REQUEST_STARTED:
+      return {
+        ...state,
+        latestSessionRequests: {
+          ...state.latestSessionRequests,
+          [action.payload.requestKey]: action.payload.requestId,
+        },
+      };
+    case AUTHENTICATE_USER:
+    case UPDATE_SESSION_KEY:
+    case SIGN_OUT:
+      return {
+        ...state,
+        latestSessionRequests: {},
+      };
     case ENABLE_COIN_API_CALL: 
       return {
         ...state,

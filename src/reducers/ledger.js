@@ -16,7 +16,10 @@ import {
   SET_DEPOSIT_SOURCES,
   SET_PENDING_DEPOSITS,
   SET_LINKED_IDENTITIES,
-  LOG_NEW_CHANNELS
+  LOG_NEW_CHANNELS,
+  AUTHENTICATE_USER,
+  SIGN_OUT,
+  UPDATE_SESSION_KEY,
 } from '../utils/constants/storeType'
 import {
   BALANCES,
@@ -32,7 +35,7 @@ import {
   WITHDRAW_DESTINATIONS
 } from "../utils/constants/intervalConstants";
 
-export const ledger = (state = {
+const initialLedgerState = () => ({
   [BALANCES]: CHANNELS_OBJECT_TEMPLATE,
   [TRANSACTIONS]: CHANNELS_OBJECT_TEMPLATE,
   [RATES]: CHANNELS_OBJECT_TEMPLATE,
@@ -42,7 +45,9 @@ export const ledger = (state = {
   [DEPOSIT_SOURCES]: CHANNELS_OBJECT_TEMPLATE,
   [PENDING_DEPOSITS]: CHANNELS_OBJECT_TEMPLATE,
   [LINKED_IDS]: CHANNELS_OBJECT_TEMPLATE
-}, action) => {
+});
+
+export const ledger = (state = initialLedgerState(), action) => {
   const { chainTicker, channel, body } = action.payload || {}
 
   switch (action.type) {
@@ -138,18 +143,11 @@ export const ledger = (state = {
         ...state,
         ..._state
       }
+    case AUTHENTICATE_USER:
+    case UPDATE_SESSION_KEY:
+    case SIGN_OUT:
     case SIGN_OUT_COMPLETE:
-      return {
-        ...state,
-        balances: CHANNELS_OBJECT_TEMPLATE,
-        transactions: CHANNELS_OBJECT_TEMPLATE,
-        rates: CHANNELS_OBJECT_TEMPLATE,
-        info: CHANNELS_OBJECT_TEMPLATE,
-        conversions: CHANNELS_OBJECT_TEMPLATE,
-        withdrawDestinations: CHANNELS_OBJECT_TEMPLATE,
-        depositSources: CHANNELS_OBJECT_TEMPLATE,
-        pendingDeposits: CHANNELS_OBJECT_TEMPLATE
-      };
+      return initialLedgerState();
     /*case SET_INTERVAL_ID:
       return {
         ...state,
