@@ -1,4 +1,5 @@
 import store from '../../../../store';
+import {captureSessionScope} from '../../updates/sessionRequests';
 import { coinsList } from '../../../../utils/CoinData/CoinsList';
 import {
   CONVERSION_SEND_MODAL,
@@ -53,6 +54,8 @@ import {
   SET_SEND_COIN_MODAL_VISIBLE,
 } from '../../../../utils/constants/storeType';
 
+let sendModalRequestSequence = 0;
+
 export const openSendModal = (
   title,
   coinObj,
@@ -62,6 +65,7 @@ export const openSendModal = (
   helpText,
   initialRouteName
 ) => {
+  const state = store.getState();
   store.dispatch({
     type: OPEN_SEND_COIN_MODAL,
     payload: {
@@ -71,7 +75,9 @@ export const openSendModal = (
       data,
       type,
       helpText,
-      initialRouteName
+      initialRouteName,
+      requestId: `send-modal-${Date.now()}-${++sendModalRequestSequence}`,
+      sessionScope: captureSessionScope(state),
     },
   });
 };

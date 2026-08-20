@@ -32,6 +32,38 @@ const saveRawRequests = requests => {
   );
 };
 
+const PENDING_REQUEST_WRITE_COORDINATOR_KEY = Symbol.for(
+  'verus.mobile.pendingRequestWriteCoordinator.v1',
+);
+if (globalThis[PENDING_REQUEST_WRITE_COORDINATOR_KEY] == null) {
+  globalThis[PENDING_REQUEST_WRITE_COORDINATOR_KEY] = {
+    queue: Promise.resolve(),
+  };
+}
+const pendingRequestWriteCoordinator =
+  globalThis[PENDING_REQUEST_WRITE_COORDINATOR_KEY];
+
+const queuePendingRequestWrite = operation => {
+  const queued = pendingRequestWriteCoordinator.queue.then(
+    operation,
+    operation,
+  );
+
+  pendingRequestWriteCoordinator.queue = queued.catch(() => {});
+  return queued;
+};
+
+const updatePendingRequests = updater => {
+  return queuePendingRequestWrite(async () => {
+    const requests = await loadPendingDeeplinkRequests();
+    const update = await updater(requests);
+    const nextRequests = update?.requests || requests;
+
+    await saveRawRequests(nextRequests);
+    return update?.result;
+  });
+};
+
 const getDisplayAddress = addressObj => {
   if (!addressObj) return null;
 
@@ -167,60 +199,100 @@ export const savePendingDeeplinkRequest = async ({
   if (!pendingInfo) return null;
 
   const id = getPendingDeeplinkId(requestBufferString);
-  const requests = await loadPendingDeeplinkRequests();
-  const existing = requests.find(item => item.id === id);
-  const now = Date.now();
-  const savedRequest = {
-    id,
-    requestKind: pendingInfo.requestKind,
-    requestBufferString,
-    uri: uri || existing?.uri || null,
-    fromService: fromService != null ? fromService : existing?.fromService || null,
-    fqnToAutoLink:
-      fqnToAutoLink != null ? fqnToAutoLink : existing?.fqnToAutoLink || null,
-    requestType: requestType != null ? requestType : existing?.requestType || null,
-    title: pendingInfo.title,
-    createdAt: existing?.createdAt || now,
-    updatedAt: now,
-    completed: existing?.completed === true,
-    completedAt: existing?.completedAt || null,
-  };
+  return updatePendingRequests(async requests => {
+    const existing = requests.find(item => item.id === id);
+    const now = Date.now();
+    const savedRequest = {
+      ...existing,
+      id,
+      requestKind: pendingInfo.requestKind,
+      requestBufferString,
+      uri: uri || existing?.uri || null,
+      fromService: fromService != null ? fromService : existing?.fromService || null,
+      fqnToAutoLink:
+        fqnToAutoLink != null ? fqnToAutoLink : existing?.fqnToAutoLink || null,
+      requestType: requestType != null ? requestType : existing?.requestType || null,
+      title: pendingInfo.title,
+      createdAt: existing?.createdAt || now,
+      updatedAt: now,
+      completed: existing?.completed === true,
+      completedAt: existing?.completedAt || null,
+    };
 
-  await saveRawRequests([
-    savedRequest,
-    ...requests.filter(item => item.id !== id),
-  ]);
-
-  return savedRequest;
+    return {
+      requests: [
+        savedRequest,
+        ...requests.filter(item => item.id !== id),
+      ],
+      result: savedRequest,
+    };
+  });
 };
 
 export const markPendingDeeplinkComplete = async id => {
   if (!id) return;
 
-  const requests = await loadPendingDeeplinkRequests();
-  const now = Date.now();
+  await updatePendingRequests(async requests => {
+    const now = Date.now();
 
-  await saveRawRequests(
-    requests.map(item =>
-      item.id === id
-        ? {
-            ...item,
-            completed: true,
-            completedAt: item.completedAt || now,
-            updatedAt: now,
-          }
-        : item,
-    ),
-  );
+    return {
+      requests: requests.map(item =>
+        item.id === id
+          ? {
+              ...item,
+              completed: true,
+              completedAt: item.completedAt || now,
+              updatedAt: now,
+            }
+          : item,
+      ),
+    };
+  });
 };
 
 export const removePendingDeeplinkRequest = async id => {
   if (!id) return;
 
-  const requests = await loadPendingDeeplinkRequests();
-  await saveRawRequests(requests.filter(item => item.id !== id));
+  await updatePendingRequests(async requests => ({
+    requests: requests.filter(item => item.id !== id),
+  }));
 };
 
 export const clearPendingDeeplinkRequests = () => {
-  return SecureStorage.removeItem(DEEPLINK_STORAGE_INTERNAL_KEY);
+  return queuePendingRequestWrite(() =>
+    SecureStorage.removeItem(DEEPLINK_STORAGE_INTERNAL_KEY),
+  );
+};
+
+export const getPendingDeeplinkRequest = async id => {
+  if (!id) return null;
+
+  const requests = await loadPendingDeeplinkRequests();
+  return requests.find(request => request.id === id) || null;
+};
+
+export const setPendingDeeplinkBroadcast = async (id, pendingBroadcast) => {
+  if (!id) throw new Error('Cannot save a pending broadcast without a request ID.');
+
+  return updatePendingRequests(async requests => {
+    const requestIndex = requests.findIndex(request => request.id === id);
+
+    if (requestIndex === -1) {
+      throw new Error('Cannot save a broadcast for an unknown pending request.');
+    }
+
+    const now = Date.now();
+    const updatedRequest = {
+      ...requests[requestIndex],
+      pendingBroadcast,
+      updatedAt: now,
+    };
+    const nextRequests = [...requests];
+
+    nextRequests[requestIndex] = updatedRequest;
+    return {
+      requests: nextRequests,
+      result: updatedRequest,
+    };
+  });
 };

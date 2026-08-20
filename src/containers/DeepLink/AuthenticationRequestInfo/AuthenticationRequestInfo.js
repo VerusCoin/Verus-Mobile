@@ -70,6 +70,7 @@ import { authenticationRequestInfoStyles as styles } from '../../../styles';
 import IdentityPickerSheet from './components/IdentityPickerSheet';
 import { markPendingDeeplinkComplete } from '../../../utils/deeplink/pendingDeeplinkStorage';
 import {ensureGenericResponseSigner} from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
+import {assertAuthenticationRequestNotExpired} from '../../../utils/deeplink/validator/authenticationRequestValidator';
 
 const truncateAddress = addr => {
   if (!addr || addr.length <= 14) return addr;
@@ -548,6 +549,10 @@ const AuthenticationRequestInfo = props => {
 
   // Build response using selected identity and call next()
   const buildResponseAndContinue = async () => {
+    // Re-check immediately before signing. A request can expire while the user
+    // is choosing an identity or authenticating a profile.
+    assertAuthenticationRequestNotExpired(details);
+
     const {chainId, iAddress} = selectedIdentity;
     const requestID =
       request && request.requestID ? request.requestID : details.requestID;

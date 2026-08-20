@@ -47,6 +47,10 @@ import {
   assertNoPlaintextExtendedSpendingKey,
   assertSecurePostResponseUri,
 } from '../../../utils/deeplink/genericResponse/responseDeliverySecurity';
+import {
+  performAfterAuthenticationExpiryCheck,
+  signAfterAuthenticationExpiryCheck,
+} from '../../../utils/deeplink/validator/authenticationRequestValidator';
 
 const GenericRequestComplete = props => {
   const { requestBufferString, responseBufferString } = props.route.params;
@@ -297,14 +301,20 @@ const GenericRequestComplete = props => {
       const signerSystemName = getSystemNameFromSystemId(signerSystemID);
       const coinObj = CoinDirectory.getBasicCoinObj(signerSystemName);
 
-      const signedResponse = await signGenericResponse(coinObj, response);
+      const signedResponse = await signAfterAuthenticationExpiryCheck(
+        request,
+        () => signGenericResponse(coinObj, response),
+      );
       const verification = await verifyGenericResponse(coinObj, signedResponse);
 
       if (!verification) {
         throw new Error('Response failed verification, ensure the identity you selected is still under your control.');
       }
 
-      await handleResponseUri(request, signedResponse);
+      await performAfterAuthenticationExpiryCheck(
+        request,
+        () => handleResponseUri(request, signedResponse),
+      );
       await markSavedPendingRequestComplete();
     } catch (e) {
       if (e?.isResponsePostError) {
