@@ -15,7 +15,7 @@ import {
   Text,
   TextInput,
 } from 'react-native-paper';
-import {useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {copyToClipboard} from '../../../../../utils/clipboard/clipboard';
 import {CoinDirectory} from '../../../../../utils/CoinData/CoinDirectory';
 import {
@@ -45,6 +45,12 @@ import {
 } from '../../../../../utils/spendableKey/spendableKey';
 import Colors from '../../../../../globals/colors';
 import Styles from '../../../../../styles';
+import { unlinkGiftedIdentitiesForSession } from '../../../../../utils/spendableKey/claimMetadataSession';
+import { unlinkVerusId } from '../../../../../actions/actions/services/dispatchers/verusid/verusid';
+import { updateVerusIdWallet } from '../../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager';
+import { clearChainLifecycle, refreshActiveChainLifecycles } from '../../../../../actions/actions/intervals/dispatchers/lifecycleManager';
+import { setUserCoins } from '../../../../../actions/actionCreators';
+import { useObjectSelector } from '../../../../../hooks/useObjectSelector';
 
 const STEP_MODE = 0;
 const STEP_FUNDS = 1;
@@ -141,9 +147,14 @@ const getFundingSteps = mode => {
 };
 
 const GiftCardFund = props => {
-  const activeAccount = useSelector(state => state.authentication.activeAccount);
-  const activeCoinsForUser = useSelector(state => state.coins.activeCoinsForUser);
-  const ledgerBalances = useSelector(state => state.ledger.balances);
+  const activeAccount = useObjectSelector(state => state.authentication.activeAccount);
+  const activeCoinList = useObjectSelector(state => state.coins.activeCoinList);
+  const activeCoinsForUser = useObjectSelector(state => state.coins.activeCoinsForUser);
+  const dispatch = useDispatch();
+  const sessionEpoch = useObjectSelector(
+    state => state.authentication.sessionEpoch || 0,
+  );
+  const ledgerBalances = useObjectSelector(state => state.ledger.balances);
   const [serviceData, setServiceData] = useState(null);
   const [linkedIds, setLinkedIds] = useState({});
   const [mode, setMode] = useState(GIFT_CARD_FUNDING_FUNDS);
@@ -195,6 +206,23 @@ const GiftCardFund = props => {
       setLoadingText(null);
     }
   }, []);
+
+  const unlinkGiftedIdentities = useCallback(
+    async (identities, requestContext) =>
+      unlinkGiftedIdentitiesForSession({
+        identities,
+        requestContext,
+        activeAccount,
+        activeCoinList,
+        dispatch,
+        unlinkIdentity: unlinkVerusId,
+        updateIdentityWallet: updateVerusIdWallet,
+        clearLifecycle: clearChainLifecycle,
+        createSetUserCoinsAction: setUserCoins,
+        refreshLifecycles: refreshActiveChainLifecycles,
+      }),
+    [activeAccount, activeCoinList, dispatch],
+  );
 
   useEffect(() => {
     loadData();
@@ -388,25 +416,6 @@ const GiftCardFund = props => {
     return latestCard;
   };
 
-  const unlinkFundedIdentities = async identities => {
-    if (!identities || identities.length === 0) return;
-
-    const verusIdData = await requestServiceStoredData(VERUSID_SERVICE_ID);
-    const nextVerusIdData = unlinkGiftCardFundingIdentitiesFromVerusIdData(
-      verusIdData,
-      identities,
-    );
-
-    if (nextVerusIdData === verusIdData) return;
-
-    await modifyServiceStoredDataForUser(
-      nextVerusIdData,
-      VERUSID_SERVICE_ID,
-      activeAccount.accountHash,
-    );
-    setLinkedIds(nextVerusIdData.linked_ids || {});
-  };
-
   const currentStepPosition = steps.indexOf(step);
   const canGoNext = () => {
     if (step === STEP_FUNDS) return selections.funds.length > 0;
@@ -470,6 +479,20 @@ const GiftCardFund = props => {
     }
   };
 
+  const unlinkIdentitiesInContext = async (submittedIdentities) => {
+    if (!submittedIdentities || submittedIdentities.length === 0) return;
+
+    const unlinkContext = {
+      sessionScope: {
+        sessionScoped: true,
+        accountHash: activeAccount.accountHash,
+        sessionEpoch,
+      },
+    };
+    
+    return await unlinkGiftedIdentities(submittedIdentities, unlinkContext)
+  }
+
   const persistFundingResult = async fundingResult => {
     const submittedIdentities =
       getSubmittedGiftCardFundingIdentities(fundingResult);
@@ -486,7 +509,7 @@ const GiftCardFund = props => {
       setLoadingText('Unlinking transferred VerusIDs...');
 
       try {
-        await unlinkFundedIdentities(submittedIdentities);
+        await unlinkIdentitiesInContext(submittedIdentities);
       } catch (e) {
         console.error(e);
         unlinkError = e;

@@ -98,3 +98,60 @@ export const linkClaimedIdentitiesForSession = async ({
   assertClaimMetadataSessionCurrent(requestContext);
   refreshLifecycles(setUserCoinsAction.payload.activeCoinsForUser);
 };
+
+export const unlinkGiftedIdentitiesForSession = async ({
+  identities,
+  requestContext,
+  activeAccount,
+  activeCoinList,
+  dispatch,
+  unlinkIdentity,
+  updateIdentityWallet,
+  clearLifecycle,
+  createSetUserCoinsAction,
+  refreshLifecycles,
+}) => {
+  const sessionScope = assertClaimMetadataSessionCurrent(requestContext);
+
+  if (
+    activeAccount == null ||
+    activeAccount.accountHash !== sessionScope.accountHash
+  ) {
+    const error = new Error(
+      'The gifted identities to be unlinked belong to a different account.',
+    );
+    error.code = 'SESSION_CHANGED';
+    throw error;
+  }
+
+  const touchedCoinIds = new Set();
+
+  for (const identity of identities) {
+    assertClaimMetadataSessionCurrent(requestContext);
+
+    await unlinkIdentity(
+      identity.identityAddress,
+      identity.chain,
+      requestContext,
+    );
+    assertClaimMetadataSessionCurrent(requestContext);
+    touchedCoinIds.add(identity.chain);
+  }
+
+  await updateIdentityWallet(requestContext);
+  assertClaimMetadataSessionCurrent(requestContext);
+
+  for (const coinId of touchedCoinIds) {
+    assertClaimMetadataSessionCurrent(requestContext);
+    clearLifecycle(coinId);
+  }
+
+  assertClaimMetadataSessionCurrent(requestContext);
+  const setUserCoinsAction = createSetUserCoinsAction(
+    activeCoinList,
+    activeAccount.id,
+  );
+  dispatch(scopeSessionAction(setUserCoinsAction, sessionScope));
+  assertClaimMetadataSessionCurrent(requestContext);
+  refreshLifecycles(setUserCoinsAction.payload.activeCoinsForUser);
+};
