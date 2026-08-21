@@ -85,6 +85,7 @@ import HighRiskStep from './steps/HighRiskStep';
 import ConfirmPayStep from './steps/ConfirmPayStep';
 import {classifyChanges} from './utils/classifyChanges';
 import {buildContentMultiMapRemoveUi} from './utils/contentMultiMapRemoveUi';
+import {shouldShowIdentityStatusUpdate} from './utils/shouldShowIdentityStatusUpdate';
 import {identityUpdateRequestInfoStyles as styles} from '../../../styles';
 
 // Step identifiers
@@ -381,12 +382,17 @@ const IdentityUpdateRequestInfo = props => {
       }
     }
 
-    if (identityUpdates.flags && identityUpdates.flags !== identity.flags) {
-      if (subject.isRevoked() !== details.identity.isRevoked()) {
-        displayUpdates[VERUSID_BASE_INFO.key][VERUSID_STATUS.key] = {
-          data: getVerusIdStatus(identityUpdates, chainInfo, coinObj),
-        };
-      }
+    if (
+      shouldShowIdentityStatusUpdate({
+        identityUpdates,
+        identity,
+        subject,
+        requestedIdentity: details.identity,
+      })
+    ) {
+      displayUpdates[VERUSID_BASE_INFO.key][VERUSID_STATUS.key] = {
+        data: getVerusIdStatus(identityUpdates, chainInfo, coinObj),
+      };
     }
 
     if (identityUpdates.contentmultimap) {
