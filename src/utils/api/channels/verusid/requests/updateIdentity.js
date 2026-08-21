@@ -50,6 +50,12 @@ export const getUpdatableIdentity = async (systemId, getIdentityResult) => {
     const rawIdTx = rawIdTxRes.result;
     const identity = extractIdOutputFromTx(rawIdTx, vout);
 
+    const identityAddress = getIdentityResult.identity.identityaddress;
+
+    if (identityAddress !== identity.getIdentityAddress()) {
+      throw new Error("Identity from rawtx does not match intended identity");
+    }
+
     return { tx: rawIdTx, identity };
   }
 }
