@@ -43,7 +43,11 @@ const AlertModal = (props) => {
             </ScrollView>
           </Dialog.Content>
           <Dialog.Actions>
-            <ScrollView horizontal style={{ height: 48 }}>
+            <ScrollView
+              horizontal
+              style={{ height: 48 }}
+              contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}
+            >
               {buttons != null
                 ? buttons.map((button, index) => (
                   <Button
