@@ -1,106 +1,78 @@
-import { Platform } from "react-native";
-import { generateBiometricCredential, getLegacyBiometricData, getLegacyBiometricPassword, removeAllLegacyBiometricPasswords, removeLegacyBiometricPassword, storeLegacyBiometricPassword } from "./keychain"
-import { SecureStorage } from "./secureStore"
+import {Platform} from 'react-native';
+import {migrateLegacyAndroidBiometricVault} from './biometricMigration';
+import {
+  createBiometricPasswordNotFoundError,
+  getLegacyBiometricPassword,
+  isBiometricEnrollmentChangedError,
+  isBiometricPasswordNotFoundError,
+  removeLegacyBiometricPassword,
+  storeLegacyBiometricPassword,
+} from './keychain';
+import {SecureStorage} from './secureStore';
 
-// We continue to use "legacy" biometric storage on iOS devices because the reason to migrate to a model where 
-// an encrypted 'vault' is stored in async storage while its encryption key is stored in the biometric keychain
-// was necessary due to a limitation on keychain size in Android. If limitations occur on iOS, iOS can be migrated
-// by simply deleting the Platform.OS exceptions in the functions below.
+// iOS continues to store its small password map directly in Keychain. Android
+// uses an encrypted AsyncStorage vault because its Keychain implementation has
+// a much smaller payload limit.
 
-const androidBiometricVaultExists = async () => {
-  return (
-    SecureStorage.biometryFlagSet() ||
-    (await SecureStorage.hasBiometricVault())
-  );
-}
+const androidBiometricVaultExists = () => SecureStorage.hasBiometricVault();
 
-const getLegacyBiometricDataIfAvailable = async title => {
-  try {
-    const legacyBiometricData = await getLegacyBiometricData(title);
-
-    return legacyBiometricData != null &&
-      typeof legacyBiometricData === "object" &&
-      !Array.isArray(legacyBiometricData)
-      ? legacyBiometricData
-      : {};
-  } catch(e) {
-    if (e.message !== "Biometric authentication not enabled on this device!") {
-      console.log("Unable to read legacy biometric data:");
-      console.log(e);
-    }
-
-    return {};
-  }
-}
+export const isBiometricPasswordUnavailableError = error =>
+  isBiometricPasswordNotFoundError(error) ||
+  isBiometricEnrollmentChangedError(error);
 
 export const getBiometricPassword = async (accountHash, title) => {
-  if (Platform.OS === "ios") return getLegacyBiometricPassword(accountHash, title);
-
-  if (await androidBiometricVaultExists()) {
-    try {
-      return await SecureStorage.getPasswordFromBiometricVault(accountHash);
-    } catch(e) {
-      const allBiometricDataJson = await getLegacyBiometricDataIfAvailable(title);
-      const password = allBiometricDataJson[accountHash];
-
-      if (password != null) {
-        try {
-          await SecureStorage.setPasswordInBiometricVault(accountHash, password);
-        } catch(storeError) {
-          console.log("Error migrating legacy biometric password to secure store:");
-          console.log(storeError);
-        }
-
-        return password;
-      }
-
-      throw e;
-    }
-  } else {
-    // Attempt to migrate data to secure store while also fetching biometric password if data is stored in legacy 
-    // keychain format
-    const allBiometricDataJson = await getLegacyBiometricData(title);
-    const password = allBiometricDataJson[accountHash];
-
-    try {
-      await generateBiometricCredential();
-      await SecureStorage.setBiometricVaultData(allBiometricDataJson);
-      await removeAllLegacyBiometricPasswords();
-    } catch(e) {
-      console.log("Error migrating biometric passwords to secure store:");
-      console.log(e);
-    }
-
-    return password;
+  if (Platform.OS === 'ios') {
+    return getLegacyBiometricPassword(accountHash, title);
   }
-}
 
-export const storeBiometricPassword = async (accountHash, password) => {
-  if (Platform.OS === "ios") return storeLegacyBiometricPassword(accountHash, password);
+  const migration = await migrateLegacyAndroidBiometricVault(title);
+  if (migration.data != null) {
+    if (Object.prototype.hasOwnProperty.call(migration.data, accountHash)) {
+      return migration.data[accountHash];
+    }
+    throw createBiometricPasswordNotFoundError(accountHash);
+  }
 
   if (!(await androidBiometricVaultExists())) {
-    const legacyBiometricData = await getLegacyBiometricDataIfAvailable(
-      "Authenticate to store password in biometric keychain",
-    );
+    throw createBiometricPasswordNotFoundError(accountHash);
+  }
 
-    await generateBiometricCredential();
-    await SecureStorage.setBiometricVaultData({
-      ...legacyBiometricData,
-      [accountHash]: password,
-    })
-
-    if (Object.keys(legacyBiometricData).length > 0) {
-      await removeAllLegacyBiometricPasswords();
+  try {
+    return await SecureStorage.getPasswordFromBiometricVault(accountHash);
+  } catch (error) {
+    // Only a confirmed missing/permanently-invalidated enrollment key may
+    // erase the current vault. Cancellations, lockouts, lifecycle failures,
+    // and transient Keystore/backend errors preserve it for a later retry.
+    if (isBiometricEnrollmentChangedError(error)) {
+      await SecureStorage.invalidateCurrentSetBiometricVault();
     }
-  } else return SecureStorage.setPasswordInBiometricVault(accountHash, password);
-}
+    throw error;
+  }
+};
 
-export const removeBiometricPassword = async (accountHash) => {
-  if (Platform.OS === "ios") return removeLegacyBiometricPassword(accountHash);
+export const storeBiometricPassword = async (accountHash, password) => {
+  if (Platform.OS === 'ios') {
+    return storeLegacyBiometricPassword(accountHash, password);
+  }
 
-  if (await androidBiometricVaultExists()) {
-    return SecureStorage.removePasswordFromBiometricVault(accountHash);
-  } else {
+  await migrateLegacyAndroidBiometricVault(
+    'Authenticate to store password in biometric vault',
+  );
+
+  return SecureStorage.storePasswordInBiometricVaultAtomic(
+    accountHash,
+    password,
+  );
+};
+
+export const removeBiometricPassword = async accountHash => {
+  if (Platform.OS === 'ios') {
     return removeLegacyBiometricPassword(accountHash);
   }
-}
+
+  await migrateLegacyAndroidBiometricVault(
+    'Authenticate to remove password from biometric vault',
+  );
+  if (!(await androidBiometricVaultExists())) return;
+  return SecureStorage.removePasswordFromBiometricVault(accountHash);
+};

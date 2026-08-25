@@ -34,6 +34,12 @@ THIS IS EXPERIMENTAL SOFTWARE AND IT IS PROVIDED "AS IS" AND ANY EXPRESSED OR IM
 
 # Build Instructions
 
+## Package manager
+
+This project uses pnpm via Corepack. `pnpm-lock.yaml` is the source of truth for JavaScript dependency resolution after the migration from Yarn Classic. Do not run `yarn install` when working on this project.
+
+The pinned pnpm version is declared in `package.json` through the `packageManager` field. Use Node.js 22.13 or newer so Corepack can run that pnpm version.
+
 ## Android (on Ubuntu)
 
 0. Clone GitHub repository, and `cd` into it
@@ -58,20 +64,25 @@ echo "export PATH=$PATH:$ANDROID_SDK_ROOT/platform-tools" >> ~/.bashrc
 
 3. Install `openjdk-17-jdk` package
 
-4. Install `nvm`, select and use v18.14
+4. Install `nvm`, select and use Node.js 22
 ```
 # from https://github.com/nvm-sh/nvm?tab=readme-ov-file#install--update-script
 
 # install nvm
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
 
-# install version 18.14
-nvm install 18.14
+# install version 22.22.3, or any Node.js version >= 22.13
+nvm install 22.22.3
 
-# use 18.14. You will need to do this before you run `yarn` in any new terminals
-nvm use 18.14
+# use 22.22.3. You will need to do this before you run `pnpm` in any new terminals
+nvm use 22.22.3
 ```
-5. Enable corepack with `corepack enable` for access to `yarn` commands
+5. Enable Corepack with `corepack enable` for access to the pinned `pnpm` version
+
+```
+corepack enable
+corepack pnpm --version
+```
 
 6. Install rustup, and rust toolchain 1.81.0
 ```
@@ -96,11 +107,11 @@ echo "rust.pythonCommand=/usr/bin/python2" >> local.properties
 
 # this will install the artifacts locally in ~/.m2/repository/com/github/VerusCoin/verus-android-sdk` etc by module
 ```
-6. Run `yarn install`
+8. Run `pnpm install`
 
-7. Open a separate withdow and run `yarn start` or `npx react-native start`
+9. Open a separate window and run `pnpm start` or `pnpm exec react-native start`
 
-8. Build and install by running `yarn android`
+10. Build and install by running `pnpm android`
 
 ## iOS (on macOS)
 
@@ -121,23 +132,24 @@ echo 'eval "$(export PATH=$HOME/.rbenv/shims:$PATH)"' >> $HOME/.zprofile
 
 5. Install cocoapods (version >= 1.11.3)
 
-6. Install node (version >= 16.14.1 - tested up to 18.14)
+6. Install Node.js 22.13 or newer
 
 via Node Version Manager:
 ```
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-nvm install 18.14
-nvm use 18.14
+nvm install 22.22.3
+nvm use 22.22.3
 ```
 
-7. Install yarn (version >= 1.22.19)
+7. Enable Corepack for pnpm
 
 ```
-nvm use 18.14
+nvm use 22.22.3
 corepack enable
+corepack pnpm --version
 ```
 
-8. Run `yarn install`
+8. Run `pnpm install`
 
 9. Run `cd ios && pod install`, then if successful, `cd ..`
 
@@ -147,11 +159,11 @@ corepack enable
 
 12. open in ios/verusmobile.xcworkspace in Xcode (DO NOT OPEN THE XCODEPROJ FILE)
 
-13. Run `yarn bundle-ios`
+13. Run `pnpm bundle-ios`
 
-14. Run `yarn start` in a terminal window within the Verus-Mobile directory
+14. Run `pnpm start` in a terminal window within the Verus-Mobile directory
 
-15. Build the project in Xcode, or with `yarn ios`
+15. Build the project in Xcode, or with `pnpm ios`
 
 ### Troubleshooting
 

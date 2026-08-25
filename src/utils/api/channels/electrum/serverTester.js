@@ -20,13 +20,40 @@ import { recordBadServer, recordGoodServer } from '../../../../actions/actionCre
 import NetInfo from "@react-native-community/netinfo";
 import axios from 'axios';
 
+const createDiscoveryCancellationError = () =>
+  new Error('Electrum server discovery was cancelled.');
+
+const assertDiscoveryActive = (requestOptions, shouldCancel) => {
+  if (
+    requestOptions?.signal?.aborted ||
+    (typeof shouldCancel === 'function' && shouldCancel())
+  ) {
+    throw createDiscoveryCancellationError();
+  }
+};
+
 /**
  * @param {Function} tester A tester function that takes in a server and will fail if it does not perform it's purpose
  * @param {String[]} serverList A list of server strings in the format the tester requires
  * @param {Array} xtraTesterParams (Optional) A list of extra parameters for the tester function
  * @param {Number} startIndex (Optional) The index in the serverlist that will be checked first
+ * @param {Object} requestOptions (Optional) Axios options passed to each tester
+ * @param {Function} shouldCancel (Optional) Shared discovery cancellation predicate
  */
-export const getGoodServer = (tester, serverList, xtraTesterParams = [], startIndex = null) => {
+export const getGoodServer = (
+  tester,
+  serverList,
+  xtraTesterParams = [],
+  startIndex = null,
+  requestOptions = null,
+  shouldCancel = null,
+) => {
+  try {
+    assertDiscoveryActive(requestOptions, shouldCancel);
+  } catch (error) {
+    return Promise.reject(error);
+  }
+
   if (serverList.length === 0) {
     return Promise.reject(
       new ApiException(
@@ -40,9 +67,18 @@ export const getGoodServer = (tester, serverList, xtraTesterParams = [], startIn
   }
 
   const handleBadServer = (index) => {
+    assertDiscoveryActive(requestOptions, shouldCancel);
+
     let _serverList = serverList.slice()
     _serverList.splice(index, 1);
-    return (getGoodServer(tester, _serverList, xtraTesterParams))
+    return getGoodServer(
+      tester,
+      _serverList,
+      xtraTesterParams,
+      null,
+      requestOptions,
+      shouldCancel,
+    )
   }
 
   const state = Store.getState()
@@ -50,7 +86,14 @@ export const getGoodServer = (tester, serverList, xtraTesterParams = [], startIn
   const goodServerCache = state.electrum.goodServers
   const cachedGoodServer = serverList.find(value => goodServerCache[value] != null)
 
-  if (cachedGoodServer) return new Promise((resolve) => resolve(goodServerCache[cachedGoodServer]))
+  if (cachedGoodServer) {
+    try {
+      assertDiscoveryActive(requestOptions, shouldCancel);
+      return Promise.resolve(goodServerCache[cachedGoodServer]);
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
 
   const badServerCache = state.electrum.badServers
   const cachedBadServerIndex = serverList.findIndex(value => badServerCache[value] != null)
@@ -61,10 +104,15 @@ export const getGoodServer = (tester, serverList, xtraTesterParams = [], startIn
     startIndex == null
       ? Math.floor(Math.random() * serverList.length)
       : startIndex;
+  const testerParams = requestOptions == null
+    ? xtraTesterParams
+    : [...xtraTesterParams, requestOptions];
 
   return new Promise((resolve, reject) => {
-    tester(serverList[index], ...xtraTesterParams)
+    tester(serverList[index], ...testerParams)
     .then((res) => {
+      assertDiscoveryActive(requestOptions, shouldCancel);
+
       Store.dispatch(recordGoodServer({
         goodServer: serverList[index],
         testResult: res
@@ -74,14 +122,19 @@ export const getGoodServer = (tester, serverList, xtraTesterParams = [], startIn
         goodServer: serverList[index],
         testResult: res
       })
-    }, async (rej) => {
+    }, async () => {
+      assertDiscoveryActive(requestOptions, shouldCancel);
+
       const networkInfo = await NetInfo.fetch()
+      assertDiscoveryActive(requestOptions, shouldCancel);
 
       // Only strike the server if internet connectivity isn't broken
       if (networkInfo.isConnected && networkInfo.isInternetReachable) {
+        assertDiscoveryActive(requestOptions, shouldCancel);
         Store.dispatch(recordBadServer(serverList[index]))
       }
-      
+
+      assertDiscoveryActive(requestOptions, shouldCancel);
       return handleBadServer(index)
     })
     .then(res => {
@@ -93,7 +146,7 @@ export const getGoodServer = (tester, serverList, xtraTesterParams = [], startIn
   })
 }
 
-export const testElectrum = (electrumString, proxy) => {
+export const testElectrum = (electrumString, proxy, requestOptions = null) => {
   let electrumSplit = electrumString.split(":")
   let electrum = {
     ip: electrumSplit[0],
@@ -102,7 +155,7 @@ export const testElectrum = (electrumString, proxy) => {
   }
 
   return new Promise((resolve, reject) => {
-    getBlockHeight(proxy, electrum)
+    getBlockHeight(proxy, electrum, requestOptions)
       .then((response) => {
         if (response.msg === 'success') {
           resolve(response)
@@ -116,8 +169,11 @@ export const testElectrum = (electrumString, proxy) => {
   })
 }
 
-export const testProxy = async (proxyServer) => {
-  const res = await axios.get(`${httpsEnabled ? 'https' : 'http'}://${proxyServer}`)
+export const testProxy = async (proxyServer, requestOptions = null) => {
+  const address = `${httpsEnabled ? 'https' : 'http'}://${proxyServer}`;
+  const res = requestOptions == null
+    ? await axios.get(address)
+    : await axios.get(address, requestOptions)
 
   if (res.status === 200) {
     return true

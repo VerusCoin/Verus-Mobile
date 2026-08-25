@@ -1,3 +1,5 @@
+import { beginSessionRequest } from "../../updates/sessionRequests";
+
 export const updateServiceDataValue = async (
   state,
   dispatch,
@@ -16,14 +18,35 @@ export const updateServiceDataValue = async (
         return;
 
       const channelStore = state[`channelStore_${channel}`]
+      const request = beginSessionRequest(
+        state,
+        dispatch,
+        `service:${successType}:${channel}`,
+      );
+
       try {
+        const requestContext = {
+          signal: request.signal,
+          sessionScope: request.meta,
+          requestId: request.meta.requestId,
+          accountHash: request.meta.accountHash,
+          sessionEpoch: request.meta.sessionEpoch,
+        };
+
         dispatch({
           type: successType,
-          payload: await channelMap[channel](channelStore),
+          payload: await channelMap[channel](channelStore, requestContext),
+          meta: request.meta,
         });
         channelsPassed.push(channel);
       } catch (error) {
-        dispatch({ type: errorType, payload: { error: { message: error.message }, channel } });
+        dispatch({
+          type: errorType,
+          payload: { error: { message: error.message }, channel },
+          meta: request.meta,
+        });
+      } finally {
+        request.complete();
       }
     })
   );

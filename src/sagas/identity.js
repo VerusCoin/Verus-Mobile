@@ -81,7 +81,7 @@ export default function * identitySaga() {
     takeLatest(TOGGLE_ATTESTATION_PIN, handleToggleAttestation),
     takeLatest(SET_ATTESTATION_PINNED, updateAttestationStorage),
     takeLatest(ADD_NEW_IDENTITY_NAME, handleAddNewIdentity),
-    takeLatest(ADD_NEW_IDENTITY, updateIdentityStorage),
+    //takeLatest(ADD_NEW_IDENTITY, updateIdentityStorage),
     takeLatest(CHANGE_ACTIVE_IDENTITY, handleChangeActiveIdentity),
     takeLatest(ADD_NEW_CATEGORY, handleAddNewCategory),
     takeLatest(SET_CLAIM_VISIBILITY, updateClaimsStorage),
@@ -231,9 +231,9 @@ function * handleMoveClaims(action) {
 }
 
 function * updateIdentityStorage() {
-  const selectedIdentities = yield select(selectIdentityReducerState);
-  const identities = yield call(denormalizeIdentities, selectedIdentities.toJS());
-  yield call(updateIdentities, identities);
+  // const selectedIdentities = yield select(selectIdentityReducerState);
+  // const identities = yield call(denormalizeIdentities, selectedIdentities.toJS());
+  // yield call(updateIdentities, identities);
 }
 
 function * updateClaimCategoryStorage() {

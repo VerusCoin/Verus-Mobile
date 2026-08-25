@@ -17,7 +17,7 @@ import {
 import { TextInput, Button, Checkbox } from 'react-native-paper'
 import { NavigationActions } from '@react-navigation/compat';
 import { CommonActions } from '@react-navigation/native';
-import { deleteProfile } from '../../../../actions/actionCreators';
+import { deleteProfile, setBiometry } from '../../../../actions/actionCreators';
 import { connect } from 'react-redux';
 import { checkPinForUser } from '../../../../utils/asyncStore/asyncStore'
 import Colors from '../../../../globals/colors';
@@ -124,13 +124,26 @@ class DeleteProfile extends Component {
 
   deleteUser = async (account, deleteBiometry) => {
     try {
-      if (deleteBiometry) await removeBiometricPassword(account.accountHash)
-      
+      if (deleteBiometry) {
+        this.props.dispatch(await setBiometry(account.accountHash, false))
+        try {
+          await removeBiometricPassword(account.accountHash)
+        } catch (error) {
+          try {
+            this.props.dispatch(await setBiometry(account.accountHash, true))
+          } catch (restoreError) {
+            console.warn(restoreError)
+          }
+          throw error
+        }
+      }
+
       await deleteProfile(account, this.props.dispatch)
       createAlert("Profile Deleted!", `"${account.id}" profile successfully deleted.`)
     } catch (error) {
       console.warn(error)
       createAlert("Error.", `Failed to delete "${account.id}" profile.`)
+      throw error
     }
   }
 

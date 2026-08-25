@@ -13,6 +13,7 @@ import {
   SEND_MODAL_CONVERTTO_FIELD,
   SEND_MODAL_DISABLED_INPUTS,
   SEND_MODAL_EXPORTTO_FIELD,
+  SEND_MODAL_IS_BURN_CHANGE_PRICE,
   SEND_MODAL_SEND_COMPLETED,
   SEND_MODAL_MEMO_FIELD,
   SEND_MODAL_SHOW_CONVERTTO_FIELD,
@@ -34,6 +35,7 @@ import { conditionallyUpdateWallet } from '../../../actions/actionDispatchers';
 import store from '../../../store';
 import { useObjectSelector } from '../../../hooks/useObjectSelector';
 import { NavigationActions } from '@react-navigation/compat';
+import { getVerusPayInvoicePaymentDestination } from '../../../utils/deeplink/verusPayBurnChangePrice';
 
 const InvoicePaymentConfiguration = props => {
   const {
@@ -53,8 +55,10 @@ const InvoicePaymentConfiguration = props => {
 
   const details = new primitives.VerusPayInvoiceDetails();
   details.fromBuffer(Buffer.from(detailsBufferString, 'hex'), 0, new primitives.BigNumber(invoiceVersion));
+  const isBurnChangePrice = details.isBurnChangePrice();
 
   const activeCoinsForUser = useObjectSelector(state => state.coins.activeCoinsForUser);
+  const activeAccount = useObjectSelector(state => state.authentication.activeAccount);
   
   const sendModal = useObjectSelector(state => state.sendModal);
   const prevSendModal = usePrevious(sendModal);
@@ -98,7 +102,11 @@ const InvoicePaymentConfiguration = props => {
   }, []);
 
   useEffect(() => {
-    if (acceptedSystemsDefinitions && details.acceptsConversion()) {
+    if (
+      acceptedSystemsDefinitions &&
+      details.acceptsConversion() &&
+      !isBurnChangePrice
+    ) {
       updateConversionOptions();
     }
   }, [acceptedSystemsDefinitions]);
@@ -120,39 +128,60 @@ const InvoicePaymentConfiguration = props => {
   }, [sendModal]);
 
   const onSelectFundSource = (source) => {
-    const {
-      amount,
-      conversion,
-      wallet,
-      coinObj,
-      exportTo,
-      via
-    } = source.option;
+    try {
+      const {
+        amount,
+        conversion,
+        wallet,
+        coinObj,
+        exportTo,
+        via
+      } = source.option;
+      const allowsConversion =
+        details.acceptsConversion() && !isBurnChangePrice;
+      const destination = getVerusPayInvoicePaymentDestination(
+        details,
+        activeAccount,
+        coinObj,
+        wallet,
+      );
 
-    openConvertOrCrossChainSendModal(coinObj, wallet, {
-      [SEND_MODAL_TO_ADDRESS_FIELD]: details.acceptsAnyDestination() ? '' : details.destination.getAddressString(),
-      [SEND_MODAL_AMOUNT_FIELD]: details.acceptsAnyAmount() ? '' : amount.toString(),
-      [SEND_MODAL_MEMO_FIELD]: '',
-      [SEND_MODAL_CONVERTTO_FIELD]: details.acceptsConversion() && conversion ? currencyDefinition.fullyqualifiedname : '',
-      [SEND_MODAL_EXPORTTO_FIELD]: exportTo != null ? exportTo : '',
-      [SEND_MODAL_VIA_FIELD]: details.acceptsConversion() && via != null ? via : '',
-      [SEND_MODAL_SHOW_CONVERTTO_FIELD]: details.acceptsConversion() && conversion,
-      [SEND_MODAL_SHOW_EXPORTTO_FIELD]: exportTo != null,
-      [SEND_MODAL_SHOW_VIA_FIELD]: details.acceptsConversion() && via != null,
-      [SEND_MODAL_ADVANCED_FORM]: true,
-      [SEND_MODAL_SHOW_IS_PRECONVERT]: false,
-      [SEND_MODAL_DISABLED_INPUTS]: {
-        [SEND_MODAL_CONVERTTO_FIELD]: true,
-        [SEND_MODAL_VIA_FIELD]: true,
-        [SEND_MODAL_EXPORTTO_FIELD]: true,
-        [SEND_MODAL_MAPPING_FIELD]: true,
-        [SEND_MODAL_AMOUNT_FIELD]: !details.acceptsAnyAmount(),
-        [SEND_MODAL_TO_ADDRESS_FIELD]: !details.acceptsAnyDestination(),
-      },
-      [SEND_MODAL_CONTINUE_IMMEDIATELY]: !details.acceptsAnyAmount() && !details.acceptsAnyDestination(),
-      [SEND_MODAL_STRICT_AMOUNT]: !details.acceptsAnyAmount(),
-      [SEND_MODAL_VDXF_TAG]: details.isTagged() ? details.tag.toXAddress() : ''
-    })
+      openConvertOrCrossChainSendModal(coinObj, wallet, {
+        [SEND_MODAL_TO_ADDRESS_FIELD]: destination,
+        [SEND_MODAL_AMOUNT_FIELD]: details.acceptsAnyAmount() ? '' : amount.toString(),
+        [SEND_MODAL_MEMO_FIELD]: '',
+        [SEND_MODAL_CONVERTTO_FIELD]: allowsConversion && conversion ? currencyDefinition.fullyqualifiedname : '',
+        [SEND_MODAL_EXPORTTO_FIELD]: exportTo != null ? exportTo : '',
+        [SEND_MODAL_VIA_FIELD]: allowsConversion && via != null ? via : '',
+        [SEND_MODAL_SHOW_CONVERTTO_FIELD]: allowsConversion && conversion,
+        [SEND_MODAL_SHOW_EXPORTTO_FIELD]: exportTo != null,
+        [SEND_MODAL_SHOW_VIA_FIELD]: allowsConversion && via != null,
+        [SEND_MODAL_ADVANCED_FORM]: true,
+        [SEND_MODAL_SHOW_IS_PRECONVERT]: false,
+        [SEND_MODAL_IS_BURN_CHANGE_PRICE]: isBurnChangePrice,
+        [SEND_MODAL_DISABLED_INPUTS]: {
+          [SEND_MODAL_CONVERTTO_FIELD]: true,
+          [SEND_MODAL_VIA_FIELD]: true,
+          [SEND_MODAL_EXPORTTO_FIELD]: true,
+          [SEND_MODAL_MAPPING_FIELD]: true,
+          [SEND_MODAL_AMOUNT_FIELD]: !details.acceptsAnyAmount(),
+          [SEND_MODAL_TO_ADDRESS_FIELD]:
+            !details.acceptsAnyDestination() || isBurnChangePrice,
+        },
+        [SEND_MODAL_CONTINUE_IMMEDIATELY]:
+          !details.acceptsAnyAmount() &&
+          (!details.acceptsAnyDestination() || isBurnChangePrice),
+        [SEND_MODAL_STRICT_AMOUNT]: !details.acceptsAnyAmount(),
+        [SEND_MODAL_VDXF_TAG]: details.isTagged() ? details.tag.toXAddress() : ''
+      })
+    } catch (e) {
+      Alert.alert(
+        isBurnChangePrice
+          ? "Unable to prepare burn"
+          : "Unable to prepare invoice payment",
+        e.message,
+      );
+    }
   }
 
   return loading ? (
@@ -168,7 +197,9 @@ const InvoicePaymentConfiguration = props => {
           coinObjs={activeCoinsForUser}
           testnet={details.isTestnet()}
           allowAnyAmount={details.acceptsAnyAmount()}
-          allowConversion={details.acceptsConversion()}
+          allowConversion={details.acceptsConversion() && !isBurnChangePrice}
+          burnChangePrice={isBurnChangePrice}
+          burnSystemId={currencyDefinition.systemid}
           expires={details.expires()}
           allowNonVerusSystems={details.acceptsNonVerusSystems()}
           acceptedSystems={details.acceptedsystems}

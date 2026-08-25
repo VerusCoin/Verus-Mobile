@@ -249,4 +249,35 @@ export default StyleSheet.create({
     marginTop: 4,
     textTransform: 'uppercase',
   },
+  burnInfoCard: {
+    backgroundColor: '#F2F8F5',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#CFE4D9',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  burnInfoIconContainer: {
+    width: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 2,
+  },
+  burnInfoTextContainer: {
+    flex: 1,
+  },
+  burnInfoTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#24513D',
+    marginBottom: 4,
+  },
+  burnInfoSubtitle: {
+    fontSize: 12,
+    color: '#3F5F50',
+    lineHeight: 18,
+  },
 });

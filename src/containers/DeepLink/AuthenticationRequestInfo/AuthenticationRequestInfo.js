@@ -47,12 +47,10 @@ import {
   RecipientConstraint,
   AuthenticationResponseDetails,
   AuthenticationResponseOrdinalVDXFObject,
-  CompactAddressObject,
   fqnToParentAddress,
   fqnToParentFqn,
   GenericResponse,
   ProvisionIdentityDetails,
-  VerifiableSignatureData,
 } from 'verus-typescript-primitives';
 import {useObjectSelector} from '../../../hooks/useObjectSelector';
 import {
@@ -70,7 +68,9 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import VerusIdAtIcon from '../../../images/customIcons/verusid-at-icon.svg';
 import { authenticationRequestInfoStyles as styles } from '../../../styles';
 import IdentityPickerSheet from './components/IdentityPickerSheet';
-import { markProvisioningDeeplinkComplete } from '../../../utils/deeplink/provisioningDeeplinkStorage';
+import { markPendingDeeplinkComplete } from '../../../utils/deeplink/pendingDeeplinkStorage';
+import {ensureGenericResponseSigner} from '../../../utils/deeplink/genericResponse/ensureGenericResponseSigner';
+import {assertAuthenticationRequestNotExpired} from '../../../utils/deeplink/validator/authenticationRequestValidator';
 
 const truncateAddress = addr => {
   if (!addr || addr.length <= 14) return addr;
@@ -165,6 +165,9 @@ const AuthenticationRequestInfo = props => {
   const accounts = useObjectSelector(state => state.authentication.accounts);
   const signedIn = useSelector(state => state.authentication.signedIn);
   const passthrough = useSelector(state => state.deeplink.passthrough);
+  const pendingDeeplinkId =
+    passthrough?.pendingDeeplinkId ||
+    passthrough?.pendingProvisioningDeeplinkId;
   const fromService = useSelector(state => state.deeplink.fromService);
   const sendModal = useObjectSelector(state => state.sendModal);
   const sendModalType = useSelector(state => state.sendModal.type);
@@ -546,6 +549,10 @@ const AuthenticationRequestInfo = props => {
 
   // Build response using selected identity and call next()
   const buildResponseAndContinue = async () => {
+    // Re-check immediately before signing. A request can expire while the user
+    // is choosing an identity or authenticating a profile.
+    assertAuthenticationRequestNotExpired(details);
+
     const {chainId, iAddress} = selectedIdentity;
     const requestID =
       request && request.requestID ? request.requestID : details.requestID;
@@ -570,14 +577,14 @@ const AuthenticationRequestInfo = props => {
     baseResponse.details = [...baseResponse.details, responseDetail];
     baseResponse.setFlags();
 
-    if (baseResponse.signature == null) {
-      const coinObj = CoinDirectory.findCoinObj(chainId);
-      baseResponse.signature = new VerifiableSignatureData({
-        systemID: CompactAddressObject.fromIAddress(coinObj.system_id),
-        identityID: CompactAddressObject.fromIAddress(iAddress),
-      });
-      baseResponse.setSigned();
-    }
+    const coinObj = CoinDirectory.findCoinObj(chainId);
+    if (!coinObj) throw new Error('Unsupported signing chain.');
+
+    ensureGenericResponseSigner({
+      response: baseResponse,
+      systemID: coinObj.system_id,
+      identityID: iAddress,
+    });
 
     const handledIndices = [detailIndex];
     if (
@@ -680,14 +687,12 @@ const AuthenticationRequestInfo = props => {
       const finishSuccessfulModal = async () => {
         if (
           successfulSendModalTypeRef.current === LINK_IDENTITY_SEND_MODAL &&
-          passthrough?.pendingProvisioningDeeplinkId
+          pendingDeeplinkId
         ) {
           try {
-            await markProvisioningDeeplinkComplete(
-              passthrough.pendingProvisioningDeeplinkId,
-            );
+            await markPendingDeeplinkComplete(pendingDeeplinkId);
           } catch (e) {
-            console.warn('Unable to mark provisioning deeplink complete', e);
+            console.warn('Unable to mark pending deeplink complete', e);
           }
         }
 
@@ -724,7 +729,7 @@ const AuthenticationRequestInfo = props => {
     sendModal.data?.success,
     sendModal.visible,
     sendModalType,
-    passthrough?.pendingProvisioningDeeplinkId,
+    pendingDeeplinkId,
     props.navigation,
   ]);
 

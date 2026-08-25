@@ -12,6 +12,7 @@ import {
 import {AddPbaasCurrencyConfirmRender} from './AddPbaasCurrencyConfirm.render';
 import { CoinDirectory } from '../../../../utils/CoinData/CoinDirectory';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
+import {scopeSessionAction} from '../../../../actions/actions/updates/sessionRequests';
 
 const AddPbaasCurrencyConfirm = props => {
   const [currency, setCurrency] = useState(props.route.params.currency);
@@ -28,6 +29,9 @@ const AddPbaasCurrencyConfirm = props => {
     state => state.authentication.activeAccount,
   );
   const activeCoinList = useObjectSelector(state => state.coins.activeCoinList);
+  const sessionEpoch = useObjectSelector(
+    state => state.authentication.sessionEpoch,
+  );
 
   const goBack = useCallback(() => {
     props.setModalHeight();
@@ -35,6 +39,12 @@ const AddPbaasCurrencyConfirm = props => {
   }, [props]);
 
   const submitData = useCallback(async () => {
+    const sessionScope = {
+      sessionScoped: true,
+      accountHash: activeAccount.accountHash,
+      sessionEpoch,
+    };
+    const requestContext = {sessionScope};
     await props.setLoading(true);
     await props.setPreventExit(true);
 
@@ -52,6 +62,7 @@ const AddPbaasCurrencyConfirm = props => {
           activeAccount.keyDerivationVersion == null
             ? 0
             : activeAccount.keyDerivationVersion,
+          requestContext,
         ),
       );
   
@@ -60,16 +71,17 @@ const AddPbaasCurrencyConfirm = props => {
         activeCoinList,
         activeAccount.id,
         fullCoinData.compatible_channels,
+        requestContext,
       );
   
       if (addCoinAction) {
         dispatch(addCoinAction);
   
         const setUserCoinsAction = setUserCoins(
-          activeCoinList,
+          addCoinAction.activeCoinList,
           activeAccount.id,
         );
-        dispatch(setUserCoinsAction);
+        dispatch(scopeSessionAction(setUserCoinsAction, sessionScope));
   
         refreshActiveChainLifecycles(setUserCoinsAction.payload.activeCoinsForUser);
       } else {
@@ -92,6 +104,7 @@ const AddPbaasCurrencyConfirm = props => {
     sendModal,
     activeAccount,
     activeCoinList,
+    sessionEpoch,
     dispatch,
     props,
   ]);

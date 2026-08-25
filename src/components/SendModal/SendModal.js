@@ -61,6 +61,23 @@ class SendModal extends Component {
   }
 
   componentDidUpdate(lastProps) {
+    if (
+      lastProps.sendModal.requestId !== this.props.sendModal.requestId ||
+      (lastProps.sendModal.visible && !this.props.sendModal.visible)
+    ) {
+      if (
+        this.state.loading ||
+        this.state.preventExit ||
+        this.state.persistFormDataOnClose
+      ) {
+        this.setState({
+          loading: false,
+          preventExit: false,
+          persistFormDataOnClose: false,
+        });
+      }
+    }
+
     if (lastProps.alertActive != this.props.alertActive) {
       const shouldRestoreVisibility =
         !this.props.alertActive &&

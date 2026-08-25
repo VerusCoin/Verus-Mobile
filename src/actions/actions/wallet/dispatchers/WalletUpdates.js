@@ -19,7 +19,8 @@ import {
 } from '../../../../utils/constants/intervalConstants'
 import {
   renewCoinData,
-  occupyCoinApiCall
+  occupyCoinApiCall,
+  releaseCoinApiCall,
 } from "../../../actionCreators";
 import { createCoinExpireTimeout } from '../../../actionDispatchers'
 import { updateConversionPaths } from './UpdateConversionPaths'
@@ -27,6 +28,12 @@ import { updateWithdrawDestinations } from './UpdateWithdrawDestinations'
 import { updateDepositSources } from './UpdateDepositSources'
 import { updatePendingDeposits } from './UpdatePendingDeposits'
 import { updateLinkedIdentities } from './UpdateLinkedIdentities'
+import Store from '../../../../store'
+import {
+  captureSessionScope,
+  scopeSessionAction,
+  sessionScopeIsCurrent,
+} from '../../updates/sessionRequests'
 
 // Map of update functions to be able to call them through standardized 
 // API call constants. Each function requires the same three parameters: (store, mode, chainTicker)
@@ -42,6 +49,8 @@ export const walletUpdates = {
   [API_GET_LINKED_IDENTITIES]: updateLinkedIdentities
 }
 
+let walletRefreshSequence = 0;
+
 /**
  * Calls the specified API update function and renews (un-expires) the data in the 
  * redux store if the API call succeeded.
@@ -53,24 +62,54 @@ export const walletUpdates = {
  * @param {Function} onExpire (Optional) Function to execute on data expiry
  */
 export const updateWalletData = async (state, dispatch, channels, chainTicker, updateId, onExpire) => {  
-  dispatch(occupyCoinApiCall(chainTicker, channels, updateId))
+  const sessionScope = captureSessionScope(state)
+  const requestId = `wallet-refresh:${Date.now()}:${++walletRefreshSequence}`;
+  dispatch(
+    scopeSessionAction(
+      occupyCoinApiCall(chainTicker, channels, updateId, requestId),
+      sessionScope,
+    ),
+  )
   let noError = false
 
   try {
     if(await walletUpdates[updateId](state, dispatch, channels, chainTicker)) {
+      // The channel updater can finish successfully after the user has switched
+      // accounts. Its result actions are reducer-gated, but refresh bookkeeping
+      // and timers must be stopped here before they can affect the new session.
+      if (!sessionScopeIsCurrent(Store.getState(), sessionScope)) return false
+
       if (state.updates.coinUpdateIntervals[chainTicker][updateId].expire_timeout !== ALWAYS_ACTIVATED) {        
-        dispatch(renewCoinData(chainTicker, updateId))
+        dispatch(
+          scopeSessionAction(
+            renewCoinData(chainTicker, updateId),
+            sessionScope,
+          ),
+        )
       }
 
       if (state.updates.coinUpdateIntervals[chainTicker][updateId].expire_id) {
         //console.log(`Going to clear expire timeout for ${updateId}: ${state.updates.coinUpdateIntervals[chainTicker][updateId].expire_id}`)
         clearTimeout(state.updates.coinUpdateIntervals[chainTicker][updateId].expire_id)
       }
-      createCoinExpireTimeout(state.updates.coinUpdateIntervals[chainTicker][updateId].expire_timeout, chainTicker, updateId, onExpire)
+      createCoinExpireTimeout(
+        state.updates.coinUpdateIntervals[chainTicker][updateId].expire_timeout,
+        chainTicker,
+        updateId,
+        onExpire,
+        sessionScope,
+      )
       noError = true
     }
   } catch (e) {
     console.warn(e)
+  } finally {
+    dispatch(
+      scopeSessionAction(
+        releaseCoinApiCall(chainTicker, channels, updateId, requestId),
+        sessionScope,
+      ),
+    )
   }
   
   return noError

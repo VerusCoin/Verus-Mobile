@@ -13,7 +13,14 @@ import axios from 'axios';
 
 const OLD_DEFAULT_VERSION = 1.0
 
-export const getServerVersion = (proxyServer, ip, port, proto, httpsEnabled) => {
+export const getServerVersion = (
+  proxyServer,
+  ip,
+  port,
+  proto,
+  httpsEnabled,
+  requestOptions = null,
+) => {
   let protocolVersion = store.getState().electrum.serverVersions;
 
   if (protocolVersion[`${ip}:${port}:${proto}`]) {    
@@ -23,7 +30,11 @@ export const getServerVersion = (proxyServer, ip, port, proto, httpsEnabled) => 
   return new Promise((resolve, reject) => {
     let httpAddr = `${httpsEnabled ? 'https' : 'http'}://${proxyServer}/api/server/version?port=${port}&ip=${ip}&proto=${proto}`
 
-    axios.get(httpAddr)
+    const request = requestOptions == null
+      ? axios.get(httpAddr)
+      : axios.get(httpAddr, requestOptions);
+
+    request
     .then((res) => {
       if (!isJson(res.data)) {
         throw new Error("Invalid JSON in getServerVersion.js, received: " + res)

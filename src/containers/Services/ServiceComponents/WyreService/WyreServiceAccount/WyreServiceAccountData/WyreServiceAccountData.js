@@ -7,6 +7,10 @@ import { Linking } from "react-native";
 import { connect } from 'react-redux'
 import { expireServiceData, setServiceLoading } from "../../../../../../actions/actionCreators";
 import { conditionallyUpdateService } from "../../../../../../actions/actionDispatchers";
+import {
+  captureSessionScope,
+  sessionScopeIsCurrent,
+} from "../../../../../../actions/actions/updates/sessionRequests";
 import { createAlert, resolveAlert } from "../../../../../../actions/actions/alert/dispatchers/alert";
 import Store from "../../../../../../store";
 import { requestPersonalData } from "../../../../../../utils/auth/authBox";
@@ -50,7 +54,15 @@ import {
 import WyreProvider from "../../../../../../utils/services/WyreProvider";
 import { WyreServiceAccountDataRender } from "./WyreServiceAccountData.render"
 
-class WyreServiceAccountData extends Component {
+const assertSessionCurrent = requestContext => {
+  if (!sessionScopeIsCurrent(Store.getState(), requestContext.sessionScope)) {
+    const error = new Error("Account changed while Wyre data was being submitted.");
+    error.code = "SESSION_CHANGED";
+    throw error;
+  }
+};
+
+export class WyreServiceAccountData extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -215,11 +227,16 @@ class WyreServiceAccountData extends Component {
   }
 
   async submitOption(submission) {
+    const requestContext = {
+      sessionScope: captureSessionScope(Store.getState()),
+    };
+
     if (await this.canSubmitDataToWyre()) {
+      assertSessionCurrent(requestContext);
       return this.submitDataToWyre(
         this.state.params.wyreFieldData != null &&
           this.state.params.wyreFieldData.fieldType === "DOCUMENT"
-          ? () => WyreProvider.uploadDocument(submission)
+          ? () => WyreProvider.uploadDocument({...submission, requestContext})
           : () => WyreProvider.updateAccount(submission)
       );
     }

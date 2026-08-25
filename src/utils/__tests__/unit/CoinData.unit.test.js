@@ -59,7 +59,7 @@ describe('Main coin data functions', () => {
     expect(coinObj.system_id).toBe('iNC9NG5Jqk2tqVtqfjfiSpaqxrXaFU6RDu')
     expect(coinObj.display_name).toBe('Andromeda')
     expect(coinObj.display_ticker).toBe('Andromeda')
-    expect(coinObj.vrpc_endpoints).toContain('170.187.172.176:10004')
+    expect(coinObj.vrpc_endpoints).toContain('https://api.verustest.net:10004')
     expect(coinObj.seconds_per_block).toBe(60)
 
     expect(systemObj).toBeDefined()
@@ -68,11 +68,12 @@ describe('Main coin data functions', () => {
     expect(systemObj.system_id).toBe('iNC9NG5Jqk2tqVtqfjfiSpaqxrXaFU6RDu')
     expect(systemObj.display_name).toBe('Andromeda')
     expect(systemObj.display_ticker).toBe('Andromeda')
-    expect(systemObj.vrpc_endpoints).toContain('170.187.172.176:10004')
+    expect(systemObj.vrpc_endpoints).toContain('https://api.verustest.net:10004')
     expect(systemObj.seconds_per_block).toBe(60)
   })
 
   it('can create coinObj for pbaas currency QG on Andromeda', async () => {
+    await CoinDirectory.addPbaasCurrency(ANDROMEDA, true, false)
     await CoinDirectory.addPbaasCurrency(QG_ANDROMEDA, true, false)
     const coinObj = CoinDirectory.findCoinObj(QG_ANDROMEDA.currencyid, MOCK_USER_OBJ.id)
     const systemObj = CoinDirectory.findSystemCoinObj(coinObj.id)
@@ -83,7 +84,7 @@ describe('Main coin data functions', () => {
     expect(coinObj.system_id).toBe('iNC9NG5Jqk2tqVtqfjfiSpaqxrXaFU6RDu')
     expect(coinObj.display_name).toBe('QG.Andromeda')
     expect(coinObj.display_ticker).toBe('QG.Andromeda')
-    expect(coinObj.vrpc_endpoints).toContain('170.187.172.176:10004')
+    expect(coinObj.vrpc_endpoints).toContain('https://api.verustest.net:10004')
     expect(coinObj.seconds_per_block).toBe(60)
 
     expect(systemObj).toBeDefined()
@@ -92,7 +93,7 @@ describe('Main coin data functions', () => {
     expect(systemObj.system_id).toBe('iNC9NG5Jqk2tqVtqfjfiSpaqxrXaFU6RDu')
     expect(systemObj.display_name).toBe('Andromeda')
     expect(systemObj.display_ticker).toBe('Andromeda')
-    expect(systemObj.vrpc_endpoints).toContain('170.187.172.176:10004')
+    expect(systemObj.vrpc_endpoints).toContain('https://api.verustest.net:10004')
     expect(systemObj.seconds_per_block).toBe(60)
   })
 })

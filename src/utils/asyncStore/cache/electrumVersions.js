@@ -1,12 +1,20 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  clearCacheNamespace,
+  getCacheEntriesSafely,
+  initializeCacheSafely,
+} from './cacheIntegrity';
 
 import { Cache } from "react-native-cache"
 //Cache library built on AsyncStorage
 
 const ELECTRUM_SERVER_CACHE_CAP = 19
+const ELECTRUM_CACHE_NAMESPACE = "server_version"
+const validElectrumVersion = value =>
+  typeof value === 'number' && Number.isFinite(value);
 
 const versionCache = new Cache({
-  namespace: "server_version",
+  namespace: ELECTRUM_CACHE_NAMESPACE,
   policy: {
       maxEntries: ELECTRUM_SERVER_CACHE_CAP
   },
@@ -15,7 +23,12 @@ const versionCache = new Cache({
 
 //Initialize electrum cache by loading from AsyncStorage
 export const initElectrumCache = () => {
-  return versionCache.initializeCache().catch(e => {
+  return initializeCacheSafely(
+    versionCache,
+    ELECTRUM_CACHE_NAMESPACE,
+    ELECTRUM_SERVER_CACHE_CAP,
+    validElectrumVersion,
+  ).catch(e => {
     console.log("Error while initializing electrum cache")
     throw e
   })
@@ -36,7 +49,12 @@ export const setElectrumVersion = (server, version) => {
 //Get electrum server versions, to be called
 //on startup and dispatched to redux store
 export const getElectrumVersions = () => {
-  return versionCache.getAll().catch(e => {
+  return getCacheEntriesSafely(
+    versionCache,
+    ELECTRUM_CACHE_NAMESPACE,
+    ELECTRUM_SERVER_CACHE_CAP,
+    validElectrumVersion,
+  ).catch(e => {
     console.log("Error while getting electrum cache")
     throw e
   })
@@ -45,7 +63,7 @@ export const getElectrumVersions = () => {
 //Clear electrum version cache
 export const clearCachedVersions = () => {
   console.log("Clearing electrum version cache")
-  return versionCache.clearAll().catch(e => {
+  return clearCacheNamespace(versionCache, ELECTRUM_CACHE_NAMESPACE).catch(e => {
     console.log("Error while clearing electrum cache")
     throw e
   })

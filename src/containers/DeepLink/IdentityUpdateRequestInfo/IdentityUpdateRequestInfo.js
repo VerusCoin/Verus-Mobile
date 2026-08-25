@@ -381,7 +381,7 @@ const IdentityUpdateRequestInfo = props => {
       }
     }
 
-    if (identityUpdates.flags && identityUpdates.flags !== identity.flags) {
+    if (details.identity && identityUpdates.flags && identityUpdates.flags !== identity.flags) {
       if (subject.isRevoked() !== details.identity.isRevoked()) {
         displayUpdates[VERUSID_BASE_INFO.key][VERUSID_STATUS.key] = {
           data: getVerusIdStatus(identityUpdates, chainInfo, coinObj),

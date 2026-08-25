@@ -3,6 +3,7 @@ import { WYRE_SERVICE } from "./intervalConstants"
 export const WYRE_SERVICE_ID = 'wyre_service'
 export const VERUSID_SERVICE_ID = 'verusid_service'
 export const PBAAS_PRECONVERT_SERVICE_ID = 'pbaas_preconvert'
+export const GIFT_CARD_SERVICE_ID = 'gift_card_service'
 
 export const CONNECTED_SERVICE_DISPLAY_INFO = {
   [WYRE_SERVICE_ID]: {
@@ -18,6 +19,11 @@ export const CONNECTED_SERVICE_DISPLAY_INFO = {
     title: "Preconvert Currency",
     description: "Participate in a PBaaS currency launch by sending your funds to the currency before it starts",
     decentralized: true
+  },
+  [GIFT_CARD_SERVICE_ID]: {
+    title: "Gift Cards",
+    description: "Create spendable key gift cards to share funds and VerusIDs with another wallet",
+    decentralized: true
   }
 }
 
@@ -25,7 +31,7 @@ export const CONNECTED_SERVICE_CHANNELS = {
   [WYRE_SERVICE_ID]: WYRE_SERVICE
 }
 
-export const CONNECTED_SERVICES = [VERUSID_SERVICE_ID, /*PBAAS_PRECONVERT_SERVICE_ID ,*/ WYRE_SERVICE_ID]
+export const CONNECTED_SERVICES = [VERUSID_SERVICE_ID, GIFT_CARD_SERVICE_ID, /*PBAAS_PRECONVERT_SERVICE_ID ,*/ WYRE_SERVICE_ID]
 
 // Wyre specific constants
 export const WYRE_INDIVIDUAL_NAME = 'individualLegalName'
