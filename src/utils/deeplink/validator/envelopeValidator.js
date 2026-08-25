@@ -1,5 +1,7 @@
 import { AUTHENTICATION_REQUEST_VDXF_KEY, GenericRequest, IDENTITY_UPDATE_REQUEST_VDXF_KEY, PROVISION_IDENTITY_DETAILS_VDXF_KEY, 
-  VERUSPAY_INVOICE_DETAILS_VDXF_KEY, VerusPayInvoiceDetailsOrdinalVDXFObject, APP_ENCRYPTION_REQUEST_VDXF_KEY, CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY} from "verus-typescript-primitives"
+  VERUSPAY_INVOICE_DETAILS_VDXF_KEY, VerusPayInvoiceDetailsOrdinalVDXFObject, APP_ENCRYPTION_REQUEST_VDXF_KEY, CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY, SPENDABLE_KEY_DETAILS_VDXF_KEY, SpendableKeyDetailsOrdinalVDXFObject,
+  USER_DATA_REQUEST_VDXF_KEY, DATA_PACKET_REQUEST_VDXF_KEY,
+  CreateWalletBackupDetailsOrdinalVDXFObject} from "verus-typescript-primitives"
 import { getInfo, verifyGenericRequest } from "../../api/channels/vrpc/callCreators"
 import { getIdentity } from "../../api/channels/verusid/callCreators";
 import { validateAuthenticationRequestVDXFObject } from "./authenticationRequestValidator";
@@ -8,6 +10,9 @@ import { validateProvisionIdentityDetailsVDXFObject } from "./provisionIdentityD
 import { validateVerusPayInvoiceVDXFObject } from "./verusPayInvoiceDetailsValidator";
 import { validateAppEncryptionRequestVDXFObject } from "./appEncryptionRequestValidator";
 import { validateCreateWalletBackupDetailsVDXFObject } from "./createWalletBackupDetailsValidator";
+import { validateSpendableKeyDetailsVDXFObject } from "./spendableKeyDetailsValidator";
+import { validateUserDataRequestVDXFObject } from "./userDataRequestValidator";
+import { validateDataPacketRequestVDXFObject } from "./dataPacketRequestValidator";
 import { CoinDirectory } from "../../CoinData/CoinDirectory";
 import VrpcProvider from '../../vrpc/vrpcInterface';
 import store from "../../../store";
@@ -25,7 +30,9 @@ export const isRequestRequiredSignature = (request) => {
   const details = request.details;
 
   return !details.every((detail) => {
-    return detail instanceof VerusPayInvoiceDetailsOrdinalVDXFObject 
+    return detail instanceof VerusPayInvoiceDetailsOrdinalVDXFObject ||
+      detail instanceof SpendableKeyDetailsOrdinalVDXFObject || 
+      detail instanceof CreateWalletBackupDetailsOrdinalVDXFObject
   })
 }
 
@@ -36,7 +43,10 @@ export const getValidatorForDetail = (detailKey) => {
     [PROVISION_IDENTITY_DETAILS_VDXF_KEY.vdxfid]: validateProvisionIdentityDetailsVDXFObject,
     [VERUSPAY_INVOICE_DETAILS_VDXF_KEY.vdxfid]: validateVerusPayInvoiceVDXFObject,
     [APP_ENCRYPTION_REQUEST_VDXF_KEY.vdxfid]: validateAppEncryptionRequestVDXFObject,
-    [CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY.vdxfid]: validateCreateWalletBackupDetailsVDXFObject
+    [CREATE_WALLET_BACKUP_DETAILS_VDXF_KEY.vdxfid]: validateCreateWalletBackupDetailsVDXFObject,
+    [SPENDABLE_KEY_DETAILS_VDXF_KEY.vdxfid]: validateSpendableKeyDetailsVDXFObject,
+    [USER_DATA_REQUEST_VDXF_KEY.vdxfid]: validateUserDataRequestVDXFObject,
+    [DATA_PACKET_REQUEST_VDXF_KEY.vdxfid]: validateDataPacketRequestVDXFObject
   }
 
   if (Object.keys(detailValidators).includes(detailKey)) {
@@ -100,10 +110,6 @@ export const validateGenericRequest = async (request) => {
     if (!VerusIdInterface.validateUnsignedGenericRequest(request)) {
       throw new Error("Failed to verify request")
     }
-  }
-
-  if (request.hasEncryptResponseToAddress()) {
-    throw new Error("Encrypt response to address not yet supported.")
   }
 
   for (let i = 0; i < request.details.length; i++) {

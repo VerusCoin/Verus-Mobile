@@ -126,7 +126,9 @@ export const SendModalRender = function () {
 
   return (
     <Portal>
-      <NavigationContainer>
+      <NavigationContainer
+        key={this.props.sendModal.requestId || 'send-modal-idle'}
+      >
         <SemiModal
           animationType="slide"
           transparent={true}

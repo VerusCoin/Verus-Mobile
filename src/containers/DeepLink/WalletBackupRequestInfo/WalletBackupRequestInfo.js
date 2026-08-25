@@ -116,6 +116,7 @@ const WalletBackupRequestInfo = props => {
     profileBackup = false,
     request,
     response,
+    showSpendableKeyBackupChoice = false,
   } = props;
 
   const dispatch = useDispatch();
@@ -166,6 +167,9 @@ const WalletBackupRequestInfo = props => {
   const [backupKdfMenuVisible, setBackupKdfMenuVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [nfcStatus, setNfcStatus] = useState(null);
+  const [backupChoiceMade, setBackupChoiceMade] = useState(
+    !showSpendableKeyBackupChoice,
+  );
   const walletBackupCacheRef = useRef(null);
 
   const profilePasswordDetails = passwordStrengthDetails(profilePassword);
@@ -207,6 +211,10 @@ const WalletBackupRequestInfo = props => {
     profilePassword,
     useProfilePasswordForBackup,
   ]);
+
+  useEffect(() => {
+    setBackupChoiceMade(!showSpendableKeyBackupChoice);
+  }, [showSpendableKeyBackupChoice]);
 
   const openLogin = () => {
     if (matchingAccounts.length === 0) {
@@ -426,6 +434,76 @@ const WalletBackupRequestInfo = props => {
       setLoading(false);
     }
   };
+
+  const skipBackupAndClaimSpendableKey = async () => {
+    await next(response, [detailIndex]);
+  };
+
+  if (!backupChoiceMade) {
+    return (
+      <SafeAreaView style={{flex: 1, backgroundColor: Colors.secondaryColor}}>
+        <ScrollView
+          style={{flex: 1}}
+          contentContainerStyle={{
+            alignItems: 'center',
+            flexGrow: 1,
+            justifyContent: 'center',
+            paddingHorizontal: 24,
+            paddingVertical: 48,
+          }}>
+          <View style={{alignItems: 'center', width: fieldWidth}}>
+            <MaterialCommunityIcons
+              name="credit-card-wireless-outline"
+              size={58}
+              color={Colors.primaryColor}
+              style={{marginBottom: 18}}
+            />
+            <Text
+              style={{
+                color: Colors.primaryColor,
+                fontSize: 26,
+                fontWeight: 'bold',
+                textAlign: 'center',
+              }}>
+              Choose NFC Card Action
+            </Text>
+            <Text
+              style={{
+                color: Colors.verusDarkGray,
+                fontSize: 14,
+                lineHeight: 20,
+                marginTop: 12,
+                marginBottom: 24,
+                textAlign: 'center',
+              }}>
+              This NFC card can back up a wallet seed and redeem a spendable key. You can claim the spendable key to an existing matching profile, or back up a profile to the card first and then claim to that backed-up profile.
+            </Text>
+            <Button
+              mode="contained"
+              icon="wallet-outline"
+              onPress={skipBackupAndClaimSpendableKey}
+              labelStyle={{fontWeight: 'bold'}}
+              style={{alignSelf: 'stretch', marginBottom: 12}}>
+              Claim to Existing Profile
+            </Button>
+            <Button
+              mode="outlined"
+              icon="backup-restore"
+              onPress={() => setBackupChoiceMade(true)}
+              labelStyle={{fontWeight: 'bold'}}
+              style={{alignSelf: 'stretch', marginBottom: 18}}>
+              Back Up Then Claim
+            </Button>
+            <TouchableOpacity onPress={cancel} style={{padding: 12}}>
+              <Text style={{color: Colors.warningButtonColor, fontWeight: 'bold'}}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   if (loading) {
     return (

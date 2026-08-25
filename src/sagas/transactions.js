@@ -1,5 +1,5 @@
 import {
-  all, takeLatest, call, put, select,
+  all, call, put, select,
 } from 'redux-saga/effects';
 import { v4 as uuidv4 } from 'uuid';
 import isEqual from 'lodash/isEqual';
@@ -11,7 +11,6 @@ import { setMemoDataFromTx } from '../actions/actionCreators/claims';
 import { updateClaimsStorage, updateAttestationStorage } from './identity';
 import { selectTransactions } from '../selectors/transactions';
 import { getStoredBlockHeight, storeBlockHeight } from '../utils/asyncStore/transactionsStorage';
-import { SET_TRANSACTIONS } from '../utils/constants/storeType';
 
 const crypto = require('react-native-crypto');
 
@@ -27,7 +26,9 @@ const generateUid = (type, id, data, date) => rmd160Hash(`${type}-${id}-${data}-
 
 export default function * transactionsSaga() {
   yield all([
-    takeLatest(SET_TRANSACTIONS, handleGetMemosFromTransactions),
+    // Claim/memo ingestion is intentionally disabled until it is needed again
+    // and can be keyed by account and coin instead of one global cursor.
+    // takeLatest(SET_TRANSACTIONS, handleGetMemosFromTransactions),
   ]);
 }
 

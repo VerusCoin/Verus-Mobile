@@ -7,6 +7,7 @@ import { VERUSPAY_INVOICE_INFO } from "../../constants/deeplink";
 import { satsToCoins } from "../../math";
 import { CoinDirectory } from "../../CoinData/CoinDirectory";
 import BigNumber from "bignumber.js";
+import { VERUSPAY_BURN_OWN_ADDRESS_DISPLAY } from "../verusPayBurnChangePrice";
 
 /**
  * @param {GenericRequest} request
@@ -46,9 +47,8 @@ export const handleVerusPayInvoiceDetailsVDXFObject = async (request, response, 
 
   if (request.isSigned()) {
     displayProps = await getDisplayDataFromVerusPayInvoiceDetails(
-      details.data, 
-      request.signature.identityID.toIAddress(), 
-      request.signature.signatureAsVch.toString('base64')
+      details.data,
+      getVerusPayInvoiceSignerContext(request),
     );
   } else {
     displayProps = await getDisplayDataFromVerusPayInvoiceDetails(details.data);
@@ -61,12 +61,20 @@ export const handleVerusPayInvoiceDetailsVDXFObject = async (request, response, 
   }
 }
 
+export const getVerusPayInvoiceSignerContext = request => ({
+  signingID: request.signature.identityID.toIAddress(),
+  signerSystemID: request.signature.systemID.toIAddress(),
+  signatureAsVch: request.signature.signatureAsVch.toString('base64'),
+});
+
 /**
  * Gets display data provided a validated Verus Pay Invoice details
- * @param {VerusPayInvoiceDetails} details 
- * @param {string} signingID
- * @param {string} signerSystemID
- * @param {string} signatureAsVch
+ * @param {VerusPayInvoiceDetails} details
+ * @param {{
+ *   signingID?: string,
+ *   signerSystemID?: string,
+ *   signatureAsVch?: string,
+ * }} signerContext
  * @returns {Promise<{
  *    detailsBufferString: string;
  *    isSigned: boolean;
@@ -85,7 +93,14 @@ export const handleVerusPayInvoiceDetailsVDXFObject = async (request, response, 
  *   invoiceVersion: string;
  * }>}
  */
-export const getDisplayDataFromVerusPayInvoiceDetails = async (details, signingID, signerSystemID, signatureAsVch) => {
+export const getDisplayDataFromVerusPayInvoiceDetails = async (
+  details,
+  {
+    signingID,
+    signerSystemID,
+    signatureAsVch,
+  } = {},
+) => {
   const coinObj = CoinDirectory.getBasicCoinObj(details.isTestnet() ? 'VRSCTEST' : 'VRSC')
   VrpcProvider.initEndpoint(coinObj.system_id, coinObj.vrpc_endpoints[0])
 
@@ -95,7 +110,11 @@ export const getDisplayDataFromVerusPayInvoiceDetails = async (details, signingI
   const getDestinationDisplay = async () => {
     let destinationDisplay;
 
-    if (details.acceptsAnyDestination()) destinationDisplay = 'any destination'
+    if (details.acceptsAnyDestination()) {
+      destinationDisplay = details.isBurnChangePrice()
+        ? VERUSPAY_BURN_OWN_ADDRESS_DISPLAY
+        : 'any destination';
+    }
     else if (details.destination.isIAddr()) {
       const destinationId = await getIdentity(coinObj.system_id, details.destination.getAddressString())
       if (destinationId.error) throw new Error(destinationId.error.message)

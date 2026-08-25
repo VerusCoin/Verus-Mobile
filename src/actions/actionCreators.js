@@ -130,11 +130,12 @@ export const initInstanceKey = (instanceKey) => {
 }
 
 //Reducer Name: authentication
-export const signOut = () => {
-  return {
-    type: SIGN_OUT,
-  }
-}
+export const signOut = (sessionScope = null) => ({
+  type: SIGN_OUT,
+  ...(sessionScope?.sessionScoped === true
+    ? {meta: {...sessionScope}}
+    : {}),
+})
 
 //Reducer Name: coins
 export const setActiveCoin = (activeCoin) => {

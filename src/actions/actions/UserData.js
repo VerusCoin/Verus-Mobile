@@ -1,22 +1,22 @@
 import {
   setAccounts,
+  signOut,
   updateAccountKeys,
   authenticateUser,
 } from '../actionCreators';
 import {
   storeUser,
-  getUsers,
   getActiveCoinList,
   checkPinForUser,
   resetUserPwd,
   addEncryptedKeyToUser,
   deleteUser,
   setUserBiometry,
-  setUsers,
   setUserKeyDerivationVersion,
   setUserDisabledServices,
   setUserTestnetOverrides,
   setUserHideSeedWarnings,
+  updateUsers,
 } from '../../utils/asyncStore/asyncStore';
 import {deriveKeyPair} from '../../utils/keys';
 import {decryptkey, encryptkey} from '../../utils/seedCrypt';
@@ -48,10 +48,39 @@ import {
   requestPassword,
   requestSeeds,
 } from '../../utils/auth/authBox';
-import {clearEncryptedPersonalDataForUser} from './personal/dispatchers/personal';
-import {clearEncryptedServiceStoredDataForUser} from './services/dispatchers/services';
-import {clearActiveAccountLifecycles} from './account/dispatchers/account';
+import {
+  captureAccountTeardownContext,
+  clearActiveAccountLifecycles,
+} from './account/dispatchers/account';
 import {WYRE_SERVICE_ID} from '../../utils/constants/services';
+import store from '../../store';
+import {
+  captureSessionScope,
+  scopeSessionAction,
+  sessionScopeIsCurrent,
+} from './updates/sessionRequests';
+import {removeSessionCredential} from '../../utils/keychain/keychain';
+import {
+  clearDlightTeardownSeed,
+} from '../../utils/dlightTeardownSeed';
+
+const getRequestSessionScope = requestContext =>
+  requestContext?.sessionScope ||
+  (requestContext?.sessionScoped ? requestContext : null) ||
+  captureSessionScope(store.getState());
+
+const assertRequestSessionCurrent = (sessionScope, requestContext) => {
+  if (
+    requestContext?.signal?.aborted === true ||
+    !sessionScopeIsCurrent(store.getState(), sessionScope)
+  ) {
+    const error = new Error(
+      'Account changed while wallet keys were being generated.',
+    );
+    error.code = 'SESSION_CHANGED';
+    throw error;
+  }
+};
 
 export const addUser = async (
   userName,
@@ -63,6 +92,7 @@ export const addUser = async (
   disabledServices = SERVICES_DISABLED_DEFAULT,
   testnetOverrides = {},
 ) => {
+  const sessionScope = captureSessionScope(store.getState());
   const res = await storeUser(
     {
       seeds,
@@ -76,15 +106,39 @@ export const addUser = async (
     users,
   )
 
-  return setAccounts(res);
+  return scopeSessionAction(setAccounts(res), sessionScope);
 };
 
 export const resetPwd = (accountHash, newPwd, oldPwd) => {
+  const sessionScope = captureSessionScope(store.getState(), accountHash);
+
   return new Promise((resolve, reject) => {
-    resetUserPwd(accountHash, newPwd, oldPwd)
+    resetUserPwd(accountHash, newPwd, oldPwd, sessionScope)
       .then(res => {
         if (res) {
-          resolve(setAccounts(res));
+          const postResetSessionScope = captureSessionScope(
+            store.getState(),
+            accountHash,
+          );
+
+          if (
+            postResetSessionScope.sessionEpoch !==
+              sessionScope.sessionEpoch + 1 ||
+            !sessionScopeIsCurrent(store.getState(), postResetSessionScope)
+          ) {
+            throw new Error(
+              'Account changed while the password reset was in progress.',
+            );
+          }
+
+          resolve(scopeSessionAction({
+            type: BIOMETRIC_AUTH,
+            payload: {
+              biometry: false,
+              accountHash,
+              accounts: res,
+            },
+          }, postResetSessionScope));
         } else {
           resolve(false);
         }
@@ -94,11 +148,13 @@ export const resetPwd = (accountHash, newPwd, oldPwd) => {
 };
 
 export const addEncryptedKey = (accountHash, channel, seed, password) => {
+  const sessionScope = captureSessionScope(store.getState(), accountHash);
+
   return new Promise((resolve, reject) => {
     addEncryptedKeyToUser(accountHash, channel, seed, password)
       .then(res => {
         if (res) {
-          resolve(setAccounts(res));
+          resolve(scopeSessionAction(setAccounts(res), sessionScope));
         } else {
           resolve(false);
         }
@@ -111,6 +167,8 @@ export const setBiometry = (accountHash, biometry) => {
   return new Promise((resolve, reject) => {
     setUserBiometry(accountHash, biometry)
       .then(accounts => {
+        // Biometry is persisted account metadata, not active-session data. The
+        // reducer only updates activeAccount when this hash is actually active.
         resolve({
           type: BIOMETRIC_AUTH,
           payload: {biometry, accountHash, accounts},
@@ -121,13 +179,15 @@ export const setBiometry = (accountHash, biometry) => {
 };
 
 export const setHideSeedWarnings = (accountHash, hideSeedWarnings) => {
+  const sessionScope = captureSessionScope(store.getState(), accountHash);
+
   return new Promise((resolve, reject) => {
     setUserHideSeedWarnings(accountHash, hideSeedWarnings)
       .then(accounts => {
-        resolve({
+        resolve(scopeSessionAction({
           type: HIDE_SEED_WARNINGS,
           payload: {hideSeedWarnings, accountHash, accounts},
-        });
+        }, sessionScope));
       })
       .catch(err => reject(err));
   });
@@ -135,135 +195,214 @@ export const setHideSeedWarnings = (accountHash, hideSeedWarnings) => {
 
 // Requires user to logout and log back in
 export const setKeyDerivationVersion = async (accountHash, keyDerivationVersion) => {
+  const sessionScope = captureSessionScope(store.getState(), accountHash);
+
   return new Promise((resolve, reject) => {
     setUserKeyDerivationVersion(accountHash, keyDerivationVersion)
       .then(accounts => {
-        resolve({
+        resolve(scopeSessionAction({
           type: SET_ACCOUNTS,
           payload: {accounts},
-        });
+        }, sessionScope));
       })
       .catch(err => reject(err));
   });
 };
 
 export const setDisabledServices = async (accountHash, disabledServices) => {
+  const sessionScope = captureSessionScope(store.getState(), accountHash);
+
   return new Promise((resolve, reject) => {
     setUserDisabledServices(accountHash, disabledServices)
       .then(accounts => {
-        resolve({
+        resolve(scopeSessionAction({
           type: UPDATE_ACCOUNT_DISABLED_SERVICES,
-          payload: {disabledServices, accounts},
-        });
+          payload: {disabledServices, accountHash, accounts},
+        }, sessionScope));
       })
       .catch(err => reject(err));
   });
 };
 
 export const setTestnetOverrides = async (accountHash, testnetOverrides) => {
+  const sessionScope = captureSessionScope(store.getState(), accountHash);
+
   return new Promise((resolve, reject) => {
     setUserTestnetOverrides(accountHash, testnetOverrides)
       .then(accounts => {
-        resolve({
+        resolve(scopeSessionAction({
           type: UPDATE_ACCOUNT_TESTNET_OVERRIDES,
-          payload: {testnetOverrides, accounts},
-        });
+          payload: {testnetOverrides, accountHash, accounts},
+        }, sessionScope));
       })
       .catch(err => reject(err));
   });
 };
 
 export const deleteProfile = async (account, dispatch) => {
-  // Clear existing account lifecycles
-  await clearActiveAccountLifecycles();
+  const sessionScope = captureSessionScope(
+    store.getState(),
+    account.accountHash,
+  );
+  const dispatchForAccount = action =>
+    dispatch(scopeSessionAction(action, sessionScope));
+  let dlightSeed = null;
 
-  // Remove active coins
-  await removeExistingCoin(null, account.id, dispatch, true);
+  if (!sessionScopeIsCurrent(store.getState(), sessionScope)) {
+    const error = new Error(
+      'Account changed while preparing to delete the profile.',
+    );
+    error.code = 'SESSION_CHANGED';
+    throw error;
+  }
 
-  // Clear encrypted personal data
-  clearEncryptedPersonalDataForUser(account.accountHash);
+  const teardownContext = captureAccountTeardownContext({
+    account,
+    sessionScope,
+    clearDb: true,
+  });
+  const needsDlightErase = teardownContext.activeCoinsForUser.some(coin =>
+    (coin.compatible_channels || []).includes(DLIGHT_PRIVATE),
+  );
+  if (
+    needsDlightErase &&
+    account.seeds?.[DLIGHT_PRIVATE] != null
+  ) {
+    dlightSeed = (await requestSeeds())[DLIGHT_PRIVATE];
+    if (!sessionScopeIsCurrent(store.getState(), sessionScope)) {
+      dlightSeed = null;
+      const error = new Error(
+        'Account changed while preparing to delete the profile.',
+      );
+      error.code = 'SESSION_CHANGED';
+      throw error;
+    }
+  }
 
-  // Clear service stored data
-  clearEncryptedServiceStoredDataForUser(account.accountHash);
+  let teardownError = null;
 
-  // Delete user from accounts
-  dispatch(setAccounts(await deleteUser(account.accountHash)));
+  // Close/erase every native resource using the profile owner's captured
+  // accountHash. This remains targeted even if another profile signs in.
+  try {
+    try {
+      const lifecycleTeardown = clearActiveAccountLifecycles(
+        teardownContext,
+        dlightSeed,
+      );
+      // The lifecycle queue now owns a DLight-only holder. Do not retain a
+      // duplicate plaintext reference in this generic profile-deletion frame.
+      dlightSeed = null;
+      await lifecycleTeardown;
+    } catch (error) {
+      teardownError = error;
+      console.warn(error);
+    }
+
+    try {
+      await removeExistingCoin(
+        null,
+        account.id,
+        dispatchForAccount,
+        true,
+        {...teardownContext, skipTeardown: true},
+      );
+    } catch (error) {
+      teardownError = error;
+      console.warn(error);
+    }
+  } finally {
+    clearDlightTeardownSeed(teardownContext);
+    dlightSeed = null;
+
+    if (!teardownError) {
+      const remainingAccounts = await deleteUser(account.accountHash);
+
+      try {
+        dispatchForAccount(setAccounts(remainingAccounts));
+      } catch (error) {
+        console.warn(error);
+      }
+    } else {
+      throw teardownError;
+    }
+  }
 
   return;
 };
 
-export const fetchUsers = () => {
-  return new Promise((resolve, reject) => {
-    getUsers()
-      .then(async users => {
-        // Update for new user representation post v0.2.0
-        if (
-          users.some(value => value.encryptedKeys == null && value.encryptedKey)
-        ) {
-          console.warn('Updating users to key structure post v0.2.0');
+export const fetchUsers = async () => {
+  const users = await updateUsers(storedUsers => {
+    let nextUsers = storedUsers;
 
-          users = users.map(user => {
-            if (user.encryptedKeys == null && user.encryptedKey) {
-              return {
-                id: user.id,
-                accountHash: hashAccountId(user.id),
-                encryptedKeys: {
-                  [ELECTRUM]: user.encryptedKey,
-                },
-                biometry: false,
-                keyDerivationVersion:
-                  user.keyDerivationVersion == null
-                    ? 0
-                    : user.keyDerivationVersion,
-                disabledServices:
-                  user.disabledServices == null ? {} : user.disabledServices,
-                testnetOverrides:
-                  user.testnetOverrides == null ? {} : user.testnetOverrides,
-              };
-            } else {
-              return user;
-            }
-          });
+    // Update for new user representation post v0.2.0 while the user-root
+    // exclusion queue covers both the read and the eventual write.
+    if (
+      nextUsers.some(value => value.encryptedKeys == null && value.encryptedKey)
+    ) {
+      console.warn('Updating users to key structure post v0.2.0');
 
-          await setUsers(users);
+      nextUsers = nextUsers.map(user => {
+        if (user.encryptedKeys == null && user.encryptedKey) {
+          return {
+            id: user.id,
+            accountHash: hashAccountId(user.id),
+            encryptedKeys: {
+              [ELECTRUM]: user.encryptedKey,
+            },
+            biometry: false,
+            keyDerivationVersion:
+              user.keyDerivationVersion == null
+                ? 0
+                : user.keyDerivationVersion,
+            disabledServices:
+              user.disabledServices == null ? {} : user.disabledServices,
+            testnetOverrides:
+              user.testnetOverrides == null ? {} : user.testnetOverrides,
+          };
         }
 
-        // Update testnet overrides to include ETH
+        return user;
+      });
+    }
+
+    // Update testnet overrides to include ETH in the same queued transaction.
+    if (
+      nextUsers.some(
+        value =>
+          value.testnetOverrides != null &&
+          value.testnetOverrides.hasOwnProperty('VRSC') &&
+          !value.testnetOverrides.hasOwnProperty('ETH'),
+      )
+    ) {
+      console.warn('Updating testnet profile to account for goerli ETH');
+
+      nextUsers = nextUsers.map(user => {
         if (
-          users.some(
-            value =>
-              value.testnetOverrides != null &&
-              value.testnetOverrides.hasOwnProperty('VRSC') &&
-              !value.testnetOverrides.hasOwnProperty('ETH'),
-          )
+          user.testnetOverrides != null &&
+          user.testnetOverrides.hasOwnProperty('VRSC') &&
+          !user.testnetOverrides.hasOwnProperty('ETH')
         ) {
-          console.warn('Updating testnet profile to account for goerli ETH');
-
-          users = users.map(user => {
-            if (
-              user.testnetOverrides != null &&
-              user.testnetOverrides.hasOwnProperty('VRSC') &&
-              !user.testnetOverrides.hasOwnProperty('ETH')
-            ) {
-              return {
-                ...user,
-                testnetOverrides: {...user.testnetOverrides, ETH: 'GETH'},
-              };
-            } else {
-              return user;
-            }
-          });
-
-          await setUsers(users);
+          return {
+            ...user,
+            testnetOverrides: {...user.testnetOverrides, ETH: 'GETH'},
+          };
         }
 
-        resolve(setAccounts(users));
-      })
-      .catch(err => reject(err));
+        return user;
+      });
+    }
+
+    return nextUsers;
   });
+
+  return setAccounts(users);
 };
 
-export const authenticateAccount = async (account, password) => {
+export const authenticateAccount = async (
+  account,
+  password,
+  deferSessionInitialization = false,
+) => {
   let _keys = {};
 
   let seeds = account.encryptedKeys;
@@ -332,9 +471,7 @@ export const authenticateAccount = async (account, password) => {
           }
         }
 
-        resolve(
-          authenticateUser(
-            {
+        const activeAccount = {
               id: account.id,
               accountHash: account.accountHash
                 ? account.accountHash
@@ -358,20 +495,48 @@ export const authenticateAccount = async (account, password) => {
                 account.testnetOverrides == null
                   ? {}
                   : account.testnetOverrides,
-            },
-            await initSession(password),
-          ),
-        );
+            };
+
+        let sessionKey = null;
+        let sessionCredentialMutationStarted = false;
+
+        try {
+          if (!deferSessionInitialization) {
+            sessionCredentialMutationStarted = true;
+            sessionKey = await initSession(password);
+          }
+
+          resolve(authenticateUser(activeAccount, sessionKey));
+        } catch (sessionError) {
+          if (sessionCredentialMutationStarted) {
+            try {
+              await removeSessionCredential();
+            } catch (credentialError) {
+              console.warn(credentialError);
+            }
+            store.dispatch(signOut());
+          }
+
+          throw sessionError;
+        }
       })
       .catch(err => reject(err));
   });
 };
 
-export const validateLogin = (account, password) => {
+export const validateLogin = (
+  account,
+  password,
+  deferSessionInitialization = false,
+) => {
   return new Promise((resolve, reject) => {
     checkPinForUser(password, account.id, true, true)
       .then(() => {
-        return authenticateAccount(account, password);
+        return authenticateAccount(
+          account,
+          password,
+          deferSessionInitialization,
+        );
       })
       .then(loginData => {
         resolve(loginData);
@@ -387,13 +552,21 @@ export const addKeypairs = async (
   coinObj,
   keys,
   derivationVersion = KEY_DERIVATION_VERSION,
+  requestContext = null,
 ) => {
+  const sessionScope = getRequestSessionScope(requestContext);
+  const assertCurrent = () =>
+    assertRequestSessionCurrent(sessionScope, requestContext);
+  assertCurrent();
   let keypairs = {};
   const coinID = coinObj.id;
   const accountPass = await requestPassword();
+  assertCurrent();
   const accountSeeds = await requestSeeds();
+  assertCurrent();
 
-  for (seedType of CHANNELS) {
+  for (const seedType of CHANNELS) {
+    assertCurrent();
     const seed = accountSeeds[seedType]
       ? accountSeeds[seedType]
       : accountSeeds[ELECTRUM];
@@ -415,6 +588,7 @@ export const addKeypairs = async (
         seedType,
         derivationVersion,
       );
+      assertCurrent();
 
       keypairs[seedType] = {
         pubKey: keyObj.pubKey,
@@ -425,8 +599,13 @@ export const addKeypairs = async (
             : await encryptkey(accountPass, keyObj.viewingKey),
         addresses: keyObj.addresses,
       };
+      assertCurrent();
     }
   }
 
-  return updateAccountKeys({...keys, [coinID]: keypairs});
+  assertCurrent();
+  return scopeSessionAction(
+    updateAccountKeys({...keys, [coinID]: keypairs}),
+    sessionScope,
+  );
 };

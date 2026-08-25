@@ -13,9 +13,12 @@ import {GENERIC_REQUEST_DEEPLINK_VDXF_KEY} from 'verus-typescript-primitives';
 import {setDeeplinkData} from '../../actions/actionCreators';
 import Colors from '../../globals/colors';
 import {
-  loadProvisioningDeeplinkRequests,
-  removeProvisioningDeeplinkRequest,
-} from '../../utils/deeplink/provisioningDeeplinkStorage';
+  getPendingDeeplinkPassthrough,
+  loadPendingDeeplinkRequests,
+  PENDING_REQUEST_KIND_PROVISIONING,
+  PENDING_REQUEST_KIND_SPENDABLE_KEY,
+  removePendingDeeplinkRequest,
+} from '../../utils/deeplink/pendingDeeplinkStorage';
 
 const formatDate = timestamp => {
   if (!timestamp) return null;
@@ -27,6 +30,20 @@ const formatDate = timestamp => {
   }
 };
 
+const getRequestTitle = request => {
+  if (request.title) return request.title;
+
+  if (request.requestKind === PENDING_REQUEST_KIND_PROVISIONING) {
+    return 'VerusID provisioning request';
+  }
+
+  if (request.requestKind === PENDING_REQUEST_KIND_SPENDABLE_KEY) {
+    return 'Spendable key claim';
+  }
+
+  return 'Pending request';
+};
+
 const ProvisioningDeeplinkList = props => {
   const dispatch = useDispatch();
   const [requests, setRequests] = useState([]);
@@ -36,7 +53,7 @@ const ProvisioningDeeplinkList = props => {
     setLoading(true);
 
     try {
-      setRequests(await loadProvisioningDeeplinkRequests());
+      setRequests(await loadPendingDeeplinkRequests());
     } finally {
       setLoading(false);
     }
@@ -50,6 +67,8 @@ const ProvisioningDeeplinkList = props => {
   }, [loadRequests, props.navigation]);
 
   const openRequest = request => {
+    const pendingPassthrough = getPendingDeeplinkPassthrough(request) || {};
+
     dispatch(
       setDeeplinkData(
         GENERIC_REQUEST_DEEPLINK_VDXF_KEY.vdxfid,
@@ -57,8 +76,10 @@ const ProvisioningDeeplinkList = props => {
         request.fromService || null,
         {
           fqnToAutoLink: request.fqnToAutoLink || null,
-          pendingProvisioningDeeplinkId: request.id,
-          replayedProvisioningDeeplink: true,
+          ...pendingPassthrough,
+          replayedPendingDeeplink: true,
+          replayedProvisioningDeeplink:
+            request.requestKind === PENDING_REQUEST_KIND_PROVISIONING,
           skipWalletBackupRequests: true,
         },
       ),
@@ -77,15 +98,15 @@ const ProvisioningDeeplinkList = props => {
 
   const confirmRemoveRequest = request => {
     Alert.alert(
-      'Remove provisioning request?',
-      'You may lose the ability to provision this VerusID if you remove this request.',
+      'Remove pending request?',
+      'You may lose the ability to resume this request if you remove it.',
       [
         {text: 'Cancel', style: 'cancel'},
         {
           text: 'Remove',
           style: 'destructive',
           onPress: async () => {
-            await removeProvisioningDeeplinkRequest(request.id);
+            await removePendingDeeplinkRequest(request.id);
             await loadRequests();
           },
         },
@@ -102,9 +123,9 @@ const ProvisioningDeeplinkList = props => {
         </View>
       ) : requests.length === 0 ? (
         <View style={styles.centerContent}>
-          <Text style={styles.emptyTitle}>No provisioning requests</Text>
+          <Text style={styles.emptyTitle}>No pending requests</Text>
           <Text style={styles.emptySubtitle}>
-            Provisioning deeplinks will appear here after they are opened.
+            Pending deeplink requests will appear here after they are opened.
           </Text>
         </View>
       ) : (
@@ -123,7 +144,7 @@ const ProvisioningDeeplinkList = props => {
                   activeOpacity={0.75}>
                   <View style={styles.itemHeader}>
                     <Text style={styles.itemTitle} numberOfLines={1}>
-                      {request.title || 'VerusID provisioning request'}
+                      {getRequestTitle(request)}
                     </Text>
                     <View
                       style={[
@@ -144,7 +165,7 @@ const ProvisioningDeeplinkList = props => {
                       ? `Completed ${completedDate}`
                       : savedDate
                       ? `Saved ${savedDate}`
-                      : 'Saved provisioning request'}
+                      : 'Saved pending request'}
                   </Text>
                 </TouchableOpacity>
                 <IconButton

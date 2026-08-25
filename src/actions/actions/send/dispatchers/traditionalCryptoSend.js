@@ -91,8 +91,18 @@ export const traditionalCryptoSend = async (
       throw new Error(res ? res.result : "Unknown error");
     } else {
       if (!returnTx) {
+        const resultToAddress =
+          typeof res.result.toAddress === 'string' &&
+          res.result.toAddress.length > 0
+            ? res.result.toAddress
+            : destinationAddress;
+        const resultHasMemo = Object.prototype.hasOwnProperty.call(
+          res.result,
+          'memo',
+        );
+
         return {
-          toAddress: destinationAddress,
+          toAddress: resultToAddress,
           fees: [
             {
               amount:
@@ -108,7 +118,7 @@ export const traditionalCryptoSend = async (
           utxoCrossChecked: true,
           coinObj,
           channel,
-          memo,
+          memo: resultHasMemo ? res.result.memo : memo,
           finalTxAmount: res.result.value != null ? res.result.value : amount.toString(),
           fromAddress: res.result.fromAddress,
           txid: res.result.txid,
@@ -206,7 +216,10 @@ export const traditionalCryptoSend = async (
     if (e.message && e.message.includes("has no matching Script")) {
       throw new Error(`"${address}" is not a valid destination.`)
     } else if (e.message) {
-      throw new Error(e.message)
+      // Preserve structured broadcast state (including ambiguity and the
+      // locally-derived txid) so the confirmation UI can prevent an unsafe
+      // duplicate send.
+      throw e
     } else {
       throw new Error("Unknown error while building transaction, double check form data")
     }

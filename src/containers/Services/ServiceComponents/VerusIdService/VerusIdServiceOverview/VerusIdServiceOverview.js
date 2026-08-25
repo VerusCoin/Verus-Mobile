@@ -10,8 +10,33 @@ import { getFriendlyNameMap, getIdentity } from "../../../../../utils/api/channe
 import { VERUSID_SERVICE_ID } from "../../../../../utils/constants/services";
 import { VerusIdServiceOverviewRender } from "./VerusIdServiceOverview.render";
 import { CoinDirectory } from "../../../../../utils/CoinData/CoinDirectory";
+import Store from "../../../../../store";
+import {
+  captureSessionScope,
+  sessionScopeIsCurrent,
+} from "../../../../../actions/actions/updates/sessionRequests";
 
-class VerusIdServiceOverview extends Component {
+const captureRequestContext = () => {
+  const state = Store.getState();
+
+  return {
+    sessionScope: captureSessionScope(state),
+    accountId: state.authentication.activeAccount?.id,
+    activeCoinList: state.coins.activeCoinList,
+  };
+};
+
+const assertSessionCurrent = requestContext => {
+  if (!sessionScopeIsCurrent(Store.getState(), requestContext.sessionScope)) {
+    const error = new Error(
+      "Account changed while the VerusID was being unlinked."
+    );
+    error.code = "SESSION_CHANGED";
+    throw error;
+  }
+};
+
+export class VerusIdServiceOverview extends Component {
   constructor(props) {
     super(props);
 
@@ -65,10 +90,11 @@ class VerusIdServiceOverview extends Component {
   }
 
   tryUnlinkIdentity = async (iAddress, chain) => {
+    const requestContext = captureRequestContext();
     this.closeVerusIdDetailsModal()
     
     if (await this.canUnlinkIdentity()) {
-      return this.unlinkIdentity(iAddress, chain)
+      return this.unlinkIdentity(iAddress, chain, requestContext)
     }
   }
 
@@ -90,16 +116,26 @@ class VerusIdServiceOverview extends Component {
     );
   };
 
-  unlinkIdentity = async (iAddress, chain) => {
-    this.props.dispatch(setServiceLoading(true, VERUSID_SERVICE_ID));
+  unlinkIdentity = async (
+    iAddress,
+    chain,
+    requestContext = captureRequestContext(),
+  ) => {
 
     try {
+      assertSessionCurrent(requestContext);
+      this.props.dispatch(setServiceLoading(true, VERUSID_SERVICE_ID));
       const coinObj = CoinDirectory.findCoinObj(chain)
-      await unlinkVerusId(iAddress, coinObj.id);
-      await updateVerusIdWallet();
+      await unlinkVerusId(iAddress, coinObj.id, requestContext);
+      assertSessionCurrent(requestContext);
+      await updateVerusIdWallet(requestContext);
+      assertSessionCurrent(requestContext);
       clearChainLifecycle(coinObj.id);
       
-      const setUserCoinsAction = setUserCoins(this.props.activeCoinList, this.props.activeAccount.id);
+      const setUserCoinsAction = setUserCoins(
+        requestContext.activeCoinList,
+        requestContext.accountId,
+      );
 
       this.props.dispatch(setUserCoinsAction);
 
@@ -107,8 +143,10 @@ class VerusIdServiceOverview extends Component {
 
       this.props.dispatch(setServiceLoading(false, VERUSID_SERVICE_ID));
     } catch (e) {
-      createAlert('Error', e.message);
-      this.props.dispatch(setServiceLoading(false, VERUSID_SERVICE_ID));
+      if (sessionScopeIsCurrent(Store.getState(), requestContext.sessionScope)) {
+        createAlert('Error', e.message);
+        this.props.dispatch(setServiceLoading(false, VERUSID_SERVICE_ID));
+      }
     }
   };
 

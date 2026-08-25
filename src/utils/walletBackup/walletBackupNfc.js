@@ -1,4 +1,5 @@
 import {Buffer} from 'buffer';
+import BigNumber from 'bignumber.js';
 import {Platform} from 'react-native';
 import NfcManager, {
   Ndef,
@@ -11,9 +12,20 @@ import {
   CreateWalletBackupDetailsOrdinalVDXFObject,
   GenericRequest,
   OrdinalVDXFObject,
+  SpendableKeyDetailsOrdinalVDXFObject,
   WalletBackupOrdinalVDXFObject,
 } from 'verus-typescript-primitives';
 import {WALLET_BACKUP_NDEF_MIME} from './walletBackup';
+import store from '../../store';
+import {
+  getPendingDeeplinkId,
+  loadPendingDeeplinkRequests,
+} from '../deeplink/pendingDeeplinkStorage';
+import {
+  discoverSpendableKeyClaims,
+  spendableKeyDetailsOrdinalToMnemonic,
+} from '../spendableKey/spendableKey';
+import {REQUEST_TIMEOUT_MS} from '../../../env/index';
 
 const NFC_REQUEST_TIMEOUT_MS = 300000;
 const NFC_DEEPLINK_REQUEST_TIMEOUT_MS = 60000;
@@ -22,6 +34,18 @@ export const NFC_DEEPLINK_WALLET_BACKUP_DETECTED =
   'NFC_DEEPLINK_WALLET_BACKUP_DETECTED';
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const withTimeout = (promise, timeoutMs, timeoutMessage) => {
+  let timeout;
+
+  const timeoutPromise = new Promise((resolve, reject) => {
+    timeout = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    clearTimeout(timeout);
+  });
+};
 
 const toByteArray = value => {
   if (value == null) return [];
@@ -44,6 +68,14 @@ export const createWalletBackupNdefBytes = walletBackupOrdinal => {
   return Ndef.encodeMessage([
     Ndef.mimeMediaRecord(WALLET_BACKUP_NDEF_MIME, payload),
   ]);
+};
+
+export const createDeeplinkUriNdefBytes = uri => {
+  if (typeof uri !== 'string' || !uri.toLowerCase().startsWith('verus://')) {
+    throw new Error('Only verus:// deeplinks can be written to NFC cards.');
+  }
+
+  return Ndef.encodeMessage([Ndef.uriRecord(uri)]);
 };
 
 export const getWalletBackupOrdinalFromPayload = payload => {
@@ -123,28 +155,33 @@ const getUriFromRecord = record => {
   return null;
 };
 
-export const getDeeplinkUriFromTag = tag => {
-  const records = tag && Array.isArray(tag.ndefMessage) ? tag.ndefMessage : [];
+const getDeeplinkUrisFromTag = tag => {
+  const records = tag && Array.isArray(tag.ndefMessage)
+    ? [...tag.ndefMessage]
+    : [];
+  const uris = [];
 
-  for (const record of records) {
+  for (let index = 0; index < records.length; index++) {
+    const record = records[index];
+
     if (Ndef.isType(record, Ndef.TNF_WELL_KNOWN, Ndef.RTD_SMART_POSTER)) {
       try {
-        const uri = getDeeplinkUriFromTag({
-          ndefMessage: Ndef.decodeMessage(toByteArray(record.payload)),
-        });
-
-        if (uri) return uri;
+        records.push(...Ndef.decodeMessage(toByteArray(record.payload)));
       } catch (e) {}
     }
 
     const uri = getUriFromRecord(record);
 
     if (uri && uri.toLowerCase().startsWith('verus://')) {
-      return uri;
+      uris.push(uri);
     }
   }
 
-  return null;
+  return uris;
+};
+
+export const getDeeplinkUriFromTag = tag => {
+  return getDeeplinkUrisFromTag(tag)[0] || null;
 };
 
 const isCreateWalletBackupRequestDetail = detail => {
@@ -183,6 +220,151 @@ export const tagContainsCreateWalletBackupRequest = tag => {
   return getCreateWalletBackupRequestFromTag(tag) != null;
 };
 
+export const tagContainsVerusDeeplink = tag => {
+  return getDeeplinkUriFromTag(tag) != null;
+};
+
+const getSpendableKeyRequestsFromTag = tag => {
+  const spendableKeyRequests = [];
+
+  for (const uri of getDeeplinkUrisFromTag(tag)) {
+    try {
+      const request = GenericRequest.fromWalletDeeplinkUri(uri);
+      const spendableKeyOrdinals = (request.details || []).filter(
+        detail => detail instanceof SpendableKeyDetailsOrdinalVDXFObject,
+      );
+
+      if (spendableKeyOrdinals.length > 0) {
+        for (const spendableKeyOrdinal of spendableKeyOrdinals) {
+          spendableKeyRequests.push({request, spendableKeyOrdinal});
+        }
+      }
+    } catch (_) {}
+  }
+
+  return spendableKeyRequests;
+};
+
+export const getSpendableKeyRequestFromTag = tag => {
+  return getSpendableKeyRequestsFromTag(tag)[0] || null;
+};
+
+const assertFundedSpendableKeyWasSaved = async ({
+  request,
+  spendableKeyOrdinal,
+}) => {
+  const requestBufferString = request.toBuffer().toString('hex');
+  const requestId = getPendingDeeplinkId(requestBufferString);
+  let pendingRequests;
+
+  try {
+    pendingRequests = await withTimeout(
+      loadPendingDeeplinkRequests(),
+      REQUEST_TIMEOUT_MS,
+      'Timed out while checking saved spendable keys.',
+    );
+  } catch (_) {
+    throw new Error(
+      'Unable to verify whether this spendable key was saved. Refusing to overwrite it.',
+    );
+  }
+
+  const saved = pendingRequests.some(
+    pendingRequest =>
+      pendingRequest.id === requestId &&
+      pendingRequest.requestBufferString === requestBufferString,
+  );
+
+  // Saving the exact bearer-key request is the user's durable acknowledgement
+  // that it can be recovered after this tag is overwritten. This also permits
+  // encrypted requests without asking for their password during an NFC write.
+  if (saved) return;
+
+  let claims;
+
+  try {
+    const mnemonic = spendableKeyDetailsOrdinalToMnemonic({
+      spendableKeyOrdinal,
+    });
+    const state = store.getState();
+
+    claims = await withTimeout(
+      discoverSpendableKeyClaims({
+        mnemonic,
+        requestIsTestnet: request.isTestnet(),
+        activeCoinsForUser: state.coins?.activeCoinsForUser || [],
+        // Check inactive systems known and supported by this installation as
+        // well as the active profile. The discovery result only marks this
+        // bounded universe complete when every system check succeeds.
+        includeKnownSystems: true,
+      }),
+      REQUEST_TIMEOUT_MS,
+      'Timed out while checking spendable-key funds.',
+    );
+  } catch (_) {
+    throw new Error(
+      'Unable to establish whether this NFC spendable key contains funds. Refusing to overwrite it.',
+    );
+  }
+
+  if (!Array.isArray(claims?.systems) || claims.systems.length === 0) {
+    throw new Error(
+      'Unable to establish whether this NFC spendable key contains funds. Refusing to overwrite it.',
+    );
+  }
+
+  const hasFundsOrIdentities = claims.hasClaims === true || claims.systems.some(
+    system =>
+      (system?.identities || []).length > 0 ||
+      (system?.observedUtxos || system?.utxos || []).some(utxo => {
+        const hasNativeValue = BigNumber(utxo?.satoshis || 0).isGreaterThan(0);
+        const hasCurrencyValue = Object.values(utxo?.currencyvalues || {}).some(
+          value => BigNumber(value || 0).isGreaterThan(0),
+        );
+
+        return hasNativeValue || hasCurrencyValue;
+      }),
+  );
+
+  if (!hasFundsOrIdentities) {
+    const identityStatusUnknown = (claims?.systems || []).some(
+      system =>
+        system?.identityLookupSucceeded === false ||
+        system?.identityLookupError,
+    );
+
+    if (identityStatusUnknown) {
+      throw new Error(
+        'Unable to establish whether this NFC spendable key contains VerusIDs. Refusing to overwrite it.',
+      );
+    }
+
+    if (claims.scanUniverseComplete !== true) {
+      throw new Error(
+        'Unable to exhaustively establish that this NFC spendable key has no funds. Save it to pending requests before overwriting it.',
+      );
+    }
+
+    return;
+  }
+
+  throw new Error(
+    'This NFC card contains a funded spendable key that has not been saved to pending requests. Refusing to overwrite it.',
+  );
+};
+
+export const assertNfcTagCanBeOverwritten = async tag => {
+  if (tagContainsWalletBackup(tag)) {
+    throw new Error(
+      'This NFC card already contains a wallet backup. Refusing to overwrite it.',
+    );
+  }
+
+  for (const spendableKeyRequest of getSpendableKeyRequestsFromTag(tag)) {
+    await assertFundedSpendableKeyWasSaved(spendableKeyRequest);
+  }
+};
+
 const assertWritableStatus = async ndefBytes => {
   const status = await NfcManager.ndefHandler.getNdefStatus();
 
@@ -197,18 +379,6 @@ const assertWritableStatus = async ndefBytes => {
   if (status.capacity != null && status.capacity > 0 && ndefBytes.length > status.capacity) {
     throw new Error('This NFC card does not have enough space for the wallet backup.');
   }
-};
-
-const withTimeout = (promise, timeoutMs, timeoutMessage) => {
-  let timeout;
-
-  const timeoutPromise = new Promise((resolve, reject) => {
-    timeout = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
-  });
-
-  return Promise.race([promise, timeoutPromise]).finally(() => {
-    clearTimeout(timeout);
-  });
 };
 
 const shouldHoldAndroidNfcRelease = ({completed, error, requestStarted}) => {
@@ -358,37 +528,31 @@ export const writeWalletBackupToNfc = async (
     nfcRequestStarted = true;
     const connectedTech = await requestNdefTechnology(timeoutMs);
 
-    if (connectedTech === NfcTech.NdefFormatable) {
-      throw new Error(
-        'This NFC card does not contain a valid Verus wallet backup request. Refusing to overwrite it.',
-      );
-    }
-
     onStatus && onStatus('Checking NFC card...');
-    await assertWritableStatus(backupBytes);
 
-    let existingTag = null;
+    if (connectedTech === NfcTech.Ndef) {
+      await assertWritableStatus(backupBytes);
 
-    try {
-      existingTag = await NfcManager.ndefHandler.getNdefMessage();
-    } catch (_) {
-      existingTag = null;
+      let existingTag;
+
+      try {
+        existingTag = await NfcManager.ndefHandler.getNdefMessage();
+      } catch (_) {
+        throw new Error(
+          'Unable to inspect the existing NFC data. Refusing to overwrite it.',
+        );
+      }
+
+      await assertNfcTagCanBeOverwritten(existingTag);
+
+      onStatus && onStatus('Writing wallet backup...');
+      await NfcManager.ndefHandler.writeNdefMessage(backupBytes, {
+        reconnectAfterWrite: true,
+      });
+    } else if (connectedTech === NfcTech.NdefFormatable) {
+      onStatus && onStatus('Formatting and writing wallet backup...');
+      await NfcManager.ndefFormatableHandlerAndroid.formatNdef(backupBytes);
     }
-
-    if (tagContainsWalletBackup(existingTag)) {
-      throw new Error('This NFC card already contains a wallet backup. Refusing to overwrite it.');
-    }
-
-    if (!tagContainsCreateWalletBackupRequest(existingTag)) {
-      throw new Error(
-        'This NFC card does not contain a valid Verus wallet backup request. Refusing to overwrite it.',
-      );
-    }
-
-    onStatus && onStatus('Writing wallet backup...');
-    await NfcManager.ndefHandler.writeNdefMessage(backupBytes, {
-      reconnectAfterWrite: true,
-    });
     backupWriteCompleted = true;
 
     onStatus && onStatus('Backup written. Move the card away from the device.');
@@ -420,6 +584,88 @@ export const writeWalletBackupToNfc = async (
       } else {
         await NfcManager.cancelTechnologyRequest().catch(() => {});
       }
+    }
+  }
+};
+
+export const writeDeeplinkUriToNfc = async (
+  uri,
+  {
+    onStatus,
+    timeoutMs = NFC_REQUEST_TIMEOUT_MS,
+  } = {},
+) => {
+  const supported = await NfcManager.isSupported();
+  if (!supported) throw new Error('NFC is not supported on this device.');
+
+  const enabled = await NfcManager.isEnabled();
+  if (!enabled) throw new Error('NFC is disabled on this device.');
+
+  const deeplinkBytes = createDeeplinkUriNdefBytes(uri);
+  let deeplinkWriteCompleted = false;
+  let nfcRequestStarted = false;
+  let nfcError = null;
+
+  onStatus && onStatus('Preparing NFC writer...');
+  await NfcManager.start();
+
+  try {
+    onStatus && onStatus('Hold the NFC card against the device.');
+    nfcRequestStarted = true;
+    const connectedTech = await requestNdefTechnology(timeoutMs);
+
+    onStatus && onStatus('Checking NFC card...');
+
+    if (connectedTech === NfcTech.Ndef) {
+      await assertWritableStatus(deeplinkBytes);
+
+      let existingTag;
+
+      try {
+        existingTag = await NfcManager.ndefHandler.getNdefMessage();
+      } catch (_) {
+        throw new Error(
+          'Unable to inspect the existing NFC data. Refusing to overwrite it.',
+        );
+      }
+
+      await assertNfcTagCanBeOverwritten(existingTag);
+
+      onStatus && onStatus('Writing gift card...');
+      await NfcManager.ndefHandler.writeNdefMessage(deeplinkBytes, {
+        reconnectAfterWrite: true,
+      });
+    } else if (connectedTech === NfcTech.NdefFormatable) {
+      onStatus && onStatus('Formatting and writing gift card...');
+      await NfcManager.ndefFormatableHandlerAndroid.formatNdef(deeplinkBytes);
+    }
+
+    deeplinkWriteCompleted = true;
+    onStatus && onStatus('Gift card written. Move the card away from the device.');
+
+    return {written: true};
+  } catch (e) {
+    nfcError = e;
+    throw e;
+  } finally {
+    const releaseDelayMs = getAndroidNfcReleaseDelay({
+      completed: deeplinkWriteCompleted,
+      error: nfcError,
+      requestStarted: nfcRequestStarted,
+    });
+
+    showAndroidMoveAwayStatus({
+      onStatus,
+      completed: deeplinkWriteCompleted,
+      releaseDelayMs,
+    });
+
+    if (Platform.OS === 'android') {
+      await NfcManager.cancelTechnologyRequest({
+        delayMsAndroid: releaseDelayMs,
+      }).catch(() => {});
+    } else {
+      await NfcManager.cancelTechnologyRequest().catch(() => {});
     }
   }
 };

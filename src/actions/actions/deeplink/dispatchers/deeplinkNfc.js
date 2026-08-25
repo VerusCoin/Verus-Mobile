@@ -32,7 +32,7 @@ export const readDeeplinkFromNfc = async ({
     if (cancelled) return;
 
     closeLoadingModal();
-    store.dispatch(setDeeplinkUrl(uri));
+    store.dispatch(setDeeplinkUrl(uri, {fromNfc: true}));
   } catch (e) {
     if (cancelled) return;
 

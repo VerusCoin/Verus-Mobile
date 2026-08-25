@@ -8,9 +8,11 @@ const SignedOutDropdown = (props) => {
   const {
     handleRecoverSeed,
     handleRevokeRecover,
-    handleProvisioningRequests,
+    handlePendingRequests,
+    handleClearPendingRequests,
     handleReadDeeplinkFromNfc,
-    hasAccount
+    hasAccount,
+    pendingRequestCount = 0,
   } = props;
   const [visible, setVisible] = React.useState(false);
   const insets = useSafeAreaInsets();
@@ -43,9 +45,17 @@ const SignedOutDropdown = (props) => {
             onPress: handleRevokeRecover,
           },
           {
-            label: 'Provisioning requests',
-            onPress: handleProvisioningRequests,
+            label: `Pending requests (${pendingRequestCount})`,
+            onPress: handlePendingRequests,
           },
+          // ...(handleClearPendingRequests
+          //   ? [
+          //       {
+          //         label: 'Clear pending requests',
+          //         onPress: handleClearPendingRequests,
+          //       },
+          //     ]
+          //   : []),
         ]
       : []),
   ];

@@ -25,6 +25,9 @@ export {
   default as confirmPayStepStyles,
 } from './deeplink/confirmPayStep.styles';
 export {
+  default as dataRequestInfoStyles,
+} from './deeplink/dataRequestInfo.styles';
+export {
   default as genericRequestCompleteStyles,
 } from './deeplink/genericRequestComplete.styles';
 export {
@@ -48,6 +51,9 @@ export {
 export {
   default as reviewStepStyles,
 } from './deeplink/reviewStep.styles';
+export {
+  default as spendableKeyRequestInfoStyles,
+} from './deeplink/spendableKeyRequestInfo.styles';
 export {
   default as vdxfUniValueModalInnerAreaStyles,
 } from './components/vdxfUniValueModalInnerArea.styles';

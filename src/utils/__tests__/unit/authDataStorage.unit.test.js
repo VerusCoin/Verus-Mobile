@@ -6,6 +6,8 @@ import {
 
 import { storeUser, getUsers, checkPinForUser, resetUserPwd, deleteUser } from '../../asyncStore/asyncStore'
 import { decryptkey } from '../../seedCrypt'
+import store from '../../../store'
+import {AUTHENTICATE_USER} from '../../constants/storeType'
 
 describe('Authentication data storage and retrieval', () => {
   it('can store user with both dlight and electrum seeds', () => {
@@ -57,10 +59,16 @@ describe('Authentication data storage and retrieval', () => {
   })
 
   it('can reset user password', () => {
-    const { seeds, id } = MOCK_USER_OBJ
-    const { electrum, dlight } = seeds
+    const { seeds, id, accountHash } = MOCK_USER_OBJ
+    const { electrum, dlight_private } = seeds
 
-    return resetUserPwd(id, MOCK_PIN_TWO, MOCK_PIN)
+    store.dispatch({
+      type: AUTHENTICATE_USER,
+      activeAccount: MOCK_USER_OBJ,
+      sessionKey: null,
+    })
+
+    return resetUserPwd(accountHash, MOCK_PIN_TWO, MOCK_PIN)
     .then(async res => {
       expect(res.length).toBe(1)
       expect(res[0].id).toBe(id)
@@ -77,7 +85,7 @@ describe('Authentication data storage and retrieval', () => {
     .then(res => {
       expect(Object.keys(res).length).toBe(3)
       expect(res.electrum).toBe(electrum)
-      expect(res.dlight).toBe(dlight)
+      expect(res.dlight_private).toBe(dlight_private)
     })
   })
 
