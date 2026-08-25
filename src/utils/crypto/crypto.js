@@ -36,7 +36,7 @@ export async function saltedEncrypt(passphrase, data, iters) {
   return Buffer.concat([salt, iv, ct, tag]).toString('base64');
 }
 
-export function saltedDecrypt(passphrase, b64, iters) {
+export function saltedDecryptToBuffer(passphrase, b64, iters) {
   const blob = Buffer.from(b64, 'base64');
   const salt = blob.subarray(0, SALT_LEN);
   const iv = blob.subarray(SALT_LEN, SALT_LEN + IV_LEN);
@@ -50,6 +50,12 @@ export function saltedDecrypt(passphrase, b64, iters) {
   decipher.setAuthTag(tag);
 
   const pt = Buffer.concat([decipher.update(ct), decipher.final()]);
+  return pt;
+}
+
+export function saltedDecrypt(passphrase, b64, iters) {
+  const pt = saltedDecryptToBuffer(passphrase, b64, iters);
+
   return pt.toString('utf8');
 }
 

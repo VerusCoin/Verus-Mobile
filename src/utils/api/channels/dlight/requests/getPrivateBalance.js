@@ -1,17 +1,27 @@
-import { makeDlightRequest } from '../callCreators'
-import { DLIGHT_PRIVATE_BALANCES } from '../../../../constants/dlightConstants'
+import { getSynchronizerInstance } from 'react-native-verus'
+import { createJsonRpcResponse } from './jsonResponse'
+
 import BigNumber from "bignumber.js";
+import { satsToCoins} from '../../../../math'
 
 // Get the total private balance associated with a light wallet daemon
 export const getPrivateBalance = async (coinId, accountHash, coinProto) => {
-  const res = await makeDlightRequest(coinId, accountHash, coinProto, 0, DLIGHT_PRIVATE_BALANCES, [])
-
-  return {
-    ...res,
-    result: res.result ? {
-      confirmed: BigNumber(res.result.confirmed),
-      total: BigNumber(res.result.total),
-      pending: BigNumber(res.result.total).minus(BigNumber(res.result.confirmed))
-    } : res.result
-  }
+  const synchronizer = await getSynchronizerInstance(accountHash, coinId);
+  return new Promise((resolve, reject) => {
+    synchronizer.getPrivateBalance()
+    .then(res => {
+      const transformedRes = {
+        ...res,
+        ...(res && res.confirmed && res.total && res.pending && {
+          confirmed: satsToCoins(BigNumber(res.confirmed)),
+          total: satsToCoins(BigNumber(res.total)),
+          pending: satsToCoins(BigNumber(res.pending))
+        })
+      };
+      const result = createJsonRpcResponse(0, transformedRes, transformedRes.error)
+      resolve(result);
+    }).catch(err => {
+      reject(err);
+    });
+  })
 }

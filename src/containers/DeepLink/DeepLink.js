@@ -15,7 +15,7 @@ import {
   extractVerusPayInvoiceSig,
   getInfo
 } from '../../utils/api/channels/vrpc/callCreators';
-import { IDENTITY_UPDATE_REQUEST_INFO, LOGIN_CONSENT_INFO, VERUSPAY_INVOICE_INFO } from '../../utils/constants/deeplink';
+import { GENERIC_REQUEST, IDENTITY_UPDATE_REQUEST_INFO, LOGIN_CONSENT_INFO, VERUSPAY_INVOICE_INFO } from '../../utils/constants/deeplink';
 import LoginRequestInfo from './LoginRequestInfo/LoginRequestInfo';
 import { getCurrency, getFriendlyNameMap, getIdentity } from '../../utils/api/channels/verusid/callCreators';
 import { convertFqnToDisplayFormat } from '../../utils/fullyqualifiedname';
@@ -34,15 +34,36 @@ import IdentityUpdateRequestInfo from './IdentityUpdateRequestInfo/IdentityUpdat
 import { getIdentityContent } from '../../utils/api/channels/verusid/requests/getIdentityContent';
 import { capitalizeString } from '../../utils/stringUtils';
 import { createUpdateIdentityTx, getUpdatableIdentity } from '../../utils/api/channels/verusid/requests/updateIdentity';
+import { validateGenericRequest } from '../../utils/deeplink/validator/envelopeValidator';
+import GenericRequestHome from './GenericRequestHome/GenericRequestHome';
+import { openAuthenticateUserModal } from '../../actions/actions/sendModal/dispatchers/sendModal';
+import { AUTHENTICATE_USER_SEND_MODAL, SEND_MODAL_USER_ALLOWLIST } from '../../utils/constants/sendModal';
+import store from '../../store';
+import { selectHasAuthenticatedSession } from '../../selectors/authentication';
+import {
+  assertExperimentalDeeplinkAllowed,
+  assertExperimentalGenericRequestAllowed,
+} from '../../utils/deeplink/experimentalDeeplinks';
+import {
+  validateVerusPayBurnChangePrice,
+  VERUSPAY_BURN_OWN_ADDRESS_DISPLAY,
+} from '../../utils/deeplink/verusPayBurnChangePrice';
 
 const DeepLink = (props) => {
   const deeplinkId = useSelector((state) => state.deeplink.id)
   const deeplinkData = useObjectSelector((state) => state.deeplink.data)
 
   const signedIn = useSelector((state) => state.authentication.signedIn)
+  const hasAuthenticatedSession = useSelector(selectHasAuthenticatedSession)
+  const alertActive = useSelector(state => state.alert.active);
+  const sendModalVisible = useSelector(state => state.sendModal.visible);
+  const sendModalType = useSelector(state => state.sendModal.type);
+  const accounts = useObjectSelector(state => state.authentication.accounts)
   const [displayKey, setDisplayKey] = useState(null)
   const [loading, setLoading] = useState(false)
   const [displayProps, setDisplayProps] = useState({})
+  const [waitingForSignin, setWaitingForSignin] = useState(false)
+  const [authModalOpened, setAuthModalOpened] = useState(false)
   const dispatch = useDispatch()
 
   const cancel = () => {
@@ -53,6 +74,11 @@ const DeepLink = (props) => {
         index: 0,
         routes: [{name: 'SignedInStack'}],
       });
+    } else if (accounts.length === 0) {
+      resetAction = CommonActions.reset({
+        index: 0,
+        routes: [{name: 'SignedOutNoKeyStack'}],
+      });
     } else {
       resetAction = CommonActions.reset({
         index: 0,
@@ -61,6 +87,53 @@ const DeepLink = (props) => {
     }
     dispatch(resetDeeplinkData())
     props.navigation.dispatch(resetAction);
+  }
+
+  const processGenericRequest = async () => {
+    const request = new primitives.GenericRequest();
+    request.fromBuffer(Buffer.from(deeplinkData, 'hex'));
+
+    const requiresDelegatedUserCheck =
+      request.isSigned() &&
+      request.hasAppOrDelegatedID() &&
+      request.appOrDelegatedID.toAddress() !== request.signature.identityID.toAddress();
+    
+    assertExperimentalGenericRequestAllowed(request, store.getState());
+
+    if (requiresDelegatedUserCheck && !signedIn) {
+      setWaitingForSignin(true);
+
+      const allowList = request.isTestnet()
+        ? accounts.filter(x => x.testnetOverrides && Object.keys(x.testnetOverrides).length > 0)
+        : accounts.filter(x => !x.testnetOverrides || Object.keys(x.testnetOverrides).length === 0);
+
+      if (allowList.length > 0) {
+        const data = {
+          [SEND_MODAL_USER_ALLOWLIST]: allowList
+        };
+
+        // Unfortunate hack to prevent screen from locking with gray overlay if deeplink is 
+        // called when app is closed
+        setTimeout(() => {
+          openAuthenticateUserModal(data);
+        }, 1000)
+        return;
+      }
+
+      createAlert(
+        "Cannot continue",
+        `No ${request.isTestnet() ? 'testnet' : 'mainnet'} profiles found, cannot verify delegated request signer.`,
+      );
+      cancel();
+      return;
+    }
+
+    await validateGenericRequest(request);
+
+    setDisplayProps({
+      deeplinkData
+    })
+    setDisplayKey(GENERIC_REQUEST)
   }
 
   const processVerusPayInvoice = async () => {
@@ -76,10 +149,28 @@ const DeepLink = (props) => {
     const chainInfo = await getInfo(coinObj.system_id)
     if (chainInfo.error) throw new Error(chainInfo.error.message)
 
+    const requestedCurrency = await getCurrency(
+      coinObj.system_id,
+      invoice.details.requestedcurrencyid,
+    );
+    if (requestedCurrency.error) {
+      throw new Error(requestedCurrency.error.message);
+    }
+
+    validateVerusPayBurnChangePrice(
+      invoice.details,
+      requestedCurrency.result,
+      coinObj.system_id,
+    );
+
     const getDestinationDisplay = async () => {
       let destinationDisplay;
 
-      if (invoice.details.acceptsAnyDestination()) destinationDisplay = 'any destination'
+      if (invoice.details.acceptsAnyDestination()) {
+        destinationDisplay = invoice.details.isBurnChangePrice()
+          ? VERUSPAY_BURN_OWN_ADDRESS_DISPLAY
+          : 'any destination';
+      }
       else if (invoice.details.destination.isIAddr()) {
         const destinationId = await getIdentity(coinObj.system_id, invoice.details.destination.getAddressString())
         if (destinationId.error) throw new Error(destinationId.error.message)
@@ -146,14 +237,14 @@ const DeepLink = (props) => {
         const signedBy = await getIdentity(coinObj.system_id, invoice.signing_id)
         if (signedBy.error) throw new Error(signedBy.error.message)
 
-        const requestedCurrency = await getCurrency(coinObj.system_id, invoice.details.requestedcurrencyid)
-        if (requestedCurrency.error) throw new Error(requestedCurrency.error.message)
-
         await validateExpiry()
         setDisplayProps({
-          deeplinkData,
+          detailsBufferString: invoice.details.toBuffer().toString('hex'),
+          invoiceVersion: invoice.version.toString(),
+          isSigned: true,
           sigtime,
           signerFqn: convertFqnToDisplayFormat(signedBy.result.fullyqualifiedname),
+          signerSystemID: invoice.system_id,
           currencyDefinition: requestedCurrency.result,
           amountDisplay: invoice.details.acceptsAnyAmount() ? null : satsToCoins(BigNumber(invoice.details.amount)).toString(),
           destinationDisplay: await getDestinationDisplay(),
@@ -170,12 +261,11 @@ const DeepLink = (props) => {
         cancel();
       }
     } else {
-      const requestedCurrency = await getCurrency(coinObj.system_id, invoice.details.requestedcurrencyid)
-      if (requestedCurrency.error) throw new Error(requestedCurrency.error.message)
-
       await validateExpiry()
       setDisplayProps({
-        deeplinkData,
+        detailsBufferString: invoice.details.toBuffer().toString('hex'),
+        invoiceVersion: invoice.version.toString(),
+        isSigned: false,
         currencyDefinition: requestedCurrency.result,
         amountDisplay: invoice.details.acceptsAnyAmount() ? null : satsToCoins(BigNumber(invoice.details.amount)).toString(),
         destinationDisplay: await getDestinationDisplay(),
@@ -232,11 +322,11 @@ const DeepLink = (props) => {
       const initAddresses = [];
 
       if (req.details.identity.containsRevocation()) {
-        initAddresses.push(req.details.identity.revocation_authority.toAddress());
+        initAddresses.push(req.details.identity.revocationAuthority.toAddress());
       }
 
       if (req.details.identity.containsRecovery()) {
-        initAddresses.push(req.details.identity.recovery_authority.toAddress());
+        initAddresses.push(req.details.identity.recoveryAuthority.toAddress());
       }
 
       friendlyNames = await getFriendlyNameMap(coinObj.system_id, subjectIdentity, initAddresses);
@@ -267,7 +357,9 @@ const DeepLink = (props) => {
       subjectIdClass.getIdentityAddress(),
       subjectIdTxHex,
       subjectIdentity.blockheight,
-      false
+      false,
+      undefined,
+      req.isTestnet()
     );
 
     if (req.isSigned()) {
@@ -334,9 +426,12 @@ const DeepLink = (props) => {
 
         await validateExpiry();
         setDisplayProps({
-          deeplinkData,
+          detailsBufferString: req.details.toBuffer().toString('hex'),
           sigtime,
           signerFqn: convertFqnToDisplayFormat(signedBy.result.fullyqualifiedname),
+          signerSystemID: coinObj.system_id,
+          signerSystemName: coinObj.id,
+          signerIdentityID: signingIAddr,
           subjectIdentity,
           identityUpdates: updateIdentityTx.identity.toJson(),
           updateIdTxHex: updateIdentityTx.hex,
@@ -432,9 +527,14 @@ const DeepLink = (props) => {
 
   const processDeeplink = async () => {
     try {
+      assertExperimentalDeeplinkAllowed(deeplinkId, store.getState());
+
       switch (deeplinkId) {
         case primitives.VERUSPAY_INVOICE_VDXF_KEY.vdxfid:
           await processVerusPayInvoice();
+          break;
+        case primitives.GENERIC_REQUEST_DEEPLINK_VDXF_KEY.vdxfid:
+          await processGenericRequest();
           break;
         case primitives.LOGIN_CONSENT_REQUEST_VDXF_KEY.vdxfid:
           await processLoginConsentRequest();
@@ -459,6 +559,50 @@ const DeepLink = (props) => {
     processDeeplink()
   }, [])
 
+  useEffect(() => {
+    if (signedIn && waitingForSignin) {
+      setWaitingForSignin(false);
+      setAuthModalOpened(false);
+      processDeeplink();
+    }
+  }, [signedIn, waitingForSignin]);
+
+  useEffect(() => {
+    if (
+      waitingForSignin &&
+      !authModalOpened &&
+      sendModalVisible &&
+      sendModalType === AUTHENTICATE_USER_SEND_MODAL
+    ) {
+      setAuthModalOpened(true);
+    }
+  }, [waitingForSignin, authModalOpened, sendModalVisible, sendModalType]);
+
+  useEffect(() => {
+    if (authModalOpened && !hasAuthenticatedSession && waitingForSignin) {
+      const authModalClosed =
+        !alertActive &&
+        (
+          sendModalType !== AUTHENTICATE_USER_SEND_MODAL ||
+          !sendModalVisible
+        );
+
+      if (authModalClosed) {
+        setWaitingForSignin(false);
+        setAuthModalOpened(false);
+        createAlert('Error', 'You must be signed in to verify this deeplink request.');
+        cancel();
+      }
+    }
+  }, [
+    alertActive,
+    authModalOpened,
+    hasAuthenticatedSession,
+    waitingForSignin,
+    sendModalVisible,
+    sendModalType,
+  ]);
+
   const screens = {
     [LOGIN_CONSENT_INFO]: () => (
       <LoginRequestInfo
@@ -478,6 +622,14 @@ const DeepLink = (props) => {
     ),
     [IDENTITY_UPDATE_REQUEST_INFO]: () => (
       <IdentityUpdateRequestInfo
+        {...displayProps}
+        cancel={cancel}
+        setLoading={setLoading}
+        navigation={props.navigation}
+      />
+    ),
+    [GENERIC_REQUEST]: () => (
+      <GenericRequestHome
         {...displayProps}
         cancel={cancel}
         setLoading={setLoading}

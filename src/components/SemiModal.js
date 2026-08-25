@@ -1,17 +1,22 @@
 /*
-  This component creates a modal that covers half of 
-  the screen, while darkening the content behind it
+  SemiModal
+  - 2026-01-12: Added an optional standardized sheet header (centered title + top-right X
+    in a light grey circle) to replace ad-hoc blue "Close" text buttons across sheets.
+    Header is opt-in via `title`/`showHeader` to avoid breaking existing custom layouts.
 */
 
 import React, { Component } from "react";
 import {
   View,
+  Text,
   Animated,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  TouchableOpacity
 } from "react-native";
 import Colors from "../globals/colors";
 import Styles from "../styles/index";
 import Modal from './Modal'
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 class SemiModal extends Component {
   constructor(props) {
@@ -48,6 +53,18 @@ class SemiModal extends Component {
 
   render() {
     const flexHeight = this.props.flexHeight != null ? this.props.flexHeight : 1
+    const showHeader = this.props.showHeader != null
+      ? this.props.showHeader
+      : this.props.title != null;
+
+    const closeDisabled = !!this.props.closeDisabled;
+    const onRequestClose = this.props.onRequestClose;
+    const effectiveOnRequestClose = closeDisabled
+      ? () => {}
+      : onRequestClose;
+
+    // Header layout uses a fixed-size right action so the title stays centered.
+    const closeButtonSize = 34;
 
     return (
       <React.Fragment>
@@ -65,10 +82,10 @@ class SemiModal extends Component {
           animationType={this.props.animationType}
           transparent={true}
           visible={this.props.visible}
-          onRequestClose={this.props.onRequestClose}
-          onDismiss={this.props.onRequestClose}
+          onRequestClose={effectiveOnRequestClose}
+          onDismiss={effectiveOnRequestClose}
         >
-          <TouchableWithoutFeedback onPress={this.props.onRequestClose}>
+          <TouchableWithoutFeedback onPress={effectiveOnRequestClose}>
             <View style={{ flex: 1 }} />
           </TouchableWithoutFeedback>
           <View
@@ -76,12 +93,85 @@ class SemiModal extends Component {
               flex: flexHeight,
               backgroundColor: Colors.secondaryColor,
               borderRadius: 10,
-              paddingTop: 10,
+              paddingTop: showHeader ? 0 : 10,
               ...(this.props.contentContainerStyle
                 ? this.props.contentContainerStyle
                 : {}),
             }}
           >
+            {showHeader && (
+              <View
+                style={{
+                  paddingHorizontal: 12,
+                  paddingTop: 12,
+                  paddingBottom: 12,
+                }}
+              >
+                {/* Centered title (absolute) */}
+                <View
+                  pointerEvents="none"
+                  style={{
+                    position: 'absolute',
+                    left: 12,
+                    right: 12,
+                    top: 12,
+                    bottom: 12,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {typeof this.props.title === 'string' ? (
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: '600',
+                        color: '#1A1A1A',
+                      }}
+                      numberOfLines={1}
+                    >
+                      {this.props.title}
+                    </Text>
+                  ) : (
+                    this.props.title
+                  )}
+                </View>
+
+                {/* Left + Right actions */}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <View style={{ minWidth: closeButtonSize, minHeight: closeButtonSize }}>
+                    {this.props.headerLeft != null ? this.props.headerLeft : null}
+                  </View>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={this.props.closeAccessibilityLabel || 'Close'}
+                    onPress={closeDisabled ? undefined : onRequestClose}
+                    activeOpacity={0.7}
+                    disabled={closeDisabled}
+                    style={{
+                      width: closeButtonSize,
+                      height: closeButtonSize,
+                      borderRadius: closeButtonSize / 2,
+                      backgroundColor: '#EEF0F3',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: closeDisabled ? 0.5 : 1,
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="close"
+                      size={18}
+                      color="#111"
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
             {this.props.children}
           </View>
         </Modal>

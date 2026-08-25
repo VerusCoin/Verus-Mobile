@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, View, TouchableOpacity, Alert } from "react-native";
-import { Button, List, Divider, Text } from "react-native-paper";
+import { ActivityIndicator, Button, List, Divider, Text } from "react-native-paper";
 import { useDispatch, useSelector } from 'react-redux'
 import { expireCoinData } from "../../../../actions/actionCreators";
 import { traditionalCryptoSend } from "../../../../actions/actionDispatchers";
 import { copyToClipboard } from "../../../../utils/clipboard/clipboard";
 import { USD } from "../../../../utils/constants/currencies";
-import { API_GET_BALANCES, API_GET_FIATPRICE, API_GET_TRANSACTIONS } from "../../../../utils/constants/intervalConstants";
+import { API_GET_BALANCES, API_GET_FIATPRICE, API_GET_TRANSACTIONS, ELECTRUM } from "../../../../utils/constants/intervalConstants";
 import { SEND_MODAL_FORM_STEP_FORM, SEND_MODAL_FORM_STEP_RESULT } from "../../../../utils/constants/sendModal";
 import { truncateDecimal } from "../../../../utils/math";
 import Colors from "../../../../globals/colors";
@@ -17,6 +17,12 @@ import { useObjectSelector } from "../../../../hooks/useObjectSelector";
 function TraditionalCryptoSendConfirm({ navigation, route, setLoading, setModalHeight, setPreventExit }) {
   const [params, setParams] = useState(route.params.txConfirmation);
   const [confirmationFields, setConfirmationFields] = useState([]);
+  const [broadcastStatusUnknown, setBroadcastStatusUnknown] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [broadcastLoadingText, setBroadcastLoadingText] = useState(
+    'Sending transaction...',
+  );
+  const submissionInFlight = useRef(false);
   const dispatch = useDispatch();
 
   const balance_channel = useObjectSelector(state => state.sendModal.subWallet.api_channels[API_GET_BALANCES]);
@@ -175,7 +181,18 @@ function TraditionalCryptoSendConfirm({ navigation, route, setLoading, setModalH
   }
 
   const submitData = async () => {
-    await setLoading(true)
+    if (submissionInFlight.current || broadcastStatusUnknown) return;
+    submissionInFlight.current = true;
+
+    const isElectrumChannel =
+      params.channel?.split('.')[0] === ELECTRUM;
+
+    setBroadcastLoadingText(
+      isElectrumChannel
+        ? 'Broadcasting transaction...'
+        : 'Sending transaction...',
+    )
+    setSubmitting(true)
     await setPreventExit(true)
 
     const {
@@ -189,27 +206,80 @@ function TraditionalCryptoSendConfirm({ navigation, route, setLoading, setModalH
     } = params;
 
     try {
+      const reconciliationOptions = isElectrumChannel
+        ? {
+            onReconciliationStatus: ({ phase, delayMs }) => {
+              if (phase === 'waiting') {
+                const delaySeconds = Math.ceil(delayMs / 1000);
+                setBroadcastLoadingText(
+                  `The broadcast response is unclear. Waiting ${delaySeconds} seconds for network propagation before checking the exact signed transaction ID...`,
+                );
+              } else if (phase === 'checking') {
+                setBroadcastLoadingText(
+                  'Checking the network for the exact signed transaction ID...',
+                );
+              }
+            },
+          }
+        : null;
+      const sendPassthrough = reconciliationOptions == null
+        ? fullResult
+        : {
+            ...fullResult,
+            reconciliationOptions,
+          };
       const res = await traditionalCryptoSend(coinObj, channel, toAddress, BigNumber(
         truncateDecimal(
           finalTxAmount,
           coinObj.decimals
         )
-      ), memo, tradSendFee, false, fullResult)
+      ), memo, tradSendFee, false, sendPassthrough)
 
       if (res.txid == null) throw new Error("Transaction failed.")
   
       navigation.navigate(SEND_MODAL_FORM_STEP_RESULT, { txResult: res });
     } catch(e) {
-      Alert.alert("Error", e.message)
+      if (e.ambiguousBroadcast === true) {
+        setBroadcastStatusUnknown(true);
+        Alert.alert(
+          "Broadcast status unknown",
+          `${e.message}${
+            e.localTxid
+              ? `\n\nLocal transaction ID: ${e.localTxid}`
+              : ''
+          }`,
+        );
+      } else {
+        Alert.alert("Error", e.message)
+      }
+    } finally {
+      submissionInFlight.current = false;
+      dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE));
+      dispatch(expireCoinData(coinObj.id, API_GET_TRANSACTIONS));
+      dispatch(expireCoinData(coinObj.id, API_GET_BALANCES));
+
+      await setPreventExit(false)
+      setSubmitting(false)
     }
-
-    dispatch(expireCoinData(coinObj.id, API_GET_FIATPRICE));
-    dispatch(expireCoinData(coinObj.id, API_GET_TRANSACTIONS));
-    dispatch(expireCoinData(coinObj.id, API_GET_BALANCES));
-
-    setPreventExit(false)
-    setLoading(false)
   };
+
+  if (submitting) {
+    return (
+      <View style={{ ...Styles.focalCenter, paddingHorizontal: 32 }}>
+        <ActivityIndicator animating color={Colors.primaryColor} size="large" />
+        <Text
+          style={{
+            color: Colors.verusDarkGray,
+            fontSize: 16,
+            marginTop: 24,
+            textAlign: "center",
+          }}
+        >
+          {broadcastLoadingText}
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={{ ...Styles.fullWidth, ...Styles.backgroundColorWhite }}>
@@ -266,9 +336,10 @@ function TraditionalCryptoSendConfirm({ navigation, route, setLoading, setModalH
           style={{ width: 148 }}
           labelStyle={{ color: Colors.secondaryColor }}
           onPress={submitData}
+          disabled={broadcastStatusUnknown}
           mode="contained"
         >
-          Send
+          {broadcastStatusUnknown ? 'Status unknown' : 'Send'}
         </Button>
       </View>
     </ScrollView>

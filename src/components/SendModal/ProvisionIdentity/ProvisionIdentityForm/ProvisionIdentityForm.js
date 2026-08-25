@@ -1,6 +1,7 @@
 import { fromBase58Check } from "@bitgo/utxo-lib/dist/src/address";
 import React, { useState, useEffect } from "react";
 import { primitives } from "verusid-ts-client";
+import { ProvisionIdentityDetails } from "verus-typescript-primitives";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
 import { getIdentity } from "../../../../utils/api/channels/verusid/callCreators";
 import {
@@ -29,15 +30,57 @@ const ProvisionIdentityForm = (props) => {
       : [],
   );
 
-  const hasProvisioningInfo =
-    sendModal.data.request != null &&
-    sendModal.data.request.challenge.provisioning_info != null;
+  const provisioningDetailsBufferString = sendModal.data.provisioningDetailsBufferString;
+
+  const provisioningInfo = React.useMemo(() => {
+    if (provisioningDetailsBufferString) {
+      const details = new ProvisionIdentityDetails();
+      details.fromBuffer(Buffer.from(provisioningDetailsBufferString, 'hex'), 0);
+      const info = [];
+
+      if (details.uri) {
+        info.push({
+          vdxfkey: primitives.LOGIN_CONSENT_ID_PROVISIONING_WEBHOOK_VDXF_KEY.vdxfid,
+          data: details.uri.getUriString()
+        });
+      }
+
+      if (details.systemID) {
+        info.push({
+          vdxfkey: primitives.ID_SYSTEMID_VDXF_KEY.vdxfid,
+          data: details.systemID.toAddress()
+        });
+      }
+
+      if (details.parentID) {
+        info.push({
+          vdxfkey: primitives.ID_PARENT_VDXF_KEY.vdxfid,
+          data: details.parentID.toAddress()
+        });
+      }
+
+      if (details.identityID) {
+        info.push({
+          vdxfkey: primitives.ID_ADDRESS_VDXF_KEY.vdxfid,
+          data: details.identityID.toAddress()
+        });
+      }
+
+      return info;
+    }
+
+    if (sendModal.data.request != null && sendModal.data.request.challenge.provisioning_info != null) {
+      return sendModal.data.request.challenge.provisioning_info;
+    }
+
+    return [];
+  }, [provisioningDetailsBufferString, sendModal.data.request]);
+
+  const hasProvisioningInfo = provisioningInfo.length > 0;
 
   const [state, setState] = useState({
     friendlyNameMap: {},
-    provisioningInfo: hasProvisioningInfo
-      ? sendModal.data.request.challenge.provisioning_info
-      : [],
+    provisioningInfo: hasProvisioningInfo ? provisioningInfo : [],
     provAddress: null,
     provSystemId: null,
     provFqn: null,
@@ -53,7 +96,7 @@ const ProvisionIdentityForm = (props) => {
       if (!hasProvisioningInfo) return;
   
       const findProvisioningInfo = (key) =>
-        sendModal.data.request.challenge.provisioning_info.find(
+        provisioningInfo.find(
           (x) => x.vdxfkey === key.vdxfid
         );
   
@@ -124,8 +167,22 @@ const ProvisionIdentityForm = (props) => {
     initializeState();    
   }, []);  
   
-  const formHasError = () => {
-    const identity = sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD]?.trim() || '';
+  const trimProvisionIdentityInput = () => {
+    const currentIdentity =
+      sendModal.data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD] || '';
+    const trimmedIdentity = currentIdentity.trim();
+
+    if (trimmedIdentity !== currentIdentity) {
+      props.updateSendFormData(
+        SEND_MODAL_IDENTITY_TO_PROVISION_FIELD,
+        trimmedIdentity,
+      );
+    }
+
+    return trimmedIdentity;
+  };
+
+  const formHasError = identity => {
   
     if (!identity) {
       createAlert('Required Field', 'Identity is a required field.');
@@ -156,12 +213,13 @@ const ProvisionIdentityForm = (props) => {
   };
 
   const submitData = async () => {
-    if (formHasError()) return;
+    const identity = trimProvisionIdentityInput();
+
+    if (formHasError(identity)) return;
   
     props.setLoading(true);
   
-    const { coinObj, data } = sendModal;
-    const identity = data[SEND_MODAL_IDENTITY_TO_PROVISION_FIELD];
+    const { coinObj } = sendModal;
 
     let formattedId;
 
@@ -229,6 +287,7 @@ const ProvisionIdentityForm = (props) => {
               );
             }
           }}
+          onBlur={trimProvisionIdentityInput}
           autoCapitalize="none"
           autoCorrect={false}
         />

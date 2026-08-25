@@ -7,13 +7,12 @@
   login, creates a new update heartbeat interval.
 */
 
-import React, {useEffect} from 'react';
-import {View, ScrollView, Dimensions, SafeAreaView} from 'react-native';
-import {Button, Text} from 'react-native-paper';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {Alert, View, Dimensions, SafeAreaView} from 'react-native';
+import {Text} from 'react-native-paper';
 import Styles from '../../styles/index';
 import Colors from '../../globals/colors';
 import {VerusLogo} from '../../images/customIcons';
-import {TouchableOpacity} from 'react-native';
 import {openAuthenticateUserModal} from '../../actions/actions/sendModal/dispatchers/sendModal';
 import {
   SEND_MODAL_FORM_STEP_CONFIRM,
@@ -24,6 +23,12 @@ import {useSelector} from 'react-redux';
 import TallButton from '../../components/LargerButton';
 import SignedOutDropdown from '../SignedOutDropdown/SignedOutDropdown';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
+import { selectHasAuthenticatedSession } from '../../selectors/authentication';
+import {readDeeplinkFromNfc} from '../../actions/actionDispatchers';
+import {
+  clearPendingDeeplinkRequests,
+  getPendingDeeplinkRequestCount,
+} from '../../utils/deeplink/pendingDeeplinkStorage';
 
 const {height} = Dimensions.get('window');
 
@@ -39,8 +44,15 @@ const Login = props => {
   );
   
   const accounts = useObjectSelector(state => state.authentication.accounts);
+  const hasAuthenticatedSession = useSelector(selectHasAuthenticatedSession);
+  const [pendingRequestCount, setPendingRequestCount] = useState(0);
+  const autoOpenTimeoutRef = useRef(null);
 
-  openAuthModal = ignoreDefault => {
+  const openAuthModal = ignoreDefault => {
+    if (hasAuthenticatedSession) {
+      return;
+    }
+
     if (ignoreDefault) {
       openAuthenticateUserModal();
     } else {
@@ -58,28 +70,88 @@ const Login = props => {
   };
 
   useEffect(() => {
+    if (autoOpenTimeoutRef.current != null) {
+      clearTimeout(autoOpenTimeoutRef.current);
+      autoOpenTimeoutRef.current = null;
+    }
+
     if (
+      !hasAuthenticatedSession &&
       !authModalUsed &&
       defaultAccount != null &&
       accounts.find(x => x.accountHash === defaultAccount) != null
     ) {
-      setTimeout(() => {
+      autoOpenTimeoutRef.current = setTimeout(() => {
         openAuthModal();
       }, 700);
     }
-  }, []);
 
-  handleAddUser = () => {
+    return () => {
+      if (autoOpenTimeoutRef.current != null) {
+        clearTimeout(autoOpenTimeoutRef.current);
+        autoOpenTimeoutRef.current = null;
+      }
+    };
+  }, [accounts, authModalUsed, defaultAccount, hasAuthenticatedSession]);
+
+  const handleAddUser = () => {
     props.navigation.navigate('CreateProfile');
   };
 
-  handleRevokeRecover = () => {
+  const handleRevokeRecover = () => {
     props.navigation.navigate('RevokeRecover');
-  }
+  };
 
-  handleRecoverSeed = () => {
+  const handleRecoverSeed = () => {
     props.navigation.navigate('RecoverSeeds');
   };
+
+  const handlePendingRequests = () => {
+    props.navigation.navigate('ProvisioningDeeplinks');
+  };
+
+  const handleClearPendingRequests = () => {
+    Alert.alert(
+      'Clear pending requests?',
+      'This will remove saved pending deeplink requests from this device.',
+      [
+        {text: 'Cancel', style: 'cancel'},
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await clearPendingDeeplinkRequests();
+              setPendingRequestCount(0);
+            } catch (e) {
+              console.warn('Unable to clear pending deeplink requests', e);
+            }
+          },
+        },
+      ],
+      {cancelable: true},
+    );
+  };
+
+  const loadPendingRequestCount = useCallback(async () => {
+    try {
+      setPendingRequestCount(await getPendingDeeplinkRequestCount());
+    } catch (e) {
+      console.warn('Unable to load pending deeplink request count', e);
+      setPendingRequestCount(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPendingRequestCount();
+
+    const unsubscribe = props.navigation.addListener(
+      'focus',
+      loadPendingRequestCount,
+    );
+
+    return unsubscribe;
+  }, [loadPendingRequestCount, props.navigation]);
 
   return (
     <SafeAreaView
@@ -87,10 +159,22 @@ const Login = props => {
         backgroundColor: Colors.secondaryColor,
         ...Styles.focalCenter,
       }}>
-      <View style={{ position: "absolute", width: "100%", height: "100%" }}>
+      <View
+        pointerEvents="box-none"
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          zIndex: 20,
+          elevation: 20,
+        }}>
         {!modalVisible && <SignedOutDropdown
           handleRecoverSeed={() => handleRecoverSeed()}
           handleRevokeRecover={() => handleRevokeRecover()}
+          handlePendingRequests={() => handlePendingRequests()}
+          handleClearPendingRequests={() => handleClearPendingRequests()}
+          handleReadDeeplinkFromNfc={readDeeplinkFromNfc}
+          pendingRequestCount={pendingRequestCount}
           hasAccount={true}
         />}
       </View>

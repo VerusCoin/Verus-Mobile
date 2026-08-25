@@ -1,6 +1,6 @@
 import React from 'react';
 import {SafeAreaView, View} from 'react-native';
-import {Portal, Text} from 'react-native-paper';
+import {Button, Portal, Text} from 'react-native-paper';
 import {useSelector} from 'react-redux';
 import Colors from '../../globals/colors';
 import styles from '../../styles';
@@ -9,7 +9,9 @@ import SemiModal from '../SemiModal';
 import { useObjectSelector } from '../../hooks/useObjectSelector';
 
 export default function LoadingModal(props) {
-  const {visible, message, height} = useObjectSelector(state => state.loadingModal);
+  const {visible, message, height, onCancel, cancelLabel} = useObjectSelector(
+    state => state.loadingModal,
+  );
 
   return (
     <Portal>
@@ -39,6 +41,15 @@ export default function LoadingModal(props) {
               }}>
               {message}
             </Text>
+          )}
+          {onCancel != null && (
+            <Button
+              mode="text"
+              onPress={onCancel}
+              textColor={Colors.primaryColor}
+              style={{marginTop: 16}}>
+              {cancelLabel}
+            </Button>
           )}
         </SafeAreaView>
       </SemiModal>

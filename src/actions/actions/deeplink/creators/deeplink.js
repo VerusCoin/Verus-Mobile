@@ -1,16 +1,21 @@
 import { SET_DEEPLINK_DATA, SET_DEEPLINK_URL } from "../../../../utils/constants/storeType"
 
-export const setDeeplinkUrl = (url) => {
+export const setDeeplinkUrl = (url, passthrough = null) => {
   return {
     type: SET_DEEPLINK_URL,
-    payload: { url }
+    payload: { url, passthrough }
   }
 }
 
-export const setDeeplinkData = (id, data) => {
+export const setDeeplinkData = (
+  id,
+  data,
+  fromService = null,
+  passthrough = null,
+) => {
   return {
     type: SET_DEEPLINK_DATA,
-    payload: { id, data }
+    payload: { id, data, fromService, passthrough }
   }
 }
 

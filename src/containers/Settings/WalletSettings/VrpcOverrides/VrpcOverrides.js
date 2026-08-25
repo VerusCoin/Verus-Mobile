@@ -7,6 +7,7 @@ import { coinsList } from "../../../../utils/CoinData/CoinsList";
 import { VerusdRpcInterface } from "verusd-rpc-ts-client";
 import { timeout } from "../../../../utils/promises";
 import { createAlert } from "../../../../actions/actions/alert/dispatchers/alert";
+import { getAuthDataForUrl } from "../../../../utils/url";
 
 const EDIT = 'edit'
 const RESET_TO_DEFAULT = 'default'
@@ -131,7 +132,8 @@ class VrpcOverrides extends Component {
         loading: true
       }, async () => {
         let vrpcOverrides = this.state.vrpcOverridesSettings.vrpcOverrides ? {...this.state.vrpcOverridesSettings.vrpcOverrides} : {};
-        const testInterface = new VerusdRpcInterface("", server);
+        const authData = getAuthDataForUrl(server);
+        const testInterface = new VerusdRpcInterface("", server, undefined, undefined, authData);
         const testResult = await timeout(10000, testInterface.getInfo());
 
         if (testResult.result && (testResult.result.chainid === systemid || !systemid)) {

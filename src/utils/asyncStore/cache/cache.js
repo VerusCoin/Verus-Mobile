@@ -36,7 +36,7 @@ export const clearCache = () => {
     clearCachedVersions(),
     clearCachedHeaders(),
     clearCachedEthTxReceipts(),
-    clearCachedVrpcResponses
+    clearCachedVrpcResponses()
   ]).catch((e) => {
     throw e;
   });

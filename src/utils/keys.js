@@ -5,8 +5,8 @@ import {
   seedToPriv
 } from './agama-wallet-lib/keys';
 import { ETH, ERC20, DLIGHT_PRIVATE, ELECTRUM, WYRE_SERVICE } from './constants/intervalConstants';
+import { Tools, SaplingSpendingKey } from 'react-native-verus'
 import { SigningKey, ethers } from 'ethers';
-import VerusLightClient from 'react-native-verus-light-client'
 import {
   KEY_DERIVATION_VERSION,
 } from "../../env/index";
@@ -20,7 +20,7 @@ const deriveLightwalletdKeyPair = async (seed) => {
   return {
     pubKey: null,
     privKey: spendingKey,
-    viewingKey: await VerusLightClient.deriveViewingKey(spendingKey),
+    viewingKey: null, // no longer needed since all functions now take spendkey/seed, and derive view internally
     addresses: [],
   };
 };
@@ -108,29 +108,30 @@ export const deriveKeyPairV1 = async (seed, coinObj, channel) => {
 export const deriveKeypairV0 = async (seed, coinObj, channel) => {
   if (channel === DLIGHT_PRIVATE) {
     const spendingKey = await parseDlightSeed(seed)
+    const viewKey = await Tools.deriveViewingKey(seed);
 
     return {
       pubKey: null,
       privKey: spendingKey,
-      viewingKey: await VerusLightClient.deriveViewingKey(spendingKey),
+      viewingKey: viewKey,
       addresses: [],
     };
   } else {
     let isWif = false;
     let _seedToWif;
     let keyObj = {};
-  
+
     try {
       bs58check.decode(seed);
       isWif = true;
     } catch (e) {}
-  
+
     if (isWif) {
       _seedToWif = wifToWif(seed, networks[coinObj.bitgojs_network_key]);
     } else {
       _seedToWif = seedToWif(seed, networks[coinObj.bitgojs_network_key], true);
     }
-  
+
     keyObj = {
       pubKey: _seedToWif.pubHex,
       privKey: channel === ETH || channel === ERC20 ? seedToPriv(_seedToWif.priv, 'eth') : _seedToWif.priv,
@@ -140,7 +141,7 @@ export const deriveKeypairV0 = async (seed, coinObj, channel) => {
           : _seedToWif.pub,
       ],
     };
-  
+
     return keyObj;
   }
 }
@@ -158,20 +159,31 @@ export const deriveKeyPair = async (seed, coinObj, channel, version = KEY_DERIVA
 }
 
 export const isDlightSpendingKey = (seed) => {
-  return seed.startsWith('secret-extended-key-main')
+  return (seed.startsWith('secret-extended-key-main'))
 }
 
 export const parseDlightSeed = async (seed) => {
-  if (isDlightSpendingKey(seed)) return seed
-  
   try {
-    const keys = await VerusLightClient.deriveSpendingKeys(seed, true, 1)
-    return keys[0]
-  } catch(e) { throw e }
+    if (isDlightSpendingKey(seed)) {
+      await Tools.bech32Decode(seed)
+      return seed;
+    }
+
+    if (isSeedPhrase(seed)) {
+      const saplingSpendKey = await Tools.deriveSaplingSpendingKey(seed)
+      return saplingSpendKey.extsk
+    }
+    // if we got here, it's neither a valid bech32-encoded key, nor a mnemonic.
+    // must be invalid input or a hexstring. we don't support hex equivalently on ios/android yet
+    // so we use a soft disable here if it's anything but a seedPhrase
+    throw new Error("Invalid input")
+  } catch (e) {
+    throw e
+  }
 }
 
-export const dlightSeedToBytes = (seed) => {
-  return VerusLightClient.deterministicSeedBytes(seed)
+export const dlightSeedToBytes = async (seed) => {
+  return await Tools.deterministicSeedBytes(seed);
 }
 
 export const isSeedPhrase = (seed, minWordLength = 12) => {

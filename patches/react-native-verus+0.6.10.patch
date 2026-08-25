@@ -1,0 +1,15 @@
+diff --git a/node_modules/react-native-verus/package.json b/node_modules/react-native-verus/package.json
+index 3cd63d0..75d30d0 100644
+--- a/node_modules/react-native-verus/package.json
++++ b/node_modules/react-native-verus/package.json
+@@ -18,8 +18,8 @@
+     "Matthew Piché <matthew@edge.app>",
+     "Kevin Gorham <kevin.gorham@z.cash>"
+   ],
+-  "main": "lib/veruslightclient.rn.js",
+-  "types": "lib/src/react-native.d.ts",
++  "main": "src/react-native.ts",
++  "types": "src/react-native.ts",
+   "files": [
+     "/android/build.gradle",
+     "/android/src/",

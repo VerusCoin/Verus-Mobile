@@ -50,6 +50,11 @@ class SecureLoading extends Component {
   componentDidMount() {
     const { route } = this.props
     const data = route.params ? route.params.data : null
+    const sessionScope = {
+      sessionScoped: true,
+      accountHash: this.props.activeAccount?.accountHash || null,
+      sessionEpoch: this.props.sessionEpoch,
+    };
 
     this.timeoutTimer = setTimeout(() => {
       this.setState({status: 'timeout'})
@@ -90,7 +95,7 @@ class SecureLoading extends Component {
                         this.state.screen
                       );
                     } else {
-                      this.props.dispatch(signOut());
+                      this.props.dispatch(signOut(sessionScope));
                     }
                   });
                 }
@@ -99,14 +104,12 @@ class SecureLoading extends Component {
                 clearTimeout(this.timeoutTimer);
                 if (this.state.status !== "timeout") {
                   this.setState({ status: "error" }, () => {
-                    if (this.state.dispatchResult) this.props.dispatch(res);
-
                     if (this.state.route) {
                       this.props.dispatch(clearSecureLoadingData())
                       this.props.dispatch(setSecureLoadingData(this.state.errorData, false))
                       this.resetToScreen(this.state.route, this.state.screen, this.state.errorData);
                     } else {
-                      this.props.dispatch(signOut());
+                      this.props.dispatch(signOut(sessionScope));
                     }
                   });
                 }
@@ -183,4 +186,9 @@ class SecureLoading extends Component {
   }
 }
 
-export default connect()(SecureLoading);
+const mapStateToProps = state => ({
+  activeAccount: state.authentication.activeAccount,
+  sessionEpoch: state.authentication.sessionEpoch,
+});
+
+export default connect(mapStateToProps)(SecureLoading);

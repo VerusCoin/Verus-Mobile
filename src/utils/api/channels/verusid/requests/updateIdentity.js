@@ -8,7 +8,7 @@ import { I_ADDRESS_VERSION } from "../../../../constants/constants";
 export const extractIdOutputFromTx = (rawIdTx, vout = null) => {
   const identityTransaction = Transaction.fromHex(rawIdTx, networks.verus);
 
-  for (const i = vout != null ? vout : 0; i < identityTransaction.outs.length; i++) {
+  for (let i = vout != null ? vout : 0; i < identityTransaction.outs.length; i++) {
     if (vout != null && i > vout) break;
 
     const output = identityTransaction.outs[i];
@@ -50,6 +50,12 @@ export const getUpdatableIdentity = async (systemId, getIdentityResult) => {
     const rawIdTx = rawIdTxRes.result;
     const identity = extractIdOutputFromTx(rawIdTx, vout);
 
+    const identityAddress = getIdentityResult.identity.identityaddress;
+
+    if (identityAddress !== identity.getIdentityAddress()) {
+      throw new Error("Identity from rawtx does not match intended identity");
+    }
+
     return { tx: rawIdTx, identity };
   }
 }
@@ -65,11 +71,74 @@ export const getUpdatableIdentity = async (systemId, getIdentityResult) => {
  * @param {boolean} fundTransaction Whether or not to fund the transaction that gets returned
  * @returns 
  */
-export const createUpdateIdentityTx = async (systemId, identity, changeAaddr, rawIdTx, idHeight, fundTransaction = true, updateIdentityTransactionHex) => {
+export const createUpdateIdentityTx = async (systemId, identity, changeAaddr, rawIdTx, idHeight, fundTransaction = true, updateIdentityTransactionHex, isTestnet) => {
   const verusid = VrpcProvider.getVerusIdInterface(systemId);
   const utxos = fundTransaction ? await getSpendableUtxos(systemId, systemId, [changeAaddr]) : undefined;
 
-  return verusid.createUpdateIdentityTransaction(identity, changeAaddr, rawIdTx, idHeight, utxos, undefined, undefined, undefined, undefined, updateIdentityTransactionHex);
+  return verusid.createUpdateIdentityTransaction(identity, changeAaddr, rawIdTx, idHeight, utxos, undefined, undefined, undefined, undefined, updateIdentityTransactionHex, true, isTestnet);
+}
+
+export const createUpdateIdentityTxWithUtxos = async ({
+  systemId,
+  identity,
+  changeAaddr,
+  rawIdTx,
+  idHeight,
+  utxos,
+  maxFee,
+  expectedIdentityPrimaryAddress,
+  updateIdentityTransactionHex,
+  isTestnet,
+}) => {
+  const verusid = VrpcProvider.getVerusIdInterface(systemId);
+
+  return verusid.createUpdateIdentityTransaction(
+    identity,
+    changeAaddr,
+    rawIdTx,
+    idHeight,
+    utxos,
+    undefined,
+    maxFee,
+    undefined,
+    undefined,
+    updateIdentityTransactionHex,
+    true,
+    isTestnet,
+  );
+}
+
+export const createUpdateIdentityWithCurrencyTransferTx = async ({
+  systemId,
+  identity,
+  changeAaddr,
+  rawIdTx,
+  idHeight,
+  currencyTransferOutputs,
+  utxos,
+  maxFee,
+  expectedIdentityPrimaryAddress,
+  updateIdentityTransactionHex,
+  isTestnet,
+}) => {
+  const verusid = VrpcProvider.getVerusIdInterface(systemId);
+
+  return verusid.createUpdateIdentityWithCurrencyTransferTransaction(
+    identity,
+    changeAaddr,
+    rawIdTx,
+    idHeight,
+    currencyTransferOutputs,
+    utxos,
+    {
+      chainIAddr: systemId,
+      maxFee,
+      updateIdentityTransactionHex,
+      parseVdxfObjects: true,
+      isTestnet,
+      expectedIdentityPrimaryAddress,
+    },
+  );
 }
 
 export const createUpdateIdentityResponse = async (systemId, signerId, reqId, txid, primAddrWif) => {
@@ -143,9 +212,14 @@ export const createRecoverIdentityTx = async (systemId, iAddr, recoveryAuthority
   }
 }
 
-export const pushUpdateIdentityTx = (systemId, txHex, inputs, keys) => {
+export const signUpdateIdentityTx = (systemId, txHex, inputs, keys) => {
   const verusid = VrpcProvider.getVerusIdInterface(systemId);
-  const signedTx = verusid.signUpdateIdentityTransaction(txHex, inputs, keys);
+
+  return verusid.signUpdateIdentityTransaction(txHex, inputs, keys);
+}
+
+export const pushUpdateIdentityTx = (systemId, txHex, inputs, keys) => {
+  const signedTx = signUpdateIdentityTx(systemId, txHex, inputs, keys);
 
   return sendRawTransaction(systemId, signedTx);
 }

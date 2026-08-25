@@ -11,9 +11,13 @@ export const extractVerusPayInvoiceSig = (coinObj, inv) => {
     throw new Error("Expected VerusPayInvoice, got " + inv)
   }
 
+  return extractVerusPayInvoiceFromSigAndSigner(coinObj, inv.signing_id, inv.signature.signature)
+};
+
+export const extractVerusPayInvoiceFromSigAndSigner = (coinObj, signerID, sigAsVch) => {
   return getSignatureInfo(
     coinObj.system_id,
-    inv.signing_id,
-    inv.signature.signature
+    signerID,
+    sigAsVch
   );
 };

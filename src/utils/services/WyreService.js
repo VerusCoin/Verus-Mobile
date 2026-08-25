@@ -189,7 +189,8 @@ class WyreService {
     uris,
     documentType,
     documentSubTypes,
-    format = "image/jpeg"
+    format = "image/jpeg",
+    requestContext
   ) => {
     return await WyreService.formatCall(async () => {
       let index = 0;
@@ -225,14 +226,25 @@ class WyreService {
           .filter((x) => !beforeDocument.value.includes(x))
           .concat(beforeDocument.value.filter((x) => !afterDocument.value.includes(x)));
 
-        await mapWyreDocumentIds(field, submittedDocumentDifference, uris, hashes);
+        await mapWyreDocumentIds(
+          field,
+          submittedDocumentDifference,
+          uris,
+          hashes,
+          requestContext,
+        );
       }
 
       return res;
     }, true);
   };
 
-  followupPaymentMethod = async (paymentMethod, uris, format = "image/jpeg") => {
+  followupPaymentMethod = async (
+    paymentMethod,
+    uris,
+    format = "image/jpeg",
+    requestContext,
+  ) => {
     return await WyreService.formatCall(async () => {
       let index = 0;
       let hashes = [];
@@ -257,7 +269,13 @@ class WyreService {
           .filter((x) => !beforeDocuments.includes(x))
           .concat(beforeDocuments.filter((x) => !afterDocuments.includes(x)));
 
-        await mapWyreDocumentIds(paymentMethod.id, submittedDocumentDifference, uris, hashes);
+        await mapWyreDocumentIds(
+          paymentMethod.id,
+          submittedDocumentDifference,
+          uris,
+          hashes,
+          requestContext,
+        );
       }
 
       return res;

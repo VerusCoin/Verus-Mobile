@@ -17,6 +17,41 @@ import { isJson } from '../../../objectManip'
 import ApiException from '../../errors/apiError';
 import { ELECTRUM } from '../../../constants/intervalConstants'
 import axios from 'axios';
+import { REQUEST_TIMEOUT_MS } from '../../../../../env/index';
+
+export const ELECTRUM_REQUEST_TIMEOUT_CODE = "ELECTRUM_REQUEST_TIMEOUT";
+export const ELECTRUM_AMBIGUOUS_BROADCAST_CODE =
+  "ELECTRUM_AMBIGUOUS_BROADCAST";
+
+const createElectrumTimeoutError = (callType, timeoutMs) => {
+  const error = new Error(
+    `Electrum ${callType} request timed out after ${timeoutMs}ms.`,
+  );
+  error.code = ELECTRUM_REQUEST_TIMEOUT_CODE;
+  error.timedOut = true;
+  return error;
+};
+
+const annotatePostError = (error, callType, requestDispatched) => {
+  const annotatedError =
+    error instanceof Error ? error : new Error(String(error || "Electrum request failed."));
+
+  if (annotatedError.electrumPostError === true) return annotatedError;
+
+  annotatedError.electrumPostError = true;
+  annotatedError.requestDispatched = requestDispatched;
+  annotatedError.ambiguousBroadcast =
+    callType === "pushtx" && requestDispatched;
+  annotatedError.transportCode = annotatedError.code;
+
+  if (annotatedError.ambiguousBroadcast) {
+    annotatedError.code = ELECTRUM_AMBIGUOUS_BROADCAST_CODE;
+  } else if (annotatedError.timedOut) {
+    annotatedError.code = ELECTRUM_REQUEST_TIMEOUT_CODE;
+  }
+
+  return annotatedError;
+};
 
 // This purpose of this method is to take in a list of electrum servers,
 // and use a valid one to call a specified command given a set of parameters
@@ -24,162 +59,317 @@ import axios from 'axios';
 // servers are working by attempting to call getBlockHeight on each of them.
 // It then calls the specified command with the specified params (passed in as an object)
 // on that electrum server with an HTTP get
-export const getElectrum = async (coinObj, callType, params, toSkip) => {
-  const serverList = coinObj.electrum_endpoints
-  const coinID = coinObj.id
-
-  const proxyServer = (await getGoodServer(testProxy, proxyServers)).goodServer
-  let goodServerRes = null
-
-  if (toSkip) {
-    let _serverList = serverList.filter((server) => {
-      return !toSkip.includes(server)
-    })
-
-    goodServerRes = await getGoodServer(testElectrum, _serverList, [
-      proxyServer,
-    ]);
+export const getElectrum = async (
+  coinObj,
+  callType,
+  params,
+  toSkip,
+  timeoutMs = REQUEST_TIMEOUT_MS,
+) => {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    throw new Error("Electrum request timeout must be a positive number.");
   }
 
-  const proxyIndex = serverList.findIndex(server => server.split(":")[0] === proxyServer)
+  const abortController =
+    typeof AbortController === "undefined" ? null : new AbortController();
+  const deadlineRequestOptions = {timeout: timeoutMs};
+  if (abortController != null) {
+    deadlineRequestOptions.signal = abortController.signal;
+  }
+  let deadlineExpired = false;
+  let timeoutId;
+  const timeoutPromise = new Promise((resolve, reject) => {
+    timeoutId = setTimeout(() => {
+      deadlineExpired = true;
+      reject(createElectrumTimeoutError(callType, timeoutMs));
+      if (abortController != null) abortController.abort();
+    }, timeoutMs);
+  });
+  const assertDeadlineActive = () => {
+    if (deadlineExpired) {
+      throw createElectrumTimeoutError(callType, timeoutMs);
+    }
+  };
+  const shouldCancelDiscovery = () => deadlineExpired;
 
-  if (goodServerRes == null) {
-    goodServerRes = await getGoodServer(
-      testElectrum,
-      serverList,
-      [proxyServer],
-      proxyIndex !== -1 ? proxyIndex : null
+  const requestPromise = (async () => {
+    const serverList = coinObj.electrum_endpoints;
+    const coinID = coinObj.id;
+    const proxyServer = (
+      await getGoodServer(
+        testProxy,
+        proxyServers,
+        [],
+        null,
+        deadlineRequestOptions,
+        shouldCancelDiscovery,
+      )
+    ).goodServer;
+    assertDeadlineActive();
+    let goodServerRes = null;
+
+    if (toSkip) {
+      const filteredServerList = serverList.filter(
+        server => !toSkip.includes(server),
+      );
+
+      goodServerRes = await getGoodServer(
+        testElectrum,
+        filteredServerList,
+        [proxyServer],
+        null,
+        deadlineRequestOptions,
+        shouldCancelDiscovery,
+      );
+      assertDeadlineActive();
+    }
+
+    const proxyIndex = serverList.findIndex(
+      server => server.split(":")[0] === proxyServer,
     );
-  }
 
-  let electrumSplit = goodServerRes.goodServer.split(":")
-  let goodServer = {
-    ip: electrumSplit[0],
-    port: electrumSplit[1],
-    proto: electrumSplit[2],
-  }
+    if (goodServerRes == null) {
+      goodServerRes = await getGoodServer(
+        testElectrum,
+        serverList,
+        [proxyServer],
+        proxyIndex !== -1 ? proxyIndex : null,
+        deadlineRequestOptions,
+        shouldCancelDiscovery,
+      );
+      assertDeadlineActive();
+    }
 
-  const resultObj = { goodServer: goodServer, blockHeight: goodServerRes.testResult.result }
-  
-  let eServer = resultObj.goodServer
+    const electrumSplit = goodServerRes.goodServer.split(":");
+    const goodServer = {
+      ip: electrumSplit[0],
+      port: electrumSplit[1],
+      proto: electrumSplit[2],
+    };
+    const resultObj = {
+      goodServer,
+      blockHeight: goodServerRes.testResult.result,
+    };
+    const eServer = resultObj.goodServer;
 
-  resultObj.electrumVersion = await getServerVersion(proxyServer, eServer.ip, eServer.port, eServer.proto, httpsEnabled)
+    resultObj.electrumVersion = await getServerVersion(
+      proxyServer,
+      eServer.ip,
+      eServer.port,
+      eServer.proto,
+      httpsEnabled,
+      deadlineRequestOptions,
+    );
+    assertDeadlineActive();
 
-  let electrumServer = resultObj.goodServer
-  let httpAddr = `${httpsEnabled ? 'https' : 'http'}://${proxyServer}/api/${callType}?port=${electrumServer.port}&ip=${electrumServer.ip}&proto=${electrumServer.proto}`
+    const electrumServer = resultObj.goodServer;
+    let httpAddr = `${httpsEnabled ? 'https' : 'http'}://${proxyServer}/api/${callType}?port=${electrumServer.port}&ip=${electrumServer.ip}&proto=${electrumServer.proto}`;
 
-  updateParamObj(
-    params,
-    networks[coinID.toLowerCase()] ? networks[coinID.toLowerCase()] : networks['default'],
-    resultObj.electrumVersion)
+    updateParamObj(
+      params,
+      networks[coinID.toLowerCase()]
+        ? networks[coinID.toLowerCase()]
+        : networks['default'],
+      resultObj.electrumVersion,
+    );
 
-  for (let key in params) {
-    httpAddr += `&${key}=${params[key]}`
-  }
+    for (const key in params) {
+      httpAddr += `&${key}=${params[key]}`;
+    }
 
-  const res = await axios.get(httpAddr)
+    // Server/proxy discovery is also covered by the overall deadline. Do not
+    // start a late HTTP request if discovery only finished after the caller
+    // was already released by the timeout race.
+    assertDeadlineActive();
 
-  if (!isJson(res.data)) {
-    throw new Error("Invalid JSON in callCreators.js, received: " + res)
-  }
+    let res;
+    try {
+      res = await axios.get(httpAddr, deadlineRequestOptions);
+    } catch (error) {
+      if (
+        error?.code === "ECONNABORTED" ||
+        error?.code === "ETIMEDOUT" ||
+        deadlineExpired
+      ) {
+        const timeoutError = createElectrumTimeoutError(callType, timeoutMs);
+        timeoutError.cause = error;
+        throw timeoutError;
+      }
+      throw error;
+    }
 
-  return {
-    result: res.data.result,
-    blockHeight: resultObj.blockHeight,
-    electrumUsed: resultObj.goodServer,
-    electrumVersion: resultObj.electrumVersion
+    if (!isJson(res.data)) {
+      throw new Error("Invalid JSON in callCreators.js, received: " + res);
+    }
+
+    return {
+      result: res.data.result,
+      blockHeight: resultObj.blockHeight,
+      electrumUsed: resultObj.goodServer,
+      electrumVersion: resultObj.electrumVersion,
+    };
+  })();
+
+  try {
+    return await Promise.race([requestPromise, timeoutPromise]);
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
 //Function to update only if values have changed
-export const electrumRequest = async (coinObj, callType, params, toSkip) => {
+export const electrumRequest = async (
+  coinObj,
+  callType,
+  params,
+  toSkip,
+  timeoutMs = REQUEST_TIMEOUT_MS,
+) => {
   try {
-    const response = await getElectrum(coinObj, callType, params, toSkip)
+    const response = await getElectrum(
+      coinObj,
+      callType,
+      params,
+      toSkip,
+      timeoutMs,
+    )
 
     return !response ? false : {coin: coinObj.id, ...response}
   } catch(err) {
     console.warn(err)
       
-    throw new ApiException(
-      err.name,
+    const apiError = new ApiException(
+      err.message || err.name,
       err.message,
       coinObj.id,
       ELECTRUM,
       err.code
-    )
+    );
+    apiError.timedOut = err.timedOut === true;
+    apiError.cause = err;
+    throw apiError;
   }
 }
 
-export const postElectrum = (serverList, callType, data, toSkip) => {
-  let proxyServer
+export const postElectrum = async (
+  serverList,
+  callType,
+  data,
+  toSkip,
+  timeoutMs = REQUEST_TIMEOUT_MS,
+) => {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    throw new Error("Electrum request timeout must be a positive number.");
+  }
 
-  return new Promise((resolve, reject) => {
-    //Get working proxy server
-    getGoodServer(testProxy, proxyServers)
-    .then((_proxyServer) => {
-      proxyServer = _proxyServer.goodServer
+  let requestDispatched = false;
+  const abortController =
+    typeof AbortController === "undefined" ? null : new AbortController();
+  const discoveryRequestOptions = {timeout: timeoutMs};
+  if (abortController != null) {
+    discoveryRequestOptions.signal = abortController.signal;
+  }
+  let deadlineExpired = false;
+  let timeoutId;
+  const shouldCancelDiscovery = () => deadlineExpired;
 
-      if (toSkip) {
-        let _serverList = serverList.filter((server) => {
-          return !toSkip.includes(server)
-        })
+  const timeoutPromise = new Promise((resolve, reject) => {
+    timeoutId = setTimeout(() => {
+      deadlineExpired = true;
+      const timeoutError = new Error(
+        `Electrum ${callType} request timed out after ${timeoutMs}ms.`,
+      );
+      timeoutError.timedOut = true;
+      reject(timeoutError);
 
-        return getGoodServer(testElectrum, _serverList, [proxyServer])
-      }
-
-      return getGoodServer(testElectrum, serverList, [proxyServer], toSkip)
-    })
-    .then((result) => {
-      let electrumSplit = result.goodServer.split(":")
-      let goodServer = {
-        ip: electrumSplit[0],
-        port: electrumSplit[1],
-        proto: electrumSplit[2],
-      }
-
-      resultObj = { goodServer: goodServer, blockHeight: result.testResult.result }
-      return resultObj
-    })
-    .then((resultObj) => {
-      let electrumServer = resultObj.goodServer
-      let httpAddr = `${httpsEnabled ? 'https' : 'http'}://${proxyServer}/api/${callType}`
-      let promiseArray = []
-      let bodyObj = {
-        port: electrumServer.port,
-        ip: electrumServer.ip,
-        proto: electrumServer.proto,
-      }
-
-      for (let key in data) {
-        bodyObj[key] = data[key]
-      }
-
-      promiseArray.push(axios.post(httpAddr, bodyObj, {
-        headers: {
-          "Content-type": "application/json",
-        }
-      }))
-
-      promiseArray.push(resultObj.blockHeight)
-      promiseArray.push(resultObj.goodServer)
-
-      return Promise.all(promiseArray)
-    })
-    .then((responseArray) => {
-      if (!isJson(responseArray[0].data)) {
-        throw new Error("Invalid JSON in callCreators.js, received: " + responseArray[0])
-      }
-
-      responseArray[0] = responseArray[0].data
-
-      return Promise.all(responseArray)
-    })
-    .then((responseArray) => {
-      let resultObj = {result: responseArray[0].result, blockHeight: responseArray[1], electrumUsed: responseArray[2]}
-
-      resolve(resultObj)
-    })
+      if (abortController != null) abortController.abort();
+    }, timeoutMs);
   });
+
+  const requestPromise = (async () => {
+    const proxyResult = await getGoodServer(
+      testProxy,
+      proxyServers,
+      [],
+      null,
+      discoveryRequestOptions,
+      shouldCancelDiscovery,
+    );
+    const proxyServer = proxyResult.goodServer;
+    const filteredServerList = toSkip
+      ? serverList.filter(server => !toSkip.includes(server))
+      : serverList;
+    const serverResult = await getGoodServer(
+      testElectrum,
+      filteredServerList,
+      [proxyServer],
+      toSkip ? null : toSkip,
+      discoveryRequestOptions,
+      shouldCancelDiscovery,
+    );
+    const electrumSplit = serverResult.goodServer.split(":");
+
+    if (electrumSplit.length < 3) {
+      throw new Error("Electrum server returned an invalid endpoint.");
+    }
+
+    const goodServer = {
+      ip: electrumSplit[0],
+      port: electrumSplit[1],
+      proto: electrumSplit[2],
+    };
+    const httpAddr = `${httpsEnabled ? 'https' : 'http'}://${proxyServer}/api/${callType}`;
+    const bodyObj = {
+      port: goodServer.port,
+      ip: goodServer.ip,
+      proto: goodServer.proto,
+      ...data,
+    };
+    const axiosOptions = {
+      headers: {
+        "Content-type": "application/json",
+      },
+      timeout: timeoutMs,
+    };
+
+    if (abortController != null) {
+      axiosOptions.signal = abortController.signal;
+    }
+
+    // Promise.race cannot cancel server discovery. On runtimes without
+    // AbortController, a lookup that completes after the caller timed out must
+    // not be allowed to dispatch a late transaction broadcast.
+    if (deadlineExpired) {
+      const timeoutError = new Error(
+        `Electrum ${callType} request timed out after ${timeoutMs}ms.`,
+      );
+      timeoutError.timedOut = true;
+      throw timeoutError;
+    }
+
+    // From this point onward, response loss cannot prove that a broadcast was
+    // rejected. Mark every subsequent pushtx transport/parse error ambiguous.
+    requestDispatched = true;
+    const response = await axios.post(httpAddr, bodyObj, axiosOptions);
+
+    if (!isJson(response.data)) {
+      throw new Error("Electrum proxy returned an invalid JSON response.");
+    }
+
+    return {
+      result: response.data.result,
+      error: response.data.error,
+      msg: response.data.msg,
+      blockHeight: serverResult.testResult.result,
+      electrumUsed: goodServer,
+    };
+  })();
+
+  try {
+    return await Promise.race([requestPromise, timeoutPromise]);
+  } catch (error) {
+    throw annotatePostError(error, callType, requestDispatched);
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
-
-

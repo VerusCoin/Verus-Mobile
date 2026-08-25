@@ -1,0 +1,111 @@
+/*
+  classifyChanges
+  - 2026-02-05: Created utility to split displayUpdates into highRiskChanges and
+    contentChanges arrays. High-risk: primary address, revocation/recovery authority,
+    status/lock changes. Content: everything else (CMM, private address, etc.).
+  - 2026-03-11: Treat private-address changes as high-risk because funds can be directed there .
+*/
+import {
+  VERUSID_AUTH_INFO,
+  VERUSID_BASE_INFO,
+  VERUSID_CMM_INFO,
+  VERUSID_PRIVATE_ADDRESS,
+  VERUSID_PRIMARY_ADDRESS,
+  VERUSID_RECOVERY_AUTH,
+  VERUSID_REVOCATION_AUTH,
+  VERUSID_STATUS,
+} from '../../../../utils/constants/verusidObjectData';
+
+const HIGH_RISK_KEYS = new Set([
+  VERUSID_PRIVATE_ADDRESS.key,
+  VERUSID_PRIMARY_ADDRESS.key,
+  VERUSID_REVOCATION_AUTH.key,
+  VERUSID_RECOVERY_AUTH.key,
+  VERUSID_STATUS.key,
+]);
+
+const HIGH_RISK_LABELS = {
+  [VERUSID_PRIVATE_ADDRESS.key]: {
+    title: 'Change private address',
+    warning: 'Private payments sent to this identity can be directed to the private address.',
+  },
+  [VERUSID_PRIMARY_ADDRESS.key]: {
+    title: 'Change primary address',
+    warning: 'Primary addresses control who can spend and sign for this ID.',
+  },
+  [VERUSID_REVOCATION_AUTH.key]: {
+    title: 'Change revocation authority',
+    warning: 'The revocation authority can revoke this identity.',
+  },
+  [VERUSID_RECOVERY_AUTH.key]: {
+    title: 'Change recovery authority',
+    warning: 'The recovery authority can recover control of this identity.',
+  },
+  [VERUSID_STATUS.key]: {
+    title: 'Change identity status',
+    warning: 'This may lock or revoke your identity.',
+  },
+};
+
+/**
+ * Checks whether a displayUpdates entry key is high-risk.
+ * Primary address keys are formatted as "VERUSID_PRIMARY_ADDRESS:0", so we
+ * check the prefix before the colon.
+ */
+// keep the high-risk list conservative so payment-routing changes always surface in the warning step.
+const isHighRiskKey = key => {
+  const baseKey = key.includes(':') ? key.split(':')[0] : key;
+  return HIGH_RISK_KEYS.has(baseKey);
+};
+
+/**
+ * Returns the human-readable label config for a high-risk key.
+ */
+const getHighRiskLabel = key => {
+  const baseKey = key.includes(':') ? key.split(':')[0] : key;
+  return HIGH_RISK_LABELS[baseKey] || { title: 'Change', warning: '' };
+};
+
+/**
+ * Splits the flat displayUpdates map into two arrays:
+ *   - highRiskChanges: changes to primary address, revocation/recovery authority, status
+ *   - contentChanges: everything else (CMM data, private address, etc.)
+ *
+ * Each item in the returned arrays has: { key, groupKey, data, title, warning }
+ */
+export const classifyChanges = displayUpdates => {
+  const highRiskChanges = [];
+  const contentChanges = [];
+
+  for (const groupKey in displayUpdates) {
+    for (const itemKey in displayUpdates[groupKey]) {
+      const entry = displayUpdates[groupKey][itemKey];
+      if (!entry) continue;
+
+      if (entry.highRisk === true || isHighRiskKey(itemKey)) {
+        const label = entry.highRisk === true
+          ? {
+            title: entry.highRiskTitle || 'Change',
+            warning: entry.highRiskWarning || '',
+          }
+          : getHighRiskLabel(itemKey);
+        highRiskChanges.push({
+          key: itemKey,
+          groupKey,
+          data: entry.data,
+          title: label.title,
+          warning: label.warning,
+          highRiskType: entry.highRiskType,
+        });
+      } else {
+        contentChanges.push({
+          key: itemKey,
+          groupKey,
+          data: entry.data,
+        });
+      }
+    }
+  }
+
+  return { highRiskChanges, contentChanges };
+};

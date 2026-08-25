@@ -12,7 +12,9 @@ export const loadingModal = (
   state = {
     visible: false,
     message: "",
-    height: 442
+    height: 442,
+    onCancel: null,
+    cancelLabel: "Cancel"
   },
   action
 ) => {
@@ -22,14 +24,18 @@ export const loadingModal = (
         ...state,
         visible: true,
         message: action.payload.message,
-        height: action.payload.height
+        height: action.payload.height,
+        onCancel: action.payload.onCancel || null,
+        cancelLabel: action.payload.cancelLabel || "Cancel"
       };
     case CLOSE_LOADING_MODAL:
       return {
         ...state,
         visible: false,
         message: "",
-        height: 442
+        height: 442,
+        onCancel: null,
+        cancelLabel: "Cancel"
       };
     default:
       return state;

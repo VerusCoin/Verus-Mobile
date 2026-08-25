@@ -11,6 +11,7 @@ import { getStoredContractDefinitions, storeContractDefinitionForNetwork } from 
 import { DEST_ETH, FLAG_MASK } from "verus-typescript-primitives";
 import { BN } from "bn.js";
 import { getWeb3ProviderForNetwork } from "../web3/provider";
+import { getAuthDataForUrl } from "../url";
 
 class _CoinDirectory {
   fullCoinList = [];
@@ -161,11 +162,13 @@ class _CoinDirectory {
     const coinObj = this.findSimpleCoinObj(key, userName, useSystemId);
     
     if (coinObj.proto === 'vrsc' && (coinObj.compatible_channels.includes(VRPC) || coinObj.compatible_channels.includes(VERUSID))) {
+      const users = coinObj.users;
       const systemObj = this.findSystemCoinObj(coinObj.id);
 
       coinObj.system_options = systemObj.pbaas_options;
       coinObj.vrpc_endpoints = systemObj.vrpc_endpoints;
       coinObj.seconds_per_block = systemObj.seconds_per_block;
+      coinObj.users = users;
     }
 
     return coinObj;
@@ -260,7 +263,7 @@ class _CoinDirectory {
 
         if (checkEndpoint) {
           try {
-            const testInterface = new VerusdRpcInterface(system, endpoint);
+            const testInterface = new VerusdRpcInterface(system, endpoint, undefined, undefined, getAuthDataForUrl(endpoint));
 
             const testResult = await timeout(10000, testInterface.getInfo());
   
@@ -272,12 +275,16 @@ class _CoinDirectory {
           }
         } else endpoints = [endpoint]
       } else if (trySystemFallback) {
+        const fallbackEndpoint = isTestnet
+          ? this.getVrpcEndpoints("VRSCTEST")[0]
+          : this.getVrpcEndpoints("VRSC")[0]
         // Fallback to trying to see currency system from VRSC/VRSCTEST and get nodes from there
         const currencyInterface = new VerusdRpcInterface(
           isTestnet ? coinsList.VRSCTEST.currency_id : coinsList.VRSC.currency_id,
-          isTestnet
-            ? this.getVrpcEndpoints("VRSCTEST")[0]
-            : this.getVrpcEndpoints("VRSC")[0],
+          fallbackEndpoint,
+          undefined,
+          undefined,
+          getAuthDataForUrl(fallbackEndpoint)
         );
 
         const systemDefinition = await currencyInterface.getCurrency(system)

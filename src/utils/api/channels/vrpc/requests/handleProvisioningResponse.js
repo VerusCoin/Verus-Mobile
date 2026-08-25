@@ -3,6 +3,40 @@ import { verifyIdProvisioningResponse } from "./verifyIdProvisioningResponse";
 import { NOTIFICATION_TYPE_VERUSID_PENDING } from '../../../../constants/services';
 import { updatePendingVerusIds } from "../../../../../actions/actions/channels/verusid/dispatchers/VerusidWalletReduxManager"
 import { setRequestedVerusId } from '../../../../../actions/actions/services/dispatchers/verusid/verusid';
+import store from '../../../../../store';
+import {sessionScopeIsCurrent} from '../../../../../actions/actions/updates/sessionRequests';
+
+const getOriginatingContext = requestContext => {
+  const sessionScope =
+    requestContext?.sessionScope ||
+    (requestContext?.sessionScoped ? requestContext : null);
+
+  if (sessionScope == null) {
+    const error = new Error(
+      'Missing the account session that originated the provisioning request.',
+    );
+    error.code = 'SESSION_CHANGED';
+    throw error;
+  }
+
+  return {
+    ...(requestContext || {}),
+    sessionScope,
+  };
+};
+
+const assertOriginatingSessionCurrent = requestContext => {
+  if (
+    requestContext.signal?.aborted === true ||
+    !sessionScopeIsCurrent(store.getState(), requestContext.sessionScope)
+  ) {
+    const error = new Error(
+      'Account changed while the provisioning response was being handled.',
+    );
+    error.code = 'SESSION_CHANGED';
+    throw error;
+  }
+};
 
 export const handleProvisioningResponse = async (
   coinObj,
@@ -13,11 +47,21 @@ export const handleProvisioningResponse = async (
   notificationUid,
   requestedId,
   requestedFqn,
-  setNotification = () => { }
+  setNotification = () => { },
+  requestType = 'loginconsent',
+  signingId = null,
+  hasResponseUris = null,
+  requestContext = null,
 ) => {
+  const originatingContext = getOriginatingContext(requestContext);
+  const assertCurrent = () =>
+    assertOriginatingSessionCurrent(originatingContext);
+
+  assertCurrent();
 
   // Verify response signature
   const verified = await verifyIdProvisioningResponse(coinObj, responseJson);
+  assertCurrent();
 
   if (!verified) throw new Error('Failed to verify response from service');
 
@@ -42,6 +86,9 @@ export const handleProvisioningResponse = async (
       status: NOTIFICATION_TYPE_VERUSID_PENDING,
       fqn: requestedFqn,
       loginRequest: loginRequestBase64,
+      requestType,
+      signingId,
+      hasResponseUris,
       fromService: fromService,
       createdAt: Number((Date.now() / 1000).toFixed(0)),
       infoUri: result.info_uri,
@@ -61,9 +108,18 @@ export const handleProvisioningResponse = async (
       throw new Error(`Provisioning response fully qualified name [${result.fully_qualified_name.toLowerCase()}] does not match requested fully qualified name[${requestedFqn.toLowerCase()}]`);
     }
 
-    await setRequestedVerusId(requestedId, verusIdState, coinObj.id);
-    await updatePendingVerusIds();
-    await setNotification();
+    assertCurrent();
+    await setRequestedVerusId(
+      requestedId,
+      verusIdState,
+      coinObj.id,
+      originatingContext,
+    );
+    assertCurrent();
+    await updatePendingVerusIds(originatingContext);
+    assertCurrent();
+    await setNotification(originatingContext);
+    assertCurrent();
 
   } else {
     throw new Error('Unsupported provisioning response state');

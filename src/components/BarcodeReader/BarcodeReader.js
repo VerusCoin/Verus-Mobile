@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react';
-import {View, ScrollView, AppState} from 'react-native';
+import {View, ScrollView, AppState, Platform} from 'react-native';
 import {Text, Button} from 'react-native-paper';
 import { Camera, useCameraDevice, useCodeScanner } from 'react-native-vision-camera';
 import Colors from '../../globals/colors';

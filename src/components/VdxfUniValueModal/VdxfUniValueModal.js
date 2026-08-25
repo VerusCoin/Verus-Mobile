@@ -49,6 +49,7 @@ const VdxfUniValueModal = (props) => {
     showHelpModal,
     loading,
     preventExit,
+    items: props.items,
     objects: props.objects,
     data: props.data,
     title: props.title

@@ -16,18 +16,60 @@ import {deriveKeyPair} from '../../../../../utils/keys';
 import {ELECTRUM} from '../../../../../utils/constants/intervalConstants';
 import { dispatchRemoveNotification } from '../../../../actions/notifications/dispatchers/notifications';
 import { verifyIdProvisioningResponse } from "../../../../../utils/api/channels/vrpc/requests/verifyIdProvisioningResponse";
+import {
+  captureSessionScope,
+  sessionScopeIsCurrent,
+} from '../../../updates/sessionRequests';
 
-export const linkVerusId = async (iAddress, fqn, chain) => {
-  const state = store.getState();
+const getOriginatingContext = requestContext => {
+  const sessionScope =
+    requestContext?.sessionScope ||
+    (requestContext?.sessionScoped ? requestContext : null) ||
+    captureSessionScope(store.getState());
 
-  if (state.authentication.activeAccount == null) {
-    throw new Error('You must be signed in to link VerusIDs');
+  return {
+    ...(requestContext || {}),
+    sessionScope,
+  };
+};
+
+const assertOriginatingSessionCurrent = requestContext => {
+  const context = getOriginatingContext(requestContext);
+
+  if (
+    context.signal?.aborted === true ||
+    !sessionScopeIsCurrent(store.getState(), context.sessionScope)
+  ) {
+    const error = new Error(
+      'Account changed while VerusID data was being updated.',
+    );
+    error.code = 'SESSION_CHANGED';
+    throw error;
   }
 
+  return context;
+};
+
+const getOriginatingAccountHash = requestContext => {
+  const context = assertOriginatingSessionCurrent(requestContext);
+  const accountHash = context.sessionScope.accountHash;
+
+  if (accountHash == null) {
+    throw new Error('You must be signed in for VerusID functions');
+  }
+
+  return {accountHash, context};
+};
+
+export const linkVerusId = async (iAddress, fqn, chain, requestContext) => {
+  const {accountHash, context} = getOriginatingAccountHash(requestContext);
+
   const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+  assertOriginatingSessionCurrent(context);
   const currentLinkedIdentities =
     serviceData.linked_ids == null ? {} : serviceData.linked_ids;
 
+  assertOriginatingSessionCurrent(context);
   return await modifyServiceStoredDataForUser(
     {
       ...serviceData,
@@ -42,18 +84,16 @@ export const linkVerusId = async (iAddress, fqn, chain) => {
       },
     },
     VERUSID_SERVICE_ID,
-    state.authentication.activeAccount.accountHash,
+    accountHash,
+    context,
   );
 };
 
-export const unlinkVerusId = async (iAddress, chain) => {
-  const state = store.getState();
-
-  if (state.authentication.activeAccount == null) {
-    throw new Error('You must be signed in to unlink VerusIDs');
-  }
+export const unlinkVerusId = async (iAddress, chain, requestContext) => {
+  const {accountHash, context} = getOriginatingAccountHash(requestContext);
 
   const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+  assertOriginatingSessionCurrent(context);
   let currentLinkedIdentities =
     serviceData.linked_ids == null ? {} : serviceData.linked_ids;
 
@@ -61,27 +101,32 @@ export const unlinkVerusId = async (iAddress, chain) => {
     delete currentLinkedIdentities[chain][iAddress];
   }
 
+  assertOriginatingSessionCurrent(context);
   return await modifyServiceStoredDataForUser(
     {
       ...serviceData,
       linked_ids: currentLinkedIdentities,
     },
     VERUSID_SERVICE_ID,
-    state.authentication.activeAccount.accountHash,
+    accountHash,
+    context,
   );
 };
 
-export const setRequestedVerusId = async (iAddress, provisioningDetails, chain) => {
-  const state = store.getState();
-
-  if (state.authentication.activeAccount == null) {
-    throw new Error('You must be signed in for ID provisioning');
-  }
+export const setRequestedVerusId = async (
+  iAddress,
+  provisioningDetails,
+  chain,
+  requestContext,
+) => {
+  const {accountHash, context} = getOriginatingAccountHash(requestContext);
 
   const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+  assertOriginatingSessionCurrent(context);
   const currentPendingIdentities =
     serviceData.pending_ids == null ? {} : serviceData.pending_ids;
 
+  assertOriginatingSessionCurrent(context);
   return await modifyServiceStoredDataForUser(
     {
       ...serviceData,
@@ -96,18 +141,20 @@ export const setRequestedVerusId = async (iAddress, provisioningDetails, chain) 
       },
     },
     VERUSID_SERVICE_ID,
-    state.authentication.activeAccount.accountHash,
+    accountHash,
+    context,
   );
 };
 
-export const deleteProvisionedIds = async (iAddress, chain) => {
-  const state = store.getState();
-
-  if (state.authentication.activeAccount == null) {
-    throw new Error('You must be signed in for ID provisioning');
-  }
+export const deleteProvisionedIds = async (
+  iAddress,
+  chain,
+  requestContext,
+) => {
+  const {accountHash, context} = getOriginatingAccountHash(requestContext);
 
   const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+  assertOriginatingSessionCurrent(context);
   const currentPendingIdentities =
     serviceData.pending_ids == null ? {} : serviceData.pending_ids;
 
@@ -115,37 +162,41 @@ export const deleteProvisionedIds = async (iAddress, chain) => {
     delete currentPendingIdentities[chain][iAddress];
   }
 
+  assertOriginatingSessionCurrent(context);
   return await modifyServiceStoredDataForUser(
     {
       ...serviceData,
       pending_ids: currentPendingIdentities,
     },
     VERUSID_SERVICE_ID,
-    state.authentication.activeAccount.accountHash,
+    accountHash,
+    context,
   );
 };
 
-export const deleteAllProvisionedIds = async () => {
-  const state = store.getState();
-
-  if (state.authentication.activeAccount == null) {
-    throw new Error('You must be signed in for ID provisioning');
-  }
+export const deleteAllProvisionedIds = async requestContext => {
+  const {accountHash, context} = getOriginatingAccountHash(requestContext);
 
   const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+  assertOriginatingSessionCurrent(context);
 
+  assertOriginatingSessionCurrent(context);
   return await modifyServiceStoredDataForUser(
     {
       ...serviceData,
       pending_ids: {},
     },
     VERUSID_SERVICE_ID,
-    state.authentication.activeAccount.accountHash,
+    accountHash,
+    context,
   );
 };
 
-export const checkVerusIdNotificationsForUpdates = async () => {
+export const checkVerusIdNotificationsForUpdates = async requestContext => {
+  const context = assertOriginatingSessionCurrent(requestContext);
   const state = store.getState();
+  const accountHash = context.sessionScope.accountHash;
+  const assertCurrent = () => assertOriginatingSessionCurrent(context);
 
   const getPotentialPrimaryAddresses = async (coinObj, channel) => {
 
@@ -156,7 +207,7 @@ export const checkVerusIdNotificationsForUpdates = async () => {
     return addresses;
   };
 
-  if (state.authentication.activeAccount == null) {
+  if (state.authentication.activeAccount == null || accountHash == null) {
     throw new Error('You must be signed in for ID provisioning functions');
   }
   const isTestnet = Object.keys(state.authentication.activeAccount.testnetOverrides).length > 0;
@@ -165,20 +216,36 @@ export const checkVerusIdNotificationsForUpdates = async () => {
   const ticker = system.id;
 
   // Itterate through all pending IDs and check for updates
-  const pendingIds = state.channelStore_verusid.pendingIds;
+  const pendingIds = Object.entries(
+    state.channelStore_verusid.pendingIds || {},
+  ).reduce((allPending, [chain, ids]) => {
+    allPending[chain] = Object.entries(ids || {}).reduce(
+      (pendingForChain, [identityAddress, details]) => {
+        pendingForChain[identityAddress] = {...details};
+        return pendingForChain;
+      },
+      {},
+    );
+    return allPending;
+  }, {});
 
   const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+  assertCurrent();
   const currentLinkedIdentities =  Object.keys(serviceData.linked_ids && serviceData.linked_ids[ticker] || {});
   if (pendingIds[ticker]) {
     const details = Object.keys(pendingIds[ticker]);
     for (const iaddress of details) {
+      assertCurrent();
       
       // once an ID is linked, remove it from pending IDs, or if the server has rejected it delete.
       if (pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_READY) {
         if (currentLinkedIdentities.indexOf(iaddress) > -1 || pendingIds[ticker][iaddress].status === NOTIFICATION_TYPE_VERUSID_FAILED) {
-          await deleteProvisionedIds(iaddress, ticker);
-          await updatePendingVerusIds();
+          await deleteProvisionedIds(iaddress, ticker, context);
+          assertCurrent();
+          await updatePendingVerusIds(context);
+          assertCurrent();
           await dispatchRemoveNotification(pendingIds[ticker][iaddress].notificationUid);
+          assertCurrent();
         }
         continue;
       } 
@@ -190,13 +257,25 @@ export const checkVerusIdNotificationsForUpdates = async () => {
         try {
           if (pendingIds[ticker][iaddress].infoUri) {
             
-            const response = await axios.get(pendingIds[ticker][iaddress].infoUri);
+            const response = await axios.get(
+              pendingIds[ticker][iaddress].infoUri,
+              context.signal ? {signal: context.signal} : undefined,
+            );
+            assertCurrent();
             const responseData = new primitives.LoginConsentProvisioningResponse(response.data);
-            const req = new primitives.LoginConsentRequest();
-            req.fromBuffer(Buffer.from(pendingIds[ticker][iaddress].loginRequest, 'base64'));
-            const verified = await verifyIdProvisioningResponse(system, response.data);
+            const requestType = pendingIds[ticker][iaddress].requestType || 'loginconsent';
+            let signingId = pendingIds[ticker][iaddress].signingId || null;
 
-            if (responseData.signing_id !== req.signing_id || !verified) {
+            if (requestType === 'loginconsent') {
+              const req = new primitives.LoginConsentRequest();
+              req.fromBuffer(Buffer.from(pendingIds[ticker][iaddress].loginRequest, 'base64'));
+              signingId = req.signing_id;
+            }
+
+            const verified = await verifyIdProvisioningResponse(system, response.data);
+            assertCurrent();
+
+            if (!signingId || responseData.signing_id !== signingId || !verified) {
               throw new Error('Failed to verify response from service');
             }
             
@@ -208,27 +287,42 @@ export const checkVerusIdNotificationsForUpdates = async () => {
                 null,
                 pendingIds[ticker][iaddress].notificationUid,
                 pendingIds[ticker][iaddress].loginRequest,
-                state.authentication.activeAccount.accountHash,
+                accountHash,
                 null,
-                null
+                null,
+                pendingIds[ticker][iaddress].requestType || 'loginconsent'
               ); 
-              await deleteProvisionedIds(iaddress, ticker);
-              await updatePendingVerusIds();
+              await deleteProvisionedIds(iaddress, ticker, context);
+              assertCurrent();
+              await updatePendingVerusIds(context);
+              assertCurrent();
               newVerusIdProvisioningNotification.icon = NOTIFICATION_ICON_ERROR;
+              assertCurrent();
               dispatchAddNotification(newVerusIdProvisioningNotification);
               continue;
             }
           } 
         } catch (e) {
+          // A session change is not a provisioning/network failure. Re-assert
+          // here so it escapes without mutating the newly active account.
+          assertCurrent();
 
           if ((pendingIds[ticker][iaddress].createdAt + 1200) < Math.floor(Date.now() / 1000) &&
                 pendingIds[ticker][iaddress].status !== NOTIFICATION_TYPE_VERUSID_ERROR) {
 
+            assertCurrent();
             pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_ERROR;
             pendingIds[ticker][iaddress].error_desc = [`${pendingIds[ticker][iaddress].provisioningName}@`, ` connection error. Provisioning status unknown.`]
             pendingIds[ticker][iaddress].createdAt = Math.floor(Date.now() / 1000) + 1200;
-            await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
-            await updatePendingVerusIds();
+            await setRequestedVerusId(
+              iaddress,
+              pendingIds[ticker][iaddress],
+              ticker,
+              context,
+            );
+            assertCurrent();
+            await updatePendingVerusIds(context);
+            assertCurrent();
             errorFound = true;
           }
         } 
@@ -238,10 +332,11 @@ export const checkVerusIdNotificationsForUpdates = async () => {
             "",
             pendingIds[ticker][iaddress].error_desc,
             null,
-            state.authentication.activeAccount.accountHash
+            accountHash
           );  
           newBasicNotification.icon = NOTIFICATION_ICON_ERROR;
           newBasicNotification.uid = pendingIds[ticker][iaddress].notificationUid;
+          assertCurrent();
           dispatchAddNotification(newBasicNotification);
           continue;
         }
@@ -249,7 +344,9 @@ export const checkVerusIdNotificationsForUpdates = async () => {
       }
 
       const identity = await getIdentity(system.system_id, iaddress);
+      assertCurrent();
       const addrs = await getPotentialPrimaryAddresses(system);
+      assertCurrent();
       let isInWallet = false;
 
       if (identity.result) {
@@ -263,60 +360,80 @@ export const checkVerusIdNotificationsForUpdates = async () => {
 
       if (isInWallet) {
 
+        assertCurrent();
         pendingIds[ticker][iaddress].status = NOTIFICATION_TYPE_VERUSID_READY;
 
-        await setRequestedVerusId(iaddress, pendingIds[ticker][iaddress], ticker);
-        await updatePendingVerusIds();
+        await setRequestedVerusId(
+          iaddress,
+          pendingIds[ticker][iaddress],
+          ticker,
+          context,
+        );
+        assertCurrent();
+        await updatePendingVerusIds(context);
+        assertCurrent();
 
-        const req = new primitives.LoginConsentRequest();
-        req.fromBuffer(Buffer.from(pendingIds[ticker][iaddress].loginRequest, 'base64'));
+        const requestType = pendingIds[ticker][iaddress].requestType || 'loginconsent';
+        let hasResponseUris = pendingIds[ticker][iaddress].hasResponseUris;
+
+        if (requestType === 'loginconsent') {
+          const req = new primitives.LoginConsentRequest();
+          req.fromBuffer(Buffer.from(pendingIds[ticker][iaddress].loginRequest, 'base64'));
+          hasResponseUris = req.challenge.redirect_uris && req.challenge.redirect_uris.length > 0;
+        }
 
         const newVerusIdProvisioningNotification = new VerusIdProvisioningNotification (
-          (req.challenge.redirect_uris && req.challenge.redirect_uris.length > 0) ? "link and login" : "link VerusID",
+          hasResponseUris ? "link and login" : "link VerusID",
           [`${identity.result.fullyqualifiedname.substring(0, identity.result.fullyqualifiedname.lastIndexOf('.'))}@`, ` is ready`],
           null,
           pendingIds[ticker][iaddress].notificationUid,
           pendingIds[ticker][iaddress].loginRequest,
-          state.authentication.activeAccount.accountHash,
+          accountHash,
           pendingIds[ticker][iaddress].fqn,
-          null
+          null,
+          requestType
         ); 
 
         newVerusIdProvisioningNotification.icon = NOTIFICATION_ICON_VERUSID;
+        assertCurrent();
         dispatchAddNotification(newVerusIdProvisioningNotification);
       }
     }
   }
 };
 
-export const clearOldPendingVerusIds = async () => {
-  const state = store.getState();
-
-  if (state.authentication.activeAccount == null) {
-    throw new Error('You must be signed in for ID provisioning information');
-  }
+export const clearOldPendingVerusIds = async requestContext => {
+  const {accountHash, context} = getOriginatingAccountHash(requestContext);
 
   const serviceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
-  const currentPendingIdentities =
-    serviceData.pending_ids == null ? {} : serviceData.pending_ids;
+  assertOriginatingSessionCurrent(context);
+  const currentPendingIdentities = Object.entries(
+    serviceData.pending_ids || {},
+  ).reduce((allPending, [chain, ids]) => {
+    allPending[chain] = {...(ids || {})};
+    return allPending;
+  }, {});
 
   const chainObjects = Object.keys(currentPendingIdentities);
 
   for (const chain of chainObjects) {
     const ids = Object.keys(currentPendingIdentities[chain] || {});
     for (const id of ids) {
+      assertOriginatingSessionCurrent(context);
       if ((currentPendingIdentities[chain][id].createdAt + 604800) < Math.floor(Date.now() / 1000)) {
         delete currentPendingIdentities[chain][id];
       }
     }
   }
 
+  assertOriginatingSessionCurrent(context);
   return await modifyServiceStoredDataForUser(
     {
       ...serviceData,
       pending_ids: currentPendingIdentities,
     },
     VERUSID_SERVICE_ID,
-    state.authentication.activeAccount.accountHash,
+    accountHash,
+    context,
   );
 };

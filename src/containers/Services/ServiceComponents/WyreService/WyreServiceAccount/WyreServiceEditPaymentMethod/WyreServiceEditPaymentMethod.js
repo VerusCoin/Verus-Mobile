@@ -6,6 +6,10 @@ import React, { Component } from "react"
 import { connect } from 'react-redux'
 import { expireServiceData, setServiceLoading } from "../../../../../../actions/actionCreators";
 import { conditionallyUpdateService } from "../../../../../../actions/actionDispatchers";
+import {
+  captureSessionScope,
+  sessionScopeIsCurrent,
+} from "../../../../../../actions/actions/updates/sessionRequests";
 import { createAlert, resolveAlert } from "../../../../../../actions/actions/alert/dispatchers/alert";
 import Store from "../../../../../../store";
 import { requestPersonalData } from "../../../../../../utils/auth/authBox";
@@ -23,7 +27,15 @@ import {
 import WyreProvider from "../../../../../../utils/services/WyreProvider";
 import { WyreServiceEditPaymentMethodRender } from "./WyreServiceEditPaymentMethod.render"
 
-class WyreServiceEditPaymentMethod extends Component {
+const assertSessionCurrent = requestContext => {
+  if (!sessionScopeIsCurrent(Store.getState(), requestContext.sessionScope)) {
+    const error = new Error("Account changed while Wyre data was being submitted.");
+    error.code = "SESSION_CHANGED";
+    throw error;
+  }
+};
+
+export class WyreServiceEditPaymentMethod extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -91,9 +103,19 @@ class WyreServiceEditPaymentMethod extends Component {
   }
 
   async submitOption(paymentMethod, uris) {
+    const requestContext = {
+      sessionScope: captureSessionScope(Store.getState()),
+    };
+
     if (await this.canSubmitDataToWyre()) {
+      assertSessionCurrent(requestContext);
       return this.submitDataToWyre(
-        () => WyreProvider.followupPaymentMethod({ paymentMethod, uris, format: "image/jpeg" })
+        () => WyreProvider.followupPaymentMethod({
+          paymentMethod,
+          uris,
+          format: "image/jpeg",
+          requestContext,
+        })
       );
     }
   }

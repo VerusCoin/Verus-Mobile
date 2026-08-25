@@ -8,11 +8,38 @@ import {
   SET_PENDING_VERUSIDS,
 } from "../../../../../utils/constants/storeType";
 import { clearOldPendingVerusIds } from '../../../services/dispatchers/verusid/verusid';
+import {
+  captureSessionScope,
+  getContextActionScope,
+  scopeSessionAction,
+  sessionScopeIsCurrent,
+} from '../../../updates/sessionRequests';
+import {dispatchChannelCloseRequest} from '../../../../../utils/channelCloseRequests';
 
-export const initVerusIdWallet = async (coinObj) => {
-  await clearOldPendingVerusIds();
+const getSessionScope = requestContext =>
+  requestContext?.sessionScope ||
+  (requestContext?.sessionScoped ? requestContext : null) ||
+  captureSessionScope(Store.getState());
+
+const assertSessionCurrent = (sessionScope, requestContext) => {
+  if (
+    requestContext?.signal?.aborted === true ||
+    !sessionScopeIsCurrent(Store.getState(), sessionScope)
+  ) {
+    const error = new Error('Account changed while VerusID data was loading.');
+    error.code = 'SESSION_CHANGED';
+    throw error;
+  }
+};
+
+export const initVerusIdWallet = async (coinObj, requestedContext) => {
+  const sessionScope = getSessionScope(requestedContext);
+  const requestContext = {...(requestedContext || {}), sessionScope};
+  await clearOldPendingVerusIds(requestContext);
+  assertSessionCurrent(sessionScope, requestContext);
   const verusidServiceData = await requestServiceStoredData(VERUSID_SERVICE_ID)
-  Store.dispatch({
+  assertSessionCurrent(sessionScope, requestContext);
+  Store.dispatch(scopeSessionAction({
     type: INIT_VERUSID_CHANNEL_START,
     payload: {
       chainTicker: coinObj.id,
@@ -25,45 +52,50 @@ export const initVerusIdWallet = async (coinObj) => {
         ? verusidServiceData.pending_ids
         : {},
     },
-  });
+  }, sessionScope));
 
   return
 }
 
-export const updateVerusIdWallet = async () => {
+export const updateVerusIdWallet = async requestContext => {
+  const sessionScope = getSessionScope(requestContext);
+  assertSessionCurrent(sessionScope, requestContext);
   const verusidServiceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
+  assertSessionCurrent(sessionScope, requestContext);
 
-  Store.dispatch({
+  Store.dispatch(scopeSessionAction({
     type: SET_WATCHED_VERUSIDS,
     payload: {
       watchedVerusIds: verusidServiceData.linked_ids
         ? verusidServiceData.linked_ids
         : {},    
     },
-  });
+  }, sessionScope));
 
   return;
 };
 
-export const closeVerusIdWallet = async (coinObj) => {
-  Store.dispatch({
+export const closeVerusIdWallet = async (coinObj, _clearDb, requestContext) => {
+  const sessionScope = getContextActionScope(Store.getState(), requestContext);
+  return dispatchChannelCloseRequest(Store.dispatch, scopeSessionAction({
     type: CLOSE_VERUSID_CHANNEL,
     payload: { chainTicker: coinObj.id, systemId: coinObj.system_id, endpointAddress: coinObj.vrpc_endpoints[0] }
-  })
-
-  return
+  }, sessionScope), requestContext?.teardownTimeoutMs);
 }
 
-export const updatePendingVerusIds = async () => {
+export const updatePendingVerusIds = async (requestContext) => {
+  const sessionScope = getSessionScope(requestContext);
+  assertSessionCurrent(sessionScope, requestContext);
   const verusidServiceData = await requestServiceStoredData(VERUSID_SERVICE_ID);
-  Store.dispatch({
+  assertSessionCurrent(sessionScope, requestContext);
+  Store.dispatch(scopeSessionAction({
     type: SET_PENDING_VERUSIDS,
     payload: {
       pendingIds: verusidServiceData.pending_ids
         ? verusidServiceData.pending_ids
         : {},
     },
-  });
+  }, sessionScope));
 
   return;
 };

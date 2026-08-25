@@ -1,5 +1,5 @@
-import { toIAddress } from "verus-typescript-primitives";
 import VrpcProvider from "../../../../vrpc/vrpcInterface"
+import { validateLookupBinding } from "./lookupBinding";
 
 export const getCurrency = async (systemId, iAddressOrName) => {
   const res = await VrpcProvider.getEndpoint(systemId).getCurrency(iAddressOrName);
@@ -7,37 +7,15 @@ export const getCurrency = async (systemId, iAddressOrName) => {
   if (res.error) return res;
   else {
     const currencyDefinition = res.result;
-    let currencyFqn = res.result.fullyqualifiedname;
-    const currencyFqnSplit = currencyFqn.split(".");
-    const lastName = currencyFqnSplit[currencyFqnSplit.length - 1];
 
     try {
-      if (lastName === "VRSCTEST" || lastName === "VRSC") {
-        const calculatedIAddr = toIAddress(currencyFqn);
-  
-        if (calculatedIAddr !== currencyDefinition.currencyid) {
-          return {
-            id: 0,
-            error: {
-              message: "Unable to parse response currencyid.",
-              code: -1
-            }
-          }
-        }
-      } else {
-        const attemptTest = toIAddress(currencyFqn + ".VRSCTEST");
-        const attemptMain = toIAddress(currencyFqn + ".VRSC");
-  
-        if (attemptTest !== currencyDefinition.currencyid && attemptMain !== currencyDefinition.currencyid) {
-          return {
-            id: 0,
-            error: {
-              message: "Unable to parse response currencyid.",
-              code: -1
-            }
-          }
-        }
-      }
+      validateLookupBinding(
+        systemId,
+        iAddressOrName,
+        currencyDefinition.currencyid,
+        currencyDefinition.fullyqualifiedname,
+        "currency",
+      );
 
       return res;
     } catch(e) {

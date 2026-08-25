@@ -3,7 +3,7 @@ import VrpcProvider from "../../../../vrpc/vrpcInterface"
 import { getCurrency } from "../../verusid/callCreators";
 import { coinsToSats } from "../../../../math";
 
-export const calculateCurrencyTransferFee = async (systemId, currency, exportto, convertto, feecurrency, via, source, address, preconvert = false) => {
+export const calculateCurrencyTransferFee = async (systemId, currency, exportto, convertto, feecurrency, via, source, address, preconvert = false, vdxftag) => {
   if (feecurrency === systemId && exportto == null) {
     return "25000";
   } else {
@@ -18,7 +18,8 @@ export const calculateCurrencyTransferFee = async (systemId, currency, exportto,
       convertto,
       via,
       address,
-      preconvert
+      preconvert,
+      vdxftag
     }
 
     if (feecurrency != null) params.feecurrency = feecurrency;

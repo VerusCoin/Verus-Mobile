@@ -22,6 +22,12 @@ import {
 import { ENABLE_DLIGHT } from "../../../env/index";
 import { canEnableBiometry } from "../../actions/actions/channels/dlight/dispatchers/AlertManager";
 
+const passwordAutofillProps = {
+  autoComplete: "off",
+  importantForAutofill: "no",
+  textContentType: "none",
+};
+
 export const SignUpRender = function() {
   return (
     <Portal.Host>
@@ -135,10 +141,11 @@ export const SignUpRender = function() {
                       selectionColor={Colors.primaryColor}
                       render={(props) => (
                         <NativeTextInput
+                          {...props}
                           autoCapitalize={"none"}
                           autoCorrect={false}
+                          {...passwordAutofillProps}
                           secureTextEntry={true}
-                          {...props}
                         />
                       )}
                       error={this.state.errors.pin}
@@ -158,10 +165,11 @@ export const SignUpRender = function() {
                       mode="outlined"
                       render={(props) => (
                         <NativeTextInput
+                          {...props}
                           autoCapitalize={"none"}
                           autoCorrect={false}
+                          {...passwordAutofillProps}
                           secureTextEntry={true}
-                          {...props}
                         />
                       )}
                       error={this.state.errors.confirmPin}

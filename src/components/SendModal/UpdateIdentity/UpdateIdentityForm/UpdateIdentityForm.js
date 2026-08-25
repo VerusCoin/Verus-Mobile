@@ -3,12 +3,13 @@ import {
   SEND_MODAL_FORM_STEP_CONFIRM,
   SEND_MODAL_IDENTITY_UPDATE_ID_BLOCKHEIGHT,
   SEND_MODAL_IDENTITY_UPDATE_ID_RAW_TX_HEX,
-  SEND_MODAL_IDENTITY_UPDATE_REQUEST_HEX,
+  SEND_MODAL_IDENTITY_UPDATE_DETAILS_HEX,
+  SEND_MODAL_IDENTITY_UPDATE_IS_TESTNET,
   SEND_MODAL_IDENTITY_UPDATE_TX_HEX
 } from '../../../../utils/constants/sendModal';
 import {UpdateIdentityFormRender} from './UpdateIdentityForm.render';
 import { createUpdateIdentityTx } from '../../../../utils/api/channels/verusid/requests/updateIdentity';
-import { IdentityUpdateRequest } from 'verus-typescript-primitives';
+import { IdentityUpdateRequestDetails } from 'verus-typescript-primitives';
 import { useObjectSelector } from '../../../../hooks/useObjectSelector';
 import { satsToCoins } from '../../../../utils/math';
 import BigNumber from 'bignumber.js';
@@ -24,22 +25,24 @@ const UpdateIdentityForm = (props) => {
   const submitData = useCallback(async () => {
     const [channelName, address, systemId] = subWallet.channel.split('.');
 
-    const reqHex = data[SEND_MODAL_IDENTITY_UPDATE_REQUEST_HEX];
+    const detailsHex = data[SEND_MODAL_IDENTITY_UPDATE_DETAILS_HEX];
+    const isTestnet = data[SEND_MODAL_IDENTITY_UPDATE_IS_TESTNET];
     const rawIdHex = data[SEND_MODAL_IDENTITY_UPDATE_ID_RAW_TX_HEX];
     const idHeight = data[SEND_MODAL_IDENTITY_UPDATE_ID_BLOCKHEIGHT];
     const updateIdTxHex = data[SEND_MODAL_IDENTITY_UPDATE_TX_HEX];
 
-    const req = new IdentityUpdateRequest();
-    req.fromBuffer(Buffer.from(reqHex, 'hex'));
+    const details = new IdentityUpdateRequestDetails();
+    details.fromBuffer(Buffer.from(detailsHex, 'hex'));
 
     const updateIdentityTx = await createUpdateIdentityTx(
       systemId,
-      req.details,
+      details,
       address,
       rawIdHex,
       idHeight,
       true,
-      updateIdTxHex
+      updateIdTxHex,
+      isTestnet
     );
     
     if (updateIdentityTx.deltas.size !== 1) throw new Error("Unknown fees");
@@ -52,7 +55,7 @@ const UpdateIdentityForm = (props) => {
       feeCurrency,
       txHex: updateIdentityTx.hex,
       utxos: updateIdentityTx.utxos,
-      identity: req.details.identity.toJson()
+      identity: details.identity.toJson()
     });
   }, [props]);
 

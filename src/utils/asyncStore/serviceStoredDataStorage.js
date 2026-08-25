@@ -1,5 +1,9 @@
 import { SERVICE_STORAGE_INTERNAL_KEY } from "../../../env/index";
-import { VERUSID_SERVICE_ID, WYRE_SERVICE_ID } from "../constants/services";
+import {
+  GIFT_CARD_SERVICE_ID,
+  VERUSID_SERVICE_ID,
+  WYRE_SERVICE_ID,
+} from "../constants/services";
 import { SecureStorage } from "../keychain/secureStore";
 
 export const storeServiceStoredData = (data) => {
@@ -61,6 +65,10 @@ export const loadServiceStoredDataForUser = async (accountHash) => {
   const allStoredData = await loadServiceStoredData();
 
   if (allStoredData[accountHash] == null)
-    return {[WYRE_SERVICE_ID]: null, [VERUSID_SERVICE_ID]: null};
+    return {
+      [WYRE_SERVICE_ID]: null,
+      [VERUSID_SERVICE_ID]: null,
+      [GIFT_CARD_SERVICE_ID]: null,
+    };
   else return allStoredData[accountHash];
 };

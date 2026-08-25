@@ -34,6 +34,85 @@ THIS IS EXPERIMENTAL SOFTWARE AND IT IS PROVIDED "AS IS" AND ANY EXPRESSED OR IM
 
 # Build Instructions
 
+## Package manager
+
+This project uses pnpm via Corepack. `pnpm-lock.yaml` is the source of truth for JavaScript dependency resolution after the migration from Yarn Classic. Do not run `yarn install` when working on this project.
+
+The pinned pnpm version is declared in `package.json` through the `packageManager` field. Use Node.js 22.13 or newer so Corepack can run that pnpm version.
+
+## Android (on Ubuntu)
+
+0. Clone GitHub repository, and `cd` into it
+
+1. Install Android Studio
+  - Required SDK Components:
+    - Android SDK 35 (33 or higher will work)
+    - System Image for Emulator (Intel x86_64)
+    - NDK version 27.0.12077973 (or change `gradle.properties` to match your precise version)
+
+2a. Add `ANDROID_HOME` to `~/.bashrc` (tested on Meerkat Release of Android Studio)
+```
+echo "export ANDROID_HOME=$HOME/Android/Sdk" >> ~/.bashrc
+```
+2b. If on Koala Release of Android Studio, these lines may be necessary instead:
+```
+echo "export ANDROID_SDK_ROOT=$HOME/Android/Sdk" >> ~/.bashrc
+echo "export PATH=$PATH:$ANDROID_SDK_ROOT/emulator" >> ~/.bashrc
+echo "export PATH=$PATH:$ANDROID_SDK_ROOT/platform-tools" >> ~/.bashrc
+```
+(Would advise checking if the lines are already present in file, personally)
+
+3. Install `openjdk-17-jdk` package
+
+4. Install `nvm`, select and use Node.js 22
+```
+# from https://github.com/nvm-sh/nvm?tab=readme-ov-file#install--update-script
+
+# install nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+
+# install version 22.22.3, or any Node.js version >= 22.13
+nvm install 22.22.3
+
+# use 22.22.3. You will need to do this before you run `pnpm` in any new terminals
+nvm use 22.22.3
+```
+5. Enable Corepack with `corepack enable` for access to the pinned `pnpm` version
+
+```
+corepack enable
+corepack pnpm --version
+```
+
+6. Install rustup, and rust toolchain 1.81.0
+```
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup toolchain install 1.81.0
+rustup default 1.81.0
+```
+7. Clone `verus-android-wallet-sdk` (`master` branch) repository, build and publish Maven artifacts locally, with steps below
+
+```
+cd ~
+git clone https://github.com/VerusCoin/verus-android-wallet-sdk.git
+cd verus-android-wallet-sdk
+
+# stop here and open verus-android-wallet-sdk repo in Android studio, to download gradle with proper versions
+
+# On Ubuntu 22.04 and later, if 'python' cmd does not map to python2.7, create a local.properties, so rust can locate it
+echo "rust.pythonCommand=/usr/bin/python2" >> local.properties
+
+# then run gradle wrapper to generate local Maven artifacts
+./gradlew publishToMavenLocal
+
+# this will install the artifacts locally in ~/.m2/repository/com/github/VerusCoin/verus-android-sdk` etc by module
+```
+8. Run `pnpm install`
+
+9. Open a separate window and run `pnpm start` or `pnpm exec react-native start`
+
+10. Build and install by running `pnpm android`
+
 ## iOS (on macOS)
 
 0. Clone the GitHub repository and cd into it with a terminal window
@@ -42,35 +121,49 @@ THIS IS EXPERIMENTAL SOFTWARE AND IT IS PROVIDED "AS IS" AND ANY EXPRESSED OR IM
 
 2. Install homebrew (version >= 3.6.14)
 
-3. Install cocoapods (version >= 1.11.3)
+3. Install rbenv to manage your ruby versions with `brew install rbenv ruby-build`
 
-4. Install node (version >= 16.14.1)
+4. Run `rbenv init`, `rbenv install 3.4.1` and `rbenv global 3.4.1`
 
-5. Install yarn (version >= 1.22.19)
+ - You may also need to edit `~/.zprofile` to include rbenv path before system paths:
+```
+echo 'eval "$(export PATH=$HOME/.rbenv/shims:$PATH)"' >> $HOME/.zprofile
+```
 
-6. Install rbenv to manage your ruby versions with `brew install rbenv ruby-build`
+5. Install cocoapods (version >= 1.11.3)
 
-7. Run `rbenv init`, `rbenv install 2.7.5` and `rbenv global 2.7.5`
+6. Install Node.js 22.13 or newer
 
-8. Run `yarn install`
+via Node Version Manager:
+```
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+nvm install 22.22.3
+nvm use 22.22.3
+```
+
+7. Enable Corepack for pnpm
+
+```
+nvm use 22.22.3
+corepack enable
+corepack pnpm --version
+```
+
+8. Run `pnpm install`
 
 9. Run `cd ios && pod install`, then if successful, `cd ..`
 
 10. Setup a rust development environment by installing sourcery with `brew install sourcery`, `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`, `cargo install cargo-lipo`, and installing rustup
 
-11. Run `rustup target add aarch64-apple-ios x86_64-apple-ios`
+11. Run `rustup target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim`
 
 12. open in ios/verusmobile.xcworkspace in Xcode (DO NOT OPEN THE XCODEPROJ FILE)
 
-13. Run `yarn bundle-ios`
+13. Run `pnpm bundle-ios`
 
-14. Under Pods > Targets > ZcashLightClientKit > Build Settings, set "ZCASH_NETWORK_ENVIRONMENT" to "MAINNET"
+14. Run `pnpm start` in a terminal window within the Verus-Mobile directory
 
-15. Under Pods > Targets > react-native-verus-light-client-kit > Compile Sources, remove every file that contains "test" in its name, there should be a total of 24 files remaining
-
-16. Run `yarn start` in a terminal window within the Verus-Mobile directory
-
-17. Build the project in Xcode
+15. Build the project in Xcode, or with `pnpm ios`
 
 ### Troubleshooting
 

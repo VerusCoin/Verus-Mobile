@@ -11,6 +11,7 @@ import {
   API_GET_BALANCES,
   API_GET_FIATPRICE,
   API_GET_INFO,
+  DLIGHT_PRIVATE,
   ERC20,
 } from '../../utils/constants/intervalConstants';
 import Colors from '../../globals/colors';
@@ -172,7 +173,7 @@ const DynamicHeader = ({ switchTab }) => {
 
   const calculateSyncProgress = (subWallet) => {
     if (info == null || info[subWallet.id] == null) {
-      return 100;
+      return null;
     } else {
       return info[subWallet.id].percent;
     }
@@ -272,6 +273,21 @@ const DynamicHeader = ({ switchTab }) => {
     }
 
     const syncProgress = calculateSyncProgress(item);
+    const shouldShowSyncProgress =
+      item.api_channels[API_GET_INFO] === DLIGHT_PRIVATE &&
+      typeof syncProgress === 'number' &&
+      syncProgress !== 100 &&
+      syncProgress !== -1;
+    const subtitleText = shouldShowSyncProgress
+      ? `Syncing - ${syncProgress.toFixed(2)}%`
+      : `${
+          fiatBalance == null
+            ? '-'
+            : formatCurrency({
+                amount: fiatBalance,
+                code: displayCurrency,
+              })[0]
+        }`;
 
     return (
       <Animated.View
@@ -404,21 +420,11 @@ const DynamicHeader = ({ switchTab }) => {
                   style={{
                     ...Styles.listItemSubtitleDefault,
                     fontSize: 12,
-                    opacity: fiatBalance == null ? 0 : undefined,
                     color: Colors.secondaryColor,
                     marginTop: 0,
                   }}
                 >
-                  {syncProgress != 100 && syncProgress != -1
-                    ? `Syncing - ${syncProgress.toFixed(2)}%`
-                    : `${
-                        fiatBalance == null
-                          ? '-'
-                          : formatCurrency({
-                              amount: fiatBalance,
-                              code: displayCurrency,
-                            })[0]
-                      }`}
+                  {subtitleText}
                 </Paragraph>
               </View>
             )}

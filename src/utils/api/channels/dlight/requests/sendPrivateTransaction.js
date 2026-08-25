@@ -1,17 +1,19 @@
-import { makeDlightRequest } from '../callCreators'
-import { DLIGHT_PRIVATE_SEND_PRIVATE_TX } from '../../../../constants/dlightConstants'
 import { preflightPrivateTransaction } from './preflightPrivateTransaction'
 import { coinsToSats } from '../../../../math'
 import BigNumber from 'bignumber.js'
 import { DLIGHT_PRIVATE } from '../../../../constants/intervalConstants'
-import { requestPrivKey } from '../../../../auth/authBox'
+import { requestSeeds } from '../../../../auth/authBox'
+import { createJsonRpcResponse } from './jsonResponse'
+import { isDlightSpendingKey } from '../../../../keys'
+
+import { getSynchronizerInstance, SpendInfo, Tools } from 'react-native-verus'
 
 // Sends a private transaction with given parameters
 export const sendPrivateTransaction = async (coinObj, activeUser, address, amount, params) => {
   const coinId = coinObj.id
   const accountHash = activeUser.accountHash
   const coinProto = coinObj.proto
-  
+
   try {
     if (
       activeUser.keys[coinObj.id] == null ||
@@ -22,10 +24,16 @@ export const sendPrivateTransaction = async (coinObj, activeUser, address, amoun
       );
     }
 
-    let spendingKey;
+    let extsk = "";
+    let mnemonicSeed = "";
 
     try {
-      spendingKey = await requestPrivKey(coinObj.id, DLIGHT_PRIVATE)
+      let seed = (await requestSeeds())[DLIGHT_PRIVATE];
+      if (isDlightSpendingKey(seed)) {
+        extsk = await Tools.bech32Decode(seed);
+      } else {
+        mnemonicSeed = seed;
+      }
     } catch(e) {
       throw new Error(
         "Cannot spend transaction because user keys cannot be calculated."
@@ -33,19 +41,27 @@ export const sendPrivateTransaction = async (coinObj, activeUser, address, amoun
     }
 
     const preflight = await preflightPrivateTransaction(coinObj, activeUser, address, amount, params);
+    const synchronizer = await getSynchronizerInstance(accountHash, coinId);
 
     if (preflight.err) throw new Error(err.result)
     else {
-      let params = [
-        coinsToSats(BigNumber(preflight.result.value)).toString(),
-        preflight.result.toAddress,
-        spendingKey,
-      ];
-
-      if (preflight.result.fromAddress != null) params.push(preflight.result.fromAddress)
-      if (preflight.result.memo != null) params.push(preflight.result.memo)
-    
-      return makeDlightRequest(coinId, accountHash, coinProto, 0, DLIGHT_PRIVATE_SEND_PRIVATE_TX, params)
+      const spendInfo: SpendInfo = {
+        zatoshi: coinsToSats(BigNumber(preflight.result.value)).toString(),
+        toAddress: preflight.result.toAddress,
+        memo: preflight.result.memo,
+        extsk: extsk,
+        mnemonicSeed: mnemonicSeed
+      }
+        return new Promise((resolve, reject) => {
+        synchronizer.sendToAddress(spendInfo)
+          .then(res => {
+            const result = createJsonRpcResponse(0, res, null)
+            resolve(result);
+          })
+          .catch(err => {
+            reject(err);
+          });
+      });
     }
   } catch(e) {
     return {

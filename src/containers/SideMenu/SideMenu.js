@@ -18,9 +18,9 @@ import {
  } from '../../actions/actionCreators'
 import { getKeyByValue } from '../../utils/objectManip'
 import { CommonActions } from '@react-navigation/native';
-import { clearActiveAccountLifecycles, clearAllCoinIntervals } from "../../actions/actionDispatchers";
 import { renderSideMenu } from "./SideMenu.render";
 import { createAlert, resolveAlert } from "../../actions/actions/alert/dispatchers/alert";
+import {scopeSessionAction} from '../../actions/actions/updates/sessionRequests';
 
 class SideMenu extends Component {
   constructor(props) {
@@ -103,19 +103,25 @@ class SideMenu extends Component {
   }
 
   _removeUserFromCoin = (coinID, deleteWallet) => {
+    const activeAccount = this.props.activeAccount;
+    const sessionScope = {
+      sessionScoped: true,
+      accountHash: activeAccount.accountHash,
+      sessionEpoch: this.props.sessionEpoch,
+    };
     return new Promise((resolve, reject) => {
       removeExistingCoin(
         coinID,
-        this.props.activeAccount.id,
+        activeAccount.id,
         this.props.dispatch,
-        deleteWallet
+        deleteWallet,
+        {sessionScope, ownerAccountHash: activeAccount.accountHash},
       )
         .then((res) => {
-          clearAllCoinIntervals(coinID);
           resolve(
-            setUserCoins(
-              this.props.activeCoinList,
-              this.props.activeAccount.id
+            scopeSessionAction(
+              setUserCoins(res, activeAccount.id),
+              sessionScope,
             )
           );
         })
@@ -198,14 +204,18 @@ class SideMenu extends Component {
   };
 
   handleLogout = () => {
+    const sessionScope = {
+      sessionScoped: true,
+      accountHash: this.props.activeAccount?.accountHash || null,
+      sessionEpoch: this.props.sessionEpoch,
+    };
     this.resetToScreen("SecureLoading", null, {
       task: () => {
         // Hack to prevent crash on screens that require activeAccount not to be null
         // TODO: Find a more elegant solution
         return new Promise((resolve, reject) => {
           setTimeout(async () => {
-            await clearActiveAccountLifecycles()
-            this.props.dispatch(signOut())
+            this.props.dispatch(signOut(sessionScope))
             resolve()
           }, 1000)
         })
@@ -249,6 +259,7 @@ const mapStateToProps = (state) => {
     activeCoinsForUser: state.coins.activeCoinsForUser,
     activeCoinList: state.coins.activeCoinList,
     activeAccount: state.authentication.activeAccount,
+    sessionEpoch: state.authentication.sessionEpoch,
     dlightSockets: state.channelStore_dlight_private.dlightSockets
   }
 };

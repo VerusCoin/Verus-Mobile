@@ -14,6 +14,12 @@ const RevokeRecoverStackScreens = props => {
 
   const exitRevokeRecover = () => props.navigation.dispatch(NavigationActions.back())
 
+  const completeImport = seed => {
+    if (seed != null) setImportedSeed(seed);
+
+    props.navigation.navigate("IdentityForm");
+  };
+
   return (
     <RevokeRecoverStack.Navigator
       screenOptions={defaultHeaderOptions}
@@ -42,7 +48,7 @@ const RevokeRecoverStackScreens = props => {
             navigation={props.navigation}
             importedSeed={importedSeed}
             setImportedSeed={setImportedSeed}
-            onComplete={() => props.navigation.navigate("IdentityForm")}
+            onComplete={completeImport}
             label={`Import ${isRecovery ? "Recovery" : "Revocation"} Seed or Key`}
           />
         )}

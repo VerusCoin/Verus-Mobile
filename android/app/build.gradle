@@ -95,6 +95,21 @@ def reactNativeArchitectures() {
     return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 }
 
+buildscript {
+    repositories {
+        gradlePluginPortal()
+        // mavenCentral() include if you need plugins from other repositories
+        // google() include if you need plugins from other repositories
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        // other plugin dependencies...
+    }
+}
+
+apply plugin: 'org.jetbrains.kotlin.android'
+
 android {
     ndkVersion rootProject.ext.ndkVersion
 
@@ -105,8 +120,8 @@ android {
         applicationId "org.autonomoussoftwarefoundation.verusmobile.android"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-
-        versionCode versionMajor * 10000 + versionMinor * 1000 + versionRevision * 100 + versionBuild
+        multiDexEnabled true
+        versionCode versionMajor * 1000000 + versionMinor * 10000 + versionRevision * 100 + versionBuild
         if (versionBuild > 0) {
             versionName "${versionMajor}.${versionMinor}.${versionRevision}-${versionBuild}"
         } else {
@@ -177,10 +192,17 @@ android {
 }
 
 dependencies {
+
+    implementation project(':react-native-verus')
+
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.0.0")
+
+    // VerusBiometricEnrollmentModule binds every vault-key read to its own
+    // BiometricPrompt CryptoObject instead of relying on a time-based auth window.
+    implementation("androidx.biometric:biometric:1.1.0")
 
     implementation 'com.google.mlkit:barcode-scanning:17.2.0'
 

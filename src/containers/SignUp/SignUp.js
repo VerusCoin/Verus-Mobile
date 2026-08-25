@@ -161,9 +161,6 @@ class SignUp extends Component {
         if (!_pin || _pin.length < 1) {
           this.handleError("Please enter a password.", "pin");
           _errors = true;
-        } else if (_pin.length < 5) {
-          this.handleError("Your password must be at least 5 characters long.", "pin");
-          _errors = true;
         }
 
         if (_pin !== _confirmPin) {

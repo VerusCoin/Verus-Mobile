@@ -1,6 +1,7 @@
 import React from 'react';
 import {View, Dimensions} from 'react-native';
 import {Text, Button} from 'react-native-paper';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {TwentyFourWordIcon, ScanQrIcon, EnterKeyIcon} from '../../../../../images/customIcons';
 import Colors from '../../../../../globals/colors';
 
@@ -83,6 +84,32 @@ export default function ImportIntro({navigation, label}) {
           mode="outlined"
           onPress={() => navigation.navigate("ScanQr")}>
           {"Scan QR-Code"}
+        </Button>
+        <Button
+          icon={({size, color}) => (
+            <MaterialCommunityIcons
+              name="credit-card-wireless"
+              size={size + 10}
+              color={color}
+            />
+          )}
+          labelStyle={{
+            fontSize: 16,
+            fontWeight: "bold"
+          }}
+          contentStyle={{
+            height: 80,
+            width: 300,
+            justifyContent: "flex-start",
+            paddingLeft: 16,
+          }}
+          style={{
+            borderColor: Colors.primaryColor,
+            marginTop: 8
+          }}
+          mode="outlined"
+          onPress={() => navigation.navigate("ImportNfc")}>
+          {"Import using NFC"}
         </Button>
         <Button
           icon={({ size, color }) => (

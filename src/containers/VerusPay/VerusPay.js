@@ -114,6 +114,33 @@ const VerusPay = (props) => {
   }, [activeCoinsForUser, dispatch]);
 
   const tryProcessDeeplink = (urlstring) => {
+    const genericRequest = (() => {
+      try {
+        return primitives.GenericRequest.fromWalletDeeplinkUri(
+          urlstring,
+        );
+      } catch (e) {
+        return null;
+      }
+    })();
+
+    if (genericRequest != null) {
+      dispatch({
+        type: SET_DEEPLINK_DATA,
+        payload: {
+          id: primitives.GENERIC_REQUEST_DEEPLINK_VDXF_KEY.vdxfid,
+          data: genericRequest.toBuffer().toString('hex'),
+        },
+      });
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'DeepLink' }],
+        }),
+      );
+      return;
+    }
+
     const url = new URL(urlstring);
 
     if (url.host !== CALLBACK_HOST)

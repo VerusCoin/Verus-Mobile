@@ -9,20 +9,25 @@ import {
   OPEN_SEND_COIN_MODAL,
   CLOSE_SEND_COIN_MODAL,
   SET_SEND_COIN_MODAL_DATA_FIELD,
-  SET_SEND_COIN_MODAL_VISIBLE
+  SET_SEND_COIN_MODAL_VISIBLE,
+  SIGN_OUT,
 } from "../utils/constants/storeType";
 
+const getInitialSendModalState = () => ({
+  coinObj: { id: null },
+  subWallet: { id: null },
+  visible: false,
+  title: "",
+  type: null,
+  data: {},
+  helpText: null,
+  initialRouteName: SEND_MODAL_FORM_STEP_FORM,
+  requestId: null,
+  sessionScope: null,
+});
+
 export const sendModal = (
-  state = {
-    coinObj: { id: null },
-    subWallet: { id: null },
-    visible: false,
-    title: "",
-    type: null,
-    data: {},
-    helpText: null,
-    initialRouteName: SEND_MODAL_FORM_STEP_FORM
-  },
+  state = getInitialSendModalState(),
   action
 ) => {
   switch (action.type) {
@@ -35,19 +40,13 @@ export const sendModal = (
         subWallet: action.payload.subWallet,
         coinObj: action.payload.coinObj,
         helpText: action.payload.helpText,
-        initialRouteName: action.payload.initialRouteName
+        initialRouteName: action.payload.initialRouteName,
+        requestId: action.payload.requestId,
+        sessionScope: action.payload.sessionScope,
       };
     case CLOSE_SEND_COIN_MODAL:
-      return {
-        coinObj: { id: null },
-        subWallet: { id: null },
-        visible: false,
-        title: "",
-        type: null,
-        data: {},
-        helpText: null,
-        initialRouteName: SEND_MODAL_FORM_STEP_FORM
-      };
+    case SIGN_OUT:
+      return getInitialSendModalState();
     case SET_SEND_COIN_MODAL_DATA_FIELD:
       return {
         ...state,

@@ -6,13 +6,17 @@ import {
 
 export const openLoadingModal = (
   message,
-  height = 442
+  height = 442,
+  onCancel = null,
+  cancelLabel = "Cancel"
 ) => {
   store.dispatch({
     type: OPEN_LOADING_MODAL,
     payload: {
       message,
-      height
+      height,
+      onCancel,
+      cancelLabel
     },
   });
 };

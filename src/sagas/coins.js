@@ -1,4 +1,4 @@
-import {all, takeEvery, put, call} from 'redux-saga/effects';
+import {all, takeEvery, put, call, select} from 'redux-saga/effects';
 import store from '../store';
 import { requestServiceStoredData } from '../utils/auth/authBox';
 import { IS_PBAAS, PRE_DATA, VRPC } from '../utils/constants/intervalConstants';
@@ -12,12 +12,15 @@ import { getDefaultSubWallets } from '../utils/defaultSubWallets';
 import { getVerusIdCurrency } from '../utils/CoinData/CoinData';
 import { IS_PBAAS_CHAIN } from '../utils/constants/currencies';
 import { coinsList } from '../utils/CoinData/CoinsList';
+import {sessionActionIsCurrent} from '../actions/actions/updates/sessionRequests';
 
 export default function* setUserCoinsSaga() {
   yield all([takeEvery(SET_USER_COINS, handleFinishSetUserCoins)]);
 }
 
 function* handleFinishSetUserCoins(action) {
+  if (!sessionActionIsCurrent(yield select(), action)) return;
+
   let allSubWallets = {};
   let coinStatus = {};
   let allNewChannels = []
@@ -83,6 +86,8 @@ function* handleFinishSetUserCoins(action) {
     console.error(e);
   }
 
+  if (!sessionActionIsCurrent(yield select(), action)) return;
+
   yield put({
     type: SET_USER_COINS_COMPLETE,
     payload: {
@@ -90,11 +95,13 @@ function* handleFinishSetUserCoins(action) {
       status: coinStatus,
       activeCoinsForUser: action.payload.activeCoinsForUser,
     },
+    meta: action.meta,
   });
   yield put({
     type: LOG_NEW_CHANNELS,
     payload: {
       channels: allNewChannels
     },
+    meta: action.meta,
   });
 }
